@@ -22,7 +22,6 @@ package com.biglybt.ui.swt.views.skin;
 
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MdiEntryLoadedListener;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 
 /**
@@ -38,12 +37,10 @@ public class SB_Discovery
 
 	private void setup(final MultipleDocumentInterface mdi) {
 
-		mdi.addListener(new MdiEntryLoadedListener() {
-			@Override
-			public void mdiEntryLoaded(MdiEntry entry) {
-				if (entry.getId().equals(MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY)) {
-					setupHeader(entry);
-				}
+		mdi.addListener(entry -> {
+			if (entry.getViewID().equals(
+					MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY)) {
+				setupHeader(entry);
 			}
 		});
 	}
@@ -60,11 +57,10 @@ public class SB_Discovery
 					StringBuilder sb = new StringBuilder();
 					MdiEntry[] entries = entry.getMDI().getEntries();
 					for (MdiEntry subEntry : entries) {
-						//System.out.println(subEntry.getId());
-						if (subEntry.getId().startsWith("Subscription_")) {
+						if (subEntry.getViewID().startsWith("Subscription_")) {
 							continue;
 						}
-						if (entry.getId().equals(subEntry.getParentID())) {
+						if (entry.getViewID().equals(subEntry.getParentID())) {
 							ViewTitleInfo titleInfo = subEntry.getViewTitleInfo();
 							if (titleInfo != null) {
 								Object text = titleInfo.getTitleInfoProperty(TITLE_INDICATOR_TEXT);
@@ -87,7 +83,7 @@ public class SB_Discovery
 					StringBuilder sb = new StringBuilder();
 					MdiEntry[] entries = entry.getMDI().getEntries();
 					for (MdiEntry subEntry : entries) {
-						if (entry.getId().equals(subEntry.getParentID())) {
+						if (entry.getViewID().equals(subEntry.getParentID())) {
 							ViewTitleInfo titleInfo = subEntry.getViewTitleInfo();
 							if (titleInfo != null) {
 								Object text = titleInfo.getTitleInfoProperty(TITLE_INDICATOR_TEXT);

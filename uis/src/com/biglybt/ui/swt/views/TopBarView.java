@@ -23,33 +23,32 @@ package com.biglybt.ui.swt.views;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.CoreRunningListener;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.common.updater.UIUpdater;
-import com.biglybt.ui.skin.SkinConstants;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.skin.SWTSkin;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
-import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
-import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.common.updater.UIUpdater;
+import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.*;
-
+import com.biglybt.ui.swt.skin.SWTSkin;
+import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
+import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.views.skin.SkinView;
 
 /**
@@ -61,6 +60,7 @@ public class TopBarView
 	extends SkinView
 {
 	private static final Object	view_name_key	= new Object();
+	public static final String VIEW_ID = UISWTInstance.VIEW_TOPBAR;
 
 	private List<UISWTViewCore> topbarViews = new ArrayList<>();
 
@@ -71,9 +71,6 @@ public class TopBarView
 	private org.eclipse.swt.widgets.List listPlugins;
 
 	private Composite cPluginArea;
-
-	private static boolean registeredCoreSubViews = false;
-
 
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
@@ -137,7 +134,6 @@ public class TopBarView
 	 * @since 3.0.1.1
 	 */
 	public void buildTopBarViews() {
-		// TODO actually use plugins..
 		SWTSkinObject skinObject = skin.getSkinObject("topbar-plugins");
 		if (skinObject == null) {
 			return;
@@ -431,44 +427,42 @@ public class TopBarView
 				});
 			}
 
-			UISWTInstanceImpl uiSWTinstance = (UISWTInstanceImpl) UIFunctionsManagerSWT.getUIFunctionsSWT().getUISWTInstance();
+			ViewManagerSWT vi = ViewManagerSWT.getInstance();
+			if (!vi.areCoreViewsRegistered(VIEW_ID)) {
+				vi.registerView(VIEW_ID, new UISWTViewBuilderCore("ViewDownSpeedGraph",
+						null, ViewDownSpeedGraph.class));
 
-			if (uiSWTinstance != null && !registeredCoreSubViews ) {
-				uiSWTinstance.addView(UISWTInstance.VIEW_TOPBAR, "ViewDownSpeedGraph",
-						new ViewDownSpeedGraph());
-				uiSWTinstance.addView(UISWTInstance.VIEW_TOPBAR, "ViewUpSpeedGraph",
-						new ViewUpSpeedGraph());
-				uiSWTinstance.addView(UISWTInstance.VIEW_TOPBAR, "ViewQuickConfig",
-						new ViewQuickConfig());
-				uiSWTinstance.addView(UISWTInstance.VIEW_TOPBAR, "ViewQuickNetInfo",
-						new ViewQuickNetInfo());
-				uiSWTinstance.addView(UISWTInstance.VIEW_TOPBAR, "ViewQuickNotifications",
-						new ViewQuickNotifications());
+				vi.registerView(VIEW_ID, new UISWTViewBuilderCore("ViewUpSpeedGraph",
+						null, ViewUpSpeedGraph.class));
 
+				vi.registerView(VIEW_ID, new UISWTViewBuilderCore("ViewQuickConfig",
+						null, ViewQuickConfig.class));
 
-				registeredCoreSubViews = true;
+				vi.registerView(VIEW_ID, new UISWTViewBuilderCore("ViewQuickNetInfo",
+						null, ViewQuickNetInfo.class));
+
+				vi.registerView(VIEW_ID, new UISWTViewBuilderCore(
+						"ViewQuickNotifications", null, ViewQuickNotifications.class));
+
+				vi.setCoreViewsRegistered(VIEW_ID);
 			}
 
-			if ( uiSWTinstance != null ){
+			List<UISWTViewBuilderCore> pluginViews = vi.getBuilders(VIEW_ID);
 
-				UISWTViewEventListenerHolder[] pluginViews = uiSWTinstance.getViewListeners(UISWTInstance.VIEW_TOPBAR);
+			for (UISWTViewBuilderCore builder : pluginViews) {
+				if (builder == null) {
+					continue;
+				}
 
-				for (UISWTViewEventListenerHolder l : pluginViews) {
+				try{
+					UISWTViewCore view = new UISWTViewImpl(builder, true);
+					view.setDestroyOnDeactivate(false);
 
-					if ( l != null ){
+					addTopBarView(view, cPluginArea);
 
-						try{
-							UISWTViewImpl view = new UISWTViewImpl(l.getViewID(), UISWTInstance.VIEW_TOPBAR, false);
+				}catch ( Throwable e ){
 
-							view.setEventListener(l, true);
-
-							addTopBarView(view, cPluginArea);
-
-						}catch ( Throwable e ){
-
-							Debug.out( e );
-						}
-					}
+					Debug.out( e );
 				}
 			}
 

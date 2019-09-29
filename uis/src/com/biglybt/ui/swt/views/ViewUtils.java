@@ -806,7 +806,10 @@ ViewUtils
 		if (dataSource instanceof Object[]) {
 			Object[] newDataSources = (Object[]) dataSource;
 			for ( Object o: newDataSources ){
-				if ( o instanceof Tag ){
+				if ( o instanceof TagDownload ) {
+					Set<DownloadManager> taggedDownloads = ((TagDownload) o).getTaggedDownloads();
+					managers.addAll(taggedDownloads);
+				} else if ( o instanceof Tag ){
 					return( existing );
 				}
 				DownloadManager dm = getDownloadManagerFromDataSource( o, null );
@@ -816,7 +819,10 @@ ViewUtils
 				}
 			}
 		} else {
-			if ( dataSource instanceof Tag ){
+			if ( dataSource instanceof TagDownload ) {
+				Set<DownloadManager> taggedDownloads = ((TagDownload) dataSource).getTaggedDownloads();
+				managers.addAll(taggedDownloads);
+			} else if ( dataSource instanceof Tag ){
 				
 				return( existing );
 			}

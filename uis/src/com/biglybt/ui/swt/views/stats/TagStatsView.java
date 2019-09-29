@@ -48,9 +48,8 @@ import com.biglybt.ui.swt.components.graphics.ValueSource;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
-import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.core.tag.*;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -58,7 +57,7 @@ import com.biglybt.ui.swt.utils.ColorCache;
 
 public class TagStatsView
 	extends TagTypeAdapter
-	implements UISWTViewCoreEventListenerEx, TagManagerListener, IViewRequiresPeriodicUpdates
+	implements UISWTViewCoreEventListener, TagManagerListener, IViewRequiresPeriodicUpdates
 {
 	public static final String MSGID_PREFIX = "TagStatsView";
 
@@ -78,31 +77,6 @@ public class TagStatsView
 	{
 	}
 
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new TagStatsView());
-	}
-	
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return(
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( TagStatsView.class );
-				}
-			});
-	}
 	public void
 	periodicUpdate()
 	{

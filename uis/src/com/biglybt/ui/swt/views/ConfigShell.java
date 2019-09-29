@@ -17,28 +17,21 @@
 package com.biglybt.ui.swt.views;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.TraverseEvent;
-import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
-
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
 
 /**
  * A shell containing the <code>ConfigView</code>
@@ -53,8 +46,6 @@ public class ConfigShell
 	private static ConfigShell instance;
 
 	private Shell shell;
-
-	private ConfigView configView;
 
 	private UISWTViewImpl swtView;
 
@@ -86,7 +77,9 @@ public class ConfigShell
 
 	public void swt_open(String section) {
 		if (null != shell && !shell.isDisposed()) {
-			configView.selectSection(section, true);
+			if (swtView != null) {
+				swtView.setDatasource(section);
+			}
 			if (shell.getMinimized()) {
 				shell.setMinimized(false);
 			}
@@ -97,16 +90,16 @@ public class ConfigShell
 			shell.setLayout(new GridLayout());
 			shell.setText(MessageText.getString("ConfigView.title.full"));
 			Utils.setShellIcon(shell);
-			configView = new ConfigView();
 			try {
-				swtView = new UISWTViewImpl("ConfigView", null, false);
-				swtView.setDatasource(section);
-				swtView.setEventListener(configView, true);
+				UISWTViewBuilderCore builder = new UISWTViewBuilderCore(
+						MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, null,
+						ConfigView.class).setInitialDatasource(section);
+				swtView = new UISWTViewImpl(builder, true);
+				swtView.setDestroyOnDeactivate(false);
+				swtView.initialize(shell);
 			} catch (Exception e1) {
 				Debug.out(e1);
 			}
-			swtView.initialize(shell);
-			configView.selectSection(section,true);
 
 			/*
 			 * Set default size and centers the shell if it's configuration does not exist yet
@@ -123,42 +116,19 @@ public class ConfigShell
 					size.y = 700;
 				}
 				shell.setSize(size);
-				Utils.centerWindowRelativeTo(shell, getMainShell());
+				Utils.centerWindowRelativeTo(shell, Utils.findAnyShell(true));
 			}
 
+			//noinspection DuplicateStringLiteralInspection
 			Utils.linkShellMetricsToConfig(shell, "options");
 
-			/*
-			 * Auto-save when the shell closes
-			 */
-			shell.addListener(SWT.Close, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					configView.save();
-					event.doit = true;
+			shell.addTraverseListener(e -> {
+				if (e.detail == SWT.TRAVERSE_ESCAPE) {
+					shell.dispose();
 				}
 			});
 
-			shell.addTraverseListener(new TraverseListener() {
-				@Override
-				public void keyTraversed(TraverseEvent e) {
-					if (e.detail == SWT.TRAVERSE_ESCAPE) {
-						shell.dispose();
-					}
-				}
-			});
-
-			shell.addDisposeListener(
-				new DisposeListener()
-				{
-					@Override
-					public void
-					widgetDisposed(
-						DisposeEvent arg0 )
-					{
-						close();
-					}
-				});
+			shell.addDisposeListener(arg0 -> close());
 
 			shell.open();
 		}
@@ -178,17 +148,5 @@ public class ConfigShell
 		}
 
 		shell		= null;
-		configView	= null;
-	}
-
-	private Shell getMainShell() {
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		if (null != uiFunctions) {
-			return uiFunctions.getMainShell();
-		}
-
-		throw new IllegalStateException(
-				"No instance of UIFunctionsSWT found; the UIFunctionsManager might not have been initialized properly");
-
 	}
 }

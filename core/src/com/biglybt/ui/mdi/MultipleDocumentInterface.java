@@ -129,7 +129,7 @@ public interface MultipleDocumentInterface
 		/**
 		 * If you prefix the 'preferedAfterID' string with '~' then the operation will actually
 		 * switch to 'preferedBeforeID'
-		 * @param parentID
+		 * @param parentEntryID
 		 * @param id
 		 * @param configID
 		 * @param title
@@ -139,7 +139,7 @@ public interface MultipleDocumentInterface
 		 * @param preferedAfterID
 		 * @return
 		 */
-	public MdiEntry createEntryFromSkinRef(String parentID, String id,
+	public MdiEntry createEntryFromSkinRef(String parentEntryID, String id,
 			String configID, String title, ViewTitleInfo titleInfo, Object params,
 			boolean closeable, String preferedAfterID);
 
@@ -161,8 +161,20 @@ public interface MultipleDocumentInterface
 
 	public MdiEntry[] getEntries();
 
+	/**
+	 * @apiNote ViewManagerSWT.registerView and MDI.registerEntry do very
+	 * similar things.  
+	 * MDI has access to more properties, like image.
+	 * ViewManagerSWT auto-adds a menu item when adding to MAIN view
+	 */
 	public void registerEntry(String id, MdiEntryCreationListener l);
 
+	/**
+	 * @apiNote ViewManagerSWT.registerView and MDI.registerEntry do very
+	 * similar things.  
+	 * MDI has access to more properties, like image.
+	 * ViewManagerSWT auto-adds a menu item when adding to MAIN view
+	 */
 	public void registerEntry(String id,
 			MdiEntryCreationListener2 mdiEntryCreationListener2);
 
@@ -214,4 +226,7 @@ public interface MultipleDocumentInterface
 
 	public boolean isDisposed();
 
+	String getViewID();
+
+	Class getDataSourceType();
 }

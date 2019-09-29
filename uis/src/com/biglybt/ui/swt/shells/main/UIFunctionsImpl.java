@@ -19,10 +19,7 @@ package com.biglybt.ui.swt.shells.main;
 import java.io.File;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
@@ -51,11 +48,6 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
-import com.biglybt.pif.download.DownloadStub;
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.torrent.TorrentManagerImpl;
 import com.biglybt.ui.*;
@@ -71,23 +63,16 @@ import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.mainwindow.*;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
-import com.biglybt.ui.swt.mdi.TabbedMDI;
-import com.biglybt.ui.swt.mdi.TabbedMdiInterface;
 import com.biglybt.ui.swt.minibar.AllTransfersBar;
 import com.biglybt.ui.swt.minibar.MiniBarManager;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTView;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
-import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UIToolBarManagerImpl;
 import com.biglybt.ui.swt.plugininstall.SimplePluginInstaller;
 import com.biglybt.ui.swt.search.SearchHandler;
-import com.biglybt.ui.swt.shells.BrowserWindow;
-import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.swt.shells.MessageSlideShell;
-import com.biglybt.ui.swt.shells.RemotePairingWindow;
+import com.biglybt.ui.swt.shells.*;
 import com.biglybt.ui.swt.shells.opentorrent.OpenTorrentOptionsWindow;
 import com.biglybt.ui.swt.shells.opentorrent.OpenTorrentWindow;
 import com.biglybt.ui.swt.skin.*;
@@ -99,10 +84,15 @@ import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.utils.TorrentUIUtilsV3;
 import com.biglybt.ui.swt.views.skin.*;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog.SkinnedDialogClosedListener;
-import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
+
+import com.biglybt.pif.download.DownloadStub;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 
 /**
  * @author TuxPaper
@@ -153,24 +143,6 @@ public class UIFunctionsImpl
 	getUIType()
 	{
 		return( UIInstance.UIT_SWT );
-	}
-
-	// @see UIFunctionsSWT#addPluginView(java.lang.String, com.biglybt.ui.swt.pif.UISWTViewEventListener)
-	@Override
-	public void addPluginView(final String viewID, final UISWTViewEventListener l) {
-		try {
-
-			Utils.execSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-					PluginsMenuHelper.getInstance().addPluginView(viewID, l);
-				}
-			});
-
-		} catch (Exception e) {
-			Logger.log(new LogEvent(LOGID, "addPluginView", e));
-		}
-
 	}
 
 	// @see UIFunctions#bringToFront()
@@ -266,50 +238,6 @@ public class UIFunctionsImpl
 
 	}
 
-	/* (non-Javadoc)
-	 * @see UIFunctionsSWT#closePluginView(com.biglybt.ui.swt.pifimpl.UISWTViewCore)
-	 */
-	@Override
-	public void closePluginView(UISWTViewCore view) {
-		try {
-			MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-			if (mdi == null) {
-				return;
-			}
-			String id;
-			if (view instanceof UISWTViewImpl) {
-				id = ((UISWTViewImpl)view).getViewID();
-			} else {
-				id = view.getClass().getName();
-				int i = id.lastIndexOf('.');
-				if (i > 0) {
-					id = id.substring(i + 1);
-				}
-			}
-			mdi.closeEntry(id);
-
-		} catch (Exception e) {
-			Logger.log(new LogEvent(LOGID, "closePluginView", e));
-		}
-
-	}
-
-	// @see UIFunctionsSWT#closePluginViews(java.lang.String)
-	@Override
-	public void closePluginViews(String sViewID) {
-		try {
-			MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-			if (mdi == null) {
-				return;
-			}
-			mdi.closeEntry(sViewID);
-
-		} catch (Exception e) {
-			Logger.log(new LogEvent(LOGID, "closePluginViews", e));
-		}
-
-	}
-
 	// @see UIFunctions#dispose(boolean, boolean)
 	@Override
 	public boolean dispose(boolean for_restart, boolean close_already_in_progress) {
@@ -339,29 +267,16 @@ public class UIFunctionsImpl
 		return new UISWTView[0];
 	}
 
-	// @see UIFunctionsSWT#openPluginView(java.lang.String, java.lang.String, com.biglybt.ui.swt.pif.UISWTViewEventListener, java.lang.Object, boolean)
 	@Override
-	public void openPluginView(String sParentID, String sViewID,
-	                           UISWTViewEventListener l, Object dataSource, boolean bSetFocus) {
+	public void openPluginView(UISWTViewBuilderCore builder, boolean bSetFocus) {
 		try {
 			MultipleDocumentInterfaceSWT mdi = getMDISWT();
 
 			if (mdi != null) {
 
-				String sidebarParentID = null;
-
-				if (UISWTInstance.VIEW_MYTORRENTS.equals(sParentID)) {
-					sidebarParentID = SideBar.SIDEBAR_HEADER_TRANSFERS;
-				} else if (UISWTInstance.VIEW_MAIN.equals(sParentID)) {
-					sidebarParentID = MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS;
-				} else {
-					System.err.println("Can't find parent " + sParentID + " for " + sViewID);
-				}
-
-				MdiEntry entry = mdi.createEntryFromEventListener(sidebarParentID, l, sViewID,
-						true, dataSource, null);
+				MdiEntry entry = mdi.createEntry(builder, true);
 				if (bSetFocus) {
-					mdi.showEntryByID(sViewID);
+					mdi.showEntryByID(builder.getViewID());
 				} else if (entry instanceof BaseMdiEntry) {
 					// Some plugins (CVS Updater) want their view's composite initialized
 					// on OpenPluginView, otherwise they won't do logic users expect
@@ -405,19 +320,6 @@ public class UIFunctionsImpl
 
 		} catch (Exception e) {
 			Logger.log(new LogEvent(LOGID, "refreshLanguage", e));
-		}
-
-	}
-
-	// @see UIFunctionsSWT#removePluginView(java.lang.String)
-	@Override
-	public void removePluginView(String viewID) {
-		try {
-
-			PluginsMenuHelper.getInstance().removePluginViews(viewID);
-
-		} catch (Exception e) {
-			Logger.log(new LogEvent(LOGID, "removePluginView", e));
 		}
 
 	}
@@ -736,7 +638,7 @@ public class UIFunctionsImpl
 		MdiEntry[] sideBarEntries = mdi.getEntries();
 		for (int i = 0; i < sideBarEntries.length; i++) {
 			MdiEntry entry = sideBarEntries[i];
-			String id = entry.getId();
+			String id = entry.getViewID();
 			if (id != null && id.startsWith("DMDetails_")) {
 				mdi.closeEntry(id);
 			}
@@ -755,7 +657,7 @@ public class UIFunctionsImpl
 		MdiEntry[] sideBarEntries = mdi.getEntries();
 		for (int i = 0; i < sideBarEntries.length; i++) {
 			MdiEntry entry = sideBarEntries[i];
-			String id = entry.getId();
+			String id = entry.getViewID();
 			if (id != null && id.startsWith("DMDetails_")) {
 				return true;
 			}
@@ -1680,11 +1582,6 @@ public class UIFunctionsImpl
 	@Override
 	public void showCreateTagDialog(TagReturner tagReturner) {
 		TagUIUtilsV3.showCreateTagDialog(tagReturner);
-	}
-
-	@Override
-	public TabbedMdiInterface createTabbedMDI(Composite parent, String id) {
-		return new TabbedMDI(parent, id);
 	}
 
 	@Override

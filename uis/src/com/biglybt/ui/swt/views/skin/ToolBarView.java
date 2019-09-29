@@ -825,7 +825,7 @@ public class ToolBarView
 
 		if (mdi != null) {
 			UIToolBarItem[] allToolBarItems = tbm.getAllToolBarItems();
-			MdiEntrySWT entry = mdi.getCurrentEntrySWT();
+			MdiEntrySWT entry = mdi.getCurrentEntry();
 			Map<String, Long> mapStates = new HashMap<>();
 			if (entry != null) {
 				UIToolBarEnablerBase[] enablers = entry.getToolbarEnablers();
@@ -1058,7 +1058,7 @@ public class ToolBarView
 		}
 		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
 		if (mdi != null) {
-			MdiEntrySWT entry = mdi.getCurrentEntrySWT();
+			MdiEntrySWT entry = mdi.getCurrentEntry();
 			if ( entry != null ){
 				UIToolBarEnablerBase[] enablers = entry.getToolbarEnablers();
 				for (UIToolBarEnablerBase enabler : enablers) {

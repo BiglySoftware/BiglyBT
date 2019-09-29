@@ -34,7 +34,6 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
@@ -55,7 +54,6 @@ import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.TorrentUtils.PotentialTorrentDeletionListener;
-import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
@@ -68,8 +66,8 @@ import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.minibar.DownloadBar;
-import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.FontUtils;
@@ -88,13 +86,12 @@ import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
 
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
-import com.biglybt.pif.ui.*;
-import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableRow;
 import com.biglybt.pif.ui.tables.TableRowRefreshListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarActivationListener;
@@ -3076,14 +3073,14 @@ public class MyTorrentsView
 	 * @return
 	 */
 
-	private static boolean registeredCoreSubViews = false;
-
 	protected TableViewSWT<DownloadManager>
 	createTableView(
 		Class<?> 			forDataSourceType,
 		String	 			tableID,
 		TableColumnCore[] 	basicItems )
 	{
+		registerPluginViews();
+
 		int tableExtraStyle = COConfigurationManager.getIntParameter("MyTorrentsView.table.style");
 		TableViewSWT<DownloadManager> table =
 			TableViewFactory.createTableViewSWT(forDataSourceType, tableID,
@@ -3093,135 +3090,64 @@ public class MyTorrentsView
 			// config??
 
 		boolean	enable_tab_views =
-			//!Utils.isAZ2UI() &&
 			supportsTabs &&
 			COConfigurationManager.getBooleanParameter( "Library.ShowTabsInTorrentView" );
 
-		List<String> restrictTo = new ArrayList<>();
-		restrictTo.addAll(Arrays.asList(
-			GeneralView.MSGID_PREFIX,
-			TrackerView.MSGID_PREFIX,
-			PeersView.MSGID_PREFIX,
-			PeersGraphicView.MSGID_PREFIX,
-			PiecesView.MSGID_PREFIX,
-			DownloadActivityView.MSGID_PREFIX,
-			PieceInfoView.MSGID_PREFIX,
-			FilesView.MSGID_PREFIX,
-			TaggingView.MSGID_PREFIX,
-			PrivacyView.MSGID_PREFIX
-		));
-
-		// sub-tab hacks
-		restrictTo.add( "azbuddy.ui.menu.chat" );
-		PluginManager pm = CoreFactory.getSingleton().getPluginManager();
-		PluginInterface pi = pm.getPluginInterfaceByID("aercm", true);
-
-		if (pi != null) {
-			String pluginInfo = pi.getPluginconfig().getPluginStringParameter(
-					"plugin.info", "");
-			if (pluginInfo.equals("e")) {
-				restrictTo.add("rcm.subview.torrentdetails.name");
-			}
-		}
-		pi = pm.getPluginInterfaceByID("3dview", true);
-
-		if (pi != null) {
-			restrictTo.add("view3d.subtab.name");
-		}
-		
-		if ( Logger.isEnabled()){
-
-			restrictTo.add( LoggerView.MSGID_PREFIX );
-		}
-
-		table.setEnableTabViews(enable_tab_views, false,
-				restrictTo.toArray(new String[0]));
-
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		if (uiFunctions != null) {
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			registerPluginViews( pluginUI );
-		}
+		table.setEnableTabViews(enable_tab_views, false);
 
 		return( table );
 	}
 
-	public static void
-	registerPluginViews(
-			final UISWTInstance pluginUI )
-	{
-		if (pluginUI == null || registeredCoreSubViews) {
+	public static void registerPluginViews() {
+		// Registering for Download.class implicitly includes DownloadTypeIncomplete and DownloadTypeComplete
+
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		if (vm.areCoreViewsRegistered(Download.class)) {
 			return;
 		}
 
-		registeredCoreSubViews = true;
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				GeneralView.MSGID_PREFIX, null, GeneralView.class));
 
-		final String[] views_with_tabs = {
-				TableManager.TABLE_MYTORRENTS_ALL_BIG,			// all simple views
-				TableManager.TABLE_MYTORRENTS_INCOMPLETE,		// downloading view
-				TableManager.TABLE_MYTORRENTS_INCOMPLETE_BIG,	// downloading view
-				TableManager.TABLE_MYTORRENTS_COMPLETE,			// bottom part of split views (hack of course)
-		};
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+			FilesView.MSGID_PREFIX, null, FilesView.class));
 
-		for ( String id: views_with_tabs ){
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				TrackerView.MSGID_PREFIX, null, TrackerView.class));
 
-			pluginUI.addView( id, GeneralView.MSGID_PREFIX, GeneralView.class, null);
-			pluginUI.addView( id, TrackerView.MSGID_PREFIX, TrackerView.class, null);
-			pluginUI.addView( id, PeersView.MSGID_PREFIX,	PeersView.class, null);
-			pluginUI.addView( id, PeersGraphicView.MSGID_PREFIX, PeersGraphicView.class, null);
-			pluginUI.addView( id, PiecesView.MSGID_PREFIX, PiecesView.class, null);
-			pluginUI.addView( id, PieceInfoView.MSGID_PREFIX, PieceInfoView.class, null);
-			pluginUI.addView( id, DownloadActivityView.MSGID_PREFIX, DownloadActivityView.class, null);
-			pluginUI.addView( id, FilesView.MSGID_PREFIX,	FilesView.class, null);
-			pluginUI.addView( id, TorrentInfoView.MSGID_PREFIX, TorrentInfoView.class, null);
-			pluginUI.addView( id, TorrentOptionsView.MSGID_PREFIX, TorrentOptionsView.class, null);
-			pluginUI.addView( id, TaggingView.MSGID_PREFIX, TaggingView.class, null);
-			pluginUI.addView( id, PrivacyView.MSGID_PREFIX, PrivacyView.class, null);
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				PeersView.MSGID_PREFIX, null, PeersView.class));
 
-			if (Logger.isEnabled()) {
-				pluginUI.addView( id, LoggerView.MSGID_PREFIX, LoggerView.class, null);
-			}
-		}
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				PeersGraphicView.MSGID_PREFIX, null, PeersGraphicView.class));
 
-		final UIManager uiManager = PluginInitializer.getDefaultInterface().getUIManager();
-		uiManager.addUIListener(new UIManagerListener() {
-			@Override
-			public void UIAttached(UIInstance instance) {
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				PiecesView.MSGID_PREFIX, null, PiecesView.class));
 
-			}
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				PieceInfoView.MSGID_PREFIX, null, PieceInfoView.class));
 
-			@Override
-			public void UIDetached(UIInstance instance) {
-				if (!(instance instanceof UISWTInstance)) {
-					return;
-				}
-				for ( String id: views_with_tabs ) {
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				DownloadActivityView.MSGID_PREFIX, null, DownloadActivityView.class));
 
-					pluginUI.removeViews(id, GeneralView.MSGID_PREFIX);
-					pluginUI.removeViews(id, TrackerView.MSGID_PREFIX);
-					pluginUI.removeViews(id, PeersView.MSGID_PREFIX);
-					pluginUI.removeViews(id, PeersGraphicView.MSGID_PREFIX);
-					pluginUI.removeViews(id, PiecesView.MSGID_PREFIX);
-					pluginUI.removeViews(id, PieceInfoView.MSGID_PREFIX);
-					pluginUI.removeViews(id, DownloadActivityView.MSGID_PREFIX);
-					pluginUI.removeViews(id, FilesView.MSGID_PREFIX);
-					pluginUI.removeViews(id, TorrentInfoView.MSGID_PREFIX);
-					pluginUI.removeViews(id, TorrentOptionsView.MSGID_PREFIX);
-					pluginUI.removeViews(id, TaggingView.MSGID_PREFIX);
-					pluginUI.removeViews(id, PrivacyView.MSGID_PREFIX);
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				TorrentInfoView.MSGID_PREFIX, null, TorrentInfoView.class));
 
-					if (Logger.isEnabled()) {
-						pluginUI.removeViews(id, LoggerView.MSGID_PREFIX);
-					}
-				}
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				TorrentOptionsView.MSGID_PREFIX, null, TorrentOptionsView.class));
 
-				registeredCoreSubViews = false;
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				TaggingView.MSGID_PREFIX, null, TaggingView.class));
 
-				uiManager.removeUIListener(this);
-			}
-		});
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				PrivacyView.MSGID_PREFIX, null, PrivacyView.class));
+
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				LoggerView.MSGID_PREFIX, null, LoggerView.class));
+
+		vm.setCoreViewsRegistered(Download.class);
 	}
+
 	/**
 	 * Returns the default row height for the table
 	 * Subclasses my override to return a different height if needed; a height of -1 means use default

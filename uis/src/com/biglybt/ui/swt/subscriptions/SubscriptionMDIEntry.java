@@ -145,7 +145,7 @@ public class SubscriptionMDIEntry implements SubscriptionListener, ViewTitleInfo
 	protected boolean
 	isDisposed()
 	{
-		return( mdiEntry.isDisposed());
+		return( mdiEntry.isEntryDisposed());
 	}
 
 	@Override

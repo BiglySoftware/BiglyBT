@@ -18,30 +18,25 @@
 
 package com.biglybt.ui.swt.views;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.layout.*;
+import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.tag.Tag;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.pif.download.Download;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 
-import com.biglybt.core.tag.Tag;
+import com.biglybt.pif.download.Download;
 
 /**
  * @author TuxPaper
@@ -52,19 +47,20 @@ public class MyTorrentsSubView
 	extends MyTorrentsView
 {
 
+	public static final String MSGID_PREFIX = "MyTorrentsSubView";
 	private Button btnAnyTags;
 	private boolean anyTorrentTags;
 
 	private boolean	destroyed;
 	
 	public MyTorrentsSubView() {
-		super("MyTorrentsSubView", false);
+		super(MSGID_PREFIX, false);
 		neverShowCatButtons = true;
 		neverShowTagButtons = true;
 		isEmptyListOnNullDS = true;
 		Core _core = CoreFactory.getSingleton();
-		init(_core, "MyTorrentsSubView", Download.class,
-				TableColumnCreator.createCompleteDM("MyTorrentsSubView"));
+		init(_core, MSGID_PREFIX, Download.class,
+				TableColumnCreator.createCompleteDM(MSGID_PREFIX));
 	}
 
 	/* (non-Javadoc)
@@ -134,8 +130,8 @@ public class MyTorrentsSubView
 			
 			destroyed = false;
 			Core _core = CoreFactory.getSingleton();
-			init(_core, "MyTorrentsSubView", Download.class,
-					TableColumnCreator.createCompleteDM("MyTorrentsSubView"));
+			init(_core, MSGID_PREFIX, Download.class,
+					TableColumnCreator.createCompleteDM(MSGID_PREFIX));
 		}
 		return( super.initYourTableView());
 	}
@@ -153,6 +149,7 @@ public class MyTorrentsSubView
     super.tableViewDestroyed();
   }
 
+  @Override
   public boolean eventOccurred(UISWTViewEvent event) {
 	  if ( event.getType() == UISWTViewEvent.TYPE_DESTROY ){
 		  destroyed = true;

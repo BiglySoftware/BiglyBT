@@ -20,70 +20,50 @@ package com.biglybt.ui.swt.views.skin;
 
 
 import java.net.URL;
+import java.util.List;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.common.table.*;
-import com.biglybt.ui.common.table.impl.TableColumnManager;
-import com.biglybt.ui.swt.columns.alltrackers.*;
-import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
-import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
-import com.biglybt.ui.swt.pif.UISWTInstance;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagFeatureProperties;
-import com.biglybt.core.tag.TagManagerFactory;
-import com.biglybt.core.tag.TagType;
-import com.biglybt.core.tag.TagUtils;
-import com.biglybt.core.tag.TagWrapper;
+import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tracker.AllTrackersManager;
-import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
-import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
-import com.biglybt.core.tracker.AllTrackersManager.AllTrackersListener;
-import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
-import com.biglybt.pif.ui.tables.TableColumn;
-import com.biglybt.pif.ui.tables.TableColumnCreationListener;
-import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.core.tracker.AllTrackersManager.*;
+import com.biglybt.core.util.*;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.columns.alltrackers.*;
+import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
+import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import com.biglybt.ui.swt.views.MyTorrentsSubView;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.RegExUtil;
-import com.biglybt.core.util.TorrentUtils;
-import com.biglybt.core.util.TrackersUtil;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.SimpleTextEntryWindow;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
-import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
+
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 
 
 public class SBC_AllTrackersView
@@ -93,6 +73,7 @@ public class SBC_AllTrackersView
 {
 
 	private static final String TABLE_NAME = "AllTrackersView";
+	private static final Class<AllTrackersViewEntry> PLUGIN_DS_TYPE = AllTrackersViewEntry.class;
 
 	TableViewSWT<AllTrackersViewEntry> tv;
 
@@ -103,8 +84,6 @@ public class SBC_AllTrackersView
 	private boolean columnsAdded = false;
 
 	private boolean listener_added;
-
-	private boolean registeredCoreSubViews;
 
 	private Object datasource;
 
@@ -349,20 +328,12 @@ public class SBC_AllTrackersView
 	initTable(
 		Composite control )
 	{
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		
-		if ( uiFunctions != null ){
-			
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
+		registerPluginViews();
 
-			registerPluginViews( pluginUI );
-		}
-		
 		if ( tv == null ){
 
-			tv = TableViewFactory.createTableViewSWT(
-					AllTrackersViewEntry.class, TABLE_NAME, TABLE_NAME,
-					new TableColumnCore[0],
+			tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE, TABLE_NAME,
+					TABLE_NAME, new TableColumnCore[0],
 					ColumnAllTrackersTracker.COLUMN_ID,
 					SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
@@ -372,8 +343,6 @@ public class SBC_AllTrackersView
 			}
 
 			tv.setRowDefaultHeightEM(1);
-
-			tv.setEnableTabViews(true, true, null);
 
 			table_parent = new Composite(control, SWT.BORDER);
 
@@ -416,36 +385,16 @@ public class SBC_AllTrackersView
 		control.layout( true );
 	}
 
-	private void registerPluginViews(final UISWTInstance pluginUI) {
-		if (registeredCoreSubViews) {
+	private static void registerPluginViews() {
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		if (vm.areCoreViewsRegistered(PLUGIN_DS_TYPE)) {
 			return;
 		}
 
-		pluginUI.addView( TABLE_NAME, "MyTorrentsSubView", MyTorrentsSubView.class, null) ;
+		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
+			MyTorrentsSubView.MSGID_PREFIX, null, MyTorrentsSubView.class));
 
-		registeredCoreSubViews = true;
-
-		final UIManager uiManager = PluginInitializer.getDefaultInterface().getUIManager();
-		uiManager.addUIListener(new UIManagerListener() {
-
-			@Override
-			public void UIAttached(UIInstance instance) {
-
-			}
-
-			@Override
-			public void UIDetached(UIInstance instance) {
-				if (!(instance instanceof UISWTInstance)) {
-					return;
-				}
-
-				registeredCoreSubViews = false;
-			
-				pluginUI.removeViews(TABLE_NAME, "MyTorrentsSubView");
-				uiManager.removeUIListener(this);
-			}
-		});
-
+		vm.setCoreViewsRegistered(PLUGIN_DS_TYPE);
 	}
 	
 	private Tag

@@ -23,9 +23,6 @@ package com.biglybt.plugin.net.netstatus.swt;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreRunningListener;
-import com.biglybt.plugin.net.netstatus.NetStatusPluginViewInterface;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
@@ -35,11 +32,15 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
-import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.plugin.net.netstatus.NetStatusPlugin;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
@@ -50,15 +51,13 @@ import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
 
-import com.biglybt.core.proxy.AEProxyFactory;
-import com.biglybt.plugin.net.netstatus.NetStatusPlugin;
+import com.biglybt.pif.ui.UIInstance;
 
 public class
 NetStatusPluginView
-	implements UISWTViewEventListener, NetStatusPluginViewInterface
+	implements UISWTViewEventListener
 {
 	private NetStatusPlugin	plugin;
-	private final String VIEW_ID;
 
 	private boolean		created = false;
 
@@ -78,16 +77,12 @@ NetStatusPluginView
 
 	private int	log_type	= LOG_NORMAL;
 
-	public
-	NetStatusPluginView(
-		NetStatusPlugin	_plugin,
-		UIInstance		_ui,
-		String			VIEW_ID )
-	{
-		plugin	= _plugin;
-		this.VIEW_ID = VIEW_ID;
-
-		((UISWTInstance)_ui).addView( UISWTInstance.VIEW_MAIN, VIEW_ID, this );
+	/** Called via reflection from {@link NetStatusPlugin} */
+	@SuppressWarnings("unused")
+	public static void initSWTUI(UIInstance _ui) {
+		UISWTInstance ui = (UISWTInstance) _ui;
+		ui.registerView(UISWTInstance.VIEW_MAIN, ui.createViewBuilder(
+				NetStatusPlugin.VIEW_ID, NetStatusPluginView.class));
 	}
 
 	@Override
@@ -98,6 +93,7 @@ NetStatusPluginView
 		switch( event.getType() ){
 
 			case UISWTViewEvent.TYPE_CREATE:{
+				plugin = (NetStatusPlugin) event.getView().getPluginInterface().getPlugin();
 
 				if ( created ){
 
@@ -621,10 +617,5 @@ NetStatusPluginView
 		cancelTest();
 
 		composite = null;
-	}
-
-	@Override
-	public void detach(UIInstance ui) {
-		((UISWTInstance)ui).removeViews(UISWTInstance.VIEW_MAIN, VIEW_ID);
 	}
 }

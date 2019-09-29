@@ -151,8 +151,7 @@ public class TableViewPainted
 
 	private TableRowPainted focusedRow;
 
-	private boolean 	enableTabViews;
-	private String[]	tabViewRestriction;
+	private boolean 	enableTabViews = true;
 	private boolean 	tabViewsExpandedByDefault = true;
 
 	protected boolean isDragging;
@@ -181,6 +180,7 @@ public class TableViewPainted
 
 	private DragSource dragSource;
 	private DropTarget dropTarget;
+	private boolean destroying;
 
 	private class
 	RefreshTableRunnable
@@ -794,7 +794,7 @@ public class TableViewPainted
 	 */
 	@Override
 	public boolean isDisposed() {
-		return cTable == null || cTable.isDisposed();
+		return destroying || cTable == null || cTable.isDisposed();
 	}
 
 	@Override 
@@ -850,26 +850,14 @@ public class TableViewPainted
 		if (diff > 0) {
 			//debug("refreshTable took " + diff);
 		}
-
-		if (tvTabsCommon != null) {
-			Utils.execSWTThread(new SWTRunnable() {
-				@Override
-				public void runWithDisplay(Display display) {
-					if (tvTabsCommon != null) {
-						tvTabsCommon.swt_refresh();
-					}
-				}
-			});
-		}
 	}
 
 	/* (non-Javadoc)
 	 * @see TableView#setEnableTabViews(boolean)
 	 */
 	@Override
-	public void setEnableTabViews(boolean enableTabViews, boolean expandByDefault, String[] restrictedToIDs  ){
+	public void setEnableTabViews(boolean enableTabViews, boolean expandByDefault){
 		this.enableTabViews = enableTabViews;
-		tabViewRestriction = restrictedToIDs;
 		tabViewsExpandedByDefault = expandByDefault;
 	}
 
@@ -878,10 +866,6 @@ public class TableViewPainted
 		return enableTabViews;
 	}
 
-	@Override
-	public String[] getTabViewsRestrictedTo() {
-		return( tabViewRestriction );
-	}
 	@Override
 	public boolean
 	getTabViewsExpandedByDefault()
@@ -1309,7 +1293,9 @@ public class TableViewPainted
 		mainComposite.setData("ObfuscateImage", this);
 		Composite cTableComposite = tvTabsCommon.tableComposite;
 
-		cTableComposite.setLayout(new FormLayout());
+		GridLayout tableLayout = new GridLayout(1, false);
+		tableLayout.marginHeight = tableLayout.marginWidth = tableLayout.verticalSpacing = tableLayout.horizontalSpacing = 0;
+		cTableComposite.setLayout(tableLayout);
 		Layout layout = parent.getLayout();
 		if (layout instanceof FormLayout) {
 			FormData fd = Utils.getFilledFormData();
@@ -1317,8 +1303,10 @@ public class TableViewPainted
 		}
 
 		Canvas cHeaderArea = new Canvas(cTableComposite, SWT.DOUBLE_BUFFERED);
+		cHeaderArea.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
 		cTable = new Canvas(cTableComposite, SWT.NO_BACKGROUND | SWT.H_SCROLL | SWT.V_SCROLL);
+		cTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		int minRowHeight = FontUtils.getFontHeightInPX(cTable.getFont());
 		if (iHeightEM > 0) {
@@ -1334,10 +1322,6 @@ public class TableViewPainted
 		}
 
 		cTable.setBackground(Colors.getSystemColor(parent.getDisplay(), SWT.COLOR_LIST_BACKGROUND));
-
-		FormData fd = Utils.getFilledFormData();
-		fd.top = new FormAttachment(cHeaderArea);
-		cTable.setLayoutData(fd);
 
 		clientArea = cTable.getClientArea();
 
@@ -2847,6 +2831,7 @@ public class TableViewPainted
 
 	@Override
 	public void delete() {
+		destroying = true;
 		triggerLifeCycleListener(TableLifeCycleListener.EVENT_TABLELIFECYCLE_DESTROYED);
 
 		if (tvTabsCommon != null) {
@@ -2887,6 +2872,7 @@ public class TableViewPainted
 		super.delete();
 
 		MessageText.removeListener(this);
+		destroying = false;
 	}
 
 	@Override

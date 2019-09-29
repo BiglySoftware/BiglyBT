@@ -20,67 +20,51 @@
 
 package com.biglybt.plugin.net.buddy.swt;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
-import com.biglybt.ui.mdi.MdiCloseListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Debug;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
-import com.biglybt.pif.ui.tables.TableColumn;
-import com.biglybt.pif.ui.tables.TableColumnCreationListener;
-import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
-import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.swt.views.table.TableViewSWT;
-import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
-import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
-
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatManagerListener;
+import com.biglybt.plugin.net.buddy.BuddyPluginUI;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
+import com.biglybt.plugin.net.buddy.swt.columns.*;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.common.table.TableColumnCore;
-import com.biglybt.ui.common.table.TableRowCore;
-import com.biglybt.ui.common.table.TableSelectionListener;
-import com.biglybt.ui.common.table.TableViewFilterCheck;
+import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MdiEntryCreationListener2;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.mdi.*;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.views.skin.InfoBarUtil;
 import com.biglybt.ui.swt.views.skin.SkinView;
-import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
-import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
-import com.biglybt.plugin.net.buddy.BuddyPluginBeta.*;
-import com.biglybt.plugin.net.buddy.swt.columns.*;
+import com.biglybt.ui.swt.views.table.TableViewSWT;
+import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
+import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
+
+import com.biglybt.pif.ui.*;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 
 /**
  * @author TuxPaper
@@ -96,8 +80,11 @@ public class SBC_ChatOverview
 
 	private static final String TABLE_CHAT = "ChatsView";
 
-	protected static final Object	MDI_KEY = new Object();
+	protected static final Object MDI_KEY = new Object();
 
+	/**
+	 * Called by {@link BuddyPluginUI#preInitialize()}
+	 */
 	public static void
 	preInitialize()
 	{
@@ -128,7 +115,7 @@ public class SBC_ChatOverview
 									MultipleDocumentInterface mdi,
 									String id,
 									Object datasource,
-									Map<?, ?> params)
+									Map params)
 								{
 									ChatInstance chat = null;
 
@@ -216,13 +203,11 @@ public class SBC_ChatOverview
 		try{
 			chat.setAutoNotify( true );
 
-			MdiEntry mdi_entry = createChatMdiEntry( chat );
-
 			MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 
 			if ( mdi != null ){
 
-				mdi.showEntry( mdi_entry );
+				mdi.showEntryByID("Chat_", chat);
 			}
 		}catch( Throwable e ){
 
@@ -310,14 +295,12 @@ public class SBC_ChatOverview
 				prev_id = "~" + it.next();
 			}
 
-			MdiEntry entry =
-				mdi.createEntryFromEventListener(
-					MultipleDocumentInterface.SIDEBAR_SECTION_CHAT,
-					new UISWTViewEventListenerHolder(
-						key,
-						ChatView.class,
-						chat, null ),
-					key, true, chat, prev_id);
+			UISWTViewBuilderCore builder = new UISWTViewBuilderCore(key, null,
+					ChatView.class);
+			builder.setParentEntryID(MultipleDocumentInterface.SIDEBAR_SECTION_CHAT);
+			builder.setInitialDatasource(chat);
+			builder.setPreferredAfterID(prev_id);
+			MdiEntry entry = mdi.createEntry(builder, true);
 
 			ChatMDIEntry entry_info = new ChatMDIEntry( chat, entry );
 
@@ -716,30 +699,17 @@ public class SBC_ChatOverview
 			handleEvent(
 				Event event )
 			{
-				MdiEntry	first_entry = null;
+				MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 
-				for ( ChatInstance chat: chats ){
+				for (int i = 0, chatsSize = chats.size(); i < chatsSize; i++) {
+					ChatInstance chat = chats.get(i);
 
-					try{
-						MdiEntry entry = createChatMdiEntry( chat.getClone());
+					try {
+						mdi.loadEntryByID("Chat_", i == 0, false, chat.getClone());
 
-						if ( first_entry == null ){
+					} catch (Throwable e) {
 
-							first_entry = entry;
-						}
-					}catch( Throwable e ){
-
-						Debug.out( e );
-					}
-				}
-
-				if ( first_entry != null ){
-
-					MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-
-					if ( mdi != null ){
-
-						mdi.showEntry(first_entry);
+						Debug.out(e);
 					}
 				}
 			}

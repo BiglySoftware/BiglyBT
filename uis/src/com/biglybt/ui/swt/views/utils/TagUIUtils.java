@@ -3586,13 +3586,11 @@ public class TagUIUtils
 		fillLayout.marginWidth = 2;
 		shell.setLayout(fillLayout);
 
-		final FilesView view = new FilesView(false);
+		final FilesView view = new FilesView();
 
 		view.setDisableWhenEmpty( false );
 
-		Set<DownloadManager>	dms = tag.getTaggedDownloads();
-
-		view.dataSourceChanged( dms.toArray());
+		view.dataSourceChanged( tag);
 
 		view.initialize(shell);
 
@@ -3613,49 +3611,10 @@ public class TagUIUtils
 
 		UIUpdaterSWT.getInstance().addUpdater(viewUpdater);
 
-		final TagListener tag_listener =
-			new TagListener() {
-
-				@Override
-				public void taggableSync(Tag tag) {
-				}
-
-				@Override
-				public void
-				taggableRemoved(
-					Tag t, Taggable tagged)
-				{
-					Set<DownloadManager>	dms = tag.getTaggedDownloads();
-
-					view.dataSourceChanged( dms.toArray());
-				}
-
-				@Override
-				public void
-				taggableAdded(
-					Tag t, Taggable tagged)
-				{
-					Set<DownloadManager>	dms = tag.getTaggedDownloads();
-
-					view.dataSourceChanged( dms.toArray());
-				}
-			};
-
-		tag.addTagListener( tag_listener, false );
-
 		shell.addDisposeListener(
-			new DisposeListener()
-			{
-				@Override
-				public void
-				widgetDisposed(
-					DisposeEvent e)
-				{
-					tag.removeTagListener( tag_listener );
-
-					UIUpdaterSWT.getInstance().removeUpdater(viewUpdater);
-					view.delete();
-				}
+			e -> {
+				UIUpdaterSWT.getInstance().removeUpdater(viewUpdater);
+				view.delete();
 			});
 
 		shell.layout(true, true);

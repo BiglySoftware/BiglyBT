@@ -33,7 +33,7 @@ import com.biglybt.pif.PluginInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.dht.DHT;
@@ -41,7 +41,7 @@ import com.biglybt.core.dht.control.DHTControlContact;
 import com.biglybt.plugin.dht.DHTPlugin;
 
 public class VivaldiView
-	implements UISWTViewCoreEventListenerEx
+	implements UISWTViewCoreEventListener
 {
   public static final int DHT_TYPE_MAIN   		= DHT.NW_AZ_MAIN;
   public static final int DHT_TYPE_CVS   	 	= DHT.NW_AZ_CVS;
@@ -69,32 +69,6 @@ public class VivaldiView
   	this(false);
   }
 
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new VivaldiView());
-	}
-	
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return(
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( VivaldiView.class );
-				}
-			});
-	}
-	
   private void init(Core core) {
     try {
       PluginInterface dht_pi = core.getPluginManager().getPluginInterfaceByClass( DHTPlugin.class );

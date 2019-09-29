@@ -532,7 +532,7 @@ BuddyPluginViewBetaChat
 
 				Utils.execSWTThread(
 					()->{
-						if ( parent.isDisposed()){
+						if (  buddy_table == null || buddy_table.isDisposed()){
 							
 							timer.cancel();
 							

@@ -18,70 +18,36 @@
 
 package com.biglybt.ui.swt.mainwindow;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.*;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 
-import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.AEMonitor;
-import com.biglybt.core.util.AERunnable;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTInstance;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.BasicPluginViewImpl;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
-import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
 
 import com.biglybt.pif.ui.menus.MenuManager;
 
 public class PluginsMenuHelper
 {
-	private static PluginsMenuHelper INSTANCE = null;
+	private final static Comparator<String>	alpha_comparator = new FormattersImpl().getAlphanumericComparator( true );
 
-	private final AEMonitor plugin_helper_mon = new AEMonitor("plugin_helper_mon");
-
-	private final Comparator<String>	alpha_comparator = new FormattersImpl().getAlphanumericComparator( true );
-
-	private final Map<String, IViewInfo> plugin_view_info_map = new TreeMap<>(alpha_comparator);
-
-	private Map<String, IViewInfo> plugin_logs_view_info_map = new TreeMap<>(alpha_comparator);
-
-	private List<PluginAddedViewListener> pluginAddedViewListener = new ArrayList<>();
-
-	private PluginsMenuHelper() {
-		//Making this private
+	public static void buildPluginLogsMenu(Menu parentMenu) {
+		createViewInfoMenuItems(parentMenu,
+				getLogViewBuilders(ViewManagerSWT.getInstance()));
 	}
 
-	public static PluginsMenuHelper getInstance() {
-		if (null == INSTANCE) {
-			INSTANCE = new PluginsMenuHelper();
-		}
-		return INSTANCE;
-	}
-
-	public static void disposeInstance() {
-		INSTANCE = null;
-	}
-
-	public void buildPluginLogsMenu(Menu parentMenu) {
-		try {
-
-			plugin_helper_mon.enter();
-
-			createViewInfoMenuItems(parentMenu, plugin_logs_view_info_map);
-
-		} finally {
-			plugin_helper_mon.exit();
-		}
-	}
-	private void
+	private static void
 	sort(
 		com.biglybt.pif.ui.menus.MenuItem[] plugin_items )
 	{
@@ -90,7 +56,7 @@ public class PluginsMenuHelper
 			(o1, o2) -> ( alpha_comparator.compare( o1.getText(), o2.getText())));
 	}
 
-	public boolean buildToolsMenu(Menu toolsMenu) {
+	public static boolean buildToolsMenu(Menu toolsMenu) {
 		MenuItemManager menuItemManager = MenuItemManager.getInstance();
 		com.biglybt.pif.ui.menus.MenuItem[] plugin_items = menuItemManager.getAllAsArray(
 			MenuManager.MENU_MENUBAR_TOOLS);
@@ -103,7 +69,7 @@ public class PluginsMenuHelper
 		return false;
 	}
 
-	public boolean buildViewMenu(Menu viewMenu, Shell parent) {
+	public static boolean buildViewMenu(Menu viewMenu) {
 
 		int itemCount = viewMenu.getItemCount();
 		MenuItemManager menuItemManager = MenuItemManager.getInstance();
@@ -116,37 +82,26 @@ public class PluginsMenuHelper
 					true, MenuBuildUtils.BASIC_MENU_ITEM_CONTROLLER);
 		}
 
-		try {
-
-			plugin_helper_mon.enter();
-
-			if ( plugin_items.length > 0 && plugin_view_info_map.size() > 0 ){
-				new MenuItem( viewMenu, SWT.SEPARATOR );
-			}
-			createViewInfoMenuItems(viewMenu, plugin_view_info_map);
-
-		} finally {
-			plugin_helper_mon.exit();
+		List<UISWTViewBuilderCore> mainViewBuilders = getMainViewBuilder(
+				ViewManagerSWT.getInstance());
+		if ( plugin_items.length > 0 && mainViewBuilders.size() > 0 ){
+			new MenuItem( viewMenu, SWT.SEPARATOR );
 		}
-
+		createViewInfoMenuItems(viewMenu, mainViewBuilders);
 
 		return viewMenu.getItemCount() > itemCount;
 	}
 
-	public void buildPluginMenu(Menu pluginMenu, boolean showPluginViews) {
+	public static void buildPluginMenu(Menu pluginMenu, boolean showPluginViews) {
 
-		try {
+		if (showPluginViews) {
+			ViewManagerSWT vi = ViewManagerSWT.getInstance();
+			List<UISWTViewBuilderCore> mainViewBuilders = getMainViewBuilder(vi);
+			createViewInfoMenuItems(pluginMenu, mainViewBuilders);
 
-			plugin_helper_mon.enter();
-			if (showPluginViews) {
-				createViewInfoMenuItems(pluginMenu, plugin_view_info_map);
-
-				MenuItem menu_plugin_logViews = MenuFactory.addLogsViewMenuItem(pluginMenu);
-				createViewInfoMenuItems(menu_plugin_logViews.getMenu(),
-					plugin_logs_view_info_map);
-			}
-		} finally {
-			plugin_helper_mon.exit();
+			MenuItem menu_plugin_logViews = MenuFactory.addLogsViewMenuItem(pluginMenu);
+			List<UISWTViewBuilderCore> logViewBuilders = getLogViewBuilders(vi);
+			createViewInfoMenuItems(menu_plugin_logViews.getMenu(),	logViewBuilders);
 		}
 
 		if (showPluginViews) {
@@ -173,103 +128,27 @@ public class PluginsMenuHelper
 			
 			MenuFactory.addSeparatorMenuItem(pluginMenu);
 			
-			try{
+			MenuItem menu_plugin_logViews = MenuFactory.addLogsViewMenuItem(pluginMenu);
 
-				plugin_helper_mon.enter();
-				
-				MenuItem menu_plugin_logViews = MenuFactory.addLogsViewMenuItem(pluginMenu);
-				
-				createViewInfoMenuItems(menu_plugin_logViews.getMenu(),	plugin_logs_view_info_map);
-				
-			} finally {
-				plugin_helper_mon.exit();
-			}
+			List<UISWTViewBuilderCore> logViewBuilders = getLogViewBuilders(
+				ViewManagerSWT.getInstance());
+			createViewInfoMenuItems(menu_plugin_logViews.getMenu(), logViewBuilders);
 		}
 	}
 
-	public void addPluginView(String sViewID, UISWTViewEventListener l) {
-		IViewInfo view_info = new IViewInfo();
-		view_info.viewID = sViewID;
-		view_info.event_listener = l;
-
-		String name = null;
-
-		String sResourceID = UISWTViewImpl.CFG_PREFIX + sViewID + ".title";
-		boolean bResourceExists = MessageText.keyExists(sResourceID);
-		if (!bResourceExists) {
-			if (l instanceof UISWTViewEventListenerHolder) {
-				name = ((UISWTViewEventListenerHolder) l).getPluginInterface().getPluginconfig().getPluginStringParameter(
-						sResourceID, null);
-			}
-		}
-
-		if (bResourceExists) {
-			name = MessageText.getString(sResourceID);
-		} else if (name == null) {
-			// try plain resource
-			sResourceID = sViewID;
-			bResourceExists = MessageText.keyExists(sResourceID);
-
-			if (bResourceExists) {
-				name = MessageText.getString(sResourceID);
-			} else {
-				name = sViewID.replace('.', ' '); // support old plugins
-			}
-		}
-
-		view_info.name = name;
-
-		Map<String, IViewInfo> map_to_use;
-
-		if ( 	( l instanceof BasicPluginViewImpl ) ||
-				(	( l instanceof UISWTViewEventListenerHolder )) && ((UISWTViewEventListenerHolder)l).isLogView()){
-
-			map_to_use = plugin_logs_view_info_map;
-
-		}else{
-			map_to_use = plugin_view_info_map;
-		}
-
-		try {
-			plugin_helper_mon.enter();
-			map_to_use.put(name, view_info);
-		} finally {
-			plugin_helper_mon.exit();
-		}
-		triggerPluginAddedViewListeners(view_info);
+	private static List<UISWTViewBuilderCore> getMainViewBuilder(
+			ViewManagerSWT vi) {
+		List<UISWTViewBuilderCore> mainViewBuilders = vi.getBuilders(
+				UISWTInstance.VIEW_MAIN);
+		mainViewBuilders.removeIf(
+				builder -> builder.isListenerOfClass(BasicPluginViewImpl.class));
+		return mainViewBuilders;
 	}
-
-	private void removePluginViewsWithID(String sViewID, Map map) {
-		if (sViewID == null) {
-			return;
-		}
-		Iterator itr = map.values().iterator();
-		IViewInfo view_info = null;
-		while (itr.hasNext()) {
-			view_info = (IViewInfo) itr.next();
-			if (sViewID.equals(view_info.viewID)) {
-				itr.remove();
-			}
-		}
-	}
-
-	public void removePluginViews(final String sViewID) {
-		try {
-			plugin_helper_mon.enter();
-			removePluginViewsWithID(sViewID, plugin_view_info_map);
-			removePluginViewsWithID(sViewID, plugin_logs_view_info_map);
-		} finally {
-			plugin_helper_mon.exit();
-		}
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-				if (uiFunctions != null) {
-					uiFunctions.closePluginViews(sViewID);
-				}
-			}
-		});
+	
+	private static List<UISWTViewBuilderCore> getLogViewBuilders(
+			ViewManagerSWT vi) {
+		return vi.getBuildersOfClass(UISWTInstance.VIEW_MAIN,
+				BasicPluginViewImpl.class);
 	}
 
 	/**
@@ -277,109 +156,23 @@ public class PluginsMenuHelper
 	 * @param locales
 	 * @param parent
 	 */
-
-	private void createViewInfoMenuItem(Menu parent, final IViewInfo info) {
+	private static void createViewInfoMenuItem(Menu parent,
+			UISWTViewBuilderCore builder) {
 		MenuItem item = new MenuItem(parent, SWT.NULL);
-		item.setText(info.name);
-		if (info.viewID != null) {
-			item.setData("ViewID", info.viewID);
-		}
-		item.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-				if (uiFunctions != null) {
-					info.openView(uiFunctions);
-				}
+		item.setText(builder.getInitialTitle());
+		item.setData("ViewID", builder.getViewID());
+		item.addListener(SWT.Selection, e -> {
+			UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
+			if (uiFunctions != null) {
+				uiFunctions.openPluginView(builder, true);
 			}
 		});
 	}
 
-	private void createViewInfoMenuItems(Menu parent, Map menu_data) {
-		Iterator itr = menu_data.values().iterator();
-		while (itr.hasNext()) {
-			createViewInfoMenuItem(parent, (IViewInfo) itr.next());
+	private static void createViewInfoMenuItems(Menu parent,
+			List<UISWTViewBuilderCore> list) {
+		for (UISWTViewBuilderCore builder : list) {
+			createViewInfoMenuItem(parent, builder);
 		}
-	}
-
-	public IViewInfo[] getPluginViewsInfo() {
-		return plugin_view_info_map.values().toArray(new IViewInfo[0]);
-	}
-
-	public IViewInfo[] getPluginLogViewsInfo() {
-		return plugin_logs_view_info_map.values().toArray(new IViewInfo[0]);
-	}
-
-	public static class IViewInfo
-	{
-		public String name;
-
-		public String viewID;
-
-		public UISWTViewEventListener event_listener;
-
-		public void openView(UIFunctionsSWT uiFunctions) {
-			if (event_listener != null) {
-				uiFunctions.openPluginView(UISWTInstance.VIEW_MAIN, viewID,
-						event_listener, null, true);
-			}
-		}
-
-	}
-
-	public void addPluginAddedViewListener(PluginAddedViewListener l) {
-		pluginAddedViewListener.add(l);
-
-		IViewInfo[] viewsInfo = getPluginViewsInfo();
-		for (IViewInfo info : viewsInfo) {
-			l.pluginViewAdded(info);
-		}
-		viewsInfo = getPluginLogViewsInfo();
-		for (IViewInfo info : viewsInfo) {
-			l.pluginViewAdded(info);
-		}
-	}
-
-	public void triggerPluginAddedViewListeners(final IViewInfo viewInfo) {
-		final Object[] listeners = pluginAddedViewListener.toArray();
-		if (pluginAddedViewListener.size() > 0) {
-			Utils.execSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-					for (int i = 0; i < listeners.length; i++) {
-						PluginAddedViewListener l = (PluginAddedViewListener) listeners[i];
-						l.pluginViewAdded(viewInfo);
-					}
-				}
-			});
-		}
-	}
-
-	public static interface PluginAddedViewListener {
-		public void pluginViewAdded(IViewInfo viewInfo);
-	}
-
-	public IViewInfo findIViewInfo(UISWTViewEventListener l) {
-		IViewInfo foundViewInfo = null;
-
-		IViewInfo[] pluginViewsInfo = getPluginViewsInfo();
-		for (int i = 0; i < pluginViewsInfo.length; i++) {
-			IViewInfo viewInfo = pluginViewsInfo[i];
-			if (viewInfo.event_listener == l) {
-				foundViewInfo = viewInfo;
-				break;
-			}
-		}
-		if (foundViewInfo == null) {
-			pluginViewsInfo = getPluginLogViewsInfo();
-			for (int i = 0; i < pluginViewsInfo.length; i++) {
-				IViewInfo viewInfo = pluginViewsInfo[i];
-				if (viewInfo.event_listener == l) {
-					foundViewInfo = viewInfo;
-					break;
-				}
-			}
-		}
-		return foundViewInfo;
 	}
 }

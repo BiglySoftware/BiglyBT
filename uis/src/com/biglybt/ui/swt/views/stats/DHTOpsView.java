@@ -32,14 +32,14 @@ import com.biglybt.pif.PluginInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.dht.DHT;
 import com.biglybt.plugin.dht.DHTPlugin;
 
 public class DHTOpsView
-	implements UISWTViewCoreEventListenerEx
+	implements UISWTViewCoreEventListener
 {
 	public static final int DHT_TYPE_MAIN   = DHT.NW_AZ_MAIN;
 
@@ -59,32 +59,6 @@ public class DHTOpsView
 		this(false);
 	}
 
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new DHTOpsView());
-	}
-	
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return(
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( DHTOpsView.class );
-				}
-			});
-	}
-	
 	public DHTOpsView(boolean autoAlpha) {
 		this( autoAlpha, true );
 	}

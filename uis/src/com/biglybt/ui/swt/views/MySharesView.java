@@ -57,7 +57,7 @@ import com.biglybt.ui.mdi.MdiEntryDropListener;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.sharing.ShareUtils;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -90,7 +90,7 @@ extends TableViewTab<ShareResource>
 implements ShareManagerListener,
 		TableLifeCycleListener, TableViewSWTMenuFillListener,
         TableRefreshListener, TableSelectionListener, ViewTitleInfo2,
-		UIPluginViewToolBarListener, UISWTViewCoreEventListenerEx
+		UIPluginViewToolBarListener, UISWTViewCoreEventListener
 {
 	private static final TableColumnCore[] basicItems = {
 			new NameItem(),
@@ -135,38 +135,6 @@ implements ShareManagerListener,
 		tv.addSelectionListener(this, false);
 	}
 
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new MySharesView());
-	}
-	
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( MySharesView.class );
-				}
-				
-				public List<Object>
-				getParameters()
-				{
-					return( null );
-				}
-			});
-	}
-	
 	@Override
 	public TableViewSWT initYourTableView() {
   	return tv;

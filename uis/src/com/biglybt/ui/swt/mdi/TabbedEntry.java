@@ -23,21 +23,18 @@ import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
+import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Cursor;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
-import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
-import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntryVitalityImage;
 import com.biglybt.ui.swt.Utils;
@@ -45,297 +42,42 @@ import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.debug.ObfuscateTab;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.mainwindow.SWTThread;
-import com.biglybt.ui.swt.pif.UISWTView;
-import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pif.UISWTViewEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventCancelledException;
-import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
-import com.biglybt.ui.swt.skin.SWTSkin;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
-import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
-import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
-import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
+import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.pifimpl.*;
+import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.SWTRunnable;
-import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
-import com.biglybt.ui.swt.views.stats.StatsView;
+import com.biglybt.ui.swt.views.skin.SkinnedDialog;
+import com.biglybt.util.DataSourceUtils;
 import com.biglybt.util.MapUtils;
 
 /**
  * MDI Entry that is a {@link CTabItem} and belongs wo {@link TabbedMDI}
- * <p>
- * TODO: VitalityImages
  */
 public class TabbedEntry
 	extends BaseMdiEntry implements DisposeListener
 {
-	private static final String SO_ID_ENTRY_WRAPPER = "mdi.content.item";
-
 	private CTabItem swtItem;
 
 	private boolean showonSWTItemSet;
 
 	private boolean buildonSWTItemSet;
 
-	private static long uniqueNumber = 0;
+	private MdiEntryVitalityImageSWT viPopout;
 
-	private Boolean	closeWasUserInitiated;
-	
-	public TabbedEntry(TabbedMDI mdi, SWTSkin skin, String id, String parentViewID) {
-		super(mdi, id, parentViewID);
+	public TabbedEntry(TabbedMDI mdi, SWTSkin skin, String id) {
+		super(mdi, id);
 		this.skin = skin;
 	}
 
-	public SWTSkinObjectContainer
-	buildStandAlone(
-		SWTSkinObjectContainer		soParent )
-	{
-		return(
-				buildStandAlone(
-						soParent,
-						getSkinRef(),
-						skin,
-						getParentID(),
-						id,
-						getDatasourceCore(),
-						getControlType(),
-						swtItem,
-						getEventListener(),
-						false ));
-	}
-	
-	public static SWTSkinObjectContainer
-	buildStandAlone(
-		SWTSkinObjectContainer		soParent,
-		String						skinRef,
-		SWTSkin						skin,
-		String						parentID,
-		String						id,
-		Object						datasource,
-		int							controlType,
-		CTabItem					swtItem,
-		UISWTViewEventListener		original_event_listener,
-		boolean						listener_is_new )
-	{
-		Control control = null;
-
-		//SWTSkin skin = soParent.getSkin();
-
-		Composite parent = soParent.getComposite();
-
-		if ( skinRef != null ){
-
-			Shell shell = parent.getShell();
-			Cursor cursor = shell.getCursor();
-			try {
-				shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
-
-				// wrap skinRef with a container that we control visibility of
-				// (invisible by default)
-				SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
-						"MdiContents." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
-						soParent, null);
-
-				SWTSkinObject skinObject = skin.createSkinObject(id, skinRef,
-						soContents, datasource );
-
-				control = skinObject.getControl();
-				control.setLayoutData(Utils.getFilledFormData());
-				control.getParent().layout(true, true);
-
-				soContents.setVisible( true );
-
-				return( soContents );
-
-			} finally {
-				shell.setCursor(cursor);
-			}
-		} else {
-			// XXX: This needs to be merged into BaseMDIEntry.initialize
-
-			if ( 	( original_event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)original_event_listener).isCloneable()) ||
-					( original_event_listener instanceof UISWTViewEventListenerEx )){
-
-				final UISWTViewImpl view = new UISWTViewImpl( id, parentID, true );
-
-				final UISWTViewEventListener event_listener = listener_is_new?original_event_listener:original_event_listener instanceof UISWTViewEventListenerEx?((UISWTViewEventListenerEx)original_event_listener).getClone():((UISWTViewCoreEventListenerEx)original_event_listener).getClone();
-				
-				try{
-					view.setEventListener( event_listener, false);
-
-				}catch( Throwable e ){
-					// shouldn't happen as we aren't asking for 'create' to occur which means it can't fail
-					Debug.out( e );
-				}
-
-				view.setDatasource( datasource );
-
-				try {
-					SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
-							"MdiIView." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
-							soParent );
-
-					parent.setBackgroundMode(SWT.INHERIT_NONE);
-
-					final Composite viewComposite = soContents.getComposite();
-					boolean doGridLayout = true;
-					if (controlType == CONTROLTYPE_SKINOBJECT) {
-						doGridLayout = false;
-					}
-					//					viewComposite.setBackground(parent.getDisplay().getSystemColor(
-					//							SWT.COLOR_WIDGET_BACKGROUND));
-					//					viewComposite.setForeground(parent.getDisplay().getSystemColor(
-					//							SWT.COLOR_WIDGET_FOREGROUND));
-					if (doGridLayout) {
-						GridLayout gridLayout = new GridLayout();
-						gridLayout.horizontalSpacing = gridLayout.verticalSpacing = gridLayout.marginHeight = gridLayout.marginWidth = 0;
-						viewComposite.setLayout(gridLayout);
-						viewComposite.setLayoutData(Utils.getFilledFormData());
-					}
-
-					view.setPluginSkinObject(soContents);
-					view.initialize(viewComposite);
-
-					// without this some views get messed up layouts (chat view for example)
-					
-					viewComposite.setData( Utils.RELAYOUT_UP_STOP_HERE, true );
-
-					soContents.addListener(
-						new SWTSkinObjectListener(){
-							
-							@Override
-							public Object eventOccured(SWTSkinObject skinObject, int eventType, Object params){
-								if ( eventType == SWTSkinObjectListener.EVENT_OBFUSCATE ){
-									Map data = new HashMap();
-									data.put( "image", (Image)params );
-									data.put( "obfuscateTitle",false );
-									
-									view.triggerEvent(UISWTViewEvent.TYPE_OBFUSCATE, data);
-								}
-								return null;
-							}
-						});
-					
-					//swtItem.setText(view.getFullTitle());
-
-					Composite iviewComposite = view.getComposite();
-					control = iviewComposite;
-					// force layout data of IView's composite to GridData, since we set
-					// the parent to GridLayout (most plugins use grid, so we stick with
-					// that instead of form)
-					if (doGridLayout) {
-						Object existingLayoutData = iviewComposite.getLayoutData();
-						Object existingParentLayoutData = iviewComposite.getParent().getLayoutData();
-						if (existingLayoutData == null
-								|| !(existingLayoutData instanceof GridData)
-								&& (existingParentLayoutData instanceof GridLayout)) {
-							GridData gridData = new GridData(GridData.FILL_BOTH);
-							iviewComposite.setLayoutData(gridData);
-						}
-					}
-
-					parent.layout(true, true);
-
-					final UIUpdater updater = UIUpdaterSWT.getInstance();
-					if (updater != null) {
-						updater.addUpdater(
-								new UIUpdatable() {
-
-									@Override
-									public void updateUI() {
-										if (viewComposite.isDisposed()) {
-											updater.removeUpdater(this);
-										} else {
-											view.triggerEvent(UISWTViewEvent.TYPE_REFRESH, null);
-										}
-									}
-
-									@Override
-									public String getUpdateUIName() {
-										return ("popout");
-									}
-								});
-						
-						if ( event_listener instanceof IViewRequiresPeriodicUpdates ){
-							
-							updater.addPeriodicUpdater(
-									new UIUpdatable() {
-
-										@Override
-										public void updateUI() {
-											if (viewComposite.isDisposed()) {
-												updater.removePeriodicUpdater(this);
-											} else {
-												event_listener.eventOccurred(
-													new UISWTViewEvent() {										
-														@Override
-														public UISWTView getView() {
-															return null;
-														}
-														
-														@Override
-														public int getType() {
-															return( StatsView.EVENT_PERIODIC_UPDATE );
-														}										
-														@Override
-														public Object getData() {
-														
-															return null;
-														}
-													});
-											}
-										}
-
-										@Override
-										public String getUpdateUIName() {
-											return ("popout");
-										}
-									});
-						}
-					}
-
-					soContents.setVisible( true );
-
-					view.triggerEvent(UISWTViewEvent.TYPE_FOCUSGAINED, null);
-
-					iviewComposite.addDisposeListener(
-							new DisposeListener(){
-								
-								@Override
-								public void widgetDisposed(DisposeEvent arg0){
-									view.triggerEvent(UISWTViewEvent.TYPE_DESTROY, null);
-								}
-							});
-					
-					return( soContents );
-
-				} catch (Throwable e) {
-
-					Debug.out(e);
-				}
-			}
-		}
-
-		return( null );
-	}
-
-
-	/* (non-Javadoc)
-	 * @note SideBarEntrySWT is neary identical to this one.  Please keep them
-	 *       in sync until commonalities are placed in BaseMdiEntry
-	 */
 	@Override
 	public void build() {
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				swt_build();
-				TabbedEntry.super.build();
-			}
-		});
+		Utils.execSWTThread(this::swt_build);
 	}
 
+	/**
+	 * @implNote SideBarEntrySWT is neary identical to this one.  Please keep them
+	 *       in sync until commonalities are placed in BaseMdiEntry
+	 */
 	public boolean swt_build() {
 		if (swtItem == null) {
 			buildonSWTItemSet = true;
@@ -344,19 +86,22 @@ public class TabbedEntry
 		buildonSWTItemSet = false;
 
 		Control control = swtItem.getControl();
-		if (control == null || control.isDisposed()) {
-			Composite parent = swtItem.getParent();
-			if ( parent.isDisposed()) {
-				return false;
-			}
-			SWTSkinObject soParent = (SWTSkinObject) parent.getData("SkinObject");
+		if (control != null && !control.isDisposed()) {
+			return true;
+		}
 
-			String skinRef = getSkinRef();
-			if (skinRef != null) {
-				Shell shell = parent.getShell();
-				Cursor cursor = shell.getCursor();
-				try {
-					shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
+		Composite parent = swtItem.getParent();
+		if (parent == null || parent.isDisposed()) {
+			return false;
+		}
+		SWTSkinObject soParent = (SWTSkinObject) parent.getData("SkinObject");
+
+		String skinRef = getSkinRef();
+		if (skinRef != null) {
+			Shell shell = parent.getShell();
+			Cursor cursor = shell.getCursor();
+			try {
+				shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
 
 //					SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
 //							"MdiContents." + uniqueNumber++, "mdi.content.item",
@@ -364,108 +109,106 @@ public class TabbedEntry
 //					skin.addSkinObject(soContents);
 
 
-					SWTSkinObject skinObject = skin.createSkinObject(id, skinRef,
-							soParent, getDatasourceCore());
+				SWTSkinObject skinObject = skin.createSkinObject(id, skinRef,
+						soParent, getDatasourceCore());
 
-					control = skinObject.getControl();
-					control.setLayoutData(Utils.getFilledFormData());
-					control.getParent().layout(true);
-					// swtItem.setControl will set the control's visibility based on
-					// whether the control is selected.  To ensure it doesn't set
-					// our control invisible, set selection now
-					CTabItem oldSelection = swtItem.getParent().getSelection();
-					swtItem.getParent().setSelection(swtItem);
-					swtItem.setControl(control);
-					if (oldSelection != null) {
-						swtItem.getParent().setSelection(oldSelection);
-					}
-					setPluginSkinObject(skinObject);
-					setSkinObjectMaster(skinObject);
-
-
-					initialize((Composite) control);
-				} finally {
-					shell.setCursor(cursor);
+				control = skinObject.getControl();
+				control.setLayoutData(Utils.getFilledFormData());
+				control.getParent().layout(true);
+				// swtItem.setControl will set the control's visibility based on
+				// whether the control is selected.  To ensure it doesn't set
+				// our control invisible, set selection now
+				CTabItem oldSelection = swtItem.getParent().getSelection();
+				swtItem.getParent().setSelection(swtItem);
+				swtItem.setControl(control);
+				if (oldSelection != null) {
+					swtItem.getParent().setSelection(oldSelection);
 				}
-			} else {
-				// XXX: This needs to be merged into BaseMDIEntry.initialize
+				setPluginSkinObject(skinObject);
+				setSkinObjectMaster(skinObject);
+
+
+				initialize((Composite) control);
+			} finally {
+				shell.setCursor(cursor);
+			}
+		} else {
+			// XXX: This needs to be merged into BaseMDIEntry.initialize
+			try {
+				SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
+						"MdiIView." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
+						soParent);
+
+				parent.setBackgroundMode(SWT.INHERIT_NONE);
+
+				Composite viewComposite = soContents.getComposite();
+
+				boolean doGridLayout = true;
+				if (getControlType() == CONTROLTYPE_SKINOBJECT) {
+					doGridLayout = false;
+				}
+				if (doGridLayout) {
+				  GridLayout gridLayout = new GridLayout();
+				  gridLayout.horizontalSpacing = gridLayout.verticalSpacing = gridLayout.marginHeight = gridLayout.marginWidth = 0;
+				  viewComposite.setLayout(gridLayout);
+				  viewComposite.setLayoutData(Utils.getFilledFormData());
+				}
+
+				setPluginSkinObject(soContents);
+
+				initialize(viewComposite);
+
+				Composite iviewComposite = getComposite();
+				control = iviewComposite;
+				if (doGridLayout) {
+					Object existingLayoutData = iviewComposite.getLayoutData();
+					Object existingParentLayoutData = iviewComposite.getParent().getLayoutData();
+					if (existingLayoutData == null
+							|| !(existingLayoutData instanceof GridData)
+							&& (existingParentLayoutData instanceof GridLayout)) {
+						GridData gridData = new GridData(GridData.FILL_BOTH);
+						iviewComposite.setLayoutData(gridData);
+					}
+				}
+
+				CTabItem oldSelection = swtItem.getParent().getSelection();
+				swtItem.getParent().setSelection(swtItem);
+				swtItem.setControl(viewComposite);
+				if (oldSelection != null) {
+					swtItem.getParent().setSelection(oldSelection);
+				}
+				setSkinObjectMaster(soContents);
+			} catch (Exception e) {
+				Debug.out("Error creating sidebar content area for " + id, e);
 				try {
-					SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
-							"MdiIView." + uniqueNumber++, "mdi.content.item",
-							soParent);
+					setEventListener(null, null, false);
+				} catch (UISWTViewEventCancelledException ignore) {
+				}
+				close(true);
+			}
 
-					parent.setBackgroundMode(SWT.INHERIT_NONE);
+		}
 
-					Composite viewComposite = soContents.getComposite();
-					//viewComposite.setBackground(Colors.getSystemColor(parent.getDisplay(), SWT.COLOR_WIDGET_BACKGROUND));
-					//viewComposite.setForeground(Colors.getSystemColor(parent.getDisplay(), SWT.COLOR_WIDGET_FOREGROUND));
-
-					boolean doGridLayout = true;
-					if (getControlType() == CONTROLTYPE_SKINOBJECT) {
-						doGridLayout = false;
-					}
-					if (doGridLayout) {
-  					GridLayout gridLayout = new GridLayout();
-  					gridLayout.horizontalSpacing = gridLayout.verticalSpacing = gridLayout.marginHeight = gridLayout.marginWidth = 0;
-  					viewComposite.setLayout(gridLayout);
-  					viewComposite.setLayoutData(Utils.getFilledFormData());
-					}
-
-					setPluginSkinObject(soContents);
-
-					initialize(viewComposite);
-
-					Composite iviewComposite = getComposite();
-					control = iviewComposite;
-					if (doGridLayout) {
-						Object existingLayoutData = iviewComposite.getLayoutData();
-						Object existingParentLayoutData = iviewComposite.getParent().getLayoutData();
-						if (existingLayoutData == null
-								|| !(existingLayoutData instanceof GridData)
-								&& (existingParentLayoutData instanceof GridLayout)) {
-							GridData gridData = new GridData(GridData.FILL_BOTH);
-							iviewComposite.setLayoutData(gridData);
-						}
-					}
-
-					CTabItem oldSelection = swtItem.getParent().getSelection();
-					swtItem.getParent().setSelection(swtItem);
-					swtItem.setControl(viewComposite);
-					if (oldSelection != null) {
-						swtItem.getParent().setSelection(oldSelection);
-					}
-					setSkinObjectMaster(soContents);
-				} catch (Exception e) {
-					Debug.out("Error creating sidebar content area for " + id, e);
-					try {
-						setEventListener(null, false);
-					} catch (UISWTViewEventCancelledException e1) {
-					}
+		if (control != null && !control.isDisposed()) {
+			control.setData("BaseMDIEntry", this);
+			/** XXX Removed this because we can dispose of the control and still
+			 * want the tab (ie. destroy on focus lost, rebuild on focus gain)
+			control.addDisposeListener(new DisposeListener() {
+				public void widgetDisposed(DisposeEvent e) {
 					close(true);
 				}
-
-			}
-
-			if (control != null && !control.isDisposed()) {
-				control.setData("BaseMDIEntry", this);
-				/** XXX Removed this because we can dispose of the control and still
-				 * want the tab (ie. destroy on focus lost, rebuild on focus gain)
-				control.addDisposeListener(new DisposeListener() {
-					public void widgetDisposed(DisposeEvent e) {
-						close(true);
-					}
-				});
-				*/
-			} else {
-				return false;
-			}
+			});
+			*/
+		} else {
+			return false;
 		}
 
 		return true;
 	}
 
+	@Override
 	public boolean
-	isReallyDisposed()
+	isEntryDisposed()
 	{
 		return( swtItem == null || swtItem.isDisposed());
 	}
@@ -479,12 +222,7 @@ public class TabbedEntry
 		// fixes case where two showEntries are called, the first from a non
 		// SWT thread, and the 2nd from a SWT thread.  The first one will run last
 		// showing itself
-		Utils.execSWTThreadLater(0, new SWTRunnable() {
-			@Override
-			public void runWithDisplay(Display display) {
-				swt_show();
-			}
-		});
+		Utils.execSWTThreadLater(0, this::swt_show);
 	}
 
 	private void swt_show() {
@@ -507,18 +245,16 @@ public class TabbedEntry
 		super.show();
 	}
 
-	/**
-	 * Tabs don't have Vitality Image support (yet)
-	 */
 	@Override
-	public MdiEntryVitalityImage addVitalityImage(String imageID) {
-		return null; // new SideBarVitalityImageSWT(this, imageID);
+	public MdiEntryVitalityImageSWT addVitalityImage(String imageID) {
+		MdiEntryVitalityImageSWT mdiEntryVitalityImage = super.addVitalityImage(imageID);
+		Utils.execSWTThreadLater(0, () -> getMDI().swt_refreshVitality());
+		return mdiEntryVitalityImage;
 	}
 
 	@Override
 	public boolean isCloseable() {
-		// override.. we don't support non-closeable
-		return ((TabbedMDI) getMDI()).isMainMDI ? true : super.isCloseable();
+		return getMDI().isMainMDI || super.isCloseable();
 	}
 
 	/* (non-Javadoc)
@@ -527,33 +263,83 @@ public class TabbedEntry
 	@Override
 	public void setCloseable(boolean closeable) {
 		// override.. we don't support non-closeable for main
-		if (((TabbedMDI) getMDI()).isMainMDI) {
+		if (getMDI().isMainMDI) {
 			closeable = true;
 		}
 		super.setCloseable(closeable);
-		Utils.execSWTThread(new SWTRunnable() {
-			@Override
-			public void runWithDisplay(Display display) {
-				if (swtItem == null || swtItem.isDisposed()) {
-					return;
-				}
-				swtItem.setShowClose(isCloseable());
+		Utils.execSWTThread(() -> {
+			if (swtItem == null || swtItem.isDisposed()) {
+				return;
 			}
+			swtItem.setShowClose(isCloseable());
 		});
+	}
+
+	@Override
+	public void setEventListener(UISWTViewEventListener _eventListener,
+			UISWTViewBuilderCore builder, boolean doCreate)
+			throws UISWTViewEventCancelledException {
+		super.setEventListener(_eventListener, builder, doCreate);
+		buildCommonVitalityImages();
+	}
+
+	private void buildCommonVitalityImages() {
+		boolean canBuildStandalone = canBuildStandAlone();
+
+		if (canBuildStandalone && viPopout == null) {
+			// clone-able/popout-able
+			viPopout = addVitalityImage("popout_window");
+			viPopout.setToolTip(MessageText.getString("label.pop.out"));
+			viPopout.setShowOnlyOnSelection(true);
+			viPopout.setAlwaysLast(true);
+
+			viPopout.addListener((x, y) -> {
+				// From TabbedMDI.addMenus, but there's also Sidebar.addGeneralMenus which doesn't set datasource
+				SkinnedDialog skinnedDialog = new SkinnedDialog(
+						"skin3_dlg_sidebar_popout", "shell", null, // standalone
+						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+
+				SWTSkin skin = skinnedDialog.getSkin();
+
+				SWTSkinObjectContainer cont = buildStandAlone(
+						(SWTSkinObjectContainer) skin.getSkinObject("content-area"));
+
+				if (cont != null) {
+
+					String ds_str = "";
+					Object ds = getDataSource();
+					DownloadManager dm = DataSourceUtils.getDM(ds);
+
+					if (dm != null) {
+						ds_str = dm.getDisplayName();
+					}
+
+					skinnedDialog.setTitle(
+							getTitle() + (ds_str.length() == 0 ? "" : (" - " + ds_str)));
+
+					skinnedDialog.open();
+
+				} else {
+
+					skinnedDialog.close();
+				}
+			});
+
+		} else if (viPopout != null) {
+			viPopout.setVisible(canBuildStandalone);
+		}
 	}
 
 	public void setSwtItem(CTabItem swtItem) {
 		this.swtItem = swtItem;
 		if (swtItem == null) {
-			setDisposed(true);
 			return;
 		}
-		setDisposed(false);
 
 		swtItem.addDisposeListener(this);
 		String title = getTitle();
 		if (title != null) {
-			swtItem.setText(escapeAccelerators(title));
+			swtItem.setText(Utils.escapeAccelerators(title));
 		}
 
 		updateLeftImage();
@@ -568,49 +354,33 @@ public class TabbedEntry
 		}
 	}
 
-	public Item getSwtItem() {
-		return swtItem;
-	}
-
-	/* (non-Javadoc)
-	 * @see BaseMdiEntry#setTitle(java.lang.String)
-	 */
 	@Override
-	public void setTitle(String title) {
-		super.setTitle(title);
-
-		if (swtItem != null) {
-			Utils.execSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-					if (swtItem == null || swtItem.isDisposed()) {
-						return;
-					}
-					swtItem.setText(escapeAccelerators(getTitle()));
+	protected boolean setTitleSupport(String title) {
+		boolean changed = super.setTitleSupport(title);
+		if (changed && swtItem != null) {
+			Utils.execSWTThread(() -> {
+				if (swtItem == null || swtItem.isDisposed()) {
+					return;
 				}
+				swtItem.setText(Utils.escapeAccelerators(getTitle()));
 			});
 		}
+		return changed;
 	}
 
-	/* (non-Javadoc)
-	 * @see BaseMdiEntry#getVitalityImages()
-	 */
 	@Override
-	public MdiEntryVitalityImage[] getVitalityImages() {
-		return new MdiEntryVitalityImage[0];
-	}
-	
-	public boolean 
-	close(boolean force, boolean userInitiated ) {
-		if (!super.close(force)) {
-			return false;
+	protected boolean setTitleIDSupport(String titleID) {
+		boolean changed = super.setTitleIDSupport(titleID);
+		if (changed && swtItem != null) {
+			Utils.execSWTThread(() -> {
+				if (swtItem == null || swtItem.isDisposed()) {
+					return;
+				}
+				swtItem.setText(Utils.escapeAccelerators(getTitle()));
+			});
 		}
-		
-		closeWasUserInitiated = userInitiated;
-		
-		return( close( force ));
+		return changed;
 	}
-	
 
 	/* (non-Javadoc)
 	 * @see BaseMdiEntry#close()
@@ -641,17 +411,27 @@ public class TabbedEntry
 
 	@Override
 	public void redraw() {
-		
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				if (swtItem == null || swtItem.isDisposed()) {
-					return;
-				}
-				// recalculate the size of tab (in case indicator text changed)
-				swtItem.getParent().notifyListeners(SWT.Resize, new Event());
-				// redraw indicator text
-				swtItem.getParent().redraw();
+		Utils.execSWTThread(() -> {
+			if (swtItem == null || swtItem.isDisposed()) {
+				return;
+			}
+			CTabFolder parent = swtItem.getParent();
+			if (parent == null) {
+				return;
+			}
+
+			Rectangle bounds = swtItem.getBounds();
+			GC gc = new GC(parent);
+			Point point = ((TabbedMDI_Ren) parent.getRenderer()).computeSize(parent.indexOf(swtItem), parent.getSelection() == swtItem ? SWT.SELECTED : SWT.NONE, gc, SWT.DEFAULT, SWT.DEFAULT);
+			gc.dispose();
+			if (point.x != bounds.width) {
+				// width of the tab changed (text changed or image added/removed),
+				// tell folder to recalculate tab positions by faking Resize event
+				parent.notifyListeners(SWT.Resize, new Event());
+			} else {
+				// Same size, but maybe the image got updated or text is different and 
+				// just happens to be the same size
+				parent.redraw(bounds.x, bounds.y, bounds.width, bounds.height, true);
 			}
 		});
 	}
@@ -674,15 +454,12 @@ public class TabbedEntry
 		if (swtItem == null) {
 			return;
 		}
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				if (swtItem == null || swtItem.isDisposed()) {
-					return;
-				}
-				Image image = getImageLeft(null);
-				swtItem.setImage(image);
+		Utils.execSWTThread(() -> {
+			if (swtItem == null || swtItem.isDisposed()) {
+				return;
 			}
+			Image image = getImageLeft(null);
+			swtItem.setImage(image);
 		});
 	}
 
@@ -705,8 +482,8 @@ public class TabbedEntry
 		triggerCloseListeners( user );
 
 		try {
-			setEventListener(null, false);
-		} catch (UISWTViewEventCancelledException e1) {
+			setEventListener(null, null, false);
+		} catch (UISWTViewEventCancelledException ignore) {
 		}
 
 		SWTSkinObject so = getSkinObject();
@@ -733,18 +510,6 @@ public class TabbedEntry
 		});
 	}
 
-	private String escapeAccelerators(String str) {
-		if (str == null) {
-			return (str);
-		}
-
-		return str.replaceAll("&", "&&");
-	}
-
-	@Override
-	public void expandTo() {
-	}
-
 	@Override
 	public void viewTitleInfoRefresh(ViewTitleInfo titleInfoToRefresh) {
 		super.viewTitleInfoRefresh(titleInfoToRefresh);
@@ -752,18 +517,18 @@ public class TabbedEntry
 		if (titleInfoToRefresh == null || this.viewTitleInfo != titleInfoToRefresh) {
 			return;
 		}
-		if (isDisposed()) {
+		if (isEntryDisposed()) {
 			return;
 		}
 
+		boolean changed = false;
 		String newText = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_TEXT);
 		if (newText != null) {
-			setTitle(newText);
-		} else {
-			String titleID = getTitleID();
-			if (titleID != null) {
-				setTitleID(titleID);
-			}
+			changed = setTitleSupport(newText);
+		}
+		if (!changed) {
+			// Text didn't change, but something else probably did, so repaint
+			redraw();
 		}
 	}
 
@@ -792,7 +557,7 @@ public class TabbedEntry
 
 	// @see BaseMdiEntry#setParentID(java.lang.String)
 	@Override
-	public void setParentID(String id) {
+	public void setParentEntryID(String parentEntryID) {
 		// Do not set
 	}
 
@@ -842,5 +607,26 @@ public class TabbedEntry
 		}
 
 		return image;
+	}
+
+	@Override
+	public void redraw(Rectangle hitArea) {
+		if (Utils.runIfNotSWTThread(() -> this.redraw(hitArea))) {
+			return;
+		}
+
+		if (swtItem == null || swtItem.isDisposed()) {
+			return;
+		}
+		CTabFolder parent = swtItem.getParent();
+		if (parent == null) {
+			return;
+		}
+		parent.redraw(hitArea.x, hitArea.y, hitArea.width, hitArea.height, true);
+	}
+
+	@Override
+	public TabbedMDI getMDI() {
+		return (TabbedMDI) super.getMDI();
 	}
 }

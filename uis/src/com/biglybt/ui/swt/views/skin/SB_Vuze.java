@@ -23,10 +23,7 @@ import java.util.ArrayList;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoListener;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
-import com.biglybt.ui.mdi.MdiChildCloseListener;
-import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MdiEntryLoadedListener;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.views.ViewTitleInfoBetaP;
 
 public class SB_Vuze
@@ -81,7 +78,7 @@ public class SB_Vuze
 						}
 					});
 				}
-				if (!entry.getId().equals(
+				if (!entry.getViewID().equals(
 						MultipleDocumentInterface.SIDEBAR_HEADER_VUZE)) {
 					return;
 				}
@@ -116,7 +113,7 @@ public class SB_Vuze
 				StringBuilder sb = new StringBuilder();
 				MdiEntry[] entries = entry.getMDI().getEntries();
 				for (MdiEntry subEntry : entries) {
-					if (entry.getId().equals(subEntry.getParentID())) {
+					if (entry.getViewID().equals(subEntry.getParentID())) {
 						ViewTitleInfo titleInfo = subEntry.getViewTitleInfo();
 						if (titleInfo != null) {
 							Object text = titleInfo.getTitleInfoProperty(
@@ -140,7 +137,7 @@ public class SB_Vuze
 				StringBuilder sb = new StringBuilder();
 				MdiEntry[] entries = entry.getMDI().getEntries();
 				for (MdiEntry subEntry : entries) {
-					if (entry.getId().equals(subEntry.getParentID())) {
+					if (entry.getViewID().equals(subEntry.getParentID())) {
 						ViewTitleInfo titleInfo = subEntry.getViewTitleInfo();
 						if (titleInfo != null) {
 							Object text = titleInfo.getTitleInfoProperty(
@@ -163,7 +160,7 @@ public class SB_Vuze
 				}
 				MdiEntry[] entries = entry.getMDI().getEntries();
 				for (MdiEntry subEntry : entries) {
-					if (entry.getId().equals(subEntry.getParentID())) {
+					if (entry.getViewID().equals(subEntry.getParentID())) {
 						ViewTitleInfo titleInfo = subEntry.getViewTitleInfo();
 						if (titleInfo != null) {
 							Object color = titleInfo.getTitleInfoProperty(

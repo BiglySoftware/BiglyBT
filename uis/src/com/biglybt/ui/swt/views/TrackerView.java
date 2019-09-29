@@ -23,19 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.common.table.*;
-import com.biglybt.ui.common.table.impl.TableColumnManager;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerTPSListener;
 import com.biglybt.core.internat.MessageText;
@@ -45,17 +38,17 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.TorrentUtils;
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
-import com.biglybt.pif.ui.config.Parameter;
-import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.selectedcontent.SelectedContent;
+import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
-import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.table.TableSelectedRowsListener;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -65,10 +58,10 @@ import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.tableitems.tracker.*;
 
-import com.biglybt.ui.selectedcontent.SelectedContent;
-import com.biglybt.ui.selectedcontent.SelectedContentManager;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.pif.ui.config.Parameter;
+import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 
 
 /**
@@ -80,7 +73,7 @@ public class TrackerView
 	DownloadManagerTPSListener, TableViewSWTMenuFillListener,
 	TableSelectionListener, UIPluginViewToolBarListener
 {
-	private static boolean registeredCoreSubViews = false;
+	public static final Class<TrackerPeerSource> PLUGIN_DS_TYPE = TrackerPeerSource.class;
 
 	private final static TableColumnCore[] basicItems = {
 		new TypeItem(TableManager.TABLE_TORRENT_TRACKERS),
@@ -104,7 +97,6 @@ public class TrackerView
 	public static final String MSGID_PREFIX = "TrackerView";
 
 	private DownloadManager 	manager;
-	private boolean				enable_tabs = true;
 
 	private TableViewSWT<TrackerPeerSource> tv;
 
@@ -120,8 +112,10 @@ public class TrackerView
 	public TableViewSWT<TrackerPeerSource>
 	initYourTableView()
 	{
+		registerPluginViews();
+
 		tv = TableViewFactory.createTableViewSWT(
-				TrackerPeerSource.class,
+				PLUGIN_DS_TYPE,
 				TableManager.TABLE_TORRENT_TRACKERS,
 				getPropertiesPrefix(),
 				basicItems,
@@ -148,16 +142,6 @@ public class TrackerView
 					}
 				}});
 		
-								
-		tv.setEnableTabViews(enable_tabs,true,null);
-
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		if (uiFunctions != null) {
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			registerPluginViews(pluginUI);
-		}
-
 		return tv;
 	}
 
@@ -230,35 +214,16 @@ public class TrackerView
 		});
 	}
 
-	private void registerPluginViews(final UISWTInstance pluginUI) {
-		if (pluginUI == null || registeredCoreSubViews) {
+	private static void registerPluginViews() {
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		if (vm.areCoreViewsRegistered(PLUGIN_DS_TYPE)) {
 			return;
 		}
 
-		pluginUI.addView(TableManager.TABLE_TORRENT_TRACKERS, "ScrapeInfoView",
-				ScrapeInfoView.class, manager);
+		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
+				"ScrapeInfoView", null, ScrapeInfoView.class));
 
-		registeredCoreSubViews = true;
-
-		final UIManager uiManager = PluginInitializer.getDefaultInterface().getUIManager();
-		uiManager.addUIListener(new UIManagerListener() {
-
-			@Override
-			public void UIAttached(UIInstance instance) {
-
-			}
-
-			@Override
-			public void UIDetached(UIInstance instance) {
-				if (!(instance instanceof UISWTInstance)) {
-					return;
-				}
-
-				registeredCoreSubViews = false;
-				pluginUI.removeViews(TableManager.TABLE_TORRENT_TRACKERS, "ScrapeInfoView");
-				uiManager.removeUIListener(this);
-			}
-		});
+		vm.setCoreViewsRegistered(PLUGIN_DS_TYPE);
 	}
 
 
@@ -609,15 +574,6 @@ public class TrackerView
 	public boolean eventOccurred(UISWTViewEvent event) {
 	    switch (event.getType()) {
 
-	      case UISWTViewEvent.TYPE_CREATE:{
-	    	  if ( event instanceof UISWTViewEventImpl ){
-
-	    		  String parent = ((UISWTViewEventImpl)event).getParentID();
-
-	    		  enable_tabs = parent != null && parent.equals( UISWTInstance.VIEW_TORRENT_DETAILS );
-	    	  }
-	    	  break;
-	      }
 	      case UISWTViewEvent.TYPE_FOCUSGAINED:
 	    	  
 	    	updateSelectedContent();

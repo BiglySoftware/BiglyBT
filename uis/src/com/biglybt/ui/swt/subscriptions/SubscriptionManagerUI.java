@@ -44,20 +44,6 @@ import com.biglybt.core.tag.*;
 import com.biglybt.core.util.*;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
-import com.biglybt.pif.PluginConfigListener;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.download.Download;
-import com.biglybt.pif.torrent.Torrent;
-import com.biglybt.pif.ui.*;
-import com.biglybt.pif.ui.config.*;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuItemFillListener;
-import com.biglybt.pif.ui.menus.MenuItemListener;
-import com.biglybt.pif.ui.menus.MenuManager;
-import com.biglybt.pif.ui.model.BasicPluginConfigModel;
-import com.biglybt.pif.ui.tables.*;
-import com.biglybt.pif.utils.DelayedTask;
-import com.biglybt.pif.utils.Utilities;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
@@ -73,12 +59,24 @@ import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.*;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
+
+import com.biglybt.pif.PluginConfigListener;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.torrent.Torrent;
+import com.biglybt.pif.ui.*;
+import com.biglybt.pif.ui.config.*;
+import com.biglybt.pif.ui.menus.*;
+import com.biglybt.pif.ui.model.BasicPluginConfigModel;
+import com.biglybt.pif.ui.tables.*;
+import com.biglybt.pif.utils.DelayedTask;
+import com.biglybt.pif.utils.Utilities;
 
 public class
 SubscriptionManagerUI
@@ -1296,12 +1294,16 @@ SubscriptionManagerUI
 			return;
 		}
 
-		mdiEntryOverview = mdi.createEntryFromEventListener(
-				MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY,
-				new UISWTViewEventListenerHolder(
-						MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS,
-						SubscriptionsView.class, null, null),
-				MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS, false, null, null );
+		if (sidebar_setup_done
+				&& (mdiEntryOverview == null || mdiEntryOverview.isEntryDisposed())) {
+			sidebar_setup_done = false;
+		}
+
+		mdiEntryOverview = mdi.createEntry(new UISWTViewBuilderCore(
+				MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS, null,
+				SubscriptionsView.class).setParentEntryID(
+						MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY),
+				false);
 
 		if (mdiEntryOverview == null) {
 			return;
@@ -1627,11 +1629,11 @@ SubscriptionManagerUI
 
 		for ( MdiEntry e: existing ){
 
-			String id = e.getId();
+			String id = e.getViewID();
 
 			if ( id.startsWith( "Subscription_" )){
 
-				Object ds = e.getDatasource();
+				Object ds = e.getDataSource();
 
 				if ( ds instanceof Subscription ){
 
@@ -1676,10 +1678,11 @@ SubscriptionManagerUI
 
 		if ( parent_name == null || parent_name.length() == 0 ){
 
-			entry = mdi.createEntryFromEventListener(
-					MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS,
-					new UISWTViewEventListenerHolder(key, SubscriptionView.class, subs, null),
-					key, true, subs, prev_id);
+			entry = mdi.createEntry(new UISWTViewBuilderCore(key, null,
+					SubscriptionView.class).setParentEntryID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS).setInitialDatasource(
+									subs).setPreferredAfterID(prev_id),
+					true);
 
 		}else{
 
@@ -1748,10 +1751,10 @@ SubscriptionManagerUI
 				}
 			}
 
-			entry = mdi.createEntryFromEventListener(
-					parent_entry.getId(),
-					new UISWTViewEventListenerHolder(key, SubscriptionView.class, subs, null),
-					key, true, subs, prev_id);
+			entry = mdi.createEntry(new UISWTViewBuilderCore(key, null,
+					SubscriptionView.class).setParentEntryID(
+							parent_entry.getViewID()).setInitialDatasource(subs),
+					true);
 		}
 
 			// This sets up the entry (menu, etc)
@@ -3236,7 +3239,7 @@ SubscriptionManagerUI
 		public final void selected(MenuItem menu, Object target) {
 			if (target instanceof MdiEntry) {
 				MdiEntry info = (MdiEntry) target;
-				Subscription subs = (Subscription) info.getDatasource();
+				Subscription subs = (Subscription) info.getDataSource();
 
 				try {
 					selected( subs);

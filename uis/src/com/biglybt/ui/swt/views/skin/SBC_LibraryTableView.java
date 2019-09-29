@@ -22,58 +22,57 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.Map;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreRunningListener;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.common.table.TableSelectionAdapter;
-import com.biglybt.ui.common.table.impl.TableColumnManager;
-import com.biglybt.ui.selectedcontent.ISelectedVuzeFileContent;
-import com.biglybt.ui.selectedcontent.SelectedContentManager;
-import com.biglybt.ui.swt.debug.ObfuscateImage;
-import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
-import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
-import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.pif.ui.tables.TableRow;
-import com.biglybt.pif.ui.tables.TableRowRefreshListener;
-import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.common.table.TableColumnCore;
+import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.common.table.TableSelectionAdapter;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.selectedcontent.ISelectedContent;
+import com.biglybt.ui.selectedcontent.ISelectedVuzeFileContent;
+import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3;
+import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
+import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
+import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import com.biglybt.ui.swt.views.MyTorrentsSuperView;
 import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
-import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
-
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.torrent.PlatformTorrentUtils;
-import com.biglybt.ui.common.table.TableColumnCore;
-import com.biglybt.ui.common.table.TableRowCore;
-import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.selectedcontent.ISelectedContent;
-import com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.util.DLReferals;
 import com.biglybt.util.DataSourceUtils;
 import com.biglybt.util.PlayUtils;
+
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.pif.ui.tables.TableRowRefreshListener;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 
 /**
  * Classic My Torrents view wrapped in a SkinView
@@ -231,9 +230,11 @@ public class SBC_LibraryTableView
 		}
 
 		try {
-			view = new UISWTViewImpl(ID + torrentFilterMode, UISWTInstance.VIEW_MAIN, false);
-			view.setDatasource(initialDataSource);
-			view.setEventListener(swtViewListener, true);
+			UISWTViewBuilderCore builder = new UISWTViewBuilderCore(
+					ID + torrentFilterMode, null, swtViewListener).setInitialDatasource(
+							initialDataSource);
+			view = new UISWTViewImpl(builder, true);
+			view.setDestroyOnDeactivate(false);
 		} catch (Exception e) {
 			Debug.out(e);
 		}

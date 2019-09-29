@@ -33,11 +33,9 @@ public class UISWTViewEventImpl implements UISWTViewEvent {
 	int eventType;
 	Object data;
 	UISWTView view;
-	String	parentID;
 
 
-	public UISWTViewEventImpl(String parentID, UISWTView view, int eventType, Object data) {
-		this.parentID = parentID;
+	public UISWTViewEventImpl(UISWTView view, int eventType, Object data) {
 		this.view = view;
 		this.eventType = eventType;
 		this.data = data;
@@ -46,12 +44,6 @@ public class UISWTViewEventImpl implements UISWTViewEvent {
 	@Override
 	public int getType() {
 		return eventType;
-	}
-
-	public String
-	getParentID()
-	{
-		return( parentID );
 	}
 
 	@Override
@@ -63,4 +55,5 @@ public class UISWTViewEventImpl implements UISWTViewEvent {
 	public UISWTView getView() {
 		return view;
 	}
+
 }

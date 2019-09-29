@@ -322,8 +322,6 @@ public class SBC_DownloadHistoryView
 
 			tv.setRowDefaultHeightEM(1);
 
-			tv.setEnableTabViews(true, true, null);
-
 			table_parent = new Composite(control, SWT.BORDER);
 
 			table_parent.setLayoutData(Utils.getFilledFormData());

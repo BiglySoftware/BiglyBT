@@ -143,7 +143,7 @@ public class ColumnFileCount
 		Utils.verifyShellRect(shell, true);
 
 
-		final FilesView view = new FilesView(false);
+		final FilesView view = new FilesView();
 		view.dataSourceChanged(dm);
 
 		view.initialize(shell);

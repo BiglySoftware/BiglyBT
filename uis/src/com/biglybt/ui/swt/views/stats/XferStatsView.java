@@ -31,13 +31,13 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.global.GlobalManagerStats;
 
 public class XferStatsView
-	implements UISWTViewCoreEventListenerEx
+	implements UISWTViewCoreEventListener
 {
 	public static final String MSGID_PREFIX = "XferStatsView";
 
@@ -54,32 +54,6 @@ public class XferStatsView
 		this(false);
 	}
 
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new XferStatsView());
-	}
-	
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return(
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( XferStatsView.class );
-				}
-			});
-	}
-	
 	public XferStatsView(boolean autoAlpha ) {
 		this.autoAlpha = autoAlpha;
 	}

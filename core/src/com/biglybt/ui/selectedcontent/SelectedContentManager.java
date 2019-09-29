@@ -82,11 +82,12 @@ public class SelectedContentManager
 
 	public static void changeCurrentlySelectedContent(String viewID,
 			ISelectedContent[] currentlySelectedContent, TableView tv) {
-		changeCurrentlySelectedContentNoTrigger(viewID, currentlySelectedContent, tv);
-		triggerSelectedContentListeners();
+		if (changeCurrentlySelectedContentNoTrigger(viewID, currentlySelectedContent, tv)) {
+			triggerSelectedContentListeners();
+		}
 	}
 
-	private static void changeCurrentlySelectedContentNoTrigger(String viewID,
+	private static boolean changeCurrentlySelectedContentNoTrigger(String viewID,
 			ISelectedContent[] currentlySelectedContent, TableView tv) {
 		if (currentlySelectedContent == null) {
 			currentlySelectedContent = new ISelectedContent[0];
@@ -105,7 +106,7 @@ public class SelectedContentManager
 				&& !viewID.equals(SelectedContentManager.viewID)) {
 			// don't allow clearing if someone else set the currently selected
 			//System.out.println("-->abort because it's not " + SelectedContentManager.viewID);
-			return;
+			return false;
 		}
 
 		synchronized( SelectedContentManager.class ){
@@ -130,7 +131,7 @@ public class SelectedContentManager
 
 						if ( same ){
 
-							return;
+							return false;
 						}
 					}
 				}
@@ -140,6 +141,7 @@ public class SelectedContentManager
 			SelectedContentManager.currentlySelectedContent = currentlySelectedContent;
 			SelectedContentManager.viewID = viewID;
 		}
+		return true;
 	}
 
 	public static void triggerSelectedContentListeners() {

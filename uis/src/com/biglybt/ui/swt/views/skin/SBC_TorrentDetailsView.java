@@ -19,28 +19,16 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.Map;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.common.table.TableView;
-import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.common.updater.UIUpdater;
-import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
-import com.biglybt.ui.mdi.*;
-import com.biglybt.ui.selectedcontent.ISelectedContent;
-import com.biglybt.ui.selectedcontent.SelectedContentListener;
-import com.biglybt.ui.selectedcontent.SelectedContentManager;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
-import com.biglybt.ui.swt.mdi.*;
-import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.global.GlobalManager;
@@ -50,22 +38,34 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.common.table.TableView;
+import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.common.updater.UIUpdater;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
+import com.biglybt.ui.mdi.*;
+import com.biglybt.ui.selectedcontent.ISelectedContent;
+import com.biglybt.ui.selectedcontent.SelectedContentListener;
+import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.ui.swt.UIFunctionsManagerSWT;
+import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateTab;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
+import com.biglybt.ui.swt.mdi.*;
 import com.biglybt.ui.swt.pif.UISWTInstance;
-import com.biglybt.ui.swt.pif.UISWTInstance.UISWTViewEventListenerWrapper;
+import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.PeersView;
-import com.biglybt.ui.swt.views.piece.PieceInfoView;
-
-import com.biglybt.core.CoreRunningListener;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.util.DataSourceUtils;
+
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 
 /**
  * Torrent download view, consisting of several information tabs
@@ -78,6 +78,7 @@ public class SBC_TorrentDetailsView
 	implements DownloadManagerListener,
 	UIPluginViewToolBarListener, SelectedContentListener
 {
+	private static final String VIEW_ID = UISWTInstance.VIEW_TORRENT_DETAILS;
 
 	private DownloadManager manager;
 
@@ -114,10 +115,7 @@ public class SBC_TorrentDetailsView
 		}
 
 		if (tabbedMDI != null) {
-  		MdiEntry[] entries = tabbedMDI.getEntries();
-  		for (MdiEntry entry : entries) {
-  			entry.setDatasource(newDataSource);
-  		}
+			tabbedMDI.setEntriesDataSource(manager);
 		}
 	}
 
@@ -140,11 +138,13 @@ public class SBC_TorrentDetailsView
 
 		//Color bg_color = ColorCache.getColor(composite.getDisplay(), "#c0cbd4");
 
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
+		MyTorrentsView.registerPluginViews();
 
 		this.parent = composite;
 		if (tabbedMDI == null) {
-			tabbedMDI = uiFunctions.createTabbedMDI(main_area, "detailsview");
+			tabbedMDI = new TabbedMDI(Download.class, VIEW_ID,
+					"detailsview", getMdiEntry(), manager == null ? dataSource : manager);
+			tabbedMDI.buildMDI(main_area);
 		} else {
 			System.out.println("ManagerView::initialize : folder isn't null !!!");
 		}
@@ -155,49 +155,6 @@ public class SBC_TorrentDetailsView
 			main_area.setLayoutData(new GridData(GridData.FILL_BOTH));
 		}
 		composite.layout();
-
-		// Call plugin listeners
-		if (uiFunctions != null) {
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			if ( pluginUI != null ){
-
-				MyTorrentsView.registerPluginViews(pluginUI);
-
-				// unfortunately views for the manager view are currently registered
-				// against 'MyTorrents'...
-
-				for (String id : new String[] {
-					UISWTInstance.VIEW_MYTORRENTS,
-					UISWTInstance.VIEW_TORRENT_DETAILS
-				}) {
-
-					UISWTViewEventListenerWrapper[] pluginViews = pluginUI.getViewListeners(id);
-
-					for (UISWTViewEventListenerWrapper l : pluginViews) {
-
-						if (id == UISWTInstance.VIEW_MYTORRENTS
-								&& l.getViewID() == PieceInfoView.MSGID_PREFIX) {
-							// Simple hack to exlude PieceInfoView tab as it's already within Pieces View
-							continue;
-						}
-
-						if (l != null) {
-
-							try {
-								tabbedMDI.createEntryFromEventListener(null,
-										UISWTInstance.VIEW_TORRENT_DETAILS, l, l.getViewID(), false,
-										manager, null);
-
-							} catch (Throwable e) {
-
-								Debug.out(e);
-							}
-						}
-					}
-				}
-			}
-		}
 
 		SelectedContentManager.addCurrentlySelectedContentListener(this);
 
@@ -225,7 +182,6 @@ public class SBC_TorrentDetailsView
 		}
 	}
 
-
 	@Override
 	public void currentlySelectedContentChanged(
             ISelectedContent[] currentContent, String viewId) {
@@ -236,15 +192,6 @@ public class SBC_TorrentDetailsView
 	 */
 	private void refresh() {
 		tabbedMDI.updateUI();
-	}
-
-	protected static String escapeAccelerators(String str) {
-		if (str == null) {
-
-			return (str);
-		}
-
-		return (str.replaceAll("&", "&&"));
 	}
 
 	/* (non-Javadoc)
@@ -374,7 +321,7 @@ public class SBC_TorrentDetailsView
 		if (tabbedMDI == null || tabbedMDI.isDisposed()) {
 			return null;
 		}
-		return (BaseMdiEntry) tabbedMDI.getCurrentEntrySWT();
+		return (BaseMdiEntry) tabbedMDI.getCurrentEntry();
 	}
 
 	public static class TorrentDetailMdiEntry
@@ -518,7 +465,7 @@ public class SBC_TorrentDetailsView
 		// @see UIUpdatable#getUpdateUIName()
 		@Override
 		public String getUpdateUIName() {
-			return entry == null ? "DMD" : entry.getId();
+			return entry == null ? "DMD" : entry.getViewID();
 		}
 
 		// @see MdiCloseListener#mdiEntryClosed(MdiEntry, boolean)

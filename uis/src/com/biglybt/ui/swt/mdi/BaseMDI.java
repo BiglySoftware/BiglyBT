@@ -18,10 +18,10 @@
 
 package com.biglybt.ui.swt.mdi;
 
-import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 
 import com.biglybt.core.Core;
@@ -31,12 +31,6 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.ui.config.ConfigSectionHolder;
 import com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository;
@@ -47,40 +41,46 @@ import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.mainwindow.PluginsMenuHelper;
-import com.biglybt.ui.swt.mainwindow.PluginsMenuHelper.IViewInfo;
-import com.biglybt.ui.swt.mainwindow.PluginsMenuHelper.PluginAddedViewListener;
-import com.biglybt.ui.swt.pif.UISWTInstance;
-import com.biglybt.ui.swt.pif.UISWTView;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
+import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.SkinView;
-import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
-import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 import com.biglybt.util.MapUtils;
 
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIManagerListener;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemListener;
+
+// TODO: AutoOpen, createEntryByCreationListener, loadEntryByID, createEntryFromBuilder are entangled.
+//       Needs to be simplified.
 public abstract class BaseMDI
 	extends SkinView
 	implements MultipleDocumentInterfaceSWT, UIUpdatable
 {
+	private final Class<?> pluginDataSourceType;
+	private final String viewID;
+	private final UISWTView parentView;
+
 	private MdiEntrySWT currentEntry;
 
 	private Map<String, MdiEntryCreationListener> mapIdToCreationListener = new LightHashMap<>();
 	private Map<String, MdiEntryCreationListener2> mapIdToCreationListener2 = new LightHashMap<>();
 
 	// Sync changes to entry maps on mapIdEntry
-	private Map<String, MdiEntry> mapIdToEntry = new LinkedHashMap<>(8);
+	private final Map<String, MdiEntrySWT> mapIdToEntry = new LinkedHashMap<>(8);
 
-	private List<MdiListener> listeners = new ArrayList<>();
+	private final List<MdiListener> listeners = new ArrayList<>();
 
-	private List<MdiEntryLoadedListener> listLoadListeners = new ArrayList<>();
+	private final List<MdiEntryLoadedListener> listLoadListeners = new ArrayList<>();
 
 	private List<MdiSWTMenuHackListener> listMenuHackListners;
 
-	private Object	autoOpenLock = new Object();
+	private final Object	autoOpenLock = new Object();
 	
 	private LinkedHashMap<String, Object> mapAutoOpen = new LinkedHashMap<>();
 
@@ -95,6 +95,12 @@ public abstract class BaseMDI
 	private volatile boolean 	initialized;
 	private volatile boolean	closed;
 	
+	public BaseMDI(Class<?> pluginDataSourceType, String viewID, UISWTView parentView) {
+		this.pluginDataSourceType = pluginDataSourceType;
+		this.viewID = viewID;
+		this.parentView = parentView;
+	}
+
 	@Override
 	public void addListener(MdiListener l) {
 		synchronized (listeners) {
@@ -181,85 +187,28 @@ public abstract class BaseMDI
 		return "sidebar.";
 	}
 
-	// @see MultipleDocumentInterfaceSWT#createEntryFromEventListener(java.lang.String, com.biglybt.ui.swt.pif.UISWTViewEventListener, java.lang.String, boolean, java.lang.Object, java.lang.String)
+	/**
+	 * @deprecated Use createEntryFromHolder(parentEntryID, null, new UISWTViewEventListenerHolder(id, l, datasource, null), id, closeable, preferedAfterID);
+	 */
 	@Override
 	public final MdiEntry createEntryFromEventListener(String parentID,
 	                                                   UISWTViewEventListener l, String id, boolean closeable, Object datasource, String preferedAfterID) {
-		return createEntryFromEventListener(parentID, null, l, id, closeable, datasource, preferedAfterID);
+		// The only thing that uses the method is EMP, which uses a different id based on language
+		
+		UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id,
+				null).setInitialDatasource(datasource).setListenerInstantiator(false,
+			(Builder, view) -> l).setParentEntryID(parentID);
+		return createEntry(builder, closeable);
 	}
-
-	/* (non-Javadoc)
-	 * @see MultipleDocumentInterfaceSWT#createEntryFromEventListener(java.lang.String, java.lang.String, com.biglybt.ui.swt.pif.UISWTViewEventListener, java.lang.String, boolean, java.lang.Object, java.lang.String)
-	 */
-	@Override
-	public abstract MdiEntry createEntryFromEventListener(String parentEntryID,
-	                                                      String parentViewID, UISWTViewEventListener l, String id,
-	                                                      boolean closeable, Object datasource, String preferredAfterID);
 
 	// @see MultipleDocumentInterface#createEntryFromSkinRef(java.lang.String, java.lang.String, java.lang.String, java.lang.String, ViewTitleInfo, java.lang.Object, boolean, java.lang.String)
 	@Override
-	public abstract MdiEntry createEntryFromSkinRef(String parentID, String id,
+	public abstract MdiEntry createEntryFromSkinRef(String parentEntryID, String id,
 	                                                String configID, String title, ViewTitleInfo titleInfo, Object params,
 	                                                boolean closeable, String preferedAfterID);
 
-	// @see MultipleDocumentInterfaceSWT#createEntryFromEventListener(java.lang.String, java.lang.Class, java.lang.String, boolean, java.lang.Object, java.lang.String)
 	@Override
-	public MdiEntry createEntryFromEventListener(final String parentID,
-	                                             Class<? extends UISWTViewEventListener> cla, String id, boolean closeable,
-	                                             Object data, String preferedAfterID) {
-		final MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
-		if (mdi == null) {
-			return null;
-		}
-
-		if (id == null) {
-			id = cla.getName();
-			int i = id.lastIndexOf('.');
-			if (i > 0) {
-				id = id.substring(i + 1);
-			}
-		}
-
-		MdiEntry entry = mdi.getEntry(id);
-		if (entry != null) {
-			if (data != null) {
-				entry.setDatasource(data);
-			}
-			return entry;
-		}
-		UISWTViewEventListener l = null;
-		if (data != null) {
-			try {
-				Constructor<?> constructor = cla.getConstructor(new Class[] {
-					data.getClass()
-				});
-				l = (UISWTViewEventListener) constructor.newInstance(new Object[] {
-					data
-				});
-			} catch (Exception e) {
-			}
-		}
-
-		try {
-			if (l == null) {
-				l = cla.newInstance();
-			}
-			return mdi.createEntryFromEventListener(parentID, l, id, closeable, data,
-					preferedAfterID);
-		} catch (Exception e) {
-			Debug.out(e);
-		}
-
-		return null;
-	}
-
-	@Override
-	public MdiEntry getCurrentEntry() {
-		return currentEntry;
-	}
-
-	@Override
-	public MdiEntrySWT getCurrentEntrySWT() {
+	public MdiEntrySWT getCurrentEntry() {
 		return currentEntry;
 	}
 
@@ -271,11 +220,7 @@ public abstract class BaseMDI
 	}
 	
 	@Override
-	public MdiEntry[] getEntries() {
-		return getEntries( new MdiEntry[0]);
-	}
-
-	public MdiEntrySWT[] getEntriesSWT() {
+	public MdiEntrySWT[] getEntries() {
 		return getEntries( new MdiEntrySWT[0]);
 	}
 
@@ -286,19 +231,23 @@ public abstract class BaseMDI
 	}
 
 	@Override
-	public MdiEntry getEntry(String id) {
+	public MdiEntrySWT getEntry(String id) {
 		synchronized(mapIdToEntry){
-			MdiEntry entry = mapIdToEntry.get(id);
-			return entry;
+			return mapIdToEntry.get(id);
 		}
 	}
-
-	@Override
-	public MdiEntrySWT getEntrySWT(String id) {
+	
+	protected int indexOf(String id) {
+		int i = 0;
 		synchronized(mapIdToEntry){
-			MdiEntrySWT entry = (MdiEntrySWT)mapIdToEntry.get(id);
-			return entry;
+			for (String key : mapIdToEntry.keySet()) {
+				if (key.equals(id)) {
+					return i;
+				}
+				i++;
+			}
 		}
+		return -1;
 	}
 
 	/**
@@ -308,7 +257,7 @@ public abstract class BaseMDI
 	 * @since 3.1.1.1
 	 */
 	@Override
-	public MdiEntry getEntryBySkinView(Object skinView) {
+	public MdiEntrySWT getEntryBySkinView(Object skinView) {
 		SWTSkinObject so = ((SkinView)skinView).getMainSkinObject();
 		BaseMdiEntry[] sideBarEntries = getEntries( new BaseMdiEntry[0] );
 		for (int i = 0; i < sideBarEntries.length; i++) {
@@ -324,26 +273,13 @@ public abstract class BaseMDI
 	}
 
 	@Override
-	public UISWTViewCore getCoreViewFromID(String id) {
-		if (id == null) {
-			return null;
-		}
-		MdiEntrySWT entry = getEntrySWT(id);
-		if (entry instanceof UISWTViewCore) {
-			return (UISWTViewCore) entry;
-		}
-		return null;
-	}
-
-	@Override
 	public String getUpdateUIName() {
 		if (currentEntry == null) {
 			return "MDI";
 		}
-		return currentEntry.getId();
+		return currentEntry.getViewID();
 	}
 
-	// @see MultipleDocumentInterface#registerEntry(java.lang.String, MdiEntryCreationListener2)
 	@Override
 	public void registerEntry(String id, MdiEntryCreationListener2 l) {
 		if (mapIdToCreationListener.containsKey(id)) {
@@ -474,7 +410,7 @@ public abstract class BaseMDI
 
 	@Override
 	public boolean showEntryByID(String id) {
-		return loadEntryByID(id, true);
+		return loadEntryByID(id, true, false, null);
 	}
 
 	@Override
@@ -540,7 +476,7 @@ public abstract class BaseMDI
 			MdiEntry entry = getCurrentEntry();
 			if (entry != null) {
 				COConfigurationManager.setParameter("v3.StartTab",
-						entry.getId());
+						entry.getViewID());
 				String ds = entry.getExportableDatasource();
 				COConfigurationManager.setParameter("v3.StartTab.ds", ds == null ? null : ds.toString());
 			}
@@ -606,6 +542,17 @@ public abstract class BaseMDI
 		}
 
 		MdiEntry mdiEntry = createEntryByCreationListener(id, datasource, null);
+		if (mdiEntry == null) {
+			ViewManagerSWT vi = ViewManagerSWT.getInstance();
+			UISWTViewBuilderCore builder = vi.getBuilder(viewID, id);
+			if (builder == null) {
+				builder = vi.getBuilder(getDataSourceType(), id);
+			}
+			if (builder != null) {
+				mdiEntry = createEntry(builder, true);
+			}
+		}
+			
 		if (mdiEntry != null) {
 			if (onlyLoadOnce) {
 				setEntryLoadedOnce(id);
@@ -719,30 +666,30 @@ public abstract class BaseMDI
 
 		// When a new Plugin View is added, check out auto-open list to see if
 		// the user had it open
-		PluginsMenuHelper.getInstance().addPluginAddedViewListener(
-				new PluginAddedViewListener() {
-					// @see com.biglybt.ui.swt.mainwindow.PluginsMenuHelper.PluginAddedViewListener#pluginViewAdded(com.biglybt.ui.swt.mainwindow.PluginsMenuHelper.IViewInfo)
-					@Override
-					public void pluginViewAdded(IViewInfo viewInfo) {
-						//System.out.println("PluginView Added: " + viewInfo.viewID);
-						Object o;
-						
-						synchronized( autoOpenLock ){
-							o = mapAutoOpen.get(viewInfo.viewID);
-						}
-						
-						if (o instanceof Map<?, ?>) {
-							processAutoOpenMap(viewInfo.viewID, (Map<?, ?>) o, viewInfo);
-						}
-					}
-				});
+		ViewManagerSWT vi = ViewManagerSWT.getInstance();
+		vi.addSWTViewListener((forDSTypeOrViewID, builder) -> {
+			if (forDSTypeOrViewID != null
+					&& !forDSTypeOrViewID.equals(UISWTInstance.VIEW_MAIN)) {
+				return;
+			}
+
+			Object o;
+
+			synchronized (autoOpenLock) {
+				o = mapAutoOpen.get(builder.getViewID());
+			}
+
+			if (o instanceof Map<?, ?>) {
+				processAutoOpenMap(builder.getViewID(), (Map<?, ?>) o, builder);
+			}
+		});
 	}
 
 	@Override
 	public void informAutoOpenSet(MdiEntry entry, Map<String, Object> autoOpenInfo) {
 		synchronized( autoOpenLock ){
 		
-			mapAutoOpen.put(entry.getId(), autoOpenInfo);
+			mapAutoOpen.put(entry.getViewID(), autoOpenInfo);
 			autoOpenUpdated();
 		}
 	}
@@ -844,7 +791,7 @@ public abstract class BaseMDI
 		
 							// entries that are 'dispose-on-focus-lost' will report as 'not added' if this has occurred
 						
-						if ( entry != null && ( entry.isAdded() || !entry.isReallyDisposed())){
+				if ( entry != null && ( entry.isAdded() || !entry.isEntryDisposed())){
 		
 							mapAutoOpen.put(id, entry.getAutoOpenInfo());
 		
@@ -885,7 +832,7 @@ public abstract class BaseMDI
 	}
 
 	private boolean processAutoOpenMap(String id, Map<?, ?> autoOpenInfo,
-			IViewInfo viewInfo) {
+			UISWTViewBuilderCore builder) {
 		try {
 			MdiEntry entry = getEntry(id);
 			if (entry != null) {
@@ -903,15 +850,13 @@ public abstract class BaseMDI
 				return true;
 			}
 
-			String parentID = MapUtils.getMapString(autoOpenInfo, "parentID", SIDEBAR_HEADER_PLUGINS);
-
-			if (viewInfo != null) {
-				if (viewInfo.event_listener != null) {
-					entry = createEntryFromEventListener(parentID,
-							viewInfo.event_listener, id, true, datasource,null);
-					if (entry != null) {
-						entry.setTitle(title);
-					}
+			if (builder != null) {
+				entry = createEntry(builder, true);
+				if (entry != null) {
+					entry.setTitle(title);
+					// Auto-Open stores last datasource used before close.
+					// Override builder's initialDataSource with stored one.
+					entry.setDatasource(datasource);
 				}
 			}
 
@@ -964,8 +909,8 @@ public abstract class BaseMDI
 		return false;
 	}
 
-	public void addItem(MdiEntry entry) {
-		String id = entry.getId();
+	public void addItem(MdiEntrySWT entry) {
+		String id = entry.getViewID();
 
 		synchronized (mapIdToEntry) {
 			MdiEntry old = mapIdToEntry.put(id,entry);
@@ -990,7 +935,7 @@ public abstract class BaseMDI
 					
 					MdiEntry current = getCurrentEntry();
 
-					if ( current == null || current.getId().equals( initialDef )){
+					if ( current == null || current.getViewID().equals( initialDef )){
 						
 						show = true;
 					}
@@ -1014,7 +959,7 @@ public abstract class BaseMDI
 	}
 	
 	protected void removeItem(MdiEntry entry, boolean removeChildren ) {
-		String id = entry.getId();
+		String id = entry.getViewID();
 		synchronized (mapIdToEntry) {
 			mapIdToEntry.remove(id);
 
@@ -1029,10 +974,10 @@ public abstract class BaseMDI
 			return;
 		}
 		synchronized (mapIdToEntry) {
-			MdiEntrySWT[] entriesSWT = getEntriesSWT();
+			MdiEntrySWT[] entriesSWT = getEntries();
 			for (MdiEntrySWT entry : entriesSWT) {
 				if (id.equals(entry.getParentID())) {
-					String kid_id = entry.getId();
+					String kid_id = entry.getViewID();
 					mapIdToEntry.remove(kid_id);
 					removeChildrenOf(kid_id);
 				}
@@ -1047,7 +992,7 @@ public abstract class BaseMDI
 		}
 		List<MdiEntry> list = new ArrayList<>(1);
 		synchronized (mapIdToEntry) {
-			MdiEntrySWT[] entriesSWT = getEntriesSWT();
+			MdiEntrySWT[] entriesSWT = getEntries();
 			for (MdiEntrySWT entry : entriesSWT) {
 				if (id.equals(entry.getParentID())) {
 					list.add(entry);
@@ -1136,7 +1081,7 @@ public abstract class BaseMDI
 		if (entry != null) {
 
 			menu_items = MenuItemManager.getInstance().getAllAsArray(
-					getMenuIdPrefix() + entry.getId());
+					getMenuIdPrefix() + entry.getViewID());
 
 			if (menu_items.length == 0) {
 
@@ -1161,7 +1106,7 @@ public abstract class BaseMDI
 						if (relevant_sections.size() > 0) {
 
 							MenuItem mi = pi.getUIManager().getMenuManager().addMenuItem(
-									getMenuIdPrefix() + entry.getId(),
+									getMenuIdPrefix() + entry.getViewID(),
 									"MainWindow.menu.view.configuration");
 							mi.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
@@ -1182,7 +1127,7 @@ public abstract class BaseMDI
 							});
 
 							menu_items = MenuItemManager.getInstance().getAllAsArray(
-									getMenuIdPrefix() + entry.getId());
+									getMenuIdPrefix() + entry.getViewID());
 						}
 					}
 				}
@@ -1201,8 +1146,8 @@ public abstract class BaseMDI
 					Debug.out(e);
 				}
 			}
-			if (currentEntry instanceof SideBarEntrySWT) {
-				menuHackListeners = ((SideBarEntrySWT) entry).getMenuHackListeners();
+			if (currentEntry instanceof BaseMdiEntry) {
+				menuHackListeners = ((BaseMdiEntry) entry).getMenuHackListeners();
 				for (MdiSWTMenuHackListener l : menuHackListeners) {
 					try {
 						l.menuWillBeShown(entry, menu);
@@ -1229,4 +1174,33 @@ public abstract class BaseMDI
 		return initialized;
 	}
 
+
+	public static BaseMdiEntry getEntryFromSkinObject(PluginUISWTSkinObject pluginSkinObject) {
+		if (pluginSkinObject instanceof SWTSkinObject) {
+			Control control = ((SWTSkinObject) pluginSkinObject).getControl();
+			while (control != null && !control.isDisposed()) {
+				Object entry = control.getData("BaseMDIEntry");
+				if (entry instanceof BaseMdiEntry) {
+					BaseMdiEntry mdiEntry = (BaseMdiEntry) entry;
+					return mdiEntry;
+				}
+				control = control.getParent();
+			}
+		}
+		return null;
+	}
+
+	public UISWTView getParentView() {
+		return parentView;
+	}
+
+	@Override
+	public String getViewID() {
+		return viewID;
+	}
+	
+	@Override
+	public Class getDataSourceType() {
+		return pluginDataSourceType;
+	}
 }

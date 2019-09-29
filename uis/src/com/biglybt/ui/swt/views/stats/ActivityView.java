@@ -24,8 +24,6 @@ package com.biglybt.ui.swt.views.stats;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 
-import java.util.List;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
@@ -49,7 +47,7 @@ import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.components.graphics.SpeedGraphic;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
 import com.biglybt.core.Core;
 
@@ -58,7 +56,7 @@ import com.biglybt.core.Core;
  *
  */
 public class ActivityView
-	implements ParameterListener, UISWTViewCoreEventListenerEx, IViewRequiresPeriodicUpdates
+	implements ParameterListener, UISWTViewCoreEventListener, IViewRequiresPeriodicUpdates
 {
 
   public static final String MSGID_PREFIX = "SpeedView";
@@ -85,32 +83,6 @@ public class ActivityView
 			}
 		});
   }
-	
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new ActivityView());
-	}
-	
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return(
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( ActivityView.class );
-				}
-			});
-	}
 
   /* (non-Javadoc)
    * @see com.biglybt.ui.swt.views.stats.PeriodicViewUpdate#periodicUpdate()

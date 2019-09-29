@@ -25,6 +25,7 @@ import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.ParameterListener;
@@ -87,10 +88,10 @@ public class TableHeaderPainted
 			headerHeight = DEFAULT_HEADER_HEIGHT;
 		}
 
-		FormData fd = Utils.getFilledFormData();
-		fd.height = headerHeight;
-		fd.bottom = null;
-		cHeaderArea.setLayoutData(fd);
+		Object layoutData = cHeaderArea.getLayoutData();
+		if (layoutData instanceof GridData) {
+			((GridData) layoutData).heightHint = headerHeight;
+		}
 
 		cHeaderArea.addPaintListener(this::paintHeader);
 

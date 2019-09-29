@@ -18,18 +18,9 @@
 
 package com.biglybt.ui.swt.mainwindow;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -71,6 +62,7 @@ import com.biglybt.ui.swt.minibar.AllTransfersBar;
 import com.biglybt.ui.swt.minibar.MiniBarManager;
 import com.biglybt.ui.swt.nat.NatTestWindow;
 import com.biglybt.ui.swt.pif.UISWTInputReceiver;
+import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.plugininstaller.InstallPluginWizard;
 import com.biglybt.ui.swt.pluginsuninstaller.UnInstallPluginWizard;
 import com.biglybt.ui.swt.sharing.ShareUtils;
@@ -298,12 +290,7 @@ public class MenuFactory
 		MenuItem pluginsMenuItem = createTopLevelMenuItem(menuParent,
 				MENU_ID_PLUGINS);
 		MenuBuildUtils.addMaintenanceListenerForMenu(pluginsMenuItem.getMenu(),
-				new MenuBuildUtils.MenuBuilder() {
-					@Override
-					public void buildMenu(Menu menu, MenuEvent menuEvent) {
-						PluginsMenuHelper.getInstance().buildPluginMenu(menu, showPluginViews);
-					}
-				});
+			(menu, menuEvent) -> PluginsMenuHelper.buildPluginMenu(menu, showPluginViews));
 
 		return pluginsMenuItem;
 	}
@@ -514,7 +501,7 @@ public class MenuFactory
 				if (mdi != null) {
 					MdiEntry currentEntry = mdi.getCurrentEntry();
 					if (currentEntry != null && currentEntry.isCloseable()) {
-						mdi.closeEntry(currentEntry.getId());
+						mdi.closeEntry(currentEntry.getViewID());
 					}
 				}
 			}
@@ -2024,25 +2011,14 @@ public class MenuFactory
 	}
 
 	public static MenuItem addNetStatusMenuItem(Menu menu) {
-		return addMenuItem(menu, MENU_ID_NET_STATUS, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-				if (uiFunctions != null) {
-
-					PluginsMenuHelper.IViewInfo[] views = PluginsMenuHelper.getInstance().getPluginViewsInfo();
-
-					for ( PluginsMenuHelper.IViewInfo view: views ){
-
-						String viewID = view.viewID;
-
-						if ( viewID != null && viewID.equals( "aznetstatus" )){
-
-							view.openView( uiFunctions );
-						}
-					}
-				}
+		return addMenuItem(menu, MENU_ID_NET_STATUS, e -> {
+			UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
+			if (uiFunctions == null) {
+				return;
 			}
+
+			uiFunctions.getUISWTInstance().openView(UISWTInstance.VIEW_MAIN,
+					"aznetstatus", null);
 		});
 	}
 
@@ -3171,20 +3147,11 @@ public class MenuFactory
 					@Override
 					public void widgetSelected(SelectionEvent e) {
 						UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-						if (uiFunctions != null) {
-
-							PluginsMenuHelper.IViewInfo[] views = PluginsMenuHelper.getInstance().getPluginViewsInfo();
-
-							for (PluginsMenuHelper.IViewInfo view : views) {
-
-								String viewID = view.viewID;
-
-								if (viewID != null && viewID.equals("aznetstatus")) {
-
-									view.openView(uiFunctions);
-								}
-							}
+						if (uiFunctions == null) {
+							return;
 						}
+						uiFunctions.getUISWTInstance().openView(UISWTInstance.VIEW_MAIN,
+							"aznetstatus", null);
 					}
 				});
 

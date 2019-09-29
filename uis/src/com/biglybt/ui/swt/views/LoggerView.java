@@ -48,7 +48,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.BasicPluginViewImpl;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 
 /**
  * @author TuxPaper
@@ -58,7 +58,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
  * @note Plugin's Logging View is {@link BasicPluginViewImpl}
  */
 public class LoggerView
-	implements ILogEventListener, ParameterListener, UISWTViewCoreEventListenerEx
+	implements ILogEventListener, ParameterListener, UISWTViewCoreEventListener
 {
 	public static final String VIEW_ID = "LoggerView";
 
@@ -151,41 +151,6 @@ public class LoggerView
 		stopOnNull	= other.stopOnNull;
 
 		setEnabled( other.bEnabled );
-	}
-
-	@Override
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	@Override
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new LoggerView( this ));
-	}
-	
-	@Override
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( LoggerView.class );
-				}
-				
-				public java.util.List<Object>
-				getParameters()
-				{
-					return( null );
-				}
-			});
 	}
 
 	private void initialize(Composite composite) {
@@ -809,6 +774,9 @@ public class LoggerView
 	public boolean eventOccurred(UISWTViewEvent event) {
     switch (event.getType()) {
       case UISWTViewEvent.TYPE_CREATE:
+      	if (!Logger.isEnabled()) {
+      		return false;
+	      }
       	event.getView().setDestroyOnDeactivate(false);
       	swtView = (UISWTView)event.getData();
       	swtView.setTitle(getFullTitle());

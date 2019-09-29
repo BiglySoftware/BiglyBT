@@ -34,7 +34,8 @@ import java.util.regex.Matcher;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.*;
-import org.eclipse.swt.dnd.*;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
@@ -4833,5 +4834,51 @@ public class Utils
 		
 		text.setText( result.toString());
 		text.setStyleRanges( styles );
+	}
+
+	public static String escapeAccelerators(String str) {
+		return str == null ? null : str.replace("&", "&&");
+	}
+
+	public static void addSafeMouseUpListener(Control control,
+		Listener mouseUpListener) {
+		addSafeMouseUpListener(control, null, mouseUpListener);
+	}
+
+	public static void addSafeMouseUpListener(Control control, Listener mouseDownListener,
+			Listener mouseUpListener) {
+		Listener l = new Listener() {
+			boolean isMouseDown = false;
+
+			@Override
+			public void handleEvent(Event e) {
+				switch (e.type) {
+					case SWT.MouseDown:
+						isMouseDown = true;
+						if (mouseDownListener != null) {
+							mouseDownListener.handleEvent(e);
+						}
+						break;
+					case SWT.MouseExit:
+						isMouseDown = false;
+						break;
+					case SWT.MouseUp:
+						if (!isMouseDown) {
+							return;
+						}
+						if (e.widget instanceof Control) {
+							Rectangle bounds = ((Control) e.widget).getBounds();
+							if (!bounds.contains(e.x, e.y)) {
+								return;
+							}
+						}
+						mouseUpListener.handleEvent(e);
+						break;
+				}
+			}
+		};
+		control.addListener(SWT.MouseDown, l);
+		control.addListener(SWT.MouseUp, l);
+		control.addListener(SWT.MouseExit, l);
 	}
 }

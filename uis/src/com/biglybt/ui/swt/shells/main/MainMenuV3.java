@@ -123,7 +123,7 @@ public class MainMenuV3
 					MenuItem menuItem = new MenuItem(menuDebug, SWT.PUSH);
 					menuItem.setText("Log Views");
 					menuItem.setEnabled(false);
-					PluginsMenuHelper.getInstance().buildPluginLogsMenu(menuDebug);
+					PluginsMenuHelper.buildPluginLogsMenu(menuDebug);
 				}
 
 				@Override
@@ -384,7 +384,7 @@ public class MainMenuV3
 				MenuFactory.addSeparatorMenuItem(viewMenu);
 			}
 
-			needsSep = PluginsMenuHelper.getInstance().buildViewMenu(viewMenu, viewMenu.getShell());
+			needsSep = PluginsMenuHelper.buildViewMenu(viewMenu);
 
 			if ( COConfigurationManager.getBooleanParameter( "Library.EnableSimpleView" )){
 
@@ -504,7 +504,7 @@ public class MainMenuV3
 					MenuFactory.addClientStatsMenuItem(toolsMenu);
 					MenuFactory.addBlockedIPsMenuItem(toolsMenu);
 
-					PluginsMenuHelper.getInstance().buildToolsMenu(toolsMenu);
+					PluginsMenuHelper.buildToolsMenu(toolsMenu);
 
 					MenuFactory.addSeparatorMenuItem(toolsMenu);
 					MenuFactory.createPluginsMenuItem(toolsMenu, false);

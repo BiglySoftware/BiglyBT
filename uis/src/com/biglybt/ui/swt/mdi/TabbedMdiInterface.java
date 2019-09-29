@@ -44,4 +44,29 @@ public interface TabbedMdiInterface
 	public void setTabbedMdiMaximizeListener(TabbedMdiMaximizeListener l);
 
 	public void updateUI();
+
+	void setDestroyEntriesOnDeactivate(boolean destroyEntriesOnDeactivate);
+
+	void setEntriesDataSource(Object newDataSource);
+
+	/**
+	 * Sets whether this MDI wants subviews.  This is only a recommendation. It's
+	 * up to the MdiEntry to obey what they show or don't show.
+	 * <p/>
+	 * MdiEntries can check for this flag in {@link com.biglybt.ui.swt.pif.UISWTViewEvent#TYPE_CREATE} with:<br/>
+	 * <pre>
+	 * UISWTView view = event.getView();
+	 * if (view instanceof TabbedEntry) {
+	 *    enable_tabs = ((TabbedEntry) view).getMDI().getAllowSubViews();
+	 * } else {
+	 *   // Not in an MDI, set enable_tabs here
+	 * }</pre>
+	 */
+	void setAllowSubViews(boolean allowSubViews);
+
+	/**
+	 * Whether this MDI wants subviews.  This is only a recommendation. It's
+	 * up to the MdiEntry to obey what they show or don't show.
+	 */
+	boolean getAllowSubViews();
 }

@@ -19,23 +19,13 @@
 package com.biglybt.ui.swt.mdi;
 
 import java.util.*;
-import java.util.List;
-
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.UIFunctionsUserPrompter;
-import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
-import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
-import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoListener;
-import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
-import com.biglybt.ui.mdi.*;
-import com.biglybt.ui.selectedcontent.SelectedContentManager;
-import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
@@ -44,39 +34,46 @@ import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.ui.toolbar.UIToolBarEnablerBase;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.debug.ObfuscateImage;
-import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
-import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pif.UISWTViewEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.*;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx.CloneConstructor;
+import com.biglybt.pifimpl.local.ui.UIManagerImpl;
+import com.biglybt.plugin.net.buddy.swt.FriendsView;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.UIFunctionsUserPrompter;
+import com.biglybt.ui.common.viewtitleinfo.*;
+import com.biglybt.ui.mdi.*;
+import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.skin.SWTSkin;
-import com.biglybt.ui.swt.skin.SWTSkinFactory;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
-import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
+import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.pifimpl.*;
+import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
+import com.biglybt.util.MapUtils;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.PluginManager;
+import com.biglybt.pif.ui.model.BasicPluginViewModel;
+import com.biglybt.pif.ui.toolbar.UIToolBarEnablerBase;
 
 public abstract class BaseMdiEntry
 	extends UISWTViewImpl
 	implements MdiEntrySWT, ViewTitleInfoListener, AEDiagnosticsEvidenceGenerator,
 		ObfuscateImage
 {
+	protected static final String SO_ID_ENTRY_WRAPPER = "mdi.content.item";
+
+	protected static long uniqueNumber = 0;
+
 	protected final MultipleDocumentInterface mdi;
 
 	protected String logID;
 
 	private String skinRef;
-
-	protected SWTSkin skin;
 
 	private List<MdiCloseListener> listCloseListeners = null;
 
@@ -99,6 +96,8 @@ public abstract class BaseMdiEntry
 
 	private boolean closeable;
 
+	protected Boolean	closeWasUserInitiated;
+
 	private Boolean isExpanded = null;
 
 	private boolean added = false;
@@ -115,15 +114,14 @@ public abstract class BaseMdiEntry
 
 	private boolean hasBeenOpened;
 
-	private BaseMdiEntry() {
-		super(null, null, false);
-		mdi = null;
-		setDefaultExpanded(false);
-		AEDiagnostics.addWeakEvidenceGenerator(this);
-	}
+	@SuppressWarnings("unchecked")
+	private List<MdiEntryVitalityImageSWT> listVitalityImages = Collections.EMPTY_LIST;
+	
+	public BaseMdiEntry(MultipleDocumentInterface mdi, String id) {
 
-	public BaseMdiEntry(MultipleDocumentInterface mdi, String id, String parentViewID) {
-		super(id, parentViewID, true);
+		super(id);
+		setDestroyOnDeactivate(true);
+
 		this.mdi = mdi;
 		AEDiagnostics.addWeakEvidenceGenerator(this);
 
@@ -140,25 +138,51 @@ public abstract class BaseMdiEntry
 		setDefaultExpanded(false);
 	}
 
-	/* (non-Javadoc)
-	 * @see MdiEntry#getId()
-	 */
 	@Override
 	public String getId() {
 		return id;
 	}
 
-	/* (non-Javadoc)
-	 * @see MdiEntry#addVitalityImage(java.lang.String)
-	 */
 	@Override
-	public MdiEntryVitalityImage addVitalityImage(String imageID) {
-		return null;
+	public MdiEntryVitalityImageSWT addVitalityImage(String imageID) {
+		synchronized (this) {
+			MdiEntryVitalityImageSWT vitalityImage = new MdiEntryVitalityImageSWT(this,
+				imageID);
+			int index = 0;
+			if (listVitalityImages == Collections.EMPTY_LIST) {
+				listVitalityImages = new ArrayList<>(1);
+			} else {
+				for (int i = listVitalityImages.size() - 1; i >= 0; i--) {
+					if (!listVitalityImages.get(i).getAlwaysLast()) {
+						index = i + 1;
+						break;
+					}
+				}
+			}
+			listVitalityImages.add(index, vitalityImage);
+			return vitalityImage;
+		}
 	}
 
-	/* (non-Javadoc)
-	 * @see MdiEntry#close()
-	 */
+	@Override
+	public List<MdiEntryVitalityImageSWT> getVitalityImages() {
+		synchronized (this) {
+			return new ArrayList<>(listVitalityImages);
+		}
+	}
+
+	@Override
+	public boolean
+	close(boolean force, boolean userInitiated ) {
+		if (!close(force)) {
+			return false;
+		}
+
+		closeWasUserInitiated = userInitiated;
+
+		return( close( force ));
+	}
+	
 	@Override
 	public boolean close(boolean forceClose) {
 		if (!forceClose) {
@@ -169,15 +193,9 @@ public abstract class BaseMdiEntry
 
 		setCloseable(closeable);
 		
-		setDisposed( true );
-
-		baseDispose();
+		ViewTitleInfoManager.removeListener(this);
 
 		return true;
-	}
-
-	private void baseDispose() {
-		ViewTitleInfoManager.removeListener(this);
 	}
 
 	public Object getDatasourceCore() {
@@ -234,27 +252,19 @@ public abstract class BaseMdiEntry
 	 * @see MdiEntry#setParentID(java.lang.String)
 	 */
 	@Override
-	public void setParentID(String id) {
-		if (id == null || "Tools".equals(id)) {
-			id = MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS;
+	public void setParentEntryID(String parentEntryID) {
+		if (parentEntryID == null || "Tools".equals(parentEntryID)) {
+			parentEntryID = MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS;
 		}
-		if (id.equals(getId())) {
-			Debug.out("Setting Parent to same ID as child! " + id);
+		if (parentEntryID.equals(getViewID())) {
+			Debug.out("Setting Parent to same ID as child! " + parentEntryID);
 			return;
 		}
-		parentEntryID = id;
+		this.parentEntryID = parentEntryID;
 		// ensure parent gets created if it isn't there already
 		if (mdi != null) {
-			mdi.loadEntryByID(parentEntryID, false);
+			mdi.loadEntryByID(this.parentEntryID, false);
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see MdiEntry#getVitalityImages()
-	 */
-	@Override
-	public MdiEntryVitalityImage[] getVitalityImages() {
-		return null;
 	}
 
 	/* (non-Javadoc)
@@ -597,9 +607,15 @@ public abstract class BaseMdiEntry
 			ViewTitleInfoManager.addListener(this);
 
 			if (getEventListener() == null && (viewTitleInfo instanceof UISWTViewEventListener)) {
+				if (getSkinRef() == null) {
+					// TODO Remove this debug
+					System.out.println(
+							"Setting event listener because viewTitleInfo instance of UISWTViewEventListener.  Might lose builder info. "
+									+ getViewID() + " via " + Debug.getCompressedStackTrace());
+				}
 				try {
-					setEventListener((UISWTViewEventListener) viewTitleInfo, true);
-				} catch (UISWTViewEventCancelledException e) {
+					setEventListener((UISWTViewEventListener) viewTitleInfo, null, true);
+				} catch (UISWTViewEventCancelledException ignore) {
 				}
 			}
 		}
@@ -618,11 +634,7 @@ public abstract class BaseMdiEntry
 						&& ((Object[]) datasource).length == 0)) ? getInitialDataSource()
 								: datasource;
 		if (initialDataSource != null) {
-			if (skinObject instanceof SWTSkinObject) {
-				((SWTSkinObject) skinObject).triggerListeners(
-						SWTSkinObjectListener.EVENT_DATASOURCE_CHANGED, initialDataSource);
-			}
-			triggerEvent(UISWTViewEvent.TYPE_DATASOURCE_CHANGED, initialDataSource);
+			setDatasource(initialDataSource);
 		}
 	}
 
@@ -699,10 +711,6 @@ public abstract class BaseMdiEntry
 
 
 	public void show() {
-		if (skinObject == null) {
-			return;
-		}
-
 		SelectedContentManager.clearCurrentlySelectedContent();
 
 		UIFunctionsSWT uif = UIFunctionsManagerSWT.getUIFunctionsSWT();
@@ -714,6 +722,9 @@ public abstract class BaseMdiEntry
 
 
 		SWTSkinObject skinObject = getSkinObjectMaster();
+		if (skinObject == null) {
+			return;
+		}
 		skinObject.setVisible(true);
 		if (skinObject instanceof SWTSkinObjectContainer) {
 			SWTSkinObjectContainer container = (SWTSkinObjectContainer) skinObject;
@@ -737,9 +748,9 @@ public abstract class BaseMdiEntry
 		}
 
 		try {
-			// In theory, c.setVisible() will trigger TYPE_FOCUSGAINED, but let's
+			// In theory, c.setVisible() will trigger TYPE_SHOWN, but let's
 			// call it anyway (it will be ignored if focus is already gained)
-			triggerEvent(UISWTViewEvent.TYPE_FOCUSGAINED, null);
+			triggerEvent(UISWTViewEvent.TYPE_SHOWN, null);
 		} catch (Exception e) {
 			Debug.out(e);
 		}
@@ -789,32 +800,21 @@ public abstract class BaseMdiEntry
 		}
 
 		try {
-			triggerEvent(UISWTViewEvent.TYPE_FOCUSLOST, null);
+			triggerEvent(UISWTViewEvent.TYPE_HIDDEN, null);
 		} catch (Exception e) {
 			Debug.out(e);
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see MdiEntry#updateUI()
-	 */
 	@Override
 	public void
 	updateUI()
 	{
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void
-			runSupport()
-			{
-				if (!isDisposed()) {
-					if (getEventListener() != null) {
-
-						triggerEvent(UISWTViewEvent.TYPE_REFRESH, null);
-					}
-					refreshTitle();
-				}
+		Utils.execSWTThread(() -> {
+			if (getEventListener() != null) {
+				triggerEvent(UISWTViewEvent.TYPE_REFRESH, null);
 			}
+			refreshTitle();
 		});
 	}
 
@@ -829,6 +829,9 @@ public abstract class BaseMdiEntry
 		}
 		autoOpenInfo.put("title", getTitle());
 		Object datasource = getDatasourceCore();
+
+		// There's also DataSourceResolver that might be useful
+
 		if (datasource instanceof DownloadManager) {
 			try {
 				autoOpenInfo.put(
@@ -908,20 +911,16 @@ public abstract class BaseMdiEntry
 		return added;
 	}
 
-	public void setDisposed(boolean b) {
-		super.setDisposed( b );
-		added = !b;
+	@Override
+	protected void setMasterComposite(Composite masterComposite) {
+		super.setMasterComposite(masterComposite);
+
+		added = masterComposite != null;
 
 		if (added) {
-			if (getSkinObject() != null) {
-				getSkinObject().triggerListeners(
-						SWTSkinObjectListener.EVENT_DATASOURCE_CHANGED, datasource);
-			}
+			setDatasource(datasource);
 		}
 
-		if ( isDisposed()){
-			baseDispose();
-		}
 	}
 
 	@Override
@@ -993,7 +992,7 @@ public abstract class BaseMdiEntry
 		if (titleInfoToRefresh == null || this.viewTitleInfo != titleInfoToRefresh) {
 			return;
 		}
-		if (isDisposed()) {
+		if (isEntryDisposed()) {
 			return;
 		}
 
@@ -1016,9 +1015,8 @@ public abstract class BaseMdiEntry
 		}
 	}
 
-	public void build() {
-	}
-
+	public abstract void build();
+	
 	/* (non-Javadoc)
 	 * @see MdiEntry#setPreferredAfterID(java.lang.String)
 	 */
@@ -1053,7 +1051,8 @@ public abstract class BaseMdiEntry
 			//writer.println("Created: " + created);
 			writer.println("Added: " + added);
 			writer.println("closeable: " + closeable);
-			writer.println("Disposed: " + isDisposed());
+			writer.println("isEntryDisposed: " + isEntryDisposed());
+			writer.println("isContentDisposed: " + isContentDisposed());
 			writer.println("hasBeenOpened: " + hasBeenOpened);
 			//writer.println("hasFocus: " + hasFocus);
 			//writer.println("haveSentInitialize: " + haveSentInitialize);
@@ -1088,50 +1087,27 @@ public abstract class BaseMdiEntry
 	 */
 	@Override
 	public void closeView() {
-		// This essentially calls mdi.closeEntry(id)
-		//UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		//if (uiFunctions != null) {
-		//	uiFunctions.closePluginView(this);
-		//}
 		if (mdi != null) {
+			// this will end up calling #close(boolean)
 			mdi.closeEntry(id);
 		}
 
 		super.closeView();
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.pifimpl.UISWTViewImpl2#setEventListener(com.biglybt.ui.swt.pif.UISWTViewEventListener, boolean)
-	 */
 	@Override
-	public void setEventListener(UISWTViewEventListener _eventListener,
-			boolean doCreate)
-	throws UISWTViewEventCancelledException {
-		UISWTViewEventListener eventListener = getEventListener();
-		if (eventListener instanceof UIToolBarEnablerBase) {
-			removeToolbarEnabler((UIToolBarEnablerBase) eventListener);
+	public void setEventListener(UISWTViewEventListener newEventListener,
+			UISWTViewBuilderCore builder, boolean doCreate)
+			throws UISWTViewEventCancelledException {
+		UISWTViewEventListener oldEventListener = getEventListener();
+		if (oldEventListener instanceof UIToolBarEnablerBase) {
+			removeToolbarEnabler((UIToolBarEnablerBase) oldEventListener);
 		}
-		if ((eventListener instanceof ViewTitleInfo) && viewTitleInfo == eventListener) {
+		if ((oldEventListener instanceof ViewTitleInfo) && viewTitleInfo == oldEventListener) {
 			setViewTitleInfo(null);
 		}
 
-		if (_eventListener instanceof UISWTViewEventListenerHolder) {
-			UISWTViewEventListenerHolder h = (UISWTViewEventListenerHolder) _eventListener;
-			UISWTViewEventListener delegatedEventListener = h.getDelegatedEventListener(this);
-			if (delegatedEventListener != null) {
-				_eventListener = delegatedEventListener;
-			}
-		}
-
-		if (_eventListener instanceof UIToolBarEnablerBase) {
-			addToolbarEnabler((UIToolBarEnablerBase) _eventListener);
-		}
-		if ((_eventListener instanceof ViewTitleInfo) && viewTitleInfo == null) {
-			setViewTitleInfo((ViewTitleInfo) _eventListener);
-		}
-
-
-		if (_eventListener instanceof BasicPluginViewImpl) {
+		if (newEventListener instanceof BasicPluginViewImpl) {
 			String existing_id = getImageLeftID();
 
 			if (existing_id==null||"image.sidebar.plugin".equals(existing_id)) {
@@ -1139,8 +1115,14 @@ public abstract class BaseMdiEntry
 			}
 		}
 
+		super.setEventListener(newEventListener, builder, doCreate);
 
-		super.setEventListener(_eventListener, doCreate);
+		if (newEventListener instanceof UIToolBarEnablerBase) {
+			addToolbarEnabler((UIToolBarEnablerBase) newEventListener);
+		}
+		if ((newEventListener instanceof ViewTitleInfo) && viewTitleInfo == null) {
+			setViewTitleInfo((ViewTitleInfo) newEventListener);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -1151,12 +1133,6 @@ public abstract class BaseMdiEntry
 		super.setDatasource(datasource);
 
 		triggerDatasourceListeners();
-		if (isAdded()) {
-			if (getSkinObject() != null) {
-				getSkinObject().triggerListeners(
-						SWTSkinObjectListener.EVENT_DATASOURCE_CHANGED, datasource);
-			}
-		}
 	}
 
 	/* (non-Javadoc)
@@ -1164,7 +1140,7 @@ public abstract class BaseMdiEntry
 	 */
 	@Override
 	public void setTitle(String title) {
-		if ( super.setTitleSupport(title)) {
+		if ( setTitleSupport(title)) {
 		
 			redraw();
 		}
@@ -1172,7 +1148,7 @@ public abstract class BaseMdiEntry
 
 	@Override
 	public void setTitleID( String id ) {
-		if ( super.setTitleIDSupport( id )) {
+		if ( setTitleIDSupport( id )) {
 			
 			redraw();
 		}
@@ -1211,7 +1187,7 @@ public abstract class BaseMdiEntry
 
 	
 	
-	
+	@Override
 	public boolean
 	canBuildStandAlone()
 	{
@@ -1221,21 +1197,9 @@ public abstract class BaseMdiEntry
 
 			return( true );
 
-		}else {
-
-			UISWTViewEventListener event_listener = getEventListener();
-
-			if ( event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)event_listener).isCloneable()){
-
-				return( true );
-				
-			}else if ( event_listener instanceof UISWTViewEventListenerEx ) {
-				
-				return( true );
-			}
 		}
 
-		return( false );
+		return super.canBuildStandAlone();
 	}
 
 	public Map<String,Object>
@@ -1299,58 +1263,28 @@ public abstract class BaseMdiEntry
 		
 		result.put( "control_type", getControlType());
 
-		UISWTViewEventListener listener = getEventListener();
-		
-		if ( listener instanceof UISWTViewCoreEventListenerEx ){
-		
-			CloneConstructor cc = ((UISWTViewCoreEventListenerEx)listener).getCloneConstructor();
-		
-			String name = cc.getCloneClass().getName();
-			
-			Map<String,Object>	map = new HashMap<>();
-			
-			map.put( "name",  name );
-			
-			List<Object>	params = cc.getParameters();
-			
-			if ( params != null ){
-				
-				List	p_types	= new ArrayList<>();
-				List	p_vals	= new ArrayList<>();
-				
-				map.put( "p_types", p_types );
-				map.put( "p_vals", p_vals );
-				
-				for ( Object p: params ) {
-					
-					if ( p instanceof Boolean ) {
-						
-						p_types.add( "bool" );
-						
-						p_vals.add( new Long(((Boolean)p)?1:0));
-						
-					}else if ( p instanceof Long ) {
-
-						p_types.add( "long" );
-
-						p_vals.add( p );
-						
-					}else if ( p instanceof String ) {
-
-						p_types.add( "string" );
-
-						p_vals.add( p );
-	
-					}else {
-						
-						Debug.out( "Unsupported param type: " + p );
-					}
-				}
+		UISWTViewBuilderCore builder = getEventListenerBuilder();
+		if (builder != null) {
+			Map map = new HashMap();
+			Class<? extends UISWTViewEventListener> cla = builder.getListenerClass();
+			if (cla != null) {
+				map.put("name", cla.getName());
 			}
-			
-			result.put( "event_listener", map );
-			
-		}else if ( listener instanceof UISWTViewEventListenerEx ){
+
+			PluginInterface pi = builder.getPluginInterface();
+			if (pi != null) {
+				map.put( "plugin_id",  pi.getPluginID() );
+				map.put( "plugin_name", pi.getPluginName());
+			}
+			if (map.size() > 0) {
+				result.put( "event_listener", map );
+			}
+		}
+
+		UISWTViewEventListener listener = getEventListener();
+
+
+		if ( listener instanceof UISWTViewEventListenerEx ){
 			
 			com.biglybt.ui.swt.pif.UISWTViewEventListenerEx.CloneConstructor cc = ((UISWTViewEventListenerEx)listener).getCloneConstructor();
 		
@@ -1406,12 +1340,24 @@ public abstract class BaseMdiEntry
 		
 		return( result );
 	}
-	
-	public abstract SWTSkinObjectContainer
+
+	@Override
+	public SWTSkinObjectContainer
 	buildStandAlone(
-		SWTSkinObjectContainer		soParent );
+		SWTSkinObjectContainer		soParent )
+	{
+		return(
+			buildStandAlone(
+				soParent,
+				getSkinRef(),
+				skin,
+				id,
+				getDatasourceCore(),
+				getControlType(),
+				getEventListenerBuilder() ));
+	}
 	
-	private static Set<String>	installing_pids = new HashSet<>();
+	private static final Set<String>	installing_pids = new HashSet<>();
 	
 	public static void
 	popoutStandAlone(
@@ -1452,7 +1398,7 @@ public abstract class BaseMdiEntry
 		Map<String,Object>			map,
 		Runnable					callback )
 	{
-		String	mdi_type = (String)map.get( "mdi" );
+		//String	mdi_type = (String)map.get( "mdi" );
 		
 		String		skin_ref = (String)map.get( "skin_ref" );
 		
@@ -1499,17 +1445,25 @@ public abstract class BaseMdiEntry
 		
 		Map<String,Object>	el_map = (Map<String,Object>)map.get( "event_listener" );
 		
-		UISWTViewEventListener	event_listener	= null;
+		UISWTViewBuilderCore builder = null;
 		
 		if ( el_map != null ){
 		
 			try {
 				String class_name = (String)el_map.get( "name" );
-				
+
+				String try_install_plugin_id = null;
+				PluginManager pluginManager = CoreFactory.getSingleton().getPluginManager();
 				if ( class_name != null ){
 					
-					Class<? extends UISWTViewCoreEventListenerEx> cla = (Class<? extends UISWTViewCoreEventListenerEx>) Class.forName( class_name );
-					
+					Class<? extends UISWTViewCoreEventListener> cla = (Class<? extends UISWTViewCoreEventListener>) Class.forName( class_name );
+
+					// Legacy didn't have plugin_id
+					String plugin_id = (String)el_map.get( "plugin_id" );
+					PluginInterface pi = pluginManager.getPluginInterfaceByID( plugin_id );
+
+					// legacy had p_type and p_values, but we use datasource, so we
+					// need to parse and convert
 					List	p_types = (List)el_map.get( "p_types" );
 					List	p_vals	= (List)el_map.get( "p_vals" );
 					
@@ -1546,18 +1500,51 @@ public abstract class BaseMdiEntry
 								Debug.out( "Unsupported type: " + type );
 							}
 						}
+
+						// Note: Legacy had constructor params, which have been migrated to
+						//       datasource or removed if they weren't needed
+						// FilesView                   | boolean | removed
+						// PeersGeneralView            | long tagUUID | Moved to datasource
+						// DeviceManagerUI.deviceView  | String parent_key, String device_id | Moved to datasource
+						// BuddyPluginView             | String VIEW_ID | Not needed; class moved 
+						// BasicPluginViewImpl         | String (pluginID + "/" + model.getName()) | derp
+
+						switch (class_name) {
+							case "com.biglybt.ui.swt.views.PeersGeneralView":
+								data_source = args.get(0);
+								break;
+							case "com.biglybt.ui.swt.devices.DeviceManagerUI.deviceView":
+								data_source = new String[]{(String) args.get(0), (String) args.get(1)};
+								break;
+							case "com.biglybt.plugin.net.buddy.swt.BuddyPluginView":
+								cla = FriendsView.class;
+								pi = pluginManager.getPluginInterfaceByID("azbuddy");
+								break;
+							case "com.biglybt.ui.swt.pifimpl.BasicPluginViewImpl":
+								String key = (String) args.get(0);
+								// Key is {@link UIManagerImpl#getBasicPluginViewModelKey()}
+								BasicPluginViewModel model = UIManagerImpl.getBasicPluginViewModel(key);
+								if (pi == null && model != null) {
+									pi = model.getPluginInterface();
+								}
+								data_source = model;
+								break;
+						}
 						
-						event_listener = cla.getConstructor( types.toArray( new Class<?>[types.size()])).newInstance( args.toArray( new Object[args.size()]));
-						
-					}else {
-					
-						event_listener = cla.newInstance();
 					}
+					
+					if (plugin_id != null && pi == null) {
+						try_install_plugin_id = plugin_id;
+					} else {
+						builder = new UISWTViewBuilderCore(id, pi,
+								cla).setInitialDatasource(data_source);
+					}
+
 				}else{
 					
 					String plugin_id = (String)el_map.get( "plugin_id" );
 					
-					PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( plugin_id );
+					PluginInterface pi = pluginManager.getPluginInterfaceByID( plugin_id );
 					
 					if ( pi != null ){
 						
@@ -1601,139 +1588,172 @@ public abstract class BaseMdiEntry
 								}
 							}
 						}
-							
-						event_listener = (UISWTViewEventListener)pi.getIPC().invoke( ipc_method, args.toArray( new Object[args.size()]));
+
+						builder = new UISWTViewBuilderCore(id, pi).setListenerInstantiator(
+								true,
+							(Builder, view) -> (UISWTViewEventListener) pi.getIPC().invoke(ipc_method,
+										args.toArray(new Object[0])));
 						
 					}else{
-						
-						boolean	try_install = false;
-						
-						synchronized( installing_pids ) {
-							
-							if ( !installing_pids.contains( plugin_id )) {
-															
-								installing_pids.add( plugin_id );
-								
-								try_install = true;
-							}
-						}
-						
-						if ( try_install ){
-							
-							boolean	went_async = false;
-							
-							try {
-								UIFunctions uif = UIFunctionsManager.getUIFunctions();
-		
-								String plugin_name = (String)el_map.get( "plugin_name" );
-								
-								String remember_id = "basemdi.import.view.install." + plugin_id;
-								
-								String	title	= MessageText.getString( "plugin.required" );
-								String	text	= MessageText.getString( "plugin.required.info", new String[]{ plugin_name });
-								
-								UIFunctionsUserPrompter prompter = 
-									uif.getUserPrompter(title, text, new String[] {
-										MessageText.getString("Button.yes"),
-										MessageText.getString("Button.no")
-									}, 0);
-		
-								if ( remember_id != null ){
-		
-									prompter.setRemember(
-										remember_id,
-										false,
-										MessageText.getString("MessageBoxWindow.nomoreprompting"));
-								}
-		
-								prompter.setAutoCloseInMS(0);
-		
-								prompter.open(null);
-		
-								boolean	install = prompter.waitUntilClosed() == 0;
-		
-								if ( install ){
-		
-									went_async = true;
-		
-									uif.installPlugin(
-										plugin_id,
-										"plugin.generic.install",
-										new UIFunctions.actionListener()
-										{
-											@Override
-											public void
-											actionComplete(
-												Object		result )
-											{
-												try{
-													if ( callback != null ){
-		
-														if ( result instanceof Boolean ){
-		
-															if ( (Boolean)result ) {				
-		
-																callback.run();
-															}
-														}
-													}
-												}finally{
-													
-													synchronized( installing_pids ) {
-														
-														installing_pids.remove( plugin_id );
-													}
-												}
-											}
-										});
-								}
-							}finally {
-								
-								if ( !went_async ) {
-									
-									synchronized( installing_pids ) {
-										
-										installing_pids.remove( plugin_id );
-									}
-								}
-							}
-						}
+						try_install_plugin_id = plugin_id;
 					}
 				}
-				
+
+				if (try_install_plugin_id != null) {
+					tryInstallPlugin(try_install_plugin_id, MapUtils.getMapString(el_map,
+							"plugin_name", try_install_plugin_id), callback);
+				}
 			}catch( Throwable e ) {
 				
 				Debug.out( e );
+				return null;
 			}
 		}
 		
-		if ( mdi_type.equals( "sidebar" )){
-			
-			return( SideBarEntrySWT.buildStandAlone(
-						soParent,
-						skin_ref,
-						skin,
-						parent_id,
-						id,
-						data_source,
-						control_type,
-						null,
-						event_listener,
-						true ));
-			
-		}else {
-			return(TabbedEntry.buildStandAlone(
+		return( buildStandAlone(
 					soParent,
 					skin_ref,
 					skin,
-					parent_id,
 					id,
 					data_source,
 					control_type,
-					null,
-					event_listener,
-					true ));
-			
+					builder ));
+		
+	}
+
+	private static void tryInstallPlugin(String plugin_id, String plugin_name,
+			Runnable callback) {
+		boolean	try_install = false;
+
+		synchronized( installing_pids ) {
+
+			if ( !installing_pids.contains( plugin_id )) {
+
+				installing_pids.add( plugin_id );
+
+				try_install = true;
+			}
 		}
+
+		if ( try_install ){
+
+			boolean	went_async = false;
+
+			try {
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+				if (uif == null) {
+					return;
+				}
+
+				String remember_id = "basemdi.import.view.install." + plugin_id;
+
+				String	title	= MessageText.getString( "plugin.required" );
+				String	text	= MessageText.getString( "plugin.required.info", new String[]{ plugin_name });
+
+				UIFunctionsUserPrompter prompter =
+					uif.getUserPrompter(title, text, new String[] {
+						MessageText.getString("Button.yes"),
+						MessageText.getString("Button.no")
+					}, 0);
+
+				prompter.setRemember(
+					remember_id,
+					false,
+					MessageText.getString("MessageBoxWindow.nomoreprompting"));
+
+				prompter.setAutoCloseInMS(0);
+
+				prompter.open(null);
+
+				boolean	install = prompter.waitUntilClosed() == 0;
+
+				if ( install ){
+
+					went_async = true;
+
+					uif.installPlugin(
+						plugin_id,
+						"plugin.generic.install",
+						result -> {
+							try{
+								if ( callback != null ){
+
+									if ( result instanceof Boolean ){
+
+										if ( (Boolean)result ) {
+
+											callback.run();
+										}
+									}
+								}
+							}finally{
+
+								synchronized( installing_pids ) {
+
+									installing_pids.remove( plugin_id );
+								}
+							}
+						});
+				}
+			}finally {
+
+				if ( !went_async ) {
+
+					synchronized( installing_pids ) {
+
+						installing_pids.remove( plugin_id );
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Either skinRef or original_builder must be non-null
+	 */
+	public static SWTSkinObjectContainer
+	buildStandAlone(
+		SWTSkinObjectContainer		soParent,
+		String						skinRef,
+		SWTSkin						skin,
+		String						id,
+		Object						datasource,
+		int							controlType,
+		UISWTViewBuilderCore originalBuilder )
+	{
+		Composite parent = soParent.getComposite();
+		if (parent == null) {
+			return null;
+		}
+
+		if (skinRef != null){
+
+			Shell shell = parent.getShell();
+			Cursor cursor = shell.getCursor();
+			try {
+				shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
+
+				// wrap skinRef with a container that we control visibility of
+				// (invisible by default)
+				SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
+					"MdiContents." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
+					soParent, null);
+
+				SWTSkinObject skinObject = skin.createSkinObject( id, skinRef, soContents, datasource );
+
+				Control control = skinObject.getControl();
+				control.setLayoutData(Utils.getFilledFormData());
+				control.getParent().layout(true, true);
+
+				soContents.setVisible( true );
+
+				return( soContents );
+
+			}finally{
+				shell.setCursor(cursor);
+			}
+		}
+
+		return UISWTViewImpl.buildStandAlone(soParent, skin, id, datasource, controlType, originalBuilder);
 	}
 }

@@ -68,8 +68,7 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.ui.UIFunctions;
@@ -87,7 +86,7 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
  *
  */
 public class PeersGraphicView
-	implements UIPluginViewToolBarListener, UISWTViewCoreEventListenerEx
+	implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 {
 
   public static String MSGID_PREFIX = "PeersGraphicView";
@@ -242,41 +241,6 @@ public class PeersGraphicView
     this.peerComparator = new PeerComparator();
   }
 
-  @Override
-  public boolean
-  isCloneable()
-  {
-	  return( true );
-  }
-
-  @Override
-  public UISWTViewCoreEventListenerEx
-  getClone()
-  {
-	  return( new PeersGraphicView());
-  }
-
-  @Override
-  public CloneConstructor
-  getCloneConstructor()
-  {
-	  return( 
-		  new CloneConstructor()
-		  {
-			  public Class<? extends UISWTViewCoreEventListenerEx>
-			  getCloneClass()
-			  {
-				  return( PeersGraphicView.class );
-			  }
-
-			  public List<Object>
-			  getParameters()
-			  {
-				  return( null );
-			  }
-		  });
-  }
-	
   private boolean comp_focused;
   private Object focus_pending_ds;
 
@@ -646,11 +610,6 @@ public class PeersGraphicView
 													UISWTViewCore view = (UISWTViewCore)item.getData("TabbedEntry");
 	
 													UISWTViewEventListener listener = view.getEventListener();
-	
-													if ( listener instanceof UISWTViewEventListenerHolder ){
-	
-														listener = ((UISWTViewEventListenerHolder)listener).getDelegatedEventListener( view );
-													}
 	
 													if ( listener instanceof PeersView ){
 	

@@ -608,8 +608,8 @@ BuddyPlugin
 							synchronized( swt_ui_waiters ){
 								
 								swt_ui = (BuddyPluginViewInterface)Class.forName("com.biglybt.plugin.net.buddy.swt.BuddyPluginView").getConstructor(
-									new Class[]{ BuddyPlugin.class, UIInstance.class, String.class } ).newInstance(
-										new Object[]{ BuddyPlugin.this, instance, VIEW_ID } );
+									new Class[]{ BuddyPlugin.class, UIInstance.class } ).newInstance(
+										new Object[]{ BuddyPlugin.this, instance } );
 
 								for ( Runnable r: swt_ui_waiters ){
 									
@@ -1022,7 +1022,7 @@ BuddyPlugin
  		}
  	}
 
-	protected BuddyPluginViewInterface
+	public BuddyPluginViewInterface
 	getSWTUI()
 	{
 		return( swt_ui );

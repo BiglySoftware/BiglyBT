@@ -16,7 +16,8 @@
 package com.biglybt.ui.swt.mdi;
 
 import org.eclipse.swt.graphics.Image;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
+import org.eclipse.swt.graphics.Rectangle;
+
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 
 import com.biglybt.ui.mdi.MdiEntry;
@@ -29,14 +30,11 @@ import com.biglybt.ui.mdi.MdiEntry;
 public interface MdiEntrySWT
 	extends MdiEntry, UISWTViewCore
 {
-	//public SWTSkinObject getSkinObject();
-
-	@Override
-	public UISWTViewEventListener getEventListener();
-
 	public void addListener(MdiSWTMenuHackListener l);
 
 	public void removeListener(MdiSWTMenuHackListener l);
 
 	void setImageLeft(Image imageLeft);
+
+	void redraw(Rectangle hitArea);
 }

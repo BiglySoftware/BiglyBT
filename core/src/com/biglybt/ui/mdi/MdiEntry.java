@@ -20,6 +20,7 @@
 
 package com.biglybt.ui.mdi;
 
+import java.util.List;
 import java.util.Map;
 
 import com.biglybt.pif.ui.UIPluginView;
@@ -28,6 +29,26 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 
 
 /**
+ * A view (entry) that can be placed in a MDI (Multiple Document Interface).
+ * Successor to UISWTView, this class is not SWT specific. In fact, UISWTView
+ * and MdiEntry merge into a implementation class MdiEntrySWT later on:
+ * <pre>
+ *   UIPluginView
+ *     + UISWTView
+ *     |  + UISWTViewCore
+ *     |     + MdiEntrySWT
+ *     |     |  + BaseMdiEntry
+ *     |     + UISWTViewImpl
+ *     |        + BaseMdiEntry
+ *     + MdiEntry
+ *        + MdiEntrySWT
+ *           + BaseMdiEntry
+ * </pre>
+ * 
+ * MdiEntry differ from UISWTView in that they contain MDI related properties,
+ * such as {@link ViewTitleInfo}, {@link MdiEntryVitalityImage}, expand state,
+ * parent entry, etc.
+ * 
  * @author TuxPaper
  * @created Aug 13, 2008
  *
@@ -35,16 +56,31 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 public interface MdiEntry extends UIPluginView
 {
 
+	/**
+	 * ID of Parent MdiEntry
+	 */
 	public String getParentID();
 
+	//TODO: Remove after 2.1.0.1 (RCM Plugin uses this)
+	/**
+	 * @apiNote Super class has  {@link UIPluginView#getDataSource()} which uses 
+	 * capital S and is part of the PI, so we must go with that
+	 * 
+	 * @deprecated use {@link #getDataSource()}
+	 */
 	public Object getDatasource();
 
 	public String getExportableDatasource();
 
 	public boolean isCloseable();
 
+	/**
+	 * @apiNote {@link #getViewID()} returns same value.
+	 * @implNote RCM Uses this.  Remove after 2.1.0.1
+	 * @deprecated Use {@link #getViewID()}
+	 */
 	public String getId();
-
+	
 	public MdiEntryVitalityImage addVitalityImage(String imageID);
 
 	public void addListeners(Object objectWithListeners);
@@ -99,9 +135,19 @@ public interface MdiEntry extends UIPluginView
 
 	public boolean isAdded();
 
-	public boolean isDisposed();
+	/**
+	 * Whether the content of this entry is disposed.
+	 * <p/>
+	 * Content can be disposed while entry is not disposed.  Content is always disposed when entry is disposed. 
+	 */
+	public boolean isContentDisposed();
 
-	public boolean isReallyDisposed();
+	/**
+	 * Whether this entry is disposed.
+	 * <p/>
+	 * Content can be disposed while entry is not disposed.  Content is always disposed when entry is disposed. 
+	 */
+	public boolean isEntryDisposed();
 	
 	public ViewTitleInfo getViewTitleInfo();
 
@@ -111,10 +157,16 @@ public interface MdiEntry extends UIPluginView
 
 	public MultipleDocumentInterface getMDI();
 
-	public MdiEntryVitalityImage[] getVitalityImages();
+	public List<? extends MdiEntryVitalityImage> getVitalityImages();
 
+	/**
+	 * Closes this entry. Disposes this entry and its contents.
+	 */
 	public boolean close(boolean forceClose);
-	
+
+	/**
+	 * Closes this entry.  Disposes this entry and its contents.
+	 */
 	public boolean close(boolean forceClose, boolean userInitiated );
 
 	public void updateUI();
@@ -143,9 +195,14 @@ public interface MdiEntry extends UIPluginView
 
 	public void setDefaultExpanded(boolean defaultExpanded);
 
-	public void expandTo();
-
-	public void setParentID(String id);
+	/**
+	 * Set this entries belonging under another MdiEntry
+	 * 
+	 * @apiNote The getter is {@link #getParentID()} due to plugins already using it
+	 * 
+	 * @param parentEntryID Parent Entry ID to place under (if MDI supports it)
+	 */
+	public void setParentEntryID(String parentEntryID);
 
 	public UIToolBarEnablerBase[] getToolbarEnablers();
 

@@ -99,8 +99,6 @@ public class ArchivedFilesView
 		tv.addMenuFillListener(this);
 		tv.addTableDataSourceChangedListener(this, true);
 
-		tv.setEnableTabViews(false,true,null);
-
 		return( tv );
 	}
 

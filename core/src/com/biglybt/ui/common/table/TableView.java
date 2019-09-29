@@ -235,10 +235,7 @@ public interface TableView<DATASOURCETYPE>
 	 */
 	void selectAll();
 
-	/**
-	 * @param enableTabViews
-	 */
-	void setEnableTabViews(boolean enableTabViews, boolean expandByDefault, String[] restrictToIDs );
+	void setEnableTabViews(boolean enableTabViews, boolean expandByDefault);
 
 	void setFocus();
 

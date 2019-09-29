@@ -4,6 +4,12 @@ import java.util.List;
 
 import com.biglybt.pif.PluginInterface;
 
+/**
+ * @deprecated Use {@link UISWTInstance#registerView(String, UISWTViewBuilder)} 
+ * or {@link UISWTInstance#registerView(Class, UISWTViewBuilder)}
+ * 
+ * @apiNote Plugin3D uses this
+ */
 public interface 
 UISWTViewEventListenerEx
 	extends UISWTViewEventListener

@@ -20,6 +20,8 @@
 
 package com.biglybt.ui.swt.views.skin.sidebar;
 
+import java.util.List;
+
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
@@ -33,6 +35,9 @@ import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MdiEntryVitalityImage;
+import com.biglybt.ui.swt.mdi.BaseMdiEntry;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
+import com.biglybt.ui.swt.mdi.MdiEntryVitalityImageSWT;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 
 
@@ -52,7 +57,7 @@ public class SideBarToolTips
 
 	private final Tree tree;
 
-	private MdiEntry mdiEntry;
+	private BaseMdiEntry mdiEntry;
 
 	private Point lastRelMouseHoverPos;
 
@@ -117,7 +122,7 @@ public class SideBarToolTips
 		if (treeItem == null) {
 			return;
 		}
-		mdiEntry = (MdiEntry) treeItem.getData("MdiEntry");
+		mdiEntry = (BaseMdiEntry) treeItem.getData("MdiEntry");
 		if (mdiEntry == null) {
 			return;
 		}
@@ -204,9 +209,8 @@ public class SideBarToolTips
 	 * @since 3.1.1.1
 	 */
 	private String getToolTip(Point mousePos_RelativeToItem) {
-		MdiEntryVitalityImage[] vitalityImages = mdiEntry.getVitalityImages();
-		for (int i = 0; i < vitalityImages.length; i++) {
-			SideBarVitalityImageSWT vitalityImage = (SideBarVitalityImageSWT) vitalityImages[i];
+		List<MdiEntryVitalityImageSWT> vitalityImages = mdiEntry.getVitalityImages();
+		for (MdiEntryVitalityImageSWT vitalityImage : vitalityImages) {
 			if (vitalityImage == null) {
 				continue;
 			}

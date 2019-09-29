@@ -1,26 +1,23 @@
 /*
- * Created on Sep 15, 2008
+ * Copyright (C) Bigly Software.  All Rights Reserved.
  *
- * Copyright (C) Azureus Software, Inc, All Rights Reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package com.biglybt.ui.swt.views.skin.sidebar;
+package com.biglybt.ui.swt.mdi;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,8 +29,6 @@ import com.biglybt.ui.mdi.MdiEntryVitalityImageListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.widgets.Tree;
-import org.eclipse.swt.widgets.TreeItem;
 
 import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.Utils;
@@ -45,7 +40,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
  * @created Sep 15, 2008
  *
  */
-public class SideBarVitalityImageSWT
+public class MdiEntryVitalityImageSWT
 	implements MdiEntryVitalityImage
 {
 	private String imageID;
@@ -75,8 +70,11 @@ public class SideBarVitalityImageSWT
 	private String fullImageID;
 
 	private int alignment = SWT.RIGHT;
+	private boolean showOutsideOfEntry;
+	private boolean showOnlyOnSelection;
+	private boolean alwaysLast;
 
-	public SideBarVitalityImageSWT(final MdiEntry mdiEntry, String imageID) {
+	public MdiEntryVitalityImageSWT(final MdiEntry mdiEntry, String imageID) {
 		this.mdiEntry = mdiEntry;
 
 		mdiEntry.addListener(new MdiCloseListener() {
@@ -238,37 +236,15 @@ public class SideBarVitalityImageSWT
 								if (currentAnimationIndex >= images.length) {
 									currentAnimationIndex = 0;
 								}
-								if (mdiEntry instanceof SideBarEntrySWT) {
-									SideBarEntrySWT sbEntry = (SideBarEntrySWT) mdiEntry;
-
-									TreeItem treeItem = sbEntry.getTreeItem();
-									if (treeItem == null || treeItem.isDisposed()
-											|| !sbEntry.swt_isVisible()) {
-										return;
-									}
-
-									if (Utils.isGTK3) {
-										// parent.clear crashes java, so call item's clear
-										//parent.clear(parent.indexOf(treeItem), true);
-										try {
-											Method m = treeItem.getClass().getDeclaredMethod("clear");
-											m.setAccessible(true);
-											m.invoke(treeItem);
-										} catch (Throwable e) {
-										}
-									} else {
-										Tree parent = treeItem.getParent();
-										parent.redraw(hitArea.x, hitArea.y + treeItem.getBounds().y,
-												hitArea.width, hitArea.height, true);
-										parent.update();
-									}
+								if (mdiEntry instanceof MdiEntrySWT) {
+									((MdiEntrySWT) mdiEntry).redraw(hitArea);
 								}
 							}
 						});
 					}
 				};
 			}
-			timerEvent = SimpleTimer.addPeriodicEvent("Animate " + mdiEntry.getId()
+			timerEvent = SimpleTimer.addPeriodicEvent("Animate " + mdiEntry.getViewID()
 					+ "::" + imageID + suffix, delay, performer);
 		}
 	}
@@ -322,6 +298,9 @@ public class SideBarVitalityImageSWT
 				if (isVisible()) {
 					createTimerEvent();
 				}
+				if (mdiEntry != null) {
+					mdiEntry.redraw();
+				}
 			}
 		});
 	}
@@ -367,6 +346,32 @@ public class SideBarVitalityImageSWT
 	@Override
 	public void setAlignment(int alignment) {
 		this.alignment = alignment;
+	}
+
+	@Override
+	public boolean getShowOutsideOfEntry() {
+		return showOutsideOfEntry;
+	}
+
+	@Override
+	public void setShowOutsideOfEntry(boolean showOutsideOfEntry) {
+		this.showOutsideOfEntry = showOutsideOfEntry;
+	}
+
+	public void setShowOnlyOnSelection(boolean showOnlyOnSelection) {
+		this.showOnlyOnSelection = showOnlyOnSelection;
+	}
+
+	public boolean getShowOnlyOnSelection() {
+		return showOnlyOnSelection;
+	}
+
+	public void setAlwaysLast(boolean alwaysLast) {
+		this.alwaysLast = alwaysLast;
+	}
+
+	public boolean getAlwaysLast() {
+		return alwaysLast;
 	}
 
 	public void dispose() {

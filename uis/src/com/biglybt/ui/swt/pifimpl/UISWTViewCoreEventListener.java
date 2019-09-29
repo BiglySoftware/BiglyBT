@@ -23,6 +23,10 @@ package com.biglybt.ui.swt.pifimpl;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 
 /**
+ * Classes implementing {@link UISWTViewCoreEventListener} instead of its base,
+ * {@link UISWTViewEventListener} will get a core datasource instead of a 
+ * plugin one
+ * 
  * @author TuxPaper
  * @created Aug 14, 2008
  *

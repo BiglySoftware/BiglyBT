@@ -23,26 +23,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.biglybt.core.CoreFactory;
-import com.biglybt.pif.sharing.ShareException;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
-import com.biglybt.ui.mdi.*;
-import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
-import com.biglybt.ui.swt.views.skin.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.history.DownloadHistoryEvent;
 import com.biglybt.core.history.DownloadHistoryListener;
 import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
@@ -50,44 +42,39 @@ import com.biglybt.core.tracker.AllTrackersManager.AllTrackersListener;
 import com.biglybt.core.tracker.host.TRHost;
 import com.biglybt.core.tracker.host.TRHostListener;
 import com.biglybt.core.tracker.host.TRHostTorrent;
-import com.biglybt.core.util.AsyncController;
-import com.biglybt.core.util.Base32;
-import com.biglybt.core.util.SimpleTimer;
-import com.biglybt.core.util.TimerEvent;
-import com.biglybt.core.util.TimerEventPerformer;
-import com.biglybt.core.util.TimerEventPeriodic;
+import com.biglybt.core.util.*;
+import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
+import com.biglybt.plugin.net.buddy.swt.SBC_ChatOverview;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
+import com.biglybt.ui.mdi.*;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.views.*;
+import com.biglybt.ui.swt.views.clientstats.ClientStatsView;
+import com.biglybt.ui.swt.views.skin.*;
+import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
+import com.biglybt.ui.swt.views.stats.StatsView;
+import com.biglybt.ui.swt.views.utils.ManagerUtils;
+
 import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.download.Download;
-import com.biglybt.pif.download.DownloadStub;
-import com.biglybt.pif.download.DownloadStubEvent;
-import com.biglybt.pif.download.DownloadStubListener;
-import com.biglybt.pif.sharing.ShareManager;
-import com.biglybt.pif.sharing.ShareManagerListener;
-import com.biglybt.pif.sharing.ShareResource;
+import com.biglybt.pif.download.*;
+import com.biglybt.pif.sharing.*;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener2;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
-import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.swt.views.*;
-import com.biglybt.ui.swt.views.clientstats.ClientStatsView;
-import com.biglybt.ui.swt.views.stats.StatsView;
-import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
-import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagManager;
-import com.biglybt.core.tag.TagManagerFactory;
-import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
-import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
-import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
-import com.biglybt.plugin.net.buddy.swt.SBC_ChatOverview;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
-import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
+import static com.biglybt.ui.mdi.MultipleDocumentInterface.*;
 
 public class MainMDISetup
 {
@@ -229,39 +216,37 @@ public class MainMDISetup
 		};
 		COConfigurationManager.addAndFireParameterListener(
 				"Beta Programme Enabled", configBetaEnabledListener);
+		
+		// Note: We don't use ViewManagerSWT because it adds a menu item, and we
+		//       manually do that for StatsView and others
+		//		ViewManagerSWT vi = ViewManagerSWT.getInstance();
+		//		vi.registerView(VIEW_MAIN, 
+		//	  	new UISWTViewBuilderCore(StatsView.VIEW_ID, null, StatsView.class)
+		//	  	  .setParentEntryID(SIDEBAR_HEADER_PLUGINS));
 
-		mdi.registerEntry(StatsView.VIEW_ID, new MdiEntryCreationListener() {
-			@Override
-			public MdiEntry createMDiEntry(String id) {
-				MdiEntry entry = mdi.createEntryFromEventListener(
-						MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS, new StatsView(),
-						id, true, null, null);
-				return entry;
-			}
-		});
+		mdi.registerEntry(StatsView.VIEW_ID, id -> mdi.createEntry(
+				new UISWTViewBuilderCore(id, null, StatsView.class).setParentEntryID(
+						MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS),
+				true));
 
-		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_ALLPEERS,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						MdiEntry entry = mdi.createEntryFromEventListener(
-								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-								new PeersSuperView(), id, true, null, 
-								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_ALLPEERS));
-						entry.setImageLeftID("image.sidebar.allpeers");
-						return entry;
-					}
+		mdi.registerEntry(SIDEBAR_SECTION_ALLPEERS,
+				id -> {
+					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
+							PeersSuperView.class);
+					builder.setParentEntryID(SIDEBAR_HEADER_TRANSFERS);
+					builder.setPreferredAfterID(
+							SB_Transfers.getSectionPosition(mdi, SIDEBAR_SECTION_ALLPEERS));
+					MdiEntry entry = mdi.createEntry(builder, true);
+
+					entry.setImageLeftID("image.sidebar.allpeers");
+					return entry;
 				});
 
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_LOGGER,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						MdiEntry entry = mdi.createEntryFromEventListener(
-								MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS,
-								new LoggerView(), id, true, null, null);
-						return entry;
-					}
+				id -> {
+					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
+							LoggerView.class).setParentEntryID(SIDEBAR_HEADER_PLUGINS);
+					return mdi.createEntry(builder, true);
 				});
 
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_TAGS,
@@ -269,7 +254,7 @@ public class MainMDISetup
 					@Override
 					public MdiEntry createMDiEntry(String id) {
 						MdiEntry entry = mdi.createEntryFromSkinRef(
-								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, id,
+								SIDEBAR_HEADER_TRANSFERS, id,
 								"tagsview", "{tags.view.heading}", null, null, true, 
 								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_TAGS));
 						entry.setImageLeftID("image.sidebar.tag-overview");
@@ -436,7 +421,7 @@ public class MainMDISetup
 							};
 
 						MdiEntry entry = mdi.createEntryFromSkinRef(
-								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+								SIDEBAR_HEADER_TRANSFERS,
 								MultipleDocumentInterface.SIDEBAR_SECTION_ARCHIVED_DOWNLOADS, "archivedlsview",
 								"{mdi.entry.archiveddownloadsview}",
 								title_info, null, true, 
@@ -604,7 +589,7 @@ public class MainMDISetup
 							};
 
 						MdiEntry entry = mdi.createEntryFromSkinRef(
-								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+								SIDEBAR_HEADER_TRANSFERS,
 								MultipleDocumentInterface.SIDEBAR_SECTION_DOWNLOAD_HISTORY, "downloadhistoryview",
 								"{mdi.entry.downloadhistoryview}",
 								title_info, null, true, 
@@ -672,7 +657,7 @@ public class MainMDISetup
 						};
 
 					MdiEntry entry = mdi.createEntryFromSkinRef(
-							MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+							SIDEBAR_HEADER_TRANSFERS,
 							MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS, "alltrackersview",
 							"{mdi.entry.alltrackersview}",
 							title_info, null, true, 
@@ -714,100 +699,77 @@ public class MainMDISetup
 			// torrent options
 
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_OPTIONS,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						MdiEntry entry = mdi.createEntryFromEventListener(
-								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-								TorrentOptionsView.class,
-								MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_OPTIONS, true,
-								null,
-								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_OPTIONS));
+				id -> {
+					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
+							TorrentOptionsView.class).setParentEntryID(
+									SIDEBAR_HEADER_TRANSFERS).setPreferredAfterID(
+											SB_Transfers.getSectionPosition(mdi, id));
+					MdiEntry entry = mdi.createEntry(builder, true);
 
-						entry.setImageLeftID( "image.sidebar.torrentoptions" );
+					entry.setImageLeftID("image.sidebar.torrentoptions");
 
-						return entry;
-					}
+					return entry;
 				});
 
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						MdiEntry entry = mdi.createEntryFromEventListener(
-								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-								MySharesView.class,
-								MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES, true,
-								null, 
-								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES));
+				id -> {
+					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
+							MySharesView.class).setParentEntryID(
+									SIDEBAR_HEADER_TRANSFERS).setPreferredAfterID(
+											SB_Transfers.getSectionPosition(mdi, id));
+					MdiEntry entry = mdi.createEntry(builder, true);
 
-						entry.setImageLeftID( "image.sidebar.myshares" );
+					entry.setImageLeftID("image.sidebar.myshares");
 
-						return entry;
-					}
+					return entry;
 				});
 
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						MdiEntry entry = mdi.createEntryFromEventListener(
-								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-								MyTrackerView.class,
-								MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER, true,
-								null, 
-								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER));
+				id -> {
+					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
+							TrackerView.class).setParentEntryID(
+									SIDEBAR_HEADER_TRANSFERS).setPreferredAfterID(
+											SB_Transfers.getSectionPosition(mdi, id));
+					MdiEntry entry = mdi.createEntry(builder, true);
 
-						entry.setImageLeftID( "image.sidebar.mytracker" );
+					entry.setImageLeftID("image.sidebar.mytracker");
 
-						return entry;
-					}
+					return entry;
 				});
 
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_CLIENT_STATS,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						MdiEntry entry = mdi.createEntryFromEventListener(
-								MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS,
-								ClientStatsView.class,
-								MultipleDocumentInterface.SIDEBAR_SECTION_CLIENT_STATS, true,
-								null, null);
+				id -> {
+					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
+							ClientStatsView.class).setParentEntryID(
+									SIDEBAR_HEADER_PLUGINS);
+					MdiEntry entry = mdi.createEntry(builder, true);
 
-						entry.setImageLeftID( "image.sidebar.clientstats" );
+					entry.setImageLeftID("image.sidebar.clientstats");
 
-						return entry;
-					}
+					return entry;
 				});
 
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
-				new MdiEntryCreationListener2() {
+				(mdi1, id, datasource, params) -> {
 
-					@Override
-					public MdiEntry createMDiEntry(MultipleDocumentInterface mdi,
-					                               String id, Object datasource, Map<?, ?> params) {
+					String section = (datasource instanceof String)
+							? ((String) datasource) : null;
 
-						String section = (datasource instanceof String)
-								? ((String) datasource) : null;
+					if (Utils.isAZ2UI() || COConfigurationManager.getBooleanParameter(
+							"Show Options In Side Bar")) {
+						UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
+								ConfigView.class).setParentEntryID(
+										SIDEBAR_HEADER_PLUGINS).setInitialDatasource(
+												section);
+						MdiEntry entry = mdi.createEntry(builder, true);
 
-						boolean uiClassic = COConfigurationManager.getStringParameter(
-								"ui").equals("az2");
-						if (	uiClassic ||
-								COConfigurationManager.getBooleanParameter(	"Show Options In Side Bar")) {
-							MdiEntry entry = ((MultipleDocumentInterfaceSWT) mdi).createEntryFromEventListener(
-									MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS,
-									ConfigView.class,
-									MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, true, section,
-									null);
+						entry.setImageLeftID("image.sidebar.config");
 
-							entry.setImageLeftID( "image.sidebar.config" );
-
-  						return entry;
-						}
-
-						ConfigShell.getInstance().open(section);
-						return null;
+						return entry;
 					}
+
+					ConfigShell.getInstance().open(section);
+					return null;
 				});
 
 		try {
@@ -997,7 +959,7 @@ public class MainMDISetup
 
 			@Override
 			public MdiEntry createMDiEntry(MultipleDocumentInterface mdi, String id,
-			                               Object datasource, Map<?, ?> params) {
+			                               Object datasource, Map params) {
 
 				if (datasource instanceof Tag) {
 					Tag tag = (Tag) datasource;
@@ -1067,14 +1029,10 @@ public class MainMDISetup
 	
 						entry.setDefaultExpanded(true);
 	
-						if (id.equals(MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS)) {
-							entry.addListener(new MdiChildCloseListener() {
-								@Override
-								public void mdiChildEntryClosed(MdiEntry parent, MdiEntry child,
-								                                boolean user) {
-									if (mdi.getChildrenOf(parent.getId()).size() == 0) {
-										parent.close(true);
-									}
+						if (id.equals(SIDEBAR_HEADER_PLUGINS)) {
+							entry.addListener((MdiChildCloseListener) (parent, ch, user) -> {
+								if (mdi.getChildrenOf(parent.getViewID()).isEmpty()) {
+									parent.close(true);
 								}
 							});
 	
@@ -1084,7 +1042,7 @@ public class MainMDISetup
 							MenuItem menuItem;
 	
 							menuItem = menuManager.addMenuItem("sidebar."
-									+ MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS,
+									+ SIDEBAR_HEADER_PLUGINS,
 									"label.plugin.options");
 	
 							menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);

@@ -35,8 +35,8 @@ public interface UISWTViewEvent {
 		"Create",
 		"DS",
 		"Init",
-		"FocusG",
-		"FocusL",
+		"Shown",
+		"Hiddn",
 		"Refr",
 		"Lang",
 		"Destr",
@@ -92,20 +92,41 @@ public interface UISWTViewEvent {
 	public static final int TYPE_INITIALIZE = 2;
 
 	/**
-	 * Focus Gained
+	 * View has been shown.  Erroneously named TYPE_FOCUSGAINED. 
+	 * <p/>
+	 * When this view is already show, but not focused, 
+	 * changing focus to this view will NOT trigger this event.
 	 *
-	 * @since 2.3.0.6
+	 * @since Azureus 2.3.0.6
+	 * @deprecated Use {@link #TYPE_SHOWN}
 	 */
 	public static final int TYPE_FOCUSGAINED = 3;
 
 	/**
-	 * Focus Lost
-	 * <p>
-	 * TYPE_FOCUSLOST may not be called before TYPE_DESTROY
+	 * View has been shown.  Same ID as {@link #TYPE_FOCUSGAINED}
 	 *
-	 * @since 2.3.0.6
+	 * @since BiglyBT 2.1.0.1
+	 */
+	public static final int TYPE_SHOWN = 3;
+
+	/**
+	 * View has been hidden.  Erroneously named TYPE_FOCUSLOST. 
+	 * <p/>
+	 * Losing the focus, but maintaining visibility will not trigger this event.
+	 * <p>
+	 * TYPE_FOCUSLOST is called before TYPE_DESTROY
+	 *
+	 * @since Azureus 2.3.0.6
+	 * @deprecated Use {@link #TYPE_HIDDEN}
 	 */
 	public static final int TYPE_FOCUSLOST = 4;
+
+	/**
+	 * View has been hidden. .  Same ID as {@link #TYPE_FOCUSLOST}
+	 *
+	 * @since BiglyBT 2.1.0.1
+	 */
+	public static final int TYPE_HIDDEN = 4;
 
 	/** Triggered on user-specified intervals.  Plugins should update any
 	 * live information at this time.

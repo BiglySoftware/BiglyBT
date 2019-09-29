@@ -49,6 +49,9 @@ BuddyPluginViewInterface
 		ChatInstance	chat,
 		ChatMessage		message );
 
+	/**
+	 * Open "Friends" view with classic tab ("Friends") selected
+	 */
 	public void
 	selectClassicTab();
 

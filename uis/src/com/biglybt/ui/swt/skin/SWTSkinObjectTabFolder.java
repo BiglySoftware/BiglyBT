@@ -56,7 +56,7 @@ public class SWTSkinObjectTabFolder
 			style = SWT.BORDER;
 		}
 
-		String sStyle = properties.getStringValue("style");
+		String sStyle = properties.getStringValue(sConfigID + ".style");
 		if (sStyle != null && sStyle.length() > 0) {
 			String[] styles = RegExUtil.PAT_SPLIT_COMMA.split(sStyle);
 			for (String aStyle : styles) {

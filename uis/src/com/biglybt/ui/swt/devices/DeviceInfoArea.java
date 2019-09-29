@@ -23,6 +23,7 @@ package com.biglybt.ui.swt.devices;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.biglybt.ui.swt.mdi.BaseMDI;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -63,12 +64,10 @@ public class DeviceInfoArea
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
 
-		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
-		if (mdi != null) {
-			MdiEntrySWT entry = mdi.getEntryFromSkinObject(skinObject);
-			if (entry != null) {
-				device = (DeviceMediaRenderer) entry.getDatasource();
-			}
+		
+		MdiEntrySWT entry = BaseMDI.getEntryFromSkinObject(skinObject);;
+		if (entry != null) {
+			device = (DeviceMediaRenderer) entry.getDataSource();
 		}
 
 		parent = (Composite) skinObject.getControl();

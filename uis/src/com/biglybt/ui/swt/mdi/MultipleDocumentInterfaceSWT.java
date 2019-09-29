@@ -15,11 +15,13 @@
  */
 package com.biglybt.ui.swt.mdi;
 
+import org.eclipse.swt.widgets.Composite;
+
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.skin.SWTSkinObject;
 
 /**
  * @author TuxPaper
@@ -29,37 +31,42 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 public interface MultipleDocumentInterfaceSWT
 	extends MultipleDocumentInterface
 {
-	public MdiEntry getEntryBySkinView(Object skinView);
-
-	public UISWTViewCore getCoreViewFromID(String id);
+	MdiEntrySWT getEntryBySkinView(Object skinView);
 
 	/**
-	 * If you prefix the 'preferedAfterID' string with '~' then the operation will actually
-	 * switch to 'preferedBeforeID'
+	 * @implNote Still used by EMP.  Remove after 2.1.0.1
+	 * @deprecated
 	 */
 	public MdiEntry createEntryFromEventListener(String parentEntryID,
 			UISWTViewEventListener l, String id, boolean closeable,
 			Object datasource, String preferredAfterID);
 
+	/**
+	 * 
+	 * @return Newly created MDI Entry
+	 */
+	MdiEntrySWT createEntry(UISWTViewBuilderCore builder, boolean closeable);
 
-	public MdiEntry createEntryFromEventListener(String parentEntryID,
-			String parentViewID,
-			UISWTViewEventListener l, String id, boolean closeable,
-			Object datasource, String preferredAfterID);
+	@Override
+	MdiEntrySWT getEntry(String id);
 
-	public MdiEntry createEntryFromEventListener(String parentEntryID,
-			Class<? extends UISWTViewEventListener> cla, String id, boolean closeable,
-			Object data, String preferedAfterID);
+	@Override
+	MdiEntrySWT[] getEntries();
 
-	public MdiEntrySWT getEntrySWT(String id);
-
-	public MdiEntrySWT getCurrentEntrySWT();
-
-	public MdiEntrySWT getEntryFromSkinObject(PluginUISWTSkinObject skinObject);
+	@Override
+	MdiEntrySWT getCurrentEntry();
 
 	/**
 	 * @param closeableConfigFile
 	 * @since 5.6.0.1
 	 */
 	void setCloseableConfigFile(String closeableConfigFile);
+
+	/**
+	 * Builds MDI and populates it with entries registered to id or datasourcetype
+	 * @param parent
+	 */
+	void buildMDI(Composite parent);
+
+	void buildMDI(SWTSkinObject skinObject);
 }

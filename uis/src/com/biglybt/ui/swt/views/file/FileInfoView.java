@@ -44,16 +44,24 @@ import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.ui.mdi.MdiEntry;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.mdi.BaseMDI;
+import com.biglybt.ui.swt.mdi.TabbedEntry;
+import com.biglybt.ui.swt.mdi.TabbedMDI;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 
 
+/**
+ * File Pieces View
+ */
 public class FileInfoView
 	implements UISWTViewCoreEventListener
 {
@@ -625,6 +633,18 @@ public class FileInfoView
     switch (event.getType()) {
       case UISWTViewEvent.TYPE_CREATE:
       	swtView = (UISWTView)event.getData();
+      	if (swtView instanceof MdiEntry) {
+		      MultipleDocumentInterface mdi = ((MdiEntry) swtView).getMDI();
+		      // We should always have an MDI, since this view goes under the "Files" tab
+		      if (mdi instanceof BaseMDI) {
+		      	// Is our Files tab also in an MDI (MyTorrents and Torrent Details View)?
+			      UISWTView parentView = ((BaseMDI) mdi).getParentView();
+			      if (!(parentView instanceof MdiEntry)) {
+				      return false;
+			      }
+		      }
+
+	      }
       	swtView.setTitle(getFullTitle());
         break;
 

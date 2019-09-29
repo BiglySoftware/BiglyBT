@@ -238,8 +238,7 @@ public class MainMenuV2
 			//MenuFactory.addDeviceManagerMenuItem(viewMenu);
 			MenuFactory.addSubscriptionMenuItem(viewMenu);
 
-			PluginsMenuHelper pluginsMenuHelper = PluginsMenuHelper.getInstance();
-			if (pluginsMenuHelper.buildViewMenu(viewMenu, viewMenu.getShell()) && Constants.isOSX) {
+			if (PluginsMenuHelper.buildViewMenu(viewMenu) && Constants.isOSX) {
 				MenuFactory.addSeparatorMenuItem(viewMenu);
 			}
 
@@ -252,7 +251,7 @@ public class MainMenuV2
 				MenuFactory.addStatisticsMenuItem(viewMenu);
 				MenuFactory.addSpeedLimitsToMenu(viewMenu);
 
-				pluginsMenuHelper.buildToolsMenu(viewMenu);
+				PluginsMenuHelper.buildToolsMenu(viewMenu);
 			}
 
 		} catch (Exception e) {
@@ -292,7 +291,7 @@ public class MainMenuV2
 					MenuFactory.addNatTestMenuItem(toolsMenu);
 					MenuFactory.addSpeedTestMenuItem(toolsMenu);
 
-					PluginsMenuHelper.getInstance().buildToolsMenu(toolsMenu);
+					PluginsMenuHelper.buildToolsMenu(toolsMenu);
 
 					MenuFactory.addSeparatorMenuItem(toolsMenu);
 					MenuFactory.addConfigWizardMenuItem(toolsMenu);

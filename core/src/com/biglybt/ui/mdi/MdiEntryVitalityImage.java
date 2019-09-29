@@ -47,4 +47,16 @@ public interface MdiEntryVitalityImage
 	public int getAlignment();
 
 	public void setAlignment(int a);
+
+	/**
+	 * Whether the Image is shown outside of the entry.  ie. TabbedMDI has
+	 * a section to the right of all tabs that can display actions.
+	 */
+	boolean getShowOutsideOfEntry();
+
+	/**
+	 * Whether the Image is shown outside of the entry.  ie. TabbedMDI has
+	 * a section to the right of all tabs that can display actions.
+	 */
+	void setShowOutsideOfEntry(boolean showOutsideOfEntry);
 }

@@ -19,21 +19,19 @@
  */
 package com.biglybt.ui.swt.views;
 
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagListener;
-import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.ui.common.table.TableView;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
+import com.biglybt.util.DataSourceUtils;
 
 
 /**
@@ -48,60 +46,22 @@ PeersGeneralView
 
 	
 	public
-	PeersGeneralView(
-		Tag	_tag )
+	PeersGeneralView()
 	{
 		super( "AllPeersView", true );
-
-		tag = _tag;
 	}
 	
-	public
-	PeersGeneralView(
-		long		tag_uid )
-	{
-		this( TagManagerFactory.getTagManager().lookupTagByUID( tag_uid ));
-	}
-
-	@Override
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new PeersGeneralView( tag ));
-	}
-	
-	@Override
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( PeersGeneralView.class );
-				}
-				
-				public List<Object>
-				getParameters()
-				{
-					return Collections.singletonList(tag.getTagUID());
-				}
-			});
-	}
-
 	@Override
 	public String
 	getFullTitle()
 	{
-		return( tag.getTagName( true ));
+		return(  tag == null ? "" :tag.getTagName( true ));
 	}
 	
 	@Override
 	public TableViewSWT<PEPeer> initYourTableView()
 	{
-		initYourTableView( TableManager.TABLE_ALL_PEERS, true );
+		initYourTableView( TableManager.TABLE_ALL_PEERS );
 
 		return( tv );
 	}
@@ -164,6 +124,7 @@ PeersGeneralView
 		
 		switch (eventType) {
 			case EVENT_TABLELIFECYCLE_INITIALIZED:
+				
 
 				tag.addTagListener(this, true);
 				break;
@@ -173,7 +134,18 @@ PeersGeneralView
 				break;
 		}
 	}
-	
+
+	@Override
+	public boolean eventOccurred(UISWTViewEvent event) {
+		if (event.getType() == UISWTViewEvent.TYPE_CREATE) {
+			Tag[] tags = DataSourceUtils.getTags(event.getView().getInitialDataSource());
+			if (tags.length > 0) {
+				tag = tags[0];
+			}
+		}
+		return super.eventOccurred(event); 
+	}
+
 	protected void
 	updateSelectedContent(){}
 }

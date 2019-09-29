@@ -160,5 +160,5 @@ public interface UISWTView extends UIPluginView {
 	 */
 	boolean isDestroyOnDeactivate();
 
-	boolean isDisposed();
+	boolean isContentDisposed();
 }

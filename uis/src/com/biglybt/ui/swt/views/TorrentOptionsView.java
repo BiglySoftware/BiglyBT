@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.FormLayout;
@@ -44,6 +45,7 @@ import com.biglybt.ui.swt.config.FloatSwtParameter;
 import com.biglybt.ui.swt.config.IntSwtParameter;
 import com.biglybt.ui.swt.config.actionperformer.ChangeSelectionActionPerformer;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.mdi.TabbedEntry;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
@@ -70,7 +72,7 @@ TorrentOptionsView
 	private Map<String, Object> adhoc_parameters	= new HashMap<>();
 	private Map<String, Object>	ds_parameters 		= new HashMap<>();
 
-	private Composite 			panel;
+	private ScrolledComposite sc;
 	private Font 				headerFont;
 
 	// info panel
@@ -93,13 +95,6 @@ TorrentOptionsView
 	{
 	}
 
-	/**
-	 * @param managers2
-	 */
-	public TorrentOptionsView(DownloadManager[] managers2) {
-		dataSourceChanged(managers2);
-	}
-
 	private void
 	initialize(
 		Composite composite)
@@ -111,23 +106,32 @@ TorrentOptionsView
 		// cheap trick to allow datasource changes.  Normally we'd just
 		// refill the components with new info, but I didn't write this and
 		// I don't want to waste my time :) [tux]
-		if (panel != null && !panel.isDisposed()) {
-			Utils.disposeComposite(panel, false);
+		if (sc != null && !sc.isDisposed()) {
+			sc.dispose();
+		}
+
+		sc = new ScrolledComposite(composite, SWT.V_SCROLL | SWT.H_SCROLL );
+		sc.getVerticalBar().setIncrement(16);
+		sc.setExpandHorizontal(true);
+		sc.setExpandVertical(true);
+		GridData gridData = new GridData(GridData.FILL, GridData.FILL, true, true, 1, 1);
+		sc.setLayoutData(gridData);
+
+		Composite panel = new Composite(sc, SWT.NULL);
+
+		sc.setContent( panel );
+
+		layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.numColumns = 1;
+		panel.setLayout(layout);
+
+		Layout parentLayout = parent.getLayout();
+		if (parentLayout instanceof FormLayout) {
+			panel.setLayoutData(Utils.getFilledFormData());
 		} else {
-			panel = new Composite(composite, SWT.NULL);
-
-			layout = new GridLayout();
-			layout.marginHeight = 0;
-			layout.marginWidth = 0;
-			layout.numColumns = 1;
-			panel.setLayout(layout);
-
-			Layout parentLayout = parent.getLayout();
-			if (parentLayout instanceof FormLayout) {
-				panel.setLayoutData(Utils.getFilledFormData());
-			} else {
-				panel.setLayoutData(new GridData(GridData.FILL_BOTH));
-			}
+			panel.setLayoutData(new GridData(GridData.FILL_BOTH));
 		}
 
 
@@ -139,52 +143,59 @@ TorrentOptionsView
 
 			// header
 
-		Composite cHeader = new Composite(panel, SWT.BORDER);
-		GridLayout configLayout = new GridLayout();
-		configLayout.marginHeight = 3;
-		configLayout.marginWidth = 0;
-		cHeader.setLayout(configLayout);
-		GridData gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
-		cHeader.setLayoutData(gridData);
-
-		Display d = panel.getDisplay();
-		cHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
-		cHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
-
-		Label lHeader = new Label(cHeader, SWT.NULL);
-		lHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
-		lHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
-		FontData[] fontData = lHeader.getFont().getFontData();
-		fontData[0].setStyle(SWT.BOLD);
-		int fontHeight = (int)(fontData[0].getHeight() * 1.2);
-		fontData[0].setHeight(fontHeight);
-		headerFont = new Font(d, fontData);
-		lHeader.setFont(headerFont);
-
-		if ( managers.length == 1 ){
-			if ( managers[0].getDownloadManager() == null ){
-				lHeader.setText( " " + managers[0].getName().replaceAll("&", "&&"));
-			}else{
-				lHeader.setText( " " + MessageText.getString( "authenticator.torrent" ) + " : " + managers[0].getName().replaceAll("&", "&&"));
-			}
-		}else{
-			String	str = "";
-
-			for (int i=0;i<Math.min( 3, managers.length ); i ++ ){
-
-				str += (i==0?"":", ") + managers[i].getName().replaceAll("&", "&&");
-			}
-
-			if ( managers.length > 3 ){
-
-				str += "...";
-			}
-
-			lHeader.setText( " " + managers.length + " " + MessageText.getString( "ConfigView.section.torrents" ) + " : " + str );
+		boolean showHeader = true;
+		if (swtView instanceof TabbedEntry) {
+			showHeader = ((TabbedEntry) swtView).getMDI().getAllowSubViews();
 		}
+		
+		if (showHeader) {
+			Composite cHeader = new Composite(panel, SWT.BORDER);
+			GridLayout configLayout = new GridLayout();
+			configLayout.marginHeight = 3;
+			configLayout.marginWidth = 0;
+			cHeader.setLayout(configLayout);
+			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
+			cHeader.setLayoutData(gridData);
+	
+			Display d = panel.getDisplay();
+			cHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
+			cHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
+	
+			Label lHeader = new Label(cHeader, SWT.NULL);
+			lHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
+			lHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
+			FontData[] fontData = lHeader.getFont().getFontData();
+			fontData[0].setStyle(SWT.BOLD);
+			int fontHeight = (int)(fontData[0].getHeight() * 1.2);
+			fontData[0].setHeight(fontHeight);
+			headerFont = new Font(d, fontData);
+			lHeader.setFont(headerFont);
 
-		gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
-		lHeader.setLayoutData(gridData);
+			if ( managers.length == 1 ){
+				if ( managers[0].getDownloadManager() == null ){
+					lHeader.setText( " " + managers[0].getName().replaceAll("&", "&&"));
+				}else{
+					lHeader.setText( " " + MessageText.getString( "authenticator.torrent" ) + " : " + managers[0].getName().replaceAll("&", "&&"));
+				}
+			}else{
+				String	str = "";
+	
+				for (int i=0;i<Math.min( 3, managers.length ); i ++ ){
+	
+					str += (i==0?"":", ") + managers[i].getName().replaceAll("&", "&&");
+				}
+	
+				if ( managers.length > 3 ){
+	
+					str += "...";
+				}
+	
+				lHeader.setText( " " + managers.length + " " + MessageText.getString( "ConfigView.section.torrents" ) + " : " + str );
+			}
+
+			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
+			lHeader.setLayoutData(gridData);
+		}
 
 		Group gTorrentOptions = new Group(panel, SWT.NULL);
 		Messages.setLanguageText(gTorrentOptions, "ConfigView.section.transfer");
@@ -469,7 +480,8 @@ TorrentOptionsView
 			        }
 			    });
 
-	    panel.layout(true, true);
+		sc.setMinSize( panel.computeSize( SWT.DEFAULT, SWT.DEFAULT ));
+		composite.layout();
 	}
 
 	private void
@@ -637,7 +649,7 @@ TorrentOptionsView
 	private Composite
 	getComposite()
 	{
-		return panel;
+		return sc;
 	}
 
 	private String
@@ -890,21 +902,21 @@ TorrentOptionsView
 			multi_view = false;
 			managers = new DownloadManagerOptionsHandler[] {(DownloadManagerOptionsHandler)newDataSource};
 		} else if (newDataSource instanceof DownloadManager[]) {
-			multi_view = true;
 			Object[] objs = (Object[])newDataSource;
+			multi_view = objs.length > 1;
 			managers = new DownloadManagerOptionsHandler[objs.length];
 			for ( int i=0;i<objs.length;i++){
 				managers[i] = new DMWrapper((DownloadManager)objs[i]);
 			}
 		}else if ( newDataSource instanceof Object[]){
 			Object[] objs = (Object[])newDataSource;
+			multi_view = objs.length > 1;
 			if ( objs.length > 0 ){
 				if ( objs[0] instanceof DownloadManager ){
 					managers = new DownloadManagerOptionsHandler[objs.length];
 					for ( int i=0;i<objs.length;i++){
 						managers[i] = new DMWrapper((DownloadManager)objs[i]);
 					}
-					multi_view = true;
 				}
 			}
 		}

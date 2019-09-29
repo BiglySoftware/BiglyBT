@@ -261,8 +261,6 @@ public interface TableViewSWT<DATASOURCETYPE>
 	
 	boolean getTabViewsExpandedByDefault();
 
-	String[] getTabViewsRestrictedTo();
-
 	Composite createMainPanel(Composite composite);
 
 	void tableInvalidate();

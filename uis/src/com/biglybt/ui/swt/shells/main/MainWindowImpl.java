@@ -1794,18 +1794,11 @@ public class MainWindowImpl
 	}
 
 	private void initMDI() {
-		Class<?> classMDI = Utils.isAZ2UI() ? TabbedMDI.class : SideBar.class;
-
-		try {
-			SWTSkinObject skinObject = skin.getSkinObject(SkinConstants.VIEWID_MDI);
-			if (null != skinObject) {
-				BaseMDI mdi = (BaseMDI) classMDI.newInstance();
-				mdi.setMainSkinObject(skinObject);
-				skinObject.addListener(mdi);
-				MainMDISetup.setupSideBar(mdi, this);
-			}
-		} catch (Throwable t) {
-			Debug.out(t);
+		SWTSkinObject skinObject = skin.getSkinObject(SkinConstants.VIEWID_MDI);
+		if (null != skinObject) {
+			BaseMDI mdi = Utils.isAZ2UI() ? new TabbedMDI() : new SideBar();
+			mdi.buildMDI(skinObject);
+			MainMDISetup.setupSideBar(mdi, this);
 		}
 	}
 
@@ -2397,7 +2390,7 @@ public class MainWindowImpl
 				id2 = oldEntry.getLogID();
 			}
 			if (id2 == null) {
-				id2 = oldEntry.getId();
+				id2 = oldEntry.getViewID();
 			}
 
 			updateMapTrackUsage(id2);

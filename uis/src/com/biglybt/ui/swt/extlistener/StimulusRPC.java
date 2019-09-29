@@ -167,7 +167,7 @@ public class StimulusRPC
 							MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 							MdiEntry entry = mdi.getCurrentEntry();
 							if (entry != null) {
-								return entry.getId().equals(tabID);
+								return entry.getViewID().equals(tabID);
 							}
 						}
 					}

@@ -21,10 +21,7 @@
 package com.biglybt.ui.swt.pifimpl;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -60,10 +57,8 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
  */
 public class
 BasicPluginViewImpl
-	implements UISWTViewCoreEventListenerEx, UIPropertyChangeListener
+	implements UISWTViewCoreEventListener, UIPropertyChangeListener
 {
-	private static final Map<String,BasicPluginViewModel>		model_map = new HashMap<>();
-
 	BasicPluginViewModel model;
 
 	//GUI elements
@@ -79,78 +74,6 @@ BasicPluginViewImpl
 
 	boolean isCreated;
 
-	public
-	BasicPluginViewImpl(
-			BasicPluginViewModel 	model)
-	{
-		this.model = model;
-
-		synchronized( model_map ) {
-
-			model_map.put( model.getPluginInterface().getPluginID() + "/" + model.getName(), model );
-		}
-
-		isCreated = false;
-	}
-
-	public
-	BasicPluginViewImpl(
-		String			id )
-	{	
-		synchronized( model_map ) {
-		
-			model = model_map.get( id );
-		}
-		
-		if ( model == null ) {
-			
-			throw( new RuntimeException( "Model unavailable" ));
-		}
-	}
-
-	@Override
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	@Override
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new BasicPluginViewImpl( model ));
-	}
-
-	@Override
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( BasicPluginViewImpl.class );
-				}
-				
-				public java.util.List<Object>
-				getParameters()
-				{
-					String id = model.getPluginInterface().getPluginID() + "/" + model.getName();
-					
-					return Collections.singletonList(id);
-				}
-			});
-	}
-	
-	public BasicPluginViewModel
-	getModel()
-	{
-		return( model );
-	}
-
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
 		switch (event.getType()) {
@@ -160,6 +83,7 @@ BasicPluginViewImpl
 				isCreated = true;
 				UISWTView swtView = event.getView();
 				if (swtView != null) {
+					model = (BasicPluginViewModel) swtView.getInitialDataSource();
 					swtView.setTitle(model.getName());
 				}
 				break;

@@ -22,46 +22,45 @@
 
 package com.biglybt.ui.swt.pifimpl;
 
-import java.awt.Frame;
-import java.awt.Panel;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.awt.*;
+import java.util.*;
 
-import com.biglybt.ui.swt.debug.ObfuscateImage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.*;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
-import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.LightHashMap;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.common.updater.UIUpdater;
+import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.debug.ObfuscateImage;
+import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.skin.*;
+import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
+import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
+import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
+import com.biglybt.ui.swt.views.stats.StatsView;
+import com.biglybt.util.DataSourceUtils;
+import com.biglybt.util.MapUtils;
+
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.UIRuntimeException;
 import com.biglybt.pif.ui.toolbar.UIToolBarEnablerBase;
-import com.biglybt.pifimpl.local.PluginCoreUtils;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
-import com.biglybt.ui.swt.pif.UISWTView;
-import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
-
-import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.util.MapUtils;
 
 /**
  * This class creates an view that triggers {@link UISWTViewEventListener}
@@ -75,6 +74,10 @@ public class UISWTViewImpl
 {
 	public static final String CFG_PREFIX = "Views.plugins.";
 
+	protected static final String SO_ID_ENTRY_WRAPPER = "mdi.content.item";
+
+	protected static long uniqueNumber = 0;
+
 	private boolean delayInitializeToFirstActivate = true;
 
 	private static final boolean DEBUG_TRIGGERS = false;
@@ -84,11 +87,12 @@ public class UISWTViewImpl
 
 	private Object initialDatasource;
 
-	// different from parentID?
 	private UISWTView parentView;
 
+	protected SWTSkin skin;
+	
 	/* Always Core */
-	protected Object datasource;
+	protected Object datasource = new Object();
 
 	private boolean useCoreDataSource = false;
 
@@ -100,15 +104,11 @@ public class UISWTViewImpl
 
 	protected final String id;
 
-	private String title;
 	private String titleID;
-
-	private String setTitle;
-	private String setTitleID;
 
 	private int iControlType = UISWTView.CONTROLTYPE_SWT;
 
-	private Boolean hasFocus = null;
+	private Boolean isShown = null;
 
 	private Map<Object, Object> user_data;
 
@@ -116,52 +116,44 @@ public class UISWTViewImpl
 
 	private boolean created = false;
 
-	private String parentViewID;
+	/**
+	 * Whether to destroy view on deactivation (view becomes hidden).
+	 * <p/>
+	 * Note that views can be rebuilt after being destroyed (ie. when shown again)
+	 */
+	private boolean destroyOnDeactivate = true;
 
-	private boolean destroyOnDeactivate;
-
-	private boolean	disposed;
-	
 	private Composite masterComposite;
-	private Set<UIPluginViewToolBarListener> setToolBarEnablers = new HashSet<>(1);
-	private PluginInterface pi;
+	private final Set<UIPluginViewToolBarListener> setToolBarEnablers = new HashSet<>();
+	private UISWTViewBuilderCore eventListenerBuilder;
 
-	public UISWTViewImpl(String id, String parentViewID, boolean destroyOnDeactivate) {
+	public UISWTViewImpl(String id) {
 		this.id = id;
-		this.parentViewID = parentViewID;
-		this.destroyOnDeactivate = destroyOnDeactivate;
-		this.titleID = CFG_PREFIX + this.id + ".title";
-		if (!MessageText.keyExists(titleID) && MessageText.keyExists(this.id)){
-			this.titleID = id;
-		}else if ( id.contains( " " )){	// hack to fix HD Video Player which is using the expanded name as the id at the moment :(
-			this.titleID = "!" + id + "!";
+	}
+
+	public UISWTViewImpl(UISWTViewBuilderCore builder, boolean doCreate)
+			throws UISWTViewEventCancelledException {
+		this(builder.getViewID());
+		this.eventListenerBuilder = builder;
+		UISWTViewEventListener eventListener = builder.createEventListener(this);
+		if (eventListener == null) {
+			throw new UISWTViewEventCancelledException(
+					new NullPointerException("Could not create " + id));
 		}
+		this.initialDatasource = builder.getInitialDataSource();
+		this.datasource = initialDatasource;
+		setEventListener(eventListener, builder, doCreate);
 	}
 
 	public void setEventListener(UISWTViewEventListener _eventListener,
-			boolean doCreate)
-					throws UISWTViewEventCancelledException {
-		
-		if ( this.eventListener instanceof UISWTViewEventListenerHolder ){
-			
-			((UISWTViewEventListenerHolder)this.eventListener).removeListener( this );
-		}
-		
+			UISWTViewBuilderCore builder, boolean doCreate)
+			throws UISWTViewEventCancelledException {
+
 		this.eventListener = _eventListener;
+		this.eventListenerBuilder = builder;
 
 		if (eventListener == null) {
 			return;
-		}
-
-		if (_eventListener instanceof UISWTViewEventListenerHolder) {
-			UISWTViewEventListenerHolder h = (UISWTViewEventListenerHolder) _eventListener;
-			UISWTViewEventListener delegatedEventListener = h.getDelegatedEventListener(
-					this);
-			if (delegatedEventListener != null) {
-				h.removeListener( this );
-				this.eventListener = delegatedEventListener;
-			}
-			pi = h.getPluginInterface();
 		}
 
 		if (eventListener instanceof IViewAlwaysInitialize) {
@@ -170,6 +162,17 @@ public class UISWTViewImpl
 
 		if (eventListener instanceof UISWTViewCoreEventListener) {
 			setUseCoreDataSource(true);
+		}
+		
+		if (builder != null && titleID == null) {
+			String initialTitle = builder.getInitialTitle();
+			if (initialTitle != null) {
+				setTitle(initialTitle);
+			}
+		}
+		
+		if (builder != null) {
+			initialDatasource = builder.getInitialDataSource();
 		}
 
 		// >> from UISWTViewImpl
@@ -180,13 +183,31 @@ public class UISWTViewImpl
 		}
 		// <<
 	}
-
+	
+	public void create() throws UISWTViewEventCancelledException {
+		if (created) {
+			throw new UISWTViewEventCancelledException(id + " already created");
+		}
+		// >> from UISWTViewImpl
+		// we could pass the parentid as the data for the create call but unfortunately
+		// there's a bunch of crap out there that assumes that data is the view object :(
+		if (!triggerBooleanEvent(UISWTViewEvent.TYPE_CREATE, this)) {
+			throw new UISWTViewEventCancelledException();
+		}
+		// <<
+	}
+	
 	/* (non-Javadoc)
 	 * @see MdiEntrySWT#getEventListener()
 	 */
 	@Override
 	public UISWTViewEventListener getEventListener() {
 		return eventListener;
+	}
+
+	@Override
+	public UISWTViewBuilderCore getEventListenerBuilder() {
+		return eventListenerBuilder;
 	}
 
 	/* (non-Javadoc)
@@ -197,22 +218,10 @@ public class UISWTViewImpl
 		return initialDatasource;
 	}
 
-	/* (non-Javadoc)
-	 * @see MdiEntry#setDatasource(java.lang.Object)
-	 */
 	public void setDatasource(Object datasource) {
-		if (initialDatasource == null) {
-			initialDatasource = datasource;
-		}
 		triggerEvent(UISWTViewEvent.TYPE_DATASOURCE_CHANGED, datasource);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.pif.UISWTView#getDataSource()
-	 */
-	// XXX There's also a getDatasource().. lowercase S :(
-	// It doesn't use useCoreDataSource and should be either removed or renamed
-	// to getDataSourcePlugin
 	@Override
 	public Object getDataSource() {
 		return PluginCoreUtils.convert(datasource, useCoreDataSource());
@@ -237,7 +246,6 @@ public class UISWTViewImpl
 	/* (non-Javadoc)
 	 * @see com.biglybt.pif.ui.UIPluginView#getViewID()
 	 */
-	// XXX Same as getID().. remove getID?
 	@Override
 	public String getViewID() {
 		return id;
@@ -304,34 +312,17 @@ public class UISWTViewImpl
 	 */
 	@Override
 	public void triggerEvent(int eventType, Object data) {
-		if ( eventType == UISWTViewEvent.TYPE_FOCUSGAINED ) {
-			if ( isDestroyOnDeactivate() && isDisposed()){
-				setDisposed( false );	// come back to life?
-			}
-		}
-		
 		try {
 			triggerBooleanEvent(eventType, data);
 		} catch (Exception e) {
 			// TODO: Better error
 			Debug.out(e);
 		}
-		
-		if ( eventType == UISWTViewEvent.TYPE_DESTROY) {
-			setDisposed( true );
-		}
-	}
-	
-	protected void
-	setDisposed(
-		boolean	b )
-	{
-		disposed	= b;
 	}
 	
 	@Override
-	public boolean isDisposed(){
-		return( disposed );
+	public boolean isContentDisposed(){
+		return masterComposite == null || masterComposite.isDisposed();
 	}
 
 	private static String padRight(String s, int n) {
@@ -350,31 +341,11 @@ public class UISWTViewImpl
 						+ "/ds="
 						+ (datasource instanceof Object[]
 								? Arrays.toString((Object[]) datasource) : datasource)
-						+ ";" + title + ";" + Debug.getCompressedStackTrace());
+						+ ";" + titleID + ";" + Debug.getCompressedStackTrace());
 			}
 		}
 
 		if (eventType == UISWTViewEvent.TYPE_LANGUAGEUPDATE) {
-
-				// put it back to how it was constructed
-
-			this.titleID = CFG_PREFIX + this.id + ".title";
-			if (!MessageText.keyExists(titleID) && MessageText.keyExists(this.id)){
-				this.titleID = id;
-			}else if ( id.contains( " " )){	// hack to fix HD Video Player which is using the expanded name as the id at the moment :(
-				this.titleID = "!" + id + "!";
-			}
-			title = null;
-
-				// replay any explicit sets
-
-			if ( setTitleID != null ){
-				setTitleID( setTitleID );
-			}
-			if ( setTitle != null ){
-				setTitle( setTitle );
-			}
-
 			refreshTitle();
 			Messages.updateLanguageForControl(getComposite());
 		}
@@ -406,58 +377,44 @@ public class UISWTViewImpl
 		}
 
 		if (delayInitializeToFirstActivate
-				&& eventType == UISWTViewEvent.TYPE_FOCUSGAINED
+				&& eventType == UISWTViewEvent.TYPE_SHOWN
 				&& !haveSentInitialize) {
 			swt_triggerInitialize();
 		}
-		// prevent double fire of focus gained/lost
-		if (eventType == UISWTViewEvent.TYPE_FOCUSGAINED && hasFocus != null
-				&& hasFocus) {
+		// prevent double fire of shown/hidden
+		if (eventType == UISWTViewEvent.TYPE_SHOWN && isShown != null
+				&& isShown) {
 			if (DEBUG_TRIGGERS) {
-				System.out.println("  -> already hasFocus");
+				System.out.println("  -> already isShown");
 			}
 			return true;
 		}
-		if (eventType == UISWTViewEvent.TYPE_FOCUSLOST && hasFocus != null
-				&& !hasFocus) {
+		if (eventType == UISWTViewEvent.TYPE_HIDDEN && isShown != null
+				&& !isShown) {
 			if (DEBUG_TRIGGERS) {
-				System.out.println("  -> already !hasFocus");
+				System.out.println("  -> already !isShown");
 			}
 			return true;
 		}
 
 		if (eventType == UISWTViewEvent.TYPE_DATASOURCE_CHANGED) {
 			Object newDataSource = PluginCoreUtils.convert(data, true);
-			if (datasource == newDataSource) {
+			if (DataSourceUtils.areSame(datasource, newDataSource)) {
 				if (DEBUG_TRIGGERS) {
 					System.out.println("  -> same DS, skip");
 				}
 				return true;
 			}
-			if (newDataSource instanceof Object[] && datasource instanceof Object[]) {
-				if (Arrays.equals((Object[]) newDataSource, (Object[]) datasource)) {
-					if (DEBUG_TRIGGERS) {
-						System.out.println("  -> same DS[], skip");
-					}
-					return true;
-				}
-			}
 			datasource = newDataSource;
 			data = PluginCoreUtils.convert(datasource, useCoreDataSource);
-			if (initialDatasource == null) {
-				initialDatasource = datasource;
-			}else if ( datasource == null ){
-					// explicit clearing of datasource - we need to forget the initial one as it will be
-					// re-instated incorrectly if the view is subsequently switched to. This was happening in sub-tabs
-					// when a download was selected, then deselected (ctrl+click) - the active sub-tab view was cleared
-					// but the other ones still remembered the selection when switched to
-				initialDatasource = null;
+
+			if (skinObject instanceof SWTSkinObject) {
+				((SWTSkinObject) skinObject).triggerListeners(SWTSkinObjectListener.EVENT_DATASOURCE_CHANGED, data);
 			}
-			
+
 			if (eventListener == null) {
 				return true;
 			}
-			// TODO: What about triggering skinObject's EVENT_DATASOURCE_CHANGED?
 
 		} else if (eventType == UISWTViewEvent.TYPE_OBFUSCATE
 				&& (eventListener instanceof ObfuscateImage)) {
@@ -466,21 +423,21 @@ public class UISWTViewImpl
 						(Image) MapUtils.getMapObject((Map<?, ?>) data, "image", null,
 								Image.class));
 			}
-		} else if (eventType == UISWTViewEvent.TYPE_FOCUSGAINED) {
-			hasFocus = true;
+		} else if (eventType == UISWTViewEvent.TYPE_SHOWN) {
+			isShown = true;
 			if (!haveSentInitialize) {
 				swt_triggerInitialize();
 			}
-		} else if (eventType == UISWTViewEvent.TYPE_FOCUSLOST) {
-			hasFocus = false;
-			if (isDestroyOnDeactivate()) {
+		} else if (eventType == UISWTViewEvent.TYPE_HIDDEN) {
+			isShown = false;
+			if (destroyOnDeactivate) {
 				triggerEvent(UISWTViewEvent.TYPE_DESTROY, null);
 			}
 		} else if (eventType == UISWTViewEvent.TYPE_DESTROY) {
-			if (hasFocus != null && hasFocus) {
-				triggerEvent(UISWTViewEvent.TYPE_FOCUSLOST, null);
+			if (isShown != null && isShown) {
+				triggerEvent(UISWTViewEvent.TYPE_HIDDEN, null);
 			}
-			// focus lost may have destroyed us already
+			// hidden may have destroyed us already
 			if (!created && !haveSentInitialize && getComposite() == null) {
 				return true;
 			}
@@ -489,7 +446,7 @@ public class UISWTViewImpl
 		boolean result = false;
 		try {
 			result = eventListener.eventOccurred(
-					new UISWTViewEventImpl(parentViewID, this, eventType, data));
+					new UISWTViewEventImpl(this, eventType, data));
 		} catch (Throwable t) {
 			Debug.out("ViewID=" + id + "; EventID="
 					+ UISWTViewEvent.getEventDebug(eventType) + "; data=" + data, t);
@@ -503,30 +460,23 @@ public class UISWTViewImpl
 				Utils.disposeComposite(masterComposite);
 				Utils.relayoutUp(parent);
 			}
-			masterComposite = null;
+			setMasterComposite(null);
 			composite = null;
 			haveSentInitialize = false;
-			hasFocus = false;
+			isShown = false;
 			created = false;
-			initialDatasource = datasource;
-			datasource = null;
+			// Datasource is still valid even after view is destroyed, because
+			// sidebar entry or tab entry still exists
 		} else if (eventType == UISWTViewEvent.TYPE_CREATE) {
-			if (eventListener instanceof UISWTViewEventListenerHolder) {
-				UISWTViewEventListenerHolder h = (UISWTViewEventListenerHolder) eventListener;
-				UISWTViewEventListener delegatedEventListener = h.getDelegatedEventListener(
-						this);
-				if (delegatedEventListener != null) {
-					try {
-						setEventListener(delegatedEventListener, false);
-					} catch (UISWTViewEventCancelledException e) {
-					}
-				}
-			}
-
 			if (DEBUG_TRIGGERS) {
 				System.out.println(" -> raw DS Change");
 			}
-			triggerEventRaw(UISWTViewEvent.TYPE_DATASOURCE_CHANGED, PluginCoreUtils.convert(datasource, useCoreDataSource));
+
+			data = PluginCoreUtils.convert(datasource, useCoreDataSource);
+			triggerEventRaw(UISWTViewEvent.TYPE_DATASOURCE_CHANGED, data);
+			if (skinObject instanceof SWTSkinObject) {
+				((SWTSkinObject) skinObject).triggerListeners(SWTSkinObjectListener.EVENT_DATASOURCE_CHANGED, data);
+			}
 		}
 
 		return result;
@@ -540,7 +490,7 @@ public class UISWTViewImpl
 		}
 		try {
 			return eventListener.eventOccurred(
-					new UISWTViewEventImpl(parentViewID, this, eventType, data));
+					new UISWTViewEventImpl(this, eventType, data));
 		} catch (Throwable t) {
 			throw (new UIRuntimeException("UISWTView.triggerEvent:: ViewID=" + id
 					+ "; EventID=" + eventType + "; data=" + data, t));
@@ -549,61 +499,41 @@ public class UISWTViewImpl
 
 	@Override
 	public void setTitle(String title) {
-		setTitleSupport( title );
+		setTitleSupport(title);
 	}
 	
 	protected boolean setTitleSupport(String title) {
 		if (title == null) {
 			return( false );
 		}
-		
-		boolean diff = !title.equals( setTitle );
-		
-		this.setTitle	= title;
 
+		String newTitleID;
 		if (title.startsWith("{") && title.endsWith("}") && title.length() > 2) {
-			return( setTitleIDSupport(title.substring(1, title.length() - 1)));
-			
+			newTitleID = title.substring(1, title.length() - 1);
+		} else if (title.contains(".") && MessageText.keyExists(title)) {
+			// hack which might not be needed anymore
+			newTitleID = title;
+		} else {
+			newTitleID = "!" + title + "!";
 		}
-		if (title.equals(this.title)) {
-			return( diff );
-		}
-		if (title.contains(".") && MessageText.keyExists(title)) {
-			return( setTitleIDSupport(title));
-		}
-
-		diff |= this.title != title && ( this.title == null || title == null || !this.title.equals( title ));
-		diff |= this.titleID != null;
-		
-		this.title = title;
-		this.titleID = null;
-				
-		return( diff );
+		return setTitleIDSupport(newTitleID);
 	}
 
+	// Can't change signature to return boolean because MdiEntry shares same
+	// method, and it's used by plugins..
 	protected void setTitleID(String titleID) {
-		setTitleIDSupport( titleID );
+		setTitleIDSupport(titleID);
 	}
-	
-	protected boolean setTitleIDSupport(String titleID) {
-		if (titleID != null
-				&& (MessageText.keyExists(titleID) || titleID.startsWith("!"))) {
 
-			boolean diff = title != null;
-			
-			diff |= setTitleID != titleID && ( setTitleID == null || titleID == null || !setTitleID.equals( titleID ));
-			diff |= this.titleID != titleID && ( this.titleID == null || titleID == null || !this.titleID.equals( titleID ));
-			
-			this.setTitleID		= titleID;
-			this.titleID 		= titleID;
-			this.title 			= null;
-			
-			return( diff );
-			
-		}else{
-			
-			return( false );
+	protected boolean setTitleIDSupport(String titleID) {
+		if (titleID == null) {
+			return false;
 		}
+		if (titleID.equals(this.titleID)) {
+			return false;
+		}
+		this.titleID = titleID;
+		return true;
 	}
 
 	protected void
@@ -616,7 +546,8 @@ public class UISWTViewImpl
 	 */
 	@Override
 	public PluginInterface getPluginInterface() {
-		return pi;
+		return eventListenerBuilder == null ? null
+				: eventListenerBuilder.getPluginInterface();
 	}
 
 	/* (non-Javadoc)
@@ -633,19 +564,7 @@ public class UISWTViewImpl
 	// XXX Might not be needed once StatsView, SBC_TDV, and TVSWT_TC are converted
 	@Override
 	public String getTitleID() {
-		if (title == null) {
-			// still need this crappy check because some plugins still expect their
-			// view id to be their name
-			if (MessageText.keyExists(id)) {
-				return id;
-			}
-			String id = CFG_PREFIX + this.id + ".title";
-			if (MessageText.keyExists(id)) {
-				return id;
-			}
-			return "!" + id + "!";
-		}
-		return "!" + title + "!";
+		return titleID;
 	}
 
 	/* (non-Javadoc)
@@ -653,10 +572,7 @@ public class UISWTViewImpl
 	 */
 	@Override
 	public String getFullTitle() {
-		if (titleID != null) {
-			return MessageText.getString(titleID);
-		}
-		return title;
+		return MessageText.getString(getTitleID());
 	}
 
 	/* (non-Javadoc)
@@ -664,7 +580,7 @@ public class UISWTViewImpl
 	 */
 	@Override
 	public void initialize(Composite parent) {
-		this.masterComposite = parent;
+		setMasterComposite(parent);
 		if (iControlType == UISWTView.CONTROLTYPE_SWT) {
 			GridData gridData;
 			Layout parentLayout = parent.getLayout();
@@ -680,35 +596,28 @@ public class UISWTViewImpl
 				composite.setLayoutData(gridData);
 			}
 
-			Listener showListener = new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					if (composite == null || composite.isDisposed()) {
+			Listener showListener = event -> {
+				if (composite == null || composite.isDisposed()) {
+					return;
+				}
+				Composite parent1 = composite.getParent();
+				if (parent1 instanceof CTabFolder) {
+					CTabFolder tabFolder = (CTabFolder) parent1;
+					CTabItem selection = tabFolder.getSelection();
+					if (selection != null && selection.getControl() != composite) {
 						return;
 					}
-					Composite parent = composite.getParent();
-					if (parent instanceof CTabFolder) {
-						CTabFolder tabFolder = (CTabFolder) parent;
-						Control selectedControl = tabFolder.getSelection().getControl();
-						if (selectedControl != composite) {
-							return;
-						}
-					} else if (parent instanceof TabFolder) {
-						TabFolder tabFolder = (TabFolder) parent;
-						TabItem[] selectedControl = tabFolder.getSelection();
-						if (selectedControl != null && selectedControl.length == 1
-								&& selectedControl[0].getControl() != composite) {
-							return;
-						}
+				} else if (parent1 instanceof TabFolder) {
+					TabFolder tabFolder = (TabFolder) parent1;
+					TabItem[] selectedControl = tabFolder.getSelection();
+					if (selectedControl != null && selectedControl.length == 1
+							&& selectedControl[0].getControl() != composite) {
+						return;
 					}
-					// Delay trigger of FOCUSGAINED a bit, so that parent is visible
-					Utils.execSWTThreadLater(0, new AERunnable() {
-						@Override
-						public void runSupport() {
-							triggerEvent(UISWTViewEvent.TYPE_FOCUSGAINED, null);
-						}
-					});
 				}
+				// Delay trigger of TYPE_SHOWN a bit, so that parent is visible
+				Utils.execSWTThreadLater(0,
+						() -> triggerEvent(UISWTViewEvent.TYPE_SHOWN, null));
 			};
 
 			composite.addListener(SWT.Show, showListener);
@@ -716,14 +625,14 @@ public class UISWTViewImpl
 				parent.addListener(SWT.Show, showListener);
 			}
 			if (composite.isVisible()) {
-				boolean focusGained = true;
+				boolean visible = true;
 				if (parent instanceof CTabFolder || (parent instanceof TabFolder)) {
-					// can't be gaining the focus yet.. we just created it and
+					// can't be visible yet.. we just created it and
 					// it hasn't been assigned to TabFolder yet
-					focusGained = false;
+					visible = false;
 				}
-				if (focusGained) {
-					triggerEvent(UISWTViewEvent.TYPE_FOCUSGAINED, null);
+				if (visible) {
+					triggerEvent(UISWTViewEvent.TYPE_SHOWN, null);
 				}
 			}
 			if (delayInitializeToFirstActivate) {
@@ -984,4 +893,187 @@ public class UISWTViewImpl
 		this.delayInitializeToFirstActivate = delayInitializeToFirstActivate;
 	}
 
+	protected void setMasterComposite(Composite masterComposite) {
+		this.masterComposite = masterComposite;
+	}
+
+	@Override
+	public SWTSkinObjectContainer buildStandAlone(
+			SWTSkinObjectContainer soParent) {
+		SWTSkin skin = this.skin == null ? soParent.getSkin() : this.skin;
+		return buildStandAlone(soParent, skin, id, getDataSource(),
+				getControlType(), getEventListenerBuilder());
+	}
+
+	public static SWTSkinObjectContainer
+	buildStandAlone(
+		SWTSkinObjectContainer		soParent,
+		SWTSkin skin,
+		String						id,
+		Object						datasource,
+		int							controlType,
+		UISWTViewBuilderCore original_builder )
+	{
+		Composite parent = soParent.getComposite();
+		if (parent == null) {
+			return null;
+		}
+
+		if (original_builder != null && original_builder.isListenerCloneable()){
+
+			final UISWTViewImpl view;
+			UISWTViewEventListener event_listener;
+
+			try{
+				UISWTViewBuilderCore builder;
+				if (datasource == original_builder.getInitialDataSource()) {
+					builder = original_builder;
+				} else {
+					// datasource has changed since creation, clone the builder and
+					// make it's initial datasource the new one
+					builder = original_builder.cloneBuilder();
+					builder.setInitialDatasource(datasource);
+				}
+				view = new UISWTViewImpl(builder, false );
+				event_listener = view.getEventListener();
+
+			}catch( Throwable e ){
+				// shouldn't happen as we aren't asking for 'create' to occur which means it can't fail
+				Debug.out( e );
+				return null;
+			}
+
+			try {
+				SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
+					"MdiIView." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
+					soParent );
+
+				parent.setBackgroundMode(SWT.INHERIT_NONE);
+
+				final Composite viewComposite = soContents.getComposite();
+				boolean doGridLayout = true;
+				if ( controlType == CONTROLTYPE_SKINOBJECT) {
+					doGridLayout = false;
+				}
+				//					viewComposite.setBackground(parent.getDisplay().getSystemColor(
+				//							SWT.COLOR_WIDGET_BACKGROUND));
+				//					viewComposite.setForeground(parent.getDisplay().getSystemColor(
+				//							SWT.COLOR_WIDGET_FOREGROUND));
+				if (doGridLayout) {
+					GridLayout gridLayout = new GridLayout();
+					gridLayout.horizontalSpacing = gridLayout.verticalSpacing = gridLayout.marginHeight = gridLayout.marginWidth = 0;
+					viewComposite.setLayout(gridLayout);
+					viewComposite.setLayoutData(Utils.getFilledFormData());
+				}
+
+				view.setPluginSkinObject(soContents);
+				view.initialize(viewComposite);
+
+				// without this some views get messed up layouts (chat view for example)
+
+				viewComposite.setData( Utils.RELAYOUT_UP_STOP_HERE, true );
+
+				soContents.addListener((skinObject, eventType, params) -> {
+					if ( eventType == SWTSkinObjectListener.EVENT_OBFUSCATE ){
+						Map data = new HashMap();
+						data.put( "image", (Image)params );
+						data.put( "obfuscateTitle",false );
+
+						view.triggerEvent(UISWTViewEvent.TYPE_OBFUSCATE, data);
+					}
+					return null;
+				});
+
+				Composite iviewComposite = view.getComposite();
+				// force layout data of IView's composite to GridData, since we set
+				// the parent to GridLayout (most plugins use grid, so we stick with
+				// that instead of form)
+				if (doGridLayout) {
+					Object existingLayoutData = iviewComposite.getLayoutData();
+					Object existingParentLayoutData = iviewComposite.getParent().getLayoutData();
+					if (existingLayoutData == null
+						|| !(existingLayoutData instanceof GridData)
+						&& (existingParentLayoutData instanceof GridLayout)) {
+						GridData gridData = new GridData(GridData.FILL_BOTH);
+						iviewComposite.setLayoutData(gridData);
+					}
+				}
+
+				parent.layout(true, true);
+
+				// UISWTViewImpl doesn't have a refresh trigger, so we need to make one
+				// Note: BaseMdiEntry refreshes one UIUpdater via BaseMDI
+				final UIUpdater updater = UIUpdaterSWT.getInstance();
+				if (updater != null) {
+					updater.addUpdater(new UIUpdatable() {
+						@Override
+						public void updateUI() {
+							if (viewComposite.isDisposed()) {
+								updater.removeUpdater(this);
+							} else {
+								view.triggerEvent(UISWTViewEvent.TYPE_REFRESH, null);
+							}
+						}
+
+						@Override
+						public String getUpdateUIName() {
+							return ("popout");
+						}
+					});
+
+					if ( event_listener instanceof IViewRequiresPeriodicUpdates){
+
+						updater.addPeriodicUpdater(
+							new UIUpdatable() {
+
+								@Override
+								public void updateUI() {
+									if (viewComposite.isDisposed()) {
+										updater.removePeriodicUpdater(this);
+									} else {
+										// Need to test, but this line seems better:
+										//view.triggerEvent(StatsView.EVENT_PERIODIC_UPDATE, null);
+										event_listener.eventOccurred(new UISWTViewEventImpl(view, StatsView.EVENT_PERIODIC_UPDATE, null));
+									}
+								}
+
+								@Override
+								public String getUpdateUIName() {
+									return ("popout");
+								}
+							});
+					}
+				}
+
+				soContents.setVisible( true );
+
+				// Normally, an MDIEntry can dispose of it's content composite, and
+				// still have the entry available in the MDI.  For standalone UISWTViewImpl,
+				// there is no MDI, so when the main composite goes, so should the
+				// view.
+				iviewComposite.addDisposeListener(arg0 -> view.closeView());
+
+				return( soContents );
+
+			} catch (Throwable e) {
+
+				Debug.out(e);
+			}
+		} else {
+			Debug.out("Can't buildStandAlone '" + id
+				+ "'. Invalid skinref or builder (" + original_builder + ")");
+		}
+
+		return( null );
+	}
+
+	@Override
+	public boolean canBuildStandAlone() {
+		if (eventListenerBuilder != null
+				&& eventListenerBuilder.isListenerCloneable()) {
+			return true;
+		}
+
+		return getEventListener() instanceof UISWTViewEventListenerEx;
+	}
 }

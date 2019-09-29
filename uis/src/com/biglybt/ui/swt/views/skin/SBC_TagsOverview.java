@@ -37,7 +37,6 @@ import com.biglybt.core.tag.*;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.RegExUtil;
-import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
@@ -46,25 +45,28 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.table.impl.TableViewImpl;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
-import com.biglybt.ui.swt.*;
+import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.columns.tag.*;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
-import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
 import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
-import com.biglybt.ui.swt.views.MyTorrentsSubView;
-import com.biglybt.ui.swt.views.TagSettingsView;
+import com.biglybt.ui.swt.views.*;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
-import com.biglybt.pif.ui.*;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
@@ -80,6 +82,9 @@ public class SBC_TagsOverview
 	TableViewSWTMenuFillListener, TableSelectionListener, KeyListener {
 
 	private static final String TABLE_TAGS = "TagsView";
+	// TODO: This should be com.biglybt.pif.tag.Tag but we'd have to
+	// code some PluginCoreUtils.convert additions and other stuff
+	public static final Class<Tag> PLUGIN_DS_TYPE = Tag.class;
 
 	TableViewSWT<Tag> tv;
 
@@ -90,8 +95,6 @@ public class SBC_TagsOverview
 	private boolean columnsAdded = false;
 
 	private boolean tm_listener_added;
-
-	private boolean registeredCoreSubViews;
 
 	private Object datasource;
 
@@ -607,24 +610,18 @@ public class SBC_TagsOverview
 	 */
 	private void initTable(Composite control) {
 
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		if (uiFunctions != null) {
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			registerPluginViews( pluginUI );
-		}
+		registerPluginViews();
 
 		if ( tv == null ){
 
-			tv = TableViewFactory.createTableViewSWT(Tag.class, TABLE_TAGS, TABLE_TAGS,
-					new TableColumnCore[0], ColumnTagName.COLUMN_ID, SWT.MULTI
-							| SWT.FULL_SELECTION | SWT.VIRTUAL);
+			tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE, TABLE_TAGS,
+					TABLE_TAGS, new TableColumnCore[0], ColumnTagName.COLUMN_ID,
+					SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
 			if ( txtFilter != null ){
 				tv.enableFilterCheck(txtFilter, this);
 			}
 			tv.setRowDefaultHeightEM(1);
-			tv.setEnableTabViews(true, true, null);
 
 			table_parent = new Composite(control, SWT.BORDER);
 			table_parent.setLayoutData(Utils.getFilledFormData());
@@ -717,39 +714,22 @@ public class SBC_TagsOverview
 		control.layout(true);
 	}
 
-	private void registerPluginViews(final UISWTInstance pluginUI) {
-		if (registeredCoreSubViews) {
+	private static void registerPluginViews() {
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		if (vm.areCoreViewsRegistered(PLUGIN_DS_TYPE)) {
 			return;
 		}
 
-		pluginUI.addView(TABLE_TAGS, "TagSettingsView", TagSettingsView.class,
-				null);
-		pluginUI.addView(TABLE_TAGS, "MyTorrentsSubView", MyTorrentsSubView.class,
-				null);
+		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
+			"TagSettingsView", null, TagSettingsView.class));
 
-		registeredCoreSubViews = true;
+		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
+			MyTorrentsSubView.MSGID_PREFIX, null, MyTorrentsSubView.class));
 
-		final UIManager uiManager = PluginInitializer.getDefaultInterface().getUIManager();
-		uiManager.addUIListener(new UIManagerListener() {
+		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
+			FilesView.MSGID_PREFIX, null, FilesView.class));
 
-			@Override
-			public void UIAttached(UIInstance instance) {
-
-			}
-
-			@Override
-			public void UIDetached(UIInstance instance) {
-				if (!(instance instanceof UISWTInstance)) {
-					return;
-				}
-
-				registeredCoreSubViews = false;
-				pluginUI.removeViews(TABLE_TAGS, "TagSettingsView");
-				pluginUI.removeViews(TABLE_TAGS, "MyTorrentsSubView");
-				uiManager.removeUIListener(this);
-			}
-		});
-
+		vm.setCoreViewsRegistered(PLUGIN_DS_TYPE);
 	}
 
 	@Override

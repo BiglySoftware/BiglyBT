@@ -18,58 +18,42 @@
 
 package com.biglybt.ui.swt.views.table.impl;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.ui.swt.debug.ObfuscateImage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Sash;
+import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.IndentWriter;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuItemFillListener;
-import com.biglybt.pif.ui.menus.MenuItemListener;
-import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.pif.UISWTInstance;
-import com.biglybt.ui.swt.pif.UISWTInstance.UISWTViewEventListenerWrapper;
-import com.biglybt.ui.swt.pif.UISWTView;
-import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
-import com.biglybt.ui.swt.views.table.TableViewSWT;
-
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MdiEntryCreationListener2;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentListener;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
-import com.biglybt.ui.swt.mdi.MdiEntrySWT;
-import com.biglybt.ui.swt.mdi.TabbedMdiInterface;
-import com.biglybt.ui.swt.mdi.TabbedMdiMaximizeListener;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.debug.ObfuscateImage;
+import com.biglybt.ui.swt.mdi.*;
+import com.biglybt.ui.swt.pif.UISWTView;
+import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
+import com.biglybt.ui.swt.views.table.TableViewSWT;
+import com.biglybt.util.DataSourceUtils;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.*;
 
 /**
  *
@@ -100,46 +84,31 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 		if (tabbedMDI == null || tabbedMDI.isDisposed()) {
 			return;
 		}
-		MdiEntry[] entries = tabbedMDI.getEntries();
-		if (entries == null || entries.length == 0) {
-			return;
-		}
 
-		Object[] ds = tv.getSelectedDataSources(true);
+		TableView tvToUse = tvOverride != null ? tvOverride : tv;
 
-		for (MdiEntry entry : entries) {
-			if (entry instanceof MdiEntrySWT) {
-				triggerTabViewDataSourceChanged((MdiEntrySWT) entry, tv, ds);
-			}
+		Object[] dataSourcesCore = tvToUse.getSelectedDataSources(true);
+
+		// When there is not selected datasources in the TableView, send the
+		// parent's datasource
+		// DISABLED now that some views can handle multiple types.
+		//Object ds = dataSourcesCore.length == 0 ? tvToUse.getParentDataSource() : dataSourcesCore;
+		Object ds = dataSourcesCore;
+
+		if (tabbedMDI != null) {
+			DownloadManager[] dms = DataSourceUtils.getDMs(dataSourcesCore);
+			tabbedMDI.setMaximizeVisible(dms.length == 1);
+			tabbedMDI.setEntriesDataSource(ds);
 		}
 	}
 
 	public void setTvOverride(TableView<?> tvOverride) {
-		this.tvOverride = tvOverride;
-		selectedContent = SelectedContentManager.getCurrentlySelectedContent();
-	}
-
-	public void triggerTabViewDataSourceChanged(MdiEntrySWT view, TableView<?> tv,
-			Object[] dataSourcesCore) {
-		if (tvOverride != null) {
-			tv = tvOverride;
-		}
-		if (view == null) {
+		if (this.tvOverride == tvOverride) {
 			return;
 		}
-
-		// When there is not selected datasources in the TableView, send the
-		// parent's datasource
-
-		if (dataSourcesCore == null) {
-			dataSourcesCore = tv.getSelectedDataSources(true);
-		}
-		if (tabbedMDI != null) {
-			tabbedMDI.setMaximizeVisible(dataSourcesCore != null && dataSourcesCore.length == 1);
-		}
-		view.triggerEvent(UISWTViewEvent.TYPE_DATASOURCE_CHANGED,
-				dataSourcesCore.length == 0 ? tv.getParentDataSource()
-						: dataSourcesCore);
+		this.tvOverride = tvOverride;
+		selectedContent = SelectedContentManager.getCurrentlySelectedContent();
+		triggerTabViewsDataSourceChanged(tv);
 	}
 
 	public void delete() {
@@ -173,14 +142,12 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 		if ( tabbedMDI == null ){
 			return;
 		}
-		MdiEntry[] entries = tabbedMDI.getEntries();
-		if (entries == null || entries.length == 0) {
+		MdiEntrySWT[] entries = tabbedMDI.getEntries();
+		if (entries.length == 0) {
 			return;
 		}
-		for (MdiEntry entry : entries) {
-			if (entry instanceof MdiEntrySWT) {
-				((MdiEntrySWT) entry).triggerEvent(UISWTViewEvent.TYPE_LANGUAGEUPDATE, null);
-			}
+		for (MdiEntrySWT entry : entries) {
+			entry.triggerEvent(UISWTViewEvent.TYPE_LANGUAGEUPDATE, null);
 		}
 	}
 
@@ -190,71 +157,31 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 			return null;
 		}
 
-		return tabbedMDI.getCurrentEntrySWT();
+		return tabbedMDI.getCurrentEntry();
 	}
 
 		// TabViews Functions
-
-	private MdiEntry addTabView(UISWTViewEventListenerWrapper listener,
-			String afterID) {
-		UISWTViewCore view = null;
-		MdiEntrySWT entry = (MdiEntrySWT) tabbedMDI.createEntryFromEventListener(
-				tv.getTableID(), listener, listener.getViewID(), true, null, afterID);
-		if (entry instanceof UISWTViewCore) {
-			view = (UISWTViewCore) entry;
-
-		} else {
-			return entry;
-		}
-
-		try {
-			if (parentView != null) {
-				view.setParentView(parentView);
-			}
-
-			triggerTabViewDataSourceChanged(entry, tv, null);
-
-		} catch (Throwable e) {
-
-			Debug.out(e);
-		}
-
-		return entry;
-	}
-
-	private void removeTabView(String id)
-	{
-		boolean exists = tabbedMDI.entryExists(id);
-		if (!exists) {
-			return;
-		}
-		MdiEntry entry = tabbedMDI.getEntry(id);
-
-		// XXX
-		//removedViews.add(((MdiEntrySWT) entry).getEventListener());
-		tabbedMDI.removeItem(entry);
-	}
 
 	public Composite createSashForm(final Composite composite) {
 		if (!tv.isTabViewsEnabled()) {
 			tableComposite = tv.createMainPanel(composite);
 			return tableComposite;
 		}
+		
+		if (parentView instanceof TabbedEntry) {
+			if (!((TabbedEntry) parentView).getMDI().getAllowSubViews()) {
+				tableComposite = tv.createMainPanel(composite);
+				return tableComposite;
+			}
+		}
 
 		SelectedContentManager.addCurrentlySelectedContentListener(this);
 
 		ConfigurationManager configMan = ConfigurationManager.getInstance();
 
-		int iNumViews = 0;
-
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		if (uiFunctions != null) {
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			if (pluginUI != null) {
-				iNumViews += pluginUI.getViewListeners(tv.getTableID()).length;
-			}
-		}
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		int iNumViews = vm.getBuilders(tv.getTableID()).size()
+				+ vm.getBuilders(tv.getDataSourceType()).size();
 
 		if (iNumViews == 0) {
 			tableComposite = tv.createMainPanel(composite);
@@ -279,9 +206,20 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 
 
 		cTabsHolder = new Composite(form, SWT.NONE);
-		tabbedMDI = uiFunctions.createTabbedMDI(cTabsHolder, props_prefix);
-		tabbedMDI.setMaximizeVisible(true);
+		tabbedMDI = new TabbedMDI(tv.getDataSourceType(), tv.getTableID(),
+				props_prefix, parentView, null);
+		tabbedMDI.setAllowSubViews(false);
 		tabbedMDI.setMinimizeVisible(true);
+		tabbedMDI.buildMDI(cTabsHolder);
+		if (tabbedMDI.getEntries().length == 0) {
+			// All views said no, undo our tab creation
+			// TODO: If a new view is registered for this table id, we should
+			// create the tabbedMDI.  But we don't even do that yet when there
+			// are 0 subviews and one is added.. so, don't worry about it
+			form.dispose();
+			tableComposite = tv.createMainPanel(composite);
+			return tableComposite;
+		}
 
 		tabbedMDI.setTabbedMdiMaximizeListener(new TabbedMdiMaximizeListener() {
 			@Override
@@ -488,56 +426,6 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 			}
 		});
 
-		String[] restricted_to = tv.getTabViewsRestrictedTo();
-
-		Set<String> rt_set = new HashSet<>();
-
-		if ( restricted_to != null ){
-
-			rt_set.addAll( Arrays.asList( restricted_to ));
-		}
-
-		// Call plugin listeners
-
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		if (uiFunctions != null) {
-
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			if (pluginUI != null) {
-
-				UISWTViewEventListenerWrapper[] pluginViews = pluginUI.getViewListeners(
-						tv.getTableID());
-				if (pluginViews != null) {
-					for (final UISWTViewEventListenerWrapper l : pluginViews) {
-						if (l == null) {
-							continue;
-						}
-						try {
-							String view_id = l.getViewID();
-
-							if (restricted_to != null && !rt_set.contains(view_id)) {
-								continue;
-							}
-
-							tabbedMDI.registerEntry(view_id, new MdiEntryCreationListener2() {
-								@Override
-								public MdiEntry createMDiEntry(MultipleDocumentInterface mdi, String id,
-								                               Object datasource, Map<?, ?> params) {
-									return addTabView(l, null);
-								}
-							});
-
-							tabbedMDI.loadEntryByID(view_id, false);
-
-						} catch (Exception e) {
-							// skip, plugin probably specifically asked to not be added
-						}
-					}
-				}
-			}
-		}
-
 		if (!tabbedMDI.getMinimized()) {
 			MdiEntry[] entries = tabbedMDI.getEntries();
 			if (entries.length > 0) {
@@ -547,17 +435,6 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 	}
 
 	private ISelectedContent[] selectedContent;
-
-	public void swt_refresh() {
-		if (tv.isTabViewsEnabled() && tabbedMDI != null && !tabbedMDI.isDisposed()
-				&& !tabbedMDI.getMinimized()){
-
-			MdiEntry entry = tabbedMDI.getCurrentEntry();
-			if (entry != null) {
-				entry.updateUI();
-			}
-		}
-	}
 
 	// @see SelectedContentListener#currentlySelectedContentChanged(ISelectedContent[], java.lang.String)
 	@Override
@@ -579,5 +456,9 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 			ObfuscateImage o = (ObfuscateImage) tabbedMDI;
 			image = o.obfuscatedImage(image);
 		}
+	}
+	
+	public MultipleDocumentInterfaceSWT getMDI() {
+		return tabbedMDI;
 	}
 }

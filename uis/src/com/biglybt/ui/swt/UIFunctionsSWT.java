@@ -18,20 +18,18 @@ package com.biglybt.ui.swt;
 
 import java.util.Map;
 
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 import com.biglybt.pif.ui.toolbar.UIToolBarManager;
+
 import com.biglybt.ui.swt.mainwindow.IMainMenu;
 import com.biglybt.ui.swt.mainwindow.IMainStatusBar;
 import com.biglybt.ui.swt.mainwindow.IMainWindow;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTView;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
-import com.biglybt.ui.swt.mdi.TabbedMdiInterface;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 
 /**
  * @author TuxPaper
@@ -42,12 +40,6 @@ public interface UIFunctionsSWT
 	extends UIFunctions
 {
 	public Shell getMainShell();
-
-	/**
-	 * @param viewID
-	 * @param l
-	 */
-	void addPluginView(String viewID, UISWTViewEventListener l);
 
 	/**
 	 *
@@ -65,28 +57,7 @@ public interface UIFunctionsSWT
 	 */
 	public UISWTView[] getPluginViews();
 
-	/**
-	 *
-	 * @param sParentID
-	 * @param sViewID
-	 * @param l
-	 * @param dataSource
-	 * @param bSetFocus
-	 */
-	public void openPluginView(String sParentID, String sViewID,
-			UISWTViewEventListener l, Object dataSource, boolean bSetFocus);
-
-	/**
-	 * @param viewID
-	 */
-	public void removePluginView(String viewID);
-
-	/**
-	 * @param impl
-	 */
-	public void closePluginView(UISWTViewCore view);
-
-	public void closePluginViews(String sViewID);
+	public void openPluginView(UISWTViewBuilderCore builder, boolean bSetFocus);
 
 	public UISWTInstance getUISWTInstance();
 
@@ -157,13 +128,5 @@ public interface UIFunctionsSWT
 		String 					sPathOfFilesToOpen,
 		String[] 				sFilesToOpen,
 		Map<String,Object>		options );
-
-	/**
-	 *
-	 * @param parent
-	 * @param id TODO
-	 * @since 5.6.0.1
-	 */
-	public TabbedMdiInterface createTabbedMDI(Composite parent, String id);
 
 }

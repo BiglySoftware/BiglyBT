@@ -21,14 +21,12 @@
 package com.biglybt.ui.swt.views.skin.sidebar;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.TreeEvent;
-import org.eclipse.swt.events.TreeListener;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -36,12 +34,7 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
-import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.SystemTime;
-import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.common.updater.UIUpdater;
+import com.biglybt.core.util.*;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MdiEntryVitalityImage;
@@ -55,24 +48,13 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
-import com.biglybt.ui.swt.pif.UISWTView;
+import com.biglybt.ui.swt.mdi.MdiEntryVitalityImageSWT;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pif.UISWTViewEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
-import com.biglybt.ui.swt.skin.SWTSkin;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
-import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
-import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
-import com.biglybt.ui.swt.skin.SWTSkinProperties;
-import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
+import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.SWTRunnable;
-import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
 import com.biglybt.ui.swt.views.skin.InfoBarUtil;
-import com.biglybt.ui.swt.views.stats.StatsView;
 import com.biglybt.util.MapUtils;
 
 /**
@@ -163,16 +145,9 @@ public class SideBarEntrySWT
 	};
 	*/
 
-	private static final String SO_ID_ENTRY_WRAPPER = "mdi.content.item";
-
 	private static final String SO_ID_TOOLBAR = "mdientry.toolbar.full";
 
-	private static long uniqueNumber = 0;
-
 	private TreeItem swtItem;
-
-	@SuppressWarnings("unchecked")
-	private List<SideBarVitalityImageSWT> listVitalityImages = Collections.EMPTY_LIST;
 
 	private final SideBar sidebar;
 
@@ -205,11 +180,8 @@ public class SideBarEntrySWT
 	private long 	attention_start = -1;
 	private boolean	attention_flash_on;
 
-	private Boolean	closeWasUserInitiated;
-
-	public SideBarEntrySWT(SideBar sidebar, SWTSkin _skin, String id,
-			String parentViewID) {
-		super(sidebar, id, parentViewID);
+	public SideBarEntrySWT(SideBar sidebar, SWTSkin _skin, String id) {
+		super(sidebar, id);
 		this.skin = _skin;
 
 		if (id == null) {
@@ -255,7 +227,6 @@ public class SideBarEntrySWT
 		this.swtItem = treeItem;
 
 		if (treeItem != null) {
-			setDisposed(false);
 
 			ImageLoader imageLoader = ImageLoader.getInstance();
 			imgClose = imageLoader.getImage("image.sidebar.closeitem");
@@ -300,31 +271,10 @@ public class SideBarEntrySWT
 		}
 	}
 
-	// @see com.biglybt.pif.ui.sidebar.SideBarEntry#addVitalityImage(java.lang.String)
-	@Override
-	public MdiEntryVitalityImage addVitalityImage(String imageID) {
-		synchronized (this) {
-		SideBarVitalityImageSWT vitalityImage = new SideBarVitalityImageSWT(this,
-				imageID);
-		if (listVitalityImages == Collections.EMPTY_LIST) {
-			listVitalityImages = new ArrayList<>(1);
-		}
-		listVitalityImages.add(vitalityImage);
-		return vitalityImage;
-	}
-	}
-
-	@Override
-	public MdiEntryVitalityImage[] getVitalityImages() {
-		synchronized (this) {
-			return listVitalityImages.toArray(new MdiEntryVitalityImage[0]);
-		}
-	}
 
 	public MdiEntryVitalityImage getVitalityImage(int hitX, int hitY) {
-		MdiEntryVitalityImage[] vitalityImages = getVitalityImages();
-		for (int i = 0; i < vitalityImages.length; i++) {
-			SideBarVitalityImageSWT vitalityImage = (SideBarVitalityImageSWT) vitalityImages[i];
+		List<MdiEntryVitalityImageSWT> vitalityImages = getVitalityImages();
+		for (MdiEntryVitalityImageSWT vitalityImage : vitalityImages) {
 			if (!vitalityImage.isVisible()) {
 				continue;
 			}
@@ -455,46 +405,13 @@ public class SideBarEntrySWT
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				if (swtItem != null && !isDisposed()) {
+				if (swtItem != null && !isEntryDisposed()) {
 					swtItem.setExpanded(expanded);
 				}
 			}
 		});
 	}
 
-	@Override
-	public void expandTo() {
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				if (swtItem == null || isDisposed()) {
-					return;
-				}
-
-				TreeItem item = swtItem.getParentItem();
-				while (item != null) {
-					item.setExpanded(true);
-					// walk up and make sure parents are expanded
-					item = item.getParentItem();
-				}
-			}
-		});
-	}
-
-	public boolean 
-	close(boolean force, boolean userInitiated ) {
-		if (!super.close(force)) {
-			return false;
-		}
-		
-		closeWasUserInitiated = userInitiated;
-		
-		return( close( force ));
-	}
-		
-	/* (non-Javadoc)
-	 * @see BaseMdiEntry#close()
-	 */
 	@Override
 	public boolean close(boolean force) {
 		if (!super.close(force)) {
@@ -527,251 +444,9 @@ public class SideBarEntrySWT
 		return true;
 	}
 
-	
-	public SWTSkinObjectContainer
-	buildStandAlone(
-		SWTSkinObjectContainer		soParent )
-	{
-		return(
-			buildStandAlone(
-					soParent,
-					getSkinRef(),
-					skin,
-					getParentID(),
-					id,
-					getDatasourceCore(),
-					getControlType(),
-					swtItem,
-					getEventListener(),
-					false ));
-	}
-	
-	
-	public static SWTSkinObjectContainer
-	buildStandAlone(
-		SWTSkinObjectContainer		soParent,
-		String						skinRef,
-		SWTSkin						skin,
-		String						parentID,
-		String						id,
-		Object						datasource,
-		int							controlType,
-		TreeItem					swtItem,
-		UISWTViewEventListener		original_event_listener,
-		boolean						listener_is_new )
-	{
-		Control control = null;
-
-		//SWTSkin skin = soParent.getSkin();
-
-		Composite parent = soParent.getComposite();
-
-		if (skinRef != null){
-
-			Shell shell = parent.getShell();
-			Cursor cursor = shell.getCursor();
-			try {
-				shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
-
-				// wrap skinRef with a container that we control visibility of
-				// (invisible by default)
-				SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
-						"MdiContents." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
-						soParent, null);
-
-				SWTSkinObject skinObject = skin.createSkinObject( id, skinRef, soContents, datasource );
-
-				control = skinObject.getControl();
-				control.setLayoutData(Utils.getFilledFormData());
-				control.getParent().layout(true, true);
-
-				soContents.setVisible( true );
-
-				return( soContents );
-
-			}finally{
-				shell.setCursor(cursor);
-			}
-		}else {
-			// XXX: This needs to be merged into BaseMDIEntry.initialize
-
-			if ( 	( original_event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)original_event_listener).isCloneable()) ||
-					( original_event_listener instanceof UISWTViewEventListenerEx )){
-
-				final UISWTViewImpl view = new UISWTViewImpl( id, parentID, true );
-
-				final UISWTViewEventListener event_listener = original_event_listener instanceof UISWTViewEventListenerEx?((UISWTViewEventListenerEx)original_event_listener).getClone():((UISWTViewCoreEventListenerEx)original_event_listener).getClone();
-
-				try{
-					view.setEventListener( event_listener, false );
-
-				}catch( Throwable e ){
-					// shouldn't happen as we aren't asking for 'create' to occur which means it can't fail
-					Debug.out( e );
-				}
-
-				view.setDatasource( datasource );
-
-				try {
-					SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
-							"MdiIView." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
-							soParent );
-
-					parent.setBackgroundMode(SWT.INHERIT_NONE);
-
-					final Composite viewComposite = soContents.getComposite();
-					boolean doGridLayout = true;
-					if ( controlType == CONTROLTYPE_SKINOBJECT) {
-						doGridLayout = false;
-					}
-					//					viewComposite.setBackground(parent.getDisplay().getSystemColor(
-					//							SWT.COLOR_WIDGET_BACKGROUND));
-					//					viewComposite.setForeground(parent.getDisplay().getSystemColor(
-					//							SWT.COLOR_WIDGET_FOREGROUND));
-					if (doGridLayout) {
-						GridLayout gridLayout = new GridLayout();
-						gridLayout.horizontalSpacing = gridLayout.verticalSpacing = gridLayout.marginHeight = gridLayout.marginWidth = 0;
-						viewComposite.setLayout(gridLayout);
-						viewComposite.setLayoutData(Utils.getFilledFormData());
-					}
-
-					view.setPluginSkinObject(soContents);
-					view.initialize(viewComposite);
-
-						// without this some views get messed up layouts (chat view for example)
-					
-					viewComposite.setData( Utils.RELAYOUT_UP_STOP_HERE, true );
-
-					soContents.addListener(
-							new SWTSkinObjectListener(){
-								
-								@Override
-								public Object eventOccured(SWTSkinObject skinObject, int eventType, Object params){
-									if ( eventType == SWTSkinObjectListener.EVENT_OBFUSCATE ){
-										Map data = new HashMap();
-										data.put( "image", (Image)params );
-										data.put( "obfuscateTitle",false );
-										
-										view.triggerEvent(UISWTViewEvent.TYPE_OBFUSCATE, data);
-									}
-									return null;
-								}
-							});
-					
-					if (PAINT_BG) {
-						if ( swtItem != null ){
-							swtItem.setText(view.getFullTitle());
-						}
-					}
-
-					Composite iviewComposite = view.getComposite();
-					control = iviewComposite;
-					// force layout data of IView's composite to GridData, since we set
-					// the parent to GridLayout (most plugins use grid, so we stick with
-					// that instead of form)
-					if (doGridLayout) {
-						Object existingLayoutData = iviewComposite.getLayoutData();
-						Object existingParentLayoutData = iviewComposite.getParent().getLayoutData();
-						if (existingLayoutData == null
-								|| !(existingLayoutData instanceof GridData)
-								&& (existingParentLayoutData instanceof GridLayout)) {
-							GridData gridData = new GridData(GridData.FILL_BOTH);
-							iviewComposite.setLayoutData(gridData);
-						}
-					}
-
-					parent.layout(true, true);
-
-					final UIUpdater updater = UIUpdaterSWT.getInstance();
-					if (updater != null) {
-						updater.addUpdater(new UIUpdatable() {
-							@Override
-							public void updateUI() {
-								if (viewComposite.isDisposed()) {
-									updater.removeUpdater(this);
-								} else {
-									view.triggerEvent(UISWTViewEvent.TYPE_REFRESH, null);
-								}
-							}
-
-							@Override
-							public String getUpdateUIName() {
-								return ("popout");
-							}
-						});
-						
-						if ( event_listener instanceof IViewRequiresPeriodicUpdates ){
-							
-							updater.addPeriodicUpdater(
-								new UIUpdatable() {
-
-									@Override
-									public void updateUI() {
-										if (viewComposite.isDisposed()) {
-											updater.removePeriodicUpdater(this);
-										} else {
-											event_listener.eventOccurred(
-												new UISWTViewEvent() {										
-													@Override
-													public UISWTView getView() {
-														return null;
-													}
-													
-													@Override
-													public int getType() {
-														return( StatsView.EVENT_PERIODIC_UPDATE );
-													}										
-													@Override
-													public Object getData() {
-													
-														return null;
-													}
-												});
-										}
-									}
-
-									@Override
-									public String getUpdateUIName() {
-										return ("popout");
-									}
-								});						
-							}
-					}
-
-					soContents.setVisible( true );
-
-					view.triggerEvent(UISWTViewEvent.TYPE_FOCUSGAINED, null);
-
-					iviewComposite.addDisposeListener(
-						new DisposeListener(){
-							
-							@Override
-							public void widgetDisposed(DisposeEvent arg0){
-								view.triggerEvent(UISWTViewEvent.TYPE_DESTROY, null);
-							}
-						});
-					
-					return( soContents );
-
-				} catch (Throwable e) {
-
-					Debug.out(e);
-				}
-			}
-		}
-
-		return( null );
-	}
-
 	@Override
 	public void build() {
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				swt_build();
-				SideBarEntrySWT.super.build();
-			}
-		});
+		Utils.execSWTThread(this::swt_build);
 	}
 
 	public boolean swt_build() {
@@ -781,113 +456,112 @@ public class SideBarEntrySWT
 		}
 		buildonSWTItemSet = false;
 
-		if (getSkinObject() == null) {
-			Control control = null;
+		if (getSkinObject() != null) {
+			return true;
+		}
 
-			Composite parent = soParent == null ? Utils.findAnyShell()
-					: soParent.getComposite();
+		Control control = null;
 
-			String skinRef = getSkinRef();
-			if (skinRef != null) {
-				Shell shell = parent.getShell();
-				Cursor cursor = shell.getCursor();
-				try {
-					shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
+		Composite parent = soParent == null ? Utils.findAnyShell()
+				: soParent.getComposite();
 
-					// wrap skinRef with a container that we control visibility of
-					// (invisible by default)
-					SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
-							"MdiContents." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
-							getParentSkinObject(), null);
+		String skinRef = getSkinRef();
+		if (skinRef != null) {
+			Shell shell = parent.getShell();
+			Cursor cursor = shell.getCursor();
+			try {
+				shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
 
-					SWTSkinObject skinObject = skin.createSkinObject(id, skinRef,
-							soContents, getDatasourceCore());
+				// wrap skinRef with a container that we control visibility of
+				// (invisible by default)
+				SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
+						"MdiContents." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
+						getParentSkinObject(), null);
 
-					control = skinObject.getControl();
-					control.setLayoutData(Utils.getFilledFormData());
-					control.getParent().layout(true, true);
-					setPluginSkinObject(skinObject);
-					initialize((Composite) control);
-					setSkinObjectMaster(soContents);
-				} finally {
-					shell.setCursor(cursor);
+				SWTSkinObject skinObject = skin.createSkinObject(id, skinRef,
+						soContents, getDatasourceCore());
+
+				control = skinObject.getControl();
+				control.setLayoutData(Utils.getFilledFormData());
+				control.getParent().layout(true, true);
+				setPluginSkinObject(skinObject);
+				initialize((Composite) control);
+				setSkinObjectMaster(soContents);
+			} finally {
+				shell.setCursor(cursor);
+			}
+		} else {
+			// XXX: This needs to be merged into BaseMDIEntry.initialize
+			try {
+				SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
+						"MdiIView." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
+						getParentSkinObject());
+
+				parent.setBackgroundMode(SWT.INHERIT_NONE);
+
+				Composite viewComposite = soContents.getComposite();
+				boolean doGridLayout = true;
+				if (getControlType() == CONTROLTYPE_SKINOBJECT) {
+					doGridLayout = false;
 				}
-			} else {
-				// XXX: This needs to be merged into BaseMDIEntry.initialize
-				try {
-					SWTSkinObjectContainer soContents = (SWTSkinObjectContainer) skin.createSkinObject(
-							"MdiIView." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
-							getParentSkinObject());
 
-					parent.setBackgroundMode(SWT.INHERIT_NONE);
+				if (doGridLayout) {
+					GridLayout gridLayout = new GridLayout();
+					gridLayout.horizontalSpacing = gridLayout.verticalSpacing = gridLayout.marginHeight = gridLayout.marginWidth = 0;
+					viewComposite.setLayout(gridLayout);
+					viewComposite.setLayoutData(Utils.getFilledFormData());
+				}
 
-					Composite viewComposite = soContents.getComposite();
-					boolean doGridLayout = true;
-					if (getControlType() == CONTROLTYPE_SKINOBJECT) {
-						doGridLayout = false;
+				setPluginSkinObject(soContents);
+				initialize(viewComposite);
+				String fullTitle = getFullTitle();
+				if (fullTitle != null && PAINT_BG) {
+					swtItem.setText(getFullTitle());
+				}
+
+				Composite iviewComposite = getComposite();
+				control = iviewComposite;
+				// force layout data of IView's composite to GridData, since we set
+				// the parent to GridLayout (most plugins use grid, so we stick with
+				// that instead of form)
+				if (doGridLayout) {
+					Object existingLayoutData = iviewComposite.getLayoutData();
+					Object existingParentLayoutData = iviewComposite.getParent().getLayoutData();
+					if (existingLayoutData == null
+							|| !(existingLayoutData instanceof GridData)
+							&& (existingParentLayoutData instanceof GridLayout)) {
+						GridData gridData = new GridData(GridData.FILL_BOTH);
+						iviewComposite.setLayoutData(gridData);
 					}
-					//					viewComposite.setBackground(parent.getDisplay().getSystemColor(
-					//							SWT.COLOR_WIDGET_BACKGROUND));
-					//					viewComposite.setForeground(parent.getDisplay().getSystemColor(
-					//							SWT.COLOR_WIDGET_FOREGROUND));
-					if (doGridLayout) {
-						GridLayout gridLayout = new GridLayout();
-						gridLayout.horizontalSpacing = gridLayout.verticalSpacing = gridLayout.marginHeight = gridLayout.marginWidth = 0;
-						viewComposite.setLayout(gridLayout);
-						viewComposite.setLayoutData(Utils.getFilledFormData());
-					}
+				}
 
-					setPluginSkinObject(soContents);
-					initialize(viewComposite);
-					String fullTitle = getFullTitle();
-					if (fullTitle != null && PAINT_BG) {
-						swtItem.setText(getFullTitle());
-					}
+				parent.layout(true, true);
 
-					Composite iviewComposite = getComposite();
-					control = iviewComposite;
-					// force layout data of IView's composite to GridData, since we set
-					// the parent to GridLayout (most plugins use grid, so we stick with
-					// that instead of form)
-					if (doGridLayout) {
-						Object existingLayoutData = iviewComposite.getLayoutData();
-						Object existingParentLayoutData = iviewComposite.getParent().getLayoutData();
-						if (existingLayoutData == null
-								|| !(existingLayoutData instanceof GridData)
-								&& (existingParentLayoutData instanceof GridLayout)) {
-							GridData gridData = new GridData(GridData.FILL_BOTH);
-							iviewComposite.setLayoutData(gridData);
-						}
-					}
+				setSkinObjectMaster(soContents);
+			} catch (Exception e) {
+				Debug.out("Error creating sidebar content area for " + id, e);
+				close(true);
+			}
 
-					parent.layout(true, true);
+		}
 
-					setSkinObjectMaster(soContents);
-				} catch (Exception e) {
-					Debug.out("Error creating sidebar content area for " + id, e);
+		if (control != null && !control.isDisposed()) {
+			control.setData("BaseMDIEntry", this);
+			control.addDisposeListener(new DisposeListener() {
+				@Override
+				public void widgetDisposed(DisposeEvent e) {
 					close(true);
 				}
-
-			}
-
-			if (control != null && !control.isDisposed()) {
-				control.setData("BaseMDIEntry", this);
-				control.addDisposeListener(new DisposeListener() {
-					@Override
-					public void widgetDisposed(DisposeEvent e) {
-						close(true);
-					}
-				});
-			} else {
-				return false;
-			}
-		} // control == null
+			});
+		} else {
+			return false;
+		}
 
 		return true;
 	}
 	
 	public boolean
-	isReallyDisposed()
+	isEntryDisposed()
 	{
 		return( swtItem == null || swtItem.isDisposed());
 	}
@@ -944,7 +618,7 @@ public class SideBarEntrySWT
 		neverPainted = false;
 		//System.out.println(System.currentTimeMillis() + "] paint " + getId() + ";sel? " + ((event.detail & SWT.SELECTED) > 0));
 		TreeItem treeItem = (TreeItem) event.item;
-		if (treeItem.isDisposed() || isDisposed()) {
+		if (treeItem.isDisposed() || isEntryDisposed()) {
 			return;
 		}
 		Rectangle itemBounds = treeItem.getBounds();
@@ -1166,9 +840,8 @@ public class SideBarEntrySWT
 			}
 		}
 		
-		MdiEntryVitalityImage[] vitalityImages = getVitalityImages();
-		for (int i = 0; i < vitalityImages.length; i++) {
-			SideBarVitalityImageSWT vitalityImage = (SideBarVitalityImageSWT) vitalityImages[i];
+		List<MdiEntryVitalityImageSWT> vitalityImages = getVitalityImages();
+		for (MdiEntryVitalityImageSWT vitalityImage : vitalityImages) {
 			if (vitalityImage == null || !vitalityImage.isVisible()
 					|| vitalityImage.getAlignment() != SWT.RIGHT) {
 				continue;
@@ -1363,8 +1036,7 @@ public class SideBarEntrySWT
 
 		// Vitality Images
 
-		for (int i = 0; i < vitalityImages.length; i++) {
-			SideBarVitalityImageSWT vitalityImage = (SideBarVitalityImageSWT) vitalityImages[i];
+		for (MdiEntryVitalityImageSWT vitalityImage : vitalityImages) {
 			if (!vitalityImage.isVisible()
 					|| vitalityImage.getAlignment() != SWT.LEFT) {
 				continue;
@@ -1517,8 +1189,6 @@ public class SideBarEntrySWT
 			imageLoader.releaseImage("image.sidebar.closeitem-selected");
 		}
 
-		setDisposed(true);
-
 		final TreeItem treeItem = (TreeItem) e.widget;
 		if (treeItem != swtItem) {
 			Debug.out("Warning: TreeItem changed for sidebar " + id);
@@ -1575,7 +1245,7 @@ public class SideBarEntrySWT
 		  		String parentID = getParentID();
 		  		if (parentID != null) {
 		  			MdiEntry entry = mdi.getEntry(parentID);
-		  			if (entry != null && entry.isDisposed()) {
+		  			if (entry != null && entry.isEntryDisposed()) {
 		  				user = false;
 		  			}
 		  		}
@@ -1589,11 +1259,6 @@ public class SideBarEntrySWT
 			setSkinObjectMaster(null);
 			so.getSkin().removeSkinObject(so);
 		}
-
-		for (SideBarVitalityImageSWT vitalityImage : listVitalityImages) {
-			vitalityImage.dispose();
-		}
-		listVitalityImages.clear();
 
 		// delay saving of removing of auto-open flag.  If after the delay, we are
 		// still alive, it's assumed the user invoked the close, and we should
@@ -1635,7 +1300,7 @@ public class SideBarEntrySWT
 
 				boolean	replaced = false;
 
-				String my_id = SideBarEntrySWT.this.getId();
+				String my_id = SideBarEntrySWT.this.getViewID();
 
 				if ( my_id != null ){
 
@@ -1794,5 +1459,32 @@ public class SideBarEntrySWT
 				}
 			}
 		});
+	}
+
+	@Override
+	public void redraw(Rectangle hitArea) {
+		if (Utils.runIfNotSWTThread(() -> this.redraw(hitArea))) {
+			return;
+		}
+
+		if (swtItem == null || swtItem.isDisposed() || !swt_isVisible()) {
+			return;
+		}
+
+		if (Utils.isGTK3) {
+			// parent.clear crashes java, so call item's clear
+			//parent.clear(parent.indexOf(treeItem), true);
+			try {
+				Method m = swtItem.getClass().getDeclaredMethod("clear");
+				m.setAccessible(true);
+				m.invoke(swtItem);
+			} catch (Throwable e) {
+			}
+		} else {
+			Tree parent = swtItem.getParent();
+			parent.redraw(hitArea.x, hitArea.y + swtItem.getBounds().y, hitArea.width,
+					hitArea.height, true);
+			parent.update();
+		}
 	}
 }

@@ -1,34 +1,18 @@
 package com.biglybt.ui.swt.views;
 
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Layout;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
@@ -42,40 +26,22 @@ import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.speedmanager.SpeedLimitHandler;
-import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.HashWrapper;
-import com.biglybt.core.util.IdentityHashSet;
-import com.biglybt.core.util.TorrentUtils;
-import com.biglybt.pif.peers.Peer;
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
-import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.common.table.TableColumnCore;
-import com.biglybt.ui.common.table.TableLifeCycleListener;
-import com.biglybt.ui.common.table.TableRowCore;
-import com.biglybt.ui.common.table.TableSelectionListener;
-import com.biglybt.ui.common.table.TableView;
+import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.peer.PeerFilesView;
 import com.biglybt.ui.swt.views.peer.PeerInfoView;
 import com.biglybt.ui.swt.views.peer.RemotePieceDistributionView;
@@ -83,60 +49,21 @@ import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
-import com.biglybt.ui.swt.views.tableitems.peers.ASItem;
-import com.biglybt.ui.swt.views.tableitems.peers.ChokedItem;
-import com.biglybt.ui.swt.views.tableitems.peers.ChokingItem;
-import com.biglybt.ui.swt.views.tableitems.peers.ClientIdentificationItem;
-import com.biglybt.ui.swt.views.tableitems.peers.ClientItem;
-import com.biglybt.ui.swt.views.tableitems.peers.ColumnPeerNetwork;
-import com.biglybt.ui.swt.views.tableitems.peers.ConnectedTimeItem;
-import com.biglybt.ui.swt.views.tableitems.peers.DLedFromOthersItem;
-import com.biglybt.ui.swt.views.tableitems.peers.DiscardedItem;
-import com.biglybt.ui.swt.views.tableitems.peers.DownItem;
-import com.biglybt.ui.swt.views.tableitems.peers.DownSpeedItem;
-import com.biglybt.ui.swt.views.tableitems.peers.DownSpeedLimitItem;
-import com.biglybt.ui.swt.views.tableitems.peers.DownloadNameItem;
-import com.biglybt.ui.swt.views.tableitems.peers.EncryptionItem;
-import com.biglybt.ui.swt.views.tableitems.peers.GainItem;
-import com.biglybt.ui.swt.views.tableitems.peers.HandshakeReservedBytesItem;
-import com.biglybt.ui.swt.views.tableitems.peers.HostNameItem;
-import com.biglybt.ui.swt.views.tableitems.peers.IncomingRequestCountItem;
-import com.biglybt.ui.swt.views.tableitems.peers.IndexItem;
-import com.biglybt.ui.swt.views.tableitems.peers.InterestedItem;
-import com.biglybt.ui.swt.views.tableitems.peers.InterestingItem;
-import com.biglybt.ui.swt.views.tableitems.peers.IpItem;
-import com.biglybt.ui.swt.views.tableitems.peers.LANItem;
-import com.biglybt.ui.swt.views.tableitems.peers.LatencyItem;
-import com.biglybt.ui.swt.views.tableitems.peers.MessagingItem;
-import com.biglybt.ui.swt.views.tableitems.peers.OptimisticUnchokeItem;
-import com.biglybt.ui.swt.views.tableitems.peers.OutgoingRequestCountItem;
-import com.biglybt.ui.swt.views.tableitems.peers.PeerByteIDItem;
-import com.biglybt.ui.swt.views.tableitems.peers.PeerIDItem;
-import com.biglybt.ui.swt.views.tableitems.peers.PeerSourceItem;
-import com.biglybt.ui.swt.views.tableitems.peers.PercentItem;
-import com.biglybt.ui.swt.views.tableitems.peers.PieceItem;
-import com.biglybt.ui.swt.views.tableitems.peers.PiecesItem;
-import com.biglybt.ui.swt.views.tableitems.peers.PortItem;
-import com.biglybt.ui.swt.views.tableitems.peers.ProtocolItem;
-import com.biglybt.ui.swt.views.tableitems.peers.SnubbedItem;
-import com.biglybt.ui.swt.views.tableitems.peers.StatUpItem;
-import com.biglybt.ui.swt.views.tableitems.peers.StateItem;
-import com.biglybt.ui.swt.views.tableitems.peers.TimeToSendPieceItem;
-import com.biglybt.ui.swt.views.tableitems.peers.TimeUntilCompleteItem;
-import com.biglybt.ui.swt.views.tableitems.peers.TotalDownSpeedItem;
-import com.biglybt.ui.swt.views.tableitems.peers.TypeItem;
-import com.biglybt.ui.swt.views.tableitems.peers.UniquePieceItem;
-import com.biglybt.ui.swt.views.tableitems.peers.UpDownRatioItem;
-import com.biglybt.ui.swt.views.tableitems.peers.UpItem;
-import com.biglybt.ui.swt.views.tableitems.peers.UpRatioItem;
-import com.biglybt.ui.swt.views.tableitems.peers.UpSpeedItem;
-import com.biglybt.ui.swt.views.tableitems.peers.UpSpeedLimitItem;
+import com.biglybt.ui.swt.views.tableitems.peers.*;
+
+import com.biglybt.pif.peers.Peer;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.tables.TableManager;
 
 public abstract class 
 PeersViewBase
 	extends TableViewTab<PEPeer>
-	implements UISWTViewCoreEventListenerEx, TableLifeCycleListener, TableViewSWTMenuFillListener, TableSelectionListener
+	implements UISWTViewCoreEventListener, TableLifeCycleListener, TableViewSWTMenuFillListener, TableSelectionListener
 {
+
+	public static final Class<Peer> PLUGIN_DS_TYPE = Peer.class;
+
 	static TableColumnCore[] getBasicColumnItems(String table_id) {
 		return new TableColumnCore[] {
 				new IpItem(table_id),
@@ -197,8 +124,6 @@ PeersViewBase
 		tcManager.setDefaultColumnNames( TableManager.TABLE_TORRENT_PEERS, basicItems );
 	}
 	
-	private static boolean[] registeredCoreSubViews = { false, false };
-
 	protected TableViewSWT<PEPeer> tv;
 	
 	protected Shell shell;
@@ -218,13 +143,6 @@ PeersViewBase
 		super( id );
 		
 		swarm_view_enable = enable_swarm_view;
-	}
-
-	@Override
-	public boolean
-	isCloneable()
-	{
-		return( true );
 	}
 
 	@Override
@@ -314,14 +232,14 @@ PeersViewBase
 
 	
 	protected TableViewSWT<PEPeer> 
-	initYourTableView( 
-		String		table_id,
-		boolean 	enable_tabs ) 
+	initYourTableView(
+		String table_id) 
 	{
 		if ( table_id == TableManager.TABLE_TORRENT_PEERS ){
 			
-			tv = TableViewFactory.createTableViewSWT(Peer.class, TableManager.TABLE_TORRENT_PEERS,
-					getPropertiesPrefix(), basicItems, "pieces", SWT.MULTI | SWT.FULL_SELECTION	| SWT.VIRTUAL);
+			tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE,
+					TableManager.TABLE_TORRENT_PEERS, getPropertiesPrefix(), basicItems,
+					"pieces", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 			
 		}else{
 			
@@ -335,22 +253,14 @@ PeersViewBase
 			tcManager.setDefaultColumnNames( TableManager.TABLE_ALL_PEERS, basicItems );
 
 
-		  	tv = TableViewFactory.createTableViewSWT(Peer.class, TableManager.TABLE_ALL_PEERS,
-						getPropertiesPrefix(), basicItems, "connected_time", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
+			tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE,
+					TableManager.TABLE_ALL_PEERS, getPropertiesPrefix(), basicItems,
+					"connected_time", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 		}
 		
 		tv.setRowDefaultHeightEM(1);
 		
-		tv.setEnableTabViews(enable_tabs,true,null);
-
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		
-		if (uiFunctions != null) {
-			
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			registerPluginViews( table_id, pluginUI );
-		}
+		registerPluginViews();
 		
 		tv.addLifeCycleListener(this);
 		
@@ -361,54 +271,27 @@ PeersViewBase
 		return tv;
 	}	
 	
-	protected void 
-	registerPluginViews(
-		String				table_id,
-		final UISWTInstance pluginUI ) 
-	{
-		final int table_index =  table_id == TableManager.TABLE_TORRENT_PEERS?0:1;
-		
-		if ( pluginUI == null || registeredCoreSubViews[table_index]){
-			
+	private static void registerPluginViews() {
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		if (vm.areCoreViewsRegistered(PLUGIN_DS_TYPE)) {
 			return;
 		}
 
-		pluginUI.addView(table_id, "PeerInfoView",PeerInfoView.class, null);
-		pluginUI.addView(table_id, "RemotePieceDistributionView", RemotePieceDistributionView.class, null);
-		
-		if ( table_index == 0 ) {
-			pluginUI.addView(table_id, "PeerFilesView",	PeerFilesView.class, null);
-		}
-		
-		pluginUI.addView(table_id, "LoggerView", LoggerView.class, true);
+		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
+				"PeerInfoView", null, PeerInfoView.class));
 
-		registeredCoreSubViews[table_index] = true;
+		vm.registerView(PLUGIN_DS_TYPE,
+				new UISWTViewBuilderCore("RemotePieceDistributionView", null,
+						RemotePieceDistributionView.class));
 
-		final UIManager uiManager = PluginInitializer.getDefaultInterface().getUIManager();
-		
-		uiManager.addUIListener(new UIManagerListener() {
-			@Override
-			public void UIAttached(UIInstance instance) {
-			}
+		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
+				PeerFilesView.MSGID_PREFIX, null, PeerFilesView.class));
 
-			@Override
-			public void UIDetached(UIInstance instance) {
-				if (!(instance instanceof UISWTInstance)) {
-					return;
-				}
+		vm.registerView(PLUGIN_DS_TYPE,
+				new UISWTViewBuilderCore(LoggerView.VIEW_ID, null,
+						LoggerView.class).setInitialDatasource(true));
 
-				registeredCoreSubViews[table_index] = false;
-				
-				pluginUI.removeViews(table_id, "PeerInfoView");
-				pluginUI.removeViews(table_id, "RemotePieceDistributionView");
-				if ( table_index == 0 ) {
-					pluginUI.removeViews(table_id, "PeerFilesView");
-				}
-				pluginUI.removeViews(table_id, "LoggerView");
-
-				uiManager.removeUIListener(this);
-			}
-		});
+		vm.setCoreViewsRegistered(PLUGIN_DS_TYPE);
 	}	
 	
 	
@@ -561,6 +444,7 @@ PeersViewBase
 		}
 	}
 	
+	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
 		
 		switch( event.getType()){

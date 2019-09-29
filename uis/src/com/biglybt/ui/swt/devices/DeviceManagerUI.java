@@ -23,15 +23,8 @@ package com.biglybt.ui.swt.devices;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.URL;
-import java.util.*;
 import java.util.List;
-
-import com.biglybt.ui.swt.UIExitUtilsSWT.canCloseListener;
-import com.biglybt.ui.swt.components.BufferedLabel;
-import com.biglybt.ui.swt.components.Legend;
-import com.biglybt.ui.swt.components.graphics.MultiPlotGraphic;
-import com.biglybt.ui.swt.components.graphics.ValueFormater;
-import com.biglybt.ui.swt.components.graphics.ValueSource;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
@@ -41,11 +34,7 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.Core;
@@ -59,11 +48,7 @@ import com.biglybt.core.download.DiskManagerFileInfoFile;
 import com.biglybt.core.download.DiskManagerFileInfoURL;
 import com.biglybt.core.download.StreamManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagManager;
-import com.biglybt.core.tag.TagManagerFactory;
-import com.biglybt.core.tag.TagType;
-import com.biglybt.core.tag.TagUtils;
+import com.biglybt.core.tag.*;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingAverage;
@@ -74,23 +59,6 @@ import com.biglybt.net.upnp.UPnPRootDevice;
 import com.biglybt.net.upnp.UPnPService;
 import com.biglybt.net.upnp.services.UPnPWANCommonInterfaceConfig;
 import com.biglybt.net.upnpms.*;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.PluginManager;
-import com.biglybt.pif.disk.DiskManagerFileInfo;
-import com.biglybt.pif.download.Download;
-import com.biglybt.pif.installer.PluginInstaller;
-import com.biglybt.pif.installer.StandardPlugin;
-import com.biglybt.pif.ui.*;
-import com.biglybt.pif.ui.config.*;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuItemFillListener;
-import com.biglybt.pif.ui.menus.MenuItemListener;
-import com.biglybt.pif.ui.menus.MenuManager;
-import com.biglybt.pif.ui.model.BasicPluginConfigModel;
-import com.biglybt.pif.ui.tables.TableContextMenuItem;
-import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.pif.ui.tables.TableRow;
-import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerFactory;
@@ -100,7 +68,12 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.FixedURLTransfer;
+import com.biglybt.ui.swt.UIExitUtilsSWT.canCloseListener;
+import com.biglybt.ui.swt.components.BufferedLabel;
+import com.biglybt.ui.swt.components.Legend;
+import com.biglybt.ui.swt.components.graphics.MultiPlotGraphic;
+import com.biglybt.ui.swt.components.graphics.ValueFormater;
+import com.biglybt.ui.swt.components.graphics.ValueSource;
 import com.biglybt.ui.swt.devices.add.DeviceTemplateChooser;
 import com.biglybt.ui.swt.devices.add.ManufacturerChooser;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
@@ -110,7 +83,8 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.*;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.DragDropUtils;
@@ -121,6 +95,22 @@ import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.util.PlayUtils;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.PluginManager;
+import com.biglybt.pif.disk.DiskManagerFileInfo;
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.installer.PluginInstaller;
+import com.biglybt.pif.installer.StandardPlugin;
+import com.biglybt.pif.ui.*;
+import com.biglybt.pif.ui.config.*;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.*;
+import com.biglybt.pif.ui.model.BasicPluginConfigModel;
+import com.biglybt.pif.ui.tables.TableContextMenuItem;
+import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.pif.utils.StaticUtilities;
 
 public class
 DeviceManagerUI
@@ -920,7 +910,7 @@ DeviceManagerUI
 				{
 					if (target instanceof MdiEntry) {
 						MdiEntry info = (MdiEntry) target;
-						Device device = (Device)info.getDatasource();
+						Device device = (Device)info.getDataSource();
 
 						showProperties( device );
 					}
@@ -940,7 +930,7 @@ DeviceManagerUI
 
 						MdiEntry info = (MdiEntry) target;
 
-						Device device = (Device)info.getDatasource();
+						Device device = (Device)info.getDataSource();
 
 						device.setHidden( true );
 					}
@@ -971,7 +961,7 @@ DeviceManagerUI
 
 							MdiEntry info = (MdiEntry)rows[0];
 
-							Device device = (Device)info.getDatasource();
+							Device device = (Device)info.getDataSource();
 
 							menu.setData( device.isTagged());
 
@@ -995,7 +985,7 @@ DeviceManagerUI
 
 						MdiEntry info = (MdiEntry) target;
 
-						Device device = (Device)info.getDatasource();
+						Device device = (Device)info.getDataSource();
 
 						device.setTagged( !device.isTagged());
 					}
@@ -1015,7 +1005,7 @@ DeviceManagerUI
 
 							MdiEntry info = (MdiEntry) target;
 
-							final Device device = (Device)info.getDatasource();
+							final Device device = (Device)info.getDataSource();
 
 							UISWTInputReceiver entry = (UISWTInputReceiver)swt_ui.getInputReceiver();
 
@@ -1061,7 +1051,7 @@ DeviceManagerUI
 
 						MdiEntry info = (MdiEntry) target;
 
-						Device device = (Device)info.getDatasource();
+						Device device = (Device)info.getDataSource();
 
 						export( device );
 					}
@@ -1092,7 +1082,7 @@ DeviceManagerUI
 
 							MdiEntry info = (MdiEntry)rows[0];
 
-							Device device = (Device)info.getDatasource();
+							Device device = (Device)info.getDataSource();
 
 							menu.setEnabled( device.canRemove());
 
@@ -1116,7 +1106,7 @@ DeviceManagerUI
 
 						MdiEntry info = (MdiEntry) target;
 
-						Device device = (Device)info.getDatasource();
+						Device device = (Device)info.getDataSource();
 
 						device.remove();
 					}
@@ -1151,7 +1141,7 @@ DeviceManagerUI
 
 							MdiEntry info = (MdiEntry)rows[0];
 
-							Device device = (Device)info.getDatasource();
+							Device device = (Device)info.getDataSource();
 
 							Device.browseLocation[] locs = device.getBrowseLocations();
 
@@ -1198,7 +1188,7 @@ DeviceManagerUI
 
 						MdiEntry info = (MdiEntry)target;
 
-						Object ds = info.getDatasource();
+						Object ds = info.getDataSource();
 
 						if ( ds instanceof Device ){
 
@@ -1255,13 +1245,13 @@ DeviceManagerUI
 
 								MdiEntry info = (MdiEntry)row;
 
-								Object ds = info.getDatasource();
+								Object ds = info.getDataSource();
 
 								if ( ds instanceof Device ){
 
 								}else{
 
-									int	category_type = ds==null?Device.DT_UNKNOWN:(Integer)ds;
+									int	category_type = (ds instanceof Number) ? ((Number) ds).intValue() : Device.DT_UNKNOWN;
 
 									Device[] devices = device_manager.getDevices();
 
@@ -1853,7 +1843,7 @@ DeviceManagerUI
 				@Override
 				public void deviceManagerLoaded() {
 					device_manager.removeListener(this);
-					if (entryHeader == null || entryHeader.isDisposed()) {
+					if (entryHeader == null || entryHeader.isEntryDisposed()) {
 						return;
 					}
 					PluginManager pm = CoreFactory.getSingleton().getPluginManager();
@@ -2627,8 +2617,17 @@ DeviceManagerUI
 
 			}else{
 
-				entry = mdi.createEntryFromEventListener(parent, view, key, false,
-						device, null);
+				// Hack so first view gets pre-initialized device object, and new
+				// views (pop-out) get a newly built instance.
+				UISWTViewBuilderCore builder = new UISWTViewBuilderCore(key, null,
+						view).setParentEntryID(parent).setInitialDatasource(
+								new Object[] {
+									parent,
+									device
+								}).setListenerInstantiator(true,
+					(Builder, swtView) -> new deviceView(parent, device));
+				entry = mdi.createEntry(builder, false);
+
 				entry.setExpanded(true);
 
 			}
@@ -4009,9 +4008,13 @@ DeviceManagerUI
 			eventListener = new categoryViewGeneric( this, device_type, category_title );
 		}
 
-		MdiEntry entry = mdi.createEntryFromEventListener(
-				SideBar.SIDEBAR_HEADER_DEVICES, eventListener, key, false, new Integer(
-						device_type), null);
+		// Pass already created eventListener to builder, because this class needs
+		// a reference to fiddle with.  Might cause problems with cloning.
+		UISWTViewBuilderCore builder = new UISWTViewBuilderCore(key,
+				null).setInitialDatasource(device_type).setListenerInstantiator(false,
+						(Builder, view) -> eventListener).setParentEntryID(
+								SideBar.SIDEBAR_HEADER_DEVICES);
+		MdiEntry entry = mdi.createEntry(builder, false);
 
 		addDefaultDropListener( entry );
 
@@ -4391,7 +4394,7 @@ DeviceManagerUI
 
 	public static class
 	deviceView
-		implements 	ViewTitleInfo, TranscodeTargetListener, UISWTViewCoreEventListenerEx
+		implements 	ViewTitleInfo, TranscodeTargetListener, UISWTViewCoreEventListener
 	{
 		private String			parent_key;
 		private Device			device;
@@ -4404,6 +4407,10 @@ DeviceManagerUI
 
 		private Runnable	refresher;
 		
+		public deviceView() {
+			
+		}
+
 		protected
 		deviceView(
 			String			parent_key,
@@ -4412,8 +4419,8 @@ DeviceManagerUI
 			init( parent_key, device );
 		}
 
-		public
-		deviceView(
+		public void
+		setDataSource(
 			String	_parent_key,
 			String	_device_id )
 		{
@@ -4455,42 +4462,7 @@ DeviceManagerUI
 				renderer.addListener( this );
 			}
 		}
-		
-		@Override
-		public boolean
-		isCloneable()
-		{
-			return( true );
-		}
 
-		@Override
-		public UISWTViewCoreEventListenerEx
-		getClone()
-		{
-			return( new deviceView( parent_key, device));
-		}
-		
-		@Override
-		public CloneConstructor
-		getCloneConstructor()
-		{
-			return( 
-				new CloneConstructor()
-				{
-					public Class<? extends UISWTViewCoreEventListenerEx>
-					getCloneClass()
-					{
-						return( deviceView.class );
-					}
-					
-					public List<Object>
-					getParameters()
-					{
-						return( Arrays.asList( parent_key, device.getID()));
-					}
-				});
-		}
-		
 		public void
 		initialize(
 			Composite _parent_composite )
@@ -5859,8 +5831,17 @@ DeviceManagerUI
 		public boolean eventOccurred(UISWTViewEvent event) {
 	    switch (event.getType()) {
 	      case UISWTViewEvent.TYPE_CREATE:
-	      	swtView = (UISWTView)event.getData();
+	      	swtView = event.getView();
 	      	swtView.setTitle(getTitle());
+	      	if (device == null) {
+			      Object initialDataSource = swtView.getInitialDataSource();
+			      if (initialDataSource instanceof String[]) {
+			      	String[] params = (String[]) initialDataSource;
+			      	if (params.length == 2) {
+			      		setDataSource(params[0], params[1]);
+				      }
+			      }
+		      }
 	        break;
 
 	      case UISWTViewEvent.TYPE_DESTROY:
@@ -6019,7 +6000,7 @@ DeviceManagerUI
 
 			if ( mdi != null && sb_entry != null ){
 
-				mdi.showEntryByID(sb_entry.getId());
+				mdi.showEntryByID(sb_entry.getViewID());
 			}
 		}
 	}

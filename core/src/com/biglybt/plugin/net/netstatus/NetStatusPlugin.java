@@ -52,7 +52,6 @@ NetStatusPlugin
 
 	private NetStatusProtocolTester		protocol_tester;
 	private AESemaphore					protocol_tester_sem	= new AESemaphore( "ProtTestSem" );
-	private NetStatusPluginViewInterface swt_ui;
 
 	public static void
 	load(
@@ -92,17 +91,9 @@ NetStatusPlugin
 					if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
 
 						try{
-								swt_ui = (NetStatusPluginViewInterface) Class.forName(
-										"com.biglybt.plugin.net.netstatus.swt.NetStatusPluginView").getConstructor(
-												new Class[] {
-													NetStatusPlugin.class,
-													UIInstance.class,
-													String.class
-								}).newInstance(new Object[] {
-									NetStatusPlugin.this,
-									instance,
-									VIEW_ID
-								});
+								Class.forName(
+										"com.biglybt.plugin.net.netstatus.swt.NetStatusPluginView").getMethod(
+												"initSWTUI", UIInstance.class).invoke(null, instance);
 
 						}catch( Throwable e ){
 
@@ -116,10 +107,6 @@ NetStatusPlugin
 				UIDetached(
 					UIInstance		instance )
 				{
-					if ( instance.getUIType().equals(UIInstance.UIT_SWT) && swt_ui != null ) {
-						swt_ui.detach(instance);
-						swt_ui = null;
-					}
 				}
 			});
 

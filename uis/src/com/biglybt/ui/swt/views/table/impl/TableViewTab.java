@@ -20,24 +20,22 @@ package com.biglybt.ui.swt.views.table.impl;
 
 import java.util.Map;
 
-import com.biglybt.ui.swt.debug.ObfuscateImage;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEDiagnosticsEvidenceGenerator;
 import com.biglybt.core.util.IndentWriter;
+import com.biglybt.ui.common.table.TableView;
+import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
+import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
-
-import com.biglybt.ui.common.table.TableView;
-import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
-import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.util.MapUtils;
 
 /**
@@ -49,7 +47,6 @@ public abstract class TableViewTab<DATASOURCETYPE>
 		ObfuscateImage
 {
 	private TableViewSWT<DATASOURCETYPE> tv;
-	private Object parentDataSource;
 	private final String propertiesPrefix;
 	private Composite composite;
 	private UISWTView swtView;
@@ -66,10 +63,10 @@ public abstract class TableViewTab<DATASOURCETYPE>
 	}
 
 	public final void initialize(Composite composite) {
-		tv = initYourTableView();
-		if (parentDataSource != null) {
-			tv.setParentDataSource(parentDataSource);
+		if (swtView == null) {
+			return;
 		}
+		tv = initYourTableView();
 		Composite parent = initComposite(composite);
 		tv.initialize(swtView, parent);
 		if (parent != composite) {
@@ -82,6 +79,10 @@ public abstract class TableViewTab<DATASOURCETYPE>
 			tv.enableFilterCheck(filterTextControl, filterCheck);
 		}
 
+		Object dataSource = swtView.getDataSource();
+		if (dataSource != null) {
+			tv.setParentDataSource(dataSource);
+		}
 		tableViewTabInitComplete();
 	}
 
@@ -94,11 +95,17 @@ public abstract class TableViewTab<DATASOURCETYPE>
 
 	public abstract TableViewSWT<DATASOURCETYPE> initYourTableView();
 
+	// marked final and redirected to parentDataSourceChanged, so this method 
+	// doesn't get confused with this TableView's datasource change
 	public final void dataSourceChanged(Object newDataSource) {
-		this.parentDataSource = newDataSource;
+		// No need to store datasource localy, super class handles it all
+		parentDataSourceChanged(newDataSource);
 		if (tv != null) {
 			tv.setParentDataSource(newDataSource);
 		}
+	}
+	
+	public void parentDataSourceChanged(Object newParentDataSource) {
 	}
 
 	public final void refresh() {
@@ -136,20 +143,16 @@ public abstract class TableViewTab<DATASOURCETYPE>
 		return propertiesPrefix;
 	}
 
-	public Menu getPrivateMenu() {
-		return null;
-	}
-
 	public void viewActivated() {
 		// cheap hack.. calling isVisible freshens table's visible status (and
 		// updates subviews)
-		if (tv instanceof TableViewSWT) {
+		if (tv != null) {
 			tv.isVisible();
 		}
 	}
 
 	private void viewDeactivated() {
-		if (tv instanceof TableViewSWT) {
+		if (tv != null) {
 			tv.isVisible();
 		}
 	}
@@ -159,6 +162,9 @@ public abstract class TableViewTab<DATASOURCETYPE>
 		switch (event.getType()) {
 			case UISWTViewEvent.TYPE_CREATE:
 				swtView = (UISWTView) event.getData();
+				if (swtView == null || !allowCreate(swtView)) {
+					return false;
+				}
 				swtView.setTitle(getFullTitle());
 				break;
 
@@ -172,20 +178,18 @@ public abstract class TableViewTab<DATASOURCETYPE>
 				break;
 
 			case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
-				swtView.setTitle(getFullTitle());
 				updateLanguage();
-				Messages.updateLanguageForControl(composite);
 				break;
 
 			case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
 				dataSourceChanged(event.getData());
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSGAINED:
+			case UISWTViewEvent.TYPE_SHOWN:
 				viewActivated();
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSLOST:
+			case UISWTViewEvent.TYPE_HIDDEN:
 				viewDeactivated();
 				break;
 
@@ -205,7 +209,15 @@ public abstract class TableViewTab<DATASOURCETYPE>
 		return true;
 	}
 
+	public boolean allowCreate(UISWTView swtView) {
+		return true;
+	}
+
 	public void updateLanguage() {
+		if (swtView != null) {
+			swtView.setTitle(getFullTitle());
+		}
+		Messages.updateLanguageForControl(composite);
 	}
 
 	public UISWTView getSWTView() {

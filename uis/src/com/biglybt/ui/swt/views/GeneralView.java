@@ -18,7 +18,6 @@
 package com.biglybt.ui.swt.views;
 
 import java.text.DecimalFormat;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,19 +60,19 @@ import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.util.MapUtils;
 
 /**
  * View of General information on the torrent
  * <p>
- * See also {SBC_TorrentDetailsView}
+ * See also {@link com.biglybt.ui.swt.views.skin.SBC_TorrentDetailsView}
  *
  * @author Olivier
  *
  */
 public class GeneralView
-	implements ParameterListener, UISWTViewCoreEventListenerEx, UIPluginViewToolBarListener
+	implements ParameterListener, UISWTViewCoreEventListener, UIPluginViewToolBarListener
 {
 	public static final String MSGID_PREFIX = "GeneralView";
 
@@ -159,41 +158,6 @@ public class GeneralView
 			}
 		});
 	}
-
-	  @Override
-	  public boolean
-	  isCloneable()
-	  {
-		  return( true );
-	  }
-
-	  @Override
-	  public UISWTViewCoreEventListenerEx
-	  getClone()
-	  {
-		  return( new GeneralView());
-	  }
-
-	  @Override
-	  public CloneConstructor
-	  getCloneConstructor()
-	  {
-		  return( 
-			  new CloneConstructor()
-			  {
-				  public Class<? extends UISWTViewCoreEventListenerEx>
-				  getCloneClass()
-				  {
-					  return( GeneralView.class );
-				  }
-
-				  public List<Object>
-				  getParameters()
-				  {
-					  return( null );
-				  }
-			  });
-	  }
 
   public void initialize(Composite composite) {
   	parent = composite;

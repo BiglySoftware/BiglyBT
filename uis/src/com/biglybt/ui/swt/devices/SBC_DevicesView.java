@@ -142,8 +142,8 @@ public class SBC_DevicesView
 
 		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
 		if (mdi != null){
-			mdiEntry = mdi.getCurrentEntrySWT();
-			Object ds = mdiEntry.getDatasource();
+			mdiEntry = mdi.getCurrentEntry();
+			Object ds = mdiEntry.getDataSource();
 			if ( !( ds instanceof Device )){
 				return( null );
 			}

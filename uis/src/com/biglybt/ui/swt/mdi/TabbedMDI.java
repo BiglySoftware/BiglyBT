@@ -18,16 +18,17 @@
 
 package com.biglybt.ui.swt.mdi;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.List;
+import java.util.*;
 
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.*;
-import org.eclipse.swt.events.*;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.layout.RowData;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.CoreFactory;
@@ -37,14 +38,6 @@ import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.PluginManager;
-import com.biglybt.pif.download.Download;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.menus.MenuItemFillListener;
-import com.biglybt.pif.ui.menus.MenuItemListener;
-import com.biglybt.pif.ui.menus.MenuManager;
-import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
@@ -52,15 +45,30 @@ import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
-import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventCancelledException;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
+import com.biglybt.util.DataSourceUtils;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.PluginManager;
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.menus.MenuItemFillListener;
+import com.biglybt.pif.ui.menus.MenuItemListener;
+import com.biglybt.pif.ui.menus.MenuManager;
 
 public class TabbedMDI
 	extends BaseMDI
@@ -77,8 +85,6 @@ public class TabbedMDI
 
 	private final String props_prefix;
 
-	private DownloadManager		maximizeTo;
-
 	private int minimumCharacters = 25;
 
 	protected boolean isMainMDI;
@@ -91,10 +97,14 @@ public class TabbedMDI
 
 	private TabbedMdiMaximizeListener maximizeListener;
 	private ParameterListener paramFancyTabListener;
+	private Composite topRight;
+	private boolean destroyEntriesOnDeactivate = true;
+	// Set to new object so that first set, even if null, triggers a datasourcechanged event
+	private Object dataSource = new Object();
+	private boolean allowSubViews = true;
 
-	/** Called from MainWindowImpl via reflection for main UI */
 	public TabbedMDI() {
-		super();
+		super(null, UISWTInstance.VIEW_MAIN, null);
 		AEDiagnostics.addWeakEvidenceGenerator(this);
 		mapUserClosedTabs = new HashMap();
 		isMainMDI = true;
@@ -102,35 +112,68 @@ public class TabbedMDI
 	}
 
 	/**
-	 * @param parent
+	 * @param pluginDataSourceType Only needed if every tab is based on the same datasource, such as {@link Download}
+	 * @param viewID ID used to register views against this MDI
+	 * @param parent SWT Composite to place widgets on
+	 * @param props_prefix 
+	 *    Prefix for loading MDIs properties (open history, etc)<br/>
+	 *    Also used to get registered menu items.
+	 *    So, should be one of MENU_ constants in {@link MenuManager}
+	 * @param parentView This MDI's parent. For example, Parent=(Torrent's Peers View), this=(MDI showing Piece Map, Files, etc)
+	 * @param dataSource DataSource to pass into each new entry. If null, entry's initial datasource will be used.
+	 * 
+	 * @implNote 
+	 * viewID and props_prefix would be the same value if it weren't for legacy plugin code.
+	 * Any new MDIs should use the same value.
 	 */
-	public TabbedMDI(Composite parent, String id) {
-		this.props_prefix = id;
+	public TabbedMDI(Class<?> pluginDataSourceType, String viewID,
+			String props_prefix, UISWTView parentView, Object dataSource) {
+		super(pluginDataSourceType, viewID, parentView);
+		this.dataSource = dataSource;
+		this.props_prefix = props_prefix;
 		minimumCharacters = 0;
 		isMainMDI = false;
 		setCloseableConfigFile(null);
 
-		SWTSkin skin = SWTSkinFactory.getInstance();
-		SWTSkinObjectTabFolder soFolder = new SWTSkinObjectTabFolder(skin,
-				skin.getSkinProperties(), id, "tabfolder.fill", parent);
-		setMainSkinObject(soFolder);
-		soFolder.addListener(this);
-		skin.addSkinObject(soFolder);
-
-		String key = props_prefix + ".closedtabs";
+		String key = this.props_prefix + ".closedtabs";
 
 		mapUserClosedTabs = COConfigurationManager.getMapParameter(key, new HashMap());
 		COConfigurationManager.addWeakParameterListener(this, false, key);
 	}
+	
+	@Override
+	public void buildMDI(Composite parent) {
+		Utils.execSWTThread(() -> {
+			SWTSkin skin = SWTSkinFactory.getInstance();
+			SWTSkinObjectTabFolder soFolder = new SWTSkinObjectTabFolder(skin,
+				skin.getSkinProperties(), props_prefix, "tabfolder.fill", parent);
+			setMainSkinObject(soFolder);
+			soFolder.addListener(this);
+			skin.addSkinObject(soFolder);
+		});
+	}
 
+	@Override
+	public void buildMDI(SWTSkinObject skinObject) {
+		setMainSkinObject(skinObject);
+		skinObject.addListener(this);
+	}
 
 	@Override
 	public Object skinObjectCreated(SWTSkinObject skinObject, Object params) {
-		super.skinObjectCreated(skinObject, params);
-
+		Object o = super.skinObjectCreated(skinObject, params);
 		creatMDI();
+		return o;
+	}
 
-		return null;
+	@Override
+	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
+		return super.skinObjectInitialShow(skinObject, params);
+	}
+
+	@Override
+	public Object skinObjectShown(SWTSkinObject skinObject, Object params) {
+		return super.skinObjectShown(skinObject, params);
 	}
 
 	/* (non-Javadoc)
@@ -219,27 +262,81 @@ public class TabbedMDI
 				showEntry(entry);
 			}
 		});
+		
+		tabFolder.addMouseMoveListener(e -> {
+			MdiEntryVitalityImageSWT vitalityImage = getVitalityImageAtPos(e.x, e.y);
+			String tooltip = null;
+			Cursor cursor = null;
 
-		tabFolder.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				if (tabFolder.getMinimized()) {
-					restore();
-					// If the user clicked down on the restore button, and we restore
-					// before the CTabFolder does, CTabFolder will minimize us again
-					// There's no way that I know of to determine if the mouse is
-					// on that button!
-
-					// one of these will tell tabFolder to cancel
-					e.button = 0;
-					tabFolder.notifyListeners(SWT.MouseExit, null);
+			if (vitalityImage != null && vitalityImage.isVisible()) {
+				if (vitalityImage.hasListeners()) {
+					cursor = e.display.getSystemCursor(SWT.CURSOR_HAND);
 				}
+				tooltip = vitalityImage.getToolTip();
 			}
-			@Override
-			public void mouseDoubleClick(MouseEvent e) {
-				if (!tabFolder.getMinimized() && tabFolder.getMaximizeVisible()) {
-					minimize();
-				}
+
+			if (tabFolder.getCursor() != cursor) {
+				tabFolder.setCursor(cursor);
+			}
+			CTabItem item = tabFolder.getItem(new Point(e.x, e.y));
+			if (item != null && item.getToolTipText() != tooltip) {
+				item.setToolTipText(tooltip);
+			}
+		});
+
+
+		// CTabFolder focuses tab on mouse down before any of our events are fired,
+		// so we are unable to detect if the user clicked a spot that didn't have
+		// a vitality image, but does now that the tab is selected
+		// Remove their listener and add it after ours.
+		Listener[] mouseDownListeners = tabFolder.getListeners(SWT.MouseDown);
+		for (Listener mouseDownListener : mouseDownListeners) {
+			tabFolder.removeListener(SWT.MouseDown, mouseDownListener);
+		}
+
+		Utils.addSafeMouseUpListener(tabFolder,
+				e -> e.widget.setData("downedVI", getVitalityImageAtPos(e.x, e.y)),
+				e -> {
+					MdiEntryVitalityImageSWT vi = (MdiEntryVitalityImageSWT) e.widget.getData(
+							"downedVI");
+					e.widget.setData("downedVI", null);
+					if (e.button != 1) {
+						return;
+					}
+
+					if (vi != null && vi.hasListeners()) {
+						MdiEntryVitalityImageSWT viUp = getVitalityImageAtPos(e.x, e.y);
+						if (vi != viUp) {
+							// Case: 
+							// 1) Mouse down on VitalityImage
+							// 2) Move mouse outside bounds
+							// 3) Mouse up within tabFolder (up outside tabfolder already eaten)
+							return;
+						}
+						vi.triggerClickedListeners(e.x, e.y);
+						return;
+					}
+
+					if (tabFolder.getMinimized()) {
+						restore();
+						// If the user clicked down on the restore button, and we restore
+						// before the CTabFolder does, CTabFolder will minimize us again
+						// There's no way that I know of to determine if the mouse is
+						// on that button!
+
+						// one of these will tell tabFolder to cancel
+						e.button = 0;
+						tabFolder.notifyListeners(SWT.MouseExit, null);
+					}
+				});
+
+		for (Listener mouseDownListener : mouseDownListeners) {
+			tabFolder.addListener(SWT.MouseDown, mouseDownListener);
+		}
+
+		tabFolder.addListener(SWT.MouseDoubleClick, e -> {
+			if (!tabFolder.getMinimized() && tabFolder.getMaximizeVisible()) {
+				minimize();
 			}
 		});
 
@@ -266,8 +363,9 @@ public class TabbedMDI
 
 			@Override
 			public void close(CTabFolderEvent event) {
-				final TabbedEntry entry = (TabbedEntry) event.item.getData(
-						"TabbedEntry");
+				TabbedEntry entry = (TabbedEntry) event.item.getData("TabbedEntry");
+				UISWTViewBuilderCore builder = entry == null ? null
+						: entry.getEventListenerBuilder();
 
 				if (select_history.remove(entry)) {
 
@@ -275,7 +373,7 @@ public class TabbedMDI
 
 						final MdiEntry next = select_history.getLast();
 
-						if (!next.isDisposed() && next != entry) {
+						if (!next.isEntryDisposed() && next != entry) {
 
 							// If tabfolder's selected entry is the one we are closing,
 							// CTabFolder will try to move to next CTabItem.  Disable
@@ -300,25 +398,38 @@ public class TabbedMDI
 				// first, and the first tab would auto-select (on windows), and then
 				// the "next" tab would select.
 				if (props_prefix != null) {
-  				Utils.execSWTThreadLater(0, new AERunnable() {
+					Utils.execSWTThreadLater(0, () -> {
+						String view_id = entry.getViewID();
+						String key = props_prefix + ".closedtabs";
 
-  					@Override
-  					public void runSupport() {
-  						String view_id = entry.getViewID();
-  						String key = props_prefix + ".closedtabs";
+						Map closedtabs = COConfigurationManager.getMapParameter(key,
+								new HashMap());
 
-  						Map closedtabs = COConfigurationManager.getMapParameter(key,
-  								new HashMap());
+						if (closedtabs.containsKey(view_id)) {
+							return;
+						}
 
-  						if (!closedtabs.containsKey(view_id)) {
+						closedtabs.put(view_id, entry.getTitle());
 
-  							closedtabs.put(view_id, entry.getTitle());
+						// Set location if there is none.
+						if (builder != null && builder.getPreferredAfterID() == null) {
+							MdiEntrySWT[] entries = getEntries();
+							if (entries.length > 1 && entries[0] == entry) {
+								builder.setPreferredAfterID("~" + entries[1].getViewID());
+							} else {
+								for (int i = 1; i < entries.length; i++) {
+									MdiEntrySWT e = entries[i];
+									if (e == entry) {
+										builder.setPreferredAfterID(entries[i - 1].getViewID());
+										break;
+									}
+								}
+							}
+						}
 
-  							// this will trigger listener which will remove the tab
-  							COConfigurationManager.setParameter(key, closedtabs);
-  						}
-  					}
-  				});
+						// this will trigger listener which will remove the tab
+						COConfigurationManager.setParameter(key, closedtabs);
+					});
 				}
 			}
 		});
@@ -455,6 +566,41 @@ public class TabbedMDI
 			boolean toMinimize = ConfigurationManager.getInstance().getBooleanParameter(props_prefix + ".subViews.minimized");
 			setMinimized(toMinimize);
 		}
+
+		// Create views registered to this tab
+
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		List<UISWTViewBuilderCore> builders = vm.getBuilders(getViewID(),
+				getDataSourceType());
+		for (UISWTViewBuilderCore builder : builders) {
+			try {
+				createEntry(builder, true);
+			} catch (Exception ignore) {
+			}
+		}
+	}
+
+	private MdiEntryVitalityImageSWT getVitalityImageAtPos(int x, int y) {
+		CTabItem item = tabFolder.getItem(new Point(x, y));
+		if (item == null) {
+			return null;
+		}
+		TabbedEntry entry = getEntryFromTabItem(item);
+		if (entry == null) {
+			return null;
+		}
+		List<MdiEntryVitalityImageSWT> vitalityImages = entry.getVitalityImages();
+		for (MdiEntryVitalityImageSWT vitalityImage : vitalityImages) {
+			if (!vitalityImage.isVisible()) {
+				continue;
+			}
+			Rectangle hitArea = vitalityImage.getHitArea();
+			if (hitArea != null && hitArea.contains(x, y)) {
+				return vitalityImage;
+			}
+		}
+
+		return null;
 	}
 
 	private String
@@ -604,7 +750,7 @@ public class TabbedMDI
   		}
 		}
 
-		MdiEntry oldEntry = getCurrentEntrySWT();
+		MdiEntry oldEntry = getCurrentEntry();
 		if (newEntry == oldEntry && oldEntry != null) {
 			((BaseMdiEntry) newEntry).show();
 			triggerSelectionListener(newEntry, newEntry);
@@ -624,72 +770,101 @@ public class TabbedMDI
 		triggerSelectionListener(newEntry, oldEntry);
 	}
 
-	private MdiEntry createEntryFromSkinRef(String parentID, String id,
-			String configID, String title, ViewTitleInfo titleInfo, Object params,
-			boolean closeable, int index) {
-		MdiEntry oldEntry = getEntry(id);
+	private TabbedEntry createEntryFromSkinRef(String id, String configID,
+			String title, ViewTitleInfo titleInfo, Object params, boolean closeable,
+			String preferredAfterID) {
+		TabbedEntry oldEntry = getEntry(id);
 		if (oldEntry != null) {
 			return oldEntry;
 		}
 
-		TabbedEntry entry = new TabbedEntry(this, skin, id, null);
+		TabbedEntry entry = new TabbedEntry(this, skin, id);
 		entry.setTitle(title);
+		entry.setDatasource(dataSource);
 		entry.setSkinRef(configID, params);
 		entry.setViewTitleInfo(titleInfo);
+		entry.setDestroyOnDeactivate(destroyEntriesOnDeactivate);
+		entry.setPreferredAfterID(preferredAfterID);
+		entry.setCloseable(closeable);
+		entry.setParentView(getParentView());
 
-		setupNewEntry(entry, id, index, closeable);
+		setupNewEntry(entry);
 		return entry;
 	}
 
-	// @see BaseMDI#createEntryFromSkinRef(java.lang.String, java.lang.String, java.lang.String, java.lang.String, ViewTitleInfo, java.lang.Object, boolean, java.lang.String)
+	/**
+	 *
+	 * @param preferedAfterID Not used for Tabs
+	 */
 	@Override
-	public MdiEntry createEntryFromSkinRef(String parentID, String id,
-	                                       String configID, String title, ViewTitleInfo titleInfo, Object params,
-	                                       boolean closeable, String preferedAfterID) {
-		// afterid not fully supported yet
-		return createEntryFromSkinRef(parentID, id, configID, title, titleInfo,
-				params, closeable, "".equals(preferedAfterID) ? 0 : -1);
+	public TabbedEntry createEntryFromSkinRef(
+			@SuppressWarnings("unused") String parentEntryID, String id,
+			String configID, String title, ViewTitleInfo titleInfo, Object params,
+			boolean closeable, String preferedAfterID) {
+		return createEntryFromSkinRef(id, configID, title, titleInfo, params,
+				closeable, preferedAfterID);
 	}
 
 	@Override
-	public MdiEntry createEntryFromEventListener(String parentEntryID,
-	                                             String parentViewID, UISWTViewEventListener l, String id,
-	                                             boolean closeable, Object datasource, String preferredAfterID) {
+	public TabbedEntry createEntry(UISWTViewBuilderCore builder,
+			boolean closeable) {
+
+		String id = builder.getViewID();
 		if (isEntryClosedByUser(id)) {
 			return null;
 		}
-		MdiEntry oldEntry = getEntry(id);
+		TabbedEntry oldEntry = getEntry(id);
 		if (oldEntry != null) {
+			oldEntry.setDatasource(builder.getInitialDataSource());
 			return oldEntry;
 		}
 
-		TabbedEntry entry = new TabbedEntry(this, skin, id, parentViewID);
+		TabbedEntry entry = new TabbedEntry(this, skin, id);
+		// Set some defaults. Must be done before entry.setEventListener, as listener
+		// might want to override
+		entry.setDatasource(dataSource == null ? builder.getInitialDataSource(): dataSource);
+		String preferredAfterID = builder.getPreferredAfterID();
+		entry.setPreferredAfterID(preferredAfterID);
+		entry.setDestroyOnDeactivate(destroyEntriesOnDeactivate);
+		entry.setTitle(builder.getInitialTitle());
+		entry.setCloseable(closeable);
+		entry.setParentView(getParentView());
 
-		if ( datasource == null && l instanceof UISWTViewEventListenerHolder ) {
-			datasource = ((UISWTViewEventListenerHolder)l).getInitialDataSource();
-		}
 		try {
-			// hack - seteventlistener will create view it needs to have item available now, not a little later
-			addItem(entry );
-			
-			entry.setEventListener(l, true);
-		} catch (UISWTViewEventCancelledException e) {
+			// setEventListner will create the UISWTView.
+			// We need to have the entry available for the view to use if it wants
+			addItem(entry);
+
+			UISWTViewEventListener l = builder.createEventListener(entry);
+			entry.setEventListener(l, builder,true);
+			// Do not set ParentEntry ID -- Tabbed MDI doesn't have parents
+			//entry.setParentEntryID(parentEntryID);
+
+			setupNewEntry(entry);
+
+			addMenus( entry, id );
+
+			if (l instanceof IViewAlwaysInitialize) {
+				entry.build();
+			}
+		} catch (Exception e) {
+			if (!(e instanceof UISWTViewEventCancelledException)) {
+				Debug.out("Can't create " + builder.getViewID(), e);
+			}
 			entry.close(true);
 			removeItem(entry,false);
 			return null;
 		}
-		entry.setDatasource(datasource);
-		entry.setPreferredAfterID(preferredAfterID);
-
-		setupNewEntry(entry, id, -1, closeable);
-
-		addMenus( entry, id );
-		
-		if (l instanceof IViewAlwaysInitialize) {
-			entry.build();
-		}
 
 		return entry;
+	}
+
+	@Override
+	public void updateUI() {
+		if (getMinimized()) {
+			return;
+		}
+		super.updateUI();
 	}
 
 	private boolean isEntryClosedByUser(String id) {
@@ -701,24 +876,34 @@ public class TabbedMDI
 		return false;
 	}
 
-	private void setupNewEntry(final TabbedEntry entry, final String id,
-			final int index, boolean closeable) {
-		addItem( entry );
-
-		entry.setCloseable(closeable);
-
-		Utils.execSWTThreadLater(0, new AERunnable() {
-			@Override
-			public void runSupport() {
-				swt_setupNewEntry(entry, id, index);
-			}
-		});
+	private void setupNewEntry(TabbedEntry entry) {
+		Utils.execSWTThreadLater(0, () -> swt_setupNewEntry(entry));
 	}
 
-	private void swt_setupNewEntry(TabbedEntry entry, String id, int index) {
+	private void swt_setupNewEntry(TabbedEntry entry) {
 		if (tabFolder == null || tabFolder.isDisposed()) {
 			return;
 		}
+
+		int index =  -1;
+		String preferredAfterID = entry.getPreferredAfterID();
+		if (preferredAfterID != null) {
+			if (preferredAfterID.length() == 0) {
+				index = 0;
+			} else {
+				boolean preferBefore = preferredAfterID.startsWith( "~" );
+
+				if ( preferBefore ){
+					preferredAfterID = preferredAfterID.substring(1);
+				}
+
+				index = indexOf(preferredAfterID);
+				if (!preferBefore && index >= 0) {
+					index++;
+				}
+			}
+		}
+
 		if (index < 0 || index >= tabFolder.getItemCount()) {
 			index = tabFolder.getItemCount();
 		}
@@ -744,7 +929,11 @@ public class TabbedMDI
   				}
   				CTabItem selection = tabFolder.getSelection();
   				if (selection == null) {
-  					return;
+  					if (tabFolder.getItemCount() > 0) {
+  					  selection = tabFolder.getItem(0);
+					  } else {
+  					  return;
+					  }
   				}
   				TabbedEntry entry = getEntryFromTabItem(selection);
   				showEntry(entry);
@@ -765,14 +954,14 @@ public class TabbedMDI
 		String name = "MDI";
 		MdiEntry entry = getCurrentEntry();
 		if (entry != null) {
-			name += "-" + entry.getId();
+			name += "-" + entry.getViewID();
 		}
 		return name;
 	}
 
 	@Override
 	public void generate(IndentWriter writer) {
-		MdiEntrySWT[] entries = getEntriesSWT();
+		MdiEntrySWT[] entries = getEntries();
 		for (MdiEntrySWT entry : entries) {
 			if (entry == null) {
 				continue;
@@ -780,7 +969,7 @@ public class TabbedMDI
 
 
 			if (!(entry instanceof AEDiagnosticsEvidenceGenerator)) {
-				writer.println("TabbedMdi View (No Generator): " + entry.getId());
+				writer.println("TabbedMdi View (No Generator): " + entry.getViewID());
 				try {
 					writer.indent();
 
@@ -796,25 +985,8 @@ public class TabbedMDI
 		}
 	}
 
-	// @see MultipleDocumentInterfaceSWT#getEntryFromSkinObject(com.biglybt.ui.swt.pif.PluginUISWTSkinObject)
 	@Override
-	public MdiEntrySWT getEntryFromSkinObject(PluginUISWTSkinObject pluginSkinObject) {
-		if (pluginSkinObject instanceof SWTSkinObject) {
-			Control control = ((SWTSkinObject) pluginSkinObject).getControl();
-			while (control != null && !control.isDisposed()) {
-				Object entry = control.getData("BaseMDIEntry");
-				if (entry instanceof BaseMdiEntry) {
-					BaseMdiEntry mdiEntry = (BaseMdiEntry) entry;
-					return mdiEntry;
-				}
-				control = control.getParent();
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public MdiEntry createHeader(String id, String title, String preferredAfterID) {
+	public TabbedEntry createHeader(String id, String title, String preferredAfterID) {
 		return null;
 	}
 
@@ -896,43 +1068,6 @@ public class TabbedMDI
 		return iFolderHeightAdj;
 	}
 
-
-	/* (non-Javadoc)
-	 * @see SWTSkinObjectAdapter#dataSourceChanged(SWTSkinObject, java.lang.Object)
-	 */
-	@Override
-	public Object dataSourceChanged(SWTSkinObject skinObject, final Object ds) {
-		Utils.execSWTThread(new Runnable() {
-			@Override
-			public void run() {
-				if (tabFolder == null || tabFolder.isDisposed()) {
-					return;
-				}
-
-				if (ds instanceof Object[]) {
-					Object[] temp = (Object[]) ds;
-					if (temp.length == 1) {
-						Object obj = temp[0];
-
-						if (obj instanceof DownloadManager) {
-							maximizeTo = (DownloadManager) obj;
-						} else if (obj instanceof Download) {
-							maximizeTo = PluginCoreUtils.unwrap((Download) obj);
-						}
-					}
-				}
-
-				setMaximizeVisible(maximizeTo != null);
-
-			}
-		});
-
-		return super.dataSourceChanged(skinObject, ds);
-	}
-
-	/* (non-Javadoc)
-	 * @see com.biglybt.core.config.ParameterListener#parameterChanged(java.lang.String)
-	 */
 	@Override
 	public void parameterChanged(String parameterName) {
 		if (isDisposed()) {
@@ -955,6 +1090,42 @@ public class TabbedMDI
 	@Override
 	public void setTabbedMdiMaximizeListener(TabbedMdiMaximizeListener l) {
 		maximizeListener = l;
+	}
+
+	@Override
+	public void setDestroyEntriesOnDeactivate(boolean destroyEntriesOnDeactivate) {
+		this.destroyEntriesOnDeactivate = destroyEntriesOnDeactivate;
+		MdiEntrySWT[] entries = getEntries();
+		for (MdiEntrySWT entry : entries) {
+			entry.setDestroyOnDeactivate(destroyEntriesOnDeactivate);
+		}
+	}
+
+	@Override
+	public void setEntriesDataSource(Object newDataSource) {
+		if (DataSourceUtils.areSame(newDataSource, dataSource)) {
+			return;
+		}
+
+		dataSource = newDataSource;
+		MdiEntry[] entries = getEntries();
+		for (MdiEntry entry : entries) {
+			entry.setDatasource(dataSource);
+		}
+		DownloadManager[] dms = DataSourceUtils.getDMs(dataSource);
+		if (maximizeListener != null) {
+			setMaximizeVisible(dms.length == 1);
+		}
+	}
+
+	@Override
+	public void setAllowSubViews(boolean allowSubViews) {
+		this.allowSubViews = allowSubViews;
+	}
+
+	@Override
+	public boolean getAllowSubViews() {
+		return allowSubViews;
 	}
 
 	// @see com.biglybt.ui.swt.debug.ObfuscateImage#obfuscatedImage(org.eclipse.swt.graphics.Image)
@@ -1096,27 +1267,12 @@ public class TabbedMDI
 
 					if ( cont != null ){
 
-						Object ds = target.getDatasource();
-
-						if ( ds instanceof Object[]){
-
-							Object[] temp = (Object[])ds;
-
-							if ( temp.length > 0 ){
-
-								ds = temp[0];
-							}
-						}
-
 						String ds_str = "";
+						Object ds = target.getDatasourceCore();
+						DownloadManager dm = DataSourceUtils.getDM(ds);
 
-						if ( ds instanceof Download ){
-
-							ds_str = ((Download)ds).getName();
-
-						}else if ( ds instanceof DownloadManager ){
-
-							ds_str = ((DownloadManager)ds).getDisplayName();
+						if (dm != null) {
+							ds_str = dm.getDisplayName();
 						}
 
 						skinnedDialog.setTitle( target.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
@@ -1139,7 +1295,8 @@ public class TabbedMDI
 		super.fillMenu(menu, entry, menuID);
 
 		if ( entry != null ){
-			com.biglybt.pif.ui.menus.MenuItem[] menu_items = MenuItemManager.getInstance().getAllAsArray(entry.getId() + "._end_");
+			com.biglybt.pif.ui.menus.MenuItem[] menu_items = MenuItemManager.getInstance().getAllAsArray(
+					entry.getViewID() + "._end_");
 
 			if ( menu_items.length > 0 ){
 
@@ -1155,5 +1312,124 @@ public class TabbedMDI
 	@Override
 	public String getMenuIdPrefix() {
 		return props_prefix + ".";
+	}
+
+	@Override
+	protected void setCurrentEntry(MdiEntrySWT entry) {
+		super.setCurrentEntry(entry);
+
+		Utils.execSWTThread(this::swt_refreshVitality);
+	}
+
+	protected void swt_refreshVitality() {
+		TabbedEntry currentEntry = getCurrentEntry();
+		if (currentEntry == null) {
+			return;
+		}
+		if (topRight != null) {
+			topRight.dispose();
+		}
+
+		UISWTView parentView = getParentView();
+		boolean canPopOut = ((parentView instanceof UISWTViewCore)
+				&& ((UISWTViewCore) parentView).canBuildStandAlone());
+
+		List<MdiEntryVitalityImageSWT> vitalityImages = currentEntry.getVitalityImages();
+		if (vitalityImages.isEmpty() && !canPopOut) {
+			topRight = null;
+			return;
+		}
+		topRight = new Composite(tabFolder, SWT.NONE);
+		RowLayout layout = new RowLayout(SWT.HORIZONTAL);
+		layout.marginTop = layout.marginBottom = 0;
+		layout.wrap = false;
+		topRight.setLayout(layout);
+		for (MdiEntryVitalityImageSWT vitalityImage : vitalityImages) {
+			if (!vitalityImage.isVisible() || !vitalityImage.hasListeners()
+					|| !vitalityImage.getShowOutsideOfEntry()) {
+				continue;
+			}
+			Label label = new Label(topRight, SWT.CENTER);
+			Image image = ImageLoader.getInstance().getImage(
+					vitalityImage.getImageID());
+			label.setImage(image);
+			RowData rowData = new RowData();
+			rowData.width = image.getBounds().width;
+			rowData.height = tabFolder.getTabHeight();
+			label.setLayoutData(rowData);
+
+			label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+
+			Utils.setTT(label, vitalityImage.getToolTip());
+
+			if (vitalityImage.hasListeners()) {
+				Utils.addSafeMouseUpListener(label,
+						event -> vitalityImage.triggerClickedListeners(0, 0));
+			}
+		}
+
+		if (canPopOut) {
+			Label label = new Label(topRight, SWT.CENTER);
+			Image image = ImageLoader.getInstance().getImage("popout_window");
+			label.setImage(image);
+			RowData rowData = new RowData();
+			rowData.width = image.getBounds().width;
+			rowData.height = tabFolder.getTabHeight();
+			label.setLayoutData(rowData);
+
+			label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+
+			Utils.setTT(label, MessageText.getString("label.pop.out"));
+
+			Utils.addSafeMouseUpListener(label, event -> {
+				// From TabbedMDI.addMenus, but there's also Sidebar.addGeneralMenus which doesn't set datasource
+				SkinnedDialog skinnedDialog = new SkinnedDialog(
+						"skin3_dlg_sidebar_popout", "shell", null, // standalone
+						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+
+				SWTSkin skin = skinnedDialog.getSkin();
+
+				SWTSkinObjectContainer cont = ((UISWTViewCore) parentView).buildStandAlone(
+						(SWTSkinObjectContainer) skin.getSkinObject("content-area"));
+
+				if (cont != null) {
+
+					String ds_str = "";
+					Object ds = parentView.getDataSource();
+					DownloadManager dm = DataSourceUtils.getDM(ds);
+
+					if (dm != null) {
+						ds_str = dm.getDisplayName();
+					}
+
+					skinnedDialog.setTitle(((UISWTViewCore) parentView).getFullTitle()
+							+ (ds_str.length() == 0 ? "" : (" - " + ds_str)));
+
+					skinnedDialog.open();
+
+				} else {
+
+					skinnedDialog.close();
+				}
+			});
+		}
+
+		tabFolder.setTopRight(topRight);
+	}
+
+
+	@Override
+	public TabbedEntry getEntry(String id) {
+		return (TabbedEntry) super.getEntry(id);
+	}
+
+	@Override
+	public TabbedEntry getCurrentEntry() {
+		return (TabbedEntry) super.getCurrentEntry();
+	}
+
+	@Override
+	public TabbedEntry getEntryBySkinView(Object skinView) {
+		return (TabbedEntry) super.getEntryBySkinView(skinView);
 	}
 }

@@ -20,23 +20,32 @@
 
 package com.biglybt.util;
 
+import java.util.*;
+
 import com.biglybt.activities.ActivitiesEntry;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.devices.TranscodeFile;
 import com.biglybt.core.devices.TranscodeJob;
+import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.impl.DiskManagerImpl;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagDownload;
+import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.ui.selectedcontent.DownloadUrlInfo;
+import com.biglybt.ui.selectedcontent.ISelectedContent;
+
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.torrent.Torrent;
-import com.biglybt.pifimpl.local.PluginCoreUtils;
-import com.biglybt.ui.selectedcontent.DownloadUrlInfo;
-import com.biglybt.ui.selectedcontent.ISelectedContent;
 
 /**
  * @author TuxPaper
@@ -135,7 +144,7 @@ public class DataSourceUtils
   			}
 			} else if (ds instanceof Object[]) {
 					Object[] o = (Object[]) ds;
-					return getDM(o[0]);
+					return o.length == 0 ? null : getDM(o[0]);
 			}	else if ((ds instanceof String)  && CoreFactory.isCoreRunning()) {
 				String hash = (String) ds;
 				try {
@@ -146,6 +155,12 @@ public class DataSourceUtils
 	  			}
 				} catch (Exception e) {
 					// ignore
+				}
+			}else if (ds instanceof PEPiece){
+				DiskManager diskManager = ((PEPiece) ds).getDMPiece().getManager();
+				if (diskManager instanceof DiskManagerImpl) {
+					DiskManagerImpl dmi = (DiskManagerImpl) diskManager;
+					return dmi.getDownloadManager();
 				}
 			}
 
@@ -159,6 +174,24 @@ public class DataSourceUtils
 			Debug.printStackTrace(e);
 		}
 		return null;
+	}
+	
+	public static DownloadManager[] getDMs(Object ds) {
+		Object[] dsArray = (ds instanceof Object[]) ? (Object[]) ds : new Object[] {
+			ds
+		};
+		LinkedHashSet<DownloadManager> managers = new LinkedHashSet<>();
+		for (Object o : dsArray) {
+			if (o instanceof TagDownload) {
+				managers.addAll(((TagDownload) o).getTaggedDownloads());
+				continue;
+			}
+			DownloadManager dm = getDM(o);
+			if (dm != null) {
+				managers.add(dm);
+			}
+		}
+		return managers.toArray(new DownloadManager[0]);
 	}
 
 	public static TOTorrent getTorrent(Object ds) {
@@ -279,5 +312,61 @@ public class DataSourceUtils
 		}
 		return null;
 	}
+	
+	public static Tag getTag(Object ds) {
+		if (ds instanceof Tag) {
+			return (Tag) ds;
+		}
+		if (ds instanceof Number) {
+			long tag_uid = ((Number) ds).longValue();
+			return TagManagerFactory.getTagManager().lookupTagByUID( tag_uid );
+		}
+		if (ds instanceof Object[]) {
+			Object[] array = (Object[]) ds;
+			for (Object o : array) {
+				Tag tag = getTag(o);
+				if (tag != null) {
+					return tag;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public static Tag[] getTags(Object ds) {
+		if (ds instanceof Object[]) {
+			List<Tag> list = new ArrayList<>();
+			Object[] dsMulti = (Object[]) ds;
+			for (Object dsOne : dsMulti) {
+				Tag tag = getTag(dsOne);
+				if (tag != null) {
+					list.add(tag);
+				}
+			}
+			return list.toArray(new Tag[0]);
+		}
+		Tag tag = getTag(ds);
+		return tag == null ? new Tag[0] : new Tag[] {
+			tag
+		};
+	}
 
+	public static boolean areSame(Object ds0, Object ds1) {
+		boolean isArray0 = ds0 instanceof Object[];
+		boolean isArray1 = ds1 instanceof Object[];
+		if (isArray0 != isArray1) {
+			int len0 = isArray0 ? ((Object[])ds0).length : ds0 == null ? 0 : 1;
+			int len1 = isArray1 ? ((Object[])ds1).length : ds1 == null ? 0 : 1;
+			if (len0 == 1 && len1 == 1) {
+				Object oneDS0 = isArray0 ? ((Object[])ds0)[0] : ds0;
+				Object oneDS1 = isArray1 ? ((Object[])ds1)[0] : ds1;
+				return oneDS0 == oneDS1;
+			}
+			return len0 == 0 && len1 == 0;
+		}
+		if (isArray0) {
+			return Arrays.equals((Object[]) ds0, (Object[]) ds1);
+		}
+		return ds0 == ds1;
+	}
 }

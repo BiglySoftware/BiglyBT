@@ -19,22 +19,25 @@
  */
 package com.biglybt.ui.swt.views;
 
-import java.util.*;
+import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.core.util.GeneralUtils;
+import com.biglybt.core.util.TimeFormatter;
+import com.biglybt.core.util.average.AverageFactory;
+import com.biglybt.core.util.average.MovingImmediateAverage;
+import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.selectedcontent.SelectedContent;
+import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
@@ -43,18 +46,12 @@ import com.biglybt.ui.swt.components.graphics.MultiPlotGraphic;
 import com.biglybt.ui.swt.components.graphics.ValueFormater;
 import com.biglybt.ui.swt.components.graphics.ValueSource;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.mdi.TabbedEntry;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
-import com.biglybt.core.util.GeneralUtils;
-import com.biglybt.core.util.TimeFormatter;
-import com.biglybt.core.util.average.AverageFactory;
-import com.biglybt.core.util.average.MovingImmediateAverage;
-import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.selectedcontent.SelectedContent;
-import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 
 
 /**
@@ -62,7 +59,7 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
  */
 public class
 DownloadActivityView
-	implements UISWTViewCoreEventListenerEx, UIPluginViewToolBarListener
+	implements UISWTViewCoreEventListener, UIPluginViewToolBarListener
 {
 	public static final String MSGID_PREFIX = "DownloadActivityView";
 
@@ -76,7 +73,7 @@ DownloadActivityView
 	private static Color[]	eta_colors = { Colors.fadedGreen, Colors.light_grey };
 
 	private UISWTView 				swtView;
-	private boolean					legend_at_bottom;
+	private boolean					legend_at_bottom = true;
 	private Composite				panel;
 	
 	private MultiPlotGraphic 		mpg;
@@ -91,41 +88,6 @@ DownloadActivityView
 	{
 	}
 
-	@Override
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	@Override
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new DownloadActivityView());
-	}
-
-	@Override
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( DownloadActivityView.class );
-				}
-				
-				public List<Object>
-				getParameters()
-				{
-					return( null );
-				}
-			});
-	}
-	
 	private String
 	getFullTitle()
 	{
@@ -674,12 +636,9 @@ DownloadActivityView
 
 		    	swtView.setToolBarListener(this);
 
-		    	if ( event instanceof UISWTViewEventImpl ){
-
-		    		String parent = ((UISWTViewEventImpl)event).getParentID();
-
-		    		legend_at_bottom = parent != null && parent.equals( UISWTInstance.VIEW_TORRENT_DETAILS );
-		    	}
+				if (swtView instanceof TabbedEntry) {
+					legend_at_bottom = ((TabbedEntry) swtView).getMDI().getAllowSubViews();
+				}
 
 		    	break;
 		    }

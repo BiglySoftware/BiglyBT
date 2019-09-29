@@ -24,116 +24,73 @@ import java.applet.Applet;
 import java.applet.AudioClip;
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.plugin.I2PHelpers;
-import com.biglybt.plugin.net.buddy.BuddyPluginAZ2;
-import com.biglybt.plugin.net.buddy.BuddyPluginAdapter;
-import com.biglybt.plugin.net.buddy.BuddyPluginViewInterface;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.custom.*;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.*;
-import com.biglybt.pif.disk.DiskManagerFileInfo;
-import com.biglybt.pif.download.Download;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.menus.MenuContext;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuItemListener;
-import com.biglybt.pif.ui.menus.MenuManager;
-import com.biglybt.pif.ui.tables.TableCell;
-import com.biglybt.pif.ui.tables.TableCellMouseEvent;
-import com.biglybt.pif.ui.tables.TableCellMouseListener;
-import com.biglybt.pif.ui.tables.TableCellRefreshListener;
-import com.biglybt.pif.ui.tables.TableColumn;
-import com.biglybt.pif.ui.tables.TableColumnCreationListener;
-import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.pifimpl.local.PluginCoreUtils;
-import com.biglybt.pifimpl.local.utils.FormattersImpl;
-import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.SimpleTextEntryWindow;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.minibar.AllTransfersBar;
-import com.biglybt.ui.swt.pif.UISWTInstance;
-import com.biglybt.ui.swt.pif.UISWTStatusEntry;
-import com.biglybt.ui.swt.pif.UISWTStatusEntryListener;
-import com.biglybt.ui.swt.pif.UISWTView;
-import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.views.table.TableCellSWT;
-import com.biglybt.ui.swt.views.utils.TagUIUtils;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.CoreFactory;
-import com.biglybt.core.security.CryptoHandler;
-import com.biglybt.core.security.CryptoManager;
-import com.biglybt.core.security.CryptoManagerFactory;
-import com.biglybt.core.security.CryptoManagerKeyListener;
-import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagManagerFactory;
-import com.biglybt.core.tag.TagType;
-import com.biglybt.core.tag.TagUtils;
-import com.biglybt.core.tag.Taggable;
-import com.biglybt.core.tag.TaggableLifecycleAdapter;
-import com.biglybt.plugin.net.buddy.BuddyPlugin;
-import com.biglybt.plugin.net.buddy.BuddyPluginAZ2Listener;
-import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
-import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatMessage;
-import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
-import com.biglybt.plugin.net.buddy.BuddyPluginNetwork;
-import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.security.*;
+import com.biglybt.core.tag.*;
+import com.biglybt.core.util.*;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.pifimpl.local.utils.FormattersImpl;
+import com.biglybt.plugin.I2PHelpers;
+import com.biglybt.plugin.net.buddy.*;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatMessage;
 import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;
 import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTrackerListener;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.MenuBuildUtils;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.minibar.AllTransfersBar;
+import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.views.table.TableCellSWT;
+import com.biglybt.ui.swt.views.utils.TagUIUtils;
+
+import com.biglybt.pif.disk.DiskManagerFileInfo;
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.*;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.*;
 
 
+/**
+ * Setup the SWT UI for Friends/Buddy
+ * 
+ * <p/>
+ * TODO: Mebbe Rename to BuddyPluginSWTUI now that View Listener stuff is moved to new class
+ */
 public class
 BuddyPluginView
-	implements UISWTViewCoreEventListenerEx, BuddyPluginViewInterface
+	implements BuddyPluginViewInterface
 {
+	public static final String VIEWID_CHAT = "azbuddy.ui.menu.chat";
 	private  TimerEvent 			buddyStatusInit;
 	private BuddyPluginAZ2Listener buddyPluginAZ2Listener;
 	
 	private BuddyPlugin		plugin;
 	private UISWTInstance	ui_instance;
-	private String			VIEW_ID;
-
-	private BuddyPluginViewInstance		current_instance;
 
 	private Image iconNLI;
 	private Image iconIDLE;
@@ -143,246 +100,95 @@ BuddyPluginView
 
 	private	final String default_sound 	= "com/biglybt/ui/icons/downloadFinished.wav";
 
-	private boolean	select_classic_tab_oustanding;
 	private TimerEventPeriodic periodicEventMsgCheck;
 	private statusUpdater statusUpdater;
 	private TaggableLifecycleAdapter taggableLifecycleAdapter;
 
 	private TableColumnCreationListener		columnMessagePending;
 	private final List<TableColumn> columns = new ArrayList<>();
-	
+
+	/**
+	 * Called via reflection in {@link BuddyPlugin}
+	 */
 	public
 	BuddyPluginView(
 		BuddyPlugin		_plugin,
-		UIInstance		_ui_instance,
-		String			_VIEW_ID )
+		UIInstance		_ui_instance)
 	{
-		this( _plugin, _ui_instance, _VIEW_ID, true );
-	}
-	
-	public
-	BuddyPluginView(
-		BuddyPlugin		_plugin,
-		UIInstance		_ui_instance,
-		String			_VIEW_ID,
-		boolean			_main_view )
-	{
-		init( _plugin, _ui_instance, _VIEW_ID, _main_view );
-	}
-	
-	public boolean
-	isCloneable()
-	{
-		return( true );
+		init( _plugin, _ui_instance );
 	}
 
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new BuddyPluginView( plugin, ui_instance, VIEW_ID, false ));
-	}
-	
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return(
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( BuddyPluginView.class );
-				}
-		
-				public List<Object>
-				getParameters()
-				{
-					return Collections.singletonList(VIEW_ID);
-				}
-			});
-	}
-	
-	public
-	BuddyPluginView(
-		String	_VIEW_ID )
-	{
-		BuddyPlugin bp = BuddyPluginUtils.getPlugin();
-		
-		if ( bp != null ){
-			
-			UIInstance[] instances = bp.getPluginInterface().getUIManager().getUIInstances();
-			
-			for ( UIInstance ui: instances ){
-				
-				if ( ui.getUIType() == UIInstance.UIT_SWT ){
-					
-					init( bp, ui, _VIEW_ID, false );
-					
-					return;
-				}
-			}
-		}
-		
-		throw( new RuntimeException( "View currently unavailable" ));
-	}
-	
 	private void
 	init(
 		BuddyPlugin		_plugin,
-		UIInstance		_ui_instance,
-		String			_VIEW_ID,
-		boolean			_main_view )
+		UIInstance		_ui_instance )
 	{
 		plugin			= _plugin;
 		ui_instance		= (UISWTInstance)_ui_instance;
-		VIEW_ID			= _VIEW_ID;
 
-		if ( _main_view ){
-			
-			buddyPluginAZ2Listener = new BuddyPluginAZ2Listener() {
-				@Override
-				public void
-				chatCreated(
-						final BuddyPluginAZ2.chatInstance chat )
-				{
-					final Display display = ui_instance.getDisplay();
-	
-					if ( !display.isDisposed()){
-	
-						display.asyncExec(
-								new Runnable()
-								{
-									@Override
-									public void
-									run()
-									{
-										if ( !display.isDisposed()){
-	
-											new BuddyPluginViewChat( plugin, display, chat );
-										}
-									}
-								});
-					}
+		buddyPluginAZ2Listener = new BuddyPluginAZ2Listener() {
+			@Override
+			public void
+			chatCreated(
+					final BuddyPluginAZ2.chatInstance chat )
+			{
+				final Display display = ui_instance.getDisplay();
+
+				if ( display.isDisposed()){
+					return;
 				}
-	
-				@Override
-				public void
-				chatDestroyed(
-						BuddyPluginAZ2.chatInstance		chat )
-				{
-				}
-			};
-			
-			for ( BuddyPluginNetwork pn: plugin.getPluginNetworks()){
-				
-				pn.getAZ2Handler().addListener(buddyPluginAZ2Listener);
-			}
-		
-			buddyStatusInit = SimpleTimer.addEvent("BuddyStatusInit", SystemTime.getOffsetTime(1000),
-					new TimerEventPerformer() {
-						@Override
-						public void
-						perform(
-								TimerEvent event) {
-							//UISWTStatusEntry label = ui_instance.createStatusEntry();
-							//label.setText(MessageText.getString("azbuddy.tracker.bbb.status.title"));
-	
-							statusUpdater = new statusUpdater(ui_instance);
+
+				display.asyncExec(() -> {
+						if ( !display.isDisposed()){
+
+							new BuddyPluginViewChat( plugin, display, chat );
 						}
 					});
-	
-			Utils.execSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-					ImageLoader imageLoader = ImageLoader.getInstance();
-	
-					iconNLI 	= imageLoader.getImage( "bbb_nli" );
-					iconIDLE 	= imageLoader.getImage( "bbb_idle" );
-					iconIN 		= imageLoader.getImage( "bbb_in" );
-					iconOUT 	= imageLoader.getImage( "bbb_out" );
-					iconINOUT 	= imageLoader.getImage( "bbb_inout" );
-				}
-			});
-		}
-		
-		ui_instance.addView(	UISWTInstance.VIEW_MAIN, VIEW_ID, this );
+			}
 
-		if ( _main_view ){
+			@Override
+			public void
+			chatDestroyed(
+					BuddyPluginAZ2.chatInstance		chat )
+			{
+			}
+		};
 		
-			checkBetaInit();
+		for ( BuddyPluginNetwork pn: plugin.getPluginNetworks()){
+			
+			pn.getAZ2Handler().addListener(buddyPluginAZ2Listener);
 		}
+	
+		buddyStatusInit = SimpleTimer.addEvent("BuddyStatusInit", SystemTime.getOffsetTime(1000),
+			event -> statusUpdater = new statusUpdater(ui_instance));
+
+		Utils.execSWTThread(() -> {
+			ImageLoader imageLoader = ImageLoader.getInstance();
+
+			iconNLI 	= imageLoader.getImage( "bbb_nli" );
+			iconIDLE 	= imageLoader.getImage( "bbb_idle" );
+			iconIN 		= imageLoader.getImage( "bbb_in" );
+			iconOUT 	= imageLoader.getImage( "bbb_out" );
+			iconINOUT 	= imageLoader.getImage( "bbb_inout" );
+		});
+		
+		ui_instance.registerView(UISWTInstance.VIEW_MAIN,
+				ui_instance.createViewBuilder(
+						FriendsView.VIEW_ID).setListenerInstantiator(true,
+					(Builder, swtView) -> new FriendsView(this, plugin, ui_instance)));
+
+		checkBetaInit();
 	}
 	
-	protected UISWTInstance
-	getUISWTInstance()
-	{
-		return( ui_instance );
-	}
-
 	@Override
 	public void
 	selectClassicTab()
 	{
-		select_classic_tab_oustanding = true;
-
-		ui_instance.openView( UISWTInstance.VIEW_MAIN, VIEW_ID, null );
-
-		if ( current_instance != null ){
-
-			current_instance.selectClassicTab();
-
-			select_classic_tab_oustanding = false;
+		if (ui_instance == null) {
+			return;
 		}
-	}
-	@Override
-	public boolean
-	eventOccurred(
-		UISWTViewEvent event )
-	{
-		switch( event.getType() ){
-
-			case UISWTViewEvent.TYPE_CREATE:{
-
-				if ( current_instance != null ){
-
-					return( false );
-				}
-
-				event.getView().setDestroyOnDeactivate(false);
-
-				break;
-			}
-			case UISWTViewEvent.TYPE_INITIALIZE:{
-
-				current_instance = new BuddyPluginViewInstance( this, plugin, ui_instance, (Composite)event.getData());
-
-				if ( select_classic_tab_oustanding ){
-
-					select_classic_tab_oustanding = false;
-
-					current_instance.selectClassicTab();
-				}
-
-				break;
-			}
-			case UISWTViewEvent.TYPE_CLOSE:
-			case UISWTViewEvent.TYPE_DESTROY:{
-
-				try{
-					if ( current_instance != null ){
-
-						current_instance.destroy();
-					}
-				}finally{
-
-					current_instance = null;
-				}
-
-				break;
-			}
-		}
-
-		return true;
+		ui_instance.openView(UISWTInstance.VIEW_MAIN, FriendsView.VIEW_ID,
+				FriendsView.DS_SELECT_CLASSIC_TAB);
 	}
 
 	@Override
@@ -464,18 +270,7 @@ BuddyPluginView
 							entry.getMenuContext(),
 							"azbuddy.view.friends" );
 
-				mi.addListener(
-					new MenuItemListener()
-					{
-						@Override
-						public void
-						selected(
-							MenuItem			menu,
-							Object 				target )
-						{
-							selectClassicTab();
-						}
-					});
+				mi.addListener((menu, target) -> selectClassicTab());
 			}
 
 
@@ -1006,19 +801,17 @@ BuddyPluginView
 			Debug.out(t);
 		}
 
-		ui_instance.removeViews(UISWTInstance.VIEW_MAIN, VIEW_ID);
+		ui_instance.removeViews(UISWTInstance.VIEW_MAIN, FriendsView.VIEW_ID);
 	}
 
 	private void
 	addBetaSubviews(
 		boolean	enable )
 	{
-		String[] views = {
-			TableManager.TABLE_MYTORRENTS_ALL_BIG,
-			TableManager.TABLE_MYTORRENTS_INCOMPLETE,
-			TableManager.TABLE_MYTORRENTS_INCOMPLETE_BIG,
-			TableManager.TABLE_MYTORRENTS_COMPLETE,
-			"TagsView",
+		Class[] datasourceTypes = {
+			// TODO: Use com.biglybt.pif.tag.Tag?
+			Tag.class,
+			Download.class,
 		};
 
 		if ( enable ){
@@ -1141,11 +934,14 @@ BuddyPluginView
 					}
 				};
 
-			for ( String table_id: views ){
-
-				ui_instance.addView(table_id, "azbuddy.ui.menu.chat",	listener );
+			// Our one listener instance can handle multiple views, so we
+			// return same listener for every instantiation
+			UISWTViewBuilder viewBuilder = ui_instance.createViewBuilder(
+					VIEWID_CHAT).setListenerInstantiator(true, (Builder, view) -> listener);
+			for (Class datasourceType : datasourceTypes) {
+				ui_instance.registerView(datasourceType, viewBuilder);
 			}
-			
+
 			TableManager	table_manager = plugin.getPluginInterface().getUIManager().getTableManager();
 			
 			TableCellRefreshListener	msg_refresh_listener =
@@ -1289,9 +1085,8 @@ BuddyPluginView
 			
 		}else{
 
-			for ( String table_id: views ){
-
-				ui_instance.removeViews( table_id, "azbuddy.ui.menu.chat" );
+			for (Class datasourceType : datasourceTypes) {
+				ui_instance.unregisterView(datasourceType, VIEWID_CHAT);
 			}
 
 			for ( UISWTView entry: new ArrayList<>(beta_subviews.keySet())){
@@ -2030,18 +1825,8 @@ BuddyPluginView
 
 			mi = menu_manager.addMenuItem( mc, "MainWindow.menu.view.configuration" );
 
-			mi.addListener(
-				new MenuItemListener()
-				{
-					@Override
-					public void
-					selected(
-						MenuItem			menu,
-						Object 				target )
-					{
-						ui_instance.openView( UISWTInstance.VIEW_MAIN, VIEW_ID, null );
-					}
-				});
+			mi.addListener((menu, target) -> ui_instance.openView(
+					UISWTInstance.VIEW_MAIN, FriendsView.VIEW_ID, null));
 
 			menu_items.add( mi );
 

@@ -22,36 +22,35 @@ package com.biglybt.ui.swt.views;
 import java.util.List;
 import java.util.Map;
 
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.ui.common.table.TableView;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.download.DownloadManagerPieceListener;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
-import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.core.peermanager.piecepicker.PiecePicker;
+import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
+import com.biglybt.ui.mdi.MdiEntry;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.selectedcontent.SelectedContent;
+import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.components.Legend;
-import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
+import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.piece.MyPieceDistributionView;
 import com.biglybt.ui.swt.views.piece.PieceInfoView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -60,29 +59,16 @@ import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.tableitems.pieces.*;
+import com.biglybt.util.DataSourceUtils;
 
-import com.biglybt.core.peermanager.piecepicker.PiecePicker;
-import com.biglybt.core.util.Base32;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.common.table.TableColumnCore;
-import com.biglybt.ui.common.table.TableDataSourceChangedListener;
-import com.biglybt.ui.common.table.TableLifeCycleListener;
-import com.biglybt.ui.common.table.TableRowCore;
-import com.biglybt.ui.common.table.TableSelectionListener;
-import com.biglybt.ui.common.table.impl.TableColumnManager;
-import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.selectedcontent.SelectedContent;
-import com.biglybt.ui.selectedcontent.SelectedContentManager;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
+import com.biglybt.pif.ui.tables.TableManager;
 
 /**
- * @author Olivier
- * @author TuxPaper
- *         2004/Apr/20: Remove need for tableItemToObject
- *         2004/Apr/21: extends TableView instead of IAbstractView
- * @author MjrTom
- *			2005/Oct/08: Add PriorityItem, SpeedItem
+ * Pieces List View
+ * <p/>
+ * Features:<br/>
+ * <li>List of partial pieces</li>
+ * <li>double-click to show on Piece Map</li>
  */
 
 public class PiecesView
@@ -93,9 +79,10 @@ public class PiecesView
 	TableLifeCycleListener,
 	TableViewSWTMenuFillListener,
 	TableSelectionListener,
-	UISWTViewCoreEventListenerEx
+	UISWTViewCoreEventListener,
+	ViewTitleInfo2
 {
-	private static boolean registeredCoreSubViews = false;
+	public static final Class<PEPiece> PLUGIN_DS_TYPE = PEPiece.class;
 
 	private final static TableColumnCore[] basicItems = {
 		new PieceNumberItem(),
@@ -122,11 +109,10 @@ public class PiecesView
 	public static final String MSGID_PREFIX = "PiecesView";
 
 	private DownloadManager 		manager;
-	private boolean					enable_tabs = true;
 	private TableViewSWT<PEPiece> 	tv;
 
 	private Composite legendComposite;
-
+	private MultipleDocumentInterfaceSWT mdi;
 
 	/**
 	 * Initialize
@@ -136,55 +122,14 @@ public class PiecesView
 		super(MSGID_PREFIX);
 	}
 
-	@Override
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	@Override
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new PiecesView());
-	}
-	
-	@Override
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( PiecesView.class );
-				}
-				
-				public List<Object>
-				getParameters()
-				{
-					return( null );
-				}
-			});
-	}
-
 	// @see com.biglybt.ui.swt.views.table.impl.TableViewTab#initYourTableView()
 	@Override
 	public TableViewSWT<PEPiece> initYourTableView() {
-		tv = TableViewFactory.createTableViewSWT(PEPiece.class,
+		registerPluginViews();
+
+		tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE,
 				TableManager.TABLE_TORRENT_PIECES, getPropertiesPrefix(), basicItems,
 				basicItems[0].getName(), SWT.SINGLE | SWT.FULL_SELECTION | SWT.VIRTUAL);
-		tv.setEnableTabViews(enable_tabs,true,null);
-
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		if (uiFunctions != null) {
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			registerPluginViews(pluginUI);
-		}
 
 		tv.addTableDataSourceChangedListener(this, true);
 		tv.addMenuFillListener(this);
@@ -194,38 +139,19 @@ public class PiecesView
 		return tv;
 	}
 
-	private void registerPluginViews(final UISWTInstance pluginUI) {
-		if (pluginUI == null || registeredCoreSubViews) {
+	private static void registerPluginViews() {
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		if (vm.areCoreViewsRegistered(PLUGIN_DS_TYPE)) {
 			return;
 		}
 
-		pluginUI.addView(TableManager.TABLE_TORRENT_PIECES,
-				"PieceInfoView", PieceInfoView.class, manager);
+		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
+			PieceInfoView.MSGID_PREFIX, null, PieceInfoView.class));
 
-		pluginUI.addView(TableManager.TABLE_TORRENT_PIECES,
-				"MyPieceDistributionView", MyPieceDistributionView.class, manager);
+		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
+			"MyPieceDistributionView", null, MyPieceDistributionView.class));
 
-		registeredCoreSubViews = true;
-
-		final UIManager uiManager = PluginInitializer.getDefaultInterface().getUIManager();
-		uiManager.addUIListener(new UIManagerListener() {
-			@Override
-			public void UIAttached(UIInstance instance) {
-			}
-
-			@Override
-			public void UIDetached(UIInstance instance) {
-				if (!(instance instanceof UISWTInstance)) {
-					return;
-				}
-
-				registeredCoreSubViews = false;
-				pluginUI.removeViews(TableManager.TABLE_TORRENT_PIECES, "PieceInfoView");
-				pluginUI.removeViews(TableManager.TABLE_TORRENT_PIECES, "MyPieceDistributionView");
-
-				uiManager.removeUIListener(this);
-			}
-		});
+		vm.setCoreViewsRegistered(PLUGIN_DS_TYPE);
 	}
 
 	@Override
@@ -366,40 +292,13 @@ public class PiecesView
 
 	}
 
-	private boolean comp_focused;
-	private Object focus_pending_ds;
-
-	private void
-	setFocused( boolean foc )
-	{
-		if ( foc ){
-
-			comp_focused = true;
-
-			dataSourceChanged( focus_pending_ds );
-
-		}else{
-
-			focus_pending_ds = manager;
-
-			dataSourceChanged( null );
-
-			comp_focused = false;
-		}
-	}
-
 	// @see TableDataSourceChangedListener#tableDataSourceChanged(java.lang.Object)
 	@Override
 	public void tableDataSourceChanged(Object newDataSource) {
-		if ( !comp_focused ){
-			focus_pending_ds = newDataSource;
-			return;
-		}
 
-		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource, manager );
+		DownloadManager newManager = DataSourceUtils.getDM(newDataSource);
 
 		if (newManager == manager) {
-			tv.setEnabled(manager != null);
 			return;
 		}
 
@@ -410,12 +309,11 @@ public class PiecesView
 
 		manager = newManager;
 
-		if (tv.isDisposed()){
+		if (tv == null || tv.isDisposed()) {
 			return;
 		}
 
 		tv.removeAllTableRows();
-		tv.setEnabled(manager != null);
 
 		if (manager != null) {
 			manager.addPeerListener(this, false);
@@ -437,25 +335,17 @@ public class PiecesView
 	}
 
 	private void tableViewInitialized() {
-		if (legendComposite != null && tv != null) {
+		if ((legendComposite == null || legendComposite.isDisposed()) && tv != null) {
 			Composite composite = tv.getTableComposite();
 
-			legendComposite = Legend.createLegendComposite(composite,
+			legendComposite = Legend.createLegendComposite(composite.getParent(),
 					BlocksItem.colors, new String[] {
 						"PiecesView.legend.requested",
 						"PiecesView.legend.written",
 						"PiecesView.legend.downloaded",
-						"PiecesView.legend.incache"
+						"PiecesView.legend.incache",
+					"!End Game Mode!"
 					});
-		}
-
-		if (manager != null) {
-			manager.removePeerListener(this);
-			manager.removePieceListener(this);
-			manager.addPeerListener(this, false);
-			manager.addPieceListener(this, false);
-			addExistingDatasources();
-
 		}
 	}
 
@@ -467,6 +357,7 @@ public class PiecesView
 		if (manager != null) {
 			manager.removePeerListener(this);
 			manager.removePieceListener(this);
+			manager = null;
 		}
 	}
 
@@ -499,21 +390,18 @@ public class PiecesView
 	 * Faster than allowing addListener to call us one datasource at a time.
 	 */
 	private void addExistingDatasources() {
-		if (manager == null || tv.isDisposed()) {
+		if (manager == null || tv == null || tv.isDisposed()) {
 			return;
 		}
 
 		PEPiece[] dataSources = manager.getCurrentPieces();
-		if (dataSources != null && dataSources.length >= 0) {
+		if (dataSources.length > 0) {
   		tv.addDataSources(dataSources);
     	tv.processDataSourceQueue();
 		}
 
 		// For this view the tab datasource isn't driven by table row selection so we
 		// need to update it with the primary data source
-
-		// TODO: TrackerView and PiecesView now have this similar code -- this
-		//       would be better handled in TableViewTab (or TableViewSWT?)
 
 		TableViewSWT_TabsCommon tabs = tv.getTabsCommon();
 
@@ -525,90 +413,38 @@ public class PiecesView
 	}
 	
 	  @Override
-	  public void defaultSelected(TableRowCore[] rows, int keyMask, int origin) {
-		 
-		  if ( rows.length == 1 ){
-			  
-			PEPiece piece = (PEPiece)rows[0].getDataSource(); 
-			
-			try{
-				String dm_id = "DMDetails_" + Base32.encode( manager.getTorrent().getHash());
+	public void defaultSelected(TableRowCore[] rows, int keyMask, int origin) {
 
-				MdiEntry mdi_entry = UIFunctionsManager.getUIFunctions().getMDI().getEntry( dm_id );
+		if (rows.length != 1) {
+			return;
+		}
 
-				if ( mdi_entry != null ){
+		PEPiece piece = (PEPiece) rows[0].getDataSource();
 
-					mdi_entry.setDatasource(new Object[] { manager });
-				}
+		// Show piece in PieceInfoView, which is either a subtab of this view,
+		// or a sister tab
+		MdiEntrySWT entry = null;
+		MultipleDocumentInterfaceSWT mdiToUse = null;
 
-					// ugly hack to find other tab
-				
-				Composite main_comp = tv.getComposite();
-
-				Composite piv_comp = null;
-				
-				for ( int i=0;i<2;i++ ){
-					
-					Composite comp = i==0?main_comp:piv_comp;
-					
-					while( comp != null ){
-	
-						if ( piv_comp == null ){
-						
-							piv_comp = (Composite)comp.getData( PieceInfoView.KEY_INSTANCE );
-						}
-						
-						if ( comp instanceof CTabFolder ){
-	
-							CTabFolder tf = (CTabFolder)comp;
-	
-							CTabItem[] items = tf.getItems();
-	
-							for ( CTabItem item: items ){
-	
-								UISWTViewCore view = (UISWTViewCore)item.getData("TabbedEntry");
-	
-								UISWTViewEventListener listener = view.getEventListener();
-	
-								if ( listener instanceof UISWTViewEventListenerHolder ){
-	
-									listener = ((UISWTViewEventListenerHolder)listener).getDelegatedEventListener( view );
-								}
-	
-								if ( listener instanceof PieceInfoView ){
-	
-									tf.setSelection( item );
-	
-									Event ev = new Event();
-	
-									ev.item = item;
-	
-										// manual setSelection doesn't file selection event - derp
-	
-									tf.notifyListeners( SWT.Selection, ev );
-	
-									((PieceInfoView)listener).selectPiece( piece );
-	
-									return;
-								}
-							}
-						}
-	
-						comp = comp.getParent();
-					}
-					
-				}
-			}catch( Throwable e ){
-
+		TableViewSWT_TabsCommon tabsCommon = tv.getTabsCommon();
+		if (tabsCommon != null) {
+			mdiToUse = tabsCommon.getMDI();
+			if (mdiToUse != null) {
+				entry = mdiToUse.getEntry(PieceInfoView.MSGID_PREFIX);
 			}
-		  }
-	  }
+		}
+		if (entry == null && mdi != null) {
+			mdiToUse = mdi;
+			entry = mdiToUse.getEntry(PieceInfoView.MSGID_PREFIX);
+		}
 
-	/**
-	 * @return the manager
-	 */
-	public DownloadManager getManager() {
-		return manager;
+		if (entry != null) {
+			UISWTViewEventListener eventListener = entry.getEventListener();
+			if (eventListener instanceof PieceInfoView) {
+				mdiToUse.showEntry(entry);
+				((PieceInfoView) eventListener).selectPiece(piece);
+			}
+		}
 	}
 
 	protected void
@@ -672,31 +508,22 @@ public class PiecesView
 	
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
-	    switch (event.getType()) {
+		if (event.getType() == UISWTViewEvent.TYPE_CREATE) {
+			event.getView().setDestroyOnDeactivate(true);
+		}
 
-	      case UISWTViewEvent.TYPE_CREATE:{
-	    	  if ( event instanceof UISWTViewEventImpl ){
-
-	    		  String parent = ((UISWTViewEventImpl)event).getParentID();
-
-	    		  enable_tabs = parent != null && parent.equals( UISWTInstance.VIEW_TORRENT_DETAILS );
-	    	  }
-	    	  break;
-	      }
-	      case UISWTViewEvent.TYPE_FOCUSGAINED:
-
-	      	setFocused( true );	// do this here to pick up corrent manager before rest of code
-
-	      	updateSelectedContent();
-	      	
-		    break;
-	      case UISWTViewEvent.TYPE_FOCUSLOST:
-	    	  setFocused( false );
-	    		SelectedContentManager.clearCurrentlySelectedContent();
-	    	  break;
-	    }
-
-	    return( super.eventOccurred(event));
+		return super.eventOccurred(event);
 	}
 
+	@Override
+	public void titleInfoLinked(MultipleDocumentInterface mdi, MdiEntry mdiEntry) {
+		if (mdi instanceof MultipleDocumentInterfaceSWT) {
+			this.mdi = (MultipleDocumentInterfaceSWT) mdi;
+		}
+	}
+
+	@Override
+	public Object getTitleInfoProperty(int propertyID) {
+		return null;
+	}
 }

@@ -34,11 +34,10 @@ import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
-import com.biglybt.ui.swt.mdi.TabbedMdiInterface;
+import com.biglybt.ui.swt.pifimpl.*;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import com.biglybt.core.config.COConfigurationManager;
@@ -52,9 +51,6 @@ import com.biglybt.ui.swt.mainwindow.*;
 import com.biglybt.ui.swt.minibar.AllTransfersBar;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTView;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.systray.SystemTraySWT;
 
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
@@ -790,16 +786,6 @@ MainWindowDelayStub
 
 		@Override
 		public void
-		addPluginView(
-			String viewID,
-			UISWTViewEventListener l)
-		{
-			log( "addPluginView" );
-		}
-
-
-		@Override
-		public void
 		closeDownloadBars()
 		{
 		}
@@ -844,10 +830,7 @@ MainWindowDelayStub
 		@Override
 		public void
 		openPluginView(
-			String sParentID,
-			String sViewID,
-			UISWTViewEventListener l,
-			Object dataSource,
+			UISWTViewBuilderCore builder,
 			boolean bSetFocus)
 		{
 			log( "openPluginView" );
@@ -859,32 +842,6 @@ MainWindowDelayStub
 			final String name)
 		{
 			log( "openPluginView" );
-		}
-
-
-		@Override
-		public void
-		removePluginView(
-			String viewID)
-		{
-			log( "removePluginView" );
-		}
-
-
-		@Override
-		public void
-		closePluginView(
-			UISWTViewCore view)
-		{
-			log( "closePluginView" );
-		}
-
-		@Override
-		public void
-		closePluginViews(
-			String sViewID )
-		{
-			log( "closePluginViews" );
 		}
 
 		@Override
@@ -1096,15 +1053,6 @@ MainWindowDelayStub
 			fixup( new Fixup3(){
 				@Override
 				public void fix(UIFunctionsSWT uif){ uif.openTorrentWindow(); }});
-		}
-
-		/* (non-Javadoc)
-		 * @see UIFunctionsSWT#createTabbedMDI(org.eclipse.swt.widgets.Composite)
-		 */
-		@Override
-		public TabbedMdiInterface createTabbedMDI(Composite parent, String id) {
-			log( "createTabbedMDI" );
-			return null;
 		}
 
 		@Override

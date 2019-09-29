@@ -17,37 +17,20 @@ package com.biglybt.ui.swt.views;
 
 import java.util.Map;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.CoreRunningListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.AEDiagnosticsEvidenceGenerator;
-import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.IndentWriter;
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
-import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.ui.swt.DelayedListenerMultiCombiner;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.pif.UISWTInstance;
-import com.biglybt.ui.swt.pif.UISWTView;
-import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
-import com.biglybt.ui.swt.views.skin.SB_Transfers;
-import com.biglybt.ui.swt.views.table.TableViewSWT;
-import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
-import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
-
+import com.biglybt.core.util.*;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableView;
@@ -55,8 +38,23 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentListener;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.ui.swt.DelayedListenerMultiCombiner;
+import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
+import com.biglybt.ui.swt.pif.UISWTView;
+import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
+import com.biglybt.ui.swt.views.skin.SB_Transfers;
+import com.biglybt.ui.swt.views.table.TableViewSWT;
+import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
+import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.util.MapUtils;
+
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.pif.ui.tables.TableManager;
 
 /**
  * Wraps a "Incomplete" torrent list and a "Complete" torrent list into
@@ -383,55 +381,60 @@ public class MyTorrentsSuperView
 
     	// delegate selections from the incomplete view to the sub-tabs owned by the seeding view
 
-    SelectedContentManager.addCurrentlySelectedContentListener(
-    	new SelectedContentListener()
-    	{
-    		@Override
-		    public void
-    		currentlySelectedContentChanged(
-    			ISelectedContent[] 		currentContent,
-    			String 					viewId )
-    		{
-    			if ( form.isDisposed() || torrentview == null || seedingview == null ){
+		SelectedContentManager.addCurrentlySelectedContentListener(
+				new SelectedContentListener() {
+					@Override
+					public void currentlySelectedContentChanged(
+							ISelectedContent[] currentContent, String viewId) {
+						if (form.isDisposed() || torrentview == null
+								|| seedingview == null) {
 
-    				SelectedContentManager.removeCurrentlySelectedContentListener( this );
+							SelectedContentManager.removeCurrentlySelectedContentListener(
+									this);
+							return;
 
-    			}else{
+						}
 
-	    			TableView<?> selected_tv = SelectedContentManager.getCurrentlySelectedTableView();
+						TableView<?> selected_tv = SelectedContentManager.getCurrentlySelectedTableView();
 
-    				TableViewSWT<?> incomp_tv 	= torrentview.getTableView();
-       				TableViewSWT<?> comp_tv 	= seedingview.getTableView();
+						TableViewSWT<?> incomp_tv = torrentview.getTableView();
+						TableViewSWT<?> comp_tv = seedingview.getTableView();
 
-	    			if ( incomp_tv != null && comp_tv != null && ( selected_tv == incomp_tv || selected_tv == comp_tv )){
+						if (incomp_tv == null || comp_tv == null
+								|| (selected_tv != incomp_tv && selected_tv != comp_tv)) {
+							return;
+						}
 
-	    				TableViewSWT_TabsCommon target_tabs;
-	    				
-						if ( split_horizontally ){
+						TableViewSWT_TabsCommon target_tabs;
+
+						if (split_horizontally) {
 
 							target_tabs = switch_kids?incomp_tv.getTabsCommon():comp_tv.getTabsCommon();
 
 						}else{
-						
+
 							target_tabs = ((TableViewSWT<?>)selected_tv).getTabsCommon();
 						}
 
-    					if ( target_tabs != null ){
+						if (target_tabs == null) {
+							return;
+						}
 
-    						Utils.execSWTThread(
-    							new Runnable()
-    							{
-    								public void
-    								run()
-    								{
-    									target_tabs.triggerTabViewsDataSourceChanged(selected_tv);
-   									}
-    							});
-    					}
-	    			}
-    			}
-    		}
-    	});
+						if (selected_tv.getSelectedRowsSize() == 0) {
+							MyTorrentsView currentView = getCurrentView();
+							if (currentView == torrentview) {
+								seedingview.getTableView().setFocus();
+							} else {
+								torrentview.getTableView().setFocus();
+							}
+							return;
+						}
+
+						Utils.execSWTThread(
+								() -> target_tabs.triggerTabViewsDataSourceChanged(
+										selected_tv));
+					}
+				});
 
   	initializeDone();
   }
@@ -673,11 +676,12 @@ public class MyTorrentsSuperView
 		MyTorrentsView view = new MyTorrentsView( _core, tableID, isSeedingView, columns, txtFilter, cCats, support_tabs  );
 
 		try {
-			UISWTViewImpl swtView = new UISWTViewImpl(tableID, UISWTInstance.VIEW_MAIN, false);
-			swtView.setDatasource(ds);
-			swtView.setEventListener(view, true);
-			swtView.setDelayInitializeToFirstActivate(false);
+			UISWTViewBuilderCore builder = new UISWTViewBuilderCore(
+				tableID, null, view).setInitialDatasource(ds);
+			UISWTViewImpl swtView = new UISWTViewImpl(builder, true);
+			swtView.setDestroyOnDeactivate(false);
 
+			swtView.setDelayInitializeToFirstActivate(false);
 			swtView.initialize(c);
 		} catch (Exception e) {
 			Debug.out(e);

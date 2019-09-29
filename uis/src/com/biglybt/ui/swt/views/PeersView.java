@@ -19,54 +19,59 @@
  */
 package com.biglybt.ui.swt.views;
 
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.*;
-
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
-
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
-
-import com.biglybt.pif.ui.tables.TableManager;
-
+import com.biglybt.core.util.*;
+import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
+import com.biglybt.ui.mdi.MdiEntry;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
-import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
+import com.biglybt.util.DataSourceUtils;
+import com.biglybt.util.StringCompareUtils;
+
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 
 /**
- * @author Olivier
- * @author TuxPaper
- *         2004/Apr/20: Use TableRowImpl instead of PeerRow
- *         2004/Apr/20: Remove need for tableItemToObject
- *         2004/Apr/21: extends TableView instead of IAbstractView
- * @author MjrTom
- *			2005/Oct/08: Add PieceItem
+ * View showing list of peers for {@link DownloadManager}
+ * <p/>
+ * TODO: Support multiple DS
  */
 
 public class PeersView
 	extends PeersViewBase
-	implements DownloadManagerPeerListener, TableDataSourceChangedListener 
+	implements DownloadManagerPeerListener, TableDataSourceChangedListener,
+	ViewTitleInfo2, UIPluginViewToolBarListener
 {
 	public static final String MSGID_PREFIX = "PeersView";
 
 	private DownloadManager manager;
 
-	private boolean enable_tabs = true;
-
-
-	private boolean 	comp_focused;
-	private Object 		focus_pending_ds;
-	private PEPeer		select_peer_pending;
+	private Reference<PEPeer> select_peer_pending;
+	private TimerEventPeriodic timerPeerCountUI;
+	private boolean pendingTitleRefresh;
+	private String textIndicator;
 
 
 	public PeersView() {
@@ -74,75 +79,91 @@ public class PeersView
 	}
 
 	@Override
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new PeersView());
-	}
-
-	@Override
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( PeersView.class );
-				}
-				
-				public java.util.List<Object>
-				getParameters()
-				{
-					return( null );
-				}
-			});
-	}
-	
 	public TableViewSWT<PEPeer> 
 	initYourTableView()
 	{
-		initYourTableView( TableManager.TABLE_TORRENT_PEERS, enable_tabs );
+		// Clear manager that was set by parentDataSourceChanged (for title ui)
+		// no need to removeListeners, as they weren't added
+		manager = null;
+	
+		tv = initYourTableView( TableManager.TABLE_TORRENT_PEERS);
 
-		tv.addTableDataSourceChangedListener(this, true);
+		// no need to trigger, super will
+		tv.addTableDataSourceChangedListener(this, false);
+		tv.addCountChangeListener(new TableCountChangeListener() {
+			@Override
+			public void rowAdded(TableRowCore row) {
+				pendingTitleRefresh = true;
+			}
+
+			@Override
+			public void rowRemoved(TableRowCore row) {
+				pendingTitleRefresh = true;
+			}
+		});
 
 		return( tv );
 	}
 
 
 
-	private void
-	setFocused( boolean foc )
-	{
-		if ( foc ){
+	@Override
+	public void parentDataSourceChanged(Object newParentDataSource) {
+		super.parentDataSourceChanged(newParentDataSource);
 
-			comp_focused = true;
+		if (tv != null && !tv.isDisposed()) {
+			return;
+		}
+		DownloadManager newManager = DataSourceUtils.getDM(newParentDataSource);
+		if (newManager != manager) {
+			manager = newManager;
+			buildTitleInfoTimer();
+		}
+	}
+	
+	private void buildTitleInfoTimer() {
+		if (manager == null) {
+			if (timerPeerCountUI != null) {
+				timerPeerCountUI.cancel();
+				timerPeerCountUI = null;
+			}
+		} else if (timerPeerCountUI == null) {
+			pendingTitleRefresh = true;
+			timerPeerCountUI = SimpleTimer.addPeriodicEvent("PeerSumUI", 1000, e -> {
+				if (!pendingTitleRefresh) {
+					return;
+				}
+				if (tv != null) {
+					pendingTitleRefresh = false;
+				}
+				
+				updateTitle();
+			});
+		} else {
+			pendingTitleRefresh = true;
+		}
+	}
 
-			dataSourceChanged( focus_pending_ds );
-
-		}else{
-
-			focus_pending_ds = manager;
-
-			dataSourceChanged( null );
-
-			comp_focused = false;
+	private void updateTitle() {
+		int count = 0;
+		if (manager != null) {
+			PEPeerManager peerManager = manager.getPeerManager();
+			if (peerManager != null) {
+				count = peerManager.getPeers().size();
+			}
+		}
+		String newTextIndicator = count == 0 ? null : "" + count;
+		if (!StringCompareUtils.equals(textIndicator, newTextIndicator)) {
+			textIndicator = newTextIndicator;
+			ViewTitleInfoManager.refreshTitleInfo(PeersView.this);
 		}
 	}
 
 	@Override
 	public void tableDataSourceChanged(Object newDataSource) {
-		if ( !comp_focused ){
-			focus_pending_ds = newDataSource;
-			return;
-		}
-
-		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource, manager );
+		DownloadManager newManager = DataSourceUtils.getDM(newDataSource);
 
 		if (newManager == manager) {
-			tv.setEnabled(manager != null);
 			return;
 		}
 
@@ -152,12 +173,13 @@ public class PeersView
 
 		manager = newManager;
 
-		if (tv.isDisposed()) {
+		buildTitleInfoTimer();
+
+		if (tv == null || tv.isDisposed()) {
 			return;
 		}
 
 		tv.removeAllTableRows();
-		tv.setEnabled(manager != null);
 
 		if (manager != null ){
 			manager.addPeerListener(this, false);
@@ -183,13 +205,18 @@ public class PeersView
 			addExistingDatasources();
 			break;
 
-		case EVENT_TABLELIFECYCLE_DESTROYED:
-			if (manager != null) {
-				manager.removePeerListener(this);
-			}
+			case EVENT_TABLELIFECYCLE_DESTROYED: {
+				if (manager != null) {
+					manager.removePeerListener(this);
+					// don't clear manager, we still use it for title
+					buildTitleInfoTimer();
+				}
 
-			select_peer_pending = null;
-			break;
+				Object firstDS = tv.getFirstSelectedDataSource();
+				select_peer_pending = firstDS instanceof PEPeer
+						? new WeakReference<>((PEPeer) firstDS) : null;
+				break;
+			}
 		}
 	}
 
@@ -237,7 +264,7 @@ public class PeersView
 			final PEPeer		peer,
 			final int			attempt )
 	{
-		if ( attempt > 10 || tv == null ){
+		if ( attempt > 10 || tv == null || peer == null ){
 
 			return;
 		}
@@ -262,7 +289,7 @@ public class PeersView
 
 							if ( attempt == 0 ){
 
-								select_peer_pending = peer;
+								select_peer_pending = new WeakReference<>(peer);
 
 								return;
 							}
@@ -297,7 +324,7 @@ public class PeersView
 	 * Faster than allowing addListener to call us one datasource at a time.
 	 */
 	private void addExistingDatasources() {
-		if (manager == null || tv.isDisposed()) {
+		if (manager == null || tv == null || tv.isDisposed()) {
 			return;
 		}
 
@@ -310,12 +337,13 @@ public class PeersView
 
 		if ( select_peer_pending != null ){
 
-			showPeer( select_peer_pending, 1 );
+			showPeer( select_peer_pending.get(), 1 );
 
 			select_peer_pending = null;
 		}
 	}
 
+	@Override
 	protected void
 	updateSelectedContent()
 	{
@@ -325,11 +353,6 @@ public class PeersView
 			
 			String id = "DMDetails_Peers";
 	
-			if ( focus_pending_ds != null ){
-				
-				setFocused( true );	// do this here to pick up correct manager before rest of code
-			}
-			
 			if (manager != null) {
 				if (manager.getTorrent() != null) {
 					id += "." + manager.getInternalName();
@@ -359,28 +382,46 @@ public class PeersView
 	
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
-		switch (event.getType()) {
-
-		case UISWTViewEvent.TYPE_CREATE:{
-
-			if ( event instanceof UISWTViewEventImpl ){
-
-				String parent = ((UISWTViewEventImpl)event).getParentID();
-
-				enable_tabs = parent != null && parent.equals( UISWTInstance.VIEW_TORRENT_DETAILS );
-			}
-			break;
-		}
-		case UISWTViewEvent.TYPE_FOCUSGAINED:
-			updateSelectedContent();
-
-			break;
-		case UISWTViewEvent.TYPE_FOCUSLOST:
-			setFocused( false );
-			SelectedContentManager.clearCurrentlySelectedContent();
-			break;
+		if (event.getType() == UISWTViewEvent.TYPE_CREATE) {
+			event.getView().setDestroyOnDeactivate(true);
+		} else if (event.getType() == UISWTViewEvent.TYPE_DESTROY) {
+			buildTitleInfoTimer();
 		}
 
 		return( super.eventOccurred(event));
+	}
+
+	@Override
+	public void titleInfoLinked(MultipleDocumentInterface mdi, MdiEntry mdiEntry) {
+		
+	}
+
+	@Override
+	public Object getTitleInfoProperty(int propertyID) {
+		if (propertyID == ViewTitleInfo2.TITLE_INDICATOR_TEXT) {
+			return textIndicator;
+		}
+		return null;
+	}
+
+	@Override
+	public void refreshToolBarItems(Map<String, Long> list) {
+		boolean hasPeer = tv != null && tv.getSelectedRowsSize() > 0;
+		list.put("remove", hasPeer ? UIToolBarItem.STATE_ENABLED : 0);
+	}
+
+	@Override
+	public boolean toolBarItemActivated(ToolBarItem item, long activationType, Object datasource) {
+		if (item.getID().equals("remove")) {
+			List<Object> selectedDataSources = tv.getSelectedDataSources();
+			for (Object dataSource : selectedDataSources) {
+				if (dataSource instanceof PEPeer) {
+					PEPeer peer = (PEPeer) dataSource;
+					peer.getManager().removePeer(peer,"Peer kicked" );
+				}
+			}
+			return true;
+		}
+		return false;
 	}
 }

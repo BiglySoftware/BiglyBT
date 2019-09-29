@@ -22,46 +22,37 @@ package com.biglybt.ui.swt.views.skin;
 
 
 import java.io.File;
+import java.util.List;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import com.biglybt.core.CoreFactory;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.common.table.*;
-import com.biglybt.ui.common.table.impl.TableColumnManager;
-import com.biglybt.ui.swt.columns.archivedls.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
-import com.biglybt.pif.download.Download;
-import com.biglybt.pif.download.DownloadException;
-import com.biglybt.pif.download.DownloadStub;
-import com.biglybt.pif.download.DownloadStub.DownloadStubFile;
-import com.biglybt.pif.download.DownloadStubEvent;
-import com.biglybt.pif.download.DownloadStubListener;
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
-import com.biglybt.pif.ui.tables.TableColumn;
-import com.biglybt.pif.ui.tables.TableColumnCreationListener;
-import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.columns.archivedls.*;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import com.biglybt.ui.swt.views.ArchivedFilesView;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -70,14 +61,12 @@ import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.views.utils.ManagerUtils.ArchiveCallback;
 
-import com.biglybt.core.util.RegExUtil;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
-import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
+import com.biglybt.pif.download.*;
+import com.biglybt.pif.download.DownloadStub.DownloadStubFile;
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 
 
 public class SBC_ArchivedDownloadsView
@@ -87,6 +76,7 @@ public class SBC_ArchivedDownloadsView
 {
 
 	private static final String TABLE_NAME = "ArchivedDownloads";
+	public static final Class<DownloadStub> PLUGIN_DS_TYPE = DownloadStub.class;
 
 	TableViewSWT<DownloadStub> tv;
 
@@ -97,8 +87,6 @@ public class SBC_ArchivedDownloadsView
 	private boolean columnsAdded = false;
 
 	private boolean dm_listener_added;
-
-	private boolean registeredCoreSubViews;
 
 	private Object datasource;
 
@@ -316,21 +304,12 @@ public class SBC_ArchivedDownloadsView
 	initTable(
 		Composite control )
 	{
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-
-		if ( uiFunctions != null ) {
-
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			registerPluginViews( pluginUI );
-		}
+		registerPluginViews();
 
 		if ( tv == null ){
 
-			tv = TableViewFactory.createTableViewSWT(
-					DownloadStub.class, TABLE_NAME, TABLE_NAME,
-					new TableColumnCore[0],
-					ColumnArchiveDLName.COLUMN_ID,
+			tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE, TABLE_NAME,
+					TABLE_NAME, new TableColumnCore[0], ColumnArchiveDLName.COLUMN_ID,
 					SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
 			if ( txtFilter != null){
@@ -339,8 +318,6 @@ public class SBC_ArchivedDownloadsView
 			}
 
 			tv.setRowDefaultHeightEM(1);
-
-			tv.setEnableTabViews(true, true, null);
 
 			table_parent = new Composite(control, SWT.BORDER);
 
@@ -383,39 +360,16 @@ public class SBC_ArchivedDownloadsView
 		control.layout( true );
 	}
 
-	private void
-	registerPluginViews(
-			final UISWTInstance pluginUI )
-	{
-		if ( registeredCoreSubViews ){
-
+	private static void registerPluginViews() {
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		if (vm.areCoreViewsRegistered(PLUGIN_DS_TYPE)) {
 			return;
 		}
 
-		pluginUI.addView(TABLE_NAME, "ArchivedFilesView", ArchivedFilesView.class, null);
+		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
+				ArchivedFilesView.MSGID_PREFIX, null, ArchivedFilesView.class));
 
-		registeredCoreSubViews = true;
-
-		final UIManager uiManager = PluginInitializer.getDefaultInterface().getUIManager();
-		uiManager.addUIListener(new UIManagerListener() {
-
-			@Override
-			public void UIAttached(UIInstance instance) {
-
-			}
-
-			@Override
-			public void UIDetached(UIInstance instance) {
-				if (!(instance instanceof UISWTInstance)) {
-					return;
-				}
-
-				registeredCoreSubViews = false;
-				pluginUI.removeViews(TABLE_NAME, "ArchivedFilesView");
-
-				uiManager.removeUIListener(this);
-			}
-		});
+		vm.setCoreViewsRegistered(PLUGIN_DS_TYPE);
 	}
 
 	@Override

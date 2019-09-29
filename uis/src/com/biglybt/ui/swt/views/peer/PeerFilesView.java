@@ -22,9 +22,14 @@ import org.eclipse.swt.SWT;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.pif.ui.tables.TableCell;
-import com.biglybt.pif.ui.tables.TableCellRefreshListener;
-import com.biglybt.pif.ui.tables.TableColumn;
+
+import com.biglybt.pif.ui.tables.*;
+
+import com.biglybt.ui.mdi.MdiEntry;
+import com.biglybt.ui.swt.mdi.BaseMDI;
+import com.biglybt.ui.swt.mdi.BaseMdiEntry;
+import com.biglybt.ui.swt.mdi.TabbedEntry;
+import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -41,6 +46,7 @@ public class PeerFilesView
 	implements TableDataSourceChangedListener, TableRefreshListener
 {
 	public static final String TABLEID_PEER_FILES	= "PeerFiles";
+	public static final String MSGID_PREFIX = "PeerFilesView";
 
 	boolean refreshing = false;
 
@@ -63,10 +69,20 @@ public class PeerFilesView
 	private PEPeer	current_peer;
 
 	public PeerFilesView() {
-		super( "PeerFilesView");
+		super(MSGID_PREFIX);
 
 	}
 
+	@Override
+	public boolean allowCreate(UISWTView swtView) {
+		if (swtView instanceof MdiEntry) {
+			String viewID = ((MdiEntry) swtView).getMDI().getViewID();
+			if (!TableManager.TABLE_TORRENT_PEERS.equals(viewID)) {
+				return false;
+			}
+		}
+		return super.allowCreate(swtView);
+	}
 
 	@Override
 	public TableViewSWT<PeersFilesViewRow>

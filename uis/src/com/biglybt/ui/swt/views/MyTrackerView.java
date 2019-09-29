@@ -72,7 +72,7 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -95,7 +95,7 @@ public class MyTrackerView
 	extends TableViewTab<TRHostTorrent>
 	implements TRHostListener, CategoryManagerListener, TableLifeCycleListener,
         TableSelectionListener, TableViewSWTMenuFillListener, TableRefreshListener,
-	UIPluginViewToolBarListener, UISWTViewCoreEventListenerEx
+	UIPluginViewToolBarListener, UISWTViewCoreEventListener
 {
 	protected static final TorrentAttribute	category_attribute =
 			TorrentManagerImpl.getSingleton().getAttribute( TorrentAttribute.TA_CATEGORY );
@@ -145,39 +145,6 @@ public class MyTrackerView
 		tv.addRefreshListener(this, false);
 	}
 
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new MyTrackerView());
-	}
-	
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( MyTrackerView.class );
-				}
-				
-				public List<Object>
-				getParameters()
-				{
-					return( null );
-				}
-			});
-	}
-	
-	
 	@Override
 	public TableViewSWT<TRHostTorrent> initYourTableView() {
 		return tv;

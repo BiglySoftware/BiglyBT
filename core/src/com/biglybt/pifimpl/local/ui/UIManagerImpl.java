@@ -75,6 +75,7 @@ UIManagerImpl
 	protected static List<UIInstanceFactory>		ui_factories		= new ArrayList<>();
 	protected static List<UIManagerEventAdapter>	ui_event_history	= new ArrayList<>();
 	private static Map<BasicPluginConfigModel, BasicPluginConfigImpl> 	config_view_map = new HashMap<>();
+	private static Map<String, BasicPluginViewModel> view_model_map = new HashMap<>();
 
 
 
@@ -108,6 +109,8 @@ UIManagerImpl
 	{
 		final BasicPluginViewModel	model = new BasicPluginViewModelImpl( this, name );
 
+		view_model_map.put(getBasicPluginViewModelKey(model), model);
+
 		fireEvent( pi, UIManagerEvent.ET_PLUGIN_VIEW_MODEL_CREATED, model );
 
 		return( model );
@@ -117,7 +120,17 @@ UIManagerImpl
 	destroy(
 		final BasicPluginViewModel		model )
 	{
+		view_model_map.remove(getBasicPluginViewModelKey(model), model);
 		fireEvent( pi, UIManagerEvent.ET_PLUGIN_VIEW_MODEL_DESTROYED, model );
+	}
+	
+	// Legacy id stored in dashboard config
+	public static String getBasicPluginViewModelKey(BasicPluginViewModel model) {
+		return model.getPluginInterface().getPluginID() + "/" + model.getName();
+	}
+	
+	public static BasicPluginViewModel getBasicPluginViewModel(String key) {
+		return view_model_map.get(key);
 	}
 
 	@Override

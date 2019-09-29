@@ -45,6 +45,7 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.util.*;
+import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -52,9 +53,10 @@ import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.PiecesView;
 import com.biglybt.ui.swt.views.ViewUtils;
@@ -74,7 +76,7 @@ import com.biglybt.util.MapUtils;
  */
 public class PieceInfoView
 	implements DownloadManagerPieceListener,
-	UISWTViewCoreEventListenerEx
+	UISWTViewCoreEventListener
 {
 	public static final String	KEY_INSTANCE = "PieceInfoView::instance";
 	
@@ -154,41 +156,6 @@ public class PieceInfoView
 		};
 	}
 
-	@Override
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	@Override
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new PieceInfoView());
-	}
-
-	@Override
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( PieceInfoView.class );
-				}
-				
-				public java.util.List<Object>
-				getParameters()
-				{
-					return( null );
-				}
-			});
-	}
-	
 	private void dataSourceChanged(Object newDataSource) {
 		//System.out.println( "dsc: dlm=" + dlm + ", new=" + (newDataSource instanceof Object[]?((Object[])newDataSource)[0]:newDataSource));
 
@@ -245,18 +212,11 @@ public class PieceInfoView
 	{
 		selectedPieceExplicit = piece.getPieceNumber();
 		
-		setTopLableRHS( selectedPieceExplicit );
-		
-		Utils.execSWTThread(
-			new Runnable(){
-				
-				@Override
-				public void run(){
-					scrollPending = true;
-							
-					refreshInfoCanvas();
-				}
-			});
+		Utils.execSWTThread(() -> {
+			scrollPending = true;
+
+			refreshInfoCanvas();
+		});
 	}
 	
 	private void createPeerInfoPanel(Composite parent) {
@@ -743,6 +703,10 @@ public class PieceInfoView
 	updateTopLabel()
 	{
 		String text = topLabelLHS;
+		
+		if (selectedPieceExplicit >= 0) {
+			setTopLableRHS( selectedPieceExplicit );
+		}
 
 		if ( text.length() > 0 && topLabelRHS.length() > 0 ){
 
@@ -1227,6 +1191,9 @@ public class PieceInfoView
 				dlm = null;
 			}
 		}
+		
+		selectedPieceExplicit = -1;
+		selectedPiece = -1;
 	}
 
 	private void obfuscatedImage(Image image) {
@@ -1277,6 +1244,14 @@ public class PieceInfoView
     switch (event.getType()) {
       case UISWTViewEvent.TYPE_CREATE:
       	swtView = (UISWTView)event.getData();
+      	// Don't show if is a tab and the MDI is Torrent Details View
+	      // We are already registered to show under PiecesView for Torrent Details View
+      	if (swtView instanceof MdiEntry) {
+					if (UISWTInstance.VIEW_TORRENT_DETAILS.equals(
+							((MdiEntry) swtView).getMDI().getViewID())) {
+      			return false;
+		      }
+	      }
       	swtView.setTitle(getFullTitle());
         break;
 
@@ -1315,6 +1290,8 @@ public class PieceInfoView
 
     return true;
   }
+  
+  
 
 	private static class DoNothingListener implements Listener {
 		@Override

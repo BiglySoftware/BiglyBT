@@ -20,59 +20,51 @@
 
 package com.biglybt.ui.swt.views.skin.sidebar;
 
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
-import com.biglybt.ui.swt.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.PluginManager;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuItemFillListener;
-import com.biglybt.pif.ui.menus.MenuItemListener;
-import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MdiEntryVitalityImage;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.FixedHTMLTransfer;
+import com.biglybt.ui.swt.FixedURLTransfer;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
-import com.biglybt.ui.swt.mdi.BaseMDI;
-import com.biglybt.ui.swt.mdi.BaseMdiEntry;
-import com.biglybt.ui.swt.mdi.MdiEntrySWT;
-import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
+import com.biglybt.ui.swt.mdi.*;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl;
 import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.SWTViewListener;
+import com.biglybt.ui.swt.pifimpl.*;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
-import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.PluginManager;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.*;
 
 /**
  * @author TuxPaper
@@ -133,15 +125,27 @@ public class SideBar
 
 	private Composite cPluginsArea;
 
-	private List<UISWTViewCore> pluginViews = new ArrayList<>();
+	private final List<UISWTViewCore> pluginViews = new ArrayList<>();
 	private ParameterListener configShowSideBarListener;
 	private ParameterListener configRedrawListener;
 	private ParameterListener configBGColorListener;
 	private SWTViewListener swtViewListener;
 
 	public SideBar() {
-		super();
+		super(null, UISWTInstance.VIEW_MAIN, null);
 		AEDiagnostics.addWeakEvidenceGenerator(this);
+	}
+
+	@Override
+	public void buildMDI(Composite parent) {
+		// Sidebar only gets built against a skinobject
+		Debug.out("uh oh, we didn't code a way make a Sidebar in a Composite yet");
+	}
+
+	@Override
+	public void buildMDI(SWTSkinObject skinObject) {
+		setMainSkinObject(skinObject);
+		skinObject.addListener(this);
 	}
 
 	// @see SWTSkinObjectAdapter#skinObjectCreated(SWTSkinObject, java.lang.Object)
@@ -230,7 +234,7 @@ public class SideBar
 	
 					@Override
 					public void menuWillBeShown(MenuItem menu, Object data) {
-						SideBarEntrySWT sbe = (SideBarEntrySWT)getCurrentEntrySWT();
+						SideBarEntrySWT sbe = getCurrentEntry();
 	
 						if ( sbe != null && !sbe.isCloseable()){
 							
@@ -248,7 +252,7 @@ public class SideBar
 			menuItem.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = (SideBarEntrySWT)getCurrentEntrySWT();
+					SideBarEntrySWT sbe = getCurrentEntry();
 	
 					if ( sbe != null ){
 						
@@ -262,28 +266,17 @@ public class SideBar
 			MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "menu.add.to.dashboard");
 			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 	
-			menuItem.addFillListener(
-				new MenuItemFillListener() {
-	
-					@Override
-					public void menuWillBeShown(MenuItem menu, Object data) {
-						SideBarEntrySWT sbe = (SideBarEntrySWT)getCurrentEntrySWT();
-	
-						if ( sbe != null && sbe.getId().equals(  MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )) {
-							
-							menu.setVisible( false );
-							
-						}else {
-						
-							menu.setVisible( sbe != null && sbe.canBuildStandAlone());
-						}
-					}
-				});
+			menuItem.addFillListener((menu, data) -> {
+				SideBarEntrySWT entry = getCurrentEntry();
+				menu.setVisible(entry != null && entry.canBuildStandAlone()
+						&& !entry.getViewID().equals(
+								MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD));
+			});
 	
 			menuItem.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = (SideBarEntrySWT)getCurrentEntrySWT();
+					SideBarEntrySWT sbe = getCurrentEntry();
 	
 					if ( sbe != null ){
 						
@@ -302,7 +295,7 @@ public class SideBar
 	
 					@Override
 					public void menuWillBeShown(MenuItem menu, Object data) {
-						SideBarEntrySWT sbe = (SideBarEntrySWT)getCurrentEntrySWT();
+						SideBarEntrySWT sbe = getCurrentEntry();
 	
 						menu.setVisible( sbe != null && sbe.canBuildStandAlone());
 					}
@@ -311,7 +304,7 @@ public class SideBar
 			menuItem.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = (SideBarEntrySWT)getCurrentEntrySWT();
+					SideBarEntrySWT sbe = getCurrentEntry();
 	
 					if ( sbe != null ){
 						SkinnedDialog skinnedDialog =
@@ -490,8 +483,7 @@ public class SideBar
 		
 		if (swtViewListener != null) {
 			try {
-				UISWTInstanceImpl uiSWTinstance = (UISWTInstanceImpl) UIFunctionsManagerSWT.getUIFunctionsSWT().getUISWTInstance();
-				uiSWTinstance.removeSWTViewListener(swtViewListener);
+				ViewManagerSWT.getInstance().removeSWTViewListener(swtViewListener);
 			} catch (Throwable ignore) {
 
 			}
@@ -599,7 +591,7 @@ public class SideBar
 							SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
 							//System.out.println("PaintItem: " + event.item + ";" + event.index + ";" + event.detail + ";" + event.getBounds() + ";" + event.gc.getClipping());
 							if (entry != null) {
-								boolean selected = getCurrentEntrySWT() == entry
+								boolean selected = getCurrentEntry() == entry
 										&& entry.isSelectable();
 
 								if (!selected) {
@@ -632,7 +624,7 @@ public class SideBar
 								if (itemBounds != null && entry != null) {
 									event.item = treeItem;
 
-									boolean selected = getCurrentEntrySWT() == entry
+									boolean selected = getCurrentEntry() == entry
 											&& entry.isSelectable();
 									event.detail = selected ? SWT.SELECTED : SWT.NONE;
 
@@ -697,14 +689,14 @@ public class SideBar
 								}
 
 								showEntry(entry);
-							} else if (getCurrentEntrySWT() != null) {
+							} else if (getCurrentEntry() != null) {
 								TreeItem topItem = tree.getTopItem();
 
 								// prevent "jumping" in the case where selection is off screen
 								// setSelection would jump the item on screen, and then
 								// showItem would jump back to where the user was.
 								tree.setRedraw(false);
-								TreeItem ti = ((SideBarEntrySWT) getCurrentEntrySWT()).getTreeItem();
+								TreeItem ti = getCurrentEntry().getTreeItem();
 								if (ti != null) {
 									tree.setSelection(ti);
 								}
@@ -734,9 +726,8 @@ public class SideBar
 								} else if (entry != null && treeItem.getItemCount() > 0) {
 									cursorNo = SWT.CURSOR_HAND;
 								}else if ( entry != null ) {
-									MdiEntryVitalityImage[] vitalityImages = entry.getVitalityImages();
-									for (int i = 0; i < vitalityImages.length; i++) {
-										SideBarVitalityImageSWT vitalityImage = (SideBarVitalityImageSWT) vitalityImages[i];
+									List<MdiEntryVitalityImageSWT> vitalityImages = entry.getVitalityImages();
+									for (MdiEntryVitalityImageSWT vitalityImage : vitalityImages) {
 										if (vitalityImage == null || !vitalityImage.isVisible()) {
 											continue;
 										}
@@ -810,14 +801,13 @@ public class SideBar
 							if (closeArea != null && closeArea.contains(event.x, event.y)) {
 								//treeItem.dispose();
 								return;
-							} else if (getCurrentEntrySWT() != entry && Constants.isOSX) {
+							} else if (getCurrentEntry() != entry && Constants.isOSX) {
 								// showEntry(entry);  removed as we'll get a selection event if needed
 							}
 
 							if (entry != null) {
-								MdiEntryVitalityImage[] vitalityImages = entry.getVitalityImages();
-								for (int i = 0; i < vitalityImages.length; i++) {
-									SideBarVitalityImageSWT vitalityImage = (SideBarVitalityImageSWT) vitalityImages[i];
+								List<MdiEntryVitalityImageSWT> vitalityImages = entry.getVitalityImages();
+								for (MdiEntryVitalityImageSWT vitalityImage : vitalityImages) {
 									if (vitalityImage == null || !vitalityImage.isVisible()) {
 										continue;
 									}
@@ -839,10 +829,10 @@ public class SideBar
 									if (!entry.isSelectable() || event.x < 20) {
 										// Note: On Windows, user can expand row by clicking the invisible area where the OS twisty would be
   									MdiEntry currentEntry = getCurrentEntry();
-  									if (currentEntry != null
-  											&& entry.getId().equals(currentEntry.getParentID())) {
-  										showEntryByID(SIDEBAR_SECTION_LIBRARY);
-  									}
+										if (currentEntry != null && entry.getViewID().equals(
+												currentEntry.getParentID())) {
+											showEntryByID(SIDEBAR_SECTION_LIBRARY);
+										}
   									entry.setExpanded(!wasExpanded);
   									wasExpanded = !wasExpanded;
 									}
@@ -867,7 +857,8 @@ public class SideBar
 							
 							MdiEntry currentEntry = getCurrentEntry();
 							
-							if (currentEntry != null && entry.getId().equals(currentEntry.getParentID())){
+							if (currentEntry != null
+									&& entry.getViewID().equals(currentEntry.getParentID())) {
 								
 								showEntryByID(SIDEBAR_SECTION_LIBRARY);
 							}
@@ -1144,88 +1135,77 @@ public class SideBar
 		if (cPluginsArea == null) {
 			return;
 		}
-		UISWTInstanceImpl uiSWTinstance = (UISWTInstanceImpl) UIFunctionsManagerSWT.getUIFunctionsSWT().getUISWTInstance();
 
-		if (uiSWTinstance == null) {
-			return;
-		}
-
-		UISWTViewEventListenerHolder[] pluginViews = uiSWTinstance.getViewListeners(UISWTInstance.VIEW_SIDEBAR_AREA);
-		for (UISWTViewEventListenerHolder l : pluginViews) {
-			if (l != null) {
-				try {
-					UISWTViewImpl view = new UISWTViewImpl(l.getViewID(), UISWTInstance.VIEW_SIDEBAR_AREA, false);
-					view.setEventListener(l, true);
-					addSideBarView(view, cPluginsArea);
-					cPluginsArea.getParent().getParent().layout(true, true);
-				} catch (Exception e) {
-					e.printStackTrace();
-					// skip, plugin probably specifically asked to not be added
-				}
+		List<UISWTViewBuilderCore> pluginViewBuilders = ViewManagerSWT.getInstance().getBuilders(
+				UISWTInstance.VIEW_SIDEBAR_AREA);
+		for (UISWTViewBuilderCore builder : pluginViewBuilders) {
+			if (builder == null) {
+				continue;
+			}
+			try {
+				UISWTViewImpl view = new UISWTViewImpl(builder, false);
+				view.setDestroyOnDeactivate(false);
+				addSideBarView(view, cPluginsArea);
+				cPluginsArea.getParent().getParent().layout(true, true);
+			} catch (Exception e) {
+				e.printStackTrace();
+				// skip, plugin probably specifically asked to not be added
 			}
 		}
 
 		swtViewListener = new SWTViewListener() {
-
 			@Override
-			public void setViewAdded(final String parent, final String id,
-			                         final UISWTViewEventListener l) {
-				if (!parent.equals(UISWTInstance.VIEW_SIDEBAR_AREA)) {
+			public void setViewRegistered(Object forDSTypeOrViewID,
+					UISWTViewBuilderCore builder) {
+				if (!UISWTInstance.VIEW_SIDEBAR_AREA.equals(forDSTypeOrViewID)) {
 					return;
 				}
-				Utils.execSWTThread(new AERunnable() {
-
-					@Override
-					public void runSupport() {
-						try {
-							UISWTViewImpl view = new UISWTViewImpl(id, parent, false);
-							view.setEventListener(l, true);
-							addSideBarView(view, cPluginsArea);
-						} catch (Exception e) {
-							e.printStackTrace();
-							// skip, plugin probably specifically asked to not be added
-						}
+				Utils.execSWTThread(() -> {
+					try {
+						UISWTViewImpl view = new UISWTViewImpl(builder, false);
+						view.setDestroyOnDeactivate(false);
+						addSideBarView(view, cPluginsArea);
+					} catch (Exception e) {
+						e.printStackTrace();
+						// skip, plugin probably specifically asked to not be added
 					}
 				});
 			}
 
 			@Override
-			public void setViewRemoved(final String parent, final String id,
-			                           final UISWTViewEventListener l) {
-				if (!parent.equals(UISWTInstance.VIEW_SIDEBAR_AREA)) {
+			public void setViewDeregistered(Object forDSTypeOrViewID,
+					UISWTViewBuilderCore builder) {
+				if (!UISWTInstance.VIEW_SIDEBAR_AREA.equals(forDSTypeOrViewID)) {
 					return;
 				}
-				Utils.execSWTThread(new AERunnable() {
-
-					@Override
-					public void runSupport() {
-						try {
-							for (UISWTViewCore view : SideBar.this.pluginViews) {
-								if (l.equals(view.getEventListener())) {
-									view.closeView();
-								} else {
-									if (l instanceof UISWTViewEventListenerHolder) {
-										UISWTViewEventListener l2 = ((UISWTViewEventListenerHolder) l).getDelegatedEventListener(view);
-										if (l2 != null && l2.equals(view.getEventListener())) {
-											view.closeView();
-										}
-									}
-								}
+				Utils.execSWTThread(() -> {
+					try {
+						for (UISWTViewCore view : pluginViews) {
+							if (builder.equals(view.getEventListenerBuilder())) {
+								view.closeView();
 							}
-						} catch (Exception e) {
-							e.printStackTrace();
-							// skip, plugin probably specifically asked to not be added
 						}
+					} catch (Exception e) {
+						e.printStackTrace();
+						// skip, plugin probably specifically asked to not be added
 					}
 				});
 			}
 		};
-		uiSWTinstance.addSWTViewListener(swtViewListener);
+		ViewManagerSWT.getInstance().addSWTViewListener(swtViewListener);
 
 		cPluginsArea.getParent().getParent().layout(true, true);
 	}
 
 	private void addSideBarView(UISWTViewImpl view, Composite cPluginsArea) {
+		pluginViews.add(view);
+		try {
+			view.create();
+		} catch (UISWTViewEventCancelledException e) {
+			pluginViews.remove(view);
+			return;
+		}
+
 		Composite parent = new Composite(cPluginsArea, SWT.NONE);
 		GridData gridData = new GridData();
 		gridData.grabExcessHorizontalSpace = true;
@@ -1255,8 +1235,6 @@ public class SideBar
 				control.setLayoutData(Utils.getFilledFormData());
 			}
 		}
-
-		pluginViews.add(view);
 	}
 
 
@@ -1288,7 +1266,7 @@ public class SideBar
 			org.eclipse.swt.widgets.MenuItem menuItem = new org.eclipse.swt.widgets.MenuItem(
 					menuDropDown, entry.isSelectable() ? SWT.RADIO : SWT.CASCADE);
 
-			String id = entry.getId();
+			String id = entry.getViewID();
 			menuItem.setData("Plugin.viewID", id);
 			ViewTitleInfo titleInfo = entry.getViewTitleInfo();
 			String ind = "";
@@ -1301,8 +1279,8 @@ public class SideBar
 			}
 			menuItem.setText(s + entry.getTitle() + ind);
 			menuItem.addSelectionListener(dropDownSelectionListener);
-			MdiEntry currentEntry = getCurrentEntrySWT();
-			if (currentEntry != null && currentEntry.getId().equals(id)) {
+			MdiEntry currentEntry = getCurrentEntry();
+			if (currentEntry != null && currentEntry.getViewID().equals(id)) {
 				menuItem.setSelection(true);
 			}
 
@@ -1343,9 +1321,8 @@ public class SideBar
 					}
 				}
 
-				MdiEntryVitalityImage[] vitalityImages = entry.getVitalityImages();
-				for (int i = 0; i < vitalityImages.length; i++) {
-					SideBarVitalityImageSWT vitalityImage = (SideBarVitalityImageSWT) vitalityImages[i];
+				List<MdiEntryVitalityImageSWT> vitalityImages = entry.getVitalityImages();
+				for (MdiEntryVitalityImageSWT vitalityImage : vitalityImages) {
 					if (!vitalityImage.isVisible()) {
 						continue;
 					}
@@ -1448,16 +1425,17 @@ public class SideBar
 	}
 
 	@Override
-	public MdiEntry createHeader(String id, String titleID, String preferredAfterID) {
-		MdiEntry oldEntry = getEntry(id);
+	public SideBarEntrySWT createHeader(String id, String titleID, String preferredAfterID) {
+		SideBarEntrySWT oldEntry = getEntry(id);
 		if (oldEntry != null) {
 			return oldEntry;
 		}
 
-		SideBarEntrySWT entry = new SideBarEntrySWT(this, skin, id, null);
+		SideBarEntrySWT entry = new SideBarEntrySWT(this, skin, id);
 		entry.setSelectable(false);
 		entry.setPreferredAfterID(preferredAfterID);
 		entry.setTitleID(titleID);
+		entry.setParentView(getParentView());
 
 		setupNewEntry(entry, id, true, false);
 
@@ -1493,7 +1471,7 @@ public class SideBar
 			return;
 		}
 		
-		if ( getEntry( entry.getId()) != entry ){
+		if ( getEntry( entry.getViewID()) != entry ){
 		
 				// entry has been deleted/replaced in the meantime
 			
@@ -1684,7 +1662,7 @@ public class SideBar
 			return;
 		}
 
-		final SideBarEntrySWT oldEntry = (SideBarEntrySWT) getCurrentEntrySWT();
+		final SideBarEntrySWT oldEntry = getCurrentEntry();
 
 		//System.out.println("showEntry " + newEntry.getId() + "; was " + (oldEntry == null ? "null" : oldEntry.getId()) + " via " + Debug.getCompressedStackTrace());
 		if (oldEntry == newEntry) {
@@ -1713,12 +1691,12 @@ public class SideBar
 			// (well actually it happens fairly frequently) - this results in other views being rendered
 			// during switching which is nasty - hide anything that shouldn't be visible for the moment
 
-		MdiEntrySWT[] entries = getEntriesSWT();
+		MdiEntrySWT[] entries = getEntries();
 		for (MdiEntrySWT entry : entries) {
 			if (entry == null) {
 				continue;
 			}
-			if ( entry != getCurrentEntrySWT()){
+			if ( entry != getCurrentEntry()){
 
 				SWTSkinObject obj = ((SideBarEntrySWT)entry).getSkinObjectMaster();
 
@@ -1736,61 +1714,64 @@ public class SideBar
 	}
 
 	@Override
-	public MdiEntry createEntryFromEventListener(String parentEntryID, String parentViewID,
-	                                             UISWTViewEventListener l, String id, boolean closeable, Object datasource, String preferredAfterID) {
+	public SideBarEntrySWT createEntry(UISWTViewBuilderCore builder,
+			boolean closeable) {
 
-		MdiEntry oldEntry = getEntry(id);
+		String id = builder.getViewID();
+		SideBarEntrySWT oldEntry = getEntry(id);
 		if (oldEntry != null) {
+			oldEntry.setDatasource(builder.getInitialDataSource());
 			return oldEntry;
 		}
 
-		SideBarEntrySWT entry = new SideBarEntrySWT(this, skin, id, parentViewID);
-		try {
-			// hack: setEventListner will create the UISWTView.
-			// We need to have the entry available for the view to use
-			// if it wants
+		SideBarEntrySWT entry = new SideBarEntrySWT(this, skin, id);
+		entry.setDatasource(builder.getInitialDataSource());
+		entry.setPreferredAfterID(builder.getPreferredAfterID());
+		entry.setParentView(getParentView());
 
+		try {
+			// setEventListener will create the UISWTView.
+			// We need to have the entry available for the view to use if it wants
 			addItem( entry );
 
-			entry.setEventListener(l, true);
-			entry.setParentID(parentEntryID);
-			entry.setDatasource(datasource);
-			entry.setPreferredAfterID(preferredAfterID);
+			UISWTViewEventListener l = builder.createEventListener(entry);
+			entry.setEventListener(l, builder, true);
+			entry.setParentEntryID(builder.getParentEntryID());
+
 			setupNewEntry(entry, id, false, closeable);
-
-
+			
 			if (l instanceof IViewAlwaysInitialize) {
 				entry.build();
 			}
 		} catch (Exception e) {
 			Debug.out(e);
 			entry.close(true);
-			entry = null;
+			removeItem(entry,false);
+			return null;
 		}
 
 		return entry;
 	}
 
-	// @see BaseMDI#createEntryFromSkinRef(java.lang.String, java.lang.String, java.lang.String, java.lang.String, ViewTitleInfo, java.lang.Object, boolean, java.lang.String)
 	@Override
-	public MdiEntry createEntryFromSkinRef(String parentID, String id,
+	public SideBarEntrySWT createEntryFromSkinRef(String parentEntryID, String id,
 	                                       String configID, String title, ViewTitleInfo titleInfo, Object params,
 	                                       boolean closeable, String preferredAfterID) {
-
-		MdiEntry oldEntry = getEntry(id);
+		SideBarEntrySWT oldEntry = getEntry(id);
 		if (oldEntry != null) {
 			return oldEntry;
 		}
 
-		SideBarEntrySWT entry = new SideBarEntrySWT(this, skin, id, null);
+		SideBarEntrySWT entry = new SideBarEntrySWT(this, skin, id);
 
 		entry.setTitle(title);
 		entry.setSkinRef(configID, params);
-		if ( parentID == null || !parentID.isEmpty()){
-			entry.setParentID(parentID);
+		if ( parentEntryID == null || !parentEntryID.isEmpty()){
+			entry.setParentEntryID(parentEntryID);
 		}
 		entry.setViewTitleInfo(titleInfo);
 		entry.setPreferredAfterID(preferredAfterID);
+		entry.setParentView(getParentView());
 
 		setupNewEntry(entry, id, false, closeable);
 
@@ -1847,24 +1828,6 @@ public class SideBar
 		return tree;
 	}
 
-	// @see MultipleDocumentInterfaceSWT#getEntryFromSkinObject(com.biglybt.ui.swt.pif.PluginUISWTSkinObject)
-	@Override
-	public MdiEntrySWT getEntryFromSkinObject(
-			PluginUISWTSkinObject pluginSkinObject) {
-		if (pluginSkinObject instanceof SWTSkinObject) {
-			Control control = ((SWTSkinObject) pluginSkinObject).getControl();
-			while (control != null && !control.isDisposed()) {
-				Object entry = control.getData("BaseMDIEntry");
-				if (entry instanceof BaseMdiEntry) {
-					BaseMdiEntry mdiEntry = (BaseMdiEntry) entry;
-					return mdiEntry;
-				}
-				control = control.getParent();
-			}
-		}
-		return null;
-	}
-
 	protected void
 	requestAttention(
 		SideBarEntrySWT	entry )
@@ -1903,7 +1866,7 @@ public class SideBar
 
 										SideBarEntrySWT entry = it.next();
 
-										if ( entry.isDisposed()){
+										if ( entry.isEntryDisposed()){
 
 											it.remove();
 
@@ -1959,7 +1922,7 @@ public class SideBar
 	private Stack<SideBarEntrySWT>	stack = new Stack<>();
 
 	@Override
-	public void addItem(MdiEntry entry) {
+	public void addItem(MdiEntrySWT entry) {
 		super.addItem( entry );
 		if ( entry instanceof SideBarEntrySWT ){
 			synchronized( stack ){
@@ -2014,7 +1977,7 @@ public class SideBar
 
 					while( !stack.isEmpty()){
 						next = stack.pop();
-						if ( next.isDisposed()){
+						if ( next.isEntryDisposed()){
 							next = null;
 						}else{
 							break;
@@ -2040,14 +2003,14 @@ public class SideBar
 
 	@Override
 	public void generate(IndentWriter writer) {
-		MdiEntrySWT[] entries = getEntriesSWT();
+		MdiEntrySWT[] entries = getEntries();
 		for (MdiEntrySWT entry : entries) {
 			if (entry == null) {
 				continue;
 			}
 
 			if (!(entry instanceof AEDiagnosticsEvidenceGenerator)) {
-				writer.println("Sidebar View (No Generator): " + entry.getId());
+				writer.println("Sidebar View (No Generator): " + entry.getViewID());
 				try {
 					writer.indent();
 
@@ -2078,5 +2041,25 @@ public class SideBar
 			}
 		}
 		return image;
+	}
+
+	@Override
+	public SideBarEntrySWT getEntry(String id) {
+		return (SideBarEntrySWT) super.getEntry(id);
+	}
+
+	@Override
+	public SideBarEntrySWT getCurrentEntry() {
+		return (SideBarEntrySWT) super.getCurrentEntry();
+	}
+
+	@Override
+	public SideBarEntrySWT getEntryBySkinView(Object skinView) {
+		return (SideBarEntrySWT) super.getEntryBySkinView(skinView);
+	}
+
+	@Override
+	protected SideBarEntrySWT createEntryByCreationListener(String id, Object ds, Map<?, ?> autoOpenMap) {
+		return (SideBarEntrySWT) super.createEntryByCreationListener(id, ds, autoOpenMap);
 	}
 }

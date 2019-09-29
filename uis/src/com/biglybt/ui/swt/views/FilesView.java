@@ -21,24 +21,13 @@ package com.biglybt.ui.swt.views;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
@@ -47,56 +36,38 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoListener;
-import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.download.DownloadManagerListener;
-import com.biglybt.core.download.DownloadManagerState;
-import com.biglybt.core.download.DownloadManagerStateAttributeListener;
+import com.biglybt.core.download.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagListener;
+import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
-import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.DirectByteBuffer;
-import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.core.util.FileUtil;
-import com.biglybt.core.util.IdentityHashSet;
-import com.biglybt.core.util.RegExUtil;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.pif.ui.tables.TableRow;
-import com.biglybt.pif.ui.tables.TableRowRefreshListener;
-import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.BufferedLabel;
-import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.file.FileInfoView;
-import com.biglybt.ui.swt.views.table.TableRowSWT;
-import com.biglybt.ui.swt.views.table.TableRowSWTChildController;
-import com.biglybt.ui.swt.views.table.TableViewSWT;
-import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
+import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
@@ -104,7 +75,12 @@ import com.biglybt.ui.swt.views.tableitems.files.*;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.AlertsItem;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.util.DLReferals;
+import com.biglybt.util.DataSourceUtils;
 import com.biglybt.util.PlayUtils;
+
+import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.pif.ui.tables.TableRowRefreshListener;
 
 
 /**
@@ -118,9 +94,9 @@ public class FilesView
 	TableViewSWTMenuFillListener, TableRefreshListener,
 	DownloadManagerStateAttributeListener, DownloadManagerListener,
 	TableLifeCycleListener, TableViewFilterCheckEx<DiskManagerFileInfo>, KeyListener, ParameterListener,
-	UISWTViewCoreEventListenerEx
+	UISWTViewCoreEventListener, ViewTitleInfo
 {
-	private static boolean registeredCoreSubViews = false;
+	public static final Class<com.biglybt.pif.disk.DiskManagerFileInfo> PLUGIN_DS_TYPE = com.biglybt.pif.disk.DiskManagerFileInfo.class;
 	boolean refreshing = false;
 
   private static TableColumnCore[] basicItems = {
@@ -163,9 +139,7 @@ public class FilesView
 
   public static final String MSGID_PREFIX = "FilesView";
 
-  List<DownloadManager> managers = new ArrayList<>();
-
-  private boolean	enable_tabs = true;
+	private DownloadManager[] managers = new DownloadManager[0];
 
   public boolean hide_dnd_files;
   public boolean tree_view;
@@ -177,82 +151,34 @@ public class FilesView
   MenuItem path_item;
 
   TableViewSWT<DiskManagerFileInfo> tv;
-	private final boolean allowTabViews;
 	Button btnShowDND;
 	Button btnTreeView;
 	BufferedLabel lblHeader;
 
 	private boolean	disableTableWhenEmpty	= true;
+	private Object datasource;
+	private Tag[] tags;
+	private TagListener tag_listener = null;
 
 
-  /**
+	/**
    * Initialize
    */
 	public FilesView() {
 		super(MSGID_PREFIX);
-		allowTabViews = true;
-	}
-
-	public FilesView(boolean allowTabViews) {
-		super(MSGID_PREFIX);
-		this.allowTabViews = allowTabViews;
-	}
-
-	@Override
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	@Override
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new FilesView( allowTabViews ));
-	}
-
-	@Override
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( FilesView.class );
-				}
-				
-				public List<Object>
-				getParameters()
-				{
-					return Collections.singletonList(allowTabViews);
-				}
-			});
 	}
 	
 	@Override
 	public TableViewSWT<DiskManagerFileInfo> initYourTableView() {
-		tv = TableViewFactory.createTableViewSWT(
-				com.biglybt.pif.disk.DiskManagerFileInfo.class,
+		registerPluginViews();
+
+		tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE,
 				TableManager.TABLE_TORRENT_FILES, getPropertiesPrefix(), basicItems,
 				"firstpiece", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
-		if (allowTabViews) {
-	  		tv.setEnableTabViews(enable_tabs,true,null);
-		}
 		
 		tv.setExpandEnabled( true );
 		
 		basicItems = new TableColumnCore[0];
-
-  		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-  		if (uiFunctions != null) {
-  			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			  registerPluginViews(pluginUI);
-		  }
 
 		tv.addTableDataSourceChangedListener(this, true);
 		tv.addRefreshListener(this, true);
@@ -279,48 +205,21 @@ public class FilesView
 				}
 			});
 		
+		
 		return tv;
 	}
 
-	private void registerPluginViews(final UISWTInstance pluginUI) {
-		if (pluginUI == null || registeredCoreSubViews) {
+	private static void registerPluginViews() {
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		if (vm.areCoreViewsRegistered(PLUGIN_DS_TYPE)) {
 			return;
 		}
 
-		DownloadManager manager;
+		vm.registerView(PLUGIN_DS_TYPE,
+				new UISWTViewBuilderCore("FileInfoView", null,
+						FileInfoView.class));
 
-		if ( managers.size() == 1 ){
-
-			manager = managers.get(0);
-
-		}else{
-
-			manager = null;
-		}
-
-		pluginUI.addView(TableManager.TABLE_TORRENT_FILES, "FileInfoView",
-					FileInfoView.class, manager);
-
-		registeredCoreSubViews = true;
-
-		final UIManager uiManager = PluginInitializer.getDefaultInterface().getUIManager();
-		uiManager.addUIListener(new UIManagerListener() {
-			@Override
-			public void UIAttached(UIInstance instance) {
-			}
-
-			@Override
-			public void UIDetached(UIInstance instance) {
-				if (!(instance instanceof UISWTInstance)) {
-					return;
-				}
-
-				registeredCoreSubViews = false;
-				pluginUI.removeViews(TableManager.TABLE_TORRENT_FILES, "FileInfoView");
-
-				uiManager.removeUIListener(this);
-			}
-		});
+		vm.setCoreViewsRegistered(PLUGIN_DS_TYPE);
 	}
 
 	/* (non-Javadoc)
@@ -446,32 +345,66 @@ public class FilesView
   // @see TableDataSourceChangedListener#tableDataSourceChanged(java.lang.Object)
 	@Override
 	public void tableDataSourceChanged(Object newDataSource) {
-		List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource, managers );
-
-		if (newManagers.size() == managers.size()){
-			boolean diff = false;
+		Tag[] newTags = DataSourceUtils.getTags(newDataSource);
+		DownloadManager[] newManagers = DataSourceUtils.getDMs(newDataSource);
+		
+		if (tv != null) {
+	
 			for (DownloadManager manager: managers ){
-				if ( !newManagers.contains( manager )){
-					diff = true;
-					break;
-				}
-			}
-			if ( !diff ){
-				if ( disableTableWhenEmpty ){
-					tv.setEnabled(managers.size() > 0 );
-				}
-				return;
+				manager.getDownloadState().removeListener(this,
+						DownloadManagerState.AT_FILE_LINKS2,
+						DownloadManagerStateAttributeListener.WRITTEN);
+				manager.removeListener(this);
 			}
 		}
 
-		for (DownloadManager manager: managers ){
-			manager.getDownloadState().removeListener(this,
-					DownloadManagerState.AT_FILE_LINKS2,
-					DownloadManagerStateAttributeListener.WRITTEN);
-			manager.removeListener(this);
+		if (tags != null && tags.length > 0 && tag_listener != null) {
+			for (Tag tag : tags) {
+				tag.removeTagListener( tag_listener);
+			}
 		}
 
 		managers = newManagers;
+		tags = newTags;
+		datasource = newDataSource;
+		ViewTitleInfoManager.refreshTitleInfo(this);
+		
+		if (tags != null && tags.length > 0) {
+			if (tag_listener == null) {
+				tag_listener =
+					new TagListener() {
+
+						@Override
+						public void taggableSync(Tag tag) {
+						}
+
+						@Override
+						public void
+						taggableRemoved(
+							Tag t, Taggable tagged)
+						{
+							tableDataSourceChanged(datasource);
+						}
+
+						@Override
+						public void
+						taggableAdded(
+							Tag t, Taggable tagged)
+						{
+							tableDataSourceChanged(datasource);
+						}
+					};
+			}
+
+
+			for (Tag tag : tags) {
+				tag.addTagListener( tag_listener, false );
+			}
+		}
+
+		if (tv == null) {
+			return;
+		}
 
 		for (DownloadManager manager: managers ){
 			manager.getDownloadState().addListener(this,
@@ -482,9 +415,15 @@ public class FilesView
 		}
 
 		if (!tv.isDisposed()) {
-			tv.removeAllTableRows();
+
+			if (tree_view) {
+				tv.removeAllTableRows();
+				current_root = null;
+			} else {
+				updateTable();
+			}
 			if ( disableTableWhenEmpty ){
-				tv.setEnabled(managers.size()>0);
+				tv.setEnabled(managers.length>0);
 			}
 			updateHeader();
 		}
@@ -942,9 +881,9 @@ public class FilesView
 	@Override
 	public void fillMenu(String sColumnName, final Menu menu) {
 
-		if ( managers.size() == 0 ){
+		if ( managers.length == 0 ){
 
-		}else if (managers.size() == 1 ){
+		}else if (managers.length == 1 ){
 
 			Object[] data_sources = tv.getSelectedDataSources().toArray();
 
@@ -971,7 +910,7 @@ public class FilesView
 					tv,
 					sColumnName,
 					menu,
-					new DownloadManager[]{ managers.get(0) },
+					new DownloadManager[]{ managers[0] },
 					new DiskManagerFileInfo[][]{ files.toArray(new DiskManagerFileInfo[files.size()]) },
 					false );
 				
@@ -1212,7 +1151,7 @@ public class FilesView
 					public void dragStart(DragSourceEvent event) {
 						TableRowCore[] rows = tv.getSelectedRows();
 
-						if (rows.length != 0 && managers.size() > 0 ) {
+						if (rows.length != 0 && managers.length > 0 ) {
 							event.doit = true;
 						} else {
 							event.doit = false;
@@ -1262,14 +1201,6 @@ public class FilesView
 
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
-		if (event.getType() == UISWTViewEvent.TYPE_CREATE){
-	    	  if ( event instanceof UISWTViewEventImpl ){
-
-	    		  String parent = ((UISWTViewEventImpl)event).getParentID();
-
-	    		  enable_tabs = parent != null && parent.equals( UISWTInstance.VIEW_TORRENT_DETAILS );
-	    	  }
-	    }
 		boolean b = super.eventOccurred(event);
 		if (event.getType() == UISWTViewEvent.TYPE_FOCUSGAINED) {
 	    updateSelectedContent();
@@ -1318,7 +1249,7 @@ public class FilesView
 	}
 
 	private void updateHeader() {
-		if ( managers.size() == 0 ){
+		if ( managers.length == 0 ){
 			if (lblHeader != null) {
 				Utils.execSWTThread(new AERunnable() {
 					@Override
@@ -1519,7 +1450,7 @@ public class FilesView
 	updateTreeView(
 		boolean		sync )
 	{
-		int	num_managers = managers.size();
+		int	num_managers = managers.length;
 		
 		if ( num_managers == 0 ){
 			
@@ -1541,7 +1472,7 @@ public class FilesView
 			
 		}else if ( num_managers == 1 ){
 			
-			DownloadManager dm =  managers.get(0);
+			DownloadManager dm =  managers[0];
 			
 			if ( force_refresh || current_root == null || current_root.dm != dm ||  tv.getRowCount() == 0 ){
 
@@ -1628,7 +1559,7 @@ public class FilesView
 					
 					for ( int i=0;i<num_managers;i++){
 						
-						if ( !kids_set.contains( managers.get(i))){
+						if ( !kids_set.contains( managers[i])){
 							
 							force_refresh = true;
 						}
@@ -1754,7 +1685,25 @@ public class FilesView
 		getPieceInfo(
 			int[]	data );
 	}
-	
+
+	@Override
+	public void parentDataSourceChanged(Object newParentDataSource) {
+		super.parentDataSourceChanged(newParentDataSource);
+		tableDataSourceChanged(newParentDataSource);
+	}
+
+	@Override
+	public Object getTitleInfoProperty(int propertyID) {
+		if (propertyID == ViewTitleInfo.TITLE_INDICATOR_TEXT) {
+			int count = 0;
+			for (DownloadManager manager : managers) {
+				count += manager.getNumFileInfos();
+			}
+			return count == 0 ? null : "" + count;
+		}
+		return null;
+	}
+
 	private static class
 	FilesViewNodeInner
 		implements DiskManagerFileInfo, FilesViewTreeNode, TableRowSWTChildController
@@ -2511,35 +2460,25 @@ public class FilesView
 	updateFlatView(
 		boolean		sync )
 	{
-	    DiskManagerFileInfo files[] = getFileInfo();
-
-	    if (files != null && (this.force_refresh || !doAllExist(files))) {
+	    List<DiskManagerFileInfo> files = getFileInfo();
+	    
+	    if (files.size() == 0) {
+	    	tv.removeAllTableRows();
+	    } else {
 	    	this.force_refresh = false;
 
-	    	List<DiskManagerFileInfo> datasources = tv.getDataSources();
-	    	if(datasources.size() == files.length)
-	    	{
-	    		// check if we actually have to replace anything
-	    		ArrayList<DiskManagerFileInfo> toAdd = new ArrayList<>(Arrays.asList(files));
-		    	ArrayList<DiskManagerFileInfo> toRemove = new ArrayList<>();
-			    for (DiskManagerFileInfo info : datasources) {
-				    if (info.getIndex() != -1 && files[info.getIndex()] == info)
-					    toAdd.set(info.getIndex(), null);
-				    else
-					    toRemove.add(info);
+		    List<DiskManagerFileInfo> toRemove = tv.getDataSources(true);
+		    List<DiskManagerFileInfo> toAdd = new ArrayList<>();
+		    for (DiskManagerFileInfo info : files) {
+		    	if (toRemove.contains(info)) {
+		    		toRemove.remove(info);
+			    } else {
+		    		toAdd.add(info);
 			    }
-		    	tv.removeDataSources(toRemove.toArray(new DiskManagerFileInfo[toRemove.size()]));
-		    	tv.addDataSources(toAdd.toArray(new DiskManagerFileInfo[toAdd.size()]));
-		    	tv.tableInvalidate();
-	    	} else
-	    	{
-		    	tv.removeAllTableRows();
-
-		    	DiskManagerFileInfo filesCopy[] = new DiskManagerFileInfo[files.length];
-			    System.arraycopy(files, 0, filesCopy, 0, files.length);
-
-			    tv.addDataSources(filesCopy);
-	    	}
+		    }
+	      tv.removeDataSources(toRemove.toArray(new DiskManagerFileInfo[toRemove.size()]));
+	      tv.addDataSources(toAdd.toArray(new DiskManagerFileInfo[toAdd.size()]));
+	      tv.tableInvalidate();
 
 	    	if ( sync ){
 	    		
@@ -2552,28 +2491,31 @@ public class FilesView
 	    }
 	}
 	
-	private DiskManagerFileInfo[]
+	private List<DiskManagerFileInfo>
 			getFileInfo()
 	{
-		if (managers.size() == 0 ){
+		List<DiskManagerFileInfo>	temp = new ArrayList<>();
 
-			return null;
+		if (managers.length == 0 ){
 
-		}else if ( managers.size() == 1 ){
+			return temp;
 
-			return( managers.get(0).getDiskManagerFileInfoSet().getFiles());
+		}else if ( managers.length == 1 ){
+
+			DiskManagerFileInfo[] files = managers[0].getDiskManagerFileInfoSet().getFiles();
+			temp.addAll(Arrays.asList(files));
 
 		}else{
 
-			List<DiskManagerFileInfo>	temp = new ArrayList<>();
 
 			for ( DownloadManager dm: managers ){
 
 				temp.addAll( Arrays.asList( dm.getDiskManagerFileInfoSet().getFiles()));
 			}
 
-			return( temp.toArray( new DiskManagerFileInfo[ temp.size()]));
 		}
+
+		return( temp );
 	}
 	  
 	private boolean doAllExist(DiskManagerFileInfo[] files) {

@@ -48,14 +48,13 @@ import com.biglybt.ui.common.UIInstanceBase;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-import com.biglybt.ui.swt.mainwindow.IMainStatusBar;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
-import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.mainwindow.*;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.minibar.AllTransfersBar;
 import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 import com.biglybt.pif.PluginInterface;
@@ -67,31 +66,40 @@ import com.biglybt.pif.ui.model.BasicPluginViewModel;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 
-@SuppressWarnings("unused")
 public class
 UISWTInstanceImpl
 	implements UIInstanceFactory, UISWTInstance, UIManagerEventListener, UIInstanceBase
 {
-	// Map<ParentId, Map<ViewId, Listener>>
-	private Map<String,Map<String,UISWTViewEventListenerHolder>> views = new HashMap<>();
-
-	private Map<PluginInterface,UIInstance>	plugin_map = new WeakHashMap<>();
+	private final Map<PluginInterface, UISWTInstance> plugin_map = new WeakHashMap<>();
 
 	private boolean bUIAttaching;
 
 	private final UIFunctionsSWT 		uiFunctions;
 
-	public static interface SWTViewListener {
-		public void setViewAdded(String parent, String id, UISWTViewEventListener l);
-		public void setViewRemoved(String parent, String id, UISWTViewEventListener l);
-	}
+	public interface SWTViewListener
+	{
+		/**
+		 * Triggered when view has been registered.  Doesn't mean it's actually visible
+		 */
+		void setViewRegistered(Object forDSTypeOrViewID,
+				UISWTViewBuilderCore builder);
 
-	private List<SWTViewListener> listSWTViewListeners = new ArrayList<>(0);
+		/**
+		 * @param forDSTypeOrParentID May be null even if view was created for a specific parent
+		 */
+		default void setViewDeregistered(Object forDSTypeOrParentID,
+				UISWTViewBuilderCore builder) {
+		};
+	}
 
 	public UISWTInstanceImpl() {
 		// Since this is a UI **SWT** Instance Implementor, it's assumed
 		// that the UI Functions are of UIFunctionsSWT
-		uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
+		UIFunctionsSWT uif = UIFunctionsManagerSWT.getUIFunctionsSWT();
+		if (uif == null) {
+			throw new NullPointerException("UISWTInstanceImpl couldn't get getUIFunctionsSWT");
+		}
+		uiFunctions = uif;
 	}
 
 	@Override
@@ -113,11 +121,11 @@ UISWTInstanceImpl
 	}
 
 	@Override
-	public UIInstance
+	public UISWTInstance
 	getInstance(
 		PluginInterface		plugin_interface )
 	{
-		UIInstance	instance = plugin_map.get( plugin_interface );
+		UISWTInstance	instance = plugin_map.get( plugin_interface );
 
 		if ( instance == null ){
 
@@ -168,7 +176,7 @@ UISWTInstanceImpl
 						public void
 						run()
 						{
-							UIFunctionsManagerSWT.getUIFunctionsSWT().bringToFront();
+							uiFunctions.bringToFront();
 
 							Object[]	params = (Object[])data;
 
@@ -406,9 +414,10 @@ UISWTInstanceImpl
 					//
 					// If this behaviour changes, change the openView(model)
 					// method lower down.
-					String sViewID = model.getName().replaceAll(" ", ".");
-					BasicPluginViewImpl view = new BasicPluginViewImpl(model);
-					addView(UISWTInstance.VIEW_MAIN, sViewID, view);
+					String sViewID = model.getName().replace(' ', '.');
+					UISWTInstance ui = getInstance(model.getPluginInterface());
+					ui.registerView(UISWTInstance.VIEW_MAIN, ui.createViewBuilder(sViewID,
+							BasicPluginViewImpl.class).setInitialDatasource(data));
 				}
 
 				break;
@@ -421,7 +430,7 @@ UISWTInstanceImpl
 					//
 					// If this behaviour changes, change the openView(model)
 					// method lower down.
-					String sViewID = model.getName().replaceAll(" ", ".");
+					String sViewID = model.getName().replace(' ', '.');
 					removeViews(UISWTInstance.VIEW_MAIN, sViewID);
 				}
 
@@ -559,131 +568,57 @@ UISWTInstanceImpl
 		if (instance != null) {
 			instance.terminateSWTOnly();
 		}
-
-		// views should be mostly empty, but still contains BasicPluginViewImpl
-		// ..and bad plugins that didn't remove their views
-		ArrayList<Map<String, UISWTViewEventListenerHolder>> holders = new ArrayList<>(views.values());
-		views.clear();
-		for (Map<String, UISWTViewEventListenerHolder> holder : holders) {
-			for (UISWTViewEventListenerHolder eventListenerHolder : holder.values()) {
-
-				if (!(eventListenerHolder.getListener() instanceof BasicPluginViewImpl)) {
-					int numViews = eventListenerHolder.getNumViews();
-					if (numViews == 0) {
-						System.err.println("UISWTViewEventListener added but not removed: "
-								+ eventListenerHolder.getCla() + "/ " + eventListenerHolder.getListener() + " for "
-								+ eventListenerHolder.getViewID());
-					} else {
-						System.err.println(numViews + " view(s) not removed: "
-								+ eventListenerHolder.getViewID());
-					}
-				}
-				eventListenerHolder.dispose();
-
-			}
-		}
-		plugin_map.clear();
-
+		
+		ViewManagerSWT.getInstance().disposeAll();
 	}
 
-	/* (non-Javadoc)
-		 * @see com.biglybt.ui.swt.pif.UISWTInstance#addView(java.lang.String, java.lang.String, java.lang.Class, java.lang.Object)
-		 */
 	@Override
-	public void addView(String sParentID, String sViewID,
+	public void addView(String sParentViewID, String sViewID,
 	                    Class<? extends UISWTViewEventListener> cla, Object datasource) {
-		addView(null, sParentID, sViewID, cla, datasource);
+		// Note: Plugins shouldn't get here, they should have been fed a instanceWrapper which has a pi
+		throw( new RuntimeException( "plugin specific instance required" ));
 	}
 
-	public void addView(PluginInterface pi, String sParentID, String sViewID,
-			Class<? extends UISWTViewEventListener> cla, Object datasource) {
-
-		UISWTViewEventListenerHolder _l = new UISWTViewEventListenerHolder(sViewID,
-				cla, datasource, pi);
-		addView( sParentID, sViewID, _l );
-	}
-
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.pif.UISWTInstance#addView(java.lang.String, java.lang.String, com.biglybt.ui.swt.pif.UISWTViewEventListener)
-	 */
 	@Override
 	public void addView(String sParentID, String sViewID,
 	                    final UISWTViewEventListener l) {
-		UISWTViewEventListenerHolder _l = new UISWTViewEventListenerHolder(sViewID, l, null );
-		addView( sParentID, sViewID, _l );
+		// Note: Plugins shouldn't get here, they should have been fed a instanceWrapper which has a pi
+		throw( new RuntimeException( "plugin specific instance required" ));
 	}
 
-	public void addView( String sParentID,
-			final String sViewID, final UISWTViewEventListenerHolder holder)
-	{
-		if (sParentID == null) {
-			sParentID = UISWTInstance.VIEW_MAIN;
-		}
-		Map<String,UISWTViewEventListenerHolder> subViews = views.get(sParentID);
-		if (subViews == null) {
-			subViews = new LinkedHashMap<>();
-			views.put(sParentID, subViews);
-		}
-
-		subViews.put(sViewID, holder );
-
-		if (sParentID.equals(UISWTInstance.VIEW_MAIN)) {
-			Utils.execSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-					try {
-						uiFunctions.addPluginView(sViewID, holder );
-					} catch (Throwable e) {
-						// SWT not available prolly
-					}
-				}
-			});
-		}
-
-		SWTViewListener[] viewListeners = listSWTViewListeners.toArray(new SWTViewListener[0]);
-		for (SWTViewListener l : viewListeners) {
-			l.setViewAdded(sParentID, sViewID, holder);
-		}
+	@Override
+	public void registerView(Class forDataSourceType, UISWTViewBuilder viewBuilder) {
+		throw( new RuntimeException( "plugin specific instance required" ));
 	}
 
-	public void addSWTViewListener(SWTViewListener l) {
-		listSWTViewListeners.add(l);
+	@Override
+	public void registerView(String forViewID, UISWTViewBuilder viewBuilder) {
+		throw( new RuntimeException( "plugin specific instance required" ));
 	}
 
-	public void removeSWTViewListener(SWTViewListener l) {
-		listSWTViewListeners.remove(l);
+	@Override
+	public UISWTViewBuilder createViewBuilder(String viewID, Class<? extends UISWTViewEventListener> cla) {
+		throw( new RuntimeException( "plugin specific instance required" ));
 	}
 
-	// TODO: Remove views from PeersView, etc
+	@Override
+	public UISWTViewBuilder createViewBuilder(String viewID) {
+		throw( new RuntimeException( "plugin specific instance required" ));
+	}
+
+	@Override
+	public void unregisterView(Class forDataSourceType, String viewID) {
+		throw( new RuntimeException( "plugin specific instance required" ));
+	}
+
+	@Override
+	public void unregisterView(String forViewID, String viewID) {
+		throw( new RuntimeException( "plugin specific instance required" ));
+	}
+
 	@Override
 	public void removeViews(String sParentID, final String sViewID) {
-		Map<String,UISWTViewEventListenerHolder> subViews = views.get(sParentID);
-		if (subViews == null)
-			return;
-
-		if (sParentID.equals(UISWTInstance.VIEW_MAIN)) {
-			Utils.execSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-					try {
-						if (uiFunctions != null) {
-							uiFunctions.removePluginView(sViewID);
-						}
-					} catch (Throwable e) {
-						// SWT not available prolly
-					}
-				}
-			});
-		}
-
-		SWTViewListener[] viewListeners = listSWTViewListeners.toArray(new SWTViewListener[0]);
-		for (UISWTViewEventListener holder : subViews.values()) {
-  		for (SWTViewListener l : viewListeners) {
-  			l.setViewRemoved(sParentID, sViewID, holder);
-  		}
-		}
-
-		subViews.remove(sViewID);
+		ViewManagerSWT.getInstance().unregisterView(sParentID, sViewID);
 	}
 
 	@Override
@@ -693,28 +628,36 @@ UISWTInstanceImpl
 	}
 
 	@Override
-	public boolean openView(final String sParentID, final String sViewID,
+	public boolean openView(final String forViewID, final String sViewID,
 	                        final Object dataSource, final boolean setfocus) {
-		Map<String,UISWTViewEventListenerHolder> subViews = views.get(sParentID);
-		if (subViews == null) {
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		UISWTViewBuilderCore builder = vm.getBuilder(forViewID, sViewID);
+		if (builder == null) {
 			return false;
 		}
-
-		final UISWTViewEventListenerHolder l = subViews.get(sViewID);
-		if (l == null) {
-			return false;
+		
+		// XXX What if plugin calls openView(x, y, z, bool) twice with different
+		// datasources (ds1, ds2). Do they expect 2 views?
+		// Right now, the first call would created the view with ds1,
+		// and the second call would switch the existing view's datasource to ds2
+		//
+		// Some plugins to watch out for:
+		// * Plugin3D adds many views with same UISWTViewEventListener, but never sets datasource
+		// * BuddyPluginView adds many views, but only opens with null DS
+		// * HighchartsStatsPlugin always returns true on UISWTViewEvent.TYPE_CREATE
+		// * azjython always returns true on UISWTViewEvent.TYPE_CREATE
+		// * CountryLocator always returns true, but we haven't migrated it to BiglyBT
+		// * RCM adds many views and always returns true
+		// * TopBar has views
+		// All of these plugins either don't open views themselves, or send null ds 
+		
+		// Just in case, clone the builder with new ds
+		if (dataSource != builder.getInitialDataSource()) {
+			builder = builder.cloneBuilder();
+			builder.setInitialDatasource(dataSource);
 		}
 
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				if (uiFunctions != null) {
-					uiFunctions.openPluginView(
-							sParentID, sViewID, l, dataSource,
-							setfocus && !bUIAttaching);
-				}
-			}
-		});
+		uiFunctions.openPluginView(builder, setfocus && !bUIAttaching);
 
 		return true;
 	}
@@ -725,44 +668,35 @@ UISWTInstanceImpl
 		openMainView(null,sViewID, l, dataSource, true);
 	}
 
-	public void openMainView(PluginInterface pi, String sViewID,
-			UISWTViewEventListener l, Object dataSource) {
-		openMainView( pi, sViewID, l, dataSource, true);
-	}
-
 	@Override
 	public void openMainView(final String sViewID,
 	                         final UISWTViewEventListener l, final Object dataSource,
 	                         final boolean setfocus) {
 		openMainView( null, sViewID, l, dataSource, setfocus );
 	}
+
 	public void openMainView(final PluginInterface pi, final String sViewID,
 			final UISWTViewEventListener _l, final Object dataSource,
 			final boolean setfocus) {
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				if (uiFunctions != null) {
-					UISWTViewEventListenerHolder l = new UISWTViewEventListenerHolder(sViewID, _l, pi );
-
-					uiFunctions.openPluginView(UISWTInstance.VIEW_MAIN, sViewID, l, dataSource, setfocus && !bUIAttaching);
-				}
-			}
-		});
+		uiFunctions.openPluginView(
+				new UISWTViewBuilderCore(sViewID, pi, _l).setInitialDatasource(
+						dataSource),
+				setfocus && !bUIAttaching);
 	}
 
 	@Override
 	public UISWTView[] getOpenViews(String sParentID) {
 		if (sParentID.equals(UISWTInstance.VIEW_MAIN)) {
-			try {
-				if (uiFunctions != null) {
-					return uiFunctions.getPluginViews();
-				}
-			} catch (Throwable e) {
-				// SWT not available prolly
+			return uiFunctions.getPluginViews();
+		}
+		List<UISWTView> list = new ArrayList<>();
+		MdiEntrySWT[] entries = uiFunctions.getMDISWT().getEntries();
+		for (MdiEntrySWT entry : entries) {
+			if (sParentID.equals(entry.getParentID())) {
+				list.add(entry);
 			}
 		}
-		return new UISWTView[0];
+		return list.toArray(new UISWTView[0]);
 	}
 
 	// @see com.biglybt.pif.ui.UIInstance#promptUser(java.lang.String, java.lang.String, java.lang.String[], int)
@@ -823,32 +757,6 @@ UISWTInstanceImpl
 	// Core Functions
 	// ==============
 
-	@Override
-	public UISWTViewEventListenerHolder[] getViewListeners(String sParentID) {
-		
-		sParentID = Utils.getBaseViewID( sParentID );
-		
-		Map<String, UISWTViewEventListenerHolder> map = views.get(sParentID);
-		if (map == null) {
-			return new UISWTViewEventListenerHolder[0];
-		}
-		UISWTViewEventListenerHolder[] array = map.values().toArray(new UISWTViewEventListenerHolder[0]);
-		Arrays.sort(array, new Comparator<UISWTViewEventListenerHolder>() {
-			@Override
-			public int compare(UISWTViewEventListenerHolder o1,
-			                   UISWTViewEventListenerHolder o2) {
-				if ((o1.getPluginInterface() == null) && (o2.getPluginInterface() == null)) {
-					return 0;
-				}
-				if ((o1.getPluginInterface() != null) && (o2.getPluginInterface() != null)) {
-					return 0;
-				}
-				return o1.getPluginInterface() == null ? -1 : 1;
-			}
-		});
-		return array;
-	}
-
 	// @see com.biglybt.pif.ui.UIInstance#getInputReceiver()
 	@Override
 	public UIInputReceiver getInputReceiver() {
@@ -882,7 +790,7 @@ UISWTInstanceImpl
 
 	@Override
 	public boolean openView(BasicPluginViewModel model) {
-		return openView(VIEW_MAIN, model.getName().replaceAll(" ", "."), null);
+		return openView(VIEW_MAIN, model.getName().replace(' ', '.'), null);
 	}
 
 	@Override
@@ -965,6 +873,10 @@ UISWTInstanceImpl
 
 			throws UIException
 		{
+			PluginInterface pi = pi_ref.get();
+			if (pi != null) {
+				ViewManagerSWT.getInstance().dispose(pi);
+			}
 			Utils.disposeSWTObjects(listDisposeOnUnload);
 
 			listDisposeOnUnload.clear();
@@ -1028,22 +940,26 @@ UISWTInstanceImpl
 			return( delegate.createGraphic( img ));
 		}
 
+		@Deprecated
 		@Override
 		public void
-		addView(String sParentID, String sViewID, UISWTViewEventListener l)
+		addView(String sParentViewID, String sViewID, UISWTViewEventListener l)
 		{
 			PluginInterface pi = pi_ref.get();
 
-			delegate.addView( sParentID, sViewID, new UISWTViewEventListenerHolder(sViewID, l, pi) );
+			UISWTViewBuilderCore builder = new UISWTViewBuilderCore(sViewID,
+					pi).setListenerInstantiator(true, (Builder, view) -> l);
+			ViewManagerSWT.getInstance().registerView(sParentViewID, builder);
 		}
 
 		@Override
-		public void addView(String sParentID, String sViewID,
+		public void addView(String sParentViewID, String sViewID,
 		                    Class<? extends UISWTViewEventListener> cla, Object datasource) {
 			PluginInterface pi = pi_ref.get();
 
-			delegate.addView(sParentID, sViewID, new UISWTViewEventListenerHolder(sViewID,
-					cla, datasource, pi));
+			UISWTViewBuilderCore builder = new UISWTViewBuilderCore(sViewID, pi,
+					cla).setInitialDatasource(datasource);
+			ViewManagerSWT.getInstance().registerView(sParentViewID, builder);
 		}
 
 		@Override
@@ -1052,7 +968,7 @@ UISWTInstanceImpl
 		{
 			PluginInterface pi = pi_ref.get();
 
-			delegate.openMainView( pi, sViewID, l, dataSource );
+			delegate.openMainView( pi, sViewID, l, dataSource, true );
 		}
 
 		@Override
@@ -1098,14 +1014,10 @@ UISWTInstanceImpl
 		}
 
 		@Override
-		public boolean openView(String sParentID, String sViewID, Object dataSource, boolean setfocus) {
-			return delegate.openView(sParentID, sViewID, dataSource, setfocus);
+		public boolean openView(String forViewID, String sViewID, Object dataSource, boolean setfocus) {
+			return delegate.openView(forViewID, sViewID, dataSource, setfocus);
 		}
 
-		@Override
-		public UISWTViewEventListenerWrapper[] getViewListeners(String sParentId) {
-			return delegate.getViewListeners(sParentId);
-		}
 		@Override
 		public UIInputReceiver getInputReceiver() {
 			return delegate.getInputReceiver();
@@ -1185,9 +1097,49 @@ UISWTInstanceImpl
 				}
 			}
 
+			ViewManagerSWT.getInstance().dispose(pi);
+
 			Utils.disposeSWTObjects(listDisposeOnUnload);
 
 			listDisposeOnUnload.clear();
+		}
+
+		@Override
+		public UISWTViewBuilder createViewBuilder(String viewID,
+			Class<? extends UISWTViewEventListener> cla) {
+			return new UISWTViewBuilderCore(viewID, pi_ref.get(), cla);
+		}
+
+		@Override
+		public UISWTViewBuilder createViewBuilder(String viewID) {
+			return new UISWTViewBuilderCore(viewID, pi_ref.get());
+		}
+
+		@Override
+		public void registerView(Class forDataSourceType,
+				UISWTViewBuilder viewBuilder) {
+			if (viewBuilder instanceof UISWTViewBuilderCore) {
+				ViewManagerSWT.getInstance().registerView(forDataSourceType,
+						(UISWTViewBuilderCore) viewBuilder);
+			}
+		}
+
+		@Override
+		public void registerView(String forViewID, UISWTViewBuilder viewBuilder) {
+			if (viewBuilder instanceof UISWTViewBuilderCore) {
+				ViewManagerSWT.getInstance().registerView(forViewID,
+					(UISWTViewBuilderCore) viewBuilder);
+			}
+		}
+
+		@Override
+		public void unregisterView(String forViewID, String viewID) {
+			ViewManagerSWT.getInstance().unregisterView(forViewID, viewID);
+		}
+
+		@Override
+		public void unregisterView(Class forDataSourceType, String viewID) {
+			ViewManagerSWT.getInstance().unregisterView(forDataSourceType, viewID);
 		}
 	}
 

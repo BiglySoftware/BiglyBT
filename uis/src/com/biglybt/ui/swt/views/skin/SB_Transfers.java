@@ -62,6 +62,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MdiSWTMenuHackListener;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
 import com.biglybt.ui.swt.utils.DragDropUtils;
@@ -321,12 +322,10 @@ public class SB_Transfers
 			};
 			PlatformTorrentUtils.addHasBeenOpenedListener(hasBeenOpenedListener);
 		
-			mdi.addListener(new MdiEntryLoadedListener() {
-				@Override
-				public void mdiEntryLoaded(MdiEntry entry) {
-					if (MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS.equals(entry.getId())) {
-						addHeaderMenu();
-					}
+			mdi.addListener(entry -> {
+				if (MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS.equals(
+						entry.getViewID())) {
+					addHeaderMenu();
 				}
 			});
 		}else{
@@ -1610,7 +1609,7 @@ public class SB_Transfers
 										
 										TagGroup tg = tag.getGroupContainer();
 										
-										addMenuCollapseAll( mdi, menuTree, entry.getId());
+										addMenuCollapseAll( mdi, menuTree, entry.getViewID());
 										
 										TagUIUtils.createSideBarMenuItems(menuTree, tg );
 									}
@@ -1690,8 +1689,11 @@ public class SB_Transfers
 				
 			}else{
 
-				entry = mdi.createEntryFromEventListener(
-							parent_id, new PeersGeneralView( tag ), id, closable, null, prev_id );
+				UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
+						PeersGeneralView.class);
+				builder.setParentEntryID(parent_id);
+				builder.setPreferredAfterID(prev_id).setInitialDatasource(tag);
+				entry = mdi.createEntry(builder, closable);
 
 				entry.setViewTitleInfo( viewTitleInfo );
 			}
@@ -1862,7 +1864,7 @@ public class SB_Transfers
 								
 								if ( e.getUserData( TAG_TAG_OR_GROUP_KEY ) != null ){
 									
-									tag = e.getId();
+									tag = e.getViewID();
 								}
 							}
 							
@@ -1885,7 +1887,7 @@ public class SB_Transfers
 								
 								if ( e.getUserData( CAT_KEY ) != null ){
 									
-									cat = e.getId();
+									cat = e.getViewID();
 								}
 							}
 							
@@ -2002,7 +2004,7 @@ public class SB_Transfers
 					
 					if ( e.getUserData( CAT_KEY ) != null ){
 						
-						prev_id = e.getId();
+						prev_id = e.getViewID();
 					}
 				}
 				
@@ -2023,7 +2025,7 @@ public class SB_Transfers
 				
 		for ( MdiEntry kid: kids ){
 		
-			String kid_id = kid.getId();
+			String kid_id = kid.getViewID();
 			
 			String title = kid.getTitle();
 						
@@ -2056,7 +2058,7 @@ public class SB_Transfers
 					
 					if ( tt <= tag_type ){
 					
-						prev_id = kid.getId();
+						prev_id = kid.getViewID();
 					}
 				}
 			}
@@ -2152,7 +2154,7 @@ public class SB_Transfers
 				
 		for ( MdiEntry kid: kids ){
 		
-			String kid_id = kid.getId();
+			String kid_id = kid.getViewID();
 			
 			String title = kid.getTitle();
 						
@@ -2509,9 +2511,8 @@ public class SB_Transfers
 		
 		MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
 		if (entry != null) {
-			MdiEntryVitalityImage[] vitalityImages = entry.getVitalityImages();
-			for (int i = 0; i < vitalityImages.length; i++) {
-				MdiEntryVitalityImage vitalityImage = vitalityImages[i];
+			List<? extends MdiEntryVitalityImage> vitalityImages = entry.getVitalityImages();
+			for (MdiEntryVitalityImage vitalityImage : vitalityImages) {
 				String imageID = vitalityImage.getImageID();
 				if (imageID == null) {
 					continue;
@@ -2534,9 +2535,8 @@ public class SB_Transfers
 
 		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_CD);
 		if (entry != null) {
-			MdiEntryVitalityImage[] vitalityImages = entry.getVitalityImages();
-			for (int i = 0; i < vitalityImages.length; i++) {
-				MdiEntryVitalityImage vitalityImage = vitalityImages[i];
+			List<? extends MdiEntryVitalityImage> vitalityImages = entry.getVitalityImages();
+			for (MdiEntryVitalityImage vitalityImage : vitalityImages) {
 				String imageID = vitalityImage.getImageID();
 				if (imageID == null) {
 					continue;

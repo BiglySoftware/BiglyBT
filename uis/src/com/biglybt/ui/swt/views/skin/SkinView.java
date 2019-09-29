@@ -21,7 +21,7 @@ import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
+import com.biglybt.ui.swt.mdi.*;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectAdapter;
@@ -52,6 +52,7 @@ public abstract class SkinView
 	protected SWTSkin skin;
 
 	private boolean disposed = false;
+	private BaseMdiEntry mdiEntry;
 
 	/**
 	 *
@@ -145,12 +146,9 @@ public abstract class SkinView
 	public Object skinObjectCreated(SWTSkinObject skinObject, Object params) {
 		SkinViewManager.add(this);
 
-		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
-		if (mdi != null) {
-			MdiEntry entry = mdi.getEntryFromSkinObject(skinObject);
-			if (entry != null && (this instanceof UIPluginViewToolBarListener)) {
-				entry.addToolbarEnabler((UIPluginViewToolBarListener) this);
-			}
+		mdiEntry = BaseMDI.getEntryFromSkinObject(skinObject);
+		if (mdiEntry != null && (this instanceof UIPluginViewToolBarListener)) {
+			mdiEntry.addToolbarEnabler((UIPluginViewToolBarListener) this);
 		}
 		return super.skinObjectCreated(skinObject, params);
 	}
@@ -172,5 +170,9 @@ public abstract class SkinView
 
 	final public SWTSkinObject getSkinObject(String viewID) {
 		return skin.getSkinObject(viewID, soMain);
+	}
+
+	public BaseMdiEntry getMdiEntry() {
+		return mdiEntry;
 	}
 }

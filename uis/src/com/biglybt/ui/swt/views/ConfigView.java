@@ -54,7 +54,7 @@ import com.biglybt.ui.swt.pif.UISWTParameterContext;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.MultiParameterImplListenerSWT;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.configsections.*;
 import com.biglybt.util.JSONUtils;
@@ -65,7 +65,7 @@ import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.IntListParameter;
 import com.biglybt.pif.ui.config.Parameter;
 
-public class ConfigView implements UISWTViewCoreEventListenerEx {
+public class ConfigView implements UISWTViewCoreEventListener {
 	private static final LogIDs LOGID = LogIDs.GUI;
 
 	// For highligting via showSeection.  option map contains "select" key with "value".
@@ -97,27 +97,6 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 	public ConfigView() {
   }
-
-	@Override
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	@Override
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new ConfigView());
-	}
-	
-	@Override
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return () -> ConfigView.class;
-	}
 
   private void initialize(final Composite composite) {
   	// need to initalize composite now, since getComposite can
@@ -1314,6 +1293,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   }
 
   private void delete() {
+  	save();
 		for (BaseConfigSection section : sectionsCreated) {
     	try {
     		section.deleteConfigSection();

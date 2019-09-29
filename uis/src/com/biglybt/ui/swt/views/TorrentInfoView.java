@@ -50,6 +50,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
+import com.biglybt.ui.swt.mdi.TabbedEntry;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
@@ -61,6 +62,7 @@ import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.util.DataSourceUtils;
 
 public class TorrentInfoView
 	implements UISWTViewCoreEventListener, UIPluginViewToolBarListener
@@ -121,31 +123,38 @@ public class TorrentInfoView
 		//int userMode = COConfigurationManager.getIntParameter("User Mode");
 
 			// header
+		
+		boolean showHeader = true;
+		if (swtView instanceof TabbedEntry) {
+			showHeader = ((TabbedEntry) swtView).getMDI().getAllowSubViews();
+		}
 
-		Composite cHeader = new Composite(panel, SWT.BORDER);
-		GridLayout configLayout = new GridLayout();
-		configLayout.marginHeight = 3;
-		configLayout.marginWidth = 0;
-		cHeader.setLayout(configLayout);
-		gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
-		cHeader.setLayoutData(gridData);
-
-		Display d = panel.getDisplay();
-		cHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
-		cHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
-
-		Label lHeader = new Label(cHeader, SWT.NULL);
-		lHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
-		lHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
-		FontData[] fontData = lHeader.getFont().getFontData();
-		fontData[0].setStyle(SWT.BOLD);
-		int fontHeight = (int)(fontData[0].getHeight() * 1.2);
-		fontData[0].setHeight(fontHeight);
-		headerFont = new Font(d, fontData);
-		lHeader.setFont(headerFont);
-		lHeader.setText( " " + MessageText.getString( "authenticator.torrent" ) + " : " + download_manager.getDisplayName().replaceAll("&", "&&"));
-		gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
-		lHeader.setLayoutData(gridData);
+		if (showHeader) {
+			Composite cHeader = new Composite(panel, SWT.BORDER);
+			GridLayout configLayout = new GridLayout();
+			configLayout.marginHeight = 3;
+			configLayout.marginWidth = 0;
+			cHeader.setLayout(configLayout);
+			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
+			cHeader.setLayoutData(gridData);
+	
+			Display d = panel.getDisplay();
+			cHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
+			cHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
+	
+			Label lHeader = new Label(cHeader, SWT.NULL);
+			lHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
+			lHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
+			FontData[] fontData = lHeader.getFont().getFontData();
+			fontData[0].setStyle(SWT.BOLD);
+			int fontHeight = (int)(fontData[0].getHeight() * 1.2);
+			fontData[0].setHeight(fontHeight);
+			headerFont = new Font(d, fontData);
+			lHeader.setFont(headerFont);
+			lHeader.setText( " " + MessageText.getString( "authenticator.torrent" ) + " : " + download_manager.getDisplayName().replaceAll("&", "&&"));
+			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
+			lHeader.setLayoutData(gridData);
+		}
 
 		Composite gTorrentInfo = new Composite(panel, SWT.NULL);
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
@@ -427,6 +436,7 @@ public class TorrentInfoView
 	}
 
 	private void dataSourceChanged(Object newDataSource) {
+		download_manager = DataSourceUtils.getDM(newDataSource);
 		if (newDataSource instanceof DownloadManager) {
 			download_manager = (DownloadManager) newDataSource;
 		}

@@ -16,194 +16,412 @@
 
 package com.biglybt.ui.swt.mdi;
 
-import com.biglybt.core.util.Debug;
-import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
-import com.biglybt.ui.mdi.MdiEntryVitalityImage;
-import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.shells.GCStringPrinter;
-import com.biglybt.ui.swt.utils.ColorCache;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabFolderRenderer;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.widgets.Display;
 
-import java.lang.reflect.Field;
+import com.biglybt.core.util.Debug;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.shells.GCStringPrinter;
+import com.biglybt.ui.swt.utils.ColorCache;
 
 /**
  * Created by TuxPaper on 7/16/2017.
  */
-public class TabbedMDI_Ren {
-	static void setupTabFolderRenderer(final TabbedMDI mdi, final CTabFolder tabFolder) {
-		CTabFolderRenderer renderer = new CTabFolderRenderer(tabFolder) {
-			/* (non-Javadoc)
-			 * @see org.eclipse.swt.custom.CTabFolderRenderer#computeSize(int, int, org.eclipse.swt.graphics.GC, int, int)
-			 */
-			@Override
-			protected Point computeSize(int part, int state, GC gc, int wHint,
-			                            int hHint) {
-				gc.setAntialias(SWT.ON);
-				Point pt = super.computeSize(part, state, gc, wHint, hHint);
-				if (tabFolder.isDisposed()) {
-					return pt;
-				}
+public class TabbedMDI_Ren
+	extends CTabFolderRenderer
+{
+	private static final int PADDING_BUBBLE_X = 5;
 
-				if (part >= 0) {
-					TabbedEntry entry = mdi.getEntryFromTabItem(tabFolder.getItem(part));
-					if (entry != null) {
-						ViewTitleInfo viewTitleInfo = entry.getViewTitleInfo();
-						if (viewTitleInfo != null) {
-							Object titleRight = viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_INDICATOR_TEXT);
-							if (titleRight != null) {
-								Point size = gc.textExtent(titleRight.toString(), 0);
-								pt.x += size.x + 10 + 2;
-							}
-						}
+	private static final int PADDING_INDICATOR_X1 = 5;
 
+	private static final int PADDING_INDICATOR_AND_CLOSE = 5;
 
-						MdiEntryVitalityImage[] vitalityImages = entry.getVitalityImages();
-						com.biglybt.ui.swt.imageloader.ImageLoader imageLoader = com.biglybt.ui.swt.imageloader.ImageLoader.getInstance();
-						for (MdiEntryVitalityImage mdiEntryVitalityImage : vitalityImages) {
-							if (mdiEntryVitalityImage != null && mdiEntryVitalityImage.isVisible()) {
-								String imageID = mdiEntryVitalityImage.getImageID();
-								Image image = imageLoader.getImage(imageID);
-								if (com.biglybt.ui.swt.imageloader.ImageLoader.isRealImage(image)) {
-									pt.x += image.getBounds().x + 1;
-								}
-							}
-
-						}
-					}
-				}
-				return pt;
-			}
-
-			/* (non-Javadoc)
-			 * @see org.eclipse.swt.custom.CTabFolderRenderer#draw(int, int, org.eclipse.swt.graphics.Rectangle, org.eclipse.swt.graphics.GC)
-			 */
-			@Override
-			protected void draw(int part, int state, Rectangle bounds, GC parent_gc) {
-				try {
-					//super.draw(part, state & ~(SWT.FOREGROUND), bounds, gc);
-					super.draw(part, state, bounds, parent_gc);
-				} catch (Throwable t) {
-					Debug.out(t);
-				}
-				if (part < 0) {
-					return;
-				}
-				try {
-					CTabItem item = mdi.getTabFolder().getItem(part);
-					TabbedEntry entry = mdi.getEntryFromTabItem(item);
-					if (entry == null) {
-						return;
-					}
-
-					ViewTitleInfo viewTitleInfo = entry.getViewTitleInfo();
-					if (viewTitleInfo != null) {
-						Object titleRight = viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_INDICATOR_TEXT);
-						if (titleRight != null) {
-							String textIndicator = titleRight.toString();
-							int x1IndicatorOfs = 0;
-							int SIDEBAR_SPACING = 0;
-							int x2 = bounds.x + bounds.width;
-
-							if (item.getShowClose()) {
-								try {
-									Field fldCloseRect = item.getClass().getDeclaredField("closeRect");
-									fldCloseRect.setAccessible(true);
-									Rectangle closeBounds = (Rectangle) fldCloseRect.get(item);
-									if (closeBounds != null && closeBounds.x > 0) {
-										x2 = closeBounds.x;
-									}
-								} catch (Exception e) {
-									x2 -= 20;
-								}
-							}
-							//gc.setAntialias(SWT.ON); FAIL ON WINDOWS 7 AT LEAST
-
-							Point textSize = parent_gc.textExtent(textIndicator);
-							//Point minTextSize = gc.textExtent("99");
-							//if (textSize.x < minTextSize.x + 2) {
-							//	textSize.x = minTextSize.x + 2;
-							//}
-
-							int width = textSize.x + 10;
-							x1IndicatorOfs += width + SIDEBAR_SPACING;
-							int startX = x2 - x1IndicatorOfs;
-
-							int textOffsetY = 0;
-
-							int height = textSize.y + 1;
-							int startY = bounds.y + ((bounds.height - height) / 2) + 1;
-
-							Image image = new Image( parent_gc.getDevice(), width+1, height+1 );
-							
-							
-							GC gc = new GC( image );
-							
-							gc.setAdvanced( true );
-							
-							gc.setAntialias( SWT.ON );
-							
-							gc.setBackground( mdi.getTabFolder().getBackground());
-							gc.fillRectangle( new Rectangle( 0, 0, width+1, height+1 ));
-							//gc.setBackground(((state & SWT.SELECTED) != 0 ) ? item.getParent().getSelectionBackground() : item.getParent().getBackground());
-							//gc.fillRectangle(startX - 5, startY, width + 5, height);
-
-							//Pattern pattern;
-							//Color color1;
-							//Color color2;
-
-							//gc.fillRectangle(startX, startY, width, height);
-
-
-							Color default_color = ColorCache.getSchemedColor(gc.getDevice(), "#5b6e87");
-
-							Object color =  viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_INDICATOR_COLOR);
-
-							if ( color instanceof int[] ){
-
-								gc.setBackground(ColorCache.getColor( gc.getDevice(),(int[])color ));
-
-							}else{
-
-								gc.setBackground( default_color );
-							}
-
-
-							Color text_color = Colors.white;
-
-							gc.fillRoundRectangle(0, 0, width, height, textSize.y * 2 / 3,
-									height * 2 / 3);
-
-							if ( color != null ){
-
-								text_color = Colors.getInstance().getReadableColor(gc.getBackground());
-
-								gc.setBackground( default_color );
-
-								gc.drawRoundRectangle(0, 0, width, height, textSize.y * 2 / 3,
-										height * 2 / 3);
-							}
-							gc.setForeground(text_color);
-							
-							GCStringPrinter.printString(gc, textIndicator, new Rectangle(0,
-									0 + textOffsetY, width, height), true, false, SWT.CENTER);
-
-							gc.dispose();
-							
-							parent_gc.drawImage( image, startX, startY );
-							
-							image.dispose();
-						}
-					}
-
-				} catch (Throwable t) {
-					Debug.out(t);
-				}
-			}
-		};
+	static void setupTabFolderRenderer(TabbedMDI mdi, CTabFolder tabFolder) {
+		CTabFolderRenderer renderer = new TabbedMDI_Ren(tabFolder, mdi);
 		tabFolder.setRenderer(renderer);
+	}
+
+	private final CTabFolder tabFolder;
+
+	private final TabbedMDI mdi;
+
+	public TabbedMDI_Ren(CTabFolder tabFolder, TabbedMDI mdi) {
+		super(tabFolder);
+		this.tabFolder = tabFolder;
+		this.mdi = mdi;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.swt.custom.CTabFolderRenderer#computeSize(int, int, org.eclipse.swt.graphics.GC, int, int)
+	 */
+	@Override
+	protected Point computeSize(int part, int state, GC gc, int wHint,
+			int hHint) {
+		gc.setAntialias(SWT.ON);
+		Point pt = super.computeSize(part, state, gc, wHint, hHint);
+		if (tabFolder.isDisposed()) {
+			return pt;
+		}
+
+		if (part < 0 || part >= tabFolder.getItemCount()) {
+			return pt;
+		}
+
+		CTabItem item = tabFolder.getItem(part);
+		if (item == null) {
+			return pt;
+		}
+
+		TabbedEntry entry = mdi.getEntryFromTabItem(item);
+		if (entry == null) {
+			return pt;
+		}
+
+		int ourWidth = 0;
+
+		ViewTitleInfo viewTitleInfo = entry.getViewTitleInfo();
+		if (viewTitleInfo != null) {
+			Object titleRight = viewTitleInfo.getTitleInfoProperty(
+					ViewTitleInfo.TITLE_INDICATOR_TEXT);
+			if (titleRight != null) {
+				String textIndicator = titleRight.toString();
+				item.setData("textIndicator", textIndicator);
+				Point size = gc.textExtent(textIndicator, 0);
+				ourWidth += size.x + (PADDING_BUBBLE_X * 2) + PADDING_INDICATOR_X1;
+			} else {
+				item.setData("textIndicator", null);
+			}
+		} else {
+			item.setData("textIndicator", null);
+		}
+
+		boolean showUnselectedClose = tabFolder.getUnselectedCloseVisible();
+		boolean selected = (state & SWT.SELECTED) != 0;
+		boolean parentHasClose = (tabFolder.getStyle() & SWT.CLOSE) != 0;
+		boolean showingClose = (parentHasClose || item.getShowClose())
+				&& (showUnselectedClose || selected);
+
+		List<MdiEntryVitalityImageSWT> vitalityImages = entry.getVitalityImages();
+		boolean first = true;
+		for (MdiEntryVitalityImageSWT vitalityImage : vitalityImages) {
+			if (vitalityImage == null || !vitalityImage.isVisible()
+					|| vitalityImage.getAlignment() != SWT.RIGHT
+					|| vitalityImage.getShowOutsideOfEntry()) {
+				continue;
+			}
+			
+			if (!showingClose && vitalityImage.getShowOnlyOnSelection()) {
+				continue;
+			}
+
+			Image image = vitalityImage.getImage();
+			if (com.biglybt.ui.swt.imageloader.ImageLoader.isRealImage(image)) {
+				ourWidth += image.getBounds().width;
+				if (first && !vitalityImage.getAlwaysLast()) {
+					first = false;
+				}
+				ourWidth += PADDING_INDICATOR_X1;
+			}
+		}
+		
+		if (!selected) {
+			ourWidth += PADDING_INDICATOR_AND_CLOSE;
+		}
+
+		pt.x += ourWidth;
+
+		return pt;
+	}
+
+	@Override
+	protected Rectangle computeTrim(int part, int state, int x, int y, int width,
+			int height) {
+		Rectangle trim = super.computeTrim(part, state, x, y, width, height);
+		if (part < 0 || part >= tabFolder.getItemCount()) {
+			return trim;
+		}
+
+		CTabItem item = tabFolder.getItem(part);
+		if (item != null && item.getImage() == null) {
+			trim.x -= PADDING_INDICATOR_AND_CLOSE;
+			trim.width += PADDING_INDICATOR_AND_CLOSE;
+		}
+		return trim;
+	}
+
+	@Override
+	protected void draw(int part, int state, Rectangle bounds, GC gc) {
+		if (part < 0 || part >= tabFolder.getItemCount()) {
+			try {
+				//super.draw(part, state & ~(SWT.FOREGROUND), bounds, gc);
+				super.draw(part, state, bounds, gc);
+			} catch (Throwable t) {
+				Debug.out(t);
+			}
+			return;
+		}
+		try {
+			super.draw(part, state & ~(SWT.FOREGROUND), bounds, gc);
+			//super.draw(part, state, bounds, gc);
+		} catch (Throwable t) {
+			Debug.out(t);
+		}
+
+		if (bounds.width == 0 || bounds.height == 0) {
+			return;
+		}
+
+		try {
+			CTabItem item = mdi.getTabFolder().getItem(part);
+			if (item == null) {
+				return;
+			}
+
+			TabbedEntry entry = mdi.getEntryFromTabItem(item);
+			if (entry == null) {
+				return;
+			}
+
+			int x2 = bounds.x + bounds.width;
+			boolean showUnselectedClose = tabFolder.getUnselectedCloseVisible();
+			boolean selected = (state & SWT.SELECTED) != 0;
+			boolean parentHasClose = (tabFolder.getStyle() & SWT.CLOSE) != 0;
+			boolean showingClose = (parentHasClose || item.getShowClose())
+					&& (showUnselectedClose || selected);
+
+			Rectangle closeRect = null;
+			int closeImageState = 0;
+			if (showingClose) {
+				try {
+					Field fldCloseRect = CTabItem.class.getDeclaredField("closeRect");
+					fldCloseRect.setAccessible(true);
+					closeRect = (Rectangle) fldCloseRect.get(item);
+					if (item.getShowClose() && closeRect != null && closeRect.x > 0) {
+						x2 = closeRect.x;
+					}
+
+					Field fldCloseImageState = CTabItem.class.getDeclaredField(
+							"closeImageState");
+					fldCloseImageState.setAccessible(true);
+					closeImageState = (int) fldCloseImageState.get(item);
+
+				} catch (Throwable t) {
+					x2 -= 20;
+				}
+			} else {
+				x2 -= PADDING_INDICATOR_AND_CLOSE;
+			}
+
+			int oldAntiAlias = gc.getAntialias();
+			boolean oldAdvanced = gc.getAdvanced();
+			try {
+				gc.setAdvanced(true);
+				gc.setAntialias(SWT.ON);
+
+				List<MdiEntryVitalityImageSWT> vitalityImages = entry.getVitalityImages();
+				Collections.reverse(vitalityImages);
+				boolean first = true;
+				for (MdiEntryVitalityImageSWT vitalityImage :  vitalityImages) {
+					if (vitalityImage == null || !vitalityImage.isVisible()
+							|| vitalityImage.getAlignment() != SWT.RIGHT
+							|| vitalityImage.getShowOutsideOfEntry()) {
+						continue;
+					}
+
+
+					if (!showingClose && vitalityImage.getShowOnlyOnSelection()) {
+						vitalityImage.setHitArea(null);
+						continue;
+					}
+
+					vitalityImage.switchSuffix(entry.isActive() ? "-selected" : "");
+					Image image = vitalityImage.getImage();
+					if (image == null || image.isDisposed()) {
+						continue;
+					}
+
+					Rectangle imageBounds = image.getBounds();
+					int startX = x2 - imageBounds.width;
+					int startY = bounds.y + ((bounds.height - imageBounds.height) / 2)
+							+ 1;
+					if (first && !vitalityImage.getAlwaysLast()) {
+						//startX -= PADDING_INDICATOR_AND_CLOSE;
+						first = false;
+					}
+					gc.drawImage(image, startX, startY);
+					vitalityImage.setHitArea(new Rectangle(startX, startY,
+							imageBounds.width, imageBounds.height));
+
+					x2 = startX;
+					x2 -= PADDING_INDICATOR_X1;
+				}
+				
+				ViewTitleInfo viewTitleInfo = entry.getViewTitleInfo();
+
+				if (viewTitleInfo != null) {
+
+					String textIndicator = (String) item.getData("textIndicator");
+					if (textIndicator != null) {
+
+						Point textSize = gc.textExtent("" + textIndicator, 0);
+						//Point minTextSize = gc.textExtent("99");
+						//if (textSize.x < minTextSize.x + 2) {
+						//	textSize.x = minTextSize.x + 2;
+						//}
+
+						int width = textSize.x + (PADDING_BUBBLE_X * 2)
+								+ PADDING_INDICATOR_X1;
+						int startX = x2 - width;
+						if (first) {
+							startX -= PADDING_INDICATOR_AND_CLOSE;
+							first = false;
+						}
+
+						int textOffsetY = 0;
+
+						int height = textSize.y + 1;
+						int startY = bounds.y + ((bounds.height - height) / 2) + 1;
+
+						Color default_color = ColorCache.getSchemedColor(gc.getDevice(),
+								"#5b6e87");
+
+						Object color = viewTitleInfo.getTitleInfoProperty(
+								ViewTitleInfo.TITLE_INDICATOR_COLOR);
+
+						if (color instanceof int[]) {
+
+							gc.setBackground(
+									ColorCache.getColor(gc.getDevice(), (int[]) color));
+
+						} else {
+
+							gc.setBackground(default_color);
+						}
+
+						Color text_color = Colors.white;
+
+						int bubbleStartX = startX + PADDING_INDICATOR_X1;
+						int bubbleStartY = startY;
+						int bubbleWidth = width - PADDING_INDICATOR_X1;
+
+						gc.fillRoundRectangle(bubbleStartX, bubbleStartY, bubbleWidth,
+								height, textSize.y * 2 / 3, height * 2 / 3);
+
+						if (color != null) {
+
+							text_color = Colors.getInstance().getReadableColor(
+									gc.getBackground());
+
+							gc.setBackground(default_color);
+
+							gc.drawRoundRectangle(bubbleStartX, bubbleStartY, bubbleWidth,
+									height, textSize.y * 2 / 3, height * 2 / 3);
+						}
+						gc.setForeground(text_color);
+
+						GCStringPrinter.printString(
+								gc, textIndicator, new Rectangle(bubbleStartX,
+										bubbleStartY + textOffsetY, bubbleWidth, height),
+								true, false, SWT.CENTER);
+
+						x2 = startX;
+					}
+				}
+
+				/////////////////
+				if ((state & SWT.FOREGROUND) != 0) {
+
+					// draw Image
+					Rectangle trim = computeTrim(part, SWT.NONE, 0, 0, 0, 0);
+					int xDraw = bounds.x - trim.x;
+					Image image = item.getImage();
+					if (image != null && !image.isDisposed()
+							&& tabFolder.getUnselectedImageVisible()) {
+						Rectangle imageBounds = image.getBounds();
+						// only draw image if it won't overlap with close button
+						int maxImageWidth = bounds.x + bounds.width - xDraw
+								- (trim.width + trim.x);
+						if (showingClose && closeRect != null) {
+							maxImageWidth -= closeRect.width + 4; //INTERNAL_SPACING;
+						}
+						if (imageBounds.width < maxImageWidth) {
+							int imageX = xDraw;
+							int imageHeight = imageBounds.height;
+							int imageY = bounds.y + (bounds.height - imageHeight) / 2;
+							boolean onBottom = (tabFolder.getStyle() & SWT.BOTTOM) != 0;
+							imageY += onBottom ? -1 : 1;
+							int imageWidth = imageBounds.width * imageHeight
+									/ imageBounds.height;
+							gc.drawImage(image, imageBounds.x, imageBounds.y,
+									imageBounds.width, imageBounds.height, imageX, imageY,
+									imageWidth, imageHeight);
+							xDraw += imageWidth + 4; //INTERNAL_SPACING;
+						}
+					}
+					// draw close
+					if (showingClose) {
+						try {
+							Method methDrawClose = CTabFolderRenderer.class.getDeclaredMethod(
+									"drawClose", GC.class, Rectangle.class, int.class);
+							methDrawClose.setAccessible(true);
+							methDrawClose.invoke(this, gc, closeRect, closeImageState);
+						} catch (Throwable t) {
+							t.printStackTrace();
+						}
+					}
+
+					// Draw Text
+					Rectangle printArea = new Rectangle(xDraw, bounds.y + 1,
+							x2 - xDraw + 1, bounds.height);
+
+					gc.setForeground(selected ? tabFolder.getSelectionForeground()
+							: tabFolder.getForeground());
+
+					Font gcFont = gc.getFont();
+					gc.setFont(
+							item.getFont() == null ? tabFolder.getFont() : item.getFont());
+					GCStringPrinter sp = new GCStringPrinter(gc, item.getText(),
+							printArea, false, true, 0);
+					sp.printString();
+					gc.setFont(gcFont);
+
+					// draw a Focus rectangle
+					if (tabFolder.isFocusControl() && selected) {
+						Display display = tabFolder.getDisplay();
+						if (tabFolder.getSimple() || tabFolder.getSingle()) {
+							Rectangle drawRect = sp.getCalculatedDrawRect();
+							if (drawRect != null) {
+								gc.setBackground(display.getSystemColor(SWT.COLOR_BLACK));
+								gc.setForeground(display.getSystemColor(SWT.COLOR_WHITE));
+								gc.drawFocus(drawRect.x - 1, drawRect.y - 1, drawRect.width + 2,
+										drawRect.height + 2);
+							}
+						} else {
+							gc.setForeground(
+									display.getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW));
+							int lineY = tabFolder.getTabHeight();
+							int lineX2 = xDraw + sp.getCalculatedSize().x + 1;
+							gc.drawLine(xDraw, lineY, lineX2, lineY);
+						}
+					}
+				}
+
+			} finally {
+				gc.setAntialias(oldAntiAlias);
+				gc.setAdvanced(oldAdvanced);
+			}
+		} catch (Throwable t) {
+			Debug.out(t);
+		}
 	}
 }

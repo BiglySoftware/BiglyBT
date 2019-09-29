@@ -315,7 +315,6 @@ public class Initializer
 		ColorCache.dispose();
 		ColorCache2.dispose();
 		FontUtils.dispose();
-		PluginsMenuHelper.disposeInstance();
 		SWTSkinPropertiesImpl.destroyStatics();
 	}
 

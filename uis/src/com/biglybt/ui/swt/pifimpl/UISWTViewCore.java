@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
+import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 
 /**
  * A holding area between the public UISWTView plugin interface,
@@ -80,7 +81,15 @@ public interface UISWTViewCore
 
 	public boolean useCoreDataSource();
 
+	/**
+	 * @return Returns data source, based on {@link #useCoreDataSource()}
+	 */
+	@Override
+	Object getDataSource();
+
 	public UISWTViewEventListener getEventListener();
+
+	UISWTViewBuilderCore getEventListenerBuilder();
 
 	public void
 	setUserData(
@@ -92,4 +101,8 @@ public interface UISWTViewCore
 		Object		key );
 
 	public void setParentView(UISWTView parentView);
+
+	SWTSkinObjectContainer buildStandAlone(SWTSkinObjectContainer soParent);
+
+	boolean canBuildStandAlone();
 }

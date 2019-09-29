@@ -3689,7 +3689,7 @@ public class TorrentUtil
 		if (!hasRealDM) {
 			MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
 			if (mdi != null) {
-				MdiEntrySWT entry = mdi.getCurrentEntrySWT();
+				MdiEntrySWT entry = mdi.getCurrentEntry();
 				if (entry != null) {
 					if (entry.getDatasource() instanceof DownloadManager) {
 						hasRealDM = true;

@@ -18,35 +18,25 @@
  */
 package com.biglybt.ui.swt.views.stats;
 
-import java.util.List;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
-import com.biglybt.ui.swt.mdi.TabbedMdiInterface;
+import com.biglybt.ui.swt.mdi.TabbedMDI;
 import com.biglybt.ui.swt.pif.UISWTInstance;
-import com.biglybt.ui.swt.pif.UISWTInstance.UISWTViewEventListenerWrapper;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
 
 /**
  * aka "Statistics View" that contains {@link ActivityView},
@@ -54,13 +44,13 @@ import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
  * {@link VivaldiView}
  */
 public class StatsView
-	implements IViewAlwaysInitialize, UISWTViewCoreEventListenerEx
+	implements IViewAlwaysInitialize, UISWTViewCoreEventListener
 {
 	public static String VIEW_ID = UISWTInstance.VIEW_STATISTICS;
 
 	public static final int EVENT_PERIODIC_UPDATE = 0x100;
 
-	private TabbedMdiInterface tabbedMDI;
+	private TabbedMDI tabbedMDI;
 
 	private UpdateThread updateThread;
 
@@ -69,8 +59,6 @@ public class StatsView
 	private UISWTView swtView;
 
 	private Composite parent;
-
-	private static boolean registeredCoreSubViews;
 
 	private class UpdateThread
 		extends Thread
@@ -116,78 +104,25 @@ public class StatsView
 	{
 	}
 
-	@Override
-	public boolean
-	isCloneable()
-	{
-		return( true );
-	}
-
-	@Override
-	public UISWTViewCoreEventListenerEx
-	getClone()
-	{
-		return( new StatsView());
-	}
-
-	@Override
-	public CloneConstructor
-	getCloneConstructor()
-	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( StatsView.class );
-				}
-			});
-	}
-	
 	private void initialize(Composite composite) {
 		parent = composite;
 
-    // Call plugin listeners
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		if (uiFunctions != null) {
-			tabbedMDI = uiFunctions.createTabbedMDI(composite, VIEW_ID);
+		registerPluginViews();
 
-			CTabFolder folder = tabbedMDI.getTabFolder();
-			Label lblClose = new Label(folder, SWT.WRAP);
-			lblClose.setText("x");
-			lblClose.addListener(SWT.MouseUp, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					delete();
-				}
-			});
-			folder.setTopRight(lblClose);
+		tabbedMDI = new TabbedMDI(null, VIEW_ID, VIEW_ID, swtView, dataSource);
+		tabbedMDI.setDestroyEntriesOnDeactivate(true);
+		tabbedMDI.buildMDI(composite);
 
-
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			registerPluginViews(pluginUI);
-
-			if ( pluginUI != null ){
-				UISWTViewEventListenerWrapper[] pluginViews = pluginUI.getViewListeners(UISWTInstance.VIEW_STATISTICS);
-				for (int i = 0; i < pluginViews.length; i++) {
-					UISWTViewEventListenerWrapper l = pluginViews[i];
-					String name = l.getViewID();
-
-					try {
-						MdiEntrySWT entry = (MdiEntrySWT) tabbedMDI.createEntryFromEventListener(
-								UISWTInstance.VIEW_STATISTICS, l, name, false, null, null);
-						entry.setDestroyOnDeactivate(false);
-						if ((dataSource == null && i == 0) || name.equals(dataSource)) {
-							tabbedMDI.showEntry(entry);
-						}
-					} catch (Exception e) {
-						// skip
-					}
-				}
+		CTabFolder folder = tabbedMDI.getTabFolder();
+		Label lblClose = new Label(folder, SWT.WRAP);
+		lblClose.setText("x");
+		lblClose.addListener(SWT.MouseUp, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				delete();
 			}
-		}
+		});
+		folder.setTopRight(lblClose);
 
 		updateThread = new UpdateThread();
 		updateThread.setDaemon(true);
@@ -196,120 +131,74 @@ public class StatsView
 		dataSourceChanged(dataSource);
 	}
 
-	private void registerPluginViews(final UISWTInstance pluginUI) {
-		if (pluginUI == null || registeredCoreSubViews) {
+	private static void registerPluginViews() {
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		if (vm.areCoreViewsRegistered(VIEW_ID)) {
 			return;
 		}
-		pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
-				ActivityView.MSGID_PREFIX, ActivityView.class, null);
 
-		pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
-				TransferStatsView.MSGID_PREFIX, TransferStatsView.class, null);
+		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
+				ActivityView.MSGID_PREFIX, null, ActivityView.class));
 
-		pluginUI.addView(UISWTInstance.VIEW_STATISTICS, CacheView.MSGID_PREFIX,
-				CacheView.class, null);
+		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
+				TransferStatsView.MSGID_PREFIX, null, TransferStatsView.class));
 
-		pluginUI.addView(UISWTInstance.VIEW_STATISTICS, DHTView.MSGID_PREFIX,
-				DHTView.class, DHTView.DHT_TYPE_MAIN);
+		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
+				CacheView.MSGID_PREFIX, null, CacheView.class));
 
-		pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
-				DHTOpsView.MSGID_PREFIX, DHTOpsView.class,
-				DHTOpsView.DHT_TYPE_MAIN);
+		vm.registerView(VIEW_ID,
+				new UISWTViewBuilderCore(DHTView.MSGID_PREFIX, null,
+						DHTView.class).setInitialDatasource(DHTView.DHT_TYPE_MAIN));
 
-		pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
-				VivaldiView.MSGID_PREFIX, VivaldiView.class,
-				VivaldiView.DHT_TYPE_MAIN);
+		vm.registerView(VIEW_ID,
+				new UISWTViewBuilderCore(DHTOpsView.MSGID_PREFIX, null,
+						DHTOpsView.class).setInitialDatasource(DHTOpsView.DHT_TYPE_MAIN));
+
+		vm.registerView(VIEW_ID,
+				new UISWTViewBuilderCore(VivaldiView.MSGID_PREFIX, null,
+						VivaldiView.class).setInitialDatasource(VivaldiView.DHT_TYPE_MAIN));
 
 		if (NetworkAdmin.getSingleton().hasDHTIPV6()) {
-			pluginUI.addView(UISWTInstance.VIEW_STATISTICS, DHTView.MSGID_PREFIX
-					+ ".6", DHTView.class, DHTView.DHT_TYPE_MAIN_V6);
-			pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
-					VivaldiView.MSGID_PREFIX + ".6", VivaldiView.class,
-					VivaldiView.DHT_TYPE_MAIN_V6);
+			vm.registerView(VIEW_ID,
+					new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".6", null,
+							DHTView.class).setInitialDatasource(
+									VivaldiView.DHT_TYPE_MAIN_V6));
+			vm.registerView(VIEW_ID,
+					new UISWTViewBuilderCore(VivaldiView.MSGID_PREFIX + ".6",
+							null, VivaldiView.class).setInitialDatasource(
+									VivaldiView.DHT_TYPE_MAIN_V6));
 		}
 
 		if (Constants.isCVSVersion()) {
-			
-			pluginUI.addView(UISWTInstance.VIEW_STATISTICS, DHTView.MSGID_PREFIX
-					+ ".cvs", DHTView.class, DHTView.DHT_TYPE_CVS);
-			
-			pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
-					VivaldiView.MSGID_PREFIX + ".cvs", VivaldiView.class,
-					VivaldiView.DHT_TYPE_CVS);
-			
-			
-			pluginUI.addView(UISWTInstance.VIEW_STATISTICS, DHTView.MSGID_PREFIX
-					+ ".biglybt", DHTView.class, DHTView.DHT_TYPE_BIGLYBT);
-			
-			pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
-					VivaldiView.MSGID_PREFIX + ".biglybt", VivaldiView.class,
-					VivaldiView.DHT_TYPE_BIGLYBT);
+
+			vm.registerView(VIEW_ID,
+					new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".cvs", null,
+							DHTView.class).setInitialDatasource(DHTView.DHT_TYPE_CVS));
+
+			vm.registerView(VIEW_ID,
+					new UISWTViewBuilderCore(VivaldiView.MSGID_PREFIX + ".cvs",
+							null, VivaldiView.class).setInitialDatasource(
+									VivaldiView.DHT_TYPE_CVS));
+
+			vm.registerView(VIEW_ID,
+					new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".biglybt",
+							null, DHTView.class).setInitialDatasource(
+									DHTView.DHT_TYPE_BIGLYBT));
+
+			vm.registerView(VIEW_ID,
+					new UISWTViewBuilderCore(
+							VivaldiView.MSGID_PREFIX + ".biglybt", null,
+							VivaldiView.class).setInitialDatasource(
+									VivaldiView.DHT_TYPE_BIGLYBT));
 		}
 
-		pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
-				TagStatsView.MSGID_PREFIX, TagStatsView.class,
-				null );
-		
-		pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
-				XferStatsView.MSGID_PREFIX, XferStatsView.class,
-				null );
+		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
+				TagStatsView.MSGID_PREFIX, null, TagStatsView.class));
 
-		registeredCoreSubViews = true;
+		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
+				XferStatsView.MSGID_PREFIX, null, XferStatsView.class));
 
-		final UIManager uiManager = PluginInitializer.getDefaultInterface().getUIManager();
-		uiManager.addUIListener(new UIManagerListener() {
-
-			@Override
-			public void UIAttached(UIInstance instance) {
-
-			}
-
-			@Override
-			public void UIDetached(UIInstance instance) {
-				if (!(instance instanceof UISWTInstance)) {
-					return;
-				}
-
-				registeredCoreSubViews = false;
-
-				pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-						ActivityView.MSGID_PREFIX);
-
-				pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-						TransferStatsView.MSGID_PREFIX);
-
-				pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-						CacheView.MSGID_PREFIX);
-
-				pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-						DHTView.MSGID_PREFIX);
-
-				pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-						DHTOpsView.MSGID_PREFIX);
-
-				pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-						VivaldiView.MSGID_PREFIX);
-
-				if (NetworkAdmin.getSingleton().hasDHTIPV6()) {
-					pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-							DHTView.MSGID_PREFIX + ".6");
-					pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-							VivaldiView.MSGID_PREFIX + ".6");
-				}
-
-				if (Constants.isCVSVersion()) {
-					pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-							DHTView.MSGID_PREFIX + ".cvs");
-					pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-							VivaldiView.MSGID_PREFIX + ".cvs");
-				}
-
-				pluginUI.removeViews(UISWTInstance.VIEW_STATISTICS,
-						TagStatsView.MSGID_PREFIX);
-
-				uiManager.removeUIListener(this);
-			}
-		});
+		vm.setCoreViewsRegistered(VIEW_ID);
 	}
 
 	// Copied from ManagerView
@@ -317,13 +206,13 @@ public class StatsView
 		if (tabbedMDI == null || tabbedMDI.isDisposed())
 			return;
 
-		MdiEntrySWT entry = tabbedMDI.getCurrentEntrySWT();
+		MdiEntrySWT entry = tabbedMDI.getCurrentEntry();
 		if (entry != null) {
 			entry.updateUI();
 		}
 	}
 
-	private String getFullTitle() {
+	public static String getFullTitle() {
 		return MessageText.getString("Stats.title.full");
 	}
 
