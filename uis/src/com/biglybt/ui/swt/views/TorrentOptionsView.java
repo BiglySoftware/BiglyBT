@@ -50,6 +50,10 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 
+/**
+ * aka "Options" Tab in Torrent Details, 
+ * and torrent view right click -> "Options/Info" when multiple selected
+ */
 public class
 TorrentOptionsView
 	implements UISWTViewCoreEventListener, DownloadManagerOptionsHandler.ParameterChangeListener
@@ -932,6 +936,7 @@ TorrentOptionsView
 				}
 			});
 		}
+		swtView.setTitle(getFullTitle());
 	}
 
 	@Override
