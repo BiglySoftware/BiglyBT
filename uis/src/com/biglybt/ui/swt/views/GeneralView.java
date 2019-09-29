@@ -943,6 +943,7 @@ public class GeneralView
 
 		    gcImage.dispose();
 	    }
+	    availabilityImage.redraw();
   	}finally{
 
   		this_mon.exit();
@@ -950,17 +951,20 @@ public class GeneralView
   }
 
   private void updatePiecesInfo(boolean bForce) {
-  	if (manager == null)
+  	if (manager == null) {
   		return;
+	  }
 
   	try{
   		this_mon.enter();
 
-	    if (display == null || display.isDisposed())
+	    if (display == null || display.isDisposed()) {
 	      return;
+	    }
 
-	    if (piecesImage == null || piecesImage.isDisposed())
+	    if (piecesImage == null || piecesImage.isDisposed()) {
 	      return;
+	    }
 
 	    if ( piecesImageRefreshNeeded ){
 	    	bForce = true;
@@ -1163,6 +1167,7 @@ public class GeneralView
 	      if (pImage == null || pImage.isDisposed()) {
 	        return;
 	      }
+	      piecesImage.redraw();
 	    }
   	}finally{
 
