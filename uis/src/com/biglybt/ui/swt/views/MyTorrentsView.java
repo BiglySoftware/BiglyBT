@@ -3113,6 +3113,12 @@ public class MyTorrentsView
 			FilesView.MSGID_PREFIX, null, FilesView.class));
 
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
+			TaggingView.MSGID_PREFIX, null, TaggingView.class));
+
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+			TorrentOptionsView.MSGID_PREFIX, null, TorrentOptionsView.class));
+
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
 				TrackerView.MSGID_PREFIX, null, TrackerView.class));
 
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
@@ -3132,12 +3138,6 @@ public class MyTorrentsView
 
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
 				TorrentInfoView.MSGID_PREFIX, null, TorrentInfoView.class));
-
-		vm.registerView(Download.class, new UISWTViewBuilderCore(
-				TorrentOptionsView.MSGID_PREFIX, null, TorrentOptionsView.class));
-
-		vm.registerView(Download.class, new UISWTViewBuilderCore(
-				TaggingView.MSGID_PREFIX, null, TaggingView.class));
 
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
 				PrivacyView.MSGID_PREFIX, null, PrivacyView.class));
