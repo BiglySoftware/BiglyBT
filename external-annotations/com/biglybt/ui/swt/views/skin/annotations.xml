@@ -3,6 +3,10 @@
 		name='com.biglybt.ui.swt.views.skin.SBC_TagsOverview boolean removeTags(java.util.List&lt;com.biglybt.core.tag.Tag&gt;) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
+	<item
+		name='com.biglybt.ui.swt.views.skin.SBC_TorrentDetailsView.TorrentDetailMdiEntry void register(com.biglybt.ui.mdi.MultipleDocumentInterface) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 	<item name='com.biglybt.ui.swt.views.skin.SB_Transfers SB_Transfers(com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>

@@ -19,11 +19,6 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.Map;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 
 import com.biglybt.core.Core;
@@ -50,14 +45,13 @@ import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentListener;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateTab;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.mdi.*;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.skin.SWTSkinObjectTabFolder;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.PeersView;
@@ -83,10 +77,6 @@ public class SBC_TorrentDetailsView
 	private DownloadManager manager;
 
 	private TabbedMdiInterface tabbedMDI;
-
-	private Composite parent;
-
-	// private MdiEntrySWT mdi_entry;
 
 	private Object dataSource;
 
@@ -125,36 +115,19 @@ public class SBC_TorrentDetailsView
 		}
 
 		SelectedContentManager.removeCurrentlySelectedContentListener(this);
-
-		Utils.disposeSWTObjects(new Object[] {
-			parent
-		});
 	}
 
-	private void initialize(Composite composite) {
-
-		Composite main_area = new Composite(composite, SWT.NULL);
-		main_area.setLayout(new FormLayout());
-
-		//Color bg_color = ColorCache.getColor(composite.getDisplay(), "#c0cbd4");
+	private void initialize(SWTSkinObjectTabFolder soTabFolder) {
 
 		MyTorrentsView.registerPluginViews();
 
-		this.parent = composite;
 		if (tabbedMDI == null) {
 			tabbedMDI = new TabbedMDI(Download.class, VIEW_ID,
 					"detailsview", getMdiEntry(), manager == null ? dataSource : manager);
-			tabbedMDI.buildMDI(main_area);
+			tabbedMDI.buildMDI(soTabFolder);
 		} else {
 			System.out.println("ManagerView::initialize : folder isn't null !!!");
 		}
-
-		if (composite.getLayout() instanceof FormLayout) {
-			main_area.setLayoutData(Utils.getFilledFormData());
-		} else if (composite.getLayout() instanceof GridLayout) {
-			main_area.setLayoutData(new GridData(GridData.FILL_BOTH));
-		}
-		composite.layout();
 
 		SelectedContentManager.addCurrentlySelectedContentListener(this);
 
@@ -185,13 +158,6 @@ public class SBC_TorrentDetailsView
 	@Override
 	public void currentlySelectedContentChanged(
             ISelectedContent[] currentContent, String viewId) {
-	}
-
-	/**
-	 * Called when view is visible
-	 */
-	private void refresh() {
-		tabbedMDI.updateUI();
 	}
 
 	/* (non-Javadoc)
@@ -257,25 +223,11 @@ public class SBC_TorrentDetailsView
 		return manager;
 	}
 
-	// @see com.biglybt.ui.swt.IconBarEnabler#isSelected(java.lang.String)
-	public boolean isSelected(String itemKey) {
-		return false;
-	}
-
-	// @see UIUpdatable#getUpdateUIName()
-	public String getUpdateUIName() {
-		return "DMDetails";
-	}
-
-	public void updateUI() {
-		refresh();
-	}
-
 	// @see SkinView#skinObjectInitialShow(SWTSkinObject, java.lang.Object)
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
 		SWTSkinObject soListArea = getSkinObject("torrentdetails-list-area");
-		if (soListArea == null) {
+		if (!(soListArea instanceof SWTSkinObjectTabFolder)) {
 			return null;
 		}
 
@@ -299,7 +251,7 @@ public class SBC_TorrentDetailsView
 		}
 		*/
 		
-		initialize((Composite) soListArea.getControl());
+		initialize((SWTSkinObjectTabFolder) soListArea);
 		return null;
 	}
 
@@ -334,7 +286,7 @@ public class SBC_TorrentDetailsView
 
 		private BaseMdiEntry entry;
 
-		public static void register(MultipleDocumentInterfaceSWT mdi) {
+		public static void register(MultipleDocumentInterface mdi) {
 			mdi.registerEntry(SideBar.SIDEBAR_SECTION_TORRENT_DETAILS + ".*",
 					new MdiEntryCreationListener2() {
 						@Override
