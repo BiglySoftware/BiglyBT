@@ -1324,7 +1324,10 @@ public class GeneralView
 						// <A HREF=http://cowbow.com/fsdjl&sdfkj=34.sk9391>moo</a>
 						// <A HREF="http://cowbow.com/fsdjl&sdfkj=34.sk9391">moo</a>
 						// <A HREF="http://cowbow.com/fsdjl&sdfkj=34.sk9391">http://moo.com</a>
-		  ((Link)c).setText(sNewComment);
+			((Link)c).setText(sNewComment);
+		  // Reduce white flicker on Windows ever so slightly
+			c.redraw();
+			c.update();
 	  }
 
 	  return true;
