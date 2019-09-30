@@ -199,20 +199,15 @@ public class SWTSkinObjectBasic
 							return;
 						}
 
-						if (toBeVisible == control.isVisible() && (isVisible == 1) == toBeVisible) {
-							return;
-						}
-
 						if (event.widget == control) {
+							if (toBeVisible == control.isVisible() && (isVisible == 1) == toBeVisible) {
+								return;
+							}
 							setIsVisible(toBeVisible, true);
-							return;
+						} else {
+							// not our control, must be a parent
+							setIsVisible(control.isVisible(), false);
 						}
-
-						if (!toBeVisible || control.isVisible()) {
-							setIsVisible(toBeVisible, true);
-							return;
-						}
-						setIsVisible(control.isVisible(), true);
 					}
 				});
 			}
