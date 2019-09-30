@@ -166,16 +166,6 @@ public class TabbedMDI
 		return o;
 	}
 
-	@Override
-	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
-		return super.skinObjectInitialShow(skinObject, params);
-	}
-
-	@Override
-	public Object skinObjectShown(SWTSkinObject skinObject, Object params) {
-		return super.skinObjectShown(skinObject, params);
-	}
-
 	/* (non-Javadoc)
 	 * @see BaseMDI#skinObjectDestroyed(SWTSkinObject, java.lang.Object)
 	 */
@@ -861,7 +851,7 @@ public class TabbedMDI
 
 	@Override
 	public void updateUI() {
-		if (getMinimized()) {
+		if (getMinimized() || !isVisible()) {
 			return;
 		}
 		super.updateUI();
