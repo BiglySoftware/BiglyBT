@@ -1305,7 +1305,7 @@ public class ToolBarView
 		return showText;
 	}
 
-	private static class toolbarButtonListener
+	private class toolbarButtonListener
 		extends ButtonListenerAdapter
 	{
 		@Override
@@ -1330,6 +1330,33 @@ public class ToolBarView
 			boolean triggerToolBarItemHold = item.triggerToolBarItem(
 					UIToolBarActivationListener.ACTIVATIONTYPE_HELD, o);
 			return triggerToolBarItemHold;
+		}
+		
+		@Override
+		public void entered(SWTSkinButtonUtility buttonUtility, SWTSkinObject skinObject, int stateMask){
+			
+			ToolBarItem item = (ToolBarItem) buttonUtility.getSkinObject().getData("toolbaritem");
+			
+			ToolBarItemSO item_so;
+			
+			synchronized( itemMap ){
+				
+				item_so = itemMap.get( item );
+			}
+
+			if ( item_so != null ){
+				
+				if (( stateMask & SWT.CTRL ) != 0 ){
+					
+					String str = SelectedContentManager.getCurrentlySelectedContentDetails();
+								
+					item_so.setToolTip( "!" + str + "!");
+					
+				}else{
+					
+					item_so.setToolTip( null );					
+				}
+			}
 		}
 	}
 

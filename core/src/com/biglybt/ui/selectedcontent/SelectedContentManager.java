@@ -226,4 +226,41 @@ public class SelectedContentManager
 		return dl.getDiskManagerFileInfo(i);
 	}
 
+	public static String
+	getCurrentlySelectedContentDetails()
+	{
+		ISelectedContent[] contents = getCurrentlySelectedContent();
+		
+		if ( contents.length == 0){
+			
+			TableView tv = SelectedContentManager.getCurrentlySelectedTableView();
+			
+			if ( tv != null ){
+				
+				Object[] ds = tv.getSelectedDataSources( false );
+				
+				String str = "";
+					
+				for ( Object d: ds ){
+					
+					str += (str.isEmpty()?"":", " ) + d;
+				}
+					
+				return( tv.getTableID() + " -> " + str );
+			}
+			
+			return( "None" );
+			
+		}else{
+			
+			String str = "";
+			
+			for ( ISelectedContent ic: contents ){
+				
+				str += (str.isEmpty()?"":"\n" ) + ic.getString();
+			}
+			
+			return( str );
+		}
+	}
 }

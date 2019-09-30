@@ -48,6 +48,8 @@ public class ToolBarItemSO
 
 	private SWTSkinObject so;
 
+	private String explicitTT;
+	
 	public ToolBarItemSO(UIToolBarItemImpl base, SWTSkinObject so) {
 		this.base = base;
 		this.so = so;
@@ -87,6 +89,11 @@ public class ToolBarItemSO
 		}
 	}
 
+	public void setToolTip( String tt ){
+		explicitTT = tt;
+		updateUI();
+	}
+	
 	public void dispose() {
 		// ToolBarView will dispose of skinobjects
 		skinButton = null;
@@ -100,7 +107,10 @@ public class ToolBarItemSO
 	public void updateUI() {
 		if (skinButton != null) {
 			skinButton.setImage(base.getImageID());
-			String tt = base.getToolTipID();
+			String tt = explicitTT;		
+			if ( tt == null ){
+				tt = base.getToolTipID();
+			}
 			if ( tt == null ){
 				String temp = base.getTextID();
 

@@ -56,4 +56,51 @@ public interface ISelectedContent
 
 	public boolean
 	sameAs( ISelectedContent other );
+	
+	public default String
+	getString()
+	{
+		String str = "";
+		
+		String hash = getHash();
+		
+		if ( hash != null ){
+			str += (str.isEmpty()?"":", ") + "hash=" + hash;
+		}
+		
+		String dn = getDisplayName();
+		
+		if ( dn != null ){
+			str += (str.isEmpty()?"":", ") + "name=" + dn;
+		}
+		
+		DownloadManager dm = getDownloadManager();
+		
+		if ( dm != null ){
+			String n = dm.getDisplayName();
+			if ( dn == null || !dn.equals( n )){
+				str += (str.isEmpty()?"":", ") + "dm=" + dm;
+			}
+		}
+		
+		TOTorrent to = getTorrent();
+		
+		if ( to != null && dm == null ){
+			str += (str.isEmpty()?"":", ") + "to=" + new String( to.getName());
+		}
+			
+		int idx = getFileIndex();
+		
+		if ( idx >= 0 ){
+			str += (str.isEmpty()?"":", ") + "index=" + idx;
+		}
+		
+		DownloadUrlInfo url = getDownloadInfo();
+		
+		if ( url != null ){
+			str += (str.isEmpty()?"":", ") + "url=" + url.getDownloadURL();
+		}
+		
+		return( str );
+	}
 }

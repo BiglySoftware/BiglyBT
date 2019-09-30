@@ -60,6 +60,9 @@ public class SWTSkinButtonUtility
 		public void disabledStateChanged(SWTSkinButtonUtility buttonUtility,
 				boolean disabled) {
 		}
+		
+		public void entered( SWTSkinButtonUtility buttonUtility, SWTSkinObject skinObject, int stateMask ){
+		}
 	}
 
 	public SWTSkinButtonUtility(SWTSkinObject skinObject) {
@@ -90,59 +93,70 @@ public class SWTSkinButtonUtility
 
 			@Override
 			public void handleEvent(Event event) {
-				if (event.type == SWT.MouseDown) {
-					if (timerEvent == null) {
-						timerEvent = SimpleTimer.addEvent("MouseHold",
-								SystemTime.getOffsetTime(1000), new TimerEventPerformer() {
-									@Override
-									public void perform(TimerEvent event) {
-										timerEvent = null;
-
-										if (!bDownPressed) {
-											return;
+				int et = event.type;
+				
+				if ( et == SWT.MouseDown || et == SWT.MouseUp ){
+					if (event.type == SWT.MouseDown) {
+						if (timerEvent == null) {
+							timerEvent = SimpleTimer.addEvent("MouseHold",
+									SystemTime.getOffsetTime(1000), new TimerEventPerformer() {
+										@Override
+										public void perform(TimerEvent event) {
+											timerEvent = null;
+	
+											if (!bDownPressed) {
+												return;
+											}
+											bDownPressed = false;
+	
+											boolean stillPressed = true;
+											for (ButtonListenerAdapter l : listeners) {
+												stillPressed &= !l.held(SWTSkinButtonUtility.this);
+											}
+											bDownPressed = stillPressed;
 										}
-										bDownPressed = false;
-
-										boolean stillPressed = true;
-										for (ButtonListenerAdapter l : listeners) {
-											stillPressed &= !l.held(SWTSkinButtonUtility.this);
-										}
-										bDownPressed = stillPressed;
-									}
-								});
+									});
+						}
+						bDownPressed = true;
+						return;
+					} else {
+						if (timerEvent != null) {
+							timerEvent.cancel();
+							timerEvent = null;
+						}
+						if (!bDownPressed) {
+							return;
+						}
 					}
-					bDownPressed = true;
-					return;
-				} else {
-					if (timerEvent != null) {
-						timerEvent.cancel();
-						timerEvent = null;
-					}
-					if (!bDownPressed) {
+	
+					bDownPressed = false;
+	
+					if (isDisabled()) {
 						return;
 					}
-				}
-
-				bDownPressed = false;
-
-				if (isDisabled()) {
-					return;
-				}
-
-				for (ButtonListenerAdapter l : listeners) {
-					l.pressed(SWTSkinButtonUtility.this,
-							SWTSkinButtonUtility.this.skinObject, event.button, event.stateMask);
+	
+					for (ButtonListenerAdapter l : listeners) {
+						l.pressed(SWTSkinButtonUtility.this,
+								SWTSkinButtonUtility.this.skinObject, event.button, event.stateMask);
+					}
+				}else{
+					
+					for (ButtonListenerAdapter l : listeners) {
+						l.entered(SWTSkinButtonUtility.this,
+								SWTSkinButtonUtility.this.skinObject, event.stateMask);
+					}
+					
 				}
 			}
 		};
 		if (skinObject instanceof SWTSkinObjectContainer) {
-			Utils.addListenerAndChildren((Composite) skinObject.getControl(),
-					SWT.MouseUp, l);
-			Utils.addListenerAndChildren((Composite) skinObject.getControl(),
-					SWT.MouseDown, l);
+			Utils.addListenerAndChildren((Composite) skinObject.getControl(), SWT.MouseUp, l);
+			Utils.addListenerAndChildren((Composite) skinObject.getControl(), SWT.MouseDown, l);
+			Utils.addListenerAndChildren((Composite) skinObject.getControl(), SWT.MouseEnter, l);
 		} else {
 			skinObject.getControl().addListener(SWT.MouseUp, l);
 			skinObject.getControl().addListener(SWT.MouseDown, l);
+			skinObject.getControl().addListener(SWT.MouseEnter, l);
 		}
 	}
 
