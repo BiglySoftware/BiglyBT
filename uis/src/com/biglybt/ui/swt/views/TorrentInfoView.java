@@ -78,8 +78,6 @@ public class TorrentInfoView
 	private Font 			headerFont;
 	private FakeTableCell[] cells;
 
-	private ScrolledComposite sc;
-
 	private Composite parent;
 
 	private UISWTView swtView;
@@ -93,29 +91,16 @@ public class TorrentInfoView
 		// cheap trick to allow datasource changes.  Normally we'd just
 		// refill the components with new info, but I didn't write this and
 		// I don't want to waste my time :) [tux]
-		if (sc != null && !sc.isDisposed()) {
-			sc.dispose();
-		}
+		
+		Utils.disposeComposite( parent, false );
+		
 
 		if (download_manager == null) {
 			ViewUtils.setViewRequiresOneDownload(composite);
 			return;
 		}
-
-		sc = new ScrolledComposite(composite, SWT.V_SCROLL | SWT.H_SCROLL );
-		sc.getVerticalBar().setIncrement(16);
-		sc.setExpandHorizontal(true);
-		sc.setExpandVertical(true);
-		GridData gridData = new GridData(GridData.FILL, GridData.FILL, true, true, 1, 1);
-		sc.setLayoutData(gridData);
-
-		outer_panel = sc;
-
-		Composite panel = new Composite(sc, SWT.NULL);
-
-		sc.setContent( panel );
-
-
+		
+		Composite panel = Utils.createScrolledComposite( composite );
 
 		GridLayout  layout = new GridLayout();
 		layout.marginHeight = 0;
@@ -138,7 +123,7 @@ public class TorrentInfoView
 			configLayout.marginHeight = 3;
 			configLayout.marginWidth = 0;
 			cHeader.setLayout(configLayout);
-			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
+			GridData gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
 			cHeader.setLayoutData(gridData);
 	
 			Display d = panel.getDisplay();
@@ -160,7 +145,7 @@ public class TorrentInfoView
 		}
 
 		Composite gTorrentInfo = new Composite(panel, SWT.NULL);
-		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
+		GridData gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
 		gTorrentInfo.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 2;
@@ -386,7 +371,6 @@ public class TorrentInfoView
 
 		refresh();
 
-		sc.setMinSize( panel.computeSize( SWT.DEFAULT, SWT.DEFAULT ));
 		composite.layout();
 	}
 
