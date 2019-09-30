@@ -88,15 +88,16 @@ public class TorrentInfoView
 	{
 		this.parent = composite;
 
-		if (download_manager == null) {
-			return;
-		}
-
 		// cheap trick to allow datasource changes.  Normally we'd just
 		// refill the components with new info, but I didn't write this and
 		// I don't want to waste my time :) [tux]
 		if (sc != null && !sc.isDisposed()) {
 			sc.dispose();
+		}
+
+		if (download_manager == null) {
+			ViewUtils.setViewRequiresOneDownload(composite);
+			return;
 		}
 
 		sc = new ScrolledComposite(composite, SWT.V_SCROLL | SWT.H_SCROLL );
@@ -379,6 +380,7 @@ public class TorrentInfoView
 		refresh();
 
 		sc.setMinSize( panel.computeSize( SWT.DEFAULT, SWT.DEFAULT ));
+		composite.layout();
 	}
 
 	private void
@@ -436,9 +438,11 @@ public class TorrentInfoView
 	}
 
 	private void dataSourceChanged(Object newDataSource) {
-		download_manager = DataSourceUtils.getDM(newDataSource);
-		if (newDataSource instanceof DownloadManager) {
-			download_manager = (DownloadManager) newDataSource;
+		DownloadManager[] dms = DataSourceUtils.getDMs(newDataSource);
+		if (dms.length != 1) {
+			download_manager = null;
+		} else {
+			download_manager = dms[0];
 		}
 
 		Utils.execSWTThread(new AERunnable() {
