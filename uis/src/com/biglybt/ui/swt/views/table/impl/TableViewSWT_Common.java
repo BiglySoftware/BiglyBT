@@ -1113,9 +1113,14 @@ public class TableViewSWT_Common
 			Arrays.sort(allTableColumns,
 					TableColumnManager.getTableColumnOrderComparator());
 
+			int columnMenuCount = 0;
 			for (final TableColumnCore tc : allTableColumns) {
 				boolean visible = tc.isVisible();
 				if (!visible) {
+					if (columnMenuCount > 10) {
+						hiddenColumnCount++;
+						continue;
+					}
 					TableColumnInfo columnInfo = tcm.getColumnInfo(
 							tv.getDataSourceType(), tableID, tc.getName());
 					if (columnInfo.getProficiency() != TableColumnInfo.PROFICIENCY_BEGINNER
@@ -1135,6 +1140,7 @@ public class TableViewSWT_Common
 						TableColumnSWTUtils.changeColumnVisiblity( tv, tc, !tc.isVisible() );
 					}
 				});
+				columnMenuCount++;
 			}
 		}
 
