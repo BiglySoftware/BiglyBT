@@ -26,6 +26,7 @@ import java.util.List;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
@@ -54,6 +55,7 @@ import com.biglybt.ui.swt.mdi.TabbedEntry;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.views.table.impl.FakeTableCell;
 
 import com.biglybt.ui.common.ToolBarItem;
@@ -65,7 +67,7 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.util.DataSourceUtils;
 
 public class TorrentInfoView
-	implements UISWTViewCoreEventListener, UIPluginViewToolBarListener
+	implements UISWTViewCoreEventListener, UIPluginViewToolBarListener, DragSourceListener
 {
 	public static final String MSGID_PREFIX = "TorrentInfoView";
 
@@ -357,6 +359,11 @@ public class TorrentInfoView
 			String key = ((TableColumnCore) cell.getTableColumn()).getTitleLanguageKey();
 			label.setText(MessageText.getString(key) + ": ");
 			Utils.setTT(label,MessageText.getString(key + ".info", ""));
+			label.setData("ColumnName", cell.getTableColumn().getName());
+			DragSource dragSource = DragDropUtils.createDragSource(label, DND.DROP_MOVE | DND.DROP_COPY);
+			dragSource.setTransfer( new Transfer[] { TextTransfer.getInstance() });
+			dragSource.addDragListener(this);
+
 
 			final Composite c = new Composite(gColumns, SWT.DOUBLE_BUFFERED);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
@@ -527,5 +534,24 @@ public class TorrentInfoView
 		Map<String, Long> states = TorrentUtil.calculateToolbarStates(
 				SelectedContentManager.getCurrentlySelectedContent(), null);
 		list.putAll(states);
+	}
+
+	@Override
+	public void dragStart(DragSourceEvent event) {
+		if (swtView == null || swtView.isContentDisposed()) {
+			return;
+		}
+	}
+
+	@Override
+	public void dragSetData(DragSourceEvent event) {
+		DragSource dragSource = (DragSource) event.widget;
+		Control control = dragSource.getControl();
+		event.data = control.getData("ColumnName");
+	}
+
+	@Override
+	public void dragFinished(DragSourceEvent event) {
+
 	}
 }

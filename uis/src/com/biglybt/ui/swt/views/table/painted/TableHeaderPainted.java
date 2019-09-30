@@ -519,7 +519,8 @@ public class TableHeaderPainted
 					return;
 				}
 				TableColumn tcOrig = draggingHeader == null
-						? tv.getTableColumn((String) event.data) : draggingHeader;
+						? tv.getTableColumn((String) DragDropUtils.getLastDraggedObject())
+						: draggingHeader;
 				if (tcOrig == null) {
 					return;
 				}
@@ -528,11 +529,22 @@ public class TableHeaderPainted
 				if (droppingAfterHeader) {
 					destPos++;
 				}
-				if (origPos == destPos) {
+				boolean columnAdded = !tcOrig.isVisible();
+				if (columnAdded) {
+					tcOrig.setVisible(true);
+				}
+
+				if (origPos == destPos && !columnAdded) {
 					return;
 				}
 
 				TableColumnCore[] visibleColumns = tv.getVisibleColumns();
+				if (columnAdded) {
+					TableColumnCore[] tmp = new TableColumnCore[visibleColumns.length + 1];
+					System.arraycopy(visibleColumns, 0, tmp, 0, visibleColumns.length);
+					tmp[visibleColumns.length] = (TableColumnCore) tcOrig;
+					visibleColumns = tmp;
+				}
 				((TableColumnCore) tcOrig).setPositionNoShift(destPos);
 
 				Arrays.sort(visibleColumns, (o1, o2) -> {
@@ -550,7 +562,7 @@ public class TableHeaderPainted
 				tv.setColumnsOrdered(visibleColumns);
 
 				TableStructureEventDispatcher.getInstance(
-						tv.getTableID()).tableStructureChanged(false,
+						tv.getTableID()).tableStructureChanged(columnAdded,
 								tv.getDataSourceType());
 			} finally {
 				draggingHeader = null;
@@ -562,9 +574,13 @@ public class TableHeaderPainted
 
 		@Override
 		public void dragOver(DropTargetEvent event) {
-			if (draggingHeader == null) {
+			TableColumn tcOrig = draggingHeader == null
+					? tv.getTableColumn((String) DragDropUtils.getLastDraggedObject())
+					: draggingHeader;
+			if (tcOrig == null) {
 				return;
 			}
+
 			if (lastDropTargetEvent != null && lastDropTargetEvent.x == event.x
 					&& lastDropTargetEvent.y == event.y
 					&& lastDropTargetEvent.detail == event.detail
@@ -577,7 +593,7 @@ public class TableHeaderPainted
 			droppingOnHeader = getTableColumnByOffset(relativeMousePos.x, offset);
 			if (droppingOnHeader != null) {
 				int dropPos = droppingOnHeader.getPosition();
-				int ourPos = draggingHeader.getPosition();
+				int ourPos = tcOrig.isVisible() ? tcOrig.getPosition() : -2;
 				if (dropPos == ourPos) {
 					droppingOnHeader = null;
 				} else if (dropPos == ourPos + 1) {
