@@ -224,7 +224,7 @@ public class SWTSkinObjectBasic
 		// so we must monitor all parents.
 		final List<Composite> parents = new ArrayList<>();
 		Composite parentComposite = control.getParent();
-		while (parent != null && !parent.isDisposed()) {
+		while (parentComposite != null && !parentComposite.isDisposed()) {
 			parents.add(parentComposite);
 			parentComposite.addListener(SWT.Show, lShowHide);
 			parentComposite.addListener(SWT.Hide, lShowHide);
