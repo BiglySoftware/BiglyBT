@@ -308,14 +308,23 @@ public class TabbedEntry
 
 					String ds_str = "";
 					Object ds = getDataSource();
-					DownloadManager dm = DataSourceUtils.getDM(ds);
+					DownloadManager[] dms = DataSourceUtils.getDMs(ds);
 
-					if (dm != null) {
-						ds_str = dm.getDisplayName();
+					if (dms != null ){
+						for ( DownloadManager dm: dms ){
+							
+							ds_str += (ds_str.isEmpty()?"":", ") + dm.getDisplayName();
+							
+							if ( ds_str.length() > 200 ){
+								
+								ds_str = ds_str.substring( 0, 200 ) + "...";
+								
+								break;
+							}
+						}
 					}
 
-					skinnedDialog.setTitle(
-							getTitle() + (ds_str.length() == 0 ? "" : (" - " + ds_str)));
+					skinnedDialog.setTitle(	getTitle() + (ds_str.length() == 0 ? "" : (" - " + ds_str)));
 
 					skinnedDialog.open();
 
