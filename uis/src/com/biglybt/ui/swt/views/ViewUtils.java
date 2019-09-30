@@ -696,8 +696,16 @@ ViewUtils
 			}
 		});
 	}
+	
+	public static void setViewRequiresOneOrMoreDownloads(Composite genComposite) {
+		setViewRequires( genComposite, true );
+	}
 
 	public static void setViewRequiresOneDownload(Composite genComposite) {
+		setViewRequires( genComposite, false );
+	}
+	
+	private static void setViewRequires( Composite genComposite, boolean one_or_more ){
 		if (genComposite == null || genComposite.isDisposed()) {
 			return;
 		}
@@ -712,7 +720,7 @@ ViewUtils
 		}else{
 			lab.setLayoutData( Utils.getFilledFormData());
 		}
-		Messages.setLanguageText(lab, "view.one.download.only");
+		Messages.setLanguageText(lab, one_or_more?"view.one.or.more.download":"view.one.download.only");
 
 		genComposite.layout(true);
 

@@ -19,6 +19,8 @@
  */
 package com.biglybt.ui.swt.views;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
@@ -75,11 +77,12 @@ DownloadActivityView
 	private UISWTView 				swtView;
 	private boolean					legend_at_bottom = true;
 	private Composite				panel;
+	private boolean					viewBuilt;
 	
 	private MultiPlotGraphic 		mpg;
 	private MultiPlotGraphic		eta;
 	
-	private DownloadManager 		manager;
+	private List<DownloadManager> 		managers = new ArrayList<>();
 
 	private Composite parent;
 
@@ -100,14 +103,19 @@ DownloadActivityView
 	{
 	    this.parent = parent;
 	    
+	    if ( panel == null || panel.isDisposed()){
+	    	
+	    	viewBuilt = false;
+	    }
+	    
 		panel = new Composite(parent,SWT.NULL);
 			   
 		panel.setLayout( new FormLayout());
-		
-	    fillPanel();
 	}
 
-	public void fillPanel() {
+	private void 
+	fillPanel() 
+	{
 		Utils.disposeComposite(panel, false);
 
 	    GridData gridData;
@@ -148,16 +156,18 @@ DownloadActivityView
 				    public int
 		    		getValue()
 		    		{
-		    			DownloadManager dm = manager;
+		    			List<DownloadManager> dms = managers;
 	
-		    			if ( dm == null ){
+		    			int	res = 0;
+		    			
+		    			for ( DownloadManager dm: dms ){
+		    						    			
+		    				DownloadManagerStats stats = dm.getStats();
 	
-		    				return( 0 );
+		    				res += (int)(stats.getDataSendRate());
 		    			}
-	
-		    			DownloadManagerStats stats = manager.getStats();
-	
-		    			return((int)(stats.getDataSendRate()));
+		    			
+		    			return( res );
 		    		}
 		    	},
 		    	new ValueSourceImpl( "Up Smooth", 1, mpg_colors, true, false, true )
@@ -166,16 +176,18 @@ DownloadActivityView
 				    public int
 		    		getValue()
 		    		{
-		    			DownloadManager dm = manager;
+		    			List<DownloadManager> dms = managers;
+		    			
+		    			int	res = 0;
+		    			
+		    			for ( DownloadManager dm: dms ){
+		    						    			
+		    				DownloadManagerStats stats = dm.getStats();
 	
-		    			if ( dm == null ){
-	
-		    				return( 0 );
+		    				res += (int)(stats.getSmoothedDataSendRate());
 		    			}
-	
-		    			DownloadManagerStats stats = manager.getStats();
-	
-		    			return((int)(stats.getSmoothedDataSendRate()));
+		    			
+		    			return( res );
 		    		}
 		    	},
 		    	new ValueSourceImpl( "Down", 2, mpg_colors, false, false, false )
@@ -184,16 +196,18 @@ DownloadActivityView
 				    public int
 		    		getValue()
 		    		{
-		    			DownloadManager dm = manager;
+		    			List<DownloadManager> dms = managers;
+		    			
+		    			int	res = 0;
+		    			
+		    			for ( DownloadManager dm: dms ){
+		    						    			
+		    				DownloadManagerStats stats = dm.getStats();
 	
-		    			if ( dm == null ){
-	
-		    				return( 0 );
+		    				res += (int)(stats.getDataReceiveRate());
 		    			}
-	
-		    			DownloadManagerStats stats = manager.getStats();
-	
-		    			return((int)(stats.getDataReceiveRate()));
+		    			
+		    			return( res );
 		    		}
 		    	},
 		    	new ValueSourceImpl( "Down Smooth", 3, mpg_colors, false, false, true )
@@ -202,16 +216,18 @@ DownloadActivityView
 				    public int
 		    		getValue()
 		    		{
-		    			DownloadManager dm = manager;
+		    			List<DownloadManager> dms = managers;
+		    			
+		    			int	res = 0;
+		    			
+		    			for ( DownloadManager dm: dms ){
+		    						    			
+		    				DownloadManagerStats stats = dm.getStats();
 	
-		    			if ( dm == null ){
-	
-		    				return( 0 );
+		    				res += (int)(stats.getSmoothedDataReceiveRate());
 		    			}
-	
-		    			DownloadManagerStats stats = manager.getStats();
-	
-		    			return((int)(stats.getSmoothedDataReceiveRate()));
+		    			
+		    			return( res );
 		    		}
 		    	},
 		    	new ValueSourceImpl( "Swarm Peer Average", 4, mpg_colors, false, true, false )
@@ -220,14 +236,18 @@ DownloadActivityView
 				    public int
 		    		getValue()
 		    		{
-		    			DownloadManager dm = manager;
+		    			List<DownloadManager> dms = managers;
+		    			
+		    			int	res = 0;
+		    			
+		    			for ( DownloadManager dm: dms ){
+		    						    			
+		    				DownloadManagerStats stats = dm.getStats();
 	
-		    			if ( dm == null ){
-	
-		    				return( 0 );
+		    				res += (int)(dm.getStats().getTotalAveragePerPeer());
 		    			}
-	
-		    			return((int)(manager.getStats().getTotalAveragePerPeer()));
+		    			
+		    			return( res );
 		    		}
 		    	}
 		    };
@@ -348,16 +368,18 @@ DownloadActivityView
 				    public int
 		    		getValue()
 		    		{
-		    			DownloadManager dm = manager;
+		    			List<DownloadManager> dms = managers;
+		    			
+		    			int	res = 0;
+	    			
+			    		for ( DownloadManager dm: dms ){
+		    						    			
+		    				DownloadManagerStats stats = dm.getStats();
 	
-		    			if ( dm == null ){
-	
-		    				return( 0 );
+		    				res = Math.max( res, Math.max((int)(stats.getETA()), 0 ));
 		    			}
-	
-		    			DownloadManagerStats stats = manager.getStats();
-	
-		    			return(Math.max((int)(stats.getETA()), 0 ));
+		    			
+		    			return( res );
 		    		}
 		    	},
 		    	new ValueSourceImpl( "ETA Average", 1, eta_colors, ValueSource.STYLE_BLOB, true, false )
@@ -473,25 +495,25 @@ DownloadActivityView
 		return( panel );
 	}
 
-	private boolean comp_focused;
-	private Object focus_pending_ds;
+	private boolean comp_visible;
+	private Object visible_pending_ds;
 
 	private void
-	setFocused( boolean foc )
+	setVisible( boolean vis )
 	{
-		if ( foc ){
+		if ( vis ){
 
-			comp_focused = true;
+			comp_visible = true;
 
-			dataSourceChanged( focus_pending_ds );
+			dataSourceChanged( visible_pending_ds );
 
 		}else{
 
-			focus_pending_ds = manager;
+			visible_pending_ds = managers;
 
 			dataSourceChanged( null );
 
-			comp_focused = false;
+			comp_visible = false;
 		}
 	}
 
@@ -499,19 +521,42 @@ DownloadActivityView
 	dataSourceChanged(
 		Object newDataSource )
 	{
-		if ( !comp_focused ){
-			focus_pending_ds = newDataSource;
+		if ( !comp_visible ){
+			
+			visible_pending_ds = newDataSource;
+			
 			return;
 		}
 
-		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource, manager );
+		List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource, managers );
 
-		if (newManager == manager) {
-			return;
+		if ( viewBuilt ){
+			
+			if ( newManagers.size() == managers.size()){
+				
+				boolean same = true;
+				
+				for ( int i=0;i<managers.size();i++){
+					
+					if ( newManagers.get(i) != managers.get(i)){
+				
+						same = false;
+						
+						break;
+					}
+				}
+				
+				if ( same ){
+					
+					return;
+				}
+			}
 		}
+		
+		managers = newManagers;
 
-		manager = newManager;
-
+		viewBuilt = true;
+		
 		Utils.execSWTThread(
 				()->{
 					if ( panel == null || panel.isDisposed()){
@@ -520,31 +565,60 @@ DownloadActivityView
 					
 					Utils.disposeComposite(panel, false);
 					
-					if ( manager != null ){
+					List<DownloadManager>	dms = managers;
+					
+					if ( !dms.isEmpty()){
 						
 						fillPanel();
 						
 						parent.layout(true, true);
 						
-						DownloadManagerStats stats = manager.getStats();
-
-						stats.setRecentHistoryRetention( true );
-
-						int[][] _history = stats.getRecentHistory();
-
-							// reconstitute the smoothed values to the best of our ability (good enough unless we decide we want
-							// to throw more memory at remembering this more accurately...)
-
-						int[] send_history = _history[0];
-						int[] recv_history = _history[1];
-
-						int	history_secs = send_history.length;
-
-						int[] smoothed_send = new int[history_secs];
-						int[] smoothed_recv = new int[history_secs];
-
-						int[] e_history = _history[3];
+						int	min_history_secs = Integer.MAX_VALUE;
 						
+						for ( DownloadManager dm: managers ){
+						
+							DownloadManagerStats stats = dm.getStats();
+
+							stats.setRecentHistoryRetention( true );
+							
+							int[][] _history = stats.getRecentHistory();
+
+							int[] send_history = _history[0];
+
+							min_history_secs = Math.min( min_history_secs, send_history.length );
+						}
+						
+						int[] t_recv 			= new int[min_history_secs];
+						int[] t_send			= new int[min_history_secs];
+						int[] t_swarm_peer_av	= new int[min_history_secs];
+						int[] t_eta				= new int[min_history_secs];
+
+						for ( DownloadManager dm: managers ){
+							
+							DownloadManagerStats stats = dm.getStats();
+							
+							int[][] _history = stats.getRecentHistory();
+	
+								// reconstitute the smoothed values to the best of our ability (good enough unless we decide we want
+								// to throw more memory at remembering this more accurately...)
+	
+							int[] send_history 	= _history[0];
+							int[] recv_history 	= _history[1];
+							int[] sp_history 	= _history[2];
+							int[] eta_history 	= _history[3];
+	
+							for ( int i=0;i<min_history_secs;i++){
+								t_send[i] 			+= send_history[i];
+								t_recv[i] 			+= recv_history[i];
+								t_swarm_peer_av[i]	+= sp_history[i];
+								
+								t_eta[i]	= Math.max( t_eta[i], eta_history[i]);
+							}
+						}
+						
+						int[] t_smoothed_recv	= new int[min_history_secs];
+						int[] t_smoothed_send	= new int[min_history_secs];
+							
 						MovingImmediateAverage	send_average = GeneralUtils.getSmoothAverage();
 						MovingImmediateAverage	recv_average = GeneralUtils.getSmoothAverage();
 
@@ -555,9 +629,9 @@ DownloadActivityView
 						int	pending_smooth_send = 0;
 						int	pending_smooth_recv = 0;
 
-						for ( int i=0;i<history_secs;i++){
-							pending_smooth_send += send_history[i];
-							pending_smooth_recv += recv_history[i];
+						for ( int i=0;i<min_history_secs;i++){
+							pending_smooth_send += t_send[i];
+							pending_smooth_recv += t_recv[i];
 
 							if ( i % smooth_interval == 0 ){
 								current_smooth_send = (int)(send_average.update( pending_smooth_send )/smooth_interval);
@@ -566,43 +640,55 @@ DownloadActivityView
 								pending_smooth_send = 0;
 								pending_smooth_recv = 0;
 							}
-							smoothed_send[i] = current_smooth_send;
-							smoothed_recv[i] = current_smooth_recv;
+							t_smoothed_send[i] = current_smooth_send;
+							t_smoothed_recv[i] = current_smooth_recv;
 						}
+						
+						int[][] mpg_history = { t_send, t_smoothed_send, t_recv, t_smoothed_recv, t_swarm_peer_av };
 
-						int[][] mpg_history = {send_history, smoothed_send, recv_history, smoothed_recv, _history[2] };
-
+						
+						
 						mpg.reset( mpg_history );
 
 						mpg.setActive( true );
 							
+						// ETA Stuff
+						
+						
+						int[] t_eta_average	= new int[min_history_secs];
+					
 						MovingImmediateAverage eta_average = AverageFactory.MovingImmediateAverage( ETA_AVERAGE_TICKS );
-						
-						int[] e_average = new int[ e_history.length ];
-						
-						for ( int i=0;i<e_history.length;i++ ){
+												
+						for ( int i=0;i<min_history_secs;i++ ){
 							
-							eta_average.update( e_history[i] );
+							eta_average.update( t_eta[i] );
 							
-							e_average[i] = (int)eta_average.getAverage();
+							t_eta_average[i] = (int)eta_average.getAverage();
 						}
 						
-						int[][] eta_history = { e_history, e_average };
+						int[][] eta_history = { t_eta, t_eta_average };
 						
 						eta.reset( eta_history );
 						
 						eta.setActive( true );
+						
 					}else{
 						
-						ViewUtils.setViewRequiresOneDownload( panel );
+						ViewUtils.setViewRequiresOneOrMoreDownloads( panel );
 						
-						mpg.setActive( false );
+						if ( mpg != null ){
+							
+							mpg.setActive( false );
 
-						mpg.reset( new int[5][0] );
-
-						eta.setActive( false );
+							mpg.reset( new int[5][0] );
+						}
 						
-						eta.reset( new int[2][0] );
+						if ( eta != null ){
+						
+							eta.setActive( false );
+						
+							eta.reset( new int[2][0] );
+						}
 					}
 				});
 	}
@@ -615,11 +701,15 @@ DownloadActivityView
 		 if ( mpg != null ){
 
 			 mpg.dispose();
+			 
+			 mpg = null;
 		 }
 		 
 		 if ( eta != null ){
 			 
 			 eta.dispose();
+			 
+			 eta = null;
 		 }
 	}
 
@@ -673,38 +763,44 @@ DownloadActivityView
 
 		    	break;
 		    }
-	    	case UISWTViewEvent.TYPE_FOCUSGAINED:{
+	    	case UISWTViewEvent.TYPE_SHOWN:{
 
 	    		String id = "DMDetails_DownloadGraph";
 
-			    setFocused( true );	// do this here to pick up corrent manager before rest of code
+	    		setVisible( true );	// do this here to pick up corrent manager before rest of code
 
-	    		if ( manager != null ){
+	    		if ( managers != null ){
 
-	    			if ( manager.getTorrent() != null ){
+	    			List<SelectedContent>	sc = new ArrayList<>();
+	    			
+	    			for ( DownloadManager dm: managers ){
+	    				
+	    				sc.add( new SelectedContent( dm ));
+	    				
+	    				if ( dm.getTorrent() != null ){
 
-	    				id += "." + manager.getInternalName();
+	    					id += "." + dm.getInternalName();
 
-	    			}else{
+	    				}else{
 
-	    				id += ":" + manager.getSize();
+	    					id += ":" + dm.getSize();
+	    				}
 	    			}
 
-	    			SelectedContentManager.changeCurrentlySelectedContent(id,
-								new SelectedContent[] {
-									new SelectedContent(manager)
-						});
-					} else {
-						SelectedContentManager.changeCurrentlySelectedContent(id, null);
-					}
+	    			SelectedContentManager.changeCurrentlySelectedContent(id, sc.toArray( new SelectedContent[0] ));
+	    					
+	    		}else{
+	    			
+	    			SelectedContentManager.changeCurrentlySelectedContent(id, null);
+	    		}
 
 	    		refresh( true );
 
 			    break;
 	    	}
-		    case UISWTViewEvent.TYPE_FOCUSLOST:{
+		    case UISWTViewEvent.TYPE_HIDDEN:{
 
-		    	setFocused( false );
+		    	setVisible( false );
 
 		    	SelectedContentManager.clearCurrentlySelectedContent();
 
