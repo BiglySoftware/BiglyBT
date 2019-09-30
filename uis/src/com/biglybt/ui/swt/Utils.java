@@ -4867,7 +4867,9 @@ public class Utils
 							return;
 						}
 						if (e.widget instanceof Control) {
-							Rectangle bounds = ((Control) e.widget).getBounds();
+							Point size = ((Control) e.widget).getSize();
+							Rectangle bounds = new Rectangle(0, 0, size.x, size.y);
+							
 							if (!bounds.contains(e.x, e.y)) {
 								return;
 							}
