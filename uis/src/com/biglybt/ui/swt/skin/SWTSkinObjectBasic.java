@@ -220,19 +220,27 @@ public class SWTSkinObjectBasic
 
 		control.addListener(SWT.Show, lShowHide);
 		control.addListener(SWT.Hide, lShowHide);
-		final Shell shell = control.getShell();
-		shell.addListener(SWT.Show, lShowHide);
-		shell.addListener(SWT.Hide, lShowHide);
+		// When parent is shown/hidden, children do not get a Show/Hide event,
+		// so we must monitor all parents.
+		final List<Composite> parents = new ArrayList<>();
+		Composite parentComposite = control.getParent();
+		while (parent != null && !parent.isDisposed()) {
+			parents.add(parentComposite);
+			parentComposite.addListener(SWT.Show, lShowHide);
+			parentComposite.addListener(SWT.Hide, lShowHide);
 
-		control.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				disposed = true;
-				shell.removeListener(SWT.Show, lShowHide);
-				shell.removeListener(SWT.Hide, lShowHide);
+			parentComposite = parentComposite.getParent();
+		}
 
-				skin.removeSkinObject(SWTSkinObjectBasic.this);
+		control.addDisposeListener(e -> {
+			disposed = true;
+			for (Composite composite : parents) {
+				composite.removeListener(SWT.Show, lShowHide);
+				composite.removeListener(SWT.Hide, lShowHide);
 			}
+			parents.clear();
+
+			skin.removeSkinObject(SWTSkinObjectBasic.this);
 		});
 
 		control.addListener(SWT.MouseHover, new Listener() {
