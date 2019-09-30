@@ -456,7 +456,7 @@ public class MenuBuildUtils {
 			j++;
 
 			edge_lens[i] 	= Math.min( c1.length,Math.max( edge_lens[i], j ));
-			edge_lens[i+1] 	= j;
+			edge_lens[i+1] 	= Math.min( c2.length, j );
 		}
 
 		int	bucket_pos 	= 0;
@@ -480,7 +480,6 @@ public class MenuBuildUtils {
 				result.add( bucket_tags.get(0));
 
 			}else{
-
 
 				String level_name = new String( edges.get( edge_pos ), 0, edge_lens[ edge_pos++ ]) + " - " + new String( edges.get( edge_pos ), 0, edge_lens[ edge_pos++ ]);
 
