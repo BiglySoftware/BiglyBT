@@ -143,7 +143,7 @@ ViewUtils
 					"label.date.format", CoreTableColumn.MENU_STYLE_HEADER );
 			custom_date_menu.setStyle(TableContextMenuItem.STYLE_PUSH);
 
-			custom_date_menu.addListener(new MenuItemListener() {
+			custom_date_menu.addMultiListener( new MenuItemListener() {
 				@Override
 				public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target){
 
