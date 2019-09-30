@@ -71,6 +71,7 @@ public class ViewManagerSWT
 
 	public void registerView(Object forDSTypeOrViewID,
 			UISWTViewBuilderCore builder) {
+		boolean skipWarning = false;
 		if (forDSTypeOrViewID == null) {
 			forDSTypeOrViewID = UISWTInstance.VIEW_MAIN;
 		} else if (forDSTypeOrViewID instanceof String) {
@@ -81,6 +82,7 @@ public class ViewManagerSWT
 			Class<?> cla = mapViewIDToClass((String) forDSTypeOrViewID);
 			if (cla != null) {
 				forDSTypeOrViewID = cla;
+				skipWarning = true;
 			}
 		}
 
@@ -89,7 +91,7 @@ public class ViewManagerSWT
 					forDSTypeOrViewID);
 			UISWTViewBuilderCore existingBuilder = builderMap.put(builder.getViewID(),
 					builder);
-			if (existingBuilder != null && existingBuilder != builder) {
+			if (existingBuilder != null && existingBuilder != builder && !skipWarning) {
 				Debug.out("Overiding already registered view '" + builder.getViewID()
 						+ "' for " + forDSTypeOrViewID);
 			}
