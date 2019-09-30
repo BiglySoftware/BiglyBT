@@ -49,6 +49,7 @@ import com.biglybt.ui.swt.mdi.TabbedEntry;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.util.DataSourceUtils;
 
 /**
  * aka "Options" Tab in Torrent Details, 
@@ -899,31 +900,19 @@ TorrentOptionsView
 				old_managers[i].removeListener( this );
 			}
 		}
-		if (newDataSource instanceof DownloadManager) {
-			multi_view = false;
-			managers = new DownloadManagerOptionsHandler[] { new DMWrapper( (DownloadManager) newDataSource )};
-		}else if ( newDataSource instanceof DownloadManagerOptionsHandler ){
+		if ( newDataSource instanceof DownloadManagerOptionsHandler ){
 			multi_view = false;
 			managers = new DownloadManagerOptionsHandler[] {(DownloadManagerOptionsHandler)newDataSource};
-		} else if (newDataSource instanceof DownloadManager[]) {
-			Object[] objs = (Object[])newDataSource;
-			multi_view = objs.length > 1;
-			managers = new DownloadManagerOptionsHandler[objs.length];
-			for ( int i=0;i<objs.length;i++){
-				managers[i] = new DMWrapper((DownloadManager)objs[i]);
+		} else {
+			DownloadManager[] dms = DataSourceUtils.getDMs(newDataSource);
+			managers = new DownloadManagerOptionsHandler[dms.length];
+			for (int i = 0, dmsLength = dms.length; i < dmsLength; i++) {
+				DownloadManager dm = dms[i];
+				managers[i] = new DMWrapper(dm);
 			}
-		}else if ( newDataSource instanceof Object[]){
-			Object[] objs = (Object[])newDataSource;
-			multi_view = objs.length > 1;
-			if ( objs.length > 0 ){
-				if ( objs[0] instanceof DownloadManager ){
-					managers = new DownloadManagerOptionsHandler[objs.length];
-					for ( int i=0;i<objs.length;i++){
-						managers[i] = new DMWrapper((DownloadManager)objs[i]);
-					}
-				}
-			}
+			multi_view = managers.length > 1;
 		}
+
 		
 		if (parent != null && !parent.isDisposed()) {
 			Utils.execSWTThread(new AERunnable() {
