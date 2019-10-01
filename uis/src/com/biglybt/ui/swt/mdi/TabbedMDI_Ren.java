@@ -120,7 +120,7 @@ public class TabbedMDI_Ren
 				continue;
 			}
 			
-			if (!showingClose && vitalityImage.getShowOnlyOnSelection()) {
+			if (!selected && vitalityImage.getShowOnlyOnSelection()) {
 				continue;
 			}
 
@@ -239,7 +239,7 @@ public class TabbedMDI_Ren
 					}
 
 
-					if (!showingClose && vitalityImage.getShowOnlyOnSelection()) {
+					if (!selected  && vitalityImage.getShowOnlyOnSelection()) {
 						vitalityImage.setHitArea(null);
 						continue;
 					}
