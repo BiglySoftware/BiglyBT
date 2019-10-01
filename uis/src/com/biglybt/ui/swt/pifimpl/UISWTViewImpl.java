@@ -256,6 +256,9 @@ public class UISWTViewImpl
 	 */
 	@Override
 	public void closeView() {
+		if (Utils.runIfNotSWTThread(this::closeView)) {
+			return;
+		}
 		try {
 
 			// In theory mdi.closeEntry will dispose of the swtItem (ctabitem or other)
