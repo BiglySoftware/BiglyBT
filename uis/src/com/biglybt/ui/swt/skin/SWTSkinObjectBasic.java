@@ -465,7 +465,8 @@ public class SWTSkinObjectBasic
 
 	// @see java.lang.Object#toString()
 	public String toString() {
-		String s = getClass().getSimpleName() + " {" + sID;
+		String s = getClass().getSimpleName() + "@"
+				+ Integer.toHexString(hashCode()) + " {" + sID;
 
 		if (!sID.equals(sConfigID)) {
 			s += "/" + sConfigID;
@@ -485,14 +486,6 @@ public class SWTSkinObjectBasic
 	@Override
 	public SWTSkin getSkin() {
 		return skin;
-	}
-
-	public int
-	hashCode()
-	{
-		Debug.out( "this should be implemented" );
-
-		return( super.hashCode());
 	}
 
 	// @see java.lang.Object#equals(java.lang.Object)
