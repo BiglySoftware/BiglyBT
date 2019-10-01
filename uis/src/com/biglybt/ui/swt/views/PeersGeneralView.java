@@ -124,13 +124,15 @@ PeersGeneralView
 		
 		switch (eventType) {
 			case EVENT_TABLELIFECYCLE_INITIALIZED:
-				
-
-				tag.addTagListener(this, true);
+				if (tag != null) {
+					tag.addTagListener(this, true);
+				}
 				break;
 
 			case EVENT_TABLELIFECYCLE_DESTROYED:
-				tag.removeTagListener(this);
+				if (tag != null) {
+					tag.removeTagListener(this);
+				}
 				break;
 		}
 	}
