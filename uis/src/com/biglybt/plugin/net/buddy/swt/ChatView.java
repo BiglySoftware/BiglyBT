@@ -164,6 +164,8 @@ ChatView
 
 						Debug.out( e );
 					}
+				} else {
+					dataSourceChanged(event.getView().getInitialDataSource());
 				}
 			}
 			initialize((Composite)event.getData());
