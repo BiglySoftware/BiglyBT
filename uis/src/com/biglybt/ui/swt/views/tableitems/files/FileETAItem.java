@@ -90,7 +90,7 @@ public class FileETAItem
 			return;
 		}
 
-		cell.setText(  ViewUtils.formatETA( eta, eta_absolute, cdf.getDateFormat()));
+		cell.setText( cdf.formatETA( eta, eta_absolute ));
 	}
 
 	@Override

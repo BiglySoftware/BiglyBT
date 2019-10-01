@@ -89,7 +89,7 @@ public class SmoothedETAItem
 				return;
 			}
 
-			cell.setText( ViewUtils.formatETA( value, eta_absolute, cdf.getDateFormat()));
+			cell.setText( cdf.formatETA( value, eta_absolute ));
 		}else{
 			DownloadManager dm = (DownloadManager)cell.getDataSource();
 			long value = (dm == null) ? 0 : dm.getStats().getSmoothedETA();
@@ -98,7 +98,7 @@ public class SmoothedETAItem
 				return;
 			}
 
-			cell.setText( ViewUtils.formatETA( value, eta_absolute, cdf.getDateFormat()));
+			cell.setText( cdf.formatETA( value, eta_absolute));
 		}
 	}
 

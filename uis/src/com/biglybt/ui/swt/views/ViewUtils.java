@@ -102,37 +102,17 @@ ViewUtils
 			});
 	}
 
-	public static String
-	formatETA(
-		long				value,
-		boolean				absolute,
-		SimpleDateFormat	override )
-	{
-		SimpleDateFormat df = override!=null?override:formatOverride;
-
-		if (	absolute &&
-				df != null &&
-				value > 0 &&
-				!(value == Constants.CRAPPY_INFINITY_AS_INT || value >= Constants.CRAPPY_INFINITE_AS_LONG )){
-
-			try{
-				return( df.format( new Date( SystemTime.getCurrentTime() + 1000*value )));
-
-			}catch( Throwable e ){
-			}
-		}
-
-		return( DisplayFormatters.formatETA( value, absolute ));
-	}
-
-
 	public static class
 	CustomDateFormat
 	{
 		private CoreTableColumn			column;
 		private TableContextMenuItem	custom_date_menu;
+		
 		private SimpleDateFormat		custom_date_format;
 
+		private long[]				extra_times;
+		private SimpleDateFormat[]	extra_formats;
+		
 		private
 		CustomDateFormat(
 			CoreTableColumn	_column )
@@ -181,9 +161,9 @@ ViewUtils
 
 							column.setUserData( "CustomDate", date_format );
 
-							column.invalidateCells();
-
 							update();
+
+							column.invalidateCells();
 						}
 					});
 				}
@@ -195,7 +175,7 @@ ViewUtils
 		{
 			Object cd = column.getUserData( "CustomDate" );
 
-			String	format = null;
+			String	format_str = null;
 
 			if ( cd instanceof byte[]){
 
@@ -215,34 +195,220 @@ ViewUtils
 
 				if ( str.length() > 0 ){
 
-					format = str;
+					java.util.List<Long>				l_extra_t = new ArrayList<>();
+					java.util.List<SimpleDateFormat>	l_extra_f = new ArrayList<>();
+					
+					String[] bits = str.split( ";" );
+					
+					for ( String bit: bits ){
+						
+						bit = bit.trim();
+						
+						if ( bit.isEmpty()){
+							
+							continue;
+						}
+						
+						if ( bit.startsWith( ">")){
+							
+							char[] chars = bit.toCharArray();
+							
+							String	digits 	= "";
+							char	unit	= ' ';
+							String	format	= "";
+							
+							for ( int i=1;i<chars.length;i++){
+								
+								char c = chars[i];
+								
+								if ( Character.isWhitespace( c )){
+									
+									continue;
+									
+								}else if ( Character.isDigit( c )){
+									
+									digits += c;
+									
+								}else{
+									
+									unit = Character.toLowerCase( c );
+									
+									format = bit.substring( i+1 ).trim();
+									
+									break;
+								}
+							}
+							
+							try{
+								long num = Integer.parseInt( digits );
+								
+								long	mult;
+								
+								switch( unit ){
+									case 'd':{
+										mult = 24*60*60;
+										break;
+									}
+									case 'w':{
+										mult = 7*24*60*60;
+										break;
+									}
+									case 'm':{
+										mult = 30*24*60*60;
+										break;
+									}
+									case 'y':{
+										mult = 365*24*60*60;
+										break;
+									}
+									default:{
+										
+										throw( new Exception( "Invalid unit: " + unit ));
+									}
+								}
+								
+								SimpleDateFormat f = new SimpleDateFormat( format );
+								
+								l_extra_t.add( num * mult * 1000 );
+								l_extra_f.add( f );
+								
+							}catch( Throwable e ){
+								
+								Debug.out( "Invalid date specification: " + bit );
+							}
+						}else{
+							
+							try{
+								custom_date_format = new SimpleDateFormat( bit );
+
+							}catch( Throwable e ){
+
+								Debug.out( e );
+							}
+						}
+					}
+					
+					if ( l_extra_t.isEmpty()){
+						
+						extra_formats	= null;
+						extra_times		= null;
+					}else{
+						extra_formats 	= l_extra_f.toArray( new SimpleDateFormat[0]);
+						long[] temp = new long[l_extra_t.size()];
+						for ( int i=0;i<temp.length;i++){
+							temp[i] = l_extra_t.get(i);
+						}
+						extra_times		= temp;
+					}
+					
+					format_str = str;
 				}
 			}
 
-			if ( format == null ){
+			if ( format_str == null ){
 
-				format = MessageText.getString( "label.table.default" );
+				format_str = MessageText.getString( "label.table.default" );
 
-				custom_date_format = null;
+				custom_date_format 	= null;
+				extra_formats		= null;
+				extra_times			= null;
+			}
 
-			}else{
+			custom_date_menu.setText( MessageText.getString( "label.date.format" )  + " [" + format_str + "] ..." );
+		}
+		
+		public String
+		formatDate(
+			long	time )
+		{
+			long[] et = extra_times;
+			
+			if ( et != null ){
+				
+				SimpleDateFormat[] ef = extra_formats;
+				
+				if ( et.length == ef.length ){
+					
+					SimpleDateFormat 	temp 	= null;
+					long				max 	= 0;
+					
+					long age = SystemTime.getCurrentTime() - time;
+					
+					for ( int i=0;i<et.length;i++){
+						long a = et[i];
+						
+						if ( a > max && age > a ){
+							max		= a;
+							temp 	= ef[i];
+						}
+					}
+					
+					if ( temp != null ){
+						return( temp.format( new Date( time )));
+					}
+				}
+			}
+			if ( custom_date_format == null ){
+				
+				return( null );
+			}
+			
+			return( custom_date_format.format( new Date( time )));
+		}
+		
+		public String
+		formatETA(
+			long		value,
+			boolean		absolute )
+		{
+			SimpleDateFormat override = null;
+			
+			if ( absolute ){
+				
+				long[] et = extra_times;
+				
+				if ( et != null ){
+					
+					SimpleDateFormat[] ef = extra_formats;
+										
+					if ( et.length == ef.length ){
+					
+						long max 	= 0;
+
+						long age = SystemTime.getCurrentTime() - value;
+						
+						for ( int i=0;i<et.length;i++){
+							long a = et[i];
+							
+							if ( a > max && age > a ){
+								max			= a;
+								override 	= ef[i];
+							}
+						}
+					}
+				}
+			
+				if ( override == null ){
+				
+					override = custom_date_format;
+				}
+			}
+			
+			SimpleDateFormat df = override!=null?override:formatOverride;
+
+			if (	absolute &&
+					df != null &&
+					value > 0 &&
+					!(value == Constants.CRAPPY_INFINITY_AS_INT || value >= Constants.CRAPPY_INFINITE_AS_LONG )){
 
 				try{
-					custom_date_format = new SimpleDateFormat( format );
+					return( df.format( new Date( SystemTime.getCurrentTime() + 1000*value )));
 
 				}catch( Throwable e ){
-
-					Debug.out( e );
 				}
 			}
 
-			custom_date_menu.setText( MessageText.getString( "label.date.format" )  + " <" + format + "> ..." );
-		}
-
-		public SimpleDateFormat
-		getDateFormat()
-		{
-			return( custom_date_format );
+			return( DisplayFormatters.formatETA( value, absolute ));
 		}
 	}
 

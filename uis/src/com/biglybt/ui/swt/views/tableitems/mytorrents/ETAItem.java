@@ -86,7 +86,7 @@ public class ETAItem
 			return;
 		}
 
-		cell.setText( ViewUtils.formatETA( value, eta_absolute, cdf.getDateFormat()));
+		cell.setText(cdf.formatETA( value, eta_absolute ));
 	}
 
 	@Override

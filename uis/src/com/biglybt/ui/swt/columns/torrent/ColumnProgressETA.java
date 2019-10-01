@@ -415,8 +415,8 @@ public class ColumnProgressETA
 				// fgFirst = Colors.colorError;	pftt, no colours allowed apparently
 			} else {
 				if (showETA && eta > 0) {
-					String sETA = ViewUtils.formatETA(eta,
-							progress_eta_absolute, cdf.getDateFormat());
+					String sETA = cdf.formatETA( eta, progress_eta_absolute );
+					
 					sStatusLine = MessageText.getString(
 							"MyTorrents.column.ColumnProgressETA.2ndLine", new String[] {
 								sETA

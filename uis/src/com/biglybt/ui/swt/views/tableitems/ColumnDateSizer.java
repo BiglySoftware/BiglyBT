@@ -193,21 +193,17 @@ public abstract class ColumnDateSizer
 			return;
 		}
 
-		SimpleDateFormat format = cdf.getDateFormat();
-
-		if ( format != null ){
-			Date date = new Date(timestamp);
-			try {
-				String date_str = format.format(date);
-				if ( prefix != null ){
-					date_str = prefix + date_str;
-				}
-				cell.setText(date_str);
-				return;
-			} catch (Exception e) {
-
+		String cdf_str = cdf.formatDate( timestamp );
+		
+		if ( cdf_str != null ){
+			
+			if ( prefix != null ){
+				cdf_str = prefix + cdf_str;
 			}
+			cell.setText( cdf_str );
+			return;
 		}
+		
 		if (tableFormatOverride.length() > 0) {
 			Date date = new Date(timestamp);
 			try {
