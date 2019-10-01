@@ -626,21 +626,46 @@ BackupManagerImpl
 
 		if ( from_file.isDirectory()){
 
-			if ( !to_file.mkdirs()){
-
-				throw( new Exception( "Failed to create '" + to_file.getAbsolutePath() + "'" ));
+			boolean	skip = false;
+			
+			File parent = from_file.getParentFile();
+			
+			String parent_name = parent==null?"":parent.getName();
+			
+			String name = from_file.getName();
+			
+			if ( parent_name.equals( "aznettorbrowser" )){
+				
+				if ( name.startsWith( "browser_" )){
+					
+					skip = true;
+				}
+			}else if ( parent_name.equals( "azwebtorrent" )){
+			
+				if ( name.equals( "data" ) ||  name.startsWith( "browser_" )){
+					
+					skip = true;
+				}
 			}
-
-			File[] files = from_file.listFiles();
-
-			for ( File f: files ){
-
-				checkClosing();
-
-				long[] temp = copyFilesSupport( f, new File( to_file, f.getName()), depth+1 );
-
-				total_files 	+= temp[0];
-				total_copied	+= temp[1];
+			
+			if ( !skip ){
+				
+				if ( !to_file.mkdirs()){
+	
+					throw( new Exception( "Failed to create '" + to_file.getAbsolutePath() + "'" ));
+				}
+	
+				File[] files = from_file.listFiles();
+	
+				for ( File f: files ){
+	
+					checkClosing();
+	
+					long[] temp = copyFilesSupport( f, new File( to_file, f.getName()), depth+1 );
+	
+					total_files 	+= temp[0];
+					total_copied	+= temp[1];
+				}
 			}
 		}else{
 
@@ -876,6 +901,7 @@ BackupManagerImpl
 
 								continue;
 							}
+							
 						}else if ( 	name.equals( ".lock" ) ||
 									name.equals( ".azlock" ) ||
 									name.equals( "update.properties" ) ||

@@ -1331,7 +1331,7 @@ public class FileUtil {
         return true;
       }
       catch( Throwable e ) {
-      	Debug.printStackTrace( e );
+      	Debug.out( "Copy failed for " + _source, e );
         return false;
       }
     }
