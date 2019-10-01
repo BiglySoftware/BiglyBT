@@ -867,6 +867,7 @@ public class TabbedMDI
 	}
 
 	private void setupNewEntry(TabbedEntry entry) {
+		addItem( entry );	// we have to add this here otherwise duplicates can get added
 		Utils.execSWTThreadLater(0, () -> swt_setupNewEntry(entry));
 	}
 
@@ -875,6 +876,13 @@ public class TabbedMDI
 			return;
 		}
 
+		if ( getEntry( entry.getViewID()) != entry ){
+			
+			// entry has been deleted/replaced in the meantime
+		
+			return;
+		}
+		
 		int index =  -1;
 		String preferredAfterID = entry.getPreferredAfterID();
 		if (preferredAfterID != null) {
