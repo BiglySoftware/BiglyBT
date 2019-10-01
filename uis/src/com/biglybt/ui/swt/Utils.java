@@ -4716,6 +4716,7 @@ public class Utils
 			text.removeListener( SWT.MouseMove, old_listener );
 			text.removeListener( SWT.MouseHover, old_listener );
 			text.removeListener( SWT.MouseUp, old_listener );
+			text.removeListener( SWT.FocusIn, old_listener );
 		}
 		
 		Matcher 	a_matcher = a_pattern.matcher( value );
@@ -4822,13 +4823,18 @@ public class Utils
 						 
 						 break;
 					}
-
+					case SWT.FocusIn:{
+						text.traverse( SWT.TRAVERSE_TAB_NEXT );
+						
+						break;
+					}
 				}
 	    	};
 	    	
 		text.addListener( SWT.MouseMove, listener );
 		text.addListener( SWT.MouseHover, listener );
 		text.addListener( SWT.MouseUp, listener );
+		text.addListener( SWT.FocusIn, listener );
 		
 		text.setData( "Utils.setTextWithURLs", listener );
 		
