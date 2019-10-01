@@ -283,6 +283,12 @@ public class TabbedEntry
 		buildCommonVitalityImages();
 	}
 
+	@Override
+	public void setSkinRef(String configID, Object params) {
+		super.setSkinRef(configID, params);
+		buildCommonVitalityImages();
+	}
+
 	private void buildCommonVitalityImages() {
 		boolean canBuildStandalone = canBuildStandAlone();
 
