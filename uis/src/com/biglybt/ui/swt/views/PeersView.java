@@ -127,6 +127,8 @@ public class PeersView
 				timerPeerCountUI.cancel();
 				timerPeerCountUI = null;
 			}
+			// one last update to clear indicator when users still on tab
+			updateTitle();
 		} else if (timerPeerCountUI == null) {
 			pendingTitleRefresh = true;
 			timerPeerCountUI = SimpleTimer.addPeriodicEvent("PeerSumUI", 1000, e -> {
