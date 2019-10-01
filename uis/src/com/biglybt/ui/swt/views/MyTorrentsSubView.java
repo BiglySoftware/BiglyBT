@@ -18,6 +18,8 @@
 
 package com.biglybt.ui.swt.views;
 
+import java.util.Set;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -29,12 +31,16 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagDownload;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
+import com.biglybt.util.DataSourceUtils;
 
 import com.biglybt.pif.download.Download;
 
@@ -45,6 +51,7 @@ import com.biglybt.pif.download.Download;
  */
 public class MyTorrentsSubView
 	extends MyTorrentsView
+	implements ViewTitleInfo
 {
 
 	public static final String MSGID_PREFIX = "MyTorrentsSubView";
@@ -52,7 +59,8 @@ public class MyTorrentsSubView
 	private boolean anyTorrentTags;
 
 	private boolean	destroyed;
-	
+	private Tag[] tempTags;
+
 	public MyTorrentsSubView() {
 		super(MSGID_PREFIX, false);
 		neverShowCatButtons = true;
@@ -184,10 +192,22 @@ public class MyTorrentsSubView
    * @see com.biglybt.ui.swt.views.MyTorrentsView#setCurrentTags(com.biglybt.core.tag.Tag[])
    */
   @Override
-  protected void setCurrentTags(final Tag[] tags) {
+  protected void setCurrentTags(Tag... tags) {
   	super.setCurrentTags(tags);
+	  ViewTitleInfoManager.refreshTitleInfo(this);
   	updateButtonVisibility(tags);
   }
+
+	@Override
+	public void parentDataSourceChanged(Object newParentDataSource) {
+		super.parentDataSourceChanged(newParentDataSource);
+		if (getTableView() == null) {
+			tempTags = DataSourceUtils.getTags(newParentDataSource);
+			ViewTitleInfoManager.refreshTitleInfo(this);
+		} else {
+			tempTags = null;
+		}
+	}
 
 	private void updateButtonVisibility(final Tag[] tags) {
   	Utils.execSWTThread(new AERunnable() {
@@ -206,5 +226,47 @@ public class MyTorrentsSubView
 				cTop.getParent().layout(true, true);
 			}
 		});
+	}
+
+	@Override
+	public Object getTitleInfoProperty(int propertyID) {
+		if (propertyID == ViewTitleInfo.TITLE_INDICATOR_TEXT) {
+			Tag[] tags = tempTags == null ? getCurrentTags() : tempTags;
+			if (tags == null || tags.length == 0) {
+				return null;
+			}
+			DownloadManager[] dms = DataSourceUtils.getDMs(tags);
+			if (dms.length == 0) {
+				return null;
+			}
+
+			Set<DownloadManager> minTaggedDownloads = null;
+			for (Tag value : tags) {
+				if (!(value instanceof TagDownload)) {
+					continue;
+				}
+				TagDownload tag = (TagDownload) value;
+				Set<DownloadManager> taggedDownloads = tag.getTaggedDownloads();
+				if (minTaggedDownloads == null
+						|| minTaggedDownloads.size() > taggedDownloads.size()) {
+					minTaggedDownloads = taggedDownloads;
+				}
+			}
+			int count = 0;
+			for (DownloadManager dm : minTaggedDownloads) {
+				boolean hasAll = true;
+				for (Tag tag : tags) {
+					if (!tag.hasTaggable(dm)) {
+						hasAll = false;
+						break;
+					}
+				}
+				if (hasAll) {
+					count++;
+				}
+			}
+			return count == dms.length ? "" + count : dms.length + " | " + count;
+		}
+		return null;
 	}
 }
