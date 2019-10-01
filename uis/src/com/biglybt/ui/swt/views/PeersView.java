@@ -405,6 +405,17 @@ public class PeersView
 	}
 
 	@Override
+	public boolean
+	isActive()
+	{
+		if (tv == null || !tv.isVisible()) {
+			return( false );
+		}
+
+		return( !tv.getSelectedDataSources().isEmpty());
+	}
+	
+	@Override
 	public void refreshToolBarItems(Map<String, Long> list) {
 		boolean hasPeer = tv != null && tv.getSelectedRowsSize() > 0;
 		list.put("remove", hasPeer ? UIToolBarItem.STATE_ENABLED : 0);

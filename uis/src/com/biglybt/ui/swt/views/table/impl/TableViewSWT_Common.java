@@ -404,7 +404,8 @@ public class TableViewSWT_Common
 						TableCellMouseEvent.EVENT_MOUSEMOVE, false);
 				if (event != null) {
 					TableColumnCore tc = ((TableColumnCore) cell.getTableColumn());
-					if (tc.hasCellMouseMoveListener()) {
+						// seen a null tc here before
+					if (tc != null && tc.hasCellMouseMoveListener()) {
 						((TableColumnCore) cell.getTableColumn()).invokeCellMouseListeners(event);
 					}
 					cell.invokeMouseListeners(event);
