@@ -344,7 +344,7 @@ public class PiecesView
 						"PiecesView.legend.written",
 						"PiecesView.legend.downloaded",
 						"PiecesView.legend.incache",
-					"!End Game Mode!"
+						"label.end.game.mode"
 					});
 		}
 	}
