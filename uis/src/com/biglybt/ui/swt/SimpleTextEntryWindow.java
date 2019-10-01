@@ -18,8 +18,10 @@
 package com.biglybt.ui.swt;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.KeyEvent;
@@ -133,16 +135,27 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    int width_hint = (this.width_hint == -1) ? 330 : this.width_hint;
 
 	    // Process any messages.
-	    Label label = null;
+	   
 	    GridData gridData = null;
 	    for (int i=0; i<this.messages.length; i++) {
-	    	label = new Label(shell, SWT.WRAP);
-	    	label.setText(this.messages[i]);
-
-	    	// 330 is the current default width.
+	    	String msg = messages[i];
+	    	
 	    	gridData = resizeable?new GridData(GridData.FILL_HORIZONTAL):new GridData();
 	    	gridData.widthHint = width_hint;
-			label.setLayoutData(gridData);
+
+	    	if ( msg.toLowerCase(Locale.US).contains( "<a href" )){
+	    		
+	    		StyledText text = new StyledText( shell, SWT.NULL );
+	    		text.setEditable( false );
+	    		text.setBackground( shell.getBackground());
+	    		Utils.setTextWithURLs(text, msg);
+	    		text.setLayoutData(gridData);
+	    	}else{
+	    	
+		    	Label label = new Label(shell, SWT.WRAP);
+		    	label.setText( msg );
+		    	label.setLayoutData(gridData);
+	    	}	
 	    }
 
 	    // Create Text object with pre-entered text.

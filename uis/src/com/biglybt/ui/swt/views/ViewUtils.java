@@ -161,7 +161,7 @@ ViewUtils
 					}
 					SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
 							"ConfigView.section.style.customDateFormat",
-							"label.date.format");
+							"label.date.formats");
 
 					entryWindow.setPreenteredText( existing_text, false );
 
