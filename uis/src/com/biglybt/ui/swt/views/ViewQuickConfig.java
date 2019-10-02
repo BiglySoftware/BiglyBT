@@ -18,10 +18,8 @@
 package com.biglybt.ui.swt.views;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
@@ -97,31 +95,7 @@ public class ViewQuickConfig
 		gridData = new GridData(GridData.FILL_BOTH);
 		parent.setLayoutData(gridData);
 
-		layout = new GridLayout(1, false);
-		layout.marginWidth 	= 0;
-		layout.marginHeight = 0;
-
-		parent.setLayout( layout);
-
-		final ScrolledComposite sc = new ScrolledComposite( parent, SWT.V_SCROLL );
-		sc.setExpandHorizontal( true );
-		sc.setExpandVertical( true );
-		sc.addListener( SWT.Resize,
-			new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					int width = sc.getClientArea().width;
-					Point size = parent.computeSize( width, SWT.DEFAULT );
-					sc.setMinSize( size );
-				}
-			} );
-
-		gridData = new GridData(GridData.FILL_BOTH);
-		sc.setLayoutData(gridData);
-
-		composite = new Composite( sc, SWT.NULL );
-
-		sc.setContent( composite );
+		composite = Utils.createScrolledComposite(parent);
 
 		gridData = new GridData(GridData.FILL_BOTH);
 		composite.setLayoutData(gridData);
@@ -150,15 +124,6 @@ public class ViewQuickConfig
 		
 		addTemporaryData( composite );
 		
-		Utils.execSWTThreadLater(
-				100,
-				new Runnable() {
-
-					@Override
-					public void run() {
-						composite.traverse( SWT.TRAVERSE_TAB_NEXT);
-					}
-				});
 	}
 	
 	private void
@@ -639,7 +604,6 @@ public class ViewQuickConfig
         refresh();
         break;
       case UISWTViewEvent.TYPE_FOCUSGAINED:{
-    	  composite.traverse( SWT.TRAVERSE_TAB_NEXT);
     	  break;
       }
     }
