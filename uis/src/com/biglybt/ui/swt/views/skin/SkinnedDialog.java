@@ -153,6 +153,11 @@ public class SkinnedDialog
 		open(null,true);
 	}
 
+	public void openUnadjusted() {
+		skin.setAutoSizeOnLayout(false);
+		open("none", true);
+	}
+
 	public void open(String idShellMetrics, boolean bringToFront ) {
 		if (disposed) {
 			Debug.out("can't opened disposed skinnedialog");
@@ -160,14 +165,14 @@ public class SkinnedDialog
 		}
 		skin.layout();
 
-		if (idShellMetrics != null) {
+		if (idShellMetrics != null && !"none".equals(idShellMetrics)) {
 			boolean had_metrics = Utils.hasShellMetricsConfig( idShellMetrics );
 			Utils.linkShellMetricsToConfig(shell, idShellMetrics);
 			if ( !had_metrics ){
 				Utils.centerWindowRelativeTo(shell, mainShell);
 				Utils.verifyShellRect(shell, true);
 			}
-		} else {
+		} else if (idShellMetrics == null) {
 			Utils.centerWindowRelativeTo(shell, mainShell);
 			Utils.verifyShellRect(shell, true);
 		}
