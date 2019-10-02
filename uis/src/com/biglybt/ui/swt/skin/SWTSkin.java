@@ -734,14 +734,7 @@ public class SWTSkin
 
   		}
 		} else {
-			Point size = skinComposite.getSize();
-			if (width > 0) {
-				size.x = width;
-			}
-			if (height > 0) {
-				size.y = height;
-			}
-			skinComposite.setSize(size);
+			skinComposite.requestLayout();
 		}
 
 		for (SWTSkinLayoutCompleteListener l : listenersLayoutComplete) {
