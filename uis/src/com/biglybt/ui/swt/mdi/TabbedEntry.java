@@ -139,8 +139,6 @@ public class TabbedEntry
 						"MdiIView." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
 						soParent);
 
-				parent.setBackgroundMode(SWT.INHERIT_NONE);
-
 				Composite viewComposite = soContents.getComposite();
 
 				boolean doGridLayout = true;

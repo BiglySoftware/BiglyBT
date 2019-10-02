@@ -952,8 +952,6 @@ public class UISWTViewImpl
 					"MdiIView." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
 					soParent );
 
-				parent.setBackgroundMode(SWT.INHERIT_NONE);
-
 				final Composite viewComposite = soContents.getComposite();
 				boolean doGridLayout = true;
 				if ( controlType == CONTROLTYPE_SKINOBJECT) {
