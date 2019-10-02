@@ -21,7 +21,9 @@ package com.biglybt.ui.swt.mainwindow;
 import java.lang.reflect.Field;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.graphics.Device;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.Core;
@@ -284,6 +286,63 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				});
 			} catch (Throwable e) {
 			}
+			
+			/* Windows "Bug" that Eclipse devs will never fix:
+			 * Bug 75766 - Allow mouse wheel to scroll without focus
+			 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=75766
+			 */
+			display.addFilter(SWT.MouseWheel, e -> {
+				Widget focusControl = e.widget;
+				Control cursorControl = display.getCursorControl();
+				if (focusControl == cursorControl) {
+					return;
+				}
+				while (cursorControl != null) {
+					if (cursorControl instanceof ScrolledComposite) {
+						ScrollBar verticalBar = ((Scrollable) cursorControl).getVerticalBar();
+						if (verticalBar != null) {
+							ScrolledComposite sc = (ScrolledComposite) cursorControl;
+							Point origin = sc.getOrigin();
+							sc.setOrigin(origin.x, origin.y - verticalBar.getIncrement() * e.count);
+							e.doit = false;
+							break;
+						}
+					}
+					// Can't find a good way to Scroll a Scrollable, so we have a custom
+					// hack.  If the Vertical Bar has a getData("ScrollOnMouseOver") set
+					// to non-null, we call setSelection on the bar.  If the getData is
+					// a Runnable, we run it afterwards.  This allows the widget to
+					// handle any scrolling or refreshing itself.
+					if (cursorControl instanceof Scrollable) {
+						ScrollBar verticalBar = ((Scrollable) cursorControl).getVerticalBar();
+						if (verticalBar != null
+								&& verticalBar.getData("ScrollOnMouseOver") != null) {
+							int oldPos = verticalBar.getSelection();
+							int newPos = oldPos - (verticalBar.getIncrement() * e.count);
+							// This will set vertical bar position, but not update control
+							verticalBar.setSelection(newPos);
+
+							Object o = verticalBar.getData("ScrollOnMouseOver");
+							if (o instanceof Runnable) {
+								try {
+									((Runnable) o).run();
+								} catch (Throwable ignore) {
+								}
+							}
+
+							// This just doesn't work on anything.  It scrolls the control along with the scrollbar
+							//Point location = cursorControl.getLocation();
+							//location.y -= verticalBar.getIncrement() * e.count;
+							//cursorControl.setLocation(location);
+							e.doit = false;
+							break;
+						}
+					}
+
+					cursorControl = cursorControl.getParent();
+				}
+			});
+
 		}
 
 		if (app != null) {

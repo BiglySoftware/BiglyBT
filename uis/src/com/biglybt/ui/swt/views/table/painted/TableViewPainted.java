@@ -1401,6 +1401,7 @@ public class TableViewPainted
 			});
 		}
 		vBar = cTable.getVerticalBar();
+		vBar.setData("ScrollOnMouseOver", (Runnable) () -> swt_vBarChanged());
 		if (vBar != null) {
 			vBar.setValues(0, 0, 0, 50, getRowDefaultHeight(), 50);
 			vBar.addSelectionListener(new SelectionListener() {
