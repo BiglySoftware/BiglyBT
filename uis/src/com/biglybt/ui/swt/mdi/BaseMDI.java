@@ -209,6 +209,9 @@ public abstract class BaseMDI
 
 	@Override
 	public MdiEntrySWT getCurrentEntry() {
+		if (isDisposed()) {
+			return null;
+		}
 		return currentEntry;
 	}
 
