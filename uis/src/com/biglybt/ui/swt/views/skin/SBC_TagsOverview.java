@@ -33,6 +33,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
@@ -706,6 +707,97 @@ public class SBC_TagsOverview
 					@Override
 					public void dragFinished(DragSourceEvent event) {
 
+					}
+				});
+			}
+
+			DropTarget dropTarget = tv.createDropTarget(DND.DROP_DEFAULT | DND.DROP_MOVE
+				| DND.DROP_COPY);
+			if (dropTarget != null) {
+				dropTarget.setTransfer(TextTransfer.getInstance());
+				dropTarget.addDropListener(new DropTargetAdapter() {
+					@Override
+					public void dragOver(DropTargetEvent event) {
+						List<DownloadManager> dms = DragDropUtils.getDownloadsFromDropData(
+							event.data == null ? DragDropUtils.getLastDraggedObject()
+								: event.data,
+							true);
+						if (dms.isEmpty()) {
+							event.detail = DND.DROP_NONE;
+							return;
+						}
+
+						TableRowCore row = tv.getRow(event);
+						if (row == null) {
+							event.detail = DND.DROP_NONE;
+							return;
+						}
+						Object dataSource = row.getDataSource();
+						if (!(dataSource instanceof Tag)) {
+							event.detail = DND.DROP_NONE;
+							return;
+						}
+						Tag tag = (Tag) dataSource;
+
+						boolean doAdd = false;
+						for (DownloadManager dm : dms) {
+							if (!tag.hasTaggable(dm)) {
+								doAdd = true;
+								break;
+							}
+						}
+
+						boolean[] auto = tag.isTagAuto();
+						if (auto.length < 2 || (doAdd && auto[0])
+							|| (!doAdd && auto[0] && auto[1])) {
+							event.detail = DND.DROP_NONE;
+							return;
+						}
+						
+						event.detail = doAdd ? DND.DROP_COPY : DND.DROP_MOVE;
+					}
+
+					@Override
+					public void drop(DropTargetEvent event) {
+						List<DownloadManager> dms = DragDropUtils.getDownloadsFromDropData(
+								event.data == null ? DragDropUtils.getLastDraggedObject()
+										: event.data,
+								true);
+						if (dms.isEmpty()) {
+							return;
+						}
+
+						TableRowCore row = tv.getRow(event);
+						if (row == null) {
+							return;
+						}
+						Object dataSource = row.getDataSource();
+						if (!(dataSource instanceof Tag)) {
+							return;
+						}
+						Tag tag = (Tag) dataSource;
+
+						boolean doAdd = false;
+						for (DownloadManager dm : dms) {
+							if (!tag.hasTaggable(dm)) {
+								doAdd = true;
+								break;
+							}
+						}
+
+						boolean[] auto = tag.isTagAuto();
+						if (auto.length < 2 || (doAdd && auto[0])
+								|| (!doAdd && auto[0] && auto[1])) {
+							return;
+						}
+
+						for (DownloadManager dm : dms) {
+							if ( doAdd ){
+								tag.addTaggable( dm );
+							}else{
+								tag.removeTaggable( dm );
+							}
+						}
 					}
 				});
 			}
