@@ -441,6 +441,7 @@ SBC_SubscriptionResultsView
 			lblMinSeeds.setText(MessageText.getString("label.min.seeds"));
 			Spinner spinMinSeeds = new Spinner(cMinSeeds, SWT.BORDER);
 			spinMinSeeds.setMinimum(0);
+			spinMinSeeds.setMaximum(Integer.MAX_VALUE);
 			spinMinSeeds.setSelection((int)ds_filter.getMinSeeds());
 			spinMinSeeds.addListener(SWT.Selection, new Listener() {
 				@Override
