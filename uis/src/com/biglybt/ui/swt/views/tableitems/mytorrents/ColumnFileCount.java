@@ -17,20 +17,20 @@
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.ui.common.table.TableCellCore;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.mdi.BaseMdiEntry;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.views.FilesView;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
+import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
@@ -38,9 +38,6 @@ import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.*;
 
-import com.biglybt.ui.common.table.TableCellCore;
-import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 
 /**
  * @author TuxPaper
@@ -118,12 +115,20 @@ public class ColumnFileCount
 	}
 
 	private void openFilesMiniView(DownloadManager dm, TableCell cell) {
-		Shell shell = ShellFactory.createShell(Utils.findAnyShell(), SWT.SHELL_TRIM);
+		UISWTViewBuilderCore builder = ViewManagerSWT.getInstance().getBuilder(
+				Download.class, FilesView.MSGID_PREFIX);
+		if (builder == null) {
+			return;
+		}
+		SkinnedDialog skinnedDialog = BaseMdiEntry.buildSkinnedDialog("FilesView",
+				dm, builder);
+		if (skinnedDialog == null) {
+			return;
+		}
 
-		FillLayout fillLayout = new FillLayout();
-		fillLayout.marginHeight = 2;
-		fillLayout.marginWidth = 2;
-		shell.setLayout(fillLayout);
+		skinnedDialog.setTitle(dm.getDisplayName());
+
+		Shell shell = skinnedDialog.getShell();
 
 		Rectangle bounds = ((TableCellSWT) cell).getBoundsOnDisplay();
 		bounds.y += bounds.height;
@@ -142,45 +147,6 @@ public class ColumnFileCount
 
 		Utils.verifyShellRect(shell, true);
 
-
-		final FilesView view = new FilesView();
-		view.dataSourceChanged(dm);
-
-		view.initialize(shell);
-
-		Composite composite = view.getComposite();
-		//composite.setLayoutData(null);
-		//shell.setLayout(new FillLayout());
-
-		view.viewActivated();
-		view.refresh();
-
-		final UIUpdatable viewUpdater = new UIUpdatable() {
-			@Override
-			public void updateUI() {
-				view.refresh();
-			}
-
-			@Override
-			public String getUpdateUIName() {
-				return view.getFullTitle();
-			}
-		};
-		UIUpdaterSWT.getInstance().addUpdater(viewUpdater);
-
-		shell.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				UIUpdaterSWT.getInstance().removeUpdater(viewUpdater);
-				view.delete();
-			}
-		});
-
-		shell.layout(true, true);
-
-
-		shell.setText(dm.getDisplayName());
-
-		shell.open();
+		skinnedDialog.openUnadjusted();
 	}
 }
