@@ -36,7 +36,8 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.*;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.events.*;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.program.Program;
@@ -4117,6 +4118,16 @@ public class Utils
 		}
 	}
 
+	/**
+	 * Creates a ScrollComposite that scrolls vertically and handles 
+	 * recalculating size.
+	 * <br/>
+	 * If parent's layout isn't GridLayout, sets parent to GridLayout with 1 
+	 * column.  
+	 * 
+	 * @return a new Composite that is the main view of the ScrolledComposite.
+	 * No layout for this composite has been set
+	 */
 	public static Composite
 	createScrolledComposite(
 		Composite parent )
@@ -4129,13 +4140,17 @@ public class Utils
 		Composite 	parent,
 		Control		mega_parent )
 	{
-		parent.setLayout( new GridLayout( 1, true ));
+		Layout currentParentLayout = parent.getLayout();
+		if (!(currentParentLayout instanceof GridLayout)) {
+			GridLayout parentLayout = new GridLayout(1, true);
+			parentLayout.marginHeight = parentLayout.marginWidth = 0;
+			parent.setLayout(parentLayout);
+		}
 
-		ScrolledComposite scrolled_comp = new ScrolledComposite( parent , SWT.V_SCROLL );
+		ScrolledComposite sc = new ScrolledComposite(parent, SWT.V_SCROLL);
 
-		scrolled_comp.setExpandHorizontal(true);
-
-		scrolled_comp.setExpandVertical(true);
+		sc.setExpandHorizontal(true);
+		sc.setExpandVertical(true);
 
 		GridLayout layout = new GridLayout();
 
@@ -4144,100 +4159,83 @@ public class Utils
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 
-		scrolled_comp.setLayout(layout);
+		sc.setLayout(layout);
 
-		GridData gridData = new GridData(GridData.FILL_BOTH );
+		GridData gridData = new GridData(GridData.FILL_BOTH);
 
-		scrolled_comp.setLayoutData(gridData);
+		sc.setLayoutData(gridData);
 
-	    Composite result = new Composite(scrolled_comp, SWT.NULL);
+		Composite result = new Composite(sc, SWT.NONE);
 
-	    scrolled_comp.setContent(result);
-		scrolled_comp.addControlListener(new ControlAdapter() {
-			@Override
-			public void controlResized(ControlEvent e) {
-				updateScrolledComposite(scrolled_comp);
+		sc.setContent(result);
+		sc.addListener(SWT.Resize, e -> updateScrolledComposite(sc));
+
+		if (mega_parent == null) {
+			return result;
+		}
+
+		// all this hacking is required for the expando item crap used by open-torrent-options
+		// it doesn't send resize events to items that are truncated in the view so we pick up
+		// truncation and manually resize the component to cause scroll behaviour :(
+
+		Runnable hack = () -> Utils.execSWTThreadLater(1, () -> {
+			if (mega_parent.isDisposed()) {
+
+				return;
+			}
+
+			Rectangle mp = mega_parent.getBounds();
+
+			Point sc_size = sc.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+
+			Rectangle sc_bounds = sc.getBounds();
+
+			int mp_y = mega_parent.toDisplay(mp.x, mp.y).y;
+			int sc_y = sc.toDisplay(sc_bounds.x, sc_bounds.y).y;
+
+			int req_h = -1;
+
+			if (sc_y >= mp_y && sc_y < mp_y + mp.height) {
+
+				if (sc_y + sc_size.y < mp_y + mp.height) {
+
+					// fits
+
+				} else {
+
+					req_h = mp_y + mp.height - sc_y;
+				}
+			}
+
+			sc_size.x = sc_bounds.width;
+
+			if (req_h >= 0) {
+
+				sc_size.y = req_h;
+			}
+
+			Point existing = sc.getSize();
+
+			if (!existing.equals(sc_size)) {
+
+				sc.setSize(sc_size);
 			}
 		});
 
-		if ( mega_parent != null ){
-			
-				// all this hacking is required for the expando item crap used by open-torrent-options
-				// it doesn't send resize events to items that are truncated in the view so we pick up
-				// truncation and manually resize the component to cause scroll behaviour :(
-			
-			Runnable hack = ()->{
-				Utils.execSWTThreadLater(
-						1,
-						()->{
-							if ( mega_parent.isDisposed()){
-								
-								return;
-							}
-							
-							Rectangle mp = mega_parent.getBounds();
-							
-							Point sc_size = scrolled_comp.computeSize( SWT.DEFAULT, SWT.DEFAULT );
-		
-							Rectangle sc = scrolled_comp.getBounds();
-							
-							int mp_y = mega_parent.toDisplay( mp.x, mp.y ).y;
-							int sc_y = scrolled_comp.toDisplay( sc.x, sc.y ).y;
-							
-							int	req_h = -1;
-							
-							if ( sc_y >= mp_y && sc_y < mp_y + mp.height ){
-								
-								if ( sc_y + sc_size.y < mp_y + mp.height ){
-									
-									// fits
-								
-								}else{
-									
-									req_h = mp_y + mp.height - sc_y;
-								}
-							}
-												
-							sc_size.x = sc.width;
-		
-							if ( req_h >= 0 ){
-								
-								sc_size.y = req_h;
-							}
-								
-							Point existing = scrolled_comp.getSize();
-							
-							if ( !existing.equals( sc_size )){
-							
-								scrolled_comp.setSize( sc_size );
-							}
-						});
-			};
-			
-			Utils.execSWTThreadLater(
-				1000,
-				new Runnable(){
-					public void
-					run()
-					{
-						hack.run();
-								
-						if ( !mega_parent.isDisposed()){
-									
-							Utils.execSWTThreadLater( 1000, this );
-						}
-					}});
-			
-			mega_parent.addControlListener(new ControlAdapter() {
-				@Override
-				public void controlResized(ControlEvent e) {
-					
-					hack.run();
+		Utils.execSWTThreadLater(1000, () -> new Runnable() {
+			public void run() {
+				hack.run();
+
+				if (!mega_parent.isDisposed()) {
+
+					Utils.execSWTThreadLater(1000, this);
 				}
-			});
-		}
-		
-		return( result );
+			}
+		});
+
+		mega_parent.addListener(SWT.Resize, e -> hack.run());
+
+		return (result);
 	}
 
 	public static void updateScrolledComposite(ScrolledComposite sc) {
