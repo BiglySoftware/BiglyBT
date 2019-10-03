@@ -1523,15 +1523,16 @@ public class ImageLoader
 	 *
 	 * @since 4.0.0.5
 	 */
-	public void setLabelImage(Label label, final String key) {
+	public void setLabelImage(Label label, String key) {
+		if (key == null || label == null || label.isDisposed()) {
+			return;
+		}
 		Image bg = getImage(key);
+		if (!isRealImage(bg)) {
+			return;
+		}
 		label.setImage(bg);
-		label.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				releaseImage(key);
-			}
-		});
+		label.addDisposeListener(e -> releaseImage(key));
 	}
 
 	public Image setButtonImage(Button btn, final String key) {
