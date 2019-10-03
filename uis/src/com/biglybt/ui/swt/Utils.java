@@ -66,6 +66,7 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
 import com.biglybt.ui.swt.components.BufferedTruncatedLabel;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
@@ -4715,6 +4716,7 @@ public class Utils
 			text.removeListener( SWT.MouseHover, old_listener );
 			text.removeListener( SWT.MouseUp, old_listener );
 			text.removeListener( SWT.FocusIn, old_listener );
+			text.removeListener( SWT.MenuDetect, old_listener );
 		}
 		
 		Matcher 	a_matcher = a_pattern.matcher( value );
@@ -4770,14 +4772,25 @@ public class Utils
 		}
 		
 		StyleRange[] styles = ranges.toArray( new StyleRange[0]);
-				
+			
+		Menu menu = new Menu( text );
+		
+		text.setMenu(  menu );
+		
 		Listener listener = 
 			(event)->{
 	           
 				String		url = null;
 				
+				Point location = new Point( event.x, event.y );
+				
+				if ( event.type == SWT.MenuDetect ){
+					
+					location = text.getDisplay().map( null, text, location);
+				}
+				
 				try {
-					int offset = text.getOffsetAtPoint(new Point(event.x, event.y));
+					int offset = text.getOffsetAtPoint( location );
 
 					if ( offset >= 0 ){
 
@@ -4814,12 +4827,25 @@ public class Utils
 					}
 					case SWT.MouseUp:{
 						
-						 if ( url != null ){
+						if ( event.button == 1 && url != null ){
 							 
-							 Utils.launch( url );
-						 }
+							Utils.launch( url );
+						}
 						 
-						 break;
+						break;
+					}
+					case SWT.MenuDetect:{
+					
+						if ( url != null ){
+						
+							ClipboardCopy.addCopyToClipMenu(menu, url );
+							
+						}else{
+						
+							event.doit = false;
+						}
+						
+						break;
 					}
 					case SWT.FocusIn:{
 						text.traverse( SWT.TRAVERSE_TAB_NEXT );
@@ -4833,6 +4859,7 @@ public class Utils
 		text.addListener( SWT.MouseHover, listener );
 		text.addListener( SWT.MouseUp, listener );
 		text.addListener( SWT.FocusIn, listener );
+		text.addListener( SWT.MenuDetect, listener );
 		
 		text.setData( "Utils.setTextWithURLs", listener );
 		
