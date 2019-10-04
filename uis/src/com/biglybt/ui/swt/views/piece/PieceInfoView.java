@@ -35,6 +35,7 @@ import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
+import com.biglybt.core.disk.impl.resume.RDResumeHandler;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPieceListener;
 import com.biglybt.core.download.DownloadManagerState;
@@ -286,7 +287,7 @@ public class PieceInfoView
 					return;
 				try {
 					Rectangle bounds = (img == null) ? null : img.getBounds();
-					if (bounds == null || dlm == null || dlm.getPeerManager() == null ) {
+					if (bounds == null || dlm == null ) {
 						e.gc.fillRectangle(e.x, e.y, e.width, e.height);
 					} else {
 						if (e.x + e.width > bounds.width)
@@ -787,7 +788,13 @@ public class PieceInfoView
 
 		DiskManager dm = dlm.getDiskManager();
 
-		if (pm == null || dm == null) {
+		DiskManagerPiece[] dm_pieces = dm == null ? null :  dm.getPieces();
+		byte[] resume_data = dm_pieces == null ? MapUtils.getMapByteArray(
+			MapUtils.getMapMap(dlm.getDownloadState().getResumeData(), "data",
+				null),
+			"resume data", null) : null;
+
+		if (dm_pieces == null && resume_data == null) {
 			GC gc = new GC(pieceInfoCanvas);
 			gc.fillRectangle(bounds);
 			gc.dispose();
@@ -817,7 +824,8 @@ public class PieceInfoView
 			}
 		}
 		
-		int iNeededHeight = (((dm.getNbPieces() - 1) / iNumCols) + 1) * BLOCK_SIZE;
+		int numPieces = dm_pieces == null ? resume_data.length : dm_pieces.length;
+		int iNeededHeight = (((numPieces - 1) / iNumCols) + 1) * BLOCK_SIZE;
 
 		if (img != null && !img.isDisposed()) {
 			Rectangle imgBounds = img.getBounds();
@@ -828,25 +836,25 @@ public class PieceInfoView
 			}
 		}
 
-		DiskManagerPiece[] dm_pieces = dm.getPieces();
-
-		PEPiece[] currentDLPieces = pm.getPieces();
-		byte[] uploadingPieces = new byte[dm_pieces.length];
+		PEPiece[] currentDLPieces = pm == null ? null : pm.getPieces();
+		byte[] uploadingPieces = dm_pieces == null ? null :  new byte[dm_pieces.length];
 
 		// find upload pieces
-		for (PEPeer peer : pm.getPeers()) {
-			int[] peerRequestedPieces = peer.getIncomingRequestedPieceNumbers();
-			if (peerRequestedPieces != null && peerRequestedPieces.length > 0) {
-				int pieceNum = peerRequestedPieces[0];
-				if (uploadingPieces[pieceNum] < 2)
-					uploadingPieces[pieceNum] = 2;
-				for (int j = 1; j < peerRequestedPieces.length; j++) {
-					pieceNum = peerRequestedPieces[j];
-					if (uploadingPieces[pieceNum] < 1)
-						uploadingPieces[pieceNum] = 1;
+		if (pm != null && uploadingPieces != null) {
+			for (PEPeer peer : pm.getPeers()) {
+				int[] peerRequestedPieces = peer.getIncomingRequestedPieceNumbers();
+				if (peerRequestedPieces != null && peerRequestedPieces.length > 0) {
+					int pieceNum = peerRequestedPieces[0];
+					if (uploadingPieces[pieceNum] < 2)
+						uploadingPieces[pieceNum] = 2;
+					for (int j = 1; j < peerRequestedPieces.length; j++) {
+						pieceNum = peerRequestedPieces[j];
+						if (uploadingPieces[pieceNum] < 1)
+							uploadingPieces[pieceNum] = 1;
+					}
 				}
+	
 			}
-
 		}
 
 		if (sc.getMinHeight() != iNeededHeight) {
@@ -855,7 +863,7 @@ public class PieceInfoView
 			bounds = pieceInfoCanvas.getClientArea();
 		}
 
-		int[] availability = pm.getAvailability();
+		int[] availability = pm == null ? null : pm.getAvailability();
 
 		int minAvailability = Integer.MAX_VALUE;
 		int minAvailability2 = Integer.MAX_VALUE;
@@ -878,7 +886,7 @@ public class PieceInfoView
 		GC gcImg = new GC(img);
 
 
-		BlockInfo[] newBlockInfo = new BlockInfo[dm_pieces.length];
+		BlockInfo[] newBlockInfo = new BlockInfo[numPieces];
 
 		int iRow = 0;
 		try {
@@ -893,7 +901,7 @@ public class PieceInfoView
 			int	selectionStart 	= Integer.MAX_VALUE;
 			int selectionEnd	= Integer.MIN_VALUE;
 			
-			if ( selectedPiece != -1 ){
+			if ( selectedPiece != -1 & dm != null ){
 			
 				if ( selectedPieceShowFile ){
 					
@@ -922,8 +930,8 @@ public class PieceInfoView
 			gcImg.setFont(font);
 
 			int iCol = 0;
-			for (int i = 0; i < dm_pieces.length; i++) {
-				DiskManagerPiece dm_piece = dm_pieces[i];
+			for (int i = 0; i < numPieces; i++) {
+				DiskManagerPiece dm_piece = dm_pieces == null ? null : dm_pieces[i];
 				
 				if (iCol >= iNumCols) {
 					iCol = 0;
@@ -936,7 +944,8 @@ public class PieceInfoView
 					newInfo.selectedRange = true;
 				}
 
-				boolean done = dm_piece.isDone();
+				boolean done = dm_piece == null
+						? resume_data[i] == RDResumeHandler.PIECE_DONE : dm_piece.isDone();
 				int iXPos = iCol * BLOCK_SIZE + 1;
 				int iYPos = iRow * BLOCK_SIZE + 1;
 
@@ -945,11 +954,15 @@ public class PieceInfoView
 					newInfo.haveWidth = BLOCK_FILLSIZE;
 				} else {
 					// !done
-					boolean partiallyDone = dm_piece.getNbWritten() > 0;
+					boolean partiallyDone = dm_piece == null
+							? resume_data[i] == RDResumeHandler.PIECE_STARTED
+							: dm_piece.getNbWritten() > 0;
 
 					int width = BLOCK_FILLSIZE;
 					if (partiallyDone) {
-						int iNewWidth = (int) (((float)dm_piece.getNbWritten() / dm_piece.getNbBlocks()) * width);
+						int iNewWidth = dm_piece == null ? width / 2
+								: (int) (((float) dm_piece.getNbWritten()
+										/ dm_piece.getNbBlocks()) * width);
 						if (iNewWidth >= width)
 							iNewWidth = width - 1;
 						else if (iNewWidth <= 0)
@@ -959,12 +972,13 @@ public class PieceInfoView
 					}
 				}
 
-				if (currentDLPieces[i] != null && currentDLPieces[i].hasUndownloadedBlock()) {
+				if (currentDLPieces != null && currentDLPieces[i] != null
+						&& currentDLPieces[i].hasUndownloadedBlock()) {
 					newInfo.showDown = currentDLPieces[i].getNbRequests() == 0
 							? SHOW_SMALL : SHOW_BIG;
 				}
 
-				if (uploadingPieces[i] > 0) {
+				if (uploadingPieces != null && uploadingPieces[i] > 0) {
 					newInfo.showUp = uploadingPieces[i] < 2 ? SHOW_SMALL
 							: SHOW_BIG;
 				}
@@ -1018,11 +1032,11 @@ public class PieceInfoView
 					gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
 							BLOCK_SIZE);
 	
-					if ( dm_piece.isMergeRead()){
+					if ( dm_piece != null && dm_piece.isMergeRead()){
 						
 						gcImg.setBackground(blockColors[BLOCKCOLOR_MERGE_READ]);
 						
-					}else if ( dm_piece.isMergeWrite()){
+					}else if ( dm_piece != null && dm_piece.isMergeWrite()){
 						
 						gcImg.setBackground(blockColors[BLOCKCOLOR_MERGE_WRITE]);
 						
@@ -1095,38 +1109,40 @@ public class PieceInfoView
 				new String[] {
 					"" + iNumCols,
 					"" + (iRow + 1),
-					"" + dm_pieces.length
+					"" + numPieces
 				});
 
-		PiecePicker picker = pm.getPiecePicker();
-		
-		int seq_info = picker.getSequentialInfo();
-		
-		if ( seq_info != 0 ){
+		if (pm != null) {
+			PiecePicker picker = pm.getPiecePicker();
 			
-			int			seq_from;
-			boolean		asc;
+			int seq_info = picker.getSequentialInfo();
 			
-			if ( seq_info > 0 ){
+			if ( seq_info != 0 ){
 				
-				seq_from 	= seq_info-1;
+				int			seq_from;
+				boolean		asc;
 				
-				asc			= true;
+				if ( seq_info > 0 ){
+					
+					seq_from 	= seq_info-1;
+					
+					asc			= true;
+					
+				}else{
 				
-			}else{
-			
-				seq_from	= - ( seq_info + 1 );
-				asc			= false;
+					seq_from	= - ( seq_info + 1 );
+					asc			= false;
+				}
+				
+				topLabelLHS += "; seq=" + seq_from + (asc?'+':'-');
 			}
 			
-			topLabelLHS += "; seq=" + seq_from + (asc?'+':'-');
-		}
-		
-		String egm_info = picker.getEGMInfo();
-		
-		if ( egm_info != null ){
+			String egm_info = picker.getEGMInfo();
 			
-			topLabelLHS += "; EGM=" + egm_info;
+			if ( egm_info != null ){
+				
+				topLabelLHS += "; EGM=" + egm_info;
+			}
 		}
 		
 		updateTopLabel();
