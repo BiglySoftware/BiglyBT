@@ -110,6 +110,7 @@ public class PieceInfoView
 
 	private Canvas 	pieceInfoCanvas;
 	private int		currentNumColumns;
+	private int		currentNumPieces;
 	
 	private final Color[] blockColors;
 
@@ -829,13 +830,17 @@ public class PieceInfoView
 
 		if (img != null && !img.isDisposed()) {
 			Rectangle imgBounds = img.getBounds();
-			if (imgBounds.width != bounds.width || imgBounds.height != iNeededHeight) {
+			if ( 	numPieces != currentNumPieces || 
+					imgBounds.width != bounds.width || 
+					imgBounds.height != iNeededHeight) {
 				oldBlockInfo = null;
 				img.dispose();
 				img = null;
 			}
 		}
 
+		currentNumPieces = numPieces;
+		
 		PEPiece[] currentDLPieces = pm == null ? null : pm.getPieces();
 		byte[] uploadingPieces = dm_pieces == null ? null :  new byte[dm_pieces.length];
 
