@@ -194,6 +194,20 @@ public class DataSourceUtils
 		return managers.toArray(new DownloadManager[0]);
 	}
 
+	public static PEPiece[] getPieces(Object ds) {
+		Object[] dsArray = (ds instanceof Object[]) ? (Object[]) ds : new Object[] {
+			ds
+		};
+		List<PEPiece> list = new ArrayList<>();
+		for (Object o : dsArray) {
+			if (o instanceof PEPiece) {
+				list.add((PEPiece) o);
+			}
+		}
+		return list.toArray(new PEPiece[0]);
+	}
+
+
 	public static TOTorrent getTorrent(Object ds) {
 		if (ds instanceof TOTorrent) {
 			return (TOTorrent) ds;
@@ -374,4 +388,5 @@ public class DataSourceUtils
 		return data instanceof Object[] ? Arrays.toString((Object[]) data)
 			: "" + data;
 	}
+
 }
