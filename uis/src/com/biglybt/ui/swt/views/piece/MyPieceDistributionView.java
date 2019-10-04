@@ -21,7 +21,9 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.views.PieceDistributionView;
+import com.biglybt.util.DataSourceUtils;
 
 
 /**
@@ -42,6 +44,13 @@ public class MyPieceDistributionView
 		if (newDataSource instanceof Object[]
 				&& ((Object[]) newDataSource).length > 0) {
 			newDataSource = ((Object[]) newDataSource)[0];
+		}
+		if (newDataSource == null && swtView != null) {
+			// can be placed in PiecesView
+			UISWTView parentView = swtView.getParentView();
+			if (parentView != null) {
+				newDataSource = DataSourceUtils.getDM(parentView.getDataSource());
+			}
 		}
 
 		if (newDataSource instanceof DownloadManager) {

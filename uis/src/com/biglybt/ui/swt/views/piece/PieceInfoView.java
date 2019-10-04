@@ -17,6 +17,8 @@
 
 package com.biglybt.ui.swt.views.piece;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
@@ -59,7 +61,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.PiecesView;
-import com.biglybt.ui.swt.views.ViewUtils;
+import com.biglybt.util.DataSourceUtils;
 import com.biglybt.util.MapUtils;
 
 /**
@@ -114,7 +116,7 @@ public class PieceInfoView
 	private String topLabelLHS = "";
 	private String topLabelRHS = "";
 
-	private int		selectedPieceExplicit			= -1;
+	private List<Integer> selectedPieceExplicit			= null;
 	private int		selectedPiece					= -1;
 	private int		selectedPieceShowFilePending	= -1;
 	private boolean	selectedPieceShowFile;
@@ -159,9 +161,16 @@ public class PieceInfoView
 	private void dataSourceChanged(Object newDataSource) {
 		//System.out.println( "dsc: dlm=" + dlm + ", new=" + (newDataSource instanceof Object[]?((Object[])newDataSource)[0]:newDataSource));
 
-		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource, dlm );
+		DownloadManager[] newManager = DataSourceUtils.getDMs(newDataSource);
+		if (newManager.length == 0 && swtView != null) {
+			// PiecesInfoView can be placed in PiecesView
+			UISWTView parentView = swtView.getParentView();
+			if (parentView != null) {
+				newManager = DataSourceUtils.getDMs(parentView.getDataSource());
+			}
+		}
 
-		if ( newManager != null ){
+		if ( newManager.length != 1){
 
 			oldBlockInfo = null;
 		}
@@ -170,13 +179,18 @@ public class PieceInfoView
 			if (dlm != null) {
 				dlm.removePieceListener(this);
 			}
-			dlm = newManager;
+			dlm = newManager.length == 1 ? newManager[0] : null;
 			if ( dlm != null ){
 				dlm.addPieceListener(this, false);
 			}
 		}
 
-		if ( newManager != null ){
+		PEPiece[] pieces = DataSourceUtils.getPieces(newDataSource);
+		if (dlm != null && pieces.length > 0) {
+			selectPieces(pieces);
+		}
+
+		if ( dlm != null ){
 			fillPieceInfoSection();
 		}
 	}
@@ -207,10 +221,13 @@ public class PieceInfoView
 	}
 
 	public void
-	selectPiece(
-		PEPiece		piece )
+	selectPieces(
+		PEPiece...		pieces )
 	{
-		selectedPieceExplicit = piece.getPieceNumber();
+		selectedPieceExplicit = new ArrayList<>();
+		for (PEPiece piece : pieces) {
+			selectedPieceExplicit.add(piece.getPieceNumber());
+		}
 		
 		Utils.execSWTThread(() -> {
 			scrollPending = true;
@@ -351,7 +368,7 @@ public class PieceInfoView
 					
 					if ( piece_number >= 0 ){
 
-						selectedPieceExplicit = -1;
+						selectedPieceExplicit = null;
 						
 						selectedPiece 					= piece_number;
 						selectedPieceShowFilePending	= piece_number;
@@ -661,39 +678,46 @@ public class PieceInfoView
 
 	private void
 	setTopLableRHS(
-		int	piece_number )
+		Integer...	piece_numbers )
 	{
 		DiskManager		disk_manager 	= dlm.getDiskManager();
 		PEPeerManager	pm 				= dlm.getPeerManager();
 
-		DiskManagerPiece	dm_piece = disk_manager.getPiece( piece_number );
-		PEPiece 			pm_piece = pm.getPiece( piece_number );
-
-		String	text =  "Piece " + piece_number + ": " + dm_piece.getString();
-
-		if ( pm_piece != null ){
-
-			text += ", active: " + pm_piece.getString();
-
-		}else{
-
-			if ( dm_piece.isNeeded() && !dm_piece.isDone()){
-
-				text += ", inactive: " + pm.getPiecePicker().getPieceString( piece_number );
+		String text = "";
+		for (int piece_number : piece_numbers) {
+			if (!text.isEmpty()) {
+				text += "\n";
 			}
-		}
-		
-		text += " - ";
-		
-		DMPieceList l = disk_manager.getPieceList( piece_number );
-		
-		for ( int i=0;i<l.size();i++) {
-   		 
-			DMPieceMapEntry entry = l.get( i );
-			
-			DiskManagerFileInfo info = entry.getFile();
+				
+			DiskManagerPiece	dm_piece = disk_manager.getPiece( piece_number );
+			PEPiece 			pm_piece = pm.getPiece( piece_number );
 	
-			text += (i==0?"":"; ") + info.getFile( true ).getName();
+			text +=  "Piece " + piece_number + ": " + dm_piece.getString();
+	
+			if ( pm_piece != null ){
+	
+				text += ", active: " + pm_piece.getString();
+	
+			}else{
+	
+				if ( dm_piece.isNeeded() && !dm_piece.isDone()){
+	
+					text += ", inactive: " + pm.getPiecePicker().getPieceString( piece_number );
+				}
+			}
+			
+			text += " - ";
+			
+			DMPieceList l = disk_manager.getPieceList( piece_number );
+			
+			for ( int i=0;i<l.size();i++) {
+	       
+				DMPieceMapEntry entry = l.get( i );
+				
+				DiskManagerFileInfo info = entry.getFile();
+		
+				text += (i==0?"":"; ") + info.getFile( true ).getName();
+			}
 		}
 		
 		topLabelRHS = text;
@@ -704,8 +728,8 @@ public class PieceInfoView
 	{
 		String text = topLabelLHS;
 		
-		if (selectedPieceExplicit >= 0) {
-			setTopLableRHS( selectedPieceExplicit );
+		if (selectedPieceExplicit != null && !selectedPieceExplicit.isEmpty()) {
+			setTopLableRHS( selectedPieceExplicit.toArray(new Integer[0]) );
 		}
 
 		if ( text.length() > 0 && topLabelRHS.length() > 0 ){
@@ -955,7 +979,7 @@ public class PieceInfoView
 					newInfo.availNum = -1;
 				}
 
-				boolean isSel = i == selectedPiece || i == selectedPieceExplicit;
+				boolean isSel = i == selectedPiece || (selectedPieceExplicit != null && selectedPieceExplicit.contains(i));
 				
 				if ( isSel ){
 					newInfo.selected = true;
@@ -1192,7 +1216,7 @@ public class PieceInfoView
 			}
 		}
 		
-		selectedPieceExplicit = -1;
+		selectedPieceExplicit = null;
 		selectedPiece = -1;
 	}
 

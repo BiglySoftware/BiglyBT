@@ -54,7 +54,7 @@ public abstract class PieceDistributionView
 	protected boolean		isMe		= false;
 	private boolean			initialized	= false;
 	private Image imgToPaint = null;
-	private UISWTView swtView;
+	protected UISWTView swtView;
 
 	/**
 	 * implementors of this method must provide an appropriate peer manager and

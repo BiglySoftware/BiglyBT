@@ -414,36 +414,25 @@ public class PiecesView
 	
 	  @Override
 	public void defaultSelected(TableRowCore[] rows, int keyMask, int origin) {
+	  // Show piece in PieceInfoView
 
+	  // Show subtab if we have one
+	  TableViewSWT_TabsCommon tabsCommon = tv.getTabsCommon();
+		if (tabsCommon != null) {
+			MultipleDocumentInterfaceSWT mdi = tabsCommon.getMDI();
+			if (mdi != null) {
+				mdi.showEntryByID(PieceInfoView.MSGID_PREFIX);
+				return;
+			}
+		}
+		
 		if (rows.length != 1) {
 			return;
 		}
 
-		PEPiece piece = (PEPiece) rows[0].getDataSource();
-
-		// Show piece in PieceInfoView, which is either a subtab of this view,
-		// or a sister tab
-		MdiEntrySWT entry = null;
-		MultipleDocumentInterfaceSWT mdiToUse = null;
-
-		TableViewSWT_TabsCommon tabsCommon = tv.getTabsCommon();
-		if (tabsCommon != null) {
-			mdiToUse = tabsCommon.getMDI();
-			if (mdiToUse != null) {
-				entry = mdiToUse.getEntry(PieceInfoView.MSGID_PREFIX);
-			}
-		}
-		if (entry == null && mdi != null) {
-			mdiToUse = mdi;
-			entry = mdiToUse.getEntry(PieceInfoView.MSGID_PREFIX);
-		}
-
-		if (entry != null) {
-			UISWTViewEventListener eventListener = entry.getEventListener();
-			if (eventListener instanceof PieceInfoView) {
-				mdiToUse.showEntry(entry);
-				((PieceInfoView) eventListener).selectPiece(piece);
-			}
+		// Show in sister tab
+		if (mdi != null) {
+			mdi.showEntryByID(PieceInfoView.MSGID_PREFIX, rows[0].getDataSource());
 		}
 	}
 
