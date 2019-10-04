@@ -896,6 +896,15 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 		refreshenProcessDataSourcesTimer();
 	}
+	
+	protected boolean
+	hasPendingDSChanges()
+	{
+		synchronized (rows_sync){
+			
+			return( !dataSourcesToAdd.isEmpty() || !dataSourcesToRemove.isEmpty());
+		}
+	}
 
 	// @see TableView#dataSourceExists(java.lang.Object)
 	@Override

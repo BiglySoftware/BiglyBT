@@ -174,7 +174,7 @@ public class TableViewPainted
 	private boolean expandEnabled = expand_enabled_default;
 	
 	private AtomicInteger	mutationCount 	= new AtomicInteger(0);
-	private int				lastMC			= -1;
+	private volatile int	lastMC			= -1;
 
 	private TableHeaderPainted header;
 
@@ -805,6 +805,24 @@ public class TableViewPainted
 			
 			return( visibleRows.toArray( new TableRowCore[ visibleRows.size()]));
 		}
+	}
+	
+	@Override
+	public boolean hasChangesPending()
+	{
+		if ( hasPendingDSChanges()){
+			
+			return( true );
+		}
+		
+		sortColumn( true );
+		
+		if ( lastMC != mutationCount.get()){
+			
+			return( true );
+		}
+		
+		return( false );
 	}
 	
 	@Override
@@ -1587,7 +1605,8 @@ public class TableViewPainted
 		
 		int mut = mutationCount.get();
 		
-		if ( mut != lastMC ){			
+		if ( mut != lastMC ){	
+			
 			boolean changed = numberAllVisibleRows();
 			if ( changed ){
 					// not actually sure we need this any more
@@ -1595,97 +1614,101 @@ public class TableViewPainted
 					drawBounds = canvasImage.getBounds();
 				}
 			}
+		}
+		
+		try{
+			int end = drawBounds.y + drawBounds.height;
+	
+			gc.setFont(cTable.getFont());
+			Utils.setClipping(gc, drawBounds);
+			TableRowCore oldRow = null;
+			int pos = -1;
+			Set<TableRowPainted> visibleRows = this.visibleRows;
+	
+			boolean isTableSelected = isTableSelected();
+			boolean isTableEnabled = cTable.isEnabled();
+			
+			for (TableRowPainted row : visibleRows) {
+				TableRowPainted paintedRow = row;
+				int rowHeight = paintedRow.getHeight();
+				
+				if ( rowHeight > 0 ){
+					if (pos == -1) {
+						pos	= row.getVisibleRowIndex();
+					} else {
+						pos++;
+					}
+					Point drawOffset = paintedRow.getDrawOffset();
+					int rowStartX = 0;
+					if (DIRECT_DRAW) {
+						rowStartX = -drawOffset.x;
+					}
+					int rowStartY = drawOffset.y - clientArea.y;
+					
+					//debug("Paint " + drawBounds.x + "x" + drawBounds.y + " " + drawBounds.width + "x" + drawBounds.height + "; Row=" +row.getIndex() + ";clip=" + gc.getClipping() +";drawOffset=" + drawOffset);
+					if (drawBounds.intersects(rowStartX, rowStartY, 9999, rowHeight)) {
+						// ensure full row height
+						int diffY2 = (rowStartY + rowHeight) - (drawBounds.y + drawBounds.height);
+						if (diffY2 > 0 ) {
+							drawBounds.height += diffY2;
+							Utils.setClipping(gc, drawBounds);
+						}
+						paintedRow.swt_paintGC(gc, drawBounds, rowStartX, rowStartY, pos,
+								isTableSelected, isTableEnabled);
+					}
+				}
+				oldRow = row;
+			}
+	
+			int h;
+			int yDirty;
+			if (oldRow == null) {
+				yDirty = drawBounds.y;
+				h = drawBounds.height;
+			} else {
+				yDirty = ((TableRowPainted) oldRow).getDrawOffset().y
+						+ ((TableRowPainted) oldRow).getFullHeight();
+				h = (drawBounds.y + drawBounds.height) - yDirty;
+			}
+			if (h > 0) {
+				int rowHeight = getRowDefaultHeight();
+				if (extendedErase && cTable.isEnabled()) {
+					while (yDirty < end) {
+						pos++;
+						Color color = Colors.alternatingColors[pos % 2];
+						if (color != null) {
+							gc.setBackground(color);
+						}
+						if (color == null) {
+							gc.setBackground(gc.getDevice().getSystemColor(
+									SWT.COLOR_LIST_BACKGROUND));
+						}
+						gc.fillRectangle(drawBounds.x, yDirty, drawBounds.width, rowHeight);
+						yDirty += rowHeight;
+					}
+				} else {
+					gc.setBackground(gc.getDevice().getSystemColor(cTable.isEnabled() ?
+							SWT.COLOR_LIST_BACKGROUND : SWT.COLOR_WIDGET_BACKGROUND));
+					gc.fillRectangle(drawBounds.x, yDirty, drawBounds.width, h);
+				}
+			}
+	
+			//gc.setForeground(getColorLine());
+			Utils.setClipping(gc, drawBounds);
+			TableColumnCore[] visibleColumns = getVisibleColumns();
+			int x = DIRECT_DRAW ? -clientArea.x : 0;
+			gc.setAlpha(20);
+			for (TableColumnCore column : visibleColumns) {
+				x += column.getWidth();
+	
+				// Vertical lines between columns
+				gc.drawLine(x - 1, drawBounds.y, x - 1, drawBounds.y + drawBounds.height);
+			}
+			gc.setAlpha(255);
+		}finally{
+			
 			lastMC = mut;
 		}
-		
-		int end = drawBounds.y + drawBounds.height;
-
-		gc.setFont(cTable.getFont());
-		Utils.setClipping(gc, drawBounds);
-		TableRowCore oldRow = null;
-		int pos = -1;
-		Set<TableRowPainted> visibleRows = this.visibleRows;
-
-		boolean isTableSelected = isTableSelected();
-		boolean isTableEnabled = cTable.isEnabled();
-		
-		for (TableRowPainted row : visibleRows) {
-			TableRowPainted paintedRow = row;
-			int rowHeight = paintedRow.getHeight();
-			
-			if ( rowHeight > 0 ){
-				if (pos == -1) {
-					pos	= row.getVisibleRowIndex();
-				} else {
-					pos++;
-				}
-				Point drawOffset = paintedRow.getDrawOffset();
-				int rowStartX = 0;
-				if (DIRECT_DRAW) {
-					rowStartX = -drawOffset.x;
-				}
-				int rowStartY = drawOffset.y - clientArea.y;
-				
-				//debug("Paint " + drawBounds.x + "x" + drawBounds.y + " " + drawBounds.width + "x" + drawBounds.height + "; Row=" +row.getIndex() + ";clip=" + gc.getClipping() +";drawOffset=" + drawOffset);
-				if (drawBounds.intersects(rowStartX, rowStartY, 9999, rowHeight)) {
-					// ensure full row height
-					int diffY2 = (rowStartY + rowHeight) - (drawBounds.y + drawBounds.height);
-					if (diffY2 > 0 ) {
-						drawBounds.height += diffY2;
-						Utils.setClipping(gc, drawBounds);
-					}
-					paintedRow.swt_paintGC(gc, drawBounds, rowStartX, rowStartY, pos,
-							isTableSelected, isTableEnabled);
-				}
-			}
-			oldRow = row;
-		}
-
-		int h;
-		int yDirty;
-		if (oldRow == null) {
-			yDirty = drawBounds.y;
-			h = drawBounds.height;
-		} else {
-			yDirty = ((TableRowPainted) oldRow).getDrawOffset().y
-					+ ((TableRowPainted) oldRow).getFullHeight();
-			h = (drawBounds.y + drawBounds.height) - yDirty;
-		}
-		if (h > 0) {
-			int rowHeight = getRowDefaultHeight();
-			if (extendedErase && cTable.isEnabled()) {
-				while (yDirty < end) {
-					pos++;
-					Color color = Colors.alternatingColors[pos % 2];
-					if (color != null) {
-						gc.setBackground(color);
-					}
-					if (color == null) {
-						gc.setBackground(gc.getDevice().getSystemColor(
-								SWT.COLOR_LIST_BACKGROUND));
-					}
-					gc.fillRectangle(drawBounds.x, yDirty, drawBounds.width, rowHeight);
-					yDirty += rowHeight;
-				}
-			} else {
-				gc.setBackground(gc.getDevice().getSystemColor(cTable.isEnabled() ?
-						SWT.COLOR_LIST_BACKGROUND : SWT.COLOR_WIDGET_BACKGROUND));
-				gc.fillRectangle(drawBounds.x, yDirty, drawBounds.width, h);
-			}
-		}
-
-		//gc.setForeground(getColorLine());
-		Utils.setClipping(gc, drawBounds);
-		TableColumnCore[] visibleColumns = getVisibleColumns();
-		int x = DIRECT_DRAW ? -clientArea.x : 0;
-		gc.setAlpha(20);
-		for (TableColumnCore column : visibleColumns) {
-			x += column.getWidth();
-
-			// Vertical lines between columns
-			gc.drawLine(x - 1, drawBounds.y, x - 1, drawBounds.y + drawBounds.height);
-		}
-		gc.setAlpha(255);
 	}
 
 	private Color getColorLine() {

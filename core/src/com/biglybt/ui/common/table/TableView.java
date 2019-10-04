@@ -430,6 +430,8 @@ public interface TableView<DATASOURCETYPE>
 	
 	void resetLastSortedOn();
 
+	boolean hasChangesPending();
+	
 	TableColumnCore[] getAllColumns();
 
 	void removeCountChangeListener(TableCountChangeListener l);

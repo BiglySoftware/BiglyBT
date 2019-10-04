@@ -1383,62 +1383,82 @@ public class FilesView
 		
 		if ( to_select != null ){
 			
-			Utils.execSWTThreadLater(
-				100,
+			AEThread2.createAndStartDaemon(
+				"TableSelector",
 				()->{
-					List<TableRowCore>	selected_rows = new ArrayList<>();
+			
+					long	start = SystemTime.getMonotonousTime();
 					
-					TableRowCore[] tv_rows = tv.getRowsAndSubRows(false);
+					while( tv.hasChangesPending()){
 					
-					Map<DiskManagerFileInfo,TableRowCore>	file_to_row_map = new HashMap<>();
-					
-					for ( TableRowCore tv_row: tv_rows ){
+						if ( SystemTime.getMonotonousTime() - start > 5000 ){
+							
+							return;
+						}
 						
-						DiskManagerFileInfo ds_file = (DiskManagerFileInfo)tv_row.getDataSource(true);
-						
-						if ( ds_file instanceof FilesViewNodeLeaf ){
+						try{
+							Thread.sleep( 100 );
 							
-							DiskManagerFileInfo target = ((FilesViewNodeLeaf)ds_file).getTarget();
+						}catch( Throwable e ){
 							
-							file_to_row_map.put( target, tv_row );
-							
-						}else if ( ds_file instanceof FilesViewNodeInner ){
-									
-						}else{
-							
-							file_to_row_map.put( ds_file, tv_row );
 						}
 					}
 					
-					for ( Object o: to_select ){
-						
-						TableRowCore row = null;
-						
-						if ( o instanceof FilesViewTreeNode ){
+					Utils.execSWTThread(
+						()->{
+							List<TableRowCore>	selected_rows = new ArrayList<>();
 							
-							if ( o instanceof FilesViewNodeLeaf ){
+							TableRowCore[] tv_rows = tv.getRowsAndSubRows(false);
+							
+							Map<DiskManagerFileInfo,TableRowCore>	file_to_row_map = new HashMap<>();
+							
+							for ( TableRowCore tv_row: tv_rows ){
 								
-								row = file_to_row_map.get( ((FilesViewNodeLeaf)o).getTarget());
+								DiskManagerFileInfo ds_file = (DiskManagerFileInfo)tv_row.getDataSource(true);
+								
+								if ( ds_file instanceof FilesViewNodeLeaf ){
+									
+									DiskManagerFileInfo target = ((FilesViewNodeLeaf)ds_file).getTarget();
+									
+									file_to_row_map.put( target, tv_row );
+									
+								}else if ( ds_file instanceof FilesViewNodeInner ){
+											
+								}else{
+									
+									file_to_row_map.put( ds_file, tv_row );
+								}
 							}
-						}else if ( o instanceof FilesViewNodeInner ){
 							
-						}else{
+							for ( Object o: to_select ){
+								
+								TableRowCore row = null;
+								
+								if ( o instanceof FilesViewTreeNode ){
+									
+									if ( o instanceof FilesViewNodeLeaf ){
+										
+										row = file_to_row_map.get( ((FilesViewNodeLeaf)o).getTarget());
+									}
+								}else if ( o instanceof FilesViewNodeInner ){
+									
+								}else{
+									
+									row = file_to_row_map.get( o );
+								}
+								
+								if ( row != null ){
 							
-							row = file_to_row_map.get( o );
-						}
-						
-						if ( row != null ){
-					
-							selected_rows.add( row );
-						}
-					}
-					
-					if ( !selected_rows.isEmpty()){
-						
-						
-						tv.setSelectedRows( selected_rows.toArray( new TableRowCore[0]));
-					
-					}
+									selected_rows.add( row );
+								}
+							}
+							
+							if ( !selected_rows.isEmpty()){
+								
+								tv.setSelectedRows( selected_rows.toArray( new TableRowCore[0]));
+							
+							}
+						});
 				});
 		}
 	}
