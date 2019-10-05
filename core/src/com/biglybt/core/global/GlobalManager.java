@@ -471,4 +471,6 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 
 	public Object		// DownloadHistoryManager
 	getDownloadHistoryManager();
+	
+	boolean isStopping();
 }

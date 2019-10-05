@@ -1574,6 +1574,10 @@ public class GlobalManagerImpl
 	  dms.delete();
   }
 
+	public boolean isStopping() {
+		return isStopping;
+	}
+
   /* Puts GlobalManager in a stopped state.
    * Used when closing down the client.
    */
