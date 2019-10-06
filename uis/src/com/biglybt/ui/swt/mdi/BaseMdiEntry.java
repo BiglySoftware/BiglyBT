@@ -172,7 +172,8 @@ public abstract class BaseMdiEntry
 				shuttingDown = gm != null && gm.isStopping();
 			}
 			if (shuttingDown) {
-				triggerEvent(UISWTViewEvent.TYPE_DESTROY, null);
+				// Send view one last hidden event in case they want to save anything
+				triggerEvent(UISWTViewEvent.TYPE_HIDDEN, null);
 				return;
 			}
 		} catch (Throwable ignore) {

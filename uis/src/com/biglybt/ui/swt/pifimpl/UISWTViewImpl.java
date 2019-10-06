@@ -285,9 +285,13 @@ public class UISWTViewImpl
 	@Override
 	public void triggerEvent(int eventType, Object data) {
 		// Destroy event requires SWT Thread
-		if (eventType == UISWTViewEvent.TYPE_DESTROY
-				&& Utils.runIfNotSWTThread(() -> triggerEvent(eventType, data))) {
-			return;
+		if (eventType == UISWTViewEvent.TYPE_DESTROY) {
+			if (Utils.isDisplayDisposed()) {
+				return;
+			}
+			if (Utils.runIfNotSWTThread(() -> triggerEvent(eventType, data))) {
+				return;
+			}
 		}
 
 		try {
