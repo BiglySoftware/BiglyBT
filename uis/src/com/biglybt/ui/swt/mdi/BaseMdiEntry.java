@@ -32,6 +32,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -69,17 +70,13 @@ public abstract class BaseMdiEntry
 
 	protected static long uniqueNumber = 0;
 
-	protected final MultipleDocumentInterface mdi;
-
-	protected String logID;
+	protected final BaseMDI mdi;
 
 	private String skinRef;
 
 	private List<MdiCloseListener> listCloseListeners = null;
 
 	private List<MdiChildCloseListener> listChildCloseListeners = null;
-
-	private List<MdiEntryLogIdListener> listLogIDListeners = null;
 
 	private List<MdiEntryOpenListener> listOpenListeners = null;
 
@@ -96,11 +93,9 @@ public abstract class BaseMdiEntry
 
 	private boolean closeable;
 
-	protected Boolean	closeWasUserInitiated;
+	//protected Boolean	closeWasUserInitiated;
 
 	private Boolean isExpanded = null;
-
-	private boolean added = false;
 
 	private String imageLeftID;
 
@@ -117,7 +112,7 @@ public abstract class BaseMdiEntry
 	@SuppressWarnings("unchecked")
 	private List<MdiEntryVitalityImageSWT> listVitalityImages = Collections.EMPTY_LIST;
 	
-	public BaseMdiEntry(MultipleDocumentInterface mdi, String id) {
+	public BaseMdiEntry(BaseMDI mdi, String id) {
 
 		super(id);
 		setDestroyOnDeactivate(true);
@@ -125,16 +120,6 @@ public abstract class BaseMdiEntry
 		this.mdi = mdi;
 		AEDiagnostics.addWeakEvidenceGenerator(this);
 
-		if (id == null) {
-			logID = "null";
-		} else {
-			int i = id.indexOf('_');
-			if (i > 0) {
-				logID = id.substring(0, i);
-			} else {
-				logID = id;
-			}
-		}
 		setDefaultExpanded(false);
 	}
 
@@ -172,46 +157,67 @@ public abstract class BaseMdiEntry
 	}
 
 	@Override
-	public boolean
-	close(boolean force, boolean userInitiated ) {
-		if (!close(force)) {
-			return false;
+	public boolean close(boolean forceClose) {
+		closeView();
+		return true;
+	}
+
+	@Override
+	public void closeView() {
+		// Some plugins force close the view on TYPE_DESTROY 
+		try {
+			boolean shuttingDown = Utils.isDisplayDisposed();
+			if (!shuttingDown) {
+				GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+				shuttingDown = gm != null && gm.isStopping();
+			}
+			if (shuttingDown) {
+				triggerEvent(UISWTViewEvent.TYPE_DESTROY, null);
+				return;
+			}
+		} catch (Throwable ignore) {
 		}
 
-		closeWasUserInitiated = userInitiated;
-
-		return( close( force ));
-	}
-	
-	@Override
-	public boolean close(boolean forceClose) {
-		if (!forceClose) {
-			if (!requestClose()) {
-				return false;
+		if (mdi != null) {
+			MdiEntry entry = mdi.getEntry(id);
+			if (entry != null) {
+				mdi.closeEntryByID(id);
+				return;
 			}
 		}
 
-		setCloseable(closeable);
-		
+		destroyEntry();
+	}
+	
+	protected void destroyEntry() {
+		triggerCloseListeners();
+
+		try {
+			setEventListener(null, null, false);
+		} catch (UISWTViewEventCancelledException ignore) {
+		}
+
 		ViewTitleInfoManager.removeListener(this);
 
-		return true;
+		SWTSkinObject so = getSkinObject();
+		if (so != null) {
+			setSkinObjectMaster(null);
+			so.getSkin().removeSkinObject(so);
+		}
+
+		// Fires off destroy event and destroys SWT widgets
+		super.closeView();
 	}
 
 	public Object getDatasourceCore() {
 		return datasource;
 	}
 
-	/* (non-Javadoc)
-	 * @see MdiEntry#getExportableDatasource()
-	 */
 	@Override
-	public String getExportableDatasource() {
+	public Object getExportableDatasource() {
 		if (viewTitleInfo != null) {
-			Object ds = viewTitleInfo.getTitleInfoProperty(ViewTitleInfo2.TITLE_EXPORTABLE_DATASOURCE);
-			if (ds != null) {
-				return ds.toString();
-			}
+			return viewTitleInfo.getTitleInfoProperty(
+					ViewTitleInfo2.TITLE_EXPORTABLE_DATASOURCE);
 		}
 		return null;
 	}
@@ -225,18 +231,10 @@ public abstract class BaseMdiEntry
 	}
 
 	/* (non-Javadoc)
-	 * @see MdiEntry#getLogID()
-	 */
-	@Override
-	public String getLogID() {
-		return logID;
-	}
-
-	/* (non-Javadoc)
 	 * @see MdiEntry#getMDI()
 	 */
 	@Override
-	public MultipleDocumentInterface getMDI() {
+	public BaseMDI getMDI() {
 		return mdi;
 	}
 
@@ -290,9 +288,6 @@ public abstract class BaseMdiEntry
 		if (objectWithListeners instanceof MdiEntryDropListener) {
 			addListener((MdiEntryDropListener) objectWithListeners);
 		}
-		if (objectWithListeners instanceof MdiEntryLogIdListener) {
-			addListener((MdiEntryLogIdListener) objectWithListeners);
-		}
 		if (objectWithListeners instanceof MdiEntryOpenListener) {
 			addListener((MdiEntryOpenListener) objectWithListeners);
 		}
@@ -321,17 +316,17 @@ public abstract class BaseMdiEntry
 		}
 	}
 
-	public void triggerCloseListeners(boolean user) {
-		Object[] list = {};
+	public void triggerCloseListeners() {
+		MdiCloseListener[] list = {};
 		synchronized (this) {
 			if (listCloseListeners != null) {
-				list = listCloseListeners.toArray();
+				list = listCloseListeners.toArray(new MdiCloseListener[0]);
 			}
 		}
-		for (int i = 0; i < list.length; i++) {
-			MdiCloseListener l = (MdiCloseListener) list[i];
+		boolean hasAutoOpenEntry = mdi != null && mdi.willEntryAutoOpen(id);
+		for (MdiCloseListener l : list) {
 			try {
-				l.mdiEntryClosed(this, user);
+				l.mdiEntryClosed(this, !hasAutoOpenEntry);
 			} catch (Exception e) {
 				Debug.out(e);
 			}
@@ -343,10 +338,11 @@ public abstract class BaseMdiEntry
 		}
 
 		if (parentEntryID != null && mdi != null) {
-  		MdiEntry parentEntry = mdi.getEntry(parentEntryID);
-  		if (parentEntry instanceof BaseMdiEntry) {
-  			((BaseMdiEntry) parentEntry).triggerChildCloseListeners(this, user);
-  		}
+			MdiEntrySWT parentEntry = mdi.getEntry(parentEntryID);
+			if (parentEntry instanceof BaseMdiEntry) {
+				((BaseMdiEntry) parentEntry).triggerChildCloseListeners(this,
+						!hasAutoOpenEntry);
+			}
 		}
 
 		triggerEvent(UISWTViewEvent.TYPE_DESTROY, null);
@@ -386,41 +382,6 @@ public abstract class BaseMdiEntry
 			} catch (Exception e) {
 				Debug.out(e);
 			}
-		}
-	}
-
-	@Override
-	public void addListener(MdiEntryLogIdListener l) {
-		synchronized (this) {
-			if (listLogIDListeners == null) {
-				listLogIDListeners = new ArrayList<>(1);
-			}
-			listLogIDListeners.add(l);
-		}
-	}
-
-	@Override
-	public void removeListener(MdiEntryLogIdListener sideBarLogIdListener) {
-		synchronized (this) {
-			if (listLogIDListeners != null) {
-				listLogIDListeners.remove(sideBarLogIdListener);
-			}
-		}
-	}
-
-	protected void triggerLogIDListeners(String oldID) {
-		Object[] list;
-		synchronized (this) {
-			if (listLogIDListeners == null) {
-				return;
-			}
-
-			list = listLogIDListeners.toArray();
-		}
-
-		for (int i = 0; i < list.length; i++) {
-			MdiEntryLogIdListener l = (MdiEntryLogIdListener) list[i];
-			l.mdiEntryLogIdChanged(this, oldID, logID);
 		}
 	}
 
@@ -556,19 +517,6 @@ public abstract class BaseMdiEntry
 			}
 		}
 		return handled;
-	}
-
-	/* (non-Javadoc)
-	 * @see MdiEntry#setLogID(java.lang.String)
-	 */
-	@Override
-	public void setLogID(String logID) {
-		if (logID == null || logID.equals("" + this.logID)) {
-			return;
-		}
-		String oldID = this.logID;
-		this.logID = logID;
-		triggerLogIDListeners(oldID);
 	}
 
 	/* (non-Javadoc)
@@ -825,9 +773,9 @@ public abstract class BaseMdiEntry
 	public Map<String, Object> getAutoOpenInfo() {
 		Map<String, Object> autoOpenInfo = new LightHashMap<>();
 		if (getParentID() != null) {
-			autoOpenInfo.put("parentID", getParentID());
+			autoOpenInfo.put(BaseMDI.AUTOOPENINFO_PARENTID, getParentID());
 		}
-		autoOpenInfo.put("title", getTitle());
+		autoOpenInfo.put(BaseMDI.AUTOOPENINFO_TITLE, getTitle());
 		Object datasource = getDatasourceCore();
 
 		// There's also DataSourceResolver that might be useful
@@ -851,23 +799,15 @@ public abstract class BaseMdiEntry
 			autoOpenInfo.put("dms", list);
 		}
 
-		String eds = getExportableDatasource();
+		Object eds = getExportableDatasource();
 		if (eds != null) {
-			autoOpenInfo.put("datasource", eds.toString());
+			autoOpenInfo.put(BaseMDI.AUTOOPENINFO_DS, eds);
 		}
 		return autoOpenInfo;
 	}
 
 	public void setCloseable(boolean closeable) {
 		this.closeable = closeable;
-
-		if (mdi != null) {
-  		if (closeable) {
-  			mdi.informAutoOpenSet(this, getAutoOpenInfo());
-  		} else {
-  			mdi.removeEntryAutoOpen(id);
-  		}
-		}
 	}
 
 	// @see MdiEntry#setDefaultExpanded(boolean)
@@ -903,21 +843,12 @@ public abstract class BaseMdiEntry
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see MdiEntry#isAdded()
-	 */
-	@Override
-	public boolean isAdded() {
-		return added;
-	}
 
 	@Override
 	protected void setMasterComposite(Composite masterComposite) {
 		super.setMasterComposite(masterComposite);
 
-		added = masterComposite != null;
-
-		if (added) {
+		if (isContentDisposed()) {
 			setDatasource(datasource);
 		}
 
@@ -1008,11 +939,6 @@ public abstract class BaseMdiEntry
 						
 			setImageLeftID(  imageID);
 		}
-		
-		String logID = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_LOGID);
-		if (logID != null) {
-			setLogID(logID);
-		}
 	}
 
 	public abstract void build();
@@ -1033,10 +959,6 @@ public abstract class BaseMdiEntry
 		return preferredAfterID;
 	}
 
-	public boolean requestClose() {
-		return triggerEventRaw(UISWTViewEvent.TYPE_CLOSE, null);
-	}
-
 	/* (non-Javadoc)
 	 * @see com.biglybt.core.util.AEDiagnosticsEvidenceGenerator#generate(com.biglybt.core.util.IndentWriter)
 	 */
@@ -1049,7 +971,6 @@ public abstract class BaseMdiEntry
 
 			writer.println("Parent: " + getParentID());
 			//writer.println("Created: " + created);
-			writer.println("Added: " + added);
 			writer.println("closeable: " + closeable);
 			writer.println("isEntryDisposed: " + isEntryDisposed());
 			writer.println("isContentDisposed: " + isContentDisposed());
@@ -1080,19 +1001,6 @@ public abstract class BaseMdiEntry
 				writer.exdent();
 			}
 		}
-	}
-
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.mdi.UISWTViewImpl2#closeView()
-	 */
-	@Override
-	public void closeView() {
-		if (mdi != null) {
-			// this will end up calling #close(boolean)
-			mdi.closeEntry(id);
-		}
-
-		super.closeView();
 	}
 
 	@Override

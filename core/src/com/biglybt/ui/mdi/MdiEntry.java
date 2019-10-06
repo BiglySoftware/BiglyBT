@@ -70,7 +70,11 @@ public interface MdiEntry extends UIPluginView
 	 */
 	public Object getDatasource();
 
-	public String getExportableDatasource();
+	/**
+	 * Return an exportable version of the datasource.  Usually String, but
+	 * can be Map and List
+	 */
+	public Object getExportableDatasource();
 
 	public boolean isCloseable();
 
@@ -131,10 +135,6 @@ public interface MdiEntry extends UIPluginView
 
 	public void setDatasource(Object ds);
 
-	public void setLogID(String logID);
-
-	public boolean isAdded();
-
 	/**
 	 * Whether the content of this entry is disposed.
 	 * <p/>
@@ -153,29 +153,32 @@ public interface MdiEntry extends UIPluginView
 
 	public void setViewTitleInfo(ViewTitleInfo viewTitleInfo);
 
-	public String getLogID();
-
 	public MultipleDocumentInterface getMDI();
 
 	public List<? extends MdiEntryVitalityImage> getVitalityImages();
 
 	/**
 	 * Closes this entry. Disposes this entry and its contents.
+	 *
+	 * @param forceClose Some views may cancel a close (upon user request). 
+	 *  If true, the cancel attempts will be ignored, ensuring view will be closed.
+	 *  
+	 * @deprecated use {@link #closeView()}
 	 */
+	// TODO: Remove after RCM, EMP updated and > 2101
 	public boolean close(boolean forceClose);
 
 	/**
-	 * Closes this entry.  Disposes this entry and its contents.
+	 * Closes this entry.
+	 * Disposes this entry and its contents.
+	 * Removes entry from auto-open list.
 	 */
-	public boolean close(boolean forceClose, boolean userInitiated );
+	@Override
+	void closeView();
 
 	public void updateUI();
 
 	public void redraw();
-
-	public void addListener(MdiEntryLogIdListener l);
-
-	public void removeListener(MdiEntryLogIdListener l);
 
 	public void hide();
 

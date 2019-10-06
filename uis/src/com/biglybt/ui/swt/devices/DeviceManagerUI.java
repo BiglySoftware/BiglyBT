@@ -2634,8 +2634,6 @@ DeviceManagerUI
 
 			entry.setDatasource( device );
 
-			entry.setLogID(parent + "-" + device.getName());
-
 			entry.addListener(new MdiCloseListener() {
 				@Override
 				public void mdiEntryClosed(MdiEntry entry, boolean userClosed) {
@@ -4277,24 +4275,7 @@ DeviceManagerUI
 		protected void
 		destroy()
 		{
-			if ( Utils.isThisThreadSWT()){
-
-				mdiEntry.close(false);
-
-			}else{
-
-				Utils.execSWTThread(
-						new Runnable()
-						{
-							@Override
-							public void
-							run()
-							{
-								mdiEntry.close(false);
-
-							}
-						});
-			}
+			mdiEntry.closeView();
 		}
 
 		@Override
@@ -5988,7 +5969,7 @@ DeviceManagerUI
 				destroyed = true;
 
 				if (sb_entry != null) {
-					sb_entry.close(false);
+					sb_entry.closeView();
 				}
 			}
 		}

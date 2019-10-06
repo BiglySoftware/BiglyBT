@@ -62,6 +62,7 @@ public abstract class BaseMDI
 	extends SkinView
 	implements MultipleDocumentInterfaceSWT, UIUpdatable
 {
+	public static final String CLOSEABLECONFIG_INITIALID = "InitialID";
 	private final Class<?> pluginDataSourceType;
 	private final String viewID;
 	private final UISWTView parentView;
@@ -72,7 +73,7 @@ public abstract class BaseMDI
 	private Map<String, MdiEntryCreationListener2> mapIdToCreationListener2 = new LightHashMap<>();
 
 	// Sync changes to entry maps on mapIdEntry
-	private final Map<String, MdiEntrySWT> mapIdToEntry = new LinkedHashMap<>(8);
+	private final Map<String, BaseMdiEntry> mapIdToEntry = new LinkedHashMap<>(8);
 
 	private final List<MdiListener> listeners = new ArrayList<>();
 
@@ -81,8 +82,22 @@ public abstract class BaseMDI
 	private List<MdiSWTMenuHackListener> listMenuHackListners;
 
 	private final Object	autoOpenLock = new Object();
-	
-	private LinkedHashMap<String, Object> mapAutoOpen = new LinkedHashMap<>();
+
+	public static final String AUTOOPENINFO_TITLE = "title";
+	public static final String AUTOOPENINFO_DS = "datasource";
+	public static final String AUTOOPENINFO_PARENTID = "parentID";
+
+
+	/**
+	 * <pre>
+	 * mapAutoOpen: Map&lt;ViewID, AutoOpenInfo>
+	 * AutoOpenInfo: Map&lt;String, Object>
+	 *   "title" : String
+	 *   "datasource" : misc
+	 *   "parentID" : String
+	 * </pre>
+	 */
+	private LinkedHashMap<String, Map> mapAutoOpen = new LinkedHashMap<>();
 
 	private volatile boolean mapAutoOpenLoaded = false;
 
@@ -90,11 +105,14 @@ public abstract class BaseMDI
 	
 	private String[] preferredOrder;
 
-	private String closeableConfigFile = "sidebarauto.config";
+	private String closeableConfigFile = null;
 
 	private volatile boolean 	initialized;
 	private volatile boolean	closed;
-	
+
+	private String lastValidViewID = null;
+	private String initialID;
+
 	public BaseMDI(Class<?> pluginDataSourceType, String viewID, UISWTView parentView) {
 		this.pluginDataSourceType = pluginDataSourceType;
 		this.viewID = viewID;
@@ -130,9 +148,7 @@ public abstract class BaseMDI
 		// we are walking through entries
 		MdiEntry[] entries = getEntries();
 		for (MdiEntry entry : entries) {
-			if (entry.isAdded()) {
-				l.mdiEntryLoaded(entry);
-			}
+			l.mdiEntryLoaded(entry);
 		}
 	}
 
@@ -174,13 +190,40 @@ public abstract class BaseMDI
 	}
 
 	@Override
-	public void closeEntry(final String id) {
-		MdiEntry entry = getEntry(id);
-		if (entry != null) {
-			entry.close(false);
-		} else {
-			removeEntryAutoOpen(id);
+	public final void closeEntry(final String id) {
+		closeEntryByID(id);
+	}
+
+	@Override
+	public final BaseMdiEntry closeEntry(MdiEntry entry) {
+		if (entry == null) {
+			return null;
 		}
+		return closeEntryByID(entry.getViewID());
+	}
+
+	@Override
+	public BaseMdiEntry closeEntryByID(String id) {
+		// TODO: Children
+		BaseMdiEntry removedItem;
+
+		synchronized (mapIdToEntry) {
+			removedItem = mapIdToEntry.remove(id);
+		}
+
+		removeEntryAutoOpen(id);
+
+		if (removedItem == null) {
+			// already closed
+			return null;
+		}
+		
+		if (currentEntry == removedItem) {
+			setCurrentEntry(null);
+		}
+
+		removedItem.closeView();
+		return removedItem;
 	}
 
 	public String getMenuIdPrefix() {
@@ -220,6 +263,10 @@ public abstract class BaseMDI
 		MdiEntrySWT		entry )
 	{
 		currentEntry = entry;
+
+		if (currentEntry != null) {
+			lastValidViewID = currentEntry.getViewID();
+		}
 	}
 	
 	@Override
@@ -309,17 +356,14 @@ public abstract class BaseMDI
 		
 			// carefull with scope of locking on autoOpenLock - make it larger and you'll
 			// get deadlocks...
-		
-		Object o;
-		
-		synchronized( autoOpenLock ){
-			o= mapAutoOpen.get(id);
-		}
-		if (o instanceof Map<?, ?>) {
-			Map<?, ?> autoOpenMap = (Map<?, ?>) o;
 
-			return createEntryByCreationListener(id, autoOpenMap.get("datasource"),
-					autoOpenMap) != null;
+		Map<?, ?> autoOpenInfo;
+
+		synchronized( autoOpenLock ){
+			autoOpenInfo = mapAutoOpen.get(id);
+		}
+		if (autoOpenInfo != null) {
+			return createEntryByCreationListener(id, autoOpenInfo) != null;
 		}
 
 		boolean created = false;
@@ -329,12 +373,11 @@ public abstract class BaseMDI
 		}
 		for (String autoOpenID : autoOpenIDs) {
 			if (Pattern.matches(id, autoOpenID)) {
-				Map<?, ?> autoOpenMap;
 				synchronized( autoOpenLock ){
-					autoOpenMap = (Map<?, ?>) mapAutoOpen.get(autoOpenID);
+					autoOpenInfo = (Map<?, ?>) mapAutoOpen.get(autoOpenID);
 				}
 				created |= createEntryByCreationListener(autoOpenID,
-						autoOpenMap.get("datasource"), autoOpenMap) != null;
+						autoOpenInfo) != null;
 			}
 		}
 		return created;
@@ -342,8 +385,9 @@ public abstract class BaseMDI
 	}
 
 	protected MdiEntry
-	createEntryByCreationListener(String id, Object ds, Map<?, ?> autoOpenMap)
+	createEntryByCreationListener(String id, Map<?, ?> autoOpenInfo)
 	{
+		Object ds = autoOpenInfo == null ? null : autoOpenInfo.get(AUTOOPENINFO_DS);
 		MdiEntryCreationListener mdiEntryCreationListener = null;
 		for (String key : mapIdToCreationListener.keySet()) {
 			if (Pattern.matches(key, id)) {
@@ -373,7 +417,7 @@ public abstract class BaseMDI
 		}
 		if (mdiEntryCreationListener2 != null) {
 			try {
-				MdiEntry mdiEntry = mdiEntryCreationListener2.createMDiEntry(this, id, ds, autoOpenMap);
+				MdiEntry mdiEntry = mdiEntryCreationListener2.createMDiEntry(this, id, ds, autoOpenInfo);
 				if (mdiEntry == null) {
 					removeEntryAutoOpen(id);
 				}
@@ -383,7 +427,9 @@ public abstract class BaseMDI
 			}
 		}
 
-		setEntryAutoOpen(id, ds);
+		// Nothing was found.  Register as an Auto-open in case id gets
+		// registered later
+		setEntryAutoOpen(id, autoOpenInfo);
 
 		return null;
 	}
@@ -474,19 +520,7 @@ public abstract class BaseMDI
 	// @see SkinView#skinObjectDestroyed(SWTSkinObject, java.lang.Object)
 	@Override
 	public Object skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
-		if ( closeableConfigFile != null ){
-				// only persist this for the main MDI, not subtabs
-			MdiEntry entry = getCurrentEntry();
-			if (entry != null) {
-				COConfigurationManager.setParameter("v3.StartTab",
-						entry.getViewID());
-				String ds = entry.getExportableDatasource();
-				COConfigurationManager.setParameter("v3.StartTab.ds", ds == null ? null : ds.toString());
-			}
-		}
-		
 		super.skinObjectDestroyed(skinObject, params);
-
 
 		MdiListener[] array;
 		synchronized (listeners) {
@@ -544,7 +578,16 @@ public abstract class BaseMDI
 			return true;
 		}
 
-		MdiEntry mdiEntry = createEntryByCreationListener(id, datasource, null);
+		Map autoOpenInfo = new HashMap();
+		// DataSourceResolves is tooled for Dashboard.. can't use it yet
+		//Object value = DataSourceResolver.exportDataSource(datasource);
+		//if (value == null) {
+		//	value = datasource;
+		//}
+		// datasource may not be writable to config, but assuming a MdiEntry is
+		// created, the autoopen map will be updated with a writable ds.
+		autoOpenInfo.put(AUTOOPENINFO_DS, datasource);
+		MdiEntry mdiEntry = createEntryByCreationListener(id, autoOpenInfo);
 		if (mdiEntry == null) {
 			ViewManagerSWT vi = ViewManagerSWT.getInstance();
 			UISWTViewBuilderCore builder = vi.getBuilder(viewID, id);
@@ -577,51 +620,22 @@ public abstract class BaseMDI
 	@Override
 	public boolean entryExists(String id) {
 		synchronized(mapIdToEntry){
-			MdiEntry entry = mapIdToEntry.get(id);
-			if (entry == null) {
-				return false;
-			}
-			return entry.isAdded();
+			return mapIdToEntry.containsKey(id);
 		}
 	}
-		
-	private volatile boolean		initialEntrySet;
 	
-	private volatile String		initialID;
 	private volatile String		initialDef;
-	private volatile long		initialEntrySetFailTime;
 	
 	@Override
-	public void setInitialEntry(String id, Object datasource, String def){
-		if ( id != null ){
-			if (!loadEntryByID( id, true, false, datasource)){
-				
-				initialID = id;
-				initialDef = def;
-				initialEntrySetFailTime = SystemTime.getMonotonousTime();
-				
-				showEntryByID( def );
-			}	
-		}
-		initialEntrySet = true;
-	}
-	
-	@Override
-	public boolean isInitialEntrySet(){
-	
-		return( initialEntrySet );
+	public void setDefaultEntryID(String def){
+		initialDef = def;
 	}
 	
 	// @see MultipleDocumentInterface#setEntryAutoOpen(java.lang.String, java.lang.Object)
 	@Override
-	public void setEntryAutoOpen(String id, Object datasource) {
+	public void setEntryAutoOpen(String id, Map autoOpenInfo) {
 		synchronized( autoOpenLock ){
-			Map<String, Object> map = (Map<String, Object>) mapAutoOpen.get(id);
-			if (map == null) {
-				map = new LightHashMap<>(1);
-			}
-			map.put("datasource", datasource);
-			mapAutoOpen.put(id, map);
+			mapAutoOpen.put(id, autoOpenInfo);
 			autoOpenUpdated();
 		}
 	}
@@ -633,6 +647,11 @@ public abstract class BaseMDI
 			mapAutoOpen.remove(id);
 			autoOpenUpdated();
 		}
+	}
+
+	@Override
+	public boolean willEntryAutoOpen(String id) {
+		return mapAutoOpen.containsKey(id);
 	}
 
 	private void
@@ -688,15 +707,6 @@ public abstract class BaseMDI
 		});
 	}
 
-	@Override
-	public void informAutoOpenSet(MdiEntry entry, Map<String, Object> autoOpenInfo) {
-		synchronized( autoOpenLock ){
-		
-			mapAutoOpen.put(entry.getViewID(), autoOpenInfo);
-			autoOpenUpdated();
-		}
-	}
-
 	public void loadCloseables() {
 		if (closeableConfigFile == null) {
 			return;
@@ -717,26 +727,51 @@ public abstract class BaseMDI
 					Object o = loadedMap.get(id);
 
 					if (o instanceof Map<?, ?>) {
-						if (!processAutoOpenMap(id, (Map<?, ?>) o, null)) {
+						Map autoOpenInfo = (Map) o;
+						if (!processAutoOpenMap(id, autoOpenInfo, null)) {
 							synchronized( autoOpenLock ){
-								mapAutoOpen.put(id, o);
+								mapAutoOpen.put(id, autoOpenInfo);
 							}
 						}
 					}
 				}
 			}else{
+				initialID = MapUtils.getMapString(loadedMap, CLOSEABLECONFIG_INITIALID, null);
+				if (initialID == null) {
+					String legacyStartTab = COConfigurationManager.getStringParameter("v3.StartTab", null);
+					if (legacyStartTab != null) {
+						initialID = legacyStartTab;
+						COConfigurationManager.removeParameter("v3.StartTab");
+					} else {
+						initialID = initialDef;
+					}
+				}
+
 				for (Map map: orderedEntries){
 					String id = (String)map.get( "id" );
 
 					//System.out.println( "loaded " + id );
 					Object o = map.get( "value" );
 					if (o instanceof Map<?, ?>) {
-						if (!processAutoOpenMap(id, (Map<?, ?>) o, null)) {
+						Map autoOpenInfo = (Map) o;
+						if (!processAutoOpenMap(id, autoOpenInfo, null)) {
 							synchronized( autoOpenLock ){
-								mapAutoOpen.put(id, o);
+								mapAutoOpen.put(id, autoOpenInfo);
 							}
 						}
 					}
+				}
+				
+				//if (currentEntry != null && !currentEntry.getViewID().equals(initialID)) {
+				//	System.out.println("currentEntry set to " + currentEntry.getViewID() + " before initial " + initialID);
+				//}
+				if (currentEntry == null && initialDef != null) {
+					SimpleTimer.addEvent("ShowDefEntry", SystemTime.getOffsetTime(3000),
+							event -> {
+								if (currentEntry == null) {
+									showEntryByID(initialDef);
+								}
+							});
 				}
 			}
 		}catch( Throwable e ){
@@ -792,26 +827,26 @@ public abstract class BaseMDI
 		
 						MdiEntry entry = getEntry(id);
 		
-							// entries that are 'dispose-on-focus-lost' will report as 'not added' if this has occurred
-						
-				if ( entry != null && ( entry.isAdded() || !entry.isEntryDisposed())){
-		
+						if (entry != null) {
+
 							mapAutoOpen.put(id, entry.getAutoOpenInfo());
-		
+
 						}else{
-		
+
 							mapAutoOpen.remove(id);
 						}
 					}
 				}
 				
 				Map map = new HashMap();
+				
+				map.put(CLOSEABLECONFIG_INITIALID, lastValidViewID);
 	
 				List<Map> list = new ArrayList<>(mapAutoOpen.size());
 	
 				map.put( "_entries_", list );
-	
-				for ( Map.Entry<String,Object> entry: mapAutoOpen.entrySet()){
+
+				for ( Map.Entry<String,Map> entry: mapAutoOpen.entrySet()){
 	
 					Map m = new HashMap();
 	
@@ -842,16 +877,17 @@ public abstract class BaseMDI
 				return true;
 			}
 
-			Object datasource = autoOpenInfo.get("datasource");
 			String title = MapUtils.getMapString(autoOpenInfo, "title", id);
 
-			MdiEntry mdiEntry = createEntryByCreationListener(id, datasource, autoOpenInfo);
+			MdiEntry mdiEntry = createEntryByCreationListener(id, autoOpenInfo);
 			if (mdiEntry != null) {
 				if (mdiEntry.getTitle().equals("")) {
 					mdiEntry.setTitle(title);
 				}
 				return true;
 			}
+
+			Object datasource = autoOpenInfo.get(AUTOOPENINFO_DS);
 
 			if (builder != null) {
 				entry = createEntry(builder, true);
@@ -912,7 +948,7 @@ public abstract class BaseMDI
 		return false;
 	}
 
-	public void addItem(MdiEntrySWT entry) {
+	public void addItem(BaseMdiEntry entry) {
 		String id = entry.getViewID();
 
 		synchronized (mapIdToEntry) {
@@ -921,34 +957,11 @@ public abstract class BaseMDI
 				Debug.out( "MDI entry " + id + " already added" );
 			}
 		}
-		
-		if ( initialEntrySetFailTime > 0 ){
-			
-			if ( SystemTime.getMonotonousTime() - initialEntrySetFailTime > 10*1000 ){
-				
-				initialEntrySetFailTime = 0;
-				
-			}else{
-				
-				boolean show = false;
-													
-				if ( id.equals( initialID )){
-					
-					initialEntrySetFailTime = 0;
-					
-					MdiEntry current = getCurrentEntry();
 
-					if ( current == null || current.getViewID().equals( initialDef )){
-						
-						show = true;
-					}
-				}
-				
-				if ( show ){
-					
-					showEntry( entry );
-				}
-			}
+		setEntryAutoOpen(id, entry.getAutoOpenInfo());
+
+		if (currentEntry == null && id.equals(initialID)) {
+			showEntryByID(initialID);
 		}
 	}
 

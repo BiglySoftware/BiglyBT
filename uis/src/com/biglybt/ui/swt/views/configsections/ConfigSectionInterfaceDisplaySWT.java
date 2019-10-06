@@ -31,11 +31,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.proxy.AEProxyFactory;
-import com.biglybt.core.util.AEThread2;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.FileUtil;
-import com.biglybt.core.util.Wiki;
+import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
@@ -293,12 +289,13 @@ public class ConfigSectionInterfaceDisplaySWT
 			add(showNew, listSideBar);
 
 			showNew.addListener(p -> {
+				MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 				if (showNew.getValue()) {
-					UIFunctionsManager.getUIFunctions().getMDI().loadEntryByID(
+					mdi.loadEntryByID(
 							MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED,
 							false);
 				} else {
-					UIFunctionsManager.getUIFunctions().getMDI().closeEntry(
+					mdi.closeEntryByID(
 							MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED);
 				}
 			});
@@ -308,11 +305,12 @@ public class ConfigSectionInterfaceDisplaySWT
 			add(showDL, listSideBar);
 
 			showDL.addListener(p -> {
+				MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 				if (showDL.getValue()) {
-					UIFunctionsManager.getUIFunctions().getMDI().loadEntryByID(
+					mdi.loadEntryByID(
 							MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_DL, false);
 				} else {
-					UIFunctionsManager.getUIFunctions().getMDI().closeEntry(
+					mdi.closeEntryByID(
 							MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_DL);
 				}
 			});

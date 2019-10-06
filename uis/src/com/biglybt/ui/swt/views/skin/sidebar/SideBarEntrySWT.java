@@ -46,7 +46,6 @@ import com.biglybt.ui.swt.debug.ObfuscateTab;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.mdi.MdiEntryVitalityImageSWT;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -64,7 +63,6 @@ import com.biglybt.util.MapUtils;
  */
 public class SideBarEntrySWT
 	extends BaseMdiEntry
-	implements DisposeListener
 {
 	private static final boolean DARK_MODE = Utils.isDarkAppearance();
 	
@@ -183,18 +181,6 @@ public class SideBarEntrySWT
 	public SideBarEntrySWT(SideBar sidebar, SWTSkin _skin, String id) {
 		super(sidebar, id);
 		this.skin = _skin;
-
-		if (id == null) {
-			logID = "null";
-		} else {
-			int i = id.indexOf('_');
-			if (i > 0) {
-				logID = id.substring(0, i);
-			} else {
-				logID = id;
-			}
-		}
-
 		this.sidebar = sidebar;
 
 		updateColors();
@@ -232,7 +218,7 @@ public class SideBarEntrySWT
 			imgClose = imageLoader.getImage("image.sidebar.closeitem");
 			imgCloseSelected = imageLoader.getImage("image.sidebar.closeitem-selected");
 
-			treeItem.addDisposeListener(this);
+			treeItem.addDisposeListener(e -> closeView());
 
 			treeItem.getParent().addTreeListener(new TreeListener() {
 				@Override
@@ -413,35 +399,42 @@ public class SideBarEntrySWT
 	}
 
 	@Override
-	public boolean close(boolean force) {
-		if (!super.close(force)) {
-			return false;
+	protected void destroyEntry() {
+		if (Utils.runIfNotSWTThread(this::destroyEntry)) {
+			return;
 		}
 
-		// remove immediately from MDI because disposal is on a delay
-		mdi.removeItem(SideBarEntrySWT.this);
+		//System.out.println(id + " destroyEntry " + swtItem + "; " + Debug.getCompressedStackTrace());
+		if (swtItem == null) {
+			return;
+		}
 
-		// dispose will trigger dispose listener, which removed it from BaseMDI
-		Utils.execSWTThread(new SWTRunnable() {
-			@Override
-			public void runWithDisplay(Display display) {
-				if (swtItem != null && !swtItem.isDisposed()) {
-					try {
-  					swtItem.setFont(null);
-  					swtItem.dispose();
-					} catch (Exception e) {
-						// on OSX, SWT does some misguided exceptions on disposal of TreeItem
-						// We occasionally get SWTException of "Widget is Disposed" or
-						// "Argument not valid", as well as NPEs
-						Debug.outNoStack(
-								"Warning on SidebarEntry dispose: " + e.toString(), false);
-					} finally {
-  					swtItem = null;
-					}
-				}
+		// Must make a copy of swtItem because swtItem.dispose will end up in
+		// this method again, with swtItem.isDisposed() still false.
+		TreeItem item = swtItem;
+		swtItem = null;
+
+		// super can end up calling destroyEntry again (via SWT disposals), so
+		// don't call super until after we nulled swtItem
+		super.destroyEntry();
+
+		try {
+			if (!item.isDisposed()) {
+				item.dispose();
 			}
-		});
-		return true;
+
+			//System.out.println(id + " dispose " + Debug.getCompressedStackTrace());
+			ImageLoader imageLoader = ImageLoader.getInstance();
+			imageLoader.releaseImage("image.sidebar.closeitem");
+			imageLoader.releaseImage("image.sidebar.closeitem-selected");
+
+		} catch (Exception e) {
+			// on OSX, SWT does some misguided exceptions on disposal of TreeItem
+			// We occasionally get SWTException of "Widget is Disposed" or
+			// "Argument not valid", as well as NPEs
+			Debug.outNoStack(
+					"Warning on SidebarEntry dispose: " + e.toString(), false);
+		}
 	}
 
 	@Override
@@ -540,19 +533,14 @@ public class SideBarEntrySWT
 				setSkinObjectMaster(soContents);
 			} catch (Exception e) {
 				Debug.out("Error creating sidebar content area for " + id, e);
-				close(true);
+				closeView();
 			}
 
 		}
 
 		if (control != null && !control.isDisposed()) {
 			control.setData("BaseMDIEntry", this);
-			control.addDisposeListener(new DisposeListener() {
-				@Override
-				public void widgetDisposed(DisposeEvent e) {
-					close(true);
-				}
-			});
+			control.addDisposeListener(e -> closeView());
 		} else {
 			return false;
 		}
@@ -1179,145 +1167,6 @@ public class SideBarEntrySWT
 			}
 		}
 		return fgText;
-	}
-
-	@Override
-	public void widgetDisposed(DisposeEvent e) {
-		ImageLoader imageLoader = ImageLoader.getInstance();
-		if (imageLoader != null) {
-			imageLoader.releaseImage("image.sidebar.closeitem");
-			imageLoader.releaseImage("image.sidebar.closeitem-selected");
-		}
-
-		final TreeItem treeItem = (TreeItem) e.widget;
-		if (treeItem != swtItem) {
-			Debug.out("Warning: TreeItem changed for sidebar " + id);
-			return;
-		}
-
-		if (swtItem == null) {
-			return;
-		}
-
-		if (swtItem != null && !Constants.isOSX) {
-			// In theory, the disposal of swtItem will trigger the disposal of the
-			// children.  Let's force it just in case
-			// On OSX this will cause disposal confusion in SWT, and possibly result
-			// in a SIGSEGV crash.
-			TreeItem[] children = swtItem.getItems();
-			for (TreeItem child : children) {
-				if (child.isDisposed()) {
-					continue;
-				}
-				MdiEntry entry = (MdiEntry) child.getData("MdiEntry");
-				if (entry != null) {
-					entry.close(true);
-				}
-			}
-		}
-
-		final Tree tree = sidebar.getTree();
-
-			// swtItem can get set to null between the above test and here...
-
-		if (tree.isDisposed() || ( swtItem != null && swtItem.isDisposed()) || tree.getShell().isDisposed()) {
-			return;
-		}
-
-		setTreeItem(null);
-
-		mdi.removeItem(SideBarEntrySWT.this);
-
-		SWTThread instance = SWTThread.getInstance();
-		
-		boolean user = instance != null && !instance.isTerminated();
-		
-		if ( user ){
-			
-			if ( closeWasUserInitiated != null ){
-				
-				user = closeWasUserInitiated;
-				
-			}else{
-			
-					// It's not a user close if the parent is making the children (this entry)
-					// close.  parent will be marked disposed, so use that as a check.
-		  		String parentID = getParentID();
-		  		if (parentID != null) {
-		  			MdiEntry entry = mdi.getEntry(parentID);
-		  			if (entry != null && entry.isEntryDisposed()) {
-		  				user = false;
-		  			}
-		  		}
-			}
-		}
-		
-		triggerCloseListeners(user);
-
-		SWTSkinObject so = getSkinObject();
-		if (so != null) {
-			setSkinObjectMaster(null);
-			so.getSkin().removeSkinObject(so);
-		}
-
-		// delay saving of removing of auto-open flag.  If after the delay, we are
-		// still alive, it's assumed the user invoked the close, and we should
-		// remove the auto-open flag
-		Utils.execSWTThreadLater(0, new SWTRunnable() {
-			@Override
-			public void runWithDisplay(Display display) {
-				// even though execThreadLater will not run on close of app because
-				// the display is disposed, do a double check of tree disposal just
-				// in case.  We don't want to trigger close listeners or
-				// remove autoopen parameters if the user is closing the app (as
-				// opposed to closing  the sidebar)
-				if (tree.isDisposed()) {
-					return;
-				}
-
-				try {
-					COConfigurationManager.removeParameter("SideBar.AutoOpen." + id);
-
-					// OSX doesn't select a treeitem after closing an existing one
-					// Force selection
-					if (Constants.isOSX && !tree.isDisposed()
-							&& tree.getSelectionCount() == 0) {
-
-						String parentid = getParentID();
-						if (parentid != null && mdi.getEntry(parentid) != null) {
-							mdi.showEntryByID(parentid);
-						} else {
-							mdi.showEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY);
-						}
-					}
-				} catch (Exception e2) {
-					Debug.out(e2);
-				}
-
-					// See if this entry has been replaced by another in the meantime. This happens when we are
-					// moving an entry in the sidebar by removing it and then re-adding it. We assume that the
-					// auto-open properties of the replacement are the same as those of the initial entry
-
-				boolean	replaced = false;
-
-				String my_id = SideBarEntrySWT.this.getViewID();
-
-				if ( my_id != null ){
-
-					MdiEntry entry = mdi.getEntry( my_id );
-
-					if ( entry != null && entry != SideBarEntrySWT.this ){
-
-						replaced = true;
-					}
-				}
-
-				if ( !replaced ){
-
-					mdi.removeEntryAutoOpen(id);
-				}
-			}
-		});
 	}
 
 	public void setParentSkinObject(SWTSkinObjectContainer soParent) {

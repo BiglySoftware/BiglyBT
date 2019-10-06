@@ -17,14 +17,10 @@
 package com.biglybt.ui.swt.shells.main;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.lang.reflect.Method;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
-import com.biglybt.ui.swt.utils.DragDropUtils;
-import com.biglybt.ui.swt.utils.SWTRunnable;
-import com.biglybt.util.NavigationHelper.navigationListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -54,16 +50,11 @@ import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.core.versioncheck.VersionCheckClient;
-import com.biglybt.pif.ui.toolbar.UIToolBarItem;
-import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 import com.biglybt.ui.IUIIntializer;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MdiEntryLogIdListener;
-import com.biglybt.ui.mdi.MdiListener;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.skin.SkinPropertiesImpl;
@@ -92,13 +83,19 @@ import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
 import com.biglybt.ui.swt.speedtest.SpeedTestSelector;
 import com.biglybt.ui.swt.systray.SystemTraySWT;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.FontUtils;
+import com.biglybt.ui.swt.utils.SWTRunnable;
 import com.biglybt.ui.swt.views.skin.WelcomeView;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.utils.LocProvUtils;
 import com.biglybt.ui.swt.welcome.WelcomeWindow;
 import com.biglybt.util.MapUtils;
 import com.biglybt.util.NavigationHelper;
+import com.biglybt.util.NavigationHelper.navigationListener;
+
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 
 /**
  * @author TuxPaper
@@ -113,8 +110,8 @@ import com.biglybt.util.NavigationHelper;
  * - IconBarEnabler for "new" and "open"
  */
 public class MainWindowImpl
-	implements MainWindow, ObfuscateShell, MdiListener,
-	AEDiagnosticsEvidenceGenerator, MdiEntryLogIdListener, UIUpdatable
+	implements MainWindow, ObfuscateShell, AEDiagnosticsEvidenceGenerator,
+	UIUpdatable
 {
 
 	private static final LogIDs LOGID = LogIDs.GUI;
@@ -134,15 +131,6 @@ public class MainWindowImpl
 	private UIFunctionsImpl uiFunctions;
 
 	private SystemTraySWT systemTraySWT;
-
-	private static Map<String, List<Long>> mapTrackUsage = null;
-
-	private final static AEMonitor mapTrackUsage_mon = new AEMonitor(
-			"mapTrackUsage");
-
-	private long lCurrentTrackTime = 0;
-
-	private long lCurrentTrackTimeIdle = 0;
 
 	private boolean disposedOrDisposing;
 
@@ -310,29 +298,6 @@ public class MainWindowImpl
 				}
 			}
 		} catch (Exception ignore) {
-		}
-
-		mapTrackUsage_mon.enter();
-		try {
-			if (mapTrackUsage != null) {
-				String id = getUsageActiveTabID();
-				if (id != null) {
-					if (lastShellStatus == null) {
-						lastShellStatus = id;
-					}
-					updateMapTrackUsage(lastShellStatus);
-				}
-
-				Map<String, Object> map = new HashMap<>();
-				map.put("version",
-						com.biglybt.core.util.Constants.BIGLYBT_VERSION);
-				map.put("statsmap", mapTrackUsage);
-
-				FileUtil.writeResilientFile(new File(SystemProperties.getUserPath(),
-						"timingstats.dat"), map);
-			}
-		} finally {
-			mapTrackUsage_mon.exit();
 		}
 
 	}
@@ -1132,139 +1097,6 @@ public class MainWindowImpl
 		return true;
 	}
 
-	private String getUsageActiveTabID() {
-		try {
-			MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-			if (mdi != null) {
-				MdiEntry curEntry = mdi.getCurrentEntry();
-				if (curEntry == null) {
-					return "none";
-				}
-				String id = curEntry.getLogID();
-				return id == null ? "null" : id;
-			}
-		} catch (Exception e) {
-			String name = e.getClass().getName();
-			int i = name.indexOf('.');
-			if (i > 0) {
-				return name.substring(i);
-			}
-			return name;
-		}
-		return "unknown";
-	}
-
-	/**
-	 *
-	 */
-	private void setupUsageTracker() {
-		mapTrackUsage_mon.enter();
-		try {
-			File f = new File(SystemProperties.getUserPath(), "timingstats.dat");
-
-			if (COConfigurationManager.getBooleanParameter("Send Version Info")) {
-
-				mapTrackUsage = new HashMap<>();
-
-				if (f.exists()) {
-					Map<?, ?> oldMapTrackUsage = FileUtil.readResilientFile(f);
-					String version = MapUtils.getMapString(oldMapTrackUsage, "version",
-							null);
-					Map<?, ?> map = MapUtils.getMapMap(oldMapTrackUsage, "statsmap", null);
-					if (version != null && map != null) {
-					}
-				}
-
-				SimpleTimer.addPeriodicEvent("UsageTracker", 1000,
-						new TimerEventPerformer() {
-							long lLastMouseMove = SystemTime.getCurrentTime();
-
-							Point ptLastMousePos = new Point(0, 0);
-
-							@Override
-							public void perform(TimerEvent event) {
-								Utils.execSWTThread(new AERunnable() {
-									@Override
-									public void runSupport() {
-										if (shell == null || shell.isDisposed()
-												|| shell.getDisplay().getActiveShell() == null) {
-											// so when we become active again, we count a few
-											// seconds (if the mouse moves)
-											if (ptLastMousePos.x > 0) {
-												ptLastMousePos.x = 0;
-												ptLastMousePos.y = 0;
-												lLastMouseMove = 0;
-											}
-											return;
-										}
-
-										Point pt = shell.getDisplay().getCursorLocation();
-										if (pt.equals(ptLastMousePos)) {
-											return;
-										}
-										ptLastMousePos = pt;
-
-										long now = SystemTime.getCurrentTime();
-										if (lLastMouseMove > 0) {
-											long diff = now - lLastMouseMove;
-											if (diff < 10000) {
-												lCurrentTrackTime += diff;
-											} else {
-												lCurrentTrackTimeIdle += diff;
-											}
-										}
-
-										lLastMouseMove = now;
-									}
-								});
-							}
-						});
-
-				Listener lActivateDeactivate = new Listener() {
-					long start;
-
-					@Override
-					public void handleEvent(Event event) {
-						if (event.type == SWT.Activate) {
-							lCurrentTrackTimeIdle = 0;
-							if (start > 0 && lastShellStatus != null) {
-								lCurrentTrackTime = SystemTime.getCurrentTime() - start;
-								updateMapTrackUsage(lastShellStatus);
-							}
-							lastShellStatus = null;
-						} else {
-							updateMapTrackUsage(getUsageActiveTabID());
-							if (shell.getMinimized()) {
-								lastShellStatus = "idle-minimized";
-							} else if (!shell.isVisible()) {
-								lastShellStatus = "idle-invisible";
-							} else {
-								lastShellStatus = "idle-nofocus";
-							}
-							start = SystemTime.getCurrentTime();
-						}
-					}
-				};
-				shell.addListener(SWT.Activate, lActivateDeactivate);
-				shell.addListener(SWT.Deactivate, lActivateDeactivate);
-
-			} else {
-				mapTrackUsage = null;
-				// No use keeping old usage stats if we are told no one wants them
-				try {
-					if (f.exists()) {
-						f.delete();
-					}
-				} catch (Exception ignored) {
-				}
-			}
-		} catch (Exception e) {
-			Debug.out(e);
-		} finally {
-			mapTrackUsage_mon.exit();
-		}
-	}
-
 	private final Set<Shell>	minimized_on_hide = new HashSet<>();
 
 	private void showMainWindow() {
@@ -1798,7 +1630,7 @@ public class MainWindowImpl
 		if (null != skinObject) {
 			BaseMDI mdi = Utils.isAZ2UI() ? new TabbedMDI() : new SideBar();
 			mdi.buildMDI(skinObject);
-			MainMDISetup.setupSideBar(mdi, this);
+			MainMDISetup.setupSideBar(mdi);
 		}
 	}
 
@@ -2203,60 +2035,6 @@ public class MainWindowImpl
 		}
 	}
 	
-	/**
-	 *
-	 */
-	private void updateMapTrackUsage(String sTabID) {
-		//System.out.println("UPDATE: " + sTabID);
-		if (mapTrackUsage != null) {
-			mapTrackUsage_mon.enter();
-			try {
-				if (lCurrentTrackTime > 1000) {
-					addUsageStat(sTabID, lCurrentTrackTime);
-					//System.out.println("UPDATE: " + sTabID + ";" + newLength);
-				}
-
-				if (lCurrentTrackTimeIdle > 1000) {
-					String id = "idle-" + sTabID;
-					addUsageStat(id, lCurrentTrackTimeIdle);
-				}
-			} finally {
-				mapTrackUsage_mon.exit();
-			}
-		}
-
-		lCurrentTrackTime = 0;
-		lCurrentTrackTimeIdle = 0;
-	}
-
-	private static void addUsageStat(String id, long value) {
-		if (id == null) {
-			return;
-		}
-		if (id.length() > 150) {
-			id = id.substring(0, 150);
-		}
-		if (mapTrackUsage != null) {
-			mapTrackUsage_mon.enter();
-			try {
-				List<Long> currentLength = mapTrackUsage.get(id);
-				if (currentLength == null) {
-					currentLength = new ArrayList<>();
-					currentLength.add(1L);
-					currentLength.add(value / 100);
-				} else {
-					List oldList = currentLength;
-					currentLength = new ArrayList<>();
-					currentLength.add(((Number) oldList.get(0)).longValue() + 1);
-					currentLength.add(((Number) oldList.get(1)).longValue() + (value / 1000));
-				}
-				mapTrackUsage.put(id, currentLength);
-			} finally {
-				mapTrackUsage_mon.exit();
-			}
-		}
-	}
-
 	@Override
 	public Shell
 	getShell()
@@ -2371,49 +2149,6 @@ public class MainWindowImpl
 	@Override
 	public Image generateObfuscatedImage() {
 		return( UIDebugGenerator.generateObfuscatedImage( shell ));
-	}
-
-	// @see MdiListener#mdiEntrySelected(MdiEntry, MdiEntry)
-	@Override
-	public void mdiEntrySelected(MdiEntry newEntry,
-	                             MdiEntry oldEntry) {
-		if (newEntry == null) {
-			return;
-		}
-
-		if (mapTrackUsage != null && oldEntry != null) {
-			oldEntry.removeListener(this);
-
-			String id2 = null;
-			MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-			if (mdi != null) {
-				id2 = oldEntry.getLogID();
-			}
-			if (id2 == null) {
-				id2 = oldEntry.getViewID();
-			}
-
-			updateMapTrackUsage(id2);
-		}
-
-		if (mapTrackUsage != null) {
-			newEntry.addListener(this);
-		}
-	}
-
-	@Override
-	public void mdiDisposed(MultipleDocumentInterface mdi) {
-
-	}
-
-	// @see com.biglybt.ui.swt.views.skin.sidebar.MdiLogIdListener#sidebarLogIdChanged(SideBarEntrySWT, java.lang.String, java.lang.String)
-	@Override
-	public void mdiEntryLogIdChanged(MdiEntry sideBarEntrySWT, String oldID,
-	                                 String newID) {
-		if (oldID == null) {
-			oldID = "null";
-		}
-		updateMapTrackUsage(oldID);
 	}
 
 	// @see com.biglybt.core.util.AEDiagnosticsEvidenceGenerator#generate(com.biglybt.core.util.IndentWriter)

@@ -108,7 +108,11 @@ public class TabbedMDI
 		AEDiagnostics.addWeakEvidenceGenerator(this);
 		mapUserClosedTabs = new HashMap();
 		isMainMDI = true;
+		// Because we want to maintain UI state of main ui, and some naughty plugins
+		// like I2P force close their tab when their view is destroyed.
+		destroyEntriesOnDeactivate = false;
 		this.props_prefix = "sidebar";
+		setCloseableConfigFile("tabsauto.config");
 	}
 
 	/**
@@ -176,7 +180,7 @@ public class TabbedMDI
 		
 		MdiEntry[] entries = getEntries();
 		for (MdiEntry entry : entries) {
-			entry.close(true);
+			closeEntry(entry);
 		}
 
 		String key = props_prefix + ".closedtabs";
@@ -446,10 +450,7 @@ public class TabbedMDI
   				// ESC or CTRL+F4 closes current Tab
   				if (key == SWT.ESC
   						|| (event.keyCode == SWT.F4 && event.stateMask == SWT.CTRL)) {
-  					MdiEntry entry = getCurrentEntry();
-  					if (entry != null) {
-  						entry.close(false);
-  					}
+					  closeEntry(getCurrentEntry());
   					event.doit = false;
   				} else if (event.keyCode == SWT.F6
   						|| (event.character == SWT.TAB && (event.stateMask & SWT.CTRL) != 0)) {
@@ -841,8 +842,7 @@ public class TabbedMDI
 			if (!(e instanceof UISWTViewEventCancelledException)) {
 				Debug.out("Can't create " + builder.getViewID(), e);
 			}
-			entry.close(true);
-			removeItem(entry,false);
+			closeEntry(entry);
 			return null;
 		}
 
@@ -1077,7 +1077,7 @@ public class TabbedMDI
 		for (Object id : mapUserClosedTabs.keySet()) {
 			String view_id = (String) id;
 			if (entryExists(view_id)) {
-				closeEntry(view_id);
+				closeEntryByID(view_id);
 			}
 		}
 	}
@@ -1141,9 +1141,9 @@ public class TabbedMDI
 
 	@Override
 	protected MdiEntry
-	createEntryByCreationListener(String id, Object ds, Map<?, ?> autoOpenMap)
+	createEntryByCreationListener(String id, Map<?, ?> autoOpenInfo)
 	{
-		final TabbedEntry result = (TabbedEntry)super.createEntryByCreationListener(id, ds, autoOpenMap);
+		final TabbedEntry result = (TabbedEntry)super.createEntryByCreationListener(id, autoOpenInfo);
 
 		if ( result != null ){
 			

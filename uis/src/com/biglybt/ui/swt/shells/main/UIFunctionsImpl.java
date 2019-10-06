@@ -636,11 +636,10 @@ public class UIFunctionsImpl
 			return;
 		}
 		MdiEntry[] sideBarEntries = mdi.getEntries();
-		for (int i = 0; i < sideBarEntries.length; i++) {
-			MdiEntry entry = sideBarEntries[i];
+		for (MdiEntry entry : sideBarEntries) {
 			String id = entry.getViewID();
-			if (id != null && id.startsWith("DMDetails_")) {
-				mdi.closeEntry(id);
+			if (id.startsWith("DMDetails_")) {
+				mdi.closeEntryByID(id);
 			}
 		}
 

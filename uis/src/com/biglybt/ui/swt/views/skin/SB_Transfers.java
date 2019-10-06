@@ -1405,8 +1405,8 @@ public class SB_Transfers
 		if (entry != null) {
 			
 			category.removeCategoryListener(categoryListener);
-			
-			entry.close(true);
+
+			mdi.closeEntry(entry);
 		}
 	}
 
@@ -1435,7 +1435,7 @@ public class SB_Transfers
 
 		if ( !tag.isVisible()){
 
-			removeTag( tag );
+			closeTagView( tag);
 
 			return;
 		}
@@ -1547,6 +1547,8 @@ public class SB_Transfers
 						group_id = "Tag." + tag_type + ".group." + tag_group;
 						
 						if ( mdi.getEntry( group_id ) == null ){
+							
+							// Create Entry for Group
 						
 							ViewTitleInfo viewTitleInfo =
 									new ViewTitleInfo()
@@ -1586,8 +1588,16 @@ public class SB_Transfers
 							setTagIcon( tag, entry, true );
 							
 							entry.setUserData( TAG_TAG_OR_GROUP_KEY, tag.getGroupContainer());
-							
-							
+
+							// remove header when there are no children
+							entry.addListener((parent, ch, user) -> {
+								String viewID = parent.getViewID();
+								if (mdi.getChildrenOf(viewID).isEmpty()) {
+									mdi.closeEntry(parent);
+								}
+							});
+
+
 							if ( entry instanceof MdiEntrySWT ){
 								final MdiEntrySWT entrySWT = (MdiEntrySWT) entry;
 								
@@ -1716,24 +1726,6 @@ public class SB_Transfers
 									// userClosed isn't all we want - it just means we're not closing the app... So to prevent
 									// a deselection of 'show tags in sidebar' 'user-closing' the entries we need this test
 
-								
-								if ( show_tag_groups ){
-									
-									String parent_id = entry.getParentID();
-									
-									if ( parent_id.startsWith( "Tag." + tag_type + ".group." )){
-										
-										if ( mdi.getChildrenOf( parent_id ).isEmpty()){
-											
-											MdiEntry parent_entry = mdi.getEntry( parent_id );
-											
-											if ( parent_entry != null ){
-											
-												parent_entry.close( true );
-											}
-										}
-									}
-								}
 								
 								if ( COConfigurationManager.getBooleanParameter("Library.TagInSideBar")){
 
@@ -2194,8 +2186,8 @@ public class SB_Transfers
 	}
 	
 	private void
-	removeTag(
-		Tag tag ) 
+	closeTagView(
+		Tag tag) 
 	{
 		MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 		
@@ -2213,23 +2205,8 @@ public class SB_Transfers
 			if (entry != null) {
 	
 				entry.setUserData( AUTO_CLOSE_KEY, "" );
-	
-				entry.close( true );
-				
-				if ( show_tag_groups ){
-				
-					String parent_id = entry.getParentID();
-					
-					if ( parent_id.startsWith( "Tag." + tag_type + ".group." )){
-						
-						if ( mdi.getChildrenOf( parent_id ).isEmpty()){
-							
-							MdiEntry parent_entry = mdi.getEntry( parent_id );
-							
-							parent_entry.close( true );
-						}
-					}
-				}
+
+				mdi.closeEntry(entry);
 			}
 		}
 	}
@@ -2240,7 +2217,7 @@ public class SB_Transfers
 	{
 		synchronized( tag_setup_lock ){
 		
-			removeTag( tag );
+			closeTagView( tag);
 		
 			setupTag( tag );
 		}
@@ -2500,10 +2477,7 @@ public class SB_Transfers
 					}
 				}
 			} else {
-				MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
-				if (entry != null) {
-					entry.close(true, false);
-				}
+				mdi.closeEntry(mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL));
 			}
 		}else{
 			refreshAllLibraries();
@@ -2748,7 +2722,7 @@ public class SB_Transfers
 				}
 
 				public void tagRemoved(Tag tag) {
-					removeTag(tag);
+					closeTagView(tag);
 				}
 			};
 
@@ -2770,7 +2744,7 @@ public class SB_Transfers
 				public void tagTypeRemoved(TagManager manager, TagType tag_type) {
 					for (Tag t : tag_type.getTags()) {
 
-						removeTag(t);
+						closeTagView(t);
 					}
 				}
 			};
@@ -2802,7 +2776,7 @@ public class SB_Transfers
 					t.removeTagListener(tagListener);
 
 					if (removeFromSidebar) {
-						removeTag(t);
+						closeTagView(t);
 					}
 				}
 			}

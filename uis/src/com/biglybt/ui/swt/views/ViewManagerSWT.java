@@ -274,6 +274,9 @@ public class ViewManagerSWT
 	 * 
 	 * @param parentViewID null for all
 	 * @param viewID view id to dispose of
+	 * @param unregister <br/>
+	 *    true: disposes of builder, preventing new views being created<br/>
+	 *    false: Keeps builder, allows new views to be created.
 	 * @return Builders that had their views disposed of
 	 */
 	public List<UISWTViewBuilderCore> disposeViews(Object forDSTypeOrViewID,

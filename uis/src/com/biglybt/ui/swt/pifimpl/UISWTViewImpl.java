@@ -256,39 +256,8 @@ public class UISWTViewImpl
 	 */
 	@Override
 	public void closeView() {
-		if (Utils.runIfNotSWTThread(this::closeView)) {
-			return;
-		}
-		try {
-
-			// In theory mdi.closeEntry will dispose of the swtItem (ctabitem or other)
-			// via #close(false).  Not sure what happens to composite though,
-			// so I don't know fi that TYPE_DESTROY actually gets called
-			// The CTabItem scan seems pointless now, though
-
-			Composite c = getComposite();
-
-			if (c != null && !c.isDisposed()) {
-
-				Composite parent = c.getParent();
-
-				triggerEvent(UISWTViewEvent.TYPE_DESTROY, null);
-
-				if (parent instanceof CTabFolder) {
-
-					for (CTabItem item : ((CTabFolder) parent).getItems()) {
-
-						if (item.getControl() == c) {
-
-							item.dispose();
-						}
-					}
-				}
-			}
-		} catch (Throwable e) {
-			Debug.out(e);
-		}
-
+		// Trigger will dispose of composites
+		triggerEvent(UISWTViewEvent.TYPE_DESTROY, null);
 	}
 
 	/* (non-Javadoc)
@@ -315,6 +284,12 @@ public class UISWTViewImpl
 	 */
 	@Override
 	public void triggerEvent(int eventType, Object data) {
+		// Destroy event requires SWT Thread
+		if (eventType == UISWTViewEvent.TYPE_DESTROY
+				&& Utils.runIfNotSWTThread(() -> triggerEvent(eventType, data))) {
+			return;
+		}
+
 		try {
 			triggerBooleanEvent(eventType, data);
 		} catch (Exception e) {

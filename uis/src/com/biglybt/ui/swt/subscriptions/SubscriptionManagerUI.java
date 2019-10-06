@@ -1805,7 +1805,7 @@ SubscriptionManagerUI
 
 			String key = getKey( sub );
 
-			mdi.closeEntry( key );
+			mdi.closeEntryByID( key );
 
 			mdi.showEntryByID( key, sub );
 		}
@@ -1821,7 +1821,7 @@ SubscriptionManagerUI
 
 			String key = getKey( sub );
 
-			mdi.closeEntry( key );
+			mdi.closeEntryByID( key );
 		}
 	}
 

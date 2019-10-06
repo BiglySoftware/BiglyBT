@@ -22,18 +22,14 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.List;
 
-import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.ui.swt.Utils;
 
 import com.biglybt.activities.ActivitiesEntry;
 import com.biglybt.activities.ActivitiesManager;
-import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.swt.skin.SWTSkinButtonUtility;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
-import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 
 /**
  * @author TuxPaper
@@ -179,13 +175,6 @@ public class SBC_ActivityView
 
 		if (save) {
 			COConfigurationManager.setParameter(ID + ".viewmode", viewMode);
-		}
-
-
-		MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-		MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_ACTIVITIES);
-		if (entry != null) {
-			entry.setLogID(SideBar.SIDEBAR_SECTION_ACTIVITIES + "-" + viewMode);
 		}
 	}
 

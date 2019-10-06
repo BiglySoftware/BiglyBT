@@ -32,6 +32,9 @@ public interface ViewTitleInfo
 
 	public static int TITLE_INDICATOR_TEXT = 0;
 
+	/**
+	 * Return int[3] of {R, G, B} for color of Indicator Bubble
+	 */
 	public static int TITLE_INDICATOR_COLOR = 8;
 
 
@@ -43,8 +46,13 @@ public interface ViewTitleInfo
 
 	public static int TITLE_IMAGE_TOOLTIP = 3;
 
-	public static int TITLE_LOGID	= 7;
+	//Not Used Anymore
+	//public static int TITLE_LOGID	= 7;
 
+	/**
+	 * Return an exportable version of the datasource.  Usually String, but
+	 * can be Map and List
+	 */
 	public static int TITLE_EXPORTABLE_DATASOURCE	= 10;
 
 	/**

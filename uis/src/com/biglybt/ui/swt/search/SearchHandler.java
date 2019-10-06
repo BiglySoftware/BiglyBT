@@ -111,7 +111,7 @@ SearchHandler
 		MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 		String id = MultipleDocumentInterface.SIDEBAR_SECTION_SEARCH + "." + Integer.toHexString(sSearchText.hashCode()) + (toSubscribe ? ".s" : "");
 		MdiEntry existingEntry = mdi.getEntry(id);
-		if (existingEntry != null && existingEntry.isAdded()) {
+		if (existingEntry != null) {
 			SearchResultsTabArea searchClass = (SearchResultsTabArea) SkinViewManager.getByClass(SearchResultsTabArea.class);
 			if (searchClass != null) {
 				searchClass.anotherSearch(sSearchText, toSubscribe);

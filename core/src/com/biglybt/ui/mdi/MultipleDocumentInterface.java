@@ -126,7 +126,7 @@ public interface MultipleDocumentInterface
 
 	public boolean showEntryByID(String id, Object datasource);
 
-		/**
+	/**
 		 * If you prefix the 'preferedAfterID' string with '~' then the operation will actually
 		 * switch to 'preferedBeforeID'
 		 * @param parentEntryID
@@ -157,7 +157,26 @@ public interface MultipleDocumentInterface
 
 	public boolean isVisible();
 
+	/**
+	 * Close {@link MdiEntry} with id and remove from auto-open list
+	 * 
+	 * @deprecated Use {@link #closeEntryByID(String)}
+	 */
 	public void closeEntry(String id);
+
+	/**
+	 * Close {@link MdiEntry}
+	 *
+	 * @return Entry that was closed, or null if entry wasn't closed (ie. didn't exist)
+	 */
+	MdiEntry closeEntry(MdiEntry entry);
+
+	/**
+	 * Close {@link MdiEntry} of id
+	 * 
+	 * @return Entry that was closed, or null if entry wasn't closed (ie. didn't exist)
+	 */
+	MdiEntry closeEntryByID(String id);
 
 	public MdiEntry[] getEntries();
 
@@ -191,13 +210,13 @@ public interface MultipleDocumentInterface
 	 * When an entry can not be opened (ie. creation listener isn't registered yet),
 	 * call this to store your open request
 	 */
-	public void setEntryAutoOpen(String id, Object datasource);
+	public void setEntryAutoOpen(String id, Map autoOpenInfo);
 
 	public void removeEntryAutoOpen(String id);
 
-	public void showEntry(MdiEntry newEntry);
+	boolean willEntryAutoOpen(String id);
 
-	public void informAutoOpenSet(MdiEntry entry, Map<String, Object> autoOpenInfo);
+	public void showEntry(MdiEntry newEntry);
 
 	public boolean loadEntryByID(String id, boolean activate);
 
@@ -220,9 +239,7 @@ public interface MultipleDocumentInterface
 
 	public boolean isInitialized();
 	
-	public void setInitialEntry( String id, Object datasource, String def );
-	
-	public boolean isInitialEntrySet();
+	public void setDefaultEntryID(String def);
 
 	public boolean isDisposed();
 

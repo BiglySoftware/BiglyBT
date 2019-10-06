@@ -133,6 +133,7 @@ public class SideBar
 
 	public SideBar() {
 		super(null, UISWTInstance.VIEW_MAIN, null);
+		setCloseableConfigFile("sidebarauto.config");
 		AEDiagnostics.addWeakEvidenceGenerator(this);
 	}
 
@@ -249,17 +250,7 @@ public class SideBar
 					}
 				});
 	
-			menuItem.addListener(new MenuItemListener() {
-				@Override
-				public void selected(MenuItem menu, Object target) {
-					SideBarEntrySWT sbe = getCurrentEntry();
-	
-					if ( sbe != null ){
-						
-						sbe.close( true, true );
-					}
-				}
-			});
+			menuItem.addListener((menu, target) -> closeEntry(getCurrentEntry()));
 		}
 		
 		{
@@ -775,7 +766,12 @@ public class SideBar
 							Rectangle closeArea = (Rectangle) treeItem.getData("closeArea");
 							if (closeArea != null && closeArea.contains(event.x, event.y)) {
 								lastCloseAreaClicked = closeArea;
-								treeItem.dispose();
+								SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
+								if (entry != null) {
+									closeEntry(entry);
+								} else {
+									treeItem.dispose();
+								}
 								// pretend we don't have a mouse down, so we don't process a showEntry
 								mouseDowned = false;
 							}
@@ -1118,13 +1114,7 @@ public class SideBar
 					@Override
 					public void pressed(SWTSkinButtonUtility buttonUtility,
 					                    SWTSkinObject skinObject, int stateMask) {
-						
-						MdiEntry entry = getCurrentEntry();
-						
-						if ( entry != null && entry.isCloseable()){
-						
-							entry.close( true, true );
-						}
+						closeEntry(getCurrentEntry());
 					}
 				});
 			}
@@ -1644,7 +1634,7 @@ public class SideBar
 	@Override
 	protected void setCurrentEntry(MdiEntrySWT entry){
 		
-		if ( btnCloseItem != null ){
+		if (entry != null && btnCloseItem != null ){
 			
 			btnCloseItem.setDisabled( !entry.isCloseable());
 		}
@@ -1745,8 +1735,7 @@ public class SideBar
 			}
 		} catch (Exception e) {
 			Debug.out(e);
-			entry.close(true);
-			removeItem(entry,false);
+			closeEntry(entry);
 			return null;
 		}
 
@@ -1919,17 +1908,16 @@ public class SideBar
 
 		// track entry additions and selection so we can switch to previous entry when one is closed
 
-	private Stack<SideBarEntrySWT>	stack = new Stack<>();
+	private final Stack<String> entryViewHistory = new Stack<>();
 
 	@Override
-	public void addItem(MdiEntrySWT entry) {
+	public void addItem(BaseMdiEntry entry) {
 		super.addItem( entry );
-		if ( entry instanceof SideBarEntrySWT ){
-			synchronized( stack ){
-				stack.remove( entry );
-				if ( entry.isSelectable()){
-					stack.push( (SideBarEntrySWT)entry );
-				}
+		synchronized(entryViewHistory){
+			String id = entry.getViewID();
+			entryViewHistory.remove(id);
+			if ( entry.isSelectable()){
+				entryViewHistory.push( id );
 			}
 		}
 	}
@@ -1938,67 +1926,57 @@ public class SideBar
 	protected void
 	itemSelected(MdiEntry entry ){
 		super.itemSelected( entry );
-		if ( entry instanceof SideBarEntrySWT ){
-			synchronized( stack ){
-				stack.remove( entry );
-				if ( entry.isSelectable()){
-					stack.push( (SideBarEntrySWT)entry );
-				}
+		synchronized(entryViewHistory){
+			String id = entry.getViewID();
+			entryViewHistory.remove(id);
+			if ( entry.isSelectable()){
+				entryViewHistory.push(id);
 			}
 		}
 	}
 
 	@Override
-	public void removeItem(MdiEntry entry) {
-		super.removeItem( entry );
-		if (Utils.isDisplayDisposed()) {
-			return;
+	public BaseMdiEntry closeEntryByID(String id) {
+		MdiEntry currentBeforeClose = getCurrentEntry();
+
+		BaseMdiEntry entry = super.closeEntryByID(id);
+		if (entry == null || Utils.isDisplayDisposed()) {
+			return entry;
 		}
-		if ( entry instanceof SideBarEntrySWT ){
+		
+		String next = null;
 
-			MdiEntry current = getCurrentEntry();
-
-			SideBarEntrySWT next = null;
-
-			synchronized( stack ){
-
-				stack.remove( entry );
-
-				if ( current == null && !entry.getMDI().isInitialEntrySet()){
-					
-						// during startup we can get here early - if we set an explicit current entry
-						// entry then this can override the 'startup entry' waiting to be set
-					
-					return;
-				}
-				
-				if ( 	current == null ||
-						current == entry ){
-
-					while( !stack.isEmpty()){
-						next = stack.pop();
-						if ( next.isEntryDisposed()){
-							next = null;
-						}else{
-							break;
-						}
-					}
-				}
+		synchronized(entryViewHistory){
+			entryViewHistory.remove( id );
+			
+			if (currentBeforeClose == null) {
+				return entry;
 			}
-			if ( next != null ){
-				
-				showEntry( next );
-				
-					// for some reason if we don't force this we can get spurious other selection events that
-					// cause the desired entry to be switched away from :(
-				
-				try{
-					next.getTreeItem().getParent().setSelection( next.getTreeItem());
-					
-				}catch( Throwable e ){
+
+			if (currentBeforeClose != null && currentBeforeClose != entry) {
+				// Closing an entry while another entry is selected.
+				// Skip finding next in list
+				return entry;
+			}
+
+			while( !entryViewHistory.isEmpty()){
+				next = entryViewHistory.pop();
+				if (entryExists(next)) {
+					break;
+				} else {
+					next = null;
 				}
 			}
 		}
+		
+		if (next == null) {
+			// OSX doesn't select a treeitem after closing an existing one
+			// Force selection
+			next = SideBar.SIDEBAR_SECTION_LIBRARY;
+		}
+
+		showEntryByID( next );
+		return entry;
 	}
 
 	@Override
@@ -2059,7 +2037,7 @@ public class SideBar
 	}
 
 	@Override
-	protected SideBarEntrySWT createEntryByCreationListener(String id, Object ds, Map<?, ?> autoOpenMap) {
-		return (SideBarEntrySWT) super.createEntryByCreationListener(id, ds, autoOpenMap);
+	protected SideBarEntrySWT createEntryByCreationListener(String id, Map<?, ?> autoOpenInfo) {
+		return (SideBarEntrySWT) super.createEntryByCreationListener(id, autoOpenInfo);
 	}
 }

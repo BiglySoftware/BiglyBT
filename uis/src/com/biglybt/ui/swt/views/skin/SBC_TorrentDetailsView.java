@@ -333,12 +333,7 @@ public class SBC_TorrentDetailsView
 										Object ds = entry.getDatasourceCore();
 										DownloadManager manager = DataSourceUtils.getDM(ds);
 										if (dm.equals(manager)) {
-											Utils.execSWTThread(new AERunnable() {
-												@Override
-												public void runSupport() {
-													entry.closeView();
-												}
-											});
+											mdi.closeEntry(entry);
 										}
 									}
 								};
@@ -361,8 +356,6 @@ public class SBC_TorrentDetailsView
 			Object ds = entry.getDatasourceCore();
 			if (propertyID == TITLE_EXPORTABLE_DATASOURCE) {
 				return DataSourceUtils.getHash(ds);
-			} else if (propertyID == TITLE_LOGID) {
-				return "DMDetails";
 			} else if (propertyID == TITLE_IMAGEID) {
 				return "image.sidebar.details";
 			}

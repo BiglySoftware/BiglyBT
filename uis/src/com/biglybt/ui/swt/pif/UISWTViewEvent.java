@@ -145,7 +145,7 @@ public interface UISWTViewEvent {
 	public static final int TYPE_LANGUAGEUPDATE = 6;
 
 	/**
-	 * Triggered when the parent view is about to be destroyed
+	 * Triggered when the view is about to be destroyed
 	 * <p>
 	 * TYPE_FOCUSLOST may not be called before TYPE_DESTROY
 	 *
@@ -154,11 +154,10 @@ public interface UISWTViewEvent {
 	public static final int TYPE_DESTROY = 7;
 
 	/**
-	 * Triggered when the parent view is about to be closed
-	 * <p>
-	 * Return false to abort close
+	 * Triggered when the view is about to be closed
 	 *
 	 * @since 2.5.0.1
+	 * @deprecated Not called.  Use {@link #TYPE_DESTROY}
 	 */
 	public static final int TYPE_CLOSE = 8;
 

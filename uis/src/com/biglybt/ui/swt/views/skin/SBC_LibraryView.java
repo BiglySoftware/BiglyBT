@@ -51,10 +51,7 @@ import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.InitializerListener;
-import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentListener;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
@@ -134,8 +131,6 @@ public class SBC_LibraryView
 
 	private Object datasource;
 
-	private MdiEntry currentEntry;
-
 	public void setViewMode(int viewMode, boolean save) {
 		if (viewMode >= modeViewIDs.length || viewMode < 0
 				|| viewMode == this.viewMode) {
@@ -175,25 +170,6 @@ public class SBC_LibraryView
 
 		if (save) {
 			COConfigurationManager.setParameter(torrentFilter + ".viewmode", viewMode);
-		}
-
-		String entryID = null;
-		if (torrentFilterMode == TORRENTS_ALL) {
-			entryID = SideBar.SIDEBAR_SECTION_LIBRARY;
-		} else if (torrentFilterMode == TORRENTS_COMPLETE) {
-			entryID = SideBar.SIDEBAR_SECTION_LIBRARY_CD;
-		} else if (torrentFilterMode == TORRENTS_INCOMPLETE) {
-			entryID = SideBar.SIDEBAR_SECTION_LIBRARY_DL;
-		} else if (torrentFilterMode == TORRENTS_UNOPENED) {
-			entryID = SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED;
-		}
-
-		if (entryID != null) {
-			MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-			currentEntry = mdi.getEntry(entryID);
-			if (currentEntry != null) {
-				currentEntry.setLogID(entryID + "-" + viewMode);
-			}
 		}
 
 		SB_Transfers sb_t = MainMDISetup.getSb_transfers();

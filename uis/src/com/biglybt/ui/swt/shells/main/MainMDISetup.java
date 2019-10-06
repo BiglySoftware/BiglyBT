@@ -69,7 +69,6 @@ import com.biglybt.pif.download.*;
 import com.biglybt.pif.sharing.*;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener2;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
@@ -126,8 +125,9 @@ public class MainMDISetup
 	}
 
 	
-	public static void setupSideBar(final MultipleDocumentInterfaceSWT mdi,
-	                                final MdiListener l) {
+	public static void setupSideBar(final MultipleDocumentInterfaceSWT mdi) {
+		mdi.setDefaultEntryID(SideBar.SIDEBAR_SECTION_LIBRARY);
+
 		if (Utils.isAZ2UI()) {
 			setupSidebarClassic(mdi);
 		} else {
@@ -135,68 +135,6 @@ public class MainMDISetup
 		}
 
 		SBC_TorrentDetailsView.TorrentDetailMdiEntry.register(mdi);
-
-		PluginInterface pi = PluginInitializer.getDefaultInterface();
-
-		pi.getUIManager().addUIListener(
-				new UIManagerListener2() {
-					@Override
-					public void UIDetached(UIInstance instance) {
-					}
-
-					@Override
-					public void UIAttached(UIInstance instance) {
-					}
-
-					@Override
-					public void UIAttachedComplete(UIInstance instance) {
-
-						PluginInitializer.getDefaultInterface().getUIManager().removeUIListener(
-								this);
-
-						MdiEntry currentEntry = mdi.getCurrentEntry();
-						
-						String startTab		= null;
-						String datasource 	= null;
-
-						if (currentEntry != null) {
-
-							// User or another plugin selected an entry
-							
-						}else{
-							
-							final String CFG_STARTTAB = "v3.StartTab";
-							final String CFG_STARTTAB_DS = "v3.StartTab.ds";
-							boolean showWelcome = false;
-	
-							/** We don't have a welcoming welcome yet
-							boolean showWelcome = COConfigurationManager.getBooleanParameter("v3.Show Welcome");
-							if (ConfigurationChecker.isNewVersion()) {
-								showWelcome = true;
-							}
-							**/
-	
-							if (showWelcome) {
-								startTab = SideBar.SIDEBAR_SECTION_WELCOME;
-							} else {
-								if (!COConfigurationManager.hasParameter(CFG_STARTTAB, true)) {
-									COConfigurationManager.setParameter(CFG_STARTTAB,
-											SideBar.SIDEBAR_SECTION_LIBRARY);
-								}
-								startTab = COConfigurationManager.getStringParameter(CFG_STARTTAB);
-								datasource = COConfigurationManager.getStringParameter(
-										CFG_STARTTAB_DS, null);
-							}
-						}
-						
-						mdi.setInitialEntry( startTab, datasource, SideBar.SIDEBAR_SECTION_LIBRARY );
-						
-						if (l != null){
-							
-							mdi.addListener(l);
-						}
-					}
-				});
 
 		configBetaEnabledListener = new ParameterListener() {
 			@Override
@@ -772,6 +710,7 @@ public class MainMDISetup
 					return null;
 				});
 
+		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		try {
 			if ( !COConfigurationManager.getBooleanParameter( "my.shares.view.auto.open.done", false )){
 				
@@ -1030,9 +969,10 @@ public class MainMDISetup
 						entry.setDefaultExpanded(true);
 	
 						if (id.equals(SIDEBAR_HEADER_PLUGINS)) {
-							entry.addListener((MdiChildCloseListener) (parent, ch, user) -> {
-								if (mdi.getChildrenOf(parent.getViewID()).isEmpty()) {
-									parent.close(true);
+							// remove header when there are no children
+							entry.addListener((parent, ch, user) -> {
+								if (mdi.getChildrenOf(SIDEBAR_HEADER_PLUGINS).isEmpty()) {
+									mdi.closeEntry(parent);
 								}
 							});
 	

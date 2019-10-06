@@ -24,6 +24,9 @@ import org.eclipse.swt.SWT;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.pif.update.UpdateCheckInstance;
 import com.biglybt.pif.update.UpdateCheckInstanceListener;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
@@ -58,40 +61,54 @@ BetaWizard
 	{
 		super.onClose();
 
-		if ( finished ){
+		if (!finished) {
+			return;
+		}
 
-			COConfigurationManager.setParameter( "Beta Programme Enabled", beta_enabled );
+		COConfigurationManager.setParameter( "Beta Programme Enabled", beta_enabled );
 
-			if ( !beta_enabled && Constants.IS_CVS_VERSION ){
-
-				MessageBoxShell mb = new MessageBoxShell(
-						SWT.ICON_INFORMATION | SWT.OK,
-						MessageText.getString( "beta.wizard.disable.title" ),
-						MessageText.getString( "beta.wizard.disable.text" ));
-
-				mb.open(null);
-
-			}else if ( beta_enabled && !beta_was_enabled ){
-
-				UpdateMonitor.getSingleton(
-					CoreFactory.getSingleton()).performCheck(
-						true, false, false,
-						new UpdateCheckInstanceListener() {
-							@Override
-							public void
-							cancelled(
-								UpdateCheckInstance instance)
-							{
-							}
-
-							@Override
-							public void
-							complete(
-								UpdateCheckInstance instance)
-							{
-							}
-						});
+		UIFunctions uif = UIFunctionsManager.getUIFunctions();
+		if (uif != null) {
+			MultipleDocumentInterface mdi = uif.getMDI();
+			if (mdi != null) {
+				if (beta_enabled) {
+					mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_BETAPROGRAM);
+				} else {
+					mdi.closeEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_BETAPROGRAM
+					);
+				}
 			}
+		}
+
+		if ( !beta_enabled && Constants.IS_CVS_VERSION ){
+
+			MessageBoxShell mb = new MessageBoxShell(
+					SWT.ICON_INFORMATION | SWT.OK,
+					MessageText.getString( "beta.wizard.disable.title" ),
+					MessageText.getString( "beta.wizard.disable.text" ));
+
+			mb.open(null);
+
+		}else if ( beta_enabled && !beta_was_enabled ){
+
+			UpdateMonitor.getSingleton(
+				CoreFactory.getSingleton()).performCheck(
+					true, false, false,
+					new UpdateCheckInstanceListener() {
+						@Override
+						public void
+						cancelled(
+							UpdateCheckInstance instance)
+						{
+						}
+
+						@Override
+						public void
+						complete(
+							UpdateCheckInstance instance)
+						{
+						}
+					});
 		}
 	}
 

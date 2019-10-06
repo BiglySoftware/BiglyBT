@@ -25,8 +25,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -36,16 +34,17 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
-import com.biglybt.ui.mdi.MdiEntryVitalityImage;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.debug.ObfuscateTab;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
-import com.biglybt.ui.swt.pif.*;
-import com.biglybt.ui.swt.pifimpl.*;
-import com.biglybt.ui.swt.skin.*;
-import com.biglybt.ui.swt.utils.SWTRunnable;
+import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.pif.UISWTViewEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.pifimpl.UISWTViewEventCancelledException;
+import com.biglybt.ui.swt.skin.SWTSkin;
+import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.util.DataSourceUtils;
 import com.biglybt.util.MapUtils;
@@ -54,7 +53,7 @@ import com.biglybt.util.MapUtils;
  * MDI Entry that is a {@link CTabItem} and belongs wo {@link TabbedMDI}
  */
 public class TabbedEntry
-	extends BaseMdiEntry implements DisposeListener
+	extends BaseMdiEntry
 {
 	private CTabItem swtItem;
 
@@ -79,7 +78,7 @@ public class TabbedEntry
 	 *       in sync until commonalities are placed in BaseMdiEntry
 	 */
 	public boolean swt_build() {
-		if (swtItem == null) {
+		if (swtItem == null || skin == null) {
 			buildonSWTItemSet = true;
 			return true;
 		}
@@ -182,7 +181,7 @@ public class TabbedEntry
 					setEventListener(null, null, false);
 				} catch (UISWTViewEventCancelledException ignore) {
 				}
-				close(true);
+				closeView();
 			}
 
 		}
@@ -236,8 +235,9 @@ public class TabbedEntry
 		triggerOpenListeners();
 
 
-		if (swtItem.getParent().getSelection() != swtItem) {
-			swtItem.getParent().setSelection(swtItem);
+		CTabFolder parent = swtItem.getParent();
+		if (parent != null && parent.getSelection() != swtItem) {
+			parent.setSelection(swtItem);
 		}
 
 		super.show();
@@ -314,17 +314,15 @@ public class TabbedEntry
 					Object ds = getDataSource();
 					DownloadManager[] dms = DataSourceUtils.getDMs(ds);
 
-					if (dms != null ){
-						for ( DownloadManager dm: dms ){
+					for ( DownloadManager dm: dms ){
+						
+						ds_str += (ds_str.isEmpty()?"":", ") + dm.getDisplayName();
+						
+						if ( ds_str.length() > 200 ){
 							
-							ds_str += (ds_str.isEmpty()?"":", ") + dm.getDisplayName();
+							ds_str = ds_str.substring( 0, 200 ) + "...";
 							
-							if ( ds_str.length() > 200 ){
-								
-								ds_str = ds_str.substring( 0, 200 ) + "...";
-								
-								break;
-							}
+							break;
 						}
 					}
 
@@ -349,7 +347,7 @@ public class TabbedEntry
 			return;
 		}
 
-		swtItem.addDisposeListener(this);
+		swtItem.addDisposeListener(e -> closeView());
 		String title = getTitle();
 		if (title != null) {
 			swtItem.setText(Utils.escapeAccelerators(title));
@@ -395,31 +393,31 @@ public class TabbedEntry
 		return changed;
 	}
 
-	/* (non-Javadoc)
-	 * @see BaseMdiEntry#close()
-	 */
+
 	@Override
-	public boolean close(boolean forceClose) {
-    // triggerCloseListener
-		if (!super.close(forceClose)) {
-			return false;
+	protected void destroyEntry() {
+		if (Utils.runIfNotSWTThread(this::destroyEntry)) {
+			return;
 		}
 
-		Utils.execSWTThread(new SWTRunnable() {
-			@Override
-			public void runWithDisplay(Display display) {
-				if (swtItem != null && !swtItem.isDisposed()) {
-					// this will triggerCloseListeners
-					try {
-						swtItem.dispose();
-					}catch( SWTException e ){
-						// getting internal 'Widget it disposed' here, ignore
-					}
-					swtItem = null;
-				}
+		if (swtItem == null) {
+			return;
+		}
+
+		// Must make a copy of swtItem because swtItem.dispose will end up in
+		// this method again, with swtItem.isDisposed() still false.
+		CTabItem item = swtItem;
+		swtItem = null;
+
+		super.destroyEntry();
+
+		try {
+			if (!item.isDisposed()) {
+				item.dispose();
 			}
-		});
-		return true;
+		}catch( SWTException e ){
+			// getting internal 'Widget it disposed' here, ignore
+		}
 	}
 
 	@Override
@@ -473,53 +471,6 @@ public class TabbedEntry
 			}
 			Image image = getImageLeft(null);
 			swtItem.setImage(image);
-		});
-	}
-
-	@Override
-	public void widgetDisposed(DisposeEvent e) {
-		setSwtItem(null);
-
-		SWTThread instance = SWTThread.getInstance();
-		
-		boolean user = instance != null && !instance.isTerminated();
-		
-		if ( user ){
-			
-			if ( closeWasUserInitiated != null ){
-				
-				user = closeWasUserInitiated;
-			}
-		}
-		
-		triggerCloseListeners( user );
-
-		try {
-			setEventListener(null, null, false);
-		} catch (UISWTViewEventCancelledException ignore) {
-		}
-
-		SWTSkinObject so = getSkinObject();
-		if (so != null) {
-			setSkinObjectMaster(null);
-			so.getSkin().removeSkinObject(so);
-		}
-
-		// delay saving of removing of auto-open flag.  If after the delay, we are
-		// still alive, it's assumed the user invoked the close, and we should
-		// remove the auto-open flag
-		Utils.execSWTThreadLater(0, new SWTRunnable() {
-			@Override
-			public void runWithDisplay(Display display) {
-				// even though execThreadLater will not run on close of app because
-				// the display is disposed, do a double check of tree disposal just
-				// in case.  We don't want to trigger close listeners or
-				// remove autoopen parameters if the user is closing the app (as
-				// opposed to closing  the sidebar)
-
-				mdi.removeItem(TabbedEntry.this);
-				mdi.removeEntryAutoOpen(id);
-			}
 		});
 	}
 
@@ -586,10 +537,14 @@ public class TabbedEntry
 		Rectangle bounds = swtItem == null ? null : swtItem.getBounds();
 		if ( bounds != null ){
 
-			boolean isActive = swtItem.getParent().getSelection() == swtItem;
+			CTabFolder parent = swtItem.getParent();
+			if (parent == null || parent.isDisposed()) {
+				return image;
+			}
+			boolean isActive = parent.getSelection() == swtItem;
 			boolean isHeaderVisible = swtItem.isShowing();
 
-			Point location = Utils.getLocationRelativeToShell(swtItem.getParent());
+			Point location = Utils.getLocationRelativeToShell(parent);
 
 			bounds.x += location.x;
 			bounds.y += location.y;

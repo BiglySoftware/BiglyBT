@@ -45,11 +45,6 @@ public class UIConfigDefaultsSWTv3
 
 		boolean configNeedsSave = false;
 
-		if (System.getProperty("FORCE_PROGRESSIVE", "").length() > 0) { //TODO HACK FOR DEMO PURPOSES ONLY!
-			config.setParameter("Prioritize First Piece", true);
-			configNeedsSave = true;
-		}
-
 		final ConfigurationDefaults defaults = ConfigurationDefaults.getInstance();
 
 		defaults.addParameter("ui", "az3");
@@ -120,35 +115,6 @@ public class UIConfigDefaultsSWTv3
 				defaults.addParameter("Plugin.UPnP.upnp.alertdeviceproblems", false);
 			}
 		});
-
-		// "v3.StartTab" didn't exist before 4209_B49 and is written at startup.
-		// Use it as indicator to reset columns so beta users get correct columns
-		// ("Big View" only).  As a backup (in addition to), reset on first 4210
-		// run
-		if (!COConfigurationManager.hasParameter("v3.StartTab", true)){
-			// Reset 'big' columns, remove some tables that no longer exist
-			Map<?, ?> map = FileUtil.readResilientConfigFile("tables.config");
-			if (map != null && map.size() > 0) {
-  			Object[] keys = map.keySet().toArray();
-  			boolean removedSome = false;
-  			for (int i = 0; i < keys.length; i++) {
-  				if (keys[i] instanceof String) {
-  					String sKey = (String) keys[i];
-  					if (sKey.endsWith(".big") || sKey.startsWith("Table.library-")
-  							|| sKey.startsWith("Table.Media")
-  							|| sKey.startsWith("Table.activity.table")
-  							|| sKey.equals("Table.Activity.big")
-  							|| sKey.equals("Table.Activity_SB")) {
-  						map.remove(sKey);
-  						removedSome = true;
-  					}
-  				}
-  			}
-  			if (removedSome) {
-  				FileUtil.writeResilientConfigFile("tables.config", map);
-  			}
-			}
-		}
 
 		if (configNeedsSave) {
 			config.save();

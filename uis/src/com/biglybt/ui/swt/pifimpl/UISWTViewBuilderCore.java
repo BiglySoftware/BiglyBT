@@ -24,9 +24,12 @@ import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 
@@ -80,6 +83,13 @@ public class UISWTViewBuilderCore
 
 				@Override
 				public void closedownInitiated() {
+					if (Utils.isDisplayDisposed()) {
+						return;
+					}
+					GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+					if (gm != null && gm.isStopping()) {
+						return;
+					}
 					dispose();
 				}
 
