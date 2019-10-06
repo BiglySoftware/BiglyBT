@@ -657,44 +657,51 @@ public class TableViewSWT_Common
 	validateFilterRegex()
 	{
 		TableViewSWTFilter<?> filter = tv.getSWTFilter();
+		Text widget = filter.widget;
+		Color old_bg = (Color)widget.getData( "TVSWTC:filter.bg" );
+		if ( old_bg == null ){
+			old_bg = widget.getBackground();
+			widget.setData( "TVSWTC:filter.bg", old_bg);
+		}
 		if (filter.regex) {
 			if ( FONT_NO_REGEX == null ){
-				FONT_NO_REGEX = filter.widget.getFont();
+				FONT_NO_REGEX = widget.getFont();
 				FontData[] fd = FONT_NO_REGEX.getFontData();
 				for (int i = 0; i < fd.length; i++) {
 					fd[i].setStyle(SWT.BOLD);
 				}
-				FONT_REGEX = new Font( filter.widget.getDisplay(), fd );
+				FONT_REGEX = new Font( widget.getDisplay(), fd );
 				for (int i = 0; i < fd.length; i++) {
 					fd[i].setStyle(SWT.ITALIC);
 				}
-				FONT_REGEX_ERROR = new Font( filter.widget.getDisplay(), fd );
+				FONT_REGEX_ERROR = new Font( widget.getDisplay(), fd );
 				
-				filter.widget.addDisposeListener(
+				widget.addDisposeListener(
 					(e)->{
 						FONT_NO_REGEX = null;
 						FONT_REGEX.dispose();
 						FONT_REGEX_ERROR.dispose();
 					});
 			}
+			
+
 			try {
 				Pattern.compile(filter.nextText, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-				filter.widget.setBackground(COLOR_FILTER_REGEX);
-				filter.widget.setFont( FONT_REGEX );
+				
+				widget.setBackground(COLOR_FILTER_REGEX);
+				widget.setFont( FONT_REGEX );
 
-				Messages.setLanguageTooltip(filter.widget,
-						"MyTorrentsView.filter.tooltip");
+				Messages.setLanguageTooltip(widget,"MyTorrentsView.filter.tooltip");
 			} catch (Exception e) {
-				filter.widget.setBackground(Colors.colorErrorBG);
-				Utils.setTT(filter.widget,e.getMessage());
-				filter.widget.setFont( FONT_REGEX_ERROR );
+				widget.setBackground(Colors.colorErrorBG);
+				Utils.setTT(widget,e.getMessage());
+				widget.setFont( FONT_REGEX_ERROR );
 			}
 		} else {
-			filter.widget.setBackground(null);
-			Messages.setLanguageTooltip(filter.widget,
-					"MyTorrentsView.filter.tooltip");
+			widget.setBackground(old_bg);
+			Messages.setLanguageTooltip(widget,"MyTorrentsView.filter.tooltip");
 			if ( FONT_NO_REGEX != null ){
-				filter.widget.setFont( FONT_NO_REGEX );
+				widget.setFont( FONT_NO_REGEX );
 			}
 		}
 	}
