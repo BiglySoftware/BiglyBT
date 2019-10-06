@@ -204,6 +204,12 @@ public abstract class BaseMDI
 
 	@Override
 	public BaseMdiEntry closeEntryByID(String id) {
+		// We'll get here from closeEntry (BaseMDI), skinObjectDestroyed (TabbedMDI)
+		// with a 99% chance the display is disposed
+		if (Utils.isDisplayDisposed()) {
+			return null;
+		}
+
 		// TODO: Children
 		BaseMdiEntry removedItem;
 
