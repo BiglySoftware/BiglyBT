@@ -20,7 +20,6 @@
 package com.biglybt.core.disk.impl.piecemapper;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
-import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
 
 
 public interface

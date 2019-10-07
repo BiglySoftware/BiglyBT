@@ -713,7 +713,7 @@ public class PieceInfoView
 				
 				DiskManagerFileInfo info = entry.getFile();
 		
-				text += (i==0?"":"; ") + info.getFile( true ).getName();
+				text += (i==0?"":"; ") + info.getFile( true ).getName() + ", offset " + entry.getOffset();
 			}
 		}
 		
