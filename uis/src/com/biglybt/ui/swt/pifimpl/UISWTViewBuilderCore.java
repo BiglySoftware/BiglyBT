@@ -264,10 +264,6 @@ public class UISWTViewBuilderCore
 				Debug.out("Won't be able to create view " + viewID
 						+ " because listener class '" + cla.getName() + " is private");
 			}
-			if (!Modifier.isStatic(modifiers)) {
-				Debug.out("Won't be able to create view " + viewID
-					+ " because listener class '" + cla.getName() + " is not static");
-			}
 		}
 		return this;
 	}
