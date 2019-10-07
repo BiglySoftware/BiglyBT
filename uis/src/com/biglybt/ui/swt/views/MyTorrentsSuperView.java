@@ -427,12 +427,15 @@ public class MyTorrentsSuperView
 							} else {
 								torrentview.getTableView().setFocus();
 							}
-							return;
 						}
 
-						Utils.execSWTThread(
-								() -> target_tabs.triggerTabViewsDataSourceChanged(
-										selected_tv));
+						Utils.execSWTThread(() -> {
+							TableView<?> selectedTV = SelectedContentManager.getCurrentlySelectedTableView();
+							if (selectedTV == null) {
+								return;
+							}
+							target_tabs.triggerTabViewsDataSourceChanged(selectedTV);
+						});
 					}
 				});
 
