@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.pifimpl;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -257,6 +258,12 @@ public class UISWTViewBuilderCore
 	public UISWTViewBuilderCore setListenerClass(
 			Class<? extends UISWTViewEventListener> cla) {
 		cla_ref = new WeakReference<>(cla);
+		if (cla != null) {
+			if (Modifier.isPrivate(cla.getModifiers())) {
+				Debug.out("Won't be able to create view " + viewID
+						+ " because listener class '" + cla.getName() + " is private");
+			}
+		}
 		return this;
 	}
 
