@@ -887,7 +887,7 @@ public abstract class BaseMDI
 
 			MdiEntry mdiEntry = createEntryByCreationListener(id, autoOpenInfo);
 			if (mdiEntry != null) {
-				if (mdiEntry.getTitle().equals("")) {
+				if (mdiEntry.getTitle().equals("") && !title.isEmpty()) {
 					mdiEntry.setTitle(title);
 				}
 				return true;
@@ -898,7 +898,9 @@ public abstract class BaseMDI
 			if (builder != null) {
 				entry = createEntry(builder, true);
 				if (entry != null) {
-					entry.setTitle(title);
+					if (entry.getTitle().equals("") && !title.isEmpty()) {
+						entry.setTitle(title);
+					}
 					// Auto-Open stores last datasource used before close.
 					// Override builder's initialDataSource with stored one.
 					entry.setDatasource(datasource);
