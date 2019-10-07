@@ -19,6 +19,7 @@
 
 package com.biglybt.core.disk;
 
+import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 
 /**
  * Represents a DiskManager Piece
@@ -76,6 +77,8 @@ DiskManagerPiece
 
     public boolean		spansFiles();
 
+    public DMPieceList	getPieceList();
+    
 	public boolean		calcDone();
 	/** @return true when the hash check has passed and the DiskManager has asyncronously updated the Done status.
 	 * There is nothing further to be done regarding downloading for pieces that are Done.

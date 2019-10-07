@@ -599,13 +599,6 @@ public class PieceInfoView
 			return( -1 );
 		}
 
-		PEPeerManager pm = manager.getPeerManager();
-
-		if ( pm == null ){
-
-			return( -1 );
-		}
-
 		Rectangle bounds = pieceInfoCanvas.getClientArea();
 
 		if (bounds.width <= 0 || bounds.height <= 0){
@@ -620,7 +613,7 @@ public class PieceInfoView
 
 		int	piece_number = y_block*iNumCols + x_block;
 
-		if ( piece_number >= pm.getPiecePicker().getNumberOfPieces()){
+		if ( piece_number >= dlm.getNbPieces()){
 
 			return( -1 );
 
@@ -685,14 +678,16 @@ public class PieceInfoView
 		DiskManager		disk_manager 	= dlm.getDiskManager();
 		PEPeerManager	pm 				= dlm.getPeerManager();
 
+		DiskManagerPiece[] dm_pieces = disk_manager == null ? dlm.getDiskManagerPiecesSnapshot() :  disk_manager.getPieces();
+		
 		String text = "";
 		for (int piece_number : piece_numbers) {
 			if (!text.isEmpty()) {
 				text += "\n";
 			}
 				
-			DiskManagerPiece	dm_piece = disk_manager.getPiece( piece_number );
-			PEPiece 			pm_piece = pm.getPiece( piece_number );
+			DiskManagerPiece	dm_piece = dm_pieces[ piece_number ];
+			PEPiece 			pm_piece = pm==null?null:pm.getPiece( piece_number );
 	
 			text +=  "Piece " + piece_number + ": " + dm_piece.getString();
 	
@@ -702,7 +697,7 @@ public class PieceInfoView
 	
 			}else{
 	
-				if ( dm_piece.isNeeded() && !dm_piece.isDone()){
+				if ( dm_piece.isNeeded() && !dm_piece.isDone() && pm != null ){
 	
 					text += ", inactive: " + pm.getPiecePicker().getPieceString( piece_number );
 				}
@@ -710,7 +705,7 @@ public class PieceInfoView
 			
 			text += " - ";
 			
-			DMPieceList l = disk_manager.getPieceList( piece_number );
+			DMPieceList l = dm_piece.getPieceList();
 			
 			for ( int i=0;i<l.size();i++) {
 	       
@@ -789,7 +784,7 @@ public class PieceInfoView
 
 		DiskManager dm = dlm.getDiskManager();
 
-		DiskManagerPiece[] dm_pieces = dm == null ? null :  dm.getPieces();
+		DiskManagerPiece[] dm_pieces = dm == null ? dlm.getDiskManagerPiecesSnapshot() :  dm.getPieces();
 		byte[] resume_data = dm_pieces == null ? MapUtils.getMapByteArray(
 			MapUtils.getMapMap(dlm.getDownloadState().getResumeData(), "data",
 				null),
@@ -906,11 +901,11 @@ public class PieceInfoView
 			int	selectionStart 	= Integer.MAX_VALUE;
 			int selectionEnd	= Integer.MIN_VALUE;
 			
-			if ( selectedPiece != -1 & dm != null ){
+			if ( selectedPiece != -1 & dm_pieces != null ){
 			
 				if ( selectedPieceShowFile ){
 					
-					DMPieceList l = dm.getPieceList( selectedPiece );
+					DMPieceList l = dm_pieces[ selectedPiece ].getPieceList();
 				
 					for ( int i=0;i<l.size();i++) {
 	           		 

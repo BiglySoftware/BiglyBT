@@ -181,6 +181,8 @@ DownloadManagerController
 	private volatile DiskManager 			disk_manager_use_accessors;
 	private DiskManagerListener				disk_manager_listener_use_accessors;
 
+	private DiskManagerPiece[]				disk_manager_pieces_snapshot;
+	
 	final FileInfoFacadeSet		fileFacadeSet = new FileInfoFacadeSet();
 	boolean					files_facade_destroyed;
 
@@ -780,6 +782,8 @@ DownloadManagerController
 
 		  	DiskManager dm = DiskManagerFactory.create( download_manager.getTorrent(), download_manager);
 
+		  	disk_manager_pieces_snapshot = null;
+		  	
 	  	  	setDiskManager( dm, listener );
 
 		}finally{
@@ -2112,6 +2116,25 @@ DownloadManagerController
 	getDiskManager()
 	{
 		return( disk_manager_use_accessors );
+	}
+	
+	public DiskManagerPiece[] 
+	getDiskManagerPiecesSnapshot()
+	{
+		try{
+			control_mon.enter();
+		
+			if ( disk_manager_pieces_snapshot == null ){
+				
+				disk_manager_pieces_snapshot = DiskManagerUtil.getDiskManagerPiecesSnapshot( download_manager );			
+			}
+			
+			return( disk_manager_pieces_snapshot );
+			
+		}finally{
+			
+			control_mon.exit();
+		}
 	}
 
 	protected String

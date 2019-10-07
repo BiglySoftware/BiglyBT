@@ -786,7 +786,7 @@ DiskManagerImpl
                 // Maybe one day we could allocate the file info earlier. However, if we do
                 // this then we'll need to handle the "already moved" stuff too...
 
-            DiskManagerFileInfoImpl file_info = pm_info.getFileInfo();
+            DiskManagerFileInfoImpl file_info = (DiskManagerFileInfoImpl)pm_info.getFileInfo();
 
             boolean close_it    = false;
 
@@ -1640,7 +1640,7 @@ DiskManagerImpl
 	
 	                    DMPieceMapEntry piece_map_entry =piece_list.get(i);
 	
-	                    DiskManagerFileInfoImpl this_file =piece_map_entry.getFile();
+	                    DiskManagerFileInfoImpl this_file = (DiskManagerFileInfoImpl)piece_map_entry.getFile();
 	
 	                    long file_length =this_file.getLength();
 	

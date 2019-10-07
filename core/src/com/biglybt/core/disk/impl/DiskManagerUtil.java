@@ -33,7 +33,14 @@ import java.util.Map;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
+import com.biglybt.core.disk.DiskManager.OperationStatus;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceMap;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceMapper;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceMapperFactory;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceMapperFile;
 import com.biglybt.core.disk.impl.resume.RDResumeHandler;
+import com.biglybt.core.diskmanager.access.DiskAccessController;
 import com.biglybt.core.diskmanager.cache.CacheFile;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerFactory;
 import com.biglybt.core.diskmanager.cache.CacheFileOwner;
@@ -50,6 +57,7 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 
@@ -1582,4 +1590,426 @@ DiskManagerUtil
 		
 		return( false );
 	}
+	
+	public static DiskManagerPiece[]
+	getDiskManagerPiecesSnapshot(
+		DownloadManager		dm )
+	{
+		try{
+			DiskManagerFileInfoSet file_set = 
+				getFileInfoSkeleton(
+					dm,
+					new DiskManagerListener(){
+						
+						@Override
+						public void stateChanged(int oldState, int newState){
+						}
+						
+						@Override
+						public void pieceDoneChanged(DiskManagerPiece piece){
+						}
+						
+						@Override
+						public void filePriorityChanged(DiskManagerFileInfo file){
+						}
+					});
+			
+			DiskManagerFileInfo[] files = file_set.getFiles();
+			
+			TOTorrent torrent = dm.getTorrent();
+			
+	        DMPieceMapper piece_mapper    = DMPieceMapperFactory.create( torrent );
+	
+	        LocaleUtilDecoder   locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );
+	
+	        piece_mapper.construct( locale_decoder, dm.getAbsoluteSaveLocation().getName());
+	
+	        DMPieceMapperFile[] pm_files = piece_mapper.getFiles();
+	        
+	        for ( int i=0; i<pm_files.length; i++ ){
+	        	
+	        	pm_files[i].setFileInfo( files[i] );
+	        }
+	        
+	        DMPieceMap piece_map = piece_mapper.getPieceMap();       
+	        	        	        
+	        int nbPieces    = torrent.getNumberOfPieces();
+	
+	        int pieceLength     = (int)torrent.getPieceLength();
+	        int lastPieceLength = piece_mapper.getLastPieceLength();
+	
+	        DiskManagerPiece[] pieces      = new DiskManagerPiece[nbPieces];
+	
+	        DiskManagerHelper disk_manager =
+	        	new DiskManagerHelper(){
+					
+					@Override
+					public boolean stop(boolean closing){
+						return false;
+					}
+					
+					@Override
+					public void start(){
+					}
+					
+					@Override
+					public void setPieceCheckingEnabled(boolean enabled){
+					}
+					
+					@Override
+					public void setMoveState(int state){
+					}
+					
+					@Override
+					public void saveState(){
+					}
+					
+					@Override
+					public void saveResumeData(boolean interim_save) throws Exception{
+					}
+					
+					@Override
+					public void removeListener(DiskManagerListener l){
+					}
+					
+					@Override
+					public DirectByteBuffer readBlock(int pieceNumber, int offset, int length){
+						return null;
+					}
+					
+					@Override
+					public void moveDataFiles(File new_parent_dir, String dl_name, OperationStatus op_status){
+					}
+					
+					@Override
+					public boolean isStopped(){
+						return true;
+					}
+					
+					@Override
+					public boolean isInteresting(int pieceNumber){
+						return false;
+					}
+					
+					@Override
+					public boolean isDone(int pieceNumber){
+						return false;
+					}
+					
+					@Override
+					public boolean hasOutstandingWriteRequestForPiece(int piece_number){
+						return false;
+					}
+					
+					@Override
+					public boolean hasOutstandingReadRequestForPiece(int piece_number){
+						return false;
+					}
+					
+					@Override
+					public boolean hasOutstandingCheckRequestForPiece(int piece_number){
+						return false;
+					}
+					
+					@Override
+					public boolean hasListener(DiskManagerListener l){
+						return false;
+					}
+					
+					@Override
+					public long getTotalLength(){
+						return 0;
+					}
+					
+					@Override
+					public int getState(){
+						return 0;
+					}
+					
+					@Override
+					public long getSizeExcludingDND(){
+						return 0;
+					}
+					
+					@Override
+					public File getSaveLocation(){
+						return null;
+					}
+					
+					@Override
+					public long getRemainingExcludingDND(){
+						return 0;
+					}
+					
+					@Override
+					public long getRemaining(){
+						return 0;
+					}
+					
+					@Override
+					public long[] getReadStats(){
+						return null;
+					}
+					
+					@Override
+					public long getPriorityChangeMarker(){
+						return 0;
+					}
+					
+					@Override
+					public DiskManagerPiece[] getPieces(){
+						return pieces;
+					}
+					
+					@Override
+					public DMPieceMap getPieceMap(){
+						return piece_map;
+					}
+					
+					@Override
+					public int getPieceLength(int piece_number){
+						return pieces[piece_number].getLength();
+					}
+					
+					@Override
+					public int getPieceLength(){
+						return pieceLength;
+					}
+					
+					@Override
+					public DiskManagerPiece getPiece(int piece_number){
+						return pieces[piece_number];
+					}
+					
+					@Override
+					public int getPercentDoneExcludingDND(){
+						return 0;
+					}
+					
+					@Override
+					public int getPercentDone(){
+						return 0;
+					}
+					
+					@Override
+					public int getPercentAllocated(){
+						return 0;
+					}
+					
+					@Override
+					public int getNbPieces(){
+						return pieces.length;
+					}
+					
+					@Override
+					public File getMoveSubTask(){
+						return null;
+					}
+					
+					@Override
+					public int getMoveProgress(){
+						return 0;
+					}
+					
+					@Override
+					public DiskManagerFileInfo[] getFiles(){
+						return null;
+					}
+					
+					@Override
+					public DiskManagerFileInfoSet getFileSet(){
+						return null;
+					}
+					
+					@Override
+					public int getErrorType(){
+						return 0;
+					}
+					
+					@Override
+					public String getErrorMessage(){
+						return null;
+					}
+					
+					@Override
+					public int getCompleteRecheckStatus(){
+						return 0;
+					}
+					
+					@Override
+					public int getCacheMode(){
+						return 0;
+					}
+					
+					@Override
+					public void generateEvidence(IndentWriter writer){					
+					}
+					
+					@Override
+					public boolean filesExist(){
+						return false;
+					}
+					
+					@Override
+					public void enqueueWriteRequest(DiskManagerWriteRequest request, DiskManagerWriteRequestListener listener){					
+					}
+					
+					@Override
+					public void enqueueReadRequest(DiskManagerReadRequest request, DiskManagerReadRequestListener listener){						
+					}
+					
+					@Override
+					public void enqueueCompleteRecheckRequest(DiskManagerCheckRequest request,
+							DiskManagerCheckRequestListener listener){						
+					}
+					
+					@Override
+					public void enqueueCheckRequest(DiskManagerCheckRequest request, DiskManagerCheckRequestListener listener){
+					}
+					
+					@Override
+					public void downloadRemoved(){
+					}
+					
+					@Override
+					public void downloadEnded(OperationStatus op_status){
+					}
+					
+					@Override
+					public DiskManagerWriteRequest createWriteRequest(int pieceNumber, int offset, DirectByteBuffer data,
+							Object user_data){
+						return null;
+					}
+					
+					@Override
+					public DiskManagerReadRequest createReadRequest(int pieceNumber, int offset, int length){
+						return null;
+					}
+					
+					@Override
+					public DiskManagerCheckRequest createCheckRequest(int pieceNumber, Object user_data){
+						return null;
+					}
+					
+					@Override
+					public boolean checkBlockConsistencyForWrite(String originator, int pieceNumber, int offset, DirectByteBuffer data){
+						return false;
+					}
+					
+					@Override
+					public boolean checkBlockConsistencyForRead(String originator, boolean peer_request, int pieceNumber, int offset,
+							int length){
+						return false;
+					}
+					
+					@Override
+					public boolean checkBlockConsistencyForHint(String originator, int pieceNumber, int offset, int length){
+						return false;
+					}
+					
+					@Override
+					public void addListener(DiskManagerListener l){
+					}
+					
+					@Override
+					public void skippedFileSetChanged(DiskManagerFileInfo file){
+					}
+					
+					@Override
+					public void setPieceDone(DiskManagerPieceImpl piece, boolean done){
+						piece.setDoneSupport( done );
+					}
+					
+					@Override
+					public void setPercentDone(int num){
+					}
+					
+					@Override
+					public void setFailedAndRecheck(DiskManagerFileInfo file, String reason){
+					}
+					
+					@Override
+					public void setFailed(String reason, Throwable cause){
+					}
+					
+					@Override
+					public void setAllocated(long num){
+					}
+					
+					@Override
+					public void priorityChanged(DiskManagerFileInfo file){
+					}
+					
+					@Override
+					public TOTorrent getTorrent(){
+						return null;
+					}
+					
+					@Override
+					public String[] getStorageTypes(){
+						return null;
+					}
+					
+					@Override
+					public String getStorageType(int fileIndex){
+						return null;
+					}
+					
+					@Override
+					public DiskManagerRecheckScheduler getRecheckScheduler(){
+						return null;
+					}
+					
+					@Override
+					public DMPieceList getPieceList(int piece_number){
+						return piece_map.getPieceList(piece_number);
+					}
+					
+					@Override
+					public byte[] getPieceHash(int piece_number) throws TOTorrentException{
+						return null;
+					}
+					
+					@Override
+					public String getInternalName(){
+						return null;
+					}
+					
+					@Override
+					public DownloadManagerState getDownloadState(){
+						return null;
+					}
+					
+					@Override
+					public DiskAccessController getDiskAccessController(){
+						return null;
+					}
+					
+					@Override
+					public long getAllocated(){
+						return 0;
+					}
+				};
+	        
+	        for ( int i=0; i<nbPieces; i++) {
+	        
+	            pieces[i] = new DiskManagerPieceImpl( disk_manager, i, i==nbPieces-1?lastPieceLength:pieceLength);
+	        }
+	
+	        RDResumeHandler.setupPieces( dm.getDownloadState(), pieces );
+	        	        
+	        for ( int i=0; i<nbPieces; i++ ){
+	        	
+	        	pieces[i].calcNeeded();
+	        }
+	        	        
+			return( pieces );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+			return( null );
+		}
+	}	
 }

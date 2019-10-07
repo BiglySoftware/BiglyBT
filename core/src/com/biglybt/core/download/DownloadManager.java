@@ -26,6 +26,7 @@ import java.util.List;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
+import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.peer.PEPeer;
@@ -236,6 +237,9 @@ DownloadManager
     public DiskManager
     getDiskManager();
 
+    public DiskManagerPiece[]
+    getDiskManagerPiecesSnapshot();
+    
   	/**
   	 * @deprecated use getDiskManagerFileInfoSet() instead
   	 */

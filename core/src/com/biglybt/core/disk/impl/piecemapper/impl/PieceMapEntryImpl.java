@@ -17,7 +17,7 @@
 
 package com.biglybt.core.disk.impl.piecemapper.impl;
 
-import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 
 
@@ -32,13 +32,13 @@ PieceMapEntryImpl
 		 * It identifies the file, the offset within the file, and the length of the chunk
 		 */
 
-	private final DiskManagerFileInfoImpl _file;
+	private final DiskManagerFileInfo	 _file;
 	private final long 					_offset;
-	private final int						_length;
+	private final int					_length;
 
 	public
 	PieceMapEntryImpl(
-		DiskManagerFileInfoImpl 	file,
+			DiskManagerFileInfo 	file,
 		long 						offset,
 		int 						length )
 	{
@@ -48,7 +48,7 @@ PieceMapEntryImpl
 	}
 
 	@Override
-	public DiskManagerFileInfoImpl getFile() {
+	public DiskManagerFileInfo getFile() {
 		return _file;
 	}
 	@Override

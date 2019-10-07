@@ -1288,7 +1288,7 @@ implements PiecePicker
 				final int pieceListSize =pieceList.size();
 				for (int j =0; j <pieceListSize; j++)
 				{
-					final DiskManagerFileInfoImpl fileInfo =pieceList.get(j).getFile();
+					final DiskManagerFileInfo fileInfo =pieceList.get(j).getFile();
 					final long downloaded =fileInfo.getDownloaded();
 					final long length =fileInfo.getLength();
 					if (length >0 &&downloaded <length &&!fileInfo.isSkipped())
@@ -1461,7 +1461,7 @@ implements PiecePicker
 						final DMPieceList pieceList =pieceMap.getPieceList(dmPiece.getPieceNumber());
 						final int pieceListSize =pieceList.size();
 						for (int j =0; j <pieceListSize; j++){
-							final DiskManagerFileInfoImpl fileInfo =pieceList.get(j).getFile();
+							final DiskManagerFileInfo fileInfo =pieceList.get(j).getFile();
 							final long downloaded =fileInfo.getDownloaded();
 							final long length =fileInfo.getLength();
 							if (length >0 &&downloaded <length &&!fileInfo.isSkipped()){

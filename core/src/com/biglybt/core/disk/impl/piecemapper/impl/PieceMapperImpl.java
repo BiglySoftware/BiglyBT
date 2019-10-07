@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMap;
@@ -332,8 +333,8 @@ PieceMapperImpl
 	fileInfo
 		implements DMPieceMapperFile
 	{
-		private DiskManagerFileInfoImpl		file;
-		private final TOTorrentFile				torrent_file;
+		private DiskManagerFileInfo					file;
+		private final TOTorrentFile					torrent_file;
 		private final String 						path;
 		private final String 						name;
 
@@ -365,11 +366,11 @@ PieceMapperImpl
 			return( torrent_file );
 		}
 		@Override
-		public DiskManagerFileInfoImpl getFileInfo() {
+		public DiskManagerFileInfo getFileInfo() {
 			return file;
 		}
 		@Override
-		public void setFileInfo(DiskManagerFileInfoImpl _file) {
+		public void setFileInfo(DiskManagerFileInfo _file) {
 			file = _file;
 		}
 	}

@@ -1352,4 +1352,55 @@ RDResumeHandler
 
 		return( false );
 	}
+	
+	public static void
+	setupPieces(
+		DownloadManagerState		dms,
+		DiskManagerPiece[]			pieces )
+	{
+		Map	resume_data = getResumeData( dms );
+		
+		boolean	valid	= ((Long)resume_data.get("valid")).intValue() == 1;
+
+		if ( valid ){
+			
+			byte[] 	rd_pieces 	= (byte[])resume_data.get( "resume data" );
+			
+			if ( rd_pieces != null && rd_pieces.length == pieces.length ){
+				
+				for ( int i=0;i<pieces.length;i++){
+					
+					if ( rd_pieces[i] == PIECE_DONE ){
+						
+						pieces[i].setDone( true );
+					}
+				}
+			}
+			
+			Map		partialPieces	= (Map)resume_data.get("blocks");
+					
+			Iterator iter = partialPieces.entrySet().iterator();
+
+			while (iter.hasNext()) {
+
+				Map.Entry key = (Map.Entry)iter.next();
+
+				int pieceNumber = Integer.parseInt((String)key.getKey());
+
+				DiskManagerPiece	dm_piece = pieces[ pieceNumber ];
+
+				if ( !dm_piece.isDone()){
+
+					List blocks = (List)partialPieces.get(key.getKey());
+
+					Iterator iterBlock = blocks.iterator();
+
+					while (iterBlock.hasNext()) {
+
+						dm_piece.setWritten(((Long)iterBlock.next()).intValue());
+					}
+				}
+			}
+		}
+	}
 }

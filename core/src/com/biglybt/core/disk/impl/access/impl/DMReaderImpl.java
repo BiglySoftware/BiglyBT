@@ -23,6 +23,7 @@ import java.util.*;
 
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.disk.DiskManagerReadRequestListener;
+import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
 import com.biglybt.core.disk.impl.DiskManagerHelper;
 import com.biglybt.core.disk.impl.access.DMReader;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
@@ -368,7 +369,7 @@ DMReaderImpl
 
 					// this chunk denotes a read up to buffer offset "entry_read_limit"
 
-				chunks.add( new Object[]{ map_entry.getFile().getCacheFile(), new Long(fileOffset), new Integer( entry_read_limit )});
+				chunks.add( new Object[]{ ((DiskManagerFileInfoImpl)map_entry.getFile()).getCacheFile(), new Long(fileOffset), new Integer( entry_read_limit )});
 
 				buffer_position = entry_read_limit;
 

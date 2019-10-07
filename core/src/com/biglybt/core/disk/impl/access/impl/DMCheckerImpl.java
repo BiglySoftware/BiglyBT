@@ -541,7 +541,7 @@ DMCheckerImpl
 
 									DMPieceMapEntry piece_entry = piece_list.get(i);
 
-									piece_entry.getFile().dataChecked( piece_entry.getOffset(), piece_entry.getLength());
+									((DiskManagerFileInfoImpl)piece_entry.getFile()).dataChecked( piece_entry.getOffset(), piece_entry.getLength());
 								}
 							}
 						}finally{
@@ -649,7 +649,7 @@ DMCheckerImpl
 
 					DMPieceMapEntry piece_entry = pieceList.get(i);
 
-					DiskManagerFileInfoImpl	file_info = piece_entry.getFile();
+					DiskManagerFileInfoImpl	file_info = (DiskManagerFileInfoImpl)piece_entry.getFile();
 
 					CacheFile	cache_file = file_info.getCacheFile();
 
@@ -814,7 +814,7 @@ DMCheckerImpl
 
 						    										DMPieceMapEntry piece_entry = pieceList.get(i);
 
-						    										DiskManagerFileInfoImpl	file_info = piece_entry.getFile();
+						    										DiskManagerFileInfoImpl	file_info = (DiskManagerFileInfoImpl)piece_entry.getFile();
 
 						    											// edge case here for skipped zero length files that have been deleted
 

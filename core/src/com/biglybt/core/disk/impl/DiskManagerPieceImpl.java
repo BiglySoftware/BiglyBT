@@ -27,6 +27,7 @@ package com.biglybt.core.disk.impl;
  */
 
 import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 
@@ -156,7 +157,7 @@ public class DiskManagerPieceImpl
     {
 		final DMPieceList pieceList =diskManager.getPieceList(pieceNumber);
 		for (int i =0; i <pieceList.size(); i++){
-			final DiskManagerFileInfoImpl file =pieceList.get(i).getFile();
+			final DiskManagerFileInfo file =pieceList.get(i).getFile();
 			if ( file == null ){
 				return( false );	// can be null during diskmanager startup
 			}
@@ -180,7 +181,7 @@ public class DiskManagerPieceImpl
 		final DMPieceList pieceList =diskManager.getPieceList(pieceNumber);
 		for (int i =0; i <pieceList.size(); i++)
 		{
-			final DiskManagerFileInfoImpl file =pieceList.get(i).getFile();
+			final DiskManagerFileInfo file =pieceList.get(i).getFile();
 			final long fileLength =file.getLength();
 			filesNeeded |=fileLength >0 &&file.getDownloaded() <fileLength &&!file.isSkipped();
 		}
@@ -202,6 +203,12 @@ public class DiskManagerPieceImpl
 		return( pieceList.size() > 1 );
 	}
 
+	public DMPieceList
+	getPieceList()
+	{
+		return( diskManager.getPieceList(pieceNumber));
+	}
+	
 	@Override
 	public void clearNeeded()
 	{

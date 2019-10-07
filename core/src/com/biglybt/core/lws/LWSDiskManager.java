@@ -848,6 +848,8 @@ LWSDiskManager
 		@Override
 		public boolean		spansFiles(){throw( new RuntimeException( "spansfiles not implemented" ));}
 		@Override
+		public DMPieceList	getPieceList(){throw( new RuntimeException( "getPieceList not implemented" ));}
+		@Override
 		public int			getLength(){throw( new RuntimeException( "getLength not implemented" ));}
 		@Override
 		public int			getNbBlocks(){throw( new RuntimeException( "getNbBlocks not implemented" ));}

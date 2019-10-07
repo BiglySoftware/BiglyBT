@@ -20,7 +20,7 @@
 
 package com.biglybt.core.disk.impl.piecemapper.impl;
 
-import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMap;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
@@ -34,12 +34,12 @@ DMPieceMapSimple
 	final int		piece_count;
 	final int		last_piece_length;
 
-	final DiskManagerFileInfoImpl	file;
+	final DiskManagerFileInfo	file;
 
 	protected
 	DMPieceMapSimple(
 		TOTorrent				torrent,
-		DiskManagerFileInfoImpl	_file )
+		DiskManagerFileInfo		_file )
 	{
 		piece_length	= (int)torrent.getPieceLength();
 
@@ -104,7 +104,7 @@ DMPieceMapSimple
 			// map entry
 
 		@Override
-		public DiskManagerFileInfoImpl
+		public DiskManagerFileInfo
 		getFile()
 		{
 			return( file );

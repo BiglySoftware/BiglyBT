@@ -41,6 +41,7 @@ import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFactory;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
+import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.impl.DiskManagerImpl;
 import com.biglybt.core.disk.impl.DiskManagerUtil;
 import com.biglybt.core.download.*;
@@ -3323,6 +3324,13 @@ DownloadManagerImpl
 		return( controller.getDiskManager());
 	}
 
+	@Override
+	public DiskManagerPiece[] 
+	getDiskManagerPiecesSnapshot()
+	{
+		return controller.getDiskManagerPiecesSnapshot();
+	}
+	
 	@Override
 	public DiskManagerFileInfoSet getDiskManagerFileInfoSet()
 	{
