@@ -52,9 +52,6 @@ import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
-import com.biglybt.core.disk.DiskManager;
-import com.biglybt.core.disk.DiskManagerCheckRequest;
-import com.biglybt.core.disk.DiskManagerCheckRequestListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
@@ -75,7 +72,6 @@ import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadStub.DownloadStubEx;
-import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIInstance;
@@ -90,7 +86,6 @@ import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.swt.exporttorrent.wizard.ExportTorrentWizard;
 import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.sharing.ShareUtils;
-import com.biglybt.ui.swt.shells.AdvRenameWindow;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.FilesViewMenuUtil;
 import com.biglybt.ui.swt.views.ViewUtils;
@@ -1071,10 +1066,7 @@ public class TorrentUtil
 		itemRename.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				for (DownloadManager dm : dms) {
-					AdvRenameWindow window = new AdvRenameWindow();
-					window.open(dm);
-				}
+				Utils.advancedRename( dms );
 			}
 		});
 

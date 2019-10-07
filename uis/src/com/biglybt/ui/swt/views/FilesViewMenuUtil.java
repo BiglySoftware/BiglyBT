@@ -1088,10 +1088,20 @@ public class FilesViewMenuUtil
 					}
 				}
 			
+				List<DownloadManager>	dms = new ArrayList<>();
+				
 				for (int i = 0; i < datasources.length; i++) {
 					if (datasources[i] instanceof DownloadManager) {
-						AdvRenameWindow window = new AdvRenameWindow();
-						window.open((DownloadManager) datasources[i]);
+						dms.add((DownloadManager) datasources[i]);
+					}
+				}
+				
+				if ( !dms.isEmpty()){
+					Utils.advancedRename( dms.toArray( new DownloadManager[0]));
+				}
+				
+				for (int i = 0; i < datasources.length; i++) {
+					if (datasources[i] instanceof DownloadManager) {
 						continue;
 					}
 					if (!(datasources[i] instanceof DiskManagerFileInfo)) {

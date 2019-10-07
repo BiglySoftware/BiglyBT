@@ -68,7 +68,6 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.sharing.ShareUtils;
-import com.biglybt.ui.swt.shells.AdvRenameWindow;
 import com.biglybt.ui.swt.views.FilesViewMenuUtil;
 import com.biglybt.ui.swt.views.table.TableSelectedRowsListener;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -1930,10 +1929,8 @@ public class TorrentMenuFancy
 		createRow(detailArea, "MyTorrentsView.menu.rename", null, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				for (DownloadManager dm : dms) {
-					AdvRenameWindow window = new AdvRenameWindow();
-					window.open(dm);
-				}
+				Utils.advancedRename( dms );
+
 			}
 		});
 

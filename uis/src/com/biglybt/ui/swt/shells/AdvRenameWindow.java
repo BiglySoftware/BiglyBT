@@ -28,6 +28,7 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
@@ -35,6 +36,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.common.RememberedDecisionsManager;
 
 /**
@@ -45,7 +47,8 @@ import com.biglybt.ui.common.RememberedDecisionsManager;
 public class AdvRenameWindow
 {
 	private DownloadManager dm;
-
+	private Listener		lpCancelListener;
+	
 	private Shell shell;
 
 	private String newName = null;
@@ -68,13 +71,13 @@ public class AdvRenameWindow
 	}
 
 	public void open(DownloadManager dm) {
+		open( dm, null );
+	}
+	
+	public void open(DownloadManager dm, Listener lpCancel ) {
 		this.dm = dm;
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				openInSWT();
-			}
-		});
+		lpCancelListener = lpCancel;
+		Utils.execSWTThread( this::openInSWT );
 	}
 
 	private void openInSWT() {
@@ -220,6 +223,54 @@ public class AdvRenameWindow
 		
 		Button btnOk 		= buttons[0];
 		Button btnCancel 	= buttons[1];
+		
+		if ( lpCancelListener != null ){
+			btnCancel.setToolTipText( MessageText.getString( "long.press.cancel.tt" ));
+			
+			btnCancel.addListener(
+				SWT.MouseDown,
+				new Listener()
+				{
+					boolean 	mouseDown 	= false;
+					TimerEvent	timerEvent 	= null;
+					
+					public void 
+					handleEvent(
+						Event event )
+					{
+						if ( event.button != 1 ){
+							
+							return;
+						}
+						
+						if (timerEvent == null) {
+							timerEvent = SimpleTimer.addEvent("MouseHold",
+									SystemTime.getOffsetTime(1000), te -> {
+										timerEvent = null;
+										if (!mouseDown) {
+											return;
+										}
+	
+										Utils.execSWTThread(() -> {
+											if (!mouseDown) {
+												return;
+											}
+	
+											if ( event.display.getCursorControl() != btnCancel ) {
+												return;
+											}
+	
+											mouseDown = false;
+	
+											lpCancelListener.handleEvent (event );
+										});
+									});
+						}
+	
+						mouseDown = true;
+					}
+				});
+		}
 		
 		shell.setDefaultButton(btnOk);
 		btnOk.addSelectionListener(new SelectionListener() {
@@ -399,6 +450,12 @@ public class AdvRenameWindow
 		shell.open();
 	}
 
+	public void
+	cancel()
+	{
+		Utils.execSWTThread(()->{ shell.dispose(); });
+	}
+	
 	private void waitUntilDone() {
 		while (shell != null && !shell.isDisposed()) {
 			if (!shell.getDisplay().readAndDispatch()) {
