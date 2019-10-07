@@ -259,9 +259,14 @@ public class UISWTViewBuilderCore
 			Class<? extends UISWTViewEventListener> cla) {
 		cla_ref = new WeakReference<>(cla);
 		if (cla != null) {
-			if (Modifier.isPrivate(cla.getModifiers())) {
+			int modifiers = cla.getModifiers();
+			if (Modifier.isPrivate(modifiers)) {
 				Debug.out("Won't be able to create view " + viewID
 						+ " because listener class '" + cla.getName() + " is private");
+			}
+			if (Modifier.isStatic(modifiers)) {
+				Debug.out("Won't be able to create view " + viewID
+					+ " because listener class '" + cla.getName() + " is not static");
 			}
 		}
 		return this;
