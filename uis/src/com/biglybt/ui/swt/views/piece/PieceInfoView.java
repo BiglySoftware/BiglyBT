@@ -785,12 +785,8 @@ public class PieceInfoView
 		DiskManager dm = dlm.getDiskManager();
 
 		DiskManagerPiece[] dm_pieces = dm == null ? dlm.getDiskManagerPiecesSnapshot() :  dm.getPieces();
-		byte[] resume_data = dm_pieces == null ? MapUtils.getMapByteArray(
-			MapUtils.getMapMap(dlm.getDownloadState().getResumeData(), "data",
-				null),
-			"resume data", null) : null;
 
-		if (dm_pieces == null && resume_data == null) {
+		if (dm_pieces == null) {
 			GC gc = new GC(pieceInfoCanvas);
 			gc.fillRectangle(bounds);
 			gc.dispose();
@@ -820,7 +816,7 @@ public class PieceInfoView
 			}
 		}
 		
-		int numPieces = dm_pieces == null ? resume_data.length : dm_pieces.length;
+		int numPieces = dm_pieces.length;
 		int iNeededHeight = (((numPieces - 1) / iNumCols) + 1) * BLOCK_SIZE;
 
 		if (img != null && !img.isDisposed()) {
@@ -931,7 +927,7 @@ public class PieceInfoView
 
 			int iCol = 0;
 			for (int i = 0; i < numPieces; i++) {
-				DiskManagerPiece dm_piece = dm_pieces == null ? null : dm_pieces[i];
+				DiskManagerPiece dm_piece = dm_pieces[i];
 				
 				if (iCol >= iNumCols) {
 					iCol = 0;
@@ -944,8 +940,7 @@ public class PieceInfoView
 					newInfo.selectedRange = true;
 				}
 
-				boolean done = dm_piece == null
-						? resume_data[i] == RDResumeHandler.PIECE_DONE : dm_piece.isDone();
+				boolean done = dm_piece.isDone();
 				int iXPos = iCol * BLOCK_SIZE + 1;
 				int iYPos = iRow * BLOCK_SIZE + 1;
 
@@ -954,9 +949,7 @@ public class PieceInfoView
 					newInfo.haveWidth = BLOCK_FILLSIZE;
 				} else {
 					// !done
-					boolean partiallyDone = dm_piece == null
-							? resume_data[i] == RDResumeHandler.PIECE_STARTED
-							: dm_piece.getNbWritten() > 0;
+					boolean partiallyDone = dm_piece.getNbWritten() > 0;
 
 					int width = BLOCK_FILLSIZE;
 					if (partiallyDone) {

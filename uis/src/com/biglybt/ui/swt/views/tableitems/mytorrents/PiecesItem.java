@@ -207,13 +207,8 @@ public class PiecesItem
 
 		DiskManager disk_manager = infoObj.getDiskManager();
 
-		DiskManagerPiece[] pieces = disk_manager == null ? null
-				: disk_manager.getPieces();
-		byte[] resume_data = pieces == null ? MapUtils.getMapByteArray(
-				MapUtils.getMapMap(infoObj.getDownloadState().getResumeData(), "data",
-						null),
-				"resume data", null) : null;
-
+		DiskManagerPiece[] pieces = disk_manager == null ? infoObj.getDiskManagerPiecesSnapshot() : disk_manager.getPieces();
+		
 		int nbPieces = infoObj.getNbPieces();
 
 		try {
@@ -243,12 +238,6 @@ public class PiecesItem
 					if (pieces != null) {
 						for (int j = a0; j < a1; j++) {
 							if (pieces[j].isDone()) {
-								nbAvailable++;
-							}
-						}
-					} else if (resume_data != null) {
-						for (int j = a0; j < a1; j++) {
-							if (resume_data[j] == RDResumeHandler.PIECE_DONE) {
 								nbAvailable++;
 							}
 						}

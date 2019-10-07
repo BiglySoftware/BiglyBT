@@ -190,13 +190,7 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 				if ( nbPieces < 0 ){
 					nbPieces = 0;	// tree view root
 				}
-				DiskManagerPiece[] dm_pieces = diskManager == null ? null : diskManager.getPieces();
-				byte[] resume_data = dm_pieces == null && dm != null
-						? MapUtils.getMapByteArray(
-								MapUtils.getMapMap(dm.getDownloadState().getResumeData(),
-										"data", null),
-								"resume data", null)
-						: null;
+				DiskManagerPiece[] dm_pieces = diskManager == null ? (dm==null?null:dm.getDiskManagerPiecesSnapshot()) : diskManager.getPieces();
 
 				bNoRed = true;
 				for (int i = 0; i < newWidth; i++)
@@ -216,10 +210,6 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 							if (dm_pieces != null) {
 								DiskManagerPiece dm_piece = dm_pieces[this_index];
 								if (dm_piece.isDone()) {
-									nbAvailable++;
-								}
-							} else if (resume_data != null) {
-								if (resume_data[this_index] == RDResumeHandler.PIECE_DONE) {
 									nbAvailable++;
 								}
 							}
