@@ -1097,7 +1097,7 @@ public class FilesViewMenuUtil
 				}
 				
 				if ( !dms.isEmpty()){
-					Utils.advancedRename( dms.toArray( new DownloadManager[0]));
+					ManagerUtils.advancedRename( dms.toArray( new DownloadManager[0]));
 				}
 				
 				for (int i = 0; i < datasources.length; i++) {

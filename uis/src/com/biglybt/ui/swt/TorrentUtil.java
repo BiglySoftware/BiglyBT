@@ -1063,12 +1063,8 @@ public class TorrentUtil
 		final MenuItem itemRename = new MenuItem(menuAdvanced, SWT.DROP_DOWN);
 		Messages.setLanguageText(itemRename, "MyTorrentsView.menu.rename");
 		itemRename.setEnabled(hasSelection);
-		itemRename.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				Utils.advancedRename( dms );
-			}
-		});
+		itemRename.addListener(SWT.Selection,
+				event -> ManagerUtils.advancedRename(dms));
 
 		// Find more like this
 

@@ -4915,26 +4915,4 @@ public class Utils
 		control.addListener(SWT.MouseUp, l);
 		control.addListener(SWT.MouseExit, l);
 	}
-	
-	public static void
-	advancedRename(
-		DownloadManager[]		dms )
-	{
-		if ( dms.length < 1 ){
-			return;
-		}else if ( dms.length == 1 ){
-			AdvRenameWindow window = new AdvRenameWindow();
-			window.open(dms[0]);
-		}else{
-			List<AdvRenameWindow> windows = new ArrayList<>();
-			
-			Listener lpCancel = (e)->{ for (AdvRenameWindow w: windows ){ w.cancel(); }};
-
-			for (DownloadManager dm : dms) {
-				AdvRenameWindow window = new AdvRenameWindow();
-				windows.add( window );
-				window.open( dm, lpCancel );
-			}	
-		}
-	}
 }

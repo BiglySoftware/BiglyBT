@@ -32,11 +32,11 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.common.RememberedDecisionsManager;
 
 /**
@@ -46,8 +46,7 @@ import com.biglybt.ui.common.RememberedDecisionsManager;
  */
 public class AdvRenameWindow
 {
-	private DownloadManager dm;
-	private Listener		lpCancelListener;
+	private final DownloadManager dm;
 	
 	private Shell shell;
 
@@ -61,22 +60,26 @@ public class AdvRenameWindow
 
 	private static final int RENAME_TORRENT = 0x4;
 
+	private UserPrompterResultListener resultListener;
+	
+	private int result = -1;
+
 	public static void main(String[] args) {
-		AdvRenameWindow window = new AdvRenameWindow();
+		AdvRenameWindow window = new AdvRenameWindow(null);
 		window.open(null);
 		window.waitUntilDone();
 	}
 
-	public AdvRenameWindow() {
+	public AdvRenameWindow(DownloadManager dm) {
+		this.dm = dm;
 	}
 
-	public void open(DownloadManager dm) {
-		open( dm, null );
+	public void open() {
+		open( null );
 	}
 	
-	public void open(DownloadManager dm, Listener lpCancel ) {
-		this.dm = dm;
-		lpCancelListener = lpCancel;
+	public void open(UserPrompterResultListener l) {
+		resultListener = l;
 		Utils.execSWTThread( this::openInSWT );
 	}
 
@@ -90,6 +93,10 @@ public class AdvRenameWindow
 					shell.dispose();
 				}
 			}
+		});
+		
+		shell.addDisposeListener(e -> {
+			resultListener.prompterClosed(result);
 		});
 		
 		Messages.setLanguageText(shell, "AdvRenameWindow.title");
@@ -224,7 +231,7 @@ public class AdvRenameWindow
 		Button btnOk 		= buttons[0];
 		Button btnCancel 	= buttons[1];
 		
-		if ( lpCancelListener != null ){
+		if ( resultListener != null ){
 			btnCancel.setToolTipText( MessageText.getString( "long.press.cancel.tt" ));
 			
 			btnCancel.addListener(
@@ -262,7 +269,7 @@ public class AdvRenameWindow
 	
 											mouseDown = false;
 	
-											lpCancelListener.handleEvent (event );
+											shell.dispose();
 										});
 									});
 						}
@@ -297,6 +304,7 @@ public class AdvRenameWindow
 					}
 				});
 
+				result = SWT.OK;
 				shell.dispose();
 			}
 
@@ -309,6 +317,7 @@ public class AdvRenameWindow
 		btnCancel.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				result = SWT.CANCEL;
 				shell.dispose();
 			}
 

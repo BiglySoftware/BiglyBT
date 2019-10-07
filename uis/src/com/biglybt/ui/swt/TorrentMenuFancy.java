@@ -1926,13 +1926,8 @@ public class TorrentMenuFancy
 
 			// Advanced - > Rename
 
-		createRow(detailArea, "MyTorrentsView.menu.rename", null, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				Utils.advancedRename( dms );
-
-			}
-		});
+		createRow(detailArea, "MyTorrentsView.menu.rename", null,
+				event -> ManagerUtils.advancedRename(dms));
 
 			// Reposition
 

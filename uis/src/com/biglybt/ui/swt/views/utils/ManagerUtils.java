@@ -30,6 +30,7 @@ import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -49,14 +50,7 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.DirectoryDialog;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
@@ -110,6 +104,7 @@ import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
 
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.shells.AdvRenameWindow;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
 import com.biglybt.ui.swt.skin.SWTSkin;
@@ -4113,5 +4108,34 @@ download_loop:
 					});
 			}
 		}
+	}
+
+
+	public static void
+	advancedRename(
+		DownloadManager[]		dms )
+	{
+		if ( dms.length < 1 ){
+			return;
+		}
+
+		List<DownloadManager> list = new ArrayList<>(Arrays.asList(dms));
+		advancedRename(list);
+	}
+
+	private static void advancedRename(List<DownloadManager> list) {
+		if (list.isEmpty()) {
+			return;
+		}
+
+		DownloadManager dm = list.remove(0);
+		AdvRenameWindow window = new AdvRenameWindow(dm);
+		window.open(result -> {
+			if (result == -1 || list.isEmpty()) {
+				return;
+			}
+
+			advancedRename(list);
+		});
 	}
 }
