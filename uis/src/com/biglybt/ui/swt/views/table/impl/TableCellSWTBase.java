@@ -1335,7 +1335,9 @@ public abstract class TableCellSWTBase
 
     if (changed) {
     	setFlag(FLAG_VISUALLY_CHANGED_SINCE_REFRESH);
-    	redraw();
+    	if (tableRow == null || tableRow.isVisible()) {
+		    redraw();
+	    }
     }
 
     return changed;
