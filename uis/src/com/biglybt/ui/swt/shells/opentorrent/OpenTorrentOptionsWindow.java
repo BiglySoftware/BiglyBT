@@ -4190,18 +4190,18 @@ public class OpenTorrentOptionsWindow
 			
 			local_comment.setImage( ImageLoader.getInstance().getImage("no_comment"));
 			
-			local_comment.addSelectionListener(
-				SelectionListener.widgetSelectedAdapter(
-					(e)->{
-						TorrentUtil.promptUserForComment(
-							torrentOptions.getUserComment(),
-							(str)->{
-								torrentOptions.setUserComment( str );
-								
-								local_comment.setImage( 
-									ImageLoader.getInstance().getImage(str==null||str.isEmpty()?"no_comment":"comment"));
-							});
-					} ));
+			local_comment.addListener(
+				SWT.Selection,
+				(e)->{
+					TorrentUtil.promptUserForComment(
+						torrentOptions.getUserComment(),
+						(str)->{
+							torrentOptions.setUserComment( str );
+							
+							local_comment.setImage( 
+								ImageLoader.getInstance().getImage(str==null||str.isEmpty()?"no_comment":"comment"));
+						});
+				} );
 				
 			Label sep = new Label( cButtonsBottom, SWT.SEPARATOR );
 			gridData = new GridData();

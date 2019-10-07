@@ -268,11 +268,11 @@ public class AdvRenameWindow
 
 		for ( Button b: new Button[]{ btnDisplayUse, btnSavePathUse, btnTorrentUse }){
 			
-			b.addSelectionListener(
-				SelectionListener.widgetSelectedAdapter(
+			b.addListener(
+				SWT.Selection,
 					e->{
 						text_setter.accept((String)e.widget.getData());
-					}));
+					});
 		}
 		
 		shell.setLayout(new FormLayout());

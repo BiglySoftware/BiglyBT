@@ -89,8 +89,9 @@ public class IconSwtParameter
 		    
 	    mi.setText( MessageText.getString( "menu.reset.icon" ));
 		
-	    mi.addSelectionListener( SelectionListener.widgetSelectedAdapter(
-	    	(e)->{ resetToDefault();}));
+	    mi.addListener(
+	    	SWT.Selection,
+	    	(e)->{ resetToDefault();});
 	    
 	    try{
 	    	menu.addMenuListener( MenuListener.menuShownAdapter(

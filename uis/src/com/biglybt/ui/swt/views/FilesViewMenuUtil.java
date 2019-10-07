@@ -751,12 +751,12 @@ public class FilesViewMenuUtil
 				
 				Messages.setLanguageText(show, "menu.show.download");
 
-				show.addSelectionListener(
-					SelectionListener.widgetSelectedAdapter(
-						(e)->{
-							
-							dm.requestAttention();
-						}));
+				show.addListener(
+					SWT.Selection,
+					(e)->{
+						
+						dm.requestAttention();
+					});
 			}
 			
 			new MenuItem( menu, SWT.SEPARATOR );

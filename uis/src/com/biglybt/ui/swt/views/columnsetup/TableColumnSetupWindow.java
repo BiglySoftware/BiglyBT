@@ -619,23 +619,25 @@ public class TableColumnSetupWindow
 		btnExport = new Button(cResultButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnExport, "export");
 		Messages.setLanguageTooltip(btnExport, "label.export.config.to.clip");
-		btnExport.addSelectionListener(SelectionListener.widgetSelectedAdapter(	(e)->{
+		btnExport.addListener(
+			SWT.Selection,
+			(e)->{
 			
-				// need to flush values held in columns into the tcm map
-			
-			tcm.saveTableColumns( forDataSourceType, forTableID);
-			
-			Map config = tcm.getTableConfigMap(forTableID);
-			
-			Map map = new HashMap();
-			
-			map.put( "table-id", Utils.getBaseViewID( forTableID ));
-			map.put( "config", config );
-			
-			String json = BEncoder.encodeToJSON( map );
-			
-			ClipboardCopy.copyToClipBoard( json );
-		}));
+					// need to flush values held in columns into the tcm map
+				
+				tcm.saveTableColumns( forDataSourceType, forTableID);
+				
+				Map config = tcm.getTableConfigMap(forTableID);
+				
+				Map map = new HashMap();
+				
+				map.put( "table-id", Utils.getBaseViewID( forTableID ));
+				map.put( "config", config );
+				
+				String json = BEncoder.encodeToJSON( map );
+				
+				ClipboardCopy.copyToClipBoard( json );
+			});
 		
 		tvChosen = createTVChosen();
 
@@ -701,69 +703,72 @@ public class TableColumnSetupWindow
 		});
 		
 		
-		btnImport.addSelectionListener(SelectionListener.widgetSelectedAdapter(	(ev)->{
+		btnImport.addListener(
+			SWT.Selection,
+			(ev)->{
 			
 			String json = ClipboardCopy.copyFromClipboard();
-				
-			try{
-				Map map = BDecoder.decodeFromJSON( json );
-				
-				map = BDecoder.decodeStrings( map );
-				
-				String tableID = (String)map.get( "table-id" );
-				
-				Map config = (Map)map.get( "config" );
-				
-				if ( tableID.equals( Utils.getBaseViewID( forTableID ))){
 					
-					tcm.setTableConfigMap(forTableID, config );
-										
-					tcm.loadTableColumnSettings( forDataSourceType, forTableID );
+				try{
+					Map map = BDecoder.decodeFromJSON( json );
 					
-					listener.tableStructureChanged(true, forDataSourceType);
+					map = BDecoder.decodeStrings( map );
 					
-					listener.sortOrderChanged();
+					String tableID = (String)map.get( "table-id" );
 					
-					Arrays.sort(columnsCurrentOrder,TableColumnManager.getTableColumnOrderComparator());
-
-					for (int i = 0; i < columnsCurrentOrder.length; i++) {
-						boolean visible = columnsCurrentOrder[i].isVisible();
-						mapNewVisibility.put(columnsCurrentOrder[i], Boolean.valueOf(visible));
+					Map config = (Map)map.get( "config" );
+					
+					if ( tableID.equals( Utils.getBaseViewID( forTableID ))){
+						
+						tcm.setTableConfigMap(forTableID, config );
+											
+						tcm.loadTableColumnSettings( forDataSourceType, forTableID );
+						
+						listener.tableStructureChanged(true, forDataSourceType);
+						
+						listener.sortOrderChanged();
+						
+						Arrays.sort(columnsCurrentOrder,TableColumnManager.getTableColumnOrderComparator());
+	
+						for (int i = 0; i < columnsCurrentOrder.length; i++) {
+							boolean visible = columnsCurrentOrder[i].isVisible();
+							mapNewVisibility.put(columnsCurrentOrder[i], Boolean.valueOf(visible));
+						}
+											
+						fillChosen();
+						
+						fillAvail();
+						
+						setHasChanges( false );
+						
+						btnCancel.setEnabled(false);
+						
+					}else{
+						
+						MessageBoxShell mb = new MessageBoxShell(SWT.ICON_ERROR | SWT.OK,
+								MessageText.getString( "ConfigView.section.security.op.error.title"),
+								MessageText.getString( "table.columns.incorrect.table", new String[]{ Utils.getBaseViewID( forTableID ) + "/" + tableID } ));
+						
+						mb.setParent(shell);
+						
+						mb.open(null);		
+						
+						
 					}
-										
-					fillChosen();
-					
-					fillAvail();
-					
-					setHasChanges( false );
-					
-					btnCancel.setEnabled(false);
-					
-				}else{
-					
+				}catch( Throwable e ){
+				
+					//Debug.out( e );
+	
 					MessageBoxShell mb = new MessageBoxShell(SWT.ICON_ERROR | SWT.OK,
 							MessageText.getString( "ConfigView.section.security.op.error.title"),
-							MessageText.getString( "table.columns.incorrect.table", new String[]{ Utils.getBaseViewID( forTableID ) + "/" + tableID } ));
+							MessageText.getString( "label.invalid.configuration" ));
 					
 					mb.setParent(shell);
 					
-					mb.open(null);		
-					
-					
+					mb.open(null);				
 				}
-			}catch( Throwable e ){
-			
-				//Debug.out( e );
-
-				MessageBoxShell mb = new MessageBoxShell(SWT.ICON_ERROR | SWT.OK,
-						MessageText.getString( "ConfigView.section.security.op.error.title"),
-						MessageText.getString( "label.invalid.configuration" ));
-				
-				mb.setParent(shell);
-				
-				mb.open(null);				
-			}
-		}));
+			});
+		
 		
 		if (defaultColumnNames != null) {
 	  		
