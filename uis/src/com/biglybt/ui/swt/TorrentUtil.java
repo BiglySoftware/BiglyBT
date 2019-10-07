@@ -3691,7 +3691,7 @@ public class TorrentUtil
 			if (mdi != null) {
 				MdiEntrySWT entry = mdi.getCurrentEntry();
 				if (entry != null) {
-					if (entry.getDatasource() instanceof DownloadManager) {
+					if (entry.getDataSource() instanceof DownloadManager) {
 						hasRealDM = true;
 					} else if ((entry instanceof UIPluginView)
 							&& (((UIPluginView) entry).getDataSource() instanceof DownloadManager)) {
