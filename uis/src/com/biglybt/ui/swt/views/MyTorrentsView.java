@@ -236,7 +236,9 @@ public class MyTorrentsView
 					return size() > 64;
 				}
 			};
-	
+
+	private Runnable rowRemovedRunnable = null;
+
 	public MyTorrentsView( boolean supportsTabs ) {
 		super("MyTorrentsView");
 		this.supportsTabs = supportsTabs;
@@ -3299,14 +3301,13 @@ public class MyTorrentsView
 	{
 		TableRowCore[] selected = tv.getSelectedRows();
 
-		if ( selected.length > 0 ){
-			
-			Utils.execSWTThreadLater(
-				1,
-				()->{ 
-					updateSelectedContent();
-	    		  	refreshTorrentMenu();
-				});
+		if (selected.length > 0 && rowRemovedRunnable == null) {
+			rowRemovedRunnable = () -> {
+				rowRemovedRunnable = null;
+				updateSelectedContent();
+				refreshTorrentMenu();
+			};
+			Utils.execSWTThreadLater(1, rowRemovedRunnable);
 		}
 	}
 
