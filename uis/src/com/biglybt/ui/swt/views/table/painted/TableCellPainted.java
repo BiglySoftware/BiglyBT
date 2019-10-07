@@ -250,6 +250,9 @@ public class TableCellPainted
 		if (!super.setCursorID(cursorID)) {
 			return false;
 		}
+		if (!isMouseOver()) {
+			return true;
+		}
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
