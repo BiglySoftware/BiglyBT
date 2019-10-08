@@ -21,13 +21,8 @@
 package com.biglybt.ui.swt.nat;
 
 import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.ui.swt.mainwindow.Colors;
-
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
@@ -36,19 +31,14 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.ipchecker.natchecker.NatChecker;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.AEThread;
-import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.AEThread2;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
 
-import com.biglybt.core.networkmanager.admin.NetworkAdmin;
-import com.biglybt.core.networkmanager.admin.NetworkAdminProgressListener;
-import com.biglybt.core.networkmanager.admin.NetworkAdminProtocol;
 
 public class NatTestWindow {
 
@@ -60,7 +50,7 @@ public class NatTestWindow {
   int serverTCPListenPort;
   int serverUDPListenPort;
 
-  public class CheckerTCP extends AEThread {
+  public class CheckerTCP extends AEThread2 {
 
     private int TCPListenPort;
 
@@ -71,90 +61,11 @@ public class NatTestWindow {
 
     @Override
     public void
-    runSupport()
+    run()
     {
     	try{
-	          printMessage(MessageText.getString("configureWizard.nat.testing") + " TCP " + TCPListenPort + " ... ");
-	          
-	          InetAddress[] bind_ips = NetworkAdmin.getSingleton().getMultiHomedServiceBindAddresses(true);
-	          
-	          {
-	        	  	// IPv4
-	        	  
-	        	  InetAddress bind = bind_ips[0];
-	        	  
-	        	  if ( !bind.isAnyLocalAddress()){
-	        		
-	        		  for ( InetAddress a: bind_ips ){
-	        			  
-	        			  if ( a instanceof Inet4Address ){
-	        				  
-	        				  bind = a;
-
-	        				  break;
-	        			  }
-	        		  }
-	        	  }
-	        	  
-		          NatChecker checker =
-		        	 new NatChecker(
-		        		CoreFactory.getSingleton(), 
-		        		bind, 
-		        		TCPListenPort, 
-		        		false,		// ipv6  
-		        		false );
-		          
-		          switch (checker.getResult()) {
-		          case NatChecker.NAT_OK :
-		            printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + " (" + checker.getExternalAddress().getHostAddress() + ")\n" + checker.getAdditionalInfo());
-		            break;
-		          case NatChecker.NAT_KO :
-		            printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + " - " + checker.getAdditionalInfo()+".\n");
-		            break;
-		          default :
-		            printMessage( "\n" + MessageText.getString("configureWizard.nat.unable") + ". \n(" + checker.getAdditionalInfo()+").\n");
-		            break;
-		          }
-	          }
-	          
-	          if ( NetworkAdmin.getSingleton().hasIPV6Potential()){
-	        	  
-	        	  InetAddress bind = bind_ips[0];
-	        	  
-	        	  if ( !bind.isAnyLocalAddress()){
-	        		
-	        		  for ( InetAddress a: bind_ips ){
-	        			  
-	        			  if ( a instanceof Inet6Address ){
-	        				  
-	        				  bind = a;
-
-	        				  break;
-	        			  }
-	        		  }
-	        	  }
-	        	  
-	        	  printMessage("\n" + MessageText.getString("configureWizard.nat.testing") + " TCP " + TCPListenPort + " IPv6 ... ");
-		          NatChecker checker =
-		        	 new NatChecker(
-		        		CoreFactory.getSingleton(), 
-		        		bind, 
-		        		TCPListenPort, 
-		        		true,		// ipv6  
-		        		false );
-		          
-		          switch (checker.getResult()) {
-		          case NatChecker.NAT_OK :
-			            printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + " (" + checker.getExternalAddress().getHostAddress() + ")\n" + checker.getAdditionalInfo());
-		            break;
-		          case NatChecker.NAT_KO :
-		            printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + " - " + checker.getAdditionalInfo()+".\n");
-		            break;
-		          default :
-		            printMessage( "\n" + MessageText.getString("configureWizard.nat.unable") + ". \n(" + checker.getAdditionalInfo()+").\n");
-		            break;
-		          }
-	          }
+    		NATTestHelpers.runTCP( TCPListenPort, NatTestWindow.this::printMessage );
+    		
     	}finally{
           if (display.isDisposed()) {return;}
           display.asyncExec(new AERunnable()  {
@@ -172,10 +83,10 @@ public class NatTestWindow {
     }
   }
 
-  public class CheckerUDP extends AEThread {
+  public class CheckerUDP extends AEThread2 {
 
-	    private Core core;
-	    private int			udp_port;
+	    private Core 	core;
+	    private int		udp_port;
 
 	    public CheckerUDP(Core _core, int _udp_port ){
 	      super("NAT Checker UDP");
@@ -185,89 +96,10 @@ public class NatTestWindow {
 
 	    @Override
 	    public void
-	    runSupport()
+	    run()
 	    {
 	    	try{
-		    	final NetworkAdmin	admin = NetworkAdmin.getSingleton();
-
-				NetworkAdminProtocol[] inbound_protocols = admin.getInboundProtocols(core);
-
-				NetworkAdminProtocol selected = null;
-
-				for ( NetworkAdminProtocol p: inbound_protocols ){
-
-					if ( p.getType() == NetworkAdminProtocol.PT_UDP && p.getPort() == udp_port ){
-
-						selected = p;
-
-						break;
-					}
-				}
-
-				if ( selected == null ){
-
-					selected = admin.createInboundProtocol( core, NetworkAdminProtocol.PT_UDP, udp_port );
-				}
-
-		        if ( selected == null ){
-
-		        	printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + ". \n( No UDP protocols enabled ).\n");
-
-		        }else{
-
-		        	printMessage(MessageText.getString("configureWizard.nat.testing") + " UDP " + udp_port + " ... ");
-
-		        	try{
-		        		InetAddress result = selected.test(
-		        				null,
-		        				false,
-		        				true,
-		        				new NetworkAdminProgressListener()
-		        				{
-		        					@Override
-							        public void
-		        					reportProgress(
-		        							String task )
-		        					{
-		        						printMessage( "\n    " + task );
-		        					}
-		        				});
-
-		        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + " (" + result.getHostAddress() + ")\n");
-
-		        	}catch( Throwable e ){
-
-		        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + ". " + Debug.getNestedExceptionMessage(e)+".\n");
-		        	}
-		        	
-			        if ( NetworkAdmin.getSingleton().hasIPV6Potential()){
-			        	
-			        	printMessage( "\n" + MessageText.getString("configureWizard.nat.testing") + " UDP " + udp_port + " IPv6 ... ");
-
-			        	try{
-			        		InetAddress result = selected.test(
-			        				null,
-			        				true,
-			        				true,
-			        				new NetworkAdminProgressListener()
-			        				{
-			        					@Override
-								        public void
-			        					reportProgress(
-			        							String task )
-			        					{
-			        						printMessage( "\n    " + task );
-			        					}
-			        				});
-
-			        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + " (" + result.getHostAddress() + ")\n");
-
-			        	}catch( Throwable e ){
-
-			        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + ". " + Debug.getNestedExceptionMessage(e)+".\n");
-			        	}
-			        }
-		        }
+	    		NATTestHelpers.runUDP( core, udp_port, NatTestWindow.this::printMessage );
 
 	    	}finally{
 	    		if (display.isDisposed()) {return;}

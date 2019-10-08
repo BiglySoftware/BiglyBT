@@ -44,7 +44,7 @@ import com.biglybt.core.speedmanager.SpeedManagerLimitEstimate;
  */
 public class FinishPanel extends AbstractWizardPanel<ConfigureWizard> {
 
-  public FinishPanel(ConfigureWizard wizard, IWizardPanel previous) {
+  public FinishPanel(ConfigureWizard wizard, IWizardPanel<ConfigureWizard> previous) {
     super(wizard, previous);
   }
 

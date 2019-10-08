@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.Listener;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Wiki;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -50,10 +49,10 @@ import com.biglybt.ui.swt.wizard.IWizardPanel;
  * @author Olivier
  *
  */
-public class WelcomePanel extends AbstractWizardPanel {
+public class WelcomePanel extends AbstractWizardPanel<ConfigureWizard> {
 
 
-  public WelcomePanel(ConfigureWizard wizard,IWizardPanel previous) {
+  public WelcomePanel(ConfigureWizard wizard,IWizardPanel<ConfigureWizard> previous) {
     super(wizard,previous);
   }
 
@@ -256,8 +255,8 @@ public class WelcomePanel extends AbstractWizardPanel {
    * @see com.biglybt.ui.swt.wizard.AbstractWizardPanel#getNextPanel()
    */
   @Override
-  public IWizardPanel getNextPanel() {
-    return new TransferPanel2(((ConfigureWizard)wizard),this);
+  public IWizardPanel<ConfigureWizard> getNextPanel() {
+    return new TransferPanel2((wizard),this);
   }
 
 }

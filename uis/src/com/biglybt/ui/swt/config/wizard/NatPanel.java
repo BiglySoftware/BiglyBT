@@ -24,6 +24,9 @@ package com.biglybt.ui.swt.config.wizard;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.nat.NATTestHelpers;
+
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.layout.GridData;
@@ -31,66 +34,47 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.ipchecker.natchecker.NatChecker;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.AEThread;
-import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.AEThread2;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
 
-import com.biglybt.core.networkmanager.admin.NetworkAdmin;
-import com.biglybt.core.networkmanager.admin.NetworkAdminProgressListener;
-import com.biglybt.core.networkmanager.admin.NetworkAdminProtocol;
-
 /**
  * @author Olivier
  *
  */
-public class NatPanel extends AbstractWizardPanel {
+public class NatPanel extends AbstractWizardPanel<ConfigureWizard> {
 
   StyledText textResults;
 
   Button bTestTCP,bTestUDP;
 
 
-  public class CheckerTCP extends AEThread {
+  public class CheckerTCP extends AEThread2 {
 
-	  	private Core core;
 	    private int TCPListenPort;
 
-	    public CheckerTCP(Core _core, int tcp_listen_port) {
+	    public CheckerTCP(int tcp_listen_port) {
 	      super("NAT Checker TCP");
-	      core		= _core;
 	      this.TCPListenPort = tcp_listen_port;
 	    }
 
 	    @Override
 	    public void
-	    runSupport()
+	    run()
 	    {
 	    	try{
-		          printMessage(MessageText.getString("configureWizard.nat.testing") + " TCP " + TCPListenPort + " ... ");
-		          NatChecker checker = new NatChecker(core, NetworkAdmin.getSingleton().getMultiHomedServiceBindAddresses(true)[0], TCPListenPort, false, false);
-		          switch (checker.getResult()) {
-		          case NatChecker.NAT_OK :
-		            printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + "\n" + checker.getAdditionalInfo());
-		            break;
-		          case NatChecker.NAT_KO :
-		            printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + " - " + checker.getAdditionalInfo()+".\n");
-		            break;
-		          default :
-		            printMessage( "\n" + MessageText.getString("configureWizard.nat.unable") + ". \n(" + checker.getAdditionalInfo()+").\n");
-		            break;
-		          }
+	    		NATTestHelpers.runTCP( TCPListenPort, NatPanel.this::printMessage );
+	    		
 	    	}finally{
 	          enableNext();
 	    	}
 	    }
 	  }
 
-	  public class CheckerUDP extends AEThread {
+	  public class CheckerUDP extends AEThread2 {
 
 		    private Core core;
 		    private int			udp_port;
@@ -103,68 +87,18 @@ public class NatPanel extends AbstractWizardPanel {
 
 		    @Override
 		    public void
-		    runSupport()
+		    run()
 		    {
 		    	try{
-			    	final NetworkAdmin	admin = NetworkAdmin.getSingleton();
-
-					NetworkAdminProtocol[] inbound_protocols = admin.getInboundProtocols(core);
-
-					NetworkAdminProtocol selected = null;
-
-					for ( NetworkAdminProtocol p: inbound_protocols ){
-
-						if ( p.getType() == NetworkAdminProtocol.PT_UDP && p.getPort() == udp_port ){
-
-							selected = p;
-
-							break;
-						}
-					}
-
-					if ( selected == null ){
-
-						selected = admin.createInboundProtocol( core, NetworkAdminProtocol.PT_UDP, udp_port );
-					}
-
-			        if ( selected == null ){
-
-			        	printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + ". \n( No UDP protocols enabled ).\n");
-
-			        }else{
-
-			        	printMessage(MessageText.getString("configureWizard.nat.testing") + " UDP " + udp_port + " ... ");
-
-							try{
-								selected.test(
-									null,
-									true,
-									new NetworkAdminProgressListener()
-									{
-										@Override
-										public void
-										reportProgress(
-											String task )
-										{
-											printMessage( "\n    " + task );
-										}
-									});
-
-					            printMessage( "\n" + MessageText.getString("configureWizard.nat.ok"));
-
-							}catch( Throwable e ){
-
-					            printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + ". " + Debug.getNestedExceptionMessage(e)+".\n");
-							}
-						}
-
+		    		NATTestHelpers.runUDP( core, udp_port, NatPanel.this::printMessage );
+		    		
 		    	}finally{
 		    		enableNext();
 		    	}
 		    }
 	  }
 
-  public NatPanel(ConfigureWizard wizard, IWizardPanel previous) {
+  public NatPanel(ConfigureWizard wizard, IWizardPanel<ConfigureWizard> previous) {
     super(wizard, previous);
   }
 
@@ -310,7 +244,7 @@ public class NatPanel extends AbstractWizardPanel {
 						ConfigureWizard cw = (ConfigureWizard) wizard;
 
 						int TCPListenPort = cw.serverTCPListenPort;
-						CheckerTCP checker = new CheckerTCP(core, TCPListenPort);
+						CheckerTCP checker = new CheckerTCP(TCPListenPort);
 						checker.start();
 					}
 				});
@@ -380,7 +314,7 @@ public class NatPanel extends AbstractWizardPanel {
   }
 
   @Override
-  public IWizardPanel getNextPanel() {
+  public IWizardPanel<ConfigureWizard> getNextPanel() {
     return new FilePanel(((ConfigureWizard)wizard),this);
   }
 

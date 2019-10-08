@@ -70,7 +70,7 @@ public class ConfigureWizard extends Wizard {
 
     wizard_mode = _wizard_mode;
 
-    IWizardPanel panel = wizard_mode==WIZARD_MODE_FULL?new LanguagePanel(this,null):new TransferPanel2( this, null );
+    IWizardPanel<ConfigureWizard> panel = wizard_mode==WIZARD_MODE_FULL?new LanguagePanel(this,null):new TransferPanel2( this, null );
     try  {
       torrentPath = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
     } catch(Exception e) {

@@ -33,7 +33,6 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
-import com.biglybt.ui.swt.wizard.Wizard;
 
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -43,13 +42,13 @@ import com.biglybt.ui.UIFunctionsManager;
  * @created Feb 28, 2006
  *
  */
-public class LanguagePanel extends AbstractWizardPanel {
+public class LanguagePanel extends AbstractWizardPanel<ConfigureWizard> {
 
 	/**
 	 * @param wizard
 	 * @param previousPanel
 	 */
-	public LanguagePanel(Wizard wizard, IWizardPanel previousPanel) {
+	public LanguagePanel(ConfigureWizard wizard, IWizardPanel<ConfigureWizard> previousPanel) {
 		super(wizard, previousPanel);
 	}
 
@@ -207,7 +206,7 @@ public class LanguagePanel extends AbstractWizardPanel {
 	}
 
 	@Override
-	public IWizardPanel getNextPanel() {
+	public IWizardPanel<ConfigureWizard> getNextPanel() {
 		return new WelcomePanel(((ConfigureWizard) wizard), this);
 	}
 }

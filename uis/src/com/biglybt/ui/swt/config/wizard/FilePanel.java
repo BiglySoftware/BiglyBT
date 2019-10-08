@@ -36,9 +36,9 @@ import com.biglybt.ui.swt.wizard.IWizardPanel;
  * @author Olivier
  *
  */
-public class FilePanel extends AbstractWizardPanel {
+public class FilePanel extends AbstractWizardPanel<ConfigureWizard> {
 
-  public FilePanel(ConfigureWizard wizard, IWizardPanel previous) {
+  public FilePanel(ConfigureWizard wizard, IWizardPanel<ConfigureWizard> previous) {
     super(wizard, previous);
   }
 
@@ -177,7 +177,7 @@ public class FilePanel extends AbstractWizardPanel {
   }
 
   @Override
-  public IWizardPanel getFinishPanel() {
+  public IWizardPanel<ConfigureWizard> getFinishPanel() {
     return new FinishPanel(((ConfigureWizard)wizard),this);
   }
 
