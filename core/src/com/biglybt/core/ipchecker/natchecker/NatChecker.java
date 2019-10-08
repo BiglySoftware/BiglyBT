@@ -164,6 +164,8 @@ public class NatChecker {
       }else{
     	  
     	  http_server = Constants.NAT_TEST_SERVER_HTTP;
+    	  
+    	  http_server = UrlUtils.resolveIPv4Host( http_server );
       }
       
       String urlStr = http_server + (http_test?"httptest":"nattest") + "?port=" + String.valueOf( port ) + "&check=" + check;

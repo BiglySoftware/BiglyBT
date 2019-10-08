@@ -20,6 +20,7 @@
 
 package com.biglybt.core.util;
 
+import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -63,6 +64,12 @@ DNSUtils
 
 			throws Exception;
 
+		public Inet4Address
+		getIPV4ByName(
+			String		host )
+
+			throws UnknownHostException;
+		
 		public Inet6Address
 		getIPV6ByName(
 			String		host )

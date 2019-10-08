@@ -20,6 +20,7 @@
 
 package com.biglybt.core.util.dns;
 
+import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -90,6 +91,18 @@ DNSUtilsImpl
 		return( all.get(0));
 	}
 
+	@Override
+	public Inet4Address
+	getIPV4ByName(
+		String		host )
+
+		throws UnknownHostException
+	{
+		List<Inet4Address>	all = getAllIPV4ByName( host );
+
+		return( all.get(0));
+	}
+	
 	public List<Inet6Address>
 	getAllIPV6ByName(
 		String		host )
@@ -137,6 +150,53 @@ DNSUtilsImpl
 		throw( new UnknownHostException( host ));
 	}
 
+	public List<Inet4Address>
+	getAllIPV4ByName(
+		String		host )
+
+		throws UnknownHostException
+	{
+		List<Inet4Address>	result = new ArrayList<>();
+
+		try{
+			DirContext context = getInitialDirContext().ctx;
+
+			Attributes attrs = context.getAttributes( host, new String[]{ "A" });
+
+			if ( attrs != null ){
+
+				Attribute attr = attrs.get( "a" );
+
+				if ( attr != null ){
+
+					NamingEnumeration values = attr.getAll();
+
+					while( values.hasMore()){
+
+						Object value = values.next();
+
+						if ( value instanceof String ){
+
+							try{
+								result.add( (Inet4Address)InetAddress.getByName((String)value));
+
+							}catch( Throwable e ){
+							}
+						}
+					}
+				}
+			}
+		}catch( Throwable e ){
+		}
+
+		if ( result.size() > 0 ){
+
+			return( result );
+		}
+
+		throw( new UnknownHostException( host ));
+	}
+	
 	@Override
 	public List<InetAddress>
 	getAllByName(
