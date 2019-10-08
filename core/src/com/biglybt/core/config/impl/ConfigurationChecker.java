@@ -141,7 +141,17 @@ ConfigurationChecker
 		  		  				
 		  		  					// changed to an int 
 		  		  				
-		  		  				field.setInt( null, prefer_ipv6?1:0 );
+		  		  				try{
+		  		  					field.setInt( null, prefer_ipv6?1:0 );
+		  		  					
+		  		  				}catch( Throwable e2 ){
+		  		  					
+		  		  						// Java 10+ prevented setting Field fields
+		  		  					
+		  		  					Java10PlusHacks.setFieldNonFinal( field );
+		  		  					
+		  		  					field.setInt( null, prefer_ipv6?1:0 );
+		  		  				}
 		  		  			}
 
 		  		  		}catch( Throwable e ){
