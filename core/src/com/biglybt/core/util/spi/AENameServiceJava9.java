@@ -207,10 +207,12 @@ AENameServiceJava9
 		{
 			if ( method_name.equals( "getHostByAddr" )){
 
-				byte[] address_bytes = (byte[])args[0];
+				// byte[] address_bytes = (byte[])args[0];
 
 				//System.out.println( method_name + ": " + ByteFormatter.encodeString( address_bytes ));
 
+				return( delegate_method.invoke( delegate, args ));
+				
 			}else if ( method_name.equals( "lookupAllHostAddr" )){
 
 				String host_name = (String)args[0];
@@ -236,12 +238,29 @@ AENameServiceJava9
 
 					throw( new UnknownHostException( host_name ));
 				}
-
+				
 				// System.out.println( "DNS: " + host_name );
 
-			}
+				try{
+					return( delegate_method.invoke( delegate, args ));
+				
+				}catch( InvocationTargetException e ){
+					
+					Throwable target = e.getTargetException();
+					
+					if ( target instanceof UnknownHostException ){
+					
+						throw( new InvocationTargetException( new UnknownHostException( host_name )));
+						
+					}else{
+						
+						throw( e );
+					}
+				}
+			}else{
 			
-			return( delegate_method.invoke( delegate, args ));
+				return( delegate_method.invoke( delegate, args ));
+			}
 		}
 	}
 
