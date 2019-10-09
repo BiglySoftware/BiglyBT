@@ -1591,7 +1591,7 @@ PRUDPPacketHandlerImpl
 
 		if ( address.getAddress() == null ){
 
-			throw( new PRUDPPacketHandlerException( "Unresolved host '" + address.getHostName() + "'" ));
+			throw( new PRUDPPacketHandlerException( "Unknown host " + address.getHostName()));
 		}
 	}
 

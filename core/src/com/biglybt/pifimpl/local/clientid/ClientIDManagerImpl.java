@@ -404,7 +404,7 @@ ClientIDManagerImpl
 
 				String	rem = url_str.substring( host_pos + target_host.length());
 
-				if ( rem.charAt(0) == ':' ){
+				if ( !rem.isEmpty() && rem.charAt(0) == ':' ){
 
 					rem = rem.substring( (""+ target_port ).length() + 1 );
 				}
@@ -764,12 +764,12 @@ ClientIDManagerImpl
 
 			}catch( UnknownHostException e ){
 
-				report_error = "Unknown host '" + e.getMessage() + "'";
+				report_error = "Unknown host " + e.getMessage();
 
 			}catch( IOException e ){
 
 				report_error = e.getMessage();
-
+				
 				// don't log these as common
 
 			}catch( UnsupportedAddressTypeException e ){

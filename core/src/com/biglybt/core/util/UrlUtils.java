@@ -1983,10 +1983,16 @@ public class UrlUtils
 
 			try{
 
-				InetSocketAddress targetSockAddress = new InetSocketAddress(  InetAddress.getByName(target_host) , target_port  );
+				// InetSocketAddress targetSockAddress = new InetSocketAddress(  InetAddress.getByName(target_host) , target_port  );
 
-			    InetAddress bindIP = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress(targetSockAddress.getAddress() instanceof Inet6Address ? NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6 : NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4);
+			    // InetAddress bindIP = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress(targetSockAddress.getAddress() instanceof Inet6Address ? NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6 : NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4);
+				
+			    InetAddress[] bindDetails = NetworkAdmin.getSingleton().getSingleHomedServiceBinding( target_host );
 
+			    InetSocketAddress targetSockAddress = new InetSocketAddress( bindDetails[0], target_port );
+			    
+			    InetAddress bindIP	= bindDetails[1];
+			    
 				if ( is_ssl ){
 
 					TrustManager[] tms_delegate = SESecurityManager.getAllTrustingTrustManager();

@@ -22,6 +22,7 @@ package com.biglybt.core.networkmanager.admin;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.channels.UnsupportedAddressTypeException;
 
 import com.biglybt.core.Core;
@@ -66,6 +67,15 @@ NetworkAdmin
 	public abstract InetAddress
 	getSingleHomedServiceBindAddress(int protocolVersion) throws UnsupportedAddressTypeException;
 
+	/**
+	 * Selects a bind address based on available host address and bind protocol families
+	 * 
+	 * @param host
+	 * @return Array with 2 entries, first is selected host address, second is selected bind address (possibly null of course)
+	 */
+	public abstract InetAddress[]
+	getSingleHomedServiceBinding( String host ) throws UnknownHostException, UnsupportedAddressTypeException;
+	
 	public abstract InetAddress[]
 	getMultiHomedServiceBindAddresses(boolean forNIO);
 

@@ -114,11 +114,12 @@ NetworkAdminImpl
 	private boolean						supportsIPv6 = true;
 	private boolean						supportsIPv4 = true;
 
-	boolean						IPv6_enabled;
-
+	private boolean						IPv6_enabled;
+	private boolean						preferIPv6;
+	
 	{
-		COConfigurationManager.addAndFireParameterListener(
-				"IPV6 Enable Support",
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[]{ "IPV6 Enable Support", "IPV6 Prefer Addresses" },
 				new ParameterListener()
 				{
 					@Override
@@ -127,6 +128,8 @@ NetworkAdminImpl
 						String parameterName )
 					{
 						setIPv6Enabled( COConfigurationManager.getBooleanParameter("IPV6 Enable Support"));
+						
+						preferIPv6 = COConfigurationManager.getBooleanParameter( "IPV6 Prefer Addresses" );
 					}
 				});
 
@@ -735,9 +738,114 @@ NetworkAdminImpl
 			}
 		}
 
-		throw new UnsupportedAddressTypeException();
+		throw(
+				new UnsupportedAddressTypeException(){
+					public String
+					getMessage()
+					{
+						return(	"No bind address for " + (proto == IP_PROTOCOL_VERSION_REQUIRE_V4?"IPv4":"IPv6" ));
+					}
+				});
 	}
 
+	@Override
+	public InetAddress[] 
+	getSingleHomedServiceBinding( String host) 
+		throws UnknownHostException, UnsupportedAddressTypeException
+	{
+		List<InetAddress> addresses;
+		
+		try{
+			addresses = DNSUtils.getSingleton().getAllByName( host );
+			
+		}catch( Throwable e ){
+			
+			addresses = Arrays.asList( InetAddress.getAllByName( host ));
+		}
+		
+		List<Inet4Address> ip4 = new ArrayList<>();
+		List<Inet6Address> ip6 = new ArrayList<>();
+		
+		for ( InetAddress ia: addresses ){
+			if ( ia instanceof Inet4Address ){
+				ip4.add((Inet4Address)ia);
+			}else{
+				ip6.add((Inet6Address)ia);
+			}
+		}
+		
+		InetAddress	target_ia;
+		InetAddress target_bind;
+		
+		if ( ip6.isEmpty()){
+		
+			target_ia = ip4.get(0);
+			
+			target_bind = getSingleHomedServiceBindAddress( IP_PROTOCOL_VERSION_REQUIRE_V4 );
+			
+		}else if ( ip4.isEmpty()){
+			
+			target_ia = ip6.get(0);
+			
+			target_bind = getSingleHomedServiceBindAddress( IP_PROTOCOL_VERSION_REQUIRE_V6 );
+			
+		}else{
+			
+			InetAddress bind_v4 = null;
+			InetAddress bind_v6 = null;
+			
+			try{
+				bind_v4 = getSingleHomedServiceBindAddress( IP_PROTOCOL_VERSION_REQUIRE_V4 );
+				
+			}catch( Throwable e ){		
+			}
+			
+			try{
+				bind_v6 = getSingleHomedServiceBindAddress( IP_PROTOCOL_VERSION_REQUIRE_V6 );
+				
+			}catch( Throwable e ){
+			}
+			
+			if ( bind_v4 == null && bind_v6 == null ){
+				
+				throw(
+					new UnsupportedAddressTypeException(){
+						public String
+						getMessage()
+						{
+							return(	"No compatible bind address for '" + host + "'" );
+						}
+					});
+				
+			}else{
+				
+				if ( bind_v4 != null && bind_v6 != null ){
+				
+					if ( preferIPv6 ){
+						
+						bind_v4 = null;
+						
+					}else{
+						
+						bind_v6 = null;
+					}
+				}
+				
+				if ( bind_v6 == null ){
+					
+					target_ia 	= ip4.get(0);
+					target_bind = bind_v4;
+					
+				}else{
+					target_ia 	= ip6.get(0);
+					target_bind = bind_v6;
+				}
+			}
+		}
+		
+		return( new InetAddress[]{ target_ia, target_bind });
+	}
+	
 	@Override
 	public InetAddress[]
 	getAllBindAddresses(

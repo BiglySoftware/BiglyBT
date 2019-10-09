@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.*;
@@ -551,7 +552,7 @@ public class ProxyLoginHandler {
 
     if ( address == null ){
 
-    	throw( new Exception( "Unresolved host: " + remote_address));
+    	throw( new UnknownHostException( host_str ));
     }
 
     byte[] ip_bytes = address.getAddress();

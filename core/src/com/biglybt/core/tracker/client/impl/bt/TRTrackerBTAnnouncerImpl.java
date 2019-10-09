@@ -21,6 +21,7 @@
 package com.biglybt.core.tracker.client.impl.bt;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -1728,6 +1729,11 @@ TRTrackerBTAnnouncerImpl
 
  				//e.printStackTrace();
  				
+ 				if ( e instanceof FileNotFoundException ){
+ 					
+ 					e = new FileNotFoundException( original_reqUrl.toExternalForm());
+ 				}
+ 				
  				failure_reason = exceptionToString( con, e );
 
  			}finally{
@@ -2070,7 +2076,7 @@ TRTrackerBTAnnouncerImpl
  	{
  		String	str;
 
- 		if ( e instanceof BoringException ){
+ 		if ( e instanceof BoringException || e instanceof FileNotFoundException || e instanceof UnknownHostException){
 
  			str = Debug.getNestedExceptionMessage(e);
 
