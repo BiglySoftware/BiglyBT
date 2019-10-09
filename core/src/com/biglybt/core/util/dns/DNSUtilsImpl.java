@@ -34,6 +34,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.DNSUtils;
 import com.biglybt.core.util.DNSUtils.DNSUtilsIntf;
 import com.biglybt.core.util.Debug;
@@ -42,7 +43,10 @@ public class
 DNSUtilsImpl
 	implements DNSUtilsIntf
 {
-
+	private final static String[]	REC_ALL = new String[]{ "A", "AAAA", "CNAME" };
+	private final static String[]	REC_V4 	= new String[]{ "A", "CNAME" };
+	private final static String[]	REC_V6 	= new String[]{ "AAAA", "CNAME" };
+	
 	private static String
 	getFactory()
 	{
@@ -109,42 +113,14 @@ DNSUtilsImpl
 
 		throws UnknownHostException
 	{
-		List<Inet6Address>	result = new ArrayList<>();
-
 		try{
-			DirContext context = getInitialDirContext().ctx;
+			List<InetAddress>	result = getAllByName( getInitialDirContext(), host, REC_V6 );
 
-			Attributes attrs = context.getAttributes( host, new String[]{ "AAAA" });
+			if ( result.size() > 0 ){
 
-			if ( attrs != null ){
-
-				Attribute attr = attrs.get( "aaaa" );
-
-				if ( attr != null ){
-
-					NamingEnumeration values = attr.getAll();
-
-					while( values.hasMore()){
-
-						Object value = values.next();
-
-						if ( value instanceof String ){
-
-							try{
-								result.add( (Inet6Address)InetAddress.getByName((String)value));
-
-							}catch( Throwable e ){
-							}
-						}
-					}
-				}
+				return((List<Inet6Address>)(Object)result );
 			}
 		}catch( Throwable e ){
-		}
-
-		if ( result.size() > 0 ){
-
-			return( result );
 		}
 
 		throw( new UnknownHostException( host ));
@@ -156,43 +132,16 @@ DNSUtilsImpl
 
 		throws UnknownHostException
 	{
-		List<Inet4Address>	result = new ArrayList<>();
-
 		try{
-			DirContext context = getInitialDirContext().ctx;
+			List<InetAddress>	result = getAllByName( getInitialDirContext(), host, REC_V4 );
 
-			Attributes attrs = context.getAttributes( host, new String[]{ "A" });
+			if ( result.size() > 0 ){
 
-			if ( attrs != null ){
-
-				Attribute attr = attrs.get( "a" );
-
-				if ( attr != null ){
-
-					NamingEnumeration values = attr.getAll();
-
-					while( values.hasMore()){
-
-						Object value = values.next();
-
-						if ( value instanceof String ){
-
-							try{
-								result.add( (Inet4Address)InetAddress.getByName((String)value));
-
-							}catch( Throwable e ){
-							}
-						}
-					}
-				}
+				return((List<Inet4Address>)(Object)result );
 			}
 		}catch( Throwable e ){
 		}
 
-		if ( result.size() > 0 ){
-
-			return( result );
-		}
 
 		throw( new UnknownHostException( host ));
 	}
@@ -221,13 +170,52 @@ DNSUtilsImpl
 
 		throws UnknownHostException
 	{
-		// System.out.println( "Lookup for " + host );
+		List<InetAddress>	result = getAllByName( context, host, REC_ALL );
+		
+		if ( result.size() > 0 ){
 
+			return( result );
+		}
+
+		throw( new UnknownHostException( host ));
+	}
+
+	private List<InetAddress>
+	getAllByName(
+		DNSUtils.DNSDirContext		context,
+		String						host,
+		String[]					attributes )
+
+		throws UnknownHostException
+	{
+		if ( AENetworkClassifier.categoriseAddress( host ) != AENetworkClassifier.AT_PUBLIC ){
+			
+			throw( new UnknownHostException( host ));
+		}
+		
 		List<InetAddress>	result = new ArrayList<>();
+		
+		getAllByNameSupport(context, host, attributes, 1, result);
+		
+		return( result );
+	}
+		
+	private void
+	getAllByNameSupport(
+		DNSUtils.DNSDirContext		context,
+		String						host,
+		String[]					attributes,
+		int							depth,
+		List<InetAddress>			result )
 
+		throws UnknownHostException
+	{
+		if ( depth > 16 ){
+			
+			return;
+		}
+		
 		try{
-			String[] attributes = new String[]{ "A", "AAAA" };
-
 			Attributes attrs = ((DNSDirContextImpl)context).ctx.getAttributes( host, attributes );
 
 			if ( attrs != null ){
@@ -238,18 +226,26 @@ DNSUtilsImpl
 
 					if ( attr != null ){
 
-						NamingEnumeration values = attr.getAll();
+						NamingEnumeration<?> values = attr.getAll();
 
 						while( values.hasMore()){
 
-							Object value = values.next();
+							Object _value = values.next();
 
-							if ( value instanceof String ){
+							if ( _value instanceof String ){
 
-								try{
-									result.add( InetAddress.getByName((String)value));
-
-								}catch( Throwable e ){
+								String value = (String)_value;
+								
+								if ( a.equalsIgnoreCase( "cname" )){
+									
+									getAllByNameSupport( context, value, attributes, depth+1, result );
+									
+								}else{
+									try{
+										result.add( InetAddress.getByName( value ));
+	
+									}catch( Throwable e ){
+									}
 								}
 							}
 						}
@@ -258,15 +254,8 @@ DNSUtilsImpl
 			}
 		}catch( Throwable e ){
 		}
-
-		if ( result.size() > 0 ){
-
-			return( result );
-		}
-
-		throw( new UnknownHostException( host ));
 	}
-
+	
 	private static final Map<String,String>	test_records = new HashMap<>();
 
 	static{
