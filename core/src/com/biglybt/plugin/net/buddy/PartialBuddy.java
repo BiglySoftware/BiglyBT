@@ -67,6 +67,13 @@ PartialBuddy
 		
 			key = ip + "/" + tcp_port + "/" + udp_port;
 
+			if ( n.contains( ":" )){
+			
+					// ipv6
+				
+				n = "[" + ip + "]";
+			}
+			
 			if ( tcp_port==0){
 				if ( udp_port!=0){
 					n += ":0/" + udp_port;
