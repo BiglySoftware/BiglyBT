@@ -62,6 +62,12 @@ DHTPluginInterface
 	public InetSocketAddress
 	getConnectionOrientedEndpoint();
 	
+	public default InetSocketAddress[]
+	getConnectionOrientedEndpoints()
+	{
+		return( new InetSocketAddress[]{ getConnectionOrientedEndpoint()});
+	}
+	
 	public String
 	getNetwork();
 

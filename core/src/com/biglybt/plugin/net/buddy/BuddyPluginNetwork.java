@@ -22,6 +22,7 @@ package com.biglybt.plugin.net.buddy;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -2743,16 +2744,16 @@ BuddyPluginNetwork
 				return;
 			}
 			
-			InetSocketAddress public_ip = ddb.getDHTPlugin().getConnectionOrientedEndpoint();
+			InetSocketAddress[] public_ips = ddb.getDHTPlugin().getConnectionOrientedEndpoints();
 
 			synchronized( this ){
 
-				if ( 	latest_publish.getIP() == null ||
-						!latest_publish.getIP().equals( public_ip )){
+				if ( 	latest_publish.getIPs() == null ||
+						!Arrays.deepEquals( latest_publish.getIPs(), public_ips )){
 
 					PublishDetails new_publish = latest_publish.getCopy();
 
-					new_publish.setIP( public_ip );
+					new_publish.setIPs( public_ips );
 
 					updatePublish( new_publish );
 				}
@@ -3156,9 +3157,30 @@ BuddyPluginNetwork
 
 					// ensure we have a sensible ip
 
-				InetSocketAddress 	isa = details.getIP();
-				InetAddress			ia	= isa==null?null:isa.getAddress();
+				InetSocketAddress[] 	isas = details.getIPs();
 				
+				InetSocketAddress		isa 	= null;
+				
+				InetAddress				ia 	= null;
+				InetAddress				ia6 	= null;
+
+				
+				if ( isas != null ){
+					
+					for ( InetSocketAddress a: isas ){
+						
+						InetAddress address = a.getAddress();
+						
+						if ( address == null || address instanceof Inet4Address || isas.length == 1 ){
+							
+							isa = a;
+							ia	= address;
+						}else{
+							
+							ia6	= address;
+						}
+					}
+				}
 				if ( ia != null && ( ia.isLoopbackAddress() || ia.isLinkLocalAddress() || ia.isSiteLocalAddress())){
 
 					log( null, "Can't publish as ip address is invalid: " + details.getString());
@@ -3189,6 +3211,14 @@ BuddyPluginNetwork
 					String ip_str = AddressUtils.getHostAddress( isa );
 
 					payload.put( "h", ip_str );
+				}
+				
+				if ( ia6 != null ){
+					
+					if ( ia == null || !ia.equals( ia6 )){
+					
+						payload.put( "i6", ia6.getAddress());
+					}
 				}
 				
 				String	nick = details.getNickName();
@@ -3386,7 +3416,9 @@ BuddyPluginNetwork
 					{
 						private long	latest_time;
 						private Map		status;
-
+						private boolean	status_ipv4;
+						private boolean	status_ipv6;
+						
 						@Override
 						public void
 						event(
@@ -3412,6 +3444,19 @@ BuddyPluginNetwork
 											status = new_status;
 
 											latest_time = time;
+											
+											InetSocketAddress ias = event.getContact().getAddress();
+											
+											InetAddress ia = ias.getAddress();
+											
+											if ( ia == null || ia instanceof Inet4Address ){
+												
+												status_ipv4 = true;
+												
+											}else{
+												
+												status_ipv6 = true;
+											}
 										}
 									}
 								}catch( Throwable e ){
@@ -3449,6 +3494,23 @@ BuddyPluginNetwork
 											String host = MapUtils.getMapString( status, "h", null );
 											
 											ias = InetSocketAddress.createUnresolved( host, 0 );
+										}
+										
+										if ( !status_ipv4 ){
+											
+												// too much of a pain to try and maintain both v4+v6 addresses for buddies
+												// so override any ipv4 with any ipv6 if we've only had a reply from the
+												// v6 dht. If someone is v6 only this should work out as they will
+												// only have published to the v6 dht
+											
+											byte[] b_v6 = (byte[])status.get("i6");
+											
+											if ( b_v6 != null ){
+												
+												InetAddress ip = InetAddress.getByAddress( b_v6 );
+												
+												ias = new InetSocketAddress( ip, 0 );
+											}
 										}
 										
 										String	nick = decodeString((byte[])status.get( "n" ));
@@ -3598,7 +3660,7 @@ BuddyPluginNetwork
 		private final String		network;
 		
 		private byte[]				public_key;
-		private InetSocketAddress	ip;
+		private InetSocketAddress[]	ips;
 		private int					tcp_port;
 		private int					udp_port;
 		private String				nick_name;
@@ -3690,17 +3752,17 @@ BuddyPluginNetwork
 			public_key	= k;
 		}
 
-		protected InetSocketAddress
-		getIP()
+		protected InetSocketAddress[]
+		getIPs()
 		{
-			return( ip );
+			return( ips );
 		}
 
 		protected void
-		setIP(
-			InetSocketAddress	_ip )
+		setIPs(
+			InetSocketAddress[]	_ips )
 		{
-			ip	= _ip;
+			ips	= _ips;
 		}
 
 		protected int
@@ -3758,7 +3820,23 @@ BuddyPluginNetwork
 		protected String
 		getString()
 		{
-			return( "enabled=" + enabled + ",ip=" + ip + ",tcp=" + tcp_port + ",udp=" + udp_port + ",stat=" + online_status + ",key=" + (public_key==null?"<none>":Base32.encode( public_key )));
+			String ip_str = "";
+			
+			InetSocketAddress[]	ips = getIPs();
+			
+			if ( ips == null ){
+				
+				ip_str = "null";
+				
+			}else{
+				
+				for ( InetSocketAddress a: ips ){
+					
+					ip_str += (ip_str.isEmpty()?"":"/") + a;
+				}
+			}
+			
+			return( "enabled=" + enabled + ",ip=" + ip_str + ",tcp=" + tcp_port + ",udp=" + udp_port + ",stat=" + online_status + ",key=" + (public_key==null?"<none>":Base32.encode( public_key )));
 		}
 	}
 

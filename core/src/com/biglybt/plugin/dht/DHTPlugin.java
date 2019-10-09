@@ -850,6 +850,22 @@ DHTPlugin
 		return( getLocalAddress().getAddress());
 	}
 
+	@Override
+	public InetSocketAddress[]
+	getConnectionOrientedEndpoints()
+	{
+		DHTPluginContact[] locals = getLocalAddresses();
+		
+		Set<InetSocketAddress>	endpoints = new HashSet<>();
+		
+		for ( DHTPluginContact c: locals ){
+			
+			endpoints.add( c.getAddress());
+		}
+		
+		return( endpoints.toArray( new InetSocketAddress[0] ));
+	}
+	
 	protected void
 	changePort(
 		int	_new_port )
@@ -2185,6 +2201,26 @@ DHTPlugin
 		return( dhts[0].getLocalAddress());
 	}
 
+	public DHTPluginContact[]
+	getLocalAddresses()
+	{
+		if ( !isEnabled()){
+
+			throw( new RuntimeException( "DHT isn't enabled" ));
+		}
+
+		DHTPluginContact[]	result = new DHTPluginContact[dhts.length];
+		
+		int pos=0;
+		
+		for ( DHTPluginImpl d: dhts ){
+			
+			result[pos++] = d.getLocalAddress();
+		}
+		
+		return( result );
+	}
+	
 		// direct read/write support
 
 	@Override
