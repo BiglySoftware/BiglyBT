@@ -164,12 +164,7 @@ SubscriptionRSSFeed
 
 				if ( host != null ){
 
-					int	pos = host.indexOf( ':' );
-
-					if ( pos != -1 ){
-
-						host = host.substring( 0, pos );
-					}
+					host = UrlUtils.extractURLHost( host );
 
 					feed_url = UrlUtils.setHost( url, host );
 				}

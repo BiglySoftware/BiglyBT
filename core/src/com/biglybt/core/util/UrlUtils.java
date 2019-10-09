@@ -139,6 +139,32 @@ public class UrlUtils
 	}
 	
 	public static String
+	extractURLHost(
+		String		str )
+	{
+		if ( str.startsWith( "[" )){
+			
+			int pos = str.indexOf( ']' );
+			
+			if ( pos != -1 ){
+				
+				return( str.substring( 0, pos+1 ));
+			}
+		}
+		
+		int pos = str.lastIndexOf( ':' );
+		
+		if ( pos == -1 ){
+			
+			return( str );
+			
+		}else{
+			
+			return( str.substring( 0, pos ));
+		}
+	}
+	
+	public static String
 	getMagnetURI(
 		byte[]		hash,
 		String		name,
