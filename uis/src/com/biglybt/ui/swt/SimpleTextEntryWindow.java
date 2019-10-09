@@ -148,7 +148,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    		StyledText text = new StyledText( shell, SWT.NULL );
 	    		text.setEditable( false );
 	    		text.setBackground( shell.getBackground());
-	    		Utils.setTextWithURLs(text, msg);
+	    		Utils.setTextWithURLs(text, msg,false);
 	    		text.setLayoutData(gridData);
 	    	}else{
 	    	

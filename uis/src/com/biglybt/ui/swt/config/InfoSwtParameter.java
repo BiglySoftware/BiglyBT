@@ -159,7 +159,7 @@ public class InfoSwtParameter
 				((Text) control).setText(value);
 			} else if (control instanceof StyledText) {
 				
-				Utils.setTextWithURLs((StyledText)control, value );
+				Utils.setTextWithURLs((StyledText)control, value, true );
 			}
 
 			if (value.contains("\n") && !(control instanceof Text)) {

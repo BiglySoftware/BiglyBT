@@ -4707,7 +4707,8 @@ public class Utils
 	public static void
 	setTextWithURLs(
 		StyledText	text,
-		String		value )
+		String		value,
+		boolean		allow_focus )
 	{
 		Listener	old_listener = (Listener)text.getData( "Utils.setTextWithURLs" );
 		
@@ -4849,6 +4850,9 @@ public class Utils
 						break;
 					}
 					case SWT.FocusIn:{
+						
+							// not allowing focus disabled keyboard actions such as CTRL+C
+						
 						text.traverse( SWT.TRAVERSE_TAB_NEXT );
 						
 						break;
@@ -4859,7 +4863,11 @@ public class Utils
 		text.addListener( SWT.MouseMove, listener );
 		text.addListener( SWT.MouseHover, listener );
 		text.addListener( SWT.MouseUp, listener );
-		text.addListener( SWT.FocusIn, listener );
+		
+		if ( !allow_focus ){
+			text.addListener( SWT.FocusIn, listener );
+		}
+		
 		text.addListener( SWT.MenuDetect, listener );
 		
 		text.setData( "Utils.setTextWithURLs", listener );
