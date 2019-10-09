@@ -715,40 +715,11 @@ NetworkAdminImpl
 		
 		if ( proto == IP_PROTOCOL_VERSION_AUTO ){
 			
-			if ( preferIPv6 ){
-				
-				for ( InetAddress addr: addrs ){
-					
-					if ( addr instanceof Inet6Address ){
-						
-						if ( addr.isAnyLocalAddress()){
-							
-							return( anyLocalAddressIPv6 );
-							
-						}else{
-							
-							return( addr );
-						}
-					}
-				}
-			}
+				// don't try and do anything smart here regarding converting an 'any local address' into either
+				// anyLocalAddressIPv4 or anyLocalAddressIPv6 depending on preferv6 or supportsV6 because this stuffs
+				// up other code in PRUDPPacketHandlerImpl creating 'alt-protocol-delegates' Don't ask me...
 			
-			InetAddress a = addrs[0];
-			
-			if ( a.isAnyLocalAddress()){
-				
-				if ( preferIPv6 && supportsIPv6 ){
-					
-					return( anyLocalAddressIPv6 );
-					
-				}else{
-					
-					return( anyLocalAddressIPv4 );
-				}
-			}else{
-				
-				return( a );
-			}
+			return( addrs[0] );
 			
 		}else{
 			
@@ -1283,7 +1254,14 @@ addressLoop:
 				
 				InetAddress a = getSingleHomedServiceBindAddress();
 				
-				if ( a instanceof Inet4Address ){
+				if ( a.isAnyLocalAddress()){
+					
+						// for reasons outlined in getSingleHomedServiceBindAddress this will always be an Inet6Address
+						// most people probably prefer an ipv4 loopback in this case (we support both)
+					
+					return( Inet4Address.getLoopbackAddress());
+					
+				}else if ( a instanceof Inet4Address ){
 					
 					return( Inet4Address.getLoopbackAddress());
 					
