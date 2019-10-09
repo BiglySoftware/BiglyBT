@@ -115,7 +115,7 @@ public class UrlUtils
 	{
 		if ( address instanceof Inet6Address ){
 			
-			return( "[" + address.getHostAddress() + "]:" + port );
+			return( "[" + ( address.isLoopbackAddress()?"::1":address.getHostAddress()) + "]:" + port );
 			
 		}else{
 			

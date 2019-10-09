@@ -216,6 +216,7 @@ NetworkAdminSWTImpl
 												{
 													COConfigurationManager.setParameter( "Enforce Bind IP", false );
 													COConfigurationManager.setParameter( "Bind IP", "" );
+													COConfigurationManager.save();
 												}
 											});
 

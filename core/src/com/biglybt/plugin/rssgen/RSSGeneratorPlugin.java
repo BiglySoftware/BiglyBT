@@ -21,8 +21,11 @@
 package com.biglybt.plugin.rssgen;
 
 import java.io.*;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.URLEncoder;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -30,8 +33,10 @@ import java.util.TreeMap;
 import org.json.jsonjava.JSONJava;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.SystemProperties;
+import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.tracker.web.TrackerWebPageGenerator;
@@ -157,18 +162,19 @@ RSSGeneratorPlugin
 	{
 		InetAddress bind_ip = getServerBindIP();
 
-		String 	ip;
-
+		InetAddress address;
+		
 		if ( bind_ip.isAnyLocalAddress()){
 
-			ip = "127.0.0.1";
+			address = NetworkAdmin.getSingleton().getLoopbackAddress();
+			
 
 		}else{
 
-			ip = bind_ip.getHostAddress();
+			address = bind_ip;
 		}
 
-		return( getProtocol() + "://" + ip + ":" + getPort() + "/" );
+		return( getProtocol().toLowerCase( Locale.US ) + "://" + UrlUtils.getURLForm( address, getPort()) + "/" );
 	}
 
 	@Override

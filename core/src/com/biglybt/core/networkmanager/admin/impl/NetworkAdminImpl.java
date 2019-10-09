@@ -712,9 +712,46 @@ NetworkAdminImpl
 	public InetAddress getSingleHomedServiceBindAddress(int proto)
 	{
 		InetAddress[] addrs = currentBindIPs;
-		if(proto == IP_PROTOCOL_VERSION_AUTO){
-			return addrs[0];
+		
+		if ( proto == IP_PROTOCOL_VERSION_AUTO ){
+			
+			if ( preferIPv6 ){
+				
+				for ( InetAddress addr: addrs ){
+					
+					if ( addr instanceof Inet6Address ){
+						
+						if ( addr.isAnyLocalAddress()){
+							
+							return( anyLocalAddressIPv6 );
+							
+						}else{
+							
+							return( addr );
+						}
+					}
+				}
+			}
+			
+			InetAddress a = addrs[0];
+			
+			if ( a.isAnyLocalAddress()){
+				
+				if ( preferIPv6 && supportsIPv6 ){
+					
+					return( anyLocalAddressIPv6 );
+					
+				}else{
+					
+					return( anyLocalAddressIPv4 );
+				}
+			}else{
+				
+				return( a );
+			}
+			
 		}else{
+			
 			for( InetAddress addr: addrs ){
 
 				if( (proto == IP_PROTOCOL_VERSION_REQUIRE_V4 && addr instanceof Inet4Address || addr.isAnyLocalAddress()) ||
@@ -1230,6 +1267,39 @@ addressLoop:
 	hasIPV6Potential(boolean nio)
 	{
 		return nio ? supportsIPv6withNIO : supportsIPv6;
+	}
+	
+	@Override
+	public InetAddress
+	getLoopbackAddress()
+	{
+		if ( supportsIPv4 && supportsIPv6 ){
+			
+			if ( preferIPv6 ){
+				
+				return( Inet6Address.getLoopbackAddress());
+				
+			}else{
+				
+				InetAddress a = getSingleHomedServiceBindAddress();
+				
+				if ( a instanceof Inet4Address ){
+					
+					return( Inet4Address.getLoopbackAddress());
+					
+				}else{
+					
+					return( Inet6Address.getLoopbackAddress());
+				}
+			}
+		}else if ( supportsIPv6 ){
+			
+			return( Inet6Address.getLoopbackAddress());
+			
+		}else{
+			
+			return( Inet4Address.getLoopbackAddress());
+		}
 	}
 
 	@Override

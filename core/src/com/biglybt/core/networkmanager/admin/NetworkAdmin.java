@@ -140,6 +140,9 @@ NetworkAdmin
 	public abstract boolean
 	hasIPV6Potential(boolean forNIO);
 
+	public abstract InetAddress
+	getLoopbackAddress();
+	
 	public abstract NetworkAdminProtocol[]
 	getOutboundProtocols(
 		Core core);
