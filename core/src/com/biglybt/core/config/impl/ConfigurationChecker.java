@@ -200,14 +200,29 @@ ConfigurationChecker
 
 			  		  			pref_field.setAccessible( true );
 
-			  		  			pref_field.setBoolean( null, prefer_ipv4 );
+			  		  			try{
+			  		  				pref_field.setBoolean( null, prefer_ipv4 );
+			  		  				
+		  		  				}catch( Throwable e2 ){
+		  		  					
+		  		  						// Java 10+ prevented setting Field fields
+		  		  					
+		  		  					Java10PlusHacks.setFieldNonFinal( pref_field );
+		  		  					
+		  		  					pref_field.setBoolean( null, prefer_ipv4 );
+		  		  				}
 
-				  		  		Field dual_field = plainSocketImpl.getDeclaredField( "useDualStackImpl" );
-
-				  		  		dual_field.setAccessible( true );
-
-				  		  		dual_field.setBoolean( null, !prefer_ipv4 );
-
+			  		  				// doesn't existing J10+, not sure if things are even
+			  		  				// working but whatever
+			  		  			
+			  		  			if ( !Constants.isJava10OrHigher ){
+			  		  				
+					  		  		Field dual_field = plainSocketImpl.getDeclaredField( "useDualStackImpl" );
+	
+					  		  		dual_field.setAccessible( true );
+	
+					  		  		dual_field.setBoolean( null, !prefer_ipv4 );
+			  		  			}
 			  		  		}catch( Throwable e ){
 
 			  		  			Debug.out( "Failed to update 'preferIPv4Stack'", e );
