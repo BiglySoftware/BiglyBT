@@ -1031,13 +1031,13 @@ public class TransferStatsView
 		  return;
 	  }
 
-	  asn.setText(speedManager.getASN());
+	  asn.setTextAndTooltip(speedManager.getASN());
 
-	  estUpCap.setText(limit_to_text.getLimitText(speedManager.getEstimatedUploadCapacityBytesPerSec()));
+	  estUpCap.setTextAndTooltip(limit_to_text.getLimitText(speedManager.getEstimatedUploadCapacityBytesPerSec()));
 
-	  estDownCap.setText(limit_to_text.getLimitText(speedManager.getEstimatedDownloadCapacityBytesPerSec()));
+	  estDownCap.setTextAndTooltip(limit_to_text.getLimitText(speedManager.getEstimatedDownloadCapacityBytesPerSec()));
 
-	  uploadBiaser.setText( DownloadManagerRateController.getString());
+	  uploadBiaser.setTextAndTooltip( DownloadManagerRateController.getString());
 
 	  NetworkAdmin na = NetworkAdmin.getSingleton();
 	  
@@ -1059,8 +1059,7 @@ public class TransferStatsView
 		  }
 	  }
 	  
-	  currentIP.setText( str );
-	  Utils.setTT( currentIP.getControl(), str );
+	  currentIP.setTextAndTooltip( str );
   }
 
   private void

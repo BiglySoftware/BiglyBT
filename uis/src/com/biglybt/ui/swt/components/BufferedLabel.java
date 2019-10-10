@@ -217,6 +217,14 @@ BufferedLabel
 		}
 	}
 
+	public void
+	setTextAndTooltip(
+		String	str )
+	{
+		setText( str );
+		setToolTipText( str );
+	}
+	
   public String getText() {
     return value==null?"":value;
   }
@@ -234,7 +242,12 @@ BufferedLabel
   }
 
   public void setToolTipText(String toolTipText) {
-    Utils.setTT(label,toolTipText);
+	  String tt = label.getToolTipText();
+	  if ( tt != toolTipText ){
+		  if ( tt == null || toolTipText == null || !tt.equals( toolTipText )){
+			  Utils.setTT(label,toolTipText);
+		  }
+	  }
   }
 
 }
