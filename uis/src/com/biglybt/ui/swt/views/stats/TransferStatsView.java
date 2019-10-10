@@ -453,25 +453,25 @@ public class TransferStatsView
 
 	  label = new Label(blahPanel,SWT.NONE);
 	  Messages.setLanguageText(label,"SpeedView.stats.asn");
-	  asn = new BufferedLabel(blahPanel,SWT.NONE);
+	  asn = new BufferedLabel(blahPanel,SWT.DOUBLE_BUFFERED);
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  asn.setLayoutData(gridData);
 
 	  label = new Label(blahPanel,SWT.NONE);
 	  Messages.setLanguageText(label,"label.current_ip");
-	  currentIP = new BufferedLabel(blahPanel,SWT.NONE);
+	  currentIP = new BufferedLabel(blahPanel,SWT.DOUBLE_BUFFERED);
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  currentIP.setLayoutData(gridData);
 
 	  label = new Label(blahPanel,SWT.NONE);
 	  Messages.setLanguageText(label,"SpeedView.stats.estupcap");
-	  estUpCap = new BufferedLabel(blahPanel,SWT.NONE);
+	  estUpCap = new BufferedLabel(blahPanel,SWT.DOUBLE_BUFFERED);
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  estUpCap.setLayoutData(gridData);
 
 	  label = new Label(blahPanel,SWT.NONE);
 	  Messages.setLanguageText(label,"SpeedView.stats.estdowncap");
-	  estDownCap = new BufferedLabel(blahPanel,SWT.NONE);
+	  estDownCap = new BufferedLabel(blahPanel,SWT.DOUBLE_BUFFERED);
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  estDownCap.setLayoutData(gridData);
 
@@ -1039,9 +1039,28 @@ public class TransferStatsView
 
 	  uploadBiaser.setText( DownloadManagerRateController.getString());
 
-	  InetAddress current_ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+	  NetworkAdmin na = NetworkAdmin.getSingleton();
+	  
+	  InetAddress current_ip 	= na.getDefaultPublicAddress();
+	  InetAddress current_ip6 	= na.getDefaultPublicAddressV6();
 
-	  currentIP.setText(current_ip==null?"":current_ip.getHostAddress() );
+	  String str = "";
+	  
+	  if (  current_ip != null ){
+		  
+		  str += current_ip.getHostAddress();
+	  }
+	  
+	  if ( current_ip6 != null ){
+		  
+		  if ( current_ip == null || !current_ip6.equals( current_ip )){
+			  
+			  str += (str.isEmpty()?"":"/") + current_ip6.getHostAddress();
+		  }
+	  }
+	  
+	  currentIP.setText( str );
+	  Utils.setTT( currentIP.getControl(), str );
   }
 
   private void
