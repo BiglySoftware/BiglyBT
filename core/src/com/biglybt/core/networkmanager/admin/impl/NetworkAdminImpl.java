@@ -2397,34 +2397,6 @@ addressLoop:
 	{
 		List	asns = COConfigurationManager.getListParameter( "ASN Details", new ArrayList());
 
-		if ( asns.size() == 0 ){
-
-				// migration from when we only persisted a single AS
-
-			String as 	= "";
-			String asn 	= "";
-			String bgp 	= "";
-
-			try{
-				as 		= COConfigurationManager.getStringParameter( "ASN AS" );
-				asn 	= COConfigurationManager.getStringParameter( "ASN ASN" );
-				bgp 	= COConfigurationManager.getStringParameter( "ASN BGP" );
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
-			}
-
-			COConfigurationManager.removeParameter( "ASN AS" );
-			COConfigurationManager.removeParameter( "ASN ASN" );
-			COConfigurationManager.removeParameter( "ASN BGP" );
-			COConfigurationManager.removeParameter( "ASN Autocheck Performed Time" );
-
-			asns.add(ASNToMap(new NetworkAdminASNImpl(as, asn, bgp )));
-
-			COConfigurationManager.setParameter( "ASN Details", asns );
-		}
-
 		if ( asns.size() > 0 ){
 
 			Map	m = (Map)asns.get(0);
@@ -2432,7 +2404,7 @@ addressLoop:
 			return( ASNFromMap( m ));
 		}
 
-		return( new NetworkAdminASNImpl( "", "", "" ));
+		return( new NetworkAdminASNImpl( true, "", "", "" ));
 	}
 
 	protected Map
@@ -2458,7 +2430,8 @@ addressLoop:
 		m.put( "as", as );
 		m.put( "name", asn );
 		m.put( "bgp", bgp );
-
+		m.put( "v", x.isIPv4()?4:6 );
+		
 		return( m );
 	}
 
@@ -2466,6 +2439,7 @@ addressLoop:
 	ASNFromMap(
 		Map	m )
 	{
+		boolean	ipv4	= true;
 		String	as		= "";
 		String	asn		= "";
 		String	bgp		= "";
@@ -2474,13 +2448,18 @@ addressLoop:
 			as	= new String((byte[])m.get("as"),"UTF-8");
 			asn	= new String((byte[])m.get("name"),"UTF-8");
 			bgp	= new String((byte[])m.get("bgp"),"UTF-8");
+			
+			if ( m.containsKey( "v" )){
+				
+				ipv4 = ((Number)m.get( "v" )).intValue() == 4;
+			}
 
 		}catch( Throwable e ){
 
 			Debug.printStackTrace(e);
 		}
 
-		return( new NetworkAdminASNImpl( as, asn, bgp ));
+		return( new NetworkAdminASNImpl( ipv4, as, asn, bgp ));
 	}
 
 	@Override

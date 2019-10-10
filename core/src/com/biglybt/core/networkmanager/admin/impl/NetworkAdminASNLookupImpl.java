@@ -22,6 +22,7 @@ package com.biglybt.core.networkmanager.admin.impl;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -118,7 +119,7 @@ NetworkAdminASNLookupImpl
 					result += new String( buffer, 0, len );
 				}
 
-				return( processResult( result ));
+				return( processResult( address instanceof Inet4Address, result ));
 
 			}finally{
 
@@ -140,19 +141,46 @@ NetworkAdminASNLookupImpl
 
 		byte[]	bytes = address.getAddress();
 
-		String	ip_query	= "origin.asn.cymru.com";
+		StringBuilder	ip_query = new StringBuilder( 64 );
+		
+		if ( address instanceof Inet4Address ){
+			
+			for (int i=3;i>=0;i--){
 
-		for (int i=0;i<4;i++){
+				ip_query.append( String.valueOf( bytes[i] & 0xff ));
+				
+				ip_query.append( "." );
+			}
+			
+			ip_query.append( "origin.asn.cymru.com" );
+			
+		}else{
+			
+			for (int i=15;i>=0;i--){
 
-			ip_query =  ( bytes[i] & 0xff ) + "." + ip_query;
+				byte b = bytes[i];
+				
+				ip_query.append( String.valueOf( b & 0x0f ));
+				
+				ip_query.append( "." );
+
+				ip_query.append( String.valueOf( b>>4 & 0x0f ));
+				
+				ip_query.append( "." );
+			}
+			
+			ip_query.append( "origin6.asn.cymru.com" );
 		}
-
+		
+		// System.out.println( "query: " + ip_query.toString());
+		
 			// "33544 | 64.71.0.0/20 | US | arin | 2006-05-04"
 
-		String	ip_result = lookupDNS( ip_query );
+		String	ip_result = lookupDNS( ip_query.toString());
 
 		NetworkAdminASNImpl result =
 			processResult(
+				address instanceof Inet4Address,
 				"AS | BGP Prefix | CC | Reg | Date | AS Name" + "\n" +
 				ip_result + " | n/a" );
 
@@ -215,6 +243,7 @@ NetworkAdminASNLookupImpl
 
 	protected NetworkAdminASNImpl
 	processResult(
+		boolean		ipv4,
 		String		result )
 	{
 		StringTokenizer	lines = new StringTokenizer( result, "\n" );
@@ -267,7 +296,7 @@ NetworkAdminASNLookupImpl
 		}
 
 		String as 			= (String)map.get( "as" );
-		String asn 		= (String)map.get( "as name" );
+		String asn 			= (String)map.get( "as name" );
 		String bgp_prefix	= (String)map.get( "bgp prefix" );
 
 		if ( bgp_prefix != null ){
@@ -285,7 +314,7 @@ NetworkAdminASNLookupImpl
 			}
 		}
 
-		return( new NetworkAdminASNImpl( as, asn, bgp_prefix ));
+		return( new NetworkAdminASNImpl( ipv4, as, asn, bgp_prefix ));
 	}
 
 
@@ -296,7 +325,9 @@ NetworkAdminASNLookupImpl
 	{
 		try{
 
-			NetworkAdminASNLookupImpl lookup = new NetworkAdminASNLookupImpl( InetAddress.getByName( "64.71.8.82" ));
+			//NetworkAdminASNLookupImpl lookup = new NetworkAdminASNLookupImpl( InetAddress.getByName( "86.165.8.129" ));
+			NetworkAdminASNLookupImpl lookup = new NetworkAdminASNLookupImpl( InetAddress.getByName( "2a00:23c4:aeac:400:8d1d:ec9d:6107:5520" ));
+			//NetworkAdminASNLookupImpl lookup = new NetworkAdminASNLookupImpl( InetAddress.getByName( "2401:d002:2f02:301:0:0:0:2" ));
 
 			System.out.println( lookup.lookup().getString());
 

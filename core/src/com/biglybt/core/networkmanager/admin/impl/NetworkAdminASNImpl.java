@@ -20,6 +20,7 @@
 
 package com.biglybt.core.networkmanager.admin.impl;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 
 import com.biglybt.core.networkmanager.admin.NetworkAdminASN;
@@ -31,21 +32,30 @@ public class
 NetworkAdminASNImpl
 	implements NetworkAdminASN
 {
+	private final  boolean		ipv4;		
 	private final String		as;
-	private String		asn;
+	private String				asn;
 	private final String		bgp_prefix;
 
 
 
 	protected
 	NetworkAdminASNImpl(
+		boolean		_ipv4,
 		String		_as,
 		String		_asn,
 		String		_bgp )
 	{
+		ipv4		= _ipv4;
 		as			= _as;
 		asn			= _asn;
 		bgp_prefix	= _bgp;
+	}
+	
+	protected boolean
+	isIPv4()
+	{
+		return( ipv4 );
 	}
 
 	@Override
@@ -158,6 +168,13 @@ NetworkAdminASNImpl
 			return( false );
 		}
 
+		boolean	isv4 = address instanceof Inet4Address;
+		
+		if ( isv4 != ipv4 ){
+			
+			return( false );
+		}
+		
 		try{
 			InetAddress	start	= getCIDRStartAddress();
 			InetAddress	end		= getCIDREndAddress();
