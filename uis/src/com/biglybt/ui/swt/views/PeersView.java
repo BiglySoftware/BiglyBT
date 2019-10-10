@@ -33,6 +33,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.util.*;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
@@ -373,10 +374,14 @@ public class PeersView
 			SelectedContent[] sc = new SelectedContent[dataSources.length];
 			
 			for ( int i=0;i<sc.length;i++){
-				
-				sc[i] = new SelectedContent();
+				Object ds = dataSources[i];
+				if (ds instanceof PEPiece) {
+					sc[i] = new SelectedContent( "peer: " + ((PEPeer)ds).getIp());
+				}else{
+					sc[i] = new SelectedContent( "peer: "  + ds );
+				}
 			}
-			
+
 			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),
 					sc, tv);
 		}

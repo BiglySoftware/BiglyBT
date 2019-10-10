@@ -69,9 +69,17 @@ public class SelectedContent implements ISelectedContent
 		this.displayName = displayName;
 	}
 
+	/**
+	 * @deprecated - at least set a display-name for debug purposes
+	 */
+	
 	public SelectedContent() {
 	}
 
+	public SelectedContent( String dn) {
+		displayName = dn;
+	}
+	
 	// @see ISelectedContent#getHash()
 	@Override
 	public String getHash() {

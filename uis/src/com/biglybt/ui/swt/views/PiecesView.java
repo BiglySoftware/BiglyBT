@@ -45,10 +45,8 @@ import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.components.Legend;
-import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.piece.MyPieceDistributionView;
@@ -463,8 +461,12 @@ public class PiecesView
 			SelectedContent[] sc = new SelectedContent[dataSources.length];
 			
 			for ( int i=0;i<sc.length;i++){
-				
-				sc[i] = new SelectedContent();
+				Object ds = dataSources[i];
+				if (ds instanceof PEPiece) {
+					sc[i] = new SelectedContent( "piece: " + ((PEPiece)ds).getPieceNumber());
+				}else{
+					sc[i] = new SelectedContent( "piece: "  + ds );
+				}
 			}
 			
 			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),

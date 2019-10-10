@@ -538,8 +538,12 @@ public class TrackerView
 			SelectedContent[] sc = new SelectedContent[dataSources.length];
 			
 			for ( int i=0;i<sc.length;i++){
-				
-				sc[i] = new SelectedContent();
+				Object ds = dataSources[i];
+				if (ds instanceof TrackerPeerSource) {
+					sc[i] = new SelectedContent( "Source: " + ((TrackerPeerSource)ds).getName());
+				}else{
+					sc[i] = new SelectedContent( "Source: "  + ds );
+				}
 			}
 			
 			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),

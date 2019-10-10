@@ -593,7 +593,7 @@ public class ActivitiesEntry
 	public SelectedContent createSelectedContentObject()
 			throws Exception {
 
-		SelectedContent sc = new SelectedContent();
+		SelectedContent sc = new SelectedContent( "activity" );
 		if (assetHash == null) {
 			// Contains no content
 			return sc;
