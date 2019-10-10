@@ -63,12 +63,19 @@ public abstract class TableViewTab<DATASOURCETYPE>
 	}
 
 	public final void initialize(Composite composite) {
-		if (swtView == null) {
-			return;
-		}
+			// this view is instantiated manually from open-torrent-options->availability (TrackerAvailView) so
+			// needs to work without an swtView - there's probably a better way of embedding the view in a
+			// composite though....
+		
 		tv = initYourTableView();
 		Composite parent = initComposite(composite);
-		tv.initialize(swtView, parent);
+		
+		if ( swtView == null ){
+			tv.initialize(parent);
+		}else{
+			tv.initialize(swtView, parent);
+		}
+		
 		if (parent != composite) {
 			this.composite = composite;
 		} else {
@@ -79,10 +86,13 @@ public abstract class TableViewTab<DATASOURCETYPE>
 			tv.enableFilterCheck(filterTextControl, filterCheck);
 		}
 
-		Object dataSource = swtView.getDataSource();
-		if (dataSource != null) {
-			tv.setParentDataSource(dataSource);
+		if ( swtView != null ){
+			Object dataSource = swtView.getDataSource();
+			if (dataSource != null) {
+				tv.setParentDataSource(dataSource);
+			}
 		}
+		
 		tableViewTabInitComplete();
 	}
 

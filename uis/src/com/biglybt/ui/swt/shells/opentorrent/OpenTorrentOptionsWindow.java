@@ -3030,8 +3030,6 @@ public class OpenTorrentOptionsWindow
 					enabled_peer_sources,
 					enabled_networks );
 
-			view.dataSourceChanged( availability );
-
 			Composite comp = new Composite( avail_shell, SWT.NULL );
 			GridData gridData = new GridData( GridData.FILL_BOTH );
 			comp.setLayoutData(gridData);
@@ -3043,6 +3041,8 @@ public class OpenTorrentOptionsWindow
 			comp.setLayout(layout);
 
 			view.initialize(comp);
+			
+			view.dataSourceChanged( availability );
 
 			view.viewActivated();
 			view.refresh();
