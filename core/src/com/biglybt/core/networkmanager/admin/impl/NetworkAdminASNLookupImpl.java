@@ -160,11 +160,11 @@ NetworkAdminASNLookupImpl
 
 				byte b = bytes[i];
 				
-				ip_query.append( String.valueOf( b & 0x0f ));
+				ip_query.append( Integer.toHexString( b & 0x0f ));
 				
 				ip_query.append( "." );
 
-				ip_query.append( String.valueOf( b>>4 & 0x0f ));
+				ip_query.append( Integer.toHexString( b>>4 & 0x0f ));
 				
 				ip_query.append( "." );
 			}
@@ -329,7 +329,10 @@ NetworkAdminASNLookupImpl
 			NetworkAdminASNLookupImpl lookup = new NetworkAdminASNLookupImpl( InetAddress.getByName( "2a00:23c4:aeac:400:8d1d:ec9d:6107:5520" ));
 			//NetworkAdminASNLookupImpl lookup = new NetworkAdminASNLookupImpl( InetAddress.getByName( "2401:d002:2f02:301:0:0:0:2" ));
 
-			System.out.println( lookup.lookup().getString());
+			NetworkAdminASNImpl asn = lookup.lookup();
+			
+			System.out.println( asn.getString());
+			System.out.println( asn.matchesCIDR( InetAddress.getByName( "2a00:2404:aeac:400:8d1d:ec9d:6107:5520"  )));
 
 
 			/*

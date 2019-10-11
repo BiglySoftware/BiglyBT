@@ -25,7 +25,6 @@ import java.net.InetAddress;
 
 import com.biglybt.core.networkmanager.admin.NetworkAdminASN;
 import com.biglybt.core.networkmanager.admin.NetworkAdminException;
-import com.biglybt.core.tracker.protocol.PRHelpers;
 import com.biglybt.core.util.Debug;
 
 public class
@@ -135,21 +134,13 @@ NetworkAdminASNImpl
 
 			int	cidr_mask = Integer.parseInt( bgp_prefix.substring( pos+1 ));
 
-			int	rev_mask = 0;
-
-			for (int i=0;i<32-cidr_mask;i++){
-
-
-				rev_mask = ( rev_mask << 1 ) | 1;
-			}
-
 			byte[]	bytes = start.getAddress();
 
-			bytes[0] |= (rev_mask>>24)&0xff;
-			bytes[1] |= (rev_mask>>16)&0xff;
-			bytes[2] |= (rev_mask>>8)&0xff;
-			bytes[3] |= (rev_mask)&0xff;
-
+			for ( int i=cidr_mask;i<bytes.length*8;i++){
+				
+				bytes[i/8] |= 1<<(7-(i%8));
+			}
+			
 			return( InetAddress.getByAddress( bytes ));
 
 		}catch( Throwable e ){
@@ -176,16 +167,31 @@ NetworkAdminASNImpl
 		}
 		
 		try{
-			InetAddress	start	= getCIDRStartAddress();
-			InetAddress	end		= getCIDREndAddress();
+			int	pos = bgp_prefix.indexOf('/');
 
-			long	l_start = PRHelpers.addressToLong( start );
-			long	l_end	= PRHelpers.addressToLong( end );
+			InetAddress	start = InetAddress.getByName( bgp_prefix.substring(0,pos));
 
-			long	test = PRHelpers.addressToLong( address );
+			int	cidr_mask = Integer.parseInt( bgp_prefix.substring( pos+1 ));
 
-			return( test >= l_start && test <= l_end );
-
+			byte[] prefix = start.getAddress();
+			
+			byte[] bytes  = address.getAddress();
+			
+			for ( int i=0;i< cidr_mask; i++ ){
+				
+				byte mask = (byte)( 1<<(7-(i%8)));
+				
+				int b1 = prefix[i/8] & mask;
+				int b2 = bytes[i/8] & mask;
+				
+				if ( b1 != b2 ){
+					
+					return( false );
+				}
+			}
+			
+			return( true );
+			
 		}catch( Throwable e ){
 
 			Debug.printStackTrace(e);
