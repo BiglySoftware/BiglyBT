@@ -266,16 +266,21 @@ DDBaseTTTorrent
 
 				DownloadManager dm = PluginCoreUtils.unwrapIfPossible( download );
 
-				if ( dm != null && !dm.getDownloadState().isPeerSourceEnabled( PEPeerSource.PS_DHT )){
-
-					ddb.log( "TorrentDownload: request from " + originator + "  for '" + download.getName() + "' denied as DHT peer source disabled" );
-
-					return( null );
-				}
-				
-				if ( dm.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+				if ( dm != null ){
 					
-					return( null );
+					DownloadManagerState dms = dm.getDownloadState();
+					
+					if ( dms.isPeerSourceEnabled( PEPeerSource.PS_DHT )){
+	
+						ddb.log( "TorrentDownload: request from " + originator + "  for '" + download.getName() + "' denied as DHT peer source disabled" );
+	
+						return( null );
+					}
+					
+					if ( dms.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+						
+						return( null );
+					}
 				}
 			}catch( Throwable e ){
 
