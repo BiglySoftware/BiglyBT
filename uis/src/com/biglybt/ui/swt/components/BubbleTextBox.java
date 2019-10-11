@@ -18,6 +18,7 @@
 
 package com.biglybt.ui.swt.components;
 
+import com.biglybt.ui.swt.utils.FontUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -29,10 +30,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -51,13 +49,7 @@ public class BubbleTextBox
 	private static final int PADDING_TOP = (Utils.isGTK3) ? 1 : 2;
 	private static final int PADDING_BOTTOM = (Utils.isGTK3) ? 2 : 2;
 
-	private int WIDTH_OVAL;
-
-	private int HEIGHT_OVAL;
-
 	private int INDENT_OVAL;
-
-	private int HEIGHT_ICON_MAX;
 
 	private int WIDTH_CLEAR;
 
@@ -96,6 +88,11 @@ public class BubbleTextBox
 				return point;
 			}
 		};
+		if (Utils.isGTK3) {
+			Display display = textWidget.getDisplay();
+			textWidget.setBackground(Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND));
+			textWidget.setForeground(Colors.getSystemColor(display, SWT.COLOR_LIST_FOREGROUND));
+		}
 
 		FormData fd;
 
@@ -114,10 +111,7 @@ public class BubbleTextBox
 		fd.right = new FormAttachment(100, -15);
 		textWidget.setLayoutData(fd);
 
-		WIDTH_OVAL = 7;
-		HEIGHT_OVAL = 6;
 		INDENT_OVAL = 6;
-		HEIGHT_ICON_MAX = 12;
 		WIDTH_CLEAR = 7;
 		WIDTH_PADDING = 6;
 
@@ -125,11 +119,7 @@ public class BubbleTextBox
 			@Override
 			public void paintControl(PaintEvent e) {
 				Rectangle clientArea = cBubble.getClientArea();
-				if (Utils.isGTK) {
-					e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_LIST_BACKGROUND));
-				} else {
-					e.gc.setBackground(textWidget.getBackground());
-				}
+				e.gc.setBackground(textWidget.getBackground());
 				e.gc.setAdvanced(true);
 				e.gc.setAntialias(SWT.ON);
 				e.gc.fillRoundRectangle(clientArea.x, clientArea.y,
@@ -143,23 +133,27 @@ public class BubbleTextBox
 				e.gc.setAlpha(255);
 				e.gc.setLineCap(SWT.CAP_FLAT);
 
-				int iconHeight = clientArea.height - 9;
-				if (iconHeight > HEIGHT_ICON_MAX) {
-					iconHeight = HEIGHT_ICON_MAX;
+				int fontHeight = FontUtils.getFontHeightInPX(textWidget.getFont());
+				if (fontHeight > 17 - INDENT_OVAL - 1) {
+					fontHeight = 17 - INDENT_OVAL - 1;
 				}
-				int iconY = clientArea.y + ((clientArea.height - iconHeight + 1) / 2);
+				float heightOval = fontHeight * 0.7f;
+				float widthOval = heightOval;
 
 				Color colorClearX = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 				e.gc.setForeground(colorClearX);
 
+
+				int iconY = clientArea.y + ((clientArea.height - fontHeight + 1) / 2);
+
 				e.gc.setLineWidth(2);
-				e.gc.drawOval(clientArea.x + INDENT_OVAL, iconY, WIDTH_OVAL,
-						HEIGHT_OVAL);
+				e.gc.drawOval(clientArea.x + INDENT_OVAL, iconY, (int) widthOval,
+					(int) heightOval);
 				e.gc.drawPolyline(new int[] {
-					clientArea.x + INDENT_OVAL + INDENT_OVAL,
-					iconY + INDENT_OVAL,
-					clientArea.x + (int) (INDENT_OVAL * 2.6),
-					iconY + iconHeight,
+					(int) (clientArea.x + INDENT_OVAL + widthOval - 1),
+					(int) (iconY + heightOval - 1),
+					clientArea.x + INDENT_OVAL + fontHeight,
+					iconY + fontHeight,
 				});
 
 				boolean textIsBlank = textWidget.getText().length() == 0;
