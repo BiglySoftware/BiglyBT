@@ -457,6 +457,9 @@ public class SWTSkinObjectBasic
 			//System.out.println("setImage " + sConfigID + "  " + sSuffix);
 			painter.setImage(imageLoader, idLeft, idRight, id);
 		}
+		if (Utils.isGTK3 && (control instanceof Composite)) {
+			((Composite) control).setBackgroundMode(SWT.INHERIT_DEFAULT);
+		}
 
 		// XXX Is this needed?  It causes flicker and slows things down.
 		//     Maybe a redraw instead (if anything at all)?
@@ -713,6 +716,10 @@ public class SWTSkinObjectBasic
 						control.setBackground(null);
 					} else {
 						control.setBackground(bgColor);
+					}
+
+					if (color != null && Utils.isGTK3 && (control instanceof Composite)) {
+						((Composite) control).setBackgroundMode(SWT.INHERIT_DEFAULT);
 					}
 				}
 

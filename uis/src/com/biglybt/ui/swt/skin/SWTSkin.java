@@ -485,7 +485,7 @@ public class SWTSkin
 		this.startID = startID;
 		FormLayout layout = new FormLayout();
 		skinComposite.setLayout(layout);
-		if (!Constants.isWindows) {
+		if (Constants.isOSX) { // not sure if we need this anymore
 			skinComposite.setBackgroundMode(SWT.INHERIT_DEFAULT);
 		}
 
