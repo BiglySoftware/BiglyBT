@@ -1077,7 +1077,7 @@ BuddyPluginNetwork
 
 							byte[]	ip_bytes = (byte[])details.get( "ip" );
 
-							if ( ip_bytes != null ){
+							if ( ip_bytes != null && ip_bytes.length > 0 ){
 
 								try{
 									InetAddress ip = InetAddress.getByAddress( ip_bytes );
