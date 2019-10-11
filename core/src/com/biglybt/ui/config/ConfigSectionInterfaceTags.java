@@ -31,6 +31,7 @@ import com.biglybt.pif.ui.config.Parameter;
 
 
 import static com.biglybt.core.config.ConfigKeys.File.*;
+import static com.biglybt.core.config.ConfigKeys.Tag.*;
 
 public class ConfigSectionInterfaceTags
 	extends ConfigSectionImpl
@@ -49,6 +50,14 @@ public class ConfigSectionInterfaceTags
 	@Override
 	public void build() {
 
+		buildFiles();
+		
+		buildTracker();
+	}
+	
+	private void
+	buildFiles()
+	{
 		// auto tag group
 
 		List<Parameter> listAutoTag = new ArrayList<>();
@@ -135,7 +144,24 @@ public class ConfigSectionInterfaceTags
 				"ConfigView.section.files", listFiles);
 		add("pgFiles", pgFiles);
 		pgFiles.setNumberOfColumns(1);
+	}
+	
+	private void
+	buildTracker()
+	{
+		
+			// Tracker tagging
+		
+		List<Parameter> listTracker = new ArrayList<>();
 
+		BooleanParameterImpl auto_tag_enable = new BooleanParameterImpl(
+				BCFG_TRACKER_AUTO_TAG_INTERESTING_TRACKERS, "label.auto.tag.interesting.trackers");
+		add(auto_tag_enable, listTracker);
+		
+		ParameterGroupImpl pgTracker = new ParameterGroupImpl(
+				"label.tracker", listTracker);
+		add("pgTracker", pgTracker);
+		pgTracker.setNumberOfColumns(2);
 
 	}
 }

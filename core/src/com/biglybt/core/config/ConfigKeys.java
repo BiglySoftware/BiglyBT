@@ -408,4 +408,8 @@ public final class ConfigKeys {
 		public static final String BCFG_LANG_UPPER_CASE = "label.lang.upper.case";
 		public static final String SCFG_LOCALE = "locale";
 	}
+	
+	public static class Tag {
+		public static final String BCFG_TRACKER_AUTO_TAG_INTERESTING_TRACKERS = "Auto Tag Interesting Trackers";
+	}
 }

@@ -26,6 +26,7 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
+import com.biglybt.core.config.ConfigKeys.Tag;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.speedmanager.impl.SpeedManagerImpl;
 import com.biglybt.core.speedmanager.impl.v2.SMConst;
@@ -438,7 +439,8 @@ public class ConfigurationDefaults {
     def.put( "Play Notification Added", FALSE );
     def.put( "Play Notification Added File", "" );
 
-
+    def.put( Tag.BCFG_TRACKER_AUTO_TAG_INTERESTING_TRACKERS, TRUE );
+    
     //default torrent directory option
     def.put( "Save Torrent Files", TRUE );
     def.put( "General_sDefaultTorrent_Directory", SystemProperties.getUserPath()+"torrents");

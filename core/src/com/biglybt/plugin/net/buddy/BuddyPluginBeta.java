@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 import com.biglybt.activities.LocalActivityManager;
 import com.biglybt.activities.LocalActivityManager.LocalActivityCallback;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
@@ -1240,67 +1241,70 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				@Override
 				public void downloadAdded(Download download){
 					
-					Torrent torrent = download.getTorrent();
-					
-					if ( torrent != null ){
+					if ( COConfigurationManager.getBooleanParameter( ConfigKeys.Tag.BCFG_TRACKER_AUTO_TAG_INTERESTING_TRACKERS )){
 						
-						TOTorrent to_torrent = PluginCoreUtils.unwrap( download.getTorrent());
+						Torrent torrent = download.getTorrent();
 						
-						if ( TorrentUtils.isReallyPrivate( to_torrent )){
+						if ( torrent != null ){
 							
-							Set<String> hosts = TorrentUtils.getUniqueTrackerHosts( to_torrent );
+							TOTorrent to_torrent = PluginCoreUtils.unwrap( download.getTorrent());
 							
-							if ( hosts.size() == 1 ){
+							if ( TorrentUtils.isReallyPrivate( to_torrent )){
 								
-								String tracker = DNSUtils.getInterestingHostSuffix( hosts.iterator().next());
+								Set<String> hosts = TorrentUtils.getUniqueTrackerHosts( to_torrent );
 								
-								if ( tracker != null && !checked.contains( tracker )){
-								
-									checked.add( tracker );
+								if ( hosts.size() == 1 ){
 									
-									try{
-										String config_key = "azbuddy.dchat.autotracker.host." + Base32.encode( tracker.getBytes( "UTF-8" ));
+									String tracker = DNSUtils.getInterestingHostSuffix( hosts.iterator().next());
 									
-										boolean done = COConfigurationManager.getBooleanParameter( config_key, false );
+									if ( tracker != null && !checked.contains( tracker )){
+									
+										checked.add( tracker );
 										
-										if ( !done ){
+										try{
+											String config_key = "azbuddy.dchat.autotracker.host." + Base32.encode( tracker.getBytes( "UTF-8" ));
+										
+											boolean done = COConfigurationManager.getBooleanParameter( config_key, false );
 											
-											COConfigurationManager.setParameter( config_key, true );
-											
-											String chat_key = "Tracker: " + tracker;
-											
-											ChatInstance chat = getChat( AENetworkClassifier.AT_PUBLIC, chat_key );
-											
-											chat.setFavourite( true );
-											
-											BuddyPluginUI.openChat( chat );
-											
-											TagManager tm = TagManagerFactory.getTagManager();
-											
-											if ( tm.isEnabled()){
+											if ( !done ){
 												
-												TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+												COConfigurationManager.setParameter( config_key, true );
 												
-												Tag tag = tt.getTag( tracker, true );
+												String chat_key = "Tracker: " + tracker;
 												
-												if ( tag == null ){
+												ChatInstance chat = getChat( AENetworkClassifier.AT_PUBLIC, chat_key );
+												
+												chat.setFavourite( true );
+												
+												BuddyPluginUI.openChat( chat );
+												
+												TagManager tm = TagManagerFactory.getTagManager();
+												
+												if ( tm.isEnabled()){
 													
-													tag = tt.createTag( tracker, false );
+													TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
 													
-													tag.setPublic( false );
+													Tag tag = tt.getTag( tracker, true );
 													
-													tt.addTag( tag );
-													
-													TagFeatureProperties tfp = (TagFeatureProperties)tag;
-													
-													TagProperty tp = tfp.getProperty( TagFeatureProperties.PR_TRACKERS );
-													
-													tp.setStringList( new String[]{ tracker });
+													if ( tag == null ){
+														
+														tag = tt.createTag( tracker, false );
+														
+														tag.setPublic( false );
+														
+														tt.addTag( tag );
+														
+														TagFeatureProperties tfp = (TagFeatureProperties)tag;
+														
+														TagProperty tp = tfp.getProperty( TagFeatureProperties.PR_TRACKERS );
+														
+														tp.setStringList( new String[]{ tracker });
+													}
 												}
 											}
+										}catch( Throwable e ){
+											
 										}
-									}catch( Throwable e ){
-										
 									}
 								}
 							}
