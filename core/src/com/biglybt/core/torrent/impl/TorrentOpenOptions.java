@@ -35,6 +35,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
@@ -993,6 +994,28 @@ public class TorrentOpenOptions
 		return TorrentUtils.getLocalisedName(torrent);
 	}
 
+	public String getDisplayName()
+	{
+		String title = getTorrentName();
+
+		if ( torrent != null ){
+
+			String str = TorrentUtils.getDisplayName( torrent );
+			
+			if ( str == null ){
+			
+				str = PlatformTorrentUtils.getContentTitle( torrent );
+			}
+			
+			if ( str != null && str.length() > 0 ){
+
+				title = str;
+			}
+		}
+
+		return( title );
+	}
+	
 	public boolean allFilesMoving() {
 		TorrentOpenFileOptions[] files = getFiles();
 		for (int j = 0; j < files.length; j++) {
@@ -1314,6 +1337,67 @@ public class TorrentOpenOptions
 			initialMetadata = TorrentUtils.getInitialMetadata( torrent );
 			
 			renameDuplicates();
+
+			String display_name = TorrentUtils.getDisplayName( torrent );
+			
+			if ( display_name != null ){
+				
+				if ( COConfigurationManager.getBooleanParameter( "Plugin.Magnet URI Handler.MagnetPlugin.rename.using.dn" )){
+					
+					if ( torrent.isSimpleTorrent()){
+					
+						getFiles()[0].setDestFileName( FileUtil.convertOSSpecificChars( display_name, false ), true );
+						
+					}else{
+						
+						setExplicitDataDir( new File( getDataDir()).getParentFile().getAbsolutePath(), FileUtil.convertOSSpecificChars( display_name, true ), false );
+					}
+					
+					try{
+						File existing = new File( TorrentUtils.getTorrentFileName(torrent));
+						
+						File folder = existing.getParentFile();
+						
+						String old_name = existing.getName();
+						
+						String new_name = FileUtil.convertOSSpecificChars( display_name, false ) + ".torrent";
+						
+						if ( !new_name.equals( old_name )){
+							
+							String prefix = "";
+							
+							for ( int i=0;i<16;i++){
+								
+								File new_file = new File( folder, prefix + new_name );
+								
+								if ( !new_file.exists()){
+									
+									try{
+									
+										TorrentUtils.writeToFile( torrent, new_file, false );
+										
+										sFileName = new_file.getAbsolutePath();
+										
+										TorrentUtils.delete( existing, true );
+										
+										break;
+										
+									}catch( Throwable e ){
+										
+										Debug.out( e );
+									}
+								}
+								
+								prefix += "_";
+							}
+						}
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+			}
 		}
 	}
 

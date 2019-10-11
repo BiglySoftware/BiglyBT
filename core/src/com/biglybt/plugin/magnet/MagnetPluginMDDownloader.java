@@ -339,13 +339,13 @@ MagnetPluginMDDownloader
 
 			download = download_manager.addNonPersistentDownloadStopped( PluginCoreUtils.wrap( meta_torrent ), torrent_file, data_file);
 
-			String	display_name = MessageText.getString( "MagnetPlugin.use.md.download.name", new String[]{ name });
+			final String	display_name = MessageText.getString( "MagnetPlugin.use.md.download.name", new String[]{ name }) + ".torrent";
 
 			core_dm = PluginCoreUtils.unwrap( download );
 			
 			DownloadManagerState state = core_dm.getDownloadState();
-
-			state.setDisplayName( display_name + ".torrent" );
+			
+			state.setDisplayName( display_name );
 
 			if (	 networks.size() == 0 ||
 					( networks.size() == 1 && networks.contains( AENetworkClassifier.AT_PUBLIC ))){
@@ -866,6 +866,13 @@ MagnetPluginMDDownloader
 					peer_cache.put( "tracker_peers", peers_for_cache );
 
 					TorrentUtils.setPeerCache( torrent, peer_cache );
+				}
+				
+				String current_dn = state.getDisplayName();
+				
+				if ( !current_dn.equals( display_name )){
+					
+					TorrentUtils.setDisplayName( torrent, current_dn );
 				}
 
 				try{

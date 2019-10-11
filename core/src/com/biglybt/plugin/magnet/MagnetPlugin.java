@@ -132,7 +132,7 @@ MagnetPlugin
 
 	private static final int	PLUGIN_DOWNLOAD_TIMEOUT_SECS_DEFAULT 	= 10*60;	// needs to be fairly large as non-public downloads can take a while...
 
-	private BooleanParameter 	secondary_lookup;
+	// private BooleanParameter 	secondary_lookup; removed
 	private BooleanParameter 	md_lookup;
 	private IntParameter	 	md_lookup_delay;
 	private IntParameter	 	timeout_param;
@@ -182,7 +182,6 @@ MagnetPlugin
 
 		config.addInfoParameter2("MagnetPlugin.current.port", String.valueOf( uri_handler.getPort()));
 
-		secondary_lookup 	= config.addBooleanParameter2( "MagnetPlugin.use.lookup.service", "MagnetPlugin.use.lookup.service", true );
 		md_lookup 			= config.addBooleanParameter2( "MagnetPlugin.use.md.download", "MagnetPlugin.use.md.download", true );
 		md_lookup_delay		= config.addIntParameter2( "MagnetPlugin.use.md.download.delay", "MagnetPlugin.use.md.download.delay", MD_LOOKUP_DELAY_SECS_DEFAULT );
 
@@ -195,6 +194,8 @@ MagnetPlugin
 		sources_extra_param	= config.addIntParameter2( "MagnetPlugin.add.sources.extra", "MagnetPlugin.add.sources.extra", 0 );
 				
 		magnet_recovery		= config.addBooleanParameter2( "MagnetPlugin.recover.magnets", "MagnetPlugin.recover.magnets", true );
+		
+		config.addBooleanParameter2( "MagnetPlugin.rename.using.dn", "MagnetPlugin.rename.using.dn", false );
 
 		Parameter[] nps = new Parameter[ AENetworkClassifier.AT_NETWORKS.length ];
 
@@ -1332,13 +1333,15 @@ MagnetPlugin
 		
 		if ( other_metadata == null ){
 			
-			other_metadata = Collections.emptyMap();
+			other_metadata = new HashMap<>();
 		}
 		
 		List<String>	new_web_seeds 	= new ArrayList<>();
 		List<String>	new_trackers 	= new ArrayList<>();
 
 		Set<String>	tags			= new HashSet<>();
+		
+		String dn = null;
 		
 		if ( args != null ){
 
@@ -1351,36 +1354,61 @@ MagnetPlugin
 				if ( x.length == 2 ){
 
 					String	lhs = x[0].toLowerCase();
-
+					String	rhs	= x[1];
+					
 					if ( lhs.equals( "ws" )){
 
 						try{
-							new_web_seeds.add( new URL( UrlUtils.decode( x[1] )).toExternalForm());
+							new_web_seeds.add( new URL( UrlUtils.decode( rhs )).toExternalForm());
 
 						}catch( Throwable e ){
 						}
 					}else if ( lhs.equals( "tr" )){
 
 						try{
-							new_trackers.add( new URL( UrlUtils.decode( x[1] )).toExternalForm());
+							new_trackers.add( new URL( UrlUtils.decode( rhs )).toExternalForm());
 
 						}catch( Throwable e ){
 						}
 					}else if ( lhs.equals( "tag" )){
 
-						tags.add(UrlUtils.decode( x[1] ));
+						tags.add(UrlUtils.decode( rhs ));
+						
+					}else if ( lhs.equals( "dn" )){
+						
+						dn = UrlUtils.decode( rhs );
 					}
 				}
 			}
 		}
 
-		if ( new_web_seeds.size() > 0 || new_trackers.size() > 0 || networks.size() > 0 || !initial_tags.isEmpty() || !other_metadata.isEmpty()){
+		if ( dn != null || new_web_seeds.size() > 0 || new_trackers.size() > 0 || networks.size() > 0 || !initial_tags.isEmpty() || !other_metadata.isEmpty()){
 
 			try{
 				TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( torrent_data );
 
 				boolean	update_torrent = false;
 
+				if ( dn != null ){
+					
+					if ( TorrentUtils.getDisplayName( torrent ) == null ){
+						
+						String t_name = torrent.getUTF8Name();
+						
+						if ( t_name == null ){
+							
+							t_name = new String( torrent.getName(), Constants.UTF_8 );
+						}
+						
+						if ( !dn.equals( t_name )){
+							
+							TorrentUtils.setDisplayName( torrent, dn );
+							
+							update_torrent = true;
+						}
+					}
+				}
+				
 				if ( new_web_seeds.size() > 0 ){
 
 					Object obj = torrent.getAdditionalProperty( "url-list" );
@@ -2123,7 +2151,7 @@ MagnetPlugin
 			try{
 				long	remaining	= timeout;
 
-				boolean	sl_enabled				= secondary_lookup.getValue() && FeatureAvailability.isMagnetSLEnabled();
+				boolean	sl_enabled				= false; // secondary_lookup.getValue() && FeatureAvailability.isMagnetSLEnabled();
 				boolean	sl_failed				= false;
 				long secondary_lookup_time 	= -1;
 

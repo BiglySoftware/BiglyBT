@@ -27,6 +27,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.peer.PEPeerSource;
@@ -269,6 +270,11 @@ DDBaseTTTorrent
 
 					ddb.log( "TorrentDownload: request from " + originator + "  for '" + download.getName() + "' denied as DHT peer source disabled" );
 
+					return( null );
+				}
+				
+				if ( dm.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+					
 					return( null );
 				}
 			}catch( Throwable e ){

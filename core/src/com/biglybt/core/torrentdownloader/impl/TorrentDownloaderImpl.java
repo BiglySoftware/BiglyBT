@@ -907,7 +907,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 		    	}
 
 		    	if (useTempFile) {
-		    		this.file = File.createTempFile("AZU", ".torrent", new File(
+		    		this.file = File.createTempFile("AZU", ".tmp", new File(
 								this.directoryname));
 		    		this.file.createNewFile();
 		    	}
@@ -971,13 +971,24 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 
 		        		  String	name = TorrentUtils.getLocalisedName( torrent ) + ".torrent";
 
-		        		  File	new_file	= new File( directoryname, name );
-
-		        		  if ( file.renameTo( new_file )){
-
-		        			  filename	= name;
-
-		        			  file	= new_file;
+		        		  String prefix = "";
+		        		  
+		        		  for ( int i=0;i<16;i++){
+		        			  
+			        		  File	new_file	= new File( directoryname, prefix + name );
+	
+			        		  if ( file.renameTo( new_file )){
+	
+			        			  new File( file.getParentFile(), file.getName() + ".bak" ).delete();
+			        			  
+			        			  filename	= name;
+	
+			        			  file	= new_file;
+			        			  
+			        			  break;
+			        		  }
+			        		  
+			        		  prefix += "_";
 		        		  }
 		        	  }
 		          }catch( Throwable e ){
@@ -1001,6 +1012,8 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 
 		        				  if ( file.renameTo( new_file )){
 
+		        					  new File( file.getParentFile(), file.getName() + ".bak" ).delete();
+		        					  
 		        					  filename	= name;
 
 		        					  file	= new_file;

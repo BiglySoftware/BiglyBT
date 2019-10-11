@@ -119,6 +119,7 @@ TorrentUtils
 	private static final String		TORRENT_AZ_PROP_PLUGINS					= "plugins";
 
 	public static final String		TORRENT_AZ_PROP_OBTAINED_FROM			= "obtained_from";
+	public static final String		TORRENT_AZ_PROP_DISPLAY_NAME			= "display_name";
 	private static final String		TORRENT_AZ_PROP_NETWORK_CACHE			= "network_cache";
 	private static final String		TORRENT_AZ_PROP_TAG_CACHE				= "tag_cache";
 	private static final String		TORRENT_AZ_PROP_INITIAL_TAGS			= "initial_tags";
@@ -1908,15 +1909,13 @@ TorrentUtils
 		Map	m = getAzureusPrivateProperties( torrent );
 
 		try{
-			str = str.trim();
-
-			if ( str == null || str.length() == 0 ){
+			if ( str == null || str.trim().length() == 0 ){
 
 				m.remove( TORRENT_AZ_PROP_OBTAINED_FROM );
 
 			}else{
 
-				m.put( TORRENT_AZ_PROP_OBTAINED_FROM, str.getBytes( "UTF-8" ));
+				m.put( TORRENT_AZ_PROP_OBTAINED_FROM, str.trim().getBytes( "UTF-8" ));
 			}
 
 			fireAttributeListener( torrent, TORRENT_AZ_PROP_OBTAINED_FROM, str );
@@ -1949,6 +1948,51 @@ TorrentUtils
 		return( null );
 	}
 
+	public static void
+	setDisplayName(
+		TOTorrent		torrent,
+		String			str )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			if ( str == null || str.trim().length() == 0 ){
+
+				m.remove( TORRENT_AZ_PROP_DISPLAY_NAME );
+
+			}else{
+
+				m.put( TORRENT_AZ_PROP_DISPLAY_NAME, str.trim().getBytes( "UTF-8" ));
+			}
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+	}
+
+	public static String
+	getDisplayName(
+		TOTorrent		torrent )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		byte[]	from = (byte[])m.get( TORRENT_AZ_PROP_DISPLAY_NAME );
+
+		if ( from != null ){
+
+			try{
+				return( new String( from, "UTF-8" ));
+
+			}catch( Throwable e ){
+
+				Debug.printStackTrace(e);
+			}
+		}
+
+		return( null );
+	}
+	
 	public static void
 	setNetworkCache(
 		TOTorrent		torrent,

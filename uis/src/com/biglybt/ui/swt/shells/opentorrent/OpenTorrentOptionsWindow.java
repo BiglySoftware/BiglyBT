@@ -1448,19 +1448,8 @@ public class OpenTorrentOptionsWindow
 
 			TorrentOpenOptions options = open_instances.get(0).getOptions();
 
-			text = options.getTorrentName();
+			text = options.getDisplayName();
 
-			TOTorrent t = options.getTorrent();
-
-			if ( t != null ){
-
-				String str = PlatformTorrentUtils.getContentTitle( t );
-
-				if ( str != null && str.length() > 0 ){
-
-					text = str;
-				}
-			}
 		}else{
 
 			text =  MessageText.getString("label.num.torrents",new String[]{ String.valueOf( open_instances.size())});
@@ -2528,17 +2517,7 @@ public class OpenTorrentOptionsWindow
 
 			Utils.centerWindowRelativeTo(tree_shell,shell);
 
-			String title = torrentOptions.getTorrentName();
-
-			if ( t != null ){
-
-				String str = PlatformTorrentUtils.getContentTitle( t );
-
-				if ( str != null && str.length() > 0 ){
-
-					title = str;
-				}
-			}
+			String title = torrentOptions.getDisplayName();
 
 			Messages.setLanguageText( tree_shell, "torrent.files.title", new String[]{ title });
 
@@ -3218,17 +3197,7 @@ public class OpenTorrentOptionsWindow
 
 			Utils.centerWindowRelativeTo(avail_shell,shell);
 
-			String title = torrentOptions.getTorrentName();
-
-			if ( t != null ){
-
-				String str = PlatformTorrentUtils.getContentTitle( t );
-
-				if ( str != null && str.length() > 0 ){
-
-					title = str;
-				}
-			}
+			String title = torrentOptions.getDisplayName();
 
 			Messages.setLanguageText( avail_shell, "torrent.avail.title", new String[]{ title });
 
@@ -3252,19 +3221,7 @@ public class OpenTorrentOptionsWindow
 
 			TOTorrent torrent = torrentOptions.getTorrent();
 
-			String title_temp = torrentOptions.getTorrentName();
-
-			if ( torrent != null ){
-
-				String str = PlatformTorrentUtils.getContentTitle( torrent );
-
-				if ( str != null && str.length() > 0 ){
-
-					title_temp = str;
-				}
-			}
-
-			final String title = title_temp;
+			String title = torrentOptions.getDisplayName();
 
 			String[] enabled_networks = AENetworkClassifier.AT_NETWORKS;
 

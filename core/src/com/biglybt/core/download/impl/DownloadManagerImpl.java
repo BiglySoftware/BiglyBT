@@ -1325,8 +1325,13 @@ DownloadManagerImpl
 
 				if ( download_manager_state.getDisplayName() == null ){
 
-					String title = com.biglybt.core.torrent.PlatformTorrentUtils.getContentTitle( torrent );
-
+					String title = TorrentUtils.getDisplayName( torrent );
+					
+					if ( title == null ){
+					
+						title = com.biglybt.core.torrent.PlatformTorrentUtils.getContentTitle( torrent );
+					}
+					
 					if ( title != null && title.length() > 0 ){
 
 						download_manager_state.setDisplayName(title);
