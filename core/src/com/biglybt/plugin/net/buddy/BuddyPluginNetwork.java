@@ -2715,6 +2715,30 @@ BuddyPluginNetwork
 		}
 		
 		protected void
+		updateIPWithDelay()
+		{
+			synchronized( this ){
+				
+				if ( update_ip_retry_event == null ){
+					
+					update_ip_retry_event = 
+						SimpleTimer.addEvent(
+							"updateIP",
+							SystemTime.getOffsetTime( 60*1000 ),
+							(ev)->{
+								
+								synchronized( DDBDetails.this ){
+									
+									update_ip_retry_event = null;
+								}
+								
+								updateIP();
+							});
+				}
+			}
+		}
+		
+		protected void
 		updateIP()
 		{
 			if ( !ddb.isAvailable()){
@@ -2724,25 +2748,7 @@ BuddyPluginNetwork
 
 			if ( !ddb.isInitialized()){
 			
-				synchronized( this ){
-					
-					if ( update_ip_retry_event == null ){
-						
-						update_ip_retry_event = 
-							SimpleTimer.addEvent(
-								"updateIP",
-								SystemTime.getOffsetTime( 60*1000 ),
-								(ev)->{
-									
-									synchronized( DDBDetails.this ){
-										
-										update_ip_retry_event = null;
-									}
-									
-									updateIP();
-								});
-					}
-				}
+				updateIPWithDelay();
 				
 				return;
 			}
@@ -3077,6 +3083,44 @@ BuddyPluginNetwork
 							return;
 						}
 
+						if ( details.isEnabled()){
+							
+							boolean	valid = false;
+							
+							InetSocketAddress[] isas = details.getIPs();
+							
+							if ( isas != null ){
+								
+								for ( InetSocketAddress isa: isas ){
+									
+									if ( isa == null ){
+										
+										continue;
+									}
+									
+									if ( isa.isUnresolved()){
+										
+										String host = AddressUtils.getHostAddress( isa );
+										
+										if ( host != null && !host.isEmpty()){
+											
+											valid = true;
+										}
+									}else{
+										
+										valid = true;
+									}
+								}
+							}
+							
+							if ( !valid ){
+								
+								updateIPWithDelay();
+								
+								return;
+							}
+						}
+						
 						updatePublishSupport( details );
 					}
 				});
@@ -3516,22 +3560,42 @@ BuddyPluginNetwork
 											}
 										}
 										
-										String	nick = decodeString((byte[])status.get( "n" ));
-
-										Long	l_seq = (Long)status.get( "s" );
-
-										int		seq = l_seq==null?0:l_seq.intValue();
-
-										Long	l_os = (Long)status.get( "o" );
-
-										int		os = l_os==null?BuddyPlugin.STATUS_ONLINE:l_os.intValue();
-
-										Long	l_ver = (Long)status.get( "v" );
-
-										int		ver = l_ver==null?VERSION_INITIAL:l_ver.intValue();
-
-										buddy.statusCheckComplete( DDBDetails.this, latest_time, ias, tcp_port, udp_port, nick, os, seq, ver );
-
+										boolean valid = ias != null;
+										
+										if ( valid ){
+											
+											if ( ias.isUnresolved()){
+												
+												String host = AddressUtils.getHostAddress( ias );
+												
+												if ( host != null && !host.isEmpty()){
+													
+													valid = true;
+												}
+											}else{
+												
+												valid = true;
+											}
+										}
+										
+										if ( valid ){
+											
+											String	nick = decodeString((byte[])status.get( "n" ));
+	
+											Long	l_seq = (Long)status.get( "s" );
+	
+											int		seq = l_seq==null?0:l_seq.intValue();
+	
+											Long	l_os = (Long)status.get( "o" );
+	
+											int		os = l_os==null?BuddyPlugin.STATUS_ONLINE:l_os.intValue();
+	
+											Long	l_ver = (Long)status.get( "v" );
+	
+											int		ver = l_ver==null?VERSION_INITIAL:l_ver.intValue();
+	
+											buddy.statusCheckComplete( DDBDetails.this, latest_time, ias, tcp_port, udp_port, nick, os, seq, ver );
+										}
 									}catch( Throwable e ){
 
 										failed_callback.run();
