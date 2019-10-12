@@ -496,7 +496,7 @@ GenericMessageConnectionDirect
 					getConnectionProperty(
 						String property_name )
 					{
-						return( null );
+						return( listener.getConnectionProperty( property_name )); 
 					}
 
 					@Override

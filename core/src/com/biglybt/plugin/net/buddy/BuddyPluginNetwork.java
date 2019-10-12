@@ -200,6 +200,19 @@ BuddyPluginNetwork
 		return( target_network == AENetworkClassifier.AT_PUBLIC );
 	}
 	
+	public String[]
+	getDDBNetworks()
+	{
+		if ( isPublicNetwork()){
+			
+			return( new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P });
+			
+		}else{
+			
+			return(  new String[]{ AENetworkClassifier.AT_I2P });
+		}
+	}
+	
 	protected void
 	checkAvailable()
 	
@@ -221,18 +234,8 @@ BuddyPluginNetwork
 		boolean		initial_enabled )
 	{
 		try{
-			String[] ddb_nets;
-			
-			if ( isPublicNetwork()){
-			
-				ddb_nets = new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P };
-				
-			}else{
-				
-				ddb_nets = new String[]{ AENetworkClassifier.AT_I2P };
-			}
-			
-			List<DistributedDatabase> ddbs = plugin_interface.getUtilities().getDistributedDatabases( ddb_nets );
+
+			List<DistributedDatabase> ddbs = plugin_interface.getUtilities().getDistributedDatabases( getDDBNetworks());
 						
 			for ( DistributedDatabase ddb: ddbs ){
 			

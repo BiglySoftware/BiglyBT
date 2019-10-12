@@ -29,6 +29,7 @@ import java.util.*;
 
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.impl.web.WebEngine;
+import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManager;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
@@ -2521,7 +2522,22 @@ BuddyPluginBuddy
 						}
 					});
 			
-			con.connect();
+			con.connect(
+				new GenericMessageConnection.GenericMessageConnectionPropertyHandler(){
+					
+					@Override
+					public Object 
+					getConnectionProperty(
+						String property_name )
+					{
+						if ( property_name == AEProxyFactory.PO_PEER_NETWORKS ){
+
+							return( plugin_network.getDDBNetworks());
+						}
+						
+						return( null );
+					}
+				});
 
 			return( con );
 
@@ -2842,7 +2858,7 @@ BuddyPluginBuddy
 			if ( !outgoing ){
 
 				connected = true;
-
+				
 				buddyConnectionEstablished( false );
 			}
 

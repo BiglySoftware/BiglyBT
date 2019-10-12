@@ -43,7 +43,8 @@ GenericMessageConnection
 	getStartpoint();
 
 	public void
-	connect()
+	connect(
+		GenericMessageConnectionPropertyHandler l )
 
 		throws MessageException;
 
@@ -93,4 +94,12 @@ GenericMessageConnection
 	public void
 	removeListener(
 		GenericMessageConnectionListener		listener );
+	
+	public interface
+	GenericMessageConnectionPropertyHandler
+	{
+		public Object 
+		getConnectionProperty(
+			String property_name);
+	}
 }

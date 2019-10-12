@@ -386,13 +386,14 @@ SESTSConnectionImpl
 
 	@Override
 	public void
-	connect()
+	connect(
+		GenericMessageConnection.GenericMessageConnectionPropertyHandler		ph )
 
 		throws MessageException
 	{
 		if ( connection.isIncoming()){
 
-			connection.connect();
+			connection.connect( ph );
 
 		}else{
 
@@ -405,7 +406,7 @@ SESTSConnectionImpl
 
 				sent_keys = true;
 
-				connection.connect( buffer );
+				connection.connect( buffer, ph );
 
 			}catch( CryptoManagerException	e ){
 

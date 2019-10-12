@@ -855,7 +855,7 @@ implements PEPeerTransport
 
 							return( manager.getAdapter().getEnabledNetworks());
 							
-						}else if ( property_name.equals( "local_port" )){
+						}else if ( property_name.equals( AEProxyFactory.PO_LOCAL_PORT )){
 							
 							return( manager.getAdapter().getTCPListeningPortNumber());
 						}

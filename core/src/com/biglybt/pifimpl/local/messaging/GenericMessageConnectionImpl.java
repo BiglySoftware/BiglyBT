@@ -285,11 +285,12 @@ GenericMessageConnectionImpl
 
 	@Override
 	public void
-	connect()
+	connect(
+		GenericMessageConnection.GenericMessageConnectionPropertyHandler	ph )
 
 		throws MessageException
 	{
-		connect( null );
+		connect( null, ph );
 	}
 
 	protected void
@@ -332,7 +333,8 @@ GenericMessageConnectionImpl
 
 	public void
 	connect(
-		ByteBuffer	initial_data )
+		ByteBuffer															initial_data,
+		GenericMessageConnection.GenericMessageConnectionPropertyHandler	ph )
 
 		throws MessageException
 	{
@@ -357,7 +359,7 @@ GenericMessageConnectionImpl
 
 		if ( tcp_ep != null ){
 
-			connectTCP( initial_data, tcp_ep );
+			connectTCP( initial_data, tcp_ep, ph );
 
 		}else{
 
@@ -365,7 +367,7 @@ GenericMessageConnectionImpl
 
 			if ( udp_ep != null ){
 
-				connectUDP( initial_data, udp_ep, false );
+				connectUDP( initial_data, udp_ep, false, ph );
 
 			}else{
 
@@ -376,8 +378,9 @@ GenericMessageConnectionImpl
 
 	protected void
 	connectTCP(
-		final ByteBuffer		initial_data,
-		InetSocketAddress		tcp_ep )
+		final ByteBuffer													initial_data,
+		InetSocketAddress													tcp_ep,
+		GenericMessageConnection.GenericMessageConnectionPropertyHandler	ph )
 	{
 		if ( TRACE ){
 			System.out.println( "TCP connection attempt to " + tcp_ep  );
@@ -434,11 +437,26 @@ GenericMessageConnectionImpl
 
 							initial_data.rewind();
 
-							connectUDP( initial_data, udp_ep, false );
+							connectUDP( initial_data, udp_ep, false, ph );
 
 						}else{
 
 							reportFailed( failure_msg );
+						}
+					}
+					
+					@Override
+					public Object 
+					getConnectionProperty(
+						String property_name)
+					{
+						if ( ph != null ){
+							
+							return( ph.getConnectionProperty( property_name ));
+							
+						}else{
+							
+							return( null );
 						}
 					}
 				});
@@ -448,7 +466,8 @@ GenericMessageConnectionImpl
 	connectUDP(
 		final ByteBuffer			initial_data,
 		final InetSocketAddress		udp_ep,
-		boolean						nat_traversal )
+		boolean						nat_traversal,
+		GenericMessageConnection.GenericMessageConnectionPropertyHandler	ph )
 	{
 		if ( TRACE ){
 			System.out.println( "UDP connection attempt to " + udp_ep + " (nat=" + nat_traversal + ")" );
@@ -494,7 +513,7 @@ GenericMessageConnectionImpl
 
 									initial_data.rewind();
 
-									connectTunnel( initial_data, gen_udp, rendezvous, target );
+									connectTunnel( initial_data, gen_udp, rendezvous, target, ph );
 
 								}else{
 
@@ -541,7 +560,22 @@ GenericMessageConnectionImpl
 
 														initial_data.rewind();
 
-														connectTunnel( initial_data, gen_udp, rendezvous, target );
+														connectTunnel( initial_data, gen_udp, rendezvous, target, ph );
+													}
+												}
+												
+												@Override
+												public Object 
+												getConnectionProperty(
+													String property_name)
+												{
+													if ( ph != null ){
+														
+														return( ph.getConnectionProperty( property_name ));
+														
+													}else{
+														
+														return( null );
 													}
 												}
 											});
@@ -617,7 +651,22 @@ GenericMessageConnectionImpl
 
 								initial_data.rewind();
 
-								connectUDP( initial_data, udp_ep, true );
+								connectUDP( initial_data, udp_ep, true, ph );
+							}
+						}
+						
+						@Override
+						public Object 
+						getConnectionProperty(
+							String property_name)
+						{
+							if ( ph != null ){
+								
+								return( ph.getConnectionProperty( property_name ));
+								
+							}else{
+								
+								return( null );
 							}
 						}
 					});
@@ -629,7 +678,8 @@ GenericMessageConnectionImpl
 		ByteBuffer				initial_data,
 		GenericMessageEndpoint	ep,
 		InetSocketAddress		rendezvous,
-		InetSocketAddress		target )
+		InetSocketAddress		target,
+		GenericMessageConnection.GenericMessageConnectionPropertyHandler	ph )
 	{
 		if ( TRACE ){
 			System.out.println( "Tunnel connection attempt to " + target + " (rendezvous=" + rendezvous + ")" );
@@ -673,6 +723,21 @@ GenericMessageConnectionImpl
 						Throwable failure_msg )
 					{
 						reportFailed( failure_msg );
+					}
+					
+					@Override
+					public Object 
+					getConnectionProperty(
+						String property_name)
+					{
+						if ( ph != null ){
+							
+							return( ph.getConnectionProperty( property_name ));
+							
+						}else{
+							
+							return( null );
+						}
 					}
 				});
 	}
