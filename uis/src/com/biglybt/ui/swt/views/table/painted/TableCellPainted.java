@@ -281,7 +281,7 @@ public class TableCellPainted
 	public void redraw() {
 
 		if (tableRow==null || !tableRow.isVisible() || redrawScheduled) {
-			//return;
+			return;
 		}
 		redrawScheduled = true;
 		if (DEBUG_CELLPAINT) {
