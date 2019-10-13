@@ -263,6 +263,13 @@ BEncoder
        		writeChar(':');
             writeByteBuffer(bb);
 
+       }else if( object instanceof Boolean ){
+
+    	   Boolean b = (Boolean)object;
+           //write out the l
+           writeChar('i');
+           writeLong(b?1:0);
+           writeChar('e');
        }else if ( object == null ){
 
     	   	// ideally we'd bork here but I don't want to run the risk of breaking existing stuff so just log
