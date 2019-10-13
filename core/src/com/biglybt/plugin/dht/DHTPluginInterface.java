@@ -59,6 +59,12 @@ DHTPluginInterface
 	public DHTPluginContact
 	getLocalAddress();
 
+	public default DHTPluginContact[]
+	getLocalAddresses()
+	{
+		return( new DHTPluginContact[]{ getLocalAddress() }  );
+	}
+
 	public InetSocketAddress
 	getConnectionOrientedEndpoint();
 	
