@@ -35,8 +35,8 @@ import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
-import com.biglybt.core.disk.impl.resume.RDResumeHandler;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.download.DownloadManagerPieceListener;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
@@ -47,6 +47,7 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
+import com.biglybt.core.peermanager.piecepicker.PiecePickerListener;
 import com.biglybt.core.util.*;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.MenuBuildUtils;
@@ -78,7 +79,7 @@ import com.biglybt.util.MapUtils;
  *
  */
 public class PieceInfoView
-	implements DownloadManagerPieceListener,
+	implements DownloadManagerPieceListener, DownloadManagerPeerListener, PiecePickerListener,
 	UISWTViewCoreEventListener
 {
 	public static final String	KEY_INSTANCE = "PieceInfoView::instance";
@@ -97,6 +98,7 @@ public class PieceInfoView
 	private final static int BLOCKCOLOR_SHOWFILE 	= 5;
 	private final static int BLOCKCOLOR_MERGE_READ	= 6;
 	private final static int BLOCKCOLOR_MERGE_WRITE	= 7;
+	private final static int BLOCKCOLOR_FORCED		= 8;
 
 	public static final String MSGID_PREFIX = "PieceInfoView";
 
@@ -140,7 +142,8 @@ public class PieceInfoView
 	Image img = null;
 
 	private DownloadManager dlm;
-
+	private PiecePicker		current_pp;
+	
 	BlockInfo[] oldBlockInfo;
 
 	/**
@@ -156,7 +159,8 @@ public class PieceInfoView
 			Colors.black,
 			Colors.fadedGreen,
 			Colors.yellow,
-			Colors.grey
+			Colors.grey,
+			Colors.cyan
 		};
 	}
 
@@ -180,10 +184,15 @@ public class PieceInfoView
 		synchronized( this ){
 			if (dlm != null) {
 				dlm.removePieceListener(this);
+				dlm.removePeerListener(this);
+				if ( current_pp != null ){
+					current_pp.removeListener( this );
+				}
 			}
 			dlm = newManager.length == 1 ? newManager[0] : null;
 			if ( dlm != null ){
 				dlm.addPieceListener(this, false);
+				dlm.addPeerListener(this,true);
 			}
 		}
 
@@ -582,6 +591,7 @@ public class PieceInfoView
 					"PeersView.BlockView.ShowFile",
 					"PeersView.BlockView.MergeRead",
 					"PeersView.BlockView.MergeWrite",
+					"PeersView.BlockView.ForcePiece",
 				}, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 2, 1));
 
 		font = FontUtils.getFontPercentOf(pieceInfoCanvas.getFont(), 0.7f);
@@ -782,6 +792,8 @@ public class PieceInfoView
 
 		PEPeerManager pm = dlm.getPeerManager();
 
+		PiecePicker	piecePicker = pm==null?null:pm.getPiecePicker();
+		
 		DiskManager dm = dlm.getDiskManager();
 
 		DiskManagerPiece[] dm_pieces = dm == null ? dlm.getDiskManagerPiecesSnapshot() :  dm.getPieces();
@@ -833,7 +845,7 @@ public class PieceInfoView
 		currentNumPieces = numPieces;
 		
 		PEPiece[] currentDLPieces = pm == null ? null : pm.getPieces();
-		byte[] uploadingPieces = dm_pieces == null ? null :  new byte[dm_pieces.length];
+		byte[] uploadingPieces = new byte[numPieces];
 
 		// find upload pieces
 		if (pm != null && uploadingPieces != null) {
@@ -897,7 +909,7 @@ public class PieceInfoView
 			int	selectionStart 	= Integer.MAX_VALUE;
 			int selectionEnd	= Integer.MIN_VALUE;
 			
-			if ( selectedPiece != -1 & dm_pieces != null ){
+			if ( selectedPiece != -1 ){
 			
 				if ( selectedPieceShowFile ){
 					
@@ -953,8 +965,7 @@ public class PieceInfoView
 
 					int width = BLOCK_FILLSIZE;
 					if (partiallyDone) {
-						int iNewWidth = dm_piece == null ? width / 2
-								: (int) (((float) dm_piece.getNbWritten()
+						int iNewWidth = (int) (((float) dm_piece.getNbWritten()
 										/ dm_piece.getNbBlocks()) * width);
 						if (iNewWidth >= width)
 							iNewWidth = width - 1;
@@ -965,9 +976,18 @@ public class PieceInfoView
 					}
 				}
 
-				if (currentDLPieces != null && currentDLPieces[i] != null
-						&& currentDLPieces[i].hasUndownloadedBlock()) {
-					newInfo.showDown = currentDLPieces[i].getNbRequests() == 0
+				PEPiece pe_piece;
+				
+				if ( currentDLPieces != null ){
+					pe_piece = currentDLPieces[i];
+				}else{
+					pe_piece = null;
+				}
+				
+				newInfo.forced =  piecePicker != null && piecePicker.isForcePiece( i );
+				
+				if (pe_piece != null && pe_piece.hasUndownloadedBlock()) {
+					newInfo.showDown = pe_piece.getNbRequests() == 0
 							? SHOW_SMALL : SHOW_BIG;
 				}
 
@@ -1025,11 +1045,11 @@ public class PieceInfoView
 					gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
 							BLOCK_SIZE);
 	
-					if ( dm_piece != null && dm_piece.isMergeRead()){
+					if ( dm_piece.isMergeRead()){
 						
 						gcImg.setBackground(blockColors[BLOCKCOLOR_MERGE_READ]);
 						
-					}else if ( dm_piece != null && dm_piece.isMergeWrite()){
+					}else if ( dm_piece.isMergeWrite()){
 						
 						gcImg.setBackground(blockColors[BLOCKCOLOR_MERGE_WRITE]);
 						
@@ -1061,7 +1081,13 @@ public class PieceInfoView
 				String availText = availNum==-1?".":(availNum<100?String.valueOf( availNum ):"+");
 				Point size = gcImg.stringExtent(availText);
 
-				if (minAvailability == availNum){
+				if ( newInfo.forced ){
+					
+					gcImg.setForeground(blockColors[ BLOCKCOLOR_FORCED ]);
+					
+					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
+					
+				}else if (minAvailability == availNum){
 					
 					gcImg.setForeground(availCol);
 					
@@ -1221,6 +1247,10 @@ public class PieceInfoView
 		synchronized( this ){
 			if ( dlm != null){
 				dlm.removePieceListener(this);
+				dlm.removePeerListener(this);
+				if ( current_pp != null ){
+					current_pp.removeListener( this );
+				}
 				dlm = null;
 			}
 		}
@@ -1229,6 +1259,18 @@ public class PieceInfoView
 		selectedPiece = -1;
 	}
 
+	@Override
+	public void
+	somethingChanged(
+		PiecePicker	pp,
+		int			thing,
+		Object		data )
+	{	
+		Utils.execSWTThread(() -> {
+			refreshInfoCanvas();
+		});
+	}
+	
 	private void obfuscatedImage(Image image) {
 		UIDebugGenerator.obfuscateArea(image, topLabel.getControl(), "");
 	}
@@ -1245,6 +1287,44 @@ public class PieceInfoView
 		fillPieceInfoSection();
 	}
 
+	public void
+	peerManagerWillBeAdded(
+		PEPeerManager	manager )
+	{
+	}
+
+	public void
+	peerManagerAdded(
+		PEPeerManager	manager )
+	{		
+		PiecePicker pp = manager.getPiecePicker();
+		
+		if ( pp != null ){
+			
+			current_pp = pp;
+			
+			pp.addListener( this );
+		}
+	}
+
+	public void
+	peerManagerRemoved(
+		PEPeerManager	manager )
+	{
+	}
+
+	public void
+	peerAdded(
+		PEPeer 	peer )
+	{
+	}
+
+	public void
+	peerRemoved(
+		PEPeer	peer )
+	{
+	}
+	
 	private static class BlockInfo {
 		public int haveWidth;
 		int availNum;
@@ -1254,6 +1334,7 @@ public class PieceInfoView
 		byte showDown;
 		boolean selectedRange;
 		boolean selected;
+		boolean forced;
 		/**
 		 *
 		 */
@@ -1268,7 +1349,8 @@ public class PieceInfoView
 					&& showDown == otherBlockInfo.showDown
 					&& showUp == otherBlockInfo.showUp 
 					&& selectedRange == otherBlockInfo.selectedRange 
-					&& selected == otherBlockInfo.selected ;
+					&& selected == otherBlockInfo.selected 
+					&& forced == otherBlockInfo.forced;
 		}
 	}
 

@@ -23,19 +23,33 @@ package com.biglybt.core.peermanager.piecepicker;
 public interface
 PiecePickerListener
 {
-	public void
+	public default void
 	providerAdded(
-		PieceRTAProvider	provider );
+		PieceRTAProvider	provider )
+	{}
 
-	public void
+	public default void
 	providerRemoved(
-		PieceRTAProvider	provider );
+		PieceRTAProvider	provider )
+	{}
 
-	public void
+	public default void
 	providerAdded(
-		PiecePriorityProvider	provider );
+		PiecePriorityProvider	provider )
+	{}
 
-	public void
+	public default void
 	providerRemoved(
-		PiecePriorityProvider	provider );
+		PiecePriorityProvider	provider )
+	{}
+	
+	public static final int THING_FORCE_PIECE	= 1;
+		
+	public default void
+	somethingChanged(
+		PiecePicker	pp,
+		int			thing,
+		Object		data )
+	{	
+	}
 }

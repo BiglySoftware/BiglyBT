@@ -77,6 +77,7 @@ public class Colors implements ParameterListener {
   public static Color white;
   public static Color background;
   public static Color red_ConsoleView;
+  public static Color cyan;
 
   private static final AEMonitor	class_mon	= new AEMonitor( "Colors" );
 	public static int diffHue;
@@ -369,6 +370,7 @@ public class Colors implements ParameterListener {
 		white = ColorCache.getColor(display, 255, 255, 255);
 		background = ColorCache.getColor(display, 248, 248, 248);
 		red_ConsoleView = ColorCache.getColor(display, 255, 192, 192);
+		cyan = ColorCache.getColor(display, 0, 255, 255);
 	}
 
   private Display display;

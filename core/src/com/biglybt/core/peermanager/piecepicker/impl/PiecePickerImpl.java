@@ -225,7 +225,7 @@ implements PiecePicker
 	private static boolean		enable_request_hints;
 	private static boolean		includeLanPeersInReqLimiting;
 
-	private final CopyOnWriteList		listeners = new CopyOnWriteList();
+	private final CopyOnWriteList<PiecePickerListener>		listeners = new CopyOnWriteList<>();
 
 	private volatile float[]	fileAvailabilities;
 	private volatile long		fileAvailabilitiesCalcTime;
@@ -3378,6 +3378,20 @@ implements PiecePicker
 				}
 			}
 		}
+		
+		Iterator<PiecePickerListener>	it = listeners.iterator();
+
+		while( it.hasNext()){
+
+			try{
+				((PiecePickerListener)it.next()).somethingChanged( this, PiecePickerListener.THING_FORCE_PIECE, pieceNumber );
+
+			}catch( Throwable e ){
+
+				Debug.printStackTrace(e);
+			}
+		}
+		
 		paramPriorityChange++;
 
 		computeBasePriorities();
