@@ -1085,7 +1085,11 @@ public class PieceInfoView
 					
 					gcImg.setForeground(blockColors[ BLOCKCOLOR_FORCED ]);
 					
-					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
+					gcImg.setLineWidth( 2 );
+					
+					gcImg.drawRectangle(iXPos, iYPos, BLOCK_FILLSIZE, BLOCK_FILLSIZE );
+					
+					gcImg.setLineWidth( 1 );
 					
 				}else if (minAvailability == availNum){
 					
@@ -1339,7 +1343,7 @@ public class PieceInfoView
 		 *
 		 */
 		public BlockInfo() {
-			haveWidth = -1;
+			haveWidth = 0;
 		}
 
 		public boolean sameAs(BlockInfo otherBlockInfo) {
