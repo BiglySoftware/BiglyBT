@@ -525,7 +525,7 @@ public class SBC_LibraryView
 								
 								if ( addExtra ){
 									String id = "library.all.header";
-									if ( extra_total > 1 ) {
+									if ( extra_total != 1 ) {
 										id += ".p";
 									}
 									s += " - " + 
