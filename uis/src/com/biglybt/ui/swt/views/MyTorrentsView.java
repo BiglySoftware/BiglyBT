@@ -207,7 +207,8 @@ public class MyTorrentsView
 	private TableSelectionListener defaultSelectedListener;
 
 	private Composite filterParent;
-
+	private ViewUtils.ViewTitleExtraInfo	vtxi;
+	
 	protected boolean neverShowTagButtons;
 	protected boolean neverShowCatButtons;
 	private boolean	showCatButtons;
@@ -239,6 +240,8 @@ public class MyTorrentsView
 
 	private Runnable rowRemovedRunnable = null;
 
+	private volatile int[]	dmCounts = new int[3];
+	
 	public MyTorrentsView( boolean supportsTabs ) {
 		super("MyTorrentsView");
 		this.supportsTabs = supportsTabs;
@@ -468,8 +471,29 @@ public class MyTorrentsView
 
     createTabs();
 
-    if (txtFilter == null) {
+    if (txtFilter == null){
+    	
     	tv.enableFilterCheck(null, this);
+    	
+    }else if ( filterParent != null ){
+			
+		Object x = filterParent.getData( "ViewUtils:ViewTitleExtraInfo" );
+
+		if ( x instanceof ViewUtils.ViewTitleExtraInfo ){
+			
+			vtxi = (ViewUtils.ViewTitleExtraInfo)x;
+			
+			vtxi.setCountProvider(
+				tv.getComposite(),
+				new ViewUtils.ViewTitleExtraInfo.CountProvider(){
+					
+					@Override
+					public int[] getCounts(){
+						
+						return( dmCounts );
+					}
+				});
+		}
     }
 
     createDragDrop();
@@ -1313,10 +1337,7 @@ public class MyTorrentsView
 
 			@Override
 			public void runSupport() {
-				if (txtFilter != null) {
-					Object x = filterParent.getData( "ViewUtils:ViewTitleExtraInfo" );
-
-					if ( x instanceof ViewUtils.ViewTitleExtraInfo ){
+					if ( vtxi != null ){
 
 						boolean	enabled = filter.length() > 0;
 
@@ -1370,9 +1391,9 @@ public class MyTorrentsView
 							}
 						}
 
-						((ViewUtils.ViewTitleExtraInfo)x).setEnabled( tv.getComposite(), enabled );
+						vtxi.setSearchActive( tv.getComposite(), enabled );
 					}
-				}
+				
 			}
 		});
 	}
@@ -1393,9 +1414,8 @@ public class MyTorrentsView
 	private void swt_viewChanged(final TableView<DownloadManager> view) {
 
 		if ( filterParent != null && !filterParent.isDisposed()){
-			Object x = filterParent.getData( "ViewUtils:ViewTitleExtraInfo" );
 
-			if ( x instanceof ViewUtils.ViewTitleExtraInfo ){
+			if ( vtxi != null){
 
 				TableRowCore[] rows = view.getRows();
 
@@ -1413,7 +1433,7 @@ public class MyTorrentsView
 					}
 				}
 
-				((ViewUtils.ViewTitleExtraInfo)x).update( tv.getComposite(), rows.length, active );
+				vtxi.searchUpdate( tv.getComposite(), rows.length, active );
 			}
 		}
 	}
@@ -2521,6 +2541,10 @@ public class MyTorrentsView
 			  }
 		  });
 	  }
+	  
+	  if (isOurDownloadManager(manager)) {
+		  updateCounts();
+	  }
   }
 
   // DownloadManagerListener
@@ -3289,6 +3313,8 @@ public class MyTorrentsView
     		  	updateSelectedContent();
     		  	refreshTorrentMenu();
     		}
+    		
+    		updateCounts();
 		}
 		//if (getRowDefaultHeight() > 0 && row.getParentRowCore() != null) {
 		//	row.setHeight(20);
@@ -3309,6 +3335,8 @@ public class MyTorrentsView
 			};
 			Utils.execSWTThreadLater(1, rowRemovedRunnable);
 		}
+		
+		updateCounts();
 	}
 
 	@Override
@@ -3380,5 +3408,30 @@ public class MyTorrentsView
 		synchronized( currentTagsLock ){
 			setCurrentTags(_currentTags);
 		}
+	}
+	
+	private void
+	updateCounts()
+	{
+		int active 	= 0;
+		int	queued	= 0;
+		
+		List<DownloadManager> dms = tv.getDataSources();
+		
+		for ( DownloadManager dm: dms ){
+			
+			int state = dm.getState();
+			
+			if ( state == DownloadManager.STATE_DOWNLOADING || state == DownloadManager.STATE_SEEDING ){
+				
+				active++;
+				
+			}else if ( state == DownloadManager.STATE_QUEUED ){
+				
+				queued++;
+			}
+		}
+		
+		dmCounts = new int[]{ dms.size(), active, queued };
 	}
 }

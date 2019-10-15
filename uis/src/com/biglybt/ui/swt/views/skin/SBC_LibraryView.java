@@ -281,8 +281,24 @@ public class SBC_LibraryView
 									new ViewUtils.ViewTitleExtraInfo()
 									{
 										@Override
+										public void 
+										setCountProvider(
+											Composite 		reporter, 
+											CountProvider 	cp)
+										{
+											ExtraInfoProvider	provider = getProvider( reporter );
+
+											if ( provider == null ){
+
+												return;
+											}
+											
+											provider.countProvider = cp;
+										}
+										
+										@Override
 										public void
-										update(
+										searchUpdate(
 											Composite	reporter,
 											int			count,
 											int			active )
@@ -294,12 +310,12 @@ public class SBC_LibraryView
 												return;
 											}
 
-											if ( provider.value != count || provider.active != active ){
+											if ( provider.value != count || provider.active != active){
 
 												provider.value 	= count;
 												provider.active	= active;
-
-												if ( viewMode == provider.view_mode && provider.enabled ){
+												
+												if ( viewMode == provider.view_mode && provider.search_active ){
 
 													SB_Transfers xfers = MainMDISetup.getSb_transfers();
 													
@@ -313,9 +329,9 @@ public class SBC_LibraryView
 
 										@Override
 										public void
-										setEnabled(
+										setSearchActive(
 											Composite	reporter,
-											boolean		enabled )
+											boolean		active )
 										{
 											ExtraInfoProvider	provider = getProvider( reporter );
 
@@ -324,9 +340,9 @@ public class SBC_LibraryView
 												return;
 											}
 
-											if ( provider.enabled != enabled ){
+											if ( provider.search_active != active ){
 
-												provider.enabled = enabled;
+												provider.search_active = active;
 
 												if ( viewMode == provider.view_mode ){
 
@@ -385,12 +401,63 @@ public class SBC_LibraryView
 
 							String s;
 
+							String extra_search = null;
+							
+							int	extra_total 	= 0;
+							int extra_active	= 0;
+							int extra_queued	= 0;
+							
+							synchronized( extra_info_map ){
+
+								int		filter_total 	= 0;
+								int		filter_active	= 0;
+
+								boolean	filter_enabled 	= false;
+
+								for ( ExtraInfoProvider provider: extra_info_map.values()){
+
+									if ( viewMode == provider.view_mode ){
+
+										if ( provider.search_active ){
+
+											filter_enabled = true;
+											filter_total	+= provider.value;
+											filter_active	+= provider.active;
+										}
+										
+										ViewUtils.ViewTitleExtraInfo.CountProvider cp = provider.countProvider;
+										
+										if ( cp != null ){
+											
+											int[]	counts = cp.getCounts();
+											
+											extra_total += counts[0];
+											extra_active += counts[1];
+											extra_queued += counts[2];
+										}
+									}
+								}
+
+								if ( filter_enabled ){
+
+									extra_search =
+										MessageText.getString(
+												"filter.header.matches2",
+												new String[]{ String.valueOf( filter_total ), String.valueOf( filter_active )});
+								}
+							}
+							
+							
+							
+							
 								// seeding and downloading Tag views were changed to filter appropriately
 								// but that broke the header display - fixed by forcing through the 'TORRENTS_ALL'
 								// leg for Tag based views
 
 							if ( torrentFilterMode == TORRENTS_ALL || (datasource instanceof Tag)){
-
+								
+								boolean addExtra = false;
+								
 								if (datasource instanceof Category) {
 									Category cat = (Category) datasource;
 
@@ -403,6 +470,8 @@ public class SBC_LibraryView
 													: cat.getName()
 									});
 
+									addExtra = true;
+									
 								}else if (datasource instanceof Tag) {
 
 									Tag tag = (Tag) datasource;
@@ -420,6 +489,8 @@ public class SBC_LibraryView
 										s += " - " + desc;
 									}
 
+									addExtra = true;
+									
 								}else if (datasource instanceof TagGroup ) {
 									
 									String id = "library.taggroup.header";
@@ -430,6 +501,8 @@ public class SBC_LibraryView
 											new String[] {
 												tg.getName(),
 												String.valueOf( tg.getTags().size())});
+									
+									addExtra= true;
 									
 								} else {
 									String id = "library.all.header";
@@ -447,6 +520,26 @@ public class SBC_LibraryView
 										s += ", " +
 										MessageText.getString(
 												"label.num_queued", new String[]{ String.valueOf( stats.numQueued )});
+									}
+								}
+								
+								if ( addExtra ){
+									String id = "library.all.header";
+									if ( extra_total > 1 ) {
+										id += ".p";
+									}
+									s += " - " + 
+											MessageText.getString(id,
+											new String[] {
+											String.valueOf(extra_total),
+											String.valueOf(extra_active),
+									});
+
+									if ( extra_queued > 0 ){
+
+										s += ", " +
+										MessageText.getString(
+												"label.num_queued", new String[]{ String.valueOf( extra_queued )});
 									}
 								}
 
@@ -477,38 +570,13 @@ public class SBC_LibraryView
 								s = "";
 							}
 
-							synchronized( extra_info_map ){
+							if ( extra_search != null ){
 
-								int		filter_total 	= 0;
-								int		filter_active	= 0;
-
-								boolean	filter_enabled 	= false;
-
-								for ( ExtraInfoProvider provider: extra_info_map.values()){
-
-									if ( viewMode == provider.view_mode ){
-
-										if ( provider.enabled ){
-
-											filter_enabled = true;
-											filter_total	+= provider.value;
-											filter_active	+= provider.active;
-										}
-									}
-								}
-
-								if ( filter_enabled ){
-
-									String extra =
-										MessageText.getString(
-												"filter.header.matches2",
-												new String[]{ String.valueOf( filter_total ), String.valueOf( filter_active )});
-
-									s += " " + extra;
-								}
+								s += " " + extra_search;
 							}
-
+							
 							SB_Transfers transfers = MainMDISetup.getSb_transfers();
+							
 							if ( selection_count > 1 ){
 
 								s += ", " +
@@ -610,11 +678,12 @@ public class SBC_LibraryView
 						class
 						ExtraInfoProvider
 						{
-							int			view_mode;
-							boolean		enabled;
-							int			value;
-							int			active;
-
+							int											view_mode;
+							ViewUtils.ViewTitleExtraInfo.CountProvider	countProvider;
+							boolean										search_active;
+							int											value;
+							int											active;
+							
 							private
 							ExtraInfoProvider(
 								int	vm )

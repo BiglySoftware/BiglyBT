@@ -1026,15 +1026,26 @@ ViewUtils
 	ViewTitleExtraInfo
 	{
 		public void
-		update(
+		setCountProvider(
+			Composite			reporter,
+			CountProvider		cp );
+		
+		public void
+		searchUpdate(
 			Composite	composite,
 			int			count,
 			int			active );
 
 		public void
-		setEnabled(
+		setSearchActive(
 			Composite	composite,
-			boolean		enabled );
+			boolean		active );
 
+		public interface
+		CountProvider
+		{
+			public int[]
+			getCounts();
+		}
 	}
 }
