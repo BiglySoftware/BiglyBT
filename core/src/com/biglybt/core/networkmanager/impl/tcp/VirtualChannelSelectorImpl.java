@@ -338,7 +338,7 @@ public class VirtualChannelSelectorImpl {
         AEDiagnostics.logWithStack( "seltrace", "Selector created for '" + parent.getName() + "'," + selector_guard.getType());
       }
       catch (Throwable t) {
-        Debug.out( "ERROR: caught exception on Selector.open()", t );
+        Debug.out( "ERROR: caught exception on Selector.open() for '" + parent.getName() + "'", t );
 
         try {  Thread.sleep( 3000 );  }catch( Throwable x ) {x.printStackTrace();}
 
@@ -378,11 +378,11 @@ public class VirtualChannelSelectorImpl {
         }
 
         if( fail_count < MAX_TRIES ) { //success !
-          Debug.out( "NOTICE: socket Selector successfully opened after " +fail_count+ " failures." );
+          Debug.out( "NOTICE: socket Selector for '" + parent.getName() + "' successfully opened after " +fail_count+ " failures." );
         }
         else {  //failure
         	Logger.log(new LogAlert(LogAlert.REPEATABLE, LogAlert.AT_ERROR,
-						"ERROR: socket Selector.open() failed " + ( fail_count==1000?"due to timeout": (MAX_TRIES + " times in a row" )) + ", aborting."
+						"ERROR: socket Selector.open() for '" + parent.getName() + "' failed " + ( fail_count==1000?"due to timeout": (MAX_TRIES + " times in a row" )) + ", aborting."
 								+ "\nThis App / Java is likely being firewalled!"));
         }
       }

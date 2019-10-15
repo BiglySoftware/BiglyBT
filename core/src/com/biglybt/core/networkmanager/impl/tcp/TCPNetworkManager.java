@@ -120,9 +120,9 @@ TCPNetworkManager
 	}
 
 	final VirtualChannelSelector read_selector 	=
-			new VirtualChannelSelector( "TCP network manager", VirtualChannelSelector.OP_READ, true );
+			new VirtualChannelSelector( "TCP network manager reader", VirtualChannelSelector.OP_READ, true );
 	final VirtualChannelSelector write_selector =
-			new VirtualChannelSelector( "TCP network manager", VirtualChannelSelector.OP_WRITE, true );
+			new VirtualChannelSelector( "TCP network manager writer", VirtualChannelSelector.OP_WRITE, true );
 
 	private final TCPConnectionManager connect_disconnect_manager = new TCPConnectionManager();
 
