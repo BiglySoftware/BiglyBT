@@ -2008,10 +2008,13 @@ public class SBC_DevicesView
 				DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) ds;
 				listSelected.add(new SelectedContent(fileInfo.getDownloadManager(),
 						fileInfo.getIndex()));
+			}else if ( ds instanceof TranscodeFile ){
+				TranscodeFile tf = (TranscodeFile)ds;
+				
+				listSelected.add( new SelectedContent( tf.getName()));
 			}
 		}
 		SelectedContent[] sc = listSelected.toArray(new SelectedContent[0]);
-		SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),
-				null, tv);
+		SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(), sc, tv);
 	}
 }
