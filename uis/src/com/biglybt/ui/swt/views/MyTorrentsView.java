@@ -23,6 +23,7 @@ package com.biglybt.ui.swt.views;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -241,6 +242,8 @@ public class MyTorrentsView
 	private Runnable rowRemovedRunnable = null;
 
 	private volatile int[]	dmCounts = new int[3];
+	private AtomicInteger	dmCountMutations	= new AtomicInteger(0);
+	private volatile int	dmCountLast			= -1;
 	
 	public MyTorrentsView( boolean supportsTabs ) {
 		super("MyTorrentsView");
@@ -489,6 +492,34 @@ public class MyTorrentsView
 					
 					@Override
 					public int[] getCounts(){
+						
+						int	mut = dmCountMutations.get();
+								
+						if ( mut != dmCountLast ){
+							
+							int active 	= 0;
+							int	queued	= 0;
+							
+							List<DownloadManager> dms = tv.getDataSources();
+							
+							for ( DownloadManager dm: dms ){
+								
+								int state = dm.getState();
+								
+								if ( state == DownloadManager.STATE_DOWNLOADING || state == DownloadManager.STATE_SEEDING ){
+									
+									active++;
+									
+								}else if ( state == DownloadManager.STATE_QUEUED ){
+									
+									queued++;
+								}
+							}
+							
+							dmCounts = new int[]{ dms.size(), active, queued };
+							
+							dmCountLast = mut;
+						}
 						
 						return( dmCounts );
 					}
@@ -2543,7 +2574,7 @@ public class MyTorrentsView
 	  }
 	  
 	  if (isOurDownloadManager(manager)) {
-		  updateCounts();
+		  dmCountMutations.incrementAndGet();
 	  }
   }
 
@@ -3314,7 +3345,7 @@ public class MyTorrentsView
     		  	refreshTorrentMenu();
     		}
     		
-    		updateCounts();
+    		dmCountMutations.incrementAndGet();
 		}
 		//if (getRowDefaultHeight() > 0 && row.getParentRowCore() != null) {
 		//	row.setHeight(20);
@@ -3336,7 +3367,7 @@ public class MyTorrentsView
 			Utils.execSWTThreadLater(1, rowRemovedRunnable);
 		}
 		
-		updateCounts();
+		dmCountMutations.incrementAndGet();
 	}
 
 	@Override
@@ -3408,30 +3439,5 @@ public class MyTorrentsView
 		synchronized( currentTagsLock ){
 			setCurrentTags(_currentTags);
 		}
-	}
-	
-	private void
-	updateCounts()
-	{
-		int active 	= 0;
-		int	queued	= 0;
-		
-		List<DownloadManager> dms = tv.getDataSources();
-		
-		for ( DownloadManager dm: dms ){
-			
-			int state = dm.getState();
-			
-			if ( state == DownloadManager.STATE_DOWNLOADING || state == DownloadManager.STATE_SEEDING ){
-				
-				active++;
-				
-			}else if ( state == DownloadManager.STATE_QUEUED ){
-				
-				queued++;
-			}
-		}
-		
-		dmCounts = new int[]{ dms.size(), active, queued };
 	}
 }
