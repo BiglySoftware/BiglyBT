@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.biglybt</groupId>
 	<artifactId>biglybt-parent</artifactId>
-	<version>2.0.0.1-SNAPSHOT</version>
+	<version>2.1.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>BiglyBT - Parent</name>
 
@@ -147,7 +147,7 @@
 				<plugin>
 					<groupId>io.takari.maven.plugins</groupId>
 					<artifactId>takari-lifecycle-plugin</artifactId>
-					<version>1.12.6</version>
+					<version>1.13.9</version>
 					<extensions>true</extensions>
 					<configuration>
 						<source>${java.version}</source>
@@ -167,7 +167,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-shade-plugin</artifactId>
-					<version>3.0.0</version>
+					<version>3.2.1</version>
 				</plugin>
 				<!-- JUnit 5 requires Surefire version 2.22.1 or higher -->
 				<plugin>
@@ -187,6 +187,10 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<prerequisites>
+		<maven>3.0.9</maven>
+	</prerequisites>
 
 	<scm>
 		<connection>scm:git:git@github.com:BiglySoftware/BiglyBT.git</connection>
