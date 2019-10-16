@@ -888,6 +888,11 @@ TRTrackerServerProcessorTCP
 		}else if (	apply_torrent_password ||
 					apply_web_password ){
 
+			if ( !url_path.startsWith( "/" )){
+				
+				url_path = "/" + url_path;
+			}
+			
 			int	x = header.indexOf( "Authorization:" );
 
 			if ( x == -1 ){
