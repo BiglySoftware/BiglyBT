@@ -2004,18 +2004,27 @@ public class Utils
 	private static class ShellMetricsResizeListener
 		implements Listener
 	{
-		private int state = -1;
+		final private String sConfigPrefix;
 
-		private String sConfigPrefix;
+		private int 		currentState 	= -1;
+		private Rectangle 	currentBounds 	= null;
 
-		private Rectangle bounds = null;
+		private int 		savedState;
+		private Rectangle 	savedBounds;
 
 		ShellMetricsResizeListener(Shell shell, String sConfigPrefix) {
 			this.sConfigPrefix = sConfigPrefix;
-			state = calcState(shell);
-			if (state == SWT.NONE)
-				bounds = shell.getBounds();
+			currentState = calcState(shell);
+			if (currentState == SWT.NONE){
+				currentBounds = shell.getBounds();
+			}
+			if ( currentBounds == null ){
+				currentBounds = new Rectangle(0,0,0,0);
+			}
 
+			savedState = currentState;
+			savedBounds = currentBounds;
+			
 			shell.addListener(SWT.Resize, this);
 			shell.addListener(SWT.Move, this);
 			shell.addListener(SWT.Dispose, this);
@@ -2025,29 +2034,46 @@ public class Utils
 			return shell.getMinimized() ? SWT.MIN : shell.getMaximized() ? SWT.MAX : SWT.NONE;
 		}
 
-		private void saveMetrics() {
-			COConfigurationManager.setParameter(sConfigPrefix + ".maximized",
-					state == SWT.MAX);
-
-			if (bounds == null)
-				return;
-
-			COConfigurationManager.setParameter(sConfigPrefix + ".rectangle",
-					bounds.x + "," + bounds.y + "," + bounds.width + "," + bounds.height);
-
-			COConfigurationManager.save();
-		}
-
 		@Override
 		public void handleEvent(Event event) {
 			Shell shell = (Shell) event.widget;
-			state = calcState(shell);
+			
+			currentState = calcState(shell);
 
-			if (event.type != SWT.Dispose && state == SWT.NONE)
-				bounds = shell.getBounds();
+			if (event.type != SWT.Dispose && currentState == SWT.NONE){
+				currentBounds = shell.getBounds();
+				if ( currentBounds == null ){
+					currentBounds = new Rectangle(0,0,0,0);
+				}
+			}
+			
+			boolean	changed = false;
+			
+			if ( currentState != savedState ){
+				
+				COConfigurationManager.setParameter(sConfigPrefix + ".maximized", currentState == SWT.MAX);
+				
+				savedState = currentState;
+				
+				changed = true;
+			}
+			
+			if ( !currentBounds.equals( savedBounds)){
 
-			if (event.type == SWT.Dispose) {
-				saveMetrics();
+				if (currentBounds.width > 0  && currentBounds.height > 0 ){
+				
+					COConfigurationManager.setParameter(sConfigPrefix + ".rectangle",
+							currentBounds.x + "," + currentBounds.y + "," + currentBounds.width + "," + currentBounds.height);
+					
+					savedBounds = currentBounds;
+					
+					changed = true;
+				}
+			}
+			
+			if ( changed ){
+					
+				COConfigurationManager.setDirty();
 			}
 		}
 	}
