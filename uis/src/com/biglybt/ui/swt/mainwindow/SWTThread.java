@@ -315,7 +315,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 					// handle any scrolling or refreshing itself.
 					if (cursorControl instanceof Scrollable) {
 						ScrollBar verticalBar = ((Scrollable) cursorControl).getVerticalBar();
-						if (verticalBar != null
+						if (verticalBar != null && verticalBar.isEnabled()
 								&& verticalBar.getData("ScrollOnMouseOver") != null) {
 							int oldPos = verticalBar.getSelection();
 							int newPos = oldPos - (verticalBar.getIncrement() * e.count);
