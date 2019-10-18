@@ -500,304 +500,307 @@ XferStatsPanel
 
 		GC gc = new GC(img);
 
-		gc.setAdvanced( true );
-
-		gc.setAntialias( SWT.ON );
-		gc.setTextAntialias( SWT.ON );
-
-		Color white = ColorCache.getColor(display,255,255,255);
-		gc.setForeground(white);
-		gc.setBackground(white);
-		gc.fillRectangle(size);
-
-		if ( my_stats == null ){
-			
-			return;
-		}
-		
-		gc.setForeground(Colors.black);
-
-		flag_width	= scale.getReverseWidth( 25 );
-		flag_height	= scale.getReverseHeight( 15 );
-			
-		Point text_extent = gc.textExtent( "1234567890" + DisplayFormatters.formatByteCountToKiBEtcPerSec( 1024));
-		
-		text_height = scale.getReverseHeight( text_extent.y );
-
-		currentPositions.clear();
-		
-		latest_sequence = my_stats.getSequence();
-		
-		if ( header_label != null ){
-			float samples 		= my_stats.getSamples();
-			float population	= my_stats.getEstimatedPopulation();
-			
-			long received 	= my_stats.getLatestReceived();
-			long sent		= my_stats.getLatestSent();
-			
-			String throughput;
-			
-			if ( samples > 0 && population > 0 ){
+		try{
+			gc.setAdvanced( true );
+	
+			gc.setAntialias( SWT.ON );
+			gc.setTextAntialias( SWT.ON );
+	
+			Color white = ColorCache.getColor(display,255,255,255);
+			gc.setForeground(white);
+			gc.setBackground(white);
+			gc.fillRectangle(size);
+	
+			if ( my_stats == null ){
 				
-				tp_ratio = population/samples;
-				
-				throughput =  DisplayFormatters.formatByteCountToKiBEtcPerSec((long)(tp_ratio*(received+sent)/60));
-				
-			}else{
-				
-				tp_ratio = 0;
-				
-				throughput = "";
+				return;
 			}
 			
-			String header = MessageText.getString(
-								"XferStatsView.header",
-								new String[]{
-									String.valueOf( (int)samples ),
-									String.valueOf( (int)population ),
-									throughput
-								});
+			gc.setForeground(Colors.black);
+	
+			flag_width	= scale.getReverseWidth( 25 );
+			flag_height	= scale.getReverseHeight( 15 );
+				
+			Point text_extent = gc.textExtent( "1234567890" + DisplayFormatters.formatByteCountToKiBEtcPerSec( 1024));
 			
-			header_label.setText( header );
-		}
-		
-		Map<String,Map<String,long[]>> stats = my_stats.getStats();
-						
-		List<Node> 			origins 	= new ArrayList<>();
-		
-		Map<String,Node>	dest_recv_map 	= new HashMap<>();
-		Map<String,Node>	dest_sent_map 	= new HashMap<>();
-		
-		
-		for ( Map.Entry<String,Map<String,long[]>> entry: stats.entrySet()){
+			text_height = scale.getReverseHeight( text_extent.y );
+	
+			currentPositions.clear();
+			
+			latest_sequence = my_stats.getSequence();
+			
+			if ( header_label != null ){
+				float samples 		= my_stats.getSamples();
+				float population	= my_stats.getEstimatedPopulation();
+				
+				long received 	= my_stats.getLatestReceived();
+				long sent		= my_stats.getLatestSent();
+				
+				String throughput;
+				
+				if ( samples > 0 && population > 0 ){
 					
-			String from_cc = entry.getKey();
+					tp_ratio = population/samples;
+					
+					throughput =  DisplayFormatters.formatByteCountToKiBEtcPerSec((long)(tp_ratio*(received+sent)/60));
+					
+				}else{
+					
+					tp_ratio = 0;
+					
+					throughput = "";
+				}
 				
-			if ( from_cc.isEmpty()){
+				String header = MessageText.getString(
+									"XferStatsView.header",
+									new String[]{
+										String.valueOf( (int)samples ),
+										String.valueOf( (int)population ),
+										throughput
+									});
 				
-				continue;
+				header_label.setText( header );
 			}
 			
-			Node from_node 	= new Node( 0 );
+			Map<String,Map<String,long[]>> stats = my_stats.getStats();
+							
+			List<Node> 			origins 	= new ArrayList<>();
 			
-			origins.add( from_node );
+			Map<String,Node>	dest_recv_map 	= new HashMap<>();
+			Map<String,Node>	dest_sent_map 	= new HashMap<>();
 			
-			Image from_image = ImageRepository.getCountryFlag( from_cc, false );
-
-			from_node.cc		= from_cc;
-			from_node.image		= from_image;
-			from_node.links		= new LinkedList<>();
 			
-			for ( Map.Entry<String,long[]>	entry2: entry.getValue().entrySet()){
-				
-				String 	to_cc 		= entry2.getKey();
-				
-				if ( to_cc.isEmpty()){
+			for ( Map.Entry<String,Map<String,long[]>> entry: stats.entrySet()){
+						
+				String from_cc = entry.getKey();
+					
+				if ( from_cc.isEmpty()){
 					
 					continue;
 				}
 				
-				long[]	to_counts	= entry2.getValue();
+				Node from_node 	= new Node( 0 );
 				
-				long	to_recv = to_counts[0];
-				long	to_sent = to_counts[1];
+				origins.add( from_node );
 				
-				Image to_image = ImageRepository.getCountryFlag( to_cc, false );
-
-				if ( to_recv > 0 ){
-					
-					Node	to_node = dest_recv_map.get( to_cc );
-					
-					if ( to_node == null ){
-						
-						to_node = new Node( 1 );
-						
-						dest_recv_map.put( to_cc,  to_node );
-							
-						to_node.cc		= to_cc;
-						to_node.image	= to_image;
-					}
-					
-					from_node.count_recv += to_recv;
-					to_node.count_recv += to_recv;
-					
-					Link link = new Link( from_node, to_node, to_recv, false );
-										
-					from_node.links.add( link );
-				}
-				
-				if ( to_sent > 0 ){
-					
-					Node	to_node = dest_sent_map.get( to_cc );
-					
-					if ( to_node == null ){
-						
-						to_node = new Node( 2 );
-						
-						dest_sent_map.put( to_cc,  to_node );
-							
-						to_node.cc		= to_cc;
-						to_node.image	= to_image;
-					}
-					
-					from_node.count_sent += to_sent;
-					to_node.count_sent += to_sent;
-					
-					Link link = new Link( from_node, to_node, to_sent, true );
-										
-					from_node.links.add( link );
-				}
-			}
-		}
-				
-		List<Node>	dests_recv = new ArrayList<>( dest_recv_map.values());
-		List<Node>	dests_sent = new ArrayList<>( dest_sent_map.values());
-		
-		float	lhs = scale.minX;
-		float	rhs = scale.maxX - flag_width -10;
-			
-		for ( int i=0;i<3;i++){
-			
-			int flag_x 	= (int)( -1000 + scale.getReverseHeight( 5 ));
-			
-			int 		flag_y;
-			List<Node>	nodes;
-			boolean		odd;
-			
-			if ( i == 0 ){
-				
-				nodes 	= dests_recv;
-				flag_y	= (int)( -1000 + text_height );
-				odd		= false;
-				
-			}else if ( i == 1 ){
-								
-				nodes 	= dests_sent;
-				flag_y	= (int)( 1000 - flag_height - text_height - scale.getReverseHeight( 5 ));
-				odd		= true;
-				
-			}else{
-				
-				nodes 	= origins;
-				flag_y	= -flag_height/2;
-				odd		= true;
-			}
+				Image from_image = ImageRepository.getCountryFlag( from_cc, false );
 	
-			Collections.sort(
-				nodes,
-				new Comparator<Node>()
-				{
-					@Override
-					public int compare(Node o1, Node o2){
-						return( Long.compare(o2.count_recv+o2.count_sent, o1.count_recv+o1.count_sent ));
+				from_node.cc		= from_cc;
+				from_node.image		= from_image;
+				from_node.links		= new LinkedList<>();
+				
+				for ( Map.Entry<String,long[]>	entry2: entry.getValue().entrySet()){
+					
+					String 	to_cc 		= entry2.getKey();
+					
+					if ( to_cc.isEmpty()){
+						
+						continue;
 					}
-				});
-
-			int		max_flags = (int)(( rhs - lhs ) / ( 2 * flag_width ));
-			
-			int	pad;
-			
-			if ( nodes.size() >= max_flags ){
-				
-				pad = 0;
-				
-			}else{
-			
-				pad = (int)((( rhs - lhs) - nodes.size() * 2 * flag_width ) / 2 );
-			}
-			
-			for ( Node node: nodes ){
-				
-				node.x_pos	= flag_x + pad;
-				node.y_pos	= flag_y;
+					
+					long[]	to_counts	= entry2.getValue();
+					
+					long	to_recv = to_counts[0];
+					long	to_sent = to_counts[1];
+					
+					Image to_image = ImageRepository.getCountryFlag( to_cc, false );
+	
+					if ( to_recv > 0 ){
+						
+						Node	to_node = dest_recv_map.get( to_cc );
+						
+						if ( to_node == null ){
 							
-				if ( 	node.x_pos > rhs || 
-						node.x_pos < lhs ){
+							to_node = new Node( 1 );
+							
+							dest_recv_map.put( to_cc,  to_node );
+								
+							to_node.cc		= to_cc;
+							to_node.image	= to_image;
+						}
+						
+						from_node.count_recv += to_recv;
+						to_node.count_recv += to_recv;
+						
+						Link link = new Link( from_node, to_node, to_recv, false );
+											
+						from_node.links.add( link );
+					}
 					
-					node.hidden = true;
+					if ( to_sent > 0 ){
+						
+						Node	to_node = dest_sent_map.get( to_cc );
+						
+						if ( to_node == null ){
+							
+							to_node = new Node( 2 );
+							
+							dest_sent_map.put( to_cc,  to_node );
+								
+							to_node.cc		= to_cc;
+							to_node.image	= to_image;
+						}
+						
+						from_node.count_sent += to_sent;
+						to_node.count_sent += to_sent;
+						
+						Link link = new Link( from_node, to_node, to_sent, true );
+											
+						from_node.links.add( link );
+					}
+				}
+			}
 					
-					flag_x += flag_width;
+			List<Node>	dests_recv = new ArrayList<>( dest_recv_map.values());
+			List<Node>	dests_sent = new ArrayList<>( dest_sent_map.values());
+			
+			float	lhs = scale.minX;
+			float	rhs = scale.maxX - flag_width -10;
+				
+			for ( int i=0;i<3;i++){
+				
+				int flag_x 	= (int)( -1000 + scale.getReverseHeight( 5 ));
+				
+				int 		flag_y;
+				List<Node>	nodes;
+				boolean		odd;
+				
+				if ( i == 0 ){
+					
+					nodes 	= dests_recv;
+					flag_y	= (int)( -1000 + text_height );
+					odd		= false;
+					
+				}else if ( i == 1 ){
 									
+					nodes 	= dests_sent;
+					flag_y	= (int)( 1000 - flag_height - text_height - scale.getReverseHeight( 5 ));
+					odd		= true;
+					
 				}else{
-													
-					flag_x += flag_width * 2;
+					
+					nodes 	= origins;
+					flag_y	= -flag_height/2;
+					odd		= true;
 				}
-			}
+		
+				Collections.sort(
+					nodes,
+					new Comparator<Node>()
+					{
+						@Override
+						public int compare(Node o1, Node o2){
+							return( Long.compare(o2.count_recv+o2.count_sent, o1.count_recv+o1.count_sent ));
+						}
+					});
 	
-			boolean draw_links = nodes == origins;
+				int		max_flags = (int)(( rhs - lhs ) / ( 2 * flag_width ));
 				
-			List<Link>	hup_links 	= new ArrayList<>( 1024 );
-			List<Link>	hdown_links = new ArrayList<>( 1024 );
-			
-			for ( Node node: nodes ){
-	
-				if ( !node.hidden ){
-								
-					node.draw( gc, odd  );
+				int	pad;
+				
+				if ( nodes.size() >= max_flags ){
 					
-					odd = !odd;
+					pad = 0;
 					
-					if ( draw_links ){
+				}else{
+				
+					pad = (int)((( rhs - lhs) - nodes.size() * 2 * flag_width ) / 2 );
+				}
+				
+				for ( Node node: nodes ){
+					
+					node.x_pos	= flag_x + pad;
+					node.y_pos	= flag_y;
 								
-						for ( Link link: node.links ){
-							
-							if ( link.isVisible()){
-							
-								if ( link.draw( gc )){
+					if ( 	node.x_pos > rhs || 
+							node.x_pos < lhs ){
+						
+						node.hidden = true;
+						
+						flag_x += flag_width;
+										
+					}else{
+														
+						flag_x += flag_width * 2;
+					}
+				}
+		
+				boolean draw_links = nodes == origins;
+					
+				List<Link>	hup_links 	= new ArrayList<>( 1024 );
+				List<Link>	hdown_links = new ArrayList<>( 1024 );
+				
+				for ( Node node: nodes ){
+		
+					if ( !node.hidden ){
 									
-									if ( link.upload ){
+						node.draw( gc, odd  );
+						
+						odd = !odd;
+						
+						if ( draw_links ){
+									
+							for ( Link link: node.links ){
+								
+								if ( link.isVisible()){
+								
+									if ( link.draw( gc )){
 										
-										hup_links.add( link );
-										
-									}else{
-										
-										hdown_links.add( link );
+										if ( link.upload ){
+											
+											hup_links.add( link );
+											
+										}else{
+											
+											hdown_links.add( link );
+										}
 									}
 								}
 							}
 						}
 					}
 				}
-			}
-			
-			if ( !( hup_links.isEmpty() && hdown_links.isEmpty())){
 				
-				Comparator<Link>	comp = new Comparator<XferStatsPanel.Link>(){
+				if ( !( hup_links.isEmpty() && hdown_links.isEmpty())){
 					
-					@Override
-					public int compare(Link o1, Link o2){
+					Comparator<Link>	comp = new Comparator<XferStatsPanel.Link>(){
 						
-						int diff = o1.target.x_pos -  o2.target.x_pos;
-						
-						if ( diff == 0 ){
+						@Override
+						public int compare(Link o1, Link o2){
 							
-							diff = o1.source.x_pos - o2.source.x_pos;
+							int diff = o1.target.x_pos -  o2.target.x_pos;
+							
+							if ( diff == 0 ){
+								
+								diff = o1.source.x_pos - o2.source.x_pos;
+							}
+							
+							return( diff );
 						}
+					};
+					
+					Collections.sort( hup_links, comp );
+					Collections.sort( hdown_links, comp );
+					
+					int	pos = 0;
+					
+					for ( Link link: hup_links ){
 						
-						return( diff );
+						link.drawCount(gc, pos++);
 					}
-				};
-				
-				Collections.sort( hup_links, comp );
-				Collections.sort( hdown_links, comp );
-				
-				int	pos = 0;
-				
-				for ( Link link: hup_links ){
 					
-					link.drawCount(gc, pos++);
-				}
-				
-				pos = 0;
-				
-				for ( Link link: hdown_links ){
+					pos = 0;
 					
-					link.drawCount(gc, pos++);
+					for ( Link link: hdown_links ){
+						
+						link.drawCount(gc, pos++);
+					}
 				}
 			}
+		}finally{
+			
+			gc.dispose();
 		}
-		
-		gc.dispose();
 
 		canvas.redraw();
 	}
@@ -954,6 +957,11 @@ XferStatsPanel
 			int y_diff = xy2[1] - xy1[1];
 
 			int room 	= Math.abs( y2-y1 )/text_height;
+			
+			if ( room == 0 ){
+				
+				room = 1;
+			}
 			
 			float x_chunk = (float)x_diff/room;
 			float y_chunk = (float)y_diff/room;
