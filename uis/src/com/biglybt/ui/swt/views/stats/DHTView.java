@@ -34,6 +34,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.components.graphics.PingGraphic;
 import com.biglybt.ui.swt.components.graphics.SpeedGraphic;
@@ -89,6 +90,7 @@ public class DHTView
   Label lblLocal,lblDirect,lblIndirect;
   Label lblDivFreq,lblDivSize;
 
+  BufferedLabel lblTransportAddress;
   Label lblReceivedPackets,lblReceivedBytes;
   Label lblSentPackets,lblSentBytes;
 
@@ -388,6 +390,12 @@ public class DHTView
     gTransport.setLayout(layout);
 
 
+    lblTransportAddress = new BufferedLabel(gTransport,SWT.DOUBLE_BUFFERED);
+    data = new GridData(SWT.FILL,SWT.TOP,true,false);
+    data.horizontalSpan = 3;
+    lblTransportAddress.setLayoutData(data);
+
+    
     Label label = new Label(gTransport,SWT.NONE);
 
     label = new Label(gTransport,SWT.NONE);
@@ -740,6 +748,7 @@ public class DHTView
 
   private void refreshTransportDetails() {
     DHTTransportStats   transportStats = dht.getTransport().getStats();
+    lblTransportAddress.setText( AddressUtils.getHostAddress( dht.getTransport().getLocalContact().getExternalAddress()));
     lblReceivedBytes.setText(DisplayFormatters.formatByteCountToKiBEtc(transportStats.getBytesReceived()));
     lblSentBytes.setText(DisplayFormatters.formatByteCountToKiBEtc(transportStats.getBytesSent()));
     lblReceivedPackets.setText("" + transportStats.getPacketsReceived());
