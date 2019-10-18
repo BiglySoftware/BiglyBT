@@ -2144,9 +2144,9 @@ public class MyTorrentsView
       return;
     }
 
-    TableColumnCore sortColumn = tv.getSortColumn();
-    boolean isSortAscending = sortColumn == null ? true
-				: sortColumn.isSortAscending();
+    TableColumnCore[] sortColumn = tv.getSortColumns();
+		boolean isSortAscending = sortColumn.length == 0
+				|| sortColumn[0].isSortAscending();
 
     for (int i = 0; i < rows.length; i++) {
 			TableRowCore row = rows[i];
@@ -2166,9 +2166,7 @@ public class MyTorrentsView
       }
     }
 
-    boolean bForceSort = sortColumn == null ? false : sortColumn.getName().equals("#");
-    tv.columnInvalidate("#");
-    tv.refreshTable(bForceSort);
+	  columnInvalidateAfterMove();
   }
 
   // @see TableRefreshListener#tableRefresh()
@@ -2323,9 +2321,7 @@ public class MyTorrentsView
       }
     }
 
-    boolean bForceSort = tv.getSortColumn().getName().equals("#");
-    tv.columnInvalidate("#");
-    tv.refreshTable(bForceSort);
+	  columnInvalidateAfterMove();
   }
 
   private void moveSelectedTorrentsUp() {
@@ -2344,9 +2340,7 @@ public class MyTorrentsView
       }
     }
 
-    boolean bForceSort = tv.getSortColumn().getName().equals("#");
-    tv.columnInvalidate("#");
-    tv.refreshTable(bForceSort);
+	  columnInvalidateAfterMove();
   }
 
 	private void moveSelectedTorrents(int by) {
@@ -2391,12 +2385,21 @@ public class MyTorrentsView
 			globalManager.moveTo(dm, newPositions[i]);
 		}
 
-    boolean bForceSort = tv.getSortColumn().getName().equals("#");
-    tv.columnInvalidate("#");
-    tv.refreshTable(bForceSort);
+		columnInvalidateAfterMove();
 	}
 
-  private void moveSelectedTorrentsTop() {
+	private void columnInvalidateAfterMove() {
+		if (tv == null) {
+			return;
+		}
+		TableColumnCore[] sortColumn = tv.getSortColumns();
+		boolean bForceSort = sortColumn.length != 0
+			&& "#".equals(sortColumn[0].getName());
+		tv.columnInvalidate("#");
+		tv.refreshTable(bForceSort);
+	}
+
+	private void moveSelectedTorrentsTop() {
     moveSelectedTorrentsTopOrEnd(true);
   }
 
@@ -2414,11 +2417,7 @@ public class MyTorrentsView
     else
       globalManager.moveEnd(dms);
 
-    boolean bForceSort = tv.getSortColumn().getName().equals("#");
-    if (bForceSort) {
-    	tv.columnInvalidate("#");
-    	tv.refreshTable(bForceSort);
-    }
+	  columnInvalidateAfterMove();
   }
 
   /**

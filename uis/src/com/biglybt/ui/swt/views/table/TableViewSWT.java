@@ -243,8 +243,6 @@ public interface TableViewSWT<DATASOURCETYPE>
 	void triggerDefaultSelectedListeners(TableRowCore[] selectedRows,
 			int stateMask, int origin );
 
-	void sortColumn(boolean bForceDataRefresh);
-
 	void openFilterDialog();
 
 	boolean isSingleSelection();

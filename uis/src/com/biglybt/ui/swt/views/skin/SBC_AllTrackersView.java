@@ -1306,10 +1306,10 @@ public class SBC_AllTrackersView
 						
 							// need this crap to allow the sort column to pick up invisible changes and resort appropriately :(
 						
-						TableCellCore cell = row.getSortColumnCell( null );
-						
-						if ( cell != null ){
-							
+						TableCellCore[] cells = row.getSortColumnCells( null );
+
+						for (TableCellCore cell : cells) {
+
 							cell.invalidate( true );
 							
 							cell.refresh( true );

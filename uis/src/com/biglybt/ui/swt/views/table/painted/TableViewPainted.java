@@ -115,10 +115,8 @@ public class TableViewPainted
 	 */
 	LinkedHashSet<TableRowPainted> visibleRows = new LinkedHashSet<>();
 
-	private Object lock = new Object();
-
 	//Object visibleRows_sync = new Object();	// got a deadlock between this and lock when separate so consolidated
-	private Object visibleRows_sync = lock;
+	private final Object visibleRows_sync;
 
 	/**
 	 * Up to date table client area.  So far, the best places to refresh
@@ -278,8 +276,9 @@ public class TableViewPainted
 	public TableViewPainted(Class<?> pluginDataSourceType, String _sTableID,
 			String _sPropertiesPrefix, TableColumnCore[] _basicItems,
 			String _sDefaultSortOn, int _iTableStyle) {
-		super(pluginDataSourceType, _sTableID, _sPropertiesPrefix, _basicItems);
-		setRowsSync(lock);
+		super(pluginDataSourceType, _sTableID, _sPropertiesPrefix, new Object(),
+				_basicItems);
+		visibleRows_sync = getRowsSync();
 		//		boolean wantTree = (_iTableStyle & SWT.CASCADE) != 0;
 		//		_iTableStyle &= ~SWT.CASCADE;
 		//		if (wantTree) {
@@ -815,7 +814,7 @@ public class TableViewPainted
 			return( true );
 		}
 		
-		sortColumn( true );
+		sortRows( true );
 		
 		if ( lastMC != mutationCount.get()){
 			
@@ -835,12 +834,9 @@ public class TableViewPainted
 		long lStart = SystemTime.getCurrentTime();
 		super.refreshTable(bForceSort);
 
-		Utils.execSWTThread(new SWTRunnable() {
-			@Override
-			public void runWithDisplay(Display display) {
-				// call to trigger invalidation if visibility changes
-				isVisible();
-			}
+		Utils.execSWTThread((RunnableIfDisplay) display -> {
+			// call to trigger invalidation if visibility changes
+			isVisible();
 		});
 		final boolean bDoGraphics = (loopFactor % graphicsUpdate) == 0;
 		final boolean bWillSort = bForceSort || (reOrderDelay != 0)
@@ -848,10 +844,12 @@ public class TableViewPainted
 		//System.out.println("Refresh.. WillSort? " + bWillSort);
 
 		if (bWillSort) {
-			TableColumnCore sortColumn = getSortColumn();
-			if (bForceSort && sortColumn != null) {
+			TableColumnCore[] sortColumns = getSortColumns();
+			if (bForceSort && sortColumns.length > 0) {
 				resetLastSortedOn();
-				sortColumn.setLastSortValueChange(SystemTime.getCurrentTime());
+				for (TableColumnCore sortColumn : sortColumns) {
+					sortColumn.setLastSortValueChange(SystemTime.getCurrentTime());
+				}
 			}
 			_sortColumn(true, false, false);
 		}
@@ -1130,18 +1128,23 @@ public class TableViewPainted
 	public void sortOrderChanged(){
 		TableColumnManager tcManager = TableColumnManager.getInstance();
 
-		String sSortColumn = tcManager.getDefaultSortColumnName(tableID);
-		if (sSortColumn == null || sSortColumn.length() == 0) {
-			sSortColumn = sDefaultSortOn;
+		String[] sortColumnNames = tcManager.getDefaultSortColumnNames(tableID);
+		if (sortColumnNames.length == 0) {
+			sortColumnNames = new String[] { sDefaultSortOn };
 		}
 
 		TableColumnCore[] tableColumns = getAllColumns();
 		
-		TableColumnCore tc = tcManager.getTableColumnCore(tableID, sSortColumn);
-		if (tc == null && tableColumns.length > 0) {
-			tc = tableColumns[0];
+		TableColumnCore[] sortColumns = new TableColumnCore[sortColumnNames.length];
+		for (int i = 0; i < sortColumnNames.length; i++) {
+			String sortColumnName = sortColumnNames[i];
+			TableColumnCore tc = tcManager.getTableColumnCore(tableID, sortColumnName);
+			if (tc == null && tableColumns.length > 0) {
+				tc = tableColumns[0];
+			}
+			sortColumns[i] = tc;
 		}
-		setSortColumn(tc, false);		
+		setSortColumns(sortColumns, false);		
 	}
 
 	/* (non-Javadoc)
@@ -1519,16 +1522,21 @@ public class TableViewPainted
 
 		TableColumnManager tcManager = TableColumnManager.getInstance();
 
-		String sSortColumn = tcManager.getDefaultSortColumnName(tableID);
-		if (sSortColumn == null || sSortColumn.length() == 0) {
-			sSortColumn = sDefaultSortOn;
+		String[] sortColumnNames = tcManager.getDefaultSortColumnNames(tableID);
+		if (sortColumnNames.length == 0) {
+			sortColumnNames = new String[] { sDefaultSortOn };
 		}
 
-		TableColumnCore tc = tcManager.getTableColumnCore(tableID, sSortColumn);
-		if (tc == null && tableColumns.length > 0) {
-			tc = tableColumns[0];
+		TableColumnCore[] sortColumns = new TableColumnCore[sortColumnNames.length];
+		for (int i = 0; i < sortColumnNames.length; i++) {
+			String sortColumnName = sortColumnNames[i];
+			TableColumnCore tc = tcManager.getTableColumnCore(tableID, sortColumnName);
+			if (tc == null && tableColumns.length > 0) {
+				tc = tableColumns[0];
+			}
+			sortColumns[i] = tc;
 		}
-		setSortColumn(tc, false);
+		setSortColumns(sortColumns, false);
 
 		triggerLifeCycleListener(TableLifeCycleListener.EVENT_TABLELIFECYCLE_INITIALIZED);
 
@@ -2864,10 +2872,6 @@ public class TableViewPainted
 		}
 
 		TableStructureEventDispatcher.getInstance(tableID).removeListener(this);
-		TableColumnManager tcManager = TableColumnManager.getInstance();
-		if (tcManager != null) {
-			tcManager.saveTableColumns(getDataSourceType(), tableID);
-		}
 
 		if (!Utils.isDisplayDisposed()) {
 			Utils.disposeSWTObjects(new Object[] {
@@ -3246,7 +3250,7 @@ public class TableViewPainted
 	}
 
 	public Object getSyncObject() {
-		return lock;
+		return visibleRows_sync;
 	}
 
 	@Override

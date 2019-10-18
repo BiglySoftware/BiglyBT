@@ -22,16 +22,20 @@ package com.biglybt.ui.common.table.impl;
 
 import java.util.*;
 
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.download.Download;
-import com.biglybt.pif.download.DownloadTypeComplete;
-import com.biglybt.pif.download.DownloadTypeIncomplete;
-import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableColumnCoreCreationListener;
 import com.biglybt.ui.common.table.TableStructureEventDispatcher;
 import com.biglybt.util.MapUtils;
+
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadTypeComplete;
+import com.biglybt.pif.download.DownloadTypeIncomplete;
+import com.biglybt.pif.ui.tables.*;
 
 
 /** Holds a list of column definitions (TableColumnCore) for
@@ -50,16 +54,8 @@ public class TableColumnManager {
   private static final String CONFIG_FILE = "tables.config";
 
   static{
-	  COConfigurationManager.addResetToDefaultsListener(
-		  new COConfigurationManager.ResetToDefaultsListener()
-		  {
-			  @Override
-			  public void
-			  reset()
-			  {
-				  getInstance().resetAllTables();
-			  }
-		  });
+		COConfigurationManager.addResetToDefaultsListener(
+				() -> getInstance().resetAllTables());
   }
 
   private static TableColumnManager instance;
@@ -152,10 +148,33 @@ public class TableColumnManager {
 //		mapResetTable_Version.put(TableManager.TABLE_MYTORRENTS_UNOPENED, "4.6.0.1");
 	}
 
+	private boolean isDirty;
 
-  private TableColumnManager() {
-   items = new HashMap<>();
-  }
+
+	private TableColumnManager() {
+		items = new HashMap<>();
+		CoreFactory.addCoreRunningListener(
+				core -> core.addLifecycleListener(new CoreLifecycleAdapter() {
+					@Override
+					public void stopping(Core core) {
+						for (String tableID : items.keySet()) {
+							Map mapTableConfig = getTableConfigMap(tableID);
+
+							Map<String, TableColumnCore> mapColumns = items.get(tableID);
+							for (TableColumnCore tcc : mapColumns.values()) {
+								if (tcc.isDirty()) {
+									isDirty = true;
+									tcc.saveSettings(mapTableConfig);
+								}
+							}
+						}
+
+						if (isDirty) {
+							saveTableConfigs();
+						}
+					}
+				}));
+	}
 
   /** Retrieve the static TableColumnManager instance
    * @return the static TableColumnManager instance
@@ -287,15 +306,15 @@ public class TableColumnManager {
   	return columnNames;
   }
 
-  public void setDefaultColumnNames(String tableID, TableColumn[] columns) {
-	List<String>names = new ArrayList<>(columns.length);
-	for ( TableColumn column: columns ){
-		if ( column.isVisible()){
-			names.add( column.getName());
+	public void setDefaultColumnNames(String tableID, TableColumn[] columns) {
+		List<String> names = new ArrayList<>(columns.length);
+		for (TableColumn column : columns) {
+			if (column.isVisible()) {
+				names.add(column.getName());
+			}
 		}
+		setDefaultColumnNames(tableID, names.toArray(new String[names.size()]));
 	}
-	setDefaultColumnNames( tableID, names.toArray( new String[ names.size()] ));
-  }
 
   public void setDefaultColumnNames(String tableID, String[] columnNames) {
   	mapTableDefaultColumns.put(tableID, columnNames);
@@ -525,65 +544,77 @@ public class TableColumnManager {
 
   }
 
-  public String getDefaultSortColumnName(String tableID) {
-  	Map mapTableConfig = getTableConfigMap(tableID);
-  	Object object = mapTableConfig.get("SortColumn");
-  	if( object instanceof byte[])
-  		object =  new String((byte[])object);
+	public String[] getDefaultSortColumnNames(String tableID) {
+		Map mapTableConfig = getTableConfigMap(tableID);
+		List sortColumns = MapUtils.getMapList(mapTableConfig, "SortColumns", null);
 
-  	if (object instanceof String) {
-			return (String) object;
+		if (sortColumns == null) {
+			Object object = mapTableConfig.get("SortColumn");
+			if (object instanceof byte[])
+				object = new String((byte[]) object);
+
+			if (object instanceof String) {
+				return new String[] { (String) object };
+			}
+
+			String s = COConfigurationManager.getStringParameter(tableID + ".sortColumn");
+			if (s != null || s.isEmpty()) {
+				COConfigurationManager.removeParameter(tableID + ".sortColumn");
+				COConfigurationManager.removeParameter(tableID + ".sortAsc");
+			}
+			return new String[] { s };
 		}
-
-		String s = COConfigurationManager.getStringParameter(tableID + ".sortColumn");
-		if (s != null) {
-			COConfigurationManager.removeParameter(tableID + ".sortColumn");
-			COConfigurationManager.removeParameter(tableID + ".sortAsc");
+		String[] columnIDs = new String[sortColumns.size()];
+		for (int i = 0; i < sortColumns.size(); i++) {
+			columnIDs[i] = MapUtils.getString(sortColumns.get(i));
 		}
-		return s;
-  }
+		return columnIDs;
+	}
 
-  public void setDefaultSortColumnName(String tableID, String columnName) {
-	  setDefaultSortColumnName( tableID, columnName, false );
-  }
+	public void setDefaultSortColumnName(String tableID, String... columnNames) {
+		setDefaultSortColumnNames(tableID, columnNames, false);
+	}
 
-  public void setDefaultSortColumnName(String tableID, String columnName, boolean force) {
-  	Map mapTableConfig = getTableConfigMap(tableID);
-  	Object existing = mapTableConfig.get( "SortColumn" );
-  	if ( existing != null ){
-  		if ( !force ){
-  			return;
-  		}
-  		String str = existing instanceof byte[]?new String((byte[])existing):(String)existing;
-  		if ( str.equals( columnName )){
-  			return;
-  		}
-  	}
-  	mapTableConfig.put("SortColumn", columnName);
-  	saveTableConfigs();
-  }
+	public void setDefaultSortColumnNames(String tableID, String[] columnNames,
+			boolean force) {
+		Map mapTableConfig = getTableConfigMap(tableID);
+		List sortColumns = MapUtils.getMapList(mapTableConfig, "SortColumns", null);
+		if (sortColumns != null && !force) {
+			if (sortColumns.size() == columnNames.length) {
+				boolean allSame = true;
+				for (int i = 0; i < columnNames.length; i++) {
+					if (!columnNames[i].equals(MapUtils.getString(sortColumns.get(i)))) {
+						allSame = false;
+						break;
+					}
+				}
+				if (allSame) {
+					return;
+				}
+			}
+		}
+		mapTableConfig.put("SortColumns", Arrays.asList(columnNames));
+		markDirty();
+	}
 
-  private void saveTableConfigs() {
+	private void saveTableConfigs() {
 		if (tablesConfig instanceof Map) {
 			FileUtil.writeResilientConfigFile(CONFIG_FILE, (Map) tablesConfig);
+			isDirty = false;
 		}
 	}
 
-	/** Saves all the user configurable Table Column settings at once, complete
-   * with a COConfigurationManager.save().
-   *
-   * @param sTableID Table to save settings for
-   */
   public void saveTableColumns(Class forDataSourceType, String sTableID) {
   	try {
   		Map mapTableConfig = getTableConfigMap(sTableID);
       TableColumnCore[] tcs = getAllTableColumnCoreAsArray(forDataSourceType,
 					sTableID);
-      for (int i = 0; i < tcs.length; i++) {
-        if (tcs[i] != null)
-          tcs[i].saveSettings(mapTableConfig);
-      }
-      saveTableConfigs();
+		  for (TableColumnCore tc : tcs) {
+			  if (tc != null) {
+				  tc.saveSettings(mapTableConfig);
+			  }
+		  }
+      markDirty();
   	} catch (Exception e) {
   		Debug.out(e);
   	}
@@ -650,6 +681,9 @@ public class TableColumnManager {
 
 								if ( now - lastTableConfigAccess > 25000 ){
 
+									if (isDirty) {
+										saveTableConfigs();
+									}
 									tablesConfig = null;
 
 								}else{
@@ -683,7 +717,7 @@ public class TableColumnManager {
 				  if (Constants.compareVersions(lastReset, resetIfLastResetBelowVersion) < 0) {
 					  mapTableConfig.clear();
 					  mapTableConfig.put("last.reset", Constants.getBaseVersion());
-					  saveTableConfigs();
+						markDirty();
 					  mapResetTable_Version.remove(sTableID);
 				  }
 			  }
@@ -700,9 +734,8 @@ public class TableColumnManager {
 		  Map mapTablesConfig = getTablesConfigMap();
 
 		  mapTablesConfig.put(key, mapTableConfig);
+			markDirty();
 	  }
-	  
-	  saveTableConfigs();
   }
   
   public void setAutoHideOrder(String sTableID, String[] autoHideOrderColumnIDs) {
@@ -874,6 +907,7 @@ public class TableColumnManager {
 			}
 
 			mapConfig.put(key, value);
+			markDirty();
 		}
 	}
 
@@ -888,6 +922,7 @@ public class TableColumnManager {
   				if (mapConfig.size() < 1) {
   					mapColumns.remove(columnID);
   				}
+					markDirty();
   			}
   		}
 		}
@@ -920,4 +955,7 @@ public class TableColumnManager {
 				true, dataSourceType);
 	}
 
+	private void markDirty() {
+		isDirty = true;
+	}
 }

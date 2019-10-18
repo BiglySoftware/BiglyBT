@@ -1453,4 +1453,15 @@ public abstract class TableCellSWTBase
 		return null;
 	}
 
+	@Override
+	public boolean useSimpleSortValue() {
+		if (tableRow == null) {
+			return false;
+		}
+		TableView view = tableRow.getView();
+		if (view == null) {
+			return false;
+		}
+		return view.getSortColumnCount() > 0;
+	}
 }

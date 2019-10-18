@@ -228,8 +228,10 @@ public class SeedsItem
 			long value = (lConnectedSeeds << 42);
 			if (lTotalSeeds > 0)
 				value += (lTotalSeeds << 21);
-			if (lTotalPeers > 0)
+			boolean useSimpleSortValue = cell.useSimpleSortValue();
+			if (!useSimpleSortValue && lTotalPeers > 0) {
 				value += lTotalPeers;
+			}
 
 			String text;
 
@@ -251,13 +253,15 @@ public class SeedsItem
 
 					value = Integer.MIN_VALUE;
 
-					long cache = dm.getDownloadState().getLongAttribute( DownloadManagerState.AT_SCRAPE_CACHE );
-
-					if ( cache != -1 ){
-
-						int seeds 		= (int)((cache>>32)&0x00ffffff);
-
-						value += seeds+1;
+					if (!useSimpleSortValue) {
+						long cache = dm.getDownloadState().getLongAttribute( DownloadManagerState.AT_SCRAPE_CACHE );
+	
+						if ( cache != -1 ){
+	
+							int seeds 		= (int)((cache>>32)&0x00ffffff);
+	
+							value += seeds+1;
+						}
 					}
 				}
 				if (!cell.setSortValue(value) && cell.isValid()){

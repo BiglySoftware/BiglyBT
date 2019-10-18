@@ -180,6 +180,10 @@ public class TableColumnImpl
 	private boolean firstLoad;
 
 	private boolean showOnlyImage;
+	
+	private boolean postLoadConfig;
+
+	private boolean isDirty;
 
 	public TableColumnImpl(String tableID, String columnID) {
 		init(tableID, columnID);
@@ -305,6 +309,10 @@ public class TableColumnImpl
 		if (iDefaultWidth == 0) {
 			iDefaultWidth = width;
 		}
+		
+		if (diff != 0) {
+			markDirty();
+		}
 
 		if (bColumnAdded && bVisible) {
 			triggerColumnSizeChange(diff);
@@ -335,7 +343,10 @@ public class TableColumnImpl
 		if (iPosition == POSITION_INVISIBLE && position != POSITION_INVISIBLE) {
 			setVisible(true);
 		}
-		iPosition = position;
+		if (iPosition != position) {
+			iPosition = position;
+			markDirty();
+		}
 		if (position == POSITION_INVISIBLE) {
 			setVisible(false);
 		}
@@ -355,22 +366,25 @@ public class TableColumnImpl
 		}
 		*/
 
+		int newAlignment;
 		if (alignment == -1) {
 			if (iDefaultAlignment != -1) {
-				iAlignment = iDefaultAlignment;
+				newAlignment = iDefaultAlignment;
+			} else {
+				return;
 			}
 		} else {
-			iAlignment = alignment;
+			newAlignment = alignment;
 
 			if (iDefaultAlignment == -1) {
 				iDefaultAlignment = alignment;
 			}
 		}
-
-		// Commented out because size hasn't changed!
-		//if (bColumnAdded && bVisible) {
-		//	triggerColumnSizeChange();
-		//}
+		
+		if (newAlignment != iAlignment) {
+			iAlignment = newAlignment;
+			markDirty();
+		}
 	}
 
 	@Override
@@ -1037,7 +1051,10 @@ public class TableColumnImpl
 		//if (iPosition < 0 && position >= 0) {
 		//	setVisible(true);
 		//}
-		iPosition = position;
+		if (iPosition != position) {
+			iPosition = position;
+			markDirty();
+		}
 		//if (position < 0) {
 		//	setVisible(false);
 		//}
@@ -1074,6 +1091,7 @@ public class TableColumnImpl
 		if(userData == null)
 			userData = new LightHashMap(2);
 		userData.put(key, value);
+		markDirty();
 	}
 
 	@Override
@@ -1083,6 +1101,7 @@ public class TableColumnImpl
 		userData.remove(key);
 		if(userData.size() < 1)
 			userData = null;
+		markDirty();
 	}
 
 	@Override
@@ -1109,6 +1128,7 @@ public class TableColumnImpl
 
 	@Override
 	public final void loadSettings(Map mapSettings) {
+		postLoadConfig = false;
 		// Format: Key = [TableID].column.[columnname]
 		// Value[] = { visible, width, position, autotooltip, sortorder, userData, align }
 
@@ -1204,7 +1224,9 @@ public class TableColumnImpl
 	 * @see com.biglybt.pif.ui.tables.TableColumn#postLoad()
 	 */
 	@Override
-	public void postConfigLoad() {}
+	public void postConfigLoad() {
+		postLoadConfig = true;
+	}
 
 	public void preAdd() {}
 
@@ -1231,6 +1253,7 @@ public class TableColumnImpl
 			userData != null ? userData : Collections.EMPTY_MAP,
 			new Integer(iAlignment == iDefaultAlignment ? -1 : iAlignment)
 		}));
+		isDirty = false;
 		// cleanup old config
 		sItemPrefix = "Table." + sTableID + "." + sName;
 		if (COConfigurationManager.hasParameter(sItemPrefix + ".width", true)) {
@@ -1460,6 +1483,13 @@ public class TableColumnImpl
 	}
 
 	// @see java.util.Comparator#compare(T, T)
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @see com.biglybt.ui.common.table.TableView#sortRows(boolean)
+	 * @see com.biglybt.ui.common.table.TableView#refreshTable(boolean true) 
+	 */
 	@Override
 	public int compare(TableRowCore arg0, TableRowCore arg1) {
 		TableCellCore cell0 = arg0.getTableCellCore(sName);
@@ -1530,6 +1560,7 @@ public class TableColumnImpl
 		setLastSortValueChange(SystemTime.getCurrentTime());
 
 		this.bSortAscending = bAscending;
+		markDirty();
 	}
 
 	/**
@@ -1629,6 +1660,7 @@ public class TableColumnImpl
 			}
 		}
 		invalidateCells();
+		markDirty();
 	}
 
 	// @see com.biglybt.pif.ui.tables.TableColumn#getPreferredWidth()
@@ -1687,7 +1719,10 @@ public class TableColumnImpl
 
 	@Override
 	public void setAutoTooltip(boolean auto_tooltip) {
-		this.auto_tooltip = auto_tooltip;
+		if (this.auto_tooltip != auto_tooltip) {
+			this.auto_tooltip = auto_tooltip;
+			markDirty();
+		}
 	}
 
 	@Override
@@ -1827,5 +1862,17 @@ public class TableColumnImpl
 	@Override
 	public boolean showOnlyImage() {
 		return showOnlyImage;
+	}
+
+	private void markDirty() {
+		if (!postLoadConfig) {
+			return;
+		}
+		isDirty = true;
+	}
+
+	@Override
+	public boolean isDirty() {
+		return isDirty;
 	}
 }

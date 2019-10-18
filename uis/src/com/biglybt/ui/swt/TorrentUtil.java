@@ -2951,11 +2951,11 @@ public class TorrentUtil
 			
 			moveSelectedTorrentsTo( gm, all_complete, selected_complete, iNewPos );
 		}
-	
-		TableColumnCore sortColumn = tv.getSortColumn();
 
-		boolean bForceSort = sortColumn.getName().equals("#");
-		
+		TableColumnCore[] sortColumn = tv.getSortColumns();
+		boolean bForceSort = sortColumn.length != 0
+			&& "#".equals(sortColumn[0].getName());
+
 		tv.columnInvalidate("#");
 		
 		tv.refreshTable(bForceSort);

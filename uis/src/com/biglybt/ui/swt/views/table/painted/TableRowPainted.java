@@ -18,24 +18,22 @@
 
 package com.biglybt.ui.swt.views.table.painted;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
-import com.biglybt.ui.swt.utils.SWTRunnable;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 
 import com.biglybt.core.util.*;
-import com.biglybt.pif.ui.tables.TableCell;
-import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.ui.common.table.TableCellCore;
+import com.biglybt.ui.common.table.TableColumnCore;
+import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
+import com.biglybt.ui.swt.utils.FontUtils;
+import com.biglybt.ui.swt.utils.SWTRunnable;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableRowSWTChildController;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -43,10 +41,8 @@ import com.biglybt.ui.swt.views.table.impl.TableCellSWTBase;
 import com.biglybt.ui.swt.views.table.impl.TableRowSWTBase;
 import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 
-import com.biglybt.ui.common.table.TableCellCore;
-import com.biglybt.ui.common.table.TableColumnCore;
-import com.biglybt.ui.common.table.TableRowCore;
-import com.biglybt.ui.swt.utils.FontUtils;
+import com.biglybt.pif.ui.tables.TableCell;
+import com.biglybt.pif.ui.tables.TableColumn;
 
 public class TableRowPainted
 	extends TableRowSWTBase
@@ -61,11 +57,11 @@ public class TableRowPainted
 
 	private TableRowPainted[] subRows;
 
-	private Object subRows_sync;
+	private final Object subRows_sync;
 
 	private int subRowsHeightUseAccessors;
 
-	private TableCellCore cellSort;
+	private TableCellCore[] sortCells;
 
 	private int 	heightUseAccessors = 0;
 	private boolean	isHidden;
@@ -88,13 +84,12 @@ public class TableRowPainted
 		super(tv.getSyncObject(), parentRow, tv, dataSource);
 		subRows_sync = tv.getSyncObject();
 
-		TableColumnCore sortColumn = tv.getSortColumn();
-		if (sortColumn != null
-				&& (parentRow == null || sortColumn.handlesDataSourceType(getDataSource(
-						false).getClass()))) {
-			cellSort = new TableCellPainted(TableRowPainted.this, sortColumn,
-					sortColumn.getPosition());
+		TableColumnCore[] sortColumns = tv.getSortColumns();
+		String[] sortColumnNames = new String[sortColumns.length];
+		for (int i = 0; i < sortColumnNames.length; i++) {
+			sortColumnNames[i] = sortColumns[i].getName();
 		}
+		setSortColumn(sortColumnNames);
 
 		isHidden = parentRow != null && tv.getFilterSubRows() && !tv.isFiltered( dataSource );
 		
@@ -203,10 +198,6 @@ public class TableRowPainted
 		synchronized (lock) {
 			mTableCells = new LinkedHashMap<>(visibleColumns.length, 1);
 
-			TableColumn currentSortColumn = null;
-			if (cellSort != null) {
-				currentSortColumn = cellSort.getTableColumn();
-			}
 			TableRowCore parentRow = getParentRowCore();
 			// create all the cells for the column
 			for (int i = 0; i < visibleColumns.length; i++) {
@@ -221,9 +212,18 @@ public class TableRowPainted
 				}
 
 				//System.out.println(dataSource + ": " + tableColumns[i].getName() + ": " + tableColumns[i].getPosition());
-				TableCellCore cell = (currentSortColumn != null && visibleColumns[i].equals(currentSortColumn))
-						? cellSort : new TableCellPainted(TableRowPainted.this,
-								visibleColumns[i], i);
+				TableCellCore cell = null;
+				if (sortCells != null) {
+					for (TableCellCore sortCell : sortCells) {
+						if (visibleColumns[i].equals(sortCell)) {
+							cell = sortCell;
+						}
+					}
+				}
+				if (cell == null) {
+					cell = new TableCellPainted(this, visibleColumns[i], i);
+				}
+
 				mTableCells.put(visibleColumns[i].getName(), cell);
 				//if (i == 10) cell.bDebug = true;
 			}
@@ -232,16 +232,28 @@ public class TableRowPainted
 
 	private void destroyCells() {
 		synchronized (lock) {
-			if (mTableCells != null) {
-				for (TableCellCore cell : mTableCells.values()) {
-					if (cell != null && cell != cellSort) {
-						if ( !cell.isDisposed()){
-							cell.dispose();
+			if (mTableCells == null) {
+				return;
+			}
+
+			outer:
+			for (TableCellCore cell : mTableCells.values()) {
+				if (cell == null) {
+					continue;
+				}
+				if (sortCells != null) {
+					for (TableCellCore sortCell : sortCells) {
+						if (cell == sortCell) {
+							continue outer;
 						}
 					}
 				}
-				mTableCells = null;
+
+				if (!cell.isDisposed()){
+					cell.dispose();
+				}
 			}
+			mTableCells = null;
 		}
 	}
 
@@ -951,11 +963,13 @@ public class TableRowPainted
 		super.delete();
 
 		synchronized (lock) {
-			if ( cellSort != null && !cellSort.isDisposed()){
-
-				cellSort.dispose();
-
-				cellSort = null;
+			if (sortCells != null) {
+				for (TableCellCore sortCell : sortCells) {
+					if (!sortCell.isDisposed()) {
+						sortCell.dispose();
+					}
+				}
+				sortCells = null;
 			}
 		}
 
@@ -1415,12 +1429,16 @@ public class TableRowPainted
 	
 		synchronized (lock) {
 			if (mTableCells == null) {
-				if (cellSort != null && !cellSort.isDisposed()
-						&& cellSort.getTableColumn().getName().equals(name)) {
-					return cellSort;
-				} else {
+				if (sortCells == null) {
 					return null;
 				}
+				for (TableCellCore sortCell : sortCells) {
+					if (!sortCell.isDisposed()
+							&& name.equals(sortCell.getTableColumn().getName())) {
+						return sortCell;
+					}
+				}
+				return null;
 			}
 			return mTableCells.get(name);
 		}
@@ -1438,36 +1456,49 @@ public class TableRowPainted
 	}
 
 	@Override
-	public TableCellCore getSortColumnCell(String hint) {
+	public TableCellCore[] getSortColumnCells(String hint) {
 		synchronized (lock) {
-			return cellSort;
+			return sortCells == null ? new TableCellCore[0] : sortCells;
 		}
 	}
 
 	@Override
-	public void setSortColumn(String columnID) {
+	public void setSortColumn(String... columnIDs) {
 		synchronized (lock) {
 
+			List<TableCellCore> list = new ArrayList<>();
+
 			if (mTableCells == null) {
-				if (cellSort != null && !cellSort.isDisposed()) {
-					if (cellSort.getTableColumn().getName().equals(columnID)) {
-						return;
+				if (sortCells != null) {
+					for (TableCellCore sortCell : sortCells) {
+						if (!sortCell.isDisposed()) {
+							sortCell.dispose();
+						}
 					}
-					cellSort.dispose();
-					cellSort = null;
 				}
-				TableColumnCore sortColumn = (TableColumnCore) getView().getTableColumn(
-						columnID);
-				if (getParentRowCore() == null
-						|| sortColumn.handlesDataSourceType(getDataSource(false).getClass())) {
-					cellSort = new TableCellPainted(TableRowPainted.this, sortColumn,
-							sortColumn.getPosition());
-				} else {
-					cellSort = null;
+
+				for (String columnID : columnIDs) {
+					TableColumnCore sortColumn = (TableColumnCore) getView().getTableColumn(
+							columnID);
+					if (sortColumn == null) {
+						continue;
+					}
+					if (getParentRowCore() == null || sortColumn.handlesDataSourceType(
+							getDataSource(false).getClass())) {
+						list.add(new TableCellPainted(TableRowPainted.this, sortColumn,
+								sortColumn.getPosition()));
+					}
 				}
 			} else {
-				cellSort = mTableCells.get(columnID);
+				for (String columnID : columnIDs) {
+					TableCellCore cell = mTableCells.get(columnID);
+					if (cell != null) {
+						list.add(cell);
+					}
+				}
 			}
+
+			sortCells = list.toArray(new TableCellCore[0]);
 		}
 		
 		synchronized (subRows_sync) {
@@ -1476,7 +1507,7 @@ public class TableRowPainted
 				
 				for ( TableRowCore r: subRows ){
 					
-					r.setSortColumn(columnID);
+					r.setSortColumn(columnIDs);
 				}
 			}
 		}

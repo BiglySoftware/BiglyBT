@@ -44,7 +44,7 @@ public abstract class TableRowSWTBase
 {
 	public static boolean DEBUG_ROW_PAINT = false;
 
-	protected Object lock;
+	protected final Object lock;
 
 	private final TableViewSWT tv;
 
@@ -417,8 +417,7 @@ public abstract class TableRowSWTBase
   			}
   			TableColumn column = cell.getTableColumn();
   			//System.out.println(column);
-  			if (column != tv.getSortColumn()
-  					&& !tv.isColumnVisible(column)) {
+			  if (!tv.hasSortColumn(column) && !tv.isColumnVisible(column)) {
   				//System.out.println("skip " + column);
   				continue;
   			}

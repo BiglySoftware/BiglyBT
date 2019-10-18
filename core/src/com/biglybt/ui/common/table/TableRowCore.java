@@ -114,8 +114,7 @@ public interface TableRowCore extends TableRow
 	public void setUpToDate(boolean upToDate);
 
 	/**
-	 * @param bDoGraphics
-	 * @param bVisible
+	 * @return List of invalid cells
 	 */
 	public List<TableCellCore> refresh(boolean bDoGraphics, boolean bVisible);
 
@@ -199,10 +198,10 @@ public interface TableRowCore extends TableRow
 
 	public TableRowCore getSubRow(int i);
 
-	public void setSortColumn(String columnID);
+	public void setSortColumn(String... columnIDs);
 
-	public TableCellCore getSortColumnCell(String hint);
-	
+	public TableCellCore[] getSortColumnCells(String hint);
+
 	public boolean
 	sortSubRows( 
 		TableColumnCore col );

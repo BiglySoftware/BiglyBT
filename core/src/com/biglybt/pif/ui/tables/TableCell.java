@@ -425,4 +425,10 @@ public interface TableCell {
 	 * @since 4.3.1.5
 	 */
 	public String getClipboardText();
+
+	/**
+	 * When true, the user is sorting by multiple columns, and you should set 
+	 * the cell's sort value based solely on your column's data.
+	 */
+	boolean useSimpleSortValue();
 }

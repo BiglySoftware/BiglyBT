@@ -25,10 +25,12 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.ui.tables.TableRow;
-import com.biglybt.pif.ui.tables.TableRowRefreshListener;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
+
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.pif.ui.tables.TableRowRefreshListener;
 
 /**
  * @author TuxPaper
@@ -78,7 +80,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	// private AEMonitor sortColumn_mon = new AEMonitor("TableView:sC");
 
 	/** Sorting functions */
-	private TableColumnCore sortColumn;
+	private final List<TableColumnCore> sortColumns = new ArrayList<>();
 
 	/** TimeStamp of when last sorted all the rows was */
 	private long lLastSortedOn;
@@ -102,7 +104,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	private Object parentDataSource;
 
-	private Object rows_sync = new Object();
+	private final Object rows_sync;
 
 	/** Filtered rows in the table */
 	private List<TableRowCore> sortedRows;
@@ -186,7 +188,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 
 	public TableViewImpl(Class<?> pluginDataSourceType, String _sTableID,
-			String _sPropertiesPrefix, TableColumnCore[] _basicItems) {
+			String _sPropertiesPrefix, Object rows_sync,
+			TableColumnCore[] _basicItems) {
 		classPluginDataSourceType = pluginDataSourceType;
 		propertiesPrefix = _sPropertiesPrefix;
 		tableID = _sTableID;
@@ -194,6 +197,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		mapDataSourceToRow = new IdentityHashMap<>();
 		sortedRows = new ArrayList<>();
 		listUnfilteredDataSources = new IdentityHashMap<>();
+		this.rows_sync = rows_sync;
 		initializeColumnDefs();
 	}
 
@@ -1337,10 +1341,6 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		return rows_sync;
 	}
 
-	public void setRowsSync(Object o) {
-		rows_sync = o;
-	}
-
 	@Override
 	public void generate(IndentWriter writer) {
 		writer.println("Diagnostics for " + this + " (" + getTableID() + ")");
@@ -1505,7 +1505,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		_sortColumn(bForceDataRefresh, true, false);
 	}
 
-	public void sortColumn(boolean bForceDataRefresh) {
+	public void sortRows(boolean bForceDataRefresh) {
 		_sortColumn(bForceDataRefresh, false, false);
 	}
 
@@ -1515,11 +1515,14 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			return;
 		}
 
-		if ( sortColumn != null ){
-
-			if ( !sortColumn.isVisible()){
-
-				sortColumn = null;
+		// Quick check & removal of any sort columns no longer visible. Could
+		// probably be done in a much better place
+		if (!sortColumns.isEmpty()) {
+			for (Iterator<TableColumnCore> iter = sortColumns.iterator(); iter.hasNext();) {
+				TableColumnCore sortColumn = iter.next();
+				if (!sortColumn.isVisible()) {
+					iter.remove();
+				}
 			}
 		}
 
@@ -1539,33 +1542,53 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			boolean	orderChanged = false;
 			
 			synchronized (rows_sync) {
-				if (bForceDataRefresh && sortColumn != null) {
-					String sColumnID = sortColumn.getName();
-					for (Iterator<TableRowCore> iter = sortedRows.iterator(); iter.hasNext();) {
-						TableRowCore row = iter.next();
-						TableCellCore cell = row.getSortColumnCell(sColumnID);
-						if (cell != null) {
-							cell.refresh(true);
-						}
-						TableRowCore[] subs = row.getSubRowsRecursive( true );
-						
-						for ( TableRowCore sr: subs ){
-							cell = sr.getSortColumnCell(sColumnID);
-							if (cell != null) {
+				if (bForceDataRefresh && !sortColumns.isEmpty()) {
+					for (TableColumnCore sortColumn : sortColumns) {
+						String sColumnID = sortColumn.getName();
+						for (TableRowCore row : sortedRows) {
+							TableCellCore[] cells = row.getSortColumnCells(sColumnID);
+							for (TableCellCore cell : cells) {
 								cell.refresh(true);
+							}
+							TableRowCore[] subs = row.getSubRowsRecursive(true);
+
+							for (TableRowCore sr : subs) {
+								cells = sr.getSortColumnCells(sColumnID);
+								for (TableCellCore cell : cells) {
+									cell.refresh(true);
+								}
 							}
 						}
 					}
 				}
 
 				if (!bFillGapsOnly) {
-					if (sortColumn != null
-							&& sortColumn.getLastSortValueChange() >= lLastSortedOn) {
+					boolean hasSortValueChanged = false;
+					for (TableColumnCore sortColumn : sortColumns) {
+						if (sortColumn.getLastSortValueChange() >= lLastSortedOn) {
+							hasSortValueChanged = true;
+							break;
+						}
+					}
+					if (hasSortValueChanged) {
 						lLastSortedOn = SystemTime.getCurrentTime();
-						Collections.sort(sortedRows, sortColumn);
+						if (sortColumns.size() == 1) {
+							sortedRows.sort(sortColumns.get(0));
+						} else {
+							sortedRows.sort((o1, o2) -> {
+								for (TableColumnCore sortColumn : sortColumns) {
+									int compare = sortColumn.compare(o1, o2);
+									if (compare != 0) {
+										return compare;
+									}
+								}
+								return 0;
+							});
+						}
 						
 						for ( TableRowCore r: sortedRows ){
-							if ( r.sortSubRows(sortColumn )){
+							// TODO: Change to sortColumn list
+							if ( r.sortSubRows(sortColumns.get(0) )){
 								needsUpdate = true;
 								orderChanged = true;
 							}
@@ -1687,9 +1710,9 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				if (row == null || row.isRowDisposed()) {
 					continue;
 				}
-				if (sortColumn != null) {
-					TableCellCore cell = row.getSortColumnCell(null);
-					if (cell != null) {
+				if (!sortColumns.isEmpty()) {
+					TableCellCore[] cells = row.getSortColumnCells(null);
+					for (TableCellCore cell : cells) {
 						try {
 							cell.invalidate();
 							// refresh could have caused a thread lock if we were
@@ -1710,14 +1733,15 @@ public abstract class TableViewImpl<DATASOURCETYPE>
   						// instead of relying on binarySearch, which may return an item
   						// in the middle that also is equal.
   						TableRowCore lastRow = sortedRows.get(sortedRows.size() - 1);
-  						if (sortColumn == null || sortColumn.compare(row, lastRow) >= 0) {
+  						// todo: use multi-sort
+  						if (sortColumns.isEmpty() || sortColumns.get(0).compare(row, lastRow) >= 0) {
   							index = sortedRows.size();
   							sortedRows.add(row);
   							if (DEBUGADDREMOVE) {
   								debug("Adding new row to bottom");
   							}
   						} else {
-  							index = Collections.binarySearch(sortedRows, row, sortColumn);
+  							index = Collections.binarySearch(sortedRows, row, sortColumns.get(0));
   							if (index < 0) {
   								index = -1 * index - 1; // best guess
   							}
@@ -1832,19 +1856,17 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	
 	public void columnInvalidate(TableColumnCore tableColumn,
 			final boolean bMustRefresh) {
-		final String sColumnName = tableColumn.getName();
-		boolean isSortColumn = getSortColumn() == tableColumn;
-				
 		runForAllRows(new TableGroupRowRunner() {
 			@Override
 			public void run(TableRowCore row) {
-				TableCellCore cell = row.getTableCellCore(sColumnName);
-				if (cell != null) {
-					cell.invalidate(bMustRefresh);
-					if ( bMustRefresh && isSortColumn ){
-							// force immediate update to sort updates straight away
-						cell.refresh(true,true,true);
-					}
+				TableCellCore cell = row.getTableCellCore(tableColumn.getName());
+				if (cell == null) {
+					return;
+				}
+				cell.invalidate(bMustRefresh);
+				if (bMustRefresh && hasSortColumn(tableColumn)) {
+					// force immediate update to sort updates straight away
+					cell.refresh(true, true, true);
 				}
 			}
 		}, true );
@@ -2171,30 +2193,78 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		headerVisible  = visible;
 	}
 
-
-	// @see com.biglybt.ui.swt.views.TableViewSWT#getSortColumn()
 	@Override
-	public TableColumnCore getSortColumn() {
+	public boolean hasSortColumn(TableColumn column) {
 		synchronized (rows_sync) {
-			return sortColumn;
+			return sortColumns.contains(column);
 		}
 	}
 
-	public boolean setSortColumn(TableColumnCore newSortColumn, boolean allowOrderChange) {
-		if (newSortColumn == null) {
+	@Override
+	public int getSortColumnCount() {
+		synchronized (rows_sync) {
+			return sortColumns.size();
+		}
+	}
+
+	@Override
+	public TableColumnCore[] getSortColumns() {
+		synchronized (rows_sync) {
+			return sortColumns.toArray(new TableColumnCore[0]);
+		}
+	}
+
+	@Override
+	public void addSortColumn(TableColumnCore column) {
+		TableColumnCore[] sortColumns = getSortColumns();
+		List<TableColumnCore> listNewColumns = new ArrayList<>();
+		boolean alreadySortingByColumn = false;
+		for (TableColumnCore existingSortColumn : sortColumns) {
+			listNewColumns.add(existingSortColumn);
+			if (existingSortColumn == column) {
+				column.setSortAscending(!column.isSortAscending());
+				alreadySortingByColumn = true;
+			}
+		}
+		if (!alreadySortingByColumn) {
+			listNewColumns.add(column);
+		}
+		setSortColumns(listNewColumns.toArray(new TableColumnCore[0]), false);
+	}
+
+	@Override
+	public boolean setSortColumns(TableColumnCore[] newSortColumns, boolean allowOrderChange) {
+		if (newSortColumns == null) {
 			return false;
 		}
 
 			// did use sortColumn_mon
 
 		synchronized (rows_sync) {
+			boolean columnsChanged = sortColumns.size() != newSortColumns.length;
+			if (!columnsChanged) {
+				for (int i = 0; i < sortColumns.size(); i++) {
+					TableColumnCore s0 = sortColumns.get(i);
+					TableColumnCore s1 = newSortColumns[i];
+					if (!s0.equals(s1)) {
+						columnsChanged = true;
+						break;
+					}
+				}
+			}
 
-			boolean isSameColumn = newSortColumn.equals(sortColumn);
+			String[] sortColumnNames = new String[newSortColumns.length];
+			for (int i = 0; i < sortColumnNames.length; i++) {
+				sortColumnNames[i] = newSortColumns[i].getName();
+			}
+
 			if (allowOrderChange) {
-				if (!isSameColumn) {
-					sortColumn = newSortColumn;
+				if (columnsChanged) {
+					sortColumns.clear();
+					sortColumns.addAll(Arrays.asList(newSortColumns));
 
 					int iSortDirection = configMan.getIntParameter(CFG_SORTDIRECTION);
+					TableColumnCore sortColumn = sortColumns.get(0);
 					if (iSortDirection == 0) {
 						sortColumn.setSortAscending(true);
 					} else if (iSortDirection == 1) {
@@ -2205,24 +2275,25 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 						//same
 					}
 
-					TableColumnManager.getInstance().setDefaultSortColumnName(tableID, sortColumn.getName(), true );
+					TableColumnManager.getInstance().setDefaultSortColumnNames(tableID, sortColumnNames, true );
 				} else {
+					TableColumnCore sortColumn = sortColumns.get(0);
 					sortColumn.setSortAscending(!sortColumn.isSortAscending());
 				}
 			} else {
-				sortColumn = newSortColumn;
+				sortColumns.clear();
+				sortColumns.addAll(Arrays.asList(newSortColumns));
+				TableColumnManager.getInstance().setDefaultSortColumnNames(tableID, sortColumnNames, true );
 			}
-			if (!isSameColumn) {
-				String name = sortColumn.getName();
-				for (Iterator<TableRowCore> iter = sortedRows.iterator(); iter.hasNext();) {
-					TableRowCore row = iter.next();
-					row.setSortColumn(name);
+			if (columnsChanged) {
+				for (TableRowCore row : sortedRows) {
+					row.setSortColumn(sortColumnNames);
 				}
 			}
  			uiChangeColumnIndicator();
  			resetLastSortedOn();
- 			sortColumn(!isSameColumn);
-			return !isSameColumn;
+ 			sortRows(columnsChanged);
+			return columnsChanged;
 		}
 	}
 

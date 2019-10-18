@@ -368,4 +368,6 @@ public interface TableColumnCore
 	public boolean hasInplaceEditorListener();
 
 	void setInplaceEditorListener(TableCellInplaceEditorListener l);
+
+	boolean isDirty();
 }

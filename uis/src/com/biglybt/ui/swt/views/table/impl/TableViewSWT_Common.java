@@ -23,10 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.ui.UserPrompterResultListener;
-import com.biglybt.ui.common.table.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -37,24 +33,23 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.download.Download;
-import com.biglybt.pif.ui.menus.MenuManager;
-import com.biglybt.pif.ui.tables.*;
 import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
+import com.biglybt.ui.UserPrompterResultListener;
+import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 import com.biglybt.ui.common.util.MenuItemManager;
-import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.SimpleTextEntryWindow;
-import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
-import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 
-import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ui.menus.MenuManager;
+import com.biglybt.pif.ui.tables.*;
 
 public class TableViewSWT_Common
 	implements MouseListener, MouseMoveListener, SelectionListener, KeyListener
@@ -483,7 +478,7 @@ public class TableViewSWT_Common
 					}
 				});
 			} else {
-				tv.sortColumn(true);
+				tv.sortRows(true);
 			}
 			event.doit = false;
 			return;
@@ -529,7 +524,7 @@ public class TableViewSWT_Common
 				case 'g':
 					System.out.println("force sort");
 					tv.resetLastSortedOn();
-					tv.sortColumn(true);
+					tv.sortRows(true);
 					break;
 				case 'v':
 					if ( event.widget != filter.widget ){
@@ -1110,139 +1105,155 @@ public class TableViewSWT_Common
 	 */
 	public void fillColumnMenu(final Menu menu, final TableColumnCore column,
 			boolean isBlankArea) {
-		String tableID = tv.getTableID();
-		int	hiddenColumnCount = 0;
+		if (column != null) {
 
-		if (!isBlankArea) {
-			TableColumnManager tcm = TableColumnManager.getInstance();
-			TableColumnCore[] allTableColumns = tcm.getAllTableColumnCoreAsArray(
-					tv.getDataSourceType(), tableID);
-
-			Arrays.sort(allTableColumns,
-					TableColumnManager.getTableColumnOrderComparator());
-
-			int columnMenuCount = 0;
-			for (final TableColumnCore tc : allTableColumns) {
-				boolean visible = tc.isVisible();
-				if (!visible) {
-					if (columnMenuCount > 10) {
-						hiddenColumnCount++;
-						continue;
-					}
-					TableColumnInfo columnInfo = tcm.getColumnInfo(
-							tv.getDataSourceType(), tableID, tc.getName());
-					if (columnInfo.getProficiency() != TableColumnInfo.PROFICIENCY_BEGINNER
-							|| tc.getName().startsWith("tag.group.col.icons.")) {
-						hiddenColumnCount++;
-						continue;
-					}
+			String sColumnName = column.getName();
+			if (sColumnName != null) {
+				Object[] listeners = listenersMenuFill.toArray();
+				for (int i = 0; i < listeners.length; i++) {
+					TableViewSWTMenuFillListener l = (TableViewSWTMenuFillListener) listeners[i];
+					l.addThisColumnSubMenu(sColumnName, menu);
 				}
-				MenuItem menuItem = new MenuItem(menu, SWT.CHECK);
-				Messages.setLanguageText(menuItem, tc.getTitleLanguageKey());
-				if (visible) {
-					menuItem.setSelection(true);
-				}
-				menuItem.addListener(SWT.Selection, new Listener() {
-					@Override
-					public void handleEvent(Event e) {
-						TableColumnSWTUtils.changeColumnVisiblity( tv, tc, !tc.isVisible() );
-					}
-				});
-				columnMenuCount++;
 			}
-		}
 
-		if ( hiddenColumnCount > 0 ){
-
-			MenuItem itemMoreHidden = new MenuItem(menu, SWT.PUSH);
-			Messages.setLanguageText(itemMoreHidden,
-					"MyTorrentsView.menu.moreColHidden", new String[]{ String.valueOf( hiddenColumnCount )});
-
-			itemMoreHidden.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event e) {
-					showColumnEditor();
+			// Add Plugin Context menus..
+			TableContextMenuItem[] items = column.getContextMenuItems(TableColumnCore.MENU_STYLE_HEADER);
+			if (items.length > 0) {
+				if (menu.getItemCount() > 0) {
+					new MenuItem(menu, SWT.SEPARATOR);
 				}
-			});
-		}
 
-		if (menu.getItemCount() > 0) {
+				MenuBuildUtils.addPluginMenuItems(items, menu, true, true,
+					new MenuBuildUtils.MenuItemPluginMenuControllerImpl(
+						tv.getSelectedDataSources(true)));
+
+			}
+
+			if (menu.getItemCount() > 0) {
+				new MenuItem(menu, SWT.SEPARATOR);
+			}
+
+			TableColumnCore[] sortColumns = tv.getSortColumns();
+			boolean columnIsSort = false;
+			for (TableColumnCore sortColumn : sortColumns) {
+				if (sortColumn == column) {
+					columnIsSort = true;
+					break;
+				}
+			}
+			if (columnIsSort) {
+				MenuItem menuSortByColumn = new MenuItem(menu, SWT.PUSH);
+				Messages.setLanguageText(menuSortByColumn, "TableColumn.sort.reverse");
+				menuSortByColumn.addListener(SWT.Selection, e -> {
+					TableColumnCore tcc = (TableColumnCore) menu.getData("column");
+
+					tcc.setSortAscending(!tcc.isSortAscending());
+					tv.setSortColumns(tv.getSortColumns(), false);
+				});
+				if (sortColumns.length > 1) {
+					MenuItem menuRemoveSort = new MenuItem(menu, SWT.PUSH);
+					Messages.setLanguageText(menuRemoveSort, "TableColumn.sort.remove");
+					menuRemoveSort.addListener(SWT.Selection, e -> {
+						TableColumnCore tcc = (TableColumnCore) menu.getData("column");
+						List<TableColumnCore> list = new ArrayList<>(
+								Arrays.asList(tv.getSortColumns()));
+						list.remove(tcc);
+	
+						tv.setSortColumns(list.toArray(new TableColumnCore[0]), false);
+					});
+				}
+			} else {
+				MenuItem menuSortByColumn = new MenuItem(menu, SWT.PUSH);
+				Messages.setLanguageText(menuSortByColumn, "TableColumn.sort.bythiscolumn");
+				menuSortByColumn.addListener(SWT.Selection, e -> {
+					TableColumnCore tcc = (TableColumnCore) menu.getData("column");
+					tv.setSortColumns(new TableColumnCore[] { tcc }, true);
+				});
+				MenuItem menuSortAddColumn = new MenuItem(menu, SWT.PUSH);
+				Messages.setLanguageText(menuSortAddColumn, "TableColumn.sort.addcolumn");
+				menuSortAddColumn.addListener(SWT.Selection, e -> {
+					TableColumnCore tcc = (TableColumnCore) menu.getData("column");
+					tv.addSortColumn(tcc);
+				});
+			}
+
 			new MenuItem(menu, SWT.SEPARATOR);
-		}
 
-		if ( column != null ){
+			if (TableTooltips.tooltips_disabled) {
+				MenuItem at_item = new MenuItem(menu, SWT.CHECK);
+				Messages.setLanguageText(at_item,
+					"MyTorrentsView.menu.thisColumn.autoTooltip");
+				at_item.addListener(SWT.Selection, e -> {
+					TableColumnCore tcc = (TableColumnCore) menu.getData("column");
+					tcc.setAutoTooltip(at_item.getSelection());
+					tcc.invalidateCells();
+				});
+				at_item.setSelection(column.doesAutoTooltip());
+			}
+
 			final MenuItem renameColumn = new MenuItem(menu, SWT.PUSH);
 			Messages.setLanguageText(renameColumn,
 					"MyTorrentsView.menu.renameColumn");
 
-			renameColumn.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event e) {
-					SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
-							"ColumnRenameWindow.title", "ColumnRenameWindow.message");
+			renameColumn.addListener(SWT.Selection, e -> {
+				SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+						"ColumnRenameWindow.title", "ColumnRenameWindow.message");
 
-					String	existing_name = column.getNameOverride();
-					if ( existing_name == null ){
-						existing_name = "";
-					}
-					entryWindow.setPreenteredText( existing_name, false );
-					entryWindow.selectPreenteredText( true );
-
-					entryWindow.prompt(new UIInputReceiverListener() {
-						@Override
-						public void UIInputReceiverClosed(UIInputReceiver entryWindow) {
-							if ( !entryWindow.hasSubmittedInput()) {
-								return;
-							}
-
-							String name = entryWindow.getSubmittedInput().trim();
-
-							if ( name.length() == 0 ){
-								name = null;
-							}
-							column.setNameOverride( name );
-							TableColumnManager tcm = TableColumnManager.getInstance();
-							String tableID = tv.getTableID();
-							tcm.saveTableColumns(tv.getDataSourceType(), tableID);
-							TableStructureEventDispatcher.getInstance(tableID).tableStructureChanged(true, null );
-						}
-					});
-
+				String	existing_name = column.getNameOverride();
+				if ( existing_name == null ){
+					existing_name = "";
 				}
+				entryWindow.setPreenteredText( existing_name, false );
+				entryWindow.selectPreenteredText( true );
+
+				entryWindow.prompt(ew -> {
+					if (!ew.hasSubmittedInput()) {
+						return;
+					}
+
+					String name = ew.getSubmittedInput().trim();
+
+					if (name.length() == 0) {
+						name = null;
+					}
+					column.setNameOverride(name);
+					TableColumnManager tcm = TableColumnManager.getInstance();
+					String tableID = tv.getTableID();
+					tcm.saveTableColumns(tv.getDataSourceType(), tableID);
+					TableStructureEventDispatcher.getInstance(
+							tableID).tableStructureChanged(true, null);
+				});
+
 			});
 			
 			final MenuItem itemPrefSize = new MenuItem(menu, SWT.PUSH);
 			Messages.setLanguageText(itemPrefSize, "table.columns.pref.size");
-			itemPrefSize.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event e) {
-	
-					Utils.execSWTThread(
-						new Runnable(){
-							
-							@Override
-							public void run(){
-								column.setPreferredWidth( -1 );
-								
-								tv.runForAllRows(new TableGroupRowRunner() {
-									@Override
-									public void run(TableRowCore row) {																				
-										row.fakeRedraw( column.getName());							
-									}
-								});
-								
-								int pref = column.getPreferredWidth();
-																
-								if ( pref != -1 ){
-								
-									column.setWidth( pref );
-								}
-							}
-						});
-					
+			itemPrefSize.addListener(SWT.Selection, e -> Utils.execSWTThread(() -> {
+				column.setPreferredWidth(-1);
+
+				tv.runForAllRows(new TableGroupRowRunner() {
+					@Override
+					public void run(TableRowCore row) {
+						row.fakeRedraw( column.getName());
+					}
+				});
+
+				int pref = column.getPreferredWidth();
+
+				if ( pref != -1 ){
+
+					column.setWidth( pref );
 				}
-			});
+			}));
+
+			new MenuItem(menu, SWT.SEPARATOR);
+
+			MenuItem menuHideColumn = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(menuHideColumn, "TableColumn.hide");
+			menuHideColumn.addListener(SWT.Selection,
+					e -> TableColumnSWTUtils.changeColumnVisiblity(tv, column, false));
 		}
+
 		final MenuItem itemResetColumns = new MenuItem(menu, SWT.PUSH);
 		Messages.setLanguageText(itemResetColumns, "table.columns.reset");
 		itemResetColumns.addListener(SWT.Selection, new Listener() {
@@ -1284,46 +1295,6 @@ public class TableViewSWT_Common
 		});
 
 		menu.setData("column", column);
-
-		if (column == null) {
-			return;
-		}
-
-		String sColumnName = column.getName();
-		if (sColumnName != null) {
-			Object[] listeners = listenersMenuFill.toArray();
-			for (int i = 0; i < listeners.length; i++) {
-				TableViewSWTMenuFillListener l = (TableViewSWTMenuFillListener) listeners[i];
-				l.addThisColumnSubMenu(sColumnName, menu);
-			}
-		}
-
-		final MenuItem at_item = new MenuItem(menu, SWT.CHECK);
-		Messages.setLanguageText(at_item,
-				"MyTorrentsView.menu.thisColumn.autoTooltip");
-		at_item.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				TableColumnCore tcc = (TableColumnCore) menu.getData("column");
-				tcc.setAutoTooltip(at_item.getSelection());
-				tcc.invalidateCells();
-			}
-		});
-		at_item.setSelection(column.doesAutoTooltip());
-
-		// changed semantics to allow this to over-ride 'disable all'
-		// at_item.setEnabled( !TableTooltips.tooltips_disabled );
-		
-		// Add Plugin Context menus..
-		TableContextMenuItem[] items = column.getContextMenuItems(TableColumnCore.MENU_STYLE_HEADER);
-		if (items.length > 0) {
-			new MenuItem(menu, SWT.SEPARATOR);
-
-			MenuBuildUtils.addPluginMenuItems(items, menu, true, true,
-					new MenuBuildUtils.MenuItemPluginMenuControllerImpl(
-							tv.getSelectedDataSources(true)));
-
-		}
 	}
 
 	public void addMenuFillListener(TableViewSWTMenuFillListener l) {

@@ -149,7 +149,7 @@ public class TableHeaderPainted
 
 		TableColumnCore[] visibleColumns = tv.getVisibleColumns();
 		GCStringPrinter sp;
-		TableColumnCore sortColumn = tv.getSortColumn();
+		TableColumnCore[] sortColumns = tv.getSortColumns();
 		int x = -clientArea.x;
 		for (TableColumnCore column : visibleColumns) {
 			int w = column.getWidth();
@@ -162,9 +162,15 @@ public class TableHeaderPainted
 				}
 			}
 
-			boolean isSortColumn = column.equals(sortColumn);
+			int sortColumnPos = -1;
+			for (int i = 0; i < sortColumns.length; i++) {
+				if (column.equals(sortColumns[i])) {
+					sortColumnPos = i;
+					break;
+				}
+			}
 
-			e.gc.setBackgroundPattern(isSortColumn ? patternDown : patternUp);
+			e.gc.setBackgroundPattern(sortColumnPos >= 0 ? patternDown : patternUp);
 			e.gc.fillRectangle(x, 1, w, headerHeight - 2);
 			e.gc.setForeground(line);
 			boolean doingDrop = column.equals(droppingOnHeader);
@@ -213,7 +219,7 @@ public class TableHeaderPainted
 				});
 			}
 */
-			if (isSortColumn) {
+			if (sortColumnPos >= 0) {
 				// draw sort indicator
 				int arrowHeight = 6;
 				int arrowY = (headerHeight / 2) - (arrowHeight / 2);
@@ -230,6 +236,10 @@ public class TableHeaderPainted
 				}
 				e.gc.setAntialias(SWT.ON);
 				e.gc.setBackground(fg);
+				if (sortColumnPos > 0) {
+					e.gc.setAlpha((sortColumns.length - sortColumnPos + 1) * 140
+							/ sortColumns.length);
+				}
 				e.gc.fillPolygon(new int[] {
 					x + middle - arrowHalfW,
 					y1,
@@ -238,6 +248,9 @@ public class TableHeaderPainted
 					x + middle,
 					y2
 				});
+				if (sortColumnPos > 0) {
+					e.gc.setAlpha(255);
+				}
 			}
 
 			int xOfs = x + 2;
@@ -444,7 +457,12 @@ public class TableHeaderPainted
 						if (columnSizing == null) {
 							TableColumnCore column = tv.getTableColumnByOffset(e.x);
 							if (column != null) {
-								tv.setSortColumn(column, true);
+								boolean addColumn = (e.stateMask & SWT.MOD1) > 0;
+								if (addColumn) {
+									tv.addSortColumn(column);
+								} else {
+									tv.setSortColumns(new TableColumnCore[] { column }, true);
+								}
 							}
 						} else {
 							int diff = (e.x - columnSizingStart);

@@ -175,10 +175,24 @@ public interface TableView<DATASOURCETYPE>
 	 */
 	TableRowCore[] getSelectedRows();
 
+	boolean hasSortColumn(TableColumn column);
+
+	int getSortColumnCount();
+
+	TableColumnCore[] getSortColumns();
+
 	/**
-	 * @return
+	 * Add a column to the sorting. If the column already is in the sort list,
+	 * flip its order
 	 */
-	TableColumnCore getSortColumn();
+	void addSortColumn(TableColumnCore column);
+
+	boolean setSortColumns(TableColumnCore[] newSortColumns, boolean allowOrderChange);
+
+	/**
+	 * Sort rows using the columns specified in {@link #getSortColumns()}
+	 */
+	void sortRows(boolean bForceDataRefresh);
 
 	/**
 	 * @return

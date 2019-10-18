@@ -1629,4 +1629,9 @@ public class FakeTableCell
 	public TableColumnCore getTableColumnCore() {
 		return tableColumn;
 	}
+
+	@Override
+	public boolean useSimpleSortValue() {
+		return false;
+	}
 }

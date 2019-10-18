@@ -1656,18 +1656,18 @@ public class SBC_DevicesView
 				didSomething = true;
 				job.moveUp();
 
-				TableColumnCore sortColumn = tvFiles.getSortColumn();
-				forceSort = sortColumn != null
-						&& sortColumn.getName().equals(ColumnTJ_Rank.COLUMN_ID);
+				TableColumnCore[] sortColumn = tvFiles.getSortColumns();
+				forceSort = sortColumn.length != 0
+					&& ColumnTJ_Rank.COLUMN_ID.equals(sortColumn[0].getName());
 
 			} else if (itemKey.equals("down")) {
 
 				didSomething = true;
 				job.moveDown();
 
-				TableColumnCore sortColumn = tvFiles.getSortColumn();
-				forceSort = sortColumn != null
-						&& sortColumn.getName().equals(ColumnTJ_Rank.COLUMN_ID);
+				TableColumnCore[] sortColumn = tvFiles.getSortColumns();
+				forceSort = sortColumn.length != 0
+					&& ColumnTJ_Rank.COLUMN_ID.equals(sortColumn[0].getName());
 			}
 		}
 
