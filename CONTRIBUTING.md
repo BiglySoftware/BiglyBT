@@ -10,6 +10,8 @@ This is the most important contributing request from us.
 
 BiglyBT is new and very unknown.  We had an excellent [article on TorrentFreak](https://torrentfreak.com/former-vuze-developers-launch-biglybt-a-new-open-source-torrent-client-170803/) which helped us get noticed with hardcore torrent fans, but that bump has now all but disappeared.
 
+Help us by liking (star) our GitHub repository. This will help our search results position when people search for bittorrent clients on GitHub.
+
 Mentioning BiglyBT on your favorite tracker site, blog, wiki, facebook, social media sites, and to friends would help us a lot.  Pointing out that we are an open source fork with backwards compatibility (and migration tools) with other same-source-code clients might help your friends decide to try us out.
 
 If you don't see us on a comparison or "top 10" page of bittorrent clients, please contact the author and ask them to add us!  (Note: The Wikipedia bittorrent comparison page only allows new clients if they already have a main Wikipedia page)
