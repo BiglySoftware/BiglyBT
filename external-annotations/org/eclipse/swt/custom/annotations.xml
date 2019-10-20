@@ -11,6 +11,10 @@
 		name='org.eclipse.swt.custom.CTabFolderRenderer org.eclipse.swt.graphics.Rectangle computeTrim(int, int, int, int, int, int)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
+	<item
+		name='org.eclipse.swt.custom.CTabItem org.eclipse.swt.graphics.Rectangle getBounds()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 	<item name='org.eclipse.swt.custom.ScrolledComposite org.eclipse.swt.graphics.Point getOrigin()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>

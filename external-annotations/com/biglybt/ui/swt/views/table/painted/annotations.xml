@@ -41,6 +41,10 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
+		name='com.biglybt.ui.swt.views.table.painted.TableHeaderPainted void addSortColumn(com.biglybt.ui.common.table.TableColumnCore) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
 		name='com.biglybt.ui.swt.views.table.painted.TableHeaderPainted void createMenu(org.eclipse.swt.widgets.Menu) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
@@ -54,6 +58,26 @@
 	</item>
 	<item
 		name='com.biglybt.ui.swt.views.table.painted.TableHeaderPainted.MouseListeners MouseListeners(org.eclipse.swt.widgets.Canvas, com.biglybt.ui.swt.views.table.painted.TableViewPainted) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.table.painted.TableRowPainted TableRowPainted(com.biglybt.ui.common.table.TableRowCore, com.biglybt.ui.swt.views.table.painted.TableViewPainted, java.lang.Object, boolean) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.table.painted.TableRowPainted com.biglybt.ui.common.table.TableCellCore[] getSortColumnCells(java.lang.String)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.table.painted.TableRowPainted subRows_sync'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.table.painted.TableViewPainted java.lang.Object getSyncObject()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.table.painted.TableViewPainted visibleRows_sync'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 </root>

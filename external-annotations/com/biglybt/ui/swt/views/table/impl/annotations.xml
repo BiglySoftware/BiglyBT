@@ -17,6 +17,9 @@
   -->
 
 <root>
+	<item name='com.biglybt.ui.swt.views.table.impl.TableRowSWTBase lock'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 	<item
 		name='com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon void generate(com.biglybt.core.util.IndentWriter) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>

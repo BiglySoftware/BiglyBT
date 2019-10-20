@@ -8,6 +8,14 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
+		name='com.biglybt.ui.common.table.TableView com.biglybt.ui.common.table.TableColumnCore[] getSortColumns()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.common.table.TableView com.biglybt.ui.common.table.TableRowCore[] getSelectedRows()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
 		name='com.biglybt.ui.common.table.TableView java.lang.Object[] getSelectedDataSources(boolean)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>

@@ -17,22 +17,8 @@
   -->
 
 <root>
-	<item name='com.biglybt.ui.swt.views.skin.sidebar.SideBar entryViewHistory'>
-		<annotation name='org.jetbrains.annotations.NotNull'/>
-	</item>
-	<item name='com.biglybt.ui.swt.views.skin.sidebar.SideBar pluginViews'>
-		<annotation name='org.jetbrains.annotations.NotNull'/>
-	</item>
 	<item
-		name='com.biglybt.ui.swt.views.skin.sidebar.SideBar void addSideBarView(com.biglybt.ui.swt.pifimpl.UISWTViewImpl, org.eclipse.swt.widgets.Composite) 0'>
-		<annotation name='org.jetbrains.annotations.NotNull'/>
-	</item>
-	<item
-		name='com.biglybt.ui.swt.views.skin.sidebar.SideBarVitalityImageSWT imageID'>
-		<annotation name='org.jetbrains.annotations.NotNull'/>
-	</item>
-	<item
-		name='com.biglybt.ui.swt.views.skin.sidebar.SideBarVitalityImageSWT java.lang.String getImageID()'>
+		name='com.biglybt.core.peer.PEPeerManager java.util.List&lt;com.biglybt.core.peer.PEPeer&gt; getPeers()'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 </root>
