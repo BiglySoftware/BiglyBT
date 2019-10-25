@@ -65,8 +65,9 @@ AEProxyFactory
 		return( AEProxyAddressMapperImpl.getSingleton());
 	}
 
-	public static final String PO_PEER_NETWORKS = "peer_networks";
-	public static final String PO_LOCAL_PORT	= "local_port";
+	public static final String PO_PEER_NETWORKS = "peer_networks";		// String[]
+	public static final String PO_LOCAL_PORT	= "local_port";			// Integer
+	public static final String PO_EXPLICIT_BIND	= "explicit_bind";		// InetAddress
 
 	public static PluginProxy
 	getPluginProxy(

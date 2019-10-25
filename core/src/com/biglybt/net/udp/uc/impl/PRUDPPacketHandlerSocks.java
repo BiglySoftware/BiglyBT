@@ -555,9 +555,9 @@ PRUDPPacketHandlerSocks
 
 	@Override
 	public InetAddress
-	getBindIP()
+	getCurrentBindAddress()
 	{
-		return( delegate.getBindIP());
+		return( delegate.getCurrentBindAddress());
 	}
 
 	@Override
@@ -578,6 +578,13 @@ PRUDPPacketHandlerSocks
 		delegate.setExplicitBindAddress( address );
 	}
 
+	@Override
+	public InetAddress
+	getExplicitBindAddress()
+	{
+		return( delegate.getExplicitBindAddress());
+	}
+	
 	@Override
 	public PRUDPPacketHandlerStats
 	getStats()

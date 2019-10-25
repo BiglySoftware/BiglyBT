@@ -52,6 +52,7 @@ import com.biglybt.core.util.bloom.BloomFilter;
 import com.biglybt.core.util.bloom.BloomFilterFactory;
 import com.biglybt.core.versioncheck.VersionCheckClient;
 import com.biglybt.net.udp.uc.PRUDPPacketHandler;
+import com.biglybt.net.udp.uc.PRUDPPacketHandlerFactory;
 
 /**
  * @author parg
@@ -88,6 +89,8 @@ DHTTransportUDPImpl
 	private final int					dht_send_delay;
 	private final int					dht_receive_delay;
 
+	private InetAddress			explicit_bind;
+	
 	final DHTLogger			logger;
 
 	DHTUDPPacketHandler			packet_handler;
@@ -247,7 +250,7 @@ DHTTransportUDPImpl
 									packet.getConnectionId(),
 									local_contact,
 									contact );
-
+						
 						request.setDetails(
 							packet.getPacketType(),
 							packet.getTransferKey(),
@@ -659,6 +662,49 @@ DHTTransportUDPImpl
 
 		packet_handler.setDelays( dht_send_delay, dht_receive_delay, (int)request_timeout );
 	}
+	
+	@Override
+	public InetAddress 
+	getCurrentBindAddress()
+	{
+		return( packet_handler.getPacketHandler().getCurrentBindAddress());
+	}
+	
+	@Override
+	public InetAddress 
+	getExplicitBindAddress()
+	{
+		return( packet_handler.getPacketHandler().getExplicitBindAddress());
+	}
+	
+	@Override
+	public void 
+	setExplicitBindAddress(
+		InetAddress		address )
+	{
+		try{
+			class_mon.enter();
+
+			explicit_bind = address;
+			
+			if ( address != null ){
+			
+				external_address = address.getHostAddress();
+			}
+			
+			packet_handler.getPacketHandler().setExplicitBindAddress( address );
+		
+		}finally{
+			
+			class_mon.exit();
+		}
+		
+		if ( address != null ){
+			
+			setLocalContact();
+		}
+	}
+
 
 	@Override
 	public int
@@ -791,6 +837,11 @@ DHTTransportUDPImpl
 					log.log( "    External IP address obtained from test data: " + new_external_address );
 				}
 
+				if ( explicit_bind != null ){
+					
+					new_external_address = explicit_bind.getHostAddress();
+				}
+				
 				if ( ip_override != null ){
 
 					new_external_address	= ip_override;

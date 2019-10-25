@@ -20,6 +20,7 @@
 
 package com.biglybt.plugin.net.netstatus;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -30,6 +31,7 @@ import com.biglybt.core.peermanager.PeerManagerRegistration;
 import com.biglybt.core.peermanager.PeerManagerRegistrationAdapter;
 import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.peermanager.messaging.bittorrent.*;
+import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.util.*;
 
 public class
@@ -46,6 +48,8 @@ NetStatusProtocolTesterBT
 	private byte[]		my_hash;
 	private byte[]		peer_id;
 
+	private InetAddress	explicit_bind;
+	
 	private PeerManagerRegistration		pm_reg;
 
 	private long		start_time	= SystemTime.getCurrentTime();
@@ -72,6 +76,13 @@ NetStatusProtocolTesterBT
 		test_initiator	= _test_initiator;
 	}
 
+	public void
+	setBindIP(
+		InetAddress	a )
+	{
+		explicit_bind = a;
+	}
+	
 	protected void
 	start()
 	{
@@ -588,7 +599,14 @@ NetStatusProtocolTesterBT
 						getConnectionProperty(
 							String property_name )
 						{
-							return( null );
+							if ( property_name == AEProxyFactory.PO_EXPLICIT_BIND ){
+								
+								return( explicit_bind );
+								
+							}else{
+								
+								return( null );
+							}
 						}
 
 						@Override

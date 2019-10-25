@@ -127,13 +127,7 @@ NetStatusProtocolTester
 		String										test_address,
 		final NetStatusProtocolTesterListener		listener )
 	{
-		final NetStatusProtocolTesterBT bt_tester = new NetStatusProtocolTesterBT( this, true );
-
-		bt_tester.addListener( listener );
-
-		bt_tester.start();
-
-		addToActive( bt_tester );
+		NetStatusProtocolTesterBT bt_tester = createTester( listener );
 
 		try{
 			if ( test_address.length() == 0 ){
@@ -332,7 +326,24 @@ NetStatusProtocolTester
 		return( bt_tester );
 	}
 
-	protected boolean
+	
+	public NetStatusProtocolTesterBT
+	createTester(
+		NetStatusProtocolTesterListener		listener )
+	{
+		NetStatusProtocolTesterBT bt_tester = new NetStatusProtocolTesterBT( this, true );
+
+		bt_tester.addListener( listener );
+
+		bt_tester.start();
+
+		addToActive( bt_tester );
+		
+		return( bt_tester );
+	}
+	
+		
+	public boolean
 	tryTest(
 		NetStatusProtocolTesterBT		bt_tester,
 		DistributedDatabaseContact		contact )

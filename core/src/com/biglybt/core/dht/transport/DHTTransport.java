@@ -26,6 +26,7 @@ package com.biglybt.core.dht.transport;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Map;
 
 public interface
@@ -75,6 +76,24 @@ DHTTransport
 
 		throws DHTTransportException;
 
+	public default InetAddress
+	getCurrentBindAddress()
+	{
+		return( null );
+	}
+	
+	public default InetAddress
+	getExplicitBindAddress()
+	{
+		return( null );
+	}
+
+	public default void
+	setExplicitBindAddress(
+		InetAddress		address )
+	{
+	}
+	
 	public long
 	getTimeout();
 

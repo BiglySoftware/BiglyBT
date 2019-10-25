@@ -382,6 +382,8 @@ NetworkAdminImpl
 						}
 					}
 				});
+		
+		new NetworkAdminDistributedNATTester( this, core );
 	}
 	
 	private void

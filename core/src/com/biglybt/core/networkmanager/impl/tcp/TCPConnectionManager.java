@@ -333,6 +333,8 @@ public class TCPConnectionManager {
 
 	  boolean 	ipv6problem 	= false;
 	  boolean	bind_failed		= false;
+	  boolean	explicit_bind	= false;
+	  
 	  try {
 
 		  request.channel = SocketChannel.open();
@@ -368,20 +370,37 @@ public class TCPConnectionManager {
 				  request.channel.socket().setReuseAddress( true );
 			  }
 
+			  bindIP = (InetAddress)request.listener.getConnectionProperty( AEProxyFactory.PO_EXPLICIT_BIND );
+			  
 			  try {
-				  bindIP = NetworkAdmin.getSingleton().getMultiHomedOutgoingRoundRobinBindAddress(request.address.getAddress());
-				  if ( bindIP != null ) {
-					  	// ignore bind for plugin proxies as we connect directly to them - if they need to
-					  	// enforce any bindings on delegated connections then that is their job to implement
+				  if ( bindIP != null ){
+					
+					  explicit_bind = true;
+					  
+					  if (Logger.isEnabled()) 	Logger.log(new LogEvent(LOGID, "Binding outgoing connection [" + request.address + "] to local explicit IP address: " + bindIP+":"+local_bind_port));
+					  
+					  request.channel.socket().bind( new InetSocketAddress( bindIP, local_bind_port ) );
 
-					  if ( bindIP.isAnyLocalAddress() || !AEProxyFactory.isPluginProxy( request.address )){
-						  if (Logger.isEnabled()) 	Logger.log(new LogEvent(LOGID, "Binding outgoing connection [" + request.address + "] to local IP address: " + bindIP+":"+local_bind_port));
-						  request.channel.socket().bind( new InetSocketAddress( bindIP, local_bind_port ) );
+				  }else{
+					  
+					  bindIP = NetworkAdmin.getSingleton().getMultiHomedOutgoingRoundRobinBindAddress(request.address.getAddress());
+					  
+					  if ( bindIP != null ) {
+						  	// ignore bind for plugin proxies as we connect directly to them - if they need to
+						  	// enforce any bindings on delegated connections then that is their job to implement
+	
+						  if ( bindIP.isAnyLocalAddress() || !AEProxyFactory.isPluginProxy( request.address )){
+							  
+							  if (Logger.isEnabled()) 	Logger.log(new LogEvent(LOGID, "Binding outgoing connection [" + request.address + "] to local IP address: " + bindIP+":"+local_bind_port));
+							  
+							  request.channel.socket().bind( new InetSocketAddress( bindIP, local_bind_port ) );
+						  }
+					  }else if( local_bind_port > 0 ) {
+						  
+						  if (Logger.isEnabled()) Logger.log(new LogEvent(LOGID, "Binding outgoing connection [" + request.address + "] to local port #: " +local_bind_port));
+						  
+						  request.channel.socket().bind( new InetSocketAddress( local_bind_port ) );
 					  }
-				  }
-				  else if( local_bind_port > 0 ) {
-					  if (Logger.isEnabled()) Logger.log(new LogEvent(LOGID, "Binding outgoing connection [" + request.address + "] to local port #: " +local_bind_port));
-					  request.channel.socket().bind( new InetSocketAddress( local_bind_port ) );
 				  }
 			  }catch( SocketException e ){
 
@@ -401,7 +420,7 @@ public class TCPConnectionManager {
 
 		  }catch( Throwable t ) {
 
-			  if ( bind_failed && NetworkAdmin.getSingleton().mustBind()){
+			  if ( bind_failed && ( explicit_bind || NetworkAdmin.getSingleton().mustBind())){
 
 				  	// force binding is set but failed, must bail here - can happen during VPN disconnect for
 				  	// example, before we switch to a localhost bind
@@ -1089,6 +1108,19 @@ public class TCPConnectionManager {
      * @param failure_msg failure reason
      */
     public void connectFailure( Throwable failure_msg );
+    
+    /**
+     * See AEProxyFactory for properties
+     * @param property_name
+     * @return
+     */
+    
+    public default Object
+    getConnectionProperty(
+    	String property_name )
+    {
+    	return( null );
+    }
   }
 
 /////////////////////////////////////////////////////////////

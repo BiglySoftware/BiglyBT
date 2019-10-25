@@ -404,6 +404,14 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
         setConnectResult( false );
         listener.connectFailure( failure_msg );
       }
+      
+		@Override
+		public Object 
+		getConnectionProperty(
+			String property_name)
+		{
+			return( listener.getConnectionProperty(property_name));
+		}
     };
 
     connect_request_key = connect_listener;

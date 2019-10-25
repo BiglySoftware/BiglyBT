@@ -343,7 +343,7 @@ PRUDPPacketHandlerImpl
 
 	@Override
 	public InetAddress
-	getBindIP()
+	getCurrentBindAddress()
 	{
 		return( current_bind_ip );
 	}
@@ -365,6 +365,14 @@ PRUDPPacketHandlerImpl
 		}
 	}
 
+	@Override
+	public InetAddress
+	getExplicitBindAddress()
+	{
+		return( explicit_bind_ip );
+	}
+
+	
 	@Override
 	public void
 	setExplicitBindAddress(
@@ -1715,7 +1723,7 @@ PRUDPPacketHandlerImpl
 
 			packet_transformer.transformSend( p );
 		}
-
+		
 		socket.send( p );
 	}
 

@@ -134,18 +134,27 @@ PRUDPPacketHandler
 	public int
 	getPort();
 
+	public default InetAddress
+	getBindIP()
+	{
+		return( getCurrentBindAddress());
+	}
+
 	public InetAddress
-	getBindIP();
+	getCurrentBindAddress();
+
+	public InetAddress
+	getExplicitBindAddress();
+
+	public void
+	setExplicitBindAddress(
+		InetAddress	address );
 
 	public void
 	setDelays(
 		int		send_delay,
 		int		receive_delay,
 		int		queued_request_timeout );
-
-	public void
-	setExplicitBindAddress(
-		InetAddress	address );
 
 	public PRUDPPacketHandlerStats
 	getStats();

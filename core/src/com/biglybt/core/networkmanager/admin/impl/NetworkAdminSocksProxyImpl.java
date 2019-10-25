@@ -269,6 +269,14 @@ NetworkAdminSocksProxyImpl
 
 					sem.release();
 				}
+				
+				@Override
+				public Object 
+				getConnectionProperty(
+					String property_name)
+				{
+					return( null );
+				}
 			};
 
 			TCPNetworkManager.getSingleton().getConnectDisconnectManager().requestNewConnection(
