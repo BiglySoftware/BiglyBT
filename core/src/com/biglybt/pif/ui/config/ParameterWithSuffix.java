@@ -21,7 +21,7 @@ package com.biglybt.pif.ui.config;
 /**
  * A Parameter that has a suffix label
  */
-public interface ParameterWithSuffix {
+public interface ParameterWithSuffix extends Parameter{
 	String getSuffixLabelKey();
 
 	void setSuffixLabelKey(String suffixLabelKey);

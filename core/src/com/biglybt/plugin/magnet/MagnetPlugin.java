@@ -199,6 +199,8 @@ MagnetPlugin
 		
 		BooleanParameter rename_ext = config.addBooleanParameter2( "MagnetPlugin.rename.using.dn.only.with.ext", "MagnetPlugin.rename.using.dn.only.with.ext", false );	
 		
+		rename_ext.setIndent( 1, true );
+		
 		rename.addEnabledOnSelection( rename_ext );
 		
 		Parameter[] nps = new Parameter[ AENetworkClassifier.AT_NETWORKS.length ];
