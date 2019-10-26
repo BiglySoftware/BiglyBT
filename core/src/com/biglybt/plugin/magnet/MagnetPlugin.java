@@ -195,8 +195,12 @@ MagnetPlugin
 				
 		magnet_recovery		= config.addBooleanParameter2( "MagnetPlugin.recover.magnets", "MagnetPlugin.recover.magnets", true );
 		
-		config.addBooleanParameter2( "MagnetPlugin.rename.using.dn", "MagnetPlugin.rename.using.dn", false );
-
+		BooleanParameter rename = config.addBooleanParameter2( "MagnetPlugin.rename.using.dn", "MagnetPlugin.rename.using.dn", false );
+		
+		BooleanParameter rename_ext = config.addBooleanParameter2( "MagnetPlugin.rename.using.dn.only.with.ext", "MagnetPlugin.rename.using.dn.only.with.ext", false );	
+		
+		rename.addEnabledOnSelection( rename_ext );
+		
 		Parameter[] nps = new Parameter[ AENetworkClassifier.AT_NETWORKS.length ];
 
 		for ( int i=0; i<nps.length; i++ ){
