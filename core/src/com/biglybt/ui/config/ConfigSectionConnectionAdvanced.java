@@ -303,10 +303,18 @@ public class ConfigSectionConnectionAdvanced
 
 		add(new ParameterGroupImpl(
 				"ConfigView.section.connection.advanced.socket.group", listSocket));
-
-		add(new BooleanParameterImpl(BCFG_IPV_6_ENABLE_SUPPORT,
+		
+		BooleanParameterImpl ipv6_enable = 
+			add(new BooleanParameterImpl(BCFG_IPV_6_ENABLE_SUPPORT,
 				"network.ipv6.enable.support"));
-
+		
+		BooleanParameterImpl ipv6_checks = 
+			add(new BooleanParameterImpl(BCFG_IPV_6_CHECK_MULTIPLE_ADDRESS_CHECKS,
+				"network.ipv6.enable.multiple.address.checks"));
+		
+		ipv6_checks.setIndent( 1, true );
+		ipv6_enable.addEnabledOnSelection(ipv6_checks);
+		
 		add(new BooleanParameterImpl(BCFG_IPV_6_PREFER_ADDRESSES,
 				"network.ipv6.prefer.addresses"));
 
