@@ -82,6 +82,9 @@ DownloadManagerStatsImpl
 	private long saved_SecondsDownloading = 0;
 	private long saved_SecondsOnlySeeding = 0;
 
+	private int session_SecondsSinceDownload	= -1;
+	private int session_SecondsSinceUpload		= -1;
+
 	private int saved_SecondsSinceDownload	= 0;
 	private int saved_SecondsSinceUpload	= 0;
 
@@ -1007,11 +1010,11 @@ DownloadManagerStatsImpl
 
 	@Override
 	public int
-	getTimeSinceLastDataReceivedInSeconds()
+	getTimeSinceLastDataReceivedInSeconds(boolean this_session )
 	{
 		PEPeerManager	pm = download_manager.getPeerManager();
 
-		int	res = saved_SecondsSinceDownload;
+		int	res = this_session?session_SecondsSinceDownload:saved_SecondsSinceDownload;
 
 		if ( pm != null ){
 
@@ -1043,17 +1046,17 @@ DownloadManagerStatsImpl
 				}
 			}
 		}
-
+		
 		return( res );
 	}
 
 	@Override
 	public int
-	getTimeSinceLastDataSentInSeconds()
+	getTimeSinceLastDataSentInSeconds( boolean this_session )
 	{
 		PEPeerManager	pm = download_manager.getPeerManager();
 
-		int	res = saved_SecondsSinceUpload;
+		int	res = this_session?session_SecondsSinceUpload:saved_SecondsSinceUpload;
 
 		if ( pm != null ){
 
@@ -1085,7 +1088,7 @@ DownloadManagerStatsImpl
 				}
 			}
 		}
-
+	
 		return( res );
 	}
 
@@ -1142,6 +1145,9 @@ DownloadManagerStatsImpl
 		saved_SecondsSinceDownload		= getTimeSinceLastDataReceivedInSeconds();
 		saved_SecondsSinceUpload		= getTimeSinceLastDataSentInSeconds();
 
+		session_SecondsSinceDownload		= getTimeSinceLastDataReceivedInSeconds( true );
+		session_SecondsSinceUpload		= getTimeSinceLastDataSentInSeconds( true );
+		
 		saved_peak_receive_rate			= getPeakDataReceiveRate();
 		saved_peak_send_rate			= getPeakDataSendRate();
 
@@ -1189,7 +1195,7 @@ DownloadManagerStatsImpl
 
 		saved_SecondsSinceDownload	= state.getIntAttribute( DownloadManagerState.AT_TIME_SINCE_DOWNLOAD );
 		saved_SecondsSinceUpload	= state.getIntAttribute( DownloadManagerState.AT_TIME_SINCE_UPLOAD );
-
+		
 		saved_peak_receive_rate		= state.getLongAttribute( DownloadManagerState.AT_PEAK_RECEIVE_RATE );
 		saved_peak_send_rate		= state.getLongAttribute( DownloadManagerState.AT_PEAK_SEND_RATE );
 

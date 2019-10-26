@@ -258,8 +258,15 @@ DownloadManagerStats
    */
   public void setDownloadRateLimitBytesPerSecond( int max_rate_bps );
 
-	public int getTimeSinceLastDataReceivedInSeconds();
-	public int getTimeSinceLastDataSentInSeconds();
+	public default int getTimeSinceLastDataReceivedInSeconds(){
+		return(getTimeSinceLastDataReceivedInSeconds( false ));
+	}
+	public default int getTimeSinceLastDataSentInSeconds(){
+		return( getTimeSinceLastDataSentInSeconds( false ));
+	}
+
+	public int getTimeSinceLastDataReceivedInSeconds( boolean this_session );
+	public int getTimeSinceLastDataSentInSeconds( boolean this_session );
 
 	public long getAvailWentBadTime();
 	public long getBytesUnavailable();
