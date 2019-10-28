@@ -215,7 +215,7 @@ public class TableRowPainted
 				TableCellCore cell = null;
 				if (sortCells != null) {
 					for (TableCellCore sortCell : sortCells) {
-						if (visibleColumns[i].equals(sortCell)) {
+						if (visibleColumns[i].equals(sortCell.getTableColumnCore())) {
 							cell = sortCell;
 						}
 					}
