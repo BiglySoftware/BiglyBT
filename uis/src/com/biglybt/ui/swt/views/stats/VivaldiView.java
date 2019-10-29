@@ -162,6 +162,9 @@ public class VivaldiView
     switch (event.getType()) {
       case UISWTViewEvent.TYPE_CREATE:
       	swtView = (UISWTView)event.getData();
+      	if (swtView.getInitialDataSource() instanceof Number) {
+      		dht_type = ((Number) swtView.getInitialDataSource()).intValue();
+      	}
       	swtView.setTitle(MessageText.getString(getTitleID()));
         break;
 
