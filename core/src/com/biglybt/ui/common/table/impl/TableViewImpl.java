@@ -19,6 +19,7 @@
 package com.biglybt.ui.common.table.impl;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.logging.LogEvent;
@@ -1597,7 +1598,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 						if (DEBUG_SORTER) {
 							long lTimeDiff = (System.currentTimeMillis() - lTimeStart);
 							if (lTimeDiff >= 0) {
-								debug("--- Build & Sort took " + lTimeDiff + "ms");
+								debug("--- Build & Sort "
+										+ sortColumns.stream().map(m -> m.getName()).collect(
+												Collectors.joining(", ", "{", "}"))
+										+ " took " + lTimeDiff + "ms");
 							}
 						}
 					} else {
