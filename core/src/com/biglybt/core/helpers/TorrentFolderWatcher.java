@@ -23,17 +23,22 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerInitialisationAdapter;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
@@ -439,7 +444,80 @@ public class TorrentFolderWatcher {
 											DownloadManager 		dm,
 											boolean 				for_seeding )
 										{
+											DiskManagerFileInfoSet file_info_set = dm.getDiskManagerFileInfoSet();
+
+											DiskManagerFileInfo[] fileInfos = file_info_set.getFiles();
+
+											DownloadManagerState dms = dm.getDownloadState();
+											
+											boolean reorder_mode = COConfigurationManager.getBooleanParameter("Enable reorder storage mode");
+											int reorder_mode_min_mb = COConfigurationManager.getIntParameter("Reorder storage mode min MB");
+
+											boolean[] to_skip = TorrentUtils.getSkipFiles( torrent );
+											
+											if ( to_skip != null ){
+												
+												boolean[] toCompact = new boolean[fileInfos.length];
+												boolean[] toReorderCompact = new boolean[fileInfos.length];
+
+												int comp_num = 0;
+												int reorder_comp_num = 0;
+												
+												try{
+													dms.suppressStateSave(true);
+	
+													for (int i = 0; i < fileInfos.length; i++) {
+													
+														if ( to_skip[i] ){
+															
+															DiskManagerFileInfo fileInfo = fileInfos[i];
+
+																// Always pull destination file from fileInfo and not from
+																// TorrentFileInfo because the destination may have changed
+																// by magic code elsewhere
+														
+															File fDest = fileInfo.getFile(true);
+														
+															if (!fDest.exists()) {
+
+																if (reorder_mode
+																		&& (fileInfo.getLength() / (1024 * 1024)) >= reorder_mode_min_mb) {
+
+																	toReorderCompact[i] = true;
+
+																	reorder_comp_num++;
+
+																} else {
+
+																	toCompact[i] = true;
+
+																	comp_num++;
+																}
+															}
+														}
+													}
+													
+													file_info_set.setSkipped( to_skip, true );
+													
+													if (comp_num > 0) {
+
+														file_info_set.setStorageTypes(toCompact, DiskManagerFileInfo.ST_COMPACT);
+													}
+
+													if (reorder_comp_num > 0) {
+
+														file_info_set.setStorageTypes(toReorderCompact,	DiskManagerFileInfo.ST_REORDER_COMPACT);
+													}
+													
+												}finally{
+													
+													dms.suppressStateSave( false );
+												}
+											}
+											
 											applyTag( dm, tag_name );
+											
+											applyAutoTagging( dm );
 											
 											TorrentOpenOptions.addModeDuringCreate( start_mode, dm );
 										}
@@ -525,6 +603,179 @@ public class TorrentFolderWatcher {
 
 				Debug.out( e );
 			}
+		}
+	}
+	
+	private void
+	applyAutoTagging(
+		DownloadManager		dm )
+	{
+		if ( !COConfigurationManager.getBooleanParameter( "Files Auto Tag Enable" )){
+			
+			return;
+		}
+		
+		Map<String,long[]>	ext_map = new HashMap<>();
+		
+		DiskManagerFileInfoSet file_info_set = dm.getDiskManagerFileInfoSet();
+
+		DiskManagerFileInfo[] files = file_info_set.getFiles();
+
+		for ( DiskManagerFileInfo file: files ){
+			
+			if ( file.isSkipped()){
+				
+				continue;
+			}
+			
+			String ext = file.getExtension();			
+				
+			if ( ext != null && ext.startsWith(".")){
+					
+				ext = ext.substring( 1 );
+				
+				long file_size = file.getLength();
+				
+				long[] size = ext_map.get( ext );
+				
+				if ( size == null ){
+					
+					ext_map.put( ext, new long[]{ file_size });
+					
+				}else{
+					
+					size[0] += file_size;
+				}
+			}
+		}
+		
+		int num = COConfigurationManager.getIntParameter( "Files Auto Tag Count" );
+		
+		TagManager tm = TagManagerFactory.getTagManager();	
+
+		TagType tag_type = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+		
+		List<Tag>	matched_tags	= new ArrayList<>();
+		Tag			max_match_tag	= null;
+		long		max_match_size	= -1;
+		
+		for ( int i=0; i<num; i++ ){
+			
+			String exts = COConfigurationManager.getStringParameter( "File Auto Tag Exts " + (i==0?"":(" " + i )), "");
+			
+			exts = exts.trim().toLowerCase( Locale.US );
+			
+			if ( exts.isEmpty()){
+				
+				continue;
+			}
+			
+			String tag_name 	= COConfigurationManager.getStringParameter( "File Auto Tag Name " + (i==0?"":(" " + i )), "");
+			
+			tag_name = tag_name.trim();
+			
+			if ( tag_name.isEmpty()){
+				
+				continue;
+			}
+			
+			try{			
+				Tag tag = tag_type.getTag( tag_name,  true );
+				
+				if ( tag == null ){
+					
+					tag = tag_type.createTag( tag_name, true );
+					
+					tag.setPublic( false );
+				}
+				
+				String[] bits = exts.replaceAll( ",", ";" ).split( ";" );
+			
+				boolean	matched		= false;
+				long	max_match 	= 0;
+			
+				for ( String bit: bits ){
+					
+					bit = bit.trim();
+					
+					if ( bit.startsWith( "." )){
+						
+						bit = bit.substring( 1 );
+					}
+					
+					long[] size = ext_map.get( bit );
+					
+					if ( size != null ){
+						
+						matched = true;
+						
+						if ( size[0] > max_match ){
+							
+							max_match = size[0];
+						}
+					}
+				}
+				
+				if ( matched ){
+					
+					matched_tags.add( tag );
+					
+					if ( max_match > max_match_size ){
+						
+						max_match_size 	= max_match;
+						max_match_tag	= tag;
+					}
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		List<Tag>	selected_tags = new ArrayList<>();
+		
+		if ( matched_tags.isEmpty()){
+			
+			String def_tag = COConfigurationManager.getStringParameter( "File Auto Tag Name Default", "" );
+
+			def_tag = def_tag.trim();
+			
+			if ( !def_tag.isEmpty()){
+			
+				try{
+					Tag tag = tag_type.getTag( def_tag,  true );
+					
+					if ( tag == null ){
+						
+						tag = tag_type.createTag( def_tag, true );
+						
+						tag.setPublic( false );
+					}
+					
+					selected_tags.add( tag );
+						
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+		}else{
+		
+			boolean tag_best = COConfigurationManager.getBooleanParameter( "Files Auto Tag Best Size" );
+			
+			if ( tag_best ){
+				
+				selected_tags.add( max_match_tag );
+				
+			}else{
+				
+				selected_tags.addAll( matched_tags );
+			}
+		}
+		
+		for ( Tag t: selected_tags ){
+		
+			t.addTaggable( dm );
 		}
 	}
 	

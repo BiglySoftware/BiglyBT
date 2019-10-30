@@ -19,7 +19,6 @@ package com.biglybt.core.torrent.impl;
 
 import java.io.File;
 import java.util.*;
-import java.util.regex.Pattern;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
@@ -448,7 +447,7 @@ public class TorrentOpenOptions
 				name.split("[^a-zA-Z]+"),
 				torrentFileName.split("[^a-zA-Z]+")
 			};
-			List downloadManagers = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
+			List<DownloadManager> downloadManagers = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
 
 			for (int x = 0; x < segments.length; x++) {
 				String[] segmentArray = segments[x];
@@ -465,8 +464,8 @@ public class TorrentOpenOptions
 			int maxMatches = 0;
 			DownloadManager match = null;
 			long scanStarted = SystemTime.getCurrentTime();
-			for (Iterator iter = downloadManagers.iterator(); iter.hasNext();) {
-				DownloadManager dm = (DownloadManager) iter.next();
+			for (Iterator<DownloadManager> iter = downloadManagers.iterator(); iter.hasNext();) {
+				DownloadManager dm = iter.next();
 
 				if (dm.getState() == DownloadManager.STATE_ERROR) {
 					continue;
@@ -699,64 +698,23 @@ public class TorrentOpenOptions
 			return;
 		}
 		
+		boolean[]	skip = TorrentUtils.getSkipFiles( torrent );
+		
 		TOTorrentFile[] tfiles = torrent.getFiles();
 
-		Set<String>	skip_extensons 	= TorrentUtils.getSkipExtensionsSet();
-		Set<Object>	skip_files 		= TorrentUtils.getSkipFileSet();
+		if ( skip == null ){
+			
+			skip = new boolean[tfiles.length];
+		}
 
-		long	skip_min_size = COConfigurationManager.getLongParameter( "File.Torrent.AutoSkipMinSizeKB" )*1024L;
+		for ( int i=0;i<tfiles.length;i++){
 
-		for (int i = 0; i < files.length; i++) {
 			TOTorrentFile	torrentFile = tfiles[i];
 
 			String 	orgFullName = torrentFile.getRelativePath(); // translated to locale
 			String	orgFileName = new File(orgFullName).getName();
 
-			boolean	wanted = true;
-
-			if ( skip_min_size > 0 && torrentFile.getLength() < skip_min_size ){
-
-				wanted = false;
-
-			}else if ( skip_extensons.size() > 0 ){
-
-				int	pos = orgFileName.lastIndexOf( '.' );
-
-				if ( pos != -1 ){
-
-					String	ext = orgFileName.substring( pos+1 );
-
-					wanted = !skip_extensons.contains( ext );
-				}
-			}
-			
-			if ( wanted && !skip_files.isEmpty()){
-			
-				if ( skip_files.contains(orgFileName.toLowerCase())){
-					
-					wanted = false;
-					
-				}else{
-					
-					for ( Object o: skip_files ){
-						
-						if ( o instanceof Pattern ){
-						
-							try{
-								if ( ((Pattern)o).matcher( orgFileName ).matches()){
-									
-									wanted = false;
-									
-									break;
-								}
-							}catch( Throwable e ){
-								
-								Debug.out( e );
-							}
-						}
-					}
-				}
-			}
+			boolean	wanted = !skip[i];
 
 			if ( files[i] == null ){
 				
