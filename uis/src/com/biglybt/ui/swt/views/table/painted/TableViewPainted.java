@@ -2133,10 +2133,13 @@ public class TableViewPainted
 		}
 
 		if (DEBUG_ROWCHANGE) {
-			debug("visRowsChanged; shown=" + visibleRows.size() + "; +"
-					+ newlyVisibleRows.size() + "/-" + nowInVisibleRows.size() + "/"
-					+ rowsStayedVisibleButMoved.size() + " via "
-					+ Debug.getCompressedStackTrace(8));
+			int topIndex = visibleRows.size() > 0
+					? indexOf(visibleRows.iterator().next()) : -1;
+			debug(
+					"visRowsChanged; isv=" + isVisible + "; top=" + topIndex + "; shown="
+							+ visibleRows.size() + "; +" + newlyVisibleRows.size() + "/-"
+							+ nowInVisibleRows.size() + "/" + rowsStayedVisibleButMoved.size()
+							+ " via " + Debug.getCompressedStackTrace(8));
 		}
 		Utils.getOffOfSWTThread(new AERunnable() {
 
@@ -2210,7 +2213,8 @@ public class TableViewPainted
 								+ "(ofs=" + (offsetChanged ? "*" : "")
 								+ y
 								+ ";rh="
-								+ rowHeight + "/" + rowFullHeight + ")" + ", ";
+								+ rowHeight + "/" + rowFullHeight + ";ds="
+								+ rowSWT.getDataSource(true) + ")" + ", ";
 					}
 
 					if (offsetChanged) {
