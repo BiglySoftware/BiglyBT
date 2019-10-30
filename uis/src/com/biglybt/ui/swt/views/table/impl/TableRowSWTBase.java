@@ -331,7 +331,10 @@ public abstract class TableRowSWTBase
 		}
 		boolean changedIndex = lastIndex != newIndex;
 		if (changedIndex) {
-			//System.out.println("row " + newIndex + " from " + lastIndex + ";" + getView().isRowVisible(this) + ";" + Debug.getCompressedStackTrace());
+			//System.out.println("row " + newIndex + " from " + lastIndex + ";"
+			//		+ getSortColumnCells(null)[0].getSortValue() + ";"
+			//		+ getView().isRowVisible(this) + ";" + getDataSource(true) + ";"
+			//		+ Debug.getCompressedStackTrace(6));
 			lastIndex = newIndex;
 		}
 
