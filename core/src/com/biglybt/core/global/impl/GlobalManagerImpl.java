@@ -938,6 +938,7 @@ public class GlobalManagerImpl
 		File fDest = null;
 		HashWrapper hash = null;
 		boolean deleteDest = false;
+		DownloadManager deleteDestExistingDM = null;
 		boolean removeFromAddingDM = false;
 
 		try {
@@ -975,6 +976,7 @@ public class GlobalManagerImpl
 					DownloadManager existingDM = getDownloadManager(hash);
 					if (existingDM != null) {
 						deleteDest = true;
+						deleteDestExistingDM = existingDM;
 						return existingDM;
 					}
 
@@ -1013,6 +1015,7 @@ public class GlobalManagerImpl
 
 			if (manager == null || manager != new_manager) {
 				deleteDest = true;
+				deleteDestExistingDM = manager;
 			}else{
 					// new torrent, see if it is add-stopped and we want to auto-pause
 
@@ -1037,8 +1040,8 @@ public class GlobalManagerImpl
 				}
 			}
 		} catch (IOException e) {
-			System.out.println("DownloadManager::addDownloadManager: fails - td = "
-					+ torrentDir + ", fd = " + fDest);
+			System.err.println("DownloadManager::addDownloadManager: fails - td = "
+					+ torrentDir + ", fd = " + fDest + ": " + Debug.getNestedExceptionMessage( e ));
 			System.err.println(Debug.getCompressedStackTrace());
 			//Debug.printStackTrace(e);
 			manager = DownloadManagerFactory.create(this, optionalHash,
@@ -1053,13 +1056,19 @@ public class GlobalManagerImpl
 			manager = addDownloadManager(manager, true);
 		} finally {
 			if (deleteDest) {
-  			fDest.delete();
-  			File backupFile;
-				try {
-					backupFile = new File(fDest.getCanonicalPath() + ".bak");
-	  			if (backupFile.exists())
-	  				backupFile.delete();
-				} catch (IOException e) {
+				try{
+					boolean skip = deleteDestExistingDM != null && !new File( deleteDestExistingDM.getTorrentFileName()).equals( fDest );
+					
+					if ( !skip ){
+						fDest.delete();
+						File backupFile;
+	
+						backupFile = new File(fDest.getCanonicalPath() + ".bak");
+						if (backupFile.exists()){
+							backupFile.delete();
+						}
+					}
+				} catch (Throwable e) {
 				}
 			}
 

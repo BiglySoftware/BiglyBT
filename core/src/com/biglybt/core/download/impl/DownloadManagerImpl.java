@@ -3333,6 +3333,10 @@ DownloadManagerImpl
 	public DiskManagerPiece[] 
 	getDiskManagerPiecesSnapshot()
 	{
+		if ( destroyed ){
+			return( null );
+		}
+		
 		return controller.getDiskManagerPiecesSnapshot();
 	}
 	
