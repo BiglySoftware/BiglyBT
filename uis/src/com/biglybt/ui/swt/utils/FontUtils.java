@@ -244,7 +244,11 @@ public class FontUtils
 				int lineHeightPX = getFontHeightInPX(text.getFont());
 
 				int h = text.getClientArea().height - (text.getBorderWidth() * 2);
-				if (Utils.isGTK3 || Utils.isDarkAppearance()) {
+				if (h <= 4) {
+					return;
+				}
+
+				if (h > 10 && (Utils.isGTK3 || Utils.isDarkAppearance())) {
 					// GTK3 and OSX dark mode has border included in clientArea
 					h -= 6;
 				}
@@ -296,6 +300,9 @@ public class FontUtils
 		int newPX;
 		do {
 			height -= 0.25;
+			if (height < 4) {
+				return font;
+			}
 			setFontDataHeight(fontData, height);
 			font = new Font(device, fontData);
 
