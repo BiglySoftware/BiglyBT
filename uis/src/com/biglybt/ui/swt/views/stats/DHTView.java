@@ -655,24 +655,28 @@ public class DHTView
   }
 
   private void refresh() {
+	  if ( panel.isDisposed()){
+		  return;
+	  }
+
 	  // need to do these here otherwise they sit in an unpainted state
-	inGraph.refresh(false);
-	outGraph.refresh(false);
-	rttGraph.refresh();
+	  inGraph.refresh(false);
+	  outGraph.refresh(false);
+	  rttGraph.refresh();
 
-  	if (dht == null) {
-  		if (core != null) {
-  			// keep trying until dht is avail
-  			init(core);
-  		}
-			return;
-  	}
+	  if (dht == null) {
+		  if (core != null) {
+			  // keep trying until dht is avail
+			  init(core);
+		  }
+		  return;
+	  }
 
-    refreshGeneral();
-    refreshDB();
-    refreshTransportDetails();
-    refreshOperationDetails();
-    refreshActivity();
+	  refreshGeneral();
+	  refreshDB();
+	  refreshTransportDetails();
+	  refreshOperationDetails();
+	  refreshActivity();
   }
 
   private void refreshGeneral() {
