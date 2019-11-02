@@ -270,12 +270,12 @@ public class OpenTorrentOptionsWindow
 	}
 
 
-	private SkinnedDialog dlg;
-	private ImageLoader image_loader;
-	private SWTSkinObjectSash sash_object;
+	private SkinnedDialog 			dlg;
+	private ImageLoader 			image_loader;
+	private SWTSkinObjectSash 		sash_object;
 	private StackLayout				expand_stack;
 	private	Composite 				expand_stack_area;
-	private StandardButtonsArea buttonsArea;
+	private StandardButtonsArea 	buttonsArea;
 	private boolean 				window_initialised;
 
 	private Button	buttonTorrentUp;
@@ -297,162 +297,183 @@ public class OpenTorrentOptionsWindow
 
 	protected Map<String,DiscoveredTag> listDiscoveredTags = new TreeMap<>();
 
-	public static OpenTorrentOptionsWindow
+	public static void
 	addTorrent(
-		final TorrentOpenOptions torrentOptions )
+		TorrentOpenOptions torrentOptions )
+	{
+		Utils.execSWTThread(()->{ addTorrentSupport( torrentOptions, 1 ); });
+	}
+		
+	private static void
+	addTorrentSupport(
+		TorrentOpenOptions 	torrentOptions,
+		int					attempt_count )
 	{
 		TOTorrent torrent = torrentOptions.getTorrent();
-
-		TorrentManagerImpl t_man = TorrentManagerImpl.getSingleton();
-
+	
+		HashWrapper hw;
+		
 		try{
-			final HashWrapper hw = torrent.getHashWrapper();
+			hw = torrent.getHashWrapper();
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+			torrentOptions.cancel();
+			
+			return;
+		}
+		
+		synchronized( active_windows ){
 
-			synchronized( active_windows ){
+			OpenTorrentOptionsWindow existing = active_windows.get( hw );
 
-				final OpenTorrentOptionsWindow existing = active_windows.get( hw );
+			if ( existing != null ){
 
-				if ( existing != null ){
-
-					Utils.execSWTThread(new AERunnable() {
-						@Override
-						public void runSupport() {
-
-							existing.swt_activate();
-						}
-					});
-
-					torrentOptions.cancel();
+				if ( existing.isDisposed()){
 					
-					return( existing );
+					String name = new String(torrent.getName(), Constants.UTF_8 );
+					
+						// waiting for it to be removed
+					
+					if ( attempt_count > 5 ){
+						
+						Debug.out( "Taking a long time to dispose of existing dialog when adding '" + name + "'..." );
+						
+					}else if ( attempt_count > 30 ){
+						
+						Debug.out( "Giving up on adding '" + name + "'" );
+						
+						torrentOptions.cancel();
+						
+						return;
+					}
+					
+					SimpleTimer.addEvent(
+						"awc", SystemTime.getOffsetTime( 1000 ),
+						(ev)->{
+							addTorrentSupport( torrentOptions, attempt_count+1 );
+						});
+					
+					return;
 				}
+				
+				existing.swt_activate();
 
-				boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_SEP );
+				torrentOptions.cancel();
+				
+				return;
+			}
 
-				if ( active_window_checker == null ){
+			boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_SEP );
 
-					active_window_checker =
-						SimpleTimer.addPeriodicEvent(
-							"awc",
-							250,
-							new TimerEventPerformer() {
+			if ( active_window_checker == null ){
 
-								@Override
-								public void
-								perform(
-									TimerEvent event )
-								{
-									Utils.execSWTThread(new AERunnable() {
-										@Override
-										public void runSupport()
-										{
-											synchronized( active_windows ){
+				active_window_checker =
+					SimpleTimer.addPeriodicEvent(
+						"awc",
+						250,
+						new TimerEventPerformer() {
 
-												if ( active_windows.size() == 0 ){
+							@Override
+							public void
+							perform(
+								TimerEvent event )
+							{
+								Utils.execSWTThread(new AERunnable() {
+									@Override
+									public void runSupport()
+									{
+										synchronized( active_windows ){
 
-													if ( active_window_checker != null ){
+											if ( active_windows.size() == 0 ){
 
-														active_window_checker.cancel();
+												if ( active_window_checker != null ){
 
-														active_window_checker = null;
+													active_window_checker.cancel();
+
+													active_window_checker = null;
+												}
+											}else{
+
+												for ( OpenTorrentOptionsWindow w: active_windows.values()){
+
+													List<OpenTorrentInstance>	instances = w.getInstances();
+
+													int	num_reject 	= 0;
+													int num_accept	= 0;
+
+													for ( OpenTorrentInstance inst: instances ){
+
+														TorrentOpenOptions opts = inst.getOptions();
+
+														int act = opts.getCompleteAction();
+
+														if ( act == TorrentOpenOptions.CA_REJECT ){
+
+															w.removeInstance( inst, true );
+
+															num_reject++;
+
+														}else if ( act == TorrentOpenOptions.CA_ACCEPT ){
+
+															num_accept++;
+														}
+
+														if ( opts.getAndClearDirt()){
+
+															inst.refresh();
+														}
 													}
-												}else{
 
-													for ( OpenTorrentOptionsWindow w: active_windows.values()){
+													if ( num_reject >= instances.size()){
 
-														List<OpenTorrentInstance>	instances = w.getInstances();
+														w.cancelPressed();
 
-														int	num_reject 	= 0;
-														int num_accept	= 0;
+													}else if ( num_accept + num_reject >= instances.size()){
 
-														for ( OpenTorrentInstance inst: instances ){
-
-															TorrentOpenOptions opts = inst.getOptions();
-
-															int act = opts.getCompleteAction();
-
-															if ( act == TorrentOpenOptions.CA_REJECT ){
-
-																w.removeInstance( inst, true );
-
-																num_reject++;
-
-															}else if ( act == TorrentOpenOptions.CA_ACCEPT ){
-
-																num_accept++;
-															}
-
-															if ( opts.getAndClearDirt()){
-
-																inst.refresh();
-															}
-														}
-
-														if ( num_reject >= instances.size()){
-
-															w.cancelPressed();
-
-														}else if ( num_accept + num_reject >= instances.size()){
-
-															w.okPressed();
-														}
+														w.okPressed();
 													}
 												}
 											}
 										}
-									});
-								}
-							});
-
-
-				}
-
-				if ( !separate_dialogs ){
-
-					if ( active_windows.size() > 0 ){
-
-						final OpenTorrentOptionsWindow reuse_window = active_windows.values().iterator().next();
-
-						active_windows.put( hw,  reuse_window );
-
-						t_man.optionsAdded( torrentOptions );
-
-						Utils.execSWTThread(new AERunnable() {
-							@Override
-							public void runSupport()
-							{
-								reuse_window.swt_addTorrent( hw, torrentOptions );
+									}
+								});
 							}
 						});
 
 
-						return( reuse_window );
-					}
-				}
-
-				final OpenTorrentOptionsWindow new_window = new OpenTorrentOptionsWindow();
-
-				active_windows.put( hw,  new_window );
-
-				t_man.optionsAdded( torrentOptions );
-
-				Utils.execSWTThread(new AERunnable() {
-					@Override
-					public void runSupport() {
-
-						new_window.swt_addTorrent( hw, torrentOptions );
-					}
-				});
-
-				return( new_window );
 			}
-		}catch( Throwable e ){
 
-			Debug.out( e );
+			TorrentManagerImpl t_man = TorrentManagerImpl.getSingleton();
 
-			return( null );
+			if ( !separate_dialogs ){
+
+				if ( active_windows.size() > 0 ){
+
+					final OpenTorrentOptionsWindow reuse_window = active_windows.values().iterator().next();
+
+					active_windows.put( hw,  reuse_window );
+
+					t_man.optionsAdded( torrentOptions );
+
+					reuse_window.swt_addTorrent( hw, torrentOptions );
+
+					return;
+				}
+			}
+
+			final OpenTorrentOptionsWindow new_window = new OpenTorrentOptionsWindow();
+
+			active_windows.put( hw,  new_window );
+
+			t_man.optionsAdded( torrentOptions );
+
+			new_window.swt_addTorrent( hw, torrentOptions );
+			
+			return;
 		}
-
 	}
 
 	private
@@ -722,6 +743,12 @@ public class OpenTorrentOptionsWindow
 		}
 	}
 
+	private boolean
+	isDisposed()
+	{
+		return( expand_stack_area.isDisposed());
+	}
+	
 	private boolean
 	isInitialised()
 	{
@@ -1313,6 +1340,11 @@ public class OpenTorrentOptionsWindow
 				public void
 				run()
 				{
+					if ( expand_stack_area.isDisposed()){
+						
+						return;
+					}
+					
 					if ( multi_selection_instance != null ){
 
 						multi_selection_instance.getComposite().dispose();
@@ -1461,6 +1493,11 @@ public class OpenTorrentOptionsWindow
 	private void
 	swt_updateTVTorrentButtons()
 	{
+		if ( buttonTorrentRemove.isDisposed()){
+			
+			return;
+		}
+		
 		List<Object> selected = tvTorrents.getSelectedDataSources();
 
 		buttonTorrentRemove.setEnabled( selected.size() > 0 );
