@@ -1830,6 +1830,13 @@ public class GlobalManagerImpl
 	    	  if ( state != DownloadManager.STATE_STOPPED ){
 	    	  
 	    		  manager.stopIt( DownloadManager.STATE_STOPPED, false, false );
+	    		  
+	    	  }else{
+	    		  
+	    		  if ( ds_tagger != null ){
+	    			  
+	    			  ds_tagger.stateChanged( manager, DownloadManager.STATE_STOPPED );
+	    		  }
 	    	  }
 	    	  
 	    	  return( true );
@@ -1848,6 +1855,8 @@ public class GlobalManagerImpl
   stopPausedDownload(
 		DownloadManager dm )
   {
+	  boolean state_changed = false;
+	  
 	  try {
 		  paused_list_mon.enter();
 
@@ -1863,12 +1872,22 @@ public class GlobalManagerImpl
 				  
 				  paused_list.remove(i);
 
+				  state_changed = true;
+				  
 				  return( true );
 			  }
 		  }
 	  }finally{
 
 		  paused_list_mon.exit();
+		  
+		  if ( state_changed ){
+			  
+			  if ( ds_tagger != null ){
+				  
+				  ds_tagger.stateChanged( dm, DownloadManager.STATE_STOPPED );
+			  }
+		  }
 	  }
 	  
 	  return( false );
@@ -4455,6 +4474,18 @@ public class GlobalManagerImpl
 
 				}else if ( old_tag == tag_stopped ){
 
+					tag_paused.removeTaggable( manager );
+				}
+			}else if ( state == DownloadManager.STATE_STOPPED ){
+				
+				boolean paused = manager.isPaused();
+				
+				if ( paused && !tag_paused.hasTaggable( manager )){
+					
+					tag_paused.addTaggable( manager );
+					
+				}else if ( !paused && tag_paused.hasTaggable( manager )){
+					
 					tag_paused.removeTaggable( manager );
 				}
 			}
