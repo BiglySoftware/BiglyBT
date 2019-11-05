@@ -44,6 +44,7 @@ import com.biglybt.core.devices.DeviceManager;
 import com.biglybt.core.devices.DeviceManagerFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.Wiki;
 import com.biglybt.pif.PluginException;
@@ -131,17 +132,25 @@ public class DevicesFTUX
 		checkITunes.setSelection(true);
 		Messages.setLanguageText(checkITunes, "devices.turnon.itunes");
 
-		PluginInterface itunes_plugin = null;
-		try {
-			itunes_plugin = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID(
-					"azitunes", true);
-
-		} catch (Throwable ignored) {
+		if ( Constants.isWindows || Constants.isOSX ){
+			
+			PluginInterface itunes_plugin = null;
+			try {
+				itunes_plugin = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID(
+						"azitunes", true);
+	
+			} catch (Throwable ignored) {
+			}
+			if (itunes_plugin != null && itunes_plugin.getPluginState().isOperational()) {
+				checkITunes.setEnabled(false);
+			}
+		}else{
+				// no itunes support on Linux
+			
+			checkITunes.setSelection( false );
+			checkITunes.setEnabled( false );
 		}
-		if (itunes_plugin != null && itunes_plugin.getPluginState().isOperational()) {
-			checkITunes.setEnabled(false);
-		}
-
+		
 		Link lblLearnMore = new Link(shell, SWT.NONE);
 		lblLearnMore.setText("<A HREF=\"" + Wiki.DEVICES_FAQ + "\">"
 				+ MessageText.getString("label.learnmore") + "</A>");

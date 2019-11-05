@@ -19,6 +19,7 @@
 
 package com.biglybt.pifimpl.local.ui.config;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.biglybt.pif.ui.config.Parameter;
@@ -51,7 +52,7 @@ ParameterGroupImpl
 
 	public
 	ParameterGroupImpl(
-			String			_resource,
+		String				_resource,
 		Parameter...		_parameters )
 	{
 		super(null, "" );
@@ -60,19 +61,21 @@ ParameterGroupImpl
 
 		if ( _parameters != null ){
 
-			parameters = new ParameterImpl[_parameters.length];
+			List<ParameterImpl>	temp = new ArrayList<>( _parameters.length );
 
 			for (int i=0;i<_parameters.length;i++){
 
 				ParameterImpl parameter = (ParameterImpl)_parameters[i];
 
-				parameters[i] = parameter;
-
 				if ( parameter != null ){
-
+					
+					temp.add( parameter );
+					
 					parameter.setGroup( this );
 				}
 			}
+			
+			parameters = temp.toArray( new ParameterImpl[0] );
 		}
 	}
 

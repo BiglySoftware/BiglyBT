@@ -61,6 +61,7 @@ import com.biglybt.net.upnp.services.UPnPWANCommonInterfaceConfig;
 import com.biglybt.net.upnpms.*;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.platform.PlatformManager;
+import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -829,71 +830,89 @@ DeviceManagerUI
 
 		// disable sleep
 
-		final BooleanParameter disable_sleep =
-			configModel.addBooleanParameter2(
-				"device.config.xcode.disable_sleep", "device.config.xcode.disable_sleep",
-				device_manager.getDisableSleep());
-
-
-		disable_sleep.addListener(
-			new ParameterListener()
-			{
-				@Override
-				public void
-				parameterChanged(
-					Parameter param)
+		PlatformManager platform = PlatformManagerFactory.getPlatformManager();
+		
+		BooleanParameter disable_sleep;
+		
+		if ( platform.hasCapability( PlatformManagerCapabilities.PreventComputerSleep )){
+			
+			disable_sleep =
+				configModel.addBooleanParameter2(
+					"device.config.xcode.disable_sleep", "device.config.xcode.disable_sleep",
+					device_manager.getDisableSleep());
+	
+	
+			disable_sleep.addListener(
+				new ParameterListener()
 				{
-					device_manager.setDisableSleep( disable_sleep.getValue());
-				}
-			});
-
-			// itunes
-
-		final ActionParameter btnITunes = configModel.addActionParameter2("devices.button.installitunes", "UpdateWindow.columns.install");
-		btnITunes.setEnabled(false);
-		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
-			@Override
-			public void coreRunning(Core core) {
-				boolean hasItunes = core.getPluginManager().getPluginInterfaceByID(
-						"azitunes") != null;
-				btnITunes.setEnabled(!hasItunes);
-			}
-		});
-
-		btnITunes.addListener(new ParameterListener() {
-			@Override
-			public void parameterChanged(Parameter param) {
-				CoreWaiterSWT.waitForCoreRunning(new CoreRunningListener() {
 					@Override
-					public void coreRunning(Core core) {
-						try {
-							PluginInstaller installer = core.getPluginManager().getPluginInstaller();
-
-							StandardPlugin itunes_plugin = installer.getStandardPlugin("azitunes");
-
-							if ( itunes_plugin == null ){
-
-								Debug.out( "iTunes standard plugin not found");
-
-							}else{
-
-								itunes_plugin.install(false);
-							}
-						} catch (Throwable e) {
-
-							Debug.printStackTrace(e);
-						}
+					public void
+					parameterChanged(
+						Parameter param)
+					{
+						device_manager.setDisableSleep( disable_sleep.getValue());
 					}
 				});
-			}
-		});
+		}else{
+			
+			disable_sleep = null;
+		}
+		
+		ActionParameter btnITunes;
+		
+		if ( Constants.isWindows || Constants.isOSX ){
+			
+				// itunes
+	
+			btnITunes = configModel.addActionParameter2("devices.button.installitunes", "UpdateWindow.columns.install");
+			btnITunes.setEnabled(false);
+			CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+				@Override
+				public void coreRunning(Core core) {
+					boolean hasItunes = core.getPluginManager().getPluginInterfaceByID(
+							"azitunes") != null;
+					btnITunes.setEnabled(!hasItunes);
+				}
+			});
+	
+			btnITunes.addListener(new ParameterListener() {
+				@Override
+				public void parameterChanged(Parameter param) {
+					CoreWaiterSWT.waitForCoreRunning(new CoreRunningListener() {
+						@Override
+						public void coreRunning(Core core) {
+							try {
+								PluginInstaller installer = core.getPluginManager().getPluginInstaller();
+	
+								StandardPlugin itunes_plugin = installer.getStandardPlugin("azitunes");
+	
+								if ( itunes_plugin == null ){
+	
+									Debug.out( "iTunes standard plugin not found");
+	
+								}else{
+	
+									itunes_plugin.install(false);
+								}
+							} catch (Throwable e) {
+	
+								Debug.printStackTrace(e);
+							}
+						}
+					});
+				}
+			});
+		}else{
+			
+			btnITunes = null;
+		}
 
 		configModel.createGroup(
-			"device.xcode.group",
-			new Parameter[]
-			{
-					def_work_dir, max_xcode, disable_sleep, btnITunes
-			});
+				"device.xcode.group",
+				new Parameter[]
+				{
+						def_work_dir, max_xcode, disable_sleep, btnITunes
+				});
 	}
 
 	protected void
