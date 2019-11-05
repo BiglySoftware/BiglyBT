@@ -1704,8 +1704,16 @@ TRTrackerBTAnnouncerImpl
  						if (Logger.isEnabled()) {
 							Logger.log(new LogEvent(torrent, LOGID,
 									"Exception while Requesting Tracker", e));
+							
+							String str = message.toString();
+							
+							if ( str.length() > 128 ){
+								
+								str = str.substring( 0, 128 ) + "...";
+							}
+							
 							Logger.log(new LogEvent(torrent, LOGID, LogEvent.LT_ERROR,
-									"Message Received was : " + message));
+									"Message received was : " + str));
 						}
 
  						failure_reason = exceptionToString( con, e );

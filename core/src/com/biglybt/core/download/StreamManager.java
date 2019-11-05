@@ -172,12 +172,14 @@ StreamManager
 	isStreamingUsable()
 	{
 			// need win or osx 10.5+
-
+		// linux supported since 2101
+		/*
 		if ( !( Constants.isWindows || Constants.isOSX )){
 
 			return( false );
 		}
-
+		*/
+		
 		try{
 			PluginManager plug_man = CoreFactory.getSingleton().getPluginManager();
 

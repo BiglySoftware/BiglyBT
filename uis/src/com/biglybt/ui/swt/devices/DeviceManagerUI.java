@@ -118,7 +118,7 @@ DeviceManagerUI
 	private static final String CONFIG_SECTION_ID = "Devices";
 
 	public static boolean DISABLED = Utils.isAZ2UI();
-	public static boolean DISABLED_TRANSCODING = Constants.isUnix;
+	public static boolean DISABLED_TRANSCODING = false;	// Linux support added in 2101 - Constants.isUnix;
 
 	private static final int MIN_FILE_SIZE_FOR_XCODE	= 128*1024;
 	private static final int MAX_FILES_FOR_MULTI_XCODE	= 64;

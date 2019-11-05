@@ -255,7 +255,7 @@ public class DeviceInfoArea
 		parent.getParent().layout();
 	}
 
-
+/*
 	private void buildBetaArea(Composite parent, Control above) {
 		FormData fd;
 
@@ -512,4 +512,5 @@ public class DeviceInfoArea
 		}
 
 	}
+	*/
 }
