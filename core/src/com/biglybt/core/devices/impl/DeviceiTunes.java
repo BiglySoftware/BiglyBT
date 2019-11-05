@@ -306,8 +306,10 @@ DeviceiTunes
 
 				if ( !is_installed ){
 
-					info = MessageText.getString( "device.itunes.install" );
-
+					if ( Constants.isWindows || Constants.isOSX ){
+					
+						info = MessageText.getString( "device.itunes.install" );
+					}
 				}else if ( !is_running ){
 
 					if ( !getAutoStartDevice()){
@@ -733,7 +735,16 @@ DeviceiTunes
 
 		}else{
 
-			return( MessageText.getString( "device.itunes.status.notinstalled" ));
+			if ( Constants.isWindows || Constants.isOSX ){
+
+				return( MessageText.getString( "device.itunes.status.notinstalled" ));
+				
+			}else{
+				
+					// not really supported on linux
+				
+				return( null );
+			}
 		}
 	}
 
