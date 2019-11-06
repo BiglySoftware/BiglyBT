@@ -58,6 +58,7 @@ import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.core.peer.impl.PEPeerTransport;
 import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.DisplayFormatters;
@@ -993,7 +994,22 @@ public class PeersGraphicView
    	PieUtils.drawPie(gcBuffer, data.me_hit_x, data.me_hit_y,OWN_SIZE,OWN_SIZE,manager.getStats().getCompleted() / 10);
 
     if ( my_flag != null ){
-    	PieUtils.drawPie(gcBuffer, my_flag, data.me_hit_x, data.me_hit_y,OWN_SIZE,OWN_SIZE,manager.getStats().getCompleted() / 10, false );
+    	Image img = my_flag;
+    	
+    	String[] nets = data.manager.getDownloadState().getNetworks();
+    	
+    	for ( String net: nets ){
+    		if ( net == AENetworkClassifier.AT_PUBLIC ){
+    			img = my_flag;
+    			break;
+    		}else{
+    			img = ImageRepository.getCountryFlag( AENetworkClassifier.AT_I2P, false );
+    			if ( img == null ){
+    				img = my_flag;
+    			}
+    		}
+    	}
+    	PieUtils.drawPie(gcBuffer, img, data.me_hit_x, data.me_hit_y,OWN_SIZE,OWN_SIZE,manager.getStats().getCompleted() / 10, false );
     }
 
     data.me_hit_x += panelOffset.x;
