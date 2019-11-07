@@ -31,6 +31,7 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.graphics.SpeedGraphic;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -50,18 +51,18 @@ public class CacheView
 
   Composite panel;
 
-  Label lblInUse,lblSize,lblPercentUsed;
+  BufferedLabel lblInUse,lblSize,lblPercentUsed;
   ProgressBar pbInUse;
 
-  Label lblReadsFromCache,lblNumberReadsFromCache,lblAvgSizeFromCache;
-  Label lblReadsFromFile, lblNumberReadsFromFile,lblAvgSizeFromFile;
-  Label lblPercentReads;
+  BufferedLabel lblReadsFromCache,lblNumberReadsFromCache,lblAvgSizeFromCache;
+  BufferedLabel lblReadsFromFile, lblNumberReadsFromFile,lblAvgSizeFromFile;
+  BufferedLabel lblPercentReads;
   ProgressBar pbReads;
 
 
-  Label lblWritesToCache,lblNumberWritesToCache,lblAvgSizeToCache;
-  Label lblWritesToFile, lblNumberWritesToFile,lblAvgSizeToFile;
-  Label lblPercentWrites;
+  BufferedLabel lblWritesToCache,lblNumberWritesToCache,lblAvgSizeToCache;
+  BufferedLabel lblWritesToFile, lblNumberWritesToFile,lblAvgSizeToFile;
+  BufferedLabel lblPercentWrites;
   ProgressBar pbWrites;
 
   Canvas  readsFromFile,readsFromCache,writesToCache,writesToFile;
@@ -111,7 +112,7 @@ public class CacheView
     lbl.setLayoutData(gridData);
     Messages.setLanguageText(lbl,"CacheView.general.inUse");
 
-    lblInUse = new Label(gCacheGeneral,SWT.NULL);
+    lblInUse = new BufferedLabel(gCacheGeneral,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblInUse.setLayoutData(gridData);
@@ -123,10 +124,10 @@ public class CacheView
     pbInUse.setMinimum(0);
     pbInUse.setMaximum(1000);
 
-    lblPercentUsed = new Label(gCacheGeneral,SWT.NULL);
+    lblPercentUsed = new BufferedLabel(gCacheGeneral,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.verticalSpan = 2;
-    gridData.widthHint = 100;
+    gridData.widthHint = 120;
     lblPercentUsed.setLayoutData(gridData);
 
     lbl = new Label(gCacheGeneral,SWT.NULL);
@@ -135,7 +136,7 @@ public class CacheView
     lbl.setLayoutData(gridData);
     Messages.setLanguageText(lbl,"CacheView.general.size");
 
-    lblSize = new Label(gCacheGeneral,SWT.NULL);
+    lblSize = new BufferedLabel(gCacheGeneral,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblSize.setLayoutData(gridData);
@@ -174,17 +175,17 @@ public class CacheView
     lbl.setLayoutData(gridData);
     Messages.setLanguageText(lbl,"CacheView.reads.fromCache");
 
-    lblNumberReadsFromCache = new Label(gCacheReads,SWT.NULL);
+    lblNumberReadsFromCache = new BufferedLabel(gCacheReads,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblNumberReadsFromCache.setLayoutData(gridData);
 
-    lblReadsFromCache = new Label(gCacheReads,SWT.NULL);
+    lblReadsFromCache = new BufferedLabel(gCacheReads,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblReadsFromCache.setLayoutData(gridData);
 
-    lblAvgSizeFromCache = new Label(gCacheReads,SWT.NULL);
+    lblAvgSizeFromCache = new BufferedLabel(gCacheReads,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblAvgSizeFromCache.setLayoutData(gridData);
@@ -196,10 +197,10 @@ public class CacheView
     pbReads.setMinimum(0);
     pbReads.setMaximum(1000);
 
-    lblPercentReads = new Label(gCacheReads,SWT.NULL);
-    gridData = new GridData();
+    lblPercentReads = new BufferedLabel(gCacheReads,SWT.DOUBLE_BUFFERED);
+    gridData = new GridData(GridData.FILL_VERTICAL);
     gridData.verticalSpan = 2;
-    gridData.widthHint = 100;
+    gridData.widthHint = 120;
     lblPercentReads.setLayoutData(gridData);
 
     lbl = new Label(gCacheReads,SWT.NULL);
@@ -208,17 +209,17 @@ public class CacheView
     lbl.setLayoutData(gridData);
     Messages.setLanguageText(lbl,"CacheView.reads.fromFile");
 
-    lblNumberReadsFromFile = new Label(gCacheReads,SWT.NULL);
+    lblNumberReadsFromFile = new BufferedLabel(gCacheReads,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblNumberReadsFromFile.setLayoutData(gridData);
 
-    lblReadsFromFile = new Label(gCacheReads,SWT.NULL);
+    lblReadsFromFile = new BufferedLabel(gCacheReads,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblReadsFromFile.setLayoutData(gridData);
 
-    lblAvgSizeFromFile = new Label(gCacheReads,SWT.NULL);
+    lblAvgSizeFromFile = new BufferedLabel(gCacheReads,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblAvgSizeFromFile.setLayoutData(gridData);
@@ -319,17 +320,17 @@ public class CacheView
     lbl.setLayoutData(gridData);
     Messages.setLanguageText(lbl,"CacheView.writes.toCache");
 
-    lblNumberWritesToCache = new Label(gCacheWrites,SWT.NULL);
+    lblNumberWritesToCache = new BufferedLabel(gCacheWrites,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblNumberWritesToCache.setLayoutData(gridData);
 
-    lblWritesToCache = new Label(gCacheWrites,SWT.NULL);
+    lblWritesToCache = new BufferedLabel(gCacheWrites,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblWritesToCache.setLayoutData(gridData);
 
-    lblAvgSizeToCache = new Label(gCacheWrites,SWT.NULL);
+    lblAvgSizeToCache = new BufferedLabel(gCacheWrites,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblAvgSizeToCache.setLayoutData(gridData);
@@ -341,10 +342,10 @@ public class CacheView
     pbWrites.setMinimum(0);
     pbWrites.setMaximum(1000);
 
-    lblPercentWrites = new Label(gCacheWrites,SWT.NULL);
+    lblPercentWrites = new BufferedLabel(gCacheWrites,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.verticalSpan = 2;
-    gridData.widthHint = 100;
+    gridData.widthHint = 120;
     lblPercentWrites.setLayoutData(gridData);
 
     lbl = new Label(gCacheWrites,SWT.NULL);
@@ -353,17 +354,17 @@ public class CacheView
     lbl.setLayoutData(gridData);
     Messages.setLanguageText(lbl,"CacheView.writes.toFile");
 
-    lblNumberWritesToFile = new Label(gCacheWrites,SWT.NULL);
+    lblNumberWritesToFile = new BufferedLabel(gCacheWrites,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblNumberWritesToFile.setLayoutData(gridData);
 
-    lblWritesToFile = new Label(gCacheWrites,SWT.NULL);
+    lblWritesToFile = new BufferedLabel(gCacheWrites,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblWritesToFile.setLayoutData(gridData);
 
-    lblAvgSizeToFile = new Label(gCacheWrites,SWT.NULL);
+    lblAvgSizeToFile = new BufferedLabel(gCacheWrites,SWT.DOUBLE_BUFFERED);
     gridData = new GridData();
     gridData.widthHint = 100;
     lblAvgSizeToFile.setLayoutData(gridData);
@@ -438,12 +439,18 @@ public class CacheView
     lblReadsFromCache.setText(DisplayFormatters.formatByteCountToKiBEtc(readsFromCache));
     lblReadsFromFile.setText(DisplayFormatters.formatByteCountToKiBEtc(readsFromFile));
 
-    long totalRead = readsFromCache + readsFromFile;
-    if(totalRead > 0) {
-      perThousands = (int) ((1000l * stats.getBytesReadFromCache()) / totalRead);
+     if(readsFromFile > 0) {
+      perThousands = (int) ((1000l * readsFromCache ) / readsFromFile);
       
-      	// used to use CacheView.read.hits as label but this isn't accurate as it is based on bytes
-      lblPercentReads.setText(DisplayFormatters.formatPercentFromThousands(perThousands) + " " + MessageText.getString("CacheView.writes.hits"));
+      String hr;
+      if ( nbReadsFromFile==0){
+    	  hr = "";
+      }else{
+    	  hr = DisplayFormatters.formatDecimal( (double)nbReadsFromCache/nbReadsFromFile, 2 ) + "  " + MessageText.getString("label.hit.ratio");
+      }
+      lblPercentReads.setText(
+    		  DisplayFormatters.formatPercentFromThousands(perThousands) + " " + MessageText.getString("label.efficiency") + "\n" + hr );
+      
       pbReads.setSelection(perThousands);
     }
   }
