@@ -4314,7 +4314,7 @@ BuddyPluginViewBetaChat
 	private void
 	timerTick()
 	{
-		if ( buddy_table == null ){
+		if ( buddy_table == null || buddy_table.isDisposed()){
 			
 			return;
 		}
