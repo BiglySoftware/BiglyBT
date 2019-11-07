@@ -43,10 +43,34 @@ public class SBC_LibraryTableView_Big
 
 	@Override
 	public TableColumnCore[] getColumns() {
+		
 		String tableID = SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true, initialDataSource );
+		
 		if ( tableID != null ){
-			return( TableColumnCreatorV3.createCompleteDM( tableID, true ));
+			
+			TableColumnCore[] columns = null;
+			
+			if ( torrentFilterMode == SBC_LibraryView.TORRENTS_COMPLETE ){
+				
+				columns = TableColumnCreatorV3.createCompleteDM( tableID, true );
+
+			}else if ( torrentFilterMode == SBC_LibraryView.TORRENTS_INCOMPLETE ){
+				
+				columns = TableColumnCreatorV3.createIncompleteDM( tableID, true );
+
+			} else if ( torrentFilterMode == SBC_LibraryView.TORRENTS_UNOPENED ){
+				
+				columns = TableColumnCreatorV3.createUnopenedDM( tableID, true );
+
+			} else if ( torrentFilterMode == SBC_LibraryView.TORRENTS_ALL ){
+				
+				columns = TableColumnCreatorV3.createAllDM( tableID, true );
+			}
+			
+			return( columns );
+			
 		}else{
+			
 			return( null );
 		}
 	}

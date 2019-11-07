@@ -194,13 +194,15 @@ public class TableColumnSetupWindow
 			}
 		};
 
-		String tableName = MessageText.getString(_tableID + "View.header",
+		String baseID = Utils.getBaseViewID( _tableID );
+		
+		String tableName = MessageText.getString(baseID + "View.header",
 				(String) null);
 		if (tableName == null) {
-			tableName = MessageText.getString(_tableID + "View.title.full",
+			tableName = MessageText.getString(baseID + "View.title.full",
 					(String) null);
 			if (tableName == null) {
-				tableName = _tableID;
+				tableName = baseID;
 			}
 		}
 

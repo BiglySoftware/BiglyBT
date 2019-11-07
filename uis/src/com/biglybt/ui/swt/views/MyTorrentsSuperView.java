@@ -70,13 +70,19 @@ public class MyTorrentsSuperView
 		// 1: incomplete left, complete right
 		// 2: complete top, incomplete bottom
 		// 3: complete left, incomplete right
+		// 4: combined
 	
 	private static int	SPLIT_MODE = 0;	
 
 	static{
 		COConfigurationManager.addAndFireParameterListener(
 			"Library.TorrentViewSplitMode",
-			(name)->{ SPLIT_MODE= COConfigurationManager.getIntParameter( name );});
+			(name)->{ 
+				SPLIT_MODE= COConfigurationManager.getIntParameter( name );
+				if ( SPLIT_MODE == 4 ){	// shouldn't happen in general
+					SPLIT_MODE = 0;
+				}
+			});
 	}
 	
 	private MyTorrentsView torrentview;

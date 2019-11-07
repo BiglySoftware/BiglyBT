@@ -2578,7 +2578,15 @@ public class SB_Transfers
 			baseTableID =  big ? TableManager.TABLE_MYTORRENTS_INCOMPLETE_BIG
 					: TableManager.TABLE_MYTORRENTS_INCOMPLETE;
 		} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_ALL) {
-			baseTableID =  TableManager.TABLE_MYTORRENTS_ALL_BIG;
+			if ( big ){
+				baseTableID =  TableManager.TABLE_MYTORRENTS_ALL_BIG;
+			}else{
+				if ( COConfigurationManager.getIntParameter( "Library.TorrentViewSplitMode" ) == 4 ){
+					baseTableID =  TableManager.TABLE_MYTORRENTS_ALL_SMALL;
+				}else{
+					baseTableID =  TableManager.TABLE_MYTORRENTS_ALL_BIG;
+				}
+			}
 		} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_UNOPENED) {
 			baseTableID =  big ? TableManager.TABLE_MYTORRENTS_UNOPENED_BIG
 					: TableManager.TABLE_MYTORRENTS_UNOPENED;

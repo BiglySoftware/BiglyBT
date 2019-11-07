@@ -64,12 +64,14 @@ import com.biglybt.ui.swt.views.MyTorrentsSuperView;
 import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
+import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.util.DLReferals;
 import com.biglybt.util.DataSourceUtils;
 import com.biglybt.util.PlayUtils;
 
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.ui.tables.TableRow;
 import com.biglybt.pif.ui.tables.TableRowRefreshListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
@@ -142,42 +144,27 @@ public class SBC_LibraryTableView
 				"library-categories", soParent.getParent());
 		Composite cCats = soCats == null ? null : soCats.getComposite();
 
-		// columns not needed for small mode, all torrents
-		TableColumnCore[] columns = useBigTable
-				|| torrentFilterMode != SBC_LibraryView.TORRENTS_ALL ? getColumns()
-				: null;
-
-		if (null != columns) {
-			TableColumnManager tcManager = TableColumnManager.getInstance();
-			tcManager.addColumns(columns);
-		}
-
 		if (useBigTable) {
 			if (torrentFilterMode == SBC_LibraryView.TORRENTS_COMPLETE
 					|| torrentFilterMode == SBC_LibraryView.TORRENTS_INCOMPLETE
 					|| torrentFilterMode == SBC_LibraryView.TORRENTS_UNOPENED) {
 
-				swtViewListener = torrentView = new MyTorrentsView_Big(core, torrentFilterMode, initialDataSource,
-						columns, txtFilter, cCats);
+				swtViewListener = torrentView = new MyTorrentsView_Big(core, torrentFilterMode, initialDataSource, getColumnsSupport(), txtFilter, cCats);
 
 			} else {
-				swtViewListener = torrentView = new MyTorrentsView_Big(core, torrentFilterMode, initialDataSource,
-						columns, txtFilter, cCats);
+				swtViewListener = torrentView = new MyTorrentsView_Big(core, torrentFilterMode, initialDataSource, getColumnsSupport(), txtFilter, cCats);
 			}
 
 		} else {
 			String tableID = SB_Transfers.getTableIdFromFilterMode(	torrentFilterMode, false, initialDataSource );
 			if (torrentFilterMode == SBC_LibraryView.TORRENTS_COMPLETE) {
-				swtViewListener = torrentView = new MyTorrentsView(core, tableID, true, columns, txtFilter,
-						cCats,true);
+				swtViewListener = torrentView = new MyTorrentsView(core, tableID, true, getColumnsSupport(), txtFilter, cCats,true);
 
 			} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_INCOMPLETE) {
-				swtViewListener = torrentView = new MyTorrentsView(core, tableID, false, columns, txtFilter,
-						cCats,true);
+				swtViewListener = torrentView = new MyTorrentsView(core, tableID, false, getColumnsSupport(), txtFilter, cCats,true);
 
 			} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_UNOPENED) {
-				swtViewListener = torrentView = new MyTorrentsView(core, tableID, true, columns, txtFilter,
-						cCats, true) {
+				swtViewListener = torrentView = new MyTorrentsView(core, tableID, true, getColumnsSupport(), txtFilter,	cCats, true){
 					@Override
 					public boolean isOurDownloadManager(DownloadManager dm) {
 						if (PlatformTorrentUtils.getHasBeenOpened(dm)) {
@@ -187,29 +174,35 @@ public class SBC_LibraryTableView
 					}
 				};
 			} else {
-				swtViewListener = new MyTorrentsSuperView(txtFilter, cCats, initialDataSource ) {
-					@Override
-					public void initializeDone() {
-						MyTorrentsView seedingview = getSeedingview();
-						if (seedingview != null) {
-							seedingview.overrideDefaultSelected(new TableSelectionAdapter() {
-								@Override
-								public void defaultSelected(TableRowCore[] rows, int stateMask, int origin ) {
-									doDefaultClick(rows, stateMask, false, origin );
-								}
-							});
-							MyTorrentsView torrentview = getTorrentview();
-							if (torrentview != null) {
-								torrentview.overrideDefaultSelected(new TableSelectionAdapter() {
+				if ( Utils.getBaseViewID( tableID ).equals( TableManager.TABLE_MYTORRENTS_ALL_SMALL )){
+					
+					swtViewListener = torrentView = new MyTorrentsView_Small( core, torrentFilterMode, initialDataSource, getColumnsSupport(), txtFilter, cCats );
+					
+				}else{
+					swtViewListener = new MyTorrentsSuperView(txtFilter, cCats, initialDataSource ) {
+						@Override
+						public void initializeDone() {
+							MyTorrentsView seedingview = getSeedingview();
+							if (seedingview != null) {
+								seedingview.overrideDefaultSelected(new TableSelectionAdapter() {
 									@Override
 									public void defaultSelected(TableRowCore[] rows, int stateMask, int origin ) {
 										doDefaultClick(rows, stateMask, false, origin );
 									}
 								});
+								MyTorrentsView torrentview = getTorrentview();
+								if (torrentview != null) {
+									torrentview.overrideDefaultSelected(new TableSelectionAdapter() {
+										@Override
+										public void defaultSelected(TableRowCore[] rows, int stateMask, int origin ) {
+											doDefaultClick(rows, stateMask, false, origin );
+										}
+									});
+								}
 							}
 						}
-					}
-				};
+					};
+				}
 			}
 
 			if (torrentView != null) {
@@ -532,6 +525,20 @@ public class SBC_LibraryTableView
 		return false;
 	}
 
+	private TableColumnCore[]
+	getColumnsSupport()
+	{
+		TableColumnCore[] columns = getColumns();
+
+		if ( columns != null ){
+			
+			TableColumnManager tcManager = TableColumnManager.getInstance();
+			
+			tcManager.addColumns(columns);
+		}
+
+		return( columns );
+	}
 	/**
 	 * Returns the appropriate set of columns for the completed or incomplete torrents views
 	 * Subclasses may override to return different sets of columns
@@ -539,9 +546,32 @@ public class SBC_LibraryTableView
 	 */
 	protected TableColumnCore[] getColumns() {
 		String tableID = SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, false, initialDataSource);
+		
 		if ( tableID != null ){
-			return( TableColumnCreatorV3.createCompleteDM( tableID, false ));
+			
+			TableColumnCore[] columns = null;
+			
+			if (torrentFilterMode == SBC_LibraryView.TORRENTS_COMPLETE ){
+				
+				columns = TableColumnCreator.createCompleteDM( tableID );
+				
+			} else if ( torrentFilterMode == SBC_LibraryView.TORRENTS_INCOMPLETE ){
+				
+				return TableColumnCreator.createIncompleteDM( tableID );
+				
+			} else if ( torrentFilterMode == SBC_LibraryView.TORRENTS_UNOPENED ){
+				
+				return TableColumnCreatorV3.createUnopenedDM( tableID, false);
+				
+			} else if ( torrentFilterMode == SBC_LibraryView.TORRENTS_ALL ){
+				
+				return TableColumnCreator.createAllDM( tableID );
+			}
+			
+			return( columns );
+			
 		}else{
+			
 			return( null );
 		}
 	}

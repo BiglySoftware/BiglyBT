@@ -151,7 +151,6 @@ public class TableColumnCreatorV3
 		}
 	}
 
-	/*
 	public static TableColumnCore[] createIncompleteDM(String tableID, boolean big) {
 		final String[] oldVisibleOrder = {
 			ColumnThumbAndName.COLUMN_ID,
@@ -215,7 +214,6 @@ public class TableColumnCreatorV3
 
 		return mapTCs.values().toArray(new TableColumnCore[0]);
 	}
-	*/
 	
 	/**
 	 * @param mapTCs
@@ -305,7 +303,6 @@ public class TableColumnCreatorV3
 		return mapTCs.values().toArray(new TableColumnCore[0]);
 	}
 
-	/*
 	public static TableColumnCore[] createUnopenedDM(String tableID, boolean big) {
 		final String[] oldVisibleOrder = {
 			ColumnUnopened.COLUMN_ID,
@@ -364,7 +361,7 @@ public class TableColumnCreatorV3
 
 		return mapTCs.values().toArray(new TableColumnCore[0]);
 	}
-	*/
+	
 	
 	public static TableColumnCore[] createActivitySmall(String tableID) {
 		final String[] defaultVisibleOrder = {

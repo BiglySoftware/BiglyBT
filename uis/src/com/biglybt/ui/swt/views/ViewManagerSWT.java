@@ -114,6 +114,7 @@ public class ViewManagerSWT
 		switch (viewID) {
 
 			case TableManager.TABLE_MYTORRENTS_ALL_BIG:
+			case TableManager.TABLE_MYTORRENTS_ALL_SMALL:
 			case TableManager.TABLE_MYTORRENTS_INCOMPLETE: // equiv UISWTInstance.VIEW_MYTORRENTS
 			case TableManager.TABLE_MYTORRENTS_INCOMPLETE_BIG:
 			case TableManager.TABLE_MYTORRENTS_COMPLETE:

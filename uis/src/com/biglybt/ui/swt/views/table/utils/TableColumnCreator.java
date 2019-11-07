@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.LightHashMap;
+import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
 import com.biglybt.pif.ui.tables.TableColumn;
@@ -129,6 +130,52 @@ public class TableColumnCreator
 		return (TableColumnCore[]) mapTCs.values().toArray(new TableColumnCore[0]);
 	}
 
+	public static TableColumnCore[] createAllDM(String tableID) {
+		final String[] defaultVisibleOrder = {
+				HealthItem.COLUMN_ID,
+				RankItem.COLUMN_ID,
+				"SeedingRank",
+				NameItem.COLUMN_ID,
+				"TorrentStream",
+				"azsubs.ui.column.subs",
+				"azbuddy.ui.column.msgpending",
+				"RatingColumn",
+				"Info",
+				"RateIt",
+				CommentIconItem.COLUMN_ID,
+				SizeItem.COLUMN_ID,
+				DownItem.COLUMN_ID,
+				DoneItem.COLUMN_ID,
+				StatusItem.COLUMN_ID,
+				SeedsItem.COLUMN_ID,
+				PeersItem.COLUMN_ID,
+				DownSpeedItem.COLUMN_ID,
+				UpSpeedItem.COLUMN_ID,
+				ETAItem.COLUMN_ID,
+				ShareRatioItem.COLUMN_ID,
+				TrackerStatusItem.COLUMN_ID,
+		};
+
+		TableColumnManager tcManager = TableColumnManager.getInstance();
+		Map mapTCs = tcManager.getTableColumnsAsMap(Download.class, tableID);
+
+		tcManager.setDefaultColumnNames(tableID, defaultVisibleOrder);
+
+		if (!tcManager.loadTableColumnSettings(Download.class,
+				tableID)
+				|| areNoneVisible(mapTCs)) {
+			setVisibility(mapTCs, defaultVisibleOrder);
+
+			RankItem tc = (RankItem) mapTCs.get(RankItem.COLUMN_ID);
+			if (tc != null) {
+				tcManager.setDefaultSortColumnName(tableID, RankItem.COLUMN_ID);
+				tc.setSortAscending(true);
+			}
+		}
+
+		return (TableColumnCore[]) mapTCs.values().toArray(new TableColumnCore[0]);
+	}
+	
 	private static boolean areNoneVisible(Map mapTCs) {
 		boolean noneVisible = true;
 		for (Iterator iter = mapTCs.values().iterator(); iter.hasNext();) {

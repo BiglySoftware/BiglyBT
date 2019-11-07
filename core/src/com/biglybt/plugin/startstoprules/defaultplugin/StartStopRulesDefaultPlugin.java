@@ -215,9 +215,6 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	private static boolean bAlreadyInitialized = false;
 
 	// UI
-	private TableColumn seedingRankColumn;
-
-	// UI
 	private TableContextMenuItem debugMenuItem = null;
 
 	private UIAdapter	swt_ui;
@@ -306,30 +303,37 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				public void UIAttached(UIInstance instance) {
 					TableManager tm = pi.getUIManager().getTableManager();
 
-					seedingRankColumn = tm.createColumn(
-							TableManager.TABLE_MYTORRENTS_COMPLETE, "SeedingRank");
-					seedingRankColumn.initialize(TableColumn.ALIGN_TRAIL,
-							TableColumn.POSITION_LAST, 80, TableColumn.INTERVAL_LIVE);
-
-					TableCellRefreshListener columnListener = new SeedingRankColumnListener(
-							downloadDataMap, plugin_config);
-					seedingRankColumn.addCellRefreshListener(columnListener);
-
-					tm.addColumn(seedingRankColumn);
-
-					TableColumn downloadingRankColumn = tm.createColumn(
-							TableManager.TABLE_MYTORRENTS_INCOMPLETE, "DownloadingRank");
-
-					downloadingRankColumn.setMinimumRequiredUserMode( 1 );
-
-					downloadingRankColumn.initialize(TableColumn.ALIGN_TRAIL,
-							TableColumn.POSITION_INVISIBLE, 80, TableColumn.INTERVAL_LIVE);
-
-					columnListener = new DownloadingRankColumnListener( StartStopRulesDefaultPlugin.this );
-
-					downloadingRankColumn.addCellRefreshListener(columnListener);
-
-					tm.addColumn( downloadingRankColumn );
+					String[] tables1 = { TableManager.TABLE_MYTORRENTS_COMPLETE, TableManager.TABLE_MYTORRENTS_ALL_SMALL };
+					
+					for ( String table: tables1 ){
+						
+						TableColumn seedingRankColumn = tm.createColumn( table, "SeedingRank");
+						
+						seedingRankColumn.initialize(TableColumn.ALIGN_TRAIL, TableColumn.POSITION_LAST, 80, TableColumn.INTERVAL_LIVE);
+	
+						TableCellRefreshListener columnListener = new SeedingRankColumnListener( downloadDataMap, plugin_config);
+						
+						seedingRankColumn.addCellRefreshListener(columnListener);
+	
+						tm.addColumn(seedingRankColumn);
+					}
+					
+					String[] tables2 = { TableManager.TABLE_MYTORRENTS_INCOMPLETE, TableManager.TABLE_MYTORRENTS_ALL_SMALL };
+					
+					for ( String table: tables2 ){
+						
+						TableColumn downloadingRankColumn = tm.createColumn( table, "DownloadingRank");
+	
+						downloadingRankColumn.setMinimumRequiredUserMode( 1 );
+	
+						downloadingRankColumn.initialize(TableColumn.ALIGN_TRAIL, TableColumn.POSITION_INVISIBLE, 80, TableColumn.INTERVAL_LIVE);
+	
+						TableCellRefreshListener columnListener = new DownloadingRankColumnListener( StartStopRulesDefaultPlugin.this );
+	
+						downloadingRankColumn.addCellRefreshListener(columnListener);
+	
+						tm.addColumn( downloadingRankColumn );
+					}
 
 					if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
 

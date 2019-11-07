@@ -2297,6 +2297,7 @@ DeviceManagerUI
 				TableManager.TABLE_MYTORRENTS_UNOPENED,
 				TableManager.TABLE_MYTORRENTS_UNOPENED_BIG,
 				TableManager.TABLE_MYTORRENTS_ALL_BIG,
+				TableManager.TABLE_MYTORRENTS_ALL_SMALL,
 			};
 
 		TableManager table_manager = plugin_interface.getUIManager().getTableManager();

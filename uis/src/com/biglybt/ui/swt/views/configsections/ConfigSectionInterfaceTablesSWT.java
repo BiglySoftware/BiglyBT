@@ -243,7 +243,7 @@ public class ConfigSectionInterfaceTablesSWT
 
 		// split mode
 
-		String spltLabels[] = new String[4];
+		String spltLabels[] = new String[5];
 		int splitValues[] = new int[spltLabels.length];
 
 		for (int i = 0; i < spltLabels.length; i++) {

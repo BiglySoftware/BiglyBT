@@ -1749,9 +1749,10 @@ public class TableColumnImpl
 		if (forPluginDataSourceTypes.isEmpty()) {
 			// Guess forPluginDataSourceType based on tableID
 			Class<?> forPluginDataSourceType = null;
-			if (TableManager.TABLE_MYTORRENTS_ALL_BIG.equals(sTableID)
-					|| TableManager.TABLE_MYTORRENTS_UNOPENED.equals(sTableID)
-					|| TableManager.TABLE_MYTORRENTS_UNOPENED_BIG.equals(sTableID)) {
+			if (	TableManager.TABLE_MYTORRENTS_ALL_BIG.equals(sTableID) ||
+					TableManager.TABLE_MYTORRENTS_ALL_SMALL.equals(sTableID) ||
+					TableManager.TABLE_MYTORRENTS_UNOPENED.equals(sTableID) ||
+					TableManager.TABLE_MYTORRENTS_UNOPENED_BIG.equals(sTableID)) {
 				forPluginDataSourceType = Download.class;
 			} else if (TableManager.TABLE_MYTORRENTS_INCOMPLETE_BIG.equals(sTableID)
 					|| TableManager.TABLE_MYTORRENTS_INCOMPLETE.equals(sTableID)) {

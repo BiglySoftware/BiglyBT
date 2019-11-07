@@ -60,11 +60,8 @@ public class MyTorrentsView_Big
 				forDataSourceType = Download.class;
 				break;
 		}
-		init(
-				_core,
-				SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true, dataSource),
-				forDataSourceType, basicItems);
-		//setForceHeaderVisible(true);
+		
+		init( _core, SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true, dataSource), forDataSourceType, basicItems );
 	}
 
 
