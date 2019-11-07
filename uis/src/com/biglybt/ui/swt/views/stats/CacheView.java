@@ -441,7 +441,9 @@ public class CacheView
     long totalRead = readsFromCache + readsFromFile;
     if(totalRead > 0) {
       perThousands = (int) ((1000l * stats.getBytesReadFromCache()) / totalRead);
-      lblPercentReads.setText(DisplayFormatters.formatPercentFromThousands(perThousands) + " " + MessageText.getString("CacheView.reads.hits"));
+      
+      	// used to use CacheView.read.hits as label but this isn't accurate as it is based on bytes
+      lblPercentReads.setText(DisplayFormatters.formatPercentFromThousands(perThousands) + " " + MessageText.getString("CacheView.writes.hits"));
       pbReads.setSelection(perThousands);
     }
   }
