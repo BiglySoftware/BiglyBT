@@ -56,6 +56,19 @@ public class ConfigSectionFileMove
 				BCFG_FILE_MOVE_DOWNLOAD_REMOVED_ONLY_IN_DEFAULT,
 				BCFG_FILE_MOVE_DOWNLOAD_REMOVED_MOVE_PARTIAL);
 
+		// temp folder
+		
+		BooleanParameterImpl useTempFolder = new BooleanParameterImpl(
+				BCFG_FILE_USE_TEMP_AND_MOVE_ENABLE,	"ConfigView.label.download.to.temp.and.move");
+		add(useTempFolder);
+
+		DirectoryParameterImpl tempPath = new DirectoryParameterImpl(
+				SCFG_FILE_USE_TEMP_AND_MOVE_PATH, "ConfigView.label.directory");
+		add(tempPath);
+		tempPath.setIndent(1, true);
+
+		useTempFolder.addEnabledOnSelection( tempPath );
+		
 		// copy rather than move
 
 		BooleanParameterImpl copyDontMove = new BooleanParameterImpl(

@@ -168,6 +168,8 @@ public final class ConfigKeys {
 		public static final String SCFG_FILE_MOVE_DOWNLOAD_REMOVED_MOVE_TORRENT_PATH = "File.move.download.removed.move_torrent_path";
 		public static final String BCFG_FILE_MOVE_DOWNLOAD_REMOVED_ONLY_IN_DEFAULT = "File.move.download.removed.only_in_default";
 		public static final String BCFG_FILE_MOVE_DOWNLOAD_REMOVED_MOVE_PARTIAL = "File.move.download.removed.move_partial";
+		public static final String BCFG_FILE_USE_TEMP_AND_MOVE_ENABLE = "file.use.temp.path.and.move.enable";
+		public static final String SCFG_FILE_USE_TEMP_AND_MOVE_PATH = "file.use.temp.path.and.move.path";
 		public static final String BCFG_COPY_AND_DELETE_DATA_RATHER_THAN_MOVE = "Copy And Delete Data Rather Than Move";
 		public static final String ICFG_DISKMANAGER_PERF_CACHE_NOTSMALLERTHAN = "diskmanager.perf.cache.notsmallerthan";
 		public static final String BCFG_DISKMANAGER_PERF_CACHE_ENABLE_READ = "diskmanager.perf.cache.enable.read";

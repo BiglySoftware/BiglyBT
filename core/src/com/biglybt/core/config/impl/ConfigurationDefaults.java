@@ -702,9 +702,13 @@ public class ConfigurationDefaults {
     def.put( "Completed Files Directory", "" );
     def.put( "Move Only When In Default Save Dir", TRUE );
     def.put( "Move Torrent When Done", TRUE );
-    def.put( "Move Torrent When Done Directory", "" );
-    def.put( "File.move.subdir_is_default", TRUE );
+    def.put( ConfigKeys.File.SCFG_FILE_USE_TEMP_AND_MOVE_PATH, "" );
+    def.put( ConfigKeys.File.BCFG_FILE_USE_TEMP_AND_MOVE_ENABLE, FALSE );
 
+    def.put( "Move Completed When Done", FALSE );
+    def.put( "Completed Files Directory", "" );
+
+    
     // This gets permanently set by GlobalManagerImpl to false once the client has initialised.
     // This is intended to be used once as part of an upgrade.
     def.put( "Set Completion Flag For Completed Downloads On Start", TRUE );

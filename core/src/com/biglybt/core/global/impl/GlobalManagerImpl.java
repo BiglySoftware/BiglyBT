@@ -38,6 +38,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -934,6 +935,8 @@ public class GlobalManagerImpl
 			}
 		}
 
+			// torrent operations
+		
 		File torrentDir = null;
 		File fDest = null;
 		HashWrapper hash = null;
@@ -1002,6 +1005,35 @@ public class GlobalManagerImpl
 				// on it borking later
 			}
 
+				// save path operations
+			
+			File moc = null;
+			
+			if ( persistent && !for_seeding ){
+			
+				if ( COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_FILE_USE_TEMP_AND_MOVE_ENABLE )){
+			
+					String path = COConfigurationManager.getStringParameter( ConfigKeys.File.SCFG_FILE_USE_TEMP_AND_MOVE_PATH, "" );
+					
+					if ( !path.isEmpty()){
+						
+						File temp = new File( path );
+						
+						if ( !temp.isDirectory()){
+							
+							temp.mkdirs();
+						}
+						
+						if ( temp.isDirectory()){
+							
+							moc	= new File( savePath );
+							
+							savePath = temp.getAbsolutePath();
+						}
+					}
+				}
+			}
+			
 			// now do the creation!
 
 			DownloadManager new_manager = DownloadManagerFactory.create(this,
@@ -1019,6 +1051,13 @@ public class GlobalManagerImpl
 			}else{
 					// new torrent, see if it is add-stopped and we want to auto-pause
 
+				if ( moc != null ){
+					
+					DownloadManagerState dms = manager.getDownloadState();
+					
+					dms.setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, moc.getAbsolutePath());
+				}
+				
 				if ( initialState == DownloadManager.STATE_STOPPED ){
 
 					if ( COConfigurationManager.getBooleanParameter( "Default Start Torrents Stopped Auto Pause" )){
