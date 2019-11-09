@@ -1927,29 +1927,32 @@ public class SideBar
 	{
 		TreeItem[] items = tree.getItems();
 		
-		return( getTreeItemAt( items, pos ));
+		return( getTreeItemAt( items, new int[]{ pos }));
 	}
 	
 	private TreeItem
 	getTreeItemAt(
 		TreeItem[]	items,
-		int			pos )
+		int[]		pos )
 	{
 		for ( TreeItem ti: items ){
 			
-			if ( pos == 0 ){
+			if ( pos[0] == 0 ){
 				
 				return( ti );
 				
 			}else{
 				
-				pos--;
+				pos[0]--;
 				
-				TreeItem x = getTreeItemAt( ti.getItems(), pos );
-				
-				if ( x != null ){
+				if ( ti.getExpanded()){
 					
-					return( x );
+					TreeItem x = getTreeItemAt( ti.getItems(), pos );
+					
+					if ( x != null ){
+						
+						return( x );
+					}
 				}
 			}
 		}
