@@ -527,7 +527,22 @@ public class SideBar
 
 		// after a scroll we need to recalculate the hit areas as they will have moved!
 
-		tree.getVerticalBar().addSelectionListener(
+		ScrollBar vBar = tree.getVerticalBar();
+		
+		vBar.setData(
+			"ScrollOnMouseOver",
+			(Runnable) () ->{
+				int pos = vBar.getSelection();
+								
+				TreeItem item = getTreeItemAt( pos );
+				
+				if ( item != null ){
+					
+					tree.setTopItem( item );
+				}
+			});
+		
+		vBar.addSelectionListener(
 			new SelectionAdapter()
 			{
 				@Override
@@ -1906,6 +1921,42 @@ public class SideBar
 		}
 	}
 
+	private TreeItem
+	getTreeItemAt(
+		int		pos )
+	{
+		TreeItem[] items = tree.getItems();
+		
+		return( getTreeItemAt( items, pos ));
+	}
+	
+	private TreeItem
+	getTreeItemAt(
+		TreeItem[]	items,
+		int			pos )
+	{
+		for ( TreeItem ti: items ){
+			
+			if ( pos == 0 ){
+				
+				return( ti );
+				
+			}else{
+				
+				pos--;
+				
+				TreeItem x = getTreeItemAt( ti.getItems(), pos );
+				
+				if ( x != null ){
+					
+					return( x );
+				}
+			}
+		}
+		
+		return( null );
+	}
+	
 		// track entry additions and selection so we can switch to previous entry when one is closed
 
 	private final Stack<String> entryViewHistory = new Stack<>();
