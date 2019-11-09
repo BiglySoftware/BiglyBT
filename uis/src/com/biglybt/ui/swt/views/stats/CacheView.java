@@ -56,8 +56,10 @@ public class CacheView
 
   BufferedLabel lblReadsFromCache,lblNumberReadsFromCache,lblAvgSizeFromCache;
   BufferedLabel lblReadsFromFile, lblNumberReadsFromFile,lblAvgSizeFromFile;
-  BufferedLabel lblPercentReads;
-  ProgressBar pbReads;
+  BufferedLabel lblPercentReads1;
+  BufferedLabel lblPercentReads2;
+  ProgressBar pbReads1;
+  ProgressBar pbReads2;
 
 
   BufferedLabel lblWritesToCache,lblNumberWritesToCache,lblAvgSizeToCache;
@@ -190,18 +192,16 @@ public class CacheView
     gridData.widthHint = 100;
     lblAvgSizeFromCache.setLayoutData(gridData);
 
-    pbReads =  new ProgressBar(gCacheReads,SWT.HORIZONTAL);
+    pbReads1 =  new ProgressBar(gCacheReads,SWT.HORIZONTAL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    gridData.verticalSpan = 2;
-    pbReads.setLayoutData(gridData);
-    pbReads.setMinimum(0);
-    pbReads.setMaximum(1000);
+    pbReads1.setLayoutData(gridData);
+    pbReads1.setMinimum(0);
+    pbReads1.setMaximum(1000);
 
-    lblPercentReads = new BufferedLabel(gCacheReads,SWT.DOUBLE_BUFFERED);
+    lblPercentReads1 = new BufferedLabel(gCacheReads,SWT.DOUBLE_BUFFERED);
     gridData = new GridData(GridData.FILL_VERTICAL);
-    gridData.verticalSpan = 2;
-    gridData.widthHint = 120;
-    lblPercentReads.setLayoutData(gridData);
+     gridData.widthHint = 120;
+    lblPercentReads1.setLayoutData(gridData);
 
     lbl = new Label(gCacheReads,SWT.NULL);
     gridData = new GridData();
@@ -223,6 +223,17 @@ public class CacheView
     gridData = new GridData();
     gridData.widthHint = 100;
     lblAvgSizeFromFile.setLayoutData(gridData);
+    
+    pbReads2 =  new ProgressBar(gCacheReads,SWT.HORIZONTAL);
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    pbReads2.setLayoutData(gridData);
+    pbReads2.setMinimum(0);
+    pbReads2.setMaximum(1000);
+
+    lblPercentReads2 = new BufferedLabel(gCacheReads,SWT.DOUBLE_BUFFERED);
+    gridData = new GridData(GridData.FILL_VERTICAL);
+     gridData.widthHint = 120;
+    lblPercentReads2.setLayoutData(gridData);
   }
 
   private void generateSpeedGroup() {
@@ -439,20 +450,27 @@ public class CacheView
     lblReadsFromCache.setText(DisplayFormatters.formatByteCountToKiBEtc(readsFromCache));
     lblReadsFromFile.setText(DisplayFormatters.formatByteCountToKiBEtc(readsFromFile));
 
-     if(readsFromFile > 0) {
-      perThousands = (int) ((1000l * readsFromCache ) / readsFromFile);
+     if(nbReadsFromFile > 0) {
+      perThousands = (int) ((1000l * nbReadsFromCache ) / nbReadsFromFile);
       
-      String hr;
-      if ( nbReadsFromFile==0){
-    	  hr = "";
-      }else{
-    	  hr = DisplayFormatters.formatDecimal( (double)nbReadsFromCache/nbReadsFromFile, 2 ) + "  " + MessageText.getString("label.hit.ratio");
-      }
-      lblPercentReads.setText(
-    		  DisplayFormatters.formatPercentFromThousands(perThousands) + " " + MessageText.getString("label.efficiency") + "\n" + hr );
+      lblPercentReads1.setText(
+    		  DisplayFormatters.formatDecimal( (double)nbReadsFromCache/nbReadsFromFile, 2 ) + "  " + MessageText.getString("label.hit.ratio"));
       
-      pbReads.setSelection(perThousands);
+      pbReads1.setSelection(perThousands);
+    }else{
+        lblPercentReads1.setText( MessageText.getString("label.hit.ratio"));
     }
+     
+     if( readsFromFile > 0) {
+    	 perThousands = (int) ((1000l * readsFromCache ) / readsFromFile);
+
+    	 lblPercentReads2.setText(
+    			 DisplayFormatters.formatPercentFromThousands(perThousands) + " " + MessageText.getString("label.efficiency"));
+
+    	 pbReads2.setSelection(perThousands);
+     }else{
+       	 lblPercentReads2.setText(MessageText.getString("label.efficiency"));
+     }
   }
 
   private void refreshWrites() {
@@ -486,6 +504,8 @@ public class CacheView
       perThousands = (int) ((1000l * nbWritesToCache) / totalNbWrites);
       lblPercentWrites.setText(DisplayFormatters.formatPercentFromThousands(perThousands) + " " + MessageText.getString("CacheView.writes.hits"));
       pbWrites.setSelection(perThousands);
+    }else{
+        lblPercentWrites.setText( MessageText.getString("CacheView.writes.hits"));
     }
   }
 
