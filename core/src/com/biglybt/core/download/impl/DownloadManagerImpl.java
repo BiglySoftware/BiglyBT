@@ -5629,6 +5629,20 @@ DownloadManagerImpl
 								}
 
 								@Override
+								public URL
+								getURL()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( urls[0]);
+									}
+
+									return( delegate.getURL());
+								}
+								
+								@Override
 								public int
 								getStatus()
 								{
@@ -5932,6 +5946,20 @@ DownloadManagerImpl
 									}
 
 									return( delegate.getName());
+								}
+								
+								@Override
+								public URL
+								getURL()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( null );
+									}
+
+									return( delegate.getURL());
 								}
 
 								@Override

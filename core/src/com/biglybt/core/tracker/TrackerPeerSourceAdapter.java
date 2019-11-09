@@ -20,6 +20,8 @@
 
 package com.biglybt.core.tracker;
 
+import java.net.URL;
+
 import com.biglybt.core.util.Debug;
 
 public abstract class
@@ -40,6 +42,13 @@ TrackerPeerSourceAdapter
 		return( "" );
 	}
 
+	@Override
+	public URL 
+	getURL()
+	{
+		return( null );
+	}
+	
 	@Override
 	public int
 	getStatus()

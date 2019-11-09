@@ -17,6 +17,7 @@
 
 package com.biglybt.ui.common.table;
 
+import com.biglybt.core.util.Debug;
 
 /**
  * @author TuxPaper
@@ -46,7 +47,7 @@ public interface TableSelectionListener
 
 	default public void defaultSelected(TableRowCore[] rows, int stateMask )
 	{
-		System.err.println( new Exception( "Implement one of the two defaultSelected methods" ));
+		Debug.out( "Implement one of the two defaultSelected methods (" + getClass()+ ")" );
 	}
 
 	default public void defaultSelected(TableRowCore[] rows, int stateMask, int orgin )

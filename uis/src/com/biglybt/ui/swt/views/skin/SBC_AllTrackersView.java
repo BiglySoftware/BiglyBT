@@ -1386,9 +1386,29 @@ public class SBC_AllTrackersView
 		SWTSkinObject 	skinObject,
 		Object 			params)
 	{
+		if ( params instanceof URL ){
+		
+			AllTrackers all_trackers = AllTrackersManager.getAllTrackers();
+
+			String name = all_trackers.ingestURL((URL)params);
+			
+			synchronized( tracker_map ){
+	
+				for ( AllTrackersViewEntry entry: tracker_map.values()){
+					
+					if ( entry.getTrackerName().equals( name )){
+					
+						params = entry;
+						
+						break;
+					}
+				}
+			}
+		}
+		
 		if ( params instanceof AllTrackersViewEntry ){
 
-			if (tv != null) {
+			if ( tv != null ){
 
 				TableRowCore row = tv.getRow((AllTrackersViewEntry) params);
 

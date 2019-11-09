@@ -20,6 +20,8 @@
 
 package com.biglybt.core.tracker;
 
+import java.net.URL;
+
 public interface
 TrackerPeerSource
 {
@@ -62,6 +64,14 @@ TrackerPeerSource
 	public int
 	getLeecherCount();
 
+		/**
+		 * 
+		 * @return URL associated with this source, if there is one, null otherwise
+		 */
+	
+	public URL
+	getURL();
+	
 	public int
 	getPeers();
 

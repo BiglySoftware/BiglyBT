@@ -19,6 +19,7 @@
  */
 package com.biglybt.ui.swt.views;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.json.simple.JSONObject;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerTPSListener;
@@ -38,9 +40,13 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.TorrentUtils;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.config.ConfigSectionFile;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
@@ -57,7 +63,7 @@ import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.tableitems.tracker.*;
-
+import com.biglybt.util.JSONUtils;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.tables.TableManager;
@@ -566,6 +572,30 @@ public class TrackerView
 		updateSelectedContent();
 	}
 	
+	public void 
+	defaultSelected(
+		TableRowCore[] rows, int stateMask )
+	{
+		if ( rows.length == 1 ){
+		
+			TrackerPeerSource source = (TrackerPeerSource)rows[0].getDataSource();
+			
+			URL url = source.getURL();
+			
+			if ( url != null ){
+				
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+	
+				if ( uif != null ){
+					
+					uif.getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS,
+							url );
+				}
+			}
+		}
+	}
+	
 	@Override
 	public void mouseEnter(TableRowCore row){
 	}
@@ -578,13 +608,13 @@ public class TrackerView
 	public boolean eventOccurred(UISWTViewEvent event) {
 	    switch (event.getType()) {
 
-	      case UISWTViewEvent.TYPE_FOCUSGAINED:
+	      case UISWTViewEvent.TYPE_SHOWN:
 	    	  
 	    	updateSelectedContent();
 	    	
 	      	break;
 
-	      case UISWTViewEvent.TYPE_FOCUSLOST:
+	      case UISWTViewEvent.TYPE_HIDDEN:
 	    		SelectedContentManager.clearCurrentlySelectedContent();
 	    		break;
 	    }

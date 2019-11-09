@@ -1455,6 +1455,20 @@ TRTrackerAnnouncerMuxer
 				}
 
 				@Override
+				public URL
+				getURL()
+				{
+					StatusSummary summary = fixup();
+
+					if ( summary != null ){
+
+						return( summary.getURL());
+					}
+
+					return( urls[0] );
+				}
+				
+				@Override
 				public int
 				getStatus()
 				{
