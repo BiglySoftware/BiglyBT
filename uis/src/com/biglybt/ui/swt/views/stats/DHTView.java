@@ -655,7 +655,7 @@ public class DHTView
   }
 
   private void refresh() {
-	  if ( panel.isDisposed()){
+	  if ( panel == null || panel.isDisposed()){
 		  return;
 	  }
 
