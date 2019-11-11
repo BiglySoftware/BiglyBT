@@ -1427,7 +1427,10 @@ TagPropertyConstraintHandler
 							return;
 						}
 
-						tag.removeTaggable( dm );
+						if ( tag.hasTaggable( dm )){
+						
+							tag.removeTaggable( dm );
+						}
 					}
 				}
 			}

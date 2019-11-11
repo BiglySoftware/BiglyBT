@@ -1919,11 +1919,7 @@ DiskManagerUtil
 					public void setPieceDone(DiskManagerPieceImpl piece, boolean done){
 						piece.setDoneSupport( done );
 					}
-					
-					@Override
-					public void setPercentDone(int num){
-					}
-					
+										
 					@Override
 					public void setFailedAndRecheck(DiskManagerFileInfo file, String reason){
 					}
@@ -1931,11 +1927,7 @@ DiskManagerUtil
 					@Override
 					public void setFailed(String reason, Throwable cause){
 					}
-					
-					@Override
-					public void setAllocated(long num){
-					}
-					
+										
 					@Override
 					public void priorityChanged(DiskManagerFileInfo file){
 					}
@@ -1983,11 +1975,6 @@ DiskManagerUtil
 					@Override
 					public DiskAccessController getDiskAccessController(){
 						return null;
-					}
-					
-					@Override
-					public long getAllocated(){
-						return 0;
 					}
 				};
 	        

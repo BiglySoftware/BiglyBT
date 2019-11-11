@@ -748,27 +748,6 @@ LWSDiskManager
 	}
 
 	@Override
-	public long
-	getAllocated()
-	{
-		return( 0 );
-	}
-
-	@Override
-	public void
-	setAllocated(
-		long		num )
-	{
-	}
-
-	@Override
-	public void
-	setPercentDone(
-		int			num )
-	{
-	}
-
-	@Override
 	public TOTorrent
 	getTorrent()
 	{

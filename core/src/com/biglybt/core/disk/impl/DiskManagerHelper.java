@@ -66,17 +66,6 @@ DiskManagerHelper
 		DiskManagerFileInfo	file,
 		String				reason );
 
-	public long
-	getAllocated();
-
-	public void
-	setAllocated(
-		long		num );
-
-	public void
-	setPercentDone(
-		int			num );
-
 	public void
 	setPieceDone(
 		DiskManagerPieceImpl	piece,

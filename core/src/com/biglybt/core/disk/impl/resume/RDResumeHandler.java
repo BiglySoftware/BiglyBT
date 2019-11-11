@@ -130,7 +130,8 @@ RDResumeHandler
 
 	public void
 	checkAllPieces(
-		boolean newfiles )
+		boolean 			newfiles,
+		ProgressListener	listener )
 	{
 		//long	start = System.currentTimeMillis();
 
@@ -142,6 +143,8 @@ RDResumeHandler
 
         final List<DiskManagerCheckRequest>	failed_pieces = new ArrayList<>();
 
+        listener.percentDone( 0 );
+        
 		try{
 			boolean	resume_data_complete = false;
 
@@ -311,7 +314,7 @@ RDResumeHandler
 
 						DiskManagerPiece	dm_piece	= pieces[i];
 
-						disk_manager.setPercentDone(((i + 1) * 1000) / disk_manager.getNbPieces() );
+						listener.percentDone(((i + 1) * 1000) / disk_manager.getNbPieces() );
 
 						boolean pieceCannotExist = false;
 
@@ -513,7 +516,7 @@ RDResumeHandler
 
 						check_position	= i;
 
-						disk_manager.setPercentDone(((i + 1) * 1000) / disk_manager.getNbPieces() );
+						listener.percentDone(((i + 1) * 1000) / disk_manager.getNbPieces() );
 
 						boolean pieceCannotExist = false;
 
@@ -1405,5 +1408,13 @@ RDResumeHandler
 				}
 			}
 		}
+	}
+	
+	public interface
+	ProgressListener
+	{
+		public void
+		percentDone(
+			int		percent );
 	}
 }

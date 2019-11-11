@@ -165,7 +165,8 @@ DMWriterImpl
 	zeroFile(
 		DiskManagerFileInfoImpl file,
 		long					start_from,
-		long 					overall_length ) 
+		long 					overall_length,
+		ProgressListener		listener )
 				
 		throws DiskManagerException
 	{
@@ -191,7 +192,7 @@ DMWriterImpl
 					remainder 	-= start_from;
 					written		+= start_from;
 					
-					disk_manager.setAllocated( disk_manager.getAllocated() + start_from );
+					listener.allocated( start_from );
 				}
 				
 		        try{
@@ -280,7 +281,7 @@ DMWriterImpl
 						written 	+= write_size;
 						remainder 	-= write_size;
 
-						disk_manager.setAllocated( disk_manager.getAllocated() + write_size );
+						listener.allocated( write_size );
 					}
 		        }finally{
 

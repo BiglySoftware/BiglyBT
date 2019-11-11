@@ -42,7 +42,8 @@ DMWriter
 	zeroFile(
 		DiskManagerFileInfoImpl file,
 		long					start_from,
-		long 					overall_length ) 
+		long 					overall_length,
+		ProgressListener		listener )
 		
 		throws DiskManagerException;
 
@@ -61,4 +62,12 @@ DMWriter
 	public boolean
 	hasOutstandingWriteRequestForPiece(
 		int		piece_number );
+	
+	public interface
+	ProgressListener
+	{
+		public void
+		allocated(
+			long		bytes );
+	}
 }

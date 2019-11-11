@@ -580,7 +580,7 @@ DiskManagerImpl
 
 	        if ( newFiles == 0 ){
 
-	            resume_handler.checkAllPieces(false);
+	            resume_handler.checkAllPieces(false, (p)->{ percentDone = p; });
 
 	            	// unlikely to need piece list, force discard
 
@@ -592,7 +592,7 @@ DiskManagerImpl
 
 	                //  if not a fresh torrent, check pieces ignoring fast resume data
 
-	            resume_handler.checkAllPieces(true);
+	            resume_handler.checkAllPieces(true, (p)->{ percentDone = p; });
 	        }
         }
 
@@ -1015,6 +1015,8 @@ DiskManagerImpl
 
         long alloc_strategy = state.getLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY );
 
+        boolean	alloc_ok = false;
+        
         try{
             allocation_scheduler.register( this );
 
@@ -1147,6 +1149,8 @@ DiskManagerImpl
 
                 if ( cache_file.exists() ){
 
+                	boolean did_allocate = false;
+                	
                     try {
 
                         //make sure the existing file length isn't too large
@@ -1174,6 +1178,7 @@ DiskManagerImpl
                         }else if ( existing_length < target_length ){
 
                         	if ( !compact ){
+                        		
 	                        		// file is too small
 
 	                         	if ( !allocateFile( fileInfo, data_file, existing_length, target_length, stop_after_start, alloc_strategy )){
@@ -1182,6 +1187,8 @@ DiskManagerImpl
 
 	                         		return( fail_result );
 	                         	}
+	                         	
+	                         	did_allocate = true;
                         	}
                         }
                     }catch (Throwable e) {
@@ -1193,7 +1200,10 @@ DiskManagerImpl
                         return( fail_result );
                     }
 
-                    allocated += target_length;
+                    if ( !did_allocate ){
+                    
+                    	allocated += target_length;
+                    }
 
                 } else if ( mustExistOrAllocate ){
 
@@ -1246,12 +1256,21 @@ DiskManagerImpl
 
             download_manager.setDataAlreadyAllocated( true );
 
+            alloc_ok = true;
+            
             return( new int[]{ numNewFiles, notRequiredFiles });
 
         }finally{
 
             allocation_scheduler.unregister( this );
 
+            if ( alloc_ok ){
+            
+            	if ( allocated + allocate_not_required != totalLength ){
+            		
+            		Debug.out( "Allocation ok but totals inconsistent: " + allocated + "/" + allocate_not_required + "/" + totalLength );
+            	}
+            }
                 // if we failed to do the allocation make sure we close all the files that
                 // we might have opened
 
@@ -1283,6 +1302,8 @@ DiskManagerImpl
 
     	throws Throwable
     {
+    		// on success will have incremented 'allocated' by 'target_length
+    	
         while( started ){
 
             if ( allocation_scheduler.getPermission( this )){
@@ -1312,6 +1333,9 @@ DiskManagerImpl
 
         		fileInfo.getCacheFile().setLength( 0 );
         	}
+        	
+        	 allocated += target_length;
+        	 
         }else{
 
 	            //fully allocate. XFS borks with zero length files though
@@ -1384,7 +1408,13 @@ DiskManagerImpl
 	        			}
 	        		}
 	        		
-	        		successfulAlloc = writer.zeroFile( fileInfo, start_from, target_length );
+	        			
+	        		successfulAlloc = 
+	        			writer.zeroFile( 
+	        				fileInfo, 
+	        				start_from, 
+	        				target_length,
+	        				(b)->{ allocated += b; });
 
 	        		if ( successfulAlloc && !stop_after_start[0] ){
 	        				        			
@@ -1496,15 +1526,6 @@ DiskManagerImpl
         return((int) (((allocated+allocate_not_required) * 1000) / totalLength ));
     }
 
-    
-    @Override
-    public void
-    setPercentDone(
-        int         num )
-    {
-        percentDone = num;
-    }
-
     @Override
     public long
     getRemaining() {
@@ -1589,21 +1610,6 @@ DiskManagerImpl
 		float pct = (sizeExcludingDND - getRemainingExcludingDND()) / (float) sizeExcludingDND;
 		return (int) (1000 * pct);
 	}
-
-    @Override
-    public long
-    getAllocated()
-    {
-        return( allocated );
-    }
-
-    @Override
-    public void
-    setAllocated(
-        long        num )
-    {
-        allocated   = num;
-    }
 
     /**
      *  Called when status has CHANGED and should only be called by DiskManagerPieceImpl
