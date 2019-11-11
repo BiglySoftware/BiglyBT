@@ -304,6 +304,11 @@ public class SBC_AllTrackersView
 
 		listener_added = true;
 
+		if ( datasource != null ){
+			
+			setDataSource( datasource );
+		}
+		
 		return( null );
 	}
 
@@ -1380,14 +1385,12 @@ public class SBC_AllTrackersView
 		return( result );
 	}
 
-	@Override
-	public Object
-	dataSourceChanged(
-		SWTSkinObject 	skinObject,
-		Object 			params)
+	private void
+	setDataSource(
+		Object			params )
 	{
 		if ( params instanceof URL ){
-		
+			
 			AllTrackers all_trackers = AllTrackersManager.getAllTrackers();
 
 			String name = all_trackers.ingestURL((URL)params);
@@ -1420,6 +1423,15 @@ public class SBC_AllTrackersView
 		}
 
 		datasource = params;
+	}
+	
+	@Override
+	public Object
+	dataSourceChanged(
+		SWTSkinObject 	skinObject,
+		Object 			params)
+	{
+		setDataSource( params );
 
 		return( null );
 	}
