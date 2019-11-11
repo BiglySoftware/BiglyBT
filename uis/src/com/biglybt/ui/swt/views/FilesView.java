@@ -348,6 +348,11 @@ public class FilesView
 		Tag[] newTags = DataSourceUtils.getTags(newDataSource);
 		DownloadManager[] newManagers = DataSourceUtils.getDMs(newDataSource);
 		
+		if ( Arrays.deepEquals( newTags, tags ) && Arrays.equals( newManagers, managers )){
+			
+			return;
+		}
+		
 		if (tv != null) {
 	
 			for (DownloadManager manager: managers ){
