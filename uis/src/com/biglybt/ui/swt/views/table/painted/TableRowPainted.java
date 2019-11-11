@@ -1006,7 +1006,7 @@ public class TableRowPainted
 			int h = 0;
 			for (int i = 0; i < newSubRows.length; i++) {
 				newSubRows[i] = new TableRowPainted(this, tv, subDataSources[i], false);
-				newSubRows[i].setTableItem(i, false);
+				newSubRows[i].setTableItem(i);
 				h += newSubRows[i].getFullHeight();
 			}
 
@@ -1158,7 +1158,7 @@ public class TableRowPainted
 					for (int i = 0; i < newSubRows.length; i++) {
 						newSubRows[i] = new TableRowPainted(this, tv, subDataSources[i],
 								false);
-						newSubRows[i].setTableItem(i, false);
+						newSubRows[i].setTableItem(i);
 						h += newSubRows[i].getFullHeight();
 					}
 
@@ -1549,6 +1549,10 @@ public class TableRowPainted
 			if ( !sorted ){
 			
 				Arrays.sort( subRows, col );
+				
+				for ( int i=0; i<subRows.length;i++){
+					subRows[i].setTableItem(i);
+				}
 				
 				changed = true;
 			}

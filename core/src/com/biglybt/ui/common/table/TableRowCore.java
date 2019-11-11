@@ -103,10 +103,6 @@ public interface TableRowCore extends TableRow
 	 */
 	public boolean setTableItem(int newIndex);
 
-	public boolean setTableItem(int newIndex, boolean isVisible);
-
-
-
 	public void setSelected(boolean bSelected);
 
 	public boolean isRowDisposed();

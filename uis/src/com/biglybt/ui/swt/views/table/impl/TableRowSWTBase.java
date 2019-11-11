@@ -312,18 +312,10 @@ public abstract class TableRowSWTBase
 	}
 
 	/* (non-Javadoc)
-	 * @see TableRowCore#setTableItem(int)
-	 */
-	@Override
-	public boolean setTableItem(int newIndex) {
-		return setTableItem(newIndex, true);
-	}
-
-	/* (non-Javadoc)
 	 * @see TableRowCore#setTableItem(int, boolean)
 	 */
 	@Override
-	public boolean setTableItem(int newIndex, boolean isVisible) {
+	public boolean setTableItem(int newIndex) {
 		if (bDisposed) {
 			System.out.println("XXX setTI: bDisposed from "
 					+ Debug.getCompressedStackTrace());

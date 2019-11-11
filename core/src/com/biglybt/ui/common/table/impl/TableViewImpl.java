@@ -1614,7 +1614,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				for (int i = 0; i < sortedRows.size(); i++) {
 					TableRowCore row = sortedRows.get(i);
 					boolean visible = row.isVisible();
-					if (row.setTableItem(i, visible)) {
+					if (row.setTableItem(i)) {
 						orderChanged=true;
 						if (visible) {
 							needsUpdate = true;

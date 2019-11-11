@@ -622,20 +622,23 @@ public class TableViewPainted
 			}
 			rowsToSelect = new ArrayList<>(Arrays.asList(selectedRows));
 			TableRowCore curRow = firstRow;
+			
+			int maxToDo = getRowAndSubRowCount()[1];
+			
 			do {
 				if (!rowsToSelect.contains(curRow)) {
 					rowsToSelect.add(curRow);
 				}
 				TableRowCore newRow = (startPos < endPos) ? getNextRow(curRow) : getPreviousRow(curRow);
 	
-					// prevent infinite loop if things go wonky (which they have been soon to do!)
+					// prevent infinite loop if things go wonky (which they have been seen to do!)
 				if ( newRow == curRow ){
 					break;
 				}else{
 					curRow = newRow;
 				}
 	
-			} while (curRow != clickedRow && curRow != null);
+			} while (curRow != clickedRow && curRow != null && maxToDo-- > 0 );
 			if (curRow != null && !rowsToSelect.contains(curRow)) {
 				rowsToSelect.add(curRow);
 			}
