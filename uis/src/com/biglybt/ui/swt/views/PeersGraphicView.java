@@ -62,6 +62,7 @@ import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.ui.swt.components.graphics.PieUtils;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -155,6 +156,8 @@ public class PeersGraphicView
   {
 	  private AEMonitor peers_mon = new AEMonitor( "PeersGraphicView:peers" );
 
+	  private final long			add_time = SystemTime.getMonotonousTime();
+	  
 	  private DownloadManager		manager;
 
 	  private Point 				oldSize;
@@ -172,6 +175,12 @@ public class PeersGraphicView
 		  peers = new ArrayList<>();
 
 		  manager.addPeerListener(this);
+	  }
+	  
+	  protected long
+	  getAddTime()
+	  {
+		  return( add_time );
 	  }
 
 	  private void
@@ -352,6 +361,12 @@ public class PeersGraphicView
 
 			  return;
 		  }
+		  
+		  Arrays.sort(
+				new_data,
+				(a,b)->{
+					return( Long.compare( a.getAddTime(), b.getAddTime()));
+				});
 		  
 		  dm_data = new_data;
 
