@@ -29,7 +29,10 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.IdentityHashSet;
+import com.biglybt.core.util.SystemTime;
 
 
 public class
@@ -169,6 +172,9 @@ TagPropertyUntaggedHandler
 		tag.addTagListener(
 			new TagListener()
 			{
+				Set<Taggable>		added 			= new IdentityHashSet<>();
+				Map<Taggable,Long>	pending_removal = new IdentityHashMap<Taggable, Long>();
+				
 				@Override
 				public void
 				taggableAdded(
@@ -177,6 +183,52 @@ TagPropertyUntaggedHandler
 				{
 					synchronized( taggable_counts ){
 
+							// seeing counts get inconsistent occasionally so added some additional logic to see if
+							// additions and removals are getting messed up
+						
+						if ( added.contains( tagged )){
+							
+							if ( Constants.IS_CVS_VERSION ){
+
+								Debug.out( "Taggable '" + tagged.getTaggableName() + "' added twice to '" + tag.getTagName( true ) + "'" );
+							}
+							
+							return;
+							
+						}else{
+							
+							int num_pending = pending_removal.size();
+							
+							if ( num_pending > 0 ){
+								
+								Long time = pending_removal.remove( tagged );
+								
+								if ( time != null && SystemTime.getMonotonousTime() - time < 5000 ){
+									
+									Debug.out( "Addition ignored as pending removal" );
+									
+									return;
+								}
+								
+								if ( num_pending > 10 ){
+																		
+									Iterator<Long> it = pending_removal.values().iterator();
+									
+									long now = SystemTime.getMonotonousTime();
+
+									while( it.hasNext()){
+										
+										if ( now - it.next() > 10*1000 ){
+											
+											it.remove();
+										}
+									}
+								}
+							}
+						}
+						
+						added.add( tagged );
+						
 						if ( untagged_tags.contains( tag )){
 
 							return;
@@ -197,7 +249,10 @@ TagPropertyUntaggedHandler
 
 							for ( Tag t: untagged_tags ){
 
-								t.removeTaggable( tagged );
+								if ( t.hasTaggable( tagged )){
+								
+									t.removeTaggable( tagged );
+								}
 							}
 						}
 					}
@@ -219,6 +274,18 @@ TagPropertyUntaggedHandler
 				{
 					synchronized( taggable_counts ){
 
+						if ( !added.remove( tagged )){
+							
+							if ( Constants.IS_CVS_VERSION ){
+							
+								Debug.out( "Taggable '" + tagged.getTaggableName() + "' remove from '" + tag.getTagName( true ) + "' but not added" );
+							}
+							
+							pending_removal.put( tagged, SystemTime.getMonotonousTime());
+							
+							return;
+						}
+												
 						if ( untagged_tags.contains( tag )){
 
 							return;
@@ -247,43 +314,7 @@ TagPropertyUntaggedHandler
 						}
 					}
 				}
-			},
-			false );
-
-		synchronized( taggable_counts ){
-
-			if ( untagged_tags.contains( tag )){
-
-				return;
-			}
-		}
-
-		Set<Taggable>	existing = tag.getTagged();
-
-		synchronized( taggable_counts ){
-
-			for ( Taggable tagged: existing ){
-
-				int[] num = taggable_counts.get( tagged );
-
-				if ( num == null ){
-
-					num = new int[1];
-
-					taggable_counts.put( tagged, num );
-				}
-
-				if ( num[0]++ == 0 ){
-
-					//System.out.println( "tagged: " + tagged.getTaggableID());
-
-					for ( Tag t: untagged_tags ){
-
-						t.removeTaggable( tagged );
-					}
-				}
-			}
-		}
+			}, true );
 	}
 
 	public void
@@ -441,7 +472,10 @@ TagPropertyUntaggedHandler
 
 					for ( Tag t: untagged_tags ){
 
-						t.addTaggable( dm );
+						if ( !t.hasTaggable( dm )){
+						
+							t.addTaggable( dm );
+						}
 					}
 				}
 			}

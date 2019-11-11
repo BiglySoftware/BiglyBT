@@ -85,7 +85,10 @@ TagTypeWithState
 
 			for ( Tag t: tags ){
 
-				t.removeTaggable( taggable );
+				if ( t.hasTaggable( taggable )){
+				
+					t.removeTaggable( taggable );
+				}
 			}
 		}
 
