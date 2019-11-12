@@ -26,6 +26,7 @@ import com.biglybt.ui.swt.columns.ColumnCheckBox;
 import com.biglybt.pif.ui.tables.TableColumn;
 
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagType;
 
 
 public class
@@ -50,7 +51,10 @@ ColumnTagFilter
 
 		if ( tag != null ){
 
-			return( tag.getFlag( Tag.FL_IS_FILTER ));
+			if ( tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+			
+				return( tag.getFlag( Tag.FL_IS_FILTER ));
+			}
 		}
 
 		return( null );
