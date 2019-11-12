@@ -80,7 +80,7 @@ public class TrayWindow
     Shell mainShell = uif == null ? Utils.findAnyShell() : uif.getMainShell();
     this.display = mainShell.getDisplay();
     minimized = ShellFactory.createShell(mainShell, SWT.ON_TOP);
-    minimized.setText("Vuze"); //$NON-NLS-1$
+    minimized.setText( Constants.APP_NAME );
     label = new Label(minimized, SWT.NULL);
     ImageLoader.getInstance().setLabelImage(label, "tray");
     final Rectangle bounds = label.getImage().getBounds();

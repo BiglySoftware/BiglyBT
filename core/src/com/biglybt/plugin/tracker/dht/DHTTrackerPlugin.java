@@ -4188,7 +4188,7 @@ DHTTrackerPlugin
 				public String
 				getName()
 				{
-					return( "Vuze DHT" );
+					return( Constants.APP_NAME + " DHT" );
 				}
 
 				@Override
