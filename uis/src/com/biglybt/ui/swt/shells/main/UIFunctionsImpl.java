@@ -20,6 +20,7 @@ import java.io.File;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
@@ -1124,14 +1125,14 @@ public class UIFunctionsImpl
 									// we have to modify the new, private torrent, for this to work. (can't do this if it isn't private as support for
 									// hash override isn't supported in DHT, magnet xfer,...
 								
-								String text = MessageText.getString(MSG_ALREADY_EXISTS
+								String text_base = MessageText.getString(MSG_ALREADY_EXISTS
 										+ ".text", new String[] {
 									":" + torrentOptions.sOriginatingLocation,
 									fExistingName,
 									MessageText.getString(MSG_ALREADY_EXISTS_NAME),
 								});
 
-								text += "\n\n" + MessageText.getString("openTorrentWindow.mb.alreadyExists.add.dup");
+								String text = text_base + "\n\n" + MessageText.getString("openTorrentWindow.mb.alreadyExists.add.dup");
 
 								MessageBoxShell mb = 
 										new MessageBoxShell(SWT.YES | SWT.NO,
@@ -1193,12 +1194,32 @@ public class UIFunctionsImpl
 											}
 										}else{
 											
-											if ( torrentOptions.getDeleteFileOnCancel()){
-												
-												File torrentFile = new File(torrentOptions.sFileName);
-							
-												torrentFile.delete();
-											}
+											String text = text_base + "\n\n" + MessageText.getString("openTorrentWindow.mb.alreadyExists.add.replace");
+
+											MessageBoxShell mb = 
+													new MessageBoxShell(SWT.YES | SWT.NO,
+															MessageText.getString(MSG_ALREADY_EXISTS + ".title"), text);
+
+											mb.setDefaultButtonUsingStyle( SWT.NO );
+											
+											mb.open(new UserPrompterResultListener() {
+												@Override
+												public void prompterClosed(int result) {
+													if ( result == SWT.YES ){
+														
+														List<List<String>> new_trackers = TorrentUtils.announceGroupsToList( new_torrent );
+														
+														TorrentUtils.listToAnnounceGroups( new_trackers, existing_torrent );
+													}
+													
+													if ( torrentOptions.getDeleteFileOnCancel()){
+														
+														File torrentFile = new File(torrentOptions.sFileName);
+									
+														torrentFile.delete();
+													}
+												}
+											});
 										}
 									}
 								});
