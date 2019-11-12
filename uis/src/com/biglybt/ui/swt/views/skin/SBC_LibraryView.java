@@ -20,9 +20,7 @@
 
 package com.biglybt.ui.swt.views.skin;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -195,8 +193,27 @@ public class SBC_LibraryView
 				long total_size = 0;
 				long total_done = 0;
 
-				ArrayList<DownloadManager> dms = new ArrayList<>(currentContent.length);
+				List<DownloadManager> dms = new ArrayList<>(currentContent.length);
 
+					// doesn't make sense to double count a download's files if it also has its own selection
+				
+				Set<DownloadManager> dms_only = new IdentityHashSet<>();
+				
+				for (ISelectedContent sc : currentContent) {
+
+					DownloadManager dm = sc.getDownloadManager();
+
+					if ( dm != null ){
+
+						int file_index = sc.getFileIndex();
+
+						if (file_index == -1) {
+							
+							dms_only.add( dm );
+						}
+					}
+				}
+						
 				for (ISelectedContent sc : currentContent) {
 
 					DownloadManager dm = sc.getDownloadManager();
@@ -208,7 +225,7 @@ public class SBC_LibraryView
 						int file_index = sc.getFileIndex();
 
 						if (file_index == -1) {
-
+								
 							DiskManagerFileInfo[] file_infos = dm.getDiskManagerFileInfoSet().getFiles();
 
 							for (DiskManagerFileInfo file_info : file_infos) {
@@ -221,12 +238,15 @@ public class SBC_LibraryView
 							}
 						} else {
 
-							DiskManagerFileInfo file_info = dm.getDiskManagerFileInfoSet().getFiles()[file_index];
-
-							if (!file_info.isSkipped()) {
-
-								total_size += file_info.getLength();
-								total_done += file_info.getDownloaded();
+							if ( !dms_only.contains( dm )){
+								
+								DiskManagerFileInfo file_info = dm.getDiskManagerFileInfoSet().getFiles()[file_index];
+	
+								if (!file_info.isSkipped()) {
+	
+									total_size += file_info.getLength();
+									total_done += file_info.getDownloaded();
+								}
 							}
 						}
 					}
