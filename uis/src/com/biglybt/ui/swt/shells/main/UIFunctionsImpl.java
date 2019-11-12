@@ -1192,8 +1192,8 @@ public class UIFunctionsImpl
 												
 												Debug.out( e );
 											}
-										}else{
-											
+										}else if ( existing_torrent.getPrivate()){
+												
 											String text = text_base + "\n\n" + MessageText.getString("openTorrentWindow.mb.alreadyExists.add.replace");
 
 											MessageBoxShell mb = 
@@ -1220,6 +1220,14 @@ public class UIFunctionsImpl
 													}
 												}
 											});
+										}else{
+											
+											if ( torrentOptions.getDeleteFileOnCancel()){
+												
+												File torrentFile = new File(torrentOptions.sFileName);
+							
+												torrentFile.delete();
+											}
 										}
 									}
 								});
