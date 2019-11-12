@@ -40,6 +40,8 @@ ConfigSectionInterfaceTagsSWT
 		List<Parameter> listLibrary = new ArrayList<>();
 		List<Parameter> listSidebar = new ArrayList<>();
 
+			// sidebar and library
+		
 		if (isAZ3) {
 			
 			add(new BooleanParameterImpl("Library.CatInSideBar",
@@ -71,10 +73,18 @@ ConfigSectionInterfaceTagsSWT
 
 		}
 
+			// library
+		
 		BooleanParameterImpl show_tag = new BooleanParameterImpl(
 				"Library.ShowTagButtons", "ConfigView.section.style.ShowTagButtons");
 		add(show_tag,listLibrary);
 
+		BooleanParameterImpl show_filters_only = new BooleanParameterImpl(
+				"Library.ShowTagButtons.FiltersOnly",
+				"ConfigView.section.style.ShowTagButtons.FiltersOnly");
+		add(show_filters_only,listLibrary);
+		show_filters_only.setIndent(1, true);
+		
 		BooleanParameterImpl show_tag_comp_only = new BooleanParameterImpl(
 				"Library.ShowTagButtons.CompOnly",
 				"ConfigView.section.style.ShowTagButtons.CompOnly");
@@ -87,7 +97,7 @@ ConfigSectionInterfaceTagsSWT
 		add(tag_inclusive,listLibrary);
 		tag_inclusive.setIndent(1, true);
 
-		show_tag.addEnabledOnSelection(show_tag_comp_only, tag_inclusive);
+		show_tag.addEnabledOnSelection(show_filters_only, show_tag_comp_only, tag_inclusive);
 
 		BooleanParameterImpl col_config = new BooleanParameterImpl(
 				"Library.EnableSepColConfig",

@@ -538,6 +538,7 @@ public class MyTorrentsView
 						"Library.ShowCatButtons", 
 						"Library.ShowTagButtons", 
 						"Library.ShowTagButtons.CompOnly",
+						"Library.ShowTagButtons.FiltersOnly",
 						"Library.ShowTagButtons.Inclusive",
 					}, this);
 	
@@ -723,6 +724,7 @@ public class MyTorrentsView
 			    COConfigurationManager.removeParameterListener("Library.ShowCatButtons", this);
 			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons", this);
 			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.CompOnly", this);
+			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.FiltersOnly", this);
 			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.Inclusive", this);
        		}));
   }
@@ -819,49 +821,64 @@ public class MyTorrentsView
     	}
     }
 
-	  boolean showAll = Utils.isAZ2UI();
-		if (!tagButtonsDisabled) {
+    boolean showAll = Utils.isAZ2UI();
+    if (!tagButtonsDisabled) {
+    	boolean filterOnly = COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons.FiltersOnly" );
+    	
+    	ArrayList<Tag> tagsManual = new ArrayList<>(
+    			TagManagerFactory.getTagManager().getTagType(
+    					TagType.TT_DOWNLOAD_MANUAL).getTags());
+    	
+    	for (Tag tag : tagsManual) {
+    		
+    		boolean show;
+    		
+    		if ( filterOnly ){
+    			
+    			show = tag.getFlag( Tag.FL_IS_FILTER );
+    			
+    		}else{
+    			
+    			show = showAll || tag.isVisible();
+    		}
+    		if ( show ){
+    			
+    			if (!hiddenTags.contains(tag)) {
+    				
+    				tags_to_show.add(tag);
+    			}
+    		}
+    	}
+    }
 
-			ArrayList<Tag> tagsManual = new ArrayList<>(
-					TagManagerFactory.getTagManager().getTagType(
-							TagType.TT_DOWNLOAD_MANUAL).getTags());
-			for (Tag tag : tagsManual) {
-				if (showAll || tag.isVisible()) {
-					if (!hiddenTags.contains(tag)) {
-						tags_to_show.add(tag);
-					}
-				}
-			}
-		}
+    if (!catButtonsDisabled) {
 
-		if (!catButtonsDisabled) {
+    	// no point in showing any cat buttons if we're in a category library view as they are
+    	// exclusive and selecting any other cat button is pointless
 
-				// no point in showing any cat buttons if we're in a category library view as they are
-				// exclusive and selecting any other cat button is pointless
-			
-			boolean hideAllCats = false;
-			
-			for ( Tag t: hiddenTags ){
-				if ( t.getTagType().getTagType() == TagType.TT_DOWNLOAD_CATEGORY ){
-					hideAllCats = true;
-				}
-			}
-			
-			if ( !hideAllCats ){
-				ArrayList<Tag> tagsCat = new ArrayList<>(
-						TagManagerFactory.getTagManager().getTagType(
-								TagType.TT_DOWNLOAD_CATEGORY).getTags());
-				if (showAll) {
-					tags_to_show.addAll(tagsCat);
-				} else {
-					for (Tag tag : tagsCat) {
-						if (tag.isVisible()) {
-							tags_to_show.add(tag);
-						}
-					}
-				}
-			}
-		}
+    	boolean hideAllCats = false;
+
+    	for ( Tag t: hiddenTags ){
+    		if ( t.getTagType().getTagType() == TagType.TT_DOWNLOAD_CATEGORY ){
+    			hideAllCats = true;
+    		}
+    	}
+
+    	if ( !hideAllCats ){
+    		ArrayList<Tag> tagsCat = new ArrayList<>(
+    				TagManagerFactory.getTagManager().getTagType(
+    						TagType.TT_DOWNLOAD_CATEGORY).getTags());
+    		if (showAll) {
+    			tags_to_show.addAll(tagsCat);
+    		} else {
+    			for (Tag tag : tagsCat) {
+    				if (tag.isVisible()) {
+    					tags_to_show.add(tag);
+    				}
+    			}
+    		}
+    	}
+    }
 
     tags_to_show = TagUtils.sortTags( tags_to_show );
 
@@ -2442,6 +2459,7 @@ public class MyTorrentsView
 			
 			if ( 	parameterName.equals("Library.ShowCatButtons") ||
 					parameterName.equals("Library.ShowTagButtons" ) ||
+					parameterName.equals("Library.ShowTagButtons.FiltersOnly" ) ||
 					parameterName.equals("Library.ShowTagButtons.CompOnly" )){
 
 				createTabs();
@@ -2680,12 +2698,14 @@ public class MyTorrentsView
 					boolean create_tabs = false;
 					List<Tag> ourPendingTags = new ArrayList<>();
 
+				   	boolean filterOnly = COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons.FiltersOnly" );
+
 					synchronized( pending_tag_changes ){
 						ourPendingTags.addAll(pending_tag_changes);
 
 						for ( Tag t: pending_tag_changes ){
-
-							boolean should_be_visible	= t.isVisible() && !hiddenTags.contains( t );
+				
+							boolean should_be_visible	= (filterOnly?t.getFlag( Tag.FL_IS_FILTER ):t.isVisible())&& !hiddenTags.contains( t );
 							boolean is_visible			= allTags.contains( t );
 
 							if ( should_be_visible != is_visible ){

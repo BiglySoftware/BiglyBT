@@ -233,9 +233,11 @@ public class UIConfigDefaultsSWT
 
 		def.addParameter( "Library.ShowCatButtons", false );
 		def.addParameter( "Library.ShowTagButtons", true );
-		def.addParameter( "Library.showFancyMenu", true );
+		def.addParameter( "Library.ShowTagButtons.FiltersOnly", false );
 		def.addParameter( "Library.ShowTagButtons.CompOnly", false );
 		def.addParameter( "Library.ShowTagButtons.Inclusive", true );
+		
+		def.addParameter( "Library.showFancyMenu", true );
 		def.addParameter( "Library.EnableSepColConfig", false );
 		def.addParameter( "open.torrent.window.rename.on.tlf.change", true );
 		

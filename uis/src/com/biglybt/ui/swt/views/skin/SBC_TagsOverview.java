@@ -440,6 +440,14 @@ public class SBC_TagsOverview
 					}
 				});
 
+		tableManager.registerColumn(Tag.class, ColumnTagFilter.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagFilter(column);
+					}
+				});
+
 		tableManager.registerColumn(Tag.class, ColumnTagGroup.COLUMN_ID,
 				new TableColumnCreationListener() {
 					@Override

@@ -49,6 +49,7 @@ TagBase
 	protected static final String	AT_RATELIMIT_DOWN				= "rl.down";
 	protected static final String	AT_VISIBLE						= "vis";
 	protected static final String	AT_PUBLIC						= "pub";
+	protected static final String	AT_FLAGS						= "flag";
 	protected static final String	AT_GROUP						= "gr";
 	protected static final String	AT_CAN_BE_PUBLIC				= "canpub";
 	protected static final String	AT_ORIGINAL_NAME				= "oname";
@@ -131,6 +132,7 @@ TagBase
 
 	private Boolean	is_visible;
 	private Boolean	is_public;
+	private long	flags;
 	private String	group;
 	private int[]	colour;
 	private long[]	colours;
@@ -159,6 +161,7 @@ TagBase
 
 			is_visible 	= readBooleanAttribute( AT_VISIBLE, null );
 			is_public 	= readBooleanAttribute( AT_PUBLIC, null );
+			flags		= readLongAttribute( AT_FLAGS, FL_NONE );
 			group		= readStringAttribute( AT_GROUP, null );
 			description = readStringAttribute( AT_DESCRIPTION, null );
 
@@ -427,6 +430,39 @@ TagBase
 		return( true );
 	}
 
+	public void
+	setFlag(
+		long		flag,
+		boolean		value )
+	{
+		boolean set = ( flags & flag ) != 0;
+		
+		if ( set == value ){
+			
+			return;
+		}
+		
+		if ( value ){
+			
+			flags = flags | flag;
+			
+		}else{
+			
+			flags = flags & ~flag;
+		}
+		
+		writeLongAttribute( AT_FLAGS, flags );
+
+		tag_type.fireMetadataChanged( this );
+	}
+	
+	public boolean
+	getFlag(
+		long		flag )
+	{
+		return((flags & flag) != 0 );
+	}
+	
 	@Override
 	public boolean[]
 	isTagAuto()

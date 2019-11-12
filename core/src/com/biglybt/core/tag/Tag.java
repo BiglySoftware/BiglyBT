@@ -34,6 +34,9 @@ Tag
 	public static final String	TP_SETTINGS_REQUESTED	= "Settings Requested";	// Boolean
 	public static final String	TP_CONSTRAINT_ERROR		= "Constraint Error";	// String
 
+	public static final long	FL_NONE				= 0x00000000;
+	public static final long	FL_IS_FILTER		= 0x00000001;
+	
 		/**
 		 * Unique type denoting this species of tag
 		 * @return
@@ -103,6 +106,21 @@ Tag
 	setVisible(
 		boolean		visible );
 
+	public default void
+	setFlag(
+		long		flag,
+		boolean		value )
+	{
+		
+	}
+	
+	public default boolean
+	getFlag(
+		long		flag )
+	{
+		return( false );
+	}
+	
 	public String
 	getGroup();
 

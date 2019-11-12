@@ -81,15 +81,17 @@ public class TagSettingsView
 
 		private ColorSwtParameter tagColor;
 
-		private IconSwtParameter tagIcon;
-
 		private IntSwtParameter maxDownloadSpeed;
 
 		private IntSwtParameter maxUploadSpeed;
 
+		private IconSwtParameter tagIcon;
+
 		private BooleanSwtParameter viewInSideBar;
 
 		private BooleanSwtParameter isPublic;
+		
+		private BooleanSwtParameter isFilter;
 
 		public BooleanSwtParameter uploadPriority;
 
@@ -448,6 +450,18 @@ public class TagSettingsView
 						}
 					});
 
+			boolean allManual = true;
+			
+			for ( Tag t: tags ){
+				
+				if ( t.getTagType().getTagType() != TagType.TT_DOWNLOAD_MANUAL ){
+					
+					allManual = false;
+					
+					break;
+				}
+			}
+
 			// Field: Visible
 
 			params.viewInSideBar = new BooleanSwtParameter(cSection2, "viewInSidebar",
@@ -475,9 +489,43 @@ public class TagSettingsView
 						}
 					});
 			gd = new GridData();
-			gd.horizontalSpan = 4;
+			gd.horizontalSpan = allManual?1:4;
 			params.viewInSideBar.setLayoutData(gd);
 
+			// Field: is filter
+			
+			if ( allManual ){
+				
+				params.isFilter = new BooleanSwtParameter(cSection2, "isFilter",
+						"TagSettings.isFilter", null,
+						new BooleanSwtParameter.ValueProcessor() {
+							@Override
+							public Boolean getValue(BooleanSwtParameter p) {
+								int isFilter = -1;
+								for (Tag tag : tags) {
+									isFilter = updateIntBoolean(tag.getFlag( Tag.FL_IS_FILTER ), isFilter);
+								}
+								return isFilter == 2 ? null : (isFilter == 1);
+							}
+	
+							@Override
+							public boolean setValue(BooleanSwtParameter p, Boolean value) {
+								boolean changed = tags.length == 0;
+								for (Tag tag : tags) {
+									if (!tag.getFlag( Tag.FL_IS_FILTER  ) == value) {
+										tag.setFlag(Tag.FL_IS_FILTER , value);
+										changed = true;
+									}
+								}
+								return changed;
+							}
+						});
+				gd = new GridData();
+				gd.horizontalSpan = 3;
+				params.isFilter.setLayoutData(gd);
+			}
+			
+			
 			// Field: Public
 			if (canBePublic == 1) {
 				params.isPublic = new BooleanSwtParameter(cSection2, "tag.isPublic",
@@ -1689,6 +1737,10 @@ public class TagSettingsView
 
 		if (params.isPublic != null) {
 			params.isPublic.refreshControl();
+		}
+
+		if (params.isFilter != null) {
+			params.isFilter.refreshControl();
 		}
 
 		if (params.maxDownloadSpeed != null) {
