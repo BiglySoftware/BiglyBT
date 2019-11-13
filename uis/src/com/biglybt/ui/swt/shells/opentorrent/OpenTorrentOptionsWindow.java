@@ -822,6 +822,7 @@ public class OpenTorrentOptionsWindow
 	}
 
 	private void setupShowAgainOptions(SWTSkin skin) {
+		SWTSkinObjectCheckbox soAskLater = (SWTSkinObjectCheckbox) skin.getSkinObject("showagain-asklater");
 		SWTSkinObjectCheckbox soNever = (SWTSkinObjectCheckbox) skin.getSkinObject("showagain-never");
 		SWTSkinObjectCheckbox soAlways = (SWTSkinObjectCheckbox) skin.getSkinObject("showagain-always");
 		SWTSkinObjectCheckbox soMany = (SWTSkinObjectCheckbox) skin.getSkinObject("showagain-manyfile");
@@ -829,6 +830,18 @@ public class OpenTorrentOptionsWindow
 		String showAgainMode = COConfigurationManager.getStringParameter(ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS);
 		boolean hasUserChosen = COConfigurationManager.hasParameter(ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS, true);
 
+		if ( soAskLater != null && !hasUserChosen ){
+			soAskLater.addSelectionListener(new SWTSkinCheckboxListener() {
+				@Override
+				public void checkboxChanged(SWTSkinObjectCheckbox so, boolean checked) {
+					COConfigurationManager.removeParameter(ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS );
+				}
+			});
+			if (!hasUserChosen) {
+				soAskLater.setChecked(true);
+			}
+		}
+		
 		if (soNever != null) {
 			soNever.addSelectionListener(new SWTSkinCheckboxListener() {
 				@Override
