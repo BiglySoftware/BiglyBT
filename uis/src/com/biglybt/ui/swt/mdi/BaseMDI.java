@@ -195,15 +195,19 @@ public abstract class BaseMDI
 	}
 
 	@Override
-	public final BaseMdiEntry closeEntry(MdiEntry entry) {
+	public final BaseMdiEntry closeEntry(MdiEntry entry, boolean userInitiated ) {
 		if (entry == null) {
 			return null;
 		}
-		return closeEntryByID(entry.getViewID());
+		return closeEntryByID(entry.getViewID(), userInitiated );
 	}
-
+	
 	@Override
 	public BaseMdiEntry closeEntryByID(String id) {
+		return( closeEntryByID( id, false ));
+	}
+
+	private BaseMdiEntry closeEntryByID(String id, boolean userInitiated) {
 		// We'll get here from closeEntry (BaseMDI), skinObjectDestroyed (TabbedMDI)
 		// with a 99% chance the display is disposed
 		if (Utils.isDisplayDisposed()) {
@@ -228,7 +232,8 @@ public abstract class BaseMDI
 			setCurrentEntry(null);
 		}
 
-		removedItem.closeView();
+		removedItem.closeView( userInitiated );
+		
 		return removedItem;
 	}
 

@@ -972,7 +972,7 @@ public class MainMDISetup
 							// remove header when there are no children
 							entry.addListener((parent, ch, user) -> {
 								if (mdi.getChildrenOf(SIDEBAR_HEADER_PLUGINS).isEmpty()) {
-									mdi.closeEntry(parent);
+									mdi.closeEntry(parent,false);
 								}
 							});
 	

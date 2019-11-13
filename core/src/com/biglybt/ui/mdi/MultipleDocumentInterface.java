@@ -166,10 +166,10 @@ public interface MultipleDocumentInterface
 
 	/**
 	 * Close {@link MdiEntry}
-	 *
+	 * @param userInitiated whether or not the user explicitly closed this view (used for the dynamic Downloading library view, for example...)
 	 * @return Entry that was closed, or null if entry wasn't closed (ie. didn't exist)
 	 */
-	MdiEntry closeEntry(MdiEntry entry);
+	MdiEntry closeEntry(MdiEntry entry, boolean userInitiated);
 
 	/**
 	 * Close {@link MdiEntry} of id

@@ -93,8 +93,6 @@ public abstract class BaseMdiEntry
 
 	private boolean closeable;
 
-	//protected Boolean	closeWasUserInitiated;
-
 	private Boolean isExpanded = null;
 
 	private String imageLeftID;
@@ -164,6 +162,10 @@ public abstract class BaseMdiEntry
 
 	@Override
 	public void closeView() {
+		closeView( false );
+	}
+	
+	public void closeView( boolean userInitiated ) {
 		// Some plugins force close the view on TYPE_DESTROY 
 		try {
 			boolean shuttingDown = Utils.isDisplayDisposed();
@@ -187,11 +189,11 @@ public abstract class BaseMdiEntry
 			}
 		}
 
-		destroyEntry();
+		destroyEntry( userInitiated );
 	}
 	
-	protected void destroyEntry() {
-		triggerCloseListeners();
+	protected void destroyEntry( boolean userInitiated ) {
+		triggerCloseListeners( userInitiated );
 
 		try {
 			setEventListener(null, null, false);
@@ -317,17 +319,17 @@ public abstract class BaseMdiEntry
 		}
 	}
 
-	public void triggerCloseListeners() {
+	public void triggerCloseListeners( boolean userInitiated ) {
 		MdiCloseListener[] list = {};
 		synchronized (this) {
 			if (listCloseListeners != null) {
 				list = listCloseListeners.toArray(new MdiCloseListener[0]);
 			}
-		}
-		boolean hasAutoOpenEntry = mdi != null && mdi.willEntryAutoOpen(id);
+		}		
+		
 		for (MdiCloseListener l : list) {
 			try {
-				l.mdiEntryClosed(this, !hasAutoOpenEntry);
+				l.mdiEntryClosed(this, userInitiated );
 			} catch (Exception e) {
 				Debug.out(e);
 			}
@@ -341,8 +343,7 @@ public abstract class BaseMdiEntry
 		if (parentEntryID != null && mdi != null) {
 			MdiEntrySWT parentEntry = mdi.getEntry(parentEntryID);
 			if (parentEntry instanceof BaseMdiEntry) {
-				((BaseMdiEntry) parentEntry).triggerChildCloseListeners(this,
-						!hasAutoOpenEntry);
+				((BaseMdiEntry) parentEntry).triggerChildCloseListeners(this, userInitiated);
 			}
 		}
 

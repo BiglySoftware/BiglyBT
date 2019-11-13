@@ -501,7 +501,7 @@ public class MenuFactory
 				if (mdi != null) {
 					MdiEntry currentEntry = mdi.getCurrentEntry();
 					if (currentEntry != null && currentEntry.isCloseable()) {
-						mdi.closeEntry(currentEntry);
+						mdi.closeEntry(currentEntry,true);
 					}
 				}
 			}

@@ -395,8 +395,8 @@ public class TabbedEntry
 
 
 	@Override
-	protected void destroyEntry() {
-		if (Utils.runIfNotSWTThread(this::destroyEntry)) {
+	protected void destroyEntry( boolean userInitiated ) {
+		if (Utils.runIfNotSWTThread(()->destroyEntry(userInitiated))) {
 			return;
 		}
 
@@ -409,7 +409,7 @@ public class TabbedEntry
 		CTabItem item = swtItem;
 		swtItem = null;
 
-		super.destroyEntry();
+		super.destroyEntry( userInitiated );
 
 		try {
 			if (!item.isDisposed()) {

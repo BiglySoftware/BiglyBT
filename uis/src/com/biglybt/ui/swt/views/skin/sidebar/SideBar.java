@@ -250,7 +250,7 @@ public class SideBar
 					}
 				});
 	
-			menuItem.addListener((menu, target) -> closeEntry(getCurrentEntry()));
+			menuItem.addListener((menu, target) -> closeEntry(getCurrentEntry(), true ));
 		}
 		
 		{
@@ -783,7 +783,7 @@ public class SideBar
 								lastCloseAreaClicked = closeArea;
 								SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
 								if (entry != null) {
-									closeEntry(entry);
+									closeEntry(entry,true);
 								} else {
 									treeItem.dispose();
 								}
@@ -1129,7 +1129,7 @@ public class SideBar
 					@Override
 					public void pressed(SWTSkinButtonUtility buttonUtility,
 					                    SWTSkinObject skinObject, int stateMask) {
-						closeEntry(getCurrentEntry());
+						closeEntry(getCurrentEntry(),true);
 					}
 				});
 			}
@@ -1750,7 +1750,7 @@ public class SideBar
 			}
 		} catch (Exception e) {
 			Debug.out(e);
-			closeEntry(entry);
+			closeEntry(entry,false);
 			return null;
 		}
 

@@ -1406,7 +1406,7 @@ public class SB_Transfers
 			
 			category.removeCategoryListener(categoryListener);
 
-			mdi.closeEntry(entry);
+			mdi.closeEntry(entry,false);
 		}
 	}
 
@@ -1593,7 +1593,7 @@ public class SB_Transfers
 							entry.addListener((parent, ch, user) -> {
 								String viewID = parent.getViewID();
 								if (mdi.getChildrenOf(viewID).isEmpty()) {
-									mdi.closeEntry(parent);
+									mdi.closeEntry(parent,false);
 								}
 							});
 
@@ -2206,7 +2206,7 @@ public class SB_Transfers
 	
 				entry.setUserData( AUTO_CLOSE_KEY, "" );
 
-				mdi.closeEntry(entry);
+				mdi.closeEntry(entry,false);
 			}
 		}
 	}
@@ -2477,7 +2477,7 @@ public class SB_Transfers
 					}
 				}
 			} else {
-				mdi.closeEntry(mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL));
+				mdi.closeEntry(mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL), false );
 			}
 		}else{
 			refreshAllLibraries();

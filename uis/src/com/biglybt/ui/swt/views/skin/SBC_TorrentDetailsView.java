@@ -333,7 +333,7 @@ public class SBC_TorrentDetailsView
 										Object ds = entry.getDatasourceCore();
 										DownloadManager manager = DataSourceUtils.getDM(ds);
 										if (dm.equals(manager)) {
-											mdi.closeEntry(entry);
+											mdi.closeEntry(entry,false);
 										}
 									}
 								};

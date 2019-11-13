@@ -399,8 +399,8 @@ public class SideBarEntrySWT
 	}
 
 	@Override
-	protected void destroyEntry() {
-		if (Utils.runIfNotSWTThread(this::destroyEntry)) {
+	protected void destroyEntry( boolean userInitiated ) {
+		if (Utils.runIfNotSWTThread(()->destroyEntry(userInitiated))) {
 			return;
 		}
 
@@ -416,7 +416,7 @@ public class SideBarEntrySWT
 
 		// super can end up calling destroyEntry again (via SWT disposals), so
 		// don't call super until after we nulled swtItem
-		super.destroyEntry();
+		super.destroyEntry( userInitiated );
 
 		try {
 			if (!item.isDisposed()) {

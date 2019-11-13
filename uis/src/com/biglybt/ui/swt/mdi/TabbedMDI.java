@@ -180,7 +180,7 @@ public class TabbedMDI
 		
 		MdiEntry[] entries = getEntries();
 		for (MdiEntry entry : entries) {
-			closeEntry(entry);
+			closeEntry(entry,false);
 		}
 
 		String key = props_prefix + ".closedtabs";
@@ -450,7 +450,7 @@ public class TabbedMDI
   				// ESC or CTRL+F4 closes current Tab
   				if (key == SWT.ESC
   						|| (event.keyCode == SWT.F4 && event.stateMask == SWT.CTRL)) {
-					  closeEntry(getCurrentEntry());
+					  closeEntry(getCurrentEntry(),true);
   					event.doit = false;
   				} else if (event.keyCode == SWT.F6
   						|| (event.character == SWT.TAB && (event.stateMask & SWT.CTRL) != 0)) {
@@ -842,7 +842,7 @@ public class TabbedMDI
 			if (!(e instanceof UISWTViewEventCancelledException)) {
 				Debug.out("Can't create " + builder.getViewID(), e);
 			}
-			closeEntry(entry);
+			closeEntry(entry,false);
 			return null;
 		}
 
