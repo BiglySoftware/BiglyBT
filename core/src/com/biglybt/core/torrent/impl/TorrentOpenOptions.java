@@ -300,10 +300,15 @@ public class TorrentOpenOptions
 		bDeleteFileOnCancelSet = true;
 	}
 	
-	public boolean
-	getDeleteFileOnCancel()
+	public void
+	deleteTorrent()
 	{
-		return( bDeleteFileOnCancel );
+		if ( bDeleteFileOnCancel ){
+			
+			File torrentFile = new File( sFileName);
+
+			TorrentUtils.delete( torrentFile, true );
+		}
 	}
 	
 	public String
@@ -1492,7 +1497,7 @@ public class TorrentOpenOptions
 				
 					if ( bDeleteFileOnCancel ){
 						
-						torrentFile.delete();
+						TorrentUtils.delete( torrentFile, true );
 						
 					}else{
 						
@@ -1504,7 +1509,7 @@ public class TorrentOpenOptions
 							
 							if ( torrentFile.getParentFile().getAbsolutePath().equals( new File(save_dir).getAbsolutePath())){
 								
-								torrentFile.delete();
+								TorrentUtils.delete( torrentFile, true );
 							}
 						}
 					}

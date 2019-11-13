@@ -1212,22 +1212,12 @@ public class UIFunctionsImpl
 														TorrentUtils.listToAnnounceGroups( new_trackers, existing_torrent );
 													}
 													
-													if ( torrentOptions.getDeleteFileOnCancel()){
-														
-														File torrentFile = new File(torrentOptions.sFileName);
-									
-														torrentFile.delete();
-													}
+													torrentOptions.deleteTorrent();
 												}
 											});
 										}else{
 											
-											if ( torrentOptions.getDeleteFileOnCancel()){
-												
-												File torrentFile = new File(torrentOptions.sFileName);
-							
-												torrentFile.delete();
-											}
+											torrentOptions.deleteTorrent();
 										}
 									}
 								});
@@ -1302,12 +1292,7 @@ public class UIFunctionsImpl
 
 				if ( !delete_delegated ){
 					
-					if ( torrentOptions.getDeleteFileOnCancel()){
-	
-						File torrentFile = new File(torrentOptions.sFileName);
-	
-						torrentFile.delete();
-					}
+					torrentOptions.deleteTorrent();
 				}
 				
 				return( true );
@@ -1325,12 +1310,7 @@ public class UIFunctionsImpl
 
 							archived.destubbify();
 
-							if ( torrentOptions.getDeleteFileOnCancel()){
-
-								File torrentFile = new File(torrentOptions.sFileName);
-
-								torrentFile.delete();
-							}
+							torrentOptions.deleteTorrent();
 
 							return( true );
 
