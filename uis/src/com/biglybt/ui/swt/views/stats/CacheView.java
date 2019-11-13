@@ -451,10 +451,10 @@ public class CacheView
     lblReadsFromFile.setText(DisplayFormatters.formatByteCountToKiBEtc(readsFromFile));
 
      if(nbReadsFromFile > 0) {
-      perThousands = (int) ((1000l * nbReadsFromCache ) / nbReadsFromFile);
+      perThousands = (int) ((1000l * nbReadsFromCache ) / ( nbReadsFromCache + nbReadsFromFile));
       
       lblPercentReads1.setText(
-    		  DisplayFormatters.formatDecimal( (double)nbReadsFromCache/nbReadsFromFile, 2 ) + "  " + MessageText.getString("label.hit.ratio"));
+    		  DisplayFormatters.formatPercentFromThousands( perThousands ) + "  " + MessageText.getString("label.hits"));
       
       pbReads1.setSelection(perThousands);
     }else{
