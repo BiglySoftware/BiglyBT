@@ -28,6 +28,7 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -808,146 +809,196 @@ public class GeneralView
   }
 
   private void updateAvailability() {
-  	if (manager == null)
-  		return;
+	  if (manager == null)
+		  return;
 
-  	try{
-  		this_mon.enter();
+	  try{
+		  this_mon.enter();
 
-  		final int[] available;
+		  final int[] available;
 
-  		PEPeerManager	pm = manager.getPeerManager();
+		  DiskManagerPiece[]	dmPieces;
 
-	    if (manager.getPeerManager() == null) {
-	      if (availabilityPercent.getText().length() > 0 ){
+		  PEPeerManager	pm 	= manager.getPeerManager();
+		  DiskManager		dm	= manager.getDiskManager();
 
-	    	  availabilityPercent.setText("");
-	      }
+		  long runningFor;
 
-	      	available	= new int[manager.getNbPieces()];
-	    }else{
-	    	available	= pm.getAvailability();
-	    }
+		  if (pm == null) {
+			  if (availabilityPercent.getText().length() > 0 ){
 
-	    if (display == null || display.isDisposed())
-	      return;
+				  availabilityPercent.setText("");
+			  }
 
-	    if (availabilityImage == null || availabilityImage.isDisposed()) {
-	      return;
-	    }
-	    Rectangle bounds = availabilityImage.getClientArea();
+			  available	= new int[manager.getNbPieces()];
+			  dmPieces	= null;
 
-	    int xMax = bounds.width - 2;
+			  runningFor = -1;
+		  }else{
+			  available	= pm.getAvailability();
+			  dmPieces	= dm==null?null:dm.getPieces();
 
-	    int yMax = bounds.height - 2;
+			  runningFor = SystemTime.getMonotonousTime() - pm.getTimeStarted( true );
+		  }
 
-	    if (xMax < 10 || yMax < 5){
-	        return;
-	    }
+		  if (display == null || display.isDisposed())
+			  return;
 
-	    if (aImage != null && !aImage.isDisposed()){
-	      aImage.dispose();
-	    }
-	    aImage = new Image(display, bounds.width, bounds.height);
+		  if (availabilityImage == null || availabilityImage.isDisposed()) {
+			  return;
+		  }
+		  Rectangle bounds = availabilityImage.getClientArea();
 
-	    GC gcImage = new GC(aImage);
+		  int xMax = bounds.width - 2;
 
-	    try{
-		    gcImage.setForeground(Colors.grey);
-		    gcImage.drawRectangle(0, 0, bounds.width-1, bounds.height-1);
-		    int allMin = 0;
-		    int allMax = 0;
-		    int total = 0;
-		    String sTotal = "000";
-		    if (available != null) {
+		  int yMax = bounds.height - 2;
 
-		      allMin = available.length==0?0:available[0];
-		      allMax = available.length==0?0:available[0];
-		      int nbPieces = available.length;
-		      for (int i = 0; i < nbPieces; i++) {
-		        if (available[i] < allMin)
-		          allMin = available[i];
-		        if (available[i] > allMax)
-		          allMax = available[i];
-		      }
-		      int maxAboveMin = allMax - allMin;
-		      if (maxAboveMin == 0) {
-		        // all the same.. easy paint
-		        gcImage.setBackground(Colors.blues[allMin == 0 ? Colors.BLUES_LIGHTEST : Colors.BLUES_DARKEST]);
-		        gcImage.fillRectangle(1, 1, xMax, yMax);
-		      } else {
-		        for (int i = 0; i < nbPieces; i++) {
-		          if (available[i] > allMin)
-		            total++;
-		        }
-		        total = (total * 1000) / nbPieces;
-		        sTotal = "" + total;
-		        if (total < 10) sTotal = "0" + sTotal;
-		        if (total < 100) sTotal = "0" + sTotal;
+		  if (xMax < 10 || yMax < 5){
+			  return;
+		  }
 
-		        for (int i = 0; i < xMax; i++) {
-		          int a0 = (i * nbPieces) / xMax;
-		          int a1 = ((i + 1) * nbPieces) / xMax;
-		          if (a1 == a0)
-		            a1++;
-		          if (a1 > nbPieces)
-		            a1 = nbPieces;
-		          int max = 0;
-		          int min = available[a0];
-		          int Pi = 1000;
-		          for (int j = a0; j < a1; j++) {
-		            if (available[j] > max)
-		              max = available[j];
-		            if (available[j] < min)
-		              min = available[j];
-		            Pi *= available[j];
-		            Pi /= (available[j] + 1);
-		          }
-		          int pond = Pi;
-		          if (max == 0)
-		            pond = 0;
-		          else {
-		            int PiM = 1000;
-		            for (int j = a0; j < a1; j++) {
-		              PiM *= (max + 1);
-		              PiM /= max;
-		            }
-		            pond *= PiM;
-		            pond /= 1000;
-		            pond *= (max - min);
-		            pond /= 1000;
-		            pond += min;
-		          }
-		          int index;
-		          if (pond <= 0 || allMax == 0) {
-		            index = 0;
-		          } else {
-		            // we will always have allMin, so subtract that
-		            index = (pond - allMin) * (Colors.BLUES_DARKEST - 1) / maxAboveMin + 1;
-		            // just in case?
-		            if (index > Colors.BLUES_DARKEST) {
-		              index = Colors.BLUES_DARKEST;
-		            }
-		          }
+		  if (aImage != null && !aImage.isDisposed()){
+			  aImage.dispose();
+		  }
+		  aImage = new Image(display, bounds.width, bounds.height);
 
-		          gcImage.setBackground(Colors.blues[index]);
-		          gcImage.fillRectangle(i+1, 1, 1, yMax);
-		        }
-		      }
-		    }
-		    if (availabilityPercent == null || availabilityPercent.isDisposed()) {
-		      return;
-		    }
-		    availabilityPercent.setText(allMin + "." + sTotal);
-	    }finally{
+		  GC gcImage = new GC(aImage);
 
-		    gcImage.dispose();
-	    }
-	    availabilityImage.redraw();
-  	}finally{
+		  try{
+			  gcImage.setForeground(Colors.grey);
+			  gcImage.drawRectangle(0, 0, bounds.width-1, bounds.height-1);
+			  int allMin = 0;
+			  int allMax = 0;
+			  int total = 0;
+			  String sTotal = "000";
+			  
+			  if (available != null) {
 
-  		this_mon.exit();
-  	}
+				  float minAvail = manager.getStats().getAvailability();
+
+				  boolean badAvail = runningFor >= 60*1000 && minAvail >= 0 && minAvail < 1;
+
+				  allMin = available.length==0?0:available[0];
+				  allMax = available.length==0?0:available[0];
+
+				  int nbPieces = available.length;
+
+				  for (int i = 0; i < nbPieces; i++) {
+					  int avail = available[i];
+					  if (avail < allMin)
+						  allMin = avail;
+					  if (avail > allMax)
+						  allMax = avail;
+				  }
+
+				  int maxAboveMin = allMax - allMin;
+				  if ( maxAboveMin == 0 && !badAvail){
+
+					  gcImage.setBackground(Colors.blues[allMin == 0 ? Colors.BLUES_LIGHTEST : Colors.BLUES_DARKEST]);
+
+					  gcImage.fillRectangle(1, 1, xMax, yMax);
+					  
+				  } else {
+					  for (int i = 0; i < nbPieces; i++) {
+						  if (available[i] > allMin)
+							  total++;
+					  }
+					  total = (total * 1000) / nbPieces;
+					  sTotal = "" + total;
+					  if (total < 10) sTotal = "0" + sTotal;
+					  if (total < 100) sTotal = "0" + sTotal;
+
+					  for (int i = 0; i < xMax; i++) {
+						  int a0 = (i * nbPieces) / xMax;
+						  int a1 = ((i + 1) * nbPieces) / xMax;
+						  if (a1 == a0)
+							  a1++;
+						  if (a1 > nbPieces)
+							  a1 = nbPieces;
+						  int max = 0;
+						  int min = available[a0];
+						  int Pi = 1000;
+
+						  boolean badAvailBlock = false;
+						  
+						  for (int j = a0; j < a1; j++) {
+							  int avail = available[j];
+							  if ( avail > max)
+								  max = avail;
+							  if (available[j] < min)
+								  min = avail;
+							  Pi *= avail;
+							  Pi /= (avail + 1);
+
+							  if ( badAvail ){
+								  if ( dmPieces != null ){
+									  DiskManagerPiece dmp = dmPieces[j];
+									  
+									  if ( !dmp.isDone() &&  dmp.isNeeded()){
+										 
+										  if ( avail < 1 ){
+											  
+											  badAvailBlock = true;
+											  
+											  break;
+										  }
+									  }
+								  }
+							  }
+						  }
+
+						  if ( badAvailBlock ){
+
+							  gcImage.setBackground(Colors.fadedRed );
+							  
+						  }else{
+							  int pond = Pi;
+							  if (max == 0)
+								  pond = 0;
+							  else {
+								  int PiM = 1000;
+								  for (int j = a0; j < a1; j++) {
+									  PiM *= (max + 1);
+									  PiM /= max;
+								  }
+								  pond *= PiM;
+								  pond /= 1000;
+								  pond *= (max - min);
+								  pond /= 1000;
+								  pond += min;
+							  }
+							  int index;
+							  if (pond <= 0 || allMax == 0) {
+								  index = 0;
+							  } else {
+								  // we will always have allMin, so subtract that
+								  index = (pond - allMin) * (Colors.BLUES_DARKEST - 1) / maxAboveMin + 1;
+								  // just in case?
+								  if (index > Colors.BLUES_DARKEST) {
+									  index = Colors.BLUES_DARKEST;
+								  }
+							  }
+
+							  gcImage.setBackground(Colors.blues[index]);
+						  }
+						  
+						  gcImage.fillRectangle(i+1, 1, 1, yMax);
+					  }
+				  }
+			  }
+			  if (availabilityPercent == null || availabilityPercent.isDisposed()) {
+				  return;
+			  }
+			  availabilityPercent.setText(allMin + "." + sTotal);
+		  }finally{
+
+			  gcImage.dispose();
+		  }
+		  availabilityImage.redraw();
+	  }finally{
+
+		  this_mon.exit();
+	  }
   }
 
   private void updatePiecesInfo(boolean bForce) {
