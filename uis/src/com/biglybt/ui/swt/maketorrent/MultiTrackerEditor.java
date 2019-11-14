@@ -287,13 +287,13 @@ public class MultiTrackerEditor {
     	  btnSave.setEnabled( false );
     	  btnedittext.setEnabled( false );
 
-    	  trackers = new ArrayList();
+    	  trackers = new ArrayList<>();
     	  TreeItem[] groupItems = treeGroups.getItems();
 
     	  for(int i = 0 ; i < groupItems.length ; i++) {
     		  TreeItem group = groupItems[i];
     		  TreeItem[] trackerItems = group.getItems();
-    		  List groupList = new ArrayList(group.getItemCount());
+    		  List<String> groupList = new ArrayList<>(group.getItemCount());
     		  for(int j = 0 ; j < trackerItems.length ; j++) {
     			  groupList.add(trackerItems[j].getText());
     		  }
@@ -482,14 +482,31 @@ public class MultiTrackerEditor {
 		final Combo configList = new Combo(cTemplate,SWT.READ_ONLY);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		configList.setLayoutData(gridData);
-
-
+		
 		final List<Button>	buttons = new ArrayList<>();
 
 		String sel_str = COConfigurationManager.getStringParameter( "multitrackereditor.last.selection", null );
 
 		final String[]	currentTemplate = { sel_str==null||sel_str.length()==0?null:sel_str };
 
+		configList.addListener(
+				SWT.MouseHover,
+				(ev)->{
+					Map<String,List<List<String>>> multiTrackers = TrackersUtil.getInstance().getMultiTrackers();
+					
+					List<List<String>> list = multiTrackers.get( currentTemplate[0] );
+					
+					String tt = null;
+					
+					if ( list != null ){
+					
+						tt = TorrentUtils.announceGroupsToText( list );
+					}
+					
+					configList.setToolTipText( tt );
+				});
+
+		
 		final Runnable updateSelection =
 			new Runnable()
 			{
@@ -589,9 +606,9 @@ public class MultiTrackerEditor {
 		btnEdit.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				Map multiTrackers = TrackersUtil.getInstance().getMultiTrackers();
+				Map<String,List<List<String>>> multiTrackers = TrackersUtil.getInstance().getMultiTrackers();
 				String	selected = currentTemplate[0];
-				new MultiTrackerEditor( btnEdit.getShell(),selected,(List)multiTrackers.get(selected), templateTEL );
+				new MultiTrackerEditor( btnEdit.getShell(),selected,multiTrackers.get(selected), templateTEL );
 			}
 		});
 
