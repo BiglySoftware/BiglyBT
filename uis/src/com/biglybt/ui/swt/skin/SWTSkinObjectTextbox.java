@@ -110,6 +110,22 @@ public class SWTSkinObjectTextbox
 			cBubble = bubbleTextBox.getParent();
 		}
 
+		textWidget.addListener(SWT.KeyDown, event -> {
+			int key = event.character;
+
+			if (key <= 26 && key > 0) {
+
+				key += 'a' - 1;
+			}
+
+			if (key == 'a' && event.stateMask == SWT.MOD1) {
+
+				event.doit = false;
+
+				textWidget.selectAll();
+			}
+		});
+		
 		textWidget.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {

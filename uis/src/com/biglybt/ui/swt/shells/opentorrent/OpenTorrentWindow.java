@@ -22,12 +22,14 @@ import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 
@@ -75,8 +77,11 @@ public class OpenTorrentWindow
 
 	private StandardButtonsArea buttonsArea;
 
-	private Button btnPasteOpen;
-
+	private Button 	btnBrowseTorrent;
+	private Button 	btnBrowseFolder;
+	private Button 	btnPasteOrClear;
+	private boolean	btnPasteOrClearIsPaste;
+	
 	private SWTSkinObjectTextbox soTextArea;
 
 	private SWTSkinObject soReferArea;
@@ -87,10 +92,10 @@ public class OpenTorrentWindow
 
 	private java.util.List<String> referrers;
 
-	//private TorrentOpenOptions torrentOptions;
-
 	private SWTSkinObjectCheckbox soShowAdvanced;
 
+	private String lastCopiedFromClip;
+	
 	public OpenTorrentWindow(Shell parent) {
 		this.parent = parent;
 
@@ -108,14 +113,11 @@ public class OpenTorrentWindow
 
 		shellForChildren = dlg.getShell();
 		SWTSkin skin = dlg.getSkin();
-		SWTSkinObject soTopBar = skin.getSkinObject("add-buttons");
-		if (soTopBar instanceof SWTSkinObjectContainer) {
-			swt_addButtons(((SWTSkinObjectContainer) soTopBar).getComposite());
-		}
 
 		soTextArea = (SWTSkinObjectTextbox) skin.getSkinObject("text-area");
-		Text tb = ((Text) soTextArea.getControl());
 		
+		Text tb = ((Text) soTextArea.getControl());
+				
 		Clipboard clipboard = new Clipboard(Display.getDefault());
 
 		String sClipText = (String) clipboard.getContents(TextTransfer.getInstance());
@@ -129,8 +131,11 @@ public class OpenTorrentWindow
 				tb.setText( sClipText );
 				
 				tb.setSelection( 0, sClipText.length());
+				
+				lastCopiedFromClip = sClipText;
 			}
 		}
+		
 		tb.setFocus();
 		tb.addModifyListener(new ModifyListener() {
 			@Override
@@ -146,6 +151,11 @@ public class OpenTorrentWindow
 			}
 		});
 
+		SWTSkinObject soTopBar = skin.getSkinObject("add-buttons");
+		if (soTopBar instanceof SWTSkinObjectContainer) {
+			swt_addButtons(((SWTSkinObjectContainer) soTopBar).getComposite());
+		}
+
 		SWTSkinObject so;
 
 		so = skin.getSkinObject("show-advanced");
@@ -156,6 +166,11 @@ public class OpenTorrentWindow
 
 		soReferArea = skin.getSkinObject("refer-area");
 
+		if ( lastCopiedFromClip != null && UrlUtils.parseTextForURL(lastCopiedFromClip, false, true) != null ){
+			
+			soReferArea.setVisible( true );
+		}
+		
 		last_referrer = COConfigurationManager.getStringParameter(CONFIG_REFERRER_DEFAULT, "");
 		if ( last_referrer == null ){
 			last_referrer = "";
@@ -281,9 +296,10 @@ public class OpenTorrentWindow
 
 		// Buttons for tableTorrents
 
-		Button browseTorrent = new Button(cButtons, SWT.PUSH);
-		Messages.setLanguageText(browseTorrent, "OpenTorrentWindow.addFiles");
-		browseTorrent.addListener(SWT.Selection, new Listener() {
+		btnBrowseTorrent = new Button(cButtons, SWT.PUSH);
+		btnBrowseTorrent.setLayoutData( new RowData());
+		Messages.setLanguageText(btnBrowseTorrent, "OpenTorrentWindow.addFiles");
+		btnBrowseTorrent.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				FileDialog fDialog = new FileDialog(shellForChildren, SWT.OPEN
@@ -307,9 +323,10 @@ public class OpenTorrentWindow
 			}
 		});
 
-		Button browseFolder = new Button(cButtons, SWT.PUSH);
-		Messages.setLanguageText(browseFolder, "OpenTorrentWindow.addFiles.Folder");
-		browseFolder.addListener(SWT.Selection, new Listener() {
+		btnBrowseFolder = new Button(cButtons, SWT.PUSH);
+		btnBrowseFolder.setLayoutData( new RowData());
+		Messages.setLanguageText(btnBrowseFolder, "OpenTorrentWindow.addFiles.Folder");
+		btnBrowseFolder.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				DirectoryDialog fDialog = new DirectoryDialog(shellForChildren,
@@ -323,22 +340,40 @@ public class OpenTorrentWindow
 			}
 		});
 
-		btnPasteOpen = new Button(cButtons, SWT.PUSH);
-		Messages.setLanguageText(btnPasteOpen,
-				"OpenTorrentWindow.addFiles.Clipboard");
-		btnPasteOpen.addListener(SWT.Selection, new Listener() {
+			// if we have pasted from clip then start off as a 'clear' button
+		
+		btnPasteOrClearIsPaste = lastCopiedFromClip == null;
+		
+		btnPasteOrClear = new Button(cButtons, SWT.PUSH);
+		btnPasteOrClear.setLayoutData( new RowData());
+		
+		Messages.setLanguageText(btnPasteOrClear, btnPasteOrClearIsPaste?"OpenTorrentWindow.addFiles.Clipboard":"Button.clear");
+		
+		btnPasteOrClear.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				Clipboard clipboard = new Clipboard(shellForChildren.getDisplay());
-
-				String sClipText = (String) clipboard.getContents(TextTransfer.getInstance());
-				if (sClipText != null) {
-					addTorrentsFromTextList(sClipText.trim(), false);
+				if ( btnPasteOrClearIsPaste ){
+					Clipboard clipboard = new Clipboard(shellForChildren.getDisplay());
+	
+					String sClipText = (String) clipboard.getContents(TextTransfer.getInstance());
+					
+					if ( sClipText != null ){
+						
+						sClipText = sClipText.trim();
+						
+						lastCopiedFromClip = sClipText;
+						
+						addTorrentsFromTextList( sClipText, false );
+					}
+				}else{
+					soTextArea.setText( "" );	
 				}
 			}
 		});
 
-		btnPasteOpen.setVisible(false);
+		btnPasteOrClear.setVisible( !btnPasteOrClearIsPaste );
+		
+		Utils.makeButtonsEqualWidth( Arrays.asList( btnBrowseTorrent, btnBrowseFolder, btnPasteOrClear ));
 	}
 
 	private String ensureTrailingSeparator(String sPath) {
@@ -648,22 +683,41 @@ public class OpenTorrentWindow
 
 	@Override
 	public void updateUI() {
-		boolean bTorrentInClipboard = false;
 
 		Clipboard clipboard = new Clipboard(Display.getDefault());
 
 		String sClipText = (String) clipboard.getContents(TextTransfer.getInstance());
-		if (sClipText != null)
-			bTorrentInClipboard = addTorrentsFromTextList(sClipText, true) > 0;
+		
+		if (sClipText != null){
+			
+			if ( lastCopiedFromClip != null && sClipText.equals( lastCopiedFromClip )){
+				
+				return;
+			}
+		
+			boolean bTorrentInClipboard = addTorrentsFromTextList(sClipText, true) > 0;
 
-		if (btnPasteOpen != null && !btnPasteOpen.isDisposed()
-				&& btnPasteOpen.isVisible() != bTorrentInClipboard) {
-			btnPasteOpen.setVisible(bTorrentInClipboard);
+			if ( btnPasteOrClear != null && !btnPasteOrClear.isDisposed()){
+				
+				btnPasteOrClear.setVisible(bTorrentInClipboard);
+				
+				if ( !btnPasteOrClearIsPaste ){
+					
+					Messages.setLanguageText(btnPasteOrClear, "OpenTorrentWindow.addFiles.Clipboard" );
+					
+					Utils.makeButtonsEqualWidth( Arrays.asList( btnBrowseTorrent, btnBrowseFolder, btnPasteOrClear ));
+					
+					btnPasteOrClear.getParent().layout( true );
+					
+					btnPasteOrClearIsPaste = true;
+				}
+			}
+			
 			if (bTorrentInClipboard) {
-				Utils.setTT(btnPasteOpen,sClipText);
+				Utils.setTT(btnPasteOrClear,sClipText);
 			}
 		}
-
+		
 		clipboard.dispose();
 	}
 
