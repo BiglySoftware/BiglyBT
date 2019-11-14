@@ -872,6 +872,8 @@ public class GeneralView
 			  int total = 0;
 			  String sTotal = "000";
 			  
+			  boolean	hasBadAvailBlock = false;
+			  
 			  if (available != null) {
 
 				  float minAvail = manager.getStats().getAvailability();
@@ -949,6 +951,8 @@ public class GeneralView
 
 						  if ( badAvailBlock ){
 
+							  hasBadAvailBlock = true;
+							  
 							  gcImage.setBackground(Colors.fadedRed );
 							  
 						  }else{
@@ -989,6 +993,10 @@ public class GeneralView
 			  if (availabilityPercent == null || availabilityPercent.isDisposed()) {
 				  return;
 			  }
+			  
+			  availabilityPercent.setForeground( hasBadAvailBlock?Colors.fadedRed:null );
+			  
+			  
 			  availabilityPercent.setText(allMin + "." + sTotal);
 		  }finally{
 
