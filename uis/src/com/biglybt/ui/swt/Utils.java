@@ -4949,4 +4949,38 @@ public class Utils
 		control.addListener(SWT.MouseUp, l);
 		control.addListener(SWT.MouseExit, l);
 	}
+	
+	
+	public static StyledText
+	createStyledText(
+		Composite		parent,
+		int				style )
+	{
+		StyledText st = new StyledText( parent, style );
+		
+		ScrollBar vbar = st.getVerticalBar();
+		
+		vbar.setData(
+			"ScrollOnMouseOver",
+			(Runnable)()->{									
+				Listener[] listeners = vbar.getListeners( SWT.Selection );
+				
+				Event event = new Event();
+						
+				event.display	= vbar.getDisplay();
+				event.widget 	= vbar;
+				event.y			= vbar.getSelection();
+				
+				for ( Listener l: listeners ){
+					
+					try{
+						l.handleEvent( event );
+						
+					}catch( Throwable e ){
+					}
+				}
+			});
+		
+		return( st );
+	}
 }

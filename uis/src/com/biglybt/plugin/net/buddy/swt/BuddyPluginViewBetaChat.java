@@ -100,6 +100,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -633,7 +634,8 @@ BuddyPluginViewBetaChat
 			//grid_data.horizontalSpan = 2;
 			//Utils.setLayoutData(log_holder, grid_data);
 	
-			log = new StyledText(log_holder,SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
+			log = Utils.createStyledText( log_holder,SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
+			
 			grid_data = new GridData(GridData.FILL_BOTH);
 			grid_data.horizontalSpan = 1;
 			//grid_data.horizontalIndent = 4;
@@ -647,7 +649,7 @@ BuddyPluginViewBetaChat
 			final Menu log_menu = new Menu( log );
 	
 			log.setMenu(  log_menu );
-	
+			
 			log.addMenuDetectListener(
 				new MenuDetectListener() {
 	
