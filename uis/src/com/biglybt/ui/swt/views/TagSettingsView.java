@@ -42,6 +42,7 @@ import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.GeneralUtils;
+import com.biglybt.ui.config.ConfigSectionSecurity;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
@@ -50,6 +51,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.FontUtils;
 
 /**
@@ -514,6 +516,23 @@ public class TagSettingsView
 								for (Tag tag : tags) {
 									if (!tag.getFlag( Tag.FL_IS_FILTER  ) == value) {
 										tag.setFlag(Tag.FL_IS_FILTER , value);
+										
+										if (value){
+											
+											if ( !COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons.FiltersOnly" )){
+											
+												COConfigurationManager.setParameter( "Library.ShowTagButtons", true );
+												COConfigurationManager.setParameter( "Library.ShowTagButtons.FiltersOnly", true );
+												
+												MessageBoxShell mb = new MessageBoxShell(SWT.ICON_INFORMATION| SWT.OK,
+														MessageText.getString( "tag.settings.filter.enabled.title"),
+														MessageText.getString( "tag.settings.filter.enabled.msg" ));
+																
+												
+												mb.setParent(parent.getShell());
+												mb.open(null);
+											}
+										}
 										changed = true;
 									}
 								}
