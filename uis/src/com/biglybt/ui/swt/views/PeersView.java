@@ -73,7 +73,7 @@ public class PeersView
 	private TimerEventPeriodic timerPeerCountUI;
 	private boolean pendingTitleRefresh;
 	private String textIndicator;
-
+	private long countWentToZeroTime = -1;
 
 	public PeersView() {
 		super(MSGID_PREFIX, false);
@@ -155,7 +155,29 @@ public class PeersView
 				count = peerManager.getPeers().size();
 			}
 		}
-		String newTextIndicator = count == 0 ? null : "" + count;
+		
+		if ( count == 0 ){
+			
+			if ( countWentToZeroTime== -1 ){
+				
+				count = -1;
+				
+			}else if ( countWentToZeroTime == 0 ){
+				
+				countWentToZeroTime = SystemTime.getMonotonousTime();
+				
+			}else{
+				if ( countWentToZeroTime > 0 && SystemTime.getMonotonousTime() - countWentToZeroTime > 30*1000 ){
+					
+					count = -1;
+				}
+			}
+		}else{
+			
+			countWentToZeroTime = 0;
+		}
+		
+		String newTextIndicator = count == -1 ? null : "" + count;
 		if (!StringCompareUtils.equals(textIndicator, newTextIndicator)) {
 			textIndicator = newTextIndicator;
 			ViewTitleInfoManager.refreshTitleInfo(PeersView.this);
