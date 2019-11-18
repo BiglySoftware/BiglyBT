@@ -1566,6 +1566,7 @@ PRUDPPacketHandlerImpl
 
 		}catch( Throwable e ){
 
+			/*
 			if ( e instanceof NoRouteToHostException || e instanceof BindException ){
 
 			}else{
@@ -1579,7 +1580,8 @@ PRUDPPacketHandlerImpl
 					e.printStackTrace();
 				}
 			}
-
+			*/
+			
 			Logger.log(new LogEvent(LOGID, LogEvent.LT_ERROR, "PRUDPPacketHandler: send to " + destination_address + " failed: " + Debug.getNestedExceptionMessage(e)));
 
 			throw( new PRUDPPacketHandlerException( "PRUDPPacketHandler:send failed", e ));
