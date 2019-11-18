@@ -172,6 +172,12 @@ public class ConfigSectionTrackerClient
 				"ConfigView.label.minannounce"), Parameter.MODE_INTERMEDIATE,
 				listOverride);
 
+		add(new BooleanParameterImpl(BCFG_TRACKER_CLIENT_SMART_ACTIVATION,
+				"ConfigView.label.trackersmartactivate"), Parameter.MODE_ADVANCED,
+				listOverride);
+
+		
+		
 		ParameterGroupImpl pgProtocol = new ParameterGroupImpl(
 				"ConfigView.group.override", listOverride);
 		add("TC.pgProtocol", pgProtocol);

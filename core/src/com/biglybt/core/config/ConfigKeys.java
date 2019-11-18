@@ -306,6 +306,7 @@ public final class ConfigKeys {
 		public static final String SCFG_OVERRIDE_IP = "Override Ip";
 		public static final String SCFG_TCP_LISTEN_PORT_OVERRIDE = "TCP.Listen.Port.Override";
 		public static final String BCFG_TRACKER_CLIENT_NO_PORT_ANNOUNCE = "Tracker Client No Port Announce";
+		public static final String BCFG_TRACKER_CLIENT_SMART_ACTIVATION = "Tracker Client Smart Activation";
 		public static final String ICFG_TRACKER_CLIENT_NUMWANT_LIMIT = "Tracker Client Numwant Limit";
 		public static final String ICFG_TRACKER_CLIENT_MIN_ANNOUNCE_INTERVAL = "Tracker Client Min Announce Interval";
 		public static final String ICFG_TRACKER_CLIENT_CONNECT_TIMEOUT = "Tracker Client Connect Timeout";

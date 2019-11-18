@@ -23,6 +23,8 @@ package com.biglybt.core.tracker.client.impl;
 import java.net.URL;
 import java.util.*;
 
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.peer.PEPeerSource;
@@ -40,12 +42,23 @@ public class
 TRTrackerAnnouncerMuxer
 	extends TRTrackerAnnouncerImpl
 {
-	private static final int ACT_CHECK_INIT_DELAY			= 2500;
-	private static final int ACT_CHECK_INTERIM_DELAY		= 10*1000;
-	private static final int ACT_CHECK_IDLE_DELAY			= 30*1000;
+	private static final int ACT_CHECK_INIT_DELAY				= 2500;
+	private static final int ACT_CHECK_INTERIM_DELAY			= 10*1000;
+	private static final int ACT_CHECK_IDLE_DELAY				= 30*1000;
 	private static final int ACT_CHECK_SEEDING_SHORT_DELAY		= 60*1000;
 	private static final int ACT_CHECK_SEEDING_LONG_DELAY		= 3*60*1000;
+	private static final int ACT_CHECK_NOT_SMART_DELAY			= 60*1000;
 
+	private static boolean	smart_activation;
+	
+	static{
+		
+		COConfigurationManager.addAndFireParameterListener(
+			ConfigKeys.Tracker.BCFG_TRACKER_CLIENT_SMART_ACTIVATION,
+			(n)->{
+				smart_activation = COConfigurationManager.getBooleanParameter( n );
+			});
+	}
 
 	private TRTrackerAnnouncerFactory.DataProvider		f_provider;
 	private boolean										is_manual;
@@ -533,95 +546,110 @@ TRTrackerAnnouncerMuxer
 
 				boolean	activate = force;
 
-				boolean	seeding = provider.getRemaining() == 0;
-
-				if ( seeding && activated.size() > 0 ){
-
-						// when seeding we only activate on tracker fail or major lack of connections
-						// as normally we rely on downloaders rotating and finding us
-
-					int	connected	= provider.getConnectedConnectionCount();
-
-					if ( connected < 1 ){
-
-						activate = SystemTime.getMonotonousTime() - last_activation_time >= 60*1000;
-
-						next_check_delay = ACT_CHECK_SEEDING_SHORT_DELAY;
-
-					}else if ( connected < 3 ){
-
-						next_check_delay = ACT_CHECK_SEEDING_LONG_DELAY;
-
+				if ( smart_activation ){
+					
+					boolean	seeding = provider.getRemaining() == 0;
+	
+					if ( seeding && activated.size() > 0 ){
+	
+							// when seeding we only activate on tracker fail or major lack of connections
+							// as normally we rely on downloaders rotating and finding us
+	
+						int	connected	= provider.getConnectedConnectionCount();
+	
+						if ( connected < 1 ){
+	
+							activate = SystemTime.getMonotonousTime() - last_activation_time >= 60*1000;
+	
+							next_check_delay = ACT_CHECK_SEEDING_SHORT_DELAY;
+	
+						}else if ( connected < 3 ){
+	
+							next_check_delay = ACT_CHECK_SEEDING_LONG_DELAY;
+	
+						}else{
+	
+							next_check_delay = 0;
+						}
 					}else{
-
-						next_check_delay = 0;
+	
+						int	allowed		= provider.getMaxNewConnectionsAllowed("");	// -1 -> unlimited
+						int	pending		= provider.getPendingConnectionCount();
+						int	connected	= provider.getConnectedConnectionCount();
+	
+						int	online = 0;
+	
+						for ( TRTrackerAnnouncerHelper a: activated ){
+	
+							TRTrackerAnnouncerResponse response = a.getLastResponse();
+	
+							if ( 	response != null &&
+									response.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE ){
+	
+								online++;
+							}
+						}
+	
+						/*
+						System.out.println(
+							"checkActivation: announcers=" + announcers.size() +
+							", active=" + activated.size() +
+							", online=" + online +
+							", allowed=" + allowed +
+							", pending=" + pending +
+							", connected=" + connected +
+							", seeding=" + seeding );
+						*/
+	
+						if ( online == 0 ){
+	
+							activate = true;
+	
+								// no trackers online, start next and recheck soon
+	
+							next_check_delay = ACT_CHECK_INIT_DELAY;
+	
+						}else{
+	
+							int	potential = connected + pending;
+	
+							if ( potential < 10 ){
+	
+									// minimal connectivity
+	
+								activate = true;
+	
+								next_check_delay = ACT_CHECK_INIT_DELAY;
+	
+							}else if ( allowed < 0 || ( allowed >= 5 && pending < 3*allowed/4 )){
+	
+									// not enough to fulfill our needs
+	
+								activate = true;
+	
+								next_check_delay = ACT_CHECK_INTERIM_DELAY;
+	
+							}else{
+									// things look good, recheck in a bit
+	
+								next_check_delay = ACT_CHECK_IDLE_DELAY;
+							}
+						}
 					}
 				}else{
-
-					int	allowed		= provider.getMaxNewConnectionsAllowed("");	// -1 -> unlimited
-					int	pending		= provider.getPendingConnectionCount();
-					int	connected	= provider.getConnectedConnectionCount();
-
-					int	online = 0;
-
-					for ( TRTrackerAnnouncerHelper a: activated ){
-
-						TRTrackerAnnouncerResponse response = a.getLastResponse();
-
-						if ( 	response != null &&
-								response.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE ){
-
-							online++;
-						}
-					}
-
-					/*
-					System.out.println(
-						"checkActivation: announcers=" + announcers.size() +
-						", active=" + activated.size() +
-						", online=" + online +
-						", allowed=" + allowed +
-						", pending=" + pending +
-						", connected=" + connected +
-						", seeding=" + seeding );
-					*/
-
-					if ( online == 0 ){
-
-						activate = true;
-
-							// no trackers online, start next and recheck soon
-
-						next_check_delay = ACT_CHECK_INIT_DELAY;
-
+					
+					if ( announcers.size() > activated.size()){
+						
+						activate			= true;
+						next_check_delay 	= ACT_CHECK_NOT_SMART_DELAY;
+						
 					}else{
-
-						int	potential = connected + pending;
-
-						if ( potential < 10 ){
-
-								// minimal connectivity
-
-							activate = true;
-
-							next_check_delay = ACT_CHECK_INIT_DELAY;
-
-						}else if ( allowed < 0 || ( allowed >= 5 && pending < 3*allowed/4 )){
-
-								// not enough to fulfill our needs
-
-							activate = true;
-
-							next_check_delay = ACT_CHECK_INTERIM_DELAY;
-
-						}else{
-								// things look good, recheck in a bit
-
-							next_check_delay = ACT_CHECK_IDLE_DELAY;
-						}
+						
+						activate			= false;
+						next_check_delay 	= 0;
 					}
 				}
-
+				
 				if ( activate ){
 
 					for ( TRTrackerAnnouncerHelper a: announcers ){
@@ -645,7 +673,10 @@ TRTrackerAnnouncerMuxer
 								a.update( false );
 							}
 
-							break;
+							if ( smart_activation ){
+							
+								break;
+							}
 						}
 					}
 				}

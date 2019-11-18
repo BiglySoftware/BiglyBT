@@ -486,6 +486,7 @@ public class ConfigurationDefaults {
 	def.put( "Tracker Client Min Announce Interval", ZERO);
 	def.put( "Tracker Client Numwant Limit", new Long(100));
 	def.put( "Tracker Client No Port Announce", FALSE);
+	def.put( ConfigKeys.Tracker.BCFG_TRACKER_CLIENT_SMART_ACTIVATION, TRUE);
 	def.put( "Tracker Client Exclude LAN", TRUE);
 
     def.put( "Tracker Public Enable", FALSE );
