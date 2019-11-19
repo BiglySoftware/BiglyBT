@@ -71,7 +71,6 @@ public class PeersView
 
 	private Reference<PEPeer> select_peer_pending;
 	private TimerEventPeriodic timerPeerCountUI;
-	private boolean pendingTitleRefresh;
 	private String textIndicator;
 	private long countWentToZeroTime = -1;
 
@@ -91,17 +90,6 @@ public class PeersView
 
 		// no need to trigger, super will
 		tv.addTableDataSourceChangedListener(this, false);
-		tv.addCountChangeListener(new TableCountChangeListener() {
-			@Override
-			public void rowAdded(TableRowCore row) {
-				pendingTitleRefresh = true;
-			}
-
-			@Override
-			public void rowRemoved(TableRowCore row) {
-				pendingTitleRefresh = true;
-			}
-		});
 
 		return( tv );
 	}
@@ -129,34 +117,33 @@ public class PeersView
 				timerPeerCountUI = null;
 			}
 			// one last update to clear indicator when users still on tab
-			updateTitle();
+			updateTitle( true );
+			
 		} else if (timerPeerCountUI == null) {
-			pendingTitleRefresh = true;
+			
 			timerPeerCountUI = SimpleTimer.addPeriodicEvent("PeerSumUI", 1000, e -> {
-				if (!pendingTitleRefresh) {
-					return;
-				}
-				if (tv != null) {
-					pendingTitleRefresh = false;
-				}
 				
-				updateTitle();
+				updateTitle( false);
 			});
-		} else {
-			pendingTitleRefresh = true;
 		}
 	}
 
-	private void updateTitle() {
+	private void updateTitle( boolean force ) {
 		int count = 0;
 		if (manager != null) {
 			PEPeerManager peerManager = manager.getPeerManager();
 			if (peerManager != null) {
-				count = peerManager.getPeers().size();
+				count = peerManager.getNbPeers() + peerManager.getNbSeeds();
 			}
 		}
 		
-		if ( count == 0 ){
+		if ( force ){
+			
+			if ( count == 0 ){
+				
+				count = -1;
+			}
+		}else if ( count == 0 ){
 			
 			if ( countWentToZeroTime== -1 ){
 				
