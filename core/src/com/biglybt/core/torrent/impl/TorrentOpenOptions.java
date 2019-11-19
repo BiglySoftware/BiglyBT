@@ -91,9 +91,7 @@ public class TorrentOpenOptions
 	/** @todo: getter/setters */
 	public String sOriginatingLocation;
 
-	/** Filename the .torrent is saved to */
-	/** @todo: getter/setters */
-	public String sFileName;
+	private String sFileName;
 
 
 	private String sDestDir;
@@ -107,7 +105,6 @@ public class TorrentOpenOptions
 	private boolean explicitDataDir;
 	private boolean removedTopLevel;
 
-	/** @todo: getter/setters */
 	private TOTorrent torrent;
 
 	private long	totalSize;
@@ -121,7 +118,7 @@ public class TorrentOpenOptions
 	/** @todo: getter/setters */
 	public boolean isValid;
 
-	/** @todo: getter/setters */
+	private volatile boolean cancelDisabled;
 	private boolean bDeleteFileOnCancel;
 	private boolean bDeleteFileOnCancelSet;
 	
@@ -1083,6 +1080,14 @@ public class TorrentOpenOptions
 		*/
 	}
 
+	public String getTorrentFile(){
+		return( sFileName );
+	}
+	
+	public void setTorrentFile( String str ){
+		sFileName = str;
+	}
+	
 	public TOTorrent getTorrent() {
 		return torrent;
 	}
@@ -1486,8 +1491,22 @@ public class TorrentOpenOptions
 	}
 	
 	public void
+	setCancelDisabled(
+		boolean	b )
+	{
+		cancelDisabled = b;
+	}
+	
+	public void
 	cancel()
 	{
+		if ( cancelDisabled ){
+			
+			Debug.out( "Cancel is disabled" );
+			
+			return;
+		}
+		
 		if ( bDeleteFileOnCancel || !bDeleteFileOnCancelSet ){
 			
 			if ( sFileName != null ){

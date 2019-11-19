@@ -1154,13 +1154,13 @@ public class UIFunctionsImpl
 												
 												String new_file_name;
 												
-												if ( torrentOptions.sFileName == null ){
+												if ( torrentOptions.getTorrentFile() == null ){
 													
 													new_file_name = hash_str;
 													
 												}else{
 													
-													new_file_name = new File( torrentOptions.sFileName ).getName();
+													new_file_name = new File( torrentOptions.getTorrentFile()).getName();
 													
 													int pos = new_file_name.lastIndexOf( "." );
 													
@@ -1184,7 +1184,7 @@ public class UIFunctionsImpl
 												
 												torrent.serialiseToBEncodedFile( new_file );
 												
-												torrentOptions.sFileName = new_file.getAbsolutePath();
+												torrentOptions.setTorrentFile( new_file.getAbsolutePath());
 												
 												addTorrentWithOptionsSupport( torrentOptions, addOptions, false );
 												

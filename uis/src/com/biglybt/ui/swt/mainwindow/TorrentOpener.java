@@ -722,7 +722,7 @@ public class TorrentOpener {
 					
 					GlobalManager gm = core.getGlobalManager();
 
-					DownloadManager dm = gm.addDownloadManager(torrentOptions.sFileName,
+					DownloadManager dm = gm.addDownloadManager(torrentOptions.getTorrentFile(),
 							hash, torrentOptions.getParentDir(), torrentOptions.getSubDir(),
 							iStartState, true,
 							startMode == TorrentOpenOptions.STARTMODE_SEEDING, dmia);
@@ -913,7 +913,7 @@ public class TorrentOpener {
 			torrentOptions.setDeleteFileOnCancel( bDeleteFileOnCancel );
 		}
 		
-		torrentOptions.sFileName = torrentFile.getAbsolutePath();
+		torrentOptions.setTorrentFile( torrentFile.getAbsolutePath());
 		torrentOptions.setTorrent(torrent);
 		torrentOptions.sOriginatingLocation = sOriginatingLocation;
 

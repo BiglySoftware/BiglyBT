@@ -6680,6 +6680,40 @@ public class OpenTorrentOptionsWindow
 				return false;
 			}
 
+			File torrentFile = new File( torrentOptions.getTorrentFile());
+			
+			if ( !torrentFile.exists()){
+				
+					// some weird bug I'm working on that appears to be deleting the torrent file during the adding
+					// process - try and recover
+				
+				TOTorrent torrent = torrentOptions.getTorrent();
+				
+				if ( torrent != null ){
+					
+					try{
+						TorrentUtils.writeToFile( torrent, torrentFile, false );
+						
+						Debug.out( "Managed to re-save torrent file to '" + torrentFile.getAbsolutePath() + "'" );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+				
+				if ( !torrentFile.exists()){
+					
+					MessageBoxShell mb = new MessageBoxShell(SWT.OK | SWT.ICON_ERROR,
+							"OpenTorrentWindow.mb.noTorrentFile", new String[] {
+								torrentFile.getAbsolutePath()
+							});
+					mb.setParent(shell);
+					mb.open(null);
+					return( false );
+				}
+			}
+			
 			String sExistingFiles = "";
 			int iNumExistingFiles = 0;
 
@@ -6855,6 +6889,8 @@ public class OpenTorrentOptionsWindow
 				torrentOptions.setInitialTags(initialTags);
 			}
 
+			torrentOptions.setCancelDisabled( true );
+			
 			return true;
 		}
 
