@@ -31,6 +31,7 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -62,6 +63,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.util.MapUtils;
 
 /**
@@ -77,6 +79,16 @@ public class GeneralView
 {
 	public static final String MSGID_PREFIX = "GeneralView";
 
+	  private static Color badAvailColor;
+	  
+	  static{
+		  COConfigurationManager.addAndFireParameterListener(
+			"generalview.avail.bad.colour",
+			(n)->{
+				badAvailColor = Utils.getConfigColor( n, Colors.maroon );
+			});
+	  }
+	  
 	protected AEMonitor this_mon 	= new AEMonitor( MSGID_PREFIX );
 
   private Display display;
@@ -290,6 +302,46 @@ public class GeneralView
     availabilityImage.setLayoutData(gridData);
     Messages.setLanguageText(availabilityImage, "GeneralView.label.status.pieces_available.tooltip");
 
+    Menu availMenu = new Menu( availabilityImage );
+    availabilityImage.setMenu( availMenu );
+    
+    MenuItem availSubItem = new MenuItem( availMenu, SWT.CASCADE );
+    Messages.setLanguageText(availSubItem, "GeneralView.avail.bad.color" );
+    Menu availSubMenu = new Menu(availMenu.getShell(), SWT.DROP_DOWN);
+    availSubItem.setMenu( availSubMenu );
+    availSubMenu.addMenuListener(
+    	new MenuAdapter(){
+    		@Override
+    		public void menuShown(MenuEvent e){
+    			Utils.clearMenu( availSubMenu );
+  				
+    			MenuItem defItem = new MenuItem( availSubMenu, SWT.RADIO );
+    			Messages.setLanguageText(defItem, "label.default" );
+    			defItem.addListener( SWT.Selection, (ev)->{
+    				if ( defItem.getSelection()){
+    					Utils.setConfigColor( "generalview.avail.bad.colour", null );
+    				}
+    		    });
+    		    
+    		    MenuItem setItem = new MenuItem( availSubMenu, SWT.RADIO );
+    		    Messages.setLanguageText(setItem, "label.set" );
+    		    setItem.addListener( SWT.Selection, (ev)->{
+    		    	if ( setItem.getSelection()){
+	    		    	RGB res = Utils.showColorDialog( availabilityImage, badAvailColor==null?null:badAvailColor.getRGB());
+	    		    	
+	    		    	if ( res != null ){
+	    		    		
+	    		       		Utils.setConfigColor( "generalview.avail.bad.colour", ColorCache.getColor( availabilityImage.getShell().getDisplay(), res ) );
+	    		    	}
+    		    	}
+    		    });
+    		    
+    		    defItem.setSelection( badAvailColor == null );
+       		    setItem.setSelection( badAvailColor != null );
+    		}
+    	});
+
+    
     availabilityPercent = new BufferedLabel(gFile, SWT.RIGHT | SWT.DOUBLE_BUFFERED );
     gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
     gridData.widthHint = 50;
@@ -878,7 +930,7 @@ public class GeneralView
 
 				  float minAvail = manager.getStats().getAvailability();
 
-				  boolean badAvail = runningFor >= 60*1000 && minAvail >= 0 && minAvail < 1;
+				  boolean badAvail = badAvailColor != null && runningFor >= 60*1000 && minAvail >= 0 && minAvail < 1;
 
 				  allMin = available.length==0?0:available[0];
 				  allMax = available.length==0?0:available[0];
@@ -953,7 +1005,7 @@ public class GeneralView
 
 							  hasBadAvailBlock = true;
 							  
-							  gcImage.setBackground(Colors.fadedRed );
+							  gcImage.setBackground( badAvailColor );
 							  
 						  }else{
 							  int pond = Pi;
@@ -994,7 +1046,7 @@ public class GeneralView
 				  return;
 			  }
 			  
-			  availabilityPercent.setForeground( hasBadAvailBlock?Colors.fadedRed:null );
+			  availabilityPercent.setForeground( hasBadAvailBlock?badAvailColor:null );
 			  
 			  
 			  availabilityPercent.setText(allMin + "." + sTotal);

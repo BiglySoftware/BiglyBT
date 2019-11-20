@@ -3545,12 +3545,7 @@ BuddyPluginViewBetaChat
 				menuShown(
 					MenuEvent e )
 				{
-					MenuItem[] items = friends_menu.getItems();
-
-					for (int i = 0; i < items.length; i++){
-
-						items[i].dispose();
-					}
+					Utils.clearMenu( friends_menu );
 
 					boolean	enabled = plugin.isClassicEnabled();
 

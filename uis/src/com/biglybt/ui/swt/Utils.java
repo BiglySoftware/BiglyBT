@@ -75,6 +75,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.shells.AdvRenameWindow;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.systray.TrayItemDelegate;
+import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 
 import com.biglybt.pif.PluginInterface;
@@ -502,6 +503,55 @@ public class Utils
 		}
 	}
 
+	public static Color
+	getConfigColor(
+		String		name,
+		Color		def )
+	{
+		String	str = COConfigurationManager.getStringParameter( name );
+		
+		if ( str != null ){
+			
+			String[] bits = str.split( "," );
+			
+			if ( bits.length == 3 ){
+			
+				try{
+					int	r = Integer.parseInt( bits[0].trim());
+					int	g = Integer.parseInt( bits[1].trim());
+					int	b = Integer.parseInt( bits[2].trim());
+					
+					return( ColorCache.getColor( getDisplay(), r, g, b ));
+					
+				}catch( Throwable e ){
+					
+				}
+			}
+			
+			return( null );
+		}
+		
+		return( def );
+	}
+	
+	public static void
+	setConfigColor(
+		String		name,
+		Color		c )
+	{
+		if ( c == null ){
+			
+			COConfigurationManager.setParameter( name, "" );
+			
+		}else{
+			
+			RGB rgb = c.getRGB();
+			
+			COConfigurationManager.setParameter( name, rgb.red + "," + rgb.green + "," + rgb.blue ); 
+		}
+	}	
+	
+	
 	public static RGB
 	showColorDialog(
 		Composite	parent,
@@ -546,6 +596,8 @@ public class Utils
 			if ( existing != null ){
 
 				custom_colours.remove( existing );
+				
+				custom_colours.add( 0, existing );
 			}
 
 			cd.setRGBs( custom_colours.toArray( new RGB[0]));
@@ -4982,5 +5034,15 @@ public class Utils
 			});
 		
 		return( st );
+	}
+	
+	public static void
+	clearMenu(
+		Menu menu )
+	{
+		MenuItem[] items = menu.getItems();
+		for (int i = 0; i < items.length; i++){
+			items[i].dispose();
+		}
 	}
 }
