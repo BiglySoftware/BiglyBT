@@ -45,6 +45,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
@@ -64,6 +65,7 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.views.piece.PieceInfoView;
 import com.biglybt.util.MapUtils;
 
 /**
@@ -79,13 +81,28 @@ public class GeneralView
 {
 	public static final String MSGID_PREFIX = "GeneralView";
 
-	  private static Color badAvailColor;
+	private static Color badAvailColor;
+	private static Color transferringColor;
 	  
+	private static boolean showTransferring;
+	
 	  static{
 		  COConfigurationManager.addAndFireParameterListener(
 			"generalview.avail.bad.colour",
 			(n)->{
 				badAvailColor = Utils.getConfigColor( n, Colors.maroon );
+			});
+		  
+		  COConfigurationManager.addAndFireParameterListener(
+		  	"PeersView.BlockView.Transfer",
+			(n)->{
+				transferringColor = PieceInfoView.getLegendColor( n );
+			});
+		  
+		  COConfigurationManager.addAndFireParameterListener(
+			"GeneralView.show.transferring",
+			(n)->{
+				showTransferring = COConfigurationManager.getBooleanParameter( n, false );
 			});
 	  }
 	  
@@ -285,6 +302,28 @@ public class GeneralView
     gridData.heightHint = 25;
     piecesImage.setLayoutData(gridData);
 
+    Menu piecesMenu = new Menu( piecesImage );
+    piecesImage.setMenu( piecesMenu );
+    
+    MenuItem piecesSubItem = new MenuItem( piecesMenu, SWT.CASCADE );
+    Messages.setLanguageText(piecesSubItem, "Button.bar.show" );
+    Menu piecesSubMenu = new Menu(piecesMenu.getShell(), SWT.DROP_DOWN);
+    piecesSubItem.setMenu( piecesSubMenu );
+    piecesSubMenu.addMenuListener(
+    	new MenuAdapter(){
+    		@Override
+    		public void menuShown(MenuEvent e){
+    			Utils.clearMenu( piecesSubMenu );
+    			
+    			MenuItem xferItem = new MenuItem( piecesSubMenu, SWT.CHECK );
+    			Messages.setLanguageText(xferItem, "PeersView.BlockView.Transfer" );
+    			xferItem.addListener( SWT.Selection, (ev)->{
+    				COConfigurationManager.setParameter( "GeneralView.show.transferring", !showTransferring );
+    				
+    		    });
+    			xferItem.setSelection( showTransferring);
+    		}});
+    
     piecesPercent = new BufferedLabel(gFile, SWT.RIGHT | SWT.DOUBLE_BUFFERED);
     gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
     gridData.widthHint = 50;
@@ -1106,11 +1145,16 @@ public class GeneralView
         final int PS_DONE			= 0x00000001;
         final int PS_SKIPPED		= 0x00000002;
         final int PS_FILE_BOUNDARY	= 0x00000004;
+        final int PS_XFERING		= 0x00000008;
 
 	    if ( dm != null ){
 
 	      	DiskManagerPiece[]	dm_pieces = dm.getPieces();
 
+	      	PEPeerManager pm = showTransferring?manager.getPeerManager():null;
+	      	
+	      	PEPiece[] pm_pieces = pm==null?null:pm.getPieces();
+	      	
 	      	boolean	update_skipped;
 	      	boolean	update_boundaries;
 
@@ -1150,6 +1194,11 @@ public class GeneralView
 
 	 			int state = piece.isDone()?PS_DONE:PS_NONE;
 
+	 			if ( pm_pieces != null && state == PS_NONE && pm_pieces[i] != null ){
+	 				
+	 				state = PS_XFERING;
+	 			}
+	 			
 	 			if ( update_skipped ){
 		 			if (piece.isSkipped()){
 		 				state |= PS_SKIPPED;
@@ -1204,6 +1253,7 @@ public class GeneralView
 		        pImage.dispose();
 	      }
 
+	      
 	      pImage = new Image(display, bounds.width, bounds.height);
 
 	      GC gcImage = new GC(pImage);
@@ -1225,6 +1275,8 @@ public class GeneralView
 		            a1 = nbPieces;
 		          int nbAvailable = 0;
 		          int nbSkipped   = 0;
+		          int nbXferring = 0;
+		          
 		          boolean	hasFileBoundary = false;
 
 		          for (int j = a0; j < a1; j++) {
@@ -1232,6 +1284,9 @@ public class GeneralView
 		            if ( (ps & PS_DONE ) != 0 ) {
 		              nbAvailable++;
 		            }
+		            if ( (ps & PS_XFERING ) != 0 ) {
+		            	nbXferring++;
+			            }
 		            if ( (ps & PS_SKIPPED ) != 0 ) {
 		              nbSkipped++;
 		            }
@@ -1243,7 +1298,11 @@ public class GeneralView
 		            	}
 		            }
 		          }
-		          if ( nbAvailable == 0 && nbSkipped > 0 ){
+		          
+		          if ( nbXferring > 0 ){
+		        	  gcImage.setBackground( transferringColor );
+			          gcImage.fillRectangle(i+1,7,1,yMax);
+		          }else if ( nbAvailable == 0 && nbSkipped > 0 ){
 		        	  gcImage.setBackground(Colors.grey);
 			          gcImage.fillRectangle(i+1,7,1,yMax);
 		          }else{

@@ -25,7 +25,9 @@ import java.util.Map;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
@@ -106,6 +108,21 @@ public class PiecesView
 
 	public static final String MSGID_PREFIX = "PiecesView";
 
+	private static String[] legendKeys = { 
+			"PiecesView.legend.requested",
+			"PiecesView.legend.written",
+			"PiecesView.legend.downloaded",
+			"PiecesView.legend.incache",
+			"label.end.game.mode"
+		};
+	
+	public static Color
+	getLegendColor(
+		String		key )
+	{
+		return( Legend.getLegendColor( key, legendKeys, BlocksItem.colors ));
+	}
+	
 	private DownloadManager 		manager;
 	private TableViewSWT<PEPiece> 	tv;
 
@@ -337,13 +354,7 @@ public class PiecesView
 			Composite composite = tv.getTableComposite();
 
 			legendComposite = Legend.createLegendComposite(composite.getParent(),
-					BlocksItem.colors, new String[] {
-						"PiecesView.legend.requested",
-						"PiecesView.legend.written",
-						"PiecesView.legend.downloaded",
-						"PiecesView.legend.incache",
-						"label.end.game.mode"
-					});
+					BlocksItem.colors, legendKeys );
 		}
 	}
 

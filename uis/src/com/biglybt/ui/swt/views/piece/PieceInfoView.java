@@ -114,8 +114,37 @@ public class PieceInfoView
 	private int		currentNumColumns;
 	private int		currentNumPieces;
 	
-	private final Color[] blockColors;
+	private final static Color[] blockColors = {
+		Colors.blues[Colors.BLUES_DARKEST],
+		Colors.white,
+		Colors.red,
+		Colors.fadedRed,
+		Colors.black,
+		Colors.fadedGreen,
+		Colors.yellow,
+		Colors.grey,
+		Colors.cyan
+	};
 
+	private final static String[] legendKeys = {
+		"PiecesView.BlockView.Have",
+		"PiecesView.BlockView.NoHave",
+		"PeersView.BlockView.Transfer",
+		"PeersView.BlockView.NextRequest",
+		"PeersView.BlockView.AvailCount",
+		"PeersView.BlockView.ShowFile",
+		"PeersView.BlockView.MergeRead",
+		"PeersView.BlockView.MergeWrite",
+		"PeersView.BlockView.ForcePiece",
+	};
+	
+	public static Color
+	getLegendColor(
+		String		key )
+	{
+		return( Legend.getLegendColor( key, legendKeys, blockColors ));
+	}
+	
 	private BufferedLabel topLabel;
 	private String topLabelLHS = "";
 	private String topLabelRHS = "";
@@ -151,17 +180,7 @@ public class PieceInfoView
 	 *
 	 */
 	public PieceInfoView() {
-		blockColors = new Color[] {
-			Colors.blues[Colors.BLUES_DARKEST],
-			Colors.white,
-			Colors.red,
-			Colors.fadedRed,
-			Colors.black,
-			Colors.fadedGreen,
-			Colors.yellow,
-			Colors.grey,
-			Colors.cyan
-		};
+		
 	}
 
 	private void dataSourceChanged(Object newDataSource) {
@@ -582,17 +601,7 @@ public class PieceInfoView
 
 
 		Legend.createLegendComposite(pieceInfoComposite,
-				blockColors, new String[] {
-					"PiecesView.BlockView.Have",
-					"PiecesView.BlockView.NoHave",
-					"PeersView.BlockView.Transfer",
-					"PeersView.BlockView.NextRequest",
-					"PeersView.BlockView.AvailCount",
-					"PeersView.BlockView.ShowFile",
-					"PeersView.BlockView.MergeRead",
-					"PeersView.BlockView.MergeWrite",
-					"PeersView.BlockView.ForcePiece",
-				}, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 2, 1));
+				blockColors, legendKeys, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 2, 1));
 
 		font = FontUtils.getFontPercentOf(pieceInfoCanvas.getFont(), 0.7f);
 	}

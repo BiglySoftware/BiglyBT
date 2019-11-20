@@ -30,6 +30,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationManager;
@@ -39,6 +40,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.views.tableitems.pieces.BlocksItem;
 
 /**
  *
@@ -110,6 +112,40 @@ public class Legend {
 		return( createLegendComposite( panel, blockColors, keys, key_texts, layoutData, horizontal, null ));
 	}
 
+	public static Color
+	getLegendColor(
+		String		key,
+		String[]	keys,
+		Color[]		defs )
+	{
+		Color	def = null;
+		
+		for ( int i=0;i<keys.length;i++){
+			if ( keys[i].equals( key )){
+				def = BlocksItem.colors[i];
+			}
+		}
+		
+		return( getLegendColor( key, def ));
+	}
+	
+	private static Color
+	getLegendColor(
+		String		key,
+		Color		def )
+	{
+		ConfigurationManager config = ConfigurationManager.getInstance();
+		
+		int r = config.getIntParameter(key + ".red", -1);
+		if (r >= 0) {
+			int g = config.getIntParameter(key + ".green");
+			int b = config.getIntParameter(key + ".blue");
+
+			return( ColorCache.getColor( Utils.getDisplay(), r, g, b));
+		}
+		return( def );
+	}
+	
 	public static Composite
 	createLegendComposite(
 		final Composite panel,
