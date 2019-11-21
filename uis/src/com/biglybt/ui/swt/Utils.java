@@ -508,7 +508,7 @@ public class Utils
 		String		name,
 		Color		def )
 	{
-		String	str = COConfigurationManager.getStringParameter( name );
+		String	str = COConfigurationManager.getStringParameter( name, null );
 		
 		if ( str != null ){
 			
