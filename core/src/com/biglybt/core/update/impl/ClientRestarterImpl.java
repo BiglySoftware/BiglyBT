@@ -148,7 +148,7 @@ ClientRestarterImpl
 	  		user_path = user_path.substring(0,user_path.length()-1);
 	  	}
 
-	  	String config_override = System.getProperty( SystemProperties.SYS_PROP_CONFIG_OVERRIDE );
+	  	String config_override = System.getProperty( SystemProperties.SYSPROP_CONFIG_PATH );
 
 	  	if ( config_override == null ){
 

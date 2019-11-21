@@ -64,7 +64,7 @@ public class ConfigSectionConnection
 		paramTCPListenPort.addIntegerValidator((p, toValue) -> {
 			if (toValue == Constants.INSTANCE_PORT) {
 				return new ValidationInfo(false,
-						"Can't be same port as azureus.instance.port");
+						"Can't be same port as biglybt.instance.port");
 			}
 
 			return new ValidationInfo(true);
@@ -89,7 +89,7 @@ public class ConfigSectionConnection
 			paramUDPListenPort.addIntegerValidator((p, toValue) -> {
 				if (toValue == Constants.INSTANCE_PORT) {
 					return new ValidationInfo(false,
-							"Can't be same port as azureus.instance.port");
+							"Can't be same port as biglybt.instance.port");
 				}
 
 				return new ValidationInfo(true);
@@ -120,7 +120,7 @@ public class ConfigSectionConnection
 				paramNonDataUDPPort.addIntegerValidator((p, toValue) -> {
 					if (toValue == Constants.INSTANCE_PORT) {
 						return new ValidationInfo(false,
-								"Can't be same port as azureus.instance.port");
+								"Can't be same port as biglybt.instance.port");
 					}
 
 					return new ValidationInfo(true);

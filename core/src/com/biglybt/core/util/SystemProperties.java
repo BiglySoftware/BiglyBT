@@ -38,123 +38,79 @@ import com.biglybt.platform.PlatformManagerFactory;
 public class SystemProperties {
 	private static final LogIDs LOGID = LogIDs.CORE;
 
-		// note this is also used in the restart code....
-
-	public static final String SYS_PROP_CONFIG_OVERRIDE = "azureus.config.path";
-	/**
-	 * Path separator charactor.
-	 */
+		/**
+		 * Path separator charactor.
+		 */
+	
 	public static final String SEP = System.getProperty("file.separator");
 
 	public static final String	AZ_APP_ID	= "az";
-	
-	public static final String SYSPROP_PORTABLE_ENABLE = "azureus.portable.enable";
-	public static final String SYSPROP_CONFIG_PATH = "azureus.config.path";
-	public static final String SYSPROP_INSTALL_PATH = "azureus.install.path";
-	public static final String SYSPROP_PORTABLE_ROOT = "azureus.portable.root";
-	public static final String SYSPROP_JAVA_PROTOCOL_HANDLER_PKGS = "java.protocol.handler.pkgs";
-	public static final String SYSPROP_INTERNAL_BROWSER_DISABLE = "azureus.internal.browser.disable";
-	public static final String SYSPROP_RCM_PUBLISH_DISABLE = "azureus.rcm.publish.disable";
-	public static final String SYSPROP_RCM_MAX_CONCURRENT_PUBLISH = "azureus.rcm.max.concurrent.publish";
-	public static final String SYSPROP_RCM_SEARCH_CVS_ONLY = "azureus.rcm.search.cvs.only";
-	public static final String SYSPROP_FILE_PIECE_REORDER_FORCE = "azureus.file.piece.reorder.force";
-	public static final String SYSPROP_IO_USEMMAP = "azureus.io.usemmap";
-	public static final String SYSPROP_DISABLEDOWNLOADS = "azureus.disabledownloads";
-	public static final String SYSPROP_INSTANCE_LOCK_DISABLE = "azureus.instance.lock.disable";
-	public static final String SYSPROP_LOADPLUGINS = "azureus.loadplugins";
-	public static final String SYSPROP_SKIP_SWTCHECK = "azureus.skipSWTcheck";
-	public static final String SYSPROP_OVERRIDELOG = "azureus.overridelog";
-	public static final String SYSPROP_LOG_STDOUT = "azureus.log.stdout";
-	public static final String SYSPROP_SPEED_TEST_CHALLENGE_JAR_PATH = "azureus.speed.test.challenge.jar.path";
-	public static final String SYSPROP_LAZY_BITFIELD = "azureus.lazy.bitfield";
-	public static final String SYSPROP_SECURITY_MANAGER_INSTALL = "azureus.security.manager.install";
-	public static final String SYSPROP_SUBS_MAX_ASSOCIATIONS = "azureus.subs.max.associations";
-	public static final String SYSPROP_SUBS_MAX_CONCURRENT_ASSOC_PUBLISH = "azureus.subs.max.concurrent.assoc.publish";
-	public static final String SYSPROP_LOG_DOS = "azureus.log.dos";
-	public static final String SYSPROP_NATIVELAUNCHER = "azureus.nativelauncher";
-	public static final String SYSPROP_INSTANCE_PORT = "azureus.instance.port";
-	public static final String SYSPROP_PRODUCT_NAME = "azureus.product.name";
-	public static final String SYSPROP_INFER_APP_NAME = "azureus.infer.app.name";
-	public static final String SYSPROP_JAVAWS = "azureus.javaws";
-	public static final String SYSPROP_TIME_USE_RAW_PROVIDER = "azureus.time.use.raw.provider";
-	public static final String SYSPROP_DYNAMIC_PLUGINS = "azureus.dynamic.plugins";
-	public static final String SYSPROP_DOC_PATH = "azureus.doc.path";
-	public static final String SYSPROP_PLATFORM_MANAGER_DISABLE = "azureus.platform.manager.disable";
-	public static final String SYSPROP_CONSOLE_NOISY = "azureus.console.noisy";
-	public static final String SYSPROP_LOW_RESOURCE_MODE = "azureus.low.resource.mode";
-	public static final String SYSPROP_SAFEMODE = "azureus.safemode";
-	public static final String SYSPROP_OVERRIDELOGDIR = "azureus.overridelogdir";
-	public static final String SYSPROP_SECURITY_MANAGER_PERMITEXIT = "azureus.security.manager.permitexit";
-	public static final String SYSPROP_SCRIPT_VERSION = "azureus.script.version";	// inlined in Updater.java as this runs stand-alone
-	public static final String SYSPROP_APP_TIMEZONE = "azureus.timezone";
-	public static final String SYSPROP_APP_NAME = "azureus.app.name";
-	public static final String SYSPROP_APP_SCRIPT = "azureus.script";
-	public static final String SYSPROP_WINDOW_TITLE = "azureus.window.title";
-	public static final String SYSPROP_CONSOLE_MULTIUSER = "azureus.console.multiuser";
-	public static final String SYSPROP_FOLDER_DOWNLOAD = "azureus.folder.download";
-	public static final String SYSPROP_FOLDER_TORRENT = "azureus.folder.torrent";
 
-	private static final String[] SYSPROP_ALL = {
-			SYSPROP_PORTABLE_ENABLE,
-			SYSPROP_CONFIG_PATH,
-			SYSPROP_INSTALL_PATH,
-			SYSPROP_PORTABLE_ROOT,
-			SYSPROP_JAVA_PROTOCOL_HANDLER_PKGS,
-			SYSPROP_INTERNAL_BROWSER_DISABLE,
-			SYSPROP_RCM_PUBLISH_DISABLE,
-			SYSPROP_RCM_MAX_CONCURRENT_PUBLISH,
-			SYSPROP_RCM_SEARCH_CVS_ONLY,
-			SYSPROP_FILE_PIECE_REORDER_FORCE,
-			SYSPROP_IO_USEMMAP,
-			SYSPROP_DISABLEDOWNLOADS,
-			SYSPROP_INSTANCE_LOCK_DISABLE,
-			SYSPROP_LOADPLUGINS,
-			SYSPROP_SKIP_SWTCHECK,
-			SYSPROP_OVERRIDELOG,
-			SYSPROP_LOG_STDOUT,
-			SYSPROP_SPEED_TEST_CHALLENGE_JAR_PATH,
-			SYSPROP_LAZY_BITFIELD,
-			SYSPROP_SECURITY_MANAGER_INSTALL,
-			SYSPROP_SUBS_MAX_ASSOCIATIONS,
-			SYSPROP_SUBS_MAX_CONCURRENT_ASSOC_PUBLISH,
-			SYSPROP_LOG_DOS,
-			SYSPROP_NATIVELAUNCHER,
-			SYSPROP_INSTANCE_PORT,
-			SYSPROP_PRODUCT_NAME,
-			SYSPROP_INFER_APP_NAME,
-			SYSPROP_JAVAWS,
-			SYSPROP_TIME_USE_RAW_PROVIDER,
-			SYSPROP_DYNAMIC_PLUGINS,
-			SYSPROP_DOC_PATH,
-			SYSPROP_PLATFORM_MANAGER_DISABLE,
-			SYSPROP_CONSOLE_NOISY,
-			SYSPROP_LOW_RESOURCE_MODE,
-			SYSPROP_SAFEMODE,
-			SYSPROP_OVERRIDELOGDIR,
-			SYSPROP_SECURITY_MANAGER_PERMITEXIT,
-			SYSPROP_SCRIPT_VERSION,
-			SYSPROP_APP_TIMEZONE,
-			SYSPROP_APP_NAME,
-			SYSPROP_APP_SCRIPT,
-			SYSPROP_WINDOW_TITLE,
-			SYSPROP_CONSOLE_MULTIUSER,
-			SYSPROP_FOLDER_DOWNLOAD,
-			SYSPROP_FOLDER_TORRENT,
-	};
-	
-	static{
-		for ( String prop: SYSPROP_ALL ){
-			if ( prop.startsWith( "azureus." )){
-				if ( System.getProperty( prop ) == null ){
-					String bbt_prop = "biglybt." + prop.substring( 8 );
-					String val = System.getProperty( bbt_prop, null );
-					if ( val != null ){
-						System.setProperty( prop, val );
-					}
+		
+	public static final String SYSPROP_PORTABLE_ENABLE 						= migrate( "azureus.portable.enable" );
+	public static final String SYSPROP_CONFIG_PATH 							= migrate( "azureus.config.path" );	// note this is also used in the restart code....
+	public static final String SYSPROP_INSTALL_PATH							= migrate( "azureus.install.path" );
+	public static final String SYSPROP_PORTABLE_ROOT						= migrate( "azureus.portable.root" );
+	public static final String SYSPROP_JAVA_PROTOCOL_HANDLER_PKGS			= migrate( "java.protocol.handler.pkgs" );
+	public static final String SYSPROP_INTERNAL_BROWSER_DISABLE				= migrate( "azureus.internal.browser.disable" );
+	public static final String SYSPROP_RCM_PUBLISH_DISABLE					= migrate( "azureus.rcm.publish.disable" );
+	public static final String SYSPROP_RCM_MAX_CONCURRENT_PUBLISH			= migrate( "azureus.rcm.max.concurrent.publish" );
+	public static final String SYSPROP_RCM_SEARCH_CVS_ONLY					= migrate( "azureus.rcm.search.cvs.only" );
+	public static final String SYSPROP_FILE_PIECE_REORDER_FORCE				= migrate( "azureus.file.piece.reorder.force" );
+	public static final String SYSPROP_IO_USEMMAP							= migrate( "azureus.io.usemmap" );
+	public static final String SYSPROP_DISABLEDOWNLOADS						= migrate( "azureus.disabledownloads" );
+	public static final String SYSPROP_INSTANCE_LOCK_DISABLE				= migrate( "azureus.instance.lock.disable" );
+	public static final String SYSPROP_LOADPLUGINS							= migrate( "azureus.loadplugins" );
+	public static final String SYSPROP_SKIP_SWTCHECK						= migrate( "azureus.skipSWTcheck" );
+	public static final String SYSPROP_OVERRIDELOG							= migrate( "azureus.overridelog" );
+	public static final String SYSPROP_LOG_STDOUT							= migrate( "azureus.log.stdout" );
+	public static final String SYSPROP_SPEED_TEST_CHALLENGE_JAR_PATH		= migrate( "azureus.speed.test.challenge.jar.path" );
+	public static final String SYSPROP_LAZY_BITFIELD						= migrate( "azureus.lazy.bitfield" );
+	public static final String SYSPROP_SECURITY_MANAGER_INSTALL				= migrate( "azureus.security.manager.install" );
+	public static final String SYSPROP_SUBS_MAX_ASSOCIATIONS				= migrate( "azureus.subs.max.associations" );
+	public static final String SYSPROP_SUBS_MAX_CONCURRENT_ASSOC_PUBLISH	= migrate( "azureus.subs.max.concurrent.assoc.publish" );
+	public static final String SYSPROP_LOG_DOS								= migrate( "azureus.log.dos" );
+	public static final String SYSPROP_NATIVELAUNCHER						= migrate( "azureus.nativelauncher" );
+	public static final String SYSPROP_INSTANCE_PORT						= migrate( "azureus.instance.port" );
+	public static final String SYSPROP_PRODUCT_NAME							= migrate( "azureus.product.name" );
+	public static final String SYSPROP_INFER_APP_NAME						= migrate( "azureus.infer.app.name" );
+	public static final String SYSPROP_JAVAWS								= migrate( "azureus.javaws" );
+	public static final String SYSPROP_TIME_USE_RAW_PROVIDER				= migrate( "azureus.time.use.raw.provider" );
+	public static final String SYSPROP_DYNAMIC_PLUGINS						= migrate( "azureus.dynamic.plugins" );
+	public static final String SYSPROP_DOC_PATH								= migrate( "azureus.doc.path" );
+	public static final String SYSPROP_PLATFORM_MANAGER_DISABLE				= migrate( "azureus.platform.manager.disable" );
+	public static final String SYSPROP_CONSOLE_NOISY						= migrate( "azureus.console.noisy" );
+	public static final String SYSPROP_LOW_RESOURCE_MODE					= migrate( "azureus.low.resource.mode" );
+	public static final String SYSPROP_SAFEMODE								= migrate( "azureus.safemode" );
+	public static final String SYSPROP_OVERRIDELOGDIR						= migrate( "azureus.overridelogdir" );
+	public static final String SYSPROP_SECURITY_MANAGER_PERMITEXIT			= migrate( "azureus.security.manager.permitexit" );
+	public static final String SYSPROP_SCRIPT_VERSION						= migrate( "azureus.script.version" );	// inlined in Updater.java as this runs stand-alone
+	public static final String SYSPROP_APP_TIMEZONE							= migrate( "azureus.timezone" );
+	public static final String SYSPROP_APP_NAME								= migrate( "azureus.app.name" );
+	public static final String SYSPROP_APP_SCRIPT							= migrate( "azureus.script" );
+	public static final String SYSPROP_WINDOW_TITLE							= migrate( "azureus.window.title" );
+	public static final String SYSPROP_CONSOLE_MULTIUSER					= migrate( "azureus.console.multiuser" );
+	public static final String SYSPROP_FOLDER_DOWNLOAD						= migrate( "azureus.folder.download" );
+	public static final String SYSPROP_FOLDER_TORRENT						= migrate( "azureus.folder.torrent" );
+
+		
+	private static String
+	migrate(
+		String		prop )
+	{
+		if ( prop.startsWith( "azureus." )){
+			if ( System.getProperty( prop ) == null ){
+				String bbt_prop = "biglybt." + prop.substring( 8 );
+				String val = System.getProperty( bbt_prop, null );
+				if ( val != null ){
+					System.setProperty( prop, val );
 				}
 			}
 		}
+		
+		return( prop );
 	}
+	
 	
 	private static String APPLICATION_NAME 		= "BiglyBT";
 	private static String APPLICATION_ID 			= AZ_APP_ID;
@@ -287,7 +243,7 @@ public class SystemProperties {
 
 		// Super Override -- no AZ_DIR or xxx_DEFAULT added at all.
 
-		String temp_user_path = System.getProperty(SYS_PROP_CONFIG_OVERRIDE);
+		String temp_user_path = System.getProperty(SYSPROP_CONFIG_PATH);
 
 		try {
 			if (temp_user_path != null) {

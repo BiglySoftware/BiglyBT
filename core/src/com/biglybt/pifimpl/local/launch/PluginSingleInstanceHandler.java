@@ -149,7 +149,7 @@ PluginSingleInstanceHandler
 
 		    		    		String[]	args = (String[])ois.readObject();
 
-		    					String config_dir = System.getProperty( SystemProperties.SYS_PROP_CONFIG_OVERRIDE, null );
+		    					String config_dir = System.getProperty( SystemProperties.SYSPROP_CONFIG_PATH, null );
 
 		    					if ( config_dir != null ){
 
@@ -247,7 +247,7 @@ PluginSingleInstanceHandler
 				// if we know the config dir then use more secure mechanism to pass args by writing
 				// to a file (this proving we have write access to the directory at least)
 
-			String config_dir = System.getProperty( SystemProperties.SYS_PROP_CONFIG_OVERRIDE, null );
+			String config_dir = System.getProperty( SystemProperties.SYSPROP_CONFIG_PATH, null );
 
 			if ( config_dir != null ){
 

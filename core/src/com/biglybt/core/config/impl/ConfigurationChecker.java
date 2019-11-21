@@ -296,35 +296,40 @@ ConfigurationChecker
 	  String	dir )
   {
 	  try{
-		  File	prop_file = new File( dir, "azureus.properties" );
-
-		  if ( prop_file.exists()){
-
-			  Logger.log(new LogEvent(LOGID, "Loading properties file from " + prop_file.getAbsolutePath()));
-
-			  Properties props = new Properties();
-
-			  InputStream is = new FileInputStream( prop_file );
-
-			  try{
-				  props.load( is );
-
-				  Iterator it = props.entrySet().iterator();
-
-				  while( it.hasNext()){
-
-					  Map.Entry entry = (Map.Entry)it.next();
-
-					  String	key 	= (String)entry.getKey();
-					  String	value 	= (String)entry.getValue();
-
-					  Logger.log(new LogEvent(LOGID, "    " + key + "=" + value ));
-
-					  System.setProperty( key, value );
+		  String[] prefixes = { "azureus", SystemProperties.getApplicationName().toLowerCase() };
+		  
+		  for ( String prefix: prefixes ){
+			  
+			  File	prop_file = new File( dir, prefix + ".properties" );
+	
+			  if ( prop_file.exists()){
+	
+				  Logger.log(new LogEvent(LOGID, "Loading properties file from " + prop_file.getAbsolutePath()));
+	
+				  Properties props = new Properties();
+	
+				  InputStream is = new FileInputStream( prop_file );
+	
+				  try{
+					  props.load( is );
+	
+					  Iterator it = props.entrySet().iterator();
+	
+					  while( it.hasNext()){
+	
+						  Map.Entry entry = (Map.Entry)it.next();
+	
+						  String	key 	= (String)entry.getKey();
+						  String	value 	= (String)entry.getValue();
+	
+						  Logger.log(new LogEvent(LOGID, "    " + key + "=" + value ));
+	
+						  System.setProperty( key, value );
+					  }
+				  }finally{
+	
+					  is.close();
 				  }
-			  }finally{
-
-				  is.close();
 			  }
 		  }
 	  }catch( Throwable e ){
