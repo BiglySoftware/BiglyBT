@@ -14,7 +14,7 @@ msgstr ""
 "X-Crowdin-Project: biglybt\n"
 "X-Crowdin-Language: tr\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
-"PO-Revision-Date: 2019-11-10 17:23\n"
+"PO-Revision-Date: 2019-11-21 21:28\n"
 
 msgid "test"
 msgstr "İngilizce Olarak Deneyin"
@@ -23,7 +23,7 @@ msgid "onlyEng"
 msgstr "Sadece İngilizce"
 
 msgid "donation_line1"
-msgstr ""
+msgstr "BiglyBT özgür bir yazılım ürünü olmasına rağmen, geliştirmek ve bakım için çok pahalıya mal oluyor. Bunu kullanarak fayda sağladığınızı düşünüyorsanız, lütfen bizi aşağıdaki yollardan biriyle desteklemeyi düşünün:"
 
 msgid "donation_title"
 msgstr "BiglyBT'yi Destekleyin"
@@ -47,10 +47,10 @@ msgid "donation_onetime_amount"
 msgstr "Miktar (%1):"
 
 msgid "donation_onetime_description"
-msgstr ""
+msgstr "Herhangi bir miktar makbule geçer :)"
 
 msgid "donation_bitcoin_description"
-msgstr ""
+msgstr "%1 veya %2 gibi bir bağış öneririz. :)"
 
 msgid "donation_bitcoin_addresses"
 msgstr "BCH/BTC/BSG/BSV Adresi:"
@@ -59,7 +59,7 @@ msgid "donation_crypto_title"
 msgstr "Kripto para birimi"
 
 msgid "donation_crypto_description"
-msgstr ""
+msgstr "En sevdiğiniz sanal para türü listede yoksa bize bildirin ve adresi ekleyelim :)"
 
 msgid "no_thanks"
 msgstr "Hayır Teşekkürler."
