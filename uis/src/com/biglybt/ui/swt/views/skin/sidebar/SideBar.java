@@ -40,6 +40,7 @@ import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.DelayedListenerMultiCombiner;
 import com.biglybt.ui.swt.FixedHTMLTransfer;
 import com.biglybt.ui.swt.FixedURLTransfer;
 import com.biglybt.ui.swt.Utils;
@@ -100,8 +101,6 @@ public class SideBar
 
 	private SWTSkinObjectContainer soSideBarContents;
 
-	private SWTSkinObject soSideBarList;
-
 	private Tree tree;
 
 	private Font fontHeader;
@@ -123,9 +122,10 @@ public class SideBar
 	private List<SideBarEntrySWT> 	attention_seekers = new ArrayList<>();
 	private TimerEventPeriodic		attention_event;
 
-	private Composite cPluginsArea;
-
-	private final List<UISWTViewCore> pluginViews = new ArrayList<>();
+	private Composite 				cPluginsArea;
+	private Utils.SashWrapper		pluginSash;
+	
+	private final List<UISWTViewImpl> pluginViews = new ArrayList<>();
 	private ParameterListener configShowSideBarListener;
 	private ParameterListener configRedrawListener;
 	private ParameterListener configBGColorListener;
@@ -157,18 +157,23 @@ public class SideBar
 		skin = skinObject.getSkin();
 
 		soSideBarContents = (SWTSkinObjectContainer) skin.getSkinObject("sidebar-contents");
-		soSideBarList = skin.getSkinObject("sidebar-list");
 		soSideBarPopout = skin.getSkinObject("sidebar-pop");
 
 		SWTSkinObjectContainer soSideBarPluginsArea = (SWTSkinObjectContainer) skin.getSkinObject("sidebar-plugins");
+		
 		if (soSideBarPluginsArea != null) {
+			/*
 			Composite composite = soSideBarPluginsArea.getComposite();
+			
 			cPluginsArea = new Composite(composite, SWT.NONE);
 			GridLayout layout = new GridLayout();
 			layout.marginHeight = layout.marginWidth = 0;
 			layout.verticalSpacing = layout.horizontalSpacing = 0;
 			cPluginsArea.setLayout(layout);
 			cPluginsArea.setLayoutData(Utils.getFilledFormData());
+			*/
+			
+			soSideBarPluginsArea.setVisible( false );
 		}
 
 		addGeneralMenus();
@@ -254,17 +259,21 @@ public class SideBar
 		}
 		
 		{
-			MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "menu.add.to.dashboard");
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			MenuItem menuParentItem = menuManager.addMenuItem("sidebar._end_", "menu.add.to");
+			menuParentItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 	
-			menuItem.addFillListener((menu, data) -> {
+			menuParentItem.setStyle( MenuItem.STYLE_MENU );
+						
+			menuParentItem.addFillListener((menu, data) -> {
 				SideBarEntrySWT entry = getCurrentEntry();
 				menu.setVisible(entry != null && entry.canBuildStandAlone()
 						&& !entry.getViewID().equals(
 								MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD));
 			});
 	
-			menuItem.addListener(new MenuItemListener() {
+			MenuItem menuItemDashBoard = menuManager.addMenuItem( menuParentItem, "label.dashboard");
+
+			menuItemDashBoard.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
 					SideBarEntrySWT sbe = getCurrentEntry();
@@ -272,6 +281,20 @@ public class SideBar
 					if ( sbe != null ){
 						
 						MainMDISetup.getSb_dashboard().addItem( sbe );
+					}
+				}
+			});
+			
+			MenuItem menuItemSidebar = menuManager.addMenuItem( menuParentItem, "label.sidebar");
+
+			menuItemSidebar.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					SideBarEntrySWT sbe = getCurrentEntry();
+	
+					if ( sbe != null ){
+						
+						MainMDISetup.getSb_dashboard().addItemToSidebar( sbe );
 					}
 				}
 			});
@@ -484,12 +507,30 @@ public class SideBar
 	}
 
 	private void createSideBar() {
+		
+		SWTSkinObject soSideBarList = skin.getSkinObject("sidebar-list");
+
 		if (soSideBarList == null) {
 			return;
 		}
-		Composite parent = (Composite) soSideBarList.getControl();
-
-		tree = new Tree(parent, SWT.FULL_SELECTION | SWT.V_SCROLL
+		
+		Composite sidebarList = (Composite) soSideBarList.getControl();
+		
+		pluginSash = Utils.createSashWrapper( sidebarList, "Sidebar.Plugin.SplitAt", 75 );
+		
+		pluginSash.setBottomVisible( false );
+		
+		Composite[] kids = pluginSash.getChildren();
+		
+	    cPluginsArea = new Composite(kids[1], SWT.NONE);
+	    GridLayout layout = new GridLayout();
+		layout.marginHeight = layout.marginWidth = 0;
+		layout.verticalSpacing = layout.horizontalSpacing = 0;
+		cPluginsArea.setLayout(layout);
+		cPluginsArea.setLayoutData(Utils.getFilledFormData());		
+		
+		
+		tree = new Tree(kids[0], SWT.FULL_SELECTION | SWT.V_SCROLL
 				| SWT.DOUBLE_BUFFERED | SWT.NO_SCROLL);
 		tree.setHeaderVisible(false);
 
@@ -1183,65 +1224,109 @@ public class SideBar
 				if (!UISWTInstance.VIEW_SIDEBAR_AREA.equals(forDSTypeOrViewID)) {
 					return;
 				}
-				Utils.execSWTThread(() -> {
-					try {
-						for (UISWTViewCore view : pluginViews) {
+				Utils.execSWTThread(() -> {	
+					
+						List<UISWTViewImpl> views;
+						
+						synchronized( pluginViews ){
+						
+							views = new ArrayList<>( pluginViews );
+						}
+						
+						for (UISWTViewImpl view : views){
+							
 							if (builder.equals(view.getEventListenerBuilder())) {
-								view.closeView();
+									
+								removeSideBarView( view );
 							}
 						}
-					} catch (Exception e) {
-						e.printStackTrace();
-						// skip, plugin probably specifically asked to not be added
-					}
-				});
+					});			
 			}
 		};
+		
 		ViewManagerSWT.getInstance().addSWTViewListener(swtViewListener);
 
 		cPluginsArea.getParent().getParent().layout(true, true);
 	}
 
 	private void addSideBarView(UISWTViewImpl view, Composite cPluginsArea) {
-		pluginViews.add(view);
-		try {
-			view.create();
-		} catch (UISWTViewEventCancelledException e) {
-			pluginViews.remove(view);
-			return;
+		
+		synchronized( pluginViews ){
+			
+			pluginViews.add(view);
+			
+			try {
+				view.create();
+				
+			} catch (UISWTViewEventCancelledException e) {
+				
+				pluginViews.remove(view);
+				
+				return;
+			}
+	
+			if ( pluginViews.size() > 0 ){
+									
+				pluginSash.setBottomVisible( true );
+			
+				/*
+				SWTSkinObjectContainer soSideBarPluginsArea = (SWTSkinObjectContainer) skin.getSkinObject("sidebar-plugins");
+				
+				if ( !soSideBarPluginsArea.isVisible()){
+				
+					soSideBarPluginsArea.setVisible( true );
+				}
+				*/
+			}
 		}
 
+			// obviously this doesn't work for > 1 plugin, needs tabs or something
+
+		Utils.disposeComposite( cPluginsArea, false );
+		
 		Composite parent = new Composite(cPluginsArea, SWT.NONE);
-		GridData gridData = new GridData();
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.horizontalAlignment = SWT.FILL;
+				
+		GridData gridData = new GridData( GridData.FILL_BOTH );
+		
 		parent.setLayoutData(gridData);
-		parent.setLayout(new FormLayout());
-		//parent.setBackground(ColorCache.getRandomColor());
-		//cPluginsArea.setBackground(ColorCache.getRandomColor());
 
-		view.initialize(parent);
-		parent.setVisible(true);
+		parent.setLayout( new FormLayout());	// this works well with the initialize code
+		
+		view.initialize( parent );
+		
+		cPluginsArea.getParent().layout( true,  true );
+	}
 
-		Control[] children = parent.getChildren();
-		for (int i = 0; i < children.length; i++) {
-			Control control = children[i];
-			Object ld = control.getLayoutData();
-			boolean useGridLayout = ld != null && (ld instanceof GridData);
-			if (useGridLayout) {
-				GridLayout gridLayout = new GridLayout();
-				gridLayout.horizontalSpacing = 0;
-				gridLayout.marginHeight = 0;
-				gridLayout.marginWidth = 0;
-				gridLayout.verticalSpacing = 0;
-				parent.setLayout(gridLayout);
-				break;
-			} else if (ld == null) {
-				control.setLayoutData(Utils.getFilledFormData());
+	private void removeSideBarView(UISWTViewImpl view ){
+		
+		try{
+			view.closeView();
+			
+		}catch( Throwable e ){
+			
+			e.printStackTrace();
+		}
+		
+		synchronized( pluginViews ){
+			
+			pluginViews.remove(view);
+		
+			if ( pluginViews.isEmpty()){
+									
+				pluginSash.setBottomVisible( false );
+				
+				/*
+				SWTSkinObjectContainer soSideBarPluginsArea = (SWTSkinObjectContainer) skin.getSkinObject("sidebar-plugins");
+				
+				if ( soSideBarPluginsArea.isVisible()){
+				
+					soSideBarPluginsArea.setVisible( false );
+				}
+				*/
 			}
 		}
 	}
-
+	
 
 	/**
 	 * @param event

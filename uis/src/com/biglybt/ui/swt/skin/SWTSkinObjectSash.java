@@ -322,6 +322,24 @@ public class SWTSkinObjectSash
 		if (px == null) {
 			return;
 		}
+		
+		if ( px < 0 ){
+			
+			if ( parentComposite.getSize().y <= 0 ){
+				
+					// can't handle this yet
+				
+				return;
+			}
+			
+			px = -px;
+			
+			sash.setData("PX", px );
+
+			setBelowSize( px.intValue());
+			
+			return;
+		}
 		int newAboveSize;
 		if (soAbove.isVisible()) {
 			newAboveSize = px.intValue();
@@ -354,6 +372,7 @@ public class SWTSkinObjectSash
 	 * @param above
 	 *
 	 */
+	/*
 	protected void setPercent(double pctAbove, Control sash, Composite above,
 			Composite below, boolean bVertical, Control parentComposite,
 			int minAbove, int belowMin) {
@@ -406,8 +425,9 @@ public class SWTSkinObjectSash
 			above.getParent().layout();
 		}
 	}
-
-	public void setBelowSize(final int px) {
+	*/
+	
+	private void setBelowSize(final int px) {
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
@@ -416,29 +436,18 @@ public class SWTSkinObjectSash
 						- (parentComposite.getBorderWidth() * 2);
 
 				int wantAboveSize = parentHeight - sashHeight - px;
+				
+				if ( wantAboveSize < 0 ){
+					wantAboveSize = 0;
+				}
 				sash.setData("PX", new Long(wantAboveSize));
 				handleShow();
 			}
 		});
 	}
 
-	public int getAboveSize() {
-		Object o = Utils.execSWTThreadWithObject("getAboveSize", new AERunnableObject() {
-			@Override
-			public Object runSupport() {
-				if (sash == null || sash.isDisposed()) {
-					return -1;
-				}
-				return sash.getData("PX");
-			}
-		}, 1000);
-		if (o instanceof Number) {
-			return ((Number) o).intValue();
-		}
-		return -1;
-	}
-
-	public void setAboveSize(final int px) {
+	/*
+	private void setAboveSize(final int px) {
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
@@ -447,7 +456,7 @@ public class SWTSkinObjectSash
 			}
 		});
 	}
-
+	
 	public void resetWidth() {
 		Utils.execSWTThread(new AERunnable() {
 			@Override
@@ -467,7 +476,8 @@ public class SWTSkinObjectSash
 			}
 		});
 	}
-
+	*/
+	
 	public boolean isAboveVisible() {
 		if (soAbove == null || soAbove.isDisposed()) {
 			return false;

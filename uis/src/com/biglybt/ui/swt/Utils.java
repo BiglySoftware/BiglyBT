@@ -38,6 +38,8 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.program.Program;
@@ -4143,7 +4145,201 @@ public class Utils
 
 	    return( sash );
 	}
+	
+	public static SashWrapper
+	createSashWrapper(
+		Composite		parent,
+		String			config_key,
+		int				def_pct )
+	{
+		return( new SashWrapper( parent, config_key, def_pct ));
+	}
 
+	public static class
+	SashWrapper
+	{
+		private Composite	parent;
+		private Sash		sash;
+		
+		private Composite 	form;
+		private Composite 	child1;
+		private Composite 	child2;
+		
+		private FormData child1Data;
+		private FormData child2Data;
+		
+		private boolean	bottomHidden;
+		
+		private Double	savedPCT;
+		
+		private SashWrapper(
+			Composite		_parent,
+			String			config_key,
+			int				ref_pct )
+		{
+			COConfigurationManager.setFloatDefault( config_key, 75*100 );
+
+			parent	= _parent;
+			
+			form = new Composite(parent, SWT.NONE);
+		  	FormLayout flayout = new FormLayout();
+		  	flayout.marginHeight = 0;
+		  	flayout.marginWidth = 0;
+		  	form.setLayout(flayout);
+			form.setLayoutData(Utils.getFilledFormData());
+
+
+
+		  	child1 = new Composite(form,SWT.NONE);
+		  	flayout = new FormLayout();
+		  	flayout.marginHeight = 0;
+		  	flayout.marginWidth = 0;
+		  	child1.setLayout(flayout);
+		  	
+		  	int SASH_WIDTH = 3;
+		  	
+		  	sash = createSash( form, SASH_WIDTH, SWT.HORIZONTAL );
+
+		    int weight = (int) (COConfigurationManager.getFloatParameter( config_key ));
+		    if (weight > 10000) {
+		    	weight = 10000;
+		    } else if (weight < 100) {
+		    	weight *= 100;
+		    }
+		    // Min/max of 5%/95%
+		    if (weight < 500) {
+		    	weight = 500;
+		    } else if (weight > 9000) {
+		    	weight = 9000;
+		    }
+		    double pct = (float)weight / 10000;
+		    sash.setData("PCT", new Double(pct));
+		    
+		  	child2 = new Composite(form,SWT.NULL);
+		  	flayout = new FormLayout();
+		  	flayout.marginHeight = 0;
+		  	flayout.marginWidth = 0;
+		  	child2.setLayout(flayout);
+
+		    FormData formData;
+			
+			
+		    formData = new FormData();
+		    formData.left = new FormAttachment(0, 0);
+		    formData.right = new FormAttachment(100, 0);
+		    formData.top = new FormAttachment(0, 0);
+		    formData.bottom = new FormAttachment((int) (pct * 100), 0);
+		    child1.setLayoutData(formData);
+		    child1Data = formData;
+		
+		    // sash
+		    formData = new FormData();
+		    formData.left = new FormAttachment(0, 0);
+		    formData.right = new FormAttachment(100, 0);
+		    formData.top = new FormAttachment(child1);
+		    formData.height = SASH_WIDTH;
+		    sash.setLayoutData(formData);
+		
+		    // child2
+		    formData = new FormData();
+		    formData.left = new FormAttachment(0, 0);
+		    formData.right = new FormAttachment(100, 0);
+		    formData.bottom = new FormAttachment(100, 0);
+		    formData.top = new FormAttachment(sash);		
+		    child2.setLayoutData(formData);
+		    child2Data = formData;
+		
+		    // Listeners to size the folder
+		    sash.addSelectionListener(new SelectionAdapter() {
+		    	@Override
+		    	public void widgetSelected(SelectionEvent e) {
+		    		final boolean FASTDRAG = true;
+		
+		    		if (FASTDRAG && e.detail == SWT.DRAG)
+		    			return;
+		
+		    		child1Data.height = e.y + e.height - SASH_WIDTH;
+		    		form.layout();
+		
+		    		Double l = new Double((double) child1.getBounds().height
+		    				/ form.getBounds().height);
+		    		sash.setData("PCT", l);
+		    		if (e.detail != SWT.DRAG) {
+		    			int i = (int) (l.doubleValue() * 10000);
+		    			COConfigurationManager.setParameter( config_key, i);
+		    		}
+		    	}
+		    });
+		
+		    form.addListener(SWT.Resize, new DelayedListenerMultiCombiner() {
+		    	@Override
+		    	public void handleDelayedEvent(Event e) {
+		    		if ( sash.isDisposed()){
+		    			return;
+		    		}
+		    		Double l = (Double) sash.getData("PCT");
+		    		if (l == null) {
+		    			return;
+		    		}
+		    		int newHeight = (int) (form.getBounds().height * l.doubleValue());
+		    		if (child1Data.height != newHeight || child1Data.bottom != null) {
+		    			child1Data.bottom = null;
+		    			child1Data.height = newHeight;
+		    			form.layout();
+		    		}
+		    	}
+		    });
+		}
+		
+		public void
+		setBottomVisible(
+			boolean	vis )
+		{
+			execSWTThread(()->{
+				
+				if ( sash.isDisposed()){
+					return;
+				}
+				
+				if ( vis ){
+					if ( bottomHidden ){
+						bottomHidden = false;
+						sash.setVisible(true);
+						child2.setVisible(true);
+						if ( savedPCT != null ){
+							sash.setData("PCT", savedPCT );
+							
+							int newHeight = (int) (form.getBounds().height * savedPCT.doubleValue());
+				    		if (child1Data.height != newHeight || child1Data.bottom != null) {
+				    			child1Data.bottom = null;
+				    			child1Data.height = newHeight;
+				    		}
+						}
+						form.layout();
+						parent.layout( true, true );
+					}
+				}else{
+					if ( !bottomHidden ){
+						bottomHidden = true;
+						savedPCT = (Double) sash.getData("PCT");
+						child1Data.height = parent.getSize().y;
+						sash.setData("PCT", (double)1.0 );
+						form.layout();
+						sash.setVisible(false);
+						child2.setVisible(false);
+						parent.layout( true, true );
+					}
+				}
+			});
+		}
+		
+		public Composite[]
+		getChildren()
+		{
+			return( new Composite[]{ child1, child2 });
+		}
+	}
+	
 	/**
 	 * Sometimes, Display.getCursorControl doesn't go deep enough..
 	 */

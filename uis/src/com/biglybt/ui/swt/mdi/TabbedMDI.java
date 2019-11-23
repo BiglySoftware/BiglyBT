@@ -66,6 +66,7 @@ import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemFillListener;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
@@ -496,7 +497,7 @@ public class TabbedMDI
   					for (Object id : mapUserClosedTabs.keySet()) {
   						final String view_id = (String) id;
 
-  						MenuItem mi = new MenuItem(menu, SWT.PUSH);
+  						org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem(menu, SWT.PUSH);
 
   						String title;
 
@@ -532,7 +533,7 @@ public class TabbedMDI
 				}
 
 				if (need_sep) {
-					new MenuItem(menu, SWT.SEPARATOR);
+					new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
 				}
 
 
@@ -1167,14 +1168,15 @@ public class TabbedMDI
 		{
 			if ( !Utils.isAZ2UI()){
 				
-				com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem( id + "._end_", "menu.add.to.dashboard");
-				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+				MenuItem menuParentItem = menuManager.addMenuItem( id + "._end_", "menu.add.to");
+				menuParentItem.setStyle(MenuItem.STYLE_MENU );
+				menuParentItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 		
-				menuItem.addFillListener(
+				menuParentItem.addFillListener(
 					new MenuItemFillListener() {
 		
 						@Override
-						public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+						public void menuWillBeShown(MenuItem menu, Object data) {
 		
 								// pick up the right target - due to the confusion of multiple tab instances registering
 								// the same menu entries the original registerer may well not be the one that should receive the event,
@@ -1193,7 +1195,9 @@ public class TabbedMDI
 						}
 					});
 		
-				menuItem.addListener(new MenuItemListener() {
+				MenuItem menuItemDashBoard = menuManager.addMenuItem( menuParentItem, "label.dashboard");
+				
+				menuItemDashBoard.addListener(new MenuItemListener() {
 					@Override
 					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object data ) {
 							
@@ -1209,6 +1213,27 @@ public class TabbedMDI
 						}
 						
 						MainMDISetup.getSb_dashboard().addItem( target );
+					}
+				});
+				
+				MenuItem menuItemSidebar = menuManager.addMenuItem( menuParentItem, "label.sidebar");
+				
+				menuItemSidebar.addListener(new MenuItemListener() {
+					@Override
+					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object data ) {
+							
+						TabbedEntry	target = entry;
+						
+						if ( data instanceof Object[]) {
+							Object[] odata = (Object[])data;
+							if ( odata.length == 1 && odata[0] instanceof TabbedEntry ) {
+								target = (TabbedEntry)odata[0];
+							}
+						}else if ( data instanceof TabbedEntry ){
+							target = (TabbedEntry)data;
+						}
+						
+						MainMDISetup.getSb_dashboard().addItemToSidebar( target );
 					}
 				});
 			}
