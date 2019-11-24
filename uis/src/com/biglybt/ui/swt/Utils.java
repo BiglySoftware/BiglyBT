@@ -5241,4 +5241,31 @@ public class Utils
 			items[i].dispose();
 		}
 	}
+	
+	public static List<Control>
+	getAllChildren(
+		Composite		c )
+	{
+		List<Control>	list = new ArrayList<>();
+		
+		getAllChildren( c, list );
+		
+		return( list.subList( 1, list.size()));
+	}
+	
+	private static void
+	getAllChildren(
+		Control			c,
+		List<Control>	kids )
+	{
+		kids.add( c );
+		
+		if ( c instanceof Composite ){
+			
+			for ( Control x: ((Composite)c).getChildren()){
+				
+				getAllChildren( x, kids );
+			}
+		}
+	}
 }

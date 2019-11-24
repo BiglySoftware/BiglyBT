@@ -19,6 +19,9 @@
 
 package com.biglybt.ui.swt.components;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
@@ -31,7 +34,13 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.util.AERunnable;
@@ -364,6 +373,109 @@ public class Legend {
 			}
 		});
 
+		List<Control> legControls = Utils.getAllChildren( legend );
+		
+		legControls.add( legend );
+				
+		String keyVis = keys == null || keys.length == 0?null:keys[0] + ".legend.hidden";
+		
+		Listener visListener = (Listener)(event)->{
+			
+			if ( keyVis != null ){			
+				COConfigurationManager.setParameter( keyVis, false );
+			}
+			
+			legend.dispose();
+			panel.layout( true, true );
+					
+			Composite kidsPanel;;
+			
+			List<Control> kids = Utils.getAllChildren( panel );
+			
+			if ( kids.size() == 0 ){
+				
+				kidsPanel = panel.getParent();
+				
+				kids = Utils.getAllChildren( kidsPanel );
+				
+			}else{
+				
+				kidsPanel = panel;
+			}
+			
+			List<Menu> 		showListenersAdded 	= new ArrayList<>();
+			List<Menu>	 	menusHacked			= new ArrayList<>();
+			List<MenuItem>	menuItemsAdded		= new ArrayList<>();
+			
+			Listener showListener = new Listener(){
+				public void
+				handleEvent( Event ev )
+				{
+					Menu menu = (Menu)ev.widget;
+					
+					if ( menusHacked.contains( menu )){
+						return;
+					}
+					
+					menusHacked.add( menu );
+					
+					if ( menu.getItemCount() > 0 ){
+						menuItemsAdded.add( new MenuItem( menu, SWT.SEPARATOR ));
+					}
+					
+					MenuItem kmi = new MenuItem( menu, SWT.PUSH );
+					menuItemsAdded.add( kmi );
+					Messages.setLanguageText(kmi,"menu.show.legend");
+					kmi.addListener(SWT.Selection, (event)->{
+						
+						for ( Menu x: showListenersAdded ){
+							x.removeListener( SWT.Show, this );
+						}
+						for ( MenuItem x: menuItemsAdded ){
+							x.dispose();
+						}
+						
+						if ( keyVis != null ){			
+							COConfigurationManager.setParameter( keyVis, true );
+						}
+						
+						createLegendComposite( panel, blockColors, keys, key_texts, layoutData, horizontal, listener );
+	
+						kidsPanel.layout( true, true );
+					});
+				}
+			};
+				
+			for ( Control kid: kids ){
+				
+				Menu km = kid.getMenu();
+				
+				if ( km == null ){
+					
+					km = new Menu( kid );
+					
+					kid.setMenu( km );
+				}
+								
+				km.addListener( SWT.Show, showListener );
+					
+				showListenersAdded.add( km );
+			}
+		};
+
+		for ( Control c: legControls ){
+			Menu menu = new Menu( c );
+			c.setMenu( menu );
+			MenuItem mi = new MenuItem( menu, SWT.PUSH );
+			Messages.setLanguageText(mi,"menu.hide.legend");
+	
+			mi.addListener( SWT.Selection, visListener );
+		}
+		
+		if ( keyVis != null && !COConfigurationManager.getBooleanParameter( keyVis, true )){	
+			visListener.handleEvent( null );
+		}
+		
 		return legend;
 	}
 

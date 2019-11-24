@@ -858,7 +858,7 @@ public class TransferStatsView
 
   private void refresh() {
 
-	  if ( !initialised ){
+	  if ( !initialised || mainPanel == null || mainPanel.isDisposed() ){
 		  return;
 	  }
 	  refreshGeneral();
