@@ -33,7 +33,6 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
@@ -404,7 +403,6 @@ public class Legend {
 			}
 			
 			List<Menu> 		showListenersAdded 	= new ArrayList<>();
-			List<Menu>	 	menusHacked			= new ArrayList<>();
 			List<MenuItem>	menuItemsAdded		= new ArrayList<>();
 			
 			Listener showListener = new Listener(){
@@ -412,18 +410,20 @@ public class Legend {
 				handleEvent( Event ev )
 				{
 					Menu menu = (Menu)ev.widget;
+										
+					MenuItem[] items = menu.getItems();
 					
-					if ( menusHacked.contains( menu )){
-						return;
+					for ( MenuItem x: items ){
+						if ( x.getData("Legend.hacked") != null ){
+							return;
+						}
 					}
-					
-					menusHacked.add( menu );
-					
 					if ( menu.getItemCount() > 0 ){
 						menuItemsAdded.add( new MenuItem( menu, SWT.SEPARATOR ));
 					}
 					
 					MenuItem kmi = new MenuItem( menu, SWT.PUSH );
+					kmi.setData( "Legend.hacked", "" );
 					menuItemsAdded.add( kmi );
 					Messages.setLanguageText(kmi,"menu.show.legend");
 					kmi.addListener(SWT.Selection, (event)->{
