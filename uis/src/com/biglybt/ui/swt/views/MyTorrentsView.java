@@ -1527,6 +1527,10 @@ public class MyTorrentsView
 						@Override
 						public void runSupport() {
 							updateSelectedContent();
+							
+								// position change events
+							
+							columnInvalidateAfterMove();
 						}
 					});
 				}
@@ -2182,8 +2186,6 @@ public class MyTorrentsView
           iNewPos--;
       }
     }
-
-	  columnInvalidateAfterMove();
   }
 
   // @see TableRefreshListener#tableRefresh()
@@ -2337,8 +2339,6 @@ public class MyTorrentsView
         dm.getGlobalManager().moveDown(dm);
       }
     }
-
-	  columnInvalidateAfterMove();
   }
 
   private void moveSelectedTorrentsUp() {
@@ -2356,8 +2356,6 @@ public class MyTorrentsView
         dm.getGlobalManager().moveUp(dm);
       }
     }
-
-	  columnInvalidateAfterMove();
   }
 
 	private void moveSelectedTorrents(int by) {
@@ -2401,8 +2399,6 @@ public class MyTorrentsView
 			DownloadManager dm = dms[i];
 			globalManager.moveTo(dm, newPositions[i]);
 		}
-
-		columnInvalidateAfterMove();
 	}
 
 	private void columnInvalidateAfterMove() {
@@ -2429,12 +2425,11 @@ public class MyTorrentsView
     if (dms.length == 0)
       return;
 
-    if(moveToTop)
+    if(moveToTop){
       globalManager.moveTop(dms);
-    else
+    }else{
       globalManager.moveEnd(dms);
-
-	  columnInvalidateAfterMove();
+    }
   }
 
   /**
@@ -2600,9 +2595,11 @@ public class MyTorrentsView
   public void positionChanged(DownloadManager download, int oldPosition, int newPosition) {
   	if (isOurDownloadManager(download)) {
  	
-		// When a torrent gets added to the top of the list, we get a
-		// positionChanged for every torrent below it.  Definitely need this
-  		// rate limited
+			// When a torrent gets added to the top of the list, we get a
+			// positionChanged for every torrent below it.  Definitely need this
+	  		// rate limited
+  		
+  			// this will also force a column invalidate so position change is visible
   		
 			updateSelectedContentRateLimited();
   	}
