@@ -223,7 +223,7 @@ public class DHTView
 
     GridData data = new GridData();
     data.verticalAlignment = SWT.BEGINNING;
-    data.widthHint = 350;
+    data.widthHint = 360;
     gGeneral.setLayoutData(data);
 
     GridLayout layout = new GridLayout();
@@ -380,7 +380,7 @@ public class DHTView
     Messages.setLanguageText(gTransport,"DHTView.transport.title");
 
     GridData data = new GridData(GridData.FILL_VERTICAL);
-    data.widthHint = 350;
+    data.widthHint = 360;
     data.verticalSpan = 2;
     gTransport.setLayoutData(data);
 
