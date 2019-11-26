@@ -118,6 +118,7 @@ public class MessageText {
 	  CONSTANTS.put("url.wiki.app.disappears", Wiki.APPLICATION_DISSAPEARS);
 	  CONSTANTS.put("url.wiki.failed.update", Wiki.FAILED_UPDATE);
 	  CONSTANTS.put("url.wiki.swt.cant.autoupdate", Wiki.SWT_CANT_AUTO_UPDATE);
+	  CONSTANTS.put("faq.legal.url", Wiki.FAQ_LEGAL);	// used in rcmplugin
 
 
 	  /* unused expansion keys are left out */
@@ -127,7 +128,6 @@ public class MessageText {
 //	  CONSTANTS.put("ConfigView.section.connection.pairing.url", Wiki.PAIRING);
 //	  CONSTANTS.put("ConfigView.section.dns.url", Wiki.DNS);
 //	  CONSTANTS.put("MainWindow.menu.speed_limits.wiki.url", Wiki.SPEED_LIMIT_SCHEDULER);
-//	  CONSTANTS.put("faq.legal.url", Wiki.FAQ_LEGAL);
 //	  CONSTANTS.put("privacy.view.wiki.url", Wiki.PRIVACY_VIEW);
 //	  CONSTANTS.put("device.wiki.itunes", Wiki.DEVICES_ITUNES_TIPS);
 
