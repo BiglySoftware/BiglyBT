@@ -1506,6 +1506,7 @@ addressLoop:
 	public InetAddress
 	getLoopbackAddress()
 	{
+		/* InetAddress.getLoopbackAddress is minSDK 19
 		if ( supportsIPv4 && supportsIPv6 ){
 			
 			if ( preferIPv6 ){
@@ -1539,6 +1540,18 @@ addressLoop:
 		}else{
 			
 			return( Inet4Address.getLoopbackAddress());
+		}
+
+		Android workaround: return 127.0.0.1 */
+		try {
+			return Inet4Address.getByAddress("localhost", new byte[] {
+				0x7f,
+				0x00,
+				0x00,
+				0x01
+			});
+		} catch (UnknownHostException e) {
+			return null;
 		}
 	}
 
