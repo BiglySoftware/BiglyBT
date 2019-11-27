@@ -402,4 +402,51 @@ public class TagUtils{
 			+ DisplayFormatters.formatByteCountToKiBEtc(ttlSize);
 	}
 
+	public static TagFeatureFileLocation
+	selectInitialDownloadLocation(
+		Collection<Tag>		tags )
+	{
+		if ( tags.size() > 0 ){
+
+			List<Tag>	sl_tags = new ArrayList<>( tags.size());
+
+			for ( Tag tag: tags ){
+
+				TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+
+				if ( fl.supportsTagInitialSaveFolder()){
+
+					File save_loc = fl.getTagInitialSaveFolder();
+
+					if ( save_loc != null ){
+
+						sl_tags.add( tag );
+					}
+				}
+			}
+
+			if ( sl_tags.size() > 0 ){
+
+				if ( sl_tags.size() > 1 ){
+
+					Collections.sort(
+						sl_tags,
+						new Comparator<Tag>()
+						{
+							@Override
+							public int
+							compare(
+								Tag o1, Tag o2)
+							{
+								return( o1.getTagID() - o2.getTagID());
+							}
+						});
+				}
+
+				return((TagFeatureFileLocation)sl_tags.get(0));
+			}
+		}
+		
+		return( null );
+	}
 }

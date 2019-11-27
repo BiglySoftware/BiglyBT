@@ -943,75 +943,39 @@ TagManagerImpl
 										tags.addAll( untagged_handler.getUntaggedTags());
 									}
 
-									if ( tags.size() > 0 ){
+									TagFeatureFileLocation tag = TagUtils.selectInitialDownloadLocation(tags);
 
-										List<Tag>	sl_tags = new ArrayList<>();
+									if ( tag != null ){
+										
+										long	options = tag.getTagInitialSaveOptions();
 
-										for ( Tag tag: tags ){
+										boolean set_data 	= (options&TagFeatureFileLocation.FL_DATA) != 0;
+										boolean set_torrent = (options&TagFeatureFileLocation.FL_TORRENT) != 0;
 
-											TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+										File new_loc = tag.getTagInitialSaveFolder();
 
-											if ( fl.supportsTagInitialSaveFolder()){
+										if ( set_data ){
 
-												File save_loc = fl.getTagInitialSaveFolder();
+											File old_loc = manager.getSaveLocation();
 
-												if ( save_loc != null ){
+											if ( !new_loc.equals( old_loc )){
 
-													sl_tags.add( tag );
-												}
+												manager.setTorrentSaveDir( new_loc.getAbsolutePath());
 											}
 										}
 
-										if ( sl_tags.size() > 0 ){
+										if ( set_torrent ){
 
-											if ( sl_tags.size() > 1 ){
+											File old_torrent_file = new File( manager.getTorrentFileName());
 
-												Collections.sort(
-													sl_tags,
-													new Comparator<Tag>()
-													{
-														@Override
-														public int
-														compare(
-															Tag o1, Tag o2)
-														{
-															return( o1.getTagID() - o2.getTagID());
-														}
-													});
-											}
+											if ( old_torrent_file.exists()){
 
-											TagFeatureFileLocation tag = (TagFeatureFileLocation)sl_tags.get(0);
+												try{
+													manager.setTorrentFile( new_loc,  old_torrent_file.getName());
 
-											long	options = tag.getTagInitialSaveOptions();
+												}catch( Throwable e ){
 
-											boolean set_data 	= (options&TagFeatureFileLocation.FL_DATA) != 0;
-											boolean set_torrent = (options&TagFeatureFileLocation.FL_TORRENT) != 0;
-
-											File new_loc = tag.getTagInitialSaveFolder();
-
-											if ( set_data ){
-
-												File old_loc = manager.getSaveLocation();
-
-												if ( !new_loc.equals( old_loc )){
-
-													manager.setTorrentSaveDir( new_loc.getAbsolutePath());
-												}
-											}
-
-											if ( set_torrent ){
-
-												File old_torrent_file = new File( manager.getTorrentFileName());
-
-												if ( old_torrent_file.exists()){
-
-													try{
-														manager.setTorrentFile( new_loc,  old_torrent_file.getName());
-
-													}catch( Throwable e ){
-
-														Debug.out( e );
-													}
+													Debug.out( e );
 												}
 											}
 										}

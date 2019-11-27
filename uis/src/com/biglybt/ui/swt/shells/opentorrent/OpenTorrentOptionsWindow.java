@@ -2078,6 +2078,12 @@ public class OpenTorrentOptionsWindow
 				setupInfoSection(skin);
 			}
 			updateStartOptionsHeader();
+			
+			if ( tagButtonsUI != null ){
+			
+				updateInitialSaveTags( tagButtonsUI.getSelectedTags(), null );
+			}
+			
 			if ( isSingleOptions ){
 				cmbDataDirChanged();
 				updateSize();
@@ -4928,6 +4934,15 @@ public class OpenTorrentOptionsWindow
 							
 							boolean tagSelected = !tagCanvas.isSelected();
 							
+							if ( !tagSelected ){
+								if ( !torrentOptions.canDeselectTag( tag )){
+									
+									tagCanvas.setSelected( true );
+									
+									return;
+								}
+							}
+							
 							boolean initialTagsChanged = tagSelected ? addInitialTag(tags, tag)	: removeInitialTag(tags, tag);
 							
 							if ( initialTagsChanged && tagSelected ){
@@ -4980,6 +4995,8 @@ public class OpenTorrentOptionsWindow
 			tagButtonsUI.setEnableWhenNoTaggables(true);
 			tagButtonsUI.updateFields(null);
 			
+			updateInitialSaveTags( tagButtonsUI.getSelectedTags(), null );
+			
 			tagButtonsArea.getParent().layout( true, true );
 			
 				// without this the expando sometimes get stuck with the wrong height and therefore a truncated view
@@ -4988,22 +5005,65 @@ public class OpenTorrentOptionsWindow
 		}
 
 		private boolean removeInitialTag(List<Tag> tags, Tag tag) {
-			boolean tagsChanged = tags.remove( tag );
-			if (!tagsChanged) {
-				return tagsChanged;
+			if ( tags.remove( tag )){
+			
+				if ( tag instanceof TagFeatureFileLocation ){
+					
+					updateInitialSaveTags( tags, (TagFeatureFileLocation)tag );
+				}
+			
+				return( true );
+				
+			}else{
+				return( false );
 			}
+		}
 
-			// This logic might fit better outside the UI code, such as
-			// TorrentOpenOptions
-			if (tag instanceof TagFeatureFileLocation) {
-				TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+		private boolean addInitialTag(List<Tag> tags, Tag tag) {
+	
+			if (!tags.contains(tag)) {
+				
+				tags.add(tag);
 
-				if ( fl.supportsTagInitialSaveFolder()){
+				if ( tag instanceof TagFeatureFileLocation) {
+					
+					updateInitialSaveTags( tags, null );
+				}
+				
+				return( true );
+			}else{
+				return( false );
+			}
+		}
+		
+		// This logic might fit better outside the UI code, such as
+		// TorrentOpenOptions
 
-					File save_loc = fl.getTagInitialSaveFolder();
+		private void
+		updateInitialSaveTags(
+			List<Tag>					tags,
+			TagFeatureFileLocation		removed )
+		{
+			TagFeatureFileLocation init = TagUtils.selectInitialDownloadLocation( tags );
+			
+			if ( init != null ){
+				
+				if (( init.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) == 0){
+					
+					init = null;
+				}
+			}
+			
+			if ( init == null ){
+				
+				if ( removed != null ){
+					
+						// revert save location
+					
+					File save_loc = removed.getTagInitialSaveFolder();
 
 					if ( 	save_loc != null &&
-							( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0 &&
+							( removed.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0 &&
 							getSavePath().equals( save_loc.getAbsolutePath())){
 
 						String old = (String)tagButtonsArea.getData( SP_KEY );
@@ -5014,38 +5074,14 @@ public class OpenTorrentOptionsWindow
 						}
 					}
 				}
+			}else{
+				
+					// must have a save folder as selected
+				
+				File save_loc = init.getTagInitialSaveFolder();
+
+				setSavePath( save_loc.getAbsolutePath());
 			}
-			return tagsChanged;
-		}
-
-		private boolean addInitialTag(List<Tag> tags, Tag tag) {
-			boolean tagsChanged = false;
-			if (!tags.contains(tag)) {
-				tags.add(tag);
-				tagsChanged = true;
-
-				// This logic might fit better outside the UI code, such as
-				// TorrentOpenOptions
-				if (tag instanceof TagFeatureFileLocation) {
-					TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
-
-					if ( fl.supportsTagInitialSaveFolder()){
-
-						File save_loc = fl.getTagInitialSaveFolder();
-
-						if ( save_loc != null ){
-
-							if (( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0 ){
-
-								setSavePath( save_loc.getAbsolutePath());
-							}
-						}
-					}
-				}
-
-			}
-
-			return tagsChanged;
 		}
 
 		/**
@@ -6365,7 +6401,9 @@ public class OpenTorrentOptionsWindow
 		setSavePath(
 			String	path )
 		{
-			cmbDataDir.setText( path );
+			if ( cmbDataDir != null ){
+				cmbDataDir.setText( path );
+			}
 		}
 
 		private String

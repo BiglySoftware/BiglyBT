@@ -217,7 +217,7 @@ public class TagButtonsUI
 			return false;
 		}
 
-		for (TagCanvas tagWidget : tagWidgets) {
+		for (TagCanvas tagWidget : new ArrayList<>( tagWidgets )) {
 			tagWidget.updateState(taggables);
 		}
 

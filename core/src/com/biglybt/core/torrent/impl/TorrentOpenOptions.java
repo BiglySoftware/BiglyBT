@@ -731,6 +731,20 @@ public class TorrentOpenOptions
 		applyAutoTagging();
 	}
 	
+	public boolean
+	canDeselectTag(
+		Tag	tag )
+	{
+		if ( autoTags.contains( tag )){
+			
+			return( COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_FILES_AUTO_TAG_ALLOW_MOD  ));
+			
+		}else{
+			
+			return( true );
+		}
+	}
+	
 	public void
 	applyAutoTagging()
 	{		
