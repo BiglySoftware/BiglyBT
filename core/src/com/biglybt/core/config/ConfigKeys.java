@@ -233,6 +233,7 @@ public final class ConfigKeys {
 		public static final String BCFG_FILE_DECODER_PROMPT = "File.Decoder.Prompt";
 		public static final String BCFG_FILE_DECODER_SHOW_LAX = "File.Decoder.ShowLax";
 		public static final String BCFG_FILE_DECODER_SHOW_ALL = "File.Decoder.ShowAll";
+		/** Won't be supported Android until minSDK 26 */
 		public static final String BCFG_ENABLE_SPARSE_FILES = "Enable Sparse Files";
 		public static final String SCFG_FILE_AUTO_SEQUENTIAL_EXTS = "file.auto.sequential.exts";
 		public static final String SCFG_PREFIX_FILE_AUTO_TAG_EXTS = "File Auto Tag Exts ";

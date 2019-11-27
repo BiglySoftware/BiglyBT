@@ -25,8 +25,11 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+
+/* minSDK 26
 import java.nio.file.OpenOption;
 import java.nio.file.StandardOpenOption;
+*/
 import java.util.HashSet;
 import java.util.Set;
 
@@ -55,11 +58,14 @@ FMFileAccessController
 	private static boolean enable_sparse_files;
 	
 	static{
+/* minSDK 26
 		COConfigurationManager.addAndFireParameterListener(
 		"Enable Sparse Files",
 		(n)->{
 			enable_sparse_files = COConfigurationManager.getBooleanParameter( n );
 		});
+		
+ */
 	}
 	private final FMFileImpl	owner;
 
@@ -557,6 +563,7 @@ FMFileAccessController
 		
 			throws FileNotFoundException
 		{
+/* minSDK 26
 			if ( enable_sparse_files && !file.exists()){
 				
 				try{
@@ -574,7 +581,8 @@ FMFileAccessController
 					
 				}
 			}
-			
+*/
+
 			raf = new RandomAccessFile( file, access_mode );
 		}
 		
