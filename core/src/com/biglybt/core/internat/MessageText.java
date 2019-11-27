@@ -857,6 +857,7 @@ public class MessageText {
 	 * @return matching Locale or {@link Locale#ROOT} if unrecognized format or imparsable.
 	 */
 	static Locale parseFormattedLocaleString(String savedLocaleString) {
+		/* Locale.Builder minSDK 21
 		Locale.Builder localeBuilder = new Locale.Builder();
 		String[] savedLocaleStrings = savedLocaleString.split("_", 3);
 
@@ -891,6 +892,29 @@ public class MessageText {
 		}
 
 		return localeBuilder.build();
+		
+		Android workaround: Use old BiglyBT code to parse
+		 */
+		String[] savedLocaleStrings = savedLocaleString.split("_", 3);
+		if (savedLocaleStrings.length > 0 && savedLocaleStrings[0].length() == 2) {
+			if (savedLocaleStrings.length == 3) {
+				return new Locale(savedLocaleStrings[0], savedLocaleStrings[1],
+					savedLocaleStrings[2]);
+			} else if (savedLocaleStrings.length == 2
+				&& savedLocaleStrings[1].length() == 2) {
+				return new Locale(savedLocaleStrings[0], savedLocaleStrings[1]);
+			} else {
+				return new Locale(savedLocaleStrings[0]);
+			}
+		} else {
+			if (savedLocaleStrings.length == 3 && savedLocaleStrings[0].length() == 0
+				&& savedLocaleStrings[2].length() > 0) {
+				return new Locale(savedLocaleStrings[0], savedLocaleStrings[1],
+					savedLocaleStrings[2]);
+			} else {
+				return Locale.getDefault();
+			}
+		}
 	}
 
 	/**
