@@ -2336,7 +2336,7 @@ DeviceManagerUI
 
 								enabled = false;
 							}
-						}else{
+						}else if ( obj instanceof DiskManagerFileInfo ){
 
 							DiskManagerFileInfo file = (DiskManagerFileInfo)obj;
 
