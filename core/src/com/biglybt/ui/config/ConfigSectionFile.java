@@ -227,12 +227,23 @@ public class ConfigSectionFile
 		// merge tolerance
 		IntParameterImpl tol = new IntParameterImpl(
 				ICFG_MERGE_SAME_SIZE_FILES_TOLERANCE,
-				"ConfigView.section.file.merge.same.size.tolerance");
+				"ConfigView.section.file.merge.same.size.tolerance", 0, Integer.MAX_VALUE );
 		add(tol, Parameter.MODE_INTERMEDIATE);
 		tol.setIndent(1, true);
 
 		mergeSameSize.addEnabledOnSelection(tol);
+		
+		// min merge pieces
+		IntParameterImpl minmerge = new IntParameterImpl(
+				ICFG_MERGE_SAME_SIZE_FILES_MIN_PIECES,
+				"ConfigView.section.file.merge.min.pieces", 0, Integer.MAX_VALUE );
+		add(minmerge, Parameter.MODE_INTERMEDIATE);
+		minmerge.setIndent(1, true);
 
+		mergeSameSize.addEnabledOnSelection(minmerge);
+		
+		
+		
 		// check on complete
 		BooleanParameterImpl checkPiecesOnCompletion = new BooleanParameterImpl(
 				BCFG_CHECK_PIECES_ON_COMPLETION, "ConfigView.label.checkOncompletion");

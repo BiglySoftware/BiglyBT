@@ -226,6 +226,7 @@ public class ConfigurationDefaults {
     def.put("Merge Same Size Files", TRUE );
     def.put("Merge Same Size Files Extended", FALSE );
     def.put("Merge Same Size Files Tolerance", ZERO );
+    def.put(ConfigKeys.File.ICFG_MERGE_SAME_SIZE_FILES_MIN_PIECES, 5 );
     def.put("Stop Ratio", new Float(0));
     def.put("Stop Peers Ratio", ZERO);
     def.put("Disconnect Seed", TRUE);

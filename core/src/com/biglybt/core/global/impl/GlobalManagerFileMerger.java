@@ -27,6 +27,7 @@ import java.util.*;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -61,7 +62,6 @@ import com.biglybt.pifimpl.local.PluginInitializer;
 public class
 GlobalManagerFileMerger
 {
-	private static final int MIN_PIECES				= 5;
 	private static final int HASH_FAILS_BEFORE_QUIT	= 3;
 
 	private static final int TIMER_PERIOD				= 5*1000;
@@ -80,7 +80,9 @@ GlobalManagerFileMerger
 	boolean	initialised;
 	boolean	enabled;
 	boolean	enabled_extended;
-	int		tolerance;
+	
+	int		tolerance	= 0;
+	int		min_pieces	= 5;
 
 	final Map<HashWrapper,DownloadManager>		dm_map = new HashMap<>();
 
@@ -191,7 +193,11 @@ GlobalManagerFileMerger
 					runSupport()
 					{
 						COConfigurationManager.addAndFireParameterListeners(
-							new String[]{ "Merge Same Size Files", "Merge Same Size Files Extended", "Merge Same Size Files Tolerance" },
+							new String[]{ 
+									"Merge Same Size Files", 
+									"Merge Same Size Files Extended", 
+									"Merge Same Size Files Tolerance",
+									ConfigKeys.File.ICFG_MERGE_SAME_SIZE_FILES_MIN_PIECES },
 							new ParameterListener(){
 				
 								@Override
@@ -204,15 +210,17 @@ GlobalManagerFileMerger
 									
 									model.getStatus().setText( enabled?"Running":"Disabled" );
 				
-									int	old_tolerance = tolerance;
+									int	old_tolerance 	= tolerance;
+									int old_min_pieces	= min_pieces;
 									
 									tolerance		 	= COConfigurationManager.getIntParameter( "Merge Same Size Files Tolerance" );
+									min_pieces		 	= COConfigurationManager.getIntParameter( ConfigKeys.File.ICFG_MERGE_SAME_SIZE_FILES_MIN_PIECES );
 				
-									logSupport( "Complete files=" + enabled_extended + ", tolerance=" + tolerance );
+									logSupport( "Complete files=" + enabled_extended + ", tolerance=" + tolerance + ", min pieces=" + min_pieces );
 									
 									if ( initialised ){
 				
-										syncFileSets( old_tolerance != tolerance );
+										syncFileSets( old_tolerance != tolerance || old_min_pieces != min_pieces );
 									}
 								}
 							});
@@ -404,7 +412,7 @@ GlobalManagerFileMerger
 
 								// filter out small files
 
-							if ( file.getNbPieces() < MIN_PIECES ){
+							if ( file.getNbPieces() < min_pieces ){
 
 								continue;
 							}
@@ -457,7 +465,7 @@ GlobalManagerFileMerger
 
 							// filter out small files
 
-						if ( file.getNbPieces() < MIN_PIECES ){
+						if ( file.getNbPieces() < min_pieces ){
 
 							continue;
 						}
