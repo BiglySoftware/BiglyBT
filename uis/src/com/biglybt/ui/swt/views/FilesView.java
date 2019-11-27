@@ -1670,7 +1670,7 @@ public class FilesView
 		}
 	}
 	
-	private static Comparator tree_comp = new FormattersImpl().getAlphanumericComparator( true );
+	private static Comparator<String> tree_comp = new FormattersImpl().getAlphanumericComparator( true );
 
 	public interface
 	FilesViewTreeNode
