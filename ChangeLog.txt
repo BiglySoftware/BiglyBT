@@ -67,6 +67,7 @@ CHANGE: UI     | Use anon-flag for anon downloads in swarm view [Parg]
 CHANGE: UI     | Add some stability to multiple swarm view entries [Parg]
 CHANGE: UI     | Tooltip for template combo to show contents [Parg]
 CHANGE: UI     | Ensure user selects open-torrent-option dialog behaviour once open [Parg]
+CHANGE: UI     | Disable save path selection when Tag selected with 'initial save location' defined [Parg]
 
 BUGFIX: Tag    | Fix paused-tag not updating correctly when transition to/from stopped [Parg]
 BUGFIX: Tag    | Ensure open-torrent-options tags with initial save locations behave consistently [Parg] 

@@ -412,15 +412,18 @@ public class TagUtils{
 
 			for ( Tag tag: tags ){
 
-				TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
-
-				if ( fl.supportsTagInitialSaveFolder()){
-
-					File save_loc = fl.getTagInitialSaveFolder();
-
-					if ( save_loc != null ){
-
-						sl_tags.add( tag );
+				if ( tag instanceof TagFeatureFileLocation ){
+					
+					TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+	
+					if ( fl.supportsTagInitialSaveFolder()){
+	
+						File save_loc = fl.getTagInitialSaveFolder();
+	
+						if ( save_loc != null ){
+	
+							sl_tags.add( tag );
+						}
 					}
 				}
 			}

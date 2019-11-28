@@ -1728,7 +1728,9 @@ public class OpenTorrentOptionsWindow
 
 		private List<Button>	network_buttons = new ArrayList<>();
 
+		private boolean cmbDataDirEnabled = true;
 		private Combo cmbDataDir;
+		private Button btnDataDIr;
 
 		private Combo cmbQueueLocation;
 
@@ -4493,6 +4495,47 @@ public class OpenTorrentOptionsWindow
 				}
 			});
 			
+			btnDataDIr = soBrowseButton.getButton();
+			
+			if ( !isSingleOptions ){
+			
+				for ( TorrentOpenOptions to: torrentOptionsMulti ){
+					
+					if (!cmbDataDirEnabled ){
+						
+						break;
+					}
+					
+					List<Tag>	tags = to.getInitialTags();
+					
+					for ( Tag tag: tags ){
+					
+						if ( tag instanceof TagFeatureFileLocation ){
+							
+							TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+			
+							if ( fl.supportsTagInitialSaveFolder()){
+			
+								File save_loc = fl.getTagInitialSaveFolder();
+			
+								if ( save_loc != null ){
+									
+									if (( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0){
+										
+										cmbDataDirEnabled = false;
+										
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			cmbDataDir.setEnabled( cmbDataDirEnabled );
+			btnDataDIr.setEnabled( cmbDataDirEnabled );
+			
 			Composite more_outer = soMoreArea.getComposite();
 			
 			Composite more_comp = new Composite( more_outer, SWT.NULL );
@@ -5056,6 +5099,8 @@ public class OpenTorrentOptionsWindow
 			
 			if ( init == null ){
 				
+				setSavePathEnabled( true );
+				
 				if ( removed != null ){
 					
 						// revert save location
@@ -5076,6 +5121,8 @@ public class OpenTorrentOptionsWindow
 				}
 			}else{
 				
+				setSavePathEnabled( false );
+
 					// must have a save folder as selected
 				
 				File save_loc = init.getTagInitialSaveFolder();
@@ -6406,6 +6453,19 @@ public class OpenTorrentOptionsWindow
 			}
 		}
 
+		private void
+		setSavePathEnabled(
+			boolean		enabled )
+		{
+			cmbDataDirEnabled = enabled;
+			
+			if ( cmbDataDir != null ){
+				
+				cmbDataDir.setEnabled(enabled);
+				btnDataDIr.setEnabled( cmbDataDirEnabled );
+			}
+		}
+		
 		private String
 		getSavePath()
 		{
