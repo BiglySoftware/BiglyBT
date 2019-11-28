@@ -3852,6 +3852,7 @@ DHTTrackerPlugin
 				private long	last_fixup;
 				private boolean	updating;
 				private int		status		= TrackerPeerSource.ST_UNKNOWN;
+				private String  status_str;
 				private long	next_time	= -1;
 				private int[]	run_data;
 
@@ -3862,6 +3863,8 @@ DHTTrackerPlugin
 
 					if ( now - last_fixup > 5*1000 ){
 
+						String new_status_str = null;
+						
 						try{
 							this_mon.enter();
 
@@ -3934,8 +3937,12 @@ DHTTrackerPlugin
 						if ( !ok ){
 
 							status = TrackerPeerSource.ST_DISABLED;
+							
+							new_status_str = MessageText.getString( "label.peer.source.disabled" );
 						}
 
+						status_str = new_status_str;
+						
 						last_fixup = now;
 					}
 				}
@@ -3963,6 +3970,15 @@ DHTTrackerPlugin
 					return( status );
 				}
 
+				@Override
+				public String 
+				getStatusString()
+				{
+					fixup();
+
+					return( status_str );
+				}
+				
 				@Override
 				public int
 				getSeedCount()

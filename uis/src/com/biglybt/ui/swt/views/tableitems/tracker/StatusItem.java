@@ -122,7 +122,10 @@ StatusItem
 					str += extra.substring( pos );
 				}
 			}
-		}else if ( status == TrackerPeerSource.ST_ERROR || status == TrackerPeerSource.ST_STOPPED || status == TrackerPeerSource.ST_QUEUED ){
+		}else if ( 	status == TrackerPeerSource.ST_ERROR || 
+					status == TrackerPeerSource.ST_DISABLED || 
+					status == TrackerPeerSource.ST_STOPPED || 
+					status == TrackerPeerSource.ST_QUEUED ){
 
 			if ( extra != null ){
 
