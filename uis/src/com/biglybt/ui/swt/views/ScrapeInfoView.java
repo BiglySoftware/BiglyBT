@@ -424,6 +424,10 @@ public class ScrapeInfoView
 	}
 
 	private void setDownlaodManager(DownloadManager dm) {
+		if ( manager == dm ){
+			return;
+		}
+		
 		manager = dm;
 		Utils.execSWTThread(new AERunnable() {
 			@Override
@@ -461,7 +465,7 @@ public class ScrapeInfoView
         break;
 
       case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
-      	Object ds = event.getData();
+      	Object ds = swtView.getParentView().getDataSource();	// always use the parent DS as this view isn't related to selection
       	if (ds instanceof Object[] && ((Object[]) ds).length > 0) {
       		ds = ((Object[]) ds)[0];
       	}
