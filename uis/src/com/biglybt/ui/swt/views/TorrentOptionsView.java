@@ -40,6 +40,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
+import com.biglybt.ui.swt.config.BaseSwtParameter;
 import com.biglybt.ui.swt.config.BooleanSwtParameter;
 import com.biglybt.ui.swt.config.FloatSwtParameter;
 import com.biglybt.ui.swt.config.IntSwtParameter;
@@ -74,8 +75,8 @@ TorrentOptionsView
 	private downloadStateFloatParameterAdapter ds_floatparam_adapter	= new downloadStateFloatParameterAdapter();
 	private adhocIntParameterAdapter adhoc_param_adapter	= new adhocIntParameterAdapter();
 
-	private Map<String, Object> adhoc_parameters	= new HashMap<>();
-	private Map<String, Object>	ds_parameters 		= new HashMap<>();
+	private Map<String, BaseSwtParameter<?,?>> 	adhoc_parameters	= new HashMap<>();
+	private Map<String, BaseSwtParameter<?,?>>	ds_parameters 		= new HashMap<>();
 
 	private ScrolledComposite sc;
 	private Font 				headerFont;
@@ -584,30 +585,40 @@ TorrentOptionsView
 	protected void
 	setDefaults()
 	{
-		Iterator<?>	it = ds_parameters.keySet().iterator();
+		Iterator<Entry<String, BaseSwtParameter<?,?>>> it = ds_parameters.entrySet().iterator();
 
 		while( it.hasNext()){
 
-			String	key 	= (String)it.next();
-
+			Map.Entry<String, BaseSwtParameter<?,?>>	entry = it.next();
+			
+			String	key 	= entry.getKey();
+			
 		    for (int i=0;i<managers.length;i++){
 
 		    	managers[i].setParameterDefault( key );
 		    }
+		    
+		    	// we need an explicit refresh here because of the way the reset works - by the time to code
+		    	// runs to see if the displayed value has changed from the parameter value the value has been
+		    	// reset and appears not to have changed (even though the parameter has...)
+		    
+		    entry.getValue().refreshControl();
 		}
 
-		it = adhoc_parameters.values().iterator();
+		it = adhoc_parameters.entrySet().iterator();
 
 		while ( it.hasNext()){
 
-			Object	param 	= it.next();
-
+			Map.Entry<String, BaseSwtParameter<?,?>>	entry = it.next();
+			
+			BaseSwtParameter<?,?> param = entry.getValue();
+			
 			if ( param instanceof IntSwtParameter ){
 
 				IntSwtParameter	int_param = (IntSwtParameter)param;
 
 				int_param.setValue( 0 );
-
+				
 			}else{
 				Debug.out( "Unknown parameter type: " + param.getClass());
 			}
@@ -625,9 +636,9 @@ TorrentOptionsView
 		Utils.execSWTThread(new Runnable() {
 			@Override
 			public void	run() {
-				Iterator<Entry<String, Object>> it = ds_parameters.entrySet().iterator();
+				Iterator<Entry<String, BaseSwtParameter<?,?>>> it = ds_parameters.entrySet().iterator();
 				while (it.hasNext()) {
-					Map.Entry<String, Object>	entry = it.next();
+					Map.Entry<String, BaseSwtParameter<?,?>>	entry = it.next();
 					String	key 	= entry.getKey();
 					Object	param 	= entry.getValue();
 
