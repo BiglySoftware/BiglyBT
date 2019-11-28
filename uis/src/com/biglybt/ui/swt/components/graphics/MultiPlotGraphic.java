@@ -797,7 +797,14 @@ MultiPlotGraphic
 
 							int	style = source.getStyle();
 
-							if (( style & ValueSource.STYLE_HIDE_LABEL ) == 0 ){
+							boolean show_label = ( style & ValueSource.STYLE_HIDE_LABEL ) == 0;
+								
+							if ( !bold_sources.isEmpty()){
+								
+								show_label = is_bold;
+							}
+							
+							if ( show_label ){
 
 								int	average_val = computeAverage( chartIdx, currentPosition - 6 );
 
