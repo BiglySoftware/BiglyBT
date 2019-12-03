@@ -229,7 +229,7 @@ When creating a torrent to host using SSL, check the SSL checkbox on the "create
 		add(tracker_public_enable);
 		// TODO: Get rid of mid-sentence /n in translations.
 		tracker_public_enable.setSuffixLabelText(MessageText.getString(
-				"ConfigView.section.tracker.publicenable.info").replaceAll("\n", ""));
+				"ConfigView.section.tracker.publicenable.info").replaceAll("\n", " "));
 
 		// row
 
