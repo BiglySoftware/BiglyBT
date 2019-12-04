@@ -1325,8 +1325,8 @@ implements PEPeerTransport
 				avail_vers,
 				require_crypto ? AZHandshake.HANDSHAKE_TYPE_CRYPTO : AZHandshake.HANDSHAKE_TYPE_PLAIN,
 				other_peer_handshake_version,
-				manager.isSeeding() && ! ( ENABLE_LAZY_BITFIELD || manual_lazy_bitfield_control ));
-
+				manager.isSeeding() && ! ( ENABLE_LAZY_BITFIELD || manual_lazy_bitfield_control || manager.isSuperSeedMode()));
+		
 		connection.getOutgoingMessageQueue().addMessage( az_handshake, false );
 	}
 
@@ -3210,6 +3210,14 @@ implements PEPeerTransport
 	{
 		have_none.destroy();
 
+			// bug in older clients - 'upload_only' was being sent by superseeds in AZ handshakes and causing relative-peer
+			// related disconnects. The client also sent an initial 'have-none' so we can use this to clear the erroneous flag		
+		
+		if ( ( relativeSeeding & RELATIVE_SEEDING_UPLOAD_ONLY_INDICATED ) != 0 ){
+			
+			relativeSeeding &= ~RELATIVE_SEEDING_UPLOAD_ONLY_INDICATED;
+		}
+		
 		received_bitfield = true;
 
 		if ( is_metadata_download ){
