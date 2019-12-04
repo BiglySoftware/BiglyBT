@@ -500,8 +500,8 @@ DMReaderImpl
 	requestDispatcher
 		implements DiskAccessRequestListener
 	{
-		private final DiskManagerReadRequest			dm_request;
-		final DiskManagerReadRequestListener	listener;
+		private final DiskManagerReadRequest		dm_request;
+		final DiskManagerReadRequestListener		listener;
 		private final DirectByteBuffer				buffer;
 		private final List							chunks;
 
@@ -604,6 +604,13 @@ DMReaderImpl
 									}
 
 									@Override
+									public Object 
+									getUserData()
+									{
+										return( null );
+									}
+									
+									@Override
 									public void
 									requestExecuted(long bytes)
 									{
@@ -705,6 +712,13 @@ DMReaderImpl
 			return( listener.getPriority());
 		}
 
+		@Override
+		public Object 
+		getUserData()
+		{
+			return( null );
+		}
+		
 		@Override
 		public void
 		requestExecuted(long bytes)

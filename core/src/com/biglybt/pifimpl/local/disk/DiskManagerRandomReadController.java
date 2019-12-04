@@ -334,7 +334,8 @@ DiskManagerRandomReadController
 					public void
 					dataWritten(
 						long	offset,
-						long	length )
+						long	length,
+						Object	originator )
 					{
 						wait_sem.release();
 					}

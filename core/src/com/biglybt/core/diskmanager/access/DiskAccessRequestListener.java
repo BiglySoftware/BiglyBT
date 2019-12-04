@@ -37,6 +37,9 @@ DiskAccessRequestListener
 
 	public int
 	getPriority();
+	
+	public Object
+	getUserData();
 
 		/**
 		 * Called to indicate that an actual request operation occurred. If this request has

@@ -263,6 +263,13 @@ DMWriterImpl
 									}
 
 									@Override
+									public Object 
+									getUserData()
+									{
+										return( null );
+									}
+									
+									@Override
 									public void
 									requestExecuted(long bytes)
 									{
@@ -670,6 +677,13 @@ DMWriterImpl
 									}
 
 									@Override
+									public Object 
+									getUserData()
+									{
+										return( request.getUserData());
+									}
+									
+									@Override
 									public void
 									requestExecuted(long bytes)
 									{
@@ -731,7 +745,7 @@ DMWriterImpl
 					{
 						l.requestComplete( request );
 
-						file.dataWritten( request.getOffset(), request.getSize());
+						file.dataWritten( request.getOffset(), request.getSize(), request.getUserData());
 					}
 
 					@Override
@@ -758,6 +772,13 @@ DMWriterImpl
 						return( -1 );
 					}
 
+					@Override
+					public Object 
+					getUserData()
+					{
+						return( request.getUserData());
+					}
+					
 					@Override
 					public void
 					requestExecuted(long bytes)
@@ -808,6 +829,13 @@ DMWriterImpl
 			return( -1 );
 		}
 
+		@Override
+		public Object 
+		getUserData()
+		{
+			return( request.getUserData());
+		}
+		
 		@Override
 		public void
 		requestExecuted(long bytes)

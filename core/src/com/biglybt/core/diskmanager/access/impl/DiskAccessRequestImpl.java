@@ -261,6 +261,13 @@ DiskAccessRequestImpl
 		return( listener.getPriority());
 	}
 
+	@Override
+	public Object 
+	getUserData()
+	{
+		return( listener.getUserData());
+	}
+	
 	protected DiskAccessRequestListener
 	getListener()
 	{

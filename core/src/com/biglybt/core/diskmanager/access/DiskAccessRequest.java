@@ -40,6 +40,9 @@ DiskAccessRequest
 	public int
 	getPriority();
 
+	public Object
+	getUserData();
+	
 	public void
 	cancel();
 }

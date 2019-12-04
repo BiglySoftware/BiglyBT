@@ -25,7 +25,8 @@ DiskManagerFileInfoListener
 	public void
 	dataWritten(
 		long	offset,
-		long	length );
+		long	length,
+		Object	originator );
 
 	public void
 	dataChecked(

@@ -319,7 +319,8 @@ DiskManagerChannelImpl
 	public void
 	dataWritten(
 		long	offset,
-		long	length )
+		long	length,
+		Object	originator )
 	{
 		if ( TRACE ){
 			System.out.println( "data written:" + offset + "/" + length );

@@ -1300,7 +1300,7 @@ DiskManagerUtil
 		            		if ( getDownloaded() == getLength()){
 
 		            			try{
-		            				listener.dataWritten( 0, getLength());
+		            				listener.dataWritten( 0, getLength(), null);
 
 		            				listener.dataChecked( 0, getLength());
 

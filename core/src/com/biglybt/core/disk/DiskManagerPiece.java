@@ -66,6 +66,7 @@ DiskManagerPiece
 	 */
 	public boolean		isWritten(int blockNumber);
 	public void			setWritten(int blockNumber);
+	public void			clearWritten( int blockNumber );
 
 	// a piece is Checking if a hash check has been setup and the hash check hasn't finalized the result yet
 	// this flag is asynch, so be careful, and it's also transitory (comapared to most of the others being kinda sticky)

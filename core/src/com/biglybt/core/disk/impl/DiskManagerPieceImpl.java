@@ -291,6 +291,18 @@ public class DiskManagerPieceImpl
 	}
 
 	@Override
+	public void clearWritten(final int blockNumber)
+	{
+		boolean[] written_ref =written;
+
+		if ( written_ref != null ){
+			written_ref[blockNumber] = false;
+		
+			statusFlags &= ~PIECE_STATUS_WRITTEN;
+		}
+	}
+	
+	@Override
 	public boolean isChecking()
 	{
 		return (statusFlags &PIECE_STATUS_CHECKING) !=0;

@@ -601,7 +601,8 @@ DiskManagerFileInfoImpl
   	public void
   	dataWritten(
   		long		offset,
-  		long		size )
+  		long		size,
+  		Object		originator )
   	{
   		CopyOnWriteList<DiskManagerFileInfoListener>	l_ref = listeners;
 
@@ -610,7 +611,7 @@ DiskManagerFileInfoImpl
   			for ( DiskManagerFileInfoListener listener: l_ref ){
 
   				try{
-  					listener.dataWritten( offset, size );
+  					listener.dataWritten( offset, size, originator );
 
   				}catch( Throwable e ){
 
@@ -940,7 +941,7 @@ DiskManagerFileInfoImpl
 					if ( current_write_start < current_write_end ){
 
 						try{
-							listener.dataWritten( current_write_start-file_start, current_write_end-current_write_start );
+							listener.dataWritten( current_write_start-file_start, current_write_end-current_write_start, null );
 
 						}catch( Throwable e ){
 

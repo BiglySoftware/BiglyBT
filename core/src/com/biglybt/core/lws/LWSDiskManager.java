@@ -865,6 +865,8 @@ LWSDiskManager
 		@Override
 		public void			setWritten(int b){throw( new RuntimeException( "setWritten not implemented" ));}
 		@Override
+		public void			clearWritten(int b){throw( new RuntimeException( "setWritten not implemented" ));}
+		@Override
 		public boolean		isWritten(int blockNumber){throw( new RuntimeException( "isWritten not implemented" ));}
 		public boolean		calcChecking(){throw( new RuntimeException( "calcChecking not implemented" ));}
 		@Override
