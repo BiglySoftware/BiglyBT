@@ -843,4 +843,8 @@ public class TagCanvas
 	public void dragFinished(DragSourceEvent event) {
 
 	}
+
+	public boolean isGrayed() {
+		return grayed;
+	}
 }

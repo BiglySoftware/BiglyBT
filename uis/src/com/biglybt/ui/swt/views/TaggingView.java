@@ -310,7 +310,7 @@ public class TaggingView
 					if (taggables == null || longPress) {
 						return;
 					}
-					boolean doTag = !tagCanvas.isSelected();
+					boolean doTag = !(tagCanvas.isSelected() && !tagCanvas.isGrayed());
 					for (Taggable taggable : taggables) {
 						if (doTag) {
 							tag.addTaggable(taggable);
