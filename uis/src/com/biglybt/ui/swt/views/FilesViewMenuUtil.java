@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
@@ -1569,15 +1570,62 @@ public class FilesViewMenuUtil
 			}
 		}
 	}
+	
+	private static LinkedList<Object[]> 	renameQueue = new LinkedList<>();
+	private static boolean			renameActive;
 
 	private static void
 	askForRenameFilenameAndExec(
-			final DiskManagerFileInfo fileInfo,
-			final TableView tv)
+		DiskManagerFileInfo 	fileInfo,
+		TableView				tv)
 	{
-		final SimpleTextEntryWindow dialog = new SimpleTextEntryWindow(
+		synchronized( renameQueue ){
+			
+			renameQueue.add( new Object[]{ fileInfo, tv });
+		}
+		
+		processRenameQueue();
+	}
+	
+	private static void
+	processRenameQueue()
+	{
+		Object[] entry = null;
+		
+		synchronized( renameQueue ){
+			
+			if ( !renameActive ){
+							
+				if ( !renameQueue.isEmpty()){
+						
+					entry = renameQueue.removeFirst();
+					
+					renameActive = true;
+				}
+			}
+		}
+		
+		if ( entry != null ){
+				
+			askForRenameFilenameAndExecSupport((DiskManagerFileInfo)entry[0], (TableView)entry[1] );
+		}
+	}
+	
+	private static void
+	askForRenameFilenameAndExecSupport(
+		DiskManagerFileInfo 	fileInfo,
+		TableView 				tv)
+	{	
+		SimpleTextEntryWindow dialog = new SimpleTextEntryWindow(
 				"FilesView.rename.filename.title", "FilesView.rename.filename.text");
+		
+		dialog.setParentShell( Utils.findAnyShell());	// need to do this otherwise the dialog may grab an in-the-process-of-closing
+														// previous shell as parent and get immediately closed via dispose...
+
+		dialog.setEnableSpecialEscapeHandling( true );
+		
 		String file_name = fileInfo.getFile(true).getName();
+		
 		dialog.setPreenteredText(file_name, false); // false -> it's not "suggested", it's a previous value
 
 		int pos = file_name.lastIndexOf( '.' );
@@ -1603,13 +1651,42 @@ public class FilesViewMenuUtil
 		}
 
 		dialog.allowEmptyInput(false);
+		
 		dialog.prompt(new UIInputReceiverListener() {
+			
+			boolean fired = false;
+			
 			@Override
 			public void UIInputReceiverClosed(UIInputReceiver receiver) {
-				if (!receiver.hasSubmittedInput()) {
-					return;
+				
+				synchronized( renameQueue ){
+					
+					if ( fired ){
+						
+						return;
+					}
+					
+					System.out.println( "Closed" );
+					
+					fired = true;
+					
+					renameActive = false;
+					
+					if (!receiver.hasSubmittedInput()) {
+						
+						if ( receiver.userHitEscape()){
+						
+							renameQueue.clear();
+						
+						}else{
+						
+							processRenameQueue();
+						}
+							
+						return;
+					}
 				}
-
+				
 				File existing_file = fileInfo.getFile(true);
 
 				File f_target = new File(existing_file.getParentFile(), receiver.getSubmittedInput());
@@ -1630,6 +1707,8 @@ public class FilesViewMenuUtil
 								}
 
 								invalidateRows( tv, Collections.singletonList(fileInfo));
+								
+								processRenameQueue();
 							}
 						});
 			}

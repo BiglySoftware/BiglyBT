@@ -200,4 +200,15 @@ public interface UIInputReceiver {
 	 * @since 4.3.1.5
 	 */
 	public void setTextLimit(int limit);
+	
+	/**
+	 * Enables a long-press on cancel button to be treated as an escape - useful for callers that implement special escape handling
+	 * such as 'escape closes this and any other similar outstanding dialogs', e.g. when renaming a number of files this can avoid
+	 * the user having to explicitly cancel each rename if they decide to abort the operation 
+	 * @param b
+	 */
+	
+	public void setEnableSpecialEscapeHandling( boolean b );
+	
+	public boolean userHitEscape();
 }

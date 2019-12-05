@@ -37,6 +37,9 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimerEvent;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.pifimpl.AbstractUISWTInputReceiver;
@@ -60,6 +63,8 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	private Text text_entry_text;
 	private Label link_label;
 	private boolean detect_urls;
+	private boolean special_escape_handling;
+	private boolean user_hit_escape;
 	
 	private java.util.List<VerifyListener> verify_listeners = new ArrayList<>();
 	
@@ -379,6 +384,56 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	        }
 	      });
 
+	    if ( special_escape_handling ){
+		    cancel.setToolTipText( MessageText.getString( "long.press.cancel.tt" ));
+			
+		    cancel.addListener(
+				SWT.MouseDown,
+				new Listener()
+				{
+					boolean 	mouseDown 	= false;
+					TimerEvent	timerEvent 	= null;
+					
+					public void 
+					handleEvent(
+						Event event )
+					{
+						if ( event.button != 1 ){
+							
+							return;
+						}
+						
+						if (timerEvent == null) {
+							timerEvent = SimpleTimer.addEvent("MouseHold",
+									SystemTime.getOffsetTime(1000), te -> {
+										timerEvent = null;
+										if (!mouseDown) {
+											return;
+										}
+	
+										Utils.execSWTThread(() -> {
+											if (!mouseDown) {
+												return;
+											}
+	
+											if ( event.display.getCursorControl() != cancel ) {
+												return;
+											}
+	
+											mouseDown = false;
+	
+											user_hit_escape = true;
+											
+											shell.dispose();
+										});
+									});
+						}
+	
+						mouseDown = true;
+					}
+				});
+	    }
+	    
 	    if ( text_entry_text != null ){
 	    	
 	    	text_entry_text.addFocusListener(
@@ -399,6 +454,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 			@Override
 			public void handleEvent(Event e) {
 				if ( e.character == SWT.ESC){
+					user_hit_escape = true;
 					SimpleTextEntryWindow.this.recordUserAbort();
 					shell.dispose();
 				}
@@ -481,5 +537,16 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	Shell		shell )
   {
 	  parent_shell = shell;
+  }
+  
+  @Override
+  public void setEnableSpecialEscapeHandling(boolean b){
+	special_escape_handling = b;
+  }
+  
+  @Override
+  public boolean 
+  userHitEscape(){
+	 return( user_hit_escape );
   }
 }
