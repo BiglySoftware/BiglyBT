@@ -69,6 +69,7 @@ CHANGE: UI     | Add some stability to multiple swarm view entries [Parg]
 CHANGE: UI     | Tooltip for template combo to show contents [Parg]
 CHANGE: UI     | Ensure user selects open-torrent-option dialog behaviour once open [Parg]
 CHANGE: UI     | Disable save path selection when Tag selected with 'initial save location' defined [Parg]
+CHANGE: UI     | Keep connections+upload queued stats graphs updated when focus lost [Parg]
 
 BUGFIX: Tag    | Fix paused-tag not updating correctly when transition to/from stopped [Parg]
 BUGFIX: Tag    | Ensure open-torrent-options tags with initial save locations behave consistently [Parg] 
