@@ -64,6 +64,7 @@ import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.sharing.ShareUtils;
 import com.biglybt.ui.swt.shells.AdvRenameWindow;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.shells.RevertFileLocationsWindow;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 import com.biglybt.core.CoreOperation;
@@ -231,11 +232,7 @@ public class FilesViewMenuUtil
 		// revert
 
 		final MenuItem itemRevertFiles = new MenuItem(menu, SWT.PUSH);
-		Messages.setLanguageText(itemRevertFiles, "MyTorrentsView.menu.revertfiles");
-
-		final MenuItem itemRevertFilesCopy = new MenuItem(menu, SWT.PUSH);
-		Messages.setLanguageText(itemRevertFilesCopy, "MyTorrentsView.menu.revertfiles.copy");
-
+		itemRevertFiles.setText( MessageText.getString( "MyTorrentsView.menu.revertfiles" ) + "..." );
 
 		// locate files
 
@@ -419,7 +416,6 @@ public class FilesViewMenuUtil
 			itemRename.setEnabled(false);
 			itemRetarget.setEnabled(false);
 			itemRevertFiles.setEnabled(false);
-			itemRevertFilesCopy.dispose();
 			itemRecheckFiles.setEnabled(false);
 			itemLocateFiles.setEnabled(false);
 			itemfindMore.setEnabled(false);
@@ -625,24 +621,9 @@ public class FilesViewMenuUtil
 			@Override
 			public void handleEvent(Event event) {
 
-				revertFiles( tv, all_files, false );
+				revertFiles( tv, all_files );
 			}
 		});
-		
-		if ( any_relocated ){
-			
-			itemRevertFilesCopy.setEnabled( any_relocated );
-			itemRevertFilesCopy.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-	
-					revertFiles( tv, all_files, true );
-				}
-			});
-		}else{
-			
-			itemRevertFilesCopy.dispose();
-		}
 		
 		if ( itemClearLinks != null ){
 
@@ -2150,9 +2131,8 @@ public class FilesViewMenuUtil
 
 	public static void
 	revertFiles(
-		final TableView<?>		tv,
-		DownloadManager[]		dms,
-		boolean					copy )
+		TableView<?>			tv,
+		DownloadManager[]		dms )
 	{
 		List<DiskManagerFileInfo>	files = new ArrayList<>();
 
@@ -2177,15 +2157,32 @@ public class FilesViewMenuUtil
 
 		if ( files.size() > 0 ){
 
-			revertFiles( tv, files, copy );
+			revertFiles( tv, files );
 		}
 	}
-
+	
 	public static void
+	revertFiles(
+		TableView<?>					tv,
+		List<DiskManagerFileInfo>		files )
+	{
+		RevertFileLocationsWindow window = new RevertFileLocationsWindow();
+		
+		window.open(( ok, copy, retain )->{
+				
+			if ( ok ){
+				
+				revertFiles( tv, files, copy, retain );
+			}
+		});
+	}
+	
+	private  static void
 	revertFiles(
 		final TableView<?>					tv,
 		List<DiskManagerFileInfo>			files,
-		boolean								copy )
+		boolean								copy,
+		boolean								retain_names )
 	{
 		final List<DownloadManager>	paused = new ArrayList<>();
 
@@ -2199,21 +2196,26 @@ public class FilesViewMenuUtil
 				final DiskManagerFileInfo file_info = files.get(i);
 
 				if ( file_info == null ){
+					
 					continue;
 				}
+				
+				File target 	= file_info.getFile( false );
 
+				DownloadManager manager = file_info.getDownloadManager();
 
-				final File file_nolink 	= file_info.getFile( false );
+				File source = file_info.getDownloadManager().getDownloadState().getFileLink( file_info.getIndex(), target );
 
-				final DownloadManager manager = file_info.getDownloadManager();
+			   	if ( source != null ){
 
-				File target = file_info.getDownloadManager().getDownloadState().getFileLink( file_info.getIndex(), file_nolink );
+			   		if ( retain_names ){
+			   			
+			   			target = new File( target.getParentFile(), source.getName());
+			   		}
+			   		
+			    	if ( source != target ){
 
-			   	if ( target != null ){
-
-			    	if ( target != file_nolink ){
-
-			    		if ( !target.equals( file_nolink )){
+			    		if ( !source.equals( target )){
 
 							if ( !paused.contains( manager )){
 
@@ -2225,9 +2227,9 @@ public class FilesViewMenuUtil
 
 								// explicit revert - overwrite 
 							
-							if ( file_nolink.exists()){
+							if ( target.exists()){
 								
-								file_nolink.delete();
+								target.delete();
 							}
 							
 							affected_files.add( file_info );
@@ -2237,7 +2239,7 @@ public class FilesViewMenuUtil
 								copyFile(
 										manager,
 										file_info,
-										file_nolink,
+										target,
 										true,
 										new Runnable()
 										{
@@ -2254,7 +2256,7 @@ public class FilesViewMenuUtil
 								moveFile(
 									manager,
 									file_info,
-									file_nolink,
+									target,
 									true,
 									new Runnable()
 									{

@@ -1344,29 +1344,16 @@ public class TorrentMenuFancy
 								// revert
 
 							final MenuItem itemRevertFiles = new MenuItem(menu, SWT.PUSH);
-							Messages.setLanguageText(itemRevertFiles, "MyTorrentsView.menu.revertfiles");
+							itemRevertFiles.setText( MessageText.getString( "MyTorrentsView.menu.revertfiles") + "..." );
 							itemRevertFiles.addListener(SWT.Selection, new ListenerDMTask(dms) {
 								@Override
 								public void run(DownloadManager[] dms)
 								{
-									FilesViewMenuUtil.revertFiles( tv, dms, false );
+									FilesViewMenuUtil.revertFiles( tv, dms );
 								}
 							});
 
 							itemRevertFiles.setEnabled(hasRevertableFiles);
-
-							if ( hasRevertableFiles ){
-								
-								final MenuItem itemRevertFilesCopy = new MenuItem(menu, SWT.PUSH);
-								Messages.setLanguageText(itemRevertFilesCopy, "MyTorrentsView.menu.revertfiles.copy");
-								itemRevertFilesCopy.addListener(SWT.Selection, new ListenerDMTask(dms) {
-									@Override
-									public void run(DownloadManager[] dms)
-									{
-										FilesViewMenuUtil.revertFiles( tv, dms, true );
-									}
-								});
-							}
 							
 								// clear links
 
