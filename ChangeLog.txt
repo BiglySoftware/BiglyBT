@@ -16,6 +16,7 @@ FEATURE: Core  | Option to download to temporary folder and move to original des
 FEATURE: Core  | Allow tracker updates as well as download duplication for same hash [Parg]
 FEATURE: Core  | Option to disable smart tracker activation [Parg]
 FEATURE: Core  | Option to control minimum number of pieces for a file to be considered for swarm merging [Parg]
+FEATURE: Core  | Option to revert file locations but retain any name changes [Parg]
 FEATURE: Plug  | Plugin access to multiple DHT local addresses [Parg]
 FEATURE: Plug  | Support xcode for linux [Parg]
 FEATURE: UI    | Multiple column sort. CTRL+Click (CMD for Mac). Also Header menu rework. [TuxPaper]
