@@ -172,17 +172,42 @@ public class TransferStatsView
 
 
   public TransferStatsView() {
-  	CoreFactory.addCoreRunningListener(new CoreRunningListener() {
-			@Override
-			public void coreRunning(Core core) {
-				global_manager = core.getGlobalManager();
-				stats = global_manager.getStats();
-				speedManager = core.getSpeedManager();
-				totalStats = StatsFactory.getStats();
-			}
-		});
-    pingGraph = PingGraphic.getInstance();
+	  CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+		  @Override
+		  public void coreRunning(Core core) {
+			  global_manager = core.getGlobalManager();
+			  stats = global_manager.getStats();
+			  speedManager = core.getSpeedManager();
+			  totalStats = StatsFactory.getStats();
+		  }
+	  });
+	  
+	  pingGraph = PingGraphic.getInstance();
+    
+	  connection_graphic =
+			  SpeedGraphic.getInstance(
+				new Scale( false ),
+				new ValueFormater()
+				{
+				    @Override
+				    public String
+				    format(int value)
+				    {
+				         return( String.valueOf( value ));
+				    }
+				});
 
+	  upload_graphic =
+			  SpeedGraphic.getInstance(
+				new ValueFormater()
+				{
+				    @Override
+				    public String
+				    format(int value)
+				    {
+				         return DisplayFormatters.formatByteCountToKiBEtc(value);
+				    }
+				});
   }
   
   private void initialize(Composite composite) {
@@ -555,18 +580,6 @@ public class TransferStatsView
 	  gridData = new GridData(GridData.FILL_BOTH);
 	  gridData.heightHint = 200;
 	  connection_canvas.setLayoutData(gridData);
-	  connection_graphic =
-		  SpeedGraphic.getInstance(
-			new Scale( false ),
-			new ValueFormater()
-			{
-			    @Override
-			    public String
-			    format(int value)
-			    {
-			         return( String.valueOf( value ));
-			    }
-			});
 
 	  connection_graphic.initialize(connection_canvas);
 	  Color[] colors = connection_graphic.colors;
@@ -609,17 +622,6 @@ public class TransferStatsView
 	  gridData = new GridData(GridData.FILL_BOTH);
 	  gridData.heightHint = 200;
 	  upload_canvas.setLayoutData(gridData);
-	  upload_graphic =
-		  SpeedGraphic.getInstance(
-			new ValueFormater()
-			{
-			    @Override
-			    public String
-			    format(int value)
-			    {
-			         return DisplayFormatters.formatByteCountToKiBEtc(value);
-			    }
-			});
 
 	  upload_graphic.initialize(upload_canvas);
 
@@ -631,7 +633,9 @@ public class TransferStatsView
   {
 	  boolean	changed = false;
 
-	  if ( rows <= route_labels.length ){
+	  boolean force = route_labels.length > 0 && route_labels[0][0].isDisposed();
+		  
+	  if ( rows <= route_labels.length && !force ){
 
 		  for ( int i=rows;i<route_labels.length;i++){
 
@@ -690,7 +694,7 @@ public class TransferStatsView
 		  for ( int i=0;i<route_labels.length;i++){
 			  for (int j=0;j<3;j++){
 				  BufferedLabel lab = route_labels[i][j];
-				  if ( lab.getControl().getSize().y == 0 &&  lab.getText().length() > 0 ){
+				  if ( !lab.isDisposed() && lab.getControl().getSize().y == 0 &&  lab.getText().length() > 0 ){
 					  changed = true;
 				  }
 			  }
@@ -1106,14 +1110,10 @@ public class TransferStatsView
 							String.valueOf(total_connections) + "[" +MessageText.getString( "label.in").toLowerCase() + ":" + total_in + "]",
 							String.valueOf(total_con_unchoked), String.valueOf(total_con_queued), String.valueOf(total_con_blocked) }));
 
-	  connection_graphic.addIntsValue( new int[]{ total_connections, total_con_unchoked, total_con_queued, total_con_blocked });
-
 	  upload_label.setText(
 			MessageText.getString(
 					"SpeedView.stats.upload_details",
 					new String[]{ DisplayFormatters.formatByteCountToKiBEtc( total_data_queued )}));
-
-	  upload_graphic.addIntValue( total_data_queued );
 
 	  upload_graphic.refresh(false);
 	  connection_graphic.refresh(false);
@@ -1535,6 +1535,40 @@ public class TransferStatsView
           }
         }
       }
+    }
+    
+    if ( upload_graphic != null && connection_graphic != null ){
+    
+	  int	total_data_queued	= 0;
+
+	  int	total_connections	= 0;
+	  int	total_con_queued	= 0;
+	  int	total_con_blocked	= 0;
+	  int	total_con_unchoked	= 0;
+
+	  List<DownloadManager> dms = global_manager.getDownloadManagers();
+
+	  for ( DownloadManager dm: dms ){
+
+		  PEPeerManager pm = dm.getPeerManager();
+
+		  if ( pm != null ){
+
+			  total_data_queued += pm.getBytesQueuedForUpload();
+			  
+			  total_connections += pm.getNbPeers() + pm.getNbSeeds();
+
+			  total_con_queued 	+= pm.getNbPeersWithUploadQueued();
+			  total_con_blocked	+= pm.getNbPeersWithUploadBlocked();
+
+			  total_con_unchoked += pm.getNbPeersUnchoked();
+
+		  }
+	  }
+
+	  upload_graphic.addIntValue( total_data_queued );
+
+	  connection_graphic.addIntsValue( new int[]{ total_connections, total_con_unchoked, total_con_queued, total_con_blocked });
     }
   }
 
