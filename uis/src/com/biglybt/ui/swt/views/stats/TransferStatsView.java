@@ -567,7 +567,7 @@ public class TransferStatsView
 	  gridData = new GridData(GridData.FILL_BOTH);
 	  gridData.horizontalSpan = 1;
 	  con_folder.setLayoutData(gridData);
-	  con_folder.setBackground(Colors.background);
+	  //con_folder.setBackground(Colors.background);
 
 	  	// connection counts
 
@@ -596,8 +596,8 @@ public class TransferStatsView
 	  route_tab_comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 	  GridLayout routeTabLayout = new GridLayout();
 	  routeTabLayout.numColumns = 1;
+	  routeTabLayout.marginWidth = routeTabLayout.marginHeight = 0;
 	  route_tab_comp.setLayout(routeTabLayout);
-
 	  route_info_tab.setControl( route_tab_comp );
 
 	  ScrolledComposite sc = new ScrolledComposite( route_tab_comp, SWT.V_SCROLL );
@@ -605,10 +605,13 @@ public class TransferStatsView
 
 	  route_comp = new Composite( sc, SWT.NULL );
 
+	  route_comp.setBackground( Colors.white );
+	  
+	  sc.setBackground( Colors.white );
+	  
 	  route_comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 	  GridLayout routeLayout = new GridLayout();
 	  routeLayout.numColumns = 3;
-	  //routeLayout.makeColumnsEqualWidth = true;
 	  route_comp.setLayout(routeLayout);
 
 	  sc.setContent( route_comp );
@@ -654,12 +657,15 @@ public class TransferStatsView
 		  Label h1 = new Label( route_comp, SWT.NULL );
 		  h1.setLayoutData(new GridData(GridData.FILL_HORIZONTAL ));
 		  h1.setText( MessageText.getString( "label.route" ));
+		  h1.setBackground( Colors.white );
 		  Label h2 = new Label( route_comp, SWT.NULL );
 		  h2.setLayoutData(new GridData(GridData.FILL_HORIZONTAL ));
 		  h2.setText( MessageText.getString( "tps.type.incoming" ));
+		  h2.setBackground( Colors.white );
 		  Label h3 = new Label( route_comp, SWT.NULL );
 		  h3.setLayoutData(new GridData(GridData.FILL_HORIZONTAL ));
 		  h3.setText( MessageText.getString( "label.outgoing" ));
+		  h3.setBackground( Colors.white );
 
 		  new Label( route_comp, SWT.NULL );
 		  new Label( route_comp, SWT.NULL );
@@ -673,6 +679,7 @@ public class TransferStatsView
 				  BufferedLabel l = new BufferedLabel( route_comp, SWT.DOUBLE_BUFFERED );
 				  GridData gridData = new GridData(GridData.FILL_HORIZONTAL );
 				  l.setLayoutData(gridData);
+				  l.getControl().setBackground( Colors.white );
 				  route_labels[i][j] = l;
 			  }
 		  }
@@ -2139,7 +2146,7 @@ public class TransferStatsView
       case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
         break;
 
-      case UISWTViewEvent.TYPE_FOCUSGAINED:
+      case UISWTViewEvent.TYPE_SHOWN:
     	  // weird layout issue with general panel - switch away from view and then back leaves bottom line not rendering - this fixes it
     	if ( generalPanel != null ){
     	  generalPanel.layout( true, true );
