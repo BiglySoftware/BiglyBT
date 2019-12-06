@@ -538,7 +538,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 			BloomFilterFactory.createRotating(
 				BloomFilterFactory.createAddRemove4Bit( 2000 ), 2 );
 
-
+	private volatile boolean	asfe_activated;
 
 
 	public
@@ -6133,13 +6133,16 @@ DiskManagerCheckRequestListener, IPFilterListener
 	{
 		boolean was_active = false;
 		
-		if ( done_file != null ){
+		if ( asfe_activated ){
 			
-			int seq_info = piecePicker.getSequentialInfo();
-			
-			if ( seq_info > 0 && done_file.getFirstPieceNumber() == ( seq_info - 1 ) ){
+			if ( done_file != null ){
 				
-				was_active = true;
+				int seq_info = piecePicker.getSequentialInfo();
+				
+				if ( seq_info > 0 && done_file.getFirstPieceNumber() == ( seq_info - 1 ) ){
+					
+					was_active = true;
+				}
 			}
 		}
 		
@@ -6168,6 +6171,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 	        		
 	        		set_seq = true;
 	        		
+	        		asfe_activated = true;
+	        		
 	        		break;
 	        	}
         	}
@@ -6176,6 +6181,8 @@ DiskManagerCheckRequestListener, IPFilterListener
         if ( was_active && !set_seq ){
         	
         	piecePicker.clearSequential();
+        	
+        	asfe_activated = false;
         }
 	}
 	
