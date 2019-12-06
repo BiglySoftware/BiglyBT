@@ -67,7 +67,7 @@ public class FileLogging implements ILogEventListener {
 	public void
 	setClosingTakingTooLong()
 	{
-		logToFile( "Closedown is taking too long, disabling file logging" );
+		logToFile( "Closedown is taking too long, disabling file logging\n" );
 		
 		closing_taking_too_long	= true;
 	}

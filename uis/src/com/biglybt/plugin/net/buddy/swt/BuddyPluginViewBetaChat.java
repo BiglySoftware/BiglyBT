@@ -6216,6 +6216,16 @@ BuddyPluginViewBetaChat
 
 							char c = original_msg.charAt( i );
 
+								// some of the unsafe chars from https://tools.ietf.org/html/rfc1738 
+								// we use [[..]] internally so generally allow them
+							
+							if ( "<>{}\\^~`".indexOf( c ) != -1 ){
+								
+								url_end = i;
+								
+								break;
+							}
+							
 							if ( c == term_char || ( term_char == ' ' && Character.isWhitespace( c ))){
 
 								url_end = term_char==' '?i:(i+1);
