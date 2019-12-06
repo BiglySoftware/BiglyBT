@@ -226,7 +226,7 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
 	    drawChart(sizeChanged);
     }
 
-    if (bufferImage != null && !bufferImage.isDisposed()) {
+    if (bufferImage != null && !bufferImage.isDisposed() && drawCanvas.isVisible()) {
       GC gc = new GC(drawCanvas);
       gc.drawImage(bufferImage,bounds.x,bounds.y);
       gc.dispose();
@@ -234,6 +234,11 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
   }
 
   protected void drawChart(boolean sizeChanged) {
+	if (drawCanvas == null || drawCanvas.isDisposed() || !drawCanvas.isVisible()){
+		
+		return;
+	}
+	  
    try{
    	  this_mon.enter();
 

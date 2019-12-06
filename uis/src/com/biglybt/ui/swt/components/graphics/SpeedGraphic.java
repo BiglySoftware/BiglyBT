@@ -54,9 +54,6 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
   public static final int COLOR_OTHERS = 4;
   public static final int COLOR_TRIMMED = 5;
 
-  private static final int ALPHA_FOCUS = 200;
-  private static final int ALPHA_NOFOCUS = 150;
-
   public Color[] colors = new Color[] {
   	Colors.red, Colors.blues[Colors.BLUES_MIDDARK], Colors.colorInverse, Colors.blue, Colors.grey,
   	Colors.light_grey
@@ -73,10 +70,6 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 	private int[][]				all_values		= new int[1][maxEntries];
 	private int					currentPosition;
 
-  private int alpha = 255;
-
-  private boolean autoAlpha = false;
-
 
   private SpeedGraphic(Scale scale,ValueFormater formater) {
     super(scale,formater);
@@ -90,26 +83,6 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
   public void initialize(Canvas canvas) {
   	super.initialize(canvas);
 
-  	canvas.addMouseTrackListener(new MouseTrackListener() {
-			@Override
-			public void mouseHover(MouseEvent e) {
-			}
-
-			@Override
-			public void mouseExit(MouseEvent e) {
-				if (autoAlpha) {
-					setAlpha(ALPHA_NOFOCUS);
-				}
-			}
-
-			@Override
-			public void mouseEnter(MouseEvent e) {
-				if (autoAlpha) {
-					setAlpha(ALPHA_FOCUS);
-				}
-			}
-		});
-
   	drawCanvas.addPaintListener(new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e) {
@@ -117,13 +90,6 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 					Rectangle bounds = bufferImage.getBounds();
 					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
 
-						if (alpha != 255) {
-							try {
-								e.gc.setAlpha(alpha);
-						  } catch (Exception ex) {
-						  	// Ignore ERROR_NO_GRAPHICS_LIBRARY error or any others
-						  }
-						}
 						e.gc.drawImage(bufferImage, e.x, e.y, e.width, e.height, e.x, e.y,
 								e.width, e.height);
 					}
@@ -287,10 +253,11 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
   }
 
   protected void drawChart(boolean sizeChanged) {
-		if (drawCanvas == null || drawCanvas.isDisposed() || !drawCanvas.isVisible())
-		{
+		if (drawCanvas == null || drawCanvas.isDisposed() || !drawCanvas.isVisible()){
+		
 			return;
 		}
+		
 		GC gcImage = null;
 		try
 		{
@@ -487,28 +454,6 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
     }
     COConfigurationManager.removeParameterListener("Graphics Update",this);
   }
-
-    private int getAlpha() {
-		return alpha;
-	}
-
-	public void setAlpha(int alpha) {
-		this.alpha = alpha;
-		if (drawCanvas != null && !drawCanvas.isDisposed()) {
-			drawCanvas.redraw();
-		}
-	}
-
-    private boolean isAutoAlpha() {
-		return autoAlpha;
-	}
-
-    private void setAutoAlpha(boolean autoAlpha) {
-		this.autoAlpha = autoAlpha;
-		if (autoAlpha) {
-			setAlpha(drawCanvas.getDisplay().getCursorControl() == drawCanvas ? ALPHA_FOCUS : ALPHA_NOFOCUS);
-		}
-	}
 
 	public void setLineColors(Color average, Color speed, Color overhead, Color limit, Color others, Color trimmed) {
 		if (average != null) {

@@ -143,7 +143,7 @@ Plot3D
 	public void
 	refresh(boolean force)
 	{
-		if ( canvas == null || canvas.isDisposed()){
+		if ( canvas == null || canvas.isDisposed() || !canvas.isVisible()){
 
 			return;
 		}

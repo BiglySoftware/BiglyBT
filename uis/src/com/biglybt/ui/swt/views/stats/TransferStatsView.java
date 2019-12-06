@@ -1721,7 +1721,7 @@ public class TransferStatsView
 	  private void
 	  refresh( boolean force )
 	  {
-		  if ( canvas.isDisposed()){
+		  if ( canvas.isDisposed() || !canvas.isVisible()){
 
 			  return;
 		  }
