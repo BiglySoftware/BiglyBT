@@ -100,8 +100,7 @@ public class TabbedMDI
 	private ParameterListener paramFancyTabListener;
 	private Composite topRight;
 	private boolean destroyEntriesOnDeactivate = true;
-	// Set to new object so that first set, even if null, triggers a datasourcechanged event
-	private Object dataSource = new Object();
+	private Object dataSource;
 	private boolean allowSubViews = true;
 
 	public TabbedMDI() {
