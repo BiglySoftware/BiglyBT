@@ -42,6 +42,7 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeerManager;
@@ -971,6 +972,11 @@ public class GeneralView
 
 				  boolean badAvail = badAvailColor != null && runningFor >= 60*1000 && minAvail >= 0 && minAvail < 1;
 
+				  if ( badAvail ){
+					  if ( manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+						  badAvail = false;
+					  }
+				  }
 				  allMin = available.length==0?0:available[0];
 				  allMax = available.length==0?0:available[0];
 
