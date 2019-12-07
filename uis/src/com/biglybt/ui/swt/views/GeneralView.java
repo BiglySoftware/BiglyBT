@@ -974,7 +974,7 @@ public class GeneralView
 
 				  if ( badAvail ){
 					  if ( manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
-						  badAvail = false;
+						  badAvail = minAvail == 0;
 					  }
 				  }
 				  allMin = available.length==0?0:available[0];
