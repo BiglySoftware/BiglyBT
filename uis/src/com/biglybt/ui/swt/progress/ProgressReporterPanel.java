@@ -31,7 +31,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.twistie.ITwistieListener;
 import com.biglybt.ui.swt.twistie.TwistieLabel;
@@ -686,11 +688,22 @@ public class ProgressReporterPanel
 	private void showActionLabel(Label label, boolean showIt) {
 		((GridData) label.getLayoutData()).widthHint = (showIt) ? 16 : 0;
 	}
+	
+	FrequencyLimitedDispatcher disp = new FrequencyLimitedDispatcher(
+			AERunnable.create(()->{
+				Utils.execSWTThread(()->{resizeContentSupport();});
+			}), 250 );
 
 	/**
 	 * Resizes the content of this panel to fit within the shell and to layout children control appropriately
 	 */
 	public void resizeContent() {
+		if (!isDisposed()) {
+			disp.dispatch();	// reduce CPU 
+		}
+	}
+	
+	private void resizeContentSupport() {
 		if (!isDisposed()) {
 			layout(true, true);
 		}
