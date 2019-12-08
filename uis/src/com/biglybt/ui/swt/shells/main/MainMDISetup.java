@@ -665,7 +665,7 @@ public class MainMDISetup
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER,
 				id -> {
 					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
-							TrackerView.class).setParentEntryID(
+							MyTrackerView.class).setParentEntryID(
 									SIDEBAR_HEADER_TRANSFERS).setPreferredAfterID(
 											SB_Transfers.getSectionPosition(mdi, id));
 					MdiEntry entry = mdi.createEntry(builder, true);
