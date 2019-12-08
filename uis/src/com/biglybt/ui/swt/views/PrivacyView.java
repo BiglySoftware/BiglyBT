@@ -645,8 +645,9 @@ public class PrivacyView
 		Composite vpn_comp = new Composite( bottom_comp, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
+		gd.horizontalSpan = 2;
 		vpn_comp.setLayoutData(gd);
-		vpn_comp.setLayout( removeMargins( new GridLayout( 2, false )));
+		vpn_comp.setLayout( removeMargins( new GridLayout( 1, false )));
 
 		vpn_info = new BufferedLabel(vpn_comp,SWT.DOUBLE_BUFFERED);
 		gd = new GridData( GridData.FILL_HORIZONTAL );
@@ -1437,7 +1438,11 @@ public class PrivacyView
 		    socks_fails.setText( last_fail<0?"":(DisplayFormatters.formatETA( fail_ago_secs, false ) + " " + MessageText.getString( "label.ago" ) + ", tot=" + total_fails ));
 	    }
 
-	    vpn_info.setText( NetworkAdmin.getSingleton().getBindStatus());
+	    String info = NetworkAdmin.getSingleton().getBindStatus();
+	    
+	    String[] lines = info.split( "\n" );
+	    
+	    vpn_info.setText( lines.length==0?"":lines[0].trim());
 	}
 
 	@Override
