@@ -633,7 +633,7 @@ TCPTransportHelper
 				channel.socket().setTcpNoDelay(true);
 			} catch (SocketException e)
 			{
-				Debug.printStackTrace(e);
+				//Debug.printStackTrace(e);
 			}
 			remainingBytesToScatter = forBytes;
 		} else
@@ -644,7 +644,7 @@ TCPTransportHelper
 				channel.socket().setTcpNoDelay(false);
 			} catch (SocketException e)
 			{
-				Debug.printStackTrace(e);
+				//Debug.printStackTrace(e);
 			}
 			remainingBytesToScatter = 0;
 		}

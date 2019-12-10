@@ -241,6 +241,7 @@ AEProxyConnectionImpl
 							message.contains( "refused" ) ||
 							message.contains( "unreachable" ) ||
 							message.contains( "reset" ) ||
+							message.contains( "too many" ) ||	// too many connections
 							message.contains( "no route" ) ||
 							message.contains( "family" ) ||		// address family not supported
 							message.contains( "key is invalid" ) ||
