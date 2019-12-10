@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2019.xx.yy | BiglyBT 2.1.0.1
+2019.12.10 | BiglyBT 2.2.0.0
 
 FEATURE: Tag   | Added isSuperSeeding() constraint function [Parg]
 FEATURE: Tag   | Add count indicator. Shows "Inclusive | Exclusive" count when > 1 tag [TuxPaper]
