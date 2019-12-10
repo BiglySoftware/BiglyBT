@@ -998,7 +998,7 @@ public class UISWTViewImpl
 
 						@Override
 						public String getUpdateUIName() {
-							return ("popout");
+							return ("Popout-" + view.getViewID());
 						}
 					});
 
@@ -1020,7 +1020,7 @@ public class UISWTViewImpl
 
 								@Override
 								public String getUpdateUIName() {
-									return ("popout");
+									return ("Popout-" + view.getViewID());
 								}
 							});
 					}
