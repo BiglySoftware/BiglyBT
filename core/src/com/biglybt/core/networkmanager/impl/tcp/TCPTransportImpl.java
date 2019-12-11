@@ -416,7 +416,7 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
 
     connect_request_key = connect_listener;
 
-    TCPNetworkManager.getSingleton().getConnectDisconnectManager().requestNewConnection( to_connect, connect_listener, priority );
+    TCPNetworkManager.getSingleton().getConnectDisconnectManager().requestNewConnection( to_connect, pp, connect_listener, priority );
   }
 
 
@@ -609,8 +609,11 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
 	boolean		ok )
   {
 	 PluginProxy pp = plugin_proxy;
+	 
 	 if ( pp != null ){
+		 
 		 plugin_proxy = null;
+		 
 		 pp.setOK(ok);
 	 }
   }

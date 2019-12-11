@@ -739,6 +739,10 @@ AEPluginProxyHandler
 
 		private final List<PluginProxyImpl>	children = new ArrayList<>();
 
+		private volatile int	status = ST_UNKNOWN;
+		
+		private CopyOnWriteList<PluginProxyStatusListener>	listeners = new CopyOnWriteList<>(1);
+		
 		private
 		PluginProxyImpl(
 			String				_target,
@@ -875,30 +879,74 @@ AEPluginProxyHandler
 		setOK(
 			boolean	good )
 		{
+			boolean	changed = false;
+			
 			try{
-				ipc.invoke( "setProxyStatus", new Object[]{ proxy_details[0], good });
-
-			}catch( Throwable e ){
+				synchronized( this ){
+					
+					if ( status == ST_UNKNOWN ){
+				
+						status = good?ST_OK:ST_BAD;
+						
+						changed = true;
+					}
+				}
+				
+				try{
+					ipc.invoke( "setProxyStatus", new Object[]{ proxy_details[0], good });
+	
+				}catch( Throwable e ){
+				}
+	
+				List<PluginProxyImpl> kids;
+	
+				synchronized( children ){
+	
+					kids = new ArrayList<>(children);
+	
+					children.clear();
+				}
+	
+				for ( PluginProxyImpl child: kids ){
+	
+					child.setOK( good );
+				}
+	
+				synchronized( proxy_map ){
+	
+					proxy_map.remove( getProxy());
+				}
+			}finally{
+				
+				if ( changed ){
+					
+					for ( PluginProxyStatusListener l: listeners ){
+						
+						try{
+							l.statusChanged( this );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+				}
 			}
-
-			List<PluginProxyImpl> kids;
-
-			synchronized( children ){
-
-				kids = new ArrayList<>(children);
-
-				children.clear();
-			}
-
-			for ( PluginProxyImpl child: kids ){
-
-				child.setOK( good );
-			}
-
-			synchronized( proxy_map ){
-
-				proxy_map.remove( getProxy());
-			}
+		}
+		
+		@Override
+		public int 
+		getStatus()
+		{
+			return( status );
+		}
+		
+		@Override
+		public void 
+		addListener(
+			PluginProxyStatusListener l)
+		{
+			listeners.add( l );
 		}
 	}
 

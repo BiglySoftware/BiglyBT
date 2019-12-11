@@ -280,7 +280,7 @@ NetworkAdminSocksProxyImpl
 			};
 
 			TCPNetworkManager.getSingleton().getConnectDisconnectManager().requestNewConnection(
-					socks_address, connect_listener, ProtocolEndpoint.CONNECT_PRIORITY_MEDIUM );
+					socks_address, null, connect_listener, ProtocolEndpoint.CONNECT_PRIORITY_MEDIUM );
 
 		}catch( Throwable e ){
 

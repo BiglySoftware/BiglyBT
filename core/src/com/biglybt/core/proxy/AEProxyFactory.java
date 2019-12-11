@@ -191,6 +191,10 @@ AEProxyFactory
 	public interface
 	PluginProxy
 	{
+		public static final int ST_UNKNOWN	= 1;
+		public static final int ST_OK		= 2;
+		public static final int ST_BAD		= 3;
+		
 		public String
 		getTarget();
 
@@ -217,6 +221,21 @@ AEProxyFactory
 		public void
 		setOK(
 			boolean	good );
+		
+		public int
+		getStatus();
+		
+		public void
+		addListener(
+			PluginProxyStatusListener		l );
+		
+		public interface
+		PluginProxyStatusListener
+		{
+			public void
+			statusChanged(
+				PluginProxy pp );
+		}
 	}
 
 	public interface

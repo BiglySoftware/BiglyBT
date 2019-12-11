@@ -34,6 +34,7 @@ import com.biglybt.core.networkmanager.ProtocolEndpoint;
 import com.biglybt.core.networkmanager.VirtualChannelSelector;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.proxy.AEProxyFactory;
+import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.stats.CoreStatsProvider;
 import com.biglybt.core.util.*;
@@ -214,7 +215,13 @@ public class TCPConnectionManager {
 
   final AEMonitor	new_canceled_mon	= new AEMonitor( "ConnectDisconnectManager:NCM");
 
-  final Map<ConnectionRequest,Object> pending_attempts = new HashMap<>();
+  final Map<ConnectionRequest,Object> pending_attempts 		= new HashMap<>();
+  
+  	// plugin-proxies will connect at the network layer immediately even though their target connection has yet to even start
+  	// They do use a socks protocol to further establish connectivity which only completes once the actual connection
+  	// is established so we wait for this to occur in order to limit 'pending attempts' correctly
+  
+  final Map<ConnectionRequest,Object> pending_pp_attempts 	= new HashMap<>();
 
   final LinkedList<SocketChannel> 	pending_closes 	= new LinkedList<>();
 
@@ -295,7 +302,7 @@ public class TCPConnectionManager {
   void
   addNewOutboundRequests()
   {
-	  while( pending_attempts.size() < MIN_SIMULTANIOUS_CONNECT_ATTEMPTS ){
+	  while( pending_attempts.size() + pending_pp_attempts.size() < MIN_SIMULTANIOUS_CONNECT_ATTEMPTS ){
 
 		  ConnectionRequest cr = null;
 
@@ -440,13 +447,45 @@ public class TCPConnectionManager {
 
 				  throw( t );
 			  }
-		  }
+		  }		  
 
 		  request.channel.configureBlocking( false );
 		  request.connect_start_time = SystemTime.getMonotonousTime();
 
+		  PluginProxy plugin_proxy = request.plugin_proxy;
+		  
+		  if ( plugin_proxy != null ){
+			  
+			  plugin_proxy.addListener((pp)->{
+				  
+				 try{
+					  new_canceled_mon.enter();
+					  
+					  pending_pp_attempts.remove( request );
+					  					  
+				 }finally{
+						
+					  new_canceled_mon.exit();
+				  }  
+			  });
+		  }
+
+		  
 		  if ( request.channel.connect( request.address ) ) {  //already connected
 
+			  if ( plugin_proxy != null ){
+				  
+				  try{
+					  new_canceled_mon.enter();
+	
+					  pending_pp_attempts.put( request, null );
+						  
+				  }finally{
+	
+					  new_canceled_mon.exit();
+				  }
+			  }
+			  
 			  finishConnect( request );
 
 		  }else{
@@ -458,6 +497,10 @@ public class TCPConnectionManager {
 
 				  pending_attempts.put( request, null );
 
+				  if ( plugin_proxy != null ){
+					  
+					  pending_pp_attempts.put( request, null );
+				  }
 			  }finally{
 
 				  new_canceled_mon.exit();
@@ -741,6 +784,31 @@ public class TCPConnectionManager {
 	        request.connect_start_time =now;
 	      }
 	    }
+	    
+	    	// shouldn't really need to prune this as entries should always be removed, lol 
+	    
+	    for (Iterator<ConnectionRequest> i=pending_pp_attempts.keySet().iterator(); i.hasNext();) {
+
+		      ConnectionRequest request =i.next();
+		      
+		      long waiting_time = now - request.connect_start_time;
+		      
+		      if ( waiting_time > 1*60*1000 ){
+		    	
+		    	  SocketChannel sc = request.channel;
+		    	  
+		    	  if ( sc == null || sc.socket().isClosed()){
+		    		  
+		    		  i.remove();
+		    		  
+		    	  }else if ( waiting_time > 3*60*1000 ){
+		    	  
+		    		  Debug.outNoStack( "Removing stale pending plugin-proxy record: " + request.address );
+		    	  
+		    		  i.remove();
+		    	  }
+		      }
+	    }
     }finally{
 
         new_canceled_mon.exit();
@@ -769,8 +837,10 @@ public class TCPConnectionManager {
     	}
     }
 
-    //check if our connect queue is stalled, and expand if so
-    if ( num_stalled_requests == pending_attempts.size() && pending_attempts.size() <MAX_SIMULTANIOUS_CONNECT_ATTEMPTS) {
+    	//check if our connect queue is stalled, and expand if so
+    
+    if ( 	num_stalled_requests == pending_attempts.size() && 
+    		pending_attempts.size() + pending_pp_attempts.size() < MAX_SIMULTANIOUS_CONNECT_ATTEMPTS ){
 
     	ConnectionRequest cr =null;
 
@@ -850,13 +920,30 @@ public class TCPConnectionManager {
    * @param address remote ip+port to connect to
    * @param listener to receive notification of connect attempt success/failure
    */
-  public void requestNewConnection( InetSocketAddress address, ConnectListener listener, int priority ) {
-	  requestNewConnection( address, listener, CONNECT_ATTEMPT_TIMEOUT, priority  );
+  public void 
+  requestNewConnection( 
+	  InetSocketAddress 	address,
+	  PluginProxy			plugin_proxy,
+	  ConnectListener 		listener, 
+	  int 					priority ) 
+  {
+	  requestNewConnection( address, plugin_proxy, listener, CONNECT_ATTEMPT_TIMEOUT, priority  );
   }
-
+  
   public void
   requestNewConnection(
 	  InetSocketAddress 	address,
+	  ConnectListener 		listener,
+	  int					connect_timeout,
+	  int 					priority )
+  {
+	  requestNewConnection( address, null, listener, connect_timeout, priority );
+  }
+  
+  private void
+  requestNewConnection(
+	  InetSocketAddress 	address,
+	  PluginProxy			plugin_proxy,
 	  ConnectListener 		listener,
 	  int					connect_timeout,
 	  int 					priority )
@@ -884,7 +971,7 @@ public class TCPConnectionManager {
 		  //chunks, i.e. from a tracker announce reply, and we want to evenly distribute the
 		  //connect attempts if there are multiple torrents running
 
-		  ConnectionRequest cr = new ConnectionRequest( connection_request_id_next++, address, listener, connect_timeout, priority );
+		  ConnectionRequest cr = new ConnectionRequest( connection_request_id_next++, address, plugin_proxy, listener, connect_timeout, priority );
 
 		  	// this comparison is via Comparator and will weed out same address being added > once
 
@@ -1030,6 +1117,7 @@ public class TCPConnectionManager {
   ConnectionRequest
   {
     final InetSocketAddress address;
+    final PluginProxy		plugin_proxy;
     final ConnectListener listener;
     final long request_start_time;
     long connect_start_time;
@@ -1039,10 +1127,11 @@ public class TCPConnectionManager {
     final int		priority;
     private final long		id;
 
-    ConnectionRequest( long _id, InetSocketAddress _address, ConnectListener _listener, int _connect_timeout, int _priority  ) {
+    ConnectionRequest( long _id, InetSocketAddress _address, PluginProxy pp, ConnectListener _listener, int _connect_timeout, int _priority  ) {
 
       id	= _id;
       address = _address;
+      plugin_proxy = pp;
       listener = _listener;
       connect_timeout	= _connect_timeout;
       request_start_time = SystemTime.getMonotonousTime();
