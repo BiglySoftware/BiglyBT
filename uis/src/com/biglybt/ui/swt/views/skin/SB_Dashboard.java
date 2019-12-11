@@ -59,6 +59,7 @@ import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
+import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.util.MapUtils;
@@ -274,16 +275,30 @@ public class SB_Dashboard
 		}
 		
 		{
-			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+			MenuItem resetItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
 					"Button.reset");
 	
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			resetItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 	
-			menuItem.addListener(new MenuItemListener() {
+			resetItem.setStyle( MenuItem.STYLE_MENU );
+
+			MenuItem resetDashsboard = menuManager.addMenuItem( resetItem, "sidebar.header.dashboard");
+			
+			resetDashsboard.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
 					
 					main_dashboard.reset();
+				}
+			});
+			
+			MenuItem resetSidebar= menuManager.addMenuItem( resetItem, "label.sidebar");
+			
+			resetSidebar.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					
+					sidebar_dashboard.clear();
 				}
 			});
 		}
@@ -765,6 +780,22 @@ public class SB_Dashboard
 					
 					setDashboardLayout( layout, items.size(), false );
 				}
+			}
+		}
+		
+		private void
+		clear()
+		{
+			List<DashboardItem> copy;
+			
+			synchronized( items ){
+			
+				copy = new ArrayList<>( items );
+			}
+			
+			for ( DashboardItem item: copy ){
+					
+				item.remove();
 			}
 		}
 		
@@ -2280,7 +2311,10 @@ public class SB_Dashboard
 	
 	public static class
 	SideBarDashboard
-		implements UISWTViewCoreEventListener, DashboardListener
+		implements 
+			UISWTViewCoreEventListener, 
+			IViewAlwaysInitialize,		// need this otherwise if Bigly starts 
+			DashboardListener
 	{
 		final SB_Dashboard db = MainMDISetup.getSb_dashboard();
 		
