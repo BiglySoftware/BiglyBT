@@ -1555,12 +1555,20 @@ public class TableViewPainted
 		MessageText.addListener(this);
 	}
 
+	FrequencyLimitedDispatcher vbarDispatcher = new 
+			FrequencyLimitedDispatcher(
+				AERunnable.create(()->{
+					Utils.execSWTThread(()->{
+						if (DEBUG_SELECTION) {
+							debug("vBar changed " + vBar.getSelection() + " via " + Debug.getCompressedStackTrace());
+						}
+						swt_calculateClientArea();
+						cTable.update();
+					});
+				}), 100 );
+				
 	protected void swt_vBarChanged() {
-		if (DEBUG_SELECTION) {
-			debug("vBar changed " + vBar.getSelection() + " via " + Debug.getCompressedStackTrace());
-		}
-		swt_calculateClientArea();
-		cTable.update();
+		vbarDispatcher.dispatch();
 	}
 
 	protected void
