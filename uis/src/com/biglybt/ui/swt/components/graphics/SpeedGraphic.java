@@ -340,10 +340,6 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 			}
 
 			scale.setMax(max);
-			int maxHeight = scale.getScaledValue(max);
-
-			Color background = colors[COLOR_MAINSPEED]; // Colors.blues[Colors.BLUES_DARKEST];
-			Color foreground = colors[COLOR_MAINSPEED]; //Colors.blues[Colors.BLUES_MIDLIGHT];
 
 			for (int x = 0; x < bounds.width - 71; x++)
 			{
@@ -359,17 +355,17 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 				int xDraw = bounds.width - 71 - x;
 				int height = scale.getScaledValue(all_values[0][position]);
 
-				gcImage.setForeground(background);
-				gcImage.setBackground(foreground);
-				gcImage.setClipping(xDraw, bounds.height - 1 - height, 1, height);
-				gcImage.fillGradientRectangle(xDraw, bounds.height - 1 - maxHeight, 1, maxHeight, true);
-				gcImage.setClipping(0, 0, bounds.width, bounds.height);
-				if(all_values.length > 1)
-				{
+				gcImage.setForeground(colors[COLOR_MAINSPEED]);
+				
+				gcImage.drawLine( xDraw, bounds.height - 1 - height, xDraw,  bounds.height );
+				
+				if ( all_values.length > 1 ){
+					
 					gcImage.setForeground(colors[COLOR_OVERHEAD]);
 					height = scale.getScaledValue(all_values[1][position]);
-					Utils.drawStriped(gcImage, xDraw, bounds.height - 1 - height, 1, height, 1, currentPosition, false);
+					gcImage.drawLine( xDraw, bounds.height - 1 - height, xDraw,  bounds.height );
 				}
+				
 				for (int chartIdx = 2; chartIdx < all_values.length; chartIdx++)
 				{
 					int targetValue = all_values[chartIdx][position];
