@@ -82,6 +82,7 @@ CoreStats
 
 	public static final String ST_NET_TCP_OUT_CONNECT_QUEUE_LENGTH		= "net.tcp.outbound.connect.queue.length";
 	public static final String ST_NET_TCP_OUT_PENDING_QUEUE_LENGTH		= "net.tcp.outbound.pending.queue.length";
+	public static final String ST_NET_TCP_OUT_PENDING_PP_QUEUE_LENGTH	= "net.tcp.outbound.pending.pp.queue.length";
 	public static final String ST_NET_TCP_OUT_CANCEL_QUEUE_LENGTH		= "net.tcp.outbound.cancel.queue.length";
 	public static final String ST_NET_TCP_OUT_CLOSE_QUEUE_LENGTH		= "net.tcp.outbound.close.queue.length";
 
@@ -177,6 +178,7 @@ CoreStats
 
 		{ ST_NET_TCP_OUT_CONNECT_QUEUE_LENGTH,		POINT },
 		{ ST_NET_TCP_OUT_PENDING_QUEUE_LENGTH,		POINT },
+		{ ST_NET_TCP_OUT_PENDING_PP_QUEUE_LENGTH,	POINT },
 		{ ST_NET_TCP_OUT_CANCEL_QUEUE_LENGTH,		POINT },
 		{ ST_NET_TCP_OUT_CLOSE_QUEUE_LENGTH,		POINT },
 

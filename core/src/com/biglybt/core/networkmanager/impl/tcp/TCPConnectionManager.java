@@ -241,6 +241,7 @@ public class TCPConnectionManager {
 	  types.add( CoreStats.ST_NET_TCP_OUT_CANCEL_QUEUE_LENGTH );
 	  types.add( CoreStats.ST_NET_TCP_OUT_CLOSE_QUEUE_LENGTH );
 	  types.add( CoreStats.ST_NET_TCP_OUT_PENDING_QUEUE_LENGTH );
+	  types.add( CoreStats.ST_NET_TCP_OUT_PENDING_PP_QUEUE_LENGTH );
 
 	  CoreStats.registerProvider(
 			  types,
@@ -271,7 +272,11 @@ public class TCPConnectionManager {
 
 							values.put( CoreStats.ST_NET_TCP_OUT_PENDING_QUEUE_LENGTH, new Long( pending_attempts.size()));
 						}
+						
+						if ( types.contains( CoreStats.ST_NET_TCP_OUT_PENDING_PP_QUEUE_LENGTH )){
 
+							values.put( CoreStats.ST_NET_TCP_OUT_PENDING_PP_QUEUE_LENGTH, new Long( pending_pp_attempts.size()));
+						}
 					}
 			  });
 
