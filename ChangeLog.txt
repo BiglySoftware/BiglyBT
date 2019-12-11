@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2020.xx.yy | BiglyBT 2.2.0.1
+
 2019.12.10 | BiglyBT 2.2.0.0
 
 FEATURE: Tag   | Added isSuperSeeding() constraint function [Parg]
