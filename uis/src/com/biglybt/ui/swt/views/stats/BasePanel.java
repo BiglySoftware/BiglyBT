@@ -28,7 +28,8 @@ BasePanel
 	static double def_rotation = 0;
 	
 	static class 
-	Scale 
+	Scale
+		implements Cloneable
 	{
 		int width;
 		int height;
@@ -49,6 +50,16 @@ BasePanel
 
 		{
 			reset();
+		}
+		
+		public Scale
+		clone()
+		{
+			try{
+				return((Scale)super.clone());
+			}catch( CloneNotSupportedException e ){
+				return( this );
+			}
 		}
 		
 		public void

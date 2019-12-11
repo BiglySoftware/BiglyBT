@@ -51,6 +51,8 @@ GeneralOpsPanel
 
 	private static final int	FADE_OUT	= 10*1000;
 
+	private static Map<String,Scale>	scale_map = new HashMap<>();
+	
 	Display display;
 	Composite parent;
 
@@ -66,7 +68,8 @@ GeneralOpsPanel
 	private int xDown;
 	private int yDown;
 
-	private Image img;
+	private String		id;
+	private Image 		img;
 
 	private int alpha = 255;
 
@@ -387,6 +390,27 @@ GeneralOpsPanel
 				});
 	}
 
+	public void
+	setID( String _id )
+	{
+		id = _id;
+		
+		Scale existing;
+		
+		synchronized( scale_map ){
+			
+			existing = scale_map.get( id );
+		}
+		
+		if ( existing != null ){
+			
+			Utils.execSWTThread(()->{
+				scale	= existing;
+				refresh();
+			});
+		}
+	}
+	
 	public void setLayoutData(Object data) {
 		canvas.setLayoutData(data);
 	}
@@ -667,6 +691,14 @@ GeneralOpsPanel
 		synchronized( activity_map ){
 
 			activity_map.clear();
+		}
+		
+		if ( id != null ){
+			
+			synchronized( scale_map ){
+				
+				scale_map.put( id,  scale.clone());
+			}
 		}
 	}
 

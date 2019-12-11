@@ -22,7 +22,9 @@ package com.biglybt.ui.swt.views.stats;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
@@ -40,10 +42,13 @@ import com.biglybt.core.dht.netcoords.DHTNetworkPosition;
 import com.biglybt.core.dht.netcoords.vivaldi.ver1.*;
 import com.biglybt.core.dht.netcoords.vivaldi.ver1.impl.*;
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.views.stats.BasePanel.Scale;
 
 public class VivaldiPanel extends BasePanel {
   private static final int ALPHA_FOCUS = 255;
   private static final int ALPHA_NOFOCUS = 150;
+
+  private static Map<String,Scale>	scale_map = new HashMap<>();
 
   Display display;
   Composite parent;
@@ -61,6 +66,7 @@ public class VivaldiPanel extends BasePanel {
 	private List<DHTControlContact> lastContacts;
 	private DHTTransportContact lastSelf;
 
+	private String id;
 	private Image img;
 
   private int alpha = 255;
@@ -318,6 +324,27 @@ public class VivaldiPanel extends BasePanel {
 			}
 		});
   }
+  
+	public void
+	setID( String _id )
+	{
+		id = _id;
+		
+		Scale existing;
+		
+		synchronized( scale_map ){
+			
+			existing = scale_map.get( id );
+		}
+		
+		if ( existing != null ){
+			
+			Utils.execSWTThread(()->{
+				scale	= existing;
+				refreshContacts(lastContacts, lastSelf);
+			});
+		}
+	}
 
   public void setLayoutData(Object data) {
     canvas.setLayoutData(data);
@@ -632,6 +659,14 @@ public class VivaldiPanel extends BasePanel {
 		if(img != null && !img.isDisposed())
 		{
 			img.dispose();
+		}
+		
+		if ( id != null ){
+			
+			synchronized( scale_map ){
+				
+				scale_map.put( id,  scale.clone());
+			}
 		}
 	}
 }

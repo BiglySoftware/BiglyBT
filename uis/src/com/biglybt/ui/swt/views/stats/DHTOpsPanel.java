@@ -55,6 +55,11 @@ DHTOpsPanel
 		gop.setLayoutData(data);
 	}
 
+	public void
+	setID( String id ){
+		gop.setID( id );
+	}
+	
 	@Override
 	public void
 	activityChanged(

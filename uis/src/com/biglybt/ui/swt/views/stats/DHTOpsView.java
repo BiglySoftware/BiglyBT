@@ -95,6 +95,11 @@ public class DHTOpsView
 
 			if ( drawPanel != null ){
 
+				if ( dht != null ){
+					
+					drawPanel.setID( String.valueOf( dht.getTransport().getNetwork()));
+				}
+				
 				if ( 	dht == null &&
 						!dht_plugin.isInitialising()){
 
@@ -134,6 +139,11 @@ public class DHTOpsView
 		panel.setLayout(new FillLayout());
 		drawPanel = new DHTOpsPanel(panel);
 		drawPanel.setAutoAlpha(autoAlpha);
+		
+		if ( dht != null ){
+			
+			drawPanel.setID( String.valueOf( dht.getTransport().getNetwork()));
+		}
 	}
 
 	private Composite getComposite() {

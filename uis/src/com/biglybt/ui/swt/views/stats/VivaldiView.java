@@ -89,6 +89,9 @@ public class VivaldiView
 
       if ( dht == null ){
         return;
+      }else if ( drawPanel != null ){
+			
+		drawPanel.setID( String.valueOf( dht.getTransport().getNetwork()));
       }
 
     } catch(Exception e) {
@@ -110,6 +113,11 @@ public class VivaldiView
     panel.setLayout(new FillLayout());
     drawPanel = new VivaldiPanel(panel);
   	drawPanel.setAutoAlpha(autoAlpha);
+  	
+  	if ( dht != null ){
+		
+		drawPanel.setID( String.valueOf( dht.getTransport().getNetwork()));
+	}
   }
 
   private Composite getComposite() {
