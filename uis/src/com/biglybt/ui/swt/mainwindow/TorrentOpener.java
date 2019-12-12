@@ -517,6 +517,8 @@ public class TorrentOpener {
 
 									fDest = files[iIndex].getDestFileFullName();
 
+									fDest = new File( fDest.getParentFile(), FileUtil.convertOSSpecificChars( fDest.getName(), false ));
+									
 									// Can't use fileInfo.setLink(fDest) as it renames
 									// the existing file if there is one
 
