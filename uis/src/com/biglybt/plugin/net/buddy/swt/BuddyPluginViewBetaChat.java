@@ -6070,7 +6070,7 @@ BuddyPluginViewBetaChat
 	private static Pattern
 	getEmphasisPattern()
 	{
-		return( RegExUtil.getCachedPattern( "BPVBC:emphasis", "(?i)([\\*_]{1,2}|(?:[<\\[]([bi])[>\\]]))([^\\n]+?)(\\1|(?:[<\\[]/\\2[>\\]]))" ));
+		return( RegExUtil.getCachedPattern( "BPVBC:emphasis1", "(?i)([\\*_]{1,2}|(?:[<\\[]([bin])[>\\]]))([^\\n]+?)(\\1|(?:[<\\[]/\\2[>\\]]))" ));
 	}
 	
 	private static String
@@ -6110,23 +6110,36 @@ BuddyPluginViewBetaChat
 		    		
 		    		if ( existing.endsWith( "]]" )){
 		    			
-		    			sb.append( " " );
+		    			sb.append( "\ufeff" );
 		    		}
 		    				
-		    		String match	= m.group(1);
+		    		String match	= m.group(1).toLowerCase(Locale.US);
 		    		
-		    		boolean is_italic = match.length()==1 || match.toLowerCase(Locale.US).contains( "i" );
+		    		String type;
+		    		
+		    		if ( match.contains( "n" )){
+		    		
+		    			type = "normal";
+		    			
+		    		}else if ( match.length()==1 || match.contains( "i" )){
+		    			
+		    			type = "italic";
+		    			
+		    		}else{
+		    			
+		    			type = "bold";
+		    		}
 		    		
 		    		String str 		= m.group(3);
 		    		 
-		    		m.appendReplacement(sb, Matcher.quoteReplacement( (pad?" ":"") + "chat:" + (is_italic?"italic":"bold") + "[[" + UrlUtils.encode( str ) + "]]"));
+		    		m.appendReplacement(sb, Matcher.quoteReplacement( (pad?"\ufeff":"") + "chat:" + type + "[[" + UrlUtils.encode( str ) + "]]"));
 	
 		    		result = m.find();
 		    	}
 	
 		    	if ( sb.toString().endsWith( "]]" )){
 	    			
-	    			sb.append( " " );
+	    			sb.append( "\ufeff" );
 	    		}
 		    	
 				m.appendTail(sb);
@@ -6226,7 +6239,7 @@ BuddyPluginViewBetaChat
 								break;
 							}
 							
-							if ( c == term_char || ( term_char == ' ' && Character.isWhitespace( c ))){
+							if ( c == term_char || ( term_char == ' ' && ( c == '\ufeff' || Character.isWhitespace( c )))){
 
 								url_end = term_char==' '?i:(i+1);
 
@@ -6543,7 +6556,7 @@ BuddyPluginViewBetaChat
 
 							char c = msg.charAt( i );
 
-							if ( c == term_char || ( term_char == ' ' && Character.isWhitespace( c ))){
+							if ( c == term_char || ( term_char == ' ' && ( c == '\ufeff' || Character.isWhitespace( c )))){
 
 								url_end = term_char==' '?i:(i+1);
 
@@ -6672,6 +6685,12 @@ BuddyPluginViewBetaChat
 									}else if ( lc_url.startsWith( "chat:italic" )){
 										
 										fail_font = italic_font;
+										
+										will_work = false;
+										
+									}else if ( lc_url.startsWith( "chat:normal" )){
+										
+										fail_font = null;
 										
 										will_work = false;
 									}
