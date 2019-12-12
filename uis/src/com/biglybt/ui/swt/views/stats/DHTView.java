@@ -20,6 +20,8 @@ package com.biglybt.ui.swt.views.stats;
 
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -43,6 +45,7 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
+import com.biglybt.ui.swt.views.stats.BasePanel.Scale;
 import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.DHTStorageAdapter;
 import com.biglybt.core.dht.control.DHTControlActivity;
@@ -72,6 +75,8 @@ public class DHTView
 
   public static Color[] rttColours = new Color[] {
 	  	Colors.grey, Colors.fadedGreen,Colors.fadedRed };
+
+  private static Map<String,int[]>	table_col_map = new HashMap<>();
 
   private boolean auto_dht;
 
@@ -110,8 +115,10 @@ public class DHTView
   Table activityTable;
   DHTControlActivity[] activities;
 
+  private String 	id;
+  
   private int dht_type;
-	protected Core core;
+  protected Core core;
 
 
   public DHTView()
@@ -556,24 +563,37 @@ public class DHTView
     activityTable = new Table(gActivity,SWT.VIRTUAL | SWT.BORDER | SWT.FULL_SELECTION | SWT.SINGLE);
     activityTable.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-    final TableColumn colStatus =  new TableColumn(activityTable,SWT.LEFT);
+    TableColumn colStatus =  new TableColumn(activityTable,SWT.LEFT);
     Messages.setLanguageText(colStatus,"DHTView.activity.status");
-    colStatus.setWidth(80);
 
-    final TableColumn colType =  new TableColumn(activityTable,SWT.LEFT);
+    TableColumn colType =  new TableColumn(activityTable,SWT.LEFT);
     Messages.setLanguageText(colType,"DHTView.activity.type");
-    colType.setWidth(80);
-
-    final TableColumn colName =  new TableColumn(activityTable,SWT.LEFT);
+ 
+    TableColumn colName =  new TableColumn(activityTable,SWT.LEFT);
     Messages.setLanguageText(colName,"DHTView.activity.target");
-    colName.setWidth(80);
 
-    final TableColumn colDetails =  new TableColumn(activityTable,SWT.LEFT);
+    TableColumn colDetails =  new TableColumn(activityTable,SWT.LEFT);
     Messages.setLanguageText(colDetails,"label.details");
-    colDetails.setWidth(300);
     colDetails.setResizable(false);
 
+    TableColumn[] columns = { colStatus, colType, colName, colDetails };
+    
+    int[]	col_widths = { 80, 80, 80, 300 };
+    
+    if ( id != null ){
+    	
+    	int[] widths = table_col_map.get( id );
+    	
+    	if ( widths != null ){
+    		
+    		col_widths = widths;
+    	}
+    }
 
+    for ( int i=0;i<columns.length;i++){
+    	columns[i].setWidth( col_widths[i]);
+    }
+    
     activityTable.setHeaderVisible(true);
     Listener computeLastRowWidthListener = new Listener() {
     	// inUse flag to prevent a SWT stack overflow.  For some reason
@@ -588,14 +608,28 @@ public class DHTView
       	inUse = true;
        	try {
           if(activityTable == null || activityTable.isDisposed()) return;
+          
           int totalWidth = activityTable.getClientArea().width;
-          int remainingWidth = totalWidth
-                                 - colStatus.getWidth()
-                                 - colType.getWidth()
-                                 - colName.getWidth();
-          if(remainingWidth > 0)
-            colDetails.setWidth(remainingWidth);
-
+          
+          int[] widths = new int[columns.length];
+          
+          int remainingWidth = totalWidth;
+          
+          for ( int i=0;i<widths.length-1;i++){
+        	  remainingWidth -=  widths[i] = columns[i].getWidth();
+          }
+         
+          TableColumn lastCol = columns[columns.length-1];
+          
+          if(remainingWidth > 0){
+        	  lastCol.setWidth(remainingWidth);
+          }
+          
+          widths[ columns.length-1 ] = lastCol.getWidth();
+         
+          if ( id != null ){
+        	  table_col_map.put( id, widths );
+          }
        	} finally {
       		inUse = false;
       	}
@@ -876,6 +910,7 @@ public class DHTView
       	swtView = (UISWTView)event.getData();
 	      if (swtView.getInitialDataSource() instanceof Number) {
 		      dht_type = ((Number) swtView.getInitialDataSource()).intValue();
+		      id = String.valueOf( dht_type );
 	      }
       	swtView.setTitle(MessageText.getString(getTitleID()));
         break;
@@ -898,6 +933,7 @@ public class DHTView
       case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
       	if (event.getData() instanceof Number) {
       		dht_type = ((Number) event.getData()).intValue();
+      		id = String.valueOf( dht_type );
       		if (swtView != null) {
           	swtView.setTitle(MessageText.getString(getTitleID()));
       		}

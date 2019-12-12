@@ -42,7 +42,6 @@ import com.biglybt.core.dht.netcoords.DHTNetworkPosition;
 import com.biglybt.core.dht.netcoords.vivaldi.ver1.*;
 import com.biglybt.core.dht.netcoords.vivaldi.ver1.impl.*;
 import com.biglybt.ui.swt.utils.ColorCache;
-import com.biglybt.ui.swt.views.stats.BasePanel.Scale;
 
 public class VivaldiPanel extends BasePanel {
   private static final int ALPHA_FOCUS = 255;
