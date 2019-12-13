@@ -1,7 +1,19 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2020.xx.yy | BiglyBT 2.2.0.1
+2019.12.13 | BiglyBT 2.2.0.2
+
+FEATURE: UI    | Add sidebar dashboard reset option [Parg]
+FEATURE: UI    | Chat window now supports <n>...</n> to disable emphasis [Fubar99]
+
+CHANGE: UI     | Rate limit table vertical scrolling [Parg]
+CHANGE: UI     | Remember DDB Graph, Vivaldi view and activity column widths across tab switches [Parg]
+
+BUGFIX: Core   | Wait for plugin-proxy connections to actually connect [Parg]
+BUGFIX: Core   | Apply OS-specific filename character validation to renames in torrent options dialog [Parg]
+BUGFIX: UI     | Speed Graphic performance improvements [Parg]
+BUGFIX: UI     | Fix sidebar dashboard not building when UI hidden [Parg]
+BUGFIX: UI     | Fix UI deadlock [Parg]
 
 2019.12.10 | BiglyBT 2.2.0.0
 
