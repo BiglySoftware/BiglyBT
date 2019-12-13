@@ -420,19 +420,15 @@ public class SBC_LibraryView
 							SB_Transfers.stats stats = viewMode == MODE_SMALLTABLE? statsWithLowNoise : statsNoLowNoise;
 
 							String s;
+														
+							List<ViewUtils.ViewTitleExtraInfo.CountProvider> count_provs = new ArrayList<>();
+							
+							int		filter_total 	= 0;
+							int		filter_active	= 0;
 
-							String extra_search = null;
-							
-							int	extra_total 	= 0;
-							int extra_active	= 0;
-							int extra_queued	= 0;
-							
+							boolean	filter_enabled 	= false;
+
 							synchronized( extra_info_map ){
-
-								int		filter_total 	= 0;
-								int		filter_active	= 0;
-
-								boolean	filter_enabled 	= false;
 
 								for ( ExtraInfoProvider provider: extra_info_map.values()){
 
@@ -449,26 +445,34 @@ public class SBC_LibraryView
 										
 										if ( cp != null ){
 											
-											int[]	counts = cp.getCounts();
-											
-											extra_total += counts[0];
-											extra_active += counts[1];
-											extra_queued += counts[2];
+											count_provs.add( cp );
 										}
 									}
 								}
-
-								if ( filter_enabled ){
-
-									extra_search =
-										MessageText.getString(
-												"filter.header.matches2",
-												new String[]{ String.valueOf( filter_total ), String.valueOf( filter_active )});
-								}
 							}
 							
+							int	extra_total 	= 0;
+							int extra_active	= 0;
+							int extra_queued	= 0;
+
+							for ( ViewUtils.ViewTitleExtraInfo.CountProvider cp: count_provs ){
+								
+								int[]	counts = cp.getCounts();
+								
+								extra_total += counts[0];
+								extra_active += counts[1];
+								extra_queued += counts[2];
+							}
 							
-							
+							String extra_search = null;
+
+							if ( filter_enabled ){
+
+								extra_search =
+									MessageText.getString(
+											"filter.header.matches2",
+											new String[]{ String.valueOf( filter_total ), String.valueOf( filter_active )});
+							}
 							
 								// seeding and downloading Tag views were changed to filter appropriately
 								// but that broke the header display - fixed by forcing through the 'TORRENTS_ALL'

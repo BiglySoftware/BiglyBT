@@ -625,6 +625,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 		filter.eventUpdate = null;
 
+		boolean changed = false;
+
 		synchronized (rows_sync) {
 			DATASOURCETYPE[] unfilteredArray = (DATASOURCETYPE[]) listUnfilteredDataSources.keySet().toArray();
 			if (DEBUGADDREMOVE) {
@@ -633,7 +635,6 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 			if (getFilterSubRows()){
 				
-				boolean changed = false;
 				for (Iterator<TableRowCore> iter = sortedRows.iterator(); iter.hasNext();) {
 					TableRowCore row = iter.next();
 					for ( TableRowCore sr: row.getSubRowsWithNull()){
@@ -642,11 +643,6 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 							changed = true;
 						}
 					}
-				}
-				
-				if ( changed ){
-					tableMutated();
-					redrawTable();
 				}
 			}
 			
@@ -681,6 +677,13 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				listUnfilteredDataSources.put(ds,"");
 			}
 		}
+		
+		
+		if ( changed ){
+			tableMutated();
+			redrawTable();
+		}
+
 		processDataSourceQueue();
 	}
 
@@ -1527,122 +1530,118 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			}
 		}
 
-			// replaced sortColumn_mon
+		long lTimeStart;
+		if (DEBUG_SORTER) {
+			//System.out.println(">>> Sort.. ");
+			lTimeStart = System.currentTimeMillis();
+		}
+
+		int iNumMoves = 0;
+
+		boolean needsUpdate = false;
+		boolean	orderChanged = false;
+
 		synchronized (rows_sync) {
-
-			long lTimeStart;
-			if (DEBUG_SORTER) {
-				//System.out.println(">>> Sort.. ");
-				lTimeStart = System.currentTimeMillis();
-			}
-
-			int iNumMoves = 0;
-
-
-			boolean needsUpdate = false;
-			boolean	orderChanged = false;
 			
-			synchronized (rows_sync) {
-				if (bForceDataRefresh && !sortColumns.isEmpty()) {
-					for (TableColumnCore sortColumn : sortColumns) {
-						String sColumnID = sortColumn.getName();
-						for (TableRowCore row : sortedRows) {
-							TableCellCore[] cells = row.getSortColumnCells(sColumnID);
+			if (bForceDataRefresh && !sortColumns.isEmpty()) {
+				for (TableColumnCore sortColumn : sortColumns) {
+					String sColumnID = sortColumn.getName();
+					for (TableRowCore row : sortedRows) {
+						TableCellCore[] cells = row.getSortColumnCells(sColumnID);
+						for (TableCellCore cell : cells) {
+							cell.refresh(true);
+						}
+						TableRowCore[] subs = row.getSubRowsRecursive(true);
+
+						for (TableRowCore sr : subs) {
+							cells = sr.getSortColumnCells(sColumnID);
 							for (TableCellCore cell : cells) {
 								cell.refresh(true);
 							}
-							TableRowCore[] subs = row.getSubRowsRecursive(true);
-
-							for (TableRowCore sr : subs) {
-								cells = sr.getSortColumnCells(sColumnID);
-								for (TableCellCore cell : cells) {
-									cell.refresh(true);
-								}
-							}
 						}
 					}
 				}
+			}
 
-				if (!bFillGapsOnly) {
-					boolean hasSortValueChanged = false;
-					for (TableColumnCore sortColumn : sortColumns) {
-						if (sortColumn.getLastSortValueChange() >= lLastSortedOn) {
-							hasSortValueChanged = true;
-							break;
-						}
+			if (!bFillGapsOnly) {
+				boolean hasSortValueChanged = false;
+				for (TableColumnCore sortColumn : sortColumns) {
+					if (sortColumn.getLastSortValueChange() >= lLastSortedOn) {
+						hasSortValueChanged = true;
+						break;
 					}
-					if (hasSortValueChanged) {
-						lLastSortedOn = SystemTime.getCurrentTime();
-						if (sortColumns.size() == 1) {
-							sortedRows.sort(sortColumns.get(0));
-						} else {
-							sortedRows.sort((o1, o2) -> {
-								for (TableColumnCore sortColumn : sortColumns) {
-									int compare = sortColumn.compare(o1, o2);
-									if (compare != 0) {
-										return compare;
-									}
-								}
-								return 0;
-							});
-						}
-						
-						for ( TableRowCore r: sortedRows ){
-							// TODO: Change to sortColumn list
-							if ( r.sortSubRows(sortColumns.get(0) )){
-								needsUpdate = true;
-								orderChanged = true;
-							}
-						}
-						
-						if (DEBUG_SORTER) {
-							long lTimeDiff = (System.currentTimeMillis() - lTimeStart);
-							if (lTimeDiff >= 0) {
-								debug("--- Build & Sort "
-										+ sortColumns.stream().map(m -> m.getName()).collect(
-												Collectors.joining(", ", "{", "}"))
-										+ " took " + lTimeDiff + "ms");
-							}
-						}
+				}
+				if (hasSortValueChanged) {
+					lLastSortedOn = SystemTime.getCurrentTime();
+					if (sortColumns.size() == 1) {
+						sortedRows.sort(sortColumns.get(0));
 					} else {
-						if (DEBUG_SORTER) {
-							debug("Skipping sort :)");
+						sortedRows.sort((o1, o2) -> {
+							for (TableColumnCore sortColumn : sortColumns) {
+								int compare = sortColumn.compare(o1, o2);
+								if (compare != 0) {
+									return compare;
+								}
+							}
+							return 0;
+						});
+					}
+					
+					for ( TableRowCore r: sortedRows ){
+						// TODO: Change to sortColumn list
+						if ( r.sortSubRows(sortColumns.get(0) )){
+							needsUpdate = true;
+							orderChanged = true;
 						}
+					}
+					
+					if (DEBUG_SORTER) {
+						long lTimeDiff = (System.currentTimeMillis() - lTimeStart);
+						if (lTimeDiff >= 0) {
+							debug("--- Build & Sort "
+									+ sortColumns.stream().map(m -> m.getName()).collect(
+											Collectors.joining(", ", "{", "}"))
+									+ " took " + lTimeDiff + "ms");
+						}
+					}
+				} else {
+					if (DEBUG_SORTER) {
+						debug("Skipping sort :)");
 					}
 				}
+			}
 
-				for (int i = 0; i < sortedRows.size(); i++) {
-					TableRowCore row = sortedRows.get(i);
-					boolean visible = row.isVisible();
-					if (row.setTableItem(i)) {
-						orderChanged=true;
-						if (visible) {
-							needsUpdate = true;
-						}
-						iNumMoves++;
+			for (int i = 0; i < sortedRows.size(); i++) {
+				TableRowCore row = sortedRows.get(i);
+				boolean visible = row.isVisible();
+				if (row.setTableItem(i)) {
+					orderChanged=true;
+					if (visible) {
+						needsUpdate = true;
 					}
+					iNumMoves++;
 				}
 			}
 
 			if (DEBUG_SORTER && iNumMoves > 0) {
 				debug("Sort: numMoves= " + iNumMoves + ";needUpdate?" + needsUpdate);
 			}
+		}
+		
+		if (orderChanged) {
+			tableMutated();
+			
+		}	
+		if (needsUpdate) {
+			visibleRowsChanged();
+		}
 
-			if (orderChanged) {
-				tableMutated();
-				
-			}	
-			if (needsUpdate) {
-				visibleRowsChanged();
-			}
-
-			if (DEBUG_SORTER) {
-				long lTimeDiff = (System.currentTimeMillis() - lTimeStart);
-				if (lTimeDiff >= 500) {
-					debug("<<< Sort & Assign took " + lTimeDiff + "ms with "
-							+ iNumMoves + " rows (of " + sortedRows.size() + ") moved. "
-							+ Debug.getCompressedStackTrace());
-				}
+		if (DEBUG_SORTER) {
+			long lTimeDiff = (System.currentTimeMillis() - lTimeStart);
+			if (lTimeDiff >= 500) {
+				debug("<<< Sort & Assign took " + lTimeDiff + "ms with "
+						+ iNumMoves + " rows (of " + sortedRows.size() + ") moved. "
+						+ Debug.getCompressedStackTrace());
 			}
 		}
 	}
