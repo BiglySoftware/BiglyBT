@@ -904,6 +904,22 @@ public class TableViewPainted
 				if (isDisposed()) {
 					return;
 				}
+				
+					// if we have an active search then we don't want to grab focus
+					// away from the text box due to a selected-content change
+				
+				TableViewSWTFilter<?> filter = getSWTFilter();
+				
+				if ( filter != null ){
+					
+					String text = filter.text;
+					
+					if ( text != null && !text.isEmpty()){
+						
+						return;
+					}
+				}
+				
 				cTable.setFocus();
 			}
 		});
