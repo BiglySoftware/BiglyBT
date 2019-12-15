@@ -2741,7 +2741,7 @@ outer:
 
 			if ( tracker_so_enabled && seeding_only == buddy_seeding_only ){
 
-				log( "Not tracking, buddy and me both " + (seeding_only?"seeding":"downloading"), true, false );
+				// log( "Not tracking, buddy and me both " + (seeding_only?"seeding":"downloading"), true, false );
 
 				return( res );
 			}
@@ -2752,7 +2752,7 @@ outer:
 
 				if ( downloads_in_common == null ){
 
-					log( "Not tracking, buddy has nothing in common", true, false );
+					// log( "Not tracking, buddy has nothing in common", true, false );
 
 					return( res );
 				}
@@ -2771,7 +2771,7 @@ outer:
 
 							// both complete, nothing to do!
 
-						log( d.getName() + " - not tracking, both complete", true, true );
+						// log( d.getName() + " - not tracking, both complete", true, true );
 
 					}else{
 
