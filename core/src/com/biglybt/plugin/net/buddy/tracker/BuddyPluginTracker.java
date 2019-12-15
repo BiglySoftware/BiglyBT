@@ -559,6 +559,11 @@ BuddyPluginTracker
 	buddyChanged(
 		BuddyPluginBuddy	buddy )
 	{
+		if ( buddy.isTransient()){
+			
+			return;
+		}
+		
 		if ( buddy.isOnline( false )){
 
 			addBuddy( buddy );

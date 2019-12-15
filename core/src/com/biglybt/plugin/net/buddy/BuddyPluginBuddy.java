@@ -841,6 +841,11 @@ BuddyPluginBuddy
 	isOnline(
 		boolean	is_connected )
 	{
+		if ( destroyed ){
+			
+			return( false );
+		}
+		
 		boolean	connected = isConnected();
 
 			// if we're connected then we're online whatever
