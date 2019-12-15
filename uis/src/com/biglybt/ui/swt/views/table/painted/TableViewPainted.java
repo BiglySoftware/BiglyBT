@@ -45,6 +45,7 @@ import com.biglybt.ui.selectedcontent.SelectedContentListener;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
+import com.biglybt.ui.swt.TextWithHistory;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
@@ -1931,6 +1932,16 @@ public class TableViewPainted
 			} else {
 				filter.text = filter.nextText = txtFilter.getText();
 			}
+			
+			TextWithHistory twh = new TextWithHistory( "tableviewpainted.search", txtFilter );
+			
+			txtFilter.addListener( SWT.FocusOut, (ev)->{
+				String text = txtFilter.getText().trim();
+				if ( !text.isEmpty()){
+					twh.addHistory( text );
+				}
+			});
+
 		} else {
 			filter.text = filter.nextText = "";
 		}

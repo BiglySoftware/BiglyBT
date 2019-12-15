@@ -64,7 +64,8 @@ public class TableViewSWT_Common
 	private static final int ASYOUTYPE_MODE = ASYOUTYPE_MODE_FILTER;
 	private static final int ASYOUTYPE_UPDATEDELAY = 300;
 
-	private static final Color COLOR_FILTER_REGEX	= Colors.fadedYellow;
+	private static final Color COLOR_FILTER_REGEX		= Colors.fadedYellow;
+	private static final Color COLOR_FILTER_NO_REGEX	= Colors.fadedBlue;
 	
 	private Font FONT_NO_REGEX;
 	private Font FONT_REGEX;
@@ -652,7 +653,9 @@ public class TableViewSWT_Common
 	validateFilterRegex()
 	{
 		TableViewSWTFilter<?> filter = tv.getSWTFilter();
+		
 		Text widget = filter.widget;
+				
 		Color old_bg = (Color)widget.getData( "TVSWTC:filter.bg" );
 		if ( old_bg == null ){
 			old_bg = widget.getBackground();
@@ -660,12 +663,20 @@ public class TableViewSWT_Common
 		}
 		if (filter.regex) {
 			if ( FONT_NO_REGEX == null ){
-				FONT_NO_REGEX = widget.getFont();
-				FontData[] fd = FONT_NO_REGEX.getFontData();
+				Font font = widget.getFont();
+				
+				FontData[] fd = font.getFontData();
+				for (int i = 0; i < fd.length; i++) {
+					fd[i].setStyle(SWT.NORMAL);
+				}
+				FONT_NO_REGEX = new Font( widget.getDisplay(), fd );
+				
+				fd = FONT_NO_REGEX.getFontData();
 				for (int i = 0; i < fd.length; i++) {
 					fd[i].setStyle(SWT.BOLD);
 				}
 				FONT_REGEX = new Font( widget.getDisplay(), fd );
+				
 				for (int i = 0; i < fd.length; i++) {
 					fd[i].setStyle(SWT.ITALIC);
 				}
@@ -673,7 +684,7 @@ public class TableViewSWT_Common
 				
 				widget.addDisposeListener(
 					(e)->{
-						FONT_NO_REGEX = null;
+						FONT_NO_REGEX.dispose();
 						FONT_REGEX.dispose();
 						FONT_REGEX_ERROR.dispose();
 					});
@@ -693,7 +704,7 @@ public class TableViewSWT_Common
 				widget.setFont( FONT_REGEX_ERROR );
 			}
 		} else {
-			widget.setBackground(old_bg);
+			widget.setBackground(filter.nextText==null||filter.nextText.isEmpty()?old_bg:COLOR_FILTER_NO_REGEX);
 			Messages.setLanguageTooltip(widget,"MyTorrentsView.filter.tooltip");
 			if ( FONT_NO_REGEX != null ){
 				widget.setFont( FONT_NO_REGEX );

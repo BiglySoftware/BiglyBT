@@ -67,6 +67,7 @@ public class Colors implements ParameterListener {
   public static Color light_grey;
   public static Color dark_grey;
   public static Color blue;
+  public static Color fadedBlue;
   public static Color green;
   public static Color fadedGreen;
   public static Color grey;
@@ -359,6 +360,7 @@ public class Colors implements ParameterListener {
 		light_grey = ColorCache.getColor(display, 192, 192, 192);
 		dark_grey = ColorCache.getColor(display, 96, 96, 96);
 		blue = ColorCache.getColor(display, 0, 0, 170);
+		fadedBlue = ColorCache.getColor(display, 219, 236, 246);
 		green = ColorCache.getColor(display, 0, 170, 0);
 		fadedGreen = ColorCache.getColor(display, 96, 160, 96);
 		grey = ColorCache.getColor(display, 170, 170, 170);
