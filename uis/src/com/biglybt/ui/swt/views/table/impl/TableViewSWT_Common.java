@@ -697,7 +697,11 @@ public class TableViewSWT_Common
 				widget.setBackground(COLOR_FILTER_REGEX);
 				widget.setFont( FONT_REGEX );
 
-				Messages.setLanguageTooltip(widget,"MyTorrentsView.filter.tooltip");
+				if ( filter.nextText.isEmpty()){
+					Messages.setLanguageTooltip(widget,"MyTorrentsView.filter.tooltip");
+				}else{
+					Utils.setTT(widget, null); // prevent TT from appearing as you type into field
+				}
 			} catch (Exception e) {
 				widget.setBackground(Colors.colorErrorBG);
 				Utils.setTT(widget,e.getMessage());
@@ -705,7 +709,11 @@ public class TableViewSWT_Common
 			}
 		} else {
 			widget.setBackground(filter.nextText==null||filter.nextText.isEmpty()?old_bg:COLOR_FILTER_NO_REGEX);
-			Messages.setLanguageTooltip(widget,"MyTorrentsView.filter.tooltip");
+			if ( filter.nextText.isEmpty()){
+				Messages.setLanguageTooltip(widget,"MyTorrentsView.filter.tooltip");
+			}else{
+				Utils.setTT(widget, null); // prevent TT from appearing as you type into field
+			}
 			if ( FONT_NO_REGEX != null ){
 				widget.setFont( FONT_NO_REGEX );
 			}
