@@ -59,7 +59,9 @@ import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableTooltips;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_Common;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
-
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadTypeComplete;
+import com.biglybt.pif.download.DownloadTypeIncomplete;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.tables.TableRowMouseEvent;
@@ -1949,7 +1951,19 @@ public class TableViewPainted
 				filter.text = filter.nextText = txtFilter.getText();
 			}
 			
-			TextWithHistory twh = new TextWithHistory( "tableviewpainted.search", txtFilter );
+			Class<?> cla = getDataSourceType();
+			
+			String historyKey = "";
+			
+			if ( cla != null ){
+				if ( cla == DownloadTypeComplete.class || cla == DownloadTypeIncomplete.class || cla == Download.class ){
+					// default, leave blank
+				}else{
+					historyKey = "." + cla.getName();	// different history for different table types
+				}
+			}
+			
+			TextWithHistory twh = new TextWithHistory( "tableviewpainted.search" + historyKey, txtFilter );
 			
 			txtFilter.addListener( SWT.FocusOut, (ev)->{
 				String text = txtFilter.getText().trim();
