@@ -1448,10 +1448,10 @@ GlobalManagerFileMerger
 				int	end_rem = (int)( file_end_offset%piece_length);
 
 				if ( end_rem == 0 ){
-					end_rem = (int)(piece_length-1);	// exact piece so last block is last block
+					end_rem = (int)(piece_length);	// exact piece so last block is last block
 				}
 				
-				last_piece_block_number	= end_rem/DiskManager.BLOCK_SIZE;
+				last_piece_block_number	= (end_rem-1)/DiskManager.BLOCK_SIZE;
 			}
 
 			DiskManagerFileInfo
