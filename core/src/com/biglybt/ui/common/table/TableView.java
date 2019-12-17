@@ -251,8 +251,6 @@ public interface TableView<DATASOURCETYPE>
 
 	void setEnableTabViews(boolean enableTabViews, boolean expandByDefault);
 
-	void setFocus();
-
 	/**
 	 * @param newDataSource
 	 */

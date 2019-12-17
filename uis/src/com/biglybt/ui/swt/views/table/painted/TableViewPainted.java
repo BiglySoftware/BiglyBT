@@ -359,7 +359,13 @@ public class TableViewPainted
 					}
 				}
 				if (getComposite() != event.widget) {
-					super.keyPressed(event);
+					if ( getComposite().isVisible()){
+							// we only want super to get the opportunity to consume the event if it is visible
+							// the way search works we come through here multiple times for various table views (up to three
+							// if simple/detailed library views have been visited) and we don't want an invisible one
+							// to mark the event as 'doit=false' and prevent a visible one from processing it...
+						super.keyPressed(event);
+					}
 					return;
 				}
 				boolean updateTable = false;
@@ -899,7 +905,7 @@ public class TableViewPainted
 	 * @see TableView#setFocus()
 	 */
 	@Override
-	public void setFocus() {
+	public void requestFocus( int reason ) {
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
@@ -910,19 +916,37 @@ public class TableViewPainted
 					// if we have an active search then we don't want to grab focus
 					// away from the text box due to a selected-content change
 				
-				TableViewSWTFilter<?> filter = getSWTFilter();
-				
-				if ( filter != null ){
+				if ( reason == 1 ){
 					
-					String text = filter.text;
+					TableViewSWTFilter<?> filter = getSWTFilter();
 					
-					if ( text != null && !text.isEmpty()){
+					if ( filter != null ){ // && filter.widget.isFocusControl()){
 						
-						return;
+						String text = filter.text;
+						
+						if ( text != null && !text.isEmpty()){
+							
+							return;
+						}
 					}
-				}
+				}else if ( reason == 2 ){
 				
-				cTable.setFocus();
+					if ( getSelectedRowsSize() == 0 ){
+						
+						TableRowCore[] rows = getRows();
+						
+						if ( rows.length > 0 ){
+							
+							setSelectedRows( new TableRowCore[]{ rows[0] });
+						}
+					}
+					
+					cTable.setFocus();
+					
+				}else{
+					
+					cTable.setFocus();
+				}
 			}
 		});
 	}
@@ -1911,6 +1935,34 @@ public class TableViewPainted
 		}
 		filter.widget = txtFilter;
 		if (txtFilter != null) {
+			
+			Class<?> cla = getDataSourceType();
+			
+			String historyKey = "";
+			
+			if ( cla != null ){
+				if ( cla == DownloadTypeComplete.class || cla == DownloadTypeIncomplete.class || cla == Download.class ){
+					// default, leave blank
+				}else{
+					historyKey = "." + cla.getName();	// different history for different table types
+				}
+			}
+			
+				// must create this before adding other listeners so it gets priority over key events
+			
+			TextWithHistory twh = new TextWithHistory( "tableviewpainted.search" + historyKey, txtFilter );
+			
+				// disable as interferes with key-down into search results feature 
+			
+			twh.setKeDownShowsHistory( false );
+			
+			txtFilter.addListener( SWT.FocusOut, (ev)->{
+				String text = txtFilter.getText().trim();
+				if ( !text.isEmpty()){
+					twh.addHistory( text );
+				}
+			});
+			
 			txtFilter.addKeyListener(tvSWTCommon);
 
 			filter.widgetModifyListener = new ModifyListener() {
@@ -1951,26 +2003,7 @@ public class TableViewPainted
 				filter.text = filter.nextText = txtFilter.getText();
 			}
 			
-			Class<?> cla = getDataSourceType();
-			
-			String historyKey = "";
-			
-			if ( cla != null ){
-				if ( cla == DownloadTypeComplete.class || cla == DownloadTypeIncomplete.class || cla == Download.class ){
-					// default, leave blank
-				}else{
-					historyKey = "." + cla.getName();	// different history for different table types
-				}
-			}
-			
-			TextWithHistory twh = new TextWithHistory( "tableviewpainted.search" + historyKey, txtFilter );
-			
-			txtFilter.addListener( SWT.FocusOut, (ev)->{
-				String text = txtFilter.getText().trim();
-				if ( !text.isEmpty()){
-					twh.addHistory( text );
-				}
-			});
+
 
 		} else {
 			filter.text = filter.nextText = "";

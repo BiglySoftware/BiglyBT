@@ -215,6 +215,13 @@ public interface TableViewSWT<DATASOURCETYPE>
 	 */
 	boolean isMenuEnabled();
 
+	/**
+	 * @since 2.2.0.3
+	 * @param reason  1=selected content changed, 2=search filter left
+	 */
+	
+	void requestFocus( int reason );
+	
 	void packColumns();
 
 	void visibleRowsChanged();

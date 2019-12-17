@@ -552,8 +552,14 @@ public class TableViewSWT_Common
 		if (event.stateMask == 0) {
 			if (filter != null && filter.widget == event.widget) {
 				if (event.keyCode == SWT.ARROW_DOWN) {
-					tv.setFocus();
-					event.doit = false;
+					tv.requestFocus( 2 );
+						// for detailed library views we want to give the seeding section a chance to grab
+						// focus if the incomplete section is empty - code below allows the 'other' view a chance
+						// to do this
+					int rows = tv.getRowCount();
+					if ( rows > 0 ){
+						event.doit = false;
+					}
 				} else if (event.character == 13) {
 					tv.refilter();
 				}

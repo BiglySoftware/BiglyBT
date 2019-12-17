@@ -429,9 +429,9 @@ public class MyTorrentsSuperView
 						if (selected_tv.getSelectedRowsSize() == 0) {
 							MyTorrentsView currentView = getCurrentView();
 							if (currentView == torrentview) {
-								seedingview.getTableView().setFocus();
+								seedingview.getTableView().requestFocus(1);
 							} else {
-								torrentview.getTableView().setFocus();
+								torrentview.getTableView().requestFocus(1);
 							}
 						}
 

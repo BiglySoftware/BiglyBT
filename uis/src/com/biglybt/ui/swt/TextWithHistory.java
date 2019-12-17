@@ -59,7 +59,8 @@ TextWithHistory
 	private boolean	mouse_entered;
 	private boolean	menu_visible;
 
-
+	private boolean	keyDownShowsHistory	= true;
+	
 	public
 	TextWithHistory(
 		String	_config_prefix,
@@ -146,7 +147,7 @@ TextWithHistory
 
 						// down arrow with no current search shows history
 
-					if ( key == SWT.ARROW_DOWN ){
+					if ( key == SWT.ARROW_DOWN && keyDownShowsHistory ){
 						String current_text = text.getText().trim();
 						if ( current_text.length() == 0 ){
 							handleSearch(current_text, true);
@@ -179,8 +180,25 @@ TextWithHistory
 				}
 			}
 		});
+		
+			// double-click with no current search shows history
+		
+		text.addListener(SWT.MouseDoubleClick,(e)->{
+			String current_text = text.getText().trim();
+			if ( current_text.length() == 0 ){
+				handleSearch(current_text, true);
+				e.doit = false;
+			}
+		});
 	}
 
+	public void
+	setKeDownShowsHistory(
+		boolean	b )
+	{
+		keyDownShowsHistory = b;
+	}
+	
 	private void
 	handleSearch(
 		String		current_text,
