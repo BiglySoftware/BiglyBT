@@ -859,9 +859,7 @@ public class SBC_AllTrackersView
 		Menu options_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
 
 		boolean opt_enabled = trackers.size() == 1;
-		
-		options_menu.setEnabled( opt_enabled );
-		
+				
 		MenuItem options_item = new MenuItem( menu, SWT.CASCADE);
 
 		Messages.setLanguageText( options_item, "ConfigView.title.full" );
@@ -872,6 +870,8 @@ public class SBC_AllTrackersView
 
 		Messages.setLanguageText( itemOptCryptoPort, "menu.tracker.cryptoport.disabled" );
 
+		itemOptCryptoPort.setEnabled( opt_enabled );
+		
 		if ( opt_enabled ){
 			
 			AllTrackersTracker tracker = trackers.get(0);
