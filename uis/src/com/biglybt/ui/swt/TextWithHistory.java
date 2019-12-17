@@ -50,7 +50,8 @@ TextWithHistory
 	private final boolean	disabled;
 	private final String	config_prefix;
 	private final Text		text;
-
+	private final Color		text_bg;
+	
 	private List<String>	history;
 
 	private Shell 	current_shell;
@@ -68,7 +69,8 @@ TextWithHistory
 	{
 		config_prefix	= _config_prefix;
 		text			= _text;
-
+		text_bg			= text.getBackground();
+		
 			// issues around the new shell grabbing focus from the Text field that I can't be bothered
 			// to see if I can fix (focus-lost causes shell to be destroyed, can't use TraverseListener
 			// to prevent the focus loss - obviously focus loss causes subsequent keystrokes to get
@@ -271,9 +273,7 @@ TextWithHistory
 
 		current_shell.setLayout( layout );
 
-		Color	background = text.getBackground();
-
-		current_shell.setBackground( background );
+		current_shell.setBackground( text_bg );
 
 		final Composite comp = new Composite( current_shell, SWT.NULL );
 		comp.setLayoutData( new GridData( GridData.FILL_BOTH ));
@@ -288,7 +288,7 @@ TextWithHistory
 
 		comp.setLayout( layout );
 
-		comp.setBackground( background );
+		comp.setBackground( text_bg );
 
 		comp.addPaintListener( new PaintListener() {
 
@@ -315,7 +315,7 @@ TextWithHistory
 		}
 
 		list.setFont( text.getFont());
-		list.setBackground( background );
+		list.setBackground( text_bg );
 
 		list.deselectAll();
 

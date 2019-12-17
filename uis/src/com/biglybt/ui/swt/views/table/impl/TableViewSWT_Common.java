@@ -31,6 +31,7 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
@@ -64,8 +65,18 @@ public class TableViewSWT_Common
 	private static final int ASYOUTYPE_MODE = ASYOUTYPE_MODE_FILTER;
 	private static final int ASYOUTYPE_UPDATEDELAY = 300;
 
-	private static final Color COLOR_FILTER_REGEX		= Colors.fadedYellow;
-	private static final Color COLOR_FILTER_NO_REGEX	= Colors.fadedBlue;
+	private static Color COLOR_FILTER_REGEX;
+	private static Color COLOR_FILTER_NO_REGEX;
+	
+	static{
+		COConfigurationManager.addWeakParameterListener((n)->{
+			
+			COLOR_FILTER_NO_REGEX 	= Utils.getConfigColor( "table.filter.active.colour", Colors.fadedBlue );
+			COLOR_FILTER_REGEX 		= Utils.getConfigColor( "table.filter.regex.colour", Colors.fadedYellow );
+			
+		}, true, "table.filter.active.colour", "table.filter.regex.colour" );	
+	}
+	
 	
 	private Font FONT_NO_REGEX;
 	private Font FONT_REGEX;
@@ -667,6 +678,11 @@ public class TableViewSWT_Common
 			old_bg = widget.getBackground();
 			widget.setData( "TVSWTC:filter.bg", old_bg);
 		}
+		Color old_fg = (Color)widget.getData( "TVSWTC:filter.fg" );
+		if ( old_fg == null ){
+			old_fg = widget.getForeground();
+			widget.setData( "TVSWTC:filter.fg", old_fg);
+		}
 		if (filter.regex) {
 			if ( FONT_NO_REGEX == null ){
 				Font font = widget.getFont();
@@ -701,6 +717,8 @@ public class TableViewSWT_Common
 				Pattern.compile(filter.nextText, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 				
 				widget.setBackground(COLOR_FILTER_REGEX);
+				widget.setForeground( old_fg );
+				
 				widget.setFont( FONT_REGEX );
 
 				if ( filter.nextText.isEmpty()){
@@ -710,11 +728,15 @@ public class TableViewSWT_Common
 				}
 			} catch (Exception e) {
 				widget.setBackground(Colors.colorErrorBG);
+				widget.setForeground( old_fg );
 				Utils.setTT(widget,e.getMessage());
 				widget.setFont( FONT_REGEX_ERROR );
 			}
 		} else {
-			widget.setBackground(filter.nextText==null||filter.nextText.isEmpty()?old_bg:COLOR_FILTER_NO_REGEX);
+			Color bg = filter.nextText==null||filter.nextText.isEmpty()?old_bg:COLOR_FILTER_NO_REGEX;
+			Color fg = bg==COLOR_FILTER_NO_REGEX?Colors.getInstance().getReadableColor(bg):old_bg;
+			widget.setBackground( bg );
+			widget.setForeground( fg );
 			if ( filter.nextText.isEmpty()){
 				Messages.setLanguageTooltip(widget,"MyTorrentsView.filter.tooltip");
 			}else{

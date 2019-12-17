@@ -556,7 +556,7 @@ public class Utils
 	
 	public static RGB
 	showColorDialog(
-		Composite	parent,
+		Control		parent,
 		RGB			existing )
 	{
 		Shell parent_shell = parent.getShell();

@@ -64,12 +64,14 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.*;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
+import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.utils.SWTRunnable;
@@ -586,9 +588,15 @@ public class MyTorrentsView
 
 	  tableHeaderMenu = new Menu(control.getShell(), SWT.POP_UP );
 
+	  MenuItem	showItem = new MenuItem( tableHeaderMenu, SWT.CASCADE );
+	  Messages.setLanguageText( showItem, "ConfigView.label.ui_switcher_button" );
+	  Menu showMenu = new Menu( tableHeaderMenu );
+	  
+	  showItem.setMenu( showMenu );
+	  
 	  // show uptime
 
-	  final MenuItem menuItemShowUptime = new MenuItem(tableHeaderMenu, SWT.CHECK);
+	  final MenuItem menuItemShowUptime = new MenuItem(showMenu, SWT.CHECK);
 	  Messages.setLanguageText( menuItemShowUptime, "ConfigView.label.showuptime" );
 
 	  menuItemShowUptime.addSelectionListener(new SelectionAdapter() {
@@ -601,7 +609,7 @@ public class MyTorrentsView
 
 	  // selected download rates
 
-	  final MenuItem menuItemShowRates = new MenuItem(tableHeaderMenu, SWT.CHECK);
+	  final MenuItem menuItemShowRates = new MenuItem(showMenu, SWT.CHECK);
 	  Messages.setLanguageText( menuItemShowRates, "label.show.selected.rates" );
 
 	  menuItemShowRates.addSelectionListener(new SelectionAdapter() {
@@ -613,7 +621,7 @@ public class MyTorrentsView
 	  });
 	  // show category buttons
 
-	  final MenuItem menuItemShowCatBut = new MenuItem(tableHeaderMenu, SWT.CHECK);
+	  final MenuItem menuItemShowCatBut = new MenuItem(showMenu, SWT.CHECK);
 	  Messages.setLanguageText( menuItemShowCatBut, "ConfigView.label.show.cat.but" );
 
 	  menuItemShowCatBut.addSelectionListener(new SelectionAdapter() {
@@ -627,7 +635,7 @@ public class MyTorrentsView
 
 	  // show tag buttons
 
-	  final MenuItem menuItemShowTagBut = new MenuItem(tableHeaderMenu, SWT.CHECK);
+	  final MenuItem menuItemShowTagBut = new MenuItem(showMenu, SWT.CHECK);
 	  Messages.setLanguageText( menuItemShowTagBut, "ConfigView.label.show.tag.but" );
 
 	  menuItemShowTagBut.addSelectionListener(new SelectionAdapter() {
@@ -638,6 +646,30 @@ public class MyTorrentsView
 		  }
 	  });
 
+	  
+	  // search
+	  
+	  MenuItem	searchItem = new MenuItem( tableHeaderMenu, SWT.CASCADE );
+	  Messages.setLanguageText( searchItem, "LoggerView.filter" );
+	  Menu searchMenu = new Menu( tableHeaderMenu );
+	  
+	  searchItem.setMenu( searchMenu );
+	  
+	  MenuItem searchActive = new MenuItem( searchMenu, SWT.PUSH );
+	  Messages.setLanguageText(searchActive, "dialog.active.color" );
+	  searchActive.addListener( SWT.Selection, (ev)->{
+		  RGB res = Utils.showColorDialog( control, Utils.getConfigColor( "table.filter.active.colour", Colors.fadedBlue ).getRGB());
+
+		  if ( res != null ){
+
+			  Utils.setConfigColor( "table.filter.active.colour", ColorCache.getColor( control.getShell().getDisplay(), res ) );
+		  }
+	  });
+	  
+	  
+	  
+	  
+	  
 	  new MenuItem( tableHeaderMenu, SWT.SEPARATOR );
 
 	  	// enable simple views
