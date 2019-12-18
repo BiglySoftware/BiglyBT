@@ -91,8 +91,6 @@ public class PieceGraphView
 
 	private double[] squareCache;
 
-	private UISWTView swtView;
-
 	public PieceGraphView() {
 		this.properties = SWTSkinFactory.getInstance().getSkinProperties();
 	}
@@ -144,6 +142,16 @@ public class PieceGraphView
 				calcBlockSize();
 			}
 		});
+		
+	    canvas.addListener( SWT.Dispose, (ev)->{
+	    	for ( Image i: new Image[]{ img, imgHaveAll, imgNoHave }){
+		    	if ( i != null && !i.isDisposed()){
+		    		i.dispose();
+		    	}
+	    	}
+	    	
+	    	img = imgHaveAll = imgNoHave = null;
+	    });
 	}
 
 	// @see com.biglybt.ui.swt.views.AbstractIView#dataSourceChanged(java.lang.Object)
@@ -518,7 +526,6 @@ public class PieceGraphView
 	public boolean eventOccurred(UISWTViewEvent event) {
     switch (event.getType()) {
       case UISWTViewEvent.TYPE_CREATE:
-      	swtView = (UISWTView)event.getData();
         break;
 
       case UISWTViewEvent.TYPE_DESTROY:

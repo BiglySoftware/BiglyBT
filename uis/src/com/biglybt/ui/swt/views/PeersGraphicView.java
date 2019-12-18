@@ -680,16 +680,17 @@ public class PeersGraphicView
 				}
 			}
 		});
+    
+    canvas.addListener( SWT.Dispose, (ev)->{
+    	if ( img != null && !img.isDisposed()){
+    		img.dispose();
+    		img = null;
+    	}
+    });
   }
 
-  protected void refresh() {
-    doRefresh();
-  }
-
-  private void doRefresh() {
-    //Comment the following line to enable the view
-    //if(true) return;
-
+  protected void refresh() 
+  {
 	synchronized( dm_data_lock ){
 
 	    if (canvas == null || canvas.isDisposed()){
