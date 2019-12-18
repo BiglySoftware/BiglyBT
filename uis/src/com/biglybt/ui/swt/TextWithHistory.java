@@ -39,7 +39,9 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.util.StringCompareUtils;
 
 public class
 TextWithHistory
@@ -70,6 +72,22 @@ TextWithHistory
 		config_prefix	= _config_prefix;
 		text			= _text;
 		text_bg			= text.getBackground();
+	
+		TextWithHistory existing = (TextWithHistory)text.getData( "TextWithHistory::instance" );
+		
+		if ( existing != null ){
+			
+			if ( !StringCompareUtils.equals( config_prefix, existing.config_prefix )){
+				
+				Debug.out( "Config keys differ: " + config_prefix + "/" + existing.config_prefix );
+			}
+			
+			disabled = true;
+			
+			return;
+		}
+		
+		text.setData( "TextWithHistory::instance", this );
 		
 			// issues around the new shell grabbing focus from the Text field that I can't be bothered
 			// to see if I can fix (focus-lost causes shell to be destroyed, can't use TraverseListener
