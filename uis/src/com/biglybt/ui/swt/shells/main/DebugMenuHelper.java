@@ -71,7 +71,7 @@ public class DebugMenuHelper
 					"UIFunctionsManagerSWT.getUIFunctionsSWT() is returning null");
 		}
 
-		item = new MenuItem(menuDebug, SWT.CASCADE);
+		item = new MenuItem(menuDebug, SWT.PUSH);
 		item.setText("Run GC");
 		item.addListener(SWT.Selection, new Listener() {
 			@Override

@@ -21,6 +21,8 @@ package com.biglybt.ui.swt.mainwindow;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.internat.MessageText;
@@ -64,6 +66,16 @@ public class DebugMenuHelper
 		Menu menuDebug = new Menu(menu.getParent(), SWT.DROP_DOWN);
 		item.setMenu(menuDebug);
 
+		
+		item = new MenuItem(menuDebug, SWT.PUSH );
+		item.setText("Run GC");
+		item.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				System.gc();
+			}
+		});
+		
 		item = new MenuItem(menuDebug, SWT.CASCADE);
 		item.setText("ScreenSize");
 		Menu menuSS = new Menu(menu.getParent(), SWT.DROP_DOWN);
