@@ -607,6 +607,8 @@ public class BTPeerIDByteDecoder {
 		
 		assertDecode( "PicoTorrent 0.15.0", "-PI0150-9aa757efd5be" );
 		
+		assertDecode( "Zona 2.0.2.8", "-ZO2028-yeQBDpxy1b5b" );
+		
 		System.out.println("Done.");
 	}
 }
