@@ -43,6 +43,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -146,8 +147,9 @@ public class PeersGraphicView
   private Image					my_flag;
 
   //UI Stuff
-  private Display 		display;
-  private Composite 	panel;
+  private Display 	display;
+  private Canvas 	canvas;
+  private Image 	img;
 
 
   private static class
@@ -375,9 +377,9 @@ public class PeersGraphicView
 			  public void runSupport() {
 				  synchronized( dm_data_lock ){
 					  if ( dm_data.length > 0 ){
-						  Utils.disposeComposite(panel, false);
+						  Utils.disposeComposite(canvas, false);
 					  } else {
-						  ViewUtils.setViewRequiresOneDownload(panel);
+						  ViewUtils.setViewRequiresOneDownload(canvas);
 					  }
 				  }
 			  }
@@ -400,7 +402,7 @@ public class PeersGraphicView
   }
 
   protected Composite getComposite() {
-    return panel;
+    return canvas;
   }
 
   private String getData() {
@@ -410,9 +412,9 @@ public class PeersGraphicView
   protected void initialize(Composite composite) {
     display = composite.getDisplay();
 
-    panel = new Canvas(composite,SWT.NO_BACKGROUND);
+    canvas = new Canvas(composite,SWT.NO_BACKGROUND);
 
-    panel.addListener(SWT.MouseHover, new Listener() {
+    canvas.addListener(SWT.MouseHover, new Listener() {
 		@Override
 		public void handleEvent(Event event) {
 
@@ -485,11 +487,11 @@ public class PeersGraphicView
 				}
 			}
 
-			Utils.setTT(panel, tt );
+			Utils.setTT(canvas, tt );
 		}
     });
 
-    panel.addMouseListener(
+    canvas.addMouseListener(
     	new MouseAdapter()
     	{
     		@Override
@@ -541,14 +543,14 @@ public class PeersGraphicView
     					return;
     				}
 
-    				Menu menu = panel.getMenu();
+    				Menu menu = canvas.getMenu();
 
     				if ( menu != null && !menu.isDisposed()){
 
     					menu.dispose();
     				}
 
-    				menu = new Menu( panel );
+    				menu = new Menu( canvas );
 
     				PeersViewBase.fillMenu( menu, target, target_manager );
 
@@ -611,7 +613,7 @@ public class PeersGraphicView
 											mdi_entry.setDatasource(new Object[] { manager });
 										}
 	
-										Composite comp = panel.getParent();
+										Composite comp = canvas.getParent();
 	
 										while( comp != null ){
 	
@@ -663,11 +665,19 @@ public class PeersGraphicView
 
     	// without this we get a transient blank when mousing in and out of the tab folder on OSX :(
 
-    panel.addPaintListener(
+    canvas.addPaintListener(
     	new PaintListener(){
 			@Override
 			public void paintControl(PaintEvent e) {
-				doRefresh();
+				if (img != null && !img.isDisposed()) {
+					Rectangle bounds = img.getBounds();
+					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
+						e.gc.drawImage(img, e.x, e.y, e.width, e.height, e.x, e.y, e.width,
+								e.height);
+					}
+				} else {
+					e.gc.fillRectangle(e.x, e.y, e.width, e.height);
+				}
 			}
 		});
   }
@@ -682,131 +692,152 @@ public class PeersGraphicView
 
 	synchronized( dm_data_lock ){
 
-	    if (panel == null || panel.isDisposed()){
+	    if (canvas == null || canvas.isDisposed()){
 	    	return;
 	    }
 
-	    Point panelSize = panel.getSize();
+	    Rectangle bounds = canvas.getClientArea();
+	    
+	    Point panelSize = canvas.getSize();
 
-	    int	pw = panelSize.x;
-	    int	ph = panelSize.y;
-
-	    int	num_dms = dm_data.length;
-
-	    if ( num_dms == 0  || pw == 0 || ph == 0 ){
-	    	GC gcPanel = new GC(panel);
-	    	gcPanel.setBackground(Colors.white);
-	    	gcPanel.fillRectangle( panel.getBounds());
-	    	gcPanel.dispose();
-	    	return;
-	    }
-
-	    int	h_cells;
-	    int v_cells;
-
-	    if ( ph <= pw ){
-
-	    	v_cells = 1;
-	    	h_cells = pw/ph;
-
-	    	double f = Math.sqrt(((double)num_dms)/(v_cells*h_cells));
-
-	    	int factor = (int)Math.ceil(f);
-
-	    	h_cells *= factor;
-	    	v_cells = factor;
-
-	    }else{
-
-	    	v_cells = ph/pw;
-	    	h_cells = 1;
-
-
-	    	double f = Math.sqrt(((double)num_dms)/(v_cells*h_cells));
-
-	    	int factor = (int)Math.ceil(f);
-
-	    	v_cells *= factor;
-	    	h_cells = factor;
-	    }
-
-	    ph = h_cells==1?(ph/num_dms):(ph/v_cells);
-	    pw = v_cells==1?(pw/num_dms):(pw/h_cells);
-
-	    //System.out.println( h_cells + "*" + v_cells + ": " + pw + "*" + ph );
-
-	    Point mySize 	= new Point( pw, ph );
-
-	    int	num = 0;
-
-	    Point lastOffset = null;
-
-    	for ( ManagerData data: dm_data ){
-
-    		DownloadManager manager 	= data.manager;
-
-		    PEPeer[] sortedPeers;
-		    try {
-		      data.peers_mon.enter();
-		      List<PEPeerTransport> connectedPeers = new ArrayList<>();
-		      for (PEPeer peer : data.peers) {
-		    	if ( peer_filter.acceptPeer(peer)) {
-			      	if (peer instanceof PEPeerTransport) {
-			      		PEPeerTransport peerTransport = (PEPeerTransport) peer;
-			      		if(peerTransport.getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED)
-			      			connectedPeers.add(peerTransport);
-			      	}
-		    	}
-		      }
-
-		      sortedPeers = connectedPeers.toArray(new PEPeer[connectedPeers.size()]);
-		    } finally {
-		    	data.peers_mon.exit();
-		    }
-
-		    if(sortedPeers == null) return;
-
-		    for (int i=0;i<3;i++){
-		    	try{
-
-		    		Arrays.sort(sortedPeers,peerComparator);
-
-		    		break;
-
-		    	}catch( IllegalArgumentException e ){
-
-		    		// can happen as peer data can change during sort and result in 'comparison method violates its general contract' error
-		    	}
-		    }
-
-		    int h = num%h_cells;
-		    int v = num/h_cells;
-
-		    Point myOffset	= new Point(h*pw,v*ph);
-
-		    render( manager, data, sortedPeers, mySize, myOffset);
-
-		    num++;
-
-		    lastOffset = myOffset;
+		boolean clearImage = img == null || img.isDisposed()
+				|| img.getBounds().width != bounds.width
+				|| img.getBounds().height != bounds.height;
+		if (clearImage) {
+			if (img != null && !img.isDisposed()) {
+				img.dispose();
+			}
+			//System.out.println("clear " + img);
+			img = new Image(canvas.getDisplay(), bounds.width, bounds.height);
 		}
-
-		int	rem_x = panelSize.x - (lastOffset.x + mySize.x );
-
-		if ( rem_x > 0 ){
-		  	GC gcPanel = new GC(panel);
-	    	gcPanel.setBackground(Colors.white);
-	    	gcPanel.fillRectangle(lastOffset.x + mySize.x,lastOffset.y,rem_x,mySize.y);
-	    	gcPanel.dispose();
-		}
-
-		int	rem_y = panelSize.y - (lastOffset.y + mySize.y );
-
-		if ( rem_y > 0 ){
-		  	GC gcPanel = new GC(panel);
-	    	gcPanel.setBackground(Colors.white);
-	    	gcPanel.fillRectangle(0, lastOffset.y + mySize.y, panelSize.x, rem_y);
-	    	gcPanel.dispose();
+	    
+		GC gc = new GC(img);
+		
+		try{
+		    int	pw = panelSize.x;
+		    int	ph = panelSize.y;
+	
+		    int	num_dms = dm_data.length;
+	
+		    if ( num_dms == 0  || pw == 0 || ph == 0 ){
+		    
+		    	gc.setBackground(Colors.white);
+		    	gc.fillRectangle(bounds);
+		    	
+		    	return;
+		    }
+	
+		    int	h_cells;
+		    int v_cells;
+	
+		    if ( ph <= pw ){
+	
+		    	v_cells = 1;
+		    	h_cells = pw/ph;
+	
+		    	double f = Math.sqrt(((double)num_dms)/(v_cells*h_cells));
+	
+		    	int factor = (int)Math.ceil(f);
+	
+		    	h_cells *= factor;
+		    	v_cells = factor;
+	
+		    }else{
+	
+		    	v_cells = ph/pw;
+		    	h_cells = 1;
+	
+	
+		    	double f = Math.sqrt(((double)num_dms)/(v_cells*h_cells));
+	
+		    	int factor = (int)Math.ceil(f);
+	
+		    	v_cells *= factor;
+		    	h_cells = factor;
+		    }
+	
+		    ph = h_cells==1?(ph/num_dms):(ph/v_cells);
+		    pw = v_cells==1?(pw/num_dms):(pw/h_cells);
+	
+		    //System.out.println( h_cells + "*" + v_cells + ": " + pw + "*" + ph );
+	
+		    Point mySize 	= new Point( pw, ph );
+	
+		    int	num = 0;
+	
+		    Point lastOffset = null;
+	
+	    	for ( ManagerData data: dm_data ){
+	
+	    		DownloadManager manager 	= data.manager;
+	
+			    PEPeer[] sortedPeers;
+			    try {
+			      data.peers_mon.enter();
+			      List<PEPeerTransport> connectedPeers = new ArrayList<>();
+			      for (PEPeer peer : data.peers) {
+			    	if ( peer_filter.acceptPeer(peer)) {
+				      	if (peer instanceof PEPeerTransport) {
+				      		PEPeerTransport peerTransport = (PEPeerTransport) peer;
+				      		if(peerTransport.getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED)
+				      			connectedPeers.add(peerTransport);
+				      	}
+			    	}
+			      }
+	
+			      sortedPeers = connectedPeers.toArray(new PEPeer[connectedPeers.size()]);
+			    } finally {
+			    	data.peers_mon.exit();
+			    }
+	
+			    if(sortedPeers == null) return;
+	
+			    for (int i=0;i<3;i++){
+			    	try{
+	
+			    		Arrays.sort(sortedPeers,peerComparator);
+	
+			    		break;
+	
+			    	}catch( IllegalArgumentException e ){
+	
+			    		// can happen as peer data can change during sort and result in 'comparison method violates its general contract' error
+			    	}
+			    }
+	
+			    int h = num%h_cells;
+			    int v = num/h_cells;
+	
+			    Point myOffset	= new Point(h*pw,v*ph);
+	
+			    render( manager, data, gc, sortedPeers, mySize, myOffset);
+	
+			    num++;
+	
+			    lastOffset = myOffset;
+			}
+	
+			int	rem_x = panelSize.x - (lastOffset.x + mySize.x );
+	
+			if ( rem_x > 0 ){
+		
+		    	gc.setBackground(Colors.white);
+		    	gc.fillRectangle(lastOffset.x + mySize.x,lastOffset.y,rem_x,mySize.y);
+		    	
+			}
+	
+			int	rem_y = panelSize.y - (lastOffset.y + mySize.y );
+	
+			if ( rem_y > 0 ){
+			  
+		    	gc.setBackground(Colors.white);
+		    	gc.fillRectangle(0, lastOffset.y + mySize.y, panelSize.x, rem_y);
+		    	
+			}
+		}finally{
+			gc.dispose();
+			
+			canvas.redraw();
 		}
 	}
   }
@@ -815,6 +846,7 @@ public class PeersGraphicView
   render(
 	DownloadManager		manager,
 	ManagerData			data,
+	GC					gc,
 	PEPeer[] 			sortedPeers,
 	Point				panelSize,
 	Point				panelOffset )
@@ -840,10 +872,10 @@ public class PeersGraphicView
     int a = x0 - 20;
     int b = y0 - 20;
     if(a < 10 || b < 10){
-    	GC gcPanel = new GC(panel);
-    	gcPanel.setBackground(Colors.white);
-    	gcPanel.fillRectangle(panelOffset.x,panelOffset.y,panelSize.x,panelSize.y);
-    	gcPanel.dispose();
+ 
+    	gc.setBackground(Colors.white);
+    	gc.fillRectangle(panelOffset.x,panelOffset.y,panelSize.x,panelSize.y);
+    	
     	return;
     }
 
@@ -1031,9 +1063,9 @@ public class PeersGraphicView
     data.me_hit_y += panelOffset.y;
 
     gcBuffer.dispose();
-    GC gcPanel = new GC(panel);
-    gcPanel.drawImage(buffer,panelOffset.x,panelOffset.y);
-    gcPanel.dispose();
+
+    gc.drawImage(buffer,panelOffset.x,panelOffset.y);
+   
     buffer.dispose();
   }
 
