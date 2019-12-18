@@ -666,7 +666,17 @@ public class MyTorrentsView
 		  }
 	  });
 	  
-	  
+
+	  final MenuItem searchHistoryEnable = new MenuItem(searchMenu, SWT.CHECK);
+	  Messages.setLanguageText( searchHistoryEnable, "label.enable.history" );
+
+	  searchHistoryEnable.addSelectionListener(new SelectionAdapter() {
+		  @Override
+		  public void widgetSelected(SelectionEvent e) {
+			  COConfigurationManager.setParameter(
+					  "table.filter.history.enabled", searchHistoryEnable.getSelection());
+		  }
+	  });
 	  
 	  
 	  
@@ -701,6 +711,8 @@ public class MyTorrentsView
 
 			  menuItemShowCatBut.setEnabled( !neverShowCatButtons );
 			  menuItemShowTagBut.setEnabled( !neverShowTagButtons );
+
+			  searchHistoryEnable.setSelection(COConfigurationManager.getBooleanParameter( "table.filter.history.enabled", true ));
 
 			  menuEnableSimple.setSelection(COConfigurationManager.getBooleanParameter( "Library.EnableSimpleView" ));
 

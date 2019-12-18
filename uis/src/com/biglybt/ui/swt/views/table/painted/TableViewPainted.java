@@ -1950,7 +1950,7 @@ public class TableViewPainted
 			
 				// must create this before adding other listeners so it gets priority over key events
 			
-			TextWithHistory twh = new TextWithHistory( "tableviewpainted.search" + historyKey, txtFilter );
+			TextWithHistory twh = new TextWithHistory( "tableviewpainted.search" + historyKey, "table.filter.history", txtFilter );
 			
 				// disable as interferes with key-down into search results feature 
 			

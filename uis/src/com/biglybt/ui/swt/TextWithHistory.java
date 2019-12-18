@@ -51,6 +51,7 @@ TextWithHistory
 
 	private final boolean	disabled;
 	private final String	config_prefix;
+	private final String	enabled_prefix;
 	private final Text		text;
 	private final Color		text_bg;
 	
@@ -69,7 +70,17 @@ TextWithHistory
 		String	_config_prefix,
 		Text	_text )
 	{
+		this( _config_prefix, _config_prefix, _text );
+	}
+	
+	public
+	TextWithHistory(
+		String	_config_prefix,
+		String	_enabled_prefix,
+		Text	_text )
+	{
 		config_prefix	= _config_prefix;
+		enabled_prefix	= _enabled_prefix;
 		text			= _text;
 		text_bg			= text.getBackground();
 	
@@ -109,7 +120,7 @@ TextWithHistory
 				@Override
 				public void modifyText(ModifyEvent e) {
 
-					if ( !COConfigurationManager.getBooleanParameter( config_prefix + ".enabled", true )){
+					if ( !COConfigurationManager.getBooleanParameter( enabled_prefix + ".enabled", true )){
 
 						if ( current_shell != null ){
 
@@ -204,6 +215,10 @@ TextWithHistory
 			// double-click with no current search shows history
 		
 		text.addListener(SWT.MouseDoubleClick,(e)->{
+			if ( !COConfigurationManager.getBooleanParameter( enabled_prefix + ".enabled", true )){
+				return;
+			}
+			
 			String current_text = text.getText().trim();
 			if ( current_text.length() == 0 ){
 				handleSearch(current_text, true);
@@ -409,7 +424,7 @@ TextWithHistory
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 
-					COConfigurationManager.setParameter( config_prefix + ".enabled", false );
+					COConfigurationManager.setParameter( enabled_prefix + ".enabled", false );
 				}
 			});
 
