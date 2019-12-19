@@ -230,9 +230,16 @@ AEJavaManagement
 			return( String.valueOf( val ) + "m" );
 		}
 
-		val = val/1024;
-
-		return( String.valueOf( val ) + "g" );
+		if ( val % 1024 == 0 ){
+			
+			val = val/1024;
+	
+			return( String.valueOf( val ) + "g" );
+			
+		}else{
+			
+			return( String.valueOf( val ) + "m" );
+		}
 	}
 
 	public interface

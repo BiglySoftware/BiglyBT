@@ -333,7 +333,7 @@ public class ConfigSectionStartShutdown
 	
 						long min_mem = AEJavaManagement.getJVMLongOption(cur_options, "-Xms");
 	
-						if (min_mem == -1 || min_mem > cur_max_mem) {
+						if ( min_mem > cur_max_mem) {
 	
 							cur_options = AEJavaManagement.setJVMLongOption(cur_options, "-Xms", cur_max_mem);
 						}
@@ -574,9 +574,16 @@ public class ConfigSectionStartShutdown
 			return (val + " MB");
 		}
 
-		val = val / 1024;
-
-		return (val + " GB");
+		if ( val %1024 == 0 ){
+			
+			val = val / 1024;
+	
+			return (val + " GB");
+			
+		}else{
+			
+			return (val + " MB");
+		}
 	}
 
 	private static long 
