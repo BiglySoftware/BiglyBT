@@ -24,6 +24,7 @@ package com.biglybt.plugin.net.buddy;
 
 import java.io.*;
 import java.lang.ref.WeakReference;
+import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
@@ -6381,17 +6382,24 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							
 							for ( String i: info ){
 						
+									// generic
+								
 								if ( i.contains( "{ip}" )){
 									
 									String address = AddressUtils.getHostAddress( ip );
 									
-									if ( i.toLowerCase( Locale.US ).contains( "http" )){
+									if ( ip.getAddress() instanceof Inet6Address ){
 										
-										address = "[" + address + "]";	// assume it is going into a URL
+										if ( i.contains( "://" )){
+											
+											address = "[" + address + "]";	// assume it is going into a URL
+										}
 									}
 									
 									i = i.replaceAll( "(?i)\\Q${ip}\\E", address );
 								}
+								
+									// ipv4
 								
 								if ( i.contains( "{ip4}")){
 									
@@ -6407,6 +6415,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 									}
 								}
 								
+									// ipv6
+								
 								if ( i.contains( "{ip6}")){
 									
 									InetSocketAddress ip6 = buddy.getLatestIP( false );
@@ -6415,7 +6425,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 										
 										String address = AddressUtils.getHostAddress( ip6 );
 										
-										if ( i.toLowerCase( Locale.US ).contains( "http" )){
+										if ( i.contains( "://" )){
 											
 											address = "[" + address + "]";	// assume it is going into a URL
 										}
