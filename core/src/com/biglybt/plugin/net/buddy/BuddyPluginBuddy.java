@@ -21,6 +21,8 @@
 package com.biglybt.plugin.net.buddy;
 
 import java.io.File;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -77,6 +79,9 @@ BuddyPluginBuddy
 	private long				post_time;
 	
 	private InetSocketAddress	current_ip;
+	private InetSocketAddress	latest_ipv4;
+	private InetSocketAddress	latest_ipv6;
+	
 	private int					tcp_port;
 	private int					udp_port;
 	
@@ -756,6 +761,13 @@ BuddyPluginBuddy
 		return( current_ip );
 	}
 
+	public InetSocketAddress
+	getLatestIP(
+		boolean	v4 )
+	{
+		return( v4?latest_ipv4:latest_ipv6 );
+	}
+	
 	public InetSocketAddress
 	getAdjustedIP()
 	{
@@ -2024,6 +2036,19 @@ BuddyPluginBuddy
 			if ( current_ip == null ){
 
 				current_ip	= _ip;
+				
+				if ( current_ip != null && !current_ip.isUnresolved()){
+				
+					if ( current_ip.getAddress() instanceof Inet4Address ){
+					
+						latest_ipv4 = current_ip;
+						
+					}else if ( current_ip.getAddress() instanceof Inet6Address ){
+						
+						latest_ipv6 = current_ip;
+					}
+				}
+				
 				tcp_port	= _tcp_port;
 				udp_port	= _udp_port;
 			}
@@ -2132,6 +2157,19 @@ BuddyPluginBuddy
 					setAddress( _ias );
 
 					current_ip		= _ias;
+					
+					if ( current_ip != null && !current_ip.isUnresolved()){
+						
+						if ( current_ip.getAddress() instanceof Inet4Address ){
+						
+							latest_ipv4 = current_ip;
+							
+						}else if ( current_ip.getAddress() instanceof Inet6Address ){
+							
+							latest_ipv6 = current_ip;
+						}
+					}
+					
 					tcp_port		= _tcp_port;
 					udp_port		= _udp_port;
 

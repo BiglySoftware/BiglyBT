@@ -6381,7 +6381,52 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							
 							for ( String i: info ){
 						
-								i = i.replaceAll( "(?i)\\Q${ip}\\E", AddressUtils.getHostAddress( ip ));
+								if ( i.contains( "{ip}" )){
+									
+									String address = AddressUtils.getHostAddress( ip );
+									
+									if ( i.toLowerCase( Locale.US ).contains( "http" )){
+										
+										address = "[" + address + "]";	// assume it is going into a URL
+									}
+									
+									i = i.replaceAll( "(?i)\\Q${ip}\\E", address );
+								}
+								
+								if ( i.contains( "{ip4}")){
+									
+									InetSocketAddress ip4 = buddy.getLatestIP( true );
+									
+									if ( ip4 != null ){
+										
+										i = i.replaceAll( "(?i)\\Q${ip4}\\E", AddressUtils.getHostAddress( ip4 ));
+
+									}else{
+										
+										continue;	// skip entry as we can't expand it
+									}
+								}
+								
+								if ( i.contains( "{ip6}")){
+									
+									InetSocketAddress ip6 = buddy.getLatestIP( false );
+									
+									if ( ip6 != null ){
+										
+										String address = AddressUtils.getHostAddress( ip6 );
+										
+										if ( i.toLowerCase( Locale.US ).contains( "http" )){
+											
+											address = "[" + address + "]";	// assume it is going into a URL
+										}
+										
+										i = i.replaceAll( "(?i)\\Q${ip6}\\E", address );
+										
+									}else{
+										
+										continue;	// skip entry as we can't expand it
+									}
+								}
 								
 								result.add( i );
 							}
