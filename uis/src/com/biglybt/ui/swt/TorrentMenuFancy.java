@@ -2368,7 +2368,7 @@ public class TorrentMenuFancy
 			if ( !dm.canExportDownload()){
 				exportFiles = false;
 			}
-			if ( !dm.isDownloadComplete( false )){
+			if ( !dm.isDownloadComplete( false ) || dm.getState() == DownloadManager.STATE_ERROR ){
 				locateFiles = true;
 			}
 			
