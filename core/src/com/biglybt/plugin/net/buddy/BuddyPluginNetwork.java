@@ -2236,10 +2236,12 @@ BuddyPluginNetwork
 				}
 			});
 
-		result_sem.reserve( 60*1000 );
+		result_sem.reserve( isPublicNetwork()?120*1000:240*1000 );
 
 		if ( result[0] == null ){
 
+			log( buddy, "    RSS download timeout" );
+			
 			throw( new IPCException( "Timeout" ));
 
 		}else if ( result[0] instanceof InputStream ){
@@ -2248,7 +2250,11 @@ BuddyPluginNetwork
 
 		}else{
 
-			throw((IPCException)result[0]);
+			IPCException error = (IPCException)result[0];
+
+			log( buddy, "    RSS downloaded failed: " + Debug.getNestedExceptionMessage( error ));
+		
+			throw( error );
 		}
 	}
 
@@ -2266,7 +2272,7 @@ BuddyPluginNetwork
 			throw( new IPCException( "Plugin network mismatch" ));
 		}
 		
-		final long timeout = 120*1000;
+		final long timeout = isPublicNetwork()?120*1000:240*1000;
 
 		final Object[] 		result 		= { null };
 		final AESemaphore	result_sem 	= new AESemaphore( "BuddyPlugin:upt" );
