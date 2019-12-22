@@ -3333,7 +3333,7 @@ DownloadManagerImpl
 	public DiskManagerPiece[] 
 	getDiskManagerPiecesSnapshot()
 	{
-		if ( destroyed ){
+		if ( destroyed || removing ){
 			return( null );
 		}
 		

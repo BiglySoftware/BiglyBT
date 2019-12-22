@@ -2451,6 +2451,8 @@ public class FileUtil {
     	}
     }
 
+    private static AsyncDispatcher	recycler = new AsyncDispatcher( "Recycler" );
+    
 	public static boolean
 	deleteWithRecycle(
 		File		file,
@@ -2458,23 +2460,59 @@ public class FileUtil {
 	{
 		if ( COConfigurationManager.getBooleanParameter("Move Deleted Data To Recycle Bin" ) && !force_no_recycle ){
 
-			try{
-			    final PlatformManager	platform  = PlatformManagerFactory.getPlatformManager();
+		    final PlatformManager	platform  = PlatformManagerFactory.getPlatformManager();
 
-			    if (platform.hasCapability(PlatformManagerCapabilities.RecoverableFileDelete)){
+		    if ( platform.hasCapability(PlatformManagerCapabilities.RecoverableFileDelete)){
 
-			    	platform.performRecoverableFileDelete( file.getAbsolutePath());
+		    	int	queued = recycler.getQueueSize();
+		    	
+		    	int QUEUE_LIMIT = 1000;
+		    	
+		    	if ( queued < QUEUE_LIMIT ){
+		    		
+			    	boolean[]	deleted = { false };
+			    	
+			    	AESemaphore	sem = new AESemaphore( "Recycler" );
+			    	
+			    	recycler.dispatch(AERunnable.create(()->{
+			    		
+			    		try{
+				    	
+			    			platform.performRecoverableFileDelete( file.getAbsolutePath());
+			    			
+			    			synchronized( deleted ){
+			    			
+			    				deleted[0] = true;
+			    			}
+			    			
+			    		}catch( Throwable e ){
+			    			
+			    		}finally{
+			    			
+			    			sem.release();
+			    		}
+			    	}));
+			    	
+			    	if ( !sem.reserve( 30*1000 )){
+			    		
+			    		Debug.out( "Recycling of file '" + file + "' took too long, aborted" );
+			    	}
+			    	
+			    	synchronized( deleted ){
+			    		
+			    		if ( deleted[0] ){
+			    			
+			    			return( true );
+			    		}
+			    	}
+		    	}else if ( queued == QUEUE_LIMIT ){
+		    		
+		    		Debug.out( "Recycler queue limit exceeded" );
+		    	}
+		    }
 
-			    	return( true );
-
-			    }else{
-
-			    	return( file.delete());
-			    }
-			}catch( PlatformManagerException e ){
-
-				return( file.delete());
-			}
+		    return( file.delete());
+			    
 		}else{
 
 			return( file.delete());

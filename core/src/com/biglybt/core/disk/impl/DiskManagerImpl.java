@@ -3374,38 +3374,39 @@ DiskManagerImpl
 
             }else{
 
-                PlatformManager mgr = PlatformManagerFactory.getPlatformManager();
-                if( Constants.isOSX &&
-                      torrent_save_file.length() > 0 &&
-                      COConfigurationManager.getBooleanParameter("Move Deleted Data To Recycle Bin" ) &&
-                		(! force_no_recycle ) &&
-                      mgr.hasCapability(PlatformManagerCapabilities.RecoverableFileDelete) ) {
+            	PlatformManager mgr = PlatformManagerFactory.getPlatformManager();
+            	
+            		// parg - not sure what this special case code is doing here for OSX but I guess we'll
+            		// keep it for the moment...
+            	
+            	boolean deleted = false;
+            	
+            	if (	 Constants.isOSX &&
+            			torrent_save_file.length() > 0 &&
+            			COConfigurationManager.getBooleanParameter("Move Deleted Data To Recycle Bin" ) &&
+            			(! force_no_recycle ) &&
+            			mgr.hasCapability(PlatformManagerCapabilities.RecoverableFileDelete )){
 
-                    try
-                    {
-                        String  dir = torrent_save_dir + File.separatorChar + torrent_save_file + File.separatorChar;
+            			
+        			String  dir = torrent_save_dir + File.separatorChar + torrent_save_file + File.separatorChar;
 
-                            // only delete the dir if there's only this torrent's files in it!
+        				// only delete the dir if there's only this torrent's files in it!
 
-                        int numDataFiles = countDataFiles( torrent, torrent_save_dir, torrent_save_file );
-                        if ( countFiles( new File(dir), numDataFiles) == numDataFiles){
+        			int numDataFiles = countDataFiles( torrent, torrent_save_dir, torrent_save_file );
+        			
+        			if ( countFiles( new File(dir), numDataFiles) == numDataFiles){
 
-                            mgr.performRecoverableFileDelete( dir );
-
-                        }else{
-
-                            deleteDataFileContents( torrent, torrent_save_dir, torrent_save_file, force_no_recycle );
-                    }
-                    }
-                    catch(PlatformManagerException ex)
-                    {
-                        deleteDataFileContents( torrent, torrent_save_dir, torrent_save_file, force_no_recycle );
-                    }
-                }
-                else{
-                    deleteDataFileContents(torrent, torrent_save_dir, torrent_save_file, force_no_recycle);
-                }
-
+        				if ( FileUtil.deleteWithRecycle( new File( dir ), false )){
+        					
+        					deleted = true;
+        				}
+        			}
+            	}
+            	
+    			if ( !deleted ){
+    					
+    				deleteDataFileContents( torrent, torrent_save_dir, torrent_save_file, force_no_recycle );
+    			}
             }
         }catch( Throwable e ){
 
