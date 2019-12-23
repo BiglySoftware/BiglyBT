@@ -403,7 +403,7 @@ BuddyPluginView
 					
 					tick_event = SimpleTimer.addPeriodicEvent(
 							"Buddy:GuiUpdater2",
-							20*1000,
+							10*1000,
 							new TimerEventPerformer()
 							{
 								@Override
@@ -464,17 +464,7 @@ BuddyPluginView
 						if ( rates <= 0 ){
 
 								// defer switch until we're actually transferring
-
-							SimpleTimer.addEvent(
-								"BP:backoff",
-								SystemTime.getOffsetTime( 1000 ),
-								new TimerEventPerformer() {
-
-									@Override
-									public void perform(TimerEvent event) {
-										updateStatus();
-									}
-								});
+								// we'll come back through here soon due to the updater timer
 
 							return;
 						}
