@@ -25,11 +25,8 @@ MSG9=" hierarchy"
 MSG_JAVASEARCH="Java exec not found in PATH, starting auto-search..."
 MSG_AZEXIT="Exit from BiglyBT complete"
 MSG_TERMINATED="BiglyBT TERMINATED."
-MSG_RECHECK="Re-checking with GCJ (Sun Java recommended).."
 MSG_ISGCJ="Java is GCJ.. looking for Sun Java.."
 MSG_JAVABORK="Java appeared to have crashed:"
-
-SKIP_GCJ=1
 
 export GDK_BACKEND=x11
 export FT2_SUBPIXEL_HINTING=2
@@ -64,28 +61,17 @@ look_for_java()
 		done
 	done
 
-	if [ $SKIP_GCJ ] ; then
-		echo $MSG_RECHECK
-		SKIP_GCJ=
-		if look_for_java ; then
-			return 0
-		else
-			return 1
-		fi
-	else
-		echo $MSG8 "${JAVADIR}/" $MSG9 ; echo $MSG_JAVA_BELOW_MIN
-	fi
+	echo $MSG8 "${JAVADIR}/" $MSG9 ; echo $MSG_JAVA_BELOW_MIN
+
 	return 1
 }
 
 check_version()
 {
-	if [ $SKIP_GCJ ] ; then
-		JAVA_ISGCJ=`"${JAVA_PROGRAM_DIR}java" -version 2>&1 | grep "gcj"`
-		if [ ! "$JAVA_ISGCJ x" = " x" ] ; then
-			echo $MSG_ISGCJ
-			return 1
-		fi
+	JAVA_ISGCJ=`"${JAVA_PROGRAM_DIR}java" -version 2>&1 | grep "gcj"`
+	if [ ! "$JAVA_ISGCJ x" = " x" ] ; then
+		echo $MSG_ISGCJ
+		return 1
 	fi
 
 	JAVA_HEADER=`"${JAVA_PROGRAM_DIR}java" -version 2>&1 | head -n 1`
@@ -221,9 +207,6 @@ moveInSWT
 
 # setup Java System Properties (no spaces in values)
 JAVA_PROPS="${JAVA_PROPS} -Dazureus.script.version=${SCRIPT_VERSION}"
-if [ ! "$JAVA_ISGCJ x" = " x" ] ; then
-	JAVA_PROPS="$JAVA_PROPS -Dgnu.gcj.runtime.VMClassLoader.library_control=never"
-fi
 
 runJavaOutput "com.biglybt.platform.unix.ScriptBeforeStartup" "$@";
 
