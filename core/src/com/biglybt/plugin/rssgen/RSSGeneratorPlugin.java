@@ -21,14 +21,9 @@
 package com.biglybt.plugin.rssgen;
 
 import java.io.*;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.URLEncoder;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.json.jsonjava.JSONJava;
 
@@ -46,7 +41,11 @@ import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.HyperlinkParameter;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
+
+import com.biglybt.core.xml.util.XMLConverter;
 import com.biglybt.ui.webplugin.WebPlugin;
+import com.biglybt.util.JSONUtils;
+import com.biglybt.util.MapUtils;
 
 
 public class
@@ -323,9 +322,8 @@ RSSGeneratorPlugin
 			if ( provider != null && provider.isEnabled()){
 
 				pos = url.indexOf( '?' );
-				
-				if ( pos != -1 && url.substring( pos ).contains( "format=json" )){
-				
+
+				if ( pos != -1 && url.substring( pos ).contains( "format=json-old" )){
 					ByteArrayOutputStream	baos = new ByteArrayOutputStream(4096);
 					
 					response.setOutputStream( baos );
@@ -337,7 +335,9 @@ RSSGeneratorPlugin
 							String xml = new String( baos.toByteArray(), "UTF-8" );
 							
 							JSONJava.JSONObject obj = new JSONJava.XML().toJSONObject( xml );
-							
+
+							obj.put("xml-converter", "JSONJava");
+
 							try{
 								JSONJava.JSONObject rss = obj.getJSONObject( "rss" );
 							
@@ -374,6 +374,45 @@ RSSGeneratorPlugin
 						
 						return( true );
 					}
+				} else if ( pos != -1 && url.substring( pos ).contains( "format=json" )){
+
+					ByteArrayOutputStream	baos = new ByteArrayOutputStream(4096);
+
+					response.setOutputStream( baos );
+
+					if ( provider.generate(request, response)){
+
+						if ( response.getContentType().startsWith( "application/xml" )){
+
+							try {
+								Map map = XMLConverter.xmlToMap(baos.toByteArray());
+								map.put("xml-converter", "BiglyBT");
+
+								Map mapRSS = MapUtils.getMapMap(map, "rss", Collections.EMPTY_MAP);
+								Map mapChannel = MapUtils.getMapMap(mapRSS, "channel", Collections.EMPTY_MAP);
+								Object item = mapChannel.get("item");
+								if (item instanceof Map) {
+									mapChannel.put("item", Arrays.asList(item));
+								}
+
+								String json = JSONUtils.encodeToJSON(map);
+								byte[] jb = json.getBytes( "UTF-8" );
+
+								ByteArrayOutputStream baos2 = new ByteArrayOutputStream( jb.length );
+
+								baos2.write( jb );
+
+								response.setOutputStream( baos2 );
+
+								response.setContentType( "application/json; charset=UTF-8" );
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+
+						return( true );
+					}
+
 				}else{
 					
 					if ( provider.generate(request, response)){
