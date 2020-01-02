@@ -106,7 +106,7 @@ public class PieceInfoView
 
 	private static final byte SHOW_SMALL = 1;
 
-	private static final int MAX_PIECES_TO_SHOW	= 32*1024;
+	public static final int MAX_PIECES_TO_SHOW	= 32*1024;
 	
 	private Composite pieceInfoComposite;
 

@@ -64,6 +64,7 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.utils.FontUtils;
+import com.biglybt.ui.swt.views.piece.PieceInfoView;
 import com.biglybt.util.MapUtils;
 
 import com.biglybt.pif.Plugin;
@@ -101,6 +102,8 @@ public class PeerInfoView
 
 	private final static int BLOCKCOLOR_AVAILCOUNT = 6;
 
+	private static final int MAX_PIECES_TO_SHOW = PieceInfoView.MAX_PIECES_TO_SHOW;
+	
 	private Composite peerInfoComposite;
 
 	private ScrolledComposite sc;
@@ -359,6 +362,19 @@ public class PeerInfoView
 					+ "; "
 					+ DisplayFormatters.formatPercentFromThousands(peer
 							.getPercentDoneInThousandNotation());
+			
+			PEPeerManager pm = peer.getManager();
+
+			DiskManager dm = pm==null?null:pm.getDiskManager();
+
+			if ( dm != null ){
+				int numPieces =  dm.getNbPieces();
+				
+				if ( numPieces > MAX_PIECES_TO_SHOW ){
+					 s += " (" + MessageText.getString( "label.truncated" ).toLowerCase() + ")";
+				}
+			}
+			
 			topLabel.setText(s);
 
 			Image flag = ImageRepository.getCountryFlag( peer, false );
@@ -455,8 +471,13 @@ public class PeerInfoView
 			return;
 		}
 
+		PEPeerManager pm = peer.getManager();
+
+		DiskManager dm = pm==null?null:pm.getDiskManager();
+
 		BitFlags peerHavePieces = peer.getAvailable();
-		if (peerHavePieces == null) {
+		
+		if ( dm == null || peerHavePieces == null) {
 			GC gc = new GC(peerInfoCanvas);
 			gc.fillRectangle(bounds);
 			gc.dispose();
@@ -464,16 +485,16 @@ public class PeerInfoView
 			return;
 		}
 
-		DiskManagerPiece[] dm_pieces = null;
+		int numPieces =  dm.getNbPieces();
+		
+		if ( numPieces > MAX_PIECES_TO_SHOW ){
+			numPieces = MAX_PIECES_TO_SHOW;
+		}
 
-		PEPeerManager pm = peer.getManager();
-
-		DiskManager dm = pm.getDiskManager();
-
-		dm_pieces = dm.getPieces();
+		DiskManagerPiece[] dm_pieces = dm.getPieces();
 
 		int iNumCols = bounds.width / BLOCK_SIZE;
-		int iNeededHeight = (((dm.getNbPieces() - 1) / iNumCols) + 1)
+		int iNeededHeight = (((numPieces - 1) / iNumCols) + 1)
 				* BLOCK_SIZE;
 		if (sc.getMinHeight() != iNeededHeight) {
 			sc.setMinHeight(iNeededHeight);
@@ -523,10 +544,10 @@ public class PeerInfoView
 			if (peerRequestedPieces.length > 0)
 				peerNextRequestedPiece = peerRequestedPieces[0];
 			Arrays.sort(peerRequestedPieces);
-
+			
 			int iRow = 0;
 			int iCol = 0;
-			for (int i = 0; i < peerHavePieces.flags.length; i++) {
+			for (int i = 0; i < numPieces; i++) {
 				int colorIndex;
 				boolean done = (dm_pieces == null) ? false : dm_pieces[i].isDone();
 				int iXPos = iCol * BLOCK_SIZE;
