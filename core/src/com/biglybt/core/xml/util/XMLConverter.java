@@ -174,7 +174,7 @@ public class XMLConverter
 		char c = s.charAt(0);
 		boolean isLikelyValid;
 		int startPos = 1;
-		if (c == '-') {
+		if (c == '-' && s.length() > 1) {
 			char next = s.charAt(1);
 			startPos++;
 			isLikelyValid = next >= '0' && next <= '9';
