@@ -106,6 +106,8 @@ public class PieceInfoView
 
 	private static final byte SHOW_SMALL = 1;
 
+	private static final int MAX_PIECES_TO_SHOW	= 32*1024;
+	
 	private Composite pieceInfoComposite;
 
 	private ScrolledComposite sc;
@@ -838,6 +840,9 @@ public class PieceInfoView
 		}
 		
 		int numPieces = dm_pieces.length;
+		if ( numPieces > MAX_PIECES_TO_SHOW ){
+			numPieces = MAX_PIECES_TO_SHOW;
+		}
 		int iNeededHeight = (((numPieces - 1) / iNumCols) + 1) * BLOCK_SIZE;
 
 		if (img != null && !img.isDisposed()) {
@@ -965,6 +970,10 @@ public class PieceInfoView
 				int iXPos = iCol * BLOCK_SIZE + 1;
 				int iYPos = iRow * BLOCK_SIZE + 1;
 
+				Rectangle rect = pieceInfoComposite.getBounds();
+				if ( iYPos > bounds.height ){
+					break;
+				}
 				if (done) {
 				
 					newInfo.haveWidth = BLOCK_FILLSIZE;
@@ -1141,9 +1150,13 @@ public class PieceInfoView
 				new String[] {
 					"" + iNumCols,
 					"" + (iRow + 1),
-					"" + numPieces
+					"" + numPieces + (dm_pieces.length > numPieces?"+":"")
 				});
 
+		if ( dm_pieces.length > numPieces ){
+			topLabelLHS += " (" + MessageText.getString( "label.truncated" ).toLowerCase() + ")";
+		}
+		
 		if (pm != null) {
 			PiecePicker picker = pm.getPiecePicker();
 			
