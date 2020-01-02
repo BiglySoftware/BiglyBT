@@ -61,6 +61,7 @@ import com.biglybt.pifimpl.local.PluginInitializer;
 
 public class
 GlobalManagerFileMerger
+	implements AEDiagnosticsEvidenceGenerator
 {
 	private static final int HASH_FAILS_BEFORE_QUIT	= 3;
 
@@ -115,6 +116,8 @@ GlobalManagerFileMerger
 	void
 	initialise()
 	{
+		AEDiagnostics.addEvidenceGenerator( this );
+		
 		String VIEW_NAME =  "TableColumn.header.mergeddata";
 		
 		PluginInterface plugin_interface = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface();
@@ -266,17 +269,31 @@ GlobalManagerFileMerger
 		
 		if ( !b ){
 			
-			logCurrentState();
+			logCurrentState( null );
 		}
 	}
 	
 	void 
 	log(
-		String	str )
+		String			str )
 	{
-		if ( !logging_paused ){
+		log( null, str );
+	}
+	
+	void 
+	log(
+		IndentWriter	writer,
+		String			str )
+	{
+		if ( writer == null ){
 			
-			logSupport( str );
+			if ( !logging_paused ){
+				
+				logSupport( str );
+			}
+		}else{
+			
+			writer.println( str );
 		}
 	}
 	
@@ -337,6 +354,8 @@ GlobalManagerFileMerger
 
 			if ( enabled ){
 
+				log( "Scanning files" );
+				
 				for ( DownloadManager dm: dms ){
 
 					/* 
@@ -654,6 +673,11 @@ GlobalManagerFileMerger
 					sames.remove( dead );
 				}
 
+				if ( enabled ){
+					
+					log( "Scan result: dm_map=" + dm_map.size() + ", sames=" + sames.size());
+				}
+				
 				if ( sames.size() > 0 ){
 
 					if ( timer_event == null ){
@@ -948,7 +972,7 @@ GlobalManagerFileMerger
 						}
 					};
 
-				dm.setUserData( this, dmpl );
+				dm.setUserData( SameSizeFiles.this, dmpl );
 
 				dm.addPeerListener( dmpl );
 			}
@@ -1030,7 +1054,7 @@ GlobalManagerFileMerger
 
 					if ( do_sync ){
 
-						DownloadManagerPeerListenerEx dmpl = (DownloadManagerPeerListenerEx)dm.getUserData( this );
+						DownloadManagerPeerListenerEx dmpl = (DownloadManagerPeerListenerEx)dm.getUserData( SameSizeFiles.this );
 
 						if ( dmpl != null ){
 
@@ -1283,10 +1307,12 @@ GlobalManagerFileMerger
 
 				DownloadManager	dm = file.getDownloadManager();
 
-				DownloadManagerPeerListenerEx dmpl = (DownloadManagerPeerListenerEx)dm.getUserData( this );
+				DownloadManagerPeerListenerEx dmpl = (DownloadManagerPeerListenerEx)dm.getUserData( SameSizeFiles.this );
 
 				if ( dmpl != null ){
 
+					dm.setUserData( SameSizeFiles.this, null );
+					
 					dm.removePeerListener( dmpl );
 				}
 			}
@@ -1294,6 +1320,13 @@ GlobalManagerFileMerger
 
 		private void
 		logCurrentState()
+		{
+			logCurrentState( null );
+		}
+		
+		private void
+		logCurrentState(
+			IndentWriter	writer )
 		{
 			long	size_min = -1;
 			long	size_max = -1;
@@ -1324,25 +1357,24 @@ GlobalManagerFileMerger
 				size_str += " (+" + (size_max-size_min ) + ")";
 			}
 			
-			log( "  " + size_str + ", files=" + file_wrappers.size());
+			log( writer, "  " + size_str + ", files=" + file_wrappers.size());
 			
 			if ( completion_logged ){
 				
-				log( "    Completed" );
+				log( writer, "    Completed" );
 				
 			}else if ( abandon_reason != null ){
 				
-				log( "    " + abandon_reason );
+				log( writer, "    Abandoned: " + abandon_reason );
 				
 			}else{
 				
 				for ( SameSizeFileWrapper file: file_wrappers ){
 					
-					file.logCurrentState();
+					file.logCurrentState( writer );
 				}
 			}
 		}
-		
 		private String
 		getString()
 		{
@@ -1823,6 +1855,15 @@ GlobalManagerFileMerger
 										
 										consecutive_skips = 0;
 										
+										if ( write_block != null ){
+											
+											Debug.out( "eh?" );
+											
+											write_block.returnToPool();
+											
+											write_block = null;
+										}
+										
 										write_block = DirectByteBufferPool.getBuffer( DirectByteBuffer.AL_EXTERNAL, write_piece.getBlockSize( write_block_num ) );
 	
 										int block_offset = write_block_offset;
@@ -2297,24 +2338,44 @@ GlobalManagerFileMerger
 			}
 			
 			private void
-			logCurrentState()
+			logCurrentState(
+				IndentWriter	writer )
 			{
-				log( "      " + getName() + ": " + getInfo());
+				log( writer, "      " + (writer==null?getName():Debug.secretFileName(getName())) + ": " + getInfo());
 			}
 		}
 	}
 
 	private void
-	logCurrentState()
+	logCurrentState(
+		IndentWriter	write )
 	{
 		synchronized( dm_map ){
 
-			log( "Same size file sets=" + sames.size());
+			log( write, "Same size file sets=" + sames.size() + ", dm_map=" + dm_map.size());
 			
 			for ( SameSizeFiles same: sames ){
 				
-				same.logCurrentState();
+				same.logCurrentState( write );
 			}
+		}
+	}
+	
+	@Override
+	public void
+	generate(
+		IndentWriter writer )
+	{
+		writer.println( "Swarm Merge" );
+
+		try{
+			writer.indent();
+
+			logCurrentState( writer );
+			
+		}finally{
+
+			writer.exdent();
 		}
 	}
 	

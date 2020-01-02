@@ -77,8 +77,6 @@ DirectByteBufferPoolReal
 
 	public static final int MAX_SIZE = BigInteger.valueOf(2).pow(END_POWER).intValue();
 
-	private static final DirectByteBufferPoolReal pool = new DirectByteBufferPoolReal();
-
 
 	private final Map buffersMap = new LinkedHashMap(END_POWER - START_POWER + 1);
 
@@ -242,7 +240,7 @@ DirectByteBufferPoolReal
         return null;
     }
 
-    return pool.getBufferHelper(_allocator,_length);
+    return getBufferHelper(_allocator,_length);
   }
 
 
@@ -345,11 +343,11 @@ DirectByteBufferPoolReal
 
 		buff.limit( _length );
 
-        bytesOut += buff.capacity();
-
         if ( DEBUG_PRINT_MEM || DEBUG_TRACK_HANDEDOUT ){
 
         	synchronized( handed_out ){
+
+                bytesOut += buff.capacity();
 
 				if ( DEBUG_HANDOUT_SIZES ){
 
@@ -414,11 +412,11 @@ DirectByteBufferPoolReal
 
 		int	capacity = buff.capacity();
 
-		bytesIn += capacity;
-
 	  	if ( DEBUG_TRACK_HANDEDOUT ){
 
 	  		synchronized( handed_out ){
+
+	  			bytesIn += capacity;
 
 	  			if ( handed_out.remove( buff ) == null ){
 
@@ -547,74 +545,35 @@ DirectByteBufferPoolReal
   }
 
 
-  /*
-  private final HashMap in_use_counts = new HashMap();
-
-  private void addInUse( int size ) {
-    Integer key = new Integer( size );
-    synchronized( in_use_counts ) {
-      Integer count = (Integer)in_use_counts.get( key );
-      if( count == null )  count = new Integer( 1 );
-      else  count = new Integer( count.intValue() + 1 );
-      in_use_counts.put( key, count );
-    }
-  }
-
-  private void remInUse( int size ) {
-    Integer key = new Integer( size );
-    synchronized( in_use_counts ) {
-      Integer count = (Integer)in_use_counts.get( key );
-      if( count == null ) System.out.println("count = null");
-      if( count.intValue() == 0 ) System.out.println("count = 0");
-      in_use_counts.put( key, new Integer( count.intValue() - 1 ) );
-    }
-  }
-
-  private void printInUse() {
-    synchronized( in_use_counts ) {
-      for( Iterator i = in_use_counts.keySet().iterator(); i.hasNext(); ) {
-        Integer key = (Integer)i.next();
-        int count = ((Integer)in_use_counts.get( key )).intValue();
-        int size = key.intValue();
-        if( count > 0 ) {
-          if( size < 1024 )  System.out.print("[" +size+ " x " +count+ "] ");
-          else  System.out.print("[" +size/1024+ "K x " +count+ "] ");
-        }
-      }
-      System.out.println();
-    }
-  }
-  */
-
   	private void
 	printInUse(
 		boolean		verbose )
   	{
   		if ( DEBUG_PRINT_MEM ){
 
-            System.out.print("DIRECT: given=" +bytesOut/1024/1024+ "MB, returned=" +bytesIn/1024/1024+ "MB, ");
-
-            long in_use = bytesOut - bytesIn;
-            if( in_use < 1024*1024 ) System.out.print( "in use=" +in_use+ "B, " );
-            else System.out.print( "in use=" +in_use/1024/1024+ "MB, " );
-
-            long free = bytesFree();
-            if( free < 1024*1024 ) System.out.print( "free=" +free+ "B" );
-            else System.out.print( "free=" +free/1024/1024+ "MB" );
-
-  			System.out.println();
-
-	  		CacheFileManager cm	= null;
-
-			try{
-	 			cm = CacheFileManagerFactory.getSingleton();
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace( e );
-			}
-
 	  		synchronized( handed_out ){
+
+	            System.out.print("DIRECT: given=" +bytesOut/1024/1024+ "MB, returned=" +bytesIn/1024/1024+ "MB, ");
+
+	            long in_use = bytesOut - bytesIn;
+	            if( in_use < 1024*1024 ) System.out.print( "in use=" +in_use+ "B, " );
+	            else System.out.print( "in use=" +in_use/1024/1024+ "MB, " );
+
+	            long free = bytesFree();
+	            if( free < 1024*1024 ) System.out.print( "free=" +free+ "B" );
+	            else System.out.print( "free=" +free/1024/1024+ "MB" );
+
+	  			System.out.println();
+
+		  		CacheFileManager cm	= null;
+
+				try{
+		 			cm = CacheFileManagerFactory.getSingleton();
+
+				}catch( Throwable e ){
+
+					Debug.printStackTrace( e );
+				}
 
 	  			Iterator	it = handed_out.values().iterator();
 
@@ -864,7 +823,7 @@ DirectByteBufferPoolReal
 				}
 			}
 
-			sliceDBB dbb = new sliceDBB( _allocator, sb );
+			sliceDBB dbb = new sliceDBB( this, _allocator, sb );
 
 			return( dbb );
 		}
@@ -903,7 +862,7 @@ DirectByteBufferPoolReal
 
 			int			entries_per_alloc 	= SLICE_ENTRY_ALLOC_SIZES[i];
 
-			List	l = slice_entries[i];
+			List<sliceBuffer>	l = slice_entries[i];
 
 				// no point in trying gc if not enough entries
 
@@ -912,17 +871,14 @@ DirectByteBufferPoolReal
 				synchronized( l ){
 
 					Collections.sort( l,
-						new Comparator()
+						new Comparator<sliceBuffer>()
 						{
 							@Override
 							public int
 							compare(
-								Object	o1,
-								Object	o2 )
+								sliceBuffer	sb1,
+								sliceBuffer	sb2 )
 							{
-								sliceBuffer	sb1 = (sliceBuffer)o1;
-								sliceBuffer	sb2 = (sliceBuffer)o2;
-
 								int	res = sb1.getAllocID() - sb2.getAllocID();
 
 								if ( res == 0 ){
@@ -936,7 +892,7 @@ DirectByteBufferPoolReal
 
 					boolean[]	allocs				= slice_allocs[i];
 
-					Iterator	it = l.iterator();
+					Iterator<sliceBuffer>	it = l.iterator();
 
 					int	current_alloc 	= -1;
 					int entry_count		= 0;
@@ -945,7 +901,7 @@ DirectByteBufferPoolReal
 
 					while( it.hasNext()){
 
-						sliceBuffer	sb = (sliceBuffer)it.next();
+						sliceBuffer	sb = it.next();
 
 						int	aid = sb.getAllocID();
 
@@ -985,7 +941,7 @@ DirectByteBufferPoolReal
 
 						while( it.hasNext()){
 
-							sliceBuffer	sb = (sliceBuffer)it.next();
+							sliceBuffer	sb = it.next();
 
 							if ( !allocs[ sb.getAllocID()]){
 
@@ -1060,10 +1016,11 @@ DirectByteBufferPoolReal
 
 		protected
 		sliceDBB(
-			byte		_allocator,
-			sliceBuffer	_sb )
+			DirectByteBufferPoolReal	_pool,
+			byte						_allocator,
+			sliceBuffer					_sb )
 		{
-			super( _allocator, _sb.getBuffer(), pool );
+			super( _allocator, _sb.getBuffer(), _pool );
 
 			slice_buffer	= _sb;
 		}
