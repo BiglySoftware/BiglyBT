@@ -21,6 +21,7 @@
 package com.biglybt.core.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class
@@ -64,6 +65,17 @@ AEJavaManagement
 		return( thread_stuff.getThreadCPUTime());
 	}
 
+	public static List<String>
+	getMemoryHistory()
+	{
+		if ( thread_stuff == null ){
+
+			return( Collections.emptyList());
+		}
+
+		return( thread_stuff.getMemoryHistory());
+	}
+	
 	public static void
 	dumpThreads()
 	{
@@ -248,6 +260,9 @@ AEJavaManagement
 		public long
 		getThreadCPUTime();
 
+		public List<String>
+		getMemoryHistory();
+		
 		public void
 		dumpThreads();
 	}

@@ -1609,6 +1609,13 @@ public class UIFunctionsImpl
 		Utils.execSWTThread(() -> ManagerUtils.open(f));
 	}
 
+	@Override
+	public void showText(String title, String content){
+		Utils.execSWTThread(() ->{
+			new TextViewerWindow( title, null, content, false  );
+		});	
+	}	
+	
 	public void dispose() {
 		COConfigurationManager.removeParameterListener(
 				"show_torrents_menu", paramShowTorrentsMenuListener);

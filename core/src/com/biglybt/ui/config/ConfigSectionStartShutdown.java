@@ -38,7 +38,6 @@ import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
-
 import com.biglybt.pif.platform.PlatformManagerException;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.ActionParameter;
@@ -216,10 +215,11 @@ public class ConfigSectionStartShutdown
 		add("pgRestart",
 				new ParameterGroupImpl("label.restart", paramRestartWhenIdle));
 
+
+		List<Parameter> listJVM = new ArrayList<>();
+
 		if (platform.hasCapability(
 				PlatformManagerCapabilities.AccessExplicitVMOptions)) {
-
-			List<Parameter> listJVM = new ArrayList<>();
 
 			// wiki link
 
@@ -272,9 +272,41 @@ public class ConfigSectionStartShutdown
 					Debug.getNestedExceptionMessage(e)
 				}));
 			}
-
-			add("pgJVM", new ParameterGroupImpl("ConfigView.label.jvm", listJVM));
 		}
+		
+		ActionParameterImpl history_button = new ActionParameterImpl("jvm.mem.history",
+				"label.view");
+		add(history_button, Parameter.MODE_INTERMEDIATE, listJVM);
+
+		history_button.addListener(param -> {
+			try{
+
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+				
+				if ( uif == null ){
+					
+					Debug.out( "No UI Functions!" );
+				}else{
+					
+					List<String>	lines = AEJavaManagement.getMemoryHistory();
+					
+					String content = "";
+					
+					for ( String line: lines ){
+						
+						content += line + "\n";
+					}
+					
+					uif.showText( MessageText.getString( "GeneralView.section.info" ), content );
+				}
+			
+			} catch (Throwable e) {
+
+				Debug.out(e);
+			}
+		});
+
+		add("pgJVM", new ParameterGroupImpl("ConfigView.label.jvm", listJVM));
 	}
 
 	private void buildOptions(final PlatformManager platform,

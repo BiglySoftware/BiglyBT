@@ -1681,7 +1681,7 @@ public class MenuFactory
 				}
 
 				new TextViewerWindow(
-						MessageText.getString( "MainWindow.menu.quick_view" ) + ": " + file.getName(),
+						MessageText.getString( "torrent.view.info.title" ) + ": " + file.getName(),
 						null, content.toString(), false  );
 
 			}

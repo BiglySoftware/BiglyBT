@@ -157,6 +157,7 @@ AEDiagnostics
 				new String[]{
 					"Logger.Enabled",
 					"Logger.DebugFiles.Enabled",
+					"Logger.DebugFiles.Enabled.Force",
 					"Logger.DebugFiles.SizeKB",
 				},
 				new ParameterListener()

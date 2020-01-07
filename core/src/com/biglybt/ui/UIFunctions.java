@@ -220,6 +220,8 @@ public interface UIFunctions
 
 	void showInExplorer(File f);
 
+	public void showText( String title, String content );
+	
 	public interface
 	TagReturner
 	{

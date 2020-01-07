@@ -1069,5 +1069,11 @@ MainWindowDelayStub
 		public void showInExplorer(File f) {
 			ManagerUtils.open(f);
 		}
+		
+		@Override
+		public void showText(String title, String content){
+			log( "showText" );
+
+		}
 	}
 }

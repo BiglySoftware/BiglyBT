@@ -35,11 +35,12 @@ import com.biglybt.core.util.average.MovingAverage;
 
 public class
 AEThreadMonitor
-	implements ThreadStuff, AEDiagnosticsEvidenceGenerator {
-	private boolean disable_getThreadCpuTime = false;
-
+	implements ThreadStuff, AEDiagnosticsEvidenceGenerator 
+{
 	private final ThreadMXBean	thread_bean;
 
+	private final LinkedList<String>	memory_history	= new LinkedList<>();
+	
 	{
 		// store in local variable first, so we can have thread_bean final
 		ThreadMXBean threadMXBean = null;
@@ -64,73 +65,53 @@ AEThreadMonitor
 
 		return( thread_bean.getCurrentThreadCpuTime());
 	}
-
+	
+	@Override
+	public List<String>
+	getMemoryHistory()
+	{
+		synchronized( memory_history ){
+			
+			return( new ArrayList<>( memory_history ));
+		}
+	}
+	
 	public
 	AEThreadMonitor()
 	{
-		String	java_version = (String)System.getProperty("java.runtime.version");
-
-		// getThreadCpuTime crashes on OSX with 1.5.0_06
-		disable_getThreadCpuTime = Constants.isOSX
-				&& java_version.startsWith("1.5.0_06");
-
 		AEDiagnostics.addWeakEvidenceGenerator(this);
 
-		if ( !disable_getThreadCpuTime ){
-
-			AEThread	thread =
-				new AEThread( "AEThreadMonitor" )
-				{
-					@Override
-					public void
-					runSupport()
-					{
-						try{
-							try{
-								Class.forName( "java.lang.management.ManagementFactory" );
-
-								monitor15();
-
-							}catch( Throwable e ){
-
-								//monitor14();
-							}
-
-						}catch( Throwable e ){
-
-						}
-					}
-				};
-
-			thread.setPriority( Thread.MAX_PRIORITY );
-
-			thread.setDaemon( true );
-
-			thread.start();
-
-			/*
-			new AEThread( "parp", true )
+		AEThread2	thread =
+			new AEThread2( "AEThreadMonitor" )
 			{
+				@Override
 				public void
-				runSupport()
+				run()
 				{
 					try{
-						while( true ){
-							//Thread.sleep(1);
+						try{
+							Class.forName( "java.lang.management.ManagementFactory" );
+
+							monitor();
+
+						}catch( Throwable e ){
+							
 						}
 
 					}catch( Throwable e ){
 
 					}
 				}
-			}.start();
-			*/
-		}
+			};
+
+		thread.setPriority( Thread.MAX_PRIORITY );
+
+		thread.start();
 	}
 
 
-	private static void
-	monitor15()
+	private void
+	monitor()
 	{
 		AEDiagnosticsLogger log = AEDiagnostics.getLogger( "thread" );
 
@@ -230,6 +211,18 @@ AEThreadMonitor
 
 			Runtime rt = Runtime.getRuntime();
 
+			String line = "cpu: " + thread_name + "=" + percent + "%, mem: max=" + DisplayFormatters.formatByteCountToKiBEtc( rt.maxMemory())+", alloc=" + DisplayFormatters.formatByteCountToKiBEtc(rt.totalMemory()) +", free=" + DisplayFormatters.formatByteCountToKiBEtc(rt.freeMemory());
+			
+			synchronized( memory_history ){
+				
+				memory_history.addLast( AEDiagnosticsLogger.getTimestamp() + ": " + line );
+				
+				if ( memory_history.size() > 75 ){
+					
+					memory_history.removeFirst();
+				}
+			}
+
 			log.log( "Thread state: elapsed=" + elapsed + ",cpu=" + total_diffs + ",max=" + thread_name + "(" + biggest_diff + "/" + percent + "%),mem:max=" + (rt.maxMemory()/1024)+",tot=" + (rt.totalMemory()/1024) +",free=" + (rt.freeMemory()/1024));
 
 			if ( huh_mon_active ){
@@ -315,27 +308,24 @@ AEThreadMonitor
 				threadInfos.add(info);
 		}
 
-		if (!disable_getThreadCpuTime) {
-			Collections.sort(threadInfos, new Comparator<ThreadInfo>() {
-				@Override
-				public int compare(ThreadInfo o1, ThreadInfo o2) {
+		Collections.sort(threadInfos, new Comparator<ThreadInfo>() {
+			@Override
+			public int compare(ThreadInfo o1, ThreadInfo o2) {
 
-					long diff = threadBean.getThreadCpuTime(o2.getThreadId())
-							- threadBean.getThreadCpuTime(o1.getThreadId());
-					if (diff == 0) {
-						return o1.getThreadName().compareToIgnoreCase(o2.getThreadName());
-					}
-					return diff > 0 ? 1 : -1;
+				long diff = threadBean.getThreadCpuTime(o2.getThreadId())
+						- threadBean.getThreadCpuTime(o1.getThreadId());
+				if (diff == 0) {
+					return o1.getThreadName().compareToIgnoreCase(o2.getThreadName());
 				}
-			});
-		}
+				return diff > 0 ? 1 : -1;
+			}
+		});
 
 		for (int i = 0; i < threadInfos.size(); i++) {
 			try {
 				ThreadInfo threadInfo = threadInfos.get(i);
 
-				long lCpuTime = disable_getThreadCpuTime ? -1
-						: threadBean.getThreadCpuTime(threadInfo.getThreadId());
+				long lCpuTime = threadBean.getThreadCpuTime(threadInfo.getThreadId());
 				if (lCpuTime == 0)
 					break;
 
