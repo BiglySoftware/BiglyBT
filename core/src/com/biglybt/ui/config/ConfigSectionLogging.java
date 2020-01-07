@@ -34,6 +34,7 @@ import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.util.AEDiagnostics;
 import com.biglybt.core.util.AEThread2;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.ui.UIFunctions;
@@ -180,7 +181,17 @@ public class ConfigSectionLogging
 
 		// Param still in use.. not sure why it's commented out
 //		BooleanParameterImpl udp_transport = new BooleanParameterImpl(config, "Logging Enable UDP Transport", "ConfigView.section.logging.udptransport");
-
+		
+		if ( !Constants.IS_CVS_VERSION ){
+			
+				// beta versions already have the debug files forced
+			
+			BooleanParameterImpl force_debug = new BooleanParameterImpl(
+					BCFG_LOGGER_DEBUG_FILES_FORCE, "ConfigView.section.logging.forcedebug");
+			
+			add(force_debug);
+		}
+		
 		add(new IntParameterImpl(ICFG_LOGGER_DEBUG_FILES_SIZE_KB,
 				"ConfigView.section.logging.debugfilesize", 10, Integer.MAX_VALUE),
 				Parameter.MODE_INTERMEDIATE);
