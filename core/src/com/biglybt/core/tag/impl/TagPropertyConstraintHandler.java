@@ -2047,6 +2047,7 @@ TagPropertyConstraintHandler
 		private static final int FT_SET_COLOURS		= 30;		
 		private static final int FT_IS_NEW			= 31;		
 		private static final int FT_IS_SUPER_SEEDING	= 32;		
+		private static final int FT_IS_SEQUENTIAL		= 33;		
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2500,6 +2501,12 @@ TagPropertyConstraintHandler
 							}
 						}
 					}
+				}else if ( func_name.equals( "isSequential" )){
+
+					fn_type = FT_IS_SEQUENTIAL;
+
+					params_ok = num_params == 0;
+
 				}else{
 
 					throw( new RuntimeException( "Unsupported function '" + func_name + "'" ));
@@ -3014,6 +3021,11 @@ TagPropertyConstraintHandler
 						
 						return( true );
 					}
+					case FT_IS_SEQUENTIAL:{
+
+						return( dm.getDownloadState().getFlag(DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD ));
+					}
+
 				}
 
 				return( false );
