@@ -270,7 +270,7 @@ DDBaseTTTorrent
 					
 					DownloadManagerState dms = dm.getDownloadState();
 					
-					if ( dms.isPeerSourceEnabled( PEPeerSource.PS_DHT )){
+					if ( !dms.isPeerSourceEnabled( PEPeerSource.PS_DHT )){
 	
 						ddb.log( "TorrentDownload: request from " + originator + "  for '" + download.getName() + "' denied as DHT peer source disabled" );
 	
