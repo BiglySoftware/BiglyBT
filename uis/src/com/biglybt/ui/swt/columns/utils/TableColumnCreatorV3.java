@@ -111,7 +111,6 @@ public class TableColumnCreatorV3
 			ShareRatioItem tcShareRatioItem = (ShareRatioItem) mapTCs.get(ShareRatioItem.COLUMN_ID);
 			if (tcShareRatioItem != null) {
 				tcShareRatioItem.setChangeFG(false);
-				tcShareRatioItem.setWidth(80);
 			}
 		}
 
@@ -208,7 +207,6 @@ public class TableColumnCreatorV3
 			ShareRatioItem tcShareRatioItem = (ShareRatioItem) mapTCs.get(ShareRatioItem.COLUMN_ID);
 			if (tcShareRatioItem != null) {
 				tcShareRatioItem.setChangeFG(false);
-				tcShareRatioItem.setWidth(80);
 			}
 		}
 
@@ -296,7 +294,6 @@ public class TableColumnCreatorV3
 			ShareRatioItem tcShareRatioItem = (ShareRatioItem) mapTCs.get(ShareRatioItem.COLUMN_ID);
 			if (tcShareRatioItem != null) {
 				tcShareRatioItem.setChangeFG(false);
-				tcShareRatioItem.setWidth(80);
 			}
 		}
 
@@ -355,7 +352,6 @@ public class TableColumnCreatorV3
 			ShareRatioItem tcShareRatioItem = (ShareRatioItem) mapTCs.get(ShareRatioItem.COLUMN_ID);
 			if (tcShareRatioItem != null) {
 				tcShareRatioItem.setChangeFG(false);
-				tcShareRatioItem.setWidth(80);
 			}
 		}
 
