@@ -33,10 +33,9 @@ ShareResourceEvent
 	public int
 	getType();
 
-		/**
-		 * @return
-		 */
-
+	public boolean
+	isInternal();
+	
 	public Object
 	getData();
 }

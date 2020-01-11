@@ -70,7 +70,7 @@ CategoryItem
 			TOTorrent	torrent = tr_torrent.getTorrent();
 
 			if (gm == null) {
-				if (CoreFactory.isCoreRunning()) {
+				if (!CoreFactory.isCoreRunning()) {
 					return;
 				}
 				gm = CoreFactory.getSingleton().getGlobalManager();

@@ -37,6 +37,7 @@ import com.biglybt.activities.LocalActivityManager;
 import com.biglybt.activities.LocalActivityManager.LocalActivityCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
@@ -1356,7 +1357,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		
 		if ( tag != null ){
 
-			tag.addTaggable( PluginCoreUtils.unwrap( download ));
+			DownloadManager core_dm = PluginCoreUtils.unwrap( download );
+			
+			if ( !tag.hasTaggable( core_dm )){
+			
+				tag.addTaggable( core_dm );
+			}
 		}
 	}
 

@@ -278,6 +278,8 @@ ShareResourceDirContentsImpl
 	protected void
 	deleteInternal()
 	{
+		super.deleteInternal();
+		
 		for (int i=0;i<children.length;i++){
 
 			try{
@@ -406,13 +408,14 @@ ShareResourceDirContentsImpl
 	@Override
 	public void 
 	setProperties(
-		Map<String, String> props)
+		Map<String, String> 	props,
+		boolean					internal )
 	{
 		properties.putAll( props );
 		
 		for ( ShareResource sr: children ){
 			
-			sr.setProperties(props);
+			sr.setProperties(props,internal);
 		}
 		
 		manager.configDirty();
@@ -583,6 +586,13 @@ ShareResourceDirContentsImpl
 
 			return( true );
 		}
+		
+		@Override
+		public boolean 
+		isDeleted()
+		{
+			return( false );
+		}
 
 		@Override
 		public File
@@ -615,11 +625,12 @@ ShareResourceDirContentsImpl
 		@Override
 		public void 
 		setProperties(
-			Map<String, String> props)
+			Map<String, String> props,
+			boolean				internal )
 		{
 			for (int i=0;i<node_children.length;i++){
 
-				node_children[i].setProperties( props );
+				node_children[i].setProperties( props, internal );
 			}
 		}
 		

@@ -52,6 +52,8 @@ ShareResourceImpl
 	protected List	change_listeners 	= new ArrayList();
 	protected List	deletion_listeners 	= new ArrayList();
 
+	private volatile boolean deleted;
+	
 		// new constructor
 
 	protected
@@ -211,12 +213,13 @@ ShareResourceImpl
 			}
 		}
 
-		fireChangeEvent( ShareResourceEvent.ET_ATTRIBUTE_CHANGED, attribute );
+		fireChangeEvent( ShareResourceEvent.ET_ATTRIBUTE_CHANGED, false, attribute );
 	}
 
 	protected void
 	fireChangeEvent(
 		int			type,
+		boolean		internal,
 		Object		data )
 	{
 		for (int i=0;i<change_listeners.size();i++){
@@ -233,6 +236,13 @@ ShareResourceImpl
 								return( type );
 							}
 
+							@Override
+							public boolean 
+							isInternal()
+							{
+								return( internal );
+							}
+							
 							@Override
 							public Object
 							getData()
@@ -316,6 +326,8 @@ ShareResourceImpl
 		}
 
 		manager.delete( this, fire_listeners );
+		
+		deleted = true;
 	}
 
 	@Override
@@ -324,6 +336,13 @@ ShareResourceImpl
 
 		throws ShareResourceDeletionVetoException;
 
+	@Override
+	public boolean 
+	isDeleted()
+	{
+		return( deleted );
+	}
+	
 	@Override
 	public boolean
 	isPersistent()
@@ -342,8 +361,11 @@ ShareResourceImpl
 		return( persistent );
 	}
 
-	protected abstract void
-	deleteInternal();
+	protected void
+	deleteInternal()
+	{
+		deleted = true;
+	}
 
 	protected byte[]
 	getFingerPrint(

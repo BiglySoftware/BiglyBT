@@ -298,9 +298,41 @@ implements ShareManagerListener,
 				
 				List<Tag> all_tags = new ArrayList<>( tt.getTags());
 				
+				List<Object> selected = tv.getSelectedDataSources();
+				
+				List<Tag> selected_tags = new ArrayList<>();
+				
+				if ( selected.size() == 1 && selected.get(0) instanceof ShareResource ){
+					
+					String tags = ((ShareResource)selected.get(0)).getProperties().get( ShareManager.PR_TAGS );
+					
+					if ( tags != null ){
+						
+						String[] bits = tags.split( "," );
+						
+						for ( String bit: bits ){
+							bit = bit.trim();
+							
+							if (!bit.isEmpty()){
+								try{
+									long uid = Long.parseLong( bit );
+									
+									Tag tag = tagManager.lookupTagByUID( uid );
+									
+									if ( tag != null ){
+										selected_tags.add( tag );
+									}
+									
+								}catch( Throwable e ){
+									Debug.out(e);
+								}
+							}
+						}
+					}
+				}
 				TagUIUtilsV3.showTagSelectionDialog( 
 					all_tags, 
-					Collections.emptyList(),
+					selected_tags,
 					new TagUIUtilsV3.TagSelectionListener()
 					{
 						@Override
@@ -327,7 +359,7 @@ implements ShareManagerListener,
 							      			
 							      	props.put( ShareManager.PR_TAGS, f );
 							      	
-							      	sr.setProperties( props );
+							      	sr.setProperties( props, false );
 							      }
 							    });
 						}

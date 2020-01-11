@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -86,7 +87,7 @@ ShareResourceFileOrDirImpl
 	{
 		super( _manager, _type );
 
-		properties	= _properties;
+		properties	= _properties==null?new HashMap<>():_properties;
 
 		if ( getType() == ST_FILE ){
 
@@ -145,7 +146,9 @@ ShareResourceFileOrDirImpl
 
 		personal_key = (byte[])_map.get( "per_key" );
 
-		properties = BDecoder.decodeStrings((Map)_map.get( "props" ));
+		Map<String,String> _properties = BDecoder.decodeStrings((Map)_map.get( "props" ));
+
+		properties = _properties==null?new HashMap<>():_properties;
 
 		item = ShareItemImpl.deserialiseItem( this, _map );
 	}
@@ -389,7 +392,7 @@ ShareResourceFileOrDirImpl
 			map.put( "per_key", personal_key );
 		}
 
-		if ( properties != null ){
+		if ( properties != null && !properties.isEmpty()){
 
 			map.put( "props", properties );
 		}
@@ -418,6 +421,8 @@ ShareResourceFileOrDirImpl
 	protected void
 	deleteInternal()
 	{
+		super.deleteInternal();
+		
 		item.delete();
 	}
 
@@ -450,7 +455,8 @@ ShareResourceFileOrDirImpl
 	@Override
 	public void 
 	setProperties(
-		Map<String, String> props)
+		Map<String, String> 	props,
+		boolean					internal )
 	{
 		for ( Map.Entry<String,String> entry: props.entrySet()){
 			
@@ -470,7 +476,7 @@ ShareResourceFileOrDirImpl
 						old_value = "";
 					}
 
-					fireChangeEvent( ShareResourceEvent.ET_PROPERTY_CHANGED, new String[]{ key, old_value, new_value });
+					fireChangeEvent( ShareResourceEvent.ET_PROPERTY_CHANGED, internal, new String[]{ key, old_value, new_value });
 				}
 			}else{
 				

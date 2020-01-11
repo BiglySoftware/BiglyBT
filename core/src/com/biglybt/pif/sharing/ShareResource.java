@@ -79,7 +79,8 @@ ShareResource
 
 	public void
 	setProperties(
-		Map<String,String>	props );
+		Map<String,String>	props,
+		boolean				internal );
 	
 	public boolean
 	isPersistent();
@@ -89,6 +90,9 @@ ShareResource
 
 		throws ShareResourceDeletionVetoException;
 
+	public boolean
+	isDeleted();
+	
 	public ShareResourceDirContents
 	getParent();
 

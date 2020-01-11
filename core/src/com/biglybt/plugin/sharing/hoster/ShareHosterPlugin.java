@@ -31,8 +31,12 @@ import java.util.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagListener;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagTypeListener;
+import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.Plugin;
@@ -49,24 +53,27 @@ import com.biglybt.pif.tracker.TrackerTorrent;
 import com.biglybt.pif.tracker.TrackerTorrentRemovalVetoException;
 import com.biglybt.pif.tracker.TrackerTorrentWillBeRemovedListener;
 import com.biglybt.pif.utils.DelayedTask;
-import com.biglybt.pifimpl.PluginUtils;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 public class
 ShareHosterPlugin
 	implements Plugin, PluginListener, ShareManagerListener
 {
-	protected PluginInterface plugin_interface;
-	protected LoggerChannel		log;
-	protected Tracker			tracker;
-	protected ShareManager		share_manager;
-	protected DownloadManager	download_manager;
+	private PluginInterface plugin_interface;
+	private LoggerChannel		log;
+	private Tracker			tracker;
+	private ShareManager		share_manager;
+	private DownloadManager	download_manager;
+	
+	private final TagManager tag_manager = TagManagerFactory.getTagManager();
+	
 
-	protected Map				resource_dl_map = new HashMap();
-	protected Map				resource_tt_map = new HashMap();
-
-	protected Download			download_being_removed;
-	protected TrackerTorrent	torrent_being_removed;
+	private Map<ShareResource,Download>				resource_dl_map = new HashMap<>();
+	private Map<ShareResource,TrackerTorrent>		resource_tt_map = new HashMap<>();
+	private Map<Taggable,ShareResource>				taggable_map 	= new IdentityHashMap<>();
+	
+	private Download			download_being_removed;
+	private TrackerTorrent		torrent_being_removed;
 
 	public static void
 	load(
@@ -125,6 +132,161 @@ ShareHosterPlugin
 
 			share_manager.initialise();
 
+			tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL ).addTagTypeListener(
+				new TagTypeListener()
+				{
+					public void
+					tagTypeChanged(
+						TagType		tag_type )
+					{
+					}
+
+					public void
+					tagEventOccurred(
+						TagEvent			event )
+					{
+						if ( event.getEventType() == TagTypeListener.TagEvent.ET_TAG_ADDED ){
+							
+							event.getTag().addTagListener(
+								new TagListener(){
+									
+									@Override
+									public void
+									taggableSync(Tag tag)
+									{
+									}
+									
+									@Override
+									public void 
+									taggableAdded(
+										Tag 		tag, 
+										Taggable 	tagged )
+									{
+										update( tag, tagged, true );
+									}
+									
+									@Override
+									public void 
+									taggableRemoved(
+										Tag 		tag, 
+										Taggable 	tagged)
+									{
+										update( tag, tagged, false );
+									}	
+									
+									private void
+									update(
+										Tag			tag,
+										Taggable	tagged,
+										boolean		added )
+									{
+										ShareResource resource;
+										
+										boolean[] auto = tag.isTagAuto();
+										
+										if ( auto[0] ){
+											
+											return;
+										}
+										
+										synchronized( taggable_map ){
+											
+											resource = taggable_map.get( tagged );
+											
+											if ( resource != null && resource.isDeleted()){
+												
+												taggable_map.remove( tagged );
+												
+												resource = null;
+											}
+										}
+										
+										if ( resource != null ){
+											
+											Map<String,String>	properties  = resource.getProperties();
+											
+											String tags_str = properties.get( ShareManager.PR_TAGS );
+											
+											Set<Tag> existing = decodeTags( tags_str );
+											
+											List<Tag> tags = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTagsForTaggable( tagged );
+											
+											Set<Tag> current = new HashSet<>();
+											
+											for ( Tag t: tags ){
+												
+												if ( !t.isTagAuto()[0]){
+													
+													current.add( t );
+												}
+											}
+											
+											if ( !existing.equals( current )){
+												
+												String new_str = "";
+												
+												for ( Tag t: current ){
+													
+													new_str += (new_str.isEmpty()?"":",") + t.getTagUID();
+												}
+												
+												properties = new HashMap<>( properties );
+												
+												properties.put( ShareManager.PR_TAGS, new_str );
+												
+												resource.setProperties( properties, true );
+											}
+										}
+									}
+								}, false );
+						}
+					}
+				}, true );
+			
+			download_manager.addListener(
+				new DownloadManagerListener(){
+										
+					@Override
+					public void 
+					downloadAdded(
+						Download download)
+					{
+					}
+					
+					@Override
+					public void 
+					downloadRemoved(
+						Download download )
+					{
+						com.biglybt.core.download.DownloadManager core_dm = PluginCoreUtils.unwrap( download );
+						
+						ShareResource resource;
+						
+						synchronized( taggable_map ){
+							
+							resource = taggable_map.remove( core_dm );
+						}
+						
+						if ( resource != null ){
+							
+								// non-persistent shares will have this handled by the consistency mechanism (well, might 
+								// make sense to do this for them too but I'm currently working on persistent stuff so woreva)
+							
+							if ( resource.isPersistent()){
+								
+								try{
+									resource.delete( true );
+									
+								}catch( Throwable e ){
+									
+									Debug.out( e );
+								}
+							}
+						}
+					}
+
+				}, false );
+			
 		}catch( ShareException e ){
 
 			Debug.printStackTrace( e );
@@ -238,26 +400,34 @@ ShareHosterPlugin
 							String key = entry[0];
 							
 							if ( key.equals( ShareManager.PR_TAGS )){
-								
-								String new_tags_str = entry[2];
-								
-								String[] bits = new_tags_str.split( "," );
-								
-								TagManager tm = TagManagerFactory.getTagManager();
-								
-								for ( String bit: bits ){
+							
+								if ( !event.isInternal()){
 									
-									bit = bit.trim();
+									String new_tags_str = entry[2];
 									
-									if ( !bit.isEmpty()){
+									Set<Tag> new_tags = decodeTags( new_tags_str );
+									
+									com.biglybt.core.download.DownloadManager core_dm = PluginCoreUtils.unwrap( download );
+									
+									Set<Tag> existing = new HashSet<>( tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, core_dm ));
+									
+									for ( Tag tag: new_tags ){
+																								
+										existing.remove( tag );
+												
+										if ( !tag.hasTaggable( core_dm )){
+													
+											tag.addTaggable( core_dm );
+										}
+									}
+									
+									for ( Tag tag: existing ){
 										
-										try{
-											Tag tag = tm.lookupTagByUID( Long.parseLong( bit ));
+										boolean[] auto = tag.isTagAuto();
+										
+										if ( !auto[0] ){
 											
-											tag.addTaggable( PluginCoreUtils.unwrap( download ));
-											
-										}catch( Throwable e ){
-											
+											tag.removeTaggable( core_dm );
 										}
 									}
 								}
@@ -266,10 +436,27 @@ ShareHosterPlugin
 					}
 				};
 			
+			DownloadAttributeListener	attribute_listener = 
+				new DownloadAttributeListener() {
+					@Override
+					public void attributeEventOccurred(Download d, TorrentAttribute attr, int event_type){
+						resource.setAttribute(attr, d.getAttribute(attr));
+					}
+				};
+								
 			if ( old_download != null ){
 				
 				resource.addChangeListener( resource_listneer );
 
+				old_download.addAttributeListener(
+						attribute_listener,
+						plugin_interface.getTorrentManager().getAttribute(TorrentAttribute.TA_CATEGORY),
+						DownloadAttributeListener.WRITTEN );
+
+				synchronized( taggable_map ){
+					
+					taggable_map.put( PluginCoreUtils.unwrap( old_download ), resource );
+				}
 			}else if ( new_download != null ){
 
 				resource_dl_map.put( resource, new_download );
@@ -286,15 +473,14 @@ ShareHosterPlugin
 				}
 
 				new_download.addAttributeListener(
-					new DownloadAttributeListener() {
-						@Override
-						public void attributeEventOccurred(Download d, TorrentAttribute attr, int event_type){
-							resource.setAttribute(attr, d.getAttribute(attr));
-						}
-					},
+					attribute_listener,
 					plugin_interface.getTorrentManager().getAttribute(TorrentAttribute.TA_CATEGORY),
-					DownloadAttributeListener.WRITTEN
-				);
+					DownloadAttributeListener.WRITTEN );
+				
+				synchronized( taggable_map ){
+					
+					taggable_map.put( PluginCoreUtils.unwrap( new_download ), resource );
+				}
 
 				boolean persistent = resource.isPersistent();
 
@@ -368,7 +554,7 @@ ShareHosterPlugin
 		Map<String,String>	properties  = resource.getProperties();
 
 		final List<String>	networks 	= new ArrayList<>();
-		final List<Tag>		tags		= new ArrayList<>();
+		final Set<Tag>		tags;
 
 		boolean force_networks = false;
 		
@@ -412,29 +598,11 @@ ShareHosterPlugin
 
 			String tags_str = properties.get( ShareManager.PR_TAGS );
 
-			if ( tags_str != null ){
-
-				String[] bits = tags_str.split( "," );
-
-				TagManager tm = TagManagerFactory.getTagManager();
-
-				for ( String bit: bits ){
-
-					try{
-						long tag_uid = Long.parseLong( bit.trim());
-
-						Tag tag = tm.lookupTagByUID( tag_uid );
-
-						if ( tag != null ){
-
-							tags.add( tag );
-						}
-					}catch( Throwable e ){
-
-						Debug.out( e );
-					}
-				}
-			}
+			tags = decodeTags( tags_str );
+			
+		}else{
+			
+			tags = null;
 		}
 
 		DownloadWillBeAddedListener dwbal = null;
@@ -509,6 +677,40 @@ ShareHosterPlugin
 		}
 	}
 
+	private Set<Tag>
+	decodeTags(
+		String	tags_str )
+	{				
+		Set<Tag> tags = new HashSet<>();
+		
+		if ( tags_str != null ){
+			
+			String[] bits = tags_str.split( "," );
+		
+			for ( String bit: bits ){
+				
+				bit = bit.trim();
+				
+				if ( !bit.isEmpty()){
+					
+					try{
+						Tag tag = tag_manager.lookupTagByUID( Long.parseLong( bit ));
+						
+						if ( tag != null ){
+							
+							tags.add( tag );
+						}
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+			}
+		}				
+		
+		return( tags );
+	}
+	
 	protected void
 	canResourceBeDeleted(
 		ShareResource	resource )

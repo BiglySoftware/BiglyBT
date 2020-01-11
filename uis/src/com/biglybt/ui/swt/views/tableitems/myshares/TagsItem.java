@@ -19,8 +19,12 @@
 
 package com.biglybt.ui.swt.views.tableitems.myshares;
 
+import java.util.*;
+
+import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.sharing.ShareResource;
 import com.biglybt.pif.ui.tables.TableCell;
@@ -72,16 +76,23 @@ TagsItem
 				
 				value = "";
 				
+				List<Tag>	tags = new ArrayList<>();
+				
 				for ( String bit: bits ){
 					
 					try{
-						String name = tag_manager.lookupTagByUID( Long.parseLong( bit )).getTagName( true );
-						
-						value += (value.isEmpty()?"":", ") + name;
-						
+						tags.add( tag_manager.lookupTagByUID( Long.parseLong( bit )));
+												
 					}catch( Throwable e ){
 						
 					}
+				}
+				
+				tags = TagUtils.sortTags( tags );
+				
+				for ( Tag tag: tags ){
+					
+					value += (value.isEmpty()?"":", ") + tag.getTagName( true );
 				}
 			}
 			
