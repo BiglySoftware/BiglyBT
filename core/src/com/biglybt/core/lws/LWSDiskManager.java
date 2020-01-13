@@ -143,7 +143,7 @@ LWSDiskManager
 			}
 		}catch( Throwable e ){
 
-			setFailed( "Start failed", e );
+			setFailed( DiskManager.ET_OTHER, "Start failed", e );
 		}
 	}
 
@@ -207,7 +207,7 @@ LWSDiskManager
 
 		}catch( Throwable e ){
 
-			setFailed( "getFiles failed", e );
+			setFailed( DiskManager.ET_READ_ERROR, "getFiles failed", e );
 
 			return( null );
 
@@ -722,6 +722,7 @@ LWSDiskManager
 	@Override
 	public void
 	setFailed(
+		int				type,
 		String			reason,
 		Throwable		cause )
 	{
@@ -730,7 +731,7 @@ LWSDiskManager
 		state	= FAULTY;
 
 		error_message	= reason;
-		error_type		= ET_OTHER;
+		error_type		= type;
 	}
 
 	@Override

@@ -940,7 +940,7 @@ DMCheckerImpl
 
 		}catch( Throwable e ){
 
-			disk_manager.setFailed( "Piece check error", e );
+			disk_manager.setFailed( DiskManager.ET_OTHER, "Piece check error", e );
 
 			Debug.printStackTrace( e );
 

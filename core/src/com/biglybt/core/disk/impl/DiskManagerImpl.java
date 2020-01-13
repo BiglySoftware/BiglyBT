@@ -697,7 +697,7 @@ DiskManagerImpl
                     }
                 }catch ( Throwable e ){
 
-                    setFailed( "File close fails", e );
+                    setFailed( DiskManager.ET_OTHER, "File close fails", e );
                 }
             }
         }
@@ -710,7 +710,7 @@ DiskManagerImpl
 
             }catch( Exception e ){
 
-                setFailed( "Resume data save fails", e );
+                setFailed( DiskManager.ET_OTHER, "Resume data save fails", e );
             }
         }
 
@@ -1212,7 +1212,7 @@ DiskManagerImpl
 
                     if ( download_manager.isDataAlreadyAllocated() ){
 
-                        setErrorState( "Data file missing: " + data_file.getAbsolutePath() );
+                        setErrorState( DiskManager.ET_FILE_MISSING, "Data file missing: " + data_file.getAbsolutePath() );
 
                         return( fail_result );
                     }
@@ -1809,7 +1809,7 @@ DiskManagerImpl
 	                    		}
 	                        }catch ( Throwable e ){
 	
-	                            setFailed("Disk access error", e );
+	                            setFailed( this_file.getCacheFile().exists()?DiskManager.ET_WRITE_ERROR:DiskManager.ET_FILE_MISSING, "Disk access error", e );
 	
 	                            Debug.printStackTrace(e);
 	                        }
@@ -1949,6 +1949,18 @@ DiskManagerImpl
     
     private void
     setErrorState(
+    	int			type,
+    	String		msg )
+    {
+    	setErrorMessage( msg );
+    	
+    	errorType		= type;
+    	
+    	setState( FAULTY );
+    }
+    
+    private void
+    setErrorState(
     	String		msg,
     	Throwable	cause )
     {	
@@ -1964,6 +1976,21 @@ DiskManagerImpl
 	    	
 		   	errorMessage_set_via_method = msg + ": " + exception_str;
 		}
+    	
+    	setState( FAULTY );
+    }
+    
+    private void
+    setErrorState(
+    	int			type,
+    	String		msg,
+    	Throwable	cause )
+    {		
+	    String exception_str  = Debug.getNestedExceptionMessage(cause);
+	    
+		errorMessage_set_via_method = msg + ": " + exception_str;
+		
+		errorType		= type;
     	
     	setState( FAULTY );
     }
@@ -2042,6 +2069,7 @@ DiskManagerImpl
     @Override
     public void
     setFailed(
+    	int					type,
         String        		reason,
         Throwable			cause )
     {
@@ -2061,7 +2089,9 @@ DiskManagerImpl
             	
                 Logger.log(new LogAlert(DiskManagerImpl.this, LogAlert.UNREPEATABLE, LogAlert.AT_ERROR, msg));
 
-                setErrorState( reason, cause );
+                
+                
+                setErrorState( type, reason, cause );
 
                 DiskManagerImpl.this.stop( false );
             }
@@ -2479,7 +2509,7 @@ DiskManagerImpl
               try{
                   saveResumeData(false);
               }catch( Throwable e ){
-                  setFailed("Resume data save fails", e );
+                  setFailed( DiskManager.ET_OTHER, "Resume data save fails", e );
               }
           }
 

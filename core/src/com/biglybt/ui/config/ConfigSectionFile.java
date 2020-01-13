@@ -270,21 +270,36 @@ public class ConfigSectionFile
 
 		// restart out of space downloads
 
-		// resume data
 		BooleanParameterImpl OOSDRE = new BooleanParameterImpl(
 				BCFG_INSUFFICIENT_SPACE_DOWNLOAD_RESTART,
 				"ConfigView.label.restart.no.space.dls");
 		add(OOSDRE, Parameter.MODE_INTERMEDIATE);
 
-		IntParameterImpl paramOOSDRInterval = new IntParameterImpl(
+		IntParameterImpl OOSDRInterval = new IntParameterImpl(
 				ICFG_INSUFFICIENT_SPACE_DOWNLOAD_RESTART_MINS,
 				"ConfigView.label.restart.no.space.dls.interval", 1, Integer.MAX_VALUE);
-		add(paramOOSDRInterval, Parameter.MODE_INTERMEDIATE);
-		paramOOSDRInterval.setIndent(1, true);
-		paramOOSDRInterval.setSuffixLabelKey("ConfigView.text.minutes");
+		add(OOSDRInterval, Parameter.MODE_INTERMEDIATE);
+		OOSDRInterval.setIndent(1, true);
+		OOSDRInterval.setSuffixLabelKey("ConfigView.text.minutes");
 
-		OOSDRE.addEnabledOnSelection(paramOOSDRInterval);
+		OOSDRE.addEnabledOnSelection(OOSDRInterval);
 
+		// restart missing file downloads
+
+		BooleanParameterImpl MFDRE = new BooleanParameterImpl(
+				BCFG_MISSING_FILE_DOWNLOAD_RESTART,
+				"ConfigView.label.restart.missing.file.dls");
+		add(MFDRE, Parameter.MODE_INTERMEDIATE);
+
+		IntParameterImpl MFDRInterval = new IntParameterImpl(
+				ICFG_MISSING_FILE_DOWNLOAD_RESTART_MINS,
+				"ConfigView.label.restart.no.space.dls.interval", 1, Integer.MAX_VALUE);
+		add(MFDRInterval, Parameter.MODE_INTERMEDIATE);
+		MFDRInterval.setIndent(1, true);
+		MFDRInterval.setSuffixLabelKey("ConfigView.text.minutes");
+
+		MFDRE.addEnabledOnSelection(MFDRInterval);
+	
 		// use resume
 
 		// resume data

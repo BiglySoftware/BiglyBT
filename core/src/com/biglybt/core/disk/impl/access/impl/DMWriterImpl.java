@@ -471,8 +471,8 @@ DMWriterImpl
 				}
 
 
-				DiskManagerWriteRequestListener	l =
-					new DiskManagerWriteRequestListener()
+				DispatcherListener	l =
+					new DispatcherListener()
 					{
 						@Override
 						public void
@@ -488,6 +488,7 @@ DMWriterImpl
 						public void
 						writeFailed(
 							DiskManagerWriteRequest 	request,
+							DiskAccessRequest			da_request,
 							Throwable		 			cause )
 						{
 							complete();
@@ -509,7 +510,17 @@ DMWriterImpl
 
 							}else{
 
-								disk_manager.setFailed( "Disk write error", cause );
+								int	error = DiskManager.ET_WRITE_ERROR;
+								
+								if ( da_request != null ){
+									
+									if ( !da_request.getFile().exists()){
+										
+										error = DiskManager.ET_FILE_MISSING;
+									}
+								}
+								
+								disk_manager.setFailed( error, "Disk write error", cause );
 
 								Debug.printStackTrace( cause );
 
@@ -570,7 +581,7 @@ DMWriterImpl
 
 			request.getBuffer().returnToPool();
 
-			disk_manager.setFailed( "Disk write error", e );
+			disk_manager.setFailed( DiskManager.ET_WRITE_ERROR, "Disk write error", e );
 
 			Debug.printStackTrace( e );
 
@@ -582,8 +593,8 @@ DMWriterImpl
 	requestDispatcher
 		implements DiskAccessRequestListener
 	{
-		private final DiskManagerWriteRequest			request;
-		private final DiskManagerWriteRequestListener	listener;
+		private final DiskManagerWriteRequest		request;
+		private final DispatcherListener			listener;
 		private final DirectByteBuffer				buffer;
 		private final List							chunks;
 
@@ -592,7 +603,7 @@ DMWriterImpl
 		protected
 		requestDispatcher(
 			DiskManagerWriteRequest			_request,
-			DiskManagerWriteRequestListener	_listener,
+			DispatcherListener				_listener,
 			DirectByteBuffer				_buffer,
 			List							_chunks )
 		{
@@ -622,6 +633,8 @@ DMWriterImpl
 		protected void
 		dispatch()
 		{
+			DiskAccessRequest[]	error_request = { null };
+			
 			try{
 				if ( chunk_index == chunks.size()){
 
@@ -664,6 +677,8 @@ DMWriterImpl
 										DiskAccessRequest	request,
 										Throwable			cause )
 									{
+										error_request[0]	= request;
+										
 										error[0]	= cause;
 
 										sem.release();
@@ -707,7 +722,7 @@ DMWriterImpl
 				}
 			}catch( Throwable e ){
 
-				failed( e );
+				failed( error_request[0], e );
 			}
 		}
 
@@ -818,7 +833,7 @@ DMWriterImpl
 			DiskAccessRequest	request,
 			Throwable			cause )
 		{
-			failed( cause );
+			failed( request, cause );
 		}
 
 
@@ -844,11 +859,26 @@ DMWriterImpl
 
 		protected void
 		failed(
+			DiskAccessRequest	da_request,
 			Throwable			cause )
 		{
 			buffer.returnToPool();
 
-			listener.writeFailed( request, cause );
+			listener.writeFailed( request, da_request, cause );
 		}
+	}
+	
+	interface
+	DispatcherListener
+	{
+		public void
+		writeCompleted(
+			DiskManagerWriteRequest 	request );
+
+		public void
+		writeFailed(
+			DiskManagerWriteRequest 	request,
+			DiskAccessRequest			da_request,
+			Throwable		 			cause );
 	}
 }

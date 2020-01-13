@@ -170,16 +170,20 @@ public class GlobalManagerImpl
 	static boolean enable_stopped_scrapes;
 	static boolean disable_never_started_scrapes;
 
-	static boolean 	enable_no_space_dl_restarts;
 	static int		no_space_dl_restart_check_period_millis;
 
+	static int		missing_file_dl_restart_check_period_millis;
+	static Object	missing_file_dl_restart_key = new Object();
+	
 	static{
 		 COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 				"Tracker Client Scrape Stopped Enable",
 				"Tracker Client Scrape Never Started Disable",
-				"Insufficient Space Download Restart Enable",
-				"Insufficient Space Download Restart Period"
+				ConfigKeys.File.BCFG_INSUFFICIENT_SPACE_DOWNLOAD_RESTART,
+				ConfigKeys.File.ICFG_INSUFFICIENT_SPACE_DOWNLOAD_RESTART_MINS,
+				ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART,
+				ConfigKeys.File.ICFG_MISSING_FILE_DOWNLOAD_RESTART_MINS
 			},
 			new ParameterListener(){
 				@Override
@@ -188,17 +192,30 @@ public class GlobalManagerImpl
 					
 					disable_never_started_scrapes = COConfigurationManager.getBooleanParameter( "Tracker Client Scrape Never Started Disable" );
 					
-					enable_no_space_dl_restarts = COConfigurationManager.getBooleanParameter( "Insufficient Space Download Restart Enable" );
+					boolean enable_no_space_dl_restarts = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_INSUFFICIENT_SPACE_DOWNLOAD_RESTART );
 
 					if ( enable_no_space_dl_restarts ){
 
-						int mins = COConfigurationManager.getIntParameter( "Insufficient Space Download Restart Period" );
+						int mins = COConfigurationManager.getIntParameter( ConfigKeys.File.ICFG_INSUFFICIENT_SPACE_DOWNLOAD_RESTART_MINS );
 
 						no_space_dl_restart_check_period_millis = Math.max( 1, mins )*60*1000;
 
 					}else{
 
 						no_space_dl_restart_check_period_millis = 0;
+					}
+					
+					boolean enable_missing_file_dl_restarts = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART );
+
+					if ( enable_missing_file_dl_restarts ){
+
+						int mins = COConfigurationManager.getIntParameter( ConfigKeys.File.ICFG_MISSING_FILE_DOWNLOAD_RESTART_MINS );
+
+						missing_file_dl_restart_check_period_millis = Math.max( 1, mins )*60*1000;
+
+					}else{
+
+						missing_file_dl_restart_check_period_millis = 0;
 					}
 				}
 			});
@@ -392,10 +409,6 @@ public class GlobalManagerImpl
 
 		        	manager.saveResumeData();
 		       	}
-
-		            /*
-		             * seeding rules have been moved to StartStopRulesDefaultPlugin
-		             */
 	        }
 
         	if ( no_space_dl_restart_check_period_millis > 0 ){
@@ -448,6 +461,72 @@ public class GlobalManagerImpl
         		}
         	}
 
+           	if ( missing_file_dl_restart_check_period_millis > 0 ){
+
+    			long now = SystemTime.getMonotonousTime();
+
+        		List<DownloadManager>	eligible = new ArrayList<>();
+
+        		DownloadManager[] managers = managers_list_cow;
+        			
+        		for ( DownloadManager manager: managers ){
+  
+    		       	if ( 	manager.getState() == DownloadManager.STATE_ERROR &&
+     		       			(!manager.isPaused()) &&
+    		       			manager.getErrorType() == DownloadManager.ET_FILE_MISSING ){
+
+	        			Long t = (Long)manager.getUserData( missing_file_dl_restart_key );
+	        				
+	        			if ( t == null || now - t >= missing_file_dl_restart_check_period_millis ){
+    		       		
+	        				eligible.add( manager );
+	        			}
+    		       	}
+        		}
+
+		        if ( !eligible.isEmpty()){
+
+		        	if ( eligible.size() > 1 ){
+
+    		        	Collections.sort(
+    		        		eligible,
+    		        		new Comparator<DownloadManager>()
+    		        		{
+    		        			
+    		        			@Override
+					            public int
+    		        			compare(
+    		        				DownloadManager o1,
+    		        				DownloadManager o2)
+    		        			{
+       		        				Long t1 = (Long)o1.getUserData( missing_file_dl_restart_key );
+       		        				Long t2 = (Long)o2.getUserData( missing_file_dl_restart_key );
+    		        				
+       		        				long e1 = t1 == null?0:(now-t1);
+       		        				long e2 = t2 == null?0:(now-t2);
+       		        				
+       		        				long diff = e2-e1;
+       		        				
+       		        				if ( diff < 0 ){
+       		        					return( -1 );
+       		        				}else if ( diff > 0 ){
+       		        					return( 1 );
+       		        				}else{
+       		        					return( o1.getPosition() - o2.getPosition());
+       		        				}
+    		        			}
+    		        		});
+	        		}
+
+		        	DownloadManager manager = eligible.get(0);
+
+		        	manager.setUserData( missing_file_dl_restart_key, now );
+		        	
+		        	Logger.log(new LogEvent(LOGID, "Restarting download '" + manager.getDisplayName() + "' to check if missing file(s) now available" ));
+
+		        	manager.setStateQueued();
+        		}
+        	}
         	if ( loopFactor % oneMinuteThingCount == 0 ) {
 
         		try{

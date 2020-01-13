@@ -21,6 +21,7 @@ package com.biglybt.core.disk.impl.access.impl;
 
 import java.util.*;
 
+import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.disk.DiskManagerReadRequestListener;
 import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
@@ -488,7 +489,7 @@ DMReaderImpl
 				buffer.returnToPool();
 			}
 
-			disk_manager.setFailed( "Disk read error", e );
+			disk_manager.setFailed( DiskManager.ET_READ_ERROR, "Disk read error", e );
 
 			Debug.printStackTrace( e );
 
@@ -545,6 +546,8 @@ DMReaderImpl
 		protected void
 		dispatch()
 		{
+			final DiskAccessRequest[] error_request = { null };
+			
 			try{
 				if ( chunk_index == chunks.size()){
 
@@ -591,6 +594,8 @@ DMReaderImpl
 										DiskAccessRequest	request,
 										Throwable			cause )
 									{
+										error_request[0]	= request;
+										
 										error[0]	= cause;
 
 										sem.release();
@@ -644,7 +649,7 @@ DMReaderImpl
 				}
 			}catch( Throwable e ){
 
-				failed( e );
+				failed( error_request[0], e );
 			}
 		}
 
@@ -702,7 +707,7 @@ DMReaderImpl
 			DiskAccessRequest	request,
 			Throwable			cause )
 		{
-			failed( cause );
+			failed( request, cause );
 		}
 
 		@Override
@@ -734,11 +739,22 @@ DMReaderImpl
 
 		protected void
 		failed(
+			DiskAccessRequest	request,
 			Throwable			cause )
 		{
 			buffer.returnToPool();
 
-			disk_manager.setFailed( "Disk read error", cause );
+			int	error = DiskManager.ET_READ_ERROR;
+			
+			if ( request != null ){
+				
+				if ( !request.getFile().exists()){
+					
+					error = DiskManager.ET_FILE_MISSING;
+				}
+			}
+			
+			disk_manager.setFailed( error, "Disk read error", cause );
 
 			Debug.printStackTrace( cause );
 

@@ -58,6 +58,7 @@ DiskManagerHelper
 
 	public void
 	setFailed(
+		int						type,
 		String					reason,
 		Throwable				cause );
 

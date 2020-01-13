@@ -88,6 +88,7 @@ DownloadManager
 	public static final int ET_OTHER					= DiskManager.ET_OTHER;
 	public static final int ET_INSUFFICIENT_SPACE		= DiskManager.ET_INSUFFICIENT_SPACE;
 	public static final int ET_STOP_DURING_INIT			= DiskManager.ET_STOP_DURING_INIT;
+	public static final int ET_FILE_MISSING				= DiskManager.ET_FILE_MISSING;
 
 	public static final Object UD_KEY_STOP_REASON = Download.UD_KEY_STOP_REASON;
 	

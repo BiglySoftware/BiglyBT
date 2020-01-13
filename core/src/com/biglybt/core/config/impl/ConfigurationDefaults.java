@@ -427,8 +427,10 @@ public class ConfigurationDefaults {
     def.put( "Files Auto Tag Best Size", FALSE);
     def.put( ConfigKeys.File.BCFG_FILES_AUTO_TAG_ALLOW_MOD, FALSE );
     
-    def.put( "Insufficient Space Download Restart Enable", FALSE );
-    def.put( "Insufficient Space Download Restart Period", 10 );
+    def.put( ConfigKeys.File.BCFG_INSUFFICIENT_SPACE_DOWNLOAD_RESTART, FALSE );
+    def.put( ConfigKeys.File.ICFG_INSUFFICIENT_SPACE_DOWNLOAD_RESTART_MINS, 10 );
+    def.put( ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART, FALSE );
+    def.put( ConfigKeys.File.ICFG_MISSING_FILE_DOWNLOAD_RESTART_MINS, 30 );
 
     def.put( "Play Download Error", FALSE );
     def.put( "Play Download Error File", "" );

@@ -1925,7 +1925,7 @@ DiskManagerUtil
 					}
 					
 					@Override
-					public void setFailed(String reason, Throwable cause){
+					public void setFailed(int type, String reason, Throwable cause){
 					}
 										
 					@Override
