@@ -392,6 +392,17 @@ DownloadManager
     filesExist(
     	boolean	expected_to_be_allocated );
 
+    /**
+     * Download must be stopped - used at start-of-day to recover error state
+     * @param errorType
+     * @param errorDetails
+     */
+    
+    public void
+    setErrorState(
+    	int		errorType,
+    	String	errorDetails );
+    
     public String
     getErrorDetails();
 

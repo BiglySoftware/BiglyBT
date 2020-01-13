@@ -67,6 +67,7 @@ import com.biglybt.core.tracker.util.TRTrackerUtilsListener;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.dht.mainline.MainlineDHTProvider;
 import com.biglybt.pif.network.ConnectionManager;
+import com.biglybt.util.MapUtils;
 
 /**
  * @author Olivier
@@ -2831,6 +2832,17 @@ public class GlobalManagerImpl
 
 			  if ( addDownloadManager( dm, false ) == dm ){
 
+				  	// recover any error state
+				  
+				  Long errorType = (Long)mDownload.get( "errorType" );
+				  
+				  if ( errorType != null ){
+					  
+					  String errorDetails = MapUtils.getMapString( mDownload, "errorDetails", null );
+					  
+					  dm.setErrorState(((Long)errorType).intValue(), errorDetails);
+				  }
+				  
 				  return( dm );
 			  }
 		  }
@@ -2924,8 +2936,22 @@ public class GlobalManagerImpl
 	  if (state == DownloadManager.STATE_ERROR ){
 
 		  // torrents in error state always come back stopped
+		  // well, since 2203_B11 we remember the error state across restarts so we can continue
+		  // attempting restarts
 
-		  state = DownloadManager.STATE_STOPPED;
+		  int errorType = dm.getErrorType();
+
+		  if ( errorType != DownloadManager.ET_NONE ){
+			  dmMap.put( "errorType", errorType );
+			  
+			  String errorDetails = dm.getErrorDetails();
+			  
+			  if ( errorDetails != null && !errorDetails.isEmpty()){
+				  dmMap.put( "errorDetails", errorDetails );
+			  }
+		  }
+		  
+		  state = DownloadManager.STATE_STOPPED;	// keep stopped rather than error state for the moment for backwards compatability
 
 	  }else if (	dm.getAssumedComplete() && !dm.isForceStart() &&
 			  state != DownloadManager.STATE_STOPPED) {

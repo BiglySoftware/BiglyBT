@@ -43,6 +43,8 @@ DiskManager
 	public static final int READY = 4;
 	public static final int FAULTY = 10;
 
+		// don't change these, they are persisted when closing
+	
 	public static final int ET_NONE						= 0;
 	public static final int ET_OTHER					= 1;
 	public static final int ET_INSUFFICIENT_SPACE		= 2;

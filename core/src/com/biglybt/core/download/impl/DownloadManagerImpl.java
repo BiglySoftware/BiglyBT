@@ -1931,6 +1931,15 @@ DownloadManagerImpl
  		return( internal_name );
   	}
 
+ 	@Override
+ 	public void 
+ 	setErrorState(
+ 		int 		errorType, 
+ 		String		errorDetails )
+ 	{
+ 		controller.setFailed( errorType, errorDetails );
+ 	}
+ 	
 	@Override
 	public String
 	getErrorDetails()

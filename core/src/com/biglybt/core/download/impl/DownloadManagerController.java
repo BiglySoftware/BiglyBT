@@ -1884,7 +1884,7 @@ DownloadManagerController
 		}
 	}
 	
-	private void
+	protected void
 	setFailed(
 		int			type,
 		String		reason )
