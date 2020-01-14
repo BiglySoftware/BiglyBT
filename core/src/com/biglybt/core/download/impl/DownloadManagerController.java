@@ -41,7 +41,6 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.NetworkManager;
-import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.*;
 import com.biglybt.core.peermanager.PeerManager;
 import com.biglybt.core.peermanager.PeerManagerRegistration;
@@ -1079,6 +1078,8 @@ DownloadManagerController
 
 			control_mon.exit();
 
+			Logger.log(new LogEvent(this, LogIDs.CORE, "Stopped - state=" + getState() + ",error=" + getErrorType() + "/" + getErrorDetail()));
+
 			download_manager.informStateChanged();
 		}
 	}
@@ -1953,8 +1954,8 @@ DownloadManagerController
 							}
 						}
 
-						setFailed(MessageText.getString("DownloadManager.error.datamissing")
-								+ " " + file);
+						setFailed( DownloadManager.ET_FILE_MISSING, MessageText.getString("DownloadManager.error.datamissing") + ": " + file.getAbsolutePath());
+						
 						return false;
 
 					} else if (fileInfo.getLength() < file.length()) {

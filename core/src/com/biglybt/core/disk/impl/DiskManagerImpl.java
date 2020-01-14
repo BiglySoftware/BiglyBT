@@ -1212,7 +1212,9 @@ DiskManagerImpl
 
                     if ( download_manager.isDataAlreadyAllocated() ){
 
-                        setErrorState( DiskManager.ET_FILE_MISSING, "Data file missing: " + data_file.getAbsolutePath() );
+                        setErrorState( 
+                        	DiskManager.ET_FILE_MISSING, 
+                        	MessageText.getString( "DownloadManager.error.datamissing" ) + ": " + data_file.getAbsolutePath());
 
                         return( fail_result );
                     }

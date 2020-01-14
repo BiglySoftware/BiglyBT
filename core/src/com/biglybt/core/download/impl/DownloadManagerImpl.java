@@ -1001,7 +1001,7 @@ DownloadManagerImpl
 
 					 torrent_save_location = new File( torrent_save_dir, torrentFileName );
 
-					 throw( new NoStackException( "Download identity changed - please remove and re-add the download" ));
+					 throw( new NoStackException( DownloadManager.ET_OTHER,"Download identity changed - please remove and re-add the download" ));
 				 }
 
 				 read_torrent_state	= null;	// no longer needed if we saved it
@@ -1065,7 +1065,7 @@ DownloadManagerImpl
 
 				 			if ( save_dir_file.getParent() == null ){
 
-				 				throw( new NoStackException( "Data location '" + torrent_save_dir + "' is invalid" ));
+				 				throw( new NoStackException( DownloadManager.ET_FILE_MISSING, "Data location '" + torrent_save_dir + "' is invalid" ));
 
 				 			}
 
@@ -1085,7 +1085,7 @@ DownloadManagerImpl
 
 				 			if ( !save_dir_file.isDirectory()){
 
-				 				throw( new NoStackException( "'" + torrent_save_dir + "' is not a directory" ));
+				 				throw( new NoStackException( DownloadManager.ET_OTHER, "'" + torrent_save_dir + "' is not a directory" ));
 				 			}
 
 				 			if ( save_dir_file.getName().equals( display_name )){
@@ -1172,8 +1172,9 @@ DownloadManagerImpl
 						 if ( !res ){
 
 							throw (new NoStackException(
+									DownloadManager.ET_FILE_MISSING,
 									MessageText.getString("DownloadManager.error.datamissing")
-											+ " " + Debug.secretFileName(linked_target.toString())));
+											+ ": " + Debug.secretFileName(linked_target.toString())));
 						}
 				 	}
 				 }
@@ -1358,6 +1359,8 @@ DownloadManagerImpl
 
 				Debug.outNoStack( e.getMessage());
 
+				setFailed( e.getError(), e.getMessage());
+				
 			}catch( Throwable e ){
 
 				Debug.printStackTrace( e );
@@ -1973,6 +1976,14 @@ DownloadManagerImpl
 		controller.setFailed( str );
 	}
 
+	protected void
+	setFailed(
+		int		error,
+		String	str )
+	{
+		controller.setFailed( error, str );
+	}
+	
 	protected void
 	setFailed(
 		String		str,
@@ -6438,11 +6449,22 @@ DownloadManagerImpl
 	NoStackException
 		extends Exception
 	{
+		private final int error;
+		
 		protected
 		NoStackException(
+			int		_error,
 			String	str )
 		{
 			super( str );
+			
+			error = _error;
+		}
+		
+		protected int
+		getError()
+		{
+			return( error );
 		}
 	}
 
