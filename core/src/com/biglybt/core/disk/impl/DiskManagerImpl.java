@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.impl.access.DMAccessFactory;
@@ -56,13 +57,13 @@ import com.biglybt.core.internat.LocaleUtilDecoder;
 import com.biglybt.core.internat.LocaleUtilEncodingException;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.*;
+import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.FileUtil.ProgressListener;
 import com.biglybt.pif.download.savelocation.SaveLocationChange;
-import com.biglybt.pif.platform.PlatformManagerException;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
@@ -183,6 +184,22 @@ DiskManagerImpl
       	
     }
 
+	static volatile boolean	missing_file_dl_restart_enabled;
+	
+	static{
+		 COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART,
+			},
+			new ParameterListener(){
+				@Override
+				public void parameterChanged(String parameterName) {
+										
+					missing_file_dl_restart_enabled = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART );
+				}
+			});
+	}
+	
     private static final DiskManagerRecheckScheduler      recheck_scheduler       = new DiskManagerRecheckScheduler();
     private static final DiskManagerAllocationScheduler   allocation_scheduler    = new DiskManagerAllocationScheduler();
 
@@ -319,7 +336,8 @@ DiskManagerImpl
     
     private final Object   file_piece_lock  = new Object();
 
-
+    private final BitFlags	availability;
+    
     public
     DiskManagerImpl(
         TOTorrent           _torrent,
@@ -327,7 +345,7 @@ DiskManagerImpl
     {
         torrent             = _torrent;
         download_manager    = _dmanager;
-
+        
         pieces      = new DiskManagerPieceImpl[0];  // in case things go wrong later
 
         setState( INITIALIZING );
@@ -339,8 +357,14 @@ DiskManagerImpl
 
             setErrorState( "Torrent not available" );
 
+            availability = null;
+            
             return;
         }
+
+        nbPieces    = torrent.getNumberOfPieces();
+
+        availability = new BitFlags( nbPieces );
 
         LocaleUtilDecoder   locale_decoder = null;
 
@@ -383,8 +407,6 @@ DiskManagerImpl
         remaining   			= totalLength;
         remaining_excluding_dnd = remaining;
         
-        nbPieces    = torrent.getNumberOfPieces();
-
         pieceLength     = (int)torrent.getPieceLength();
         lastPieceLength = piece_mapper.getLastPieceLength();
 
@@ -1634,10 +1656,14 @@ DiskManagerImpl
 	                dmPiece.setDoneSupport(done);
 	
 	                if (done){
+	                
+	                	availability.set( piece_number );
 	                	
 	                    remaining -=piece_length;
 	                    
 	                }else{
+	                	
+	                	availability.unset( piece_number );
 	                	
 	                    remaining +=piece_length;
 	                }
@@ -1845,6 +1871,13 @@ DiskManagerImpl
         }
     }
 
+    @Override
+    public BitFlags 
+    getAvailability()
+    {
+    	return( availability );
+    }
+    
     @Override
     public DiskManagerPiece[] getPieces()
     {
@@ -2088,11 +2121,18 @@ DiskManagerImpl
             run()
             {
             	String msg = reason + ": " + Debug.getNestedExceptionMessage( cause );
-            	
-                Logger.log(new LogAlert(DiskManagerImpl.this, LogAlert.UNREPEATABLE, LogAlert.AT_ERROR, msg));
 
+            	if ( missing_file_dl_restart_enabled && type == ET_FILE_MISSING ){
+            	
+            		// prevent spamming alerts for things we are going to try and auto-recover
+            		
+            		Logger.log( new LogEvent( DiskManagerImpl.this, LOGID, LogEvent.LT_ERROR, msg ));
+            		
+            	}else{
                 
-                
+            		Logger.log(new LogAlert(DiskManagerImpl.this, LogAlert.UNREPEATABLE, LogAlert.AT_ERROR, msg));
+            	}
+            	
                 setErrorState( type, reason, cause );
 
                 DiskManagerImpl.this.stop( false );

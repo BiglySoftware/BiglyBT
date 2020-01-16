@@ -46,7 +46,7 @@ public class BTHandshake implements BTMessage, RawMessage {
   // Set seventh bit (2) and eight bit (1) to force AZMP over LTEP. [current behaviour]
   // Set seventh bit (2) only to prefer AZMP over LTEP.
   // Set eighth bit (1) only to prefer LTEP over AZMP.
-  private static final byte[] AZ_RESERVED = new byte[]{(byte)128, 0, 0, 0, 0, (byte)19, 0, 0 };
+  public static final byte[] AZ_RESERVED = new byte[]{(byte)128, 0, 0, 0, 0, (byte)19, 0, 0 };
 
   public static final int BT_RESERVED_MODE	= 0;
   public static final int LT_RESERVED_MODE	= 1;

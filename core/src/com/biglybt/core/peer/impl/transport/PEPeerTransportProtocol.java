@@ -921,8 +921,12 @@ implements PEPeerTransport
 	}
 
 
-
-
+	@Override
+	public boolean 
+	isMyPeer()
+	{
+		return( false );
+	}
 
 	@Override
 	public String

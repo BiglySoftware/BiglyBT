@@ -18,7 +18,7 @@
 
 package com.biglybt.ui.swt.views.tableitems.peers;
 
-import com.biglybt.core.peer.impl.PEPeerTransport;
+import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.util.TimeFormatter;
 
 import com.biglybt.pif.ui.tables.TableCell;
@@ -49,7 +49,7 @@ public class ConnectedTimeItem
 
   @Override
   public void refresh(TableCell cell) {
-    PEPeerTransport peer = (PEPeerTransport)cell.getDataSource();
+    PEPeer peer = (PEPeer)cell.getDataSource();
 
     long value = (peer == null) ? 0 : peer.getTimeSinceConnectionEstablished();
 

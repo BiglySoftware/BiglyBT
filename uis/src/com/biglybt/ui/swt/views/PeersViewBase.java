@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
@@ -129,11 +130,13 @@ PeersViewBase
 	protected Shell shell;
 
 	private boolean				swarm_view_enable;
+	private boolean				local_peer_enable = true;
 	
 	private PeersGraphicView 	swarm_view;
 	private Set<PEPeer>			swarm_peers = new HashSet<>();
 	private volatile boolean	peers_changed;
 
+	private volatile boolean	show_local_peer;
 
 	protected
 	PeersViewBase(
@@ -224,12 +227,86 @@ PeersViewBase
 			
 			return tableParent;
 			
+		}else if ( local_peer_enable ){
+			
+			Composite parent = new Composite(composite, SWT.NONE);
+			GridLayout layout = new GridLayout(1,true);
+			layout.marginHeight = layout.marginWidth = 0;
+			layout.horizontalSpacing = layout.verticalSpacing = 0;
+			parent.setLayout(layout);
+	
+			Layout compositeLayout = composite.getLayout();
+			if (compositeLayout instanceof GridLayout) {
+				parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			} else if (compositeLayout instanceof FormLayout) {
+				parent.setLayoutData(Utils.getFilledFormData());
+			}
+			
+			Composite header = new Composite(parent, SWT.NONE);
+			layout = new GridLayout(1,true);
+			layout.marginHeight = layout.marginWidth = 0;
+			header.setLayout(layout);
+			
+			header.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
+
+			Button lp_enable = new Button( header, SWT.CHECK );
+			lp_enable.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
+			
+			Messages.setLanguageText( lp_enable, "label.local.peer.show" );
+			lp_enable.addListener( SWT.Selection, (ev)->{
+				COConfigurationManager.setParameter( "Peers View Show Local Peer", lp_enable.getSelection());
+			});
+			
+			COConfigurationManager.addAndFireParameterListener(
+				"Peers View Show Local Peer",
+				new ParameterListener(){
+					public void
+					parameterChanged(
+						String n )
+					{
+						if ( lp_enable.isDisposed()){
+							
+							COConfigurationManager.removeParameterListener( n, this );
+							
+							return;
+						}
+						
+						boolean enabled = COConfigurationManager.getBooleanParameter( n );
+						
+						lp_enable.setSelection( enabled );
+						
+						setShowLocalPeer( enabled );
+					}
+				});
+			
+			Composite tableParent = new Composite(parent, SWT.NONE);
+			
+			tableParent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+			layout = new GridLayout();
+			layout.horizontalSpacing = layout.verticalSpacing = 0;
+			layout.marginHeight = layout.marginWidth = 0;
+			tableParent.setLayout(layout);
+
+			return( tableParent );
+			
 		}else {
 			
 			return( super.initComposite(composite));
 		}
 	}
 
+	protected boolean
+	getShowLocalPeer()
+	{
+		return( show_local_peer );
+	}
+	
+	protected void
+	setShowLocalPeer(
+		boolean		b )
+	{	
+		show_local_peer = b;
+	}
 	
 	protected TableViewSWT<PEPeer> 
 	initYourTableView(
@@ -767,7 +844,9 @@ PeersViewBase
 		kick_item.addListener(SWT.Selection, new PeersRunner(peers) {
 			@Override
 			public void run(PEPeer peer) {
-				peer.getManager().removePeer(peer,"Peer kicked" );
+				if ( !peer.isMyPeer()){
+					peer.getManager().removePeer(peer,"Peer kicked" );
+				}
 			}
 		});
 
@@ -777,10 +856,12 @@ PeersViewBase
 		ban_item.addListener(SWT.Selection, new PeersRunner(peers) {
 			@Override
 			public void run(PEPeer peer) {
-				String msg = MessageText.getString("PeersView.menu.kickandban.reason");
-				IpFilterManagerFactory.getSingleton().getIPFilter().ban(peer.getIp(),
-						msg, true );
-				peer.getManager().removePeer(peer, "Peer kicked and banned");
+				if ( !peer.isMyPeer()){
+					String msg = MessageText.getString("PeersView.menu.kickandban.reason");
+					IpFilterManagerFactory.getSingleton().getIPFilter().ban(peer.getIp(),
+							msg, true );
+					peer.getManager().removePeer(peer, "Peer kicked and banned");
+				}
 			}
 		});
 
@@ -845,11 +926,13 @@ PeersViewBase
 
 						for ( PEPeer peer: peers ){
 
-							String msg = MessageText.getString("PeersView.menu.kickandbanfor.reason", new String[]{ String.valueOf( mins )});
-
-							filter.ban( peer.getIp(), msg, true, mins );
-
-							peer.getManager().removePeer(peer, "Peer kicked and banned");
+							if ( !peer.isMyPeer()){
+								String msg = MessageText.getString("PeersView.menu.kickandbanfor.reason", new String[]{ String.valueOf( mins )});
+	
+								filter.ban( peer.getIp(), msg, true, mins );
+	
+								peer.getManager().removePeer(peer, "Peer kicked and banned");
+							}
 						}
 					}
 				});

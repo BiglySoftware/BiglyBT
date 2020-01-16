@@ -49,17 +49,21 @@ import com.biglybt.core.peermanager.PeerManagerRegistration;
 import com.biglybt.core.peermanager.control.PeerControlInstance;
 import com.biglybt.core.peermanager.control.PeerControlScheduler;
 import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
+import com.biglybt.core.peermanager.messaging.Message;
+import com.biglybt.core.peermanager.messaging.bittorrent.BTHandshake;
 import com.biglybt.core.peermanager.nat.PeerNATInitiator;
 import com.biglybt.core.peermanager.nat.PeerNATTraversalAdapter;
 import com.biglybt.core.peermanager.nat.PeerNATTraverser;
 import com.biglybt.core.peermanager.peerdb.*;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.peermanager.piecepicker.PiecePickerFactory;
+import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.peermanager.unchoker.Unchoker;
 import com.biglybt.core.peermanager.unchoker.UnchokerFactory;
 import com.biglybt.core.peermanager.unchoker.UnchokerUtil;
 import com.biglybt.core.peermanager.uploadslots.UploadHelper;
 import com.biglybt.core.peermanager.uploadslots.UploadSlotManager;
+import com.biglybt.core.tag.TaggableResolver;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
@@ -422,7 +426,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 		@Override
 		public int getRateLimitBytesPerSecond() {
-			int rate = adapter.getUploadRateLimitBytesPerSecond();
+			int rate = adapter.getEffectiveUploadRateLimitBytesPerSecond();
 			
 			boolean disabled = rate < 0;
 			
@@ -459,7 +463,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 		public boolean
 		isDisabled()
 		{
-			return( adapter.getUploadRateLimitBytesPerSecond() == -1 );
+			return( adapter.getEffectiveUploadRateLimitBytesPerSecond() == -1 );
 		}
 		@Override
 		public void
@@ -540,7 +544,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 	private volatile boolean	asfe_activated;
 
-
+	private final MyPeer		my_peer = new MyPeer();
+	
 	public
 	PEPeerControlImpl(
 		byte[]					_peer_id,
@@ -1002,6 +1007,13 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 	}
 
+	@Override
+	public PEPeer 
+	getMyPeer()
+	{
+		return( my_peer );
+	}
+	
 	@Override
 	public List<PEPeer>
 	getPeers()
@@ -3435,6 +3447,13 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 	}
 
+	@Override
+	public int
+	getEffectiveUploadRateLimitBytesPerSecond()
+	{
+		return( adapter.getEffectiveUploadRateLimitBytesPerSecond());
+	}
+	
 	@Override
 	public int
 	getUploadRateLimitBytesPerSecond()
@@ -6354,5 +6373,728 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 
 		disk_mgr.generateEvidence( writer );
+	}
+	
+	private class
+	MyPeer
+		implements PEPeer
+	{
+		private Map<Object,Object>	user_data = new HashMap<>();
+		
+		private PEPeerStats stats = new MyPeerStats( this );
+		
+		@Override
+		public boolean 
+		isMyPeer()
+		{
+			return( true );
+		}
+
+		public void addListener( PEPeerListener listener )
+		{
+		}
+
+		public void removeListener( PEPeerListener listener )
+		{
+		}
+
+		public int getPeerState()
+		{
+			return( TRANSFERING );
+		}
+
+		public PEPeerManager
+		getManager()
+		{
+			return( PEPeerControlImpl.this );
+		}
+
+		public String
+		getPeerSource()
+		{
+			return( "local" );
+		}
+
+		public byte[] getId()
+		{
+			return( _myPeerId );
+		}
+
+		public String getIp()
+		{
+			InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+			
+			return( ia==null?"127.0.0.1":ia.getHostAddress());
+		}
+	
+		public InetAddress getAlternativeIPv6()
+		{
+			return( null );
+		}
+	
+		public int getPort()
+		{
+			return( getTCPListeningPortNumber());
+		}
+
+
+		public String getIPHostName()
+		{
+			return( "" );
+		}
+
+		public int getTCPListenPort()
+		{
+			return( getTCPListeningPortNumber());
+		}
+
+		public int getUDPListenPort()
+		{
+			return(UDPNetworkManager.getSingleton().getUDPListeningPortNumber());
+		}
+
+		public int getUDPNonDataListenPort()
+		{
+			return(UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber());
+		}
+
+		public BitFlags getAvailable()
+		{
+			return( disk_mgr.getAvailability());
+		}
+		
+		public boolean isPieceAvailable(int pieceNumber)
+		{
+			return( disk_mgr.isDone( pieceNumber ));
+		}
+
+		public boolean
+		transferAvailable()
+		{
+			return( true );
+		}
+
+		public void setSnubbed(boolean b)
+		{
+		}
+
+		public boolean isChokingMe()
+		{
+			return( false );
+		}
+
+		public boolean isUnchokeOverride()
+		{
+			return( false );
+		}
+
+		public boolean isChokedByMe()
+		{
+			return( false );
+		}
+
+		public void
+		sendChoke()
+		{
+		}
+
+		public void
+		sendUnChoke()
+		{
+		}
+
+		public boolean isInteresting()
+		{
+			return( false );
+		}
+
+		public boolean isInterested()
+		{
+			return( false );
+		}
+
+		public boolean isDownloadPossible()
+		{
+			return( true );
+		}
+
+		public boolean isSeed()
+		{
+			return( PEPeerControlImpl.this.isSeeding());
+		}
+
+		public boolean isRelativeSeed()
+		{
+			return( isSeed());
+		}
+
+		public boolean isSnubbed()
+		{
+			return( false );
+		}
+
+		public long getSnubbedTime()
+		{
+			return( 0 );
+		}
+
+		public PEPeerStats getStats()
+		{
+			return( stats );
+		}
+
+		public boolean isIncoming()
+		{
+			return( false );
+		}
+
+		public boolean hasReceivedBitField()
+		{
+			return( true );
+		}
+
+		public int getPercentDoneInThousandNotation()
+		{
+			long	total 	= disk_mgr.getTotalLength();
+			long	rem		= disk_mgr.getRemaining();
+			
+			return((int)(((total-rem)*1000)/total));
+		}
+
+		public String getClient()
+		{
+			return( MessageText.getString( "label.local.peer" ) + " - " + Constants.APP_NAME );
+		}
+
+		public boolean isOptimisticUnchoke()
+		{
+			return( false );
+		}
+		
+		public void setOptimisticUnchoke( boolean is_optimistic )
+		{
+		}
+
+		public void setUploadHint(int timeToSpread)
+		{
+		}
+
+		public int getUploadHint()
+		{
+			return( -1 );
+		}
+
+		public void setUniqueAnnounce(int uniquePieceNumber)
+		{
+		}
+
+		public int getUniqueAnnounce()
+		{
+			return( -1 );
+		}
+
+		public int getConsecutiveNoRequestCount()
+		{
+			return( 0 );
+		}
+		
+		public void setConsecutiveNoRequestCount( int num )
+		{
+		}
+
+		public void setUploadRateLimitBytesPerSecond( int bytes )
+		{
+			adapter.setUploadRateLimitBytesPerSecond( bytes );
+		}
+		
+		public void setDownloadRateLimitBytesPerSecond( int bytes )
+		{
+			adapter.setDownloadRateLimitBytesPerSecond( bytes );
+		}
+		
+		public int getUploadRateLimitBytesPerSecond()
+		{
+			return( adapter.getUploadRateLimitBytesPerSecond());
+		}
+		
+		public int getDownloadRateLimitBytesPerSecond()
+		{
+			return( adapter.getDownloadRateLimitBytesPerSecond());
+		}
+
+		public void
+		addRateLimiter(
+			LimitedRateGroup	limiter,
+			boolean				upload )
+		{	
+		}
+
+		public LimitedRateGroup[]
+		getRateLimiters(
+			boolean				upload )
+		{
+			return( new LimitedRateGroup[0] );
+		}
+
+		public void
+		removeRateLimiter(
+			LimitedRateGroup	limiter,
+			boolean				upload )
+		{
+		}
+
+		public void
+		setUploadDisabled(
+			Object				key,
+			boolean				disabled )
+		{
+		}
+
+		public void
+		setDownloadDisabled(
+			Object				key,
+			boolean				disabled )
+		{
+		}
+
+		public boolean
+		isUploadDisabled()
+		{
+			return( false );
+		}
+
+		public boolean
+		isDownloadDisabled()
+		{
+			return( false );
+		}
+
+		public void
+		updateAutoUploadPriority(
+			Object	key,
+			boolean	inc )
+		{
+		}
+
+	
+		public Object getData (String key)
+		{
+			return( getUserData( key ));
+		}
+		
+		public void setData (String key, Object value)
+		{
+			setUserData( key, value );
+		}
+
+		public Object getUserData (Object key)
+		{
+			synchronized( user_data ){
+				return( user_data.get( key ));
+			}
+		}
+		
+		public void setUserData (Object key, Object value)
+		{
+			synchronized(user_data){
+				user_data.put(key, value );
+			}
+		}
+
+
+		public Connection getPluginConnection()
+		{
+			return( null );
+		}
+
+		public boolean supportsMessaging()
+		{
+			return( true );
+		}
+
+		public int getMessagingMode()
+		{
+			return( MESSAGING_AZMP );
+		}
+
+		public String
+		getEncryption()
+		{
+			return( "" );
+		}
+
+		public String
+		getProtocol()
+		{
+			return( "" );
+		}
+
+		public String
+		getProtocolQualifier()
+		{
+			return( null );
+		}
+
+		public Message[] getSupportedMessages()
+		{
+			return( null );
+		}
+
+		public void addReservedPieceNumber(int pieceNumber)
+		{
+		}
+
+		public void removeReservedPieceNumber(int pieceNumber)
+		{
+		}
+
+		public int[] getReservedPieceNumbers()
+		{
+			return( new int[0] );
+		}
+
+		public int getIncomingRequestCount()
+		{
+			return( 0 );
+		}
+		
+		public int getOutgoingRequestCount()
+		{
+			return( 0 );
+		}
+
+		public int getOutboundDataQueueSize()
+		{
+			return( 0 );
+		}
+
+		public int[] getIncomingRequestedPieceNumbers()
+		{
+			return( new int[0] );
+		}
+
+
+		public int[] getOutgoingRequestedPieceNumbers()
+		{
+			return( new int[0] );
+		}
+
+		public int
+		getPercentDoneOfCurrentIncomingRequest()
+		{
+			return( 0 );
+		}
+
+		public int
+		getPercentDoneOfCurrentOutgoingRequest()
+		{
+			return( 0 );
+		}
+
+		public long
+		getBytesRemaining()
+		{
+			return( disk_mgr.getRemaining());
+		}
+
+
+		public void
+		setSuspendedLazyBitFieldEnabled(
+				boolean	enable )
+		{
+		}
+
+
+		public long getTimeSinceConnectionEstablished(){
+			return( SystemTime.getMonotonousTime() - _timeStarted_mono );
+		}
+
+		public void setLastPiece(int i)
+		{
+		}
+
+		public int getLastPiece()
+		{
+			return( -1 );
+		}
+
+		public boolean
+		isLANLocal()
+		{
+			return( true );
+		}
+
+		public void
+		resetLANLocalStatus()
+		{
+		}
+
+		public boolean
+		sendRequestHint(
+				int		piece_number,
+				int		offset,
+				int		length,
+				int		life )
+		{
+			return( false );
+		}
+
+		public int[]
+				getRequestHint()
+		{
+			return( null );
+		}
+
+		public void
+		clearRequestHint()
+		{
+		}
+
+		public void
+		sendStatsRequest(
+				Map		request )
+		{
+		}
+
+		public void
+		sendRejectRequest(
+				DiskManagerReadRequest	request )
+		{
+		}
+
+		public void
+		setHaveAggregationEnabled(
+				boolean		enabled )
+		{
+		}
+
+		public byte[] getHandshakeReservedBytes()
+		{
+			return( BTHandshake.AZ_RESERVED );
+		}
+
+		public String getClientNameFromPeerID()
+		{
+			return( getClient());
+		}
+		
+		public String getClientNameFromExtensionHandshake()
+		{
+			return( getClient());
+		}
+
+		public boolean isPriorityConnection()
+		{
+			return( false );
+		}
+
+		public void setPriorityConnection( boolean is_priority )
+		{
+		}
+
+		public boolean
+		isClosed()
+		{
+			return( false );
+		}
+		
+		@Override
+		public int getTaggableType() {return TT_PEER;}
+	   	@Override
+	    public String getTaggableID(){ return( null ); }
+	   	@Override
+	   	public String getTaggableName(){
+	   		return( getIp());
+	   	}
+		@Override
+		public TaggableResolver	getTaggableResolver(){ return( null ); }
+		@Override
+		public Object getTaggableTransientProperty(String key) {
+			return null;
+		}
+		@Override
+		public void setTaggableTransientProperty(String key, Object value) {
+		}
+
+	}
+	
+	private class
+	MyPeerStats
+		implements PEPeerStats
+	{
+		private final PEPeer	peer;
+		
+		private
+		MyPeerStats(
+			PEPeer		_peer )
+		{
+			peer = _peer;
+		}
+		
+		public PEPeer getPeer()
+		{
+			return( peer );
+		}
+		
+		public void setPeer(PEPeer p)
+		{
+		}
+
+		public void dataBytesSent( int num_bytes )
+		{
+		}
+
+
+		public void protocolBytesSent( int num_bytes )
+		{
+			
+		}
+		public void dataBytesReceived( int num_bytes )
+		{
+		}
+
+		public void protocolBytesReceived( int num_bytes )
+		{
+		}
+
+		public void bytesDiscarded( int num_bytes )
+		{
+		}
+
+		public void hasNewPiece( int piece_size )
+		{
+		}
+
+		public void statisticalSentPiece( int piece_size )
+		{
+		}
+
+
+		public long getDataReceiveRate()
+		{
+			return( _stats.getDataReceiveRate());
+		}
+
+		public long getProtocolReceiveRate()
+		{
+			return( _stats.getProtocolReceiveRate());
+		}
+
+		public long getTotalDataBytesReceived()
+		{
+			return( _stats.getTotalDataBytesReceived());
+		}
+
+		public long getTotalProtocolBytesReceived()
+		{
+			return( _stats.getTotalProtocolBytesReceived());
+		}
+
+		public long getDataSendRate()
+		{
+			return( _stats.getDataSendRate());
+		}
+
+		public long getProtocolSendRate()
+		{
+			return( _stats.getProtocolSendRate());
+		}
+
+		public long getTotalDataBytesSent()
+		{
+			return( _stats.getTotalDataBytesSent());
+		}
+
+		public long getTotalProtocolBytesSent()
+		{
+			return( _stats.getTotalProtocolBytesSent());
+		}
+
+		public long getSmoothDataReceiveRate()
+		{
+			return( _stats.getSmoothedDataReceiveRate());
+		}
+
+		public long getTotalBytesDiscarded()
+		{
+			return( _stats.getTotalDiscarded());
+		}
+
+		public long getEstimatedDownloadRateOfPeer()
+		{
+			return( getDataReceiveRate() + getProtocolReceiveRate());
+		}
+
+		public long getEstimatedUploadRateOfPeer()
+		{
+			return( getDataSendRate() + getProtocolSendRate());
+		}
+
+		public long getEstimatedSecondsToCompletion()
+		{
+			return( getETA( true ));
+		}
+
+		public long getTotalBytesDownloadedByPeer()
+		{
+			return( _stats.getTotalDataBytesReceived() + _stats.getTotalProtocolBytesReceived());
+		}
+
+		public void diskReadComplete( long bytes )
+		{
+		}
+		
+		public int getTotalDiskReadCount()
+		{
+			return( 0 );
+		}
+		
+		public int getAggregatedDiskReadCount()
+		{
+			return( 0 );
+		}
+		
+		public long getTotalDiskReadBytes()
+		{
+			return( 0 );
+		}		
+
+		public void setUploadRateLimitBytesPerSecond( int bytes )
+		{
+			peer.setUploadRateLimitBytesPerSecond(bytes);
+		}
+		
+		public void setDownloadRateLimitBytesPerSecond( int bytes )
+		{
+			peer.setDownloadRateLimitBytesPerSecond(bytes);
+		}
+		
+		public int getUploadRateLimitBytesPerSecond()
+		{
+			return( peer.getUploadRateLimitBytesPerSecond());
+		}
+		
+		public int getDownloadRateLimitBytesPerSecond()
+		{
+			return( peer.getDownloadRateLimitBytesPerSecond());
+		}
+
+		public int getPermittedBytesToSend()
+		{
+			return( Integer.MAX_VALUE );
+		}
+		
+		public void permittedSendBytesUsed( int num )
+		{
+		}		
+
+		public int getPermittedBytesToReceive()
+		{
+			return( Integer.MAX_VALUE );
+		}
+		
+		public void permittedReceiveBytesUsed( int num )
+		{
+		}
 	}
 }

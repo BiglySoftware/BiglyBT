@@ -310,5 +310,7 @@ public class UIConfigDefaultsSWT
 		}
 		def.addParameter( "Side Bar Top Level Order", orderDef );
 		def.addParameter( "Library.TagInTabBar", 1 );
+		
+		def.addParameter( "Peers View Show Local Peer", false);
 	}
 }

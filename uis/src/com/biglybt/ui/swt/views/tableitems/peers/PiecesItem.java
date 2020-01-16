@@ -249,7 +249,16 @@ public class PiecesItem
 				}
 
 				final BitFlags peerHave = infoObj.getAvailable();
-				boolean established = ((PEPeerTransport) infoObj).getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED;
+				
+				boolean established;
+				
+				if ( infoObj instanceof PEPeerTransport ){
+				
+					established = ((PEPeerTransport) infoObj).getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED;
+					
+				}else{
+					established = true;	// hack for 'my-peer'
+				}
 
 				if (established && peerHave != null && peerHave.flags.length > 0) {
 					if (imageBuffer == null || imageBuffer.length != drawWidth) {

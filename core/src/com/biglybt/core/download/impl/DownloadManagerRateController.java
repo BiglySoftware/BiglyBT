@@ -672,7 +672,7 @@ DownloadManagerRateController
 							// see if the download has a manually imposed upload limit and if
 							// we are close to it
 
-						int limit = manager.getUploadRateLimitBytesPerSecond();
+						int limit = manager.getEffectiveUploadRateLimitBytesPerSecond();
 
 						if ( 	limit > 0 &&
 								( stats.getDataSendRate() + stats.getProtocolSendRate() ) >= ( limit - (5*1024))){

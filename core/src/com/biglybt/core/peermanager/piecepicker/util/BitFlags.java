@@ -154,6 +154,16 @@ public class BitFlags
 		}
 	}
 
+	/** for setting a flag that is not known to be the first or last, or not */
+	public void unset(final int i)
+	{
+		if (flags[i])
+		{
+			flags[i] =false;
+			nbSet--;
+		}
+	}
+		
     /** this is for setting a flag that is already known to be the last true flag */
 	public void setEnd(final int i)
 	{

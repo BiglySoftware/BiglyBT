@@ -210,6 +210,9 @@ PEPeerManager
 	createPeerStats(
 		PEPeer	owner );
 
+	public PEPeer
+	getMyPeer();
+	
 	public List<PEPeer>
 	getPeers();
 
@@ -351,6 +354,8 @@ PEPeerManager
    */
   public LimitedRateGroup getDownloadLimitedRateGroup();
 
+  public int getEffectiveUploadRateLimitBytesPerSecond();
+  
   public int getUploadRateLimitBytesPerSecond();
 
   public int getDownloadRateLimitBytesPerSecond();

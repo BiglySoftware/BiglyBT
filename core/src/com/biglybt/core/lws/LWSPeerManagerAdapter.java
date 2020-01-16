@@ -105,9 +105,21 @@ LWSPeerManagerAdapter
 
 	@Override
 	public int
+	getEffectiveUploadRateLimitBytesPerSecond()
+	{
+		return( 0 );
+	}
+
+	@Override
+	public int
 	getUploadRateLimitBytesPerSecond()
 	{
 		return( 0 );
+	}
+	
+	@Override
+	public void setUploadRateLimitBytesPerSecond(int b)
+	{
 	}
 
 	@Override
@@ -117,6 +129,11 @@ LWSPeerManagerAdapter
 		return( 0 );
 	}
 
+	@Override
+	public void setDownloadRateLimitBytesPerSecond(int b)
+	{
+	}
+	
 	@Override
 	public int
 	getPermittedBytesToReceive()

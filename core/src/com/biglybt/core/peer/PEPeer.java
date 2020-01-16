@@ -89,6 +89,14 @@ PEPeer
 	public String
 	getPeerSource();
 
+		/**
+		 * Whether or not this is a 'dummy' peer that represents our presence in a swarm
+		 * @return
+		 */
+	
+	public boolean
+	isMyPeer();
+	
 	public byte[] getId();
 
 	public String getIp();

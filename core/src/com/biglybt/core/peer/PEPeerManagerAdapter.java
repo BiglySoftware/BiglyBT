@@ -40,10 +40,19 @@ PEPeerManagerAdapter
 	getTCPListeningPortNumber();
 	
 	public int
-	getUploadRateLimitBytesPerSecond();
+	getEffectiveUploadRateLimitBytesPerSecond();
 
 	public int
+	getUploadRateLimitBytesPerSecond();
+
+	public void
+	setUploadRateLimitBytesPerSecond( int b );
+	
+	public int
 	getDownloadRateLimitBytesPerSecond();
+	
+	public void
+	setDownloadRateLimitBytesPerSecond( int b );
 
 	public int
 	getMaxUploads();

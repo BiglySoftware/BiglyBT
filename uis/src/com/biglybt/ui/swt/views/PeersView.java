@@ -23,7 +23,6 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Menu;
@@ -44,7 +43,6 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.util.DataSourceUtils;
@@ -325,10 +323,46 @@ public class PeersView
 	@Override
 	public void peerManagerWillBeAdded(PEPeerManager	peer_manager ){}
 	@Override
-	public void peerManagerAdded(PEPeerManager manager) {	}
+	public void peerManagerAdded(PEPeerManager manager)
+	{
+		if ( getShowLocalPeer()){
+		
+			tv.addDataSource( manager.getMyPeer());
+		}
+	}
 	@Override
-	public void peerManagerRemoved(PEPeerManager manager) {
+	public void 
+	peerManagerRemoved(PEPeerManager manager) 
+	{
 		tv.removeAllTableRows();
+	}
+	
+	@Override
+	protected void
+	setShowLocalPeer(
+		boolean		b )
+	{	
+		super.setShowLocalPeer(b);
+		
+		if (manager == null || tv == null || tv.isDisposed()) {
+			
+			return;
+		}
+		
+		PEPeerManager pm = manager.getPeerManager();
+		
+		if ( pm != null ){
+			
+			PEPeer my_peer = pm.getMyPeer();
+			
+			if ( b ){
+				
+				tv.addDataSource( my_peer );
+			}else{
+				
+				tv.removeDataSource( my_peer );
+			}
+		}
 	}
 
 	/**
@@ -341,12 +375,22 @@ public class PeersView
 		}
 
 		PEPeer[] dataSources = manager.getCurrentPeers();
-		if (dataSources != null && dataSources.length > 0) {
-
+		
+		if ( dataSources != null && dataSources.length > 0) {
+			
 			tv.addDataSources(dataSources);
-			tv.processDataSourceQueue();
 		}
 
+		if ( getShowLocalPeer()){
+			
+			PEPeerManager pm = manager.getPeerManager();
+			
+			if ( pm != null ){
+			
+				tv.addDataSource( pm.getMyPeer());
+			}
+		}
+		
 		if ( select_peer_pending != null ){
 
 			showPeer( select_peer_pending.get(), 1 );

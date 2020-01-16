@@ -158,6 +158,13 @@ PeerForeignDelegate
 	}
 
 	@Override
+	public boolean 
+	isMyPeer()
+	{
+		return( false );
+	}
+	
+	@Override
 	public void
 	start()
 	{

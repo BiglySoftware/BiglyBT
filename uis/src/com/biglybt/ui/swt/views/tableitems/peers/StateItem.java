@@ -48,29 +48,43 @@ public class StateItem
 
   @Override
   public void refresh(TableCell cell) {
-    PEPeerTransport peer = (PEPeerTransport)cell.getDataSource();  //TODO fix this "naughty" cast
+	Object ds = cell.getDataSource();
+	
+	int state = -1;
+	
+	if ( ds instanceof PEPeerTransport ){
+    
+		PEPeerTransport peer = (PEPeerTransport)ds;
+		
+		state = peer.getConnectionState();
+		
+	}else{
+		
+		if ( ds != null ){
+			
+			state = PEPeerTransport.CONNECTION_FULLY_ESTABLISHED;	// assume other peer types (e.g. MyPeer) are connected
+		}
+	}
+	    
+    if( !cell.setSortValue( state ) && cell.isValid() ) {
+       return;
+    }
+
     String state_text = "";
-    if( peer != null ) {
-      int state = peer.getConnectionState();
 
-      if( !cell.setSortValue( state ) && cell.isValid() ) {
-        return;
-      }
-
-      switch( state ) {
-        case PEPeerTransport.CONNECTION_PENDING :
-          state_text = MessageText.getString( "PeersView.state.pending" );
-          break;
-        case PEPeerTransport.CONNECTION_CONNECTING :
-          state_text = MessageText.getString( "PeersView.state.connecting" );
-          break;
-        case PEPeerTransport.CONNECTION_WAITING_FOR_HANDSHAKE :
-          state_text = MessageText.getString( "PeersView.state.handshake" );
-          break;
-        case PEPeerTransport.CONNECTION_FULLY_ESTABLISHED :
-          state_text = MessageText.getString( "PeersView.state.established" );
-          break;
-      }
+    switch( state ) {
+	    case PEPeerTransport.CONNECTION_PENDING :
+	    	state_text = MessageText.getString( "PeersView.state.pending" );
+	    	break;
+	    case PEPeerTransport.CONNECTION_CONNECTING :
+	    	state_text = MessageText.getString( "PeersView.state.connecting" );
+	    	break;
+	    case PEPeerTransport.CONNECTION_WAITING_FOR_HANDSHAKE :
+	    	state_text = MessageText.getString( "PeersView.state.handshake" );
+	    	break;
+	    case PEPeerTransport.CONNECTION_FULLY_ESTABLISHED :
+	    	state_text = MessageText.getString( "PeersView.state.established" );
+	    	break;
     }
 
     cell.setText( state_text );

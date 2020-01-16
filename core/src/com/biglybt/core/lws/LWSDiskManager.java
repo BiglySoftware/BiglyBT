@@ -34,6 +34,7 @@ import com.biglybt.core.diskmanager.cache.CacheFileOwner;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.LocaleUtilDecoder;
+import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.util.ByteFormatter;
@@ -48,6 +49,7 @@ LWSDiskManager
 {
 	private static final sePiece	piece = new sePiece();
 
+	
 	private final LightWeightSeed			lws;
 	private final DiskAccessController	disk_access_controller;
 	private final File					save_file;
@@ -57,6 +59,8 @@ LWSDiskManager
 	private DMPieceMap				piece_map_use_accessor;
 
 	private final sePiece[]					pieces;
+	private final BitFlags					availability;
+
 	private DiskManagerFileInfoImpl[]	files;
 	private String						internal_name;
 	private final DownloadManagerState		download_state;
@@ -86,6 +90,10 @@ LWSDiskManager
 
 			pieces[i] = piece;
 		}
+		
+		availability = new BitFlags( pieces.length );
+		
+		availability.setAll();
 	}
 
 	public String
@@ -405,6 +413,12 @@ LWSDiskManager
 		return( pieces );
 	}
 
+	@Override
+	public BitFlags getAvailability()
+	{
+		return( availability );
+	}
+	
 	@Override
 	public DiskManagerPiece
 	getPiece(

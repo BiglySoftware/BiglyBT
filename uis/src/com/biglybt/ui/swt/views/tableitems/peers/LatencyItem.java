@@ -49,10 +49,21 @@ public class LatencyItem
 
   @Override
   public void refresh(TableCell cell) {
-    PEPeerTransport peer = (PEPeerTransport)cell.getDataSource();
+	Object ds = cell.getDataSource();
+	
+	long value;
+	
+	if ( ds instanceof PEPeerTransport ){
+		
+		PEPeerTransport peer = (PEPeerTransport)ds;
 
-    long value = (peer == null) ? 0 : peer.getLatency();
-
+		value = peer.getLatency();
+		
+	}else{
+		
+		value = 0;
+	}
+	
     if( !cell.setSortValue( value ) && cell.isValid() ) {
       return;
     }

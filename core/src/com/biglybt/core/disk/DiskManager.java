@@ -25,6 +25,7 @@ import java.io.File;
 
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMap;
+import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.IndentWriter;
@@ -193,6 +194,9 @@ DiskManager
 	public int
 	getNbPieces();
 
+	public BitFlags
+	getAvailability();
+	
 	public DiskManagerFileInfo[] getFiles();
 	public DiskManagerFileInfoSet getFileSet();
 	public DiskManagerPiece getPiece(int PieceNumber);

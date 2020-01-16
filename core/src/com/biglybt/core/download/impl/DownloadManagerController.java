@@ -2253,16 +2253,37 @@ DownloadManagerController
 
 	@Override
 	public int
-	getUploadRateLimitBytesPerSecond()
+	getEffectiveUploadRateLimitBytesPerSecond()
 	{
 		return( download_manager.getEffectiveUploadRateLimitBytesPerSecond());
 	}
 
 	@Override
 	public int
+	getUploadRateLimitBytesPerSecond()
+	{
+		return( stats.getUploadRateLimitBytesPerSecond());
+	}
+
+	@Override
+	public void
+	setUploadRateLimitBytesPerSecond( int b )
+	{
+		stats.setUploadRateLimitBytesPerSecond( b );
+	}
+	
+	@Override
+	public int
 	getDownloadRateLimitBytesPerSecond()
 	{
 		return( stats.getDownloadRateLimitBytesPerSecond());
+	}
+	
+	@Override
+	public void
+	setDownloadRateLimitBytesPerSecond( int b )
+	{
+		stats.setDownloadRateLimitBytesPerSecond( b );
 	}
 
 		// these per-download rates are not easy to implement as we either have per-peer limits or global limits, with the download-limits being implemented

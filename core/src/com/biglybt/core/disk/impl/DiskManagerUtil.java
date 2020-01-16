@@ -56,6 +56,7 @@ import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
@@ -1764,6 +1765,11 @@ DiskManagerUtil
 					@Override
 					public DMPieceMap getPieceMap(){
 						return piece_map;
+					}
+					
+					@Override
+					public BitFlags getAvailability(){
+						return null;
 					}
 					
 					@Override
