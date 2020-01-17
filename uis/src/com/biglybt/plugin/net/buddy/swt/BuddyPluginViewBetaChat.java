@@ -4446,35 +4446,35 @@ BuddyPluginViewBetaChat
 	{
 		if ( p.isIgnored() || p.isSpammer()){
 
-			item.setForeground( 0, Colors.grey );
+			item.setForeground( bt_col_offset + 0, Colors.grey );
 
 		}else{
 
 			if ( p.isPinned()){
 
-				item.setForeground( 0, Colors.fadedGreen );
+				item.setForeground( bt_col_offset + 0, Colors.fadedGreen );
 
 			}else{
 
 				if ( p.isMe()){
 
-					item.setForeground( 0, Colors.fadedGreen );
+					item.setForeground( bt_col_offset + 0, Colors.fadedGreen );
 
-					item.setFont( 0, italic_font );
+					item.setFont( bt_col_offset + 0, italic_font );
 
 				}else if ( p.isNickClash( true )){
 
-					item.setForeground( 0, Colors.red );
+					item.setForeground( bt_col_offset + 0, Colors.red );
 
 				}else{
 
 					if ( p.hasNickname()){
 
-						item.setForeground( 0, Colors.blues[Colors.FADED_DARKEST] );
+						item.setForeground( bt_col_offset + 0, Colors.blues[Colors.FADED_DARKEST] );
 
 					}else{
 
-						item.setForeground( 0, Colors.black );
+						item.setForeground( bt_col_offset + 0, Colors.black );
 					}
 				}
 			}
