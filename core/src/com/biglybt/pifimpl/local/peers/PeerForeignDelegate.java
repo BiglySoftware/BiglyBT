@@ -1164,14 +1164,6 @@ PeerForeignDelegate
 	}
 
 	@Override
-	public int getOutboundDataQueueSize()
-	{
-			// don't know, assume all requests are queued and block size
-
-		return( getOutgoingRequestCount() * DiskManager.BLOCK_SIZE );
-	}
-
-	@Override
 	public int getLastPiece()
 	{
 		return _lastPiece;

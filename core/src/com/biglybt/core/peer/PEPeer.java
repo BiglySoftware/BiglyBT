@@ -339,13 +339,6 @@ PEPeer
   public int getOutgoingRequestCount();
 
   /**
-   * amount of data queued for delivery to peer
-   * @return
-   */
-
-  public int getOutboundDataQueueSize();
-
-  /**
    * get a list of piece numbers the peer has requested
    * @return list of Long() representing the piece number requested, in order
    */

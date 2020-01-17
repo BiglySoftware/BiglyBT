@@ -27,7 +27,10 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
+import com.biglybt.ui.swt.views.table.TableRowSWT;
 
 /**
  *
@@ -39,6 +42,8 @@ public class ClientItem
        implements TableCellRefreshListener
 {
 	public static final String COLUMN_ID = "client";
+
+	private static TableRowSWT.ColorRequester	color_requester = ()-> 3;
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
@@ -58,5 +63,12 @@ public class ClientItem
     PEPeer peer = (PEPeer)cell.getDataSource();
 
     cell.setText( peer == null ? "" : peer.getClient() );
+    
+    TableRow row = cell.getTableRow();
+    
+	if (row instanceof TableRowSWT) {
+		
+		((TableRowSWT)row).requestForegroundColor( color_requester, (peer!=null&&peer.isMyPeer()) ? Colors.fadedGreen : null );
+	}
   }
 }

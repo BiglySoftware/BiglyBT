@@ -5385,13 +5385,6 @@ implements PEPeerTransport
 		return( getNbRequests());
   }
 
-  @Override
-  public int
-  getOutboundDataQueueSize()
-  {
-	  return( connection.getOutgoingMessageQueue().getTotalSize());
-	}
-
 	@Override
 	public boolean
 	isStalledPendingLoad()

@@ -896,7 +896,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 			if ( seeding_mode ){
 				
-				if ( mainloop_loop_count % MAINLOOP_FIVE_MINUTE_INTERVAL != 0 ){
+				if ( mainloop_loop_count % MAINLOOP_FIVE_MINUTE_INTERVAL == 0 ){
 					
 					synchronized( seeding_seed_disconnects ){
 						
@@ -931,6 +931,11 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 			updatePeersInSuperSeedMode();
 			doUnchokes();
+			
+			if ( mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL == 0 ){
+				
+				my_peer.update();
+			}
 
 		}catch (Throwable e) {
 
@@ -1545,8 +1550,10 @@ DiskManagerCheckRequestListener, IPFilterListener
 	 * otherwise, it will unmark it as fully downloaded, so blocks can be retreived again.
 	 */
 	private void checkCompletedPieces() {
-		if ((mainloop_loop_count %MAINLOOP_ONE_SECOND_INTERVAL) !=0)
+		if ( mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL !=0 ){
+			
 			return;
+		}
 
 		long remaining = 0;
 		
@@ -1612,8 +1619,9 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private void checkSpeedAndReserved()
 	{
 		// only check every 5 seconds
-		if(mainloop_loop_count % MAINLOOP_FIVE_SECOND_INTERVAL != 0)
+		if (mainloop_loop_count % MAINLOOP_FIVE_SECOND_INTERVAL != 0){
 			return;
+		}
 
 		final int				nbPieces	=_nbPieces;
 		final PEPieceImpl[] pieces =pePieces;
@@ -2354,6 +2362,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 	updateTrackerAnnounceInterval()
 	{
 		if ( mainloop_loop_count % MAINLOOP_FIVE_SECOND_INTERVAL != 0 ){
+			
 			return;
 		}
 
@@ -2534,7 +2543,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		if( !UploadSlotManager.AUTO_SLOT_ENABLE ) {		 //manual per-torrent unchoke slot mode
 
-			if( mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL != 0 ) {
+			if ( mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL != 0 ) {
+				
 				return;
 			}
 
@@ -2647,9 +2657,10 @@ DiskManagerCheckRequestListener, IPFilterListener
 	// Method that checks if we are connected to another seed, and if so, disconnect from him.
 	private void checkSeeds() {
 		//proceed on mainloop 1 second intervals if we're a seed and we want to force disconnects
-		if ((mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL) != 0)
+		if ((mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL) != 0){
 			return;
-
+		}
+		
 		if (!disconnect_seeds_when_seeding ){
 			return;
 		}
@@ -5094,11 +5105,11 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 
 		// every 10 seconds check for connected + banned peers
-		if ( mainloop_loop_count % MAINLOOP_TEN_SECOND_INTERVAL == 0 )
-		{
+		if ( mainloop_loop_count % MAINLOOP_TEN_SECOND_INTERVAL == 0 ){
+			
 			final long	last_update = ip_filter.getLastUpdateTime();
-			if ( last_update != ip_filter_last_update_time )
-			{
+			if ( last_update != ip_filter_last_update_time ){
+				
 				ip_filter_last_update_time	= last_update;
 				checkForBannedConnections();
 			}
@@ -5119,13 +5130,14 @@ DiskManagerCheckRequestListener, IPFilterListener
 		//sweep over all peers in a 60 second timespan
 		float percentage = ((mainloop_loop_count % MAINLOOP_SIXTY_SECOND_INTERVAL) + 1F) / (1F *MAINLOOP_SIXTY_SECOND_INTERVAL);
 		int goal;
-		if(mainloop_loop_count % MAINLOOP_SIXTY_SECOND_INTERVAL == 0)
-		{
+		if(mainloop_loop_count % MAINLOOP_SIXTY_SECOND_INTERVAL == 0){
+		
 			goal = 0;
 			sweepList = peer_transports_cow;
-		} else
+		} else{
 			goal = (int)Math.floor(percentage * sweepList.size());
-
+		}
+		
 		for( int i=nextPEXSweepIndex; i < goal && i < sweepList.size(); i++) {
 			//System.out.println(mainloop_loop_count+" %:"+percentage+" start:"+nextPEXSweepIndex+" current:"+i+" <"+goal+"/"+sweepList.size());
 			final PEPeerTransport peer = sweepList.get( i );
@@ -6379,9 +6391,99 @@ DiskManagerCheckRequestListener, IPFilterListener
 	MyPeer
 		implements PEPeer
 	{
-		private Map<Object,Object>	user_data = new HashMap<>();
+		private final Map<Object,Object>	user_data = new HashMap<>();
 		
-		private PEPeerStats stats = new MyPeerStats( this );
+		private final PEPeerStats stats = new MyPeerStats( this );
+		
+		private volatile long		last_active;
+		
+		private volatile int		incoming_request_count;
+		private volatile int		outgoing_request_count;
+		
+		private volatile int[]		incoming_requested_pieces = {};
+		private volatile int[]		outgoing_requested_pieces = {};
+
+		private void
+		update()
+		{
+			if ( last_active == 0 ){
+				
+				return;
+			}
+			
+			long now = SystemTime.getMonotonousTime();
+			
+			if ( now - last_active > 10*1000 ){
+				
+				last_active = 0;
+				
+				return;
+			}
+			
+			int	in_req 	= 0;
+			int out_req	= 0;
+			
+			Set<Integer>	in_pieces = new HashSet<>();
+			Set<Integer>	out_pieces = new HashSet<>();
+			
+			for ( PEPeerTransport peer: peer_transports_cow ){
+				
+				in_req 	+= peer.getIncomingRequestCount();
+				out_req	+= peer.getOutgoingRequestCount();
+				
+				int[] pieces = peer.getIncomingRequestedPieceNumbers();
+				
+				for ( int p: pieces ){
+					in_pieces.add( p );
+				}
+				
+				pieces = peer.getOutgoingRequestedPieceNumbers();
+				
+				for ( int p: pieces ){
+					out_pieces.add( p );
+				}
+			}
+			
+			int[] temp = new int[in_pieces.size()];
+			int	pos = 0;
+			
+			for ( Integer i: in_pieces ){
+			
+				temp[pos++] = i;
+			}
+			
+			incoming_requested_pieces = temp;
+			
+			temp = new int[out_pieces.size()];
+			pos = 0;
+			
+			for ( Integer i: out_pieces ){
+			
+				temp[pos++] = i;
+			}
+			
+			outgoing_requested_pieces = temp;
+			
+			incoming_request_count 	= in_req;
+			outgoing_request_count	= out_req;
+		}
+		
+		private void
+		setActive()
+		{
+			long now = SystemTime.getMonotonousTime();
+			
+			if ( last_active == 0 ){
+				
+				last_active = now;
+				
+				update();
+				
+			}else{
+				
+				last_active = now;
+			}
+		}
 		
 		@Override
 		public boolean 
@@ -6755,28 +6857,31 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		public int getIncomingRequestCount()
 		{
-			return( 0 );
+			setActive();
+			
+			return( incoming_request_count );
 		}
 		
 		public int getOutgoingRequestCount()
 		{
-			return( 0 );
-		}
-
-		public int getOutboundDataQueueSize()
-		{
-			return( 0 );
+			setActive();
+			
+			return( outgoing_request_count );
 		}
 
 		public int[] getIncomingRequestedPieceNumbers()
 		{
-			return( new int[0] );
+			setActive();
+			
+			return( incoming_requested_pieces );
 		}
 
 
 		public int[] getOutgoingRequestedPieceNumbers()
 		{
-			return( new int[0] );
+			setActive();
+			
+			return( outgoing_requested_pieces );
 		}
 
 		public int
