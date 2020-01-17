@@ -100,7 +100,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -138,6 +137,7 @@ import com.biglybt.ui.swt.PropertiesWindow;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.swt.FixedURLTransfer;
+import com.biglybt.ui.swt.ImageRepository;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.BufferedLabel;
@@ -1403,17 +1403,20 @@ BuddyPluginViewBetaChat
 			String[] headers = {
 				"azbuddy.ui.table.name",
 				"!#!",
-				"label.friend"};
+				"label.friend",
+				"" };
 	
 			int[] sizes = {
 				rhs_width-10,
 				30,
-				50};
+				50,
+				20};
 	
 			int[] aligns = { 
 				SWT.LEFT,
 				SWT.CENTER,
-				SWT.LEFT };
+				SWT.LEFT,
+				SWT.CENTER };
 	
 			for (int i = 0; i < headers.length; i++){
 	
@@ -1421,7 +1424,12 @@ BuddyPluginViewBetaChat
 
 				tc.setWidth(sizes[i]);
 	
-				Messages.setLanguageText(tc, headers[i]);
+				String key = headers[i];
+				
+				if ( !key.isEmpty()){
+				
+					Messages.setLanguageText(tc, key);
+				}
 			}
 	
 		    buddy_table.setHeaderVisible(true);
@@ -4371,6 +4379,33 @@ BuddyPluginViewBetaChat
 				if ( !values[i].equals( item.getText( i ))){
 				
 					item.setText(i, values[i] );
+				}
+			}
+			
+			List<String> profile = participant.getProfileData();
+			
+			if ( profile != null && !profile.isEmpty()){
+				
+				for ( String s: profile ){
+					
+					s = s.trim().toLowerCase( Locale.US );
+					
+					if ( s.startsWith( "country" )){
+						
+						String[] bits = s.split( "=" );
+						
+						if ( bits.length == 2 ){
+							
+							String cc = bits[1].trim();
+							
+							Image img = ImageRepository.getCountryFlag( cc, true );
+							
+							if ( img != null ){
+								
+								item.setImage( 3, img );
+							}
+						}
+					}
 				}
 			}
 			
