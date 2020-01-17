@@ -243,6 +243,7 @@ BuddyPluginViewBetaChat
 
 	private BufferedLabel			table_header_left;
 	private Table					buddy_table;
+	private int						bt_col_offset;
 	private BufferedLabel		 	status;
 
 	private Button 					shared_nick_button;
@@ -1418,6 +1419,18 @@ BuddyPluginViewBetaChat
 				SWT.LEFT,
 				SWT.CENTER };
 	
+			if ( Constants.isWindows ){
+					
+					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=43910 
+					// if any column has an image then the first column gets an indent on Windows :(
+				
+				TableColumn tc = new TableColumn(buddy_table, SWT.LEFT );
+				tc.setWidth( 0 );
+				tc.setResizable( false );
+				
+				bt_col_offset = 1;
+			}
+			
 			for (int i = 0; i < headers.length; i++){
 	
 				TableColumn tc = new TableColumn(buddy_table, aligns[i]);
@@ -4332,9 +4345,9 @@ BuddyPluginViewBetaChat
 				
 				String status = participant.isFriend()?"*":(participant.getFriendKey()!=null?"+":"");
 				
-				if ( !ti.getText( 2 ).equals( status )){
+				if ( !ti.getText( bt_col_offset + 2 ).equals( status )){
 					
-					ti.setText( 2, status );
+					ti.setText( bt_col_offset + 2, status );
 				}
 			}
 		}
@@ -4376,9 +4389,9 @@ BuddyPluginViewBetaChat
 			
 			for ( int i=0;i<values.length;i++){
 				
-				if ( !values[i].equals( item.getText( i ))){
+				if ( !values[i].equals( item.getText( bt_col_offset + i ))){
 				
-					item.setText(i, values[i] );
+					item.setText( bt_col_offset + i, values[i] );
 				}
 			}
 			
@@ -4402,7 +4415,7 @@ BuddyPluginViewBetaChat
 							
 							if ( img != null ){
 								
-								item.setImage( 3, img );
+								item.setImage( bt_col_offset + 3, img );
 							}
 						}
 					}
@@ -5152,7 +5165,7 @@ BuddyPluginViewBetaChat
 
 							if ( item.getData() == participant ){
 								
-								String old_name = item.getText(0);
+								String old_name = item.getText( bt_col_offset + 0);
 
 								if ( !old_name.equals( name )){
 
