@@ -6469,6 +6469,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		{
 			profile_data		= d;
 			profile_data_set	= SystemTime.getMonotonousTime();
+			
+			chat.updated( this );
 		}
 		
 		private long
