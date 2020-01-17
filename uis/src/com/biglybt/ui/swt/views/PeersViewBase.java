@@ -604,12 +604,17 @@ PeersViewBase
 		long	upSpeedSetMax		= 0;
 		long	maxUp				= 0;
 
+		boolean onlyMyPeer = true;
+		
 		if ( hasSelection ){
 			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
 
 			for (int i = 0; i < peers.length; i++) {
 				PEPeer peer = peers[i];
 
+				if ( !peer.isMyPeer()){
+					onlyMyPeer = false;
+				}
 				PEPeerManager m = peer.getManager();
 
 				if ( m != null ){
@@ -672,7 +677,7 @@ PeersViewBase
 			final MenuItem block_item = new MenuItem(menu, SWT.CHECK);
 			PEPeer peer = peers.length==0?null:peers[0];
 
-			if ( peer == null || peer.getManager().getDiskManager().getRemainingExcludingDND() > 0 ){
+			if ( onlyMyPeer || peer == null || peer.getManager().getDiskManager().getRemainingExcludingDND() > 0 ){
 				// disallow peer upload blocking when downloading
 				block_item.setSelection(false);
 				block_item.setEnabled(false);
@@ -730,7 +735,12 @@ PeersViewBase
 			boolean has_pb_potential = false;
 			
 			for ( PEPeer peer: peers ){
-														
+						
+				if ( peer.isMyPeer()){
+					
+					continue;
+				}
+				
 				DownloadManager dm = peer_dm_map.get( peer );
 				
 				Peer p_peer = PluginCoreUtils.wrap( peer );
@@ -849,6 +859,8 @@ PeersViewBase
 				}
 			}
 		});
+		
+		kick_item.setEnabled( !onlyMyPeer );
 
 		final MenuItem ban_item = new MenuItem(menu, SWT.PUSH);
 
@@ -864,6 +876,8 @@ PeersViewBase
 				}
 			}
 		});
+
+		ban_item.setEnabled( !onlyMyPeer );
 
 		final MenuItem ban_for_item = new MenuItem(menu, SWT.PUSH);
 
@@ -927,6 +941,7 @@ PeersViewBase
 						for ( PEPeer peer: peers ){
 
 							if ( !peer.isMyPeer()){
+								
 								String msg = MessageText.getString("PeersView.menu.kickandbanfor.reason", new String[]{ String.valueOf( mins )});
 	
 								filter.ban( peer.getIp(), msg, true, mins );
@@ -941,6 +956,8 @@ PeersViewBase
 			}
 		});
 		
+		ban_for_item.setEnabled( !onlyMyPeer );
+
 		addPeersMenu( download_specific, "", menu );
 	}
 	
