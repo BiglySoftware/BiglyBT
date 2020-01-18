@@ -426,6 +426,12 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
     Utils.setTerminated();
     // must dispose here in case another window has take over the
     // readAndDispatch/sleep loop
+    
+	// for 1.2 there is a bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=526758 causing crash on exit
+	// apparently fixed in 4.14
+
+    boolean crash_on_dispose_bug = Constants.isWindows8OrHigher && SWT.getVersion() < 4930;
+    
     if (!display.isDisposed()) {
     	
     	Runnable disposer = 
@@ -450,7 +456,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				    
 				    	// while crash is occurring we can just avoid the dispose completely and let the VM death trash things
 				    
-				    if ( !Constants.isWindows8OrHigher ){
+				    if ( !crash_on_dispose_bug ){
 				    	if ( !display.isDisposed()){
 				    		try{
 				    			display.dispose();
@@ -461,9 +467,8 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 			    }
     	};
 
-    		// for 1.2 there is a bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=526758 causing crash on exit
     	
-		if ( Constants.isWindows8OrHigher ){
+		if ( crash_on_dispose_bug ){
 			
 			display.asyncExec(
 				new Runnable()
