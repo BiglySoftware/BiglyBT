@@ -201,7 +201,8 @@ DownloadManagerController
 
 	private String 	errorDetail;
 	private int		errorType	= DownloadManager.ET_NONE;
-
+	private int		errorFlags	= 0;
+	
 	final GlobalManagerStats		global_stats;
 
 	boolean bInitialized = false;
@@ -776,7 +777,8 @@ DownloadManagerController
 
 			errorDetail	= "";
 			errorType	= DownloadManager.ET_NONE;
-
+			errorFlags	= 0;
+			
 			setState( initialising_state, false );
 
 		  	DiskManager dm = DiskManagerFactory.create( download_manager.getTorrent(), download_manager);
@@ -895,6 +897,15 @@ DownloadManagerController
 
 				//already in stopped state, just do removals if necessary
 
+				if ( stateAfterStopping !=  DownloadManager.STATE_ERROR && state == DownloadManager.STATE_ERROR ){
+				
+						// explicitly stopping an error download clears this stuff out
+					
+					errorType	= DownloadManager.ET_NONE;
+					errorDetail	= "";
+					errorFlags	= 0;
+				}
+				
 				if( remove_data ){
 
 					download_manager.deleteDataFiles();
@@ -1078,7 +1089,7 @@ DownloadManagerController
 
 			control_mon.exit();
 
-			Logger.log(new LogEvent(this, LogIDs.CORE, "Stopped - state=" + getState() + ",error=" + getErrorType() + "/" + getErrorDetail()));
+			Logger.log(new LogEvent(this, LogIDs.CORE, "Stopped - state=" + getState() + ",error=" + getErrorType() + "/" + getErrorDetail() + "/" + getErrorFlags()));
 
 			download_manager.informStateChanged();
 		}
@@ -1837,7 +1848,8 @@ DownloadManagerController
 				int	state = getState();
 
 				if (	force_start &&
-						(	state == DownloadManager.STATE_STOPPED ||
+						(	state == DownloadManager.STATE_ERROR ||
+							state == DownloadManager.STATE_STOPPED ||
 							state == DownloadManager.STATE_QUEUED )) {
 
 						// Start it!  (Which will cause a stateChanged to trigger)
@@ -1886,22 +1898,61 @@ DownloadManagerController
 	}
 	
 	protected void
+	setErrorState(
+		int			type,
+		String		reason,
+		int			flags )
+	{
+			// recovering download state on restart
+
+		errorFlags = flags;
+		
+		setFailed( type, reason, true );
+	}
+	
+	protected void
 	setFailed(
 		int			type,
 		String		reason )
 	{
-		if( type == DownloadManager.ET_STOP_DURING_INIT ){
+		setFailed( type, reason, false );
+	}
+	
+	private void
+	setFailed(
+		int			type,
+		String		reason,
+		boolean		recovering )
+	{
+			// all download errors come through here
+		
+		if ( type == DownloadManager.ET_STOP_DURING_INIT ){
 			
 			stopIt( DownloadManager.STATE_STOPPED, false, false, false );
 			
 		}else{
+			
 			if ( reason != null ){
 	
 				errorDetail = reason;
 			}
 	
 			errorType	= type;
-	
+			
+			if ( !recovering ){
+				
+				if ( force_start ){
+					
+						// stopIt will clear down force-start so grab the state before
+					
+					errorFlags = DownloadManager.EF_WAS_FORCE_START;
+					
+				}else{
+					
+					errorFlags = 0;
+				}
+			}
+			
 			stopIt( DownloadManager.STATE_ERROR, false, false, false );
 		}
 	}
@@ -2148,6 +2199,12 @@ DownloadManagerController
 	getErrorType()
 	{
 		return( errorType );
+	}
+	
+	protected int
+	getErrorFlags()
+	{
+		return( errorFlags );
 	}
 
  	protected void

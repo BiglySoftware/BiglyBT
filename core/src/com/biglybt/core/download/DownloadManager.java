@@ -90,6 +90,8 @@ DownloadManager
 	public static final int ET_STOP_DURING_INIT			= DiskManager.ET_STOP_DURING_INIT;
 	public static final int ET_FILE_MISSING				= DiskManager.ET_FILE_MISSING;
 
+	public static final int EF_WAS_FORCE_START			= 0x01;
+	
 	public static final Object UD_KEY_STOP_REASON = Download.UD_KEY_STOP_REASON;
 	
     public void
@@ -401,7 +403,8 @@ DownloadManager
     public void
     setErrorState(
     	int		errorType,
-    	String	errorDetails );
+    	String	errorDetails,
+    	int		errorFlags );
     
     public String
     getErrorDetails();
@@ -409,6 +412,9 @@ DownloadManager
     public int
     getErrorType();
 
+    public int
+    getErrorFlags();
+    
     public DownloadManagerStats
     getStats();
 

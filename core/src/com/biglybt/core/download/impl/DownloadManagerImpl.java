@@ -1928,7 +1928,7 @@ DownloadManagerImpl
 	}
 
  	@Override
-  public String
+ 	public String
 	getInternalName()
   	{
  		return( internal_name );
@@ -1938,9 +1938,10 @@ DownloadManagerImpl
  	public void 
  	setErrorState(
  		int 		errorType, 
- 		String		errorDetails )
+ 		String		errorDetails,
+ 		int			errorFlags )
  	{
- 		controller.setFailed( errorType, errorDetails );
+ 		controller.setErrorState( errorType, errorDetails, errorFlags );
  	}
  	
 	@Override
@@ -1955,6 +1956,13 @@ DownloadManagerImpl
 	getErrorType()
 	{
 		return( controller.getErrorType());
+	}
+	
+	@Override
+	public int 
+	getErrorFlags()
+	{
+		return( controller.getErrorFlags());
 	}
 
 	@Override

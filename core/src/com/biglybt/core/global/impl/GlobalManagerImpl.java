@@ -456,8 +456,16 @@ public class GlobalManagerImpl
 
     		        	Logger.log(new LogEvent(LOGID, "Restarting download '" + manager.getDisplayName() + "' to check if disk space now available" ));
 
-    		        	manager.setStateQueued();
-
+    		        	boolean force = (manager.getErrorFlags()&DownloadManager.EF_WAS_FORCE_START) != 0;
+    		        	
+    		        	if ( force ){
+    		        		
+    		        		manager.setForceStart( true );
+    		        		
+    		        	}else{
+    		        	
+    		        		manager.setStateQueued();
+    		        	}
     		       	}
         		}
         	}
@@ -525,7 +533,16 @@ public class GlobalManagerImpl
 		        	
 		        	Logger.log(new LogEvent(LOGID, "Restarting download '" + manager.getDisplayName() + "' to check if missing file(s) now available" ));
 
-		        	manager.setStateQueued();
+		        	boolean force = (manager.getErrorFlags()&DownloadManager.EF_WAS_FORCE_START) != 0;
+		        	
+		        	if ( force ){
+		        		
+		        		manager.setForceStart( true );
+		        		
+		        	}else{
+		        	
+		        		manager.setStateQueued();
+		        	}
         		}
         	}
         	if ( loopFactor % oneMinuteThingCount == 0 ) {
@@ -2840,7 +2857,9 @@ public class GlobalManagerImpl
 					  
 					  String errorDetails = MapUtils.getMapString( mDownload, "errorDetails", null );
 					  
-					  dm.setErrorState(((Long)errorType).intValue(), errorDetails);
+					  Long errorFlags = (Long)mDownload.get( "errorFlags" );
+					  
+					  dm.setErrorState(((Long)errorType).intValue(), errorDetails, errorFlags==null?0:errorFlags.intValue());
 				  }
 				  
 				  return( dm );
@@ -2943,6 +2962,7 @@ public class GlobalManagerImpl
 
 		  if ( errorType != DownloadManager.ET_NONE ){
 			  dmMap.put( "errorType", errorType );
+			  dmMap.put( "errorFlags", dm.getErrorFlags());
 			  
 			  String errorDetails = dm.getErrorDetails();
 			  
