@@ -23,7 +23,6 @@ import org.eclipse.swt.graphics.Image;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
-import com.biglybt.core.disk.impl.resume.RDResumeHandler;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
@@ -34,7 +33,6 @@ import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
-import com.biglybt.util.MapUtils;
 
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.ui.tables.*;

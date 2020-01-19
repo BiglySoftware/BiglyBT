@@ -19,22 +19,32 @@ package com.biglybt.ui.swt.views.peer;
 
 import com.biglybt.ui.common.table.*;
 import org.eclipse.swt.SWT;
-import com.biglybt.core.disk.DiskManagerFileInfo;
-import com.biglybt.core.peer.PEPeer;
-import com.biglybt.core.util.DisplayFormatters;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 
+import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.disk.DiskManagerPiece;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.SystemTime;
+import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.ui.tables.*;
 
 import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.swt.mdi.BaseMDI;
-import com.biglybt.ui.swt.mdi.BaseMdiEntry;
-import com.biglybt.ui.swt.mdi.TabbedEntry;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.pif.UISWTView;
+import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
+import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
-
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 
@@ -54,6 +64,7 @@ public class PeerFilesView
 
 		new NameItem(),
 		new PercentItem(),
+		new PiecesItem(),
 	};
 
 	static{
@@ -288,6 +299,8 @@ public class PeerFilesView
 
 				cell.setText( "" );
 
+				cell.setSortValue( -1 );
+				
 				return;
 			}
 
@@ -316,6 +329,199 @@ public class PeerFilesView
 
 			cell.setText(percent < 0 ? "" : DisplayFormatters.formatPercentFromThousands((int) percent));
 
+		}
+	}
+	
+	private static class
+	PiecesItem
+		extends CoreTableColumnSWT
+		implements TableCellAddedListener, TableCellDisposeListener, TableCellVisibilityListener
+	{
+		private static final int	borderWidth	= 1;
+		
+		private
+		PiecesItem()
+		{
+			super( "pieces", TABLEID_PEER_FILES );
+			initializeAsGraphic(200);
+			setMinWidth(100);
+		}
+
+		@Override
+		public void cellAdded(TableCell cell) {
+			new Cell(cell);
+		}
+
+		@Override
+		public void cellVisibilityChanged(TableCell cell, int visibility) {
+			if(visibility == VISIBILITY_HIDDEN)
+				dispose(cell);
+		}
+
+		@Override
+		public void dispose(TableCell cell) {
+			// only dispose of image here, this method is reused in other methods
+			Graphic graphic = cell.getGraphic();
+			if (graphic instanceof UISWTGraphic)
+			{
+				final Image img = ((UISWTGraphic) graphic).getImage();
+				if (img != null && !img.isDisposed()){
+					Utils.execSWTThread(() -> Utils.disposeSWTObjects(img));
+
+						// see http://forum.vuze.com/thread.jspa?threadID=117243
+						// could it be that it isn't being marked as disposed after disposal and
+						// being double-disposed?
+					((UISWTGraphic) graphic).setImage( null );
+				}
+			}
+		}
+
+
+		private class Cell implements TableCellLightRefreshListener {
+			int				lastPercentDone	= 0;
+
+			public Cell(TableCell cell) {
+				cell.setFillCell(false);
+				cell.addListeners(this);
+			}
+
+			@Override
+			public void refresh(TableCell cell) {
+				refresh(cell, false);
+			}
+
+			@Override
+			public void refresh(TableCell cell, boolean sortOnly) {
+				
+				PeersFilesViewRow row = (PeersFilesViewRow) cell.getDataSource();
+
+				if ( row == null ){
+
+					return;
+				}
+				
+				final DiskManagerFileInfo file = row.getFile();
+				
+				PEPeer peer = row.getPeer();
+				
+				BitFlags pieces = peer.getAvailable();
+
+				boolean[] flags = pieces==null?null:pieces.flags;
+				
+				int	firstPiece = file.getFirstPieceNumber();
+
+				int	lastPiece	= file.getLastPieceNumber();
+
+				int	done = 0;
+
+				if ( flags != null ){
+					
+					for ( int i=firstPiece;i<=lastPiece;i++){
+	
+						if ( flags[i] ){
+	
+							done++;
+						}
+					}
+				}
+				
+				int percentDone = ( done * 1000 ) / (lastPiece - firstPiece + 1 );
+				
+				cell.setSortValue( percentDone );
+				
+				if (sortOnly){
+				
+					dispose(cell);
+					return;
+				}
+
+				//Compute bounds ...
+				int newWidth = cell.getWidth();
+				if (newWidth <= 0)
+					return;
+				final int newHeight = cell.getHeight() - 2;
+				final int x1 = newWidth - borderWidth - 1;
+				final int y1 = newHeight - borderWidth - 1;
+
+				if (x1 < 10 || y1 < 3)
+					return;
+
+
+				boolean hasGraphic = false;
+				Graphic graphic = cell.getGraphic();
+				if (graphic instanceof UISWTGraphic) {
+					Image img = ((UISWTGraphic) graphic).getImage();
+					hasGraphic = img != null && !img.isDisposed();
+				}
+				final boolean bImageBufferValid = (lastPercentDone == percentDone)
+						&& cell.isValid() && hasGraphic;
+
+				if (bImageBufferValid)
+					return;
+
+				lastPercentDone = percentDone;
+				Image piecesImage = null;
+
+				if (graphic instanceof UISWTGraphic)
+					piecesImage = ((UISWTGraphic) graphic).getImage();
+				if (piecesImage != null && !piecesImage.isDisposed())
+					piecesImage.dispose();
+
+				piecesImage = new Image(Utils.getDisplay(), newWidth, newHeight);
+				final GC gcImage = new GC(piecesImage);
+
+				if (percentDone == 1000) {
+					gcImage.setForeground(Colors.blues[Colors.BLUES_DARKEST]);
+					gcImage.setBackground(Colors.blues[Colors.BLUES_DARKEST]);
+					gcImage.fillRectangle(1, 1, newWidth - 2, newHeight - 2);
+				}else{
+
+					
+					int nbPieces = file.getNbPieces();
+					if ( nbPieces < 0 ){
+						nbPieces = 0;	// tree view root
+					}
+					
+						
+					if ( flags != null ){
+						
+						for (int i = 0; i < newWidth; i++)
+						{
+							final int a0 = (i * nbPieces) / newWidth;
+							int a1 = ((i + 1) * nbPieces) / newWidth;
+							if (a1 == a0)
+								a1++;
+							if (a1 > nbPieces && nbPieces != 0)
+								a1 = nbPieces;
+							int nbAvailable = 0;
+	
+							if (firstPiece >= 0) {
+								for (int j = a0; j < a1; j++) {
+									final int this_index = j + firstPiece;
+									if ( flags[this_index]){
+										nbAvailable++;
+									}
+								} // for j
+							} else {
+								nbAvailable = 1;
+							}
+							gcImage.setBackground( Colors.blues[(nbAvailable * Colors.BLUES_DARKEST) / (a1 - a0)]);
+							gcImage.fillRectangle(i, 1, 1, newHeight - 2);
+						}
+					}
+				}
+
+				gcImage.setForeground(Colors.grey);
+				gcImage.drawRectangle(0, 0, newWidth - 1, newHeight - 1);
+				gcImage.drawRectangle(0, 0, newWidth - 1, newHeight - 1);
+				
+				gcImage.dispose();
+
+				if (cell instanceof TableCellSWT)
+					((TableCellSWT) cell).setGraphic(piecesImage);
+				else
+					cell.setGraphic(new UISWTGraphicImpl(piecesImage));
+			}
 		}
 	}
 }
