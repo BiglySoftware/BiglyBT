@@ -4344,7 +4344,7 @@ public class OpenTorrentOptionsWindow
 				new KeyListener(){
 					@Override
 					public void keyReleased(KeyEvent e) {
-						if ( e.keyCode == SWT.SPACE && ( e.stateMask & SWT.MODIFIER_MASK ) != 0 ){
+						if ( e.keyCode == SWT.SPACE && ( e.stateMask & SWT.MOD1) != 0 ){
 
 							e.doit = false;
 						}
@@ -4353,7 +4353,7 @@ public class OpenTorrentOptionsWindow
 					@Override
 					public void keyPressed(KeyEvent e) {
 
-						if ( e.keyCode == SWT.SPACE && ( e.stateMask & SWT.MODIFIER_MASK ) != 0 ){
+						if ( e.keyCode == SWT.SPACE && ( e.stateMask & SWT.MOD1 ) != 0 ){
 
 							e.doit = false;
 
