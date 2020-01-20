@@ -35,6 +35,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerEvent;
 import com.biglybt.core.history.DownloadHistoryManager;
@@ -1097,6 +1098,25 @@ public class UIFunctionsImpl
 
 			if ( existingDownload != null ){
 
+					// if existing is metadata download then we need to remove it before continuing (use case is that user has a long running metadata download and in
+					// the meantime manually obtains the torrent from elsewhere and adds it
+				
+				if ( existingDownload.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+					
+					try{
+						gm.removeDownloadManager( existingDownload, true, true );
+						
+						existingDownload = null;
+						
+					}catch( Throwable e){
+						
+						Debug.out( e );
+					}
+				}
+			}
+				
+			if ( existingDownload != null ){
+				
 				boolean delete_delegated = false;
 				
 				if ( !is_silent ){
