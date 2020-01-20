@@ -130,6 +130,7 @@ DownloadManagerStats
 
 	/**
 	 * Gives the share ratio of the torrent in 1000ths (i.e. 1000 = share ratio of 1)
+	 * -1 if actually infinite (downloaded = 0, uploaded > 0 ), Integer.MAX_VALUE if massive
 	 */
 	public int
 	getShareRatio();

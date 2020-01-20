@@ -858,7 +858,16 @@ DownloadManagerStatsImpl
 			return( -1 );
 		}
 
-		return (int) ((1000 * uploaded) / downloaded);
+		long ratio = (1000 * uploaded) / downloaded;
+		
+		if ( ratio > Integer.MAX_VALUE ){
+			
+			return( Integer.MAX_VALUE );
+			
+		}else{
+			
+			return((int)ratio);
+		}
 	}
 
 	@Override
