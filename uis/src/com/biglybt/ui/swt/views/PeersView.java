@@ -478,6 +478,16 @@ public class PeersView
 	@Override
 	public void refreshToolBarItems(Map<String, Long> list) {
 		boolean hasPeer = tv != null && tv.getSelectedRowsSize() > 0;
+		
+		if ( hasPeer ){
+			List<Object> selectedDataSources = tv.getSelectedDataSources();
+			if ( selectedDataSources.size() == 1 ){
+				Object ds = selectedDataSources.get(0);
+				if ( ds instanceof PEPeer && ((PEPeer)ds).isMyPeer()){
+					hasPeer = false;
+				}
+			}
+		}
 		list.put("remove", hasPeer ? UIToolBarItem.STATE_ENABLED : 0);
 	}
 
@@ -488,7 +498,9 @@ public class PeersView
 			for (Object dataSource : selectedDataSources) {
 				if (dataSource instanceof PEPeer) {
 					PEPeer peer = (PEPeer) dataSource;
-					peer.getManager().removePeer(peer,"Peer kicked" );
+					if ( !peer.isMyPeer()){
+						peer.getManager().removePeer(peer,"Peer kicked" );
+					}
 				}
 			}
 			return true;

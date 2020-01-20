@@ -378,7 +378,10 @@ public class PeerFilesView
 
 
 		private class Cell implements TableCellLightRefreshListener {
-			int				lastPercentDone	= 0;
+			private int		lastPercentDone	= 0;
+			private boolean	bNoRed			= false;
+			private long	last_draw_time	= SystemTime.getMonotonousTime();
+
 
 			public Cell(TableCell cell) {
 				cell.setFillCell(false);
@@ -454,7 +457,7 @@ public class PeerFilesView
 					hasGraphic = img != null && !img.isDisposed();
 				}
 				final boolean bImageBufferValid = (lastPercentDone == percentDone)
-						&& cell.isValid() && hasGraphic;
+						&& cell.isValid() && bNoRed && hasGraphic;
 
 				if (bImageBufferValid)
 					return;
@@ -470,6 +473,10 @@ public class PeerFilesView
 				piecesImage = new Image(Utils.getDisplay(), newWidth, newHeight);
 				final GC gcImage = new GC(piecesImage);
 
+				final long now = SystemTime.getMonotonousTime();
+
+				bNoRed = true;
+				
 				if (percentDone == 1000) {
 					gcImage.setForeground(Colors.blues[Colors.BLUES_DARKEST]);
 					gcImage.setBackground(Colors.blues[Colors.BLUES_DARKEST]);
@@ -485,6 +492,27 @@ public class PeerFilesView
 						
 					if ( flags != null ){
 						
+						DiskManagerPiece[] 	dm_pieces 	= null;
+						PEPiece[] 			pe_pieces	= null;
+						
+						if ( peer.isMyPeer()){
+							
+							PEPeerManager pm = peer.getManager();
+							
+							if ( pm != null ){
+								
+								pe_pieces = pm.getPieces();
+							
+								DiskManager dm = pm.getDiskManager();
+								
+								if ( dm != null ){
+									
+									dm_pieces = dm.getPieces();
+								}
+							}
+						}
+						
+						bNoRed = true;
 						for (int i = 0; i < newWidth; i++)
 						{
 							final int a0 = (i * nbPieces) / newWidth;
@@ -494,19 +522,47 @@ public class PeerFilesView
 							if (a1 > nbPieces && nbPieces != 0)
 								a1 = nbPieces;
 							int nbAvailable = 0;
-	
+							boolean written = false;
+							boolean partially_written = false;
 							if (firstPiece >= 0) {
 								for (int j = a0; j < a1; j++) {
 									final int this_index = j + firstPiece;
-									if ( flags[this_index]){
-										nbAvailable++;
+									if (dm_pieces != null) {
+										DiskManagerPiece dm_piece = dm_pieces[this_index];
+										if (dm_piece.isDone()) {
+											nbAvailable++;
+										}
+									}
+									if (written) {
+										continue;
+									}
+
+									if (pe_pieces != null) {
+										PEPiece pe_piece = pe_pieces[this_index];
+										if (pe_piece != null) {
+											written = (pe_piece.getLastDownloadTime(now) + 500) > last_draw_time;
+										}
+									}
+
+									if (!written && !partially_written && dm_pieces != null) {
+										boolean[] blocks = dm_pieces[this_index].getWritten();
+										if (blocks != null) {
+											for (boolean block : blocks) {
+												if (block) {
+													partially_written = true;
+													break;
+												}
+											}
+										}
 									}
 								} // for j
 							} else {
 								nbAvailable = 1;
 							}
-							gcImage.setBackground( Colors.blues[(nbAvailable * Colors.BLUES_DARKEST) / (a1 - a0)]);
+							gcImage.setBackground(written ? Colors.red : partially_written ? Colors.grey : Colors.blues[(nbAvailable * Colors.BLUES_DARKEST) / (a1 - a0)]);
 							gcImage.fillRectangle(i, 1, 1, newHeight - 2);
+							if (written)
+								bNoRed = false;
 						}
 					}
 				}
@@ -517,6 +573,8 @@ public class PeerFilesView
 				
 				gcImage.dispose();
 
+				last_draw_time = now;
+				
 				if (cell instanceof TableCellSWT)
 					((TableCellSWT) cell).setGraphic(piecesImage);
 				else
