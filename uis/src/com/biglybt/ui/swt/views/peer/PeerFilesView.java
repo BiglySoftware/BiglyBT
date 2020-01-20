@@ -124,7 +124,7 @@ public class PeerFilesView
 
  			Object[] temp = (Object[])newDataSource;
 
- 			if ( temp.length > 0 && temp[0] instanceof PEPeer ){
+ 			if ( temp.length == 1 && temp[0] instanceof PEPeer ){
 
  				current_peer = (PEPeer)temp[0];
 
@@ -155,8 +155,10 @@ public class PeerFilesView
 		try{
 			PEPeer	peer = current_peer;
 
-			if ( peer == null ){
+			if ( peer == null || peer.getManager().isDestroyed()){
 
+				current_peer = null;
+				
 				tv.removeAllTableRows();
 
 			}else{
@@ -250,6 +252,15 @@ public class PeerFilesView
 			setType(TableColumn.TYPE_TEXT);
 
 		}
+		
+		@Override
+		public void fillTableColumnInfo(TableColumnInfo info) {
+			info.addCategories(new String[] {
+				CAT_CONTENT,
+				CAT_ESSENTIAL
+			});
+			info.setProficiency(TableColumnInfo.PROFICIENCY_BEGINNER);
+		}
 
 		@Override
 		public void
@@ -275,6 +286,14 @@ public class PeerFilesView
 		{
 			super( "%", ALIGN_TRAIL, POSITION_LAST, 60, TABLEID_PEER_FILES );
 			setRefreshInterval(INTERVAL_LIVE);
+		}
+		
+		@Override
+		public void fillTableColumnInfo(TableColumnInfo info) {
+			info.addCategories(new String[] {
+				CAT_PROGRESS
+			});
+			info.setProficiency(TableColumnInfo.PROFICIENCY_BEGINNER);
 		}
 
 		@Override
@@ -347,6 +366,15 @@ public class PeerFilesView
 			setMinWidth(100);
 		}
 
+		@Override
+		public void fillTableColumnInfo(TableColumnInfo info) {
+			info.addCategories(new String[] {
+				CAT_CONTENT,
+				CAT_PROGRESS
+			});
+			info.setProficiency(TableColumnInfo.PROFICIENCY_INTERMEDIATE);
+		}
+		
 		@Override
 		public void cellAdded(TableCell cell) {
 			new Cell(cell);

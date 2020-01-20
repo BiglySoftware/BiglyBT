@@ -22,7 +22,6 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
-import com.biglybt.core.disk.impl.resume.RDResumeHandler;
 import com.biglybt.ui.swt.Utils;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -33,12 +32,10 @@ import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
-import com.biglybt.util.MapUtils;
 
 import com.biglybt.pif.download.DownloadTypeIncomplete;
 import com.biglybt.pif.ui.Graphic;
