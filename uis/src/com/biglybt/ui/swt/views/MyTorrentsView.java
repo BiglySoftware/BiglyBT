@@ -3149,6 +3149,31 @@ public class MyTorrentsView
     				removed_while_selected.put( dm.getInternalName(), "" );
     			}
     		}
+    		
+    		TableRowCore[] selected_rows = tv.getSelectedRows();
+    		
+    		if ( selected_rows.length == 1 && selected_rows[0] == row ){
+    			
+    			// this is going to remove the selection completely so select existing appropriate row
+    			// logic should probably be in the table itself but for the moment fix here
+    			
+    			TableRowCore[] rows = tv.getRows();
+    			
+    			for ( int i=0;i<rows.length;i++){
+    				
+    				if ( rows[i] == row ){
+    					
+    					if ( i < rows.length - 1 ){
+    						
+    						tv.setSelectedRows( new TableRowCore[]{ rows[i+1 ] });
+    						
+    					}else if ( i > 0 ){
+    						
+    						tv.setSelectedRows( new TableRowCore[]{ rows[i-1 ] });
+    					}
+    				}
+    			}
+    		}
     	}
     }
     
