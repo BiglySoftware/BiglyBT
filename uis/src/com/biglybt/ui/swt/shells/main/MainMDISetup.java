@@ -80,6 +80,7 @@ public class MainMDISetup
 
 	private static ParameterListener configBetaEnabledListener;
 	private static TRHostListener trackerHostListener;
+	private static TRHostListener trackerHostListener2;
 	private static SB_Dashboard	sb_dashboard;
 	private static SB_Transfers sb_transfers;
 	private static ShareManagerListener shareManagerListener;
@@ -741,6 +742,9 @@ public class MainMDISetup
 
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER,
 				id -> {
+					
+					TRHost trackerHost = CoreFactory.getSingleton().getTrackerHost();
+					
 					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
 							MyTrackerView.class).setParentEntryID(
 									SIDEBAR_HEADER_TRANSFERS).setPreferredAfterID(
@@ -749,6 +753,55 @@ public class MainMDISetup
 
 					entry.setImageLeftID("image.sidebar.mytracker");
 
+					ViewTitleInfo title_info =
+							new ViewTitleInfo()
+							{
+								
+								@Override
+								public Object
+								getTitleInfoProperty(
+									int propertyID)
+								{
+									if ( propertyID == TITLE_INDICATOR_TEXT ){
+
+										return( String.valueOf( trackerHost.getTorrentCount()));
+									}
+
+									return null;
+								}
+							};
+					
+					entry.setViewTitleInfo( title_info );
+
+					trackerHostListener2 = new TRHostListener() {
+			
+						@Override
+						public void torrentRemoved(TRHostTorrent t) {
+							ViewTitleInfoManager.refreshTitleInfo( title_info );
+							entry.redraw();
+						}
+			
+						@Override
+						public void torrentChanged(TRHostTorrent t) {
+						}
+			
+						@Override
+						public void torrentAdded(TRHostTorrent t) {
+							ViewTitleInfoManager.refreshTitleInfo( title_info );
+							entry.redraw();
+						}
+			
+						@Override
+						public boolean handleExternalRequest(InetSocketAddress client_address,
+						                                     String user, String url, URL absolute_url, String header, InputStream is,
+						                                     OutputStream os, AsyncController async)
+								throws IOException {
+							return false;
+						}
+					};
+					
+					trackerHost.addListener(trackerHostListener2);
+					
 					return entry;
 				});
 
@@ -1136,10 +1189,13 @@ public class MainMDISetup
 
 		if (trackerHostListener != null) {
 			TRHost trackerHost = CoreFactory.getSingleton().getTrackerHost();
-			if (trackerHost != null) {
-				trackerHost.removeListener(trackerHostListener);
-			}
+			trackerHost.removeListener(trackerHostListener);
 			trackerHostListener = null;
+		}
+		if (trackerHostListener2 != null) {
+			TRHost trackerHost = CoreFactory.getSingleton().getTrackerHost();
+			trackerHost.removeListener(trackerHostListener2);
+			trackerHostListener2 = null;
 		}
 
 		if (shareManagerListener != null) {

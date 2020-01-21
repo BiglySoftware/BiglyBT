@@ -916,6 +916,21 @@ TRHostImpl
 	}
 
 	@Override
+	public int 
+	getTorrentCount()
+	{
+		try{
+			this_mon.enter();
+			
+			return( host_torrents.size());
+			
+		}finally{
+
+			this_mon.exit();
+		}
+	}
+	
+	@Override
 	public void
 	clientCreated(
 		TRTrackerAnnouncer		client )

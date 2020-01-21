@@ -72,6 +72,9 @@ TRHost
 	public TRHostTorrent[]
 	getTorrents();
 
+	public int
+	getTorrentCount();
+	
 		/**
 		 * returns the host torrent for the torrent if it exists, null otherwise
 		 * @param torrent
