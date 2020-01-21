@@ -501,6 +501,13 @@ ShareManagerImpl
 		return( res );
 	}
 
+	@Override
+	public int 
+	getShareCount()
+	{
+		return( shares.size());
+	}
+	
 	protected ShareResourceImpl
 	getResource(
 		File		file )

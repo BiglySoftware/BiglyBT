@@ -48,6 +48,9 @@ ShareManager
 	public ShareResource[]
 	getShares();
 
+	public int
+	getShareCount();
+	
 	public ShareResource
 	lookupShare(
 		byte[]		torrent_hash )

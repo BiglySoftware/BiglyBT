@@ -83,6 +83,7 @@ public class MainMDISetup
 	private static SB_Dashboard	sb_dashboard;
 	private static SB_Transfers sb_transfers;
 	private static ShareManagerListener shareManagerListener;
+	private static ShareManagerListener shareManagerListener2;
 	private static SB_Vuze sb_vuze;
 
 	public static Set<String>	hiddenTopLevelIDs = new HashSet<>();
@@ -651,14 +652,90 @@ public class MainMDISetup
 
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES,
 				id -> {
+					final ShareManager sm;
+					
+					{
+						ShareManager temp;
+						
+						try{
+							temp = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getShareManager();
+							
+						}catch( Throwable e ){
+							
+							temp = null;
+						}
+						
+						sm = temp;
+					}
+	
+					ViewTitleInfo title_info =
+							new ViewTitleInfo()
+							{
+								
+								@Override
+								public Object
+								getTitleInfoProperty(
+									int propertyID)
+								{
+									if ( propertyID == TITLE_INDICATOR_TEXT ){
+
+										return( sm==null?null:String.valueOf( sm.getShareCount()));
+									}
+
+									return null;
+								}
+							};
+
 					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
 							MySharesView.class).setParentEntryID(
 									SIDEBAR_HEADER_TRANSFERS).setPreferredAfterID(
 											SB_Transfers.getSectionPosition(mdi, id));
 					MdiEntry entry = mdi.createEntry(builder, true);
 
+					entry.setViewTitleInfo( title_info );
+					
 					entry.setImageLeftID("image.sidebar.myshares");
-
+						
+					if ( sm != null ){
+						
+						shareManagerListener2 = 
+								new ShareManagerListener()
+								{
+									public void
+									resourceAdded(
+										ShareResource		resource )
+									{
+										ViewTitleInfoManager.refreshTitleInfo( title_info );
+										entry.redraw();
+									}
+			
+									public void
+									resourceModified(
+										ShareResource		old_resource,
+										ShareResource		new_resource )
+									{
+									}
+			
+									public void
+									resourceDeleted(
+										ShareResource		resource )
+									{
+										ViewTitleInfoManager.refreshTitleInfo( title_info );
+										entry.redraw();
+									}
+			
+									public void
+									reportProgress(
+										int		percent_complete ){}
+			
+									public void
+									reportCurrentTask(
+										String	task_description ){}						
+								};
+								
+						sm.addListener( shareManagerListener2 );
+					}
+					
 					return entry;
 				});
 
@@ -1075,7 +1152,16 @@ public class MainMDISetup
 			} catch (ShareException ignore) {
 			}
 		}
-
+		if (shareManagerListener2 != null) {
+			try {
+				ShareManager share_manager = PluginInitializer.getDefaultInterface().getShareManager();
+				if (share_manager != null) {
+					share_manager.removeListener(shareManagerListener2);
+				}
+				shareManagerListener2 = null;
+			} catch (ShareException ignore) {
+			}
+		}
 		if (configBetaEnabledListener != null) {
 			COConfigurationManager.removeParameterListener(
 					"Beta Programme Enabled", configBetaEnabledListener);
