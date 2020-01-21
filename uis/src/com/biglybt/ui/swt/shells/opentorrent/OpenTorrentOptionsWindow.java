@@ -4403,7 +4403,9 @@ public class OpenTorrentOptionsWindow
 
 									MenuItem mi = new MenuItem( menu, SWT.PUSH );
 
-									mi.setText( str );
+									String mi_str = str.replaceAll( "&", "&&" );
+									
+									mi.setText( mi_str );
 
 									mi.addSelectionListener(
 										new SelectionAdapter() {
