@@ -37,4 +37,10 @@ InfoParameter
 	public void
 	setValue(
 		String		str );
+	
+	public void 
+	setTextSelectable(
+		boolean selectable );
+	
+	public boolean isTextSelectable();
 }

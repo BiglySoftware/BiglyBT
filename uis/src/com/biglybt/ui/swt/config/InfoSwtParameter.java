@@ -30,6 +30,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.pifimpl.local.ui.config.InfoParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.LabelParameterImpl;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.pif.ui.config.InfoParameter;
 import com.biglybt.pif.ui.config.LabelParameter;
@@ -103,6 +104,8 @@ public class InfoSwtParameter
 				link.addListener(SWT.Selection, event -> Utils.launch(event.text));
 			} else {
 				control = new Label(parent, SWT.WRAP);
+				
+				ClipboardCopy.addCopyToClipMenu(control);
 			};
 		}
 		setMainControl(control);
