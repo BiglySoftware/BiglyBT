@@ -73,6 +73,9 @@ PMSWTImpl
 
 	private long	last_image_expiry_mono;
 	private long	last_image_expiry_uc_min;
+	
+	private boolean	ui_attached;
+	
 	private UIUpdater.UIUpdaterListener uiUpdaterListener;
 	private ParameterListener iconEnableListener;
 
@@ -111,6 +114,8 @@ PMSWTImpl
 					{
 						if ( instance instanceof UISWTInstance ){
 
+							ui_attached = true;
+							
 							UIFunctions uif = UIFunctionsManager.getUIFunctions();
 
 							if ( uif != null ){
@@ -299,6 +304,8 @@ PMSWTImpl
 					{
 						if ( instance instanceof UISWTInstance ){
 
+							ui_attached = false;
+							
 							UIFunctions uif = UIFunctionsManager.getUIFunctions();
 
 							if ( uif != null && uiUpdaterListener != null) {
@@ -355,27 +362,30 @@ PMSWTImpl
 		final String		ip,
 		final boolean		good )
 	{
-		Utils.execSWTThread(
-			new AERunnable()
-			{
-				@Override
-				public void
-				runSupport()
+		if ( ui_attached ){
+			
+			Utils.execSWTThread(
+				new AERunnable()
 				{
-					RemoteHistory entry = history_map.get( name );
-
-					if ( entry == null ){
-
-						entry = new RemoteHistory();
-
-						history_map.put( name, entry );
+					@Override
+					public void
+					runSupport()
+					{
+						RemoteHistory entry = history_map.get( name );
+	
+						if ( entry == null ){
+	
+							entry = new RemoteHistory();
+	
+							history_map.put( name, entry );
+						}
+	
+						entry.addRequest( ip, good );
+	
+						updateStatus( false );
 					}
-
-					entry.addRequest( ip, good );
-
-					updateStatus( false );
-				}
-			});
+				});
+		}
 	}
 
 	private void
