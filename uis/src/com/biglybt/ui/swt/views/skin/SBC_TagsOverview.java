@@ -32,9 +32,11 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.RegExUtil;
@@ -1042,8 +1044,20 @@ public class SBC_TagsOverview
 						tag.setVisible( true );
 					}
 
-					String id = "Tag." + tag.getTagType().getTagType() + "." + tag.getTagID();
-					uiFunctions.getMDI().showEntryByID(id, tag);
+					if ( tag instanceof Category ){
+						
+						String name = ((Category)tag).getName();
+						
+						String id = "Cat." + Base32.encode(name.getBytes());
+						
+						uiFunctions.getMDI().showEntryByID(id, tag);
+						
+					}else{
+						
+						String id = "Tag." + tag.getTagType().getTagType() + "." + tag.getTagID();
+						
+						uiFunctions.getMDI().showEntryByID(id, tag);
+					}
 				}
 			}
 		}

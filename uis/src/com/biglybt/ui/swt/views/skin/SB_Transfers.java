@@ -1284,18 +1284,7 @@ public class SB_Transfers
 
 		MdiEntry entry = mdi.getEntry("Cat." + Base32.encode(category.getName().getBytes()));
 		
-		if ( entry == null ){
-			
-				// in classic UI categories are represented as tags...
-			
-			int tag_type = category.getTagType().getTagType();
-			
-			String tag_id = "Tag." + tag_type + "." + category.getTagID();
-
-			entry = mdi.getEntry( tag_id );
-		}
-		
-		if ( entry == null ){
+		if (entry == null) {
 			return;
 		}
 
@@ -1304,10 +1293,10 @@ public class SB_Transfers
 		ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
 	}
 
-	private void setupCategory(final Category category) {
+	public MdiEntry setupCategory(final Category category) {
 		MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 		if (mdi == null) {
-			return;
+			return(null);
 		}
 
 		String name = category.getName();
@@ -1316,7 +1305,7 @@ public class SB_Transfers
 		MdiEntry existing = mdi.getEntry( id );
 
 		if ( existing != null ){
-			return;
+			return( existing );
 		}
 		
 		category.addCategoryListener( categoryListener );
@@ -1420,6 +1409,7 @@ public class SB_Transfers
 			});
 		}
 
+		return( entry );
 	}
 
 	private void removeCategory(Category category) {
@@ -2568,8 +2558,6 @@ public class SB_Transfers
 				requestRedraw( entry );
 			}
 		}
-		
-		System.out.println( "refresh" );
 		
 		RefreshCategorySideBar( CategoryManager.getCategory( Category.TYPE_ALL ));
 		RefreshCategorySideBar( CategoryManager.getCategory( Category.TYPE_UNCATEGORIZED ));

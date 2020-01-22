@@ -26,6 +26,8 @@ import java.net.URL;
 import java.util.*;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.category.Category;
+import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.history.DownloadHistoryEvent;
@@ -1062,6 +1064,42 @@ public class MainMDISetup
 			}
 		});
 
+		mdi.registerEntry("Cat\\..*", new MdiEntryCreationListener2() {
+
+			@Override
+			public MdiEntry createMDiEntry(MultipleDocumentInterface mdi, String id,
+			                               Object datasource, Map params) {
+
+				if (datasource instanceof Category) {
+
+					return sb_transfers.setupCategory((Category)datasource);
+
+				}else{
+
+					try{
+							// id format is "Cat." + base32 encoded name.getBytes();
+
+						TagManager tm = TagManagerFactory.getTagManager();
+
+						String[] bits = id.split( "\\." );
+
+						String cat_name = new String( Base32.decode( bits[1] ));
+						
+						Category cat = CategoryManager.getCategory( cat_name );
+
+						if ( cat != null ){
+
+							return sb_transfers.setupCategory(cat);
+						}
+					}catch( Throwable e ){
+
+					}
+				}
+
+				return null;
+			}
+		});
+		
 		sb_transfers = new SB_Transfers(mdi, false);
 		
 		SBC_ActivityTableView.setupSidebarEntry(mdi);
