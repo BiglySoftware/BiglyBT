@@ -263,15 +263,16 @@ public class SB_Transfers
 		statsWithLowNoise = new stats();
 		statsWithLowNoise.includeLowNoise = true;
 		
+		refresh_limiter = new FrequencyLimitedDispatcher(
+				new AERunnable() {
+					@Override
+					public void runSupport() {
+						refreshAllLibrariesSupport( vuze_ui );
+					}
+				}, 250);
+		refresh_limiter.setSingleThreaded();
+		
 		if ( vuze_ui ){
-			refresh_limiter = new FrequencyLimitedDispatcher(
-					new AERunnable() {
-						@Override
-						public void runSupport() {
-							refreshAllLibrariesSupport();
-						}
-					}, 250);
-			refresh_limiter.setSingleThreaded();
 	
 			MdiEntryCreationListener libraryCreator = new MyMdiEntryCreationListener(mdi);
 			mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY, libraryCreator);
@@ -1283,7 +1284,18 @@ public class SB_Transfers
 
 		MdiEntry entry = mdi.getEntry("Cat." + Base32.encode(category.getName().getBytes()));
 		
-		if (entry == null) {
+		if ( entry == null ){
+			
+				// in classic UI categories are represented as tags...
+			
+			int tag_type = category.getTagType().getTagType();
+			
+			String tag_id = "Tag." + tag_type + "." + category.getTagID();
+
+			entry = mdi.getEntry( tag_id );
+		}
+		
+		if ( entry == null ){
 			return;
 		}
 
@@ -2460,99 +2472,104 @@ public class SB_Transfers
 		}
 	}
 
-	void refreshAllLibrariesSupport() {
+	void refreshAllLibrariesSupport( boolean vuze_ui ) {
 		for (countRefreshListener l : listeners) {
 			l.countRefreshed(statsWithLowNoise, statsNoLowNoise);
 		}
-		MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-		if (mdi == null) {
-			return;
-		}
-
-			// don't mess with things until MDI initialized as it might be auto-opening views
 		
-		if ( mdi.isInitialized()){
-			
-			boolean showDownloading = COConfigurationManager.getBooleanParameter( "Show Downloading In Side Bar" );
+		if ( vuze_ui ){
+			MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+			if (mdi == null) {
+				return;
+			}
 	
-			if ( showDownloading && statsNoLowNoise.numIncomplete > 0){
+				// don't mess with things until MDI initialized as it might be auto-opening views
+			
+			if ( mdi.isInitialized()){
 				
-				MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
-				
-				if (entry == null) {
-					long now = SystemTime.getMonotonousTime();
+				boolean showDownloading = COConfigurationManager.getBooleanParameter( "Show Downloading In Side Bar" );
+		
+				if ( showDownloading && statsNoLowNoise.numIncomplete > 0){
 					
-						// prevent rapid show/hides and also trt and work around bug where 2 Downloading entries have
-						// been seen to get created (lame fix I know)
+					MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
 					
-					if ( now - last_dl_entry_load > 5000 ){
+					if (entry == null) {
+						long now = SystemTime.getMonotonousTime();
 						
-						last_dl_entry_load = now;
-											
-						mdi.loadEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY_DL, false);
+							// prevent rapid show/hides and also trt and work around bug where 2 Downloading entries have
+							// been seen to get created (lame fix I know)
+						
+						if ( now - last_dl_entry_load > 5000 ){
+							
+							last_dl_entry_load = now;
+												
+							mdi.loadEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY_DL, false);
+						}
+					}
+				} else {
+					mdi.closeEntry(mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL), false );
+				}
+			}else{
+				refreshAllLibraries();
+			}
+			
+			MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
+			if (entry != null) {
+				List<? extends MdiEntryVitalityImage> vitalityImages = entry.getVitalityImages();
+				for (MdiEntryVitalityImage vitalityImage : vitalityImages) {
+					String imageID = vitalityImage.getImageID();
+					if (imageID == null) {
+						continue;
+					}
+					if (imageID.equals(ID_VITALITY_ACTIVE)) {
+						//replace this annoying spinner with color change
+						//vitalityImage.setVisible(statsNoLowNoise.numDownloading > 0);
+	
+					} else if (imageID.equals(ID_VITALITY_ALERT)) {
+						vitalityImage.setVisible(statsNoLowNoise.numErrorInComplete > 0);
+						if (statsNoLowNoise.numErrorInComplete > 0) {
+							vitalityImage.setToolTip(statsNoLowNoise.errorInCompleteTooltip);
+						}
 					}
 				}
-			} else {
-				mdi.closeEntry(mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL), false );
+				ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
+				
+				requestRedraw( entry );
 			}
-		}else{
-			refreshAllLibraries();
+	
+			entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_CD);
+			if (entry != null) {
+				List<? extends MdiEntryVitalityImage> vitalityImages = entry.getVitalityImages();
+				for (MdiEntryVitalityImage vitalityImage : vitalityImages) {
+					String imageID = vitalityImage.getImageID();
+					if (imageID == null) {
+						continue;
+					}
+					if (imageID.equals(ID_VITALITY_ALERT)) {
+						vitalityImage.setVisible(statsNoLowNoise.numErrorComplete > 0);
+						if (statsNoLowNoise.numErrorComplete > 0) {
+							vitalityImage.setToolTip(statsNoLowNoise.errorCompleteTooltip);
+						}
+					}
+				}
+			}
+	
+			entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
+			if (entry != null) {
+				ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
+				
+				requestRedraw( entry );
+			}
+			
+			entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY);
+			if (entry != null) {
+				ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
+				
+				requestRedraw( entry );
+			}
 		}
 		
-		MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
-		if (entry != null) {
-			List<? extends MdiEntryVitalityImage> vitalityImages = entry.getVitalityImages();
-			for (MdiEntryVitalityImage vitalityImage : vitalityImages) {
-				String imageID = vitalityImage.getImageID();
-				if (imageID == null) {
-					continue;
-				}
-				if (imageID.equals(ID_VITALITY_ACTIVE)) {
-					//replace this annoying spinner with color change
-					//vitalityImage.setVisible(statsNoLowNoise.numDownloading > 0);
-
-				} else if (imageID.equals(ID_VITALITY_ALERT)) {
-					vitalityImage.setVisible(statsNoLowNoise.numErrorInComplete > 0);
-					if (statsNoLowNoise.numErrorInComplete > 0) {
-						vitalityImage.setToolTip(statsNoLowNoise.errorInCompleteTooltip);
-					}
-				}
-			}
-			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
-			
-			requestRedraw( entry );
-		}
-
-		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_CD);
-		if (entry != null) {
-			List<? extends MdiEntryVitalityImage> vitalityImages = entry.getVitalityImages();
-			for (MdiEntryVitalityImage vitalityImage : vitalityImages) {
-				String imageID = vitalityImage.getImageID();
-				if (imageID == null) {
-					continue;
-				}
-				if (imageID.equals(ID_VITALITY_ALERT)) {
-					vitalityImage.setVisible(statsNoLowNoise.numErrorComplete > 0);
-					if (statsNoLowNoise.numErrorComplete > 0) {
-						vitalityImage.setToolTip(statsNoLowNoise.errorCompleteTooltip);
-					}
-				}
-			}
-		}
-
-		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
-		if (entry != null) {
-			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
-			
-			requestRedraw( entry );
-		}
-		
-		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY);
-		if (entry != null) {
-			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
-			
-			requestRedraw( entry );
-		}
+		System.out.println( "refresh" );
 		
 		RefreshCategorySideBar( CategoryManager.getCategory( Category.TYPE_ALL ));
 		RefreshCategorySideBar( CategoryManager.getCategory( Category.TYPE_UNCATEGORIZED ));
