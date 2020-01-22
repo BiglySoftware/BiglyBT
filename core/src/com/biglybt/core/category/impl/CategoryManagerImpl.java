@@ -381,6 +381,13 @@ CategoryManagerImpl
   {
 	  return( new ArrayList<Tag>( categories.values()));
   }
+  
+  @Override
+  protected void
+  sync()
+  {
+	  super.sync();
+  }
 
   private void
   checkConfig()

@@ -2553,6 +2553,9 @@ public class SB_Transfers
 			
 			requestRedraw( entry );
 		}
+		
+		RefreshCategorySideBar( CategoryManager.getCategory( Category.TYPE_ALL ));
+		RefreshCategorySideBar( CategoryManager.getCategory( Category.TYPE_UNCATEGORIZED ));
 	}
 
 	private static boolean	TABLE_SUBCONFIG_ENABLE = COConfigurationManager.getBooleanParameter( "Library.EnableSepColConfig" );
