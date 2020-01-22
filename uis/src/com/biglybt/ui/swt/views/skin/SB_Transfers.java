@@ -1320,8 +1320,24 @@ public class SB_Transfers
 			@Override
 			public Object getTitleInfoProperty(int propertyID) {
 				if (propertyID == TITLE_INDICATOR_TEXT) {
-					if (statsNoLowNoise.numIncomplete > 0) {
+					if ( category.getType() == Category.TYPE_ALL ){
+						
+						int all = core.getGlobalManager().getDownloadManagers().size();
+						
+						return( String.valueOf( all ));
+						
+					}else if ( category.getType() == Category.TYPE_UNCATEGORIZED ){
+						
+						int all = core.getGlobalManager().getDownloadManagers().size();
+
+						int	num_cat = CategoryManager.getCategorisedDownloadCount();
+						
+						return( String.valueOf( all - num_cat ));
+
+					}else{
+						
 						List<?> dms = category.getDownloadManagers(null);
+						
 						if (dms != null) {
 							return "" + dms.size();
 						}

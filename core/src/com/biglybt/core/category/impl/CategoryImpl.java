@@ -48,7 +48,7 @@ CategoryImpl
 {
   final String sName;
   private final int type;
-  private final List<DownloadManager> managers = new ArrayList<>();
+  private final CopyOnWriteList<DownloadManager> managers_cow = new CopyOnWriteList<>();
 
   int upload_speed;
   int download_speed;
@@ -138,7 +138,7 @@ CategoryImpl
 			}
 		});
 
-  public CategoryImpl(CategoryManagerImpl manager, String sName, int maxup, int maxdown, Map<String,String> _attributes ) {
+  protected CategoryImpl(CategoryManagerImpl manager, String sName, int maxup, int maxdown, Map<String,String> _attributes ) {
 	super( manager, tag_ids.incrementAndGet(), sName );
 	addTag();
 
@@ -152,7 +152,7 @@ CategoryImpl
     attributes = _attributes;
   }
 
-  public CategoryImpl(CategoryManagerImpl manager, String sName, int type, Map<String,String> _attributes) {
+  protected CategoryImpl(CategoryManagerImpl manager, String sName, int type, Map<String,String> _attributes) {
 	super( manager, tag_ids.incrementAndGet(), sName);
 	addTag();
 
@@ -198,7 +198,7 @@ CategoryImpl
   @Override
   public List<DownloadManager> getDownloadManagers(List<DownloadManager> all_dms) {
 	  if ( type == Category.TYPE_USER ){
-		  return managers;
+		  return managers_cow.getList();
 	  }else if ( type == Category.TYPE_ALL || all_dms == null ){
 		  return all_dms;
 	  }else{
@@ -232,12 +232,22 @@ CategoryImpl
     	return;
     }
 
-    boolean do_add = !managers.contains(manager);
+    boolean do_add;
+    
+    synchronized( managers_cow ){
+    	
+    	do_add = !managers_cow.contains(manager);
+    	
+    	if ( do_add ){
+    		
+        	if ( type == Category.TYPE_USER ){
+        		
+        		managers_cow.add( manager );
+        	}
+    	}
+    }
     
     if ( do_add ){
-    	if (type == Category.TYPE_USER) {
-    		managers.add(manager);
-    	}
     	
         manager.addRateLimiter( upload_limiter, true );
         manager.addRateLimiter( download_limiter, false );
@@ -259,7 +269,6 @@ CategoryImpl
 
     if ( do_add ) {
   
-
       category_listeners.dispatch(LDT_CATEGORY_DMADDED, manager);
     }
   }
@@ -278,11 +287,19 @@ CategoryImpl
     	return;
     }
 
-    boolean do_remove = type != Category.TYPE_USER || managers.contains(manager);
+    boolean do_remove;
+    
+    synchronized( managers_cow ){
+    	
+    	do_remove = type != Category.TYPE_USER || managers_cow.contains(manager);
+    
+    	if ( do_remove ){
+    	
+    		managers_cow.remove(manager);
+    	}
+    }
     
     if ( do_remove ){
-    	
-        managers.remove(manager);
 
         manager.removeRateLimiter( upload_limiter, true );
         manager.removeRateLimiter( download_limiter, false );
@@ -441,7 +458,7 @@ CategoryImpl
 
 		  if ( name.equals( AT_UPLOAD_PRIORITY )){
 
-			  for ( DownloadManager dm: managers ){
+			  for ( DownloadManager dm: managers_cow ){
 
 				  dm.updateAutoUploadPriority( UPLOAD_PRIORITY_KEY, value > 0 );
 			  }
@@ -653,7 +670,7 @@ CategoryImpl
 
 	  	if ( type == Category.TYPE_USER ){
 
-	  		return( managers.contains( t ));
+	  		return( managers_cow.contains((DownloadManager)t));
 
 	  	}else if ( type == Category.TYPE_ALL ){
 

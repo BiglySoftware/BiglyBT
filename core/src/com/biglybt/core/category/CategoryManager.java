@@ -85,4 +85,8 @@ public class CategoryManager {
   public static Category getCategory(int type) {
     return CategoryManagerImpl.getInstance().getCategory(type);
   }
+  
+  public static int getCategorisedDownloadCount(){
+	  return CategoryManagerImpl.getInstance().getCategorisedDownloadCount();
+  }
 }

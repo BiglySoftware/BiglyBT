@@ -25,9 +25,11 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
+import com.biglybt.core.category.CategoryListener;
 import com.biglybt.core.category.CategoryManagerListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
@@ -52,7 +54,7 @@ import com.biglybt.plugin.rssgen.RSSGeneratorPlugin;
 public class
 CategoryManagerImpl
 	extends TagTypeBase
-	implements RSSGeneratorPlugin.Provider
+	implements RSSGeneratorPlugin.Provider, CategoryListener
 {
   private static final int[] color_default = { 189, 178, 57 };
 
@@ -62,14 +64,19 @@ CategoryManagerImpl
   private static final String ALL_NAME 		= "__all__";
 
   private static CategoryManagerImpl catMan;
-  private static CategoryImpl catAll = null;
-  private static CategoryImpl catUncategorized = null;
-  private static boolean doneLoading = false;
   private static final AEMonitor	class_mon	= new AEMonitor( "CategoryManager:class" );
 
+  
+  private CategoryImpl catAll = null;
+  private CategoryImpl catUncategorized = null;
+  
+  private boolean doneLoading = false;
+ 
   private final Map<String,CategoryImpl> categories 			= new HashMap<>();
   private final AEMonitor	categories_mon	= new AEMonitor( "Categories" );
 
+  private final AtomicInteger	dms_with_cats = new AtomicInteger();
+  
   private static final int LDT_CATEGORY_ADDED     = 1;
   private static final int LDT_CATEGORY_REMOVED   = 2;
   private static final int LDT_CATEGORY_CHANGED   = 3;
@@ -94,7 +101,7 @@ CategoryManagerImpl
         }
     });
 
-  protected
+  private
   CategoryManagerImpl()
   {
 	super( TagType.TT_DOWNLOAD_CATEGORY, TagDownload.FEATURES, "Category" );
@@ -165,13 +172,16 @@ CategoryManagerImpl
 					catAll.setAttributes(attributes);
 
 				} else {
-					categories.put(catName,
-							new CategoryImpl(
-									this,
-									catName,
-									l_maxup == null ? 0 : l_maxup.intValue(),
-									l_maxdown == null ? 0 : l_maxdown.intValue(),
-									attributes));
+					CategoryImpl cat = new CategoryImpl(
+							this,
+							catName,
+							l_maxup == null ? 0 : l_maxup.intValue(),
+							l_maxdown == null ? 0 : l_maxdown.intValue(),
+							attributes);
+					
+					cat.addCategoryListener( this );
+					
+					categories.put(catName,cat);
 				}
       }
     }
@@ -287,6 +297,7 @@ CategoryManagerImpl
     CategoryImpl newCategory = getCategory(name);
     if (newCategory == null) {
       newCategory = new CategoryImpl(this,name, 0, 0, new HashMap<String,String>());
+      newCategory.addCategoryListener( this );
       categories.put(name, newCategory);
       saveCategories();
 
@@ -338,6 +349,25 @@ CategoryManagerImpl
     }
   }
 
+  
+  public void downloadManagerAdded(Category cat, DownloadManager manager){
+	  
+	  dms_with_cats.incrementAndGet();
+  }
+
+	
+  public void downloadManagerRemoved(Category cat, DownloadManager manager){
+	 
+	  dms_with_cats.decrementAndGet();
+  }
+	
+  public int getCategorisedDownloadCount(){
+	  int num = dms_with_cats.get();
+	  if ( num < 0 ){	// shouldn't happen...
+		  num = 0;
+	  }
+	  return( num );
+  }
   @Override
   public int[]
   getColorDefault()
