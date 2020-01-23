@@ -1012,31 +1012,34 @@ SBC_SubscriptionResultsView
 				ColumnSearchSubResultAge.COLUMN_ID,
 				SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL );
 
-		TableColumnManager tableManager = TableColumnManager.getInstance();
+		TableColumnManager tcm = TableColumnManager.getInstance();
 
-		tableManager.setDefaultColumnNames( TABLE_SR,
-				new String[] {
-					ColumnSubResultNew.COLUMN_ID,
-					ColumnSearchSubResultType.COLUMN_ID,
-					ColumnSearchSubResultName.COLUMN_ID,
-					ColumnSearchSubResultActions.COLUMN_ID,
-					ColumnSearchSubResultSize.COLUMN_ID,
-					ColumnSearchSubResultSeedsPeers.COLUMN_ID,
-					ColumnSearchSubResultRatings.COLUMN_ID,
-					ColumnSearchSubResultAge.COLUMN_ID,
-					ColumnSearchSubResultRank.COLUMN_ID,
-					ColumnSearchSubResultCategory.COLUMN_ID,
-				});
-
-		tableManager.setDefaultSortColumnName(TABLE_SR, ColumnSearchSubResultAge.COLUMN_ID);
-
-		TableColumnCore tcc = tableManager.getTableColumnCore( TABLE_SR, ColumnSearchSubResultAge.COLUMN_ID );
-
-		if ( tcc != null ){
-
-			tcc.setDefaultSortAscending( true );
+		if ( tcm.getDefaultColumnNames( TABLE_SR ) == null ){
+			
+			tcm.setDefaultColumnNames( TABLE_SR,
+					new String[] {
+						ColumnSubResultNew.COLUMN_ID,
+						ColumnSearchSubResultType.COLUMN_ID,
+						ColumnSearchSubResultName.COLUMN_ID,
+						ColumnSearchSubResultActions.COLUMN_ID,
+						ColumnSearchSubResultSize.COLUMN_ID,
+						ColumnSearchSubResultSeedsPeers.COLUMN_ID,
+						ColumnSearchSubResultRatings.COLUMN_ID,
+						ColumnSearchSubResultAge.COLUMN_ID,
+						ColumnSearchSubResultRank.COLUMN_ID,
+						ColumnSearchSubResultCategory.COLUMN_ID,
+					});
+	
+			tcm.setDefaultSortColumnName(TABLE_SR, ColumnSearchSubResultAge.COLUMN_ID);
+	
+			TableColumnCore tcc = tcm.getTableColumnCore( TABLE_SR, ColumnSearchSubResultAge.COLUMN_ID );
+	
+			if ( tcc != null ){
+	
+				tcc.setDefaultSortAscending( true );
+			}
 		}
-
+		
 		if (txtFilter != null) {
 			tv_subs_results.enableFilterCheck(txtFilter, this);
 		}
