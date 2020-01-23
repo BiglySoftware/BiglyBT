@@ -84,15 +84,22 @@ ColumnPeerBoost
 
 		Peer peer = (Peer)datasource;
 
-		if ( peer != null && bp != null ){
-				
-			if ( peer.getState() == Peer.TRANSFERING ){
+		if ( peer != null ){
 			
-				return( bp.isFullBuddy( peer ));
-				
-			}else{
-				
+			if ( peer.isMyPeer()){
+			
 				return( true );
+				
+			}else if ( bp != null ){
+				
+				if ( peer.getState() == Peer.TRANSFERING ){
+			
+					return( bp.isFullBuddy( peer ));
+				
+				}else{
+					
+					return( true );
+				}
 			}
 		}
 		

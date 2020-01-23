@@ -56,6 +56,9 @@ Peer
 	public PeerManager
 	getManager();
 
+	public boolean
+	isMyPeer();
+	
 	public int getState();	// from above set
 
 	public byte[] getId();

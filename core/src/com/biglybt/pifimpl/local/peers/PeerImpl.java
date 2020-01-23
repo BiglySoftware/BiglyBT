@@ -150,6 +150,13 @@ PeerImpl
 	}
 
 	@Override
+	public boolean 
+	isMyPeer()
+	{
+		return( delegate.isMyPeer());
+	}
+	
+	@Override
 	public byte[] getId()
 	{
 			// we *really* don't want a plugin to accidentally change our peerid (e.g. the Stuffer plugin did this)

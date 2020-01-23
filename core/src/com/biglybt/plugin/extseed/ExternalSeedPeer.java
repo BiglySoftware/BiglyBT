@@ -151,6 +151,13 @@ ExternalSeedPeer
 	}
 
 	@Override
+	public boolean 
+	isMyPeer()
+	{
+		return false;
+	}
+
+	@Override
 	public void
 	bindConnection(
 		ConnectionStub		stub )
