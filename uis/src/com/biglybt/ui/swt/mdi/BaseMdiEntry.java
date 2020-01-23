@@ -184,7 +184,7 @@ public abstract class BaseMdiEntry
 		if (mdi != null) {
 			MdiEntry entry = mdi.getEntry(id);
 			if (entry != null) {
-				mdi.closeEntryByID(id);
+				mdi.closeEntryByID(id,userInitiated);
 				return;
 			}
 		}

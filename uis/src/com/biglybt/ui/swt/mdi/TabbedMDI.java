@@ -361,6 +361,9 @@ public class TabbedMDI
 				UISWTViewBuilderCore builder = entry == null ? null
 						: entry.getEventListenerBuilder();
 
+				if ( entry != null ){
+					entry.setUserInitiatedClose();
+				}
 				if (select_history.remove(entry)) {
 
 					if (select_history.size() > 0) {

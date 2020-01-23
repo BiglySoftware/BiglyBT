@@ -63,6 +63,8 @@ public class TabbedEntry
 
 	private MdiEntryVitalityImageSWT viPopout;
 
+	private boolean userInitiatedClose;
+	
 	public TabbedEntry(TabbedMDI mdi, SWTSkin skin, String id) {
 		super(mdi, id);
 		this.skin = skin;
@@ -210,6 +212,12 @@ public class TabbedEntry
 		return( swtItem == null || swtItem.isDisposed());
 	}
 	
+	protected void
+	setUserInitiatedClose()
+	{
+		userInitiatedClose = true;
+	}
+	
 	/* (non-Javadoc)
 	 * @see BaseMdiEntry#show()
 	 */
@@ -347,7 +355,7 @@ public class TabbedEntry
 			return;
 		}
 
-		swtItem.addDisposeListener(e -> closeView());
+		swtItem.addDisposeListener(e -> closeView( userInitiatedClose ));
 		String title = getTitle();
 		if (title != null) {
 			swtItem.setText(Utils.escapeAccelerators(title));
