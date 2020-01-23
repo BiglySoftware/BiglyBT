@@ -5977,10 +5977,10 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 	
 	@Override
-	public int 
+	public int[] 
 	getPeerCount()
 	{
-		return( peer_transports_cow.size());
+		return( new int[]{ _peers + _seeds, peer_transports_cow.size() });
 	}
 	
 	@Override

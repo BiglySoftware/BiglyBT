@@ -52,7 +52,7 @@ PeerControlSchedulerBasic
 	
 	private volatile long		peer_count_active_time = 0;
 	
-	private volatile int		last_peer_count;
+	private volatile int		last_peer_count[] = { 0, 0 };
 
 	
 	@Override
@@ -92,17 +92,21 @@ PeerControlSchedulerBasic
 					
 					if ( count_them ){
 						
-						int count = 0;
+						int count1 = 0;
+						int count2 = 0;
 						
 						synchronized( instance_lock ){
 							
 							for ( PeerControlInstance i: instance_map.keySet()){
 								
-								count += i.getPeerCount();
+								int[] c = i.getPeerCount();
+								
+								count1 += c[0];
+								count2 += c[01];
 							}
 						}
 						
-						last_peer_count = count;
+						last_peer_count = new int[]{ count1, count2 };
 					}
 				}
 			});
@@ -270,7 +274,7 @@ PeerControlSchedulerBasic
 	}
 
 	@Override
-	public int getPeerCount()
+	public int[] getPeerCount()
 	{
 		peer_count_active_time = SystemTime.getMonotonousTime();
 		

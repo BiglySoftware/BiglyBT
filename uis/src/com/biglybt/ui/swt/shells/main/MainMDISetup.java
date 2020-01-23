@@ -193,7 +193,9 @@ public class MainMDISetup
 								{
 									if ( propertyID == TITLE_INDICATOR_TEXT ){
 										
-										return( String.valueOf( scheduler.getPeerCount()));
+										int[] counts = scheduler.getPeerCount();
+										
+										return( counts[0] + " | " + counts[1] );
 									}
 									
 									return( null );
@@ -210,18 +212,23 @@ public class MainMDISetup
 									1*1000,
 									new TimerEventPerformer()
 									{
-										private int last_count = -1;
+										private int last_count1 = -1;
+										private int last_count2 = -1;
 										
 										@Override
 										public void
 										perform(
 											TimerEvent event)
 										{
-											int count = scheduler.getPeerCount();
+											int[] counts = scheduler.getPeerCount();
 											
-											if ( count != last_count ){
+											int c1 = counts[0];
+											int c2 = counts[1];
 											
-												last_count = count;
+											if ( c1 != last_count1 || c2 != last_count2 ){
+											
+												last_count1 = c1;
+												last_count2 = c2;
 														
 												entry.redraw();
 

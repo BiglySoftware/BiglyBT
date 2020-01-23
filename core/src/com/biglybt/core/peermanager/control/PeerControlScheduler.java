@@ -43,6 +43,6 @@ PeerControlScheduler
 	 */
 	public void overrideWeightedPriorities(boolean override);
 	
-	public int
+	public int[]
 	getPeerCount();
 }
