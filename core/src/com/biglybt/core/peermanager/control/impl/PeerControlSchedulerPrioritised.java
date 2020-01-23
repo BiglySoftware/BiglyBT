@@ -46,6 +46,8 @@ PeerControlSchedulerPrioritised
 
 	private long	next_peer_count_time = SystemTime.getMonotonousTime();
 	
+	private volatile long		peer_count_active_time = 0;
+
 	private volatile int		last_peer_count;
 
 	@Override
@@ -64,15 +66,25 @@ PeerControlSchedulerPrioritised
 					
 					synchronized( PeerControlSchedulerPrioritised.this ){
 						
-						if ( time >= next_peer_count_time ){
+					if ( peer_count_active_time > 0 ){
 							
-							count_them = true;
-							
-							next_peer_count_time = time+500;
+							if ( time >= next_peer_count_time ){
+								
+								if ( time - peer_count_active_time > 15*1000 ){
+									
+									peer_count_active_time = 0;
+									
+								}else{
+									
+									count_them = true;
+									
+									next_peer_count_time = time+900;
+								}
+							}
 						}
-						
 
 						latest_time	= time;
+						
 						if ( instance_map.size() > 0 || pending_registrations.size() > 0 ){
 
 							PeerControlSchedulerPrioritised.this.notify();
@@ -269,6 +281,8 @@ PeerControlSchedulerPrioritised
 	@Override
 	public int getPeerCount()
 	{
+		peer_count_active_time = SystemTime.getMonotonousTime();
+
 		return( last_peer_count );
 	}
 	
