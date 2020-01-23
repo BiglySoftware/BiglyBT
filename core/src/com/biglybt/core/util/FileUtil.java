@@ -1,4 +1,3 @@
-
 /*
  * Created on Oct 10, 2003
  * Modified Apr 14, 2004 by Alon Rohter
@@ -45,7 +44,6 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
-import com.biglybt.pif.platform.PlatformManagerException;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;

@@ -43,6 +43,7 @@ import com.biglybt.core.torrentdownloader.TorrentDownloader;
 import com.biglybt.core.torrentdownloader.TorrentDownloaderCallBackInterface;
 import com.biglybt.core.torrentdownloader.TorrentDownloaderFactory;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.core.util.protocol.AzURLStreamHandlerFactory;
 import com.biglybt.core.util.protocol.AzURLStreamHandlerSkipConnection;
@@ -209,6 +210,9 @@ public class FileDownloadWindow
 				if ( dirName != null ){
 					File f = new File( dirName );
 					if ( f.isDirectory()){
+						if ( !FileUtil.canWriteToDirectory( f )){
+							dirName = null;
+						}
 					}else{
 						if ( f.exists()){
 							dirName = null;
