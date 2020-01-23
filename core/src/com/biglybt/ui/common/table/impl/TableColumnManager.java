@@ -651,6 +651,32 @@ public class TableColumnManager {
   	return true;
   }
 
+  public boolean hasTableColumnSettings( String sTableID) {
+	  try {
+		  Map mapTableConfig = getTableConfigMap(sTableID);
+		  int size = mapTableConfig.size();
+		  if (size == 0) {
+			  return false;
+		  }
+		  boolean hasColumnInfo = false;
+		  for (Object key : mapTableConfig.keySet()) {
+			  if (key instanceof String) {
+				  if (((String) key).startsWith("Column.")) {
+					  hasColumnInfo = true;
+					  break;
+				  }
+			  }
+		  }
+		  if (!hasColumnInfo) {
+			  return false;
+		  }
+
+	  } catch (Exception e) {
+		  Debug.out(e);
+	  }
+	  return true;
+  }
+  
   private Map getTablesConfigMap() {
 		lastTableConfigAccess = SystemTime.getMonotonousTime();
 

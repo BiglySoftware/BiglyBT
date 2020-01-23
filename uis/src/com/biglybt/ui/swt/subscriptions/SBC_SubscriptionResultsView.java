@@ -41,6 +41,7 @@ import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.subs.SubscriptionResultFilter;
 import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
@@ -1013,23 +1014,23 @@ SBC_SubscriptionResultsView
 				SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL );
 
 		TableColumnManager tcm = TableColumnManager.getInstance();
-
-		if ( tcm.getDefaultColumnNames( TABLE_SR ) == null ){
 			
-			tcm.setDefaultColumnNames( TABLE_SR,
-					new String[] {
-						ColumnSubResultNew.COLUMN_ID,
-						ColumnSearchSubResultType.COLUMN_ID,
-						ColumnSearchSubResultName.COLUMN_ID,
-						ColumnSearchSubResultActions.COLUMN_ID,
-						ColumnSearchSubResultSize.COLUMN_ID,
-						ColumnSearchSubResultSeedsPeers.COLUMN_ID,
-						ColumnSearchSubResultRatings.COLUMN_ID,
-						ColumnSearchSubResultAge.COLUMN_ID,
-						ColumnSearchSubResultRank.COLUMN_ID,
-						ColumnSearchSubResultCategory.COLUMN_ID,
-					});
+		tcm.setDefaultColumnNames( TABLE_SR,
+				new String[] {
+					ColumnSubResultNew.COLUMN_ID,
+					ColumnSearchSubResultType.COLUMN_ID,
+					ColumnSearchSubResultName.COLUMN_ID,
+					ColumnSearchSubResultActions.COLUMN_ID,
+					ColumnSearchSubResultSize.COLUMN_ID,
+					ColumnSearchSubResultSeedsPeers.COLUMN_ID,
+					ColumnSearchSubResultRatings.COLUMN_ID,
+					ColumnSearchSubResultAge.COLUMN_ID,
+					ColumnSearchSubResultRank.COLUMN_ID,
+					ColumnSearchSubResultCategory.COLUMN_ID,
+				});
 	
+		if ( !tcm.hasTableColumnSettings( TABLE_SR )){
+			
 			tcm.setDefaultSortColumnName(TABLE_SR, ColumnSearchSubResultAge.COLUMN_ID);
 	
 			TableColumnCore tcc = tcm.getTableColumnCore( TABLE_SR, ColumnSearchSubResultAge.COLUMN_ID );
