@@ -61,15 +61,19 @@ public class IpItem
     String sText = (peer == null) ? "" : peer.getIp();
 
     if (cell.setText(sText) || !cell.isValid()) {
-      String[] sBlocks = sText.split("\\.");
-      if (sBlocks.length == 4) {
-        try {
-          long l = (Long.parseLong(sBlocks[0]) << 24) +
-                   (Long.parseLong(sBlocks[1]) << 16) +
-                   (Long.parseLong(sBlocks[2]) << 8) +
-                   Long.parseLong(sBlocks[3]);
-          cell.setSortValue(l);
-        } catch (Exception e) { e.printStackTrace(); /* ignore */ }
+    	// vague attempt at sorting, only supports ipv4 :(
+    	
+    	if ( !sText.contains( ";" )){	// handle 'my-peer' which can have multiple entries sep by ;
+    		String[] sBlocks = sText.split("\\.");
+    		if (sBlocks.length == 4) {
+    			try {
+    				long l = (Long.parseLong(sBlocks[0]) << 24) +
+    						(Long.parseLong(sBlocks[1]) << 16) +
+    						(Long.parseLong(sBlocks[2]) << 8) +
+    						Long.parseLong(sBlocks[3]);
+    				cell.setSortValue(l);
+    			} catch (Exception e) { e.printStackTrace(); /* ignore */ }
+    		}
       }
     }
   }

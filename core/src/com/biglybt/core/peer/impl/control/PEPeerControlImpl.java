@@ -6524,9 +6524,32 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		public String getIp()
 		{
-			InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+			String[] nets = adapter.getEnabledNetworks();
 			
-			return( ia==null?"127.0.0.1":ia.getHostAddress());
+			String pub_str = "";
+			String i2p_str = null;
+			
+			for ( String net: nets ){
+								
+				if ( net == AENetworkClassifier.AT_PUBLIC ){
+					
+					InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+			
+					pub_str = ia==null?"127.0.0.1":ia.getHostAddress();
+					
+				}else if ( net == AENetworkClassifier.AT_I2P ){
+					
+					i2p_str = "local.i2p";
+				}
+			}
+			
+			String str = pub_str;
+			
+			if ( i2p_str != null ){
+				str += (str.isEmpty()?"":"; ") + i2p_str;
+			}
+			
+			return( str );
 		}
 	
 		public InetAddress getAlternativeIPv6()
