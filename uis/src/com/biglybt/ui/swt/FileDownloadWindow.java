@@ -231,6 +231,10 @@ public class FileDownloadWindow
 					? Utils.findAnyShell() : parent, SWT.NULL);
 			dd.setText(MessageText.getString("fileDownloadWindow.saveTorrentIn"));
 			dirName = dd.open();
+			
+			if ( dirName != null ){
+				COConfigurationManager.setParameter("General_sDefaultTorrent_Directory", new File( dirName ).getAbsolutePath());
+			}
 		}
 		if (dirName == null)
 			return;
