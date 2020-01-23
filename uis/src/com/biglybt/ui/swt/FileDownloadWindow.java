@@ -279,6 +279,7 @@ public class FileDownloadWindow
 						case REPORT_TYPE_RETRY:
 							if (pReport.isRetryAllowed()) {
 								downloader.cancel();
+								lastState = -1;
 								downloader = TorrentDownloaderFactory.create(
 										FileDownloadWindow.this, original_url, referrer,
 										request_properties, dirName);
@@ -314,6 +315,15 @@ public class FileDownloadWindow
 		int state;
 		synchronized (this) {
 			localLastState = lastState;
+			if ( 	localLastState == TorrentDownloader.STATE_FINISHED ||
+					localLastState == TorrentDownloader.STATE_ERROR ||
+					localLastState == TorrentDownloader.STATE_DUPLICATE ||
+					localLastState == TorrentDownloader.STATE_CANCELLED ){
+				
+					// already in a terminal state, ignore
+				return;
+			}
+							
 			state = downloader.getDownloadState();
 			// update lastState now, so if we are called again while in this method, we
 			// have the right lastState

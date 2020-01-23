@@ -791,8 +791,12 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 	                						}
 
 	                						try{
-	                							percentDone = Integer.parseInt( s.substring( i, pos ).trim());
 
+	                								// keep < 100 until all done as there's some crappy code out there that treats
+	                								// 100% as done prematurely 
+	                							
+	                							percentDone = Math.min( 99, Integer.parseInt( s.substring( i, pos ).trim()));	
+	                							
 	                							progress_update = true;
 
 	                						}catch( Throwable e ){
@@ -931,7 +935,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 		            this.readTotal += bufBytes;
 
 		            if (size > 0){
-		              this.percentDone = (100 * this.readTotal) / size;
+		              this.percentDone = Math.min( 99,  (100 * this.readTotal) / size );
 		            }
 
 		            notifyListener();
@@ -1039,6 +1043,8 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 		        	  TorrentUtils.setObtainedFrom( file, original_url );
 		          }
 
+		          percentDone = 100;
+		          
 		          this.state = STATE_FINISHED;
 		        }
 		        this.notifyListener();
