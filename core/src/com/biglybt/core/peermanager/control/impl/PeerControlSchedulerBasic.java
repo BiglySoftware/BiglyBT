@@ -25,7 +25,6 @@ import java.util.*;
 import com.biglybt.core.peermanager.control.PeerControlInstance;
 import com.biglybt.core.peermanager.control.SpeedTokenDispenser;
 import com.biglybt.core.stats.CoreStatsProvider;
-import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
 
@@ -42,13 +41,18 @@ PeerControlSchedulerBasic
 
 	private volatile boolean	registrations_changed;
 
-	protected final AEMonitor	this_mon = new AEMonitor( "PeerControlSchedulerBasic" );
-
+	private final Object instance_lock = new Object();
+	
 	private final SpeedTokenDispenserBasic tokenDispenser = new SpeedTokenDispenserBasic();
 
 	private long	latest_time;
 	private long	last_lag_log;
 
+	private long	next_peer_count_time = SystemTime.getMonotonousTime();
+	
+	private volatile int		last_peer_count;
+
+	
 	@Override
 	protected void
 	schedule()
@@ -61,9 +65,33 @@ PeerControlSchedulerBasic
 				consume(
 					long	time )
 				{
+					boolean count_them = false;
+					
 					synchronized( PeerControlSchedulerBasic.this ){
 
+						if ( time >= next_peer_count_time ){
+							
+							count_them = true;
+							
+							next_peer_count_time = time+500;
+						}
+						
 						PeerControlSchedulerBasic.this.notify();
+					}
+					
+					if ( count_them ){
+						
+						int count = 0;
+						
+						synchronized( instance_lock ){
+							
+							for ( PeerControlInstance i: instance_map.keySet()){
+								
+								count += i.getPeerCount();
+							}
+						}
+						
+						last_peer_count = count;
 					}
 				}
 			});
@@ -78,8 +106,7 @@ PeerControlSchedulerBasic
 
 			if ( registrations_changed ){
 
-				try{
-					this_mon.enter();
+				synchronized( instance_lock ){
 
 					Iterator<instanceWrapper>	it = instances.iterator();
 
@@ -96,10 +123,6 @@ PeerControlSchedulerBasic
 					pending_registrations.clear();
 
 					registrations_changed	= false;
-
-				}finally{
-
-					this_mon.exit();
 				}
 			}
 
@@ -182,8 +205,7 @@ PeerControlSchedulerBasic
 
 		wrapper.setNextTick( latest_time + random.nextInt( SCHEDULE_PERIOD_MILLIS ));
 
-		try{
-			this_mon.enter();
+		synchronized( instance_lock ){
 
 			Map<PeerControlInstance,instanceWrapper>	new_map = new HashMap<>(instance_map);
 
@@ -194,10 +216,6 @@ PeerControlSchedulerBasic
 			pending_registrations.add( wrapper );
 
 			registrations_changed = true;
-
-		}finally{
-
-			this_mon.exit();
 		}
 	}
 
@@ -206,8 +224,7 @@ PeerControlSchedulerBasic
 	unregister(
 		PeerControlInstance	instance )
 	{
-		try{
-			this_mon.enter();
+		synchronized( instance_lock ){
 
 			Map<PeerControlInstance,instanceWrapper>	new_map = new HashMap<>(instance_map);
 
@@ -225,10 +242,6 @@ PeerControlSchedulerBasic
 			instance_map = new_map;
 
 			registrations_changed = true;
-
-		}finally{
-
-			this_mon.exit();
 		}
 	}
 
@@ -245,6 +258,12 @@ PeerControlSchedulerBasic
 	{
 	}
 
+	@Override
+	public int getPeerCount()
+	{
+		return( last_peer_count );
+	}
+	
 	protected class
 	instanceWrapper
 	{

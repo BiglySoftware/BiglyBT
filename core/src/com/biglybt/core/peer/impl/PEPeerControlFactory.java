@@ -30,17 +30,8 @@ import com.biglybt.core.peer.PEPeerManagerAdapter;
 import com.biglybt.core.peer.impl.control.PEPeerControlImpl;
 
 public class
-PEPeerControlFactory {
-
-	public static PEPeerControl
-	create(
-		byte[]					peer_id,
-		PEPeerManagerAdapter 	adapter,
-		DiskManager 			diskManager )
-	{
-		return( create( peer_id, adapter, diskManager, 0 ));
-	}
-
+PEPeerControlFactory 
+{
 	public static PEPeerControl
 	create(
 		byte[]					peer_id,

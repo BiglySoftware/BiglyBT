@@ -5975,6 +5975,14 @@ DiskManagerCheckRequestListener, IPFilterListener
 		return( new int[]{ allowed_peers, extra });
 	}
 
+	
+	@Override
+	public int 
+	getPeerCount()
+	{
+		return( peer_transports_cow.size());
+	}
+	
 	@Override
 	public int getSchedulePriority() {
 		return isSeeding() ? Integer.MAX_VALUE : adapter.getPosition();

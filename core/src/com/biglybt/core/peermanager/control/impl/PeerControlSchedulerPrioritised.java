@@ -25,7 +25,6 @@ import java.util.*;
 import com.biglybt.core.peermanager.control.PeerControlInstance;
 import com.biglybt.core.peermanager.control.SpeedTokenDispenser;
 import com.biglybt.core.stats.CoreStatsProvider;
-import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
 
@@ -34,19 +33,20 @@ PeerControlSchedulerPrioritised
 	extends PeerControlSchedulerImpl
 	implements CoreStatsProvider
 {
-	private Map	instance_map = new HashMap();
+	private Map<PeerControlInstance,instanceWrapper>	instance_map = new HashMap<>();
 
-	final List	pending_registrations = new ArrayList();
+	final List<instanceWrapper>	pending_registrations = new ArrayList<>();
 
 	private volatile boolean	registrations_changed;
 	private volatile long		latest_time;
 
-	protected final AEMonitor	this_mon = new AEMonitor( "PeerControlSchedulerPrioritised" );
-
+	private final Object	instance_lock = new Object();
 
 	private final SpeedTokenDispenserPrioritised tokenDispenser = new SpeedTokenDispenserPrioritised();
 
-
+	private long	next_peer_count_time = SystemTime.getMonotonousTime();
+	
+	private volatile int		last_peer_count;
 
 	@Override
 	protected void
@@ -60,12 +60,38 @@ PeerControlSchedulerPrioritised
 				public void
 				consume( long	time )
 				{
+					boolean	count_them = false;
+					
 					synchronized( PeerControlSchedulerPrioritised.this ){
+						
+						if ( time >= next_peer_count_time ){
+							
+							count_them = true;
+							
+							next_peer_count_time = time+500;
+						}
+						
+
 						latest_time	= time;
 						if ( instance_map.size() > 0 || pending_registrations.size() > 0 ){
 
 							PeerControlSchedulerPrioritised.this.notify();
 						}
+					}
+					
+					if ( count_them ){
+						
+						int count = 0;
+						
+						synchronized( instance_lock ){
+							
+							for ( PeerControlInstance i: instance_map.keySet()){
+								
+								count += i.getPeerCount();
+							}
+						}
+						
+						last_peer_count = count;
 					}
 				}
 			});
@@ -81,8 +107,7 @@ PeerControlSchedulerPrioritised
 		while( true ){
 
 			if ( registrations_changed ){
-				try{
-					this_mon.enter();
+				synchronized( instance_lock ){
 					Iterator	it = instances.iterator();
 					while( it.hasNext()){
 						if (((instanceWrapper)it.next()).isUnregistered()){
@@ -107,8 +132,6 @@ PeerControlSchedulerPrioritised
 					currentScheduleStart = latest_time;
 
 					registrations_changed	= false;
-				}finally{
-					this_mon.exit();
 				}
 			}
 
@@ -191,8 +214,7 @@ PeerControlSchedulerPrioritised
 	{
 		instanceWrapper wrapper = new instanceWrapper( instance );
 
-		try{
-			this_mon.enter();
+		synchronized( instance_lock ){
 
 			Map	new_map = new HashMap( instance_map );
 
@@ -203,10 +225,6 @@ PeerControlSchedulerPrioritised
 			pending_registrations.add( wrapper );
 
 			registrations_changed = true;
-
-		}finally{
-
-			this_mon.exit();
 		}
 	}
 
@@ -215,8 +233,7 @@ PeerControlSchedulerPrioritised
 	unregister(
 		PeerControlInstance	instance )
 	{
-		try{
-			this_mon.enter();
+		synchronized( instance_lock ){
 
 			Map	new_map = new HashMap( instance_map );
 
@@ -234,10 +251,6 @@ PeerControlSchedulerPrioritised
 			instance_map = new_map;
 
 			registrations_changed = true;
-
-		}finally{
-
-			this_mon.exit();
 		}
 	}
 
@@ -252,7 +265,13 @@ PeerControlSchedulerPrioritised
 	public void updateScheduleOrdering() {
 		registrations_changed = true;
 	}
-
+	
+	@Override
+	public int getPeerCount()
+	{
+		return( last_peer_count );
+	}
+	
 	protected static class
 	instanceWrapper implements Comparable
 	{

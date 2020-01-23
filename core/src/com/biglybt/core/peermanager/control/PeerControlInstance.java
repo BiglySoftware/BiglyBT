@@ -26,4 +26,7 @@ PeerControlInstance
 
 	public String
 	getName();
+	
+	public int
+	getPeerCount();
 }

@@ -42,4 +42,7 @@ PeerControlScheduler
 	 * @param override, set to true to disable weighted priorities, false to use user-configureable default
 	 */
 	public void overrideWeightedPriorities(boolean override);
+	
+	public int
+	getPeerCount();
 }

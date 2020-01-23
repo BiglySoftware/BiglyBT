@@ -34,6 +34,7 @@ import com.biglybt.core.history.DownloadHistoryEvent;
 import com.biglybt.core.history.DownloadHistoryListener;
 import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.peermanager.control.*;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
@@ -180,8 +181,70 @@ public class MainMDISetup
 							SB_Transfers.getSectionPosition(mdi, SIDEBAR_SECTION_ALLPEERS));
 					MdiEntry entry = mdi.createEntry(builder, true);
 
+					PeerControlScheduler scheduler = PeerControlSchedulerFactory.getSingleton(0);
+
+					ViewTitleInfo title_info =
+							new ViewTitleInfo()
+							{
+								@Override
+								public Object
+								getTitleInfoProperty(
+									int propertyID)
+								{
+									if ( propertyID == TITLE_INDICATOR_TEXT ){
+										
+										return( String.valueOf( scheduler.getPeerCount()));
+									}
+									
+									return( null );
+								}
+							};
+							
+					entry.setViewTitleInfo( title_info );
+
 					entry.setImageLeftID("image.sidebar.allpeers");
-					return entry;
+					
+					final TimerEventPeriodic	timer =
+							SimpleTimer.addPeriodicEvent(
+									"sb:allpeers",
+									1*1000,
+									new TimerEventPerformer()
+									{
+										private int last_count = -1;
+										
+										@Override
+										public void
+										perform(
+											TimerEvent event)
+										{
+											int count = scheduler.getPeerCount();
+											
+											if ( count != last_count ){
+											
+												last_count = count;
+														
+												entry.redraw();
+
+												ViewTitleInfoManager.refreshTitleInfo( title_info );
+												
+												entry.redraw();
+											}
+										}
+									});
+
+					entry.addListener(
+						new MdiCloseListener() {
+
+							@Override
+							public void
+							mdiEntryClosed(
+								MdiEntry entry, boolean userClosed)
+							{
+								timer.cancel();
+							}
+						});
+
+					return( entry );
 				});
 
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_LOGGER,
