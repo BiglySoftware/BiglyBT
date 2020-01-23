@@ -1602,6 +1602,9 @@ public class TableViewPainted
 			FrequencyLimitedDispatcher(
 				AERunnable.create(()->{
 					Utils.execSWTThread(()->{
+						if ( cTable.isDisposed()){
+							return;
+						}
 						if (DEBUG_SELECTION) {
 							debug("vBar changed " + vBar.getSelection() + " via " + Debug.getCompressedStackTrace());
 						}
