@@ -366,9 +366,13 @@ public class Legend {
 				// We don't want to give them disposed colors
 				// Restore defaults in case blockColors is a static or is used
 				// afterwards, or if the view wants to dispose of the old colors.
-				System.arraycopy(defaultColors, 0, blockColors, 0, blockColors.length);
-				for (int i = 0; i < keys.length;i++)
+				// PARG update: colors are used by the speed graphic whether legend is visible or not
+				// so we don't want to revert to defaults. Also colours come from colorcache so aren't
+				// disposed AFAIK
+				//System.arraycopy(defaultColors, 0, blockColors, 0, blockColors.length);
+				for (int i = 0; i < keys.length;i++){
 					config.removeParameterListener(keys[i], paramListeners[i]);
+				}
 			}
 		});
 
