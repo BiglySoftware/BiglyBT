@@ -4872,17 +4872,61 @@ public class OpenTorrentOptionsWindow
 			}
 		}
 
-		private void buildTagButtonPanel() {
-			if (!Utils.isThisThreadSWT()) {
-				Utils.execSWTThread(this::buildTagButtonPanel);
-				return;
-			}
-
+		private boolean tbp_building 		= false;
+		private boolean tbp_build_pending 	= false;
+		
+		private void
+		buildTagButtonPanel()
+		{
 			if (tagButtonsArea == null || tagButtonsArea.isDisposed()) {
 
 				return;
 			}
+
+			if (!Utils.isThisThreadSWT()){
+				
+				Utils.execSWTThread(this::buildTagButtonPanel);
+				
+				return;
+			}
+
+				// we can get recursion during build which causes havoc :(
+				// SWT single thread here...
 			
+			if ( tbp_building ){
+				
+				tbp_build_pending = true;
+				
+				return;
+			}
+			
+			for ( int i=0;i<10;i++){
+			
+				try{
+					tbp_building = true;
+					
+					buildTagButtonPanelSupport();
+					
+				}finally{
+					
+					tbp_building = false;
+					
+					if ( tbp_build_pending ){
+						
+						tbp_build_pending = false;
+						
+					}else{
+						
+						return;
+					}
+				}
+			}
+			
+			Debug.out( "Tag Button Panel build abandoned, too many retries" );
+		}
+		
+		private void buildTagButtonPanelSupport() {
+				
 			TagManager tm = TagManagerFactory.getTagManager();
 
 			TagType[] tts = {
