@@ -22,6 +22,7 @@ package com.biglybt.ui.common.viewtitleinfo;
 
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
+import com.biglybt.ui.mdi.MdiEntry;
 
 /**
  * @author TuxPaper
@@ -53,6 +54,16 @@ public class ViewTitleInfoManager
 			}catch( Throwable e ){
 
 				Debug.out( e );
+			}
+		}
+		
+		if ( titleinfo instanceof ViewTitleInfo2 ){
+			
+			MdiEntry entry = ((ViewTitleInfo2)titleinfo).getLinkedMdiEntry();
+			
+			if ( entry != null ){
+				
+				entry.redraw();
 			}
 		}
 	}

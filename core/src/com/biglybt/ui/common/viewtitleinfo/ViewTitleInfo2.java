@@ -32,4 +32,10 @@ public interface ViewTitleInfo2
 	extends ViewTitleInfo
 {
 	public void titleInfoLinked(MultipleDocumentInterface mdi, MdiEntry mdiEntry);
+	
+	public default MdiEntry
+	getLinkedMdiEntry()
+	{
+		return( null );
+	}
 }

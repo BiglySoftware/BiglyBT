@@ -67,6 +67,7 @@ import com.biglybt.core.content.RelatedAttributeLookupListener;
 import com.biglybt.core.content.RelatedContentManager;
 import com.biglybt.core.tag.*;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.columns.tag.ColumnTagName;
@@ -79,7 +80,7 @@ public class SBC_TagDiscovery
 	extends SkinView
 	implements UIUpdatable, UIPluginViewToolBarListener,
         TableViewFilterCheck<TagDiscovery>, TableViewSWTMenuFillListener,
-        TableSelectionListener, ViewTitleInfo
+        TableSelectionListener, ViewTitleInfo2
 {
 
 	private static final String TABLE_TAGDISCOVERY = "TagDiscoveryView";
@@ -235,6 +236,22 @@ public class SBC_TagDiscovery
 		return null;
 	}
 
+	@Override
+	public void 
+	titleInfoLinked(
+		MultipleDocumentInterface 	mdi, 
+		MdiEntry 					mdiEntry)
+	{
+		entry = mdiEntry;
+	}
+	
+	@Override
+	public MdiEntry
+	getLinkedMdiEntry()
+	{
+		return( entry );
+	}
+	
 	protected void initColumns() {
 		synchronized (SBC_TagDiscovery.class) {
 
