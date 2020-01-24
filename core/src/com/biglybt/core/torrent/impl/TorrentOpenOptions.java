@@ -686,7 +686,7 @@ public class TorrentOpenOptions
 
 			if (files[i] != null) {
 				files[i].orgFullName = torrentFile.getRelativePath(); // translated to locale
-				files[i].orgFileName = new File(files[i].orgFullName).getName();
+				files[i].setOriginalFileName( new File(files[i].orgFullName).getName());
 			}
 		}
 
@@ -774,7 +774,7 @@ public class TorrentOpenOptions
 				continue;
 			}
 			
-			String name = file.getDestFileName();
+			String name = file.getOriginalFileName();	// important to use original, especially for simple torrents
 			
 			int pos = name.lastIndexOf( '.' );
 			

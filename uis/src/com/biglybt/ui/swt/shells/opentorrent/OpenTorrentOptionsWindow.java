@@ -5012,6 +5012,10 @@ public class OpenTorrentOptionsWindow
 				tags.add(discoveredTag);
 			}
 
+			boolean[] building = { true };
+			
+			List<Tag> initialTagsCache = torrentOptions.getInitialTags();
+			
 			tagButtonsUI.buildTagGroup(tags, tagButtonsArea, false,
 					new TagButtonTrigger() {
 						public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag,
@@ -5074,7 +5078,7 @@ public class OpenTorrentOptionsWindow
 						}
 
 						public Boolean tagSelectedOverride(Tag tag) {
-							List<Tag> initialTags = torrentOptions.getInitialTags();
+							List<Tag> initialTags = building[0]?initialTagsCache:torrentOptions.getInitialTags();
 							if (initialTags.contains(tag)) {
 								return true;
 							}
@@ -5082,7 +5086,13 @@ public class OpenTorrentOptionsWindow
 						}
 					});
 			tagButtonsUI.setEnableWhenNoTaggables(true);
+			
+				// this causes each tag to hit the 'tagSelectedOverride' above so rather than letting it call 'getInitialTags'
+				// ( which is costly when auto-tagging is enable) cache the initial tags during build
+			
 			tagButtonsUI.updateFields(null);
+			
+			building[0] = false;
 			
 			updateInitialSaveTags( tagButtonsUI.getSelectedTags(), null );
 			
@@ -5811,7 +5821,7 @@ public class OpenTorrentOptionsWindow
 		protected void renameFilenames(final TorrentOpenFileOptions torrentFileInfo) {
 			SimpleTextEntryWindow dialog = new SimpleTextEntryWindow(
 					"FilesView.rename.filename.title", "FilesView.rename.filename.text");
-			dialog.setPreenteredText(torrentFileInfo.orgFileName, false); // false -> it's not "suggested", it's a previous value
+			dialog.setPreenteredText(torrentFileInfo.getOriginalFileName(), false); // false -> it's not "suggested", it's a previous value
 			dialog.allowEmptyInput(false);
 
 			dialog.prompt(new UIInputReceiverListener() {
@@ -6067,7 +6077,7 @@ public class OpenTorrentOptionsWindow
 							| style);
 
 					String sFilterPath = fileInfo.getDestPathName();
-					String sFileName = fileInfo.orgFileName;
+					String sFileName = fileInfo.getOriginalFileName();
 
 					File f = new File(sFilterPath);
 					if (!f.isDirectory()) {

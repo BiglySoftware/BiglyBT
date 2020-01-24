@@ -48,7 +48,7 @@ implements TableCellRefreshListener, TableColumnExtraInfoListener
   		return;
   	}
   	TorrentOpenFileOptions tfi = (TorrentOpenFileOptions) ds;
-  	String s = FileUtil.getExtension(tfi.orgFileName);
+  	String s = FileUtil.getExtension(tfi.getOriginalFileName());
   	cell.setText(s);
   }
 

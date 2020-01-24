@@ -32,7 +32,7 @@ public class TorrentOpenFileOptions
 	public String orgFullName;
 
 	/** @todo: getter/setters */
-	public String orgFileName;
+	private String orgFileName;
 
 	/** @todo: getter/setters */
 	public final long lSize;
@@ -96,6 +96,19 @@ public class TorrentOpenFileOptions
 		return( iIndex );
 	}
 
+	public String
+	getOriginalFileName()
+	{
+		return( orgFileName );
+	}
+	
+	public void
+	setOriginalFileName(
+		String str )
+	{
+		orgFileName = str;
+	}
+	
 	public void setFullDestName(String newFullName)
 	{
 		if(newFullName == null)
