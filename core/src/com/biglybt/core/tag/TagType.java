@@ -82,6 +82,9 @@ TagType
 		String		tag_name,
 		boolean		is_localized );
 
+	public int
+	getTagCount();
+	
 	public List<Tag>
 	getTags();
 

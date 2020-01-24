@@ -376,6 +376,11 @@ CategoryManagerImpl
   }
 
   @Override
+  public int getTagCount(){
+	  return( categories.size());
+  }
+  
+  @Override
   public List<Tag>
   getTags()
   {

@@ -131,4 +131,9 @@ TagTypeWithState
 	{
 		return( tags.getList());
 	}
+	
+	@Override
+	public int getTagCount(){
+		return( tags.size());
+	}
 }

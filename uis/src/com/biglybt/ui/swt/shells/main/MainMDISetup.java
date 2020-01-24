@@ -38,6 +38,10 @@ import com.biglybt.core.peermanager.control.*;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagManagerListener;
+import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagTypeListener;
+import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
@@ -54,6 +58,7 @@ import com.biglybt.plugin.net.buddy.swt.SBC_ChatOverview;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.Utils;
@@ -269,8 +274,106 @@ public class MainMDISetup
 								SIDEBAR_HEADER_TRANSFERS, id,
 								"tagsview", "{tags.view.heading}", null, null, true, 
 								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_TAGS));
+						
 						entry.setImageLeftID("image.sidebar.tag-overview");
 						entry.setDefaultExpanded(true);
+
+						TagManager tm = TagManagerFactory.getTagManager();
+
+						ViewTitleInfo2 title_info =
+							new ViewTitleInfo2()
+							{
+								@Override
+								public Object
+								getTitleInfoProperty(
+									int propertyID)
+								{
+									if ( propertyID == TITLE_INDICATOR_TEXT ){
+										
+										int num = 0;
+										
+										for ( TagType tt: tm.getTagTypes()){
+											
+											num += tt.getTagCount();
+										}
+										
+										return( String.valueOf( num ));
+									}
+									
+									return( null );
+								}
+								
+								public void titleInfoLinked(MultipleDocumentInterface mdi, MdiEntry mdiEntry){}
+								
+								public MdiEntry	getLinkedMdiEntry(){
+									return( entry );
+								}
+							};
+
+						entry.setViewTitleInfo( title_info );
+												
+						TagTypeListener ttl = 
+							new TagTypeListener()
+							{
+								public void
+								tagTypeChanged(
+									TagType		tag_type )
+								{
+								}
+	
+								public void
+								tagEventOccurred(
+									TagEvent			event )
+								{
+									int type = event.getEventType();
+									
+									if ( type == TagEvent.ET_TAG_ADDED || type == TagEvent.ET_TAG_REMOVED ){
+										
+										ViewTitleInfoManager.refreshTitleInfo( title_info );
+									}
+								}
+
+							};
+							
+						TagManagerListener tml = 
+							new TagManagerListener()
+							{
+								public void
+								tagTypeAdded(
+									TagManager		manager,
+									TagType			tag_type )
+								{
+									tag_type.addTagTypeListener( ttl, false );
+										
+								}
+	
+								public void
+								tagTypeRemoved(
+									TagManager		manager,
+									TagType			tag_type )
+								{
+								}
+							};
+							
+						tm.addTagManagerListener( tml, true);
+												
+						entry.addListener(
+							new MdiCloseListener() {
+
+								@Override
+								public void
+								mdiEntryClosed(
+									MdiEntry entry, boolean userClosed)
+								{
+									tm.removeTagManagerListener( tml );
+									
+									for ( TagType tt: tm.getTagTypes()){
+										
+										tt.removeTagTypeListener( ttl );
+									}
+								}
+							});
+						
 						return entry;
 					}
 				});

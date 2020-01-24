@@ -7332,6 +7332,11 @@ public class OpenTorrentOptionsWindow
 			}
 
 			@Override
+			public int getTagCount(){
+				return 0;
+			}
+			
+			@Override
 			public int[] getColorDefault() {
 				return color_default;
 			}
