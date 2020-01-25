@@ -329,7 +329,7 @@ public class TabbedMDI
 		}
 
 		tabFolder.addListener(SWT.MouseDoubleClick, e -> {
-			if (!tabFolder.getMinimized() && tabFolder.getMaximizeVisible()) {
+			if (!tabFolder.getMinimized() && tabFolder.getMinimizeVisible()) {
 				minimize();
 			}
 		});
