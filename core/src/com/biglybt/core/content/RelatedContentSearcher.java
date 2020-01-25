@@ -34,6 +34,7 @@ import com.biglybt.core.content.RelatedContentManager.ContentCache;
 import com.biglybt.core.content.RelatedContentManager.DownloadInfo;
 import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.bloom.BloomFilter;
 import com.biglybt.core.util.bloom.BloomFilterFactory;
@@ -225,6 +226,8 @@ RelatedContentSearcher
 
 		}else{
 
+			boolean hasIPV4 = NetworkAdmin.getSingleton().hasIPV4Potential();
+			
 			new AEThread2( "RCM:search", true )
 			{
 				@Override
@@ -383,7 +386,7 @@ RelatedContentSearcher
 
 								for ( DHTInterface dht: dhts ){
 
-									if ( dht.isIPV6()){
+									if ( dht.isIPV6() && hasIPV4 ){
 
 										continue;
 									}
@@ -427,7 +430,7 @@ RelatedContentSearcher
 
 									for ( DHTInterface dht: dhts ){
 
-										if ( dht.isIPV6()){
+										if ( dht.isIPV6() && hasIPV4 ){
 
 											continue;
 										}
@@ -2066,6 +2069,8 @@ RelatedContentSearcher
 	private void
 	harvestBlooms()
 	{
+		boolean hasIPV4 = NetworkAdmin.getSingleton().hasIPV4Potential();
+
 		harvest_dispatcher.dispatch(
 			new AERunnable()
 			{
@@ -2143,7 +2148,7 @@ RelatedContentSearcher
 outer:
 							for ( DHTInterface dht: dhts ){
 
-								if ( dht.isIPV6()){
+								if ( dht.isIPV6() && hasIPV4 ){
 
 									continue;
 								}

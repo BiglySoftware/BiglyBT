@@ -260,7 +260,7 @@ MetaSearchImpl
 						return( provider );
 					}
 					
-					if ( pid != null && pid.equals( for_engine.getPluginID())){
+					if ( pid != null && pid.equals( pe.getPluginID())){
 						
 						return( provider );
 					}
