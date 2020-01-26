@@ -215,7 +215,7 @@ SFPluginDetailsLoaderImpl
 
 				if ( plugin_proxy == null ){
 
-					throw( new SFPluginDetailsException( "Proxy not available" ));
+					throw( new SFPluginDetailsException( "Tor helper plugin failed or not available" ));
 
 				}else{
 
@@ -432,7 +432,7 @@ SFPluginDetailsLoaderImpl
 
 				if ( plugin_proxy == null ){
 
-					throw( new SFPluginDetailsException( "Proxy not available" ));
+					throw( new SFPluginDetailsException( "Tor helper plugin failed or not available" ));
 
 				}else{
 

@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.mainwindow;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.List;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -93,6 +94,7 @@ import com.biglybt.pif.ui.tables.*;
 import com.biglybt.pif.update.Update;
 import com.biglybt.pif.update.UpdateCheckInstance;
 import com.biglybt.pif.update.UpdateCheckInstanceListener;
+import com.biglybt.pif.update.UpdateChecker;
 
 public class MenuFactory
 	implements IMenuConstants
@@ -2364,30 +2366,63 @@ public class MenuFactory
 											}
 											if (!hasUpdates) {
 
-												int build = Constants.getIncrementalBuild();
-
-												if ( COConfigurationManager.getBooleanParameter( "Beta Programme Enabled" ) && build > 0 ){
-
-													String build_str = "" + build;
-
-													if ( build_str.length() == 1 ){
-
-														build_str = "0" + build_str;
+												UpdateChecker[] checkers = instance.getCheckers();
+												
+												List<String> errors = new ArrayList<>();
+												
+												for ( UpdateChecker checker: checkers ){
+													
+													if ( checker.getFailed()){
+														
+														String name = checker.getComponent().getName();
+														
+														Throwable reason = checker.getFailureReason();
+														
+														errors.add( name + ", " + Debug.getNestedExceptionMessage( reason ));
 													}
-
-													MessageBoxShell mb = new MessageBoxShell(
-															SWT.ICON_INFORMATION | SWT.OK,
-															"window.update.noupdates.beta", new String[]{ "B" + build_str });
-
-													mb.open(null);
-
+												}
+												
+												if ( errors.isEmpty()){
+													
+													int build = Constants.getIncrementalBuild();
+	
+													if ( COConfigurationManager.getBooleanParameter( "Beta Programme Enabled" ) && build > 0 ){
+	
+														String build_str = "" + build;
+	
+														if ( build_str.length() == 1 ){
+	
+															build_str = "0" + build_str;
+														}
+	
+														MessageBoxShell mb = new MessageBoxShell(
+																SWT.ICON_INFORMATION | SWT.OK,
+																"window.update.noupdates.beta", new String[]{ "B" + build_str });
+	
+														mb.open(null);
+	
+													}else{
+	
+														MessageBoxShell mb = new MessageBoxShell(
+																SWT.ICON_INFORMATION | SWT.OK,
+																"window.update.noupdates", (String[]) null);
+	
+														mb.open(null);
+													}
 												}else{
-
+													
+													String str = "";
+													
+													for ( String e: errors ){
+														
+														str += (str.isEmpty()?"":"\n\n") + e;
+													}
+														
 													MessageBoxShell mb = new MessageBoxShell(
-															SWT.ICON_INFORMATION | SWT.OK,
-															"window.update.noupdates", (String[]) null);
+															SWT.ICON_ERROR | SWT.OK,
+															"window.update.failed", new String[]{ str });
 
-													mb.open(null);
+													mb.open(null);												
 												}
 											}
 										}

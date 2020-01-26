@@ -285,7 +285,7 @@ PlatformManagerUpdateChecker
 
 			checker.reportProgress( "Failed to load plugin details for the platform manager: " + Debug.getNestedExceptionMessage(e));
 
-			checker.failed();
+			checker.setFailed( new Exception( "Failed to load plugin details for the platform manager", e ));
 
 		}finally{
 

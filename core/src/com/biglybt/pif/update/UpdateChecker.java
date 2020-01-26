@@ -89,8 +89,15 @@ UpdateChecker
 		 */
 
 	public void
-	failed();
+	setFailed(
+		Throwable cause );
 
+	public boolean
+	getFailed();
+	
+	public Throwable
+	getFailureReason();
+	
 		/**
 		 * report a progress string to registered listeners
 		 * @param str

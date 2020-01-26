@@ -242,9 +242,11 @@ public class SWTUpdateChecker implements UpdatableComponent
 			    if ( 	update_prevented_version == versionGetter.getCurrentVersion() &&
 			    		update_prevented_revision == versionGetter.getCurrentRevision()){
 	
-			    	Logger.log(new LogEvent(LOGID, LogEvent.LT_ERROR, "SWT update aborted due to previously reported issues regarding its install location" ));
+			    	String err= "SWT update aborted due to previously reported issues regarding its install location";
+			    	
+			    	Logger.log(new LogEvent(LOGID, LogEvent.LT_ERROR, err ));
 	
-					checker.failed();
+					checker.setFailed( new Exception( err ));
 	
 					checker.getCheckInstance().cancel();
 	
@@ -330,10 +332,12 @@ public class SWTUpdateChecker implements UpdatableComponent
 		    }
 	    }
   	}catch( Throwable e ){
-  		Logger.log(new LogAlert(LogAlert.UNREPEATABLE,
-					"SWT Version check failed", e));
+  		
+  		String err = "SWT Version check failed";
+  				
+  		Logger.log(new LogAlert(LogAlert.UNREPEATABLE,	err, e));
 
-  		checker.failed();
+  		checker.setFailed( new Exception( err, e ));
 
   	}finally{
 

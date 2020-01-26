@@ -221,12 +221,21 @@ CoreUpdateChecker
 	
 				log.log( "Update check starts: current = " + current_version );
 	
-				Map	decoded = VersionCheckClient.getSingleton().getVersionCheckInfo(
+				VersionCheckClient vc = VersionCheckClient.getSingleton();
+				
+				Map	decoded = vc.getVersionCheckInfo(
 			  			first_check?VersionCheckClient.REASON_UPDATE_CHECK_START:VersionCheckClient.REASON_UPDATE_CHECK_PERIODIC);
 	
 	
 				displayUserMessage( decoded );
 	
+				Throwable error = vc.getError();
+				
+				if ( error != null ){
+					
+					throw( error );
+				}
+				
 				// No point complaining later if we don't have any data in the map (which is
 				// more likely due to network problems rather than the version check server
 				// *actually* returning a map with nothing in it.
@@ -461,7 +470,7 @@ CoreUpdateChecker
 
 			checker.reportProgress( "Failed to check for core update: " + Debug.getNestedExceptionMessage(e));
 
-			checker.failed();
+			checker.setFailed( new Exception( "Failed to check for core update", e ));
 
 		}finally{
 

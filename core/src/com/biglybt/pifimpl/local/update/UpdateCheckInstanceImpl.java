@@ -335,7 +335,7 @@ UpdateCheckInstanceImpl
 
 						e.printStackTrace();
 
-						checker.failed();
+						checker.setFailed( new Exception( "Update check failed", e ));
 					}
 				}
 			}.start();
@@ -352,16 +352,21 @@ UpdateCheckInstanceImpl
 						sem.reserve();
 					}
 
+					boolean	any_failed = false;
+					
 					try{
 						boolean	mandatory_failed = false;
 
 						for (int i=0;i<checkers.length;i++){
 
-							if ( components[i].isMandatory() && checkers[i].getFailed()){
+							if ( checkers[i].getFailed()){
+								
+								any_failed = true;
 
-								mandatory_failed	= true;
+								if ( components[i].isMandatory()){
 
-								break;
+									mandatory_failed	= true;
+								}
 							}
 						}
 
@@ -469,6 +474,9 @@ UpdateCheckInstanceImpl
 
 					}
 
+					if ( any_failed ){
+						
+					}
 					for (int i=0;i<listeners.size();i++){
 
 						try{

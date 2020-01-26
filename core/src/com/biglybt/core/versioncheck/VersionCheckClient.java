@@ -125,6 +125,9 @@ public class VersionCheckClient {
 	private Map last_check_data_v4 = null;
 	private Map last_check_data_v6 = null;
 
+	private volatile Throwable last_error_v4 = null;
+	private volatile Throwable last_error_v6 = null;
+	
 	private final AEMonitor check_mon = new AEMonitor( "versioncheckclient" );
 
 	private long last_check_time_v4 = 0;
@@ -133,6 +136,7 @@ public class VersionCheckClient {
 	private long last_feature_flag_cache;
 	private long last_feature_flag_cache_time;
 
+	private volatile boolean check_has_worked;
 
 	private
 	VersionCheckClient()
@@ -276,6 +280,8 @@ public class VersionCheckClient {
 							return( new HashMap() );
 						}
 						try {
+							last_error_v6		= null;
+							
 							last_check_data_v6 = performVersionCheck( constructVersionCheckMessage( reason ), true, true, true );
 	
 							if ( last_check_data_v6 != null && last_check_data_v6.size() > 0 ){
@@ -288,14 +294,20 @@ public class VersionCheckClient {
 						catch(SocketException t) {
 							// internet is broken
 							// Debug.out(t.getClass().getName() + ": " + t.getMessage());
+							
+							last_error_v6 = t;
 						}
 						catch(UnknownHostException t) {
 							// dns is broken
 							// Debug.out(t.getClass().getName() + ": " + t.getMessage());
-						}
-						catch( Throwable t ) {
+							
+							last_error_v6 = t;
+							
+						}catch( Throwable t ) {
 							Debug.out(t);
 							last_check_data_v6 = new HashMap();
+							
+							last_error_v6 = t;
 						}
 					}
 					else {
@@ -326,6 +338,8 @@ public class VersionCheckClient {
 						return( new HashMap() );
 					}
 					try {
+						last_error_v4		= null;
+						
 						last_check_data_v4 = performVersionCheck( constructVersionCheckMessage( reason ), true, true, false );
 	
 						if ( last_check_data_v4 != null && last_check_data_v4.size() > 0 ){
@@ -361,14 +375,19 @@ public class VersionCheckClient {
 					catch( UnknownHostException t ) {
 						// no internet
 						Debug.outNoStack("VersionCheckClient - " + t.getClass().getName() + ": " + t.getMessage());
+						
+						last_error_v4 = t;
 					}
 					catch (IOException t) {
 						// General connection problem.
 						Debug.outNoStack("VersionCheckClient - " + t.getClass().getName() + ": " + t.getMessage());
-					}
-					catch( Throwable t ) {
+						
+						last_error_v4 = t;
+						
+					}catch( Throwable t ) {
 						Debug.out(t);
 						last_check_data_v4 = new HashMap();
+						last_error_v4 = t;
 					}
 				}
 				else {
@@ -387,6 +406,11 @@ public class VersionCheckClient {
 				return last_check_data_v4;
 			}
 		}finally{
+			
+			if ( changed ){
+				
+				check_has_worked = true;
+			}
 			
 			for (VersionCheckClientListener l : listeners_clone) {
 				try{
@@ -462,6 +486,24 @@ public class VersionCheckClient {
 		last_check_time_v4	= 0;
 	}
 
+	public Throwable
+	getError()
+	{
+		if ( !check_has_worked ){
+			
+			if ( last_error_v4 != null ){
+				
+				return( last_error_v4 );
+				
+			}else{
+				
+				return( last_error_v6 );
+			}
+		}
+		
+		return( null );
+	}
+	
 	public long
 	getFeatureFlags()
 	{
@@ -882,8 +924,10 @@ public class VersionCheckClient {
 
 		URL	url = new URL( url_str );
 
+		boolean anon = COConfigurationManager.getBooleanParameter( "update.anonymous");
+		
 		try{
-			if ( COConfigurationManager.getBooleanParameter( "update.anonymous")){
+			if ( anon ){
 
 				throw( new Exception( "Direct HTTP disabled for anonymous updates" ));
 			}
@@ -976,6 +1020,11 @@ public class VersionCheckClient {
 				}
 			}
 
+			if ( anon ){
+				
+				throw( new Exception( "Tor helper plugin failed or not available" ));
+			}
+			
 			throw( e );
 		}
 	}

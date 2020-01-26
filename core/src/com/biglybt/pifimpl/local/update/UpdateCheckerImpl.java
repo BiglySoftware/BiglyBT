@@ -37,21 +37,22 @@ public class
 UpdateCheckerImpl
 	implements UpdateChecker
 {
-	protected UpdateCheckInstanceImpl		check_instance;
-	protected UpdatableComponentImpl		component;
-	protected AESemaphore					semaphore;
+	private UpdateCheckInstanceImpl		check_instance;
+	private UpdatableComponentImpl		component;
+	private AESemaphore					semaphore;
 
-	protected boolean						completed;
-	protected boolean						failed;
-	protected boolean						cancelled;
+	private boolean						completed;
+	private boolean						failed;
+	private Throwable						failure;
+	private boolean						cancelled;
 
-	protected boolean						sem_released;
+	private boolean						sem_released;
 
 
-	protected List	listeners			= new ArrayList();
-	protected List	progress_listeners	= new ArrayList();
+	private List	listeners			= new ArrayList();
+	private List	progress_listeners	= new ArrayList();
 
-	protected AEMonitor this_mon 	= new AEMonitor( "UpdateChecker" );
+	private AEMonitor this_mon 	= new AEMonitor( "UpdateChecker" );
 
 	protected
 	UpdateCheckerImpl(
@@ -154,7 +155,8 @@ UpdateCheckerImpl
 
 	@Override
 	public void
-	failed()
+	setFailed(
+		Throwable reason )
 	{
 		try{
 			this_mon.enter();
@@ -162,7 +164,8 @@ UpdateCheckerImpl
 			if ( !sem_released ){
 
 				failed	= true;
-
+				failure	= reason;
+				
 				for (int i=0;i<listeners.size();i++){
 
 					try{
@@ -184,12 +187,18 @@ UpdateCheckerImpl
 		}
 	}
 
-	protected boolean
+	public boolean
 	getFailed()
 	{
 		return( failed );
 	}
 
+	@Override
+	public Throwable getFailureReason(){
+		
+		return( failure );
+	}
+	
 	protected void
 	cancel()
 	{

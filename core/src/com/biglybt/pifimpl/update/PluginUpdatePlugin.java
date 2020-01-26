@@ -923,7 +923,7 @@ PluginUpdatePlugin
 
 			checker.reportProgress( "Failed to load plugin details: " + Debug.getNestedExceptionMessage(e));
 
-			checker.failed();
+			checker.setFailed( new Exception( "Failed to load plugin details", e ));
 
 		}finally{
 
