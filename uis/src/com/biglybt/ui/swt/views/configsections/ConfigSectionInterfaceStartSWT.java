@@ -72,8 +72,10 @@ public class ConfigSectionInterfaceStartSWT
 		autoDownload.addDisabledOnSelection(openDialog);
 
 		// XXX is this really SWT only?
+		// no but can't think where else to put it
+		
 		add(new BooleanParameterImpl("update.anonymous",
-				"ConfigView.label.update.anonymous"));
+				"ConfigView.label.update.anonymous")).setMinimumRequiredUserMode( Parameter.MODE_ADVANCED );
 
 		add("ifs.gap1", new LabelParameterImpl(""));
 
