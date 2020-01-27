@@ -2278,7 +2278,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 						//same
 					}
 
-					TableColumnManager.getInstance().setDefaultSortColumnNames(tableID, sortColumnNames, true );
+					TableColumnManager.getInstance().setSortColumnNames(tableID, sortColumnNames );
 				} else {
 					TableColumnCore sortColumn = sortColumns.get(0);
 					sortColumn.setSortAscending(!sortColumn.isSortAscending());
@@ -2286,7 +2286,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			} else {
 				sortColumns.clear();
 				sortColumns.addAll(Arrays.asList(newSortColumns));
-				TableColumnManager.getInstance().setDefaultSortColumnNames(tableID, sortColumnNames, true );
+				TableColumnManager.getInstance().setSortColumnNames(tableID, sortColumnNames );
 			}
 			if (columnsChanged) {
 				for (TableRowCore row : sortedRows) {

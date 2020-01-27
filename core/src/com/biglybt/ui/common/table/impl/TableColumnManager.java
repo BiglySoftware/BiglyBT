@@ -572,14 +572,21 @@ public class TableColumnManager {
 	}
 
 	public void setDefaultSortColumnName(String tableID, String... columnNames) {
-		setDefaultSortColumnNames(tableID, columnNames, false);
-	}
-
-	public void setDefaultSortColumnNames(String tableID, String[] columnNames,
-			boolean force) {
 		Map mapTableConfig = getTableConfigMap(tableID);
 		List sortColumns = MapUtils.getMapList(mapTableConfig, "SortColumns", null);
-		if (sortColumns != null && !force) {
+		if (sortColumns != null && !sortColumns.isEmpty()) {
+			// already has sort columns, nothing to do (especially we don't want to replace the
+			// latest user-selected sort with the defaults...
+			return;
+		}
+		mapTableConfig.put("SortColumns", Arrays.asList(columnNames));
+		markDirty();
+	}
+
+	protected void setSortColumnNames(String tableID, String... columnNames) {
+		Map mapTableConfig = getTableConfigMap(tableID);
+		List sortColumns = MapUtils.getMapList(mapTableConfig, "SortColumns", null);
+		if (sortColumns != null ){
 			if (sortColumns.size() == columnNames.length) {
 				boolean allSame = true;
 				for (int i = 0; i < columnNames.length; i++) {
