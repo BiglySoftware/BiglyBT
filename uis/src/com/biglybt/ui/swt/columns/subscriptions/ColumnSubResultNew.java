@@ -92,7 +92,7 @@ public class ColumnSubResultNew
 			boolean unread = !entry.getRead();
 
 			long sortVal = ((unread ? 2 : 1L) << 61)
-					+ (SystemTime.getCurrentTime() - entry.getTime()) / 1000;
+					- (SystemTime.getCurrentTime() - entry.getTime()) / 1000;
 
 			cell.setSortValue(sortVal);
 		}
