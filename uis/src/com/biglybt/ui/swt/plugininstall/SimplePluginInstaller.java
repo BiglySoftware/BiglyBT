@@ -302,12 +302,15 @@ SimplePluginInstaller
 
 		}catch( Throwable e ){
 
+				// must report error before hitting the listener otherwise the listener cancels the action
+				// and the error gets lost
+			
+			action_listener.actionComplete( e );
+
 			if ( listener != null ){
 
 				listener.finished();
 			}
-
-			action_listener.actionComplete( e );
 		}
 
 		return false;

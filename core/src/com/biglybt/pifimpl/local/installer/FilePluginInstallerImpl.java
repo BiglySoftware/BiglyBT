@@ -270,25 +270,31 @@ FilePluginInstallerImpl
 
 						// see if we can normalise the ID based on SF values
 
-					try{
-						SFPluginDetailsLoader	loader = SFPluginDetailsLoaderFactory.getSingleton();
-
-						String[]	ids = loader.getPluginIDs();
-
-						for (int i=0;i<ids.length;i++){
-
-							if ( ids[i].equalsIgnoreCase(id)){
-
-								id = ids[i];
-
-								break;
+						// special case for aznettor as we want to avoid triggering another probably failure to list plugins ids
+						// when updating anonymously
+					
+					if ( !id.equals( "aznettor" )){
+						
+						try{
+							SFPluginDetailsLoader	loader = SFPluginDetailsLoaderFactory.getSingleton();
+	
+							String[]	ids = loader.getPluginIDs();
+	
+							for (int i=0;i<ids.length;i++){
+	
+								if ( ids[i].equalsIgnoreCase(id)){
+	
+									id = ids[i];
+	
+									break;
+								}
 							}
+						}catch( Throwable e ){
+	
+							Debug.printStackTrace(e);
 						}
-					}catch( Throwable e ){
-
-						Debug.printStackTrace(e);
 					}
-
+					
 					version		= version == null?prefix.substring(pos+1):version;
 
 				}

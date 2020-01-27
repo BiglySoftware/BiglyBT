@@ -678,6 +678,22 @@ AEPluginProxyHandler
 								Object		result )
 							{
 								try{
+									if ( result instanceof Throwable ){
+										
+										UIFunctionsUserPrompter prompter = 
+											uif.getUserPrompter(
+												MessageText.getString( "metasearch.addtemplate.failed.title"), 
+												MessageText.getString( "aznettor.manual.install",
+													new String[]{ Constants.PLUGINS_WEB_SITE }), 
+												new String[]{
+														MessageText.getString("Button.ok"),
+												}, 0);
+
+											prompter.setAutoCloseInMS(0);
+											
+											prompter.open(null);
+									}
+									
 									if ( callback != null ){
 
 										if ( result instanceof Boolean ){
