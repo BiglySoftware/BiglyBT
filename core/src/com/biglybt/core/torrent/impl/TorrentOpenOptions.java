@@ -1157,14 +1157,27 @@ public class TorrentOpenOptions
 					// the resulting torrent file happens to have public trackers - don't surprise the user
 					// by leaving 'Public' enabled
 
+					// actually we only really want to apply this logic to the 'public' case, no harm in leaving
+					// the others as they are
+				
+				String to_remove = null;
+				
 				for ( String net: enabledNetworks.keySet()){
 
 					boolean enabled = network_cache.contains( net );
 
 					if ( !enabled ){
 
-						enabledNetworks.put( net, false );
+						if ( net == AENetworkClassifier.AT_PUBLIC ){
+							
+							to_remove = net;
+						}
 					}
+				}
+				
+				if ( to_remove != null ){
+					
+					enabledNetworks.put( to_remove, false );
 				}
 			}
 
