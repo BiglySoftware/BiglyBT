@@ -683,8 +683,9 @@ AEPluginProxyHandler
 										UIFunctionsUserPrompter prompter = 
 											uif.getUserPrompter(
 												MessageText.getString( "metasearch.addtemplate.failed.title"), 
-												MessageText.getString( "aznettor.manual.install",
-													new String[]{ Constants.PLUGINS_WEB_SITE }), 
+												MessageText.getString( "plugin.manual.install",
+													new String[]{ Constants.PLUGINS_WEB_SITE,
+													MessageText.getString( "aznettor.plugin.name" )}), 
 												new String[]{
 														MessageText.getString("Button.ok"),
 												}, 0);
