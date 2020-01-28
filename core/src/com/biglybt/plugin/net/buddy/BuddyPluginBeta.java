@@ -25,6 +25,7 @@ package com.biglybt.plugin.net.buddy;
 import java.io.*;
 import java.lang.ref.WeakReference;
 import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
@@ -40,6 +41,8 @@ import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.ipfilter.IpFilter;
+import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
 import com.biglybt.core.security.BGSpongy;
 import com.biglybt.core.tag.Tag;
@@ -128,6 +131,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	private int						max_chat_ui_kb;
 	private boolean					standalone_windows;
 	private boolean					windows_to_sidebar;
+	private boolean					use_ip_filter;
 	private boolean					hide_ratings;
 	private boolean					hide_search_subs;
 
@@ -151,6 +155,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 	private AESemaphore	init_complete = new AESemaphore( "bpb:init" );
 
+	private final IpFilter	ip_filter	= IpFilterManagerFactory.getSingleton().getIPFilter();
+
+	
 	protected
 	BuddyPluginBeta(
 		PluginInterface		_pi,
@@ -223,6 +230,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		max_chat_ui_kb			= COConfigurationManager.getIntParameter( "azbuddy.dchat.ui.max.char.kb", 10 );
 		standalone_windows		= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.standalone.windows", false );
 		windows_to_sidebar		= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.windows.to.sidebar", false );
+		use_ip_filter			= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.ip.filter.enable", true );
 		hide_ratings			= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.hide.ratings", false );
 		hide_search_subs		= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.hide.search_subs", false );
 
@@ -321,6 +329,23 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		windows_to_sidebar			= b;
 
 		COConfigurationManager.setParameter( "azbuddy.dchat.ui.windows.to.sidebar", b );
+
+		COConfigurationManager.setDirty();
+	}
+
+	public boolean
+	getUseIPFilter()
+	{
+		return( use_ip_filter );
+	}
+
+	public void
+	setUseIPFilter(
+		boolean		b )
+	{
+		use_ip_filter			= b;
+
+		COConfigurationManager.setParameter( "azbuddy.dchat.ui.ip.filter.enable", b );
 
 		COConfigurationManager.setDirty();
 	}
@@ -6203,6 +6228,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				
 				is_pinned 	= MapUtils.getMapBoolean( props, "pinned", false );
 				is_ignored 	= MapUtils.getMapBoolean( props, "ignored", false );
+				//is_spammer 	= MapUtils.getMapBoolean( props, "spammer", false );
 			}
 			
 			String old_pinned_key = "azbuddy.chat.pinned." + ByteFormatter.encodeString( pk, 0, 16 );
@@ -6217,6 +6243,15 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 
 			chat.registerNick( this, null, nickname );
+			
+			/* don't persist spammer status, it causes too much collateral damage in terms of the banning of nodes
+			 * potentially the source of the spam 
+			 *
+			if ( is_spammer ){
+				
+				chat.setSpammer( this, true );
+			}
+			*/
 		}
 
 		public ChatInstance
@@ -6490,6 +6525,14 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		{
 			participant_messages.add( message );
 
+			if ( is_spammer && getUseIPFilter()){
+				
+				if ( !message.isIPFiltered()){
+					
+					ip_filter.ban( AddressUtils.getHostAddress( message.getAddress()), "D-Chat/" + chat.getName() + "/" + getName(), false );
+				}
+			}
+			
 			message.setParticipant( this );
 
 			message.setIgnored( is_ignored || is_spammer );
@@ -6656,13 +6699,36 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				is_spammer = b;
 
+				setProperty( "spammer", b );
+				
 				chat.setSpammer( this, b );
 
+				Set<String> addresses = new HashSet<>();
+				
 				synchronized( chat.chat_lock ){
 
 					for ( ChatMessage message: participant_messages ){
 
 						message.setIgnored( b || is_ignored );
+						
+						InetSocketAddress originator = message.getAddress();
+						
+						addresses.add( AddressUtils.getHostAddress( originator ));
+					}
+				}
+				
+				if (getUseIPFilter()){
+					
+					for ( String a: addresses ){
+						
+						if ( b ){
+							
+							ip_filter.ban( a, "D-Chat/" + chat.getName() + "/" + getName(), false );
+							
+						}else{
+							
+							ip_filter.unban( a );
+						}
 					}
 				}
 			}
@@ -7269,8 +7335,26 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		}
 
 		public boolean
+		isIPFiltered()
+		{
+			if (getUseIPFilter()){
+				
+				return( ip_filter.isInRange( AddressUtils.getHostAddress( getAddress()), "D-Chat", null, true ));
+				
+			}else{
+				
+				return( false );
+			}
+		}
+		
+		public boolean
 		isIgnored()
 		{
+			if ( isIPFiltered()){
+				
+				return( true );
+			}
+			
 			return( is_duplicate || is_ignored );
 		}
 

@@ -573,6 +573,26 @@ BuddyPluginViewInstance
 					}
 				});
 
+			// use IP Filter
+	
+		final Button use_ip_filter = new Button( ui_area_checks, SWT.CHECK );
+	
+		use_ip_filter.setText( lu.getLocalisedMessageText( "azbuddy.dchat.ui.ipfilter.enable" ));
+	
+		use_ip_filter.setSelection( plugin_beta.getUseIPFilter());
+	
+		use_ip_filter.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent ev )
+					{
+						plugin_beta.setUseIPFilter( use_ip_filter.getSelection());
+					}
+				});
+	
 			// notifications
 
 		final Group noti_area = new Group( main, SWT.NULL );
