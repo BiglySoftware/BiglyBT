@@ -32,6 +32,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.instancemanager.ClientInstance;
 import com.biglybt.core.instancemanager.ClientInstanceManager;
@@ -113,7 +114,9 @@ NetworkAdminImpl
 	private boolean						supportsIPv6withNIO		= true;
 	private boolean						supportsIPv6 = true;
 	private boolean						supportsIPv4 = true;
-
+	private boolean						ignoreIPv4;
+	private boolean						ignoreIPv6;
+	
 	private boolean						IPv6_enabled;
 	private boolean						preferIPv6;
 	
@@ -208,7 +211,7 @@ NetworkAdminImpl
 		};
 
 	private final boolean 	initialised;
-
+	
 	public
 	NetworkAdminImpl()
 	{
@@ -225,6 +228,22 @@ NetworkAdminImpl
 				}
 			});
 
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[]{
+					ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES,
+					ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES },
+				(n)->{
+					ignoreIPv4 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES );
+					ignoreIPv6 = COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES );
+					
+					if ( n != null ){
+						
+						checkNetworkInterfaces( false, true );
+	
+						checkDefaultBindAddress( false );
+					}
+				});
+		
 		SimpleTimer.addPeriodicEvent(
 			"NetworkAdmin:checker",
 			INTERFACE_CHECK_MILLIS,
@@ -2066,6 +2085,14 @@ addressLoop:
 		}
 	}
 
+	@Override
+	public boolean
+	hasDHTIPV4()
+	{
+		return( !ignoreIPv4 );	// should be brave and change this to hasIPv4Potential() but as this is really just for
+								// testing gonna require user to explicitly ignore V4 ATM
+	}
+	
 	@Override
 	public boolean
 	hasDHTIPV6()

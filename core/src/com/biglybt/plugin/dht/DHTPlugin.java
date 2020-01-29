@@ -998,6 +998,8 @@ DHTPlugin
 
 													// adapter only added to first DHTPluginImpl we create
 
+												boolean hasV4 = NetworkAdmin.getSingleton().hasDHTIPV4();
+												
 												DHTPluginImplAdapter adapter =
 										        		new DHTPluginImplAdapter()
 										        		{
@@ -1013,7 +1015,7 @@ DHTPlugin
 										        			}
 										        		};
 
-												if ( AZ_MAIN_DHT_ENABLE ){
+												if ( AZ_MAIN_DHT_ENABLE && hasV4 ){
 
 													main_dht =
 														new DHTPluginImpl(
@@ -1035,32 +1037,29 @@ DHTPlugin
 													adapter = null;
 												}
 
-												if ( AZ_MAIN_DHT_V6_ENABLE ){
+												if ( AZ_MAIN_DHT_V6_ENABLE && NetworkAdmin.getSingleton().hasDHTIPV6() ){
 
-													if ( NetworkAdmin.getSingleton().hasDHTIPV6()){
+													main_v6_dht =
+														new DHTPluginImpl(
+															plugin_interface,
+															CoreFactory.getSingleton().getNATTraverser(),
+															adapter,
+															DHTTransportUDP.PROTOCOL_VERSION_AZ_MAIN,
+															DHT.NW_AZ_MAIN_V6,
+															true,
+															null,
+															dht_data_port,
+															reseed,
+															warn_user,
+															logging,
+															log, dht_log );
 
-														main_v6_dht =
-															new DHTPluginImpl(
-																plugin_interface,
-																CoreFactory.getSingleton().getNATTraverser(),
-																adapter,
-																DHTTransportUDP.PROTOCOL_VERSION_AZ_MAIN,
-																DHT.NW_AZ_MAIN_V6,
-																true,
-																null,
-																dht_data_port,
-																reseed,
-																warn_user,
-																logging,
-																log, dht_log );
+													plugins.add( main_v6_dht );
 
-														plugins.add( main_v6_dht );
-
-														adapter = null;
-													}
+													adapter = null;
 												}
-
-												if ( Constants.isCVSVersion() && AZ_CVS_DHT_ENABLE ){
+												
+												if ( Constants.isCVSVersion() && AZ_CVS_DHT_ENABLE && hasV4 ){
 
 													cvs_dht =
 														new DHTPluginImpl(
@@ -1082,7 +1081,7 @@ DHTPlugin
 													adapter = null;
 												}
 
-												if ( BIGLYBT_MAIN_DHT_ENABLE ){
+												if ( BIGLYBT_MAIN_DHT_ENABLE && hasV4  ){
 
 													biglybt_dht =
 														new DHTPluginImpl(

@@ -629,7 +629,7 @@ COConfigurationManager
 		}
 
 		try{
-			listener.parameterChanged( null );
+			listener.parameterChanged( null );	// code out there relies on the param being null, no changey!
 
 		}catch (Throwable e) {
 

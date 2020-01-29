@@ -315,14 +315,22 @@ public class ConfigSectionConnectionAdvanced
 		ipv6_checks.setIndent( 1, true );
 		ipv6_enable.addEnabledOnSelection(ipv6_checks);
 		
-		add(new BooleanParameterImpl(BCFG_IPV_6_PREFER_ADDRESSES,
-				"network.ipv6.prefer.addresses"));
+		add(new BooleanParameterImpl(BCFG_IPV_6_PREFER_ADDRESSES, "network.ipv6.prefer.addresses"));
 
 		if (Constants.isWindowsVistaOrHigher) {
 
-			add(new BooleanParameterImpl(BCFG_IPV_4_PREFER_STACK,
-					"network.ipv4.prefer.stack"));
+			add(new BooleanParameterImpl(BCFG_IPV_4_PREFER_STACK, "network.ipv4.prefer.stack"));
 		}
+		
+		List<Parameter> listNIIgnore = new ArrayList<>();
+		
+		add(new LabelParameterImpl( "connection.advanced.ni.ignore.info"), listNIIgnore);
+		add(new BooleanParameterImpl(BCFG_IPV_4_IGNORE_NI_ADDRESSES, "label.ignore.ipv4"), listNIIgnore);
+		add(new BooleanParameterImpl(BCFG_IPV_6_IGNORE_NI_ADDRESSES, "label.ignore.ipv6"), listNIIgnore);
+
+		add(new ParameterGroupImpl(
+				"connection.advanced.ni.ignore.group", listNIIgnore ));
+
 	}
 
 	private static void enableTOSRegistrySetting(boolean enable) {

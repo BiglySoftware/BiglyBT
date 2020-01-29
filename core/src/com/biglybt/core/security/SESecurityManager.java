@@ -20,6 +20,8 @@
 
 package com.biglybt.core.security;
 
+import java.net.NetworkInterface;
+
 /**
  * @author parg
  *
@@ -29,6 +31,7 @@ import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
+import java.util.List;
 
 import javax.net.ssl.*;
 
@@ -260,5 +263,13 @@ SESecurityManager
 	getClassContext()
 	{
 		return( SESecurityManagerImpl.getSingleton().getClassContext());
+	}
+	
+	public interface 
+	MySecurityManager
+	{
+		public boolean
+		filterNetworkInterfaces( 
+			List<NetworkInterface>		interfaces );
 	}
 }

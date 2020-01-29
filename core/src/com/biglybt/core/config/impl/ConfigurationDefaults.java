@@ -160,6 +160,8 @@ public class ConfigurationDefaults {
     def.put(ConfigKeys.Connection.BCFG_IPV_6_CHECK_MULTIPLE_ADDRESS_CHECKS, TRUE );
     def.put("IPV6 Prefer Addresses",FALSE );
     def.put("IPV4 Prefer Stack", FALSE );
+    def.put(ConfigKeys.Connection.BCFG_IPV_4_IGNORE_NI_ADDRESSES, FALSE );
+    def.put(ConfigKeys.Connection.BCFG_IPV_6_IGNORE_NI_ADDRESSES, FALSE );
 
     def.put("max active torrents", new Long(4));
     def.put("max downloads", new Long(4));

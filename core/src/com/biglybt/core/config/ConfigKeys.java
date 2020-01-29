@@ -73,6 +73,9 @@ public final class ConfigKeys {
 		public static final String BCFG_IPV_6_CHECK_MULTIPLE_ADDRESS_CHECKS = "IPV6 Enable Multiple Address Checks";
 		public static final String BCFG_IPV_6_PREFER_ADDRESSES = "IPV6 Prefer Addresses";
 		public static final String BCFG_IPV_4_PREFER_STACK = "IPV4 Prefer Stack";
+		public static final String BCFG_IPV_4_IGNORE_NI_ADDRESSES = "IPV4 Ignore Network Addresses";
+		public static final String BCFG_IPV_6_IGNORE_NI_ADDRESSES = "IPV6 Ignore Network Addresses";
+
 		public static final String SCFG_DNS_ALT_SERVERS = "DNS Alt Servers";
 		public static final String BCFG_DNS_ALT_SERVERS_SOCKS_ENABLE = "DNS Alt Servers SOCKS Enable";
 		public static final String BCFG_NETWORK_TRANSPORT_ENCRYPTED_REQUIRE = "network.transport.encrypted.require";

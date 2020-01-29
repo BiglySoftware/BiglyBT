@@ -26,6 +26,8 @@ import java.net.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import com.biglybt.core.security.SESecurityManager;
+import com.biglybt.core.security.impl.SESecurityManagerImpl;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl.runnableWithException;
 
 public class
@@ -153,6 +155,16 @@ NetUtils
 								current_interfaces 	= result;
 
 								last_ni_check	= SystemTime.getMonotonousTime();
+								
+								SecurityManager sec = System.getSecurityManager();
+								
+								if ( sec instanceof SESecurityManager.MySecurityManager ){
+									
+									if (((SESecurityManager.MySecurityManager)sec).filterNetworkInterfaces( result )){
+										
+										changed = true;
+									}
+								}
 								
 								if ( changed ){
 								

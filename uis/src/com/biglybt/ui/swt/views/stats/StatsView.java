@@ -146,19 +146,25 @@ public class StatsView
 		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
 				CacheView.MSGID_PREFIX, null, CacheView.class));
 
-		vm.registerView(VIEW_ID,
-				new UISWTViewBuilderCore(DHTView.MSGID_PREFIX, null,
-						DHTView.class).setInitialDatasource(DHTView.DHT_TYPE_MAIN));
+		boolean hasV4 = NetworkAdmin.getSingleton().hasDHTIPV4();
 
-		vm.registerView(VIEW_ID,
-				new UISWTViewBuilderCore(DHTOpsView.MSGID_PREFIX, null,
-						DHTOpsView.class).setInitialDatasource(DHTOpsView.DHT_TYPE_MAIN));
-
-		vm.registerView(VIEW_ID,
-				new UISWTViewBuilderCore(VivaldiView.MSGID_PREFIX, null,
-						VivaldiView.class).setInitialDatasource(VivaldiView.DHT_TYPE_MAIN));
-
-		if (NetworkAdmin.getSingleton().hasDHTIPV6()) {
+		if ( hasV4 ){
+			
+			vm.registerView(VIEW_ID,
+					new UISWTViewBuilderCore(DHTView.MSGID_PREFIX, null,
+							DHTView.class).setInitialDatasource(DHTView.DHT_TYPE_MAIN));
+	
+			vm.registerView(VIEW_ID,
+					new UISWTViewBuilderCore(DHTOpsView.MSGID_PREFIX, null,
+							DHTOpsView.class).setInitialDatasource(DHTOpsView.DHT_TYPE_MAIN));
+	
+			vm.registerView(VIEW_ID,
+					new UISWTViewBuilderCore(VivaldiView.MSGID_PREFIX, null,
+							VivaldiView.class).setInitialDatasource(VivaldiView.DHT_TYPE_MAIN));
+		}
+		
+		if ( NetworkAdmin.getSingleton().hasDHTIPV6()){
+			
 			vm.registerView(VIEW_ID,
 					new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".6", null,
 							DHTView.class).setInitialDatasource(
@@ -169,7 +175,7 @@ public class StatsView
 									VivaldiView.DHT_TYPE_MAIN_V6));
 		}
 
-		if (Constants.isCVSVersion()) {
+		if ( Constants.isCVSVersion() && hasV4 ){
 
 			vm.registerView(VIEW_ID,
 					new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".cvs", null,
