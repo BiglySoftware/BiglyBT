@@ -120,6 +120,8 @@ NetworkAdminImpl
 	private boolean						IPv6_enabled;
 	private boolean						preferIPv6;
 	
+	private volatile boolean			testedIPv6Routing;
+	
 	{
 		COConfigurationManager.addAndFireParameterListeners(
 				new String[]{ "IPV6 Enable Support", "IPV6 Prefer Addresses" },
@@ -529,6 +531,11 @@ NetworkAdminImpl
 
 					if ( changed || force ){
 
+						if ( changed ){
+							
+							testedIPv6Routing = false;
+						}
+						
 						fire_stuff = true;
 
 						boolean newV6 = false;
@@ -2729,12 +2736,15 @@ addressLoop:
 
 							external_address = address;
 
-							try{
-								lookupCurrentASN( address );
-
-							}catch( Throwable e ){
-
-								Debug.printStackTrace(e);
+							if ( !address.isLoopbackAddress()){
+								
+								try{
+									lookupCurrentASN( address );
+	
+								}catch( Throwable e ){
+	
+									Debug.printStackTrace(e);
+								}
 							}
 						}
 					}
@@ -3500,15 +3510,21 @@ addressLoop:
 	void
 	checkConnectionRoutes()
 	{
-		// System.out.println( "Checking connection routes" );
-
 		if ( getAllBindAddresses( false ).length > 0 ){
 
-			// System.out.println( "    Bind IP found" );
+				// User knows what they're doing shurely
 
 			return;
 		}
 
+		checkActiveConnections();
+		
+		checkIPV6Routing();
+	}
+	
+	void
+	checkActiveConnections()
+	{
 		Set<NetworkConnectionBase> connections = NetworkManager.getSingleton().getConnections();
 
 			// check if all outgoing TCP connections are being routed through the same interface
@@ -3706,6 +3722,72 @@ addressLoop:
 		}
 	}
 
+	void
+	checkIPV6Routing()
+	{
+		if (isIPV6Enabled()){
+			
+			return;
+		}
+		
+		if ( testedIPv6Routing ){
+			
+			return;
+		}
+		
+		if ( COConfigurationManager.getBooleanParameter( "IPV6 Enable Support Auto Done" )){
+			
+			testedIPv6Routing = true;
+			
+			return;
+		}
+		
+		try{
+			List<InetAddress> addresses = new ArrayList<>();
+			
+			for ( NetworkInterface ni: old_network_interfaces ){
+				
+				for ( InterfaceAddress ia: ni.getInterfaceAddresses()){
+					
+					InetAddress a = ia.getAddress();
+										
+					if ( AddressUtils.isGlobalAddressV6( a ) && !AddressUtils.isTeredo( a ) && !AddressUtils.is6to4( a )){
+						
+						addresses.add( a );
+					}	
+				}
+			}
+			
+			if ( !addresses.isEmpty()){
+				
+				testedIPv6Routing = true;
+				
+				AEThread2.createAndStartDaemon( 
+					"IPv6RouteTest", ()->{
+						for ( InetAddress address: addresses ){
+							
+							if ( canConnectWithBind( address, 30*1000 )){
+								
+								COConfigurationManager.setParameter( "IPV6 Enable Support Auto Done", true );
+								
+								COConfigurationManager.setParameter( "IPV6 Enable Support", true );
+								
+								Logger.log(
+										new LogAlert(
+											true,
+											LogAlert.AT_INFORMATION,
+											MessageText.getString( "network.admin.ipv6.auto.enabled", new String[]{ address.toString() })));
+								break;
+							}
+						}
+					});
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
 	void
 	clearMaybeVPNs()
 	{
