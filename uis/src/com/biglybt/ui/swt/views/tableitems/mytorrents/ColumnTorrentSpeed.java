@@ -89,7 +89,11 @@ public class ColumnTorrentSpeed
     	((TableCellSWT)cell).setIcon(null);
     	value = 0;
     }
-    sortValue = (value << 4) | iState;
+    if ( cell.isSecondarySortEnabled()){
+    	sortValue = (value << 4) | iState;
+    }else{
+    	sortValue = value;
+    }
 
 
     if (cell.setSortValue(sortValue) || !cell.isValid()) {

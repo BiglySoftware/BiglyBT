@@ -68,8 +68,14 @@ IntervalItem
 			min_interval	= ps.getMinInterval();
 		}
 
-		long	sort = ( interval<<31 ) | (min_interval&0xffffffffL);
+		long	sort = ( interval<<31 );
+		
+		
+		if ( cell.isSecondarySortEnabled()){
 
+			 sort |= (min_interval&0xffffffffL);
+		}
+		
 		if (!cell.setSortValue(sort) && cell.isValid()){
 
 			return;

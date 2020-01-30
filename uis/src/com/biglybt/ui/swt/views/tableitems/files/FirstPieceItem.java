@@ -55,15 +55,18 @@ public class FirstPieceItem
     }else{
     	sort_value = fileInfo.getFirstPieceNumber();
 
-    	if ( sort_value >= 0 ){
-
-    		int index = fileInfo.getIndex();
+    	if ( cell.isSecondarySortEnabled()){
     		
-    		if ( index < 0 ){
-    			index = 0;
-    		}
-    		
-    		sort_value = (sort_value << 32) + index;
+	    	if ( sort_value >= 0 ){
+	
+	    		int index = fileInfo.getIndex();
+	    		
+	    		if ( index < 0 ){
+	    			index = 0;
+	    		}
+	    		
+	    		sort_value = (sort_value << 32) + index;
+	    	}
     	}
     }
 

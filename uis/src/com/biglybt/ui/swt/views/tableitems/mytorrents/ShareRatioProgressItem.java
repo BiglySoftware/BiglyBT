@@ -150,14 +150,17 @@ ShareRatioProgressItem
 
 		String		sr_str 	= DisplayFormatters.formatDecimal((double) sr / 1000, 3);
 
-			// feed a bit of share ratio/next eta into sort order for fun and to ensure refresh occurs when they change
-
 		long	sort_order = timestamp;
 
-		sort_order += (sr&0xff)<<8;
+		if ( cell.isSecondarySortEnabled()){
 
-		sort_order += (next_eta&0xff );
+			// feed a bit of share ratio/next eta into sort order for fun and to ensure refresh occurs when they change
 
+			sort_order += (sr&0xff)<<8;
+	
+			sort_order += (next_eta&0xff );
+		}
+		
 		String next_eta_str;
 
 		if ( next_eta == -1 ){
