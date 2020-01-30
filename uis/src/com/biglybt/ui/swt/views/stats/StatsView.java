@@ -169,6 +169,14 @@ public class StatsView
 					new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".6", null,
 							DHTView.class).setInitialDatasource(
 									VivaldiView.DHT_TYPE_MAIN_V6));
+			
+			if ( !hasV4 ){
+				
+				vm.registerView(VIEW_ID,
+						new UISWTViewBuilderCore(DHTOpsView.MSGID_PREFIX + ".6", null,
+								DHTOpsView.class).setInitialDatasource(DHTOpsView.DHT_TYPE_MAIN_V6));
+			}
+			
 			vm.registerView(VIEW_ID,
 					new UISWTViewBuilderCore(VivaldiView.MSGID_PREFIX + ".6",
 							null, VivaldiView.class).setInitialDatasource(

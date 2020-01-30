@@ -45,7 +45,6 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
-import com.biglybt.ui.swt.views.stats.BasePanel.Scale;
 import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.DHTStorageAdapter;
 import com.biglybt.core.dht.control.DHTControlActivity;
