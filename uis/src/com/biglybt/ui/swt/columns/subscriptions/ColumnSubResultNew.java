@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
@@ -91,9 +92,13 @@ public class ColumnSubResultNew
 
 			boolean unread = !entry.getRead();
 
-			long sortVal = ((unread ? 2 : 1L) << 61)
-					- (SystemTime.getCurrentTime() - entry.getTime()) / 1000;
-
+			long sortVal = ((unread ? 2 : 1L) << 61);
+					
+			if ( cell.isSecondarySortEnabled()){
+				
+				sortVal -= (SystemTime.getCurrentTime() - entry.getTime()) / 1000;
+			}
+			
 			cell.setSortValue(sortVal);
 		}
 	}

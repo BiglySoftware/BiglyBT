@@ -22,6 +22,7 @@
 package com.biglybt.pif.ui.tables;
 
 import com.biglybt.pif.ui.Graphic;
+import com.biglybt.ui.common.table.TableView;
 
 /** This interface provides access to an Azureus table cell.
  *
@@ -182,10 +183,33 @@ public interface TableCell {
    */
   public Comparable getSortValue();
 
-  /** Determines if the user has chosen to display the cell
-   *
-   * @return True - User has chosen to display cell
+  /**
+   * When false the cell's sort value should be set to the simple sort value without any implicit secondary
+   * sort being applied. Default implementation is based on whether the table is in multi-sort mode where the user
+   * is explicitly selecting secondary, tertiary... sorting  
+   * @return
+   * @since 2.2.0.3
    */
+  
+  public default boolean isSecondarySortEnabled()
+  {
+	  TableView<?> view = getTableRow().getView();
+	  
+	  if ( view != null ){
+		  
+		  return( view.getSortColumns().length < 2 );
+		  
+	  }else{
+		  
+		  return( true );
+	  }
+  }
+  
+  /** Determines if the user has chosen to display the cell
+  *
+  * @return True - User has chosen to display cell
+  */
+
   boolean isShown();
 
   /** Validility of the cell's text.
