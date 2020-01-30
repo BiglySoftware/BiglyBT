@@ -187,6 +187,7 @@ UPnPPlugin
 			// UPNP
 
 		upnp_config.addLabelParameter2( "upnp.info" );
+		upnp_config.addLabelParameter2( "upnp.info.ipv4" );
 		upnp_config.addHyperlinkParameter2("upnp.wiki_link", Constants.URL_WIKI + "w/UPnP");
 
 
