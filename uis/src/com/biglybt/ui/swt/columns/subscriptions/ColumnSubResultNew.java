@@ -24,7 +24,6 @@ import org.eclipse.swt.graphics.Rectangle;
 import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.pif.ui.tables.*;
-import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;

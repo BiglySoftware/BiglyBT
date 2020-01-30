@@ -63,6 +63,11 @@ public class ColumnSubscriptionNewestDate
 
 		long scanTime = (sub.getHistory().getLastScanTime() / 1000) & 0xFFFFFFFFL;
 
+		if ( !cell.isSecondarySortEnabled()){
+			
+			scanTime = 0;	// remove from consideration
+		}
+		
 		if (cell.isValid()) {
 			Comparable lastSortVal = cell.getSortValue();
 			if (lastSortVal instanceof Long) {
