@@ -19,9 +19,11 @@
 
 package com.biglybt.plugin.dht.impl;
 
+import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
+import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.nat.DHTNATPuncher;
 import com.biglybt.core.dht.transport.DHTTransportContact;
 import com.biglybt.core.dht.transport.DHTTransportReplyHandlerAdapter;
@@ -154,7 +156,16 @@ DHTPluginContactImpl
 			return( null );
 		}
 		
-		DHTNATPuncher puncher = plugin.getDHT().getNATPuncher();
+		DHT dht = plugin.getDHT();
+		
+		if (( contact.getAddress().getAddress() instanceof Inet6Address ) != dht.getTransport().isIPV6()){
+		
+				// no point in trying to tunnel to an ipv6 contact over non-ipv6 or vice-versa
+			
+			return( null );
+		}
+		
+		DHTNATPuncher puncher = dht.getNATPuncher();
 
 		if ( puncher == null ){
 
@@ -174,7 +185,16 @@ DHTPluginContactImpl
 			return( null );
 		}
 		
-		DHTNATPuncher puncher = plugin.getDHT().getNATPuncher();
+		DHT dht = plugin.getDHT();
+		
+		if (( contact.getAddress().getAddress() instanceof Inet6Address ) != dht.getTransport().isIPV6()){
+		
+				// no point in trying to tunnel to an ipv6 contact over non-ipv6 or vice-versa
+			
+			return( null );
+		}
+		
+		DHTNATPuncher puncher = dht.getNATPuncher();
 
 		if ( puncher == null ){
 

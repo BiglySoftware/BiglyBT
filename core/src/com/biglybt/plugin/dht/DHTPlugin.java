@@ -2066,30 +2066,33 @@ DHTPlugin
 
 			// try decode with dht[0] and fix up if IPv6 as the contact includes a reference to the underlying DHT
 		
-		DHTPluginContact result = dhts[0].importContact( map );
+		DHTPluginImpl dht0 = dhts[0];
+				
+		DHTPluginContact result = dht0.importContact( map );
 		
 		if ( result != null ){
 			
-			try{
-				if ( result.getAddress().getAddress() instanceof Inet6Address ){
-					
+			boolean want_ipv6 = result.getAddress().getAddress() instanceof Inet6Address;
+			
+			if ( want_ipv6 != dht0.isIPV6()){
+				
+				try{					
 					for ( DHTPluginImpl dht: dhts ){
-
-						if ( dht.isIPV6()){
-							
+	
+						if ( want_ipv6 == dht.isIPV6()){
+								
 							DHTPluginContact temp = dht.importContact( map );
-							
+									
 							if ( temp != null ){
-								
+										
 								result = temp;
-								
+										
 								break;
 							}
 						}
 					}
-					
+				}catch( Throwable e ){
 				}
-			}catch( Throwable e ){
 			}
 		}
 		
