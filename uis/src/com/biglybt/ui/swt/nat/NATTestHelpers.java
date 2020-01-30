@@ -44,7 +44,7 @@ NATTestHelpers
 
 		InetAddress[] bind_ips = NetworkAdmin.getSingleton().getMultiHomedServiceBindAddresses(true);
 
-		{
+		if ( NetworkAdmin.getSingleton().hasIPV4Potential()){
 			// IPv4
 
 			InetAddress bind = bind_ips[0];
@@ -81,8 +81,11 @@ NATTestHelpers
 					logger.accept( "\n" + MessageText.getString("configureWizard.nat.unable") + ". \n(" + checker.getAdditionalInfo()+").\n");
 					break;
 			}
+		}else{
+			
+			logger.accept( "\n\tIPv4 " + MessageText.getString( "azbuddy.os_not_avail" ).toLowerCase());
 		}
-
+		
 		if ( NetworkAdmin.getSingleton().hasIPV6Potential()){
 
 			InetAddress bind = bind_ips[0];
@@ -121,6 +124,9 @@ NATTestHelpers
 					logger.accept( "\n" + MessageText.getString("configureWizard.nat.unable") + ". \n(" + checker.getAdditionalInfo()+").\n");
 					break;
 			}
+		}else{
+			
+			logger.accept( "\n\tIPv6 " + MessageText.getString( "azbuddy.os_not_avail" ).toLowerCase());
 		}
 	}
 
