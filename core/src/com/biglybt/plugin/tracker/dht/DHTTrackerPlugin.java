@@ -4099,6 +4099,13 @@ DHTTrackerPlugin
 				{
 					announce( download );
 				}
+				
+				@Override
+				public long[]
+				getReportedStats()
+				{
+					return( new long[]{ -1, -1 });
+				}
 			});
 	}
 

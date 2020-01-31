@@ -33,6 +33,7 @@ import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.tracker.client.impl.TRTrackerAnnouncerHelper;
 import com.biglybt.core.tracker.client.impl.TRTrackerAnnouncerImpl;
+import com.biglybt.core.tracker.client.impl.TRTrackerAnnouncerRequestImpl;
 import com.biglybt.core.tracker.client.impl.TRTrackerAnnouncerResponseImpl;
 import com.biglybt.core.tracker.client.impl.TRTrackerAnnouncerResponsePeerImpl;
 import com.biglybt.core.util.*;
@@ -393,7 +394,7 @@ TRTrackerDHTAnnouncerImpl
 		     }
 		}
 
-		helper.informResponse( this, response );
+		helper.informResponse( this, new TRTrackerAnnouncerRequestImpl(), response );
 	}
 
 	@Override

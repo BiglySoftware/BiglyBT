@@ -137,6 +137,12 @@ AllTrackersManager
 		public long
 		getConsecutiveFails();
 		
+		public long
+		getTotalReportedUp();
+		
+		public long
+		getTotalReportedDown();
+		
 		public Map<String,Object>
 		getOptions();
 		

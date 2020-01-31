@@ -23,6 +23,7 @@ package com.biglybt.core.tracker.client.impl;
 import java.net.URL;
 import java.util.Map;
 
+import com.biglybt.core.tracker.client.TRTrackerAnnouncerRequest;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponsePeer;
 import com.biglybt.core.util.HashWrapper;
@@ -46,6 +47,8 @@ TRTrackerAnnouncerResponseImpl
 
 	protected Map						extensions;
 
+	private TRTrackerAnnouncerRequest		request;
+	
 	public
 	TRTrackerAnnouncerResponseImpl(
 		URL			_url,
@@ -89,6 +92,19 @@ TRTrackerAnnouncerResponseImpl
 		peers			= _peers;
 	}
 
+	public void
+	setRequest(
+		TRTrackerAnnouncerRequest	_request )
+	{
+		request = _request;
+	}
+	
+	public TRTrackerAnnouncerRequest
+	getRequest()
+	{
+		return( request );
+	}
+	
 	@Override
 	public HashWrapper
 	getHash()

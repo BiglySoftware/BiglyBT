@@ -564,6 +564,20 @@ DownloadManagerAvailabilityImpl
 						}
 
 						@Override
+						public long[]
+						getReportedStats()
+						{
+							TrackerPeerSource delegate = fixup();
+
+							if ( delegate == null ){
+
+								return( new long[]{ -1, -1 });
+							}
+
+							return( delegate.getReportedStats());
+						}
+						
+						@Override
 						public boolean
 						canDelete()
 						{

@@ -20,6 +20,10 @@
 
 package com.biglybt.core.download.impl;
 
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author parg
  */
@@ -34,6 +38,8 @@ import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerManagerStats;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.tracker.AllTrackersManager;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.IndentWriter;
@@ -43,6 +49,8 @@ public class
 DownloadManagerStatsImpl
 	implements DownloadManagerStats
 {
+	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
+
 	static int share_ratio_progress_interval;
 
 	static{
@@ -1131,7 +1139,62 @@ DownloadManagerStatsImpl
 
 		return( state.getLongAttribute( DownloadManagerState.AT_AVAIL_BAD_TIME ));
 	}
+	
+	Map<String,Map<Long,long[]>>	tracker_session_stats = new HashMap<>();
 
+	protected void
+	updateTrackerSession(
+		URL			url,
+		long		session,
+		long		up,
+		long		down  )
+	{
+		String key = all_trackers.ingestURL( url );
+
+		synchronized( tracker_session_stats ){
+			
+			Map<Long,long[]> stats = tracker_session_stats.get( key );
+			
+			if ( stats == null ){
+				
+				stats = new HashMap<>();
+				
+				tracker_session_stats.put( key, stats );
+			}
+			
+			stats.put( session, new long[]{ up, down });
+		}
+	}
+	
+	@Override
+	public long[] 
+	getTrackerReportedStats(
+		URL 		url )
+	{
+		String key = all_trackers.ingestURL( url );
+
+		synchronized( tracker_session_stats ){
+			
+			Map<Long,long[]> stats = tracker_session_stats.get( key );
+			
+			if ( stats != null ){
+				
+				long total_up 	= 0;
+				long total_down	= 0;
+				
+				for (long[] entry: stats.values()){
+					
+					total_up 	+= entry[0];
+					total_down 	+= entry[1];
+				}
+				
+				return( new long[]{ total_up, total_down });
+			}
+		}
+		
+		return( new long[]{ 0, 0 });
+	}
+	
 	protected void
 	saveSessionTotals()
 	{

@@ -29,7 +29,6 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.json.simple.JSONObject;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerTPSListener;
@@ -45,7 +44,6 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
-import com.biglybt.ui.config.ConfigSectionFile;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
@@ -63,7 +61,6 @@ import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.tableitems.tracker.*;
-import com.biglybt.util.JSONUtils;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.tables.TableManager;
@@ -82,17 +79,19 @@ public class TrackerView
 	public static final Class<TrackerPeerSource> PLUGIN_DS_TYPE = TrackerPeerSource.class;
 
 	private final static TableColumnCore[] basicItems = {
-		new TypeItem(TableManager.TABLE_TORRENT_TRACKERS),
-		new NameItem(TableManager.TABLE_TORRENT_TRACKERS),
-		new StatusItem(TableManager.TABLE_TORRENT_TRACKERS),
-		new PeersItem(TableManager.TABLE_TORRENT_TRACKERS),
-		new SeedsItem(TableManager.TABLE_TORRENT_TRACKERS),
-		new LeechersItem(TableManager.TABLE_TORRENT_TRACKERS),
-		new CompletedItem(TableManager.TABLE_TORRENT_TRACKERS),
-		new UpdateInItem(TableManager.TABLE_TORRENT_TRACKERS),
-		new IntervalItem(TableManager.TABLE_TORRENT_TRACKERS),
-		new LastUpdateItem(TableManager.TABLE_TORRENT_TRACKERS),
-	};
+			new TypeItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new NameItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new StatusItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new PeersItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new SeedsItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new LeechersItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new CompletedItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new UpdateInItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new IntervalItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new LastUpdateItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new ReportedUpItem(TableManager.TABLE_TORRENT_TRACKERS),
+			new ReportedDownItem(TableManager.TABLE_TORRENT_TRACKERS),
+		};
 
 	static{
 		TableColumnManager tcManager = TableColumnManager.getInstance();

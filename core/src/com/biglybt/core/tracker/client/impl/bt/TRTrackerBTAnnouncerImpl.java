@@ -814,7 +814,14 @@ TRTrackerBTAnnouncerImpl
 
 				last_response = response;
 
-				helper.informResponse( this, response );
+				TRTrackerAnnouncerRequest request = response.getRequest();
+				
+				if ( request == null ){
+					
+					request = new TRTrackerAnnouncerRequestImpl();
+				}
+				
+				helper.informResponse( this, request, response );
 
 				return( response.getTimeToWait());
 			}
@@ -993,12 +1000,14 @@ TRTrackerBTAnnouncerImpl
 
 			  	// report this now as it is about to be lost
 
-			  helper.informResponse( this, last_failure_resp );
+			  helper.informResponse( this, new TRTrackerAnnouncerRequestImpl(), last_failure_resp );
 		  }
 
 		  try{
 
-		  	request_url = constructUrl(evt,original_url);
+			TRTrackerAnnouncerRequest request_obj =  constructRequest( evt,original_url );
+			
+		  	request_url = request_obj.getURL();
 
 		  	URL[]	tracker_url = { original_url };
 
@@ -1010,6 +1019,8 @@ TRTrackerBTAnnouncerImpl
 
 			TRTrackerAnnouncerResponseImpl resp = decodeTrackerResponse( lastUsedUrl, result_bytes );
 
+			resp.setRequest( request_obj );	// easiest way to transport the request around internally is to tie it to the response
+			
 			int	resp_status = resp.getStatus();
 
 		    if ( resp_status == TRTrackerAnnouncerResponse.ST_ONLINE ){
@@ -2129,8 +2140,8 @@ TRTrackerBTAnnouncerImpl
  		return( str );
  	}
 
-  public URL
-  constructUrl(
+  private TRTrackerAnnouncerRequest
+  constructRequest(
   	String 	evt,
 	URL		_url)
 
@@ -2197,8 +2208,12 @@ TRTrackerBTAnnouncerImpl
 	}
 				
   	request.append(port_details);
-  	request.append("&uploaded=").append(announce_data_provider.getTotalSent());
-  	request.append("&downloaded=").append(announce_data_provider.getTotalReceived());
+  	
+  	long total_sent 	= announce_data_provider.getTotalSent();
+  	long total_received	= announce_data_provider.getTotalReceived();
+  	  	
+  	request.append("&uploaded=").append( total_sent );
+  	request.append("&downloaded=").append( total_received );
 
   	if ( Constants.DOWNLOAD_SOURCES_PRETEND_COMPLETE ){
 
@@ -2454,7 +2469,7 @@ TRTrackerBTAnnouncerImpl
 		request = new StringBuffer( head + "?" + tail );
 	}
 
-    return new URL( request.toString());
+  	return( new TRTrackerAnnouncerRequestImpl( helper.getSessionID(), new URL( request.toString()), total_sent, total_received ));
   }
 
   protected int
@@ -3959,7 +3974,7 @@ TRTrackerBTAnnouncerImpl
 			tracker_status_str	= status + " (" + (update_is_dht?MessageText.getString( "dht.backup.only" ):(result_url==null?"<null>":result_url.getHost())) + ")";
 		}
 
-		helper.informResponse( this, response );
+		helper.informResponse( this, new TRTrackerAnnouncerRequestImpl(), response );
 	}
 
 	@Override

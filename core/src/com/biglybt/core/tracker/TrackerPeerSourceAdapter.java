@@ -141,6 +141,13 @@ TrackerPeerSourceAdapter
 	}
 
 	@Override
+	public long[]
+	getReportedStats()
+	{
+		return( new long[]{ -1, -1 });
+	}
+	
+	@Override
 	public boolean
 	canDelete()
 	{

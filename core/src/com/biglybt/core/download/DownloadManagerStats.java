@@ -20,6 +20,8 @@
 
 package com.biglybt.core.download;
 
+import java.net.URL;
+
 /**
  * @author parg
  *
@@ -277,6 +279,10 @@ DownloadManagerStats
 	public long getEstimatedUploaded();
 	*/
 
+	public long[]
+	getTrackerReportedStats(
+		URL		url );
+	
 	public void
 	restoreSessionTotals(
 		long		_saved_data_bytes_downloaded,

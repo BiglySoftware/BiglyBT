@@ -572,12 +572,14 @@ DownloadManagerImpl
 	private String 			torrent_created_by;
 
 	TRTrackerAnnouncer 				tracker_client;
+	
 	private final TRTrackerAnnouncerListener		tracker_client_listener =
 			new TRTrackerAnnouncerListener()
 			{
 				@Override
 				public void
 				receivedTrackerResponse(
+					TRTrackerAnnouncerRequest	request,
 					TRTrackerAnnouncerResponse	response)
 				{
 					PEPeerManager pm = controller.getPeerManager();
@@ -652,20 +654,24 @@ DownloadManagerImpl
 			@Override
 			public void
 			receivedTrackerResponse(
-				TRTrackerAnnouncerResponse	response)
+					TRTrackerAnnouncerRequest	request,
+					TRTrackerAnnouncerResponse	response)
 			{
-				if(tracker_client == null)
+				if ( tracker_client == null ){
+
 					response.setPeers(new TRTrackerAnnouncerResponsePeer[0]);
+				}
+
 				tracker_listeners.dispatch( LDT_TL_ANNOUNCERESULT, response );
 			}
 
 			@Override
 			public void
 			urlChanged(
-				TRTrackerAnnouncer	announcer,
-				URL 				old_url,
-				URL					new_url,
-				boolean 			explicit )
+					TRTrackerAnnouncer	announcer,
+					URL 				old_url,
+					URL					new_url,
+					boolean 			explicit )
 			{
 			}
 
@@ -676,7 +682,50 @@ DownloadManagerImpl
 			}
 		};
 
+		// a third listener responsible for tracking the stats up/down reports
+	
+	private final TRTrackerAnnouncerListener		tracker_client_stats_listener =
+			new TRTrackerAnnouncerListener()
+			{
+				@Override
+				public void
+				receivedTrackerResponse(
+					TRTrackerAnnouncerRequest	request,
+					TRTrackerAnnouncerResponse	response)
+				{
+					if ( response.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE ){
+						
+						long down 		= request.getReportedDownload();
+						long up 		= request.getReportedUpload();
 
+						if ( down > 0 || up > 0 ){
+							
+							long session	= request.getSessionID();
+							
+							URL url = request.getURL();
+		
+							if ( session != 0 && url != null ){
+																						
+								stats.updateTrackerSession( url, session, up, down );
+							}
+						}
+					}
+				}
+
+				@Override
+				public void
+				urlChanged(
+					TRTrackerAnnouncer	announcer,
+					URL 				old_url,
+					URL					new_url,
+					boolean 			explicit ){}
+
+				@Override
+				public void
+				urlRefresh(){}
+			};
+		
+		
 	private final CopyOnWriteList	activation_listeners = new CopyOnWriteList();
 
 	private final long						scrape_random_seed	= SystemTime.getCurrentTime();
@@ -2202,6 +2251,8 @@ DownloadManagerImpl
 
 				tracker_client.addListener( tracker_client_listener );
 
+				tracker_client.addListener( tracker_client_stats_listener );
+				
 			}finally{
 
 				this_mon.exit();
@@ -5880,7 +5931,25 @@ DownloadManagerImpl
 										delegate.manualUpdate();
 									}
 								}
+								
+								@Override
+								public long[]
+								getReportedStats()
+								{
+									TrackerPeerSource delegate = fixup();
 
+									long[] overall = stats.getTrackerReportedStats( getURL());
+									
+									if ( delegate == null ){
+
+										return( overall );
+									}
+
+									long[] session = delegate.getReportedStats();
+									
+									return( new long[]{ overall[0], overall[1], session[0], session[1] });
+								}
+								
 								@Override
 								public boolean
 								canDelete()

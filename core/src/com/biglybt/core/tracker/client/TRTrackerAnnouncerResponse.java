@@ -46,6 +46,9 @@ TRTrackerAnnouncerResponse
 	public HashWrapper
 	getHash();
 
+	public TRTrackerAnnouncerRequest
+	getRequest();
+	
 	/**
 	 * This value is always available
 	 * @return time to wait before requerying tracker

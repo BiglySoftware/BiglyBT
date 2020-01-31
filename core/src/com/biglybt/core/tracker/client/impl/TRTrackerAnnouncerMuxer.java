@@ -916,6 +916,7 @@ TRTrackerAnnouncerMuxer
 	protected void
 	informResponse(
 		TRTrackerAnnouncerHelper		helper,
+		TRTrackerAnnouncerRequest		request,
 		TRTrackerAnnouncerResponse		response )
 	{
 		URL	url = response.getURL();
@@ -932,7 +933,7 @@ TRTrackerAnnouncerMuxer
 
 				if ( summary != null ){
 
-					summary.updateFrom( response );
+					summary.updateFrom( request, response );
 				}
 			}
 		}
@@ -943,7 +944,7 @@ TRTrackerAnnouncerMuxer
 
 		last_best_active_set_time = 0;
 
-		super.informResponse( helper, response );
+		super.informResponse( helper, request, response );
 
 		if ( response.getStatus() != TRTrackerAnnouncerResponse.ST_ONLINE ){
 
@@ -1694,6 +1695,20 @@ TRTrackerAnnouncerMuxer
 				}
 
 				@Override
+				public long[]
+				getReportedStats()
+				{
+					StatusSummary summary = fixup();
+
+					if ( summary != null && enabled ){
+
+						return( summary.getReportedStats());
+					}
+
+					return( new long[]{ -1, -1 });
+				}
+				
+				@Override
 				public boolean
 				canDelete()
 				{
@@ -1737,6 +1752,9 @@ TRTrackerAnnouncerMuxer
 		private int			interval;
 		private int			min_interval;
 
+		private long		reported_sent;
+		private long		reported_received;
+		
 		protected
 		StatusSummary(
 			TRTrackerAnnouncerHelper		_helper,
@@ -1757,6 +1775,7 @@ TRTrackerAnnouncerMuxer
 
 		protected void
 		updateFrom(
+			TRTrackerAnnouncerRequest		request,
 			TRTrackerAnnouncerResponse		response )
 		{
 			time	= SystemTime.getMonotonousTime();
@@ -1771,7 +1790,10 @@ TRTrackerAnnouncerMuxer
 				leechers	= response.getScrapeIncompleteCount();
 				completed	= response.getScrapeDownloadedCount();
 				peers		= response.getPeers().length;
-
+					
+				reported_sent		= request.getReportedUpload();
+				reported_received 	= request.getReportedDownload();
+				
 			}else{
 
 				status = TrackerPeerSource.ST_ERROR;
@@ -1865,6 +1887,12 @@ TRTrackerAnnouncerMuxer
 		manualUpdate()
 		{
 			helper.update( true );
+		}
+		
+		public long[]
+		getReportedStats()
+		{
+			return( new long[]{ reported_sent, reported_received });
 		}
 	}
 }

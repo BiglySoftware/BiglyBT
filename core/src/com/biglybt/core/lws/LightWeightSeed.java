@@ -497,6 +497,7 @@ LightWeightSeed
 					@Override
 					public void
 					receivedTrackerResponse(
+						TRTrackerAnnouncerRequest	request,
 						TRTrackerAnnouncerResponse	response )
 					{
 						TRTrackerAnnouncerResponsePeer[] peers = response.getPeers();

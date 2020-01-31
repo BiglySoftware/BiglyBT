@@ -104,6 +104,9 @@ TrackerPeerSource
 	public void
 	manualUpdate();
 
+	public long[]
+	getReportedStats();
+	
 	public boolean
 	canDelete();
 

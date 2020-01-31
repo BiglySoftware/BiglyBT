@@ -34,6 +34,7 @@ import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersListener;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
+import com.biglybt.core.tracker.client.TRTrackerAnnouncerRequest;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.CopyOnWriteList;
@@ -159,9 +160,34 @@ AllTrackersManagerImpl
 										
 								status = a_resp.getStatusString();
 								
-								if ( tracker.setOK( a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE )){
+								boolean good = a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE;
+		
+								if ( tracker.setOK( good )){
 									
 									updated = true;
+								}
+								
+								if ( good ){
+									
+									TRTrackerAnnouncerRequest req = a_resp.getRequest();
+									
+									if ( req != null ){
+										
+										long	session = req.getSessionID();
+										
+										if ( session != 0 ){
+											
+											long	up 		= req.getReportedUpload();
+											long	down	= req.getReportedDownload();
+											
+											if ( up > 0 || down > 0 ){
+												
+												tracker.updateSession( session, up, down );
+												
+												updated = true;
+											}
+										}
+									}
 								}
 							}else{
 								
@@ -538,6 +564,11 @@ AllTrackersManagerImpl
 		
 		private Map<String,Object>	options;
 		
+		private Map<Long,long[]>	session_stats;
+		
+		private long				total_up;
+		private long				total_down;
+		
 		private boolean		registered;
 		
 		private
@@ -568,6 +599,38 @@ AllTrackersManagerImpl
 			consec_fails = MapUtils.getMapLong( map, "cf", 0 );
 			
 			options = (Map<String,Object>)map.get( "op" );
+			
+			Map<String,List<Number>> ss = (Map<String,List<Number>>)map.get("ss" );
+			
+			if ( ss != null ){
+				
+				session_stats = new HashMap<>();
+				
+				for ( Map.Entry<String,List<Number>> entry: ss.entrySet()){
+					
+					try{
+						long id = Long.parseLong( entry.getKey());
+						
+						List<Number> nums = entry.getValue();
+						
+						long[] vals = new long[nums.size()];
+						
+						for ( int i=0; i<vals.length; i++){
+							
+							vals[i] = nums.get(i).longValue();
+						}
+						
+						session_stats.put( id,  vals );
+						
+						total_up 	+= vals[1];
+						total_down	+= vals[2];
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+			}
 		}
 		
 		private Map
@@ -585,6 +648,68 @@ AllTrackersManagerImpl
 			if ( options != null ){
 				
 				map.put( "op", options );
+			}
+			
+			if ( session_stats != null ){
+				
+				Map<String,Object> ss = new HashMap<>();
+				
+				while( session_stats.size() > 5 ){
+				
+					long oldest_time 	= Long.MAX_VALUE;
+					long oldest_session	= 0;
+					
+					long[]	consolidated = session_stats.remove( 0 );
+					
+					for ( Map.Entry<Long, long[]> entry: session_stats.entrySet()){
+						
+						long[] 	vals = entry.getValue();
+							
+						long time = vals[0];
+							
+						if ( time < oldest_time ){
+								
+							long 	sid = entry.getKey();							
+
+							oldest_time 	= time;
+							oldest_session	= sid;
+						}
+					}
+					
+					long[] oldest = session_stats.remove( oldest_session );
+					
+					if ( consolidated == null ){
+						
+						consolidated = oldest;
+						
+					}else{
+						
+						for ( int i=1;i<Math.min( oldest.length, consolidated.length ); i++){
+							
+							consolidated[i] = consolidated[i] + oldest[i];
+						}
+					}
+					
+					consolidated[0] = SystemTime.getCurrentTime();
+					
+					session_stats.put( 0L, consolidated );
+				}
+				
+				for ( Map.Entry<Long, long[]> entry: session_stats.entrySet()){
+					
+					String id = String.valueOf( entry.getKey());
+					
+					List<Long> vals = new ArrayList<>();
+					
+					for ( long l: entry.getValue()){
+						
+						vals.add( l );
+					}
+					
+					ss.put( id, vals );
+				}
+				
+				map.put( "ss", ss );
 			}
 			
 			return( map );
@@ -697,6 +822,34 @@ AllTrackersManagerImpl
 			return( true );
 		}
 		
+		protected void
+		updateSession(
+			long		session_id,
+			long		up,
+			long		down )
+		{
+			long	now = SystemTime.getCurrentTime();
+			
+			if ( session_stats == null ){
+				
+				session_stats = new HashMap<>();
+			}
+			
+			session_stats.put( session_id, new long[]{ now, up, down });
+			
+			long	new_up 		= 0;
+			long	new_down	= 0;
+			
+			for ( long[] entry: session_stats.values()){
+				
+				new_up 		+= entry[1];
+				new_down	+= entry[2];
+			}
+			
+			total_up 	= new_up;
+			total_down	= new_down;
+		}
+		
 		public long
 		getLastGoodTime()
 		{
@@ -719,6 +872,20 @@ AllTrackersManagerImpl
 		getConsecutiveFails()
 		{
 			return( consec_fails );
+		}
+		
+		@Override
+		public long 
+		getTotalReportedDown()
+		{
+			return( total_down );
+		}
+		
+		@Override
+		public long 
+		getTotalReportedUp()
+		{
+			return( total_up );
 		}
 		
 		@Override

@@ -688,6 +688,7 @@ TRHostImpl
 				@Override
 				public void
 				receivedTrackerResponse(
+					TRTrackerAnnouncerRequest	request,
 					TRTrackerAnnouncerResponse	response	)
 				{
 					try{

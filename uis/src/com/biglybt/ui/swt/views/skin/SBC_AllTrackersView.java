@@ -224,7 +224,22 @@ public class SBC_AllTrackersView
 					}
 				});
 
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersReportedUp.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersReportedUp(column);
+					}
+				});
 		
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersReportedDown.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersReportedDown(column);
+					}
+				});
+
 		tableManager.setDefaultColumnNames(TABLE_NAME,
 				new String[] {
 					ColumnAllTrackersTracker.COLUMN_ID,
@@ -1504,6 +1519,20 @@ public class SBC_AllTrackersView
 			Map<String, Object> options)
 		{
 			tracker.setOptions( options );
+		}
+		
+		@Override
+		public long 
+		getTotalReportedDown()
+		{
+			return( tracker.getTotalReportedDown());
+		}
+		
+		@Override
+		public long 
+		getTotalReportedUp()
+		{
+			return( tracker.getTotalReportedUp());
 		}
 		
 		public Tag

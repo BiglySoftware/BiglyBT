@@ -19,7 +19,6 @@
 
 package com.biglybt.core.tracker.client.impl;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.*;
 
@@ -28,15 +27,12 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
-import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.torrent.TOTorrent;
-import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.clientid.ClientIDException;
-import com.biglybt.pif.download.DownloadAnnounceResultPeer;
 import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
 
 /**
@@ -53,9 +49,9 @@ TRTrackerAnnouncerImpl
 
 	// 	listener
 
-	protected static final int LDT_TRACKER_RESPONSE		= 1;
-	protected static final int LDT_URL_CHANGED			= 2;
-	protected static final int LDT_URL_REFRESH			= 3;
+	private static final int LDT_TRACKER_RESPONSE		= 1;
+	private static final int LDT_URL_CHANGED			= 2;
+	private static final int LDT_URL_REFRESH			= 3;
 
 	private static final String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -87,7 +83,9 @@ TRTrackerAnnouncerImpl
 				{
 					if ( type == LDT_TRACKER_RESPONSE ){
 
-						listener.receivedTrackerResponse((TRTrackerAnnouncerResponse)value);
+						Object[] temp = (Object[])value;
+						
+						listener.receivedTrackerResponse((TRTrackerAnnouncerRequest)temp[0], (TRTrackerAnnouncerResponse)temp[1]);
 
 					}else if ( type == LDT_URL_CHANGED ){
 
@@ -112,6 +110,7 @@ TRTrackerAnnouncerImpl
 
 	final private TOTorrent						torrent;
 	final private byte[]						peer_id;
+	final private long							session_id;
 	final private String						tracker_key;
 	final private int							udp_key;
 
@@ -124,6 +123,15 @@ TRTrackerAnnouncerImpl
 	{
 		torrent	= _torrent;
 
+		long	sid = 0;
+		
+		while( sid == 0 ){
+			
+			sid = RandomUtils.SECURE_RANDOM.nextLong();
+		}
+		
+		session_id = sid;
+		
 		tracker_key	= createKeyID();
 
 		udp_key	= RandomUtils.nextInt();
@@ -165,6 +173,13 @@ TRTrackerAnnouncerImpl
 					return( peer_id );
 				}
 
+				@Override
+				public long 
+				getSessionID()
+				{
+					return( session_id );
+				}
+				
 				@Override
 				public String
 				getTrackerKey()
@@ -222,9 +237,10 @@ TRTrackerAnnouncerImpl
 				public void
 				informResponse(
 					TRTrackerAnnouncerHelper		helper,
+					TRTrackerAnnouncerRequest		request,
 					TRTrackerAnnouncerResponse		response )
 				{
-					TRTrackerAnnouncerImpl.this.informResponse( helper, response );
+					TRTrackerAnnouncerImpl.this.informResponse( helper, request, response );
 				}
 
 				@Override
@@ -601,9 +617,10 @@ TRTrackerAnnouncerImpl
 	protected void
 	informResponse(
 		TRTrackerAnnouncerHelper		helper,
+		TRTrackerAnnouncerRequest		request,
 		TRTrackerAnnouncerResponse		response )
 	{
-		listeners.dispatch( LDT_TRACKER_RESPONSE, response );
+		listeners.dispatch( LDT_TRACKER_RESPONSE, new Object[]{ request, response });
 	}
 
 	protected void
@@ -634,6 +651,9 @@ TRTrackerAnnouncerImpl
 		public byte[]
 		getPeerID();
 
+		public long
+		getSessionID();
+		
 		public String
 		getTrackerKey();
 
@@ -662,6 +682,7 @@ TRTrackerAnnouncerImpl
 		public void
 		informResponse(
 			TRTrackerAnnouncerHelper		helper,
+			TRTrackerAnnouncerRequest		request,
 			TRTrackerAnnouncerResponse		response );
 
 		public void
