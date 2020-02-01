@@ -163,31 +163,37 @@ NATTestHelpers
 
 		}else{
 
-			logger.accept(MessageText.getString("configureWizard.nat.testing") + " UDP " + udp_port + " ... ");
+			if ( NetworkAdmin.getSingleton().hasIPV4Potential()){
 
-			try{
-				InetAddress result = selected.test(
-						null,
-						false,
-						true,
-						new NetworkAdminProgressListener()
-						{
-							@Override
-							public void
-							reportProgress(
-									String task )
+				logger.accept(MessageText.getString("configureWizard.nat.testing") + " UDP " + udp_port + " ... ");
+	
+				try{
+					InetAddress result = selected.test(
+							null,
+							false,
+							true,
+							new NetworkAdminProgressListener()
 							{
-								logger.accept( "\n    " + task );
-							}
-						});
-
-				logger.accept( "\n" + MessageText.getString("configureWizard.nat.ok") + " (" + result.getHostAddress() + ")\n");
-
-			}catch( Throwable e ){
-
-				logger.accept( "\n" + MessageText.getString("configureWizard.nat.ko") + ". " + Debug.getNestedExceptionMessage(e)+".\n");
+								@Override
+								public void
+								reportProgress(
+										String task )
+								{
+									logger.accept( "\n    " + task );
+								}
+							});
+	
+					logger.accept( "\n" + MessageText.getString("configureWizard.nat.ok") + " (" + result.getHostAddress() + ")\n");
+	
+				}catch( Throwable e ){
+	
+					logger.accept( "\n" + MessageText.getString("configureWizard.nat.ko") + ". " + Debug.getNestedExceptionMessage(e)+".\n");
+				}
+			}else{
+				
+				logger.accept( "\n\tIPv4 " + MessageText.getString( "azbuddy.os_not_avail" ).toLowerCase());
 			}
-
+			
 			if ( NetworkAdmin.getSingleton().hasIPV6Potential()){
 
 				logger.accept( "\n" + MessageText.getString("configureWizard.nat.testing") + " UDP " + udp_port + " IPv6 ... ");
@@ -214,6 +220,9 @@ NATTestHelpers
 
 					logger.accept( "\n" + MessageText.getString("configureWizard.nat.ko") + ". " + Debug.getNestedExceptionMessage(e)+".\n");
 				}
+			}else{
+				
+				logger.accept( "\n\tIPv6 " + MessageText.getString( "azbuddy.os_not_avail" ).toLowerCase());
 			}
 		}
 	}
