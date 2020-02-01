@@ -21,7 +21,9 @@
 package com.biglybt.core.download.impl;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,8 +42,11 @@ import com.biglybt.core.peer.PEPeerManagerStats;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
+import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.SystemTime;
 
@@ -1142,6 +1147,104 @@ DownloadManagerStatsImpl
 	
 	Map<String,Map<Long,long[]>>	tracker_session_stats = new HashMap<>();
 
+	private void
+	loadTrackerStats()
+	{
+		DownloadManagerState state = download_manager.getDownloadState();
+
+		synchronized( tracker_session_stats ){
+
+			if ( !tracker_session_stats.isEmpty()){
+				
+				return;		// already loaded so holds most up-to-date values
+			}
+			
+			Map<String,Map<String,List<Number>>> stats = state.getMapAttribute( DownloadManagerState.AT_TRACKER_SESSION_STATS );
+			
+			if ( stats == null ){
+				
+				return;
+			}
+						
+			for ( Map.Entry<String,Map<String,List<Number>>> entry1: stats.entrySet()){
+				
+				String key = entry1.getKey();
+				
+				key = new String( Base32.decode( key ), Constants.UTF_8 );
+				
+				Map<Long, long[]> session_stats = new HashMap<>();
+				
+				tracker_session_stats.put( key, session_stats );
+				
+				for ( Map.Entry<String,List<Number>> entry: entry1.getValue().entrySet()){
+					
+					try{
+						long id = Long.parseLong( entry.getKey());
+						
+						List<Number> nums = entry.getValue();
+						
+						long[] vals = new long[nums.size()];
+						
+						for ( int i=0; i<vals.length; i++){
+							
+							vals[i] = nums.get(i).longValue();
+						}
+						
+						session_stats.put( id,  vals );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+			}
+		}
+	}
+	
+	private void
+	saveTrackerStats()
+	{
+		DownloadManagerState state = download_manager.getDownloadState();
+
+		synchronized( tracker_session_stats ){
+
+			Map<String,Map<String,List<Long>>> stats = new HashMap<>();
+			
+			for (Map.Entry<String,Map<Long,long[]>> entry1: tracker_session_stats.entrySet()){
+				
+				String key = entry1.getKey();
+				
+				key = Base32.encode( key.getBytes( Constants.UTF_8 ));	// protect against non-ascii keys
+				
+				Map<String,List<Long>> session_stats = new HashMap<>();
+				
+				stats.put( key, session_stats );
+				
+				for ( Map.Entry<Long,long[]> entry: entry1.getValue().entrySet()){
+					
+					String id = String.valueOf( entry.getKey());
+					
+					List<Long> vals = new ArrayList<>();
+					
+					session_stats.put( id, vals );
+					
+					for ( long l: entry.getValue()){
+						
+						vals.add( l );
+					}
+				}
+			}
+			
+			state.setMapAttribute( DownloadManagerState.AT_TRACKER_SESSION_STATS, stats );
+		}		
+	}
+	
+	FrequencyLimitedDispatcher stats_saver = 
+		new FrequencyLimitedDispatcher(
+			AERunnable.create(()->{
+				saveTrackerStats();
+			}),1000 );
+	
 	protected void
 	updateTrackerSession(
 		URL			url,
@@ -1153,16 +1256,62 @@ DownloadManagerStatsImpl
 
 		synchronized( tracker_session_stats ){
 			
-			Map<Long,long[]> stats = tracker_session_stats.get( key );
+			Map<Long,long[]> session_stats = tracker_session_stats.get( key );
 			
-			if ( stats == null ){
+			if ( session_stats == null ){
 				
-				stats = new HashMap<>();
+				session_stats = new HashMap<>();
 				
-				tracker_session_stats.put( key, stats );
+				tracker_session_stats.put( key, session_stats );
 			}
 			
-			stats.put( session, new long[]{ up, down });
+			session_stats.put( session, new long[]{ SystemTime.getCurrentTime(), up, down });
+			
+			while( session_stats.size() > 5 ){
+				
+				long oldest_time 	= Long.MAX_VALUE;
+				long oldest_session	= 0;
+				
+				long[]	consolidated = session_stats.remove( 0 );
+				
+				for ( Map.Entry<Long, long[]> entry: session_stats.entrySet()){
+					
+					long[] 	vals = entry.getValue();
+						
+					long time = vals[0];
+						
+					if ( time < oldest_time ){
+							
+						long 	sid = entry.getKey();							
+
+						oldest_time 	= time;
+						oldest_session	= sid;
+					}
+				}
+				
+				long[] oldest = session_stats.remove( oldest_session );
+				
+				if ( consolidated == null ){
+					
+					consolidated = oldest;
+					
+				}else{
+					
+					for ( int i=1;i<Math.min( oldest.length, consolidated.length ); i++){
+						
+						consolidated[i] = consolidated[i] + oldest[i];
+					}
+				}
+				
+				consolidated[0] = SystemTime.getCurrentTime();
+				
+				session_stats.put( 0L, consolidated );
+			}
+		}
+		
+		if ( download_manager.getPeerManager() == null ){
+
+			stats_saver.dispatch();	// can get a bunch of these when stopping a download
 		}
 	}
 	
@@ -1184,8 +1333,8 @@ DownloadManagerStatsImpl
 				
 				for (long[] entry: stats.values()){
 					
-					total_up 	+= entry[0];
-					total_down 	+= entry[1];
+					total_up 	+= entry[1];
+					total_down 	+= entry[2];
 				}
 				
 				return( new long[]{ total_up, total_down });
@@ -1232,6 +1381,8 @@ DownloadManagerStatsImpl
 
 		state.setLongAttribute( DownloadManagerState.AT_PEAK_RECEIVE_RATE, saved_peak_receive_rate );
 		state.setLongAttribute( DownloadManagerState.AT_PEAK_SEND_RATE, saved_peak_send_rate );
+		
+		saveTrackerStats();
 	}
 
  	protected void
@@ -1276,6 +1427,8 @@ DownloadManagerStatsImpl
 			// when there's actually completed data.  Force a recalc on next request
 			saved_completed_download_bytes = -1;
 		}
+		
+		loadTrackerStats();
 	}
 
 	public void

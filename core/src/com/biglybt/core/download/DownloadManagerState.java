@@ -86,6 +86,7 @@ DownloadManagerState
 	public static final String AT_MOVE_ON_COMPLETE_DIR		= "moc.dir";		// String - explicit move-on-complete folder
 	public static final String AT_FILE_FLAGS				= "ff";
 	public static final String AT_FILE_ALLOC_STRATEGY		= "fas";			// long
+	public static final String AT_TRACKER_SESSION_STATS		= "tss";			// Map
 	
 	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
 
