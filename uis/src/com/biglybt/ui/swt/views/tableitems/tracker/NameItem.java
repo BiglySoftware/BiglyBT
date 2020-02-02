@@ -32,7 +32,7 @@ import com.biglybt.core.tracker.TrackerPeerSource;
 public class
 NameItem
 	extends CoreTableColumnSWT
-    implements TableCellRefreshListener
+    implements TableCellRefreshListener, TableCellToolTipListener
 {
 	public
 	NameItem( String tableID)
@@ -68,5 +68,22 @@ NameItem
 		}
 
 		cell.setText( name );
+	}
+	
+	public void 
+	cellHover(TableCell cell)
+	{
+		TrackerPeerSource ps = (TrackerPeerSource)cell.getDataSource();
+
+		if ( ps != null ){
+			
+			cell.setToolTip( ps.getDetails());
+		}
+	}
+
+	public void 
+	cellHoverComplete(TableCell cell)
+	{
+		
 	}
 }

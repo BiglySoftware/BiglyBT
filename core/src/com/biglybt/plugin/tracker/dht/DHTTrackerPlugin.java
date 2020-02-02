@@ -4104,7 +4104,7 @@ DHTTrackerPlugin
 				public long[]
 				getReportedStats()
 				{
-					return( new long[]{ -1, -1 });
+					return( null );
 				}
 			});
 	}

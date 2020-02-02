@@ -329,6 +329,20 @@ DownloadManagerAvailabilityImpl
 
 							return( delegate.getName());
 						}
+						
+						@Override
+						public String
+						getDetails()
+						{
+							TrackerPeerSource delegate = fixup();
+
+							if ( delegate == null ){
+
+								return( null );
+							}
+
+							return( delegate.getDetails());
+						}
 
 						@Override
 						public URL 
@@ -571,7 +585,7 @@ DownloadManagerAvailabilityImpl
 
 							if ( delegate == null ){
 
-								return( new long[]{ -1, -1 });
+								return( null );
 							}
 
 							return( delegate.getReportedStats());

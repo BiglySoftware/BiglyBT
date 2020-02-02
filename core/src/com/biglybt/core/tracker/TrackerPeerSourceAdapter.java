@@ -43,6 +43,13 @@ TrackerPeerSourceAdapter
 	}
 
 	@Override
+	public String 
+	getDetails()
+	{
+		return( null );
+	}
+	
+	@Override
 	public URL 
 	getURL()
 	{
@@ -144,7 +151,7 @@ TrackerPeerSourceAdapter
 	public long[]
 	getReportedStats()
 	{
-		return( new long[]{ -1, -1 });
+		return( null );
 	}
 	
 	@Override

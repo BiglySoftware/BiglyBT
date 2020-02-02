@@ -51,6 +51,9 @@ TrackerPeerSource
 
 	public String
 	getName();
+	
+	public String
+	getDetails();
 
 	public int
 	getStatus();

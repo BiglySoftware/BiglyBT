@@ -278,10 +278,6 @@ DownloadManagerStats
 	public long getEstimatedDownloaded();
 	public long getEstimatedUploaded();
 	*/
-
-	public long[]
-	getTrackerReportedStats(
-		URL		url );
 	
 	public void
 	restoreSessionTotals(

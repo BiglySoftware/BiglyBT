@@ -62,14 +62,41 @@ ReportedDownItem
 
 		long[] stats = (ps==null)?null:ps.getReportedStats();
 
-		long value1 = stats==null?-1:stats[1];
-		long value2 = stats==null||stats.length<4?-1:stats[3];
+		long 	sort;
+		String 	str;
 		
-		if (!cell.setSortValue(value1) && cell.isValid()){
+		if ( stats != null ){
+			long gu = stats[1];
+			long uu = stats[3];
+			long su = stats[5];
+			
+			sort = gu!=0?gu:(uu!=0?uu:su);
+			
+			if ( sort == 0 ){
+				str = "";
+			}else{
+				if ( uu>0 ){
+					str = DisplayFormatters.formatByteCountToKiBEtc( uu );
+				}else{
+					str = "";
+				}
+				if ( gu != 0 && gu != uu ){
+					str = DisplayFormatters.formatByteCountToKiBEtc( gu ) + (str.isEmpty()?"":("/" + str ));
+				}
+				if ( su > 0 ){
+					str += " (" +  DisplayFormatters.formatByteCountToKiBEtc( su ) + ")";
+				}
+			}
+		}else{
+			sort 	= -1;
+			str		= "";
+		}
+				
+		if (!cell.setSortValue(sort) && cell.isValid()){
 
 			return;
 		}
 
-		cell.setText( value1<0?"":DisplayFormatters.formatByteCountToKiBEtc( value1 ) + (value2==-1?"":(" (" + DisplayFormatters.formatByteCountToKiBEtc( value2 ) + ")")));
+		cell.setText( str );	
 	}
 }

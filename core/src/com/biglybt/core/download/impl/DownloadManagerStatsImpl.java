@@ -1254,58 +1254,74 @@ DownloadManagerStatsImpl
 	{
 		String key = all_trackers.ingestURL( url );
 
+		int group = download_manager.getTrackerURLGroup( key );
+		
 		synchronized( tracker_session_stats ){
 			
-			Map<Long,long[]> session_stats = tracker_session_stats.get( key );
-			
-			if ( session_stats == null ){
+			while( true ){
 				
-				session_stats = new HashMap<>();
+				Map<Long,long[]> session_stats = tracker_session_stats.get( key );
 				
-				tracker_session_stats.put( key, session_stats );
-			}
-			
-			session_stats.put( session, new long[]{ SystemTime.getCurrentTime(), up, down });
-			
-			while( session_stats.size() > 5 ){
-				
-				long oldest_time 	= Long.MAX_VALUE;
-				long oldest_session	= 0;
-				
-				long[]	consolidated = session_stats.remove( 0 );
-				
-				for ( Map.Entry<Long, long[]> entry: session_stats.entrySet()){
+				if ( session_stats == null ){
 					
-					long[] 	vals = entry.getValue();
-						
-					long time = vals[0];
-						
-					if ( time < oldest_time ){
-							
-						long 	sid = entry.getKey();							
-
-						oldest_time 	= time;
-						oldest_session	= sid;
-					}
+					session_stats = new HashMap<>();
+					
+					tracker_session_stats.put( key, session_stats );
 				}
 				
-				long[] oldest = session_stats.remove( oldest_session );
+				session_stats.put( session, new long[]{ SystemTime.getCurrentTime(), up, down });
 				
-				if ( consolidated == null ){
+				while( session_stats.size() > 5 ){
 					
-					consolidated = oldest;
+					long oldest_time 	= Long.MAX_VALUE;
+					long oldest_session	= 0;
+					
+					long[]	consolidated = session_stats.remove( 0 );
+					
+					for ( Map.Entry<Long, long[]> entry: session_stats.entrySet()){
+						
+						long[] 	vals = entry.getValue();
+							
+						long time = vals[0];
+							
+						if ( time < oldest_time ){
+								
+							long 	sid = entry.getKey();							
+	
+							oldest_time 	= time;
+							oldest_session	= sid;
+						}
+					}
+					
+					long[] oldest = session_stats.remove( oldest_session );
+					
+					if ( consolidated == null ){
+						
+						consolidated = oldest;
+						
+					}else{
+						
+						for ( int i=1;i<Math.min( oldest.length, consolidated.length ); i++){
+							
+							consolidated[i] = consolidated[i] + oldest[i];
+						}
+					}
+					
+					consolidated[0] = SystemTime.getCurrentTime();
+					
+					session_stats.put( 0L, consolidated );
+				}
+				
+				if ( group == -1 ){
+					
+					break;
 					
 				}else{
 					
-					for ( int i=1;i<Math.min( oldest.length, consolidated.length ); i++){
-						
-						consolidated[i] = consolidated[i] + oldest[i];
-					}
+					key = String.valueOf( group );
+					
+					group = -1;
 				}
-				
-				consolidated[0] = SystemTime.getCurrentTime();
-				
-				session_stats.put( 0L, consolidated );
 			}
 		}
 		
@@ -1314,34 +1330,50 @@ DownloadManagerStatsImpl
 			stats_saver.dispatch();	// can get a bunch of these when stopping a download
 		}
 	}
-	
-	@Override
-	public long[] 
+
+	protected long[] 
 	getTrackerReportedStats(
 		URL 		url )
 	{
 		String key = all_trackers.ingestURL( url );
+		
+		int group = download_manager.getTrackerURLGroup( key );
+		
+		long group_up	= 0;
+		long group_down	= 0;
+		
+		long url_up 	= 0;
+		long url_down	= 0;
 
 		synchronized( tracker_session_stats ){
 			
 			Map<Long,long[]> stats = tracker_session_stats.get( key );
 			
 			if ( stats != null ){
-				
-				long total_up 	= 0;
-				long total_down	= 0;
-				
+								
 				for (long[] entry: stats.values()){
 					
-					total_up 	+= entry[1];
-					total_down 	+= entry[2];
+					url_up 		+= entry[1];
+					url_down 	+= entry[2];
 				}
+			}
+			
+			if ( group != -1 ){
 				
-				return( new long[]{ total_up, total_down });
+				stats = tracker_session_stats.get( String.valueOf( group ));
+				
+				if ( stats != null ){
+									
+					for (long[] entry: stats.values()){
+						
+						group_up 		+= entry[1];
+						group_down 	+= entry[2];
+					}
+				}
 			}
 		}
 		
-		return( new long[]{ 0, 0 });
+		return( new long[]{ group_up, group_down, url_up, url_down });
 	}
 	
 	protected void

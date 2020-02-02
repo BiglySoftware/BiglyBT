@@ -571,6 +571,8 @@ DownloadManagerImpl
 	private String 			torrent_comment;
 	private String 			torrent_created_by;
 
+	private transient Map<String,Object[]>	url_group_map = new HashMap<>();
+	
 	TRTrackerAnnouncer 				tracker_client;
 	
 	private final TRTrackerAnnouncerListener		tracker_client_listener =
@@ -823,6 +825,17 @@ DownloadManagerImpl
 	
 			if ( torrent != null ){
 	
+				buildURLGroupMap( torrent );
+				
+				torrent.addListener(
+					new TOTorrentListener(){
+						
+						@Override
+						public void torrentChanged(TOTorrent torrent, int change_type){
+							buildURLGroupMap( torrent );
+						}
+					});
+				
 				if ( _open_for_seeding && !_recovered ){
 	
 					Map<Integer,File>	linkage = TorrentUtils.getInitialLinkage( torrent );
@@ -881,7 +894,44 @@ DownloadManagerImpl
 			}
 		}
 	}
+	
+	private void
+	buildURLGroupMap(
+		TOTorrent	torrent )
+	{
+		int	group = 0;
+		
+		Map<String,Object[]>	map = new HashMap<>();
+		
+		for ( TOTorrentAnnounceURLSet set: torrent.getAnnounceURLGroup().getAnnounceURLSets()){
+			
+			URL[] urls = set.getAnnounceURLs();
+			
+			if ( urls.length > 1 ){
+		
+				Integer g = ++group;
+				
+				for ( URL u: urls ){
+					
+					String key = all_trackers.ingestURL( u );
+					
+					map.put( key, new Object[]{ u, g });
+				}
+			}
+		}
+		
+		url_group_map = map;
+	}
 
+	protected int
+	getTrackerURLGroup(
+		String		key )
+	{
+		Object[] entry = url_group_map.get( key );
+		
+		return( entry==null?-1:(int)entry[1] );
+	}
+	
 	@Override
 	public int
 	getTaggableType()
@@ -5542,11 +5592,11 @@ DownloadManagerImpl
   					}
 
   						// source per set
-
+ 					
 					for ( final TOTorrentAnnounceURLSet set: sets ){
 
 						final URL[] urls = set.getAnnounceURLs();
-
+				
 						if ( urls.length == 0 || TorrentUtils.isDecentralised( urls[0] )){
 
 							continue;
@@ -5938,16 +5988,61 @@ DownloadManagerImpl
 								{
 									TrackerPeerSource delegate = fixup();
 
-									long[] overall = stats.getTrackerReportedStats( getURL());
+									URL url = getURL();
 									
-									if ( delegate == null ){
+									long[] url_stats = stats.getTrackerReportedStats( url );
 
-										return( overall );
+									long session_up 	= 0;
+									long session_down	= 0;
+									
+									if ( delegate != null ){
+
+										long[] session = delegate.getReportedStats();
+										
+										session_up 		= session[0];
+										session_down	= session[1];
 									}
-
-									long[] session = delegate.getReportedStats();
 									
-									return( new long[]{ overall[0], overall[1], session[0], session[1] });
+									return( new long[]{ url_stats[0], url_stats[1], url_stats[2], url_stats[3], session_up, session_down });
+								}
+								
+								@Override
+								public String 
+								getDetails()
+								{
+									URL url = getURL();
+									
+									String key = all_trackers.ingestURL(url);
+									
+									Map<String,Object[]> map = url_group_map;
+									
+									Object[] entry = map.get( key );
+									
+									if ( entry != null ){
+										
+										String str = "Tracker Group";
+										
+										for (Map.Entry<String,Object[]> e: map.entrySet()){
+											
+											Object[] temp = e.getValue();
+											
+											if ( temp[1] == entry[1] ){
+												
+												URL u = (URL)temp[0];
+												
+												long[] url_stats = stats.getTrackerReportedStats( u );
+												
+												str += 	"\n\t" + 
+														u + 
+														": sent=" + DisplayFormatters.formatByteCountToKiBEtc( url_stats[2]) +
+														": recv=" + DisplayFormatters.formatByteCountToKiBEtc( url_stats[3]);
+											}
+										}
+										
+										return( str );
+									}
+									
+									return( null );
 								}
 								
 								@Override
