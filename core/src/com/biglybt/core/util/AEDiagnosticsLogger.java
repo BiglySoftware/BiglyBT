@@ -35,7 +35,9 @@ AEDiagnosticsLogger
 	private static final int	MAX_PENDING = 8*1024;
 
 	private final String 			name;
-	private int[]					max_size;
+	private int[]					default_max_size;
+	private int						explicit_max_size;
+	
 	private final File			debug_dir;
 	private boolean			timestamp_enable				= true;
 	private boolean			force;
@@ -70,7 +72,7 @@ AEDiagnosticsLogger
 	{
 		debug_dir		= _debug_dir;
 		name			= _name;
-		max_size		= _max_size;
+		default_max_size		= _max_size;
 		direct_writes	= _direct_writes;
 
 		try{
@@ -121,7 +123,7 @@ AEDiagnosticsLogger
 	setMaxFileSize(
 		int		_max_size )
 	{
-		max_size[0]	= _max_size;
+		explicit_max_size = _max_size;
 	}
 
 	public void
@@ -328,7 +330,7 @@ AEDiagnosticsLogger
 				 *  to explicitly check for its existence.
 				 */
 
-			if ( log_file.length() >= max_size[0] ){
+			if ( log_file.length() >= (explicit_max_size==0?default_max_size[0]:explicit_max_size)){
 
 				if ( current_writer != null ){
 
@@ -394,7 +396,7 @@ AEDiagnosticsLogger
 					 *  to explicitly check for its existence.
 					 */
 
-				if ( log_file.length() >= max_size[0] ){
+				if ( log_file.length() >= (explicit_max_size==0?default_max_size[0]:explicit_max_size)){
 
 					if ( current_writer != null ){
 
