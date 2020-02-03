@@ -40,14 +40,18 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.common.table.impl.TableViewImpl;
 import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.columns.alltrackers.*;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import com.biglybt.ui.swt.views.MyTorrentsSubView;
@@ -55,6 +59,7 @@ import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
+import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
@@ -474,11 +479,27 @@ public class SBC_AllTrackersView
 		long activationType,
 		Object datasource)
 	{
+		boolean isTableSelected = false;
+		if (tv instanceof TableViewImpl) {
+			isTableSelected = ((TableViewImpl) tv).isTableSelected();
+		}
+		if (!isTableSelected) {
+			UISWTViewCore active_view = getActiveView();
+			if (active_view != null) {
+				UIPluginViewToolBarListener l = active_view.getToolBarListener();
+				if (l != null && l.toolBarItemActivated(item, activationType, datasource)) {
+					return true;
+				}
+			}
+			return false;
+		}
+		  
 		if ( tv == null || !tv.isVisible()){
 
 			return( false );
 		}
 
+		/*
 		List<Object> datasources = tv.getSelectedDataSources();
 
 		if ( datasources.size() > 0 ){
@@ -499,7 +520,8 @@ public class SBC_AllTrackersView
 
 			return true;
 		}
-
+		*/
+		
 		return false;
 	}
 
@@ -527,6 +549,14 @@ public class SBC_AllTrackersView
 		//list.put( "startstop", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
 
 		//list.put( "remove", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
+	}
+	
+	private MdiEntrySWT getActiveView() {
+		TableViewSWT_TabsCommon tabsCommon = tv.getTabsCommon();
+		if (tabsCommon != null) {
+			return tabsCommon.getActiveSubView();
+		}
+		return null;
 	}
 
 	@Override
@@ -1251,6 +1281,8 @@ public class SBC_AllTrackersView
 	selected(
 		TableRowCore[] row )
 	{
+		updateSelectedContent();
+		
 		UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 
 		if ( uiFunctions != null ){
@@ -1264,12 +1296,39 @@ public class SBC_AllTrackersView
 	deselected(
 		TableRowCore[] rows )
 	{
+		updateSelectedContent();
+		
 	  	UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 
 	  	if ( uiFunctions != null ){
 
 	  		uiFunctions.refreshIconBar();
 	  	}
+	}
+	
+	public void updateSelectedContent() {
+		updateSelectedContent( false );
+	}
+
+	public void updateSelectedContent( boolean force ) {
+		if (table_parent == null || table_parent.isDisposed()) {
+			return;
+		}
+			// if we're not active then ignore this update as we don't want invisible components
+			// updating the toolbar with their invisible selection. Note that unfortunately the
+			// call we get here when activating a view does't yet have focus
+
+		if ( !isVisible()){
+			if ( !force ){
+				return;
+			}
+		}
+		
+		SelectedContentManager.clearCurrentlySelectedContent();
+
+		if ( tv != null ){
+			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(), null, tv);
+		}
 	}
 
 	@Override
