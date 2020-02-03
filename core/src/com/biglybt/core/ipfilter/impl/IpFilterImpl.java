@@ -414,49 +414,47 @@ IpFilterImpl
 	protected void
 	saveBannedIPs()
 	{
-		if ( !COConfigurationManager.getBooleanParameter("Ip Filter Banning Persistent" )){
+		if ( COConfigurationManager.getBooleanParameter("Ip Filter Banning Persistent" )){
 
-			return;
-		}
-
-		try{
-			class_mon.enter();
-
-			Map	map = new HashMap();
-
-			List	ips = new ArrayList();
-
-			Iterator	it = bannedIps.values().iterator();
-
-			while( it.hasNext()){
-
-				BannedIpImpl	bip = (BannedIpImpl)it.next();
-
-				if ( bip.isTemporary()){
-
-					continue;
+			try{
+				class_mon.enter();
+	
+				Map	map = new HashMap();
+	
+				List	ips = new ArrayList();
+	
+				Iterator	it = bannedIps.values().iterator();
+	
+				while( it.hasNext()){
+	
+					BannedIpImpl	bip = (BannedIpImpl)it.next();
+	
+					if ( bip.isTemporary()){
+	
+						continue;
+					}
+	
+					Map	entry = new HashMap();
+	
+					entry.put( "ip", bip.getIp());
+					entry.put( "desc", bip.getTorrentName().getBytes( "UTF-8" ));
+					entry.put( "time", new Long( bip.getBanningTime()));
+	
+					ips.add( entry );
 				}
-
-				Map	entry = new HashMap();
-
-				entry.put( "ip", bip.getIp());
-				entry.put( "desc", bip.getTorrentName().getBytes( "UTF-8" ));
-				entry.put( "time", new Long( bip.getBanningTime()));
-
-				ips.add( entry );
+	
+				map.put( "ips", ips );
+	
+				FileUtil.writeResilientConfigFile( "banips.config", map );
+	
+			}catch( Throwable e ){
+	
+				Debug.printStackTrace(e);
+	
+			}finally{
+	
+				class_mon.exit();
 			}
-
-			map.put( "ips", ips );
-
-			FileUtil.writeResilientConfigFile( "banips.config", map );
-
-		}catch( Throwable e ){
-
-			Debug.printStackTrace(e);
-
-		}finally{
-
-			class_mon.exit();
 		}
 	}
 
@@ -1132,6 +1130,20 @@ IpFilterImpl
 			}
 		}
 
+		if ( new_bans.size() > 0 ){
+			
+			for ( IPFilterListener listener: listenerz ){
+
+				try{
+					listener.IPBanListChanged( this );
+
+				}catch( Throwable e ){
+
+					Debug.printStackTrace(e);
+				}
+			}	
+		}
+		
 		return( block_ban );
 	}
 
@@ -1283,12 +1295,25 @@ IpFilterImpl
 
 			class_mon.exit();
 		}
+				
+		for ( IPFilterListener listener: listenerz ){
+
+			try{
+				listener.IPBanListChanged( this );
+
+			}catch( Throwable e ){
+
+				Debug.printStackTrace(e);
+			}
+		}
 	}
 
 	@Override
 	public void
 	unban(String ipAddress)
 	{
+		boolean hit = false;
+		
 		try{
 			class_mon.enter();
 
@@ -1300,6 +1325,8 @@ IpFilterImpl
 
 			if ( entry != null ){
 
+				hit = true;
+				
 				if ( !entry.isTemporary()){
 
 					saveBannedIPs();
@@ -1310,12 +1337,28 @@ IpFilterImpl
 
 			class_mon.exit();
 		}
+		
+		if ( hit ){
+			
+			for ( IPFilterListener listener: listenerz ){
+	
+				try{
+					listener.IPBanListChanged( this );
+	
+				}catch( Throwable e ){
+	
+					Debug.printStackTrace(e);
+				}
+			}
+		}
 	}
 
 	@Override
 	public void
 	unban(String ipAddress, boolean block)
 	{
+		boolean	hit = false;
+
 		if ( block ){
 
 			int	address = range_manager.addressToInt( ipAddress );
@@ -1329,8 +1372,6 @@ IpFilterImpl
 
 			long	start 	= l_address & 0xffffff00;
 			long	end		= start+256;
-
-			boolean	hit = false;
 
 			try{
 				class_mon.enter();
@@ -1354,6 +1395,7 @@ IpFilterImpl
 				class_mon.exit();
 			}
 
+
 		}else{
 
 			try{
@@ -1365,12 +1407,28 @@ IpFilterImpl
 
 				if ( bannedIps.remove(i_address) != null ){
 
+					hit = true;
+					
 					saveBannedIPs();
 				}
 
 			}finally{
 
 				class_mon.exit();
+			}
+		}
+		
+		if ( hit ){
+			
+			for ( IPFilterListener listener: listenerz ){
+
+				try{
+					listener.IPBanListChanged( this );
+
+				}catch( Throwable e ){
+
+					Debug.printStackTrace(e);
+				}
 			}
 		}
 	}

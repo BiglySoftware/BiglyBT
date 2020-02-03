@@ -39,6 +39,12 @@ IPFilterListener
 	IPBlockedListChanged(
 		IpFilter 		filter );
 
+	public default void
+	IPBanListChanged(
+		IpFilter 		filter )
+	{
+	}
+
 	public boolean
 	canIPBeBlocked(
 		String			ip,

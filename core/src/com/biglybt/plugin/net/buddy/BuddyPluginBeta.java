@@ -41,6 +41,8 @@ import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.ipfilter.BannedIp;
+import com.biglybt.core.ipfilter.IPFilterListener;
 import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
@@ -248,6 +250,43 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				}
 			});
 
+		ip_filter.addListener(
+			new IPFilterListener(){
+				
+				@Override
+				public boolean 
+				canIPBeBlocked(
+					String ip, byte[] torrent_hash)
+				{
+					return( true );
+				}
+				
+				@Override
+				public boolean canIPBeBanned(String ip){
+					return( true );
+				}
+				
+				@Override
+				public void IPFilterEnabledChanged(boolean is_enabled){
+					if ( is_enabled ){
+						resetIPFilters();
+					}
+				}
+				
+				@Override
+				public void IPBlockedListChanged(IpFilter filter){
+					resetIPFilters();
+				}
+
+				@Override
+				public void IPBanListChanged(IpFilter filter){
+					resetIPFilters();
+				}
+				@Override
+				public void IPBanned(BannedIp ip){
+				}
+			});
+		
 		DataSourceResolver.registerExporter( this );
 		
 		AEDiagnostics.addWeakEvidenceGenerator(this);
@@ -433,6 +472,15 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		}
 	}
 
+	private void
+	resetIPFilters()
+	{
+		for ( ChatInstance chat: chat_instances_list ){
+			
+			chat.resetIPFilters();
+		}
+	}
+	
 	private void
 	tick()
 	{
@@ -4916,6 +4964,18 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			sendMessage( getMagnet( download, 400 ), new HashMap<String, Object>());
 		}
 		
+		void
+		resetIPFilters()
+		{
+			synchronized( chat_lock ){
+
+				for ( ChatMessage m: messages ){
+					
+					m.resetIPFilters();
+				}
+			}
+		}
+		
 		public String
 		getMagnet(
 			Download		download,
@@ -6876,6 +6936,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		private boolean							is_ignored;
 		private boolean							is_duplicate;
+		private Boolean							is_ip_filtered;
 		private boolean							is_nick_clash;
 
 		private int								seen_state = SEEN_UNKNOWN;
@@ -7334,12 +7395,23 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			is_duplicate	= true;
 		}
 
+		void
+		resetIPFilters()
+		{
+			is_ip_filtered = null;
+		}
+		
 		public boolean
 		isIPFiltered()
 		{
 			if (getUseIPFilter()){
 				
-				return( ip_filter.isInRange( AddressUtils.getHostAddress( getAddress()), "D-Chat", null, true ));
+				if ( is_ip_filtered == null ){
+					
+					is_ip_filtered = ip_filter.isInRange( AddressUtils.getHostAddress( getAddress()), "D-Chat", null, true );
+				}
+				
+				return( is_ip_filtered );
 				
 			}else{
 				
