@@ -149,22 +149,37 @@ AllTrackersManagerImpl
 						if ( host_map.containsKey( tracker.getTrackerName())){
 
 							Object	obj 	= entry[1];
-						
-							String status;
-							
+													
 							boolean	updated = false;
 							
-							if ( obj instanceof TRTrackerAnnouncerResponse ){
+							if ( obj instanceof String ){
+								
+								String cmd = (String)obj;
+								
+								if ( cmd.equals( "reset_stats" )){
+									
+									tracker.resetReportedStatsSupport();
+									
+									updated = true;
+									
+								}else{
+									
+									Debug.out( "eh?" );
+								}
+							}else if ( obj instanceof TRTrackerAnnouncerResponse ){
 						
 								TRTrackerAnnouncerResponse a_resp = (TRTrackerAnnouncerResponse)obj;
-										
-								status = a_resp.getStatusString();
-										
+																				
 								if ( tracker.setOK( a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE )){
 									
 									updated = true;
 								}
 								
+								if ( tracker.setStatusString( a_resp.getStatusString())){
+									
+									updated = true;
+								}
+
 							}else if ( obj instanceof TRTrackerScraperResponse ){
 								
 									// announce status trumps scrape 
@@ -175,17 +190,18 @@ AllTrackersManagerImpl
 								}
 								
 								TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)obj;							
-															
-								status = s_resp.getStatusString();
-								
+																							
 								if ( tracker.setOK( s_resp.getStatus() == TRTrackerScraperResponse.ST_ONLINE )){
 									
 									updated = true;
 								}
-							}else{
 								
-								status = null;
-								
+								if ( tracker.setStatusString( s_resp.getStatusString() )){
+									
+									updated = true;		
+								}
+							}else if ( obj instanceof TRTrackerAnnouncerRequest ){
+																
 								TRTrackerAnnouncerRequest req = (TRTrackerAnnouncerRequest)obj;
 								
 									// caller already validated this
@@ -200,14 +216,6 @@ AllTrackersManagerImpl
 								updated = true;
 							}
 								
-							if ( status != null ){
-								
-								if ( tracker.setStatusString( status )){
-									
-									updated = true;		
-								}
-							}
-							
 							if ( updated ){
 								
 								updates.add( tracker );
@@ -231,7 +239,7 @@ AllTrackersManagerImpl
 						}
 					}
 					
-					if ( tick_count % SAVE_PERIOD == 0 ){
+					if ( tick_count % SAVE_TICKS == 0 ){
 						
 						saveConfig( false );
 					}
@@ -527,6 +535,14 @@ AllTrackersManagerImpl
 				update_queue.add( new Object[]{ tracker, response } );
 			}
 		}
+	}
+	
+	void
+	queueCommand(
+		AllTrackersTrackerImpl		tracker,
+		String						cmd )
+	{
+		update_queue.add( new Object[]{ tracker, cmd } );
 	}
 	
 	@Override
@@ -866,6 +882,14 @@ AllTrackersManagerImpl
 			total_down	= new_down;
 		}
 		
+		protected void
+		resetReportedStatsSupport()
+		{
+			session_stats	= null;
+			total_up		= 0;
+			total_down		= 0;
+		}
+		
 		public long
 		getLastGoodTime()
 		{
@@ -888,6 +912,13 @@ AllTrackersManagerImpl
 		getConsecutiveFails()
 		{
 			return( consec_fails );
+		}
+		
+		@Override
+		public void 
+		resetReportedStats()
+		{
+			queueCommand( this, "reset_stats" );
 		}
 		
 		@Override

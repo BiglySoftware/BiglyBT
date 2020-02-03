@@ -869,6 +869,28 @@ public class SBC_AllTrackersView
 		
 		assoc_item.setEnabled( hasSelection && !assoc_templates.isEmpty());
 		
+			// clear reported stats
+		
+		
+		MenuItem itemClearStats = new MenuItem(menu, SWT.PUSH);
+
+		Messages.setLanguageText( itemClearStats, "alltorrents.reset.reported.stats" );
+
+		itemClearStats.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void
+			handleEvent(
+				Event event)
+			{
+				for ( AllTrackersTracker t: trackers ){
+					
+					t.resetReportedStats();
+				}
+			}});	
+		
+		itemClearStats.setEnabled( hasSelection );
+		
+		
 			// options
 		
 		Menu options_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
@@ -1519,6 +1541,11 @@ public class SBC_AllTrackersView
 			Map<String, Object> options)
 		{
 			tracker.setOptions( options );
+		}
+		
+		@Override
+		public void resetReportedStats(){
+			tracker.resetReportedStats();
 		}
 		
 		@Override

@@ -143,6 +143,9 @@ AllTrackersManager
 		public long
 		getConsecutiveFails();
 		
+		public void
+		resetReportedStats();
+		
 		public long
 		getTotalReportedUp();
 		
