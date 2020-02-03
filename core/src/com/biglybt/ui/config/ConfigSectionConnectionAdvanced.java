@@ -315,6 +315,13 @@ public class ConfigSectionConnectionAdvanced
 		ipv6_checks.setIndent( 1, true );
 		ipv6_enable.addEnabledOnSelection(ipv6_checks);
 		
+		StringParameterImpl ipv6_extra_globals = 
+				add(new StringParameterImpl(SCFG_IPV_6_EXTRA_GLOBALS, "network.ipv6.extra.global"));
+			
+		ipv6_extra_globals.setGenerateIntermediateEvents( false );
+		ipv6_extra_globals.setIndent( 1, true );
+		ipv6_enable.addEnabledOnSelection(ipv6_extra_globals);
+		
 		add(new BooleanParameterImpl(BCFG_IPV_6_PREFER_ADDRESSES, "network.ipv6.prefer.addresses"));
 
 		if (Constants.isWindowsVistaOrHigher) {

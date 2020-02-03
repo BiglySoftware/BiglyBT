@@ -27,9 +27,12 @@ import org.gudy.bouncycastle.util.encoders.Base64;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.instancemanager.ClientInstance;
 import com.biglybt.core.instancemanager.ClientInstanceManager;
+import com.biglybt.core.logging.LogAlert;
+import com.biglybt.core.logging.Logger;
 import com.biglybt.core.proxy.AEProxyFactory;
 
 public class
@@ -399,8 +402,97 @@ AddressUtils
 	/**
 	 * checks if the provided address is a global-scope ipv6 unicast address
 	 */
-	public static boolean isGlobalAddressV6(InetAddress addr) {
-		return addr instanceof Inet6Address && !addr.isAnyLocalAddress() && !addr.isLinkLocalAddress() && !addr.isLoopbackAddress() && !addr.isMulticastAddress() && !addr.isSiteLocalAddress() && !((Inet6Address)addr).isIPv4CompatibleAddress();
+	
+	
+	static volatile List<Object[]> extra_ipv6_globals;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			ConfigKeys.Connection.SCFG_IPV_6_EXTRA_GLOBALS,
+			(n)->{
+				String str = COConfigurationManager.getStringParameter(ConfigKeys.Connection.SCFG_IPV_6_EXTRA_GLOBALS, "" ).trim();
+				
+				if ( !str.isEmpty()){
+					
+					List<Object[]> extra = new ArrayList<>();
+					
+					String[] bits = str.replace( ';', ',' ).split( "," );
+					
+					for ( String bit: bits ){
+						
+						bit = bit.trim();
+						
+						String[] temp = bit.split( "/" );
+						
+						boolean ok = false;
+						
+						if ( temp.length == 2 ){
+							
+							String prefix 	= temp[0].trim();
+							String len		= temp[1].trim();
+							
+							try{
+								InetAddress address = InetAddress.getByName( prefix );
+								
+								int l = Integer.parseInt( len );
+								
+								byte[] bytes = address.getAddress();
+								
+								if ( bytes.length == 16 ){
+									
+									extra.add( new Object[]{ bytes, l });
+									
+									ok = true;
+								}
+							}catch( Throwable e ){								
+							}
+						}
+						
+						if ( !ok ){
+							
+							LogAlert alert = new LogAlert( true, LogAlert.AT_ERROR,  "Additional IPv6 global address error: Invalid CIDR: " + bit );
+							
+							alert.forceNotify = true;
+							
+							Logger.log(  alert );
+						}
+					}
+					
+					extra_ipv6_globals = extra;
+				}
+			});
+	}
+	
+	
+	public static boolean 
+	isGlobalAddressV6(
+		InetAddress addr )
+	{
+		List<Object[]> extra = extra_ipv6_globals;
+		
+		if ( extra != null && addr != null ){
+		
+			byte[] bytes = addr.getAddress();
+
+			for ( Object[] e: extra ){
+				
+				byte[]	prefix	= (byte[])e[0];
+				int		len		= (Integer)e[1];
+			
+				if ( matchesCIDR( prefix, len, bytes )){
+					
+					return( true );
+				}
+			}
+		}
+		
+		return 	addr instanceof Inet6Address && 
+				!addr.isAnyLocalAddress() && 
+				!addr.isLinkLocalAddress() && 
+				!addr.isLoopbackAddress() && 
+				!addr.isMulticastAddress() && 
+				!addr.isSiteLocalAddress() && 
+				!((Inet6Address)addr).isIPv4CompatibleAddress();
 	}
 
 	public static boolean isTeredo(InetAddress addr)
@@ -702,5 +794,52 @@ AddressUtils
 			
 			return( false );
 		}
+	}
+	
+	public static boolean
+	matchesCIDR(
+		String			address_mask,
+		int				len,
+		InetAddress		address )
+	{
+
+		try{
+			InetAddress	a = InetAddress.getByName( address_mask );
+
+			return( matchesCIDR( a.getAddress(), len, address.getAddress()));
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+			return( false );
+		}
+	}
+	
+	public static boolean
+	matchesCIDR(
+		byte[]			prefix,
+		int				len,
+		byte[]			bytes )
+	{		
+		if ( bytes.length != prefix.length || len > bytes.length ){
+			
+			return( false );
+		}
+		
+		for ( int i=0;i< len; i++ ){
+			
+			byte mask = (byte)( 1<<(7-(i%8)));
+			
+			int b1 = prefix[i/8] & mask;
+			int b2 = bytes[i/8] & mask;
+			
+			if ( b1 != b2 ){
+				
+				return( false );
+			}
+		}
+		
+		return( true );
 	}
 }
