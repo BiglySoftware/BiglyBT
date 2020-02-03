@@ -656,8 +656,8 @@ DownloadManagerImpl
 			@Override
 			public void
 			receivedTrackerResponse(
-					TRTrackerAnnouncerRequest	request,
-					TRTrackerAnnouncerResponse	response)
+				TRTrackerAnnouncerRequest	request,
+				TRTrackerAnnouncerResponse	response)
 			{
 				if ( tracker_client == null ){
 
@@ -670,10 +670,10 @@ DownloadManagerImpl
 			@Override
 			public void
 			urlChanged(
-					TRTrackerAnnouncer	announcer,
-					URL 				old_url,
-					URL					new_url,
-					boolean 			explicit )
+				TRTrackerAnnouncer	announcer,
+				URL 				old_url,
+				URL					new_url,
+				boolean 			explicit )
 			{
 			}
 
@@ -696,21 +696,8 @@ DownloadManagerImpl
 					TRTrackerAnnouncerResponse	response)
 				{
 					if ( response.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE ){
-						
-						long down 		= request.getReportedDownload();
-						long up 		= request.getReportedUpload();
 
-						if ( down > 0 || up > 0 ){
-							
-							long session	= request.getSessionID();
-							
-							URL url = request.getURL();
-		
-							if ( session != 0 && url != null ){
-																						
-								stats.updateTrackerSession( url, session, up, down );
-							}
-						}
+						stats.updateTrackerSession( request );
 					}
 				}
 

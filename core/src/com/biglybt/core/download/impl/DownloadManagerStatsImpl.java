@@ -42,6 +42,7 @@ import com.biglybt.core.peer.PEPeerManagerStats;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
+import com.biglybt.core.tracker.client.TRTrackerAnnouncerRequest;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Constants;
@@ -1247,87 +1248,104 @@ DownloadManagerStatsImpl
 	
 	protected void
 	updateTrackerSession(
-		URL			url,
-		long		session,
-		long		up,
-		long		down  )
+		TRTrackerAnnouncerRequest	request )
 	{
-		String key = all_trackers.ingestURL( url );
+		long down 		= request.getReportedDownload();
+		long up 		= request.getReportedUpload();
 
-		int group = download_manager.getTrackerURLGroup( key );
-		
-		synchronized( tracker_session_stats ){
+		if ( down > 0 || up > 0 ){
 			
-			while( true ){
-				
-				Map<Long,long[]> session_stats = tracker_session_stats.get( key );
-				
-				if ( session_stats == null ){
+			long session	= request.getSessionID();
+			
+			URL url = request.getURL();
+
+			if ( session != 0 && url != null ){
+																		
+				String key = all_trackers.ingestURL( url );
+		
+				if ( key == null ){
 					
-					session_stats = new HashMap<>();
-					
-					tracker_session_stats.put( key, session_stats );
+					return;
 				}
+		
+				all_trackers.updateTracker( key, request );
 				
-				session_stats.put( session, new long[]{ SystemTime.getCurrentTime(), up, down });
+				int group = download_manager.getTrackerURLGroup( key );
 				
-				while( session_stats.size() > 5 ){
+				synchronized( tracker_session_stats ){
 					
-					long oldest_time 	= Long.MAX_VALUE;
-					long oldest_session	= 0;
-					
-					long[]	consolidated = session_stats.remove( 0 );
-					
-					for ( Map.Entry<Long, long[]> entry: session_stats.entrySet()){
+					while( true ){
 						
-						long[] 	vals = entry.getValue();
+						Map<Long,long[]> session_stats = tracker_session_stats.get( key );
+						
+						if ( session_stats == null ){
 							
-						long time = vals[0];
+							session_stats = new HashMap<>();
 							
-						if ( time < oldest_time ){
+							tracker_session_stats.put( key, session_stats );
+						}
+						
+						session_stats.put( session, new long[]{ SystemTime.getCurrentTime(), up, down });
+						
+						while( session_stats.size() > 5 ){
+							
+							long oldest_time 	= Long.MAX_VALUE;
+							long oldest_session	= 0;
+							
+							long[]	consolidated = session_stats.remove( 0 );
+							
+							for ( Map.Entry<Long, long[]> entry: session_stats.entrySet()){
 								
-							long 	sid = entry.getKey();							
-	
-							oldest_time 	= time;
-							oldest_session	= sid;
-						}
-					}
-					
-					long[] oldest = session_stats.remove( oldest_session );
-					
-					if ( consolidated == null ){
-						
-						consolidated = oldest;
-						
-					}else{
-						
-						for ( int i=1;i<Math.min( oldest.length, consolidated.length ); i++){
+								long[] 	vals = entry.getValue();
+									
+								long time = vals[0];
+									
+								if ( time < oldest_time ){
+										
+									long 	sid = entry.getKey();							
+			
+									oldest_time 	= time;
+									oldest_session	= sid;
+								}
+							}
 							
-							consolidated[i] = consolidated[i] + oldest[i];
+							long[] oldest = session_stats.remove( oldest_session );
+							
+							if ( consolidated == null ){
+								
+								consolidated = oldest;
+								
+							}else{
+								
+								for ( int i=1;i<Math.min( oldest.length, consolidated.length ); i++){
+									
+									consolidated[i] = consolidated[i] + oldest[i];
+								}
+							}
+							
+							consolidated[0] = SystemTime.getCurrentTime();
+							
+							session_stats.put( 0L, consolidated );
+						}
+						
+						if ( group == -1 ){
+							
+							break;
+							
+						}else{
+							
+							key = String.valueOf( group );
+							
+							group = -1;
 						}
 					}
-					
-					consolidated[0] = SystemTime.getCurrentTime();
-					
-					session_stats.put( 0L, consolidated );
 				}
 				
-				if ( group == -1 ){
-					
-					break;
-					
-				}else{
-					
-					key = String.valueOf( group );
-					
-					group = -1;
+				if ( download_manager.getPeerManager() == null ){
+		
+					stats_saver.dispatch();	// can get a bunch of these when stopping a download
 				}
 			}
-		}
-		
-		if ( download_manager.getPeerManager() == null ){
-
-			stats_saver.dispatch();	// can get a bunch of these when stopping a download
 		}
 	}
 

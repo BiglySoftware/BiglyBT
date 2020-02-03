@@ -24,6 +24,7 @@ import java.util.Map;
 
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.alltrackers.AllTrackersManagerImpl;
+import com.biglybt.core.tracker.client.TRTrackerAnnouncerRequest;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 
@@ -63,6 +64,11 @@ AllTrackersManager
 			URL							tracker,
 			TRTrackerAnnouncerResponse	response );
 		
+		public void
+		updateTracker(
+			String						key,
+			TRTrackerAnnouncerRequest	request );
+	
 		public void
 		updateTracker(
 			URL							tracker,

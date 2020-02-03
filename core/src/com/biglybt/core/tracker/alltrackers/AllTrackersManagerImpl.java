@@ -148,48 +148,24 @@ AllTrackersManagerImpl
 						
 						if ( host_map.containsKey( tracker.getTrackerName())){
 
-							Object	resp 	= entry[1];
+							Object	obj 	= entry[1];
 						
 							String status;
 							
 							boolean	updated = false;
 							
-							if ( resp instanceof TRTrackerAnnouncerResponse ){
+							if ( obj instanceof TRTrackerAnnouncerResponse ){
 						
-								TRTrackerAnnouncerResponse a_resp = (TRTrackerAnnouncerResponse)resp;
+								TRTrackerAnnouncerResponse a_resp = (TRTrackerAnnouncerResponse)obj;
 										
 								status = a_resp.getStatusString();
-								
-								boolean good = a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE;
-		
-								if ( tracker.setOK( good )){
+										
+								if ( tracker.setOK( a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE )){
 									
 									updated = true;
 								}
 								
-								if ( good ){
-									
-									TRTrackerAnnouncerRequest req = a_resp.getRequest();
-									
-									if ( req != null ){
-										
-										long	session = req.getSessionID();
-										
-										if ( session != 0 ){
-											
-											long	up 		= req.getReportedUpload();
-											long	down	= req.getReportedDownload();
-											
-											if ( up > 0 || down > 0 ){
-												
-												tracker.updateSession( session, up, down );
-												
-												updated = true;
-											}
-										}
-									}
-								}
-							}else{
+							}else if ( obj instanceof TRTrackerScraperResponse ){
 								
 									// announce status trumps scrape 
 								
@@ -198,7 +174,7 @@ AllTrackersManagerImpl
 									continue;
 								}
 								
-								TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)resp;							
+								TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)obj;							
 															
 								status = s_resp.getStatusString();
 								
@@ -206,11 +182,30 @@ AllTrackersManagerImpl
 									
 									updated = true;
 								}
-							}
-														
-							if ( tracker.setStatusString( status )){
+							}else{
 								
-								updated = true;		
+								status = null;
+								
+								TRTrackerAnnouncerRequest req = (TRTrackerAnnouncerRequest)obj;
+								
+									// caller already validated this
+								
+								long	session = req.getSessionID();
+																	
+								long	up 		= req.getReportedUpload();
+								long	down	= req.getReportedDownload();
+																			
+								tracker.updateSession( session, up, down );
+																		
+								updated = true;
+							}
+								
+							if ( status != null ){
+								
+								if ( tracker.setStatusString( status )){
+									
+									updated = true;		
+								}
 							}
 							
 							if ( updated ){
@@ -435,45 +430,52 @@ AllTrackersManagerImpl
 		
 		if ( name != null ){
 			
-			AllTrackersTrackerImpl existing_tracker = host_map.get( name );
-			
-			if ( existing_tracker == null ){ 
-				
-				AllTrackersTrackerImpl new_tracker = new AllTrackersTrackerImpl( name );
-				
-				existing_tracker = host_map.putIfAbsent( name, new_tracker );
-				
-				if ( existing_tracker == null ){
-				
-					for ( AllTrackersListener listener: listeners ){
-						
-						List<AllTrackersTracker>	trackers = new ArrayList<>();
-						
-						trackers.add( new_tracker );
-						
-						try{
-							listener.trackerEventOccurred( new AllTrackersEventImpl( AllTrackersEvent.ET_TRACKER_ADDED, trackers ));
-
-						}catch( Throwable e ){
-							
-							Debug.out( e );
-						}
-					}
-					
-					new_tracker.setRegistered();
-					
-					return( new_tracker );
-				}
-			}
-			
-			existing_tracker.setRegistered();
-				
-			return( existing_tracker );
+			return( register( name ));
 			
 		}else{
 			
 			return( null );
 		}
+	}
+	
+	private AllTrackersTrackerImpl
+	register(
+		String		name )
+	{
+		AllTrackersTrackerImpl existing_tracker = host_map.get( name );
+		
+		if ( existing_tracker == null ){ 
+			
+			AllTrackersTrackerImpl new_tracker = new AllTrackersTrackerImpl( name );
+			
+			existing_tracker = host_map.putIfAbsent( name, new_tracker );
+			
+			if ( existing_tracker == null ){
+			
+				for ( AllTrackersListener listener: listeners ){
+					
+					List<AllTrackersTracker>	trackers = new ArrayList<>();
+					
+					trackers.add( new_tracker );
+					
+					try{
+						listener.trackerEventOccurred( new AllTrackersEventImpl( AllTrackersEvent.ET_TRACKER_ADDED, trackers ));
+
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+				
+				new_tracker.setRegistered();
+				
+				return( new_tracker );
+			}
+		}
+		
+		existing_tracker.setRegistered();
+			
+		return( existing_tracker );
 	}
 	
 	@Override
@@ -488,6 +490,20 @@ AllTrackersManagerImpl
 			
 			update_queue.add( new Object[]{ tracker, response } );
 		}
+	}
+	
+	@Override
+	public void 
+	updateTracker(
+		String 						key, 
+		TRTrackerAnnouncerRequest 	request )
+	{
+		AllTrackersTrackerImpl tracker = register( key );
+		
+		if ( tracker != null ){
+			
+			update_queue.add( new Object[]{ tracker, request });
+		}	
 	}
 	
 	@Override
