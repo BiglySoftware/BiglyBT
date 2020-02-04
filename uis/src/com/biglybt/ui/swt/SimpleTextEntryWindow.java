@@ -59,6 +59,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	private Shell shell;
 	private int textLimit;
 	private boolean resizeable;
+	private String loc_size_config_key;
 	private Combo text_entry_combo;
 	private Text text_entry_text;
 	private Label link_label;
@@ -470,7 +471,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 				triggerReceiverListener();
 			}
 		});
-
+		
 	    shell.pack();
 	    if (text_entry_text != null)
 	    	DragDropUtils.createURLDropTarget(shell, text_entry_text);
@@ -478,7 +479,19 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    	// don't shrink this control otherwise the manual speed entry for up/down speed on
 	    	// the transfers bar doesn't work as parent shell small...
 
-	    Utils.centreWindow(shell,false);
+	    boolean centre = true;
+	    
+		if ( loc_size_config_key != null ){
+			
+			if ( Utils.linkShellMetricsToConfig( shell, loc_size_config_key )){
+				
+				centre = false;
+			}
+		}
+		if ( centre ){
+			Utils.centreWindow(shell,false);
+		}
+		
 	    shell.open();
 	  }
 
@@ -525,6 +538,14 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	  resizeable = b;
   }
 
+  public void
+  setRememberLocationSize(
+		 String		config_key )
+  {
+	  loc_size_config_key = config_key;
+	  resizeable = true;
+  }
+  
   public void
   setDetectURLs(
 		 boolean	b )

@@ -1622,6 +1622,8 @@ public class FilesViewMenuUtil
 		dialog.setParentShell( Utils.findAnyShell());	// need to do this otherwise the dialog may grab an in-the-process-of-closing
 														// previous shell as parent and get immediately closed via dispose...
 
+		dialog.setRememberLocationSize( "file.rename.dialog.pos" );
+		
 		dialog.setEnableSpecialEscapeHandling( true );
 		
 		String file_name = fileInfo.getFile(true).getName();

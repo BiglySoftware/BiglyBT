@@ -5823,7 +5823,7 @@ public class OpenTorrentOptionsWindow
 					"FilesView.rename.filename.title", "FilesView.rename.filename.text");
 			dialog.setPreenteredText(torrentFileInfo.getOriginalFileName(), false); // false -> it's not "suggested", it's a previous value
 			dialog.allowEmptyInput(false);
-
+			dialog.setRememberLocationSize( "file.rename.dialog.pos" );
 			dialog.prompt(new UIInputReceiverListener() {
 				@Override
 				public void UIInputReceiverClosed(UIInputReceiver receiver) {
