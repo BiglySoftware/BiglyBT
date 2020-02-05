@@ -48,8 +48,6 @@ SubscriptionResultFilterImpl
 	private String[] 	excludeTextFilters;
 	private Pattern[]	excludeTextFilterPatterns;
 
-	private String regexFilter;	// unused
-
 	private long minSeeds = -1;
 	private long minSize = -1;
 	private long maxSize = -1;
@@ -87,8 +85,6 @@ SubscriptionResultFilterImpl
 
 			excludeTextFilterPatterns = getPatterns( excludeTextFilters );
 			
-			regexFilter = MapUtils.getMapString(filters, "text_filter_regex", null);
-
 			minSize = MapUtils.importLong(filters,"min_size",-1l);
 
 			maxSize = MapUtils.importLong(filters,"max_size",-1l);
@@ -259,8 +255,6 @@ SubscriptionResultFilterImpl
 		String	res = addString( "", "+", getString(textFilters));
 
 		res = addString( res, "-", getString(excludeTextFilters));
-
-		res = addString( res, "regex=", regexFilter );
 
 		res = addString( res, "cat=", categoryFilter );
 		res = addString( res, "min-size=", minSize<=0?null:DisplayFormatters.formatByteCountToKiBEtc(minSize));
