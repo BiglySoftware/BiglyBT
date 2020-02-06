@@ -26,8 +26,8 @@ import com.biglybt.core.peer.PEPeerManagerStats;
 import com.biglybt.core.peer.impl.control.PEPeerControlImpl;
 import com.biglybt.core.util.Average;
 import com.biglybt.core.util.GeneralUtils;
+import com.biglybt.core.util.GeneralUtils.SmoothAverage;
 import com.biglybt.core.util.SystemTime;
-import com.biglybt.core.util.average.MovingImmediateAverage;
 
 public class
 PEPeerManagerStatsImpl
@@ -67,8 +67,8 @@ PEPeerManagerStatsImpl
 	private int current_smoothing_window 	= GeneralUtils.getSmoothUpdateWindow();
 	private int current_smoothing_interval 	= GeneralUtils.getSmoothUpdateInterval();
 
-	private MovingImmediateAverage smoothed_receive_rate 	= GeneralUtils.getSmoothAverage();
-	private MovingImmediateAverage smoothed_send_rate 		= GeneralUtils.getSmoothAverage();
+	private SmoothAverage smoothed_receive_rate 	= GeneralUtils.getSmoothAverage();
+	private SmoothAverage smoothed_send_rate 		= GeneralUtils.getSmoothAverage();
 
 	private long peak_receive_rate;
 	private long peak_send_rate;
@@ -344,14 +344,14 @@ PEPeerManagerStatsImpl
 	public long
 	getSmoothedDataReceiveRate()
 	{
-		return((long)(smoothed_receive_rate.getAverage()/current_smoothing_interval));
+		return(smoothed_receive_rate.getAverage());
 	}
 
 	@Override
 	public long
 	getSmoothedDataSendRate()
 	{
-		return((long)(smoothed_send_rate.getAverage()/current_smoothing_interval));
+		return( smoothed_send_rate.getAverage());
 	}
 
 	@Override
@@ -390,8 +390,8 @@ PEPeerManagerStatsImpl
 			long	up 		= total_data_bytes_sent;
 			long	down 	= total_data_bytes_received;
 
-			smoothed_send_rate.update( up - smooth_last_sent );
-			smoothed_receive_rate.update( down - smooth_last_received );
+			smoothed_send_rate.addValue( up - smooth_last_sent );
+			smoothed_receive_rate.addValue( down - smooth_last_received );
 
 			smooth_last_sent 		= up;
 			smooth_last_received 	= down;

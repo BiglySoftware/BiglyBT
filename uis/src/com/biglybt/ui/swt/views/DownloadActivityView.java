@@ -32,8 +32,10 @@ import org.eclipse.swt.widgets.Composite;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Average;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.GeneralUtils;
+import com.biglybt.core.util.GeneralUtils.SmoothAverage;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingImmediateAverage;
@@ -619,8 +621,8 @@ DownloadActivityView
 						int[] t_smoothed_recv	= new int[min_history_secs];
 						int[] t_smoothed_send	= new int[min_history_secs];
 							
-						MovingImmediateAverage	send_average = GeneralUtils.getSmoothAverage();
-						MovingImmediateAverage	recv_average = GeneralUtils.getSmoothAverage();
+						SmoothAverage	send_average = GeneralUtils.getSmoothAverageForReplay();
+						SmoothAverage	recv_average = GeneralUtils.getSmoothAverageForReplay();
 
 						int smooth_interval = GeneralUtils.getSmoothUpdateInterval();
 
@@ -634,8 +636,10 @@ DownloadActivityView
 							pending_smooth_recv += t_recv[i];
 
 							if ( i % smooth_interval == 0 ){
-								current_smooth_send = (int)(send_average.update( pending_smooth_send )/smooth_interval);
-								current_smooth_recv = (int)(recv_average.update( pending_smooth_recv )/smooth_interval);
+								send_average.addValue( pending_smooth_send );
+								current_smooth_send = (int)send_average.getAverage();
+								recv_average.addValue( pending_smooth_recv );
+								current_smooth_recv = (int)recv_average.getAverage();
 
 								pending_smooth_send = 0;
 								pending_smooth_recv = 0;

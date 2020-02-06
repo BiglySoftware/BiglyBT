@@ -57,11 +57,11 @@ import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Average;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.GeneralUtils;
+import com.biglybt.core.util.GeneralUtils.SmoothAverage;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.SimpleTimer.TimerTickReceiver;
 import com.biglybt.core.util.average.AverageFactory;
-import com.biglybt.core.util.average.MovingImmediateAverage;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.plugin.dht.DHTPlugin;
 
@@ -78,8 +78,8 @@ GlobalManagerStatsImpl
 	private int current_smoothing_window 	= GeneralUtils.getSmoothUpdateWindow();
 	private int current_smoothing_interval 	= GeneralUtils.getSmoothUpdateInterval();
 
-	private MovingImmediateAverage smoothed_receive_rate 	= GeneralUtils.getSmoothAverage();
-	private MovingImmediateAverage smoothed_send_rate 		= GeneralUtils.getSmoothAverage();
+	private SmoothAverage smoothed_receive_rate 	= GeneralUtils.getSmoothAverage();
+	private SmoothAverage smoothed_send_rate 		= GeneralUtils.getSmoothAverage();
 
 
 	private long total_data_bytes_received;
@@ -489,14 +489,14 @@ GlobalManagerStatsImpl
 	public long
 	getSmoothedSendRate()
 	{
-		return((long)(smoothed_send_rate.getAverage()/current_smoothing_interval));
+		return( smoothed_send_rate.getAverage());
 	}
 
 	@Override
 	public long
 	getSmoothedReceiveRate()
 	{
-		return((long)(smoothed_receive_rate.getAverage()/current_smoothing_interval));
+		return( smoothed_receive_rate.getAverage());
 	}
 	
 	
@@ -539,8 +539,8 @@ GlobalManagerStatsImpl
 			long	up 		= total_data_bytes_sent + total_protocol_bytes_sent;
 			long	down 	= total_data_bytes_received + total_protocol_bytes_received;
 
-			smoothed_send_rate.update( up - smooth_last_sent );
-			smoothed_receive_rate.update( down - smooth_last_received );
+			smoothed_send_rate.addValue( up - smooth_last_sent );
+			smoothed_receive_rate.addValue( down - smooth_last_received );
 
 			smooth_last_sent 		= up;
 			smooth_last_received 	= down;

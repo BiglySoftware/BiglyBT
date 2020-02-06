@@ -200,7 +200,7 @@ public class Average {
 	  return(values != null ? values[(int)((timeFactor-1)% nbElements)] : 0);
   }
 
-  protected synchronized final long getSum() {
+  public synchronized final long getSum() {
     //The sum of all elements used for the average.
     long sum = 0;
 

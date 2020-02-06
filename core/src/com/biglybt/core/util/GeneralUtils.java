@@ -309,12 +309,92 @@ GeneralUtils
 		return( SMOOTHING_UPDATE_INTERVAL );
 	}
 
-	public static MovingImmediateAverage
+
+	public static SmoothAverage
+	getSmoothAverageForReplay()
+	{
+		return( new SmoothAverage2());
+	}
+	
+	public static SmoothAverage
 	getSmoothAverage()
 	{
-		return( AverageFactory.MovingImmediateAverage(SMOOTHING_UPDATE_WINDOW/SMOOTHING_UPDATE_INTERVAL ));
+		return( new SmoothAverage1());
 	}
+	
+	public interface
+	SmoothAverage
+	{
+		public void
+		addValue(
+			long	v );
+		
+		public long
+		getAverage();
+	}
+	
+	private static class
+	SmoothAverage1
+		implements SmoothAverage
+	{
+			// works well with inconsistent update timings
+		
+		final Average		average;
+		final int			interval;
 
+		private
+		SmoothAverage1()
+		{
+			interval = SMOOTHING_UPDATE_INTERVAL;
+			
+			average = Average.getInstance(interval*1000, SMOOTHING_UPDATE_WINDOW ); //average over SMOOTHING_UPDATE_INTERVAL secs, update every SMOOTHING_UPDATE_WINDOW secs
+		}
+		
+		public void
+		addValue(
+			long	v )
+		{
+			average.addValue( v );
+		}
+		
+		public long
+		getAverage()
+		{
+			return( average.getAverage());
+		}
+	}
+	
+	private static class
+	SmoothAverage2
+		implements SmoothAverage
+	{
+			// doesn't work well with inconsistent update timings but good for replaying values...
+		
+		final MovingImmediateAverage		average;
+		final int							interval;
+
+		private
+		SmoothAverage2()
+		{
+			interval = SMOOTHING_UPDATE_INTERVAL;
+			
+			average = AverageFactory.MovingImmediateAverage(SMOOTHING_UPDATE_WINDOW/interval );
+		}
+		
+		public void
+		addValue(
+			long	v )
+		{
+			average.update( v );
+		}
+		
+		public long
+		getAverage()
+		{
+			return((long)( average.getAverage()/interval ));
+		}
+	}
+	
 	public static String stringJoin(Collection list, String delim) {
 		StringBuilder sb = new StringBuilder();
 		for (Object s : list) {

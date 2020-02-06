@@ -88,6 +88,10 @@ public class MovingImmediateAverage implements Average {
 	   return( pos>periods?periods:pos );
    }
 
+   public double getSum(){
+	   return( total );
+   }
+   
    private double calculateAve() {
       int	lim = pos>periods?periods:pos;
       if ( lim == 0 ){
