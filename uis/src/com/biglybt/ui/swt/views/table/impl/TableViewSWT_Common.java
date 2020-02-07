@@ -196,6 +196,18 @@ public class TableViewSWT_Common
 						&& lastMouseUpPos.x == e.x && lastMouseUpPos.y == e.y) {
 					// Fake double click because Cocoa SWT 3650 doesn't always trigger
 					// DefaultSelection listener on a Tree on dblclick (works find in Table)
+					
+					// parg, 07/02/20 - not sure if this is still an issue but we're sometimes running the default action even though it
+					// has been cancelled - reset the cancel indicator if we've had a recent real double click and cancel. obviously crap...
+					
+					long now = System.currentTimeMillis();
+					
+					if (	time  - lastMouseDblClkEventTime < 1000 &&
+							now - lCancelSelectionTriggeredOn < 1000 ){
+						
+						lCancelSelectionTriggeredOn = now;
+					}
+					
 					runDefaultAction(e.stateMask, 0 );
 					return;
 				}
