@@ -86,6 +86,9 @@ BuddyPluginView
 	implements BuddyPluginViewInterface
 {
 	public static final String VIEWID_CHAT = "azbuddy.ui.menu.chat";
+	
+	private static final Object TT_KEY = new Object();
+	
 	private  TimerEvent 			buddyStatusInit;
 	private BuddyPluginAZ2Listener buddyPluginAZ2Listener;
 	
@@ -956,6 +959,8 @@ BuddyPluginView
 							boolean	is_pending 	= false;
 							boolean	is_sm		= false;
 							
+							String msg_history = "";
+							
 							for ( ChatInstance instance: instances ){
 								
 								if ( instance.getMessageOutstanding()){
@@ -973,6 +978,63 @@ BuddyPluginView
 												is_sm = true;
 											}
 										}
+									}
+								}
+								
+								if ( plugin.getBeta().getFTUXAccepted()){
+																		
+									Object[] entry = (Object[])dl.getUserData( TT_KEY );
+									
+									long now = SystemTime.getCurrentTime();
+									
+									if ( 	entry == null ||
+											now - (Long)entry[0] > 30*1000 ){
+										
+										List<ChatMessage> msgs = instance.getMessages();
+										
+										int num = msgs.size();
+										
+										if ( num > 0 ){
+																				
+											String msgs_str = "";
+										
+											for ( int i=msgs.size()-1;i>=0;i--){
+												
+												ChatMessage msg = msgs.get(i);
+												
+												if ( msg.isIgnored()){
+													
+													continue;
+													
+												}else if ( msg.getMessageType() == ChatMessage.MT_NORMAL ){
+													
+													String str = msg.getMessage();
+															
+													if ( str.length() > 50 ){
+														
+														str = str.substring( 0,  47 ) + "...";
+													}
+													
+													msgs_str = str + "\n" + msgs_str;
+												}
+											}
+											
+											if ( !msgs_str.isEmpty()){
+												
+												if ( !msg_history.isEmpty()){
+													
+													msg_history += "\n\n";
+												}
+		
+												msg_history += msgs_str;
+											}
+										}
+										
+										dl.setUserData( TT_KEY, new Object[]{ now, msg_history });
+										
+									}else{
+										
+										msg_history = (String)entry[1];	
 									}
 								}
 							}
@@ -1001,6 +1063,11 @@ BuddyPluginView
 								graphic 	= null;
 								tooltip		= MessageText.getString( "label.no.messages" );
 								sort_order	= 0;
+							}
+							
+							if ( !msg_history.isEmpty()){
+								
+								tooltip += "\n\n---- " + MessageText.getString( "label.history" ) + " ----\n" + msg_history.trim();
 							}
 
 							cell.setMarginHeight(0);
@@ -1045,6 +1112,29 @@ BuddyPluginView
 										}
 									}
 								}
+							}else if ( event.eventType == TableCellMouseEvent.EVENT_MOUSEDOUBLECLICK ){
+								
+								TableCell cell = event.cell;
+
+								Download	dl = (Download)cell.getDataSource();
+
+								if ( dl != null ){
+									
+									List<ChatInstance> instances = BuddyPluginUtils.peekChatInstances( dl );
+									
+									for ( ChatInstance instance: instances ){
+										
+										try{
+											BuddyPluginUtils.getBetaPlugin().showChat( instance  );
+												
+										}catch( Throwable e ){
+												
+											Debug.out( e );
+										}
+									}
+								}
+								
+								event.skipCoreFunctionality = true;
 							}
 						}
 					};
