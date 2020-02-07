@@ -2075,10 +2075,10 @@ public class SideBar
 	}
 
 	@Override
-	public BaseMdiEntry closeEntryByID(String id) {
+	public BaseMdiEntry closeEntryByID(String id, boolean user_initiated ) {
 		MdiEntry currentBeforeClose = getCurrentEntry();
 
-		BaseMdiEntry entry = super.closeEntryByID(id);
+		BaseMdiEntry entry = super.closeEntryByID(id, user_initiated);
 		if (entry == null || Utils.isDisplayDisposed()) {
 			return entry;
 		}
