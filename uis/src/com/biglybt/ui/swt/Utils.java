@@ -4265,8 +4265,8 @@ public class Utils
 		    				/ form.getBounds().height);
 		    		sash.setData("PCT", l);
 		    		if (e.detail != SWT.DRAG) {
-		    			int i = (int) (l.doubleValue() * 10000);
-		    			COConfigurationManager.setParameter( config_key, i);
+		    			float f = (float) (l.doubleValue() * 10000);
+		    			COConfigurationManager.setParameter( config_key, f );
 		    		}
 		    	}
 		    });
