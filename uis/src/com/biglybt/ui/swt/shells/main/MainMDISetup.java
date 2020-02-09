@@ -1172,6 +1172,16 @@ public class MainMDISetup
 				}
 			});
 
+			menuItem = uim.getMenuManager().addMenuItem(
+					MenuManager.MENU_MENUBAR, "MainWindow.menu.view.allpeers");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_ALLPEERS );
+				}
+			});
 		}
 
 		//		System.out.println("Activate sidebar " + startTab + " took "
