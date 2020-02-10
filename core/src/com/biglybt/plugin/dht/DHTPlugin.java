@@ -34,11 +34,14 @@ import com.biglybt.core.dht.control.DHTControlActivity;
 import com.biglybt.core.dht.control.DHTControlContact;
 import com.biglybt.core.dht.nat.DHTNATPuncher;
 import com.biglybt.core.dht.router.DHTRouterContact;
+import com.biglybt.core.dht.transport.DHTTransportAlternativeContact;
+import com.biglybt.core.dht.transport.DHTTransportAlternativeNetwork;
 import com.biglybt.core.dht.transport.DHTTransportContact;
 import com.biglybt.core.dht.transport.DHTTransportFullStats;
 import com.biglybt.core.dht.transport.DHTTransportReplyHandlerAdapter;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.dht.transport.udp.impl.DHTTransportUDPImpl;
+import com.biglybt.core.dht.transport.udp.impl.DHTUDPUtils;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
 import com.biglybt.core.util.*;
@@ -384,6 +387,35 @@ DHTPlugin
 
 										return;
 
+									}else if ( lc.equals( "seed_test" )){
+										
+										for ( int net: DHTTransportAlternativeNetwork.AT_ALL_PUB ){
+										
+											log.log( "Network " + net );;
+											
+											List<DHTTransportAlternativeContact> contacts = 
+												DHTUDPUtils.getAlternativeContacts( net, 16 );
+											
+											for ( DHTTransportAlternativeContact contact: contacts ){
+												
+												log.log( "    " + contact.getProperties());
+											}
+										}
+									
+										for ( int net: DHTTransportAlternativeNetwork.AT_ALL_I2P){
+											
+											log.log( "Network " + net );;
+											
+											List<DHTTransportAlternativeContact> contacts = 
+												DHTUDPUtils.getAlternativeContacts( net, 16 );
+											
+											for ( DHTTransportAlternativeContact contact: contacts ){
+												
+												log.log( "    " + contact.getProperties());
+											}
+										}
+										
+										return;
 									}else if ( lc.equals( "bridge_put" )){
 
 										try{

@@ -373,6 +373,105 @@ DHTTransportUDPImpl
 		logger.log( "Initial external address: " + address );
 
 		local_contact = new DHTTransportUDPContactImpl( true, this, address, address, protocol_version, random.nextInt(), 0, (byte)0 );
+		
+		if ( network == DHT.NW_AZ_MAIN || network == DHT.NW_AZ_MAIN_V6 ){
+			
+				// local provider for use by the plugin for xfer
+			
+			DHTUDPUtils.registerAlternativeNetwork( 
+				new DHTTransportAlternativeNetwork(){
+					
+					@Override
+					public int 
+					getNetworkType()
+					{
+						return( network == DHT.NW_AZ_MAIN?DHTTransportAlternativeNetwork.AT_BIGLYBT_IPV4:DHTTransportAlternativeNetwork.AT_BIGLYBT_IPV6 );
+					}
+					
+					@Override
+					public List<DHTTransportAlternativeContact> 
+					getContacts(
+						int		max )
+					{
+						List<DHTTransportAlternativeContact>	result = new ArrayList<>( max );
+						
+						try{
+							this_mon.enter();
+							
+							long start = SystemTime.getMonotonousTime();
+							
+							for ( DHTTransportContact c: routable_contact_history.values()){
+
+								InetSocketAddress ia = c.getAddress();
+								
+								Map<String,Object> properties = new HashMap<>();
+								
+								properties.put( "a",  ia.getAddress().getHostAddress());
+								properties.put( "p",  (long)ia.getPort());
+								
+								result.add( 
+									new DHTTransportAlternativeContact()
+									{
+										public int
+										getNetworkType()
+										{
+											return(getNetworkType());
+										}
+
+										public int
+										getVersion()
+										{
+											return( 1 );
+										}
+			
+
+										public int
+										getID()
+										{
+											try{
+												return(Arrays.hashCode( BEncoder.encode( getProperties())));
+												
+											}catch( Throwable e ){
+												
+												return( 0 );
+											}
+										}
+
+										public int
+										getLastAlive()
+										{
+											return( 0 );
+										}
+										
+										public int
+										getAge()
+										{
+											return((int)((SystemTime.getMonotonousTime() - start )/1000 ));
+										}
+
+										public Map<String,Object>
+										getProperties()
+										{
+											return( properties );
+										}
+									});
+								
+								max--;
+								
+								if ( max == 0 ){
+									
+									break;
+								}
+							}
+						}finally{
+
+							this_mon.exit();
+						}
+						
+						return( result );
+					}
+				});
+		}
 	}
 
 	protected void
@@ -3344,7 +3443,7 @@ outer:
 	private final Object	alt_net_providers_lock = new Object();
 
 	{
-		for ( Integer net: DHTTransportAlternativeNetwork.AT_ALL ){
+		for ( Integer net: DHTTransportAlternativeNetwork.AT_ALL_PUB ){
 
 			alt_net_states.put( net, new DHTTransportAlternativeNetworkImpl( net ));
 		}

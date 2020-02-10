@@ -37,6 +37,7 @@ import com.biglybt.core.dht.nat.DHTNATPuncherAdapter;
 import com.biglybt.core.dht.router.DHTRouterStats;
 import com.biglybt.core.dht.transport.*;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
+import com.biglybt.core.dht.transport.udp.impl.DHTUDPUtils;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
 import com.biglybt.core.versioncheck.VersionCheckClient;
@@ -53,6 +54,7 @@ import com.biglybt.pif.utils.UTTimerEvent;
 import com.biglybt.pif.utils.UTTimerEventPerformer;
 import com.biglybt.plugin.dht.*;
 import com.biglybt.plugin.dht.DHTPluginInterface.DHTInterface;
+import com.biglybt.util.MapUtils;
 
 
 /**
@@ -588,6 +590,36 @@ outer:
 							if ( peers_imported > seed_limit ){
 
 								break;
+							}
+						}
+					}
+				}
+				
+				if ( peers_imported < seed_limit ){
+					
+					List<DHTTransportAlternativeContact> contacts = 
+						DHTUDPUtils.getAlternativeContacts( 
+							network == DHT.NW_AZ_MAIN_V6?DHTTransportAlternativeNetwork.AT_BIGLYBT_IPV6:DHTTransportAlternativeNetwork.AT_BIGLYBT_IPV4,
+							seed_limit - peers_imported );
+					
+					for ( DHTTransportAlternativeContact c: contacts ){
+						
+						Map<String, Object> props = c.getProperties();
+						
+						String ip = MapUtils.getMapString( props, "a", null );
+						
+						int	port = (int)MapUtils.getMapLong( props, "p", 0 );
+						
+						if ( ip != null && port > 0 ){
+							
+							if ( importSeed( ip, port ) != null ){
+	
+								peers_imported++;
+	
+								if ( peers_imported > seed_limit ){
+									
+									break;
+								}
 							}
 						}
 					}
