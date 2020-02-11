@@ -832,7 +832,7 @@ public class TorrentUtil
 
 			// move on complete
 		
-		final Menu moc_menu = new Menu( shell, SWT.DROP_DOWN);
+		final Menu moc_menu = new Menu( menu_shell, SWT.DROP_DOWN);
 
 		MenuItem moc_item = new MenuItem( menuFiles, SWT.CASCADE);
 
