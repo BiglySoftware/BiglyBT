@@ -998,6 +998,8 @@ BuddyPluginView
 																				
 											String msgs_str = "";
 										
+											int added = 0;
+											
 											for ( int i=msgs.size()-1;i>=0;i--){
 												
 												ChatMessage msg = msgs.get(i);
@@ -1016,6 +1018,13 @@ BuddyPluginView
 													}
 													
 													msgs_str = str + "\n" + msgs_str;
+													
+													added++;
+													
+													if ( added == 5 ){
+														
+														break;
+													}
 												}
 											}
 											
