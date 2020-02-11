@@ -395,77 +395,87 @@ DHTTransportUDPImpl
 					{
 						List<DHTTransportAlternativeContact>	result = new ArrayList<>( max );
 						
-						try{
-							this_mon.enter();
+						if ( max > 0 ){
 							
-							long start = SystemTime.getMonotonousTime();
-							
-							for ( DHTTransportContact c: routable_contact_history.values()){
-
-								InetSocketAddress ia = c.getAddress();
+							try{
+								this_mon.enter();
 								
-								Map<String,Object> properties = new HashMap<>();
+								long start = SystemTime.getMonotonousTime();
 								
-								properties.put( "a",  ia.getAddress().getHostAddress());
-								properties.put( "p",  (long)ia.getPort());
+								int net = getNetworkType();
 								
-								result.add( 
-									new DHTTransportAlternativeContact()
-									{
-										public int
-										getNetworkType()
-										{
-											return(getNetworkType());
-										}
-
-										public int
-										getVersion()
-										{
-											return( 1 );
-										}
-			
-
-										public int
-										getID()
-										{
-											try{
-												return(Arrays.hashCode( BEncoder.encode( getProperties())));
-												
-											}catch( Throwable e ){
-												
-												return( 0 );
-											}
-										}
-
-										public int
-										getLastAlive()
-										{
-											return( 0 );
-										}
-										
-										public int
-										getAge()
-										{
-											return((int)((SystemTime.getMonotonousTime() - start )/1000 ));
-										}
-
-										public Map<String,Object>
-										getProperties()
-										{
-											return( properties );
-										}
-									});
-								
-								max--;
-								
-								if ( max == 0 ){
+								for ( DHTTransportContact c: routable_contact_history.values()){
+	
+									InetSocketAddress ia = c.getAddress();
 									
-									break;
+									Map<String,Object> properties = new HashMap<>();
+									
+									properties.put( "a",  ia.getAddress().getHostAddress());
+									properties.put( "p",  (long)ia.getPort());
+									
+									int _id;
+									
+									try{
+										_id = Arrays.hashCode( BEncoder.encode( properties ));
+										
+									}catch( Throwable e ){
+										
+										_id = 0;
+									}
+									
+									int id = _id;
+									
+									result.add( 
+										new DHTTransportAlternativeContact()
+										{
+											public int
+											getNetworkType()
+											{
+												return( net );
+											}
+	
+											public int
+											getVersion()
+											{
+												return( 1 );
+											}
+				
+											public int
+											getID()
+											{
+												return( id );
+											}
+	
+											public int
+											getLastAlive()
+											{
+												return( 0 );	// deprecated
+											}
+											
+											public int
+											getAge()
+											{
+												return((int)((SystemTime.getMonotonousTime() - start )/1000 ));
+											}
+	
+											public Map<String,Object>
+											getProperties()
+											{
+												return( properties );
+											}
+										});
+									
+									max--;
+									
+									if ( max == 0 ){
+										
+										break;
+									}
 								}
+							}finally{
+	
+								this_mon.exit();
 							}
-						}finally{
-
-							this_mon.exit();
 						}
 						
 						return( result );
