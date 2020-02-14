@@ -935,7 +935,7 @@ DiskManagerImpl
 
         	if ( Debug.getNestedExceptionMessage(e).contains( "volume label syntax is incorrect" )){
 
-              	File target_file = new File( root_dir + relative_file.toString());
+              	File target_file = FileUtil.newFile( root_dir + relative_file.toString());
 
         		File actual_file = state.getFileLink( file_index, target_file );
 
@@ -999,7 +999,7 @@ DiskManagerImpl
         					comp = prefix + "_" + comp;
         				}
 
-        				temp = new File( temp, comp );
+        				temp = FileUtil.newFile( temp, comp );
         			}
 
            			Debug.outNoStack( "Fixing unsupported file path: " + actual_file.getAbsolutePath() + " -> " + temp.getAbsolutePath());
@@ -1755,7 +1755,7 @@ DiskManagerImpl
 			                    					}
 		                    					}
 	
-		                    					File new_file = new File( link.getParentFile(), new_name );
+		                    					File new_file = FileUtil.newFile( link.getParentFile(), new_name );
 	
 		                    					if ( !new_file.exists()){
 	
@@ -1800,7 +1800,7 @@ DiskManagerImpl
 				                    					}
 			                    					}
 	
-			                    					File new_file = new File( save_location.getParentFile(), new_name );
+			                    					File new_file = FileUtil.newFile( save_location.getParentFile(), new_name );
 	
 			                    					if ( !new_file.exists()){
 	
@@ -2838,7 +2838,7 @@ DiskManagerImpl
 	
 				  if ( new_name == null ){
 	
-					  new_file = new File( new File( move_to_dir, sub_path ), old_file.getName());
+					  new_file = FileUtil.newFile( FileUtil.newFile( move_to_dir, sub_path ), old_file.getName());
 	
 				  }else{
 	
@@ -2846,7 +2846,7 @@ DiskManagerImpl
 	
 					  if ( simple_torrent ){
 	
-						  new_file = new File( new File( move_to_dir, sub_path ), new_name );
+						  new_file = FileUtil.newFile( FileUtil.newFile( move_to_dir, sub_path ), new_name );
 	
 					  }else{
 	
@@ -2882,7 +2882,7 @@ DiskManagerImpl
 						  }
 	
 	
-						  new_file = new File( new File( move_to_dir, new_path ), old_file.getName());
+						  new_file = FileUtil.newFile( FileUtil.newFile( move_to_dir, new_path ), old_file.getName());
 					  }
 				  }
 	
@@ -3287,7 +3287,7 @@ DiskManagerImpl
 							  bytes_moved -= bytes_this_file;
 						  }
 	
-						  File new_loc = new File( new_root_dir );
+						  File new_loc = FileUtil.newFile( new_root_dir );
 	
 						  if ( new_loc.isDirectory()){
 	
@@ -3350,7 +3350,7 @@ DiskManagerImpl
     {
     	if (!loc_change.hasTorrentChange()) {return;}
 
-		File old_torrent_file = new File(download_manager.getTorrentFileName());
+		File old_torrent_file = FileUtil.newFile(download_manager.getTorrentFileName());
 		File new_torrent_file = loc_change.normaliseTorrentLocation(old_torrent_file);
 
 		if (!old_torrent_file.exists()) {
@@ -3438,7 +3438,7 @@ DiskManagerImpl
         try{
             if (torrent.isSimpleTorrent()){
 
-                File    target = new File( torrent_save_dir, torrent_save_file );
+                File    target = FileUtil.newFile( torrent_save_dir, torrent_save_file );
 
                 target = FMFileManagerFactory.getSingleton().getFileLink( torrent, 0, target.getCanonicalFile());
 
@@ -3466,9 +3466,9 @@ DiskManagerImpl
 
         			int numDataFiles = countDataFiles( torrent, torrent_save_dir, torrent_save_file );
         			
-        			if ( countFiles( new File(dir), numDataFiles) == numDataFiles){
+        			if ( countFiles( FileUtil.newFile(dir), numDataFiles) == numDataFiles){
 
-        				if ( FileUtil.deleteWithRecycle( new File( dir ), false )){
+        				if ( FileUtil.deleteWithRecycle( FileUtil.newFile( dir ), false )){
         					
         					deleted = true;
         				}
@@ -3544,7 +3544,7 @@ DiskManagerImpl
                     path_str += (j==0?"":File.separator) + comp;
                 }
 
-                File file = new File(path_str).getCanonicalFile();
+                File file = FileUtil.newFile(path_str).getCanonicalFile();
 
                 File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, file );
 
@@ -3552,7 +3552,7 @@ DiskManagerImpl
 
                 if ( linked_file != file ){
 
-                    if ( !linked_file.getCanonicalPath().startsWith(new File( torrent_save_dir ).getCanonicalPath())){
+                    if ( !linked_file.getCanonicalPath().startsWith(FileUtil.newFile( torrent_save_dir ).getCanonicalPath())){
 
                         skip = true;
                     }
@@ -3588,7 +3588,7 @@ DiskManagerImpl
 			TOTorrentFile[] files = torrent.getFiles();
 
 			String  root_path = torrent_save_dir + File.separator + torrent_save_file + File.separator;
-			File root_path_file = new File( torrent_save_dir, torrent_save_file );
+			File root_path_file = FileUtil.newFile( torrent_save_dir, torrent_save_file );
 			String root_full_path;
 			try {
 				root_full_path = root_path_file.getCanonicalPath();
@@ -3638,7 +3638,7 @@ DiskManagerImpl
                 }
             }
 
-            File file = new File(path_str);
+            File file = FileUtil.newFile(path_str);
 
 					boolean delete;
 

@@ -3852,7 +3852,7 @@ public class OpenTorrentOptionsWindow
 			checkSeedingMode();
 
 			if (!Constants.isOSX) { // See Eclipse Bug 292449
-				File file = new File( dirText );
+				File file = FileUtil.newFile( dirText );
 				if (!file.isDirectory()) {
 					cmbDataDir.setBackground(Colors.colorErrorBG);
 					// make the error state visible
@@ -4474,12 +4474,12 @@ public class OpenTorrentOptionsWindow
 					String sSavePath;
 					String sDefPath = cmbDataDir.getText();
 
-					File f = new File(sDefPath);
+					File f = FileUtil.newFile(sDefPath);
 					if (sDefPath.length() > 0) {
 						while (!f.exists()) {
 							f = f.getParentFile();
 							if (f == null) {
-								f = new File(sDefPath);
+								f = FileUtil.newFile(sDefPath);
 								break;
 							}
 						}
@@ -4553,7 +4553,7 @@ public class OpenTorrentOptionsWindow
 				
 				sub_label.setText( MessageText.getString( "label.subfolder" ));
 				
-				String top = new File (torrentOptions.getDataDir()).getName();
+				String top = FileUtil.newFile(torrentOptions.getDataDir()).getName();
 				
 				txtSubFolder = new Text( more_comp, SWT.BORDER );
 				GridData grid_data = new GridData(GridData.FILL_VERTICAL);
@@ -4563,7 +4563,7 @@ public class OpenTorrentOptionsWindow
 
 				txtSubFolder.setText( top );
 								
-				torrentOptions.addListener((TorrentOpenOptions.ParentDirChangedListener) () -> txtSubFolder.setText(new File (torrentOptions.getDataDir()).getName()) );
+				torrentOptions.addListener((TorrentOpenOptions.ParentDirChangedListener) () -> txtSubFolder.setText(FileUtil.newFile(torrentOptions.getDataDir()).getName()) );
 						
 				txtSubFolder.addFocusListener(
 					new FocusListener(){
@@ -4575,7 +4575,7 @@ public class OpenTorrentOptionsWindow
 							
 							String str = txtSubFolder.getText().trim();
 							
-							File data_dir = new File( torrentOptions.getDataDir());
+							File data_dir = FileUtil.newFile( torrentOptions.getDataDir());
 							
 							if ( str.isEmpty()){
 								
@@ -4585,7 +4585,7 @@ public class OpenTorrentOptionsWindow
 								
 							}else{
 								
-								File new_dir = new File( data_dir.getParentFile(), str );
+								File new_dir = FileUtil.newFile( data_dir.getParentFile(), str );
 								
 								setTopLevelFolder( new_dir, false );
 							}
@@ -4714,7 +4714,7 @@ public class OpenTorrentOptionsWindow
 
 						TorrentOpener.setFilterPathData(path);
 
-						File target = new File(path);
+						File target = FileUtil.newFile(path);
 						
 						for ( TorrentOpenOptions to: torrentOptionsMulti ){
 							
@@ -5854,7 +5854,7 @@ public class OpenTorrentOptionsWindow
 			}else{
 				DirectoryDialog dDialog = new DirectoryDialog(shell,SWT.SYSTEM_MODAL);
 
-				File filterPath = new File( torrentOptions.getDataDir());
+				File filterPath = FileUtil.newFile( torrentOptions.getDataDir());
 
 				if ( !filterPath.exists()){
 					filterPath = filterPath.getParentFile();
@@ -5868,7 +5868,7 @@ public class OpenTorrentOptionsWindow
 					return;
 				}
 
-				File newDir = new File(sNewDir).getAbsoluteFile();
+				File newDir = FileUtil.newFile(sNewDir).getAbsoluteFile();
 
 				if ( !newDir.isDirectory()){
 
@@ -5899,7 +5899,7 @@ public class OpenTorrentOptionsWindow
 
 			}else{
 
-				File oldDir = new File( torrentOptions.getDataDir());
+				File oldDir = FileUtil.newFile( torrentOptions.getDataDir());
 
 				File newDir = oldDir.getParentFile();
 
@@ -5922,7 +5922,7 @@ public class OpenTorrentOptionsWindow
 
 			}else{
 
-				File oldDir = new File( torrentOptions.getDataDir());
+				File oldDir = FileUtil.newFile( torrentOptions.getDataDir());
 
 				File newDir = oldDir.getParentFile();
 
@@ -5997,7 +5997,7 @@ public class OpenTorrentOptionsWindow
 
 							if ( pos < cp_len ){
 
-								File f = new File( new String( cp_chars, 0, pos ) + "x" );
+								File f = FileUtil.newFile( new String( cp_chars, 0, pos ) + "x" );
 
 								File pf = f.getParentFile();
 
@@ -6040,7 +6040,7 @@ public class OpenTorrentOptionsWindow
 
 						if ( prefix_len == 0 ){
 
-							File f = new File( dest );
+							File f = FileUtil.newFile( dest );
 
 							while( f.getParentFile() != null ){
 
@@ -6079,7 +6079,7 @@ public class OpenTorrentOptionsWindow
 					String sFilterPath = fileInfo.getDestPathName();
 					String sFileName = fileInfo.getOriginalFileName();
 
-					File f = new File(sFilterPath);
+					File f = FileUtil.newFile(sFilterPath);
 					if (!f.isDirectory()) {
 						// Move up the tree until we have an existing path
 						while (sFilterPath != null) {
@@ -6088,7 +6088,7 @@ public class OpenTorrentOptionsWindow
 								break;
 
 							sFilterPath = parentPath;
-							f = new File(sFilterPath);
+							f = FileUtil.newFile(sFilterPath);
 							if (f.isDirectory())
 								break;
 						}
@@ -6107,7 +6107,7 @@ public class OpenTorrentOptionsWindow
 						return;
 
 					if (fileInfo.parent.getStartMode() == TorrentOpenOptions.STARTMODE_SEEDING) {
-						File file = new File(sNewName);
+						File file = FileUtil.newFile(sNewName);
 						if (file.length() == fileInfo.lSize)
 							fileInfo.setFullDestName(sNewName);
 						else {
@@ -6216,7 +6216,7 @@ public class OpenTorrentOptionsWindow
 									torrentOptions.rebuildOriginalNames();
 									setupInfoSection(skin);
 									if (txtSubFolder != null) {
-										String top = new File (torrentOptions.getDataDir()).getName();
+										String top = FileUtil.newFile(torrentOptions.getDataDir()).getName();
 
 										txtSubFolder.setText(top);
 									}
@@ -6795,9 +6795,9 @@ public class OpenTorrentOptionsWindow
 		okPressed(
 			String dataDirPassed)
 		{
-			File filePassed = new File(dataDirPassed);
+			File filePassed = FileUtil.newFile( dataDirPassed );
 
-			File fileDefSavePath = new File(
+			File fileDefSavePath = FileUtil.newFile(
 					COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH));
 
 			if (filePassed.equals(fileDefSavePath) && !fileDefSavePath.isDirectory()) {
@@ -6834,7 +6834,7 @@ public class OpenTorrentOptionsWindow
 				return false;
 			}
 
-			File torrentFile = new File( torrentOptions.getTorrentFile());
+			File torrentFile = FileUtil.newFile( torrentOptions.getTorrentFile());
 			
 			if ( !torrentFile.exists()){
 				
@@ -6871,7 +6871,7 @@ public class OpenTorrentOptionsWindow
 			String sExistingFiles = "";
 			int iNumExistingFiles = 0;
 
-			File torrentOptionsDataDir = new File(torrentOptions.getDataDir());
+			File torrentOptionsDataDir = FileUtil.newFile(torrentOptions.getDataDir());
 
 			// Need to make directory now, or single file torrent will take the
 			// "dest dir" as their filename.  ie:
@@ -6964,7 +6964,7 @@ public class OpenTorrentOptionsWindow
 						
 						if ( !torrentOptions.isRemovedTopLevel()){
 						
-							newSavePath = new File( newSavePath ).getParent();
+							newSavePath = FileUtil.newFile( newSavePath ).getParent();
 						}
 					}
 				}else{
@@ -6978,7 +6978,7 @@ public class OpenTorrentOptionsWindow
 
 					List<String> oldDirList = COConfigurationManager.getStringListParameter("saveTo_list");
 					
-					newSavePath = new File( newSavePath ).getAbsolutePath();
+					newSavePath = FileUtil.newFile( newSavePath ).getAbsolutePath();
 					
 					LinkedList<String>	newDirList	= new LinkedList<>();
 	

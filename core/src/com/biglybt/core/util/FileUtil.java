@@ -21,12 +21,14 @@ package com.biglybt.core.util;
 
 import java.io.*;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
@@ -147,7 +149,7 @@ public class FileUtil {
 				  return( file );
 			  }
 			  
-			  return( new File( file.getParentFile().getCanonicalFile(), file.getName()));
+			  return( newFile( file.getParentFile().getCanonicalFile(), file.getName()));
 			  
 		  }else{
 			  
@@ -179,7 +181,7 @@ public class FileUtil {
 				  return( file.getAbsolutePath());
 			  }
 			  
-			  return( new File( file.getParentFile().getCanonicalFile(), file.getName()).getAbsolutePath());
+			  return( newFile( file.getParentFile().getCanonicalFile(), file.getName()).getAbsolutePath());
 			  
 		  }else{
 			  
@@ -217,7 +219,7 @@ public class FileUtil {
 
     String canonicalFileName = filename;
     try {
-      canonicalFileName = new File(filename).getCanonicalPath();
+      canonicalFileName = newFile(filename).getCanonicalPath();
     }
     catch (IOException ignore) {}
     return canonicalFileName;
@@ -225,7 +227,7 @@ public class FileUtil {
 
 
   public static File getUserFile(String filename) {
-    return new File(SystemProperties.getUserPath(), filename);
+    return newFile(SystemProperties.getUserPath(), filename);
   }
 
   /**
@@ -241,7 +243,7 @@ public class FileUtil {
 
 		String path = SystemProperties.getApplicationPath();
 
-		return new File(path, filename);
+		return newFile(path, filename);
 	}
 
 
@@ -254,11 +256,11 @@ public class FileUtil {
     String moveToDir = COConfigurationManager.getStringParameter("Completed Files Directory", "");
 
     try{
-  	  moveToDir = new File(moveToDir).getCanonicalPath();
+  	  moveToDir = newFile(moveToDir).getCanonicalPath();
     }catch( Throwable e ){
     }
     try{
-    	defSaveDir = new File(defSaveDir).getCanonicalPath();
+    	defSaveDir = newFile(defSaveDir).getCanonicalPath();
     }catch( Throwable e ){
     }
 
@@ -361,12 +363,12 @@ public class FileUtil {
 
       if ( defSaveDir.trim().length() > 0 ){
 
-      	defSaveDir = new File(defSaveDir).getCanonicalPath();
+      	defSaveDir = newFile(defSaveDir).getCanonicalPath();
       }
 
       if ( moveToDir.trim().length() > 0 ){
 
-      	moveToDir = new File(moveToDir).getCanonicalPath();
+      	moveToDir = newFile(moveToDir).getCanonicalPath();
       }
 
       if ( f.isDirectory()){
@@ -584,7 +586,7 @@ public class FileUtil {
 
 		}else{
 
-			String str = new File(file_name_out).getCanonicalFile().toString();
+			String str = newFile(file_name_out).getCanonicalFile().toString();
 
 			int	p = str.lastIndexOf( File.separator );
 
@@ -606,7 +608,7 @@ public class FileUtil {
   	String		file_name,
 	Map			data )
   {
-	  File parent_dir = new File(SystemProperties.getUserPath());
+	  File parent_dir = newFile(SystemProperties.getUserPath());
 
 	  boolean use_backups = COConfigurationManager.getBooleanParameter("Use Config File Backups" );
 
@@ -650,7 +652,7 @@ public class FileUtil {
   {
 	  if ( use_backup ){
 
-		  File	originator = new File( parent_dir, file_name );
+		  File	originator = newFile( parent_dir, file_name );
 
 		  if ( originator.exists()){
 
@@ -684,7 +686,7 @@ public class FileUtil {
 			  return( false );
 		  }
 		  
-		  File existing = new File(  parent_dir, file_name );
+		  File existing = newFile(  parent_dir, file_name );
 		  
 		  if ( existing.length() == encoded_data.length ) {
 			  
@@ -714,7 +716,7 @@ public class FileUtil {
 
 		  try{
 			  getReservedFileHandles();
-			  File temp = new File(  parent_dir, file_name + ".saving");
+			  File temp = newFile(  parent_dir, file_name + ".saving");
 			  BufferedOutputStream	baos = null;
 
 			  try{
@@ -737,7 +739,7 @@ public class FileUtil {
 
 				  if ( temp.length() > 1L ){
 
-					  File file = new File( parent_dir, file_name );
+					  File file = newFile( parent_dir, file_name );
 
 					  if ( file.exists()){
 
@@ -803,12 +805,12 @@ public class FileUtil {
   	resilientConfigFileExists(
   		String		name )
   	{
- 		File parent_dir = new File(SystemProperties.getUserPath());
+ 		File parent_dir = newFile(SystemProperties.getUserPath());
 
  		boolean use_backups = COConfigurationManager.getBooleanParameter("Use Config File Backups" );
 
- 		return( new File( parent_dir, name ).exists() ||
- 				( use_backups && new File( parent_dir, name + ".bak" ).exists()));
+ 		return( newFile( parent_dir, name ).exists() ||
+ 				( use_backups && newFile( parent_dir, name + ".bak" ).exists()));
   	}
 
 	/**
@@ -819,7 +821,7 @@ public class FileUtil {
 	readResilientConfigFile(
 		String		file_name )
 	{
- 		File parent_dir = new File(SystemProperties.getUserPath());
+ 		File parent_dir = newFile(SystemProperties.getUserPath());
 
  		boolean use_backups = COConfigurationManager.getBooleanParameter("Use Config File Backups" );
 
@@ -835,7 +837,7 @@ public class FileUtil {
 		String		file_name,
 		boolean		use_backups )
 	{
- 		File parent_dir = new File(SystemProperties.getUserPath());
+ 		File parent_dir = newFile(SystemProperties.getUserPath());
 
  		if ( !use_backups ){
 
@@ -843,7 +845,7 @@ public class FileUtil {
  				// of the main config file itself as when bootstrapping we can't get the
  				// "use backups"
 
- 			if ( new File( parent_dir, file_name + ".bak").exists()){
+ 			if ( newFile( parent_dir, file_name + ".bak").exists()){
 
  				use_backups = true;
  			}
@@ -892,7 +894,7 @@ public class FileUtil {
 		boolean		use_backup,
 		boolean		intern_keys )
  	{
-		File	backup_file = new File( parent_dir, file_name + ".bak" );
+		File	backup_file = newFile( parent_dir, file_name + ".bak" );
 
  		if ( use_backup ){
 
@@ -1003,7 +1005,7 @@ public class FileUtil {
 
   		boolean	using_backup	= file_name.endsWith(".saving");
 
-  		File file = new File(  parent_dir, file_name );
+  		File file = newFile(  parent_dir, file_name );
 
 	   		//make sure the file exists and isn't zero-length
 
@@ -1114,7 +1116,7 @@ public class FileUtil {
 
 		    	while(true){
 
-		    		File	test = new File( parent_dir, file.getName() + ".bad" + (bad_id==0?"":(""+bad_id)));
+		    		File	test = newFile( parent_dir, file.getName() + ".bad" + (bad_id==0?"":(""+bad_id)));
 
 		    		if ( !test.exists()){
 
@@ -1168,17 +1170,17 @@ public class FileUtil {
 		File		file )
 	{
 		file.delete();
-		new File( file.getParentFile(), file.getName() + ".bak" ).delete();
+		newFile( file.getParentFile(), file.getName() + ".bak" ).delete();
 	}
 
 	public static void
 	deleteResilientConfigFile(
 		String		name )
 	{
-		File parent_dir = new File(SystemProperties.getUserPath());
+		File parent_dir = newFile(SystemProperties.getUserPath());
 
-		new File( parent_dir, name ).delete();
-		new File( parent_dir, name + ".bak" ).delete();
+		newFile( parent_dir, name ).delete();
+		newFile( parent_dir, name + ".bak" ).delete();
 	}
 
 	private static void
@@ -1214,7 +1216,7 @@ public class FileUtil {
 
 			class_mon.enter();
 
-			File	lock_file	= new File(SystemProperties.getUserPath() + ".lock");
+			File	lock_file	= newFile(SystemProperties.getUserPath() + ".lock");
 
 			if ( first_reservation ){
 
@@ -1260,7 +1262,7 @@ public class FileUtil {
      * @param _make_copy copy instead of move
      */
     public static void backupFile( final String _filename, final boolean _make_copy ) {
-      backupFile( new File( _filename ), _make_copy );
+      backupFile( newFile( _filename ), _make_copy );
     }
 
     /**
@@ -1271,7 +1273,7 @@ public class FileUtil {
      */
     public static void backupFile( final File _file, final boolean _make_copy ) {
       if ( _file.length() > 0L ) {
-        File bakfile = new File( _file.getAbsolutePath() + ".bak" );
+        File bakfile = newFile( _file.getAbsolutePath() + ".bak" );
         if ( bakfile.exists() ) bakfile.delete();
         if ( _make_copy ) {
           copyFile( _file, bakfile );
@@ -1519,7 +1521,7 @@ public class FileUtil {
 
     		File[]	files = from_file_or_dir.listFiles();
 
-    		File	new_parent = new File( to_parent_dir, from_file_or_dir.getName());
+    		File	new_parent = newFile( to_parent_dir, from_file_or_dir.getName());
 
     		FileUtil.mkdirs(new_parent);
 
@@ -1531,7 +1533,7 @@ public class FileUtil {
     		}
     	}else{
 
-    		File target = new File( to_parent_dir, from_file_or_dir.getName());
+    		File target = newFile( to_parent_dir, from_file_or_dir.getName());
 
     		if ( !copyFile(  from_file_or_dir, target )){
 
@@ -1550,11 +1552,11 @@ public class FileUtil {
      */
     public static File getFileOrBackup( final String _filename ) {
       try {
-        File file = new File( _filename );
+        File file = newFile( _filename );
         //make sure the file exists and isn't zero-length
         if ( file.length() <= 1L ) {
           //if so, try using the backup file
-          File bakfile = new File( _filename + ".bak" );
+          File bakfile = newFile( _filename + ".bak" );
           if ( bakfile.length() <= 1L ) {
             return null;
           }
@@ -1636,7 +1638,7 @@ public class FileUtil {
         		try{
         			uri = URI.create(jarName);
 
-        			if ( !new File(uri).exists()){
+        			if ( !newFile(uri).exists()){
 
         				throw( new FileNotFoundException());
         			}
@@ -1647,7 +1649,7 @@ public class FileUtil {
         			uri = URI.create(jarName);
         		}
 
-        		File jar = new File(uri);
+        		File jar = newFile(uri);
 
         		return( jar );
 
@@ -1860,7 +1862,7 @@ public class FileUtil {
     		for (int i=0;i<files.length;i++){
 
   				File	ff = files[i];
-				File	tf = new File( to_file, ff.getName());
+				File	tf = newFile( to_file, ff.getName());
 
     			try{
      				if ( renameFile( ff, tf, fail_on_existing_directory, file_filter, pl )){
@@ -1912,7 +1914,7 @@ public class FileUtil {
       		for (int i=0;i<last_ok;i++){
 
 				File	ff = files[i];
-				File	tf = new File( to_file, ff.getName());
+				File	tf = newFile( to_file, ff.getName());
 
     			try{
     				// null - We don't want to use the file filter, it only refers to source paths.
@@ -2422,7 +2424,7 @@ public class FileUtil {
     	byte[] file_data )
     {
     	try{
-    		File file = new File( filename );
+    		File file = newFile( filename );
 
     		if ( !file.getParentFile().exists()){
 
@@ -2597,19 +2599,24 @@ public class FileUtil {
 
 		core.createOperation( op_type, task );
 	}
+		
 	
 	/**
 	 * Makes Directories as long as the directory isn't directly in Volumes (OSX)
 	 * @param f
 	 * @return
 	 */
-	public static boolean mkdirs(File f) {
+	
+	public static boolean 
+	mkdirs(
+		File f) 
+	{
 		if (Constants.isOSX) {
 			Pattern pat = Pattern.compile("^(/Volumes/[^/]+)");
 			Matcher matcher = pat.matcher(f.getParent());
 			if (matcher.find()) {
 				String sVolume = matcher.group();
-				File fVolume = new File(sVolume);
+				File fVolume = newFile(sVolume);
 				if (!fVolume.isDirectory()) {
 					Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING, sVolume
 							+ " is not mounted or not available."));
@@ -2996,7 +3003,7 @@ public class FileUtil {
 
 				if ( rename_test.exists()){
 
-					File target = new File( rename_test.getParentFile(), rename_test.getName() + ".bak" );
+					File target = newFile( rename_test.getParentFile(), rename_test.getName() + ".bak" );
 
 					target.delete();
 
@@ -3129,5 +3136,435 @@ public class FileUtil {
 		public void
 		complete();
 	}
+	
+	
+	private static final boolean FILE_HACK_ENABLE = false;
+	
+	
+	private static final String hack_prefix = "content://";
+	private static final String hack_target = "C:\\Temp\\ContentStore";
+	
+	public static File
+	newFile(
+		String		path )
+	{
+		if ( !FILE_HACK_ENABLE ){
+			
+			return( new File( path ));
+		}
+		
+		if ( path.startsWith( hack_prefix )){
+			
+			return( new FileHack( path ));
+			
+		}else{
+			
+			return( new File( path ));
+		}
+	}
+	
+	public static File
+	newFile(
+		String		parent,
+		String		name )
+	{
+		if ( !FILE_HACK_ENABLE ){
+			
+			return( new File( parent, name ));
+		}
 
+		if ( parent == null ){
+			
+			return( newFile( name ));
+			
+		}else if ( parent.startsWith( hack_prefix )){
+			
+			return( new FileHack( parent + (parent.endsWith( DIR_SEP )?"":DIR_SEP) + (name.startsWith( DIR_SEP )?name.substring(1):name)));
+			
+		}else{
+			
+			return( new File( parent, name ));
+		}
+	}
+
+	public static File
+	newFile(
+		File		parent_file,
+		String		name )
+	{
+		if ( !FILE_HACK_ENABLE ){
+			
+			return( new File( parent_file, name ));
+		}
+		
+		if ( parent_file == null ){
+			
+			return( newFile( name ));
+			
+		}else if ( parent_file instanceof FileHack ){
+			
+			String parent = parent_file.getAbsolutePath();
+			
+			return( new FileHack( parent + (parent.endsWith( DIR_SEP )?"":DIR_SEP) + (name.startsWith( DIR_SEP )?name.substring(1):name)));
+			
+		}else{
+			
+			return( new File( parent_file, name ));
+		}
+	}
+	
+	public static File
+	newFile(
+		URI		uri )
+	{
+			// hackery not required
+		
+		return( new File( uri ));
+	}
+
+
+	public static class
+	FileHack
+		extends File
+	{
+		final private String 	path;
+		final private File		target;
+		
+		private
+		FileHack(
+			String	_path )
+		{
+			super( Base32.encode( _path.getBytes( Constants.UTF_8 )));
+			
+			path	= _path;
+			
+			target = new File( hack_target, path.substring( hack_prefix.length()));
+		}
+		
+		public File
+		getHackTarget()
+		{
+			return( target );
+		}
+		
+		public File
+		getAbsoluteFile()
+		{
+			return( this );
+		}
+		
+		public String
+		getAbsolutePath()
+		{
+			return( path );
+		}
+		
+		public boolean
+		exists()
+		{
+			return( target.exists());
+		}
+		
+		@Override
+		public String getName(){
+			String temp = path;
+			if ( temp.endsWith( DIR_SEP )){
+				temp = temp.substring( 0, temp.length()-1);
+			}
+			
+			int	pos = temp.lastIndexOf( DIR_SEP );
+			
+			if ( pos == -1 ){
+				
+				return( "" );
+				
+			}else{
+				
+				return( temp.substring( pos+1 ));
+			}
+		}
+		
+		@Override
+		public String getParent(){
+			return( getParentFile().getAbsolutePath());
+		}
+		
+		@Override
+		public File getParentFile(){
+			String temp = path;
+			if ( temp.endsWith( DIR_SEP )){
+				temp = temp.substring( 0, temp.length()-1);
+			}
+			
+			int	pos = temp.lastIndexOf( DIR_SEP );
+			
+			if ( pos == -1 ){
+				
+				return( null );
+				
+			}else{
+				
+				return( new FileHack( temp.substring( 0, pos+1 )));
+			}
+		}
+		
+		@Override
+		public String getPath(){
+			return( path );
+		}
+		
+		
+		public boolean
+		isFile()
+		{
+			return( target.isFile());
+		}
+		
+		public boolean
+		isDirectory()
+		{
+			return( target.isDirectory());
+		}	
+		
+		@Override
+		public int compareTo(File other){
+			if ( other instanceof FileHack ){
+				return( path.compareTo((((FileHack)other).path)));
+			}
+			return( -1 );
+		}
+		
+		@Override
+		public int hashCode(){
+			return( path.hashCode());
+		}
+		
+		@Override
+		public boolean equals(Object other){
+			if ( other instanceof FileHack ){
+				return( path.equals((((FileHack)other).path)));
+			}
+			return( false );
+		}
+			
+		@Override
+		public boolean createNewFile() throws IOException{
+			return( target.createNewFile());
+		}
+		
+		@Override
+		public boolean delete(){
+			return( target.delete());
+		}
+				
+		@Override
+		public File getCanonicalFile() throws IOException{
+			return( this );
+		}
+		
+		@Override
+		public String getCanonicalPath() throws IOException{
+			return( path );
+		}
+				
+		@Override
+		public long lastModified(){
+			return( target.lastModified());
+		}
+		
+		@Override
+		public String[] list(){
+			File[] files = listFiles();
+			if ( files != null ){
+				String[] result = new String[files.length];
+				
+				for ( int i=0;i<result.length;i++){
+					result[i] = files[i].getAbsolutePath();
+				};
+				
+				return( result );
+			}else{
+				return( null );
+			}
+		}
+		
+		@Override
+		public long length(){
+			return( target.length());
+		}
+				
+		@Override
+		public File[] listFiles(){
+			File[] files = target.listFiles();
+			
+			if ( files != null ){
+			
+				for ( int i=0;i<files.length;i++){
+					
+					files[i] = new FileHack( hack_prefix + files[i].getAbsolutePath().substring( hack_target.length() + 1 ));
+				}	
+			}
+			
+			return( files );
+		}
+		
+		@Override
+		public boolean mkdir(){
+			return( target.mkdir());
+		}
+		
+		@Override
+		public boolean mkdirs(){
+			return( target.mkdirs());
+		}
+
+		@Override
+		public String toString(){
+			return( path );
+		}
+		
+		
+		
+			// NOT NEEDED
+		
+		@Override
+		public boolean canExecute(){
+			Debug.out( "!" );
+			return super.canExecute();
+		}
+		
+		@Override
+		public boolean canRead(){
+			Debug.out( "!" );
+			return super.canRead();
+		}
+		
+		@Override
+		public boolean canWrite(){
+			Debug.out( "!" );
+			return super.canWrite();
+		}
+
+		@Override
+		public void deleteOnExit(){
+			Debug.out( "!" );
+			super.deleteOnExit();
+		}
+
+		@Override
+		public long getFreeSpace(){
+			Debug.out( "!" );
+			return super.getFreeSpace();
+		}
+		
+		@Override
+		public long getTotalSpace(){
+			Debug.out( "!" );
+			return super.getTotalSpace();
+		}
+		
+		@Override
+		public long getUsableSpace(){
+			Debug.out( "!" );
+			return super.getUsableSpace();
+		}
+		
+		@Override
+		public boolean isAbsolute(){
+			Debug.out( "!" );
+			return super.isAbsolute();
+		}
+		
+		@Override
+		public boolean isHidden(){
+			Debug.out( "!" );
+			return super.isHidden();
+		}
+
+		@Override
+		public String[] list(FilenameFilter filter){
+			Debug.out( "!" );
+			return super.list(filter);
+		}
+
+		@Override
+		public File[] listFiles(FileFilter filter){
+			Debug.out( "!" );
+			return super.listFiles(filter);
+		}
+		
+		@Override
+		public File[] listFiles(FilenameFilter filter){
+			Debug.out( "!" );
+			return super.listFiles(filter);
+		}
+				
+		@Override
+		public boolean renameTo(File dest){
+			Debug.out( "!" );
+			return super.renameTo(dest);
+		}
+		
+		@Override
+		public boolean setExecutable(boolean executable){
+			Debug.out( "!" );
+			return super.setExecutable(executable);
+		}
+		
+		@Override
+		public boolean setExecutable(boolean executable, boolean ownerOnly){
+			Debug.out( "!" );
+			return super.setExecutable(executable, ownerOnly);
+		}
+		
+		@Override
+		public boolean setLastModified(long time){
+			Debug.out( "!" );
+			return super.setLastModified(time);
+		}
+		
+		@Override
+		public boolean setReadable(boolean readable){
+			Debug.out( "!" );
+			return super.setReadable(readable);
+		}
+		@Override
+		public boolean setReadable(boolean readable, boolean ownerOnly){
+			Debug.out( "!" );
+			return super.setReadable(readable, ownerOnly);
+		}
+		
+		@Override
+		public boolean setReadOnly(){
+			Debug.out( "!" );
+			return super.setReadOnly();
+		}
+		@Override
+		public boolean setWritable(boolean writable){
+			Debug.out( "!" );
+			return super.setWritable(writable);
+		}
+		@Override
+		public boolean setWritable(boolean writable, boolean ownerOnly){
+			Debug.out( "!" );
+			return super.setWritable(writable, ownerOnly);
+		}
+		
+		@Override
+		public Path toPath(){
+			Debug.out( "!" );
+			return( super.toPath());
+		}
+		
+		@Override
+		public URI toURI(){
+			Debug.out( "!" );
+			return super.toURI();
+		}
+		@Override
+		public URL toURL() throws MalformedURLException{
+			Debug.out( "!" );
+			return super.toURL();
+		}
+	}
 }

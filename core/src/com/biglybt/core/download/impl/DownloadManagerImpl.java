@@ -1085,7 +1085,7 @@ DownloadManagerImpl
 
 					 	// set up some kinda default else things don't work wel...
 
-					 torrent_save_location = new File( torrent_save_dir, torrentFileName );
+					 torrent_save_location = FileUtil.newFile( torrent_save_dir, torrentFileName );
 
 					 throw( new NoStackException( DownloadManager.ET_OTHER,"Download identity changed - please remove and re-add the download" ));
 				 }
@@ -1107,7 +1107,7 @@ DownloadManagerImpl
 				 	// the save dir and file. On initial entry the save_dir will have the user-selected
 				 	// save location and the save_file will be null
 
-				 File	save_dir_file	= new File( torrent_save_dir );
+				 File	save_dir_file	= FileUtil.newFile( torrent_save_dir );
 
 				 // System.out.println( "before: " + torrent_save_dir + "/" + torrent_save_file );
 
@@ -1183,7 +1183,7 @@ DownloadManagerImpl
 				 	}
 				 }
 
-				 torrent_save_location = new File( torrent_save_dir, torrent_save_file );
+				 torrent_save_location = FileUtil.newFile( torrent_save_dir, torrent_save_file );
 
 				 	// final validity test must be based of potentially linked target location as file
 				 	// may have been re-targetted
@@ -1360,7 +1360,7 @@ DownloadManagerImpl
 						 // grab an initial value from torrent file - migration only
 
 						 try{
-							 add_time = new File( torrentFileName ).lastModified();
+							 add_time = FileUtil.newFile( torrentFileName ).lastModified();
 
 						 }catch( Throwable e ){
 						 }
@@ -1475,11 +1475,11 @@ DownloadManagerImpl
 
 				if ( torrent_save_file == null ){
 
-					torrent_save_location = new File( torrent_save_dir );
+					torrent_save_location = FileUtil.newFile( torrent_save_dir );
 
 				}else{
 
-					torrent_save_location = new File( torrent_save_dir, torrent_save_file );
+					torrent_save_location = FileUtil.newFile( torrent_save_dir, torrent_save_file );
 				}
 
 			}else{
@@ -1489,7 +1489,7 @@ DownloadManagerImpl
 
 				if ( torrent_save_file == null ){
 
-					torrent_save_location = new File( torrent_save_dir );
+					torrent_save_location = FileUtil.newFile( torrent_save_dir );
 				}
 
 					// make sure we know what networks to use for this download
@@ -1515,7 +1515,7 @@ DownloadManagerImpl
 
 					if ( cache.startsWith( key )){
 
-						torrent_save_location = new File( cache.substring( key.length()));
+						torrent_save_location = FileUtil.newFile( cache.substring( key.length()));
 
 						already_done = true;
 					}
@@ -1915,7 +1915,7 @@ DownloadManagerImpl
 			//System.out.println( "   adding " + old_path + " -> null" );
 
 			from_indexes.add( 0 );
-			from_links.add( new File(old_path));
+			from_links.add( FileUtil.newFile(old_path));
 			to_links.add( null );
 
 				// in general links on simple torrents aren't used, instead the download's save-path is switched to the
@@ -1952,8 +1952,8 @@ DownloadManagerImpl
 
 			//System.out.println( "   adding " + new_path + " -> " + to_loc_to_use );
 			from_indexes.add( 0 );
-			from_links.add(new File(new_path));
-			to_links.add( new File(to_loc_to_use));
+			from_links.add(FileUtil.newFile(new_path));
+			to_links.add( FileUtil.newFile(to_loc_to_use));
 
 		}else{
 
@@ -1974,14 +1974,14 @@ DownloadManagerImpl
 				// delete old
 
 			from_indexes.add( file_index );
-			from_links.add(new File(from_loc));
+			from_links.add(FileUtil.newFile(from_loc));
 			to_links.add( null );
 
 				// add new
 
 			from_indexes.add( file_index );
-			from_links.add( new File(from_loc_to_use));
-			to_links.add( new File(to_loc_to_use));
+			from_links.add( FileUtil.newFile(from_loc_to_use));
+			to_links.add( FileUtil.newFile(to_loc_to_use));
 		}
 	}
 
@@ -2992,7 +2992,7 @@ DownloadManagerImpl
 	@Override
 	public void setTorrentSaveDir(String new_dir, String dl_name) {
 		File old_location = torrent_save_location;
-		File new_location = new File(new_dir, dl_name);
+		File new_location = FileUtil.newFile(new_dir, dl_name);
 
 		if ( FileUtil.areFilePathsIdentical( new_location, old_location)){
 			
@@ -4429,7 +4429,7 @@ DownloadManagerImpl
 	{
 		if ( torrentFileName != null ){
 
-			TorrentUtils.delete( new File(torrentFileName),getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ));
+			TorrentUtils.delete(FileUtil.newFile(torrentFileName),getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ));
 		}
 	}
 
@@ -4933,7 +4933,7 @@ DownloadManagerImpl
 	  }
 
 	  final File current_save_location = old_file;
-	  File new_save_location = new File(
+	  File new_save_location = FileUtil.newFile(
 			  (new_parent_dir == null) ? old_file.getParentFile() : new_parent_dir,
 					  (new_filename == null) ? old_file.getName() : new_filename
 			  );
@@ -5162,7 +5162,7 @@ DownloadManagerImpl
 		  File file_from = files[0].getFile( true );
 
 		  try{
-			  File file_to = new File( parent_dir, file_from.getName());
+			  File file_to = FileUtil.newFile( parent_dir, file_from.getName());
 
 			  if ( file_to.exists()){
 
@@ -5190,7 +5190,7 @@ DownloadManagerImpl
 				  save_location += File.separator;
 			  }
 
-			  parent_dir = new File( parent_dir, sl_file.getName());
+			  parent_dir = FileUtil.newFile( parent_dir, sl_file.getName());
 
 			  if ( !parent_dir.isDirectory()){
 
@@ -5208,7 +5208,7 @@ DownloadManagerImpl
 
 						  if ( file_path.startsWith( save_location )){
 
-							  File file_to = new File( parent_dir, file_path.substring( save_location.length()));
+							  File file_to = FileUtil.newFile( parent_dir, file_path.substring( save_location.length()));
 
 							  if ( file_to.exists()){
 
@@ -5248,7 +5248,7 @@ DownloadManagerImpl
   copyTorrentFile(
 	 File	parent_dir ) throws DownloadManagerException
   {
-	  File	file = new File( getTorrentFileName() );
+	  File	file = FileUtil.newFile( getTorrentFileName() );
 
 	  if ( !file.exists()){
 		  
@@ -5256,7 +5256,7 @@ DownloadManagerImpl
 	  }
 	  
 	  try{
-		  FileUtil.copyFileWithException( file, new File( parent_dir, file.getName()));
+		  FileUtil.copyFileWithException( file, FileUtil.newFile( parent_dir, file.getName()));
 		  
 	  }catch( Throwable e ){
 		  
@@ -5337,7 +5337,7 @@ DownloadManagerImpl
 	  slc.torrent_location = new_parent_dir;
 	  slc.torrent_name = new_name;
 
-	  File torrent_file_now = new File(getTorrentFileName());
+	  File torrent_file_now = FileUtil.newFile(getTorrentFileName());
 	  if (!slc.isDifferentTorrentLocation(torrent_file_now)) {return;}
 
 	  boolean is_paused = this.pause( true );
@@ -5364,7 +5364,7 @@ DownloadManagerImpl
   @Override
   public void setTorrentFile(File new_parent_dir, String new_name) throws DownloadManagerException {
 
-	  File	old_file = new File( getTorrentFileName() );
+	  File	old_file = FileUtil.newFile( getTorrentFileName() );
 
 	  if ( !old_file.exists()){
 		  Debug.out( "torrent file doesn't exist!" );
@@ -5373,7 +5373,7 @@ DownloadManagerImpl
 
 	  if (new_parent_dir == null) {new_parent_dir = old_file.getParentFile();}
 	  if (new_name == null) {new_name = old_file.getName();}
-	  File new_file = new File(new_parent_dir, new_name);
+	  File new_file = FileUtil.newFile(new_parent_dir, new_name);
 
 	  try{
 		  old_file = FileUtil.getCanonicalFileSafe( old_file );
@@ -6818,17 +6818,17 @@ DownloadManagerImpl
 
 	@Override
 	public void renameTorrentSafe(String name) throws DownloadManagerException {
-		String torrent_parent = new File(this.getTorrentFileName()).getParent();
+		String torrent_parent = FileUtil.newFile(this.getTorrentFileName()).getParent();
 		String torrent_name = name;
 
-		File new_path = new File(torrent_parent, torrent_name + ".torrent");
+		File new_path = FileUtil.newFile(torrent_parent, torrent_name + ".torrent");
 		if ( FileUtil.reallyExists( new_path )) {
 			new_path = null;
 		}
 
 		for (int i=1; i<10; i++) {
 			if (new_path != null) {break;}
-			new_path = new File(torrent_parent, torrent_name + "(" + i + ").torrent");
+			new_path = FileUtil.newFile(torrent_parent, torrent_name + "(" + i + ").torrent");
 			if ( FileUtil.reallyExists( new_path )) {new_path = null;}
 		}
 

@@ -858,9 +858,9 @@ DiskManagerUtil
 	    											file_name = prefix + file_name;
 	    										}
 
-			            						File new_parent = new File( parent, dnd_sf );
+			            						File new_parent = FileUtil.newFile( parent, dnd_sf );
 
-			            						File new_file = new File( new_parent, file_name );
+			            						File new_file = FileUtil.newFile( new_parent, file_name );
 
 			            						if ( !new_file.exists()){
 
@@ -898,11 +898,11 @@ DiskManagerUtil
 
 			            					if ( parent != null && parent.canWrite()){
 
-			            						File new_parent = parent.getName().equals( dnd_sf )?parent:new File( parent, dnd_sf );
+			            						File new_parent = parent.getName().equals( dnd_sf )?parent:FileUtil.newFile( parent, dnd_sf );
 
 			            							// use link name to handle incomplete file suffix if set
 
-			            						File new_file = new File( new_parent, link.getName());
+			            						File new_file = FileUtil.newFile( new_parent, link.getName());
 
 			            						if ( new_file.equals( link )){
 
@@ -933,11 +933,11 @@ DiskManagerUtil
 			    											prefix = "";
 			    										}
 
-			    										file = new File( file.getParentFile(), prefix + file_name + incomp_ext );
+			    										file = FileUtil.newFile( file.getParentFile(), prefix + file_name + incomp_ext );
 
 			    									}else if ( prefix_removed ){
 
-			    										file = new File( file.getParentFile(), file_name);
+			    										file = FileUtil.newFile( file.getParentFile(), file_name);
 			    									}
 
 			            							if ( new_file.exists()){
@@ -1048,7 +1048,7 @@ DiskManagerUtil
 		            			}
 		            		}
 
-		            		dataFile = new WeakReference(toReturn = simpleFile != null ? simpleFile : new File( path_str ));
+		            		dataFile = new WeakReference(toReturn = simpleFile != null ? simpleFile : FileUtil.newFile( path_str ));
 
 		            		//System.out.println("new file:"+toReturn);
 		            		return toReturn;

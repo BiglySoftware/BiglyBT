@@ -357,7 +357,7 @@ PieceMapperImpl
 		public File
 		getDataFile()
 		{
-			return( new File( path, name ));
+			return( FileUtil.newFile( path, name ));
 		}
 		@Override
 		public TOTorrentFile

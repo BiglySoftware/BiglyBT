@@ -433,7 +433,7 @@ public class TorrentOpenOptions
 	public String getDataDir() {
 		if (torrent.isSimpleTorrent())
 			return sDestDir;
-		return new File(sDestDir, sDestSubDir == null
+		return FileUtil.newFile(sDestDir, sDestSubDir == null
 				? FileUtil.convertOSSpecificChars(getTorrentName(), true) : sDestSubDir).getPath();
 	}
 

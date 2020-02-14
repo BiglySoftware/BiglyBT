@@ -90,7 +90,7 @@ DiskManagerFileInfoImpl
 
     int	cache_st = DiskManagerUtil.convertDMStorageTypeToCache( _storage_type );
 
-  	cache_file = CacheFileManagerFactory.getSingleton().createFile( this, new File( root_dir + relative_file.toString()), cache_st);
+  	cache_file = CacheFileManagerFactory.getSingleton().createFile( this, FileUtil.newFile( root_dir + relative_file.toString()), cache_st);
 
   	if ( cache_st == CacheFile.CT_COMPACT || cache_st == CacheFile.CT_PIECE_REORDER_COMPACT ){
 
@@ -226,7 +226,7 @@ DiskManagerFileInfoImpl
 		  }
 	  }
 
-	  return( new File( root_dir + relative_file.toString()));
+	  return( FileUtil.newFile( root_dir + relative_file.toString()));
   	}
 
   	@Override
@@ -438,7 +438,7 @@ DiskManagerFileInfoImpl
 
     					if ( parent != null ){
 
-    						File new_parent = new File( parent, dnd_sf );
+    						File new_parent = FileUtil.newFile( parent, dnd_sf );
 
     							// add prefix if not already present
 
@@ -451,7 +451,7 @@ DiskManagerFileInfoImpl
 								file_name = prefix + file_name;
 							}
 
-    						File new_file = new File( new_parent, file_name );
+    						File new_file = FileUtil.newFile( new_parent, file_name );
 
     						if ( !new_file.exists()){
 
@@ -494,11 +494,11 @@ DiskManagerFileInfoImpl
 
     					if ( parent != null && parent.canWrite()){
 
-    						File new_parent = parent.getName().equals( dnd_sf )?parent:new File( parent, dnd_sf );
+    						File new_parent = parent.getName().equals( dnd_sf )?parent:FileUtil.newFile( parent, dnd_sf );
 
     							// use link name to handle incomplete file suffix if set
 
-    						File new_file = new File( new_parent, link.getName());
+    						File new_file = FileUtil.newFile( new_parent, link.getName());
 
     						if ( new_file.equals( link )){
 
@@ -530,7 +530,7 @@ DiskManagerFileInfoImpl
 											prefix = "";
 										}
 
-										File new_link = new File( file.getParentFile(), prefix + file_name + incomp_ext );
+										File new_link = FileUtil.newFile( file.getParentFile(), prefix + file_name + incomp_ext );
 
 										dm_state.setFileLink( file_index, file, new_link );
 
@@ -538,7 +538,7 @@ DiskManagerFileInfoImpl
 
 									}else if ( prefix_removed ){
 
-										File new_link = new File( file.getParentFile(), file_name );
+										File new_link = FileUtil.newFile( file.getParentFile(), file_name );
 
 										dm_state.setFileLink( file_index, file, new_link );
 
