@@ -25,6 +25,7 @@ import java.util.function.Function;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
@@ -65,11 +66,13 @@ import com.biglybt.ui.swt.columns.searchsubs.*;
 import com.biglybt.ui.swt.columns.subscriptions.ColumnSubResultNew;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.search.SBC_SearchResultsView;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.SearchSubsUtils;
 import com.biglybt.ui.swt.views.skin.SkinView;
+import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -83,6 +86,8 @@ SBC_SubscriptionResultsView
 
 	private static boolean columnsAdded = false;
 
+	private static TableRowSWT.ColorRequester colour_requester = ()->1;
+	
 	private TableViewSWT<SubscriptionResultFilterable> tv_subs_results;
 
 	private MdiEntry			mdi_entry;
@@ -1129,6 +1134,33 @@ SBC_SubscriptionResultsView
 					}
 				}
 
+				TableRowCore	hash_row 	= null;
+				byte[] 			hash 		= null;
+				
+				if ( rows.length == 1 ){
+					
+					hash_row = rows[0];
+							
+					SubscriptionResultFilterable rc = (SubscriptionResultFilterable)hash_row.getDataSource();
+					
+					hash = rc.getHash();
+				}
+				
+				for ( TableRowCore row: tv_subs_results.getRows()){
+						
+					Color target = null;
+					
+					if ( row != hash_row && hash != null ){
+							
+						if ( Arrays.equals(((SubscriptionResultFilterable)row.getDataSource()).getHash(), hash )){
+			
+							target = Colors.blues[ Colors.BLUES_MIDLIGHT ];
+						}
+					}
+					
+					((TableRowSWT)row).requestBackgroundColor( colour_requester, target );
+				}
+				
 				ISelectedContent[] sels = valid.toArray( new ISelectedContent[valid.size()] );
 
 				SelectedContentManager.changeCurrentlySelectedContent("IconBarEnabler",
