@@ -421,7 +421,9 @@ ClientIDManagerImpl
 					new_url += rem.substring(0,q_pos+1) + details + "&" + rem.substring(q_pos+1);
 				}
 
-				properties.put( ClientIDGenerator.PR_URL, new URL( prefix + new_url ));
+				URL redirect_url = new URL( prefix + new_url );
+										
+				properties.put( ClientIDGenerator.PR_URL, redirect_url );
 
 			}catch( Throwable e ){
 
@@ -636,7 +638,7 @@ ClientIDManagerImpl
 
 					InputStream	target_is = target.getInputStream();
 
-						// meh, need to support 301/302 redirects here
+						// meh, need to support 301/302 redirects here (and apparently now 307, changed to pick up 30x codes
 
 					String reply_header = "";
 
@@ -658,14 +660,14 @@ ClientIDManagerImpl
 							break;
 						}
 					}
-
+					
 					String[] reply_lines = reply_header.trim().split( "\r\n" );
 
 					String line1 = reply_lines[0];
 
 					line1 = line1.substring( line1.indexOf( ' ' ) + 1).trim();
 
-					if ( line1.startsWith( "301" ) || line1.startsWith( "302" )){
+					if ( line1.startsWith( "30" )){
 
 						for ( int i=1;i<reply_lines.length;i++){
 
