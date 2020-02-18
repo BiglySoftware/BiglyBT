@@ -40,7 +40,6 @@ import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.swt.DelayedListenerMultiCombiner;
 import com.biglybt.ui.swt.FixedHTMLTransfer;
 import com.biglybt.ui.swt.FixedURLTransfer;
 import com.biglybt.ui.swt.Utils;
@@ -215,6 +214,21 @@ public class SideBar
 			}
 		});
 
+		
+		Display.getDefault().addFilter(SWT.Traverse,(ev)->{
+			
+			if ( 	ev.character == '\t' &&
+					(ev.stateMask & (SWT.MOD1 + SWT.SHIFT)) == SWT.MOD1 ) {
+
+				showNext();
+				
+			}else  if ( 	ev.character == '\t' &&
+					(ev.stateMask & (SWT.MOD1 + SWT.SHIFT)) == SWT.MOD1 + SWT.SHIFT) {
+
+				showPrevious();
+			}
+		});
+		
 		return null;
 	}
 
@@ -2047,31 +2061,20 @@ public class SideBar
 	
 		// track entry additions and selection so we can switch to previous entry when one is closed
 
-	private final Stack<String> entryViewHistory = new Stack<>();
+	private final Stack<String> entryViewHistory 	= new Stack<>();
+	private final Stack<String> entryViewFuture 	= new Stack<>();
 
 	@Override
 	public void addItem(BaseMdiEntry entry) {
 		super.addItem( entry );
-		synchronized(entryViewHistory){
-			String id = entry.getViewID();
-			entryViewHistory.remove(id);
-			if ( entry.isSelectable()){
-				entryViewHistory.push( id );
-			}
-		}
+		addHistory( entry );
 	}
 
 	@Override
 	protected void
 	itemSelected(MdiEntry entry ){
 		super.itemSelected( entry );
-		synchronized(entryViewHistory){
-			String id = entry.getViewID();
-			entryViewHistory.remove(id);
-			if ( entry.isSelectable()){
-				entryViewHistory.push(id);
-			}
-		}
+		addHistory( entry );
 	}
 
 	@Override
@@ -2108,16 +2111,145 @@ public class SideBar
 			}
 		}
 		
-		if (next == null) {
-			// OSX doesn't select a treeitem after closing an existing one
-			// Force selection
+		if ( next == null ){
+			
+				// OSX doesn't select a treeitem after closing an existing one
+				// Force selection
+			
 			next = SideBar.SIDEBAR_SECTION_LIBRARY;
 		}
 
 		showEntryByID( next );
+		
 		return entry;
 	}
 
+	private void
+	addHistory(
+		MdiEntry	entry )
+	{
+		synchronized(entryViewHistory){
+			String id = entry.getViewID();
+			if ( !entryViewHistory.remove(id)){
+				if ( !entryViewFuture.contains( id )){
+					entryViewFuture.clear();
+				}
+			}
+			if ( entry.isSelectable()){
+				if ( !isInitialized()){
+					entryViewHistory.clear();	// don't build up a load of history cruff during startup
+				}
+				entryViewHistory.push( id );
+			}
+		}
+	}
+	
+	private void
+	showNext()
+	{
+		MdiEntry current = getCurrentEntry();
+
+		String next = null;
+		
+		synchronized( entryViewHistory ){
+			
+			while( !entryViewFuture.isEmpty()){
+				
+				next = entryViewFuture.pop();
+												
+				if ( entryExists( next )){
+				
+					if ( current != null && current.getViewID().equals( next )){
+						
+						continue;
+					}
+					
+					entryViewHistory.push( next );  // prepare for show-next so we keep future history
+					
+					break;
+					
+				}else{
+					
+					next = null;
+				}
+			}
+		}
+		
+		if ( next != null ){
+
+			showEntryByID( next );
+		}
+	}
+	
+	private void
+	showPrevious()
+	{
+		MdiEntry current = getCurrentEntry();
+		
+		String next = null;
+
+		synchronized( entryViewHistory ){
+			
+			boolean	future_added = false;
+			
+			if ( current != null && entryExists( current.getViewID()) && current.isSelectable()){
+				
+				String cid = current.getViewID();
+				
+				if ( entryViewFuture.isEmpty() || !entryViewFuture.peek().equals( cid )){
+				
+					entryViewFuture.push( cid );
+				}
+				
+				future_added = true;
+			}
+			
+			if ( entryViewHistory.isEmpty()){
+				
+				entryViewHistory.push( SideBar.SIDEBAR_SECTION_LIBRARY );
+			}
+			
+			while( !entryViewHistory.isEmpty()){
+				
+				next = entryViewHistory.pop();
+					
+				if ( current != null && current.getViewID().equals( next) ){
+					
+					continue;
+				}
+				
+				if ( entryExists( next )){
+
+					if ( !future_added ){
+					
+						if ( entryViewFuture.isEmpty() || !entryViewFuture.peek().equals( next )){
+
+							entryViewFuture.push( next );
+						}
+					}
+
+					entryViewHistory.push( next );	// prepare for show-next so we keep future history
+					
+					break;
+					
+				}else{
+					
+					next = null;
+				}
+			}
+		}
+		
+		if ( next == null ){
+			
+				// OSX doesn't select a treeitem after closing an existing one
+				// Force selection
+			
+			next = SideBar.SIDEBAR_SECTION_LIBRARY;
+		}
+
+		showEntryByID( next );
+	}
+	
 	@Override
 	public void generate(IndentWriter writer) {
 		MdiEntrySWT[] entries = getEntries();
