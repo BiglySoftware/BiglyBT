@@ -222,10 +222,14 @@ public class SideBar
 
 				showNext();
 				
+				ev.doit = false;
+				
 			}else  if ( 	ev.character == '\t' &&
 					(ev.stateMask & (SWT.MOD1 + SWT.SHIFT)) == SWT.MOD1 + SWT.SHIFT) {
 
 				showPrevious();
+				
+				ev.doit = false;
 			}
 		});
 		
@@ -2067,7 +2071,7 @@ public class SideBar
 	@Override
 	public void addItem(BaseMdiEntry entry) {
 		super.addItem( entry );
-		addHistory( entry );
+		// addHistory( entry ); don't want this simply on addition, wait for selection
 	}
 
 	@Override
@@ -2155,22 +2159,20 @@ public class SideBar
 			
 			while( !entryViewFuture.isEmpty()){
 				
-				next = entryViewFuture.pop();
+				String maybe_next = entryViewFuture.pop();
 												
-				if ( entryExists( next )){
+				if ( entryExists( maybe_next )){
 				
-					if ( current != null && current.getViewID().equals( next )){
+					if ( current != null && current.getViewID().equals( maybe_next )){
 						
 						continue;
 					}
 					
+					next = maybe_next;
+					
 					entryViewHistory.push( next );  // prepare for show-next so we keep future history
 					
 					break;
-					
-				}else{
-					
-					next = null;
 				}
 			}
 		}
@@ -2203,23 +2205,20 @@ public class SideBar
 				
 				future_added = true;
 			}
-			
-			if ( entryViewHistory.isEmpty()){
-				
-				entryViewHistory.push( SideBar.SIDEBAR_SECTION_LIBRARY );
-			}
-			
+						
 			while( !entryViewHistory.isEmpty()){
 				
-				next = entryViewHistory.pop();
+				String maybe_next = entryViewHistory.pop();
 					
-				if ( current != null && current.getViewID().equals( next) ){
-					
+				if ( current != null && current.getViewID().equals( maybe_next) ){
+										
 					continue;
 				}
 				
-				if ( entryExists( next )){
+				if ( entryExists( maybe_next )){
 
+					next = maybe_next;
+					
 					if ( !future_added ){
 					
 						if ( entryViewFuture.isEmpty() || !entryViewFuture.peek().equals( next )){
@@ -2231,18 +2230,11 @@ public class SideBar
 					entryViewHistory.push( next );	// prepare for show-next so we keep future history
 					
 					break;
-					
-				}else{
-					
-					next = null;
 				}
 			}
 		}
-		
+				
 		if ( next == null ){
-			
-				// OSX doesn't select a treeitem after closing an existing one
-				// Force selection
 			
 			next = SideBar.SIDEBAR_SECTION_LIBRARY;
 		}

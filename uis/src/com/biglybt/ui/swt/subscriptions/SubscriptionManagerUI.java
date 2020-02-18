@@ -1302,7 +1302,7 @@ SubscriptionManagerUI
 		mdiEntryOverview = mdi.createEntry(new UISWTViewBuilderCore(
 				MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS, null,
 				SubscriptionsView.class).setParentEntryID(
-						MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY),
+						MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY).setPreferredAfterID( "~" + MultipleDocumentInterface.SIDEBAR_SECTION_CHAT),
 				false);
 
 		if (mdiEntryOverview == null) {

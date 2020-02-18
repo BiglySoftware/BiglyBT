@@ -452,7 +452,7 @@ public class MainMDISetup
 						MdiEntry mdi_entry = mdi.createEntryFromSkinRef(
 								MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY,
 								MultipleDocumentInterface.SIDEBAR_SECTION_CHAT, "chatsview",
-								"{mdi.entry.chatsoverview}", title_info, null, true, null);
+								"{mdi.entry.chatsoverview}", title_info, null, true, MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS );
 
 						mdi_entry.setImageLeftID("image.sidebar.chat-overview");
 
