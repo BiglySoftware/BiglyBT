@@ -17,6 +17,7 @@
 
 package com.biglybt.ui.common.table;
 
+import java.util.HashSet;
 import java.util.List;
 
 import com.biglybt.core.util.AEDiagnosticsEvidenceGenerator;
@@ -114,14 +115,14 @@ public interface TableView<DATASOURCETYPE>
 	TableCellCore[] getColumnCells(String columnName);
 
 	/**
-	 * @return not sorted
+	 * @return a new, unsorted Hashset of all datasources
 	 */
-	List<DATASOURCETYPE> getDataSources();
+	HashSet<DATASOURCETYPE> getDataSources();
 
 	/**
-	 * @return not sorted
+	 * @return a new, unsorted Hashset of datasources
 	 */
-	List<DATASOURCETYPE> getDataSources( boolean include_filtered );
+	HashSet<DATASOURCETYPE> getDataSources( boolean include_filtered );
 
 	/**
 	 * @note May not necessarily return DATASOURCETYPE if table has subrows

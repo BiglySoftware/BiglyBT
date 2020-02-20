@@ -19,6 +19,7 @@
  */
 package com.biglybt.ui.swt.views;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -91,7 +92,7 @@ public class TrackerAvailView
 	public boolean
 	isUpdating()
 	{
-		List<TrackerPeerSource> peer_sources = tv.getDataSources();
+		Collection<TrackerPeerSource> peer_sources = tv.getDataSources();
 
 		for ( TrackerPeerSource p: peer_sources ){
 

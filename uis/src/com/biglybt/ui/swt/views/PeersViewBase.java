@@ -460,15 +460,13 @@ PeersViewBase
 						
 						GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
 						
-						List<PEPeer> peers = tv.getDataSources();
-						
-						swarm_peers = new HashSet<>( peers );
+						swarm_peers = tv.getDataSources();
 						
 						final Map<PEPeerManager,int[]> done_pms = new HashMap<>();
 						
 						List<DownloadManager>	dms = new ArrayList<>();
 						
-						for ( PEPeer peer: peers ){
+						for ( PEPeer peer: swarm_peers ){
 							
 							PEPeerManager pm = peer.getManager();
 							

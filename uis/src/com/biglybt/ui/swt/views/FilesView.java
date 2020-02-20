@@ -353,6 +353,8 @@ public class FilesView
 			return;
 		}
 		
+		force_refresh = true;
+		
 		if (tv != null) {
 	
 			for (DownloadManager manager: managers ){
@@ -369,6 +371,7 @@ public class FilesView
 			}
 		}
 
+		DownloadManager[] oldManagers = managers;
 		managers = newManagers;
 		tags = newTags;
 		datasource = newDataSource;
@@ -425,6 +428,9 @@ public class FilesView
 				tv.removeAllTableRows();
 				current_root = null;
 			} else {
+				if (oldManagers.length == 1 && newManagers.length == 1) {
+					tv.removeAllTableRows();
+				}
 				updateTable();
 			}
 			if ( disableTableWhenEmpty ){
@@ -2485,14 +2491,27 @@ public class FilesView
 	updateFlatView(
 		boolean		sync )
 	{
+		if (!force_refresh) {
+			return;
+		}
+		if (!sync && Utils.isSWTThread()) {
+			Utils.getOffOfSWTThread(() -> updateFlatView(false));
+			return;
+		}
+		force_refresh = false;
+
 	    List<DiskManagerFileInfo> files = getFileInfo();
 	    
 	    if (files.size() == 0) {
 	    	tv.removeAllTableRows();
 	    } else {
-	    	this.force_refresh = false;
-
-		    List<DiskManagerFileInfo> toRemove = tv.getDataSources(true);
+		    Collection<DiskManagerFileInfo> toRemove = tv.getDataSources(true);
+		    // If we are removing a lot of rows, it's faster to clear and add 
+		    if (toRemove.size() - files.size() > 50000) {
+		    	// todo: restore selectedRows
+		    	tv.removeAllTableRows();
+		    	toRemove = new HashSet<>();
+		    }
 		    List<DiskManagerFileInfo> toAdd = new ArrayList<>();
 		    for (DiskManagerFileInfo info : files) {
 		    	if (toRemove.contains(info)) {
@@ -2501,8 +2520,8 @@ public class FilesView
 		    		toAdd.add(info);
 			    }
 		    }
-	      tv.removeDataSources(toRemove.toArray(new DiskManagerFileInfo[toRemove.size()]));
-	      tv.addDataSources(toAdd.toArray(new DiskManagerFileInfo[toAdd.size()]));
+	      tv.removeDataSources(toRemove.toArray(new DiskManagerFileInfo[0]));
+	      tv.addDataSources(toAdd.toArray(new DiskManagerFileInfo[0]));
 	      tv.tableInvalidate();
 
 	    	if ( sync ){

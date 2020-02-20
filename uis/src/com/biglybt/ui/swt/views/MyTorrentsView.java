@@ -502,7 +502,7 @@ public class MyTorrentsView
 							int active 	= 0;
 							int	queued	= 0;
 							
-							List<DownloadManager> dms = tv.getDataSources();
+							Collection<DownloadManager> dms = tv.getDataSources();
 							
 							for ( DownloadManager dm: dms ){
 								
@@ -3051,7 +3051,7 @@ public class MyTorrentsView
 	{
 		// request to fully resync this tag
 
-		List<DownloadManager> dataSources = tv.getDataSources();
+		Collection<DownloadManager> dataSources = tv.getDataSources();
 
 		for ( DownloadManager dm : dataSources ){
 

@@ -867,7 +867,7 @@ SBC_SubscriptionResultsView
 
 			tv_subs_results.processDataSourceQueueSync();
 
-			List<SubscriptionResultFilterable> existing_results = tv_subs_results.getDataSources( true );
+			Collection<SubscriptionResultFilterable> existing_results = tv_subs_results.getDataSources( true );
 
 			Map<String,SubscriptionResultFilterable>	existing_map = new HashMap<>();
 

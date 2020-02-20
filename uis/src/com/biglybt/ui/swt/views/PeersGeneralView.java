@@ -83,7 +83,7 @@ PeersGeneralView
 	{
 		if ( tv.getRowCount() != tag.getTaggedCount()){
 
-			Set<PEPeer>	peers_in_table 	= new HashSet<>( tv.getDataSources());
+			Set<PEPeer>	peers_in_table 	= tv.getDataSources();
 
 			Set<PEPeer> peers_in_tag	= new HashSet<>((Set)tag.getTagged());
 

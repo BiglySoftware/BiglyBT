@@ -645,23 +645,22 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 					}
 				}
 			}
-			
-			Set<DATASOURCETYPE> existing = new HashSet<>(
-					getDataSources());
+
+			Collection<DATASOURCETYPE> existing = getDataSources();
 			List<DATASOURCETYPE> listRemoves = new ArrayList<>();
 			List<DATASOURCETYPE> listAdds = new ArrayList<>();
 
-			for (int i = 0; i < unfilteredArray.length; i++) {
-				boolean bHave = existing.contains(unfilteredArray[i]);
-				boolean isOurs = filter.checker.filterCheck(unfilteredArray[i],
-						filter.text, filter.regex);
+			for (DATASOURCETYPE dst : unfilteredArray) {
+				boolean bHave = existing.contains(dst);
+				boolean isOurs = filter.checker.filterCheck(dst, filter.text,
+						filter.regex);
 				if (!isOurs) {
 					if (bHave) {
-						listRemoves.add(unfilteredArray[i]);
+						listRemoves.add(dst);
 					}
 				} else {
 					if (!bHave) {
-						listAdds.add(unfilteredArray[i]);
+						listAdds.add(dst);
 					}
 				}
 			}
@@ -1152,21 +1151,21 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	// @see TableView#getDataSources()
 	@Override
-	public ArrayList<DATASOURCETYPE> getDataSources() {
+	public HashSet<DATASOURCETYPE> getDataSources() {
 		synchronized (rows_sync) {
-			return new ArrayList<>(mapDataSourceToRow.keySet());
+			return new HashSet<>(mapDataSourceToRow.keySet());
 		}
 	}
 
 	// @see TableView#getDataSources()
 	@Override
-	public ArrayList<DATASOURCETYPE> getDataSources(boolean include_filtered) {
+	public HashSet<DATASOURCETYPE> getDataSources(boolean include_filtered) {
 		synchronized (rows_sync) {
 			if ( include_filtered ){
-				return new ArrayList<>(listUnfilteredDataSources.keySet());
+				return new HashSet<>(listUnfilteredDataSources.keySet());
 
 			}else{
-				return new ArrayList<>(mapDataSourceToRow.keySet());
+				return new HashSet<>(mapDataSourceToRow.keySet());
 			}
 		}
 	}
@@ -1235,8 +1234,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 
 		synchronized (rows_sync) {
-			for (int i = 0; i < dataSources.length; i++) {
-				DATASOURCETYPE dataSource = dataSources[i];
+			for (DATASOURCETYPE dataSource : dataSources) {
 				dataSourcesToAdd.remove(dataSource); // override any pending addition
 				dataSourcesToRemove.put(dataSource, "");
 			}

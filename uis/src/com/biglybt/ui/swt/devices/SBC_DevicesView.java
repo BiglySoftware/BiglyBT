@@ -1435,7 +1435,7 @@ public class SBC_DevicesView
 
 		if ( tvFiles.getRow( file ) == null ){
 
-			List<TranscodeFile>	files = tvFiles.getDataSources();
+			Collection<TranscodeFile>	files = tvFiles.getDataSources();
 
 			for ( TranscodeFile f: files ){
 
