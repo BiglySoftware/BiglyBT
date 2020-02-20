@@ -45,9 +45,15 @@ TagFeatureLimits
 	setMaximumTaggables(
 		int		max );
 
+	/**
+	 * @return {@link #RS_NONE}, {@link #RS_ARCHIVE}, {@link #RS_REMOVE_FROM_LIBRARY}, {@link #RS_DELETE_FROM_COMPUTER}, {@link #RS_MOVE_TO_OLD_TAG}
+	 */
 	public int
 	getRemovalStrategy();
 
+	/**
+	 * @param id {@link #RS_NONE}, {@link #RS_ARCHIVE}, {@link #RS_REMOVE_FROM_LIBRARY}, {@link #RS_DELETE_FROM_COMPUTER}, {@link #RS_MOVE_TO_OLD_TAG}
+	 */
 	public void
 	setRemovalStrategy(
 		int		id );

@@ -45,6 +45,9 @@ TagFeatureRateLimit
 	public boolean
 	supportsTagDownloadLimit();
 
+	/**
+	 * @return Max Upload Speed in bytes/sec
+	 */
 	public int
 	getTagUploadLimit();
 
@@ -55,6 +58,9 @@ TagFeatureRateLimit
 	public int
 	getTagCurrentUploadRate();
 
+	/**
+	 * @return Max Download Speed in bytes/sec
+	 */
 	public int
 	getTagDownloadLimit();
 
