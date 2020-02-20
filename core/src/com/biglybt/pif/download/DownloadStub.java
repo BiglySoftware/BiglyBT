@@ -107,6 +107,9 @@ DownloadStub
 		public int
 		getShareRatio();
 
+		public String
+		getCategory();
+		
 			// could migrate to DownloadStub one day
 
 		public void

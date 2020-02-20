@@ -57,6 +57,7 @@ DownloadStubImpl
 	private final String					main_tracker;
 	private final DownloadStubFileImpl[]	files;
 	private final String[]					manual_tags;
+	private final String					category;
 	private final int						share_ratio;
 
 	private final Map<String,Object>		gm_map;
@@ -69,6 +70,7 @@ DownloadStubImpl
 		DownloadManagerImpl		_manager,
 		DownloadImpl			_download,
 		String[]				_manual_tags,
+		String					_category,
 		Map<String,Object>		_gm_map )
 	{
 		manager			= _manager;
@@ -96,7 +98,8 @@ DownloadStubImpl
 		}
 
 		manual_tags = _manual_tags;
-
+		category	= _category;
+		
 		DownloadStats stats = temp_download.getStats();
 
 		share_ratio = stats.getShareRatio();
@@ -159,6 +162,8 @@ DownloadStubImpl
 			manual_tags = null;
 		}
 
+		category = MapUtils.getMapString( _map, "cat", null );
+		
 		attributes = (Map<String,Object>)_map.get( "attr" );
 
 		share_ratio	= MapUtils.getMapInt( _map, "sr", -1 );
@@ -211,6 +216,11 @@ DownloadStubImpl
 			if ( tag_list.size() > 0 ){
 				map.put( "t", tag_list );
 			}
+		}
+		
+		if ( category != null ){
+			
+			MapUtils.setMapString(map, "cat", category );
 		}
 
 		if ( attributes != null ){
@@ -326,6 +336,13 @@ DownloadStubImpl
 		return( manual_tags );
 	}
 
+	@Override
+	public String 
+	getCategory()
+	{
+		return( category );
+	}
+	
 	@Override
 	public int
 	getShareRatio()

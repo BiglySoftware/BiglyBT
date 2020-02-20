@@ -31,6 +31,7 @@ import java.net.URL;
 import java.util.*;
 
 import com.biglybt.core.Core;
+import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
@@ -1324,8 +1325,21 @@ DownloadManagerImpl
 				}
 			}
 		}
+		
+		Category cat = core_dm.getDownloadState().getCategory();
 
-		DownloadStubImpl stub = new DownloadStubImpl( this,	download, manual_tags, gm_data );
+		String category;
+		
+		if ( cat != null && cat.getType()==Category.TYPE_USER ){
+			
+			category = cat.getName();
+			
+		}else{
+			
+			category = null;
+		}
+		
+		DownloadStubImpl stub = new DownloadStubImpl( this,	download, manual_tags, category,  gm_data );
 
 		try{
 			informAdded( stub, true );
