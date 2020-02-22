@@ -122,6 +122,8 @@ public class TagCanvas
 
 	private boolean showImage = true;
 
+	private boolean imageOverridesText = false;
+	
 	private Font font = null;
 
 	private Color colorTagFaded;
@@ -198,8 +200,10 @@ public class TagCanvas
 		gc.setFont(getFont());
 
 		gc.setTextAntialias(SWT.ON);
-		GCStringPrinter sp = new GCStringPrinter(gc, lastUsedName.isEmpty()?"\u200b":lastUsedName,
-				new Rectangle(0, 0, 9999, 9999), false, true, SWT.LEFT);
+		
+		String text = imageOverridesText && image != null?"\u200b":(lastUsedName.isEmpty()?"\u200b":lastUsedName);
+		
+		GCStringPrinter sp = new GCStringPrinter(gc, text,	new Rectangle(0, 0, 9999, 9999), false, true, SWT.LEFT);
 		sp.calculateMetrics();
 		Point size = sp.getCalculatedSize();
 		gc.dispose();
@@ -209,7 +213,7 @@ public class TagCanvas
 		}
 		size.x += paddingContentX0 + paddingContentX1;
 		size.y += paddingContentY + paddingContentY;
-
+		
 		if (showImage && image != null && !image.isDisposed()) {
 			Rectangle bounds = image.getBounds();
 			int imageH = size.y - paddingImageY - paddingImageY;
@@ -422,23 +426,27 @@ public class TagCanvas
 			e.gc.fillRoundRectangle(-curveWidth, 0, size.x + curveWidth - 1,
 					size.y - 1, curveWidth, curveWidth);
 		}
+		
+		boolean imageOverride = imageOverridesText && image != null;
 
-		if (!selected || grayed) {
-			int lineWidth = focused ? 2 : 2;
-			int y1 = lineWidth / 2;
-			int x1 = y1;
-			int width = size.x - lineWidth;
-			int height = size.y - lineWidth;
-			e.gc.setLineWidth(lineWidth);
-			e.gc.setForeground(colorTag);
-			e.gc.setLineStyle(SWT.LINE_SOLID);
-
-			e.gc.drawRoundRectangle(-curveWidth, y1, width + curveWidth,
-					height - y1 + 1, curveWidth, curveWidth);
-			e.gc.drawLine(x1, y1, x1, height - y1 + 1);
-			e.gc.setLineWidth(1);
+		if ( !imageOverride ){
+			if (!selected || grayed) {
+				int lineWidth = focused ? 2 : 2;
+				int y1 = lineWidth / 2;
+				int x1 = y1;
+				int width = size.x - lineWidth;
+				int height = size.y - lineWidth;
+				e.gc.setLineWidth(lineWidth);
+				e.gc.setForeground(colorTag);
+				e.gc.setLineStyle(SWT.LINE_SOLID);
+	
+				e.gc.drawRoundRectangle(-curveWidth, y1, width + curveWidth,
+						height - y1 + 1, curveWidth, curveWidth);
+				e.gc.drawLine(x1, y1, x1, height - y1 + 1);
+				e.gc.setLineWidth(1);
+			}
 		}
-
+		
 		if (selected && needsBorderOnSelection) {
 			e.gc.setLineWidth(1);
 			e.gc.setForeground(colorText);
@@ -453,23 +461,30 @@ public class TagCanvas
 
 		clientArea.x += paddingContentX0;
 		clientArea.width = clientArea.width - paddingContentX0;
+		int imageX = clientArea.x;
 		if (showImage && image != null) {
 			Rectangle bounds = image.getBounds();
 			int imageH = size.y - paddingImageY - paddingImageY;
 			int imageW = (bounds.width * imageH) / bounds.height;
 
-			e.gc.drawImage(image, 0, 0, bounds.width, bounds.height, clientArea.x,
+			e.gc.drawImage(image, 0, 0, bounds.width, bounds.height, imageX,
 					clientArea.y + paddingImageY, imageW, imageH);
 			clientArea.x += imageW + paddingImageX;
 			clientArea.width -= imageW - paddingImageX;
 		}
+		
 		e.gc.setForeground(colorText);
 		clientArea.y += paddingContentY;
 		clientArea.height -= (paddingContentY + paddingContentY);
-		GCStringPrinter sp = new GCStringPrinter(e.gc, lastUsedName, clientArea,
+		
+		String text = imageOverride?"\u200b":(lastUsedName.isEmpty()?"\u200b":lastUsedName);
+
+		GCStringPrinter sp = new GCStringPrinter(e.gc, text, clientArea,
 				true, true, SWT.LEFT);
 		sp.printString();
+	
 		if (focused) {
+			
 			Rectangle focusRect = sp.getCalculatedDrawRect();
 			if (focusRect == null) {
 				focusRect = sp.getPrintArea();
@@ -479,11 +494,22 @@ public class TagCanvas
 				1
 			});
 			int y = focusRect.y + focusRect.height - 1;
+
+			if ( imageOverride ){
+				Rectangle bounds = image.getBounds();
+				int imageH = size.y - paddingImageY - paddingImageY;
+				int imageW = (bounds.width * imageH) / bounds.height;
+
+				e.gc.drawLine(imageX, y, imageW, y);
+				
+			}else{
 			
-			if ( lastUsedName.isEmpty()){
-				focusRect.width = MIN_WIDTH - curveWidth;
+				if ( lastUsedName.isEmpty()){
+					focusRect.width = MIN_WIDTH - curveWidth;
+				}
+				e.gc.drawLine(focusRect.x, y, focusRect.x + focusRect.width - 1, y);
 			}
-			e.gc.drawLine(focusRect.x, y, focusRect.x + focusRect.width - 1, y);
+			
 			e.gc.setLineStyle(SWT.LINE_SOLID);
 		}
 	}
@@ -700,7 +726,7 @@ public class TagCanvas
 		this.trigger = trigger;
 	}
 
-	public void setCompact(boolean compact) {
+	public void setCompact(boolean compact, boolean imageOverride ) {
 		if (this.compact == compact) {
 			return;
 		}
@@ -712,7 +738,11 @@ public class TagCanvas
 			paddingContentX0 = COMPACT_CONTENT_PADDING_X0;
 			paddingContentX1 = COMPACT_CONTENT_PADDING_X1;
 			curveWidth = COMPACT_CURVE_WIDTH;
-			showImage = false;
+			showImage = imageOverride;
+			imageOverridesText = imageOverride;
+			if ( imageOverridesText ){
+				paddingImageY = 2;
+			}
 		} else {
 			paddingImageX = DEF_PADDING_IMAGE_X;
 			paddingImageY = DEF_PADDING_IMAGE_Y;

@@ -541,6 +541,7 @@ public class MyTorrentsView
 						"Library.ShowTagButtons", 
 						"Library.ShowTagButtons.CompOnly",
 						"Library.ShowTagButtons.FiltersOnly",
+						"Library.ShowTagButtons.ImageOverride",
 						"Library.ShowTagButtons.Inclusive",
 					}, this);
 	
@@ -763,12 +764,13 @@ public class MyTorrentsView
 			    TorrentUtils.removePotentialTorrentDeletionListener( this );
 			    globalManager.removeListener(this);
 			    globalManager.removeEventListener( gm_event_listener );
-				  COConfigurationManager.removeParameterListener("DND Always In Incomplete", this);
-				  COConfigurationManager.removeParameterListener("User Mode", this);
+				COConfigurationManager.removeParameterListener("DND Always In Incomplete", this);
+				COConfigurationManager.removeParameterListener("User Mode", this);
 			    COConfigurationManager.removeParameterListener("Library.ShowCatButtons", this);
 			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons", this);
 			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.CompOnly", this);
 			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.FiltersOnly", this);
+			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.ImageOverride", this );
 			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.Inclusive", this);
        		}));
   }
@@ -1150,7 +1152,7 @@ public class MyTorrentsView
 
 			TagCanvas button = new TagCanvas(cCategoriesAndTags, tag, false, true);
 			button.setTrigger(buttonListener);
-			button.setCompact(true);
+			button.setCompact(true,COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons.ImageOverride" ));
 
 			if (isCat) {
   			if (spacer == null) {
@@ -2499,6 +2501,7 @@ public class MyTorrentsView
 			if ( 	parameterName.equals("Library.ShowCatButtons") ||
 					parameterName.equals("Library.ShowTagButtons" ) ||
 					parameterName.equals("Library.ShowTagButtons.FiltersOnly" ) ||
+					parameterName.equals("Library.ShowTagButtons.ImageOverride" ) ||
 					parameterName.equals("Library.ShowTagButtons.CompOnly" )){
 
 				createTabs();

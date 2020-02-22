@@ -85,6 +85,12 @@ ConfigSectionInterfaceTagsSWT
 		add(show_filters_only,listLibrary);
 		show_filters_only.setIndent(1, true);
 		
+		BooleanParameterImpl image_override = new BooleanParameterImpl(
+				"Library.ShowTagButtons.ImageOverride",
+				"ConfigView.section.style.ShowTagButtons.ImageOverride");
+		add(image_override,listLibrary);
+		image_override.setIndent(1, true);
+		
 		BooleanParameterImpl show_tag_comp_only = new BooleanParameterImpl(
 				"Library.ShowTagButtons.CompOnly",
 				"ConfigView.section.style.ShowTagButtons.CompOnly");
