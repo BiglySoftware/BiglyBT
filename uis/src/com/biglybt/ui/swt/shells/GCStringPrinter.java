@@ -1221,7 +1221,9 @@ public class GCStringPrinter
 				
 				tl.dispose();
 				
-				return( new Point( bounds.width, bounds.height ));
+				Point temp = gc.stringExtent( text );
+				
+				return( new Point( bounds.width, Math.max( temp.y, bounds.height )));
 			}
 		}
 		
@@ -1248,7 +1250,9 @@ public class GCStringPrinter
 				
 				tl.dispose();
 				
-				return( new Point( bounds.width, bounds.height ));
+				Point temp = gc.textExtent( text );
+				
+				return( new Point( bounds.width, Math.max( temp.y, bounds.height )));
 			}
 		}
 		
