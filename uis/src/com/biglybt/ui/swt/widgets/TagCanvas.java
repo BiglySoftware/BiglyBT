@@ -412,18 +412,20 @@ public class TagCanvas
 		boolean selected = isSelected();
 		boolean focused = isFocusControl();
 
-		Color colorOrigBG = e.gc.getBackground();
+		GC gc = e.gc;
+		
+		Color colorOrigBG = gc.getBackground();
 
 		Color colorText = Colors.getInstance().getReadableColor(
 				selected ? grayed ? colorTagFaded : colorTag : colorOrigBG);
 
 		Point size = getSize();
-		e.gc.setAntialias(SWT.ON);
-		e.gc.setTextAntialias(SWT.ON);
+		gc.setAntialias(SWT.ON);
+		gc.setTextAntialias(SWT.ON);
 
 		if (selected) {
-			e.gc.setBackground(grayed ? colorTagFaded : colorTag);
-			e.gc.fillRoundRectangle(-curveWidth, 0, size.x + curveWidth - 1,
+			gc.setBackground(grayed ? colorTagFaded : colorTag);
+			gc.fillRoundRectangle(-curveWidth, 0, size.x + curveWidth - 1,
 					size.y - 1, curveWidth, curveWidth);
 		}
 		
@@ -436,27 +438,27 @@ public class TagCanvas
 				int x1 = y1;
 				int width = size.x - lineWidth;
 				int height = size.y - lineWidth;
-				e.gc.setLineWidth(lineWidth);
-				e.gc.setForeground(colorTag);
-				e.gc.setLineStyle(SWT.LINE_SOLID);
+				gc.setLineWidth(lineWidth);
+				gc.setForeground(colorTag);
+				gc.setLineStyle(SWT.LINE_SOLID);
 	
-				e.gc.drawRoundRectangle(-curveWidth, y1, width + curveWidth,
+				gc.drawRoundRectangle(-curveWidth, y1, width + curveWidth,
 						height - y1 + 1, curveWidth, curveWidth);
-				e.gc.drawLine(x1, y1, x1, height - y1 + 1);
-				e.gc.setLineWidth(1);
+				gc.drawLine(x1, y1, x1, height - y1 + 1);
+				gc.setLineWidth(1);
 			}
 		}
 		
 		if (selected && needsBorderOnSelection) {
-			e.gc.setLineWidth(1);
-			e.gc.setForeground(colorText);
-			e.gc.setAlpha(0x70);
-			e.gc.setLineStyle(SWT.LINE_SOLID);
+			gc.setLineWidth(1);
+			gc.setForeground(colorText);
+			gc.setAlpha(0x70);
+			gc.setLineStyle(SWT.LINE_SOLID);
 
-			e.gc.drawRoundRectangle(-curveWidth, 0, size.x + curveWidth - 1,
+			gc.drawRoundRectangle(-curveWidth, 0, size.x + curveWidth - 1,
 					size.y - 1, curveWidth, curveWidth);
-			e.gc.drawLine(0, 0, 0, size.y - 1);
-			e.gc.setAlpha(0xFF);
+			gc.drawLine(0, 0, 0, size.y - 1);
+			gc.setAlpha(0xFF);
 		}
 
 		clientArea.x += paddingContentX0;
@@ -467,19 +469,19 @@ public class TagCanvas
 			int imageH = size.y - paddingImageY - paddingImageY;
 			int imageW = (bounds.width * imageH) / bounds.height;
 
-			e.gc.drawImage(image, 0, 0, bounds.width, bounds.height, imageX,
+			gc.drawImage(image, 0, 0, bounds.width, bounds.height, imageX,
 					clientArea.y + paddingImageY, imageW, imageH);
 			clientArea.x += imageW + paddingImageX;
 			clientArea.width -= imageW - paddingImageX;
 		}
 		
-		e.gc.setForeground(colorText);
+		gc.setForeground(colorText);
 		clientArea.y += paddingContentY;
 		clientArea.height -= (paddingContentY + paddingContentY);
 		
 		String text = imageOverride?"\u200b":(lastUsedName.isEmpty()?"\u200b":lastUsedName);
 
-		GCStringPrinter sp = new GCStringPrinter(e.gc, text, clientArea,
+		GCStringPrinter sp = new GCStringPrinter(gc, text, clientArea,
 				true, true, SWT.LEFT);
 		sp.printString();
 	
@@ -489,7 +491,7 @@ public class TagCanvas
 			if (focusRect == null) {
 				focusRect = sp.getPrintArea();
 			}
-			e.gc.setLineDash(new int[] {
+			gc.setLineDash(new int[] {
 				2,
 				1
 			});
@@ -500,17 +502,17 @@ public class TagCanvas
 				int imageH = size.y - paddingImageY - paddingImageY;
 				int imageW = (bounds.width * imageH) / bounds.height;
 
-				e.gc.drawLine(imageX, y, imageW, y);
+				gc.drawLine(imageX, y, imageW, y);
 				
 			}else{
 			
 				if ( lastUsedName.isEmpty()){
 					focusRect.width = MIN_WIDTH - curveWidth;
 				}
-				e.gc.drawLine(focusRect.x, y, focusRect.x + focusRect.width - 1, y);
+				gc.drawLine(focusRect.x, y, focusRect.x + focusRect.width - 1, y);
 			}
 			
-			e.gc.setLineStyle(SWT.LINE_SOLID);
+			gc.setLineStyle(SWT.LINE_SOLID);
 		}
 	}
 

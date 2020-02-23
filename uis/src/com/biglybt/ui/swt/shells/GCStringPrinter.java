@@ -407,7 +407,7 @@ public class GCStringPrinter
 
 					if (sProcessedLine != null && sProcessedLine.length() > 0) {
 						if (lineInfo.outputLineExtent.x == 0 || lineInfo.outputLineExtent.y == 0) {
-							lineInfo.outputLineExtent = gc.stringExtent(sProcessedLine);
+							lineInfo.outputLineExtent = stringExtent(gc,sProcessedLine);
 						}
 						iCurrentHeight += lineInfo.outputLineExtent.y;
 						boolean isOverY = iCurrentHeight > printArea.height;
@@ -607,7 +607,7 @@ public class GCStringPrinter
 
 		if (lineInfo.originalLine.length() == 0) {
 			lineInfo.lineOutputed = "";
-			lineInfo.outputLineExtent = new Point(0, gc.stringExtent(GOOD_STRING).y);
+			lineInfo.outputLineExtent = new Point(0, stringExtent(gc,GOOD_STRING).y);
 			lineInfo.outputLinePreferredExtent = new Point( 0, lineInfo.outputLineExtent.y );
 			return lineInfo;
 		}
@@ -617,7 +617,7 @@ public class GCStringPrinter
 
 		boolean b = images != null || lineInfo.originalLine.length() > MAX_LINE_LEN;
 		if (!b) {
-			Point outputLineExtent = gc.stringExtent(lineInfo.originalLine);
+			Point outputLineExtent = stringExtent(gc,lineInfo.originalLine);
 			lineInfo.outputLinePreferredExtent = new Point( outputLineExtent.x, outputLineExtent.y );
 			b = outputLineExtent.x > printArea.width;
 			if (!b) {
@@ -751,7 +751,7 @@ public class GCStringPrinter
 					bounds.height = (int) (bounds.height * imageScales[imgIdx]);
 				}
 
-				Point spaceExtent = gc.stringExtent(space.toString());
+				Point spaceExtent = stringExtent(gc,space.toString());
 				int newWidth = lineInfo.outputLineExtent.x + bounds.width + spaceExtent.x;
 
 
@@ -773,7 +773,7 @@ public class GCStringPrinter
 
 				lineInfo.outputLineExtent = new Point(newWidth, Math.max(bounds.height, lineInfo.outputLineExtent.y));
 
-				Point ptWordSize = gc.stringExtent(word.substring(2) + " ");
+				Point ptWordSize = stringExtent(gc,word.substring(2) + " ");
 				if (lineInfo.outputLineExtent.x + ptWordSize.x > printArea.width) {
 					outputLine.append(space);
 					outputLine.append(word.substring(0,2));
@@ -801,12 +801,12 @@ public class GCStringPrinter
 			}
 		}
 		
-		Point ptLineAndWordSize = gc.stringExtent(outputLine + word + " ");
+		Point ptLineAndWordSize = stringExtent(gc,outputLine + word + " ");
 		//System.out.println(ptLineAndWordSize + ";" + outputLine  + "::WordComp " + (ptLineAndWordSize.x - lineInfo.outputLineExtent.x));
 		if (ptLineAndWordSize.x > printArea.width) {
 			// word is longer than space avail, split
 
-			Point ptWordSize2 = gc.stringExtent(word + " ");
+			Point ptWordSize2 = stringExtent(gc,word + " ");
 			boolean bWordLargerThanWidth = ptWordSize2.x > printArea.width;
 
 			if (bWordLargerThanWidth) {
@@ -843,7 +843,7 @@ public class GCStringPrinter
 					}
 				}
 
-				ptLineAndWordSize = gc.stringExtent(outputLine + word.substring(0, endIndex) + " ");
+				ptLineAndWordSize = stringExtent(gc,outputLine + word.substring(0, endIndex) + " ");
 
 				if (diff <= 1) {
 					break;
@@ -855,7 +855,7 @@ public class GCStringPrinter
 			}
 			if (ptLineAndWordSize.x > printArea.width && endIndex > 1) {
 				endIndex--;
-				ptLineAndWordSize = gc.stringExtent(outputLine + word.substring(0, endIndex) + " ");
+				ptLineAndWordSize = stringExtent(gc,outputLine + word.substring(0, endIndex) + " ");
 			}
 
 			if (DEBUG) {
@@ -864,7 +864,7 @@ public class GCStringPrinter
 						+ "wrap?" + wrap);
 			}
 			if (wrap && (printFlags & FLAG_FULLLINESONLY) != 0) {
-				int nextLineHeight = gc.stringExtent(GOOD_STRING).y;
+				int nextLineHeight = stringExtent(gc,GOOD_STRING).y;
 				if (iCurrentHeight + ptLineAndWordSize.y + nextLineHeight > printArea.height) {
 					if (DEBUG) {
 						System.out.println("turn off wrap");
@@ -973,7 +973,7 @@ public class GCStringPrinter
 		String text = lineInfo.lineOutputed;
 		// TODO: ensure width and height have values
 		if (lineInfo.outputLineExtent.x == 0 || lineInfo.outputLineExtent.y == 0) {
-			lineInfo.outputLineExtent = gc.stringExtent(text);
+			lineInfo.outputLineExtent = stringExtent(gc,text);
 		}
 
 		int x0;
@@ -1112,13 +1112,13 @@ public class GCStringPrinter
 
     			if (imgIdx >= images.length || imgIdx < 0 || images[imgIdx] == null) {
       			String sStart = s.substring(lastPos, pctPos + 1);
-    				textExtent = gc.textExtent(sStart);
+    				textExtent = textExtent(gc,sStart);
     				int centerY = y + (height / 2 - textExtent.y / 2);
         		if (hitAreas != null) {
         			hitAreas.add(new Rectangle(x, centerY, textExtent.x, textExtent.y));
         		}
       			if (!nodraw) {
-      				gc.drawText(sStart, x, centerY, true);
+      				drawText(gc,sStart, x, centerY, true);
       			}
       			x += textExtent.x;
       			w += textExtent.x;
@@ -1130,10 +1130,10 @@ public class GCStringPrinter
     			}
 
     			String sStart = s.substring(lastPos, pctPos);
-    			textExtent = gc.textExtent(sStart);
+    			textExtent = textExtent(gc,sStart);
   				int centerY = y + (height / 2 - textExtent.y / 2);
     			if (!nodraw) {
-    				gc.drawText(sStart, x, centerY, true);
+    				drawText(gc,sStart, x, centerY, true);
     			}
     			x += textExtent.x;
     			w += textExtent.x;
@@ -1172,13 +1172,13 @@ public class GCStringPrinter
 
   		if (s.length() >= lastPos) {
     		String sEnd = s.substring(lastPos);
-  			textExtent = gc.textExtent(sEnd);
+  			textExtent = textExtent(gc,sEnd);
 				int centerY = y + (height / 2 - textExtent.y / 2);
   			if (hitAreas != null) {
   				hitAreas.add(new Rectangle(x, centerY, textExtent.x, textExtent.y));
   			}
   			if (!nodraw) {
-  				gc.drawText(sEnd, x, centerY, true);
+  				drawText(gc,sEnd, x, centerY, true);
   			}
   			//x += textExtent.x;
   			w += textExtent.x;
@@ -1189,18 +1189,78 @@ public class GCStringPrinter
 
 
 		if (!nodraw) {
-			gc.drawText(s, x, y, true);
+			drawText(gc,s, x, y, true);
 		}
 		if (!calcExtent && hitAreas == null) {
 			return null;
 		}
-		textExtent = gc.textExtent(s);
+		textExtent = textExtent(gc,s);
 		if (hitAreas != null) {
 			hitAreas.add(new Rectangle(x, y, textExtent.x, textExtent.y));
 		}
 		return textExtent;
 	}
 
+	private static Point
+	stringExtent(
+		GC		gc,
+		String	text )
+	{
+		// return( gc.stringExtent( text ));
+		
+		TextLayout tl = new TextLayout(gc.getDevice());
+		
+		tl.setText(text);
+		tl.setFont( gc.getFont());
+		
+		Rectangle bounds = tl.getLineBounds(0);
+		
+		tl.dispose();
+		
+		return( new Point( bounds.width, bounds.height ));
+	}
+	
+	private static Point
+	textExtent(
+		GC			gc,
+		String		text )
+	{
+		// return( gc.textExtent( text ));	// tab/nl expansion done
+		
+		TextLayout tl = new TextLayout(gc.getDevice());
+		
+		tl.setText(text);
+		tl.setFont( gc.getFont());
+		
+		Rectangle bounds = tl.getBounds();
+		
+		tl.dispose();
+		
+		return( new Point( bounds.width, bounds.height ));
+	}
+	
+	private static void
+	drawText(
+		GC			gc,
+		String		text,
+		int			x,
+		int			y,
+		boolean		transparent )
+	{
+		// gc.drawText( text, x, y, transparent );
+		
+		// this handles supplemental chars...
+		
+		TextLayout tl = new TextLayout(gc.getDevice());
+		
+		tl.setText(text);
+		tl.setFont( gc.getFont());
+		
+		tl.draw( gc,  x,  y );
+		
+		tl.dispose();
+	}
+	
 	public static void main(String[] args) {
 
 		//String s = "this is $1.00";

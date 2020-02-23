@@ -42,7 +42,6 @@ import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.GeneralUtils;
-import com.biglybt.ui.config.ConfigSectionSecurity;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
