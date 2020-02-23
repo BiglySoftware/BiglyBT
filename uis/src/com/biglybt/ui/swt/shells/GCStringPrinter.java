@@ -1206,18 +1206,26 @@ public class GCStringPrinter
 		GC		gc,
 		String	text )
 	{
-		// return( gc.stringExtent( text ));
+		char[] chars = text.toCharArray();
 		
-		TextLayout tl = new TextLayout(gc.getDevice());
+		for ( char c: chars ){
+			
+			if ( Character.isHighSurrogate(c)){
+
+				TextLayout tl = new TextLayout(gc.getDevice());
+				
+				tl.setText(text);
+				tl.setFont( gc.getFont());
+				
+				Rectangle bounds = tl.getLineBounds(0);
+				
+				tl.dispose();
+				
+				return( new Point( bounds.width, bounds.height ));
+			}
+		}
 		
-		tl.setText(text);
-		tl.setFont( gc.getFont());
-		
-		Rectangle bounds = tl.getLineBounds(0);
-		
-		tl.dispose();
-		
-		return( new Point( bounds.width, bounds.height ));
+		return( gc.stringExtent( text ));
 	}
 	
 	private static Point
@@ -1225,18 +1233,26 @@ public class GCStringPrinter
 		GC			gc,
 		String		text )
 	{
-		// return( gc.textExtent( text ));	// tab/nl expansion done
+		char[] chars = text.toCharArray();
 		
-		TextLayout tl = new TextLayout(gc.getDevice());
+		for ( char c: chars ){
+			
+			if ( Character.isHighSurrogate(c)){
+
+				TextLayout tl = new TextLayout(gc.getDevice());
+				
+				tl.setText(text);
+				tl.setFont( gc.getFont());
+				
+				Rectangle bounds = tl.getBounds();
+				
+				tl.dispose();
+				
+				return( new Point( bounds.width, bounds.height ));
+			}
+		}
 		
-		tl.setText(text);
-		tl.setFont( gc.getFont());
-		
-		Rectangle bounds = tl.getBounds();
-		
-		tl.dispose();
-		
-		return( new Point( bounds.width, bounds.height ));
+		return( gc.textExtent( text ));
 	}
 	
 	private static void
@@ -1247,18 +1263,28 @@ public class GCStringPrinter
 		int			y,
 		boolean		transparent )
 	{
-		// gc.drawText( text, x, y, transparent );
+		char[] chars = text.toCharArray();
 		
-		// this handles supplemental chars...
+		for ( char c: chars ){
+			
+			if ( Character.isHighSurrogate(c)){
+				
+					// this handles supplemental chars...
+				
+				TextLayout tl = new TextLayout(gc.getDevice());
+				
+				tl.setText(text);
+				tl.setFont( gc.getFont());
+				
+				tl.draw( gc,  x,  y );
+				
+				tl.dispose();
+				
+				return;
+			}
+		}
 		
-		TextLayout tl = new TextLayout(gc.getDevice());
-		
-		tl.setText(text);
-		tl.setFont( gc.getFont());
-		
-		tl.draw( gc,  x,  y );
-		
-		tl.dispose();
+		gc.drawText( text, x, y, transparent );
 	}
 	
 	public static void main(String[] args) {
