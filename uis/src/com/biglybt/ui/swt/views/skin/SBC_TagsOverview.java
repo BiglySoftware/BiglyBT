@@ -36,10 +36,12 @@ import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.RegExUtil;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
@@ -1194,7 +1196,29 @@ public class SBC_TagsOverview
 
 				tv.setSelectedRows(new TableRowCore[] { row });
 				
-				Utils.execSWTThreadLater(1, ()->{ tv.showRow( row ); });
+				AEThread2.createAndStartDaemon(
+					"feh",
+					()->{
+						long start = SystemTime.getMonotonousTime();
+						
+						while( tv.hasChangesPending()){
+							
+							if ( SystemTime.getMonotonousTime() - start > 20*1000 ){
+								
+								break;
+							}
+							
+							try{
+								Thread.sleep(100);
+							}catch( Throwable e ){
+								
+							}
+						}
+							
+						Utils.execSWTThread(()->{ 
+							tv.showRow( row ); 
+						});
+					});
 			}
 		}
 	}
