@@ -1193,6 +1193,8 @@ public class SBC_TagsOverview
 			}else{
 
 				tv.setSelectedRows(new TableRowCore[] { row });
+				
+				Utils.execSWTThreadLater(1, ()->{ tv.showRow( row ); });
 			}
 		}
 	}
