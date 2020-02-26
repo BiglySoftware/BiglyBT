@@ -124,7 +124,7 @@ public class SMConfigurationAdapterImpl implements SMConfigurationAdapter
          */
         @Override
         public String getString() {
-            StringBuilder sb = new StringBuilder("estiamte: ");
+            StringBuilder sb = new StringBuilder("estimate: ");
             sb.append(bytesPerSec);
             sb.append(" (").append(limitEstimateType).append(") ");
 
