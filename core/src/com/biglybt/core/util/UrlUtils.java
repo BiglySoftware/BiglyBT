@@ -28,6 +28,7 @@ import javax.net.ssl.*;
 
 import org.gudy.bouncycastle.util.encoders.Base64;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
@@ -41,6 +42,7 @@ import com.biglybt.pif.torrent.TorrentAnnounceURLListSet;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pif.utils.resourceuploader.ResourceUploader;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.plugin.magnet.MagnetPlugin;
 
 
 /**
@@ -108,6 +110,13 @@ public class UrlUtils
 		return( "magnet:?xt=urn:btih:" + Base32.encode( hash ));
 	}
 
+	public static String
+	getURLForm(
+		InetSocketAddress	address )
+	{
+		return( AddressUtils.getHostAddressForURL(address) + ":" + address.getPort());
+	}
+	
 	public static String
 	getURLForm(
 		InetAddress		address,
@@ -452,6 +461,26 @@ public class UrlUtils
 
 		return( magnet_str );
 	}
+	
+	public static String
+	addSource(
+		Download			download,
+		String				magnet,
+		InetSocketAddress	address )
+	{
+		if ( address != null ){
+
+			MagnetPlugin magnet_plugin = (MagnetPlugin)CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByClass( MagnetPlugin.class ).getPlugin();
+
+			if ( magnet_plugin != null ){
+				
+				magnet = magnet_plugin.addSource( download, magnet, address );
+			}
+		}
+		
+		return( magnet );
+	}
+	
 		/**
 		 * returns magnet uri if input is base 32 or base 16 encoded sha1 hash, null otherwise
 		 * @param base_hash

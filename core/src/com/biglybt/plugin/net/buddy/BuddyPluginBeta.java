@@ -5009,16 +5009,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			magnet += "&_d="  + added;
 			
-			InetSocketAddress address = getMyAddress();
-
-			if ( address != null ){
-
-				String address_str = AddressUtils.getHostAddressForURL(address) + ":" + address.getPort();
-
-				String arg = "&xsource=" + UrlUtils.encode( address_str );
-
-				magnet += arg;
-			}
+			magnet = UrlUtils.addSource( download, magnet, getMyAddress());
 
 			magnet += "[[$dn]]";
 

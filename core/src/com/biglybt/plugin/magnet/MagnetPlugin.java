@@ -824,6 +824,38 @@ MagnetPlugin
 				});
 	}
 
+	public String
+	addSource(
+		Download			download,
+		String				magnet,
+		InetSocketAddress	address )
+	{
+		boolean	is_share = false;
+		
+		try{
+			byte[] hash = download.getTorrentHash();
+			
+			if ( plugin_interface.getShareManager().lookupShare( hash ) != null ){
+				
+				is_share = true;
+			}								
+		}catch( Throwable e ){								
+		}
+		
+		String sources = sources_param.getValue();
+
+		boolean add_sources = sources.equals( "2" ) || ( sources.equals( "1" ) && is_share );
+
+		if ( add_sources ){
+						
+			String arg = "&xsource=" + UrlUtils.encode( UrlUtils.getURLForm( address ));
+	
+			magnet += arg;
+		}
+		
+		return( magnet );
+	}
+	
 	protected void
 	updateLocale(
 		LocaleUtilities	lu )

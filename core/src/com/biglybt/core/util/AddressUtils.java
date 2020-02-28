@@ -669,13 +669,15 @@ AddressUtils
 
 		}else{
 			
-			if ( address.getAddress() instanceof Inet6Address ){
+			InetAddress a = address.getAddress();
+			
+			if ( a instanceof Inet6Address ){
 
-				return( "[" + address.getAddress().getHostAddress() + "]" );
+				return( "[" + ( a.isLoopbackAddress()?"::1":a.getHostAddress()) + "]" );
 				
 			}else{
 				
-				return( address.getAddress().getHostAddress());
+				return( a.getHostAddress());
 			}
 		}
 	}
