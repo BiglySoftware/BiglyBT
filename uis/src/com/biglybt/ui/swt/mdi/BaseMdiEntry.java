@@ -1387,11 +1387,21 @@ public abstract class BaseMdiEntry
 				PluginManager pluginManager = CoreFactory.getSingleton().getPluginManager();
 				if ( class_name != null ){
 					
-					Class<? extends UISWTViewCoreEventListener> cla = (Class<? extends UISWTViewCoreEventListener>) Class.forName( class_name );
-
 					// Legacy didn't have plugin_id
 					String plugin_id = (String)el_map.get( "plugin_id" );
 					PluginInterface pi = pluginManager.getPluginInterfaceByID( plugin_id );
+
+					ClassLoader cl;
+					
+					if ( pi != null ){
+						cl = pi.getPluginClassLoader();
+					}else{
+						cl = BaseMdiEntry.class.getClassLoader();
+					}
+					
+					Class<? extends UISWTViewCoreEventListener> cla = 
+							(Class<? extends UISWTViewCoreEventListener>) Class.forName( class_name, true, cl );
+
 
 					// legacy had p_type and p_values, but we use datasource, so we
 					// need to parse and convert
