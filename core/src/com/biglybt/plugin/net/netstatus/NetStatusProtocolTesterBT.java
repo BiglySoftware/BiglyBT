@@ -80,6 +80,8 @@ NetStatusProtocolTesterBT
 	setBindIP(
 		InetAddress	a )
 	{
+		log( "Bind IP set to " + a );
+		
 		explicit_bind = a;
 	}
 	
@@ -549,7 +551,7 @@ NetStatusProtocolTesterBT
 						connectSuccess(
 							ByteBuffer remaining_initial_data )
 						{
-							log( type + " connect success", true );
+							log( type + " connect success, protocol=" + connection.getTransport().getProtocol(), true );
 
 							connected	= true;
 
