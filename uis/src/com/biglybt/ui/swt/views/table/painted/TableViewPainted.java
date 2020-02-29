@@ -929,6 +929,9 @@ public class TableViewPainted
 							return;
 						}
 					}
+					
+					cTable.setFocus();
+					
 				}else if ( reason == 2 ){
 				
 					if ( getSelectedRowsSize() == 0 ){
