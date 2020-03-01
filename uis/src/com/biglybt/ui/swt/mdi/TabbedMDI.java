@@ -143,6 +143,12 @@ public class TabbedMDI
 
 		mapUserClosedTabs = COConfigurationManager.getMapParameter(key, new HashMap());
 		COConfigurationManager.addWeakParameterListener(this, false, key);
+		
+		String key2 = props_prefix + ".tabOrder";
+
+		List<String> pref = BDecoder.decodeStrings(COConfigurationManager.getListParameter( key2, new ArrayList<>()));
+		
+		setPreferredOrder( pref.toArray( new String[0] ));
 	}
 	
 	@Override
@@ -526,6 +532,32 @@ public class TabbedMDI
   									COConfigurationManager.setParameter(key, closedtabs);
   								}
 
+  								if ( !isMainMDI ){
+  									
+  									CTabItem[] items = tabFolder.getItems();
+  									
+  									List<String>	ids = new ArrayList<>();
+  									
+  									for ( CTabItem item: items ){
+  										
+  										TabbedEntry e = getEntryFromTabItem( item );
+  										
+  										if ( e != null ){
+  											ids.add( e.getViewID());
+  										}
+  									}
+  									
+  									if ( !ids.contains( view_id )){
+  										ids.add( view_id );
+  									}
+  									
+  									setPreferredOrder( ids.toArray( new String[0] ));
+  									
+  									String key2 = props_prefix + ".tabOrder";
+
+  									COConfigurationManager.setParameter( key2, ids );
+  									
+  								}
   								showEntryByID(view_id);
   							}
   						});
@@ -879,7 +911,9 @@ public class TabbedMDI
 			return;
 		}
 
-		if ( getEntry( entry.getViewID()) != entry ){
+		String viewID = entry.getViewID();
+		
+		if ( getEntry( viewID ) != entry ){
 			
 			// entry has been deleted/replaced in the meantime
 		
@@ -901,6 +935,46 @@ public class TabbedMDI
 				index = indexOf(preferredAfterID);
 				if (!preferBefore && index >= 0) {
 					index++;
+				}
+			}
+		}
+
+		if ( index == -1 ){
+			
+			String[] order = getPreferredOrder();
+			for (int i = 0; i < order.length; i++) {
+				String orderID = order[i];
+				if (orderID.equals(viewID)) {
+					
+					CTabItem[] items = tabFolder.getItems();
+					Map<String,Integer>	map = new HashMap<>();
+					
+					for ( int j=0;j<items.length;j++){
+						TabbedEntry e = getEntryFromTabItem( items[j] );
+						if ( e != null ){
+							map.put( e.getViewID(), j );
+						}
+					}
+					
+					for ( int j=i-1;j>=0;j--){
+						Integer x = map.get( order[j] );
+						if ( x != null ){
+							index = x+1;
+							break;
+						}
+					}
+					
+					if ( index == -1 ){
+						for ( int j=i+1;j<order.length;j++){
+							Integer x = map.get( order[j] );
+							if ( x != null ){
+								index = x;
+								break;
+							}
+						}
+					}
+					
+					break;
 				}
 			}
 		}
@@ -943,6 +1017,38 @@ public class TabbedMDI
 		}
 	}
 
+	private int
+	indexOf(
+		MdiEntry	entry )
+	{
+		CTabItem[] items = tabFolder.getItems();
+		
+		for ( int i=0;i<items.length;i++){
+			if ( getEntryFromTabItem( items[i] ) == entry ){
+				
+				return( i );
+			}
+		}
+		return( -1 );
+	}
+		
+	private int
+	indexOf(
+		String		viewID )
+	{
+		CTabItem[] items = tabFolder.getItems();
+		
+		for ( int i=0;i<items.length;i++){
+			TabbedEntry entry = getEntryFromTabItem( items[i] );
+			
+			if ( entry != null && entry.getViewID().equals( viewID )){
+				
+				return( i );
+			}
+		}
+		return( -1 );
+	}
+	
 	protected TabbedEntry getEntryFromTabItem(CTabItem item) {
 		if (item.isDisposed()) {
 			return null;

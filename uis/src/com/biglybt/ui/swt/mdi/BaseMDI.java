@@ -73,7 +73,7 @@ public abstract class BaseMDI
 	private Map<String, MdiEntryCreationListener2> mapIdToCreationListener2 = new LightHashMap<>();
 
 	// Sync changes to entry maps on mapIdEntry
-	private final Map<String, BaseMdiEntry> mapIdToEntry = new LinkedHashMap<>(8);
+	private final Map<String, BaseMdiEntry> mapIdToEntry = new HashMap<>(8);
 
 	private final List<MdiListener> listeners = new ArrayList<>();
 
@@ -296,19 +296,6 @@ public abstract class BaseMDI
 		synchronized(mapIdToEntry){
 			return mapIdToEntry.get(id);
 		}
-	}
-	
-	protected int indexOf(String id) {
-		int i = 0;
-		synchronized(mapIdToEntry){
-			for (String key : mapIdToEntry.keySet()) {
-				if (key.equals(id)) {
-					return i;
-				}
-				i++;
-			}
-		}
-		return -1;
 	}
 
 	/**
