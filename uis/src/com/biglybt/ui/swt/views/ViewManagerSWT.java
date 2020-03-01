@@ -22,6 +22,7 @@ import java.util.*;
 
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pifimpl.BasicPluginViewImpl;
 import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.SWTViewListener;
@@ -111,7 +112,7 @@ public class ViewManagerSWT
 
 		Class<?> cla;
 		// Convert Legacy view id's to datasourcetypes
-		switch (viewID) {
+		switch ( Utils.getBaseViewID( viewID )){
 
 			case TableManager.TABLE_MYTORRENTS_ALL_BIG:
 			case TableManager.TABLE_MYTORRENTS_ALL_SMALL:
