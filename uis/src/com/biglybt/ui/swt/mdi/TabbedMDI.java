@@ -512,9 +512,19 @@ public class TabbedMDI
   						Object oTitle = mapUserClosedTabs.get(id);
   						if (oTitle instanceof String && ((String) oTitle).length() > 0) {
 								title = (String) oTitle;
-							} else {
+						} else {
 								title = MessageText.getString(getViewTitleID(view_id));
-							}
+						}
+  						
+  						// can still end up with a resource key here :( not sure why we don't always use the view-id
+  						
+  						if ( title.contains( "." )){
+  							String temp = MessageText.getString( title );
+  							if ( temp != null && !temp.isEmpty()){
+  								title = temp;
+  							}
+  						}
+  						
   						mi.setText(title);
 
   						mi.addListener(SWT.Selection, new Listener() {
