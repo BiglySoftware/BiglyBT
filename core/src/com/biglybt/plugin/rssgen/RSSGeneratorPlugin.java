@@ -25,8 +25,6 @@ import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.util.*;
 
-import org.json.jsonjava.JSONJava;
-
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.Constants;
@@ -323,58 +321,7 @@ RSSGeneratorPlugin
 
 				pos = url.indexOf( '?' );
 
-				if ( pos != -1 && url.substring( pos ).contains( "format=json-old" )){
-					ByteArrayOutputStream	baos = new ByteArrayOutputStream(4096);
-					
-					response.setOutputStream( baos );
-					
-					if ( provider.generate(request, response)){
-	
-						if ( response.getContentType().startsWith( "application/xml" )){
-							
-							String xml = new String( baos.toByteArray(), "UTF-8" );
-							
-							JSONJava.JSONObject obj = new JSONJava.XML().toJSONObject( xml );
-
-							obj.put("xml-converter", "JSONJava");
-
-							try{
-								JSONJava.JSONObject rss = obj.getJSONObject( "rss" );
-							
-								JSONJava.JSONObject channel = rss.getJSONObject( "channel" );
-								
-								Object items = channel.get( "item" );
-								
-								if ( items instanceof JSONJava.JSONArray ){
-									
-								}else{
-									
-									JSONJava.JSONArray item_array = new JSONJava.JSONArray();
-									
-									item_array.put( 0, items );
-									
-									channel.put( "item", item_array );
-								}
-							}catch( Throwable e ){
-								
-							}
-							
-							String json = obj.toString();
-							
-							byte[] jb = json.getBytes( "UTF-8" );
-							
-							ByteArrayOutputStream baos2 = new ByteArrayOutputStream( jb.length );
-							
-							baos2.write( jb );
-							
-							response.setOutputStream( baos2 );
-							
-							response.setContentType( "application/json; charset=UTF-8" );
-						}
-						
-						return( true );
-					}
-				} else if ( pos != -1 && url.substring( pos ).contains( "format=json" )){
+				if ( pos != -1 && url.substring( pos ).contains( "format=json" )){
 
 					ByteArrayOutputStream	baos = new ByteArrayOutputStream(4096);
 
