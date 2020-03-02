@@ -4741,7 +4741,14 @@ public class Utils
 		Control		c,
 		String		text )
 	{
-		c.setToolTipText( tt_enabled?text:null );
+		text = tt_enabled?text:null;
+		
+		String old = c.getToolTipText();
+				
+		if ( old != text && ( old == null || text == null || !text.equals( old ))){
+		
+			c.setToolTipText( text );
+		}
 	}
 
 	public static void

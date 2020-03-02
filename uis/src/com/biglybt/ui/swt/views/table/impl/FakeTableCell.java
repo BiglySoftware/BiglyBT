@@ -960,6 +960,10 @@ public class FakeTableCell
 	private void
 	updateTooltip()
 	{
+		if ( cellArea != null ){
+			return;	// can't update tooltip as only applies to an area of the canvas! 
+		}
+		
 		if (!isDisposed()) {
 			Object	target = tooltip==null?default_tooltip:tooltip;
 
