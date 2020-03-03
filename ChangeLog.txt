@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2020.03.03 | BiglyBT 2.3.0.0
+2020.03.04 | BiglyBT 2.3.0.0
 
 FEATURE: Tag   | Added isSequential() tag constraint function [Parg]
 FEATURE: Core  | Option to periodically restart downloads with missing files [Parg]
