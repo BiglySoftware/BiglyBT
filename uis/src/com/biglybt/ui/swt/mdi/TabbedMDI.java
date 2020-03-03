@@ -710,7 +710,7 @@ public class TabbedMDI
 			}
 			selection.getControl().setVisible(true);
 			*/
-			tabbedEntry.updateUI();
+			tabbedEntry.updateUI( true );
 		}
 
 		if (tabFolder.getMaximizeVisible()) {

@@ -176,7 +176,7 @@ public interface MdiEntry extends UIPluginView
 	@Override
 	void closeView();
 
-	public void updateUI();
+	public void updateUI( boolean force );
 
 	public void redraw();
 

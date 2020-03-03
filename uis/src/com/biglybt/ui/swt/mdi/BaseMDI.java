@@ -539,7 +539,7 @@ public abstract class BaseMDI
 	public void updateUI() {
 		MdiEntry currentEntry = getCurrentEntry();
 		if (currentEntry != null) {
-			currentEntry.updateUI();
+			currentEntry.updateUI( false );
 		}
 	}
 

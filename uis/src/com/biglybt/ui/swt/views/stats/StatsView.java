@@ -222,7 +222,7 @@ public class StatsView
 
 		MdiEntrySWT entry = tabbedMDI.getCurrentEntry();
 		if (entry != null) {
-			entry.updateUI();
+			entry.updateUI( false );
 		}
 	}
 

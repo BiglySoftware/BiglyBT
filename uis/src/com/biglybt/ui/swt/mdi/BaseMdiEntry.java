@@ -648,7 +648,7 @@ public abstract class BaseMdiEntry
 				if (viewTitleInfo != null) {
 					viewTitleInfoRefresh(viewTitleInfo);
 				}
-				updateUI();
+				updateUI( true );
 			//}
 
 			SWTSkinObject skinObjectMaster = getSkinObjectMaster();
@@ -756,11 +756,33 @@ public abstract class BaseMdiEntry
 		}
 	}
 
+	private long lastUpdateUI;
+	
 	@Override
 	public void
-	updateUI()
+	updateUI( boolean force )
 	{
 		Utils.execSWTThread(() -> {
+			
+				// unfortunately we can end up coming through here > once during a periodic update cycle 
+				// e.g. via sidebar->updateUI and tabbedmdi->updateUI. This messes up things that count updates to
+				// apply graphic-update-ticks and generally uses extra CPU. Thought about adding an 'updateTickCount' to updateUI
+				// but bit complicated due to dependencies and the fact that there are currently two separate periodic mehanisms
+				// for normal + stand-alone components. Also the updateUI goes via a 'refresh' event in some cases so the 
+				// updateTickCount would need transporting. Meh
+			
+			long now = SystemTime.getMonotonousTime();
+
+			if ( now - lastUpdateUI < 100 ){
+				
+				if ( !force ){
+					
+					return;
+				}
+			}
+			
+			lastUpdateUI = now;
+			  
 			if (getEventListener() != null) {
 				triggerEvent(UISWTViewEvent.TYPE_REFRESH, null);
 			}

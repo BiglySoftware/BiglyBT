@@ -36,7 +36,6 @@ import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 /**
@@ -181,7 +180,6 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
 			@Override
 			public void paintControl(PaintEvent e) {
 				if (bufferImage != null && !bufferImage.isDisposed()) {
-					Debug.out( "Paint" );
 					Rectangle bounds = bufferImage.getBounds();
 					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
 
