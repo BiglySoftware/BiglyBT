@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 /**
@@ -180,6 +181,7 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
 			@Override
 			public void paintControl(PaintEvent e) {
 				if (bufferImage != null && !bufferImage.isDisposed()) {
+					Debug.out( "Paint" );
 					Rectangle bounds = bufferImage.getBounds();
 					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
 
@@ -226,11 +228,8 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
 	    drawChart(sizeChanged);
     }
 
-    if (bufferImage != null && !bufferImage.isDisposed() && drawCanvas.isVisible()) {
-      GC gc = new GC(drawCanvas);
-      gc.drawImage(bufferImage,bounds.x,bounds.y);
-      gc.dispose();
-    }
+    drawCanvas.redraw();
+    drawCanvas.update();
   }
 
   protected void drawChart(boolean sizeChanged) {
