@@ -1245,6 +1245,12 @@ public class TabbedMDI
 		return allowSubViews;
 	}
 
+	public boolean
+	isEmpty()
+	{
+		return( getEntries().length == 0 && ( mapUserClosedTabs == null || mapUserClosedTabs.isEmpty()));
+	}
+	
 	// @see com.biglybt.ui.swt.debug.ObfuscateImage#obfuscatedImage(org.eclipse.swt.graphics.Image)
 	@Override
 	public Image obfuscatedImage(Image image) {

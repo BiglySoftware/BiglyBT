@@ -70,7 +70,7 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 
 	private TableView<?> tvOverride;
 	private Sash sash;
-	private TabbedMdiInterface tabbedMDI;
+	private TabbedMDI tabbedMDI;
 	private Composite cTabsHolder;
 	private FormData fdHeightChanger;
 	private MenuItem menuItemShowTabs;
@@ -211,7 +211,7 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 		tabbedMDI.setAllowSubViews(false);
 		tabbedMDI.setMinimizeVisible(true);
 		tabbedMDI.buildMDI(cTabsHolder);
-		if (tabbedMDI.getEntries().length == 0) {
+		if (tabbedMDI.isEmpty()) {
 			// All views said no, undo our tab creation
 			// TODO: If a new view is registered for this table id, we should
 			// create the tabbedMDI.  But we don't even do that yet when there
