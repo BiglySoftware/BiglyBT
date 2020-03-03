@@ -3450,6 +3450,8 @@ DownloadManagerStateImpl
 		URL								announce_url;
 		cacheGroup						announce_group;
 
+		List<TOTorrentListener>			pending_listeners;
+		
 		volatile boolean		discard_fluff;
 
 		protected
@@ -3870,6 +3872,13 @@ DownloadManagerStateImpl
 								announce_group.fixGroup();
 
 								announce_group = null;
+							}
+							
+							if ( pending_listeners != null ){
+								for ( TOTorrentListener l: pending_listeners ){
+									delegate.addListener( l );
+								}
+								pending_listeners = null;
 							}
 						}
 					}
@@ -4678,9 +4687,15 @@ DownloadManagerStateImpl
        addListener(
     	  TOTorrentListener		l )
        {
-    	   if ( fixup()){
-
-    		   delegate.addListener( l );
+    	   synchronized( this ){
+    		   if ( delegate != null ){
+    			   delegate.addListener( l );
+    		   }else{
+    			   if ( pending_listeners == null ){
+    				   pending_listeners = new ArrayList<>(2);
+    			   }
+    			   pending_listeners.add( l );
+    		   }
     	   }
        }
 
@@ -4689,9 +4704,14 @@ DownloadManagerStateImpl
        removeListener(
     	  TOTorrentListener		l )
        {
-    	   if ( fixup()){
-
-    		   delegate.removeListener( l );
+    	   synchronized( this ){
+    		   if ( delegate != null ){
+    			   delegate.removeListener( l );
+    		   }else{
+    			   if ( pending_listeners != null ){
+    				   pending_listeners.remove( l );
+    			   }
+    		   }
     	   }
        }
 

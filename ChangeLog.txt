@@ -94,6 +94,10 @@ BUGFIX: UI     | Fix ability to re-open closed sub-tabs with separate tag column
 BUGFIX: UI     | need to actually grab focus when not prevented from doing so [Parg]
 BUGFIX: UI     | Fix fake cell tooltip error [Parg]
 BUGFIX: UI     | Make sure we resolve view title resource ids [Parg]
+BUGFIX: UI     | Don't destroy sub-tabs control if closed views exist [Parg]
+BUGFIX: UI     | Fix ping graphic redraw behaviour on linux [Parg]
+BUGFIX: UI     | Prevent multiple UI updates per cycle [Parg]
+
 
 2019.12.13 | BiglyBT 2.2.0.2
 
