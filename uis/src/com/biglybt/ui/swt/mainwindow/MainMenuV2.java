@@ -231,7 +231,7 @@ public class MainMenuV2
 			MenuFactory.addMySharesMenuItem(viewMenu);
 			MenuFactory.addViewToolbarMenuItem(viewMenu);
 			MenuFactory.addTransferBarToMenu(viewMenu);
-			MenuFactory.addAllPeersMenuItem(viewMenu);
+			//MenuFactory.addAllPeersMenuItem(viewMenu);
 			MenuFactory.addClientStatsMenuItem(viewMenu);
 			MenuFactory.addPairingMenuItem(viewMenu);
 			//MenuFactory.addDetailedListMenuItem(viewMenu);
