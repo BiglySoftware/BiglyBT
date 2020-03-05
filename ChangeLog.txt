@@ -1,6 +1,9 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2020.xx.yy | BiglyBT 2.3.0.1
+
+
 2020.03.04 | BiglyBT 2.3.0.0
 
 FEATURE: Tag   | Added isSequential() tag constraint function [Parg]
