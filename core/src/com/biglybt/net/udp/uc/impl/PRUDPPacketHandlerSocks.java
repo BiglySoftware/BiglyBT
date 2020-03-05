@@ -573,9 +573,10 @@ PRUDPPacketHandlerSocks
 	@Override
 	public void
 	setExplicitBindAddress(
-		InetAddress	address )
+		InetAddress	address,
+		boolean		autoDelegate )
 	{
-		delegate.setExplicitBindAddress( address );
+		delegate.setExplicitBindAddress( address, autoDelegate );
 	}
 
 	@Override

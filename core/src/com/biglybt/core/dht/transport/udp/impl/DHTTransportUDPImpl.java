@@ -789,7 +789,8 @@ DHTTransportUDPImpl
 	@Override
 	public void 
 	setExplicitBindAddress(
-		InetAddress		address )
+		InetAddress		address,
+		boolean			autoDelegate )
 	{
 		try{
 			class_mon.enter();
@@ -801,7 +802,7 @@ DHTTransportUDPImpl
 				external_address = address.getHostAddress();
 			}
 			
-			packet_handler.getPacketHandler().setExplicitBindAddress( address );
+			packet_handler.getPacketHandler().setExplicitBindAddress( address, autoDelegate );
 		
 		}finally{
 			

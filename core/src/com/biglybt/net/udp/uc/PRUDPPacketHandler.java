@@ -148,7 +148,8 @@ PRUDPPacketHandler
 
 	public void
 	setExplicitBindAddress(
-		InetAddress	address );
+		InetAddress	address,
+		boolean		autoDelegate );
 
 	public void
 	setDelays(

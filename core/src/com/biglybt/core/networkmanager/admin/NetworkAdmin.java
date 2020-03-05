@@ -102,6 +102,10 @@ NetworkAdmin
 	public abstract InetAddress
 	guessRoutableBindAddress();
 
+	public abstract InetAddress
+	getAlternativeProtocolBindAddress(
+		InetAddress		address );
+	
 		/**
 		 * Returns the list of current addresses that can successfully be bound
 		 * to with an ephemeral port

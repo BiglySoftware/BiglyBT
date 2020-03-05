@@ -1238,7 +1238,7 @@ public class VersionCheckClient {
 		try{
 			Exception	last_error = null;
 
-			packet_handler.setExplicitBindAddress( bind_ip );
+			packet_handler.setExplicitBindAddress( bind_ip, false );
 
 			for (int i=0;i<3;i++){
 
@@ -1277,7 +1277,7 @@ public class VersionCheckClient {
 
 		}finally{
 
-			packet_handler.setExplicitBindAddress( null );
+			packet_handler.setExplicitBindAddress( null, false );
 
 			handler.release();
 		}

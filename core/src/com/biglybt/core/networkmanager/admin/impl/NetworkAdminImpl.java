@@ -1597,6 +1597,44 @@ addressLoop:
 		}
 	}
 
+	@Override
+	public InetAddress
+	getAlternativeProtocolBindAddress(
+		InetAddress	address )
+	{
+		Set<NetworkInterface> nis = old_network_interfaces;
+		
+		if ( nis == null ){
+			
+			return( null );
+		}
+		
+		for( NetworkInterface iface : nis ){
+			
+			for ( InterfaceAddress ia: iface.getInterfaceAddresses()){
+				
+				if ( ia.getAddress().equals( address )){
+					
+					boolean want_v4 = address instanceof Inet6Address;
+					
+					for ( InterfaceAddress x: iface.getInterfaceAddresses()){
+				
+						InetAddress xa = x.getAddress();
+						
+						if ( want_v4 == ( xa instanceof Inet4Address )){
+							
+							return( xa );
+						}
+					}
+					
+					return( null );
+				}
+			}
+		}
+		
+		return( null );
+	}
+	
 	protected boolean
 	canConnectWithBind(
 		InetAddress	bind_address,

@@ -396,7 +396,7 @@ NetworkAdminDistributedNATTester
 			
 			tester.setBindIP(  bind_address );
 			
-			transport.setExplicitBindAddress( bind_address );
+			transport.setExplicitBindAddress( bind_address, true );
 		}
 		
 		try{
@@ -432,7 +432,7 @@ NetworkAdminDistributedNATTester
 			
 			if ( bind_address != null ){
 			
-				transport.setExplicitBindAddress( null );
+				transport.setExplicitBindAddress( null, true );
 			}
 		}
 		

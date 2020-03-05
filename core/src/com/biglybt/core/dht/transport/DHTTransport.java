@@ -90,7 +90,8 @@ DHTTransport
 
 	public default void
 	setExplicitBindAddress(
-		InetAddress		address )
+		InetAddress		address,
+		boolean			autoDelegate )
 	{
 	}
 	

@@ -169,7 +169,7 @@ NetworkAdminUDPTester
 		data_to_send.put( "id", new Long( random.nextLong()));
 
 		try{
-			packet_handler.setExplicitBindAddress( bind_ip );
+			packet_handler.setExplicitBindAddress( bind_ip, false );
 
 			Throwable last_error = null;
 
@@ -270,7 +270,7 @@ NetworkAdminUDPTester
 
 		}finally{
 
-			packet_handler.setExplicitBindAddress( null );
+			packet_handler.setExplicitBindAddress( null, false );
 
 			handler.release();
 		}

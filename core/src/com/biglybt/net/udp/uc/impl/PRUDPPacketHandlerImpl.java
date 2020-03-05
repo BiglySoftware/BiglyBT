@@ -133,6 +133,7 @@ PRUDPPacketHandlerImpl
 
 	private InetAddress				default_bind_ip;
 	private InetAddress				explicit_bind_ip;
+	private boolean					explicit_bind_ip_ad;
 
 	private volatile InetAddress				current_bind_ip;
 	private volatile InetAddress				target_bind_ip;
@@ -376,13 +377,15 @@ PRUDPPacketHandlerImpl
 	@Override
 	public void
 	setExplicitBindAddress(
-		InetAddress	address )
+		InetAddress	address,
+		boolean		autoDelegate )
 	{
 		try{
 			bind_address_mon.enter();
 
 			explicit_bind_ip	= address;
-
+			explicit_bind_ip_ad	= autoDelegate;
+			
 			calcBind();
 
 		}finally{
@@ -418,42 +421,78 @@ PRUDPPacketHandlerImpl
 	{
 		if ( explicit_bind_ip != null ){
 
-			if(altProtocolDelegate != null)
-			{
-				altProtocolDelegate.destroy();
-				altProtocolDelegate = null;
+			if ( explicit_bind_ip_ad ){
+				
+				InetAddress altAddress = null;
+				NetworkAdmin adm = NetworkAdmin.getSingleton();
+				
+				try{
+					if (explicit_bind_ip instanceof Inet6Address && !explicit_bind_ip.isAnyLocalAddress() && adm.hasIPV4Potential())
+						altAddress = adm.getSingleHomedServiceBindAddress(NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4);
+					else if (explicit_bind_ip instanceof Inet4Address && adm.hasIPV6Potential())
+						altAddress = adm.getSingleHomedServiceBindAddress(NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6);
+				}catch (UnsupportedAddressTypeException e){
+				}
+
+				if(altProtocolDelegate != null && !altProtocolDelegate.explicit_bind_ip.equals(altAddress)){
+					altProtocolDelegate.destroy();
+					altProtocolDelegate = null;
+				}
+
+				if ( altAddress != null ){
+					// issue here is that we can't bind a explicit IPv6 and an 'any' IPv4 (or vice-versa) on a dual-stack impl
+					
+					if ( altAddress.isAnyLocalAddress()){
+						
+						InetAddress alt = adm.getAlternativeProtocolBindAddress( explicit_bind_ip );
+						
+						if ( alt != null ){
+							
+							altAddress = alt;
+						}
+					}
+				}
+				target_bind_ip = explicit_bind_ip;				
+
+				if(altAddress != null && altProtocolDelegate == null){
+					altProtocolDelegate = new PRUDPPacketHandlerImpl(port,altAddress,packet_transformer);
+					altProtocolDelegate.stats = stats;
+					altProtocolDelegate.primordial_handlers = primordial_handlers;
+					altProtocolDelegate.request_handler = request_handler;
+				}
+				
+			}else{
+				
+				if(altProtocolDelegate != null){
+					altProtocolDelegate.destroy();
+					altProtocolDelegate = null;
+				}
+	
+				target_bind_ip = explicit_bind_ip;
 			}
-
-			target_bind_ip = explicit_bind_ip;
-
 		}else{
 
 			InetAddress altAddress = null;
 			NetworkAdmin adm = NetworkAdmin.getSingleton();
-			try
-			{
+			try{
 				if (default_bind_ip instanceof Inet6Address && !default_bind_ip.isAnyLocalAddress() && adm.hasIPV4Potential())
 					altAddress = adm.getSingleHomedServiceBindAddress(NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4);
 				else if (default_bind_ip instanceof Inet4Address && adm.hasIPV6Potential())
 					altAddress = adm.getSingleHomedServiceBindAddress(NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6);
-			} catch (UnsupportedAddressTypeException e)
-			{
+			} catch (UnsupportedAddressTypeException e){
 			}
 
-			if(altProtocolDelegate != null && !altProtocolDelegate.explicit_bind_ip.equals(altAddress))
-			{
+			if(altProtocolDelegate != null && !altProtocolDelegate.explicit_bind_ip.equals(altAddress)){
 				altProtocolDelegate.destroy();
 				altProtocolDelegate = null;
 			}
 
-			if(altAddress != null && altProtocolDelegate == null)
-			{
+			if(altAddress != null && altProtocolDelegate == null){
 				altProtocolDelegate = new PRUDPPacketHandlerImpl(port,altAddress,packet_transformer);
 				altProtocolDelegate.stats = stats;
 				altProtocolDelegate.primordial_handlers = primordial_handlers;
 				altProtocolDelegate.request_handler = request_handler;
 			}
-
 
 			target_bind_ip = default_bind_ip;
 		}
