@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.tracker.host.TRHostTorrent;
@@ -149,7 +150,7 @@ TRHostConfigImpl
 
 				 	}else{
 
-						if ( COConfigurationManager.getBooleanParameter( "Tracker Public Enable")){
+						if ( COConfigurationManager.getBooleanParameter( ConfigKeys.Tracker.BCFG_TRACKER_PUBLIC_ENABLE )){
 
 				 			host.addExternalTorrent( hash, state, date_added );
 						}

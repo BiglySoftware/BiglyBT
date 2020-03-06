@@ -25,6 +25,8 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.*;
 
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -1033,6 +1035,30 @@ TRTrackerServerImpl
 		}
 	}
 
+	public boolean
+	isKnownTorrent(
+		byte[]		hash )
+	{
+			/*
+			 * Obviously this is a crap implementation but currently it is only required for a very limited situation
+			 * where we allow external torrents but restrict them to ones in the client (hosting without actually hosting them)
+			 */
+		
+		Core core = CoreFactory.getSingleton();
+		
+		if ( core.getGlobalManager().getDownloadManager( new HashWrapper( hash )) != null ){
+			
+			return( true );
+		}
+		
+		if ( core.getPluginManager().getDefaultPluginInterface().getDownloadManager().lookupDownloadStub( hash ) != null ){
+			
+			return( true );
+		}
+		
+		return( false );
+	}
+	
 	public TRTrackerServerTorrentImpl
 	getTorrent(
 		byte[]		hash )

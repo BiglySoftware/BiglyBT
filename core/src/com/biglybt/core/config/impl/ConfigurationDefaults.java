@@ -494,7 +494,8 @@ public class ConfigurationDefaults {
 	def.put( ConfigKeys.Tracker.BCFG_TRACKER_CLIENT_SMART_ACTIVATION, TRUE);
 	def.put( "Tracker Client Exclude LAN", TRUE);
 
-    def.put( "Tracker Public Enable", FALSE );
+	def.put( ConfigKeys.Tracker.BCFG_TRACKER_PUBLIC_ENABLE, FALSE );
+	def.put( ConfigKeys.Tracker.BCFG_TRACKER_PUBLIC_ENABLE_KNOWN_ONLY, FALSE );
     def.put( "Tracker Log Enable", FALSE );
     def.put( "Tracker Port Enable", FALSE );
     def.put( "Tracker Port", new Long( TRHost.DEFAULT_PORT ) );

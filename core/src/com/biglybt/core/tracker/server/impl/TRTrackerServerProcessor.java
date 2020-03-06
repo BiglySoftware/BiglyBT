@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.dht.netcoords.DHTNetworkPosition;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -174,12 +175,20 @@ TRTrackerServerProcessor
 
 				if ( torrent == null ){
 
-					if ( !COConfigurationManager.getBooleanParameter( "Tracker Public Enable")){
+					if ( !COConfigurationManager.getBooleanParameter( ConfigKeys.Tracker.BCFG_TRACKER_PUBLIC_ENABLE )){
 
 						throw( new TRTrackerServerException( "Torrent unauthorised" ));
 
 					}else{
 
+						if ( COConfigurationManager.getBooleanParameter( ConfigKeys.Tracker.BCFG_TRACKER_PUBLIC_ENABLE_KNOWN_ONLY )){
+							
+							if ( !server.isKnownTorrent( hash )){
+								
+								throw( new TRTrackerServerException( "Torrent unauthorised" ));
+							}
+						}
+						
 						try{
 
 							torrent = (TRTrackerServerTorrentImpl)server.permit( real_ip_address, hash, false );
@@ -352,12 +361,20 @@ TRTrackerServerProcessor
 
 					if ( torrent == null ){
 
-						if ( !COConfigurationManager.getBooleanParameter( "Tracker Public Enable")){
+						if ( !COConfigurationManager.getBooleanParameter( ConfigKeys.Tracker.BCFG_TRACKER_PUBLIC_ENABLE )){
 
 							continue;
 
 						}else{
 
+							if ( COConfigurationManager.getBooleanParameter( ConfigKeys.Tracker.BCFG_TRACKER_PUBLIC_ENABLE_KNOWN_ONLY )){
+								
+								if ( !server.isKnownTorrent( hash )){
+									
+									continue;
+								}
+							}
+							
 							try{
 								torrent = (TRTrackerServerTorrentImpl)server.permit( real_ip_address, hash, false );
 

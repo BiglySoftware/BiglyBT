@@ -332,6 +332,7 @@ public final class ConfigKeys {
 		public static final String BCFG_TRACKER_TOR_ENABLE = "Tracker Tor Enable";
 		public static final String SCFG_TRACKER_TOR_HOST_PORT = "Tracker Tor Host Port";
 		public static final String BCFG_TRACKER_PUBLIC_ENABLE = "Tracker Public Enable";
+		public static final String BCFG_TRACKER_PUBLIC_ENABLE_KNOWN_ONLY = "Tracker Public Enable Known Only";
 		public static final String BCFG_TRACKER_PORT_FORCE_EXTERNAL = "Tracker Port Force External";
 		public static final String BCFG_TRACKER_HOST_ADD_OUR_ANNOUNCE_URLS = "Tracker Host Add Our Announce URLs";
 		public static final String BCFG_TRACKER_PASSWORD_ENABLE_WEB = "Tracker Password Enable Web";

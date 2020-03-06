@@ -232,6 +232,15 @@ When creating a torrent to host using SSL, check the SSL checkbox on the "create
 				"ConfigView.section.tracker.publicenable.info").replaceAll("\n", " "));
 
 		// row
+		
+		BooleanParameterImpl tracker_public_enable_known_only = new BooleanParameterImpl(
+				BCFG_TRACKER_PUBLIC_ENABLE_KNOWN_ONLY, "ConfigView.section.tracker.publicenableknownonly");
+		tracker_public_enable_known_only.setIndent(1, true);
+		add(tracker_public_enable_known_only);
+
+		tracker_public_enable.addEnabledOnSelection( tracker_public_enable_known_only );
+		
+		// row
 
 		BooleanParameterImpl forcePortDetails = new BooleanParameterImpl(
 				BCFG_TRACKER_PORT_FORCE_EXTERNAL,
