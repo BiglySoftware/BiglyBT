@@ -75,6 +75,10 @@ AllTrackersManagerImpl
 	
 	private boolean	got_running;
 	
+	private final Object process_lock = new Object();
+	
+	private List<TOTorrent>	pending_torrents = new ArrayList<>();
+
 	private
 	AllTrackersManagerImpl()
 	{
@@ -88,6 +92,8 @@ AllTrackersManagerImpl
 					stopped(
 						Core core )
 					{
+						processUpdates( true );
+						
 						saveConfig( true );
 					}
 				});
@@ -98,9 +104,7 @@ AllTrackersManagerImpl
 			new TimerEventPerformer(){
 					
 				private int	tick_count;
-				
-				private List<TOTorrent>	pending_torrents = new ArrayList<>();
-						
+										
 				@Override
 				public void 
 				perform(
@@ -108,136 +112,7 @@ AllTrackersManagerImpl
 				{
 					tick_count++;
 					
-					if ( pending_torrents != null && CoreFactory.isCoreRunning()){
-					
-						for ( TOTorrent torrent: pending_torrents ){
-							
-							torrent.addListener( AllTrackersManagerImpl.this );
-						}
-						
-						got_running = true;
-						
-						pending_torrents = null;
-					}
-					
-					Set<AllTrackersTracker>	updates = new HashSet<>();
-							
-					while( !update_queue.isEmpty()){
-						
-						Object[] entry = update_queue.remove();
-						
-						Object	e0 = entry[0];
-						
-						if ( e0 instanceof TOTorrent ){
-						
-							TOTorrent torrent = (TOTorrent)e0;
-							
-							if ( pending_torrents == null ){
-								
-								torrent.addListener( AllTrackersManagerImpl.this );
-								
-							}else{
-								
-								pending_torrents.add( torrent );
-							}
-							
-							continue;
-						}
-								
-						AllTrackersTrackerImpl 		tracker = (AllTrackersTrackerImpl)e0;
-						
-						if ( host_map.containsKey( tracker.getTrackerName())){
-
-							Object	obj 	= entry[1];
-													
-							boolean	updated = false;
-							
-							if ( obj instanceof String ){
-								
-								String cmd = (String)obj;
-								
-								if ( cmd.equals( "reset_stats" )){
-									
-									tracker.resetReportedStatsSupport();
-									
-									updated = true;
-									
-								}else{
-									
-									Debug.out( "eh?" );
-								}
-							}else if ( obj instanceof TRTrackerAnnouncerResponse ){
-						
-								TRTrackerAnnouncerResponse a_resp = (TRTrackerAnnouncerResponse)obj;
-																				
-								if ( tracker.setOK( a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE )){
-									
-									updated = true;
-								}
-								
-								if ( tracker.setStatusString( a_resp.getStatusString())){
-									
-									updated = true;
-								}
-
-							}else if ( obj instanceof TRTrackerScraperResponse ){
-								
-									// announce status trumps scrape 
-								
-								if ( tracker.hasStatus()){
-									
-									continue;
-								}
-								
-								TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)obj;							
-																							
-								if ( tracker.setOK( s_resp.getStatus() == TRTrackerScraperResponse.ST_ONLINE )){
-									
-									updated = true;
-								}
-								
-								if ( tracker.setStatusString( s_resp.getStatusString() )){
-									
-									updated = true;		
-								}
-							}else if ( obj instanceof TRTrackerAnnouncerRequest ){
-																
-								TRTrackerAnnouncerRequest req = (TRTrackerAnnouncerRequest)obj;
-								
-									// caller already validated this
-								
-								long	session = req.getSessionID();
-																	
-								long	up 		= req.getReportedUpload();
-								long	down	= req.getReportedDownload();
-																			
-								tracker.updateSession( session, up, down );
-																		
-								updated = true;
-							}
-								
-							if ( updated ){
-								
-								updates.add( tracker );
-							}
-						}
-					}
-					
-					if ( !updates.isEmpty()){
-						
-						List<AllTrackersTracker> trackers = new ArrayList<>( updates );
-						
-						for ( AllTrackersListener listener: listeners ){
-							
-							try{
-								listener.trackerEventOccurred(	new AllTrackersEventImpl( AllTrackersEvent.ET_TRACKER_UPDATED, trackers ));
-								
-							}catch( Throwable e ){
-								
-								Debug.out( e );
-							}
-						}
-					}
+					processUpdates( false );
 					
 					if ( tick_count % SAVE_TICKS == 0 ){
 						
@@ -245,6 +120,148 @@ AllTrackersManagerImpl
 					}
 				}
 			});
+	}
+	
+	private void
+	processUpdates(
+		boolean	for_close )
+	{
+		synchronized( process_lock ){
+			
+			if ( pending_torrents != null && CoreFactory.isCoreRunning()){
+				
+				for ( TOTorrent torrent: pending_torrents ){
+					
+					torrent.addListener( AllTrackersManagerImpl.this );
+				}
+				
+				got_running = true;
+				
+				pending_torrents = null;
+			}
+			
+			Set<AllTrackersTracker>	updates = new HashSet<>();
+					
+			while( !update_queue.isEmpty()){
+				
+				Object[] entry = update_queue.remove();
+				
+				Object	e0 = entry[0];
+				
+				if ( e0 instanceof TOTorrent ){
+				
+					TOTorrent torrent = (TOTorrent)e0;
+					
+					if ( pending_torrents == null ){
+						
+						torrent.addListener( AllTrackersManagerImpl.this );
+						
+					}else{
+						
+						pending_torrents.add( torrent );
+					}
+					
+					continue;
+				}
+						
+				AllTrackersTrackerImpl 		tracker = (AllTrackersTrackerImpl)e0;
+				
+				if ( host_map.containsKey( tracker.getTrackerName())){
+	
+					Object	obj 	= entry[1];
+											
+					boolean	updated = false;
+					
+					if ( obj instanceof String ){
+						
+						String cmd = (String)obj;
+						
+						if ( cmd.equals( "reset_stats" )){
+							
+							tracker.resetReportedStatsSupport();
+							
+							updated = true;
+							
+						}else{
+							
+							Debug.out( "eh?" );
+						}
+					}else if ( obj instanceof TRTrackerAnnouncerResponse ){
+				
+						TRTrackerAnnouncerResponse a_resp = (TRTrackerAnnouncerResponse)obj;
+																		
+						if ( tracker.setOK( a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE )){
+							
+							updated = true;
+						}
+						
+						if ( tracker.setStatusString( a_resp.getStatusString())){
+							
+							updated = true;
+						}
+	
+					}else if ( obj instanceof TRTrackerScraperResponse ){
+						
+							// announce status trumps scrape 
+						
+						if ( tracker.hasStatus()){
+							
+							continue;
+						}
+						
+						TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)obj;							
+																					
+						if ( tracker.setOK( s_resp.getStatus() == TRTrackerScraperResponse.ST_ONLINE )){
+							
+							updated = true;
+						}
+						
+						if ( tracker.setStatusString( s_resp.getStatusString() )){
+							
+							updated = true;		
+						}
+					}else if ( obj instanceof TRTrackerAnnouncerRequest ){
+														
+						TRTrackerAnnouncerRequest req = (TRTrackerAnnouncerRequest)obj;
+						
+							// caller already validated this
+						
+						long	session = req.getSessionID();
+															
+						long	up 		= req.getReportedUpload();
+						long	down	= req.getReportedDownload();
+																	
+						tracker.updateSession( session, up, down );
+																
+						updated = true;
+					}
+						
+					if ( updated ){
+						
+						updates.add( tracker );
+					}
+				}
+			}
+			
+			if ( !for_close ){
+				
+				if ( !updates.isEmpty()){
+					
+					List<AllTrackersTracker> trackers = new ArrayList<>( updates );
+					
+					for ( AllTrackersListener listener: listeners ){
+						
+						try{
+							listener.trackerEventOccurred(	new AllTrackersEventImpl( AllTrackersEvent.ET_TRACKER_UPDATED, trackers ));
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	private synchronized void
