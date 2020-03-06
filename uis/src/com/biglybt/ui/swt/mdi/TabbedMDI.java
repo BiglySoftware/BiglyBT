@@ -496,90 +496,126 @@ public class TabbedMDI
 				final CTabItem item = tabFolder.getItem(
 						tabFolder.toControl(cursorLocation.x, cursorLocation.y));
 
-				boolean need_sep = false;
 
-				if (item == null) {
+				if ( item == null ){
 
-					need_sep = mapUserClosedTabs.size() > 0;
-					if (need_sep) {
-  					for (Object id : mapUserClosedTabs.keySet()) {
-  						final String view_id = (String) id;
+					for (Object id : mapUserClosedTabs.keySet()) {
+						
+						final String view_id = (String) id;
 
-  						org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem(menu, SWT.PUSH);
+						org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem(menu, SWT.PUSH);
 
-  						String title;
+						String title;
 
-  						Object oTitle = mapUserClosedTabs.get(id);
-  						if (oTitle instanceof String && ((String) oTitle).length() > 0) {
-								title = (String) oTitle;
+						Object oTitle = mapUserClosedTabs.get(id);
+						if (oTitle instanceof String && ((String) oTitle).length() > 0) {
+							title = (String) oTitle;
 						} else {
-								title = MessageText.getString(getViewTitleID(view_id));
+							title = MessageText.getString(getViewTitleID(view_id));
 						}
-  						
-  						// can still end up with a resource key here :( not sure why we don't always use the view-id
-  						
-  						if ( title.contains( "." )){
-  							String temp = MessageText.getString( title );
-  							if ( temp != null && !temp.isEmpty()){
-  								title = temp;
-  							}
-  						}
-  						
-  						mi.setText(title);
 
-  						mi.addListener(SWT.Selection, new Listener() {
-  							@Override
-							  public void handleEvent(Event event) {
-  								String key = props_prefix + ".closedtabs";
+						// can still end up with a resource key here :( not sure why we don't always use the view-id
 
-  								Map closedtabs = COConfigurationManager.getMapParameter(key,
-  										new HashMap());
+						if ( title.contains( "." )){
+							String temp = MessageText.getString( title );
+							if ( temp != null && !temp.isEmpty()){
+								title = temp;
+							}
+						}
 
-  								if (closedtabs.containsKey(view_id)) {
+						mi.setText(title);
 
-  									closedtabs.remove(view_id);
+						mi.addListener(SWT.Selection, new Listener() {
+							@Override
+							public void handleEvent(Event event) {
+								String key = props_prefix + ".closedtabs";
 
-  									COConfigurationManager.setParameter(key, closedtabs);
-  								}
+								Map closedtabs = COConfigurationManager.getMapParameter(key,
+										new HashMap());
 
-  								if ( !isMainMDI ){
-  									
-  									CTabItem[] items = tabFolder.getItems();
-  									
-  									List<String>	ids = new ArrayList<>();
-  									
-  									for ( CTabItem item: items ){
-  										
-  										TabbedEntry e = getEntryFromTabItem( item );
-  										
-  										if ( e != null ){
-  											ids.add( e.getViewID());
-  										}
-  									}
-  									
-  									if ( !ids.contains( view_id )){
-  										ids.add( view_id );
-  									}
-  									
-  									setPreferredOrder( ids.toArray( new String[0] ));
-  									
-  									String key2 = props_prefix + ".tabOrder";
+								if (closedtabs.containsKey(view_id)) {
 
-  									COConfigurationManager.setParameter( key2, ids );
-  									
-  								}
-  								showEntryByID(view_id);
-  							}
-  						});
+									closedtabs.remove(view_id);
 
-  					}
+									COConfigurationManager.setParameter(key, closedtabs);
+								}
+
+								if ( !isMainMDI ){
+
+									CTabItem[] items = tabFolder.getItems();
+
+									List<String>	ids = new ArrayList<>();
+
+									for ( CTabItem item: items ){
+
+										TabbedEntry e = getEntryFromTabItem( item );
+
+										if ( e != null ){
+											ids.add( e.getViewID());
+										}
+									}
+
+									if ( !ids.contains( view_id )){
+										ids.add( view_id );
+									}
+
+									setPreferredOrder( ids.toArray( new String[0] ));
+
+									String key2 = props_prefix + ".tabOrder";
+
+									COConfigurationManager.setParameter( key2, ids );
+
+								}
+								showEntryByID(view_id);
+							}
+						});
 					}
-				}
 
-				if (need_sep) {
+					if ( !mapUserClosedTabs.isEmpty()){
+						
+						new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
+					}
+
+					org.eclipse.swt.widgets.MenuItem miReset = new org.eclipse.swt.widgets.MenuItem(menu, SWT.PUSH);
+
+					miReset.setText( MessageText.getString( "menu.reset.tabs" ));
+					
+					miReset.addListener( SWT.Selection, (ev)->{
+						
+						CTabItem[] items = tabFolder.getItems();
+
+						for ( CTabItem x: items ){
+							x.dispose();
+						}
+						
+						mapUserClosedTabs.clear();
+						
+						String key = props_prefix + ".closedtabs";
+						
+						COConfigurationManager.setParameter(key, mapUserClosedTabs );
+						
+						setPreferredOrder( new String[0] );
+						
+						String key2 = props_prefix + ".tabOrder";
+
+						COConfigurationManager.setParameter( key2, new ArrayList<>());
+						
+						ViewManagerSWT vm = ViewManagerSWT.getInstance();
+						
+						List<UISWTViewBuilderCore> builders = vm.getBuilders(getViewID(),getDataSourceType());
+						
+						for (UISWTViewBuilderCore builder : builders){
+							
+							try{
+								createEntry(builder, true);
+								
+							}catch (Exception ignore) {
+							}	
+						}
+					});
+					
 					new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
 				}
-
 
 				TabbedEntry entry = null;
 				if (item != null) {
