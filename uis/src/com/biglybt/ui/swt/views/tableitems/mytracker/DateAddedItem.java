@@ -45,13 +45,22 @@ public class DateAddedItem
 
     String date_text = "";
 
+    long sort_order = -1;
+    
     if( item != null ) {
 
     	long	date = item.getDateAdded();
 
     	date_text = DisplayFormatters.formatDate( date );
+    	
+    	sort_order = date;
     }
 
+    if (!cell.setSortValue(sort_order) && cell.isValid()){
+    	
+        return;
+    }
+    
     cell.setText( date_text );
   }
 
