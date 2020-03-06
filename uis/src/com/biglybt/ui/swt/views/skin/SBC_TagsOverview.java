@@ -825,7 +825,7 @@ public class SBC_TagsOverview
 		}
 
 		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
-			"TagSettingsView", null, TagSettingsView.class));
+			TagSettingsView.VIEW_ID, null, TagSettingsView.class));
 
 		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
 			MyTorrentsSubView.MSGID_PREFIX, null, MyTorrentsSubView.class));
@@ -1215,7 +1215,8 @@ public class SBC_TagsOverview
 							}
 						}
 							
-						Utils.execSWTThread(()->{ 
+						Utils.execSWTThread(()->{
+							tv.getTabsCommon().getMDI().showEntryByID( TagSettingsView.VIEW_ID );
 							tv.showRow( row ); 
 						});
 					});

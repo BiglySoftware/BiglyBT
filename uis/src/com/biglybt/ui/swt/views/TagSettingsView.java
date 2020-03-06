@@ -61,6 +61,8 @@ import com.biglybt.ui.swt.utils.FontUtils;
 public class TagSettingsView
 	implements UISWTViewCoreEventListener, TagTypeListener
 {
+	public static final String VIEW_ID = "TagSettingsView";
+	
 	private static final String CM_ADD_REMOVE 	= "am=0;";
 	private static final String CM_ADD_ONLY	 	= "am=1;";
 	private static final String CM_REMOVE_ONLY	= "am=2;";
