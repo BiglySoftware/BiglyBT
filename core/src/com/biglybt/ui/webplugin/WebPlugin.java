@@ -1820,7 +1820,7 @@ WebPlugin
 								if ( !result ){
 									
 									
-									log.log( "Access denied: No password and " + msg );
+									log.log( "Access denied: No password and " + msg + " (" + client_address + ")");
 								}
 							}
 						}else{
@@ -1834,7 +1834,7 @@ WebPlugin
 
 							if ( !user.equals( p_user_name.getValue())){
 
-								log.log( "Access denied: Incorrect user name: " + user );
+								log.log( "Access denied: Incorrect user name: " + user + " (" + client_address + ")" );
 								
 								result = false;
 
@@ -1855,7 +1855,7 @@ WebPlugin
 								
 								if ( !result ){
 									
-									log.log( "Access denied: Incorrect password" );
+									log.log( "Access denied: Incorrect password" + " (" + client_address + ")" );
 								}
 							}
 						}
