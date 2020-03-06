@@ -1292,7 +1292,7 @@ DownloadManagerStatsImpl
 							long oldest_time 	= Long.MAX_VALUE;
 							long oldest_session	= 0;
 							
-							long[]	consolidated = session_stats.remove( 0 );
+							long[]	consolidated = session_stats.remove( 0L );
 							
 							for ( Map.Entry<Long, long[]> entry: session_stats.entrySet()){
 								
