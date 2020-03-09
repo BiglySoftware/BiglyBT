@@ -188,11 +188,12 @@ PRUDPPacketHandlerImpl
 					perform(
 						TimerEvent	event )
 					{
-						if ( destroyed && f_ev[0] != null ){
+						boolean jobDone = checkTimeouts();
+						
+						if ( jobDone && f_ev[0] != null ){
 
 							f_ev[0].cancel();
 						}
-						checkTimeouts();
 					}
 				});
 
@@ -831,16 +832,20 @@ PRUDPPacketHandlerImpl
 		}
 	}
 
-	protected void
+	protected boolean
 	checkTimeouts()
 	{
 		long	now = SystemTime.getCurrentTime();
 
 		List	timed_out = new ArrayList();
 
+		boolean result;
+		
 		try{
 			requests_mon.enter();
 
+			result = destroyed;
+			
 			Iterator it = requests.values().iterator();
 
 			while( it.hasNext()){
@@ -849,8 +854,9 @@ PRUDPPacketHandlerImpl
 
 				long	sent_time = request.getSendTime();
 
-				if ( 	sent_time != 0 &&
-						now - sent_time >= request.getTimeout()){
+				if ( 	destroyed ||	// never going to get processed, treat as timeout
+						(	sent_time != 0 &&
+							now - sent_time >= request.getTimeout())){
 
 					it.remove();
 
@@ -883,6 +889,8 @@ PRUDPPacketHandlerImpl
 				Debug.printStackTrace(e);
 			}
 		}
+		
+		return( result );
 	}
 
 	protected void
@@ -1313,6 +1321,11 @@ PRUDPPacketHandlerImpl
 			try{
 				requests_mon.enter();
 
+				if ( destroyed ){
+					
+					throw( new PRUDPPacketHandlerException( "Handler destroyed" ));
+				}
+				
 				requests.put( new Integer( request_packet.getTransactionId()), request );
 
 			}finally{
@@ -1480,11 +1493,6 @@ PRUDPPacketHandlerImpl
 				}else{
 
 					request.sent();
-
-					if ( dg_packet == null ){
-
-						throw new NullPointerException("dg_packet is null");
-					}
 
 					sendToSocket( dg_packet );
 
