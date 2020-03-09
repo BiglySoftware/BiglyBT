@@ -1047,12 +1047,21 @@ public class OpenTorrentOptionsWindow
 							new TableColumnOTOT_Size(column);
 						}
 					});
+			
+			tcm.registerColumn(OpenTorrentInstance.class,
+					TableColumnOTOT_SaveLocation.COLUMN_ID, new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new TableColumnOTOT_SaveLocation(column);
+						}
+					});
 
 			tcm.setDefaultColumnNames(TABLEID_TORRENTS, new String[] {
 
 				TableColumnOTOT_Position.COLUMN_ID,
 				TableColumnOTOT_Name.COLUMN_ID,
 				TableColumnOTOT_Size.COLUMN_ID,
+				TableColumnOTOT_SaveLocation.COLUMN_ID,
 			});
 
 			tcm.setDefaultSortColumnName(TABLEID_TORRENTS, TableColumnOTOT_Position.COLUMN_ID);
