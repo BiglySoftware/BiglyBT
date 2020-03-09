@@ -57,6 +57,7 @@ import com.biglybt.plugin.dht.DHTPlugin;
 import com.biglybt.plugin.dht.DHTPluginContact;
 import com.biglybt.plugin.dht.DHTPluginOperationListener;
 import com.biglybt.plugin.dht.DHTPluginValue;
+import com.biglybt.util.StringCompareUtils;
 
 /**
  * @author parg
@@ -4526,7 +4527,19 @@ DHTTrackerPlugin
 		sameAs(
 			putDetails		other )
 		{
-			return( getEncoded().equals( other.getEncoded()));
+				// ignore i2p setting as this can flip about with network mixing
+			
+			if ( !StringCompareUtils.equals( ip_override, other.ip_override )){
+				
+				return( false );
+			}
+			
+			if ( tcp_port == other.tcp_port && udp_port == other.udp_port ){
+				
+				return( true );
+			}
+			
+			return( false );
 		}
 	}
 
