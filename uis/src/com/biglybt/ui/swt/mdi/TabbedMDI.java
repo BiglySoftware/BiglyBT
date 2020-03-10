@@ -23,6 +23,15 @@ import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.*;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DragSource;
+import org.eclipse.swt.dnd.DragSourceAdapter;
+import org.eclipse.swt.dnd.DragSourceEvent;
+import org.eclipse.swt.dnd.DropTarget;
+import org.eclipse.swt.dnd.DropTargetAdapter;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuEvent;
@@ -76,6 +85,8 @@ public class TabbedMDI
 	implements TabbedMdiInterface, AEDiagnosticsEvidenceGenerator,
 	ParameterListener, ObfuscateImage
 {
+	private static final String KEY_AUTO_CLOSE = "TabbedMDI:autoclose";
+	
 	private CTabFolder tabFolder;
 
 	private LinkedList<MdiEntry>	select_history = new LinkedList<>();
@@ -258,9 +269,11 @@ public class TabbedMDI
 		tabFolder.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				TabbedEntry entry = (TabbedEntry) event.item.getData("TabbedEntry");
+				CTabItem item = (CTabItem)event.item;
 				
-				if ( !isMainMDI && !soMain.isDisposed()){
+				TabbedEntry entry = (TabbedEntry)item.getData("TabbedEntry");
+				
+				if ( !isMainMDI && !soMain.isDisposed() && item.getData( KEY_AUTO_CLOSE ) == null ){
 					String id = entry.getViewID();
 				
 					String key = props_prefix + ".selectedTab";
@@ -590,13 +603,7 @@ public class TabbedMDI
 					miReset.setText( MessageText.getString( "menu.reset.tabs" ));
 					
 					miReset.addListener( SWT.Selection, (ev)->{
-						
-						CTabItem[] items = tabFolder.getItems();
-
-						for ( CTabItem x: items ){
-							x.dispose();
-						}
-						
+												
 						mapUserClosedTabs.clear();
 						
 						String key = props_prefix + ".closedtabs";
@@ -637,14 +644,141 @@ public class TabbedMDI
 			setMinimized(toMinimize);
 		}
 
+		if ( !isMainMDI ){
+			
+			addDragDropListeners();
+		}
 			// Create views registered to this tab
 
 		buildTabs();
 	}
 
+    private void addDragDropListeners() {
+  
+        DragSource dragSource = new DragSource( tabFolder, DND.DROP_MOVE );
+                
+        dragSource.setTransfer(new Transfer[] {TextTransfer.getInstance()});
+        
+        dragSource.addDragListener(     		
+    		new DragSourceAdapter() {
+    			 
+                private CTabItem item;
+     
+                @Override
+                public void dragStart(DragSourceEvent event) {
+                   
+                    Point cursorLocation = tabFolder.getDisplay().getCursorLocation();
+                    
+                    item = tabFolder.getItem( tabFolder.toControl(cursorLocation));
+                    
+                    event.doit = item != null;
+                }
+     
+                @Override
+                public void dragSetData(final DragSourceEvent event) {
+                	
+                	if ( item != null ){
+                		
+                		event.data = ((TabbedEntry)item.getData("TabbedEntry")).getViewID();
+
+                	}else{
+
+                		event.data 	= null;
+                		event.doit	= false;
+                	}
+                }
+            });
+        
+        DropTarget dropTarget = new DropTarget( tabFolder, DND.DROP_MOVE);
+        
+        dropTarget.setTransfer(new Transfer[] {TextTransfer.getInstance()});
+        
+        dropTarget.addDropListener(
+    		new DropTargetAdapter(){
+            	
+                private int pos;
+     
+                @Override
+                public void dragOver( DropTargetEvent event ){
+                	
+                    if ( tabFolder.getDisplay().getCursorControl() instanceof CTabFolder){
+                    	
+                        event.detail = DND.DROP_MOVE;
+                        
+                        CTabItem item = tabFolder.getItem( tabFolder.toControl( tabFolder.getDisplay().getCursorLocation()));
+                        
+                        if ( item == null ){
+                        	
+                        	pos = tabFolder.getItemCount() - 1;
+                        	
+                        }else{
+                        	
+                        	pos = tabFolder.indexOf( item );
+                        }
+                    }else{
+                    	
+                    	pos = -1;
+                    	
+                        event.detail = DND.DROP_NONE;
+                    }
+                }
+     
+                @Override
+                public void drop(final DropTargetEvent event) {
+                    
+                	if ( pos < 0 ){
+                		
+                		return;
+                	}
+                	
+					CTabItem[] items = tabFolder.getItems();
+
+					List<String>	ids = new ArrayList<>();
+					
+					for ( CTabItem x: items ){
+						
+						ids.add( ((TabbedEntry)x.getData("TabbedEntry")).getViewID());
+					}
+					
+					String target_id = (String)event.data;
+					
+					if ( ids.indexOf( target_id ) == pos ){
+						
+						return;
+					}
+					
+					ids.remove( target_id );
+					
+					ids.add( pos, target_id );
+															
+					setPreferredOrder( ids.toArray( new String[0]));
+					
+					String key2 = props_prefix + ".tabOrder";
+
+					COConfigurationManager.setParameter( key2, ids );
+					
+					buildTabs();
+                }
+            });
+        
+        tabFolder.addListener( SWT.Dispose, (ev)->{ dragSource.dispose(); dropTarget.dispose();});
+    }
+    
 	private void
 	buildTabs()
 	{
+		CTabItem[] items = tabFolder.getItems();
+		
+		for ( CTabItem item: items ){
+			
+			item.setData( KEY_AUTO_CLOSE, true );
+		}
+		
+		for ( CTabItem item: items ){
+			
+			item.dispose();
+		}
+
 		ViewManagerSWT vm = ViewManagerSWT.getInstance();
 		
 		List<UISWTViewBuilderCore> builders = vm.getBuilders(getViewID(),getDataSourceType());
