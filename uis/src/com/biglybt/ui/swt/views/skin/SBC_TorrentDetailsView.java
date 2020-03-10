@@ -148,10 +148,12 @@ public class SBC_TorrentDetailsView
 				&& ((Object[]) dataSource)[0] instanceof PEPeer) {
 			tabbedMDI.showEntryByID(PeersView.MSGID_PREFIX);
 		} else {
-  		MdiEntry[] entries = tabbedMDI.getEntries();
-  		if (entries.length > 0) {
-  			tabbedMDI.showEntry(entries[0]);
-  		}
+			/* TabbedMDI now remembers tab order
+	  		MdiEntry[] entries = tabbedMDI.getEntries();
+	  		if (entries.length > 0) {
+	  			tabbedMDI.showEntry(entries[0]);
+	  		}
+	  		*/
 		}
 	}
 

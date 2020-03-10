@@ -426,12 +426,14 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 			}
 		});
 
+		/* TabbedMDI now keeps track of last selected tab so don't force.
 		if (!tabbedMDI.getMinimized()) {
 			MdiEntry[] entries = tabbedMDI.getEntries();
 			if (entries.length > 0) {
 				tabbedMDI.showEntry(entries[0]);
 			}
 		}
+		*/
 	}
 
 	private ISelectedContent[] selectedContent;

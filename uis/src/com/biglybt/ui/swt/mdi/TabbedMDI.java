@@ -259,6 +259,15 @@ public class TabbedMDI
 			@Override
 			public void handleEvent(Event event) {
 				TabbedEntry entry = (TabbedEntry) event.item.getData("TabbedEntry");
+				
+				if ( !isMainMDI && !soMain.isDisposed()){
+					String id = entry.getViewID();
+				
+					String key = props_prefix + ".selectedTab";
+	
+					COConfigurationManager.setParameter( key, id );
+				}
+				
 				showEntry(entry);
 			}
 		});
@@ -600,18 +609,7 @@ public class TabbedMDI
 
 						COConfigurationManager.setParameter( key2, new ArrayList<>());
 						
-						ViewManagerSWT vm = ViewManagerSWT.getInstance();
-						
-						List<UISWTViewBuilderCore> builders = vm.getBuilders(getViewID(),getDataSourceType());
-						
-						for (UISWTViewBuilderCore builder : builders){
-							
-							try{
-								createEntry(builder, true);
-								
-							}catch (Exception ignore) {
-							}	
-						}
+						buildTabs();
 					});
 					
 					new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
@@ -639,19 +637,56 @@ public class TabbedMDI
 			setMinimized(toMinimize);
 		}
 
-		// Create views registered to this tab
+			// Create views registered to this tab
 
-		ViewManagerSWT vm = ViewManagerSWT.getInstance();
-		List<UISWTViewBuilderCore> builders = vm.getBuilders(getViewID(),
-				getDataSourceType());
-		for (UISWTViewBuilderCore builder : builders) {
-			try {
-				createEntry(builder, true);
-			} catch (Exception ignore) {
-			}
-		}
+		buildTabs();
 	}
 
+	private void
+	buildTabs()
+	{
+		ViewManagerSWT vm = ViewManagerSWT.getInstance();
+		
+		List<UISWTViewBuilderCore> builders = vm.getBuilders(getViewID(),getDataSourceType());
+		
+		for (UISWTViewBuilderCore builder : builders){
+			
+			try{
+				createEntry(builder, true);
+				
+			}catch (Exception ignore) {
+			}	
+		}
+		
+		if ( !isMainMDI ){
+		
+			Utils.execSWTThreadLater(0,()->{
+
+				String key = props_prefix + ".selectedTab";
+				
+				String id = COConfigurationManager.getStringParameter( key, null );
+				
+				if ( id != null ){
+				
+					int index = indexOf( id );
+					
+					if ( index != -1 ){
+						
+						tabFolder.setSelection( index );
+						
+						return;
+					}
+				}
+				
+				if ( tabFolder.getItemCount() > 0 ){
+					
+					tabFolder.setSelection( 0 );
+				}
+			});
+			
+		}
+	}
+	
 	private MdiEntryVitalityImageSWT getVitalityImageAtPos(int x, int y) {
 		CTabItem item = tabFolder.getItem(new Point(x, y));
 		if (item == null) {
