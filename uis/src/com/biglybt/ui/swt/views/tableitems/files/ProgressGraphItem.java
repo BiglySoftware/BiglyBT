@@ -202,7 +202,8 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 					int nbAvailable = 0;
 					boolean written = false;
 					boolean partially_written = false;
-					if (firstPiece >= 0) {
+					// nbPieces > 0 check case: last file in torrent is 0 byte and starts on a new piece
+					if (firstPiece >= 0 && nbPieces > 0) {
 						for (int j = a0; j < a1; j++) {
 							final int this_index = j + firstPiece;
 							if (dm_pieces != null) {
