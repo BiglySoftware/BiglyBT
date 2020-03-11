@@ -6576,15 +6576,15 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		{
 			participant_messages.add( message );
 
+			message.setParticipant( this );
+
 			if ( is_spammer && getUseIPFilter()){
 				
 				if ( !message.isIPFiltered()){
 					
 					ip_filter.ban( AddressUtils.getHostAddress( message.getAddress()), "D-Chat/" + chat.getName() + "/" + getName(), false );
 				}
-			}
-			
-			message.setParticipant( this );
+			}			
 
 			message.setIgnored( is_ignored || is_spammer );
 
@@ -7396,6 +7396,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		isIPFiltered()
 		{
 			if (getUseIPFilter()){
+				
+				if ( participant != null && participant.isMe()){
+						
+						// avoid confusion by not hiding our own messages due to our local IP filter setup
+					
+					return( false );
+				}
 				
 				if ( is_ip_filtered == null ){
 					
