@@ -669,7 +669,9 @@ public class TabbedMDI
                    
                     Point cursorLocation = tabFolder.getDisplay().getCursorLocation();
                     
-                    item = tabFolder.getItem( tabFolder.toControl(cursorLocation));
+                    Point p = tabFolder.toControl(cursorLocation);
+                    
+                    item = tabFolder.getItem( p );
                     
                     event.doit = item != null;
                 }
@@ -700,26 +702,30 @@ public class TabbedMDI
      
                 @Override
                 public void dragOver( DropTargetEvent event ){
-                	
-                    if ( tabFolder.getDisplay().getCursorControl() instanceof CTabFolder){
+                	                    	                        
+                    Point rel = tabFolder.toControl( new Point(event.x, event.y ));
+                    
+                    if ( rel.y > tabFolder.getTabHeight()){
                     	
-                        event.detail = DND.DROP_MOVE;
-                        
-                        CTabItem item = tabFolder.getItem( tabFolder.toControl( tabFolder.getDisplay().getCursorLocation()));
-                        
-                        if ( item == null ){
-                        	
-                        	pos = tabFolder.getItemCount() - 1;
-                        	
-                        }else{
-                        	
-                        	pos = tabFolder.indexOf( item );
-                        }
+                    	 event.detail = DND.DROP_NONE;
+                    	 
+                    	 pos = -1;
+                    	 
                     }else{
                     	
-                    	pos = -1;
-                    	
-                        event.detail = DND.DROP_NONE;
+                        event.detail = DND.DROP_MOVE;
+
+                    	CTabItem item = tabFolder.getItem( rel );
+
+
+                    	if ( item == null ){
+
+                    		pos = tabFolder.getItemCount() - 1;
+
+                    	}else{
+
+                    		pos = tabFolder.indexOf( item );
+                    	}
                     }
                 }
      
