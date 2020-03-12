@@ -1174,4 +1174,25 @@ public class MenuBuildUtils {
 				}
 			});
 	}
+	
+		/**
+		 * Adds a separator if the current last item isn't one already
+		 * @param menu
+		 */
+	
+	public static void
+	addSeparater(
+		Menu		menu )
+	{
+		if ( menu.isDisposed() || menu.getItemCount() == 0 ){
+			return;
+		}
+		
+		org.eclipse.swt.widgets.MenuItem[] items = menu.getItems();
+		
+		if ( items[items.length-1].getStyle() != SWT.SEPARATOR ){
+			
+			new org.eclipse.swt.widgets.MenuItem( menu, SWT.SEPARATOR );
+		}
+	}
 }

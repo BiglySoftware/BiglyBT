@@ -96,7 +96,8 @@ public class FilesViewMenuUtil
 		final Menu 						menu,
 		final DownloadManager[] 		manager_list,
 		final DiskManagerFileInfo[][] 	files_list,
-		boolean							multi_dl_view )
+		boolean							multi_dl_view,
+		boolean							disable_multi_dialog_crud )
 	{
 		Shell shell = menu.getShell();
 
@@ -109,88 +110,95 @@ public class FilesViewMenuUtil
 
 		boolean hasSelection = (all_files.size() > 0);
 
-		final MenuItem itemOpen = new MenuItem(menu, SWT.PUSH);
-		Messages.setLanguageText(itemOpen, "FilesView.menu.open");
-		Utils.setMenuItemImage(itemOpen, "run");
-		// Invoke open on enter, double click
-		menu.setDefaultItem(itemOpen);
-
-		// Explore  (Copied from MyTorrentsView)
-		final boolean use_open_containing_folder = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");
-		final MenuItem itemExplore = new MenuItem(menu, SWT.PUSH);
-		Messages.setLanguageText(itemExplore, "MyTorrentsView.menu."
-				+ (use_open_containing_folder ? "open_parent_folder" : "explore"));
-		itemExplore.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				for (int i = all_files.size() - 1; i >= 0; i--) {
-					DiskManagerFileInfo info = (DiskManagerFileInfo) all_files.get(i);
-					if (info != null) {
-						ManagerUtils.open(info, use_open_containing_folder);
-					}
-				}
-			}
-		});
-		itemExplore.setEnabled(hasSelection);
-
-			// open in browser
-
-		final Menu menuBrowse = new Menu(menu.getShell(),SWT.DROP_DOWN);
-		final MenuItem itemBrowse = new MenuItem(menu, SWT.CASCADE);
-		Messages.setLanguageText(itemBrowse, "MyTorrentsView.menu.browse");
-		itemBrowse.setMenu(menuBrowse);
-
-
-		final MenuItem itemBrowsePublic = new MenuItem(menuBrowse, SWT.PUSH);
-		itemBrowsePublic.setText( MessageText.getString( "label.public" ) + "..." );
-		itemBrowsePublic.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				for (int i = all_files.size() - 1; i >= 0; i--) {
-					DiskManagerFileInfo info = (DiskManagerFileInfo)all_files.get(i);
-					if (info != null) {
-						ManagerUtils.browse(info, false, true );
-					}
-				}
-			}
-		});
-
-		final MenuItem itemBrowseAnon = new MenuItem(menuBrowse, SWT.PUSH);
-		itemBrowseAnon.setText( MessageText.getString( "label.anon" ) + "..." );
-		itemBrowseAnon.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				for (int i = all_files.size() - 1; i >= 0; i--) {
-					DiskManagerFileInfo info = all_files.get(i);
-					if (info != null) {
-						ManagerUtils.browse(info, true, true );
-					}
-				}
-			}
-		});
-
-		new MenuItem(menuBrowse, SWT.SEPARATOR);
-
-		final MenuItem itemBrowseURL = new MenuItem(menuBrowse, SWT.PUSH);
-		Messages.setLanguageText(itemBrowseURL, "label.copy.url.to.clip" );
-		itemBrowseURL.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event){
-				Utils.getOffOfSWTThread(
-					new AERunnable() {
-						@Override
-						public void runSupport() {
-							String url = ManagerUtils.browse(all_files.get(0), true, false );
-							if ( url != null ){
-								ClipboardCopy.copyToClipBoard( url );
-							}
+		MenuItem itemOpen = null;
+		
+		if ( !disable_multi_dialog_crud ){
+			
+			itemOpen = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(itemOpen, "FilesView.menu.open");
+			Utils.setMenuItemImage(itemOpen, "run");
+			// Invoke open on enter, double click
+			menu.setDefaultItem(itemOpen);
+	
+			// Explore  (Copied from MyTorrentsView)
+			final boolean use_open_containing_folder = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");
+			final MenuItem itemExplore = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(itemExplore, "MyTorrentsView.menu."
+					+ (use_open_containing_folder ? "open_parent_folder" : "explore"));
+			itemExplore.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					for (int i = all_files.size() - 1; i >= 0; i--) {
+						DiskManagerFileInfo info = (DiskManagerFileInfo) all_files.get(i);
+						if (info != null) {
+							ManagerUtils.open(info, use_open_containing_folder);
 						}
-					});
-			}});
-
-		itemBrowseURL.setEnabled( all_files.size()==1 );
-
-		itemBrowse.setEnabled(hasSelection);
+					}
+				}
+			});
+			itemExplore.setEnabled(hasSelection);
+	
+				// open in browser
+	
+			final Menu menuBrowse = new Menu(menu.getShell(),SWT.DROP_DOWN);
+			final MenuItem itemBrowse = new MenuItem(menu, SWT.CASCADE);
+			Messages.setLanguageText(itemBrowse, "MyTorrentsView.menu.browse");
+			itemBrowse.setMenu(menuBrowse);
+	
+	
+			final MenuItem itemBrowsePublic = new MenuItem(menuBrowse, SWT.PUSH);
+			itemBrowsePublic.setText( MessageText.getString( "label.public" ) + "..." );
+			itemBrowsePublic.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					for (int i = all_files.size() - 1; i >= 0; i--) {
+						DiskManagerFileInfo info = (DiskManagerFileInfo)all_files.get(i);
+						if (info != null) {
+							ManagerUtils.browse(info, false, true );
+						}
+					}
+				}
+			});
+	
+			final MenuItem itemBrowseAnon = new MenuItem(menuBrowse, SWT.PUSH);
+			itemBrowseAnon.setText( MessageText.getString( "label.anon" ) + "..." );
+			itemBrowseAnon.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					for (int i = all_files.size() - 1; i >= 0; i--) {
+						DiskManagerFileInfo info = all_files.get(i);
+						if (info != null) {
+							ManagerUtils.browse(info, true, true );
+						}
+					}
+				}
+			});
+	
+			new MenuItem(menuBrowse, SWT.SEPARATOR);
+			
+			final MenuItem itemBrowseURL = new MenuItem(menuBrowse, SWT.PUSH);
+			Messages.setLanguageText(itemBrowseURL, "label.copy.url.to.clip" );
+			itemBrowseURL.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event){
+					Utils.getOffOfSWTThread(
+						new AERunnable() {
+							@Override
+							public void runSupport() {
+								String url = ManagerUtils.browse(all_files.get(0), true, false );
+								if ( url != null ){
+									ClipboardCopy.copyToClipBoard( url );
+								}
+							}
+						});
+				}});
+	
+			itemBrowseURL.setEnabled( all_files.size()==1 );
+	
+			if ( itemBrowse != null ){
+				itemBrowse.setEnabled(hasSelection);
+			}
+		}
 
 			// rename/retarget
 
@@ -531,9 +539,24 @@ public class FilesViewMenuUtil
 			}
 		}
 
-		// we can only open files if they are read-only
-
-		itemOpen.setEnabled(open);
+		if ( itemOpen != null ){
+			
+			// we can only open files if they are read-only
+	
+			itemOpen.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					for (int i = 0; i < all_files.size(); i++) {
+						DiskManagerFileInfo info = (DiskManagerFileInfo)all_files.get(i);
+						if (info != null && info.getAccessMode() == DiskManagerFileInfo.READ) {
+							Utils.launch(info);
+						}
+					}
+				}
+			});
+			
+			itemOpen.setEnabled(open);
+		}
 
 		// can't rename files for non-persistent downloads (e.g. shares) as these
 		// are managed "externally"
@@ -558,18 +581,6 @@ public class FilesViewMenuUtil
 		itemLow.setEnabled(!all_low_pri);
 
 		itemDelete.setEnabled(!all_compact);
-
-		itemOpen.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				for (int i = 0; i < all_files.size(); i++) {
-					DiskManagerFileInfo info = (DiskManagerFileInfo)all_files.get(i);
-					if (info != null && info.getAccessMode() == DiskManagerFileInfo.READ) {
-						Utils.launch(info);
-					}
-				}
-			}
-		});
 
 		Listener rename_listener = new Listener() {
 			@Override

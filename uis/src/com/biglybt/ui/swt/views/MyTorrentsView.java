@@ -1848,7 +1848,8 @@ public class MyTorrentsView
   					menu,
   					new DownloadManager[]{ firstFileDM },
   					new DiskManagerFileInfo[][]{ listFileInfos.toArray(new DiskManagerFileInfo[0])},
-  					false );
+  					false,
+  					false);
   			return;
   		}
 		}

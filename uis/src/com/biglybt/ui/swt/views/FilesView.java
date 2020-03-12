@@ -58,6 +58,7 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
@@ -902,12 +903,18 @@ public class FilesView
 
 			List<FilesView.FilesViewNodeInner>	inners = new ArrayList<>();
 			
+			List<DiskManagerFileInfo> inner_files = new ArrayList<>();
+			
 			for ( int i=0;i<data_sources.length;i++ ){
 				DiskManagerFileInfo file = (DiskManagerFileInfo)data_sources[i];
 				
 				if ( file instanceof FilesView.FilesViewNodeInner ){
+
+					FilesView.FilesViewNodeInner inner = (FilesView.FilesViewNodeInner )file;
 					
-					inners.add((FilesView.FilesViewNodeInner )file);
+					inner_files.addAll( inner.getFiles( true ));
+					
+					inners.add( inner );
 					
 				}else{
 				
@@ -923,6 +930,7 @@ public class FilesView
 					menu,
 					new DownloadManager[]{ managers[0] },
 					new DiskManagerFileInfo[][]{ files.toArray(new DiskManagerFileInfo[files.size()]) },
+					false,
 					false );
 				
 			}else if ( !inners.isEmpty()){
@@ -952,6 +960,20 @@ public class FilesView
 				mi.setEnabled( doTreeAction( inners, 1, true ));
 				
 				new MenuItem( menu, SWT.SEPARATOR );
+				
+				if ( !inner_files.isEmpty()){
+					
+					FilesViewMenuUtil.fillMenu(
+							tv,
+							sColumnName,
+							menu,
+							new DownloadManager[]{ managers[0] },
+							new DiskManagerFileInfo[][]{ inner_files.toArray(new DiskManagerFileInfo[inner_files.size()]) },
+							false,
+							true );
+									
+					MenuBuildUtils.addSeparater( menu );
+				}
 			}
 		}else{
 
@@ -966,6 +988,7 @@ public class FilesView
 				DiskManagerFileInfo file = (DiskManagerFileInfo)ds;
 
 				if ( file instanceof FilesView.FilesViewNodeInner ){
+					
 					continue;
 				}
 				
@@ -997,7 +1020,8 @@ public class FilesView
 			}
 
 			if ( files_list.length > 0 ){
-				FilesViewMenuUtil.fillMenu(tv, sColumnName, menu, manager_list, files_list, true );
+				
+				FilesViewMenuUtil.fillMenu(tv, sColumnName, menu, manager_list, files_list, true, false );
 			}
 		}
 	}
@@ -1795,6 +1819,38 @@ public class FilesView
 			kids.put( child.getName(), child );
 		}
 
+		protected List<DiskManagerFileInfo>
+		getFiles(
+			boolean	recursive )
+		{
+			List<DiskManagerFileInfo> result = new ArrayList<>();
+			
+			getFiles( result, recursive );
+			
+			return( result );
+		}
+		
+		private void
+		getFiles(
+			List<DiskManagerFileInfo>		files,
+			boolean							recursive )
+		{
+			for ( FilesViewTreeNode kid: kids.values()){
+				
+				if ( kid.isLeaf()){
+					
+					files.add(((FilesViewNodeLeaf)kid).getTarget());
+					
+				}else{
+					
+					if ( recursive ){
+						
+						((FilesViewNodeInner)kid).getFiles( files, recursive );
+					}
+				}
+			}
+		}
+		
 		@Override
 		public String
 		getName()
