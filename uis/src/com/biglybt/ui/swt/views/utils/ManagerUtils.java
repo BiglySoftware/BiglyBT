@@ -2520,6 +2520,8 @@ public class ManagerUtils {
 		
 		SWTSkinObjectContainer	so_mode		= (SWTSkinObjectContainer)skin.getSkinObject( "mode" );
 		
+		SWTSkinObjectCheckbox	so_include_skipped	= (SWTSkinObjectCheckbox)skin.getSkinObject( "skip-inc" );
+
 		Composite c_mode = so_mode.getComposite();
 		c_mode.setLayoutData( Utils.getFilledFormData());
 		
@@ -2582,6 +2584,8 @@ public class ManagerUtils {
 					
 					int tolerance = spinner.getSelection();
 					
+					boolean include_skipped = so_include_skipped.isChecked();
+					
 					dialog.close();
 					
 					Utils.execSWTThreadLater(
@@ -2591,7 +2595,7 @@ public class ManagerUtils {
 							public void
 							run()
 							{
-								locateFiles( dms, dm_files, shell, roots, mode, tolerance );
+								locateFiles( dms, dm_files, shell, roots, mode, tolerance, include_skipped );
 							}
 						});
 					
@@ -2855,6 +2859,19 @@ public class ManagerUtils {
 					}
 				});
 			
+		so_include_skipped.setChecked( COConfigurationManager.getBooleanParameter( "find.files.include.skipped"));
+		
+		so_include_skipped.addSelectionListener(
+				new SWTSkinCheckboxListener(){
+					
+					@Override
+					public void 
+					checkboxChanged(SWTSkinObjectCheckbox so, boolean checked){
+					
+						COConfigurationManager.setParameter( "find.files.include.skipped", checked );
+					}
+				});
+		
 		dialog.open();	
 	}
 	
@@ -2876,7 +2893,8 @@ public class ManagerUtils {
 		Shell							shell,
 		String[]						search_roots,
 		int								mode,
-		int								tolerance )
+		int								tolerance,
+		boolean							include_skipped )
 	{
 		TextViewerWindow _viewer = null;
 		
@@ -3115,13 +3133,16 @@ download_loop:
 										}
 									}
 									
-									if ( file.isSkipped()){
+									if ( !include_skipped ){
 										
-										skipped++;
-										
-										continue;
+										if ( file.isSkipped()){
+											
+											skipped++;
+											
+											continue;
+										}
 									}
-
+									
 									Set<File> candidates = file_map.get( file_length );
 
 									String extra_info = "";
@@ -3603,6 +3624,8 @@ download_loop:
 
 							logLine( viewer, "    Matched=" + actions_established.size() + ", complete=" + already_complete + ", ignored as not selected for download=" + skipped + ", no candidates=" + no_candidates + ", remaining=" + unmatched_files.size() + " (total=" + files.length + ")");
 
+							List<DiskManagerFileInfo> fixed_files = new ArrayList<>( actions_established.keySet());
+							
 							if ( actions_established.size() > 0 && unmatched_files.size() > 0 ){
 
 								logLine( viewer, "    Looking for other potential name-based matches" );
@@ -3695,6 +3718,8 @@ download_loop:
 	
 														if ( file.setLink( expected_file )){
 	
+															fixed_files.add( file );
+															
 															actions_ok++;
 	
 															action_count++;
@@ -3727,6 +3752,8 @@ download_loop:
 														
 														if ( ok ){
 															
+															fixed_files.add( file );
+															
 															actions_ok++;
 															
 															action_count++;
@@ -3738,6 +3765,8 @@ download_loop:
 														boolean ok = FileUtil.renameFile( expected_file,  target );
 														
 														if ( ok ){
+															
+															fixed_files.add( file );
 															
 															actions_ok++;
 															
@@ -3755,6 +3784,25 @@ download_loop:
 								}
 							}
 							
+							if ( include_skipped ){
+								
+								int	changed = 0;
+								
+								for ( DiskManagerFileInfo file: fixed_files ){
+									
+									if ( file.isSkipped()){
+										
+										file.setSkipped( false );
+										
+										changed++;
+									}
+								}
+								
+								if ( changed > 0 ){
+									
+									logLine( viewer, "    Changed " + changed + " files from 'skipped' to 'normal'" );
+								}
+							}
 						}finally{
 
 							if ( action_count > 0 ){
