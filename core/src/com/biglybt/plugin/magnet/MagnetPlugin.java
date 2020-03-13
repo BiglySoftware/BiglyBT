@@ -31,6 +31,7 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
@@ -617,16 +618,23 @@ MagnetPlugin
 
 						if ( dl != null ){
 
-							Torrent	torrent = dl.getTorrent();
-
-							if ( torrent != null ){
-
-								byte[] torrent_data = torrent.writeToBEncodedData();
-
-								torrent_data = addTrackersAndWebSeedsEtc( torrent_data, args, new HashSet<String>(), Collections.emptyList(), Collections.emptyMap());
-
-								return( torrent_data);
-							}
+								// might just be an existing metadata download
+							
+							com.biglybt.core.download.DownloadManager		core_dm = PluginCoreUtils.unwrap( dl );
+							
+							if ( !core_dm.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+								
+								Torrent	torrent = dl.getTorrent();
+	
+								if ( torrent != null ){
+	
+									byte[] torrent_data = torrent.writeToBEncodedData();
+	
+									torrent_data = addTrackersAndWebSeedsEtc( torrent_data, args, new HashSet<String>(), Collections.emptyList(), Collections.emptyMap());
+	
+									return( torrent_data);
+								}
+								}
 						}
 					}catch( Throwable e ){
 

@@ -24,6 +24,7 @@ package com.biglybt.core.torrentdownloader.impl;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -52,6 +53,8 @@ import com.biglybt.pifimpl.local.utils.xml.rss.RSSUtils;
  */
 public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader {
 
+  private static final AtomicLong uid = new AtomicLong( SystemTime.getCurrentTime());
+	
   private String	original_url;
   private String 	url_str;
   private Proxy		proxy;
@@ -605,7 +608,10 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
         		filename = "Torrent" + (long)(Math.random()*Long.MAX_VALUE);
         	}
 
-
+    			// in case we end up downloading the same magnet more than once concurrently add in some spice
+    		
+    		filename += "_" + uid.incrementAndGet();
+    		
     		filename += ".tmp";
 
         }else{
