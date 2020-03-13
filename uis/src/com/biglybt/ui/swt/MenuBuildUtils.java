@@ -455,8 +455,18 @@ public class MenuBuildUtils {
 
 			j++;
 
-			edge_lens[i] 	= Math.min( c1.length,Math.max( edge_lens[i], j ));
-			edge_lens[i+1] 	= Math.min( c2.length, j );
+			int e1 = edge_lens[i] 	= Math.min( c1.length,Math.max( edge_lens[i], j ));
+			
+			if ( e1 > 0 && e1 < c1.length && Character.isHighSurrogate( c1[e1-1] )){
+				edge_lens[i]++;
+			}
+			
+			int e2 = edge_lens[i+1] 	= Math.min( c2.length, j );
+			
+			if ( e2 > 0 && e2 < c2.length && Character.isHighSurrogate( c2[e2-1] )){
+				edge_lens[i+1]++;
+			}
+
 		}
 
 		int	bucket_pos 	= 0;
