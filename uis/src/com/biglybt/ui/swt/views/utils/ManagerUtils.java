@@ -3103,6 +3103,7 @@ public class ManagerUtils {
 							int	no_candidates 		= 0;
 							int	already_complete	= 0;
 							int skipped				= 0;
+							int unskipped_count		= 0;
 							
 							int	action_count = 0;
 
@@ -3521,10 +3522,33 @@ download_loop:
 
 												if ( !( error || hash_failed )){
 
-													logLine( viewer, test_indent, "Matched" + (failed_pieces==0?"":(" (fails=" + failed_pieces + ")")));
+													logLine( viewer, 0, " Matched" + (failed_pieces==0?"":(" (fails=" + failed_pieces + ")")));
 
 													int action_indent = test_indent+1;
-													
+
+													if ( include_skipped && file.isSkipped()){
+														
+														File existing = file.getFile( true );
+														
+														boolean existed = existing.exists();
+														
+														file.setSkipped( false );
+														
+														boolean worked = !file.isSkipped();
+														
+														if ( worked ){
+															
+															unskipped_count++;
+														}
+														
+														logLine( viewer, action_indent, "Setting priority to normal - " + ( worked?"OK":"Failed" ));
+														
+														if ( !existed && existing.exists()){
+															
+															existing.delete();
+														}
+													}
+																										
 													if ( mode == 0 ){
 														
 														try{
@@ -3733,6 +3757,29 @@ download_loop:
 													
 												int action_indent = file_indent+1;
 
+												if ( include_skipped && file.isSkipped()){
+													
+													File existing = file.getFile( true );
+													
+													boolean existed = existing.exists();
+													
+													file.setSkipped( false );
+													
+													boolean worked = !file.isSkipped();
+													
+													if ( worked ){
+														
+														unskipped_count++;
+													}
+													
+													logLine( viewer, action_indent, "Setting priority to normal - " + ( worked?"OK":"Failed" ));
+													
+													if ( !existed && existing.exists()){
+														
+														existing.delete();
+													}
+												}
+												
 												if ( mode == 0 ){
 													
 													try{
@@ -3828,21 +3875,9 @@ download_loop:
 							
 							if ( include_skipped ){
 								
-								int	changed = 0;
-								
-								for ( DiskManagerFileInfo file: fixed_files ){
+								if ( unskipped_count > 0 ){
 									
-									if ( file.isSkipped()){
-										
-										file.setSkipped( false );
-										
-										changed++;
-									}
-								}
-								
-								if ( changed > 0 ){
-									
-									logLine( viewer, dm_indent, "Changed " + changed + " files from 'skipped' to 'normal'" );
+									logLine( viewer, dm_indent, "Changed " + unskipped_count + " file priorities from 'skipped' to 'normal'" );
 								}
 							}
 						}finally{
