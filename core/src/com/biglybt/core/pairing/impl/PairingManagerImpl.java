@@ -1595,7 +1595,7 @@ PairingManagerImpl
 				}
 
 					// grab some UPnP info for diagnostics
-
+				/* removed this to reduce message size - diags not used at the moment anyway
 				try{
 				    PluginInterface pi_upnp = core.getPluginManager().getPluginInterfaceByClass( UPnPPlugin.class );
 
@@ -1639,7 +1639,8 @@ PairingManagerImpl
 				    }
 				}catch( Throwable e ){
 				}
-
+				*/
+				
 				try{
 					NetworkAdmin admin = NetworkAdmin.getSingleton();
 
