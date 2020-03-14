@@ -1172,6 +1172,8 @@ IpFilterImpl
 						perform(
 							TimerEvent event)
 						{
+							List<String> to_unban = new ArrayList<>();
+							
 							try{
 								class_mon.enter();
 
@@ -1191,7 +1193,7 @@ IpFilterImpl
 
 											unban_map_reverse.remove( ip );
 
-											unban( ip );
+											to_unban.add( ip );	// unban invokes listeners, defer until out of class_mon
 										}
 									}else{
 
@@ -1208,6 +1210,11 @@ IpFilterImpl
 							}finally{
 
 								class_mon.exit();
+							}
+							
+							for ( String ip: to_unban ){
+								
+								unban( ip );
 							}
 						}
 					});
