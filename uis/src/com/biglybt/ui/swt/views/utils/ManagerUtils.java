@@ -3526,7 +3526,7 @@ download_loop:
 
 													int action_indent = test_indent+1;
 
-													if ( include_skipped && file.isSkipped()){
+													if ( file.isSkipped()){
 														
 														File existing = file.getFile( true );
 														
@@ -3757,7 +3757,7 @@ download_loop:
 													
 												int action_indent = file_indent+1;
 
-												if ( include_skipped && file.isSkipped()){
+												if ( file.isSkipped()){
 													
 													File existing = file.getFile( true );
 													
