@@ -1156,6 +1156,25 @@ public class TagUIUtils
 			createXCodeMenuItems(menu, tag);
 		}
 
+		if ( tag_type.hasTagTypeFeature( TagFeature.TF_NOTIFICATIONS )) {
+			
+			TagFeatureNotifications tfn = (TagFeatureNotifications)tag;
+			
+			String chat_str = tfn.getNotifyMessageChannel();
+			
+			MenuBuildUtils.addChatSelectionMenu( 
+				menu,
+				"label.notify.magnets.to.chat",
+				chat_str,
+				new MenuBuildUtils.ChatSelectionListener(){
+					
+					@Override
+					public void chatSelected( String chat ){
+						tfn.setNotifyMessageChannel( chat );
+					}
+				});			
+		}
+		
 		needs_separator_next = true;
 
 		if ( tag_type.getTagType() == TagType.TT_DOWNLOAD_MANUAL ){

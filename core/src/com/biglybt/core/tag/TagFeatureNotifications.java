@@ -35,4 +35,11 @@ TagFeatureNotifications
 	public void
 	setPostingNotifications(
 		int		flags );
+	
+	public String
+	getNotifyMessageChannel();
+
+	public void
+	setNotifyMessageChannel(
+		String		chat );
 }

@@ -87,6 +87,7 @@ TagBase
 	protected static final String	AT_EOS_OPTIONS_TEMPLATE			= "eos.ot";
 	protected static final String	AT_EOS_PM						= "eos.pm";
 	protected static final String	AT_NOTIFICATION_POST			= "noti.post";
+	protected static final String	AT_NOTIFICATION_PUBLISH			= "noti.pub";
 	protected static final String	AT_LIMIT_ORDERING				= "max.t.o";
 	protected static final String	AT_EOS_ASSIGN_TAGS				= "eos.at";
 
@@ -1675,6 +1676,38 @@ TagBase
 		int		flags )
 	{
 		writeLongAttribute( AT_NOTIFICATION_POST, flags );
+	}
+	
+	public String
+	getNotifyMessageChannel()
+	{
+		String channel = readStringAttribute( AT_NOTIFICATION_PUBLISH, "" );
+
+		if ( channel == null ){
+
+			channel = "";
+		}
+
+		return( channel );
+	}
+
+	public void
+	setNotifyMessageChannel(
+		String		channel )
+	{
+		if ( channel == null ){
+
+			channel = "";
+		}
+
+		channel = channel.trim();
+
+		boolean changed = writeStringAttribute( AT_NOTIFICATION_PUBLISH, channel);
+
+		if (changed) {
+	
+			tag_type.fireMetadataChanged( this );
+		}		
 	}
 	
 		// assign tags
