@@ -51,6 +51,7 @@ import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
+import com.biglybt.plugin.net.buddy.swt.BuddyUIUtils;
 
 
 /**
@@ -1119,6 +1120,14 @@ public class MenuBuildUtils {
 						
 						return;
 					}
+					
+					BuddyUIUtils.createChat( 
+						chat_menu,
+						(BuddyUIUtils.ChatCreationListener)( chat )->{
+							listener.chatSelected( chat );
+						});
+					
+					new org.eclipse.swt.widgets.MenuItem( chat_menu, SWT.SEPARATOR );
 					
 					org.eclipse.swt.widgets.MenuItem mi_none = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.RADIO);
 					
