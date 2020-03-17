@@ -22,6 +22,7 @@ package com.biglybt.core.tag.impl;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
@@ -33,11 +34,11 @@ import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.*;
-import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatMessage;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 
 public class
@@ -74,6 +75,8 @@ TagDownloadWithState
 	private boolean	supports_xcode;
 	private boolean	supports_file_location;
 
+	private String	notification_pub = "";
+		
 	final Object	rate_lock = new Object();
 
 	private final LimitedRateGroup upload_limiter =
@@ -253,6 +256,8 @@ TagDownloadWithState
 		max_aggregate_share_ratio_priority	= readBooleanAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY, TagFeatureRateLimit.AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY_DEFAULT );
 		fp_seeding							= readBooleanAttribute( AT_RATELIMIT_FP_SEEDING, false );
 
+		notification_pub					= getNotifyMessageChannel();
+		
 		addTagListener(
 			new TagListener()
 			{
@@ -285,6 +290,8 @@ TagDownloadWithState
 						
 						updateFPSeeding( manager, true );
 					}
+					
+					ncp_pub_list_mutate_index.incrementAndGet();
 				}
 
 				@Override
@@ -323,6 +330,8 @@ TagDownloadWithState
 						
 						updateFPSeeding( manager, false );
 					}
+					
+					ncp_pub_list_mutate_index.incrementAndGet();
 				}
 
 				private void
@@ -636,19 +645,30 @@ TagDownloadWithState
 														
 													ChatInstance chat = BuddyPluginUtils.getChat(net, key);
 													
-													if ( chat != null && chat.isAvailable()){
-													
-														chat.sendMessage(  PluginCoreUtils.wrap( dm ));
+													if ( chat != null ){
 														
-													}else{
-												
-														if ( SystemTime.getMonotonousTime() - start >= 10*60*1000 ){
+														try{
+															if ( chat.isAvailable()){
 															
-															Debug.out( "EOS:PM Abandoned sending of magnet to " + chat );
-															
-														}else{
+																chat.sendMessage(  PluginCoreUtils.wrap( dm ));
+																
+															}else{
 														
-															SimpleTimer.addEvent( "EOS:PM", SystemTime.getOffsetTime( 5000 ), this );
+																if ( SystemTime.getMonotonousTime() - start >= 10*60*1000 ){
+																	
+																	Debug.out( "EOS:PM Abandoned sending of magnet to " + chat );
+																	
+																}else{
+																
+																	SimpleTimer.addEvent( "EOS:PM", SystemTime.getOffsetTime( 5000 ), this );
+																}
+															}
+														}finally{
+															
+															if ( chat.getReferenceCount() > 1 ){
+															
+																chat.destroy();
+															}
 														}
 													}
 												}
@@ -1354,6 +1374,16 @@ TagDownloadWithState
 		checkFPSeeding();
 	}
 	
+	@Override
+	public void
+	setNotifyMessageChannel(
+		String		channel )
+	{
+		super.setNotifyMessageChannel(channel);
+		
+		notification_pub = getNotifyMessageChannel();
+	}
+	
 	private void
 	updateStuff()
 	{
@@ -1668,6 +1698,291 @@ TagDownloadWithState
 		}
 	}
 	
+	private ChatInstance 	notification_pub_channel;
+	private String			notification_pub_channel_key;
+	private long			npc_initialised_time;
+	private boolean			npc_chat_ready;
+	
+	private AtomicLong		ncp_pub_list_mutate_index = new AtomicLong();
+	
+	private LinkedList<NPCState>	ncp_pub_list;
+	private long					ncp_pub_list_mut;
+	
+	private static final String NPC_ATTRIBUTE_NAME = "_tm::npc";
+	
+	private void
+	checkNotifyPublish()
+	{
+		String channel = notification_pub;
+				
+		if ( channel.isEmpty()){
+			
+			if ( notification_pub_channel != null ){
+				
+				notification_pub_channel.destroy();
+				
+				notification_pub_channel = null;
+				
+				ncp_pub_list = null;
+			}
+		}else{
+			
+			if ( notification_pub_channel_key != null ){
+				
+				if ( notification_pub_channel != null ){
+					
+					if ( !notification_pub_channel.getNetAndKey().equals( notification_pub_channel_key )){
+						
+						notification_pub_channel.destroy();
+						
+						notification_pub_channel = null;
+						
+						ncp_pub_list = null;
+					}
+				}
+			}
+			
+			if ( notification_pub_channel == null ){
+				
+				String[] bits = channel.split( ":", 2 );
+				
+				String net = bits[0].startsWith( "Public")?AENetworkClassifier.AT_PUBLIC:AENetworkClassifier.AT_I2P;
+				
+				String key = bits[1].trim();
+		
+				notification_pub_channel 		= BuddyPluginUtils.getChat(net, key);
+				notification_pub_channel_key	= channel;
+				npc_initialised_time			= 0;
+				npc_chat_ready					= false;
+			}
+			
+			if ( !npc_chat_ready ){
+				
+				long now = SystemTime.getMonotonousTime();
+				
+				if ( npc_initialised_time == 0 ){
+					
+					if ( notification_pub_channel.isInitialised()){
+						
+						npc_initialised_time = now;
+					}
+				}else{
+					
+					if ( now - npc_initialised_time > 60*1000 && notification_pub_channel.getIncomingSyncState() == 0 ){
+						
+						npc_chat_ready = true;
+					}
+				}
+			}else{
+												
+				Set<DownloadManager>	dms = getTaggedDownloads();
+				
+				String state_key = getTagUID() + ":" + notification_pub_channel.getDefaultNickname();	// should be good enough
+				
+				LinkedList<NPCState>	pub_list = ncp_pub_list;
+				
+				long mut = ncp_pub_list_mutate_index.get();
+				
+				if ( pub_list == null || ncp_pub_list_mut != mut ){
+							
+					ncp_pub_list_mut 	= mut;
+						
+					List<NPCState>	new_pub_list = new ArrayList<>( dms.size());
+					
+					for ( DownloadManager dm: dms ){
+						
+						synchronized( NPC_ATTRIBUTE_NAME ){
+						
+							Map<String,Object> state = (Map<String,Object>)dm.getDownloadState().getMapAttribute( NPC_ATTRIBUTE_NAME );
+							
+							long last_pub;
+							
+							if ( state == null ){
+																
+								last_pub = 0;
+								
+							}else{
+							
+								Long l_last_pub = (Long)state.get( state_key );
+							
+								if ( l_last_pub != null ){
+									
+									last_pub = l_last_pub;
+									
+								}else{
+									
+									last_pub = 0;
+								}
+							}
+														
+							new_pub_list.add( new NPCState( last_pub, dm ));
+						}
+					}
+					
+					Collections.sort( 
+						new_pub_list,
+						new Comparator<NPCState>(){
+							@Override
+							public int 
+							compare(
+								NPCState o1, 
+								NPCState o2 )
+							{
+								long	l1 = o1.last_pub;
+								long	l2 = o2.last_pub;
+								
+								if ( l1 == l2 ){	// generally never published if same
+									
+									DownloadManager dm1 = o1.dm;
+									DownloadManager dm2 = o2.dm;
+									
+									long a1 = dm1.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
+									long a2 = dm2.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
+									
+										// we want the newest added first as given other things we want to publish newer before older
+									
+									if ( a1 == a2 ){
+										return(0);
+									}else if ( a1 < a2 ){
+										return( 1 );
+									}else{
+										return( -1 );
+									}
+								}else{
+										// we want the oldest published first as that is the first to re-publish
+									if ( l1 < l2 ){
+										return( -1 );
+									}else{
+										return( 1 );
+									}
+								}
+							}
+						});
+						
+					/*
+					System.out.println( "built pub list" );
+					
+					for ( NPCState x: new_pub_list ){
+						
+						System.out.println( x.dm.getDisplayName());
+					}
+					*/
+					
+					pub_list = new LinkedList<>( new_pub_list );
+					
+					ncp_pub_list = pub_list;	
+				}
+				
+				if ( !pub_list.isEmpty()){
+					
+					int num_to_publish = Math.min( 1, pub_list.size());
+					
+					for ( int num=0; num < num_to_publish; num++ ){
+						
+						NPCState next = pub_list.removeFirst();
+						
+							// continually cycle through them, even if we don't actually publish them
+						
+						DownloadManager dm = next.dm;
+						
+						pub_list.addLast( new NPCState( SystemTime.getCurrentTime(), dm ));
+		
+						boolean	already_published = false;
+	
+							// only 128 normal messages are actually replicated, rest are only in UI buffer
+
+						int	max_msg_to_check = 128;
+						
+						if ( pub_list.size() <= max_msg_to_check ){
+						
+							List<ChatMessage> messages = notification_pub_channel.getMessages();
+								
+							int	normal_count = 0;
+							
+							try{
+								byte[] hash = next.dm.getTorrent().getHash();
+								
+								String magnet = UrlUtils.getMagnetURI( hash );
+								
+								for ( int i=messages.size()-1;i>=0;i--){
+									
+									ChatMessage message = messages.get(i);
+									
+									if ( message.getMessageType() == ChatMessage.MT_NORMAL ){
+										
+										normal_count++;
+										
+										String text = message.getMessage();
+										
+										if ( text.contains( magnet )){
+											
+											already_published = true;
+											
+											break;
+										}
+										
+										if ( normal_count == max_msg_to_check ){
+											
+											break;
+										}
+									}
+								}
+							}catch( Throwable e ){
+								
+								already_published = true;	// borked, avoid publish
+								
+								Debug.out( e );
+							}
+						}
+						
+						if ( !already_published ){
+														
+							try{					
+								notification_pub_channel.sendMessage(  PluginCoreUtils.wrap( dm ));
+								
+								synchronized( NPC_ATTRIBUTE_NAME ){
+									
+									Map<String,Object> state = (Map<String,Object>)dm.getDownloadState().getMapAttribute( NPC_ATTRIBUTE_NAME );
+								
+									if ( state == null ){
+										
+										state = new HashMap<>();
+										
+									}else{
+										
+										state = BEncoder.cloneMap( state );
+									}
+									
+									state.put( state_key, SystemTime.getCurrentTime());
+									
+									dm.getDownloadState().setMapAttribute( NPC_ATTRIBUTE_NAME, state );
+								}
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	private class
+	NPCState
+	{
+		final DownloadManager		dm;
+		final long					last_pub;
+		
+		NPCState(
+			long				t,
+			DownloadManager		d )
+		{
+			last_pub	= t;
+			dm			= d;
+		}
+	}
+	
 	@Override
 	protected void
 	sync()
@@ -1679,6 +1994,8 @@ TagDownloadWithState
 		checkMaximumTaggables();
 
 		checkFPSeeding();
+		
+		checkNotifyPublish();
 		
 		super.sync();
 	}

@@ -2291,6 +2291,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	pkToString(
 		byte[]		pk )
 	{
+			// don't change this, used for persistence purposes in Tag stuff (for example)
+		
 		byte[] temp = new byte[3];
 
 		if ( pk != null ){
@@ -3063,8 +3065,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private boolean		is_shared_nick;
 		private String		instance_nick;
 
-		private int			reference_count;
-		private int			virtual_reference_count;
+		private volatile int	reference_count;
+		private int				virtual_reference_count;
 
 		private ChatMessage		last_message_requiring_attention;
 		private boolean			message_outstanding;
@@ -3211,6 +3213,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 
+		public int
+		getReferenceCount()
+		{
+			return( reference_count );
+		}
+		
 		public String
 		getName()
 		{
@@ -4033,6 +4041,23 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			return( out_pending==null?-2:out_pending.intValue());
 		}
 
+		public boolean
+		isInitialised()
+		{
+			Map<String,Object> map = status;
+
+			if ( map == null ){
+				
+				return( false );
+				
+			}else{
+				
+				int status 			= ((Number)map.get( "status" )).intValue();
+				
+				return( status > 0 );
+			}
+		}
+		
 		public String
 		getStatus()
 		{
