@@ -1750,10 +1750,15 @@ TagDownloadWithState
 				
 				String key = bits[1].trim();
 		
-				notification_pub_channel 		= BuddyPluginUtils.getChat(net, key);
-				notification_pub_channel_key	= channel;
-				npc_initialised_time			= 0;
-				npc_chat_ready					= false;
+					// stop stuff going to our channels
+				
+				if ( !key.startsWith( Constants.APP_NAME )){
+					
+					notification_pub_channel 		= BuddyPluginUtils.getChat(net, key);
+					notification_pub_channel_key	= channel;
+					npc_initialised_time			= 0;
+					npc_chat_ready					= false;
+				}
 			}
 			
 			if ( !npc_chat_ready ){
