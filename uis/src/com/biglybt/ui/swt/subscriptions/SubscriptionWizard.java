@@ -153,7 +153,8 @@ public class SubscriptionWizard {
 	DownloadManager download;
 	URL				rss_feed_url;
 	boolean			anon_default = false;
-
+	int				frequency	= 0;
+	
 	private ImageLoader imageLoader;
 	private TableViewSWT<Subscription> tvSubscriptions;
 	private static boolean columnsAdded = false;
@@ -175,6 +176,13 @@ public class SubscriptionWizard {
 
 		subs_name_default = (String)options.get(SubscriptionManager.SO_NAME );
 
+		Number freq = (Number)options.get(SubscriptionManager.SO_FREQUENCY );
+
+		if ( freq != null ){
+			
+			frequency = freq.intValue();
+		}
+		
 		init();
 	}
 
@@ -1283,6 +1291,11 @@ public class SubscriptionWizard {
 					if ( anonymous ){
 
 						subRSS.getHistory().setDownloadNetworks( new String[]{ AENetworkClassifier.AT_I2P });
+					}
+					
+					if ( frequency != 0 ){
+						
+						subRSS.getHistory().setCheckFrequencyMins( frequency );
 					}
 
 					shell.close();

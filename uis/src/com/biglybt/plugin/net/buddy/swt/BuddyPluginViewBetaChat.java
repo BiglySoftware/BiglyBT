@@ -2731,7 +2731,9 @@ BuddyPluginViewBetaChat
 						}
 
 						options.put( SubscriptionManager.SO_NAME, chat.getName());
-
+						
+						options.put( SubscriptionManager.SO_FREQUENCY, 10 );
+						
 						sm.requestSubscription( new URL( url ), options );
 
 					}catch( Throwable e ){

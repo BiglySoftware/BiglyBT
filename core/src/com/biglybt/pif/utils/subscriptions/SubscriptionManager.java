@@ -28,7 +28,8 @@ import com.biglybt.pif.utils.search.SearchProvider;
 public interface
 SubscriptionManager
 {
-	public static final String SO_ANONYMOUS = "_anonymous_";
+	public static final String SO_ANONYMOUS = "_anonymous_";	// Boolean
+	public static final String SO_FREQUENCY = "_frequency_";	// Number
 	public static final String SO_NAME		= SearchProvider.SP_SEARCH_NAME;
 
 	public Subscription[]
