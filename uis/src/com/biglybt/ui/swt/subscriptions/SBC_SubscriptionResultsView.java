@@ -42,7 +42,6 @@ import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.subs.SubscriptionResultFilter;
 import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
@@ -76,6 +75,8 @@ import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
+import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
+import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 
 public class
 SBC_SubscriptionResultsView
@@ -735,6 +736,24 @@ SBC_SubscriptionResultsView
 						new ColumnSearchSubResultAge(column);
 					}
 				});
+		
+		tableManager.registerColumn(
+			SubscriptionResultFilterable.class,
+			ColumnSearchSubResultAssetDate.COLUMN_ID,
+			new TableColumnCoreCreationListener() {
+				@Override
+				public TableColumnCore createTableColumnCore(
+						Class<?> forDataSourceType, String tableID, String columnID) {
+					return new ColumnDateSizer(SubscriptionResultFilterable.class, columnID,
+							TableColumnCreator.DATE_COLUMN_WIDTH, tableID) {
+					};
+				}
+
+				@Override
+				public void tableColumnCreated(TableColumn column) {
+					new ColumnSearchSubResultAssetDate(column);
+				}
+			});
 
 		tableManager.registerColumn(
 			SubscriptionResultFilterable.class,
@@ -1030,6 +1049,7 @@ SBC_SubscriptionResultsView
 					ColumnSearchSubResultSeedsPeers.COLUMN_ID,
 					ColumnSearchSubResultRatings.COLUMN_ID,
 					ColumnSearchSubResultAge.COLUMN_ID,
+					ColumnSearchSubResultAssetDate.COLUMN_ID,
 					ColumnSearchSubResultRank.COLUMN_ID,
 					ColumnSearchSubResultCategory.COLUMN_ID,
 				});

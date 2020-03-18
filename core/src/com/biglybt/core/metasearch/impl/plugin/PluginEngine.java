@@ -56,6 +56,7 @@ PluginEngine
 		{ SearchResult.PR_PLAY_LINK,			Engine.FIELD_PLAYLINK },
 		{ SearchResult.PR_PRIVATE,				Engine.FIELD_PRIVATE },
 		{ SearchResult.PR_PUB_DATE,				Engine.FIELD_DATE },
+		{ SearchResult.PR_ASSET_DATE,			Engine.FIELD_ASSET_DATE },
 		{ SearchResult.PR_SEED_COUNT,			Engine.FIELD_SEEDS },
 		{ SearchResult.PR_SIZE,					Engine.FIELD_SIZE },
 		{ SearchResult.PR_SUPER_SEED_COUNT,		Engine.FIELD_SUPERSEEDS },

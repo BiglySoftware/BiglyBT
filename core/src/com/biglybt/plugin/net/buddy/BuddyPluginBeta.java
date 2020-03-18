@@ -1833,30 +1833,32 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								pw.println( "<link>" + escape( cdp ) + "</link>" );
 							}
 	
-							Long	size 		= (Long)magnet.get( "size" );
-							Long	seeds 		= (Long)magnet.get( "seeds" );
-							Long	leechers 	= (Long)magnet.get( "leechers" );
-							Long	date	 	= (Long)magnet.get( "date" );
+							Long	size 			= (Long)magnet.get( "size" );
+							Long	seeds 			= (Long)magnet.get( "seeds" );
+							Long	leechers 		= (Long)magnet.get( "leechers" );
+							Long	magnet_date		= (Long)magnet.get( "date" );
 								
-							if ( date != null ){
+							Long 	magnet_item_date = magnet_date;
+							
+							if ( magnet_item_date != null ){
 								
 									// make sure within range for this item
 								
-								if ( date < message_time ){
+								if ( magnet_item_date < message_time ){
 								
-									date = null;
+									magnet_item_date = null;
 									
 								}else{
 									
 									if ( i < message_num -1 ){
 										
-										if ( date >= message_times[ i+1 ] ){
+										if ( magnet_item_date >= message_times[ i+1 ] ){
 											
-											date = null;
+											magnet_item_date = null;
 										}
 									}else{
 										
-										date = null;
+										magnet_item_date = null;
 									}
 								}
 							}
@@ -1875,7 +1877,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	
 							pw.println( enclosure );
 	
-							String date_str = (date==null||date<=0)?item_date:TimeFormatter.getHTTPDate( date );
+							String date_str = (magnet_item_date==null||magnet_item_date<=0)?item_date:TimeFormatter.getHTTPDate( magnet_item_date );
 	
 							pw.println(	"<pubDate>" + date_str + "</pubDate>" );
 	
@@ -1894,6 +1896,17 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	
 								pw.println(	"<vuze:peers>" + leechers + "</vuze:peers>" );
 							}
+							
+							if ( magnet_date != null ){
+								
+								String str = TimeFormatter.getHTTPDate( magnet_date );
+								
+								if ( !str.equalsIgnoreCase( date_str )){
+									
+									pw.println(	"<vuze:assetdate>" + str + "</vuze:assetdate>" );
+								}
+							}
+								
 	
 							pw.println(	"<vuze:assethash>" + hash + "</vuze:assethash>" );
 	

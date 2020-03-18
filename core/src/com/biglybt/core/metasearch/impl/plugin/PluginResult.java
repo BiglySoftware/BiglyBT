@@ -60,6 +60,13 @@ PluginResult
 	}
 
 	@Override
+	public Date
+	getAssetDate()
+	{
+		return((Date)getResultProperty( SearchResult.PR_ASSET_DATE ));
+	}
+	
+	@Override
 	public String
 	getCategory()
 	{

@@ -33,6 +33,7 @@ import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.UrlUtils;
+import com.biglybt.pifimpl.local.utils.xml.rss.RSSUtils;
 
 public class WebResult extends Result {
 
@@ -52,7 +53,8 @@ public class WebResult extends Result {
 	String drmKey = null;
 
 	Date publishedDate;
-
+	Date assetDate;
+	
 	long size = -1;
 	int nbPeers = -1;
 	int nbSeeds = -1;
@@ -257,6 +259,13 @@ public class WebResult extends Result {
 		}
 	}
 
+	public Date getAssetDate(){
+		return( assetDate );
+	}
+	public void setAssetDate( String str ){
+		
+		assetDate = RSSUtils.parseRSSDate( str );
+	}
 
 	public void setSizeFromHTML(String size) {
 		if(size != null) {

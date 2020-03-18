@@ -49,7 +49,7 @@ SearchResult
 															// from a result in preference to the 'download link' - sometimes these are different... so added this one to
 															// always return teh 'download link'
 
-
+	public static final int	PR_ASSET_DATE			= 24;
 
 		// if you add more properties make sure you amend the mapping in PluginEngine appropriately
 		// AND the reverse mapping in MetaSearchManagerImpl

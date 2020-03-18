@@ -252,6 +252,15 @@ SBC_SearchResult
 		return( result.getTime());
 	}
 
+	@Override
+	public long 
+	getAssetDate()
+	{
+		Date d = result.getAssetDate();
+				
+		return( d==null?0:d.getTime());
+	}
+	
 	public Image
 	getIcon()
 	{

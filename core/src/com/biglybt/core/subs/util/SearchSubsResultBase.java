@@ -68,6 +68,9 @@ SearchSubsResultBase
 	public long
 	getTime();
 
+	public long
+	getAssetDate();
+	
 	public boolean
 	getRead();
 

@@ -52,6 +52,7 @@ SubscriptionResultFilterable
 	private long				votes_comments_sort;
 	private String				votes_comments;
 	private int					rank;
+	private long				asset_date;
 
 	private LightHashMap<Object,Object>	user_data;
 
@@ -102,6 +103,13 @@ SubscriptionResultFilterable
 
 		category = (String)properties.get( SearchResult.PR_CATEGORY );
 
+		Date	ad = (Date)properties.get( SearchResult.PR_ASSET_DATE );
+		
+		if ( ad != null ){
+			
+			asset_date = ad.getTime();
+		}
+		
 		updateMutables( _result, properties );
 	}
 
@@ -297,6 +305,13 @@ SubscriptionResultFilterable
 		return( time );
 	}
 
+	@Override
+	public long 
+	getAssetDate()
+	{
+		return( asset_date==0?time:asset_date );
+	}
+	
 	@Override
 	public boolean
 	getRead()

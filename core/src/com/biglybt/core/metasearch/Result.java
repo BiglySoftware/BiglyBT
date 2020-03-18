@@ -43,7 +43,8 @@ Result
 	private final long			time_created_secs = SystemTime.getCurrentTime()/1000;
 
 	public abstract Date getPublishedDate();
-
+	public abstract Date getAssetDate();
+	
 	public abstract String getCategory();
 	public abstract void setCategory(String category);
 
@@ -240,6 +241,11 @@ Result
 			}
 		}
 
+		Date ad = this.getAssetDate();
+		if ( ad != null ){
+			object.put( "ad", String.valueOf( ad.getTime()));
+		}
+		
 		object.put("c", this.getCategory());
 		object.put("n",this.getName());
 

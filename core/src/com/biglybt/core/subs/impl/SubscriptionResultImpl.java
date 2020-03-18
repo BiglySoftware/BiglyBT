@@ -521,6 +521,12 @@ SubscriptionResultImpl
 				result.put( SearchResult.PR_CONTENT_TYPE, contentType );
 			}
 
+			String ad = (String)map.get( "ad" );
+			
+			if ( ad != null ){
+				result.put( SearchResult.PR_ASSET_DATE, new Date( Long.parseLong( ad )));
+			}
+			
 			props_ref = new WeakReference<>(result);
 
 			return( result );

@@ -65,26 +65,27 @@ Engine
 	public static final int FIELD_VOTES_DOWN    = 14;
 
 
-	public static final int FIELD_TORRENTLINK 	= 102;
-	public static final int FIELD_CDPLINK 		= 103;
-	public static final int FIELD_PLAYLINK 		= 104;
-	public static final int FIELD_DOWNLOADBTNLINK 		= 105;
+	public static final int FIELD_TORRENTLINK 		= 102;
+	public static final int FIELD_CDPLINK 			= 103;
+	public static final int FIELD_PLAYLINK 			= 104;
+	public static final int FIELD_DOWNLOADBTNLINK 	= 105;
 
 	public static final int FIELD_HASH			= 200;
-	public static final int FIELD_RANK    = 201;
+	public static final int FIELD_RANK    		= 201;
+	public static final int FIELD_ASSET_DATE	= 202;
 
 	public static final int[] FIELD_IDS = {
 		FIELD_NAME, FIELD_DATE, FIELD_SIZE, FIELD_PEERS, FIELD_SEEDS, FIELD_CATEGORY,
 		FIELD_COMMENTS, FIELD_CONTENT_TYPE, FIELD_DISCARD,
 		FIELD_TORRENTLINK, FIELD_CDPLINK, FIELD_PLAYLINK,FIELD_DOWNLOADBTNLINK, FIELD_VOTES, FIELD_SUPERSEEDS,
-		FIELD_PRIVATE, FIELD_DRMKEY, FIELD_VOTES_DOWN, FIELD_HASH, FIELD_RANK
+		FIELD_PRIVATE, FIELD_DRMKEY, FIELD_VOTES_DOWN, FIELD_HASH, FIELD_RANK, FIELD_ASSET_DATE
 	};
 
 	public static final String[] FIELD_NAMES = {
 		"TITLE", "DATE", "SIZE", "PEERS", "SEEDS", "CAT",
 		"COMMENTS", "CONTENT_TYPE", "DISCARD",
 		"TORRENT", "CDP", "PLAY","DLBTN", "VOTES", "XSEEDS",
-		"PRIVATE", "DRMKEY", "VOTESDOWN", "HASH", "RANK"
+		"PRIVATE", "DRMKEY", "VOTESDOWN", "HASH", "RANK", "ASSETDATE"
 	};
 
 	public static final int ENGINE_TYPE_REGEX		= 1;

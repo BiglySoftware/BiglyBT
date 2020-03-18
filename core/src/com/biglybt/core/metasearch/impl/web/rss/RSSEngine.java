@@ -568,6 +568,10 @@ RSSEngine
 							}else if ( lc_full_child_name.equals( "vuze:assethash" )){
 
 								result.setHash( value);
+								
+							}else if ( lc_full_child_name.equals( "vuze:assetdate" )){
+
+								result.setAssetDate( value);
 
 							}else if( lc_child_name.equals( "seeds" ) || lc_child_name.equals( "seeders" )){
 

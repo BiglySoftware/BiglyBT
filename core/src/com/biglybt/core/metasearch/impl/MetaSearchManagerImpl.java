@@ -1892,6 +1892,10 @@ MetaSearchManagerImpl
 
 	     				return( result.getPublishedDate());
 	     			}
+	     			case PR_ASSET_DATE:{
+
+	     				return( result.getAssetDate());
+	     			}
 	     			case PR_SIZE:{
 
 	     				return( result.getSize());
