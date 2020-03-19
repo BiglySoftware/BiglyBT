@@ -92,22 +92,14 @@ public class AboutWindow {
     imgSrc = imageLoader.getImage(IMG_SPLASH);
     if (imgSrc != null) {
       int w = imgSrc.getBounds().width;
-      int ow = w;
       int h = imgSrc.getBounds().height;
 
       Image imgGray = new Image(display, imageLoader.getImage(IMG_SPLASH),
 					SWT.IMAGE_GRAY);
       imageLoader.releaseImage(IMG_SPLASH);
-      GC gc = new GC(imgGray);
-      if (Constants.isOSX) {
-      	gc.drawImage(imgGray, (w - ow) / 2, 0);
-      } else {
-      	gc.copyArea(0, 0, ow, h, (w - ow) / 2, 0);
-      }
-      gc.dispose();
 
       Image image2 = new Image(display, w, h);
-      gc = new GC(image2);
+      GC gc = new GC(image2);
       gc.setBackground(window.getBackground());
       gc.fillRectangle(image2.getBounds());
       gc.dispose();
