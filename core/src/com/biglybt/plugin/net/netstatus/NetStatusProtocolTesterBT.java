@@ -577,7 +577,7 @@ NetStatusProtocolTesterBT
 						{
 							if ( !closing ){
 
-								logError( type + " connection fail", e );
+								logError( type + " connect failed: " + Debug.getNestedExceptionMessage( e ));
 							}
 
 							close();
@@ -590,7 +590,7 @@ NetStatusProtocolTesterBT
 						{
 							if ( !closing ){
 
-								logError( type + " connection fail", e );
+								logError( type + " connection failure", e );
 							}
 
 							close();
