@@ -23,6 +23,7 @@ package com.biglybt.plugin.net.netstatus;
 
 import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.AEThread2;
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.Plugin;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginListener;
@@ -202,7 +203,6 @@ NetStatusPlugin
 		String		str,
 		Throwable	e )
 	{
-		logger.log( str );
-		logger.log( e );
+		logger.log( str + ": " + Debug.getNestedExceptionMessage( e ));
 	}
 }
