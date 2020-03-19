@@ -2858,6 +2858,13 @@ public class Utils
 	public static Image createAlphaImage(Device device, int width, int height,
 			byte defaultAlpha) {
 		byte[] alphaData = new byte[width * height];
+		
+		if ( Constants.isOSX ){
+				// some bug in 4932r18 causes alpha weirdness if we use 0 :(
+			if ( defaultAlpha == 0 ){
+				defaultAlpha = 1;
+			}
+		}
 		Arrays.fill(alphaData, 0, alphaData.length, (byte) defaultAlpha);
 
 		ImageData imageData = new ImageData(width, height, 24, new PaletteData(
