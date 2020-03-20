@@ -5021,7 +5021,7 @@ BuddyPluginViewBetaChat
 
 						// update as key may now be available
 
-					if ( nickname != null ) {
+					if ( nickname != null && !nickname.isDisposed()) {
 					
 						nickname.setMessage( chat.getDefaultNickname());
 					}

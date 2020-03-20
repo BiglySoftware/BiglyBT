@@ -53,6 +53,16 @@ public class ChatMDIEntry implements ViewTitleInfo
 			{
 				update();
 			}
+			
+			public void 
+			stateChanged(
+				boolean avail )
+			{
+				if ( chat.isDestroyed()){
+					
+					mdi_entry.closeView();
+				}
+			}
 		};
 
 	public
