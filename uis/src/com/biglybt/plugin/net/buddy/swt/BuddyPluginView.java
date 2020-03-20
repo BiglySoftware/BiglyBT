@@ -634,6 +634,36 @@ BuddyPluginView
 						{
 							return( BuddyPluginUtils.getChatKey((Download)object ));
 						}
+						
+						@Override
+						public boolean 
+						canShareMessage()
+						{
+							return( true );
+						}
+						
+						@Override
+						public void
+						shareMessage(
+							Object				target,
+							ChatInstance		chat )
+						{
+							if ( target instanceof Download ){
+								
+								Download dl = (Download)target;
+							
+								chat.sendMessage( dl );
+								
+							}else{
+								
+								Download[] dls = (Download[])target;
+								
+								for ( Download dl: dls ){
+									
+									chat.sendMessage( dl );
+								}
+							}
+						}
 					});
 
 			addBetaSubviews( true );
@@ -1793,7 +1823,20 @@ BuddyPluginView
 
 				// create channel
 
-			MenuItem mi = BuddyUIUtils.createChat( menu_manager, mc );
+			MenuItem mi = menu_manager.addMenuItem( mc, "chat.view.create.chat" );
+
+			mi.setStyle( MenuItem.STYLE_MENU );
+
+			BuddyUIUtils.createChat( menu_manager, mi, false, new BuddyUIUtils.ChatCreationListener(){
+				
+				@Override
+				public void chatCreated(Object target, String name){
+				}
+				
+				@Override
+				public void chatAvailable(Object target,ChatInstance chat){
+				}
+			});
 
 				// chat overview
 

@@ -1111,6 +1111,10 @@ public class TableViewSWT_Common
 									}
 								}
 							}
+							
+							@Override
+							public void buildComplete(Menu menu){
+							}
 						});
 			}
 		}

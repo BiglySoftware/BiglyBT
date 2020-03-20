@@ -51,6 +51,7 @@ import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
+import com.biglybt.plugin.net.buddy.BuddyPluginUI;
 import com.biglybt.plugin.net.buddy.swt.BuddyUIUtils;
 
 
@@ -174,6 +175,8 @@ public class MenuBuildUtils {
 		public void notifyFillListeners(MenuItem menu_item);
 
 		public void buildSubmenu(MenuItem parent);
+		
+		public void buildComplete( Menu menu );
 	}
 
 	/**
@@ -221,6 +224,10 @@ public class MenuBuildUtils {
 					Debug.out(t);
 				}
 			}
+		}
+		
+		@Override
+		public void buildComplete(Menu menu){
 		}
 	}
 
@@ -355,6 +362,8 @@ public class MenuBuildUtils {
 			menuItem.setEnabled(enable_items && az_menuitem.isEnabled());
 
 		}
+		
+		controller.buildComplete( parent );
 	}
 
 	/**
@@ -908,7 +917,21 @@ public class MenuBuildUtils {
 	{
 		public String
 		getChatKey(
-			Object		object );
+			Object		target );
+		
+		public default boolean
+		canShareMessage()
+		{
+			return( false );
+		}
+		
+		public default void
+		shareMessage(
+			Object				target,
+			ChatInstance		chat )
+			
+		{	
+		}
 	}
 
 	public static MenuItem
@@ -931,8 +954,42 @@ public class MenuBuildUtils {
 				{
 					menu.removeAllChildItems();
 
+					if ( chat_key_resolver.canShareMessage()){
+							
+						MenuItem chat_share = menu_manager.addMenuItem(chat_item, "menu.share.download");
+						
+						addChatSelectionMenu( 
+							menu_manager, 
+							chat_share, 
+							null, 
+							new ChatSelectionListener(){
+								public void
+								chatSelected(
+									Object	target,
+									String	chat )
+								{
+								}
+								
+								public void
+								chatAvailable(
+									Object			target,
+									ChatInstance	chat )
+								{
+									chat_key_resolver.shareMessage(target, chat );
+								}
+							});
+						
+						MenuItem mi = menu_manager.addMenuItem( chat_item, "sep" );
+						
+						mi.setStyle( MenuItem.STYLE_SEPARATOR );
+					}
+					
+					MenuItem discuss_menu = menu_manager.addMenuItem(chat_item, "menu.discuss.chat");
+
+					discuss_menu.setStyle( MenuItem.STYLE_MENU );
+					
 					{
-						MenuItem chat_pub = menu_manager.addMenuItem(chat_item,  "label.public");
+						MenuItem chat_pub = menu_manager.addMenuItem(discuss_menu,  "label.public");
 
 						chat_pub.addMultiListener(
 								new MenuItemListener() {
@@ -988,7 +1045,7 @@ public class MenuBuildUtils {
 
 					if ( BuddyPluginUtils.isBetaChatAnonAvailable()){
 
-						MenuItem chat_priv = menu_manager.addMenuItem(chat_item,  "label.anon");
+						MenuItem chat_priv = menu_manager.addMenuItem(discuss_menu,  "label.anon");
 
 						chat_priv.addMultiListener(
 							new MenuItemListener()
@@ -1079,7 +1136,172 @@ public class MenuBuildUtils {
 	{
 		public void
 		chatSelected(
-			String	chat );
+			Object		target,
+			String		chat );
+		
+		public void
+		chatAvailable(
+			Object			target,
+			ChatInstance	chat );
+	}
+	
+	private static class
+	ChatSelectionDelegator
+		implements ChatSelectionListener
+	{
+		private ChatSelectionListener	delegate;
+				
+		private TimerEventPeriodic	timer;
+		
+		protected
+		ChatSelectionDelegator(
+			ChatSelectionListener	_delegate )
+		{
+			delegate = _delegate;
+		}
+		
+		public void
+		chatSelected(
+			Object		target,
+			String		name )
+		{
+			delegate.chatSelected(target, name);
+		}
+		
+		public void
+		chatAvailable(
+			Object			target,
+			ChatInstance	chat )
+		{
+			synchronized( ChatSelectionDelegator.this ){
+				
+				if ( timer != null ){
+					
+					return;
+				}
+				
+				long start = SystemTime.getMonotonousTime();
+				
+				timer = SimpleTimer.addPeriodicEvent( "availcheck", 1000, (ev)->{
+					
+					if ( chat.isAvailable()){
+						
+						if ( !chat.isDestroyed()){
+						
+							delegate.chatAvailable(target, chat);
+						}
+						
+						synchronized( ChatSelectionDelegator.this ){
+							
+							timer.cancel();
+						}
+					}
+					
+					if ( SystemTime.getMonotonousTime() - start > 3*60*1000 ){
+
+						Debug.out( "Gave up waiting for " + chat.getNetAndKey() + " to become available" );
+						
+						synchronized( ChatSelectionDelegator.this ){
+							
+							timer.cancel();
+						}
+					}
+				});
+			}
+		}
+	}
+	
+	public static void
+	addChatSelectionMenu(
+		final MenuManager		menu_manager,
+		final MenuItem			chat_item,
+		String					existing_chat,
+		ChatSelectionListener	_listener )
+	{
+		ChatSelectionListener listener = new ChatSelectionDelegator( _listener );
+		
+		chat_item.setStyle( MenuItem.STYLE_MENU );
+
+		chat_item.addFillListener(
+			new MenuItemFillListener()
+			{
+
+				@Override
+				public void
+				menuWillBeShown(
+					MenuItem 	menu,
+					Object 		data)
+				{
+					menu.removeAllChildItems();
+
+					MenuItem create_menu = menu_manager.addMenuItem( chat_item, "chat.view.create.chat" );
+
+					create_menu.setStyle( MenuItem.STYLE_MENU );
+					
+					BuddyUIUtils.createChat( 
+						menu_manager,
+						create_menu,
+						true,
+						new BuddyUIUtils.ChatCreationListener(){
+							
+							@Override
+							public void chatCreated(Object target, String name){
+								listener.chatSelected( target, name);
+							}
+							
+							@Override
+							public void chatAvailable(Object target,ChatInstance chat){
+								listener.chatAvailable( target,chat );
+							}
+						});
+					
+					MenuItem mi = menu_manager.addMenuItem( chat_item, "sep" );
+					
+					mi.setStyle( MenuItem.STYLE_SEPARATOR );
+					
+					List<ChatInstance> chats = BuddyPluginUtils.getChats();			
+					
+					for ( int i=0;i<2;i++){
+						
+						MenuItem chat_menu = menu_manager.addMenuItem( chat_item, i==0?"label.public":"label.anon" );
+
+						chat_menu.setStyle( MenuItem.STYLE_MENU );
+		
+						String net = i==0?AENetworkClassifier.AT_PUBLIC:AENetworkClassifier.AT_I2P;
+
+						for ( ChatInstance chat: chats ){
+							
+							if ( chat.getNetwork() == net ){
+								
+								mi = menu_manager.addMenuItem( chat_menu, "!" + chat.getKey() + "!" );
+																
+								mi.addMultiListener(
+									new MenuItemListener()
+									{
+										@Override
+										public void
+										selected(
+											MenuItem			menu,
+											Object 				target )
+										{
+											listener.chatSelected( target, chat.getNetAndKey());
+											
+											listener.chatAvailable( target, chat );
+											
+											try{
+												BuddyPluginUtils.getBetaPlugin().showChat( chat );
+												
+											}catch( Throwable e ){
+												
+												Debug.out( e );
+											}
+										}
+									});
+							}
+						}
+					}
+				}
+			});
 	}
 	
 	public static void
@@ -1087,8 +1309,10 @@ public class MenuBuildUtils {
 		Menu					menu,
 		String					resource_key,
 		String					existing_chat,
-		ChatSelectionListener	listener )
-{
+		ChatSelectionListener	_listener )
+	{
+		ChatSelectionListener listener = new ChatSelectionDelegator( _listener );
+
 		final Menu chat_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
 
 		final org.eclipse.swt.widgets.MenuItem chat_item = new org.eclipse.swt.widgets.MenuItem(menu, SWT.CASCADE);
@@ -1123,8 +1347,15 @@ public class MenuBuildUtils {
 					
 					BuddyUIUtils.createChat( 
 						chat_menu,
-						(BuddyUIUtils.ChatCreationListener)( chat )->{
-							listener.chatSelected( chat );
+						new BuddyUIUtils.ChatCreationListener(){
+							@Override
+							public void chatCreated(Object target, String name){
+								listener.chatSelected( target, name );
+							}
+							@Override
+							public void chatAvailable(Object target, ChatInstance chat){
+								listener.chatAvailable( target,chat );
+							}
 						});
 					
 					new org.eclipse.swt.widgets.MenuItem( chat_menu, SWT.SEPARATOR );
@@ -1139,7 +1370,7 @@ public class MenuBuildUtils {
 						@Override
 						public void handleEvent(Event event){
 							
-							listener.chatSelected( "" );
+							listener.chatSelected( null, "" );
 						}});
 					
 					for ( int i=0;i<2;i++){
@@ -1183,7 +1414,9 @@ public class MenuBuildUtils {
 												@Override
 												public void handleEvent(Event event){
 													
-													listener.chatSelected( chat.getNetAndKey());
+													listener.chatSelected( null, chat.getNetAndKey());
+													
+													listener.chatAvailable( null, chat);
 												}});
 										}
 									}

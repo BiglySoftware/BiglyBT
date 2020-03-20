@@ -58,6 +58,7 @@ import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
@@ -950,8 +951,12 @@ public class TagUIUtils
 								new MenuBuildUtils.ChatSelectionListener(){
 									
 									@Override
-									public void chatSelected( String chat ){
+									public void chatSelected( Object target, String chat ){
 										tf_eoa.setPostMessageChannel( chat );
+									}
+									
+									@Override
+									public void chatAvailable(Object target, ChatInstance chat){
 									}
 								});
 							
@@ -1169,8 +1174,12 @@ public class TagUIUtils
 				new MenuBuildUtils.ChatSelectionListener(){
 					
 					@Override
-					public void chatSelected( String chat ){
+					public void chatSelected( Object target, String chat ){
 						tfn.setNotifyMessageChannel( chat );
+					}
+					
+					@Override
+					public void chatAvailable(Object target, ChatInstance chat){
 					}
 				});			
 		}

@@ -2156,6 +2156,11 @@ public class TorrentMenuFancy
 													}
 												}
 											}
+											
+											@Override
+											public void buildComplete(Menu menu){
+												addMenuItemListener(menu, listenerForTrigger);
+											}
 										});
 							}
 						}

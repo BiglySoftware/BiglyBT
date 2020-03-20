@@ -23,38 +23,130 @@ import org.eclipse.swt.widgets.Menu;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimerEventPeriodic;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.menus.MenuContext;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.plugin.I2PHelpers;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
+import com.biglybt.ui.swt.Utils;
 
 public class 
 BuddyUIUtils
 {
-	public static MenuItem
+	public static void
 	createChat(
-		MenuManager		menu_manager,
-		MenuContext		mc )
+		MenuManager				menu_manager,
+		MenuItem 				menu,
+		boolean					immediate,
+		ChatCreationListener	_listener )
 	{
-		MenuItem mi = menu_manager.addMenuItem( mc, "chat.view.create.chat" );
+		ChatCreationListener listener = new ChatCreationListener(){
+			
+			Object				lock = new Object();
+			
+			TimerEventPeriodic	timer;
+			
+			public void
+			chatCreated(
+				Object		target,
+				String		name )
+			{
+				_listener.chatCreated(target, name);
+			}
+			
+			public void
+			chatAvailable(
+				Object			target,
+				ChatInstance	chat )
+			{
+				synchronized( lock ){
+					if ( timer != null ){
+						return;
+					}
+					
+					long start = SystemTime.getMonotonousTime();
+					
+					timer = SimpleTimer.addPeriodicEvent( "availcheck", 1000, (ev)->{
+						
+						if ( chat.isAvailable()){
+							
+							if ( !chat.isDestroyed()){
+							
+								_listener.chatAvailable(target, chat);
+							}
+							
+							synchronized( lock ){
+								
+								timer.cancel();
+							}
+						}
+						
+						if ( SystemTime.getMonotonousTime() - start > 3*60*1000 ){
 
-		mi.setStyle( MenuItem.STYLE_MENU );
+							Debug.out( "Gave up waiting for " + chat.getNetAndKey() + " to become available" );
+							
+							synchronized( lock ){
+								
+								timer.cancel();
+							}
+						}
+					});
+				}
+			}
+		};
+		
+		Runnable build = ()->{
+			MenuItem mi = menu_manager.addMenuItem( menu, "!" + MessageText.getString( "label.public" ) + "...!" );
 
-		mi.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
-			@Override
-			public void menuWillBeShown(MenuItem menu, Object data){
+			mi.addMultiListener(
+				new MenuItemListener()
+				{
+					@Override
+					public void
+					selected(
+						MenuItem			menu,
+						Object 				target )
+					{
+						SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+								"chat.view.enter.key.title", "chat.view.enter.key.msg");
 
-				menu.removeAllChildItems();
+							// if we don't do this then the fancy-menu will stay open...
+						
+						entryWindow.setParentShell( Utils.findAnyShell( true ));
+						
+						entryWindow.prompt(new UIInputReceiverListener() {
+							@Override
+							public void UIInputReceiverClosed(UIInputReceiver receiver) {
+								if (!receiver.hasSubmittedInput()) {
+									return;
+								}
 
-				MenuItem mi = menu_manager.addMenuItem( menu, "!" + MessageText.getString( "label.public" ) + "...!" );
+								String key = receiver.getSubmittedInput().trim();
 
-				mi.addListener(
+								listener.chatCreated( target, AENetworkClassifier.AT_PUBLIC + ": " + key );
+								
+								BuddyPluginUtils.createBetaChat( 
+									AENetworkClassifier.AT_PUBLIC, 
+									key, 
+									(chat)->{ listener.chatAvailable( target, chat ); });							
+							}
+						});
+
+					}
+				});
+
+			mi = menu_manager.addMenuItem( menu, "!" + MessageText.getString( "label.anon" ) + "...!" );
+
+			mi.addMultiListener(
 					new MenuItemListener()
 					{
 						@Override
@@ -63,70 +155,63 @@ BuddyUIUtils
 							MenuItem			menu,
 							Object 				target )
 						{
-							SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
-									"chat.view.enter.key.title", "chat.view.enter.key.msg");
+							if ( BuddyPluginUtils.getBetaPlugin().isI2PAvailable()){
 
-							entryWindow.prompt(new UIInputReceiverListener() {
-								@Override
-								public void UIInputReceiverClosed(UIInputReceiver receiver) {
-									if (!receiver.hasSubmittedInput()) {
-										return;
+								SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+										"chat.view.enter.key.title", "chat.view.enter.key.msg");
+
+									// if we don't do this then the fancy-menu will stay open...
+								
+								entryWindow.setParentShell( Utils.findAnyShell( true ));
+
+								entryWindow.prompt(new UIInputReceiverListener() {
+									@Override
+									public void UIInputReceiverClosed(UIInputReceiver receiver) {
+										if (!receiver.hasSubmittedInput()) {
+											return;
+										}
+
+										String key = receiver.getSubmittedInput().trim();
+
+										listener.chatCreated( target, AENetworkClassifier.AT_I2P + ": " + key );
+										
+										BuddyPluginUtils.createBetaChat(
+											AENetworkClassifier.AT_I2P, 
+											key, 
+											(chat)->{ listener.chatAvailable( target, chat ); });	
 									}
+								});
 
-									String key = receiver.getSubmittedInput().trim();
+							}else{
 
-									BuddyPluginUtils.createBetaChat( AENetworkClassifier.AT_PUBLIC, key, null );
-								}
-							});
+								I2PHelpers.installI2PHelper( null, null, null );
+							}
 
 						}
 					});
 
-				mi = menu_manager.addMenuItem( menu, "!" + MessageText.getString( "label.anon" ) + "...!" );
+			if ( I2PHelpers.isInstallingI2PHelper()){
 
-				mi.addListener(
-						new MenuItemListener()
-						{
-							@Override
-							public void
-							selected(
-								MenuItem			menu,
-								Object 				target )
-							{
-								if ( BuddyPluginUtils.getBetaPlugin().isI2PAvailable()){
-
-									SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
-											"chat.view.enter.key.title", "chat.view.enter.key.msg");
-
-									entryWindow.prompt(new UIInputReceiverListener() {
-										@Override
-										public void UIInputReceiverClosed(UIInputReceiver receiver) {
-											if (!receiver.hasSubmittedInput()) {
-												return;
-											}
-
-											String key = receiver.getSubmittedInput().trim();
-
-											BuddyPluginUtils.createBetaChat( AENetworkClassifier.AT_I2P, key, null );
-										}
-									});
-
-								}else{
-
-									I2PHelpers.installI2PHelper( null, null, null );
-								}
-
-							}
-						});
-
-				if ( I2PHelpers.isInstallingI2PHelper()){
-
-					mi.setEnabled( false );
-					mi.setText(  mi.getText() + " (" + MessageText.getString( "PeersView.state.pending" ) + ")" );
-				}
-			}});
-
-		return( mi );
+				mi.setEnabled( false );
+				mi.setText(  mi.getText() + " (" + MessageText.getString( "PeersView.state.pending" ) + ")" );
+			}
+		};
+		
+		if ( immediate ){
+			
+			build.run();
+			
+		}else{
+			
+			menu.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
+				@Override
+				public void menuWillBeShown(MenuItem menu, Object data){
+	
+					menu.removeAllChildItems();
+					
+					build.run();
+				}} );
+		}
 	}
 	
 	public static void
@@ -161,7 +246,7 @@ BuddyUIUtils
 
 					BuddyPluginUtils.createBetaChat( AENetworkClassifier.AT_PUBLIC, key, null );
 					
-					listener.chatCreated( AENetworkClassifier.AT_PUBLIC + ": " + key );
+					listener.chatCreated( null, AENetworkClassifier.AT_PUBLIC + ": " + key );
 				}
 			});
 		});
@@ -185,7 +270,7 @@ BuddyUIUtils
 
 					BuddyPluginUtils.createBetaChat( AENetworkClassifier.AT_I2P, key, null );
 					
-					listener.chatCreated( AENetworkClassifier.AT_I2P + ": " + key );
+					listener.chatCreated( null, AENetworkClassifier.AT_I2P + ": " + key );
 				}
 			});
 		});
@@ -196,6 +281,12 @@ BuddyUIUtils
 	{
 		public void
 		chatCreated(
+			Object		target,
 			String		name );
+		
+		public void
+		chatAvailable(
+			Object			target,
+			ChatInstance	chat );
 	}
 }
