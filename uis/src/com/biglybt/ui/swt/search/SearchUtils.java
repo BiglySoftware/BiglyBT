@@ -142,7 +142,7 @@ SearchUtils
 				}
 			});
 
-		MenuBuildUtils.addChatMenu( menu, "label.chat", "Search Templates" );
+		MenuBuildUtils.addChatMenu( menu, "menu.discuss.searchtemplates", "Search Templates" );
 
 		MenuItem itemExport = new MenuItem(menu, SWT.PUSH);
 
@@ -542,6 +542,11 @@ SearchUtils
 			chat_menu,
 			new MenuBuildUtils.ChatKeyResolver() {
 
+				@Override
+				public String getResourceKey(){
+					return( "menu.discuss.searchtemplates" );
+				}
+				
 				@Override
 				public String getChatKey(Object object) {
 					return( "Search Templates" );

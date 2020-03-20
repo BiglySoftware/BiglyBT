@@ -795,17 +795,25 @@ public class MenuBuildUtils {
 	public static void
 	addChatMenu(
 		Menu			menu,
-		String			menu_resource_key,
-		final String	chat_key )
+		String			chat_resource,
+		String			chat_key )
 	{
+		final Menu top_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+
+		final org.eclipse.swt.widgets.MenuItem top_item = new org.eclipse.swt.widgets.MenuItem(menu, SWT.CASCADE);
+
+		Messages.setLanguageText( top_item, "label.chat" );
+
+		top_item.setMenu(top_menu);
+
 		final Menu chat_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
 
-		final org.eclipse.swt.widgets.MenuItem chat_item = new org.eclipse.swt.widgets.MenuItem(menu, SWT.CASCADE);
+		final org.eclipse.swt.widgets.MenuItem chat_item = new org.eclipse.swt.widgets.MenuItem(top_menu, SWT.CASCADE);
 
-		Messages.setLanguageText( chat_item, menu_resource_key );
+		Messages.setLanguageText( chat_item, chat_resource );
 
-		chat_item.setMenu(chat_menu);
-
+		chat_item.setMenu( chat_menu );
+		
 		chat_menu.addMenuListener(
 			new MenuAdapter()
 			{
@@ -916,6 +924,9 @@ public class MenuBuildUtils {
 	ChatKeyResolver
 	{
 		public String
+		getResourceKey();
+		
+		public String
 		getChatKey(
 			Object		target );
 		
@@ -984,7 +995,7 @@ public class MenuBuildUtils {
 						mi.setStyle( MenuItem.STYLE_SEPARATOR );
 					}
 					
-					MenuItem discuss_menu = menu_manager.addMenuItem(chat_item, "menu.discuss.chat");
+					MenuItem discuss_menu = menu_manager.addMenuItem(chat_item, chat_key_resolver.getResourceKey());
 
 					discuss_menu.setStyle( MenuItem.STYLE_MENU );
 					

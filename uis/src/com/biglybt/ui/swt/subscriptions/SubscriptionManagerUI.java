@@ -2260,6 +2260,11 @@ SubscriptionManagerUI
 					new MenuBuildUtils.ChatKeyResolver()
 					{
 						@Override
+						public String getResourceKey(){
+							return( "menu.discuss.subs" );
+						}
+						
+						@Override
 						public String getChatKey(Object object) {
 
 							return( key );

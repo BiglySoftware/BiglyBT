@@ -628,6 +628,11 @@ BuddyPluginView
 					new MenuBuildUtils.ChatKeyResolver()
 					{
 						@Override
+						public String getResourceKey(){
+							return( "menu.discuss.download" );
+						}
+						
+						@Override
 						public String
 						getChatKey(
 							Object object )

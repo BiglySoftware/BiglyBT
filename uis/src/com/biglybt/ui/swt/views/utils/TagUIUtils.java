@@ -1188,7 +1188,7 @@ public class TagUIUtils
 
 		if ( tag_type.getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
 
-			MenuBuildUtils.addChatMenu( menu, "label.chat", getChatKey( tag ));
+			MenuBuildUtils.addChatMenu( menu, "menu.discuss.tag", getChatKey( tag ));
 		}
 
 		MenuItem itemShowStats = new MenuItem(menu, SWT.PUSH);
