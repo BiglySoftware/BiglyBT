@@ -800,6 +800,8 @@ public class MenuBuildUtils {
 	{
 		final Menu top_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
 
+		top_menu.setEnabled( chat_key != null );
+			
 		final org.eclipse.swt.widgets.MenuItem top_item = new org.eclipse.swt.widgets.MenuItem(menu, SWT.CASCADE);
 
 		Messages.setLanguageText( top_item, "label.chat" );

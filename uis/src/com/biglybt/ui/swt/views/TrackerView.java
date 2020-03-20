@@ -47,6 +47,7 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
@@ -65,6 +66,7 @@ import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 
 
 /**
@@ -367,6 +369,15 @@ public class TrackerView
 						}
 					});
 
+				String tracker_key = null;
+				
+				if ( sources.length == 1 ){
+					
+					tracker_key = BuddyPluginUtils.getTrackerChatKey(((TrackerPeerSource)sources[0]).getURL().toExternalForm());
+				}
+				
+				MenuBuildUtils.addChatMenu( menu, "menu.discuss.tracker", tracker_key );
+						
 				TOTorrent torrent = manager.getTorrent();
 
 				edit_item.setEnabled( torrent != null && !TorrentUtils.isReallyPrivate( torrent ));

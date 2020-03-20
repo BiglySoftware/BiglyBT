@@ -23,6 +23,7 @@
 package com.biglybt.plugin.net.buddy;
 
 import java.net.InetAddress;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -618,6 +619,32 @@ BuddyPluginUtils
 		return( key );
 	}
 
+	public static String
+	getTrackerChatKey(
+		String		url )
+	{
+		try{
+			return( getTrackerChatKey( new URL( url )));
+			
+		}catch( Throwable e ){
+			
+			return( null );
+		}
+	}
+	
+	public static String
+	getTrackerChatKey(
+		URL		url )
+	{
+		try{
+			return( "Tracker: " + DNSUtils.getInterestingHostSuffix( url.getHost().toLowerCase( Locale.US )));
+			
+		}catch( Throwable e ){
+			
+			return( null );
+		}
+	}
+	
 	private static class
 	ViewWrapper
 		implements BuddyPluginViewInterface.View

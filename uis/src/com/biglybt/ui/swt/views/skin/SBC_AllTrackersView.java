@@ -43,6 +43,7 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.table.impl.TableViewImpl;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
@@ -69,6 +70,7 @@ import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 
 
 public class SBC_AllTrackersView
@@ -920,6 +922,16 @@ public class SBC_AllTrackersView
 		
 		itemClearStats.setEnabled( hasSelection );
 		
+			// discuss
+		
+		String tracker_key = null;
+		
+		if ( trackers.size() == 1 ){
+			
+			tracker_key = BuddyPluginUtils.getTrackerChatKey( trackers.get(0).getTrackerName());
+		}
+		
+		MenuBuildUtils.addChatMenu( menu, "menu.discuss.tracker", tracker_key );
 		
 			// options
 		
