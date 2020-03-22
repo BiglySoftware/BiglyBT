@@ -21,6 +21,11 @@ package com.biglybt.plugin.net.buddy.swt;
 
 import java.util.Arrays;
 
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemListener;
+import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatAdapter;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.ui.UIFunctionsManager;
@@ -30,6 +35,7 @@ import com.biglybt.ui.mdi.MdiCloseListener;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MdiEntryDropListener;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.Utils;
 
 
 public class ChatMDIEntry implements ViewTitleInfo
@@ -67,6 +73,7 @@ public class ChatMDIEntry implements ViewTitleInfo
 
 	public
 	ChatMDIEntry(
+		UIManager		_ui_manager,
 		ChatInstance 	_chat,
 		MdiEntry 		_entry)
 	{
@@ -74,11 +81,12 @@ public class ChatMDIEntry implements ViewTitleInfo
 
 		mdi_entry 	= _entry;
 
-		setupMdiEntry();
+		setupMdiEntry( _ui_manager );
 	}
 
 	private void
-	setupMdiEntry()
+	setupMdiEntry(
+		UIManager	ui_manager )
 	{
 		mdi_entry.setViewTitleInfo( this );
 
@@ -147,28 +155,32 @@ public class ChatMDIEntry implements ViewTitleInfo
 					chat.destroy();
 				}
 			});
-
-		/*
-		UIManager ui_manager = PluginInitializer.getDefaultInterface().getUIManager();
+		
+		String menu_key = "sidebar." + mdi_entry.getViewID();
 		
 		MenuManager menu_manager = ui_manager.getMenuManager();
 
-		MenuItem menu_item;
+		MenuItem menu_item = menu_manager.addMenuItem( menu_key, "iconBar.remove" );
+		
+		Utils.setMenuItemImage( menu_item, "delete" );
 
-		menu_item = menu_manager.addMenuItem( "sidebar." + mdi_entry.getId(), "dasd.ad.ad." );
 		menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		
 		menu_item.addListener(
-				new MenuItemListener() 
-				{
+				new MenuItemListener(){
+					
 					@Override
 					public void
 					selected(
 						MenuItem menu, Object target ) 
 					{
-				      	
+						chat.remove();
 					}
 				});
-		*/
+		
+		menu_item = menu_manager.addMenuItem( menu_key, "sep" );
+		
+		menu_item.setStyle( MenuItem.STYLE_SEPARATOR );
 		
 		mdi_entry.setImageLeftID("image.sidebar.chat-overview");
 		

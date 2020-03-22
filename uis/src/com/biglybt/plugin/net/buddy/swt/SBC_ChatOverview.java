@@ -158,7 +158,7 @@ public class SBC_ChatOverview
 
 										chat.setAutoNotify( true );
 
-										return( createChatMdiEntry( chat ));
+										return( createChatMdiEntry( ui_manager, chat ));
 									}
 
 									return( null );
@@ -217,7 +217,8 @@ public class SBC_ChatOverview
 	
 	private static MdiEntry
 	createChatMdiEntry(
-			final ChatInstance chat )
+		UIManager		ui_manager,
+		ChatInstance 	chat )
 	{
 		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
 
@@ -302,7 +303,7 @@ public class SBC_ChatOverview
 			builder.setPreferredAfterID(prev_id);
 			MdiEntry entry = mdi.createEntry(builder, true);
 
-			ChatMDIEntry entry_info = new ChatMDIEntry( chat, entry );
+			ChatMDIEntry entry_info = new ChatMDIEntry( ui_manager, chat, entry );
 
 			chat.setUserData( MDI_KEY, entry_info );
 
