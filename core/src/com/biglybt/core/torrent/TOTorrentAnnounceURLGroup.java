@@ -25,6 +25,9 @@ import java.net.URL;
 public interface
 TOTorrentAnnounceURLGroup
 {
+	public long
+	getUID();
+	
 	 /**
 	  * Gets the current sets defined for this group, 0 length if none defined
 	  * @return

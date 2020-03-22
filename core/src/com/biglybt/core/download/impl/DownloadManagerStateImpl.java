@@ -3661,6 +3661,8 @@ DownloadManagerStateImpl
 		{
 			private TOTorrentAnnounceURLSet[]		sets;
 
+			private volatile long	uid = TorrentUtils.getAnnounceGroupUID();
+			
 			protected
 			cacheGroup(
 				List	group )
@@ -3682,6 +3684,20 @@ DownloadManagerStateImpl
 
 					sets[i] = new cacheSet(urls);
 				}
+			}
+			
+			@Override
+			public long 
+			getUID()
+			{
+				TorrentUtils.ExtendedTorrent	del = delegate;
+				
+				if ( del != null ){
+					
+					return( del.getAnnounceURLGroup().getUID());
+				}
+				
+				return( uid );
 			}
 
 			@Override
@@ -3798,6 +3814,8 @@ DownloadManagerStateImpl
 		    		}else{
 
 		    			urls = toSet;
+		    			
+		    			uid = TorrentUtils.getAnnounceGroupUID();
 		    		}
 		    	}
            	}

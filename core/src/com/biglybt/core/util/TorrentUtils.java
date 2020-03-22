@@ -224,7 +224,14 @@ TorrentUtils
 	static final AtomicLong	torrent_delete_level = new AtomicLong();
 	static long			torrent_delete_time;
 
-
+	private static AtomicLong announce_group_uid_next = new AtomicLong();
+	
+	public static long
+	getAnnounceGroupUID()
+	{
+		return( announce_group_uid_next.incrementAndGet());
+	}
+	
 	public static TOTorrent
 	readFromFile(
 		File		file,
@@ -5101,6 +5108,8 @@ TorrentUtils
 
 		private boolean modified;
 
+		private long uid = TorrentUtils.getAnnounceGroupUID();
+
 		private
 		URLGroup(
 			TOTorrentAnnounceURLGroup		_delegate,
@@ -5110,7 +5119,14 @@ TorrentUtils
 
 			sets = mod_sets.toArray( new TOTorrentAnnounceURLSet[mod_sets.size()]);
 		}
-
+		
+		@Override
+		public long 
+		getUID()
+		{
+			return( uid );
+		}
+		
 		@Override
 		public TOTorrentAnnounceURLSet[]
        	getAnnounceURLSets()
@@ -5122,10 +5138,12 @@ TorrentUtils
         public void
        	setAnnounceURLSets(
        		TOTorrentAnnounceURLSet[]	_sets )
-       	{
+       	{       		
        		modified = true;
 
        		sets = _sets;
+
+       		uid = TorrentUtils.getAnnounceGroupUID();
 
        		delegate.setAnnounceURLSets(_sets );
        	}

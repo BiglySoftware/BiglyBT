@@ -25,6 +25,7 @@ import java.net.URL;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLGroup;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentListener;
+import com.biglybt.core.util.TorrentUtils;
 
 public class
 TOTorrentAnnounceURLGroupImpl
@@ -33,6 +34,8 @@ TOTorrentAnnounceURLGroupImpl
 	private final TOTorrentImpl	torrent;
 	private TOTorrentAnnounceURLSet[]		sets;
 
+	private volatile long	uid = TorrentUtils.getAnnounceGroupUID();
+
 	protected
 	TOTorrentAnnounceURLGroupImpl(
 		TOTorrentImpl	_torrent )
@@ -40,6 +43,13 @@ TOTorrentAnnounceURLGroupImpl
 		torrent	= _torrent;
 
 		sets = new TOTorrentAnnounceURLSet[0];
+	}
+	
+	@Override
+	public long 
+	getUID()
+	{
+		return( uid );
 	}
 
 	protected void
@@ -54,6 +64,8 @@ TOTorrentAnnounceURLGroupImpl
 
 		sets = new_sets;
 
+		uid = TorrentUtils.getAnnounceGroupUID();
+		
 		torrent.fireChanged( TOTorrentListener.CT_ANNOUNCE_URLS );
 	}
 
@@ -71,6 +83,8 @@ TOTorrentAnnounceURLGroupImpl
 	{
 		sets = _sets;
 
+		uid = TorrentUtils.getAnnounceGroupUID();
+		
 		torrent.fireChanged( TOTorrentListener.CT_ANNOUNCE_URLS );
 	}
 

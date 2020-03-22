@@ -571,7 +571,9 @@ DownloadManagerImpl
 	private String 			torrent_comment;
 	private String 			torrent_created_by;
 
-	private transient Map<String,Object[]>	url_group_map = new HashMap<>();
+	
+	private volatile Map<String,Object[]>	url_group_map 		= new HashMap<>();
+	private volatile long					url_group_map_uid	= -1;
 	
 	TRTrackerAnnouncer 				tracker_client;
 	
@@ -890,7 +892,11 @@ DownloadManagerImpl
 		
 		Map<String,Object[]>	map = new HashMap<>();
 		
-		for ( TOTorrentAnnounceURLSet set: torrent.getAnnounceURLGroup().getAnnounceURLSets()){
+		TOTorrentAnnounceURLGroup t_group = torrent.getAnnounceURLGroup();
+		
+		url_group_map_uid = t_group.getUID();
+		
+		for ( TOTorrentAnnounceURLSet set: t_group.getAnnounceURLSets()){
 			
 			URL[] urls = set.getAnnounceURLs();
 			
@@ -914,6 +920,11 @@ DownloadManagerImpl
 	getTrackerURLGroup(
 		String		key )
 	{
+		if ( torrent.getAnnounceURLGroup().getUID() != url_group_map_uid ){
+			
+			buildURLGroupMap( torrent );
+		}
+		
 		Object[] entry = url_group_map.get( key );
 		
 		return( entry==null?-1:(int)entry[1] );
@@ -6000,6 +6011,11 @@ DownloadManagerImpl
 									URL url = getURL();
 									
 									String key = all_trackers.ingestURL(url);
+									
+									if ( torrent.getAnnounceURLGroup().getUID() != url_group_map_uid ){
+										
+										buildURLGroupMap( torrent );
+									}
 									
 									Map<String,Object[]> map = url_group_map;
 									

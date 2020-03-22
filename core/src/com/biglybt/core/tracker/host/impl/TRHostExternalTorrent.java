@@ -170,6 +170,15 @@ TRHostExternalTorrent
 		return(
 			new TOTorrentAnnounceURLGroup()
 			{
+				private final long uid = TorrentUtils.getAnnounceGroupUID();
+				
+				@Override
+				public long 
+				getUID()
+				{
+					return( uid );
+				}
+				
 				@Override
 				public TOTorrentAnnounceURLSet[]
                	getAnnounceURLSets()

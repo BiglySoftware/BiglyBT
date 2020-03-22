@@ -31,6 +31,7 @@ import com.biglybt.core.torrent.*;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
+import com.biglybt.core.util.TorrentUtils;
 
 
 public class
@@ -41,8 +42,17 @@ LWSTorrent
 	private static final TOTorrentAnnounceURLGroup announce_group =
 		new TOTorrentAnnounceURLGroup()
 		{
+			private final long uid = TorrentUtils.getAnnounceGroupUID();
+			
 			private TOTorrentAnnounceURLSet[]	sets = new TOTorrentAnnounceURLSet[0];
 
+			@Override
+			public long 
+			getUID()
+			{
+				return( uid );
+			}
+			
 			@Override
 			public TOTorrentAnnounceURLSet[]
            	getAnnounceURLSets()
