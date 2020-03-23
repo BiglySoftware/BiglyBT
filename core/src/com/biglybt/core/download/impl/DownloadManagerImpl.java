@@ -890,7 +890,7 @@ DownloadManagerImpl
 	{
 		int	group = 0;
 		
-		Map<String,Object[]>	map = new HashMap<>();
+		Map<String,Object[]>	new_map = new HashMap<>();
 		
 		TOTorrentAnnounceURLGroup t_group = torrent.getAnnounceURLGroup();
 		
@@ -908,12 +908,58 @@ DownloadManagerImpl
 					
 					String key = all_trackers.ingestURL( u );
 					
-					map.put( key, new Object[]{ u, g });
+					new_map.put( key, new Object[]{ u, g });
 				}
 			}
 		}
 		
-		url_group_map = map;
+		if ( Constants.isCVSVersion()){
+			
+			Map<String,Object[]>	old_map = url_group_map;
+			
+			boolean changed = false;
+			
+			if ( old_map.size() != new_map.size()){
+				changed = true;
+			}else{
+				for ( String key:old_map.keySet()){
+					
+					Object[] o1 = old_map.get(key);
+					Object[] o2 = new_map.get(key);
+					
+					if ( o2 == null ){
+						changed = true;
+						break;
+					}else{
+						int g1 = (Integer)o1[1];
+						int g2 = (Integer)o2[1];
+						
+						if ( g1 != g2 ){
+							changed = true;
+							break;
+						}
+					}
+				}
+			}
+			
+			if ( changed ){
+				
+				String old_str = "";
+				String new_str = "";
+				
+				for ( Map.Entry<String,Object[]> entry: old_map.entrySet()){
+					old_str += (old_str.isEmpty()?"":", ") + entry.getKey() + "=" + entry.getValue()[1];
+				}
+				
+				for ( Map.Entry<String,Object[]> entry: new_map.entrySet()){
+					new_str += (new_str.isEmpty()?"":", ") + entry.getKey() + "=" + entry.getValue()[1];
+				}
+
+				Debug.outNoStack( "URL Group map changed for " + getDisplayName() + ": old=" + old_str + ", new=" + new_str );
+			}
+		}
+		
+		url_group_map = new_map;
 	}
 
 	protected int
@@ -6023,7 +6069,13 @@ DownloadManagerImpl
 									
 									if ( entry != null ){
 										
-										String str = "Tracker Group";
+										String str = MessageText.getString( "wizard.multitracker.group" );
+										
+										long total_sent 	= 0;
+										long total_received	= 0;
+										
+										String sent_str = MessageText.getString( "DHTView.transport.sent" );
+										String recv_str = MessageText.getString( "DHTView.transport.received" );
 										
 										for (Map.Entry<String,Object[]> e: map.entrySet()){
 											
@@ -6035,12 +6087,23 @@ DownloadManagerImpl
 												
 												long[] url_stats = stats.getTrackerReportedStats( u );
 												
+												long sent 		= url_stats[2];
+												long received	= url_stats[3];
+												
+												total_sent += sent;
+												
+												total_received += received;
+												
 												str += 	"\n\t" + 
-														u + 
-														": sent=" + DisplayFormatters.formatByteCountToKiBEtc( url_stats[2]) +
-														": recv=" + DisplayFormatters.formatByteCountToKiBEtc( url_stats[3]);
+														u + ": " +
+														sent_str + "=" + DisplayFormatters.formatByteCountToKiBEtc( sent ) + ", " +
+														recv_str + "=" + DisplayFormatters.formatByteCountToKiBEtc( received );
 											}
 										}
+										
+										str += 	"\n\t" + MessageText.getString( "SpeedView.stats.total" )+ ": "+
+												sent_str + "=" + DisplayFormatters.formatByteCountToKiBEtc( total_sent ) + ", " +
+												recv_str + "=" + DisplayFormatters.formatByteCountToKiBEtc( total_received );
 										
 										return( str );
 									}
