@@ -4981,19 +4981,23 @@ TorrentUtils
 	{
 		if ( DNS_HANDLING_ENABLE ){
 
-			Map<String,Object[]>	dns_maps = new HashMap<>();
+				// linked hash map to retain set order as best as possible
+			
+			Map<String,Object[]>	dns_maps = new LinkedHashMap<>();
 
 			DNSTXTEntry announce_txt_entry = getDNSTXTEntry( announce_url );
 
 			if ( announce_txt_entry != null && announce_txt_entry.hasRecords()){
 
-				dns_maps.put( announce_url.getHost(), new Object[]{ announce_url, announce_txt_entry });
+				dns_maps.put( announce_url.getHost(), new Object[]{ announce_url, announce_txt_entry, -1 });
 			}
 
 			TOTorrentAnnounceURLSet[] sets = group.getAnnounceURLSets();
 
 			List<TOTorrentAnnounceURLSet>	mod_sets = new ArrayList<>();
 
+			int	set_index = 0;
+			
 			for ( TOTorrentAnnounceURLSet set: sets ){
 
 				URL[] urls = set.getAnnounceURLs();
@@ -5012,7 +5016,7 @@ TorrentUtils
 
 							// remove any affected entries here, we'll add them in if needed later
 
-						dns_maps.put( url.getHost(), new Object[]{ url, txt_entry });
+						dns_maps.put( url.getHost(), new Object[]{ url, txt_entry, set_index });
 					}
 				}
 
@@ -5026,6 +5030,8 @@ TorrentUtils
 
 					mod_sets.add( set );
 				}
+				
+				set_index++;
 			}
 
 			if ( dns_maps.size() > 0 ){
@@ -5034,9 +5040,9 @@ TorrentUtils
 
 					Object[] stuff		= entry.getValue();
 
-					URL			url = (URL)stuff[0];
-					DNSTXTEntry	dns	= (DNSTXTEntry)stuff[1];
-
+					URL			url 	= (URL)stuff[0];
+					DNSTXTEntry	dns		= (DNSTXTEntry)stuff[1];
+					
 					List<DNSTXTPortInfo> ports = dns.getPorts();
 
 					if ( ports.size() > 0 ){
@@ -5065,7 +5071,18 @@ TorrentUtils
 
 						if ( urls.size() > 0 ){
 
-							mod_sets.add( group.createAnnounceURLSet( urls.toArray( new URL[ urls.size()])));
+							int			index 	= (Integer)stuff[2];
+
+							TOTorrentAnnounceURLSet mod_set = group.createAnnounceURLSet( urls.toArray( new URL[ urls.size()]));
+							
+							if ( index < 0 || index > mod_sets.size()){
+							
+								mod_sets.add( mod_set );
+								
+							}else{
+								
+								mod_sets.add( index, mod_set );
+							}
 						}
 					}
 				}
