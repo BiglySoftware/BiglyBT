@@ -127,6 +127,7 @@ import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.UserPrompterResultListener;
 
 /**
  * @author Olivier
@@ -2470,6 +2471,79 @@ public class ManagerUtils {
 
 	public static void
 	locateFiles(
+		final DownloadManager[]			dms,
+		final DiskManagerFileInfo[][]	dm_files,
+		Shell							shell )
+	{
+		if ( !Utils.isSWTThread()){
+			
+			Utils.execSWTThread( ()->{ locateFiles( dms, dm_files, shell );});
+			
+			return;
+		}
+		
+		boolean all_bad 	= true;
+		boolean some_bad 	= false;
+			
+		for ( DownloadManager dm: dms ){
+			
+			int dm_state = dm.getState();
+
+			if ( !( dm_state == DownloadManager.STATE_STOPPED || dm_state == DownloadManager.STATE_ERROR )){
+				
+				some_bad = true;
+				
+			}else{
+				
+				all_bad = false;
+			}
+		}
+		
+		if ( all_bad ){
+			
+			MessageBoxShell mb = new MessageBoxShell(
+				MessageText.getString( "dlg.finddatafiles.title" ),
+				MessageText.getString( "dlg.finddatafiles.dms.all.bad" ));
+			
+			mb.setButtons( new String[] { MessageText.getString("Button.ok") });				
+
+			mb.setIconResource( "error" );
+			
+			mb.open((result)->{
+				
+			});
+			
+		}else if ( some_bad ){
+			
+			MessageBoxShell mb = new MessageBoxShell(
+					MessageText.getString( "dlg.finddatafiles.title" ),
+					MessageText.getString( "dlg.finddatafiles.dms.some.bad" ));
+				
+				mb.setButtons(0, new String[] {
+						MessageText.getString("Button.yes"),
+						MessageText.getString("Button.no"),
+					}, new Integer[] {
+						0,
+						1
+					});
+
+				mb.setIconResource( "warning" );
+				
+				mb.open((result)->{
+					
+					if ( result == 0 ){
+						
+						locateFilesSupport( dms, dm_files, shell );
+					}
+				});
+		}else{
+			
+			locateFilesSupport( dms, dm_files, shell );
+		}
+	}
+	
+	private static void
+	locateFilesSupport(
 		final DownloadManager[]			dms,
 		final DiskManagerFileInfo[][]	dm_files,
 		Shell							shell )
