@@ -795,7 +795,8 @@ PairingManagerImpl
 
 	protected void
 	setLastServerError(
-		String	error )
+		String					error,
+		Map<String, Object>		payload )
 	{
 		String last_error = param_last_error.getValue();
 
@@ -804,6 +805,14 @@ PairingManagerImpl
 			error = "";
 		}
 
+		try{
+			COConfigurationManager.setParameter( "Plugin.default.pairing.last.error.payload", error.isEmpty()?"":Base32.encode(BEncoder.encode( payload )));
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
 		if ( !last_error.equals( error )){
 
 			param_last_error.setValue( error );
@@ -1905,7 +1914,7 @@ PairingManagerImpl
 				throw( new PairingException( error ));
 			}
 
-			setLastServerError( null );
+			setLastServerError( null, payload );
 
 			Map<String,Object> reply = (Map<String,Object>)response.get( "rep" );
 
@@ -1924,7 +1933,7 @@ PairingManagerImpl
 
 		}catch( Throwable e ){
 
-			setLastServerError( Debug.getNestedExceptionMessage( e ));
+			setLastServerError( Debug.getNestedExceptionMessage( e ), payload );
 
 			if ( e instanceof PairingException ){
 
