@@ -20,6 +20,7 @@
 
 package com.biglybt.pifimpl.local.logging;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -110,6 +111,24 @@ LoggerChannelImpl
 		return( diagnostic_logger.isForced());
 	}
 
+	@Override
+	public File 
+	getCurrentFile( boolean flush )
+	{
+		if ( diagnostic_logger != null ){
+			
+			if ( flush ){
+				
+				diagnostic_logger.flush();
+			}
+			return( diagnostic_logger.getLogFile());
+			
+		}else{
+			
+			return( null );
+		}
+	}
+	
 	@Override
 	public void
 	setDiagnostic(

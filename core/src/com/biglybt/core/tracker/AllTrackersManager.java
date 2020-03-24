@@ -18,6 +18,7 @@
 
 package com.biglybt.core.tracker;
 
+import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +78,19 @@ AllTrackersManager
 		public AllTrackersTracker
 		getTracker(
 			URL		url );
+		
+		public boolean
+		getLoggingEnabled(
+			String		short_key );
+		
+		public void
+		setLoggingEnabled(
+			String		short_key,
+			boolean		enabled );
+		
+		public File
+		getLogFile(
+			String		short_key );
 		
 		public void
 		addListener(
@@ -158,5 +172,8 @@ AllTrackersManager
 		public void
 		setOptions(
 			Map<String,Object>		options );
+		
+		public String
+		getShortKey();
 	}
 }

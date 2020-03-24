@@ -2469,7 +2469,7 @@ TRTrackerBTAnnouncerImpl
 		request = new StringBuffer( head + "?" + tail );
 	}
 
-  	return( new TRTrackerAnnouncerRequestImpl( helper.getSessionID(), new URL( request.toString()), total_sent, total_received ));
+  	return( new TRTrackerAnnouncerRequestImpl( helper.getSessionID(), torrent_hash_target, new URL( request.toString()), total_sent, total_received ));
   }
 
   protected int

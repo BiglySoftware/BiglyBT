@@ -18,6 +18,7 @@
 
 package com.biglybt.core.tracker.alltrackers;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
@@ -27,6 +28,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreLifecycleAdapter;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentListener;
@@ -38,12 +40,16 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncerRequest;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.CopyOnWriteList;
+import com.biglybt.core.util.DNSUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimerEvent;
 import com.biglybt.core.util.TimerEventPerformer;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.util.MapUtils;
 
 public class 
@@ -66,6 +72,8 @@ AllTrackersManagerImpl
 	{
 		return( singleton );
 	}
+
+	private final Core	core;
 	
 	private Map<String,AllTrackersTrackerImpl>		host_map = new ConcurrentHashMap<>();
 	
@@ -79,12 +87,18 @@ AllTrackersManagerImpl
 	
 	private List<TOTorrent>	pending_torrents = new ArrayList<>();
 
+	private Map<String, LoggerChannel>	logging_keys = new HashMap<>();
+	
 	private
 	AllTrackersManagerImpl()
 	{
+		core = CoreFactory.getSingleton();
+
 		loadConfig();
 		
-		CoreFactory.getSingleton().addLifecycleListener(
+		updateLogging();
+	
+		core.addLifecycleListener(
 				new CoreLifecycleAdapter()
 				{
 					@Override
@@ -162,6 +176,21 @@ AllTrackersManagerImpl
 					}
 					
 					continue;
+					
+				}else if ( e0 instanceof String ){
+					
+					String cmd = (String)e0;
+					
+					if ( cmd.equals( "logging_changed" )){
+						
+						updateLogging();
+						
+					}else{
+						
+						Debug.out( "eh?" );
+					}
+					
+					continue;
 				}
 						
 				AllTrackersTrackerImpl 		tracker = (AllTrackersTrackerImpl)e0;
@@ -189,7 +218,7 @@ AllTrackersManagerImpl
 					}else if ( obj instanceof TRTrackerAnnouncerResponse ){
 				
 						TRTrackerAnnouncerResponse a_resp = (TRTrackerAnnouncerResponse)obj;
-																		
+													
 						if ( tracker.setOK( a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE )){
 							
 							updated = true;
@@ -200,6 +229,10 @@ AllTrackersManagerImpl
 							updated = true;
 						}
 	
+						if ( updated ){
+							
+							tracker.log( a_resp );
+						}
 					}else if ( obj instanceof TRTrackerScraperResponse ){
 						
 							// announce status trumps scrape 
@@ -223,7 +256,7 @@ AllTrackersManagerImpl
 					}else if ( obj instanceof TRTrackerAnnouncerRequest ){
 														
 						TRTrackerAnnouncerRequest req = (TRTrackerAnnouncerRequest)obj;
-						
+												
 							// caller already validated this
 						
 						long	session = req.getSessionID();
@@ -232,7 +265,9 @@ AllTrackersManagerImpl
 						long	down	= req.getReportedDownload();
 																	
 						tracker.updateSession( session, up, down );
-																
+						
+						tracker.log( req );
+
 						updated = true;
 					}
 						
@@ -264,82 +299,128 @@ AllTrackersManagerImpl
 		}
 	}
 	
-	private synchronized void
+	private void
 	loadConfig()
 	{
-		try{
-			Map map = FileUtil.readResilientConfigFile( CONFIG_FILE );
+		synchronized( process_lock ){
 			
-			List<Map>	trackers = (List<Map>)map.get( "trackers" );
-			
-			if ( trackers != null ){
+			try{
+				Map map = FileUtil.readResilientConfigFile( CONFIG_FILE );
 				
-				for ( Map t: trackers ){
+				List<Map>	trackers = (List<Map>)map.get( "trackers" );
+				
+				if ( trackers != null ){
+					
+					for ( Map t: trackers ){
+						
+						try{
+							AllTrackersTrackerImpl tracker = new AllTrackersTrackerImpl( t );
+							
+							host_map.put( tracker.getTrackerName(), tracker );
+							
+							if ( host_map.size() > MAX_TRACKERS ){
+								
+								Debug.out( "Too many trackers - " + trackers.size());
+								
+								return;
+							}
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+				}
+				
+				List<Map>	logging = (List<Map>)map.get( "logging" );
+				
+				if ( logging != null ){
+					
+					for ( Map log: logging ){
+						
+						String key = MapUtils.getMapString( log, "key", null );
+						
+						if ( key != null ){
+							
+							logging_keys.put( key, getLogger( key ));
+						}
+					}
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	private void
+	saveConfig(
+		boolean	closing )
+	{
+		synchronized( process_lock ){
+			
+			boolean skip_unregistered = closing && got_running;
+			
+			try{
+				Map map = new HashMap();
+				
+				List<Map>	trackers = new ArrayList<>( host_map.size() + 32 );
+				
+				map.put( "trackers", trackers ); 
+				
+				for ( AllTrackersTrackerImpl tracker: host_map.values()){
+				
+					if ( skip_unregistered && !tracker.isRegistered()){
+						
+						continue;
+					}
 					
 					try{
-						AllTrackersTrackerImpl tracker = new AllTrackersTrackerImpl( t );
+						trackers.add( tracker.exportToMap());
 						
-						host_map.put( tracker.getTrackerName(), tracker );
-						
-						if ( host_map.size() > MAX_TRACKERS ){
+						if ( trackers.size() > MAX_TRACKERS ){
 							
 							Debug.out( "Too many trackers - " + trackers.size());
 							
-							return;
+							break;
 						}
+						
 					}catch( Throwable e ){
 						
 						Debug.out( e );
 					}
 				}
+				
+				if ( !logging_keys.isEmpty()){
+					
+					List<Map>	logging = new ArrayList<>( logging_keys.size() + 32 );
+					
+					map.put( "logging", logging ); 
+					
+					for ( String key: logging_keys.keySet()){
+						
+						Map m = new HashMap();
+						
+						logging.add( m );
+						
+						m.put( "key", key );
+					}
+				}
+				
+				FileUtil.writeResilientConfigFile( CONFIG_FILE, map );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
 			}
-		}catch( Throwable e ){
-			
-			Debug.out( e );
 		}
 	}
 	
-	private synchronized void
-	saveConfig(
-		boolean	closing )
+	private void
+	updateLogging()
 	{
-		boolean skip_unregistered = closing && got_running;
-		
-		try{
-			Map map = new HashMap();
+		for ( AllTrackersTrackerImpl tracker: host_map.values()){
 			
-			List<Map>	trackers = new ArrayList<>( host_map.size() + 32 );
-			
-			map.put( "trackers", trackers ); 
-			
-			for ( AllTrackersTrackerImpl tracker: host_map.values()){
-			
-				if ( skip_unregistered && !tracker.isRegistered()){
-					
-					continue;
-				}
-				
-				try{
-					trackers.add( tracker.exportToMap());
-					
-					if ( trackers.size() > MAX_TRACKERS ){
-						
-						Debug.out( "Too many trackers - " + trackers.size());
-						
-						break;
-					}
-					
-				}catch( Throwable e ){
-					
-					Debug.out( e );
-				}
-			}
-			
-			FileUtil.writeResilientConfigFile( CONFIG_FILE, map );
-			
-		}catch( Throwable e ){
-			
-			Debug.out( e );
+			tracker.updateLogger();
 		}
 	}
 	
@@ -572,6 +653,80 @@ AllTrackersManagerImpl
 	}
 	
 	@Override
+	public boolean 
+	getLoggingEnabled(
+		String short_key)
+	{
+		synchronized( process_lock ){
+			
+			return( logging_keys.containsKey( short_key ));
+		}
+	}
+	
+	@Override
+	public void 
+	setLoggingEnabled(
+		String 		short_key, 
+		boolean 	enabled )
+	{
+		synchronized( process_lock ){
+
+			if ( enabled ){
+			
+				if ( !logging_keys.containsKey( short_key )){
+					
+					logging_keys.put( short_key, getLogger( short_key ));
+				}
+				
+			}else{
+				
+				logging_keys.remove( short_key );
+			}
+		}
+		
+		update_queue.add( new Object[]{ "logging_changed" } );
+	}
+	
+	private LoggerChannel
+	getLogger(
+		String		short_key )
+	{
+		PluginInterface plugin_interface = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface();
+		
+		LoggerChannel log = plugin_interface.getLogger().getChannel( "TrackerLog_" + FileUtil.convertOSSpecificChars( short_key, false ));
+
+		log.setDiagnostic(-1,true);
+
+		log.setForce( true );
+		
+		System.out.println( "got logger for " + short_key );
+		
+		return( log );
+	}
+	
+	@Override
+	public File 
+	getLogFile(
+		String short_key )
+	{
+		LoggerChannel log = getLogger( short_key );
+
+		File f = log.getCurrentFile( true );
+		
+		if ( f != null && !f.exists()){
+			
+			try{
+				f.createNewFile();
+				
+			}catch( Throwable e ){
+				
+			}
+		}
+		
+		return( f );
+	}
+	
+	@Override
 	public void
 	addListener(
 		AllTrackersListener		listener,
@@ -603,6 +758,7 @@ AllTrackersManagerImpl
 		implements AllTrackersTracker
 	{
 		final private String	name;
+		final private String	short_key;
 		
 		private String		status = "";
 		
@@ -620,11 +776,27 @@ AllTrackersManagerImpl
 		
 		private boolean		registered;
 		
+		private LoggerChannel	logger;
+		
 		private
 		AllTrackersTrackerImpl(
 			String		_name )
 		{
 			name	= _name;
+			
+			String sk;
+			
+			try{
+				sk = DNSUtils.getInterestingHostSuffix( new URL( name ).getHost().toLowerCase( Locale.US ));
+				
+			}catch( Throwable e ){
+				
+				sk = null;
+			}
+			
+			short_key = sk;
+			
+			updateLogger();
 		}
 		
 		private
@@ -639,6 +811,20 @@ AllTrackersManagerImpl
 				
 				throw( new IOException( "Invalid" ));
 			}
+			
+			String sk;
+			
+			try{
+				sk = DNSUtils.getInterestingHostSuffix( new URL( name ).getHost().toLowerCase( Locale.US ));
+				
+			}catch( Throwable e ){
+				
+				sk = null;
+			}
+			
+			short_key = sk;
+			
+			updateLogger();
 			
 			status = MapUtils.getMapString( map, "status", "" );
 			
@@ -680,6 +866,12 @@ AllTrackersManagerImpl
 					}
 				}
 			}
+		}
+		
+		private void
+		updateLogger()
+		{
+			logger = logging_keys.get( short_key );
 		}
 		
 		private Map
@@ -785,6 +977,13 @@ AllTrackersManagerImpl
 		
 		@Override
 		public String 
+		getShortKey()
+		{
+			return( short_key );
+		}
+		
+		@Override
+		public String 
 		getStatusString()
 		{
 			return( status );
@@ -869,6 +1068,61 @@ AllTrackersManagerImpl
 			}
 			
 			return( true );
+		}
+		
+		protected void
+		log(
+			TRTrackerAnnouncerResponse	resp )
+		{
+			if ( logger != null ){
+			
+				HashWrapper hw = resp.getHash();
+				
+				if ( hw != null ){
+					
+					DownloadManager dm = core.getGlobalManager().getDownloadManager( hw );
+				
+					if ( dm != null ){
+					
+						if ( resp.getStatus() != TRTrackerAnnouncerResponse.ST_ONLINE ){
+						
+							logger.log( dm.getDisplayName() + ", " + name + " - " + resp.getStatusString());
+						}
+					}
+				}
+			}
+		}
+		
+		protected void
+		log(
+			TRTrackerAnnouncerRequest	req )
+		{
+			if ( logger != null ){
+				
+				HashWrapper hw = req.getHash();
+				
+				if ( hw != null ){
+					
+					DownloadManager dm = core.getGlobalManager().getDownloadManager( hw );
+				
+					if ( dm != null ){
+					
+						long session = req.getSessionID();
+						
+						String sid = Long.toHexString( session );
+						
+						if ( sid.length() > 4 ){
+							sid = sid.substring( 0, 4 );
+						}else{
+							while( sid.length() < 4 ){
+								sid = "0" + sid;
+							}
+						}
+						
+						logger.log( dm.getDisplayName() + ", " + name + ", session=" + sid + " - sent=" + req.getReportedUpload() + ", received=" + req.getReportedDownload());
+					}
+				}
+			}
 		}
 		
 		protected void

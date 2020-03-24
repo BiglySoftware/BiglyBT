@@ -21,21 +21,24 @@ package com.biglybt.core.tracker.client.impl;
 import java.net.URL;
 
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerRequest;
+import com.biglybt.core.util.HashWrapper;
 
 public class 
 TRTrackerAnnouncerRequestImpl
 	implements TRTrackerAnnouncerRequest
 {
-	final private long		session_id;
-	final private URL		url;
-	final private long		sent;
-	final private long		received;
+	final private long			session_id;
+	final private HashWrapper	hash;
+	final private URL			url;
+	final private long			sent;
+	final private long			received;
 	
 	public
 	TRTrackerAnnouncerRequestImpl()
 	{
 		session_id	= 0;
 		url			= null;
+		hash		= null;
 		sent		= 0;
 		received	= 0;
 	}
@@ -43,11 +46,13 @@ TRTrackerAnnouncerRequestImpl
 	public
 	TRTrackerAnnouncerRequestImpl(
 		long		_session_id,
+		HashWrapper	_hash,
 		URL			_url,
 		long		_sent,
 		long		_received )
 	{
 		session_id	= _session_id;
+		hash		= _hash;
 		url			= _url;
 		sent		= _sent;
 		received	= _received;
@@ -63,6 +68,12 @@ TRTrackerAnnouncerRequestImpl
 	getURL()
 	{
 		return( url );
+	}
+	
+	public HashWrapper
+	getHash()
+	{
+		return( hash );
 	}
 	
 	public long

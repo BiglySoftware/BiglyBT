@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.views.skin;
 
 
+import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
@@ -901,13 +902,67 @@ public class SBC_AllTrackersView
 		
 		assoc_item.setEnabled( hasSelection && !assoc_templates.isEmpty());
 		
-			// clear reported stats
+		new MenuItem( menu, SWT.SEPARATOR );
+				
+		String short_key = null;
 		
+		for ( AllTrackersTracker t: trackers ){
+			
+			String sk = t.getShortKey();
+			
+			if ( short_key == null ){
+				
+				short_key = sk;
+				
+			}else if ( !short_key.equals( sk )){
+				
+				short_key = null;
+				
+				break;
+			}
+		}
+		
+		String f_short_key = short_key;
+		
+			// enable logging
+		
+		MenuItem itemEnableLogging = new MenuItem(menu, SWT.CHECK );
+
+		Messages.setLanguageText( itemEnableLogging, "alltorrents.logging.enable", (short_key==null?"":("- *." + short_key )));
+
+		if ( short_key != null ){
+			
+			itemEnableLogging.setSelection( all_trackers.getLoggingEnabled( short_key ));
+
+			itemEnableLogging.addListener(SWT.Selection, (ev)->{
+				
+				all_trackers.setLoggingEnabled( f_short_key, itemEnableLogging.getSelection());
+			});
+		}
+		
+		itemEnableLogging.setEnabled( short_key != null );
+		
+		// view logs
+
+		MenuItem itemViewLogs = new MenuItem(menu, SWT.PUSH );
+
+		Messages.setLanguageText( itemViewLogs, "alltorrents.logging.view" );
+
+		itemViewLogs.addListener(SWT.Selection, (ev)->{
+			
+			File f = all_trackers.getLogFile( f_short_key );
+			
+			UIFunctionsManager.getUIFunctions().showInExplorer(f); 
+		});
+		
+		itemViewLogs.setEnabled( short_key != null && all_trackers.getLoggingEnabled( short_key ));
+		
+		// clear reported stats
 		
 		MenuItem itemClearStats = new MenuItem(menu, SWT.PUSH);
-
+	
 		Messages.setLanguageText( itemClearStats, "alltorrents.reset.reported.stats" );
-
+	
 		itemClearStats.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void
@@ -922,13 +977,19 @@ public class SBC_AllTrackersView
 		
 		itemClearStats.setEnabled( hasSelection );
 		
+		new MenuItem( menu, SWT.SEPARATOR );
+		
 			// discuss
 		
-		String tracker_key = null;
+		String tracker_key;
 		
 		if ( trackers.size() == 1 ){
 			
 			tracker_key = BuddyPluginUtils.getTrackerChatKey( trackers.get(0).getTrackerName());
+			
+		}else{
+			
+			tracker_key = null;
 		}
 		
 		MenuBuildUtils.addChatMenu( menu, "menu.discuss.tracker", tracker_key );
@@ -1556,6 +1617,7 @@ public class SBC_AllTrackersView
 		{
 			tracker	= _tracker;
 		}
+		
 		public AllTrackersTracker
 		getTracker()
 		{
@@ -1566,6 +1628,12 @@ public class SBC_AllTrackersView
 		getTrackerName()
 		{
 			return( tracker.getTrackerName());
+		}
+		
+		public String
+		getShortKey()
+		{
+			return( tracker.getShortKey());
 		}
 		
 		public String

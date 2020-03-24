@@ -20,6 +20,8 @@ package com.biglybt.core.tracker.client;
 
 import java.net.URL;
 
+import com.biglybt.core.util.HashWrapper;
+
 public interface 
 TRTrackerAnnouncerRequest
 {
@@ -28,6 +30,9 @@ TRTrackerAnnouncerRequest
 	
 	public URL
 	getURL();
+	
+	public HashWrapper
+	getHash();
 	
 	public long
 	getReportedUpload();

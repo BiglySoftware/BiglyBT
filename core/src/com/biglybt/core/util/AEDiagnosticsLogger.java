@@ -443,7 +443,13 @@ AEDiagnosticsLogger
 		}
 	}
 
-	private File
+	public void
+	flush()
+	{
+		writePending();
+	}
+	
+	public File
 	getLogFile()
 	{
 		return( new File( debug_dir, getName() + "_" + (first_file?"1":"2") + ".log" ));

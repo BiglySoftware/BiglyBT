@@ -20,6 +20,8 @@
 
 package com.biglybt.pif.logging;
 
+import java.io.File;
+
 /**
  * Manipulation of a subsection (a channel) of the client's logging.
  *
@@ -267,4 +269,12 @@ public interface LoggerChannel {
 	 * @since 2.3.0.0
 	 */
 	public Logger getLogger();
+	
+	/**
+	 * retrieves the current file associated with the channel, null if none
+	 * @return
+	 */
+	
+	public File
+	getCurrentFile( boolean flush );
 }
