@@ -80,6 +80,7 @@ import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TextViewerWindow;
@@ -766,7 +767,7 @@ public class TransferStatsView
 	    	format(
 	    		int value)
 	    	{
-	    		return( value + " ms" );
+	    		return( value + TimeFormatter.MS_SUFFIX );
 	    	}
 	    };
 

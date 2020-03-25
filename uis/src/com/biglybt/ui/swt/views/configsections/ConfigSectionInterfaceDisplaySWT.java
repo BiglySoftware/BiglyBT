@@ -615,19 +615,25 @@ public class ConfigSectionInterfaceDisplaySWT
 			10000,
 			15000
 		};
+		
+		String ms	= TimeFormatter.MS_SUFFIX;
+		
+		String secs = " " + TimeFormatter.getShortSuffix( TimeFormatter.TS_SECOND );
+		
 		String[] labels = {
-			"10 ms",
-			"25 ms",
-			"50 ms",
-			"100 ms",
-			"250 ms",
-			"500 ms",
-			"1 s",
-			"2 s",
-			"5 s",
-			"10 s",
-			"15 s"
+			"10" + ms,
+			"25" + ms,
+			"50" + ms,
+			"100" + ms,
+			"250" + ms,
+			"500" + ms,
+			"1" + secs,
+			"2" + secs,
+			"5" + secs,
+			"10" + secs,
+			"15" + secs
 		};
+		
 		add(new IntListParameterImpl("GUI Refresh",
 				"ConfigView.section.style.guiUpdate", values, labels), listRefresh);
 

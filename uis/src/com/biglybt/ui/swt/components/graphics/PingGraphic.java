@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 /**
@@ -79,7 +80,7 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
     return new PingGraphic(new Scale( false ),new ValueFormater() {
       @Override
       public String format(int value) {
-        return value + " ms";
+        return value + TimeFormatter.MS_SUFFIX;
       }
     });
   }

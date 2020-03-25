@@ -18,6 +18,7 @@
 
 package com.biglybt.ui.swt.columns.alltrackers;
 
+import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.skin.SBC_AllTrackersView.AllTrackersViewEntry;
 
@@ -69,6 +70,6 @@ public class ColumnAllTrackersResponseTime
 			return;
 		}
 
-		cell.setText(value<0?"":(value+ " ms"));
+		cell.setText(value<0?"":(value + TimeFormatter.MS_SUFFIX ));
 	}
 }

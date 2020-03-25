@@ -47,13 +47,21 @@ public class TimeFormatter {
 	
 	public static final long[]		TIME_SUFFIXES_2_MULT	 = { 1, 60, 60*60, 24*60*60, 7*24*60*60, 30*24*60*60, 365L*24*60*60 };
 
+	public static String		MS_SUFFIX = " ms";
+	
+	public static String
+	getShortSuffix(
+		int		unit )
+	{
+		return( TIME_SUFFIXES[unit]);
+	}
+	
 	public static String
 	getLongSuffix(
 		int		unit )
 	{
 		return( TIME_SUFFIXES_2[unit]);
 	}
-	
 	public static final String[] DATEFORMATS_DESC;
 	
 	static{
@@ -154,6 +162,8 @@ public class TimeFormatter {
 		TIME_SUFFIXES_2[4]	= MessageText.getString( "ConfigView.section.stats.weeks.medium" );
 		TIME_SUFFIXES_2[5]	= MessageText.getString( "ConfigView.section.stats.months.medium" );
 		TIME_SUFFIXES_2[6]	= MessageText.getString( "ConfigView.section.stats.years.medium" );
+		
+		MS_SUFFIX = " " + MessageText.getString( "ConfigView.section.stats.millis.short" );
 	}
 
 	/**
@@ -502,7 +512,7 @@ public class TimeFormatter {
 
     	nanos = nanos - ((nanos/truncator) * truncator);
 
-    	return( String.valueOf(((double)nanos)/1000000) + " ms" );
+    	return( String.valueOf(((double)nanos)/1000000) + MS_SUFFIX );
     }
 
     public static String
