@@ -1250,26 +1250,26 @@ DownloadManagerStatsImpl
 	updateTrackerSession(
 		TRTrackerAnnouncerRequest	request )
 	{
-		long down 		= request.getReportedDownload();
-		long up 		= request.getReportedUpload();
-
-		if ( down > 0 || up > 0 ){
-			
-			long session	= request.getSessionID();
-			
-			URL url = request.getURL();
-
-			if ( session != 0 && url != null ){
-																		
-				String key = all_trackers.ingestURL( url );
+		long session	= request.getSessionID();
 		
-				if ( key == null ){
-					
-					return;
-				}
-		
-				all_trackers.updateTracker( key, request );
+		URL url = request.getURL();
+
+		if ( session != 0 && url != null ){
+																	
+			String key = all_trackers.ingestURL( url );
+	
+			if ( key == null ){
 				
+				return;
+			}
+	
+			all_trackers.updateTracker( key, request );
+				
+			long down 		= request.getReportedDownload();
+			long up 		= request.getReportedUpload();
+
+			if ( down > 0 || up > 0 ){
+					
 				int group = download_manager.getTrackerURLGroup( key );
 				
 				synchronized( tracker_session_stats ){

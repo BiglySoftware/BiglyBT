@@ -1249,26 +1249,29 @@ AllTrackersManagerImpl
 			long	up 		= req.getReportedUpload();
 			long	down	= req.getReportedDownload();
 		
-			long	now = SystemTime.getCurrentTime();
-			
-			if ( session_stats == null ){
+			if ( up > 0 || down > 0 ){
 				
-				session_stats = new HashMap<>();
-			}
-			
-			session_stats.put( session_id, new long[]{ now, up, down });
-			
-			long	new_up 		= 0;
-			long	new_down	= 0;
-			
-			for ( long[] entry: session_stats.values()){
+				long	now = SystemTime.getCurrentTime();
 				
-				new_up 		+= entry[1];
-				new_down	+= entry[2];
+				if ( session_stats == null ){
+					
+					session_stats = new HashMap<>();
+				}
+				
+				session_stats.put( session_id, new long[]{ now, up, down });
+				
+				long	new_up 		= 0;
+				long	new_down	= 0;
+				
+				for ( long[] entry: session_stats.values()){
+					
+					new_up 		+= entry[1];
+					new_down	+= entry[2];
+				}
+				
+				total_up 	= new_up;
+				total_down	= new_down;
 			}
-			
-			total_up 	= new_up;
-			total_down	= new_down;
 			
 			long elapsed = req.getElapsed();
 			
