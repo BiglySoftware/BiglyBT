@@ -29,9 +29,12 @@ TRTrackerAnnouncerRequestImpl
 {
 	final private long			session_id;
 	final private HashWrapper	hash;
+	final private boolean		is_stop;
 	final private URL			url;
 	final private long			sent;
 	final private long			received;
+	
+	private long			elapsed;
 	
 	public
 	TRTrackerAnnouncerRequestImpl()
@@ -39,52 +42,82 @@ TRTrackerAnnouncerRequestImpl
 		session_id	= 0;
 		url			= null;
 		hash		= null;
+		is_stop		= false;
 		sent		= 0;
 		received	= 0;
+		elapsed		= -1;
 	}
 	
 	public
 	TRTrackerAnnouncerRequestImpl(
 		long		_session_id,
 		HashWrapper	_hash,
+		boolean		_is_stop,
 		URL			_url,
 		long		_sent,
 		long		_received )
 	{
 		session_id	= _session_id;
 		hash		= _hash;
+		is_stop		= _is_stop;
 		url			= _url;
 		sent		= _sent;
 		received	= _received;
 	}
 	
+	@Override
 	public long
 	getSessionID()
 	{
 		return( session_id );
 	}
 	
+	@Override
 	public URL
 	getURL()
 	{
 		return( url );
 	}
 	
+	@Override
 	public HashWrapper
 	getHash()
 	{
 		return( hash );
 	}
 	
+	@Override
+	public boolean 
+	isStopRequest()
+	{
+		return( is_stop );
+	}
+	
+	@Override
 	public long
 	getReportedUpload()
 	{
 		return( sent );
 	}
 	
+	@Override
 	public long
 	getReportedDownload()
 	{
 		return( received );
+	}
+	
+	public void
+	setElapsed(
+		long	t )
+	{
+		elapsed = t;
+	}
+	
+	@Override
+	public long 
+	getElapsed()
+	{
+		return( elapsed );
 	}
 }

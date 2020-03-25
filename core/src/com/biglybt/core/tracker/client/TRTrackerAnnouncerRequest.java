@@ -28,6 +28,9 @@ TRTrackerAnnouncerRequest
 	public long
 	getSessionID();
 	
+	public boolean
+	isStopRequest();
+	
 	public URL
 	getURL();
 	
@@ -39,4 +42,7 @@ TRTrackerAnnouncerRequest
 	
 	public long
 	getReportedDownload();
+	
+	public long
+	getElapsed();
 }

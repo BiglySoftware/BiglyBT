@@ -75,6 +75,14 @@ AllTrackersManager
 			URL							tracker,
 			TRTrackerScraperResponse	response );
 	
+		public void
+		addActiveRequest(
+			TRTrackerAnnouncerRequest	request );
+		
+		public void
+		removeActiveRequest(
+			TRTrackerAnnouncerRequest	request );
+		
 		public AllTrackersTracker
 		getTracker(
 			URL		url );
@@ -175,5 +183,8 @@ AllTrackersManager
 		
 		public String
 		getShortKey();
+		
+		public long
+		getAverageRequestDuration();
 	}
 }

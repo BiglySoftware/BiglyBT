@@ -48,6 +48,8 @@ import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimerEvent;
 import com.biglybt.core.util.TimerEventPerformer;
+import com.biglybt.core.util.average.AverageFactory;
+import com.biglybt.core.util.average.MovingImmediateAverage;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.util.MapUtils;
@@ -81,6 +83,8 @@ AllTrackersManagerImpl
 	
 	private CopyOnWriteList<AllTrackersListener>	listeners = new CopyOnWriteList<>();
 	
+	private Map<TRTrackerAnnouncerRequest,String>	active_requests = new ConcurrentHashMap<>();
+			
 	private boolean	got_running;
 	
 	private final Object process_lock = new Object();
@@ -256,17 +260,10 @@ AllTrackersManagerImpl
 					}else if ( obj instanceof TRTrackerAnnouncerRequest ){
 														
 						TRTrackerAnnouncerRequest req = (TRTrackerAnnouncerRequest)obj;
-												
-							// caller already validated this
-						
-						long	session = req.getSessionID();
-															
-						long	up 		= req.getReportedUpload();
-						long	down	= req.getReportedDownload();
 																	
-						tracker.updateSession( session, up, down );
+						tracker.updateSession( req );
 						
-						tracker.log( req );
+						tracker.log( req, false );
 
 						updated = true;
 					}
@@ -278,7 +275,23 @@ AllTrackersManagerImpl
 				}
 			}
 			
-			if ( !for_close ){
+			if ( for_close ){
+				
+				for ( TRTrackerAnnouncerRequest req: active_requests.keySet()){
+					
+					String key = ingestURL( req.getURL());
+					
+					if ( key != null ){
+						
+						AllTrackersTrackerImpl existing_tracker = host_map.get( key );
+						
+						if ( existing_tracker != null ){
+							
+							existing_tracker.log( req, true );
+						}
+					}
+				}
+			}else{
 				
 				if ( !updates.isEmpty()){
 					
@@ -424,6 +437,22 @@ AllTrackersManagerImpl
 		}
 	}
 	
+	@Override
+	public void
+	addActiveRequest(
+		TRTrackerAnnouncerRequest	request )
+	{
+		active_requests.put( request, "" );
+	}
+		
+	@Override
+	public void
+	removeActiveRequest(
+		TRTrackerAnnouncerRequest	request )
+	{
+		active_requests.remove( request );
+	}
+		
 	@Override
 	public int 
 	getTrackerCount()
@@ -698,9 +727,7 @@ AllTrackersManagerImpl
 		log.setDiagnostic(-1,true);
 
 		log.setForce( true );
-		
-		System.out.println( "got logger for " + short_key );
-		
+				
 		return( log );
 	}
 	
@@ -777,6 +804,8 @@ AllTrackersManagerImpl
 		private boolean		registered;
 		
 		private LoggerChannel	logger;
+		
+		private MovingImmediateAverage	request_average = AverageFactory.MovingImmediateAverage( 5 );
 		
 		private
 		AllTrackersTrackerImpl(
@@ -1086,7 +1115,36 @@ AllTrackersManagerImpl
 					
 						if ( resp.getStatus() != TRTrackerAnnouncerResponse.ST_ONLINE ){
 						
-							logger.log( dm.getDisplayName() + ", " + name + " - " + resp.getStatusString());
+							TRTrackerAnnouncerRequest req = resp.getRequest();
+							
+							String req_details;
+							
+							if ( req != null ){
+								
+								long session = req.getSessionID();
+								
+								String sid = Long.toHexString( session );
+								
+								if ( sid.length() > 4 ){
+									sid = sid.substring( 0, 4 );
+								}else{
+									while( sid.length() < 4 ){
+										sid = "0" + sid;
+									}
+								}
+								
+								if ( req.isStopRequest()){
+									sid += "$";
+								}
+								
+								req_details = ", session=" + sid + " - pending_sent=" + req.getReportedUpload() + ", pending_received=" + req.getReportedDownload();
+								
+							}else{
+								
+								req_details = "";
+							}
+							
+							logger.log( dm.getDisplayName() + ", " + name + req_details + " - " + resp.getStatusString());
 						}
 					}
 				}
@@ -1095,7 +1153,8 @@ AllTrackersManagerImpl
 		
 		protected void
 		log(
-			TRTrackerAnnouncerRequest	req )
+			TRTrackerAnnouncerRequest	req,
+			boolean						incomplete )
 		{
 			if ( logger != null ){
 				
@@ -1119,6 +1178,15 @@ AllTrackersManagerImpl
 							}
 						}
 						
+						if ( req.isStopRequest()){
+							sid += "$";
+						}
+						
+						if ( incomplete ){
+							
+							sid += "[Success unknown]";
+						}
+						
 						logger.log( dm.getDisplayName() + ", " + name + ", session=" + sid + " - sent=" + req.getReportedUpload() + ", received=" + req.getReportedDownload());
 					}
 				}
@@ -1127,10 +1195,15 @@ AllTrackersManagerImpl
 		
 		protected void
 		updateSession(
-			long		session_id,
-			long		up,
-			long		down )
+			TRTrackerAnnouncerRequest		req )
 		{
+				// caller already validated this
+			
+			long	session_id = req.getSessionID();
+												
+			long	up 		= req.getReportedUpload();
+			long	down	= req.getReportedDownload();
+		
 			long	now = SystemTime.getCurrentTime();
 			
 			if ( session_stats == null ){
@@ -1151,6 +1224,13 @@ AllTrackersManagerImpl
 			
 			total_up 	= new_up;
 			total_down	= new_down;
+			
+			long elapsed = req.getElapsed();
+			
+			if ( elapsed >= 0 ){
+				
+				request_average.update( elapsed );
+			}
 		}
 		
 		protected void
@@ -1219,6 +1299,18 @@ AllTrackersManagerImpl
 			Map<String, Object> _options)
 		{
 			options = _options;
+		}
+		
+		@Override
+		public long 
+		getAverageRequestDuration()
+		{
+			if ( request_average.getSampleCount() == 0 ){
+				
+				return( -1 );
+			}
+			
+			return((long)request_average.getAverage());
 		}
 	}
 	

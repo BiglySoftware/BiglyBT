@@ -1003,89 +1003,102 @@ TRTrackerBTAnnouncerImpl
 			  helper.informResponse( this, new TRTrackerAnnouncerRequestImpl(), last_failure_resp );
 		  }
 
+		  TRTrackerAnnouncerRequestImpl request_obj = null;
+		  
 		  try{
 
-			TRTrackerAnnouncerRequest request_obj =  constructRequest( evt,original_url );
+			request_obj =  constructRequest( evt,original_url );
 			
-		  	request_url = request_obj.getURL();
-
-		  	URL[]	tracker_url = { original_url };
-
-		  	int	prev_udp_probes_ok = autoUDPProbeSuccessCount;
-
-		  	byte[]	result_bytes = updateOld( tracker_url, request_url);
-
-		  	lastUsedUrl = tracker_url[0];	// url may have redirected, use this value as it will be correct
-
-			TRTrackerAnnouncerResponseImpl resp = decodeTrackerResponse( lastUsedUrl, result_bytes );
-
-			resp.setRequest( request_obj );	// easiest way to transport the request around internally is to tie it to the response
+			all_trackers.addActiveRequest( request_obj );
 			
-			int	resp_status = resp.getStatus();
+			long start = SystemTime.getMonotonousTime();
 
-		    if ( resp_status == TRTrackerAnnouncerResponse.ST_ONLINE ){
-
-		    	if ( autoUDPProbeSuccessCount > prev_udp_probes_ok ){
-
-		    		resp.setWasProbe();
-		    	}
-		    	try{
-		    			// tracker looks ok, make any redirection permanent
-
-		    		if ( !original_url.toString().equals(lastUsedUrl.toString())){
-
-		    			if (Logger.isEnabled())
-							Logger.log(new LogEvent(torrent, LOGID,
-									"announce url permanently redirected: old = " + original_url + ", new = " + lastUsedUrl ));
-
-
-						TorrentUtils.replaceAnnounceURL( torrent, original_url, lastUsedUrl );
-
-					}
-		    	}catch( Throwable e ){
-
-		    		Debug.printStackTrace(e);
-		    	}
-
-	            urls.remove(j);
-
-	            urls.add(0, lastUsedUrl );
-
-	            trackerUrlLists.remove(i);
-
-	            trackerUrlLists.add(0,urls);
-
-	            informURLChange( original_url, lastUsedUrl, false );
-
-	            	//and return the result
-
-	            return( resp );
-
-			 }else  if ( resp_status == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR ){
-
-			 	last_failure_resp = resp;
-
-			 	String	reason = resp.getAdditionalInfo();
-
-			 		// avoid re-hitting a host with multiple ports if reporting overloaded. This is
-			 		// particularly "interesting" when reporting the "completed" event and we get a
-			 		// "overloaded" response - when we hit another port we record the event twice
-			 		// as the tracker has discarded this peer and therefore doesn't know to ignore the
-			 		// second "completed" event...
-
-			 	if ( reason != null &&
-			 			(reason.contains("too many seeds") ||
-							reason.contains("too many peers"))){
-
-			 		skip_host	= original_url.getHost();
-			 	}
-
-			 }else{
-
-				 announceFailCount++;
-
-				 last_failure_resp = resp;
-			 }
+			try{				
+			  	request_url = request_obj.getURL();
+	
+			  	URL[]	tracker_url = { original_url };
+	
+			  	int	prev_udp_probes_ok = autoUDPProbeSuccessCount;
+	
+			  	byte[]	result_bytes = updateOld( tracker_url, request_url);
+	
+			  	lastUsedUrl = tracker_url[0];	// url may have redirected, use this value as it will be correct
+	
+				TRTrackerAnnouncerResponseImpl resp = decodeTrackerResponse( lastUsedUrl, result_bytes );
+	
+				resp.setRequest( request_obj );	// easiest way to transport the request around internally is to tie it to the response
+				
+				int	resp_status = resp.getStatus();
+	
+			    if ( resp_status == TRTrackerAnnouncerResponse.ST_ONLINE ){
+	
+			    	if ( autoUDPProbeSuccessCount > prev_udp_probes_ok ){
+	
+			    		resp.setWasProbe();
+			    	}
+			    	try{
+			    			// tracker looks ok, make any redirection permanent
+	
+			    		if ( !original_url.toString().equals(lastUsedUrl.toString())){
+	
+			    			if (Logger.isEnabled())
+								Logger.log(new LogEvent(torrent, LOGID,
+										"announce url permanently redirected: old = " + original_url + ", new = " + lastUsedUrl ));
+	
+	
+							TorrentUtils.replaceAnnounceURL( torrent, original_url, lastUsedUrl );
+	
+						}
+			    	}catch( Throwable e ){
+	
+			    		Debug.printStackTrace(e);
+			    	}
+	
+		            urls.remove(j);
+	
+		            urls.add(0, lastUsedUrl );
+	
+		            trackerUrlLists.remove(i);
+	
+		            trackerUrlLists.add(0,urls);
+	
+		            informURLChange( original_url, lastUsedUrl, false );
+	
+		            	//and return the result
+	
+		            return( resp );
+	
+				 }else  if ( resp_status == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR ){
+	
+				 	last_failure_resp = resp;
+	
+				 	String	reason = resp.getAdditionalInfo();
+	
+				 		// avoid re-hitting a host with multiple ports if reporting overloaded. This is
+				 		// particularly "interesting" when reporting the "completed" event and we get a
+				 		// "overloaded" response - when we hit another port we record the event twice
+				 		// as the tracker has discarded this peer and therefore doesn't know to ignore the
+				 		// second "completed" event...
+	
+				 	if ( reason != null &&
+				 			(reason.contains("too many seeds") ||
+								reason.contains("too many peers"))){
+	
+				 		skip_host	= original_url.getHost();
+				 	}
+	
+				 }else{
+	
+					 announceFailCount++;
+	
+					 last_failure_resp = resp;
+				 }
+			}finally{
+				
+				request_obj.setElapsed( SystemTime.getMonotonousTime() - start );
+				
+				all_trackers.removeActiveRequest( request_obj );
+			}
 
 		  }catch( MalformedURLException e ){
 
@@ -1101,6 +1114,8 @@ TRTrackerBTAnnouncerImpl
 						getErrorRetryInterval(),
 						"malformed URL '" + (request_url==null?"<null>":request_url.toString()) + "'" );
 
+		  	last_failure_resp.setRequest( request_obj );
+		  	
 		  }catch( Throwable e ){
 
 			announceFailCount++;
@@ -1112,6 +1127,8 @@ TRTrackerBTAnnouncerImpl
 		  				TRTrackerAnnouncerResponse.ST_OFFLINE,
 						getErrorRetryInterval(),
 						e.getMessage()==null?e.toString():e.getMessage());
+		  	
+		  	last_failure_resp.setRequest( request_obj );
 		  }
 
 	  	  if ( destroyed ){
@@ -2140,7 +2157,7 @@ TRTrackerBTAnnouncerImpl
  		return( str );
  	}
 
-  private TRTrackerAnnouncerRequest
+  private TRTrackerAnnouncerRequestImpl
   constructRequest(
   	String 	evt,
 	URL		_url)
@@ -2469,7 +2486,7 @@ TRTrackerBTAnnouncerImpl
 		request = new StringBuffer( head + "?" + tail );
 	}
 
-  	return( new TRTrackerAnnouncerRequestImpl( helper.getSessionID(), torrent_hash_target, new URL( request.toString()), total_sent, total_received ));
+  	return( new TRTrackerAnnouncerRequestImpl( helper.getSessionID(), torrent_hash_target, stopped, new URL( request.toString()), total_sent, total_received ));
   }
 
   protected int
