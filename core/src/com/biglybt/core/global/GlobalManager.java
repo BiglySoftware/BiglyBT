@@ -171,8 +171,8 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	/**
 	 * Puts GlobalManager in a stopped state.<br>
 	 * Used when closing down the client.
-	 */
-	public void stopGlobalManager();
+	 */ 
+	public void stopGlobalManager( GlobalMangerProgressListener callback );
 
 	/**
 	 * Stops all downloads without removing them

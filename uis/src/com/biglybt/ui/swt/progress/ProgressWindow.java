@@ -99,17 +99,33 @@ ProgressWindow
 
 		int	op_type = operation.getOperationType();
 		
+		int delay = 1000;
+		
 		if ( op_type == CoreOperation.OP_FILE_MOVE ){
 			resource = "progress.window.msg.filemove";
 		}else if ( op_type == CoreOperation.OP_DOWNLOAD_EXPORT ){
 			resource = "progress.window.msg.dlexport";
 		}else{
 			resource = "progress.window.msg.progress";
+			
+			delay = 10;
+			
+			CoreOperationTask.ProgressCallback cb = operation.getTask().getProgressCallback();
+			
+			if ( cb != null ){
+				
+				int del = cb.getDelay();
+				
+				if ( del > 10 ){
+					
+					delay = del;
+				}
+			}
 		}
 		
 		new DelayedEvent(
 				"ProgWin",
-				operation.getOperationType()== CoreOperation.OP_PROGRESS?10:1000,
+				delay,
 				new AERunnable()
 				{
 					@Override
@@ -446,7 +462,7 @@ ProgressWindow
 
 			int states = progress.getSupportedTaskStates();
 			
-			if ( states != ProgressCallback.ST_NONE ){
+			if ((states & ProgressCallback.ST_BUTTONS) != 0 ){
 				
 				Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
 				gridData = new GridData(GridData.FILL_HORIZONTAL);

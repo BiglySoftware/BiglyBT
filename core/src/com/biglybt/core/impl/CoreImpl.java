@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.biglybt.core.*;
 import com.biglybt.core.backup.BackupManagerFactory;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.custom.CustomizationManagerFactory;
@@ -43,6 +44,7 @@ import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.global.GlobalManagerFactory;
 import com.biglybt.core.global.GlobalManagerStats;
+import com.biglybt.core.global.GlobalMangerProgressListener;
 import com.biglybt.core.instancemanager.ClientInstanceManager;
 import com.biglybt.core.instancemanager.ClientInstanceManagerAdapter;
 import com.biglybt.core.instancemanager.ClientInstanceManagerFactory;
@@ -81,6 +83,8 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.tracker.AllTrackersManager;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.host.TRHost;
@@ -1539,10 +1543,19 @@ CoreImpl
 			}
 		}
 	}
-
+	
 	@Override
 	public void
 	stop()
+		throws CoreException
+	{
+		stop( new CoreOperationTask.ProgressCallbackAdapter());
+	}
+
+	@Override
+	public void
+	stop(
+		CoreOperationTask.ProgressCallback	callback )
 
 		throws CoreException
 	{
@@ -1552,15 +1565,16 @@ CoreImpl
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(LOGID, "Stop operation starts"));
 
-				stopSupport( false, true );
+				stopSupport( false, true, callback );
 			}
 		});
 	}
 
 	void
 	stopSupport(
-		final boolean		for_restart,
-		final boolean		apply_updates )
+		final boolean							for_restart,
+		final boolean							apply_updates,
+		CoreOperationTask.ProgressCallback		callback )
 
 		throws CoreException
 	{
@@ -1716,6 +1730,11 @@ CoreImpl
 			}
 		}
 
+		int	progress = 250;
+				
+		callback.setSubTaskName( MessageText.getString( "label.starting.closedown" ));
+		callback.setProgress( progress );
+		
 		try{
 			if (Logger.isEnabled())
 				Logger.log(new LogEvent(LOGID, "Invoking synchronous 'stopping' listeners"));
@@ -1757,25 +1776,121 @@ CoreImpl
 					},
 					10*1000 );
 
-			if (Logger.isEnabled())
+			if (Logger.isEnabled()){
 				Logger.log(new LogEvent(LOGID, "Waiting for quiescence pre gm stop"));
-
+			}
+			
 			NonDaemonTaskRunner.waitUntilIdle();
 
 			last_progress.set( SystemTime.getMonotonousTime());
 			
-			if (Logger.isEnabled())
+			if (Logger.isEnabled()){
 				Logger.log(new LogEvent(LOGID, "Stopping global manager"));
-
-			if (global_manager != null) {
-				global_manager.stopGlobalManager();
+			}
+			
+			progress = 500;
+			
+			String prefix = MessageText.getString( "label.stopping.downloads" );
+			
+			callback.setSubTaskName( prefix );
+			callback.setProgress( progress );
+			
+			if ( global_manager != null ){
+				
+					// progress 500 -> 749
+				
+				global_manager.stopGlobalManager( 
+					new GlobalMangerProgressListener(){
+						
+						@Override
+						public void 
+						reportPercent(
+							int percent)
+						{
+							callback.setProgress( 500 + (249*percent)/100 );
+						}
+						
+						@Override
+						public void 
+						reportCurrentTask(
+							String currentTask )
+						{
+							callback.setSubTaskName( prefix + ": " + currentTask );
+						}
+					});
 			}
 
 			last_progress.set( SystemTime.getMonotonousTime());
 			
-			if (Logger.isEnabled())
-				Logger.log(new LogEvent(LOGID, "Invoking synchronous 'stopped' listeners"));
+			AllTrackers at = AllTrackersManager.getAllTrackers();
+			
+			progress = 750;
+						
+			callback.setSubTaskName( MessageText.getString( "label.waiting.tracker.updates" ));
+			callback.setProgress( progress );
 
+			int initial_active_req = at.getActiveRequestCount();
+
+			if ( initial_active_req > 0 ){				
+				
+				if (Logger.isEnabled()){
+					Logger.log(new LogEvent(LOGID, "Waiting for tracker updates, " + initial_active_req + " outstanding"));
+				}
+				
+				long at_start = SystemTime.getMonotonousTime();
+				
+				int wait_secs = COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CLOSEDOWN_TIMEOUT );
+				
+				int current_active = initial_active_req;
+				
+					// 750 - 899
+				
+				if ( wait_secs > 0 ){
+					
+					while( true ){
+						
+						if ( SystemTime.getMonotonousTime() - at_start > wait_secs*1000 ){
+							
+							break;
+						}
+						
+						try{
+							Thread.sleep(500);
+							
+						}catch( Throwable e ){
+							
+						}
+						
+						int active = at.getActiveRequestCount();
+						
+						if ( active == 0 ){
+							
+							break;
+						}
+						
+						if ( active < current_active ){
+							
+							current_active = active;
+							
+							int percent = ((initial_active_req-current_active)*100)/initial_active_req;
+							
+							callback.setProgress( 750 + (149*percent)/100 );
+							
+							last_progress.set( SystemTime.getMonotonousTime());
+						}
+					}
+				}
+			}
+			
+			if (Logger.isEnabled()){
+				Logger.log(new LogEvent(LOGID, "Invoking synchronous 'stopped' listeners"));
+			}
+			
+			progress = 900;
+			
+			callback.setSubTaskName( MessageText.getString( "label.finalising.closedown" ));
+			callback.setProgress( progress );
+			
 			for (int i=0;i<sync_listeners.size();i++){
 				try{
 					((CoreLifecycleListener)sync_listeners.get(i)).stopped( this );
@@ -1788,9 +1903,10 @@ CoreImpl
 				last_progress.set( SystemTime.getMonotonousTime());
 			}
 
-			if (Logger.isEnabled())
+			if (Logger.isEnabled()){
 				Logger.log(new LogEvent(LOGID, "Invoking asynchronous 'stopped' listeners"));
-
+			}
+			
 			ListenerManager.dispatchWithTimeout(
 					async_listeners,
 					new ListenerManagerDispatcher()
@@ -2019,6 +2135,16 @@ CoreImpl
 	@Override
 	public void
 	restart()
+	
+		throws CoreException
+	{
+		restart( new CoreOperationTask.ProgressCallbackAdapter());
+	}
+	
+	@Override
+	public void
+	restart(
+		CoreOperationTask.ProgressCallback		callback )
 
 		throws CoreException
 	{
@@ -2032,7 +2158,7 @@ CoreImpl
 
 				restarting = true;
 
-				stopSupport( true, false);
+				stopSupport( true, false, callback );
 
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(LOGID, "Restart operation: stop complete,"

@@ -39,13 +39,34 @@ CoreOperationTask
 		public int ST_PAUSE		= 0x0001;
 		public int ST_RESUME	= 0x0002;
 		public int ST_CANCEL	= 0x0004;
+		
 		public int ST_SUBTASKS	= 0x0008;
+		
+		public int ST_BUTTONS	= ST_PAUSE | ST_RESUME | ST_CANCEL;
 		
 		public int
 		getProgress();
 		
+		public default void
+		setProgress(
+			int		thousandths )
+		{
+		}
+		
 		public String
 		getSubTaskName();
+		
+		public default void
+		setSubTaskName(
+			String	name )
+		{
+		}
+		
+		public default int
+		getDelay()
+		{
+			return( 0 );
+		}
 		
 		public int
 		getSupportedTaskStates();
@@ -53,5 +74,51 @@ CoreOperationTask
 		public void
 		setTaskState(
 			int		state );
+	}
+	
+	public static class
+	ProgressCallbackAdapter
+		implements ProgressCallback
+	{
+		private int 	thousandths;
+		private String	subtask;
+		
+		public int
+		getProgress()
+		{
+			return( thousandths );
+		}
+		
+		public void
+		setProgress(
+			int		_thousandths )
+		{
+			thousandths = _thousandths;
+		}
+				
+		public String
+		getSubTaskName()
+		{
+			return( subtask );
+		}
+			
+		public void
+		setSubTaskName(
+			String	name )
+		{
+			subtask = name;
+		}
+		
+		public int
+		getSupportedTaskStates()
+		{
+			return( ST_NONE );
+		}
+		
+		public void
+		setTaskState(
+			int		state )
+		{
+		}
 	}
 }

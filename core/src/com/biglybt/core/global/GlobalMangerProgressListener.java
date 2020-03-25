@@ -29,4 +29,22 @@ GlobalMangerProgressListener
 	public void
 	reportPercent(
 		int percent );
+	
+	public static class
+	GlobalMangerProgressAdapter
+		implements GlobalMangerProgressListener
+	{
+		public void
+		reportCurrentTask(
+			String currentTask )
+		{
+		}
+
+		public void
+		reportPercent(
+			int percent )
+		{
+		}
+		
+	}
 }

@@ -1728,7 +1728,9 @@ public class GlobalManagerImpl
    */
   @Override
   public void
-  stopGlobalManager() {
+  stopGlobalManager(
+	  GlobalMangerProgressListener	listener )
+  {
 	 synchronized( managers_lock ){
 
 		  if ( isStopping ){
@@ -1783,7 +1785,7 @@ public class GlobalManagerImpl
 
 		  // do this before save-downloads so paused state gets saved
 
-		  stopAllDownloads( true );
+		  stopAllDownloads( true, listener );
 
 		  saveDownloads();
 
@@ -1791,7 +1793,7 @@ public class GlobalManagerImpl
 
 		  saveDownloads();
 
-		  stopAllDownloads( true );
+		  stopAllDownloads( true, listener );
 	  }
 
 	  if ( stats_writer != null ){
@@ -1823,7 +1825,7 @@ public class GlobalManagerImpl
 				
 				@Override
 				public Object run() throws Throwable{
-					  stopAllDownloads(false);
+					  stopAllDownloads(false, new GlobalMangerProgressListener.GlobalMangerProgressAdapter());
 					  return( null );
 				}
 				
@@ -1837,7 +1839,7 @@ public class GlobalManagerImpl
 	  }
   }
 
-  protected void stopAllDownloads(boolean for_close ) {
+  protected void stopAllDownloads(boolean for_close, GlobalMangerProgressListener listener ) {
 
 	if ( for_close ){
 		if (progress_listener != null){
@@ -1874,9 +1876,15 @@ public class GlobalManagerImpl
       if( state != DownloadManager.STATE_STOPPED &&
           state != DownloadManager.STATE_STOPPING ) {
 
+    	listener.reportCurrentTask( manager.getDisplayName());;
+    	  
         manager.stopIt( for_close?DownloadManager.STATE_CLOSED:DownloadManager.STATE_STOPPED, false, false );
+        
+        listener.reportPercent((i*100)/nbDownloads );
       }
     }
+    
+    listener.reportPercent( 100 );
   }
 
 

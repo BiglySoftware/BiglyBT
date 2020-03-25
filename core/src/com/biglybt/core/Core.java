@@ -74,6 +74,10 @@ Core
 
 		throws CoreException;
 
+	public void
+	stop(
+		CoreOperationTask.ProgressCallback		progress );
+	
 		/**
 		 * ask lifecycle listeners to perform a stop. they may veto this by throwing an exception, or do nothing
 		 * if nothing is done then it will be stopped as per "stop" above
@@ -101,6 +105,10 @@ Core
 
 	public void
 	restart();
+
+	public void
+	restart(
+		CoreOperationTask.ProgressCallback		progress );
 
 		/**
 		 * request a restart of the system - currently only available for com.biglybt.ui.swt based systems

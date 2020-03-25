@@ -93,6 +93,8 @@ AllTrackersManagerImpl
 
 	private Map<String, LoggerChannel>	logging_keys = new HashMap<>();
 	
+	private Map<HashWrapper,String>		dm_name_cache = new HashMap<>();
+	
 	private
 	AllTrackersManagerImpl()
 	{
@@ -105,6 +107,31 @@ AllTrackersManagerImpl
 		core.addLifecycleListener(
 				new CoreLifecycleAdapter()
 				{
+					@Override
+					public void 
+					stopping(
+						Core core )
+					{
+						synchronized( process_lock ){
+							
+							if ( !logging_keys.isEmpty()){
+								
+									// gotta cache these for logging purposes as by the time we might need them later
+									// the downloads will have been unloaded...
+								
+								for ( DownloadManager dm: core.getGlobalManager().getDownloadManagers()){
+									
+									try{
+										dm_name_cache.put( dm.getTorrent().getHashWrapper(), dm.getDisplayName());
+										
+									}catch( Throwable e ){
+										
+									}
+								}
+							}
+						}
+					}
+					
 					@Override
 					public void
 					stopped(
@@ -453,6 +480,13 @@ AllTrackersManagerImpl
 		active_requests.remove( request );
 	}
 		
+	@Override
+	public int 
+	getActiveRequestCount()
+	{
+		return( active_requests.size());
+	}
+	
 	@Override
 	public int 
 	getTrackerCount()
@@ -1164,7 +1198,18 @@ AllTrackersManagerImpl
 					
 					DownloadManager dm = core.getGlobalManager().getDownloadManager( hw );
 				
+					String dm_name;
+					
 					if ( dm != null ){
+						
+						dm_name = dm.getDisplayName();
+						
+					}else{
+						
+						dm_name = dm_name_cache.get( hw );
+					}
+					
+					if ( dm_name != null ){
 					
 						long session = req.getSessionID();
 						
@@ -1187,7 +1232,7 @@ AllTrackersManagerImpl
 							sid += "[Success unknown]";
 						}
 						
-						logger.log( dm.getDisplayName() + ", " + name + ", session=" + sid + " - sent=" + req.getReportedUpload() + ", received=" + req.getReportedDownload());
+						logger.log( dm_name + ", " + name + ", session=" + sid + " - sent=" + req.getReportedUpload() + ", received=" + req.getReportedDownload());
 					}
 				}
 			}

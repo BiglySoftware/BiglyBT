@@ -83,6 +83,9 @@ AllTrackersManager
 		removeActiveRequest(
 			TRTrackerAnnouncerRequest	request );
 		
+		public int
+		getActiveRequestCount();
+		
 		public AllTrackersTracker
 		getTracker(
 			URL		url );

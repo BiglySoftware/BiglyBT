@@ -193,6 +193,10 @@ public class ConfigSectionTrackerClient
 				"ConfigView.section.tracker.client.readtimeout"),
 				Parameter.MODE_ADVANCED);
 
+		add(new IntParameterImpl(ICFG_TRACKER_CLIENT_CLOSEDOWN_TIMEOUT,
+				"ConfigView.section.tracker.client.closetimeout"),
+				Parameter.MODE_ADVANCED);
+
 		add(new BooleanParameterImpl(BCFG_TRACKER_KEY_ENABLE_CLIENT,
 				"ConfigView.section.tracker.enablekey"), Parameter.MODE_ADVANCED);
 

@@ -26,6 +26,7 @@ import java.util.Map;
 import org.eclipse.swt.widgets.Display;
 
 import com.biglybt.core.*;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
@@ -739,18 +740,118 @@ public class Initializer
 				if ( core != null && !isCloseAreadyInProgress) {
 
 					try {
-						if (isForRestart) {
+						long lStopStarted = System.currentTimeMillis();
+						
+						System.out.println("core.stop");
+						
+						AESemaphore stop_sem = new AESemaphore( "stop" );
+						
+						ProgressCallback	prog = 
+							new ProgressCallback()
+							{
+								private int 	percent = 0;
+								private String	subtask = "";
+								
+								public int
+								getProgress()
+								{
+									return( percent );
+								}
+								
+								@Override
+								public void 
+								setProgress(
+									int _percent )
+								{
+									percent = _percent;
+								}
+								
+								public String
+								getSubTaskName()
+								{
+									return( subtask );
+								}
+								
+								@Override
+								public void 
+								setSubTaskName(
+									String name )
+								{
+									subtask	= name;
+								}
+								
+								@Override
+								public int 
+								getDelay()
+								{
+									return( 3*1000 );
+								}
+								
+								public int
+								getSupportedTaskStates()
+								{
+									return( ProgressCallback.ST_SUBTASKS );
+								}
+								
+								public void
+								setTaskState(
+									int		state )
+								{
+								}
+							};
+						
+						Utils.execSWTThread(()->{
+							FileUtil.runAsTask(
+								CoreOperation.OP_PROGRESS,
+								new CoreOperationTask()
+								{
+									@Override
+									public String 
+									getName()
+									{
+										return( MessageText.getString( isForRestart?"label.restarting.app":"label.closing.app" ));
+									}
 
-							core.restart();
+									@Override
+									public void
+									run(
+										CoreOperation operation)
+									{
+										try{
+											
+											stop_sem.reserve();
+											
+										}catch( Throwable e ){
 
-						} else {
+											throw( new RuntimeException( e ));
+										}
+									}
 
-							long lStopStarted = System.currentTimeMillis();
-							System.out.println("core.stop");
-							core.stop();
-							System.out.println("core.stop done in "
-									+ (System.currentTimeMillis() - lStopStarted));
+									@Override
+									public ProgressCallback 
+									getProgressCallback()
+									{
+										return( prog );
+									}
+								});});
+						
+						try{
+							if ( isForRestart ){							
+
+								core.restart( prog );
+								
+							}else{
+
+								core.stop( prog );
+							}
+							
+						}finally{
+							
+							stop_sem.release();
 						}
+													
+						System.out.println("core.stop done in "	+ (System.currentTimeMillis() - lStopStarted));
+						
 					} catch (Throwable e) {
 
 						// don't let any failure here cause the stop operation to fail

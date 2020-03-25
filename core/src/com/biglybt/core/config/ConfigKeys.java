@@ -319,6 +319,7 @@ public final class ConfigKeys {
 		public static final String ICFG_TRACKER_CLIENT_MIN_ANNOUNCE_INTERVAL = "Tracker Client Min Announce Interval";
 		public static final String ICFG_TRACKER_CLIENT_CONNECT_TIMEOUT = "Tracker Client Connect Timeout";
 		public static final String ICFG_TRACKER_CLIENT_READ_TIMEOUT = "Tracker Client Read Timeout";
+		public static final String ICFG_TRACKER_CLIENT_CLOSEDOWN_TIMEOUT = "Tracker Client Closedown Timeout";
 		public static final String BCFG_TRACKER_KEY_ENABLE_CLIENT = "Tracker Key Enable Client";
 		public static final String BCFG_TRACKER_SEPARATE_PEER_I_DS = "Tracker Separate Peer IDs";
 		public static final String BCFG_TRACKER_PORT_ENABLE = "Tracker Port Enable";
