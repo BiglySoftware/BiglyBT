@@ -585,8 +585,13 @@ public class MainWindowImpl
 								COConfigurationManager.getBooleanParameter("System Tray Disabled Override"))){						
 
 						minimizeToTray(event);
-					} else {
-						event.doit = dispose(false, false);
+						
+					}else{
+						
+						dispose(false, false);
+						
+						event.doit = false;		// don't allow shell to close at this point, the disposal code 
+												// will close it when ready to
 					}
 				}
 
