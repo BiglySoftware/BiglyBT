@@ -127,7 +127,7 @@ public class SwtConfigParameterValueProcessor<PARAMTYPE extends SwtParameter<VAL
 		try {
 			String key = p.getParamID();
 			VALUETYPE oldValue = getValue(p);
-			if (oldValue.equals(value)) {
+			if (oldValue==value||(oldValue!=null&&value!=null&&oldValue.equals(value))) {
 				if (COConfigurationManager.doesParameterNonDefaultExist(key)
 						|| COConfigurationManager.doesParameterDefaultExist(key)) {
 					changedExternally = true;
