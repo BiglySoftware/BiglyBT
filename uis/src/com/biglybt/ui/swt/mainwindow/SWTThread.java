@@ -247,8 +247,12 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				public void handleEvent(Event event) {
 					UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 					if (uiFunctions != null) {
-						event.doit = uiFunctions.dispose(false);
+						uiFunctions.dispose(false);
 					}
+					
+						// we want normal closedown to proceed, not OSX to dispose of things abruptly
+					
+					event.doit = false;
 				}
 			});
 
