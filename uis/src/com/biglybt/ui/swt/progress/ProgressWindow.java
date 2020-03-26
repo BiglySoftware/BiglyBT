@@ -291,6 +291,11 @@ ProgressWindow
 	{
 		shell	= _shell;
 
+		if ( shell == null || shell.isDisposed()){
+			
+			return;
+		}
+		
 		shell.setText( MessageText.getString( "progress.window.title" ));
 
 		CoreOperationTask task = _core_op==null?null:_core_op.getTask();
