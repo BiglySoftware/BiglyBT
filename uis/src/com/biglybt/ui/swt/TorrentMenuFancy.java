@@ -2057,12 +2057,31 @@ public class TorrentMenuFancy
 
 	private Object[] getTarget(com.biglybt.pif.ui.menus.MenuItem item) {
 		if (MenuManager.MENU_TABLE.equals(item.getMenuID())) {
-			return tv.getSelectedRows();
+			TableRowCore[] rows = tv.getSelectedRows();
+			
+			List<TableRowCore> result = new ArrayList<TableRowCore>(rows.length);
+			
+			for (TableRowCore row: rows ){
+				if ( row.getDataSource( false ) instanceof Download ){
+					result.add( row );
+				}
+			}
+			
+			return( result.toArray( new TableRowCore[result.size()]));
+		}else{
+			Object[] dataSources = tv.getSelectedDataSources(false);
+			
+			List<Download> result = new ArrayList<>(dataSources.length);
+			
+			for ( Object ds: dataSources ){
+				if ( ds instanceof Download ){
+			
+					result.add((Download)ds );
+				}
+			}
+			
+			return( result.toArray( new Download[result.size()]));
 		}
-		Object[] dataSources = tv.getSelectedDataSources(false);
-		Download[] downloads = new Download[dataSources.length];
-		System.arraycopy(dataSources, 0, downloads, 0, dataSources.length);
-		return downloads;
 	}
 
 	private void addPluginItem(Composite detailArea,
