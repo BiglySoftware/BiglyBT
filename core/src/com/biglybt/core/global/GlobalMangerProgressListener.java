@@ -34,16 +34,49 @@ GlobalMangerProgressListener
 	GlobalMangerProgressAdapter
 		implements GlobalMangerProgressListener
 	{
+		private final GlobalMangerProgressListener		delegate;
+		private final int	start_percent;
+		private final int	range;
+		
+		public
+		GlobalMangerProgressAdapter()
+		{
+			delegate		= null;
+			start_percent	= -1;
+			range			= -1;
+		}
+		
+		public
+		GlobalMangerProgressAdapter(
+			GlobalMangerProgressListener	_delegate,
+			int								_start_percent,
+			int								_end_percent )
+		{
+			delegate		= _delegate;
+			start_percent	= _start_percent;
+			range			= _end_percent - _start_percent;
+		}
+		
 		public void
 		reportCurrentTask(
 			String currentTask )
 		{
+			if ( delegate != null ){
+				delegate.reportCurrentTask(currentTask);
+			}
 		}
 
 		public void
 		reportPercent(
 			int percent )
 		{
+			if ( delegate != null ){
+				if ( range == -1 ){
+					delegate.reportPercent(percent);
+				}else{
+					delegate.reportPercent( start_percent + (range*percent)/100 );
+				}
+			}
 		}
 		
 	}

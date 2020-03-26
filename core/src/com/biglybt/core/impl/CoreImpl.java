@@ -1730,7 +1730,7 @@ CoreImpl
 			}
 		}
 
-		int	progress = 250;
+		int	progress = 125;
 				
 		callback.setSubTaskName( MessageText.getString( "label.starting.closedown" ));
 		callback.setProgress( progress );
@@ -1788,16 +1788,15 @@ CoreImpl
 				Logger.log(new LogEvent(LOGID, "Stopping global manager"));
 			}
 			
-			progress = 500;
-			
-			String prefix = MessageText.getString( "label.stopping.downloads" );
-			
-			callback.setSubTaskName( prefix );
+			progress = 250;
+						
+			callback.setSubTaskName( MessageText.getString( "label.stopping.downloads" ));
 			callback.setProgress( progress );
 			
 			if ( global_manager != null ){
 				
-					// progress 500 -> 749
+				int p_start = 250;
+				int p_end	= 699;
 				
 				global_manager.stopGlobalManager( 
 					new GlobalMangerProgressListener(){
@@ -1807,7 +1806,7 @@ CoreImpl
 						reportPercent(
 							int percent)
 						{
-							callback.setProgress( 500 + (249*percent)/100 );
+							callback.setProgress( p_start + ((p_end-p_start)*percent)/100 );
 						}
 						
 						@Override
@@ -1815,7 +1814,7 @@ CoreImpl
 						reportCurrentTask(
 							String currentTask )
 						{
-							callback.setSubTaskName( prefix + ": " + currentTask );
+							callback.setSubTaskName( currentTask );
 						}
 					});
 			}
@@ -1825,8 +1824,10 @@ CoreImpl
 			AllTrackers at = AllTrackersManager.getAllTrackers();
 			
 			progress = 750;
-						
-			callback.setSubTaskName( MessageText.getString( "label.waiting.tracker.updates" ));
+				
+			int wait_secs = COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CLOSEDOWN_TIMEOUT );
+
+			callback.setSubTaskName( MessageText.getString( "label.waiting.tracker.updates", new String[]{ String.valueOf( wait_secs )}));
 			callback.setProgress( progress );
 
 			int initial_active_req = at.getActiveRequestCount();
@@ -1838,12 +1839,11 @@ CoreImpl
 				}
 				
 				long at_start = SystemTime.getMonotonousTime();
-				
-				int wait_secs = COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CLOSEDOWN_TIMEOUT );
-				
+								
 				int current_active = initial_active_req;
 				
-					// 750 - 899
+				int p_start = 750;
+				int p_end	= 899;
 				
 				if ( wait_secs > 0 ){
 					
@@ -1874,7 +1874,7 @@ CoreImpl
 							
 							int percent = ((initial_active_req-current_active)*100)/initial_active_req;
 							
-							callback.setProgress( 750 + (149*percent)/100 );
+							callback.setProgress( p_start + ((p_end-p_start)*percent)/100 );
 							
 							last_progress.set( SystemTime.getMonotonousTime());
 						}

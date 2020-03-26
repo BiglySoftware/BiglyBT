@@ -349,7 +349,7 @@ public class GlobalManagerImpl
 
 	        if (( loopFactor % saveResumeLoopCount == 0 )){
 
-	        	saveDownloads();
+	        	saveDownloads( null );
 
 	        }else if ( loadingComplete && loopFactor > initSaveResumeLoopCount ){
 
@@ -377,7 +377,7 @@ public class GlobalManagerImpl
 
 	        		if ( do_save ){
 
-	        			saveDownloads();
+	        			saveDownloads( null );
 	        		}
 	        	}
 	        }
@@ -1785,15 +1785,15 @@ public class GlobalManagerImpl
 
 		  // do this before save-downloads so paused state gets saved
 
-		  stopAllDownloads( true, listener );
+		  stopAllDownloads( true, new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 0, 49 ));
 
-		  saveDownloads();
+		  saveDownloads( new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 50, 100 ) );
 
 	  }else{
 
-		  saveDownloads();
+		  saveDownloads( new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 0, 49 ) );
 
-		  stopAllDownloads( true, listener );
+		  stopAllDownloads( true, new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 50, 100 ) );
 	  }
 
 	  if ( stats_writer != null ){
@@ -1853,6 +1853,8 @@ public class GlobalManagerImpl
 
 	int nbDownloads = managers.size();
 
+	String prefix = MessageText.getString( "label.stopping.downloads" );
+	
     for ( int i=0;i<nbDownloads;i++){
 
       DownloadManager manager = managers.get(i);
@@ -1876,7 +1878,7 @@ public class GlobalManagerImpl
       if( state != DownloadManager.STATE_STOPPED &&
           state != DownloadManager.STATE_STOPPING ) {
 
-    	listener.reportCurrentTask( manager.getDisplayName());;
+    	listener.reportCurrentTask( prefix + ": " + manager.getDisplayName());;
     	  
         manager.stopIt( for_close?DownloadManager.STATE_CLOSED:DownloadManager.STATE_STOPPED, false, false );
         
@@ -2637,11 +2639,11 @@ public class GlobalManagerImpl
   public void
   saveState()
   {
-	  saveDownloads();
+	  saveDownloads( null );
   }
 
   protected void
-  saveDownloads()
+  saveDownloads( GlobalMangerProgressListener listener_maybe_null  )
   {
 	  if (!loadingComplete) {
 
@@ -2677,10 +2679,23 @@ public class GlobalManagerImpl
 
 		  Map map = new HashMap();
 
-		  List<Map> list = new ArrayList<>(managers_temp.length);
+		  int nbDownloads = managers_temp.length;
 
-		  for ( DownloadManager dm: managers_temp ){
+		  List<Map> list = new ArrayList<>(nbDownloads);
 
+		  String prefix = MessageText.getString( "label.saving.downloads" );
+		  
+		  for ( int i=0;i<nbDownloads;i++){
+			  
+			  DownloadManager dm = managers_temp[i];
+
+			  if ( listener_maybe_null != null ){
+				
+				  listener_maybe_null.reportCurrentTask( prefix + ": " + dm.getDisplayName());
+				  
+				  listener_maybe_null.reportPercent((i*100)/nbDownloads );
+			  }
+			  
 			  Map dmMap = exportDownloadStateToMapSupport( dm, true );
 
 			  list.add(dmMap);
