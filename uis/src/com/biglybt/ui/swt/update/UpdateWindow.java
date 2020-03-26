@@ -749,7 +749,7 @@ UpdateWindow
 	    	// this HAS to be done this way around else the restart inherits
 	    	// the instance port listen. However, this is a general problem....
 	    	UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-	    	if (uiFunctions != null && uiFunctions.dispose(true, false)) {
+	    	if (uiFunctions != null && uiFunctions.dispose(true)) {
 	   			bDisposeUpdateWindow = false;
 				}
 	    }else if ( hasMandatoryUpdates && !restartRequired ){

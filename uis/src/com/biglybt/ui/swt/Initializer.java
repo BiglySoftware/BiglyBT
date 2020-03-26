@@ -716,11 +716,15 @@ public class Initializer
 	}
 
 	@Override
-	public void stopIt(boolean isForRestart, boolean isCloseAreadyInProgress)
-			throws CoreException {
-		if (core != null && !isCloseAreadyInProgress) {
+	public void 
+	stopIt(
+		boolean isForRestart )
+			
+		throws CoreException 
+	{
+		if ( core != null ){
 
-			if (isForRestart) {
+			if ( isForRestart ){
 
 				core.checkRestartSupported();
 			}
@@ -737,7 +741,7 @@ public class Initializer
 		} finally {
 
 			try{
-				if ( core != null && !isCloseAreadyInProgress) {
+				if ( core != null ) {
 
 					try {
 						long lStopStarted = System.currentTimeMillis();
@@ -749,8 +753,8 @@ public class Initializer
 						ProgressCallback	prog = 
 							new ProgressCallback()
 							{
-								private int 	percent = 0;
-								private String	subtask = "";
+								private volatile int 	percent = 0;
+								private volatile String	subtask = "";
 								
 								public int
 								getProgress()
@@ -799,41 +803,48 @@ public class Initializer
 								{
 								}
 							};
-						
-						Utils.execSWTThread(()->{
-							FileUtil.runAsTask(
-								CoreOperation.OP_PROGRESS,
-								new CoreOperationTask()
-								{
-									@Override
-									public String 
-									getName()
-									{
-										return( MessageText.getString( isForRestart?"label.restarting.app":"label.closing.app" ));
-									}
+							
+							if ( Utils.isSWTThread()){
+								
+								Debug.out( "Can't run closedown progress window as already on SWT thread" );
+								
+							}else{
 
-									@Override
-									public void
-									run(
-										CoreOperation operation)
-									{
-										try{
-											
-											stop_sem.reserve();
-											
-										}catch( Throwable e ){
-
-											throw( new RuntimeException( e ));
-										}
-									}
-
-									@Override
-									public ProgressCallback 
-									getProgressCallback()
-									{
-										return( prog );
-									}
-								});});
+								Utils.execSWTThread(()->{
+									FileUtil.runAsTask(
+										CoreOperation.OP_PROGRESS,
+										new CoreOperationTask()
+										{
+											@Override
+											public String 
+											getName()
+											{
+												return( MessageText.getString( isForRestart?"label.restarting.app":"label.closing.app" ));
+											}
+		
+											@Override
+											public void
+											run(
+												CoreOperation operation)
+											{
+												try{
+													
+													stop_sem.reserve();
+													
+												}catch( Throwable e ){
+		
+													throw( new RuntimeException( e ));
+												}
+											}
+		
+											@Override
+											public ProgressCallback 
+											getProgressCallback()
+											{
+												return( prog );
+											}
+										});});
+						}
 						
 						try{
 							if ( isForRestart ){							
@@ -1030,7 +1041,7 @@ public class Initializer
   {
 		UIFunctionsSWT functionsSWT = UIFunctionsManagerSWT.getUIFunctionsSWT();
 		if (functionsSWT != null) {
-			return functionsSWT.dispose(restart, true);
+			return functionsSWT.dispose(restart);
 		}
 
 		return false;

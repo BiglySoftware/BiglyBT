@@ -129,7 +129,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 						+ "(2) No write access to '" + tempDir
 						+ "'. SWT will extract libraries contained in the swt.jar to this dir.\n", ue);
 
-				app.stopIt(false, false);
+				app.stopIt(false);
 				terminated = true;
 
 				PlatformManagerFactory.getPlatformManager().dispose();
@@ -164,7 +164,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 						}
 						UIFunctions uif = UIFunctionsManager.getUIFunctions();
 						if (uif != null) {
-							uif.dispose(true, false);
+							uif.dispose(true);
 						}
 					}
 				});
@@ -247,7 +247,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				public void handleEvent(Event event) {
 					UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 					if (uiFunctions != null) {
-						event.doit = uiFunctions.dispose(false, false);
+						event.doit = uiFunctions.dispose(false);
 					}
 				}
 			});
@@ -398,7 +398,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 		      // this appears to have been caused by a non-specific exit/restart request (as the
 		      // specific ones should terminate us before disposing of the window...)
 		      if (app != null) {
-			      app.stopIt(false, false);
+			      app.stopIt(false);
 		      }
 
 		      terminate();

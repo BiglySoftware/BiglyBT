@@ -421,7 +421,7 @@ public class SystemTraySWT
 				Utils.execSWTThreadLater(0, new AERunnable() {
 					@Override
 					public void runSupport() {
-						uiFunctions.dispose(false, false);
+						uiFunctions.dispose(false);
 					}
 				});
 			}

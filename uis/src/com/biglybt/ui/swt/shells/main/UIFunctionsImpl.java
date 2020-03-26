@@ -239,12 +239,11 @@ public class UIFunctionsImpl
 		}
 
 	}
-
-	// @see UIFunctions#dispose(boolean, boolean)
+	
 	@Override
-	public boolean dispose(boolean for_restart, boolean close_already_in_progress) {
+	public boolean dispose(boolean for_restart) {
 		try {
-			return mainWindow.dispose(for_restart, close_already_in_progress);
+			return mainWindow.dispose(for_restart );
 		} catch (Exception e) {
 			Logger.log(new LogEvent(LOGID, "Disposing MainWindow", e));
 		}

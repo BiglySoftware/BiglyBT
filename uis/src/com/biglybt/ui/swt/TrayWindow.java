@@ -197,7 +197,7 @@ public class TrayWindow
     file_exit.addListener(SWT.Selection, new Listener() {
       @Override
       public void handleEvent(Event e) {
-      	UIFunctionsManager.getUIFunctions().dispose(false, false);
+      	UIFunctionsManager.getUIFunctions().dispose(false);
       }
     });
 

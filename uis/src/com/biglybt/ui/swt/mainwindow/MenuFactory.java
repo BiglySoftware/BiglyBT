@@ -585,7 +585,7 @@ public class MenuFactory
 
 			@Override
 			public void handleEvent(Event event) {
-				UIFunctionsManagerSWT.getUIFunctionsSWT().dispose(true, false);
+				UIFunctionsManagerSWT.getUIFunctionsSWT().dispose(true);
 			}
 		});
 		return file_restart;
@@ -602,7 +602,7 @@ public class MenuFactory
 		file_exit.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				UIFunctionsManagerSWT.getUIFunctionsSWT().dispose(false, false);
+				UIFunctionsManagerSWT.getUIFunctionsSWT().dispose(false);
 			}
 		});
 
@@ -3144,7 +3144,7 @@ public class MenuFactory
 				public void widgetSelected(SelectionEvent e) {
 					UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 					if (uiFunctions != null) {
-						uiFunctions.dispose(true, false);
+						uiFunctions.dispose(true);
 					}
 				}
 			});

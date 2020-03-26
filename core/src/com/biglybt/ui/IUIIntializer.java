@@ -24,7 +24,7 @@ package com.biglybt.ui;
  */
 public interface IUIIntializer
 {
-	public void stopIt(boolean isForRestart, boolean isCloseAreadyInProgress);
+	public void stopIt(boolean isForRestart);
 
 	public void run();
 

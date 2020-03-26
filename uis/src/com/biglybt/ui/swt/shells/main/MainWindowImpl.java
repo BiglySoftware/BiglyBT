@@ -588,7 +588,7 @@ public class MainWindowImpl
 						
 					}else{
 						
-						dispose(false, false);
+						dispose(false);
 						
 						event.doit = false;		// don't allow shell to close at this point, the disposal code 
 												// will close it when ready to
@@ -1057,8 +1057,7 @@ public class MainWindowImpl
 
 	@Override
 	@SuppressWarnings("deprecation")
-	public boolean dispose(final boolean for_restart,
-			final boolean close_already_in_progress) {
+	public boolean dispose(final boolean for_restart ){
 		if (disposedOrDisposing) {
 			return true;
 		}
@@ -1066,13 +1065,13 @@ public class MainWindowImpl
 				new AERunnableBoolean() {
 					@Override
 					public boolean runSupport() {
-						return _dispose(for_restart, close_already_in_progress);
+						return _dispose(for_restart);
 					}
 				}, 0);
 		return b == null || b;
 	}
 
-	boolean _dispose(final boolean bForRestart, boolean bCloseAlreadyInProgress) {
+	boolean _dispose(final boolean bForRestart ) {
 		if (disposedOrDisposing) {
 			return true;
 		}
@@ -1093,7 +1092,7 @@ public class MainWindowImpl
 				public void runSupport() {
 					SWTThread instance = SWTThread.getInstance();
 					if (instance != null && !instance.isTerminated()) {
-						instance.getInitializer().stopIt(bForRestart, false);
+						instance.getInitializer().stopIt(bForRestart);
 					}
 				}
 			});

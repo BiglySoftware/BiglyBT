@@ -137,7 +137,7 @@ public class ConfigSectionSecuritySWT
 
 								if (uiFunctions != null) {
 
-									uiFunctions.dispose(true, false);
+									uiFunctions.dispose(true);
 								}
 							}
 						} catch (Throwable e) {

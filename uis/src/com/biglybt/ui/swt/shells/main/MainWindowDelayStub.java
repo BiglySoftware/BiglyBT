@@ -443,12 +443,11 @@ MainWindowDelayStub
 	@Override
 	public boolean
 	dispose(
-		final boolean for_restart,
-		final boolean close_already_in_progress )
+		boolean for_restart )
 	{
 		if ( main_window != null ){
 
-			return( main_window.dispose(for_restart, close_already_in_progress));
+			return( main_window.dispose(for_restart));
 		}
 
 		log( "dispose" );
@@ -477,7 +476,7 @@ MainWindowDelayStub
 				public void runSupport() {
 					SWTThread instance = SWTThread.getInstance();
 					if (instance != null && !instance.isTerminated()) {
-						instance.getInitializer().stopIt(for_restart, false);
+						instance.getInitializer().stopIt(for_restart);
 					}
 				}
 			});
@@ -625,10 +624,9 @@ MainWindowDelayStub
 		@Override
 		public boolean
 		dispose(
-			boolean for_restart,
-			boolean close_already_in_progress )
+			boolean for_restart )
 		{
-			return( MainWindowDelayStub.this.dispose( for_restart, close_already_in_progress ));
+			return( MainWindowDelayStub.this.dispose( for_restart ));
 		}
 
 		@Override

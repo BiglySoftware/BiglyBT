@@ -71,6 +71,5 @@ MainWindow
 	
 	public boolean
 	dispose(
-		boolean for_restart,
-		boolean close_already_in_progress );
+		boolean for_restart );
 }

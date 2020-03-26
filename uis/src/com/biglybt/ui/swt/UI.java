@@ -171,7 +171,7 @@ public class UI
 
 			if (uiFunctions != null) {
 
-				uiFunctions.dispose(false, false);
+				uiFunctions.dispose(false);
 			}
 
 			return null;
@@ -184,7 +184,7 @@ public class UI
 
 			if (uiFunctions != null) {
 
-				uiFunctions.dispose(true, false);
+				uiFunctions.dispose(true);
 			}
 
 			return null;

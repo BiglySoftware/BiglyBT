@@ -277,7 +277,7 @@ public class PlatformManagerUnixPlugin
 						public void prompterClosed(int answer) {
 							if (answer == 0) {
 								System.out.println("The line you should run:\n" + sCopyLine);
-								uif.dispose(false, false);
+								uif.dispose(false);
 							} else if (answer == 2) {
 								COConfigurationManager.setParameter("unix.script.lastaskversion",
 										version);
@@ -301,7 +301,7 @@ public class PlatformManagerUnixPlugin
 						@Override
 						public void prompterClosed(int answer) {
 							if (answer == 0) {
-								uif.dispose(true, false);
+								uif.dispose(true);
 							}
 						}
 					});

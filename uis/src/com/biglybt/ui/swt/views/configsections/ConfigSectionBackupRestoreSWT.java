@@ -170,7 +170,7 @@ public class ConfigSectionBackupRestoreSWT
 
 										if (uiFunctions != null) {
 
-											uiFunctions.dispose(true, false);
+											uiFunctions.dispose(true);
 										}
 									});
 								});

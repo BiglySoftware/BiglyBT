@@ -133,7 +133,7 @@ public class ConfigSectionSecurity
 						promptComplete.open(null);
 					}
 
-					uiFunctions.dispose(true, false);
+					uiFunctions.dispose(true);
 
 				} else {
 

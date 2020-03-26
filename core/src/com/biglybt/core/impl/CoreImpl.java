@@ -2106,19 +2106,24 @@ CoreImpl
 
 		throws CoreException
 	{
-		if (stopped)
+		if ( stopped ){
+			
 			return;
-
+		}
+		
 		runNonDaemon(new AERunnable() {
 			@Override
 			public void runSupport() {
 
-				Iterator it = lifecycle_listeners.iterator();
+				boolean	in_progress = false;
 
-				while( it.hasNext()){
+				for ( CoreLifecycleListener l: lifecycle_listeners ){
+					
+					if ( l.stopRequested(CoreImpl.this)){
 
-					if (!((CoreLifecycleListener)it.next())
-							.stopRequested(CoreImpl.this)) {
+						in_progress = true;
+						
+					}else{
 						if (Logger.isEnabled())
 							Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING,
 									"Request to stop the core has been denied"));
@@ -2127,7 +2132,10 @@ CoreImpl
 					}
 				}
 
-				stop();
+				if ( !in_progress ){
+				
+					stop();
+				}
 			}
 		});
 	}
@@ -2175,18 +2183,26 @@ CoreImpl
 
 		throws CoreException
 	{
+		if ( stopped ){
+			
+			return;
+		}
+
 		runNonDaemon(new AERunnable() {
             @Override
-            public void runSupport() {
+            public void runSupport(){
                 checkRestartSupported();
 
-                Iterator it = lifecycle_listeners.iterator();
+                boolean	in_progress = false;
+                
+                for ( CoreLifecycleListener l: lifecycle_listeners ){
+                	
+                    if ( l.restartRequested(CoreImpl.this)){
 
-                while( it.hasNext()){
-                    CoreLifecycleListener l = (CoreLifecycleListener)it.next();
-
-                    if (!l.restartRequested(CoreImpl.this)) {
-
+                    	in_progress = true;
+                    	
+                    }else{
+                    	
                         if (Logger.isEnabled())
                             Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING,
                                     "Request to restart the core"
@@ -2196,7 +2212,10 @@ CoreImpl
                     }
                 }
 
-                restart();
+                if (!in_progress ){
+                
+                	restart();
+                }
             }
         });
 	}

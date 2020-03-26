@@ -393,9 +393,31 @@ ProgressWindow
 					@Override
 					public void paintControl(PaintEvent e) {
 						e.gc.drawImage(spinImages[curSpinIndex ], 0, 0);
+					}
+				});
+
+	    	Utils.execSWTThreadLater(100, new AERunnable() {
+					@Override
+					public void runSupport() {
+						if (canvas == null || canvas.isDisposed()) {
+							return;
+						}
+
+						canvas.redraw();
+						
+						if (curSpinIndex == spinImages.length - 1) {
+							curSpinIndex = 0;
+						} else {
+							curSpinIndex++;
+						}
 						
 						if ( progress != null && progress_bar != null ){
-															
+							
+							if ( progress_bar.isDisposed()){
+								
+								return;
+							}
+							
 							int p =  progress.getProgress();
 								
 							progress_bar.setSelection( p );
@@ -408,27 +430,11 @@ ProgressWindow
 									
 									st = "";
 								}
-								
+																
 								subtask_label.setText( st );
 							}
 						}
-					}
-				});
-
-	    	Utils.execSWTThreadLater(100, new AERunnable() {
-					@Override
-					public void runSupport() {
-						if (canvas == null || canvas.isDisposed()) {
-							return;
-						}
-
-						canvas.redraw();
-						//canvas.update();
-						if (curSpinIndex == spinImages.length - 1) {
-							curSpinIndex = 0;
-						} else {
-							curSpinIndex++;
-						}
+						
 						Utils.execSWTThreadLater(100, this);
 					}
 				});

@@ -164,7 +164,7 @@ public class OpenTorrentOptionsWindow
 				new IUIIntializer() {
 
 					@Override
-					public void stopIt(boolean isForRestart, boolean isCloseAreadyInProgress) {
+					public void stopIt(boolean isForRestart) {
 						// TODO Auto-generated method stub
 
 					}

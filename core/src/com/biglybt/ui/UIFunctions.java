@@ -95,8 +95,13 @@ public interface UIFunctions
 	 *
 	 * @return true - request granted, UI is being shut down
 	 *         false - request denied (example: password entry failed)
+	 * @deprecated
 	 */
-	boolean dispose(boolean for_restart, boolean close_already_in_progress);
+	default boolean dispose(boolean for_restart, boolean UNUSED ){
+		return( dispose( for_restart ));
+	}
+
+	boolean dispose(boolean for_restart );
 
 	boolean viewURL(String url, String target, int w, int h, boolean allowResize,
 			boolean isModal);

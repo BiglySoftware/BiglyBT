@@ -728,7 +728,7 @@ public class UpdateMonitor
 			if ( 	visiblity_state == UIFunctions.VS_TRAY_ONLY &&
 					COConfigurationManager.getBooleanParameter( "Low Resource Silent Update Restart Enabled" )){
 
-				uiFunctions.dispose( true, false );
+				uiFunctions.dispose( true );
 
 			}else{
 
@@ -745,7 +745,7 @@ public class UpdateMonitor
 						{
 							if ((Boolean)result){
 
-								uiFunctions.dispose(true, false);
+								uiFunctions.dispose(true);
 							}
 						}
 					});
