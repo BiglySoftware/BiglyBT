@@ -145,9 +145,26 @@ ProgressWindow
 
 											if ( !task_complete ){
 
-												Shell shell = com.biglybt.ui.swt.components.shell.ShellFactory.createMainShell(
-														( SWT.DIALOG_TRIM | SWT.RESIZE ));	// parg: removed modal - people complain about this locking the UI, let it be on their own heads if they go and screw with things then
+													// parg: removed general modal - people complain about this locking the UI, let it be on their own heads if they go and screw with things then
 
+												int style = SWT.DIALOG_TRIM | SWT.RESIZE;
+												
+												if ( op_type == CoreOperation.OP_PROGRESS ){
+													
+													int s = operation.getTask().getProgressCallback().getStyle();
+													
+													if ((s & ProgressCallback.STYLE_NO_CLOSE) != 0 ){
+														
+														style &= ~SWT.CLOSE;
+													}
+													if ((s & ProgressCallback.STYLE_MODAL) != 0 ){
+														
+														style |= SWT.APPLICATION_MODAL;
+													}
+												}
+												
+												Shell shell = com.biglybt.ui.swt.components.shell.ShellFactory.createMainShell(( style ));
+												
 												showDialog( shell, operation );
 											}
 										}
@@ -296,6 +313,8 @@ ProgressWindow
 			return;
 		}
 		
+		boolean closeable = (shell.getStyle() & SWT.CLOSE ) != 0;
+		
 		shell.setText( MessageText.getString( "progress.window.title" ));
 
 		CoreOperationTask task = _core_op==null?null:_core_op.getTask();
@@ -306,19 +325,10 @@ ProgressWindow
 		
 		Utils.setShellIcon(shell);
 
-		/*
-		shell.addListener(
-				SWT.Close,
-				new Listener()
-				{
-					public void
-					handleEvent(
-						org.eclipse.swt.widgets.Event event)
-					{
-						event.doit = false;
-					}
-				});
-		*/
+		if ( !closeable ){
+			
+			shell.addListener( SWT.Close, (ev)->{ ev.doit = false; });
+		}
 
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;

@@ -44,6 +44,16 @@ CoreOperationTask
 		
 		public int ST_BUTTONS	= ST_PAUSE | ST_RESUME | ST_CANCEL;
 		
+		public int STYLE_NONE		= 0x0000;
+		public int STYLE_NO_CLOSE	= 0x0001;
+		public int STYLE_MODAL		= 0x0002;
+		
+		public default int
+		getStyle()
+		{
+			return( STYLE_NONE );
+		}
+		
 		public int
 		getProgress();
 		

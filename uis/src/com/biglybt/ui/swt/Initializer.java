@@ -756,6 +756,12 @@ public class Initializer
 								private volatile int 	percent = 0;
 								private volatile String	subtask = "";
 								
+								@Override
+								public int 
+								getStyle()
+								{
+									return( STYLE_NO_CLOSE | STYLE_MODAL );
+								}
 								public int
 								getProgress()
 								{
