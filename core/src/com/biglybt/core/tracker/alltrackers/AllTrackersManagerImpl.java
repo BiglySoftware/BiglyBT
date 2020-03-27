@@ -513,7 +513,7 @@ AllTrackersManagerImpl
 	registerTorrentSupport(
 		TOTorrent torrent)
 	{
-		registerTracker( torrent.getAnnounceURL());
+		registerTracker( torrent, torrent.getAnnounceURL());
 		
 		TOTorrentAnnounceURLSet[] sets = torrent.getAnnounceURLGroup().getAnnounceURLSets();
 					
@@ -523,7 +523,7 @@ AllTrackersManagerImpl
 				
 			for ( URL url: urls ){
 					
-				register( url );
+				register( torrent, url );
 			}
 		}
 	}
@@ -539,26 +539,28 @@ AllTrackersManagerImpl
 	@Override
 	public void
 	registerTracker(
-		URL			url )
+		TOTorrent		torrent,
+		URL				url )
 	{
 		if ( url == null ){
 			
 			return;
 		}
 				
-		register( url );
+		register( torrent, url );
 	}
 	
 	@Override
 	public void
 	registerTrackers(
+		TOTorrent				torrent,
 		List<List<URL>>			trackers )
 	{
 		for ( List<URL> urls: trackers ){
 			
 			for ( URL url: urls ){
 				
-				register( url );
+				register( torrent, url );
 			}
 		}
 	}
@@ -593,13 +595,14 @@ AllTrackersManagerImpl
 	
 	private AllTrackersTrackerImpl
 	register(
-		URL		url )
+		TOTorrent		torrent_maybe_null,
+		URL				url )
 	{
 		String 	name = ingestURL( url );
 		
 		if ( name != null ){
 			
-			return( register( name ));
+			return( register( torrent_maybe_null, name ));
 			
 		}else{
 			
@@ -609,7 +612,8 @@ AllTrackersManagerImpl
 	
 	private AllTrackersTrackerImpl
 	register(
-		String		name )
+		TOTorrent		torrent_maybe_null,
+		String			name )
 	{
 		AllTrackersTrackerImpl existing_tracker = host_map.get( name );
 		
@@ -636,13 +640,13 @@ AllTrackersManagerImpl
 					}
 				}
 				
-				new_tracker.setRegistered();
+				new_tracker.setRegistered( torrent_maybe_null );
 				
 				return( new_tracker );
 			}
 		}
 		
-		existing_tracker.setRegistered();
+		existing_tracker.setRegistered( torrent_maybe_null );
 			
 		return( existing_tracker );
 	}
@@ -653,7 +657,7 @@ AllTrackersManagerImpl
 		URL 							url, 
 		TRTrackerAnnouncerResponse	 	response )
 	{
-		AllTrackersTrackerImpl tracker = register( url );
+		AllTrackersTrackerImpl tracker = register( null, url );
 		
 		if ( tracker != null ){
 			
@@ -667,7 +671,7 @@ AllTrackersManagerImpl
 		String 						key, 
 		TRTrackerAnnouncerRequest 	request )
 	{
-		AllTrackersTrackerImpl tracker = register( key );
+		AllTrackersTrackerImpl tracker = register( null, key );
 		
 		if ( tracker != null ){
 			
@@ -681,7 +685,7 @@ AllTrackersManagerImpl
 		URL 							url, 
 		TRTrackerScraperResponse	 	response )
 	{
-		AllTrackersTrackerImpl tracker = register( url );
+		AllTrackersTrackerImpl tracker = register( null, url );
 		
 		if ( tracker != null ){
 			
@@ -710,7 +714,7 @@ AllTrackersManagerImpl
 	public AllTrackersTracker 
 	getTracker(URL url)
 	{
-		AllTrackersTrackerImpl tracker = register( url );
+		AllTrackersTrackerImpl tracker = register( null, url );
 
 		return( tracker );
 	}
@@ -836,6 +840,8 @@ AllTrackersManagerImpl
 		private long				total_down;
 		
 		private boolean		registered;
+		
+		private boolean		has_private;
 		
 		private LoggerChannel	logger;
 		
@@ -1020,9 +1026,15 @@ AllTrackersManagerImpl
 		}
 		
 		private void
-		setRegistered()
+		setRegistered(
+			TOTorrent	torrent_maybe_null )
 		{
 			registered	= true;
+			
+			if ( torrent_maybe_null != null && torrent_maybe_null.getPrivate()){
+				
+				has_private = true;
+			}
 		}
 		
 		private boolean
@@ -1043,6 +1055,13 @@ AllTrackersManagerImpl
 		getShortKey()
 		{
 			return( short_key );
+		}
+		
+		@Override
+		public boolean 
+		hasPrivateTorrents()
+		{
+			return( has_private );
 		}
 		
 		@Override

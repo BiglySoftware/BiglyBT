@@ -2680,7 +2680,7 @@ TRTrackerBTAnnouncerImpl
 			Debug.printStackTrace( e );
 		}
 		
-		all_trackers.registerTrackers( trackerUrlLists );
+		all_trackers.registerTrackers( torrent, trackerUrlLists );
 	}
 
 	protected String
@@ -3760,7 +3760,7 @@ TRTrackerBTAnnouncerImpl
 	{
 		if ( old_url != new_url ){
 			
-			all_trackers.registerTracker( new_url );
+			all_trackers.registerTracker( torrent, new_url );
 		}
 		
 		helper.informURLChange( old_url, new_url, explicit );

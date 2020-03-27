@@ -256,6 +256,16 @@ public class SBC_AllTrackersView
 					}
 				});
 
+		
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersHasPrivate.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersHasPrivate(column);
+					}
+				});
+
+		
 		tableManager.setDefaultColumnNames(TABLE_NAME,
 				new String[] {
 					ColumnAllTrackersTracker.COLUMN_ID,
@@ -1714,6 +1724,13 @@ public class SBC_AllTrackersView
 		getAverageRequestDuration()
 		{
 			return( tracker.getAverageRequestDuration());
+		}
+		
+		@Override
+		public boolean 
+		hasPrivateTorrents()
+		{
+			return(tracker.hasPrivateTorrents());
 		}
 		
 		public Tag

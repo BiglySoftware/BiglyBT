@@ -54,10 +54,12 @@ AllTrackersManager
 		
 		public void
 		registerTracker(
+			TOTorrent	torrent,
 			URL			tracker );
 			
 		public void
 		registerTrackers(
+			TOTorrent				torrent,
 			List<List<URL>>			trackers );
 		
 		public void
@@ -189,5 +191,8 @@ AllTrackersManager
 		
 		public long
 		getAverageRequestDuration();
+		
+		public boolean
+		hasPrivateTorrents();
 	}
 }
