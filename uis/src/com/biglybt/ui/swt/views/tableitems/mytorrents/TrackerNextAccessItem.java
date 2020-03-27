@@ -22,9 +22,11 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
-import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
 
 import com.biglybt.pif.download.Download;
@@ -43,7 +45,8 @@ public class TrackerNextAccessItem
 	public static final Class DATASOURCE_TYPE = Download.class;
 
 	public static final String COLUMN_ID = "trackernextaccess";
-	HashMap map = new HashMap();
+	
+	Map<DownloadManager,Long> map = new IdentityHashMap<>();
 
   public TrackerNextAccessItem(String sTableID) {
     super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
@@ -63,18 +66,24 @@ public class TrackerNextAccessItem
   public void refresh(TableCell cell) {
     DownloadManager dm = (DownloadManager)cell.getDataSource();
     if (cell.isValid() && map.containsKey(dm)) {
-    	long lNextUpdate = ((Long)map.get(dm)).longValue();
-    	if (System.currentTimeMillis() < lNextUpdate)
+    	long lNextUpdate = map.get(dm);
+    	
+    	if (SystemTime.getMonotonousTime() < lNextUpdate){
     		return;
+    	}
     }
+    
     long value = (dm == null) ? 0 : dm.getTrackerTime();
 
-    if (value < -1)
+    if (value < -1){
       value = -1;
-
-    long lNextUpdate = System.currentTimeMillis()
-				+ (((value > 60) ? (value % 60) : 1) * 1000);
-		map.put(dm, new Long(lNextUpdate));
+    }
+    
+    long skip_secs = value > 60?(value % 60):1;
+        
+    long lNextUpdate = SystemTime.getMonotonousTime() + ( skip_secs * 1000);
+		
+    map.put(dm, new Long(lNextUpdate));
 
     if (!cell.setSortValue(value) && cell.isValid())
       return;
