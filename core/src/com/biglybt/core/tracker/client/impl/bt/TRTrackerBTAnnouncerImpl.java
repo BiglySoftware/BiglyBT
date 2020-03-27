@@ -443,19 +443,25 @@ TRTrackerBTAnnouncerImpl
 
       //use 'min interval' for calculation
       if( min_interval != 0 && secs_to_wait < min_interval ) {
-        float percentage = (float)min_interval / current_time_to_wait_secs;  //percentage of original interval
+        float percentage = (float)min_interval / secs_to_wait;  //percentage of original interval
 
         //long orig_override = secs_to_wait;
 
-        int added_secs = (int)((min_interval - secs_to_wait) * percentage);  //increase by x percentage of difference
+        int added_secs = (int)(((min_interval - secs_to_wait) * percentage)/100);  //increase by x percentage of difference
+        
         secs_to_wait += added_secs;
 
-    		if (Logger.isEnabled())
-					Logger.log(new LogEvent(torrent, LOGID,
-							"MIN INTERVAL CALC: min_interval=" + min_interval + ", interval="
-									+ current_time_to_wait_secs + ", orig=" +  current_time_to_wait_secs
-									+ ", new=" + secs_to_wait + ", added=" + added_secs
-									+ ", perc=" + percentage));
+        if ( secs_to_wait > tracker_interval ){
+        	
+        	secs_to_wait = tracker_interval;
+        }
+        
+        if (Logger.isEnabled())
+        	Logger.log(new LogEvent(torrent, LOGID,
+        			"MIN INTERVAL CALC: min_interval=" + min_interval + ", interval="
+        					+ current_time_to_wait_secs + ", orig=" +  current_time_to_wait_secs
+        					+ ", new=" + secs_to_wait + ", added=" + added_secs
+        					+ ", perc=" + percentage));
       }
 
     }
