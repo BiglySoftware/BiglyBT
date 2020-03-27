@@ -3445,6 +3445,7 @@ DownloadManagerStateImpl
 
 		Boolean		simple_torrent;
 		long		size;
+		Boolean		is_private;
 		int			file_count;
 
 		URL								announce_url;
@@ -3506,6 +3507,13 @@ DownloadManagerStateImpl
 				size = l_size.longValue();
 			}
 
+			Long	l_priv = (Long)cache.get( "priv" );
+
+			if ( l_priv != null ){
+
+				is_private = l_priv.longValue() != 0;
+			}
+			
 			byte[]	au = (byte[])cache.get( "au" );
 
 			if ( au != null ){
@@ -3537,7 +3545,7 @@ DownloadManagerStateImpl
 
 			throws TOTorrentException
 		{
-			Map	cache = new HashMap();
+			Map<String,Object>	cache = new HashMap<>();
 
 			TOTorrent	state = dms.getTorrent();
 
@@ -3547,7 +3555,8 @@ DownloadManagerStateImpl
 			cache.put( "comment", state.getComment());
 			cache.put( "createdby", state.getCreatedBy());
 			cache.put( "size", new Long( state.getSize()));
-
+			cache.put( "priv", new Long( state.getPrivate()?1:0));
+			
 			cache.put( "encoding", state.getAdditionalStringProperty( "encoding" ));
 			cache.put( "torrent filename", state.getAdditionalStringProperty( "torrent filename" ));
 
@@ -4415,12 +4424,19 @@ DownloadManagerStateImpl
 	    public boolean
     	getPrivate()
        	{
-	   		if ( fixup()){
-
-				return( delegate.getPrivate());
-			}
-
-	   		return( false );
+    		if ( is_private == null ){
+    			
+		   		if ( fixup()){
+	
+					return( delegate.getPrivate());
+				}
+	
+		   		return( false );
+		   		
+    		}else{
+    			
+    			return( is_private );
+    		}
     	}
 
     	@Override
@@ -4429,12 +4445,14 @@ DownloadManagerStateImpl
     		boolean	_private )
 
     		throws TOTorrentException
-    	   	{
-    	   		if ( fixup()){
+	   	{
+    		is_private = null;
+    		
+	   		if ( fixup()){
 
-    				delegate.setPrivate( _private );
-    			}
-        	}
+				delegate.setPrivate( _private );
+			}
+    	}
 
     	@Override
 	    public void

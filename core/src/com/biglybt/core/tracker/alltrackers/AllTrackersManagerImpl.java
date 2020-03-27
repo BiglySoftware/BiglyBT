@@ -28,7 +28,11 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreLifecycleAdapter;
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.logging.LogAlert;
+import com.biglybt.core.logging.Logger;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentListener;
@@ -39,6 +43,7 @@ import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerRequest;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
+import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.DNSUtils;
 import com.biglybt.core.util.Debug;
@@ -66,6 +71,7 @@ AllTrackersManagerImpl
 	
 	private static final String	CONFIG_FILE 				= "alltrackers.config";
 
+	private static final String CONFIG_PRIVATE_ACTIVE_AT_CLOSE = "alltrackers.close.private.active";
 	
 	final private static AllTrackersManagerImpl singleton = new AllTrackersManagerImpl();
 	
@@ -104,6 +110,31 @@ AllTrackersManagerImpl
 		
 		updateLogging();
 	
+		try{
+			List<String> actives = BDecoder.decodeStrings( COConfigurationManager.getListParameter( CONFIG_PRIVATE_ACTIVE_AT_CLOSE, new ArrayList<String>()));
+									
+			if ( !actives.isEmpty()){
+				
+				String trackers = "";
+				
+				for ( String t: actives ){
+					
+					trackers += ( trackers.isEmpty()?"":", ") + t;
+				}
+				
+				String text = MessageText.getString( "alltorrents.updates.outstanding", new String[]{ trackers });
+				
+				Logger.log(new LogAlert(LogAlert.UNREPEATABLE, LogAlert.AT_WARNING, text, 0 ));
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+		}finally{
+			
+			COConfigurationManager.removeParameter( CONFIG_PRIVATE_ACTIVE_AT_CLOSE );
+		}
+		
 		core.addLifecycleListener(
 				new CoreLifecycleAdapter()
 				{
@@ -304,6 +335,8 @@ AllTrackersManagerImpl
 			
 			if ( for_close ){
 				
+				Set<String>		active_privates = new HashSet<>();
+				
 				for ( TRTrackerAnnouncerRequest req: active_requests.keySet()){
 					
 					String key = ingestURL( req.getURL());
@@ -315,8 +348,18 @@ AllTrackersManagerImpl
 						if ( existing_tracker != null ){
 							
 							existing_tracker.log( req, true );
+							
+							if ( existing_tracker.hasPrivateTorrents()){
+								
+								active_privates.add( existing_tracker.getShortKey());
+							}
 						}
 					}
+				}
+				
+				if ( !active_privates.isEmpty()){
+					
+					COConfigurationManager.setParameter( CONFIG_PRIVATE_ACTIVE_AT_CLOSE, new ArrayList<String>( active_privates ));
 				}
 			}else{
 				
