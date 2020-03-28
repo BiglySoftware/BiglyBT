@@ -88,6 +88,7 @@ MultiPlotGraphic
 
 	private TimerEventPeriodic	update_event;
 
+	private boolean				maintain_history;
 
 	private
 	MultiPlotGraphic(
@@ -147,6 +148,31 @@ MultiPlotGraphic
 		update_outstanding = true;
 	}
 
+	public int[][]
+	getHistory()
+	{
+		int[][] result = new int[all_values.length][nbValues];
+		
+		int offset;
+		
+		if ( nbValues == maxEntries ){
+		
+			offset = currentPosition;
+			
+		}else{
+			
+			offset = 0;
+		}
+		
+		for ( int i=0;i<nbValues;i++){
+			for ( int j=0;j<result.length;j++){
+				result[j][i] = all_values[j][(i+offset)%maxEntries];
+			}
+		}
+
+		return( result );
+	}
+	
 	@Override
 	public void
 	initialize(
@@ -247,7 +273,7 @@ MultiPlotGraphic
 		  			perform(
 		  				TimerEvent event )
 		  			{
-		  				if ( drawCanvas.isDisposed()){
+		  				if ( !maintain_history && drawCanvas.isDisposed()){
 
 		  					if ( update_event != null ){
 
@@ -908,11 +934,20 @@ MultiPlotGraphic
 
 		setUpdateDividerWidth( update_divider_width );
 	}
-
+	
 	@Override
 	public void
 	dispose()
 	{
+		dispose( false );
+	}
+	
+	public void
+	dispose(
+		boolean	_maintain_history )
+	{
+		maintain_history = _maintain_history;
+		
 		super.dispose();
 
 		if ( bufferImage != null && ! bufferImage.isDisposed()){
@@ -920,7 +955,7 @@ MultiPlotGraphic
 			bufferImage.dispose();
 		}
 
-		if ( update_event != null ){
+		if ( update_event != null && !maintain_history ){
 
 			update_event.cancel();
 

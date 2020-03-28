@@ -122,7 +122,7 @@ ThreadPool
 
 	final List	busy;
 	private final boolean	queue_when_full;
-	final List	task_queue	= new ArrayList();
+	final List<AERunnable>	task_queue	= new ArrayList<>();
 
 	final AESemaphore		thread_sem;
 	private int				reserved_target;
@@ -274,10 +274,11 @@ ThreadPool
 
 		synchronized( this ){
 
-			if ( high_priority )
+			if ( high_priority ){
 				task_queue.add( 0, runnable );
-			else
+			}else{
 				task_queue.add( runnable );
+			}
 
 			// reserve if available is non-blocking
 
@@ -371,6 +372,20 @@ ThreadPool
 		}
 	}
 
+	public AERunnable
+	getOldestQueuedTask()
+	{
+		synchronized (this){
+			int num = task_queue.size();
+			
+			if ( num > 0 ){
+				return( task_queue.get( num-1 ));
+			}else{
+				return( null );
+			}
+		}
+	}
+	
 	public int getQueueSize() {
 		synchronized (this)
 		{

@@ -79,15 +79,35 @@ AllTrackersManager
 	
 		public void
 		addActiveRequest(
-			TRTrackerAnnouncerRequest	request );
+			TRTrackerAnnouncerRequest	request,
+			long						lag_millis );
 		
 		public void
 		removeActiveRequest(
 			TRTrackerAnnouncerRequest	request );
 		
+		public void
+		addScrapeRequest(
+			long	lag_millis );
+		
+		public void
+		removeScrapeRequest();
+		
 		public int
 		getActiveRequestCount();
 		
+		public float
+		getAnnouncesPerSecond();
+		
+		public long
+		getAnnounceLagMillis();
+		
+		public float
+		getScrapesPerSecond();
+		
+		public long
+		getScrapeLagMillis();
+
 		public AllTrackersTracker
 		getTracker(
 			URL		url );

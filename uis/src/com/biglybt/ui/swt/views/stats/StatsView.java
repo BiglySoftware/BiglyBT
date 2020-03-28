@@ -139,12 +139,15 @@ public class StatsView
 
 		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
 				ActivityView.MSGID_PREFIX, null, ActivityView.class));
-
+		
 		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
 				TransferStatsView.MSGID_PREFIX, null, TransferStatsView.class));
 
 		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
 				CacheView.MSGID_PREFIX, null, CacheView.class));
+
+		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
+				TrackerActivityView.MSGID_PREFIX, null, TrackerActivityView.class));
 
 		boolean hasV4 = NetworkAdmin.getSingleton().hasDHTIPV4();
 

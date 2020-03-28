@@ -83,6 +83,15 @@ UpdateInItem
 			return;
 		}
 
-		cell.setText( TimeFormatter.formatColon( secs ));
+		if ( secs >= -1 ){
+		
+			cell.setText( TimeFormatter.formatColon( secs ));
+			
+		}else{
+			
+				// things are lagging, time should have run already
+			
+			cell.setText( "-" + TimeFormatter.formatColon( -secs ));
+		}
 	}
 }

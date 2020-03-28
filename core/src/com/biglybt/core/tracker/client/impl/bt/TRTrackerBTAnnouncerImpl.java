@@ -390,83 +390,96 @@ TRTrackerBTAnnouncerImpl
 	getAdjustedSecsToWait()
 	{
 
-	  long		secs_to_wait = current_time_to_wait_secs;
+		long	secs_to_wait = current_time_to_wait_secs;
 
-	  if( last_response != null && last_response.getStatus() != TRTrackerAnnouncerResponse.ST_ONLINE ) {
+		if ( last_response != null && last_response.getStatus() != TRTrackerAnnouncerResponse.ST_ONLINE ){
 
-	  	if( last_response.getStatus() == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR ) {
+			if ( last_response.getStatus() == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR ){
 
-	  		//the tracker has explicitly reported an error (torrent is unauthorized for example),
-	  		//so there's no need to keep trying to re-announce as if it were actually offline
+					//the tracker has explicitly reported an error (torrent is unauthorized for example),
+					//so there's no need to keep trying to re-announce as if it were actually offline
+	
+					//there's no "min interval" returned, so start the re-announce backoff timings at 15min
+				
+				if ( failure_added_time < 900 ){
+					
+					failure_added_time = 900;
+				}
+				
+				secs_to_wait = getErrorRetryInterval();
 
-	  		//there's no "min interval" returned, so start the re-announce backoff timings at 15min
-	  		if( failure_added_time < 900 )  failure_added_time = 900;
-  			secs_to_wait = getErrorRetryInterval();
-
-    		if (Logger.isEnabled()) {
+				if (Logger.isEnabled()) {
 					Logger.log(new LogEvent(torrent, LOGID,
 							"MIN INTERVAL CALC: tracker reported error, " +
-							"adjusting to error retry interval"));
-    		}
-	  	}
-	  	else {	//tracker is OFFLINE
-	  		secs_to_wait = getErrorRetryInterval();
-    		if (Logger.isEnabled()) {
+							"adjusting to error retry interval: " + secs_to_wait ));
+				}
+			}else{
+					//tracker is OFFLINE
+				
+				secs_to_wait = getErrorRetryInterval();
+				
+				if (Logger.isEnabled()) {
 					Logger.log(new LogEvent(torrent, LOGID,
 							"MIN INTERVAL CALC: tracker seems to be offline, " +
-							"adjusting to error retry interval"));
-    		}
-	  	}
+							"adjusting to error retry interval: " + secs_to_wait ));
+				}
+			}
+		}else{
 
-	  }
-    else{
+			if ( rd_override_percentage == 0 ){
+				
+				secs_to_wait = TRTrackerAnnouncer.REFRESH_MINIMUM_SECS;
 
-      if( rd_override_percentage == 0 ) {
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(torrent, LOGID,
-							"MIN INTERVAL CALC: override, perc = 0"));
-      	return TRTrackerAnnouncer.REFRESH_MINIMUM_SECS;
-      }
+							"MIN INTERVAL CALC: override, perc = 0: " + secs_to_wait ));
+								
+			}else{
 
-      if (rd_override_percentage != 100) {
-      	secs_to_wait = (secs_to_wait * rd_override_percentage) /100;
-    		if (Logger.isEnabled()) {
-					Logger.log(new LogEvent(torrent, LOGID,
-							"MIN INTERVAL CALC: override, perc = " + rd_override_percentage));
-    		}
-      }
+				if ( rd_override_percentage != 100 ){
+					
+					secs_to_wait = (secs_to_wait * rd_override_percentage) /100;
+					
+					if (Logger.isEnabled()){
+						Logger.log(new LogEvent(torrent, LOGID,
+								"MIN INTERVAL CALC: override, perc = " + rd_override_percentage + ": " + secs_to_wait ));
+					}
+				}
+	
+				if ( secs_to_wait < TRTrackerAnnouncer.REFRESH_MINIMUM_SECS ){
+	
+					secs_to_wait = TRTrackerAnnouncer.REFRESH_MINIMUM_SECS;
+				}
+	
+					//use 'min interval' for calculation
+				
+				if ( min_interval != 0 && secs_to_wait < min_interval ){
+					
+					float percentage = (float)min_interval / secs_to_wait;  //percentage of original interval
+	
+					//long orig_override = secs_to_wait;
+	
+					int added_secs = (int)(((min_interval - secs_to_wait) * percentage)/100);  //increase by x percentage of difference
+	
+					secs_to_wait += added_secs;
+	
+					if ( secs_to_wait > tracker_interval ){
+	
+						secs_to_wait = tracker_interval;
+					}
+	
+					if (Logger.isEnabled())
+						Logger.log(new LogEvent(torrent, LOGID,
+								"MIN INTERVAL CALC: min_interval=" + min_interval + ", interval="
+										+ current_time_to_wait_secs + ", orig=" +  current_time_to_wait_secs
+										+ ", new=" + secs_to_wait + ", added=" + added_secs
+										+ ", perc=" + percentage));
+				}
+			}
 
-      if ( secs_to_wait < TRTrackerAnnouncer.REFRESH_MINIMUM_SECS ){
+		}
 
-        secs_to_wait = TRTrackerAnnouncer.REFRESH_MINIMUM_SECS;
-      }
-
-      //use 'min interval' for calculation
-      if( min_interval != 0 && secs_to_wait < min_interval ) {
-        float percentage = (float)min_interval / secs_to_wait;  //percentage of original interval
-
-        //long orig_override = secs_to_wait;
-
-        int added_secs = (int)(((min_interval - secs_to_wait) * percentage)/100);  //increase by x percentage of difference
-        
-        secs_to_wait += added_secs;
-
-        if ( secs_to_wait > tracker_interval ){
-        	
-        	secs_to_wait = tracker_interval;
-        }
-        
-        if (Logger.isEnabled())
-        	Logger.log(new LogEvent(torrent, LOGID,
-        			"MIN INTERVAL CALC: min_interval=" + min_interval + ", interval="
-        					+ current_time_to_wait_secs + ", orig=" +  current_time_to_wait_secs
-        					+ ", new=" + secs_to_wait + ", added=" + added_secs
-        					+ ", perc=" + percentage));
-      }
-
-    }
-
-	  return( secs_to_wait );
+		return( secs_to_wait );
 	}
 
 
@@ -522,30 +535,39 @@ TRTrackerBTAnnouncerImpl
 
 				if ( current_timer_event != null && !current_timer_event.isCancelled()){
 
-					long	start 	= current_timer_event.getCreatedTime();
 					long	expiry	= current_timer_event.getWhen();
 
-					long	secs_to_wait = getAdjustedSecsToWait();
-
-					long target_time = start + (secs_to_wait*1000);
-
-					if ( target_time != expiry ){
-
-						current_timer_event.cancel();
-
-						if ( !destroyed ){
-
-							if (Logger.isEnabled())
-								Logger.log(new LogEvent(torrent, LOGID,
-										"Changed next tracker announce to " + secs_to_wait
-												+ "s via " + Debug.getStackTrace(true, false, 0, 3)));
-
-							current_timer_event =
-								tracker_timer.addEvent(
-									start,
-									target_time,
-									timer_event_action );
+					if ( expiry < now + 10*1000 ){
+						
+						// event is about to run or should have already run. Let it complete
+						
+					}else{
+						
+						long	start 	= current_timer_event.getCreatedTime();
+	
+						long	secs_to_wait = getAdjustedSecsToWait();
+	
+						long target_time = start + (secs_to_wait*1000);
+	
+						if ( target_time != expiry ){
+	
+							current_timer_event.cancel();
+	
+							if ( !destroyed ){
+	
+								if (Logger.isEnabled())
+									Logger.log(new LogEvent(torrent, LOGID,
+											"Changed next tracker announce to " + secs_to_wait
+													+ "s via " + Debug.getStackTrace(true, false, 0, 3)));
+	
+								current_timer_event =
+									tracker_timer.addEvent(
+										start,
+										target_time,
+										timer_event_action );
+							}
 						}
+						
 					}
 				}
 			}finally{
@@ -654,6 +676,15 @@ TRTrackerBTAnnouncerImpl
 
 			if ( current_timer_event != null ){
 
+				long now = SystemTime.getCurrentTime();
+				
+				if ( current_timer_event.getWhen() <= now ){
+				
+						// event is about to run or should have already run. Let it complete
+
+					return;
+				}
+				
 				current_timer_event.cancel();
 			}
 
@@ -1015,7 +1046,15 @@ TRTrackerBTAnnouncerImpl
 
 			request_obj =  constructRequest( evt,original_url );
 			
-			all_trackers.addActiveRequest( request_obj );
+			TimerEvent first_event = tracker_timer.getFirstEvent();
+			
+			long lag = first_event==null?0:(SystemTime.getCurrentTime()-first_event.getWhen());
+			
+			if ( lag < 0 ){
+				lag = 0;
+			}
+				
+			all_trackers.addActiveRequest( request_obj, lag );
 			
 			long start = SystemTime.getMonotonousTime();
 

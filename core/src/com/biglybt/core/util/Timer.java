@@ -110,6 +110,19 @@ public class Timer
 		indestructable	= true;
 	}
 
+	public synchronized TimerEvent
+	getFirstEvent()
+	{
+		if ( events.isEmpty()){
+					
+			return( null );
+			
+		}else{
+			
+			return( events.iterator().next());
+		}
+	}
+	
 	public synchronized List<TimerEvent>
 	getEvents()
 	{

@@ -39,6 +39,8 @@ import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.security.SESecurityManager;
+import com.biglybt.core.tracker.AllTrackersManager;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.client.TRTrackerScraperClientResolver;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
@@ -100,10 +102,12 @@ public class TrackerStatus {
 			});
 	}
 
+	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
+
 	private byte					autoUDPscrapeEvery				= 1;
 	private int						scrapeCount;
 
-	private static final List				logged_invalid_urls				= new ArrayList();
+	private static final List			logged_invalid_urls				= new ArrayList();
 	private static final ThreadPool		thread_pool						= new ThreadPool("TrackerStatus", 10, true);	// queue when full rather than block
 
 	private final URL				tracker_url;
@@ -343,10 +347,10 @@ public class TrackerStatus {
   		if ( async ){
 
   			thread_pool.run(
-  				new AERunnable()
+  				new ScrapeTask()
   				{
   					@Override
-					  public void
+					public void
   					runSupport()
   					{
   						runScrapesSupport( responses, force );
@@ -562,6 +566,10 @@ public class TrackerStatus {
 		  		}
 
 		  		try{
+		  			ScrapeTask oldest = (ScrapeTask)thread_pool.getOldestQueuedTask();
+		  			
+		  			all_trackers.addScrapeRequest(oldest==null?0:(SystemTime.getMonotonousTime()-oldest.create_time ));
+		  			
 		  				// set context in case authentication dialog is required
 
 					TorrentUtils.setTLSTorrentHash(one_of_the_hashes);
@@ -600,6 +608,8 @@ public class TrackerStatus {
 			  		}
 				}finally{
 
+					all_trackers.removeScrapeRequest();
+					
 					TorrentUtils.setTLSTorrentHash( null );
 				}
 
@@ -1799,5 +1809,12 @@ public class TrackerStatus {
 
 	public int getNumActiveScrapes() {
 		return numActiveScrapes.get();
+	}
+	
+	private abstract class
+	ScrapeTask
+		extends AERunnable
+	{
+		final long	create_time = SystemTime.getMonotonousTime();
 	}
 }
