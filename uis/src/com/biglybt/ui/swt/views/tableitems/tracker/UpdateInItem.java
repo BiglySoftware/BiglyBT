@@ -24,6 +24,8 @@ package com.biglybt.ui.swt.views.tableitems.tracker;
 
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 import com.biglybt.core.tracker.TrackerPeerSource;
@@ -84,12 +86,17 @@ UpdateInItem
 		}
 
 		if ( secs >= -1 ){
-		
+
+			cell.setForeground( null );
+			
 			cell.setText( TimeFormatter.formatColon( secs ));
 			
 		}else{
 			
+
 				// things are lagging, time should have run already
+			
+			cell.setForeground( Utils.colorToIntArray(Colors.colorWarning));
 			
 			cell.setText( "-" + TimeFormatter.formatColon( -secs ));
 		}
