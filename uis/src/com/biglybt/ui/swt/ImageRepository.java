@@ -80,7 +80,7 @@ public class ImageRepository
 	   *
 	   */
 	
-	private static transient Set<String>	ignore_icon_exts;
+	private static volatile Set<String>	ignore_icon_exts;
 	
 	static{
 		
