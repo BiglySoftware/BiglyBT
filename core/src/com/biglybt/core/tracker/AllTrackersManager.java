@@ -80,7 +80,7 @@ AllTrackersManager
 		public void
 		addActiveRequest(
 			TRTrackerAnnouncerRequest	request,
-			long						lag_millis );
+			long[]						lag_millis );
 		
 		public void
 		removeActiveRequest(
@@ -99,7 +99,7 @@ AllTrackersManager
 		public float
 		getAnnouncesPerSecond();
 		
-		public long
+		public long[]
 		getAnnounceLagMillis();
 		
 		public float

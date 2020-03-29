@@ -85,13 +85,15 @@ TRTrackerBTAnnouncerImpl
 
 	private static final int OVERRIDE_PERIOD			= 10*1000;
 
-	private static final Timer	tracker_timer = new Timer( "Tracker Announce Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
+	private static final Timer	tracker_timer_public 	= new Timer( "Tracker Announce Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
+	private static final Timer	tracker_timer_private	= new Timer( "Tracker Announce Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
 
 	static{
 		COConfigurationManager.addParameterListener(
 			ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE,
 			(name)->{
-				tracker_timer.getThreadPool().setMaxThreads( COConfigurationManager.getIntParameter( name ));
+				tracker_timer_public.getThreadPool().setMaxThreads( COConfigurationManager.getIntParameter( name ));
+				tracker_timer_private.getThreadPool().setMaxThreads( COConfigurationManager.getIntParameter( name ));
 			});
 	}
 	
@@ -132,6 +134,7 @@ TRTrackerBTAnnouncerImpl
 
 	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
 
+	private final Timer						tracker_timer;
 	private final TOTorrent					torrent;
 	
 	private final TOTorrentAnnounceURLSet[]	announce_urls;
@@ -230,6 +233,8 @@ TRTrackerBTAnnouncerImpl
   	manual_control		= _manual;
   	helper				= _helper;
 
+  	tracker_timer = torrent.getPrivate()?tracker_timer_private:tracker_timer_public;
+  	
 	try {
 		torrent_hash_actual = _torrent.getHashWrapper();
 
@@ -1055,15 +1060,7 @@ TRTrackerBTAnnouncerImpl
 
 			request_obj =  constructRequest( evt,original_url );
 			
-			TimerEvent first_event = tracker_timer.getFirstEvent();
-			
-			long lag = first_event==null?0:(SystemTime.getCurrentTime()-first_event.getWhen());
-			
-			if ( lag < 0 ){
-				lag = 0;
-			}
-				
-			all_trackers.addActiveRequest( request_obj, lag );
+			all_trackers.addActiveRequest( request_obj, new long[]{ tracker_timer_public.getLag(), tracker_timer_private.getLag() });
 			
 			long start = SystemTime.getMonotonousTime();
 

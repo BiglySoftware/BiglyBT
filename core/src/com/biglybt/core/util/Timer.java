@@ -109,17 +109,28 @@ public class Timer
 	{
 		indestructable	= true;
 	}
-
-	public synchronized TimerEvent
-	getFirstEvent()
+	
+	public synchronized long
+	getLag()
 	{
 		if ( events.isEmpty()){
-					
-			return( null );
+			
+			return( 0 );
 			
 		}else{
 			
-			return( events.iterator().next());
+			TimerEvent ev = events.iterator().next();
+		
+			long lag = SystemTime.getCurrentTime()-ev.getWhen();
+		
+			if ( lag < 0 ){
+			
+				return( 0 );
+				
+			}else{
+				
+				return( lag );
+			}
 		}
 	}
 	

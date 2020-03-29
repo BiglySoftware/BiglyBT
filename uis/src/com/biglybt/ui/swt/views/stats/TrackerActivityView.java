@@ -64,6 +64,7 @@ public class TrackerActivityView
 	private static Color[]	mpg_lags_colors = 
 		{ 
 			Colors.blues[Colors.BLUES_DARKEST],
+			Colors.maroon,
 			Colors.fadedGreen,
 		};
 	
@@ -225,16 +226,25 @@ public class TrackerActivityView
 	
 	
 			final ValueSourceImpl[] sources = {
-					new ValueSourceImpl( "Announce", 0, mpg_lags_colors, ValueSource.STYLE_NONE, false, false )
+					new ValueSourceImpl( "Announce Public", 0, mpg_lags_colors, ValueSource.STYLE_NONE, false, false )
 					{
 						@Override
 						public int
 						getValue()
 						{
-							return((int)all_trackers.getAnnounceLagMillis());
+							return((int)all_trackers.getAnnounceLagMillis()[0]);
 						}
 					},
-					new ValueSourceImpl( "Scrape", 1, mpg_lags_colors, ValueSource.STYLE_NONE, false, false )
+					new ValueSourceImpl( "Announce Private", 1, mpg_lags_colors, ValueSource.STYLE_NONE, false, false )
+					{
+						@Override
+						public int
+						getValue()
+						{
+							return((int)all_trackers.getAnnounceLagMillis()[1]);
+						}
+					},
+					new ValueSourceImpl( "Scrape", 2, mpg_lags_colors, ValueSource.STYLE_NONE, false, false )
 					{
 						@Override
 						public int
@@ -249,7 +259,8 @@ public class TrackerActivityView
 	
 	
 			String[] color_configs = new String[] {
-					"TrackerActivityView.legend.lag.announce",
+					"TrackerActivityView.legend.lag.announce.pub",
+					"TrackerActivityView.legend.lag.announce.priv",
 					"TrackerActivityView.legend.lag.scrape",
 			};
 	

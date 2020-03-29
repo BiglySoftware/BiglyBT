@@ -511,14 +511,14 @@ AllTrackersManagerImpl
 	private final Average announce_rate = Average.getInstance( 3000, 60 );  //update every 3s, average over 60s
 	private final Average scrape_rate 	= Average.getInstance( 3000, 60 );  //update every 3s, average over 60s
 
-	private volatile long announce_lag;
-	private volatile long scrape_lag;
+	private volatile long[] announce_lag;
+	private volatile long 	scrape_lag;
 	
 	@Override
 	public void
 	addActiveRequest(
 		TRTrackerAnnouncerRequest	request,
-		long						lag_millis )
+		long[]						lag_millis )
 	{
 		active_requests.put( request, "" );
 		
@@ -565,7 +565,7 @@ AllTrackersManagerImpl
 	}
 	
 	@Override
-	public long
+	public long[]
 	getAnnounceLagMillis()
 	{
 		return( announce_lag );
