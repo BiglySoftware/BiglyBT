@@ -114,19 +114,18 @@ ThreadPool
 	}
 
 
-	final String	name;
-	private final int		max_size;
-	private int		thread_name_index	= 1;
+	private final String	name;
+	private int				thread_name_index	= 1;
 
 	private long	execution_limit;
 
-	final List	busy;
+	private final List	busy;
 	private final boolean	queue_when_full;
-	final List<AERunnable>	task_queue	= new ArrayList<>();
+	private final List<AERunnable>	task_queue	= new ArrayList<>();
 
-	final AESemaphore		thread_sem;
-	private int				reserved_target;
-	private int				reserved_actual;
+	private final AESemaphore	thread_sem;
+	private int					target_permits;
+	private int					current_permits;
 
 	private int			thread_priority	= Thread.NORM_PRIORITY;
 	private boolean		warn_when_full;
@@ -151,12 +150,20 @@ ThreadPool
 		int		_max_size,
 		boolean	_queue_when_full )
 	{
-		name			= _name;
-		max_size		= _max_size;
-		queue_when_full	= _queue_when_full;
+		name				= _name;
+		
+		if ( _max_size < 1 ){
+			Debug.out( "Invalid thread pool max: " + _max_size );
+			_max_size = 1;
+		}
+		
+		target_permits		= _max_size;
+		queue_when_full		= _queue_when_full;
 
-		thread_sem = new AESemaphore( "ThreadPool::" + name, _max_size );
+		thread_sem = new AESemaphore( "ThreadPool::" + name, target_permits );
 
+		current_permits = target_permits;
+		
 		busy		= new ArrayList( _max_size );
 	}
 
@@ -164,7 +171,7 @@ ThreadPool
 	generateEvidence(
 		IndentWriter		writer )
 	{
-		writer.println( name + ": max=" + max_size +",qwf=" + queue_when_full + ",queue=" + task_queue.size() + ",busy=" + busy.size() + ",total=" + task_total + ":" + DisplayFormatters.formatDecimal(task_average.getDoubleAverage(),2) + "/sec");
+		writer.println( name + ": max=" + target_permits +",qwf=" + queue_when_full + ",queue=" + task_queue.size() + ",busy=" + busy.size() + ",total=" + task_total + ":" + DisplayFormatters.formatDecimal(task_average.getDoubleAverage(),2) + "/sec");
 	}
 
 	public void
@@ -182,7 +189,7 @@ ThreadPool
 	public int
 	getMaxThreads()
 	{
-		return( max_size );
+		return( target_permits );
 	}
 
 	public void
@@ -464,57 +471,38 @@ ThreadPool
 	setMaxThreads(
 		int		max )
 	{
-		if ( max > max_size ){
-
-			Debug.out( "should support this sometime..." );
-
-			return;
+		if ( max < 1 ){
+			Debug.out( "Invalid thread pool max: " + max );
+			max = 1;
 		}
-
-		setReservedThreadCount( max_size - max );
-	}
-
-	public void
-	setReservedThreadCount(
-		int		res )
-	{
+		
 		synchronized( this ){
 
-			if ( res < 0 ){
-
-				res = 0;
-
-			}else if ( res > max_size ){
-
-				res = max_size;
+			if ( max == target_permits ){
+	
+				return;
 			}
-
-			int	 diff =  res - reserved_actual;
-
-			while( diff < 0 ){
-
-				thread_sem.release();
-
-				reserved_actual--;
-
-				diff++;
-			}
-
-			while( diff > 0 ){
+		
+			target_permits = max;
+			
+			while( target_permits < current_permits ){
 
 				if ( thread_sem.reserveIfAvailable()){
 
-					reserved_actual++;
-
-					diff--;
+					current_permits--;
 
 				}else{
 
 					break;
 				}
 			}
+			
+			while( target_permits > current_permits ){
 
-			reserved_target = res;
+				thread_sem.release();
+				
+				current_permits++;
+			}
 		}
 	}
 
@@ -531,7 +519,7 @@ ThreadPool
 
 			if ( debug_thread_pool_log_on ){
 
-				System.out.println( "ThreadPool '" + getName() + "'/" + thread_name_index + ": max=" + max_size + ",sem=[" + thread_sem.getString() + "],busy=" + busy.size() + ",queue=" + task_queue.size());
+				System.out.println( "ThreadPool '" + getName() + "'/" + thread_name_index + ": max=" + target_permits + ",sem=[" + thread_sem.getString() + "],busy=" + busy.size() + ",queue=" + task_queue.size());
 			}
 
 			long	now = SystemTime.getMonotonousTime();
@@ -615,9 +603,9 @@ ThreadPool
 
 			if ( busy.size() == 0){
 
-				if ( reserved_target > reserved_actual ){
+				if ( current_permits > target_permits ){
 
-					reserved_actual++;
+					current_permits--;
 
 				}else{
 
@@ -788,9 +776,9 @@ ThreadPool
 
 					synchronized (ThreadPool.this){
 
-						if ( reserved_target > reserved_actual ){
+						if ( current_permits > target_permits ){
 
-							reserved_actual++;
+							current_permits--;
 
 						}else{
 

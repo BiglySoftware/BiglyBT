@@ -89,14 +89,14 @@ UpdateInItem
 
 			cell.setForeground( null );
 			
-			cell.setText( TimeFormatter.formatColon( secs ));
+			cell.setText( TimeFormatter.formatColon( secs<0?0:secs ));	// negative value render as blank, leave as 0
 			
 		}else{
 			
 
-				// things are lagging, time should have run already
+				// things are lagging, timer should have run already
 			
-			cell.setForeground( Utils.colorToIntArray(Colors.colorWarning));
+			cell.setForeground( secs<-5?Utils.colorToIntArray(Colors.colorWarning):null);
 			
 			cell.setText( "-" + TimeFormatter.formatColon( -secs ));
 		}

@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -40,6 +41,8 @@ import com.biglybt.core.util.*;
  */
 public class TrackerChecker implements AEDiagnosticsEvidenceGenerator, SystemTime.ChangeListener, TimerEventPerformer {
 	private final static LogIDs LOGID = LogIDs.TRACKER;
+
+	private static final Timer	tracker_timer = new Timer( "Tracker Scrape Timer", 32 );
 
   /** List of Trackers.
    * key = Tracker URL string
@@ -341,73 +344,73 @@ public class TrackerChecker implements AEDiagnosticsEvidenceGenerator, SystemTim
   private void
   runScrapes()
   {
-		TRTrackerBTScraperResponseImpl nextResponseScraping = checkForNextScrape();
+	  TRTrackerBTScraperResponseImpl nextResponseScraping = checkForNextScrape();
 
-		if (Logger.isEnabled() && nextResponseScraping != oldResponse && nextResponseScraping != null ) {
-			Logger.log(new LogEvent(
-					TorrentUtils.getDownloadManager(nextResponseScraping.getHash()),
-					LOGID,
-					LogEvent.LT_INFORMATION,
-					"Next scrape will be "
-							+ nextResponseScraping.getURL()
-							+ " in "
-							+ ((nextResponseScraping.getNextScrapeStartTime() - SystemTime.getCurrentTime())/1000)
-							+ " sec,type="
-							+ (nextResponseScraping.getTrackerStatus().getSupportsMultipeHashScrapes()
-									? "multi" : "single")
-									+ ",active="+nextResponseScraping.getTrackerStatus().getNumActiveScrapes()));
-		}
+	  if (Logger.isEnabled() && nextResponseScraping != oldResponse && nextResponseScraping != null ) {
+		  Logger.log(new LogEvent(
+				  TorrentUtils.getDownloadManager(nextResponseScraping.getHash()),
+				  LOGID,
+				  LogEvent.LT_INFORMATION,
+				  "Next scrape will be "
+						  + nextResponseScraping.getURL()
+						  + " in "
+						  + ((nextResponseScraping.getNextScrapeStartTime() - SystemTime.getCurrentTime())/1000)
+						  + " sec,type="
+						  + (nextResponseScraping.getTrackerStatus().getSupportsMultipeHashScrapes()
+								  ? "multi" : "single")
+						  + ",active="+nextResponseScraping.getTrackerStatus().getNumActiveScrapes()));
+	  }
 
 
-			long delay;
+	  long delay;
 
-			if (nextResponseScraping == null) {
+	  if (nextResponseScraping == null) {
 
-				delay = 60000; // nothing going on, recheck in a min
+		  delay = 60000; // nothing going on, recheck in a min
 
-			} else {
+	  } else {
 
-				long scrape_time = nextResponseScraping.getNextScrapeStartTime();
+		  long scrape_time = nextResponseScraping.getNextScrapeStartTime();
 
-				long time_to_scrape = scrape_time - SystemTime.getCurrentTime()
-						+ SystemTime.TIME_GRANULARITY_MILLIS;
+		  long time_to_scrape = scrape_time - SystemTime.getCurrentTime()
+				  + SystemTime.TIME_GRANULARITY_MILLIS;
 
-				if (time_to_scrape <= 0) {
+		  if (time_to_scrape <= 0) {
 
-					if (nextResponseScraping.getTrackerStatus().getNumActiveScrapes() > 0) {
-						// check if done scraping every 2 seconds, if no other
-						// scrapes are scheduled.  If other scrapes are sceduled,
-						// we would have got them from checkForNextScrape()
-						delay = 2000;
-					} else {
+			  if (nextResponseScraping.getTrackerStatus().getNumActiveScrapes() > 0) {
+				  // check if done scraping every 2 seconds, if no other
+				  // scrapes are scheduled.  If other scrapes are sceduled,
+				  // we would have got them from checkForNextScrape()
+				  delay = 2000;
+			  } else {
 
-						try {
-							nextResponseScraping.getTrackerStatus().updateSingleHash(
-									nextResponseScraping.getHash(), false);
+				  try {
+					  nextResponseScraping.getTrackerStatus().updateSingleHash(
+							  nextResponseScraping.getHash(), false);
 
-							delay = 0; // pick up next scrape fairly quickly
+					  delay = 0; // pick up next scrape fairly quickly
 
-						} catch (Throwable e) {
+				  } catch (Throwable e) {
 
-							Debug.printStackTrace(e);
+					  Debug.printStackTrace(e);
 
-							delay = 30000;
-						}
-					}
-				} else {
+					  delay = 30000;
+				  }
+			  }
+		  } else {
 
-					delay = time_to_scrape;
+			  delay = time_to_scrape;
 
-					if (delay > 30000) {
-						delay = 30000; // don't sleep too long in case new hashes are added etc.
-					}
-				}
-			}
+			  if (delay > 30000) {
+				  delay = 30000; // don't sleep too long in case new hashes are added etc.
+			  }
+		  }
+	  }
 
-			nextScrapeCheckOn = SystemTime.getCurrentTime() + delay;
-			oldResponse = nextResponseScraping;
-			// use tracker timer/thread pool
-			TRTrackerBTAnnouncerImpl.tracker_timer.addEvent(nextScrapeCheckOn, this);
+	  nextScrapeCheckOn = SystemTime.getCurrentTime() + delay;
+	  oldResponse = nextResponseScraping;
+
+	  tracker_timer.addEvent(nextScrapeCheckOn, this);
 
 	}
 

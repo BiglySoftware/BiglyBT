@@ -210,9 +210,12 @@ public class TrackerActivityView
 				{
 					String str;
 					
-					if ( value < 1000 ){
-						str = DisplayFormatters.formatDecimal((double)value/1000, 3 );
+					if ( value < 10000 ){
+						
+						str = DisplayFormatters.formatDecimal((double)value/1000, 3, true, true );
+						
 					}else{
+						
 						str = String.valueOf( value/1000 );
 					}
 					

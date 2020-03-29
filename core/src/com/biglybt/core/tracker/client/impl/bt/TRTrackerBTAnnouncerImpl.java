@@ -32,6 +32,7 @@ import java.util.zip.GZIPInputStream;
 import javax.net.ssl.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.dht.netcoords.DHTNetworkPosition;
 import com.biglybt.core.dht.netcoords.DHTNetworkPositionManager;
@@ -84,8 +85,16 @@ TRTrackerBTAnnouncerImpl
 
 	private static final int OVERRIDE_PERIOD			= 10*1000;
 
-	protected static final Timer	tracker_timer = new Timer( "Tracker Timer", 32);
+	private static final Timer	tracker_timer = new Timer( "Tracker Announce Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
 
+	static{
+		COConfigurationManager.addParameterListener(
+			ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE,
+			(name)->{
+				tracker_timer.getThreadPool().setMaxThreads( COConfigurationManager.getIntParameter( name ));
+			});
+	}
+	
 	public static final String 	UDP_REALM = "UDP Tracker";
 
 	private static int userMinInterval = 0;

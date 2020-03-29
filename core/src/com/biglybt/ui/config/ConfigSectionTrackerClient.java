@@ -197,6 +197,10 @@ public class ConfigSectionTrackerClient
 				"ConfigView.section.tracker.client.closetimeout"),
 				Parameter.MODE_ADVANCED);
 
+		add(new IntParameterImpl(ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE,
+				"ConfigView.section.tracker.client.conc.announce",8,1024),
+				Parameter.MODE_ADVANCED);
+
 		add(new BooleanParameterImpl(BCFG_TRACKER_KEY_ENABLE_CLIENT,
 				"ConfigView.section.tracker.enablekey"), Parameter.MODE_ADVANCED);
 
