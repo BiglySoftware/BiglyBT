@@ -110,7 +110,7 @@ ProgressWindow
 			
 			delay = 10;
 			
-			CoreOperationTask.ProgressCallback cb = operation.getTask().getProgressCallback();
+			ProgressCallback cb = operation.getTask().getProgressCallback();
 			
 			if ( cb != null ){
 				
@@ -151,15 +151,20 @@ ProgressWindow
 												
 												if ( op_type == CoreOperation.OP_PROGRESS ){
 													
-													int s = operation.getTask().getProgressCallback().getStyle();
+													ProgressCallback cb = operation.getTask().getProgressCallback();
 													
-													if ((s & ProgressCallback.STYLE_NO_CLOSE) != 0 ){
+													if ( cb != null ){
 														
-														style &= ~SWT.CLOSE;
-													}
-													if ((s & ProgressCallback.STYLE_MODAL) != 0 ){
+														int s = cb.getStyle();
 														
-														style |= SWT.APPLICATION_MODAL;
+														if ((s & ProgressCallback.STYLE_NO_CLOSE) != 0 ){
+															
+															style &= ~SWT.CLOSE;
+														}
+														if ((s & ProgressCallback.STYLE_MODAL) != 0 ){
+															
+															style |= SWT.APPLICATION_MODAL;
+														}
 													}
 												}
 												
@@ -319,7 +324,7 @@ ProgressWindow
 
 		CoreOperationTask task = _core_op==null?null:_core_op.getTask();
 		
-		CoreOperationTask.ProgressCallback progress = task==null?null:task.getProgressCallback();
+		ProgressCallback progress = task==null?null:task.getProgressCallback();
 		
 		boolean alreadyPositioned = Utils.linkShellMetricsToConfig( shell, "com.biglybt.ui.swt.progress.ProgressWindow" + "." + _core_op.getOperationType());
 		
