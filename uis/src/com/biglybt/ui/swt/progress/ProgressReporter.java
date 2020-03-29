@@ -97,10 +97,9 @@ public class ProgressReporter
 
 	/**
 	 * An instance id for this reporter that is guaranteed to be unique within this same session
-	 * It is declared as transient to help ensure no accidental reliance on the persistence of this ID
-	 * between sessionS (just in case this class is declared serializable in a future modification)
 	 */
-	private transient int ID;
+	
+	private int ID;
 
 	private int minimum, maximum, selection, percentage;
 
