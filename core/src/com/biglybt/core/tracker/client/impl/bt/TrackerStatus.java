@@ -41,6 +41,7 @@ import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.security.SESecurityManager;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
+import com.biglybt.core.tracker.AllTrackersManager.ScrapeStats;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.client.TRTrackerScraperClientResolver;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
@@ -110,6 +111,26 @@ public class TrackerStatus {
 	private static final List			logged_invalid_urls				= new ArrayList();
 	private static final ThreadPool		thread_pool						= new ThreadPool("TrackerStatus", 10, true);	// queue when full rather than block
 
+	static{
+		all_trackers.registerScrapeStatsProvider(
+			new AllTrackersManager.ScrapeStatsProvider(){
+				
+				@Override
+				public ScrapeStats 
+				getStats()
+				{
+					return( new ScrapeStats(){
+						@Override
+						public long getLagMillis(){
+				  			ScrapeTask oldest = (ScrapeTask)thread_pool.getOldestQueuedTask();
+				  			
+				  			return( oldest==null?0:(SystemTime.getMonotonousTime()-oldest.create_time ));
+						}
+					});
+				}
+			});
+	}
+	
 	private final URL				tracker_url;
 	private boolean					az_tracker;
 	private boolean					enable_sni_hack;
@@ -565,10 +586,8 @@ public class TrackerStatus {
 		  			}
 		  		}
 
-		  		try{
-		  			ScrapeTask oldest = (ScrapeTask)thread_pool.getOldestQueuedTask();
-		  			
-		  			all_trackers.addScrapeRequest(oldest==null?0:(SystemTime.getMonotonousTime()-oldest.create_time ));
+		  		try{		  			
+		  			all_trackers.addScrapeRequest();
 		  			
 		  				// set context in case authentication dialog is required
 

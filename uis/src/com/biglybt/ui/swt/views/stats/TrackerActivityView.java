@@ -52,27 +52,25 @@ public class TrackerActivityView
 
 	public static final String MSGID_PREFIX = "TrackerActivityView";
 
-	private static MultiPlotGraphic	mpg_rates_history;
-	private static MultiPlotGraphic	mpg_lags_history;
-
-	private static Color[]	mpg_rates_colors = 
-		{ 
-			Colors.blues[Colors.BLUES_DARKEST],
-			Colors.fadedGreen,
-		};
+	private static MultiPlotGraphic[] mpg_histories = new MultiPlotGraphic[3];
 	
-	private static Color[]	mpg_lags_colors = 
-		{ 
+	private static Color[]	mpg_rates_colors = { 
+			Colors.blues[Colors.BLUES_DARKEST],
+			Colors.fadedGreen };
+	
+	private static Color[]	mpg_lags_colors =  { 
 			Colors.blues[Colors.BLUES_DARKEST],
 			Colors.maroon,
-			Colors.fadedGreen,
-		};
+			Colors.fadedGreen };
+	
+	private static Color[]	mpg_sched_colors = { 
+			Colors.blues[Colors.BLUES_DARKEST],
+			Colors.maroon };
 	
 	private Composite panel;
-	
-	private MultiPlotGraphic	mpg_rates;
-	private MultiPlotGraphic	mpg_lags;
-	
+		
+	private MultiPlotGraphic[] mpgs = new MultiPlotGraphic[3];
+
 	private AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
 
 	public 
@@ -86,13 +84,14 @@ public class TrackerActivityView
 		Composite composite ) 
 	{
 		panel = new Composite(composite,SWT.NULL);
-		panel.setLayout(new GridLayout());
+		panel.setLayout(new GridLayout(2, true));
 		GridData gridData;
 
 		{
 			Group gRates = new Group(panel,SWT.NULL);
 			Messages.setLanguageText(gRates,"TrackerActivityView.rates");
 			gridData = new GridData(GridData.FILL_BOTH);
+			gridData.horizontalSpan = 2;
 			gRates.setLayoutData(gridData);
 			gRates.setLayout(new GridLayout());
 	
@@ -130,7 +129,7 @@ public class TrackerActivityView
 					}
 			};
 	
-			mpg_rates = MultiPlotGraphic.getInstance( sources, formatter );
+			MultiPlotGraphic mpg_rates = mpgs[0] = MultiPlotGraphic.getInstance( sources, formatter );
 	
 	
 			String[] color_configs = new String[] {
@@ -186,9 +185,11 @@ public class TrackerActivityView
 	
 			mpg_rates.initialize( ratesCanvas, false );
 	
-			if ( mpg_rates_history != null ){
+			MultiPlotGraphic history = mpg_histories[0];
+			
+			if ( history != null ){
 				
-				mpg_rates.reset( mpg_rates_history.getHistory());
+				mpg_rates.reset( history.getHistory());
 			}
 			
 			mpg_rates.setActive( true );
@@ -232,7 +233,7 @@ public class TrackerActivityView
 						public int
 						getValue()
 						{
-							return((int)all_trackers.getAnnounceLagMillis()[0]);
+							return((int)all_trackers.getAnnounceStats().getPublicLagMillis());
 						}
 					},
 					new ValueSourceImpl( "Announce Private", 1, mpg_lags_colors, ValueSource.STYLE_NONE, false, false )
@@ -241,7 +242,7 @@ public class TrackerActivityView
 						public int
 						getValue()
 						{
-							return((int)all_trackers.getAnnounceLagMillis()[1]);
+							return((int)all_trackers.getAnnounceStats().getPrivateLagMillis());
 						}
 					},
 					new ValueSourceImpl( "Scrape", 2, mpg_lags_colors, ValueSource.STYLE_NONE, false, false )
@@ -250,12 +251,12 @@ public class TrackerActivityView
 						public int
 						getValue()
 						{
-							return((int)all_trackers.getScrapeLagMillis());
+							return((int)all_trackers.getScrapeStats().getLagMillis());
 						}
 					}
 			};
 	
-			mpg_lags = MultiPlotGraphic.getInstance( sources, formatter );
+			MultiPlotGraphic mpg_lags = mpgs[1] = MultiPlotGraphic.getInstance( sources, formatter );
 	
 	
 			String[] color_configs = new String[] {
@@ -312,100 +313,194 @@ public class TrackerActivityView
 	
 			mpg_lags.initialize( lagsCanvas, false );
 	
-			if ( mpg_lags_history != null ){
+			MultiPlotGraphic history = mpg_histories[1];
+			
+			if ( history != null ){
 				
-				mpg_lags.reset( mpg_lags_history.getHistory());
+				mpg_lags.reset( history.getHistory());
 			}
 			
 			mpg_lags.setActive( true );
 		}
+		
+		{
+			Group gSched = new Group(panel,SWT.NULL);
+			Messages.setLanguageText(gSched,"TrackerActivityView.scheduled");
+			gridData = new GridData(GridData.FILL_BOTH);
+			gSched.setLayoutData(gridData);
+			gSched.setLayout(new GridLayout());
+	
+			ValueFormater formatter =
+					new ValueFormater()
+			{
+				@Override
+				public String
+				format(
+					int value)
+				{
+					return( String.valueOf( value ));
+				}
+			};
+	
+	
+			final ValueSourceImpl[] sources = {
+					new ValueSourceImpl( "Sched Public", 0, mpg_sched_colors, ValueSource.STYLE_NONE, false, false )
+					{
+						@Override
+						public int
+						getValue()
+						{
+							return((int)all_trackers.getAnnounceStats().getPublicScheculedCount());
+						}
+					},
+					new ValueSourceImpl( "Sched Private", 1, mpg_sched_colors, ValueSource.STYLE_NONE, false, false )
+					{
+						@Override
+						public int
+						getValue()
+						{
+							return((int)all_trackers.getAnnounceStats().getPrivateScheculedCount());
+						}
+					},
+			};
+	
+			MultiPlotGraphic mpg_sched = mpgs[2] = MultiPlotGraphic.getInstance( sources, formatter );
+	
+	
+			String[] color_configs = new String[] {
+					"TrackerActivityView.legend.sched.announce.pub",
+					"TrackerActivityView.legend.sched.announce.priv",
+			};
+	
+			Legend.LegendListener legend_listener =
+					new Legend.LegendListener()
+			{
+				private int	hover_index = -1;
+	
+				@Override
+				public void
+				hoverChange(
+						boolean 	entry,
+						int 		index )
+				{
+					if ( hover_index != -1 ){
+	
+						sources[hover_index].setHover( false );
+					}
+	
+					if ( entry ){
+	
+						hover_index = index;
+	
+						sources[index].setHover( true );
+					}
+	
+					mpg_sched.refresh( true );
+				}
+	
+				@Override
+				public void
+				visibilityChange(
+						boolean	visible,
+						int		index )
+				{
+					sources[index].setVisible( visible );
+	
+					mpg_sched.refresh( true );
+				}
+			};	
+	
+			Canvas lagsCanvas = new Canvas(gSched,SWT.NO_BACKGROUND);
+			gridData = new GridData(GridData.FILL_BOTH);
+			lagsCanvas.setLayoutData(gridData);
+	
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+	
+			Legend.createLegendComposite(gSched, mpg_sched_colors, color_configs, null, gridData, true, legend_listener );
+	
+			mpg_sched.initialize( lagsCanvas, false );
+	
+			MultiPlotGraphic history = mpg_histories[2];
+			
+			if ( history != null ){
+				
+				mpg_sched.reset( history.getHistory());
+			}
+			
+			mpg_sched.setActive( true );
+		}
 	}
 
-	private void delete() {
-		
+	private void delete()
+	{	
 		synchronized( TrackerActivityView.class ){
 			
-			if ( mpg_rates_history == null ){
-				
-				if ( mpg_rates != null ){
-				
-					mpg_rates_history = mpg_rates;
-					
-					mpg_rates_history.dispose( true );
-					
-					mpg_rates = null;
-					
-					Utils.execSWTThread(()->{
-						Shell shell = Utils.findAnyShell( true );
+			for ( int i=0; i<mpg_histories.length; i++ ){
 						
-						if ( shell != null && !shell.isDisposed()){
-							
-							shell.addListener( SWT.Dispose, (ev)->{
-								
-								synchronized( TrackerActivityView.class ){
-									
-									mpg_rates_history.dispose();
-									
-									mpg_rates_history = null;
-								}
-							});
-						}
-					});
-				}
+				if ( mpg_histories[i] == null ){
 				
-				if ( mpg_lags != null ){
+					MultiPlotGraphic mpg = mpgs[i];
 					
-					mpg_lags_history = mpg_lags;
+					if ( mpg != null ){
 					
-					mpg_lags_history.dispose( true );
-					
-					mpg_lags = null;
-					
-					Utils.execSWTThread(()->{
-						Shell shell = Utils.findAnyShell( true );
+						mpg_histories[i] = mpg;
 						
-						if ( shell != null && !shell.isDisposed()){
+						mpg.dispose( true );
+						
+						mpgs[i] = null;
+						
+						final int f_i = i;
+						
+						Utils.execSWTThread(()->{
+							Shell shell = Utils.findAnyShell( true );
 							
-							shell.addListener( SWT.Dispose, (ev)->{
+							if ( shell != null && !shell.isDisposed()){
 								
-								synchronized( TrackerActivityView.class ){
+								shell.addListener( SWT.Dispose, (ev)->{
 									
-									mpg_lags_history.dispose();
-									
-									mpg_lags_history = null;
-								}
-							});
-						}
-					});
+									synchronized( TrackerActivityView.class ){
+										
+										if ( mpg_histories[f_i] != null ){
+											
+											mpg_histories[f_i].dispose();
+										
+											mpg_histories[f_i] = null;
+										}
+									}
+								});
+							}
+						});
+					}
 				}
 			}
 		}
 
-		if ( mpg_rates != null ){
+		for ( int i=0; i<mpgs.length; i++ ){
 			
-			mpg_rates.dispose();
-		}
-		
-		mpg_rates = null;
-		
-		if ( mpg_lags != null ){
+			if ( mpgs[i] != null ){
 			
-			mpg_lags.dispose();
+				mpgs[i].dispose();
+				
+				mpgs[i] = null;
+			}
 		}
-		
-		mpg_lags = null;
 	}
 
-	private Composite getComposite() {
+	private Composite 
+	getComposite() 
+	{
 		return panel;
 	}
 
-	private void refresh(boolean force) {
-		if ( mpg_rates != null ){
-			mpg_rates.refresh(force);
-		}
-		if ( mpg_lags != null ){
-			mpg_lags.refresh(force);
+	private void 
+	refresh( boolean force) 
+	{
+		for ( int i=0; i<mpgs.length; i++ ){
+			
+			if ( mpgs[i] != null ){
+				
+				mpgs[i].refresh(force);
+			}
 		}
 	}
 

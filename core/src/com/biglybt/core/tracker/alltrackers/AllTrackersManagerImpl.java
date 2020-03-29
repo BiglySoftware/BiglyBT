@@ -40,6 +40,10 @@ import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersListener;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
+import com.biglybt.core.tracker.AllTrackersManager.AnnounceStats;
+import com.biglybt.core.tracker.AllTrackersManager.AnnounceStatsProvider;
+import com.biglybt.core.tracker.AllTrackersManager.ScrapeStats;
+import com.biglybt.core.tracker.AllTrackersManager.ScrapeStatsProvider;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerRequest;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
@@ -511,18 +515,69 @@ AllTrackersManagerImpl
 	private final Average announce_rate = Average.getInstance( 3000, 60 );  //update every 3s, average over 60s
 	private final Average scrape_rate 	= Average.getInstance( 3000, 60 );  //update every 3s, average over 60s
 
-	private volatile long[] announce_lag;
-	private volatile long 	scrape_lag;
+	private AnnounceStats	announce_stats = new AnnounceStats(){
+		
+		@Override
+		public int getPublicScheculedCount(){
+			return 0;
+		}
+		
+		@Override
+		public long getPublicLagMillis(){
+			return 0;
+		}
+		
+		@Override
+		public int getPrivateScheculedCount(){
+			return 0;
+		}
+		
+		@Override
+		public long getPrivateLagMillis(){
+			return 0;
+		}
+	};
+
+	private volatile ScrapeStats	scrape_stats = new ScrapeStats(){
+		
+		@Override
+		public long getLagMillis(){
+			return 0;
+		}
+	};
+	
+	private AnnounceStatsProvider	announce_provider = new AnnounceStatsProvider(){
+		
+		@Override
+		public AnnounceStats getStats(){
+			return( announce_stats );
+		}
+	};
+	
+	private ScrapeStatsProvider	scrape_provider = new ScrapeStatsProvider(){
+		
+		@Override
+		public ScrapeStats getStats(){
+			return( scrape_stats );
+		}
+	};
+	
+	@Override
+	public void registerAnnounceStatsProvider(AnnounceStatsProvider provider){
+		announce_provider = provider;
+	}
+	
+	@Override
+	public void registerScrapeStatsProvider(ScrapeStatsProvider provider){
+		scrape_provider = provider;
+	}
 	
 	@Override
 	public void
 	addActiveRequest(
-		TRTrackerAnnouncerRequest	request,
-		long[]						lag_millis )
+		TRTrackerAnnouncerRequest	request )
 	{
 		active_requests.put( request, "" );
-		
-		announce_lag = lag_millis;
 	}
 		
 	@Override
@@ -537,10 +592,8 @@ AllTrackersManagerImpl
 	
 	@Override
 	public void
-	addScrapeRequest(
-		long		lag_millis )
+	addScrapeRequest()
 	{
-		scrape_lag = lag_millis;
 	}
 	
 	@Override
@@ -565,13 +618,6 @@ AllTrackersManagerImpl
 	}
 	
 	@Override
-	public long[]
-	getAnnounceLagMillis()
-	{
-		return( announce_lag );
-	}
-	
-	@Override
 	public float 
 	getScrapesPerSecond()
 	{
@@ -579,10 +625,17 @@ AllTrackersManagerImpl
 	}
     
 	@Override
-	public long
-	getScrapeLagMillis()
+	public AnnounceStats 
+	getAnnounceStats()
 	{
-		return( scrape_lag );
+		return( announce_provider.getStats());
+	}
+	
+	@Override
+	public ScrapeStats 
+	getScrapeStats()
+	{
+		return( scrape_provider.getStats());
 	}
 	
 	@Override

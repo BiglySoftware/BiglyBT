@@ -79,16 +79,14 @@ AllTrackersManager
 	
 		public void
 		addActiveRequest(
-			TRTrackerAnnouncerRequest	request,
-			long[]						lag_millis );
+			TRTrackerAnnouncerRequest	request );
 		
 		public void
 		removeActiveRequest(
 			TRTrackerAnnouncerRequest	request );
 		
 		public void
-		addScrapeRequest(
-			long	lag_millis );
+		addScrapeRequest();
 		
 		public void
 		removeScrapeRequest();
@@ -98,16 +96,16 @@ AllTrackersManager
 		
 		public float
 		getAnnouncesPerSecond();
-		
-		public long[]
-		getAnnounceLagMillis();
-		
+			
 		public float
 		getScrapesPerSecond();
+			
+		public AnnounceStats
+		getAnnounceStats();
 		
-		public long
-		getScrapeLagMillis();
-
+		public ScrapeStats
+		getScrapeStats();
+		
 		public AllTrackersTracker
 		getTracker(
 			URL		url );
@@ -124,6 +122,14 @@ AllTrackersManager
 		public File
 		getLogFile(
 			String		short_key );
+		
+		public void
+		registerAnnounceStatsProvider(
+			AnnounceStatsProvider		provider );
+		
+		public void
+		registerScrapeStatsProvider(
+			ScrapeStatsProvider			provider );
 		
 		public void
 		addListener(
@@ -214,5 +220,42 @@ AllTrackersManager
 		
 		public boolean
 		hasPrivateTorrents();
+	}
+	
+	public interface
+	AnnounceStatsProvider
+	{
+		public AnnounceStats
+		getStats();
+	}
+	
+	public interface
+	AnnounceStats
+	{
+		public long
+		getPublicLagMillis();
+		
+		public long
+		getPrivateLagMillis();
+		
+		public int
+		getPublicScheculedCount();
+		
+		public int
+		getPrivateScheculedCount();
+	}
+	
+	public interface
+	ScrapeStatsProvider
+	{
+		public ScrapeStats
+		getStats();
+	}
+	
+	public interface
+	ScrapeStats
+	{
+		public long
+		getLagMillis();
 	}
 }

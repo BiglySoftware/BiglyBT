@@ -139,6 +139,13 @@ public class Timer
 	{
 		return(new ArrayList<>(events));
 	}
+	
+	public int
+	getEventCount()
+	{
+		return( events.size());
+	}
+	
 	public void
 	setLogging(
 		boolean	_log )

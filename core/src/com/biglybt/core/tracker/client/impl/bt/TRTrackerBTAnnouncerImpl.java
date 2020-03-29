@@ -55,6 +55,7 @@ import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
+import com.biglybt.core.tracker.AllTrackersManager.AnnounceStats;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.tracker.client.impl.*;
@@ -88,6 +89,44 @@ TRTrackerBTAnnouncerImpl
 	private static final Timer	tracker_timer_public 	= new Timer( "Tracker Announce Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
 	private static final Timer	tracker_timer_private	= new Timer( "Tracker Announce Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
 
+	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
+
+	static{
+		all_trackers.registerAnnounceStatsProvider(
+			new AllTrackersManager.AnnounceStatsProvider(){
+				
+				@Override
+				public AnnounceStats getStats(){
+					return( 
+						new AnnounceStats()
+						{
+							public long
+							getPublicLagMillis()
+							{
+								return( tracker_timer_public.getLag());
+							}
+							
+							public long
+							getPrivateLagMillis()
+							{
+								return( tracker_timer_private.getLag());
+							}
+							
+							public int
+							getPublicScheculedCount()
+							{
+								return(tracker_timer_public.getEventCount());
+							}
+							
+							public int
+							getPrivateScheculedCount()
+							{
+								return(tracker_timer_private.getEventCount());
+							}
+						});
+				}
+			});
+	}
 	static{
 		COConfigurationManager.addParameterListener(
 			ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE,
@@ -131,8 +170,6 @@ TRTrackerBTAnnouncerImpl
 
 	private static final AEMonitor 	class_mon 			= new AEMonitor( "TRTrackerBTAnnouncer:class" );
 	private static final Map			tracker_report_map	= new HashMap();
-
-	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
 
 	private final Timer						tracker_timer;
 	private final TOTorrent					torrent;
@@ -1060,7 +1097,7 @@ TRTrackerBTAnnouncerImpl
 
 			request_obj =  constructRequest( evt,original_url );
 			
-			all_trackers.addActiveRequest( request_obj, new long[]{ tracker_timer_public.getLag(), tracker_timer_private.getLag() });
+			all_trackers.addActiveRequest( request_obj );
 			
 			long start = SystemTime.getMonotonousTime();
 
