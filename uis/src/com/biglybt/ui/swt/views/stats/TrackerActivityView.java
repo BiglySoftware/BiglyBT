@@ -350,7 +350,7 @@ public class TrackerActivityView
 						public int
 						getValue()
 						{
-							return((int)all_trackers.getAnnounceStats().getPublicScheculedCount());
+							return((int)all_trackers.getAnnounceStats().getPublicScheduledCount());
 						}
 					},
 					new ValueSourceImpl( "Sched Private", 1, mpg_sched_colors, ValueSource.STYLE_NONE, false, false )
@@ -359,7 +359,7 @@ public class TrackerActivityView
 						public int
 						getValue()
 						{
-							return((int)all_trackers.getAnnounceStats().getPrivateScheculedCount());
+							return((int)all_trackers.getAnnounceStats().getPrivateScheduledCount());
 						}
 					},
 			};

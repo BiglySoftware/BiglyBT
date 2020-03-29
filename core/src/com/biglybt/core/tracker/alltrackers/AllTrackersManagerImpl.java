@@ -227,114 +227,119 @@ AllTrackersManagerImpl
 				
 				Object[] entry = update_queue.remove();
 				
-				Object	e0 = entry[0];
-				
-				if ( e0 instanceof TOTorrent ){
-				
-					TOTorrent torrent = (TOTorrent)e0;
+				try{
+					Object	e0 = entry[0];
 					
-					if ( pending_torrents == null ){
-						
-						torrent.addListener( AllTrackersManagerImpl.this );
-						
-					}else{
-						
-						pending_torrents.add( torrent );
-					}
+					if ( e0 instanceof TOTorrent ){
 					
-					continue;
-					
-				}else if ( e0 instanceof String ){
-					
-					String cmd = (String)e0;
-					
-					if ( cmd.equals( "logging_changed" )){
+						TOTorrent torrent = (TOTorrent)e0;
 						
-						updateLogging();
-						
-					}else{
-						
-						Debug.out( "eh?" );
-					}
-					
-					continue;
-				}
-						
-				AllTrackersTrackerImpl 		tracker = (AllTrackersTrackerImpl)e0;
-				
-				if ( host_map.containsKey( tracker.getTrackerName())){
-	
-					Object	obj 	= entry[1];
-											
-					boolean	updated = false;
-					
-					if ( obj instanceof String ){
-						
-						String cmd = (String)obj;
-						
-						if ( cmd.equals( "reset_stats" )){
+						if ( pending_torrents == null ){
 							
-							tracker.resetReportedStatsSupport();
+							torrent.addListener( AllTrackersManagerImpl.this );
 							
-							updated = true;
+						}else{
+							
+							pending_torrents.add( torrent );
+						}
+						
+						continue;
+						
+					}else if ( e0 instanceof String ){
+						
+						String cmd = (String)e0;
+						
+						if ( cmd.equals( "logging_changed" )){
+							
+							updateLogging();
 							
 						}else{
 							
 							Debug.out( "eh?" );
 						}
-					}else if ( obj instanceof TRTrackerAnnouncerResponse ){
-				
-						TRTrackerAnnouncerResponse a_resp = (TRTrackerAnnouncerResponse)obj;
-													
-						if ( tracker.setOK( a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE )){
-							
-							updated = true;
-						}
 						
-						if ( tracker.setStatusString( a_resp.getStatusString())){
+						continue;
+					}
 							
+					AllTrackersTrackerImpl 		tracker = (AllTrackersTrackerImpl)e0;
+					
+					if ( host_map.containsKey( tracker.getTrackerName())){
+		
+						Object	obj 	= entry[1];
+												
+						boolean	updated = false;
+						
+						if ( obj instanceof String ){
+							
+							String cmd = (String)obj;
+							
+							if ( cmd.equals( "reset_stats" )){
+								
+								tracker.resetReportedStatsSupport();
+								
+								updated = true;
+								
+							}else{
+								
+								Debug.out( "eh?" );
+							}
+						}else if ( obj instanceof TRTrackerAnnouncerResponse ){
+					
+							TRTrackerAnnouncerResponse a_resp = (TRTrackerAnnouncerResponse)obj;
+														
+							if ( tracker.setOK( a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE )){
+								
+								updated = true;
+							}
+							
+							if ( tracker.setStatusString( a_resp.getStatusString())){
+								
+								updated = true;
+							}
+		
+							if ( updated ){
+								
+								tracker.log( a_resp );
+							}
+						}else if ( obj instanceof TRTrackerScraperResponse ){
+							
+								// announce status trumps scrape 
+							
+							if ( tracker.hasStatus()){
+								
+								continue;
+							}
+							
+							TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)obj;							
+																						
+							if ( tracker.setOK( s_resp.getStatus() == TRTrackerScraperResponse.ST_ONLINE )){
+								
+								updated = true;
+							}
+							
+							if ( tracker.setStatusString( s_resp.getStatusString() )){
+								
+								updated = true;		
+							}
+						}else if ( obj instanceof TRTrackerAnnouncerRequest ){
+															
+							TRTrackerAnnouncerRequest req = (TRTrackerAnnouncerRequest)obj;
+																		
+							tracker.updateSession( req );
+							
+							tracker.log( req, false );
+	
 							updated = true;
 						}
-	
+							
 						if ( updated ){
 							
-							tracker.log( a_resp );
+							updates.add( tracker );
 						}
-					}else if ( obj instanceof TRTrackerScraperResponse ){
-						
-							// announce status trumps scrape 
-						
-						if ( tracker.hasStatus()){
-							
-							continue;
-						}
-						
-						TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)obj;							
-																					
-						if ( tracker.setOK( s_resp.getStatus() == TRTrackerScraperResponse.ST_ONLINE )){
-							
-							updated = true;
-						}
-						
-						if ( tracker.setStatusString( s_resp.getStatusString() )){
-							
-							updated = true;		
-						}
-					}else if ( obj instanceof TRTrackerAnnouncerRequest ){
-														
-						TRTrackerAnnouncerRequest req = (TRTrackerAnnouncerRequest)obj;
-																	
-						tracker.updateSession( req );
-						
-						tracker.log( req, false );
-
-						updated = true;
 					}
-						
-					if ( updated ){
-						
-						updates.add( tracker );
-					}
+				}catch( Throwable e ){
+					
+					Debug.out( e );
 				}
 			}
 			
@@ -518,7 +523,7 @@ AllTrackersManagerImpl
 	private AnnounceStats	announce_stats = new AnnounceStats(){
 		
 		@Override
-		public int getPublicScheculedCount(){
+		public int getPublicScheduledCount(){
 			return 0;
 		}
 		
@@ -528,7 +533,7 @@ AllTrackersManagerImpl
 		}
 		
 		@Override
-		public int getPrivateScheculedCount(){
+		public int getPrivateScheduledCount(){
 			return 0;
 		}
 		
@@ -1061,6 +1066,8 @@ AllTrackersManagerImpl
 				
 				session_stats = new HashMap<>();
 				
+					// should only be the one consolidated entry
+				
 				for ( Map.Entry<String,List<Number>> entry: ss.entrySet()){
 					
 					try{
@@ -1097,7 +1104,7 @@ AllTrackersManagerImpl
 		private Map
 		exportToMap()
 		{
-			Map	map = new HashMap();
+			Map<String,Object>	map = new HashMap<>();
 			
 			map.put( "name", name );
 			map.put( "status", status );
@@ -1112,65 +1119,43 @@ AllTrackersManagerImpl
 			}
 			
 			if ( session_stats != null ){
-				
-				Map<String,Object> ss = new HashMap<>();
-				
-				while( session_stats.size() > 5 ){
-				
-					long oldest_time 	= Long.MAX_VALUE;
-					long oldest_session	= 0;
-					
-					long[]	consolidated = session_stats.remove( 0L );
-					
-					for ( Map.Entry<Long, long[]> entry: session_stats.entrySet()){
-						
-						long[] 	vals = entry.getValue();
-							
-						long time = vals[0];
-							
-						if ( time < oldest_time ){
 								
-							long 	sid = entry.getKey();							
+					// consolidate all the sessions but don't touch the existing state as use is ongoing...
 
-							oldest_time 	= time;
-							oldest_session	= sid;
-						}
-					}
+				long[]	consolidated = null;
 					
-					long[] oldest = session_stats.remove( oldest_session );
-					
+				for ( long[] vals: session_stats.values()){
+																		
 					if ( consolidated == null ){
 						
-						consolidated = oldest;
+						consolidated = vals;
 						
 					}else{
 						
-						for ( int i=1;i<Math.min( oldest.length, consolidated.length ); i++){
+						for ( int i=1;i<Math.min( vals.length, consolidated.length ); i++){
 							
-							consolidated[i] = consolidated[i] + oldest[i];
+							consolidated[i] = consolidated[i] + vals[i];
 						}
 					}
-					
-					consolidated[0] = SystemTime.getCurrentTime();
-					
-					session_stats.put( 0L, consolidated );
 				}
 				
-				for ( Map.Entry<Long, long[]> entry: session_stats.entrySet()){
+				if ( consolidated != null ){
 					
-					String id = String.valueOf( entry.getKey());
-					
+					consolidated[0] = SystemTime.getCurrentTime();
+										
 					List<Long> vals = new ArrayList<>();
 					
-					for ( long l: entry.getValue()){
+					for ( long l: consolidated ){
 						
 						vals.add( l );
 					}
 					
-					ss.put( id, vals );
-				}
-				
-				map.put( "ss", ss );
+					Map<String,Object> ss = new HashMap<>();
+
+					ss.put( "0", vals );
+					
+					map.put( "ss", ss );
+				}				
 			}
 			
 			return( map );
@@ -1419,10 +1404,10 @@ AllTrackersManagerImpl
 			long	up 		= req.getReportedUpload();
 			long	down	= req.getReportedDownload();
 		
+			long	now = SystemTime.getCurrentTime();
+
 			if ( up > 0 || down > 0 ){
-				
-				long	now = SystemTime.getCurrentTime();
-				
+								
 				if ( session_stats == null ){
 					
 					session_stats = new HashMap<>();
@@ -1442,6 +1427,33 @@ AllTrackersManagerImpl
 				total_up 	= new_up;
 				total_down	= new_down;
 			}
+			
+			if ( req.isStopRequest() && session_stats != null ){
+				
+				long[]	values = session_stats.remove( session_id );
+				
+				if ( values != null ){
+					
+					long[]	consolidated = session_stats.get( 0L );
+					
+					if ( consolidated == null ){
+						
+						consolidated = values;
+						
+						session_stats.put( 0L, consolidated );
+						
+					}else{
+						
+						for ( int i=1;i<Math.min( values.length, consolidated.length ); i++){
+							
+							consolidated[i] = consolidated[i] + values[i];
+						}
+					}
+					
+					consolidated[0] = now;
+				}
+			}
+			
 			
 			long elapsed = req.getElapsed();
 			

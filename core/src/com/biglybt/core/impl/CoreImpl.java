@@ -1830,17 +1830,23 @@ CoreImpl
 			callback.setSubTaskName( MessageText.getString( "label.waiting.tracker.updates", new String[]{ String.valueOf( wait_secs )}));
 			callback.setProgress( progress );
 
-			int initial_active_req = at.getActiveRequestCount();
+			int active_req = at.getActiveRequestCount();
+			
+			AllTrackersManager.AnnounceStats announce_stats = at.getAnnounceStats();
 
-			if ( initial_active_req > 0 ){				
+			int scheduled_req = announce_stats.getPrivateScheduledCount() + announce_stats.getPublicScheduledCount();
+			
+			int total_req = active_req + scheduled_req;
+			
+			if ( total_req > 0 ){				
 				
 				if (Logger.isEnabled()){
-					Logger.log(new LogEvent(LOGID, "Waiting for tracker updates, " + initial_active_req + " outstanding"));
+					Logger.log(new LogEvent(LOGID, "Waiting for tracker updates, " + active_req + "/" + scheduled_req + " outstanding"));
 				}
 				
 				long at_start = SystemTime.getMonotonousTime();
 								
-				int current_active = initial_active_req;
+				int current_req = total_req;
 				
 				int p_start = 750;
 				int p_end	= 899;
@@ -1861,18 +1867,24 @@ CoreImpl
 							
 						}
 						
-						int active = at.getActiveRequestCount();
+						int latest_active = at.getActiveRequestCount();
 						
-						if ( active == 0 ){
+						announce_stats = at.getAnnounceStats();
+
+						int latest_scheduled = announce_stats.getPrivateScheduledCount() + announce_stats.getPublicScheduledCount();
+
+						int latest_req = latest_active + latest_scheduled;
+						
+						if ( latest_req == 0 ){
 							
 							break;
 						}
-						
-						if ( active < current_active ){
+												
+						if ( latest_req < current_req ){
 							
-							current_active = active;
+							current_req = latest_req;
 							
-							int percent = ((initial_active_req-current_active)*100)/initial_active_req;
+							int percent = ((total_req-current_req)*100)/total_req;
 							
 							callback.setProgress( p_start + ((p_end-p_start)*percent)/100 );
 							

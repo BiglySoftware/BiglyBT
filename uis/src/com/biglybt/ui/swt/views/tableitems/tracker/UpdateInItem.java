@@ -60,6 +60,8 @@ UpdateInItem
 	{
 		TrackerPeerSource ps = (TrackerPeerSource)cell.getDataSource();
 
+		boolean show_blank = false;
+		
 		int secs;
 
 		if ( ps == null ){
@@ -70,13 +72,15 @@ UpdateInItem
 
 			int	state = ps.getStatus();
 
-			if ( 	state != TrackerPeerSource.ST_DISABLED &&  !ps.isUpdating()){
+			if ( state != TrackerPeerSource.ST_DISABLED &&  !ps.isUpdating()){
 
 				secs = ps.getSecondsToUpdate();
 
 			}else{
 
 				secs = -1;
+				
+				show_blank = true;
 			}
 		}
 
@@ -85,20 +89,29 @@ UpdateInItem
 			return;
 		}
 
-		if ( secs >= -1 ){
-
+		if ( show_blank ){
+			
 			cell.setForeground( null );
 			
-			cell.setText( TimeFormatter.formatColon( secs<0?0:secs ));	// negative value render as blank, leave as 0
+			cell.setText( "" );
 			
 		}else{
 			
-
-				// things are lagging, timer should have run already
-			
-			cell.setForeground( secs<-5?Utils.colorToIntArray(Colors.colorWarning):null);
-			
-			cell.setText( "-" + TimeFormatter.formatColon( -secs ));
+			if ( secs >= -1 ){
+	
+				cell.setForeground( null );
+				
+				cell.setText( TimeFormatter.formatColon( secs<0?0:secs ));	// negative value render as blank, leave as 0
+				
+			}else{
+				
+	
+					// things are lagging, timer should have run already
+				
+				cell.setForeground( secs<-5?Utils.colorToIntArray(Colors.colorWarning):null);
+				
+				cell.setText( "-" + TimeFormatter.formatColon( -secs ));
+			}
 		}
 	}
 }

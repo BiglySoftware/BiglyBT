@@ -1217,19 +1217,41 @@ DownloadManagerStatsImpl
 				
 				key = Base32.encode( key.getBytes( Constants.UTF_8 ));	// protect against non-ascii keys
 				
-				Map<String,List<Long>> session_stats = new HashMap<>();
+				Map<String,List<Long>> ss = new HashMap<>();
 				
-				stats.put( key, session_stats );
+				stats.put( key, ss );
 				
-				for ( Map.Entry<Long,long[]> entry: entry1.getValue().entrySet()){
+				Map<Long,long[]> session_stats = entry1.getValue();
+				
+					// only ever persist consolidated stats as session-ids are relative to a biglybt run only
+					// but don't touch the existing state as it is reused
+				
+				long[]	consolidated = null;
+				
+				for ( long[] vals: session_stats.values()){
 					
-					String id = String.valueOf( entry.getKey());
+					if ( consolidated == null ){
+						
+						consolidated = vals;
+						
+					}else{
+						
+						for ( int i=1;i<Math.min( vals.length, consolidated.length ); i++){
+							
+							consolidated[i] = consolidated[i] + vals[i];
+						}
+					}
+				}
+				
+				if ( consolidated != null ){
+					
+					consolidated[0] = SystemTime.getCurrentTime();
 					
 					List<Long> vals = new ArrayList<>();
 					
-					session_stats.put( id, vals );
+					ss.put( "0", vals );
 					
-					for ( long l: entry.getValue()){
+					for ( long l: consolidated ){
 						
 						vals.add( l );
 					}

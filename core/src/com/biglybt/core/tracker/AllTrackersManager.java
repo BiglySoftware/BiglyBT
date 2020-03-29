@@ -239,10 +239,10 @@ AllTrackersManager
 		getPrivateLagMillis();
 		
 		public int
-		getPublicScheculedCount();
+		getPublicScheduledCount();
 		
 		public int
-		getPrivateScheculedCount();
+		getPrivateScheduledCount();
 	}
 	
 	public interface

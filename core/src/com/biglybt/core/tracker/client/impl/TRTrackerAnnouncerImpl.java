@@ -21,6 +21,7 @@ package com.biglybt.core.tracker.client.impl;
 
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
@@ -57,6 +58,8 @@ TRTrackerAnnouncerImpl
 
 	private static final int	   	key_id_length	= 8;
 
+	private static AtomicLong		session_id_next = new AtomicLong(0);	// 0 reserved for consolidation
+	
 	private static String
 	createKeyID()
 	{
@@ -122,15 +125,8 @@ TRTrackerAnnouncerImpl
 		throws TRTrackerAnnouncerException
 	{
 		torrent	= _torrent;
-
-		long	sid = 0;
 		
-		while( sid == 0 ){
-			
-			sid = RandomUtils.SECURE_RANDOM.nextLong();
-		}
-		
-		session_id = sid;
+		session_id = session_id_next.incrementAndGet();
 		
 		tracker_key	= createKeyID();
 

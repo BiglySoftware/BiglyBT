@@ -86,8 +86,8 @@ TRTrackerBTAnnouncerImpl
 
 	private static final int OVERRIDE_PERIOD			= 10*1000;
 
-	private static final Timer	tracker_timer_public 	= new Timer( "Tracker Announce Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
-	private static final Timer	tracker_timer_private	= new Timer( "Tracker Announce Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
+	private static final Timer	tracker_timer_public 	= new Timer( "Tracker Announce Public Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
+	private static final Timer	tracker_timer_private	= new Timer( "Tracker Announce Private Timer", COConfigurationManager.getIntParameter( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE ));
 
 	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
 
@@ -113,13 +113,13 @@ TRTrackerBTAnnouncerImpl
 							}
 							
 							public int
-							getPublicScheculedCount()
+							getPublicScheduledCount()
 							{
 								return(tracker_timer_public.getEventCount());
 							}
 							
 							public int
-							getPrivateScheculedCount()
+							getPrivateScheduledCount()
 							{
 								return(tracker_timer_private.getEventCount());
 							}
@@ -337,13 +337,6 @@ TRTrackerBTAnnouncerImpl
 
 					return;
 				}
-
-				if ( Logger.isClosingTakingTooLong()){
-				
-						// give up 
-					
-					return;
-				}
 				
 				long	secs_to_wait = getErrorRetryInterval();
 
@@ -351,11 +344,13 @@ TRTrackerBTAnnouncerImpl
 
 					secs_to_wait = requestUpdateSupport();
 
-					if (Logger.isEnabled())
-						Logger.log(new LogEvent(torrent, LOGID,
-								"Next tracker announce (unadjusted) will be in " + secs_to_wait
-										+ "s"));
-
+					if ( tracker_state != TRTrackerAnnouncer.TS_STOPPED ){
+						
+						if (Logger.isEnabled())
+							Logger.log(new LogEvent(torrent, LOGID,
+									"Next tracker announce (unadjusted) will be in " + secs_to_wait
+											+ "s"));
+					}
 				}finally{
 
 					current_time_to_wait_secs	= secs_to_wait;
@@ -1221,6 +1216,8 @@ TRTrackerBTAnnouncerImpl
 
 	  	  if ( destroyed ){
 
+	  		  // we've had a go at one url, give up
+	  		  
 	  		break outer;
 	  	  }
 		}
