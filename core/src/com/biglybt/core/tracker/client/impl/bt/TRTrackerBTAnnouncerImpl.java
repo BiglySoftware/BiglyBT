@@ -595,6 +595,11 @@ TRTrackerBTAnnouncerImpl
 	
 						long target_time = start + (secs_to_wait*1000);
 	
+						if ( target_time < now ){
+							
+							target_time = now;
+						}
+						
 						if ( target_time != expiry ){
 	
 							current_timer_event.cancel();

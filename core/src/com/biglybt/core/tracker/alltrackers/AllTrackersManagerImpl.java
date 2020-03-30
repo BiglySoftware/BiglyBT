@@ -71,8 +71,13 @@ AllTrackersManagerImpl
 	final static int	MAX_TRACKERS	= 1024;
 	
 	final static int 	TICK_PERIOD	= 2500;
+	
 	final static int	SAVE_PERIOD	= 5*60*1000;
 	final static int	SAVE_TICKS	= SAVE_PERIOD/TICK_PERIOD;
+	
+	final static int	LAG_CHECK_PERIOD	= 60*1000;
+	final static int	LAG_CHECK_TICKS		= LAG_CHECK_PERIOD/TICK_PERIOD;
+
 	
 	private static final String	CONFIG_FILE 				= "alltrackers.config";
 
@@ -86,6 +91,8 @@ AllTrackersManagerImpl
 		return( singleton );
 	}
 
+	private final long start_time = SystemTime.getMonotonousTime();
+			
 	private final Core	core;
 	
 	private volatile boolean stopping;
@@ -199,12 +206,42 @@ AllTrackersManagerImpl
 					
 					processUpdates( false );
 					
+					if ( tick_count % LAG_CHECK_TICKS == 0 ){
+						
+						checkLag();
+					}
+					
 					if ( tick_count % SAVE_TICKS == 0 ){
 						
 						saveConfig( false );
 					}
 				}
 			});
+	}
+	
+	private MovingImmediateAverage	lag_average = AverageFactory.MovingImmediateAverage( 5 );
+	private boolean					lag_logged;
+	
+	private void
+	checkLag()
+	{
+		AnnounceStats stats = getAnnounceStats();
+		
+		long max_lag = Math.max( stats.getPrivateLagMillis(), stats.getPublicLagMillis());
+		
+		lag_average.update( max_lag );
+		
+		if ( !lag_logged && SystemTime.getMonotonousTime() - start_time > 10*60*1000 ){
+			
+			if ( lag_average.getAverage() > 120*1000 ){
+				
+				lag_logged = true;
+				
+				String text = MessageText.getString( "alltorrents.updates.lagging" );
+				
+				Logger.log(new LogAlert(LogAlert.UNREPEATABLE, LogAlert.AT_WARNING, text, 0 ));
+			}
+		}
 	}
 	
 	private void
