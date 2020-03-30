@@ -155,6 +155,9 @@ PairingManagerImpl
 	private String			local_v4	= "";
 	private String			local_v6	= "";
 
+	private Set<InetAddress>	ignored_v4 = new HashSet<>();
+	private Set<InetAddress>	ignored_v6 = new HashSet<>();
+	
 	private PairingManagerTunnelHandler	tunnel_handler;
 
 	private boolean	update_outstanding;
@@ -1196,12 +1199,21 @@ PairingManagerImpl
 				existing_checked = new HashSet<>(local_address_checks.keySet());
 			}
 
+				// Some users have huge numbers of these that breaks the server table limit (seen a linux user with 50 of them)
+				// To retain determinism in the computation of address equivalence over updates we maintain a list of ignored addresses
+			
+			int	num_v4_accepted = 0;
+			int	num_v6_accepted = 0;
+			
 			for ( NetworkAdminNetworkInterface intf: interfaces ){
 
 				NetworkAdminNetworkInterfaceAddress[] addresses = intf.getAddresses();
 
+				int num_v4_from_this_intf = 0;
+				int num_v6_from_this_intf = 0;
+				
 				for ( NetworkAdminNetworkInterfaceAddress address: addresses ){
-
+					
 					final InetAddress ia = address.getAddress();
 
 					if ( ia.isLoopbackAddress()){
@@ -1211,8 +1223,32 @@ PairingManagerImpl
 
 					if ( ia.isLinkLocalAddress() || ia.isSiteLocalAddress()){
 
-						final String a_str = ia.getHostAddress();
+						boolean is_v4 = ia instanceof Inet4Address;
 
+						if ( is_v4 ){
+							if ( ignored_v4.contains( ia )){
+								continue;
+							}
+							if ( num_v4_from_this_intf == 3 || num_v4_accepted == 10 ){
+								ignored_v4.add( ia );
+								continue;
+							}
+							num_v4_from_this_intf++;
+							num_v4_accepted++;
+						}else{
+							if ( ignored_v6.contains( ia )){
+								continue;
+							}
+							if ( num_v6_from_this_intf == 3 || num_v6_accepted == 10 ){
+								ignored_v6.add( ia );
+								continue;
+							}
+							num_v6_from_this_intf++;
+							num_v6_accepted++;
+						}							
+						
+						final String a_str = ia.getHostAddress();
+						
 						existing_checked.remove( a_str );
 
 						Object[] check;
@@ -1258,7 +1294,7 @@ PairingManagerImpl
 
 											local_address_checks.put( a_str, new Object[]{ new Long(now), result });
 
-											if ( ia instanceof Inet4Address ){
+											if ( is_v4 ){
 
 												latest_v4_locals.add( result );
 
@@ -1272,7 +1308,7 @@ PairingManagerImpl
 
 						}else{
 
-							if ( ia instanceof Inet4Address ){
+							if ( is_v4 ){
 
 								latest_v4_locals.add((String)check[1]);
 
