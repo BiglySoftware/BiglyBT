@@ -729,171 +729,165 @@ public class Initializer
 				core.checkRestartSupported();
 			}
 		}
+		
+		try{
+			if ( core != null ){
 
-		try {
-
-			try {
-				UIUpdaterSWT.destroyInstance();
-			} catch (Exception e) {
-				Debug.out(e);
-			}
-
-		} finally {
-
-			try{
-				if ( core != null ) {
-
-					try {
-						long lStopStarted = System.currentTimeMillis();
-						
-						System.out.println("core.stop");
-						
-						AESemaphore stop_sem = new AESemaphore( "stop" );
-						
-						ProgressCallback	prog = 
-							new ProgressCallback()
-							{
-								private volatile int 	percent = 0;
-								private volatile String	subtask = "";
-								
-								@Override
-								public int 
-								getStyle()
-								{
-									return( STYLE_NO_CLOSE | STYLE_MODAL );
-								}
-								public int
-								getProgress()
-								{
-									return( percent );
-								}
-								
-								@Override
-								public void 
-								setProgress(
-									int _percent )
-								{
-									percent = _percent;
-								}
-								
-								public String
-								getSubTaskName()
-								{
-									return( subtask );
-								}
-								
-								@Override
-								public void 
-								setSubTaskName(
-									String name )
-								{
-									subtask	= name;
-								}
-								
-								@Override
-								public int 
-								getDelay()
-								{
-									return( 3*1000 );
-								}
-								
-								public int
-								getSupportedTaskStates()
-								{
-									return( ProgressCallback.ST_SUBTASKS );
-								}
-								
-								public void
-								setTaskState(
-									int		state )
-								{
-								}
-							};
+				try{
+					long lStopStarted = System.currentTimeMillis();
+					
+					System.out.println("core.stop");
+					
+					AESemaphore stop_sem = new AESemaphore( "stop" );
+					
+					ProgressCallback	prog = 
+						new ProgressCallback()
+						{
+							private volatile int 	percent = 0;
+							private volatile String	subtask = "";
 							
-							if ( Utils.isSWTThread()){
-								
-								Debug.out( "Can't run closedown progress window as already on SWT thread" );
-								
-							}else{
-
-								Utils.execSWTThread(()->{
-									FileUtil.runAsTask(
-										CoreOperation.OP_PROGRESS,
-										new CoreOperationTask()
-										{
-											@Override
-											public String 
-											getName()
-											{
-												return( MessageText.getString( isForRestart?"label.restarting.app":"label.closing.app" ));
-											}
-		
-											@Override
-											public void
-											run(
-												CoreOperation operation)
-											{
-												try{
-													
-													stop_sem.reserve();
-													
-												}catch( Throwable e ){
-		
-													throw( new RuntimeException( e ));
-												}
-											}
-		
-											@Override
-											public ProgressCallback 
-											getProgressCallback()
-											{
-												return( prog );
-											}
-										});});
-						}
-						
-						try{
-							if ( isForRestart ){							
-
-								core.restart( prog );
-								
-							}else{
-
-								core.stop( prog );
+							@Override
+							public int 
+							getStyle()
+							{
+								return( STYLE_NO_CLOSE | STYLE_MODAL );
+							}
+							public int
+							getProgress()
+							{
+								return( percent );
 							}
 							
-						}finally{
+							@Override
+							public void 
+							setProgress(
+								int _percent )
+							{
+								percent = _percent;
+							}
 							
-							stop_sem.release();
-						}
-													
-						System.out.println("core.stop done in "	+ (System.currentTimeMillis() - lStopStarted));
+							public String
+							getSubTaskName()
+							{
+								return( subtask );
+							}
+							
+							@Override
+							public void 
+							setSubTaskName(
+								String name )
+							{
+								subtask	= name;
+							}
+							
+							@Override
+							public int 
+							getDelay()
+							{
+								return( 3*1000 );
+							}
+							
+							public int
+							getSupportedTaskStates()
+							{
+								return( ProgressCallback.ST_SUBTASKS );
+							}
+							
+							public void
+							setTaskState(
+								int		state )
+							{
+							}
+						};
 						
-					} catch (Throwable e) {
+						if ( Utils.isSWTThread()){
+							
+							Debug.out( "Can't run closedown progress window as already on SWT thread" );
+							
+						}else{
 
-						// don't let any failure here cause the stop operation to fail
-
-						Debug.out(e);
+							Utils.execSWTThread(()->{
+								FileUtil.runAsTask(
+									CoreOperation.OP_PROGRESS,
+									new CoreOperationTask()
+									{
+										@Override
+										public String 
+										getName()
+										{
+											return( MessageText.getString( isForRestart?"label.restarting.app":"label.closing.app" ));
+										}
+	
+										@Override
+										public void
+										run(
+											CoreOperation operation)
+										{
+											try{
+												
+												stop_sem.reserve();
+												
+											}catch( Throwable e ){
+	
+												throw( new RuntimeException( e ));
+											}
+										}
+	
+										@Override
+										public ProgressCallback 
+										getProgressCallback()
+										{
+											return( prog );
+										}
+									});});
 					}
-				}
-			}finally{
+					
+					try{
+						if ( isForRestart ){							
 
-					// do this after closing core to minimise window when the we aren't
-					// listening and therefore another client start can potentially get
-					// in and screw things up
+							core.restart( prog );
+							
+						}else{
 
-				if (startServer != null) {
-					startServer.stopIt();
+							core.stop( prog );
+						}
+						
+					}finally{
+						
+						stop_sem.release();
+					}
+												
+					System.out.println("core.stop done in "	+ (System.currentTimeMillis() - lStopStarted));
+					
+				} catch (Throwable e) {
+
+					// don't let any failure here cause the stop operation to fail
+
+					Debug.out(e);
 				}
 			}
+		}finally{
+
+				// do this later than before so we get UI updates during closedown and can see progress of stats etc
+			
+			UIUpdaterSWT.destroyInstance();
 
 
-			SWTThread instance = SWTThread.getInstance();
-			if (instance != null) {
-				instance.terminate();
+				// do this after closing core to minimise window when the we aren't
+				// listening and therefore another client start can potentially get
+				// in and screw things up
+
+			if (startServer != null) {
+				startServer.stopIt();
 			}
-
 		}
+
+
+		SWTThread instance = SWTThread.getInstance();
+		if (instance != null) {
+			instance.terminate();
+		}
+
 	}
 
 	// @see IUIIntializer#addListener(com.biglybt.ui.swt.mainwindow.InitializerListener)

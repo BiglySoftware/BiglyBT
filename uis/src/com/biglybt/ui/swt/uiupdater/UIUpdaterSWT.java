@@ -98,8 +98,12 @@ public class UIUpdaterSWT
 
 	public static void destroyInstance() {
 		synchronized( UIUpdaterSWT.class ) {
-			if (updater != null) {
-				updater.stopIt();
+			if (updater != null){
+				try{
+					updater.stopIt();
+				}catch( Throwable e ){
+					Debug.out( e );
+				}
 				updater = null;
 			}
 		}

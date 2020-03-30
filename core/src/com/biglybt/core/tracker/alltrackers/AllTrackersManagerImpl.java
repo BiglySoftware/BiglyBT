@@ -88,6 +88,8 @@ AllTrackersManagerImpl
 
 	private final Core	core;
 	
+	private volatile boolean stopping;
+	
 	private Map<String,AllTrackersTrackerImpl>		host_map = new ConcurrentHashMap<>();
 	
 	private ConcurrentLinkedDeque<Object[]>			update_queue = new ConcurrentLinkedDeque<>();
@@ -148,6 +150,8 @@ AllTrackersManagerImpl
 					stopping(
 						Core core )
 					{
+						stopping	= true;
+						
 						synchronized( process_lock ){
 							
 							if ( !logging_keys.isEmpty()){
@@ -619,6 +623,16 @@ AllTrackersManagerImpl
 	public float 
 	getAnnouncesPerSecond()
 	{
+		if ( stopping && active_requests.size() == 0 ){
+		
+			AnnounceStats stats = announce_provider.getStats();
+			
+			if ( stats.getPrivateScheduledCount() + stats.getPublicScheduledCount() == 0 ){
+				
+				return( 0 );
+			}
+		}
+		
 		return( (float)announce_rate.getAverage()/100 );
 	}
 	

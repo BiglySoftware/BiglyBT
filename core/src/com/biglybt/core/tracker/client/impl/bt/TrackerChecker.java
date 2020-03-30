@@ -410,8 +410,10 @@ public class TrackerChecker implements AEDiagnosticsEvidenceGenerator, SystemTim
 	  nextScrapeCheckOn = SystemTime.getCurrentTime() + delay;
 	  oldResponse = nextResponseScraping;
 
-	  tracker_timer.addEvent(nextScrapeCheckOn, this);
-
+	  if ( !Logger.isClosingTakingTooLong()){
+  			
+		  tracker_timer.addEvent(nextScrapeCheckOn, this);
+	  }
 	}
 
   /** Finds the torrent that will be needing a scrape next.
