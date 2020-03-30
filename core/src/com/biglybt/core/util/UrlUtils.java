@@ -328,6 +328,53 @@ public class UrlUtils
 	}
 
 	public static String
+	truncateForURI(
+		String		str,
+		int			max_utf8_bytes )
+	{	
+		if ( max_utf8_bytes == Integer.MAX_VALUE ){
+			
+			return( str );
+		}
+		
+		boolean truncated = false;
+		
+			// assume min size for simplicity, only an idiot would truncate below this...
+		
+		while( str.length() > 4 ){
+			
+			int enc_len = UrlUtils.encode( str ).getBytes( Constants.UTF_8 ).length;
+		
+			if ( enc_len > max_utf8_bytes ){
+				
+				if ( !truncated ){
+				
+					truncated = true;
+					
+					max_utf8_bytes -= 3;	// room for the ...
+				}
+				
+				str = str.substring( 0, str.length() - 1 );
+				
+				if ( Character.isHighSurrogate( str.charAt( str.length()-1 ))){
+					
+					str = str.substring( 0, str.length() - 1 );
+				}
+			}else{
+				
+				break;
+			}
+		}
+		
+		if ( truncated ){
+			
+			str = str + "...";
+		}
+		
+		return( str );
+	}
+	
+	public static String
 	getMagnetURI(
 		DownloadManager		dm,
 		int					max_name_len )
@@ -344,12 +391,7 @@ public class UrlUtils
 			return( null );
 		}
 
-		String name = dm.getDisplayName();
-
-		if ( name.length() > max_name_len ){
-
-			name = name.substring( 0, max_name_len-3) + "...";
-		}
+		String name = truncateForURI( dm.getDisplayName(), max_name_len );
 
 		String[]	networks = dm.getDownloadState().getNetworks();
 
