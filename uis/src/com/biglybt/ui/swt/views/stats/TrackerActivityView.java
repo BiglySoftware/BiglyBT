@@ -233,7 +233,14 @@ public class TrackerActivityView
 						public int
 						getValue()
 						{
-							return((int)all_trackers.getAnnounceStats().getPublicLagMillis());
+							int result = (int)all_trackers.getAnnounceStats().getPublicLagMillis();
+							
+							if ( result < 500 ){
+				
+								result = 0;
+							}
+							
+							return( result );
 						}
 					},
 					new ValueSourceImpl( "Announce Private", 1, mpg_lags_colors, ValueSource.STYLE_NONE, false, false )
@@ -242,7 +249,15 @@ public class TrackerActivityView
 						public int
 						getValue()
 						{
-							return((int)all_trackers.getAnnounceStats().getPrivateLagMillis());
+							int result = (int)all_trackers.getAnnounceStats().getPrivateLagMillis();
+							
+							if ( result < 500 ){
+				
+								result = 0;
+							}
+							
+							return( result );
+
 						}
 					},
 					new ValueSourceImpl( "Scrape", 2, mpg_lags_colors, ValueSource.STYLE_NONE, false, false )
@@ -251,7 +266,15 @@ public class TrackerActivityView
 						public int
 						getValue()
 						{
-							return((int)all_trackers.getScrapeStats().getLagMillis());
+							int result = (int)all_trackers.getScrapeStats().getLagMillis();
+							
+							if ( result < 500 ){
+				
+								result = 0;
+							}
+							
+							return( result );
+
 						}
 					}
 			};
