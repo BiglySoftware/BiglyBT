@@ -54,18 +54,31 @@ public class ColumnAllTrackersHasPrivate
 	{
 		AllTrackersViewEntry tr = (AllTrackersViewEntry)cell.getDataSource();
 		
-		int state;
-
+		int 		state;
+		String 		key;
+		
 		if ( tr != null ){
 
-			if ( tr.hasPrivateTorrents()){
-				state = 1;
+			int percent = tr.getPrivatePercentage();
+			
+			if ( percent == 100 ){
+				
+				state 	= 1;
+				key		= "GeneralView.yes";
+				
+			}else if ( percent == 0 ){
+				
+				state 	= 2;
+				key		= "GeneralView.no";
+				
 			}else{
-				state = 2;
+				state 	= 3;
+				key		= "label.mixed";
 			}
 		}else{
 			
-			state = 3;
+			state 	= 4;
+			key		= "";
 		}
 
 		if ( !cell.setSortValue(state) && cell.isValid()){
@@ -73,6 +86,7 @@ public class ColumnAllTrackersHasPrivate
 			return;
 		}
 
-		cell.setText(state==3?"":MessageText.getString( state==1?"GeneralView.yes":"GeneralView.no" ));
+		
+		cell.setText( key.isEmpty()?"":MessageText.getString( key ));
 	}
 }

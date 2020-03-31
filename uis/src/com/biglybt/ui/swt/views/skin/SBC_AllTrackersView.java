@@ -1727,10 +1727,10 @@ public class SBC_AllTrackersView
 		}
 		
 		@Override
-		public boolean 
-		hasPrivateTorrents()
+		public int 
+		getPrivatePercentage()
 		{
-			return(tracker.hasPrivateTorrents());
+			return(tracker.getPrivatePercentage());
 		}
 		
 		public Tag

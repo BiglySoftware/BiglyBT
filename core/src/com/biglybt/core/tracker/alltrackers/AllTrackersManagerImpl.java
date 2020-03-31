@@ -400,7 +400,7 @@ AllTrackersManagerImpl
 							
 							existing_tracker.log( req, true );
 							
-							if ( existing_tracker.hasPrivateTorrents()){
+							if ( existing_tracker.getPrivatePercentage() > 80 ){
 								
 								active_privates.add( existing_tracker.getShortKey());
 							}
@@ -1048,7 +1048,8 @@ AllTrackersManagerImpl
 		
 		private boolean		registered;
 		
-		private boolean		has_private;
+		private int			num_private;
+		private int			num_public;
 		
 		private LoggerChannel	logger;
 		
@@ -1218,9 +1219,16 @@ AllTrackersManagerImpl
 		{
 			registered	= true;
 			
-			if ( torrent_maybe_null != null && torrent_maybe_null.getPrivate()){
+			if ( torrent_maybe_null != null ){
 				
-				has_private = true;
+				if ( torrent_maybe_null.getPrivate()){
+				
+					num_private++
+					;
+				}else{
+					
+					num_public++;
+				}
 			}
 		}
 		
@@ -1245,10 +1253,19 @@ AllTrackersManagerImpl
 		}
 		
 		@Override
-		public boolean 
-		hasPrivateTorrents()
+		public int 
+		getPrivatePercentage()
 		{
-			return( has_private );
+			int total = num_private + num_public;
+					
+			if ( total == 0 ){
+				
+				return( 0 );
+				
+			}else{
+				
+				return( (num_private*100)/total );
+			}
 		}
 		
 		@Override

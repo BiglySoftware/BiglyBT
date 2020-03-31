@@ -218,8 +218,8 @@ AllTrackersManager
 		public long
 		getAverageRequestDuration();
 		
-		public boolean
-		hasPrivateTorrents();
+		public int
+		getPrivatePercentage();
 	}
 	
 	public interface
