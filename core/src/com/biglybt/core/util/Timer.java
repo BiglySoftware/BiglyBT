@@ -140,6 +140,28 @@ public class Timer
 		return(new ArrayList<>(events));
 	}
 	
+	public synchronized List<TimerEvent>
+	getEvents(
+		long	up_to_when )
+	{
+		List<TimerEvent>	result = new ArrayList<>( events.size());
+				
+		for ( TimerEvent ev: events ){
+			
+			if ( ev.getWhen() < up_to_when ){
+				
+				result.add( ev );
+				
+			}else{
+				
+				break;
+			}
+		}
+		
+		return( result );
+	}
+	
+	
 	public int
 	getEventCount()
 	{
@@ -494,6 +516,27 @@ public class Timer
 		}
 	}
 
+	public void
+	modifyWhen(
+		TimerEvent			event,
+		long				new_when )
+	{
+		synchronized( this ){
+			
+			if ( events.remove( event )){
+				
+				event.setWhen( new_when );
+				
+				events.add( event );
+				
+				if ( current_when == Integer.MAX_VALUE || new_when < current_when ){
+
+					notify();
+				}
+			}
+		}
+	}
+	
 	public synchronized TimerEvent
 	addEvent(
 		long				when,

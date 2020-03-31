@@ -91,6 +91,130 @@ TRTrackerBTAnnouncerImpl
 
 	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
 
+	static void
+	analyseTimerEvents()
+	{
+		analyseTimerEvents( tracker_timer_public );
+		analyseTimerEvents( tracker_timer_private );
+	}
+	
+	static void
+	analyseTimerEvents(
+		Timer	timer )
+	{	
+		if ( all_trackers.isStopping()){
+			
+			return;
+		}
+		
+		int total_events = timer.getEventCount();
+				
+		if ( total_events < 30 || total_events > 5000 ){
+			
+				// no point in doing anything if there are masses of events
+			
+			return;
+		}
+		
+			// even the events out a bit to flatten peaks
+		
+		long	now = SystemTime.getCurrentTime();
+		
+		final int	secs_to_check		= 15*60;
+		final int	bucket_secs			= 60;
+
+		List<TimerEvent>	events = timer.getEvents( now + secs_to_check*1000 );
+		
+		List[]	buckets = new List[secs_to_check/bucket_secs];
+		
+		for ( int i=0;i<buckets.length;i++){
+			
+			buckets[i] = new LinkedList();
+		}
+		
+		for ( TimerEvent ev: events ){
+			
+			long when = ev.getWhen();
+			
+			if ( when < now ){
+				
+				continue;
+			}
+			
+			int slot = (int)((when - now)/(bucket_secs*1000));
+			
+			if ( slot >= buckets.length ){
+				
+				break;
+			}
+			
+			buckets[slot].add( ev );
+		}
+		
+		int	max_size = 0;
+		
+		for ( List l: buckets ){
+		
+			max_size = Math.max( max_size, l.size());
+		}
+
+		if ( max_size < 10 ){
+			
+			return;
+		}
+		
+		int	limit = max_size/2;
+				
+		//System.out.println( "Buckets, max=" + max_size + ", limit=" + limit + ", events=" + events.size());
+		
+		for ( int i=0;i<buckets.length;i++){
+
+			List<TimerEvent> list = buckets[i];
+			
+			int	num_events = list.size();
+
+			//System.out.println( "    " + i + " - " + num_events );
+			
+			// ignore first bucket as contains active events
+
+			if ( i == 0 || num_events < limit ){
+				
+				continue;
+			}
+			
+			long 	start 	= now 	+ i*bucket_secs*1000;					
+			long	end 	= start + ((3*bucket_secs)/2)*1000;
+					
+			TimerEvent	first = list.get(0);
+			
+			if ( first.getWhen() > start ){
+				
+				start = first.getWhen();
+			}
+			
+			long	inc = (end-start)/num_events;
+						
+			if ( inc > 100 ){
+
+				long	new_time = start;
+
+				for ( TimerEvent ev: list ){
+					
+					long change = new_time - ev.getWhen();
+					
+					if ( change > 0 ){
+						
+						// System.out.println( "        Modifying event: offset=" + change );
+						
+						timer.modifyWhen( ev, new_time );
+					}
+					
+					new_time += inc;
+				}
+			}
+		}
+	}
+	
 	static{
 		all_trackers.registerAnnounceStatsProvider(
 			new AllTrackersManager.AnnounceStatsProvider(){
@@ -126,7 +250,20 @@ TRTrackerBTAnnouncerImpl
 						});
 				}
 			});
+		
+		SimpleTimer.addEvent( "TA Timer Checker", SystemTime.getOffsetTime( 60*1000 ), (e)->
+		{
+			analyseTimerEvents();
+			
+			SimpleTimer.addPeriodicEvent(
+				"TA Timer Checker",
+				2*60*1000,
+				(ev)->{
+					analyseTimerEvents();
+				});
+		});
 	}
+	
 	static{
 		COConfigurationManager.addParameterListener(
 			ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE,

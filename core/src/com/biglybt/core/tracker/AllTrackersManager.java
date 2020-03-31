@@ -85,6 +85,9 @@ AllTrackersManager
 		removeActiveRequest(
 			TRTrackerAnnouncerRequest	request );
 		
+		public boolean
+		isStopping();
+		
 		public void
 		addScrapeRequest();
 		

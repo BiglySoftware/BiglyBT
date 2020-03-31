@@ -219,6 +219,13 @@ AllTrackersManagerImpl
 			});
 	}
 	
+	@Override
+	public boolean
+	isStopping()
+	{
+		return( stopping );
+	}
+	
 	private MovingImmediateAverage	lag_average = AverageFactory.MovingImmediateAverage( 5 );
 	private boolean					lag_logged;
 	
