@@ -112,17 +112,23 @@ public class ConsoleConfigSections
 		for (BaseConfigSection repoConfigSection : repoList) {
 			String repoParentID = repoConfigSection.getParentSectionID();
 
-			boolean found = false;
-			for (int i = configSections.size() - 1; i >= 0; i--) {
+			int size = configSections.size();
+			int insertAt = size;
+			for (int i = 0; i < size; i++) {
 				BaseConfigSection configSection = configSections.get(i);
-				if (configSection.getConfigSectionID().equals(repoParentID)) {
-					configSections.add(i + 1, repoConfigSection);
-					found = true;
-					break;
+				if (insertAt == i) {
+					if (!repoParentID.equals(configSection.getParentSectionID())) {
+						break;
+					}
+					insertAt++;
+				} else if (configSection.getConfigSectionID().equals(repoParentID)) {
+					insertAt = i + 1;
 				}
 			}
-			if (!found) {
+			if (insertAt >= size) {
 				configSections.add(repoConfigSection);
+			} else {
+				configSections.add(insertAt, repoConfigSection);
 			}
 		}
 
