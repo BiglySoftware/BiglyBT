@@ -932,6 +932,21 @@ ConfigurationChecker
 	    	changed = true;
 	    }
 	    
+	    String param_name = "StartStopManager_iFirstPriority_ignoreIdleHours";
+	    
+	    if ( COConfigurationManager.doesParameterNonDefaultExist( param_name )){
+	    	
+	    	int hours = COConfigurationManager.getIntParameter( param_name, 0 );
+	    	
+	    	COConfigurationManager.removeParameter( param_name );
+	    	
+	    	if ( hours > 0 ){
+	    		
+	    		COConfigurationManager.setParameter("StartStopManager_iFirstPriority_ignoreIdleMinutes", hours*60 );
+	    	}
+	    	
+	    	changed = true;
+	    }    
 	    
 	    if(changed) {
 	      COConfigurationManager.save();

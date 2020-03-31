@@ -238,34 +238,51 @@ public class StartStopConfigModel
 				"ConfigView.label.seeding.firstPriority.ignore0Peer",
 				!COConfigurationManager.getStringParameter("ui", "").equals("az2")));
 
-		// Ignore idle hours
-		int[] availIdleHours = {
-			2,
-			3,
-			4,
+		// Ignore idle mins
+		int[] availIdleMinutes = {
 			5,
-			6,
-			7,
-			8,
-			12,
-			18,
-			24,
-			48,
-			72,
-			168
+			10,
+			15,
+			20,
+			30,
+			45,
+			60,
+			2*60,
+			3*60,
+			4*60,
+			5*60,
+			6*60,
+			7*60,
+			8*60,
+			12*60,
+			18*60,
+			24*60,
+			48*60,
+			72*60,
+			168*60,
 		};
-		String[] ignoreIdleHoursLabels = new String[availIdleHours.length + 1];
-		int[] ignoreIdleHoursValues = new int[availIdleHours.length + 1];
-		ignoreIdleHoursLabels[0] = MessageText.getString("ConfigView.text.ignore");
-		ignoreIdleHoursValues[0] = 0;
-		for (int i = 0; i < availIdleHours.length; i++) {
-			ignoreIdleHoursLabels[i + 1] = availIdleHours[i] + " " + sHours;
-			ignoreIdleHoursValues[i + 1] = availIdleHours[i];
+		
+		String[] ignoreIdleMinutesLabels = new String[availIdleMinutes.length + 1];
+		
+		int[] ignoreIdleMinutesValues = new int[availIdleMinutes.length + 1];
+		
+		ignoreIdleMinutesLabels[0] = MessageText.getString("ConfigView.text.ignore");
+		
+		ignoreIdleMinutesValues[0] = 0;
+		
+		for (int i = 0; i < availIdleMinutes.length; i++) {
+			
+			int mins = availIdleMinutes[i];
+			
+			ignoreIdleMinutesLabels[i + 1] = mins<60?( mins + " " + sMinutes ):((mins/60) + " " + sHours );
+			
+			ignoreIdleMinutesValues[i + 1] = availIdleMinutes[i];
 		}
+		
 		listIgnoreFP.add(model.addIntListParameter2(
-				"StartStopManager_iFirstPriority_ignoreIdleHours",
-				"ConfigView.label.seeding.firstPriority.ignoreIdleHours",
-				ignoreIdleHoursValues, ignoreIdleHoursLabels, 24));
+				"StartStopManager_iFirstPriority_ignoreIdleMinutes",
+				"ConfigView.label.seeding.firstPriority.ignoreIdle",
+				ignoreIdleMinutesValues, ignoreIdleMinutesLabels, 0 ));
 
 		//	 row
 

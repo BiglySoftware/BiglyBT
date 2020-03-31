@@ -174,7 +174,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 
 	private static int iFirstPriorityActiveMinutes;
 
-	private static int iFirstPriorityIgnoreIdleHours;
+	private static int iFirstPriorityIgnoreIdleMinutes;
 
 	private static long minTimeAlive;
 
@@ -345,8 +345,10 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 				+ "iFirstPriority_ignoreSPRatio");
 		bFirstPriorityIgnore0Peer = cfg.getUnsafeBooleanParameter(PREFIX
 				+ "bFirstPriority_ignore0Peer");
-		iFirstPriorityIgnoreIdleHours = cfg.getUnsafeIntParameter(PREFIX
-				+ "iFirstPriority_ignoreIdleHours");
+		
+		iFirstPriorityIgnoreIdleMinutes = cfg.getUnsafeIntParameter(PREFIX
+				+ "iFirstPriority_ignoreIdleMinutes");
+		
 		iTimed_MinSeedingTimeWithPeers = cfg.getUnsafeIntParameter(PREFIX
 				+ "iTimed_MinSeedingTimeWithPeers") * 1000;
 	}
@@ -929,15 +931,15 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 			return false;
 		}
 
-		if (iFirstPriorityIgnoreIdleHours > 0) {
+		if (iFirstPriorityIgnoreIdleMinutes > 0) {
 			long lastUploadSecs = dl.getStats().getSecondsSinceLastUpload();
 			if (lastUploadSecs < 0) {
 				lastUploadSecs = dl.getStats().getSecondsOnlySeeding();
 			}
-			if (lastUploadSecs > 60 * 60 * (long)iFirstPriorityIgnoreIdleHours) {
+			if (lastUploadSecs > 60 * (long)iFirstPriorityIgnoreIdleMinutes) {
 				if (rules.bDebugLog)
 					sExplainFP += "Not FP: " + lastUploadSecs + "s > "
-							+ iFirstPriorityIgnoreIdleHours + "h of no upload\n";
+							+ iFirstPriorityIgnoreIdleMinutes + "m of no upload\n";
 				return false;
 			}
 		}
