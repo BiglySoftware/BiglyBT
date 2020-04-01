@@ -692,7 +692,11 @@ TRHostImpl
 					TRTrackerAnnouncerResponse	response	)
 				{
 					try{
-						TRTrackerScraperFactory.getSingleton().scrape( torrent, true );
+							// Changed this to not force an actual scrape as we will have updated
+							// the scrape value in the announce-code already and a synchronous forced scrape
+							// can block things for a while and creates unnecessary load
+						
+						TRTrackerScraperFactory.getSingleton().scrape( torrent, false );
 
 					}finally{
 
