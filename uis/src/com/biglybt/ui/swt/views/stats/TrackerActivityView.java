@@ -103,7 +103,7 @@ public class TrackerActivityView
 				format(
 						int value)
 				{
-					return( (float)value/100 + "/"+ TimeFormatter.getShortSuffix( TimeFormatter.TS_SECOND ));
+					return( (float)value/1000 + "/"+ TimeFormatter.getShortSuffix( TimeFormatter.TS_SECOND ));
 				}
 			};
 	
