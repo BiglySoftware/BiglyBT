@@ -219,35 +219,68 @@ TRTrackerBTAnnouncerImpl
 		all_trackers.registerAnnounceStatsProvider(
 			new AllTrackersManager.AnnounceStatsProvider(){
 				
+				private volatile AnnounceStats	last_stats = null;
+				private volatile long			last_stats_time;
+				
 				@Override
-				public AnnounceStats getStats(){
-					return( 
-						new AnnounceStats()
-						{
-							public long
-							getPublicLagMillis()
+				public AnnounceStats 
+				getStats()
+				{
+					if ( last_stats == null || SystemTime.getMonotonousTime() - last_stats_time > 900 ){
+						
+						last_stats = 
+							new AnnounceStats()
 							{
-								return( tracker_timer_public.getLag());
-							}
-							
-							public long
-							getPrivateLagMillis()
-							{
-								return( tracker_timer_private.getLag());
-							}
-							
-							public int
-							getPublicScheduledCount()
-							{
-								return(tracker_timer_public.getEventCount());
-							}
-							
-							public int
-							getPrivateScheduledCount()
-							{
-								return(tracker_timer_private.getEventCount());
-							}
-						});
+								final private long	public_lag 		= tracker_timer_public.getLag();
+								final private long	private_lag 	= tracker_timer_private.getLag();
+		
+								final private int	public_sched	= tracker_timer_public.getEventCount();
+								final private int	private_sched	= tracker_timer_private.getEventCount();
+								
+								final private int	public_pending	= tracker_timer_public.getEventCount( SystemTime.getCurrentTime());
+								final private int	private_pending	= tracker_timer_private.getEventCount( SystemTime.getCurrentTime() );
+								
+								public long
+								getPublicLagMillis()
+								{
+									return( public_lag );
+								}
+								
+								public long
+								getPrivateLagMillis()
+								{
+									return( private_lag );
+								}
+								
+								public int
+								getPublicScheduledCount()
+								{
+									return( public_sched );
+								}
+								
+								public int
+								getPrivateScheduledCount()
+								{
+									return( private_sched );
+								}
+								
+								public int
+								getPublicPendingCount()
+								{
+									return( public_pending );
+								}
+								
+								public int
+								getPrivatePendingCount()
+								{
+									return( private_pending );
+								}
+							};
+		
+						 last_stats_time = SystemTime.getMonotonousTime();
+					}
+					
+					return( last_stats );
 				}
 			});
 		

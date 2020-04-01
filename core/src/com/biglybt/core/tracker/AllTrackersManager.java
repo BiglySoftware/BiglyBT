@@ -246,6 +246,12 @@ AllTrackersManager
 		
 		public int
 		getPrivateScheduledCount();
+		
+		public int
+		getPublicPendingCount();
+		
+		public int
+		getPrivatePendingCount();
 	}
 	
 	public interface

@@ -168,6 +168,25 @@ public class Timer
 		return( events.size());
 	}
 	
+	public synchronized int
+	getEventCount(
+		long	up_to_when )
+	{
+		int	result = 0;
+		
+		for ( TimerEvent ev: events ){
+			
+			if ( ev.getWhen() >= up_to_when ){
+			
+				break;
+			}
+			
+			result++;
+		}
+		
+		return( result );
+	}
+	
 	public void
 	setLogging(
 		boolean	_log )

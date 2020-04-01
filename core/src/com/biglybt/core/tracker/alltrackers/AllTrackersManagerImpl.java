@@ -565,8 +565,8 @@ AllTrackersManagerImpl
 		}
 	}
 	
-	private final Average announce_rate = Average.getInstance( 3000, 60 );  //update every 3s, average over 60s
-	private final Average scrape_rate 	= Average.getInstance( 3000, 60 );  //update every 3s, average over 60s
+	private final Average announce_rate = Average.getInstance( 1000, 20 );  //update every 3s, average over 60s
+	private final Average scrape_rate 	= Average.getInstance( 1000, 20 );  //update every 3s, average over 60s
 
 	private AnnounceStats	announce_stats = new AnnounceStats(){
 		
@@ -587,6 +587,16 @@ AllTrackersManagerImpl
 		
 		@Override
 		public long getPrivateLagMillis(){
+			return 0;
+		}
+		
+		@Override
+		public int getPrivatePendingCount(){
+			return 0;
+		}
+		
+		@Override
+		public int getPublicPendingCount(){
 			return 0;
 		}
 	};

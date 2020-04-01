@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Shell;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
+import com.biglybt.core.tracker.AllTrackersManager.AnnounceStats;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.ui.swt.Messages;
@@ -65,7 +66,9 @@ public class TrackerActivityView
 	
 	private static Color[]	mpg_sched_colors = { 
 			Colors.blues[Colors.BLUES_DARKEST],
-			Colors.maroon };
+			Colors.maroon,
+			Colors.fadedGreen,
+			Colors.dark_grey };
 	
 	private Composite panel;
 		
@@ -385,6 +388,26 @@ public class TrackerActivityView
 							return((int)all_trackers.getAnnounceStats().getPrivateScheduledCount());
 						}
 					},
+					new ValueSourceImpl( "Sched Active", 2, mpg_sched_colors, ValueSource.STYLE_NONE, false, false )
+					{
+						@Override
+						public int
+						getValue()
+						{
+							return((int)all_trackers.getActiveRequestCount());
+						}
+					},
+					new ValueSourceImpl( "Sched Pending", 3, mpg_sched_colors, ValueSource.STYLE_NONE, false, false )
+					{
+						@Override
+						public int
+						getValue()
+						{
+							AnnounceStats stats = all_trackers.getAnnounceStats();
+							
+							return( stats.getPrivatePendingCount() + stats.getPublicPendingCount());
+						}
+					},
 			};
 	
 			MultiPlotGraphic mpg_sched = mpgs[2] = MultiPlotGraphic.getInstance( sources, formatter );
@@ -393,6 +416,8 @@ public class TrackerActivityView
 			String[] color_configs = new String[] {
 					"TrackerActivityView.legend.sched.announce.pub",
 					"TrackerActivityView.legend.sched.announce.priv",
+					"TrackerActivityView.legend.sched.announce.active",
+					"TrackerActivityView.legend.sched.announce.pending",
 			};
 	
 			Legend.LegendListener legend_listener =
