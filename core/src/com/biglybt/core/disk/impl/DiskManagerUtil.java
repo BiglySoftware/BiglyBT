@@ -1774,7 +1774,7 @@ DiskManagerUtil
 					
 					@Override
 					public int getPieceLength(int piece_number){
-						return pieces[piece_number].getLength();
+						return( piece_number==nbPieces-1?lastPieceLength:pieceLength );
 					}
 					
 					@Override
