@@ -1093,7 +1093,7 @@ GlobalManagerFileMerger
 								DiskManager 	dm = ss_file.getDiskManager();
 								PEPeerManager 	pm = ss_file.getPeerManager();
 
-								if ( dm == null ){
+								if ( dm == null || pm == null ){
 
 									continue;
 								}
