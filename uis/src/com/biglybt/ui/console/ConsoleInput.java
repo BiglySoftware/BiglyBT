@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -347,6 +348,7 @@ public class ConsoleInput extends Thread {
 		registerCommand(new CommandQuit());
 		registerCommand(new CommandHelp());
 		registerCommand(new CommandEcho());
+		registerCommand(new CommandLogging());
 		registerCommand(new Alias());
 		registerCommand(new Priority());
 		registerCommand(new Plugin());
@@ -415,6 +417,36 @@ public class ConsoleInput extends Thread {
 		}
 	}
 
+	private class CommandLogging extends IConsoleCommand
+	{
+		public CommandLogging()
+		{
+			super("logging");
+		}
+		@Override
+		public String getCommandDescriptions() {
+			return("logging [options]");
+		}
+		
+		@Override
+		public void printHelpExtra(PrintStream out, List args) {
+			out.println("> -----" );
+			out.println("Subcommands:");
+			out.println("    > <file_name>    Log all console input/output to <file_name>" );
+			out.println("    >> <file_name>   Append all console input/output to <file_name>" );
+			out.println("    >$               Stop logging" );
+			out.println("Note:");
+			out.println("    Any command can have its output sent to a file by using a suffix of '> <file_name>' or '>> <file_name>'");
+			out.println("> -----" );
+		}
+		
+		@Override
+		public void execute(String commandName, ConsoleInput ci, List<String> args)
+		{
+			// implemented in main loop
+		}
+	}
+	
 	private class CommandEcho extends IConsoleCommand
 	{
 		public CommandEcho()
@@ -641,30 +673,78 @@ public class ConsoleInput extends Thread {
 	public void run() {
 		List<String> comargs;
 		running = true;
+		
+		PrintStream originalOutputStream = out;
+		PrintStream redirectOutputStream = null;
+		
 		while (running) {
 			if (numNewErrorLogEvents > 0) {
 				System.out.println(numNewErrorLogEvents + " new errors logged. Use `show errors` to view.");
 				numNewErrorLogEvents = 0;
 			}
 			try {
+				out.flush();
+				
 				waitingForInput = true;
 				String line = br.readLine();
 				waitingForInput = false;
+				
+				if ( redirectOutputStream != null ){
+					
+					redirectOutputStream.println( "> " + line );
+				}
+				
 				comargs = br.parseCommandLine(line);
 			} catch (Exception e) {
-				out.println("Stopping console input reader because of exception: " + e.getMessage());
+				out.println("> Stopping console input reader because of exception: " + e.getMessage());
 				running = false;
 				waitingForInput = false;
 				break;
 			}
+			
 			if (!comargs.isEmpty()) {
-
+				
+					// logging is implemented in-line below
+				
+				if ( comargs.size() > 0 && comargs.get(0).equalsIgnoreCase( "logging" )){
+					
+					comargs.remove(0);
+					
+					if ( comargs.isEmpty()){
+						
+						out.println("> Missing subcommand for 'logging'" );
+					}
+				}
+			}
+			
+			if (!comargs.isEmpty()) {
+				
 				int	argNum = comargs.size();
 
-				File 	outputFile 			= null;
-				boolean outputFileAppend	= false;
+				File	thisCommandoutputFile		= null;
+				boolean thisCommandoutputFileAppend	= false;
+				
+				if ( argNum == 1 && comargs.get(0).equals( ">$" )){
+				
+					if ( redirectOutputStream != null ){
+						
+						redirectOutputStream.close();
+						
+						out = originalOutputStream;
+						
+						out.println( "> Output is no longer being copied to file" );
+						
+					}else{
+						
+						out.println("> '>$' used when not copying output" );
+					}
+					
+					continue;
+					
+				}else if ( argNum >= 2 ){
 
-				if ( argNum >= 3 ){
+					File 	outputFile 				= null;
+					boolean outputFileAppend		= false;
 
 					String temp = comargs.get( argNum-2 );
 
@@ -684,6 +764,48 @@ public class ConsoleInput extends Thread {
 
 						comargs = comargs.subList( 0, argNum-2 );
 					}
+					
+					if ( comargs.isEmpty()){
+						
+							// permanent redirect
+						
+						if ( redirectOutputStream != null ){
+							
+							redirectOutputStream.close();
+							
+							redirectOutputStream = null;
+							
+							out = originalOutputStream;
+						}
+						
+						try{
+						
+							PrintStream redirect = 
+									new PrintStream( 
+											new BufferedOutputStream(
+													new RedirectOutputStream(
+															new FileOutputStream( outputFile, outputFileAppend ), out ), 128 ));
+
+							redirectOutputStream = redirect;
+							
+							out = redirectOutputStream;
+							
+							out.println("> Copying output to " + outputFile + ". Use '>$' to stop" );
+							
+							continue;
+							
+						}catch( Throwable e ){
+							
+							out.println("Exception occurred when opening output file" );
+						}
+						
+					}else{
+						
+							// this command only output redirect
+						
+						thisCommandoutputFile			= outputFile;
+						thisCommandoutputFileAppend		= outputFileAppend;
+					}
 				}
 
 				String command = ((String) comargs.get(0)).toLowerCase();
@@ -694,7 +816,7 @@ public class ConsoleInput extends Thread {
 						comargs.addAll(oldcommand);
 						command = ((String) comargs.get(0)).toLowerCase();
 					} else {
-						out.println("No old command. Remove commands are not repeated to prevent errors");
+						out.println("> No old command. Remove commands are not repeated to prevent errors");
 					}
 				}
 				oldcommand.clear();
@@ -704,9 +826,9 @@ public class ConsoleInput extends Thread {
 				PrintStream	 base_os 	= null;
 
 				try {
-					if ( outputFile != null ){
+					if ( thisCommandoutputFile != null ){
 
-						PrintStream temp = new PrintStream( new BufferedOutputStream( new FileOutputStream( outputFile, outputFileAppend ), 128 ));
+						PrintStream temp = new PrintStream( new BufferedOutputStream( new FileOutputStream( thisCommandoutputFile, thisCommandoutputFileAppend ), 128 ));
 
 						base_os = out;
 						out		= temp;
@@ -947,5 +1069,55 @@ public class ConsoleInput extends Thread {
 		errorLogEvents.clear();
 		numNewErrorLogEvents = 0;
 		return logEvents;
+	}
+	
+	private class
+	RedirectOutputStream
+		extends OutputStream
+	{
+		private final OutputStream		dest1;
+		private final PrintStream		dest2;
+		
+		private
+		RedirectOutputStream(
+			OutputStream	_dest1,
+			PrintStream		_dest2 )
+		{
+			dest1		= _dest1;
+			dest2		= _dest2;
+		}
+		
+	    public void 
+	    write(
+	    	int b ) 
+	    		
+	    	throws IOException
+	    {
+	    	dest2.write( b );
+	    	
+	    	dest1.write( b );
+	    }
+	    
+	    @Override
+	    public void 
+	    flush() 
+	    	throws IOException
+	    {    	
+	    	dest2.flush();
+	    	
+	    	dest1.flush();
+	    }
+	    
+	    @Override
+	    public void 
+	    close() 
+	    		
+	    	throws IOException
+	    {
+	    	dest1.close();
+	    	
+	    	// DONT close dest2 as we want that to continue
+	    }
+	    
 	}
 }
