@@ -1406,7 +1406,7 @@ public class FilesView
 			
 			to_select = null;
 		}
-		
+				
 		if ( !tree_view ){
 			
 			updateFlatView( sync );
@@ -1507,6 +1507,8 @@ public class FilesView
 	{
 		int	num_managers = managers.length;
 		
+		boolean	wait_until_idle = false;
+		
 		if ( num_managers == 0 ){
 			
 			if ( tv.getRowCount() > 0 ){
@@ -1526,6 +1528,8 @@ public class FilesView
 			current_root = null;
 			
 		}else if ( num_managers == 1 ){
+			
+			wait_until_idle = force_refresh;
 			
 			DownloadManager dm =  managers[0];
 			
@@ -1624,6 +1628,8 @@ public class FilesView
 		
 			if ( force_refresh || current_root == null || tv.getRowCount() == 0 ){
 				
+				wait_until_idle = force_refresh;
+				
 				current_root = new FilesViewNodeInner( null, MessageText.getString( "label.downloads" ), null );
 				
 				tree_file_map.clear();
@@ -1697,6 +1703,33 @@ public class FilesView
 
 				tv.processDataSourceQueueSync();
 			}
+		}
+		
+		if ( wait_until_idle ){
+			
+			AEThread2.createAndStartDaemon(
+					"TableSorter",
+					()->{
+						long	start = SystemTime.getMonotonousTime();
+						
+							// this has the added bonus of forcing a sort which we particularly need if the user
+							// has disabled automatic resorts - we want the initial view to at least be sorted
+						
+						while( tv.hasChangesPending()){
+						
+							if ( SystemTime.getMonotonousTime() - start > 5000 ){
+								
+								return;
+							}
+							
+							try{
+								Thread.sleep( 100 );
+								
+							}catch( Throwable e ){
+								
+							}
+						}
+					});	
 		}
 	}
 	
@@ -2556,39 +2589,63 @@ public class FilesView
 		}
 		force_refresh = false;
 
-	    List<DiskManagerFileInfo> files = getFileInfo();
-	    
-	    if (files.size() == 0) {
-	    	tv.removeAllTableRows();
-	    } else {
-		    Collection<DiskManagerFileInfo> toRemove = tv.getDataSources(true);
-		    // If we are removing a lot of rows, it's faster to clear and add 
-		    if (toRemove.size() - files.size() > 50000) {
-		    	// todo: restore selectedRows
-		    	tv.removeAllTableRows();
-		    	toRemove = new HashSet<>();
-		    }
-		    List<DiskManagerFileInfo> toAdd = new ArrayList<>();
-		    for (DiskManagerFileInfo info : files) {
-		    	if (toRemove.contains(info)) {
-		    		toRemove.remove(info);
-			    } else {
-		    		toAdd.add(info);
-			    }
-		    }
-	      tv.removeDataSources(toRemove.toArray(new DiskManagerFileInfo[0]));
-	      tv.addDataSources(toAdd.toArray(new DiskManagerFileInfo[0]));
-	      tv.tableInvalidate();
+		List<DiskManagerFileInfo> files = getFileInfo();
 
-	    	if ( sync ){
-	    		
-	    		tv.processDataSourceQueueSync();
-	    		
-	    	}else{
-		    
-	    		tv.processDataSourceQueue();
-	    	}
-	    }
+		if (files.size() == 0) {
+			tv.removeAllTableRows();
+		} else {
+			Collection<DiskManagerFileInfo> toRemove = tv.getDataSources(true);
+			// If we are removing a lot of rows, it's faster to clear and add 
+			if (toRemove.size() - files.size() > 50000) {
+				// todo: restore selectedRows
+				tv.removeAllTableRows();
+				toRemove = new HashSet<>();
+			}
+			List<DiskManagerFileInfo> toAdd = new ArrayList<>();
+			for (DiskManagerFileInfo info : files) {
+				if (toRemove.contains(info)) {
+					toRemove.remove(info);
+				} else {
+					toAdd.add(info);
+				}
+			}
+			tv.removeDataSources(toRemove.toArray(new DiskManagerFileInfo[0]));
+			tv.addDataSources(toAdd.toArray(new DiskManagerFileInfo[0]));
+			tv.tableInvalidate();
+
+			if ( sync ){
+
+				tv.processDataSourceQueueSync();
+
+			}else{
+
+				tv.processDataSourceQueue();
+			}
+			
+			AEThread2.createAndStartDaemon(
+				"TableSorter",
+				()->{
+					long	start = SystemTime.getMonotonousTime();
+					
+						// this has the added bonus of forcing a sort which we particularly need if the user
+						// has disabled automatic resorts - we want the initial view to at least be sorted
+					
+					while( tv.hasChangesPending()){
+					
+						if ( SystemTime.getMonotonousTime() - start > 5000 ){
+							
+							return;
+						}
+						
+						try{
+							Thread.sleep( 100 );
+							
+						}catch( Throwable e ){
+							
+						}
+					}
+				});
+		}
 	}
 	
 	private List<DiskManagerFileInfo>

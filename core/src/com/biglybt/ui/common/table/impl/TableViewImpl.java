@@ -19,6 +19,7 @@
 package com.biglybt.ui.common.table.impl;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.biglybt.core.config.impl.ConfigurationManager;
@@ -129,6 +130,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	/** Queue removed datasources and add them on refresh */
 	private IdentityHashMap<DATASOURCETYPE, String> dataSourcesToRemove = new IdentityHashMap<>(4);
 
+	private AtomicInteger	datsaSourceQueueProcessingCount = new AtomicInteger();
+	
 	// class used to keep filter stuff in a nice readable parcel
 	public static class filter<DATASOURCETYPE>
 	{
@@ -713,51 +716,61 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	}
 
 	private void _processDataSourceQueue() {
-		Object[] dataSourcesAdd = null;
-		Object[] dataSourcesRemove = null;
+		boolean hasAdd;
+		boolean hasRemove;
+		
+		try{
+			datsaSourceQueueProcessingCount.incrementAndGet();
 
-		synchronized (rows_sync) {
-			if (dataSourcesToAdd.size() > 0) {
-				boolean removed_something = false;
-				for ( DATASOURCETYPE ds: dataSourcesToRemove.keySet()){
+			Object[] dataSourcesAdd = null;
+			Object[] dataSourcesRemove = null;
 
-					if ( dataSourcesToAdd.remove( ds ) != null ){
-
-						removed_something = true;
+			synchronized (rows_sync) {
+				if (dataSourcesToAdd.size() > 0) {
+					boolean removed_something = false;
+					for ( DATASOURCETYPE ds: dataSourcesToRemove.keySet()){
+	
+						if ( dataSourcesToAdd.remove( ds ) != null ){
+	
+							removed_something = true;
+						}
 					}
+	
+					if ( removed_something&& DEBUGADDREMOVE){
+						debug("Saved time by not adding a row that was removed");
+					}
+	
+					dataSourcesAdd = dataSourcesToAdd.keySet().toArray();
+	
+					dataSourcesToAdd.clear();
 				}
-
-				if ( removed_something&& DEBUGADDREMOVE){
-					debug("Saved time by not adding a row that was removed");
+	
+				if (dataSourcesToRemove.size() > 0) {
+					dataSourcesRemove = dataSourcesToRemove.keySet().toArray();
+					if (DEBUGADDREMOVE && dataSourcesRemove.length > 1) {
+						debug("Streamlining removing " + dataSourcesRemove.length + " rows");
+					}
+					dataSourcesToRemove.clear();
 				}
-
-				dataSourcesAdd = dataSourcesToAdd.keySet().toArray();
-
-				dataSourcesToAdd.clear();
 			}
-
-			if (dataSourcesToRemove.size() > 0) {
-				dataSourcesRemove = dataSourcesToRemove.keySet().toArray();
-				if (DEBUGADDREMOVE && dataSourcesRemove.length > 1) {
-					debug("Streamlining removing " + dataSourcesRemove.length + " rows");
+	
+			hasAdd = dataSourcesAdd != null && dataSourcesAdd.length > 0;
+			if (hasAdd) {
+				reallyAddDataSources(dataSourcesAdd);
+				if (DEBUGADDREMOVE && dataSourcesAdd.length > 1) {
+					debug("Streamlined adding " + dataSourcesAdd.length + " rows");
 				}
-				dataSourcesToRemove.clear();
 			}
-		}
-
-		boolean hasAdd = dataSourcesAdd != null && dataSourcesAdd.length > 0;
-		if (hasAdd) {
-			reallyAddDataSources(dataSourcesAdd);
-			if (DEBUGADDREMOVE && dataSourcesAdd.length > 1) {
-				debug("Streamlined adding " + dataSourcesAdd.length + " rows");
+	
+			hasRemove = dataSourcesRemove != null && dataSourcesRemove.length > 0;
+			if (hasRemove) {
+				reallyRemoveDataSources(dataSourcesRemove);
 			}
+		}finally{
+			
+			datsaSourceQueueProcessingCount.decrementAndGet();
 		}
-
-		boolean hasRemove = dataSourcesRemove != null && dataSourcesRemove.length > 0;
-		if (hasRemove) {
-			reallyRemoveDataSources(dataSourcesRemove);
-		}
-
+		
 		if (hasAdd || hasRemove) {
 			tableMutated();
 		}
@@ -831,7 +844,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		addDataSources(dataSources, false);
 	}
 
-	public void addDataSources(final DATASOURCETYPE dataSources[],
+	private void addDataSources(final DATASOURCETYPE dataSources[],
 			boolean skipFilterCheck) {
 
 		if (dataSources == null) {
@@ -909,8 +922,13 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	{
 		synchronized (rows_sync){
 			
-			return( !dataSourcesToAdd.isEmpty() || !dataSourcesToRemove.isEmpty());
+			if ( !dataSourcesToAdd.isEmpty() || !dataSourcesToRemove.isEmpty()){
+				
+				return( true );
+			}
 		}
+		
+		return( datsaSourceQueueProcessingCount.get() > 0 );
 	}
 
 	// @see TableView#dataSourceExists(java.lang.Object)
@@ -1267,7 +1285,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 	}
 
-	public void reallyAddDataSources(final Object dataSources[]) {
+	private void reallyAddDataSources(final Object dataSources[]) {
 		// Note: We assume filterCheck has already run, and the list of dataSources
 		//       all passed the filter
 
@@ -1399,7 +1417,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	}
 
 	@SuppressWarnings("null")
-	public void reallyRemoveDataSources(final Object[] dataSources) {
+	private void reallyRemoveDataSources(final Object[] dataSources) {
 		final long lStart = SystemTime.getCurrentTime();
 
 		int rows_removed = 0;
@@ -1540,7 +1558,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		boolean	orderChanged = false;
 
 		synchronized (rows_sync) {
-			
+						
 			if (bForceDataRefresh && !sortColumns.isEmpty()) {
 				for (TableColumnCore sortColumn : sortColumns) {
 					String sColumnID = sortColumn.getName();
