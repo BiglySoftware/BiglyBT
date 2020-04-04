@@ -3939,7 +3939,23 @@ DHTTrackerPlugin
 
 							status = TrackerPeerSource.ST_DISABLED;
 							
-							new_status_str = MessageText.getString( "label.peer.source.disabled" );
+							boolean done = false;
+							
+							try{
+								if ( download.getTorrent().isPrivate()){
+												
+									new_status_str = MessageText.getString( "label.private" );
+									
+									done = true;
+								}
+							}catch( Throwable e ){
+								
+							}
+					
+							if ( !done ){
+								
+								new_status_str = MessageText.getString( "label.peer.source.disabled" );
+							}
 						}
 
 						status_str = new_status_str;

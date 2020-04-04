@@ -827,6 +827,25 @@ LocalTrackerPlugin
 
 					return( TrackerPeerSource.ST_STOPPED );
 				}
+				
+				@Override
+				public String 
+				getStatusString()
+				{
+					if ( getStatus() == TrackerPeerSource.ST_DISABLED ){
+						
+						try{
+							if ( TorrentUtils.isReallyPrivate(PluginCoreUtils.unwrap( download.getTorrent()))){
+								
+								return( MessageText.getString( "label.private" ));
+							}
+						}catch( Throwable e ){
+							
+						}
+					}
+					
+					return( null );
+				}
 
 				@Override
 				public int

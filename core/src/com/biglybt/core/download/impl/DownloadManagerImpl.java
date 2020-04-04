@@ -6374,6 +6374,25 @@ DownloadManagerImpl
 						}
 
 						@Override
+						public String 
+						getStatusString()
+						{
+							if ( getStatus() == TrackerPeerSource.ST_DISABLED ){
+								
+								try{
+									if ( torrent.getPrivate()){
+										
+										return( MessageText.getString( "label.private" ));
+									}
+								}catch( Throwable e ){
+									
+								}
+							}
+							
+							return( null );
+						}
+						
+						@Override
 						public int
 						getPeers()
 						{
