@@ -705,7 +705,18 @@ public class GeneralView
     gridData.horizontalSpan = 3;
     lblComment.setLayoutData(gridData);
 
-
+    ClipboardCopy.addCopyToClipMenu( 
+    	lblComment,
+    	new ClipboardCopy.copyToClipProvider(){
+			
+			@Override
+			public String getText(){
+				String comment = (String)lblComment.getData( "comment" );
+				
+				return( comment==null?"":comment );
+			}
+		});
+    
     piecesImage.addListener(SWT.Paint, new Listener() {
       @Override
       public void handleEvent(Event e) {
