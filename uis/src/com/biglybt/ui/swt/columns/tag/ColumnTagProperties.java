@@ -112,7 +112,8 @@ ColumnTagProperties
 						TagFeatureExecOnAssign.ACTION_RESUME,
 						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI,
 						TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC,
-						TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS };
+						TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS,
+						TagFeatureExecOnAssign.ACTION_HOST };
 
 				String[] action_keys =
 					{ 	"label.apply.options.template",
@@ -126,7 +127,8 @@ ColumnTagProperties
 						"v3.MainWindow.button.resume",
 						"label.post.magnet.to.chat",
 						"label.init.save.loc.move",
-						"label.assign.tags" };
+						"label.assign.tags",
+						"menu.host.on.tracker" };
 
 				for ( int i=0; i<action_ids.length;i++ ){
 

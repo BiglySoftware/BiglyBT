@@ -44,6 +44,7 @@ TagFeatureExecOnAssign
 	public static final int ACTION_POST_MAGNET_URI			= 0x0200;
 	public static final int ACTION_MOVE_INIT_SAVE_LOC		= 0x0400;
 	public static final int ACTION_ASSIGN_TAGS				= 0x0800;
+	public static final int ACTION_HOST						= 0x1000;
 
 	public static final int[] ACTIONS = {
 			ACTION_DESTROY,
@@ -58,6 +59,7 @@ TagFeatureExecOnAssign
 			ACTION_POST_MAGNET_URI,
 			ACTION_MOVE_INIT_SAVE_LOC,
 			ACTION_ASSIGN_TAGS,
+			ACTION_HOST,
 	};
 	
 	public int

@@ -24,6 +24,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.download.DownloadManagerState;
@@ -738,6 +739,26 @@ TagDownloadWithState
 									}
 								});
 						}
+					}
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_HOST )){
+
+						rs_async.dispatch(
+							new AERunnable()
+							{
+								@Override
+								public void
+								runSupport()
+								{
+									try{
+										CoreFactory.getSingleton().getTrackerHost().hostTorrent( dm.getTorrent(), true, false);
+										
+									}catch( Throwable e ){
+										
+										Debug.out( e );
+									}
+								}
+							});
 					}
 				}
 			}
@@ -2242,7 +2263,8 @@ TagDownloadWithState
 					TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE |
 					TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI |
 					TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC |
-					TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS );
+					TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS |
+					TagFeatureExecOnAssign.ACTION_HOST );
 
 		}else if ( getTagType().getTagType() == TagType.TT_DOWNLOAD_STATE ){
 
