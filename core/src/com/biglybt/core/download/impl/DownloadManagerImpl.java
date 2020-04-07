@@ -5189,6 +5189,14 @@ DownloadManagerImpl
 	  }else{
 		  dm.moveDataFiles( new_save_location.getParentFile(), new_save_location.getName(), null );
 	  }
+	  
+	  	// this is a manual move - we want to prevent any future move-on-complete from kicking in and moving the files
+	  	// elsewhere.
+	  
+	  if ( getAssumedComplete()){
+	  
+		  getDownloadState().setFlag(DownloadManagerState.FLAG_MOVE_ON_COMPLETION_DONE, true);
+	  }
   }
 
   @Override
