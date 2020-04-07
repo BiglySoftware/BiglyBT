@@ -719,6 +719,8 @@ WebEngine
 
 		}catch( SearchException e ){
 
+			boolean	pp_connected = false;
+			
 			try{
 				URL 			original_url	= new URL( searchURL );
 
@@ -751,11 +753,29 @@ WebEngine
 
 					}finally{
 
+						if ( !ok ){
+							
+							Throwable error = plugin_proxy.getError();
+							
+							if ( error != null ){
+								
+								e = new SearchException( error );
+								
+							}else if ( plugin_proxy.getConnected()){
+								
+								pp_connected = true;
+							}
+						}
+						
 						plugin_proxy.setOK( ok );
 					}
 				}
-			}catch( Throwable f ){
+			}catch( SearchException f ){
 
+				throw( pp_connected?f:e );
+				
+			}catch( Throwable f ){
+				
 				throw( e );
 			}
 		}
@@ -975,7 +995,7 @@ WebEngine
 							return( new pageDetails( initial_url, initial_url, "" ));
 
 						}else{
-
+							
 							throw( e );
 						}
 					}
@@ -1332,6 +1352,14 @@ WebEngine
 
 		}catch( Throwable e) {
 
+			if ( e instanceof ResourceDownloaderException && proxy != null ){
+				
+					
+					// exception can contain a load of crap, just use generic one
+				
+				e = new IOException( "I/O Exception" );
+			}
+			
 			// e.printStackTrace();
 
 			debugLog( "Failed to load page: " + Debug.getNestedExceptionMessageAndStack(e));

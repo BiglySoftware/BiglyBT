@@ -890,6 +890,45 @@ AEPluginProxyHandler
 		{
 			return((Integer)proxy_details[2]);
 		}
+		
+		@Override
+		public Throwable 
+		getError()
+		{
+			try{
+				Map<String,Object> status = (Map<String,Object>)ipc.invoke( "getProxyStatus", new Object[]{ proxy_details[0] });
+	
+				if ( status != null ){
+					
+					return((Throwable)status.get( "error" ));
+				}
+			}catch( Throwable e ){
+			}
+			
+			return( null );
+		}
+		
+		@Override
+		public boolean 
+		getConnected()
+		{
+			try{
+				Map<String,Object> status = (Map<String,Object>)ipc.invoke( "getProxyStatus", new Object[]{ proxy_details[0] });
+	
+				if ( status != null ){
+					
+					Boolean connected = (Boolean)status.get( "connected" );
+					
+					if ( connected != null ){
+						
+						return( connected );
+					}
+				}
+			}catch( Throwable e ){
+			}
+			
+			return( false );
+		}
 
 		@Override
 		public void

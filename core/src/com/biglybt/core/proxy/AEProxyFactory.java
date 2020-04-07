@@ -225,6 +225,12 @@ AEProxyFactory
 		public int
 		getStatus();
 		
+		public boolean
+		getConnected();
+		
+		public Throwable
+		getError();
+		
 		public void
 		addListener(
 			PluginProxyStatusListener		l );
