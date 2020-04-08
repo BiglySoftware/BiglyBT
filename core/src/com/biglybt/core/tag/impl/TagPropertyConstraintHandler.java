@@ -2048,6 +2048,7 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_NEW			= 31;		
 		private static final int FT_IS_SUPER_SEEDING	= 32;		
 		private static final int FT_IS_SEQUENTIAL		= 33;		
+		private static final int FT_TAG_POSITION		= 34;		
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2202,7 +2203,7 @@ TagPropertyConstraintHandler
 				
 				boolean	params_ok = false;
 
-				if ( func_name.equals( "hasTag" ) || func_name.equals( "hasTagAge" ) || func_name.equals( "countTag" )){
+				if ( func_name.equals( "hasTag" ) || func_name.equals( "hasTagAge" ) || func_name.equals( "countTag" ) || func_name.equals( "tagPosition" )){
 
 					if ( func_name.equals( "hasTag" )){
 						
@@ -2212,9 +2213,13 @@ TagPropertyConstraintHandler
 						
 						fn_type = FT_HAS_TAG_AGE;
 						
-					}else{
+					}else if ( func_name.equals( "countTag" )){
 						
 						fn_type = FT_COUNT_TAG;
+						
+					}else{
+						
+						fn_type = FT_TAG_POSITION;
 					}
 					
 					params_ok = num_params == 1 && getStringLiteral( params, 0 );
@@ -2655,6 +2660,70 @@ TagPropertyConstraintHandler
 						}else{
 							
 							return( target.getTaggedCount());
+						}
+					}
+					case FT_TAG_POSITION:{
+						
+						String tag_name = (String)params[0];
+						
+						Tag target = null;
+						
+						if ( dependent_on_tags != null ){
+							
+							for ( Tag t: dependent_on_tags ){
+	
+								if ( t.getTagName( true ).equals( tag_name )){
+	
+									target = t;
+									
+									break;
+								}
+							}
+						}	
+						
+						if ( target == null ){
+							
+							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Tag '" + tag_name + "' not found" );
+							
+							return( -1 );
+							
+						}else{
+							
+							Set<Taggable> dms = target.getTagged();
+							
+							int my_position = dm.getPosition();
+							
+							int tag_position = 0;
+							
+							boolean found = false;
+							
+							for ( Taggable t: dms ){
+								
+								DownloadManager this_dm = (DownloadManager)t;
+								
+								if ( t == dm ){
+									
+									found = true;
+									
+								}else{
+									
+									int this_pos = this_dm.getPosition();
+									
+									if ( this_pos < my_position ){
+										
+										tag_position++;
+									}
+								}
+							}
+							
+							if ( found ){
+								
+								return( tag_position );
+								
+							}else{
+								
+								return( -1 );
+							}
 						}
 					}
 					case FT_HAS_NET:{
