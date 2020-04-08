@@ -1631,7 +1631,16 @@ TagPropertyConstraintHandler
 						
 					}else if ( value.startsWith( "{" )){
 						
-						return( new Object[]{ dereference( value )});
+						Object temp = dereference( value );
+						
+						if ( temp instanceof Object[]){
+							
+							return((Object[])temp);
+							
+						}else{
+							
+							return( new Object[]{ temp });
+						}
 						
 					}else if ( value.contains( "(" )){
 						
@@ -1704,30 +1713,23 @@ TagPropertyConstraintHandler
 			private Object
 			dereference(
 				String	key )
+		
 			{
-				Object obj = context.get( key );
+				ConstraintExpr expr = context.get( key );
 				
-				if ( obj == null ){
+				if ( expr == null ){
 					
 					throw( new RuntimeException( "Reference " + key + " not found" ));
 				}
 			
-				if ( obj instanceof ConstraintExprParams ){
+				if ( expr instanceof ConstraintExprParams ){
 					
-					ConstraintExprParams params = (ConstraintExprParams)obj;
+					ConstraintExprParams params = (ConstraintExprParams)expr;
 					
-					Object[] args = params.getValues();
-					
-					if ( args.length != 1 ){
-						
-						throw( new RuntimeException( "Reference " + key + " resolved incorrectly" ));
-					}
-					
-					return( args[0] );
-					
+					return( params.getValues());
 				}
 				
-				return( obj );
+				return( expr );
 			}
 			
 			@Override
@@ -2222,8 +2224,22 @@ TagPropertyConstraintHandler
 						fn_type = FT_TAG_POSITION;
 					}
 					
-					params_ok = num_params == 1 && getStringLiteral( params, 0 );
+					params_ok = num_params >= 1 && getStringLiteral( params, 0 );
 
+					if ( params_ok ){
+						
+						if ( fn_type == FT_TAG_POSITION ){
+							
+							if ( num_params > 1 ){
+								
+								params_ok = num_params == 2 && getNumericLiteral( params, 1 );
+							}
+						}else{
+							
+							params_ok = num_params == 1;
+						}
+					}
+						
 					if ( params_ok ){
 						
 						String tag_name = (String)params[0];
@@ -2689,40 +2705,109 @@ TagPropertyConstraintHandler
 							
 						}else{
 							
-							Set<Taggable> dms = target.getTagged();
+							int sort;
 							
-							int my_position = dm.getPosition();
+							if ( params.length == 1 ){
 							
-							int tag_position = 0;
-							
-							boolean found = false;
-							
-							for ( Taggable t: dms ){
-								
-								DownloadManager this_dm = (DownloadManager)t;
-								
-								if ( t == dm ){
-									
-									found = true;
-									
-								}else{
-									
-									int this_pos = this_dm.getPosition();
-									
-									if ( this_pos < my_position ){
-										
-										tag_position++;
-									}
-								}
-							}
-							
-							if ( found ){
-								
-								return( tag_position );
+								sort = 1;
 								
 							}else{
 								
-								return( -1 );
+								sort = ((Number)params[1]).intValue();
+							}
+							
+							Set<Taggable> dms = target.getTagged();
+							
+							if ( !dms.contains( dm )){
+								
+								return( -1 );	// not present
+							}
+							
+							if ( sort == 1 ){
+								
+								int my_position = dm.getPosition();
+								
+								int tag_position = 0;
+								
+								boolean found = false;
+								
+								for ( Taggable t: dms ){
+									
+									DownloadManager this_dm = (DownloadManager)t;
+									
+									if ( t == dm ){
+										
+										found = true;
+										
+									}else{
+										
+										int this_pos = this_dm.getPosition();
+										
+										if ( this_pos < my_position ){
+											
+											tag_position++;
+										}
+									}
+								}
+								
+								if ( found ){
+									
+									return( tag_position );
+									
+								}else{
+									
+									return( -1 );
+								}
+							}else{
+								
+								long my_time = target.getTaggableAddedTime( dm );
+								
+								if ( my_time == -1 ){
+									
+									return( -1 );	// not in tag
+								}
+								
+									// need to mix in position as if a number of downloads are added to a tag at the same time (drag+drop a bunch)
+									// then they most likely end up with identical times
+								
+								my_time += dm.getPosition();
+								
+								int tag_position = 0;
+								
+								boolean found = false;
+								
+								for ( Taggable t: dms ){
+																		
+									if ( t == dm ){
+											
+										found = true;
+									
+									}else{
+										
+										long this_time = target.getTaggableAddedTime( t );
+										
+										if ( this_time != -1 ){
+											
+											DownloadManager this_dm = (DownloadManager)t;
+											
+											this_time += this_dm.getPosition();
+											
+											if ( this_time < my_time ){
+												
+												tag_position++;
+											}
+										}
+									}
+								}
+								
+								if ( found ){
+									
+									return( tag_position );
+									
+								}else{
+									
+									return( -1 );
+								}
 							}
 						}
 					}
