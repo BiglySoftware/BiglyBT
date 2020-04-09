@@ -833,6 +833,8 @@ public class TagUIUtils
 
 				eoa_item.setMenu( eoa_menu );
 
+				boolean is_peer_set = tag.getTagType().getTagType() == TagType.TT_PEER_IPSET;
+
 				int[]	action_ids =
 					{ 	TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE,
 						TagFeatureExecOnAssign.ACTION_DESTROY,
@@ -850,7 +852,7 @@ public class TagUIUtils
 
 				String[] action_keys =
 					{ 	"label.apply.options.template",
-						"v3.MainWindow.button.delete",
+						is_peer_set?"azbuddy.ui.menu.disconnect":"v3.MainWindow.button.delete",
 						"v3.MainWindow.button.start",
 						"v3.MainWindow.button.forcestart",
 						"v3.MainWindow.button.notforcestart",

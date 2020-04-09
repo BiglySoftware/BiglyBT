@@ -34,6 +34,7 @@ import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureExecOnAssign;
 import com.biglybt.core.tag.TagFeatureProperties;
+import com.biglybt.core.tag.TagType;
 
 
 public class
@@ -100,6 +101,8 @@ ColumnTagProperties
 
 				String actions_str = "";
 
+				boolean is_peer_set = tag.getTagType().getTagType() == TagType.TT_PEER_IPSET;
+				
 				int[]	action_ids =
 					{	TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE,
 					 	TagFeatureExecOnAssign.ACTION_DESTROY,
@@ -117,7 +120,7 @@ ColumnTagProperties
 
 				String[] action_keys =
 					{ 	"label.apply.options.template",
-						"v3.MainWindow.button.delete",
+						is_peer_set?"azbuddy.ui.menu.disconnect":"v3.MainWindow.button.delete",
 						"v3.MainWindow.button.start",
 						"v3.MainWindow.button.forcestart",
 						"v3.MainWindow.button.notforcestart",
