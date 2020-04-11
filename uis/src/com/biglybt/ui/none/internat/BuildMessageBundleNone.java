@@ -80,10 +80,13 @@ public class BuildMessageBundleNone {
 
 	public static void main(String[] args)
 			throws IOException, URISyntaxException {
-		File dirRoot = new File("").getAbsoluteFile();
 		System.setProperty("SKIP_SETRB", "1");
 
-		File dirNone = new File(dirRoot, "uis/src/com/biglybt/ui/none/internat");
+		File dirRoot = new File(args.length > 0 ? args[0] : "").getAbsoluteFile();
+		String dest = args.length > 1 ? args[1]
+				: "uis/src/com/biglybt/ui/none/internat";
+
+		File dirNone = new File(dirRoot, dest);
 		System.out.println(dirNone);
 		System.out.println(dirRoot);
 		File dirFullMB = new File(dirRoot, "core/src/com/biglybt/internat");
