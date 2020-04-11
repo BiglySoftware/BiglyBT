@@ -48,6 +48,8 @@ public class MessageText {
 
 	public static final Locale LOCALE_DEFAULT = Locale.ROOT; // == english
 
+	private static final boolean LOG_MISSING_MESSAGES = System.getProperty("log.missing.messages", "0").equals("1");
+
 	private static Locale LOCALE_CURRENT = LOCALE_DEFAULT;
 
 	static final String BUNDLE_NAME;
@@ -358,6 +360,9 @@ public class MessageText {
       if ( key.startsWith("!") && key.endsWith( "!" )){
     	  return( expandValue(key.substring(1,key.length()-1 )));
       }
+			if (LOG_MISSING_MESSAGES) {
+				System.err.println("Missing message key '" + key + "' via " + Debug.getCompressedStackTraceSkipFrames(2));
+			}
       return '!' + key + '!';
     }
   }
@@ -429,7 +434,18 @@ public class MessageText {
   		String		key,
 		String[] params )
   {
-  	String	res = getString(key);
+  	String	res = getString(key, (String) null);
+
+		if (res == null) {
+			if (LOG_MISSING_MESSAGES) {
+				System.err.println("Missing message key '" + key + "', params " + Arrays.toString(params));
+			}
+
+			if (params == null) {
+				return  "!" + key + "!";
+			}
+			return "!" + key + "(" + Arrays.toString(params) + ")" + "!";
+		}
 
   	if (params == null) {
   		return res;
