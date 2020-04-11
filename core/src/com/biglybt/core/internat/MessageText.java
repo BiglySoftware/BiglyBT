@@ -54,7 +54,7 @@ public class MessageText {
 
 	static final String BUNDLE_NAME;
 
-	private static final Map<String, Object> CONSTANTS = new HashMap<>();
+	public static final Map<String, String> CONSTANTS = new HashMap<>();
 
 	public static final String DEFAULT_BUNDLE_NAME = "com.biglybt.internat.MessagesBundle";
 
@@ -95,7 +95,12 @@ public class MessageText {
 			PLATFORM_SUFFIX = "._unknown";
 		}
 
-	  setResourceBundle( new IntegratedResourceBundle( getResourceBundle( BUNDLE_NAME, LOCALE_DEFAULT, MessageText.class.getClassLoader()), pluginLocalizationPaths, null, 4000, true ));
+		if (System.getProperty("SKIP_SETRB", "0").equals("0")) {
+			setResourceBundle(new IntegratedResourceBundle(
+					getResourceBundle(BUNDLE_NAME, LOCALE_DEFAULT,
+							MessageText.class.getClassLoader()),
+					pluginLocalizationPaths, null, 4000, true));
+		}
   }
 
   	// grab a reference to the default bundle

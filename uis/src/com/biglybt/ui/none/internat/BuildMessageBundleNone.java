@@ -1,18 +1,15 @@
 package com.biglybt.ui.none.internat;
 
-import com.biglybt.core.util.FileUtil;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
+import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.FileUtil;
 
 /**
  * Using keys in the default (english) language, fills non-default 'none' messagebundle packages.
@@ -55,7 +52,8 @@ public class BuildMessageBundleNone {
 
 	private static final Pattern PAT_PARAM_ALPHA = Pattern.compile("\\{([^0-9].+?)\\}");
 
-	public static String expandValue(String value, Properties properties) {
+	public static String expandValue(String value, Properties properties,
+			Map<String, String> defaultProps) {
 		// Replace {*} with a lookup of *
 		if (value != null && value.indexOf('}') > 0) {
 			Matcher matcher = PAT_PARAM_ALPHA.matcher(value);
@@ -64,12 +62,14 @@ public class BuildMessageBundleNone {
 				try {
 					String text = properties.getProperty(key);
 					if (text == null) {
-						return null;
+						text = defaultProps.get(key);
+						if (text == null) {
+							return null;
+						}
 					}
 
-					if (text != null) {
-						value = value.replaceAll("\\Q{" + key + "}\\E", Matcher.quoteReplacement(text));
-					}
+					value = value.replaceAll("\\Q{" + key + "}\\E",
+							Matcher.quoteReplacement(text));
 				} catch (MissingResourceException e) {
 					// ignore error
 				}
@@ -78,8 +78,10 @@ public class BuildMessageBundleNone {
 		return value;
 	}
 
-	public static void main(String[] args) throws IOException, URISyntaxException {
+	public static void main(String[] args)
+			throws IOException, URISyntaxException {
 		File dirRoot = new File("").getAbsoluteFile();
+		System.setProperty("SKIP_SETRB", "1");
 
 		File dirNone = new File(dirRoot, "uis/src/com/biglybt/ui/none/internat");
 		System.out.println(dirNone);
@@ -129,11 +131,13 @@ public class BuildMessageBundleNone {
 					if (fullCurrentVal == null) {
 						// no key in the full messagebundle for this language, maybe the
 						// default language's value expands to another key?
-						String defaultFullVal = defaultFullProperties.getProperty(key_val[0]);
+						String defaultFullVal = defaultFullProperties.getProperty(
+								key_val[0]);
 						if (defaultFullVal == null || !defaultFullVal.contains("}")) {
 							bw.write(isCurrentFileDefaultLang ? line : "#" + line);
 						} else {
-							String expandedValue = expandValue(defaultFullVal, fullCurrentProperties);
+							String expandedValue = expandValue(defaultFullVal,
+									fullCurrentProperties, MessageText.CONSTANTS);
 							if (expandedValue == null) {
 								bw.write("# No expansion for " + defaultFullVal);
 								bw.newLine();
@@ -143,7 +147,8 @@ public class BuildMessageBundleNone {
 							}
 						}
 					} else {
-						String expandedValue = expandValue(fullCurrentVal, fullCurrentProperties);
+						String expandedValue = expandValue(fullCurrentVal,
+								fullCurrentProperties, MessageText.CONSTANTS);
 						if (expandedValue == null) {
 							bw.write("# No expansion for " + fullCurrentVal);
 							bw.newLine();
