@@ -760,6 +760,26 @@ TagDownloadWithState
 								}
 							});
 					}
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_PUBLISH )){
+
+						rs_async.dispatch(
+							new AERunnable()
+							{
+								@Override
+								public void
+								runSupport()
+								{
+									try{
+										CoreFactory.getSingleton().getTrackerHost().publishTorrent( dm.getTorrent());
+										
+									}catch( Throwable e ){
+										
+										Debug.out( e );
+									}
+								}
+							});
+					}
 				}
 			}
 		}else{
@@ -2264,7 +2284,8 @@ TagDownloadWithState
 					TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI |
 					TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC |
 					TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS |
-					TagFeatureExecOnAssign.ACTION_HOST );
+					TagFeatureExecOnAssign.ACTION_HOST |
+					TagFeatureExecOnAssign.ACTION_PUBLISH );
 
 		}else if ( getTagType().getTagType() == TagType.TT_DOWNLOAD_STATE ){
 

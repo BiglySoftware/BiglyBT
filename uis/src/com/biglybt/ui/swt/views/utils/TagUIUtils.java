@@ -848,7 +848,8 @@ public class TagUIUtils
 						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI,
 						TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC,
 						TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS,
-						TagFeatureExecOnAssign.ACTION_HOST };
+						TagFeatureExecOnAssign.ACTION_HOST,
+						TagFeatureExecOnAssign.ACTION_PUBLISH };
 
 				String[] action_keys =
 					{ 	"label.apply.options.template",
@@ -863,7 +864,8 @@ public class TagUIUtils
 						"label.post.magnet.to.chat",
 						"label.init.save.loc.move",
 						"label.assign.tags",
-						"menu.host.on.tracker" };
+						"menu.host.on.tracker",
+						"menu.publish.on.tracker"};
 
 				for ( int i=0;i<action_ids.length;i++ ){
 
@@ -900,6 +902,8 @@ public class TagUIUtils
 							
 						}else if ( action_id == TagFeatureExecOnAssign.ACTION_SCRIPT ){
 
+							new MenuItem( eoa_menu, SWT.SEPARATOR);
+							
 							final MenuItem action_item = new MenuItem( eoa_menu, SWT.PUSH);
 
 							String script = tf_eoa.getActionScript();
@@ -1017,6 +1021,11 @@ public class TagUIUtils
 							
 						}else{
 
+							if ( action_id == TagFeatureExecOnAssign.ACTION_HOST ){
+								
+								new MenuItem( eoa_menu, SWT.SEPARATOR);
+							}
+							
 							final MenuItem action_item = new MenuItem( eoa_menu, SWT.CHECK);
 
 							Messages.setLanguageText( action_item, action_keys[i] );
