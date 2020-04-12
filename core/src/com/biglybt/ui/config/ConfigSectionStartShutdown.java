@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
@@ -229,9 +230,16 @@ public class ConfigSectionStartShutdown
 			paramRestartWhenIdlePrompt.setEnabled(paramRestartWhenIdle.getValue() > 0 );
 		});
 		
-		add("pgRestart",
-				new ParameterGroupImpl("label.restart", paramRestartWhenIdle, paramRestartWhenIdlePrompt ));
+		// >>> Android: Add Restart Now
+		ActionParameterImpl paramRestartNow = new ActionParameterImpl("",
+				"UpdateWindow.restart");
+		paramRestartNow.addListener(
+				param -> CoreFactory.getSingleton().requestRestart());
+		add(paramRestartNow);
+		// <<< Android: Add Restart Now
 
+		add("pgRestart", new ParameterGroupImpl("label.restart",
+				paramRestartWhenIdle, paramRestartWhenIdlePrompt, paramRestartNow));
 
 			// JVM
 		
