@@ -2268,12 +2268,14 @@ CoreImpl
 
 		throws CoreException
 	{
+		/* Android doesn't need azupdater to restart since we don't auto update plugins
 		if ( getPluginManager().getPluginInterfaceByClass( "com.biglybt.update.UpdaterPatcher") == null ){
 			Logger.log(new LogAlert(LogAlert.REPEATABLE, LogAlert.AT_ERROR,
 					"Can't restart without the 'azupdater' plugin installed"));
 
 			throw( new CoreException("Can't restart without the 'azupdater' plugin installed"));
 		}
+		*/
 	}
 
 	@Override
