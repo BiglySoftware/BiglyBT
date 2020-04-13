@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.biglybt.core.util.AESemaphore;
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderCancelledException;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderException;
@@ -327,6 +328,8 @@ ResourceDownloaderAlternateImpl
 		ResourceDownloaderException e )
 	{
 		result		= e;
+
+		informActivity( getLogIndent() + "  failed: " + Debug.getNestedExceptionMessage( e ));
 
 		asyncDownload();
 	}
