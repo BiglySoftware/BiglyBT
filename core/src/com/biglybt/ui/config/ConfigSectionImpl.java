@@ -137,7 +137,25 @@ public abstract class ConfigSectionImpl
 	@SafeVarargs
 	protected final <T extends ParameterImpl> T add(String key, T param,
 			List<Parameter>... otherLists) {
-		return( add(key, param, defaultMode, otherLists));
+		int minMode = Parameter.MODE_ADVANCED + 1;
+		for (List<Parameter> otherList : otherLists) {
+			for (Parameter child : otherList) {
+				int childMinMode = child.getMinimumRequiredUserMode();
+				if (childMinMode < minMode) {
+					minMode = childMinMode;
+					if (minMode == 0) {
+						break;
+					}
+				}
+			}
+			if (minMode == 0) {
+				break;
+			}
+		}
+		if (minMode > Parameter.MODE_ADVANCED) {
+			minMode = defaultMode;
+		}
+		return( add(key, param, minMode, otherLists));
 	}
 
 	@SafeVarargs
