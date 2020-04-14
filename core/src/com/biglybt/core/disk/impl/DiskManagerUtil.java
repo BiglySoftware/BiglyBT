@@ -342,7 +342,7 @@ DiskManagerUtil
 
 	    state.setFileLink( file_info.getIndex(), from_file, to_link );
 
-	    state.save();
+	    state.save(false);
 
 	    return( null );
 	}
@@ -664,13 +664,13 @@ DiskManagerUtil
 								}
 							}
 
-							DiskManagerImpl.storeFileDownloaded( download_manager, res, true );
+							DiskManagerImpl.storeFileDownloaded( download_manager, res, true, false );
 
 							doFileExistenceChecks(this, toChange, download_manager, newStorageType == FileSkeleton.ST_LINEAR || newStorageType == FileSkeleton.ST_REORDER );
 
 						} finally {
 							dmState.suppressStateSave(false);
-							dmState.save();
+							dmState.save(false);
 						}
 
 						return modified;
@@ -1662,7 +1662,7 @@ DiskManagerUtil
 					}
 					
 					@Override
-					public void saveState(){
+					public void saveState( boolean interim ){
 					}
 					
 					@Override

@@ -347,7 +347,7 @@ DiskManager
    */
 
 	public void
-	saveState();
+	saveState( boolean interim );
 
 	/**
 	 * @param pieceNumber

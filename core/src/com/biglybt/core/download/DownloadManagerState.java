@@ -400,7 +400,7 @@ DownloadManagerState
 	public void discardFluff();
 
 	public void
-	save();
+	save( boolean interim );
 
 	public boolean
 	exportState(

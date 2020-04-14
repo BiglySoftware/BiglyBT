@@ -249,7 +249,8 @@ DownloadManagerStateImpl
 
 	private final TorrentUtils.ExtendedTorrent	torrent;
 
-	private boolean						write_required;
+	private boolean						write_required_soon;
+	private boolean						write_required_sometime;
 
 	private Category 	category;
 
@@ -922,7 +923,7 @@ DownloadManagerStateImpl
 
 			if ( changed ){
 
-				write_required	= true;
+				setDirty( false );
 
 				torrent.setAdditionalMapProperty( TRACKER_CACHE_KEY, value );
 			}
@@ -960,27 +961,40 @@ DownloadManagerStateImpl
 	setResumeData(
 		Map	data )
 	{
+		boolean changed = false;
+
 		try{
 			this_mon.enter();
 
 			// System.out.println( "setting download state/resume data for '" + new String(torrent.getName()));
-
+			
+			Map existing = torrent.getAdditionalMapProperty(RESUME_KEY  );
+			
 			if ( data == null ){
 
 				setLongAttribute( AT_RESUME_STATE, 1 );
+				
+				if ( existing != null ){
+				
+					torrent.removeAdditionalProperty( RESUME_KEY );
 
-				torrent.removeAdditionalProperty( RESUME_KEY );
-
+					changed = true;
+				}
 			}else{
 
-				torrent.setAdditionalMapProperty( RESUME_KEY, data );
+				changed = !BEncoder.mapsAreIdentical( existing, data );
 
+				torrent.setAdditionalMapProperty( RESUME_KEY, data );
+				
 				boolean complete = DiskManagerFactory.isTorrentResumeDataComplete( this );
 
 				setLongAttribute( AT_RESUME_STATE, complete?2:1 );
 			}
 
-			write_required	= true;
+			if ( changed ){
+			
+				setDirty( false );
+			}
 
 		}finally{
 
@@ -989,7 +1003,7 @@ DownloadManagerStateImpl
 
 			// we need to ensure this is persisted now as it has implications regarding crash restarts etc
 
-		save();
+		saveSupport(false,false);
 	}
 
 	@Override
@@ -1045,7 +1059,7 @@ DownloadManagerStateImpl
 		try{
 			this_mon.enter();
 
-			save( true );
+			saveSupport( false, true );
 
 			byte[]	hash = torrent.getHash();
 
@@ -1090,15 +1104,35 @@ DownloadManagerStateImpl
 			supressWrites--;
 	}
 
+
+	private void
+	setDirty(
+		boolean		slightly )
+	{
+		//Debug.out( (slightly?"slightly":"dirty" )+ ": " + new String(torrent.getName()));
+		
+		if ( slightly ){
+			
+			write_required_sometime = true;
+			
+		}else{
+		
+			write_required_soon = true;
+		}
+	}
+	
 	@Override
 	public void
-	save()
+	save( 
+		boolean interim )
 	{
-		save( false );
+		saveSupport( interim, false );
 	}
 
 	protected void
-	save( boolean force )
+	saveSupport( 
+		boolean interim, 
+		boolean force )
 	{
 		if ( supressWrites > 0 && !force ){
 
@@ -1110,10 +1144,24 @@ DownloadManagerStateImpl
 		try{
 			this_mon.enter();
 
-			do_write = write_required;
-
-			write_required = false;
-
+			if ( write_required_soon ){
+				
+				do_write = true;
+				
+			}else if ( write_required_sometime ){
+								
+				do_write = !interim;
+				
+			}else{
+				
+				do_write = false;
+			}
+			
+			if ( do_write ){
+			
+				write_required_soon 	= false;
+				write_required_sometime	= false;
+			}
 		}finally{
 
 			this_mon.exit();
@@ -1121,7 +1169,8 @@ DownloadManagerStateImpl
 
 		if ( do_write ){
 
-			try {
+			try{
+				
 				// System.out.println( "writing download state for '" + new String(torrent.getName()));
 
 				if (Logger.isEnabled())
@@ -1132,10 +1181,11 @@ DownloadManagerStateImpl
 
 				TorrentUtils.writeToFile(torrent, true);
 
-			} catch (Throwable e) {
+			}catch ( Throwable e ){
+				
 				Logger.log(new LogEvent(torrent, LOGID, "Saving state", e));
 			}
-		} else {
+		}else{
 
 			// System.out.println( "not writing download state for '" + new String(torrent.getName()));
 		}
@@ -1197,7 +1247,7 @@ DownloadManagerStateImpl
 
 			if ( write ){
 
-				save();
+				saveSupport(false,false);
 
 				if ( download_manager != null ){
 
@@ -2337,7 +2387,9 @@ DownloadManagerStateImpl
 
 					attributes.remove( attribute_name );
 
-					write_required = changed = true;
+					changed = true;
+					
+					setDirty( attribute_name == DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE );
 				}
 			}else{
 
@@ -2346,7 +2398,8 @@ DownloadManagerStateImpl
 
 				if (existing_bytes == null || !Arrays.equals(existing_bytes, new_bytes)) {
 					attributes.put(attribute_name, new_bytes);
-					write_required = changed = true;
+					changed = true;
+					setDirty( attribute_name == DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE );
 				}
 			}
 		}finally{
@@ -2398,7 +2451,7 @@ DownloadManagerStateImpl
 
 					attributes.put( attribute_name, new Long( res ));
 
-					write_required	= true;
+					setDirty( false );
 
 					return( res );
 				}
@@ -2432,7 +2485,9 @@ DownloadManagerStateImpl
 
 				attributes.put( attribute_name, new Long( attribute_value) );
 
-				write_required = changed = true;
+				changed = true;
+								
+				setDirty( attribute_name == DownloadManagerState.AT_SCRAPE_CACHE );
 			}
 		}finally{
 
@@ -2588,7 +2643,9 @@ DownloadManagerStateImpl
 
 					attributes.remove( attribute_name );
 
-					write_required = changed = true;
+					changed = true;
+					
+					setDirty( false );
 				}
 			}else{
 
@@ -2598,7 +2655,9 @@ DownloadManagerStateImpl
 
 					attributes.put( attribute_name, attribute_value );
 
-					write_required = changed = true;
+					changed = true;
+					
+					setDirty( false );
 
 				}else{
 
@@ -2611,7 +2670,7 @@ DownloadManagerStateImpl
 
 					if ( changed ){
 
-						write_required = true;
+						setDirty( false );
 
 						attributes.put( attribute_name, attribute_value );
 					}
@@ -2674,7 +2733,9 @@ DownloadManagerStateImpl
 
 					attributes.remove( attribute_name );
 
-					write_required = changed = true;
+					changed = true;
+					
+					setDirty( false );
 				}
 			}else{
 
@@ -2684,7 +2745,9 @@ DownloadManagerStateImpl
 
 					attributes.put( attribute_name, attribute_value );
 
-					write_required = changed = true;
+					changed = true;
+					
+					setDirty( false );
 
 				}else{
 
@@ -2697,7 +2760,7 @@ DownloadManagerStateImpl
 
 					if ( changed ){
 
-						write_required = true;
+						setDirty( false );
 
 						attributes.put( attribute_name, attribute_value );
 					}
@@ -3353,7 +3416,7 @@ DownloadManagerStateImpl
 
 		@Override
 		public void
-		save()
+		save( boolean interim )
 		{
 		}
 

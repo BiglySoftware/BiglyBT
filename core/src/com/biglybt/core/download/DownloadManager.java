@@ -479,7 +479,7 @@ DownloadManager
          */
 
     public void
-    saveDownload();
+    saveDownload( boolean interim );
 
 	/**
 	 * To retreive arbitrary objects against this object.

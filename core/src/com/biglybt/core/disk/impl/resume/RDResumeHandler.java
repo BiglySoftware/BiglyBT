@@ -38,6 +38,7 @@ import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.AESemaphore;
+import com.biglybt.core.util.BEncoder;
 import com.biglybt.core.util.ByteArrayHashMap;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
@@ -223,6 +224,8 @@ RDResumeHandler
 
 									// set it so that if we crash the NOT_DONE pieces will be
 									// rechecked
+
+								resume_data = BEncoder.cloneMap( resume_data );	// copy it as we are updating it
 
 								resume_data.put("valid", new Long(0));
 
@@ -1094,6 +1097,8 @@ RDResumeHandler
 			return(0);
 		}
 
+		resume_data = BEncoder.cloneMap( resume_data );	// copy it as we are updating it
+		
 		int	pieces_cleared	= 0;
 
 		// clear any affected pieces

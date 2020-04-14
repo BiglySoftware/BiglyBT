@@ -1018,7 +1018,7 @@ DownloadManagerController
 								// we don't want to update the torrent if we're seeding
 
 								if ( !download_manager.getAssumedComplete()){
-									download_manager.getDownloadState().save();
+									download_manager.getDownloadState().save(false);
 								}
 
 								setDiskManager( null, null );

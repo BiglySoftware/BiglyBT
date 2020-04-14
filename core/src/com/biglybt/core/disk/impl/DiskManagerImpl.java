@@ -736,7 +736,7 @@ DiskManagerImpl
             }
         }
 
-        saveState();
+        saveState( false );
 
         // can't be used after a stop so we might as well clear down the listeners
         listeners.clear();
@@ -3739,7 +3739,8 @@ DiskManagerImpl
   storeFileDownloaded(
     DownloadManager         download_manager,
     DiskManagerFileInfo[]   files,
-    boolean					persist )
+    boolean					persist,
+    boolean					interim )
   {
       DownloadManagerState  state = download_manager.getDownloadState();
 
@@ -3758,26 +3759,27 @@ DiskManagerImpl
 
       if ( persist ){
 
-    	  state.save();
+    	  state.save( interim );
       }
   }
 
   @Override
   public void
-  saveState()
+  saveState( boolean interim )
   {
-	  saveState( true );
+	  saveStateSupport( true, interim );
   }
 
   protected void
-  saveState(
-	boolean	persist )
+  saveStateSupport(
+	boolean	persist,
+	boolean	interim )
   {
       if ( files != null ){
 
     	  if ( getState() == READY ){
         
-    		  storeFileDownloaded( download_manager, files, persist );
+    		  storeFileDownloaded( download_manager, files, persist, interim );
     	  }
     	  
     	  storeFilePriorities();

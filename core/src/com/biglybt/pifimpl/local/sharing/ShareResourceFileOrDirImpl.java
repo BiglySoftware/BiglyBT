@@ -297,7 +297,7 @@ ShareResourceFileOrDirImpl
 			TorrentUtils.setResumeDataCompletelyValid( download_manager_state );
 
 
-			download_manager_state.save();
+			download_manager_state.save( false );
 
 			if ( item == null ){
 

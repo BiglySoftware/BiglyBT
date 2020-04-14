@@ -193,7 +193,7 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 
 		} finally {
 			dm_state.suppressStateSave(false);
-			dm_state.save();
+			dm_state.save(false);
 		}
 
 		return modified;

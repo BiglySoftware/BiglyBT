@@ -2257,22 +2257,23 @@ DownloadManagerImpl
 
 		if ( !assumedComplete  ){
 
-			download_manager_state.save();
+			download_manager_state.save( true );	// always in interim save
 		}
 	}
 
   	@Override
-	  public void
-  	saveDownload()
+	public void
+  	saveDownload(
+  		boolean	interim )
   	{
   		DiskManager disk_manager = controller.getDiskManager();
 
   		if ( disk_manager != null ){
 
-  			disk_manager.saveState();
+  			disk_manager.saveState( interim );
   		}
 
-  		download_manager_state.save();
+  		download_manager_state.save( interim );
   	}
 
 

@@ -349,7 +349,7 @@ public class GlobalManagerImpl
 
 	        if (( loopFactor % saveResumeLoopCount == 0 )){
 
-	        	saveDownloads( null );
+	        	saveDownloads( true, null );
 
 	        }else if ( loadingComplete && loopFactor > initSaveResumeLoopCount ){
 
@@ -377,7 +377,7 @@ public class GlobalManagerImpl
 
 	        		if ( do_save ){
 
-	        			saveDownloads( null );
+	        			saveDownloads( true, null );
 	        		}
 	        	}
 	        }
@@ -1787,11 +1787,11 @@ public class GlobalManagerImpl
 
 		  stopAllDownloads( true, new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 0, 49 ));
 
-		  saveDownloads( new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 50, 100 ) );
+		  saveDownloads( false, new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 50, 100 ) );
 
 	  }else{
 
-		  saveDownloads( new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 0, 49 ) );
+		  saveDownloads( false, new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 0, 49 ) );
 
 		  stopAllDownloads( true, new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 50, 100 ) );
 	  }
@@ -2639,11 +2639,13 @@ public class GlobalManagerImpl
   public void
   saveState()
   {
-	  saveDownloads( null );
+	  saveDownloads( false,null );
   }
 
   protected void
-  saveDownloads( GlobalMangerProgressListener listener_maybe_null  )
+  saveDownloads(
+	boolean							interim,
+	GlobalMangerProgressListener 	listener_maybe_null  )
   {
 	  if (!loadingComplete) {
 
@@ -2696,7 +2698,7 @@ public class GlobalManagerImpl
 				  listener_maybe_null.reportPercent((i*100)/nbDownloads );
 			  }
 			  
-			  Map dmMap = exportDownloadStateToMapSupport( dm, true );
+			  Map dmMap = exportDownloadStateToMapSupport( dm, true, interim );
 
 			  list.add(dmMap);
 		  }
@@ -2916,7 +2918,7 @@ public class GlobalManagerImpl
   exportDownloadStateToMap(
 	  DownloadManager		dm )
   {
-	  return( exportDownloadStateToMapSupport( dm, false ));
+	  return( exportDownloadStateToMapSupport( dm, false, false ));
   }
 
   @Override
@@ -2948,7 +2950,8 @@ public class GlobalManagerImpl
   private Map
   exportDownloadStateToMapSupport(
 	DownloadManager 	dm,
-	boolean				internal_export )
+	boolean				internal_export,
+	boolean				interim )
   {
 	  DownloadManagerStats dm_stats = dm.getStats();
 	  Map<String, Object> dmMap = new HashMap<>();
@@ -3012,8 +3015,10 @@ public class GlobalManagerImpl
 	  dmMap.put("state", new Long(state));
 
 	  if ( internal_export ){
+		  
 		  dmMap.put("position", new Long(dm.getPosition()));
 	  }
+	  
 	  dmMap.put("downloaded", new Long(dm_stats.getTotalDataBytesReceived()));
 	  dmMap.put("uploaded", new Long(dm_stats.getTotalDataBytesSent()));
 	  dmMap.put("completedbytes", new Long(dm_stats.getDownloadCompletedBytes()));
@@ -3030,7 +3035,7 @@ public class GlobalManagerImpl
 
 	  //save file priorities
 
-	  dm.saveDownload();
+	  dm.saveDownload( interim );
 
 	  List file_priorities = (List)dm.getUserData( "file_priorities" );
 	  if ( file_priorities != null ) {

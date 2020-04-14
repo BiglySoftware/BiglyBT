@@ -661,7 +661,7 @@ LWSDiskManager
 
 	@Override
 	public void
-	saveState()
+	saveState( boolean interim )
 	{
 	}
 
