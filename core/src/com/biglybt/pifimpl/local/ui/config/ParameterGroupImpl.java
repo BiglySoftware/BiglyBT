@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterGroup;
+import com.biglybt.pif.ui.config.ParameterTabFolder;
 
 /**
  * @author parg
@@ -157,14 +158,20 @@ ParameterGroupImpl
 		return( parameters );
 	}
 	
+	@Override
 	public int size(boolean countChildren) {
 		if (!countChildren) {
 			return parameters.length;
 		}
 		int count = parameters.length;
 		for (ParameterImpl param : parameters) {
-			if (param instanceof ParameterGroupImpl) {
-				count += ((ParameterGroupImpl) param).size(true);
+			if (param instanceof ParameterGroup) {
+				count += ((ParameterGroup) param).size(true);
+			} else if (param instanceof ParameterTabFolder) {
+				ParameterGroup[] groups = ((ParameterTabFolder) param).getGroups();
+				for (ParameterGroup group : groups) {
+					count += group.size(true);
+				}
 			}
 		}
 		return count;

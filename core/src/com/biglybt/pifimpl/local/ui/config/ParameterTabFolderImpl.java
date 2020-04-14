@@ -78,4 +78,9 @@ ParameterTabFolderImpl
 	public Object getValueObject() {
 		return null;
 	}
+
+	@Override
+	public ParameterGroup[] getGroups() {
+		return groups.toArray(new ParameterGroup[0]);
+	}
 }

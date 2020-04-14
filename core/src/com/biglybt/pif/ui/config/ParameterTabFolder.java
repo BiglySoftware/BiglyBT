@@ -33,4 +33,6 @@ ParameterTabFolder
 	public void
 	removeTab(
 		ParameterGroup		group );
+
+	ParameterGroup[] getGroups();
 }

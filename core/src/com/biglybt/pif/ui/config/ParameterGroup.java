@@ -44,4 +44,6 @@ ParameterGroup
 	public void
 	setNumberOfColumns(
 		int		num );
+
+	int size(boolean countChildren);
 }
