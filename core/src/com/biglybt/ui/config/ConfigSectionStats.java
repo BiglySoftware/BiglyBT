@@ -33,6 +33,7 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
 
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
 
@@ -102,6 +103,7 @@ public class ConfigSectionStats
 				BCFG_STATS_GRAPH_DIVIDERS,
 				"ConfigView.section.stats.graph_update_dividers");
 		add(paramGraphDividers);
+		paramGraphDividers.setAllowedUiTypes(UIInstance.UIT_SWT);
 
 		add("pgStatsDisplay",
 				new ParameterGroupImpl("stats.display.group", paramGraphDividers));

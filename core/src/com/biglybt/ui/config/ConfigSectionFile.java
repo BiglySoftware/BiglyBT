@@ -31,6 +31,7 @@ import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
 
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterListener;
@@ -79,13 +80,17 @@ public class ConfigSectionFile
 			MessageText.getString("OpenTorrentOptions.show.always"),
 			MessageText.getString("OpenTorrentOptions.show.many"),
 		};
-		add(new StringListParameterImpl(
-				ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS,
-				"ConfigView.section.file.showopentorrentoptions", openValues,
-				openLabels), listDefaultDir);
+		StringListParameterImpl paramShowOpenTorrentOptions = new StringListParameterImpl(
+			ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS,
+			"ConfigView.section.file.showopentorrentoptions", openValues,
+			openLabels);
+		paramShowOpenTorrentOptions.setAllowedUiTypes(UIInstance.UIT_SWT);
+		add(paramShowOpenTorrentOptions, listDefaultDir);
 
-		add(new BooleanParameterImpl(BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP,
-				"ConfigView.section.file.showopentorrentoptions.sep"), listDefaultDir);
+		BooleanParameterImpl paramShowSep = new BooleanParameterImpl(BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP,
+			"ConfigView.section.file.showopentorrentoptions.sep");
+		paramShowSep.setAllowedUiTypes(UIInstance.UIT_SWT);
+		add(paramShowSep, listDefaultDir);
 
 		// def dir: autoSave -> auto-rename
 
@@ -513,10 +518,12 @@ public class ConfigSectionFile
 		IntListParameterImpl paramConfirmDelete = new IntListParameterImpl(
 				ICFG_TB_CONFIRM_DELETE_CONTENT, "ConfigView.section.file.tb.delete",
 				values, labels);
+		paramConfirmDelete.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(paramConfirmDelete, Parameter.MODE_INTERMEDIATE, listDeletion);
 
 		BooleanParameterImpl paramDeleteTorrentFile = new BooleanParameterImpl(
 				BCFG_DEF_DELETETORRENT, "ConfigView.section.file.delete.torrent");
+		paramDeleteTorrentFile.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(paramDeleteTorrentFile, Parameter.MODE_INTERMEDIATE, listDeletion);
 
 		try {

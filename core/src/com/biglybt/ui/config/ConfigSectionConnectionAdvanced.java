@@ -112,6 +112,7 @@ public class ConfigSectionConnectionAdvanced
 
 		BooleanParameterImpl paramVPNGuess = new BooleanParameterImpl(
 				BCFG_NETWORK_ADMIN_MAYBE_VPN_ENABLE, "network.admin.maybe.vpn.enable");
+		paramVPNGuess.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(paramVPNGuess, listSocket);
 
 		IntParameterImpl paramPortBind = new IntParameterImpl(

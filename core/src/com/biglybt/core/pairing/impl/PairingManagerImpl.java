@@ -20,10 +20,7 @@
 
 package com.biglybt.core.pairing.impl;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -42,24 +39,23 @@ import com.biglybt.core.security.CryptoManagerFactory;
 import com.biglybt.core.util.*;
 import com.biglybt.core.versioncheck.VersionCheckClient;
 import com.biglybt.core.versioncheck.VersionCheckClientListener;
-import com.biglybt.net.upnp.UPnPRootDevice;
+import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
+import com.biglybt.pifimpl.local.utils.resourcedownloader.ResourceDownloaderFactoryImpl;
+import com.biglybt.util.JSONUtils;
+
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.clientid.ClientIDException;
 import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pif.tracker.web.TrackerWebPageRequest;
 import com.biglybt.pif.tracker.web.TrackerWebPageResponse;
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.ui.config.*;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.utils.DelayedTask;
 import com.biglybt.pif.utils.StaticUtilities;
-import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
-import com.biglybt.pifimpl.local.utils.resourcedownloader.ResourceDownloaderFactoryImpl;
-import com.biglybt.plugin.upnp.UPnPPlugin;
-import com.biglybt.plugin.upnp.UPnPPluginService;
-import com.biglybt.util.JSONUtils;
 
 public class
 PairingManagerImpl
@@ -439,20 +435,14 @@ PairingManagerImpl
 		param_e_enable.addEnabledOnSelection( param_local_ipv6 );
 		param_e_enable.addEnabledOnSelection( param_host );
 
-		configModel.createGroup(
-			"pairing.group.explicit",
-			new Parameter[]{
-				param_e_info,
-				param_e_enable,
-				param_public_ipv4,
-				param_public_ipv6,
-				param_host,
-				spacer,
-				param_local_ipv4,
-				param_local_ipv6,
-			});
+		ParameterGroup groupExplicit = configModel.createGroup(
+				"pairing.group.explicit", param_e_info, param_e_enable,
+				param_public_ipv4, param_public_ipv6, param_host, spacer,
+				param_local_ipv4, param_local_ipv6);
+		groupExplicit.setMinimumRequiredUserMode(1);
 
 		param_icon_enable = configModel.addBooleanParameter2( "pairing.config.icon.show", "pairing.config.icon.show", true );
+		param_icon_enable.setAllowedUiTypes(UIInstance.UIT_SWT);
 
 		CoreFactory.addCoreRunningListener(
 			new CoreRunningListener()

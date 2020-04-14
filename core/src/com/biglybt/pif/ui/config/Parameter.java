@@ -218,6 +218,10 @@ Parameter
 	 */
 	void setIndent(int indent, boolean fancy);
 
+	void setAllowedUiTypes(String... uiTypes);
+
+	boolean isForUIType(String uiType);
+
 	/**
 	 * Resets the parameter to its default value
 	 * 

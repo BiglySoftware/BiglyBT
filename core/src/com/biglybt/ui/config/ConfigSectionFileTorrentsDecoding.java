@@ -24,6 +24,8 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.StringListParameterImpl;
 
+import com.biglybt.pif.ui.UIInstance;
+
 import static com.biglybt.core.config.ConfigKeys.File.*;
 import static com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED;
 
@@ -61,13 +63,17 @@ public class ConfigSectionFileTorrentsDecoding
 
 		// locale always prompt
 
-		add(new BooleanParameterImpl(BCFG_FILE_DECODER_PROMPT,
-				"ConfigView.section.file.decoder.prompt"));
+		BooleanParameterImpl paramDecoderPrompt = new BooleanParameterImpl(BCFG_FILE_DECODER_PROMPT,
+			"ConfigView.section.file.decoder.prompt");
+		paramDecoderPrompt.setAllowedUiTypes(UIInstance.UIT_SWT);
+		add(paramDecoderPrompt);
 
 		// show lax decodings
 
-		add(new BooleanParameterImpl(BCFG_FILE_DECODER_SHOW_LAX,
-				"ConfigView.section.file.decoder.showlax"));
+		BooleanParameterImpl paramShowLax = new BooleanParameterImpl(BCFG_FILE_DECODER_SHOW_LAX,
+			"ConfigView.section.file.decoder.showlax");
+		paramShowLax.setAllowedUiTypes(UIInstance.UIT_SWT);
+		add(paramShowLax);
 
 		// show all decoders
 

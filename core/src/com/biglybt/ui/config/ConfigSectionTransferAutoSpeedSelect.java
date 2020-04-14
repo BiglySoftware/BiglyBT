@@ -66,6 +66,9 @@ public class ConfigSectionTransferAutoSpeedSelect
 	public void build() {
 
 		sm = CoreFactory.getSingleton().getSpeedManager();
+		if (sm == null) {
+			return;
+		}
 		//V1, V2 ... drop down.
 
 		//enable auto-speed beta

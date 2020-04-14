@@ -489,6 +489,7 @@ ParameterImpl
 		return refID;
 	}
 
+	@Override
 	public void setAllowedUiTypes(String... uiTypes) {
 		if (uiTypes != null) {
 			Arrays.sort(uiTypes);
@@ -496,6 +497,7 @@ ParameterImpl
 		this.allowedUiTypes = uiTypes;
 	}
 
+	@Override
 	public boolean isForUIType(String uiType) {
 		if (allowedUiTypes == null) {
 			return true;

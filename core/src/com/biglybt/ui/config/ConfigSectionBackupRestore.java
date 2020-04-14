@@ -30,6 +30,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.*;
 
 import static com.biglybt.core.config.ConfigKeys.BackupRestore.*;
@@ -126,7 +127,7 @@ public class ConfigSectionBackupRestore
 		add(paramBackupDays, listBackupParams);
 
 		IntParameterImpl paramBackupHours = new IntParameterImpl(
-				ICFG_BACKUP_AUTO_EVERYHOURS, ICFG_BACKUP_AUTO_EVERYHOURS, 1,
+				ICFG_BACKUP_AUTO_EVERYHOURS, ICFG_BACKUP_AUTO_EVERYHOURS, 0,
 				Integer.MAX_VALUE);
 		add(paramBackupHours, listBackupParams);
 
@@ -158,6 +159,7 @@ public class ConfigSectionBackupRestore
 
 		BooleanParameterImpl paramNotify = new BooleanParameterImpl(
 				BCFG_BACKUP_NOTIFY, "br.backup.notify");
+		paramNotify.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(paramNotify, listBackupParams);
 
 		ActionParameterImpl paramBackupNow = new ActionParameterImpl(

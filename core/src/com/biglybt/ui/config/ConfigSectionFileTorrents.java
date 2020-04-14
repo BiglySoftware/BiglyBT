@@ -26,6 +26,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.pifimpl.local.ui.config.*;
 
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
 
@@ -221,9 +222,11 @@ public class ConfigSectionFileTorrents
 		watchFolder.addEnabledOnSelection(pgWatch, pgWatchDirs);
 		
 			// monitor clipboard
-		
-		add(new BooleanParameterImpl(BCFG_TORRENT_MONITOR_CLIPBOARD,
-				"label.monitor.clipboard"));
+
+		BooleanParameterImpl paramMonClip = new BooleanParameterImpl(BCFG_TORRENT_MONITOR_CLIPBOARD,
+			"label.monitor.clipboard");
+		paramMonClip.setAllowedUiTypes(UIInstance.UIT_SWT);
+		add(paramMonClip);
 
 		
 	}

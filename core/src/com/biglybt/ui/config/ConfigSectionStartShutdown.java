@@ -199,6 +199,7 @@ public class ConfigSectionStartShutdown
 
 		BooleanParameterImpl enablePrompt = new BooleanParameterImpl(
 				BCFG_PROMPT_TO_ABORT_SHUTDOWN, "ConfigView.label.prompt.abort");
+		enablePrompt.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(enablePrompt, Parameter.MODE_INTERMEDIATE, listStop);
 
 		add("pgStop", new ParameterGroupImpl("ConfigView.label.stop", listStop));
@@ -208,6 +209,7 @@ public class ConfigSectionStartShutdown
 		IntParameterImpl paramRestartWhenIdle = new IntParameterImpl(
 				ICFG_AUTO_RESTART_WHEN_IDLE, "ConfigView.label.restart.auto", 0,
 				100000);
+		paramRestartWhenIdle.setSuffixLabelKey("ConfigView.text.minutes");
 		add(paramRestartWhenIdle);
 		paramRestartWhenIdle.setMinimumRequiredUserMode(
 				Parameter.MODE_INTERMEDIATE);
@@ -276,6 +278,7 @@ public class ConfigSectionStartShutdown
 		
 		ActionParameterImpl history_button = new ActionParameterImpl("jvm.mem.history",
 				"label.view");
+		history_button.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(history_button, Parameter.MODE_INTERMEDIATE, listJVM);
 
 		history_button.addListener(param -> {

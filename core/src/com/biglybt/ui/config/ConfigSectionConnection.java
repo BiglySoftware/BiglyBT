@@ -28,6 +28,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.IntParameter;
 import com.biglybt.pif.ui.config.Parameter;
@@ -320,8 +321,11 @@ public class ConfigSectionConnection
 			// Gap
 			add("con.net.gap0", new LabelParameterImpl(""), listNetworks);
 
-			add(new BooleanParameterImpl(BCFG_NETWORK_SELECTION_PROMPT,
-					"ConfigView.section.connection.networks.prompt"), listNetworks);
+			BooleanParameterImpl paramNetworksPrompt = new BooleanParameterImpl(
+					BCFG_NETWORK_SELECTION_PROMPT,
+					"ConfigView.section.connection.networks.prompt");
+			paramNetworksPrompt.setAllowedUiTypes(UIInstance.UIT_SWT);
+			add(paramNetworksPrompt, listNetworks);
 
 			add("pgNetworks", new ParameterGroupImpl(
 					"ConfigView.section.connection.group.networks", listNetworks));

@@ -30,6 +30,7 @@ import com.biglybt.core.util.DisplayFormatters;
 
 import com.biglybt.core.util.Wiki;
 import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.config.*;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
@@ -618,8 +619,9 @@ public class StartStopConfigModel
 		model.addBooleanParameter2("StartStopManager_bRetainForceStartWhenComplete",
 				"ConfigView.label.queue.retainforce", false);
 
-		addDefaultedBooleanParam(model, "Alert on close",
-				"ConfigView.label.showpopuponclose");
+		BooleanParameter paramAlertOnClose = addDefaultedBooleanParam(model, "Alert on close",
+			"ConfigView.label.showpopuponclose");
+		paramAlertOnClose.setAllowedUiTypes(UIInstance.UIT_SWT);
 
 		model.addBooleanParameter2("StartStopManager_bDebugLog",
 				"ConfigView.label.queue.debuglog", false);
