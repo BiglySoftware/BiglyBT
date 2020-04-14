@@ -149,7 +149,10 @@ public class ConfigSectionInterfaceTags
 	private void
 	buildTracker()
 	{
-		
+
+		if (!COConfigurationManager.getBooleanParameter( "PluginInfo.azbuddy.enabled")) {
+			return;
+		}
 			// Tracker tagging
 		
 		List<Parameter> listTracker = new ArrayList<>();
