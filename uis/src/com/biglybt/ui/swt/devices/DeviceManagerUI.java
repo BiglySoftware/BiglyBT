@@ -1209,7 +1209,7 @@ DeviceManagerUI
 
 						}else{
 
-							int	category_type = ds==null?Device.DT_UNKNOWN:(Integer)ds;
+							int	category_type = (ds instanceof Integer)?(Integer)ds:Device.DT_UNKNOWN;
 
 							Device[] devices = device_manager.getDevices();
 
