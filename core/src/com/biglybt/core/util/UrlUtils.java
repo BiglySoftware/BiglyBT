@@ -57,6 +57,7 @@ public class UrlUtils
 	private static final String[] prefixes = new String[] {
 			"http://",
 			"https://",
+			"udp://",			// for trackers
 			"biglybt://",
 			"ftp://",
 			"dht://",
@@ -64,7 +65,7 @@ public class UrlUtils
 			"magnet://?",
 			"maggot://" };
 
-	private static final int MAGNETURL_STARTS_AT = 3;	// dht:// is a form of magnet URL
+	private static final int MAGNETURL_STARTS_AT = 5;	// dht:// is a form of magnet URL
 
 	private static final Object[] XMLescapes = new Object[] {
 		new String[] { "&", "&amp;" },

@@ -55,8 +55,14 @@ public class TrackerChangerWindow {
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.widthHint = 400;
     url.setLayoutData(gridData);
-    Utils.setTextLinkFromClipboard(shell, url, false, false);
-
+    
+    String link = Utils.getLinkFromClipboard(shell.getDisplay());
+    
+	if (link != null){
+		url.setText(link);
+		url.setSelection(0,link.length());
+	}
+    
     Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     labelSeparator.setLayoutData(gridData);

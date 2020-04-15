@@ -370,40 +370,22 @@ public class Utils
 		}
 	}
 
-	/**
-	 * Initializes the URL dialog with http://
-	 * If a valid link is found in the clipboard, it will be inserted
-	 * and the size (and location) of the dialog is adjusted.
-	 * @param shell to set the dialog location if needed
-	 * @param url the URL text control
-	 * @param accept_magnets
-	 *
-	 * @author Rene Leonhardt
-	 */
-	public static void setTextLinkFromClipboard(final Shell shell,
-			final Text url, boolean accept_magnets, boolean default_magnet ) {
-		String link = getLinkFromClipboard(shell.getDisplay(), accept_magnets, default_magnet );
-		if (link != null)
-			url.setText(link);
-	}
 
 	/**
-	 * <p>Gets an URL from the clipboard if a valid URL for downloading has been copied.</p>
-	 * <p>The supported protocols currently are http, https, and magnet.</p>
+	 * <p>Gets a URL from the clipboard</p>
+	 * <p>The supported protocols currently are http, https and udp.</p>
 	 * @param display
-	 * @param accept_magnets
-	 * @return first valid link from clipboard, else "http://" or "magnet:"
+	 * @return first valid link from clipboard, else "http://"
 	 */
-	public static String getLinkFromClipboard(Display display,
-			boolean accept_magnets, boolean default_magnet ) {
+	public static String getLinkFromClipboard(Display display ){
 		final Clipboard cb = new Clipboard(display);
 		final TextTransfer transfer = TextTransfer.getInstance();
 
 		String data = (String) cb.getContents(transfer);
 
-		String text = UrlUtils.parseTextForURL(data, accept_magnets);
+		String text = UrlUtils.parseTextForURL(data, false);
 		if (text == null) {
-			return default_magnet?"magnet:":"http://";
+			return( "http://" );
 		}
 
 		return text;
