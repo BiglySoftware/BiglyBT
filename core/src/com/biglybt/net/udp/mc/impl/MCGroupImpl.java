@@ -945,7 +945,7 @@ MCGroupImpl
 
 		}catch( Throwable e ){
 
-			throw( new MCGroupException( "sendToMember failed", e ));
+			throw( new MCGroupException( "sendToMember failed for " + address, e ));
 
 		}finally{
 
