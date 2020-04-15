@@ -89,8 +89,9 @@ GlobalManagerFileMerger
 
 	final Map<HashWrapper,DownloadManager>		dm_map = new HashMap<>();
 
-	final List<SameSizeFiles>				sames = new ArrayList<>();
-
+	final List<SameSizeFiles>				sames 		= new ArrayList<>();
+	final Set<DownloadManager>				sames_dms	= new IdentityHashSet<>();
+	
 	final AsyncDispatcher		read_write_dispatcher = new AsyncDispatcher( "GMFM" );
 
 	private TimerEventPeriodic	timer_event;
@@ -177,6 +178,8 @@ GlobalManagerFileMerger
 							}
 							
 							sames.clear();
+							
+							sames_dms.clear();
 							
 							syncFileSets( true );
 						}
@@ -304,8 +307,18 @@ GlobalManagerFileMerger
 		log.log( str );
 	}
 	
+	protected boolean
+	isSwarmMergingZ(
+		DownloadManager		dm )
+	{
+		synchronized( dm_map ){
+
+			return( sames_dms.contains( dm ));
+		}
+	}
+
 	protected String
-	isSwarmMerging(
+	getSwarmMergingInfo(
 		DownloadManager		dm )
 	{
 		synchronized( dm_map ){
@@ -339,7 +352,7 @@ GlobalManagerFileMerger
 
 		return( null );
 	}
-
+	
 	void
 	syncFileSets(
 		boolean		force )
@@ -678,8 +691,15 @@ GlobalManagerFileMerger
 					log( "Scan result: dm_map=" + dm_map.size() + ", sames=" + sames.size());
 				}
 				
+				sames_dms.clear();
+				
 				if ( sames.size() > 0 ){
 
+					for ( SameSizeFiles same: sames ){
+						
+						sames_dms.addAll( same.getDownloadManagers());
+					}
+					
 					if ( timer_event == null ){
 
 						timer_event =
@@ -708,7 +728,7 @@ GlobalManagerFileMerger
 								});
 					}
 				}else{
-
+					
 					if ( timer_event != null ){
 
 						timer_event.cancel();
@@ -994,6 +1014,12 @@ GlobalManagerFileMerger
 			return( dm_set.contains( dm ));
 		}
 
+		Set<DownloadManager>
+		getDownloadManagers()
+		{
+			return( dm_set );
+		}
+		
 		void
 		sync(
 			int		tick_count )

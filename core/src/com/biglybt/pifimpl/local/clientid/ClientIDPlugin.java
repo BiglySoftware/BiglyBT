@@ -128,7 +128,7 @@ ClientIDPlugin
 
 				DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash ));
 
-				if ( dm != null &&  gm.isSwarmMerging( dm ) != null ){
+				if ( dm != null &&  gm.isSwarmMerging( dm )){
 
 					return( BIGLYBT_CLIENT_NAME_SM );
 				}

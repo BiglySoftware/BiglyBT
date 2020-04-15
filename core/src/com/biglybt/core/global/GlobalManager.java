@@ -270,7 +270,9 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 */
 	public boolean isPaused(DownloadManager dm);
 
-	public String isSwarmMerging(DownloadManager dm);
+	public boolean isSwarmMerging(DownloadManager dm);
+	
+	public String getSwarmMergingInfo(DownloadManager dm);
 
 	/**
 	 * Determines whether we are only seeding, and not currently downloading

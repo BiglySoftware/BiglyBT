@@ -509,7 +509,9 @@ DownloadManager
 
     public int getSeedingRank();
 
-    public String isSwarmMerging();
+    public boolean isSwarmMerging();
+    
+    public String getSwarmMergingInfo();
 
     public void setMaxUploads( int max_slots );
 

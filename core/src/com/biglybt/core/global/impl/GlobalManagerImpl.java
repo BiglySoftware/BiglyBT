@@ -2421,8 +2421,13 @@ public class GlobalManagerImpl
   }
 
   @Override
-  public String isSwarmMerging(DownloadManager dm) {
-	  return( file_merger.isSwarmMerging(dm));
+  public boolean isSwarmMerging(DownloadManager dm) {
+	  return( file_merger.isSwarmMergingZ(dm));
+  }
+  
+  @Override
+  public String getSwarmMergingInfo(DownloadManager dm) {
+	  return( file_merger.getSwarmMergingInfo(dm));
   }
 
   	private List<DownloadManager>

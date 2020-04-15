@@ -84,7 +84,7 @@ public class MergedDataItem
 			
 		}else{
 			
-			info = dm.isSwarmMerging();
+			info = dm.getSwarmMergingInfo();
 
 			if ( info == null ){
 				

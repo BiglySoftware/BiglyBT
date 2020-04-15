@@ -4680,10 +4680,17 @@ DownloadManagerImpl
   }
 
   @Override
-  public String
+  public boolean
   isSwarmMerging()
   {
 	 return( globalManager.isSwarmMerging( this ));
+  }
+  
+  @Override
+  public String
+  getSwarmMergingInfo()
+  {
+	 return( globalManager.getSwarmMergingInfo( this ));
   }
 
   @Override
