@@ -3631,9 +3631,9 @@ public class TagUIUtils
 
 		view.setDisableWhenEmpty( false );
 
-		view.dataSourceChanged( tag);
-
 		view.initialize(shell);
+
+		view.dataSourceChanged( tag);
 
 		view.viewActivated();
 		view.refresh();
