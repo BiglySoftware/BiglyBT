@@ -69,6 +69,9 @@ TagBase
 	protected static final String	AT_FL_COPY_COMP_OPT				= "fl.copy.o";
 	protected static final String	AT_FL_INIT_LOC					= "fl.init";
 	protected static final String	AT_FL_INIT_LOC_OPT				= "fl.init.o";
+	protected static final String	AT_FL_MOVE_ASSIGN				= "fl.ass";
+	protected static final String	AT_FL_MOVE_ASSIGN_OPT			= "fl.ass.o";
+
 	protected static final String	AT_RATELIMIT_MIN_SR				= "rl.minsr";
 	protected static final String	AT_RATELIMIT_MAX_SR				= "rl.maxsr";
 	protected static final String	AT_RATELIMIT_MAX_SR_ACTION		= "rl.maxsr.a";
@@ -1073,6 +1076,92 @@ TagBase
 			if ( existing != options ){
 	
 				writeLongAttribute( AT_FL_MOVE_REM_OPT, options );
+	
+				tag_type.fireMetadataChanged( this );
+			}
+		}
+	}
+
+		// move on assign
+	
+	public boolean
+	supportsTagMoveOnAssign()
+	{
+		return( false );
+	}
+	
+	public File
+	getTagMoveOnAssignFolder()
+	{
+		if ( tag_fl != null ){
+	
+			String str = readStringAttribute( AT_FL_MOVE_ASSIGN, null );
+	
+			if ( str == null ){
+	
+				return( null );
+	
+			}else{
+	
+				return( new File( str ));
+			}
+		}
+	
+		return( null );
+	}
+	
+	public void
+	setTagMoveOnAssignFolder(
+		File		folder )
+	{
+		if ( tag_fl != null ){
+	
+			File	existing = getTagMoveOnAssignFolder();
+	
+			if ( existing == null && folder == null ){
+	
+				return;
+	
+			}else if ( existing == null || folder == null || !existing.equals( folder )){
+	
+				boolean changed = writeStringAttribute( AT_FL_MOVE_ASSIGN, folder==null?null:folder.getAbsolutePath());
+	
+				if ( changed ){
+	
+						// update initial-save-location too as this is what drives
+						// any initial locations - the move-on-assign code is explicitly implemented to only apply 
+						// post-initial-location handling
+						
+					setTagInitialSaveFolder( folder );
+					
+					tag_type.fireMetadataChanged( this );
+				}
+			}
+		}
+	}
+	
+	public long
+	getTagMoveOnAssignOptions()
+	{
+		if ( tag_fl != null ){
+	
+			return( readLongAttribute( AT_FL_MOVE_ASSIGN_OPT, TagFeatureFileLocation.FL_DEFAULT ));
+		}
+	
+		return( TagFeatureFileLocation.FL_NONE );
+	}
+	
+	public void
+	setTagMoveOnAssignOptions(
+		long		options )
+	{
+		if ( tag_fl != null ){
+	
+			long	existing = getTagMoveOnAssignOptions();
+	
+			if ( existing != options ){
+	
+				writeLongAttribute( AT_FL_MOVE_ASSIGN_OPT, options );
 	
 				tag_type.fireMetadataChanged( this );
 			}

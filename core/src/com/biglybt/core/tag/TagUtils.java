@@ -322,6 +322,15 @@ public class TagUtils{
 					str += "\r\n    " + MessageText.getString("label.move.on.rem") + "=" + mor.getAbsolutePath();
 				}
 			}
+			if ( fl.supportsTagMoveOnAssign()){
+
+				File mor = fl.getTagMoveOnAssignFolder();
+
+				if ( mor != null ){
+
+					str += "\r\n    " + MessageText.getString("label.move.on.assign") + "=" + mor.getAbsolutePath();
+				}
+			}
 		}
 
 		if ( str.startsWith( "\r\n" )){

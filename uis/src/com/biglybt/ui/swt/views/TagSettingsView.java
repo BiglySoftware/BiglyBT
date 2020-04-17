@@ -128,6 +128,11 @@ public class TagSettingsView
 		public BooleanSwtParameter		moveOnRemoveData;
 		public BooleanSwtParameter		moveOnRemoveTorrent;
 
+		public folderOption 		moveOnAssignFolder;
+		public BooleanSwtParameter	moveOnAssignData;
+		public BooleanSwtParameter	moveOnAssignTorrent;
+
+
 		
 		public Text		 	constraints;
 		public Label		constraintError;
@@ -948,7 +953,8 @@ public class TagSettingsView
 				if (	fl.supportsTagCopyOnComplete() || 
 						fl.supportsTagInitialSaveFolder() || 
 						fl.supportsTagMoveOnComplete() ||
-						fl.supportsTagMoveOnRemove()) {
+						fl.supportsTagMoveOnRemove() ||
+						fl.supportsTagMoveOnAssign()) {
 
 					Group gFiles = new Group(cMainComposite, SWT.NONE);
 					gFiles.setText(MessageText.getString( "label.file.settings"));
@@ -1248,6 +1254,79 @@ public class TagSettingsView
 										}
 										if (fl.getTagMoveOnRemoveOptions() != flags) {
 											fl.setTagMoveOnRemoveOptions(flags);
+											return true;
+										}
+										return false;
+									}
+								});
+					}
+					
+					if ( fl.supportsTagMoveOnAssign()){
+
+						params.moveOnAssignFolder =
+							new folderOption(gFiles,
+								"label.move.on.assign")
+							{
+								@Override
+								public void setFolder(File folder)
+								{
+									params.moveOnAssignData.setEnabled( folder != null );
+									params.moveOnAssignTorrent.setEnabled( folder != null );
+															fl.setTagMoveOnAssignFolder(folder);
+								}
+
+								@Override
+								public File getFolder() {
+									File result = fl.getTagMoveOnAssignFolder();
+									params.moveOnAssignData.setEnabled( result != null );
+									params.moveOnAssignTorrent.setEnabled( result != null );
+															return( result );
+								}
+							};
+
+						params.moveOnAssignData = new BooleanSwtParameter(gFiles,
+								"tag.moveOnAssignData", "label.move.data", null,
+								new BooleanSwtParameter.ValueProcessor() {
+									@Override
+									public Boolean getValue(BooleanSwtParameter p) {
+										return ((fl.getTagMoveOnAssignOptions()
+												& TagFeatureFileLocation.FL_DATA) != 0);
+									}
+
+									@Override
+									public boolean setValue(BooleanSwtParameter p, Boolean value) {
+										long flags = fl.getTagMoveOnAssignOptions();
+										if ( value ){
+											flags |= TagFeatureFileLocation.FL_DATA;
+										}else{
+											flags &= ~TagFeatureFileLocation.FL_DATA;
+										}
+										if (fl.getTagMoveOnAssignOptions() != flags) {
+											fl.setTagMoveOnAssignOptions(flags);
+											return true;
+										}
+										return false;
+									}
+								});
+
+						params.moveOnAssignTorrent = new BooleanSwtParameter(gFiles,
+								"tag.moveOnAssignTorrent", "label.move.torrent", null,
+								new BooleanSwtParameter.ValueProcessor() {
+									@Override
+									public Boolean getValue(BooleanSwtParameter p) {
+										return(( fl.getTagMoveOnAssignOptions() & TagFeatureFileLocation.FL_TORRENT ) != 0);
+									}
+
+									@Override
+									public boolean setValue(BooleanSwtParameter p, Boolean value) {
+										long flags = fl.getTagMoveOnAssignOptions();
+										if ( value ){
+											flags |= TagFeatureFileLocation.FL_TORRENT;
+										}else{
+											flags &= ~TagFeatureFileLocation.FL_TORRENT;
+										}
+										if (fl.getTagMoveOnAssignOptions() != flags) {
+											fl.setTagMoveOnAssignOptions(flags);
 											return true;
 										}
 										return false;
@@ -1791,6 +1870,9 @@ public class TagSettingsView
 		}
 		if (params.moveOnRemoveFolder != null) {
 			params.moveOnRemoveFolder.update();
+		}
+		if (params.moveOnAssignFolder != null) {
+			params.moveOnAssignFolder.update();
 		}
 		if (params.constraints != null ) {
 			Tag tag = tags[0];

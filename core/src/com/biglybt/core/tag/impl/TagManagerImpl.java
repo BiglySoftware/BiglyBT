@@ -661,6 +661,8 @@ TagManagerImpl
 		};
 
 	final AsyncDispatcher async_dispatcher = new AsyncDispatcher(5000);
+	
+	final AsyncDispatcher move_on_assign_dispatcher = new AsyncDispatcher(5000);
 
 	private final FrequencyLimitedDispatcher dirty_dispatcher =
 		new FrequencyLimitedDispatcher(
@@ -1464,18 +1466,18 @@ TagManagerImpl
 		Tag			tag,
 		Taggable	tagged )
 	{
-			// hack to support initial-save-location logic when a user manually assigns a tag and the download
-			// hasn't had files allocated yet (most common scenario is user has 'add-torrent-stopped' set up)
-
 		int tt = tag_type.getTagType();
 
-		try{
-			if ( tt == TagType.TT_DOWNLOAD_MANUAL && tagged instanceof DownloadManager ){
+		if ( tt == TagType.TT_DOWNLOAD_MANUAL && tagged instanceof DownloadManager ){
 
-				TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+			TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+			
+				// hack to support initial-save-location logic when a user manually assigns a tag and the download
+				// hasn't had files allocated yet (most common scenario is user has 'add-torrent-stopped' set up)
 
-				if ( fl.supportsTagInitialSaveFolder()){
+			if ( fl.supportsTagInitialSaveFolder()){
 
+				try{
 					File save_loc = fl.getTagInitialSaveFolder();
 
 					if ( save_loc != null ){
@@ -1528,12 +1530,49 @@ TagManagerImpl
 							}
 						}
 					}
+
+				}catch( Throwable e ){
+
+					Debug.out(e );
 				}
 			}
-		}catch( Throwable e ){
-
-			Debug.out(e );
+				
+			if ( fl.supportsTagMoveOnAssign()){
+	
+				try{
+					File ass_loc = fl.getTagMoveOnAssignFolder();
+		
+					if ( ass_loc != null ){
+		
+						DownloadManager dm = (DownloadManager)tagged;
+		
+						TOTorrent torrent = dm.getTorrent();
+	
+						if ( torrent != null ){
+	
+								// Only consider applying move-on-assign after a download has been added. If the user
+								// also wants it to be applied initially then they need to specify the initial-save-location
+								// to be the same. Much simpler to do this than deal with the possible interaction between the 
+								// two options
+							
+							if ( dm.getGlobalManager().getDownloadManager( torrent.getHashWrapper()) != null ){
+																
+								move_on_assign_dispatcher.dispatch(
+									AERunnable.create(()->{
+										
+										moveOnAssign( dm, ass_loc, fl.getTagMoveOnAssignOptions());
+									}));
+									
+							}
+						}
+					}	
+				}catch( Throwable e ){
+		
+					Debug.out(e );
+				}
+			}
 		}
+		
 
 			// hack to limit tagged/untagged callbacks as the auto-dl-state ones generate a lot
 			// of traffic and thusfar nobody's interested in it
@@ -1558,6 +1597,52 @@ TagManagerImpl
 		}
 	}
 
+	private void
+	moveOnAssign(
+		DownloadManager		dm,
+		File				location,
+		long				options )
+	{
+		try{
+			boolean set_data 	= (options&TagFeatureFileLocation.FL_DATA) != 0;
+			boolean set_torrent = (options&TagFeatureFileLocation.FL_TORRENT) != 0;
+	
+			if ( set_data ){
+	
+				File existing_save_loc = dm.getSaveLocation();
+	
+				if ( existing_save_loc.isFile()){
+					
+					existing_save_loc = existing_save_loc.getParentFile();
+				}
+				
+				if ( ! existing_save_loc.equals( location )){
+	
+					dm.moveDataFilesLive( location );
+				}
+			}
+	
+			if ( set_torrent ){
+	
+				File old_torrent_file = new File( dm.getTorrentFileName());
+	
+				if ( old_torrent_file.exists()){
+	
+					try{
+						dm.setTorrentFile( location, old_torrent_file.getName());
+	
+					}catch( Throwable e ){
+	
+						Debug.out( e );
+					}
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+		
 	public void
 	taggableRemoved(
 		TagType		tag_type,

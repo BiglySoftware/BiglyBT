@@ -107,4 +107,23 @@ TagFeatureFileLocation
 	setTagMoveOnRemoveOptions(
 		long		opions );
 	
+		// move on assign
+		
+	public boolean
+	supportsTagMoveOnAssign();
+	
+	public File
+	getTagMoveOnAssignFolder();
+	
+	public void
+	setTagMoveOnAssignFolder(
+		File		folder );
+	
+	public long
+	getTagMoveOnAssignOptions();
+	
+	public void
+	setTagMoveOnAssignOptions(
+		long		opions );
+		
 }

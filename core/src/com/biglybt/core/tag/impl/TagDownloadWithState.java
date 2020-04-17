@@ -2382,6 +2382,13 @@ TagDownloadWithState
 	}
 	
 	@Override
+	public boolean
+	supportsTagMoveOnAssign()
+	{
+		return( supports_file_location );
+	}
+	
+	@Override
 	public TagProperty[]
 	getSupportedProperties()
 	{
