@@ -20,6 +20,7 @@
 
 package com.biglybt.core.tag.impl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -703,6 +704,7 @@ TagTypeBase
  		private final String name;
  		
  		private boolean		exclusive;
+ 		private File		ass_root;
  		
  		private CopyOnWriteList<Tag>	tags = new CopyOnWriteList<>();
  		
@@ -726,6 +728,13 @@ TagTypeBase
  			Map<String,Object>		map )
  		{
  			exclusive = MapUtils.getMapBoolean( map, "x", false );
+ 			
+ 			String ar = MapUtils.getMapString(map, "ar", null );
+ 			
+ 			if ( ar != null ){
+ 				
+ 				ass_root = new File( ar );
+ 			}
  		}
  		
  		protected Map<String,Object>
@@ -736,6 +745,11 @@ TagTypeBase
  			if ( exclusive ){
  				
  				map.put( "x", new Long(1));
+ 			}
+ 			
+ 			if ( ass_root != null ){
+ 				
+ 				map.put( "ar", ass_root.getAbsolutePath());
  			}
  			
  			return( map );
@@ -765,6 +779,42 @@ TagTypeBase
  			}
  		}
  		
+		public File
+		getRootMoveOnAssignLocation()
+ 		{
+ 			return( ass_root );
+ 		}
+ 		
+ 		public void
+ 		setRootMoveOnAssignLocation(
+ 			File		f )
+ 		{
+ 			if ( f == ass_root ){
+ 				
+ 				return;
+ 			}
+ 			
+ 			if ( f == null || ass_root == null || !f.equals( ass_root )){
+ 				
+ 				ass_root = f;
+ 				
+ 		 		for ( Tag tag: tags ){
+ 		 			
+	 				if ( hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
+
+	 					TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+	 					
+	 					if ( fl.supportsTagMoveOnAssign()){
+	 						
+	 						fl.setTagMoveOnAssignFolder( ass_root==null?null:new File( ass_root, tag.getTagName( true )));
+	 					}
+	 				}
+ 				}
+ 				
+ 				manager.tagGroupUpdated( TagTypeBase.this, this );
+ 			}
+ 		}
+ 		
  		@Override
  		public TagType 
  		getTagType()
@@ -785,6 +835,19 @@ TagTypeBase
  			if ( !tags.contains( tag )){
  				
 	 			tags.add( tag );
+	 			
+	 			if ( ass_root != null ){
+	 				
+	 				if ( hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
+
+	 					TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+	 					
+	 					if ( fl.supportsTagMoveOnAssign()){
+	 						
+	 						fl.setTagMoveOnAssignFolder( ass_root==null?null:new File( ass_root, tag.getTagName( true )));
+	 					}
+	 				}
+	 			}
 	 			
 	 			for( TagGroupListener l: listeners ){
 	 				

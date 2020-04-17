@@ -1,5 +1,6 @@
 package com.biglybt.core.tag;
 
+import java.io.File;
 import java.util.List;
 
 public interface 
@@ -14,6 +15,13 @@ TagGroup
 	public void
 	setExclusive(
 		boolean		b );
+	
+	public void
+	setRootMoveOnAssignLocation(
+		File		loc );
+	
+	public File
+	getRootMoveOnAssignLocation();
 	
 	public TagType
 	getTagType();
