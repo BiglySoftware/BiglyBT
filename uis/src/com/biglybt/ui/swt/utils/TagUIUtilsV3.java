@@ -96,6 +96,16 @@ public class TagUIUtilsV3
 		cb.setChecked(COConfigurationManager.getBooleanParameter(
 				"tag.sharing.default.checked"));
 
+		cb.addSelectionListener(
+				new SWTSkinCheckboxListener() {
+
+					@Override
+					public void checkboxChanged(SWTSkinObjectCheckbox so, boolean checked) {
+						COConfigurationManager.setParameter(
+								"tag.sharing.default.checked", checked);
+					}
+				});
+		
 		if ( ss != null ){
 
 			ss.setChecked(COConfigurationManager.getBooleanParameter(
