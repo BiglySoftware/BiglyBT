@@ -1639,6 +1639,8 @@ public class SB_Transfers
 										
 										addMenuCollapseAll( mdi, menuTree, entry.getViewID());
 										
+										new org.eclipse.swt.widgets.MenuItem( menuTree, SWT.SEPARATOR );
+										
 										TagUIUtils.createSideBarMenuItems(menuTree, tg );
 									}
 								});

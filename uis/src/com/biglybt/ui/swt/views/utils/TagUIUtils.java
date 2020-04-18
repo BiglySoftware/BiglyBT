@@ -732,6 +732,8 @@ public class TagUIUtils
 		
 		addTagGroupMenu( menu, tag_group);
 		
+		new MenuItem( menu, SWT.SEPARATOR );
+		
 		MenuItem itemSetColor = new MenuItem(menu, SWT.PUSH);
 		Messages.setLanguageText(itemSetColor, "TagGroup.menu.setcolor");
 		itemSetColor.addListener(SWT.Selection, event -> {
@@ -1602,7 +1604,7 @@ public class TagUIUtils
 				apply_item.addListener(SWT.Selection, new Listener() {
 					@Override
 					public void handleEvent(Event event) {
-						applyLocationToCurrent( tag, existing, false );
+						applyLocationToCurrent( tag, existing, fl.getTagInitialSaveOptions(), 1 );
 					}});
 
 				new MenuItem( moc_menu, SWT.SEPARATOR);
@@ -1678,7 +1680,7 @@ public class TagUIUtils
 				apply_item.addListener(SWT.Selection, new Listener() {
 					@Override
 					public void handleEvent(Event event) {
-						applyLocationToCurrent( tag, existing, true );
+						applyLocationToCurrent( tag, existing, fl.getTagMoveOnCompleteOptions(), 2 );
 					}});
 
 				new MenuItem( moc_menu, SWT.SEPARATOR);
@@ -1866,9 +1868,21 @@ public class TagUIUtils
 						fl.setTagMoveOnAssignFolder( null );
 					}});
 
-				new MenuItem( mor_menu, SWT.SEPARATOR);
-
+					// apply
+	
 				File existing = fl.getTagMoveOnAssignFolder();
+	
+				MenuItem apply_item = new MenuItem( mor_menu, SWT.CASCADE);
+	
+				Messages.setLanguageText( apply_item, "apply.to.current" );
+	
+				apply_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						applyLocationToCurrent( tag, existing, fl.getTagMoveOnAssignOptions(), 3 );
+					}});
+
+				new MenuItem( mor_menu, SWT.SEPARATOR);
 
 				if ( existing != null ){
 
@@ -1880,8 +1894,10 @@ public class TagUIUtils
 					new MenuItem( mor_menu, SWT.SEPARATOR);
 
 				}else{
-
+					
 					clear_item.setEnabled( false );
+					
+					apply_item.setEnabled( false );
 				}
 
 				MenuItem set_item = new MenuItem( mor_menu, SWT.CASCADE);
@@ -3211,9 +3227,10 @@ public class TagUIUtils
 
 	private static void
 	applyLocationToCurrent(
-		final Tag			tag,
-		final File			location,
-		final boolean		complete_only )
+		Tag			tag,
+		File		location,
+		long		options,
+		int			type )
 	{
 		move_dispatcher.dispatch(
 			new AERunnable()
@@ -3222,36 +3239,67 @@ public class TagUIUtils
 				public void
 				runSupport()
 				{
+					boolean set_data 	= (options&TagFeatureFileLocation.FL_DATA) != 0;
+					boolean set_torrent = (options&TagFeatureFileLocation.FL_TORRENT) != 0;
+
 					Set<DownloadManager>	downloads = ((TagDownload)tag).getTaggedDownloads();
 
 					for ( DownloadManager download: downloads ){
 
 						boolean dl_is_complete = download.isDownloadComplete( false );
 
-						if ( complete_only && !dl_is_complete){
+						if ( type == 1 && dl_is_complete ){
+
+								// applying initial-save-folder, ignore completed files
+								// that have been moved somewhere already
+	
+							if ( download.getDownloadState().getFlag( DownloadManagerState.FLAG_MOVE_ON_COMPLETION_DONE )){
+	
+								continue;
+							}
+						}
+						
+						if ( type == 2 && !dl_is_complete){
 
 								// applying move-on-complete so ignore incomplete
 
 							continue;
 						}
 
-						if ( dl_is_complete && !complete_only ){
+						if ( set_data ){
+							
+							try{
+								File existing_save_loc = download.getSaveLocation();
+								
+								if ( existing_save_loc.isFile()){
+									
+									existing_save_loc = existing_save_loc.getParentFile();
+								}
+								
+								if ( ! existing_save_loc.equals( location )){
 
-								// applying initial-save-folder, ignore completed files
-								// that have been moved somewhere already
-
-							if ( download.getDownloadState().getFlag( DownloadManagerState.FLAG_MOVE_ON_COMPLETION_DONE )){
-
-								continue;
+									download.moveDataFilesLive( location );
+								}
+							}catch( Throwable e ){
+	
+								Debug.out( e );
 							}
 						}
-
-						try{
-							download.moveDataFilesLive( location );
-
-						}catch( Throwable e ){
-
-							Debug.out( e );
+						
+						if ( set_torrent ){
+							
+							File old_torrent_file = new File( download.getTorrentFileName());
+				
+							if ( old_torrent_file.exists()){
+				
+								try{
+									download.setTorrentFile( location, old_torrent_file.getName());
+				
+								}catch( Throwable e ){
+				
+									Debug.out( e );
+								}
+							}
 						}
 					}
 				}
