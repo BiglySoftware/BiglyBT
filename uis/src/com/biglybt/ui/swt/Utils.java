@@ -4397,12 +4397,29 @@ public class Utils
 	createScrolledComposite(
 		Composite parent )
 	{
-		return( createScrolledComposite( parent, null ));
+		return( createScrolledComposite( parent, SWT.V_SCROLL, null ));
 	}
 	
 	public static Composite
 	createScrolledComposite(
 		Composite 	parent,
+		int			style )
+	{
+		return( createScrolledComposite( parent, style, null ));
+	}
+	
+	public static Composite
+	createScrolledComposite(
+		Composite 	parent,
+		Control		mega_parent )
+	{
+		return( createScrolledComposite( parent, SWT.V_SCROLL, mega_parent ));
+	}
+	
+	private static Composite
+	createScrolledComposite(
+		Composite 	parent,
+		int			style,
 		Control		mega_parent )
 	{
 		Layout currentParentLayout = parent.getLayout();
@@ -4412,7 +4429,7 @@ public class Utils
 			parent.setLayout(parentLayout);
 		}
 
-		ScrolledComposite sc = new ScrolledComposite(parent, SWT.V_SCROLL);
+		ScrolledComposite sc = new ScrolledComposite( parent, style );
 
 		sc.setExpandHorizontal(true);
 		sc.setExpandVertical(true);
@@ -4433,7 +4450,7 @@ public class Utils
 		Composite result = new Composite(sc, SWT.NONE);
 
 		sc.setContent(result);
-		sc.addListener(SWT.Resize, e -> updateScrolledComposite(sc));
+		sc.addListener(SWT.Resize, e -> updateScrolledComposite(sc, style ));
 
 		if (mega_parent == null) {
 			return result;
@@ -4504,11 +4521,44 @@ public class Utils
 	}
 
 	public static void updateScrolledComposite(ScrolledComposite sc) {
+		updateScrolledComposite( sc, SWT.V_SCROLL );
+	}
+	
+	protected static void updateScrolledComposite(ScrolledComposite sc, int style ) {
 		Control content = sc.getContent();
 		if (content != null && !content.isDisposed()) {
-			Rectangle r = sc.getClientArea();
-			Point min = content.computeSize(r.width, SWT.DEFAULT );
-			sc.setMinSize(min);
+			
+			boolean do_v = (style&SWT.V_SCROLL) != 0;
+			boolean do_h = (style&SWT.H_SCROLL) != 0;
+			
+			Point min;
+			
+			if ( do_v && do_h ){
+				
+				min = content.computeSize( SWT.DEFAULT, SWT.DEFAULT );
+				
+			}else{
+				
+				Rectangle r = sc.getClientArea();
+
+				if ( do_v ){
+					
+					min = content.computeSize( r.width, SWT.DEFAULT );
+					
+				}else if ( do_h ){
+					
+					min = content.computeSize(  SWT.DEFAULT, r.height );
+					
+				}else{
+					
+					min = null;
+				}
+			}
+			
+			if ( min != null ){
+			
+				sc.setMinSize(min);
+			}
 		}
 	}
 

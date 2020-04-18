@@ -74,7 +74,7 @@ public class TagSettingsView
 
 	private Composite cMainComposite;
 
-	private ScrolledComposite sc;
+	//private ScrolledComposite sc;
 
 	private Tag[] tags;
 
@@ -245,28 +245,13 @@ public class TagSettingsView
 			return;
 		}
 
-		if (cMainComposite == null || cMainComposite.isDisposed()) {
-			if (parent == null || parent.isDisposed()) {
-				return;
-			}
-			sc = new ScrolledComposite(parent, SWT.V_SCROLL);
-			sc.setExpandHorizontal(true);
-			sc.setExpandVertical(true);
-			sc.getVerticalBar().setIncrement(16);
-			Layout parentLayout = parent.getLayout();
-			if (parentLayout instanceof GridLayout) {
-				GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-				sc.setLayoutData(gd);
-			} else if (parentLayout instanceof FormLayout) {
-				sc.setLayoutData(Utils.getFilledFormData());
-			}
-
-			cMainComposite = new Composite(sc, SWT.NONE);
-
-			sc.setContent(cMainComposite);
-		} else {
-			Utils.disposeComposite(cMainComposite, false);
+		if (parent == null || parent.isDisposed()) {
+			return;
 		}
+			
+		Utils.disposeComposite(parent, false);
+
+		cMainComposite = Utils.createScrolledComposite( parent, SWT.V_SCROLL | SWT.H_SCROLL );
 
 		if (tags == null) {
 			params = null;
@@ -1689,9 +1674,7 @@ public class TagSettingsView
 
 			swt_updateFields();
 		}
-		cMainComposite.layout();
-		Rectangle r = sc.getClientArea();
-		sc.setMinSize(cMainComposite.computeSize(r.width - 16, SWT.DEFAULT));
+		parent.layout( true, true );
 	}
 
 	private void
