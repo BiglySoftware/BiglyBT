@@ -759,7 +759,7 @@ BuddyPluginBuddy
 			
 		}else{
 			
-			return( my_name + "/" + res );
+			return( my_name + " (" + res + ")" );
 		}
 	}
 	
