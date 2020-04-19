@@ -1046,7 +1046,9 @@ BuddyPluginNetwork
 
 							List	recent_ygm = (List)details.get( "ygm" );
 
-							String	nick = decodeString((byte[])details.get( "n" ));
+							String	nick 	= decodeString((byte[])details.get( "n" ));
+							
+							String	my_name = decodeString((byte[])details.get( "mn" ));
 
 							Long	l_seq = (Long)details.get( "ls" );
 
@@ -1076,7 +1078,7 @@ BuddyPluginNetwork
 							String	loc_cat = decodeString((byte[])details.get( "lc" ));
 							String	rem_cat = decodeString((byte[])details.get( "rc" ));
 
-							BuddyPluginBuddy buddy = new BuddyPluginBuddy( this, created_time, subsystem, true, key, nick, ver, loc_cat, rem_cat, last_seq, last_time_online, recent_ygm, false );
+							BuddyPluginBuddy buddy = new BuddyPluginBuddy( this, created_time, subsystem, true, key, nick, my_name, ver, loc_cat, rem_cat, last_seq, last_time_online, recent_ygm, false );
 
 							byte[]	ip_bytes = (byte[])details.get( "ip" );
 
@@ -1188,6 +1190,13 @@ BuddyPluginNetwork
 							map.put( "n", nick );
 						}
 	
+						String	my_nick = buddy.getMyName();
+						
+						if ( my_nick != null ){
+	
+							map.put( "mn", my_nick );
+						}
+						
 						map.put( "ls", new Long( buddy.getLastStatusSeq()));
 	
 						map.put( "lo", new Long( buddy.getLastTimeOnline()));
@@ -1334,7 +1343,7 @@ BuddyPluginNetwork
 			if ( buddy_to_return == null ){
 
 				buddy_to_return =
-					new BuddyPluginBuddy( this, SystemTime.getCurrentTime(), subsystem, authorised, key, null, VERSION_CURRENT, null, null, 0, 0, null, for_peek );
+					new BuddyPluginBuddy( this, SystemTime.getCurrentTime(), subsystem, authorised, key, null, null, VERSION_CURRENT, null, null, 0, 0, null, for_peek );
 
 				buddies.add( buddy_to_return );
 

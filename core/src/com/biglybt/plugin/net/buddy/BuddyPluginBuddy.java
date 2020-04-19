@@ -71,6 +71,7 @@ BuddyPluginBuddy
 	private boolean			authorised;
 	private String			public_key;
 	private String			nick_name;
+	private String			my_name;
 	private List<Long>		recent_ygm;
 	private boolean			is_transient;
 	
@@ -152,6 +153,7 @@ BuddyPluginBuddy
 		boolean				_authorised,
 		String				_pk,
 		String				_nick_name,
+		String				_my_name,
 		int					_version,
 		String				_rss_local_cats,
 		String				_rss_remote_cats,
@@ -166,6 +168,7 @@ BuddyPluginBuddy
 		authorised			= _authorised;
 		public_key 			= _pk;
 		nick_name			= _nick_name;
+		my_name				= _my_name;
 		version				= Math.max( version, _version );
 		rss_local_cats		= stringToCats( _rss_local_cats );
 		rss_remote_cats		= stringToCats( _rss_remote_cats );
@@ -739,12 +742,50 @@ BuddyPluginBuddy
 	public String
 	getName()
 	{
+		String res;
+		
 		if ( nick_name != null ){
 
-			return( nick_name );
-		}
+			res = nick_name;
+			
+		}else{
 
-		return( getShortString());
+			res = getShortString();
+		}
+		
+		if ( my_name == null ){
+			
+			return( res );
+			
+		}else{
+			
+			return( my_name + "/" + res );
+		}
+	}
+	
+	public String
+	getMyName()
+	{
+		return( my_name );
+	}
+	
+	public void
+	setMyName(
+		String		_my_name )
+	{
+		if ( _my_name != null ){
+			
+			_my_name = _my_name.trim();
+			
+			if ( _my_name.isEmpty()){
+				
+				_my_name = null;
+			}
+		}
+		
+		my_name = _my_name;
+		
+		plugin_network.fireDetailsChanged( this );
 	}
 
 	public void

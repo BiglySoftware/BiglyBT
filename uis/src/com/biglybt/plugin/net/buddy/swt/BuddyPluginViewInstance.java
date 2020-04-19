@@ -2195,92 +2195,6 @@ BuddyPluginViewInstance
 
 		final Menu menu = new Menu(buddy_table);
 
-		final MenuItem remove_item = new MenuItem(menu, SWT.PUSH);
-
-		remove_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.remove" ));
-
-		remove_item.addSelectionListener(
-			new SelectionAdapter()
-			{
-				@Override
-				public void
-				widgetSelected(
-					SelectionEvent e)
-				{
-					TableItem[] selection = buddy_table.getSelection();
-
-					for (int i=0;i<selection.length;i++){
-
-						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
-
-						buddy.remove();
-					}
-				}
-			});
-
-			// get public key
-
-		final MenuItem get_pk_item = new MenuItem(menu, SWT.PUSH);
-
-		get_pk_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.copypk" ) );
-
-		get_pk_item.addSelectionListener(
-			new SelectionAdapter()
-			{
-				@Override
-				public void
-				widgetSelected(
-					SelectionEvent event )
-				{
-					TableItem[] selection = buddy_table.getSelection();
-
-					StringBuilder sb = new StringBuilder();
-
-					for (int i=0;i<selection.length;i++){
-
-						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
-
-						sb.append(buddy.getPublicKey()).append("\r\n");
-					}
-
-					if ( sb.length() > 0 ){
-
-						writeToClipboard( sb.toString());
-					}
-				}
-			});
-
-			// disconnect message
-
-		final  MenuItem disconnect_msg_item;
-		
-		if ( Constants.isCVSVersion()){
-			disconnect_msg_item = new MenuItem(menu, SWT.PUSH);
-
-			disconnect_msg_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.disconnect" ) );
-
-			disconnect_msg_item.addSelectionListener(
-				new SelectionAdapter()
-				{
-					@Override
-					public void
-					widgetSelected(
-						SelectionEvent event )
-					{
-						TableItem[] selection = buddy_table.getSelection();
-
-						for (int i=0;i<selection.length;i++){
-
-							BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
-
-							buddy.disconnect();
-						}
-					}
-				});
-		}else{
-			disconnect_msg_item = null;
-		}
-
 			// send message
 
 		final  MenuItem send_msg_item = new MenuItem(menu, SWT.PUSH);
@@ -2386,13 +2300,20 @@ BuddyPluginViewInstance
 				}
 			});
 
-			// ygm
-
-		final MenuItem ygm_item = new MenuItem(menu, SWT.PUSH);
-
-		ygm_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.ygm" ) );
-
-		ygm_item.addSelectionListener(
+			// cats
+	
+		Menu cat_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+		MenuItem cat_item = new MenuItem(menu, SWT.CASCADE);
+		Messages.setLanguageText(cat_item, "azbuddy.ui.menu.cat" );
+		cat_item.setMenu(cat_menu);
+	
+			// cats - share
+	
+		final MenuItem cat_share_item = new MenuItem(cat_menu, SWT.PUSH);
+	
+		cat_share_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.cat.share" ) );
+	
+		cat_share_item.addSelectionListener(
 			new SelectionAdapter()
 			{
 				@Override
@@ -2401,22 +2322,309 @@ BuddyPluginViewInstance
 					SelectionEvent event )
 				{
 					TableItem[] selection = buddy_table.getSelection();
-
+	
+					List<BuddyPluginBuddy>	buddies = new ArrayList<>();
+	
+					Set<String> enabled_tags = new HashSet<>();
+	
 					for (int i=0;i<selection.length;i++){
-
+	
 						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
-
-						try{
-							buddy.setMessagePending();
-
-						}catch( Throwable e ){
-
-							print( "YGM failed", e );
+	
+						buddies.add( buddy );
+	
+						Set<String> et = buddy.getLocalAuthorisedRSSTagsOrCategories();
+	
+						if ( et == null ){
+	
+							enabled_tags.clear();
+	
+							break;
+	
+						}else{
+	
+							if ( i == 0 ){
+	
+								enabled_tags.addAll( et );
+	
+							}else{
+	
+								enabled_tags.retainAll( et );
+	
+								if ( enabled_tags.isEmpty()){
+	
+									break;
+								}
+							}
 						}
+					}
+	
+					TagManager tm = TagManagerFactory.getTagManager();
+	
+					List<Tag> all_tags = tm.getTagType( TagType.TT_DOWNLOAD_CATEGORY ).getTags();
+	
+					all_tags.addAll( tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags());
+	
+					Map<String,Tag>	tag_map = new HashMap<>();
+	
+					for ( Tag t: all_tags ){
+	
+						tag_map.put( t.getTagName( true ), t );
+					}
+	
+					List<Tag> selected_tags = new ArrayList<>();
+	
+					for ( String s: enabled_tags ){
+	
+						Tag t = tag_map.get( s );
+	
+						if ( t != null ){
+	
+							selected_tags.add( t );
+						}
+					}
+	
+					TagUIUtilsV3.showTagSelectionDialog(
+						all_tags,
+						selected_tags,
+						false,
+						(tags)->{
+	
+							Set<String>	tag_names = new HashSet<>();
+	
+							for ( Tag t: tags ){
+	
+								tag_names.add( t.getTagName( true ));
+							}
+	
+							for ( BuddyPluginBuddy buddy: buddies ){
+	
+								buddy.setLocalAuthorisedRSSTagsOrCategories( tag_names );
+							}
+						});
+				}
+			});
+	
+			// cats - subscribe
+	
+		final Menu cat_subs_menu = new Menu(cat_menu.getShell(), SWT.DROP_DOWN);
+		final MenuItem cat_subs_item = new MenuItem(cat_menu, SWT.CASCADE);
+		Messages.setLanguageText(cat_subs_item, "azbuddy.ui.menu.cat_subs" );
+		cat_subs_item.setMenu(cat_subs_menu);
+	
+		cat_subs_menu.addMenuListener(
+			new MenuListener()
+			{
+				@Override
+				public void
+				menuShown(
+					MenuEvent arg0 )
+				{
+					MenuItem[] items = cat_subs_menu.getItems();
+	
+					for (int i = 0; i < items.length; i++){
+	
+						items[i].dispose();
+					}
+	
+					final TableItem[] selection = buddy_table.getSelection();
+	
+					List<BuddyPluginBuddy>	buddies = new ArrayList<>();
+	
+					Set<String> avail_cats = new TreeSet<>();
+	
+					for (int i=0;i<selection.length;i++){
+	
+						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
+	
+						buddies.add( buddy );
+	
+						Set<String> cats = buddy.getRemoteAuthorisedRSSTagsOrCategories();
+	
+						if ( cats != null ){
+	
+							avail_cats.addAll( cats );
+						}
+					}
+	
+					for ( final String cat: avail_cats ){
+	
+						final MenuItem subs_item = new MenuItem( cat_subs_menu, SWT.CHECK );
+	
+						subs_item.setText( cat );
+	
+						boolean	all_subs 	= true;
+						boolean some_subs 	= false;
+	
+						for ( BuddyPluginBuddy buddy: buddies ){
+	
+							if ( buddy.isSubscribedToCategory( cat )){
+	
+								some_subs = true;
+	
+							}else{
+	
+								all_subs = false;
+							}
+						}
+	
+						subs_item.setSelection( all_subs );
+	
+						subs_item.addSelectionListener(
+							new SelectionAdapter()
+							{
+								@Override
+								public void
+								widgetSelected(
+									SelectionEvent event )
+								{
+									for (int i=0;i<selection.length;i++){
+	
+										BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
+	
+										if ( buddy.isRemoteRSSTagOrCategoryAuthorised( cat )){
+	
+											try{
+												buddy.subscribeToCategory( cat );
+	
+											}catch( Throwable e ){
+	
+												print( "Failed", e );
+											}
+										}
+									}
+								}
+							});
+						}
+				}
+	
+				@Override
+				public void
+				menuHidden(
+					MenuEvent arg0 )
+				{
+				}
+			});
+		
+			// set local name
+		
+		MenuItem set_name_item = new MenuItem(menu, SWT.PUSH);
+
+		set_name_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.setname" ) );
+
+		set_name_item.addSelectionListener(
+			new SelectionAdapter()
+			{
+				@Override
+				public void
+				widgetSelected(
+					SelectionEvent event )
+				{
+					final TableItem[] selection = buddy_table.getSelection();
+
+					UIInputReceiver prompter = ui_instance.getInputReceiver();
+
+					prompter.setLocalisedTitle( lu.getLocalisedMessageText( "azbuddy.ui.menu.setname" ));
+					prompter.setLocalisedMessage( lu.getLocalisedMessageText( "azbuddy.ui.menu.setname_msg" ) );
+
+					try{
+						prompter.prompt(new UIInputReceiverListener() {
+							@Override
+							public void UIInputReceiverClosed(UIInputReceiver prompter) {
+								String text = prompter.getSubmittedInput();
+
+								if ( text != null ){
+
+									text = text.trim();
+									
+									for (int i=0;i<selection.length;i++){
+
+										BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
+
+										buddy.setMyName( text );
+									}
+								}
+							}
+						});
+
+					}catch( Throwable e ){
+
 					}
 				}
 			});
 
+		MenuItem ygm_item;
+		
+		if ( Constants.isCVSVersion()){
+			
+				// ygm
+	
+			ygm_item = new MenuItem(menu, SWT.PUSH);
+	
+			ygm_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.ygm" ) );
+	
+			ygm_item.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent event )
+					{
+						TableItem[] selection = buddy_table.getSelection();
+	
+						for (int i=0;i<selection.length;i++){
+	
+							BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
+	
+							try{
+								buddy.setMessagePending();
+	
+							}catch( Throwable e ){
+	
+								print( "YGM failed", e );
+							}
+						}
+					}
+				});
+		}else{
+			
+			ygm_item = null;
+		}
+		
+		new MenuItem( menu, SWT.SEPARATOR );
+
+			// get public key
+	
+		final MenuItem get_pk_item = new MenuItem(menu, SWT.PUSH);
+	
+		get_pk_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.copypk" ) );
+	
+		get_pk_item.addSelectionListener(
+			new SelectionAdapter()
+			{
+				@Override
+				public void
+				widgetSelected(
+					SelectionEvent event )
+				{
+					TableItem[] selection = buddy_table.getSelection();
+	
+					StringBuilder sb = new StringBuilder();
+	
+					for (int i=0;i<selection.length;i++){
+	
+						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
+	
+						sb.append(buddy.getPublicKey()).append("\r\n");
+					}
+	
+					if ( sb.length() > 0 ){
+	
+						writeToClipboard( sb.toString());
+					}
+				}
+			});
 
 			// encrypt
 
@@ -2697,210 +2905,62 @@ BuddyPluginViewInstance
 				}
 			});
 
+		new MenuItem( menu, SWT.SEPARATOR );
 
-			// cats
+			// disconnect message
+	
+		final  MenuItem disconnect_msg_item;
+		
+		if ( Constants.isCVSVersion()){
+			disconnect_msg_item = new MenuItem(menu, SWT.PUSH);
+	
+			disconnect_msg_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.disconnect" ) );
+	
+			disconnect_msg_item.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent event )
+					{
+						TableItem[] selection = buddy_table.getSelection();
+	
+						for (int i=0;i<selection.length;i++){
+	
+							BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
+	
+							buddy.disconnect();
+						}
+					}
+				});
+		}else{
+			
+			disconnect_msg_item = null;
+		}
+		
+		final MenuItem remove_item = new MenuItem(menu, SWT.PUSH);
 
-		Menu cat_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
-		MenuItem cat_item = new MenuItem(menu, SWT.CASCADE);
-		Messages.setLanguageText(cat_item, "azbuddy.ui.menu.cat" );
-		cat_item.setMenu(cat_menu);
-
-			// cats - share
-
-		final MenuItem cat_share_item = new MenuItem(cat_menu, SWT.PUSH);
-
-		cat_share_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.cat.share" ) );
-
-		cat_share_item.addSelectionListener(
+		remove_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.remove" ));
+		
+		Utils.setMenuItemImage( remove_item, "delete" );
+		
+		remove_item.addSelectionListener(
 			new SelectionAdapter()
 			{
 				@Override
 				public void
 				widgetSelected(
-					SelectionEvent event )
+					SelectionEvent e)
 				{
 					TableItem[] selection = buddy_table.getSelection();
 
-					List<BuddyPluginBuddy>	buddies = new ArrayList<>();
-
-					Set<String> enabled_tags = new HashSet<>();
-
 					for (int i=0;i<selection.length;i++){
 
 						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
 
-						buddies.add( buddy );
-
-						Set<String> et = buddy.getLocalAuthorisedRSSTagsOrCategories();
-
-						if ( et == null ){
-
-							enabled_tags.clear();
-
-							break;
-
-						}else{
-
-							if ( i == 0 ){
-
-								enabled_tags.addAll( et );
-
-							}else{
-
-								enabled_tags.retainAll( et );
-
-								if ( enabled_tags.isEmpty()){
-
-									break;
-								}
-							}
-						}
+						buddy.remove();
 					}
-
-					TagManager tm = TagManagerFactory.getTagManager();
-
-					List<Tag> all_tags = tm.getTagType( TagType.TT_DOWNLOAD_CATEGORY ).getTags();
-
-					all_tags.addAll( tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags());
-
-					Map<String,Tag>	tag_map = new HashMap<>();
-
-					for ( Tag t: all_tags ){
-
-						tag_map.put( t.getTagName( true ), t );
-					}
-
-					List<Tag> selected_tags = new ArrayList<>();
-
-					for ( String s: enabled_tags ){
-
-						Tag t = tag_map.get( s );
-
-						if ( t != null ){
-
-							selected_tags.add( t );
-						}
-					}
-
-					TagUIUtilsV3.showTagSelectionDialog(
-						all_tags,
-						selected_tags,
-						false,
-						(tags)->{
-
-							Set<String>	tag_names = new HashSet<>();
-
-							for ( Tag t: tags ){
-
-								tag_names.add( t.getTagName( true ));
-							}
-
-							for ( BuddyPluginBuddy buddy: buddies ){
-
-								buddy.setLocalAuthorisedRSSTagsOrCategories( tag_names );
-							}
-						});
-				}
-			});
-
-			// cats - subscribe
-
-		final Menu cat_subs_menu = new Menu(cat_menu.getShell(), SWT.DROP_DOWN);
-		final MenuItem cat_subs_item = new MenuItem(cat_menu, SWT.CASCADE);
-		Messages.setLanguageText(cat_subs_item, "azbuddy.ui.menu.cat_subs" );
-		cat_subs_item.setMenu(cat_subs_menu);
-
-		cat_subs_menu.addMenuListener(
-			new MenuListener()
-			{
-				@Override
-				public void
-				menuShown(
-					MenuEvent arg0 )
-				{
-					MenuItem[] items = cat_subs_menu.getItems();
-
-					for (int i = 0; i < items.length; i++){
-
-						items[i].dispose();
-					}
-
-					final TableItem[] selection = buddy_table.getSelection();
-
-					List<BuddyPluginBuddy>	buddies = new ArrayList<>();
-
-					Set<String> avail_cats = new TreeSet<>();
-
-					for (int i=0;i<selection.length;i++){
-
-						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
-
-						buddies.add( buddy );
-
-						Set<String> cats = buddy.getRemoteAuthorisedRSSTagsOrCategories();
-
-						if ( cats != null ){
-
-							avail_cats.addAll( cats );
-						}
-					}
-
-					for ( final String cat: avail_cats ){
-
-						final MenuItem subs_item = new MenuItem( cat_subs_menu, SWT.CHECK );
-
-						subs_item.setText( cat );
-
-						boolean	all_subs 	= true;
-						boolean some_subs 	= false;
-
-						for ( BuddyPluginBuddy buddy: buddies ){
-
-							if ( buddy.isSubscribedToCategory( cat )){
-
-								some_subs = true;
-
-							}else{
-
-								all_subs = false;
-							}
-						}
-
-						subs_item.setSelection( all_subs );
-
-						subs_item.addSelectionListener(
-							new SelectionAdapter()
-							{
-								@Override
-								public void
-								widgetSelected(
-									SelectionEvent event )
-								{
-									for (int i=0;i<selection.length;i++){
-
-										BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
-
-										if ( buddy.isRemoteRSSTagOrCategoryAuthorised( cat )){
-
-											try{
-												buddy.subscribeToCategory( cat );
-
-											}catch( Throwable e ){
-
-												print( "Failed", e );
-											}
-										}
-									}
-								}
-							});
-						}
-				}
-
-				@Override
-				public void
-				menuHidden(
-					MenuEvent arg0 )
-				{
 				}
 			});
 
@@ -2929,12 +2989,15 @@ BuddyPluginViewInstance
 					send_msg_item.setEnabled(available && selection.length > 0);
 					chat_item.setEnabled(available && selection.length > 0);
 					ping_item.setEnabled(available && selection.length > 0);
-					ygm_item.setEnabled(available && selection.length > 0);
+					if (ygm_item!=null ){
+						ygm_item.setEnabled(available && selection.length > 0);
+					}
 					encrypt_item.setEnabled(selection.length > 0);
 					decrypt_item.setEnabled(true);
 					sign_item.setEnabled(true);
 					verify_item.setEnabled(true);
 					cat_item.setEnabled(selection.length > 0);
+					set_name_item.setEnabled( selection.length == 1);
 				}
 
 				@Override
@@ -3044,6 +3107,8 @@ BuddyPluginViewInstance
 		final Menu menu = new Menu(partial_buddy_table);
 
 		final MenuItem remove_item = new MenuItem(menu, SWT.PUSH);
+
+		Utils.setMenuItemImage( remove_item, "delete" );
 
 		remove_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.remove" ));
 
