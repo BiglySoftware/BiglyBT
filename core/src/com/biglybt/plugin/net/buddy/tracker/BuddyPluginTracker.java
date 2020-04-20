@@ -606,43 +606,7 @@ BuddyPluginTracker
 
 			BuddyTrackingData bd = getBuddyData( buddy );
 
-			if ( bd.hasIPChanged()){
-
-				String	ip = bd.getIP();
-
-				if ( ip != null ){
-
-					List<BuddyPluginBuddy>	l = online_buddy_ips.get( ip );
-
-					if ( l != null ){
-
-						l.remove( buddy );
-
-						if ( l.size() == 0 ){
-
-							online_buddy_ips.remove( ip );
-						}
-					}
-				}
-
-				bd.updateIP();
-
-				ip = bd.getIP();
-
-				if ( ip != null ){
-
-					List<BuddyPluginBuddy> l = online_buddy_ips.get( ip );
-
-					if ( l == null ){
-
-						l = new ArrayList<>();
-
-						online_buddy_ips.put( ip, l );
-					}
-
-					l.add( buddy );
-				}
-			}
+			bd.updateIPs();
 
 			return( bd );
 		}
@@ -660,22 +624,7 @@ BuddyPluginTracker
 
 				online_buddies.remove( buddy );
 
-				String	ip = bd.getIP();
-
-				if ( ip != null ){
-
-					List<BuddyPluginBuddy>	l = online_buddy_ips.get( ip );
-
-					if ( l != null ){
-
-						l.remove( buddy );
-
-						if ( l.size() == 0 ){
-
-							online_buddy_ips.remove( ip );
-						}
-					}
-				}
+				bd.destroy();
 			}
 		}
 	}
@@ -2081,7 +2030,7 @@ outer:
 		private int		consecutive_fails;
 		private long	last_fail;
 
-		private String	current_ip;
+		private String[]	current_ips = {};
 
 		protected
 		BuddyTrackingData(
@@ -2091,41 +2040,112 @@ outer:
 		}
 
 		protected void
-		updateIP()
+		updateIPs()
+		{
+			String[] latest_ips = getLatestIPs();
+			
+			if ( !Arrays.equals( current_ips, latest_ips )){
+
+				for ( String ip: current_ips ){
+						
+					List<BuddyPluginBuddy>	l = online_buddy_ips.get( ip );
+
+					if ( l != null ){
+
+						l.remove( buddy );
+
+						if ( l.size() == 0 ){
+
+							online_buddy_ips.remove( ip );
+						}
+					}
+				}
+
+				current_ips = latest_ips;
+				
+				String str = "";
+				
+				for ( String ip: current_ips ){
+						
+					str += (str.isEmpty()?"":", ") + ip;
+					
+					List<BuddyPluginBuddy> l = online_buddy_ips.get( ip );
+
+					if ( l == null ){
+
+						l = new ArrayList<>();
+
+						online_buddy_ips.put( ip, l );
+					}
+
+					l.add( buddy );
+				}
+				
+				log( "IPs set to {" + str + "}" );
+			}
+		}
+		
+		protected void
+		destroy()
+		{
+			for ( String ip: current_ips ){
+					
+				List<BuddyPluginBuddy>	l = online_buddy_ips.get( ip );
+
+				if ( l != null ){
+
+					l.remove( buddy );
+
+					if ( l.size() == 0 ){
+
+						online_buddy_ips.remove( ip );
+					}
+				}
+			}
+		}
+		
+		private String[]
+		getLatestIPs()
 		{
 			InetSocketAddress	latest_ip = buddy.getAdjustedIP();
+			InetSocketAddress	latest_v6 = buddy.getLatestIP( false );
 
+			String ip1 	= null;
+			String ip2	= null;
+			
 			if ( latest_ip != null ){
 
-				current_ip	= AddressUtils.getHostAddress( latest_ip );
-
-				log( "IP set to " + current_ip );
+				ip1	= AddressUtils.getHostAddress( latest_ip );
+				
+				if ( latest_v6 != null ){
+					
+					ip2 = AddressUtils.getHostAddress( latest_v6 );
+					
+					if ( ip2.equals( ip1 )){
+						
+						ip2 = null;
+					}
+				}
 			}
-		}
-
-		protected boolean
-		hasIPChanged()
-		{
-			InetSocketAddress	latest_ip = buddy.getAdjustedIP();
-
-			if ( latest_ip == null && current_ip == null ){
-
-				return( false );
-
-			}else if ( latest_ip == null || current_ip == null ){
-
-				return( true );
-
+			
+			if ( ip1 == null ){
+				
+				return( new String[0] );
+								
+			}else if ( ip2 == null ){
+				
+				return( new String[]{ ip1 });
+								
 			}else{
-
-				return(	!current_ip.equals( AddressUtils.getHostAddress( latest_ip )));
+				
+				return( new String[]{ ip1, ip2 });
 			}
 		}
 
-		protected String
-		getIP()
+		protected String[]
+		getIPs()
 		{
-			return( current_ip );
+			return( current_ips );
 		}
 
 		protected boolean

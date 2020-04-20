@@ -2104,26 +2104,40 @@ BuddyPluginViewInstance
 
 					InetSocketAddress 	adj = buddy.getAdjustedIP();
 
+					InetSocketAddress latest_v4 = buddy.getLatestIP( true );
+					InetSocketAddress latest_v6 = buddy.getLatestIP( false );
+					
+					Set<InetSocketAddress>	all_ips = new HashSet<>();
+					
+					all_ips.addAll( addresses );
+					all_ips.add( ip );
+					all_ips.add( adj );
+					all_ips.add( latest_v4 );
+					all_ips.add( latest_v6 );
+					
+					all_ips.remove( null );
+					
 					String	str = "";
 
-					if ( ip == null ){
+					if ( all_ips.isEmpty()){
 
 						str = "<none>";
 
-					}else if ( ip == adj ){
-
-						str = AddressUtils.getHostAddress( ip );
-
 					}else{
 
-						str = AddressUtils.getHostAddress( ip ) + "{";
+						Set<String>	done = new HashSet<>();
+						
+						for ( InetSocketAddress a: all_ips ){
 
-						for (int i=0;i<addresses.size();i++){
-
-							str += (i==0?"":"/") + AddressUtils.getHostAddress( addresses.get(i));
+							String host = AddressUtils.getHostAddress( a );
+							
+							if ( !done.contains( host )){
+							
+								done.add( host );
+							
+								str += (str.isEmpty()?"":", ") + host;
+							}
 						}
-
-						str += "}";
 					}
 
 					return(  "ip=" + str + ",tcp=" + buddy.getTCPPort() + ",udp=" + buddy.getUDPPort());
