@@ -3942,7 +3942,7 @@ BuddyPluginViewBetaChat
 	
 								boolean is_me = Arrays.equals( participant.getPublicKey(), chat_pk );
 								
-								boolean is_friend = participant.isFriend();
+								boolean is_friend = participant.getFriendStatus() != 0;
 								
 								if ( ! (is_friend || is_me )){
 	
@@ -3972,7 +3972,7 @@ BuddyPluginViewBetaChat
 					
 					String fk = participant.getFriendKey();
 					
-					boolean is_friend = participant.isFriend();
+					boolean is_friend = participant.getFriendStatus() != 0;
 
 					final MenuItem add_fk_item = new MenuItem(friends_menu, SWT.PUSH);
 		
@@ -4157,7 +4157,7 @@ BuddyPluginViewBetaChat
 	
 						boolean is_me = Arrays.equals( participant.getPublicKey(), chat_pk );
 						
-						boolean is_friend = participant.isFriend();
+						boolean is_friend = participant.getFriendStatus() != 0;
 
 						if ( !is_me ){
 	
@@ -4292,8 +4292,8 @@ BuddyPluginViewBetaChat
 			ChatParticipant	participant = (ChatParticipant)ti.getData();
 			
 			if ( participant != null ){
-				
-				String status = participant.isFriend()?"*":(participant.getFriendKey()!=null?"+":"");
+	
+				String status = getFriendStatus( participant );
 				
 				if ( !ti.getText( bt_col_offset + 2 ).equals( status )){
 					
@@ -4301,6 +4301,27 @@ BuddyPluginViewBetaChat
 				}
 			}
 		}
+	}
+	
+	private String
+	getFriendStatus(
+		ChatParticipant		participant )
+	{
+		
+		int friend_status = participant.getFriendStatus();
+		
+		String status;
+		
+		if ( friend_status == 0 ){
+			
+			status = participant.getFriendKey()!=null?"+":"";
+			
+		}else{
+			
+			status = friend_status==1?"*":"~";
+		}
+		
+		return( status );
 	}
 	
 	private ChatParticipant
@@ -4334,7 +4355,7 @@ BuddyPluginViewBetaChat
 			String[] values = {
 				participant.getName( ftux_ok ),
 				String.valueOf(participant.getMessageCount( true )),
-				participant.isFriend()?"*":(participant.getFriendKey()!=null?"+":"")
+				getFriendStatus( participant )
 			};
 			
 			for ( int i=0;i<values.length;i++){
