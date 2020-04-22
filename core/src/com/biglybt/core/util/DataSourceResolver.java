@@ -7,6 +7,8 @@ import com.biglybt.core.devices.Device;
 public class 
 DataSourceResolver
 {
+	public static final Object DEFAULT_DATASOURCE	= new Object();
+	
 	private static Map<String,Object>	importer_map = new HashMap<>();
 	
 	public static Map<String,Object>
@@ -49,6 +51,10 @@ DataSourceResolver
 		}else if ( data_source instanceof Device ){
 			
 			// not required as resolved internally
+			
+			return( null );
+			
+		}else if ( data_source == DEFAULT_DATASOURCE ){
 			
 			return( null );
 			

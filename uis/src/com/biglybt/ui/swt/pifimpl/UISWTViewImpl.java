@@ -39,6 +39,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.util.DataSourceResolver;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.LightHashMap;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -73,7 +74,7 @@ public class UISWTViewImpl
 	implements UISWTViewCore, UIPluginViewToolBarListener
 {
 	public static final String CFG_PREFIX = "Views.plugins.";
-
+	
 	protected static final String SO_ID_ENTRY_WRAPPER = "mdi.content.item";
 
 	protected static long uniqueNumber = 0;
@@ -92,7 +93,7 @@ public class UISWTViewImpl
 	protected SWTSkin skin;
 	
 	/* Always Core */
-	protected Object datasource = new Object();
+	protected Object datasource = DataSourceResolver.DEFAULT_DATASOURCE;
 
 	private boolean useCoreDataSource = false;
 
