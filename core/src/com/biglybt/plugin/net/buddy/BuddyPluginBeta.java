@@ -6296,6 +6296,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		private byte[]				friend_key;
 		
+		private List<String>		profile_data_cache;
+		
 		private List<String>		profile_data;
 		private boolean				profile_data_peeked;
 		private long				profile_data_set;
@@ -6317,6 +6319,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				is_pinned 	= MapUtils.getMapBoolean( props, "pinned", false );
 				is_ignored 	= MapUtils.getMapBoolean( props, "ignored", false );
 				//is_spammer 	= MapUtils.getMapBoolean( props, "spammer", false );
+				
+				profile_data_cache = BDecoder.decodeStrings((List)props.get( "profile" ));
 			}
 			
 			String old_pinned_key = "azbuddy.chat.pinned." + ByteFormatter.encodeString( pk, 0, 16 );
@@ -6583,7 +6587,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				checkProfileData();
 			}
 			
-			return( profile_data );
+			return( profile_data==null?profile_data_cache:profile_data );
 		}
 		
 		public void
@@ -6592,6 +6596,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		{
 			profile_data		= d;
 			profile_data_set	= SystemTime.getMonotonousTime();
+			
+			profile_data_cache = null;
+			
+			if ( !isMe()){
+				
+				setProperty( "profile", d );
+			}
 			
 			chat.updated( this );
 		}
@@ -6874,6 +6885,53 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				if ( value ){
 					
 					props.put( name, 1L );
+					
+				}else{
+					
+					props.remove( name );
+				}
+				
+				if ( props.isEmpty() ){
+	
+					COConfigurationManager.removeParameter( key );
+					
+				}else{
+					
+					COConfigurationManager.setParameter( key, props );
+				}
+	
+				COConfigurationManager.setDirty();
+			}
+		}
+		
+		private void
+		setProperty(
+			String			name,
+			List<String>	value )
+		{
+			synchronized( chat.chat_lock ){
+				
+				String key =  getPropsKey();
+				
+				Map<String,Object> props 	= COConfigurationManager.getMapParameter( key, null );
+				
+				if ( props == null ){
+					
+					if ( value == null ){
+						
+						return;
+					}
+					
+					props = new HashMap<>();
+					
+				}else{
+					
+					props = BEncoder.cloneMap( props );
+				}
+	
+				if ( value != null ){
+					
+					props.put( name, value );
 					
 				}else{
 					
