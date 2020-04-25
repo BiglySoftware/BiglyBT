@@ -19,7 +19,10 @@
  */
 package com.biglybt.ui.swt.components.graphics;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
@@ -38,10 +41,12 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimerEvent;
 import com.biglybt.core.util.TimerEventPerformer;
 import com.biglybt.core.util.TimerEventPeriodic;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.Colors;
 
 /**
  * @author Olivier
@@ -86,9 +91,13 @@ MultiPlotGraphic
 
 	private boolean				update_outstanding = false;
 
+	private int					update_period_millis;
 	private TimerEventPeriodic	update_event;
 
 	private boolean				maintain_history;
+
+	private SimpleDateFormat	timeFormatter = new SimpleDateFormat("HH:mm", Locale.US );
+
 
 	private
 	MultiPlotGraphic(
@@ -256,6 +265,8 @@ MultiPlotGraphic
 		boolean	active,
 		int		period_millis )
 	{
+		update_period_millis = period_millis;
+		
 		if ( active ){
 
 			if ( update_event != null ){
@@ -581,6 +592,10 @@ MultiPlotGraphic
 
 			int[] maxs = new int[all_values.length];
 
+			long now		= SystemTime.getCurrentTime();
+			
+			int next_secs = 60;
+
 			for (int x = 0; x < bounds.width - 71; x++){
 
 				int position = currentPosition - x - 1;
@@ -592,6 +607,35 @@ MultiPlotGraphic
 					if ( position < 0 ){
 
 						position = 0;
+					}
+				}
+
+				boolean has_value = nbValues>=maxEntries||position<nbValues;
+
+				if ( has_value ){
+
+					int	this_age = (x*update_period_millis)/1000;;
+					
+					if ( this_age >= next_secs ){
+						
+						next_secs += 60;
+						
+						long time = now - (this_age*1000);
+						
+						String str = timeFormatter.format( new Date( time ));
+												
+						Point p = gcImage.stringExtent( str );
+						
+						int xDraw = bounds.width - 71 - x;
+
+						int xPos = xDraw-p.x/2;
+						
+						if ( xPos >= 0 ){
+						
+							gcImage.setForeground(Colors.grey );
+
+							gcImage.drawText( str, xPos, 0, true );
+						}
 					}
 				}
 

@@ -241,6 +241,9 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
     			all_values[i] = newValues;
     		}
 
+    		int[] newAges = new int[maxEntries];
+			System.arraycopy(ages, 0, newAges, 0, ages.length);
+			ages = newAges;
     	} finally {
     		this_mon.exit();
     	}
