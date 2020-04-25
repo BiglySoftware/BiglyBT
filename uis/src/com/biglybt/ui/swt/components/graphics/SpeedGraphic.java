@@ -19,6 +19,10 @@
  */
 package com.biglybt.ui.swt.components.graphics;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -34,6 +38,7 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 /**
@@ -65,9 +70,15 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 	private int					nbValues		= 0;
 	private int					maxEntries		= DEFAULT_ENTRIES;
 	private int[][]				all_values		= new int[1][maxEntries];
+	
+	private long				startTime		= -1;
+	private int[]				ages			= new int[maxEntries];
+	
 	private int					currentPosition;
 
 
+	private SimpleDateFormat	timeFormatter = new SimpleDateFormat("HH:mm", Locale.US );
+	
   private SpeedGraphic(Scale scale,ValueFormater formater) {
     super(scale,formater);
 
@@ -141,7 +152,10 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 		 		
 			   	for ( int i=0;i<all_values.length;i++ ){
 			   		all_values[i] = new int[all_values[i].length];
-			   	}	
+			   	}
+			   	
+			   	startTime = -1;
+			   	
 			  }finally{
 				  
 				this_mon.exit();
@@ -159,7 +173,7 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
     	if ( all_values.length < new_values.length ){
 
     		int[][]	new_all_values = new int[new_values.length][];
-
+    		
 		    System.arraycopy(all_values, 0, new_all_values, 0, all_values.length);
 
     		for (int i=all_values.length;i<new_all_values.length; i++ ){
@@ -175,6 +189,13 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 	        all_values[i][currentPosition] = new_values[i];
     	}
 
+	    long now = SystemTime.getMonotonousTime();
+	    
+	    if ( startTime == -1 ){
+	    	startTime = now;
+	    }
+	    ages[currentPosition] = (int)((now - startTime )/1000);
+	    
 	    currentPosition++;
 
 	    if(nbValues < maxEntries){
@@ -338,20 +359,56 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 
 			scale.setMax(max);
 
-			for (int x = 0; x < bounds.width - 71; x++)
-			{
+			long now		= SystemTime.getCurrentTime();
+									
+			int mono_secs = (int)((SystemTime.getMonotonousTime()-startTime)/1000);
+			int next_secs = 60;
+			
+			for (int x = 0; x < bounds.width - 71; x++){
+			
 				int position = currentPosition - x - 1;
-				if (position < 0)
-				{
+				
+				if (position < 0){
+				
 					position += maxEntries;
-					if (position < 0)
-					{
+					
+					if (position < 0){
+					
 						position = 0;
 					}
 				}
+								
 				int xDraw = bounds.width - 71 - x;
 				int height = scale.getScaledValue(all_values[0][position]);
 
+				int	this_age = ages[position];
+				
+				if ( this_age > 0 ){
+					
+					int offset = mono_secs - this_age;
+					
+					if ( offset >= next_secs ){
+						
+						next_secs += 60;
+						
+						long time = now - (offset*1000);
+						
+						String str = timeFormatter.format( new Date( time ));
+												
+						Point p = gcImage.stringExtent( str );
+						
+						int xPos = xDraw-p.x/2;
+						
+						if ( xPos >= 0 ){
+						
+							gcImage.setForeground(Colors.grey );
+
+							gcImage.drawText( str, xPos, 0, true );
+						}
+					}
+				}
+
+				
 				gcImage.setForeground(colors[COLOR_MAINSPEED]);
 				
 				gcImage.drawLine( xDraw, bounds.height - 1 - height, xDraw,  bounds.height );
