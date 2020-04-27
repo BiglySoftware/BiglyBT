@@ -486,7 +486,7 @@ public class ConfigurationDefaults {
     def.put( "Tracker Separate Peer IDs", FALSE);
     def.put( "Tracker Client Connect Timeout", new Long(120));
     def.put( "Tracker Client Read Timeout", SIXTY );
-    def.put( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CLOSEDOWN_TIMEOUT, 5L );
+    def.put( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CLOSEDOWN_TIMEOUT, 20L );
     def.put( ConfigKeys.Tracker.ICFG_TRACKER_CLIENT_CONCURRENT_ANNOUNCE, 32 );
 	def.put( "Tracker Client Send OS and Java Version", FALSE);
 	def.put( "Tracker Client Show Warnings", TRUE);
