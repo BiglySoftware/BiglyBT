@@ -1668,44 +1668,45 @@ WebPlugin
 								result = true;
 								
 							}else{
-								
-								String 	this_server_host = getHeaderField( headers, "host" );
-								
+																
 								int		this_server_port = protocol == Tracker.PR_HTTP?80:443;
 								
 								String 	referrer = getHeaderField( headers, "referer" );
-																
-								if ( this_server_host.startsWith( "[" )){
+								
+								String 	host_maybe_null = getHeaderField( headers, "host" );
+
+								if ( host_maybe_null != null ){
 									
-									int	pos = this_server_host.lastIndexOf( ']' );
-									
-									if ( pos != -1 ){
+									if ( host_maybe_null.startsWith( "[" )){
 										
-										String rem = this_server_host.substring( pos+1 );
-										
-										this_server_host = this_server_host.substring( 0, pos+1 );
-										
-										pos = rem.indexOf( ':' );
+										int	pos = host_maybe_null.lastIndexOf( ']' );
 										
 										if ( pos != -1 ){
 											
-											this_server_port = Integer.parseInt( rem.substring( pos+1 ).trim());
+											String rem = host_maybe_null.substring( pos+1 );
+											
+											host_maybe_null = host_maybe_null.substring( 0, pos+1 );
+											
+											pos = rem.indexOf( ':' );
+											
+											if ( pos != -1 ){
+												
+												this_server_port = Integer.parseInt( rem.substring( pos+1 ).trim());
+											}
+										}
+									}else{
+										
+										int pos = host_maybe_null.indexOf( ':' );
+										
+										if ( pos != -1 ){
+											
+											this_server_port = Integer.parseInt( host_maybe_null.substring( pos+1 ).trim());
+											
+											host_maybe_null = host_maybe_null.substring( 0,  pos );
 										}
 									}
-								}else{
-									
-									int pos = this_server_host.indexOf( ':' );
-									
-									if ( pos != -1 ){
-										
-										this_server_port = Integer.parseInt( this_server_host.substring( pos+1 ).trim());
-										
-										this_server_host = this_server_host.substring( 0,  pos );
-									}
 								}
-								
-								String[] allowed = whitelist.split( "," );
-								
+																
 								result = false;
 								
 								String msg	= "";
@@ -1715,7 +1716,9 @@ WebPlugin
 									msg = "port mismatch: " + server_port + "/" + this_server_port;
 									
 								}else{
-																
+								
+									String[] allowed = whitelist.split( "," );
+
 									for ( String a: allowed ){
 									
 										a = a.trim();
