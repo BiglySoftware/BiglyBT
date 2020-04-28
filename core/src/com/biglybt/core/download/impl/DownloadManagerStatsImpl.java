@@ -611,7 +611,7 @@ DownloadManagerStatsImpl
 	}
 
 	private static final int HISTORY_RATE_DIV = 64;
-	private static final int HISTORY_TIME_DIV = 60;
+	private static final int HISTORY_TIME_DIV = 1;		//	used to be 60 but this messes up small ETAs (obviously) - rethink if need to re-introduce 
 
 	@Override
 	public int[][]
@@ -646,7 +646,7 @@ DownloadManagerStatsImpl
 					int	recv_rate 	= (int)((entry1>>21)&0x001fffffL);
 					int	swarm_rate 	= (int)((entry1)&0x001fffffL);
 
-					int	eta 	= (int)((entry2)&0x001fffffL);
+					int	eta 	= (int)((entry2)&0x000000007fffffffL);
 
 					result[0][i] = send_rate*HISTORY_RATE_DIV;
 					result[1][i] = recv_rate*HISTORY_RATE_DIV;
@@ -733,9 +733,11 @@ DownloadManagerStatsImpl
 			((((receive_rate-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV)<<21)  & 0x000003ffffe00000L ) |
 			((((peer_swarm_average-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV))& 0x00000000001fffffL );
 
-		long	entry2 =
-			((((eta-1+HISTORY_TIME_DIV/2)/HISTORY_TIME_DIV))& 0x00000000001fffffL );
+		//long	entry2 =
+		//	((((eta-1+HISTORY_TIME_DIV/2)/HISTORY_TIME_DIV))& 0x00000000001fffffL );
 
+		long entry2 = eta&0x000000007fffffffL;
+		
 		synchronized( this ){
 
 			if ( history != null ){
