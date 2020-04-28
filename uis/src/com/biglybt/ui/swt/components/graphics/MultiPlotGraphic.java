@@ -340,7 +340,7 @@ MultiPlotGraphic
 	    try{
 	    	this_mon.enter();
 
-	    	int[]	averages = new int[all_values.length];
+	    	long[]	averages = new long[all_values.length];
 	    		
 	    	if ( nbValues < num_entries ){
 	    		
@@ -373,7 +373,13 @@ MultiPlotGraphic
 	    		}
 	    	}
 	    	
-	    	return( averages );
+	    	int[] i_averages =  new int[averages.length];
+	    	
+	    	for ( int j=0;j<averages.length;j++){
+	    		i_averages[j] = (int)averages[j];
+	    	}
+	    	
+	    	return( i_averages );
 	    	
 	    }finally{
 
