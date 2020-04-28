@@ -27,6 +27,8 @@ package com.biglybt.core.util;
 public class
 SimpleTimer
 {
+	public static final int TICK_MILLIS = 1000;
+	
 		/**
 		 * A simple timer class for use by application components that want to schedule
 		 * low-overhead events (i.e. when fired the event shouldn't take significant processing
@@ -34,6 +36,8 @@ SimpleTimer
 		 */
 
 	protected static final Timer	timer;
+
+	private static volatile int tick_count;
 
 	static final CopyOnWriteList<TimerTickReceiver>		tick_receivers = new CopyOnWriteList<>(true);
 
@@ -55,11 +59,9 @@ SimpleTimer
 
 		addPeriodicEvent(
 			"SimpleTimer:ticker",
-			1000,
+			TICK_MILLIS,
 			new TimerEventPerformer()
 			{
-				private int tick_count;
-
 				@Override
 				public void
 				perform(
@@ -146,6 +148,12 @@ SimpleTimer
 		tick_receivers.remove( receiver );
 	}
 
+	public static int
+	getTickCount()
+	{
+		return( tick_count );
+	}
+	
 	public interface
 	TimerTickReceiver
 	{

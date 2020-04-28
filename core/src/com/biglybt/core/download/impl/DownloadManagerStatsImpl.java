@@ -49,6 +49,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.core.util.IndentWriter;
+import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
 
 public class
@@ -115,6 +116,7 @@ DownloadManagerStatsImpl
 
 	private static final int HISTORY_MAX_SECS = 30*60;
 	private volatile boolean history_retention_required;
+	private int			history_last_tick = -1;
 	private long[][]	history;
 	private int			history_pos;
 	private boolean		history_wrapped;
@@ -625,6 +627,13 @@ DownloadManagerStatsImpl
 
 			}else{
 
+				int ticks = SimpleTimer.getTickCount();
+				
+				if ( ticks != history_last_tick ){
+					
+					timerTick( ticks );
+				}
+				
 				int	entries = history_wrapped?HISTORY_MAX_SECS:history_pos;
 				int	start	= history_wrapped?history_pos:0;
 
@@ -715,33 +724,72 @@ DownloadManagerStatsImpl
 
 		PEPeerManager pm = download_manager.getPeerManager();
 
-		if ( pm == null ){
-
-			return;
-		}
-
-		PEPeerManagerStats stats = pm.getStats();
-
-		long send_rate 			= stats.getDataSendRate() + stats.getProtocolSendRate();
-		long receive_rate 		= stats.getDataReceiveRate() + stats.getProtocolReceiveRate();
-		long peer_swarm_average = getTotalAveragePerPeer();
-
-		long eta	= Math.max( getETA(), 0);
+		long	entry1;
+		long	entry2;
 		
-		long	entry1 =
-			((((send_rate-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV)<<42) 	&  0x7ffffc0000000000L ) |
-			((((receive_rate-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV)<<21)  & 0x000003ffffe00000L ) |
-			((((peer_swarm_average-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV))& 0x00000000001fffffL );
+		if ( pm != null ){
 
-		//long	entry2 =
-		//	((((eta-1+HISTORY_TIME_DIV/2)/HISTORY_TIME_DIV))& 0x00000000001fffffL );
-
-		long entry2 = eta&0x000000007fffffffL;
+			PEPeerManagerStats stats = pm.getStats();
+	
+			long send_rate 			= stats.getDataSendRate() + stats.getProtocolSendRate();
+			long receive_rate 		= stats.getDataReceiveRate() + stats.getProtocolReceiveRate();
+			long peer_swarm_average = getTotalAveragePerPeer();
+	
+			long eta	= Math.max( getETA(), 0);
+			
+			entry1 =
+				((((send_rate-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV)<<42) 	&  0x7ffffc0000000000L ) |
+				((((receive_rate-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV)<<21)  & 0x000003ffffe00000L ) |
+				((((peer_swarm_average-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV))& 0x00000000001fffffL );
+	
+			//long	entry2 =
+			//	((((eta-1+HISTORY_TIME_DIV/2)/HISTORY_TIME_DIV))& 0x00000000001fffffL );
+	
+			entry2 = eta&0x000000007fffffffL;
+			
+		}else{
+			
+			entry1	= 0;
+			entry2	= 0;
+		}
 		
 		synchronized( this ){
 
 			if ( history != null ){
 
+				if ( history_last_tick == tick_count ){
+				
+						// already processed
+					
+					return;
+				}
+				
+				if ( history_last_tick != -1 ){
+				
+					int missed = tick_count - history_last_tick - 1;
+					
+					if ( missed > 0 ){
+						
+						missed = Math.min( missed, HISTORY_MAX_SECS );
+						
+						while( missed > 0 ){
+							
+							history[history_pos][0] 	= 0;
+							history[history_pos++][1] 	= 0;
+
+							if ( history_pos == HISTORY_MAX_SECS ){
+
+								history_pos 	= 0;
+								history_wrapped	= true;
+							}
+							
+							missed--;
+						}
+					}
+				}
+				
+				history_last_tick = tick_count;
+				
 				history[history_pos][0] 	= entry1;
 				history[history_pos++][1] 	= entry2;
 
