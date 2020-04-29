@@ -5065,7 +5065,26 @@ BuddyPluginViewBetaChat
 	
 						updateTableHeader();
 					}
-					
+				}
+			});
+	}
+
+	@Override
+	public void
+	configChanged()
+	{
+		if ( status.isDisposed()){
+
+			return;
+		}
+
+		Utils.execSWTThread(
+			new Runnable()
+			{
+				@Override
+				public void
+				run()
+				{					
 					boolean changed = false;
 					
 					String cdf = beta.getCustomDateFormat();
@@ -5103,7 +5122,7 @@ BuddyPluginViewBetaChat
 				}
 			});
 	}
-
+	
 	private void
 	sortParticipants()
 	{

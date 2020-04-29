@@ -1222,6 +1222,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			COConfigurationManager.setDirty();
 
+			for ( ChatInstance chat: chat_instances_list ){
+
+				chat.configChanged();
+			}
+			
 			plugin.fireUpdated();
 		}
 	}
@@ -4001,6 +4006,21 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				try{
 					l.updated();
+
+				}catch( Throwable e ){
+
+					Debug.out( e );
+				}
+			}
+		}
+		
+		private void
+		configChanged()
+		{
+			for ( ChatListener l: listeners ){
+
+				try{
+					l.configChanged();
 
 				}catch( Throwable e ){
 
@@ -7717,6 +7737,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		public void
 		updated();
+		
+		public void
+		configChanged();
 	}
 
 	public static class
@@ -7729,6 +7752,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		{
 		}
 
+		@Override
+		public void 
+		configChanged()
+		{
+		}
+		
 		@Override
 		public void
 		stateChanged(
