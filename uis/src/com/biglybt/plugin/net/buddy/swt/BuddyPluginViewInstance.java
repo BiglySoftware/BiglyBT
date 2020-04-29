@@ -471,7 +471,7 @@ BuddyPluginViewInstance
 
 		label = new Label( ui_area, SWT.NULL );
 
-		// max chars
+			// max chars
 
 		IntSwtParameter max_chars = new IntSwtParameter(ui_area,
 				"azbuddy.chat.temp.ui.max.chars", "azbuddy.dchat.ui.max.kb", null, 1,
@@ -483,7 +483,57 @@ BuddyPluginViewInstance
 
 		label = new Label( ui_area, SWT.NULL );
 
+			// custom date format
+		
+		Button cd_enable = new Button( ui_area, SWT.CHECK );
 
+		cd_enable.setText( lu.getLocalisedMessageText( "ConfigView.section.style.customDateFormat" ));
+
+		String cdf =  plugin_beta.getCustomDateFormat();
+		
+		cd_enable.setSelection( !cdf.isEmpty());
+
+		Text cd_format = new Text( ui_area, SWT.BORDER );
+		grid_data = new GridData();
+		grid_data.widthHint = 200;
+		cd_format.setText( cdf );
+		cd_format.setLayoutData(grid_data);
+	
+		cd_enable.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent ev )
+					{
+						if ( cd_enable.getSelection()){
+							
+							cd_format.setEnabled( true );
+							
+							cd_format.setText(plugin_beta.getCustomDateFormat());
+							
+						}else{
+							
+							cd_format.setText( "" );
+							
+							plugin_beta.setCustomDateFormat( "" );
+							
+							cd_format.setEnabled( false );
+						}
+					}
+				});
+		
+		cd_format.setEnabled( !cdf.isEmpty());
+		
+		cd_format.addListener(SWT.FocusOut, ev->{
+			plugin_beta.setCustomDateFormat( cd_format.getText().trim());
+	    });
+	   
+		label = new Label( ui_area, SWT.NULL );
+
+			// checks
+		
 		final Composite ui_area_checks = new Composite( ui_area, SWT.NULL );
 		layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = 0;

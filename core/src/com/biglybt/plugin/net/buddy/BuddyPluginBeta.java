@@ -139,6 +139,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 	private int						private_chat_state;
 	private boolean					shared_anon_endpoint;
+	private String					custom_date_format = "";
 	private boolean					sound_enabled;
 	private String					sound_file;
 	
@@ -178,6 +179,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private_chat_state	 	= COConfigurationManager.getIntParameter( "azbuddy.chat.private_chat_state", PRIVATE_CHAT_ENABLED );
 
 		shared_anon_endpoint	= COConfigurationManager.getBooleanParameter( "azbuddy.chat.share_i2p_endpoint", true );
+		custom_date_format		= COConfigurationManager.getStringParameter( "azbuddy.chat.cdf", "" );
 		sound_enabled			= COConfigurationManager.getBooleanParameter( "azbuddy.chat.notif.sound.enable", false );
 		sound_file			 	= COConfigurationManager.getStringParameter( "azbuddy.chat.notif.sound.file", "" );
 
@@ -1193,6 +1195,37 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		}
 	}
 
+	public String
+	getCustomDateFormat()
+	{
+		return( custom_date_format );
+	}
+
+	public void
+	setCustomDateFormat(
+		String		cdf )
+	{
+		if ( cdf == null ){
+			
+			cdf = "";
+			
+		}else{
+			
+			cdf = cdf.trim();
+		}
+		
+		if ( !cdf.equals( custom_date_format )){
+
+			custom_date_format	= cdf;
+
+			COConfigurationManager.setParameter( "azbuddy.chat.cdf", cdf );
+
+			COConfigurationManager.setDirty();
+
+			plugin.fireUpdated();
+		}
+	}
+	
 	public void
 	setSoundEnabled(
 		boolean		b )

@@ -529,6 +529,16 @@ BuddyPluginViewBetaChat
 	{
 		boolean public_chat = !chat.isPrivateChat();
 
+		try{
+			String cdf = beta.getCustomDateFormat();
+			
+			if ( !cdf.isEmpty()){
+			
+				custom_date_format = new SimpleDateFormat( cdf );
+			}		
+		}catch( Throwable e ){
+		}
+		
 		if ( chat.getViewType() == BuddyPluginBeta.VIEW_TYPE_DEFAULT || chat.isReadOnly()){
 			
 			GridLayout layout = new GridLayout();
@@ -5032,6 +5042,7 @@ BuddyPluginViewBetaChat
 					}
 					
 					if ( nickname != null ) {
+						
 						if ( !nickname.isFocusControl()){
 	
 							String old_nick = nickname.getText().trim();
@@ -5053,6 +5064,41 @@ BuddyPluginViewBetaChat
 						}
 	
 						updateTableHeader();
+					}
+					
+					boolean changed = false;
+					
+					String cdf = beta.getCustomDateFormat();
+					
+					if ( cdf.isEmpty()){
+					
+						if ( custom_date_format != null ){
+						
+							custom_date_format = null;
+						
+							changed = true;
+						}
+						
+					}else if ( !cdf.isEmpty()){
+						
+						try{
+							SimpleDateFormat new_format = new SimpleDateFormat( cdf );
+							
+							if ( custom_date_format == null || !custom_date_format.equals( new_format )){
+								
+								custom_date_format = new_format;
+								
+								changed = true;
+							}
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+					
+					if ( changed ){
+					
+						messagesChanged();
 					}
 				}
 			});
@@ -5497,6 +5543,8 @@ BuddyPluginViewBetaChat
 		logChatMessages( new ChatMessage[]{ message } );
 	}
 
+	private SimpleDateFormat custom_date_format;
+	
 	private final SimpleDateFormat time_format1 	= new SimpleDateFormat( "HH:mm" );
 	private final SimpleDateFormat time_format2a 	= new SimpleDateFormat( "EE h" );
 	private final SimpleDateFormat time_format2b 	= new SimpleDateFormat( "a" );
@@ -5507,6 +5555,11 @@ BuddyPluginViewBetaChat
 		long		now,
 		long		time )
 	{
+		if ( custom_date_format != null ){
+			
+			return( custom_date_format.format( new Date( time )));
+		}
+		
 		long 	age 	= now - time;
 		Date	date	= new Date( time );
 
