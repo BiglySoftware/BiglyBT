@@ -1147,6 +1147,11 @@ public class TorrentOpenOptions
 					networks.add( network );
 				}
 			}
+			
+				// use actually trackers to check for I2P enable - cache might well have I2P set if it was potentially
+				// available for magnet download
+			
+			boolean	enable_i2p = networks.contains( AENetworkClassifier.AT_I2P );
 
 			List<String> network_cache = TorrentUtils.getNetworkCache( torrent );
 
@@ -1184,8 +1189,7 @@ public class TorrentOpenOptions
 			networks.addAll( network_cache );
 
 				// could do something here if multiple networks to get user to decide what to do...
-
-			boolean	enable_i2p = networks.contains( AENetworkClassifier.AT_I2P );
+			
 			String enable_i2p_reason = null;
 
 			if ( enable_i2p ){
