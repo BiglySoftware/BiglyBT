@@ -186,29 +186,38 @@ public class StatsView
 									VivaldiView.DHT_TYPE_MAIN_V6));
 		}
 
-		if ( Constants.isCVSVersion() && hasV4 ){
-
-			vm.registerView(VIEW_ID,
-					new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".cvs", null,
-							DHTView.class).setInitialDatasource(DHTView.DHT_TYPE_CVS));
-
-			vm.registerView(VIEW_ID,
-					new UISWTViewBuilderCore(VivaldiView.MSGID_PREFIX + ".cvs",
-							null, VivaldiView.class).setInitialDatasource(
-									VivaldiView.DHT_TYPE_CVS));
-
-			vm.registerView(VIEW_ID,
-					new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".biglybt",
-							null, DHTView.class).setInitialDatasource(
-									DHTView.DHT_TYPE_BIGLYBT));
-
-			vm.registerView(VIEW_ID,
-					new UISWTViewBuilderCore(
-							VivaldiView.MSGID_PREFIX + ".biglybt", null,
-							VivaldiView.class).setInitialDatasource(
-									VivaldiView.DHT_TYPE_BIGLYBT));
+		if ( hasV4 ){
+			
+			if ( Constants.isCVSVersion()){
+	
+				vm.registerView(VIEW_ID,
+						new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".cvs", null,
+								DHTView.class).setInitialDatasource(DHTView.DHT_TYPE_CVS));
+	
+				vm.registerView(VIEW_ID,
+						new UISWTViewBuilderCore(VivaldiView.MSGID_PREFIX + ".cvs",
+								null, VivaldiView.class).setInitialDatasource(
+										VivaldiView.DHT_TYPE_CVS));
+	
+				vm.registerView(VIEW_ID,
+						new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".biglybt",
+								null, DHTView.class).setInitialDatasource(
+										DHTView.DHT_TYPE_BIGLYBT));
+	
+				vm.registerView(VIEW_ID,
+						new UISWTViewBuilderCore(
+								VivaldiView.MSGID_PREFIX + ".biglybt", null,
+								VivaldiView.class).setInitialDatasource(
+										VivaldiView.DHT_TYPE_BIGLYBT));
+			}else{
+				
+				vm.registerView(VIEW_ID,
+						new UISWTViewBuilderCore(DHTView.MSGID_PREFIX + ".biglybt",
+								null, DHTView.class).setInitialDatasource(
+										DHTView.DHT_TYPE_BIGLYBT));
+			}
 		}
-
+		
 		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
 				TagStatsView.MSGID_PREFIX, null, TagStatsView.class));
 
