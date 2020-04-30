@@ -4552,26 +4552,26 @@ public class OpenTorrentOptionsWindow
 			Composite more_comp = new Composite( more_outer, SWT.NULL );
 			more_comp.setLayoutData( Utils.getFilledFormData());
 			
-			GridLayout more_layout;
+			GridLayout more_layout= new GridLayout(4,false);
 			
+			Label sub_label = new Label( more_comp, SWT.NULL );
+			
+			sub_label.setText( MessageText.getString( "label.subfolder" ));
+						
+			Text sub_text = new Text( more_comp, SWT.BORDER );
+			GridData grid_data = new GridData(GridData.FILL_BOTH);
+			grid_data.verticalAlignment = SWT.CENTER;
+			
+			sub_text.setLayoutData(grid_data);
+		
 			if ( isSingleOptions && !torrentOptions.isSimpleTorrent()){
-				
-				more_layout = new GridLayout(4,false);
-				
-				Label sub_label = new Label( more_comp, SWT.NULL );
-				
-				sub_label.setText( MessageText.getString( "label.subfolder" ));
+
+				txtSubFolder = sub_text;
 				
 				String top = FileUtil.newFile(torrentOptions.getDataDir()).getName();
-				
-				txtSubFolder = new Text( more_comp, SWT.BORDER );
-				GridData grid_data = new GridData(GridData.FILL_VERTICAL);
-				grid_data.verticalAlignment = SWT.CENTER;
-				grid_data.widthHint=200;
-				txtSubFolder.setLayoutData(grid_data);
 
 				txtSubFolder.setText( top );
-								
+				
 				torrentOptions.addListener((TorrentOpenOptions.ParentDirChangedListener) () -> txtSubFolder.setText(FileUtil.newFile(torrentOptions.getDataDir()).getName()) );
 						
 				txtSubFolder.addFocusListener(
@@ -4604,9 +4604,11 @@ public class OpenTorrentOptionsWindow
 						public void focusGained(FocusEvent e){
 						}
 					});
+				
 			}else{
-			
-				more_layout = new GridLayout(2,false);
+				
+				sub_label.setEnabled( false );
+				sub_text.setEnabled( false );
 			}
 			
 			more_layout.marginTop = more_layout.marginBottom = 0;
@@ -4615,7 +4617,7 @@ public class OpenTorrentOptionsWindow
 			more_comp.setLayout( more_layout );
 			
 			Label more_label = new Label( more_comp, SWT.NULL );
-			GridData grid_data = new GridData(GridData.FILL_VERTICAL );
+			grid_data = new GridData(GridData.FILL_VERTICAL );
 			grid_data.verticalAlignment = SWT.CENTER;
 			more_label.setLayoutData(grid_data);
 
