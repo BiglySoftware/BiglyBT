@@ -69,7 +69,7 @@ RelatedContent
 	{
 		version				= _version;
 		related_to_hash		= _related_to_hash;
-		title				= _title;
+		title				= fixTitle( _title );
 		hash				= _hash;
 		tracker				= _tracker;
 		tracker_keys		= _tracker_keys;
@@ -111,7 +111,7 @@ RelatedContent
 		int			_seeds_leechers )
 	{
 		version				= _version;
-		title				= _title;
+		title				= fixTitle( _title );
 		hash				= _hash;
 		tracker				= _tracker;
 		tracker_keys		= _tracker_keys;
@@ -122,6 +122,33 @@ RelatedContent
 		date				= _date;
 		seeds_leechers		= _seeds_leechers;
 		setChangedLocallyOn(0);
+	}
+	
+	private String
+	fixTitle(
+		String	str )
+	{
+		if ( str != null ){
+			
+			if ( str.startsWith( "urlencode(" )){
+				
+				str = str.substring( 10 );
+				
+				if ( str.endsWith( ")" )){
+					
+					str = str.substring( 0, str.length() - 1 );
+				}
+				
+				str = str.trim();
+				
+				if ( str.isEmpty()){
+					
+					str = "download";
+				}
+			}
+		}
+		
+		return( str );
 	}
 
 	public int
