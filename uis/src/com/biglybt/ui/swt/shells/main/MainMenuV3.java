@@ -315,14 +315,14 @@ public class MainMenuV3
 					}
 				}
 			}
+			
+			MenuFactory.addViewToolbarMenuItem(viewMenu);
 
 			MenuItem mi =
 					MainMenuV3.createQuickLinksMenuItem(skin, viewMenu,
 						"v3.MainWindow.menu.view." + SkinConstants.VIEWID_QUICK_LINKS,
 						SkinConstants.VIEWID_QUICK_LINKS + ".visible",
 						SkinConstants.VIEWID_QUICK_LINKS, true, -1);
-
-			MenuFactory.addViewToolbarMenuItem(viewMenu);
 			
 			/////////
 
@@ -680,6 +680,8 @@ public class MainMenuV3
 					}
 				});
 	
+		item.setEnabled(COConfigurationManager.getBooleanParameter( "IconBar.enabled" ));
+		
 		final ParameterListener listener = new ParameterListener() {
 			@Override
 			public void parameterChanged(String parameterName) {

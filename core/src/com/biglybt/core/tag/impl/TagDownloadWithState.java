@@ -1799,6 +1799,12 @@ TagDownloadWithState
 				}
 				
 				notification_pub_channel 		= BuddyPluginUtils.getChat(net, key);
+				
+				if ( notification_pub_channel == null ){
+					
+					return;
+				}
+				
 				notification_pub_channel_key	= channel;
 				npc_initialised_time			= 0;
 				npc_chat_ready					= false;
