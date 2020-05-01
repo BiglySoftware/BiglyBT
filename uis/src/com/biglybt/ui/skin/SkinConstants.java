@@ -28,6 +28,8 @@ public class SkinConstants
 
 	public static final String VIEWID_PLUGINBAR = "pluginbar";
 
+	public static final String VIEWID_QUICK_LINKS = "quick-links";
+
 	public static final String VIEWID_VIEW_TOOLBAR = "view-toolbar";
 
 	public static final String VIEWID_TOOLBAR = "global-toolbar";

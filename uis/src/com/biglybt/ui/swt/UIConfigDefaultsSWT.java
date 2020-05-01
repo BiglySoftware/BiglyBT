@@ -204,6 +204,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter("v3.topbar.height", 60);
 		def.addParameter("v3.topbar.show.plugin", false);
 		def.addParameter("pluginbar.visible", false);
+		def.addParameter("quick-links.visible", true);
 		def.addParameter("ui.toolbar.uiswitcher", false);
 		def.addParameter("Table.extendedErase", false);
 		def.addParameter("Table.useTree", false);

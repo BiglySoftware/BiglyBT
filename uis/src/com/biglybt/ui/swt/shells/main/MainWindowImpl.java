@@ -28,6 +28,7 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.activities.ActivitiesManager;
@@ -86,6 +87,7 @@ import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.utils.SWTRunnable;
+import com.biglybt.ui.swt.views.QuickLinksView;
 import com.biglybt.ui.swt.views.skin.WelcomeView;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.utils.LocProvUtils;
@@ -1667,6 +1669,13 @@ public class MainWindowImpl
 			});
 		}
 
+		skinObject = skin.getSkinObject("quick-links");
+		
+		if ( skinObject != null ){
+			
+			QuickLinksView.init( skinObject );
+		}
+		
 		skinObject = skin.getSkinObject(SkinConstants.VIEWID_PLUGINBAR);
 		if (skinObject != null) {
 			Menu topbarMenu = new Menu(shell, SWT.POP_UP);
@@ -2005,7 +2014,7 @@ public class MainWindowImpl
 			});
 		}
 	}
-
+	
 	private void
 	runTest(
 		String	cmd )

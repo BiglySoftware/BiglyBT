@@ -275,6 +275,8 @@ public class MainMenuV3
 	private void buildSimpleViewMenu(final Menu viewMenu, int accelerator) {
 		try {
 
+			SWTSkin skin = SWTSkinFactory.getInstance();
+
 			MenuFactory.addMenuItem(viewMenu, SWT.CHECK, PREFIX_V3 + ".view.sidebar",
 					new Listener() {
 						@Override
@@ -287,8 +289,6 @@ public class MainMenuV3
 					});
 
 			if (COConfigurationManager.getIntParameter("User Mode") > 1) {
-
-				SWTSkin skin = SWTSkinFactory.getInstance();
 
 				SWTSkinObject plugin_bar = skin.getSkinObject(SkinConstants.VIEWID_PLUGINBAR);
 
@@ -315,6 +315,12 @@ public class MainMenuV3
 					}
 				}
 			}
+
+			MenuItem mi =
+					MainMenuV3.createViewMenuItem(skin, viewMenu,
+						"v3.MainWindow.menu.view." + SkinConstants.VIEWID_QUICK_LINKS,
+						SkinConstants.VIEWID_QUICK_LINKS + ".visible",
+						SkinConstants.VIEWID_QUICK_LINKS, true, -1);
 
 			MenuFactory.addViewToolbarMenuItem(viewMenu);
 			

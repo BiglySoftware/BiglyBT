@@ -1339,7 +1339,7 @@ public class ImageLoader
 		return null;
 	}
 
-	private Image resizeImageIfLarger(Image image, Point maxSize) {
+	public Image resizeImageIfLarger(Image image, Point maxSize) {
 
 		if (image == null || image.isDisposed()) {
 			return null;

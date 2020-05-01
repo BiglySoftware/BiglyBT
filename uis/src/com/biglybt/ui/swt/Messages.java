@@ -333,6 +333,8 @@ public class Messages {
 				Utils.setTT((Composite) widget,sToolTip);
 			else if (widget instanceof Control)
 				Utils.setTT((Control) widget,sToolTip);
+			else if (widget instanceof ToolItem)
+				Utils.setTT((ToolItem) widget,sToolTip);
 			else
 				System.out.println("No cast for " + widget.getClass().getName());
 		}
