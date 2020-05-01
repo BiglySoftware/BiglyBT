@@ -295,7 +295,7 @@ public class MainMenuV3
 				if ( plugin_bar != null ){
 
 					MenuItem mi =
-						MainMenuV3.createViewMenuItem(skin, viewMenu,
+						MainMenuV3.createPluginBarMenuItem(skin, viewMenu,
 							"v3.MainWindow.menu.view." + SkinConstants.VIEWID_PLUGINBAR,
 							SkinConstants.VIEWID_PLUGINBAR + ".visible",
 							SkinConstants.VIEWID_PLUGINBAR, true, -1);
@@ -317,7 +317,7 @@ public class MainMenuV3
 			}
 
 			MenuItem mi =
-					MainMenuV3.createViewMenuItem(skin, viewMenu,
+					MainMenuV3.createQuickLinksMenuItem(skin, viewMenu,
 						"v3.MainWindow.menu.view." + SkinConstants.VIEWID_QUICK_LINKS,
 						SkinConstants.VIEWID_QUICK_LINKS + ".visible",
 						SkinConstants.VIEWID_QUICK_LINKS, true, -1);
@@ -609,7 +609,7 @@ public class MainMenuV3
 	/**
 	 * @param viewMenu
 	 */
-	public static MenuItem createViewMenuItem(final SWTSkin skin, Menu viewMenu,
+	public static MenuItem createPluginBarMenuItem(final SWTSkin skin, Menu viewMenu,
 			final String textID, final String configID, final String viewID,
 			final boolean fast, int menuIndex) {
 		MenuItem item;
@@ -653,6 +653,51 @@ public class MainMenuV3
 		return item;
 	}
 
+	public static MenuItem createQuickLinksMenuItem(final SWTSkin skin, Menu viewMenu,
+			final String textID, final String configID, final String viewID,
+			final boolean fast, int menuIndex) {
+		
+		if (!ConfigurationDefaults.getInstance().doesParameterDefaultExist(configID)) {
+			COConfigurationManager.setBooleanDefault(configID, true);
+		}
+
+		MenuItem item = MenuFactory.addMenuItem(viewMenu, SWT.CHECK, menuIndex, textID,
+				new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						SWTSkinObject skinObject = skin.getSkinObject(viewID);
+						if (skinObject != null) {
+							boolean newVisibility = !skinObject.isVisible();
+
+							if ( newVisibility ){
+								
+								COConfigurationManager.setParameter( "IconBar.enabled", true );
+							}
+							
+							SWTSkinUtils.setVisibility(skin, configID, viewID, newVisibility,
+									true, fast);
+						}
+					}
+				});
+	
+		final ParameterListener listener = new ParameterListener() {
+			@Override
+			public void parameterChanged(String parameterName) {
+				item.setSelection(COConfigurationManager.getBooleanParameter(parameterName));
+			}
+		};
+
+		COConfigurationManager.addAndFireParameterListener(configID, listener);
+		item.addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				COConfigurationManager.removeParameterListener(configID, listener);
+			}
+		});
+
+		return item;
+	}
+	
 	// backward compat..
 	public static void setVisibility(SWTSkin skin, String configID,
 			String viewID, boolean visible) {

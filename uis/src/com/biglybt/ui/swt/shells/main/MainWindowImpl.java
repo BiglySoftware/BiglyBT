@@ -1682,7 +1682,7 @@ public class MainWindowImpl
 
 			if (COConfigurationManager.getIntParameter("User Mode") > 1) {
 				MenuItem mi =
-					MainMenuV3.createViewMenuItem(skin, topbarMenu,
+					MainMenuV3.createPluginBarMenuItem(skin, topbarMenu,
 						"v3.MainWindow.menu.view." + SkinConstants.VIEWID_PLUGINBAR,
 						SkinConstants.VIEWID_PLUGINBAR + ".visible",
 						SkinConstants.VIEWID_PLUGINBAR, true, -1);
