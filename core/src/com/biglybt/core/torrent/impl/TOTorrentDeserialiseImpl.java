@@ -647,8 +647,26 @@ TOTorrentDeserialiseImpl
 					|| encoding.equals(ENCODING_ACTUALLY_UTF8_KEYS)
 					|| encoding.equalsIgnoreCase("utf-8");
 
+				// There are invalid torrents out there that have a 'length' specified for multi-file torrents (example I'm looking
+				// at has length=0). If we follow the spec and assume the existance of a length field means it is a simple torrent
+				// then we go ahead and produce an unusable torrent. The fix I guess is to see if there is a 'files' entry and
+				// if so treat as a multi-file torrent. However, in order to preserve the torrent hash it is necessary to rewrite
+				// the length field as decoded as this is part of the 'info' portion  :(
+			
 			if ( simple_file_length != null ){
 
+					// currently only seeing for length=0 so just deal with that for the mo
+				
+				if ( simple_file_length == 0 && info.containsKey( TK_FILES)){
+					
+					addAdditionalInfoProperty( TK_LENGTH, simple_file_length );
+					
+					simple_file_length = null;
+				}
+			}
+			
+			if ( simple_file_length != null ){
+	
 				setSimpleTorrent( true );
 
 				total_length = simple_file_length.longValue();

@@ -6059,6 +6059,11 @@ DownloadManagerImpl
 
 										long[] session = delegate.getReportedStats();
 										
+										if ( session == null ){
+											
+											return( null );
+										}
+										
 										session_up 		= session[0];
 										session_down	= session[1];
 									}
