@@ -33,6 +33,7 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.views.stats.StatsView;
 
 public class 
 QuickLinksView
@@ -60,6 +61,8 @@ QuickLinksView
 		});
 		
 		addItem( toolBar, "image.sidebar.library", "library.name", MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY );
+		
+		addItem( toolBar, "image.sidebar.stats", "Stats.title.full", StatsView.VIEW_ID );
 
 		addItem( toolBar, "image.sidebar.config2", "ConfigView.title.full", MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG );
 

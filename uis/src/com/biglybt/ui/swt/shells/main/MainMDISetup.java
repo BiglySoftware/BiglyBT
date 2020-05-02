@@ -172,10 +172,20 @@ public class MainMDISetup
 		//	  	new UISWTViewBuilderCore(StatsView.VIEW_ID, null, StatsView.class)
 		//	  	  .setParentEntryID(SIDEBAR_HEADER_PLUGINS));
 
-		mdi.registerEntry(StatsView.VIEW_ID, id -> mdi.createEntry(
-				new UISWTViewBuilderCore(id, null, StatsView.class).setParentEntryID(
+		mdi.registerEntry(
+			StatsView.VIEW_ID, 
+			id -> {
+				MdiEntry entry = 
+					mdi.createEntry(
+						new UISWTViewBuilderCore(id, null, StatsView.class).setParentEntryID(
 						MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS),
-				true));
+					true);
+				
+				entry.setImageLeftID("image.sidebar.stats2");
+				
+				return( entry );
+			}
+			);
 
 		mdi.registerEntry(SIDEBAR_SECTION_ALLPEERS,
 				id -> {
