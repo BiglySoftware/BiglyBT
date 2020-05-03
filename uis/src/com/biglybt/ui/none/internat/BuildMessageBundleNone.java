@@ -1,5 +1,8 @@
 package com.biglybt.ui.none.internat;
 
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.FileUtil;
+
 import java.io.*;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -8,17 +11,17 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.FileUtil;
-
 /**
  * Using keys in the default (english) language, fills non-default 'none' messagebundle packages.
  * <p>
  * Created by TuxPaper on 1/30/18.
  */
 
-public class BuildMessageBundleNone {
+public class BuildMessageBundleNone
+{
 	private static final String zeros = "000";
+
+	public static final boolean COMPACT = true;
 
 	public static final boolean doUTF8 = false;
 
@@ -50,10 +53,11 @@ public class BuildMessageBundleNone {
 		return ("\\u" + zeros.substring(0, 4 - body.length()) + body);
 	}
 
-	private static final Pattern PAT_PARAM_ALPHA = Pattern.compile("\\{([^0-9].+?)\\}");
+	private static final Pattern PAT_PARAM_ALPHA = Pattern.compile(
+		"\\{([^0-9].+?)\\}");
 
 	public static String expandValue(String value, Properties properties,
-			Map<String, String> defaultProps) {
+																	 Map<String, String> defaultProps) {
 		// Replace {*} with a lookup of *
 		if (value != null && value.indexOf('}') > 0) {
 			Matcher matcher = PAT_PARAM_ALPHA.matcher(value);
@@ -69,7 +73,7 @@ public class BuildMessageBundleNone {
 					}
 
 					value = value.replaceAll("\\Q{" + key + "}\\E",
-							Matcher.quoteReplacement(text));
+						Matcher.quoteReplacement(text));
 				} catch (MissingResourceException e) {
 					// ignore error
 				}
@@ -79,12 +83,12 @@ public class BuildMessageBundleNone {
 	}
 
 	public static void main(String[] args)
-			throws IOException, URISyntaxException {
+		throws IOException, URISyntaxException {
 		System.setProperty("SKIP_SETRB", "1");
 
 		File dirRoot = new File(args.length > 0 ? args[0] : "").getAbsoluteFile();
 		String dest = args.length > 1 ? args[1]
-				: "uis/src/com/biglybt/ui/none/internat";
+			: "uis/src/com/biglybt/ui/none/internat";
 
 		File dirNone = new File(dirRoot, dest);
 		System.out.println(dirNone);
@@ -126,41 +130,64 @@ public class BuildMessageBundleNone {
 			for (String line : lines) {
 				String[] key_val = line.split("=", 2);
 
-				if (key_val.length != 2 || line.startsWith("#") || line.length() == 0) {
-					bw.write(line);
-					bw.newLine();
-				} else {
+				if (key_val.length == 2 && !line.startsWith("#")
+					&& line.length() != 0) {
 					String fullCurrentVal = fullCurrentProperties.getProperty(key_val[0]);
 					if (fullCurrentVal == null) {
 						// no key in the full messagebundle for this language, maybe the
 						// default language's value expands to another key?
 						String defaultFullVal = defaultFullProperties.getProperty(
-								key_val[0]);
+							key_val[0]);
 						if (defaultFullVal == null || !defaultFullVal.contains("}")) {
-							bw.write(isCurrentFileDefaultLang ? line : "#" + line);
+							if (isCurrentFileDefaultLang) {
+								bw.write(line);
+							} else if (!COMPACT) {
+								bw.write("#" + line);
+							} else {
+								continue;
+							}
 						} else {
 							String expandedValue = expandValue(defaultFullVal,
-									fullCurrentProperties, MessageText.CONSTANTS);
+								fullCurrentProperties, MessageText.CONSTANTS);
 							if (expandedValue == null) {
 								bw.write("# No expansion for " + defaultFullVal);
 								bw.newLine();
-								bw.write(isCurrentFileDefaultLang ? line : "#" + line);
+								if (isCurrentFileDefaultLang) {
+									bw.write(line);
+								} else if (!COMPACT) {
+									bw.write("#" + line);
+								} else {
+									continue;
+								}
 							} else {
 								bw.write(key_val[0] + "=" + toEscape(expandedValue));
 							}
 						}
 					} else {
 						String expandedValue = expandValue(fullCurrentVal,
-								fullCurrentProperties, MessageText.CONSTANTS);
+							fullCurrentProperties, MessageText.CONSTANTS);
 						if (expandedValue == null) {
-							bw.write("# No expansion for " + fullCurrentVal);
-							bw.newLine();
-							bw.write(isCurrentFileDefaultLang ? line : "#" + line);
+							if (isCurrentFileDefaultLang || !COMPACT) {
+								bw.write("# No expansion for " + fullCurrentVal);
+								bw.newLine();
+								if (isCurrentFileDefaultLang) {
+									bw.write(line);
+								} else if (!COMPACT) {
+									bw.write("#" + line);
+								}
+							} else {
+								continue;
+							}
 						} else {
 							bw.write(key_val[0] + "=" + toEscape(expandedValue));
 						}
 					}
 					bw.newLine();
+				} else {
+					if (isCurrentFileDefaultLang || !COMPACT) {
+						bw.write(line);
+						bw.newLine();
+					}
 				}
 			}
 			bw.close();
