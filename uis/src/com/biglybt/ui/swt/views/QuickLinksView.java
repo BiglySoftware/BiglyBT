@@ -18,7 +18,7 @@
 
 package com.biglybt.ui.swt.views;
 
-import java.util.Map;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -33,7 +33,10 @@ import org.eclipse.swt.widgets.ToolItem;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.BDecoder;
+import com.biglybt.core.util.BEncoder;
 import com.biglybt.core.util.DataSourceResolver;
+import com.biglybt.core.util.Debug;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.swt.Messages;
@@ -47,13 +50,18 @@ import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.shells.main.MainWindow;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.views.stats.StatsView;
+import com.biglybt.util.MapUtils;
 
 public class 
 QuickLinksView
 {
+	private static final String CONFIG_KEY	= "quicklinks.config";
+		
 	private static SWTSkinObject	skinObject;
 	
 	private static ToolBar toolBar;
+	
+	private static List<QuickLinkItem>		qlItems = new ArrayList<>();
 	
 	public static void
 	init(
@@ -72,58 +80,112 @@ QuickLinksView
 
 		toolBar = new ToolBar( parent, SWT.FLAT );
 
-		toolBar.addListener( SWT.Dispose, ev->{ toolBar = null; });
+		toolBar.addListener( 
+			SWT.Dispose, ev->{ 
+				toolBar = null;
+				qlItems.clear();
+			});
 		
 		GridData gridData = new GridData(GridData.FILL_BOTH);
 		
 		toolBar.setLayoutData( gridData );
 
 		toolBar.addListener( SWT.MenuDetect, ev->{
-			Menu	menu = new Menu( toolBar );
 			
-			toolBar.setMenu( menu );
-
-			MenuItem itemRemove = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
-			
-			Messages.setLanguageText(itemRemove, "Button.remove");
-			
-			Utils.setMenuItemImage(itemRemove, "delete");
-
-			menu.addListener( SWT.Show, (e)->{
-				Point loc = toolBar.toControl( toolBar.getDisplay().getCursorLocation());
+			if ( toolBar.getItemCount() == 0 ){
 				
-				itemRemove.setData( toolBar.getItem( loc ));
-			});
-			
-			itemRemove.addListener( SWT.Selection, (e)->{
-								
-				ToolItem ti = (ToolItem)itemRemove.getData();
+				toolBar.setMenu( null );
 				
-				if ( ti != null ){
-										
-					ti.dispose();
+			}else{
+				
+				Menu	menu = new Menu( toolBar );
+				
+				toolBar.setMenu( menu );
+	
+				MenuItem itemRemove = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+				
+				Messages.setLanguageText(itemRemove, "Button.remove");
+				
+				Utils.setMenuItemImage(itemRemove, "delete");
+	
+				menu.addListener( SWT.Show, (e)->{
+					Point loc = toolBar.toControl( toolBar.getDisplay().getCursorLocation());
 					
-					if ( toolBar.getItemCount() == 0 ){
+					itemRemove.setData( toolBar.getItem( loc ));
+				});
+				
+				itemRemove.addListener( SWT.Selection, (e)->{
+									
+					ToolItem ti = (ToolItem)itemRemove.getData();
 					
-						setVisible( false );
+					if ( ti != null ){
+							
+						QuickLinkItem qli = (QuickLinkItem)ti.getData( "qli" );
 						
-					}else{
-					
-						skinObject.relayout();
-					
-						Utils.relayoutUp( toolBar );
+						if ( qli != null ){
+							
+							synchronized( qlItems ){
+										
+								qlItems.remove( qli );
+							
+								saveConfig();
+							}
+						}
+						
+						ti.dispose();
+						
+						if ( toolBar.getItemCount() == 0 ){
+						
+							setVisible( false );
+							
+						}else{
+						
+							skinObject.relayout();
+						
+							Utils.relayoutUp( toolBar );
+						}
 					}
-				}
-			});
-
+				});
+			}
 		});
 		
-		addItem( mdi, toolBar, "image.sidebar.library", "library.name", MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY, null );
+		synchronized( qlItems ){
+			
+			Map<String,Object> config = COConfigurationManager.getMapParameter( CONFIG_KEY, null );
+			
+			if ( config == null ){
+				
+				addDefaultItem( mdi, toolBar, MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY, "image.sidebar.library", "library.name" );
+				
+				addDefaultItem( mdi, toolBar, StatsView.VIEW_ID,"image.sidebar.stats", "Stats.title.full" );
 		
-		addItem( mdi, toolBar, "image.sidebar.stats", "Stats.title.full", StatsView.VIEW_ID, null );
-
-		addItem( mdi, toolBar, "image.sidebar.config2", "ConfigView.title.full", MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, null );
-
+				addDefaultItem( mdi, toolBar, MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, "image.sidebar.config2", "ConfigView.title.full" );
+				
+			}else{
+				
+				config = BDecoder.decodeStrings( BEncoder.cloneMap( config ));
+				
+				try{
+					List<Map<String,Object>>	items = (List<Map<String,Object>>)config.get( "items" );
+					
+					if ( items != null ){
+						
+						for (Map<String,Object> item: items ){
+							
+							addItem( mdi, toolBar, item );
+						}
+					}
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+		}
+		
+		if ( !COConfigurationManager.getBooleanParameter( SkinConstants.VIEWID_QUICK_LINKS + ".visible", true )){
+			
+			setVisible( false );
+		}
 	}
 	
 	public static void
@@ -192,13 +254,19 @@ QuickLinksView
 					ds_map = DataSourceResolver.exportDataSource( ds );
 				}
 				
-				addItem( mdi, toolBar, entry.getImageLeftID(), titleID, entry.getViewID(), ds_map );
+				QuickLinkItem qli = new QuickLinkItem( entry.getViewID(), entry.getImageLeftID(), titleID, ds_map );	 
+
+				synchronized( qlItems ){
 					
-				if ( toolBar.getItemCount() == 1 ){
-					
-					setVisible( true );
+					qlItems.add( qli );
+				
+					saveConfig();
 				}
 				
+				addItem( mdi, toolBar, qli );
+										
+				setVisible( true );
+								
 				skinObject.relayout();
 				
 				Utils.relayoutUp( toolBar );
@@ -207,14 +275,50 @@ QuickLinksView
 	}
 	
 	private static void
+	addDefaultItem(
+		BaseMDI					mdi,
+		ToolBar					toolBar,
+		String					mdi_id,
+		String					image_id,
+		String					tt_id )
+	{
+		QuickLinkItem qli = new QuickLinkItem( mdi_id, image_id, tt_id, null );	 
+
+		synchronized( qlItems ){
+			
+			qlItems.add( qli );
+		}
+
+		addItem(mdi, toolBar, qli  );
+	}
+	
+	private static void
 	addItem(
 		BaseMDI					mdi,
 		ToolBar					toolBar,
-		String					image_id,
-		String					tt_id,
-		String					mdi_id,
-		Map<String,Object>		ds_map )
+		Map<String,Object>		map )
 	{
+		QuickLinkItem qli = new QuickLinkItem( map );
+		
+		if ( qli != null ){
+			
+			synchronized( qlItems ){
+				
+				qlItems.add( qli );
+			}
+	
+			addItem(mdi, toolBar, qli  );
+		}
+	}
+	
+	private static void
+	addItem(
+		BaseMDI					mdi,
+		ToolBar					toolBar,
+		QuickLinkItem			qli )
+	{
+		String tt_id = qli.tt_id;
+		
 		ToolItem item = new ToolItem( toolBar, SWT.PUSH );
 		
 		if ( MessageText.keyExists( tt_id )){
@@ -228,7 +332,7 @@ QuickLinksView
 		
 		ImageLoader imageLoader = ImageLoader.getInstance();
 		
-		Image image = imageLoader.getImage( image_id );
+		Image image = imageLoader.getImage( qli.image_id );
 		
 		Image resized = imageLoader.resizeImageIfLarger(image, new Point( 15, 15 ));
 		
@@ -245,20 +349,92 @@ QuickLinksView
 				resized.dispose();
 			});
 		}
-		
-	
+			
 		item.addListener( SWT.Selection, ev->{
 			
-			if ( ds_map == null ){
+			if ( qli.ds_map == null ){
 				
-				mdi.showEntryByID(	mdi_id );
+				mdi.showEntryByID( qli.mdi_id );
 					
 			}else{
 					
-				Object ds = DataSourceResolver.importDataSource( ds_map );
+				Object ds = DataSourceResolver.importDataSource( qli.ds_map );
 					
-				mdi.showEntryByID(	mdi_id, ds );
+				mdi.showEntryByID(	qli.mdi_id, ds );
 			}
 		});
+		
+		item.setData( "qli", qli );
+	}
+	
+	private static void
+	saveConfig()
+	{
+		synchronized( qlItems ){
+			
+			Map<String,Object> config = new HashMap<>();
+			
+			List<Map<String,Object>>	items = new ArrayList<>();
+			
+			config.put( "items", items );
+			
+			for ( QuickLinkItem item: qlItems ){
+				
+				items.add( item.export());
+			}
+					
+			COConfigurationManager.setParameter( CONFIG_KEY, config );
+			
+			COConfigurationManager.save();
+		}
+	}
+	
+	private static class
+	QuickLinkItem
+	{
+		final String					mdi_id;
+		final String					image_id;
+		final String					tt_id;
+		final Map<String,Object>		ds_map;
+		
+		QuickLinkItem(
+			String					_mdi_id,
+			String					_image_id,
+			String					_tt_id,
+			Map<String,Object>		_ds_map )
+		{
+			mdi_id		= _mdi_id;
+			image_id	= _image_id;
+			tt_id		= _tt_id;
+			ds_map		= _ds_map;
+	
+		}
+		
+		QuickLinkItem(
+			Map<String,Object>		map )
+		{
+			mdi_id		= (String)map.get( "mdi" );
+			image_id	= (String)map.get( "image" );
+			tt_id		= (String)map.get( "tt" );
+			
+			ds_map = (Map<String,Object>)map.get( "ds" );
+		}
+		
+		Map<String,Object>
+		export()
+		{
+			Map<String,Object> map = new HashMap<>();
+			
+			map.put( "mdi", mdi_id );
+			map.put( "image", image_id );
+			map.put( "tt", tt_id );
+			
+			if ( ds_map != null ){
+				
+				map.put( "ds", ds_map );
+			}
+			
+			return( map );
+		}
 	}
 }
