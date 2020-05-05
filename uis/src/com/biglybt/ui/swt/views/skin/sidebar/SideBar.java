@@ -56,6 +56,7 @@ import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
+import com.biglybt.ui.swt.views.QuickLinksView;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 
@@ -282,11 +283,35 @@ public class SideBar
 	
 			menuParentItem.setStyle( MenuItem.STYLE_MENU );
 						
+			String ql_res = "v3.MainWindow.menu.view.quick-links";
+			
 			menuParentItem.addFillListener((menu, data) -> {
+				
 				SideBarEntrySWT entry = getCurrentEntry();
-				menu.setVisible(entry != null && entry.canBuildStandAlone()
-						&& !entry.getViewID().equals(
-								MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD));
+				
+				boolean visible = 
+					entry != null && 
+					entry.canBuildStandAlone() &&
+					!entry.getViewID().equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD);
+			
+				menu.setVisible( visible );
+				
+				if ( visible ){
+					
+					boolean ql_ok = QuickLinksView.canAddItem( this, entry );
+					
+					MenuItem[] items = menu.getItems();
+						
+					for ( MenuItem item: items ){
+						
+						String res = item.getResourceKey();
+							
+						if ( res.equals( ql_res )){
+							
+							item.setVisible( ql_ok );
+						}
+					}
+				}
 			});
 	
 			MenuItem menuItemDashBoard = menuManager.addMenuItem( menuParentItem, "label.dashboard");
@@ -313,6 +338,20 @@ public class SideBar
 					if ( sbe != null ){
 						
 						MainMDISetup.getSb_dashboard().addItemToSidebar( sbe );
+					}
+				}
+			});
+			
+			MenuItem menuItemQuickLinks = menuManager.addMenuItem( menuParentItem, ql_res );
+
+			menuItemQuickLinks.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					SideBarEntrySWT sbe = getCurrentEntry();
+	
+					if ( sbe != null ){
+						
+						QuickLinksView.addItem( SideBar.this, sbe );
 					}
 				}
 			});

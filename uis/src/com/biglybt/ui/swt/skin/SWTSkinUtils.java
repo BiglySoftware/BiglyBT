@@ -125,12 +125,7 @@ public class SWTSkinUtils
 	}
 
 	public static void setVisibility(SWTSkin skin, String configID,
-			String viewID, boolean visible) {
-		setVisibility(skin, configID, viewID, visible, true, false);
-	}
-
-	public static void setVisibility(SWTSkin skin, String configID,
-			String viewID, final boolean visible, boolean save, boolean fast) {
+			String viewID, final boolean visible, boolean save) {
 
 		SWTSkinObject skinObject = skin.getSkinObject(viewID);
 
@@ -163,13 +158,12 @@ public class SWTSkinUtils
 			} else {
 				size = new Point(0, 0);
 			}
-			setVisibility(skin, configID, skinObject, size, save, fast, null);
+			setVisibility(skin, configID, skinObject, size, save );
 		}
 	}
 
-	public static void setVisibility(SWTSkin skin, String configID,
-			final SWTSkinObject skinObject, final Point destSize, boolean save,
-			boolean fast, Runnable runAfterSlide) {
+	private static void setVisibility(SWTSkin skin, String configID,
+			final SWTSkinObject skinObject, final Point destSize, boolean save ) {
 		boolean visible = destSize.x != 0 || destSize.y != 0;
 		try {
 			if (skinObject == null) {
@@ -195,15 +189,10 @@ public class SWTSkinUtils
 
 					//if (destSize != null) {
 						if (fd.width != destSize.x || fd.height != destSize.y) {
-							if (fast) {
-								fd.width = destSize.x;
-								fd.height = destSize.y;
-								control.setLayoutData(fd);
-								Utils.relayout(control);
-							} else {
-								slide(skinObject, fd, destSize, runAfterSlide);
-								runAfterSlide = null; // prevent calling again
-							}
+							fd.width = destSize.x;
+							fd.height = destSize.y;
+							control.setLayoutData(fd);
+							Utils.relayout(control);
 						}
 					/*} else {
 						if (fd.width == 0) {
@@ -225,12 +214,7 @@ public class SWTSkinUtils
 						}
 						control.setData("v3.oldHeight", oldSize);
 
-						if (fast) {
-							skinObject.setVisible(false);
-						} else {
-							slide(skinObject, fd, destSize, runAfterSlide);
-							runAfterSlide = null; // prevent calling again
-						}
+						skinObject.setVisible(false);
 					}
 				}
 			}
@@ -241,12 +225,92 @@ public class SWTSkinUtils
 				COConfigurationManager.setParameter(configID, visible);
 			}
 
-			if (runAfterSlide != null) {
-				runAfterSlide.run();
-			}
 		}
 	}
 
+	public static void setVisibilityRelaxed(SWTSkin skin, String configID,
+			String viewID, final boolean visible, boolean save) {
+
+		SWTSkinObject skinObject = skin.getSkinObject(viewID);
+
+		if (skinObject == null) {
+			Debug.out("setVisibility on non existing skin object: " + viewID);
+			return;
+		}
+
+		if (skinObject.isVisible() == visible && skin.getShell().isVisible()) {
+			return;
+		}
+
+		final Control control = skinObject.getControl();
+
+		if (control != null && !control.isDisposed()) {
+			setVisibilityRelaxed(skin, configID, skinObject, visible, save );
+		}
+	}
+
+	private static void setVisibilityRelaxed(SWTSkin skin, String configID,
+			final SWTSkinObject skinObject, boolean visible, boolean save ) {
+
+		try {
+			if (skinObject == null) {
+				return;
+			}
+			final Control control = skinObject.getControl();
+			if (control != null && !control.isDisposed()) {
+				if (visible) {
+					FormData fd = (FormData) control.getLayoutData();
+					fd.width = 0;
+					fd.height = 0;
+					control.setData("oldSize", new Point(0, 0));
+
+					skinObject.setVisible(visible);
+
+					// FormData should now be 0,0, but setVisible may have
+					// explicitly changed it
+					fd = (FormData) control.getLayoutData();
+
+					if (fd.width != 0 || fd.height != 0) {
+						return;
+					}
+
+					fd.width 	= SWT.DEFAULT;
+					fd.height	= SWT.DEFAULT;
+					
+					Composite comp = control instanceof Composite?(Composite)control:control.getParent();
+					
+					if ( comp != null ){
+						comp.layout( true, true );
+						
+						Utils.relayoutUp( comp );
+					}
+				} else {
+					final FormData fd = (FormData) control.getLayoutData();
+					if (fd != null) {
+						Point oldSize = new Point(fd.width, fd.height);
+						if (oldSize.y <= 0) {
+							oldSize = null;
+						}
+
+						skinObject.setVisible(false);
+					}
+				}
+			}
+
+		} finally {
+			if (save
+					&& COConfigurationManager.getBooleanParameter(configID) != visible) {
+				COConfigurationManager.setParameter(configID, visible);
+			}
+
+		}
+	}
+	
+	
+	
+	
+	
+	/*
 	public static void slide(final SWTSkinObject skinObject, final FormData fd,
 			final Point destSize, final Runnable runOnCompletion) {
 		final Control control = skinObject.getControl();
@@ -333,7 +397,8 @@ public class SWTSkinUtils
 		};
 		control.getDisplay().asyncExec(runnable);
 	}
-
+	*/
+	
 	public static class MouseEnterExitListener
 		implements Listener
 	{

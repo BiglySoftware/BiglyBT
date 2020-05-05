@@ -44,6 +44,7 @@ import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinUtils;
+import com.biglybt.ui.swt.views.QuickLinksView;
 import com.biglybt.ui.swt.views.skin.SkinViewManager;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 
@@ -298,7 +299,7 @@ public class MainMenuV3
 						MainMenuV3.createPluginBarMenuItem(skin, viewMenu,
 							"v3.MainWindow.menu.view." + SkinConstants.VIEWID_PLUGINBAR,
 							SkinConstants.VIEWID_PLUGINBAR + ".visible",
-							SkinConstants.VIEWID_PLUGINBAR, true, -1);
+							SkinConstants.VIEWID_PLUGINBAR );
 
 					if ( accelerator != -1 && mi.getAccelerator() == accelerator ){
 
@@ -322,7 +323,7 @@ public class MainMenuV3
 					MainMenuV3.createQuickLinksMenuItem(skin, viewMenu,
 						"v3.MainWindow.menu.view." + SkinConstants.VIEWID_QUICK_LINKS,
 						SkinConstants.VIEWID_QUICK_LINKS + ".visible",
-						SkinConstants.VIEWID_QUICK_LINKS, true, -1);
+						SkinConstants.VIEWID_QUICK_LINKS );
 			
 			/////////
 
@@ -610,15 +611,14 @@ public class MainMenuV3
 	 * @param viewMenu
 	 */
 	public static MenuItem createPluginBarMenuItem(final SWTSkin skin, Menu viewMenu,
-			final String textID, final String configID, final String viewID,
-			final boolean fast, int menuIndex) {
+			final String textID, final String configID, final String viewID){
 		MenuItem item;
 
 		if (!ConfigurationDefaults.getInstance().doesParameterDefaultExist(configID)) {
 			COConfigurationManager.setBooleanDefault(configID, true);
 		}
 
-		item = MenuFactory.addMenuItem(viewMenu, SWT.CHECK, menuIndex, textID,
+		item = MenuFactory.addMenuItem(viewMenu, SWT.CHECK, textID,
 				new Listener() {
 					@Override
 					public void handleEvent(Event event) {
@@ -626,13 +626,12 @@ public class MainMenuV3
 						if (skinObject != null) {
 							boolean newVisibility = !skinObject.isVisible();
 
-							SWTSkinUtils.setVisibility(skin, configID, viewID, newVisibility,
-									true, fast);
+							SWTSkinUtils.setVisibility(skin, configID, viewID, newVisibility, true);
 						}
 					}
 				});
 		SWTSkinUtils.setVisibility(skin, configID, viewID,
-				COConfigurationManager.getBooleanParameter(configID), false, true);
+				COConfigurationManager.getBooleanParameter(configID), false);
 
 		final MenuItem itemViewPluginBar = item;
 		final ParameterListener listener = new ParameterListener() {
@@ -654,28 +653,21 @@ public class MainMenuV3
 	}
 
 	public static MenuItem createQuickLinksMenuItem(final SWTSkin skin, Menu viewMenu,
-			final String textID, final String configID, final String viewID,
-			final boolean fast, int menuIndex) {
+			final String textID, final String configID, final String viewID) {
 		
 		if (!ConfigurationDefaults.getInstance().doesParameterDefaultExist(configID)) {
 			COConfigurationManager.setBooleanDefault(configID, true);
 		}
 
-		MenuItem item = MenuFactory.addMenuItem(viewMenu, SWT.CHECK, menuIndex, textID,
+		MenuItem item = MenuFactory.addMenuItem(viewMenu, SWT.CHECK, textID,
 				new Listener() {
 					@Override
 					public void handleEvent(Event event) {
 						SWTSkinObject skinObject = skin.getSkinObject(viewID);
 						if (skinObject != null) {
 							boolean newVisibility = !skinObject.isVisible();
-
-							if ( newVisibility ){
-								
-								COConfigurationManager.setParameter( "IconBar.enabled", true );
-							}
 							
-							SWTSkinUtils.setVisibility(skin, configID, viewID, newVisibility,
-									true, fast);
+							QuickLinksView.setVisible( newVisibility );
 						}
 					}
 				});
@@ -700,6 +692,7 @@ public class MainMenuV3
 		return item;
 	}
 	
+	/*
 	// backward compat..
 	public static void setVisibility(SWTSkin skin, String configID,
 			String viewID, boolean visible) {
@@ -711,5 +704,5 @@ public class MainMenuV3
 			String viewID, boolean visible, boolean save) {
 		SWTSkinUtils.setVisibility(skin, configID, viewID, visible, save, false);
 	}
-
+	*/
 }

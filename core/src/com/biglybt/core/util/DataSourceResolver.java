@@ -3,6 +3,7 @@ package com.biglybt.core.util;
 import java.util.*;
 
 import com.biglybt.core.devices.Device;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 public class 
 DataSourceResolver
@@ -59,6 +60,13 @@ DataSourceResolver
 			return( null );
 			
 		}else{
+			
+			Object core_ds = PluginCoreUtils.convert( data_source, true );
+			
+			if ( core_ds != null && core_ds != data_source ){
+				
+				return( exportDataSource( core_ds ));
+			}
 			
 			Debug.out( "Can't export a " + data_source );
 		}

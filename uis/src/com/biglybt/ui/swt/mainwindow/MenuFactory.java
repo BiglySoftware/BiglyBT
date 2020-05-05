@@ -2789,17 +2789,8 @@ public class MenuFactory
 		return menuItem;
 	}
 
-	public static final MenuItem addMenuItem(Menu menu, int style,
-			String localizationKey, Listener selListener) {
-		return addMenuItem(menu, style, -1, localizationKey, selListener);
-	}
-
-	public static final MenuItem addMenuItem(Menu menu, int style, int index,
-			String localizationKey, Listener selListener) {
-		if (index < 0 || index > menu.getItemCount()) {
-			index = menu.getItemCount();
-		}
-		MenuItem menuItem = new MenuItem(menu, style, index);
+	public static final MenuItem addMenuItem(Menu menu, int style, String localizationKey, Listener selListener) {
+		MenuItem menuItem = new MenuItem(menu, style);
 		Messages.setLanguageText(menuItem, localizationKey);
 		KeyBindings.setAccelerator(menuItem, localizationKey);
 		menuItem.addListener(SWT.Selection, selListener);

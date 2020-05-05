@@ -688,11 +688,11 @@ public class MainWindowImpl
 			//System.out.println("hooks init took " + (SystemTime.getCurrentTime() - startTime) + "ms");
 			//startTime = SystemTime.getCurrentTime();
 
-			initMDI();
+			BaseMDI mdi = initMDI();
 			System.out.println("skin widgets (1/2) init took "
 					+ (SystemTime.getCurrentTime() - startTime) + "ms");
 			startTime = SystemTime.getCurrentTime();
-			initWidgets2();
+			initWidgets2( mdi );
 
 			increaseProgress(uiInitializer, "v3.splash.initSkin");
 			System.out.println("skin widgets (2/2) init took "
@@ -1631,16 +1631,18 @@ public class MainWindowImpl
 				uiSkinnableSWTListener);
 	}
 
-	private void initMDI() {
+	private BaseMDI initMDI() {
 		SWTSkinObject skinObject = skin.getSkinObject(SkinConstants.VIEWID_MDI);
 		if (null != skinObject) {
 			BaseMDI mdi = Utils.isAZ2UI() ? new TabbedMDI() : new SideBar();
 			mdi.buildMDI(skinObject);
 			MainMDISetup.setupSideBar(mdi);
+			return( mdi );
 		}
+		return( null );
 	}
 
-	private void initWidgets2() {
+	private void initWidgets2(BaseMDI mdi ) {
 		SWTSkinObject skinObject = skin.getSkinObject("statusbar");
 		if (skinObject != null) {
 			final Composite cArea = (Composite) skinObject.getControl();
@@ -1671,9 +1673,9 @@ public class MainWindowImpl
 
 		skinObject = skin.getSkinObject("quick-links");
 		
-		if ( skinObject != null ){
+		if ( skinObject != null && mdi != null ){
 			
-			QuickLinksView.init( skinObject );
+			QuickLinksView.init( mdi, skinObject );
 		}
 		
 		skinObject = skin.getSkinObject(SkinConstants.VIEWID_PLUGINBAR);
@@ -1685,7 +1687,7 @@ public class MainWindowImpl
 					MainMenuV3.createPluginBarMenuItem(skin, topbarMenu,
 						"v3.MainWindow.menu.view." + SkinConstants.VIEWID_PLUGINBAR,
 						SkinConstants.VIEWID_PLUGINBAR + ".visible",
-						SkinConstants.VIEWID_PLUGINBAR, true, -1);
+						SkinConstants.VIEWID_PLUGINBAR );
 
 				if ( Utils.isAZ2UI()){
 
@@ -2082,6 +2084,13 @@ public class MainWindowImpl
 				}
 				break;
 			}
+			case WINDOW_ELEMENT_QUICK_LINKS: {
+				SWTSkinObject skinObject = skin.getSkinObject(SkinConstants.VIEWID_QUICK_LINKS);
+				if (skinObject != null) {
+					return skinObject.isVisible();
+				}
+				break;
+			}
 			case WINDOW_ELEMENT_STATUSBAR:
 				//TODO:
 				break;
@@ -2098,12 +2107,18 @@ public class MainWindowImpl
 		switch (windowElement) {
 			case WINDOW_ELEMENT_TOOLBAR:
 				SWTSkinUtils.setVisibility(skin, "IconBar.enabled",
-						SkinConstants.VIEWID_TOOLBAR, value, true, true);
+						SkinConstants.VIEWID_TOOLBAR, value, true);
 				break;
 			case WINDOW_ELEMENT_TOPBAR:
 
 				SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_PLUGINBAR
-						+ ".visible", SkinConstants.VIEWID_PLUGINBAR, value, true, true);
+						+ ".visible", SkinConstants.VIEWID_PLUGINBAR, value, true);
+
+				break;
+			case WINDOW_ELEMENT_QUICK_LINKS:
+
+				SWTSkinUtils.setVisibilityRelaxed(skin, SkinConstants.VIEWID_QUICK_LINKS
+						+ ".visible", SkinConstants.VIEWID_QUICK_LINKS, value, true);
 
 				break;
 			case WINDOW_ELEMENT_STATUSBAR:
@@ -2128,6 +2143,8 @@ public class MainWindowImpl
 					return skinObject.getControl().getBounds();
 				}
 
+				break;
+			case WINDOW_ELEMENT_QUICK_LINKS:
 				break;
 			case WINDOW_ELEMENT_STATUSBAR:
 

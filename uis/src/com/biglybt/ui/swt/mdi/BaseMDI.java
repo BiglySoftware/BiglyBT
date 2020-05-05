@@ -382,6 +382,40 @@ public abstract class BaseMDI
 		
 	}
 
+	private boolean
+	canCreateEntryByCreationListener(String id ){
+	
+		MdiEntryCreationListener mdiEntryCreationListener = null;
+		
+		for (String key : mapIdToCreationListener.keySet()) {
+			if (Pattern.matches(key, id)) {
+				mdiEntryCreationListener = mapIdToCreationListener.get(key);
+				break;
+			}
+		}
+		
+		if (mdiEntryCreationListener != null) {
+			
+			return( true );
+		}
+
+		MdiEntryCreationListener2 mdiEntryCreationListener2 = null;
+		
+		for (String key : mapIdToCreationListener2.keySet()) {
+			if (Pattern.matches(key, id)) {
+				mdiEntryCreationListener2 = mapIdToCreationListener2.get(key);
+				break;
+			}
+		}
+		
+		if (mdiEntryCreationListener2 != null) {
+			
+			return( true );
+		}
+
+		return( false );
+	}
+	
 	protected MdiEntry
 	createEntryByCreationListener(String id, Map<?, ?> autoOpenInfo)
 	{
@@ -459,12 +493,37 @@ public abstract class BaseMDI
 	public boolean showEntryByID(String id) {
 		return loadEntryByID(id, true, false, null);
 	}
+	
+	public boolean
+	canShowEntryByID( String id ){
+	
+		if ( id == null ){
+			
+			return( false );
+		}
+						
+		if ( canCreateEntryByCreationListener( id )){
+			
+			return( true );
+		}
+		
+		ViewManagerSWT vi = ViewManagerSWT.getInstance();
+		
+		UISWTViewBuilderCore builder = vi.getBuilder(viewID, id);
+		
+		if (builder == null) {
+		
+			builder = vi.getBuilder(getDataSourceType(), id);
+		}	
+		
+		return( builder != null );
+	}
 
 	@Override
 	public boolean showEntryByID(String id, Object datasource) {
 		return loadEntryByID(id, true, false, datasource);
 	}
-
+	
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
 		final UIManager ui_manager = PluginInitializer.getDefaultInterface().getUIManager();
@@ -609,7 +668,6 @@ public abstract class BaseMDI
 
 		return false;
 	}
-
 
 	protected abstract void setEntryLoadedOnce(String id);
 

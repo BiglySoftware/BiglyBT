@@ -1219,79 +1219,7 @@ public class MainMDISetup
 					}
 				});
 
-		mdi.registerEntry("Tag\\..*", new MdiEntryCreationListener2() {
-
-			@Override
-			public MdiEntry createMDiEntry(MultipleDocumentInterface mdi, String id,
-			                               Object datasource, Map params) {
-
-				if (datasource instanceof Tag) {
-					Tag tag = (Tag) datasource;
-
-					return sb_transfers.setupTag(tag);
-
-				}else{
-
-					try{
-							// id format is "Tag." + tag.getTagType().getTagType() + "." + tag.getTagID();
-
-						TagManager tm = TagManagerFactory.getTagManager();
-
-						String[] bits = id.split( "\\." );
-
-						int	tag_type = Integer.parseInt( bits[1] );
-						int	tag_id	 = Integer.parseInt( bits[2] );
-
-						Tag tag = tm.getTagType( tag_type ).getTag( tag_id );
-
-						if ( tag != null ){
-
-							return sb_transfers.setupTag(tag);
-						}
-					}catch( Throwable e ){
-
-					}
-				}
-
-				return null;
-			}
-		});
-
-		mdi.registerEntry("Cat\\..*", new MdiEntryCreationListener2() {
-
-			@Override
-			public MdiEntry createMDiEntry(MultipleDocumentInterface mdi, String id,
-			                               Object datasource, Map params) {
-
-				if (datasource instanceof Category) {
-
-					return sb_transfers.setupCategory((Category)datasource);
-
-				}else{
-
-					try{
-							// id format is "Cat." + base32 encoded name.getBytes();
-
-						TagManager tm = TagManagerFactory.getTagManager();
-
-						String[] bits = id.split( "\\." );
-
-						String cat_name = new String( Base32.decode( bits[1] ));
-						
-						Category cat = CategoryManager.getCategory( cat_name );
-
-						if ( cat != null ){
-
-							return sb_transfers.setupCategory(cat);
-						}
-					}catch( Throwable e ){
-
-					}
-				}
-
-				return null;
-			}
-		});
+		setupCatsTags( mdi );
 		
 		sb_transfers = new SB_Transfers(mdi, false);
 		
@@ -1304,6 +1232,8 @@ public class MainMDISetup
 		
 		mdi.setPreferredOrder(preferredOrder);
 
+		setupCatsTags( mdi );
+		
 		sb_dashboard = new SB_Dashboard(mdi);
 		
 		for (int i = 0; i < preferredOrder.length; i++) {
@@ -1389,6 +1319,84 @@ public class MainMDISetup
 		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES, false);
 	}
 
+	private static void
+	setupCatsTags(MultipleDocumentInterfaceSWT mdi )
+	{
+		mdi.registerEntry("Tag\\..*", new MdiEntryCreationListener2() {
+
+			@Override
+			public MdiEntry createMDiEntry(MultipleDocumentInterface mdi, String id,
+			                               Object datasource, Map params) {
+
+				if (datasource instanceof Tag) {
+					Tag tag = (Tag) datasource;
+
+					return sb_transfers.setupTag(tag);
+
+				}else{
+
+					try{
+							// id format is "Tag." + tag.getTagType().getTagType() + "." + tag.getTagID();
+
+						TagManager tm = TagManagerFactory.getTagManager();
+
+						String[] bits = id.split( "\\." );
+
+						int	tag_type = Integer.parseInt( bits[1] );
+						int	tag_id	 = Integer.parseInt( bits[2] );
+
+						Tag tag = tm.getTagType( tag_type ).getTag( tag_id );
+
+						if ( tag != null ){
+
+							return sb_transfers.setupTag(tag);
+						}
+					}catch( Throwable e ){
+
+					}
+				}
+
+				return null;
+			}
+		});
+
+		mdi.registerEntry("Cat\\..*", new MdiEntryCreationListener2() {
+
+			@Override
+			public MdiEntry createMDiEntry(MultipleDocumentInterface mdi, String id,
+			                               Object datasource, Map params) {
+
+				if (datasource instanceof Category) {
+
+					return sb_transfers.setupCategory((Category)datasource);
+
+				}else{
+
+					try{
+							// id format is "Cat." + base32 encoded name.getBytes();
+
+						TagManager tm = TagManagerFactory.getTagManager();
+
+						String[] bits = id.split( "\\." );
+
+						String cat_name = new String( Base32.decode( bits[1] ));
+						
+						Category cat = CategoryManager.getCategory( cat_name );
+
+						if ( cat != null ){
+
+							return sb_transfers.setupCategory(cat);
+						}
+					}catch( Throwable e ){
+
+					}
+				}
+
+				return null;
+			}
+		});
+	}
+	
 	public static SB_Transfers getSb_transfers() {
 		return sb_transfers;
 	}
