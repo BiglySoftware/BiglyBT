@@ -50,7 +50,6 @@ import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.shells.main.MainWindow;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.views.stats.StatsView;
-import com.biglybt.util.MapUtils;
 
 public class 
 QuickLinksView
@@ -140,11 +139,43 @@ QuickLinksView
 							
 						}else{
 						
-							skinObject.relayout();
-						
-							Utils.relayoutUp( toolBar );
+							relayout();
 						}
 					}
+				});
+				
+				new MenuItem( menu, SWT.SEPARATOR );
+				
+				MenuItem itemReset = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+				
+				Messages.setLanguageText(itemReset, "Button.reset");
+								
+				itemReset.addListener( SWT.Selection, (e)->{
+					
+					synchronized( qlItems ){
+
+						qlItems.clear();
+						
+						COConfigurationManager.removeParameter( CONFIG_KEY );
+						
+						for ( ToolItem ti: toolBar.getItems()){
+							
+							ti.dispose();
+						}
+						
+						addDefaults( mdi );
+					}
+					
+					relayout();
+				});
+				
+				MenuItem itemHide = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+				
+				Messages.setLanguageText(itemHide, "Button.bar.hide");
+								
+				itemHide.addListener( SWT.Selection, (e)->{
+					
+					setVisible( false );
 				});
 			}
 		});
@@ -155,11 +186,7 @@ QuickLinksView
 			
 			if ( config == null ){
 				
-				addDefaultItem( mdi, toolBar, MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY, "image.sidebar.library", "library.name" );
-				
-				addDefaultItem( mdi, toolBar, StatsView.VIEW_ID,"image.sidebar.stats", "Stats.title.full" );
-		
-				addDefaultItem( mdi, toolBar, MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, "image.sidebar.config2", "ConfigView.title.full" );
+				addDefaults( mdi );
 				
 			}else{
 				
@@ -186,6 +213,17 @@ QuickLinksView
 			
 			setVisible( false );
 		}
+	}
+	
+	private static void
+	addDefaults(
+		BaseMDI		mdi )
+	{
+		addDefaultItem( mdi, toolBar, MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY, "image.sidebar.library", "library.name" );
+		
+		addDefaultItem( mdi, toolBar, StatsView.VIEW_ID,"image.sidebar.stats", "Stats.title.full" );
+
+		addDefaultItem( mdi, toolBar, MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, "image.sidebar.config2", "ConfigView.title.full" );
 	}
 	
 	public static void
@@ -267,9 +305,7 @@ QuickLinksView
 										
 				setVisible( true );
 								
-				skinObject.relayout();
-				
-				Utils.relayoutUp( toolBar );
+				relayout();
 			}
 		});
 	}
@@ -365,6 +401,14 @@ QuickLinksView
 		});
 		
 		item.setData( "qli", qli );
+	}
+	
+	private static void
+	relayout()
+	{
+		skinObject.relayout();
+		
+		Utils.relayoutUp( toolBar );
 	}
 	
 	private static void
