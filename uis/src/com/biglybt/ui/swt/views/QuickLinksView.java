@@ -89,18 +89,14 @@ QuickLinksView
 		
 		toolBar.setLayoutData( gridData );
 
-		toolBar.addListener( SWT.MenuDetect, ev->{
+		toolBar.addListener( SWT.MenuDetect, ev->{			
+				
+			Menu	menu = new Menu( toolBar );
 			
-			if ( toolBar.getItemCount() == 0 ){
+			toolBar.setMenu( menu );
+
+			if ( toolBar.getItemCount() > 0 ){
 				
-				toolBar.setMenu( null );
-				
-			}else{
-				
-				Menu	menu = new Menu( toolBar );
-				
-				toolBar.setMenu( menu );
-	
 				MenuItem itemRemove = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
 				
 				Messages.setLanguageText(itemRemove, "Button.remove");
@@ -145,39 +141,39 @@ QuickLinksView
 				});
 				
 				new MenuItem( menu, SWT.SEPARATOR );
-				
-				MenuItem itemReset = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
-				
-				Messages.setLanguageText(itemReset, "Button.reset");
-								
-				itemReset.addListener( SWT.Selection, (e)->{
-					
-					synchronized( qlItems ){
-
-						qlItems.clear();
-						
-						COConfigurationManager.removeParameter( CONFIG_KEY );
-						
-						for ( ToolItem ti: toolBar.getItems()){
+			}
+			
+			MenuItem itemReset = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText(itemReset, "Button.reset");
 							
-							ti.dispose();
-						}
+			itemReset.addListener( SWT.Selection, (e)->{
+				
+				synchronized( qlItems ){
+
+					qlItems.clear();
+					
+					COConfigurationManager.removeParameter( CONFIG_KEY );
+					
+					for ( ToolItem ti: toolBar.getItems()){
 						
-						addDefaults( mdi );
+						ti.dispose();
 					}
 					
-					relayout();
-				});
+					addDefaults( mdi );
+				}
 				
-				MenuItem itemHide = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+				relayout();
+			});
+			
+			MenuItem itemHide = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText(itemHide, "Button.bar.hide");
+							
+			itemHide.addListener( SWT.Selection, (e)->{
 				
-				Messages.setLanguageText(itemHide, "Button.bar.hide");
-								
-				itemHide.addListener( SWT.Selection, (e)->{
-					
-					setVisible( false );
-				});
-			}
+				setVisible( false );
+			});
 		});
 		
 		synchronized( qlItems ){
