@@ -116,6 +116,8 @@ BuddyPluginViewBetaChat
 	private static final int	MAX_MSG_CHUNK_LENGTH	= 400;	// chunk size
 	private static final int	MAX_MSG_OVERALL_LENGTH	= 2048;	// max user can enter in input field
 	
+	private static final String	TI_MSG_COUNT = "bpvbc:mc";
+	
 
 	private static final Set<BuddyPluginViewBetaChat>	active_windows = new HashSet<>();
 
@@ -4362,9 +4364,11 @@ BuddyPluginViewBetaChat
 			
 		if ( participant != null ){
 			
+			int msg_count = participant.getMessageCount( true );
+			
 			String[] values = {
 				participant.getName( ftux_ok ),
-				String.valueOf(participant.getMessageCount( true )),
+				String.valueOf(msg_count),
 				getFriendStatus( participant )
 			};
 			
@@ -4375,6 +4379,8 @@ BuddyPluginViewBetaChat
 					item.setText( bt_col_offset + i, values[i] );
 				}
 			}
+			
+			item.setData( TI_MSG_COUNT, msg_count );
 			
 			List<String> profile = participant.getProfileData();
 			
@@ -4550,12 +4556,23 @@ BuddyPluginViewBetaChat
 	private void
 	updateTableHeader()
 	{
-		if ( buddy_table == null ) {
+		if ( buddy_table == null || buddy_table.isDisposed()){
 			
 			return;
 		}
 		
-		int	active 	= buddy_table.getItemCount();
+		int	active 	= 0;
+		
+		for ( TableItem ti: buddy_table.getItems()){
+			
+			Integer mc = (Integer)ti.getData( TI_MSG_COUNT );
+			
+			if ( mc != null && mc > 0 ){
+				
+				active++;
+			}
+		}
+		
 		int online	= chat.getEstimatedNodes();
 
 		String msg =
