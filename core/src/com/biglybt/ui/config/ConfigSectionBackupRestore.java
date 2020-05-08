@@ -131,27 +131,6 @@ public class ConfigSectionBackupRestore
 				Integer.MAX_VALUE);
 		add(paramBackupHours, listBackupParams);
 
-		paramBackupDays.addListener(
-				param -> paramBackupHours.setEnabled(paramEnableBackup.getValue()
-						&& ((IntParameter) param).getValue() == 0));
-
-		// XXX Will this trigger on open? Maybe for disabled, but not for enabled?
-
-		// re-disable hours param after enabled by paramEnableBackup.addEnabledOnSelection trigger
-//		paramBackupHours.addImplListener(new ParameterImplListener() {
-//			@Override
-//			public void enabledChanged(ParameterImpl parameter) {
-//				parameter.setEnabled(
-//						paramEnableBackup.getValue() && paramBackupDays.getValue() == 0);
-//			}
-//
-//			@Override
-//			public void labelChanged(ParameterImpl parameter, String text,
-//					boolean bIsKey) {
-//
-//			}
-//		});
-
 		IntParameterImpl paramAutoRetain = new IntParameterImpl(
 				ICFG_BACKUP_AUTO_RETAIN, ICFG_BACKUP_AUTO_RETAIN, 1,
 				Integer.MAX_VALUE);
@@ -174,9 +153,25 @@ public class ConfigSectionBackupRestore
 			}
 		});
 
-		paramEnableBackup.addEnabledOnSelection(paramPath, paramBackupDays,
-				paramBackupHours, paramAutoRetain, paramNotify, paramBackupNow);
+		ParameterListener enableListener = (n)->{
+			
+			boolean enable = paramEnableBackup.getValue();
+			
+			boolean hoursEnable = enable && paramBackupDays.getValue()==0;
 
+			paramPath.setEnabled( enable );
+			paramBackupDays.setEnabled( enable );
+			paramBackupHours.setEnabled( hoursEnable );
+			paramAutoRetain.setEnabled( enable );
+			paramNotify.setEnabled( enable );
+			paramBackupNow.setEnabled( enable );
+		};
+		
+		paramEnableBackup.addListener(enableListener);
+		paramBackupDays.addListener(enableListener);
+		
+		enableListener.parameterChanged(null);
+		
 		add(new ParameterGroupImpl("br.backup", listBackupParams));
 
 		// restore
