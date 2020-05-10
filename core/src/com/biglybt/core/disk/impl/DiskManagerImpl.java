@@ -3744,22 +3744,20 @@ DiskManagerImpl
   {
       DownloadManagerState  state = download_manager.getDownloadState();
 
-      Map   new_details = new HashMap();
+      Map   details = new HashMap();
 
       List  downloaded = new ArrayList();
 
-      new_details.put( "downloaded", downloaded );
+      details.put( "downloaded", downloaded );
 
       for (int i=0;i<files.length;i++){
 
           downloaded.add( new Long( files[i].getDownloaded()));
       }
 
-      Map old_details = state.getMapAttribute( DownloadManagerState.AT_FILE_DOWNLOADED );
+      state.setMapAttribute( DownloadManagerState.AT_FILE_DOWNLOADED, details );
 
-      state.setMapAttribute( DownloadManagerState.AT_FILE_DOWNLOADED, new_details );
-
-      if ( persist && !BEncoder.mapsAreIdentical( old_details, new_details )){
+      if ( persist ){
 
     	  state.save( interim );
       }
