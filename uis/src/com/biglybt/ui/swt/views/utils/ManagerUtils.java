@@ -3634,6 +3634,8 @@ download_loop:
 	
 																logLine( viewer, action_indent+1, "Link successful" );
 	
+																dm_files.add( candidate.getAbsolutePath());
+																
 																actions_established.put( file, candidate );
 	
 																action_count++;
