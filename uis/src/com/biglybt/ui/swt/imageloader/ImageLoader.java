@@ -1504,10 +1504,12 @@ public class ImageLoader
 						numRemoved++;
 
 						Image[] images = info.getImages();
-						for (int j = 0; j < images.length; j++) {
-							Image image = images[j];
-							if (isRealImage(image)) {
-								image.dispose();
+						if ( images != null ){
+							for (int j = 0; j < images.length; j++) {
+								Image image = images[j];
+								if (isRealImage(image)) {
+									image.dispose();
+								}
 							}
 						}
 					}
