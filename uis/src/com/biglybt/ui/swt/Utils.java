@@ -41,6 +41,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
@@ -95,6 +96,22 @@ import com.biglybt.pif.utils.PooledByteBuffer;
  */
 public class Utils
 {
+	static final boolean hasDPIUtils;
+	
+	static {
+			// osx 10.7 only runs on older swt and that doesn't have DPIUtil
+		
+		boolean ok = false;
+		try {
+			DPIUtil.getDeviceZoom();
+			
+			ok = true;
+		}catch( Throwable e ) {
+			
+		}
+		hasDPIUtils = ok;
+	}
+	
 	public static final String GOOD_STRING = "(/|,jI~`gy";
 
 	public static final boolean isGTK = SWT.getPlatform().equals("gtk");
@@ -259,6 +276,16 @@ public class Utils
 	getSWTVersionAndRevision()
 	{
 		return( SWT_REVISION==0?String.valueOf( SWT_VERSION):SWT_VERSION + "r" + SWT_REVISION );	
+	}
+	
+	public static int
+	getDeviceZoom()
+	{
+		if ( hasDPIUtils ) {
+			return( DPIUtil.getDeviceZoom());
+		}
+		
+		return( 100 );
 	}
 	
 	public static void

@@ -584,7 +584,11 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 				if (oldVisible != visible) {
 					((GridData) layoutData).exclude = !visible;
 					con.setLayoutData(layoutData);
-					con.requestLayout();
+					try {
+						con.requestLayout();
+					}catch( Throwable e ) {
+						// old swt no support
+					}
 				}
 			}
 			con.setVisible(visible);

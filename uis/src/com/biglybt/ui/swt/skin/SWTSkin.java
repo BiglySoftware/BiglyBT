@@ -734,7 +734,11 @@ public class SWTSkin
 
   		}
 		} else {
-			skinComposite.requestLayout();
+			try {
+				skinComposite.requestLayout();
+			}catch( Throwable e ) {
+				// old swt no support
+			}
 		}
 
 		for (SWTSkinLayoutCompleteListener l : listenersLayoutComplete) {

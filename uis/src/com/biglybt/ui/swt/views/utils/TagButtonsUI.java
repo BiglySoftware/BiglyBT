@@ -285,7 +285,11 @@ public class TagButtonsUI
 			}
 		}
 		cMainComposite.setLayoutDeferred(false);
-		cMainComposite.requestLayout();
+		try {
+			cMainComposite.requestLayout();
+		}catch( Throwable e ) {
+			// old swt no support
+		}
 		Composite c = cMainComposite;
 		while (c != null) {
 			if (c instanceof ScrolledComposite) {

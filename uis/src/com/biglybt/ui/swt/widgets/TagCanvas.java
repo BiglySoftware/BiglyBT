@@ -371,7 +371,11 @@ public class TagCanvas
 		}
 		this.image = newImage;
 		this.imageID = key;
-		requestLayout();
+		try {
+			requestLayout();
+		}catch( Throwable e ) {
+			// old swt no support
+		}
 		redraw();
 	}
 
@@ -536,7 +540,11 @@ public class TagCanvas
 		String tagName = tag.getTagName(true);
 		if (!tagName.equals(lastUsedName)) {
 			lastUsedName = null;
-			requestLayout();
+			try {
+				requestLayout();
+			}catch( Throwable e ) {
+				// old swt no support
+			}
 			return true;
 		}
 		return false;
@@ -754,7 +762,11 @@ public class TagCanvas
 			curveWidth = DEF_CURVE_WIDTH;
 			showImage = true;
 		}
-		requestLayout();
+		try {	
+			requestLayout();
+		}catch( Throwable e ) {
+			// old swt no support
+		}
 	}
 
 	public boolean isCompact() {

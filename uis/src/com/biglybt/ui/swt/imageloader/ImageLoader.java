@@ -27,7 +27,6 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.util.*;
@@ -510,7 +509,7 @@ public class ImageLoader
 		if (img == null) {
 			try {
 				if (cl != null && res != null ) {
-					int deviceZoom = DPIUtil.getDeviceZoom();
+					int deviceZoom = Utils.getDeviceZoom();
 					InputStream is = cl.getResourceAsStream(res);
 					InputStream is2 = null;
 					if (deviceZoom > 100) {

@@ -27,7 +27,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
@@ -87,7 +86,7 @@ public class TableViewPainted
 	private static final boolean DEBUG_WITH_SHELL = false;
 
 	public static final boolean DIRECT_DRAW = (Constants.isOSX
-			|| Constants.isUnix) && DPIUtil.getDeviceZoom() != 100;
+			|| Constants.isUnix) && Utils.getDeviceZoom() != 100;
 
 	private static final boolean DEBUG_REDRAW_CLIP = false;
 

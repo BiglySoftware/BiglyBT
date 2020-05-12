@@ -275,7 +275,11 @@ public class ColorSwtParameter
 			// Note on Windows: No amount of invalidation will fix the bug
 			// of having a gap before the text, after setting the image from non-null
 			// to null
-			colorChooser.requestLayout();
+			try {
+				colorChooser.requestLayout();
+			}catch( Throwable e ) {
+				// old swt no support
+			}		
 		}
 	}
 
