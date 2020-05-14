@@ -1421,10 +1421,14 @@ public abstract class BaseMdiEntry
 						cl = BaseMdiEntry.class.getClassLoader();
 					}
 					
-					Class<? extends UISWTViewCoreEventListener> cla = 
-							(Class<? extends UISWTViewCoreEventListener>) Class.forName( class_name, true, cl );
-
-
+					Class<? extends UISWTViewCoreEventListener> cla = null;
+					
+					try{
+						cla = (Class<? extends UISWTViewCoreEventListener>) Class.forName( class_name, true, cl );
+						
+					}catch(Throwable e ) {
+					}
+	
 					// legacy had p_type and p_values, but we use datasource, so we
 					// need to parse and convert
 					List	p_types = (List)el_map.get( "p_types" );
@@ -1499,8 +1503,13 @@ public abstract class BaseMdiEntry
 					if (plugin_id != null && pi == null) {
 						try_install_plugin_id = plugin_id;
 					} else {
-						builder = new UISWTViewBuilderCore(id, pi,
-								cla).setInitialDatasource(data_source);
+						
+						if (cla == null ) {
+							
+							throw(new Exception( "Failed to load class '" +class_name + "'"));
+						}
+						
+						builder = new UISWTViewBuilderCore( id, pi, cla ).setInitialDatasource(data_source);
 					}
 
 				}else{
