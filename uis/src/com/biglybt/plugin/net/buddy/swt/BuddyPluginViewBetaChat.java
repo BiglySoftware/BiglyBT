@@ -5196,7 +5196,7 @@ BuddyPluginViewBetaChat
 	participantChanged(
 		final ChatParticipant		participant )
 	{
-		if ( !buddy_table.isDisposed()){
+		if ( buddy_table != null && !buddy_table.isDisposed()){
 
 			Utils.execSWTThread(
 				new Runnable()
