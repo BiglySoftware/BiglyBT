@@ -482,8 +482,22 @@ public class MyTorrentsView
     	
     }else if ( filterParent != null ){
 			
-		Object x = filterParent.getData( "ViewUtils:ViewTitleExtraInfo" );
-
+    	Composite comp = filterParent;
+    	
+    	Object x = null;
+    	
+    	while( comp != null ){
+    		
+    		x = comp.getData( "ViewUtils:ViewTitleExtraInfo" );
+    		
+    		if ( x != null ){
+    			
+    			break;
+    		}
+    		
+    		comp = comp.getParent();
+    	}
+    	
 		if ( x instanceof ViewUtils.ViewTitleExtraInfo ){
 			
 			vtxi = (ViewUtils.ViewTitleExtraInfo)x;
