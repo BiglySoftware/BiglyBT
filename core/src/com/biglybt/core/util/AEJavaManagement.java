@@ -33,24 +33,38 @@ AEJavaManagement
 	public static void
 	initialise()
 	{
-		try{
-			thread_stuff = (ThreadStuff)Class.forName("com.biglybt.core.util.jman.AEThreadMonitor").newInstance();
-
-		}catch( ClassNotFoundException e ){
-
-		}catch( Throwable e ){
-
-			e.printStackTrace();
+		if ( System.getProperty( SystemProperties.SYSPROP_THREAD_MON_ENABLE, "1" ).equals( "0" )){
+			
+			Debug.outNoStack( "Thread monitoring disabled" );
+			
+		}else{
+			
+			try{
+				thread_stuff = (ThreadStuff)Class.forName("com.biglybt.core.util.jman.AEThreadMonitor").newInstance();
+	
+			}catch( ClassNotFoundException e ){
+	
+			}catch( Throwable e ){
+	
+				e.printStackTrace();
+			}
 		}
+		
+		if ( System.getProperty( SystemProperties.SYSPROP_MEMORY_MON_ENABLE, "1" ).equals( "0" )){
 
-		try{
-			memory_stuff = (MemoryStuff)Class.forName("com.biglybt.core.util.jman.AEMemoryMonitor").newInstance();
+			Debug.outNoStack( "Memory monitoring disabled" );
 
-		}catch( ClassNotFoundException e ){
-
-		}catch( Throwable e ){
-
-			e.printStackTrace();
+		}else{
+			
+			try{
+				memory_stuff = (MemoryStuff)Class.forName("com.biglybt.core.util.jman.AEMemoryMonitor").newInstance();
+	
+			}catch( ClassNotFoundException e ){
+	
+			}catch( Throwable e ){
+	
+				e.printStackTrace();
+			}
 		}
 	}
 
