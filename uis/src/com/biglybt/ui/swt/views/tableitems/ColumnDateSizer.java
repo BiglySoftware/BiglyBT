@@ -66,7 +66,9 @@ public abstract class ColumnDateSizer
 	private ViewUtils.CustomDateFormat cdf;
 
 	private boolean sortInvalidToBottom	= false;
-			
+		
+	private boolean recalculatingWidths;
+	
 	public
 	ColumnDateSizer(
 		String 	sName,
@@ -274,56 +276,70 @@ public abstract class ColumnDateSizer
 	}
 
 	private void recalcWidth(Date date, String prefix) {
-		String suffix = showTime && !multiline ? " hh:mm a" : "";
-
-		int width = getWidth();
-
-		if (maxWidthDate == null) {
-			maxWidthUsed = new int[TimeFormatter.DATEFORMATS_DESC.length];
-			maxWidthDate = new Date[TimeFormatter.DATEFORMATS_DESC.length];
-		}
-
-		int idxFormat = TimeFormatter.DATEFORMATS_DESC.length - 1;
-
-		GC gc = new GC(Display.getDefault());
-		gc.setFont(FontUtils.getAnyFontBold(gc));
-
-		try {
-			Point minSize = new Point(99999, 0);
-			for (int i = 0; i < TimeFormatter.DATEFORMATS_DESC.length; i++) {
-				if (maxWidthUsed[i] > width - PADDING) {
-					continue;
-				}
-				SimpleDateFormat temp = new SimpleDateFormat(
-						TimeFormatter.DATEFORMATS_DESC[i] + suffix);
-				String date_str = temp.format(date);
-				if ( prefix != null ){
-					date_str = prefix + date_str;
-				}
-				Point newSize = gc.stringExtent(date_str);
-				if (newSize.x < width - PADDING) {
-					idxFormat = i;
-					if (maxWidthUsed[i] < newSize.x) {
-						maxWidthUsed[i] = newSize.x;
-						maxWidthDate[i] = date;
-					}
-					break;
-				}
-				if (newSize.x < minSize.x) {
-					minSize = newSize;
-					idxFormat = i;
-				}
+		try{
+			if ( recalculatingWidths ){
+				
+					// seen recursion here with width and format flipping, guard against it
+				
+				return;
 			}
-		} catch (Throwable t) {
-			return;
-		} finally {
-			gc.dispose();
-		}
-
-		if (curFormat != idxFormat) {
-			//System.out.println(getTableID() + ":" + getName() + "] switch fmt to " + idxFormat + ", max=" + maxWidthUsed[idxFormat]);
-			curFormat = idxFormat;
-			invalidateCells();
+			
+			recalculatingWidths = true;
+			
+			String suffix = showTime && !multiline ? " hh:mm a" : "";
+	
+			int width = getWidth();
+	
+			if (maxWidthDate == null) {
+				maxWidthUsed = new int[TimeFormatter.DATEFORMATS_DESC.length];
+				maxWidthDate = new Date[TimeFormatter.DATEFORMATS_DESC.length];
+			}
+	
+			int idxFormat = TimeFormatter.DATEFORMATS_DESC.length - 1;
+	
+			GC gc = new GC(Display.getDefault());
+			gc.setFont(FontUtils.getAnyFontBold(gc));
+	
+			try {
+				Point minSize = new Point(99999, 0);
+				for (int i = 0; i < TimeFormatter.DATEFORMATS_DESC.length; i++) {
+					if (maxWidthUsed[i] > width - PADDING) {
+						continue;
+					}
+					SimpleDateFormat temp = new SimpleDateFormat(
+							TimeFormatter.DATEFORMATS_DESC[i] + suffix);
+					String date_str = temp.format(date);
+					if ( prefix != null ){
+						date_str = prefix + date_str;
+					}
+					Point newSize = gc.stringExtent(date_str);
+					if (newSize.x < width - PADDING) {
+						idxFormat = i;
+						if (maxWidthUsed[i] < newSize.x) {
+							maxWidthUsed[i] = newSize.x;
+							maxWidthDate[i] = date;
+						}
+						break;
+					}
+					if (newSize.x < minSize.x) {
+						minSize = newSize;
+						idxFormat = i;
+					}
+				}
+			} catch (Throwable t) {
+				return;
+			} finally {
+				gc.dispose();
+			}
+	
+			if (curFormat != idxFormat) {
+				//System.out.println(getTableID() + ":" + getName() + "] switch fmt to " + idxFormat + ", max=" + maxWidthUsed[idxFormat]);
+				curFormat = idxFormat;
+				invalidateCells();
+			}
+		}finally{
+			
+			recalculatingWidths = false;
 		}
 	}
 
