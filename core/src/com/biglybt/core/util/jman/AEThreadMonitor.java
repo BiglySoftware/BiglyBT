@@ -19,6 +19,7 @@
 
 package com.biglybt.core.util.jman;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
@@ -288,7 +289,13 @@ AEThreadMonitor
 
 		iw.close();
 
-		Debug.out( sw.toString());
+		String dump = sw.toString();
+		
+		Debug.out( dump );
+		
+		File logDir = AEDiagnostics.getLogDir();
+		
+		FileUtil.writeStringAsFile( new File( logDir, "ThreadDump.log" ), dump );
 	}
 
 	private void
