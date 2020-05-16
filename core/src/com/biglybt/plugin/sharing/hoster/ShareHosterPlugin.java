@@ -205,6 +205,11 @@ ShareHosterPlugin
 											
 											Map<String,String>	properties  = resource.getProperties();
 											
+											if ( properties == null ){
+												
+												properties = new HashMap<>();
+											}
+											
 											String tags_str = properties.get( ShareManager.PR_TAGS );
 											
 											Set<Tag> existing = decodeTags( tags_str );

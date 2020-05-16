@@ -64,7 +64,9 @@ TagsItem
 
 		}else{
 
-			String	value = item.getProperties().get( ShareManager.PR_TAGS );
+			Map<String,String> properties = item.getProperties();
+			
+			String	value = properties==null?null:properties.get( ShareManager.PR_TAGS );
 
 			if ( value == null ){
 				

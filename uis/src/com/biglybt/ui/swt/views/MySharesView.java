@@ -304,27 +304,32 @@ implements ShareManagerListener,
 				
 				if ( selected.size() == 1 && selected.get(0) instanceof ShareResource ){
 					
-					String tags = ((ShareResource)selected.get(0)).getProperties().get( ShareManager.PR_TAGS );
+					Map<String,String> properties = ((ShareResource)selected.get(0)).getProperties();
 					
-					if ( tags != null ){
+					if ( properties != null ){
 						
-						String[] bits = tags.split( "," );
+						String tags = properties.get( ShareManager.PR_TAGS );
 						
-						for ( String bit: bits ){
-							bit = bit.trim();
+						if ( tags != null ){
 							
-							if (!bit.isEmpty()){
-								try{
-									long uid = Long.parseLong( bit );
-									
-									Tag tag = tagManager.lookupTagByUID( uid );
-									
-									if ( tag != null ){
-										selected_tags.add( tag );
+							String[] bits = tags.split( "," );
+							
+							for ( String bit: bits ){
+								bit = bit.trim();
+								
+								if (!bit.isEmpty()){
+									try{
+										long uid = Long.parseLong( bit );
+										
+										Tag tag = tagManager.lookupTagByUID( uid );
+										
+										if ( tag != null ){
+											selected_tags.add( tag );
+										}
+										
+									}catch( Throwable e ){
+										Debug.out(e);
 									}
-									
-								}catch( Throwable e ){
-									Debug.out(e);
 								}
 							}
 						}
@@ -355,7 +360,7 @@ implements ShareManagerListener,
 							      	
 							      	Map<String,String> props = sr.getProperties();
 							      	
-							      	props = new HashMap<>( props );
+							      	props = props==null?new HashMap<>():new HashMap<>( props );
 							      			
 							      	props.put( ShareManager.PR_TAGS, f );
 							      	
