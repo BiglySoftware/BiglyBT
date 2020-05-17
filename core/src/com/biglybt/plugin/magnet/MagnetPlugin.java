@@ -140,6 +140,7 @@ MagnetPlugin
 	private StringListParameter	sources_param;
 	private IntParameter	 	sources_extra_param;
 	private BooleanParameter	magnet_recovery;
+	private IntParameter	 	magnet_recovery_concurrency;
 
 	private Map<String,BooleanParameter> net_params = new HashMap<>();
 
@@ -196,6 +197,12 @@ MagnetPlugin
 				
 		magnet_recovery		= config.addBooleanParameter2( "MagnetPlugin.recover.magnets", "MagnetPlugin.recover.magnets", true );
 		
+		magnet_recovery_concurrency	= config.addIntParameter2( "MagnetPlugin.recover.magnets.conc", "MagnetPlugin.recover.magnets.conc", 32 );
+
+		magnet_recovery_concurrency.setIndent( 1, true );
+		
+		magnet_recovery.addEnabledOnSelection( magnet_recovery_concurrency );
+
 		BooleanParameter rename = config.addBooleanParameter2( "MagnetPlugin.rename.using.dn", "MagnetPlugin.rename.using.dn", false );
 		
 		BooleanParameter rename_ext = config.addBooleanParameter2( "MagnetPlugin.rename.using.dn.only.with.ext", "MagnetPlugin.rename.using.dn.only.with.ext", false );	
@@ -900,7 +907,13 @@ MagnetPlugin
 
 		if ( recover && !active.isEmpty()){
 		
-			ThreadPool tp = new ThreadPool( "Magnet Recovery", 16, true );
+			int conc = magnet_recovery_concurrency.getValue();
+			
+			if ( conc < 1 ){
+				conc = 1;
+			}
+			
+			ThreadPool tp = new ThreadPool( "Magnet Recovery", conc, true );
 			
 			for ( Map map: active.values()){
 					
