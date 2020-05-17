@@ -197,7 +197,7 @@ MagnetPlugin
 				
 		magnet_recovery		= config.addBooleanParameter2( "MagnetPlugin.recover.magnets", "MagnetPlugin.recover.magnets", true );
 		
-		magnet_recovery_concurrency	= config.addIntParameter2( "MagnetPlugin.recover.magnets.conc", "MagnetPlugin.recover.magnets.conc", 32 );
+		magnet_recovery_concurrency	= config.addIntParameter2( "MagnetPlugin.recover.magnets.conc", "MagnetPlugin.recover.magnets.conc", 32, 8, 512 );
 
 		magnet_recovery_concurrency.setIndent( 1, true );
 		
