@@ -247,14 +247,15 @@ public class GlobalManagerImpl
 	private Object						download_history_manager;
 
 		// for non-persistent downloads
-	private final Map<HashWrapper,Map>		saved_download_manager_state	= new HashMap<>();
+	private final Map<HashWrapper,Map>			saved_download_manager_state	= new HashMap<>();
+	private final Map<HashWrapper,Boolean> 		paused_list_initial 			= new HashMap<>();
 
 
 	private int							next_seed_piece_recheck_index;
 
 	private final TorrentFolderWatcher torrent_folder_watcher;
 
-	private final ArrayList<Object[]> paused_list = new ArrayList<>();
+	private final Map<HashWrapper,Boolean>	paused_list = new HashMap<>();
 
 	private final AEMonitor paused_list_mon = new AEMonitor( "GlobalManager:PL" );
 
@@ -295,18 +296,19 @@ public class GlobalManagerImpl
 
    private MainlineDHTProvider provider = null;
 
+   private boolean		auto_resume_on_start;
    private TimerEvent	auto_resume_timer;
    private boolean		auto_resume_disabled;
 
    private final TaggableLifecycleHandler	taggable_life_manager;
 
    {
-   	auto_resume_disabled =
-   		COConfigurationManager.getBooleanParameter( "Pause Downloads On Exit" ) &&
-   		!COConfigurationManager.getBooleanParameter( "Resume Downloads On Start" );
-
-   	taggable_life_manager = TagManagerFactory.getTagManager().registerTaggableResolver( this );
-
+	   auto_resume_on_start = COConfigurationManager.getBooleanParameter( "Resume Downloads On Start" );
+	   
+	   auto_resume_disabled =
+	   		COConfigurationManager.getBooleanParameter( "Pause Downloads On Exit" ) && !auto_resume_on_start;
+	
+	   taggable_life_manager = TagManagerFactory.getTagManager().registerTaggableResolver( this );
    }
 
    private DownloadStateTagger	ds_tagger;
@@ -1002,8 +1004,9 @@ public class GlobalManagerImpl
 
 		if (!persistent) {
 
-			Map save_download_state = (Map) saved_download_manager_state.get(new HashWrapper(
-					optionalHash));
+			HashWrapper hw = new HashWrapper( optionalHash );
+			
+			Map save_download_state = (Map) saved_download_manager_state.get( hw );
 
 			if (save_download_state != null) {
 
@@ -1029,6 +1032,32 @@ public class GlobalManagerImpl
 						needsFixup = true;
 					}
 				}
+			}
+			
+			try {
+          		paused_list_mon.enter();
+          		
+          		Boolean force = paused_list_initial.remove( hw );
+          		
+          		if ( force != null ){
+          			
+          			if ( auto_resume_on_start ){
+          			
+          				if ( initialState == DownloadManager.STATE_STOPPED ){
+          					
+          					initialState = DownloadManager.STATE_QUEUED;
+          				}
+          				
+          				save_download_state.put( "forceStart", new Long( force?1:0 ));
+          				
+          			}else{
+          			
+          				paused_list.put( hw, force );
+          			}
+          		}
+          		
+			}finally{
+				paused_list_mon.exit();
 			}
 		}
 
@@ -1162,7 +1191,7 @@ public class GlobalManagerImpl
 			         	try {
 			          		paused_list_mon.enter();
 
-			          		paused_list.add( new Object[]{ manager.getTorrent().getHashWrapper(), false });
+			          		paused_list.put( manager.getTorrent().getHashWrapper(), false );
 
 				    	}finally{
 
@@ -1966,7 +1995,7 @@ public class GlobalManagerImpl
 	    	  try{
 	    		  paused_list_mon.enter();
 
-	    		  paused_list.add( new Object[]{wrapper, Boolean.valueOf(forced)});
+	    		  paused_list.put( wrapper, forced );
 
 	    	  }finally{
 
@@ -2001,28 +2030,37 @@ public class GlobalManagerImpl
   stopPausedDownload(
 		DownloadManager dm )
   {
+	  TOTorrent torrent = dm.getTorrent();
+	  
+	  if ( torrent == null ){
+		  
+		  return( false );
+	  }
+	  
 	  boolean state_changed = false;
 	  
 	  try {
 		  paused_list_mon.enter();
 
-		  for( int i=0; i < paused_list.size(); i++ ) {
-
-			  Object[]	data = (Object[])paused_list.get(i);
-
-			  HashWrapper hash = (HashWrapper)data[0];
-
-			  DownloadManager this_manager = getDownloadManager( hash );
-
+		  HashWrapper hw = torrent.getHashWrapper();
+		 
+		  if ( paused_list.containsKey( hw )){
+			  
+			  DownloadManager this_manager = getDownloadManager( hw );
+	
 			  if ( this_manager == dm ){
-				  
-				  paused_list.remove(i);
-
+					  
+				  paused_list.remove( hw );
+	
 				  state_changed = true;
-				  
+					  
 				  return( true );
 			  }
 		  }
+	  }catch( Throwable e ){
+		  
+		  return( false );
+		  
 	  }finally{
 
 		  paused_list_mon.exit();
@@ -2146,7 +2184,7 @@ public class GlobalManagerImpl
           	try {
           		paused_list_mon.enter();
 
-          		paused_list.add( new Object[]{ manager.getTorrent().getHashWrapper(), Boolean.valueOf(forced)});
+          		paused_list.put( manager.getTorrent().getHashWrapper(), forced );
 
 	    	}finally{
 
@@ -2192,7 +2230,9 @@ public class GlobalManagerImpl
 	isPaused(
 		DownloadManager	manager )
 	{
-		if ( paused_list.size() == 0 ){
+		TOTorrent torrent = manager.getTorrent();
+		
+		if ( torrent == null || paused_list.size() == 0 ){
 
 			return( false );
 		}
@@ -2200,13 +2240,11 @@ public class GlobalManagerImpl
 		try {
 			paused_list_mon.enter();
 
-		    for( int i=0; i < paused_list.size(); i++ ) {
+			HashWrapper hw =  torrent.getHashWrapper();
+						
+		    if ( paused_list.containsKey( hw )){
 
-		      	Object[]	data = (Object[])paused_list.get(i);
-
-		        HashWrapper hash = (HashWrapper)data[0];
-
-		        DownloadManager this_manager = getDownloadManager( hash );
+		        DownloadManager this_manager = getDownloadManager( hw );
 
 		        if ( this_manager == manager ){
 
@@ -2216,6 +2254,10 @@ public class GlobalManagerImpl
 
 		    return( false );
 
+		}catch( Throwable e ){
+			
+			return( false );
+			
 		}finally{
 
 			paused_list_mon.exit();
@@ -2247,28 +2289,37 @@ public class GlobalManagerImpl
 	boolean	resume_ok 	= false;
 	boolean force		= false;
 
-	try {
-		paused_list_mon.enter();
+    TOTorrent torrent = manager.getTorrent();
 
-	    for( int i=0; i < paused_list.size(); i++ ) {
+    if ( torrent == null ){
+    	
+    	return;
+    }
+    
+    try {
+    	paused_list_mon.enter();
 
-	      	Object[]	data = (Object[])paused_list.get(i);
+    	HashWrapper hw = torrent.getHashWrapper();
 
-	        HashWrapper hash = (HashWrapper)data[0];
+    	Boolean forced = paused_list.get( hw );
 
-	        force = ((Boolean)data[1]).booleanValue();
+    	if ( forced != null ){
 
-	        DownloadManager this_manager = getDownloadManager( hash );
+    		force = forced;
 
-	        if ( this_manager == manager ){
+    		DownloadManager this_manager = getDownloadManager( hw );
 
-	        	resume_ok	= true;
+    		if ( this_manager == manager ){
 
-	        	paused_list.remove(i);
+    			resume_ok	= true;
 
-	        	break;
-	        }
-	    }
+    			paused_list.remove( hw );
+    		}
+    	}
+	}catch( Throwable e ){
+		
+		return;
+		
 	}finally{
 
 		paused_list_mon.exit();
@@ -2295,24 +2346,32 @@ public class GlobalManagerImpl
   resumingDownload(
 	 DownloadManager manager)
   {
+	  TOTorrent torrent = manager.getTorrent();
+
+	  if ( torrent == null ){
+		  
+		  return( false );
+	  }
 		try {
 			paused_list_mon.enter();
 
-		    for( int i=0; i < paused_list.size(); i++ ) {
+			HashWrapper	hw = torrent.getHashWrapper();
+			
+			if ( paused_list.containsKey( hw )){
 
-		      	Object[]	data = (Object[])paused_list.get(i);
-
-		        HashWrapper hash = (HashWrapper)data[0];
-
-		        DownloadManager this_manager = getDownloadManager( hash );
+		        DownloadManager this_manager = getDownloadManager( hw );
 
 		        if ( this_manager == manager ){
 
-		        	paused_list.remove(i);
+		        	paused_list.remove( hw );
 
 		        	return( true );
 		        }
 		    }
+		}catch( Throwable e ){
+			
+			return( false );
+			
 		}finally{
 
 			paused_list_mon.exit();
@@ -2347,12 +2406,12 @@ public class GlobalManagerImpl
 						  // copy the list as the act of resuming entries causes entries to be removed from the
 						  // list and therefore borkerage
 
-						  ArrayList<Object[]> copy = new ArrayList<>(paused_list);
+						  Map<HashWrapper,Boolean> copy = new HashMap<>(paused_list);
 
-						  for( Object[] data: copy ){
+						  for( Map.Entry<HashWrapper, Boolean> entry: copy.entrySet()){
 
-							  HashWrapper 	hash = (HashWrapper)data[0];
-							  boolean		force = ((Boolean)data[1]).booleanValue();
+							  HashWrapper 	hash 	= entry.getKey();
+							  boolean		force 	= entry.getValue();
 
 							  DownloadManager manager = getDownloadManager( hash );
 
@@ -2405,9 +2464,8 @@ public class GlobalManagerImpl
   @Override
   public boolean canResumeDownloads() {
     try {  paused_list_mon.enter();
-      for( int i=0; i < paused_list.size(); i++ ) {
-      	Object[]	data = (Object[])paused_list.get(i);
-        HashWrapper hash = (HashWrapper)data[0];
+      for( HashWrapper hash: paused_list.keySet()){
+     
         DownloadManager manager = getDownloadManager( hash );
 
         if( manager != null && manager.getState() == DownloadManager.STATE_STOPPED ) {
@@ -2576,25 +2634,33 @@ public class GlobalManagerImpl
 			  //load pause/resume state
 			  if( pause_data != null ) {
 				  try {  paused_list_mon.enter();
-				  for( int i=0; i < pause_data.size(); i++ ) {
-					  Object	pd = pause_data.get(i);
-
-					  byte[]		key;
-					  boolean		force;
-
-					  if ( pd instanceof byte[]){
-						  // old style, migration purposes
-						  key 	= (byte[])pause_data.get( i );
-						  force	= false;
-					  }else{
-						  Map	m = (Map)pd;
-
-						  key 	= (byte[])m.get("hash");
-						  force 	= ((Long)m.get("force")).intValue() == 1;
+					  for( int i=0; i < pause_data.size(); i++ ) {
+						  Object	pd = pause_data.get(i);
+	
+						  byte[]		key;
+						  boolean		force;
+	
+						  if ( pd instanceof byte[]){
+							  // old style, migration purposes
+							  key 	= (byte[])pause_data.get( i );
+							  force	= false;
+						  }else{
+							  Map	m = (Map)pd;
+	
+							  key 	= (byte[])m.get("hash");
+							  force 	= ((Long)m.get("force")).intValue() == 1;
+						  }
+						  
+						  HashWrapper hw = new HashWrapper( key );
+						  
+						  Boolean b_force = Boolean.valueOf(force);
+						  
+						  paused_list.put( hw, b_force );
+						  
+						  paused_list_initial.put( hw, b_force );
 					  }
-					  paused_list.add( new Object[]{ new HashWrapper( key ), Boolean.valueOf(force)} );
 				  }
-				  }
+				  
 				  finally {  paused_list_mon.exit();  }
 			  }
 
@@ -2712,23 +2778,22 @@ public class GlobalManagerImpl
 
 		  //save pause/resume state
 		  try {  paused_list_mon.enter();
-		  if( !paused_list.isEmpty() ) {
-			  ArrayList pause_data = new ArrayList();
-			  for( int i=0; i < paused_list.size(); i++ ) {
-				  Object[] data = (Object[])paused_list.get(i);
-
-				  HashWrapper hash 	= (HashWrapper)data[0];
-				  Boolean		force 	= (Boolean)data[1];
-
-				  Map	m = new HashMap();
-
-				  m.put( "hash", hash.getHash());
-				  m.put( "force", new Long(force.booleanValue()?1:0));
-
-				  pause_data.add( m );
+			  if( !paused_list.isEmpty() ) {
+				  ArrayList pause_data = new ArrayList();
+				  for ( Map.Entry<HashWrapper,Boolean> entry: paused_list.entrySet()){
+	
+					  HashWrapper 	hash 	= entry.getKey();
+					  Boolean		force 	= entry.getValue();
+	
+					  Map	m = new HashMap();
+	
+					  m.put( "hash", hash.getHash());
+					  m.put( "force", new Long(force.booleanValue()?1:0));
+	
+					  pause_data.add( m );
+				  }
+				  map.put( "pause_data", pause_data );
 			  }
-			  map.put( "pause_data", pause_data );
-		  }
 		  }
 		  finally {  paused_list_mon.exit();  }
 
