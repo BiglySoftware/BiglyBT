@@ -36,6 +36,7 @@ import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.tables.TableColumnExtraInfoListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -62,6 +63,8 @@ public class ColumnTagGroupIcons
 
 	public static final String COLUMN_ID = "tag_icons";
 	
+	private static int[]	interesting_tts = { TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_CATEGORY };
+
 	private TagGroup	tag_group;
 	
 	@Override
@@ -87,7 +90,7 @@ public class ColumnTagGroupIcons
 		String sTags = null;
 		Download dm = (Download)cell.getDataSource();
 		if (dm != null) {
-			List<Tag> tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, PluginCoreUtils.unwrap( dm ) );
+			List<Tag> tags = tag_manager.getTagsForTaggable( interesting_tts, PluginCoreUtils.unwrap( dm ) );
 
 			if ( tags.size() > 0 ){
 
@@ -127,7 +130,7 @@ public class ColumnTagGroupIcons
 
 		if (dm != null) {
 
-			List<Tag> tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, PluginCoreUtils.unwrap( dm ));
+			List<Tag> tags = tag_manager.getTagsForTaggable( interesting_tts, PluginCoreUtils.unwrap( dm ));
 
 			tags = TagUtils.sortTagIcons( tags );
 			

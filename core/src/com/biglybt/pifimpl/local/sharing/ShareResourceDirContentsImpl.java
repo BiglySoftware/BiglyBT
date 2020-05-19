@@ -22,6 +22,7 @@ package com.biglybt.pifimpl.local.sharing;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,7 +58,7 @@ ShareResourceDirContentsImpl
 
 		root 		= _dir;
 		recursive	= _recursive;
-		properties	= _properties;
+		properties	= _properties==null?new HashMap<>():_properties;
 
 		if ( !root.exists()){
 

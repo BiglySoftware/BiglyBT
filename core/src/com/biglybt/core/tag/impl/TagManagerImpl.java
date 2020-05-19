@@ -1912,6 +1912,8 @@ TagManagerImpl
 		
 		pi.getUtilities().getLocaleUtilities().integrateLocalisedMessageBundle( props );
 		
+		int[]	interesting_tts = { TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_CATEGORY };
+		
 		tm.registerColumn(
 			Download.class,
 			col_id_text,
@@ -1935,7 +1937,7 @@ TagManagerImpl
 								return;
 							}
 							
-							List<Tag> tags = TagManagerImpl.this.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, PluginCoreUtils.unwrap( dl ));
+							List<Tag> tags = TagManagerImpl.this.getTagsForTaggable( interesting_tts, PluginCoreUtils.unwrap( dl ));
 
 							String sTags = null;
 							
