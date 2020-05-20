@@ -4356,6 +4356,180 @@ public class Utils
 		}
 	}
 	
+	public static SashWrapper2
+	createSashWrapper2(
+		Composite		parent,
+		String			config_key )
+	{
+		return( new SashWrapper2( parent, config_key ));
+	}
+
+	public static class
+	SashWrapper2
+	{
+	  	final int SASH_WIDTH 	= 3;
+	  	
+	  	int MIN_BOTTOM_HEIGHT	= 10;
+	  	
+		private Composite	parent;
+		private String		config_key;
+		private Sash		sash;
+		
+		private Composite 	form;
+		private Composite 	child1;
+		private Composite 	child2;
+		
+		private FormData child1Data;
+		private FormData child2Data;
+				
+		private SashWrapper2(
+			Composite		_parent,
+			String			_config_key )
+		{
+			parent		= _parent;
+			config_key	= _config_key;
+			
+			form = new Composite(parent, SWT.NONE);
+		  	FormLayout flayout = new FormLayout();
+		  	flayout.marginHeight = 0;
+		  	flayout.marginWidth = 0;
+		  	form.setLayout(flayout);
+			form.setLayoutData(Utils.getFilledFormData());
+
+
+
+		  	child1 = new Composite(form,SWT.NONE);
+		  	flayout = new FormLayout();
+		  	flayout.marginHeight = 0;
+		  	flayout.marginWidth = 0;
+		  	child1.setLayout(flayout);
+		  			  	
+		  	sash = new Sash( form, SWT.HORIZONTAL );
+		    
+		  	child2 = new Composite(form,SWT.NULL);
+		  	flayout = new FormLayout();
+		  	flayout.marginHeight = 0;
+		  	flayout.marginWidth = 0;
+		  	child2.setLayout(flayout);
+
+		    FormData formData;
+			
+			
+		    formData = new FormData();
+		    formData.left = new FormAttachment(0, 0);
+		    formData.right = new FormAttachment(100, 0);
+		    formData.top = new FormAttachment(0, 0);
+		    formData.bottom = new FormAttachment(100, 0);
+		    child1.setLayoutData(formData);
+		    child1Data = formData;
+		
+		    // sash
+		    formData = new FormData();
+		    formData.left = new FormAttachment(0, 0);
+		    formData.right = new FormAttachment(100, 0);
+		    formData.top = new FormAttachment(child1);
+		    formData.height = SASH_WIDTH;
+		    sash.setLayoutData(formData);
+		
+		    // child2
+		    formData = new FormData();
+		    formData.left = new FormAttachment(0, 0);
+		    formData.right = new FormAttachment(100, 0);
+		    formData.bottom = new FormAttachment(100, 0);
+		    formData.top = new FormAttachment(sash);		
+		    child2.setLayoutData(formData);
+		    child2Data = formData;
+		
+		    // Listeners to size the folder
+		    sash.addSelectionListener(new SelectionAdapter() {
+		    	@Override
+		    	public void widgetSelected(SelectionEvent e) {
+		    		final boolean FASTDRAG = true;
+		
+		    		if ( FASTDRAG && e.detail == SWT.DRAG ){
+		    			
+		    			return;
+		    		}
+		    		
+		    		int newTopHeight = e.y + e.height - SASH_WIDTH;
+		    		
+		    		int maxNewTopHeight = form.getBounds().height - MIN_BOTTOM_HEIGHT - SASH_WIDTH;
+
+		    		newTopHeight = Math.min( newTopHeight,  maxNewTopHeight );
+
+		    		child1Data.height = newTopHeight;
+		    		
+		    		form.layout();
+		
+		    		int newBottomHeight = child2.getBounds().height;
+		    			
+		    		newBottomHeight = Math.max( MIN_BOTTOM_HEIGHT,  newBottomHeight );
+		    		
+		    		sash.setData( "BH", newBottomHeight );
+		    		
+		    		if (e.detail != SWT.DRAG) {
+		    		
+		    			COConfigurationManager.setParameter( config_key, newBottomHeight );
+		    		}
+		    	}
+		    });
+		
+		    form.addListener(SWT.Resize, new DelayedListenerMultiCombiner() {
+		    	@Override
+		    	public void handleDelayedEvent(Event e) {
+		    		resize();
+		    	}
+		    });
+		}
+		
+		private void
+		resize()
+		{
+    		if ( sash.isDisposed()){
+    			return;
+    		}
+    		Integer height = (Integer)sash.getData("BH");
+    		if (height == null) {
+    			return;
+    		}
+    		
+    		int newTopHeight = form.getBounds().height - height - SASH_WIDTH;
+    		
+    		int maxNewTopHeight = form.getBounds().height - MIN_BOTTOM_HEIGHT - SASH_WIDTH;
+    		
+    		newTopHeight = Math.min( newTopHeight,  maxNewTopHeight );
+
+    		if (child1Data.height != newTopHeight || child1Data.bottom != null) {
+    			child1Data.bottom = null;
+    			child1Data.height = newTopHeight;
+    			form.layout();
+    		}
+		}
+		
+		public void
+		setDefaultBottomHeight(
+			int	height )
+		{
+			MIN_BOTTOM_HEIGHT = Math.max( 10, height );
+			
+			COConfigurationManager.setIntDefault( config_key,MIN_BOTTOM_HEIGHT );
+			
+		    height = (COConfigurationManager.getIntParameter( config_key ));
+		  	    
+		    height = Math.max( 10, height );
+		    
+		    sash.setData("BH", height );
+		    
+		    resize();
+		}
+		
+		public Composite[]
+		getChildren()
+		{
+			return( new Composite[]{ child1, child2 });
+		}
+	}
+	
 	/**
 	 * Sometimes, Display.getCursorControl doesn't go deep enough..
 	 */

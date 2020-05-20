@@ -544,29 +544,50 @@ BuddyPluginViewBetaChat
 		if ( chat.getViewType() == BuddyPluginBeta.VIEW_TYPE_DEFAULT || chat.isReadOnly()){
 			
 			GridLayout layout = new GridLayout();
-			layout.numColumns = 2;
+			layout.numColumns = 1;
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
 			parent.setLayout(layout);
 			GridData grid_data = new GridData(GridData.FILL_BOTH );
 			parent.setLayoutData(grid_data);
 
-			Composite sash_area = new Composite( parent, SWT.NONE );
+			Composite sash_top_bottom = new Composite( parent, SWT.NONE );
+			FormLayout flayout = new FormLayout();
+			flayout.marginHeight = 0;
+			flayout.marginWidth = 0;
+			sash_top_bottom.setLayout(flayout);
+	
+			grid_data = new GridData(GridData.FILL_BOTH );
+			sash_top_bottom.setLayoutData(grid_data);
+
+			Utils.SashWrapper2 sash_tb = Utils.createSashWrapper2( sash_top_bottom, "bpvbc.sash.top.bottom" );
+
+			Composite[] sash_tb_kids = sash_tb.getChildren();
+			
+			Composite top_area = sash_tb_kids[0];
+
+			layout = new GridLayout();
+			layout.numColumns = 2;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			top_area.setLayout(layout);
+
+			Composite sash_left_right = new Composite( top_area, SWT.NONE );
 			layout = new GridLayout();
 			layout.numColumns = 1;
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
-			sash_area.setLayout(layout);
+			sash_left_right.setLayout(layout);
 	
 			grid_data = new GridData(GridData.FILL_BOTH );
 			grid_data.horizontalSpan = 2;
-			sash_area.setLayoutData(grid_data);
+			sash_left_right.setLayoutData(grid_data);
 
-			final SashForm sash = new SashForm(sash_area,SWT.HORIZONTAL );
+			final SashForm sash_lr = new SashForm(sash_left_right,SWT.HORIZONTAL );
 			grid_data = new GridData(GridData.FILL_BOTH );
-			sash.setLayoutData(grid_data);
+			sash_lr.setLayoutData(grid_data);
 
-			final Composite lhs = new Composite(sash, SWT.NONE);
+			final Composite lhs = new Composite(sash_lr, SWT.NONE);
 	
 			layout = new GridLayout();
 			layout.numColumns = 3;
@@ -579,7 +600,7 @@ BuddyPluginViewBetaChat
 			grid_data.widthHint = 300;
 			lhs.setLayoutData(grid_data);
 
-			buildStatus( parent, lhs );
+			buildStatus( top_area, lhs );
 	
 			Composite log_holder = buildFTUX( lhs, SWT.BORDER );
 			
@@ -1240,7 +1261,7 @@ BuddyPluginViewBetaChat
 					}
 				});
 	
-			Composite rhs = new Composite(sash, SWT.NONE);
+			Composite rhs = new Composite(sash_lr, SWT.NONE);
 			layout = new GridLayout();
 			layout.numColumns = 1;
 			layout.marginHeight = 0;
@@ -1410,7 +1431,6 @@ BuddyPluginViewBetaChat
 		    grid_data = new GridData(GridData.FILL_BOTH);
 		    
 			buddy_table.setLayoutData(grid_data);
-
 
 			buddy_table.addListener(
 				SWT.SetData,
@@ -1637,7 +1657,7 @@ BuddyPluginViewBetaChat
 					}
 				});
 	
-		    Utils.maintainSashPanelWidth( sash, rhs, new int[]{ 700, 300 }, "azbuddy.dchat.ui.sash.pos" );
+		    Utils.maintainSashPanelWidth( sash_lr, rhs, new int[]{ 700, 300 }, "azbuddy.dchat.ui.sash.pos" );
 	
 		    /*
 		    Listener sash_listener=
@@ -1689,22 +1709,18 @@ BuddyPluginViewBetaChat
 	
 		    	// bottom area
 	
-		    Composite bottom_area = new Composite( parent, SWT.NULL );
+		    Composite bottom_area = sash_tb_kids[1];
+		    
 			layout = new GridLayout();
 			layout.numColumns = 2;
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
 			bottom_area.setLayout(layout);
-	
-			grid_data = new GridData(GridData.FILL_HORIZONTAL );
-			grid_data.horizontalSpan = 2;
-			bottom_area.setLayoutData( grid_data );
-	
+		
 				// Text
-	
-	
+		
 			input_area = new Text( bottom_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
-			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data = new GridData(GridData.FILL_BOTH );
 			grid_data.horizontalSpan = 1;
 			grid_data.heightHint = 30;
 			grid_data.horizontalIndent = 4;
@@ -2022,7 +2038,9 @@ BuddyPluginViewBetaChat
 					});
 				}
 			}
-		
+			
+			sash_tb.setDefaultBottomHeight( bottom_area.computeSize( SWT.DEFAULT,  SWT.DEFAULT ).y );
+			
 			Control[] focus_controls = { log, input_area, buddy_table, nickname, shared_nick_button };
 	
 			Listener focus_listener = new Listener() {
