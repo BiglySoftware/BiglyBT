@@ -600,7 +600,7 @@ BuddyPluginViewBetaChat
 			grid_data.widthHint = 300;
 			lhs.setLayoutData(grid_data);
 
-			buildStatus( top_area, lhs );
+			buildStatus( sash_top_bottom, lhs );
 	
 			Composite log_holder = buildFTUX( lhs, SWT.BORDER );
 			
@@ -1935,7 +1935,7 @@ BuddyPluginViewBetaChat
 					@Override
 					public void widgetDisposed(DisposeEvent arg0){
 						
-						if ( input_area != null ){
+						if ( input_area != null && !input_area.isDisposed()){
 							
 							String text = input_area.getText();
 							
