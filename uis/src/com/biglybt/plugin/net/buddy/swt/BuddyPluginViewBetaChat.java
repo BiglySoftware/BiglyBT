@@ -1715,6 +1715,7 @@ BuddyPluginViewBetaChat
 			layout.numColumns = 2;
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
+			layout.marginBottom = 2;
 			bottom_area.setLayout(layout);
 		
 				// Text
@@ -1722,7 +1723,7 @@ BuddyPluginViewBetaChat
 			input_area = new Text( bottom_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
 			grid_data = new GridData(GridData.FILL_BOTH );
 			grid_data.horizontalSpan = 1;
-			grid_data.heightHint = 30;
+			//grid_data.heightHint = 30;
 			grid_data.horizontalIndent = 4;
 			input_area.setLayoutData(grid_data);
 
