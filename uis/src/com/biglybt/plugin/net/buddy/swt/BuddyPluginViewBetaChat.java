@@ -99,6 +99,7 @@ import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
+import com.biglybt.ui.swt.utils.TooltipShell;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.*;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
@@ -1523,126 +1524,122 @@ BuddyPluginViewBetaChat
 					});
 	
 	
-			buddy_table.addMouseTrackListener(
-				new MouseTrackAdapter(){
+			new TooltipShell(
+				new TooltipShell.TooltipProvider(){
 					
 					@Override
-					public void 
-					mouseHover(
-						MouseEvent e )
+					public String 
+					getTooltip(
+						Point location )
 					{
-						Point point = new Point( e.x, e.y );
-						
-						TableItem item = buddy_table.getItem( point );
+						TableItem item = buddy_table.getItem( location );
 						
 						String tt = null;
 						
-						try{
-							if ( item == null ){
+						if ( item == null ){
+						
+							return( null );
+						}
+						
+						ChatParticipant	participant = (ChatParticipant)item.getData();
+						
+						if ( participant == null ){
 							
-								return;
-							}
+							return( null );
+						}
+						
+						Rectangle status_bounds = item.getBounds( bt_col_offset + 2 );
+						
+						if ( status_bounds.contains( location )){
+						
+							tt = MessageText.getString( "dchat.friend.status.tt" );
 							
-							ChatParticipant	participant = (ChatParticipant)item.getData();
+						}else{	
 							
-							if ( participant == null ){
+							String fk = participant.getFriendKey();
+							
+							if ( fk  != null ){
 								
-								return;
-							}
-							
-							Rectangle status_bounds = item.getBounds( bt_col_offset + 2 );
-							
-							if ( status_bounds.contains( point )){
-							
-								tt = MessageText.getString( "dchat.friend.status.tt" );
+								BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
 								
-							}else{	
+								String nick = "";
 								
-								String fk = participant.getFriendKey();
-								
-								if ( fk  != null ){
+								if ( buddy != null ){
 									
-									BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
+									String n = buddy.getNickName();
 									
-									String nick = "";
-									
-									if ( buddy != null ){
+									if ( n != null && !n.isEmpty()){
 										
-										String n = buddy.getNickName();
-										
-										if ( n != null && !n.isEmpty()){
-											
-											nick = ": " + n;
-										}
+										nick = ": " + n;
 									}
+								}
+								
+								List<String> profile = participant.getProfileData();
+								
+								if ( profile == null ){
 									
-									List<String> profile = participant.getProfileData();
+									tt = MessageText.getString( "label.profile.pending" );
 									
-									if ( profile == null ){
+								}else{
+									
+									tt = MessageText.getString( "label.profile" ) + nick;
+									
+									for ( String p: profile ){
 										
-										tt = MessageText.getString( "label.profile.pending" );
+										String[] bits = p.split( "=", 2 );
 										
-									}else{
-										
-										tt = MessageText.getString( "label.profile" ) + nick;
-										
-										for ( String p: profile ){
+										if ( bits.length == 2 ){
 											
-											String[] bits = p.split( "=", 2 );
+											String val = bits[1];
 											
-											if ( bits.length == 2 ){
+											URL u = UrlUtils.getRawURL(val);
+											
+											if ( u != null ){
 												
-												String val = bits[1];
-												
-												URL u = UrlUtils.getRawURL(val);
-												
-												if ( u != null ){
-													
-													val = UrlUtils.getFriendlyName( u, val );
-												}
-												
-												p = bits[0] + "=" + val;
+												val = UrlUtils.getFriendlyName( u, val );
 											}
 											
-											tt += "\n    " + p;
-										}
-									}
-								}
-								
-								List<ChatMessage> messages = participant.getMessages();
-								
-								int	 num = messages.size();
-								
-								if ( num > 0 ){
-									
-									tt = ( tt==null?"":(tt+"\n")) +  MessageText.getString( "label.messages" );
-									
-									int	start = Math.max( num-6, 0 );
-									
-									if ( start > 0 ){
-										
-										tt += "\n    ...";
-									}
-									
-									for ( int i=start;i<messages.size();i++){
-										
-										String str = messages.get(i).getMessage();
-												
-										if ( str.length() > 50 ){
-											
-											str = str.substring( 0,  47 ) + "...";
+											p = bits[0] + "=" + val;
 										}
 										
-										tt += "\n    " + str;
+										tt += "\n    " + p;
 									}
 								}
 							}
-						}finally{
-						
-							Utils.setTT( buddy_table, tt );
+							
+							List<ChatMessage> messages = participant.getMessages();
+							
+							int	 num = messages.size();
+							
+							if ( num > 0 ){
+								
+								tt = ( tt==null?"":(tt+"\n")) +  MessageText.getString( "label.messages" );
+								
+								int	start = Math.max( num-6, 0 );
+								
+								if ( start > 0 ){
+									
+									tt += "\n    ...";
+								}
+								
+								for ( int i=start;i<messages.size();i++){
+									
+									String str = messages.get(i).getMessage();
+											
+									if ( str.length() > 50 ){
+										
+										str = str.substring( 0,  47 ) + "...";
+									}
+									
+									tt += "\n    " + str;
+								}
+							}
 						}
+						
+						
+						return( tt );
 					}
-				});
+				}, buddy_table );
 			
 			buddy_table.addMouseListener(
 				new MouseAdapter()
