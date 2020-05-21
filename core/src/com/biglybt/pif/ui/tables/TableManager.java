@@ -44,6 +44,8 @@ public interface TableManager
   
   public static final String TABLE_MYTORRENTS_ALL_SMALL   = "MyLibrary.small";
 
+  public static final String TABLE_MYTORRENTS_SUBVIEW = "MyTorrentsSubView";
+  
   public static final String[] TABLE_MYTORRENTS_ALL = {
 		  TABLE_MYTORRENTS_COMPLETE,
 		  TABLE_MYTORRENTS_INCOMPLETE,
@@ -53,6 +55,7 @@ public interface TableManager
 		  TABLE_MYTORRENTS_UNOPENED_BIG,
 		  TABLE_MYTORRENTS_ALL_BIG,
 		  TABLE_MYTORRENTS_ALL_SMALL,
+		  TABLE_MYTORRENTS_SUBVIEW,
   };
   
   public static final String TABLE_ACTIVITY = "Activity";

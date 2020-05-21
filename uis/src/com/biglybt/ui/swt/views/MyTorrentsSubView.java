@@ -43,6 +43,7 @@ import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.util.DataSourceUtils;
 
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ui.tables.TableManager;
 
 /**
  * @author TuxPaper
@@ -54,7 +55,8 @@ public class MyTorrentsSubView
 	implements ViewTitleInfo
 {
 
-	public static final String MSGID_PREFIX = "MyTorrentsSubView";
+	public static final String MSGID_PREFIX = TableManager.TABLE_MYTORRENTS_SUBVIEW;
+	
 	private Button btnAnyTags;
 	private boolean anyTorrentTags;
 
