@@ -1531,7 +1531,9 @@ BuddyPluginViewBetaChat
 					mouseHover(
 						MouseEvent e )
 					{
-						TableItem item = buddy_table.getItem( new Point( e.x, e.y ));
+						Point point = new Point( e.x, e.y );
+						
+						TableItem item = buddy_table.getItem( point );
 						
 						String tt = null;
 						
@@ -1548,87 +1550,96 @@ BuddyPluginViewBetaChat
 								return;
 							}
 							
-							String fk = participant.getFriendKey();
+							Rectangle status_bounds = item.getBounds( bt_col_offset + 2 );
 							
-							if ( fk  != null ){
+							if ( status_bounds.contains( point )){
+							
+								tt = MessageText.getString( "dchat.friend.status.tt" );
 								
-								BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
+							}else{	
 								
-								String nick = "";
+								String fk = participant.getFriendKey();
 								
-								if ( buddy != null ){
+								if ( fk  != null ){
 									
-									String n = buddy.getNickName();
+									BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
 									
-									if ( n != null && !n.isEmpty()){
+									String nick = "";
+									
+									if ( buddy != null ){
 										
-										nick = ": " + n;
+										String n = buddy.getNickName();
+										
+										if ( n != null && !n.isEmpty()){
+											
+											nick = ": " + n;
+										}
 									}
-								}
-								
-								List<String> profile = participant.getProfileData();
-								
-								if ( profile == null ){
 									
-									tt = MessageText.getString( "label.profile.pending" );
+									List<String> profile = participant.getProfileData();
 									
-								}else{
-									
-									tt = MessageText.getString( "label.profile" ) + nick;
-									
-									for ( String p: profile ){
+									if ( profile == null ){
 										
-										String[] bits = p.split( "=", 2 );
+										tt = MessageText.getString( "label.profile.pending" );
 										
-										if ( bits.length == 2 ){
+									}else{
+										
+										tt = MessageText.getString( "label.profile" ) + nick;
+										
+										for ( String p: profile ){
 											
-											String val = bits[1];
+											String[] bits = p.split( "=", 2 );
 											
-											URL u = UrlUtils.getRawURL(val);
-											
-											if ( u != null ){
+											if ( bits.length == 2 ){
 												
-												val = UrlUtils.getFriendlyName( u, val );
+												String val = bits[1];
+												
+												URL u = UrlUtils.getRawURL(val);
+												
+												if ( u != null ){
+													
+													val = UrlUtils.getFriendlyName( u, val );
+												}
+												
+												p = bits[0] + "=" + val;
 											}
 											
-											p = bits[0] + "=" + val;
+											tt += "\n    " + p;
+										}
+									}
+								}
+								
+								List<ChatMessage> messages = participant.getMessages();
+								
+								int	 num = messages.size();
+								
+								if ( num > 0 ){
+									
+									tt = ( tt==null?"":(tt+"\n")) +  MessageText.getString( "label.messages" );
+									
+									int	start = Math.max( num-6, 0 );
+									
+									if ( start > 0 ){
+										
+										tt += "\n    ...";
+									}
+									
+									for ( int i=start;i<messages.size();i++){
+										
+										String str = messages.get(i).getMessage();
+												
+										if ( str.length() > 50 ){
+											
+											str = str.substring( 0,  47 ) + "...";
 										}
 										
-										tt += "\n    " + p;
+										tt += "\n    " + str;
 									}
-								}
-							}
-							
-							List<ChatMessage> messages = participant.getMessages();
-							
-							int	 num = messages.size();
-							
-							if ( num > 0 ){
-								
-								tt = ( tt==null?"":(tt+"\n")) +  MessageText.getString( "label.messages" );
-								
-								int	start = Math.max( num-6, 0 );
-								
-								if ( start > 0 ){
-									
-									tt += "\n    ...";
-								}
-								
-								for ( int i=start;i<messages.size();i++){
-									
-									String str = messages.get(i).getMessage();
-											
-									if ( str.length() > 50 ){
-										
-										str = str.substring( 0,  47 ) + "...";
-									}
-									
-									tt += "\n    " + str;
 								}
 							}
 						}finally{
 						
-							buddy_table.setToolTipText( tt );
+							Utils.setTT( buddy_table, tt );
 						}
 					}
 				});
