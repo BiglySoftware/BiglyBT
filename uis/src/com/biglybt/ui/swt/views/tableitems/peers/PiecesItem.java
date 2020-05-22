@@ -34,9 +34,9 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.impl.PEPeerTransport;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
@@ -70,6 +70,11 @@ public class PiecesItem
 
 	private int row_count;
 
+	private FrequencyLimitedDispatcher invalidateDispatcher = 
+		new FrequencyLimitedDispatcher(
+			AERunnable.create(()->{ invalidateCells();}),
+			250 );
+	
 	/** Default Constructor */
 	public PiecesItem(String table_id) {
 		super("pieces", table_id);
@@ -417,7 +422,7 @@ public class PiecesItem
 		if (remove_listener) {
 			diskmanager.removeListener(this);
 		} else {
-			invalidateCells();
+			invalidateDispatcher.dispatch();
 
 			if (diskmanager.getRemaining() == 0) {
 
