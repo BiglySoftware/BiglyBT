@@ -3830,13 +3830,66 @@ public class ManagerUtils {
 										}
 									}
 
-									File expected_file = new File( overall_root, file.getTorrentFile().getRelativePath());
+									File source_file = new File( overall_root, file.getTorrentFile().getRelativePath());
+									
+									boolean is_approximate = false;
+									
+									if ( source_file.exists() && source_file.length() == file.getLength()){
 
-									if ( expected_file.exists() && expected_file.length() == file.getLength()){
+										// looks good
+										
+									}else{
+										
+											// if there's only one with the right size in same folder then grab that
+										
+										File[] source_files = source_file.getParentFile().listFiles();
+										
+										File selected = null;
+										
+										if ( source_files != null ){
+											
+											for ( File f: source_files ){
+												
+												if ( f.length() == file.getLength()){
+													
+													if ( selected == null ){
+														
+														selected = f;
+														
+													}else{
+														
+														selected = null;	// multiple same size
+														
+														break;
+													}
+												}
+											}
+										}
+										
+										if ( selected != null ){
+										
+											source_file = selected;
+											
+											is_approximate = true;
+											
+										}else{
+											
+											source_file = null;
+										}
+									}
+									
+									if ( source_file != null ){
+										
+										if ( !entry.getValue().contains( source_file.getAbsolutePath())){
 
-										if ( !entry.getValue().contains( expected_file.getAbsolutePath())){
-
-											logLine( viewer, file_indent, "File '" + file.getFile( false ).getName() + "'" );
+											String str = "File '" + file.getFile( false ).getName() + "'";
+											
+											if ( is_approximate ){
+												
+												str += "- selected " + source_file ;
+											}
+											
+											logLine( viewer, file_indent, str );
 
 											int action_indent = file_indent+1;
 
@@ -3875,9 +3928,9 @@ public class ManagerUtils {
 												try{
 													dm.setUserData( "set_link_dont_delete_existing", true );
 
-													logLine( viewer, action_indent, "Linking to " + expected_file );
+													logLine( viewer, action_indent, "Linking to " + source_file );
 
-													if ( file.setLink( expected_file )){
+													if ( file.setLink( source_file )){
 
 														logLine( viewer, action_indent+1, "Linked successful" );
 
@@ -3913,9 +3966,9 @@ public class ManagerUtils {
 
 												if ( mode == 1 ){
 
-													logLine( viewer, action_indent, "Copying " + expected_file + " to " + target );
+													logLine( viewer, action_indent, "Copying " + source_file + " to " + target );
 
-													boolean ok = FileUtil.copyFile( expected_file,  target );
+													boolean ok = FileUtil.copyFile( source_file,  target );
 
 													if ( ok ){
 
@@ -3933,9 +3986,9 @@ public class ManagerUtils {
 													}
 												}else{
 
-													logLine( viewer, action_indent, "Moving " + expected_file + " to " + target );
+													logLine( viewer, action_indent, "Moving " + source_file + " to " + target );
 
-													boolean ok = FileUtil.renameFile( expected_file,  target );
+													boolean ok = FileUtil.renameFile( source_file,  target );
 
 													if ( ok ){
 
