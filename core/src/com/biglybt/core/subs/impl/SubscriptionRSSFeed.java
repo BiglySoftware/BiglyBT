@@ -182,7 +182,7 @@ SubscriptionRSSFeed
 
 				pw.println( "<channel>" );
 
-				String channel_title = "Vuze Subscription: " + escape( subscription.getName());
+				String channel_title = Constants.APP_NAME + " Subscription: " + escape( subscription.getName());
 
 				pw.println( "<title>" + channel_title + "</title>" );
 				pw.println( "<link>http://biglybt.com</link>" );
