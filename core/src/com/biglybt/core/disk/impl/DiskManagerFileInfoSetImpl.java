@@ -141,7 +141,7 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 	}
 
 	@Override
-	public boolean[] setStorageTypes(boolean[] toChange, int newStroageType) {
+	public boolean[] setStorageTypes(boolean[] toChange, int newStroageType, boolean force ) {
 		if(toChange.length != files.length)
 			throw new IllegalArgumentException("array length mismatches the number of files");
 		if(files.length == 0)
@@ -176,7 +176,7 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 				DiskManagerFileInfoImpl file = files[i];
 
 				try	{
-					file.getCacheFile().setStorageType( DiskManagerUtil.convertDMStorageTypeToCache( newStroageType ));
+					file.getCacheFile().setStorageType( DiskManagerUtil.convertDMStorageTypeToCache( newStroageType ), force );
 					modified[i] = true;
 				} catch (Throwable e) {
 					Debug.printStackTrace(e);

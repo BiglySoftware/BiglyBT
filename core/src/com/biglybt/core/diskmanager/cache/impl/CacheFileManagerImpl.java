@@ -226,7 +226,8 @@ CacheFileManagerImpl
 	createFile(
 		final CacheFileOwner	owner,
 		File					file,
-		int						type )
+		int						type,
+		boolean					force )
 
 		throws CacheFileManagerException
 	{
@@ -268,7 +269,7 @@ CacheFileManagerImpl
 						{
 							return( owner.getCacheFileControlFileDir( ));
 						}
-					}, file, fm_type );
+					}, file, fm_type, force );
 
 			TOTorrentFile	tf = owner.getCacheFileTorrentFile();
 

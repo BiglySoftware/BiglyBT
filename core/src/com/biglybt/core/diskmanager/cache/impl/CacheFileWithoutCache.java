@@ -131,13 +131,14 @@ CacheFileWithoutCache
 	@Override
 	public void
 	setStorageType(
-		int		type )
+		int		type,
+		boolean	force )
 
 		throws CacheFileManagerException
 	{
 		try{
 
-			file.setStorageType( CacheFileManagerImpl.convertCacheToFileType( type ));
+			file.setStorageType( CacheFileManagerImpl.convertCacheToFileType( type ), force);
 
 		}catch( FMFileManagerException e ){
 

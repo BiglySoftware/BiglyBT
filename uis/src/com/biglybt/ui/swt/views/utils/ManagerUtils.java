@@ -3602,7 +3602,7 @@ public class ManagerUtils {
 
 														if ( file.getStorageType() != DiskManagerFileInfo.ST_LINEAR ){
 															
-															boolean worked = file.setStorageType( DiskManagerFileInfo.ST_LINEAR );
+															boolean worked = file.setStorageType( DiskManagerFileInfo.ST_LINEAR, true );
 															
 															logLine( viewer, action_indent, "Setting storage type to linear - " + ( worked?"OK":"Failed" ));
 														}
@@ -3895,7 +3895,7 @@ public class ManagerUtils {
 
 											if ( file.getStorageType() != DiskManagerFileInfo.ST_LINEAR ){
 												
-												boolean worked = file.setStorageType( DiskManagerFileInfo.ST_LINEAR );
+												boolean worked = file.setStorageType( DiskManagerFileInfo.ST_LINEAR, true );
 												
 												logLine( viewer, action_indent, "Setting storage type to linear - " + ( worked?"OK":"Failed" ));
 											}

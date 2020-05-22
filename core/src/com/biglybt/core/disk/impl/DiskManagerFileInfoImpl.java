@@ -90,7 +90,7 @@ DiskManagerFileInfoImpl
 
     int	cache_st = DiskManagerUtil.convertDMStorageTypeToCache( _storage_type );
 
-  	cache_file = CacheFileManagerFactory.getSingleton().createFile( this, FileUtil.newFile( root_dir + relative_file.toString()), cache_st);
+  	cache_file = CacheFileManagerFactory.getSingleton().createFile( this, FileUtil.newFile( root_dir + relative_file.toString()), cache_st, false );
 
   	if ( cache_st == CacheFile.CT_COMPACT || cache_st == CacheFile.CT_PIECE_REORDER_COMPACT ){
 
@@ -282,11 +282,11 @@ DiskManagerFileInfoImpl
 	}
 
 	@Override
-	public boolean setStorageType(int type) {
+	public boolean setStorageType(int type, boolean force ) {
 		DiskManagerFileInfoSet set = diskManager.getFileSet();
 		boolean[] toSet = new boolean[set.nbFiles()];
 		toSet[file_index] = true;
-		return set.setStorageTypes(toSet, type)[file_index];
+		return set.setStorageTypes(toSet, type, force )[file_index];
 	}
 
 	@Override

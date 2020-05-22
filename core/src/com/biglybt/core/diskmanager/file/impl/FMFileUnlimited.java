@@ -38,14 +38,15 @@ FMFileUnlimited
 {
 	protected
 	FMFileUnlimited(
-		FMFileOwner			_owner,
-		FMFileManagerImpl	_manager,
-		File				_file,
-		int					_type )
+		FMFileOwner			owner,
+		FMFileManagerImpl	manager,
+		File				file,
+		int					type,
+		boolean				force )
 
 		throws FMFileManagerException
 	{
-		super( _owner, _manager, _file, _type );
+		super( owner, manager, file, type, force );
 	}
 
 	protected

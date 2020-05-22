@@ -37,7 +37,8 @@ FMFileManager
 	createFile(
 		FMFileOwner	owner,
 		File		file,
-		int			type )
+		int			type,
+		boolean		force )
 
 		throws FMFileManagerException;
 

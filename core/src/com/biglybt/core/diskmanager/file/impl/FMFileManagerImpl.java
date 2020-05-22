@@ -256,7 +256,8 @@ FMFileManagerImpl
 	createFile(
 		FMFileOwner	owner,
 		File		file,
-		int			type )
+		int			type,
+		boolean		force )
 
 		throws FMFileManagerException
 	{
@@ -264,17 +265,17 @@ FMFileManagerImpl
 
 		if ( AEDiagnostics.USE_DUMMY_FILE_DATA ){
 
-			res = new FMFileTestImpl( owner, this, file, type );
+			res = new FMFileTestImpl( owner, this, file, type, force );
 
 		}else{
 
 			if ( limited ){
 
-				res = new FMFileLimited( owner, this, file, type );
+				res = new FMFileLimited( owner, this, file, type, force );
 
 			}else{
 
-				res = new FMFileUnlimited( owner, this, file, type );
+				res = new FMFileUnlimited( owner, this, file, type, force );
 			}
 		}
 

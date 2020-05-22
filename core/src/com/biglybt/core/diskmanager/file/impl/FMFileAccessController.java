@@ -73,7 +73,8 @@ FMFileAccessController
 	protected
 	FMFileAccessController(
 		FMFileImpl	_file,
-		int			_target_type )
+		int			_target_type,
+		boolean		_force )
 
 		throws FMFileManagerException
 	{
@@ -161,13 +162,47 @@ FMFileAccessController
 							new FMFileAccessLinear( owner ));
 			}
 
-			convert( _target_type );
+			convert( _target_type, _force );
 		}
 	}
 
-	protected void
+	private void
 	convert(
-		int					target_type )
+		int					target_type,
+		boolean				force )
+
+		throws FMFileManagerException
+	{
+		try{
+			convertSupport( target_type, force );
+			
+		}catch( FMFileManagerException error ){
+			
+			if ( force ){
+				
+					// hack to support reverting fom re-order mode to linear when 'searching for existing files'
+				
+				if ( ( type == FMFile.FT_PIECE_REORDER || type == FMFile.FT_PIECE_REORDER_COMPACT ) && target_type == FMFile.FT_LINEAR ){
+				
+					new File(control_dir,controlFileName).delete();
+					
+					new File( control_dir, controlFileName + REORDER_SUFFIX ).delete();
+
+					type		= FMFile.FT_LINEAR;
+					file_access = new FMFileAccessLinear( owner );
+					
+					return;
+				}
+			}
+				
+			throw( error );
+		}
+	}
+	
+	private void
+	convertSupport(
+		int					target_type,
+		boolean				force )
 
 		throws FMFileManagerException
 	{
@@ -176,9 +211,10 @@ FMFileAccessController
 			return;
 		}
 
-		if ( type == FMFile.FT_PIECE_REORDER || target_type == FMFile.FT_PIECE_REORDER ){
+		if ( type == FMFile.FT_PIECE_REORDER || type == FMFile.FT_PIECE_REORDER_COMPACT || target_type == FMFile.FT_PIECE_REORDER || target_type == FMFile.FT_PIECE_REORDER_COMPACT ){
 
-			if ( target_type == FMFile.FT_PIECE_REORDER_COMPACT || type == FMFile.FT_PIECE_REORDER_COMPACT ){
+			if (	( target_type == FMFile.FT_PIECE_REORDER_COMPACT && type == FMFile.FT_PIECE_REORDER ) ||
+					( target_type == FMFile.FT_PIECE_REORDER && type == FMFile.FT_PIECE_REORDER_COMPACT )){
 
 					// these two access modes are in fact identical at the moment
 
@@ -394,11 +430,12 @@ FMFileAccessController
 
 	public void
 	setStorageType(
-		int					new_type )
+		int					new_type,
+		boolean				force )
 
 		throws FMFileManagerException
 	{
-		convert( new_type );
+		convert( new_type, force );
 	}
 
 	public int

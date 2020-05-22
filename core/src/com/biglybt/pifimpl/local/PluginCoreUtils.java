@@ -234,7 +234,8 @@ PluginCoreUtils
 				@Override
 				public boolean
 				setStorageType(
-					int type )
+					int 	type,
+					boolean	force )
 				{
 					return( false );
 				}

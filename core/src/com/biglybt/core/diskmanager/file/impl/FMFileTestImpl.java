@@ -44,11 +44,12 @@ FMFileTestImpl
 		FMFileOwner			_owner,
 		FMFileManagerImpl	_manager,
 		File				_file,
-		int					_type )
+		int					_type,
+		boolean				_force )
 
 		throws FMFileManagerException
 	{
-		super( _owner, _manager, _file, _type );
+		super( _owner, _manager, _file, _type, _force );
 
 		TOTorrentFile	torrent_file = getOwner().getTorrentFile();
 

@@ -2864,8 +2864,8 @@ DownloadManagerController
 		}
 
 		@Override
-		public boolean[] setStorageTypes(boolean[] toChange, int newStroageType) {
-			return delegate.setStorageTypes(toChange, newStroageType);
+		public boolean[] setStorageTypes(boolean[] toChange, int newStorageType, boolean force ) {
+			return delegate.setStorageTypes(toChange, newStorageType, force );
 		}
 
 		/** XXX Don't call me, call makeSureFilesFacadeFilled() */
@@ -3090,9 +3090,10 @@ DownloadManagerController
 		@Override
 		public boolean
 		setStorageType(
-			int		type )
+			int		type,
+			boolean	force )
 		{
-			return( delegate.setStorageType( type ));
+			return( delegate.setStorageType( type, force ));
 		}
 
 		@Override

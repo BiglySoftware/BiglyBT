@@ -29,7 +29,17 @@ public interface DiskManagerFileInfoSet {
 	 * @param toChange array size must be # of files in set. Only true values will be set to value of <code>setSkipped</code>
 	 * @param setSkipped Whether to set file as skipped or unskipped, when toChange[i] is true
 	 */
-	public boolean[] setStorageTypes(boolean[] toChange, int newStroageType);
+	
+	public default boolean[] setStorageTypes(boolean[] toChange, int newStroageType){ return( setStorageTypes( toChange, newStroageType, false )); }
+	
+		/**
+		 * 
+		 * @param toChange
+		 * @param newStroageType
+		 * @param force may discard file state, use with care...
+		 * @return
+		 */
+	public boolean[] setStorageTypes(boolean[] toChange, int newStroageType, boolean force );
 
 	/**
 	 * Sets the priorities of all files

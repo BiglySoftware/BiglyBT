@@ -75,7 +75,8 @@ FMFile
 
 	public void
 	setStorageType(
-		int		type )
+		int		type,
+		boolean	force )
 
 		throws FMFileManagerException;
 

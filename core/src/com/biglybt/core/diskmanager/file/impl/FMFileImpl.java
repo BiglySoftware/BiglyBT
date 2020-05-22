@@ -89,7 +89,8 @@ FMFileImpl
 		FMFileOwner			_owner,
 		FMFileManagerImpl	_manager,
 		File				_file,
-		int					_type )
+		int					_type,
+		boolean 			_force )
 
 		throws FMFileManagerException
 	{
@@ -135,7 +136,7 @@ FMFileImpl
 
 			file_reserved	= true;
 
-			file_access = new FMFileAccessController( this, _type );
+			file_access = new FMFileAccessController( this, _type, _force );
 
 			last_modified = linked_file.lastModified();
 			
@@ -180,7 +181,7 @@ FMFileImpl
 		clone			= true;
 
 		try{
-			file_access = new FMFileAccessController( this, basis.file_access.getStorageType());
+			file_access = new FMFileAccessController( this, basis.file_access.getStorageType(), false );
 
 			last_modified = linked_file.lastModified();
 			
@@ -232,7 +233,8 @@ FMFileImpl
 	@Override
 	public void
 	setStorageType(
-		int		new_type )
+		int		new_type,
+		boolean	force )
 
 		throws FMFileManagerException
 	{
@@ -247,7 +249,7 @@ FMFileImpl
 			}
 
 			try{
-				file_access.setStorageType(  new_type );
+				file_access.setStorageType(  new_type, force );
 
 			}finally{
 

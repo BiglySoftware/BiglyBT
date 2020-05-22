@@ -1403,7 +1403,8 @@ CacheFileWithCache
 	@Override
 	public void
 	setStorageType(
-		int		type )
+		int		type,
+		boolean	force )
 
 		throws CacheFileManagerException
 	{
@@ -1415,7 +1416,7 @@ CacheFileWithCache
 				flushCachePublic( false, -1 );
 			}
 
-			file.setStorageType( CacheFileManagerImpl.convertCacheToFileType( type ));
+			file.setStorageType( CacheFileManagerImpl.convertCacheToFileType( type ), force );
 
 		}catch( FMFileManagerException e ){
 

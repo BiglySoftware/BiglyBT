@@ -522,7 +522,7 @@ DiskManagerUtil
 					}
 
 					@Override
-					public boolean[] setStorageTypes(boolean[] toChange, int newStorageType) {
+					public boolean[] setStorageTypes(boolean[] toChange, int newStorageType, boolean force) {
 						if(toChange.length != res.length)
 							throw new IllegalArgumentException("array length mismatches the number of files");
 
@@ -596,7 +596,7 @@ DiskManagerUtil
 													}
 												},
 												target_file,
-												DiskManagerUtil.convertDMStorageTypeToCache( newStorageType ));
+												DiskManagerUtil.convertDMStorageTypeToCache( newStorageType ), force );
 
 										cache_file.getLength();	// need this to trigger recovery for re-order files :(
 
@@ -1123,10 +1123,10 @@ DiskManagerUtil
 	                	}
 
 	                	@Override
-		                public boolean setStorageType(int type) {
+		                public boolean setStorageType(int type, boolean force) {
 	                		boolean[] change = new boolean[res.length];
 	                		change[file_index] = true;
-	                		return fileSetSkeleton.setStorageTypes(change, type)[file_index];
+	                		return fileSetSkeleton.setStorageTypes(change, type, force)[file_index];
 	                	}
 
 	                	@Override
@@ -1192,7 +1192,7 @@ DiskManagerUtil
 	                								}
 	                							},
 	                							getFile( true ),
-	                							convertDMStorageTypeToCache( type ));
+	                							convertDMStorageTypeToCache( type ), false );
 
 	                				}catch( Throwable e ){
 

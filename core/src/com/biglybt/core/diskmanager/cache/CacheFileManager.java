@@ -37,7 +37,8 @@ CacheFileManager
 	createFile(
 		CacheFileOwner	owner,
 		File			file,
-		int				type )
+		int				type,
+		boolean			force )
 
 		throws CacheFileManagerException;
 

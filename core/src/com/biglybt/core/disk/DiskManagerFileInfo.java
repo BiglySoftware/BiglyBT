@@ -78,7 +78,15 @@ DiskManagerFileInfo
 		 * {@link DiskManagerFileInfo#ST_REORDER_COMPACT}
 		 */
 
-	public boolean setStorageType(int type );
+	public default boolean setStorageType(int type ){ return( setStorageType( type, false )); }
+	
+		/**
+		 * @param type
+		 * @param force	discards any existing file content if it exists - use with care...
+		 * @return
+		 */
+	
+	public boolean setStorageType(int type, boolean force );
 
 	/**
 	 * Returns the storage type for this file

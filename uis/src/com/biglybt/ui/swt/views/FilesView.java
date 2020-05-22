@@ -1985,7 +1985,7 @@ public class FilesView
 
 		@Override
 		public boolean
-		setStorageType(int type )
+		setStorageType(int type, boolean force )
 		{
 			return( false );
 		}
@@ -2359,9 +2359,9 @@ public class FilesView
 
 		@Override
 		public boolean
-		setStorageType(int type )
+		setStorageType(int type, boolean force )
 		{
-			return( delegate.setStorageType(type));
+			return( delegate.setStorageType(type, force));
 		}
 
 		@Override
