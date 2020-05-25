@@ -373,7 +373,12 @@ public class TrackerView
 				
 				if ( sources.length == 1 ){
 					
-					tracker_key = BuddyPluginUtils.getTrackerChatKey(((TrackerPeerSource)sources[0]).getURL().toExternalForm());
+					URL url = ((TrackerPeerSource)sources[0]).getURL();
+					
+					if ( url != null ){
+					
+						tracker_key = BuddyPluginUtils.getTrackerChatKey( url.toExternalForm());
+					}
 				}
 				
 				MenuBuildUtils.addChatMenu( menu, "menu.discuss.tracker", tracker_key );
