@@ -30,7 +30,6 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.impl.DownloadManagerStateImpl;
-import com.biglybt.core.impl.CoreImpl;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
@@ -1506,7 +1505,12 @@ public class VersionCheckClient {
 
 			message.put( "beta_prog", "true" );
 		}
+		
+		if ( System.getProperty(SystemProperties.SYSPROP_PORTABLE_ENABLE, "false" ).equalsIgnoreCase( "true" )){
 
+			message.put( "portable", "true" );
+		}
+		
 		message.put( "ui",      COConfigurationManager.getStringParameter( "ui", "unknown" ) );
 		message.put( "os",      Constants.OSName );
 		message.put( "os_version", System.getProperty( "os.version" ) );
