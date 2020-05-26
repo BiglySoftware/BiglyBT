@@ -1808,7 +1808,7 @@ public class SB_Transfers
 						
 						boolean doAdd = false;
 
-						int mods = Utils.getCurrentKeyModifiers();
+						int mods = Utils.getDragDetectModifiers();
 						
 						if (( mods & SWT.ALT ) != 0 ){
 							

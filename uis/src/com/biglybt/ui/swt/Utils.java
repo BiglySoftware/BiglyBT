@@ -44,6 +44,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.internal.DPIUtil;
+import org.eclipse.swt.internal.win32.OS;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
@@ -247,7 +248,7 @@ public class Utils
 	private static Set<DiskManagerFileInfo>	quick_view_active = new HashSet<>();
 	private static TimerEventPeriodic		quick_view_event;
 
-	private static volatile int currentKeyMods	= 0;
+	private static volatile int dragDetectMask	= 0;
 	
 	public static void
 	initialize(
@@ -256,35 +257,16 @@ public class Utils
 		isGTK3 = isGTK && System.getProperty("org.eclipse.swt.internal.gtk.version",
 				"2").startsWith("3");
 		
-		Listener stateListener = (ev)->{
-			int code = ev.keyCode;
-			
-				// doesn't work if you press key down, move focus to another app and then release it but so what
-				// also if you start a drag and then hit keys something is filtering them out so we don't get notified...
-			
-			if ( code == SWT.SHIFT ){
-				if ( ev.type == SWT.KeyDown ){
-					currentKeyMods |= SWT.SHIFT;
-				}else{
-					currentKeyMods &= ~SWT.SHIFT;
-				}
-			}else if ( code == SWT.ALT ){
-				if ( ev.type == SWT.KeyDown ){
-					currentKeyMods |= SWT.ALT;
-				}else{
-					currentKeyMods &= ~SWT.ALT;
-				}
-			}
-		};
-		
-		display.addFilter( SWT.KeyDown, stateListener );
-		display.addFilter( SWT.KeyUp, stateListener );
+		display.addFilter( SWT.DragDetect, (ev)->{
+
+			dragDetectMask = ev.stateMask;
+		});
 	}
 	
 	public static int
-	getCurrentKeyModifiers()
+	getDragDetectModifiers()
 	{
-		return( currentKeyMods );
+		return( dragDetectMask );
 	}
 
 		// these are used by VersionCheckClient by the way
