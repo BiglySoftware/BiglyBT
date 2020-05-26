@@ -1805,25 +1805,45 @@ public class SB_Transfers
 						if (dms.isEmpty()) {
 							return;
 						}
+						
 						boolean doAdd = false;
-						for (DownloadManager dm : dms) {
-							if (!tag.hasTaggable(dm)) {
-								doAdd = true;
-								break;
+
+						int mods = Utils.getCurrentKeyModifiers();
+						
+						if (( mods & SWT.ALT ) != 0 ){
+							
+								/// alt+drop -> addl shift+alt+drop -> remove otherwise existing togglish logic
+							
+							doAdd = ( mods & SWT.SHIFT ) == 0 ;
+							
+						}else{
+							
+							for (DownloadManager dm : dms) {
+								if (!tag.hasTaggable(dm)) {
+									doAdd = true;
+									break;
+								}
 							}
 						}
 
 						boolean[] auto = tag.isTagAuto();
-						if (auto.length < 2 || (doAdd && auto[0])
-							|| (!doAdd && auto[0] && auto[1])) {
+						
+						if ( 	auto.length < 2 || 
+								(doAdd && auto[0]) || 
+								(!doAdd && auto[0] && auto[1])){
+							
 							return;
 						}
 
 						for (DownloadManager dm : dms) {
 							if ( doAdd ){
-								tag.addTaggable( dm );
+								if ( !tag.hasTaggable( dm )){
+									tag.addTaggable( dm );
+								}
 							}else{
-								tag.removeTaggable( dm );
+								if ( tag.hasTaggable( dm )){
+									tag.removeTaggable( dm );
+								}
 							}
 						}
 					}
