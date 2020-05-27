@@ -122,6 +122,10 @@ CoreUpdateChecker
 
 		log	= plugin_interface.getLogger().getChannel("CoreUpdater");
 
+		log.setDiagnostic();
+		
+		log.setForce( true );
+		
 		rd_logger =
 			new ResourceDownloaderAdapter()
 			{
@@ -781,6 +785,8 @@ CoreUpdateChecker
 
 		File		update_file = null;
 
+		log.log( "Update is zip based" );
+
 		try{
 			zip = new ZipInputStream(data);
 
@@ -789,6 +795,8 @@ CoreUpdateChecker
 			while((entry = zip.getNextEntry()) != null) {
 
 				String name = entry.getName().trim();
+
+				log.log( "    entry: " + name );
 
 				if ( name.equals( "azureus.sig" ) || name.endsWith( "/" ) || name.length() == 0 ){
 
@@ -809,6 +817,9 @@ CoreUpdateChecker
 					update_file = new File( temp_dir, name );
 
 					FileUtil.copyFile( zip, update_file, false );
+					
+					log.log( "        extracted to " + update_file );
+
 				}
 			}
 		}finally{
@@ -872,6 +883,8 @@ CoreUpdateChecker
 
 		if ( silent ){
 
+			log.log( "Update is silent" );
+			
 				// problem on OSX if they have renamed their app and we're running silently as it
 				// installs to Vuze.app regardless
 
