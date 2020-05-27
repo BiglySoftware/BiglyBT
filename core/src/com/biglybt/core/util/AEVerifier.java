@@ -125,12 +125,12 @@ AEVerifier
 
 			if ( signature == null ){
 
-				throw( new AEVerifierException( AEVerifierException.FT_SIGNATURE_MISSING, "Signature missing from file" ));
+				throw( new AEVerifierException( AEVerifierException.FT_SIGNATURE_MISSING, "Signature missing from file (" + file.getAbsolutePath() + ")" ));
 			}
 
 			if ( !sig.verify( signature )){
 
-				throw( new AEVerifierException( AEVerifierException.FT_SIGNATURE_BAD, "Signature doesn't match data" ));
+				throw( new AEVerifierException( AEVerifierException.FT_SIGNATURE_BAD, "Signature doesn't match data (" + file.getAbsolutePath() + ")" ));
 			}
 		}finally{
 
