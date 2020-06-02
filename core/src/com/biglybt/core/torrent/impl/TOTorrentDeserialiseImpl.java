@@ -684,6 +684,15 @@ TOTorrentDeserialiseImpl
 
 				List	meta_files = (List)info.get( TK_FILES );
 
+				if ( meta_files == null ){
+					
+					if ( info.containsKey( TK2_FILE_TREE )){
+						
+						throw( new TOTorrentException( "Version 2 only torrents not supported",
+								TOTorrentException.RT_DECODE_FAILS ));
+					}
+				}
+				
 				TOTorrentFileImpl[] files = new TOTorrentFileImpl[ meta_files.size()];
 
 				if (hasUTF8Keys) {

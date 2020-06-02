@@ -461,6 +461,11 @@ public class MessageText {
   		String	from_str 	= "%" + (i+1);
   		String	to_str		= params[i];
 
+  		if ( to_str == null ){
+  			
+  			to_str = "<null>";
+  		}
+  		
   		to_str = to_str.replace( '%', '\uFDE5' );	// invalid char to avoid %n in to_str being expanded
   		
   		res = replaceStrings( res, from_str, to_str );

@@ -897,7 +897,7 @@ public class TorrentOpener {
 			UIFunctionsManager.getUIFunctions().showErrorMessage(
 					"OpenTorrentWindow.mb.openError",  Debug.getStackTrace(e),
 					new String[] {
-						sOriginatingLocation,
+						sOriginatingLocation==null?torrentFile.getAbsolutePath():sOriginatingLocation,
 						e.getMessage()
 					});
 
