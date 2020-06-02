@@ -640,6 +640,15 @@ public class SideBar
 				}
 			});
 		
+			// repaint problems on mousewheel scroll on OSX
+		if ( Constants.isOSX ) {
+			vBar.setData(
+				"ScrollOnMouseOver2",
+				(Runnable) () ->{
+					tree.redraw();
+				});
+		}
+		
 		vBar.addSelectionListener(
 			new SelectionAdapter()
 			{
@@ -648,6 +657,11 @@ public class SideBar
 					if ( e.detail == SWT.None ){
 						SideBarEntrySWT[] sideBarEntries = getEntries( new SideBarEntrySWT[0]);
 						swt_updateSideBarHitAreasY(sideBarEntries);
+					}
+					
+					// repaint problems on mousewheel scroll on OSX
+					if ( Constants.isOSX ) {
+						tree.redraw();
 					}
 				}
 			});

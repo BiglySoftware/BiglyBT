@@ -290,7 +290,10 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				});
 			} catch (Throwable e) {
 			}
-			
+		}
+		
+		if (Constants.isWindows) {
+		
 			/* Windows "Bug" that Eclipse devs will never fix:
 			 * Bug 75766 - Allow mouse wheel to scroll without focus
 			 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=75766
@@ -344,6 +347,36 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 					}
 
 					cursorControl = cursorControl.getParent();
+				}
+			});
+
+		}
+		
+		if (Constants.isOSX ) {
+			// sidebar not redrawing on mouse-wheel scroll
+			display.addFilter(SWT.MouseWheel, e -> {
+				Widget focusControl = e.widget;
+				Control control = focusControl instanceof Control?(Control)focusControl:null;
+				while (control != null) {
+					
+					if (control instanceof Scrollable) {
+						ScrollBar verticalBar = ((Scrollable) control).getVerticalBar();
+						if (verticalBar != null && verticalBar.isEnabled()
+								&& verticalBar.getData("ScrollOnMouseOver2") != null) {
+							
+							Object o = verticalBar.getData("ScrollOnMouseOver2");
+							if (o instanceof Runnable) {
+								try {
+									((Runnable) o).run();
+								} catch (Throwable ignore) {
+								}
+							}
+
+							break;
+						}
+					}
+
+					control = control.getParent();
 				}
 			});
 
