@@ -274,7 +274,7 @@ TOTorrentFileImpl
 	public boolean 
 	isPadFile()
 	{
-		return( isPadFile());
+		return( attr_pad_file );
 	}
 	
 	@Override

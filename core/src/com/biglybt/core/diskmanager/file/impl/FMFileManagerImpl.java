@@ -261,6 +261,11 @@ FMFileManagerImpl
 
 		throws FMFileManagerException
 	{
+		if ( owner.getTorrentFile().isPadFile()){
+			
+			return( new FMFilePadding( owner, file, false ));
+		}
+		
 		FMFile	res;
 
 		if ( AEDiagnostics.USE_DUMMY_FILE_DATA ){
