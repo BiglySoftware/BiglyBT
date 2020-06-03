@@ -586,7 +586,8 @@ DiskManagerImpl
 
         int	newFiles 		= alloc_result[0];
         int	notNeededFiles	= alloc_result[1];
-
+        int numPadFiles		= alloc_result[2];
+        
         if ( getState() == FAULTY ){
 
                 // bail out if broken in the meantime
@@ -610,7 +611,7 @@ DiskManagerImpl
 
 	            	checkFreePieceList( true );
 	            }
-	        }else if ( newFiles + notNeededFiles != files.length ){
+	        }else if ( newFiles + notNeededFiles + numPadFiles != files.length ){
 
 	                //  if not a fresh torrent, check pieces ignoring fast resume data
 
@@ -1025,7 +1026,7 @@ DiskManagerImpl
     allocateFiles(
     	boolean[] stop_after_start )
     {
-    	int[] fail_result = { -1, -1 };
+    	int[] fail_result = { -1, -1, -1 };
 
         Set file_set    = new HashSet();
 
@@ -1049,7 +1050,8 @@ DiskManagerImpl
             
             int numNewFiles 		= 0;
             int notRequiredFiles	= 0;
-
+            int numPadFiles			= 0;
+            
             String  root_dir = download_manager.getAbsoluteSaveLocation().getParent();
 
             if ( !torrent.isSimpleTorrent()){
@@ -1096,6 +1098,15 @@ DiskManagerImpl
                     return( fail_result );
                 }
 
+                if ( fileInfo.getTorrentFile().isPadFile()){
+                	
+                	allocate_not_required += target_length;
+                	
+                	numPadFiles++;
+                	
+                	continue;
+                }
+                
                 CacheFile   cache_file      = fileInfo.getCacheFile();
                 File        data_file       = fileInfo.getFile(true);
 
@@ -1282,7 +1293,7 @@ DiskManagerImpl
 
             alloc_ok = true;
             
-            return( new int[]{ numNewFiles, notRequiredFiles });
+            return( new int[]{ numNewFiles, notRequiredFiles, numPadFiles });
 
         }finally{
 
