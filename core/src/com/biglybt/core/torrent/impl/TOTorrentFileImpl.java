@@ -49,6 +49,8 @@ TOTorrentFileImpl
 
 	private final boolean	is_utf8;
 
+	private boolean	attr_pad_file;
+	
 	protected
 	TOTorrentFileImpl(
 		TOTorrent		_torrent,
@@ -231,6 +233,13 @@ TOTorrentFileImpl
 		}
 
 		additional_properties_maybe_null.put( name, value );
+		
+		if ( name.equals( TOTorrentImpl.TK_BEP47_ATTRS ) && value instanceof byte[] ){
+			
+			String attr_str = new String((byte[])value, Constants.UTF_8 );
+			
+			attr_pad_file = attr_str.contains( "p" );
+		}
 	}
 
 	@Override
@@ -261,6 +270,13 @@ TOTorrentFileImpl
 		return( getLastPieceNumber() - getFirstPieceNumber() + 1 );
 	}
 
+	@Override
+	public boolean 
+	isPadFile()
+	{
+		return( isPadFile());
+	}
+	
 	@Override
 	public String getRelativePath() {
 		if (torrent == null) {

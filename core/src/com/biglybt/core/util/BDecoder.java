@@ -276,193 +276,293 @@ public class BDecoder
 		case 'd' :
 				//create a new dictionary object
 
-			LightHashMap tempMap = new LightHashMap();
+				// in almost all cases the dictionary keys are ascii or utf-8, as advised in the 'standards'. unfortunately
+				// bt v2 has a raw byte key dictionary for 'piece layers'. jeez
+			
+			if ( context.length() == 12 && context.equals( "piece layers" )){
 
-			try{
-				byte[]	prev_key = null;
+				ByteEncodedKeyHashMap<String,Object> dict = new ByteEncodedKeyHashMap<>();
+				
+				try{
 
-					//get the key
+						//get the key
 
-				while (true) {
+					while (true) {
 
-					dbis.mark(1);
+						dbis.mark(1);
 
-					tempByte = dbis.read();
-					if(tempByte == 'e' || tempByte == -1)
-						break; // end of map
+						tempByte = dbis.read();
+						
+						if (tempByte == 'e' || tempByte == -1 ){
+							
+							break; // end of map
+						}
+						
+						dbis.reset();
 
-					dbis.reset();
+						int keyLength = (int)getPositiveNumberFromStream(dbis, ':');
 
-					// decode key strings manually so we can reuse the bytebuffer
+						int skipBytes = 0;
 
-					int keyLength = (int)getPositiveNumberFromStream(dbis, ':');
-
-					int skipBytes = 0;
-
-					if ( keyLength > MAX_MAP_KEY_SIZE ){
-						skipBytes = keyLength - MAX_MAP_KEY_SIZE;
-						keyLength = MAX_MAP_KEY_SIZE;
-						//new Exception().printStackTrace();
-						//throw( new IOException( msg ));
-					}
-
-					if(keyLength < keyBytesBuffer.capacity())
-					{
-						keyBytesBuffer.position(0).limit(keyLength);
-						keyCharsBuffer.position(0).limit(keyLength);
-					} else {
-						keyBytesBuffer = ByteBuffer.allocate(keyLength);
-						keyCharsBuffer = CharBuffer.allocate(keyLength);
-					}
-
-					getByteArrayFromStream(dbis, keyLength, keyBytesBuffer.array());
-
-					if (skipBytes > 0) {
-						dbis.skip(skipBytes);
-					}
-
-					if ( verify_map_order ){
-
-						byte[] current_key = new byte[keyLength];
-
-						System.arraycopy( keyBytesBuffer.array(), 0, current_key, 0, keyLength );
-
-						if ( prev_key != null ){
-
-							int	len = Math.min( prev_key.length, keyLength );
-
-							int	state = 0;
-
-							for ( int i=0;i<len;i++){
-
-								int	cb = current_key[i]&0x00ff;
-								int	pb = prev_key[i]&0x00ff;
-
-								if ( cb > pb ){
-									state = 1;
-									break;
-								}else if ( cb < pb ){
-									state = 2;
-									break;
-								}
-							}
-
-							if ( state == 0){
-								if ( prev_key.length > keyLength ){
-
-									state = 2;
-								}
-							}
-
-							if ( state == 2 ){
-
-								// Debug.out( "Dictionary order incorrect: prev=" + new String( prev_key ) + ", current=" + new String( current_key ));
-
-								if (!( tempMap instanceof LightHashMapEx )){
-
-									LightHashMapEx x = new LightHashMapEx( tempMap );
-
-									x.setFlag( LightHashMapEx.FL_MAP_ORDER_INCORRECT, true );
-
-									tempMap = x;
-								}
-							}
+						if ( keyLength > MAX_MAP_KEY_SIZE ){
+							skipBytes = keyLength - MAX_MAP_KEY_SIZE;
+							keyLength = MAX_MAP_KEY_SIZE;
 						}
 
-						prev_key = current_key;
+						byte[] keyBytes = new byte[keyLength];
+
+						getByteArrayFromStream(dbis, keyLength, keyBytes );
+
+						if (skipBytes > 0) {
+							
+							dbis.skip(skipBytes);
+						}
+
+
+						//decode value
+
+						Object value = decodeInputStream(dbis,"<binary key>",nesting+1,internKeys);
+
+						if ( value == null ){
+
+							System.err.println( "Invalid encoding - value not serialsied for binary key " +  Base32.encode( keyBytes ) + " - ignoring: map so far=" + dict + ",loc=" + Debug.getCompressedStackTrace());
+
+							break;
+						}
+
+						if (skipBytes > 0) {
+
+							String msg = "dictionary key is too large - "
+									+ (keyLength + skipBytes) + ":, max=" + MAX_MAP_KEY_SIZE
+									+ ": skipping binary key " +  Base32.encode( keyBytes );
+							
+							System.err.println( msg );
+
+						} else {
+
+		  					if ( dict.put( new String( keyBytes, Constants.BYTE_ENCODING_CHARSET), value) != null ){
+
+		  						Debug.out( "BDecoder: binary key '" + Base32.encode( keyBytes ) + "' already exists!" );
+		  					}
+						}
 					}
 
-					keyDecoder.reset();
-					keyDecoder.decode(keyBytesBuffer,keyCharsBuffer,true);
-					keyDecoder.flush(keyCharsBuffer);
-					/* XXX Should be keyCharsBuffer.position() and not limit()
-					 * .position() is where the decode ended,
-					 * .limit() is keyLength in bytes.
-					 * Limit may be larger than needed since some chars are built from
-					 * multiple bytes. Not changing code because limit and position are
-					 * always (?) the same for ISO-8859-1, and for other encodings we
-					 * use the new decoder, which handles size correctly
-					 */
-					String key = new String(keyCharsBuffer.array(),0,keyCharsBuffer.limit());
+					dbis.mark(1);
+					
+					tempByte = dbis.read();
+					
+					dbis.reset();
+					
+					if ( nesting > 0 && tempByte == -1 ){
 
-					// keys often repeat a lot - intern to save space
-					if (internKeys)
-						key = StringInterner.intern( key );
-
-
-					//decode value
-
-					Object value = decodeInputStream(dbis,key,nesting+1,internKeys);
-
-					// value interning is too CPU-intensive, let's skip that for now
-					/*if(value instanceof byte[] && ((byte[])value).length < 17)
-					value = StringInterner.internBytes((byte[])value);*/
-
-					if ( TRACE ){
-						System.out.println( key + "->" + value + ";" );
+						throw( new BEncodingException( "BDecoder: invalid input data, 'e' missing from end of dictionary"));
 					}
+				}catch( Throwable e ){
 
-						// recover from some borked encodings that I have seen whereby the value has
-						// not been encoded. This results in, for example,
-						// 18:azureus_propertiesd0:e
-						// we only get null back here if decoding has hit an 'e' or end-of-file
-						// that is, there is no valid way for us to get a null 'value' here
+					if ( !recovery_mode ){
 
-					if ( value == null ){
+						if ( e instanceof IOException ){
 
-						System.err.println( "Invalid encoding - value not serialsied for '" + key + "' - ignoring: map so far=" + tempMap + ",loc=" + Debug.getCompressedStackTrace());
+							throw((IOException)e);
+						}
 
-						break;
-					}
-
-					if (skipBytes > 0) {
-
-						String msg = "dictionary key is too large - "
-								+ (keyLength + skipBytes) + ":, max=" + MAX_MAP_KEY_SIZE
-								+ ": skipping key starting with " + new String(key.substring(0, 128));
-						System.err.println( msg );
-
-					} else {
-
-  					if ( tempMap.put( key, value) != null ){
-
-  						Debug.out( "BDecoder: key '" + key + "' already exists!" );
-  					}
+						throw( new IOException( Debug.getNestedExceptionMessage(e)));
 					}
 				}
 
-				/*
-	        if ( tempMap.size() < 8 ){
+					//return the map
 
-	        	tempMap = new CompactMap( tempMap );
-	        }*/
-
-				dbis.mark(1);
-				tempByte = dbis.read();
-				dbis.reset();
-				if ( nesting > 0 && tempByte == -1 ){
-
-					throw( new BEncodingException( "BDecoder: invalid input data, 'e' missing from end of dictionary"));
-				}
-			}catch( Throwable e ){
-
-				if ( !recovery_mode ){
-
-					if ( e instanceof IOException ){
-
-						throw((IOException)e);
+				return dict;
+				
+			}else{
+				
+				LightHashMap tempMap = new LightHashMap();
+				
+				try{
+					byte[]	prev_key = null;
+	
+						//get the key
+	
+					while (true) {
+	
+						dbis.mark(1);
+	
+						tempByte = dbis.read();
+						if(tempByte == 'e' || tempByte == -1)
+							break; // end of map
+	
+						dbis.reset();
+	
+						// decode key strings manually so we can reuse the bytebuffer
+	
+						int keyLength = (int)getPositiveNumberFromStream(dbis, ':');
+	
+						int skipBytes = 0;
+	
+						if ( keyLength > MAX_MAP_KEY_SIZE ){
+							skipBytes = keyLength - MAX_MAP_KEY_SIZE;
+							keyLength = MAX_MAP_KEY_SIZE;
+							//new Exception().printStackTrace();
+							//throw( new IOException( msg ));
+						}
+	
+						if(keyLength < keyBytesBuffer.capacity())
+						{
+							keyBytesBuffer.position(0).limit(keyLength);
+							keyCharsBuffer.position(0).limit(keyLength);
+						} else {
+							keyBytesBuffer = ByteBuffer.allocate(keyLength);
+							keyCharsBuffer = CharBuffer.allocate(keyLength);
+						}
+	
+						getByteArrayFromStream(dbis, keyLength, keyBytesBuffer.array());
+	
+						if (skipBytes > 0) {
+							dbis.skip(skipBytes);
+						}
+	
+						if ( verify_map_order ){
+	
+							byte[] current_key = new byte[keyLength];
+	
+							System.arraycopy( keyBytesBuffer.array(), 0, current_key, 0, keyLength );
+	
+							if ( prev_key != null ){
+	
+								int	len = Math.min( prev_key.length, keyLength );
+	
+								int	state = 0;
+	
+								for ( int i=0;i<len;i++){
+	
+									int	cb = current_key[i]&0x00ff;
+									int	pb = prev_key[i]&0x00ff;
+	
+									if ( cb > pb ){
+										state = 1;
+										break;
+									}else if ( cb < pb ){
+										state = 2;
+										break;
+									}
+								}
+	
+								if ( state == 0){
+									if ( prev_key.length > keyLength ){
+	
+										state = 2;
+									}
+								}
+	
+								if ( state == 2 ){
+	
+									// Debug.out( "Dictionary order incorrect: prev=" + new String( prev_key ) + ", current=" + new String( current_key ));
+	
+									if (!( tempMap instanceof LightHashMapEx )){
+	
+										LightHashMapEx x = new LightHashMapEx( tempMap );
+	
+										x.setFlag( LightHashMapEx.FL_MAP_ORDER_INCORRECT, true );
+	
+										tempMap = x;
+									}
+								}
+							}
+	
+							prev_key = current_key;
+						}
+	
+						keyDecoder.reset();
+						keyDecoder.decode(keyBytesBuffer,keyCharsBuffer,true);
+						keyDecoder.flush(keyCharsBuffer);
+						/* XXX Should be keyCharsBuffer.position() and not limit()
+						 * .position() is where the decode ended,
+						 * .limit() is keyLength in bytes.
+						 * Limit may be larger than needed since some chars are built from
+						 * multiple bytes. Not changing code because limit and position are
+						 * always (?) the same for ISO-8859-1, and for other encodings we
+						 * use the new decoder, which handles size correctly
+						 */
+						String key = new String(keyCharsBuffer.array(),0,keyCharsBuffer.limit());
+	
+						// keys often repeat a lot - intern to save space
+						if (internKeys)
+							key = StringInterner.intern( key );
+	
+	
+						//decode value
+	
+						Object value = decodeInputStream(dbis,key,nesting+1,internKeys);
+	
+						// value interning is too CPU-intensive, let's skip that for now
+						/*if(value instanceof byte[] && ((byte[])value).length < 17)
+						value = StringInterner.internBytes((byte[])value);*/
+	
+						if ( TRACE ){
+							System.out.println( key + "->" + value + ";" );
+						}
+	
+							// recover from some borked encodings that I have seen whereby the value has
+							// not been encoded. This results in, for example,
+							// 18:azureus_propertiesd0:e
+							// we only get null back here if decoding has hit an 'e' or end-of-file
+							// that is, there is no valid way for us to get a null 'value' here
+	
+						if ( value == null ){
+	
+							System.err.println( "Invalid encoding - value not serialsied for '" + key + "' - ignoring: map so far=" + tempMap + ",loc=" + Debug.getCompressedStackTrace());
+	
+							break;
+						}
+	
+						if (skipBytes > 0) {
+	
+							String msg = "dictionary key is too large - "
+									+ (keyLength + skipBytes) + ":, max=" + MAX_MAP_KEY_SIZE
+									+ ": skipping key starting with " + new String(key.substring(0, 128));
+							System.err.println( msg );
+	
+						} else {
+	
+	  					if ( tempMap.put( key, value) != null ){
+	
+	  						Debug.out( "BDecoder: key '" + key + "' already exists!" );
+	  					}
+						}
 					}
-
-					throw( new IOException( Debug.getNestedExceptionMessage(e)));
+	
+					/*
+		        if ( tempMap.size() < 8 ){
+	
+		        	tempMap = new CompactMap( tempMap );
+		        }*/
+	
+					dbis.mark(1);
+					tempByte = dbis.read();
+					dbis.reset();
+					if ( nesting > 0 && tempByte == -1 ){
+	
+						throw( new BEncodingException( "BDecoder: invalid input data, 'e' missing from end of dictionary"));
+					}
+				}catch( Throwable e ){
+	
+					if ( !recovery_mode ){
+	
+						if ( e instanceof IOException ){
+	
+							throw((IOException)e);
+						}
+	
+						throw( new IOException( Debug.getNestedExceptionMessage(e)));
+					}
 				}
+	
+				tempMap.compactify(-0.9f);
+	
+					//return the map
+	
+				return tempMap;
 			}
-
-			tempMap.compactify(-0.9f);
-
-				//return the map
-
-			return tempMap;
-
 		case 'l' :
 				//create the list
 
@@ -613,6 +713,106 @@ public class BDecoder
 			case 'd' :
 				//create a new dictionary object
 
+				// in almost all cases the dictionary keys are ascii or utf-8, as advised in the 'standards'. unfortunately
+				// bt v2 has a raw byte key dictionary for 'piece layers'. jeez
+			
+			if ( context.length() == 12 && context.equals( "piece layers" )){
+
+				ByteEncodedKeyHashMap<String,Object> dict = new ByteEncodedKeyHashMap<>();
+				
+				try{
+
+						//get the key
+
+					while (true) {
+
+						dbis.mark(1);
+
+						tempByte = dbis.read();
+						
+						if (tempByte == 'e' || tempByte == -1 ){
+							
+							break; // end of map
+						}
+						
+						dbis.reset();
+
+						int keyLength = (int)getPositiveNumberFromStream(dbis, ':');
+
+						int skipBytes = 0;
+
+						if ( keyLength > MAX_MAP_KEY_SIZE ){
+							skipBytes = keyLength - MAX_MAP_KEY_SIZE;
+							keyLength = MAX_MAP_KEY_SIZE;
+						}
+
+						byte[] keyBytes = new byte[keyLength];
+
+						getByteArrayFromStream(dbis, keyLength, keyBytes );
+
+						if (skipBytes > 0) {
+							
+							dbis.skip(skipBytes);
+						}
+
+
+						//decode value
+
+						Object value = decodeInputStream(dbis,"<binary key>",nesting+1,internKeys);
+
+						if ( value == null ){
+
+							System.err.println( "Invalid encoding - value not serialsied for binary key " +  Base32.encode( keyBytes ) + " - ignoring: map so far=" + dict + ",loc=" + Debug.getCompressedStackTrace());
+
+							break;
+						}
+
+						if ( skipBytes > 0 ){
+
+							String msg = "dictionary key is too large - "
+									+ (keyLength + skipBytes) + ":, max=" + MAX_MAP_KEY_SIZE
+									+ ": skipping binary key " +  Base32.encode( keyBytes );
+							
+							System.err.println( msg );
+
+						}else{
+
+		  					if ( dict.put( new String( keyBytes, Constants.BYTE_ENCODING_CHARSET), value) != null ){
+	
+		  						Debug.out( "BDecoder: binary key '" + Base32.encode( keyBytes ) + "' already exists!" );
+		  					}
+						}
+					}
+
+					dbis.mark(1);
+					
+					tempByte = dbis.read();
+					
+					dbis.reset();
+					
+					if ( nesting > 0 && tempByte == -1 ){
+
+						throw( new BEncodingException( "BDecoder: invalid input data, 'e' missing from end of dictionary"));
+					}
+				}catch( Throwable e ){
+
+					if ( !recovery_mode ){
+
+						if ( e instanceof IOException ){
+
+							throw((IOException)e);
+						}
+
+						throw( new IOException( Debug.getNestedExceptionMessage(e)));
+					}
+				}
+
+					//return the map
+
+				return dict;
+				
+			}else{
+				
 				LightHashMap tempMap = new LightHashMap();
 
 				try{
@@ -758,6 +958,7 @@ public class BDecoder
 				//return the map
 
 				return tempMap;
+			}
 
 			case 'l' :
 				//create the list

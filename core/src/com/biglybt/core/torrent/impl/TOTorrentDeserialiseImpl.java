@@ -686,7 +686,7 @@ TOTorrentDeserialiseImpl
 
 				if ( meta_files == null ){
 					
-					if ( info.containsKey( TK2_FILE_TREE )){
+					if ( info.containsKey( TK_V2_FILE_TREE )){
 						
 						throw( new TOTorrentException( "Version 2 only torrents not supported",
 								TOTorrentException.RT_DECODE_FAILS ));
@@ -722,23 +722,23 @@ TOTorrentDeserialiseImpl
 
 					byte[][]	path_comps = null;
 					if (paths != null) {
-  					path_comps = new byte[paths.size()][];
-
-  					for (int j=0;j<paths.size();j++){
-
-  						path_comps[j] = (byte[])paths.get(j);
-  					}
+	  					path_comps = new byte[paths.size()][];
+	
+	  					for (int j=0;j<paths.size();j++){
+	
+	  						path_comps[j] = (byte[])paths.get(j);
+	  					}
 					}
 
 					TOTorrentFileImpl file;
 
 					if (hasUTF8Keys) {
-  					byte[][]	path_comps8 = new byte[paths8.size()][];
+						byte[][]	path_comps8 = new byte[paths8.size()][];
 
-  					for (int j=0;j<paths8.size();j++){
+						for (int j=0;j<paths8.size();j++){
 
-  						path_comps8[j] = (byte[])paths8.get(j);
-  					}
+							path_comps8[j] = (byte[])paths8.get(j);
+						}
 
 						file = files[i] = new TOTorrentFileImpl( this, i, total_length, len, path_comps, path_comps8 );
 					} else {

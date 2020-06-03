@@ -63,8 +63,10 @@ TOTorrentImpl
 	protected static final List	TK_ADDITIONAL_OK_ATTRS =
 		Arrays.asList(new String[]{ TK_COMMENT_UTF8, AZUREUS_PROPERTIES, TK_WEBSEED_BT, TK_WEBSEED_GR });
 
+
+	protected static final String TK_BEP47_ATTRS		= "attr";
 	
-	protected static final String TK2_FILE_TREE		= "file tree";
+	protected static final String TK_V2_FILE_TREE		= "file tree";
 	
 	private static CopyOnWriteList<TOTorrentListener>		global_listeners = new CopyOnWriteList<>();
 	

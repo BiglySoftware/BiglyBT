@@ -29,6 +29,8 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLGroup;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentException;
+import com.biglybt.core.util.ByteEncodedKeyHashMap;
+import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.xml.simpleparser.SimpleXMLParserDocumentFactory;
@@ -459,18 +461,40 @@ TOTorrentXMLDeserialiser
 
 		throws TOTorrentException
 	{
-		Map res = new HashMap();
-
-		SimpleXMLParserDocumentNode[]	kids = node.getChildren();
-
-		for (int i=0;i<kids.length;i++){
-
-			mapEntry	entry = readGenericMapEntry( kids[i] );
-
-			res.put( entry.name, entry.value );
+		SimpleXMLParserDocumentAttribute bk = node.getAttribute( "byte_keys" );
+		
+		if ( bk != null && bk.getValue().equalsIgnoreCase( "true" )){
+			
+			Map res = new ByteEncodedKeyHashMap<>();
+			
+			SimpleXMLParserDocumentNode[]	kids = node.getChildren();
+			
+			for (int i=0;i<kids.length;i++){
+	
+				mapEntry	entry = readGenericMapEntry( kids[i] );
+	
+				String key = new String( ByteFormatter.decodeString( entry.name ), Constants.BYTE_ENCODING_CHARSET );
+				
+				res.put( key, entry.value );
+			}
+			
+			return( res );
+			
+		}else{
+			
+			Map res = new HashMap();
+	
+			SimpleXMLParserDocumentNode[]	kids = node.getChildren();
+	
+			for (int i=0;i<kids.length;i++){
+	
+				mapEntry	entry = readGenericMapEntry( kids[i] );
+	
+				res.put( entry.name, entry.value );
+			}
+	
+			return( res );
 		}
-
-		return( res );
 	}
 
 	protected byte[]

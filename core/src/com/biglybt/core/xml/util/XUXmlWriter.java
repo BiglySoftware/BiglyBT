@@ -23,6 +23,7 @@ package com.biglybt.core.xml.util;
 import java.io.*;
 import java.util.*;
 
+import com.biglybt.core.util.ByteEncodedKeyHashMap;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Constants;
 
@@ -334,8 +335,17 @@ XUXmlWriter
 	writeGeneric(
 		Map		map )
 	{
-		writeLineRaw( "<MAP>" );
-
+		boolean byte_keys = map instanceof ByteEncodedKeyHashMap;
+		
+		if ( byte_keys ){
+		
+			writeLineRaw( "<MAP byte_keys=\"true\">" );
+			
+		}else{
+			
+			writeLineRaw( "<MAP>" );
+		}
+		
 		try{
 			indent();
 
@@ -344,8 +354,21 @@ XUXmlWriter
 			while(it.hasNext()){
 
 				String	key = (String)it.next();
-
-				writeGenericMapEntry( key, map.get( key ));
+				
+				Object value = map.get( key );
+				
+				if ( byte_keys ){
+					
+					byte[] key_bytes = key.getBytes( Constants.BYTE_ENCODING_CHARSET );
+					
+					key = encodeBytes( key_bytes );
+					
+					writeGenericMapEntry( key, value);
+					
+				}else{
+				
+					writeGenericMapEntry( key, value );
+				}
 			}
 		}finally{
 
@@ -456,22 +479,8 @@ XUXmlWriter
 	encodeBytes(
 		byte[]	bytes )
 	{
-		String data = ByteFormatter.nicePrint( bytes, true );
+		String data = ByteFormatter.nicePrint( bytes, true, Integer.MAX_VALUE );
 
 		return( data );
-
-		/*
-		try{
-
-			return( URLEncoder.encode(new String( bytes, Constants.DEFAULT_ENCODING ), Constants.DEFAULT_ENCODING));
-
-		}catch( UnsupportedEncodingException e ){
-
-			throw( new TOTorrentException( 	"TOTorrentXMLSerialiser: unsupported encoding for '" + new String(bytes) + "'",
-										TOTorrentException.RT_UNSUPPORTED_ENCODING));
-		}
-		*/
 	}
-
-
 }

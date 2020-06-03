@@ -51,6 +51,14 @@ TOTorrentFile
 	public int
 	getNumberOfPieces();
 
+		/**
+		 * is BEP_47 pad file
+		 * @return
+		 */
+	
+	public boolean
+	isPadFile();
+	
 	public Map
 	getAdditionalProperties();
 }
