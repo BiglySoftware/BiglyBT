@@ -138,12 +138,15 @@ TOTorrentCreateImpl
 
 	private TOTorrentFileHasher			file_hasher;
 
-	private long	total_file_size		= -1;
-	private long	total_file_count	= 0;
+	private long	total_file_size_no_pad		= -1;
+	private long	total_file_count_no_pad		= 0;
 
-	private long							piece_count;
+	private long	piece_count_no_pad;
+	
 	private boolean							add_other_hashes;
-
+	private boolean							add_pad_files = false;
+	private int								pad_file_num;
+	
 	private final List<TOTorrentProgressListener>							progress_listeners = new ArrayList<>();
 
 	private int	reported_progress;
@@ -272,9 +275,9 @@ TOTorrentCreateImpl
 
 		report( "Torrent.create.progress.piecelength", _piece_length );
 
-		piece_count = calculateNumberOfPieces( _torrent_base,_piece_length );
+		piece_count_no_pad = calculateNumberOfPieces( _torrent_base,_piece_length );
 
-		if ( piece_count == 0 ){
+		if ( piece_count_no_pad == 0 ){
 
 			throw( new TOTorrentException( "TOTorrentCreate: specified files have zero total length",
 											TOTorrentException.RT_ZERO_LENGTH ));
@@ -324,7 +327,7 @@ TOTorrentCreateImpl
 
 				List<TOTorrentFileImpl>	encoded = new ArrayList<>();
 
-				ignored = processDir( file_hasher, _torrent_base, encoded, _torrent_base.getName(), "" );
+				ignored = processDir( file_hasher, _torrent_base, encoded, _torrent_base.getName(), "", new long[1] );
 
 				TOTorrentFileImpl[] files = new TOTorrentFileImpl[ encoded.size()];
 
@@ -361,7 +364,8 @@ TOTorrentCreateImpl
 		File						dir,
 		List<TOTorrentFileImpl>		encoded,
 		String						base_name,
-		String						root )
+		String						root,
+		long[]						torrent_offset )
 
 		throws TOTorrentException
 	{
@@ -387,8 +391,6 @@ TOTorrentCreateImpl
 			Collections.sort( file_list,file_comparator);
 		}
 
-		long	offset	= 0;
-
 		int	ignored = 0;
 
 		for (int i=0;i<file_list.size();i++){
@@ -406,7 +408,7 @@ TOTorrentCreateImpl
 						file_name = root + File.separator + file_name ;
 					}
 
-					ignored += processDir( hasher, file, encoded, base_name, file_name );
+					ignored += processDir( hasher, file, encoded, base_name, file_name, torrent_offset );
 
 				}else{
 
@@ -416,6 +418,30 @@ TOTorrentCreateImpl
 
 					}else{
 
+						if ( add_pad_files ){
+							
+							long offset = torrent_offset[0];
+							
+							long l = offset%piece_length;
+							
+							if ( l > 0 ){
+								
+								long pad_size = piece_length - l;
+							
+								hasher.addPad((int)pad_size);
+
+								String pad_file = root + File.separator + ".pad" + File.separator + (++pad_file_num) + "_" + pad_size;
+										
+								TOTorrentFileImpl	tf = new TOTorrentFileImpl( this, i, torrent_offset[0], pad_size, pad_file );
+
+								tf.setAdditionalProperty( "attr", "p".getBytes( Constants.UTF_8 ));
+								
+								torrent_offset[0] += pad_size;
+								
+								encoded.add( tf );
+							}
+						}
+						
 						if ( root.length() > 0 ){
 
 							file_name = root + File.separator + file_name;
@@ -430,9 +456,9 @@ TOTorrentCreateImpl
 
 						long length = hasher.add( link==null?file:link );
 
-						TOTorrentFileImpl	tf = new TOTorrentFileImpl( this, i, offset, length, file_name );
+						TOTorrentFileImpl	tf = new TOTorrentFileImpl( this, i, torrent_offset[0], length, file_name );
 
-						offset += length;
+						torrent_offset[0] += length;
 
 						if ( add_other_hashes ){
 
@@ -462,8 +488,13 @@ TOTorrentCreateImpl
 	{
 		for (int i=0;i<progress_listeners.size();i++){
 
-			int	this_progress = (int)((piece_number*100)/piece_count );
+			int	this_progress = (int)((piece_number*100)/piece_count_no_pad );
 
+			if ( this_progress > 100 ){
+				
+				this_progress = 100;
+			}
+			
 			if ( this_progress != reported_progress ){
 
 				reported_progress = this_progress;
@@ -493,12 +524,12 @@ TOTorrentCreateImpl
 
 		throws TOTorrentException
 	{
-		if ( total_file_size == -1 ){
+		if ( total_file_size_no_pad == -1 ){
 
-			total_file_size = getTotalFileSize( file );
+			total_file_size_no_pad = getTotalFileSize( file );
 		}
 
-		return( total_file_size );
+		return( total_file_size_no_pad );
 	}
 
 	protected long
@@ -513,7 +544,7 @@ TOTorrentCreateImpl
 
 		report( "Torrent.create.progress.totalfilesize", res );
 
-		report( "Torrent.create.progress.totalfilecount", ""+total_file_count );
+		report( "Torrent.create.progress.totalfilecount", ""+total_file_count_no_pad );
 
 		return( res );
 	}
@@ -542,7 +573,7 @@ TOTorrentCreateImpl
 
 			if ( !ignoreFile( name )){
 
-				total_file_count++;
+				total_file_count_no_pad++;
 
 				if ( root.length() > 0 ){
 

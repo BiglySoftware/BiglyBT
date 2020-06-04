@@ -22,6 +22,7 @@ package com.biglybt.core.torrent.impl;
 
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -174,6 +175,79 @@ TOTorrentFileHasher
 		return( file_length );
 	}
 
+	void
+	addPad(
+		int		pad_length)
+
+		throws TOTorrentException
+	{
+		InputStream is = null;
+
+		try{
+
+			is = new ByteArrayInputStream( new byte[ pad_length ]);
+
+			while(true){
+
+				if ( cancelled ){
+
+					throw( new TOTorrentException( 	"TOTorrentCreate: operation cancelled",
+													TOTorrentException.RT_CANCELLED ));
+				}
+
+				int	len = is.read( buffer, buffer_pos, piece_length - buffer_pos );
+
+				if ( len > 0 ){
+
+
+					buffer_pos += len;
+
+					if ( buffer_pos == piece_length ){
+
+						// hash this piece
+
+						byte[] hash = new SHA1Hasher().calculateHash(buffer);
+
+						if ( overall_sha1_hash != null ){
+
+							overall_sha1_hash.update( buffer );
+							overall_ed2k_hash.update( buffer );
+						}
+
+						pieces.add( hash );
+
+						if ( listener != null ){
+
+							listener.pieceHashed( pieces.size() );
+						}
+
+						buffer_pos = 0;
+					}
+				}else{
+
+					break;
+				}
+			}
+
+		}catch( TOTorrentException e ){
+
+			throw( e );
+
+		}catch( Throwable e ){
+
+			throw( new TOTorrentException( 	"TOTorrentFileHasher: file read fails '" + e.toString() + "'",
+											TOTorrentException.RT_READ_FAILS ));
+		}finally {
+			if (is != null) {
+				try {
+					is.close();
+				}
+				catch (Exception e) {
+				}
+			}
+		}
+	}
+	
 	protected byte[]
 	getPerFileSHA1Digest()
 	{
