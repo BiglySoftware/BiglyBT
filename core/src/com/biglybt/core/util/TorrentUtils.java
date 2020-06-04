@@ -2932,49 +2932,56 @@ TorrentUtils
 			
 			TOTorrentFile	torrentFile = tfiles[i];
 	
-			String 	orgFullName = torrentFile.getRelativePath(); // translated to locale
-			String	orgFileName = new File(orgFullName).getName();
-	
 			boolean	wanted = true;
-	
-			if ( skip_min_size > 0 && torrentFile.getLength() < skip_min_size ){
-	
+
+			if ( torrentFile.isPadFile()){
+				
 				wanted = false;
-	
-			}else if ( skip_extensons.size() > 0 ){
-	
-				int	pos = orgFileName.lastIndexOf( '.' );
-	
-				if ( pos != -1 ){
-	
-					String	ext = orgFileName.substring( pos+1 );
-	
-					wanted = !skip_extensons.contains( ext );
-				}
-			}
-			
-			if ( wanted && !skip_files.isEmpty()){
-			
-				if ( skip_files.contains(orgFileName.toLowerCase())){
-					
+				
+			}else{
+				
+				String 	orgFullName = torrentFile.getRelativePath(); // translated to locale
+				String	orgFileName = new File(orgFullName).getName();
+				
+				if ( skip_min_size > 0 && torrentFile.getLength() < skip_min_size ){
+		
 					wanted = false;
-					
-				}else{
-					
-					for ( Object o: skip_files ){
+		
+				}else if ( skip_extensons.size() > 0 ){
+		
+					int	pos = orgFileName.lastIndexOf( '.' );
+		
+					if ( pos != -1 ){
+		
+						String	ext = orgFileName.substring( pos+1 );
+		
+						wanted = !skip_extensons.contains( ext );
+					}
+				}
+				
+				if ( wanted && !skip_files.isEmpty()){
+				
+					if ( skip_files.contains(orgFileName.toLowerCase())){
 						
-						if ( o instanceof Pattern ){
+						wanted = false;
 						
-							try{
-								if ( ((Pattern)o).matcher( orgFileName ).matches()){
+					}else{
+						
+						for ( Object o: skip_files ){
+							
+							if ( o instanceof Pattern ){
+							
+								try{
+									if ( ((Pattern)o).matcher( orgFileName ).matches()){
+										
+										wanted = false;
+										
+										break;
+									}
+								}catch( Throwable e ){
 									
-									wanted = false;
-									
-									break;
+									Debug.out( e );
 								}
-							}catch( Throwable e ){
-								
-								Debug.out( e );
 							}
 						}
 					}
