@@ -33,6 +33,8 @@ import java.util.List;
 
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerPiece;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -97,6 +99,31 @@ public class PEPieceImpl
 
 		requested =new String[nbBlocks];
 
+			// easiest way to deal with the fact that pad files are effectively already downloaded (contents is just array of zero bytes) is to wait until
+			// a piece is allocated for downloading and then set the pad blocks as written. If you try and do this via presetting resume data then you end
+			// up with potentially a load of partial pieces on startup
+		
+		DMPieceList pl = dmPiece.getPieceList();
+		
+		if ( pl.size() == 2 ){
+			
+			DMPieceMapEntry pme2 = pl.get( 1 );
+			
+			if ( pme2.getFile().getTorrentFile().isPadFile()){
+			
+				DMPieceMapEntry pme1 = pl.get( 0 );
+
+				int	len1 = pme1.getLength();
+				
+				int pad_block_start = ( len1 + DiskManager.BLOCK_SIZE - 1 ) / DiskManager.BLOCK_SIZE;
+				
+				for ( int i=pad_block_start; i<nbBlocks; i++ ){
+					
+					dmPiece.setWritten( i );
+				}
+			}
+		}
+		
         final boolean[] written =dmPiece.getWritten();
 		if (written ==null)
 			downloaded =new boolean[nbBlocks];
