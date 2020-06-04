@@ -303,7 +303,7 @@ public class MessageText {
 	String key,
 	String sDefault)
   {
-	  if (key == null) {
+	  if (key == null || key.length() == 0) {
 		  return "";
 	  }
 
@@ -439,39 +439,39 @@ public class MessageText {
   		String		key,
 		String[] params )
   {
-  	String	res = getString(key, (String) null);
+	  String	res = getString(key, (String) null);
 
-		if (res == null) {
-			if (LOG_MISSING_MESSAGES) {
-				System.err.println("Missing message key '" + key + "', params " + Arrays.toString(params));
-			}
+	  if (res == null) {
+		  if (LOG_MISSING_MESSAGES) {
+			  System.err.println("Missing message key '" + key + "', params " + Arrays.toString(params));
+		  }
 
-			if (params == null) {
-				return  "!" + key + "!";
-			}
-			return "!" + key + "(" + Arrays.toString(params) + ")" + "!";
-		}
+		  if (params == null) {
+			  return  "!" + key + "!";
+		  }
+		  return "!" + key + "(" + Arrays.toString(params) + ")" + "!";
+	  }
 
-  	if (params == null) {
-  		return res;
-  	}
+	  if (params == null || params.length == 0 ) {
+		  return res;
+	  }
 
-  	for(int i=0;i<params.length;i++){
+	  for(int i=0;i<params.length;i++){
 
-  		String	from_str 	= "%" + (i+1);
-  		String	to_str		= params[i];
+		  String	from_str 	= "%" + (i+1);
+		  String	to_str		= params[i];
 
-  		if ( to_str == null ){
-  			
-  			to_str = "<null>";
-  		}
-  		
-  		to_str = to_str.replace( '%', '\uFDE5' );	// invalid char to avoid %n in to_str being expanded
-  		
-  		res = replaceStrings( res, from_str, to_str );
-  	}
+		  if ( to_str == null ){
 
-  	return( res.replace( '\uFDE5', '%' ));
+			  to_str = "<null>";
+		  }
+
+		  to_str = to_str.replace( '%', '\uFDE5' );	// invalid char to avoid %n in to_str being expanded
+
+		  res = replaceStrings( res, from_str, to_str );
+	  }
+
+	  return( res.replace( '\uFDE5', '%' ));
   }
 
   protected static String
