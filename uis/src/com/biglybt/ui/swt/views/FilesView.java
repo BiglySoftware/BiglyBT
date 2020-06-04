@@ -552,9 +552,21 @@ public class FilesView
 	filterCheck(
 		DiskManagerFileInfo ds, String filter, boolean regex )
 	{
-		if ( hide_dnd_files && ds.isSkipped()){
+		if ( hide_dnd_files ){
+			
+			if ( ds.isSkipped()){
 
-			return( false );
+				return( false );
+				
+			}else if ( ds instanceof FilesViewNodeInner ){
+				
+					// see if all kids skipped
+				
+				if (((FilesViewNodeInner)ds).getSkippedState() == 0 ){
+					
+					return( false );
+				}
+			}
 		}
 
 		if ( filter == null || filter.length() == 0 ){
