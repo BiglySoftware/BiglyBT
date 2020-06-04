@@ -430,11 +430,11 @@ TOTorrentCreateImpl
 							
 								hasher.addPad((int)pad_size);
 
-								String pad_file = root + File.separator + ".pad" + File.separator + (++pad_file_num) + "_" + pad_size;
+								String pad_file = ".pad" + File.separator + (++pad_file_num) + "_" + pad_size;
 										
 								TOTorrentFileImpl	tf = new TOTorrentFileImpl( this, i, torrent_offset[0], pad_size, pad_file );
 
-								tf.setAdditionalProperty( "attr", "p".getBytes( Constants.UTF_8 ));
+								tf.setAdditionalProperty( TOTorrentImpl.TK_BEP47_ATTRS, "p".getBytes( Constants.UTF_8 ));
 								
 								torrent_offset[0] += pad_size;
 								

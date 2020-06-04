@@ -5732,8 +5732,23 @@ public class OpenTorrentOptionsWindow
 				}
 			}, false);
 
-
-			tvFiles.addDataSources(torrentOptions.getFiles());
+			TorrentOpenFileOptions[] files = torrentOptions.getFiles();
+			
+			TOTorrent torrent = torrentOptions.getTorrent();
+			
+			TOTorrentFile[] torrent_files = torrent.getFiles();
+			
+			List<TorrentOpenFileOptions> visible_files = new ArrayList<>( files.length );
+			
+			for ( TorrentOpenFileOptions file: files ){
+				
+				if ( !torrent_files[file.getIndex()].isPadFile()){
+					
+					visible_files.add( file );
+				}
+			}
+			
+			tvFiles.addDataSources( visible_files.toArray( new TorrentOpenFileOptions[0] ));
 		}
 
 		@Override
