@@ -33,6 +33,7 @@ TOTorrentException
 	public static final int		RT_UNSUPPORTED_ENCODING		= 7;
 	public static final int		RT_HASH_FAILS				= 8;
 	public static final int		RT_CANCELLED				= 9;
+	public static final int		RT_CREATE_FAILED			= 10;
 
 	protected final int	reason;
 

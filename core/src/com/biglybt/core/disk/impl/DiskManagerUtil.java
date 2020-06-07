@@ -1626,6 +1626,11 @@ DiskManagerUtil
 			
 			TOTorrent torrent = dm.getTorrent();
 			
+			if ( torrent == null ){
+				
+				return( new DiskManagerPiece[0] );
+			}
+			
 	        DMPieceMapper piece_mapper    = DMPieceMapperFactory.create( torrent );
 	
 	        LocaleUtilDecoder   locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );

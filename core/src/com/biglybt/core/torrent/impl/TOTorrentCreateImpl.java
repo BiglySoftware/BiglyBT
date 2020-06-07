@@ -38,6 +38,7 @@ TOTorrentCreateImpl
 	implements	TOTorrentFileHasherListener
 {
 	private static final Comparator<File> file_comparator;
+	private static final Comparator<File> file_comparator_v2;
 
 	static{
 		if ( System.getProperty( "az.create.torrent.alphanumeric.sort", "0" ).equals( "1" )){
@@ -131,8 +132,25 @@ TOTorrentCreateImpl
 
 			file_comparator = null;
 		}
+		
+		file_comparator_v2 =
+				new Comparator<File>()
+				{
+					@Override
+					public int
+					compare(
+						File	f1,
+						File	f2 )
+					{
+						return( f1.getName().compareTo( f2.getName()));
+					}
+				};
 	}
 
+	private static int	torrent_create_versions	= TT_V1;
+	
+	private final int						torrent_type;
+	
 	private File							torrent_base;
 	private long							piece_length;
 
@@ -144,8 +162,12 @@ TOTorrentCreateImpl
 	private long	piece_count_no_pad;
 	
 	private boolean							add_other_hashes;
+	
 	private boolean							add_pad_files = false;
 	private int								pad_file_num;
+	private long							pad_file_sizes;
+	private final boolean					add_v1;
+	private final boolean					add_v2;
 	
 	private final List<TOTorrentProgressListener>							progress_listeners = new ArrayList<>();
 
@@ -156,7 +178,7 @@ TOTorrentCreateImpl
 	private Map<String,File>	linkage_map;
 	private final Map<String,String>	linked_tf_map = new HashMap<>();
 
-	private boolean	cancelled;
+	private volatile boolean	cancelled;
 
 	protected
 	TOTorrentCreateImpl(
@@ -174,6 +196,11 @@ TOTorrentCreateImpl
 		torrent_base		= _torrent_base;
 		piece_length		= _piece_length;
 		add_other_hashes	= _add_other_hashes;
+		
+		torrent_type = torrent_create_versions;
+		
+		add_v1	= torrent_type == TT_V1 || torrent_type == TT_V1_V2;
+		add_v2	= torrent_type == TT_V2 || torrent_type == TT_V1_V2;
 	}
 
 	protected
@@ -195,6 +222,11 @@ TOTorrentCreateImpl
 		torrent_base		= _torrent_base;
 		add_other_hashes	= _add_other_hashes;
 
+		torrent_type = torrent_create_versions;
+
+		add_v1	= torrent_type == TT_V1 || torrent_type == TT_V1_V2;
+		add_v2	= torrent_type == TT_V2 || torrent_type == TT_V1_V2;
+
 		long	total_size = calculateTotalFileSize( _torrent_base );
 
 		piece_length = getComputedPieceSize( total_size, _piece_min_size, _piece_max_size, _piece_num_lower, _piece_num_upper );
@@ -205,21 +237,58 @@ TOTorrentCreateImpl
 
 		throws TOTorrentException
 	{
+		if ( !( add_v1 || add_v2 )){
+			
+			throw( new TOTorrentException( "No torrent versions selected", TOTorrentException.RT_CREATE_FAILED ));
+		}
+	
 		try{
-			int ignored = constructFixed( torrent_base, piece_length );
-	
-				// linkage map doesn't include ignored files, if it is supplied, so take account of this when
-				// checking that linkages have resolved correctly
-	
-			if ( 	linkage_map.size() > 0 &&
-					linkage_map.size() != ( linked_tf_map.size() + ignored )){
-	
-				throw( new TOTorrentException( "TOTorrentCreate: unresolved linkages: required=" + linkage_map + ", resolved=" + linked_tf_map,
-						TOTorrentException.RT_DECODE_FAILS));
+			setIgnoreList();
+
+			setTorrentType( torrent_type );
+			
+			setCreationDate( SystemTime.getCurrentTime() / 1000);
+
+			setCreatedBy( Constants.BIGLYBT_NAME + "/" + Constants.BIGLYBT_VERSION );
+
+			setPieceLength( piece_length );
+
+			report( "Torrent.create.progress.piecelength", piece_length );
+
+			if ( add_v1 ){
+				
+				int ignored = createV1();
+		
+					// linkage map doesn't include ignored files, if it is supplied, so take account of this when
+					// checking that linkages have resolved correctly
+		
+				if ( 	linkage_map.size() > 0 &&
+						linkage_map.size() != ( linked_tf_map.size() + ignored )){
+		
+					throw( new TOTorrentException( "Unresolved V1 linkages: required=" + linkage_map + ", resolved=" + linked_tf_map,
+							TOTorrentException.RT_DECODE_FAILS));
+				}
 			}
-	
+			
+			if ( add_v2 ){
+				
+				linked_tf_map.clear();
+				
+				int ignored = createV2();
+				
+					// linkage map doesn't include ignored files, if it is supplied, so take account of this when
+					// checking that linkages have resolved correctly
+		
+				if ( 	linkage_map.size() > 0 &&
+						linkage_map.size() != ( linked_tf_map.size() + ignored )){
+		
+					throw( new TOTorrentException( "Unresolved V2 linkages: required=" + linkage_map + ", resolved=" + linked_tf_map,
+							TOTorrentException.RT_DECODE_FAILS));
+				}
+			}
+			
 			if ( linked_tf_map.size() > 0 ){
-	
+				
 				Map	m = getAdditionalMapProperty( TOTorrent.AZUREUS_PRIVATE_PROPERTIES );
 	
 				if ( m == null ){
@@ -259,27 +328,15 @@ TOTorrentCreateImpl
 	}
 
 	private int
-	constructFixed(
-		File		_torrent_base,
-		long		_piece_length )
-
+	createV1()
+	
 		throws TOTorrentException
 	{
-		setIgnoreList();
-
-		setCreationDate( SystemTime.getCurrentTime() / 1000);
-
-		setCreatedBy( Constants.BIGLYBT_NAME + "/" + Constants.BIGLYBT_VERSION );
-
-		setPieceLength( _piece_length );
-
-		report( "Torrent.create.progress.piecelength", _piece_length );
-
-		piece_count_no_pad = calculateNumberOfPieces( _torrent_base,_piece_length );
+		piece_count_no_pad = calculateNumberOfPieces( torrent_base, piece_length );
 
 		if ( piece_count_no_pad == 0 ){
 
-			throw( new TOTorrentException( "TOTorrentCreate: specified files have zero total length",
+			throw( new TOTorrentException( "Specified files have zero total length",
 											TOTorrentException.RT_ZERO_LENGTH ));
 		}
 
@@ -296,7 +353,7 @@ TOTorrentCreateImpl
 			new TOTorrentFileHasher(
 					add_other_hashes,
 					add_other_per_file_hashes,
-					(int)_piece_length,
+					(int)piece_length,
 					progress_listeners.size()==0?null:this );
 
 		int	ignored = 0;
@@ -304,20 +361,20 @@ TOTorrentCreateImpl
 		try{
 			if ( cancelled ){
 
-				throw( new TOTorrentException( 	"TOTorrentCreate: operation cancelled",
+				throw( new TOTorrentException( 	"Operation cancelled",
 												TOTorrentException.RT_CANCELLED ));
 			}
 
 			if ( getSimpleTorrent()){
 
-				File link = linkage_map.get( _torrent_base.getName());
+				File link = linkage_map.get( torrent_base.getName());
 
 				if ( link != null ){
 
 					linked_tf_map.put( "0", link.getAbsolutePath());
 				}
 
-				long length = file_hasher.add( link==null?_torrent_base:link );
+				long length = file_hasher.add( link==null?torrent_base:link );
 
 				setFiles( new TOTorrentFileImpl[]{ new TOTorrentFileImpl( this, 0, 0, length, new byte[][]{ getName()})});
 
@@ -327,7 +384,7 @@ TOTorrentCreateImpl
 
 				List<TOTorrentFileImpl>	encoded = new ArrayList<>();
 
-				ignored = processDir( file_hasher, _torrent_base, encoded, _torrent_base.getName(), "", new long[1] );
+				ignored = processDir( file_hasher, torrent_base, encoded, torrent_base.getName(), "", new long[1] );
 
 				TOTorrentFileImpl[] files = new TOTorrentFileImpl[ encoded.size()];
 
@@ -345,9 +402,6 @@ TOTorrentCreateImpl
 
 				addAdditionalInfoProperty( "sha1", sha1_digest );
 				addAdditionalInfoProperty( "ed2k", ed2k_digest );
-
-				//System.out.println( "overall:sha1 = " + ByteFormatter.nicePrint( sha1_digest, true));
-				//System.out.println( "overall:ed2k = " + ByteFormatter.nicePrint( ed2k_digest, true));
 			}
 
 			return( ignored );
@@ -358,6 +412,92 @@ TOTorrentCreateImpl
 		}
 	}
 
+	private int
+	createV2()
+	
+		throws TOTorrentException
+	{
+		TOTorrentCreateV2Impl v2_creator = 
+			new TOTorrentCreateV2Impl( 
+				torrent_base, 
+				piece_length,
+				new TOTorrentCreateV2Impl.Adapter(){
+					
+					@Override
+					public File 
+					resolveFile(
+						int			index,
+						File 		file, 
+						String 		relative_file)
+					{
+						File link = linkage_map.get( relative_file );
+							
+						if ( link != null ){
+
+							linked_tf_map.put( String.valueOf( index ), link.getAbsolutePath());
+						}
+
+						return( link );
+					}
+					
+					@Override
+					public void 
+					report(
+						String resource_key)
+					{
+						TOTorrentCreateImpl.this.report( resource_key );
+					}
+					
+					@Override
+					public boolean 
+					ignore(
+						String name)
+					{
+						return( ignoreFile( name ));
+					}
+					
+					@Override
+					public boolean 
+					cancelled()
+					{
+						return( cancelled );
+					}
+				});
+			
+		Map<String,Object> v2_torrent = v2_creator.create();
+		
+		if ( add_v1 ){
+						
+			if ( v2_creator.getTotalFileSize() != total_file_size_no_pad ){
+				
+				throw( new TOTorrentException( "V1 and V2 total file sizes inconsistent",
+						TOTorrentException.RT_READ_FAILS ));
+			}
+			
+			if ( v2_creator.getTotalPadding() != pad_file_sizes ){
+				
+				throw( new TOTorrentException( "V1 and V2 padding file sizes inconsistent",
+						TOTorrentException.RT_READ_FAILS ));
+			}
+			
+			// verify files
+		}
+		
+		setAdditionalStringProperty( TK_ENCODING, "UTF-8" );
+		
+		setAdditionalMapProperty( TK_V2_PIECE_LAYERS, (Map)v2_torrent.get( TK_V2_PIECE_LAYERS  ));
+		
+		Map v2_info = (Map)v2_torrent.get( TK_INFO );
+		
+		Map v2_file_tree = (Map)v2_info.get( TK_V2_FILE_TREE );
+		
+		addAdditionalInfoProperty( TK_V2_FILE_TREE, v2_file_tree );
+		
+		addAdditionalInfoProperty( TK_V2_META_VERSION, v2_info.get( TK_V2_META_VERSION ));
+		
+		return( v2_creator.getIgnoredFiles());
+	}
+	
 	private int
 	processDir(
 		TOTorrentFileHasher			hasher,
@@ -373,7 +513,7 @@ TOTorrentCreateImpl
 
 		if ( dir_file_list == null ){
 
-			throw( new TOTorrentException( "TOTorrentCreate: directory '" + dir.getAbsolutePath() + "' returned error when listing files in it",
+			throw( new TOTorrentException( "Directory '" + dir.getAbsolutePath() + "' returned error when listing files in it",
 					TOTorrentException.RT_FILE_NOT_FOUND ));
 
 		}
@@ -382,9 +522,15 @@ TOTorrentCreateImpl
 
 		List<File> file_list = new ArrayList<>(Arrays.asList(dir_file_list));
 
-		if ( file_comparator == null ){
+		if ( add_v2 ){
 
-			Collections.sort(file_list);
+				// v2 requires files to be in 'natural' order, default File comparator isn't
+			
+			Collections.sort( file_list, file_comparator_v2 );
+			
+		}else  if ( file_comparator == null ){
+			
+			Collections.sort(file_list); 
 
 		}else{
 
@@ -431,7 +577,9 @@ TOTorrentCreateImpl
 								hasher.addPad((int)pad_size);
 
 								String pad_file = ".pad" + File.separator + (++pad_file_num) + "_" + pad_size;
-										
+									
+								pad_file_sizes += pad_size;
+								
 								TOTorrentFileImpl	tf = new TOTorrentFileImpl( this, i, torrent_offset[0], pad_size, pad_file );
 
 								tf.setAdditionalProperty( TOTorrentImpl.TK_BEP47_ATTRS, "p".getBytes( Constants.UTF_8 ));
@@ -565,7 +713,7 @@ TOTorrentCreateImpl
 
 		if ( !file.exists()){
 
-			throw( new TOTorrentException( "TOTorrentCreate: file '" + file.getName() + "' doesn't exist",
+			throw( new TOTorrentException( "File '" + file.getName() + "' doesn't exist",
 											TOTorrentException.RT_FILE_NOT_FOUND ));
 		}
 
@@ -594,7 +742,7 @@ TOTorrentCreateImpl
 
 			if ( dir_files == null ){
 
-				throw( new TOTorrentException( "TOTorrentCreate: directory '" + file.getAbsolutePath() + "' returned error when listing files in it",
+				throw( new TOTorrentException( "Directory '" + file.getAbsolutePath() + "' returned error when listing files in it",
 						TOTorrentException.RT_FILE_NOT_FOUND ));
 
 			}
@@ -699,7 +847,7 @@ TOTorrentCreateImpl
 		return( (total_size + (piece_size-1))/piece_size );
 	}
 
-	protected void
+	private void
 	setIgnoreList()
 	{
 		try{

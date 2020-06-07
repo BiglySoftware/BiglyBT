@@ -113,6 +113,13 @@ LWSTorrent
 		lws				= _lws;
 	}
 
+	@Override
+	public int 
+	getTorrentType()
+	{
+		return( TT_V1 );
+	}
+	
 	protected TOTorrent
 	getDelegate()
 	{

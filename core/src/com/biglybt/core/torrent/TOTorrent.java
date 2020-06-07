@@ -31,6 +31,10 @@ import com.biglybt.core.util.HashWrapper;
 public interface
 TOTorrent
 {
+	public static final int TT_V1		= 1;
+	public static final int TT_V1_V2	= 2;
+	public static final int TT_V2		= 3;
+	
 	public static final String	DEFAULT_IGNORE_FILES	= ".DS_Store;Thumbs.db;desktop.ini";
 
 		/**
@@ -48,6 +52,14 @@ TOTorrent
 
 	public static final String ENCODING_ACTUALLY_UTF8_KEYS = "utf8 keys";
 
+		/**
+		 * 
+		 * @return One of the TT_ constants
+		 */
+	
+	public int
+	getTorrentType();
+	
 	/**
 	 * Get the name of the torrent
 	 * @return

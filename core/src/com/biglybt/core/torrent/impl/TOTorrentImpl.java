@@ -60,13 +60,17 @@ TOTorrentImpl
 
 	protected static final String TK_HASH_OVERRIDE		= "hash-override";
 
+	protected static final String TK_ENCODING			= "encoding";
+		
 	protected static final List	TK_ADDITIONAL_OK_ATTRS =
 		Arrays.asList(new String[]{ TK_COMMENT_UTF8, AZUREUS_PROPERTIES, TK_WEBSEED_BT, TK_WEBSEED_GR });
 
 
 	protected static final String TK_BEP47_ATTRS		= "attr";
 	
+	protected static final String TK_V2_META_VERSION	= "meta version";
 	protected static final String TK_V2_FILE_TREE		= "file tree";
+	protected static final String TK_V2_PIECE_LAYERS	= "piece layers";
 	
 	private static CopyOnWriteList<TOTorrentListener>		global_listeners = new CopyOnWriteList<>();
 	
@@ -84,6 +88,8 @@ TOTorrentImpl
 		global_listeners.remove( listener );
 	}
 	
+	private int								torrent_type;
+	
 	private byte[]							torrent_name;
 	private byte[]							torrent_name_utf8;
 
@@ -92,6 +98,7 @@ TOTorrentImpl
 	private final TOTorrentAnnounceURLGroupImpl	announce_group = new TOTorrentAnnounceURLGroupImpl(this);
 
 	private long		piece_length;
+	
 	private byte[][]	pieces;
 	private int			number_of_pieces;
 
@@ -107,7 +114,7 @@ TOTorrentImpl
 	private byte[]				created_by;
 
 	private Map					additional_properties 		= new LightHashMap(4);
-	private final Map					additional_info_properties	= new LightHashMap(4);
+	private final Map			additional_info_properties	= new LightHashMap(4);
 
 	private boolean				created;
 	private boolean				serialising;
@@ -390,26 +397,64 @@ TOTorrentImpl
 			root.put( TK_CREATED_BY, created_by );
 		}
 
+		boolean	v2_only = false;
+		
+		if ( pieces == null ){
+			
+			Number version = (Number)additional_info_properties.get( TK_V2_META_VERSION );
+			
+			if ( version != null && version.intValue() == 2 ){
+			
+				v2_only = true;
+			}
+		}
+		
 		Map info = new HashMap();
 
 		root.put( TK_INFO, info );
 
 		info.put( TK_PIECE_LENGTH, new Long( piece_length ));
 
-		if ( pieces == null ){
+		if ( !v2_only ){
+			
+			if ( pieces == null ){
+	
+				throw( new TOTorrentException( "Pieces is null", TOTorrentException.RT_WRITE_FAILS ));
+			}
+	
+			byte[]	flat_pieces = new byte[pieces.length*20];
+	
+			for (int i=0;i<pieces.length;i++){
+	
+				System.arraycopy( pieces[i], 0, flat_pieces, i*20, 20 );
+			}
+	
+			info.put( TK_PIECES, flat_pieces );
+			
+			if ( simple_torrent ){
 
-			throw( new TOTorrentException( "Pieces is null", TOTorrentException.RT_WRITE_FAILS ));
+				TOTorrentFile	file = files[0];
+
+				info.put( TK_LENGTH, new Long( file.getLength()));
+
+			}else{
+
+				List	meta_files = new ArrayList();
+
+				info.put( TK_FILES, meta_files );
+
+				for (int i=0;i<files.length;i++){
+
+					TOTorrentFileImpl	file	= files[i];
+
+					Map	file_map = file.serializeToMap();
+
+					meta_files.add( file_map );
+
+				}
+			}
 		}
-
-		byte[]	flat_pieces = new byte[pieces.length*20];
-
-		for (int i=0;i<pieces.length;i++){
-
-			System.arraycopy( pieces[i], 0, flat_pieces, i*20, 20 );
-		}
-
-		info.put( TK_PIECES, flat_pieces );
-
+		
 		info.put( TK_NAME, torrent_name );
 
 		if ( torrent_name_utf8 != null ){
@@ -420,29 +465,6 @@ TOTorrentImpl
 		if ( torrent_hash_override != null ){
 
 			info.put( TK_HASH_OVERRIDE, torrent_hash_override );
-		}
-
-		if ( simple_torrent ){
-
-			TOTorrentFile	file = files[0];
-
-			info.put( TK_LENGTH, new Long( file.getLength()));
-
-		}else{
-
-			List	meta_files = new ArrayList();
-
-			info.put( TK_FILES, meta_files );
-
-			for (int i=0;i<files.length;i++){
-
-				TOTorrentFileImpl	file	= files[i];
-
-				Map	file_map = file.serializeToMap();
-
-				meta_files.add( file_map );
-
-			}
 		}
 
 		Iterator info_it = additional_info_properties.keySet().iterator();
@@ -488,6 +510,27 @@ TOTorrentImpl
 		serialiser.serialiseToFile( file );
 	}
 
+	@Override
+	public int 
+	getTorrentType()
+	{
+		if ( torrent_type == 0 ){
+			
+			Debug.out( "Torrent type not set!" );
+			
+			return( TT_V1 );
+		}
+		
+		return( torrent_type );
+	}
+	
+	protected void
+	setTorrentType(
+		int		type )
+	{
+		torrent_type		= type;
+	}
+	
 	@Override
 	public byte[]
 	getName()

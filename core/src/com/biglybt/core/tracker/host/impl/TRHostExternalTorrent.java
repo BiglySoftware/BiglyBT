@@ -71,6 +71,13 @@ TRHostExternalTorrent
 	}
 
 	@Override
+	public int 
+	getTorrentType()
+	{
+		return( TT_V1 );
+	}
+	
+	@Override
 	public byte[]
 	getName()
 	{

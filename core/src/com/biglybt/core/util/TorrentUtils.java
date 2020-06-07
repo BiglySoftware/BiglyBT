@@ -3220,6 +3220,13 @@ TorrentUtils
 		}
 
 		@Override
+		public int 
+		getTorrentType()
+		{
+			return( delegate.getTorrentType());
+		}
+		
+		@Override
 		public boolean
 		isSimpleTorrent()
 		{

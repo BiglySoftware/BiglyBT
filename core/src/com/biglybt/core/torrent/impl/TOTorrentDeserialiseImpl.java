@@ -622,6 +622,8 @@ TOTorrentDeserialiseImpl
 												TOTorrentException.RT_DECODE_FAILS ));
 			}
 
+			boolean has_v2 = info.containsKey( TK_V2_FILE_TREE );
+			
 			boolean hasUTF8Keys = info.containsKey(TK_NAME_UTF8);
 
 			setName((byte[])info.get( TK_NAME ));
@@ -654,7 +656,7 @@ TOTorrentDeserialiseImpl
 				// the length field as decoded as this is part of the 'info' portion  :(
 			
 			if ( simple_file_length != null ){
-
+				
 					// currently only seeing for length=0 so just deal with that for the mo
 				
 				if ( simple_file_length == 0 && info.containsKey( TK_FILES)){
@@ -665,8 +667,12 @@ TOTorrentDeserialiseImpl
 				}
 			}
 			
+			boolean has_v1 = false;
+
 			if ( simple_file_length != null ){
 	
+				has_v1 = true;
+
 				setSimpleTorrent( true );
 
 				total_length = simple_file_length.longValue();
@@ -686,11 +692,14 @@ TOTorrentDeserialiseImpl
 
 				if ( meta_files == null ){
 					
-					if ( info.containsKey( TK_V2_FILE_TREE )){
+					if ( has_v2 ){
 						
 						throw( new TOTorrentException( "Version 2 only torrents not supported",
 								TOTorrentException.RT_DECODE_FAILS ));
 					}
+				}else{
+					
+					has_v1 = true;
 				}
 				
 				TOTorrentFileImpl[] files = new TOTorrentFileImpl[ meta_files.size()];
@@ -770,6 +779,28 @@ TOTorrentDeserialiseImpl
 				setFiles( files );
 			}
 
+			int torrent_type;
+			
+			if ( has_v1 && has_v2 ){
+			
+				torrent_type = TT_V1_V2;
+				
+			}else if ( has_v1 ){
+				
+				torrent_type = TT_V1;
+				
+			}else if ( has_v2 ){
+				
+				torrent_type = TT_V2;
+				
+			}else{
+				
+				throw( new TOTorrentException( "Decode fails, missing v1 and v2 data",
+						TOTorrentException.RT_DECODE_FAILS ));
+			}
+			
+			setTorrentType( torrent_type );
+			
 			byte[]	flat_pieces = (byte[])info.get( TK_PIECES );
 
 				// work out how many pieces we require for the torrent

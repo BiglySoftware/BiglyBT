@@ -3506,6 +3506,7 @@ DownloadManagerStateImpl
 		boolean		discard_pieces;
 		boolean		logged_failure;
 
+		Integer		torrent_type;
 		Boolean		simple_torrent;
 		long		size;
 		Boolean		is_private;
@@ -3549,6 +3550,13 @@ DownloadManagerStateImpl
 				}
 			}
 
+			Long	tt = (Long)cache.get( "tt" );
+
+			if ( tt != null ){
+
+				torrent_type = tt.intValue();
+			}
+			
 			Long	st = (Long)cache.get( "simple" );
 
 			if ( st != null ){
@@ -3668,6 +3676,18 @@ DownloadManagerStateImpl
 
 					cache.put( "fc", new Long( fc ));
 				}
+				
+				Integer	tt = csw.torrent_type;
+
+				if ( tt != null ){
+
+					cache.put( "tt", new Long( tt.intValue()));
+
+				}else{
+
+					Debug.out( "Failed to cache torrent type" );
+				}
+				
 			}else{
 				if ( t instanceof TorrentUtils.torrentDelegate ){
 
@@ -3677,6 +3697,8 @@ DownloadManagerStateImpl
 
 					cache.put( "fc", t.getFileCount());
 
+					cache.put( "tt", new Long(t.getTorrentType()));
+					
 				}else{
 
 					Debug.out( "Hmm, torrent isn't cache-state-wrapper, it is " + t );
@@ -4124,6 +4146,27 @@ DownloadManagerStateImpl
 			return null;
 		}
 
+	  	@Override
+	    public int
+    	getTorrentType()
+    	{
+    		if ( torrent_type != null ){
+
+    			return( torrent_type );
+    		}
+
+    		if ( fixup()){
+
+    			int tt = delegate.getTorrentType();
+
+    			torrent_type = tt;
+
+    			return( tt );
+    		}
+
+    		return( TOTorrent.TT_V1 );
+    	}
+	  	
     	@Override
 	    public boolean
     	isSimpleTorrent()

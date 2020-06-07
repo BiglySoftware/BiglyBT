@@ -212,8 +212,11 @@ public class ProgressPanel extends AbstractWizardPanel<NewTorrentWizard> impleme
 
       TorrentUtils.setPrivate( torrent, wizard.getPrivateTorrent());
 
-      LocaleTorrentUtil.setDefaultTorrentEncoding( torrent );
-
+      if ( torrent.getAdditionalStringProperty( "encoding" ) == null ){
+      
+    	  LocaleTorrentUtil.setDefaultTorrentEncoding( torrent );
+      }
+      
       	// mark this newly created torrent as complete to avoid rechecking on open
 
       final File save_dir;

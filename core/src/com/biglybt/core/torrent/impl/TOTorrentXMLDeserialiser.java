@@ -215,11 +215,13 @@ TOTorrentXMLDeserialiser
 	{
 		SimpleXMLParserDocumentNode[] kids = doc.getChildren();
 
-		byte[]	torrent_name 	= null;
 		long	torrent_length	= 0;
 
 		SimpleXMLParserDocumentNode[] file_nodes	= null;
 
+		boolean has_v1 = false;
+		boolean has_v2 = false;
+		
 		for (int i=0;i<kids.length;i++){
 
 			SimpleXMLParserDocumentNode	kid = kids[i];
@@ -248,6 +250,8 @@ TOTorrentXMLDeserialiser
 
 			}else if ( name.equalsIgnoreCase( "PIECES" )){
 
+				has_v1 = true;
+				
 				SimpleXMLParserDocumentNode[]	piece_nodes = kid.getChildren();
 
 				byte[][]	pieces = new byte[piece_nodes.length][];
@@ -263,10 +267,37 @@ TOTorrentXMLDeserialiser
 
 				mapEntry entry = readGenericMapEntry( kid );
 
+				if ( entry.name.equals( "file tree" )){
+					
+					has_v2 = true;
+				}
+				
 				torrent.addAdditionalInfoProperty( entry.name, entry.value );
 			}
 		}
 
+		int torrent_type;
+		
+		if ( has_v1 && has_v2 ){
+		
+			torrent_type = TOTorrent.TT_V1_V2;
+			
+		}else if ( has_v1 ){
+			
+			torrent_type = TOTorrent.TT_V1;
+			
+		}else if ( has_v2 ){
+			
+			torrent_type = TOTorrent.TT_V2;
+			
+		}else{
+			
+			throw( new TOTorrentException( "Decode fails, missing v1 and v2 data",
+					TOTorrentException.RT_DECODE_FAILS ));
+		}
+		
+		torrent.setTorrentType( torrent_type);
+		
 		if ( torrent.isSimpleTorrent()){
 
 			torrent.setFiles(
