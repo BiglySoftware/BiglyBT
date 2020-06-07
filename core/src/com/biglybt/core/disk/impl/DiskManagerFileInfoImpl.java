@@ -135,6 +135,11 @@ DiskManagerFileInfoImpl
   	cache_file.flushCache();
   }
 
+  @Override
+  public boolean exists(){
+	return( cache_file.exists());
+  }
+  
   public void
   moveFile(
 	String						new_root_dir,

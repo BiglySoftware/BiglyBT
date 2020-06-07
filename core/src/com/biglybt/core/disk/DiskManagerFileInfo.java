@@ -77,7 +77,7 @@ DiskManagerFileInfo
 		 * {@link DiskManagerFileInfo#ST_REORDER},
 		 * {@link DiskManagerFileInfo#ST_REORDER_COMPACT}
 		 */
-
+	
 	public default boolean setStorageType(int type ){ return( setStorageType( type, false )); }
 	
 		/**
@@ -140,6 +140,13 @@ DiskManagerFileInfo
 	 * Other states will retain existing data (ie. Do Not Download).
 	 */
 	public boolean isSkipped();
+
+		/**
+		 * Checks that the linked file exists (always returns true for pad files)
+		 * @return
+		 */
+	
+	public boolean exists();
 
 	public int	getIndex();
 

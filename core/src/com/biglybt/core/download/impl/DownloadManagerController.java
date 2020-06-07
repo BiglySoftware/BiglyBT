@@ -1982,11 +1982,12 @@ DownloadManagerController
 		for (int i = 0; i < files.length; i++) {
 			DiskManagerFileInfo fileInfo = files[i];
 			if (!fileInfo.isSkipped()) {
-				File file = fileInfo.getFile(true);
 				try {
 					long start = SystemTime.getMonotonousTime();
 
-					boolean 	exists = file.exists();
+					boolean 	exists = fileInfo.exists();
+
+					File file = fileInfo.getFile(true);
 
 					long elapsed = SystemTime.getMonotonousTime() - start;
 
@@ -3171,6 +3172,11 @@ DownloadManagerController
 		isSkipped()
 		{
 			return( delegate.isSkipped());
+		}
+
+		@Override
+		public boolean exists(){
+			return( delegate.exists());
 		}
 
 		@Override

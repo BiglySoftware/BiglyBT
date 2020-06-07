@@ -33,7 +33,6 @@ import java.util.Map;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
-import com.biglybt.core.disk.DiskManager.OperationStatus;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMap;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapper;
@@ -51,7 +50,6 @@ import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.download.impl.DownloadManagerStatsImpl;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.LocaleUtilDecoder;
-import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -209,7 +207,7 @@ DiskManagerUtil
 					if( st == DiskManagerFileInfo.ST_COMPACT || st == DiskManagerFileInfo.ST_REORDER_COMPACT ){
 						currentFile.delete();
 					}
-				} else if(allowAlloction && !currentFile.exists())	{
+				} else if(allowAlloction && !files[i].exists())	{
 					/*
 					 * file must exist, does not exist and we probably just changed to linear
 					 * mode, assume that (re)allocation of adjacent files is necessary
@@ -991,6 +989,15 @@ DiskManagerUtil
 		            		return( download_manager );
 		            	}
 
+		            	@Override
+		            	public boolean exists(){
+		            		if ( torrent_file.isPadFile()){
+		            			return( true );
+		            		}else{
+		            			return( getFile( true ).exists());
+		            		}
+		            	}
+		            	  
 		            	@Override
 			            public File
 		            	getFile(

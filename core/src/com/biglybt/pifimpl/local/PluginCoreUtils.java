@@ -301,6 +301,11 @@ PluginCoreUtils
 				{
 					return( info.getNumPieces());
 				}
+				
+				@Override
+				public boolean exists(){
+					return( true );
+				}
 
 				@Override
 				public int

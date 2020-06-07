@@ -1968,6 +1968,11 @@ public class FilesView
 		{
 			return( false );
 		}
+		
+		@Override
+		public boolean exists(){
+			return( false );
+		}
 
 		@Override
 		public String getLastError(){
@@ -2481,6 +2486,11 @@ public class FilesView
 			}
 		}
 
+		@Override
+		public boolean exists(){
+			return( delegate.exists());
+		}
+		  
 		@Override
 		public int
 		getIndex()
