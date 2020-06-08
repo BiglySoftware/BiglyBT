@@ -35,6 +35,8 @@ TOTorrentCreateV2Impl
 {
 	private final static int block_size = 16*1024;
 
+	private final static int digest_length = 32;	// sha256 length
+
 	private final File		root;
 	private final long		piece_size;
 	private final Adapter	adapter;
@@ -166,7 +168,7 @@ TOTorrentCreateV2Impl
 		
 		if ( length > 0 ){
 			
-			details.put( "pieces root", result.root_hash );
+			details.put( TOTorrentImpl.TK_V2_PIECES_ROOT, result.root_hash );
 		}
 		
 		if ( length > piece_size ){
@@ -255,9 +257,7 @@ TOTorrentCreateV2Impl
 		
 		try{
 			MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
-			
-			int digest_length = sha256.getDigestLength();
-									
+												
 			byte[]	buffer = new byte[block_size];
 				
 			File link = adapter.resolveFile( file_index++, file, relative_path );
@@ -391,6 +391,171 @@ TOTorrentCreateV2Impl
 		}
 	}
 	
+	protected static void
+	lashUpV1Info(
+		TOTorrentImpl	torrent )
+	
+		throws TOTorrentException
+	{
+		Map piece_layers = torrent.getAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS );
+		
+		if ( piece_layers == null ){
+			
+			throw( new TOTorrentException( "V2 piece layers missing", TOTorrentException.RT_DECODE_FAILS ));
+		}
+		
+		Map<String,Object> file_tree = (Map<String,Object>)torrent.getAdditionalInfoProperties().get( TOTorrentImpl.TK_V2_FILE_TREE );
+		
+		if ( file_tree == null ){
+			
+			throw( new TOTorrentException( "V2 piece layers missing", TOTorrentException.RT_DECODE_FAILS ));
+		}
+		
+		long piece_length = torrent.getPieceLength();
+		
+		List<TOTorrentFileImpl>	files = new ArrayList<>();
+		
+		long[] torrent_offset	= { 0 };
+		long[] pad_details 		= { 0, 0 };
+		
+		lashUpV2Files( torrent, files, new LinkedList<byte[]>(), file_tree, piece_length, torrent_offset, pad_details );
+		
+		torrent.setFiles( files.toArray( new TOTorrentFileImpl[ files.size() ]));
+		
+		long	total_file_sizes = torrent_offset[0];
+		
+		long	piece_count = total_file_sizes/piece_length;
+		
+		if ( total_file_sizes%piece_length != 0 ){
+			
+			piece_count++;
+		}
+		
+		byte[][] pieces = new byte[(int)piece_count][];
+		
+		int piece_num = 0;
+		
+		for ( TOTorrentFileImpl file: files ){
+		
+			if ( file.isPadFile()){
+				
+				continue;	// artifical entry
+			}
+			
+			long length = file.getLength();
+			
+			if ( length > 0 ){
+				
+				byte[] pieces_root = (byte[])file.getAdditionalProperties().get( TOTorrentImpl.TK_V2_PIECES_ROOT );
+
+				if ( length <= piece_length ){
+								
+					pieces[piece_num++] = pieces_root;
+				
+				}else{
+				
+					byte[] piece_layer = (byte[])piece_layers.get( new String( pieces_root, Constants.BYTE_ENCODING_CHARSET ));
+					
+					for ( int i=0;i<piece_layer.length; i+= digest_length ){
+						
+						byte[] hash = new byte[ digest_length ];
+						
+						System.arraycopy( piece_layer, i, hash, 0, digest_length );
+						
+						pieces[piece_num++] = hash;
+					}
+				}
+			}
+		}
+		
+		if ( piece_num != piece_count ){
+			
+			throw( new TOTorrentException( "V2 piece layers inconsistent", TOTorrentException.RT_DECODE_FAILS ));
+		}
+		
+		torrent.setPieces( pieces );
+	}
+	
+	
+	
+	private static void
+	lashUpV2Files(
+		TOTorrentImpl				torrent,
+		List<TOTorrentFileImpl>		files,
+		LinkedList<byte[]>			path,
+		Map<String,Object> 			node,
+		long						piece_length,
+		long[]						torrent_offset,
+		long[]						pad_details )
+	
+		throws TOTorrentException
+	{
+		List<String> keys = new ArrayList<>( node.keySet());
+		
+		Collections.sort( keys );
+		
+		for ( String name: keys ){
+			
+			Map<String,Object> kid = (Map<String,Object>)node.get( name );
+			
+			if ( name.isEmpty()){
+				
+				if ( !files.isEmpty()){
+					
+					long offset = torrent_offset[0];
+					
+					long l = offset%piece_length;
+					
+					if ( l > 0 ){
+						
+						long pad_size = piece_length - l;
+					
+						String pad_file = ".pad" + File.separator + (++pad_details[0]) + "_" + pad_size;
+							
+						pad_details[1] += pad_size;
+						
+						TOTorrentFileImpl	tf = new TOTorrentFileImpl( torrent, files.size(), torrent_offset[0], pad_size, pad_file );
+
+						tf.setAdditionalProperty( TOTorrentImpl.TK_BEP47_ATTRS, "p".getBytes( Constants.UTF_8 ));
+						
+						torrent_offset[0] += pad_size;
+						
+						files.add( tf );
+					}
+				}
+				
+				long length = (Long)kid.get( "length" );
+				
+				byte[][] bpath = path.toArray( new byte[path.size()][] );
+				
+				TOTorrentFileImpl file = new TOTorrentFileImpl( torrent, files.size(), torrent_offset[0], length, bpath, bpath );
+				
+				if ( length > 0 ){
+					
+					byte[] pieces_root = (byte[])kid.get( TOTorrentImpl.TK_V2_PIECES_ROOT );
+					
+					file.setAdditionalProperty( TOTorrentImpl.TK_V2_PIECES_ROOT, pieces_root );
+				}
+				
+				files.add( file );
+				
+				torrent_offset[0] += length;
+			}else{
+				
+				path.add( name.getBytes( Constants.UTF_8 ));
+				
+				try{
+					
+					lashUpV2Files( torrent, files, path, kid, piece_length, torrent_offset, pad_details );
+					
+				}finally{
+					
+					path.removeLast();
+				}
+			}
+		}
+	}
+		
 	private class
 	FileDetails
 	{

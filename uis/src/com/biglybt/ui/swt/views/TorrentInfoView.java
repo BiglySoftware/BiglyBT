@@ -163,8 +163,12 @@ public class TorrentInfoView
 		BufferedLabel blabel = new BufferedLabel(gTorrentInfo, SWT.NULL);
 		gridData = new GridData();
 
+		int tt = torrent.getTorrentType();
+		boolean v1 = tt==TOTorrent.TT_V1 || tt==TOTorrent.TT_V1_V2;
+		boolean v2 = tt==TOTorrent.TT_V2 || tt==TOTorrent.TT_V1_V2;
+		
 		blabel.setLayoutData(gridData);
-		blabel.setText(torrent==null?"":LocaleTorrentUtil.getCurrentTorrentEncoding( torrent ));
+		blabel.setText(torrent==null?"":( LocaleTorrentUtil.getCurrentTorrentEncoding( torrent ) + "; v1=" + (v1?"Y":"N") + ", v2=" + (v2?"Y":"N")));
 
 			// trackers
 

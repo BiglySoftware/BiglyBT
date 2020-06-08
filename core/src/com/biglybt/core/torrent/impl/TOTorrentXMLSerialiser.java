@@ -32,6 +32,7 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.xml.util.XUXmlWriter;
@@ -200,96 +201,101 @@ TOTorrentXMLSerialiser
 
 			writeTag( "PIECE_LENGTH", torrent.getPieceLength());
 
-			TOTorrentFileImpl[] files = (TOTorrentFileImpl[])torrent.getFiles();
-
-			if ( torrent.isSimpleTorrent()){
-
-				writeTag( "LENGTH", files[0].getLength());
-
-			}else{
-
-				writeLineRaw( "<FILES>");
-
-				try{
-					indent();
-
-					for (int i=0;i<files.length;i++){
-
-						writeLineRaw( "<FILE>");
-
-						try{
-
-							indent();
-
-							TOTorrentFileImpl	file	= files[i];
-
-							writeTag( "LENGTH", file.getLength());
-
-							writeLineRaw( "<PATH>");
-
+			int	torrent_type = torrent.getTorrentType();
+			
+			if ( torrent_type != TOTorrent.TT_V2 ){
+				
+				TOTorrentFileImpl[] files = (TOTorrentFileImpl[])torrent.getFiles();
+	
+				if ( torrent.isSimpleTorrent()){
+	
+					writeTag( "LENGTH", files[0].getLength());
+	
+				}else{
+	
+					writeLineRaw( "<FILES>");
+	
+					try{
+						indent();
+	
+						for (int i=0;i<files.length;i++){
+	
+							writeLineRaw( "<FILE>");
+	
 							try{
-
+	
 								indent();
-
-								byte[][]	path_comps = file.getPathComponents();
-
-								for (int j=0;j<path_comps.length;j++){
-
-									writeLocalisableTag( "COMPONENT", path_comps[j] );
+	
+								TOTorrentFileImpl	file	= files[i];
+	
+								writeTag( "LENGTH", file.getLength());
+	
+								writeLineRaw( "<PATH>");
+	
+								try{
+	
+									indent();
+	
+									byte[][]	path_comps = file.getPathComponents();
+	
+									for (int j=0;j<path_comps.length;j++){
+	
+										writeLocalisableTag( "COMPONENT", path_comps[j] );
+									}
+	
+								}finally{
+	
+									exdent();
 								}
-
+	
+								writeLineRaw( "</PATH>");
+	
+								Map additional_properties = file.getAdditionalProperties();
+	
+								if ( additional_properties != null ){
+	
+									Iterator prop_it = additional_properties.keySet().iterator();
+	
+									while( prop_it.hasNext()){
+	
+										String	key = (String)prop_it.next();
+	
+										writeGenericMapEntry( key, additional_properties.get( key ));
+									}
+								}
 							}finally{
-
+	
 								exdent();
 							}
-
-							writeLineRaw( "</PATH>");
-
-							Map additional_properties = file.getAdditionalProperties();
-
-							if ( additional_properties != null ){
-
-								Iterator prop_it = additional_properties.keySet().iterator();
-
-								while( prop_it.hasNext()){
-
-									String	key = (String)prop_it.next();
-
-									writeGenericMapEntry( key, additional_properties.get( key ));
-								}
-							}
-						}finally{
-
-							exdent();
+	
+							writeLineRaw( "</FILE>");
 						}
-
-						writeLineRaw( "</FILE>");
+					}finally{
+	
+						exdent();
+					}
+	
+					writeLineRaw( "</FILES>");
+				}
+	
+				writeLineRaw( "<PIECES>");
+	
+				try{
+					indent();
+	
+					byte[][]	pieces = torrent.getPieces();
+	
+					for (int i=0;i<pieces.length;i++){
+	
+						writeGeneric( pieces[i] );
 					}
 				}finally{
-
 					exdent();
 				}
-
-				writeLineRaw( "</FILES>");
+	
+				writeLineRaw( "</PIECES>");
 			}
-
-			writeLineRaw( "<PIECES>");
-
-			try{
-				indent();
-
-				byte[][]	pieces = torrent.getPieces();
-
-				for (int i=0;i<pieces.length;i++){
-
-					writeGeneric( pieces[i] );
-				}
-			}finally{
-				exdent();
-			}
-
-			writeLineRaw( "</PIECES>");
-
+			
 			Map additional_properties = torrent.getAdditionalInfoProperties();
 
 			Iterator it = additional_properties.keySet().iterator();

@@ -638,8 +638,6 @@ TOTorrentDeserialiseImpl
 
 			setPieceLength( piece_length );
 
-			setHashFromInfo( info );
-
 			Long simple_file_length = (Long)info.get( TK_LENGTH );
 
 			long	total_length = 0;
@@ -692,91 +690,90 @@ TOTorrentDeserialiseImpl
 
 				if ( meta_files == null ){
 					
-					if ( has_v2 ){
+					if ( !has_v2 ){
 						
-						throw( new TOTorrentException( "Version 2 only torrents not supported",
-								TOTorrentException.RT_DECODE_FAILS ));
+						throw( new TOTorrentException( "files missing",	TOTorrentException.RT_DECODE_FAILS ));
 					}
 				}else{
 					
-					has_v1 = true;
-				}
+					has_v1 = true;			
 				
-				TOTorrentFileImpl[] files = new TOTorrentFileImpl[ meta_files.size()];
-
-				if (hasUTF8Keys) {
-  				for (int i=0;i<files.length;i++){
-  					Map	file_map = (Map)meta_files.get(i);
-
-  					hasUTF8Keys &= file_map.containsKey(TK_PATH_UTF8);
-  					if (!hasUTF8Keys) {
-  						break;
-  					}
-  				}
-
-  				if (hasUTF8Keys) {
-  					setNameUTF8((byte[])info.get( TK_NAME_UTF8 ));
-  					setAdditionalStringProperty("encoding", ENCODING_ACTUALLY_UTF8_KEYS);
-  				}
-				}
-
-				for (int i=0;i<files.length;i++){
-
-					Map	file_map = (Map)meta_files.get(i);
-
-					long	len = ((Long)file_map.get( TK_LENGTH )).longValue();
-
-					List	paths = (List)file_map.get( TK_PATH );
-					List	paths8 = (List)file_map.get( TK_PATH_UTF8 );
-
-					byte[][]	path_comps = null;
-					if (paths != null) {
-	  					path_comps = new byte[paths.size()][];
+					TOTorrentFileImpl[] files = new TOTorrentFileImpl[ meta_files.size()];
 	
-	  					for (int j=0;j<paths.size();j++){
-	
-	  						path_comps[j] = (byte[])paths.get(j);
-	  					}
-					}
-
-					TOTorrentFileImpl file;
-
 					if (hasUTF8Keys) {
-						byte[][]	path_comps8 = new byte[paths8.size()][];
-
-						for (int j=0;j<paths8.size();j++){
-
-							path_comps8[j] = (byte[])paths8.get(j);
-						}
-
-						file = files[i] = new TOTorrentFileImpl( this, i, total_length, len, path_comps, path_comps8 );
-					} else {
-						file = files[i] = new TOTorrentFileImpl( this, i, total_length, len, path_comps );
+	  				for (int i=0;i<files.length;i++){
+	  					Map	file_map = (Map)meta_files.get(i);
+	
+	  					hasUTF8Keys &= file_map.containsKey(TK_PATH_UTF8);
+	  					if (!hasUTF8Keys) {
+	  						break;
+	  					}
+	  				}
+	
+	  				if (hasUTF8Keys) {
+	  					setNameUTF8((byte[])info.get( TK_NAME_UTF8 ));
+	  					setAdditionalStringProperty("encoding", ENCODING_ACTUALLY_UTF8_KEYS);
+	  				}
 					}
-
-					total_length += len;
-
-						// preserve any non-standard attributes
-
-					Iterator file_it = file_map.keySet().iterator();
-
-					while( file_it.hasNext()){
-
-						String	key = (String)file_it.next();
-
-						if ( 	key.equals( TK_LENGTH ) ||
-								key.equals( TK_PATH )){
-
-							// standard
-							// we don't skip TK_PATH_UTF8 because some code might assume getAdditionalProperty can get it
-						}else{
-
-							file.setAdditionalProperty( key, file_map.get( key ));
+	
+					for (int i=0;i<files.length;i++){
+	
+						Map	file_map = (Map)meta_files.get(i);
+	
+						long	len = ((Long)file_map.get( TK_LENGTH )).longValue();
+	
+						List	paths = (List)file_map.get( TK_PATH );
+						List	paths8 = (List)file_map.get( TK_PATH_UTF8 );
+	
+						byte[][]	path_comps = null;
+						if (paths != null) {
+		  					path_comps = new byte[paths.size()][];
+		
+		  					for (int j=0;j<paths.size();j++){
+		
+		  						path_comps[j] = (byte[])paths.get(j);
+		  					}
+						}
+	
+						TOTorrentFileImpl file;
+	
+						if (hasUTF8Keys) {
+							byte[][]	path_comps8 = new byte[paths8.size()][];
+	
+							for (int j=0;j<paths8.size();j++){
+	
+								path_comps8[j] = (byte[])paths8.get(j);
+							}
+	
+							file = files[i] = new TOTorrentFileImpl( this, i, total_length, len, path_comps, path_comps8 );
+						} else {
+							file = files[i] = new TOTorrentFileImpl( this, i, total_length, len, path_comps );
+						}
+	
+						total_length += len;
+	
+							// preserve any non-standard attributes
+	
+						Iterator file_it = file_map.keySet().iterator();
+	
+						while( file_it.hasNext()){
+	
+							String	key = (String)file_it.next();
+	
+							if ( 	key.equals( TK_LENGTH ) ||
+									key.equals( TK_PATH )){
+	
+								// standard
+								// we don't skip TK_PATH_UTF8 because some code might assume getAdditionalProperty can get it
+							}else{
+	
+								file.setAdditionalProperty( key, file_map.get( key ));
+							}
 						}
 					}
+	
+					setFiles( files );
 				}
-
-				setFiles( files );
 			}
 
 			int torrent_type;
@@ -801,34 +798,49 @@ TOTorrentDeserialiseImpl
 			
 			setTorrentType( torrent_type );
 			
+			if ( has_v1 ){
+					
+					// if not v1 then this will be lashed up at the end
+				
+				setHashFromInfo( info );
+			}
+			
 			byte[]	flat_pieces = (byte[])info.get( TK_PIECES );
 
-				// work out how many pieces we require for the torrent
-
-			int	pieces_required = (int)((total_length + (piece_length-1)) / piece_length);
-
-			int		pieces_supplied = flat_pieces.length/20;
-
-			if ( pieces_supplied < pieces_required ){
-
-				throw( new TOTorrentException( "Decode fails, insufficient pieces supplied",
-						TOTorrentException.RT_DECODE_FAILS ));
+			if ( flat_pieces == null ){
+				
+				if ( !has_v2 ){
+					
+					throw( new TOTorrentException( "pieces missing",	TOTorrentException.RT_DECODE_FAILS ));
+				}
+			}else{
+					// work out how many pieces we require for the torrent
+	
+				int	pieces_required = (int)((total_length + (piece_length-1)) / piece_length);
+	
+				int		pieces_supplied = flat_pieces.length/20;
+	
+				if ( pieces_supplied < pieces_required ){
+	
+					throw( new TOTorrentException( "Decode fails, insufficient pieces supplied",
+							TOTorrentException.RT_DECODE_FAILS ));
+				}
+	
+				if ( pieces_supplied > pieces_required ){
+	
+					Debug.out( "Torrent '" + new String( getName()) + "' has too many pieces (required=" + pieces_required + ",supplied=" + pieces_supplied + ") - ignoring excess" );
+				}
+	
+				byte[][]pieces = new byte[pieces_supplied][20];
+	
+				for (int i=0;i<pieces.length;i++){
+	
+					System.arraycopy( flat_pieces, i*20, pieces[i], 0, 20 );
+				}
+	
+				setPieces( pieces );
 			}
-
-			if ( pieces_supplied > pieces_required ){
-
-				Debug.out( "Torrent '" + new String( getName()) + "' has too many pieces (required=" + pieces_required + ",supplied=" + pieces_supplied + ") - ignoring excess" );
-			}
-
-			byte[][]pieces = new byte[pieces_supplied][20];
-
-			for (int i=0;i<pieces.length;i++){
-
-				System.arraycopy( flat_pieces, i*20, pieces[i], 0, 20 );
-			}
-
-			setPieces( pieces );
-
+			
 				// extract and additional info elements
 
 			Iterator info_it = info.keySet().iterator();

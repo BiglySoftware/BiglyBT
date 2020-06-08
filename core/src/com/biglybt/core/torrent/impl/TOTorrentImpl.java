@@ -71,6 +71,7 @@ TOTorrentImpl
 	protected static final String TK_V2_META_VERSION	= "meta version";
 	protected static final String TK_V2_FILE_TREE		= "file tree";
 	protected static final String TK_V2_PIECE_LAYERS	= "piece layers";
+	protected static final String TK_V2_PIECES_ROOT		= "pieces root";
 	
 	private static CopyOnWriteList<TOTorrentListener>		global_listeners = new CopyOnWriteList<>();
 	
@@ -155,8 +156,18 @@ TOTorrentImpl
 
 	protected void
 	setConstructed()
+	
+		throws TOTorrentException
 	{
-		constructing = false;
+		try{
+			if ( torrent_type == TT_V2 ){
+			
+				TOTorrentCreateV2Impl.lashUpV1Info( this );
+			}
+		}finally{
+		
+			constructing = false;
+		}
 	}
 	
 	@Override
@@ -351,7 +362,7 @@ TOTorrentImpl
 
 		TOTorrentAnnounceURLSet[] sets = announce_group.getAnnounceURLSets();
 
-		if (sets.length > 0 ){
+		if ( sets.length > 0 ){
 
 			List	announce_list = new ArrayList();
 
@@ -396,18 +407,6 @@ TOTorrentImpl
 
 			root.put( TK_CREATED_BY, created_by );
 		}
-
-		boolean	v2_only = false;
-		
-		if ( pieces == null ){
-			
-			Number version = (Number)additional_info_properties.get( TK_V2_META_VERSION );
-			
-			if ( version != null && version.intValue() == 2 ){
-			
-				v2_only = true;
-			}
-		}
 		
 		Map info = new HashMap();
 
@@ -415,7 +414,7 @@ TOTorrentImpl
 
 		info.put( TK_PIECE_LENGTH, new Long( piece_length ));
 
-		if ( !v2_only ){
+		if ( torrent_type != TT_V2 ){
 			
 			if ( pieces == null ){
 	
