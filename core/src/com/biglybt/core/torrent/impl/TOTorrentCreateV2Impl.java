@@ -286,6 +286,11 @@ TOTorrentCreateV2Impl
 							
 				int leaf_count = (int)( leaf_width/block_size);
 				
+				if ( leaf_count == 0 ){
+					
+					leaf_count = 1;
+				}
+				
 				FileInputStream fis = new FileInputStream(file);
 				
 				List<byte[]> leaf_digests = new ArrayList<>( leaf_count );

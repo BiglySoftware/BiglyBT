@@ -3129,7 +3129,7 @@ public class ManagerUtils {
 
 						TOTorrentFile[] to_files = torrent.getFiles();
 
-						long	piece_size = torrent.getPieceLength();
+						final long	piece_size = torrent.getPieceLength();
 
 						byte[][] pieces = torrent.getPieces();
 
@@ -3186,6 +3186,11 @@ public class ManagerUtils {
 							download_loop:
 								for ( final DiskManagerFileInfo file: files ){
 
+									if ( file.getTorrentFile().isPadFile()){
+										
+										continue;
+									}
+									
 									int file_indent = dm_indent;
 
 									synchronized( quit ){
@@ -3523,11 +3528,18 @@ public class ManagerUtils {
 
 															raf.read( buffer );
 
-															ConcurrentHasherRequest req = hasher.addRequest( ByteBuffer.wrap( buffer ));
+															byte[] required_hash = pieces[piece_number];
+															
+															ConcurrentHasherRequest req = 
+																hasher.addRequest( 
+																	ByteBuffer.wrap( buffer ), 
+																	required_hash.length==20?1:2,
+																	(int)piece_size,
+																	to_file.getLength());
 
 															byte[] hash = req.getResult();
 
-															boolean	match = Arrays.equals( pieces[piece_number], hash );
+															boolean	match = Arrays.equals( required_hash, hash );
 
 															if ( match ){
 

@@ -25,6 +25,7 @@ package com.biglybt.core.util;
  */
 
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,7 +43,8 @@ ConcurrentHasher
 
 	protected final List<ConcurrentHasherRequest>				requests		= new LinkedList<>();
 
-	protected final List<SHA1Hasher>	hashers			= new ArrayList<>();
+	protected final List<SHA1Hasher>	v1_hashers			= new LinkedList<>();
+	protected final List<MessageDigest>	v2_hashers			= new LinkedList<>();
 
 	protected final AESemaphore		request_sem		= new AESemaphore("ConcHashReqQ");
 	protected final AESemaphore		scheduler_sem	= new AESemaphore("ConcHashSched");
@@ -113,20 +115,47 @@ ConcurrentHasher
 						// now extract the request
 
 					final ConcurrentHasherRequest	req;
-					final SHA1Hasher				hasher;
+					final SHA1Hasher				v1_hasher;
+					final MessageDigest				v2_hasher;
 
 					try{
 						requests_mon.enter();
 
 						req	= requests.remove(0);
 
-						if ( hashers.size() == 0 ){
-
-							hasher = new SHA1Hasher();
-
+						if ( req.getHashVersion() == 1 ){
+							
+							v2_hasher = null;
+							
+							if ( v1_hashers.size() == 0 ){
+	
+								v1_hasher = new SHA1Hasher();
+	
+							}else{
+	
+								v1_hasher	= v1_hashers.remove(0);
+							}
 						}else{
-
-							hasher	= hashers.remove( hashers.size()-1 );
+							v1_hasher = null;
+							
+							if ( v2_hashers.size() == 0 ){
+	
+								try{
+									v2_hasher = MessageDigest.getInstance( "SHA-256" );
+									
+								}catch( Throwable e ){
+									
+									Debug.out( e );
+									
+									req.cancel();
+									
+									continue;
+								}
+	
+							}else{
+	
+								v2_hasher	= v2_hashers.remove(0);
+							}
 						}
 					}finally{
 
@@ -141,14 +170,25 @@ ConcurrentHasher
 								runSupport()
 								{
 									try{
-										req.run( hasher );
-
+										if ( v1_hasher != null ){
+										
+											req.run( v1_hasher );
+										}else{
+											
+											req.run( v2_hasher );
+										}
 									}finally{
 										try{
 											requests_mon.enter();
 
-											hashers.add( hasher );
-
+											if ( v1_hasher != null ){
+											
+												v1_hashers.add( v1_hasher );
+												
+											}else{
+												
+												v2_hashers.add( v2_hasher );
+											}
 										}finally{
 
 											requests_mon.exit();
@@ -198,9 +238,12 @@ ConcurrentHasher
 
 	public ConcurrentHasherRequest
 	addRequest(
-		ByteBuffer		buffer )
+		ByteBuffer		buffer,
+		int				hash_version,
+		int				piece_size,
+		long			v2_file_size )
 	{
-		return( addRequest( buffer, null, false ));
+		return( addRequest( buffer, hash_version, piece_size, v2_file_size, null, false ));
 	}
 
 		/**
@@ -216,10 +259,13 @@ ConcurrentHasher
 	public ConcurrentHasherRequest
 	addRequest(
 		ByteBuffer							buffer,
+		int									hash_version,
+		int									piece_size,
+		long								v2_file_size,
 		ConcurrentHasherRequestListener		listener,
 		boolean								low_priorty )
 	{
-		final ConcurrentHasherRequest	req = new ConcurrentHasherRequest( this, buffer, listener, low_priorty );
+		final ConcurrentHasherRequest	req = new ConcurrentHasherRequest( this, buffer, hash_version, piece_size, v2_file_size, listener, low_priorty );
 
 			// get permission to run a request
 

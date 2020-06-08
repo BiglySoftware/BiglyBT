@@ -23,6 +23,7 @@ package com.biglybt.core.torrent.impl;
 
 import java.io.*;
 import java.net.URL;
+import java.security.MessageDigest;
 import java.util.*;
 
 import com.biglybt.core.CoreFactory;
@@ -743,10 +744,29 @@ TOTorrentImpl
 		try{
 			if ( torrent_hash_override == null ){
 
-				SHA1Hasher s = new SHA1Hasher();
-
-				torrent_hash = s.calculateHash(BEncoder.encode(info));
+				if ( torrent_type == 0 ){
+					
+					Debug.out( "Torrent type unknown" );
+				}
 				
+				byte[] encoded = BEncoder.encode(info);
+				
+				if ( torrent_type == TT_V2 ){
+					
+					MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
+					
+					byte[] full_hash = sha256.digest( encoded );
+					
+					torrent_hash = new byte[20];
+					
+					System.arraycopy( full_hash, 0, torrent_hash, 0, 20 );
+					
+				}else{
+					
+					SHA1Hasher s = new SHA1Hasher();
+	
+					torrent_hash = s.calculateHash( encoded );
+				}
 			}else{
 
 				torrent_hash = torrent_hash_override;

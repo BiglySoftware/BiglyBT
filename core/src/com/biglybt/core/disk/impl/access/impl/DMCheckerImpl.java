@@ -19,6 +19,7 @@
 
 package com.biglybt.core.disk.impl.access.impl;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -773,8 +774,44 @@ DMCheckerImpl
 							try{
 						    	final	DirectByteBuffer	f_buffer	= buffer;
 
+						    	int piece_length = disk_manager.getPieceLength();
+						    	
+						    	int hash_version = required_hash.length==20?1:2;
+						    	
+						    	long	v2_file_length;
+						    	
+						    	ByteBuffer byte_buffer = buffer.getBuffer(DirectByteBuffer.SS_DW);
+						    	
+						    	if ( hash_version == 2 ){
+						    		
+						    		DMPieceMapEntry piece_entry = pieceList.get(0);
+						    		
+						    		v2_file_length = piece_entry.getFile().getLength();					    		
+						    		
+										// with v2 a piece only contains > 1 file if the second file is a dummy padding file added
+										// to 'make things work'
+
+						    		if ( pieceList.size() == 2 ){
+
+							    		int v2_piece_length = piece_entry.getLength();
+							    		
+							    		if ( v2_piece_length < piece_length ){
+							    			
+							    				// hasher will pad appropriately
+							    			
+							    			byte_buffer.limit( byte_buffer.position() + v2_piece_length );
+							    		}
+						    		}
+						    	}else{
+						    		
+						    		v2_file_length = -1;
+						    	}
+						    	
 							   	ConcurrentHasher.getSingleton().addRequest(
-						    			buffer.getBuffer(DirectByteBuffer.SS_DW),
+						    			byte_buffer,
+						    			hash_version,
+						    			piece_length,
+						    			v2_file_length,
 										new ConcurrentHasherRequestListener()
 										{
 						    				@Override
