@@ -183,6 +183,7 @@ ShareResourceFileOrDirImpl
 			URL[]	urls = manager.getAnnounceURLs();
 
 			TOTorrentCreator creator = TOTorrentFactory.createFromFileOrDirWithComputedPieceLength(
+										TOTorrent.TT_V1,
 										file,
 										urls[0],
 										manager.getAddHashes());

@@ -146,8 +146,6 @@ TOTorrentCreateImpl
 					}
 				};
 	}
-
-	private static int	torrent_create_versions	= TT_V2;
 	
 	private final int						torrent_type;
 	
@@ -182,6 +180,7 @@ TOTorrentCreateImpl
 
 	protected
 	TOTorrentCreateImpl(
+		int							_torrent_type,
 		Map<String,File>			_linkage_map,
 		File						_torrent_base,
 		URL							_announce_url,
@@ -197,7 +196,7 @@ TOTorrentCreateImpl
 		piece_length		= _piece_length;
 		add_other_hashes	= _add_other_hashes;
 		
-		torrent_type = torrent_create_versions;
+		torrent_type = _torrent_type;
 		
 		add_v1	= torrent_type == TT_V1 || torrent_type == TT_V1_V2;
 		add_v2	= torrent_type == TT_V2 || torrent_type == TT_V1_V2;
@@ -205,6 +204,7 @@ TOTorrentCreateImpl
 
 	protected
 	TOTorrentCreateImpl(
+		int							_torrent_type,
 		Map<String,File>			_linkage_map,
 		File						_torrent_base,
 		URL							_announce_url,
@@ -222,7 +222,7 @@ TOTorrentCreateImpl
 		torrent_base		= _torrent_base;
 		add_other_hashes	= _add_other_hashes;
 
-		torrent_type = torrent_create_versions;
+		torrent_type = _torrent_type;
 
 		add_v1	= torrent_type == TT_V1 || torrent_type == TT_V1_V2;
 		add_v2	= torrent_type == TT_V2 || torrent_type == TT_V1_V2;

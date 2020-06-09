@@ -118,7 +118,7 @@ TOTorrentFactory
 
 		throws TOTorrentException
 	{
-		return( createFromFileOrDirWithFixedPieceLength( file, announce_url, false, TO_DEFAULT_FIXED_PIECE_SIZE ));
+		return( createFromFileOrDirWithFixedPieceLength( TOTorrent.TT_V1, file, announce_url, false, TO_DEFAULT_FIXED_PIECE_SIZE ));
 	}
 
 	public static TOTorrentCreator
@@ -129,7 +129,7 @@ TOTorrentFactory
 
 		throws TOTorrentException
 	{
-		return( createFromFileOrDirWithFixedPieceLength( file, announce_url, add_hashes, TO_DEFAULT_FIXED_PIECE_SIZE ));
+		return( createFromFileOrDirWithFixedPieceLength( TOTorrent.TT_V1, file, announce_url, add_hashes, TO_DEFAULT_FIXED_PIECE_SIZE ));
 	}
 
 	public static TOTorrentCreator
@@ -140,11 +140,12 @@ TOTorrentFactory
 
 		throws TOTorrentException
 	{
-		return( createFromFileOrDirWithFixedPieceLength( file, announce_url, false, piece_length ));
+		return( createFromFileOrDirWithFixedPieceLength( TOTorrent.TT_V1, file, announce_url, false, piece_length ));
 	}
 
 	public static TOTorrentCreator
 	createFromFileOrDirWithFixedPieceLength(
+		int							torrent_version,
 		File						file,
 		URL							announce_url,
 		boolean						add_hashes,
@@ -152,7 +153,7 @@ TOTorrentFactory
 
 		throws TOTorrentException
 	{
-		return( new TOTorrentCreatorImpl( file, announce_url, add_hashes, piece_length ));
+		return( new TOTorrentCreatorImpl( TOTorrent.TT_V1, file, announce_url, add_hashes, piece_length ));
 	}
 
 		// construction methods: variable piece size
@@ -164,11 +165,12 @@ TOTorrentFactory
 
 		throws TOTorrentException
 	{
-		return( createFromFileOrDirWithComputedPieceLength( file, announce_url, false ));
+		return( createFromFileOrDirWithComputedPieceLength( TOTorrent.TT_V1, file, announce_url, false ));
 	}
 
 	public static TOTorrentCreator
 	createFromFileOrDirWithComputedPieceLength(
+		int							torrent_version,
 		File						file,
 		URL							announce_url,
 		boolean						add_hashes )
@@ -176,6 +178,7 @@ TOTorrentFactory
 		throws TOTorrentException
 	{
 		return( createFromFileOrDirWithComputedPieceLength(
+					torrent_version,
 					file,
 					announce_url,
 					add_hashes,
@@ -188,23 +191,7 @@ TOTorrentFactory
 
 	public static TOTorrentCreator
 	createFromFileOrDirWithComputedPieceLength(
-		File						file,
-		URL							announce_url,
-		long						piece_min_size,
-		long						piece_max_size,
-		long						piece_num_lower,
-		long						piece_num_upper )
-
-		throws TOTorrentException
-	{
-		return( createFromFileOrDirWithComputedPieceLength(
-						file, announce_url, false, piece_min_size, piece_max_size,
-						piece_num_lower, piece_num_upper ));
-
-	}
-
-	public static TOTorrentCreator
-	createFromFileOrDirWithComputedPieceLength(
+		int							torrent_version,
 		File						file,
 		URL							announce_url,
 		boolean						add_hashes,
@@ -216,6 +203,7 @@ TOTorrentFactory
 		throws TOTorrentException
 	{
 		return( new TOTorrentCreatorImpl(
+					torrent_version,
 					file, announce_url, add_hashes, piece_min_size, piece_max_size,
 					piece_num_lower, piece_num_upper ));
 
@@ -228,7 +216,7 @@ TOTorrentFactory
 
 		throws TOTorrentException
 	{
-		TOTorrentCreatorImpl	creator = new TOTorrentCreatorImpl( file_or_dir_or_desc );
+		TOTorrentCreatorImpl	creator = new TOTorrentCreatorImpl( TOTorrent.TT_V1, file_or_dir_or_desc );
 
 		creator.setFileIsLayoutDescriptor( is_layout_descriptor );
 

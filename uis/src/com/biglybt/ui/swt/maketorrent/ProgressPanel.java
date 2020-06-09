@@ -181,7 +181,7 @@ public class ProgressPanel extends AbstractWizardPanel<NewTorrentWizard> impleme
 
         wizard.creator =
       		TOTorrentFactory.createFromFileOrDirWithComputedPieceLength(
-      					f, url, wizard.getAddOtherHashes());
+      					wizard.torrentVersion, f, url, wizard.getAddOtherHashes());
 
         wizard.creator.addListener( this );
 
@@ -192,7 +192,7 @@ public class ProgressPanel extends AbstractWizardPanel<NewTorrentWizard> impleme
       }else{
     	wizard.creator =
       		TOTorrentFactory.createFromFileOrDirWithFixedPieceLength(
-      					f, url, wizard.getAddOtherHashes(), wizard.getPieceSizeManual());
+      				wizard.torrentVersion, f, url, wizard.getAddOtherHashes(), wizard.getPieceSizeManual());
 
     	wizard.creator.addListener( this );
 

@@ -446,7 +446,7 @@ public class MessageText {
 			  System.err.println("Missing message key '" + key + "', params " + Arrays.toString(params));
 		  }
 
-		  if (params == null) {
+		  if (params == null || params.length == 0 ) {
 			  return  "!" + key + "!";
 		  }
 		  return "!" + key + "(" + Arrays.toString(params) + ")" + "!";

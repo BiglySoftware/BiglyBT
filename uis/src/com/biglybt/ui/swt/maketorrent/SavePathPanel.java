@@ -31,6 +31,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
@@ -428,6 +429,39 @@ public class SavePathPanel extends AbstractWizardPanel<NewTorrentWizard> {
     }else{
     	bPrivateTorrent.setSelection( privateTorrent );
     }
+    
+    	// torrent version
+    
+    label = new Label(panel, SWT.NULL);
+    Messages.setLanguageText(label, "label.torrent.version");
+
+   
+    final Combo torrent_Version = new Combo(panel, SWT.SINGLE | SWT.READ_ONLY);
+
+    int[] torrent_versions = { TOTorrent.TT_V1, TOTorrent.TT_V1_V2, TOTorrent.TT_V2 };
+    
+    for ( int i=1;i<=3;i++){
+    
+    	torrent_Version.add( MessageText.getString( "torrent.version.type." + i));
+    }
+    
+    torrent_Version.select(0);
+
+    wizard.torrentVersion = TOTorrent.TT_V1;
+    
+    torrent_Version.addListener(SWT.Selection, new Listener() {
+    	@Override
+	    public void
+    	handleEvent(
+    			Event e)
+    	{
+    		int	index = torrent_Version.getSelectionIndex();
+
+    		wizard.torrentVersion = torrent_versions[index];
+    	}
+    });
+
+    label = new Label(gFileStuff, SWT.NULL);
   }
 
   @Override

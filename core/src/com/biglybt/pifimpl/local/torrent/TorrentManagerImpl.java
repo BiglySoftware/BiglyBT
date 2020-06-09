@@ -236,7 +236,7 @@ TorrentManagerImpl
 		throws TorrentException
 	{
 		try{
-			TOTorrentCreator c = TOTorrentFactory.createFromFileOrDirWithComputedPieceLength( data, announce_url, include_other_hashes);
+			TOTorrentCreator c = TOTorrentFactory.createFromFileOrDirWithComputedPieceLength( TOTorrent.TT_V1, data, announce_url, include_other_hashes);
 
 			c.addListener( this );
 
@@ -258,7 +258,7 @@ TorrentManagerImpl
 		throws TorrentException
 	{
 		try{
-			final TOTorrentCreator c = TOTorrentFactory.createFromFileOrDirWithComputedPieceLength( data, announce_url, include_other_hashes);
+			final TOTorrentCreator c = TOTorrentFactory.createFromFileOrDirWithComputedPieceLength( TOTorrent.TT_V1, data, announce_url, include_other_hashes);
 
 			return(
 				new TorrentCreator()

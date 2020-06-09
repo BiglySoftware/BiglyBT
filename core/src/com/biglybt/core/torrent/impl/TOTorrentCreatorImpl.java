@@ -45,7 +45,8 @@ public class
 TOTorrentCreatorImpl
 	implements TOTorrentCreator
 {
-	private final File					torrent_base;
+	private final int				torrent_type;
+	private final File				torrent_base;
 	private URL						announce_url;
 	private boolean					add_other_hashes;
 	private long					piece_length;
@@ -65,13 +66,16 @@ TOTorrentCreatorImpl
 
 	public
 	TOTorrentCreatorImpl(
+		int							_torrent_type,
 		File						_torrent_base )
 	{
+		torrent_type		= _torrent_type;
 		torrent_base 		= _torrent_base;
 	}
 
 	public
 	TOTorrentCreatorImpl(
+		int							_torrent_type,
 		File						_torrent_base,
 		URL							_announce_url,
 		boolean						_add_other_hashes,
@@ -79,6 +83,7 @@ TOTorrentCreatorImpl
 
 		throws TOTorrentException
 	{
+		torrent_type		= _torrent_type;
 		torrent_base 		= _torrent_base;
 		announce_url		= _announce_url;
 		add_other_hashes	= _add_other_hashes;
@@ -87,6 +92,7 @@ TOTorrentCreatorImpl
 
 	public
 	TOTorrentCreatorImpl(
+		int							_torrent_type,
 		File						_torrent_base,
 		URL							_announce_url,
 		boolean						_add_other_hashes,
@@ -97,6 +103,7 @@ TOTorrentCreatorImpl
 
 		throws TOTorrentException
 	{
+		torrent_type		= _torrent_type;
 		torrent_base 		= _torrent_base;
 		announce_url		= _announce_url;
 		add_other_hashes	= _add_other_hashes;
@@ -141,6 +148,7 @@ TOTorrentCreatorImpl
 
 				torrent =
 					new TOTorrentCreateImpl(
+							torrent_type,
 							linkage_map,
 							base_to_use,
 							announce_url,
@@ -150,6 +158,7 @@ TOTorrentCreatorImpl
 
 				torrent =
 					new TOTorrentCreateImpl(
+							torrent_type,
 							linkage_map,
 							base_to_use,
 							announce_url,

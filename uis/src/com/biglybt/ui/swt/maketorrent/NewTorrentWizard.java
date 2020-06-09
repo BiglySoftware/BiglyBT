@@ -27,6 +27,7 @@ import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentCreator;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.ui.swt.FixedURLTransfer;
@@ -100,7 +101,8 @@ NewTorrentWizard
   String  initialTags		= COConfigurationManager.getStringParameter( "CreateTorrent.default.initialTags", "" );
   boolean superseed			= false;
   boolean permitDHT			= true;
-
+  int     torrentVersion	= TOTorrent.TT_V1;
+  
   TOTorrentCreator creator = null;
 
   public
