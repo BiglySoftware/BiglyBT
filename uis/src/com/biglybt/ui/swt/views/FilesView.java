@@ -566,6 +566,14 @@ public class FilesView
 					
 					return( false );
 				}
+			}else{
+				
+				TOTorrentFile tf = ds.getTorrentFile();
+				
+				if ( tf != null && tf.isPadFile()){
+					
+					return( false );
+				}
 			}
 		}
 
@@ -589,7 +597,7 @@ public class FilesView
 			return( true );
 		}
 		
-		try {
+		try {			
 			File file = ds.getFile(true);
 
 			String name = filter.contains( File.separator )?file.getAbsolutePath():file.getName();

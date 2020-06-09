@@ -3341,7 +3341,10 @@ public class MyTorrentsView
 				int pos = 0;
 				for (int i = 0; i < files.length; i++) {
 					DiskManagerFileInfo fileInfo = files[i];
-					if (fileInfo.isSkipped()
+					if ( fileInfo.getTorrentFile().isPadFile()){
+						continue;
+					}
+					if (	fileInfo.isSkipped()
 							&& (fileInfo.getStorageType() == DiskManagerFileInfo.ST_COMPACT || fileInfo.getStorageType() == DiskManagerFileInfo.ST_REORDER_COMPACT)) {
 						continue;
 					}
