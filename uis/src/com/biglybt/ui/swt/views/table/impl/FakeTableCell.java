@@ -18,6 +18,7 @@
 package com.biglybt.ui.swt.views.table.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -123,6 +124,8 @@ public class FakeTableCell
 
 	private TableRow fakeRow = null;
 
+	private Map<Object,Object>	userData;
+	
 	/**
 	 * @param columnRateUpDown
 	 */
@@ -1637,5 +1640,37 @@ public class FakeTableCell
 	@Override
 	public boolean useSimpleSortValue() {
 		return false;
+	}
+	
+	@Override
+	public Object getData(Object key){
+		synchronized( this ){
+			if ( userData == null ){
+				return( null );
+			}else{
+				return( userData.get( key ));
+			}
+		}
+	}
+	
+	@Override
+	public void setData(Object key, Object data){
+		synchronized( this ){
+			if ( userData == null ){
+				if ( data == null ){
+					return;
+				}else{
+					userData = new HashMap<>();
+				}
+			}
+			if ( data == null ){
+				userData.remove( key );
+				if ( userData.isEmpty()){
+					userData = null;
+				}
+			}else{
+				userData.put(key, data);
+			}
+		}
 	}
 }

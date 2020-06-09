@@ -1404,6 +1404,11 @@ public class FilesViewMenuUtil
 	}
 	
 	public static void changePriority(Object type, final List<DiskManagerFileInfo> file_list ) {
+		changePriority( type, file_list, true );
+	}
+	
+	
+	public static void changePriority(Object type, final List<DiskManagerFileInfo> file_list, boolean prompt ) {
 
 		if (file_list == null || file_list.size() == 0) {
 			return;
@@ -1448,7 +1453,7 @@ public class FilesViewMenuUtil
 				dm.setFilePriorities(fileInfos, -1);
 			}
 
-			boolean paused = setSkipped(dm, fileInfos, skipped, delete_action);
+			boolean paused = setSkipped(dm, fileInfos, skipped, delete_action, prompt );
 
 			if (paused) {
 
@@ -1504,7 +1509,7 @@ public class FilesViewMenuUtil
 				for (DownloadManager dm : mapDMtoDMFI.keySet()) {
 					ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
 					DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
-					boolean paused = setSkipped(dm, fileInfos, false, false);
+					boolean paused = setSkipped(dm, fileInfos, false, false,true);
 
 					if (paused) {
 
@@ -1573,7 +1578,7 @@ public class FilesViewMenuUtil
 		for (DownloadManager dm : mapDMtoDMFI.keySet()) {
 			ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
 			DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
-			boolean paused = setSkipped(dm, fileInfos, false, false);
+			boolean paused = setSkipped(dm, fileInfos, false, false, true);
 
 			if (paused) {
 
@@ -2059,7 +2064,7 @@ public class FilesViewMenuUtil
 	
 	// Returns true if it was paused here.
 	private static boolean setSkipped(DownloadManager manager,
-			DiskManagerFileInfo[] infos, boolean skipped, boolean delete_action) {
+			DiskManagerFileInfo[] infos, boolean skipped, boolean delete_action, boolean prompt ) {
 		// if we're not managing the download then don't do anything other than
 		// change the file's priority
 
@@ -2123,27 +2128,33 @@ public class FilesViewMenuUtil
 
 				if (perform_check && existing_file.exists()) {
 					if (delete_action) {
-						MessageBoxShell mb = new MessageBoxShell(SWT.OK | SWT.CANCEL,
-								MessageText.getString("FilesView.rename.confirm.delete.title"),
-								MessageText.getString("FilesView.rename.confirm.delete.text",
-										new String[] {
-											existing_file.toString()
-										}));
-						mb.setDefaultButtonUsingStyle(SWT.OK);
-						mb.setRememberOnlyIfButton(0);
-						mb.setRemember("FilesView.messagebox.delete.id", false, null);
-						mb.setLeftImage(SWT.ICON_WARNING);
-						mb.open(null);
-
-						boolean wants_to_delete = mb.waitUntilClosed() == SWT.OK;
-
-						if ( wants_to_delete ){
-
-							new_storage_type = compact_target;
-
+						
+						if ( prompt ){
+							MessageBoxShell mb = new MessageBoxShell(SWT.OK | SWT.CANCEL,
+									MessageText.getString("FilesView.rename.confirm.delete.title"),
+									MessageText.getString("FilesView.rename.confirm.delete.text",
+											new String[] {
+												existing_file.toString()
+											}));
+							mb.setDefaultButtonUsingStyle(SWT.OK);
+							mb.setRememberOnlyIfButton(0);
+							mb.setRemember("FilesView.messagebox.delete.id", false, null);
+							mb.setLeftImage(SWT.ICON_WARNING);
+							mb.open(null);
+	
+							boolean wants_to_delete = mb.waitUntilClosed() == SWT.OK;
+	
+							if ( wants_to_delete ){
+	
+								new_storage_type = compact_target;
+	
+							}else{
+	
+								new_storage_type = non_compact_target;
+							}
 						}else{
-
-							new_storage_type = non_compact_target;
+							
+							new_storage_type = compact_target;
 						}
 					}else{
 

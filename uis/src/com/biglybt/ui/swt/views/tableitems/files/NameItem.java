@@ -24,6 +24,7 @@ package com.biglybt.ui.swt.views.tableitems.files;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -49,6 +50,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.FilesView;
+import com.biglybt.ui.swt.views.FilesViewMenuUtil;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
@@ -73,6 +75,8 @@ public class NameItem extends CoreTableColumnSWT implements
 {
 	private static final String ID_CHECKHITAREA		= "checkHitArea";
 
+	private static final Object	KEY_OLD_CELL_TT	= new Object();
+	
 	private static boolean NEVER_SHOW_TWISTY;
 	
 	static{
@@ -558,13 +562,33 @@ public class NameItem extends CoreTableColumnSWT implements
 				Rectangle hitArea = (Rectangle) data;
 				boolean inCheck = hitArea.contains(event.x, event.y);
 
+				Object tt = null;
+				
 				if ( inCheck ){
+					
+					final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)event.cell.getDataSource();
+
+					boolean realFile;
+					
+					if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
+						
+						realFile = ((FilesView.FilesViewTreeNode)fileInfo).isLeaf();
+						
+					}else{
+						
+						realFile = true;
+					}
+					
+					if ( realFile ){
+						
+						tt = MessageText.getString( "filesview.name.check.tt" );
+					}
+					
 					inArea = true;
 					if (event.eventType == TableCellMouseEvent.EVENT_MOUSEDOWN) {
 						if (row instanceof TableRowCore) {
 							TableRowCore rowCore = (TableRowCore) row;
 							if ( rowCore != null ){
-								final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)event.cell.getDataSource();
 							
 								if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
 									
@@ -590,8 +614,51 @@ public class NameItem extends CoreTableColumnSWT implements
 									}
 								}
 								
-								ManagerUtils.setFileSkipped( fileInfo, !fileInfo.isSkipped());
+								if ( ( event.keyboardState & SWT.SHIFT ) != 0 && !fileInfo.isSkipped()){
+									
+									FilesViewMenuUtil.changePriority(
+											FilesViewMenuUtil.PRIORITY_DELETE,
+											Collections.singletonList(fileInfo), false );
+								}else{
+								
+									ManagerUtils.setFileSkipped( fileInfo, !fileInfo.isSkipped());
+								}
 							}
+						}
+					}
+				}
+				
+				if ( event.cell instanceof TableCellCore ){
+					
+					TableCellCore cellCore = (TableCellCore)event.cell;
+					
+						// this code assumes the existing tt doesn't change, if it does then more work required...
+					
+					Object existingTT = cellCore.getToolTip();
+					
+					if ( existingTT != tt ){
+						
+						if ( existingTT instanceof String && tt != null && tt.equals( existingTT )){
+							
+							// no change
+							
+						}else{
+							
+							Object storedTT = cellCore.getData( KEY_OLD_CELL_TT );
+							
+							if ( existingTT != null && storedTT == null ){
+								
+								storedTT = existingTT;
+								
+								cellCore.setData( KEY_OLD_CELL_TT, existingTT );
+							}
+							
+							if ( tt == null ){
+								
+								tt  = storedTT;	
+							}
+							
+							cellCore.setToolTip( tt );
 						}
 					}
 				}
@@ -602,7 +669,7 @@ public class NameItem extends CoreTableColumnSWT implements
 			}
 		}
 	}
-
+	  
 	@Override
 	public boolean inplaceValueSet(TableCell cell, String value, boolean finalEdit) {
 		if (value.equalsIgnoreCase(cell.getText()) || "".equals(value) || "".equals(cell.getText()))

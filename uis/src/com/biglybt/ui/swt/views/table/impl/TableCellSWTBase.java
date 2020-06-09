@@ -20,8 +20,10 @@ package com.biglybt.ui.swt.views.table.impl;
 
 import java.text.Collator;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
 
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableColumnSortObject;
@@ -164,6 +166,8 @@ public abstract class TableCellSWTBase
 	private Image icon;
 
 	private Graphic graphic = null;
+
+	private Map<Object,Object>	userData;
 
 	public TableCellSWTBase(TableRowCore row, TableColumnCore column) {
 		flags = FLAG_SORTVALUEISTEXT;
@@ -1463,5 +1467,37 @@ public abstract class TableCellSWTBase
 			return false;
 		}
 		return view.getSortColumnCount() > 0;
+	}
+	
+	@Override
+	public Object getData(Object key){
+		synchronized( this ){
+			if ( userData == null ){
+				return( null );
+			}else{
+				return( userData.get( key ));
+			}
+		}
+	}
+	
+	@Override
+	public void setData(Object key, Object data){
+		synchronized( this ){
+			if ( userData == null ){
+				if ( data == null ){
+					return;
+				}else{
+					userData = new HashMap<>();
+				}
+			}
+			if ( data == null ){
+				userData.remove( key );
+				if ( userData.isEmpty()){
+					userData = null;
+				}
+			}else{
+				userData.put(key, data);
+			}
+		}
 	}
 }

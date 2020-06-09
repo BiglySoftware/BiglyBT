@@ -193,4 +193,8 @@ public interface TableCellCore extends TableCell, Comparable
 	public void setDefaultToolTip(Object tt);
 
 	public Object getDefaultToolTip();
+	
+	public void setData( Object key, Object data );
+	
+	public Object getData( Object key );
 }
