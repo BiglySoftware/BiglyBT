@@ -304,7 +304,16 @@ public class NameItem extends CoreTableColumnSWT implements
 			
 			if ( is_leaf ){
 				if (fileInfo.isSkipped()){
-					check_key = "check_no";
+					
+					int	st = fileInfo.getStorageType();
+					
+					if ( 	st == DiskManagerFileInfo.ST_COMPACT ||
+							st == DiskManagerFileInfo.ST_REORDER_COMPACT ){
+						
+						check_key = "check_no";
+					}else{
+						check_key = "check_no_grey";
+					}
 				}else{
 					if ( fileInfo.getLength() == fileInfo.getDownloaded()){
 						check_key = "check_ro_yes";
