@@ -50,7 +50,11 @@ TOTorrentCreateV2Impl
 
 	private int		file_index	= 0;
 	
+	private int		synthetic_pad_file_count;
+	
 	private int		files_ignored;	
+	
+	private final boolean flatten_files = false;		// for testing only
 	
 	protected
 	TOTorrentCreateV2Impl(
@@ -156,6 +160,14 @@ TOTorrentCreateV2Impl
 			relative_path += File.separator + file.getName();
 		}
 		
+			// we need to keep track of where pad files will be inserted during the 'lashup process' as any file linkage information
+			// has to take account of this...
+		
+		if ( total_file_size % piece_size != 0 ){
+			
+			synthetic_pad_file_count++;
+		}
+		
 		FileDetails result = handleFile( file, relative_path );
 					
 		Map<String,Object>	details = new HashMap<>();
@@ -210,15 +222,18 @@ TOTorrentCreateV2Impl
 				
 		Arrays.sort( files );
 		
-		if ( relative_path.isEmpty()){
+		if (!flatten_files ){
 			
-			relative_path = dir.getName();
-			
-		}else{
-			
-			relative_path += File.separator + dir.getName();
+			if ( relative_path.isEmpty()){
+				
+				relative_path = dir.getName();
+				
+			}else{
+				
+				relative_path += File.separator + dir.getName();
+			}
 		}
-
+		
 		for ( String name: files ){
 			
 			if ( name.equals( "." ) || name.equals( ".." )){
@@ -260,7 +275,9 @@ TOTorrentCreateV2Impl
 												
 			byte[]	buffer = new byte[block_size];
 				
-			File link = adapter.resolveFile( file_index++, file, relative_path );
+			File link = adapter.resolveFile( file_index + synthetic_pad_file_count, file, relative_path );
+			
+			file_index++;
 			
 			if ( link != null ){
 								
@@ -461,6 +478,11 @@ TOTorrentCreateV2Impl
 				
 					byte[] piece_layer = (byte[])piece_layers.get( new String( pieces_root, Constants.BYTE_ENCODING_CHARSET ));
 					
+					if ( piece_layer.length % digest_length != 0 ){
+						
+						throw( new TOTorrentException( "V2 piece layer length invalid", TOTorrentException.RT_DECODE_FAILS ));
+					}
+					
 					for ( int i=0;i<piece_layer.length; i+= digest_length ){
 						
 						byte[] hash = new byte[ digest_length ];
@@ -637,7 +659,7 @@ TOTorrentCreateV2Impl
 							return false;
 						}
 					});
-			
+						
 			Map<String,Object> torrent = creator.create(); 
 	
 			System.out.println( "size=" + creator.total_file_size + ", padding=" + creator.total_v1_padding_size );

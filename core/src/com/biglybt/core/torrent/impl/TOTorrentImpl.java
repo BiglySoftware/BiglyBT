@@ -164,6 +164,14 @@ TOTorrentImpl
 			if ( torrent_type == TT_V2 ){
 			
 				TOTorrentCreateV2Impl.lashUpV1Info( this );
+				
+				if ( files.length == 1 ){
+					
+					if ( files[0].getPathComponents().length == 1 ){
+						
+						setSimpleTorrent( true );
+					}
+				}
 			}
 		}finally{
 		

@@ -147,7 +147,7 @@ TOTorrentCreateImpl
 				};
 	}
 
-	private static int	torrent_create_versions	= TT_V1;
+	private static int	torrent_create_versions	= TT_V2;
 	
 	private final int						torrent_type;
 	
