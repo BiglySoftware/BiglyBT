@@ -48,6 +48,8 @@ TOTorrentCreateV2Impl
 	private long	total_file_size;
 	private long	total_v1_padding_size;
 
+	private long	file_bytes_hashed	= 0;
+	
 	private int		file_index	= 0;
 	
 	private int		synthetic_pad_file_count;
@@ -194,7 +196,11 @@ TOTorrentCreateV2Impl
 		
 		if ( excess > 0 ){
 		
-			total_v1_padding_size += piece_size - excess;
+			long pad_size = piece_size - excess;
+			
+			//System.out.println( "V2: " + file.getName() +", " + total_file_size + ", " + pad_size );
+
+			total_v1_padding_size += pad_size;
 		}
 		
 		total_file_size += length;
@@ -331,6 +337,10 @@ TOTorrentCreateV2Impl
 						sha256.update( buffer, 0, len );
 						
 						byte[] digest = sha256.digest();
+						
+						file_bytes_hashed += len;
+						
+						adapter.reportHashedBytes( file_bytes_hashed );
 						
 						leaf_digests.add( digest );
 					}
@@ -615,6 +625,10 @@ TOTorrentCreateV2Impl
 			String		relative_file );
 		
 		public void
+		reportHashedBytes(
+			long		bytes );
+		
+		public void
 		report(
 			String		resource_key );
 		
@@ -647,6 +661,10 @@ TOTorrentCreateV2Impl
 						public File resolveFile(int index,File file, String relative_file){
 							System.out.println( "resolve: " + relative_file );
 							return( null );
+						}
+						
+						@Override
+						public void reportHashedBytes(long bytes){							
 						}
 						
 						@Override

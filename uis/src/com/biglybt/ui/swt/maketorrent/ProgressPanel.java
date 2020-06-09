@@ -201,6 +201,8 @@ public class ProgressPanel extends AbstractWizardPanel<NewTorrentWizard> impleme
       	torrent = wizard.creator.create();
       }
 
+      TorrentUtils.setPrivate( torrent, wizard.getPrivateTorrent());	// this will change the hash so do it before setting the URL!  	
+
       if ( tracker_type == NewTorrentWizard.TT_DECENTRAL ){
 
       	TorrentUtils.setDecentralised( torrent );
@@ -209,8 +211,6 @@ public class ProgressPanel extends AbstractWizardPanel<NewTorrentWizard> impleme
       torrent.setComment(wizard.getComment());
 
       TorrentUtils.setDHTBackupEnabled( torrent, wizard.permitDHT );
-
-      TorrentUtils.setPrivate( torrent, wizard.getPrivateTorrent());
 
       if ( torrent.getAdditionalStringProperty( "encoding" ) == null ){
       

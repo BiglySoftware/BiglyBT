@@ -242,6 +242,11 @@ TOTorrentCreateImpl
 			throw( new TOTorrentException( "No torrent versions selected", TOTorrentException.RT_CREATE_FAILED ));
 		}
 	
+		if ( add_v2 ){
+			
+			add_pad_files = true;
+		}
+		
 		try{
 			setIgnoreList();
 
@@ -252,6 +257,14 @@ TOTorrentCreateImpl
 			setCreatedBy( Constants.BIGLYBT_NAME + "/" + Constants.BIGLYBT_VERSION );
 
 			setPieceLength( piece_length );
+
+			piece_count_no_pad = calculateNumberOfPieces( torrent_base, piece_length );
+
+			if ( piece_count_no_pad == 0 ){
+
+				throw( new TOTorrentException( "Specified files have zero total length",
+												TOTorrentException.RT_ZERO_LENGTH ));
+			}
 
 			report( "Torrent.create.progress.piecelength", piece_length );
 
@@ -332,15 +345,7 @@ TOTorrentCreateImpl
 	
 		throws TOTorrentException
 	{
-		piece_count_no_pad = calculateNumberOfPieces( torrent_base, piece_length );
-
-		if ( piece_count_no_pad == 0 ){
-
-			throw( new TOTorrentException( "Specified files have zero total length",
-											TOTorrentException.RT_ZERO_LENGTH ));
-		}
-
-		report( "Torrent.create.progress.hashing");
+		report( "Torrent.create.progress.hashing", (add_v2?": V1":"" ));
 
 		for (int i=0;i<progress_listeners.size();i++){
 
@@ -417,6 +422,13 @@ TOTorrentCreateImpl
 	
 		throws TOTorrentException
 	{
+		report( "Torrent.create.progress.hashing", (add_v1?": V2":"" ));
+
+		for (int i=0;i<progress_listeners.size();i++){
+
+			((TOTorrentProgressListener)progress_listeners.get(i)).reportProgress( 0 );
+		}
+
 		TOTorrentCreateV2Impl v2_creator = 
 			new TOTorrentCreateV2Impl( 
 				torrent_base, 
@@ -438,6 +450,14 @@ TOTorrentCreateImpl
 						}
 
 						return( link );
+					}
+					
+					@Override
+					public void 
+					reportHashedBytes(
+						long 	bytes )
+					{
+						pieceHashed( (int)( bytes/piece_length ));
 					}
 					
 					@Override
@@ -465,6 +485,8 @@ TOTorrentCreateImpl
 				});
 			
 		Map<String,Object> v2_torrent = v2_creator.create();
+		
+		pieceHashed( (int)piece_count_no_pad );
 		
 		if ( add_v1 ){
 						
@@ -574,6 +596,8 @@ TOTorrentCreateImpl
 								
 								long pad_size = piece_length - l;
 							
+									// System.out.println( "V1: " + file_name + ", " + offset + ", " + pad_size );
+								
 								hasher.addPad((int)pad_size);
 
 								String pad_file = ".pad" + File.separator + (++pad_file_num) + "_" + pad_size;
@@ -634,19 +658,19 @@ TOTorrentCreateImpl
 	pieceHashed(
 		int		piece_number )
 	{
-		for (int i=0;i<progress_listeners.size();i++){
+		int	this_progress = (int)((piece_number*100)/piece_count_no_pad );
 
-			int	this_progress = (int)((piece_number*100)/piece_count_no_pad );
-
-			if ( this_progress > 100 ){
-				
-				this_progress = 100;
-			}
+		if ( this_progress > 100 ){
 			
-			if ( this_progress != reported_progress ){
+			this_progress = 100;
+		}
+		
+		if ( this_progress != reported_progress ){
 
-				reported_progress = this_progress;
+			reported_progress = this_progress;
 
+			for (int i=0;i<progress_listeners.size();i++){
+	
 				((TOTorrentProgressListener)progress_listeners.get(i)).reportProgress( reported_progress );
 			}
 		}

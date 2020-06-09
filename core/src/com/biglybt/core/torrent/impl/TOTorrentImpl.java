@@ -829,7 +829,21 @@ TOTorrentImpl
 
 		throws TOTorrentException
 	{
-		additional_info_properties.put( TK_PRIVATE, new Long(_private_torrent?1:0));
+		Long existing = (Long)additional_info_properties.get( TK_PRIVATE );
+		
+		if ( existing == null && !_private_torrent ){
+			
+			return;
+		}
+	
+		Long l_private = new Long(_private_torrent?1:0);
+
+		if ( existing != null && existing.equals( l_private )){
+			
+			return;
+		}
+		
+		additional_info_properties.put( TK_PRIVATE, l_private );
 
 			// update torrent hash
 

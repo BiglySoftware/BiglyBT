@@ -168,7 +168,7 @@ public class TorrentInfoView
 		boolean v2 = tt==TOTorrent.TT_V2 || tt==TOTorrent.TT_V1_V2;
 		
 		blabel.setLayoutData(gridData);
-		blabel.setText(torrent==null?"":( LocaleTorrentUtil.getCurrentTorrentEncoding( torrent ) + "; v1=" + (v1?"Y":"N") + ", v2=" + (v2?"Y":"N")));
+		blabel.setText(torrent==null?"":( LocaleTorrentUtil.getCurrentTorrentEncoding( torrent ) + "; V1=" + (v1?"Y":"N") + ", V2=" + (v2?"Y":"N")));
 
 			// trackers
 
