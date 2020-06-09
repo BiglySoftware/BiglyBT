@@ -562,7 +562,9 @@ public class NameItem extends CoreTableColumnSWT implements
 				Rectangle hitArea = (Rectangle) data;
 				boolean inCheck = hitArea.contains(event.x, event.y);
 
-				Object tt = null;
+				String our_tt = MessageText.getString( "filesview.name.check.tt" );
+				
+				Object set_tt = null;
 				
 				if ( inCheck ){
 					
@@ -581,7 +583,7 @@ public class NameItem extends CoreTableColumnSWT implements
 					
 					if ( realFile ){
 						
-						tt = MessageText.getString( "filesview.name.check.tt" );
+						set_tt = our_tt;
 					}
 					
 					inArea = true;
@@ -631,34 +633,30 @@ public class NameItem extends CoreTableColumnSWT implements
 				if ( event.cell instanceof TableCellCore ){
 					
 					TableCellCore cellCore = (TableCellCore)event.cell;
-					
-						// this code assumes the existing tt doesn't change, if it does then more work required...
-					
+										
 					Object existingTT = cellCore.getToolTip();
 					
-					if ( existingTT != tt ){
+					if ( existingTT != set_tt ){
 						
-						if ( existingTT instanceof String && tt != null && tt.equals( existingTT )){
+						if ( existingTT instanceof String && set_tt != null && set_tt.equals( existingTT )){
 							
 							// no change
 							
 						}else{
 							
-							Object storedTT = cellCore.getData( KEY_OLD_CELL_TT );
+								// we want to store any existing TTs we get that aren't ours
 							
-							if ( existingTT != null && storedTT == null ){
-								
-								storedTT = existingTT;
+							if ( existingTT != null && !existingTT.equals( our_tt )){
 								
 								cellCore.setData( KEY_OLD_CELL_TT, existingTT );
 							}
 							
-							if ( tt == null ){
+							if ( set_tt == null ){
 								
-								tt  = storedTT;	
+								set_tt = cellCore.getData(KEY_OLD_CELL_TT );
 							}
 							
-							cellCore.setToolTip( tt );
+							cellCore.setToolTip( set_tt );
 						}
 					}
 				}
