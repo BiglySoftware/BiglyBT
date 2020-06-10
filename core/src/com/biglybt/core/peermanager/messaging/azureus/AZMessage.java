@@ -41,31 +41,31 @@ public interface AZMessage extends Message {
 
   public static final String ID_AZ_REQUEST_HINT    		= "AZ_REQUEST_HINT";
   public static final byte[] ID_AZ_REQUEST_HINT_BYTES  = ID_AZ_REQUEST_HINT.getBytes();
-  public static final int SUBID_ID_AZ_REQUEST_HINT		= 3;
+  public static final int SUBID_AZ_REQUEST_HINT			= 3;
 
   public static final String ID_AZ_HAVE	    			= "AZ_HAVE";
   public static final byte[] ID_AZ_HAVE_BYTES 			= ID_AZ_HAVE.getBytes();
-  public static final int SUBID_ID_AZ_HAVE				= 4;
+  public static final int SUBID_AZ_HAVE					= 4;
 
   public static final String ID_AZ_BAD_PIECE	    	= "AZ_BAD_PIECE";
   public static final byte[] ID_AZ_BAD_PIECE_BYTES 		= ID_AZ_BAD_PIECE.getBytes();
-  public static final int SUBID_ID_AZ_BAD_PIECE			= 5;
+  public static final int SUBID_AZ_BAD_PIECE			= 5;
 
   public static final String ID_AZ_STAT_REQUEST	    	= "AZ_STAT_REQ";
   public static final byte[] ID_AZ_STAT_REQUEST_BYTES 	= ID_AZ_STAT_REQUEST.getBytes();
-  public static final int SUBID_ID_AZ_STAT_REQUEST		= 6;
+  public static final int SUBID_AZ_STAT_REQUEST			= 6;
 
   public static final String ID_AZ_STAT_REPLY	    	= "AZ_STAT_REP";
   public static final byte[] ID_AZ_STAT_REPLY_BYTES 	= ID_AZ_STAT_REPLY.getBytes();
-  public static final int SUBID_ID_AZ_STAT_REPLY		= 7;
+  public static final int SUBID_AZ_STAT_REPLY			= 7;
 
   public static final String ID_AZ_METADATA	    		= "AZ_METADATA";
   public static final byte[] ID_AZ_METADATA_BYTES 		= ID_AZ_METADATA.getBytes();
-  public static final int SUBID_ID_AZ_METADATA			= 8;
+  public static final int SUBID_AZ_METADATA				= 8;
 
 
   //TODO
-
+  /*
   public static final String ID_AZ_SESSION_SYN      	= "AZ_SESSION_SYN";
   public static final byte[] ID_AZ_SESSION_SYN_BYTES    = ID_AZ_SESSION_SYN.getBytes();
 
@@ -89,4 +89,5 @@ public interface AZMessage extends Message {
 
   public static final String ID_AZ_SESSION_REQUEST  		= "AZ_SESSION_REQUEST";
   public static final byte[] ID_AZ_SESSION_REQUEST_BYTES  	= ID_AZ_SESSION_REQUEST.getBytes();
+  */
 }

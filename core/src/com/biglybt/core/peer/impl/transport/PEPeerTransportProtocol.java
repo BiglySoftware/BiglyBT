@@ -4223,185 +4223,200 @@ implements PEPeerTransport
 				messageReceived(
 					Message message )
 				{
-					if (Logger.isEnabled())
+					if( closing ) {
+						message.destroy();
+						return true;
+					}
+
+					if (Logger.isEnabled()){
 						Logger.log(new LogEvent(PEPeerTransportProtocol.this, LogIDs.NET,
 								"Received [" + message.getDescription() + "] message"));
+					}
+					
 					final long now =SystemTime.getCurrentTime();
 					last_message_received_time =now;
 					if( message.getType() == Message.TYPE_DATA_PAYLOAD ) {
 						last_data_message_received_time =now;
 					}
 
-					String	message_id = message.getID();
+					String 	featureID 	= message.getFeatureID();
+					int		subID		= message.getFeatureSubID();
+					
+					if ( featureID == BTMessage.BT_FEATURE_ID ){
+						switch( subID ){
+							case BTMessage.SUBID_BT_HANDSHAKE:{
+								decodeBTHandshake( (BTHandshake)message );
+								return true;
+							}
 
-					if( message_id.equals( BTMessage.ID_BT_PIECE ) ) {
-						decodePiece( (BTPiece)message );
-						return true;
-					}
+							case BTMessage.SUBID_BT_PIECE:{
+								decodePiece( (BTPiece)message );
+								return true;
+							}
+						
+							case BTMessage.SUBID_BT_KEEP_ALIVE:{
+								message.destroy();
+	
+								//make sure they're not spamming us
+								if( !message_limiter.countIncomingMessage( message.getID(), 6, 60*1000 ) ) {  //allow max 6 keep-alives per 60sec
+									System.out.println( manager.getDisplayName() + ": Incoming keep-alive message flood detected, dropping spamming peer connection." +PEPeerTransportProtocol.this );
+									closeConnectionInternally( "Incoming keep-alive message flood detected, dropping spamming peer connection." );
+								}
+	
+								return true;
+							}
 
-					if( closing ) {
-						message.destroy();
-						return true;
-					}
-
-					if(message_id.equals( BTMessage.ID_BT_KEEP_ALIVE ) ) {
-						message.destroy();
-
-						//make sure they're not spamming us
-						if( !message_limiter.countIncomingMessage( message.getID(), 6, 60*1000 ) ) {  //allow max 6 keep-alives per 60sec
-							System.out.println( manager.getDisplayName() + ": Incoming keep-alive message flood detected, dropping spamming peer connection." +PEPeerTransportProtocol.this );
-							closeConnectionInternally( "Incoming keep-alive message flood detected, dropping spamming peer connection." );
+							case BTMessage.SUBID_BT_BITFIELD:{
+								decodeBitfield( (BTBitfield)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_CHOKE:{
+								decodeChoke( (BTChoke)message );
+								if( choking_other_peer ) {
+									connection.enableEnhancedMessageProcessing( false, manager.getPartitionID());  //downgrade back to normal handler
+								}
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_UNCHOKE:{
+								decodeUnchoke( (BTUnchoke)message );
+								connection.enableEnhancedMessageProcessing( true, manager.getPartitionID() );  //make sure we use a fast handler for the resulting download
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_INTERESTED:{
+								decodeInterested( (BTInterested)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_UNINTERESTED:{
+								decodeUninterested( (BTUninterested)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_HAVE:{
+								decodeHave( (BTHave)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_REQUEST:{
+								decodeRequest( (BTRequest)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_CANCEL:{
+								decodeCancel( (BTCancel)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_SUGGEST_PIECE:{
+								decodeSuggestPiece( (BTSuggestPiece)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_HAVE_ALL:{
+								decodeHaveAll( (BTHaveAll)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_HAVE_NONE:{
+								decodeHaveNone( (BTHaveNone)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_REJECT_REQUEST:{
+								decodeRejectRequest( (BTRejectRequest)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_ALLOWED_FAST:{
+								decodeAllowedFast( (BTAllowedFast)message );
+								return true;
+							}
+	
+							case BTMessage.SUBID_BT_DHT_PORT:{
+								decodeMainlineDHTPort((BTDHTPort)message);
+								return true;
+							}
+						}		
+					}else if ( featureID == LTMessage.LT_FEATURE_ID ){
+						
+						switch( subID ){
+							
+							case LTMessage.SUBID_LT_HANDSHAKE:{
+								decodeLTHandshake((LTHandshake)message);
+								return true;
+							}
+	
+							case LTMessage.SUBID_UT_PEX:{
+								decodePeerExchange((UTPeerExchange)message);
+								return true;
+							}
+	
+							case LTMessage.SUBID_UT_METADATA:{
+								decodeMetaData((UTMetaData)message);
+								return true;
+							}
+	
+							case LTMessage.SUBID_UT_UPLOAD_ONLY:{
+								decodeUploadOnly((UTUploadOnly)message);
+								return true;
+							}						
 						}
-
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_HANDSHAKE ) ) {
-						decodeBTHandshake( (BTHandshake)message );
-						return true;
-					}
-
-					if( message_id.equals( AZMessage.ID_AZ_HANDSHAKE ) ) {
-						decodeAZHandshake( (AZHandshake)message );
-						return true;
-					}
-
-					if (message_id.equals(LTMessage.ID_LT_HANDSHAKE)) {
-						decodeLTHandshake((LTHandshake)message);
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_BITFIELD ) ) {
-						decodeBitfield( (BTBitfield)message );
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_CHOKE ) ) {
-						decodeChoke( (BTChoke)message );
-						if( choking_other_peer ) {
-							connection.enableEnhancedMessageProcessing( false, manager.getPartitionID());  //downgrade back to normal handler
+					}else if ( featureID == AZMessage.AZ_FEATURE_ID ){
+						
+						switch( subID ){
+						
+							case AZMessage.SUBID_AZ_HANDSHAKE:{
+								decodeAZHandshake( (AZHandshake)message );
+								return true;
+							}
+	
+							case AZMessage.SUBID_AZ_METADATA:{
+								decodeMetaData((AZMetaData)message );
+								return true;
+							}
+	
+							case AZMessage.SUBID_AZ_REQUEST_HINT:{
+								decodeAZRequestHint( (AZRequestHint)message );
+								return true;
+							}
+	
+							case AZMessage.SUBID_AZ_HAVE:{
+								decodeAZHave((AZHave)message );
+								return true;
+							}
+	
+							case AZMessage.SUBID_AZ_BAD_PIECE:{
+								decodeAZBadPiece((AZBadPiece)message );
+								return true;
+							}
+	
+							case AZMessage.SUBID_AZ_STAT_REQUEST:{
+								decodeAZStatsRequest((AZStatRequest)message );
+								return true;
+							}
+	
+							case AZMessage.SUBID_AZ_STAT_REPLY:{
+								decodeAZStatsReply((AZStatReply)message );
+								return true;
+							}
+							
+							case AZMessage.SUBID_AZ_PEER_EXCHANGE:{
+								decodePeerExchange( (AZPeerExchange)message );
+								return true;
+							}			
 						}
-						return true;
 					}
-
-					if( message_id.equals( BTMessage.ID_BT_UNCHOKE ) ) {
-						decodeUnchoke( (BTUnchoke)message );
-						connection.enableEnhancedMessageProcessing( true, manager.getPartitionID() );  //make sure we use a fast handler for the resulting download
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_INTERESTED ) ) {
-						decodeInterested( (BTInterested)message );
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_UNINTERESTED ) ) {
-						decodeUninterested( (BTUninterested)message );
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_HAVE ) ) {
-						decodeHave( (BTHave)message );
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_REQUEST ) ) {
-						decodeRequest( (BTRequest)message );
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_CANCEL ) ) {
-						decodeCancel( (BTCancel)message );
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_SUGGEST_PIECE ) ) {
-						decodeSuggestPiece( (BTSuggestPiece)message );
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_HAVE_ALL ) ) {
-						decodeHaveAll( (BTHaveAll)message );
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_HAVE_NONE ) ) {
-						decodeHaveNone( (BTHaveNone)message );
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_REJECT_REQUEST ) ) {
-						decodeRejectRequest( (BTRejectRequest)message );
-						return true;
-					}
-
-					if( message_id.equals( BTMessage.ID_BT_ALLOWED_FAST ) ) {
-						decodeAllowedFast( (BTAllowedFast)message );
-						return true;
-					}
-
-					if (message_id.equals(BTMessage.ID_BT_DHT_PORT)) {
-						decodeMainlineDHTPort((BTDHTPort)message);
-						return true;
-					}
-
-					if( message_id.equals( AZMessage.ID_AZ_PEER_EXCHANGE ) ) {
-						decodePeerExchange( (AZPeerExchange)message );
-						return true;
-					}
-
-					if (message_id.equals(LTMessage.ID_UT_PEX)) {
-						decodePeerExchange((UTPeerExchange)message);
-						return true;
-					}
-
+					
 						// generic handling of az-style PEX (e.g. used by non-public net)
 
 					if ( message instanceof AZStylePeerExchange ){
 						decodePeerExchange((AZStylePeerExchange)message );
 						return true;
 					}
-
-					if( message_id.equals( AZMessage.ID_AZ_REQUEST_HINT ) ) {
-						decodeAZRequestHint( (AZRequestHint)message );
-						return true;
-					}
-
-					if( message_id.equals( AZMessage.ID_AZ_HAVE ) ) {
-						decodeAZHave((AZHave)message );
-						return true;
-					}
-
-					if( message_id.equals( AZMessage.ID_AZ_BAD_PIECE ) ) {
-						decodeAZBadPiece((AZBadPiece)message );
-						return true;
-					}
-
-					if( message_id.equals( AZMessage.ID_AZ_STAT_REQUEST ) ) {
-						decodeAZStatsRequest((AZStatRequest)message );
-						return true;
-					}
-
-					if( message_id.equals( AZMessage.ID_AZ_STAT_REPLY ) ) {
-						decodeAZStatsReply((AZStatReply)message );
-						return true;
-					}
-
-					if (message_id.equals(LTMessage.ID_UT_METADATA)) {
-						decodeMetaData((UTMetaData)message);
-						return true;
-					}
-
-					if( message_id.equals( AZMessage.ID_AZ_METADATA ) ) {
-						decodeMetaData((AZMetaData)message );
-						return true;
-					}
-
-					if (message_id.equals(LTMessage.ID_UT_UPLOAD_ONLY)) {
-						decodeUploadOnly((UTUploadOnly)message);
-						return true;
-					}
-
+	
 					return false;
 				}
 

@@ -80,7 +80,7 @@ AZRequestHint
 	public int
 	getFeatureSubID()
 	{
-		return( AZMessage.SUBID_ID_AZ_REQUEST_HINT );
+		return( AZMessage.SUBID_AZ_REQUEST_HINT );
 	}
 
 	@Override

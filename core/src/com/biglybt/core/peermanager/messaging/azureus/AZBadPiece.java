@@ -71,7 +71,7 @@ AZBadPiece
 	public int
 	getFeatureSubID()
 	{
-		return( AZMessage.SUBID_ID_AZ_BAD_PIECE );
+		return( AZMessage.SUBID_AZ_BAD_PIECE );
 	}
 
 	@Override

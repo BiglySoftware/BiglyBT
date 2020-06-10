@@ -73,7 +73,7 @@ AZHave
 	public int
 	getFeatureSubID()
 	{
-		return( AZMessage.SUBID_ID_AZ_HAVE );
+		return( AZMessage.SUBID_AZ_HAVE );
 	}
 
 	@Override

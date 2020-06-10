@@ -98,4 +98,17 @@ public interface BTMessage extends Message {
   public static final String ID_BT_LT_EXT_MESSAGE        = "BT_LT_EXT_MESSAGE";
   public static final byte[] ID_BT_LT_EXT_MESSAGE_BYTES  = ID_BT_LT_EXT_MESSAGE.getBytes();
   public static final int SUBID_BT_LT_EXT_MESSAGE	= 20;
+  
+  public static final String ID_BT_HASH_REQUEST			= "BT_HASH_REQUEST";
+  public static final byte[] ID_BT_HASH_REQUEST_BYTES	= ID_BT_HASH_REQUEST.getBytes();
+  public static final int SUBID_BT_HASH_REQUEST			= 21;
+
+  public static final String ID_BT_HASHES        		= "BT_HASHES";
+  public static final byte[] ID_BT_HASHES_BYTES  		= ID_BT_HASHES.getBytes();
+  public static final int SUBID_BT_HASHES				= 22;
+
+  public static final String ID_BT_HASH_REJECT        	= "BT_HASH_REJECT";
+  public static final byte[] ID_BT_HASH_REJECT_BYTES  	= ID_BT_HASH_REJECT.getBytes();
+  public static final int SUBID_BT_HASH_REJECT			= 23;
+
 }

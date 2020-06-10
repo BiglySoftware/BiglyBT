@@ -71,7 +71,7 @@ AZStatRequest
 	public int
 	getFeatureSubID()
 	{
-		return( AZMessage.SUBID_ID_AZ_STAT_REQUEST );
+		return( AZMessage.SUBID_AZ_STAT_REQUEST );
 	}
 
 	@Override

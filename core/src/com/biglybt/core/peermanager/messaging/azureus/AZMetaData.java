@@ -112,7 +112,7 @@ AZMetaData
 	public int
 	getFeatureSubID()
 	{
-		return SUBID_ID_AZ_METADATA;
+		return SUBID_AZ_METADATA;
 	}
 
 	@Override
