@@ -75,11 +75,17 @@ public class BTLTMessage implements BTMessage {
 
 	@Override
 	public String getFeatureID() {
+		if ( base_message == null ){
+			return( BTMessage.BT_FEATURE_ID );
+		}
 		return base_message.getFeatureID();
 	}
 
 	@Override
 	public int getFeatureSubID() {
+		if ( base_message == null ){
+			return( BTMessage.SUBID_BT_LT_EXT_MESSAGE );
+		}
 		return base_message.getFeatureSubID();
 	}
 

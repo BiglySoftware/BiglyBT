@@ -66,6 +66,11 @@ public class BTMessageFactory {
       MessageManager.getSingleton().registerMessageType( new BTAllowedFast( -1, MESSAGE_VERSION_SUPPORTS_PADDING ));
       MessageManager.getSingleton().registerMessageType( new BTLTMessage( null, MESSAGE_VERSION_SUPPORTS_PADDING ));
       MessageManager.getSingleton().registerMessageType( new BTDHTPort(-1));
+      
+      MessageManager.getSingleton().registerMessageType( new BTHashRequest( MESSAGE_VERSION_SUPPORTS_PADDING ));
+      MessageManager.getSingleton().registerMessageType( new BTHashes( MESSAGE_VERSION_SUPPORTS_PADDING ));
+      MessageManager.getSingleton().registerMessageType( new BTHashReject( MESSAGE_VERSION_SUPPORTS_PADDING ));
+
     }
     catch( MessageException me ) {  me.printStackTrace();  }
   }
@@ -73,56 +78,67 @@ public class BTMessageFactory {
 
 
 
-  private static final String[] id_to_name = new String[21];
+  private static final String[] id_to_name = new String[BTMessage.SUBID_MAX+1];
+  
   private static final HashMap legacy_data = new HashMap();
+  
   static {
-    legacy_data.put( BTMessage.ID_BT_CHOKE, new LegacyData( RawMessage.PRIORITY_HIGH, true, new Message[]{new BTUnchoke((byte)0), new BTPiece( -1, -1, null,(byte)0 )}, (byte)0 ) );
-    id_to_name[0] = BTMessage.ID_BT_CHOKE;
+    legacy_data.put( BTMessage.ID_BT_CHOKE, new LegacyData( RawMessage.PRIORITY_HIGH, true, new Message[]{new BTUnchoke((byte)0), new BTPiece( -1, -1, null,(byte)0 )}, (byte) BTMessage.SUBID_BT_CHOKE ) );
+    id_to_name[BTMessage.SUBID_BT_CHOKE] = BTMessage.ID_BT_CHOKE;
 
-    legacy_data.put( BTMessage.ID_BT_UNCHOKE, new LegacyData( RawMessage.PRIORITY_NORMAL, true, new Message[]{new BTChoke((byte)0)}, (byte)1 ) );
-    id_to_name[1] = BTMessage.ID_BT_UNCHOKE;
+    legacy_data.put( BTMessage.ID_BT_UNCHOKE, new LegacyData( RawMessage.PRIORITY_NORMAL, true, new Message[]{new BTChoke((byte)0)}, (byte)BTMessage.SUBID_BT_UNCHOKE ) );
+    id_to_name[BTMessage.SUBID_BT_UNCHOKE] = BTMessage.ID_BT_UNCHOKE;
 
-    legacy_data.put( BTMessage.ID_BT_INTERESTED, new LegacyData( RawMessage.PRIORITY_HIGH, true, new Message[]{new BTUninterested((byte)0)}, (byte)2 ) );
-    id_to_name[2] = BTMessage.ID_BT_INTERESTED;
+    legacy_data.put( BTMessage.ID_BT_INTERESTED, new LegacyData( RawMessage.PRIORITY_HIGH, true, new Message[]{new BTUninterested((byte)0)}, (byte)BTMessage.SUBID_BT_INTERESTED ) );
+    id_to_name[BTMessage.SUBID_BT_INTERESTED] = BTMessage.ID_BT_INTERESTED;
 
-    legacy_data.put( BTMessage.ID_BT_UNINTERESTED, new LegacyData( RawMessage.PRIORITY_NORMAL, false, new Message[]{new BTInterested((byte)0)}, (byte)3 ) );
-    id_to_name[3] = BTMessage.ID_BT_UNINTERESTED;
+    legacy_data.put( BTMessage.ID_BT_UNINTERESTED, new LegacyData( RawMessage.PRIORITY_NORMAL, false, new Message[]{new BTInterested((byte)0)}, (byte)BTMessage.SUBID_BT_UNINTERESTED ) );
+    id_to_name[BTMessage.SUBID_BT_UNINTERESTED] = BTMessage.ID_BT_UNINTERESTED;
 
-    legacy_data.put( BTMessage.ID_BT_HAVE, new LegacyData( RawMessage.PRIORITY_LOW, false, null, (byte)4 ) );
-    id_to_name[4] = BTMessage.ID_BT_HAVE;
+    legacy_data.put( BTMessage.ID_BT_HAVE, new LegacyData( RawMessage.PRIORITY_LOW, false, null, (byte)BTMessage.SUBID_BT_HAVE ) );
+    id_to_name[BTMessage.SUBID_BT_HAVE] = BTMessage.ID_BT_HAVE;
 
-    legacy_data.put( BTMessage.ID_BT_BITFIELD, new LegacyData( RawMessage.PRIORITY_HIGH, true, null, (byte)5 ) );
-    id_to_name[5] = BTMessage.ID_BT_BITFIELD;
+    legacy_data.put( BTMessage.ID_BT_BITFIELD, new LegacyData( RawMessage.PRIORITY_HIGH, true, null, (byte)BTMessage.SUBID_BT_BITFIELD ) );
+    id_to_name[BTMessage.SUBID_BT_BITFIELD] = BTMessage.ID_BT_BITFIELD;
 
-    legacy_data.put( BTMessage.ID_BT_REQUEST, new LegacyData( RawMessage.PRIORITY_NORMAL, true, null, (byte)6 ) );
-    id_to_name[6] = BTMessage.ID_BT_REQUEST;
+    legacy_data.put( BTMessage.ID_BT_REQUEST, new LegacyData( RawMessage.PRIORITY_NORMAL, true, null, (byte)BTMessage.SUBID_BT_REQUEST ) );
+    id_to_name[BTMessage.SUBID_BT_REQUEST] = BTMessage.ID_BT_REQUEST;
 
-    legacy_data.put( BTMessage.ID_BT_PIECE, new LegacyData( RawMessage.PRIORITY_LOW, false, null, (byte)7 ) );
-    id_to_name[7] = BTMessage.ID_BT_PIECE;
+    legacy_data.put( BTMessage.ID_BT_PIECE, new LegacyData( RawMessage.PRIORITY_LOW, false, null, (byte)BTMessage.SUBID_BT_PIECE ) );
+    id_to_name[BTMessage.SUBID_BT_PIECE] = BTMessage.ID_BT_PIECE;
 
-    legacy_data.put( BTMessage.ID_BT_CANCEL, new LegacyData( RawMessage.PRIORITY_HIGH, true, null, (byte)8 ) );
-    id_to_name[8] = BTMessage.ID_BT_CANCEL;
+    legacy_data.put( BTMessage.ID_BT_CANCEL, new LegacyData( RawMessage.PRIORITY_HIGH, true, null, (byte)BTMessage.SUBID_BT_CANCEL ) );
+    id_to_name[BTMessage.SUBID_BT_CANCEL] = BTMessage.ID_BT_CANCEL;
 
-    legacy_data.put( BTMessage.ID_BT_DHT_PORT, new LegacyData( RawMessage.PRIORITY_LOW, true, null, (byte)9 ) );
-    id_to_name[9] = BTMessage.ID_BT_DHT_PORT;
+    legacy_data.put( BTMessage.ID_BT_DHT_PORT, new LegacyData( RawMessage.PRIORITY_LOW, true, null, (byte)BTMessage.SUBID_BT_DHT_PORT ) );
+    id_to_name[BTMessage.SUBID_BT_DHT_PORT] = BTMessage.ID_BT_DHT_PORT;
 
-    legacy_data.put( BTMessage.ID_BT_SUGGEST_PIECE, new LegacyData( RawMessage.PRIORITY_NORMAL, true, null, (byte)13 ) );
-    id_to_name[13] = BTMessage.ID_BT_SUGGEST_PIECE;
+    legacy_data.put( BTMessage.ID_BT_SUGGEST_PIECE, new LegacyData( RawMessage.PRIORITY_NORMAL, true, null, (byte)BTMessage.SUBID_BT_SUGGEST_PIECE) );
+    id_to_name[BTMessage.SUBID_BT_SUGGEST_PIECE] = BTMessage.ID_BT_SUGGEST_PIECE;
 
-    legacy_data.put( BTMessage.ID_BT_HAVE_ALL, new LegacyData( RawMessage.PRIORITY_HIGH, true, null, (byte)14 ) );
-    id_to_name[14] = BTMessage.ID_BT_HAVE_ALL;
+    legacy_data.put( BTMessage.ID_BT_HAVE_ALL, new LegacyData( RawMessage.PRIORITY_HIGH, true, null, (byte)BTMessage.SUBID_BT_HAVE_ALL ) );
+    id_to_name[BTMessage.SUBID_BT_HAVE_ALL] = BTMessage.ID_BT_HAVE_ALL;
 
-    legacy_data.put( BTMessage.ID_BT_HAVE_NONE, new LegacyData( RawMessage.PRIORITY_HIGH, true, null, (byte)15 ) );
-    id_to_name[15] = BTMessage.ID_BT_HAVE_NONE;
+    legacy_data.put( BTMessage.ID_BT_HAVE_NONE, new LegacyData( RawMessage.PRIORITY_HIGH, true, null, (byte)BTMessage.SUBID_BT_HAVE_NONE ) );
+    id_to_name[BTMessage.SUBID_BT_HAVE_NONE] = BTMessage.ID_BT_HAVE_NONE;
 
-    legacy_data.put( BTMessage.ID_BT_REJECT_REQUEST, new LegacyData( RawMessage.PRIORITY_NORMAL, true, null, (byte)16 ) );
-    id_to_name[16] = BTMessage.ID_BT_REJECT_REQUEST;
+    legacy_data.put( BTMessage.ID_BT_REJECT_REQUEST, new LegacyData( RawMessage.PRIORITY_NORMAL, true, null, (byte)BTMessage.SUBID_BT_REJECT_REQUEST) );
+    id_to_name[BTMessage.SUBID_BT_REJECT_REQUEST] = BTMessage.ID_BT_REJECT_REQUEST;
 
-    legacy_data.put( BTMessage.ID_BT_ALLOWED_FAST, new LegacyData( RawMessage.PRIORITY_LOW, false, null, (byte)17 ) );
-    id_to_name[17] = BTMessage.ID_BT_ALLOWED_FAST;
+    legacy_data.put( BTMessage.ID_BT_ALLOWED_FAST, new LegacyData( RawMessage.PRIORITY_LOW, false, null, (byte)BTMessage.SUBID_BT_ALLOWED_FAST ) );
+    id_to_name[BTMessage.SUBID_BT_ALLOWED_FAST] = BTMessage.ID_BT_ALLOWED_FAST;
 
-    legacy_data.put( BTMessage.ID_BT_LT_EXT_MESSAGE, new LegacyData( RawMessage.PRIORITY_HIGH, true, null, (byte)20 ) );
-    id_to_name[20] = BTMessage.ID_BT_LT_EXT_MESSAGE;
+    legacy_data.put( BTMessage.ID_BT_LT_EXT_MESSAGE, new LegacyData( RawMessage.PRIORITY_HIGH, true, null, (byte)BTMessage.SUBID_BT_LT_EXT_MESSAGE ) );
+    id_to_name[BTMessage.SUBID_BT_LT_EXT_MESSAGE] = BTMessage.ID_BT_LT_EXT_MESSAGE;
+
+    legacy_data.put( BTMessage.ID_BT_HASH_REQUEST, new LegacyData( RawMessage.PRIORITY_NORMAL, true, null, (byte)BTMessage.SUBID_BT_HASH_REQUEST ) );
+    id_to_name[BTMessage.SUBID_BT_HASH_REQUEST] = BTMessage.ID_BT_HASH_REQUEST;
+    
+    legacy_data.put( BTMessage.ID_BT_HASHES, new LegacyData( RawMessage.PRIORITY_NORMAL, true, null, (byte)BTMessage.SUBID_BT_HASHES ) );
+    id_to_name[BTMessage.SUBID_BT_HASHES] = BTMessage.ID_BT_HASHES;
+    
+    legacy_data.put( BTMessage.ID_BT_HASH_REJECT, new LegacyData( RawMessage.PRIORITY_NORMAL, true, null, (byte)BTMessage.SUBID_BT_HASH_REJECT ) );
+    id_to_name[BTMessage.SUBID_BT_HASH_REJECT] = BTMessage.ID_BT_HASH_REJECT;
   }
 
 
@@ -141,49 +157,49 @@ public class BTMessageFactory {
     byte id = stream_payload.get( DirectByteBuffer.SS_MSG );
 
     switch( id ) {
-      case 0:
+      case BTMessage.SUBID_BT_CHOKE:
         return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_CHOKE_BYTES, stream_payload, (byte)1 );
 
-      case 1:
+      case BTMessage.SUBID_BT_UNCHOKE:
         return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_UNCHOKE_BYTES, stream_payload, (byte)1 );
 
-      case 2:
+      case BTMessage.SUBID_BT_INTERESTED:
         return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_INTERESTED_BYTES, stream_payload, (byte)1 );
 
-      case 3:
+      case BTMessage.SUBID_BT_UNINTERESTED:
         return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_UNINTERESTED_BYTES, stream_payload, (byte)1 );
 
-      case 4:
+      case BTMessage.SUBID_BT_HAVE:
         return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_HAVE_BYTES, stream_payload, (byte)1 );
 
-      case 5:
+      case BTMessage.SUBID_BT_BITFIELD:
         return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_BITFIELD_BYTES, stream_payload, (byte)1 );
 
-      case 6:
+      case BTMessage.SUBID_BT_REQUEST:
         return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_REQUEST_BYTES, stream_payload, (byte)1 );
 
-      case 7:
+      case BTMessage.SUBID_BT_PIECE:
         return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_PIECE_BYTES, stream_payload, (byte)1 );
 
-      case 8:
+      case BTMessage.SUBID_BT_CANCEL:
         return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_CANCEL_BYTES, stream_payload, (byte)1 );
 
-      case 9:
+      case BTMessage.SUBID_BT_DHT_PORT:
     	return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_DHT_PORT_BYTES, stream_payload, (byte)1 );
 
-      case 13:
+      case BTMessage.SUBID_BT_SUGGEST_PIECE:
       	return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_SUGGEST_PIECE_BYTES, stream_payload, (byte)1 );
 
-      case 14:
+      case BTMessage.SUBID_BT_HAVE_ALL:
       	return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_HAVE_ALL_BYTES, stream_payload, (byte)1 );
 
-      case 15:
+      case BTMessage.SUBID_BT_HAVE_NONE:
       	return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_HAVE_NONE_BYTES, stream_payload, (byte)1 );
 
-      case 16:
+      case BTMessage.SUBID_BT_REJECT_REQUEST:
       	return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_REJECT_REQUEST_BYTES, stream_payload, (byte)1 );
 
-      case 17:
+      case BTMessage.SUBID_BT_ALLOWED_FAST:
       	return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_ALLOWED_FAST_BYTES, stream_payload, (byte)1 );
 
       case 20:
@@ -195,9 +211,21 @@ public class BTMessageFactory {
   									+ "ignoring and faking as keep-alive."));
   	        return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_KEEP_ALIVE_BYTES, null, (byte)1 );
 
-      default: {  System.out.println( "Unknown BT message id [" +id+ "]" );
-        					throw new MessageException( "Unknown BT message id [" +id+ "]" );
-      				}
+      case BTMessage.SUBID_BT_HASH_REQUEST:
+      	return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_HASH_REQUEST_BYTES, stream_payload, (byte)1 );
+      	
+      case BTMessage.SUBID_BT_HASHES:
+      	return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_HASHES_BYTES, stream_payload, (byte)1 );
+      	
+      case BTMessage.SUBID_BT_HASH_REJECT:
+        	return MessageManager.getSingleton().createMessage( BTMessage.ID_BT_HASH_REJECT_BYTES, stream_payload, (byte)1 );
+ 	        
+      default:{
+    	  
+    	  System.out.println( "Unknown BT message id [" +id+ "]" );
+        	
+    	  throw new MessageException( "Unknown BT message id [" +id+ "]" );
+      }
     }
   }
 

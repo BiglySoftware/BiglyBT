@@ -195,7 +195,12 @@ implements PEPeerTransport
 	private byte	other_peer_have_none_version		= BTMessageFactory.MESSAGE_VERSION_INITIAL;
 	private byte	other_peer_reject_request_version	= BTMessageFactory.MESSAGE_VERSION_INITIAL;
 	private byte	other_peer_allowed_fast_version		= BTMessageFactory.MESSAGE_VERSION_INITIAL;
-	private final byte  	other_peer_bt_lt_ext_version    	= BTMessageFactory.MESSAGE_VERSION_INITIAL;
+	private final byte  other_peer_bt_lt_ext_version   	= BTMessageFactory.MESSAGE_VERSION_INITIAL;
+	private byte	other_peer_hash_request_version		= BTMessageFactory.MESSAGE_VERSION_INITIAL;
+	private byte	other_peer_hashes_version			= BTMessageFactory.MESSAGE_VERSION_INITIAL;
+	private byte	other_peer_hash_reject_version		= BTMessageFactory.MESSAGE_VERSION_INITIAL;
+
+	
 	private byte	other_peer_az_request_hint_version	= BTMessageFactory.MESSAGE_VERSION_INITIAL;
 	private byte	other_peer_az_bad_piece_version		= BTMessageFactory.MESSAGE_VERSION_INITIAL;
 	private byte	other_peer_az_stats_request_version	= BTMessageFactory.MESSAGE_VERSION_INITIAL;
@@ -3029,68 +3034,111 @@ implements PEPeerTransport
 		for (int i = 0; i < handshake.getMessageIDs().length; i++)
 		{
 			Message msg = MessageManager.getSingleton().lookupMessage(supported_message_ids[i]);
-			if (msg != null)
-			{ // mutual support!
+			if (msg != null){
+					// mutual support!
 				messages.add(msg);
 
-				String id = msg.getID();
 				byte supported_version = supported_message_versions[i];
 
-				// we can use == safely
-				if (id == BTMessage.ID_BT_BITFIELD)
-					other_peer_bitfield_version = supported_version;
-				else if (id == BTMessage.ID_BT_CANCEL)
-					other_peer_cancel_version = supported_version;
-				else if (id == BTMessage.ID_BT_CHOKE)
-					other_peer_choke_version = supported_version;
-				else if (id == BTMessage.ID_BT_HANDSHAKE)
-					other_peer_handshake_version = supported_version;
-				else if (id == BTMessage.ID_BT_HAVE)
-					other_peer_bt_have_version = supported_version;
-				else if (id == BTMessage.ID_BT_INTERESTED)
-					other_peer_interested_version = supported_version;
-				else if (id == BTMessage.ID_BT_KEEP_ALIVE)
-					other_peer_keep_alive_version = supported_version;
-				else if (id == BTMessage.ID_BT_PIECE)
-					other_peer_piece_version = supported_version;
-				else if (id == BTMessage.ID_BT_UNCHOKE)
-					other_peer_unchoke_version = supported_version;
-				else if (id == BTMessage.ID_BT_UNINTERESTED)
-					other_peer_uninterested_version = supported_version;
-				else if (id == BTMessage.ID_BT_REQUEST)
-					other_peer_request_version = supported_version;
-				else if (id == BTMessage.ID_BT_SUGGEST_PIECE)
-					other_peer_suggest_piece_version = supported_version;
-				else if (id == BTMessage.ID_BT_HAVE_ALL)
-					other_peer_have_all_version = supported_version;
-				else if (id == BTMessage.ID_BT_HAVE_NONE)
-					other_peer_have_none_version = supported_version;
-				else if (id == BTMessage.ID_BT_REJECT_REQUEST)
-					other_peer_reject_request_version = supported_version;
-				else if (id == BTMessage.ID_BT_ALLOWED_FAST)
-					other_peer_allowed_fast_version = supported_version;
-				else if (id == AZMessage.ID_AZ_PEER_EXCHANGE)
-					other_peer_pex_version = supported_version;
-				else if (id == AZMessage.ID_AZ_REQUEST_HINT)
-					other_peer_az_request_hint_version = supported_version;
-				else if (id == AZMessage.ID_AZ_HAVE)
-					other_peer_az_have_version = supported_version;
-				else if (id == AZMessage.ID_AZ_BAD_PIECE)
-					other_peer_az_bad_piece_version = supported_version;
-				else if (id == AZMessage.ID_AZ_STAT_REQUEST)
-					other_peer_az_stats_request_version = supported_version;
-				else if (id == AZMessage.ID_AZ_STAT_REPLY)
-					other_peer_az_stats_reply_version = supported_version;
-				else if (id == AZMessage.ID_AZ_METADATA)
-					other_peer_az_metadata_version = supported_version;
-				else if (id == BTMessage.ID_BT_DHT_PORT)
-					this.ml_dht_enabled = true;
-				else
-				{
+				String 	featureID	= msg.getFeatureID();
+				int		subID		= msg.getFeatureSubID();
+
+				if ( featureID == BTMessage.BT_FEATURE_ID ){
+					
+					switch( subID ){
+						case BTMessage.SUBID_BT_BITFIELD:
+							other_peer_bitfield_version = supported_version;
+							break;
+						case BTMessage.SUBID_BT_CANCEL:
+							other_peer_cancel_version = supported_version;
+							break;
+						case BTMessage.SUBID_BT_CHOKE:
+							other_peer_choke_version = supported_version;
+							break;
+						case BTMessage.SUBID_BT_HANDSHAKE:
+							other_peer_handshake_version = supported_version;
+							break;
+						case BTMessage.SUBID_BT_HAVE:
+							other_peer_bt_have_version = supported_version;
+							break;
+						case BTMessage.SUBID_BT_INTERESTED:
+							other_peer_interested_version = supported_version;
+							break;
+						case BTMessage.SUBID_BT_KEEP_ALIVE:
+							other_peer_keep_alive_version = supported_version;
+							break;
+						case BTMessage.SUBID_BT_PIECE:
+							other_peer_piece_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_UNCHOKE:
+							other_peer_unchoke_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_UNINTERESTED:
+							other_peer_uninterested_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_REQUEST:
+							other_peer_request_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_SUGGEST_PIECE:
+							other_peer_suggest_piece_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_HAVE_ALL:
+							other_peer_have_all_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_HAVE_NONE:
+							other_peer_have_none_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_REJECT_REQUEST:
+							other_peer_reject_request_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_ALLOWED_FAST:
+							other_peer_allowed_fast_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_DHT_PORT:
+							this.ml_dht_enabled = true;
+							break;
+						case  BTMessage.SUBID_BT_HASH_REQUEST:
+							other_peer_hash_request_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_HASHES:
+							other_peer_hashes_version = supported_version;
+							break;
+						case  BTMessage.SUBID_BT_HASH_REJECT:
+							other_peer_hash_reject_version = supported_version;
+							break;
+
+					}
+				}else if ( featureID == AZMessage.AZ_FEATURE_ID ){
+									
+					switch( subID ){
+						case AZMessage.SUBID_AZ_PEER_EXCHANGE:
+							other_peer_pex_version = supported_version;
+							break;
+						case AZMessage.SUBID_AZ_REQUEST_HINT:
+							other_peer_az_request_hint_version = supported_version;
+							break;
+						case AZMessage.SUBID_AZ_HAVE:
+							other_peer_az_have_version = supported_version;
+							break;
+						case AZMessage.SUBID_AZ_BAD_PIECE:
+							other_peer_az_bad_piece_version = supported_version;
+							break;
+						case AZMessage.SUBID_AZ_STAT_REQUEST:
+							other_peer_az_stats_request_version = supported_version;
+							break;
+						case AZMessage.SUBID_AZ_STAT_REPLY:
+							other_peer_az_stats_reply_version = supported_version;
+							break;
+						case AZMessage.SUBID_AZ_METADATA:
+							other_peer_az_metadata_version = supported_version;
+							break;
+					}
+				}
+				
 					// we expect unmatched ones here at the moment as we're not
 					// dealing with them yet or they don't make sense.
 					// for example AZVER
-				}
+				
 			}
 		}
 

@@ -111,4 +111,5 @@ public interface BTMessage extends Message {
   public static final byte[] ID_BT_HASH_REJECT_BYTES  	= ID_BT_HASH_REJECT.getBytes();
   public static final int SUBID_BT_HASH_REJECT			= 23;
 
+  public static final int SUBID_MAX	= 23;
 }
