@@ -859,19 +859,20 @@ public class PieceInfoView
 		currentNumPieces = numPieces;
 		
 		PEPiece[] currentDLPieces = pm == null ? null : pm.getPieces();
+		
 		byte[] uploadingPieces = new byte[numPieces];
 
 		// find upload pieces
-		if (pm != null && uploadingPieces != null) {
+		if (pm != null ) {
 			for (PEPeer peer : pm.getPeers()) {
 				int[] peerRequestedPieces = peer.getIncomingRequestedPieceNumbers();
 				if (peerRequestedPieces != null && peerRequestedPieces.length > 0) {
 					int pieceNum = peerRequestedPieces[0];
-					if (uploadingPieces[pieceNum] < 2)
+					if ( pieceNum < uploadingPieces.length && uploadingPieces[pieceNum] < 2)
 						uploadingPieces[pieceNum] = 2;
 					for (int j = 1; j < peerRequestedPieces.length; j++) {
 						pieceNum = peerRequestedPieces[j];
-						if (uploadingPieces[pieceNum] < 1)
+						if (pieceNum < uploadingPieces.length && uploadingPieces[pieceNum] < 1)
 							uploadingPieces[pieceNum] = 1;
 					}
 				}
