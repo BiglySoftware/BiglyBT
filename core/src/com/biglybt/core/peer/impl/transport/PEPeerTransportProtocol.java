@@ -4034,6 +4034,42 @@ implements PEPeerTransport
 	}
 
 	private void
+	decodeHashRequest(
+		BTHashRequest	request )
+	{
+		try{
+			
+		}finally{
+			
+			request.destroy();
+		}
+	}
+	
+	private void
+	decodeHashes(
+		BTHashes	hashes )
+	{
+		try{
+			
+		}finally{
+			
+			hashes.destroy();
+		}	
+	}
+	
+	private void
+	decodeHashReject(
+		BTHashReject	reject )
+	{
+		try{
+			
+		}finally{
+			
+			reject.destroy();
+		}	
+	}
+	
+	private void
 	decodeAllowedFast(
 		BTAllowedFast	allowed )
 	{
@@ -4385,6 +4421,21 @@ implements PEPeerTransport
 	
 							case BTMessage.SUBID_BT_DHT_PORT:{
 								decodeMainlineDHTPort((BTDHTPort)message);
+								return true;
+							}
+							
+							case BTMessage.SUBID_BT_HASH_REQUEST:{
+								decodeHashRequest((BTHashRequest)message);
+								return true;
+							}
+							
+							case BTMessage.SUBID_BT_HASHES:{
+								decodeHashes((BTHashes)message);
+								return true;
+							}
+							
+							case BTMessage.SUBID_BT_HASH_REJECT:{
+								decodeHashReject((BTHashReject)message);
 								return true;
 							}
 						}		

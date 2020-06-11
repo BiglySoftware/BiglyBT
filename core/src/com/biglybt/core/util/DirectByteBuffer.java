@@ -74,7 +74,10 @@ DirectByteBuffer
     public static final byte        AL_MSG_UT_METADATA 	        = 34;
     public static final byte        AL_MSG_AZ_METADATA 	        = 35;
     public static final byte        AL_MSG_UT_UPLOAD_ONLY       = 36;
-
+    public static final byte        AL_MSG_BT_HASH_REQUEST      = 37;
+    public static final byte        AL_MSG_BT_HASHES            = 38;
+    public static final byte        AL_MSG_BT_HASH_REJECT       = 39;
+       
 
 	public static final String[] AL_DESCS =
 	{ "None", "Ext", "Other", "PeerRead", "PeerLen",
@@ -103,7 +106,10 @@ DirectByteBuffer
     "BTAllowedFast",
     "UTMetaData",
     "AZMetaData",
-    "UTUploadOnly"};
+    "UTUploadOnly",
+    "BTHashRequest",
+    "BTHashes",
+    "BTHashReject"};
 
 
 

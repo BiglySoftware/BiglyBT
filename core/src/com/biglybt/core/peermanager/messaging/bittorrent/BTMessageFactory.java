@@ -67,9 +67,9 @@ public class BTMessageFactory {
       MessageManager.getSingleton().registerMessageType( new BTLTMessage( null, MESSAGE_VERSION_SUPPORTS_PADDING ));
       MessageManager.getSingleton().registerMessageType( new BTDHTPort(-1));
       
-      MessageManager.getSingleton().registerMessageType( new BTHashRequest( MESSAGE_VERSION_SUPPORTS_PADDING ));
-      MessageManager.getSingleton().registerMessageType( new BTHashes( MESSAGE_VERSION_SUPPORTS_PADDING ));
-      MessageManager.getSingleton().registerMessageType( new BTHashReject( MESSAGE_VERSION_SUPPORTS_PADDING ));
+      MessageManager.getSingleton().registerMessageType( new BTHashRequest( null, -1, -1, -1, -1, MESSAGE_VERSION_SUPPORTS_PADDING ));
+      MessageManager.getSingleton().registerMessageType( new BTHashes( null, -1, -1, -1, -1, null, MESSAGE_VERSION_SUPPORTS_PADDING ));
+      MessageManager.getSingleton().registerMessageType( new BTHashReject( null, -1, -1, -1, -1, MESSAGE_VERSION_SUPPORTS_PADDING ));
 
     }
     catch( MessageException me ) {  me.printStackTrace();  }

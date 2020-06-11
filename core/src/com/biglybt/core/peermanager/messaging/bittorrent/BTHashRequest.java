@@ -20,24 +20,45 @@ package com.biglybt.core.peermanager.messaging.bittorrent;
 
 import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.peermanager.messaging.MessageException;
+import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.DirectByteBufferPool;
+import com.biglybt.core.util.SHA256;
 
 public class 
 BTHashRequest
 	implements BTMessage
 {
+	private static int WIRE_SIZE = SHA256.DIGEST_LENGTH + 4+4+4+4;
+	
 	private final byte version;
 	
 	private DirectByteBuffer buffer = null;
 	
 	private String description = null;
 
+	
+	final private byte[]		pieces_root;
+	final private int			base_layer;
+	final private int			index;
+	final private int			length;
+	final private int			proof_layers;
+	
 	public 
 	BTHashRequest( 
-		byte 	_version ) 
+		byte[]		_pieces_root,
+		int			_base_layer,
+		int			_index,
+		int			_length,
+		int			_proof_layers,
+		byte 		_version ) 
 	{
-		version = _version;
+		pieces_root		= _pieces_root;
+		base_layer		= _base_layer;
+		index			= _index;
+		length			= _length;
+		proof_layers	= _proof_layers;
+		version 		= _version;
 	}
 	  
 	@Override
@@ -63,7 +84,7 @@ BTHashRequest
 	getDescription() {
 		if ( description == null ){
 			
-			description = BTMessage.ID_BT_HASH_REQUEST + " blah blah";
+			description = BTMessage.ID_BT_HASH_REQUEST + (pieces_root==null?"null":ByteFormatter.encodeString(pieces_root)) + ": b=" + base_layer + ",i=" + index + ",l=" +length + ",p=" + proof_layers;
 		}
 
 		return description;
@@ -75,9 +96,14 @@ BTHashRequest
 	{
 		if ( buffer == null ){
 			
-			buffer = DirectByteBufferPool.getBuffer( DirectByteBuffer.AL_MSG_BT_HAVE, 4 );
+			buffer = DirectByteBufferPool.getBuffer( DirectByteBuffer.AL_MSG_BT_HASH_REQUEST, WIRE_SIZE );
 			
-				// encode
+			buffer.put( DirectByteBuffer.SS_MSG, pieces_root );
+			
+			buffer.putInt( DirectByteBuffer.SS_MSG, base_layer );
+			buffer.putInt( DirectByteBuffer.SS_MSG, index );
+			buffer.putInt( DirectByteBuffer.SS_MSG, length );
+			buffer.putInt( DirectByteBuffer.SS_MSG, proof_layers );
 			
 			buffer.flip( DirectByteBuffer.SS_MSG );
 		}
@@ -98,18 +124,55 @@ BTHashRequest
 			throw new MessageException( "[" +getID() + "] decode error: data == null" );
 		}
 
-		if ( data.remaining( DirectByteBuffer.SS_MSG ) != 4 ){
+		if ( data.remaining( DirectByteBuffer.SS_MSG ) != WIRE_SIZE ){
 			
-			throw new MessageException( "[" +getID() + "] decode error: payload.remaining[" +data.remaining( DirectByteBuffer.SS_MSG )+ "] != 4" );
+			throw new MessageException( "[" +getID() + "] decode error: payload.remaining[" +data.remaining( DirectByteBuffer.SS_MSG )+ "] != " + WIRE_SIZE );
 		}
 
-			// decode
+		byte[] pieces_root = new byte[ SHA256.DIGEST_LENGTH ];
+		
+		data.get( DirectByteBuffer.SS_MSG, pieces_root );
+		
+		int base_layer 		= data.getInt( DirectByteBuffer.SS_MSG );
+		int index 			= data.getInt( DirectByteBuffer.SS_MSG );
+		int length 			= data.getInt( DirectByteBuffer.SS_MSG );
+		int proof_layers 	= data.getInt( DirectByteBuffer.SS_MSG );
 
 		data.returnToPool();
 
-		return new BTHashRequest( version );
+		return new BTHashRequest( pieces_root, base_layer, index, length, proof_layers, version );
 	}
 
+	public byte[]
+	getPiecesRoot()
+	{
+		return( pieces_root );
+	}
+	
+	public int
+	getBaseLayer()
+	{
+		return( base_layer );
+	}
+	
+	public int
+	getIndex()
+	{
+		return( index );
+	}
+	
+	public int
+	getLength()
+	{
+		return( length );
+	}
+	
+	public int
+	getProofLayers()
+	{
+		return( proof_layers );
+	}
+	
 	@Override
 	public void 
 	destroy() 
