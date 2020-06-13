@@ -59,6 +59,14 @@ TOTorrentFile
 	public boolean
 	isPadFile();
 	
+		/**
+		 * V2 torrents only - also null for zero length files
+		 * @return
+		 */
+	
+	public TOTorrentFileHashTree
+	getHashTree();
+	
 	public Map
 	getAdditionalProperties();
 }

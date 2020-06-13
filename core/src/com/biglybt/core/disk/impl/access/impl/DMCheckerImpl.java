@@ -627,6 +627,16 @@ DMCheckerImpl
 
 			final byte[]	required_hash = disk_manager.getPieceHash(pieceNumber);
 
+			System.out.println( "required hash for " + pieceNumber + " -> " + required_hash );
+			
+			if ( required_hash == null ){
+				
+					// v2 torrent and hash not yet available
+				
+				listener.checkFailed( request, new Exception( "V2 hash for piece " + pieceNumber + " not available" ));
+				
+				return;
+			}
 				// quick check that the files that make up this piece are at least big enough
 				// to warrant reading the data to check
 

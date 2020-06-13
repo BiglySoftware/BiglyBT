@@ -36,7 +36,8 @@ public class
 TOTorrentFileImpl
 	implements TOTorrentFile
 {
-	private final TOTorrent	torrent;
+	private final TOTorrentImpl	torrent;
+	
 	private final int		index;
 	private final long		file_length;
 	private final byte[][]	path_components;
@@ -49,11 +50,14 @@ TOTorrentFileImpl
 
 	private final boolean	is_utf8;
 
-	private boolean	attr_pad_file;
+	private boolean		attr_pad_file;
+	
+	private final TOTorrentFileHashTreeImpl	hash_tree;
+	
 	
 	protected
 	TOTorrentFileImpl(
-		TOTorrent		_torrent,
+		TOTorrentImpl	_torrent,
 		int				_index,
 		long			_torrent_offset,
 		long			_len,
@@ -68,6 +72,8 @@ TOTorrentFileImpl
 		first_piece_number 	= (int)( _torrent_offset / torrent.getPieceLength());
 		last_piece_number	= (int)(( _torrent_offset + file_length - 1 ) /  torrent.getPieceLength());
 
+		hash_tree	= null;
+		
 		is_utf8	= true;
 
 		Vector temp = new Vector();
@@ -102,7 +108,7 @@ TOTorrentFileImpl
 
 	protected
 	TOTorrentFileImpl(
-		TOTorrent		_torrent,
+		TOTorrentImpl	_torrent,
 		int				_index,
 		long			_torrent_offset,
 		long			_len,
@@ -119,6 +125,8 @@ TOTorrentFileImpl
 		first_piece_number 	= (int)( _torrent_offset / torrent.getPieceLength());
 		last_piece_number	= (int)(( _torrent_offset + file_length - 1 ) /  torrent.getPieceLength());
 
+		hash_tree	= null;
+
 		is_utf8				= false;
 
 		checkComponents();
@@ -126,12 +134,27 @@ TOTorrentFileImpl
 
 	protected
 	TOTorrentFileImpl(
-		TOTorrent		_torrent,
+		TOTorrentImpl	_torrent,
 		int				_index,
 		long			_torrent_offset,
 		long			_len,
 		byte[][]		_path_components,
 		byte[][]		_path_components_utf8 )
+
+		throws TOTorrentException
+	{
+		this( _torrent, _index, _torrent_offset, _len, _path_components, _path_components_utf8, null );
+	}
+		
+	protected
+	TOTorrentFileImpl(
+		TOTorrentImpl	_torrent,
+		int				_index,
+		long			_torrent_offset,
+		long			_len,
+		byte[][]		_path_components,
+		byte[][]		_path_components_utf8,
+		byte[]			_v2_root_hash )
 
 		throws TOTorrentException
 	{
@@ -143,6 +166,8 @@ TOTorrentFileImpl
 
 		first_piece_number 	= (int)( _torrent_offset / torrent.getPieceLength());
 		last_piece_number	= (int)(( _torrent_offset + file_length - 1 ) /  torrent.getPieceLength());
+
+		hash_tree	= _v2_root_hash==null?null:new TOTorrentFileHashTreeImpl( this, _v2_root_hash );
 
 		is_utf8				= false;
 
@@ -176,7 +201,7 @@ TOTorrentFileImpl
 	}
 
 	@Override
-	public TOTorrent
+	public TOTorrentImpl
 	getTorrent()
 	{
 		return( torrent );
@@ -239,9 +264,16 @@ TOTorrentFileImpl
 			String attr_str = new String((byte[])value, Constants.UTF_8 );
 			
 			attr_pad_file = attr_str.contains( "p" );
-		}
+		}			
 	}
 
+	@Override
+	public TOTorrentFileHashTreeImpl
+	getHashTree()
+	{
+		return( hash_tree );
+	}
+	
 	@Override
 	public Map
 	getAdditionalProperties()

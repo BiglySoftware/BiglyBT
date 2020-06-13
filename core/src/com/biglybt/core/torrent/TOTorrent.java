@@ -137,15 +137,15 @@ TOTorrent
 	public TOTorrentAnnounceURLGroup
 	getAnnounceURLGroup();
 
+	public boolean
+	isDecentralised();
+
 	 /**
-	  * This method provides access to the SHA1 hash values (20 bytes each) that correspond
+	  * This method provides access to the SHA1/SHA256 hash values (20/32 bytes each) that correspond
 	  * to the pieces of the torrent.
 	  * @return
 	  * @exception	can fail if re-reading of piece hashes for space spacing fails
 	  */
-
-	public boolean
-	isDecentralised();
 
 	public byte[][]
 	getPieces()

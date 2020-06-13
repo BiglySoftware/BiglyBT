@@ -24,6 +24,7 @@ import java.util.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.clientid.ClientIDGenerator;
@@ -344,6 +345,21 @@ ExternalSeedReaderImpl
 				return( false );
 			}
 
+			if ( PluginCoreUtils.unwrap( torrent ).getTorrentType() == TOTorrent.TT_V2 ){
+				
+					// don't activate if we are missing any piece hashes (safe hack for the mo)
+				
+				byte[][] pieces = torrent.getPieces();
+				
+				for ( byte[] piece: pieces ){
+					
+					if ( piece == null ){
+						
+						return( false );
+					}
+				}
+			}
+			
 				// now the more interesting stuff
 
 			if ( transient_seed ){

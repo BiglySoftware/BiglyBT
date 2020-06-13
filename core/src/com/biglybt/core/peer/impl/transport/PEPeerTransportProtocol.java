@@ -59,6 +59,7 @@ import com.biglybt.core.peermanager.utils.*;
 import com.biglybt.core.proxy.AEProxyAddressMapper;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.tag.TaggableResolver;
+import com.biglybt.core.torrent.TOTorrentFileHashTree.*;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pif.dht.mainline.MainlineDHTProvider;
@@ -1511,6 +1512,8 @@ implements PEPeerTransport
 					connection.getOutgoingMessageQueue().addMessage( new UTMetaData( pieceNumber, other_peer_request_version ), false );
 				}
 			}else{
+				
+				manager.sendingRequest( this, request );
 
 				connection.getOutgoingMessageQueue().addMessage( new BTRequest( pieceNumber, pieceOffset, pieceLength, other_peer_request_version ), false );
 			}
@@ -4033,12 +4036,36 @@ implements PEPeerTransport
 		}
 	}
 
+	@Override
+	public void 
+	sendHashRequest(
+		HashRequest req)
+	{
+		BTHashRequest	request = new BTHashRequest( req.getRootHash(), req.getBaseLayer(), req.getOffset(), req.getLength(), req.getProofLayers(), other_peer_hash_request_version );
+
+  		connection.getOutgoingMessageQueue().addMessage( request, false );	
+  	}
+	
 	private void
 	decodeHashRequest(
 		BTHashRequest	request )
 	{
 		try{
+
+			HashReply reply = manager.receivedHashRequest( this, request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers());
+				
+			if ( reply != null ){
 			
+				BTHashes	bt_hashes = new BTHashes( request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers(), reply.getHashes(), other_peer_hashes_version );
+
+				connection.getOutgoingMessageQueue().addMessage( bt_hashes, false );		
+
+			}else{
+				
+				BTHashReject	reject = new BTHashReject( request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers(), other_peer_hash_reject_version );
+
+				connection.getOutgoingMessageQueue().addMessage( reject, false );		
+			}
 		}finally{
 			
 			request.destroy();
@@ -4051,6 +4078,8 @@ implements PEPeerTransport
 	{
 		try{
 			
+			manager.receivedHashes( this, hashes.getPiecesRoot(), hashes.getBaseLayer(), hashes.getIndex(), hashes.getLength(), hashes.getProofLayers(), hashes.getHashes());
+			
 		}finally{
 			
 			hashes.destroy();
@@ -4062,7 +4091,9 @@ implements PEPeerTransport
 		BTHashReject	reject )
 	{
 		try{
-			
+		
+			manager.rejectedHashes( this, reject.getPiecesRoot(), reject.getBaseLayer(), reject.getIndex(), reject.getLength(), reject.getProofLayers());
+
 		}finally{
 			
 			reject.destroy();

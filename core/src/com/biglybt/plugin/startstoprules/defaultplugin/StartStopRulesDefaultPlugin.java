@@ -2086,8 +2086,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					totals.activelyDLing++;
 					totals.maxSeeders = calcMaxSeeders(totals.activelyDLing
 							+ totals.waitingToDL);
-				} catch (Exception ignore) {
-					/*ignore*/
+				} catch (Exception e) {
+					
+					Debug.out( e );
 				}
 				state = download.getState();
 			}

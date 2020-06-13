@@ -43,6 +43,7 @@ import com.biglybt.core.peermanager.peerdb.PeerItem;
 import com.biglybt.core.peermanager.peerdb.PeerItemFactory;
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.tag.TaggableResolver;
+import com.biglybt.core.torrent.TOTorrentFileHashTree.HashRequest;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.network.Connection;
 import com.biglybt.pif.network.ConnectionStub;
@@ -741,6 +742,13 @@ PeerForeignDelegate
 	{
 	}
 
+	@Override
+	public void 
+	sendHashRequest(
+		HashRequest req)
+	{
+	}
+	
 	@Override
 	public boolean
 	isTCP()

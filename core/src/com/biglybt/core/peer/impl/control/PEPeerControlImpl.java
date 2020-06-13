@@ -64,7 +64,11 @@ import com.biglybt.core.peermanager.unchoker.UnchokerUtil;
 import com.biglybt.core.peermanager.uploadslots.UploadHelper;
 import com.biglybt.core.peermanager.uploadslots.UploadSlotManager;
 import com.biglybt.core.tag.TaggableResolver;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
+import com.biglybt.core.torrent.TOTorrentFile;
+import com.biglybt.core.torrent.TOTorrentFileHashTree;
+import com.biglybt.core.torrent.TOTorrentFileHashTree.HashReply;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
@@ -241,6 +245,10 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private final AEMonitor     peer_transports_mon	= new AEMonitor( "PEPeerControl:PT");
 
 	protected final PEPeerManagerAdapter	adapter;
+	private final TOTorrent					torrent;
+	private final ByteArrayHashMap<TOTorrentFileHashTree>		torrent_v2_file_map;
+	private final Map<Integer,PEPeerTransport>					hash_requests;
+	
 	private final DiskManager           disk_mgr;
 	private final DiskManagerPiece[]    dm_pieces;
 
@@ -558,17 +566,31 @@ DiskManagerCheckRequestListener, IPFilterListener
 		disk_mgr 		= _diskManager;
 		partition_id	= _partition_id;
 
-		boolean is_private = false;
-
-		try{
-			is_private = disk_mgr.getTorrent().getPrivate();
-
-		}catch( Throwable e ){
-
-			Debug.out( e );
+		torrent = disk_mgr.getTorrent();
+			
+		if ( torrent.getTorrentType() == TOTorrent.TT_V2 ){
+			
+			hash_requests = new HashMap<Integer, PEPeerTransport>();
+			
+			torrent_v2_file_map = new ByteArrayHashMap<TOTorrentFileHashTree>();
+			
+			for ( TOTorrentFile file: torrent.getFiles()){
+				
+				TOTorrentFileHashTree hash_tree = file.getHashTree();
+				
+				if ( hash_tree != null ){
+				
+					torrent_v2_file_map.put( hash_tree.getRootHash(),  hash_tree );
+				}
+			}
+		}else{
+			
+			hash_requests	= null;
+			
+			torrent_v2_file_map = null;
 		}
-
-		is_private_torrent = is_private;
+		
+		is_private_torrent = torrent.getPrivate();
 
 		is_metadata_download	= adapter.isMetadataDownload();
 
@@ -6124,6 +6146,120 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 	}
 
+	@Override
+	public void
+	sendingRequest(
+		PEPeerTransport				peer,
+		DiskManagerReadRequest		request )
+	{
+		if ( torrent_v2_file_map != null ){
+			
+			int piece_number = request.getPieceNumber();
+						
+			try{
+				if ( torrent.getPieces()[ piece_number ] == null ){
+			
+					if ( peer.getClient().contains( "qB" )){
+						System.out.println( "Ignoring qB" );
+					}else{
+						synchronized( hash_requests ){
+							
+							if ( hash_requests.containsKey( piece_number )){
+								
+								return;
+							}
+							
+							hash_requests.put( piece_number, peer );
+						}
+					
+
+						TOTorrentFile file = disk_mgr.getPieceList( piece_number ).get(0).getFile().getTorrentFile();
+						
+						TOTorrentFileHashTree tree = file.getHashTree();
+						
+						System.out.println( "Client is " + peer.getClient());
+						
+						TOTorrentFileHashTree.HashRequest hash_req = tree.requestPieceHash( piece_number );
+						
+						if ( hash_req != null ){
+							
+							peer.sendHashRequest( hash_req );
+						}
+					}
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	@Override
+	public void 
+	receivedHashes(
+		PEPeerTransport peer, 
+		byte[]			root_hash, 
+		int 			base_layer, 
+		int 			index, 
+		int 			length,
+		int 			proof_layers, 
+		byte[][] 		hashes)
+	{
+		if ( torrent_v2_file_map != null ){
+						
+			try{
+				TOTorrentFileHashTree tree = torrent_v2_file_map.get( root_hash );
+
+				if ( tree != null ){
+				
+					tree.receivedHashes( root_hash, base_layer,	index, length, proof_layers, hashes );
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	@Override
+	public HashReply
+	receivedHashRequest(
+		PEPeerTransport		peer,
+		byte[]				root_hash,
+		int					base_layer,
+		int					index,
+		int					length,
+		int					proof_layers )
+	{
+		return( null );
+	}
+	
+	@Override
+	public void 
+	rejectedHashes(
+		PEPeerTransport peer, 
+		byte[]			root_hash, 
+		int 			base_layer, 
+		int 			index, 
+		int 			length,
+		int 			proof_layers )
+	{
+		if ( torrent_v2_file_map != null ){
+			
+			try{
+				
+				TOTorrentFileHashTree tree = torrent_v2_file_map.get( root_hash );
+
+				if ( tree != null ){
+				
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}			
+		}
+	}
+	
 	@Override
 	public TrackerPeerSource
 	getTrackerPeerSource()

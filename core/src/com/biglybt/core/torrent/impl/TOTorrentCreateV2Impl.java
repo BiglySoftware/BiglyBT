@@ -26,6 +26,8 @@ import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.util.ByteArrayHashMap;
 import com.biglybt.core.util.ByteEncodedKeyHashMap;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.SHA256;
 
 import java.security.*;
 
@@ -35,7 +37,7 @@ TOTorrentCreateV2Impl
 {
 	private final static int block_size = 16*1024;
 
-	private final static int digest_length = 32;	// sha256 length
+	private final static int digest_length = SHA256.DIGEST_LENGTH;
 
 	private final File		root;
 	private final long		piece_size;
@@ -428,14 +430,7 @@ TOTorrentCreateV2Impl
 		TOTorrentImpl	torrent )
 	
 		throws TOTorrentException
-	{
-		Map piece_layers = torrent.getAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS );
-		
-		if ( piece_layers == null ){
-			
-			throw( new TOTorrentException( "V2 piece layers missing", TOTorrentException.RT_DECODE_FAILS ));
-		}
-		
+	{		
 		Map<String,Object> file_tree = (Map<String,Object>)torrent.getAdditionalInfoProperties().get( TOTorrentImpl.TK_V2_FILE_TREE );
 		
 		if ( file_tree == null ){
@@ -467,6 +462,18 @@ TOTorrentCreateV2Impl
 		
 		int piece_num = 0;
 		
+		Map piece_layers = torrent.getAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS );
+		
+		/*
+		 * torrent spec says piece layers must be present. however, for magnet downloads this isn't the case
+		 * as the piece hashes are grabbed during download. Relax this so that in general we'll grab them
+		 * 
+		if ( piece_layers == null ){
+			
+			throw( new TOTorrentException( "V2 piece layers missing", TOTorrentException.RT_DECODE_FAILS ));
+		}
+		*/
+		
 		for ( TOTorrentFileImpl file: files ){
 		
 			if ( file.isPadFile()){
@@ -478,7 +485,9 @@ TOTorrentCreateV2Impl
 			
 			if ( length > 0 ){
 				
-				byte[] pieces_root = (byte[])file.getAdditionalProperties().get( TOTorrentImpl.TK_V2_PIECES_ROOT );
+				TOTorrentFileHashTreeImpl tree = file.getHashTree();
+				
+				byte[] pieces_root = tree.getRootHash();
 
 				if ( length <= piece_length ){
 								
@@ -486,20 +495,47 @@ TOTorrentCreateV2Impl
 				
 				}else{
 				
-					byte[] piece_layer = (byte[])piece_layers.get( new String( pieces_root, Constants.BYTE_ENCODING_CHARSET ));
+					int file_pieces = file.getNumberOfPieces();
 					
-					if ( piece_layer.length % digest_length != 0 ){
-						
-						throw( new TOTorrentException( "V2 piece layer length invalid", TOTorrentException.RT_DECODE_FAILS ));
-					}
+					byte[] piece_layer = piece_layers==null?null:(byte[])piece_layers.get( new String( pieces_root, Constants.BYTE_ENCODING_CHARSET ));
 					
-					for ( int i=0;i<piece_layer.length; i+= digest_length ){
+					if ( piece_layer == null ){
 						
-						byte[] hash = new byte[ digest_length ];
+						for ( int i=0;i<file_pieces;i++ ){
+																					
+							pieces[piece_num++] = null;		// don't have this piece hash yet
+						}
+					}else{
+					
+						if ( piece_layer.length % digest_length != 0 ){
+							
+							throw( new TOTorrentException( "V2 piece layer length invalid", TOTorrentException.RT_DECODE_FAILS ));
+						}
 						
-						System.arraycopy( piece_layer, i, hash, 0, digest_length );
+						int layer_pieces = piece_layer.length / digest_length;
 						
-						pieces[piece_num++] = hash;
+						if ( file_pieces != layer_pieces ){
+							
+							throw( new TOTorrentException( "V2 piece layer hash count invalid", TOTorrentException.RT_DECODE_FAILS ));
+						}
+	
+						try{
+							List<byte[]> validated_pieces = tree.addPieceLayer( piece_layer );
+							
+							for ( byte[] hash: validated_pieces ){
+																
+								pieces[piece_num++] = hash;
+							}
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+							
+							for ( int i=0;i<file_pieces;i++ ){
+								
+								pieces[piece_num++] = null;		// don't have this piece hash yet
+							}
+
+						}
 					}
 				}
 			}
@@ -547,11 +583,11 @@ TOTorrentCreateV2Impl
 						
 						long pad_size = piece_length - l;
 					
-						String pad_file = ".pad" + File.separator + (++pad_details[0]) + "_" + pad_size;
-							
+						byte[][] pad_file = new byte[][]{ ".pad".getBytes( Constants.UTF_8 ), ((++pad_details[0]) + "_" + pad_size ).getBytes( Constants.UTF_8 ) };
+						
 						pad_details[1] += pad_size;
 						
-						TOTorrentFileImpl	tf = new TOTorrentFileImpl( torrent, files.size(), torrent_offset[0], pad_size, pad_file );
+						TOTorrentFileImpl	tf = new TOTorrentFileImpl( torrent, files.size(), torrent_offset[0], pad_size, pad_file, pad_file, null );
 
 						tf.setAdditionalProperty( TOTorrentImpl.TK_BEP47_ATTRS, "p".getBytes( Constants.UTF_8 ));
 						
@@ -565,18 +601,24 @@ TOTorrentCreateV2Impl
 				
 				byte[][] bpath = path.toArray( new byte[path.size()][] );
 				
-				TOTorrentFileImpl file = new TOTorrentFileImpl( torrent, files.size(), torrent_offset[0], length, bpath, bpath );
+				byte[] pieces_root = null;
 				
 				if ( length > 0 ){
 					
-					byte[] pieces_root = (byte[])kid.get( TOTorrentImpl.TK_V2_PIECES_ROOT );
+					pieces_root = (byte[])kid.get( TOTorrentImpl.TK_V2_PIECES_ROOT );
 					
-					file.setAdditionalProperty( TOTorrentImpl.TK_V2_PIECES_ROOT, pieces_root );
+					if ( pieces_root == null ){
+						
+						throw( new TOTorrentException( "Pieces root missing for file " + files.size(), TOTorrentException.RT_DECODE_FAILS ));
+					}
 				}
+				
+				TOTorrentFileImpl file = new TOTorrentFileImpl( torrent, files.size(), torrent_offset[0], length, bpath, bpath, pieces_root );
 				
 				files.add( file );
 				
 				torrent_offset[0] += length;
+				
 			}else{
 				
 				path.add( name.getBytes( Constants.UTF_8 ));

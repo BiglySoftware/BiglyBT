@@ -1547,7 +1547,23 @@ DownloadManagerController
 
 		if ( secrets_map.size() == 0 ){
 
-			secrets_map.put( "p1", torrent.getPieces()[0] );
+			if ( torrent.getTorrentType() == TOTorrent.TT_V2 ){
+				
+				TOTorrentFile[] files = torrent.getFiles();
+				
+				for ( TOTorrentFile file: files ){
+					
+					if ( file.getLength() > 0 ){
+				
+						secrets_map.put( "p1", file.getHashTree().getRootHash());
+						
+						break;
+					}
+				}
+			}else{
+			
+				secrets_map.put( "p1", torrent.getPieces()[0] );
+			}
 
 			download_manager.getDownloadState().setMapAttribute( DownloadManagerState.AT_SECRETS, secrets_map );
 		}

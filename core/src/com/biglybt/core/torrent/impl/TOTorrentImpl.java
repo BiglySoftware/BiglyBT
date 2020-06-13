@@ -940,6 +940,14 @@ TOTorrentImpl
 		pieces = _pieces;
 	}
 
+	protected void
+	setPiece(
+		int		index,
+		byte[]	piece )
+	{
+		pieces[index] = piece;
+	}
+	
 	@Override
 	public int
 	getFileCount()

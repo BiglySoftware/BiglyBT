@@ -30,6 +30,7 @@ import java.util.Map;
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peermanager.peerdb.PeerItem;
+import com.biglybt.core.torrent.TOTorrentFileHashTree;
 import com.biglybt.core.util.IndentWriter;
 
 public interface
@@ -261,6 +262,10 @@ PEPeerTransport
 	public String
 	getNetwork();
 
+	public void
+	sendHashRequest(
+		TOTorrentFileHashTree.HashRequest		req );
+	
 	public void
 	generateEvidence(
 		IndentWriter	writer );
