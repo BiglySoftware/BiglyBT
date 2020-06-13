@@ -551,7 +551,7 @@ public class TableViewSWT_Common
 					tv.sortRows(true);
 					break;
 				case 'v':
-					if ( event.widget != filter.widget ){
+					if ( filter == null || event.widget != filter.widget ){
 						
 						Clipboard clipboard = new Clipboard(Display.getDefault());
 						

@@ -357,6 +357,9 @@ public class TableViewPainted
 						filter.widget.setText( "" );
 					}
 				}
+				if ( getComposite().isDisposed()){
+					return;
+				}
 				if (getComposite() != event.widget) {
 					if ( getComposite().isVisible()){
 							// we only want super to get the opportunity to consume the event if it is visible
