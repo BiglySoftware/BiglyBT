@@ -36,6 +36,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
@@ -284,10 +285,79 @@ implements ShareManagerListener,
   fillMenu(
   	String sColumnName, final Menu menu)
   {
+		Menu menuTags = new Menu( menu.getShell(), SWT.DROP_DOWN);
 	    final MenuItem itemTags = new MenuItem(menu, SWT.CASCADE);
-	    itemTags.setText( MessageText.getString( "label.tags" ) + "..." ); 
+	    Messages.setLanguageText(itemTags, "label.tags" ); 
+	  
+	    itemTags.setMenu(menuTags);
 
-	    itemTags.addListener( SWT.Selection, new Listener(){
+		MenuItem itemAddTag = new MenuItem( menuTags, SWT.PUSH);
+
+		Messages.setLanguageText(itemAddTag, "label.add.tag");
+		itemAddTag.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+
+				TagUIUtils.createManualTag(new UIFunctions.TagReturner() {
+					@Override
+					public void returnedTags(Tag[] tags) {
+						
+						if ( tags != null ){
+							
+						    tv.runForSelectedRows(new TableGroupRowRunner() {
+							      @Override
+							      public void run(TableRowCore row) {
+							      
+							      	ShareResource sr = ((ShareResource)row.getDataSource(true));
+							      	
+							      	Map<String,String> props = sr.getProperties();
+							      	
+							      	props = props==null?new HashMap<>():new HashMap<>( props );
+							      		
+									String tag_str = props.get( ShareManager.PR_TAGS );
+
+									Set<String>	existing = new HashSet<>();
+									
+									if ( tag_str == null ){
+										
+										tag_str = "";
+										
+									}else{
+										
+										String[] bits = tag_str.split( "," );
+										
+										for ( String bit: bits ){
+											
+											existing.add( bit.trim());
+										}
+									}
+									
+									for ( Tag t: tags ){
+											
+										String uid = String.valueOf( t.getTagUID());
+												
+										if ( !existing.contains( uid )){
+											
+											tag_str += (tag_str.isEmpty()?"":",") + uid;
+										}
+									}
+									
+							      	props.put( ShareManager.PR_TAGS, tag_str );
+							      	
+							      	sr.setProperties( props, false );
+							      }
+							    });
+						}
+					}
+				});
+			}
+		});
+	    
+	    
+	    MenuItem itemTagsSelect = new MenuItem(menuTags, SWT.PUSH);
+	    itemTagsSelect.setText( MessageText.getString( "label.select.tags" ) + "..." );
+	    
+	    itemTagsSelect.addListener( SWT.Selection, new Listener(){
 			@Override
 			public void
 			handleEvent(Event event)
@@ -335,6 +405,7 @@ implements ShareManagerListener,
 						}
 					}
 				}
+				
 				TagUIUtilsV3.showTagSelectionDialog( 
 					all_tags, 
 					selected_tags,

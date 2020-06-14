@@ -291,7 +291,7 @@ public class TagUIUtilsV3
 			}
 		}
 		
-		dialog.open();
+		dialog.open( "skin3_dlg_selecttags", true );
 	}
 	
 	public interface
