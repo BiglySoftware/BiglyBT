@@ -6159,32 +6159,26 @@ DiskManagerCheckRequestListener, IPFilterListener
 			try{
 				if ( torrent.getPieces()[ piece_number ] == null ){
 			
-					if ( peer.getClient().contains( "qB" )){
-						System.out.println( "Ignoring qB" );
-					}else{
-						synchronized( hash_requests ){
+					synchronized( hash_requests ){
+						
+						if ( hash_requests.containsKey( piece_number )){
 							
-							if ( hash_requests.containsKey( piece_number )){
-								
-								return;
-							}
-							
-							hash_requests.put( piece_number, peer );
+							return;
 						}
-					
+						
+						hash_requests.put( piece_number, peer );
+					}
+				
 
-						TOTorrentFile file = disk_mgr.getPieceList( piece_number ).get(0).getFile().getTorrentFile();
+					TOTorrentFile file = disk_mgr.getPieceList( piece_number ).get(0).getFile().getTorrentFile();
+					
+					TOTorrentFileHashTree tree = file.getHashTree();
+											
+					TOTorrentFileHashTree.HashRequest hash_req = tree.requestPieceHash( piece_number );
+					
+					if ( hash_req != null ){
 						
-						TOTorrentFileHashTree tree = file.getHashTree();
-						
-						System.out.println( "Client is " + peer.getClient());
-						
-						TOTorrentFileHashTree.HashRequest hash_req = tree.requestPieceHash( piece_number );
-						
-						if ( hash_req != null ){
-							
-							peer.sendHashRequest( hash_req );
-						}
+						peer.sendHashRequest( hash_req );
 					}
 				}
 			}catch( Throwable e ){
@@ -6231,6 +6225,21 @@ DiskManagerCheckRequestListener, IPFilterListener
 		int					length,
 		int					proof_layers )
 	{
+		if ( torrent_v2_file_map != null ){
+			
+			try{
+				TOTorrentFileHashTree tree = torrent_v2_file_map.get( root_hash );
+
+				if ( tree != null ){
+				
+					return( tree.requestHashes( root_hash, base_layer,	index, length, proof_layers ));
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
 		return( null );
 	}
 	

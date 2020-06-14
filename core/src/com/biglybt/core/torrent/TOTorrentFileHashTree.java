@@ -37,6 +37,14 @@ TOTorrentFileHashTree
 		int 			proof_layers, 
 		byte[][] 		hashes );
 	
+	public HashReply 
+	requestHashes(
+		byte[]			root_hash, 
+		int 			base_layer, 
+		int 			index, 
+		int 			length,
+		int 			proof_layers );
+	
 	public interface
 	HashRequest
 	{

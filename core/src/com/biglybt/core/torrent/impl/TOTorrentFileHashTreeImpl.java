@@ -23,6 +23,7 @@ import java.util.*;
 
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFileHashTree;
+import com.biglybt.core.torrent.TOTorrentFileHashTree.HashReply;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SHA256;
@@ -229,9 +230,7 @@ TOTorrentFileHashTreeImpl
 			
 			try{
 				MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
-	
-				int tree_depth =  tree.length;
-	
+		
 				int layer_index = piece_layer_index;
 																									
 				byte[]	tree_layer = tree[layer_index];
@@ -242,7 +241,7 @@ TOTorrentFileHashTreeImpl
 				
 				while( layer_index > 0 ){
 				
-					byte[] layer_pad_hash = pad_hash_cache.get( tree_depth - layer_index -1 );
+					byte[] layer_pad_hash = pad_hash_cache.get( tree.length - layer_index -1 );
 	
 					int layer_width = tree_hash_widths[layer_index];
 					
@@ -384,164 +383,328 @@ TOTorrentFileHashTreeImpl
 		int 			proof_layers, 
 		byte[][] 		hashes )
 	{
-		System.out.println( "hash reply for " + ( file.getFirstPieceNumber() + index ) + " -> " + base_layer + ", " + index + ", " + length );
-		
-		int layer_index = tree.length - base_layer -1;
-		
-		if ( layer_index != piece_layer_index ){
+		try{
+			System.out.println( "hash reply for " + ( file.getFirstPieceNumber() + index ) + " -> " + base_layer + ", " + index + ", " + length );
 			
-			return;
-		}
-		
-		synchronized( tree_lock ){
-
-					
-				// int missing_proofs = 31 - Integer.numberOfLeadingZeros( length ) -1;
+			int layer_index = tree.length - base_layer -1;
 			
-			byte[][]	copy_bytes 		= new byte[layer_index+1][];
-			int[]		copy_offsets	= new int[copy_bytes.length];
+				// TODO support leaf hashes
 			
-			
-			try{		
-				MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
-	
-				List<byte[]> l_hashes = Arrays.asList( hashes ).subList( 0,  length );
-				
-				int	proof_pos = length;
-	
-				int	layer_offset = index;
-				
-				boolean	layer_match = false;
-				
-				for ( int li=layer_index; li>0; li-- ){
-					
-					int copy_offset_bytes = layer_offset*DIGEST_LENGTH;
-					
-					if ( l_hashes.size() == 1 ){
-						
-						if ( proof_pos == hashes.length ){
-						
-								// run out of proof layers, if we asked for less then we would have had
-								// a layer match
-							
-							break;
-						}
-						
-						if ( ( layer_offset & 0x00000001 ) == 0 ){
-						
-							l_hashes.add( hashes[ proof_pos++ ]);
-							
-						}else{
-						
-							l_hashes.add( 0,  hashes[ proof_pos++ ] );
-							
-							copy_offset_bytes -= DIGEST_LENGTH;
-						}
-					}
-					
-					byte[] hashes_bytes = new byte[l_hashes.size()*DIGEST_LENGTH];
-					
-					for ( int i=0;i < l_hashes.size();i++ ){
-						
-						System.arraycopy( l_hashes.get(i), 0, hashes_bytes, i*DIGEST_LENGTH, DIGEST_LENGTH );
-					}
-					
-					byte[] tree_layer = tree[li];
-					
-					layer_match = true;
-					
-					int tree_pos = copy_offset_bytes;
-					
-					for ( int i=0; i<hashes_bytes.length && tree_pos < tree_layer.length; i++ ){
-						
-						if ( tree_layer[ tree_pos++ ] != hashes_bytes[i] ){
-							
-							layer_match = false;
-							
-							break;
-						}
-					}
-					
-					if ( layer_match ){
-						
-						break;
-					}
-					
-					copy_bytes[li] 		= hashes_bytes;
-					copy_offsets[li]	= copy_offset_bytes;  
-							
-					List<byte[]> next_hashes = new ArrayList<>( l_hashes.size() / 2 );
-					
-					for ( int i=0; i<hashes_bytes.length; i += 2*DIGEST_LENGTH ){
-					
-						sha256.update( hashes_bytes, i, 2*DIGEST_LENGTH );
-						
-						next_hashes.add( sha256.digest());
-					}	
-					
-					l_hashes = next_hashes;
-									
-					layer_offset >>>= 1;
-				}
-	
-				if ( !layer_match ){
-					
-					byte[] computed_root_hash = l_hashes.get(0);
-					
-					if ( !Arrays.equals( computed_root_hash, tree[0] )){
-						
-						Debug.out( "Computed root hash mismatch" );
-						
-						return;
-					}
-				}
-				
-				for ( int li = layer_index; li > 0; li-- ){
-					
-					byte[] 	bytes = copy_bytes[li];
-					
-					if ( bytes == null ){
-						
-						break;
-					}
-										
-					int copy_offset = copy_offsets[li];
-					
-						// layer length is limited to actual needed, not fully padded tree width
-					
-					byte[] tree_layer = tree[li];
-							
-					int to_copy = Math.min( bytes.length, tree_layer.length - copy_offset );
-					
-					if ( to_copy > 0 ){
-					
-						System.arraycopy( bytes, 0, tree_layer, copy_offset, to_copy );
-					}
-				}
-			}catch( Throwable e ){
-				
-				Debug.out( e );
+			if ( layer_index != piece_layer_index ){
 				
 				return;
 			}
-		}
+			
+			synchronized( tree_lock ){
+				
+				byte[][]	copy_bytes 		= new byte[layer_index+1][];
+				int[]		copy_offsets	= new int[copy_bytes.length];			
+				
+				try{		
+					MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
 		
+					List<byte[]> l_hashes = Arrays.asList( hashes ).subList( 0,  length );
+					
+					int	proof_pos = length;
 		
+					int	layer_offset = index;
+					
+					boolean	layer_match = false;
+					
+					for ( int li=layer_index; li>0; li-- ){
+						
+						int copy_offset_bytes = layer_offset*DIGEST_LENGTH;
+						
+						if ( l_hashes.size() == 1 ){
+							
+							if ( proof_pos == hashes.length ){
+							
+									// run out of proof layers, if we asked for less then we would have had
+									// a layer match
+								
+								break;
+							}
+							
+							if ( ( layer_offset & 0x00000001 ) == 0 ){
+							
+								l_hashes.add( hashes[ proof_pos++ ]);
+								
+							}else{
+							
+								l_hashes.add( 0,  hashes[ proof_pos++ ] );
+								
+								copy_offset_bytes -= DIGEST_LENGTH;
+							}
+						}
+						
+						byte[] hashes_bytes = new byte[l_hashes.size()*DIGEST_LENGTH];
+						
+						for ( int i=0;i < l_hashes.size();i++ ){
+							
+							System.arraycopy( l_hashes.get(i), 0, hashes_bytes, i*DIGEST_LENGTH, DIGEST_LENGTH );
+						}
+						
+						byte[] tree_layer = tree[li];
+						
+						layer_match = true;
+						
+						int tree_pos = copy_offset_bytes;
+						
+						for ( int i=0; i<hashes_bytes.length && tree_pos < tree_layer.length; i++ ){
+							
+							if ( tree_layer[ tree_pos++ ] != hashes_bytes[i] ){
+								
+								layer_match = false;
+								
+								break;
+							}
+						}
+						
+						if ( layer_match ){
+							
+							break;
+						}
+						
+						copy_bytes[li] 		= hashes_bytes;
+						copy_offsets[li]	= copy_offset_bytes;  
+								
+						List<byte[]> next_hashes = new ArrayList<>( l_hashes.size() / 2 );
+						
+						for ( int i=0; i<hashes_bytes.length; i += 2*DIGEST_LENGTH ){
+						
+							sha256.update( hashes_bytes, i, 2*DIGEST_LENGTH );
+							
+							next_hashes.add( sha256.digest());
+						}	
+						
+						l_hashes = next_hashes;
+										
+						layer_offset >>>= 1;
+					}
 		
-		for ( int i=0; i<length; i++ ){
-			
-			byte[]	piece_hash = new byte[DIGEST_LENGTH];
-			
-			System.arraycopy( hashes[i], 0, piece_hash, 0, DIGEST_LENGTH );
-			
-			int piece_number = file.getFirstPieceNumber() + index + i;
-			
-			if ( piece_number <= file.getLastPieceNumber()){
-			
-				file.getTorrent().setPiece( piece_number, piece_hash );
+					if ( !layer_match ){
+						
+						byte[] computed_root_hash = l_hashes.get(0);
+						
+						if ( !Arrays.equals( computed_root_hash, tree[0] )){
+							
+							Debug.out( "Computed root hash mismatch" );
+							
+							return;
+						}
+					}
+					
+					for ( int li = layer_index; li > 0; li-- ){
+						
+						byte[] 	bytes = copy_bytes[li];
+						
+						if ( bytes == null ){
+							
+							break;
+						}
+											
+						int copy_offset = copy_offsets[li];
+						
+							// layer length is limited to actual needed, not fully padded tree width
+						
+						byte[] tree_layer = tree[li];
+								
+						int to_copy = Math.min( bytes.length, tree_layer.length - copy_offset );
+						
+						if ( to_copy > 0 ){
+						
+							System.arraycopy( bytes, 0, tree_layer, copy_offset, to_copy );
+						}
+					}
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+					
+					return;
+				}
 			}
+					
+			for ( int i=0; i<length; i++ ){
+				
+				byte[]	piece_hash = new byte[DIGEST_LENGTH];
+				
+				System.arraycopy( hashes[i], 0, piece_hash, 0, DIGEST_LENGTH );
+				
+				int piece_number = file.getFirstPieceNumber() + index + i;
+				
+				if ( piece_number <= file.getLastPieceNumber()){
+				
+					file.getTorrent().setPiece( piece_number, piece_hash );
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
 		}
 	}
+	
+	public HashReply 
+	requestHashes(
+		byte[]			root_hash, 
+		int 			base_layer, 
+		int 			index, 
+		int 			length,
+		int 			proof_layers )
+	{
+		try{
+			System.out.println( "hash request for " + ( file.getFirstPieceNumber() + index ) + " -> " + base_layer + ", " + index + ", " + length );
+			
+			int layer_index = tree.length - base_layer -1;
+			
+			// TODO support leaf hashes
+			
+			if ( layer_index != piece_layer_index ){
+				
+				return( null );
+			}
+			
+			if ( length < 2 || length > 512 ){
+				
+				return( null );
+			}
+			
+			if ( length != Integer.highestOneBit( length )){
+				
+				return( null );	// not a power of 2
+			}
+			
+			if ( index % length != 0 ){
+				
+				return( null );	// index must be multiple of length
+			}
+			
+			if ( proof_layers >= tree.length ){
+				
+				return( null );
+			}
+			
+			int missing_proofs = 31 - Integer.numberOfLeadingZeros( length ) -1;
+	
+			byte[]	tree_layer = tree[layer_index];
+			
+			int layer_offset = index;
+			
+			byte[][]	hashes = new byte[length+proof_layers-missing_proofs][];
+			
+			int	hash_pos = 0;
+			
+			int	hashes_start = layer_offset * DIGEST_LENGTH;
+		
+			for ( int i=hashes_start; i<tree_layer.length && hash_pos < length; i += DIGEST_LENGTH ){
+				
+				byte[] hash = new byte[DIGEST_LENGTH];
+				
+				System.arraycopy( tree_layer, i, hash, 0, DIGEST_LENGTH );
+				
+				boolean ok = false;
+				
+				for ( int j=0; j<hash.length; j++ ){
+					
+					if ( hash[j] != 0 ){
+						
+						ok = true;
+						
+						break;
+					}	
+				}
+				
+				if ( !ok ){
+					
+					return( null );		// hash not available
+				}
+				
+				hashes[ hash_pos++ ] = hash;
+			}
+			
+			if ( hash_pos < length ){
+				
+				byte[] layer_pad_hash = pad_hash_cache.get( tree.length - layer_index - 1 );
+				
+				while( hash_pos < length ){
+				
+					hashes[ hash_pos++ ] = layer_pad_hash;
+				}
+			}
+			
+			while( proof_layers > 0 && layer_index > 1 ){
+				
+				layer_offset >>>= 1;
+				
+				layer_index--;
+				
+				if ( missing_proofs > 0 ){
+					
+					missing_proofs--;
+					
+				}else{
+				
+					tree_layer = tree[layer_index];
+	
+					int uncle_offset;
+					
+					if ( ( layer_offset & 0x00000001 ) == 0 ){
+	
+						uncle_offset = layer_offset+1;
+						
+					}else{
+						
+						uncle_offset = layer_offset-1;
+					}
+					
+					int hash_start = uncle_offset * DIGEST_LENGTH;
+					
+					if ( hash_start < tree_layer.length ){
+						
+						byte[] hash = new byte[DIGEST_LENGTH];
+						
+						System.arraycopy( tree_layer, hash_start, hash, 0, DIGEST_LENGTH );
+						
+						boolean ok = false;
+						
+						for ( int j=0; j<hash.length; j++ ){
+							
+							if ( hash[j] != 0 ){
+								
+								ok = true;
+								
+								break;
+							}	
+						}
+						
+						if ( !ok ){
+							
+							return( null );		// hash not available
+						}
+						
+						hashes[ hash_pos++ ] = hash;
+						
+					}else{
+						
+						hashes[ hash_pos++ ] = pad_hash_cache.get( tree.length - layer_index - 1 );
+					}
+				}
+			}
+			
+			if ( hash_pos != hashes.length ){
+				
+				return( null );		// didn't fill things in
+			}
+			
+			return( new HashReplyImpl( base_layer, index, length, proof_layers, hashes ));
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+		return( null );
+	}
+
 	
 	private class
 	HashRequestImpl
@@ -593,6 +756,68 @@ TOTorrentFileHashTreeImpl
 		getProofLayers()
 		{
 			return( proof_layers );
+		}
+	}
+	
+	private class
+	HashReplyImpl
+		implements HashReply
+	{		
+		private final int		base_layer;
+		private final int		offset;
+		private final int		length;
+		private final int		proof_layers;
+		private final byte[][]	hashes;
+		
+		private 
+		HashReplyImpl(
+			int			_base_layer,
+			int			_offset,
+			int			_length,
+			int			_proof_layers,
+			byte[][]	_hashes )
+		{
+			base_layer		= _base_layer;
+			offset			= _offset;
+			length			= _length;
+			proof_layers	= _proof_layers;
+			hashes			= _hashes;
+		}
+		
+		public byte[]
+		getRootHash()
+		{
+			return( tree[0] );
+		}
+		
+		public int
+		getBaseLayer()
+		{
+			return( base_layer );
+		}
+		
+		public int
+		getOffset()
+		{
+			return( offset );
+		}
+		
+		public int
+		getLength()
+		{
+			return( length );
+		}
+		
+		public int
+		getProofLayers()
+		{
+			return( proof_layers );
+		}
+		
+		public byte[][]
+		getHashes()
+		{
+			return( hashes );
 		}
 	}
 }
