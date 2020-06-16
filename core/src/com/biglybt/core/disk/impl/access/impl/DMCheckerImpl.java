@@ -604,7 +604,16 @@ DMCheckerImpl
 							}
 						}
 					}
-				}, read_flush );
+					
+					@Override
+					public boolean 
+					hashRequest(
+						int 			piece_number, 
+						HashListener 	hash_listener)
+					{
+						return( listener.hashRequest( piece_number, hash_listener));
+					}
+				}, read_flush, false );
 	}
 
 
@@ -612,7 +621,8 @@ DMCheckerImpl
 	enqueueCheckRequestSupport(
 		final DiskManagerCheckRequest			request,
 		final DiskManagerCheckRequestListener	listener,
-		boolean									read_flush )
+		boolean									read_flush,
+		boolean									hash_requested )
 	{
 		if ( !checking_enabled ){
 
@@ -626,13 +636,44 @@ DMCheckerImpl
 		try{
 
 			final byte[]	required_hash = disk_manager.getPieceHash(pieceNumber);
-
-			System.out.println( "required hash for " + pieceNumber + " -> " + required_hash );
 			
 			if ( required_hash == null ){
 				
-					// v2 torrent and hash not yet available
+					// v2 torrent and hash not yet available, make an attempt to get it
+					// normally it will be available as requested prior to data
 				
+				if ( !hash_requested ){
+				
+					if ( listener.hashRequest( 
+							pieceNumber,
+							new DiskManagerCheckRequestListener.HashListener()
+							{
+								@Override
+								public int 
+								getPieceNumber()
+								{
+									return( pieceNumber );
+								}
+								
+								public void
+								complete(
+									boolean success )
+								{
+										// ignore success, just do it again and probably fail
+									
+									if ( !success ){
+										
+										Debug.out( "Failed to get hash for piece " + request.getPieceNumber());
+										
+									}
+									enqueueCheckRequestSupport( request, listener, read_flush, true );
+								}
+							})){
+					
+						return;
+					}
+				}				
+					
 				listener.checkFailed( request, new Exception( "V2 hash for piece " + pieceNumber + " not available" ));
 				
 				return;

@@ -21,9 +21,9 @@ package com.biglybt.core.torrent.impl;
 import java.security.MessageDigest;
 import java.util.*;
 
+import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFileHashTree;
-import com.biglybt.core.torrent.TOTorrentFileHashTree.HashReply;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SHA256;
@@ -163,6 +163,13 @@ TOTorrentFileHashTreeImpl
 			tree[i] = new byte[ layer_size ];
 			
 			tree_bytes += layer_size;
+			
+				// nah, not going to allocate below piece layer as takes a LOT of space
+			
+			if ( i == piece_layer_index ){
+				
+				break;
+			}
 		}
 		
 		System.out.println( "tree for " + file_length + " / " + base_width_bytes + ", blocks=" + (file_length/BLOCK_SIZE ) + " -> " + DisplayFormatters.formatByteCountToKiBEtc( tree_bytes ) + ", piece=" + piece_length + ", piece_layer=" + piece_layer_index );
@@ -181,18 +188,25 @@ TOTorrentFileHashTreeImpl
 			
 			String str = "'";
 			
-			for ( int j=0;j<layer.length;j+=DIGEST_LENGTH ){
-			
-				boolean blank = true;
+			if ( layer == null ){
 				
-				for ( int k=j; k<j+DIGEST_LENGTH; k++ ){
-					if ( layer[k] != 0 ){
-						blank = false;
-						break;
+				str = "<null>";
+				
+			}else{
+
+				for ( int j=0;j<layer.length;j+=DIGEST_LENGTH ){
+				
+					boolean blank = true;
+					
+					for ( int k=j; k<j+DIGEST_LENGTH; k++ ){
+						if ( layer[k] != 0 ){
+							blank = false;
+							break;
+						}
 					}
+					
+					str += blank?" ":"*";
 				}
-				
-				str += blank?" ":"*";
 			}
 			
 			System.out.println( tree_hash_widths[i] + " / " + layer.length/DIGEST_LENGTH + " - " + str + "'");
@@ -206,6 +220,129 @@ TOTorrentFileHashTreeImpl
 		return( tree[0] );
 	}
 	
+	protected Map<String,Object>
+	exportState()
+	{
+		synchronized( tree_lock ){
+
+			Map<String,Object>	map = new HashMap<>();
+			
+			for ( int i=1; i <= piece_layer_index; i++ ){
+				
+				map.put( String.valueOf( i ), tree[i].clone());
+			}
+			
+			return( map );
+		}
+	}
+	
+	protected List<byte[]>
+	importState(
+		Map<String,Object>	map )
+	{
+		List<byte[]> result = null;
+		
+		byte[][] updated_tree = new byte[tree.length][];
+		
+		synchronized( tree_lock ){
+			
+			for ( int i=1; i <= piece_layer_index; i++ ){
+				
+				byte[] layer = (byte[])map.get(String.valueOf( i ));
+				
+				if ( layer != null && layer.length == tree[i].length ){
+					
+					updated_tree[i] = layer;
+					
+					if ( i == piece_layer_index ){
+						
+						result = new ArrayList<>( layer.length / DIGEST_LENGTH );
+						
+						for ( int j=0;j<layer.length;j+= DIGEST_LENGTH ){
+							
+							byte[] x = new byte[DIGEST_LENGTH];
+							
+							System.arraycopy( layer, j, x, 0, DIGEST_LENGTH );
+						
+							boolean ok = false;
+							
+							for ( int k=0; k<DIGEST_LENGTH;k++){
+								
+								if ( x[k] != 0 ){
+									
+									ok = true;
+									
+									break;
+								}
+							}
+								
+							result.add( ok?x:null );
+						}
+					}
+				}else{
+					
+						// invalid
+					
+					Debug.out( "Invalid hash tree state" );
+					
+					return( Collections.EMPTY_LIST );
+				}
+			}
+		
+			if ( result == null ){
+				
+				Debug.out( "Invalid hash tree state" );
+
+				return( Collections.EMPTY_LIST );
+				
+			}else{
+				
+				for ( int i=1;i<=piece_layer_index;i++){
+					
+					tree[i] = updated_tree[i];
+				}
+				
+				return( result );
+			}
+		}
+	}
+	
+	protected byte[]
+	getPieceLayer()
+	{
+		if ( piece_layer_index == 0 ){
+			
+			return( null );
+		}
+		
+		synchronized( tree_lock ){
+																												
+			byte[]	tree_layer = tree[piece_layer_index];
+			
+			for ( int i=0; i < tree_layer.length; i+= DIGEST_LENGTH ){
+				
+				boolean	ok = false;
+				
+				for ( int j=i; j<i+DIGEST_LENGTH; j++){
+					
+					if ( tree_layer[j] != 0 ){
+						
+						ok = true;
+						
+						break;
+					}
+				}
+				
+				if ( !ok ){
+					
+					return( null );
+				}
+			}
+			
+			return( tree_layer.clone());
+		}
+	}
+		
 	protected List<byte[]>
 	addPieceLayer(
 		byte[]			piece_layer )
@@ -332,7 +469,8 @@ TOTorrentFileHashTreeImpl
 	@Override
 	public HashRequest 
 	requestPieceHash(
-		int piece_number)
+		int 		piece_number,
+		BitFlags	available )
 	{
 		if ( piece_layer_index == 0 ){
 			
@@ -543,7 +681,7 @@ TOTorrentFileHashTreeImpl
 		}
 	}
 	
-	public HashReply 
+	public byte[][] 
 	requestHashes(
 		byte[]			root_hash, 
 		int 			base_layer, 
@@ -695,7 +833,7 @@ TOTorrentFileHashTreeImpl
 				return( null );		// didn't fill things in
 			}
 			
-			return( new HashReplyImpl( base_layer, index, length, proof_layers, hashes ));
+			return( hashes );
 			
 		}catch( Throwable e ){
 			
@@ -756,68 +894,6 @@ TOTorrentFileHashTreeImpl
 		getProofLayers()
 		{
 			return( proof_layers );
-		}
-	}
-	
-	private class
-	HashReplyImpl
-		implements HashReply
-	{		
-		private final int		base_layer;
-		private final int		offset;
-		private final int		length;
-		private final int		proof_layers;
-		private final byte[][]	hashes;
-		
-		private 
-		HashReplyImpl(
-			int			_base_layer,
-			int			_offset,
-			int			_length,
-			int			_proof_layers,
-			byte[][]	_hashes )
-		{
-			base_layer		= _base_layer;
-			offset			= _offset;
-			length			= _length;
-			proof_layers	= _proof_layers;
-			hashes			= _hashes;
-		}
-		
-		public byte[]
-		getRootHash()
-		{
-			return( tree[0] );
-		}
-		
-		public int
-		getBaseLayer()
-		{
-			return( base_layer );
-		}
-		
-		public int
-		getOffset()
-		{
-			return( offset );
-		}
-		
-		public int
-		getLength()
-		{
-			return( length );
-		}
-		
-		public int
-		getProofLayers()
-		{
-			return( proof_layers );
-		}
-		
-		public byte[][]
-		getHashes()
-		{
-			return( hashes );
 		}
 	}
 }

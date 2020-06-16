@@ -649,7 +649,12 @@ RDResumeHandler
 
 					for ( int i=0;i<piece_hashes.length;i++){
 
-						hash_map.put( piece_hashes[i], i );
+						byte[] hash = piece_hashes[i];
+						
+						if ( hash != null ){
+						
+							hash_map.put( hash, i );
+						}
 					}
 
 					for ( DiskManagerCheckRequest request: failed_pieces ){

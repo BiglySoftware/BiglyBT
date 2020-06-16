@@ -3530,16 +3530,24 @@ public class ManagerUtils {
 
 															byte[] required_hash = pieces[piece_number];
 															
-															ConcurrentHasherRequest req = 
-																hasher.addRequest( 
-																	ByteBuffer.wrap( buffer ), 
-																	required_hash.length==20?1:2,
-																	(int)piece_size,
-																	to_file.getLength());
-
-															byte[] hash = req.getResult();
-
-															boolean	match = Arrays.equals( required_hash, hash );
+															boolean match;
+															
+															if ( required_hash != null ){
+																ConcurrentHasherRequest req = 
+																	hasher.addRequest( 
+																		ByteBuffer.wrap( buffer ), 
+																		required_hash.length==20?1:2,
+																		(int)piece_size,
+																		to_file.getLength());
+	
+																byte[] hash = req.getResult();
+	
+																match = Arrays.equals( required_hash, hash );
+																
+															}else{
+																
+																match = false;
+															}
 
 															if ( match ){
 

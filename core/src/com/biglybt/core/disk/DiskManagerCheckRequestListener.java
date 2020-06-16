@@ -40,4 +40,24 @@ DiskManagerCheckRequestListener
 	checkFailed(
 		DiskManagerCheckRequest 	request,
 		Throwable		 			cause );
+	
+	public default boolean
+	hashRequest(
+		int							piece_number,
+		HashListener				listener )
+	{
+		return( false );
+	}
+	
+	public interface
+	HashListener
+	{
+		public int
+		getPieceNumber();
+		
+		public void
+		complete(
+			boolean success );
+	}
+		
 }

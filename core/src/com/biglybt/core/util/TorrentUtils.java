@@ -45,7 +45,6 @@ import com.biglybt.core.logging.LogRelation;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.torrent.*;
-import com.biglybt.core.torrent.impl.TorrentOpenFileOptions;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pifimpl.local.utils.resourcedownloader.ResourceDownloaderFactoryImpl;
 import com.biglybt.util.MapUtils;
@@ -130,6 +129,7 @@ TorrentUtils
 	public static final String		TORRENT_AZ_PROP_INITIAL_LINKAGE			= "initial_linkage";
 	public static final String		TORRENT_AZ_PROP_INITIAL_LINKAGE2		= "initial_linkage2";
 	public static final String		TORRENT_AZ_PROP_ORIGINAL_HASH			= "original_hash";
+	public static final String		TORRENT_AZ_PROP_HASHTREE_STATE			= "hash_tree";
 
 	private static final String		MEM_ONLY_TORRENT_PATH		= "?/\\!:mem_only:!\\/?";
 
@@ -2324,6 +2324,45 @@ TorrentUtils
 
 		try{
 			return((byte[])m.get( TORRENT_AZ_PROP_ORIGINAL_HASH ));
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+		
+		return( null );
+	}
+	
+	public static void
+	setHashTreeState(
+		TOTorrent		torrent,
+		Map				state )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			if ( state == null ){
+				
+				m.remove( TORRENT_AZ_PROP_HASHTREE_STATE );
+				
+			}else{
+			
+				m.put( TORRENT_AZ_PROP_HASHTREE_STATE, state );
+			}
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+	}
+	
+	public static Map
+	getHashTreeState(
+		TOTorrent		torrent )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			return(Map)m.get( TORRENT_AZ_PROP_HASHTREE_STATE );
 
 		}catch( Throwable e ){
 

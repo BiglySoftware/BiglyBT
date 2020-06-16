@@ -1513,7 +1513,7 @@ implements PEPeerTransport
 				}
 			}else{
 				
-				manager.sendingRequest( this, request );
+				manager.getHashHandler().sendingRequest( this, request );
 
 				connection.getOutgoingMessageQueue().addMessage( new BTRequest( pieceNumber, pieceOffset, pieceLength, other_peer_request_version ), false );
 			}
@@ -4052,11 +4052,11 @@ implements PEPeerTransport
 	{
 		try{
 
-			HashReply reply = manager.receivedHashRequest( this, request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers());
+			byte[][] reply = manager.getHashHandler().receivedHashRequest( this, request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers());
 				
 			if ( reply != null ){
 			
-				BTHashes	bt_hashes = new BTHashes( request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers(), reply.getHashes(), other_peer_hashes_version );
+				BTHashes	bt_hashes = new BTHashes( request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers(), reply, other_peer_hashes_version );
 
 				connection.getOutgoingMessageQueue().addMessage( bt_hashes, false );		
 
@@ -4078,7 +4078,7 @@ implements PEPeerTransport
 	{
 		try{
 			
-			manager.receivedHashes( this, hashes.getPiecesRoot(), hashes.getBaseLayer(), hashes.getIndex(), hashes.getLength(), hashes.getProofLayers(), hashes.getHashes());
+			manager.getHashHandler().receivedHashes( this, hashes.getPiecesRoot(), hashes.getBaseLayer(), hashes.getIndex(), hashes.getLength(), hashes.getProofLayers(), hashes.getHashes());
 			
 		}finally{
 			
@@ -4092,7 +4092,7 @@ implements PEPeerTransport
 	{
 		try{
 		
-			manager.rejectedHashes( this, reject.getPiecesRoot(), reject.getBaseLayer(), reject.getIndex(), reject.getLength(), reject.getProofLayers());
+			manager.getHashHandler().rejectedHashes( this, reject.getPiecesRoot(), reject.getBaseLayer(), reject.getIndex(), reject.getLength(), reject.getProofLayers());
 
 		}finally{
 			

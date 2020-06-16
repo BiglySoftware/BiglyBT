@@ -18,6 +18,8 @@
 
 package com.biglybt.core.torrent;
 
+import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
+
 public interface 
 TOTorrentFileHashTree
 {
@@ -26,7 +28,8 @@ TOTorrentFileHashTree
 	
 	public HashRequest
 	requestPieceHash(
-		int		piece_number );
+		int			piece_number,
+		BitFlags	available );
 	
 	public void 
 	receivedHashes(
@@ -37,7 +40,7 @@ TOTorrentFileHashTree
 		int 			proof_layers, 
 		byte[][] 		hashes );
 	
-	public HashReply 
+	public byte[][] 
 	requestHashes(
 		byte[]			root_hash, 
 		int 			base_layer, 
@@ -62,12 +65,5 @@ TOTorrentFileHashTree
 		
 		public int
 		getProofLayers();
-	}
-	
-	public interface
-	HashReply
-	{
-		public byte[][]
-		getHashes();
 	}
 }

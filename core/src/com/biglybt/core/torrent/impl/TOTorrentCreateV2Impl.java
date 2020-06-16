@@ -28,6 +28,7 @@ import com.biglybt.core.util.ByteEncodedKeyHashMap;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SHA256;
+import com.biglybt.core.util.TorrentUtils;
 
 import java.security.*;
 
@@ -464,6 +465,17 @@ TOTorrentCreateV2Impl
 		
 		Map piece_layers = torrent.getAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS );
 		
+		Map hash_tree_state;
+		
+		if ( piece_layers == null ){
+			
+			hash_tree_state = TorrentUtils.getHashTreeState( torrent );
+			
+		}else{
+			
+			hash_tree_state = null;
+		}
+		
 		/*
 		 * torrent spec says piece layers must be present. however, for magnet downloads this isn't the case
 		 * as the piece hashes are grabbed during download. Relax this so that in general we'll grab them
@@ -478,7 +490,7 @@ TOTorrentCreateV2Impl
 		
 			if ( file.isPadFile()){
 				
-				continue;	// artifical entry
+				continue;	// artificial entry
 			}
 			
 			long length = file.getLength();
@@ -497,13 +509,37 @@ TOTorrentCreateV2Impl
 				
 					int file_pieces = file.getNumberOfPieces();
 					
-					byte[] piece_layer = piece_layers==null?null:(byte[])piece_layers.get( new String( pieces_root, Constants.BYTE_ENCODING_CHARSET ));
+					String root_key = new String( pieces_root, Constants.BYTE_ENCODING_CHARSET );
+					
+					byte[] piece_layer = piece_layers==null?null:(byte[])piece_layers.get( root_key );
 					
 					if ( piece_layer == null ){
 						
-						for ( int i=0;i<file_pieces;i++ ){
-																					
-							pieces[piece_num++] = null;		// don't have this piece hash yet
+						Map state;
+						
+						if ( hash_tree_state != null ){
+							
+							state = (Map)hash_tree_state.get( String.valueOf( file.getIndex()));
+							
+						}else{
+							
+							state = null;
+						}
+						
+						if ( state == null ){
+							
+							for ( int i=0;i<file_pieces;i++ ){
+																						
+								pieces[piece_num++] = null;		// don't have this piece hash yet
+							}
+						}else{
+							
+							List<byte[]> imported_pieces = tree.importState( state );
+							
+							for ( byte[] hash: imported_pieces ){
+								
+								pieces[piece_num++] = hash;
+							}
 						}
 					}else{
 					

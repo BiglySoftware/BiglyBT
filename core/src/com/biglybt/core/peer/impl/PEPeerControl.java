@@ -28,11 +28,9 @@ package com.biglybt.core.peer.impl;
 
 import java.util.Map;
 
-import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peermanager.peerdb.PeerItem;
-import com.biglybt.core.torrent.TOTorrentFileHashTree.HashReply;
 
 
 public interface
@@ -147,39 +145,6 @@ PEPeerControl
 	statsReply(
 		PEPeerTransport		originator,
 		Map					reply );
-
-	public void
-	sendingRequest(
-		PEPeerTransport				peer,
-		DiskManagerReadRequest		request );
-	
-	public void
-	receivedHashes(
-		PEPeerTransport		peer,
-		byte[]				root_hash,
-		int					base_layer,
-		int					index,
-		int					length,
-		int					proof_layers,
-		byte[][]			hashes );
-	
-	public HashReply
-	receivedHashRequest(
-		PEPeerTransport		peer,
-		byte[]				root_hash,
-		int					base_layer,
-		int					index,
-		int					length,
-		int					proof_layers );
-	
-	public void
-	rejectedHashes(
-		PEPeerTransport		peer,
-		byte[]				root_hash,
-		int					base_layer,
-		int					index,
-		int					length,
-		int					proof_layers );			
 	
 	public boolean isRTA();
 
@@ -187,4 +152,7 @@ PEPeerControl
 	peerDiscovered(
 		PEPeerTransport		finder,
 		PeerItem			pi );
+	
+	public PEPeerControlHashHandler
+	getHashHandler();
 }

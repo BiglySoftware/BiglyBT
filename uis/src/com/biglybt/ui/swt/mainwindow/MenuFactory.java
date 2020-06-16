@@ -1600,7 +1600,7 @@ public class MenuFactory
 
 					content.append("Size:\t").append(DisplayFormatters.formatByteCountToKiBEtc(torrent.getSize())).append(", piece size=")
 						.append(DisplayFormatters.formatByteCountToKiBEtc(torrent.getPieceLength())).append(", piece count=")
-						.append(torrent.getPieces().length).append(NL);
+						.append(torrent.getNumberOfPieces()).append(NL);
 
 					if ( torrent.getPrivate()){
 

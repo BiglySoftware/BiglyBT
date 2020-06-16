@@ -32,6 +32,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.DiskManager.GettingThere;
+import com.biglybt.core.disk.DiskManagerCheckRequestListener.HashListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipfilter.*;
 import com.biglybt.core.logging.*;
@@ -68,7 +69,6 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.torrent.TOTorrentFileHashTree;
-import com.biglybt.core.torrent.TOTorrentFileHashTree.HashReply;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
@@ -96,9 +96,9 @@ import com.biglybt.pif.peers.PeerDescriptor;
 @SuppressWarnings("serial")
 public class
 PEPeerControlImpl
-extends LogRelation
-implements 	PEPeerControl, DiskManagerWriteRequestListener, PeerControlInstance, PeerNATInitiator,
-DiskManagerCheckRequestListener, IPFilterListener
+	extends LogRelation
+	implements 	PEPeerControl, DiskManagerWriteRequestListener, PeerControlInstance, PeerNATInitiator,
+				DiskManagerCheckRequestListener, IPFilterListener
 {
 	private static final LogIDs LOGID = LogIDs.PEER;
 
@@ -246,8 +246,6 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 	protected final PEPeerManagerAdapter	adapter;
 	private final TOTorrent					torrent;
-	private final ByteArrayHashMap<TOTorrentFileHashTree>		torrent_v2_file_map;
-	private final Map<Integer,PEPeerTransport>					hash_requests;
 	
 	private final DiskManager           disk_mgr;
 	private final DiskManagerPiece[]    dm_pieces;
@@ -275,6 +273,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private final byte[]        		_myPeerId;
 	private PEPeerManagerStatsImpl      _stats;
 
+	private final PEPeerControlHashHandler	hash_handler;
+	
 	//private final TRTrackerAnnouncer _tracker;
 	//  private int _maxUploads;
 	private int		stats_tick_count;
@@ -570,24 +570,68 @@ DiskManagerCheckRequestListener, IPFilterListener
 			
 		if ( torrent.getTorrentType() == TOTorrent.TT_V2 ){
 			
-			hash_requests = new HashMap<Integer, PEPeerTransport>();
-			
-			torrent_v2_file_map = new ByteArrayHashMap<TOTorrentFileHashTree>();
-			
-			for ( TOTorrentFile file: torrent.getFiles()){
-				
-				TOTorrentFileHashTree hash_tree = file.getHashTree();
-				
-				if ( hash_tree != null ){
-				
-					torrent_v2_file_map.put( hash_tree.getRootHash(),  hash_tree );
-				}
-			}
+			hash_handler 	= new PEPeerControlHashHandlerImpl( this, torrent, disk_mgr );
+
 		}else{
 			
-			hash_requests	= null;
-			
-			torrent_v2_file_map = null;
+			hash_handler	=
+				new PEPeerControlHashHandler()
+				{
+					public void
+					sendingRequest(
+						PEPeerTransport				peer,
+						DiskManagerReadRequest		request )
+					{
+					}
+					
+					public boolean 
+					hashRequest(
+						int 			piece_number, 
+						HashListener 	listener)
+					{
+						return( false );
+					}
+					
+					public void
+					receivedHashes(
+						PEPeerTransport		peer,
+						byte[]				root_hash,
+						int					base_layer,
+						int					index,
+						int					length,
+						int					proof_layers,
+						byte[][]			hashes )
+					{
+					}
+					
+					public byte[][]
+					receivedHashRequest(
+						PEPeerTransport		peer,
+						byte[]				root_hash,
+						int					base_layer,
+						int					index,
+						int					length,
+						int					proof_layers )
+					{
+						return( null );
+					}
+					
+					public void
+					rejectedHashes(
+						PEPeerTransport		peer,
+						byte[]				root_hash,
+						int					base_layer,
+						int					index,
+						int					length,
+						int					proof_layers )
+					{
+					}
+					
+					@Override
+					public void update()
+					{						
+					}
+				};
 		}
 		
 		is_private_torrent = torrent.getPrivate();
@@ -936,6 +980,11 @@ DiskManagerCheckRequestListener, IPFilterListener
 							}
 						}
 					}
+				}
+				
+				if ( mainloop_loop_count % MAINLOOP_FIVE_SECOND_INTERVAL == 0 ){
+					
+					hash_handler.update();
 				}
 			}else{
 				// if we're not finished
@@ -1602,6 +1651,15 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 		
 		nbBytesRemaining	= remaining;
+	}
+	
+	@Override
+	public boolean 
+	hashRequest(
+		int piece_number, 
+		HashListener listener)
+	{
+		return( hash_handler.hashRequest(piece_number, listener));
 	}
 
 	/** Checks given piece to see if it's active but empty, and if so deactivates it.
@@ -2288,6 +2346,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 			return;
 		}
 
+		hash_handler.update();
+		
 		final long now =SystemTime.getCurrentTime();
 
 		//for every connection
@@ -6145,129 +6205,6 @@ DiskManagerCheckRequestListener, IPFilterListener
 			}
 		}
 	}
-
-	@Override
-	public void
-	sendingRequest(
-		PEPeerTransport				peer,
-		DiskManagerReadRequest		request )
-	{
-		if ( torrent_v2_file_map != null ){
-			
-			int piece_number = request.getPieceNumber();
-						
-			try{
-				if ( torrent.getPieces()[ piece_number ] == null ){
-			
-					synchronized( hash_requests ){
-						
-						if ( hash_requests.containsKey( piece_number )){
-							
-							return;
-						}
-						
-						hash_requests.put( piece_number, peer );
-					}
-				
-
-					TOTorrentFile file = disk_mgr.getPieceList( piece_number ).get(0).getFile().getTorrentFile();
-					
-					TOTorrentFileHashTree tree = file.getHashTree();
-											
-					TOTorrentFileHashTree.HashRequest hash_req = tree.requestPieceHash( piece_number );
-					
-					if ( hash_req != null ){
-						
-						peer.sendHashRequest( hash_req );
-					}
-				}
-			}catch( Throwable e ){
-				
-				Debug.out( e );
-			}
-		}
-	}
-	
-	@Override
-	public void 
-	receivedHashes(
-		PEPeerTransport peer, 
-		byte[]			root_hash, 
-		int 			base_layer, 
-		int 			index, 
-		int 			length,
-		int 			proof_layers, 
-		byte[][] 		hashes)
-	{
-		if ( torrent_v2_file_map != null ){
-						
-			try{
-				TOTorrentFileHashTree tree = torrent_v2_file_map.get( root_hash );
-
-				if ( tree != null ){
-				
-					tree.receivedHashes( root_hash, base_layer,	index, length, proof_layers, hashes );
-				}
-			}catch( Throwable e ){
-				
-				Debug.out( e );
-			}
-		}
-	}
-	
-	@Override
-	public HashReply
-	receivedHashRequest(
-		PEPeerTransport		peer,
-		byte[]				root_hash,
-		int					base_layer,
-		int					index,
-		int					length,
-		int					proof_layers )
-	{
-		if ( torrent_v2_file_map != null ){
-			
-			try{
-				TOTorrentFileHashTree tree = torrent_v2_file_map.get( root_hash );
-
-				if ( tree != null ){
-				
-					return( tree.requestHashes( root_hash, base_layer,	index, length, proof_layers ));
-				}
-			}catch( Throwable e ){
-				
-				Debug.out( e );
-			}
-		}
-		
-		return( null );
-	}
-	
-	@Override
-	public void 
-	rejectedHashes(
-		PEPeerTransport peer, 
-		byte[]			root_hash, 
-		int 			base_layer, 
-		int 			index, 
-		int 			length,
-		int 			proof_layers )
-	{
-		if ( torrent_v2_file_map != null ){
-			
-			try{
-				
-				TOTorrentFileHashTree tree = torrent_v2_file_map.get( root_hash );
-
-				if ( tree != null ){
-				
-				}
-			}catch( Throwable e ){
-				
-				Debug.out( e );
-			}			
-		}
-	}
 	
 	@Override
 	public TrackerPeerSource
@@ -6368,6 +6305,13 @@ DiskManagerCheckRequestListener, IPFilterListener
         	
         	asfe_activated = false;
         }
+	}
+	
+	@Override
+	public PEPeerControlHashHandler 
+	getHashHandler()
+	{
+		return( hash_handler );
 	}
 	
 	@Override

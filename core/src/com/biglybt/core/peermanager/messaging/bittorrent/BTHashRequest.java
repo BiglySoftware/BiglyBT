@@ -84,7 +84,7 @@ BTHashRequest
 	getDescription() {
 		if ( description == null ){
 			
-			description = BTMessage.ID_BT_HASH_REQUEST + (pieces_root==null?"null":ByteFormatter.encodeString(pieces_root)) + ": b=" + base_layer + ",i=" + index + ",l=" +length + ",p=" + proof_layers;
+			description = BTMessage.ID_BT_HASH_REQUEST + " " + (pieces_root==null?"null":ByteFormatter.encodeString(pieces_root)) + ": b=" + base_layer + ",i=" + index + ",l=" +length + ",p=" + proof_layers;
 		}
 
 		return description;

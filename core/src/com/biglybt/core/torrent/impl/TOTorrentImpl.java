@@ -461,6 +461,52 @@ TOTorrentImpl
 
 				}
 			}
+		}else{
+			
+			if ( getAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS ) == null ){
+			
+				ByteEncodedKeyHashMap<String,byte[]>	pl_map 		= new ByteEncodedKeyHashMap<>();
+				
+				Map<String,Object>	hash_tree_state = new HashMap<>();
+
+				boolean complete = true;
+				
+				for ( TOTorrentFileImpl file: files ){
+				
+					if ( file.getLength() > piece_length ){
+						
+						TOTorrentFileHashTreeImpl tree = file.getHashTree();
+						
+						byte[] root_hash = tree.getRootHash();
+						
+						byte[] piece_layer = tree.getPieceLayer();
+				
+						if ( piece_layer == null ){
+							
+							complete = false;
+							
+							hash_tree_state.put( String.valueOf( file.getIndex()), tree.exportState());
+							
+						}else{
+						
+							pl_map.put( new String( root_hash, Constants.BYTE_ENCODING_CHARSET ), piece_layer );
+						}
+					}
+				}
+				
+				if ( complete ){
+										
+					setAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS, pl_map );
+					
+				}else{
+					
+					
+					TorrentUtils.setHashTreeState( this, hash_tree_state );
+				}
+			}else{
+				
+				TorrentUtils.setHashTreeState( this, null );
+			}
 		}
 		
 		info.put( TK_NAME, torrent_name );
