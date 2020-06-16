@@ -64,4 +64,7 @@ PEPeerControlHashHandler
 	
 	public void
 	update();
+	
+	public void
+	stop();
 }

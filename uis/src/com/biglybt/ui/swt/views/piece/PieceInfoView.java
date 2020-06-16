@@ -702,39 +702,42 @@ public class PieceInfoView
 		DiskManagerPiece[] dm_pieces = disk_manager == null ? dlm.getDiskManagerPiecesSnapshot() :  disk_manager.getPieces();
 		
 		String text = "";
-		for (int piece_number : piece_numbers) {
-			if (!text.isEmpty()) {
-				text += "\n";
-			}
-				
-			DiskManagerPiece	dm_piece = dm_pieces[ piece_number ];
-			PEPiece 			pm_piece = pm==null?null:pm.getPiece( piece_number );
-	
-			text +=  "Piece " + piece_number + ": " + dm_piece.getString();
-	
-			if ( pm_piece != null ){
-	
-				text += ", active: " + pm_piece.getString();
-	
-			}else{
-	
-				if ( dm_piece.isNeeded() && !dm_piece.isDone() && pm != null ){
-	
-					text += ", inactive: " + pm.getPiecePicker().getPieceString( piece_number );
-				}
-			}
-			
-			text += " - ";
-			
-			DMPieceList l = dm_piece.getPieceList();
-			
-			for ( int i=0;i<l.size();i++) {
-	       
-				DMPieceMapEntry entry = l.get( i );
-				
-				DiskManagerFileInfo info = entry.getFile();
 		
-				text += (i==0?"":"; ") + info.getFile( true ).getName() + ", offset " + entry.getOffset();
+		if ( dm_pieces != null ){
+			for (int piece_number : piece_numbers) {
+				if (!text.isEmpty()) {
+					text += "\n";
+				}
+					
+				DiskManagerPiece	dm_piece = dm_pieces[ piece_number ];
+				PEPiece 			pm_piece = pm==null?null:pm.getPiece( piece_number );
+		
+				text +=  "Piece " + piece_number + ": " + dm_piece.getString();
+		
+				if ( pm_piece != null ){
+		
+					text += ", active: " + pm_piece.getString();
+		
+				}else{
+		
+					if ( dm_piece.isNeeded() && !dm_piece.isDone() && pm != null ){
+		
+						text += ", inactive: " + pm.getPiecePicker().getPieceString( piece_number );
+					}
+				}
+				
+				text += " - ";
+				
+				DMPieceList l = dm_piece.getPieceList();
+				
+				for ( int i=0;i<l.size();i++) {
+		       
+					DMPieceMapEntry entry = l.get( i );
+					
+					DiskManagerFileInfo info = entry.getFile();
+			
+					text += (i==0?"":"; ") + info.getFile( true ).getName() + ", offset " + entry.getOffset();
+				}
 			}
 		}
 		

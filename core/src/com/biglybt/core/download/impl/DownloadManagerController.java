@@ -1348,6 +1348,13 @@ DownloadManagerController
 	}
 
 	@Override
+	public void 
+	saveState()
+	{
+		download_manager.getDownloadState().save( false );
+	}
+	
+	@Override
 	public boolean
 	isPeerSourceEnabled(
 		String		peer_source )

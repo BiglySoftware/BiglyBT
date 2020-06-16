@@ -23,8 +23,14 @@ import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 public interface 
 TOTorrentFileHashTree
 {
+	public TOTorrentFile
+	getFile();
+	
 	public byte[]
 	getRootHash();
+	
+	public boolean
+	isPieceLayerComplete();
 	
 	public HashRequest
 	requestPieceHash(

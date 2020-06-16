@@ -487,6 +487,12 @@ LWSPeerManagerAdapter
 	}
 
 	@Override
+	public void 
+	saveState()
+	{
+	}
+	
+	@Override
 	public LogRelation
 	getLogRelation()
 	{

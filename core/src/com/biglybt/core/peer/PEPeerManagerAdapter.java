@@ -211,4 +211,7 @@ PEPeerManagerAdapter
 
 	public int getPermittedBytesToSend();
 	public void	permittedSendBytesUsed(	int bytes );
+	
+	public void
+	saveState();
 }

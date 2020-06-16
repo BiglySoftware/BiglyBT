@@ -485,8 +485,12 @@ TOTorrentImpl
 							
 							complete = false;
 							
-							hash_tree_state.put( String.valueOf( file.getIndex()), tree.exportState());
+							Map export = tree.exportState();
 							
+							if ( export != null ){
+								
+								hash_tree_state.put( String.valueOf( file.getIndex()), export );
+							}
 						}else{
 						
 							pl_map.put( new String( root_hash, Constants.BYTE_ENCODING_CHARSET ), piece_layer );

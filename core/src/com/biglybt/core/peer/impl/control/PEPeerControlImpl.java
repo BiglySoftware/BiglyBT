@@ -631,6 +631,12 @@ PEPeerControlImpl
 					public void update()
 					{						
 					}
+					
+					@Override
+					public void 
+					stop()
+					{
+					}
 				};
 		}
 		
@@ -822,6 +828,8 @@ PEPeerControlImpl
 
 		udp_reconnects.clear();
 
+		hash_handler.stop();
+		
 		is_destroyed = true;
 	}
 

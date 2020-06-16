@@ -23,6 +23,7 @@ import java.util.*;
 
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.torrent.TOTorrentException;
+import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.torrent.TOTorrentFileHashTree;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
@@ -214,6 +215,13 @@ TOTorrentFileHashTreeImpl
 	}
 	
 	@Override
+	public TOTorrentFile 
+	getFile()
+	{
+		return( file );
+	}
+	
+	@Override
 	public byte[] 
 	getRootHash()
 	{
@@ -225,6 +233,25 @@ TOTorrentFileHashTreeImpl
 	{
 		synchronized( tree_lock ){
 
+			byte[]	piece_layer = tree[piece_layer_index];
+			
+			boolean is_empty = true;
+			
+			for ( int i=0;i<piece_layer.length;i++){
+				
+				if ( piece_layer[i] != 0 ){
+			
+					is_empty = false;
+					
+					break;
+				}
+			}
+			
+			if ( is_empty ){
+				
+				return( null );
+			}
+			
 			Map<String,Object>	map = new HashMap<>();
 			
 			for ( int i=1; i <= piece_layer_index; i++ ){
@@ -304,6 +331,43 @@ TOTorrentFileHashTreeImpl
 				
 				return( result );
 			}
+		}
+	}
+	
+	@Override
+	public boolean 
+	isPieceLayerComplete()
+	{
+		if ( piece_layer_index == 0 ){
+			
+			return( true );
+		}
+		
+		synchronized( tree_lock ){
+																												
+			byte[]	tree_layer = tree[piece_layer_index];
+			
+			for ( int i=0; i < tree_layer.length; i+= DIGEST_LENGTH ){
+				
+				boolean	ok = false;
+				
+				for ( int j=i; j<i+DIGEST_LENGTH; j++){
+					
+					if ( tree_layer[j] != 0 ){
+						
+						ok = true;
+						
+						break;
+					}
+				}
+				
+				if ( !ok ){
+					
+					return( false );
+				}
+			}
+			
+			return( true );
 		}
 	}
 	

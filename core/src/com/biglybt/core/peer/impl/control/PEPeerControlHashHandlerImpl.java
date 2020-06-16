@@ -19,6 +19,7 @@
 package com.biglybt.core.peer.impl.control;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.disk.DiskManager;
@@ -26,6 +27,7 @@ import com.biglybt.core.disk.DiskManagerCheckRequestListener.HashListener;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.impl.PEPeerControlHashHandler;
 import com.biglybt.core.peer.impl.PEPeerTransport;
+import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
@@ -51,6 +53,14 @@ PEPeerControlHashHandlerImpl
 	
 	private PeerHashRequest[][]		piece_requests;
 	
+	private AtomicInteger	piece_hashes_received = new AtomicInteger();
+	
+	private boolean			save_done_on_complete;
+	
+	private final Set<TOTorrentFileHashTree>					incomplete_trees 		= new HashSet<>();
+	private final Map<TOTorrentFileHashTree, PeerHashRequest>	incomplete_tree_reqs 	= new HashMap<>();
+	
+	
 	public 
 	PEPeerControlHashHandlerImpl(
 		PEPeerControlImpl	_peer_manager,
@@ -70,7 +80,22 @@ PEPeerControlHashHandlerImpl
 			if ( hash_tree != null ){
 			
 				file_map.put( hash_tree.getRootHash(),  hash_tree );
+				
+				if ( !hash_tree.isPieceLayerComplete()){
+					
+					incomplete_trees.add( hash_tree );
+				}
 			}
+		}
+	}
+	
+	@Override
+	public void 
+	stop()
+	{
+		if ( piece_hashes_received.get() > 0 ){
+			
+			peer_manager.getAdapter().saveState();
 		}
 	}
 	
@@ -78,8 +103,13 @@ PEPeerControlHashHandlerImpl
 	public void 
 	update()
 	{	
-		//List<PEPeer>	peers = peer_manager.getPeers();
-		
+		if ( !save_done_on_complete && disk_manager.getRemaining() == 0 && piece_hashes_received.get() > 0 ){
+			
+			save_done_on_complete = true;
+			
+			peer_manager.getAdapter().saveState();
+		}
+				
 		long now = SystemTime.getMonotonousTime();
 			
 		List<PeerHashRequest>	expired = new ArrayList<>();
@@ -87,61 +117,167 @@ PEPeerControlHashHandlerImpl
 		
 		synchronized( peer_requests ){
 			
-			Iterator<PeerHashRequest>	it = active_requests.iterator();
-			
-			while( it.hasNext()){
+			{
+				Iterator<PeerHashRequest>	request_it = active_requests.iterator();
 				
-				PeerHashRequest peer_request = it.next();
-				
-				boolean remove = false;
-				
-				long age = now - peer_request.getCreateTime();
-				
-				if ( age > 10*1000 ){
-							
-					expired.add( peer_request );
+				while( request_it.hasNext()){
 					
-					remove = true;
+					PeerHashRequest peer_request = request_it.next();
 					
-				}else if ( age > 5*1000 ){
+					boolean remove = false;
 					
-					if ( peer_request.getPeer().getPeerState() != PEPeer.TRANSFERING ){
-												
-						retry.add( peer_request );
+					long age = now - peer_request.getCreateTime();
+					
+					if ( age > 10*1000 ){
+								
+						expired.add( peer_request );
 						
 						remove = true;
-					}
-				}
-				
-				if ( remove ){
-					
-					PEPeerTransport peer = peer_request.getPeer();
-					
-					List<PeerHashRequest> peer_reqs = peer_requests.get( peer );
-
-					if ( peer_reqs == null ){
 						
-						Debug.out( "entry not found" );
+					}else if ( age > 5*1000 ){
 						
-					}else{
-						
-						peer_reqs.remove( peer_request );
-						
-						if ( peer_reqs.isEmpty()){
+						if ( peer_request.getPeer().getPeerState() != PEPeer.TRANSFERING ){
+													
+							retry.add( peer_request );
 							
-							peer_requests.remove( peer );
+							remove = true;
 						}
 					}
 					
-					removeFromPieceRequests( peer_request );
-					
-				}else{
-					
-					break;
+					if ( remove ){
+						
+						request_it.remove();
+						
+						PEPeerTransport peer = peer_request.getPeer();
+						
+						List<PeerHashRequest> peer_reqs = peer_requests.get( peer );
+	
+						if ( peer_reqs == null ){
+							
+							Debug.out( "entry not found" );
+							
+						}else{
+							
+							peer_reqs.remove( peer_request );
+							
+							if ( peer_reqs.isEmpty()){
+								
+								peer_requests.remove( peer );
+							}
+						}
+						
+						removeFromPieceRequests( peer_request );
+						
+						peer_request.setComplete();
+						
+					}else{
+						
+						break;
+					}
 				}
 			}
 			
-			System.out.println( "Active requests: " + active_requests.size() + ", peers=" + peer_requests + ", piece_req=" + piece_requests );
+			if ( incomplete_trees.isEmpty()){
+				
+				if ( !save_done_on_complete && piece_hashes_received.get() > 0 ){
+					
+					save_done_on_complete = true;
+					
+					peer_manager.getAdapter().saveState();
+				}
+			}else{
+				
+				byte[][] pieces = null;
+	
+				int[]		peer_availability 	= null;
+				boolean		has_seeds			= false;
+				
+				Iterator<PeerHashRequest>	request_it = incomplete_tree_reqs.values().iterator();
+				
+				while( request_it.hasNext()){
+					
+					PeerHashRequest peer_request = request_it.next();
+					
+					if ( peer_request.isComplete()){
+						
+						request_it.remove();
+					}
+				}
+				
+				Iterator<TOTorrentFileHashTree> tree_it = incomplete_trees.iterator();
+				
+				while( tree_it.hasNext()){
+					
+					if ( incomplete_tree_reqs.size() >= 10 ){
+						
+						break;
+					}
+					
+					TOTorrentFileHashTree tree = tree_it.next();
+					
+					PeerHashRequest peer_request = incomplete_tree_reqs.get( tree );
+											
+					if ( peer_request == null ){
+						
+						if ( tree.isPieceLayerComplete()){
+							
+							tree_it.remove();
+							
+						}else{
+							
+							if (  pieces == null ){
+								
+								try{
+									pieces = torrent.getPieces();
+									
+								}catch( Throwable e ){
+									
+									break;
+								}
+							}
+							
+							TOTorrentFile file = tree.getFile();
+							
+							int start 	= file.getFirstPieceNumber();
+							int end		= file.getLastPieceNumber();
+							
+							for ( int i=start; i<=end; i++ ){
+								
+								if ( pieces[i] == null ){
+									
+									if ( peer_availability == null ){
+											
+										PiecePicker piece_picker = peer_manager.getPiecePicker();
+										
+										if ( piece_picker.getMinAvailability() >= 1 ){
+											
+											has_seeds = true;
+											
+										}else{
+										
+											peer_availability = piece_picker.getAvailability();
+										}
+									}
+									
+									if ( has_seeds || peer_availability[i] >= 1 ){
+									
+										PeerHashRequest req = hashRequestSupport( i, null );
+										
+										if ( req != null ){
+											
+											incomplete_tree_reqs.put( tree,  req );
+											
+											break;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			System.out.println( "Active requests: " + active_requests.size() + ", peers=" + peer_requests + ", piece_req=" + piece_requests + ", incomplete tree req=" + incomplete_tree_reqs);
 		}
 		
 		for ( PeerHashRequest peer_request: retry ){
@@ -159,7 +295,7 @@ PEPeerControlHashHandlerImpl
 				}
 			}
 		}
-		
+				
 		for ( PeerHashRequest peer_request: expired ){
 			
 			List<HashListener> listeners =  peer_request.getListeners();
@@ -181,7 +317,7 @@ PEPeerControlHashHandlerImpl
 		}
 	}
 	
-	private boolean
+	private PeerHashRequest
 	request(
 		PEPeerTransport		peer,
 		int					piece_number,
@@ -195,9 +331,11 @@ PEPeerControlHashHandlerImpl
 
 		if ( tree == null ){
 			
-			return( false );
+			return( null );
 		}
-				
+			
+		PeerHashRequest	peer_request;
+		
 		synchronized( peer_requests ){
 			
 			if ( piece_requests != null && piece_requests[piece_number] != null ){
@@ -207,24 +345,24 @@ PEPeerControlHashHandlerImpl
 					piece_requests[piece_number][0].addListener( listener_maybe_null );	// add listener to any entry, doesn't matter which
 				}
 				
-				return( true );
+				return( piece_requests[piece_number][0] );
 			}
 							
 			hash_req = tree.requestPieceHash( piece_number, peer.getAvailable());
 			
 			if ( hash_req == null ){
 				
-				return( false );
+				return( null );
 			}
 								
 			if ( active_requests.size() > 1024 ){
 					
 				Debug.out( "Too many active hash requests" );
 					
-				return( false );
+				return( null );
 			}
 				
-			PeerHashRequest	peer_request = new PeerHashRequest( peer, file, hash_req, listener_maybe_null );
+			peer_request = new PeerHashRequest( peer, file, hash_req, listener_maybe_null );
 
 			active_requests.add( peer_request );
 			
@@ -282,7 +420,7 @@ PEPeerControlHashHandlerImpl
 			
 		peer.sendHashRequest( hash_req );
 			
-		return( true );
+		return( peer_request );
 	}
 	
 	@Override
@@ -294,6 +432,15 @@ PEPeerControlHashHandlerImpl
 			// general request for hash, e.g. piece is about to be checked and hash still missing
 			// OR re-request after peer failure
 		
+		return( hashRequestSupport( piece_number, listener ) != null );
+	}
+	
+
+	private PeerHashRequest 
+	hashRequestSupport(
+		int 			piece_number, 
+		HashListener 	listener)
+	{
 		List<PEPeer>	peers = peer_manager.getPeers();
 		
 		PEPeer 	best_peer 		= null;
@@ -314,9 +461,11 @@ PEPeerControlHashHandlerImpl
 				
 				if ( req_count == 0 ){
 					
-					if ( request( (PEPeerTransport)peer, piece_number, listener )){
+					PeerHashRequest res = request( (PEPeerTransport)peer, piece_number, listener );
+					
+					if ( res != null ){
 						
-						return( true );
+						return( res );
 					}
 				}else{
 					
@@ -331,10 +480,14 @@ PEPeerControlHashHandlerImpl
 		
 		if ( best_peer != null ){
 			
-			return( request( (PEPeerTransport)best_peer, piece_number, listener ));
-		}
+			PeerHashRequest res = request( (PEPeerTransport)best_peer, piece_number, listener );
+			
+			return( res );
+			
+		}else{
 		
-		return( false );
+			return( null );
+		}
 	}
 	
 	@Override
@@ -370,6 +523,8 @@ PEPeerControlHashHandlerImpl
 		byte[][] 		hashes)
 	{
 		receivedOrRejectedHashes( peer, root_hash, base_layer, index, length, proof_layers, hashes );
+		
+		piece_hashes_received.addAndGet( length );
 	}
 	
 	private void
@@ -437,6 +592,8 @@ PEPeerControlHashHandlerImpl
 							}
 							
 							removeFromPieceRequests( match );							
+							
+							match.setComplete();
 							
 							listeners = match.getListeners();
 						}
@@ -590,6 +747,8 @@ PEPeerControlHashHandlerImpl
 		
 		List<HashListener>		listeners;
 		
+		boolean	completed;
+		
 		private
 		PeerHashRequest(
 			PEPeerTransport		_peer,
@@ -649,6 +808,18 @@ PEPeerControlHashHandlerImpl
 		getListeners()
 		{
 			return( listeners );
+		}
+		
+		private void
+		setComplete()
+		{
+			completed = true;
+		}
+		
+		private boolean
+		isComplete()
+		{
+			return( completed );
 		}
 	}
 }
