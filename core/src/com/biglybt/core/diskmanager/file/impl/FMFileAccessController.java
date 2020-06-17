@@ -249,7 +249,7 @@ FMFileAccessController
 
 			if ( file.exists()){
 
-				fa = new FileAccessorRAF( file, FMFileImpl.WRITE_ACCESS_MODE);
+				fa = FileUtil.newFileAccessor( file, FMFileImpl.WRITE_ACCESS_MODE);
 
 					// due to the simplistic implementation of compact we only actually need to deal with
 					// the last piece of the file (first piece is in the right place already)

@@ -577,7 +577,7 @@ FMFileImpl
 
 		file_access.aboutToOpen();
 
-		fa = new FMFileAccessController.FileAccessorRAF( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+		fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
 		last_modified = linked_file.lastModified();
 		
@@ -600,7 +600,7 @@ FMFileImpl
 		try{
 			file_access.aboutToOpen();
 
-			fa = new FMFileAccessController.FileAccessorRAF( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+			fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
 			last_modified = linked_file.lastModified();
 			
@@ -618,7 +618,7 @@ FMFileImpl
 
 				linked_file.createNewFile();
 
-				fa = new FMFileAccessController.FileAccessorRAF( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+				fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
 				last_modified = linked_file.lastModified();
 				
