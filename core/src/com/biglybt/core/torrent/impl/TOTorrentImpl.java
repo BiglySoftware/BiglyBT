@@ -590,6 +590,59 @@ TOTorrentImpl
 	}
 	
 	@Override
+	public boolean
+	isExportable()
+	{
+		if ( torrent_type == TT_V2 ){
+			
+			return( getAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS ) != null );
+		}
+		
+		return( true );
+	}
+	
+	@Override
+	public boolean
+	updateExportability(
+		TOTorrent		from )
+	{
+		if ( torrent_type == TT_V2 ){
+			
+			if ( isExportable()){
+				
+				return( true );
+			}
+			
+			try{
+				if ( !Arrays.equals( getHash(), from.getHash())){
+					
+					return( false );
+				}
+				
+				Map piece_layers = (Map)from.getAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS );
+				
+				if ( piece_layers == null ){
+					
+					return( false );
+				}
+				
+				setAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS, piece_layers );
+				
+				return( true );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+				
+				return( false );
+			}
+		}else{
+			
+			return( true );
+		}
+	}
+	
+	@Override
 	public byte[]
 	getName()
 	{

@@ -87,6 +87,8 @@ DownloadManagerState
 	public static final String AT_FILE_FLAGS				= "ff";
 	public static final String AT_FILE_ALLOC_STRATEGY		= "fas";			// long
 	public static final String AT_TRACKER_SESSION_STATS		= "tss";			// Map
+	public static final String AT_TORRENT_SAVE_TIME			= "tst";			// long
+	public static final String AT_TORRENT_EXPORT_PROPAGATED	= "tep";			// bool
 	
 	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
 

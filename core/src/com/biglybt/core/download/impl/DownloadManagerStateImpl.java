@@ -4167,6 +4167,31 @@ DownloadManagerStateImpl
     		return( TOTorrent.TT_V1 );
     	}
 	  	
+		@Override
+		public boolean 
+		isExportable()
+		{
+			if ( fixup()){
+
+				return( delegate.isExportable());
+			}
+			
+			return( false );
+		}
+	  	
+		@Override
+		public boolean 
+		updateExportability(
+			TOTorrent from )
+		{
+			if ( fixup()){
+
+				return( delegate.updateExportability( from ));
+			}
+			
+			return( false );
+		}
+		
     	@Override
 	    public boolean
     	isSimpleTorrent()

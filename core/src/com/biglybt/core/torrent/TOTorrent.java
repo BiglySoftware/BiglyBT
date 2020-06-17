@@ -60,6 +60,26 @@ TOTorrent
 	public int
 	getTorrentType();
 	
+		/**
+		 * Is the torrent in a fit state to export and share?
+		 * @return
+		 */
+	
+	public boolean
+	isExportable();
+	
+		/**
+		 * Propagate exportability from another torrent to this one - has to have same hash. Required because
+		 * an internal torrent can become exportable whilst the 'saved' (unexportable) original torrent is sitting there
+		 * untouched...
+		 * @param from
+		 * @return
+		 */
+	
+	public boolean
+	updateExportability(
+		TOTorrent	from );	
+
 	/**
 	 * Get the name of the torrent
 	 * @return

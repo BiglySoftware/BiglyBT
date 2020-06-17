@@ -1988,6 +1988,8 @@ public class TorrentMenuFancy
 							}
 						});
 				row.getText().setText(title);
+				
+				row.setEnabled( dms[0].getTorrent().isExportable());
 			}
 
 			// Advanced > Export > Export Torrent
@@ -2002,6 +2004,15 @@ public class TorrentMenuFancy
 			});
 			row.getText().setText(title);
 
+			boolean canExport = true;
+			for ( DownloadManager dm: dms ){
+				if ( !dm.getTorrent().isExportable()){
+					canExport = false;
+				}
+			}
+			
+			row.setEnabled( canExport );
+			
 			// Advanced > Export > WebSeed URL
 			createRow(detailArea, "MyTorrentsView.menu.exporthttpseeds", null,
 					new ListenerDMTask(dms) {

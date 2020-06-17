@@ -488,7 +488,7 @@ LWSPeerManagerAdapter
 
 	@Override
 	public void 
-	saveState()
+	saveTorrentState()
 	{
 	}
 	

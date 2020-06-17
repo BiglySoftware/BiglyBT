@@ -120,6 +120,21 @@ LWSTorrent
 		return( TT_V1 );
 	}
 	
+	@Override
+	public boolean 
+	isExportable()
+	{
+		return( true );
+	}
+	
+	@Override
+	public boolean
+	updateExportability(
+		TOTorrent		from )
+	{
+		return( true );
+	}
+	
 	protected TOTorrent
 	getDelegate()
 	{

@@ -1349,9 +1349,31 @@ DownloadManagerController
 
 	@Override
 	public void 
-	saveState()
+	saveTorrentState()
 	{
-		download_manager.getDownloadState().save( false );
+		DownloadManagerState dms = download_manager.getDownloadState();
+	
+		TOTorrent dms_torrent = dms.getTorrent();
+		
+		if ( dms_torrent.getTorrentType() == TOTorrent.TT_V2 ){
+		
+			if ( !dms.getBooleanAttribute( DownloadManagerState.AT_TORRENT_EXPORT_PROPAGATED )){
+
+					// this attribute is a hack to get the torrent to be serialised via the 'save'
+				
+				dms.setLongAttribute( DownloadManagerState.AT_TORRENT_SAVE_TIME, SystemTime.getCurrentTime());	
+			
+				dms.save( false );
+			
+				if ( dms_torrent.isExportable()){
+				
+					if ( TorrentUtils.propagateExportability( dms_torrent, new File( download_manager.getTorrentFileName()))){
+						
+						dms.setBooleanAttribute( DownloadManagerState.AT_TORRENT_EXPORT_PROPAGATED, true );
+					}
+				}
+			}
+		}
 	}
 	
 	@Override

@@ -78,6 +78,21 @@ TRHostExternalTorrent
 	}
 	
 	@Override
+	public boolean 
+	isExportable()
+	{
+		return( true );
+	}
+	
+	@Override
+	public boolean
+	updateExportability(
+		TOTorrent		from )
+	{
+		return( true );
+	}
+	
+	@Override
 	public byte[]
 	getName()
 	{

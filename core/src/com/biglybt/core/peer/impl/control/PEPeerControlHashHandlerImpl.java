@@ -95,7 +95,7 @@ PEPeerControlHashHandlerImpl
 	{
 		if ( piece_hashes_received.get() > 0 ){
 			
-			peer_manager.getAdapter().saveState();
+			peer_manager.getAdapter().saveTorrentState();
 		}
 	}
 	
@@ -107,7 +107,7 @@ PEPeerControlHashHandlerImpl
 			
 			save_done_on_complete = true;
 			
-			peer_manager.getAdapter().saveState();
+			peer_manager.getAdapter().saveTorrentState();
 		}
 				
 		long now = SystemTime.getMonotonousTime();
@@ -183,7 +183,7 @@ PEPeerControlHashHandlerImpl
 					
 					save_done_on_complete = true;
 					
-					peer_manager.getAdapter().saveState();
+					peer_manager.getAdapter().saveTorrentState();
 				}
 			}else{
 				

@@ -3266,6 +3266,21 @@ TorrentUtils
 		}
 		
 		@Override
+		public boolean 
+		isExportable()
+		{
+			return( delegate.isExportable());
+		}
+		
+		@Override
+		public boolean
+		updateExportability(
+			TOTorrent		from )
+		{
+			return( delegate.updateExportability( from ));
+		}
+		
+		@Override
 		public boolean
 		isSimpleTorrent()
 		{
@@ -5534,6 +5549,38 @@ TorrentUtils
 				return( Long.MAX_VALUE );
 			}
 			return( SystemTime.getMonotonousTime() - torrent_delete_time );
+		}
+	}
+	
+	public static boolean
+	propagateExportability(
+		TOTorrent		source,
+		File			dest )
+	{
+		try{
+			TOTorrent target = TOTorrentFactory.deserialiseFromBEncodedFile( dest );
+			
+			if ( target.isExportable()){
+				
+				return( true );
+			}
+			
+			if ( target.updateExportability( source )){
+				
+				target.serialiseToBEncodedFile( dest );
+				
+				return( true );
+				
+			}else{
+				
+				return( false );
+			}
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+			return( false );
 		}
 	}
 
