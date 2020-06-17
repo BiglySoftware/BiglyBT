@@ -2329,8 +2329,20 @@ public class TorrentUtil
 
 		boolean scrape_stopped = COConfigurationManager.getBooleanParameter("Tracker Client Scrape Stopped Enable");
 
-		boolean manualScrape = (!scrape_enabled)
-				|| ((!scrape_stopped) && allStopped);
+		boolean manualScrape;
+		
+		if ( !scrape_enabled ){
+			
+			manualScrape = false;
+
+		}else if ( !scrape_stopped ){
+			
+			manualScrape = false;
+			
+		}else{
+			
+			manualScrape = allStopped;
+		}
 
 		final MenuItem itemManualScrape = new MenuItem(menuTracker, SWT.PUSH);
 		Messages.setLanguageText(itemManualScrape,
