@@ -43,6 +43,7 @@ import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.diskmanager.file.impl.FMFileAccess.FileAccessor;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -68,6 +69,7 @@ public class FileUtil {
 
   private static char[]	char_conversion_mapping = null;
 
+  private static final FileHandler fileHandling;
 
   static {
 
@@ -78,7 +80,22 @@ public class FileUtil {
 	  {
 		  reflectOnUsableSpace = null;
 	  }
-  }
+
+		String fileHandlingCN = System.getProperty("az.FileHandling.impl",
+			"");
+	  // To test:
+	  // fileHandlingCN = FileHandlerHack.class.getName();
+		FileHandler fileHandlingImpl = null;
+	  if (!fileHandlingCN.isEmpty()) {
+			try {
+				Class<FileHandler> cla = (Class<FileHandler>) Class.forName(fileHandlingCN);
+				fileHandlingImpl = cla.newInstance();
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
+		}
+		fileHandling = fileHandlingImpl == null ? new FileHandler() : fileHandlingImpl;
+	}
 
   public static boolean
   areFilePathsIdentical(
@@ -139,26 +156,7 @@ public class FileUtil {
   getCanonicalFileSafe(
 	 File		file )
   {
-	  try{
-		  if ( file.exists()){
-			  
-			  File parent = file.getParentFile();
-			  
-			  if ( parent == null ){
-				  
-				  return( file );
-			  }
-			  
-			  return( newFile( file.getParentFile().getCanonicalFile(), file.getName()));
-			  
-		  }else{
-			  
-			  return( file.getCanonicalFile());
-		  }
-	  }catch( Throwable e ){
-		  
-		  return( file.getAbsoluteFile());
-	  }
+		return fileHandling.getCanonicalFileSafe(file);
   }
   
   /**
@@ -171,40 +169,11 @@ public class FileUtil {
   getCanonicalPathSafe(
 	 File		file )
   {
-	  try{
-		  if ( file.exists()){
-			  
-			  File parent = file.getParentFile();
-			  
-			  if ( parent == null ){
-				  
-				  return( file.getAbsolutePath());
-			  }
-			  
-			  return( newFile( file.getParentFile().getCanonicalFile(), file.getName()).getAbsolutePath());
-			  
-		  }else{
-			  
-			  return( file.getCanonicalPath());
-		  }
-	  }catch( Throwable e ){
-		  
-		  return( file.getAbsolutePath());
-	  }
+		return fileHandling.getCanonicalPathSafe(file);
   }
   
   public static boolean isAncestorOf(File _parent, File _child) {
-	  File parent = canonise(_parent);
-	  File child = canonise(_child);
-	  if (parent.equals(child)) {
-		  return( areFilePathsIdentical( _parent, _child ));
-	  }
-	  String parent_s = parent.getPath();
-	  String child_s = child.getPath();
-	  if (parent_s.charAt(parent_s.length()-1) != File.separatorChar) {
-		  parent_s += File.separatorChar;
-	  }
-	  return child_s.startsWith(parent_s);
+  	return fileHandling.isAncestorOf(_parent, _child);
   }
 
   public static File canonise(File file) {
@@ -693,7 +662,7 @@ public class FileUtil {
 			  //System.out.println( "same length for " + file_name );
 			  
 			  try{
-				  BufferedInputStream	bin = new BufferedInputStream( new FileInputStream(existing), encoded_data.length );
+				  BufferedInputStream	bin = new BufferedInputStream( newFileInputStream(existing), encoded_data.length );
 
 				  try{
 					  BDecoder	decoder = new BDecoder();
@@ -720,7 +689,7 @@ public class FileUtil {
 			  BufferedOutputStream	baos = null;
 
 			  try{
-				  FileOutputStream tempOS = new FileOutputStream( temp, false );
+				  FileOutputStream tempOS = newFileOutputStream( temp, false );
 				  baos = new BufferedOutputStream( tempOS, 8192 );
 				  baos.write( encoded_data );
 				  baos.flush();
@@ -1048,7 +1017,7 @@ public class FileUtil {
   			while(true){
 
   				try{
-  					bin = new BufferedInputStream( new FileInputStream(file), 16384 );
+  					bin = new BufferedInputStream( newFileInputStream(file), 16384 );
 
   					break;
 
@@ -1230,7 +1199,7 @@ public class FileUtil {
 
 				// System.out.println( "getting reserved file handle");
 
-				InputStream	is = new FileInputStream( lock_file );
+				InputStream	is = newFileInputStream( lock_file );
 
 				reserved_file_handles.add(is);
 			}
@@ -1296,8 +1265,8 @@ public class FileUtil {
         if( _source.length() < 1L ) {
           throw new IOException( _source.getAbsolutePath() + " does not exist or is 0-sized" );
         }
-        source = new FileInputStream( _source ).getChannel();
-        dest = new FileOutputStream( _dest ).getChannel();
+        source = newInputStream( _source ).getChannel();
+        dest = newOutputStream( _dest ).getChannel();
 
         source.transferTo(0, source.size(), dest);
         return true;
@@ -1322,7 +1291,7 @@ public class FileUtil {
     	if ( !parent.exists()){
     		parent.mkdirs();
     	}
-        copyFile( new FileInputStream( _source ), new FileOutputStream( _dest ) );
+        copyFile( newFileInputStream( _source ), newFileOutputStream( _dest ) );
         return true;
       }
       catch( Throwable e ) {
@@ -1332,12 +1301,12 @@ public class FileUtil {
     }
 
     public static void copyFileWithException( final File _source, final File _dest ) throws IOException{
-         copyFile( new FileInputStream( _source ), new FileOutputStream( _dest ) );
+         copyFile( newFileInputStream( _source ), newFileOutputStream( _dest ) );
     }
 
     public static boolean copyFile( final File _source, final OutputStream _dest, boolean closeInputStream ) {
         try {
-          copyFile( new FileInputStream( _source ), _dest, closeInputStream );
+          copyFile( newFileInputStream( _source ), _dest, closeInputStream );
           return true;
         }
         catch( Throwable e ) {
@@ -1372,7 +1341,7 @@ public class FileUtil {
     	boolean	close_input = true;
 
     	try{
-    		dest = new FileOutputStream(_dest);
+    		dest = newFileOutputStream(_dest);
 
     			// copyFile will close from now on, we don't need to
 
@@ -1416,7 +1385,7 @@ public class FileUtil {
     	boolean	close_input = _close_input_stream;
 
     	try{
-    		dest = new FileOutputStream(_dest);
+    		dest = newFileOutputStream(_dest);
 
     		close_input = false;
 
@@ -2104,8 +2073,8 @@ public class FileUtil {
 
     		ByteBuffer bb = buffer.getBuffer( DirectByteBuffer.SS_EXTERNAL  );
 
-    		from_is 	= new FileInputStream( from_file );
-    		to_os 		= new FileOutputStream( to_file );
+    		from_is 	= newFileInputStream( from_file );
+    		to_os 		= newFileOutputStream( to_file );
 
     		FileChannel from_fc = from_is.getChannel();
     		FileChannel to_fc 	= to_os.getChannel();
@@ -2242,7 +2211,22 @@ public class FileUtil {
     		}
     	}
     }
-    
+
+	public static FileInputStream newFileInputStream(File from_file)
+			throws FileNotFoundException {
+		return fileHandling.newFileInputStream(from_file);
+	}
+
+	public static FileOutputStream newFileOutputStream(File file)
+			throws FileNotFoundException {
+   	return fileHandling.newFileOutputStream(file, false);
+	}
+
+	public static FileOutputStream newFileOutputStream(File file, boolean append)
+			throws FileNotFoundException {
+		return fileHandling.newFileOutputStream(file, append);
+	}
+
     /*
     private static boolean
     transfer(
@@ -2426,7 +2410,7 @@ public class FileUtil {
     			file.getParentFile().mkdirs();
     		}
 
-    		FileOutputStream out = new FileOutputStream( file );
+    		FileOutputStream out = newFileOutputStream( file );
 
     		try{
     			out.write( file_data );
@@ -2647,7 +2631,7 @@ public class FileUtil {
 
 		throws IOException
 	{
-		FileInputStream fis = new FileInputStream(file);
+		FileInputStream fis = newFileInputStream(file);
 		try {
 			return readInputStreamAsString(fis, size_limit, charset);
 		} finally {
@@ -2663,7 +2647,7 @@ public class FileUtil {
 
 		throws IOException
 	{
-		FileInputStream fis = new FileInputStream(file);
+		FileInputStream fis = newFileInputStream(file);
 		try {
 			return readInputStreamAsString(fis, size_limit);
 		} finally {
@@ -2679,7 +2663,7 @@ public class FileUtil {
 
 		throws IOException
 	{
-		FileInputStream fis = new FileInputStream(file);
+		FileInputStream fis = newFileInputStream(file);
 
 		try {
 			GZIPInputStream zis = new GZIPInputStream( fis );
@@ -2805,7 +2789,7 @@ public class FileUtil {
 
 		throws IOException
 	{
-		FileInputStream	fis = new FileInputStream( file );
+		FileInputStream	fis = newFileInputStream( file );
 
 		try{
 			if ( file.length() > size_limit){
@@ -2898,7 +2882,7 @@ public class FileUtil {
 
    		byte[]	buffer = new byte[32*1024];
 
-   		InputStream is = new FileInputStream( file );
+   		InputStream is = newFileInputStream( file );
 
    		try{
 	   		while( true ){
@@ -2955,7 +2939,7 @@ public class FileUtil {
 					// should fail if no perms, but sometimes it's created in
 					// virtualstore (if ran from java(w).exe for example)
 
-				FileOutputStream fos = new FileOutputStream( write_test );
+				FileOutputStream fos = newFileOutputStream( write_test );
 
 				try{
 					fos.write(32);
@@ -3132,80 +3116,20 @@ public class FileUtil {
 		complete();
 	}
 	
-	
-	private static final boolean FILE_HACK_ENABLE = false;
-	
-	
-	private static final String hack_prefix = "content://";
-	private static final String hack_target = "C:\\Temp\\ContentStore";
-	
-	public static File
-	newFile(
-		String		path )
-	{
-		if ( !FILE_HACK_ENABLE ){
-			
-			return( new File( path ));
-		}
-		
-		if ( path.startsWith( hack_prefix )){
-			
-			return( new FileHack( path ));
-			
-		}else{
-			
-			return( new File( path ));
-		}
-	}
-	
 	public static File
 	newFile(
 		String		parent,
-		String		name )
+		String...		subDirs )
 	{
-		if ( !FILE_HACK_ENABLE ){
-			
-			return( new File( parent, name ));
-		}
-
-		if ( parent == null ){
-			
-			return( newFile( name ));
-			
-		}else if ( parent.startsWith( hack_prefix )){
-			
-			return( new FileHack( parent + (parent.endsWith( DIR_SEP )?"":DIR_SEP) + (name.startsWith( DIR_SEP )?name.substring(1):name)));
-			
-		}else{
-			
-			return( new File( parent, name ));
-		}
+		return fileHandling.newFile(parent, subDirs);
 	}
 
 	public static File
 	newFile(
 		File		parent_file,
-		String		name )
+		String...		subDirs )
 	{
-		if ( !FILE_HACK_ENABLE ){
-			
-			return( new File( parent_file, name ));
-		}
-		
-		if ( parent_file == null ){
-			
-			return( newFile( name ));
-			
-		}else if ( parent_file instanceof FileHack ){
-			
-			String parent = parent_file.getAbsolutePath();
-			
-			return( new FileHack( parent + (parent.endsWith( DIR_SEP )?"":DIR_SEP) + (name.startsWith( DIR_SEP )?name.substring(1):name)));
-			
-		}else{
-			
-			return( new File( parent_file, name ));
-		}
+		return fileHandling.newFile(parent_file, subDirs);
 	}
 	
 	public static File
@@ -3217,11 +3141,118 @@ public class FileUtil {
 		return( new File( uri ));
 	}
 
+	public static FileAccessor
+	newFileAccessor(
+		File			file,
+		String			access_mode)
+		throws FileNotFoundException
+	{
+		return fileHandling.newFileAccessor(file, access_mode);
+	}
 
+	/**
+	 * @return {@link File#getAbsolutePath()}.contains({@link File#separator} + path + {@link File#separator})
+	 * @implNote must handle path containing {@link File#separator}
+	 */
+	public static boolean containsPathSegment(File f, String path, boolean caseSensitive) {
+		return fileHandling.containsPathSegment(f, path, caseSensitive);
+	}
+
+	/**
+	 * @return path string relative to <code>parentDir</code>. 
+	 *         <code>null</code> if file is not in parentDir.
+	 *         Empty String if file is parentDir.
+	 */
+	public static String getRelativePath(File parentDir, File file) {
+		return fileHandling.getRelativePath(parentDir, file);
+	}
+
+	public static class FileHandlerHack
+		extends FileHandler
+	{
+		@Override
+		public File newFile(File parent, String... subDirs) {
+			if (!(parent instanceof FileHack)) {
+				return super.newFile(parent, subDirs);
+			}
+			if (subDirs == null || subDirs.length == 0) {
+				return parent;
+			}
+
+			FileHack file = new FileHack((FileHack) parent, subDirs[0]);
+			for (int i = 1, subDirsLength = subDirs.length;
+				i < subDirsLength; i++) {
+				file = new FileHack(file, subDirs[i]);
+			}
+			return file;
+		}
+
+		@Override
+		public File newFile(String parent, String... subDirs) {
+			if (parent != null && !parent.startsWith(FileHack.hack_prefix)) {
+				return super.newFile(parent, subDirs);
+			}
+			FileHack fileHack = new FileHack(parent);
+			if (subDirs == null || subDirs.length == 0) {
+				return fileHack;
+			}
+
+			FileHack file = new FileHack(fileHack, subDirs[0]);
+			for (int i = 1, subDirsLength = subDirs.length; i < subDirsLength; i++) {
+				file = new FileHack(file, subDirs[i]);
+			}
+			return file;
+		}
+
+		@Override
+		public File getCanonicalFileSafe(File file) {
+			if (file instanceof FileHack) {
+				return file.getAbsoluteFile();
+			}
+
+			return super.getCanonicalFileSafe(file);
+		}
+
+		@Override
+		public String getCanonicalPathSafe(File file) {
+			try{
+				if (file instanceof FileHack) {
+					return file.getCanonicalPath();
+				}
+			}catch( Throwable e ){
+
+				return( file.getAbsolutePath());
+			}
+
+			return super.getCanonicalPathSafe(file);
+		}
+
+		@Override
+		public boolean isAncestorOf(File _parent, File _child) {
+			if (_parent instanceof FileHack && _child instanceof FileHack) {
+				return getRelativePath(_parent, _child) != null;
+			}
+
+			return super.isAncestorOf(_parent, _child);
+		}
+
+		@Override
+		public FileAccessor newFileAccessor(File file, String access_mode)
+			throws FileNotFoundException {
+			if (file instanceof FileHack) {
+				file = ((FileHack) file).getHackTarget();
+			}
+			return super.newFileAccessor(file, access_mode);
+		}
+	}
+	
 	public static class
 	FileHack
 		extends File
 	{
+		private static final String hack_target = "C:\\Temp\\ContentStore";
+		private static final String hack_prefix = "content://";
+
 		final private String 	path;
 		final private File		target;
 		
@@ -3234,6 +3265,14 @@ public class FileUtil {
 			path	= _path;
 			
 			target = new File( hack_target, path.substring( hack_prefix.length()));
+		}
+
+		// Called via Reflection
+		private FileHack(
+			FileHack path, String subPath) 
+		{
+			this(new File(path.toString(), subPath.startsWith(DIR_SEP)
+					? subPath.substring(1) : subPath).toString());
 		}
 		
 		public File

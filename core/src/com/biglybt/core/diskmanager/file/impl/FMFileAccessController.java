@@ -557,11 +557,6 @@ FMFileAccessController
 		
 			throws FileNotFoundException
 		{
-			if ( file instanceof FileUtil.FileHack ){
-				
-				file = ((FileUtil.FileHack)file).getHackTarget();
-			}
-			
 			if ( enable_sparse_files && !file.exists()){
 				
 				try{
