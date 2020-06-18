@@ -48,11 +48,22 @@ TOTorrentFileHashTree
 	
 	public byte[][] 
 	requestHashes(
-		byte[]			root_hash, 
-		int 			base_layer, 
-		int 			index, 
-		int 			length,
-		int 			proof_layers );
+		PieceTreeProvider	ptp,
+		byte[]				root_hash, 
+		int 				base_layer, 
+		int 				index, 
+		int 				length,
+		int 				proof_layers );
+	
+	
+	public interface
+	PieceTreeProvider
+	{
+		public byte[][]
+		getPieceTree(
+			TOTorrentFileHashTree	tree,
+			int 					piece_index );
+	}
 	
 	public interface
 	HashRequest

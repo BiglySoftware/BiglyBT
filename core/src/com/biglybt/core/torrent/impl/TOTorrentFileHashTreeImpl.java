@@ -27,6 +27,7 @@ import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.torrent.TOTorrentFileHashTree;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.SHA256;
 
 public class 
@@ -139,7 +140,7 @@ TOTorrentFileHashTreeImpl
 		
 		tree[0]	= _root_hash;
 		
-		long tree_bytes = tree[0].length; 
+		//long tree_bytes = tree[0].length; 
 		
 		long	layer_block_size = base_width_bytes;
 		
@@ -163,7 +164,7 @@ TOTorrentFileHashTreeImpl
 			
 			tree[i] = new byte[ layer_size ];
 			
-			tree_bytes += layer_size;
+			//tree_bytes += layer_size;
 			
 				// nah, not going to allocate below piece layer as takes a LOT of space
 			
@@ -173,11 +174,12 @@ TOTorrentFileHashTreeImpl
 			}
 		}
 		
-		System.out.println( "tree for " + file_length + " / " + base_width_bytes + ", blocks=" + (file_length/BLOCK_SIZE ) + " -> " + DisplayFormatters.formatByteCountToKiBEtc( tree_bytes ) + ", piece=" + piece_length + ", piece_layer=" + piece_layer_index );
+		//System.out.println( "tree for " + file_length + " / " + base_width_bytes + ", blocks=" + (file_length/BLOCK_SIZE ) + " -> " + DisplayFormatters.formatByteCountToKiBEtc( tree_bytes ) + ", piece=" + piece_length + ", piece_layer=" + piece_layer_index );
 		
 		//printTree();
 	}
 	
+	/*
 	private void
 	printTree()
 	{
@@ -213,6 +215,7 @@ TOTorrentFileHashTreeImpl
 			System.out.println( tree_hash_widths[i] + " / " + layer.length/DIGEST_LENGTH + " - " + str + "'");
 		}
 	}
+	*/
 	
 	@Override
 	public TOTorrentFile 
@@ -559,20 +562,51 @@ TOTorrentFileHashTreeImpl
 				}
 			}
 			
-			int	base_layer = tree.length - piece_layer_index - 1;
-			
-			index	= index&0xfffffffe;
-			
-			int	length			= 2;
-			int proof_layers	= piece_layer_index-1;
-			
-			
-				// todo: 1 - request more pieces if the peer has them
-				// 2: limit proof layers to depth required rather than full set 
-			
-			System.out.println( "hash request for " + piece_number + " -> " + base_layer + ", " + index + ", " + length );
-			
-			return( new HashRequestImpl( base_layer, index, length, proof_layers ));
+			int	piece_base_layer = tree.length - piece_layer_index - 1;
+
+			if ( true ){
+				
+				index	= index&0xfffffffe;
+				
+				int	length			= 2;
+				int proof_layers	= piece_layer_index-1;
+				
+				
+					// todo: 1 - request more pieces if the peer has them
+					// 2: limit proof layers to depth required rather than full set 
+				
+				System.out.println( "hash piece request for " + piece_number + " -> " + piece_base_layer + ", " + index + ", " + length );
+				
+				return( new HashRequestImpl( piece_base_layer, index, length, proof_layers ));
+				
+			}else{
+				
+				// convert piece request into a leaf request for testing purposes
+				
+				int	leaf_base_layer = 0;	// leaf
+				
+				int layer_diff = piece_base_layer - leaf_base_layer;
+				
+				int leafs_per_piece = 1 << layer_diff;
+				
+				index <<= layer_diff;
+				
+				index += RandomUtils.nextInt( leafs_per_piece );
+				
+				index	= index&0xfffffffe;
+				
+				int	length			= 2;
+				int proof_layers	= tree.length - 2;
+				
+				
+					// todo: 1 - request more pieces if the peer has them
+					// 2: limit proof layers to depth required rather than full set 
+				
+				System.out.println( "hash leaf request for " + piece_number + " -> " + leaf_base_layer + ", " + index + ", " + length );
+				
+				return( new HashRequestImpl( leaf_base_layer, index, length, proof_layers ));
+
+			}
 		}
 	}
 	
@@ -586,11 +620,11 @@ TOTorrentFileHashTreeImpl
 		byte[][] 		hashes )
 	{
 		try{
-			System.out.println( "hash reply for " + ( file.getFirstPieceNumber() + index ) + " -> " + base_layer + ", " + index + ", " + length );
+			// System.out.println( "hash reply for " + ( file.getFirstPieceNumber() + index ) + " -> " + base_layer + ", " + index + ", " + length );
 			
 			int layer_index = tree.length - base_layer -1;
 			
-				// TODO support leaf hashes
+				// we never request anything other than piece hashes from peers
 			
 			if ( layer_index != piece_layer_index ){
 				
@@ -648,23 +682,26 @@ TOTorrentFileHashTreeImpl
 						
 						byte[] tree_layer = tree[li];
 						
-						layer_match = true;
-						
-						int tree_pos = copy_offset_bytes;
-						
-						for ( int i=0; i<hashes_bytes.length && tree_pos < tree_layer.length; i++ ){
+						if ( tree_layer != null ){
 							
-							if ( tree_layer[ tree_pos++ ] != hashes_bytes[i] ){
+							layer_match = true;
+							
+							int tree_pos = copy_offset_bytes;
+							
+							for ( int i=0; i<hashes_bytes.length && tree_pos < tree_layer.length; i++ ){
 								
-								layer_match = false;
+								if ( tree_layer[ tree_pos++ ] != hashes_bytes[i] ){
+									
+									layer_match = false;
+									
+									break;
+								}
+							}
+							
+							if ( layer_match ){
 								
 								break;
 							}
-						}
-						
-						if ( layer_match ){
-							
-							break;
 						}
 						
 						copy_bytes[li] 		= hashes_bytes;
@@ -711,11 +748,14 @@ TOTorrentFileHashTreeImpl
 						
 						byte[] tree_layer = tree[li];
 								
-						int to_copy = Math.min( bytes.length, tree_layer.length - copy_offset );
-						
-						if ( to_copy > 0 ){
-						
-							System.arraycopy( bytes, 0, tree_layer, copy_offset, to_copy );
+						if ( tree_layer != null ){
+							
+							int to_copy = Math.min( bytes.length, tree_layer.length - copy_offset );
+							
+							if ( to_copy > 0 ){
+							
+								System.arraycopy( bytes, 0, tree_layer, copy_offset, to_copy );
+							}
 						}
 					}
 				}catch( Throwable e ){
@@ -747,20 +787,23 @@ TOTorrentFileHashTreeImpl
 	
 	public byte[][] 
 	requestHashes(
-		byte[]			root_hash, 
-		int 			base_layer, 
-		int 			index, 
-		int 			length,
-		int 			proof_layers )
+		PieceTreeProvider	piece_tree_provider,
+		byte[]				root_hash, 
+		int 				base_layer, 
+		int 				index, 
+		int 				length,
+		int 				proof_layers )
 	{
 		try{
 			System.out.println( "hash request for " + ( file.getFirstPieceNumber() + index ) + " -> " + base_layer + ", " + index + ", " + length );
 			
-			int layer_index = tree.length - base_layer -1;
+			int leaf_layer_index = tree.length - 1;
 			
-			// TODO support leaf hashes
+			int layer_index = leaf_layer_index - base_layer;
 			
-			if ( layer_index != piece_layer_index ){
+				// support piece layer and leaf layer only
+			
+			if ( layer_index != piece_layer_index && layer_index != tree.length - 1 ){
 				
 				return( null );
 			}
@@ -785,17 +828,87 @@ TOTorrentFileHashTreeImpl
 				return( null );
 			}
 			
+			int[]		layer_offsets	= new int[tree.length];
+			byte[][]	piece_tree		= null;
+			
+			int layer_offset_x = index;
+					
+			for ( int i=layer_index;i>0;i--){
+				
+				layer_offsets[i] = layer_offset_x;
+				
+				layer_offset_x >>>= 1;
+			}
+			
 			int missing_proofs = 31 - Integer.numberOfLeadingZeros( length ) -1;
 	
-			byte[]	tree_layer = tree[layer_index];
+				// we use a local tree when hacking in a piece tree, normal tree at and above piece layer
+				// and then piece-only tree below with adjusted layer offsets to index into it correctly
 			
-			int layer_offset = index;
+			byte[][]	local_tree;
 			
+			if  ( layer_index == piece_layer_index ){
+				
+				local_tree	= tree;
+				
+			}else{
+			
+					// dynamically construct the hash tree below the relevant piece hash
+								
+				int pli_offset = index >>> ( leaf_layer_index - piece_layer_index ); 
+			
+				byte[] piece_layer = tree[piece_layer_index];
+				
+				boolean ok = false;
+				
+				for ( int i=pli_offset;i<pli_offset+DIGEST_LENGTH;i++){
+					
+					if ( piece_layer[i] != 0 ){
+						
+						ok = true;
+						
+						break;
+					}
+				}
+				
+				if ( !ok ){
+					
+					return( null );		// we don't have the piece hash
+				}
+				
+				piece_tree = piece_tree_provider.getPieceTree( this, pli_offset );
+				
+				if ( piece_tree == null ){
+					
+					return( null );		// failed to read the tree
+				}
+			
+				local_tree = tree.clone();
+				
+				int x = piece_layer_index + 1;
+				
+				int missing_offset = layer_offsets[ piece_layer_index ];
+				
+				for ( int i=0;i<piece_tree.length;i++){
+					
+					missing_offset <<= 1;
+
+					local_tree[ x ] = piece_tree[i];
+					
+					layer_offsets[ x] -= missing_offset;
+										
+					x++;
+				}
+			}
+			
+			
+			byte[]	tree_layer = local_tree[layer_index];
+						
 			byte[][]	hashes = new byte[length+proof_layers-missing_proofs][];
 			
 			int	hash_pos = 0;
 			
-			int	hashes_start = layer_offset * DIGEST_LENGTH;
+			int	hashes_start = layer_offsets[layer_index] * DIGEST_LENGTH;
 		
 			for ( int i=hashes_start; i<tree_layer.length && hash_pos < length; i += DIGEST_LENGTH ){
 				
@@ -803,21 +916,24 @@ TOTorrentFileHashTreeImpl
 				
 				System.arraycopy( tree_layer, i, hash, 0, DIGEST_LENGTH );
 				
-				boolean ok = false;
-				
-				for ( int j=0; j<hash.length; j++ ){
+				if ( layer_index <= piece_layer_index ){
 					
-					if ( hash[j] != 0 ){
-						
-						ok = true;
-						
-						break;
-					}	
-				}
-				
-				if ( !ok ){
+					boolean ok = false;
 					
-					return( null );		// hash not available
+					for ( int j=0; j<hash.length; j++ ){
+						
+						if ( hash[j] != 0 ){
+							
+							ok = true;
+							
+							break;
+						}	
+					}
+					
+					if ( !ok ){
+						
+						return( null );		// hash not available
+					}
 				}
 				
 				hashes[ hash_pos++ ] = hash;
@@ -834,10 +950,10 @@ TOTorrentFileHashTreeImpl
 			}
 			
 			while( proof_layers > 0 && layer_index > 1 ){
-				
-				layer_offset >>>= 1;
-				
+								
 				layer_index--;
+				
+				int	layer_offset = layer_offsets[layer_index];
 				
 				if ( missing_proofs > 0 ){
 					
@@ -845,7 +961,7 @@ TOTorrentFileHashTreeImpl
 					
 				}else{
 				
-					tree_layer = tree[layer_index];
+					tree_layer = local_tree[layer_index];
 	
 					int uncle_offset;
 					

@@ -200,6 +200,18 @@ TOTorrentCreateImpl
 		
 		add_v1	= torrent_type == TT_V1 || torrent_type == TT_V1_V2;
 		add_v2	= torrent_type == TT_V2 || torrent_type == TT_V1_V2;
+		
+		if ( add_v2 ){
+			
+			long highestOneBit = Long.highestOneBit( piece_length );
+			
+				// if not already power of two round up to next
+			
+			if ( piece_length != highestOneBit ) {
+										
+				piece_length =  highestOneBit << 1;	// round up to next power of 2
+			}
+		}
 	}
 
 	protected
@@ -230,6 +242,18 @@ TOTorrentCreateImpl
 		long	total_size = calculateTotalFileSize( _torrent_base );
 
 		piece_length = getComputedPieceSize( total_size, _piece_min_size, _piece_max_size, _piece_num_lower, _piece_num_upper );
+		
+		if ( add_v2 ){
+			
+			long highestOneBit = Long.highestOneBit( piece_length );
+			
+				// if not already power of two round up to next
+			
+			if ( piece_length != highestOneBit ) {
+										
+				piece_length =  highestOneBit << 1;	// round up to next power of 2
+			}
+		}
 	}
 
 	protected void

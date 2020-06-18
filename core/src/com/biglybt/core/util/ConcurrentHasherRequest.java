@@ -36,6 +36,8 @@ ConcurrentHasherRequest
 	private final int							piece_size;
 	private final long							v2_file_size;
 	
+	private List<List<byte[]>>					v2_hash_tree;
+	
 	private ConcurrentHasherRequestListener		listener;
 
 	private final int							size;
@@ -84,6 +86,12 @@ ConcurrentHasherRequest
 		return( result );
 	}
 
+	public List<List<byte[]>>
+	getHashTree()
+	{
+		return( v2_hash_tree );
+	}
+	
 		/**
 		 * cancel the hash request. If it is cancelled before it is completed then
 		 * a subsequent call to getResult will return null
@@ -243,9 +251,13 @@ ConcurrentHasherRequest
 				}
 				
 				List<byte[]> current_level = leaf_digests;
-								
+					
+				v2_hash_tree = new ArrayList<>(10);
+				
 				while( current_level.size() > 1 ){
-										
+						
+					v2_hash_tree.add( current_level );
+					
 					List<byte[]> next_level = new ArrayList<byte[]>(current_level.size()/2);
 																	
 					for ( int i=0;i<current_level.size();i+=2 ){

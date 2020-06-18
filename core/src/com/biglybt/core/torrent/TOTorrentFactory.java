@@ -35,10 +35,12 @@ import com.biglybt.core.torrent.impl.TOTorrentXMLDeserialiser;
 public class
 TOTorrentFactory
 {
+		// v2 torrents require piece size to be a power of 2
+	
 	public static final long	TO_DEFAULT_FIXED_PIECE_SIZE = 256*1024;
 
 	public static final long	TO_DEFAULT_VARIABLE_PIECE_SIZE_MIN = 32*1024;
-	public static final long	TO_DEFAULT_VARIABLE_PIECE_SIZE_MAX = 2*1024*1024;
+	public static final long	TO_DEFAULT_VARIABLE_PIECE_SIZE_MAX = 4*1024*1024;
 
 	public static final long	TO_DEFAULT_VARIABLE_PIECE_NUM_LOWER = 1024;
 	public static final long	TO_DEFAULT_VARIABLE_PIECE_NUM_UPPER = 2048;
@@ -153,7 +155,7 @@ TOTorrentFactory
 
 		throws TOTorrentException
 	{
-		return( new TOTorrentCreatorImpl( TOTorrent.TT_V1, file, announce_url, add_hashes, piece_length ));
+		return( new TOTorrentCreatorImpl( torrent_version, file, announce_url, add_hashes, piece_length ));
 	}
 
 		// construction methods: variable piece size

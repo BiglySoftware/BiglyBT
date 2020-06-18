@@ -463,7 +463,9 @@ TOTorrentImpl
 			}
 		}else{
 			
-			if ( getAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS ) == null ){
+				// files can be null here if we're in an error path trying to grab the torrent's hash
+			
+			if ( getAdditionalMapProperty( TOTorrentImpl.TK_V2_PIECE_LAYERS ) == null && files != null ){
 			
 				ByteEncodedKeyHashMap<String,byte[]>	pl_map 		= new ByteEncodedKeyHashMap<>();
 				

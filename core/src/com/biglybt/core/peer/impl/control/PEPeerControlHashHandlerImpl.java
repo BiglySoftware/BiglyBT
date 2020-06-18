@@ -18,12 +18,16 @@
 
 package com.biglybt.core.peer.impl.control;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.biglybt.core.disk.DiskManagerReadRequest;
+import com.biglybt.core.disk.DiskManagerReadRequestListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerCheckRequestListener.HashListener;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.impl.PEPeerControlHashHandler;
 import com.biglybt.core.peer.impl.PEPeerTransport;
@@ -33,13 +37,19 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.torrent.TOTorrentFileHashTree;
 import com.biglybt.core.torrent.TOTorrentFileHashTree.HashRequest;
+import com.biglybt.core.torrent.TOTorrentFileHashTree.PieceTreeProvider;
+import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.ByteArrayHashMap;
+import com.biglybt.core.util.ConcurrentHasher;
+import com.biglybt.core.util.ConcurrentHasherRequest;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.SHA256;
 import com.biglybt.core.util.SystemTime;
 
 public class 
 PEPeerControlHashHandlerImpl
-	implements PEPeerControlHashHandler
+	implements PEPeerControlHashHandler, PieceTreeProvider
 {
 	private final PEPeerControlImpl		peer_manager;
 	private final TOTorrent				torrent;
@@ -277,7 +287,7 @@ PEPeerControlHashHandlerImpl
 				}
 			}
 			
-			System.out.println( "Active requests: " + active_requests.size() + ", peers=" + peer_requests + ", piece_req=" + piece_requests + ", incomplete tree req=" + incomplete_tree_reqs);
+			// System.out.println( "Active requests: " + active_requests.size() + ", peers=" + peer_requests + ", piece_req=" + piece_requests + ", incomplete tree req=" + incomplete_tree_reqs);
 		}
 		
 		for ( PeerHashRequest peer_request: retry ){
@@ -537,6 +547,8 @@ PEPeerControlHashHandlerImpl
 		int 			proof_layers, 
 		byte[][] 		hashes )		// null if rejected
 	{
+		System.out.println( (hashes==null?"hash_reject":"hashes") + " received: " + base_layer + ", " + index + "," + length );
+		
 		try{
 			TOTorrentFileHashTree tree = file_map.get( root_hash );
 
@@ -726,13 +738,146 @@ PEPeerControlHashHandlerImpl
 
 			if ( tree != null ){
 			
-				return( tree.requestHashes( root_hash, base_layer,	index, length, proof_layers ));
+				return( tree.requestHashes( this, root_hash, base_layer,	index, length, proof_layers ));
 			}
 		}catch( Throwable e ){
 			
 			Debug.out( e );
 		}
 		
+		return( null );
+	}
+	
+	public byte[][]
+	getPieceTree(
+		TOTorrentFileHashTree		tree,
+		int 						piece_offset )
+	{
+		TOTorrentFile file = tree.getFile();
+		
+		int piece_number = file.getFirstPieceNumber() + piece_offset;
+		
+		if ( !disk_manager.isDone( piece_number )){
+			
+			return( null );
+		}
+		
+		try{
+			byte[] piece_hash = torrent.getPieces()[piece_number];
+		
+			int piece_size = disk_manager.getPieceLength( piece_number );
+			
+			AESemaphore sem = new AESemaphore( "getPieceTree" );
+			
+			byte[][][] result = { null };
+			
+			disk_manager.enqueueReadRequest(
+					disk_manager.createReadRequest( piece_number, 0, piece_size ),
+					new DiskManagerReadRequestListener()
+					{
+						public void
+						readCompleted(
+							DiskManagerReadRequest 	request,
+							DirectByteBuffer 		data )
+						{
+							try{
+								ByteBuffer byte_buffer = data.getBuffer( DirectByteBuffer.SS_OTHER );
+								
+								DMPieceList pieceList = disk_manager.getPieceList( piece_number );
+								
+								DMPieceMapEntry piece_entry = pieceList.get(0);
+					    							    		
+									// with v2 a piece only contains > 1 file if the second file is a dummy padding file added
+									// to 'make things work'
+
+					    		if ( pieceList.size() == 2 ){
+
+						    		int v2_piece_length = piece_entry.getLength();
+						    		
+						    		if ( v2_piece_length < disk_manager.getPieceLength()){
+						    			
+						    				// hasher will pad appropriately
+						    			
+						    			byte_buffer.limit( byte_buffer.position() + v2_piece_length );
+						    		}
+					    		}
+					    		
+								ConcurrentHasher hasher = ConcurrentHasher.getSingleton();
+								
+								ConcurrentHasherRequest req = 
+										hasher.addRequest( 
+											byte_buffer,
+											2,
+											piece_size,
+											file.getLength());
+																
+								if ( Arrays.equals( req.getResult(), piece_hash )){
+									
+									List<List<byte[]>> tree = req.getHashTree();
+									
+									if ( tree != null ){
+										
+										byte[][]	hashes = new byte[tree.size()][];
+										
+										int layer_index = hashes.length - 1;
+										
+										for ( List<byte[]> entry: tree ){
+											
+											byte[] layer = new byte[ entry.size() * SHA256.DIGEST_LENGTH ];
+											
+											hashes[layer_index--] = layer;
+											
+											int layer_pos = 0;
+											
+											for ( byte[] hash: entry ){
+												
+												System.arraycopy( hash, 0, layer, layer_pos, SHA256.DIGEST_LENGTH );
+												
+												layer_pos += SHA256.DIGEST_LENGTH;
+											}
+										}
+										
+										result[0] = hashes;
+									}
+								}
+							}finally{
+								
+								sem.release();
+								
+								data.returnToPool();
+							}
+						}
+	
+						public void
+						readFailed(
+							DiskManagerReadRequest 	request,
+							Throwable		 		cause )
+						{
+							sem.release();
+						}
+	
+						public int
+						getPriority()
+						{
+							return( -1 );
+						}
+	
+						public void
+						requestExecuted(
+							long 	bytes )
+						{
+						}
+					});
+			
+			sem.reserve();
+			
+			return( result[0] );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	
 		return( null );
 	}
 	
