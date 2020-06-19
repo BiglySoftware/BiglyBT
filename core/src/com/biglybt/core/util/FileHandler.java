@@ -22,8 +22,10 @@ import com.biglybt.core.diskmanager.file.impl.FMFileAccess.FileAccessor;
 import com.biglybt.core.diskmanager.file.impl.FMFileAccessController.FileAccessorRAF;
 
 import java.io.*;
+import java.net.URI;
 import java.util.Locale;
 
+@SuppressWarnings("MethodMayBeStatic")
 public class FileHandler
 {
 	/**
@@ -46,7 +48,9 @@ public class FileHandler
 	/**
 	 * @return <code>null</code> will fallback to normal java.io.File
 	 *
-	 * @implNote parent and subDirs may contain File.separator
+	 * @implNote 
+	 *  parent and subDirs may contain File.separator<br/>
+	 *  parent might be empty string (default is File.separater)
 	 */
 	public File newFile(String parent, String... subDirs) {
 		if (subDirs == null || subDirs.length == 0) {
@@ -58,6 +62,10 @@ public class FileHandler
 			file = new File(file, subDirs[i]);
 		}
 		return file;
+	}
+
+	public File newFile(URI uri) {
+		return new File(uri);
 	}
 
 	public FileOutputStream newFileOutputStream(File file, boolean append)

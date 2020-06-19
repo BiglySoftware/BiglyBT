@@ -3136,9 +3136,7 @@ public class FileUtil {
 	newFile(
 		URI		uri )
 	{
-			// hackery not required
-		
-		return( new File( uri ));
+		return fileHandling.newFile(uri);
 	}
 
 	public static FileAccessor
