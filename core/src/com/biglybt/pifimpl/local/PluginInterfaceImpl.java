@@ -266,7 +266,7 @@ PluginInterfaceImpl
 
   		try{
 
-  			name = new File(pluginDir).getName();
+  			name = FileUtil.newFile(pluginDir).getName();
 
   		}catch( Throwable e ){
 
@@ -345,10 +345,10 @@ PluginInterfaceImpl
 	if ( pluginDir == null ){
 		name = getPluginID();
 	}else{
-		name = new File( pluginDir).getName();
+		name = FileUtil.newFile( pluginDir).getName();
 	}
 
-	String str = new File(new File(SystemProperties.getUserPath(),"plugins"),name).getAbsolutePath();
+	String str = FileUtil.newFile(SystemProperties.getUserPath(),"plugins", name).getAbsolutePath();
 
 	if ( pluginDir == null ){
 
@@ -356,7 +356,7 @@ PluginInterfaceImpl
 	}
 
 	try{
-		if ( new File( pluginDir ).getCanonicalPath().equals( new File( str ).getCanonicalPath())){
+		if ( FileUtil.newFile( pluginDir ).getCanonicalPath().equals( FileUtil.newFile( str ).getCanonicalPath())){
 
 			return( pluginDir );
 		}
@@ -371,7 +371,7 @@ PluginInterfaceImpl
   setPluginDirectoryName(
   	String		name )
   {
-  	initialiser_key	= new File(name);
+  	initialiser_key	= FileUtil.newFile(name);
 
   	pluginDir	= name;
   }
@@ -880,7 +880,7 @@ PluginInterfaceImpl
 			}else{
 				if ( !built_in ){
 
-					File dir = new File( plugin_dir );
+					File dir = FileUtil.newFile( plugin_dir );
 
 					if ( dir.exists()){
 

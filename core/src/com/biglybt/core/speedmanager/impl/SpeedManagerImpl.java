@@ -164,7 +164,7 @@ SpeedManagerImpl
 			ping_mappers = new SpeedManagerPingMapperImpl[]{ ping_mapper };
 		}
 
-		final File	config_dir = new File( SystemProperties.getUserPath(), "net" );
+		final File	config_dir = FileUtil.newFile( SystemProperties.getUserPath(), "net" );
 
 		if ( !config_dir.exists()){
 
@@ -190,7 +190,7 @@ SpeedManagerImpl
 							as = "default";
 						}
 
-						File history = new File( config_dir, "pm_" + FileUtil.convertOSSpecificChars( as, false ) + ".dat" );
+						File history = FileUtil.newFile( config_dir, "pm_" + FileUtil.convertOSSpecificChars( as, false ) + ".dat" );
 
 						ping_mapper.loadHistory( history );
 

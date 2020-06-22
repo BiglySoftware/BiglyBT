@@ -437,11 +437,11 @@ DHTPluginImpl
 	getDataDir(
 		int		network )
 	{
-		File	dir = new File( plugin_interface.getUtilities().getUserDir(), "dht" );
+		File	dir = FileUtil.newFile( plugin_interface.getUtilities().getUserDir(), "dht" );
 
 		if ( network != 0 ){
 
-			dir = new File( dir, "net" + network );
+			dir = FileUtil.newFile( dir, "net" + network );
 		}
 
 		FileUtil.mkdirs(dir);

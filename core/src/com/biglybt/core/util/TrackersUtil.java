@@ -117,7 +117,7 @@ public class TrackersUtil {
       FileInputStream fin = null;
       BufferedInputStream bin = null;
       try {
-        fin = new FileInputStream(fTrackers);
+        fin = FileUtil.newFileInputStream(fTrackers);
         bin = new BufferedInputStream(fin, 8192);
         Map map = BDecoder.decode(bin);
         List list = (List) map.get("trackers");
@@ -187,7 +187,7 @@ public class TrackersUtil {
     try {
       //  Open the file
       File fTrackers = FileUtil.getUserFile("trackers.config");
-      fos = new FileOutputStream(fTrackers);
+      fos = FileUtil.newFileOutputStream(fTrackers);
       fos.write(BEncoder.encode(map));
       fos.close();
     } catch (Exception e) {

@@ -30,6 +30,7 @@ import java.util.Vector;
 
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.util.ED2KHasher;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.SHA1Hasher;
 
 public class
@@ -96,7 +97,7 @@ TOTorrentFileHasher
 				ed2k_hash		= new ED2KHasher();
 			}
 
-			is = new BufferedInputStream(new FileInputStream( _file ), 65536);
+			is = new BufferedInputStream(FileUtil.newFileInputStream( _file ), 65536);
 
 			while(true){
 

@@ -968,7 +968,7 @@ TagManagerImpl
 
 										if ( set_torrent ){
 
-											File old_torrent_file = new File( manager.getTorrentFileName());
+											File old_torrent_file = FileUtil.newFile( manager.getTorrentFileName());
 
 											if ( old_torrent_file.exists()){
 
@@ -1212,11 +1212,11 @@ TagManagerImpl
 
 			if ( copy_torrent ){
 
-				File old_file = new File( manager.getTorrentFileName());
+				File old_file = FileUtil.newFile( manager.getTorrentFileName());
 
 				if ( old_file.exists()){
 
-					File new_file = new File( new_loc, old_file.getName());
+					File new_file = FileUtil.newFile( new_loc, old_file.getName());
 
 					FileUtil.copyFile( old_file, new_file );
 				}
@@ -1513,7 +1513,7 @@ TagManagerImpl
 
 									if ( set_torrent ){
 
-										File old_torrent_file = new File( dm.getTorrentFileName());
+										File old_torrent_file = FileUtil.newFile( dm.getTorrentFileName());
 
 										if ( old_torrent_file.exists()){
 
@@ -1624,7 +1624,7 @@ TagManagerImpl
 	
 			if ( set_torrent ){
 	
-				File old_torrent_file = new File( dm.getTorrentFileName());
+				File old_torrent_file = FileUtil.newFile( dm.getTorrentFileName());
 	
 				if ( old_torrent_file.exists()){
 	

@@ -23,6 +23,7 @@ package com.biglybt.core.stats.transfer.impl;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreComponent;
@@ -610,11 +611,11 @@ outer:
 
 					if ( record_type != RT_SESSION_END ){
 
-						File file = new File( stats_dir, current_rel_file );
+						File file = FileUtil.newFile( stats_dir, current_rel_file );
 
 						file.getParentFile().mkdirs();
 
-						writer = new PrintWriter( new FileWriter( file, true ));
+						writer = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( file, true )));
 
 						writer_rel_file = current_rel_file;
 
@@ -896,9 +897,7 @@ outer:
 					can_cache = false;
 				}
 
-				String	current_rel_file = bits[0] + File.separator + bits[1] + File.separator + bits[2] + ".dat";
-
-				File stats_file = new File( stats_dir, current_rel_file );
+				File stats_file = FileUtil.newFile( stats_dir, bits[0], bits[1], bits[2] + ".dat" );
 
 				if ( !stats_file.exists()){
 
@@ -913,7 +912,7 @@ outer:
 					try{
 						//System.out.println( "Reading " + stats_file );
 
-						lnr = new LineNumberReader( new FileReader( stats_file ));
+						lnr = new LineNumberReader( new InputStreamReader( FileUtil.newFileInputStream( stats_file )));
 
 						long	file_start_time	= 0;
 
@@ -1333,7 +1332,7 @@ outer:
 		private File
 		getCacheFile()
 		{
-			return( new File( stats_dir, year + File.separator + month + File.separator + "cache.dat" ));
+			return( FileUtil.newFile( stats_dir, year, month, "cache.dat" ));
 		}
 
 		private boolean

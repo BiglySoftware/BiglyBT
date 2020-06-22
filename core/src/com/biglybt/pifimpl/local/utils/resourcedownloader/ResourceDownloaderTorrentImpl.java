@@ -585,11 +585,11 @@ ResourceDownloaderTorrentImpl
 			// assumption is that this is a SIMPLE torrent
 
 		File target_file =
-			new File( data_dir,	new String(torrent_holder[0].getFiles()[0].getPathComponents()[0]));
+			FileUtil.newFile( data_dir,	new String(torrent_holder[0].getFiles()[0].getPathComponents()[0]));
 
 			if ( !target_file.exists()){
 
-				File	actual_target_file = new File(download.getSavePath());
+				File	actual_target_file = FileUtil.newFile(download.getSavePath());
 
 				try{
 					if ( download_dir != null && actual_target_file.exists()){
@@ -611,7 +611,7 @@ ResourceDownloaderTorrentImpl
 				throw( new Exception( "File '" + target_file.toString() + "' not found" ));
 			}
 
-			InputStream	data = new FileInputStream( target_file );
+			InputStream	data = FileUtil.newFileInputStream( target_file );
 
 			informComplete( data );
 

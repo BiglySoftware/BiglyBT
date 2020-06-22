@@ -771,14 +771,14 @@ TRTrackerServerProcessorTCP
 
 					if ( data.length > 1000000 ){
 
-						File	dump = new File( "bdecoder.dump" );
+						File	dump = FileUtil.newFile( "bdecoder.dump" );
 
 						synchronized( TRTrackerServerProcessorTCP.class ){
 
 							try{
 								Debug.out( "Output is too large, saving diagnostics to " + dump.toString());
 
-								PrintWriter	pw = new PrintWriter( new FileWriter( dump ));
+								PrintWriter	pw = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( dump )));
 
 								BDecoder.print( pw, root );
 

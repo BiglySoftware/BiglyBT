@@ -109,11 +109,11 @@ FMFileAccessController
 
 		}else{
 
-			if ( new File( control_dir, controlFileName ).exists()){
+			if ( FileUtil.newFile( control_dir, controlFileName ).exists()){
 
 				type = FMFile.FT_COMPACT;
 
-			}else if ( new File( control_dir, controlFileName + REORDER_SUFFIX ).exists()){
+			}else if ( FileUtil.newFile( control_dir, controlFileName + REORDER_SUFFIX ).exists()){
 
 				type = _target_type==FMFile.FT_PIECE_REORDER?FMFile.FT_PIECE_REORDER:FMFile.FT_PIECE_REORDER_COMPACT;
 
@@ -128,7 +128,7 @@ FMFileAccessController
 						FMFileAccessPieceReorderer.recoverConfig(
 							owner.getOwner().getTorrentFile(),
 							target_file,
-							new File( control_dir, controlFileName + REORDER_SUFFIX ), _target_type );
+							FileUtil.newFile( control_dir, controlFileName + REORDER_SUFFIX ), _target_type );
 					}
 
 					type = _target_type;
@@ -378,7 +378,7 @@ FMFileAccessController
 
 				if ( type == FMFile.FT_LINEAR ){
 
-					new File(control_dir,controlFileName).delete();
+					FileUtil.newFile(control_dir,controlFileName).delete();
 				}
 			}
 		}

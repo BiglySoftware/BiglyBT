@@ -507,7 +507,7 @@ ConfigurationManager
     String dir = getStringParameter(parameter);
 
     if( dir.length() > 0 ) {
-      File temp = new File(dir);
+      File temp = FileUtil.newFile(dir);
       if (!temp.exists()) {
       	FileUtil.mkdirs(temp);
       }
@@ -917,11 +917,11 @@ ConfigurationManager
 				  }
 			  }
 
-			  File parent_dir = new File(SystemProperties.getUserPath());
+			  File parent_dir = FileUtil.newFile(SystemProperties.getUserPath());
 
-			  File props = new File( parent_dir, "exported_params.properties" );
+			  File props = FileUtil.newFile( parent_dir, "exported_params.properties" );
 
-			  PrintWriter pw = new PrintWriter( new OutputStreamWriter( new FileOutputStream( props ), "UTF-8" ));
+			  PrintWriter pw = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( props ), "UTF-8" ));
 
 			  try{
 				  for ( Map.Entry<String, String> entry: tm.entrySet()){
@@ -946,13 +946,13 @@ ConfigurationManager
 	  synchronized( exported_parameters ){
 
 		  try{
-			  File parent_dir = new File(SystemProperties.getUserPath());
+			  File parent_dir = FileUtil.newFile(SystemProperties.getUserPath());
 
-			  File props = new File( parent_dir, "exported_params.properties" );
+			  File props = FileUtil.newFile( parent_dir, "exported_params.properties" );
 
 			  if ( props.exists()){
 
-				  LineNumberReader lnr = new LineNumberReader( new InputStreamReader( new FileInputStream( props ), "UTF-8" ));
+				  LineNumberReader lnr = new LineNumberReader( new InputStreamReader( FileUtil.newFileInputStream( props ), "UTF-8" ));
 
 				  try{
 					  while( true ){

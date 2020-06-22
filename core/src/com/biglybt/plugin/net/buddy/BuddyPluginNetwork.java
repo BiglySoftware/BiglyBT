@@ -1414,7 +1414,7 @@ BuddyPluginNetwork
 	protected Map
 	readConfig()
 	{
-		File	config_file = new File( plugin_interface.getUtilities().getUserDir(), config_file_name );
+		File	config_file = FileUtil.newFile( plugin_interface.getUtilities().getUserDir(), config_file_name );
 
 		return( readConfigFile( config_file ));
 	}
@@ -1423,7 +1423,7 @@ BuddyPluginNetwork
 	writeConfig(
 		Map		map )
 	{
-		File	config_file = new File( plugin_interface.getUtilities().getUserDir(), config_file_name );
+		File	config_file = FileUtil.newFile( plugin_interface.getUtilities().getUserDir(), config_file_name );
 
 		writeConfigFile( config_file, map );
 	}
@@ -1433,7 +1433,7 @@ BuddyPluginNetwork
 	{
 		Utilities utils = plugin_interface.getUtilities();
 
-		File	config_file = new File( utils.getUserDir(), config_file_name );
+		File	config_file = FileUtil.newFile( utils.getUserDir(), config_file_name );
 
 		utils.deleteResilientBEncodedFile( config_file.getParentFile(), config_file.getName(), true );
 
@@ -1472,7 +1472,7 @@ BuddyPluginNetwork
 	protected File
 	getBuddyConfigDir()
 	{
-		return( new File( plugin_interface.getUtilities().getUserDir(), "friends" ));
+		return( FileUtil.newFile( plugin_interface.getUtilities().getUserDir(), "friends" ));
 	}
 
 	public BuddyPluginAZ2

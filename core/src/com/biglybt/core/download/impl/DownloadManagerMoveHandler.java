@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.savelocation.SaveLocationChange;
 import com.biglybt.pif.download.savelocation.SaveLocationManager;
@@ -150,7 +151,7 @@ public class DownloadManagerMoveHandler extends DownloadManagerMoveHandlerUtils 
 	}
 
 	private static void addFile(ArrayList l, String s) {
-		if (s != null && s.trim().length()!=0) {addFile(l, new File(s));}
+		if (s != null && s.trim().length()!=0) {addFile(l, FileUtil.newFile(s));}
 	}
 
 	public interface

@@ -30,9 +30,7 @@ import java.util.Map;
 import com.biglybt.core.security.CryptoECCUtils;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionException;
-import com.biglybt.core.util.BEncoder;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.SHA1Simple;
+import com.biglybt.core.util.*;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
@@ -504,7 +502,7 @@ SubscriptionBodyImpl
 
 			if ( file.exists()){
 
-				backup_file = new File( file.getParent(), file.getName() + ".bak" );
+				backup_file = FileUtil.newFile( file.getParent(), file.getName() + ".bak" );
 
 				backup_file.delete();
 

@@ -33,6 +33,7 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.SystemProperties;
 
 /**
@@ -236,11 +237,11 @@ public class FileLogging implements ILogEventListener {
 
 
 		long lMaxBytes = (iLogFileMaxMB * 1024L * 1024L) / 2;
-		File logFile = new File(sLogDir + File.separator + LOG_FILE_NAME);
+		File logFile = FileUtil.newFile(sLogDir, LOG_FILE_NAME);
 
 		if (logFile.length() > lMaxBytes && logFilePrinter != null)
 		{
-			File back_name = new File(sLogDir + File.separator + BAK_FILE_NAME);
+			File back_name = FileUtil.newFile(sLogDir, BAK_FILE_NAME);
 			logFilePrinter.close();
 			logFilePrinter = null;
 
@@ -259,7 +260,7 @@ public class FileLogging implements ILogEventListener {
 		{
 			try
 			{
-				logFileOS = new FileOutputStream( logFile, true );
+				logFileOS = FileUtil.newFileOutputStream( logFile, true );
 				if (logFile.length() == 0) {
 					// UTF-8 BOM
 					logFileOS.write(new byte[] { (byte) 239, (byte) 187, (byte) 191 });

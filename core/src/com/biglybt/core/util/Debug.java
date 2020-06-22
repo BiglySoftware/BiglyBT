@@ -711,7 +711,7 @@ public class Debug {
 		File f = new File( "biglybt_error.log" );	// user.dir relative
 		
 		try{
-			PrintWriter pw = new PrintWriter( new FileWriter( f, true ));
+			PrintWriter pw = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( f, true )));
 			
 			try{
 				pw.println( str );

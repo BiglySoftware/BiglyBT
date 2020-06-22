@@ -20,10 +20,7 @@
 
 package com.biglybt.core.metasearch.impl;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.*;
@@ -1609,7 +1606,7 @@ EngineImpl
 	{
 		if ( logging_enabled ){
 
-			return( new File( AEDiagnostics.getLogDir(), "MetaSearch_Engine_" + getId() + ".txt" ));
+			return( FileUtil.newFile( AEDiagnostics.getLogDir(), "MetaSearch_Engine_" + getId() + ".txt" ));
 
 		}else{
 
@@ -1639,7 +1636,7 @@ EngineImpl
 			PrintWriter	 pw = null;
 
 			try{
-				pw = new PrintWriter(new FileWriter( f, true ));
+				pw = new PrintWriter(new OutputStreamWriter( FileUtil.newFileOutputStream( f, true )));
 
 				pw.println( str );
 

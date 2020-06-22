@@ -24,24 +24,13 @@ package com.biglybt.core.download.impl;
  *
  */
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.util.*;
-
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
-import com.biglybt.core.disk.DiskManager;
-import com.biglybt.core.disk.DiskManagerFactory;
-import com.biglybt.core.disk.DiskManagerFileInfo;
-import com.biglybt.core.disk.DiskManagerFileInfoSet;
-import com.biglybt.core.disk.DiskManagerPiece;
+import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.impl.DiskManagerImpl;
 import com.biglybt.core.disk.impl.DiskManagerUtil;
 import com.biglybt.core.download.*;
@@ -55,19 +44,16 @@ import com.biglybt.core.logging.*;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
-import com.biglybt.core.peer.PEPeer;
-import com.biglybt.core.peer.PEPeerManager;
-import com.biglybt.core.peer.PEPeerSource;
-import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.peer.*;
 import com.biglybt.core.peermanager.PeerManagerRegistration;
 import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.TaggableResolver;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.tracker.AllTrackersManager;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
-import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
@@ -86,6 +72,12 @@ import com.biglybt.pifimpl.local.download.DownloadImpl;
 import com.biglybt.plugin.extseed.ExternalSeedPlugin;
 import com.biglybt.plugin.tracker.dht.DHTTrackerPlugin;
 import com.biglybt.plugin.tracker.local.LocalTrackerPlugin;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.util.*;
 
 /**
  * @author Olivier

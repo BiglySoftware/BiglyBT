@@ -98,7 +98,7 @@ PluginLauncherImpl
 				    PrintWriter	pw = null;
 
 				    try{
-						pw = new PrintWriter(new FileWriter( log_file, true ));
+						pw = new PrintWriter(new OutputStreamWriter( FileUtil.newFileOutputStream( log_file, true )));
 
 						if ( str.endsWith( "\n" )){
 
@@ -285,7 +285,7 @@ PluginLauncherImpl
 
 	    	    Properties props = new Properties();
 
-	    	    File	properties_file = new File( plugin_dir, "plugin.properties");
+	    	    File	properties_file = FileUtil.newFile( plugin_dir, "plugin.properties");
 
 	    	    	// if properties file exists on its own then override any properties file
 	    	    	// potentially held within a jar
@@ -295,7 +295,7 @@ PluginLauncherImpl
 	  	    		FileInputStream	fis = null;
 
 	  	    		try{
-	  	    			fis = new FileInputStream( properties_file );
+	  	    			fis = FileUtil.newFileInputStream( properties_file );
 
 	  	    			props.load( fis );
 

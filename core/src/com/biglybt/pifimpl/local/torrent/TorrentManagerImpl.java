@@ -463,7 +463,7 @@ TorrentManagerImpl
 	{
 		FileInputStream fis = null;
 		try {
-			fis = new FileInputStream (file);
+			fis = FileUtil.newFileInputStream (file);
 			TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedInputStream( fis );
 			return new TorrentImpl(plugin_interface, preserveFields(torrent,preserve));
 		} catch (FileNotFoundException e) {

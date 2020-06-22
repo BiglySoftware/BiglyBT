@@ -460,7 +460,7 @@ TagDownloadWithState
 
 					if ( set_torrent ){
 
-						File old_torrent_file = new File( dm.getTorrentFileName());
+						File old_torrent_file = FileUtil.newFile( dm.getTorrentFileName());
 
 						if ( old_torrent_file.exists()){
 

@@ -28,12 +28,7 @@ import java.util.Map;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
-import com.biglybt.core.util.Base32;
-import com.biglybt.core.util.CopyOnWriteList;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.IndentWriter;
-import com.biglybt.core.util.ListenerManager;
-import com.biglybt.core.util.ListenerManagerDispatcher;
+import com.biglybt.core.util.*;
 import com.biglybt.util.MapUtils;
 
 public abstract class
@@ -733,7 +728,7 @@ TagTypeBase
  			
  			if ( ar != null ){
  				
- 				ass_root = new File( ar );
+ 				ass_root = FileUtil.newFile( ar );
  			}
  		}
  		
@@ -806,7 +801,7 @@ TagTypeBase
 	 					
 	 					if ( fl.supportsTagMoveOnAssign()){
 	 						
-	 						fl.setTagMoveOnAssignFolder( ass_root==null?null:new File( ass_root, tag.getTagName( true )));
+	 						fl.setTagMoveOnAssignFolder( ass_root==null?null:FileUtil.newFile( ass_root, tag.getTagName( true )));
 	 					}
 	 				}
  				}
@@ -844,7 +839,7 @@ TagTypeBase
 	 					
 	 					if ( fl.supportsTagMoveOnAssign()){
 	 						
-	 						fl.setTagMoveOnAssignFolder( ass_root==null?null:new File( ass_root, tag.getTagName( true )));
+	 						fl.setTagMoveOnAssignFolder( ass_root==null?null:FileUtil.newFile( ass_root, tag.getTagName( true )));
 	 					}
 	 				}
 	 			}

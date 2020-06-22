@@ -249,7 +249,7 @@ public class TorrentFolderWatcher {
 				File folder = null;
 
 				if (folder_path != null && folder_path.length() > 0) {
-					folder = new File(folder_path);
+					folder = FileUtil.newFile(folder_path);
 					if (!folder.isDirectory()) {
 						if (!folder.exists()) {
 							FileUtil.mkdirs(folder);
@@ -291,7 +291,7 @@ public class TorrentFolderWatcher {
 
 			File f = null;
 			if (data_save_path != null && data_save_path.length() > 0) {
-				f = new File(data_save_path);
+				f = FileUtil.newFile(data_save_path);
 
 				// Path is not an existing directory.
 				if (!f.isDirectory()) {
@@ -350,8 +350,8 @@ public class TorrentFolderWatcher {
 				boolean	save_torrents = save_torrents_default;
 
 				if (torrent_save_path.length() == 0
-						|| new File( torrent_save_path ).getAbsolutePath().equals(folder.getAbsolutePath())
-						|| !new File(torrent_save_path).isDirectory()) {
+						|| FileUtil.newFile( torrent_save_path ).getAbsolutePath().equals(folder.getAbsolutePath())
+						|| !FileUtil.newFile(torrent_save_path).isDirectory()) {
 
 					save_torrents = false;
 				}
@@ -371,7 +371,7 @@ public class TorrentFolderWatcher {
 							return;
 						}
 
-						File file = new File(folder, currentFileList[i]).getAbsoluteFile();
+						File file = FileUtil.newFile(folder, currentFileList[i]).getAbsoluteFile();
 						
 						if ( file.getName().toLowerCase( Locale.US ).endsWith( ".magnet" )) {
 							
@@ -398,9 +398,9 @@ public class TorrentFolderWatcher {
 
 									if ( always_rename ){
 									
-										if ( !file.equals( new File( dm.getTorrentFileName()).getAbsoluteFile())){
+										if ( !file.equals( FileUtil.newFile( dm.getTorrentFileName()).getAbsoluteFile())){
 											
-											File imported = new File(folder, file.getName() + ".imported");
+											File imported = FileUtil.newFile(folder, file.getName() + ".imported");
 											
 											TorrentUtils.move(file, imported);
 										}
@@ -418,7 +418,7 @@ public class TorrentFolderWatcher {
 	
 									if ( always_rename || !save_torrents ){
 	
-										File imported = new File(folder, file.getName() + ".imported");
+										File imported = FileUtil.newFile(folder, file.getName() + ".imported");
 	
 										TorrentUtils.move(file, imported);
 	
@@ -533,7 +533,7 @@ public class TorrentFolderWatcher {
 									
 									if ( always_rename || !save_torrents) {
 	
-										File imported = new File(folder, file.getName() + ".imported");
+										File imported = FileUtil.newFile(folder, file.getName() + ".imported");
 	
 										TorrentUtils.move(file, imported);
 	
@@ -829,7 +829,7 @@ public class TorrentFolderWatcher {
 						
 						bad_magnet = false;
 						
-						File output_file = new File( active.getAbsolutePath() + ".torrent" );
+						File output_file = FileUtil.newFile( active.getAbsolutePath() + ".torrent" );
 						
 						if ( output_file.exists()){
 							
@@ -877,7 +877,7 @@ public class TorrentFolderWatcher {
 								
 								if ( bad_magnet ){
 								
-									active.renameTo( new File( active.getAbsolutePath() + ".failed" ));
+									active.renameTo( FileUtil.newFile( active.getAbsolutePath() + ".failed" ));
 								}
 								
 								failed_magnets.add( active );

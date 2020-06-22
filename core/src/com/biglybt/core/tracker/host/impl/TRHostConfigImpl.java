@@ -25,9 +25,7 @@ package com.biglybt.core.tracker.host.impl;
  *
  */
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -126,7 +124,7 @@ TRHostConfigImpl
 						if ( file_b != null ){
 
 							try{
-								File	file = new File( new String( file_b, Constants.BYTE_ENCODING_CHARSET ));
+								File	file = FileUtil.newFile( new String( file_b, Constants.BYTE_ENCODING_CHARSET ));
 
 								torrent = TorrentUtils.readFromFile( file, true, true );
 
@@ -456,11 +454,11 @@ TRHostConfigImpl
 
 					   		PrintWriter	pw = null;
 
-					   		File	file_name = new File( log_dir.concat(File.separator).concat(LOG_FILE_NAME) );
+					   		File	file_name = FileUtil.newFile( log_dir, LOG_FILE_NAME );
 
 					   		try{
 
-					   			pw = new PrintWriter(new FileWriter( file_name, true ));
+					   			pw = new PrintWriter(new OutputStreamWriter( FileUtil.newFileOutputStream( file_name, true )));
 
 					   			for (int i=0;i<stats_entries.size();i++){
 

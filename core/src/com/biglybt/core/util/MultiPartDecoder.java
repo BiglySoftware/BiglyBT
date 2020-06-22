@@ -307,7 +307,7 @@ MultiPartDecoder
 
 			}else{
 
-				returned_stream = new FileInputStream( file );
+				returned_stream = FileUtil.newFileInputStream( file );
 			}
 
 			return( returned_stream );
@@ -369,7 +369,7 @@ MultiPartDecoder
 
 					file.deleteOnExit();
 
-					fos = new FileOutputStream( file );
+					fos = FileUtil.newFileOutputStream( file );
 
 					fos.write( baos.toByteArray());
 

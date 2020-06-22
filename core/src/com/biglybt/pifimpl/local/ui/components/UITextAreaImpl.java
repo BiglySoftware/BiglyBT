@@ -328,7 +328,7 @@ UITextAreaImpl
 					if ( poop_file != null ){
 
 						try{
-							pw = new PrintWriter( new OutputStreamWriter( new FileOutputStream( poop_file ), "UTF-8" ));
+							pw = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( poop_file ), "UTF-8" ));
 
 							pw.print( buffer.toString());
 

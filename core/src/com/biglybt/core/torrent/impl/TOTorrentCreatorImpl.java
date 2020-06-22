@@ -231,7 +231,7 @@ TOTorrentCreatorImpl
 					logical_path.set( i, FileUtil.convertOSSpecificChars( logical_path.get(i), i < logical_path.size()-1));
 				}
 
-				File	tf = new File( target );
+				File	tf = FileUtil.newFile( target );
 
 				if ( !tf.exists()){
 
@@ -295,7 +295,7 @@ TOTorrentCreatorImpl
 				continue;
 			}
 
-			File t = new File( temp, file_name);
+			File t = FileUtil.newFile( temp, file_name);
 
 			if ( f.isDirectory()){
 
@@ -353,7 +353,7 @@ TOTorrentCreatorImpl
 
 				for ( int i=0;i<logical_path.size();i++ ){
 
-					temp = new File( temp, logical_path.get( i ));
+					temp = FileUtil.newFile( temp, logical_path.get( i ));
 
 					if ( top_level_file == null ){
 

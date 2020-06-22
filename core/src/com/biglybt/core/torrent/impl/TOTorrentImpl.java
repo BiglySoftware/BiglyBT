@@ -240,7 +240,7 @@ TOTorrentImpl
 			} // end if (!parent.isDirectory)
 
 
-			File temp = new File( parent, output_file.getName() + ".saving");
+			File temp = FileUtil.newFile( parent, output_file.getName() + ".saving");
 
 			if ( temp.exists()){
 
@@ -265,7 +265,7 @@ TOTorrentImpl
 				}
 			}
 
-            FileOutputStream fos = new FileOutputStream( temp, false );
+            FileOutputStream fos = FileUtil.newFileOutputStream( temp );
 
             bos = new BufferedOutputStream( fos, 8192 );
 

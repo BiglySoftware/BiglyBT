@@ -119,7 +119,7 @@ PluginInstallerImpl
 
 										File temp_dir = AETemporaryFileHandler.createTempDir();
 
-										File temp_file = new File( temp_dir, id + "_" + version + "." + suffix );
+										File temp_file = FileUtil.newFile( temp_dir, id + "_" + version + "." + suffix );
 
 										FileUtil.copyFile( new ByteArrayInputStream( plugin_file ), temp_file );
 
@@ -453,7 +453,7 @@ PluginInstallerImpl
 
 					File temp_dir = AETemporaryFileHandler.createTempDir();
 
-					File temp_file = new File( temp_dir, id + "_" + version + "." + suffix );
+					File temp_file = FileUtil.newFile( temp_dir, id + "_" + version + "." + suffix );
 
 					FileUtil.copyFile( new ByteArrayInputStream( plugin_file ), temp_file );
 
@@ -858,7 +858,7 @@ PluginInstallerImpl
 
 			String	plugin_dir = pi.getPluginDirectoryName();
 
-			if ( plugin_dir == null || !new File(plugin_dir).exists()){
+			if ( plugin_dir == null || !FileUtil.newFile(plugin_dir).exists()){
 
 				throw( new PluginException( "Plugin '" + pi.getPluginID() + "' is not loaded from the file system, can't uninstall" ));
 			}
@@ -906,7 +906,7 @@ PluginInstallerImpl
 						{
 							try{
 								ResourceDownloader rd =
-									manager.getDefaultPluginInterface().getUtilities().getResourceDownloaderFactory().create( new File( plugin_dir ));
+									manager.getDefaultPluginInterface().getUtilities().getResourceDownloaderFactory().create( FileUtil.newFile( plugin_dir ));
 
 									// the plugin may have > 1 plugin interfaces, make the name up appropriately
 
@@ -971,7 +971,7 @@ PluginInstallerImpl
 
 															pi.getPluginState().unload();
 
-															if ( !FileUtil.recursiveDelete( new File( plugin_dir ))){
+															if ( !FileUtil.recursiveDelete( FileUtil.newFile( plugin_dir ))){
 
 																update.setRestartRequired( Update.RESTART_REQUIRED_YES );
 
@@ -983,7 +983,7 @@ PluginInstallerImpl
 
 														UpdateInstaller installer = checker.createInstaller();
 
-														installer.addRemoveAction( new File( plugin_dir ).getCanonicalPath());
+														installer.addRemoveAction( FileUtil.newFile( plugin_dir ).getCanonicalPath());
 
 														update.complete( true );
 

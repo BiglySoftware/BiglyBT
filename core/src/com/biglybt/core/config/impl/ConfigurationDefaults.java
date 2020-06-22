@@ -298,15 +298,15 @@ public class ConfigurationDefaults {
     try {
       File dirDownloads = PlatformManagerFactory.getPlatformManager().getLocation(PlatformManager.LOC_DOWNLOADS);
       if (dirDownloads != null) {
-        f = new File(dirDownloads, Constants.APP_NAME);
+        f = FileUtil.newFile(dirDownloads, Constants.APP_NAME);
       }
     } catch (Throwable ignore) {
     }
     if (f == null) {
-      f = new File(SystemProperties.getDocPath(), "Downloads");
+      f = FileUtil.newFile(SystemProperties.getDocPath(), "Downloads");
     }
 	}else{
-    f = new File(SystemProperties.getDocPath(),  Constants.APP_NAME + " Downloads");
+    f = FileUtil.newFile(SystemProperties.getDocPath(),  Constants.APP_NAME + " Downloads");
 	}
 
 	def.put("Default save path", f.getAbsolutePath());

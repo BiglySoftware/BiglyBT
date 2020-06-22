@@ -517,7 +517,7 @@ IntegratedResourceBundle
 					temp_file = scratch_file_name;
 				}
 
-				fos = new FileOutputStream( temp_file );
+				fos = FileUtil.newFileOutputStream( temp_file );
 
 				props.store( fos, "message cache" );
 
@@ -528,7 +528,7 @@ IntegratedResourceBundle
 					// System.out.println( "wrote cache file " + temp_file + " for " + this );
 
 				scratch_file_name	= temp_file;
-				scratch_file_is 	= new FileInputStream( temp_file );
+				scratch_file_is 	= FileUtil.newFileInputStream( temp_file );
 
 				messages_dirty		= false;
 
@@ -627,7 +627,7 @@ IntegratedResourceBundle
 
 					fis.close();
 
-					scratch_file_is = new FileInputStream( scratch_file_name );
+					scratch_file_is = FileUtil.newFileInputStream( scratch_file_name );
 
 					messages = new LightHashMap();
 

@@ -1108,7 +1108,7 @@ UtilitiesImpl
  		String	file_name,
  		boolean	use_backup )
 	{
-		FileUtil.deleteResilientFile( new File( parent_dir, file_name ));
+		FileUtil.deleteResilientFile( FileUtil.newFile( parent_dir, file_name ));
 	}
 
 	@Override

@@ -532,7 +532,7 @@ UPnPImpl
 		}catch( Throwable e ){
 
 			try{
-				FileOutputStream	trace = new FileOutputStream( getTraceFile());
+				FileOutputStream	trace = FileUtil.newFileOutputStream( getTraceFile());
 
 				try{
 					trace.write( bytes_in );
@@ -978,7 +978,7 @@ UPnPImpl
 				trace_index = 1;
 			}
 
-			return( new File( adapter.getTraceDir(), "upnp_trace" + trace_index + ".log" ));
+			return( FileUtil.newFile( adapter.getTraceDir(), "upnp_trace" + trace_index + ".log" ));
 		}finally{
 
 			this_mon.exit();

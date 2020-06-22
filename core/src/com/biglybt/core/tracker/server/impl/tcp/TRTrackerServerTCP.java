@@ -201,14 +201,14 @@ TRTrackerServerTCP
 
 					if ( dos_log_file == null ){
 
-						dos_log_file = new File( System.getProperty("user.dir" ) + File.separator + "dos.log" );
+						dos_log_file = FileUtil.newFile( System.getProperty("user.dir" ), "dos.log" );
 					}
 
 					PrintWriter pw = null;
 
 					try{
 
-						pw = new PrintWriter( new FileWriter( dos_log_file, true ));
+						pw = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( dos_log_file, true )));
 
 						for (int i=0;i<dos_list.size();i++){
 

@@ -964,7 +964,7 @@ PluginConfigImpl
 
 		String	dir = plugin_interface.getUtilities().getUserDir();
 
-		File	file = new File( dir, "plugins" );
+		File	file = FileUtil.newFile( dir, "plugins" );
 
 		String	p_dir = plugin_interface.getPluginDirectoryName();
 
@@ -977,7 +977,7 @@ PluginConfigImpl
 				p_dir = p_dir.substring(lp+1);
 			}
 
-			file = new File( file, p_dir );
+			file = FileUtil.newFile( file, p_dir );
 
 		}else{
 
@@ -985,7 +985,7 @@ PluginConfigImpl
 
 			if ( id.length() > 0 && !id.equals( PluginInitializer.INTERNAL_PLUGIN_ID )){
 
-				file = new File( file, id );
+				file = FileUtil.newFile( file, id );
 
 			}else{
 
@@ -996,7 +996,7 @@ PluginConfigImpl
 
 		FileUtil.mkdirs(file);
 
-		return( new File( file, name ));
+		return( FileUtil.newFile( file, name ));
 	}
 
 	@Override

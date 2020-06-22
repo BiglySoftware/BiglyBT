@@ -762,7 +762,7 @@ PluginInitializer
 	getRootClassLoader(
 		File		dir )
   	{
- 		dir = new File( dir, "lib" );
+ 		dir = FileUtil.newFile( dir, "lib" );
 
  		if ( dir.exists() && dir.isDirectory()){
 
@@ -937,7 +937,7 @@ PluginInitializer
 	  try {
 		  Properties props = new Properties();
 
-		  File	properties_file = new File(directory.toString() + File.separator + "plugin.properties");
+		  File	properties_file = FileUtil.newFile(directory.toString(), "plugin.properties");
 
 		  try {
 
@@ -949,7 +949,7 @@ PluginInitializer
 				  FileInputStream	fis = null;
 
 				  try{
-					  fis = new FileInputStream( properties_file );
+					  fis = FileUtil.newFileInputStream( properties_file );
 
 					  props.load( fis );
 

@@ -325,7 +325,7 @@ DiskManagerFileInfoStream
 
 			}else{
 
-				final File	temp_file = new File( save_to.getAbsolutePath() + "._tmp_" );
+				final File	temp_file = FileUtil.newFile( save_to.getAbsolutePath() + "._tmp_" );
 
 				raf = new RandomAccessFile( temp_file, "rw" );
 

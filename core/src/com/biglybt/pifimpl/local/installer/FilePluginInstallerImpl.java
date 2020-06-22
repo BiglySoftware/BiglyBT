@@ -28,6 +28,7 @@ import java.util.zip.ZipInputStream;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.Plugin;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
@@ -109,7 +110,7 @@ FilePluginInstallerImpl
 				try{
 					zis =
 						new ZipInputStream(
-								new BufferedInputStream( new FileInputStream( file ) ));
+								new BufferedInputStream( FileUtil.newFileInputStream( file ) ));
 
 
 						while( properties == null ){

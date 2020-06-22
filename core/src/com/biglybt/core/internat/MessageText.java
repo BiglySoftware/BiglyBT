@@ -560,7 +560,7 @@ public class MessageText {
 				}
 			}
 		} else {
-      File bundleDirectory = new File(URI.create(urlString)).getParentFile();
+      File bundleDirectory = FileUtil.newFile(URI.create(urlString)).getParentFile();
       //      System.out.println("bundleDirectory: " +
       // bundleDirectory.getAbsolutePath());
 
@@ -575,7 +575,7 @@ public class MessageText {
     HashSet<String> bundleSet = new HashSet<>();
 
     // Add local first
-    File localDir = new File(SystemProperties.getUserPath());
+    File localDir = FileUtil.newFile(SystemProperties.getUserPath());
     String[] localBundles = localDir.list(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String name) {
@@ -590,7 +590,7 @@ public class MessageText {
     }
 
     // Add AppDir 2nd
-    File appDir = new File(SystemProperties.getApplicationPath());
+    File appDir = FileUtil.newFile(SystemProperties.getApplicationPath());
     String[] appBundles = appDir.list(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String name) {
@@ -662,8 +662,8 @@ public class MessageText {
     	  newLocale = LOCALE_DEFAULT;
 
       try {
-        File userBundleFile = new File(SystemProperties.getUserPath());
-        File appBundleFile = new File(SystemProperties.getApplicationPath());
+        File userBundleFile = FileUtil.newFile(SystemProperties.getUserPath());
+        File appBundleFile = FileUtil.newFile(SystemProperties.getApplicationPath());
 
         // Get the jarURL
         // XXX Is there a better way to get the JAR name?

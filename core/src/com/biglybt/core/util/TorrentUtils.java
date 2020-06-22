@@ -281,7 +281,7 @@ TorrentUtils
 
 	    	if (bSaveTorrentBackup) {
 
-	    		File torrent_file_bak = new File(file.getParent(), file.getName() + ".bak");
+	    		File torrent_file_bak = FileUtil.newFile(file.getParent(), file.getName() + ".bak");
 
 	    		if ( !torrent_file_bak.exists()){
 
@@ -299,7 +299,7 @@ TorrentUtils
 
 			// Debug.outNoStack( e.getMessage() );
 
-			File torrentBackup = new File(file.getParent(), file.getName() + ".bak");
+			File torrentBackup = FileUtil.newFile(file.getParent(), file.getName() + ".bak");
 
 			if( torrentBackup.exists()){
 
@@ -412,18 +412,18 @@ TorrentUtils
 	    		// save first to temporary file as serialisation may require state to be re-read from
 	    		// the existing file first and if we rename to .bak first then this aint good
 
-    		File torrent_file_tmp = new File(str + "._az");
+    		File torrent_file_tmp = FileUtil.newFile(str + "._az");
 
 	    	torrent.serialiseToBEncodedFile( torrent_file_tmp );
 
 	    		// now backup if required
 
-	    	File torrent_file = new File(str);
+	    	File torrent_file = FileUtil.newFile(str);
 
 	    	if ( 	( force_backup ||COConfigurationManager.getBooleanParameter("Save Torrent Backup")) &&
 	    			torrent_file.exists()) {
 
-	    		File torrent_file_bak = new File(str + ".bak");
+	    		File torrent_file_bak = FileUtil.newFile(str + ".bak");
 
 	    		try{
 
@@ -536,7 +536,7 @@ TorrentUtils
 	    		return;
 	    	}
 
-	    	File file = new File(str);
+	    	File file = FileUtil.newFile(str);
 
 	    	if ( !file.delete()){
 
@@ -546,7 +546,7 @@ TorrentUtils
 	    		}
 	    	}
 
-	    	new File( str + ".bak" ).delete();
+			 FileUtil.newFile( str + ".bak" ).delete();
 
 	    }finally{
 
@@ -565,9 +565,9 @@ TorrentUtils
 
 				Debug.out( "TorrentUtils::delete: failed to delete '" + torrent_file + "'" );
 			}
-    	}
+		}
 
-    	new File( torrent_file.toString() + ".bak" ).delete();
+		FileUtil.newFile( torrent_file.toString() + ".bak" ).delete();
 	}
 
 	public static boolean
@@ -580,11 +580,11 @@ TorrentUtils
 			return( false );
 		}
 
-		if ( new File( from_torrent.toString() + ".bak").exists()){
+		if ( FileUtil.newFile( from_torrent.toString() + ".bak").exists()){
 
 			FileUtil.renameFile(
-				new File( from_torrent.toString() + ".bak"),
-				new File( to_torrent.toString() + ".bak"));
+				FileUtil.newFile( from_torrent.toString() + ".bak"),
+				FileUtil.newFile( to_torrent.toString() + ".bak"));
 		}
 
 		return( true );
@@ -2520,7 +2520,7 @@ TorrentUtils
 						int		file_index 	= Integer.parseInt( entry.getKey());
 						String	file		= entry.getValue();
 
-						result.put( file_index, new File( file ));
+						result.put( file_index, FileUtil.newFile( file ));
 					}
 				}
 			}
@@ -2980,7 +2980,7 @@ TorrentUtils
 			}else{
 				
 				String 	orgFullName = torrentFile.getRelativePath(); // translated to locale
-				String	orgFileName = new File(orgFullName).getName();
+				String	orgFileName = FileUtil.newFile(orgFullName).getName();
 				
 				if ( skip_min_size > 0 && torrentFile.getLength() < skip_min_size ){
 		
@@ -4127,10 +4127,10 @@ TorrentUtils
 		boolean saveTorrents = persistent
 				&& COConfigurationManager.getBooleanParameter("Save Torrent Files");
 		if (saveTorrents)
-			torrentDir = new File(COConfigurationManager
+			torrentDir = FileUtil.newFile(COConfigurationManager
 					.getDirectoryParameter("General_sDefaultTorrent_Directory"));
 		else
-			torrentDir = new File(f.getParent());
+			torrentDir = FileUtil.newFile(f.getParent());
 
 		//if the torrent is already in the completed files dir, use this
 		//torrent instead of creating a new one in the default dir
@@ -4138,22 +4138,22 @@ TorrentUtils
 		String completedDir = COConfigurationManager.getStringParameter(
 				"Completed Files Directory", "");
 		if (moveWhenDone && completedDir.length() > 0) {
-			File cFile = new File(completedDir, f.getName());
+			File cFile = FileUtil.newFile(completedDir, f.getName());
 			if (cFile.exists()) {
 				//set the torrentDir to the completedDir
-				torrentDir = new File(completedDir);
+				torrentDir = FileUtil.newFile(completedDir);
 			}
 		}
 
 		FileUtil.mkdirs(torrentDir);
 
-		File fDest = new File(torrentDir, f.getName().replaceAll("%20", "."));
+		File fDest = FileUtil.newFile(torrentDir, f.getName().replaceAll("%20", "."));
 		if (fDest.equals(f)) {
 			return f;
 		}
 
 		while (fDest.exists()) {
-			fDest = new File(torrentDir, "_" + fDest.getName());
+			fDest = FileUtil.newFile(torrentDir, "_" + fDest.getName());
 		}
 
 		fDest.createNewFile();
@@ -4192,7 +4192,7 @@ TorrentUtils
 		if ( saveTorrents ){
 
 			try{
-				File torrentDir = new File(COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory"));
+				File torrentDir = FileUtil.newFile(COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory"));
 
 				if ( torrentDir.isDirectory() && torrentDir.equals( f.getParentFile())){
 
@@ -4309,7 +4309,7 @@ TorrentUtils
 	 * @throws IOException
 	 */
 	public static boolean isTorrentFile(String filename) throws FileNotFoundException, IOException {
-	  File check = new File(filename);
+	  File check = FileUtil.newFile(filename);
 	  if (!check.exists())
 	    throw new FileNotFoundException("File "+filename+" not found.");
 	  if (!check.canRead())

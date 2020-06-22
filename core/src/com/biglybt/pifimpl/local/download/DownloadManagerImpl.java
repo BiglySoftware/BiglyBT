@@ -385,7 +385,7 @@ DownloadManagerImpl
 		    	throw( new DownloadException("DownloadManager::addDownload: default torrent save directory must be configured" ));
 		    }
 
-		    torrent_file = new File( torrent_dir + File.separator + torrent.getName() + ".torrent" );
+		    torrent_file = FileUtil.newFile( torrent_dir, torrent.getName() + ".torrent" );
 
 		    try{
 		    	torrent.writeToFile( torrent_file );
@@ -414,7 +414,7 @@ DownloadManagerImpl
 		    	throw( new DownloadException("DownloadManager::addDownload: default data save directory must be configured" ));
 		    }
 
-		    data_location = new File(data_dir);
+		    data_location = FileUtil.newFile(data_dir);
 
 		    FileUtil.mkdirs(data_location);
 		}
@@ -1527,7 +1527,7 @@ DownloadManagerImpl
 	getStubTorrent(
 		byte[]		hash  )
 	{
-		File torrent_file = new File( ARCHIVE_DIR, ByteFormatter.encodeString( hash ) + ".dat" );
+		File torrent_file = FileUtil.newFile( ARCHIVE_DIR, ByteFormatter.encodeString( hash ) + ".dat" );
 
 		if ( torrent_file.exists()){
 
@@ -1546,7 +1546,7 @@ DownloadManagerImpl
 	getTorrent(
 		DownloadStubImpl		stub )
 	{
-		File torrent_file = new File( ARCHIVE_DIR, ByteFormatter.encodeString( stub.getTorrentHash()) + ".dat" );
+		File torrent_file = FileUtil.newFile( ARCHIVE_DIR, ByteFormatter.encodeString( stub.getTorrentHash()) + ".dat" );
 
 		if ( torrent_file.exists()){
 

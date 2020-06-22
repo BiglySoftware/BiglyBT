@@ -251,7 +251,7 @@ SESecurityManagerImpl
 	initEmptyTrustStore()
 	{
 		try{
-			File	target = new File( truststore_name );
+			File	target = FileUtil.newFile( truststore_name );
 
 			if ( target.exists() && target.length() > 2*1024 ){
 
@@ -264,7 +264,7 @@ SESecurityManagerImpl
 
 			if ( keystore.size() == 0 ){
 
-				File cacerts = new File( new File( new File( System.getProperty( "java.home" ), "lib" ), "security" ), "cacerts" );
+				File cacerts = FileUtil.newFile( System.getProperty( "java.home" ), "lib", "security", "cacerts" );
 
 				if ( cacerts.exists()){
 
@@ -297,7 +297,7 @@ SESecurityManagerImpl
 		boolean	test_only,
 		boolean	recovering )
 	{
-		File cacerts = new File( new File( new File( System.getProperty( "java.home" ), "lib" ), "security" ), "cacerts" );
+		File cacerts = FileUtil.newFile( System.getProperty( "java.home" ), "lib", "security", "cacerts" );
 
 		if ( !cacerts.exists()){
 
@@ -309,7 +309,7 @@ SESecurityManagerImpl
 			return( true );
 		}
 
-		File	target = new File( truststore_name );
+		File	target = FileUtil.newFile( truststore_name );
 
 		if ( target.exists()){
 
@@ -537,7 +537,7 @@ SESecurityManagerImpl
 	protected boolean
 	checkKeyStoreHasEntry()
 	{
-		File	f  = new File(keystore_name);
+		File	f  = FileUtil.newFile(keystore_name);
 
 		if ( !f.exists()){
 			Logger.logTextResource(new LogAlert(LogAlert.UNREPEATABLE,
@@ -581,14 +581,14 @@ SESecurityManagerImpl
 
 			KeyStore keystore = KeyStore.getInstance( KEYSTORE_TYPE );
 
-			if ( !new File(name).exists()){
+			if ( !FileUtil.newFile(name).exists()){
 
 				keystore.load(null,null);
 
 				FileOutputStream	out = null;
 
 				try{
-					out = new FileOutputStream(name);
+					out = FileUtil.newFileOutputStream(FileUtil.newFile(name));
 
 					keystore.store(out, SESecurityManager.SSL_PASSWORD.toCharArray());
 
@@ -642,7 +642,7 @@ SESecurityManagerImpl
 	{
 		KeyStore keystore = KeyStore.getInstance( KEYSTORE_TYPE );
 
-		File tf_file = new File( truststore_name );
+		File tf_file = FileUtil.newFile( truststore_name );
 
 		try{
 			if ( !tf_file.exists()){
@@ -654,7 +654,7 @@ SESecurityManagerImpl
 				FileInputStream		in 	= null;
 
 				try{
-					in = new FileInputStream( tf_file );
+					in = FileUtil.newFileInputStream( tf_file );
 
 					keystore.load(in, SESecurityManager.SSL_PASSWORD.toCharArray());
 
@@ -675,7 +675,7 @@ SESecurityManagerImpl
 				try{
 					if ( tf_file.exists()){
 
-						File bad_file = new File( tf_file.getAbsolutePath() + ".bad" );
+						File bad_file = FileUtil.newFile( tf_file.getAbsolutePath() + ".bad" );
 
 						bad_file.delete();
 
@@ -724,7 +724,8 @@ SESecurityManagerImpl
 	{
 		KeyStore key_store = KeyStore.getInstance( KEYSTORE_TYPE );
 
-		if ( !new File(keystore_name).exists()){
+		File keystore_file = FileUtil.newFile(keystore_name);
+		if ( !keystore_file.exists()){
 
 			key_store.load(null,null);
 
@@ -733,7 +734,7 @@ SESecurityManagerImpl
 			InputStream kis = null;
 
 			try{
-				kis = new FileInputStream(keystore_name);
+				kis = FileUtil.newFileInputStream(keystore_file);
 
 				key_store.load(kis, SESecurityManager.SSL_PASSWORD.toCharArray());
 
@@ -1510,7 +1511,7 @@ SESecurityManagerImpl
 			FileOutputStream	out = null;
 
 			try{
-				out = new FileOutputStream(keystore_name);
+				out = FileUtil.newFileOutputStream(FileUtil.newFile(keystore_name));
 
 				key_store.store(out, SESecurityManager.SSL_PASSWORD.toCharArray());
 
@@ -1556,7 +1557,7 @@ SESecurityManagerImpl
 				FileOutputStream	out = null;
 
 				try{
-					out = new FileOutputStream(truststore_name);
+					out = FileUtil.newFileOutputStream(FileUtil.newFile(truststore_name));
 
 					keystore.store(out, SESecurityManager.SSL_PASSWORD.toCharArray());
 

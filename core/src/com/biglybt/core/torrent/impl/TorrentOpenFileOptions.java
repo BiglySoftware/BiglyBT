@@ -17,6 +17,8 @@
 
 package com.biglybt.core.torrent.impl;
 
+import com.biglybt.core.util.FileUtil;
+
 import java.io.File;
 
 /**
@@ -118,7 +120,7 @@ public class TorrentOpenFileOptions
 			return;
 		}
 
-		File newPath = new File(newFullName);
+		File newPath = FileUtil.newFile(newFullName);
 		setDestPathName(newPath.getParent());
 		setDestFileName(newPath.getName(),true);
 	}
@@ -149,7 +151,7 @@ public class TorrentOpenFileOptions
 		if (parent.getTorrent().isSimpleTorrent())
 			return parent.getParentDir();
 
-		return new File(parent.getDataDir(), orgFullName).getParent();
+		return FileUtil.newFile(parent.getDataDir(), orgFullName).getParent();
 	}
 
 	public boolean
@@ -165,7 +167,7 @@ public class TorrentOpenFileOptions
 	public File getDestFileFullName() {
 		String path = getDestPathName();
 		String file = getDestFileName();
-		return new File(path,file);
+		return FileUtil.newFile(path,file);
 	}
 
 	public boolean okToDisable() {

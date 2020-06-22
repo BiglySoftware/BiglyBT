@@ -1071,7 +1071,7 @@ public class GlobalManagerImpl
 		boolean removeFromAddingDM = false;
 
 		try {
-			File f = new File(torrent_file_name);
+			File f = FileUtil.newFile(torrent_file_name);
 
 			if (!f.exists()) {
 				throw (new IOException("Torrent file '" + torrent_file_name
@@ -1143,7 +1143,7 @@ public class GlobalManagerImpl
 					
 					if ( !path.isEmpty()){
 						
-						File temp = new File( path );
+						File temp = FileUtil.newFile( path );
 						
 						if ( !temp.isDirectory()){
 							
@@ -1152,7 +1152,7 @@ public class GlobalManagerImpl
 						
 						if ( temp.isDirectory()){
 							
-							moc	= new File( savePath );
+							moc	= FileUtil.newFile( savePath );
 							
 							savePath = temp.getAbsolutePath();
 						}
@@ -1222,13 +1222,13 @@ public class GlobalManagerImpl
 		} finally {
 			if (deleteDest) {
 				try{
-					boolean skip = deleteDestExistingDM != null && !new File( deleteDestExistingDM.getTorrentFileName()).equals( fDest );
+					boolean skip = deleteDestExistingDM != null && !FileUtil.newFile( deleteDestExistingDM.getTorrentFileName()).equals( fDest );
 					
 					if ( !skip ){
 						fDest.delete();
 						File backupFile;
 	
-						backupFile = new File(fDest.getCanonicalPath() + ".bak");
+						backupFile = FileUtil.newFile(fDest.getCanonicalPath() + ".bak");
 						if (backupFile.exists()){
 							backupFile.delete();
 						}
@@ -2825,7 +2825,7 @@ public class GlobalManagerImpl
 
 			  String shortFileName = fileName;
 			  try {
-				  File f = new File(fileName);
+				  File f = FileUtil.newFile(fileName);
 				  shortFileName = f.getName();
 			  } catch (Exception e) {
 				// TODO: handle exception
@@ -4123,7 +4123,7 @@ public class GlobalManagerImpl
 
 												if ( existing_link == null ){
 
-													new_link = new File( base_file.getParentFile(), prefix + base_file.getName() + ext );
+													new_link = FileUtil.newFile( base_file.getParentFile(), prefix + base_file.getName() + ext );
 
 												}else{
 
@@ -4134,7 +4134,7 @@ public class GlobalManagerImpl
 														link_name = prefix + link_name;
 													}
 
-													new_link = new File( existing_link.getParentFile(), link_name + ext );
+													new_link = FileUtil.newFile( existing_link.getParentFile(), link_name + ext );
 												}
 
 												from_indexes.add( i );
@@ -4215,7 +4215,7 @@ public class GlobalManagerImpl
 						boolean first = true;
 						while (name.length() > 50) {
 							try {
-								newFile = new File(parentFile, name + ext);
+								newFile = FileUtil.newFile(parentFile, name + ext);
 								newFile.getCanonicalPath();
 
 								if (first) {
@@ -4238,7 +4238,7 @@ public class GlobalManagerImpl
 												}
 												name = name.substring(0, name.length() - 3)
 														+ Integer.toHexString(fixNameID);
-												newFile = new File(parentFile, name + ext);
+												newFile = FileUtil.newFile(parentFile, name + ext);
 											} while (newFile.equals(convertedFileInfo.getFile(true)));
 											redo = fixNameID <= 0xFFF;
 											break;
@@ -4341,8 +4341,8 @@ public class GlobalManagerImpl
 		}
 
 		try{
-			Map	map1 = FileUtil.readResilientFile( new File(args[0]));
-			Map	map2 = FileUtil.readResilientFile( new File(args[1]));
+			Map	map1 = FileUtil.readResilientFile( FileUtil.newFile(args[0]));
+			Map	map2 = FileUtil.readResilientFile( FileUtil.newFile(args[1]));
 
 			List	downloads1 = (List)map1.get( "downloads" );
 			List	downloads2 = (List)map2.get( "downloads" );
@@ -4390,7 +4390,7 @@ public class GlobalManagerImpl
 
 			System.out.println( to_add.size() + " copied from " + args[1] + " to " + args[2]);
 
-			FileUtil.writeResilientFile( new File( args[2]), map1 );
+			FileUtil.writeResilientFile( FileUtil.newFile( args[2]), map1 );
 
 		}catch( Throwable e ){
 

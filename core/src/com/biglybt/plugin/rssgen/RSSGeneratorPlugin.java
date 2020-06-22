@@ -27,9 +27,7 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.SystemProperties;
-import com.biglybt.core.util.UrlUtils;
+import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.tracker.web.TrackerWebPageGenerator;
@@ -77,7 +75,7 @@ RSSGeneratorPlugin
 			loaded = true;
 		}
 
-		File	root_dir = new File( SystemProperties.getUserPath() + "rss" );
+		File	root_dir = FileUtil.newFile( SystemProperties.getUserPath(), "rss" );
 
 		if ( !root_dir.exists()){
 

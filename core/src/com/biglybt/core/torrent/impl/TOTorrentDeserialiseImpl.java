@@ -72,7 +72,7 @@ TOTorrentDeserialiseImpl
 	
 			try{
 	
-				fis = new FileInputStream(file);
+				fis = FileUtil.newFileInputStream(file);
 	
 				construct( fis );
 	
@@ -91,7 +91,7 @@ TOTorrentDeserialiseImpl
 	
 						// have to do this separately as if the GZIPInputStream constructor fails it doesn't close the file...
 					
-					fis = new FileInputStream( file );
+					fis = FileUtil.newFileInputStream( file );
 					
 					fis = new GZIPInputStream( fis );
 	

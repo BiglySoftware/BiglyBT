@@ -386,14 +386,14 @@ TrackerWebPageResponseImpl
 
 				post_file.deleteOnExit();
 
-				FileOutputStream fos = new FileOutputStream( post_file );
+				FileOutputStream fos = FileUtil.newFileOutputStream( post_file );
 				GZIPOutputStream gzos = new GZIPOutputStream(fos);
 
 				gzos.write( reply_bytes );
 
 				gzos.close();
 
-				FileInputStream fis = new FileInputStream(post_file);
+				FileInputStream fis = FileUtil.newFileInputStream(post_file);
 
 				reply_header +=
 						"Content-Length: " + post_file.length() + NL +
@@ -451,9 +451,9 @@ TrackerWebPageResponseImpl
 		}
 		String	target = root_dir + relative_url.replace('/',File.separatorChar);
 
-		File canonical_file = new File(target).getCanonicalFile();
+		File canonical_file = FileUtil.newFile(target).getCanonicalFile();
 		
-		File canonical_root = new File(root_dir).getCanonicalFile();
+		File canonical_root = FileUtil.newFile(root_dir).getCanonicalFile();
 
 			// make sure some fool isn't trying to use ../../ to escape from web dir
 
@@ -483,7 +483,7 @@ TrackerWebPageResponseImpl
 			FileInputStream	fis = null;
 
 			try{
-				fis = new FileInputStream(canonical_file);
+				fis = FileUtil.newFileInputStream(canonical_file);
 
 				useStream( file_type, fis );
 

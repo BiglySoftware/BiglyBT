@@ -1599,9 +1599,9 @@ public class BDecoder
 
 			decoder.setRecoveryMode( false );
 
-			PrintWriter	pw = new PrintWriter( new FileWriter( output ));
+			PrintWriter	pw = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( output )));
 
-			print( pw, decoder.decodeStream( new BufferedInputStream( new FileInputStream( f ))));
+			print( pw, decoder.decodeStream( new BufferedInputStream( FileUtil.newFileInputStream( f ))));
 
 			pw.flush();
 

@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.SystemProperties;
 import com.biglybt.pif.PluginManagerArgumentHandler;
@@ -163,14 +164,14 @@ PluginSingleInstanceHandler
 		    		    				throw( new Exception( "Called supplied incorrect config path: " + config_path ));
 		    		    			}
 
-		    		    			File cmd_file = new File( new File( config_dir, "tmp" ), file_name ).getCanonicalFile();
+		    		    			File cmd_file = FileUtil.newFile( config_dir, "tmp" , file_name ).getCanonicalFile();
 
-		    		    			if ( !cmd_file.getParentFile().getParentFile().equals( new File( config_dir ))){
+		    		    			if ( !cmd_file.getParentFile().getParentFile().equals( FileUtil.newFile( config_dir ))){
 
 		    		    				throw( new Exception( "Called supplied invalid file name: " + file_name ));
 		    		    			}
 
-		    		    			ObjectInputStream ois2 = new ObjectInputStream( new FileInputStream( cmd_file ));
+		    		    			ObjectInputStream ois2 = new ObjectInputStream( FileUtil.newFileInputStream( cmd_file ));
 
 		    		    			try{
 
@@ -251,13 +252,13 @@ PluginSingleInstanceHandler
 
 			if ( config_dir != null ){
 
-				File	file = new File( config_dir, "tmp" );
+				File	file = FileUtil.newFile( config_dir, "tmp" );
 
 				file.mkdirs();
 
 				file = File.createTempFile( "AZU" + RandomUtils.nextSecureAbsoluteLong(), ".tmp", file );
 
-				ObjectOutputStream oos2 = new ObjectOutputStream( new FileOutputStream( file ));
+				ObjectOutputStream oos2 = new ObjectOutputStream( FileUtil.newFileOutputStream( file ));
 
 				try{
 					oos2.writeObject( args );

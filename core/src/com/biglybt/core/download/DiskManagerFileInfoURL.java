@@ -144,13 +144,13 @@ DiskManagerFileInfoURL
 		file_name = FileUtil.convertOSSpecificChars( file_name, false );
 
 		try{
-			file = new File( AETemporaryFileHandler.createTempDir(), file_name );
+			file = FileUtil.newFile( AETemporaryFileHandler.createTempDir(), file_name );
 
 		}catch( Throwable e ){
 
 			file_name += ".tmp";
 
-			file = new File( AETemporaryFileHandler.getTempDirectory(), file_name );
+			file = FileUtil.newFile( AETemporaryFileHandler.getTempDirectory(), file_name );
 		}
 	}
 
@@ -177,7 +177,7 @@ DiskManagerFileInfoURL
 
 				req.setAll();
 
-				final FileOutputStream fos = new FileOutputStream( file );
+				final FileOutputStream fos = FileUtil.newFileOutputStream( file );
 
 				boolean	ok = false;
 

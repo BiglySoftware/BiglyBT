@@ -187,16 +187,16 @@ DHTPluginStorageManager
 		try{
 			contact_mon.enter();
 
-			File	target = new File( data_dir, "contacts.dat" );
+			File	target = FileUtil.newFile( data_dir, "contacts.dat" );
 
 			if ( !target.exists()){
 
-				target	= new File( data_dir, "contacts.saving" );
+				target	= FileUtil.newFile( data_dir, "contacts.saving" );
 			}
 
 			if ( target.exists()){
 
-				DataInputStream	dis =  new DataInputStream( new FileInputStream( target ));
+				DataInputStream	dis =  new DataInputStream( FileUtil.newFileInputStream( target ));
 
 				try{
 
@@ -224,8 +224,8 @@ DHTPluginStorageManager
 		try{
 			contact_mon.enter();
 
-			File	saving = new File( data_dir, "contacts.saving" );
-			File	target = new File( data_dir, "contacts.dat" );
+			File	saving = FileUtil.newFile( data_dir, "contacts.saving" );
+			File	target = FileUtil.newFile( data_dir, "contacts.dat" );
 
 			saving.delete();
 
@@ -234,7 +234,7 @@ DHTPluginStorageManager
 			boolean	ok = false;
 
 			try{
-				FileOutputStream fos = new FileOutputStream( saving );
+				FileOutputStream fos = FileUtil.newFileOutputStream( saving );
 
 				dos = new DataOutputStream(fos);
 
@@ -393,16 +393,16 @@ DHTPluginStorageManager
 		String		file_prefix )
 	{
 		try{
-			File target = new File( data_dir, file_prefix + ".dat" );
+			File target = FileUtil.newFile( data_dir, file_prefix + ".dat" );
 
 			if ( !target.exists()){
 
-				target	= new File( data_dir, file_prefix + ".saving" );
+				target	= FileUtil.newFile( data_dir, file_prefix + ".saving" );
 			}
 
 			if ( target.exists()){
 
-				BufferedInputStream	is = new BufferedInputStream( new FileInputStream( target ));
+				BufferedInputStream	is = new BufferedInputStream( FileUtil.newFileInputStream( target ));
 
 				try{
 					return( BDecoder.decode( is ));
@@ -426,8 +426,8 @@ DHTPluginStorageManager
 		String		file_prefix )
 	{
 		try{
-			File	saving = new File( data_dir, file_prefix + ".saving" );
-			File	target = new File( data_dir, file_prefix + ".dat" );
+			File	saving = FileUtil.newFile( data_dir, file_prefix + ".saving" );
+			File	target = FileUtil.newFile( data_dir, file_prefix + ".dat" );
 
 			saving.delete();
 
@@ -444,7 +444,7 @@ DHTPluginStorageManager
 				try{
 					byte[]	data = BEncoder.encode( map );
 
-					os = new FileOutputStream( saving );
+					os = FileUtil.newFileOutputStream( saving );
 
 					os.write( data );
 

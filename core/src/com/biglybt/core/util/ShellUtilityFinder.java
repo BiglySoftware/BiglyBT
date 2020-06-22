@@ -37,7 +37,7 @@ public class ShellUtilityFinder {
 	{
 	  final String[] locations = { "/bin", "/usr/bin" };
 	  for ( String s: locations ){
-	      File f = new File( s, name );
+	      File f = FileUtil.newFile( s, name );
 	      if ( f.exists() && f.canRead()){
 	          return( f.getAbsolutePath());
 	      }

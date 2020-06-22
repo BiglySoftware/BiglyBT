@@ -386,7 +386,7 @@ BackupManagerImpl
 
 			listener.reportProgress( "Auto backup starting: folder=" + backup_dir );
 
-			final File target_dir = new File( backup_dir );
+			final File target_dir = FileUtil.newFile( backup_dir );
 
 			backup(
 				target_dir,
@@ -431,7 +431,7 @@ BackupManagerImpl
 
 								if ( f.isDirectory() && getBackupDirTime( f ) > 0 ){
 
-									File	test_file = new File( f, ConfigurationManager.CONFIG_FILENAME );
+									File	test_file = FileUtil.newFile( f, ConfigurationManager.CONFIG_FILENAME );
 
 									if ( test_file.exists()){
 
@@ -661,7 +661,7 @@ BackupManagerImpl
 	
 					checkClosing();
 	
-					long[] temp = copyFilesSupport( f, new File( to_file, f.getName()), depth+1 );
+					long[] temp = copyFilesSupport( f, FileUtil.newFile( to_file, f.getName()), depth+1 );
 	
 					total_files 	+= temp[0];
 					total_copied	+= temp[1];
@@ -839,7 +839,7 @@ BackupManagerImpl
 						test_dir = test_dir + "." + i;
 					}
 
-					File test_file = new File( parent_folder, test_dir );
+					File test_file = FileUtil.newFile( parent_folder, test_dir );
 
 					if ( !test_file.exists()){
 
@@ -853,10 +853,10 @@ BackupManagerImpl
 
 				if ( backup_folder == null ){
 
-					backup_folder = new File( parent_folder, date_dir );
+					backup_folder = FileUtil.newFile( parent_folder, date_dir );
 				}
 
-				File user_dir = new File( SystemProperties.getUserPath());
+				File user_dir = FileUtil.newFile( SystemProperties.getUserPath());
 
 				File temp_dir = backup_folder;
 
@@ -911,7 +911,7 @@ BackupManagerImpl
 							continue;
 						}
 
-						File	dest_file = new File( backup_folder, name );
+						File	dest_file = FileUtil.newFile( backup_folder, name );
 
 						listener.reportProgress( "Copying '" + name  + "' ..." );
 
@@ -983,7 +983,7 @@ BackupManagerImpl
 
 			for ( File f: files ){
 
-				addActions( installer, f, new File( target, f.getName()));
+				addActions( installer, f, FileUtil.newFile( target, f.getName()));
 			}
 		}else{
 
@@ -1124,7 +1124,7 @@ BackupManagerImpl
 
 				listener.reportProgress( "Analysing backup" );
 
-				File	config = new File( backup_folder, ConfigurationManager.CONFIG_FILENAME );
+				File	config = FileUtil.newFile( backup_folder, ConfigurationManager.CONFIG_FILENAME );
 
 				if ( !config.exists()){
 
@@ -1140,8 +1140,8 @@ BackupManagerImpl
 					throw( new Exception( "Invalid backup: " + ConfigurationManager.CONFIG_FILENAME + " doesn't contain user directory details" ));
 				}
 
-				File current_user_dir	= new File( SystemProperties.getUserPath());
-				File backup_user_dir 	= new File( new String( temp, "UTF-8" ));
+				File current_user_dir	= FileUtil.newFile( SystemProperties.getUserPath());
+				File backup_user_dir 	= FileUtil.newFile( new String( temp, "UTF-8" ));
 
 				listener.reportProgress( "Current user directory:\t"  + current_user_dir.getAbsolutePath());
 				listener.reportProgress( "Backup's user directory:\t" + backup_user_dir.getAbsolutePath());
@@ -1169,13 +1169,13 @@ BackupManagerImpl
 
 					for ( File f: files ){
 
-						File source = new File( temp_dir, f.getName());
+						File source = FileUtil.newFile( temp_dir, f.getName());
 
 						listener.reportProgress( "Creating restore action for '" + f.getName() + "'" );
 
 						copyFiles( f, source );
 
-						File target = new File( current_user_dir, f.getName());
+						File target = FileUtil.newFile( current_user_dir, f.getName());
 
 						addActions( installer, source, target );
 					}
@@ -1185,7 +1185,7 @@ BackupManagerImpl
 
 					for ( File f: files ){
 
-						File source = new File( temp_dir, f.getName());
+						File source = FileUtil.newFile( temp_dir, f.getName());
 
 						listener.reportProgress( "Creating restore action for '" + f.getName() + "'" );
 
@@ -1197,7 +1197,7 @@ BackupManagerImpl
 
 							boolean	patched = false;
 
-							BufferedInputStream bis = new BufferedInputStream( new FileInputStream( f ), 1024*1024 );
+							BufferedInputStream bis = new BufferedInputStream( FileUtil.newFileInputStream( f ), 1024*1024 );
 
 							try{
 								Map m = BDecoder.decode( bis );
@@ -1256,7 +1256,7 @@ BackupManagerImpl
 							}
 						}
 
-						File target = new File( current_user_dir, f.getName());
+						File target = FileUtil.newFile( current_user_dir, f.getName());
 
 						addActions( installer, source, target );
 					}

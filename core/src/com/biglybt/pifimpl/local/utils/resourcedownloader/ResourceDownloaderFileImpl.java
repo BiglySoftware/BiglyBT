@@ -166,7 +166,7 @@ ResourceDownloaderFileImpl
 
 								}else{
 
-									completed( ResourceDownloaderFileImpl.this, new FileInputStream( file ));
+									completed( ResourceDownloaderFileImpl.this, FileUtil.newFileInputStream( file ));
 								}
 
 							}catch( Throwable e ){

@@ -1001,7 +1001,7 @@ MagnetPlugin
 												
 												if ( dir.length() > 0 ){
 													
-													File f = new File( dir );
+													File f = FileUtil.newFile( dir );
 													
 													if ( !f.exists()){
 														
@@ -1021,11 +1021,11 @@ MagnetPlugin
 									    
 									    if ( dir != null ){
 									    	
-									    	torrent_file = new File( dir, torrent_name );
+									    	torrent_file = FileUtil.newFile( dir, torrent_name );
 									    	
 									    }else {
 									    	
-									    	torrent_file = new File( AETemporaryFileHandler.getTempDirectory(), torrent_name );
+									    	torrent_file = FileUtil.newFile( AETemporaryFileHandler.getTempDirectory(), torrent_name );
 									    }
 									    
 									    if ( torrent_file.exists()){

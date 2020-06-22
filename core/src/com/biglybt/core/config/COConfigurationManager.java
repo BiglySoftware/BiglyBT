@@ -30,10 +30,7 @@ import java.util.Set;
 
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationManager;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.IndentWriter;
-import com.biglybt.core.util.SystemProperties;
+import com.biglybt.core.util.*;
 import com.biglybt.core.util.protocol.AzURLStreamHandlerFactory;
 import com.biglybt.core.util.spi.AENameServiceJava9;
 import com.biglybt.core.util.spi.AENameServiceJava12;
@@ -110,7 +107,8 @@ COConfigurationManager
 
 						if ( root_file.exists()){
 
-							LineNumberReader lnr = new LineNumberReader( new InputStreamReader( new FileInputStream( root_file ), "UTF-8" ));
+							LineNumberReader lnr = new LineNumberReader( new InputStreamReader( 
+								FileUtil.newFileInputStream( root_file ), "UTF-8" ));
 
 							try{
 								String	 line = lnr.readLine();
@@ -136,7 +134,7 @@ COConfigurationManager
 
 						if ( write_file ){
 
-							PrintWriter pw = new PrintWriter( new OutputStreamWriter( new FileOutputStream( root_file ), "UTF-8" ));
+							PrintWriter pw = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( root_file ), "UTF-8" ));
 
 							try{
 								pw.println( root_relative );

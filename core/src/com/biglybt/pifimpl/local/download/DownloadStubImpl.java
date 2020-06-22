@@ -417,7 +417,7 @@ DownloadStubImpl
 
 			if ( torrent != null ){
 
-				File save_location = new File(getSavePath());
+				File save_location = FileUtil.newFile(getSavePath());
 
 				if ( torrent.isSimpleTorrent()){
 
@@ -495,7 +495,7 @@ DownloadStubImpl
 				try{
 					String torrent_file = new String( bytes, "UTF-8" );
 
-					File file = new File( torrent_file );
+					File file = FileUtil.newFile( torrent_file );
 
 					TorrentUtils.delete( file, false );
 
@@ -582,7 +582,7 @@ DownloadStubImpl
 
 			if ( abs_file != null ){
 
-				file 	= new File( abs_file );
+				file 	= FileUtil.newFile( abs_file );
 
 			}else{
 
@@ -621,7 +621,7 @@ DownloadStubImpl
 
 			}else{
 
-				return( new File( stub.getSavePath(), (String)file ));
+				return( FileUtil.newFile( stub.getSavePath(), (String)file ));
 			}
 		}
 
@@ -765,7 +765,7 @@ DownloadStubImpl
 		{
 			if ( parent == null ){
 
-				return( new File( name ));
+				return( FileUtil.newFile( name ));
 
 			}else{
 
@@ -797,7 +797,7 @@ DownloadStubImpl
 					path.append( nodes.get(i).getName());
 				}
 
-				return( new File( path.toString()));
+				return( FileUtil.newFile( path.toString()));
 			}
 		}
 	}

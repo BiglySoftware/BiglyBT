@@ -651,7 +651,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 
         	// this code removes any parent directories from the filename we've extracted
 
-        File temp = new File(filename);
+        File temp = FileUtil.newFile(filename);
         filename = temp.getName();
       }
 
@@ -662,7 +662,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 
       if (file_str != null) {
       	// not completely sure about the whole logic in this block
-        File temp = new File(file_str);
+        File temp = FileUtil.newFile(file_str);
 
         //if we're not using a default torrent save dir
         if (!useTorrentSave || directoryname.length() == 0) {
@@ -904,7 +904,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 
 		    if ( this.state != STATE_ERROR ){
 
-		    	this.file = new File(this.directoryname, filename);
+		    	this.file = FileUtil.newFile(this.directoryname, filename);
 
 		    	boolean useTempFile = file.exists();
 		    	if (!useTempFile) {
@@ -917,12 +917,12 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 		    	}
 
 		    	if (useTempFile) {
-		    		this.file = File.createTempFile("AZU", ".tmp", new File(
+		    		this.file = File.createTempFile("AZU", ".tmp", FileUtil.newFile(
 								this.directoryname));
 		    		this.file.createNewFile();
 		    	}
 
-		        fileout = new FileOutputStream(this.file, false);
+		        fileout = FileUtil.newFileOutputStream(this.file);
 
 		        bufBytes = 0;
 
@@ -985,12 +985,12 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 		        		  
 		        		  for ( int i=0;i<16;i++){
 		        			  
-			        		  File	new_file	= new File( directoryname, prefix + name );
+			        		  File	new_file	= FileUtil.newFile( directoryname, prefix + name );
 	
 			        		  if ( file.renameTo( new_file )){
-	
-			        			  new File( file.getParentFile(), file.getName() + ".bak" ).delete();
-			        			  
+
+											FileUtil.newFile( file.getParentFile(), file.getName() + ".bak" ).delete();
+
 			        			  filename	= name;
 	
 			        			  file	= new_file;
@@ -1018,12 +1018,12 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 
 		        				  String	name = VuzeFileHandler.getVuzeFileName( filename );
 
-		        				  File	new_file	= new File( directoryname, name );
+		        				  File	new_file	= FileUtil.newFile( directoryname, name );
 
 		        				  if ( file.renameTo( new_file )){
 
-		        					  new File( file.getParentFile(), file.getName() + ".bak" ).delete();
-		        					  
+												FileUtil.newFile( file.getParentFile(), file.getName() + ".bak" ).delete();
+
 		        					  filename	= name;
 
 		        					  file	= new_file;
@@ -1165,7 +1165,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
   @Override
   public java.io.File getFile() {
     if ((!this.isAlive()) || (this.file == null))
-      this.file = new File(this.directoryname, filename);
+      this.file = FileUtil.newFile(this.directoryname, filename);
     return this.file;
   }
 

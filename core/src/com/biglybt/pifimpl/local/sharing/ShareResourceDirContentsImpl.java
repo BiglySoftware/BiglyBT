@@ -362,7 +362,7 @@ ShareResourceDirContentsImpl
 
 		throws ShareException
 	{
-		File root = new File(new String((byte[]) map.get("file"), Constants.DEFAULT_ENCODING_CHARSET));
+		File root = FileUtil.newFile(new String((byte[]) map.get("file"), Constants.DEFAULT_ENCODING_CHARSET));
 
 		boolean recursive = ((Long) map.get("recursive")).longValue() == 1;
 

@@ -165,7 +165,7 @@ RSSUtils
 
 				if ( str.contains( "<feed" ) || str.contains( "<rss" )){
 
-					InputStream is = new BufferedInputStream( new FileInputStream( file ));
+					InputStream is = new BufferedInputStream( FileUtil.newFileInputStream( file ));
 
 					try{
 						new RSSFeedImpl( new UtilitiesImpl( null, null ), null, is );

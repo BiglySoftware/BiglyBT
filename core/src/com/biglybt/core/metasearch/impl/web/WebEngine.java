@@ -966,7 +966,7 @@ WebEngine
 						str = str.substring( 0, pos );
 					}
 
-					is = new FileInputStream( new File( new URL( str ).toURI()));
+					is = FileUtil.newFileInputStream( FileUtil.newFile( new URL( str ).toURI()));
 
 				}else{
 

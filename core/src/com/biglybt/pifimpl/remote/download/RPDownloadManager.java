@@ -29,6 +29,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.Map;
 
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.download.*;
 import com.biglybt.pif.download.savelocation.DefaultSaveLocationManager;
 import com.biglybt.pif.download.savelocation.SaveLocationManager;
@@ -140,8 +141,8 @@ RPDownloadManager
 
 			try{
 				RPTorrent	torrent = (RPTorrent)request.getParams()[0];
-				File		f1 = params[1]==null?null:new File((String)params[1]);
-				File		f2 = params[2]==null?null:new File((String)params[2]);
+				File		f1 = params[1]==null?null:FileUtil.newFile((String)params[1]);
+				File		f2 = params[2]==null?null:FileUtil.newFile((String)params[2]);
 
 				Download res = delegate.addDownload((Torrent)torrent._setLocal(), f1, f2 );
 

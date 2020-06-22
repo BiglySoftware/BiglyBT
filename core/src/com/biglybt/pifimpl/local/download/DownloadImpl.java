@@ -2531,9 +2531,9 @@ DownloadImpl
 		 if (!has_change) {return;}
 
 		 // Test that one of the locations is actually different.
-		 has_change = slc.isDifferentDownloadLocation(new File(this.getSavePath()));
+		 has_change = slc.isDifferentDownloadLocation(FileUtil.newFile(this.getSavePath()));
 		 if (!has_change) {
-			 has_change = slc.isDifferentTorrentLocation(new File(this.getTorrentFileName()));
+			 has_change = slc.isDifferentTorrentLocation(FileUtil.newFile(this.getTorrentFileName()));
 		 }
 
 		 if (!has_change) {return;}

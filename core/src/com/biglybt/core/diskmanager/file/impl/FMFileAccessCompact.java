@@ -114,7 +114,7 @@ FMFileAccessCompact
 					", lp = " + last_piece_start + "/" + last_piece_length );
 			*/
 
-			if ( !new File(controlFileDir,controlFileName).exists()){
+			if ( !FileUtil.newFile(controlFileDir,controlFileName).exists()){
 
 				if (!controlFileDir.isDirectory() && !FileUtil.mkdirs(controlFileDir)) {
 					throw new FMFileManagerException("Directory creation failed: "	+ controlFileDir);

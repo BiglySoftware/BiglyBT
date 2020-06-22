@@ -890,9 +890,9 @@ PairingManagerImpl
 
 			long	ver		= (Long)response.get( "qr_v" );
 
-			File cache_dir = new File( SystemProperties.getUserPath(), "cache" );
+			File cache_dir = FileUtil.newFile( SystemProperties.getUserPath(), "cache" );
 
-			File qr_file = new File( cache_dir, "qr_" + ac + "_" + ver + ".png" );
+			File qr_file = FileUtil.newFile( cache_dir, "qr_" + ac + "_" + ver + ".png" );
 
 			if ( FileUtil.writeBytesAsFile2( qr_file.getAbsolutePath(), bytes )){
 
@@ -924,9 +924,9 @@ PairingManagerImpl
 
 		if ( qr_version > 0 ){
 
-			File cache_dir = new File( SystemProperties.getUserPath(), "cache" );
+			File cache_dir = FileUtil.newFile( SystemProperties.getUserPath(), "cache" );
 
-			File qr_file = new File( cache_dir, "qr_" + existing + "_" + qr_version + ".png" );
+			File qr_file = FileUtil.newFile( cache_dir, "qr_" + existing + "_" + qr_version + ".png" );
 
 			if ( qr_file.exists()){
 

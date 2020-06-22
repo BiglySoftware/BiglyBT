@@ -177,7 +177,7 @@ BuddyPluginBuddy
 		recent_ygm			= _recent_ygm;
 		is_transient		= _is_transient;
 		
-		persistent_msg_handler = new BuddyPluginBuddyMessageHandler( this, new File(plugin_network.getBuddyConfigDir(), public_key ));
+		persistent_msg_handler = new BuddyPluginBuddyMessageHandler( this, FileUtil.newFile(plugin_network.getBuddyConfigDir(), public_key ));
 	}
 
 	public BuddyPluginNetwork

@@ -82,7 +82,7 @@ public class ConfigSectionPlugins
 
 		add(new LabelParameterImpl("ConfigView.pluginlist.whereToPut"));
 
-		File dirUserPlugin = new File(sUserPluginDir);
+		File dirUserPlugin = FileUtil.newFile(sUserPluginDir);
 		if (!(dirUserPlugin.exists() && dirUserPlugin.isDirectory())) {
 			dirUserPlugin = dirUserPlugin.getParentFile();
 		}
@@ -94,7 +94,7 @@ public class ConfigSectionPlugins
 
 		add(new LabelParameterImpl("ConfigView.pluginlist.whereToPutOr"));
 
-		File dirAppPlugin = new File(sAppPluginDir);
+		File dirAppPlugin = FileUtil.newFile(sAppPluginDir);
 		if (!(dirAppPlugin.exists() && dirAppPlugin.isDirectory())) {
 			dirAppPlugin = dirAppPlugin.getParentFile();
 		}

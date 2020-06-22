@@ -62,7 +62,7 @@ SimpleXMLParserDocumentImpl
 	{
 		try{
 
-			create( new FileInputStream( file ));
+			create( FileUtil.newFileInputStream( file ));
 
 		}catch( Throwable e ){
 

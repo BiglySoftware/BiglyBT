@@ -196,7 +196,7 @@ ClientRestarterImpl
 
 	  		update_properties.put( "instance_port", String.valueOf( Constants.INSTANCE_PORT ));
 
-	  		fos	= new FileOutputStream( new File( user_path, UPDATE_PROPERTIES ));
+	  		fos	= FileUtil.newFileOutputStream( FileUtil.newFile( user_path, UPDATE_PROPERTIES ));
 
 	  			// this handles unicode chars by writing \\u escapes
 

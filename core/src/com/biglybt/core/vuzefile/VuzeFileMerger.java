@@ -20,6 +20,8 @@
 
 package com.biglybt.core.vuzefile;
 
+import com.biglybt.core.util.FileUtil;
+
 import java.io.File;
 
 public class
@@ -34,7 +36,7 @@ VuzeFileMerger
 			usage();
 		}
 
-		File	input_dir = new File( args[0] );
+		File	input_dir = FileUtil.newFile( args[0] );
 
 		if ( !input_dir.isDirectory()){
 
@@ -42,7 +44,7 @@ VuzeFileMerger
 		}
 
 		try{
-			File	output_file = new File( VuzeFileHandler.getVuzeFileName( args[0] ));
+			File	output_file = FileUtil.newFile( VuzeFileHandler.getVuzeFileName( args[0] ));
 
 			File[]	files = input_dir.listFiles();
 

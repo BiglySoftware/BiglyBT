@@ -2265,20 +2265,20 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	{
 		File log_dir = AEDiagnostics.getLogDir();
 
-		log_dir = new File( log_dir, "chat" );
+		log_dir = FileUtil.newFile( log_dir, "chat" );
 
 		if ( !log_dir.exists()){
 
 			log_dir.mkdir();
 		}
 
-		File log_file = new File( log_dir, FileUtil.convertOSSpecificChars( chat.getName(), false ) + ".log" );
+		File log_file = FileUtil.newFile( log_dir, FileUtil.convertOSSpecificChars( chat.getName(), false ) + ".log" );
 
 		PrintWriter	pw = null;
 
 		try{
 
-			pw = new PrintWriter( new OutputStreamWriter( new FileOutputStream( log_file, true ), "UTF-8" ));
+			pw = new PrintWriter( new OutputStreamWriter( FileUtil.newFileOutputStream( log_file, true ), "UTF-8" ));
 
 			SimpleDateFormat time_format 	= new SimpleDateFormat( "yyyy/MM/dd HH:mm" );
 

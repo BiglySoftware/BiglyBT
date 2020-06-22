@@ -1716,7 +1716,7 @@ SubscriptionImpl
 								// make a version based filename to avoid issues regarding multiple
 								// versions
 
-							final File	versioned_data_location = new File( original_data_location.getParent(), original_data_location.getName() + "." + getVersion());
+							final File	versioned_data_location = FileUtil.newFile( original_data_location.getParent(), original_data_location.getName() + "." + getVersion());
 
 							if ( !versioned_data_location.exists()){
 

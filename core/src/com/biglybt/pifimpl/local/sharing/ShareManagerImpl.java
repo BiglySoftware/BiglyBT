@@ -355,9 +355,7 @@ ShareManagerImpl
 	{
 		for (int i=1;i<=MAX_DIRS;i++){
 
-			String	cache_dir_str = share_dir + File.separator + TORRENT_SUBSTORE + i;
-
-			File	cache_dir = new File(cache_dir_str);
+			File	cache_dir = FileUtil.newFile(share_dir, TORRENT_SUBSTORE + i);
 
 			if ( !cache_dir.exists()){
 
@@ -370,7 +368,7 @@ ShareManagerImpl
 
 					long	file = RandomUtils.nextAbsoluteLong();
 
-					File	file_name = new File(cache_dir_str + File.separator + file + ".torrent");
+					File	file_name = FileUtil.newFile(cache_dir, file + ".torrent");
 
 					if ( !file_name.exists()){
 
@@ -437,7 +435,7 @@ ShareManagerImpl
 	getTorrentFile(
 		ShareItemImpl		item )
 	{
-		return( new File(share_dir+File.separator+item.getTorrentLocation()));
+		return( FileUtil.newFile(share_dir, item.getTorrentLocation()));
 	}
 
 	protected URL[]

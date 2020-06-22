@@ -145,7 +145,7 @@ CategoryManagerImpl
     try {
       //open the file
       File configFile = FileUtil.getUserFile("categories.config");
-      fin = new FileInputStream(configFile);
+      fin = FileUtil.newFileInputStream(configFile);
       bin = new BufferedInputStream(fin, 8192);
 
       Map map = BDecoder.decode(bin);
@@ -258,7 +258,7 @@ CategoryManagerImpl
          File newFile = FileUtil.getUserFile("categories.config.new");
 
          //write the data out
-        fos = new FileOutputStream(newFile);
+        fos = FileUtil.newFileOutputStream(newFile);
         fos.write(torrentData);
          fos.flush();
          fos.getFD().sync();

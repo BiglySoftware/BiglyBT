@@ -65,7 +65,7 @@ AEVerifier
 
 		try{
 			zis = new ZipInputStream(
-					new BufferedInputStream( new FileInputStream( file ) ));
+					new BufferedInputStream( FileUtil.newFileInputStream( file ) ));
 
 			byte[]		signature	= null;
 

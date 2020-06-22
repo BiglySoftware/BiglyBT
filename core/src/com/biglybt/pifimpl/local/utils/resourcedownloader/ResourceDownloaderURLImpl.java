@@ -241,7 +241,7 @@ ResourceDownloaderURLImpl
 
 			}else if ( protocol.equals( "file" )){
 
-				return( new File( original_url.toURI()).length());
+				return( FileUtil.newFile( original_url.toURI()).length());
 			}
 
 			reportActivity(this, "Getting size of " + original_url );
@@ -687,9 +687,9 @@ ResourceDownloaderURLImpl
 
 				}else if ( protocol.equals( "file" )){
 
-					File file = new File( original_url.toURI());
+					File file = FileUtil.newFile( original_url.toURI());
 
-					FileInputStream fis = new FileInputStream( file );
+					FileInputStream fis = FileUtil.newFileInputStream( file );
 
 					informAmountComplete( file.length());
 
@@ -1282,7 +1282,7 @@ redirect_label:
 
 														temp_file = AETemporaryFileHandler.createTempFile();
 
-														fos = new FileOutputStream( temp_file );
+														fos = FileUtil.newFileOutputStream( temp_file );
 
 														fos.write( baos.toByteArray());
 

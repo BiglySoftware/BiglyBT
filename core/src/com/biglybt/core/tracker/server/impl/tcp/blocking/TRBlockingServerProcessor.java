@@ -33,6 +33,7 @@ import com.biglybt.core.tracker.server.impl.tcp.TRTrackerServerProcessorTCP;
 import com.biglybt.core.tracker.server.impl.tcp.TRTrackerServerTCP;
 import com.biglybt.core.util.AETemporaryFileHandler;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.FileUtil;
 
 /**
  * @author parg
@@ -220,7 +221,7 @@ TRBlockingServerProcessor
 
 								post_file.deleteOnExit();
 
-								fos	= new FileOutputStream( post_file );
+								fos	= FileUtil.newFileOutputStream( post_file );
 
 								data_os	= fos;
 							}
@@ -297,7 +298,7 @@ TRBlockingServerProcessor
 
 								fos = null;
 
-								post_is = new BufferedInputStream( new FileInputStream( post_file ), 256*1024 );
+								post_is = new BufferedInputStream( FileUtil.newFileInputStream( post_file ), 256*1024 );
 							}
 
 						// System.out.println( "TRTrackerServerProcessorTCP: request data = " + baos.size());

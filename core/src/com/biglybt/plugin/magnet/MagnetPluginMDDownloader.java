@@ -229,8 +229,8 @@ MagnetPluginMDDownloader
 
 			int	 rand = RandomUtils.generateRandomIntUpto( 10000 );
 
-			data_file 		= new File( tmp_dir, hash_str + "_" + rand + ".torrent" );
-			torrent_file 	= new File( tmp_dir, hash_str + "_" + rand + ".metatorrent" );
+			data_file 		= FileUtil.newFile( tmp_dir, hash_str + "_" + rand + ".torrent" );
+			torrent_file 	= FileUtil.newFile( tmp_dir, hash_str + "_" + rand + ".metatorrent" );
 
 			RandomAccessFile raf = new RandomAccessFile( data_file, "rw" );
 

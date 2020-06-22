@@ -184,7 +184,7 @@ AETemporaryFileHandler
 			
 			for ( int i=0;i<10;i++){
 				
-				File file = new File( dir, preferred_name );
+				File file = FileUtil.newFile( dir, preferred_name );
 				
 				if ( !file.exists()){
 					

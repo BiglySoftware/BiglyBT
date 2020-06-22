@@ -28,9 +28,7 @@ import com.biglybt.core.tracker.host.TRHost;
 import com.biglybt.core.tracker.host.TRHostFactory;
 import com.biglybt.core.tracker.host.TRHostTorrent;
 import com.biglybt.core.tracker.host.TRHostTorrentFinder;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.HashWrapper;
-import com.biglybt.core.util.TorrentUtils;
+import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.download.DownloadManagerImpl;
 
 
@@ -92,7 +90,7 @@ GlobalManagerHostSupport
 				// check file already exists - might have already been deleted as in the
 				// case of shared resources
 
-			File	torrent_file = new File( torrent_file_str );
+			File	torrent_file = FileUtil.newFile( torrent_file_str );
 
 			if ( torrent_file.exists()){
 

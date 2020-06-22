@@ -250,7 +250,7 @@ IpFilterImpl
 
 	    		File filtersFile = FileUtil.getUserFile("filters.config");
 
-	    		fos = new FileOutputStream(filtersFile);
+	    		fos = FileUtil.newFileOutputStream(filtersFile);
 
 	    		fos.write(BEncoder.encode(map));
 
@@ -290,7 +290,7 @@ IpFilterImpl
 			//open the file
 			File filtersFile = FileUtil.getUserFile("filters.config");
 			if (filtersFile.exists()) {
-				fin = new FileInputStream(filtersFile);
+				fin = FileUtil.newFileInputStream(filtersFile);
 				bin = new BufferedInputStream(fin, 16384);
 				Map map = BDecoder.decode(bin);
 				List list = (List) map.get("ranges");

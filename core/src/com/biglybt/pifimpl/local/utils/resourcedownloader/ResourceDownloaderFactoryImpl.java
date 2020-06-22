@@ -35,6 +35,7 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderDelayedFactory;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderFactory;
@@ -70,7 +71,7 @@ ResourceDownloaderFactoryImpl
 		if ( url.getProtocol().equalsIgnoreCase("file")){
 
 			try{
-				return( new ResourceDownloaderFileImpl( null, new File( new URI( url.toString()))));
+				return( new ResourceDownloaderFileImpl( null, FileUtil.newFile( new URI( url.toString()))));
 
 			}catch( Throwable e ){
 

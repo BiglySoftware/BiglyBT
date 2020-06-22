@@ -302,7 +302,7 @@ public class TorrentOpenOptions
 	{
 		if ( bDeleteFileOnCancel ){
 			
-			File torrentFile = new File( sFileName);
+			File torrentFile = FileUtil.newFile( sFileName);
 
 			TorrentUtils.delete( torrentFile, true );
 		}
@@ -442,7 +442,7 @@ public class TorrentOpenOptions
 		try {
 			String name = getTorrentName();
 			String torrentFileName = sFileName == null ? ""
-					: new File(sFileName).getName().replaceFirst("\\.torrent$", "");
+					: FileUtil.newFile(sFileName).getName().replaceFirst("\\.torrent$", "");
 			int totalSegmentsLengths = 0;
 
 			String[][] segments = {
@@ -686,7 +686,7 @@ public class TorrentOpenOptions
 
 			if (files[i] != null) {
 				files[i].orgFullName = torrentFile.getRelativePath(); // translated to locale
-				files[i].setOriginalFileName( new File(files[i].orgFullName).getName());
+				files[i].setOriginalFileName( FileUtil.newFile(files[i].orgFullName).getName());
 			}
 		}
 
@@ -714,7 +714,7 @@ public class TorrentOpenOptions
 			TOTorrentFile	torrentFile = tfiles[i];
 
 			String 	orgFullName = torrentFile.getRelativePath(); // translated to locale
-			String	orgFileName = new File(orgFullName).getName();
+			String	orgFileName = FileUtil.newFile(orgFullName).getName();
 
 			boolean	wanted = !skip[i];
 
@@ -1024,12 +1024,12 @@ public class TorrentOpenOptions
 		}
 
 		if (!torrent.isSimpleTorrent()) {
-			if (new File(getDataDir()).isDirectory()) {
+			if (FileUtil.newFile(getDataDir()).isDirectory()) {
 				File f;
 				int idx = 0;
 				do {
 					idx++;
-					f = new File(getDataDir() + "-" + idx);
+					f = FileUtil.newFile(getDataDir() + "-" + idx);
 				} while (f.isDirectory());
 
 				sDestSubDir = f.getName();
@@ -1044,7 +1044,7 @@ public class TorrentOpenOptions
 				int idx = 0;
 				while (file.exists()) {
 					idx++;
-					file = new File(info.getDestPathName(), idx + "-"
+					file = FileUtil.newFile(info.getDestPathName(), idx + "-"
 							+ info.getDestFileName());
 				}
 
@@ -1379,13 +1379,13 @@ public class TorrentOpenOptions
 							}
 						}else{
 							
-							setExplicitDataDir( new File( getDataDir()).getParentFile().getAbsolutePath(), FileUtil.convertOSSpecificChars( display_name, true ), false );
+							setExplicitDataDir( FileUtil.newFile( getDataDir()).getParentFile().getAbsolutePath(), FileUtil.convertOSSpecificChars( display_name, true ), false );
 						}
 						
 						if ( do_it ){
 							
 							try{
-								File existing = new File( TorrentUtils.getTorrentFileName(torrent));
+								File existing = FileUtil.newFile( TorrentUtils.getTorrentFileName(torrent));
 								
 								File folder = existing.getParentFile();
 								
@@ -1399,7 +1399,7 @@ public class TorrentOpenOptions
 									
 									for ( int i=0;i<16;i++){
 										
-										File new_file = new File( folder, prefix + new_name );
+										File new_file = FileUtil.newFile( folder, prefix + new_name );
 										
 										if ( !new_file.exists()){
 											
@@ -1553,7 +1553,7 @@ public class TorrentOpenOptions
 			if ( sFileName != null ){
 			
 				try{
-					File torrentFile = new File(sFileName);
+					File torrentFile = FileUtil.newFile(sFileName);
 				
 					if ( bDeleteFileOnCancel ){
 						
@@ -1567,7 +1567,7 @@ public class TorrentOpenOptions
 					
 							String save_dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
 							
-							if ( torrentFile.getParentFile().getAbsolutePath().equals( new File(save_dir).getAbsolutePath())){
+							if ( torrentFile.getParentFile().getAbsolutePath().equals( FileUtil.newFile(save_dir).getAbsolutePath())){
 								
 								TorrentUtils.delete( torrentFile, true );
 							}

@@ -697,7 +697,7 @@ BuddyPluginBuddyMessageHandler
 			}
 		}
 
-		File target = new File( store, target_str );
+		File target = FileUtil.newFile( store, target_str );
 
 		try{
 
@@ -729,7 +729,7 @@ BuddyPluginBuddyMessageHandler
 
 		throws BuddyPluginException
 	{
-		File target = new File( store, target_str );
+		File target = FileUtil.newFile( store, target_str );
 
 		if ( !target.exists()){
 
@@ -776,7 +776,7 @@ BuddyPluginBuddyMessageHandler
 	deleteRequest(
 		int			id  )
 	{
-		File target = new File( store, id + ".req.dat" );
+		File target = FileUtil.newFile( store, id + ".req.dat" );
 
 		if ( target.exists()){
 
@@ -798,7 +798,7 @@ BuddyPluginBuddyMessageHandler
 	deleteReply(
 		int			id  )
 	{
-		File target = new File( store, id + ".rep.dat" );
+		File target = FileUtil.newFile( store, id + ".rep.dat" );
 
 		if ( target.exists()){
 
@@ -934,7 +934,7 @@ BuddyPluginBuddyMessageHandler
 	protected void
 	loadConfig()
 	{
-		File	config_file = new File( store, "messages.dat" );
+		File	config_file = FileUtil.newFile( store, "messages.dat" );
 
 		if ( config_file.exists()){
 
@@ -998,7 +998,7 @@ BuddyPluginBuddyMessageHandler
 
 		throws BuddyPluginException
 	{
-		File	config_file = new File( store, "messages.dat" );
+		File	config_file = FileUtil.newFile( store, "messages.dat" );
 
 		List	messages 	= (List)config_map.get( "messages" );
 		List	pending 	= (List)config_map.get( "pending_success" );

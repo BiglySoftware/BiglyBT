@@ -161,14 +161,14 @@ TrackerListURLConnection
 		
 		boolean do_cache = !url.getProtocol().equals( "file" );
 		
-		File cache_dir = new File( SystemProperties.getUserPath(), "cache" );
+		File cache_dir = FileUtil.newFile( SystemProperties.getUserPath(), "cache" );
 
 		if ( !cache_dir.exists()){
 			
 			cache_dir.mkdirs();
 		}
 		
-		File cache_file = new File( cache_dir, key );
+		File cache_file = FileUtil.newFile( cache_dir, key );
 		
 		if ( do_cache ){
 			

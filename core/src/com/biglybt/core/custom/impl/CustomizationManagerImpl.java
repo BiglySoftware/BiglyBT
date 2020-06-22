@@ -113,7 +113,7 @@ CustomizationManagerImpl
 					System.out.println( "Processing config presets: " + file );
 
 					try{
-						fis = new FileInputStream( file );
+						fis = FileUtil.newFileInputStream( file );
 
 						Properties props = new Properties();
 
@@ -230,7 +230,7 @@ CustomizationManagerImpl
 							}
 						}
 
-						File	rename_target = new File( file.getAbsolutePath() + (ok?".applied":".bad" ));
+						File	rename_target = FileUtil.newFile( file.getAbsolutePath() + (ok?".applied":".bad" ));
 
 						rename_target.delete();
 
@@ -523,7 +523,7 @@ CustomizationManagerImpl
 		    	user_dir.mkdirs();
 		    }
 
-		    File	target = new File( user_dir, name + "_" + version + ".zip" );
+		    File	target = FileUtil.newFile( user_dir, name + "_" + version + ".zip" );
 
 		    if ( !target.exists()){
 
@@ -551,12 +551,12 @@ CustomizationManagerImpl
 	{
 		if ( to_file.isDirectory()){
 
-			to_file = new File( to_file, VuzeFileHandler.getVuzeFileName( cust.getName() + "_" + cust.getVersion()));
+			to_file = FileUtil.newFile( to_file, VuzeFileHandler.getVuzeFileName( cust.getName() + "_" + cust.getVersion()));
 		}
 
 		if ( !VuzeFileHandler.isAcceptedVuzeFileName( to_file.getName())){
 
-			to_file = new File( to_file.getParentFile(), VuzeFileHandler.getVuzeFileName( to_file.getName()));
+			to_file = FileUtil.newFile( to_file.getParentFile(), VuzeFileHandler.getVuzeFileName( to_file.getName()));
 		}
 
 		try{
@@ -602,7 +602,7 @@ CustomizationManagerImpl
 									this,
 									current_customization_name,
 									entry[0],
-									new File( entry[1] ));
+									FileUtil.newFile( entry[1] ));
 
 							SimpleTimer.addEvent(
 								"Custom:clear",
@@ -651,7 +651,7 @@ CustomizationManagerImpl
 				String[]	bits = (String[])entry.getValue();
 
 				String	version = (String)bits[0];
-				File	file	= new File(bits[1]);
+				File	file	= FileUtil.newFile(bits[1]);
 
 				try{
 
@@ -680,12 +680,12 @@ CustomizationManagerImpl
 		
 		String name = prefix + ".config";
 		
-		File config = new File( user_dir, name );
+		File config = FileUtil.newFile( user_dir, name );
 		
 		config.delete();
-		
-		new File( user_dir, name + ".applied" ).delete();
-		new File( user_dir, name + ".bad" ).delete();
+
+		FileUtil.newFile( user_dir, name + ".applied" ).delete();
+		FileUtil.newFile( user_dir, name + ".bad" ).delete();
 		
 		return( config );
 	}

@@ -137,7 +137,7 @@ VuzeFileHandler
 
 				String test_name = prefix + ext;
 
-				File test_file = new File( file.getParentFile(), test_name );
+				File test_file = FileUtil.newFile( file.getParentFile(), test_name );
 
 				if ( test_file.exists()) {
 
@@ -154,13 +154,13 @@ VuzeFileHandler
 		String	target  )
 	{
 		try{
-			File test_file = new File( target );
+			File test_file = FileUtil.newFile( target );
 
 			test_file = migrateFile( test_file );
 
 			if ( test_file.isFile()){
 
-				return( getVuzeFile( new FileInputStream( test_file )));
+				return( getVuzeFile( FileUtil.newFileInputStream( test_file )));
 
 			}else{
 
@@ -204,7 +204,7 @@ VuzeFileHandler
 		InputStream is = null;
 
 		try{
-			is = new FileInputStream( file );
+			is = FileUtil.newFileInputStream( file );
 
 			return( getVuzeFile( is ));
 

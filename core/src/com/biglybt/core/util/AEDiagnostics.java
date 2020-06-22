@@ -151,7 +151,7 @@ AEDiagnostics
 
 			debug_dir		= FileUtil.getUserFile( "logs" );
 
-			debug_save_dir	= new File( debug_dir, "save" );
+			debug_save_dir	= FileUtil.newFile( debug_dir, "save" );
 
 			COConfigurationManager.addAndFireParameterListeners(
 				new String[]{
@@ -239,7 +239,7 @@ AEDiagnostics
 									debug_save_dir.mkdir();
 								}
 
-								FileUtil.copyFile( file, new File( debug_save_dir, now + "_" + file.getName()));
+								FileUtil.copyFile( file, FileUtil.newFile( debug_save_dir, now + "_" + file.getName()));
 							}
 						}
 					}
@@ -474,7 +474,7 @@ AEDiagnostics
 
 			List<File>	fdirs_to_check = new ArrayList<>();
 
-			fdirs_to_check.add( new File( SystemProperties.getApplicationPath()));
+			fdirs_to_check.add( FileUtil.newFile( SystemProperties.getApplicationPath()));
 
 			try{
 				File temp_file = File.createTempFile( "AZU", "tmp" );
@@ -558,7 +558,7 @@ AEDiagnostics
 		System.out.println( "Analysing " + file );
 
 		try{
-			LineNumberReader lnr = new LineNumberReader( new FileReader( file ));
+			LineNumberReader lnr = new LineNumberReader( new InputStreamReader( FileUtil.newFileInputStream( file )));
 
 			try{
 				boolean	float_excep		= false;

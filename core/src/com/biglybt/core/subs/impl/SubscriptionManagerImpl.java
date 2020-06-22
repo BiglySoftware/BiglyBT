@@ -2247,7 +2247,7 @@ SubscriptionManagerImpl
 
 			vuze_file.delete();
 
-			new File( vuze_file.getParent(), vuze_file.getName() + ".bak" ).delete();
+			FileUtil.newFile( vuze_file.getParent(), vuze_file.getName() + ".bak" ).delete();
 
 		}catch( Throwable e ){
 
@@ -3109,9 +3109,9 @@ SubscriptionManagerImpl
 
 		throws IOException
 	{
-		File dir = new File(SystemProperties.getUserPath());
+		File dir = FileUtil.newFile(SystemProperties.getUserPath());
 
-		dir = new File( dir, "subs" );
+		dir = FileUtil.newFile( dir, "subs" );
 
  		if ( !dir.exists()){
 
@@ -3132,7 +3132,7 @@ SubscriptionManagerImpl
 	{
  		File dir = getSubsDir();
 
- 		return( new File( dir, VuzeFileHandler.getVuzeFileName( ByteFormatter.encodeString( subs.getShortID()))));
+ 		return( FileUtil.newFile( dir, VuzeFileHandler.getVuzeFileName( ByteFormatter.encodeString( subs.getShortID()))));
 	}
 
 	protected File
@@ -3143,7 +3143,7 @@ SubscriptionManagerImpl
 	{
  		File dir = getSubsDir();
 
- 		return( new File( dir, ByteFormatter.encodeString( subs.getShortID()) + ".results" ));
+ 		return( FileUtil.newFile( dir, ByteFormatter.encodeString( subs.getShortID()) + ".results" ));
 	}
 
 	@Override
@@ -5019,7 +5019,7 @@ SubscriptionManagerImpl
 						Download	download,
 						File		torrent_file )
 					{
-						File	data_file = new File( download.getSavePath());
+						File	data_file = FileUtil.newFile( download.getSavePath());
 
 						try{
 							removeDownload( download, false );
@@ -6863,7 +6863,7 @@ SubscriptionManagerImpl
 
 				File	dir = getSubsDir();
 
-				dir = new File( dir, "temp" );
+				dir = FileUtil.newFile( dir, "temp" );
 
 				if ( !dir.exists()){
 
@@ -6873,8 +6873,8 @@ SubscriptionManagerImpl
 					}
 				}
 
-				final File	torrent_file 	= new File( dir, sid + "_" + version + ".torrent" );
-				final File	data_file 		= new File( dir, VuzeFileHandler.getVuzeFileName( sid + "_" + version ));
+				final File	torrent_file 	= FileUtil.newFile( dir, sid + "_" + version + ".torrent" );
+				final File	data_file 		= FileUtil.newFile( dir, VuzeFileHandler.getVuzeFileName( sid + "_" + version ));
 
 				PluginInterface pi = PluginInitializer.getDefaultInterface();
 
@@ -7130,7 +7130,7 @@ SubscriptionManagerImpl
 					Download	download,
 					File		torrent_file )
 				{
-					updateSubscription( subs, download, torrent_file, new File( download.getSavePath()));
+					updateSubscription( subs, download, torrent_file, FileUtil.newFile( download.getSavePath()));
 				}
 
 				@Override
@@ -7230,7 +7230,7 @@ SubscriptionManagerImpl
 					Download	download,
 					File		torrent_file )
 				{
-					updateSubscription( subs, download, torrent_file, new File( download.getSavePath()));
+					updateSubscription( subs, download, torrent_file, FileUtil.newFile( download.getSavePath()));
 				}
 
 				@Override

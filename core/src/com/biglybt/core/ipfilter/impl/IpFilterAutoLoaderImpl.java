@@ -281,7 +281,7 @@ public class IpFilterAutoLoaderImpl
 				//open the file
 				String file = COConfigurationManager.getStringParameter(CFG_AUTOLOAD_FILE);
 				Logger.log(new LogEvent(LOGID, "IP Filter file: " + file));
-				File filtersFile = new File(file);
+				File filtersFile = FileUtil.newFile(file);
 				if (filtersFile.exists()) {
 					isURL = false;
 				} else {
@@ -317,7 +317,7 @@ public class IpFilterAutoLoaderImpl
 					}
 				}
 
-				fin = new FileInputStream(filtersFile);
+				fin = FileUtil.newFileInputStream(filtersFile);
 				bin = new BufferedInputStream(fin, 16384);
 
 				// extract (g)zip'd file and open that
@@ -331,7 +331,7 @@ public class IpFilterAutoLoaderImpl
 
 					filtersFile = FileUtil.getUserFile("ipfilter.ext");
 					FileUtil.copyFile(gzip, filtersFile);
-					fin = new FileInputStream(filtersFile);
+					fin = FileUtil.newFileInputStream(filtersFile);
 					bin = new BufferedInputStream(fin, 16384);
 				} else if (headerBytes[0] == 0x50 && headerBytes[1] == 0x4b) {
 					// We pick the largest file in the zip, but we should someday consider
@@ -357,7 +357,7 @@ public class IpFilterAutoLoaderImpl
 					}
 					bin.close();
 					fin.close();
-					fin = new FileInputStream(filtersFile);
+					fin = FileUtil.newFileInputStream(filtersFile);
 					bin = new BufferedInputStream(fin, 16384);
 					zip = new ZipInputStream(bin);
 					for (int i = 0; i < largestPos; i++) {
@@ -366,7 +366,7 @@ public class IpFilterAutoLoaderImpl
 
 					filtersFile = FileUtil.getUserFile("ipfilter.ext");
 					FileUtil.copyFile(zip, filtersFile);
-					fin = new FileInputStream(filtersFile);
+					fin = FileUtil.newFileInputStream(filtersFile);
 					bin = new BufferedInputStream(fin, 16384);
 				}
 
@@ -508,7 +508,7 @@ public class IpFilterAutoLoaderImpl
 						event.cancel();
 
 						String file = COConfigurationManager.getStringParameter(CFG_AUTOLOAD_FILE);
-						File filtersFile = new File(file);
+						File filtersFile = FileUtil.newFile(file);
 						if (!filtersFile.exists()) {
 							return;
 						}

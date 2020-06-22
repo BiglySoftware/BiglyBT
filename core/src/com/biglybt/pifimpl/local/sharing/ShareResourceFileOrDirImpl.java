@@ -369,7 +369,7 @@ ShareResourceFileOrDirImpl
 
 		throws ShareException
 	{
-		File file = new File(new String((byte[]) map.get("file"), Constants.DEFAULT_ENCODING_CHARSET));
+		File file = FileUtil.newFile(new String((byte[]) map.get("file"), Constants.DEFAULT_ENCODING_CHARSET));
 
 		if (type == ST_FILE) {
 			return new ShareResourceFileImpl(manager, file, map);

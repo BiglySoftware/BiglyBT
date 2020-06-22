@@ -276,8 +276,8 @@ CoreImpl
 	
 				// set up a backwards pointer from config -> app dir so we can derive one from the other. It'll get saved on closedown, no need to do so now
 	
-			COConfigurationManager.setParameter( "azureus.application.directory", new File( SystemProperties.getApplicationPath()).getAbsolutePath());
-			COConfigurationManager.setParameter( "azureus.user.directory", new File( SystemProperties.getUserPath()).getAbsolutePath());
+			COConfigurationManager.setParameter( "azureus.application.directory", FileUtil.newFile( SystemProperties.getApplicationPath()).getAbsolutePath());
+			COConfigurationManager.setParameter( "azureus.user.directory", FileUtil.newFile( SystemProperties.getUserPath()).getAbsolutePath());
 				
 			crypto_manager = CryptoManagerFactory.getSingleton();
 	
@@ -886,7 +886,7 @@ CoreImpl
 	public File
 	getLockFile()
 	{
-		return( new File(SystemProperties.getUserPath(), ".azlock" ));
+		return( FileUtil.newFile(SystemProperties.getUserPath(), ".azlock" ));
 	}
 
 	private FileLock file_lock;
@@ -1085,7 +1085,7 @@ CoreImpl
 
 											if ( tf != null ){
 
-												File file = new File( tf );
+												File file = FileUtil.newFile( tf );
 
 												if ( !file.canRead() || file.isDirectory()){
 
@@ -1106,7 +1106,7 @@ CoreImpl
 
 										if ( save_folder != null ){
 
-											dest = new File( save_folder, torrent.getName());
+											dest = FileUtil.newFile( save_folder, torrent.getName());
 
 										}else{
 
@@ -1114,7 +1114,7 @@ CoreImpl
 
 											if ( save_file != null ){
 
-												dest = new File( save_file );
+												dest = FileUtil.newFile( save_file );
 											}
 										}
 
@@ -3118,7 +3118,7 @@ CoreImpl
 
 		if ( script_type == "" ){
 
-			script_file = new File( script.trim());
+			script_file = FileUtil.newFile( script.trim());
 
 			if ( !script_file.isFile()){
 

@@ -170,7 +170,7 @@ FMFileAccessPieceReorderer
 
 			}
 
-			dirt_state = new File( control_dir, control_file ).exists()?DIRT_CLEAN:DIRT_NEVER_WRITTEN;
+			dirt_state = FileUtil.newFile( control_dir, control_file ).exists()?DIRT_CLEAN:DIRT_NEVER_WRITTEN;
 
 		}catch( Throwable e ){
 
@@ -868,7 +868,7 @@ FMFileAccessPieceReorderer
 
 			if ( l_len == null || l_next == null || piece_bytes == null ){
 
-				configBorked( "Failed to read control file " + new File( control_dir, control_file ).getAbsolutePath() + ": map invalid - " + map );
+				configBorked( "Failed to read control file " + FileUtil.newFile( control_dir, control_file ).getAbsolutePath() + ": map invalid - " + map );
 
 				return;
 			}
@@ -878,7 +878,7 @@ FMFileAccessPieceReorderer
 
 			if ( piece_bytes.length != num_pieces * 4 ){
 
-				configBorked( "Failed to read control file " + new File( control_dir, control_file ).getAbsolutePath() + ": piece bytes invalid" );
+				configBorked( "Failed to read control file " + FileUtil.newFile( control_dir, control_file ).getAbsolutePath() + ": piece bytes invalid" );
 
 				return;
 			}
@@ -1088,7 +1088,7 @@ FMFileAccessPieceReorderer
 
 		if ( !FileUtil.writeResilientFileWithResult( control_dir, control_file, map )){
 
-			throw( new FMFileManagerException( "Failed to write control file " + new File( control_dir, control_file ).getAbsolutePath()));
+			throw( new FMFileManagerException( "Failed to write control file " + FileUtil.newFile( control_dir, control_file ).getAbsolutePath()));
 		}
 
 		if ( TRACE ){

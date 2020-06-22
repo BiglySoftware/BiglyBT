@@ -431,7 +431,7 @@ DownloadManagerStateImpl
 
 		if ( saved_state == null ){
 
-			original_torrent = TorrentUtils.readDelegateFromFile( new File(torrent_file), discard_pieces );
+			original_torrent = TorrentUtils.readDelegateFromFile( FileUtil.newFile(torrent_file), discard_pieces );
 
 			torrent_hash = original_torrent.getHash();
 
@@ -508,15 +508,15 @@ DownloadManagerStateImpl
 				
 				if ( file_str != null ){
 					
-					File file = new File( file_str );
+					File file = FileUtil.newFile( file_str );
 					
-					File torrentDir = new File(COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory"));
+					File torrentDir = FileUtil.newFile(COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory"));
 	
 					if ( torrentDir.isDirectory() && torrentDir.equals( file.getParentFile())){
 						
 						file.delete();
-						
-						new File( file.getAbsolutePath() + ".bak" ).delete();
+
+						FileUtil.newFile( file.getAbsolutePath() + ".bak" ).delete();
 					}
 				}
 			}catch( Throwable e ){
@@ -530,13 +530,13 @@ DownloadManagerStateImpl
 	getStateFile(
 		byte[]		torrent_hash )
 	{
-		return( new File( ACTIVE_DIR, ByteFormatter.encodeString( torrent_hash ) + ".dat" ));
+		return( FileUtil.newFile( ACTIVE_DIR, ByteFormatter.encodeString( torrent_hash ) + ".dat" ));
 	}
 
 	protected static File
 	getGlobalStateFile()
 	{
-		return( new File( ACTIVE_DIR, "cache.dat" ));
+		return( FileUtil.newFile( ACTIVE_DIR, "cache.dat" ));
 	}
 
 	public static void
@@ -617,7 +617,7 @@ DownloadManagerStateImpl
 				}
 			}
 
-			GZIPOutputStream	os = new GZIPOutputStream( new FileOutputStream( getGlobalStateFile()));
+			GZIPOutputStream	os = new GZIPOutputStream( FileUtil.newFileOutputStream( getGlobalStateFile()));
 
 			try{
 
@@ -672,8 +672,8 @@ DownloadManagerStateImpl
 
 		String	state_file = hash_str + ".dat";
 
-		File	target_state_file 	= new File( ACTIVE_DIR, state_file );
-		File	source_state_file 	= new File( source_dir, state_file );
+		File	target_state_file 	= FileUtil.newFile( ACTIVE_DIR, state_file );
+		File	source_state_file 	= FileUtil.newFile( source_dir, state_file );
 
 		if ( !source_state_file.exists()){
 
@@ -692,7 +692,7 @@ DownloadManagerStateImpl
 			throw( new DownloadManagerException( "Failed to copy state file: " + source_state_file + " -> " + target_state_file ));
 		}
 
-		File	source_state_dir = new File( source_dir, hash_str );
+		File	source_state_dir = FileUtil.newFile( source_dir, hash_str );
 
 		if ( source_state_dir.exists()){
 
@@ -728,7 +728,7 @@ DownloadManagerStateImpl
 
 		String	state_file = hash_str + ".dat";
 
-		File	target_state_file 	= new File( source_dir, state_file );
+		File	target_state_file 	= FileUtil.newFile( source_dir, state_file );
 
 		if ( target_state_file.exists()){
 
@@ -738,9 +738,9 @@ DownloadManagerStateImpl
 			}
 		}
 
-		new File( source_dir, state_file + ".bak" ).delete();
-		
-		File	target_state_dir = new File( source_dir, hash_str );
+		FileUtil.newFile( source_dir, state_file + ".bak" ).delete();
+
+		File	target_state_dir = FileUtil.newFile( source_dir, hash_str );
 
 		if ( target_state_dir.exists()){
 
@@ -856,7 +856,7 @@ DownloadManagerStateImpl
 	getStateFile( )
 	{
 		try{
-			File	parent = new File( ACTIVE_DIR, ByteFormatter.encodeString( torrent.getHash()) + File.separatorChar);
+			File	parent = FileUtil.newFile( ACTIVE_DIR, ByteFormatter.encodeString( torrent.getHash()));
 
 			return( StringInterner.internFile(parent));
 
@@ -1067,15 +1067,15 @@ DownloadManagerStateImpl
 
 			String	state_file = hash_str + ".dat";
 
-			File	existing_state_file = new File( ACTIVE_DIR, state_file );
-			File	target_state_file 	= new File( target_dir, state_file );
+			File	existing_state_file = FileUtil.newFile( ACTIVE_DIR, state_file );
+			File	target_state_file 	= FileUtil.newFile( target_dir, state_file );
 
 			if ( !FileUtil.copyFile( existing_state_file, target_state_file )){
 
 				throw( new IOException( "Failed to copy state file" ));
 			}
 
-			File	existing_state_dir = new File( ACTIVE_DIR, hash_str );
+			File	existing_state_dir = FileUtil.newFile( ACTIVE_DIR, hash_str );
 
 			if ( existing_state_dir.exists()){
 
@@ -1208,7 +1208,7 @@ DownloadManagerStateImpl
 	        
 			String	state_file = hash_str + ".dat";
 			
-			File	target_state_file 	= new File( ACTIVE_DIR, state_file );
+			File	target_state_file 	= FileUtil.newFile( ACTIVE_DIR, state_file );
 
 			if ( target_state_file.exists()){
 
@@ -1218,9 +1218,9 @@ DownloadManagerStateImpl
 				}
 			}
 
-			new File( ACTIVE_DIR, state_file + ".bak" ).delete();
+			FileUtil.newFile( ACTIVE_DIR, state_file + ".bak" ).delete();
 			
-			File	dir = new File( ACTIVE_DIR, hash_str );
+			File	dir = FileUtil.newFile( ACTIVE_DIR, hash_str );
 
 			if ( dir.exists() && dir.isDirectory()){
 
@@ -1549,7 +1549,7 @@ DownloadManagerStateImpl
 
 		if (name.equals(AT_RELATIVE_SAVE_PATH)) {
 			if (value.length() > 0) {
-				File relative_path_file = new File(value);
+				File relative_path_file = FileUtil.newFile(value);
 				relative_path_file = DownloadManagerDefaultPaths.normaliseRelativePath(relative_path_file);
 				value = (relative_path_file == null) ? "" : relative_path_file.getPath();
 			}
@@ -2237,8 +2237,8 @@ DownloadManagerStateImpl
 
 					try{
 						int		index 	= Integer.parseInt( bits[0].trim());
-						File	source	= new File(bits[1]);
-						File	target	= bits.length<3?null:new File(bits[2]);
+						File	source	= FileUtil.newFile(bits[1]);
+						File	target	= bits.length<3?null:FileUtil.newFile(bits[2]);
 
 						if( index >= 0 ){
 
@@ -2268,9 +2268,9 @@ DownloadManagerStateImpl
 
 				if ( sep != -1 ){
 
-					File target = (sep == entry.length()-1)?null:new File( entry.substring( sep+1 ));
+					File target = (sep == entry.length()-1)?null:FileUtil.newFile( entry.substring( sep+1 ));
 
-					res.putMigration( new File( entry.substring(0,sep)), target );
+					res.putMigration( FileUtil.newFile( entry.substring(0,sep)), target );
 				}
 			}
 		}
@@ -4055,7 +4055,7 @@ DownloadManagerStateImpl
 
 				// try reading from original
 
-			TOTorrent original_torrent = TorrentUtils.readFromFile( new File(torrent_file), true );
+			TOTorrent original_torrent = TorrentUtils.readFromFile( FileUtil.newFile(torrent_file), true );
 
 			torrent_hash_wrapper = original_torrent.getHashWrapper();
 

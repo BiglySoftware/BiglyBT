@@ -29,6 +29,7 @@ import java.util.zip.ZipInputStream;
 import com.biglybt.core.custom.Customization;
 import com.biglybt.core.custom.CustomizationException;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
 
 public class
@@ -123,7 +124,7 @@ CustomizationImpl
 
 		try{
 			zis = new ZipInputStream(
-					new BufferedInputStream( new FileInputStream( contents ) ));
+					new BufferedInputStream( FileUtil.newFileInputStream( contents ) ));
 
 			while( true ){
 

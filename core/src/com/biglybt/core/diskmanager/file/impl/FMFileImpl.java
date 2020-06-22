@@ -399,7 +399,7 @@ FMFileImpl
 
 			String	new_canonical_path;
 
-			File 	new_linked_file = new File( linked_file.getParentFile(), new_name );
+			File 	new_linked_file = FileUtil.newFile( linked_file.getParentFile(), new_name );
 
 			try{
 
@@ -1171,7 +1171,7 @@ FMFileImpl
 	protected String
 	getString()
 	{
-		File cPath = new File(canonical_path);
+		File cPath = FileUtil.newFile(canonical_path);
 		String sPaths;
 		if (cPath.equals(linked_file))
 			sPaths = "can/link=" + Debug.secretFileName(canonical_path);

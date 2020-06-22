@@ -1213,7 +1213,7 @@ WebPlugin
 
 		for (int i=0;i<welcome_pages.length;i++){
 
-			welcome_files[i] = new File( file_root + File.separator + welcome_pages[i] );
+			welcome_files[i] = FileUtil.newFile( file_root, welcome_pages[i] );
 		}
 	}
 

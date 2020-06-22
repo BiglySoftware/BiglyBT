@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.biglybt.core.util.BEncoder;
+import com.biglybt.core.util.FileUtil;
 
 public class
 VuzeFileImpl
@@ -167,7 +168,7 @@ VuzeFileImpl
 
 		throws IOException
 	{
-		FileOutputStream	fos = new FileOutputStream( target );
+		FileOutputStream	fos = FileUtil.newFileOutputStream( target );
 
 		try{
 			fos.write( exportToBytes());

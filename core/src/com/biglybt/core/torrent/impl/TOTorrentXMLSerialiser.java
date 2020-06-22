@@ -35,6 +35,7 @@ import java.util.Map;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentException;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.xml.util.XUXmlWriter;
 
 public class
@@ -60,7 +61,7 @@ TOTorrentXMLSerialiser
 
 		try{
 
-			setOutputStream( new FileOutputStream( file ));
+			setOutputStream( FileUtil.newFileOutputStream( file ));
 
 			writeRoot();
 

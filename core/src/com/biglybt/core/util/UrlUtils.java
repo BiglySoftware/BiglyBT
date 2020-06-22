@@ -788,7 +788,7 @@ public class UrlUtils
 			return strURL;
 		}
 
-		if (new File(text).exists()) {
+		if (FileUtil.newFile(text).exists()) {
 			return null;
 		}
 

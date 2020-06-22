@@ -78,7 +78,7 @@ public class SaveLocationChange {
 	 * to store the torrent.
 	 */
 	public final File normaliseTorrentLocation(File old_torrent_directory, String old_torrent_name) {
-		return new File(
+		return FileUtil.newFile(
 			(torrent_location != null) ? torrent_location : old_torrent_directory,
 			(torrent_name != null) ? torrent_name : old_torrent_name
 		);
@@ -97,7 +97,7 @@ public class SaveLocationChange {
 	 * to store the download.
 	 */
 	public final File normaliseDownloadLocation(File old_download_directory, String old_download_name) {
-		return new File(
+		return FileUtil.newFile(
 			(download_location != null) ? download_location : old_download_directory,
 			(download_name != null) ? download_name : old_download_name
 		);

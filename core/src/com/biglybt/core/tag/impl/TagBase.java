@@ -787,7 +787,7 @@ TagBase
 
 			}else{
 
-				return( new File( str ));
+				return( FileUtil.newFile( str ));
 			}
 		}
 
@@ -866,7 +866,7 @@ TagBase
 
 			}else{
 
-				return( new File( str ));
+				return( FileUtil.newFile( str ));
 			}
 		}
 
@@ -945,7 +945,7 @@ TagBase
 
 			}else{
 
-				return( new File( str ));
+				return( FileUtil.newFile( str ));
 			}
 		}
 
@@ -1024,7 +1024,7 @@ TagBase
 	
 			}else{
 	
-				return( new File( str ));
+				return( FileUtil.newFile( str ));
 			}
 		}
 	
@@ -1103,7 +1103,7 @@ TagBase
 	
 			}else{
 	
-				return( new File( str ));
+				return( FileUtil.newFile( str ));
 			}
 		}
 	

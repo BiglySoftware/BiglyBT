@@ -203,7 +203,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
     	
     	if ( explicit_target != null && explicit_target.length() > 0 ){
     		
-    		File move_to = new File( explicit_target );
+    		File move_to = FileUtil.newFile( explicit_target );
     		
     		if ( !move_to.exists()){
 
@@ -563,7 +563,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 
     	//  Simple one-level path.
     	if (parent == null) {
-    		return new File(child_name);
+    		return FileUtil.newFile(child_name);
     	}
 
     	ArrayList parts = new ArrayList();
@@ -584,7 +584,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
     		sb.append(parts.get(i));
     	}
 
-    	return new File(sb.toString());
+    	return FileUtil.newFile(sb.toString());
     }
 
     static File[] getDefaultDirs() {
@@ -780,7 +780,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 				data_target = null;
 			}else{
 
-				data_target = new File(FileUtil.getCanonicalFileName(location));
+				data_target = FileUtil.newFile(FileUtil.getCanonicalFileName(location));
 				String relative_path = null;
 
 				if( dm != null && dm.getDownloadState() != null ) {
@@ -792,7 +792,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 
 					// Doesn't matter if File.separator is required or not, it seems to
 					// remove duplicate file separators.
-					data_target = new File(data_target.getPath() + File.separator + relative_path);
+					data_target = FileUtil.newFile(data_target.getPath(), relative_path);
 				}
 			}
 
@@ -819,7 +819,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 
 				if ( torrent_path != null && torrent_path.trim().length() > 0 ){
 
-					File temp = new File( torrent_path );
+					File temp = FileUtil.newFile( torrent_path );
 
 					if ( temp.isDirectory()){
 

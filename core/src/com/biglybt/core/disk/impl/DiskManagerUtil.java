@@ -20,45 +20,31 @@
 
 package com.biglybt.core.disk.impl;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
-import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
-import com.biglybt.core.disk.impl.piecemapper.DMPieceMap;
-import com.biglybt.core.disk.impl.piecemapper.DMPieceMapper;
-import com.biglybt.core.disk.impl.piecemapper.DMPieceMapperFactory;
-import com.biglybt.core.disk.impl.piecemapper.DMPieceMapperFile;
+import com.biglybt.core.disk.impl.piecemapper.*;
 import com.biglybt.core.disk.impl.resume.RDResumeHandler;
 import com.biglybt.core.diskmanager.access.DiskAccessController;
 import com.biglybt.core.diskmanager.cache.CacheFile;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerFactory;
 import com.biglybt.core.diskmanager.cache.CacheFileOwner;
-import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.download.DownloadManagerException;
-import com.biglybt.core.download.DownloadManagerState;
-import com.biglybt.core.download.DownloadManagerStats;
+import com.biglybt.core.download.*;
 import com.biglybt.core.download.impl.DownloadManagerStatsImpl;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.LocaleUtilDecoder;
-import com.biglybt.core.logging.LogAlert;
-import com.biglybt.core.logging.LogEvent;
-import com.biglybt.core.logging.LogIDs;
-import com.biglybt.core.logging.Logger;
+import com.biglybt.core.logging.*;
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
+import java.util.*;
 
 public class
 DiskManagerUtil

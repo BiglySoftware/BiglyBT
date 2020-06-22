@@ -300,7 +300,7 @@ ConfigurationChecker
 		  
 		  for ( String prefix: prefixes ){
 			  
-			  File	prop_file = new File( dir, prefix + ".properties" );
+			  File	prop_file = FileUtil.newFile( dir, prefix + ".properties" );
 	
 			  if ( prop_file.exists()){
 	
@@ -308,7 +308,7 @@ ConfigurationChecker
 	
 				  Properties props = new Properties();
 	
-				  InputStream is = new FileInputStream( prop_file );
+				  InputStream is = FileUtil.newFileInputStream( prop_file );
 	
 				  try{
 					  props.load( is );
@@ -750,7 +750,7 @@ ConfigurationChecker
       //but old left-over MessagesBundle.properties files in the user dir
       //cause display text problems, so let's delete them.
 	    if( ConfigurationManager.getInstance().doesParameterNonDefaultExist( "General_bEnableLanguageUpdate" ) ) {
-        File user_dir = new File( SystemProperties.getUserPath() );
+        File user_dir = FileUtil.newFile( SystemProperties.getUserPath() );
         File[] files = user_dir.listFiles( new FilenameFilter() {
           @Override
           public boolean accept(File dir, String name) {
@@ -769,7 +769,7 @@ ConfigurationChecker
 								Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING,
 										"ConfigurationChecker:: removing old language file: "
 												+ file.getAbsolutePath()));
-	            file.renameTo( new File( file.getParentFile(), "delme" + file.getName() ) );
+	            file.renameTo( FileUtil.newFile( file.getParentFile(), "delme" + file.getName() ) );
 	          }
 	        }
         }

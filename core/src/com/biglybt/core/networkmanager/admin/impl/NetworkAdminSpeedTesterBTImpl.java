@@ -197,8 +197,8 @@ public class NetworkAdminSpeedTesterBTImpl
             //create a blank file of specified size. (using the temporary name.)
             File saveLocation = AETemporaryFileHandler.createTempFile();
             File baseDir = saveLocation.getParentFile();
-            File blankFile = new File(baseDir,fileName);
-            File blankTorrentFile = new File( baseDir, "speedTestTorrent.torrent" );
+            File blankFile = FileUtil.newFile(baseDir, fileName);
+            File blankTorrentFile = FileUtil.newFile(baseDir, "speedTestTorrent.torrent");
             torrent.writeToFile(blankTorrentFile);
 
             URL	announce_url = torrent.getAnnounceURL();

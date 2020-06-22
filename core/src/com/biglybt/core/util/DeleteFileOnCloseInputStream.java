@@ -40,7 +40,7 @@ DeleteFileOnCloseInputStream
 		throws IOException
 	{
 		file		= _file;
-		in			= new BufferedInputStream( new FileInputStream( file ), 128*1024 );
+		in			= new BufferedInputStream( FileUtil.newFileInputStream( file ), 128*1024 );
 	}
 
 	@Override
@@ -160,7 +160,7 @@ DeleteFileOnCloseInputStream
 	{
 		in.close();
 
-		in = new FileInputStream( file );
+		in = FileUtil.newFileInputStream( file );
 
 		in.skip( mark );
 
