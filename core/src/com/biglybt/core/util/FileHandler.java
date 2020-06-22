@@ -29,8 +29,6 @@ import java.util.Locale;
 public class FileHandler
 {
 	/**
-	 * @return <code>null</code> will fallback to normal java.io.File
-	 *
 	 * @implNote Each string entry of subDir may contain File.separator
 	 */
 	public File newFile(File parent, String... subDirs) {
@@ -46,8 +44,6 @@ public class FileHandler
 	}
 
 	/**
-	 * @return <code>null</code> will fallback to normal java.io.File
-	 *
 	 * @implNote 
 	 *  parent and subDirs may contain File.separator<br/>
 	 *  parent might be empty string (default is File.separater)
