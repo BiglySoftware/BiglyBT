@@ -604,16 +604,16 @@ PEPeerControlImpl
 					{
 					}
 					
-					public byte[][]
+					public void
 					receivedHashRequest(
 						PEPeerTransport		peer,
+						HashesReceiver		receiver,
 						byte[]				root_hash,
 						int					base_layer,
 						int					index,
 						int					length,
 						int					proof_layers )
 					{
-						return( null );
 					}
 					
 					public void

@@ -38,25 +38,34 @@ import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.torrent.TOTorrentFileHashTree;
 import com.biglybt.core.torrent.TOTorrentFileHashTree.HashRequest;
 import com.biglybt.core.torrent.TOTorrentFileHashTree.PieceTreeProvider;
-import com.biglybt.core.util.AESemaphore;
+import com.biglybt.core.torrent.TOTorrentFileHashTree.PieceTreeReceiver;
+import com.biglybt.core.util.Average;
 import com.biglybt.core.util.ByteArrayHashMap;
 import com.biglybt.core.util.ConcurrentHasher;
-import com.biglybt.core.util.ConcurrentHasherRequest;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SHA256;
+import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimerEvent;
+import com.biglybt.core.util.TimerEventPerformer;
 
 public class 
 PEPeerControlHashHandlerImpl
 	implements PEPeerControlHashHandler, PieceTreeProvider
 {
+	private static final Object	KEY_PEER_STATS = new Object();
+	
 	private final PEPeerControlImpl		peer_manager;
 	private final TOTorrent				torrent;
 	private final DiskManager			disk_manager;
+	private final int					piece_length;
 	
 	private final ByteArrayHashMap<TOTorrentFileHashTree>		file_map;
 
+	private long 						last_update	= SystemTime.getMonotonousTime();
+	
 	private Set<PeerHashRequest>		active_requests = new LinkedHashSet<>();
 	
 	private Map<PEPeerTransport,List<PeerHashRequest>>	peer_requests	 = new HashMap<>();
@@ -70,6 +79,25 @@ PEPeerControlHashHandlerImpl
 	private final Set<TOTorrentFileHashTree>					incomplete_trees 		= new HashSet<>();
 	private final Map<TOTorrentFileHashTree, PeerHashRequest>	incomplete_tree_reqs 	= new HashMap<>();
 	
+	private final int PIECE_TREE_CACHE_MAX	= 20;
+	
+		// 4MB piece has 128 leaves totaling 4096 bytes, layer above 2048 etc -> total around 8k
+	
+	private final Map<Integer,byte[][]>	piece_tree_cache =
+			new LinkedHashMap<Integer,byte[][]>(PIECE_TREE_CACHE_MAX,0.75f,true)
+			{
+				@Override
+				protected boolean
+				removeEldestEntry(
+			   		Map.Entry<Integer,byte[][]> eldest)
+				{
+					return size() > PIECE_TREE_CACHE_MAX;
+				}
+			};
+
+	private volatile long	last_piece_tree_request = -1;
+		
+	private final Map<Integer,PieceTreeRequest>		piece_tree_requests = new HashMap<>();
 	
 	public 
 	PEPeerControlHashHandlerImpl(
@@ -80,6 +108,8 @@ PEPeerControlHashHandlerImpl
 		peer_manager	= _peer_manager;
 		torrent			= _torrent;
 		disk_manager	= _disk_manager;
+		
+		piece_length = disk_manager.getPieceLength();
 		
 		file_map = new ByteArrayHashMap<TOTorrentFileHashTree>();
 		
@@ -113,15 +143,54 @@ PEPeerControlHashHandlerImpl
 	public void 
 	update()
 	{	
+		long now = SystemTime.getMonotonousTime();
+		
 		if ( !save_done_on_complete && disk_manager.getRemaining() == 0 && piece_hashes_received.get() > 0 ){
 			
 			save_done_on_complete = true;
 			
 			peer_manager.getAdapter().saveTorrentState();
 		}
-				
-		long now = SystemTime.getMonotonousTime();
 			
+		if ( last_piece_tree_request > 0 && now - last_piece_tree_request > 60*1000 ){
+			
+			last_piece_tree_request = -1;
+			
+			synchronized( piece_tree_cache ){
+
+				piece_tree_cache.clear();
+			}
+		}
+		
+		if ( now - last_update >= 30*1000 ){
+			
+			List<PieceTreeRequest>	expired = new ArrayList<>();
+			
+			synchronized( piece_tree_requests ){
+				
+				Iterator<PieceTreeRequest> it = piece_tree_requests.values().iterator();
+				
+				while( it.hasNext()){
+					
+					PieceTreeRequest req = it.next();
+					
+					if ( now - req.getCreateTime() > 30*1000 ){
+						
+						it.remove();
+						
+						expired.add( req );
+					}
+				}
+			}
+			
+			for ( PieceTreeRequest req: expired ){
+					
+				Debug.out( "PieceTreeRequest expired, derp" );
+				
+				req.complete( null );
+			}
+		}
+		
 		List<PeerHashRequest>	expired = new ArrayList<>();
 		List<PeerHashRequest>	retry	= new ArrayList<>();
 		
@@ -323,8 +392,9 @@ PEPeerControlHashHandlerImpl
 					}
 				}
 			}
-			
 		}
+		
+		last_update = now;
 	}
 	
 	private PeerHashRequest
@@ -365,7 +435,7 @@ PEPeerControlHashHandlerImpl
 				return( null );
 			}
 								
-			if ( active_requests.size() > 1024 ){
+			if ( active_requests.size() > 2048 ){
 					
 				Debug.out( "Too many active hash requests" );
 					
@@ -547,7 +617,7 @@ PEPeerControlHashHandlerImpl
 		int 			proof_layers, 
 		byte[][] 		hashes )		// null if rejected
 	{
-		System.out.println( (hashes==null?"hash_reject":"hashes") + " received: " + base_layer + ", " + index + "," + length );
+		// System.out.println( (hashes==null?"hash_reject":"hashes") + " received: " + base_layer + ", " + index + "," + length );
 		
 		try{
 			TOTorrentFileHashTree tree = file_map.get( root_hash );
@@ -722,34 +792,77 @@ PEPeerControlHashHandlerImpl
 	
 	
 	@Override
-	public byte[][]
+	public void
 	receivedHashRequest(
 		PEPeerTransport		peer,
+		HashesReceiver		receiver,
 		byte[]				root_hash,
 		int					base_layer,
 		int					index,
 		int					length,
 		int					proof_layers )
 	{
-			// TODO rate limit?
+		PeerStats stats = (PeerStats)peer.getUserData( KEY_PEER_STATS );
+
+		if ( stats == null ){
+			
+			stats = new PeerStats( peer );
+			
+			peer.setUserData( KEY_PEER_STATS, stats );
+		}
+			
+		// System.out.println( "Stats: " + stats.getString());
 		
 		try{
 			TOTorrentFileHashTree tree = file_map.get( root_hash );
 
 			if ( tree != null ){
 			
-				return( tree.requestHashes( this, root_hash, base_layer,	index, length, proof_layers ));
+				int	related_bytes;
+				
+				if ( base_layer == 0 ){
+					
+					related_bytes = 16*1024*length;			// leaf layer
+					
+				}else{
+					
+					related_bytes = piece_length * length;	// assume pieces layer
+				}
+				
+				stats.hashesRequested( related_bytes );
+				
+					// this does rate limiting 
+				
+				stats.runTask( 
+					()->{
+						if ( tree.requestHashes( 
+								this, 
+								new HashesReceiverImpl( peer, receiver ), 
+								root_hash, 
+								base_layer, 
+								index, 
+								length, 
+								proof_layers )){
+							
+								// request has been accepted and receiver will be informed of result
+							
+						}else{
+							receiver.receiveResult( null );
+						}});
+				
+				return;
 			}
 		}catch( Throwable e ){
 			
 			Debug.out( e );
 		}
 		
-		return( null );
+		receiver.receiveResult( null );
 	}
 	
-	public byte[][]
+	public void
 	getPieceTree(
+		PieceTreeReceiver			receiver,
 		TOTorrentFileHashTree		tree,
 		int 						piece_offset )
 	{
@@ -759,17 +872,67 @@ PEPeerControlHashHandlerImpl
 		
 		if ( !disk_manager.isDone( piece_number )){
 			
-			return( null );
+			receiver.receivePieceTree( piece_offset, null );
+			
+			return;
 		}
+		
+		byte[][] existing;
+		
+		synchronized( piece_tree_cache ){
+			
+			existing = piece_tree_cache.get( piece_number );
+		}
+		
+		if ( existing != null ){
+			
+			last_piece_tree_request = SystemTime.getMonotonousTime();
+				
+			receiver.receivePieceTree( piece_offset, existing );
+			
+			// System.out.println( "reusing hash tree for " + piece_number );
+			
+			return;
+		}
+		
+		PieceTreeRequest piece_tree_request;
+		
+		synchronized( piece_tree_requests ){
+			
+			piece_tree_request = piece_tree_requests.get( piece_number );
+			
+			if ( piece_tree_request != null ){
+				
+				piece_tree_request.addListener( receiver );
+				
+				// System.out.println( "adding to hash tree for " + piece_number );
+
+				return;
+				
+			}else{
+
+				piece_tree_request		= new PieceTreeRequest( piece_offset, piece_number, receiver );
+				
+				piece_tree_requests.put( piece_number, piece_tree_request );
+			}
+		}
+		
+		PieceTreeRequest	f_piece_tree_request = piece_tree_request;
+			
+		// System.out.println( "building hash tree for " + piece_number );
+		
+		boolean	went_async = false;
 		
 		try{
 			byte[] piece_hash = torrent.getPieces()[piece_number];
 		
 			int piece_size = disk_manager.getPieceLength( piece_number );
 			
-			AESemaphore sem = new AESemaphore( "getPieceTree" );
-			
-			byte[][][] result = { null };
+			PEPeerTransport peer = ((HashesReceiverImpl)receiver.getHashesReceiver()).getPeer();			
+				
+			PeerStats stats = (PeerStats)peer.getUserData( KEY_PEER_STATS );
+
+			stats.pieceTreeRequest( piece_size );
 			
 			disk_manager.enqueueReadRequest(
 					disk_manager.createReadRequest( piece_number, 0, piece_size ),
@@ -780,6 +943,8 @@ PEPeerControlHashHandlerImpl
 							DiskManagerReadRequest 	request,
 							DirectByteBuffer 		data )
 						{
+							boolean async_hashing = false;
+							
 							try{
 								ByteBuffer byte_buffer = data.getBuffer( DirectByteBuffer.SS_OTHER );
 								
@@ -794,7 +959,7 @@ PEPeerControlHashHandlerImpl
 
 						    		int v2_piece_length = piece_entry.getLength();
 						    		
-						    		if ( v2_piece_length < disk_manager.getPieceLength()){
+						    		if ( v2_piece_length < piece_length ){
 						    			
 						    				// hasher will pad appropriately
 						    			
@@ -804,47 +969,70 @@ PEPeerControlHashHandlerImpl
 					    		
 								ConcurrentHasher hasher = ConcurrentHasher.getSingleton();
 								
-								ConcurrentHasherRequest req = 
-										hasher.addRequest( 
-											byte_buffer,
-											2,
-											piece_size,
-											file.getLength());
-																
-								if ( Arrays.equals( req.getResult(), piece_hash )){
-									
-									List<List<byte[]>> tree = req.getHashTree();
-									
-									if ( tree != null ){
+								hasher.addRequest( 
+									byte_buffer,
+									2,
+									piece_size,
+									file.getLength(),
+									(completed_request)->{
 										
-										byte[][]	hashes = new byte[tree.size()][];
+										byte[][]	hashes = null;
 										
-										int layer_index = hashes.length - 1;
-										
-										for ( List<byte[]> entry: tree ){
-											
-											byte[] layer = new byte[ entry.size() * SHA256.DIGEST_LENGTH ];
-											
-											hashes[layer_index--] = layer;
-											
-											int layer_pos = 0;
-											
-											for ( byte[] hash: entry ){
+										try{
+											if ( Arrays.equals( completed_request.getResult(), piece_hash )){
 												
-												System.arraycopy( hash, 0, layer, layer_pos, SHA256.DIGEST_LENGTH );
+												List<List<byte[]>> tree = completed_request.getHashTree();
 												
-												layer_pos += SHA256.DIGEST_LENGTH;
+												if ( tree != null ){
+													
+													hashes = new byte[tree.size()][];
+													
+													int layer_index = hashes.length - 1;
+													
+													for ( List<byte[]> entry: tree ){
+														
+														byte[] layer = new byte[ entry.size() * SHA256.DIGEST_LENGTH ];
+														
+														hashes[layer_index--] = layer;
+														
+														int layer_pos = 0;
+														
+														for ( byte[] hash: entry ){
+															
+															System.arraycopy( hash, 0, layer, layer_pos, SHA256.DIGEST_LENGTH );
+															
+															layer_pos += SHA256.DIGEST_LENGTH;
+														}
+													}
+																							
+													last_piece_tree_request = SystemTime.getMonotonousTime();
+
+													synchronized( piece_tree_cache ){
+
+														piece_tree_cache.put( piece_number, hashes );
+													}
+												}
 											}
+										}finally{
+											
+											data.returnToPool();
+
+											f_piece_tree_request.complete( hashes );								
+
 										}
-										
-										result[0] = hashes;
-									}
-								}
+									},
+									false );
+								
+								async_hashing = true;
+																
 							}finally{
 								
-								sem.release();
+								if ( !async_hashing ){
 								
-								data.returnToPool();
+									data.returnToPool();
+
+									f_piece_tree_request.complete( null );								
+								}
 							}
 						}
 	
@@ -853,7 +1041,7 @@ PEPeerControlHashHandlerImpl
 							DiskManagerReadRequest 	request,
 							Throwable		 		cause )
 						{
-							sem.release();
+							f_piece_tree_request.complete( null );	
 						}
 	
 						public int
@@ -869,16 +1057,248 @@ PEPeerControlHashHandlerImpl
 						}
 					});
 			
-			sem.reserve();
-			
-			return( result[0] );
-			
+			went_async = true;
+						
 		}catch( Throwable e ){
 			
 			Debug.out( e );
+			
+		}finally{
+			
+			if ( !went_async ){
+		
+				piece_tree_request.complete( null );
+			}
 		}
+	}
 	
-		return( null );
+	private class
+	PeerStats
+	{
+		private final PEPeerTransport	peer;
+		
+		private final Average piece_tree_data_rate 	= Average.getInstance( 1000, 10 );  //update every 1s, average over 10s
+		private final Average hash_data_rate 		= Average.getInstance( 1000, 10 );  //update every 1s, average over 10s
+		private final Average hash_rate 			= Average.getInstance( 1000, 10 );  //update every 1s, average over 10s
+
+		private final LinkedList<Runnable>	tasks = new LinkedList<>();
+		
+		PeerStats(
+			PEPeerTransport		_peer )
+		{
+			peer		= _peer;
+		}
+		
+		void
+		pieceTreeRequest(
+			int		bytes )
+		{
+			piece_tree_data_rate.addValue( bytes );
+		}
+		
+		void
+		hashesRequested(
+			int		bytes_related )
+		{
+			hash_rate.addValue( 100 );
+			
+			hash_data_rate.addValue( bytes_related );
+		}
+				
+		void
+		runTask(
+			Runnable	task )
+		{
+			long hd_rate 	= hash_data_rate.getAverage();
+			long pt_rate	= piece_tree_data_rate.getAverage();
+			long peer_rate	= peer.getStats().getDataSendRate();
+			
+			boolean rate_limit = false;
+			
+			if ( pt_rate > 1*1024*1024 ){
+				
+				if ( pt_rate > peer_rate * 2 ){
+					
+					rate_limit = true;
+				}
+			}
+			
+			if ( hd_rate > 10*1024*1024 ){
+				
+				if ( hd_rate > peer_rate * 4 ){
+					
+					rate_limit = true;
+				}
+			}
+			
+			if ( rate_limit ){
+								
+				synchronized( tasks ){
+					
+					tasks.addLast( task );
+				
+					if ( tasks.size() > 1024 ){
+						
+						peer_manager.removePeer( peer, "Too many hash requests" );
+						
+						return;
+					}
+					
+					// System.out.println( "rate limiting, tasks=" + tasks.size() );
+
+					if ( tasks.size() == 1 ){
+						
+						SimpleTimer.addEvent(
+							"Peer.hash.rl",
+							SystemTime.getOffsetTime( 100 ),
+							new TimerEventPerformer()
+							{
+								
+								public void
+								perform(
+									TimerEvent	event )
+								{
+									Runnable t;
+									
+									synchronized( tasks ){
+										
+										t = tasks.removeFirst();
+										
+										if ( !tasks.isEmpty()){
+											
+											if ( peer.getPeerState() == PEPeer.DISCONNECTED ){
+												
+												tasks.clear();
+												
+											}else{
+												
+												SimpleTimer.addEvent(
+													"Peer.hash.rl",
+													SystemTime.getOffsetTime( 100 ),
+													this );
+											}
+										}
+									}
+									
+									t.run();
+								}
+							});
+					}
+				}
+			}else{
+				
+				task.run();
+			}
+		}
+		
+		String
+		getString()
+		{
+			return( "hash rate=" + (hash_rate.getAverage()/100f) + 
+					", hash data=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( hash_data_rate.getAverage()) +
+					", pt data=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( piece_tree_data_rate.getAverage()) +
+					", peer data=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( peer.getStats().getDataSendRate()));
+		}
+	}
+	
+	private class
+	PieceTreeRequest
+	{
+		private final int		piece_offset;
+		private final int		piece_number;
+		
+		private final long		time = SystemTime.getMonotonousTime();
+		
+		private final List<PieceTreeReceiver>		listeners = new ArrayList<>();
+		
+		private boolean done;
+		
+		PieceTreeRequest(
+			int						_po,
+			int						_pn,
+			PieceTreeReceiver		_listener )
+		{
+			piece_offset	= _po;
+			piece_number	= _pn;
+			
+			listeners.add( _listener );
+		}
+		
+		private long
+		getCreateTime()
+		{
+			return( time );
+		}
+		
+		private void
+		addListener(
+			PieceTreeReceiver		l )
+		{
+			synchronized( piece_tree_requests ){
+				
+				listeners.add( l );
+			}
+		}
+		
+		private void
+		complete(
+			byte[][]	piece_tree )
+		{
+			synchronized( piece_tree_requests ){
+
+				if ( done ){
+					
+					return;
+				}
+				
+				done = true;
+				
+				piece_tree_requests.remove( piece_number );
+			}
+		
+			//System.out.println( "    piece tree request complete for " + piece_number + ", tree=" + piece_tree  );
+			
+			for ( PieceTreeReceiver listener: listeners ){
+				
+				try{
+					listener.receivePieceTree( piece_offset, piece_tree );
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+		}
+	}
+	
+	private static class
+	HashesReceiverImpl
+		implements TOTorrentFileHashTree.HashesReceiver
+	{
+		private final PEPeerTransport		peer;
+		private final HashesReceiver		receiver;
+		
+		HashesReceiverImpl(
+			PEPeerTransport		_peer,
+			HashesReceiver		_receiver )
+		{
+			peer		= _peer;
+			receiver	= _receiver;
+		}
+		
+		@Override
+		public void 
+		receiveHashes(
+			byte[][] hashes)
+		{
+			receiver.receiveResult( hashes );
+		}
+		
+		PEPeerTransport
+		getPeer()
+		{
+			return( peer );
+		}
 	}
 	
 	private static class

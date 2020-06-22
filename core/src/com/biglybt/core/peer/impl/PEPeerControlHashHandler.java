@@ -44,9 +44,10 @@ PEPeerControlHashHandler
 		int					proof_layers,
 		byte[][]			hashes );
 	
-	public byte[][]
+	public void
 	receivedHashRequest(
 		PEPeerTransport		peer,
+		HashesReceiver		receiver,
 		byte[]				root_hash,
 		int					base_layer,
 		int					index,
@@ -67,4 +68,12 @@ PEPeerControlHashHandler
 	
 	public void
 	stop();
+	
+	public interface
+	HashesReceiver
+	{
+		public void
+		receiveResult(
+			byte[][]	hashes );
+	}
 }

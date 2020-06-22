@@ -26,7 +26,6 @@ import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.torrent.TOTorrentFileHashTree;
 import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.SHA256;
 
@@ -34,6 +33,14 @@ public class
 TOTorrentFileHashTreeImpl
 	implements TOTorrentFileHashTree
 {
+	private static final boolean TEST_LEAF_REQUESTS		= false;
+	
+	static{
+		if ( TEST_LEAF_REQUESTS ){
+			
+			Debug.out( "LEAF TESTING ENABLED!!!!");
+		}
+	}
 	
 	private final static int DIGEST_LENGTH = SHA256.DIGEST_LENGTH;
 	
@@ -416,20 +423,6 @@ TOTorrentFileHashTreeImpl
 	
 		throws TOTorrentException
 	{
-		if ( false ){
-			
-			Debug.outNoStack( "Ignoring piece layer" );
-			
-			List<byte[]> result = new ArrayList<>( piece_layer.length/DIGEST_LENGTH );
-			
-			for ( int i=0;i<piece_layer.length;i+= DIGEST_LENGTH ){
-				
-				result.add( null );
-			}
-			
-			return( result );
-		}
-		
 		synchronized( tree_lock ){
 			
 			try{
@@ -564,22 +557,7 @@ TOTorrentFileHashTreeImpl
 			
 			int	piece_base_layer = tree.length - piece_layer_index - 1;
 
-			if ( true ){
-				
-				index	= index&0xfffffffe;
-				
-				int	length			= 2;
-				int proof_layers	= piece_layer_index-1;
-				
-				
-					// todo: 1 - request more pieces if the peer has them
-					// 2: limit proof layers to depth required rather than full set 
-				
-				System.out.println( "hash piece request for " + piece_number + " -> " + piece_base_layer + ", " + index + ", " + length );
-				
-				return( new HashRequestImpl( piece_base_layer, index, length, proof_layers ));
-				
-			}else{
+			if ( TEST_LEAF_REQUESTS ){
 				
 				// convert piece request into a leaf request for testing purposes
 				
@@ -598,13 +576,25 @@ TOTorrentFileHashTreeImpl
 				int	length			= 2;
 				int proof_layers	= tree.length - 2;
 				
+								
+				//System.out.println( "hash leaf request for " + piece_number + " -> " + leaf_base_layer + ", " + index + ", " + length );
+				
+				return( new HashRequestImpl( leaf_base_layer, index, length, proof_layers ));
+
+			}else{
+							
+				index	= index&0xfffffffe;
+				
+				int	length			= 2;
+				int proof_layers	= piece_layer_index-1;
+				
 				
 					// todo: 1 - request more pieces if the peer has them
 					// 2: limit proof layers to depth required rather than full set 
 				
-				System.out.println( "hash leaf request for " + piece_number + " -> " + leaf_base_layer + ", " + index + ", " + length );
+				//System.out.println( "hash piece request for " + piece_number + " -> " + piece_base_layer + ", " + index + ", " + length );
 				
-				return( new HashRequestImpl( leaf_base_layer, index, length, proof_layers ));
+				return( new HashRequestImpl( piece_base_layer, index, length, proof_layers ));
 
 			}
 		}
@@ -624,11 +614,14 @@ TOTorrentFileHashTreeImpl
 			
 			int layer_index = tree.length - base_layer -1;
 			
-				// we never request anything other than piece hashes from peers
+				// we never request anything other than piece hashes from peers (unless testing leaf hashes)
 			
 			if ( layer_index != piece_layer_index ){
 				
-				return;
+				if ( !TEST_LEAF_REQUESTS ){
+				
+					return;
+				}
 			}
 			
 			synchronized( tree_lock ){
@@ -755,6 +748,29 @@ TOTorrentFileHashTreeImpl
 							if ( to_copy > 0 ){
 							
 								System.arraycopy( bytes, 0, tree_layer, copy_offset, to_copy );
+								
+								if ( li == piece_layer_index && TEST_LEAF_REQUESTS ){
+									
+										// end up here when testing leaf hashes
+									
+									int	piece_offset = copy_offset/DIGEST_LENGTH;
+
+									int piece_number = file.getFirstPieceNumber() + piece_offset;
+									
+									for ( int x=0; x<bytes.length;x+=DIGEST_LENGTH){
+																			
+										byte[]	piece_hash = new byte[DIGEST_LENGTH];
+										
+										System.arraycopy( bytes, x, piece_hash, 0, DIGEST_LENGTH );
+																				
+										if ( piece_number <= file.getLastPieceNumber()){
+										
+											file.getTorrent().setPiece( piece_number, piece_hash );
+										}
+										
+										piece_number++;
+									}
+								}
 							}
 						}
 					}
@@ -765,18 +781,23 @@ TOTorrentFileHashTreeImpl
 					return;
 				}
 			}
+			
+			if ( layer_index == piece_layer_index && !TEST_LEAF_REQUESTS ){
+				
+					// normal case when not testing leaf hashes
+				
+				for ( int i=0; i<length; i++ ){
 					
-			for ( int i=0; i<length; i++ ){
-				
-				byte[]	piece_hash = new byte[DIGEST_LENGTH];
-				
-				System.arraycopy( hashes[i], 0, piece_hash, 0, DIGEST_LENGTH );
-				
-				int piece_number = file.getFirstPieceNumber() + index + i;
-				
-				if ( piece_number <= file.getLastPieceNumber()){
-				
-					file.getTorrent().setPiece( piece_number, piece_hash );
+					byte[]	piece_hash = new byte[DIGEST_LENGTH];
+					
+					System.arraycopy( hashes[i], 0, piece_hash, 0, DIGEST_LENGTH );
+					
+					int piece_number = file.getFirstPieceNumber() + index + i;
+					
+					if ( piece_number <= file.getLastPieceNumber()){
+					
+						file.getTorrent().setPiece( piece_number, piece_hash );
+					}
 				}
 			}
 		}catch( Throwable e ){
@@ -785,17 +806,36 @@ TOTorrentFileHashTreeImpl
 		}
 	}
 	
-	public byte[][] 
+	public boolean
 	requestHashes(
 		PieceTreeProvider	piece_tree_provider,
+		HashesReceiver		hashes_receiver,
 		byte[]				root_hash, 
 		int 				base_layer, 
 		int 				index, 
 		int 				length,
 		int 				proof_layers )
 	{
+		return( requestHashesSupport( piece_tree_provider, hashes_receiver, root_hash, base_layer, index, length, proof_layers, null ));
+	}
+	
+		/*
+		 * If we need to load a piece tree we come back through here asynchronously with it loaded
+		 */
+	
+	private boolean
+	requestHashesSupport(
+		PieceTreeProvider	piece_tree_provider,
+		HashesReceiver		hashes_receiver,
+		byte[]				root_hash, 
+		int 				base_layer, 
+		int 				index, 
+		int 				length,
+		int 				proof_layers,
+		byte[][]			loaded_piece_tree )
+	{
 		try{
-			System.out.println( "hash request for " + ( file.getFirstPieceNumber() + index ) + " -> " + base_layer + ", " + index + ", " + length );
+			//System.out.println( "hash request for file " + file.getIndex() + ": " + base_layer + ", " + index + ", " + length );
 			
 			int leaf_layer_index = tree.length - 1;
 			
@@ -805,27 +845,27 @@ TOTorrentFileHashTreeImpl
 			
 			if ( layer_index != piece_layer_index && layer_index != tree.length - 1 ){
 				
-				return( null );
+				return( false );
 			}
 			
 			if ( length < 2 || length > 512 ){
 				
-				return( null );
+				return( false );
 			}
 			
 			if ( length != Integer.highestOneBit( length )){
 				
-				return( null );	// not a power of 2
+				return( false );	// not a power of 2
 			}
 			
 			if ( index % length != 0 ){
 				
-				return( null );	// index must be multiple of length
+				return( false );	// index must be multiple of length
 			}
 			
 			if ( proof_layers >= tree.length ){
 				
-				return( null );
+				return( false );
 			}
 			
 			int[]		layer_offsets	= new int[tree.length];
@@ -859,28 +899,181 @@ TOTorrentFileHashTreeImpl
 			
 				byte[] piece_layer = tree[piece_layer_index];
 				
-				boolean ok = false;
+				int piece_length = (int)file.getTorrent().getPieceLength();
+
+				int hashes_per_piece = piece_length / BLOCK_SIZE;
 				
-				for ( int i=pli_offset;i<pli_offset+DIGEST_LENGTH;i++){
+				int pieces_required = ( length + hashes_per_piece - 1 ) / hashes_per_piece;
+								
+				for ( int piece_num=0; piece_num < pieces_required; piece_num++){
+				
+					boolean ok = false;
 					
-					if ( piece_layer[i] != 0 ){
+					int current_offset = pli_offset;
+					
+					for ( int i=current_offset;i<current_offset+DIGEST_LENGTH;i++){
 						
-						ok = true;
-						
-						break;
+						if ( piece_layer[i] != 0 ){
+							
+							ok = true;
+							
+							break;
+						}
 					}
+					
+					if ( !ok ){
+						
+						return( false );		// we don't have the piece hash
+					}
+					
+					current_offset += DIGEST_LENGTH;
 				}
 				
-				if ( !ok ){
+				if ( loaded_piece_tree == null ){
+										
+					PieceTreeReceiver pt_receiver = 
+						new PieceTreeReceiver(){
+							
+							byte[][][] trees = new byte[pieces_required][][];
+							
+							int		remaining	= pieces_required;
+							
+							boolean	done;
+							
+							@Override
+							public void 
+							receivePieceTree(
+								int			piece_offset,
+								byte[][] 	piece_tree )
+							{
+								if ( pieces_required == 1 ){
+									
+									if ( piece_tree == null ){
+										
+										hashes_receiver.receiveHashes( null );
+										
+									}else{
+										
+										if ( requestHashesSupport(
+												piece_tree_provider,
+												hashes_receiver,
+												root_hash, 
+												base_layer, 
+												index, 
+												length,
+												proof_layers,
+												piece_tree )){
+											
+												// all done, receiver informed
+										}else{
+											
+											hashes_receiver.receiveHashes( null );
+										}
+									}
+								}else{
+										
+									synchronized( trees ){
+										
+										if ( done ){
+											
+											return;
+										}
+										
+										if ( piece_tree == null ){
+										
+											hashes_receiver.receiveHashes( null );
+											
+											done = true;
+											
+											return;
+										}
+										
+										int entry = piece_offset - pli_offset;
+										
+										if ( trees[entry] != null ){
+											
+											Debug.out( "Got tree twice" );
+											
+											hashes_receiver.receiveHashes( null );
+											
+											done = true;
+											
+											return;
+										}
+										
+										trees[entry] = piece_tree;
+										
+										remaining--;
+										
+										if ( remaining > 0 ){
+											
+											return;
+										}
+										
+										done = true;
+									}
+									
+									byte[][]	tree0 = trees[0];
+									
+									int layers = tree0.length;
+									
+									byte[][]	combined = new byte[layers][];
+									
+									for ( int li = 0; li < tree0.length; li++ ){
+										
+										combined[li] = new byte[ tree0[li].length * pieces_required ];
+									}
+									
+									for ( int ti=0; ti < pieces_required; ti++ ){
+										
+										byte[][] t = trees[ti];
+										
+										for ( int li = 0; li < layers; li++ ){
+										
+											byte[]	src = t[li];
+											
+											int		len = src.length;
+											
+											System.arraycopy( src, 0, combined[li], len*ti, len );
+										}
+									}
+									
+									if ( requestHashesSupport(
+											piece_tree_provider,
+											hashes_receiver,
+											root_hash, 
+											base_layer, 
+											index, 
+											length,
+											proof_layers,
+											combined )){
+										
+											// all done, receiver informed
+									}else{
+										
+										hashes_receiver.receiveHashes( null );
+									}
+								}
+							}
+							
+							@Override
+							public HashesReceiver 
+							getHashesReceiver()
+							{
+								return( hashes_receiver );
+							}
+						};
 					
-					return( null );		// we don't have the piece hash
-				}
-				
-				piece_tree = piece_tree_provider.getPieceTree( this, pli_offset );
-				
-				if ( piece_tree == null ){
+					for ( int piece_num=0; piece_num < pieces_required; piece_num++){
 					
-					return( null );		// failed to read the tree
+						piece_tree_provider.getPieceTree( pt_receiver, this, pli_offset + piece_num );
+					}
+					
+					return( true );
+					
+				}else{
+					
+					piece_tree = loaded_piece_tree;
 				}
 			
 				local_tree = tree.clone();
@@ -932,7 +1125,7 @@ TOTorrentFileHashTreeImpl
 					
 					if ( !ok ){
 						
-						return( null );		// hash not available
+						return( false );		// hash not available
 					}
 				}
 				
@@ -996,7 +1189,7 @@ TOTorrentFileHashTreeImpl
 						
 						if ( !ok ){
 							
-							return( null );		// hash not available
+							return( false );		// hash not available
 						}
 						
 						hashes[ hash_pos++ ] = hash;
@@ -1010,17 +1203,19 @@ TOTorrentFileHashTreeImpl
 			
 			if ( hash_pos != hashes.length ){
 				
-				return( null );		// didn't fill things in
+				return( false );		// didn't fill things in
 			}
 			
-			return( hashes );
+			hashes_receiver.receiveHashes( hashes );
+			
+			return( true );
 			
 		}catch( Throwable e ){
 			
 			Debug.out( e );
 		}
 		
-		return( null );
+		return( false );
 	}
 
 	

@@ -46,21 +46,42 @@ TOTorrentFileHashTree
 		int 			proof_layers, 
 		byte[][] 		hashes );
 	
-	public byte[][] 
+	public boolean 
 	requestHashes(
-		PieceTreeProvider	ptp,
+		PieceTreeProvider	piece_tree_provider,
+		HashesReceiver		hashes_receiver,
 		byte[]				root_hash, 
 		int 				base_layer, 
 		int 				index, 
 		int 				length,
 		int 				proof_layers );
 	
+	public interface
+	HashesReceiver
+	{	
+		public void
+		receiveHashes(
+			byte[][]	hashes );
+	}
+	
+	public interface
+	PieceTreeReceiver
+	{	
+		public HashesReceiver
+		getHashesReceiver();
+		
+		public void
+		receivePieceTree(
+			int			piece_number,
+			byte[][]	piece_tree );
+	}
 	
 	public interface
 	PieceTreeProvider
 	{
-		public byte[][]
+		public void
 		getPieceTree(
+			PieceTreeReceiver		receiver,
 			TOTorrentFileHashTree	tree,
 			int 					piece_index );
 	}
