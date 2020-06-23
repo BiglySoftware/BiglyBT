@@ -480,7 +480,7 @@ public class GCStringPrinter
 							if ( str.length() > 2 ){
 								str = str.substring( 0, str.length()-2);
 							}
-							prev.lineOutputed = str + ELLIPSIS;
+							prev.lineOutputed = truncate( str );
 							cutoff = true;
 							if (DEBUG) {
 								System.out.println("set cutoff");
@@ -710,8 +710,7 @@ public class GCStringPrinter
 			if (len > 2) {
 				len -= 2;
 			}
-			outputLine.setLength(len);
-			outputLine.append( ELLIPSIS );
+			truncate( outputLine, len );
 			cutoff = true;
 			if (DEBUG) {
 				System.out.println("set cutoff");
@@ -725,7 +724,32 @@ public class GCStringPrinter
 		lineInfo.lineOutputed = outputLine == null ? lineInfo.originalLine : outputLine.toString();
 		return lineInfo;
 	}
+	
+	private void
+	truncate(
+		StringBuffer	buffer,
+		int				len )
+	{
+		if ( len > 0 && Character.isHighSurrogate( buffer.charAt( len-1 ))){
+			
+			len--;
+		}
+		
+		buffer.setLength(len);
+		buffer.append( ELLIPSIS );
+	}
 
+	private String
+	truncate(
+		String			str )
+	{
+		int len = str.length();
+		if ( len > 0 && Character.isHighSurrogate( str.charAt( len-1 ))){
+			str = str.substring( 0, len-1 );
+		}
+		return( str + ELLIPSIS );
+	}
+	
 	/**
 	 * @param int Position of part of word that didn't fit
 	 *
@@ -896,8 +920,7 @@ public class GCStringPrinter
 					if (len > 2) {
 						len -= 2;
 					}
-					outputLine.setLength(len);
-					outputLine.append( ELLIPSIS );
+					truncate( outputLine, len );
 					cutoff = true;
 					if (DEBUG) {
 						System.out.println("set cutoff");
@@ -930,8 +953,7 @@ public class GCStringPrinter
 					if (len > 2) {
 						len -= 2;
 					}
-					outputLine.setLength(len);
-					outputLine.append( ELLIPSIS );
+					truncate( outputLine, len );
 					cutoff = true;
 					if (DEBUG) {
 						System.out.println("set cutoff");
