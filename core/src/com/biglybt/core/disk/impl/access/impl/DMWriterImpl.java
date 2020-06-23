@@ -198,6 +198,8 @@ DMWriterImpl
 		        try{
 		        	final byte[]	blanks = new byte[1024];
 
+		        	// RandomUtils.nextBytes( blanks );
+		        	
 					for (int i = 0; i < buffer_size/1024; i++ ){
 
 						buffer.put(DirectByteBuffer.SS_DW, blanks );

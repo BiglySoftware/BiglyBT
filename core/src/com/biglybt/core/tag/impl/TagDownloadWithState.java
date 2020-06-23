@@ -35,6 +35,7 @@ import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -1954,30 +1955,39 @@ TagDownloadWithState
 							int	normal_count = 0;
 							
 							try{
-								byte[] hash = next.dm.getTorrent().getHash();
+								TOTorrent torrent = next.dm.getTorrent();
 								
-								String magnet = UrlUtils.getMagnetURI( hash );
-								
-								for ( int i=messages.size()-1;i>=0;i--){
+								if ( torrent == null ){
 									
-									ChatMessage message = messages.get(i);
+									already_published = true;	// borked, avoid publish
 									
-									if ( message.getMessageType() == ChatMessage.MT_NORMAL ){
+								}else{
+									
+									byte[] hash = torrent.getHash();
+									
+									String magnet = UrlUtils.getMagnetURI( hash );
+									
+									for ( int i=messages.size()-1;i>=0;i--){
 										
-										normal_count++;
+										ChatMessage message = messages.get(i);
 										
-										String text = message.getMessage();
-										
-										if ( text.contains( magnet )){
+										if ( message.getMessageType() == ChatMessage.MT_NORMAL ){
 											
-											already_published = true;
+											normal_count++;
 											
-											break;
-										}
-										
-										if ( normal_count == max_msg_to_check ){
+											String text = message.getMessage();
 											
-											break;
+											if ( text.contains( magnet )){
+												
+												already_published = true;
+												
+												break;
+											}
+											
+											if ( normal_count == max_msg_to_check ){
+												
+												break;
+											}
 										}
 									}
 								}

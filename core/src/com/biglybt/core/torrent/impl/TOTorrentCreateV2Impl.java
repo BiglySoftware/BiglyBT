@@ -43,9 +43,7 @@ TOTorrentCreateV2Impl
 	private final File		root;
 	private final long		piece_size;
 	private final Adapter	adapter;
-	
-	private Map<String,Map>				file_tree 		= new TreeMap<>();
-	
+		
 	private ByteArrayHashMap<byte[]>	piece_layers 	= new ByteArrayHashMap<>();
 
 	private long	total_file_size;
@@ -77,13 +75,15 @@ TOTorrentCreateV2Impl
 
 		throws TOTorrentException
 	{	
+		Map<String,Map>				file_tree 		= new TreeMap<>();
+
 		if ( root.isFile()){
 			
-			processFile( root, "" );
+			processFile( root, file_tree, "" );
 			
 		}else{
 			
-			processDirectory( root, "" );
+			processDirectory( root, file_tree, "" );
 		}
 		
 		if ( total_file_size == 0 ){
@@ -141,6 +141,7 @@ TOTorrentCreateV2Impl
 	public void
 	processFile(
 		File						file,
+		Map<String,Map>				node,
 		String						relative_path )
 	
 		throws TOTorrentException
@@ -154,7 +155,7 @@ TOTorrentCreateV2Impl
 		
 		Map<String,Map>	file_node = new TreeMap<>();
 		
-		file_tree.put( file.getName(), file_node );
+		node.put( file.getName(), file_node );
 
 		if ( relative_path.isEmpty()){
 			
@@ -212,6 +213,7 @@ TOTorrentCreateV2Impl
 	public void
 	processDirectory(
 		File						dir,
+		Map<String,Map>				node,
 		String						relative_path )
 	
 		throws TOTorrentException
@@ -254,15 +256,15 @@ TOTorrentCreateV2Impl
 			
 			if ( file.isFile()){
 				
-				processFile( file, relative_path );
+				processFile( file, node, relative_path );
 				
 			}else if ( file.isDirectory()){
 				
 				Map<String,Map>	sub_tree = new TreeMap<>();
 				
-				file_tree.put( name, sub_tree );
+				node.put( name, sub_tree );
 								
-				processDirectory( file, relative_path );
+				processDirectory( file, sub_tree, relative_path );
 			}
 		}
 

@@ -57,6 +57,11 @@ public class BDecoder
 
 	private final Charset keyCharset; // new decoder only
 
+	private CharsetDecoder keyDecoderUTF8; // old decoder only
+
+	private Charset keyCharsetUTF8; // new decoder only
+
+	
 	private int keyBytesLen = 0;
 
 	private ByteBuffer keyBytesBuffer; // old decoder only
@@ -67,6 +72,8 @@ public class BDecoder
 
 	private MapDecodeListener mapDecodeListener;
 
+	private boolean force_utf8_keys;
+	
 	static{
 		byte[]	portable = null;
 
@@ -471,29 +478,62 @@ public class BDecoder
 	
 							prev_key = current_key;
 						}
+						
+						String key;
 	
-						keyDecoder.reset();
-						keyDecoder.decode(keyBytesBuffer,keyCharsBuffer,true);
-						keyDecoder.flush(keyCharsBuffer);
-						/* XXX Should be keyCharsBuffer.position() and not limit()
-						 * .position() is where the decode ended,
-						 * .limit() is keyLength in bytes.
-						 * Limit may be larger than needed since some chars are built from
-						 * multiple bytes. Not changing code because limit and position are
-						 * always (?) the same for ISO-8859-1, and for other encodings we
-						 * use the new decoder, which handles size correctly
-						 */
-						String key = new String(keyCharsBuffer.array(),0,keyCharsBuffer.limit());
+						if ( force_utf8_keys ){
+							
+							keyDecoderUTF8.reset();
+							keyDecoderUTF8.decode(keyBytesBuffer,keyCharsBuffer,true);
+							keyDecoderUTF8.flush(keyCharsBuffer);
 	
-						// keys often repeat a lot - intern to save space
-						if (internKeys)
+							key = new String(keyCharsBuffer.array(),0,keyCharsBuffer.position());
+
+						}else{
+							
+							keyDecoder.reset();
+							keyDecoder.decode(keyBytesBuffer,keyCharsBuffer,true);
+							keyDecoder.flush(keyCharsBuffer);
+						
+						
+							/* XXX Should be keyCharsBuffer.position() and not limit()
+							 * .position() is where the decode ended,
+							 * .limit() is keyLength in bytes.
+							 * Limit may be larger than needed since some chars are built from
+							 * multiple bytes. Not changing code because limit and position are
+							 * always (?) the same for ISO-8859-1, and for other encodings we
+							 * use the new decoder, which handles size correctly
+							 */
+							key = new String(keyCharsBuffer.array(),0,keyCharsBuffer.limit());
+						}
+						
+						// keys often repeat a lot - intern to save space. utf8 keys imply non-fixed keys (e.g. file names...)
+						
+						if (internKeys && !force_utf8_keys )
 							key = StringInterner.intern( key );
 	
-	
-						//decode value
-	
-						Object value = decodeInputStream(dbis,key,nesting+1,internKeys);
-	
+							//decode value
+
+						Object value;
+						
+						if ( !force_utf8_keys && key.equals( "file tree" )){
+							
+							try{
+								force_utf8_keys = true;
+								
+								keyDecoderUTF8 = Constants.DEFAULT_ENCODING_CHARSET.newDecoder();
+								
+								value = decodeInputStream(dbis,key,nesting+1,internKeys);
+								
+							}finally{
+								
+								force_utf8_keys = false;
+							}
+						}else{
+						
+							value = decodeInputStream(dbis,key,nesting+1,internKeys);
+						}
+						
 						// value interning is too CPU-intensive, let's skip that for now
 						/*if(value instanceof byte[] && ((byte[])value).length < 17)
 						value = StringInterner.internBytes((byte[])value);*/
@@ -857,10 +897,19 @@ public class BDecoder
 							dbis.skip(skipBytes);
 						}
 
-						String key = new String(keyBytes, 0, keyLength, keyCharset);
-
+						String key;
+						
+						if ( force_utf8_keys ){
+							
+							key = new String(keyBytes, 0, keyLength, keyCharsetUTF8 );
+							
+						}else{
+							
+							key = new String(keyBytes, 0, keyLength, keyCharset);
+						}
+						
 						// keys often repeat a lot - intern to save space
-						if (internKeys)
+						if (internKeys && !force_utf8_keys )
 							key = StringInterner.intern( key );
 
 						if ( verify_map_order ){
@@ -884,8 +933,26 @@ public class BDecoder
 
 						//decode value
 
-						Object value = decodeInputStream2(dbis,key,nesting+1,internKeys);
+						Object value;
+						
+						if ( !force_utf8_keys && key.equals( "file tree" )){
+							
+							try{
+								force_utf8_keys = true;
 
+								keyCharsetUTF8 = Constants.DEFAULT_ENCODING_CHARSET;
+								
+								value = decodeInputStream2(dbis,key,nesting+1,internKeys);
+								
+							}finally{
+								
+								force_utf8_keys = false;
+							}
+						}else{
+							
+							value = decodeInputStream2(dbis,key,nesting+1,internKeys);
+						}
+						
 						// value interning is too CPU-intensive, let's skip that for now
 					/*if(value instanceof byte[] && ((byte[])value).length < 17)
 					value = StringInterner.internBytes((byte[])value);*/

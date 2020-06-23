@@ -843,7 +843,7 @@ TOTorrentCreateImpl
 
 			for (int i=0;i<progress_listeners.size();i++){
 
-				((TOTorrentProgressListener)progress_listeners.get(i)).reportCurrentTask( prefix + (additional_text==null?"":additional_text ));
+				((TOTorrentProgressListener)progress_listeners.get(i)).reportCurrentTask( prefix + (additional_text==null?"":( " " + additional_text )));
 			}
 		}
 	}

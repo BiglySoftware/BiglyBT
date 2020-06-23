@@ -22,6 +22,7 @@ package com.biglybt.core.util;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.*;
 
 import org.json.simple.JSONArray;
@@ -53,7 +54,7 @@ BEncoder
     {
     	BEncoder encoder = new BEncoder();
 
-    	encoder.encodeObject( object);
+    	encoder.encodeObject( object, false );
 
     	return( encoder.toByteArray());
     }
@@ -63,14 +64,14 @@ BEncoder
     private byte[][]	old_buffers;
 
     private final byte[]		int_buffer			= new byte[12];
-
+    
     private boolean
-	encodeObject(
-		Object 					object)
+   	encodeObject(
+   		Object 					object,
+   		boolean					utf_key_expected )
 
-    	throws IOException
-	{
-
+       	throws IOException
+   	{
         if (object instanceof BEncodableObject) {
             object = ((BEncodableObject)object).toBencodeObject();
         }
@@ -113,7 +114,7 @@ BEncoder
 
             }else{
 
-							ByteBuffer bb = Constants.DEFAULT_ENCODING_CHARSET.encode(tempString);
+				ByteBuffer bb = Constants.DEFAULT_ENCODING_CHARSET.encode(tempString);
 
 	            writeInt( bb.limit() );
 
@@ -163,24 +164,32 @@ BEncoder
 				{
 					if (o_key instanceof byte[])
 					{
-						encodeObject(o_key);
-						if (!encodeObject(value))
-							encodeObject("");
+						encodeObject(o_key,false);
+						if (!encodeObject(value,utf_key_expected))
+							encodeObject("",false);
 					} else if(o_key instanceof String)
 					{
 						String key = (String) o_key;
 						if (byte_keys)
 						{
-							encodeObject(Constants.BYTE_ENCODING_CHARSET.encode(key));
-							if (!encodeObject(value))
-								encodeObject("");
+							encodeObject(Constants.BYTE_ENCODING_CHARSET.encode(key),false);
+							if (!encodeObject(value,utf_key_expected))
+								encodeObject("",false);
 						} else
 						{
 								// if we put non-ascii chars in as keys we can get horrible expanding
 								// config issues as we cycle through decode/encode cycles with certain
 								// characters
 
-							if ( Constants.IS_CVS_VERSION ){
+							if ( !utf_key_expected ){
+								
+								if ( key.equals( "file tree" )){	// GAH, yes, v2 torrents have utf-8 keys for the file tree
+									
+									utf_key_expected = true;
+								}
+							}
+							
+							if ( Constants.IS_CVS_VERSION && !utf_key_expected ){
 								char[]	chars = key.toCharArray();
 
 								for ( char c: chars ){
@@ -198,9 +207,9 @@ BEncoder
 									}
 								}
 							}
-							encodeObject(key); // Key goes in as UTF-8
-							if (!encodeObject(value))
-								encodeObject("");
+							encodeObject(key,utf_key_expected); // Key goes in as UTF-8
+							if (!encodeObject(value, utf_key_expected))
+								encodeObject("", false);
 						}
 					} else
 						Debug.out( "Attempt to encode an unsupported map key type: " + object.getClass() + ";value=" + object);
@@ -220,7 +229,7 @@ BEncoder
 
             for(int i = 0; i<tempList.size(); i++){
 
-            	encodeObject( tempList.get(i));
+            	encodeObject( tempList.get(i), utf_key_expected);
             }
 
             writeChar('e');
