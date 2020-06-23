@@ -683,8 +683,6 @@ BackupManagerImpl
 
 					String name = from_file.getName().toLowerCase( Locale.US );
 
-					String full_name = from_file.getAbsolutePath().toLowerCase( Locale.US );
-
 					if ( 	name.startsWith( ".lock" ) 		||
 							name.startsWith( ".azlock" ) 	|| 	// i2phelper
 							name.startsWith( "lock" ) 		|| 	// dasu
@@ -695,9 +693,9 @@ BackupManagerImpl
 							name.endsWith( ".zip" )			||	// most likely not interesting
 							name.endsWith( ".dll" )			||	// might be in use, no big deal
 							name.endsWith( ".so" )			||	// might be in use, no big deal
-							full_name.contains( File.separator + "cache" + File.separator )	|| // caches can be in use, no big deal
-							full_name.contains( File.separator + "azneti2phelper" + File.separator + "netdb" + File.separator ) ||	// troublesome i2p files
-							full_name.contains( File.separator + "azneti2phelper" + File.separator + "peerprofiles" + File.separator )	// troublesome i2p files
+							FileUtil.containsPathSegment(from_file, "cache", false) || // caches can be in use, no big deal
+							FileUtil.containsPathSegment(from_file, "azneti2phelper" + File.separator + "netdb", false ) ||	// troublesome i2p files
+							FileUtil.containsPathSegment(from_file, "azneti2phelper" + File.separator + "peerprofiles", false )	// troublesome i2p files
 							){
 
 						return( new long[]{ total_files, total_copied });
