@@ -596,14 +596,23 @@ DownloadManager
      */
     public void renameDownload(String new_name) throws DownloadManagerException;
 
-    /**
-     * Move the files and rename a download in one go.
-     *
-     * For convenience - either argument can be null, but not both.
-     *
-     * @see #moveDataFiles(File)
-     * @see #renameDownload(String)
-     */
+	/**
+	 * Move the files and rename a download in one go.
+	 *
+	 * For convenience - either argument can be null, but not both.
+	 *
+	 *
+	 * @param new_parent_dir new location to move torrent data files to.  
+	 * If null, and simple torrent, torrent data file will be renamed new_name.
+	 * If null, and not simple torrent, torrent end path will be changed to new_name.
+	 *
+	 * @param new_name For simple torrent, changes the filename of the downloaded file.
+	 * For non-simple torrent, changes the end path  for the downloaded files.
+	 * If null, torrent data files will be moved to new_parent_dir, with a subfolder of the existing name.
+	 * 
+	 * @see #moveDataFiles(File)
+	 * @see #renameDownload(String)
+	 */
     public void moveDataFiles(File new_parent_dir, String new_name) throws DownloadManagerException;
 
         /**
