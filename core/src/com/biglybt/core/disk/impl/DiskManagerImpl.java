@@ -798,7 +798,7 @@ DiskManagerImpl
 
             DMPieceMapperFile pm_info = pm_files[i];
 
-            File    relative_file = pm_info.getDataFile();
+            String relative_file = pm_info.getRelativeDataPath();
 
             long target_length = pm_info.getLength();
 
@@ -911,7 +911,7 @@ DiskManagerImpl
     	DMPieceMapperFile			pm_info,
     	int							file_index,
     	String						root_dir,
-    	File						relative_file,
+    	String					relative_file,
     	int							storage_type )
 
     	throws Exception
@@ -936,7 +936,7 @@ DiskManagerImpl
 
         	if ( Debug.getNestedExceptionMessage(e).contains( "volume label syntax is incorrect" )){
 
-              	File target_file = FileUtil.newFile( root_dir + relative_file.toString());
+						File target_file = FileUtil.newFile( root_dir, relative_file);
 
         		File actual_file = state.getFileLink( file_index, target_file );
 
@@ -995,7 +995,7 @@ DiskManagerImpl
 
         				if ( comps.isEmpty()){
 
-        					String prefix = Base32.encode( new SHA1Simple().calculateHash( relative_file.toString().getBytes( "UTF-8" ))).substring( 0, 4 );
+        					String prefix = Base32.encode( new SHA1Simple().calculateHash( relative_file.getBytes( "UTF-8" ))).substring( 0, 4 );
 
         					comp = prefix + "_" + comp;
         				}
@@ -1078,7 +1078,7 @@ DiskManagerImpl
 
                 final long target_length = pm_info.getLength();
 
-                File relative_data_file = pm_info.getDataFile();
+                String relative_data_file = pm_info.getRelativeDataPath();
 
                 DiskManagerFileInfoImpl fileInfo;
 

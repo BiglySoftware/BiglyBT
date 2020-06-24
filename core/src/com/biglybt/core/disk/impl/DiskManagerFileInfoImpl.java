@@ -50,7 +50,7 @@ DiskManagerFileInfoImpl
 	implements DiskManagerFileInfo, CacheFileOwner
 {
   private String				root_dir;
-  private final File			relative_file;
+  private final String	relative_file;
 
   final int			file_index;
   CacheFile		cache_file;
@@ -73,7 +73,7 @@ DiskManagerFileInfoImpl
   DiskManagerFileInfoImpl(
 	DiskManagerHelper	_disk_manager,
   	String				_root_dir,
-  	File				_relative_file,
+  	String				_relative_file,
   	int					_file_index,
 	TOTorrentFile		_torrent_file,
 	int					_storage_type )

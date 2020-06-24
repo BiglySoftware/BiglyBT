@@ -177,15 +177,13 @@ LWSDiskManager
 
 				DMPieceMapperFile pm_info = pm_files[i];
 
-				File	relative_file = pm_info.getDataFile();
-
 				long target_length = pm_info.getLength();
 
 				DiskManagerFileInfoImpl	file_info =
 					new DiskManagerFileInfoImpl(
 											this,
 											save_location.toString(),
-											relative_file,
+											pm_info.getRelativeDataPath(),
 											i,
 											pm_info.getTorrentFile(),
 											DiskManagerFileInfo.ST_LINEAR );

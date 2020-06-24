@@ -335,17 +335,17 @@ PieceMapperImpl
 	{
 		private DiskManagerFileInfo					file;
 		private final TOTorrentFile					torrent_file;
-		private final String 						path;
+		private final String 						relative_path;
 		private final String 						name;
 
 		public
 		fileInfo(
 			TOTorrentFile	_torrent_file,
-			String 			_path,
+			String 			_relative_path,
 			String 			_name )
 		{
 			torrent_file	= _torrent_file;
-			path			= StringInterner.intern(_path);
+			relative_path = StringInterner.intern(_relative_path);
 			name 			= _name;
 		}
 
@@ -354,10 +354,10 @@ PieceMapperImpl
 			return torrent_file.getLength();
 		}
 		@Override
-		public File
-		getDataFile()
+		public String getRelativeDataPath()
 		{
-			return( FileUtil.newFile( path, name ));
+			return relative_path.isEmpty() ? name
+					: relative_path + File.separator + name;
 		}
 		@Override
 		public TOTorrentFile

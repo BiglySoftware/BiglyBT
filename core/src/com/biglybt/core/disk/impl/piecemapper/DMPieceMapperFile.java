@@ -19,8 +19,6 @@
 
 package com.biglybt.core.disk.impl.piecemapper;
 
-import java.io.File;
-
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.torrent.TOTorrentFile;
 
@@ -30,8 +28,11 @@ DMPieceMapperFile
 	public long
 	getLength();
 
-	public File
-	getDataFile();
+	/**
+	 * @return Relative file location and file name
+	 */
+	public String
+	getRelativeDataPath();
 
 	public TOTorrentFile
 	getTorrentFile();
