@@ -583,9 +583,15 @@ public class SideBarEntrySWT
 
 		triggerOpenListeners();
 
-		swtItem.getParent().select(swtItem);
-		swtItem.getParent().showItem(swtItem);
+		Tree tree = swtItem.getParent();
+		
+		tree.select(swtItem);
+		tree.showItem(swtItem);
 
+		if ( Constants.isOSX ){
+			tree.redraw();	// issue up to at least 4934r6 whereby tree is not being repainted after being scrolled via 'showItem'
+		}
+		
 		super.show();
 	}
 
