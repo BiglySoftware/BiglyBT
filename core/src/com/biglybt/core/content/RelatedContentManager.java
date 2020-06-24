@@ -4271,7 +4271,23 @@ RelatedContentManager
 				}
 			}
 		}
-
+		
+		try{
+			TOTorrent torrent = PluginCoreUtils.unwrap( download.getTorrent());
+			
+			int tt = torrent.getTorrentType();
+			
+			if ( tt == TOTorrent.TT_V1_V2 ){
+				
+				all_tags.add( "_hybrid_" );
+				
+			}else  if ( tt == TOTorrent.TT_V2 ){
+				
+				all_tags.add( "_v2_" );
+			}
+		}catch( Throwable e ){	
+		}
+		
 		if ( all_tags.size() == 0 ){
 
 			return( null );
