@@ -4513,6 +4513,27 @@ DownloadManagerStateImpl
 
     		return( torrent_hash_wrapper.getBytes());
     	}
+    	
+    	@Override
+    	public byte[][] 
+    	getHashes() 
+    		throws TOTorrentException
+    	{
+    		if ( getTorrentType() == TOTorrent.TT_V1_V2 ){
+    			
+    			if ( fixup()){
+
+    				return( delegate.getHashes());
+    				
+    			}else{
+    				
+    				return( null );
+    			}
+    			
+    		}else{
+    			return( new byte[][]{ getHash()});
+    		}
+    	}
 
     	@Override
 	    public HashWrapper
@@ -4521,6 +4542,29 @@ DownloadManagerStateImpl
     		throws TOTorrentException
 	   	{
     		return( torrent_hash_wrapper );
+    	}
+    	
+    	@Override
+    	public HashWrapper[]
+    	getHashWrappers() 
+    	
+    		throws TOTorrentException
+    	{
+    		if ( getTorrentType() == TOTorrent.TT_V1_V2 ){
+    			
+    			if ( fixup()){
+
+    				return( delegate.getHashWrappers());
+    				
+    			}else{
+    				
+    				return( null );
+    			}
+    			
+    		}else{
+    			
+    			return( new HashWrapper[]{ getHashWrapper()});
+    		}
     	}
 
     	@Override

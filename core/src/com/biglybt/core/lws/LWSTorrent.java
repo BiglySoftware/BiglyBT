@@ -308,6 +308,14 @@ LWSTorrent
 	}
 
 	@Override
+	public byte[][] 
+	getHashes() throws 
+	TOTorrentException
+	{
+		return( new byte[][]{ getHash()} );
+	}
+	
+	@Override
 	public HashWrapper
 	getHashWrapper()
 
@@ -316,6 +324,14 @@ LWSTorrent
 		return( lws.getHash());
 	}
 
+	@Override
+	public HashWrapper[] 
+	getHashWrappers() 
+		throws TOTorrentException
+	{	
+		return( new HashWrapper[]{ getHashWrapper()});
+	}
+	
    	@Override
     public void
 	setHashOverride(

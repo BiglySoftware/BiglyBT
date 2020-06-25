@@ -109,6 +109,9 @@ TOTorrentImpl
 	private byte[]		torrent_hash;
 	private HashWrapper	torrent_hash_wrapper;
 
+	private byte[]		torrent_hash_hybrid_v2;
+	private HashWrapper	torrent_hash_wrapper_hybrid_v2;
+
 	private boolean				simple_torrent;
 	private TOTorrentFileImpl[]	files;
 
@@ -815,6 +818,24 @@ TOTorrentImpl
 
 		return( torrent_hash );
 	}
+	
+	@Override
+	public byte[][]
+	getHashes()
+
+		throws TOTorrentException
+	{
+		if ( torrent_hash == null ){
+
+			Map	root = serialiseToMap();
+
+			Map info = (Map)root.get( TK_INFO );
+
+			setHashFromInfo( info );
+		}
+
+		return( torrent_type == TT_V1_V2?new byte[][]{ torrent_hash, torrent_hash_hybrid_v2 }:new byte[][]{torrent_hash});
+	}
 
 	@Override
 	public HashWrapper
@@ -830,6 +851,20 @@ TOTorrentImpl
 		return( torrent_hash_wrapper );
 	}
 
+	@Override
+	public HashWrapper[] 
+	getHashWrappers() 
+			
+		throws TOTorrentException
+	{
+		if ( torrent_hash_wrapper == null ){
+
+			getHash();
+		}
+		
+		return( torrent_type == TT_V1_V2?new HashWrapper[]{ torrent_hash_wrapper, torrent_hash_wrapper_hybrid_v2 }:new HashWrapper[]{torrent_hash_wrapper});
+	}
+	
 	@Override
 	public boolean
 	hasSameHashAs(
@@ -863,8 +898,25 @@ TOTorrentImpl
 				}
 				
 				byte[] encoded = BEncoder.encode(info);
+							
 				
-				if ( torrent_type == TT_V2 ){
+				if ( torrent_type == TT_V1_V2 ){
+					
+					SHA1Hasher s = new SHA1Hasher();
+					
+					torrent_hash = s.calculateHash( encoded );
+					
+					MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
+					
+					byte[] full_hash = sha256.digest( encoded );
+					
+					torrent_hash_hybrid_v2 = new byte[20];
+					
+					System.arraycopy( full_hash, 0, torrent_hash_hybrid_v2, 0, 20 );
+
+					torrent_hash_wrapper_hybrid_v2 = new HashWrapper( torrent_hash_hybrid_v2 );
+					
+				}else if ( torrent_type == TT_V2 ){
 					
 					MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
 					

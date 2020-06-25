@@ -3664,6 +3664,14 @@ TorrentUtils
 		}
 
 		@Override
+		public byte[][] 
+		getHashes() 
+			throws TOTorrentException
+		{
+			return( delegate.getHashes());
+		}
+		
+		@Override
 		public HashWrapper
 		getHashWrapper()
 
@@ -3672,6 +3680,14 @@ TorrentUtils
 			return( delegate.getHashWrapper());
 		}
 
+		@Override
+		public HashWrapper[] 
+		getHashWrappers() 
+			throws TOTorrentException
+		{	
+			return( delegate.getHashWrappers());
+		}
+		
 	   	@Override
 	    public void
     	setHashOverride(

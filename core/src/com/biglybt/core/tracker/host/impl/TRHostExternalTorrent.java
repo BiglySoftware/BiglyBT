@@ -100,10 +100,10 @@ TRHostExternalTorrent
 	}
 
 	@Override
-	public String getUTF8Name() {
+	public String 
+	getUTF8Name() {
 		return null;
 	}
-
 
 	@Override
 	public boolean
@@ -150,7 +150,7 @@ TRHostExternalTorrent
 	}
 
  	@Override
-  public void
+ 	public void
 	setCreatedBy(
 		byte[]		cb )
    	{
@@ -306,6 +306,14 @@ TRHostExternalTorrent
 	}
 
 	@Override
+	public byte[][] 
+	getHashes() 
+		throws TOTorrentException
+	{
+		return( new byte[][]{ getHash()} );
+	}
+	
+	@Override
 	public HashWrapper
 	getHashWrapper()
 
@@ -314,7 +322,15 @@ TRHostExternalTorrent
 		return( hash_wrapper );
 	}
 
-   	@Override
+	@Override
+	public HashWrapper[] 
+	getHashWrappers() 
+		throws TOTorrentException
+	{	
+		return( new HashWrapper[]{ getHashWrapper()});
+	}
+	
+	@Override
     public void
 	setHashOverride(
 		byte[] hash )

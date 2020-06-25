@@ -208,8 +208,8 @@ TOTorrent
 	getFiles();
 
 	 /**
-	  * A torrent has a unique SHA1 (20 byte) hash that is computed from some of its contents.
-	  * It is used, for example, when contacting a tracker to identify the torrent.
+	  * For a V1 or hybrid torrent this returns the SHA1 hash
+	  * For a V2 only torrent it returns the truncated SHA256 hash
 	  * @return
 	  * @throws TOTorrentException
 	  */
@@ -220,6 +220,16 @@ TOTorrent
 		throws TOTorrentException;
 
 	/**
+	 * @return 1 or two hashes. First entry same as getHash, second is V2 hash for a hybrid torrent
+	 * @throws TOTorrentException
+	 */
+	
+	public byte[][]
+	getHashes()
+
+		throws TOTorrentException;
+	
+	/**
 	 * convenience method to get a wrapped hash for performance purposes
 	 * @return
 	 * @throws TOTorrentException
@@ -227,6 +237,17 @@ TOTorrent
 
 	public HashWrapper
 	getHashWrapper()
+
+		throws TOTorrentException;
+
+	/**
+	 * See above description of getHashes
+	 * @return
+	 * @throws TOTorrentException
+	 */
+	
+	public HashWrapper[]
+	getHashWrappers()
 
 		throws TOTorrentException;
 
