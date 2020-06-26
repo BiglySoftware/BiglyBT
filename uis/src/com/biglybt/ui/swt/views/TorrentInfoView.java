@@ -162,14 +162,21 @@ public class TorrentInfoView
 		TOTorrent	torrent = download_manager.getTorrent();
 		BufferedLabel blabel = new BufferedLabel(gTorrentInfo, SWT.NULL);
 		gridData = new GridData();
-
-		int tt = torrent.getTorrentType();
-		boolean v1 = tt==TOTorrent.TT_V1 || tt==TOTorrent.TT_V1_V2;
-		boolean v2 = tt==TOTorrent.TT_V2 || tt==TOTorrent.TT_V1_V2;
-		
 		blabel.setLayoutData(gridData);
-		blabel.setText(torrent==null?"":( LocaleTorrentUtil.getCurrentTorrentEncoding( torrent ) + "; V1=" + (v1?"Y":"N") + ", V2=" + (v2?"Y":"N")));
 
+		if ( torrent == null ){
+			
+			blabel.setText("");
+			
+		}else{
+			
+			int tt = torrent.getTorrentType();
+			
+			boolean v1 = tt==TOTorrent.TT_V1 || tt==TOTorrent.TT_V1_V2;
+			boolean v2 = tt==TOTorrent.TT_V2 || tt==TOTorrent.TT_V1_V2;
+			
+			blabel.setText( LocaleTorrentUtil.getCurrentTorrentEncoding( torrent ) + "; V1=" + (v1?"Y":"N") + ", V2=" + (v2?"Y":"N"));
+		}
 			// trackers
 
 		label = new Label(gTorrentInfo, SWT.NULL);

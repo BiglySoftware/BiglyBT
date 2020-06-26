@@ -210,62 +210,65 @@ public class PiecesItem
 
 		try {
 
-			int nbComplete = 0;
-			int a0;
-			int a1 = 0;
-			for (int i = 0; i < drawWidth; i++) {
-				if (i == 0) {
-					// always start out with one piece
-					a0 = 0;
-					a1 = nbPieces / drawWidth;
-					if (a1 == 0)
-						a1 = 1;
-				} else {
-					// the last iteration, a1 will be nbPieces
-					a0 = a1;
-					a1 = ((i + 1) * nbPieces) / (drawWidth);
-				}
+			if ( nbPieces > 0 ){	// will be 0 for borked torrent
+				
+				int nbComplete = 0;
+				int a0;
+				int a1 = 0;
+				for (int i = 0; i < drawWidth; i++) {
+					if (i == 0) {
+						// always start out with one piece
+						a0 = 0;
+						a1 = nbPieces / drawWidth;
+						if (a1 == 0)
+							a1 = 1;
+					} else {
+						// the last iteration, a1 will be nbPieces
+						a0 = a1;
+						a1 = ((i + 1) * nbPieces) / (drawWidth);
+					}
 
-				int index;
+					int index;
 
-				if (a1 <= a0) {
-					index = imageBuffer[i - 1];
-				} else {
-					int nbAvailable = 0;
-					if (pieces != null) {
-						for (int j = a0; j < a1; j++) {
-							if (pieces[j].isDone()) {
-								nbAvailable++;
+					if (a1 <= a0) {
+						index = imageBuffer[i - 1];
+					} else {
+						int nbAvailable = 0;
+						if (pieces != null) {
+							for (int j = a0; j < a1; j++) {
+								if (pieces[j].isDone()) {
+									nbAvailable++;
+								}
 							}
 						}
+						nbComplete += nbAvailable;
+						index = (nbAvailable * Colors.BLUES_DARKEST) / (a1 - a0);
+						//System.out.println("i="+i+";nbAvailable="+nbAvailable+";nbComplete="+nbComplete+";nbPieces="+nbPieces+";a0="+a0+";a1="+a1);
 					}
-					nbComplete += nbAvailable;
-					index = (nbAvailable * Colors.BLUES_DARKEST) / (a1 - a0);
-					//System.out.println("i="+i+";nbAvailable="+nbAvailable+";nbComplete="+nbComplete+";nbPieces="+nbPieces+";a0="+a0+";a1="+a1);
+
+					if (!bImageBufferValid || imageBuffer[i] != index) {
+						imageBuffer[i] = index;
+						bImageChanged = true;
+						gcImage.setForeground(index == INDEX_COLOR_NONEAVAIL ? Colors.red
+								: Colors.blues[index]);
+						gcImage.drawLine(i + x0, y0, i + x0, y1);
+					}
 				}
 
-				if (!bImageBufferValid || imageBuffer[i] != index) {
-					imageBuffer[i] = index;
-					bImageChanged = true;
-					gcImage.setForeground(index == INDEX_COLOR_NONEAVAIL ? Colors.red
-							: Colors.blues[index]);
-					gcImage.drawLine(i + x0, y0, i + x0, y1);
+				// pieces can sometimes be 0 due to timing or bad torrent (well, there's a bug with a /0 error
+				// so it can happen somehow :)
+	
+				int limit = nbPieces == 0 ? 0 : ((drawWidth * nbComplete) / nbPieces);
+	
+				if (limit < drawWidth) {
+					gcImage.setBackground(Colors.blues[Colors.BLUES_LIGHTEST]);
+					gcImage.fillRectangle(limit + x0, borderHorizontalSize, x1 - limit,
+							completionHeight);
 				}
+	
+				gcImage.setBackground(Colors.colorProgressBar);
+				gcImage.fillRectangle(x0, borderHorizontalSize, limit, completionHeight);
 			}
-
-			// pieces can sometimes be 0 due to timing or bad torrent (well, there's a bug with a /0 error
-			// so it can happen somehow :)
-
-			int limit = nbPieces == 0 ? 0 : ((drawWidth * nbComplete) / nbPieces);
-
-			if (limit < drawWidth) {
-				gcImage.setBackground(Colors.blues[Colors.BLUES_LIGHTEST]);
-				gcImage.fillRectangle(limit + x0, borderHorizontalSize, x1 - limit,
-						completionHeight);
-			}
-
-			gcImage.setBackground(Colors.colorProgressBar);
-			gcImage.fillRectangle(x0, borderHorizontalSize, limit, completionHeight);
 		} catch (Exception e) {
 			System.out.println("Error Drawing PiecesItem");
 			Debug.printStackTrace(e);
