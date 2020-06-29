@@ -690,7 +690,7 @@ public class ManagerUtils {
 						useFile(
 							TrackerWebPageRequest				request,
 							final TrackerWebPageResponse		response,
-							String								root,
+							File								root,
 							String								relative_url )
 
 							throws IOException
