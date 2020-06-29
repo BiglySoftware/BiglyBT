@@ -188,7 +188,7 @@ WebPlugin
 	private boolean				na_intf_listener_added;
 
 	private String				home_page;
-	private String				file_root;
+	private File				file_root;
 	private String				resource_root;
 
 	private String				root_dir;
@@ -469,12 +469,12 @@ WebPlugin
 				plugin_config.setPluginParameter(CONFIG_MODE, prop_mode );
 				plugin_config.setPluginParameter(CONFIG_ACCESS, prop_access );
 
-				File	props_file = new File( plugin_interface.getPluginDirectoryName(), "plugin.properties" );
+				File	props_file = FileUtil.newFile( plugin_interface.getPluginDirectoryName(), "plugin.properties" );
 
 				PrintWriter pw = null;
 
 				try{
-					File	backup = new File( plugin_interface.getPluginDirectoryName(), "plugin.properties.bak" );
+					File	backup = FileUtil.newFile( plugin_interface.getPluginDirectoryName(), "plugin.properties.bak" );
 
 					props_file.renameTo( backup );
 
@@ -1138,19 +1138,18 @@ WebPlugin
 
 		if ( root_dir.length() == 0 ){
 
-			file_root = plugin_interface.getPluginDirectoryName();
+			String pluginDirectoryName = plugin_interface.getPluginDirectoryName();
 
-			if ( file_root == null ){
-
-				file_root = SystemProperties.getUserPath() + "web";
-			}
+			file_root = pluginDirectoryName == null
+					? FileUtil.newFile(SystemProperties.getUserPath(), "web")
+					: FileUtil.newFile(pluginDirectoryName);
 		}else{
 
 				// absolute or relative
 
 			if ( root_dir.startsWith(File.separator) || root_dir.contains(":")){
 
-				file_root = root_dir;
+				file_root = FileUtil.newFile(root_dir);
 
 			}else{
 
@@ -1161,23 +1160,23 @@ WebPlugin
 
 					// try relative to plugin dir
 
-				file_root = plugin_interface.getPluginDirectoryName();
+				String pluginDirectoryName = plugin_interface.getPluginDirectoryName();
 
-				if ( file_root != null ){
+				if ( pluginDirectoryName != null ){
 
-					file_root = file_root + File.separator + root_dir;
+					file_root = FileUtil.newFile(pluginDirectoryName, root_dir);
 
-					if ( !new File(file_root).exists()){
+					if ( !file_root.exists()){
 
 						// try relative to plugin classpath
 						try {
 							String pluginClass = plugin_interface.getPluginProperties().getProperty(
 									"plugin.class");
-							file_root = new File(
+							file_root = FileUtil.newFile(
 									Class.forName(
 											pluginClass).getProtectionDomain().getCodeSource().getLocation().getPath(),
-									root_dir).getAbsolutePath();
-							if (!new File(file_root).exists()) {
+									root_dir);
+							if (!file_root.exists()) {
 
 								file_root = null;
 							}
@@ -1189,20 +1188,19 @@ WebPlugin
 
 				if ( file_root == null ){
 
-					file_root = SystemProperties.getUserPath() + "web" + File.separator + root_dir;
+					file_root = FileUtil.newFile(SystemProperties.getUserPath(), "web", root_dir);
 				}
 			}
 		}
 
-		File	f_root = new File( file_root );
 
-		if ( !f_root.exists()){
+		if ( !file_root.exists()){
 
 			String	error = "WebPlugin: root dir '" + file_root + "' doesn't exist";
 
 			log.log( LoggerChannel.LT_ERROR, error );
 
-		}else if ( !f_root.isDirectory()){
+		}else if ( !file_root.isDirectory()){
 
 			String	error = "WebPlugin: root dir '" + file_root + "' isn't a directory";
 
@@ -3109,12 +3107,12 @@ WebPlugin
 	useFile(
 		TrackerWebPageRequest		request,
 		TrackerWebPageResponse		response,
-		String						root,
+		File						root,
 		String						relative_url )
 
 		throws IOException
 	{
-		return( response.useFile( file_root, relative_url ));
+		return( response.useFile( root.getAbsolutePath(), relative_url ));
 	}
 
 	private String
