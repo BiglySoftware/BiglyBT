@@ -691,30 +691,30 @@ PluginInstallerImpl
 					}
 				}
 
-				String	target_dir;
+				File	target_dir;
 
 				if ( shared ){
 
-					target_dir 	= FileUtil.getApplicationFile( "plugins" ).toString();
+					target_dir 	= FileUtil.getApplicationFile( "plugins" );
 
 				}else{
 
-					target_dir 	= FileUtil.getUserFile( "plugins" ).toString();
+					target_dir 	= FileUtil.getUserFile( "plugins" );
 				}
 
-				target_dir += File.separator + plugin_id;
+				target_dir = FileUtil.newFile(target_dir, plugin_id);
 
 					// this may fail on Vista but it doesn't matter as we recover this later
 					// on. So *don't* check for success here
 
-				new File( target_dir ).mkdir();
+				target_dir.mkdir();
 
 				if ( existing_plugin == null ){
 
 						// create a dummy plugin at version 0.0 to trigger the "upgrade" to the new
 						// installed version
 
-					FailedPlugin	dummy_plugin = new FailedPlugin( plugin_id, target_dir );
+					FailedPlugin	dummy_plugin = new FailedPlugin( plugin_id, target_dir.toString() );
 
 					PluginManager.registerPlugin( dummy_plugin, plugin_id );
 
