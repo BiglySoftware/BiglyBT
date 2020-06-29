@@ -96,9 +96,9 @@ StatsWriterPeriodicImpl
 
 		config_period	= COConfigurationManager.getIntParameter( "Stats Period" );
 
-		config_dir		= COConfigurationManager.getStringParameter( "Stats Dir" );
+		config_dir		= COConfigurationManager.getStringParameter( "Stats Dir" ).trim();
 
-		config_file		= COConfigurationManager.getStringParameter( "Stats File" );
+		config_file		= COConfigurationManager.getStringParameter( "Stats File" ).trim();
 
 		if(config_enabled)
 		{
@@ -149,30 +149,10 @@ StatsWriterPeriodicImpl
 			last_write_time	= now;
 
 			try{
-				String	dir = config_dir;
 
-				dir = dir.trim();
-
-				if ( dir.length() == 0 ){
-
-					dir = File.separator;
-				}
-
-				String	file_name = dir;
-
-				if ( !file_name.endsWith( File.separator )){
-
-					file_name = file_name + File.separator;
-				}
-
-				String	file = config_file;
-
-				if ( file.trim().length() == 0 ){
-
-					file = DEFAULT_STATS_FILE_NAME;
-				}
-
-				file_name += file;
+				File file_name = FileUtil.newFile(
+						config_dir.isEmpty() ? File.separator : config_dir,
+						config_file.isEmpty() ? DEFAULT_STATS_FILE_NAME : config_file);
 
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(LOGID, "Stats Logged to '" + file_name + "'"));

@@ -25,9 +25,7 @@ package com.biglybt.core.stats.impl;
  *
  */
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -67,12 +65,12 @@ StatsWriterImpl
 
 	protected void
 	write(
-		String		file_name )
+		File to_file )
 
 		throws IOException
 	{
 		try{
-			setOutputStream( new FileOutputStream( file_name ));
+			setOutputStream( FileUtil.newFileOutputStream( to_file ));
 
 			writeSupport();
 		}finally{
