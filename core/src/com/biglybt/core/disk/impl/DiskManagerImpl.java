@@ -534,10 +534,10 @@ DiskManagerImpl
         	File[] move_to_dirs = DownloadManagerMoveHandler.getRelatedDirs(download_manager);
 
         	for (int i=0; i<move_to_dirs.length; i++) {
-        		String move_to_dir = move_to_dirs[i].getAbsolutePath();
+        		File move_to_dir = move_to_dirs[i].getAbsoluteFile();
         		if (filesExist (move_to_dir)) {
                     alreadyMoved = files_exist = true;
-                    download_manager.setTorrentSaveDir(move_to_dir);
+                    download_manager.setTorrentSaveDir(move_to_dir.getPath());
                     break;
                 }
         	}
@@ -769,21 +769,16 @@ DiskManagerImpl
     public boolean
     filesExist()
     {
-        return( filesExist( download_manager.getAbsoluteSaveLocation().getParent()));
+        return( filesExist( download_manager.getAbsoluteSaveLocation().getParentFile()));
     }
 
     protected boolean
     filesExist(
-        String  root_dir )
+        File  root_dir )
     {
         if ( !torrent.isSimpleTorrent()){
 
-            root_dir += File.separator + download_manager.getAbsoluteSaveLocation().getName();
-        }
-
-        if ( !root_dir.endsWith( File.separator )){
-
-            root_dir    += File.separator;
+            root_dir = FileUtil.newFile(root_dir, download_manager.getAbsoluteSaveLocation().getName());
         }
 
         // System.out.println( "root dir = " + root_dir_file );
@@ -896,7 +891,9 @@ DiskManagerImpl
                 }
             }catch( Throwable e ){
 
-            	setErrorMessage( e, "filesExist:" + relative_file.toString());;
+            	Debug.out(e);
+
+            	setErrorMessage( e, "filesExist:" + relative_file);
 
                 return( false );
             }
@@ -910,7 +907,7 @@ DiskManagerImpl
     	DownloadManagerState		state,
     	DMPieceMapperFile			pm_info,
     	int							file_index,
-    	String						root_dir,
+    	File						root_dir,
     	String					relative_file,
     	int							storage_type )
 
@@ -1051,15 +1048,13 @@ DiskManagerImpl
             int numNewFiles 		= 0;
             int notRequiredFiles	= 0;
             int numPadFiles			= 0;
-            
-            String  root_dir = download_manager.getAbsoluteSaveLocation().getParent();
 
-            if ( !torrent.isSimpleTorrent()){
+            File root_dir = download_manager.getAbsoluteSaveLocation();
 
-                root_dir += File.separator + download_manager.getAbsoluteSaveLocation().getName();
+            if ( torrent.isSimpleTorrent()){
+
+                root_dir = root_dir.getParentFile();
             }
-
-            root_dir    += File.separator;
 
             String[]    storage_types = getStorageTypes();
 
@@ -1225,6 +1220,7 @@ DiskManagerImpl
                         	}
                         }
                     }catch (Throwable e) {
+                    	Debug.out(e);
 
                     	fileAllocFailed( data_file, target_length, false, e );
 
@@ -2738,7 +2734,7 @@ DiskManagerImpl
 			  // move to, because later code determining new file paths will break otherwise.
 	
 			  final String move_from_name	= save_location.getName();
-			  final String move_from_dir	= save_location.getParentFile().getCanonicalFile().getPath();
+			  final File move_from_dir	= save_location.getParentFile().getCanonicalFile();
 	
 			  final File[]    new_files   = new File[files.length];
 	
@@ -2825,9 +2821,9 @@ DiskManagerImpl
 				   *   https://sourceforge.net/tracker/?func=detail&atid=575154&aid=1636342&group_id=84122
 				   */
 	
-				  if ( old_parent_path.startsWith(move_from_dir)){
+				  if ( old_parent_path.startsWith(move_from_dir.getPath())){
 	
-					  sub_path = old_parent_path.substring(move_from_dir.length());
+					  sub_path = old_parent_path.substring(move_from_dir.getPath().length());
 	
 				  }else{
 	
@@ -3139,18 +3135,18 @@ DiskManagerImpl
 	
 			  long	start = SystemTime.getMonotonousTime();
 	
-			  String	old_root_dir;
-			  String	new_root_dir;
+			  File	old_root_dir;
+			  File	new_root_dir;
 	
 			  if ( simple_torrent ){
 	
 				  old_root_dir = move_from_dir;
-				  new_root_dir = move_to_dir;
+				  new_root_dir = FileUtil.newFile(move_to_dir);
 	
 			  }else{
 	
-				  old_root_dir = move_from_dir + File.separator + move_from_name;
-				  new_root_dir = move_to_dir + File.separator + (new_name==null?move_from_name:new_name );
+				  old_root_dir = FileUtil.newFile(move_from_dir, move_from_name);
+				  new_root_dir = FileUtil.newFile(move_to_dir, (new_name==null?move_from_name:new_name ));
 			  }
 	
 			  FileUtil.ProgressListener pl = 
@@ -3298,11 +3294,9 @@ DiskManagerImpl
 							  bytes_moved -= bytes_this_file;
 						  }
 	
-						  File new_loc = FileUtil.newFile( new_root_dir );
+						  if ( new_root_dir.isDirectory()){
 	
-						  if ( new_loc.isDirectory()){
-	
-							  TorrentUtils.recursiveEmptyDirDelete( new_loc, false );
+							  TorrentUtils.recursiveEmptyDirDelete( new_root_dir, false );
 						  }
 	
 						  return false;
@@ -3598,7 +3592,6 @@ DiskManagerImpl
 
 			TOTorrentFile[] files = torrent.getFiles();
 
-			String  root_path = torrent_save_dir + File.separator + torrent_save_file + File.separator;
 			File root_path_file = FileUtil.newFile( torrent_save_dir, torrent_save_file );
 			String root_full_path;
 			try {
@@ -3631,7 +3624,7 @@ DiskManagerImpl
 
             byte[][]path_comps = files[i].getPathComponents();
 
-            String  path_str    = root_path;
+            File  file    = root_path_file;
 
             for (int j=0;j<path_comps.length;j++){
 
@@ -3641,15 +3634,13 @@ DiskManagerImpl
 
                     comp = FileUtil.convertOSSpecificChars( comp, j != path_comps.length-1 );
 
-                    path_str += (j==0?"":File.separator) + comp;
+                    file = FileUtil.newFile( file, comp);
 
                 }catch( UnsupportedEncodingException e ){
 
                     Debug.out( "file - unsupported encoding!!!!");
                 }
             }
-
-            File file = FileUtil.newFile(path_str);
 
 					boolean delete;
 

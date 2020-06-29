@@ -49,7 +49,7 @@ public class
 DiskManagerFileInfoImpl
 	implements DiskManagerFileInfo, CacheFileOwner
 {
-  private String				root_dir;
+  private File					root_dir;
   private final String	relative_file;
 
   final int			file_index;
@@ -72,7 +72,7 @@ DiskManagerFileInfoImpl
   public
   DiskManagerFileInfoImpl(
 	DiskManagerHelper	_disk_manager,
-  	String				_root_dir,
+  	File				_root_dir,
   	String				_relative_file,
   	int					_file_index,
 	TOTorrentFile		_torrent_file,
@@ -83,14 +83,14 @@ DiskManagerFileInfoImpl
     diskManager 	= _disk_manager;
     torrent_file	= _torrent_file;
 
-    root_dir		= _root_dir.endsWith(File.separator)?_root_dir:(_root_dir + File.separator);
+    root_dir		= _root_dir;
     relative_file	= _relative_file;
 
     file_index		= _file_index;
 
     int	cache_st = DiskManagerUtil.convertDMStorageTypeToCache( _storage_type );
 
-  	cache_file = CacheFileManagerFactory.getSingleton().createFile( this, FileUtil.newFile( root_dir + relative_file.toString()), cache_st, false );
+  	cache_file = CacheFileManagerFactory.getSingleton().createFile( this, FileUtil.newFile( root_dir, relative_file), cache_st, false );
 
   	if ( cache_st == CacheFile.CT_COMPACT || cache_st == CacheFile.CT_PIECE_REORDER_COMPACT ){
 
@@ -142,7 +142,7 @@ DiskManagerFileInfoImpl
   
   public void
   moveFile(
-	String						new_root_dir,
+  	File						new_root_dir,
   	File						new_absolute_file,
   	boolean						link_only,
   	FileUtil.ProgressListener	pl )
@@ -154,7 +154,7 @@ DiskManagerFileInfoImpl
 		  cache_file.moveFile( new_absolute_file, pl );
 	  }
 
-	 root_dir	= new_root_dir.endsWith(File.separator)?new_root_dir:(new_root_dir + File.separator);
+	 root_dir	= new_root_dir;
   }
 
   public void
@@ -231,7 +231,7 @@ DiskManagerFileInfoImpl
 		  }
 	  }
 
-	  return( FileUtil.newFile( root_dir + relative_file.toString()));
+	  return( FileUtil.newFile( root_dir, relative_file));
   	}
 
   	@Override
