@@ -5243,13 +5243,6 @@ DownloadManagerImpl
 		  try{
 			  File sl_file = getSaveLocation();
 
-			  String save_location = FileUtil.getCanonicalPathSafe( sl_file );
-
-			  if ( !save_location.endsWith( File.separator )){
-
-				  save_location += File.separator;
-			  }
-
 			  dest_parent_dir = FileUtil.newFile( dest_parent_dir, sl_file.getName());
 
 			  if ( !dest_parent_dir.isDirectory()){
@@ -5264,11 +5257,11 @@ DownloadManagerImpl
 					  File file_from = file.getFile( true );
 
 					  try{
-						  String file_path = FileUtil.getCanonicalPathSafe( file_from );
+						  String relativePath = FileUtil.getRelativePath(sl_file, file_from);
 
-						  if ( file_path.startsWith( save_location )){
+						  if (relativePath != null && !relativePath.isEmpty()) {
 
-							  File file_to = FileUtil.newFile( dest_parent_dir, file_path.substring( save_location.length()));
+							  File file_to = FileUtil.newFile( dest_parent_dir, relativePath);
 
 							  if ( file_to.exists()){
 
