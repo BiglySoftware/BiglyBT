@@ -3034,15 +3034,10 @@ DownloadManagerImpl
   		return( torrent_save_location );
   	}
 
-	@Override
-	public void setTorrentSaveDir(String new_dir) {
-		setTorrentSaveDir(new_dir, this.getAbsoluteSaveLocation().getName());
-	}
-
-	@Override
-	public void setTorrentSaveDir(String new_dir, String dl_name) {
+	public void setTorrentSaveDir(File _new_location, boolean locationIncludesName) {
+		File new_location = locationIncludesName ? _new_location
+				: FileUtil.newFile(_new_location, torrent_save_location.getName());
 		File old_location = torrent_save_location;
-		File new_location = FileUtil.newFile(new_dir, dl_name);
 
 		if ( FileUtil.areFilePathsIdentical( new_location, old_location)){
 			
@@ -5014,7 +5009,7 @@ DownloadManagerImpl
 				  
 				  if ( controller.getDiskManagerFileInfoSet().getFiles()[0].setLinkAtomic( new_save_location )){
 				  
-				  	setTorrentSaveDir(new_save_location.getParent().toString(), new_save_location.getName());
+				  	setTorrentSaveDir(new_save_location, true);
 					  	
 				  }else{
 					  
@@ -5022,7 +5017,7 @@ DownloadManagerImpl
 				  }
 			  }else{
 				  
-				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+				  setTorrentSaveDir( new_save_location, true);
 			  }
 			  
 			  return;
@@ -5090,7 +5085,7 @@ DownloadManagerImpl
 	
 				  if ( file.setLinkAtomic( new_save_location, pl )){
 					  
-					  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+					  setTorrentSaveDir( new_save_location, true);
 					  
 				  }else{
 					  
@@ -5161,7 +5156,7 @@ DownloadManagerImpl
 				  
 				  if ( FileUtil.renameFile( old_file, new_save_location, false, ff, pl )){
 	
-					  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+					  setTorrentSaveDir( new_save_location, true);
 	
 				  }else{
 	

@@ -3096,25 +3096,27 @@ public class TorrentUtil
 
 				if (state == DownloadManager.STATE_ERROR) {
 
-					dm.setTorrentSaveDir(sSavePath);
+					dm.setTorrentSaveDir(FileUtil.newFile(sSavePath), false);
 
 					boolean found = dm.filesExist(true);
 					if (!found && dm.getTorrent() != null
 							&& !dm.getTorrent().isSimpleTorrent()) {
 						String parentPath = fSavePath.getParent();
 						if (parentPath != null) {
-							dm.setTorrentSaveDir(parentPath);
+							dm.setTorrentSaveDir(FileUtil.newFile(parentPath), false);
 							found = dm.filesExist(true);
 							if (!found) {
-								dm.setTorrentSaveDir(parentPath, fSavePath.getName());
+								dm.setTorrentSaveDir(FileUtil.newFile(parentPath,
+									fSavePath.getName()), true);
 
 								found = dm.filesExist(true);
 								if (!found) {
-									dm.setTorrentSaveDir(sSavePath, dm.getDisplayName());
+									dm.setTorrentSaveDir(FileUtil.newFile(sSavePath,
+										dm.getDisplayName()), true);
 
 									found = dm.filesExist(true);
 									if (!found) {
-										dm.setTorrentSaveDir(sSavePath);
+										dm.setTorrentSaveDir(FileUtil.newFile(sSavePath), false);
 									}
 								}
 							}

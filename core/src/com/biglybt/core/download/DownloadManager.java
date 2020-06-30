@@ -37,6 +37,7 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadAnnounceResult;
@@ -317,19 +318,21 @@ DownloadManager
     public File
     getSaveLocation();
 
-        /**
-         * changes the save directory. Only call this if you know what you are doing!!!!
-         * @param sPath
-         */
+		/**
+		 * @deprecated Use setTorrentSaveDir(FileUtil.newFile(sPath), false)
+		 * @implNote Remove once xmwebui stops using this method
+		 */
+    default void setTorrentSaveDir(String sPath) {
+			setTorrentSaveDir(FileUtil.newFile(sPath), false);
+		}
 
-    public void
-    setTorrentSaveDir(
-        String sPath );
-
-    /**
-     * changes the save directory. Only call this if you know what you are doing!!!!
-     */
-    public void setTorrentSaveDir(String parent_dir, String dl_name);
+	/**
+	 * changes the save directory. Only call this if you know what you are doing!!!!
+	 * <p/>
+	 * When locationIncludesName, torrent name will also change (Data files will be stored under new_location)<br/>
+	 * When !locationIncludesName, only save dire is changed, name remains (Data files will be stored under new_location + / + old_location.getName()) 
+	 */
+	void setTorrentSaveDir(File _new_location, boolean locationIncludesName);
 
     public boolean isForceStart();
 

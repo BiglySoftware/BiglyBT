@@ -537,7 +537,7 @@ DiskManagerImpl
         		File move_to_dir = move_to_dirs[i].getAbsoluteFile();
         		if (filesExist (move_to_dir)) {
                     alreadyMoved = files_exist = true;
-                    download_manager.setTorrentSaveDir(move_to_dir.getPath());
+                    download_manager.setTorrentSaveDir(move_to_dir, false);
                     break;
                 }
         	}
@@ -564,10 +564,10 @@ DiskManagerImpl
         				File dl_location = transfer.download_location;
         				if (dl_location == null) {dl_location = download_manager.getAbsoluteSaveLocation().getParentFile();}
         				if (transfer.download_name == null) {
-        					download_manager.setTorrentSaveDir(dl_location.getAbsolutePath());
+        					download_manager.setTorrentSaveDir(dl_location, false);
         				}
         				else {
-        					download_manager.setTorrentSaveDir(dl_location.getAbsolutePath(), transfer.download_name);
+        					download_manager.setTorrentSaveDir(FileUtil.newFile(dl_location, transfer.download_name), true);
         				}
         			}
         			if (transfer.torrent_location != null || transfer.torrent_name != null) {
@@ -2630,11 +2630,11 @@ DiskManagerImpl
   }
 
   // Helper function
-  private void logMoveFileError(String destination_path, String message) {
+  private void logMoveFileError(File destination_path, String message) {
       Logger.log(new LogEvent(this, LOGID, LogEvent.LT_ERROR, message));
       Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
                       LogAlert.AT_ERROR, "DiskManager.alert.movefilefails"),
-                      new String[] {destination_path, message});
+                      new String[] {destination_path.toString(), message});
   }
 
   private boolean isFileDestinationIsItself(SaveLocationChange loc_change) {
@@ -2646,7 +2646,7 @@ DiskManagerImpl
           if (old_location.equals(new_location)) {return true;}
           if (!download_manager.getTorrent().isSimpleTorrent() && FileUtil.isAncestorOf(new_location, old_location)) {
        		String msg = "Target is sub-directory of files";
-       		logMoveFileError(new_location.toString(), msg);
+       		logMoveFileError(new_location, msg);
        		return true;
           }
 	  }
@@ -2679,11 +2679,11 @@ DiskManagerImpl
 			  
 			  garbage += remaining_excluding_dnd;
 		  }
-	
-		  File move_to_dir_name = loc_change.download_location;
-		  if (move_to_dir_name == null) {move_to_dir_name = download_manager.getAbsoluteSaveLocation().getParentFile();}
-	
-		  final String move_to_dir = move_to_dir_name.toString();
+
+		File move_to_dir = loc_change.download_location == null
+				? download_manager.getAbsoluteSaveLocation().getParentFile()
+				: loc_change.download_location;
+
 		  final String new_name = loc_change.download_name;
 	
 		  // consider the two cases:
@@ -2919,7 +2919,7 @@ DiskManagerImpl
 				  }
 			  }
 	
-			  String	abs_path = move_to_dir_name.getAbsolutePath();
+			  String	abs_path = move_to_dir.getAbsolutePath();
 	
 			  String	_average_config_key = null;
 	
@@ -3330,13 +3330,14 @@ DiskManagerImpl
 			  // NOTE: this operation FIXES up any file links
 	
 			  if ( new_name == null ){
-	
-				  download_manager.setTorrentSaveDir( move_to_dir );
-	
-			  }else{
-	
-				  download_manager.setTorrentSaveDir( move_to_dir, new_name );
-			  }
+
+					download_manager.setTorrentSaveDir(FileUtil.newFile(move_to_dir), false);
+
+				}else{
+
+					download_manager.setTorrentSaveDir(FileUtil.newFile(move_to_dir,
+						new_name), true);
+				}
 	
 			  return true;
 	
@@ -3521,6 +3522,9 @@ DiskManagerImpl
         }
     }
 
+	/**
+	 * @note: Only used on OSX
+	 */
     private static int
     countDataFiles(
         TOTorrent torrent,
@@ -3538,7 +3542,7 @@ DiskManagerImpl
 
                 byte[][]path_comps = files[i].getPathComponents();
 
-                String  path_str = torrent_save_dir + File.separator + torrent_save_file + File.separator;
+                File file = FileUtil.newFile(torrent_save_dir, torrent_save_file);
 
                 for (int j=0;j<path_comps.length;j++){
 
@@ -3546,10 +3550,10 @@ DiskManagerImpl
 
                     comp = FileUtil.convertOSSpecificChars( comp, j != path_comps.length-1 );
 
-                    path_str += (j==0?"":File.separator) + comp;
+                    file = FileUtil.newFile( file, comp );
                 }
 
-                File file = FileUtil.newFile(path_str).getCanonicalFile();
+                file = file.getCanonicalFile();
 
                 File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, file );
 

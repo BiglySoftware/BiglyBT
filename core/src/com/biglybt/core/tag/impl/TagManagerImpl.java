@@ -962,7 +962,8 @@ TagManagerImpl
 
 											if ( !new_loc.equals( old_loc )){
 
-												manager.setTorrentSaveDir( new_loc.getAbsolutePath());
+												manager.setTorrentSaveDir(FileUtil.newFile(
+													new_loc.getAbsolutePath()), false);
 											}
 										}
 
@@ -1507,7 +1508,8 @@ TagManagerImpl
 
 										if ( ! ( existing_save_loc.equals( save_loc ) || existing_save_loc.exists())){
 
-											dm.setTorrentSaveDir( save_loc.getAbsolutePath());
+											dm.setTorrentSaveDir(FileUtil.newFile(
+												save_loc.getAbsolutePath()), false);
 										}
 									}
 
