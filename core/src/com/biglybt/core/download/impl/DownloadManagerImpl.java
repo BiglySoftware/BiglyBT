@@ -5195,25 +5195,25 @@ DownloadManagerImpl
   }
 
   @Override
-  public void
-  copyDataFiles(
-  	File	parent_dir )
+	public void
+	copyDataFiles(
+		File	dest_parent_dir )
 
-  	throws DownloadManagerException
-  {
-	  if ( parent_dir.exists()){
+		throws DownloadManagerException
+	{
+		if ( dest_parent_dir.exists()){
 
-		  if ( !parent_dir.isDirectory()){
+			if ( !dest_parent_dir.isDirectory()){
 
-			  throw( new DownloadManagerException( "'" + parent_dir + "' is not a directory" ));
-		  }
-	  }else{
+				throw( new DownloadManagerException( "'" + dest_parent_dir + "' is not a directory" ));
+			}
+		}else{
 
-		  if ( !parent_dir.mkdirs()){
+			if ( !dest_parent_dir.mkdirs()){
 
-			  throw( new DownloadManagerException( "failed to create '" + parent_dir + "'" ));
-		  }
-	  }
+				throw( new DownloadManagerException( "failed to create '" + dest_parent_dir + "'" ));
+			}
+		}
 
 	  DiskManagerFileInfo[] files = controller.getDiskManagerFileInfoSet().getFiles();
 
@@ -5222,7 +5222,7 @@ DownloadManagerImpl
 		  File file_from = files[0].getFile( true );
 
 		  try{
-			  File file_to = FileUtil.newFile( parent_dir, file_from.getName());
+			  File file_to = FileUtil.newFile( dest_parent_dir, file_from.getName());
 
 			  if ( file_to.exists()){
 
@@ -5250,11 +5250,11 @@ DownloadManagerImpl
 				  save_location += File.separator;
 			  }
 
-			  parent_dir = FileUtil.newFile( parent_dir, sl_file.getName());
+			  dest_parent_dir = FileUtil.newFile( dest_parent_dir, sl_file.getName());
 
-			  if ( !parent_dir.isDirectory()){
+			  if ( !dest_parent_dir.isDirectory()){
 
-				  parent_dir.mkdirs();
+				  dest_parent_dir.mkdirs();
 			  }
 
 			  for ( DiskManagerFileInfo file: files ){
@@ -5268,7 +5268,7 @@ DownloadManagerImpl
 
 						  if ( file_path.startsWith( save_location )){
 
-							  File file_to = FileUtil.newFile( parent_dir, file_path.substring( save_location.length()));
+							  File file_to = FileUtil.newFile( dest_parent_dir, file_path.substring( save_location.length()));
 
 							  if ( file_to.exists()){
 
