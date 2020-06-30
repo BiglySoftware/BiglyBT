@@ -184,10 +184,10 @@ RelatedContentManager
 
 	protected final Object	rcm_lock	= new Object();
 
-	PluginInterface 				plugin_interface;
+	private PluginInterface 				plugin_interface;
 	private TorrentAttribute 				ta_networks;
 	private TorrentAttribute 				ta_category;
-	DHTPluginInterface				public_dht_plugin;
+	private DHTPluginInterface				public_dht_plugin;
 
 	private volatile Map<Byte,DHTPluginInterface>		i2p_dht_plugin_map = new HashMap<>();
 
@@ -205,11 +205,13 @@ RelatedContentManager
 	private Set<String>							download_priv_set	= new HashSet<>();
 
 
-	final boolean	enabled;
+	private final boolean	enabled;
 
-	int		max_search_level;
-	int		max_results;
+	private int		max_search_level;
+	private int		max_results;
 
+	private int		global_filter_min_seeds;
+	
 	private AtomicInteger	temporary_space = new AtomicInteger();
 
 	private int publishing_count = 0;
@@ -288,6 +290,7 @@ RelatedContentManager
 					"rcm.ui.enabled",
 					"rcm.max_search_level",
 					"rcm.max_results",
+					"rcm.global.filter.min_seeds",
 				},
 				new ParameterListener()
 				{
@@ -298,6 +301,8 @@ RelatedContentManager
 					{
 						max_search_level 	= COConfigurationManager.getIntParameter( "rcm.max_search_level", 3 );
 						max_results		 	= COConfigurationManager.getIntParameter( "rcm.max_results", 500 );
+						
+						global_filter_min_seeds	= COConfigurationManager.getIntParameter( "rcm.global.filter.min_seeds", 0 );
 					}
 				});
 
@@ -617,6 +622,21 @@ RelatedContentManager
 		enforceMaxResults( false );
 	}
 
+	public int
+	getMinimumSeeds()
+	{
+		return( global_filter_min_seeds );
+	}
+
+	public void
+	setMinimumSeeds(
+		int		_min )
+	{
+		global_filter_min_seeds	= _min;
+		
+		COConfigurationManager.setParameter( "rcm.global.filter.min_seeds", _min );
+	}
+	
 	private int[]
 	getAggregateSeedsLeechers(
 		DownloadManagerState		state )
@@ -2968,6 +2988,11 @@ RelatedContentManager
 					return;
 				}
 
+				if ( ignore( to_info )){
+					
+					return;
+				}
+				
 				ContentCache	content_cache = loadRelatedContent();
 
 				DownloadInfo	target_info = null;
@@ -4537,6 +4562,21 @@ RelatedContentManager
 				}
 			}
 		}
+	}
+	
+	protected boolean
+	ignore(
+		RelatedContent		content )
+	{
+		if ( global_filter_min_seeds > 0 ){
+			
+			if ( content.getSeeds() < global_filter_min_seeds ){
+				
+				return( true );
+			}
+		}
+		
+		return( false );
 	}
 
 	protected boolean
