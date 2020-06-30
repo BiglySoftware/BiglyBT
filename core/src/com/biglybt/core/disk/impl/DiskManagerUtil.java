@@ -354,17 +354,15 @@ DiskManagerUtil
 	        return( new DiskManagerFileInfoSetImpl(new DiskManagerFileInfoImpl[0],null) );
 	    }
 
-	    String  tempRootDir = download_manager.getAbsoluteSaveLocation().getParent();
+		File tempRootDir = download_manager.getAbsoluteSaveLocation().getParentFile();
 
-	    if(tempRootDir == null) // in case we alraedy are at the root
-	    	tempRootDir = download_manager.getAbsoluteSaveLocation().getPath();
+		if (tempRootDir == null) { // in case we already are at the root
+			tempRootDir = download_manager.getAbsoluteSaveLocation();
+		}
 
-
-	    if ( !torrent.isSimpleTorrent()){
-	    	tempRootDir += File.separator + download_manager.getAbsoluteSaveLocation().getName();
-	    }
-
-	    tempRootDir    += File.separator;
+		if ( !torrent.isSimpleTorrent()){
+			tempRootDir = FileUtil.newFile(tempRootDir, download_manager.getAbsoluteSaveLocation().getName());
+		}
 
 	    	// prevent attempted state saves and associated nastyness during population of
 	    	// the file skeleton entries
@@ -372,7 +370,7 @@ DiskManagerUtil
 	    final boolean[] loading = { true };
 
 	    try{
-		    final String root_dir = StringInterner.intern(tempRootDir) ;
+		    final File root_dir = tempRootDir;
 
 		    try{
 		        final LocaleUtilDecoder locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );
@@ -1009,7 +1007,7 @@ DiskManagerUtil
 
 		            		TOTorrent tor = download_manager.getTorrent();
 
-		            		String  path_str = root_dir;
+		            		File  dataPath = root_dir;
 		            		File simpleFile = null;
 
 		            		// for a simple torrent the target file can be changed
@@ -1037,11 +1035,11 @@ DiskManagerUtil
 
 		            				comp = FileUtil.convertOSSpecificChars( comp,  j != path_comps.length-1 );
 
-		            				path_str += (j==0?"":File.separator) + comp;
+		            				dataPath = FileUtil.newFile(dataPath, comp);
 		            			}
 		            		}
 
-		            		dataFile = new WeakReference(toReturn = simpleFile != null ? simpleFile : FileUtil.newFile( path_str ));
+		            		dataFile = new WeakReference(toReturn = simpleFile != null ? simpleFile : dataPath );
 
 		            		//System.out.println("new file:"+toReturn);
 		            		return toReturn;
