@@ -210,7 +210,7 @@ RelatedContentManager
 	private int		max_search_level;
 	private int		max_results;
 
-	private int		global_filter_min_seeds;
+	private boolean		global_filter_active_only;
 	
 	private AtomicInteger	temporary_space = new AtomicInteger();
 
@@ -291,6 +291,7 @@ RelatedContentManager
 					"rcm.max_search_level",
 					"rcm.max_results",
 					"rcm.global.filter.min_seeds",
+					"rcm.global.filter.min_peers",
 				},
 				new ParameterListener()
 				{
@@ -302,7 +303,7 @@ RelatedContentManager
 						max_search_level 	= COConfigurationManager.getIntParameter( "rcm.max_search_level", 3 );
 						max_results		 	= COConfigurationManager.getIntParameter( "rcm.max_results", 500 );
 						
-						global_filter_min_seeds	= COConfigurationManager.getIntParameter( "rcm.global.filter.min_seeds", 0 );
+						global_filter_active_only	= COConfigurationManager.getBooleanParameter( "rcm.global.filter.active_only", false );
 					}
 				});
 
@@ -622,21 +623,21 @@ RelatedContentManager
 		enforceMaxResults( false );
 	}
 
-	public int
-	getMinimumSeeds()
+	public boolean
+	getFilterActiveOnly()
 	{
-		return( global_filter_min_seeds );
+		return( global_filter_active_only );
 	}
 
 	public void
-	setMinimumSeeds(
-		int		_min )
+	setFilterActiveOnly(
+		boolean		b )
 	{
-		global_filter_min_seeds	= _min;
+		global_filter_active_only	= b;
 		
-		COConfigurationManager.setParameter( "rcm.global.filter.min_seeds", _min );
+		COConfigurationManager.setParameter( "rcm.global.filter.active_only", b );
 	}
-	
+		
 	private int[]
 	getAggregateSeedsLeechers(
 		DownloadManagerState		state )
@@ -2988,7 +2989,7 @@ RelatedContentManager
 					return;
 				}
 
-				if ( ignore( to_info )){
+				if ( globalFilter( to_info )){
 					
 					return;
 				}
@@ -4565,12 +4566,12 @@ RelatedContentManager
 	}
 	
 	protected boolean
-	ignore(
+	globalFilter(
 		RelatedContent		content )
 	{
-		if ( global_filter_min_seeds > 0 ){
+		if ( global_filter_active_only ){
 			
-			if ( content.getSeeds() < global_filter_min_seeds ){
+			if ( content.getSeeds() <= 0 && content.getLeechers() <= 0 ){
 				
 				return( true );
 			}
