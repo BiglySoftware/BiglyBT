@@ -1683,9 +1683,7 @@ public class FilesViewMenuUtil
 						
 						return;
 					}
-					
-					System.out.println( "Closed" );
-					
+										
 					fired = true;
 					
 					renameActive = false;
