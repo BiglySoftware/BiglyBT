@@ -290,8 +290,7 @@ RelatedContentManager
 					"rcm.ui.enabled",
 					"rcm.max_search_level",
 					"rcm.max_results",
-					"rcm.global.filter.min_seeds",
-					"rcm.global.filter.min_peers",
+					"rcm.global.filter.active_only",
 				},
 				new ParameterListener()
 				{
