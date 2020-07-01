@@ -3599,7 +3599,14 @@ public class Utils
 	isQuickViewSupported(
 		DiskManagerFileInfo	file )
 	{
-		String ext = file.getExtension().toLowerCase();
+		String ext = file.getExtension();
+		
+		if ( ext == null ){
+			
+			return( false );
+		}
+		
+		ext = ext.toLowerCase();
 
 		if ( ext.startsWith( "." )){
 

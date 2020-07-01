@@ -138,8 +138,18 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    shell.setLayout(layout);
 
 	    // Default width hint is 330.
-	    int width_hint = (this.width_hint == -1) ? 330 : this.width_hint;
-
+	    
+	    int width_hint;
+	    
+	    if ( loc_size_config_key != null && Utils.hasShellMetricsConfig( loc_size_config_key )){
+	    	
+	    	width_hint = -1;
+	    	
+	    }else{
+	    
+	    	width_hint = (this.width_hint == -1) ? 330 : this.width_hint;
+	    }
+	    
 	    // Process any messages.
 	   
 	    GridData gridData = null;
