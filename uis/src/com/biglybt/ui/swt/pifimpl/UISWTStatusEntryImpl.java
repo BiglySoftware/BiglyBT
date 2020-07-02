@@ -157,9 +157,12 @@ public class UISWTStatusEntryImpl implements UISWTStatusEntry, MainStatusBar.CLa
 
 		releaseOldImages();
 
-		MenuItem[] items = MenuItemManager.getInstance().getAllAsArray(menu_context.context);
-		if (items.length > 0 & menu == null) {
+		boolean hasMenuItems = MenuItemManager.getInstance().hasMenuItems(menu_context.context);
+		
+		if ( hasMenuItems && menu == null) {
+			
 			menu = new Menu(label);
+			
 			label.setMenu(menu);
 
 			MenuBuildUtils.addMaintenanceListenerForMenu(menu,
@@ -172,10 +175,14 @@ public class UISWTStatusEntryImpl implements UISWTStatusEntry, MainStatusBar.CLa
 					}
 				}
 			);
-		}
-		else if (menu != null && items.length == 0) {
+		}else if (menu != null && !hasMenuItems ){
+			
 			label.setMenu(null);
-			if (!menu.isDisposed()) {menu.dispose();}
+			
+			if (!menu.isDisposed()){
+				menu.dispose();
+			}
+			
 			this.menu = null;
 		}
 

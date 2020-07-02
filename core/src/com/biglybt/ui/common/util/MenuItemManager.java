@@ -20,6 +20,7 @@ package com.biglybt.ui.common.util;
 import java.util.*;
 
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.menus.MenuContext;
 import com.biglybt.pif.ui.menus.MenuItem;
@@ -34,6 +35,8 @@ import com.biglybt.pifimpl.local.ui.menus.MenuContextImpl;
  */
 public class MenuItemManager {
 
+	private static final boolean DEBUG_MENU_STUFF = Constants.IS_CVS_VERSION;
+	
 	private static MenuItemManager instance;
 
 	private static AEMonitor class_mon = new AEMonitor("MenuManager");
@@ -172,6 +175,11 @@ public class MenuItemManager {
 				List<MenuItem> mis = it.next().getValue();
 
 				if ( mis.size() > 0 ){
+					
+					if ( DEBUG_MENU_STUFF ){
+						Debug.out( "Removing arbitrary menu item for " + sMenuID );
+					}
+
 					mis.remove( 0 );	// pick one at random, not great but there you go
 				}
 
@@ -208,6 +216,10 @@ public class MenuItemManager {
 
 						if ( mis.size() > 0 ){
 
+							if ( DEBUG_MENU_STUFF ){
+								Debug.out( "Removing arbitrary menu item for " + item.getMenuID() + "/" + item.getResourceKey());
+							}
+							
 							mis.remove( 0 );
 						}
 					}
@@ -227,6 +239,54 @@ public class MenuItemManager {
 
 			items_mon.exit();
 		}
+	}
+	
+	public boolean hasMenuItems(String sMenuID) {
+		if (sMenuID != null) {
+			triggerMenuItemQuery(sMenuID);
+		}
+
+		try{
+			items_mon.enter();
+
+			Map<String, List<MenuItem>> local_menu_item_map = items_map.get(sMenuID);
+			Map<String, List<MenuItem>> global_menu_item_map = items_map.get(null);
+
+
+			if (local_menu_item_map == null && global_menu_item_map == null) {
+				return( false );
+			}
+
+			if (sMenuID == null) {local_menu_item_map = null;}
+
+			if ( local_menu_item_map != null ){
+
+				for ( List<MenuItem> mis: local_menu_item_map.values()){
+
+					if ( mis.size() > 0 ){
+
+						return( true );
+					}
+				}
+			}
+
+			if ( global_menu_item_map != null ){
+
+				for ( List<MenuItem> mis: global_menu_item_map.values()){
+
+					if ( mis.size() > 0 ){
+
+						return( true );
+					}
+				}
+			}
+
+		}finally{
+
+			items_mon.exit();
+		}
+		
+		return( false );
 	}
 
 	/**
@@ -259,6 +319,10 @@ public class MenuItemManager {
 
 					if (mis.size() > 0 ){
 
+						if ( DEBUG_MENU_STUFF && mis.size() > 1 ){
+							Debug.out( "Returning arbitrary menu item for " + sMenuID );
+						}
+
 						l.add( mis.get(0));
 					}
 				}
@@ -270,6 +334,10 @@ public class MenuItemManager {
 
 					if (mis.size() > 0 ){
 
+						if ( DEBUG_MENU_STUFF && mis.size() > 1 ){
+							Debug.out( "Returning arbitrary menu item for " + sMenuID );
+						}
+						
 						l.add( mis.get(0));
 					}
 				}
@@ -311,6 +379,10 @@ public class MenuItemManager {
 
 					if (mis.size() > 0 ){
 
+						if ( DEBUG_MENU_STUFF && mis.size() > 1 ){
+							Debug.out( "Returning arbitrary menu item for " + menu_id );
+						}
+						
 						l.add( mis.get(0));
 					}
 				}
