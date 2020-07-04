@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 
 
@@ -1088,6 +1089,21 @@ XferStatsPanel
 		getToolTip()
 		{
 			String tt = cc;
+						
+			try{
+				Locale country_locale = new Locale( "", cc );
+
+				country_locale.getISO3Country();
+				
+				String name = country_locale.getDisplayCountry( Locale.getDefault());
+				
+				if ( name != null && !name.isEmpty()){
+					
+					tt = name + " (" + cc + ")";
+				}
+				
+			}catch( Throwable e ){				
+			}
 			
 			if ( type == 0 ){
 				
