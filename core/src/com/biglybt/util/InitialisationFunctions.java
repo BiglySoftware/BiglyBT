@@ -22,7 +22,9 @@ package com.biglybt.util;
 import com.biglybt.core.Core;
 import com.biglybt.core.content.PlatformContentDirectory;
 import com.biglybt.core.content.RelatedContentManager;
+/* Android: No Devices
 import com.biglybt.core.devices.DeviceManagerFactory;
+ */
 import com.biglybt.core.download.DownloadManagerEnhancer;
 import com.biglybt.core.metasearch.MetaSearchManagerFactory;
 import com.biglybt.core.metasearch.MetaSearchManagerListener;
@@ -54,7 +56,9 @@ public class InitialisationFunctions
 
 		SubscriptionManagerFactory.preInitialise();
 
+/* Android: No Devices
 		DeviceManagerFactory.preInitialise();
+ */
 
 		NavigationHelper.initialise();
 
