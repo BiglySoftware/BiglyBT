@@ -222,10 +222,12 @@ public class PlayUtils
 			return( false );
 		}
 
+/* Android: No Devices
 		if ( !StreamManager.getSingleton().isStreamingUsable()){
 
 			return( false );
 		}
+*/
 
 		TOTorrent torrent = dm.getTorrent();
 

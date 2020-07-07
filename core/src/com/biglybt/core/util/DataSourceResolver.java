@@ -2,7 +2,6 @@ package com.biglybt.core.util;
 
 import java.util.*;
 
-import com.biglybt.core.devices.Device;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 public class 
@@ -53,12 +52,6 @@ DataSourceResolver
 			}
 			
 			return( result );
-			
-		}else if ( data_source instanceof Device ){
-			
-			// not required as resolved internally
-			
-			return( null );
 			
 		}else if ( data_source == DEFAULT_DATASOURCE ){
 			
