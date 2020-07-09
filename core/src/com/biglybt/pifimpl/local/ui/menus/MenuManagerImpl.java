@@ -17,6 +17,8 @@
  */
 package com.biglybt.pifimpl.local.ui.menus;
 
+import java.util.List;
+
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIRuntimeException;
 import com.biglybt.pif.ui.menus.MenuContext;
@@ -67,5 +69,11 @@ public class MenuManagerImpl implements MenuManager {
 
 		return new MenuItemImpl((MenuItemImpl) parent, resource_key);
 
+	}
+	
+	@Override
+	public List<MenuItem> getMenuItems(String menu_id, String resource_key){
+    	
+	    return( MenuItemManager.getInstance().getMenuItems( menu_id, resource_key ));
 	}
 }

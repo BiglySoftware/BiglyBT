@@ -17,6 +17,8 @@
  */
 package com.biglybt.pif.ui.menus;
 
+import java.util.List;
+
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.UIManager;
@@ -149,4 +151,9 @@ public interface MenuManager {
 	 * @return The newly created menu item.
      */
     public MenuItem addMenuItem(MenuItem parent, String resource_key);
+    
+    public List<MenuItem>
+    getMenuItems(
+    	String		menu_id,
+    	String		resource_key );
 }

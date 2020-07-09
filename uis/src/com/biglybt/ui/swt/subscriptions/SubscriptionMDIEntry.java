@@ -20,6 +20,8 @@ package com.biglybt.ui.swt.subscriptions;
 
 
 
+import java.util.List;
+
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
@@ -119,9 +121,20 @@ public class SubscriptionMDIEntry implements SubscriptionListener, ViewTitleInfo
 				createMenu(
 					String 	resource_id )
 				{
-					MenuItem menu_item = menu_manager.addMenuItem(key, resource_id);
-					menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-					return menu_item;
+					List<MenuItem> mis = menu_manager.getMenuItems(key, resource_id);
+					
+					if ( mis.isEmpty()){
+						
+						MenuItem menu_item = menu_manager.addMenuItem(key, resource_id);
+						
+						menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+						
+						return( menu_item );
+						
+					}else{
+						
+						return( mis.get( 0 ));
+					}
 				}
 
 				@Override

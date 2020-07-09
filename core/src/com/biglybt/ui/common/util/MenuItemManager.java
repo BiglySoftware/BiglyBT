@@ -116,6 +116,35 @@ public class MenuItemManager {
 		}
 	}
 
+	public List<MenuItem>
+	getMenuItems(
+		String		menu_id,
+		String		resource_key )
+	{
+		List<MenuItem>	result = new ArrayList<>();
+	
+		try{
+			items_mon.enter();
+			
+			Map<String, List<MenuItem>> mTypes = items_map.get(menu_id);
+
+			if ( mTypes != null ){
+
+				List<MenuItem> mis = mTypes.get( resource_key );
+
+				if ( mis != null ){
+					
+					result.addAll( mis );
+				}
+			}
+		}finally{
+
+			items_mon.exit();
+		}
+		
+		return( result );
+	}
+	
 	public void removeMenuItemsForDetach(String uiType) {
 		List<MenuItem> toRemove = new ArrayList<>();
 		try {
