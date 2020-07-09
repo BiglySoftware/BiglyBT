@@ -1030,7 +1030,7 @@ BuddyPluginViewInstance
 
 		Button beta_button = new Button( test_area, SWT.NULL );
 
-		setupButton( beta_button, lu.getLocalisedMessageText( "Button.open" ), AENetworkClassifier.AT_PUBLIC, new String[] { BuddyPluginBeta.BETA_CHAT_KEY, BuddyPluginBeta.LEGACY_BETA_CHAT_KEY });
+		setupButton( beta_button, lu.getLocalisedMessageText( "Button.open" ), AENetworkClassifier.AT_PUBLIC, new String[] { BuddyPluginBeta.BETA_CHAT_KEY }); // dead BuddyPluginBeta.LEGACY_BETA_CHAT_KEY });
 
 		label = new Label( test_area, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
@@ -1045,7 +1045,7 @@ BuddyPluginViewInstance
 
 		Button beta_i2p_button = new Button( test_area, SWT.NULL );
 
-		setupButton( beta_i2p_button, lu.getLocalisedMessageText( "Button.open" ), AENetworkClassifier.AT_I2P,new String[] { BuddyPluginBeta.BETA_CHAT_KEY, BuddyPluginBeta.LEGACY_BETA_CHAT_KEY });
+		setupButton( beta_i2p_button, lu.getLocalisedMessageText( "Button.open" ), AENetworkClassifier.AT_I2P,new String[] { BuddyPluginBeta.BETA_CHAT_KEY }); // dead BuddyPluginBeta.LEGACY_BETA_CHAT_KEY });
 
 		beta_i2p_button.setEnabled( i2p_enabled );
 

@@ -25,7 +25,6 @@ package com.biglybt.plugin.net.buddy;
 import java.io.*;
 import java.lang.ref.WeakReference;
 import java.net.Inet6Address;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
@@ -83,8 +82,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	public static final String	LEGACY_ANNOUNCE_CHAT_KEY		= 	"General: Announce";
 	public static final String	ANNOUNCE_CHAT_KEY				= 	Constants.APP_NAME + ": " + LEGACY_ANNOUNCE_CHAT_KEY;
 	
-	public static final String	LEGACY_BETA_CHAT_KEY 	= 	"test:beta:chat";
-	public static final String	BETA_CHAT_KEY 			= 	Constants.APP_NAME + ": Beta: Chat";
+	public static final String	LEGACY_BETA_CHAT_KEY_DEAD	 	= 	"test:beta:chat";
+	public static final String	BETA_CHAT_KEY 					= 	Constants.APP_NAME + ": Beta: Chat";
 
 	public static final int PRIVATE_CHAT_DISABLED			= 1;
 	public static final int PRIVATE_CHAT_PINNED_ONLY		= 2;
@@ -532,7 +531,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								if ( !set.contains( net + ":" + key )){
 
 									if ( 	net == AENetworkClassifier.AT_PUBLIC &&
-											( key.equals(BETA_CHAT_KEY) || key.equals(LEGACY_BETA_CHAT_KEY) )){
+											( key.equals(BETA_CHAT_KEY) || key.equals(LEGACY_BETA_CHAT_KEY_DEAD) )){
 
 										// leave
 
@@ -1527,9 +1526,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 									chat.setKeepAlive( true );
 									
-									ChatInstance legacy_chat = getChat( AENetworkClassifier.AT_PUBLIC, LEGACY_BETA_CHAT_KEY );
-
-									legacy_chat.setKeepAlive( true );
+									// Time to die
+									// ChatInstance legacy_chat = getChat( AENetworkClassifier.AT_PUBLIC, LEGACY_BETA_CHAT_KEY );
+									// legacy_chat.setKeepAlive( true );
 								}
 								
 							}
