@@ -1600,8 +1600,23 @@ public class SB_Transfers
 
 							String prev_id = getTagPosition( mdi, parent_id, tag_type, tag_group );
 							
-							MdiEntry entry = mdi.createEntryFromSkinRef(
+							MdiEntry entry;
+							
+							if ( tag.getTaggableTypes() == Taggable.TT_DOWNLOAD ){
+							
+								entry = mdi.createEntryFromSkinRef(
 									parent_id, group_id, "library", tag_group, viewTitleInfo, tag.getGroupContainer(), false, prev_id );
+							
+							}else{
+								
+								UISWTViewBuilderCore builder = new UISWTViewBuilderCore( group_id, null,
+										PeersGeneralView.class);
+								builder.setParentEntryID(parent_id);
+								builder.setPreferredAfterID(prev_id).setInitialDatasource( tag.getGroupContainer() );
+								entry = mdi.createEntry(builder, false);
+
+								entry.setViewTitleInfo( viewTitleInfo );
+							}
 							
 							setTagIcon( tag, entry, true );
 							

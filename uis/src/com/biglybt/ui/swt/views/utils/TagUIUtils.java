@@ -730,9 +730,10 @@ public class TagUIUtils
 			return;
 		}
 		
-		addTagGroupMenu( menu, tag_group);
+		if ( addTagGroupMenu( menu, tag_group)){
 		
-		new MenuItem( menu, SWT.SEPARATOR );
+			new MenuItem( menu, SWT.SEPARATOR );
+		}
 		
 		MenuItem itemSetColor = new MenuItem(menu, SWT.PUSH);
 		Messages.setLanguageText(itemSetColor, "TagGroup.menu.setcolor");
@@ -3051,85 +3052,92 @@ public class TagUIUtils
 	}
 	
 	
-	private static void
+	private static boolean
 	addTagGroupMenu(
 		Menu		menu,
 		TagGroup	group )
 	{
-			// exclusive 
-		
-		MenuItem exclusive_item = new MenuItem( menu, SWT.CHECK);
-		
-		exclusive_item.setText( MessageText.getString( "label.exclusive" ));
-		
-		exclusive_item.setSelection( group.isExclusive());
-		
-		exclusive_item.addListener( 
-			SWT.Selection,
-			(e)->{
-				group.setExclusive(exclusive_item.getSelection());
-			});
-		
-			// move on assign root
-		
-		File existing = group.getRootMoveOnAssignLocation();
-		
-		final Menu moa_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
-
-		MenuItem isl_item = new MenuItem( menu, SWT.CASCADE);
-
-		Messages.setLanguageText( isl_item, "label.tag.group.moa.root" );
-
-		isl_item.setMenu( moa_menu );
-
-		MenuItem clear_item = new MenuItem( moa_menu, SWT.CASCADE);
-
-		Messages.setLanguageText( clear_item, "Button.clear" );
-
-		clear_item.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				group.setRootMoveOnAssignLocation( null );
-			}});
-
-
-
-		if ( existing != null ){
-
-			MenuItem current_item = new MenuItem( moa_menu, SWT.RADIO );
-			current_item.setSelection( true );
-
-			current_item.setText( existing.getAbsolutePath());
-
-			new MenuItem( moa_menu, SWT.SEPARATOR);
-
-		}else{
-
-			clear_item.setEnabled( false );
+		if ( group.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+			
+				// exclusive 
+			
+			MenuItem exclusive_item = new MenuItem( menu, SWT.CHECK);
+			
+			exclusive_item.setText( MessageText.getString( "label.exclusive" ));
+			
+			exclusive_item.setSelection( group.isExclusive());
+			
+			exclusive_item.addListener( 
+				SWT.Selection,
+				(e)->{
+					group.setExclusive(exclusive_item.getSelection());
+				});
+			
+				// move on assign root
+			
+			File existing = group.getRootMoveOnAssignLocation();
+			
+			final Menu moa_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+	
+			MenuItem isl_item = new MenuItem( menu, SWT.CASCADE);
+	
+			Messages.setLanguageText( isl_item, "label.tag.group.moa.root" );
+	
+			isl_item.setMenu( moa_menu );
+	
+			MenuItem clear_item = new MenuItem( moa_menu, SWT.CASCADE);
+	
+			Messages.setLanguageText( clear_item, "Button.clear" );
+	
+			clear_item.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					group.setRootMoveOnAssignLocation( null );
+				}});
+	
+	
+	
+			if ( existing != null ){
+	
+				MenuItem current_item = new MenuItem( moa_menu, SWT.RADIO );
+				current_item.setSelection( true );
+	
+				current_item.setText( existing.getAbsolutePath());
+	
+				new MenuItem( moa_menu, SWT.SEPARATOR);
+	
+			}else{
+	
+				clear_item.setEnabled( false );
+			}
+	
+			MenuItem set_item = new MenuItem( moa_menu, SWT.CASCADE);
+	
+			Messages.setLanguageText( set_item, "label.set" );
+	
+			set_item.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event){
+					DirectoryDialog dd = new DirectoryDialog(moa_menu.getShell());
+	
+					dd.setFilterPath( TorrentOpener.getFilterPathData());
+	
+					dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+	
+					String path = dd.open();
+	
+					if ( path != null ){
+	
+						TorrentOpener.setFilterPathData( path );
+	
+						group.setRootMoveOnAssignLocation( new File( path ));
+					}
+				}});
+			
+			return( true );
 		}
-
-		MenuItem set_item = new MenuItem( moa_menu, SWT.CASCADE);
-
-		Messages.setLanguageText( set_item, "label.set" );
-
-		set_item.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event){
-				DirectoryDialog dd = new DirectoryDialog(moa_menu.getShell());
-
-				dd.setFilterPath( TorrentOpener.getFilterPathData());
-
-				dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
-
-				String path = dd.open();
-
-				if ( path != null ){
-
-					TorrentOpener.setFilterPathData( path );
-
-					group.setRootMoveOnAssignLocation( new File( path ));
-				}
-			}});
+		
+		return( false );
 	}
 	
 	public static void

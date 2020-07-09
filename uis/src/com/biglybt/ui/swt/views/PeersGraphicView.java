@@ -224,6 +224,8 @@ public class PeersGraphicView
   private Object			dm_data_lock = new Object();
   private ManagerData[]		dm_data = {};
 
+  private boolean			always_show_dm_name;
+  
   private final PeerFilter	peer_filter;
 
   public PeersGraphicView() {
@@ -253,6 +255,13 @@ public class PeersGraphicView
     this.peerComparator = new PeerComparator();
   }
 
+  public void
+  setAlwaysShowDownloadName(
+		 boolean	b )
+  {
+	  always_show_dm_name = b;
+  }
+  
   private boolean comp_focused;
   private Object focus_pending_ds;
 
@@ -432,7 +441,7 @@ public class PeersGraphicView
 					if ( 	x >= data.me_hit_x && x <= data.me_hit_x+OWN_SIZE &&
 							y >= data.me_hit_y && y <= data.me_hit_y+OWN_SIZE ){
 
-						if ( dm_data.length > 1 ){
+						if ( always_show_dm_name || dm_data.length > 1 ){
 
 							tt = manager.getDisplayName() + "\r\n";
 						}

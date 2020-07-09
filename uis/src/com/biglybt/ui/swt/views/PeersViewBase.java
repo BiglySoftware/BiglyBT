@@ -27,6 +27,7 @@ import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.speedmanager.SpeedLimitHandler;
+import com.biglybt.core.tag.TagGroup;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
@@ -348,6 +349,16 @@ PeersViewBase
 		return tv;
 	}	
 	
+	@Override
+	public void
+	tableViewTabInitComplete()
+	{
+		if ( tv.getParentDataSource() instanceof TagGroup ){
+		
+			tv.setEnabled( false );
+		}
+	}
+	
 	private static void registerPluginViews() {
 		ViewManagerSWT vm = ViewManagerSWT.getInstance();
 		if (vm.areCoreViewsRegistered(PLUGIN_DS_TYPE)) {
@@ -379,8 +390,10 @@ PeersViewBase
 		Map<String, Object> data) 
 	{
 		switch (eventType) {
-			case EVENT_TABLELIFECYCLE_INITIALIZED:
+			case EVENT_TABLELIFECYCLE_INITIALIZED:{
 				shell = this.tv.getComposite().getShell();
+				break;
+			}
 		}
 	}
 	
@@ -429,6 +442,8 @@ PeersViewBase
 						return( swarm_peers.contains( peer ));
 					}
 				});
+		
+		swarm_view.setAlwaysShowDownloadName( true );
 		
 		swarm_view.initialize( parent );
 		
@@ -532,13 +547,13 @@ PeersViewBase
 				}
 				break;
 			}
-			case UISWTViewEvent.TYPE_FOCUSGAINED:{
+			case UISWTViewEvent.TYPE_SHOWN:{
 				if ( swarm_view != null ) {
 					swarm_view.setFocused( true );
 				}
 				break;
 			}				
-			case UISWTViewEvent.TYPE_FOCUSLOST:{
+			case UISWTViewEvent.TYPE_HIDDEN:{
 				if ( swarm_view != null ) {
 					swarm_view.setFocused( false );
 				}

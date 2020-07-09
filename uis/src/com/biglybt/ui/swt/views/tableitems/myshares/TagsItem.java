@@ -83,8 +83,14 @@ TagsItem
 				for ( String bit: bits ){
 					
 					try{
-						tags.add( tag_manager.lookupTagByUID( Long.parseLong( bit )));
-												
+						Tag tag = tag_manager.lookupTagByUID( Long.parseLong( bit ));
+						
+							// might have been deleted
+						
+						if ( tag != null ){
+						
+							tags.add( tag );
+						}					
 					}catch( Throwable e ){
 						
 					}
