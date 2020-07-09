@@ -123,18 +123,16 @@ public class SubscriptionMDIEntry implements SubscriptionListener, ViewTitleInfo
 				{
 					List<MenuItem> mis = menu_manager.getMenuItems(key, resource_id);
 					
-					if ( mis.isEmpty()){
+					for ( MenuItem old: mis ){
 						
-						MenuItem menu_item = menu_manager.addMenuItem(key, resource_id);
-						
-						menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-						
-						return( menu_item );
-						
-					}else{
-						
-						return( mis.get( 0 ));
+						old.remove();
 					}
+						
+					MenuItem menu_item = menu_manager.addMenuItem(key, resource_id);
+						
+					menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+						
+					return( menu_item );
 				}
 
 				@Override
