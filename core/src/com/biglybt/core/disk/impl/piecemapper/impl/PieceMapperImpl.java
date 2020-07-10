@@ -25,11 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
-import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
-import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
-import com.biglybt.core.disk.impl.piecemapper.DMPieceMap;
-import com.biglybt.core.disk.impl.piecemapper.DMPieceMapper;
-import com.biglybt.core.disk.impl.piecemapper.DMPieceMapperFile;
+import com.biglybt.core.disk.impl.piecemapper.*;
 import com.biglybt.core.internat.LocaleUtilDecoder;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
@@ -338,6 +334,9 @@ PieceMapperImpl
 		private final String 						relative_path;
 		private final String 						name;
 
+		/**
+		 * @param _relative_path  Blank or Relative Path with trailing File.separator
+		 */
 		public
 		fileInfo(
 			TOTorrentFile	_torrent_file,
@@ -356,8 +355,7 @@ PieceMapperImpl
 		@Override
 		public String getRelativeDataPath()
 		{
-			return relative_path.isEmpty() ? name
-					: relative_path + File.separator + name;
+			return relative_path + name;
 		}
 		@Override
 		public TOTorrentFile
