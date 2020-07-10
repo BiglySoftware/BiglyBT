@@ -24,10 +24,16 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableCellToolTipListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.pif.ui.tables.TableContextMenuItem;
+import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.swt.TextViewerWindow;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 /**
@@ -48,6 +54,63 @@ public class MergedDataItem
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
 
 		setRefreshInterval(INTERVAL_LIVE);
+		
+		TableContextMenuItem menuView = addContextMenuItem("menu.view.swarm.merge.info");
+		menuView.addMultiListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				if (target instanceof TableRowCore[]) {
+					TableRowCore[] rows = (TableRowCore[]) target;
+					
+					for ( TableRowCore row: rows ){
+						Object dataSource = row.getDataSource(true);
+						if (dataSource instanceof DownloadManager) {
+							
+							DownloadManager dm = (DownloadManager)dataSource;
+		
+							String info = dm.getSwarmMergingInfo();
+							
+							if ( info != null && !info.isEmpty()){
+								
+								TextViewerWindow viewer =
+										new TextViewerWindow(
+												Utils.findAnyShell(),
+												"menu.view.swarm.merge.info",
+												dm.getDisplayName(),
+												info, false, false );
+
+								viewer.setNonProportionalFont();
+							}
+						}
+					}
+				}
+			}
+		});
+		
+		menuView.addFillListener((menu,target)->{
+			
+			boolean	enable = false;
+			
+			if ( target instanceof TableRowCore[]){
+				TableRowCore[] rows = (TableRowCore[])target;
+			
+				for ( TableRowCore row: rows ){
+					Object dataSource = row.getDataSource(true);
+					if (dataSource instanceof DownloadManager) {
+						
+						String info = ((DownloadManager)dataSource).getSwarmMergingInfo();
+		
+						if ( info != null && !info.isEmpty()){
+							
+							enable = true;
+							
+							break;
+						}
+					}
+				}
+			}
+			menuView.setEnabled( enable );
+		});
 	}
 
 	@Override
@@ -89,6 +152,24 @@ public class MergedDataItem
 			if ( info == null ){
 				
 				info = "";
+				
+			}else{
+				
+				String[] lines = info.split( "\n" );
+				
+				int max_lines = 40;	// over-large tooltips can cause display issues
+				
+				if ( lines.length > max_lines ){
+					
+					info = "";
+					
+					for (int i=0;i<max_lines;i++){
+						
+						info += lines[i] + "\n";
+					}
+					
+					info += "...";
+				}
 			}
 		}
 		
