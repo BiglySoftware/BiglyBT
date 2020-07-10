@@ -66,7 +66,7 @@ public class SpeedScaleShell
 
 	private int PX_10 = 10;
 
-	private static final int TYPED_TEXT_ALPHA = 80;
+	private static final int TYPED_TEXT_ALPHA = 180;
 
 	private static final long CLOSE_DELAY = 600;
 
