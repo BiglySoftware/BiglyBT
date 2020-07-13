@@ -708,6 +708,11 @@ public class PeersGraphicView
 
 	    Rectangle bounds = canvas.getClientArea();
 	    
+	    if ( bounds.width <= 0 || bounds.height <= 0 ){
+	    	
+	    	return;
+	    }
+	    
 	    Point panelSize = canvas.getSize();
 
 		boolean clearImage = img == null || img.isDisposed()
