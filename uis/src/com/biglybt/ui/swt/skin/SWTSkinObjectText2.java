@@ -147,6 +147,13 @@ public class SWTSkinObjectText2
 					"true")) ? SWT.ON : SWT.OFF;
 		}
 
+		String pAntiAlias = skinProperties.getStringValue(sPrefix + ".antialias",
+				(String) null);
+		if (pAntiAlias != null && pAntiAlias.length() > 0) {
+			antialiasMode = (pAntiAlias.equals("1") || pAntiAlias.toLowerCase().equals(
+					"true")) ? SWT.ON : SWT.OFF;
+		}
+		
 		relayoutOnTextChange = skinProperties.getBooleanValue(sPrefix + ".relayoutOnChange", true);
 		
 		bgAware = skinProperties.getBooleanValue(sPrefix + ".bgaware", false);
