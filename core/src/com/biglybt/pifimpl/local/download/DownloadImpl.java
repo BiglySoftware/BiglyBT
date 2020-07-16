@@ -1146,6 +1146,9 @@ DownloadImpl
 
 			long	mins = SystemTime.getCurrentTime()/(1000*60);
 
+			int	old_seeds 		= -2;
+			int old_leechers 	= -2;
+			
 			if ( cache != null ){
 
 				String[]	bits = cache.split(",");
@@ -1155,7 +1158,9 @@ DownloadImpl
 					long	updated_mins	= 0;
 
 					try{
-						updated_mins = Long.parseLong( bits[0] );
+						updated_mins 	= Long.parseLong( bits[0] );
+						old_seeds 		= Integer.parseInt( bits[1] );
+						old_leechers 	= Integer.parseInt( bits[2] );
 
 					}catch( Throwable e ){
 
@@ -1163,17 +1168,35 @@ DownloadImpl
 
 					if ( mins - updated_mins < 15 ){
 
-
+							// too recent
+						
 						do_update = false;
+						
+					}else{
+						
+						int dl_state = download_manager.getState();
+						
+						if ( dl_state != DownloadManager.STATE_DOWNLOADING && dl_state != DownloadManager.STATE_SEEDING ){
+
+								// not running, who cares
+							
+							do_update = false;
+						}
 					}
 				}
 			}
 
 			if ( do_update ){
 
-				String str = mins + "," + result.getSeedCount() + "," + result.getNonSeedCount();
-
-				download_manager.getDownloadState().setAttribute( DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE, str  );
+				int	new_seeds 		= result.getSeedCount();
+				int new_leechers	= result.getNonSeedCount();
+				
+				if ( new_seeds != old_seeds || new_leechers != old_leechers ){
+					
+					String str = mins + "," + new_seeds + "," + new_leechers;
+	
+					download_manager.getDownloadState().setAttribute( DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE, str  );
+				}
 			}
 		}
 

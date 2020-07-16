@@ -250,7 +250,7 @@ DownloadManagerStateImpl
 	private final TorrentUtils.ExtendedTorrent	torrent;
 
 	private boolean						write_required_soon;
-	private boolean						write_required_sometime;
+	private long						write_required_sometime = -1;
 
 	private Category 	category;
 
@@ -1110,10 +1110,13 @@ DownloadManagerStateImpl
 		boolean		slightly )
 	{
 		//Debug.out( (slightly?"slightly":"dirty" )+ ": " + new String(torrent.getName()));
-		
+				
 		if ( slightly ){
 			
-			write_required_sometime = true;
+			if ( write_required_sometime == -1 ){
+			
+				write_required_sometime = SystemTime.getMonotonousTime();
+			}
 			
 		}else{
 		
@@ -1148,10 +1151,18 @@ DownloadManagerStateImpl
 				
 				do_write = true;
 				
-			}else if ( write_required_sometime ){
-								
-				do_write = !interim;
+			}else if ( write_required_sometime != -1 ){
+					
+				if ( interim ){
 				
+						// avoid all the 'sometime' writes ending up being done on closedown
+					
+					do_write = SystemTime.getMonotonousTime() - write_required_sometime > 5*60*1000;
+				
+				}else{
+					
+					do_write = true;
+				}
 			}else{
 				
 				do_write = false;
@@ -1160,7 +1171,7 @@ DownloadManagerStateImpl
 			if ( do_write ){
 			
 				write_required_soon 	= false;
-				write_required_sometime	= false;
+				write_required_sometime	= -1;
 			}
 		}finally{
 
@@ -2486,8 +2497,23 @@ DownloadManagerStateImpl
 				attributes.put( attribute_name, new Long( attribute_value) );
 
 				changed = true;
-								
-				setDirty( attribute_name == DownloadManagerState.AT_SCRAPE_CACHE );
+					
+				boolean	set_dirty = true;
+				
+				boolean is_scrape_cache = attribute_name == DownloadManagerState.AT_SCRAPE_CACHE ;
+				
+				if ( is_scrape_cache && download_manager.getGlobalManager().isStopping()){
+					
+					 if ( download_manager.getState() == DownloadManager.STATE_STOPPED ){
+						 
+						 set_dirty = false;
+					 }
+				}
+				
+				if ( set_dirty ){
+				
+					setDirty( is_scrape_cache );
+				}
 			}
 		}finally{
 
