@@ -1784,6 +1784,8 @@ public class OpenTorrentOptionsWindow
 		private Button btnRetarget;
 		private Composite tagButtonsArea;
 
+		private TagFeatureFileLocation		tag_save_location;
+		
 		private boolean 		treeViewDisableUpdates;
 		private Set<TreeNode>	treePendingExpansions = new HashSet<>();
 		private TagButtonsUI tagButtonsUI;
@@ -3837,6 +3839,35 @@ public class OpenTorrentOptionsWindow
 							fileInfo.isValid = true;
 						}
 					}
+					
+					if ( !bTorrentValid && tag_save_location != null ){
+					
+						if ( tag_save_location.supportsTagMoveOnComplete()){
+							
+							File move_loc = tag_save_location.getTagMoveOnCompleteFolder();
+							
+							if ( move_loc != null ){
+								
+								if (( tag_save_location.getTagMoveOnCompleteOptions() & TagFeatureFileLocation.FL_DATA ) != 0 ){
+									
+									String current = getSavePath();
+									
+									String move_path = move_loc.getAbsolutePath();
+									
+									if ( !move_path.equals( current )){
+									
+										to.isValid = false;
+										
+											// this will recursively run the check on the new location
+										
+										setSavePath( move_path );
+									
+										continue;
+									}
+								}
+							}
+						}
+					}
 				}
 	
 				to.isValid = bTorrentValid;
@@ -5166,6 +5197,8 @@ public class OpenTorrentOptionsWindow
 			
 			if ( init == null ){
 				
+				tag_save_location = null;
+				
 				setSavePathEnabled( true );
 				
 				if ( removed != null ){
@@ -5191,6 +5224,8 @@ public class OpenTorrentOptionsWindow
 				setSavePathEnabled( false );
 
 					// must have a save folder as selected
+				
+				tag_save_location = init;
 				
 				File save_loc = init.getTagInitialSaveFolder();
 
