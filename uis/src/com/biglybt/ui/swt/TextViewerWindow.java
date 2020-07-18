@@ -90,21 +90,21 @@ public class TextViewerWindow {
 
     	if ( parent_shell == null ){
 
-    		shell = ShellFactory.createMainShell( SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE | SWT.MAX );
+    		shell = ShellFactory.createMainShell( SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE | SWT.MIN | SWT.MAX );
     	}else{
 
-    		shell = ShellFactory.createShell( parent_shell, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE | SWT.MAX );
+    		shell = ShellFactory.createShell( parent_shell, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE | SWT.MIN | SWT.MAX );
 
     	}
     }else{
 
     	if ( parent_shell == null ){
 
-    		shell = ShellFactory.createMainShell(SWT.DIALOG_TRIM | SWT.RESIZE | SWT.MAX );
+    		shell = ShellFactory.createMainShell(SWT.DIALOG_TRIM | SWT.RESIZE | SWT.MIN | SWT.MAX );
 
     	}else{
 
-    		shell = ShellFactory.createShell( parent_shell, SWT.DIALOG_TRIM | SWT.RESIZE | SWT.MAX );
+    		shell = ShellFactory.createShell( parent_shell, SWT.DIALOG_TRIM | SWT.RESIZE | SWT.MIN | SWT.MAX );
     	}
     }
 
