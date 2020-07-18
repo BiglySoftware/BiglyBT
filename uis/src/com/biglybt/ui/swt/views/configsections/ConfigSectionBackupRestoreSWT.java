@@ -241,6 +241,8 @@ public class ConfigSectionBackupRestoreSWT
 		final Runnable		stats_updater )
 
 	{
+		boolean modal = false;	// switch to non-modal after user request
+		
 		if (Utils.runIfNotSWTThread(
 				() -> runBackup(backup_manager, path, stats_updater))) {
 			return;
@@ -249,7 +251,7 @@ public class ConfigSectionBackupRestoreSWT
 		final TextViewerWindow viewer =
 			new TextViewerWindow(
 					MessageText.getString( "br.backup.progress" ),
-					null, "", true, true );
+					null, "", modal, modal );
 
 		viewer.setEditable( false );
 
@@ -323,6 +325,9 @@ public class ConfigSectionBackupRestoreSWT
 			backup_manager.backup( new File( path ), listener );
 		}
 
-		viewer.goModal();
+		if ( modal ){
+		
+			viewer.goModal();
+		}
 	}
 }
