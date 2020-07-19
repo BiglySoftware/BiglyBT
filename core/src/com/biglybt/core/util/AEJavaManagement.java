@@ -33,7 +33,17 @@ AEJavaManagement
 	public static void
 	initialise()
 	{
-		if ( System.getProperty( SystemProperties.SYSPROP_THREAD_MON_ENABLE, "1" ).equals( "0" )){
+		String thread_prop = System.getProperty( SystemProperties.SYSPROP_THREAD_MON_ENABLE, null );
+		
+		if ( thread_prop == null ){
+			
+			// not seeing any progress on https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8245768 
+			// so setting linux default to disabled for the moment
+			
+			thread_prop = ( Constants.isWindows || Constants.isOSX )?"1":"0";
+		}
+		
+		if ( thread_prop.equals( "0" )){
 			
 			Debug.outNoStack( "Thread monitoring disabled" );
 			
