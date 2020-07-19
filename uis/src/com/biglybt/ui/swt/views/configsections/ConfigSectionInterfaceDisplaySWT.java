@@ -179,7 +179,10 @@ public class ConfigSectionInterfaceDisplaySWT
 
 		add(new BooleanParameterImpl("Disable All Tooltips",
 				"ConfigView.section.style.disable.all.tt"), listVarious);
-
+		
+		add(new BooleanParameterImpl("Tidy Close With Progress",
+				"ConfigView.section.style.tidy.close.with.progress"), listVarious);
+	
 		add(new ParameterGroupImpl("label.various", listVarious));
 
 		// Group: toolbar

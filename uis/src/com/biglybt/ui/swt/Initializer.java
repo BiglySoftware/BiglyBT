@@ -800,46 +800,51 @@ public class Initializer
 							}
 						};
 						
-						if ( Utils.isSWTThread()){
+						boolean show_progress = COConfigurationManager.getBooleanParameter( "Tidy Close With Progress" );
+						
+						if ( show_progress ){
 							
-							Debug.out( "Can't run closedown progress window as already on SWT thread" );
-							
-						}else{
-
-							Utils.execSWTThread(()->{
-								FileUtil.runAsTask(
-									CoreOperation.OP_PROGRESS,
-									new CoreOperationTask()
-									{
-										@Override
-										public String 
-										getName()
-										{
-											return( MessageText.getString( isForRestart?"label.restarting.app":"label.closing.app" ));
-										}
+							if ( Utils.isSWTThread()){
+								
+								Debug.out( "Can't run closedown progress window as already on SWT thread" );
+								
+							}else{
 	
-										@Override
-										public void
-										run(
-											CoreOperation operation)
+								Utils.execSWTThread(()->{
+									FileUtil.runAsTask(
+										CoreOperation.OP_PROGRESS,
+										new CoreOperationTask()
 										{
-											try{
-												
-												stop_sem.reserve();
-												
-											}catch( Throwable e ){
-	
-												throw( new RuntimeException( e ));
+											@Override
+											public String 
+											getName()
+											{
+												return( MessageText.getString( isForRestart?"label.restarting.app":"label.closing.app" ));
 											}
-										}
-	
-										@Override
-										public ProgressCallback 
-										getProgressCallback()
-										{
-											return( prog );
-										}
-									});});
+		
+											@Override
+											public void
+											run(
+												CoreOperation operation)
+											{
+												try{
+													
+													stop_sem.reserve();
+													
+												}catch( Throwable e ){
+		
+													throw( new RuntimeException( e ));
+												}
+											}
+		
+											@Override
+											public ProgressCallback 
+											getProgressCallback()
+											{
+												return( prog );
+											}
+										});});
+							}
 					}
 					
 					try{

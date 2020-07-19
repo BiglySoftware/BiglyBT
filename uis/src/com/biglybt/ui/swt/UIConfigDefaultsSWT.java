@@ -136,7 +136,8 @@ public class UIConfigDefaultsSWT
 		def.addParameter("show_torrents_menu", true);
 		def.addParameter("mainwindow.search.history.enabled", true);
 		def.addParameter("Disable All Tooltips", false);
-
+		def.addParameter("Tidy Close With Progress", true );
+		
 		def.addParameter("Ignore Icon Exts", "" );
 		
 		if ( Constants.isWindows ){
