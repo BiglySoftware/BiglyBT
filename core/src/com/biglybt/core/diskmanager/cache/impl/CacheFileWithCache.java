@@ -1335,6 +1335,8 @@ CacheFileWithCache
 									// next cache entry
 								
 								current_start = cache_end_exclusive;
+								
+								next_cache	= true;
 							}
 						}
 						
