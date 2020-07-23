@@ -1273,7 +1273,7 @@ DHTTransferHandler
 
 				if ( transfers.size() > TRANSFER_QUEUE_MAX ){
 
-					Debug.out( "Transfer queue count limit exceeded" );
+					// Debug.out( "Transfer queue count limit exceeded" );
 
 					throw( new DHTTransportException( "Transfer queue limit exceeded" ));
 				}

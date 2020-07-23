@@ -315,5 +315,6 @@ public class UIConfigDefaultsSWT
 		def.addParameter( "Library.TagInTabBar", 1 );
 		
 		def.addParameter( "Peers View Show Local Peer", false);
+		def.addParameter( "Pieces View Show Uploading", false);
 	}
 }

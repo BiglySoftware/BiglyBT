@@ -20,6 +20,7 @@ package com.biglybt.ui.swt.views.tableitems.pieces;
 
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.views.PiecesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 /**
@@ -47,6 +48,14 @@ public class CompletedItem
   @Override
   public void refresh(TableCell cell) {
     PEPiece piece = (PEPiece)cell.getDataSource();
+    
+	boolean is_uploading = piece instanceof PiecesView.PEPieceUploading;
+
+	if ( is_uploading ){
+		cell.setText("");
+		return;
+	}
+	
     long value = (piece == null) ? 0 : piece.getNbWritten();
 
     if( !cell.setSortValue( value ) && cell.isValid() ) {

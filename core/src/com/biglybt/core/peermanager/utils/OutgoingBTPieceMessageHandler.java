@@ -30,6 +30,7 @@ import com.biglybt.core.peermanager.messaging.bittorrent.BTMessage;
 import com.biglybt.core.peermanager.messaging.bittorrent.BTPiece;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.SystemTime;
 
 
 /**
@@ -50,6 +51,9 @@ public class OutgoingBTPieceMessageHandler {
   private final ArrayList<DiskManagerReadRequest>			loading_messages 	= new ArrayList<>();
   private final HashMap<BTPiece,DiskManagerReadRequest> 	queued_messages 	= new HashMap<>();
 
+  private LinkedList<DiskManagerReadRequest>		recent_messages;
+  private volatile long								recent_messages_last_access	= -1;
+  
   private final AEMonitor	lock_mon	= new AEMonitor( "OutgoingBTPieceMessageHandler:lock");
   private boolean destroyed = false;
   private int request_read_ahead = 2;
@@ -103,6 +107,24 @@ public class OutgoingBTPieceMessageHandler {
         queued_messages.put( msg, request );
 
         outgoing_message_queue.addMessage( msg, true );
+        
+        if ( recent_messages != null ){
+        	
+        	long now = SystemTime.getMonotonousTime();
+        	
+        	if ( now - recent_messages_last_access > 60*1000 ){
+        		
+        		recent_messages = null;
+        		
+        		recent_messages_last_access = -1;
+        		
+        	}else{
+        	
+        		trimRecentMessages();
+        		
+        		recent_messages.add( request );
+        	}
+        }
       }
       finally{
       	lock_mon.exit();
@@ -110,7 +132,7 @@ public class OutgoingBTPieceMessageHandler {
 
       outgoing_message_queue.doListenerNotifications();
     }
-
+    
     @Override
     public void
     readFailed(
@@ -158,26 +180,39 @@ public class OutgoingBTPieceMessageHandler {
 
           	// due to timing issues we can get in here with a message already removed
 
-          queued_messages.remove( message );
+          DiskManagerReadRequest request = queued_messages.remove( message );
 
+          if ( request != null ){
+        	  
+        	  request.setTimeSent( SystemTime.getMonotonousTime());
+          }
         }finally{
           lock_mon.exit();
         }
-
-        /*
-    	if ( peer.getIp().equals( "64.71.5.2" )){
-
-    		outgoing_message_queue.setTrace( true );
-
-    		// BTPiece p = (BTPiece)message;
-
-    		// TimeFormatter.milliTrace( "obt sent: " + p.getPieceNumber() + "/" + p.getPieceOffset());
-    	}
-   		*/
-
+        
         doReadAheadLoads();
+        
+        if ( recent_messages_last_access != -1 ){
+        	
+        	 trimRecentMessages();
+        }
+      }else{
+      
+	      if ( recent_messages_last_access != -1 ){
+	    	  
+	    	  try{
+	              lock_mon.enter();
+	
+	              trimRecentMessages();
+	              
+	    	  }finally{
+	    		  
+	              lock_mon.exit();
+	          }
+	      }
       }
     }
+    
     @Override
     public void messageQueued(Message message ) {/*nothing*/}
     @Override
@@ -190,7 +225,29 @@ public class OutgoingBTPieceMessageHandler {
     public void flush(){}
   };
 
+  private void
+  trimRecentMessages()
+  {
+	  Iterator<DiskManagerReadRequest>	it = recent_messages.descendingIterator();
 
+	  long now = SystemTime.getMonotonousTime();
+
+	  while( it.hasNext()){
+
+		  DiskManagerReadRequest req = it.next();
+
+		  long sent = req.getTimeSent();
+
+		  if ( sent < 0 || now - sent > 5000 ){
+
+			  it.remove();
+
+		  }else{
+
+			  break;
+		  }
+	  }
+  }
 
   /**
    * Register a new piece data request.
@@ -199,22 +256,22 @@ public class OutgoingBTPieceMessageHandler {
    * @param length
    */
   public boolean addPieceRequest( int piece_number, int piece_offset, int length ) {
-    if( destroyed )  return( false );
+	  if( destroyed )  return( false );
 
-    DiskManagerReadRequest dmr = peer.getManager().getDiskManager().createReadRequest( piece_number, piece_offset, length );
+	  DiskManagerReadRequest dmr = peer.getManager().getDiskManager().createReadRequest( piece_number, piece_offset, length );
 
-    try{
-      lock_mon.enter();
+	  try{
+		  lock_mon.enter();
 
-      requests.addLast( dmr );
+		  requests.addLast( dmr );
 
-    }finally{
-      lock_mon.exit();
-    }
+	  }finally{
+		  lock_mon.exit();
+	  }
 
-    doReadAheadLoads();
+	  doReadAheadLoads();
 
-    return( true );
+	  return( true );
   }
 
 
@@ -247,13 +304,14 @@ public class OutgoingBTPieceMessageHandler {
       }
 
 
-      for( Iterator i = queued_messages.entrySet().iterator(); i.hasNext(); ) {
-        Map.Entry entry = (Map.Entry)i.next();
+      for( Iterator<Map.Entry<BTPiece,DiskManagerReadRequest>> i = queued_messages.entrySet().iterator(); i.hasNext(); ) {
+    	Map.Entry<BTPiece,DiskManagerReadRequest> entry = i.next();
         if( entry.getValue().equals( dmr ) ) {  //it's already been queued
-          BTPiece msg = (BTPiece)entry.getKey();
+          BTPiece msg = entry.getKey();
           if( outgoing_message_queue.removeMessage( msg, true ) ) {
         	inform_rejected = true;
             i.remove();
+            entry.getValue().setTimeSent( -1 );
           }
           break;  //do manual listener notify
         }
@@ -281,52 +339,31 @@ public class OutgoingBTPieceMessageHandler {
 
   	List<DiskManagerReadRequest> removed = new ArrayList<>();
 
-    try{
-      lock_mon.enter();
+  	try{
+  		lock_mon.enter();
 
-      // removed this trace as Alon can't remember why the trace is here anyway and as far as I can
-      // see there's nothing to stop a piece being delivered to transport and removed from
-      // the message queue before we're notified of this and thus it is entirely possible that
-      // our view of queued messages is lagging.
-      // String before_trace = outgoing_message_queue.getQueueTrace();
-      /*
-      int num_queued = queued_messages.size();
-      int num_removed = 0;
+  		for( Iterator<Map.Entry<BTPiece,DiskManagerReadRequest>> i = queued_messages.entrySet().iterator(); i.hasNext(); ) {
+  			Map.Entry<BTPiece,DiskManagerReadRequest> entry = i.next();
+  			BTPiece msg = entry.getKey();
+  			if (outgoing_message_queue.removeMessage( msg, true )){
+  				removed.add( queued_messages.get( msg ));
+  			}
+  			entry.getValue().setTimeSent( -1 );
+  		}
 
-      for( Iterator i = queued_messages.keySet().iterator(); i.hasNext(); ) {
-        BTPiece msg = (BTPiece)i.next();
-        if( outgoing_message_queue.removeMessage( msg, true ) ) {
-          i.remove();
-          num_removed++;
-        }
-      }
+  		queued_messages.clear();
+  		
+  		removed.addAll( requests );
 
-      if( num_removed < num_queued -2 ) {
-        Debug.out( "num_removed[" +num_removed+ "] < num_queued[" +num_queued+ "]:\nBEFORE:\n" +before_trace+ "\nAFTER:\n" +outgoing_message_queue.getQueueTrace() );
-      }
-      */
+  		requests.clear();
 
+  		removed.addAll( loading_messages );
 
-      for( Iterator<BTPiece> i = queued_messages.keySet().iterator(); i.hasNext(); ) {
-          BTPiece msg = i.next();
-          if (outgoing_message_queue.removeMessage( msg, true )){
-        	  removed.add( queued_messages.get( msg ));
-          }
-      }
-
-      queued_messages.clear();	// this replaces stuff above
-
-      removed.addAll( requests );
-
-      requests.clear();
-
-      removed.addAll( loading_messages );
-
-      loading_messages.clear();
-    }
-    finally{
-      lock_mon.exit();
-    }
+  		loading_messages.clear();
+  	}
+  	finally{
+  		lock_mon.exit();
+  	}
 
     for ( DiskManagerReadRequest request: removed ){
 
@@ -444,7 +481,28 @@ public class OutgoingBTPieceMessageHandler {
 
 		return trimmed;
 	}
-
+	
+	public DiskManagerReadRequest[]
+	getRecentMessages()
+	{
+		try {
+			lock_mon.enter();
+			
+			recent_messages_last_access = SystemTime.getMonotonousTime();
+			
+			if ( recent_messages == null ){
+				
+				recent_messages = new LinkedList<DiskManagerReadRequest>(); 
+			}
+									
+			return( recent_messages.toArray( new DiskManagerReadRequest[recent_messages.size()]));
+			
+		} finally {
+			
+			lock_mon.exit();
+		}
+	}
+	
 	public int
 	getRequestCount()
 	{

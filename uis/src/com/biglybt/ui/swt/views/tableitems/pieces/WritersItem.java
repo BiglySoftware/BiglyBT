@@ -22,6 +22,7 @@ import java.util.*;
 
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.views.PiecesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 /**
@@ -50,6 +51,14 @@ public class WritersItem
   @Override
   public void refresh(TableCell cell) {
     PEPiece piece = (PEPiece)cell.getDataSource();
+    
+    boolean is_uploading = piece instanceof PiecesView.PEPieceUploading;
+
+	if ( is_uploading ){
+		cell.setText("");
+		return;
+	}
+	
     String[] core_writers = piece.getWriters();
     String[] my_writers = new String[core_writers.length];
     int writer_count = 0;

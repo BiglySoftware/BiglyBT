@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views.tableitems.pieces;
 
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.views.PiecesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 /**
@@ -50,6 +51,14 @@ public class RequestedItem
     {
         boolean value =false;
         final PEPiece pePiece =(PEPiece) cell.getDataSource();
+        
+    	boolean is_uploading = pePiece instanceof PiecesView.PEPieceUploading;
+
+    	if ( is_uploading ){
+    		cell.setText("");
+    		return;
+    	}
+    	
         if (pePiece !=null)
         {
              value = pePiece.isRequested();

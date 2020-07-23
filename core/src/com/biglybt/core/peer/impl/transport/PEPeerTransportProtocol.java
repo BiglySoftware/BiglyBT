@@ -5564,6 +5564,16 @@ implements PEPeerTransport
 	}
 
 	@Override
+	public DiskManagerReadRequest[] getRecentPiecesSent(){
+		if ( outgoing_piece_message_handler == null ){
+
+			return( new DiskManagerReadRequest[0] );
+		}
+
+		return( outgoing_piece_message_handler.getRecentMessages());
+	}
+	
+	@Override
 	public int[] getOutgoingRequestedPieceNumbers() {
 		try{
 			requested_mon.enter();

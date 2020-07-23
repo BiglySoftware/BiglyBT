@@ -33,6 +33,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
+import com.biglybt.ui.swt.views.PiecesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 
@@ -61,6 +62,8 @@ public class BlocksItem
 	private static final int COLOR_INCACHE = 3;
 	
 	private static final int COLOR_EGM = 4;
+	
+	private static final int COLOR_UPLOADING = 5;
 
 	public static final Color[] colors = new Color[] {
 		Colors.blues[Colors.BLUES_MIDLIGHT],
@@ -68,6 +71,7 @@ public class BlocksItem
 		Colors.red,
 		Colors.grey,
 		Colors.fadedGreen,
+		Colors.yellow,
 	};
 
 	private static CacheFileManagerStats cacheStats = null;
@@ -121,6 +125,8 @@ public class BlocksItem
 			return;
 		}
 
+		boolean is_uploading = pePiece instanceof PiecesView.PEPieceUploading;
+		
 		cell.setSortValue(pePiece.getNbWritten());
 
 		Utils.execSWTThread(new AERunnable() {
@@ -213,14 +219,13 @@ public class BlocksItem
 
 					int num = -1;
 					
-					if ((written == null && piece_written)
-							|| (written != null && written[i])) {
+					if ( (written == null && piece_written)	|| (written != null && written[i])) {
 
 						color = colors[COLOR_WRITTEN];
 
 					} else if (pePiece.isDownloaded(i)) {
 
-						color = colors[COLOR_DOWNLOADED];
+						color = colors[is_uploading?COLOR_UPLOADING:COLOR_DOWNLOADED];
 
 					} else if (pePiece.isRequested(i)) {
 

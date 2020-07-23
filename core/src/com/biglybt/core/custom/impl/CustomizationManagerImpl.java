@@ -713,24 +713,17 @@ CustomizationManagerImpl
 
 			Map	config = new HashMap();
 
-			List list = new ArrayList();
-
-			list.add( "trout" );
-			list.add( 45 );
-
-			config.put( "test.a10", "Hello mum" );
-			config.put( "test.a11", new Long(100));
-			config.put( "test.a13", list );
+			config.put( "Side Bar Top Level Order", "1,2,3,4,5,6" );
 
 			Map	map = new HashMap();
 
-			map.put( "name", "My Proxy Settings" );
+			map.put( "name", "Sidebar header order fix" );
 			map.put( "settings", config );
 			map.put( "restart", new Long( 1 ));
 
 			vf.addComponent( VuzeFileComponent.COMP_TYPE_CONFIG_SETTINGS, map );
 
-			vf.write( new File( "C:\\temp\\p_config.vuze" ) );
+			vf.write( new File( "C:\\temp\\fixsidebar.biglybt" ) );
 
 		}catch( Throwable e ){
 

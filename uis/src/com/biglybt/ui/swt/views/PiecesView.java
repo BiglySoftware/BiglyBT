@@ -19,18 +19,26 @@
  */
 package com.biglybt.ui.swt.views;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerPiece;
+import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.download.DownloadManagerPieceListener;
@@ -38,6 +46,7 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
@@ -46,6 +55,7 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -113,7 +123,8 @@ public class PiecesView
 			"PiecesView.legend.written",
 			"PiecesView.legend.downloaded",
 			"PiecesView.legend.incache",
-			"label.end.game.mode"
+			"label.end.game.mode",
+			"label.uploading"
 		};
 	
 	public static Color
@@ -129,6 +140,9 @@ public class PiecesView
 	private Composite legendComposite;
 	private MultipleDocumentInterfaceSWT mdi;
 
+	private Map<Integer,PEPieceUploading>	uploading_pieces = new HashMap<>();
+	private boolean							show_uploading;
+	
 	/**
 	 * Initialize
 	 *
@@ -137,6 +151,72 @@ public class PiecesView
 		super(MSGID_PREFIX);
 	}
 
+	@Override
+	public Composite 
+	initComposite(
+		Composite composite) 
+	{
+		Composite parent = new Composite(composite, SWT.NONE);
+		GridLayout layout = new GridLayout(1,true);
+		layout.marginHeight = layout.marginWidth = 0;
+		layout.horizontalSpacing = layout.verticalSpacing = 0;
+		parent.setLayout(layout);
+
+		Layout compositeLayout = composite.getLayout();
+		if (compositeLayout instanceof GridLayout) {
+			parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		} else if (compositeLayout instanceof FormLayout) {
+			parent.setLayoutData(Utils.getFilledFormData());
+		}
+		
+		Composite header = new Composite(parent, SWT.NONE);
+		layout = new GridLayout(1,true);
+		layout.marginHeight = layout.marginWidth = 0;
+		header.setLayout(layout);
+		
+		header.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
+
+		Button lp_enable = new Button( header, SWT.CHECK );
+		lp_enable.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
+		
+		Messages.setLanguageText( lp_enable, "label.show.uploading.pieces" );
+		lp_enable.addListener( SWT.Selection, (ev)->{
+			COConfigurationManager.setParameter( "Pieces View Show Uploading", lp_enable.getSelection());
+		});
+		
+		COConfigurationManager.addAndFireParameterListener(
+				"Pieces View Show Uploading",
+			new ParameterListener(){
+				public void
+				parameterChanged(
+					String n )
+				{
+					if ( lp_enable.isDisposed()){
+						
+						COConfigurationManager.removeParameterListener( n, this );
+						
+						return;
+					}
+					
+					boolean enabled = COConfigurationManager.getBooleanParameter( n );
+					
+					lp_enable.setSelection( enabled );
+					
+					setShowUploading( enabled );
+				}
+			});
+		
+		Composite tableParent = new Composite(parent, SWT.NONE);
+		
+		tableParent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		layout = new GridLayout();
+		layout.horizontalSpacing = layout.verticalSpacing = 0;
+		layout.marginHeight = layout.marginWidth = 0;
+		tableParent.setLayout(layout);
+
+		return( tableParent );
+	}
+	
 	// @see com.biglybt.ui.swt.views.table.impl.TableViewTab#initYourTableView()
 	@Override
 	public TableViewSWT<PEPiece> initYourTableView() {
@@ -154,6 +234,20 @@ public class PiecesView
 		return tv;
 	}
 
+	private void
+	setShowUploading(
+		boolean		enabled )
+	{
+		if ( enabled == show_uploading ){
+			
+			return;
+		}
+		
+		show_uploading = enabled;
+		
+		refreshView();
+	}
+	
 	private static void registerPluginViews() {
 		ViewManagerSWT vm = ViewManagerSWT.getInstance();
 		if (vm.areCoreViewsRegistered(PLUGIN_DS_TYPE)) {
@@ -324,6 +418,11 @@ public class PiecesView
 
 		manager = newManager;
 
+		synchronized( uploading_pieces ){
+		
+			uploading_pieces.clear();
+		}
+		
 		if (tv == null || tv.isDisposed()) {
 			return;
 		}
@@ -368,6 +467,11 @@ public class PiecesView
 			manager.removePieceListener(this);
 			manager = null;
 		}
+		
+		synchronized( uploading_pieces ){
+			
+			uploading_pieces.clear();
+		}
 	}
 
 	/* DownloadManagerPeerListener implementation */
@@ -385,13 +489,16 @@ public class PiecesView
 	public void peerAdded(PEPeer peer) {  }
 	@Override
 	public void peerRemoved(PEPeer peer) {  }
-  @Override
-  public void peerManagerWillBeAdded(PEPeerManager	peer_manager ){}
+	@Override
+	public void peerManagerWillBeAdded(PEPeerManager	peer_manager ){}
 	@Override
 	public void peerManagerAdded(PEPeerManager manager) {	}
 	@Override
 	public void peerManagerRemoved(PEPeerManager	manager) {
 		tv.removeAllTableRows();
+		synchronized( uploading_pieces ){
+			uploading_pieces.clear();
+		}
 	}
 
 	/**
@@ -403,12 +510,28 @@ public class PiecesView
 			return;
 		}
 
+		boolean process = false;
+		
 		PEPiece[] dataSources = manager.getCurrentPieces();
 		if (dataSources.length > 0) {
-  		tv.addDataSources(dataSources);
-    	tv.processDataSourceQueue();
+			
+			tv.addDataSources(dataSources);
+			
+			process = true;
 		}
+		
+		refreshView();
 
+		if ( uploading_pieces.isEmpty()){
+			
+			process = true;
+		}
+		
+		if ( process ){
+			
+			tv.processDataSourceQueue();
+		}
+		
 		// For this view the tab datasource isn't driven by table row selection so we
 		// need to update it with the primary data source
 
@@ -419,6 +542,129 @@ public class PiecesView
 			tabs.triggerTabViewsDataSourceChanged(tv);
 		}
 
+	}
+	
+	private void
+	refreshView()
+	{
+		DownloadManager dm = manager;
+		
+		if ( dm == null ){
+			
+			return;
+		}
+		
+		PEPeerManager pm = manager.getPeerManager();
+
+		if ( pm == null ){
+
+			return;
+		}
+
+		if ( show_uploading ){
+			
+			DiskManagerPiece[] dm_pieces = pm.getDiskManager().getPieces();
+	
+			Map<Integer,boolean[]>	up_map = new HashMap<>();
+			
+			for ( PEPeer peer: pm.getPeers()){
+				
+				if ( !peer.isChokedByMe()){
+					
+					//System.out.println( "peer " + peer.getIp());
+					
+					DiskManagerReadRequest[] pieces = peer.getRecentPiecesSent();
+					
+					for ( DiskManagerReadRequest piece: pieces ){
+					
+						long sent = piece.getTimeSent();
+						
+						if ( sent <= 0 || SystemTime.getMonotonousTime() - sent > 10*1000 ){
+							
+							continue;
+						}
+						
+						//System.out.println( "    Uploading " + piece.getPieceNumber() + "/" + piece.getOffset());
+						
+						int	piece_number = piece.getPieceNumber();
+								
+						boolean[] blocks = up_map.get( piece_number );
+					
+						if ( blocks == null ){
+						
+							DiskManagerPiece dm_piece = dm_pieces[piece.getPieceNumber()];
+						
+							blocks = new boolean[dm_piece.getNbBlocks()];
+							
+							up_map.put( piece_number, blocks );
+						}
+						
+						blocks[piece.getOffset()/DiskManager.BLOCK_SIZE] = true;
+					}
+				}
+			}
+			
+			List<PEPiece>	to_add 		= new ArrayList<PEPiece>();
+			Set<PEPiece>	to_remove 	= new HashSet<PEPiece>();
+			
+			synchronized( uploading_pieces ){
+				
+				to_remove.addAll( uploading_pieces.values());
+				
+				for ( Map.Entry<Integer,boolean[]> entry: up_map.entrySet()){
+					
+					int 		pn 		= entry.getKey();
+					boolean[]	blocks 	= entry.getValue();
+					
+					PEPieceUploading piece = uploading_pieces.get( pn );
+					
+					if ( piece == null ){
+						
+						piece = new PEPieceUploading( pm, dm_pieces[pn], pn );
+						
+						to_add.add( piece );
+						
+						uploading_pieces.put( pn, piece );
+						
+					}else{
+						
+						to_remove.remove( piece );
+					}
+					
+					piece.addUploading( blocks );
+				}
+				
+				for ( PEPiece p: to_remove ){
+					
+					uploading_pieces.remove( p.getPieceNumber());
+				}
+			}
+			
+			if ( !to_add.isEmpty()){
+				
+				tv.addDataSources( to_add.toArray( new PEPiece[to_add.size()]));
+			}
+			
+			if ( !to_remove.isEmpty()){
+				
+				tv.removeDataSources( to_remove.toArray( new PEPiece[to_remove.size()]));
+			}
+		}else{
+			
+			Set<PEPiece>	to_remove 	= new HashSet<PEPiece>();
+		
+			synchronized( uploading_pieces ){
+			
+				to_remove.addAll( uploading_pieces.values());
+				
+				uploading_pieces.clear();
+			}
+			
+			if ( !to_remove.isEmpty()){
+				
+				tv.removeDataSources( to_remove.toArray( new PEPiece[to_remove.size()]));
+			}
+		}
 	}
 	
 	  @Override
@@ -510,8 +756,11 @@ public class PiecesView
 	
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
-		if (event.getType() == UISWTViewEvent.TYPE_CREATE) {
+		int type = event.getType();
+		if (type == UISWTViewEvent.TYPE_CREATE) {
 			event.getView().setDestroyOnDeactivate(true);
+		}else if ( type == UISWTViewEvent.TYPE_REFRESH ){
+			refreshView();
 		}
 
 		return super.eventOccurred(event);
@@ -527,5 +776,121 @@ public class PiecesView
 	@Override
 	public Object getTitleInfoProperty(int propertyID) {
 		return null;
+	}
+	
+	public class
+	PEPieceUploading
+		implements PEPiece
+	{
+			// 'fake' class to denote an uploading piece for the UI
+		
+		private final PEPeerManager		pm;
+		private final DiskManagerPiece	dm_piece;
+		private final int				piece_number;
+		
+		private final boolean[]			blocks;
+		
+		private boolean 	complete;
+		
+		private
+		PEPieceUploading(
+			PEPeerManager			_pm,
+			DiskManagerPiece		_dm_piece,
+			int						_piece_number )
+		{
+			pm				= _pm;
+			dm_piece		= _dm_piece;
+			piece_number	= _piece_number;
+			
+			blocks = new boolean[dm_piece.getNbBlocks()];
+		}
+			
+		public PiecePicker		getPiecePicker(){ return( pm.getPiecePicker()); }
+		public PEPeerManager	getManager(){ return( pm ); }
+	    public DiskManagerPiece getDMPiece(){ return( dm_piece ); }
+	    public int         		getPieceNumber(){ return( piece_number ); };
+		public int				getLength(){ return( dm_piece.getLength()); }
+		public int				getNbBlocks(){ return( dm_piece.getNbBlocks()); }
+	    public int         		getBlockNumber(int offset){ return( offset/DiskManager.BLOCK_SIZE ); }
+		public int				getBlockSize( int block_index ){ return( dm_piece.getBlockSize(block_index)); }
+
+		
+		private void
+		addUploading(
+			boolean[]		b )
+		{
+			boolean done = true;
+			
+			for ( int i=0;i<b.length;i++){
+				if ( b[i] ){
+					blocks[i] = true;
+				}else if ( !blocks[i] ){					
+					done = false;
+				}
+			}
+			
+			complete = done;
+		}
+		
+	    public long         	getCreationTime(){ return( 0 ); };
+
+	    public long         	getTimeSinceLastActivity(){ return( 0 ); }
+
+	    public long         	getLastDownloadTime( long now ){ return( 0 ); }
+
+		public void
+		addWrite( int blockNumber, String sender, byte[] hash,boolean correct	){}
+
+		public int			getNbWritten(){ return( 0 ); }
+
+		public int			getAvailability(){ return( 0 ); }
+
+		public boolean		hasUnrequestedBlock(){ return( false ); }
+		public int[]		getAndMarkBlocks(PEPeer peer, int nbWanted, int[] request_hint, boolean reverse_order ){ return( null ); }
+
+		public void 		getAndMarkBlock(PEPeer peer, int index){}
+		public Object		getRealTimeData(){ return( null ); }
+		public void			setRealTimeData( Object	o ){};
+
+		public boolean		setRequested(PEPeer peer, int blockNumber){ return( false ); }
+		public void			clearRequested(int blocNumber){}
+	    public boolean      isRequested(int blockNumber){ return( false ); }
+
+	    public boolean      isRequested(){ return( false ); }
+	    public void			setRequested(){};
+	    public boolean		isRequestable(){ return( false ); }
+
+		public int			getNbRequests(){ return( 0 ); }
+		public int			getNbUnrequested(){ return( 0 ); }
+
+		public boolean		isDownloaded(int blockNumber){ return( blocks[ blockNumber] ); }
+	    public void         setDownloaded(int offset){};
+	    public void         clearDownloaded(int offset){}
+		public boolean		isDownloaded(){ return( complete ); }
+		public boolean[]	getDownloaded(){ return( blocks ); }
+		public boolean		hasUndownloadedBlock(){ return( false ); }
+
+		public String		getReservedBy(){ return( "" ); }
+		public void			setReservedBy(String peer){}
+
+		public int			getResumePriority(){ return( 0 ); }
+		public void			setResumePriority(int p){}
+
+		public String[] 	getWriters(){ return( null ); }
+		public void			setWritten(String peer, int blockNumber){}
+		public boolean 		isWritten(){ return( false ); }
+		public boolean 		isWritten( int blockNumber){ return( true ); }
+
+		public int 			getSpeed(){ return( 0 ); }
+		public void			setSpeed(int speed){}
+
+		public void
+		setLastRequestedPeerSpeed(
+			int		speed ){}
+
+		public void			reset(){}
+
+		public String
+		getString(){ return( "" ); }
 	}
 }

@@ -351,6 +351,10 @@ PEPeer
    */
   public int[] getOutgoingRequestedPieceNumbers();
 
+  public default DiskManagerReadRequest[] getRecentPiecesSent(){
+	  return( new DiskManagerReadRequest[0]) ;
+  }
+  
   public int
   getPercentDoneOfCurrentIncomingRequest();
 
