@@ -245,7 +245,7 @@ public class PiecesView
 		
 		show_uploading = enabled;
 		
-		refreshView();
+		updateUploadingPieces( true );
 	}
 	
 	private static void registerPluginViews() {
@@ -520,9 +520,9 @@ public class PiecesView
 			process = true;
 		}
 		
-		refreshView();
+		updateUploadingPieces( false );
 
-		if ( uploading_pieces.isEmpty()){
+		if ( !uploading_pieces.isEmpty()){
 			
 			process = true;
 		}
@@ -545,7 +545,8 @@ public class PiecesView
 	}
 	
 	private void
-	refreshView()
+	updateUploadingPieces(
+		boolean	process_queue )
 	{
 		DownloadManager dm = manager;
 		
@@ -561,6 +562,8 @@ public class PiecesView
 			return;
 		}
 
+		boolean	changed = false;
+		
 		if ( show_uploading ){
 			
 			DiskManagerPiece[] dm_pieces = pm.getDiskManager().getPieces();
@@ -643,11 +646,15 @@ public class PiecesView
 			if ( !to_add.isEmpty()){
 				
 				tv.addDataSources( to_add.toArray( new PEPiece[to_add.size()]));
+				
+				changed = true;
 			}
 			
 			if ( !to_remove.isEmpty()){
 				
 				tv.removeDataSources( to_remove.toArray( new PEPiece[to_remove.size()]));
+				
+				changed = true;
 			}
 		}else{
 			
@@ -663,7 +670,14 @@ public class PiecesView
 			if ( !to_remove.isEmpty()){
 				
 				tv.removeDataSources( to_remove.toArray( new PEPiece[to_remove.size()]));
+				
+				changed = true;
 			}
+		}
+		
+		if ( process_queue && changed ){
+			
+			tv.processDataSourceQueue();
 		}
 	}
 	
@@ -760,7 +774,7 @@ public class PiecesView
 		if (type == UISWTViewEvent.TYPE_CREATE) {
 			event.getView().setDestroyOnDeactivate(true);
 		}else if ( type == UISWTViewEvent.TYPE_REFRESH ){
-			refreshView();
+			updateUploadingPieces( true );
 		}
 
 		return super.eventOccurred(event);

@@ -238,7 +238,7 @@ public class OutgoingBTPieceMessageHandler {
 
 		  long sent = req.getTimeSent();
 
-		  if ( sent < 0 || now - sent > 5000 ){
+		  if ( sent < 0 || ( sent > 0 && now - sent > 5000 )){
 
 			  it.remove();
 
