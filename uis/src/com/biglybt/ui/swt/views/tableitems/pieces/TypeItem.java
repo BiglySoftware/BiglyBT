@@ -49,7 +49,7 @@ public class TypeItem
     boolean is_uploading = piece instanceof PiecesView.PEPieceUploading;
 
 	if ( is_uploading ){
-		cell.setText("");
+		cell.setText( MessageText.getString( "label.uploading" ));
 		return;
 	}
 	

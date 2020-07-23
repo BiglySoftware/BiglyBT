@@ -20,6 +20,7 @@
 
 package com.biglybt.core.util;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -58,6 +59,11 @@ CopyOnWriteSet<T>
 
 		synchronized( this ){
 
+			if ( set.contains( o )){
+				
+				return( false );
+			}
+			
 			if ( visible ){
 
 				Set<T> new_set;
@@ -80,6 +86,47 @@ CopyOnWriteSet<T>
 			}else{
 
 				result = set.add( o );
+			}
+		}
+
+		return( result );
+	}
+	
+	public boolean
+	addAll(
+		Collection<T>	to_add)
+	{
+		boolean	result;
+
+		synchronized( this ){
+
+			if ( set.containsAll( to_add )){
+				
+				return( false );
+			}
+			
+			if ( visible ){
+
+				Set<T> new_set;
+
+				if ( is_identify ){
+
+					new_set = new IdentityHashSet<>(set);
+
+				}else{
+
+					new_set = new HashSet<>(set);
+				}
+
+				result = new_set.addAll( to_add );
+
+				set = new_set;
+
+				visible = false;
+
+			}else{
+
+				result = set.addAll( to_add );
 			}
 		}
 

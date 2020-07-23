@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views.tableitems.pieces;
 import java.util.*;
 
 import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.util.CopyOnWriteSet;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.PiecesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
@@ -51,67 +52,81 @@ public class WritersItem
   @Override
   public void refresh(TableCell cell) {
     PEPiece piece = (PEPiece)cell.getDataSource();
-    
-    boolean is_uploading = piece instanceof PiecesView.PEPieceUploading;
-
-	if ( is_uploading ){
-		cell.setText("");
-		return;
-	}
 	
-    String[] core_writers = piece.getWriters();
-    String[] my_writers = new String[core_writers.length];
-    int writer_count = 0;
-    Map map = new HashMap();
+    if ( piece instanceof PiecesView.PEPieceUploading ){
+    	
+    	CopyOnWriteSet<String> peers = ((PiecesView.PEPieceUploading)piece).getUploadPeers();
+    	
+    	StringBuilder sb = new StringBuilder(64);
+    	
+    	for ( String peer: peers ){
+    		if ( sb.length()>0){
+    			sb.append( ";" );
+    		}
+    		sb.append( peer );
+    	}
 
-    for(int i = 0 ; ; ) {
-	String this_writer = null;
+    	String value = sb.toString();
+    	if( !cell.setSortValue( value ) && cell.isValid() ) {
+    		return;
+    	}
 
-	int start;
-	for (start = i ; start < core_writers.length ; start++ ) {
-	    this_writer = core_writers[start];
-	    if (this_writer != null)
-		break;
-	}
-	if (this_writer == null)
-	    break;
+    	cell.setText(value);
+    }else{
+    	String[] core_writers = piece.getWriters();
+    	String[] my_writers = new String[core_writers.length];
+    	int writer_count = 0;
+    	Map map = new HashMap();
 
-	int end;
-	for (end = start + 1; end < core_writers.length; end++) {
-	    if (! this_writer.equals(core_writers[end]))
-		break;
-	}
+    	for(int i = 0 ; ; ) {
+    		String this_writer = null;
 
-	StringBuffer pieces = (StringBuffer) map.get(this_writer);
-	if (pieces == null) {
-	    pieces = new StringBuffer();
-	    map.put(this_writer, pieces);
-	    my_writers[writer_count++] = this_writer;
-	} else {
-	    pieces.append(',');
-	}
+    		int start;
+    		for (start = i ; start < core_writers.length ; start++ ) {
+    			this_writer = core_writers[start];
+    			if (this_writer != null)
+    				break;
+    		}
+    		if (this_writer == null)
+    			break;
 
-	pieces.append(start);
-	if (end-1 > start)
-	    pieces.append('-').append(end-1);
+    		int end;
+    		for (end = start + 1; end < core_writers.length; end++) {
+    			if (! this_writer.equals(core_writers[end]))
+    				break;
+    		}
 
-	i=end;
+    		StringBuffer pieces = (StringBuffer) map.get(this_writer);
+    		if (pieces == null) {
+    			pieces = new StringBuffer();
+    			map.put(this_writer, pieces);
+    			my_writers[writer_count++] = this_writer;
+    		} else {
+    			pieces.append(',');
+    		}
+
+    		pieces.append(start);
+    		if (end-1 > start)
+    			pieces.append('-').append(end-1);
+
+    		i=end;
+    	}
+
+    	StringBuilder sb = new StringBuilder();
+    	for (int i = 0 ; i < writer_count ; i++) {
+    		String writer = my_writers[i];
+    		StringBuffer pieces = (StringBuffer) map.get(writer);
+    		if (i > 0)
+    			sb.append(';');
+    		sb.append(writer).append('[').append(pieces).append(']');
+    	}
+
+    	String value = sb.toString();
+    	if( !cell.setSortValue( value ) && cell.isValid() ) {
+    		return;
+    	}
+
+    	cell.setText(value);
     }
-
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0 ; i < writer_count ; i++) {
-	String writer = my_writers[i];
-	StringBuffer pieces = (StringBuffer) map.get(writer);
-	if (i > 0)
-	    sb.append(';');
-	sb.append(writer).append('[').append(pieces).append(']');
-    }
-
-    String value = sb.toString();
-    if( !cell.setSortValue( value ) && cell.isValid() ) {
-      return;
-    }
-
-    cell.setText(value);
   }
 }

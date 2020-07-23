@@ -46,6 +46,7 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
+import com.biglybt.core.util.CopyOnWriteSet;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
@@ -566,9 +567,11 @@ public class PiecesView
 		
 		if ( show_uploading ){
 			
+			long now = SystemTime.getMonotonousTime();
+			
 			DiskManagerPiece[] dm_pieces = pm.getDiskManager().getPieces();
 	
-			Map<Integer,boolean[]>	up_map = new HashMap<>();
+			Map<Integer,Object[]>	up_map = new HashMap<>();
 			
 			for ( PEPeer peer: pm.getPeers()){
 				
@@ -582,7 +585,7 @@ public class PiecesView
 					
 						long sent = piece.getTimeSent();
 						
-						if ( sent <= 0 || SystemTime.getMonotonousTime() - sent > 10*1000 ){
+						if ( sent <= 0 || now - sent > 10*1000 ){
 							
 							continue;
 						}
@@ -591,33 +594,48 @@ public class PiecesView
 						
 						int	piece_number = piece.getPieceNumber();
 								
-						boolean[] blocks = up_map.get( piece_number );
+						Object[] entry = up_map.get( piece_number );
 					
-						if ( blocks == null ){
+						boolean[] 	blocks;
+						Set<String>	peers;
+						
+						if ( entry == null ){
 						
 							DiskManagerPiece dm_piece = dm_pieces[piece.getPieceNumber()];
 						
 							blocks = new boolean[dm_piece.getNbBlocks()];
 							
-							up_map.put( piece_number, blocks );
+							peers = new HashSet<>();
+							
+							up_map.put( piece_number, new Object[]{ blocks, peers });
+							
+						}else{
+							
+							blocks 	= (boolean[])entry[0];
+							peers	= (Set<String>)entry[1];
 						}
 						
 						blocks[piece.getOffset()/DiskManager.BLOCK_SIZE] = true;
+						
+						peers.add( peer.getIp());
 					}
 				}
 			}
 			
-			List<PEPiece>	to_add 		= new ArrayList<PEPiece>();
-			Set<PEPiece>	to_remove 	= new HashSet<PEPiece>();
+			List<PEPieceUploading>	to_add 		= new ArrayList<>();
+			Set<PEPieceUploading>	to_remove 	= new HashSet<>();
 			
 			synchronized( uploading_pieces ){
-				
+								
 				to_remove.addAll( uploading_pieces.values());
 				
-				for ( Map.Entry<Integer,boolean[]> entry: up_map.entrySet()){
+				for ( Map.Entry<Integer,Object[]> up_entry: up_map.entrySet()){
 					
-					int 		pn 		= entry.getKey();
-					boolean[]	blocks 	= entry.getValue();
+					int 		pn 		= up_entry.getKey();
+					Object[]	entry	= up_entry.getValue();
+					
+					boolean[]	blocks 	= (boolean[])entry[0];
+					Set<String>	peers	= (Set<String>)entry[1];
 					
 					PEPieceUploading piece = uploading_pieces.get( pn );
 					
@@ -634,12 +652,30 @@ public class PiecesView
 						to_remove.remove( piece );
 					}
 					
-					piece.addUploading( blocks );
+					piece.addUploading( blocks, peers );
 				}
 				
-				for ( PEPiece p: to_remove ){
+				if ( !to_remove.isEmpty()){
 					
-					uploading_pieces.remove( p.getPieceNumber());
+					int active_pieces = uploading_pieces.size();
+
+					Iterator<PEPieceUploading> it = to_remove.iterator();
+					
+					while( it.hasNext()){
+						
+						PEPieceUploading piece = it.next();
+						
+						if ( piece.readyToRemove() || active_pieces > 50 ){
+						
+							uploading_pieces.remove( piece.getPieceNumber());
+							
+							active_pieces--;
+							
+						}else{
+						
+							it.remove();
+						}
+					}
 				}
 			}
 			
@@ -802,9 +838,12 @@ public class PiecesView
 		private final DiskManagerPiece	dm_piece;
 		private final int				piece_number;
 		
-		private final boolean[]			blocks;
+		private final boolean[]					blocks;
+		private final CopyOnWriteSet<String>	peers = new CopyOnWriteSet<String>( false );
 		
 		private boolean 	complete;
+		
+		private volatile long	last_active = SystemTime.getMonotonousTime();
 		
 		private
 		PEPieceUploading(
@@ -816,7 +855,7 @@ public class PiecesView
 			dm_piece		= _dm_piece;
 			piece_number	= _piece_number;
 			
-			blocks = new boolean[dm_piece.getNbBlocks()];
+			blocks 	= new boolean[dm_piece.getNbBlocks()];
 		}
 			
 		public PiecePicker		getPiecePicker(){ return( pm.getPiecePicker()); }
@@ -831,19 +870,39 @@ public class PiecesView
 		
 		private void
 		addUploading(
-			boolean[]		b )
+			boolean[]		b,
+			Set<String>		latest_peers )
 		{
-			boolean done = true;
+			last_active = SystemTime.getMonotonousTime();
 			
-			for ( int i=0;i<b.length;i++){
-				if ( b[i] ){
-					blocks[i] = true;
-				}else if ( !blocks[i] ){					
-					done = false;
+			synchronized( this ){
+				
+				boolean done = true;
+				
+				for ( int i=0;i<b.length;i++){
+					if ( b[i] ){
+						blocks[i] = true;
+					}else if ( !blocks[i] ){					
+						done = false;
+					}
 				}
+				
+				complete = done;
+				
+				peers.addAll( latest_peers );
 			}
-			
-			complete = done;
+		}
+		
+		private boolean
+		readyToRemove()
+		{
+			return( SystemTime.getMonotonousTime() - last_active > 5000 );
+		}
+		
+		public CopyOnWriteSet<String>
+		getUploadPeers()
+		{
+			return( peers );
 		}
 		
 	    public long         	getCreationTime(){ return( 0 ); };
