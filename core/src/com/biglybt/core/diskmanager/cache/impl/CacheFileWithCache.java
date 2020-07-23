@@ -47,23 +47,20 @@ CacheFileWithCache
   private static final byte SS_CACHE = DirectByteBuffer.SS_CACHE;
   private static final LogIDs LOGID = LogIDs.CACHE;
 
-  protected static final Comparator comparator = new
-		Comparator()
+  protected static final Comparator<CacheEntry> comparator = new
+		Comparator<CacheEntry>()
 		{
 			@Override
 			public int
 		   	compare(
-		   		Object _o1,
-				Object _o2)
+		   		CacheEntry o1,
+		   		CacheEntry o2)
 			{
-				if ( _o1 == _o2 ){
+				if ( o1 == o2 ){
 
 					return( 0 );
 				}
 					// entries in the cache should never overlap
-
-				CacheEntry	o1 = (CacheEntry)_o1;
-				CacheEntry	o2 = (CacheEntry)_o2;
 
 				long	offset1 = o1.getFilePosition();
 				int		length1	= o1.getLength();
@@ -109,7 +106,7 @@ CacheFileWithCache
 	protected long[]					read_history; // lazy allocation
 	protected int						read_history_next	= 0;
 
-	protected final TreeSet					cache			= new TreeSet(comparator);
+	protected final TreeSet<CacheEntry>					cache			= new TreeSet<CacheEntry>(comparator);
 
 	protected int 	current_read_ahead_size				= 0;
 
@@ -1197,11 +1194,185 @@ CacheFileWithCache
 
 	protected void
 	getBytesInCache(
-		boolean[] toModify,
-		long[]	absoluteOffsets,
-		long[]	lengths )
+		boolean[] 	result,
+		long[]		absolute_offsets,
+		long[]		lengths )
 	{
+			// absolute offsets are in ascending order and might span the start/end of this file
+			
+			// cache entries are in ascending order
+		
+			// purpose of this function is to set toModify[i] to false if any part of [i] that falls in this file's span
+			// is not in the cache
+		
+		
+		int	num_entries = absolute_offsets.length;
+		
+		/*
+		System.out.println( "to test" );
+		
+		for ( int i=0;i<num_entries;i++){
+			
+			System.out.println( "    " + absolute_offsets[i] + " / " + lengths[i] );
+		}
+		*/
+		
+		long file_start = file_offset_in_torrent;
+		long file_end 	= file_start + torrent_file.getLength();
+		
+		while( num_entries > 0 ){
+			
+			if ( absolute_offsets[ num_entries-1 ] >= file_end ){
+				
+					// entry beyond this file extent, ignore
+				
+				num_entries--;
+				
+			}else{
+				
+				break;
+			}
+		}
+		
+		if ( num_entries == 0 ){
+			
+			return;
+		}
 
+		int current_index = 0;
+		
+			// skip any entries that come completely before this file
+		
+		while( absolute_offsets[ current_index ] + lengths[ current_index ] < file_start ){
+			
+			current_index++;
+			
+			if ( current_index == num_entries ){
+				
+				return;	// nothing of relevance here
+			}
+		}
+		
+		long overall_start 			= absolute_offsets[ current_index ];
+		long overall_end_exclusive	= absolute_offsets[ num_entries -1 ] + lengths[ num_entries - 1 ];
+				
+		if ( !this_mon.enter(250)){
+
+			Debug.outNoStack( "Failed to lock stats, abandoning" );
+
+			return;
+		}
+
+		// System.out.println( "cache" );
+		
+		try{
+				// subSet doesn't really work as a cache entry could overlap the first chunk and be relevant even though
+				// its offset is < chunk start - I added in "-piece_size" in an attempt to ensure we grab such entries
+				// which should generally be OK as we tend (?) not to cache lumps bigger than that...
+			
+			Set<CacheEntry> sub_map = cache.subSet(new CacheEntry( overall_start-file_start-piece_size), new CacheEntry( overall_end_exclusive-file_start));
+			
+			Iterator<CacheEntry> it = sub_map.iterator();
+						
+			long current_start 			= absolute_offsets[ current_index ];
+			long current_end_exclusive	= current_start + lengths[ current_index ];
+			
+			while( current_index < num_entries && it.hasNext()){
+				
+				CacheEntry	entry = it.next();
+				
+				long cache_start = entry.getFilePosition() + file_start;
+				
+				// System.out.println( "    " + cache_start + " / " + entry.getLength());
+				
+				long cache_end_exclusive = cache_start + entry.getLength();
+		
+					// cache entry might overlap multiple chunks
+				
+				while( true ){
+					
+					boolean	next_cache	= false;
+
+					if ( cache_end_exclusive <= current_start ){
+						
+						// cache entry entirely before, retry with next cache entry
+						
+						next_cache = true;
+						
+					}else{
+							
+						boolean next_chunk 	= false;
+
+						if ( current_start < cache_start ){
+							
+								// missing a chunk before 
+							
+							result[current_index] = false;
+							
+							next_chunk = true;
+
+						}else{ 
+							
+								// cache entry overlaps
+							
+							if ( cache_end_exclusive > current_end_exclusive ){
+								
+									// cache entry goes beyond current chunk so this chunk ok and move onto next chunk
+								
+								next_chunk = true;
+								
+							}else if ( cache_end_exclusive == current_end_exclusive ){
+
+									// exact match at end of cache/chunk, move both on
+								
+								next_chunk 	= true;
+								
+								next_cache	= true;
+								
+							}else{
+								
+									// current chunk looking good but has remainder that needs to be checked against
+									// next cache entry
+								
+								current_start = cache_end_exclusive;
+							}
+						}
+						
+						if ( next_chunk ){
+							
+							current_index++;
+							
+							if ( current_index == num_entries ){
+								
+								break;
+							}
+							
+							current_start 			= absolute_offsets[ current_index ];
+							current_end_exclusive	= current_start + lengths[ current_index ];
+						}
+					}
+					
+					if ( next_cache ){
+						
+						break;
+					}
+				}
+			}
+
+		}finally{
+			
+			this_mon.exit();
+		}
+		
+			// stuff beyond end of last cache entry not available
+		
+		while( current_index < num_entries ){
+			
+			result[current_index++] = false;
+		}
+		
+		/*
+		
 		final long baseOffset = file_offset_in_torrent;
 
 		int i = 0;
@@ -1223,14 +1394,24 @@ CacheFileWithCache
 			return;
 		}
 
+		System.out.println( "get for" );
+		
+		for (int j=0;j<absoluteOffsets.length;j++){
+			System.out.println( "    " + absoluteOffsets[j] + " / " + lengths[j] );
+		}
+		
 		try{
-			Iterator it = cache.subSet(new CacheEntry(first-1-baseOffset), new CacheEntry(last-baseOffset)).iterator();
-			//Iterator it = cache.iterator();
+			Iterator<CacheEntry> it = cache.subSet(new CacheEntry(first-1-baseOffset), new CacheEntry(last-baseOffset)).iterator();
+			//Iterator<CacheEntry> it = cache.iterator();
 
+			System.out.println( "cache" );
 			while(it.hasNext())
 			{
-				CacheEntry	entry = (CacheEntry)it.next();
+				CacheEntry	entry = it.next();
 				long startPos = entry.getFilePosition()+baseOffset;
+				
+				System.out.println( "    " + startPos + " / " + entry.getLength());
+				
 				long endPos = startPos+entry.getLength();
 				// the following check ensures that we are within the interesting region
 				if(startPos < first)
@@ -1283,6 +1464,7 @@ CacheFileWithCache
 				toModify[i] = false;
 				i++;
 			}
+			*/
 	}
 
 
