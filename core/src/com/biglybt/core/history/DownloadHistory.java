@@ -40,6 +40,9 @@ DownloadHistory
 	public String
 	getSaveLocation();
 
+	public String[]
+	getTags();
+	
 	public long
 	getAddTime();
 

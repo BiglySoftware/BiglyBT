@@ -205,6 +205,14 @@ public class SBC_DownloadHistoryView
 					}
 				});
 
+		tableManager.registerColumn(DownloadHistory.class, ColumnDLHistoryTags.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnDLHistoryTags(column);
+					}
+				});
+
 		tableManager.setDefaultColumnNames(TABLE_NAME,
 				new String[] {
 					ColumnDLHistoryName.COLUMN_ID,

@@ -40,6 +40,11 @@ import com.biglybt.core.history.DownloadHistory;
 import com.biglybt.core.history.DownloadHistoryEvent;
 import com.biglybt.core.history.DownloadHistoryListener;
 import com.biglybt.core.history.DownloadHistoryManager;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 
@@ -59,8 +64,12 @@ DownloadHistoryManagerImpl
 	private static final int UPDATE_TYPE_DEAD	= 0x10;
 	private static final int UPDATE_TYPE_BOTH	= UPDATE_TYPE_ACTIVE | UPDATE_TYPE_DEAD;
 
+	private static final Object	TAG_CACHE_KEY = new Object();
+	
 	private final Core core;
 
+	private static final TagManager	tag_manager = TagManagerFactory.getTagManager();
+	
 	private final ListenerManager<DownloadHistoryListener>	listeners =
 		ListenerManager.createAsyncManager(
 			"DHM",
@@ -196,7 +205,11 @@ DownloadHistoryManagerImpl
 
 											dh.setHistoryReference( dead_history );
 
-											dh.setRemoveTime( SystemTime.getCurrentTime());
+											List<Tag> tags = (List<Tag>)dm.getUserData( TAG_CACHE_KEY );
+											
+											tags = TagUtils.sortTags( tags );
+											
+											dh.setRemoved( tags );
 
 											historyUpdated( dh, DownloadHistoryEvent.DHE_HISTORY_MODIFIED, UPDATE_TYPE_BOTH );
 										}
@@ -204,6 +217,20 @@ DownloadHistoryManagerImpl
 								}
 							}, false );
 
+						global_manager.addDownloadWillBeRemovedListener((dm,b1,b2)->{
+							
+							try{
+								List<Tag>	tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
+
+								dm.setUserData( TAG_CACHE_KEY, tags );
+							
+							}catch( Throwable e ){
+								
+								Debug.out( e );;
+							}
+							
+						});
+						
 						DownloadManagerFactory.addGlobalDownloadListener(
 							new DownloadManagerAdapter()
 							{
@@ -863,6 +890,8 @@ DownloadHistoryManagerImpl
 		}
 	}
 
+	private static String[] NO_TAGS = {};
+	
 	private class
 	DownloadHistoryImpl
 		implements DownloadHistory
@@ -870,9 +899,11 @@ DownloadHistoryManagerImpl
 		private final long 		uid;
 		private final byte[]	hash;
 		private final long		size;
-		private String			name 			= "test test test";
-		private String			save_location	= "somewhere or other";
-		private long			add_time		= -1;
+		private final String	name;
+		private final long		add_time;
+		
+		private String			save_location;
+		private String[]		tags			= NO_TAGS;
 		private long			complete_time	= -1;
 		private long			remove_time		= -1;
 
@@ -911,6 +942,8 @@ DownloadHistoryManagerImpl
 
 			add_time 		= dms.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
 
+				// tags only populated on removal
+			
 			updateCompleteTime( dms );
 		}
 
@@ -926,8 +959,8 @@ DownloadHistoryManagerImpl
 				uid		= (Long)map.get( "u" );
 				hash	= (byte[])map.get("h");
 
-				name 			= new String((byte[])map.get( "n"), "UTF-8" );
-				save_location 	= new String((byte[])map.get( "s"), "UTF-8" );
+				name 			= new String((byte[])map.get( "n"), Constants.UTF_8 );
+				save_location 	= new String((byte[])map.get( "s"), Constants.UTF_8 );
 
 				Long l_size		= (Long)map.get( "z" );
 
@@ -937,10 +970,17 @@ DownloadHistoryManagerImpl
 				complete_time 	= (Long)map.get( "c" );
 				remove_time 	= (Long)map.get( "r" );
 
-			}catch( IOException e ){
-
-				throw( e );
-
+				List<byte[]> l_tags = (List<byte[]>)map.get( "t" );
+				
+				if ( l_tags != null ){
+					
+					tags = new String[l_tags.size()];
+					
+					for ( int i=0;i<l_tags.size();i++){
+						
+						tags[i] = new String( l_tags.get(i), Constants.UTF_8 );
+					}
+				}
 			}catch( Throwable e ){
 
 				throw( new IOException( "History decode failed: " + Debug.getNestedExceptionMessage( e )));
@@ -963,13 +1003,25 @@ DownloadHistoryManagerImpl
 
 			map.put( "u", uid );
 			map.put( "h", hash );
-			map.put( "n", name.getBytes( "UTF-8" ));
+			map.put( "n", name.getBytes( Constants.UTF_8 ));
 			map.put( "z", size );
-			map.put( "s", save_location.getBytes( "UTF-8" ));
+			map.put( "s", save_location.getBytes( Constants.UTF_8 ));
 			map.put( "a", add_time );
 			map.put( "c", complete_time );
 			map.put( "r", remove_time );
 
+			if ( tags != null && tags.length > 0 ){
+				
+				List<byte[]>	l_tags = new ArrayList<>();
+				
+				for ( String tag: tags ){
+					
+					l_tags.add( tag.getBytes( Constants.UTF_8 ));
+				}
+				
+				map.put( "t", l_tags );
+			}
+			
 			return( map );
 		}
 
@@ -1062,11 +1114,28 @@ DownloadHistoryManagerImpl
 			return( complete_time );
 		}
 
-		void
-		setRemoveTime(
-			long		time )
+		@Override
+		public String[] 
+		getTags()
 		{
-			remove_time	= time;
+			return( tags );
+		}
+		
+		void
+		setRemoved(
+			List<Tag>	removal_tags  )
+		{
+			remove_time	= SystemTime.getCurrentTime();
+			
+			if ( removal_tags != null && !removal_tags.isEmpty()){
+				
+				tags = new String[removal_tags.size()];
+					
+				for ( int i=0; i<removal_tags.size(); i++ ){
+						
+					tags[i] = removal_tags.get(i).getTagName( true );
+				}
+			}
 		}
 
 		@Override
