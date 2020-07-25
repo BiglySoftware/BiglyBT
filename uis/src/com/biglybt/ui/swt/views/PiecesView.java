@@ -577,10 +577,50 @@ public class PiecesView
 				
 				if ( !peer.isChokedByMe()){
 					
-					//System.out.println( "peer " + peer.getIp());
+					int[] peerRequestedPieces = peer.getIncomingRequestedPieceNumbers();
+					
+						// prepare the next few pieces
+					
+					if ( peerRequestedPieces != null && peerRequestedPieces.length > 0 ){
+						
+						int	pieces_added = 0;
+						
+						for ( int i=0;i<peerRequestedPieces.length;i++){
+							
+							int	piece_number = peerRequestedPieces[i];
+							
+							Object[] entry = up_map.get( piece_number );
+						
+							Set<String>	peers;
+							
+							if ( entry == null ){
+							
+								DiskManagerPiece dm_piece = dm_pieces[ piece_number ];
+							
+								boolean[] blocks = new boolean[dm_piece.getNbBlocks()];
+								
+								peers = new HashSet<>();
+								
+								up_map.put( piece_number, new Object[]{ blocks, peers });
+								
+								pieces_added++;
+								
+							}else{
+								
+								peers	= (Set<String>)entry[1];
+							}
+													
+							peers.add( peer.getIp());
+							
+							if ( pieces_added >= 2 ){
+								
+								break;
+							}
+						}
+					}
 					
 					DiskManagerReadRequest[] pieces = peer.getRecentPiecesSent();
-					
+
 					for ( DiskManagerReadRequest piece: pieces ){
 					
 						long sent = piece.getTimeSent();
@@ -589,9 +629,7 @@ public class PiecesView
 							
 							continue;
 						}
-						
-						//System.out.println( "    Uploading " + piece.getPieceNumber() + "/" + piece.getOffset());
-						
+												
 						int	piece_number = piece.getPieceNumber();
 								
 						Object[] entry = up_map.get( piece_number );
@@ -601,7 +639,7 @@ public class PiecesView
 						
 						if ( entry == null ){
 						
-							DiskManagerPiece dm_piece = dm_pieces[piece.getPieceNumber()];
+							DiskManagerPiece dm_piece = dm_pieces[ piece_number ];
 						
 							blocks = new boolean[dm_piece.getNbBlocks()];
 							
