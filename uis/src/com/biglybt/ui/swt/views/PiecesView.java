@@ -625,7 +625,7 @@ public class PiecesView
 					
 						long sent = piece.getTimeSent();
 						
-						if ( sent <= 0 || now - sent > 10*1000 ){
+						if ( sent < 0 || ( sent > 0 && now - sent > 10*1000 )){
 							
 							continue;
 						}
