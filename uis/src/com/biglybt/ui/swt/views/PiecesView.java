@@ -30,6 +30,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
@@ -58,8 +59,10 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.Legend;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.piece.MyPieceDistributionView;
@@ -294,32 +297,126 @@ public class PiecesView
 		boolean	has_undone	 	= false;
 		boolean	has_unforced	= false;
 
+		boolean all_uploading	= true;
+		
 		for ( Object obj: selected ){
 
 			PEPiece piece = (PEPiece)obj;
 
-			if ( !piece.getDMPiece().isDone()){
+			if ( !( piece instanceof PEPieceUploading )){
 
-				has_undone = true;
-
-				if ( picker.isForcePiece( piece.getPieceNumber())){
-
-					has_unforced = true;
+				all_uploading = false;
+				
+				if ( !piece.getDMPiece().isDone()){
+	
+					has_undone = true;
+	
+					if ( picker.isForcePiece( piece.getPieceNumber())){
+	
+						has_unforced = true;
+					}		
 				}
 			}
 		}
 
-		final MenuItem force_piece = new MenuItem( menu, SWT.CHECK );
+		if ( all_uploading ){
+			
 
-		Messages.setLanguageText( force_piece, "label.force.piece" );
+			if ( selected.size() > 0 ){
 
-		force_piece.setEnabled( has_undone );
+				PEPieceUploading piece = (PEPieceUploading)selected.get(0);
 
-		if ( has_undone ){
+				CopyOnWriteSet<String> uploaders = piece.getUploadPeers();
 
-			force_piece.setSelection( has_unforced );
+				PEPeer peer = null;
 
-			force_piece.addSelectionListener(
+				if ( uploaders.size() == 1 ){
+
+					String ip = uploaders.iterator().next();
+
+					List<PEPeer> peers = pm.getPeers( ip );
+
+					if ( peers.size() == 1 ){
+
+						peer = peers.get(0);
+					}
+				}
+
+				MenuItem show_peer = new MenuItem( menu, SWT.PUSH );
+
+				Messages.setLanguageText( show_peer, "menu.show.peer" );
+
+				final PEPeer f_peer = peer;
+
+				show_peer.addSelectionListener(
+					new SelectionAdapter()
+					{
+						@Override
+						public void
+						widgetSelected(
+								SelectionEvent e)
+						{
+							if ( mdi != null ){
+
+								MdiEntrySWT entry = mdi.getEntry( PeersView.MSGID_PREFIX );
+
+								if ( entry != null ){
+
+									UISWTViewEventListener listener = entry.getEventListener();
+
+									if ( listener instanceof PeersView ){
+
+										((PeersView)listener).selectPeer( f_peer );
+
+										mdi.showEntryByID( PeersView.MSGID_PREFIX );
+									}			    					
+								}
+							}
+						}
+					});
+
+				show_peer.setEnabled( peer != null );
+			}
+		}else{
+			
+			final MenuItem force_piece = new MenuItem( menu, SWT.CHECK );
+	
+			Messages.setLanguageText( force_piece, "label.force.piece" );
+	
+			force_piece.setEnabled( has_undone );
+	
+			if ( has_undone ){
+	
+				force_piece.setSelection( has_unforced );
+	
+				force_piece.addSelectionListener(
+		    		new SelectionAdapter()
+		    		{
+		    			@Override
+					    public void
+		    			widgetSelected(
+		    				SelectionEvent e)
+		    			{
+		    				boolean	forced = force_piece.getSelection();
+	
+		    				for ( Object obj: selected ){
+	
+		    					PEPiece piece = (PEPiece)obj;
+	
+		    					if ( !piece.getDMPiece().isDone()){
+	
+		    						picker.setForcePiece( piece.getPieceNumber(), forced );
+		    					}
+		    				}
+		    			}
+		    		});
+			}
+	
+			final MenuItem cancel_reqs_piece = new MenuItem( menu, SWT.PUSH );
+	
+			Messages.setLanguageText( cancel_reqs_piece, "label.rerequest.blocks" );
+	
+			cancel_reqs_piece.addSelectionListener(
 	    		new SelectionAdapter()
 	    		{
 	    			@Override
@@ -327,70 +424,44 @@ public class PiecesView
 	    			widgetSelected(
 	    				SelectionEvent e)
 	    			{
-	    				boolean	forced = force_piece.getSelection();
-
-	    				for ( Object obj: selected ){
-
+	     				for ( Object obj: selected ){
+	
 	    					PEPiece piece = (PEPiece)obj;
-
-	    					if ( !piece.getDMPiece().isDone()){
-
-	    						picker.setForcePiece( piece.getPieceNumber(), forced );
+	
+	    					for ( int i=0;i<piece.getNbBlocks();i++){
+	
+	    						if ( piece.isRequested( i )){
+	
+	    							piece.clearRequested( i );
+	    						}
 	    					}
 	    				}
 	    			}
 	    		});
+	
+			final MenuItem reset_piece = new MenuItem( menu, SWT.PUSH );
+	
+			Messages.setLanguageText( reset_piece, "label.reset.piece" );
+	
+			reset_piece.addSelectionListener(
+	    		new SelectionAdapter()
+	    		{
+	    			@Override
+				    public void
+	    			widgetSelected(
+	    				SelectionEvent e)
+	    			{
+	     				for ( Object obj: selected ){
+	
+	    					PEPiece piece = (PEPiece)obj;
+	
+	    					piece.reset();
+	    				}
+	    			}
+	    		});
+	
+			new MenuItem( menu, SWT.SEPARATOR );
 		}
-
-		final MenuItem cancel_reqs_piece = new MenuItem( menu, SWT.PUSH );
-
-		Messages.setLanguageText( cancel_reqs_piece, "label.rerequest.blocks" );
-
-		cancel_reqs_piece.addSelectionListener(
-    		new SelectionAdapter()
-    		{
-    			@Override
-			    public void
-    			widgetSelected(
-    				SelectionEvent e)
-    			{
-     				for ( Object obj: selected ){
-
-    					PEPiece piece = (PEPiece)obj;
-
-    					for ( int i=0;i<piece.getNbBlocks();i++){
-
-    						if ( piece.isRequested( i )){
-
-    							piece.clearRequested( i );
-    						}
-    					}
-    				}
-    			}
-    		});
-
-		final MenuItem reset_piece = new MenuItem( menu, SWT.PUSH );
-
-		Messages.setLanguageText( reset_piece, "label.reset.piece" );
-
-		reset_piece.addSelectionListener(
-    		new SelectionAdapter()
-    		{
-    			@Override
-			    public void
-    			widgetSelected(
-    				SelectionEvent e)
-    			{
-     				for ( Object obj: selected ){
-
-    					PEPiece piece = (PEPiece)obj;
-
-    					piece.reset();
-    				}
-    			}
-    		});
-
-		new MenuItem( menu, SWT.SEPARATOR );
 	}
 
 	@Override
