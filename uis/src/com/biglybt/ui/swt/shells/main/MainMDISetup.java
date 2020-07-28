@@ -269,6 +269,22 @@ public class MainMDISetup
 					return( entry );
 				});
 
+		
+		mdi.registerEntry(SIDEBAR_SECTION_ALLPIECES,
+				id -> {
+					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null, PiecesSuperView.class);
+					
+					builder.setParentEntryID(SIDEBAR_HEADER_TRANSFERS);
+					
+					builder.setPreferredAfterID( SB_Transfers.getSectionPosition(mdi, SIDEBAR_SECTION_ALLPIECES));
+					
+					MdiEntry entry = mdi.createEntry(builder, true);
+
+					entry.setImageLeftID("image.sidebar.allpieces");
+
+					return( entry );
+				});
+		
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_LOGGER,
 				id -> {
 					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null,
@@ -1190,6 +1206,17 @@ public class MainMDISetup
 				public void selected(MenuItem menu, Object target) {
 					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID(
 							MultipleDocumentInterface.SIDEBAR_SECTION_ALLPEERS );
+				}
+			});
+			
+			menuItem = uim.getMenuManager().addMenuItem(
+					MenuManager.MENU_MENUBAR, "MainWindow.menu.view.allpieces");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_ALLPIECES );
 				}
 			});
 		}

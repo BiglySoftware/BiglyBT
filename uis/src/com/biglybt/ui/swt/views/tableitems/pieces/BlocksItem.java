@@ -77,8 +77,8 @@ public class BlocksItem
 	private static CacheFileManagerStats cacheStats = null;
 
 	/** Default Constructor */
-	public BlocksItem() {
-		super("blocks", TableManager.TABLE_TORRENT_PIECES);
+	public BlocksItem(String table_id) {
+		super("blocks", table_id);
 		initializeAsGraphic(POSITION_LAST, 200);
 	}
 

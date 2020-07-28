@@ -77,6 +77,8 @@ public interface TableManager
   public static final String TABLE_MYSHARES              = "MyShares";
   /** Visible for All Peers table */
   public static final String TABLE_ALL_PEERS             = "AllPeers";
+  
+  public static final String TABLE_ALL_PIECES            = "AllPieces";
 
   /** Creates a column for a UI table.
    * <p>

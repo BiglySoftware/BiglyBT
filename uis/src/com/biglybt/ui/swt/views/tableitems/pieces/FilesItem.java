@@ -35,9 +35,9 @@ public class FilesItem
     implements TableCellRefreshListener
 {
     /** Default Constructor */
-    public FilesItem()
+    public FilesItem(String table_id)
     {
-        super("Files", ALIGN_LEAD, POSITION_INVISIBLE, 200, TableManager.TABLE_TORRENT_PIECES);
+        super("Files", ALIGN_LEAD, POSITION_INVISIBLE, 200, table_id);
         setRefreshInterval(INTERVAL_LIVE);
     }
 

@@ -32,8 +32,8 @@ public class BlockCountItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public BlockCountItem() {
-    super("numberofblocks", ALIGN_TRAIL, POSITION_LAST, 65, TableManager.TABLE_TORRENT_PIECES);
+  public BlockCountItem(String table_id) {
+    super("numberofblocks", ALIGN_TRAIL, POSITION_LAST, 65, table_id);
   }
 
   @Override

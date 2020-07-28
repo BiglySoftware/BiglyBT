@@ -33,8 +33,8 @@ public class ReservedByItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public ReservedByItem() {
-    super("reservedby", ALIGN_TRAIL, POSITION_INVISIBLE, 80, TableManager.TABLE_TORRENT_PIECES);
+  public ReservedByItem( String table_id ) {
+    super("reservedby", ALIGN_TRAIL, POSITION_INVISIBLE, 80, table_id);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

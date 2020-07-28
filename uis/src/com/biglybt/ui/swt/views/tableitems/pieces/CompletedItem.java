@@ -33,8 +33,8 @@ public class CompletedItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public CompletedItem() {
-    super("completed", ALIGN_TRAIL, POSITION_LAST, 80, TableManager.TABLE_TORRENT_PIECES);
+  public CompletedItem(String table_id) {
+    super("completed", ALIGN_TRAIL, POSITION_LAST, 80, table_id);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

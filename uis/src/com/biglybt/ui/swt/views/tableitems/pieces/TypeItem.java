@@ -37,8 +37,8 @@ public class TypeItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public TypeItem() {
-    super("type", ALIGN_TRAIL, POSITION_LAST, 80, TableManager.TABLE_TORRENT_PIECES);
+  public TypeItem(String table_id) {
+    super("type", ALIGN_TRAIL, POSITION_LAST, 80, table_id);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

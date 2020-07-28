@@ -34,8 +34,8 @@ public class AvailabilityItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public AvailabilityItem() {
-    super("availability", ALIGN_TRAIL, POSITION_LAST, 80, TableManager.TABLE_TORRENT_PIECES);
+  public AvailabilityItem(String table_id) {
+    super("availability", ALIGN_TRAIL, POSITION_LAST, 80, table_id);
     setRefreshInterval(INTERVAL_LIVE);
   }
 

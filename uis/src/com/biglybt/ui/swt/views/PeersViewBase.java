@@ -330,7 +330,6 @@ PeersViewBase
 
 			tcManager.setDefaultColumnNames( TableManager.TABLE_ALL_PEERS, basicItems );
 
-
 			tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE,
 					TableManager.TABLE_ALL_PEERS, getPropertiesPrefix(), basicItems,
 					"connected_time", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);

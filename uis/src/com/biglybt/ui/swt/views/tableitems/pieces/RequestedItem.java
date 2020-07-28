@@ -33,9 +33,9 @@ public class RequestedItem
     implements TableCellRefreshListener
 {
     /** Default Constructor */
-    public RequestedItem()
+    public RequestedItem(String table_id)
     {
-        super("Requested", ALIGN_CENTER, POSITION_INVISIBLE, 20, TableManager.TABLE_TORRENT_PIECES);
+        super("Requested", ALIGN_CENTER, POSITION_INVISIBLE, 20, table_id );
         setRefreshInterval(INTERVAL_LIVE);
     }
 

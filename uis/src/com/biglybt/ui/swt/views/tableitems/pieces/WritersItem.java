@@ -36,8 +36,8 @@ public class WritersItem
        implements TableCellRefreshListener
 {
   /** Default Constructor */
-  public WritersItem() {
-    super("writers", ALIGN_LEAD, POSITION_INVISIBLE, 80, TableManager.TABLE_TORRENT_PIECES);
+  public WritersItem(String table_id) {
+    super("writers", ALIGN_LEAD, POSITION_INVISIBLE, 80, table_id);
     setObfuscation(true);
     setRefreshInterval(4);
   }

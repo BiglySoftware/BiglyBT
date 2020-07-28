@@ -29,6 +29,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.ui.common.table.TableView;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.global.GlobalManager;
@@ -55,7 +56,7 @@ public class PeersSuperView
 	extends PeersViewBase
 	implements GlobalManagerListener, DownloadManagerPeerListener
 {
-	public static final String VIEW_ID = "AllPeersView";
+	public static final String VIEW_ID = MultipleDocumentInterface.SIDEBAR_SECTION_ALLPEERS;
 
 	private boolean active_listener = true;
 

@@ -29,6 +29,7 @@ import com.biglybt.core.tag.TagListener;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.ui.common.table.TableView;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.util.DataSourceUtils;
@@ -48,7 +49,7 @@ PeersGeneralView
 	public
 	PeersGeneralView()
 	{
-		super( "AllPeersView", true );
+		super( MultipleDocumentInterface.SIDEBAR_SECTION_ALLPEERS, true );
 	}
 	
 	@Override

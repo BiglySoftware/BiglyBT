@@ -735,6 +735,17 @@ public class MenuFactory
 		});
 	}
 
+	public static MenuItem addAllPiecesMenuItem(Menu menu) {
+		return addMenuItem(menu, MENU_ID_ALL_PIECES, new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+				if (uiFunctions != null) {
+					uiFunctions.getMDI().showEntryByID(	MultipleDocumentInterface.SIDEBAR_SECTION_ALLPIECES );
+				}
+			}
+		});
+	}
 	public static MenuItem addClientStatsMenuItem(Menu menu) {
 		return addMenuItem(menu, MENU_ID_CLIENT_STATS, new Listener() {
 			@Override

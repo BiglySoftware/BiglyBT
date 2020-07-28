@@ -34,8 +34,8 @@ extends CoreTableColumnSWT
 implements TableCellRefreshListener
 {
 	/** Default Constructor */
-	public SpeedItem() {
-		super("speed", ALIGN_TRAIL, POSITION_LAST, 80, TableManager.TABLE_TORRENT_PIECES);
+	public SpeedItem(String table_id) {
+		super("speed", ALIGN_TRAIL, POSITION_LAST, 80, table_id );
 		setRefreshInterval(INTERVAL_LIVE);
 	}
 

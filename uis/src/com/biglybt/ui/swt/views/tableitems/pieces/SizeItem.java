@@ -33,8 +33,8 @@ public class SizeItem
        implements TableCellRefreshListener
 {
   /** Default Initialization */
-  public SizeItem() {
-    super("size", ALIGN_TRAIL, POSITION_LAST, 60, TableManager.TABLE_TORRENT_PIECES);
+  public SizeItem(String table_id) {
+    super("size", ALIGN_TRAIL, POSITION_LAST, 60, table_id);
   }
 
 	@Override

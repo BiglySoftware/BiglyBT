@@ -36,6 +36,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.logging.impl.FileLogging;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.util.*;
 import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.swt.Messages;
@@ -725,8 +726,23 @@ public class UIDebugGenerator
 		}else{
 			return( name );
 		}
-		
 	}
+	
+	public static String
+	obfuscateDownloadName(
+		PEPiece	piece )
+	{
+		if (piece == null) return( "" );
+		PEPeerManager manager = piece.getManager();
+		if (manager == null) return( "" );
+		String name = manager.getDisplayName();
+		if ( name.length() > 3 ){
+			return( name.substring( 0,  3));
+		}else{
+			return( name );
+		}
+	}
+	
 	public static String
 	obfuscateDownloadName(
 		DownloadManager	dm )

@@ -1314,6 +1314,20 @@ public class TableColumnImpl
 						return sTitleLanguageKey;
 					}
 				}
+				
+				if (sTableID.equals(TableManager.TABLE_ALL_PIECES)) {
+					sKeyPrefix = TableManager.TABLE_TORRENT_PIECES + ".column.";
+					if (MessageText.keyExists(sKeyPrefix + sName)) {
+						sTitleLanguageKey = sKeyPrefix + sName;
+						return sTitleLanguageKey;
+					}
+
+					sKeyPrefix = "PiecesView.";
+					if (MessageText.keyExists(sKeyPrefix + sName)) {
+						sTitleLanguageKey = sKeyPrefix + sName;
+						return sTitleLanguageKey;
+					}
+				}
 
 				// Try a generic one of "TableColumn." + columnid
 				sKeyPrefix = "TableColumn.header.";
