@@ -29,4 +29,7 @@ PeerControlInstance
 	
 	public int[]
 	getPeerCount();
+	
+	public int[]
+	getPieceCount();
 }

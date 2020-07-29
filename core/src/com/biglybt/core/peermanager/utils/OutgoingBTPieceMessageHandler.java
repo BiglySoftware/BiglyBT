@@ -29,6 +29,8 @@ import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.peermanager.messaging.bittorrent.BTMessage;
 import com.biglybt.core.peermanager.messaging.bittorrent.BTPiece;
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.SystemTime;
 
@@ -51,6 +53,8 @@ public class OutgoingBTPieceMessageHandler {
   private final ArrayList<DiskManagerReadRequest>			loading_messages 	= new ArrayList<>();
   private final HashMap<BTPiece,DiskManagerReadRequest> 	queued_messages 	= new HashMap<>();
 
+  private final Map<Integer,int[]>							active_pieces		= new HashMap<>();
+  
   private LinkedList<DiskManagerReadRequest>		recent_messages;
   private volatile long								recent_messages_last_access	= -1;
   
@@ -101,9 +105,13 @@ public class OutgoingBTPieceMessageHandler {
       	  data.returnToPool();
       	  return;
       	}
+      	
       	loading_messages.remove( request );
 
         BTPiece msg = new BTPiece( request.getPieceNumber(), request.getOffset(), data, piece_version );
+        
+        	// message moved from loading->queued, no need to update 'active'
+        
         queued_messages.put( msg, request );
 
         outgoing_message_queue.addMessage( msg, true );
@@ -146,6 +154,22 @@ public class OutgoingBTPieceMessageHandler {
           	  return;
           	}
           	loading_messages.remove( request );
+          	
+          	int piece_number = request.getPieceNumber();
+          	
+          	int[] active = active_pieces.get( piece_number );
+          	
+          	if ( active == null ){
+          		
+          		Debug.out("eh?" );
+          		
+          	}else{
+          		
+          		if( --active[0] == 0 ){
+
+          			active_pieces.remove( piece_number );
+          		}	  
+          	}
         }finally{
           	lock_mon.exit();
         }
@@ -185,6 +209,22 @@ public class OutgoingBTPieceMessageHandler {
           if ( request != null ){
         	  
         	  request.setTimeSent( SystemTime.getMonotonousTime());
+        	  
+        	  int piece_number = request.getPieceNumber();
+        			  
+    		  int[] active = active_pieces.get( piece_number );
+    		  
+    		  if ( active == null ){
+    			  
+    			  Debug.out("eh?" );
+    			  
+    		  }else{
+    			  
+    			  if( --active[0] == 0 ){
+    				
+    				  active_pieces.remove( piece_number );
+    			  }	  
+    		  }
           }
         }finally{
           lock_mon.exit();
@@ -265,6 +305,26 @@ public class OutgoingBTPieceMessageHandler {
 
 		  requests.addLast( dmr );
 
+		  int[] active = active_pieces.get( piece_number );
+		  
+		  if ( active == null ){
+			  
+			  active = new int[1];
+			  
+			  active_pieces.put( piece_number, active );
+		  }
+		  
+		  active[0]++;
+		  
+		  	// TODO: remove once we're happy they ain't borkage
+		  
+		  if ( Constants.IS_CVS_VERSION ){
+			  
+			  if ( active_pieces.size() > requests.size() + loading_messages.size() + queued_messages.size()){
+				  
+				  Debug.out( "eh?" );
+			  }
+		  }
 	  }finally{
 		  lock_mon.exit();
 	  }
@@ -286,20 +346,20 @@ public class OutgoingBTPieceMessageHandler {
 
     DiskManagerReadRequest dmr = peer.getManager().getDiskManager().createReadRequest( piece_number, piece_offset, length );
 
-    boolean	inform_rejected = false;
+    boolean	entry_removed = false;
 
     try{
       lock_mon.enter();
 
       if( requests.contains( dmr ) ) {
         requests.remove( dmr );
-        inform_rejected = true;
+        entry_removed = true;
         return;
       }
 
       if( loading_messages.contains( dmr ) ) {
         loading_messages.remove( dmr );
-        inform_rejected = true;
+        entry_removed = true;
         return;
       }
 
@@ -309,7 +369,7 @@ public class OutgoingBTPieceMessageHandler {
         if( entry.getValue().equals( dmr ) ) {  //it's already been queued
           BTPiece msg = entry.getKey();
           if( outgoing_message_queue.removeMessage( msg, true ) ) {
-        	inform_rejected = true;
+        	entry_removed = true;
             i.remove();
             entry.getValue().setTimeSent( -1 );
           }
@@ -318,9 +378,25 @@ public class OutgoingBTPieceMessageHandler {
       }
     }finally{
 
+      if ( entry_removed ){
+    	  
+		  int[] active = active_pieces.get( piece_number );
+		  
+		  if ( active == null ){
+			  
+			  Debug.out("eh?" );
+			  
+		  }else{
+			  
+			  if( --active[0] == 0 ){
+				
+				  active_pieces.remove( piece_number );
+			  }	  
+		  }
+      }
       lock_mon.exit();
 
-      if ( inform_rejected ){
+      if ( entry_removed ){
 
    		  peer.sendRejectRequest( dmr );
       }
@@ -360,6 +436,8 @@ public class OutgoingBTPieceMessageHandler {
   		removed.addAll( loading_messages );
 
   		loading_messages.clear();
+  		
+  		active_pieces.clear();
   	}
   	finally{
   		lock_mon.exit();
@@ -387,8 +465,6 @@ public class OutgoingBTPieceMessageHandler {
 
       removeAllPieceRequests();
 
-      queued_messages.clear();
-
       destroyed = true;
 
       outgoing_message_queue.cancelQueueListener(sent_message_listener);
@@ -404,10 +480,19 @@ public class OutgoingBTPieceMessageHandler {
   	try{
   		lock_mon.enter();
 
-  		while( loading_messages.size() + queued_messages.size() < request_read_ahead && !requests.isEmpty() && !destroyed ) {
+  		while( loading_messages.size() + queued_messages.size() < request_read_ahead && !requests.isEmpty() && !destroyed ){
+  			
   			DiskManagerReadRequest dmr = (DiskManagerReadRequest)requests.removeFirst();
+  			
+  				// moved from requests->loading - no need to update 'active'
+  			
   			loading_messages.add( dmr );
-  			if( to_submit == null )  to_submit = new ArrayList();
+  			
+  			if ( to_submit == null ){
+  				
+  				to_submit = new ArrayList();
+  			}
+  			
   			to_submit.add( dmr );
   		}
     }finally{
@@ -431,55 +516,43 @@ public class OutgoingBTPieceMessageHandler {
 
   /**
 	 * Get a list of piece numbers being requested
-	 *
-	 * @return list of Long values
 	 */
+  
 	public int[] getRequestedPieceNumbers() {
 		if( destroyed )  return new int[0];
 
-		/** Cheap hack to reduce (but not remove all) the # of duplicate entries */
-		int iLastNumber = -1;
-		int pos = 0;
-		int[] pieceNumbers;
-
-		try {
+		try{
 			lock_mon.enter();
 
-			// allocate max size needed (we'll shrink it later)
-			pieceNumbers = new int[queued_messages.size()	+ loading_messages.size() + requests.size()];
-
-			for (Iterator iter = queued_messages.keySet().iterator(); iter.hasNext();) {
-				BTPiece msg = (BTPiece) iter.next();
-				if (iLastNumber != msg.getPieceNumber()) {
-					iLastNumber = msg.getPieceNumber();
-					pieceNumbers[pos++] = iLastNumber;
+			int num = active_pieces.size();
+			
+			int[] result = new int[num];
+			
+			if ( num >0 ){
+				
+				int pos = 0;
+				
+				for ( Integer pn: active_pieces.keySet() ){
+					
+					result[pos++] = pn;
 				}
 			}
 
-			for (Iterator iter = loading_messages.iterator(); iter.hasNext();) {
-				DiskManagerReadRequest dmr = (DiskManagerReadRequest) iter.next();
-				if (iLastNumber != dmr.getPieceNumber()) {
-					iLastNumber = dmr.getPieceNumber();
-					pieceNumbers[pos++] = iLastNumber;
-				}
-			}
-
-			for (Iterator iter = requests.iterator(); iter.hasNext();) {
-				DiskManagerReadRequest dmr = (DiskManagerReadRequest) iter.next();
-				if (iLastNumber != dmr.getPieceNumber()) {
-					iLastNumber = dmr.getPieceNumber();
-					pieceNumbers[pos++] = iLastNumber;
-				}
-			}
-
-		} finally {
+			return( result );
+		}finally{
 			lock_mon.exit();
 		}
+	}
+	
+	public int getRequestedPieceNumberCount(){
+		try{
+			lock_mon.enter();
 
-		int[] trimmed = new int[pos];
-		System.arraycopy(pieceNumbers, 0, trimmed, 0, pos);
+			return( active_pieces.size());
 
-		return trimmed;
+		}finally{
+			lock_mon.exit();
+		}
 	}
 	
 	public DiskManagerReadRequest[]

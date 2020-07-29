@@ -252,6 +252,9 @@ PEPeerTransport
 	public PEPeerTransport
 	reconnect(boolean tryUDP, boolean tryIPv6);
 
+	public int
+	getIncomingRequestedPieceNumberCount();
+	
 	/**
 	 * This method is called to check if it is safe to reconnect to a peer, i.e. avoid hammering
 	 * exchanging data with a peer should work as it takes time to setup the connection and negotiate things before that happens

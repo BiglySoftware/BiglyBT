@@ -150,6 +150,8 @@ public abstract class PiecesViewBase
 	private Composite legendComposite;
 	private MultipleDocumentInterfaceSWT mdi;
 
+	private boolean shown;
+	
 	private Map<Integer,PEPieceUploading>	uploading_pieces = new HashMap<>();
 	private boolean							show_uploading;
 
@@ -778,6 +780,23 @@ public abstract class PiecesViewBase
 		return( has_uploading_pieces );
 	}
 	
+	public int
+	getUploadingPieceCount()
+	{
+		if ( shown && show_uploading ){
+			
+			synchronized( uploading_pieces ){
+				
+				return( uploading_pieces.size());
+			}
+		}else{
+			
+				// only accurate when view is shown as calculated on refresh events
+			
+			return( -1 );
+		}
+	}
+	
 	protected void
 	clearUploadingPieces()
 	{
@@ -858,6 +877,10 @@ public abstract class PiecesViewBase
 			event.getView().setDestroyOnDeactivate(true);
 		}else if ( type == UISWTViewEvent.TYPE_REFRESH ){
 			updateUploadingPieces( true );
+		}else if ( type == UISWTViewEvent.TYPE_SHOWN ){
+			shown = true;
+		}else if ( type == UISWTViewEvent.TYPE_HIDDEN ){
+			shown = false;
 		}
 
 		return super.eventOccurred(event);

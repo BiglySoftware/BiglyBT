@@ -45,4 +45,7 @@ PeerControlScheduler
 	
 	public int[]
 	getPeerCount();
+	
+	public int[]
+	getPieceCount();
 }

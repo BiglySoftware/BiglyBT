@@ -1152,6 +1152,13 @@ PeerForeignDelegate
 	}
 
 	@Override
+	public int 
+	getIncomingRequestedPieceNumberCount()
+	{
+		return( 0 );
+	}
+	
+	@Override
 	public int
 	getIncomingRequestCount()
 	{

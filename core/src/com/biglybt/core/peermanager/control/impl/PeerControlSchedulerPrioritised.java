@@ -44,17 +44,21 @@ PeerControlSchedulerPrioritised
 
 	private final SpeedTokenDispenserPrioritised tokenDispenser = new SpeedTokenDispenserPrioritised();
 
-	private long	next_peer_count_time = SystemTime.getMonotonousTime();
+	private long	next_peer_count_time 	= SystemTime.getMonotonousTime();
+	private long	next_piece_count_time 	= SystemTime.getMonotonousTime();
 	
 	private volatile long		peer_count_active_time = 0;
+	private volatile long		piece_count_active_time = 0;
 
 	private volatile int[]		last_peer_count = { 0, 0 };
+	private volatile int[]		last_piece_count = { 0, 0 };
 
 	@Override
 	protected void
 	schedule()
 	{
 		latest_time	= SystemTime.getMonotonousTime();
+		
 		SystemTime.registerMonotonousConsumer(
 			new SystemTime.TickConsumer()
 			{
@@ -62,11 +66,12 @@ PeerControlSchedulerPrioritised
 				public void
 				consume( long	time )
 				{
-					boolean	count_them = false;
+					boolean count_peers 	= false;
+					boolean count_pieces 	= false;
 					
 					synchronized( PeerControlSchedulerPrioritised.this ){
 						
-					if ( peer_count_active_time > 0 ){
+						if ( peer_count_active_time > 0 ){
 							
 							if ( time >= next_peer_count_time ){
 								
@@ -75,39 +80,74 @@ PeerControlSchedulerPrioritised
 									peer_count_active_time = 0;
 									
 								}else{
-									
-									count_them = true;
+									count_peers = true;
 									
 									next_peer_count_time = time+900;
 								}
 							}
 						}
+						
+						if ( piece_count_active_time > 0 ){
+							
+							if ( time >= next_piece_count_time ){
+								
+								if ( time - piece_count_active_time > 15*1000 ){
+									
+									piece_count_active_time = 0;
+									
+								}else{
+									
+									count_pieces = true;
+									
+									next_piece_count_time = time+900;
+								}
+							}
+						}
 
 						latest_time	= time;
-						
+
 						if ( instance_map.size() > 0 || pending_registrations.size() > 0 ){
 
 							PeerControlSchedulerPrioritised.this.notify();
 						}
 					}
 					
-					if ( count_them ){
+				if ( count_peers || count_pieces ){
 						
-						int count1 = 0;
-						int count2 = 0;
+						int peer_count1 = 0;
+						int peer_count2 = 0;
+						
+						int piece_count1 = 0;
+						int piece_count2 = 0;
 						
 						synchronized( instance_lock ){
 							
 							for ( PeerControlInstance i: instance_map.keySet()){
 								
-								int[] c = i.getPeerCount();
+								if ( count_peers ){
+									
+									int[] c = i.getPeerCount();
+									
+									peer_count1 += c[0];
+									peer_count2 += c[01];
+								}
 								
-								count1 += c[0];
-								count2 += c[01];
+								if ( count_pieces ){
+									
+									int[] c = i.getPieceCount();
+									
+									piece_count1 += c[0];
+									piece_count2 += c[01];
+								}
 							}
 						}
 						
-						last_peer_count = new int[]{ count1, count2 };
+						if ( count_peers ){
+							last_peer_count = new int[]{ peer_count1, peer_count2 };
+						}
+						if ( count_pieces ){
+							last_piece_count = new int[]{ piece_count1, piece_count2 };
+						}
 					}
 				}
 			});
@@ -288,6 +328,14 @@ PeerControlSchedulerPrioritised
 		peer_count_active_time = SystemTime.getMonotonousTime();
 
 		return( last_peer_count );
+	}
+	
+	@Override
+	public int[] getPieceCount()
+	{
+		piece_count_active_time = SystemTime.getMonotonousTime();
+		
+		return( last_piece_count );
 	}
 	
 	protected static class

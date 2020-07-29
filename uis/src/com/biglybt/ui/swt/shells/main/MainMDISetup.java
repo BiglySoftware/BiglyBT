@@ -41,7 +41,6 @@ import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagManagerListener;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.tag.TagTypeListener;
-import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
@@ -62,7 +61,9 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
+import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.*;
@@ -278,10 +279,101 @@ public class MainMDISetup
 					
 					builder.setPreferredAfterID( SB_Transfers.getSectionPosition(mdi, SIDEBAR_SECTION_ALLPIECES));
 					
-					MdiEntry entry = mdi.createEntry(builder, true);
+					MdiEntrySWT entry = mdi.createEntry(builder, true);
+
+					PeerControlScheduler scheduler = PeerControlSchedulerFactory.getSingleton(0);
+
+					ViewTitleInfo title_info =
+							new ViewTitleInfo()
+							{
+								@Override
+								public Object
+								getTitleInfoProperty(
+									int propertyID)
+								{
+									if ( propertyID == TITLE_INDICATOR_TEXT ){
+										
+										int[] counts = scheduler.getPieceCount();
+										
+										UISWTViewEventListener listener = entry.getEventListener();
+										
+										if ( listener instanceof PiecesViewBase ){
+											
+											int count = ((PiecesViewBase)listener).getUploadingPieceCount();
+											
+											if ( count >= 0 ){
+											
+												counts[1] = count;
+											}
+										}
+										
+										return( counts[0] + " | " + counts[1] );
+									}
+									
+									return( null );
+								}
+							};
+							
+					entry.setViewTitleInfo( title_info );
 
 					entry.setImageLeftID("image.sidebar.allpieces");
 
+					final TimerEventPeriodic	timer =
+							SimpleTimer.addPeriodicEvent(
+									"sb:allpieces",
+									1*1000,
+									new TimerEventPerformer()
+									{
+										private int last_count1 = -1;
+										private int last_count2 = -1;
+										
+										@Override
+										public void
+										perform(
+											TimerEvent event)
+										{
+											int[] counts = scheduler.getPieceCount();
+											
+											UISWTViewEventListener listener = entry.getEventListener();
+											
+											if ( listener instanceof PiecesViewBase ){
+												
+												int count = ((PiecesViewBase)listener).getUploadingPieceCount();
+												
+												if ( count >= 0 ){
+												
+													counts[1] = count;
+												}
+											}
+											
+											int c1 = counts[0];
+											int c2 = counts[1];
+											
+											if ( c1 != last_count1 || c2 != last_count2 ){
+											
+												last_count1 = c1;
+												last_count2 = c2;
+														
+												entry.redraw();
+
+												ViewTitleInfoManager.refreshTitleInfo( title_info );
+												
+												entry.redraw();
+											}
+										}
+									});
+
+					entry.addListener(
+						new MdiCloseListener() {
+
+							@Override
+							public void
+							mdiEntryClosed(
+								MdiEntry entry, boolean userClosed)
+							{
+								timer.cancel();
+							}
+						});
 					return( entry );
 				});
 		

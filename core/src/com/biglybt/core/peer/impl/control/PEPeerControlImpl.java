@@ -327,7 +327,7 @@ PEPeerControlImpl
 	private int	connections_with_queued_data;
 	private int	connections_with_queued_data_blocked;
 	private int	connections_unchoked;
-
+	private int outbound_message_count;
 
 	private List<PEPeerTransport> sweepList = Collections.emptyList();
 	private int nextPEXSweepIndex = 0;
@@ -2801,7 +2801,8 @@ PEPeerControlImpl
 		int	con_queued		= 0;
 		int con_blocked		= 0;
 		int con_unchoked	= 0;
-
+		int	out_messages	= 0;
+		
 		for ( Iterator<PEPeerTransport> it=peer_transports.iterator();it.hasNext();){
 
 			final PEPeerTransport pc = it.next();
@@ -2811,6 +2812,8 @@ PEPeerControlImpl
 				if ( !pc.isChokedByMe()){
 
 					con_unchoked++;
+					
+					out_messages += pc.getIncomingRequestedPieceNumberCount();
 				}
 
 				Connection connection = pc.getPluginConnection();
@@ -2890,6 +2893,7 @@ PEPeerControlImpl
 		connections_with_queued_data			= con_queued;
 		connections_with_queued_data_blocked	= con_blocked;
 		connections_unchoked					= con_unchoked;
+		outbound_message_count					= out_messages;
 
 		_stats.update( stats_tick_count );
 	}
@@ -6072,6 +6076,14 @@ PEPeerControlImpl
 	{
 		return( new int[]{ _peers + _seeds, peer_transports_cow.size() });
 	}
+	
+	@Override
+	public int[] 
+	getPieceCount()
+	{
+		return( new int[]{ nbPiecesActive, outbound_message_count });
+	}
+	
 	
 	@Override
 	public int getSchedulePriority() {
