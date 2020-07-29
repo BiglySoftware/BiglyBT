@@ -18,8 +18,6 @@
 
 package com.biglybt.ui.swt.views;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +27,8 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.selectedcontent.SelectedContent;
+import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.download.DownloadManagerPieceListener;
@@ -37,6 +37,7 @@ import com.biglybt.core.global.GlobalManagerListener;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 
@@ -45,13 +46,12 @@ import com.biglybt.ui.swt.views.table.TableViewSWT;
 
 public class PiecesSuperView
 	extends PiecesViewBase
-	implements GlobalManagerListener, DownloadManagerPieceListener
+	implements GlobalManagerListener, DownloadManagerPieceListener, DownloadManagerPeerListener
 {
 	public static final String VIEW_ID = MultipleDocumentInterface.SIDEBAR_SECTION_ALLPIECES;
 
-	private boolean active_listener = true;
-
-
+	private CopyOnWriteList<PEPeerManager> peer_managers = new CopyOnWriteList<PEPeerManager>();
+	
 	public PiecesSuperView() {
 		super( VIEW_ID );
 	}
@@ -91,17 +91,8 @@ public class PiecesSuperView
 	registerGlobalManagerListener(
 		Core core ) 
 	{
-		this.active_listener = false;
-		
-		try{
-			
-			core.getGlobalManager().addListener(this);
-			
-		}finally{
-			
-			this.active_listener = true;
-		}
-		
+		core.getGlobalManager().addListener(this);
+
 		tv.processDataSourceQueue();
 	}
 
@@ -130,7 +121,8 @@ public class PiecesSuperView
 	downloadManagerAdded(
 		DownloadManager dm )
 	{
-		dm.addPieceListener(this, !active_listener );
+		dm.addPieceListener( this, true );
+		dm.addPeerListener( this, true );
 	}
 	
 	@Override
@@ -139,16 +131,16 @@ public class PiecesSuperView
 		DownloadManager dm ) 
 	{
 		dm.removePieceListener(this);
+		dm.removePeerListener(this);
 	}
 
 	@Override
-	protected DownloadManager 
-	getDownloadManager()
+	protected List<PEPeerManager> 
+	getPeerManagers()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return( peer_managers.getList());
 	}
-
+	
 	@Override
 	public void	
 	destroyInitiated() 
@@ -168,6 +160,37 @@ public class PiecesSuperView
 	{
 	}
 	
+	public void
+	peerManagerWillBeAdded(
+		PEPeerManager	manager )
+	{
+	}
+
+	public void
+	peerManagerAdded(
+		PEPeerManager	manager )
+	{
+		peer_managers.add( manager );
+	}
+
+	public void
+	peerManagerRemoved(
+		PEPeerManager	manager )
+	{
+		peer_managers.remove( manager );
+	}
+
+	public void
+	peerAdded(
+		PEPeer 	peer )
+	{
+	}
+
+	public void
+	peerRemoved(
+		PEPeer	peer )
+	{	
+	}
 	
 	@Override
 	public void 
@@ -183,5 +206,24 @@ public class PiecesSuperView
 		PEPiece removed )
 	{
 		tv.removeDataSource(removed);
+	}
+	
+	protected void
+	updateSelectedContent()
+	{
+		Object[] dataSources = tv.getSelectedDataSources(true);
+
+		SelectedContent[] sc = new SelectedContent[dataSources.length];
+
+		for ( int i=0;i<sc.length;i++){
+			Object ds = dataSources[i];
+			if (ds instanceof PEPiece) {
+				sc[i] = new SelectedContent( "piece: " + ((PEPiece)ds).getPieceNumber());
+			}else{
+				sc[i] = new SelectedContent( "piece: "  + ds );
+			}
+		}
+
+		SelectedContentManager.changeCurrentlySelectedContent( tv.getTableID(), sc, tv );
 	}
 }

@@ -31,22 +31,30 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.util.CopyOnWriteSet;
+import com.biglybt.core.util.HashWrapper;
+import com.biglybt.core.util.IdentityHashSet;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
@@ -237,7 +245,7 @@ public abstract class PiecesViewBase
 
 			tcManager.setDefaultColumnNames( TableManager.TABLE_ALL_PIECES, basicItems );
 
-			tv = TableViewFactory.createTableViewSWT(null,	// PEPiece subviews assume single download
+			tv = TableViewFactory.createTableViewSWT(PEPiece[].class,	// PEPiece subviews assume single download
 					TableManager.TABLE_ALL_PIECES, getPropertiesPrefix(), basicItems,
 					basicItems[0].getName(), SWT.SINGLE | SWT.FULL_SELECTION | SWT.VIRTUAL);
 		}
@@ -250,10 +258,10 @@ public abstract class PiecesViewBase
 
 		return tv;
 	}
-
-	protected abstract DownloadManager
-	getDownloadManager();
 	
+	protected abstract List<PEPeerManager>
+	getPeerManagers();
+
 	private void
 	setShowUploading(
 		boolean		enabled )
@@ -296,31 +304,38 @@ public abstract class PiecesViewBase
 			return;
 		}
 
-		DownloadManager manager = getDownloadManager();
-		
-		if ( manager == null ){
+		List<PEPeerManager> pms = getPeerManagers();
+
+		if ( pms.isEmpty()){
 
 			return;
 		}
-
-		PEPeerManager pm = manager.getPeerManager();
-
-		if ( pm == null ){
-
-			return;
-		}
-
-		final PiecePicker picker = pm.getPiecePicker();
 
 		boolean	has_undone	 	= false;
 		boolean	has_unforced	= false;
 
 		boolean all_uploading	= true;
 		
+		IdentityHashSet<DownloadManager>	download_managers = new IdentityHashSet<>();
+
+		GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+
 		for ( Object obj: selected ){
 
 			PEPiece piece = (PEPiece)obj;
 
+			PEPeerManager pm = piece.getManager();
+
+			if ( pm != null && gm != null ){
+
+				DownloadManager dm = gm.getDownloadManager( new HashWrapper( pm.getHash()));
+
+				if ( dm != null ){
+					
+					download_managers.add( dm );
+				}
+			}
+			
 			if ( !( piece instanceof PEPieceUploading )){
 
 				all_uploading = false;
@@ -329,17 +344,41 @@ public abstract class PiecesViewBase
 	
 					has_undone = true;
 	
-					if ( picker.isForcePiece( piece.getPieceNumber())){
+					if ( piece.getPiecePicker().isForcePiece( piece.getPieceNumber())){
 	
 						has_unforced = true;
 					}		
 				}
 			}
 		}
+		
+		if ( download_managers.size() > 0 ){
 
+			MenuItem itemDetails = new MenuItem(menu, SWT.PUSH);
+
+			Messages.setLanguageText(itemDetails, "PeersView.menu.showdownload");
+
+			Utils.setMenuItemImage(itemDetails, "details");
+
+			itemDetails.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+					if (uiFunctions != null) {
+						for (DownloadManager dm : download_managers) {
+							uiFunctions.getMDI().showEntryByID(
+									MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS,
+									dm);
+						}
+					}
+				}
+			});
+
+			new MenuItem(menu, SWT.SEPARATOR);
+		}
+		
 		if ( all_uploading ){
 			
-
 			if ( selected.size() > 0 ){
 
 				PEPieceUploading piece = (PEPieceUploading)selected.get(0);
@@ -352,7 +391,7 @@ public abstract class PiecesViewBase
 
 					String ip = uploaders.iterator().next();
 
-					List<PEPeer> peers = pm.getPeers( ip );
+					List<PEPeer> peers = piece.getManager().getPeers( ip );
 
 					if ( peers.size() == 1 ){
 
@@ -360,40 +399,43 @@ public abstract class PiecesViewBase
 					}
 				}
 
-				MenuItem show_peer = new MenuItem( menu, SWT.PUSH );
+				if ( mdi != null && mdi.getEntry( PeersView.MSGID_PREFIX ) != null ){
 
-				Messages.setLanguageText( show_peer, "menu.show.peer" );
-
-				final PEPeer f_peer = peer;
-
-				show_peer.addSelectionListener(
-					new SelectionAdapter()
-					{
-						@Override
-						public void
-						widgetSelected(
-								SelectionEvent e)
+					MenuItem show_peer = new MenuItem( menu, SWT.PUSH );
+	
+					Messages.setLanguageText( show_peer, "menu.show.peer" );
+	
+					final PEPeer f_peer = peer;
+	
+					show_peer.addSelectionListener(
+						new SelectionAdapter()
 						{
-							if ( mdi != null ){
-
-								MdiEntrySWT entry = mdi.getEntry( PeersView.MSGID_PREFIX );
-
-								if ( entry != null ){
-
-									UISWTViewEventListener listener = entry.getEventListener();
-
-									if ( listener instanceof PeersView ){
-
-										((PeersView)listener).selectPeer( f_peer );
-
-										mdi.showEntryByID( PeersView.MSGID_PREFIX );
-									}			    					
+							@Override
+							public void
+							widgetSelected(
+									SelectionEvent e)
+							{
+								if ( mdi != null ){
+	
+									MdiEntrySWT entry = mdi.getEntry( PeersView.MSGID_PREFIX );
+	
+									if ( entry != null ){
+	
+										UISWTViewEventListener listener = entry.getEventListener();
+	
+										if ( listener instanceof PeersView ){
+	
+											((PeersView)listener).selectPeer( f_peer );
+	
+											mdi.showEntryByID( PeersView.MSGID_PREFIX );
+										}			    					
+									}
 								}
 							}
-						}
-					});
-
-				show_peer.setEnabled( peer != null );
+						});
+	
+					show_peer.setEnabled( peer != null );
+				}
 			}
 		}else{
 			
@@ -423,7 +465,7 @@ public abstract class PiecesViewBase
 	
 		    					if ( !piece.getDMPiece().isDone()){
 	
-		    						picker.setForcePiece( piece.getPieceNumber(), forced );
+		    						piece.getPiecePicker().setForcePiece( piece.getPieceNumber(), forced );
 		    					}
 		    				}
 		    			}
@@ -529,190 +571,185 @@ public abstract class PiecesViewBase
 	updateUploadingPieces(
 		boolean				process_queue )
 	{
-		DownloadManager manager = getDownloadManager();
-		
-		if ( manager == null ){
+		List<PEPeerManager> pms = getPeerManagers();
 			
-			return( false );
-		}
-		
-		PEPeerManager pm = manager.getPeerManager();
-
-		if ( pm == null ){
-
+		if ( pms.isEmpty()){
+			
 			return( false );
 		}
 
 		boolean	changed = false;
 		
-		boolean has_uploading_pieces;
+		boolean has_uploading_pieces = false;
 		
 		if ( show_uploading ){
 			
 			long now = SystemTime.getMonotonousTime();
 			
-			DiskManagerPiece[] dm_pieces = pm.getDiskManager().getPieces();
-	
-			Map<Integer,Object[]>	up_map = new HashMap<>();
-			
-			for ( PEPeer peer: pm.getPeers()){
+			for ( PEPeerManager pm: pms ){
+				DiskManagerPiece[] dm_pieces = pm.getDiskManager().getPieces();
+		
+				Map<Integer,Object[]>	up_map = new HashMap<>();
 				
-				if ( !peer.isChokedByMe()){
+				for ( PEPeer peer: pm.getPeers()){
 					
-					int[] peerRequestedPieces = peer.getIncomingRequestedPieceNumbers();
-					
-						// prepare the next few pieces
-					
-					if ( peerRequestedPieces != null && peerRequestedPieces.length > 0 ){
+					if ( !peer.isChokedByMe()){
 						
-						int	pieces_added = 0;
+						int[] peerRequestedPieces = peer.getIncomingRequestedPieceNumbers();
 						
-						for ( int i=0;i<peerRequestedPieces.length;i++){
+							// prepare the next few pieces
+						
+						if ( peerRequestedPieces != null && peerRequestedPieces.length > 0 ){
 							
-							int	piece_number = peerRequestedPieces[i];
+							int	pieces_added = 0;
 							
+							for ( int i=0;i<peerRequestedPieces.length;i++){
+								
+								int	piece_number = peerRequestedPieces[i];
+								
+								Object[] entry = up_map.get( piece_number );
+							
+								Set<String>	peers;
+								
+								if ( entry == null ){
+								
+									DiskManagerPiece dm_piece = dm_pieces[ piece_number ];
+								
+									boolean[] blocks = new boolean[dm_piece.getNbBlocks()];
+									
+									peers = new HashSet<>();
+									
+									up_map.put( piece_number, new Object[]{ blocks, peers });
+									
+									pieces_added++;
+									
+								}else{
+									
+									peers	= (Set<String>)entry[1];
+								}
+														
+								peers.add( peer.getIp());
+								
+								if ( pieces_added >= 2 ){
+									
+									break;
+								}
+							}
+						}
+						
+						DiskManagerReadRequest[] pieces = peer.getRecentPiecesSent();
+	
+						for ( DiskManagerReadRequest piece: pieces ){
+						
+							long sent = piece.getTimeSent();
+							
+							if ( sent < 0 || ( sent > 0 && now - sent > 10*1000 )){
+								
+								continue;
+							}
+													
+							int	piece_number = piece.getPieceNumber();
+									
 							Object[] entry = up_map.get( piece_number );
 						
+							boolean[] 	blocks;
 							Set<String>	peers;
 							
 							if ( entry == null ){
 							
 								DiskManagerPiece dm_piece = dm_pieces[ piece_number ];
 							
-								boolean[] blocks = new boolean[dm_piece.getNbBlocks()];
+								blocks = new boolean[dm_piece.getNbBlocks()];
 								
 								peers = new HashSet<>();
 								
 								up_map.put( piece_number, new Object[]{ blocks, peers });
 								
-								pieces_added++;
-								
 							}else{
 								
+								blocks 	= (boolean[])entry[0];
 								peers	= (Set<String>)entry[1];
 							}
-													
-							peers.add( peer.getIp());
 							
-							if ( pieces_added >= 2 ){
-								
-								break;
-							}
+							blocks[piece.getOffset()/DiskManager.BLOCK_SIZE] = true;
+							
+							peers.add( peer.getIp());
 						}
 					}
+				}
+				
+				List<PEPieceUploading>	to_add 		= new ArrayList<>();
+				Set<PEPieceUploading>	to_remove 	= new HashSet<>();
+				
+				synchronized( uploading_pieces ){
+									
+					to_remove.addAll( uploading_pieces.values());
 					
-					DiskManagerReadRequest[] pieces = peer.getRecentPiecesSent();
-
-					for ( DiskManagerReadRequest piece: pieces ){
-					
-						long sent = piece.getTimeSent();
+					for ( Map.Entry<Integer,Object[]> up_entry: up_map.entrySet()){
 						
-						if ( sent < 0 || ( sent > 0 && now - sent > 10*1000 )){
+						int 		pn 		= up_entry.getKey();
+						Object[]	entry	= up_entry.getValue();
+						
+						boolean[]	blocks 	= (boolean[])entry[0];
+						Set<String>	peers	= (Set<String>)entry[1];
+						
+						PEPieceUploading piece = uploading_pieces.get( pn );
+						
+						if ( piece == null ){
 							
-							continue;
-						}
-												
-						int	piece_number = piece.getPieceNumber();
-								
-						Object[] entry = up_map.get( piece_number );
-					
-						boolean[] 	blocks;
-						Set<String>	peers;
-						
-						if ( entry == null ){
-						
-							DiskManagerPiece dm_piece = dm_pieces[ piece_number ];
-						
-							blocks = new boolean[dm_piece.getNbBlocks()];
+							piece = new PEPieceUploading( pm, dm_pieces[pn], pn );
 							
-							peers = new HashSet<>();
+							to_add.add( piece );
 							
-							up_map.put( piece_number, new Object[]{ blocks, peers });
+							uploading_pieces.put( pn, piece );
 							
 						}else{
 							
-							blocks 	= (boolean[])entry[0];
-							peers	= (Set<String>)entry[1];
+							to_remove.remove( piece );
 						}
 						
-						blocks[piece.getOffset()/DiskManager.BLOCK_SIZE] = true;
-						
-						peers.add( peer.getIp());
+						piece.addUploading( blocks, peers );
 					}
-				}
-			}
-			
-			List<PEPieceUploading>	to_add 		= new ArrayList<>();
-			Set<PEPieceUploading>	to_remove 	= new HashSet<>();
-			
-			synchronized( uploading_pieces ){
+					
+					if ( !to_remove.isEmpty()){
+						
+						int active_pieces = uploading_pieces.size();
+	
+						Iterator<PEPieceUploading> it = to_remove.iterator();
+						
+						while( it.hasNext()){
+							
+							PEPieceUploading piece = it.next();
+							
+							if ( piece.readyToRemove() || active_pieces > 50 ){
+							
+								uploading_pieces.remove( piece.getPieceNumber());
 								
-				to_remove.addAll( uploading_pieces.values());
-				
-				for ( Map.Entry<Integer,Object[]> up_entry: up_map.entrySet()){
-					
-					int 		pn 		= up_entry.getKey();
-					Object[]	entry	= up_entry.getValue();
-					
-					boolean[]	blocks 	= (boolean[])entry[0];
-					Set<String>	peers	= (Set<String>)entry[1];
-					
-					PEPieceUploading piece = uploading_pieces.get( pn );
-					
-					if ( piece == null ){
-						
-						piece = new PEPieceUploading( pm, dm_pieces[pn], pn );
-						
-						to_add.add( piece );
-						
-						uploading_pieces.put( pn, piece );
-						
-					}else{
-						
-						to_remove.remove( piece );
+								active_pieces--;
+								
+							}else{
+							
+								it.remove();
+							}
+						}
 					}
 					
-					piece.addUploading( blocks, peers );
+					has_uploading_pieces |= !uploading_pieces.isEmpty();
+				}
+				
+				if ( !to_add.isEmpty()){
+					
+					tv.addDataSources( to_add.toArray( new PEPiece[to_add.size()]));
+					
+					changed = true;
 				}
 				
 				if ( !to_remove.isEmpty()){
 					
-					int active_pieces = uploading_pieces.size();
-
-					Iterator<PEPieceUploading> it = to_remove.iterator();
+					tv.removeDataSources( to_remove.toArray( new PEPiece[to_remove.size()]));
 					
-					while( it.hasNext()){
-						
-						PEPieceUploading piece = it.next();
-						
-						if ( piece.readyToRemove() || active_pieces > 50 ){
-						
-							uploading_pieces.remove( piece.getPieceNumber());
-							
-							active_pieces--;
-							
-						}else{
-						
-							it.remove();
-						}
-					}
+					changed = true;
 				}
-				
-				has_uploading_pieces = !uploading_pieces.isEmpty();
-			}
-			
-			if ( !to_add.isEmpty()){
-				
-				tv.addDataSources( to_add.toArray( new PEPiece[to_add.size()]));
-				
-				changed = true;
-			}
-			
-			if ( !to_remove.isEmpty()){
-				
-				tv.removeDataSources( to_remove.toArray( new PEPiece[to_remove.size()]));
-				
-				changed = true;
 			}
 		}else{
 			
@@ -723,8 +760,6 @@ public abstract class PiecesViewBase
 				to_remove.addAll( uploading_pieces.values());
 				
 				uploading_pieces.clear();
-				
-				has_uploading_pieces = false;
 			}
 			
 			if ( !to_remove.isEmpty()){
@@ -771,53 +806,28 @@ public abstract class PiecesViewBase
 		}
 
 		// Show in sister tab
-		if (mdi != null) {
+		if (mdi != null && mdi.getEntry(PieceInfoView.MSGID_PREFIX ) != null ){
 			mdi.showEntryByID(PieceInfoView.MSGID_PREFIX, rows[0].getDataSource());
-		}
-	}
-
-	protected void
-	updateSelectedContent()
-	{
-		Object[] dataSources = tv.getSelectedDataSources(true);
-
-		if ( dataSources.length == 0 ){
-
-	      	String id = "DMDetails_Pieces";
-	      	
-	      	DownloadManager manager = getDownloadManager();
-	      	
-	      	if (manager != null) {
-	      		if (manager.getTorrent() != null) {
-	      			id += "." + manager.getInternalName();
-	      		} else {
-	      			id += ":" + manager.getSize();
-	      		}
-	      		SelectedContentManager.changeCurrentlySelectedContent(id,
-	      				new SelectedContent[] {
-	      						new SelectedContent(manager)
-	      		});
-	      	} else {
-	      		SelectedContentManager.changeCurrentlySelectedContent(id, null);
-	      	}
 		}else{
-			
-			SelectedContent[] sc = new SelectedContent[dataSources.length];
-			
-			for ( int i=0;i<sc.length;i++){
-				Object ds = dataSources[i];
-				if (ds instanceof PEPiece) {
-					sc[i] = new SelectedContent( "piece: " + ((PEPiece)ds).getPieceNumber());
-				}else{
-					sc[i] = new SelectedContent( "piece: "  + ds );
+			UIFunctions uif = UIFunctionsManager.getUIFunctions();
+			if (uif != null) {
+				GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+
+				PEPeerManager pm = ((PEPiece)rows[0].getDataSource()).getManager();
+				
+				DownloadManager dm = pm==null?null:gm.getDownloadManager( new HashWrapper( pm.getHash()));
+
+				if ( dm != null ){
+				
+					uif.getMDI().showEntryByID(
+						MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, dm);
 				}
 			}
-			
-			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),
-					sc, tv);
 		}
-
 	}
+
+	protected abstract void
+	updateSelectedContent();
 	
 	@Override
 	public void deselected(TableRowCore[] rows) {
