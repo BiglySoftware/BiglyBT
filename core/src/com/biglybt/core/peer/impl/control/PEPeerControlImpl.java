@@ -26,7 +26,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.*;
-
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -238,6 +238,10 @@ PEPeerControlImpl
     
 	private static final IpFilter ip_filter = IpFilterManagerFactory.getSingleton().getIPFilter();
 
+	private static final AtomicInteger	UUID_GEN = new AtomicInteger();
+	
+	private final int pm_uuid = UUID_GEN.incrementAndGet();
+	
 	private volatile boolean	is_running 		= false;
 	private volatile boolean	is_destroyed 	= false;
 
@@ -694,7 +698,13 @@ PEPeerControlImpl
 			});
 	}
 
-
+	@Override
+	public int
+	getUID()
+	{
+		return( pm_uuid );
+	}
+	
 	@Override
 	public void
 	start()

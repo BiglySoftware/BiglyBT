@@ -47,6 +47,9 @@ import com.biglybt.pif.peers.PeerDescriptor;
 public interface
 PEPeerManager
 {
+	public int
+	getUID();
+	
 	public DiskManager getDiskManager();
 	public PiecePicker getPiecePicker();
 

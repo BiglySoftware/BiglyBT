@@ -60,8 +60,6 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.selectedcontent.SelectedContent;
-import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.Legend;
@@ -152,7 +150,8 @@ public abstract class PiecesViewBase
 
 	private boolean shown;
 	
-	private Map<Integer,PEPieceUploading>	uploading_pieces = new HashMap<>();
+	private Map<Long,PEPieceUploading>		uploading_pieces = new HashMap<>();
+	
 	private boolean							show_uploading;
 
 	protected
@@ -587,12 +586,15 @@ public abstract class PiecesViewBase
 		if ( show_uploading ){
 			
 			long now = SystemTime.getMonotonousTime();
-			
-			for ( PEPeerManager pm: pms ){
-				DiskManagerPiece[] dm_pieces = pm.getDiskManager().getPieces();
 		
-				Map<Integer,Object[]>	up_map = new HashMap<>();
+			Map<Long,Object[]>	up_map = new HashMap<>();
+
+			for ( PEPeerManager pm: pms ){
 				
+				long pm_id_mask = ((long)pm.getUID()) << 32;
+								
+				DiskManagerPiece[] dm_pieces = pm.getDiskManager().getPieces();
+						
 				for ( PEPeer peer: pm.getPeers()){
 					
 					if ( !peer.isChokedByMe()){
@@ -607,21 +609,23 @@ public abstract class PiecesViewBase
 							
 							for ( int i=0;i<peerRequestedPieces.length;i++){
 								
-								int	piece_number = peerRequestedPieces[i];
+								int	raw_piece_number = peerRequestedPieces[i];
 								
-								Object[] entry = up_map.get( piece_number );
+								long masked_piece_number = pm_id_mask | raw_piece_number;
+								
+								Object[] entry = up_map.get( masked_piece_number );
 							
 								Set<String>	peers;
 								
 								if ( entry == null ){
 								
-									DiskManagerPiece dm_piece = dm_pieces[ piece_number ];
+									DiskManagerPiece dm_piece = dm_pieces[ raw_piece_number ];
 								
 									boolean[] blocks = new boolean[dm_piece.getNbBlocks()];
 									
 									peers = new HashSet<>();
 									
-									up_map.put( piece_number, new Object[]{ blocks, peers });
+									up_map.put( masked_piece_number, new Object[]{ blocks, peers, pm });
 									
 									pieces_added++;
 									
@@ -650,22 +654,24 @@ public abstract class PiecesViewBase
 								continue;
 							}
 													
-							int	piece_number = piece.getPieceNumber();
+							int	raw_piece_number = piece.getPieceNumber();
 									
-							Object[] entry = up_map.get( piece_number );
+							long masked_piece_number = pm_id_mask | raw_piece_number;
+							
+							Object[] entry = up_map.get( masked_piece_number );
 						
 							boolean[] 	blocks;
 							Set<String>	peers;
 							
 							if ( entry == null ){
 							
-								DiskManagerPiece dm_piece = dm_pieces[ piece_number ];
+								DiskManagerPiece dm_piece = dm_pieces[ raw_piece_number ];
 							
 								blocks = new boolean[dm_piece.getNbBlocks()];
 								
 								peers = new HashSet<>();
 								
-								up_map.put( piece_number, new Object[]{ blocks, peers });
+								up_map.put( masked_piece_number, new Object[]{ blocks, peers, pm });
 								
 							}else{
 								
@@ -679,79 +685,87 @@ public abstract class PiecesViewBase
 						}
 					}
 				}
+			}
+			
+			List<PEPieceUploading>	to_add 		= new ArrayList<>();
+			Set<PEPieceUploading>	to_remove 	= new HashSet<>();
+			
+			synchronized( uploading_pieces ){
+								
+				to_remove.addAll( uploading_pieces.values());
 				
-				List<PEPieceUploading>	to_add 		= new ArrayList<>();
-				Set<PEPieceUploading>	to_remove 	= new HashSet<>();
-				
-				synchronized( uploading_pieces ){
-									
-					to_remove.addAll( uploading_pieces.values());
+				for ( Map.Entry<Long,Object[]> up_entry: up_map.entrySet()){
 					
-					for ( Map.Entry<Integer,Object[]> up_entry: up_map.entrySet()){
+					long 		masked_piece_number 	= up_entry.getKey();
+					Object[]	entry					= up_entry.getValue();
+					
+					boolean[]	blocks 	= (boolean[])entry[0];
+					Set<String>	peers	= (Set<String>)entry[1];
+					
+					PEPieceUploading piece = uploading_pieces.get( masked_piece_number );
+					
+					if ( piece == null ){
 						
-						int 		pn 		= up_entry.getKey();
-						Object[]	entry	= up_entry.getValue();
+						PEPeerManager pm = (PEPeerManager)entry[2];
 						
-						boolean[]	blocks 	= (boolean[])entry[0];
-						Set<String>	peers	= (Set<String>)entry[1];
+						int raw_piece_number = (int)( masked_piece_number & 0x00000000ffffffff );
 						
-						PEPieceUploading piece = uploading_pieces.get( pn );
+						piece = new PEPieceUploading( pm, pm.getDiskManager().getPieces()[raw_piece_number], raw_piece_number );
 						
-						if ( piece == null ){
-							
-							piece = new PEPieceUploading( pm, dm_pieces[pn], pn );
-							
-							to_add.add( piece );
-							
-							uploading_pieces.put( pn, piece );
-							
-						}else{
-							
-							to_remove.remove( piece );
-						}
+						to_add.add( piece );
 						
-						piece.addUploading( blocks, peers );
+						uploading_pieces.put( masked_piece_number, piece );
+						
+					}else{
+						
+						to_remove.remove( piece );
 					}
 					
-					if ( !to_remove.isEmpty()){
-						
-						int active_pieces = uploading_pieces.size();
-	
-						Iterator<PEPieceUploading> it = to_remove.iterator();
-						
-						while( it.hasNext()){
-							
-							PEPieceUploading piece = it.next();
-							
-							if ( piece.readyToRemove() || active_pieces > 50 ){
-							
-								uploading_pieces.remove( piece.getPieceNumber());
-								
-								active_pieces--;
-								
-							}else{
-							
-								it.remove();
-							}
-						}
-					}
-					
-					has_uploading_pieces |= !uploading_pieces.isEmpty();
-				}
-				
-				if ( !to_add.isEmpty()){
-					
-					tv.addDataSources( to_add.toArray( new PEPiece[to_add.size()]));
-					
-					changed = true;
+					piece.addUploading( blocks, peers );
 				}
 				
 				if ( !to_remove.isEmpty()){
 					
-					tv.removeDataSources( to_remove.toArray( new PEPiece[to_remove.size()]));
+					int active_pieces = uploading_pieces.size();
+
+					Iterator<PEPieceUploading> it = to_remove.iterator();
 					
-					changed = true;
+					while( it.hasNext()){
+						
+						PEPieceUploading piece = it.next();
+						
+						if ( piece.readyToRemove() || active_pieces > 50 ){
+						
+							int raw_piece_number = piece.getPieceNumber();
+							
+							long masked_piece_number = ((long)piece.getManager().getUID()) << 32 | raw_piece_number;
+							
+							uploading_pieces.remove(  masked_piece_number );
+							
+							active_pieces--;
+							
+						}else{
+						
+							it.remove();
+						}
+					}
 				}
+				
+				has_uploading_pieces |= !uploading_pieces.isEmpty();
+			}
+			
+			if ( !to_add.isEmpty()){
+				
+				tv.addDataSources( to_add.toArray( new PEPiece[to_add.size()]));
+				
+				changed = true;
+			}
+			
+			if ( !to_remove.isEmpty()){
+				
+				tv.removeDataSources( to_remove.toArray( new PEPiece[to_remove.size()]));
+				
+				changed = true;
 			}
 		}else{
 			
