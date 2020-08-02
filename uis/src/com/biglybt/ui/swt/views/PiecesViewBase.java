@@ -560,6 +560,11 @@ public abstract class PiecesViewBase
 			legendComposite.dispose();
 		}
 		
+		if ( tv != null ){
+			
+			tv.removeAllTableRows();
+		}
+		
 		synchronized( uploading_pieces ){
 			
 			uploading_pieces.clear();
