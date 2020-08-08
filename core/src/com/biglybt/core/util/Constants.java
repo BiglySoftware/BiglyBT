@@ -350,13 +350,13 @@ Constants
 				|| System.getProperty("java.vendor", "").contains("Android");
 	}
 
-	// Android is roughly 1.6 (reports as 0 for java.version)
+	// Android is roughly 1.8 (reports as 0 for java.version)
 
 	public static final String	JAVA_VERSION;
 	public static final int		API_LEVEL;
 
 	static{
-		String java_version 	= isAndroid?"1.6":System.getProperty("java.version");
+		String java_version 	= isAndroid?"1.8":System.getProperty("java.version");
 		int	 api_level 		= 0;
 
 		if ( isAndroid ){
@@ -366,10 +366,6 @@ Constants
 			try{
 				api_level = Integer.parseInt( sdk_int );
 
-				if ( api_level > 0  && api_level <= 8 ){
-
-					java_version = "1.5";
-				}
 			}catch( Throwable e ){
 			}
 		}
