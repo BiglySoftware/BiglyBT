@@ -41,6 +41,7 @@ import com.biglybt.core.logging.*;
 import com.biglybt.core.torrentdownloader.TorrentDownloader;
 import com.biglybt.core.torrentdownloader.TorrentDownloaderFactory;
 import com.biglybt.core.torrentdownloader.impl.TorrentDownloaderManager;
+import com.biglybt.core.util.AEDiagnosticsLogger;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemProperties;
@@ -69,6 +70,8 @@ public class ConsoleInput extends Thread {
 	private static final String ALIASES_CONFIG_FILE = "console.aliases.properties";
 	public final Core core;
 	public volatile PrintStream out;
+	private RedirectOutputStream	current_ros;
+	
 	public final List torrents = new ArrayList();
 	public File[] adds = null;
 
@@ -704,6 +707,13 @@ public class ConsoleInput extends Thread {
 			
 			if (!comargs.isEmpty()) {
 				
+				RedirectOutputStream ros = current_ros;
+				
+				if ( ros != null ){
+					
+					ros.requestTimeStamp();
+				}
+				
 					// logging is implemented in-line below
 				
 				if ( comargs.size() > 0 && comargs.get(0).equalsIgnoreCase( "logging" )){
@@ -780,13 +790,14 @@ public class ConsoleInput extends Thread {
 						
 						try{
 						
-							PrintStream redirect = 
-									new PrintStream( 
-											new BufferedOutputStream(
-													new RedirectOutputStream(
-															new FileOutputStream( outputFile, outputFileAppend ), out ), 128 ));
+							RedirectOutputStream ros = new RedirectOutputStream(
+									new FileOutputStream( outputFile, outputFileAppend ), out );
+
+							PrintStream redirect = new PrintStream( new BufferedOutputStream( ros, 128 ));
 
 							redirectOutputStream = redirect;
+							
+							current_ros	= ros;
 							
 							out = redirectOutputStream;
 							
@@ -1078,6 +1089,8 @@ public class ConsoleInput extends Thread {
 		private final OutputStream		dest1;
 		private final PrintStream		dest2;
 		
+		boolean	ts;
+		
 		private
 		RedirectOutputStream(
 			OutputStream	_dest1,
@@ -1087,12 +1100,25 @@ public class ConsoleInput extends Thread {
 			dest2		= _dest2;
 		}
 		
+		private void
+		requestTimeStamp()
+		{
+			ts = true;
+		}
+		
 	    public void 
 	    write(
 	    	int b ) 
 	    		
 	    	throws IOException
 	    {
+	    	if ( ts ){
+	    		
+	    		dest1.write( AEDiagnosticsLogger.getTimestamp().getBytes());
+	    		
+	    		ts = false;
+	    	}
+	    	
 	    	dest2.write( b );
 	    	
 	    	dest1.write( b );
