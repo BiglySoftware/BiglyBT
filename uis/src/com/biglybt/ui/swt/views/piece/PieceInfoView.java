@@ -451,6 +451,8 @@ public class PieceInfoView
 					selectedPiece 			= -1;
 					selectedPieceShowFile 	= false;
 					
+					Utils.setTT( pieceInfoCanvas, null );
+					
 					refreshInfoCanvas();
 				}
 			});
@@ -704,6 +706,10 @@ public class PieceInfoView
 		String text = "";
 		
 		if ( dm_pieces != null ){
+			
+			String 	files_str = "";
+			int		file_count = 0;
+			
 			for (int piece_number : piece_numbers) {
 				if (!text.isEmpty()) {
 					text += "\n";
@@ -729,7 +735,7 @@ public class PieceInfoView
 				text += " - ";
 				
 				DMPieceList l = dm_piece.getPieceList();
-				
+								
 				for ( int i=0;i<l.size();i++) {
 		       
 					DMPieceMapEntry entry = l.get( i );
@@ -737,8 +743,22 @@ public class PieceInfoView
 					DiskManagerFileInfo info = entry.getFile();
 			
 					text += (i==0?"":"; ") + info.getFile( true ).getName() + ", offset " + entry.getOffset();
-				}
+					
+					if ( file_count < 20 ){
+					
+						files_str += (files_str.isEmpty()?"":"\n") + info.getTorrentFile().getRelativePath();
+						
+					}else if ( file_count == 20 ){
+						
+						files_str += "\n...";
+					}
+				}	
 			}
+				
+			Utils.setTT( pieceInfoCanvas, files_str );
+			
+		}else{
+			Utils.setTT( pieceInfoCanvas, null );
 		}
 		
 		topLabelRHS = text;
