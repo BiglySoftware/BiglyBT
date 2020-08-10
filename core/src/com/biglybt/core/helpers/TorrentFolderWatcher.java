@@ -45,10 +45,12 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagFeatureFileLocation;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.protocol.magnet.MagnetConnection2;
@@ -287,11 +289,11 @@ public class TorrentFolderWatcher {
 				return;
 			}
 
-			String data_save_path = COConfigurationManager.getStringParameter("Default save path");
+			String default_data_save_path = COConfigurationManager.getStringParameter("Default save path");
 
 			File f = null;
-			if (data_save_path != null && data_save_path.length() > 0) {
-				f = FileUtil.newFile(data_save_path);
+			if (default_data_save_path != null && default_data_save_path.length() > 0) {
+				f = FileUtil.newFile(default_data_save_path);
 
 				// Path is not an existing directory.
 				if (!f.isDirectory()) {
@@ -428,7 +430,9 @@ public class TorrentFolderWatcher {
 									}
 	
 								} else {
-	
+
+									boolean[] to_skip = TorrentUtils.getSkipFiles( torrent );
+
 									final DownloadManagerInitialisationAdapter dmia = new DownloadManagerInitialisationAdapter() {
 	
 										@Override
@@ -452,8 +456,6 @@ public class TorrentFolderWatcher {
 											
 											boolean reorder_mode = COConfigurationManager.getBooleanParameter("Enable reorder storage mode");
 											int reorder_mode_min_mb = COConfigurationManager.getIntParameter("Reorder storage mode min MB");
-
-											boolean[] to_skip = TorrentUtils.getSkipFiles( torrent );
 											
 											if ( to_skip != null ){
 												
@@ -528,6 +530,76 @@ public class TorrentFolderWatcher {
 										hash = torrent.getHash();
 									} catch (Exception e) { }
 	
+									String data_save_path = default_data_save_path;
+									
+									boolean for_seeding = false;
+									
+									if ( tag_name != null ){
+										
+											// if we have a tag with a move-on-complete destination and the files are already
+											// there then fix things to it gets added-for-seeding
+										
+										TagManager tm = TagManagerFactory.getTagManager();
+
+										TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+
+										Tag	tag = tt.getTag( tag_name, true );
+										
+										if ( tag instanceof TagFeatureFileLocation ){
+											
+											TagFeatureFileLocation tag_save_location = (TagFeatureFileLocation)tag;
+										
+											if ( tag_save_location.supportsTagMoveOnComplete()){
+												
+												File move_loc = tag_save_location.getTagMoveOnCompleteFolder();
+												
+												if ( move_loc != null && move_loc.exists()){
+												
+													File root;
+													
+													if ( torrent.isSimpleTorrent()){
+													
+														root = move_loc;
+														
+													}else{
+														
+														root = new File( move_loc, FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName(torrent), true ));
+													}
+													
+													if (( tag_save_location.getTagMoveOnCompleteOptions() & TagFeatureFileLocation.FL_DATA ) != 0 ){
+																																										
+														TOTorrentFile[] files = torrent.getFiles();
+														
+														boolean all_exist = true;
+														
+														for ( int j=0;j<files.length;j++){
+															
+															if ( to_skip != null && to_skip[j] ){
+																
+																continue;
+															}
+															
+															File file_loc = new File( root, files[j].getRelativePath());
+															
+															if ( !file_loc.exists()){
+																
+																all_exist = false;
+																
+																break;
+															}
+														}
+														
+														if ( all_exist ){
+															
+															data_save_path = move_loc.getAbsolutePath();
+															
+															for_seeding = true;
+														}
+													}
+												}
+											}
+										}
+									}
 									
 									int start_state = TorrentOpenOptions.addModePreCreate(start_mode);
 									
@@ -538,13 +610,13 @@ public class TorrentFolderWatcher {
 										TorrentUtils.move(file, imported);
 	
 										dm = global_manager.addDownloadManager(imported.getAbsolutePath(), hash,
-												data_save_path, start_state, true,false,dmia);
+												data_save_path, start_state, true, for_seeding, dmia);
 										
 	
 									} else {
 	
 										dm = global_manager.addDownloadManager(file.getAbsolutePath(), hash,
-												data_save_path, start_state, true, false, dmia);
+												data_save_path, start_state, true, for_seeding, dmia);
 	
 										// add torrent for deletion, since there will be a
 										// saved copy elsewhere
@@ -597,8 +669,10 @@ public class TorrentFolderWatcher {
 					tag = tt.createTag( tag_name, true );
 				}
 
-				tag.addTaggable( dm );
-
+				if ( !tag.hasTaggable( dm )){
+				
+					tag.addTaggable( dm );
+				}
 			}catch( Throwable e ){
 
 				Debug.out( e );

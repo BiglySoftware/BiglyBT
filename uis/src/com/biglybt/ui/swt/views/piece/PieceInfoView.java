@@ -742,11 +742,11 @@ public class PieceInfoView
 					
 					DiskManagerFileInfo info = entry.getFile();
 			
-					text += (i==0?"":"; ") + info.getFile( true ).getName() + ", offset " + entry.getOffset();
+					text += (i==0?"":"; ") + info.getFile( true ).getName() + ", " + MessageText.getString( "label.offset" ) + " " + entry.getOffset();
 					
 					if ( file_count < 20 ){
 					
-						files_str += (files_str.isEmpty()?"":"\n") + info.getTorrentFile().getRelativePath();
+						files_str += (files_str.isEmpty()?"":"\n") + info.getTorrentFile().getRelativePath() + ", " + MessageText.getString( "label.offset" ) + " " + entry.getOffset();
 						
 					}else if ( file_count == 20 ){
 						
