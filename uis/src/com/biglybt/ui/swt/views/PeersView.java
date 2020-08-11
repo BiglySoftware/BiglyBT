@@ -264,21 +264,31 @@ public class PeersView
 
 	public void
 	selectPeer(
-			PEPeer		peer )
+		PEPeer		peer )
 	{
 		showPeer( peer, 0 );
 	}
 
 	private void
 	showPeer(
-			final PEPeer		peer,
-			final int			attempt )
+		final PEPeer		peer,
+		final int			attempt )
 	{
-		if ( attempt > 10 || tv == null || peer == null ){
+		
+		if ( attempt > 10 || peer == null ){
 
 			return;
 		}
 
+		if ( tv == null ){
+			
+				// view not yet constructed
+	
+			select_peer_pending = new WeakReference<>(peer);
+			
+			return;
+		}
+		
 		// need to insert an async here as if we are in the process of switching to this view the
 		// selection sometimes get lost. grrr
 		// also, due to the way things work, as the table is building it is possible to select the entry
@@ -298,19 +308,19 @@ public class PeersView
 						if ( row == null ){
 
 							if ( attempt == 0 ){
-
+								
 								select_peer_pending = new WeakReference<>(peer);
 
 								return;
 							}
 						}else{
-
+							
 							tv.setSelectedRows( new TableRowCore[]{ row } );
 
 							tv.showRow( row );
 
 							if ( row.isVisible()){
-
+								
 								return;
 							}
 						}

@@ -30,7 +30,6 @@ import com.biglybt.core.download.DownloadManagerPieceListener;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
-import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.selectedcontent.SelectedContent;
