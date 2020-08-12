@@ -43,6 +43,7 @@ SearchProvider
 	public static final String	SP_NETWORKS				 	= "n";	// String[]
 	public static final String	SP_MIN_SEEDS				= "z";	// Long
 	public static final String	SP_MIN_LEECHERS				= "l";	// Long
+	public static final String	SP_MAX_AGE_SECS				= "a";	// Long
 
 	public SearchInstance
 	search(

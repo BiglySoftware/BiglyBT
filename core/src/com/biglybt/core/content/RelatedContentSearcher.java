@@ -56,12 +56,15 @@ RelatedContentSearcher
 	implements DistributedDatabaseTransferHandler
 {
 	static final boolean	SEARCH_CVS_ONLY_DEFAULT		= System.getProperty(SystemProperties.SYSPROP_RCM_SEARCH_CVS_ONLY, "0" ).equals( "1" );
+	
 	private static final boolean	TRACE_SEARCH				= false;
 
-	private static final int		SEARCH_MIN_SEEDS_DEFAULT	= -1;
-	private static final int		SEARCH_MIN_LEECHERS_DEFAULT	= -1;
-	private static final int		SEARCH_POP_MIN_SEEDS_DEFAULT	= 100;
-	private static final int		SEARCH_POP_MIN_LEECHERS_DEFAULT	= 25;
+	private static final int	SEARCH_MIN_SEEDS_DEFAULT		= -1;
+	private static final int	SEARCH_MIN_LEECHERS_DEFAULT		= -1;
+	private static final int	SEARCH_MAX_AGE_SECS_DEFAULT		= -1;
+	private static final int	SEARCH_POP_MIN_SEEDS_DEFAULT	= 100;
+	private static final int	SEARCH_POP_MIN_LEECHERS_DEFAULT	= 25;
+	private static final int	SEARCH_POP_MAX_AGE_SECS_DEFAULT	= -1;
 
 	private static final int	MAX_REMOTE_SEARCH_RESULTS		= 30;
 	private static final int	MAX_REMOTE_SEARCH_CONTACTS		= 50;
@@ -206,8 +209,9 @@ RelatedContentSearcher
 
 		final int	min_seeds 		= MapUtils.importInt(search_parameters,SearchProvider.SP_MIN_SEEDS, is_popular?SEARCH_POP_MIN_SEEDS_DEFAULT:SEARCH_MIN_SEEDS_DEFAULT );
 		final int	min_leechers 	= MapUtils.importInt(search_parameters,SearchProvider.SP_MIN_LEECHERS, is_popular?SEARCH_POP_MIN_LEECHERS_DEFAULT:SEARCH_MIN_LEECHERS_DEFAULT );
+		final int	max_age_secs 	= MapUtils.importInt(search_parameters,SearchProvider.SP_MAX_AGE_SECS, is_popular?SEARCH_POP_MAX_AGE_SECS_DEFAULT:SEARCH_MAX_AGE_SECS_DEFAULT );
 
-		final MySearchObserver observer = new MySearchObserver( _observer, min_seeds, min_leechers );
+		final MySearchObserver observer = new MySearchObserver( _observer, min_seeds, min_leechers, max_age_secs );
 
 		final SearchInstance si =
 			new SearchInstance()
@@ -240,7 +244,7 @@ RelatedContentSearcher
 
 					try{
 
-						List<RelatedContent>	matches = matchContent( term, min_seeds, min_leechers, true, search_cvs_only );
+						List<RelatedContent>	matches = matchContent( term, min_seeds, min_leechers, max_age_secs, true, search_cvs_only );
 
 						for ( final RelatedContent c: matches ){
 
@@ -555,7 +559,7 @@ RelatedContentSearcher
 													sendRemoteSearch(
 														si, hashes_sync_me, contact_to_search,
 														term,
-														min_seeds, min_leechers,
+														min_seeds, min_leechers, max_age_secs,
 														observer );
 
 											if ( extra_contacts == null ){
@@ -800,6 +804,7 @@ RelatedContentSearcher
 		final String		term,
 		int					min_seeds,
 		int					min_leechers,
+		int					max_age_secs,
 		boolean				is_local,
 		boolean				search_cvs_only )
 	{
@@ -920,6 +925,8 @@ RelatedContentSearcher
 
 		Iterator<DownloadInfo>	it3 = manager.getRelatedContentAsList().iterator();
 
+		long now = SystemTime.getCurrentTime();
+		
 		for ( Iterator<DownloadInfo> it: new Iterator[]{ it1, it2, it3 }){
 
 			while( it.hasNext()){
@@ -931,6 +938,23 @@ RelatedContentSearcher
 					continue;
 				}
 
+				if ( max_age_secs > 0 ){
+				
+					long pd = c.getPublishDate();
+				
+					if ( pd <= 0 ){
+						
+						continue;
+					}
+					
+					long age_secs = ( now - pd )/1000;
+					
+					if ( age_secs > max_age_secs ){
+						
+						continue;
+					}
+				}
+				
 				String title 	= c.getTitle();
 				String lc_title = c.getTitle().toLowerCase();
 
@@ -1120,6 +1144,7 @@ RelatedContentSearcher
 		String								term,
 		int									min_seeds,
 		int									min_leechers,
+		int									max_age_secs,
 		final SearchObserver				_observer )
 	{
 		SearchObserver observer =
@@ -1165,6 +1190,10 @@ RelatedContentSearcher
 
 			if ( min_leechers > 0 ){
 				request.put( "l", (long)min_leechers );
+			}
+			
+			if ( max_age_secs > 0 ){
+				request.put( "a", (long)max_age_secs );
 			}
 
 			DistributedDatabaseKey key = ddb.createKey( BEncoder.encode( request ));
@@ -1553,6 +1582,7 @@ RelatedContentSearcher
 
 				int	min_seeds 		= MapUtils.importInt( request, "s", SEARCH_MIN_SEEDS_DEFAULT );
 				int	min_leechers 	= MapUtils.importInt( request, "l", SEARCH_MIN_LEECHERS_DEFAULT );
+				int	max_age_secs 	= MapUtils.importInt( request, "a", SEARCH_MAX_AGE_SECS_DEFAULT );
 
 				// System.out.println( "Received remote search: '" + term + "' from " + originator.getAddress() + ", hits=" + hits + ", bs=" + harvest_se_requester_bloom.getEntryCount());
 
@@ -1564,7 +1594,7 @@ RelatedContentSearcher
 
 					if ( term != null ){
 
-						List<RelatedContent>	matches = matchContent( term, min_seeds, min_leechers, false, search_cvs_only );
+						List<RelatedContent>	matches = matchContent( term, min_seeds, min_leechers, max_age_secs, false, search_cvs_only );
 
 						List<Map<String,Object>> l_list = new ArrayList<>();
 
@@ -2048,11 +2078,11 @@ RelatedContentSearcher
 					misses++;
 				}
 
-				List<RelatedContent> hits = matchContent( word, SEARCH_MIN_SEEDS_DEFAULT, SEARCH_MIN_LEECHERS_DEFAULT, true, false );
+				List<RelatedContent> hits = matchContent( word, SEARCH_MIN_SEEDS_DEFAULT, SEARCH_MIN_LEECHERS_DEFAULT, SEARCH_MAX_AGE_SECS_DEFAULT, true, false );
 
 				if ( hits.size() == 0 ){
 
-					hits = matchContent( word, SEARCH_MIN_SEEDS_DEFAULT, SEARCH_MIN_LEECHERS_DEFAULT, true, false );
+					hits = matchContent( word, SEARCH_MIN_SEEDS_DEFAULT, SEARCH_MIN_LEECHERS_DEFAULT, SEARCH_MAX_AGE_SECS_DEFAULT, true, false );
 
 					match_fails++;
 				}
@@ -2475,17 +2505,20 @@ outer:
 
 		private final int					min_seeds;
 		private final int					min_leechers;
+		private final int					max_age_secs;
 
 		private final AtomicInteger		num_results = new AtomicInteger();
 
 		MySearchObserver(
 			SearchObserver		_observer,
 			int					_min_seeds,
-			int					_min_leechers )
+			int					_min_leechers,
+			int					_max_age_secs )
 		{
 			observer 		= _observer;
 			min_seeds		= _min_seeds;
 			min_leechers	= _min_leechers;
+			max_age_secs	= _max_age_secs;
 		}
 
 		@Override
@@ -2510,6 +2543,23 @@ outer:
 
 				if ( leechers != null && leechers.intValue() < min_leechers ){
 
+					return;
+				}
+			}
+			
+			if ( max_age_secs > 0 ){
+				
+				Date pub_date = (Date)result.getProperty( SearchResult.PR_PUB_DATE );
+				
+				if ( pub_date == null ){
+					
+					return;
+				}
+				
+				long age_secs = (SystemTime.getCurrentTime() - pub_date.getTime())/1000;
+				
+				if ( age_secs > max_age_secs ){
+					
 					return;
 				}
 			}
