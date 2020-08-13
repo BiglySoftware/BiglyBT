@@ -328,21 +328,25 @@ PluginEngine
 			String pattern 	= param.getMatchPattern();
 			String value	= param.getValue();
 
-			if ( pattern.equals( "s" )){
+			if ( pattern.equals( SearchProvider.SP_SEARCH_TERM )){
 
 				term = value;
 
 				search_parameters.put( SearchProvider.SP_SEARCH_TERM, value );
 
-			}else if ( pattern.equals( "m" )){
+			}else if ( pattern.equals( SearchProvider.SP_MATURE )){
 
 				search_parameters.put( SearchProvider.SP_MATURE, Boolean.valueOf(value));
 
-			}else if ( pattern.equals( "n" )){
+			}else if ( pattern.equals( SearchProvider.SP_NETWORKS )){
 
 				String[] networks = value.split(",");
 
 				search_parameters.put( SearchProvider.SP_NETWORKS, networks );
+				
+			}else if ( pattern.equals( SearchProvider.SP_MAX_AGE_SECS )){
+
+				search_parameters.put( SearchProvider.SP_MAX_AGE_SECS, Long.parseLong( value ));
 
 			}else{
 

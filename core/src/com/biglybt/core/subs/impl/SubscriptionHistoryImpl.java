@@ -52,7 +52,9 @@ SubscriptionHistoryImpl
 	private int			num_read;
 	private long		max_results	= -1;
 	private String[]	networks	= null;
-
+	
+	private long		max_age_secs	= -1;
+	
 	private String			last_error;
 	private boolean			auth_failed;
 	private int				consec_fails;
@@ -424,6 +426,23 @@ SubscriptionHistoryImpl
 		saveConfig(SubscriptionListener.CR_METADATA);
 	}
 
+	@Override
+	public long 
+	getMaxAgeSecs()
+	{
+		return( max_age_secs );
+	}
+	
+	@Override
+	public void 
+	setMaxAgeSecs(
+		long max )
+	{
+		max_age_secs = max;
+		
+		saveConfig(SubscriptionListener.CR_METADATA);
+	}
+	
 	@Override
 	public boolean
 	getNotificationPostEnabled()
@@ -1164,6 +1183,9 @@ SubscriptionHistoryImpl
 		Long	l_post_noto	= (Long)map.get( "post_noti" );
 		post_notifications	= l_post_noto==null?false:l_post_noto.longValue()==1;
 
+		Long l_max_age_secs = (Long)map.get( "max_age_secs" );
+		
+		max_age_secs = l_max_age_secs==null?-1:l_max_age_secs;
 	}
 
 	protected void
@@ -1195,6 +1217,11 @@ SubscriptionHistoryImpl
 		if (post_notifications ){
 			map.put( "post_noti", 1);
 		}
+		
+		if ( max_age_secs > 0 ){
+			map.put( "max_age_secs", max_age_secs );
+		}
+		
 		subs.updateHistoryConfig( map, reason );
 	}
 

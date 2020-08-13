@@ -1878,7 +1878,14 @@ SubscriptionManagerImpl
 
 				subs.getHistory().setDownloadNetworks( new String[]{ AENetworkClassifier.AT_I2P });
 			}
-
+			
+			Long max_age_secs = (Long)search_parameters.get( SearchProvider.SP_MAX_AGE_SECS );
+			
+			if ( max_age_secs != null && max_age_secs > 0 ){
+			
+				subs.getHistory().setMaxAgeSecs( max_age_secs );
+			}
+			
 			log( "Created new subscription: " + subs.getString());
 
 			subs = addSubscription( subs );

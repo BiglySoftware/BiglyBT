@@ -33,6 +33,7 @@ import com.biglybt.core.subs.SubscriptionException;
 import com.biglybt.core.subs.SubscriptionResultFilter;
 import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.pif.utils.search.SearchProvider;
 import com.biglybt.util.JSONUtils;
 
 public class
@@ -77,16 +78,25 @@ SubscriptionDownloader
 
 		if ( search_term != null ){
 
-			sps.add( new SearchParameter( "s", search_term ));
+			sps.add( new SearchParameter( SearchProvider.SP_SEARCH_TERM, search_term ));
 
 			log( "    Using search term '" + search_term + "' for engine " + engine.getString());
 		}
 
 		if ( networks != null && networks.length() > 0 ){
 
-			sps.add( new SearchParameter( "n", networks ));
+			sps.add( new SearchParameter( SearchProvider.SP_NETWORKS, networks ));
 		}
 
+		SubscriptionHistoryImpl history = (SubscriptionHistoryImpl)subs.getHistory();
+
+		long max_age_secs = history.getMaxAgeSecs();
+		
+		if ( max_age_secs > 0 ){
+			
+			sps.add( new SearchParameter( SearchProvider.SP_MAX_AGE_SECS, String.valueOf( max_age_secs )));
+		}
+		
 		/*
 		if ( mature != null ){
 
@@ -95,9 +105,6 @@ SubscriptionDownloader
 		*/
 
 		SearchParameter[] parameters = (SearchParameter[])sps.toArray(new SearchParameter[ sps.size()] );
-
-
-		SubscriptionHistoryImpl history = (SubscriptionHistoryImpl)subs.getHistory();
 
 		try{
 			Map	context = new HashMap();

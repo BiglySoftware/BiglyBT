@@ -125,6 +125,13 @@ SubscriptionHistory
 	setDownloadNetworks(
 		String[]	nets );
 
+	public long
+	getMaxAgeSecs();
+	
+	public void
+	setMaxAgeSecs(
+		long		max );
+	
 	public boolean
 	getNotificationPostEnabled();
 
