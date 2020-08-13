@@ -32,6 +32,7 @@ import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.columns.dlhistory.*;
 import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import org.eclipse.swt.SWT;
@@ -43,6 +44,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.global.GlobalManagerEvent;
 import com.biglybt.core.history.DownloadHistory;
 import com.biglybt.core.history.DownloadHistoryEvent;
 import com.biglybt.core.history.DownloadHistoryListener;
@@ -50,12 +53,14 @@ import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
+import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
@@ -728,6 +733,21 @@ public class SBC_DownloadHistoryView
 		TableRowCore[] 	rows,
 		int 			stateMask )
 	{
+		if ( rows.length == 1 ){
+			
+			DownloadHistory dh = (DownloadHistory)rows[0].getDataSource();
+			
+			byte[] hash = dh.getTorrentHash();
+			
+			DownloadManager dm = CoreFactory.getSingleton().getGlobalManager().getDownloadManager( new HashWrapper( hash ));
+			
+			if ( dm != null ){
+				
+				UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT().showEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY );
+				
+				dm.fireGlobalManagerEvent( GlobalManagerEvent.ET_REQUEST_ATTENTION );
+			}
+		}
 	}
 
 	@Override
