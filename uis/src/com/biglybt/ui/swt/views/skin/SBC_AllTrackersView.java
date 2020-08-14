@@ -1148,7 +1148,7 @@ public class SBC_AllTrackersView
 					
 					has_any_constraint = val.length > 0;
 					
-					has_true_constraint = val.length == 1 && val[0].equalsIgnoreCase( "true" );
+					has_true_constraint = has_any_constraint && val[0].equalsIgnoreCase( "true" );
 				}
 			}
 			
