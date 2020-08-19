@@ -29,6 +29,7 @@ import java.net.InetSocketAddress;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -119,7 +120,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 	private AsyncDispatcher		dispatcher = new AsyncDispatcher( "BuddyPluginBeta" );
 
-	private Map<String,ChatInstance>		chat_instances_map 	= new HashMap<>();
+	private Map<String,ChatInstance>		chat_instances_map 	= new ConcurrentHashMap<>();
 	private CopyOnWriteList<ChatInstance>	chat_instances_list	= new CopyOnWriteList<>();
 
 	private PluginInterface azmsgsync_pi;
@@ -2752,22 +2753,19 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	{
 		String meta_key = network + ":" + key;
 
-		synchronized( chat_instances_map ){
+		ChatInstance inst = chat_instances_map.get( meta_key );
 
-			ChatInstance inst = chat_instances_map.get( meta_key );
+		if ( inst == null && create_if_missing ){
 
-			if ( inst == null && create_if_missing ){
+			try{
+				inst = getChat( network, key );
 
-				try{
-					inst = getChat( network, key );
+			}catch( Throwable e ){
 
-				}catch( Throwable e ){
-
-				}
 			}
-
-			return( inst );
 		}
+
+		return( inst );
 	}
 
 	private static final Object	DOWNLOAD_PEEK_CACHE_KEY = new Object();
