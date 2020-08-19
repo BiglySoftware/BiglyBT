@@ -535,7 +535,7 @@ DiskManagerImpl
 
         	for (int i=0; i<move_to_dirs.length; i++) {
         		File move_to_dir = move_to_dirs[i].getAbsoluteFile();
-        		if (filesExist (move_to_dir)) {
+        		if (filesExist (move_to_dir,true)) {
                     alreadyMoved = files_exist = true;
                     download_manager.setTorrentSaveDir(move_to_dir, false);
                     break;
@@ -769,12 +769,13 @@ DiskManagerImpl
     public boolean
     filesExist()
     {
-        return( filesExist( download_manager.getAbsoluteSaveLocation().getParentFile()));
+        return( filesExist( download_manager.getAbsoluteSaveLocation().getParentFile(), false));
     }
 
     protected boolean
     filesExist(
-        File  root_dir )
+        File  		root_dir,
+        boolean		exact )
     {
         if ( !torrent.isSimpleTorrent()){
 
@@ -860,10 +861,17 @@ DiskManagerImpl
                           return false;
                     }
 
-                        // only test for too big as if incremental creation selected
-                        // then too small is OK
-
                     long    existing_length = file_info.getCacheFile().getLength();
+
+                    if ( exact && !file_info.isSkipped() && existing_length != target_length ){
+                    	
+                    	setErrorMessage( data_file.toString() + " incorrect size." );
+                    	
+                    	return( false );
+                    }
+                    
+                    	// only test for too big as if incremental creation selected
+                    	// then too small is OK
 
                     if ( existing_length > target_length ){
 
