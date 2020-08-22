@@ -176,6 +176,9 @@ public interface UIFunctions
 		Runnable	runnable );
 
 	public boolean
+	isUIThread();
+	
+	public boolean
 	isProgramInstalled(
 		String		extension,
 		String		name );

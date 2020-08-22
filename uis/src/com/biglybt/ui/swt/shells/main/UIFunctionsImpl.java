@@ -1011,6 +1011,13 @@ public class UIFunctionsImpl
 
 	@Override
 	public boolean
+	isUIThread()
+	{
+		return( Utils.isSWTThread());
+	}
+	
+	@Override
+	public boolean
 	isProgramInstalled(
 		String extension,
 		String name )
