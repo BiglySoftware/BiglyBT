@@ -591,6 +591,13 @@ MainWindowDelayStub
 		}
 
 		@Override
+		public boolean
+		isUIThread()
+		{
+			return( Utils.isSWTThread());
+		}
+		
+		@Override
 		public void
 		refreshLanguage()
 		{

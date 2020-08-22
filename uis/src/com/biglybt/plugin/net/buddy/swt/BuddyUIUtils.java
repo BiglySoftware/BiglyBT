@@ -178,7 +178,7 @@ BuddyUIUtils
 										BuddyPluginUtils.createBetaChat(
 											AENetworkClassifier.AT_I2P, 
 											key, 
-											(chat)->{ listener.chatAvailable( target, chat ); });	
+											(chat)->{ if ( chat != null ){ listener.chatAvailable( target, chat ); }});	
 									}
 								});
 

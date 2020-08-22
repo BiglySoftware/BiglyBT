@@ -69,6 +69,8 @@ import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.I2PHelpers;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.util.MapUtils;
 
 
@@ -1489,28 +1491,32 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	{
 		if ( pi.getPluginID().equals( "azmsgsync" )){
 
+			List<ChatInstance>	to_bind = new ArrayList<>();
+			
 			synchronized( chat_instances_map ){
 
 				azmsgsync_pi = pi;
 
-				Iterator<ChatInstance>	it = chat_instances_map.values().iterator();
+				to_bind = chat_instances_list.getList();
+			}
 
-				while( it.hasNext()){
-
-					ChatInstance inst = it.next();
-
-					try{
-						inst.bind( azmsgsync_pi, null );
-
-					}catch( Throwable e ){
-
-						Debug.out( e );
-
-						it.remove();
+			for ( int i=0;i<2;i++){
+				
+				for ( ChatInstance chat: to_bind ){
+					
+					if ( ( chat.getNetwork() == AENetworkClassifier.AT_PUBLIC ) == ( i == 0 )){
+						
+						try{
+							doBind( chat, chat.getKey() + ":" + chat.getNetwork(), pi, null, false );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
 					}
 				}
 			}
-
+			
 			dispatcher.dispatch(
 				new AERunnable() {
 
@@ -2581,6 +2587,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		ChatInstance	added = null;
 
+		PluginInterface bind_pi = null;
+		
 		synchronized( chat_instances_map ){
 
 			result = chat_instances_map.get( meta_key );
@@ -2597,26 +2605,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				if ( azmsgsync_pi != null ){
 
-					try{
-						result.bind( azmsgsync_pi, handler );
-
-					}catch( Throwable e ){
-
-						chat_instances_map.remove( meta_key );
-
-						chat_instances_list.remove( result );
-
-						added = null;
-
-						result.destroy();
-
-						if ( e instanceof Exception ){
-
-							throw((Exception)e);
-						}
-
-						throw( new Exception( e ));
-					}
+					bind_pi = azmsgsync_pi;				
 				}
 			}else{
 
@@ -2631,20 +2620,65 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						2500,
 						new TimerEventPerformer() {
 
+							int tick_count;
+							
+							AsyncDispatcher rebinder = new AsyncDispatcher();
+							
+							boolean rebind_active;
+							
 							@Override
 							public void
 							perform(
 								TimerEvent event )
 							{
+								tick_count++;
+																				
 								for ( ChatInstance inst: chat_instances_list ){
 
 									inst.update();
+								}
+								
+								if ( tick_count % 25 == 0 ){
+									
+									synchronized( rebinder ){
+										
+										if ( !rebind_active ){
+											
+											rebind_active = true;
+											
+											rebinder.dispatch(
+												new AERunnable(){
+													public void
+													runSupport()
+													{
+														try{
+															
+															for ( ChatInstance inst: chat_instances_list ){
+
+																inst.checkRebind();
+															}
+														}finally{
+															
+															synchronized( rebinder ){
+																
+																rebind_active = false;
+															}
+														}
+													}
+												});							
+										}
+									}
 								}
 							}
 						});
 			}
 		}
 
+		if ( bind_pi != null ){
+			
+			doBind( result, meta_key, bind_pi, handler, true );
+		}
+		
 		if ( added != null ){
 
 			for ( ChatManagerListener l: BuddyPluginBeta.this.listeners ){
@@ -2662,6 +2696,41 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		return( result );
 	}
 
+	private void
+	doBind(
+		ChatInstance		chat,
+		String				meta_key,
+		PluginInterface		pi,
+		Object				handler,
+		boolean				destroy_on_fail )
+	
+		throws Exception
+	{
+		try{
+			chat.bind( azmsgsync_pi, handler, -1 );
+
+		}catch( Throwable e ){
+
+			if ( destroy_on_fail ){
+				
+				synchronized( chat_instances_map ){
+	
+					chat_instances_map.remove( meta_key );
+	
+					chat_instances_list.remove( chat );
+				}
+				
+				chat.destroy();
+			}
+			
+			if ( e instanceof Exception ){
+
+				throw((Exception)e);
+			}
+
+			throw( new Exception( e ));
+		}
+	}
 
 	public ChatInstance
 	peekChatInstance(
@@ -3130,6 +3199,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private String		display_name;
 			
 		private boolean		has_been_viewed;
+		
+		private volatile long		last_bind_fail = -1;
 		
 		private boolean		destroyed;
 
@@ -3800,14 +3871,27 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private void
 		bind(
 			PluginInterface		_msgsync_pi,
-			Object				_handler )
+			Object				_handler,
+			long				timeout )
 
 			throws Exception
 		{
 			boolean	inform_avail = false;
 
+			if ( timeout == -1 ){
+				
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+				
+				 if ( uif != null && uif.isUIThread()){
+					 
+					 timeout = 250;
+				 }
+			}
+			
 			synchronized( binding_lock ){
 
+				last_bind_fail = -1;
+				
 				binding_sem = new AESemaphore( "bpb:bind" );
 
 				try{
@@ -3825,6 +3909,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 							options.put( "addlistener", this );
 
+							if ( timeout > 0 ){
+							
+								options.put( "timeout", timeout );
+							}
+							
 							Map<String,Object> reply = (Map<String,Object>)msgsync_pi.getIPC().invoke( "updateMessageHandler", new Object[]{ options } );
 
 							my_public_key 		= (byte[])reply.get( "pk" );
@@ -3863,6 +3952,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								options.put( "server_id", getSharedAnonEndpoint()?"dchat_shared":"dchat" );
 							}
 
+							if ( timeout > 0 ){
+								
+								options.put( "timeout", timeout );
+							}
+							
 							options.put( "listener", this );
 
 							if ( getSaveMessages()){
@@ -3888,6 +3982,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 						}catch( Throwable e ){
 
+							last_bind_fail = SystemTime.getMonotonousTime();
+							
 							throw( new Exception( e ));
 						}
 					}
@@ -3921,6 +4017,21 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 
+		private void 
+		checkRebind()
+		{
+			if ( last_bind_fail >= 0 ){
+				
+				try{
+					bind( msgsync_pi, null, 1000 );
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+		}
+		
 		private void
 		updateOptions(
 			Map<String,Object>		options )
@@ -4124,6 +4235,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		public String
 		getStatus()
 		{
+			if ( isDestroyed()){
+				
+				return( MessageText.getString( "azbuddy.dchat.status.destroyed" ));
+			}
+			
 			PluginInterface		current_pi 			= msgsync_pi;
 			Object 				current_handler 	= handler;
 
