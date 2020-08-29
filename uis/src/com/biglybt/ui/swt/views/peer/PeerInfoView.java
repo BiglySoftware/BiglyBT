@@ -102,7 +102,7 @@ public class PeerInfoView
 
 	private final static int BLOCKCOLOR_AVAILCOUNT = 6;
 
-	private static final int MAX_PIECES_TO_SHOW = PieceInfoView.MAX_PIECES_TO_SHOW;
+	private static final int MAX_PIECES_TO_SHOW = 1024 * 32;
 	
 	private Composite peerInfoComposite;
 

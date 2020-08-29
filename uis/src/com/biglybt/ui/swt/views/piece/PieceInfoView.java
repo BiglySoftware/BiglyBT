@@ -35,10 +35,7 @@ import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
-import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.download.DownloadManagerPeerListener;
-import com.biglybt.core.download.DownloadManagerPieceListener;
-import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -106,7 +103,7 @@ public class PieceInfoView
 
 	private static final byte SHOW_SMALL = 1;
 
-	public static final int MAX_PIECES_TO_SHOW	= 32*1024;
+	public static final int MAX_PIECE_CACHE	= 32*1024;
 	
 	private Composite pieceInfoComposite;
 
@@ -164,7 +161,7 @@ public class PieceInfoView
 	private Label imageLabel;
 
 	// More delay for this view because of high workload
-	private int graphicsUpdate = COConfigurationManager.getIntParameter("Graphics Update") * 2;
+	private final int graphicsUpdate = COConfigurationManager.getIntParameter("Graphics Update") * 2;
 
 	private int loopFactor = 0;
 
@@ -176,6 +173,7 @@ public class PieceInfoView
 	private PiecePicker		current_pp;
 	
 	BlockInfo[] oldBlockInfo;
+	int oldBlockInfoStart = 0;
 
 	/**
 	 * Initialize
@@ -256,9 +254,13 @@ public class PieceInfoView
 	selectPieces(
 		PEPiece...		pieces )
 	{
-		selectedPieceExplicit = new ArrayList<>();
-		for (PEPiece piece : pieces) {
-			selectedPieceExplicit.add(piece.getPieceNumber());
+		if (pieces.length > 0) {
+			selectedPieceExplicit = new ArrayList<>();
+			for (PEPiece piece : pieces) {
+				selectedPieceExplicit.add(piece.getPieceNumber());
+			}
+		} else {
+			selectedPieceExplicit = null;
 		}
 		
 		Utils.execSWTThread(() -> {
@@ -311,80 +313,80 @@ public class PieceInfoView
 		pieceInfoCanvas = new Canvas(sc, SWT.NO_REDRAW_RESIZE | SWT.NO_BACKGROUND);
 		gridData = new GridData(GridData.FILL, SWT.DEFAULT, true, false);
 		pieceInfoCanvas.setLayoutData(gridData);
-		pieceInfoCanvas.addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e) {
-				if (e.width <= 0 || e.height <= 0)
-					return;
-				try {
-					Rectangle bounds = (img == null) ? null : img.getBounds();
-					if (bounds == null || dlm == null ) {
-						e.gc.fillRectangle(e.x, e.y, e.width, e.height);
-					} else {
-						if (e.x + e.width > bounds.width)
-							e.gc.fillRectangle(bounds.width, e.y, e.x + e.width
-									- bounds.width + 1, e.height);
-						if (e.y + e.height > bounds.height)
-							e.gc.fillRectangle(e.x, bounds.height, e.width, e.y + e.height
-									- bounds.height + 1);
-
-						int width = Math.min(e.width, bounds.width - e.x);
-						int height = Math.min(e.height, bounds.height - e.y);
-						e.gc.drawImage(img, e.x, e.y, width, height, e.x, e.y, width,
-								height);
+		pieceInfoCanvas.addPaintListener(e -> {
+			if (e.width <= 0 || e.height <= 0) {
+				return;
+			}
+			try {
+				Rectangle bounds = (img == null) ? null : img.getBounds();
+				if (bounds == null || dlm == null ) {
+					e.gc.fillRectangle(e.x, e.y, e.width, e.height);
+				} else {
+					int visibleImageWidth = bounds.width - e.x;
+					int visibleImageHeight = bounds.height - e.y;
+					if (e.width > visibleImageWidth) {
+						e.gc.fillRectangle(bounds.width, e.y,
+								e.width - visibleImageWidth + 1, e.height);
 					}
-				} catch (Exception ex) {
+					if (e.height > visibleImageHeight) {
+						e.gc.fillRectangle(e.x, bounds.height, e.width,
+								e.height - visibleImageHeight + 1);
+					}
+
+					int width = Math.min(e.width, visibleImageWidth);
+					int height = Math.min(e.height, visibleImageHeight);
+					e.gc.drawImage(img, e.x, e.y, width, height, e.x, e.y, width,
+							height);
+					//log("draw " + e.x + "x" + e.y + ", w=" + width + ", h=" + height);
 				}
+			} catch (Exception ex) {
 			}
 		});
 		pieceInfoCanvas.addListener(SWT.KeyDown, new DoNothingListener());
 
-		pieceInfoCanvas.addListener(SWT.Resize, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				synchronized (PieceInfoView.this) {
-  				if (alreadyFilling) {
-  					return;
-  				}
+		pieceInfoCanvas.addListener(SWT.Resize, e -> {
+			synchronized (PieceInfoView.this) {
+//				log("resize.  af=" + alreadyFilling);
+			  if (alreadyFilling) {
+				  return;
+			  }
 
-  				alreadyFilling = true;
-				}
-
-				// wrap in asyncexec because sc.setMinWidth (called later) doesn't work
-				// too well inside a resize (the canvas won't size isn't always updated)
-				Utils.execSWTThreadLater(0, new AERunnable() {
-					@Override
-					public void runSupport() {
-						if (img != null) {
-							int iOldColCount = img.getBounds().width / BLOCK_SIZE;
-							int iNewColCount = pieceInfoCanvas.getClientArea().width
-									/ BLOCK_SIZE;
-							if (iOldColCount != iNewColCount)
-								refreshInfoCanvas();
-						}
-						synchronized (PieceInfoView.this) {
-							alreadyFilling = false;
-						}
-					}
-				});
+			  alreadyFilling = true;
 			}
+
+			// wrap in asyncexec because sc.setMinWidth (called later) doesn't work
+			// too well inside a resize (the canvas won't size isn't always updated)
+			Utils.execSWTThreadLater(0, () -> {
+				if (img != null) {
+					int iOldColCount = img.getBounds().width / BLOCK_SIZE;
+					int iNewColCount = pieceInfoCanvas.getClientArea().width
+							/ BLOCK_SIZE;
+//					log("resize. col " + iOldColCount + "->" + iNewColCount);
+					if (iOldColCount != iNewColCount) {
+						refreshInfoCanvas();
+					}
+				} else {
+//					log("resize. no img");
+				}
+				synchronized (PieceInfoView.this) {
+					alreadyFilling = false;
+				}
+			});
 		});
 
 		sc.setContent(pieceInfoCanvas);
 
-		pieceInfoCanvas.addMouseMoveListener(
-			new MouseMoveListener(){
+		pieceInfoCanvas.addMouseMoveListener(event -> {
+			int piece_number = getPieceNumber( event.x, event.y );
+			
+			if ( piece_number != selectedPiece ){
 				
-				@Override
-				public void mouseMove(MouseEvent event){
-					int piece_number = getPieceNumber( event.x, event.y );
-					
-					if ( piece_number != selectedPiece ){
-						
-						selectedPieceShowFilePending = -1;
-					}
-				}
-			});
+				selectedPieceShowFilePending = -1;
+			}
+		});
+		
+		pieceInfoCanvas.addListener(SWT.Move, event -> fillPieceInfoSection());
+		sc.addListener(SWT.Resize, event -> fillPieceInfoSection());
 		
 		pieceInfoCanvas.addMouseTrackListener(
 			new MouseTrackAdapter()
@@ -408,26 +410,15 @@ public class PieceInfoView
 						SimpleTimer.addEvent(
 							"ShowFile",
 							SystemTime.getOffsetTime( 1000 ),
-							new TimerEventPerformer(){
-								
-								@Override
-								public void perform(TimerEvent event){										
-									Utils.execSWTThread(
-										new Runnable(){
-											
-											@Override
-											public void run(){
-												
-												if ( selectedPieceShowFilePending == piece_number ){
+							event1 -> Utils.execSWTThread(() -> {
+									
+								if ( selectedPieceShowFilePending == piece_number ){
 
-													selectedPieceShowFile = true;
-													
-													refreshInfoCanvas();
-												}	
-											}
-										});
-									}
-							});
+									selectedPieceShowFile = true;
+									
+									refreshInfoCanvas();
+								}	
+							}));
 						
 						refreshInfoCanvas();
 						
@@ -463,142 +454,127 @@ public class PieceInfoView
 
 		pieceInfoCanvas.addListener(
 			SWT.MenuDetect,
-			new Listener()
-			{
-				@Override
-				public void
-				handleEvent(
-					Event event)
-				{
-					Point pt = pieceInfoCanvas.toControl(event.x, event.y);
+			event -> {
+				Point pt = pieceInfoCanvas.toControl(event.x, event.y);
 
-					int	piece_number = getPieceNumber( pt.x, pt.y );
+				int	piece_number = getPieceNumber( pt.x, pt.y );
 
-					menu.setData( "pieceNumber", piece_number );
-				}
+				menu.setData( "pieceNumber", piece_number );
 			});
 
 		MenuBuildUtils.addMaintenanceListenerForMenu(
 			menu,
-			new MenuBuildUtils.MenuBuilder()
-			{
-				@Override
-				public void
-				buildMenu(
-					Menu 		menu,
-					MenuEvent 	event)
-				{
-					Integer pn = (Integer)menu.getData( "pieceNumber" );
+			(menu1, event) -> {
+				Integer pn = (Integer) menu1.getData( "pieceNumber" );
 
-					if ( pn != null && pn != -1 ){
+				if ( pn != null && pn != -1 ){
 
-						DownloadManager	download_manager = dlm;
+					DownloadManager	download_manager = dlm;
 
-						if ( download_manager == null ){
+					if ( download_manager == null ){
 
-							return;
-						}
-
-						DiskManager		disk_manager = download_manager.getDiskManager();
-						PEPeerManager	peer_manager = download_manager.getPeerManager();
-
-						if ( disk_manager == null || peer_manager == null ){
-
-							return;
-						}
-
-						final PiecePicker picker = peer_manager.getPiecePicker();
-
-						DiskManagerPiece[] 	dm_pieces = disk_manager.getPieces();
-						PEPiece[]			pe_pieces = peer_manager.getPieces();
-
-						final int piece_number = pn;
-
-						final DiskManagerPiece	dm_piece = dm_pieces[piece_number];
-						final PEPiece			pm_piece = pe_pieces[piece_number];
-
-						final MenuItem force_piece = new MenuItem( menu, SWT.CHECK );
-
-						Messages.setLanguageText( force_piece, "label.force.piece" );
-
-						boolean	done = dm_piece.isDone();
-
-						force_piece.setEnabled( !done );
-
-						if ( !done ){
-
-							force_piece.setSelection( picker.isForcePiece( piece_number ));
-
-							force_piece.addSelectionListener(
-									new SelectionListenerForcePiece(picker, piece_number, force_piece));
-						}
-
-						final MenuItem reset_piece = new MenuItem( menu, SWT.PUSH );
-
-						Messages.setLanguageText( reset_piece, "label.reset.piece" );
-
-						boolean	can_reset = dm_piece.isDone() || dm_piece.getNbWritten() > 0;
-
-						reset_piece.setEnabled( can_reset );
-
-						reset_piece.addSelectionListener(
-								new SelectionListenerResetPiece(dm_piece, pm_piece));
-										
-						new MenuItem( menu, SWT.SEPARATOR );
-						
-						final MenuItem seq_asc = new MenuItem( menu, SWT.PUSH );
-
-						Messages.setLanguageText( seq_asc, "label.seq.asc.from", new String[]{ String.valueOf( piece_number )});
-
-						seq_asc.addSelectionListener(
-							new SelectionAdapter()
-							{
-								@Override
-								public void widgetSelected(SelectionEvent e){
-									
-									download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
-									
-									picker.setReverseBlockOrder( false );
-									
-									picker.setSequentialAscendingFrom( piece_number );
-								}
-							});
-						
-						final MenuItem seq_desc = new MenuItem( menu, SWT.PUSH );
-
-						Messages.setLanguageText( seq_desc, "label.seq.desc.from", new String[]{ String.valueOf( piece_number )});
-
-						seq_desc.addSelectionListener(
-							new SelectionAdapter()
-							{
-								@Override
-								public void widgetSelected(SelectionEvent e){
-									download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
-									
-									picker.setReverseBlockOrder( true );
-									
-									picker.setSequentialDescendingFrom( piece_number );
-								}
-							});
-						
-						final MenuItem seq_clear = new MenuItem( menu, SWT.PUSH );
-
-						Messages.setLanguageText( seq_clear, "label.seq.clear", new String[]{ String.valueOf( piece_number )});
-
-						seq_clear.addSelectionListener(
-							new SelectionAdapter()
-							{
-								@Override
-								public void widgetSelected(SelectionEvent e){
-									download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
-									
-									picker.setReverseBlockOrder( false );
-									
-									picker.clearSequential();
-								}
-							});
-						
+						return;
 					}
+
+					DiskManager		disk_manager = download_manager.getDiskManager();
+					PEPeerManager	peer_manager = download_manager.getPeerManager();
+
+					if ( disk_manager == null || peer_manager == null ){
+
+						return;
+					}
+
+					final PiecePicker picker = peer_manager.getPiecePicker();
+
+					DiskManagerPiece[] 	dm_pieces = disk_manager.getPieces();
+					PEPiece[]			pe_pieces = peer_manager.getPieces();
+
+					final int piece_number = pn;
+
+					final DiskManagerPiece	dm_piece = dm_pieces[piece_number];
+					final PEPiece			pm_piece = pe_pieces[piece_number];
+
+					final MenuItem force_piece = new MenuItem(menu1, SWT.CHECK );
+
+					Messages.setLanguageText( force_piece, "label.force.piece" );
+
+					boolean	done = dm_piece.isDone();
+
+					force_piece.setEnabled( !done );
+
+					if ( !done ){
+
+						force_piece.setSelection( picker.isForcePiece( piece_number ));
+
+						force_piece.addSelectionListener(
+								new SelectionListenerForcePiece(picker, piece_number, force_piece));
+					}
+
+					final MenuItem reset_piece = new MenuItem(menu1, SWT.PUSH );
+
+					Messages.setLanguageText( reset_piece, "label.reset.piece" );
+
+					boolean	can_reset = dm_piece.isDone() || dm_piece.getNbWritten() > 0;
+
+					reset_piece.setEnabled( can_reset );
+
+					reset_piece.addSelectionListener(
+							new SelectionListenerResetPiece(dm_piece, pm_piece));
+									
+					new MenuItem(menu1, SWT.SEPARATOR );
+					
+					final MenuItem seq_asc = new MenuItem(menu1, SWT.PUSH );
+
+					Messages.setLanguageText( seq_asc, "label.seq.asc.from", String.valueOf( piece_number ));
+
+					seq_asc.addSelectionListener(
+						new SelectionAdapter()
+						{
+							@Override
+							public void widgetSelected(SelectionEvent e){
+								
+								download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
+								
+								picker.setReverseBlockOrder( false );
+								
+								picker.setSequentialAscendingFrom( piece_number );
+							}
+						});
+					
+					final MenuItem seq_desc = new MenuItem(menu1, SWT.PUSH );
+
+					Messages.setLanguageText( seq_desc, "label.seq.desc.from", String.valueOf( piece_number ));
+
+					seq_desc.addSelectionListener(
+						new SelectionAdapter()
+						{
+							@Override
+							public void widgetSelected(SelectionEvent e){
+								download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
+								
+								picker.setReverseBlockOrder( true );
+								
+								picker.setSequentialDescendingFrom( piece_number );
+							}
+						});
+					
+					final MenuItem seq_clear = new MenuItem(menu1, SWT.PUSH );
+
+					Messages.setLanguageText( seq_clear, "label.seq.clear", String.valueOf( piece_number ));
+
+					seq_clear.addSelectionListener(
+						new SelectionAdapter()
+						{
+							@Override
+							public void widgetSelected(SelectionEvent e){
+								download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
+								
+								picker.setReverseBlockOrder( false );
+								
+								picker.clearSequential();
+							}
+						});
+					
 				}
 			});
 
@@ -651,6 +627,7 @@ public class PieceInfoView
 	private UISWTView swtView;
 
 	private void fillPieceInfoSection() {
+//		log("fillPieceInfoSection.  af=" + alreadyFilling + "; " + Debug.getCompressedStackTrace(4));
 		synchronized (this) {
 			if (alreadyFilling) {
 				return;
@@ -658,31 +635,28 @@ public class PieceInfoView
 			alreadyFilling = true;
 		}
 
-		Utils.execSWTThreadLater(100, new AERunnable() {
-			@Override
-			public void runSupport() {
-				synchronized (PieceInfoView.this) {
-					if (!alreadyFilling) {
-						return;
-					}
+		Utils.execSWTThreadLater(0, () -> {
+			synchronized (PieceInfoView.this) {
+				if (!alreadyFilling) {
+					return;
+				}
+			}
+
+			try {
+				if (imageLabel == null || imageLabel.isDisposed()) {
+					return;
 				}
 
-				try {
-					if (imageLabel == null || imageLabel.isDisposed()) {
-						return;
-					}
+				if (imageLabel.getImage() != null) {
+					Image image = imageLabel.getImage();
+					imageLabel.setImage(null);
+					image.dispose();
+				}
 
-					if (imageLabel.getImage() != null) {
-						Image image = imageLabel.getImage();
-						imageLabel.setImage(null);
-						image.dispose();
-					}
-
-					refreshInfoCanvas();
-				} finally {
-					synchronized (PieceInfoView.this) {
-						alreadyFilling = false;
-					}
+				refreshInfoCanvas();
+			} finally {
+				synchronized (PieceInfoView.this) {
+					alreadyFilling = false;
 				}
 			}
 		});
@@ -702,37 +676,40 @@ public class PieceInfoView
 		PEPeerManager	pm 				= dlm.getPeerManager();
 
 		DiskManagerPiece[] dm_pieces = disk_manager == null ? dlm.getDiskManagerPiecesSnapshot() :  disk_manager.getPieces();
-		
-		String text = "";
+
+		// TODO: i18n
+		StringBuilder text = new StringBuilder();
 		
 		if ( dm_pieces != null ){
 			
-			String 	files_str = "";
+			StringBuilder files_str = new StringBuilder();
 			int		file_count = 0;
-			
+
 			for (int piece_number : piece_numbers) {
-				if (!text.isEmpty()) {
-					text += "\n";
+				if (text.length() > 0) {
+					text.append("\n");
 				}
 					
 				DiskManagerPiece	dm_piece = dm_pieces[ piece_number ];
 				PEPiece 			pm_piece = pm==null?null:pm.getPiece( piece_number );
-		
-				text +=  "Piece " + piece_number + ": " + dm_piece.getString();
-		
+
+				text.append("Piece ").append(piece_number);
+				text.append(": ").append(dm_piece.getString());
+
 				if ( pm_piece != null ){
-		
-					text += ", active: " + pm_piece.getString();
-		
+
+					text.append(", active: ").append(pm_piece.getString());
+
 				}else{
 		
 					if ( dm_piece.isNeeded() && !dm_piece.isDone() && pm != null ){
-		
-						text += ", inactive: " + pm.getPiecePicker().getPieceString( piece_number );
+
+						text.append(", inactive: ");
+						text.append(pm.getPiecePicker().getPieceString(piece_number));
 					}
 				}
 				
-				text += " - ";
+				text.append(" - ");
 				
 				DMPieceList l = dm_piece.getPieceList();
 								
@@ -741,27 +718,43 @@ public class PieceInfoView
 					DMPieceMapEntry entry = l.get( i );
 					
 					DiskManagerFileInfo info = entry.getFile();
-			
-					text += (i==0?"":"; ") + info.getFile( true ).getName() + ", " + MessageText.getString( "label.offset" ) + " " + entry.getOffset();
-					
+
+					if (i > 0) {
+						text.append("; ");
+					}
+					text.append(info.getFile(true).getName());
+					text.append(", ");
+					text.append(MessageText.getString("label.offset"));
+					text.append(" ");
+					text.append(entry.getOffset());
+
 					if ( file_count < 20 ){
-					
-						files_str += (files_str.isEmpty()?"":"\n") + info.getTorrentFile().getRelativePath() + ", " + MessageText.getString( "label.offset" ) + " " + entry.getOffset();
-						
+
+						if (files_str.length() > 0) {
+							files_str.append('\n');
+						}
+						files_str.append(info.getTorrentFile().getRelativePath());
+						files_str.append(", ");
+						files_str.append(MessageText.getString("label.offset"));
+						files_str.append(" ");
+						files_str.append(entry.getOffset());
+
 					}else if ( file_count == 20 ){
 						
-						files_str += "\n...";
+						files_str.append("\n...");
 					}
+
+					file_count++;
 				}	
 			}
 				
-			Utils.setTT( pieceInfoCanvas, files_str );
+			Utils.setTT( pieceInfoCanvas, files_str.toString());
 			
 		}else{
 			Utils.setTT( pieceInfoCanvas, null );
 		}
 		
-		topLabelRHS = text;
+		topLabelRHS = text.toString();
 	}
 	
 	private void
@@ -769,7 +762,7 @@ public class PieceInfoView
 	{
 		String text = topLabelLHS;
 		
-		if (selectedPieceExplicit != null && !selectedPieceExplicit.isEmpty()) {
+		if (selectedPieceExplicit != null) {
 			setTopLableRHS( selectedPieceExplicit.toArray(new Integer[0]) );
 		}
 
@@ -790,6 +783,8 @@ public class PieceInfoView
 			scrollPending = false;
 			
 			sc.setOrigin( 0, pos );
+
+			refreshInfoCanvasSupport();
 		}
 	}
 	
@@ -863,9 +858,6 @@ public class PieceInfoView
 		}
 		
 		int numPieces = dm_pieces.length;
-		if ( numPieces > MAX_PIECES_TO_SHOW ){
-			numPieces = MAX_PIECES_TO_SHOW;
-		}
 		int iNeededHeight = (((numPieces - 1) / iNumCols) + 1) * BLOCK_SIZE;
 
 		if (img != null && !img.isDisposed()) {
@@ -877,6 +869,20 @@ public class PieceInfoView
 				img.dispose();
 				img = null;
 			}
+		}
+
+		if (sc.getMinHeight() != iNeededHeight) {
+			boolean scrollVisible = sc.getVerticalBar() != null && sc.getVerticalBar().getVisible();
+//			log("minHeight sc=" + sc.getMinHeight() +
+//				", needed=" + iNeededHeight + "; sc.ca=" + sc.getClientArea()
+//				+ "; sc.vbv=" + scrollVisible + "; " + Debug.getCompressedStackTrace(3));
+			sc.setMinHeight(iNeededHeight);
+			sc.layout(true, true);
+			if (!scrollVisible && iNeededHeight > sc.getClientArea().height) {
+//				log("skip canvas fill, scrollbar incoming. " + (sc.getVerticalBar() != null && sc.getVerticalBar().getVisible()));
+				return refreshInfoCanvasSupport();
+			}
+			bounds = pieceInfoCanvas.getClientArea();
 		}
 
 		currentNumPieces = numPieces;
@@ -903,12 +909,6 @@ public class PieceInfoView
 			}
 		}
 
-		if (sc.getMinHeight() != iNeededHeight) {
-			sc.setMinHeight(iNeededHeight);
-			sc.layout(true, true);
-			bounds = pieceInfoCanvas.getClientArea();
-		}
-
 		int[] availability = pm == null ? null : pm.getAvailability();
 
 		int minAvailability = Integer.MAX_VALUE;
@@ -932,9 +932,8 @@ public class PieceInfoView
 		GC gcImg = new GC(img);
 
 
-		BlockInfo[] newBlockInfo = new BlockInfo[numPieces];
-
-		int iRow = 0;
+		int iRow;
+		int numChanged = 0;
 		try {
 			// use advanced capabilities for faster drawText
 			gcImg.setAdvanced(true);
@@ -976,7 +975,26 @@ public class PieceInfoView
 			gcImg.setFont(font);
 
 			int iCol = 0;
-			for (int i = 0; i < numPieces; i++) {
+			int startPieceNo = 0;
+
+			Rectangle canvasBounds = pieceInfoCanvas.getBounds();
+			if (canvasBounds.y < 0) {
+				startPieceNo = ((-canvasBounds.y) / BLOCK_SIZE) * iNumCols;
+			}
+			int drawHeight = sc.getClientArea().height;
+			// +1 in case first visible row is partial
+			int endPieceNo = Math.min(numPieces - 1, (int) (startPieceNo
+					+ (Math.ceil(drawHeight / (float) BLOCK_SIZE) + 1) * iNumCols) - 1);
+//			log("start filling " + (endPieceNo - startPieceNo + 1) + ". " + startPieceNo + " to " + endPieceNo + " (of " + numPieces + ")");
+			iRow = startPieceNo / iNumCols;
+
+			int blockInfoStart = (endPieceNo / MAX_PIECE_CACHE) * MAX_PIECE_CACHE;
+			if (oldBlockInfo == null || oldBlockInfoStart != blockInfoStart) {
+				oldBlockInfo = new BlockInfo[numPieces];
+				oldBlockInfoStart = blockInfoStart;
+			}
+			
+			for (int i = startPieceNo; i <= endPieceNo; i++) {
 				DiskManagerPiece dm_piece = dm_pieces[i];
 				
 				if (iCol >= iNumCols) {
@@ -984,7 +1002,7 @@ public class PieceInfoView
 					iRow++;
 				}
 
-				BlockInfo newInfo = newBlockInfo[i] = new BlockInfo();
+				BlockInfo newInfo = new BlockInfo();
 
 				if ( i >= selectionStart && i <= selectionEnd ){
 					newInfo.selectedRange = true;
@@ -994,10 +1012,6 @@ public class PieceInfoView
 				int iXPos = iCol * BLOCK_SIZE + 1;
 				int iYPos = iRow * BLOCK_SIZE + 1;
 
-				Rectangle rect = pieceInfoComposite.getBounds();
-				if ( iYPos > bounds.height ){
-					break;
-				}
 				if (done) {
 				
 					newInfo.haveWidth = BLOCK_FILLSIZE;
@@ -1033,7 +1047,7 @@ public class PieceInfoView
 							? SHOW_SMALL : SHOW_BIG;
 				}
 
-				if (uploadingPieces != null && uploadingPieces[i] > 0) {
+				if (uploadingPieces[i] > 0) {
 					newInfo.showUp = uploadingPieces[i] < 2 ? SHOW_SMALL
 							: SHOW_BIG;
 				}
@@ -1056,12 +1070,13 @@ public class PieceInfoView
 				}
 
 				if ( 	!forceRepaint && 
-						oldBlockInfo != null && 
-						i < oldBlockInfo.length &&
-						oldBlockInfo[i].sameAs(newInfo)) {
-					
+						oldBlockInfo != null &&
+						i >= oldBlockInfoStart &&
+						i - oldBlockInfoStart < oldBlockInfo.length &&
+						newInfo.sameAs(oldBlockInfo[i - oldBlockInfoStart])) {
+
 						// skip this one as unchanged
-					
+
 					iCol++;
 					continue;
 				}
@@ -1080,7 +1095,6 @@ public class PieceInfoView
 					}
 					
 					gcImg.setBackground(file_color_faded);
-					gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos, BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
 
 				}else {
 					gcImg.setBackground(pieceInfoCanvas.getBackground());
@@ -1103,9 +1117,11 @@ public class PieceInfoView
 					gcImg.fillRectangle(iXPos, iYPos, newInfo.haveWidth, BLOCK_FILLSIZE);
 	
 					gcImg.setBackground(blockColors[BLOCKCOLOR_NOHAVE]);
-					gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos, BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
 				}
-				
+
+				gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos,
+						BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
+
 				if (newInfo.showDown > 0) {
 					drawDownloadIndicator(gcImg, iXPos, iYPos,
 							newInfo.showDown == SHOW_SMALL);
@@ -1162,25 +1178,22 @@ public class PieceInfoView
 				gcImg.drawText(availText, x, y, true);
 
 				iCol++;
+				numChanged++;
+				if (i >= oldBlockInfoStart) {
+					oldBlockInfo[i - oldBlockInfoStart] = newInfo;
+				}
 			}
-			oldBlockInfo = newBlockInfo;
+
+//			log("end fill. numChanged=" + numChanged);
+
 		} catch (Exception e) {
 			Logger.log(new LogEvent(LogIDs.GUI, "drawing piece map", e));
 		} finally {
 			gcImg.dispose();
 		}
 
-		topLabelLHS = MessageText.getString("PiecesView.BlockView.Header",
-				new String[] {
-					"" + iNumCols,
-					"" + (iRow + 1),
-					"" + numPieces + (dm_pieces.length > numPieces?"+":"")
-				});
+		topLabelLHS = numPieces + " " + MessageText.getString("Peers.column.pieces"); 
 
-		if ( dm_pieces.length > numPieces ){
-			topLabelLHS += " (" + MessageText.getString( "label.truncated" ).toLowerCase() + ")";
-		}
-		
 		if (pm != null) {
 			PiecePicker picker = pm.getPiecePicker();
 			
@@ -1216,13 +1229,25 @@ public class PieceInfoView
 		
 		updateTopLabel();
 
-		pieceInfoCanvas.redraw();
-		
+		if (numChanged > 0) {
+//			log("redraw");
+			pieceInfoCanvas.redraw();
+		}
+
+		if (result == -1 && (selectedPiece >= 0 || selectedPieceExplicit != null)) {
+			int i = selectedPiece >= 0 ? selectedPiece : selectedPieceExplicit.get(0);
+			result = (i / iNumCols) * BLOCK_SIZE;
+		}
+
 		return( result );
 	}
 
-	private void drawDownloadIndicator(GC gcImg, int iXPos, int iYPos,
-			boolean small) {
+//	private static void log(String s) {
+//		System.out.println(SystemTime.getCurrentTime() + " PIV] " + s);
+//	}
+
+	private static void drawDownloadIndicator(GC gcImg, int iXPos, int iYPos,
+		boolean small) {
 		if (small) {
 			gcImg.setBackground(blockColors[BLOCKCOLOR_NEXT]);
 			gcImg.fillPolygon(new int[] {
@@ -1246,7 +1271,7 @@ public class PieceInfoView
 		}
 	}
 
-	private void drawUploadIndicator(GC gcImg, int iXPos, int iYPos, boolean small) {
+	private static void drawUploadIndicator(GC gcImg, int iXPos, int iYPos, boolean small) {
 		if (!small) {
 			gcImg.setBackground(blockColors[BLOCKCOLOR_TRANSFER]);
 			gcImg.fillPolygon(new int[] {
@@ -1316,9 +1341,7 @@ public class PieceInfoView
 		int			thing,
 		Object		data )
 	{	
-		Utils.execSWTThread(() -> {
-			refreshInfoCanvas();
-		});
+		Utils.execSWTThread(this::refreshInfoCanvas);
 	}
 	
 	private void obfuscatedImage(Image image) {
@@ -1337,12 +1360,14 @@ public class PieceInfoView
 		fillPieceInfoSection();
 	}
 
+	@Override
 	public void
 	peerManagerWillBeAdded(
 		PEPeerManager	manager )
 	{
 	}
 
+	@Override
 	public void
 	peerManagerAdded(
 		PEPeerManager	manager )
@@ -1357,18 +1382,21 @@ public class PieceInfoView
 		}
 	}
 
+	@Override
 	public void
 	peerManagerRemoved(
 		PEPeerManager	manager )
 	{
 	}
 
+	@Override
 	public void
 	peerAdded(
 		PEPeer 	peer )
 	{
 	}
 
+	@Override
 	public void
 	peerRemoved(
 		PEPeer	peer )
@@ -1393,6 +1421,9 @@ public class PieceInfoView
 		}
 
 		public boolean sameAs(BlockInfo otherBlockInfo) {
+			if (otherBlockInfo == null) {
+				return false;
+			}
 			return haveWidth == otherBlockInfo.haveWidth
 					&& availNum == otherBlockInfo.availNum
 					&& availDotted == otherBlockInfo.availDotted
@@ -1401,6 +1432,20 @@ public class PieceInfoView
 					&& selectedRange == otherBlockInfo.selectedRange 
 					&& selected == otherBlockInfo.selected 
 					&& forced == otherBlockInfo.forced;
+		}
+
+		@Override
+		public String toString() {
+			return "BlockInfo@" + Integer.toHexString(hashCode()) + "{" +
+				"haveWidth=" + haveWidth +
+				", availNum=" + availNum +
+				", availDotted=" + availDotted +
+				", showUp=" + showUp +
+				", showDown=" + showDown +
+				", selectedRange=" + selectedRange +
+				", selected=" + selected +
+				", forced=" + forced +
+				'}';
 		}
 	}
 
@@ -1436,9 +1481,6 @@ public class PieceInfoView
       case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
       	dataSourceChanged(event.getData());
         break;
-
-      case UISWTViewEvent.TYPE_FOCUSGAINED:
-      	break;
 
       case UISWTViewEvent.TYPE_REFRESH:
         refresh();
