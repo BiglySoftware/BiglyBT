@@ -347,6 +347,11 @@ public class ConfigSectionFile
 		bpUseResume.addEnabledOnSelection(pgResumeGroup);
 		save_peers.addEnabledOnSelection(savePeersMax);
 
+			// disable interim state save 
+		BooleanParameterImpl bDisableSveInterim = new BooleanParameterImpl(BCFG_DISABLE_SAVE_INTERIM_DOWNLOAD_STATE,
+				"ConfigView.label.disableinterimstatesave");
+		add(bDisableSveInterim, Parameter.MODE_ADVANCED );
+
 		List<Parameter> listExt = new ArrayList<>();
 
 		StringParameterImpl priorityExtensions = new StringParameterImpl(

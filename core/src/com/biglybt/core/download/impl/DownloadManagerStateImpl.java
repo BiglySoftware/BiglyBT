@@ -30,6 +30,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFactory;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -79,6 +80,16 @@ DownloadManagerStateImpl
 
 			FileUtil.mkdirs(ACTIVE_DIR);
 		}
+	}
+	
+	private static boolean disable_interim_saves;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			ConfigKeys.File.BCFG_DISABLE_SAVE_INTERIM_DOWNLOAD_STATE,
+			(n)->{
+				disable_interim_saves = COConfigurationManager.getBooleanParameter( n );
+			});
 	}
 
 	private static final Random	random = RandomUtils.SECURE_RANDOM;
@@ -1137,10 +1148,21 @@ DownloadManagerStateImpl
 		boolean interim, 
 		boolean force )
 	{
-		if ( supressWrites > 0 && !force ){
-
-			return;
+		if ( !force ){
+			
+			if ( supressWrites > 0 ){
+	
+				return;
+			}
+			
+			if ( interim && disable_interim_saves ){
+				
+				return;
+			}
 		}
+		
+		boolean soon = write_required_soon;
+		long some = write_required_sometime;
 
  		boolean do_write;
 
@@ -1182,7 +1204,7 @@ DownloadManagerStateImpl
 
 			try{
 				
-				// System.out.println( "writing download state for '" + new String(torrent.getName()));
+				//Debug.out( "writing download state for '" + new String(torrent.getName()) + ", interim=" + interim + ", soon/some=" + soon + "/" + some );
 
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(torrent, LOGID, "Saving state for download '"

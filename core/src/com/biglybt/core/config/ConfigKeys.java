@@ -137,6 +137,7 @@ public final class ConfigKeys {
 		public static final String BCFG_ON_RESUME_RECHECK_ALL = "On Resume Recheck All";
 		public static final String BCFG_FILE_SAVE_PEERS_ENABLE = "File.save.peers.enable";
 		public static final String ICFG_FILE_SAVE_PEERS_MAX = "File.save.peers.max";
+		public static final String BCFG_DISABLE_SAVE_INTERIM_DOWNLOAD_STATE = "Disable Interim Download State Save";
 		public static final String SCFG_PRIORITY_EXTENSIONS = "priorityExtensions";
 		public static final String BCFG_PRIORITY_EXTENSIONS_IGNORE_CASE = "priorityExtensionsIgnoreCase";
 		public static final String SCFG_QUICK_VIEW_EXTS = "quick.view.exts";
