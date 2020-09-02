@@ -962,6 +962,17 @@ TagManagerImpl
 
 											if ( !new_loc.equals( old_loc )){
 
+													// it is possible some folder structure has already been created, we need to remove this
+													// as simply setting the save dir doesn't do this.
+													// example is if we have a dnd-dir configured and one or more skipped files. this
+													// results in the dnd-dir(s) being pre-created and they will remain in the old
+													// save location if we don't remove them+it
+												
+												if ( old_loc.isDirectory()){
+													
+													TorrentUtils.recursiveEmptyDirDelete( old_loc, false );
+												}
+												
 												manager.setTorrentSaveDir(FileUtil.newFile(
 													new_loc.getAbsolutePath()), false);
 											}
