@@ -80,7 +80,6 @@ public class ConfigSectionConnectionAdvanced
 		StringParameterImpl paramBindIP = new StringParameterImpl(SCFG_BIND_IP,
 				"ConfigView.label.bindip");
 		add(paramBindIP, listSocket);
-		paramBindIP.setWidthInCharacters(15);
 
 		InfoParameterImpl paramInterfaceList = new InfoParameterImpl(null, null,
 				MessageText.getString("ConfigView.label.bindip.details", new String[] {
