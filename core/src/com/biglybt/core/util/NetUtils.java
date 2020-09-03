@@ -382,31 +382,47 @@ NetUtils
 
 							if ( ifs != null ){
 								
+								NetworkInterface best = null;
+								
 								for ( NetworkInterface x: ifs ){
 									
 									String dn = x.getDisplayName();
 									
 									if ( dn != null ){
-																			
+																						
 										if ( p.matcher( dn ).find()){
 											
-											if ( result == null ){
+											if ( best == null ){
 											
-												result = x;
+												best = x;
 												
 											}else{
 												
-												result = null;
+												boolean has_ias = x.getInetAddresses().hasMoreElements();
+
+												if ( has_ias ){
+													
+													if ( best.getInetAddresses().hasMoreElements()){
 												
-												Debug.out( "Multiple network interface matches for regex " + expr );
-												
-												failed = true;
-												
-												break;
+														best = null;
+														
+														Debug.out( "Multiple network interface matches for regex " + expr );
+														
+														failed = true;
+														
+														break;
+														
+													}else{
+													
+														best = x;
+													}
+												}
 											}
 										}
 									}
 								}
+								
+								result = best;
 							}
 						}catch( Throwable e ){
 							
