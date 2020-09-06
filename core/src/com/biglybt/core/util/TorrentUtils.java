@@ -3054,7 +3054,7 @@ TorrentUtils
 
 			Set<String>		new_ignore_set	= new HashSet<>();
 
-			String	ignore_list = COConfigurationManager.getStringParameter( "File.Torrent.IgnoreFiles", TOTorrent.DEFAULT_IGNORE_FILES );
+			String	ignore_list = COConfigurationManager.getStringParameter( "File.Torrent.IgnoreFiles" );
 
 			if ( ignore_files_set == null ){
 
@@ -3093,7 +3093,12 @@ TorrentUtils
 					pos	= p1+1;
 				}
 
-				new_ignore_set.add(bit.trim().toLowerCase());	// use default locale as we're dealing with local file names
+				String trimmedBit = bit.trim();
+
+				if ( !trimmedBit.isEmpty() ){
+
+					new_ignore_set.add(trimmedBit.toLowerCase());	// use default locale as we're dealing with local file names
+				}
 
 				if ( p1 == -1 ){
 

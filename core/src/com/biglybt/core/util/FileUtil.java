@@ -353,6 +353,7 @@ public class FileUtil {
           	return;
         }
 
+        boolean hasIgnoreSet = ignore_set.size() > 0;
         for (int i = 0; i < files.length; i++) {
 
         	File	x = files[i];
@@ -363,7 +364,7 @@ public class FileUtil {
 
         	}else{
 
-        		if ( ignore_set.contains( x.getName().toLowerCase())){
+        		if ( hasIgnoreSet && ignore_set.contains( x.getName().toLowerCase())){
 
         			if ( !x.delete()){
 
