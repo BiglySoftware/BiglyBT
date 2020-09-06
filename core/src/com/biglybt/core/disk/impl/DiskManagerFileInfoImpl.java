@@ -220,19 +220,19 @@ DiskManagerFileInfoImpl
   public File
   getFile(
 	boolean	follow_link )
-  	{
-	  if ( follow_link ){
+	{
+		File file = FileUtil.newFile(root_dir, relative_file);
 
-		  File	res = getLink();
+		if (!follow_link) {
 
-		  if ( res != null ){
+			return file;
+		}
 
-			  return( res );
-		  }
-	  }
-
-	  return( FileUtil.newFile( root_dir, relative_file));
-  	}
+		// Same as getLink(), except saves redundant getFile(false) call
+		File	res = diskManager.getDownloadState().getFileLink(file_index, file);
+		
+		return res == null ? file : res;
+	}
 
   	@Override
 	  public TOTorrentFile
