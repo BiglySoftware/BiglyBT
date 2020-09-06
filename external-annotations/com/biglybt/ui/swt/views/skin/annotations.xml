@@ -1,4 +1,10 @@
 <root>
+	<item name='com.biglybt.ui.swt.views.skin.SBC_LibraryView modeIDs'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.skin.SBC_LibraryView modeViewIDs'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 	<item
 		name='com.biglybt.ui.swt.views.skin.SBC_TagsOverview boolean removeTags(java.util.List&lt;com.biglybt.core.tag.Tag&gt;) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>

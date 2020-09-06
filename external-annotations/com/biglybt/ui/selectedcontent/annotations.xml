@@ -18,18 +18,22 @@
 
 <root>
 	<item
-		name='com.biglybt.ui.swt.skin.SWTSkinObject com.biglybt.ui.swt.skin.SWTSkin getSkin()'>
+		name='com.biglybt.ui.selectedcontent.SelectedContentManager2 com.biglybt.ui.selectedcontent.ISelectedContent[] getCurrentlySelectedContent()'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.skin.SWTSkinObjectBasic SWTSkinObjectBasic(com.biglybt.ui.swt.skin.SWTSkin, com.biglybt.ui.swt.skin.SWTSkinProperties, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.skin.SWTSkinObject) 1'>
+		name='com.biglybt.ui.selectedcontent.SelectedContentManager2 currentlySelectedContent'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.skin.SWTSkinObjectBasic SWTSkinObjectBasic(com.biglybt.ui.swt.skin.SWTSkin, com.biglybt.ui.swt.skin.SWTSkinProperties, org.eclipse.swt.widgets.Control, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.skin.SWTSkinObject) 1'>
+		name='com.biglybt.ui.selectedcontent.SelectedContentManager2 java.lang.Object selectedContentToObject(com.biglybt.ui.selectedcontent.ISelectedContent) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
-	<item name='com.biglybt.ui.swt.skin.SWTSkinObjectBasic properties'>
+	<item name='com.biglybt.ui.selectedcontent.SelectedContentManager2 listeners'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.selectedcontent.SelectedContentManager2 void addCurrentlySelectedContentListener(com.biglybt.ui.selectedcontent.SelectedContentListener) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 </root>

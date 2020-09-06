@@ -17,6 +17,9 @@
                  val="{com.biglybt.pif.ui.config.IntListParameter.TYPE_DROPDOWN, com.biglybt.pif.ui.config.IntListParameter.TYPE_RADIO_COMPACT, com.biglybt.pif.ui.config.IntListParameter.TYPE_RADIO_LIST}"/>
         </annotation>
     </item>
+    <item name='com.biglybt.pif.ui.config.ParameterTabFolder com.biglybt.pif.ui.config.ParameterGroup[] getGroups()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
     <item name='com.biglybt.pif.ui.config.ParameterWithSuffix void setSuffixLabelKey(java.lang.String) 0'>
         <annotation name='org.jetbrains.annotations.PropertyKey'>
             <val name="resourceBundle"

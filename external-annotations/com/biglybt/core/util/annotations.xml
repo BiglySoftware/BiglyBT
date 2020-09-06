@@ -4,7 +4,7 @@
             <val val="&quot;unused&quot;"/>
         </annotation>
     </item>
-    <item name='com.biglybt.core.util.FileUtil byte[] readFileAsByteArray(java.io.File)'>
+	<item name='com.biglybt.core.util.FileUtil byte[] readFileAsByteArray(java.io.File)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='com.biglybt.core.util.UrlUtils java.lang.String encode(java.lang.String)'>

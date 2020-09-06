@@ -1,4 +1,9 @@
 <root>
+    <item name='com.biglybt.pifimpl.local.PluginCoreUtils com.biglybt.core.download.DownloadManager unwrap(com.biglybt.pif.download.Download)'>
+        <annotation name='org.jetbrains.annotations.Contract'>
+            <val val="&quot;null -&gt; null; !null -&gt; !null&quot;"/>
+        </annotation>
+    </item>
     <item name='com.biglybt.pifimpl.local.PluginInitializer com.biglybt.pif.PluginInterface getDefaultInterface()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
