@@ -817,19 +817,21 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	  public String
 	getSavePath();
 
-  		/**
-  		 * Move a download's data files to a new location. Download must be stopped and persistent
-  		 *
-  		 * <p>
-  		 *
-  		 * If a download is running, it will be automatically paused and resumed afterwards - be
-  		 * aware that this behaviour may generate <tt>stateChanged</tt> events being fired.
-		 *
-		 * @since 2.3.0.5
-  		 * @param new_parent_dir
-  		 * @throws DownloadException
-  		 */
-
+	/**
+	 * Move a download's data files to a new location.
+	 *
+	 * <p/>
+	 *
+	 * If a download is running, it will be automatically paused and resumed afterwards - be
+	 * aware that this behaviour may generate <tt>stateChanged</tt> events being fired.
+	 *
+	 * @since 2.3.0.5
+	 * @param new_parent_dir New location.
+	 *        Note that non-simple torrents' data will be placed in a 
+	 *        subdirectory of the torrent's name ({@link #getName()}) 
+	 *        under this new_parent_dir
+	 * @throws DownloadException
+	*/
   	public void
   	moveDataFiles(
   		File	new_parent_dir )
@@ -849,6 +851,15 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
   	 * aware that this behaviour may generate <tt>stateChanged</tt> events being fired.
   	 *
   	 * @since 3.0.2
+	   * 
+	   * @param new_parent_dir new location to move torrent data files to.  
+	   * If null, and simple torrent, torrent data file will be renamed new_name.
+	   * If null, and not simple torrent, torrent end path will be changed to new_name.
+	   *
+	   * @param new_name For simple torrent, changes the filename of the downloaded file.
+	   * For non-simple torrent, changes the end path for the downloaded files.
+	   * If null, torrent data files will be moved to new_parent_dir, with a subfolder of {@link #getName()}.
+	   * 
   	 * @throws DownloadException
   	 * @see {@link #moveDataFiles(File)}
   	 * @see {@link #renameDownload(String)}
