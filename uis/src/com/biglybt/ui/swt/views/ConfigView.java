@@ -1800,15 +1800,14 @@ public class ConfigView implements UISWTViewCoreEventListener {
 
 			if (swtParamsToEnable.size() + swtParamsToDisable.size() > 0) {
 
-				IAdditionalActionPerformer<Boolean> ap = new DualChangeSelectionActionPerformer(
-						swtParamsToEnable.toArray(new BaseSwtParameter[0]),
-						swtParamsToDisable.toArray(new BaseSwtParameter[0]));
-
 				BaseSwtParameter swtParameter = mapParamToSwtParam.get(param);
 
 				// might not be visible (e.g. user mode too low) in which case it won't be in the map
 
 				if (swtParameter instanceof BooleanSwtParameter) {
+					IAdditionalActionPerformer<Boolean> ap = new DualChangeSelectionActionPerformer(
+						swtParamsToEnable.toArray(new BaseSwtParameter[0]),
+						swtParamsToDisable.toArray(new BaseSwtParameter[0]));
 
 					((BooleanSwtParameter) swtParameter).setAdditionalActionPerformer(ap);
 				}
