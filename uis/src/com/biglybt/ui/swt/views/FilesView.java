@@ -600,7 +600,23 @@ public class FilesView
 		try {			
 			File file = ds.getFile(true);
 
-			String name = filter.contains( File.separator )?file.getAbsolutePath():file.getName();
+			String name;
+			
+			if ( filter.startsWith( File.separator )){
+				
+				filter = filter.substring( 1 );
+				
+				if ( filter.isEmpty()){
+					
+					return( true );
+				}
+				
+				name = file.getAbsolutePath();
+				
+			}else{
+				
+				name = file.getName();
+			}
 
 			String s = regex ? filter : "\\Q" + filter.replaceAll("[|;]", "\\\\E|\\\\Q") + "\\E";
 
