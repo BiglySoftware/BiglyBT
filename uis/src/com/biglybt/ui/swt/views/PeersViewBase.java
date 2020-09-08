@@ -76,6 +76,7 @@ PeersViewBase
 				new ProtocolItem(table_id),
 				new PiecesItem(table_id),
 				new PercentItem(table_id),
+				new PercentHaveWeNeedItem(table_id),
 				new DownSpeedItem(table_id),
 				new UpSpeedItem(table_id),
 				new PeerSourceItem(table_id),
