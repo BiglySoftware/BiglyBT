@@ -45,6 +45,7 @@ import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.logging.LoggerChannel;
 
 /**
  * @author parg
@@ -83,12 +84,23 @@ DownloadManagerStateImpl
 	}
 	
 	private static boolean disable_interim_saves;
+	private static LoggerChannel 	save_log;
+	
 	
 	static{
 		COConfigurationManager.addAndFireParameterListener(
 			ConfigKeys.File.BCFG_DISABLE_SAVE_INTERIM_DOWNLOAD_STATE,
 			(n)->{
 				disable_interim_saves = COConfigurationManager.getBooleanParameter( n );
+				
+				if ( disable_interim_saves && Constants.isCVSVersion() && save_log == null ){
+					
+					save_log = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getLogger().getChannel( "DownloadStateSaves" );
+
+					save_log.setDiagnostic();
+
+					save_log.setForce( true );
+				}
 			});
 	}
 
@@ -1161,8 +1173,8 @@ DownloadManagerStateImpl
 			}
 		}
 		
-		boolean soon = write_required_soon;
-		long some = write_required_sometime;
+		//boolean soon = write_required_soon;
+		//long some = write_required_sometime;
 
  		boolean do_write;
 
@@ -1210,6 +1222,11 @@ DownloadManagerStateImpl
 					Logger.log(new LogEvent(torrent, LOGID, "Saving state for download '"
 							+ TorrentUtils.getLocalisedName(torrent) + "'"));
 
+				if ( save_log != null ){
+					
+					save_log.log( TorrentUtils.getLocalisedName(torrent) + ": " + Debug.getCompressedStackTrace());
+				}
+				
 				torrent.setAdditionalMapProperty( ATTRIBUTE_KEY, attributes );
 
 				TorrentUtils.writeToFile(torrent, true);
