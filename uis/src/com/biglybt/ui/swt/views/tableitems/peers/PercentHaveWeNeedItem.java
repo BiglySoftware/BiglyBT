@@ -65,8 +65,8 @@ public class PercentHaveWeNeedItem
     			
     			if ( peer.isSeed()){
     				
-    				value = 1000;
-    				
+    				value = 1000 - pm.getDiskManager().getPercentDoneExcludingDND();
+     				
     			}else{
     				
     				BitFlags bf = peer.getAvailable();
@@ -104,17 +104,6 @@ public class PercentHaveWeNeedItem
 	    							}
    								}
     						}
-    						
-    						/*
-    						if ( we_need == 0 ){
-    							
-    							value = 1000;
-    							
-    						}else{
-    							
-    							value = ( 1000*they_have_we_need ) / we_need;
-    						}
-    						*/
     						
     						if ( we_need > 0 ){
     							    								
