@@ -993,10 +993,12 @@ DownloadManagerStateImpl
 			
 			Map existing = torrent.getAdditionalMapProperty(RESUME_KEY  );
 			
+			long new_resume_state;
+			
 			if ( data == null ){
 
-				setLongAttribute( AT_RESUME_STATE, 1 );
-				
+				new_resume_state = 1;
+								
 				if ( existing != null ){
 				
 					torrent.removeAdditionalProperty( RESUME_KEY );
@@ -1011,7 +1013,14 @@ DownloadManagerStateImpl
 				
 				boolean complete = DiskManagerFactory.isTorrentResumeDataComplete( this );
 
-				setLongAttribute( AT_RESUME_STATE, complete?2:1 );
+				new_resume_state = complete?2:1;
+			}
+			
+			if ( getLongAttribute( AT_RESUME_STATE ) != new_resume_state ){
+				
+				setLongAttribute( AT_RESUME_STATE, new_resume_state );
+				
+				changed = true;
 			}
 
 			if ( changed ){
@@ -1026,7 +1035,15 @@ DownloadManagerStateImpl
 
 			// we need to ensure this is persisted now as it has implications regarding crash restarts etc
 
-		saveSupport(false,false);
+		if ( disable_interim_saves && !changed ){
+			
+				// to be honest if the data hasn't changed I'm not sure why we need a save at all here but for the moment
+				// I'll disable it if the user has already opted in to reducing writes
+			
+		}else{
+		
+			saveSupport(false,false);
+		}
 	}
 
 	@Override
