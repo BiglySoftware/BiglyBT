@@ -107,11 +107,13 @@ FMFileImpl
 
 		try{
 
+			String linked_path = linked_file.getPath();
 			try {
 
 				canonical_path = linked_file.getCanonicalPath();
-				if(canonical_path.equals(linked_file.getPath()))
-					canonical_path = linked_file.getPath();
+				if(canonical_path.equals(linked_path)) {
+					canonical_path = linked_path;
+				}
 
 			}catch( IOException ioe ) {
 
@@ -122,7 +124,7 @@ FMFileImpl
 		          String abs_path = linked_file.getAbsolutePath();
 
 		          String error = "Caught 'There are no more files' exception during file.getCanonicalPath(). " +
-		                         "os=[" +Constants.OSName+ "], file.getPath()=[" +linked_file.getPath()+ "], file.getAbsolutePath()=[" +abs_path+ "]. ";
+		                         "os=[" +Constants.OSName+ "], file.getPath()=[" + linked_path + "], file.getAbsolutePath()=[" +abs_path+ "]. ";
 
 		          Debug.out( error, ioe );
 		        }
@@ -138,8 +140,6 @@ FMFileImpl
 
 			file_access = new FMFileAccessController( this, _type, _force );
 
-			last_modified = linked_file.lastModified();
-			
 			ok	= true;
 
 		}catch( Throwable e ){
@@ -183,8 +183,6 @@ FMFileImpl
 		try{
 			file_access = new FMFileAccessController( this, basis.file_access.getStorageType(), false );
 
-			last_modified = linked_file.lastModified();
-			
 		}catch( Throwable e ){
 
 			if ( e instanceof FMFileManagerException ){
@@ -579,7 +577,7 @@ FMFileImpl
 
 		fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
-		last_modified = linked_file.lastModified();
+		last_modified = 0;
 		
 		Debug.outNoStack( "Recovered connection to " + getName() + " after access failure" );
 	}
@@ -602,7 +600,7 @@ FMFileImpl
 
 			fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
-			last_modified = linked_file.lastModified();
+			last_modified = 0;
 			
 		}catch( FileNotFoundException e ){
 
@@ -620,7 +618,7 @@ FMFileImpl
 
 				fa = FileUtil.newFileAccessor( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
-				last_modified = linked_file.lastModified();
+				last_modified = 0;
 				
 				ok = true;
 
@@ -827,6 +825,9 @@ FMFileImpl
 	public long
 	getLastModified()
 	{
+		if (last_modified == 0) {
+			last_modified = linked_file.lastModified();
+		}
 		return( last_modified );
 	}
 	
