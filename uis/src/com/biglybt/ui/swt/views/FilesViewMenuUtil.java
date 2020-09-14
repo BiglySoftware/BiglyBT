@@ -1001,7 +1001,7 @@ public class FilesViewMenuUtil
 					
 											// Nothing to do.
 					
-										if ( target_file.equals(existing_file)){
+										if ( FileUtil.areFilePathsIdentical( target_file, existing_file)){
 					
 											continue;
 					
