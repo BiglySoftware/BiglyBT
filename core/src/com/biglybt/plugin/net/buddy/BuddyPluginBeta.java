@@ -2116,6 +2116,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					String[] bits = magnet.substring( x+1 ).split( "&" );
 
+					byte[] hash = UrlUtils.getTruncatedHashFromMagnetURI( magnet );
+					
+					if ( hash != null ){
+						
+						map.put( "hash", Base32.encode( hash ).toUpperCase( Locale.US ));
+					}
+					
 					for ( String bit: bits ){
 
 						String[] temp = bit.split( "=" );
@@ -2127,18 +2134,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								String	lhs = temp[0].toLowerCase( Locale.US );
 								String	rhs = UrlUtils.decode( temp[1] );
 
-								if ( lhs.equals( "xt" )){
-
-									String lc_rhs = rhs.toLowerCase( Locale.US );
-
-									int p = lc_rhs.indexOf( "btih:" );
-
-									if ( p >= 0 ){
-
-										map.put( "hash", lc_rhs.substring( p+5 ).toUpperCase( Locale.US ));
-									}
-
-								}else if ( lhs.equals( "dn" )){
+								if ( lhs.equals( "dn" )){
 
 									map.put( "title", rhs );
 
@@ -2185,7 +2181,6 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							}catch( Throwable e ){
 
 							}
-
 						}
 					}
 

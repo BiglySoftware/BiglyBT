@@ -308,11 +308,11 @@ LWSTorrent
 	}
 
 	@Override
-	public byte[][] 
-	getHashes() throws 
-	TOTorrentException
+	public byte[]
+	getV2Hash() throws 
+		TOTorrentException
 	{
-		return( new byte[][]{ getHash()} );
+		return( null );
 	}
 	
 	@Override
@@ -325,11 +325,11 @@ LWSTorrent
 	}
 
 	@Override
-	public HashWrapper[] 
-	getHashWrappers() 
+	public HashWrapper
+	getV2HashWrapper() 
 		throws TOTorrentException
 	{	
-		return( new HashWrapper[]{ getHashWrapper()});
+		return( null );
 	}
 	
    	@Override

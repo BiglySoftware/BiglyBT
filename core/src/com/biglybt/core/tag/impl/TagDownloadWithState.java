@@ -1962,10 +1962,8 @@ TagDownloadWithState
 									already_published = true;	// borked, avoid publish
 									
 								}else{
-									
-									byte[] hash = torrent.getHash();
-									
-									String magnet = UrlUtils.getMagnetURI( hash );
+																		
+									String magnet = UrlUtils.getMagnetURI( torrent );
 									
 									for ( int i=messages.size()-1;i>=0;i--){
 										

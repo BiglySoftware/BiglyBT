@@ -45,6 +45,7 @@ import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLGroup;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
+import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerFactory;
@@ -1292,29 +1293,32 @@ MagnetPlugin
 
 	public URL
 	getMagnetURL(
-		Download		d )
-	{
-		Torrent	torrent = d.getTorrent();
-
-		if ( torrent == null ){
-
-			return( null );
-		}
-
-		return( getMagnetURL( torrent.getHash()));
-	}
-
-	public URL
-	getMagnetURL(
 		byte[]		hash )
 	{
 		try{
-			return( new URL( "magnet:?xt=urn:btih:" + Base32.encode(hash)));
-
+			return( new URL( UrlUtils.getMagnetURI( hash )));
+			
 		}catch( Throwable e ){
-
-			Debug.printStackTrace(e);
-
+			
+			Debug.out( e );
+			
+			return( null );
+		}
+	}
+	
+	public URL
+	getMagnetURL(
+		TOTorrent		torrent  )
+	
+		throws TOTorrentException
+	{
+		try{
+			return( new URL(  UrlUtils.getMagnetURI( torrent )));
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
 			return( null );
 		}
 	}

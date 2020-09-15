@@ -817,11 +817,27 @@ MagnetPluginMDDownloader
 
 				TOTorrent torrent = TOTorrentFactory.deserialiseFromMap( map );
 
-				byte[] final_hash = torrent.getHash();
+				byte[] torrent_hash = torrent.getHash();
 
-				if ( !Arrays.equals( hash, final_hash )){
+				if ( !Arrays.equals( hash, torrent_hash )){
 
-					throw( new Exception( "Metadata torrent hash mismatch: expected=" + ByteFormatter.encodeString( hash ) + ", actual=" + ByteFormatter.encodeString( final_hash )));
+					byte[] v2_hash = torrent.getV2Hash();
+					
+					boolean ok = false;
+					
+					if ( v2_hash != null ){
+					
+						byte[]	trunc = new byte[20];
+						
+						System.arraycopy( v2_hash, 0, trunc, 0, 20 );
+						
+						ok = Arrays.equals( hash, trunc );
+					}
+					
+					if ( !ok ){
+					
+						throw( new Exception( "Metadata torrent hash mismatch: expected=" + ByteFormatter.encodeString( hash ) + ", actual=" + ByteFormatter.encodeString( torrent_hash )));
+					}
 				}
 
 				if ( url_sets != null ){

@@ -6786,7 +6786,7 @@ BuddyPluginViewBetaChat
 									}
 								}
 
-									/* Check that the URL is actually going tobe useful. IN particular, if it is a magnet URI with
+									/* Check that the URL is actually going to be useful. IN particular, if it is a magnet URI with
 									 * no hash and no &fl links then it ain't gonna work
 									 */
 
@@ -6800,9 +6800,7 @@ BuddyPluginViewBetaChat
 
 									if ( lc_url.startsWith( "magnet" )){
 
-										if ( 	( !lc_url.contains( "btih:" )) ||
-												lc_url.contains( "btih:&" ) ||
-												lc_url.endsWith( "btih:" )){
+										if ( UrlUtils.getTruncatedHashFromMagnetURI( lc_url ) == null ){
 
 												// no hash
 

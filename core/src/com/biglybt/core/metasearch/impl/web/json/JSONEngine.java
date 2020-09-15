@@ -511,7 +511,7 @@ JSONEngine
 									case FIELD_HASH :
 											// seen a magnet being returned as hash!
 										if ( fieldContent.startsWith( "magnet:")){
-											byte[] hash = UrlUtils.getHashFromMagnetURI(fieldContent);
+											byte[] hash = UrlUtils.getTruncatedHashFromMagnetURI(fieldContent);
 											if ( hash != null ){
 												fieldContent = ByteFormatter.encodeString( hash );
 											}else{
@@ -534,7 +534,7 @@ JSONEngine
 							if (result.getHash() == null) {
 								String downloadLink = result.getDownloadLink();
 								String possibleMagnet = UrlUtils.parseTextForMagnets(downloadLink);
-								byte[] hash = UrlUtils.getHashFromMagnetURI(possibleMagnet);
+								byte[] hash = UrlUtils.getTruncatedHashFromMagnetURI(possibleMagnet);
 								if (hash != null) {
 									result.setHash(ByteFormatter.nicePrint(hash, true));
 								}

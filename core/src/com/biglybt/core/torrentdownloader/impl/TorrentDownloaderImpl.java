@@ -582,27 +582,12 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 
         	String	query = tmp.toUpperCase();
 
-    		int	pos = query.indexOf( "XT=URN:SHA1:");
-
-    		if ( pos == -1 ){
-
-    	   		pos = query.indexOf( "XT=URN:BTIH:");
-    		}
-
-    		if ( pos != -1 ){
-
-    			pos += 12;
-
-    			int	p2 = query.indexOf( "&", pos );
-
-    			if ( p2 == -1 ){
-
-    				filename = query.substring(pos);
-
-    			}else{
-
-    				filename = query.substring(pos,p2);
-    			}
+        	byte[] hash = UrlUtils.getTruncatedHashFromMagnetURI( query );
+    		
+        	if ( hash != null ){
+    			
+        		filename = Base32.encode( hash );
+    			
         	}else{
 
         		filename = "Torrent" + (long)(Math.random()*Long.MAX_VALUE);

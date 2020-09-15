@@ -51,9 +51,25 @@ Torrent
 	public TorrentAnnounceURLList
 	getAnnounceURLList();
 
+		/**
+		 * v1 torrent hash or truncated v2 hash if v2 only 
+		 * @return
+		 */
+	
 	public byte[]
 	getHash();
 
+		/**
+		 * 
+		 * @return v2 torrent hash if hybrid or v2 only torrent
+		 */
+	
+	public default byte[]
+	getV2Hash()
+	{
+		return( null );
+	}
+	
 	/**
 	 * If size is 0 then this is an "external" torrent and we only know its hash (and name
 	 * constructed from hash). e.g. we don't know file details

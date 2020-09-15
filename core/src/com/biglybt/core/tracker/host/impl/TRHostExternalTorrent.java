@@ -306,11 +306,12 @@ TRHostExternalTorrent
 	}
 
 	@Override
-	public byte[][] 
-	getHashes() 
+	public byte[]
+	getV2Hash() 
+	
 		throws TOTorrentException
 	{
-		return( new byte[][]{ getHash()} );
+		return( null );
 	}
 	
 	@Override
@@ -323,11 +324,12 @@ TRHostExternalTorrent
 	}
 
 	@Override
-	public HashWrapper[] 
-	getHashWrappers() 
+	public HashWrapper
+	getV2HashWrapper() 
+	
 		throws TOTorrentException
 	{	
-		return( new HashWrapper[]{ getHashWrapper()});
+		return( null );
 	}
 	
 	@Override

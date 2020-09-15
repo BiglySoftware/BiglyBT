@@ -5223,7 +5223,7 @@ SubscriptionManagerImpl
 									}
 								}else if ( lc_url.startsWith( "magnet" )){
 
-									result_hash = UrlUtils.extractHash( lc_url );
+									result_hash = UrlUtils.getTruncatedHashFromMagnetURI( lc_url );
 								}
   							}
 						}

@@ -187,7 +187,7 @@ TorrentImpl
 		}
 
 		try{
-			URL	res = magnet_plugin.getMagnetURL(  torrent.getHash());
+			URL	res = magnet_plugin.getMagnetURL(  torrent );
 
 			return( res );
 
@@ -212,6 +212,21 @@ TorrentImpl
 		}
 	}
 
+	@Override
+	public byte[] 
+	getV2Hash()
+	{
+		try{
+			return( torrent.getV2Hash());
+
+		}catch( TOTorrentException e ){
+
+			Debug.printStackTrace( e );
+
+			return( null );
+		}
+	}
+	
 	@Override
 	public long
 	getSize()

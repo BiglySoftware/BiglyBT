@@ -1667,6 +1667,7 @@ PlatformManagerImpl
 					access.writeStringValue( type, "Software\\Magnet\\Handlers\\Azureus", "ShellExecute", "\"" + az_exe_string + "\" \"%URL\"" );
 
 					access.writeWordValue( type, "Software\\Magnet\\Handlers\\Azureus\\Type", "urn:btih", 0 );
+					access.writeWordValue( type, "Software\\Magnet\\Handlers\\Azureus\\Type", "urn:btmh", 0 );
 
 				}catch( Throwable e ){
 				}

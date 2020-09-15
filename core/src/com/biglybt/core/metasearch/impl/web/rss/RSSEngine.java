@@ -869,7 +869,7 @@ RSSEngine
 
 							if ( mag != null ){
 
-								byte[] hash = UrlUtils.getHashFromMagnetURI( mag );
+								byte[] hash = UrlUtils.getTruncatedHashFromMagnetURI( mag );
 
 								if ( hash != null ){
 

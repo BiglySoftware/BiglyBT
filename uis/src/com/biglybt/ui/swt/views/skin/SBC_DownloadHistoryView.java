@@ -422,7 +422,6 @@ public class SBC_DownloadHistoryView
 				}
 			}
 
-
 			return true;
 		}
 

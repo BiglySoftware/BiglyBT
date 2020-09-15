@@ -42,6 +42,7 @@ import com.biglybt.pif.torrent.TorrentAnnounceURLListSet;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pif.utils.resourceuploader.ResourceUploader;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.pifimpl.local.torrent.TorrentImpl;
 import com.biglybt.plugin.magnet.MagnetPlugin;
 
 
@@ -52,7 +53,8 @@ import com.biglybt.plugin.magnet.MagnetPlugin;
  */
 public class UrlUtils
 {
-	private static Pattern patMagnetHashFinder = Pattern.compile("xt=urn:(?:btih|sha1):([^&]+)");
+	private static Pattern patMagnetSHA1HashFinder 		= Pattern.compile("(?i)xt=urn:(?:btih|sha1):([^&]+)");
+	private static Pattern patMagnetMultiHashFinder 	= Pattern.compile("(?i)xt=urn:btmh:([^&]+)");
 
 	private static final String[] prefixes = new String[] {
 			"http://",
@@ -108,7 +110,23 @@ public class UrlUtils
 	getMagnetURI(
 		byte[]		hash )
 	{
-		return( "magnet:?xt=urn:btih:" + Base32.encode( hash ));
+		int	length = hash.length;
+		
+		if ( length == 32 ){
+		
+				// multi-hash prefix for sha256 is 0x1220
+			
+			return( "magnet:?xt=urn:btmh:" + "1220" + ByteFormatter.encodeString( hash ));
+			
+		}else{
+			
+			if (length != 20 ){
+				
+				Debug.out( "Invalid hash length " + length );
+			}
+
+			return( "magnet:?xt=urn:btih:" + Base32.encode( hash ));
+		}
 	}
 
 	public static String
@@ -173,7 +191,7 @@ public class UrlUtils
 			return( str.substring( 0, pos ));
 		}
 	}
-	
+		
 	public static String
 	getMagnetURI(
 		byte[]		hash,
@@ -223,31 +241,6 @@ public class UrlUtils
 		}
 
 		return( net_str );
-	}
-
-	public static byte[]
-	extractHash(
-		String			magnet_uri )
-	{
-		magnet_uri = magnet_uri.toLowerCase( Locale.US );
-
-		int pos = magnet_uri.indexOf( "btih:" );
-
-		if ( pos > 0 ){
-
-			magnet_uri = magnet_uri.substring( pos+5 );
-
-			pos = magnet_uri.indexOf( '&' );
-
-			if ( pos != -1 ){
-
-				magnet_uri = magnet_uri.substring( 0, pos );
-			}
-
-			return( decodeSHA1Hash( magnet_uri ));
-		}
-
-		return( null );
 	}
 
 	public static Set<String>
@@ -403,6 +396,20 @@ public class UrlUtils
 
 	public static String
 	getMagnetURI(
+		TOTorrent		to_torrent )
+	{		
+		return( getMagnetURI( new TorrentImpl( to_torrent )));
+	}
+
+	public static String
+	getMagnetURI(
+		Torrent		torrent )
+	{
+		return( getMagnetURI( torrent.getName(), torrent, null ));
+	}
+	
+	public static String
+	getMagnetURI(
 		String		name,
 		Torrent		torrent )
 	{
@@ -417,6 +424,13 @@ public class UrlUtils
 	{
 		String	magnet_str = getMagnetURI( torrent.getHash());
 
+		byte[] v2_hash = torrent.getV2Hash();
+		
+		if ( v2_hash != null ){
+			
+			magnet_str += "&xt=urn:btmh:" + "1220" + ByteFormatter.encodeString( v2_hash );
+		}
+		
 		magnet_str += encodeName( name);
 
 		if ( networks != null ) {
@@ -525,7 +539,7 @@ public class UrlUtils
 	}
 	
 		/**
-		 * returns magnet uri if input is base 32 or base 16 encoded sha1 hash, null otherwise
+		 * returns magnet uri if input is base 32 or base 16 encoded sha1 or sha256 hash, null otherwise
 		 * @param base_hash
 		 * @return
 		 */
@@ -540,22 +554,124 @@ public class UrlUtils
 
 			return( getMagnetURI( hash ));
 		}
+		
+		hash = decodeMultiHash( base_hash );
+
+		if ( hash != null ){
+
+			return( getMagnetURI( hash ));
+		}
 
 		return( null );
 	}
 
-	public static byte[] getHashFromMagnetURI(String magnetURI) {
-		if (magnetURI == null) {
+		/**
+		 * decodes a sha1 or sha256 multihash from an actual magnet URI and truncates to 20 bytes
+		 * @param hash_str
+		 * @return
+		 */
+	
+	public static byte[] 
+	getTruncatedHashFromMagnetURI(
+		String magnetURI) 
+	{
+		if ( magnetURI == null ){
+			
 			return null;
 		}
-		Matcher matcher = patMagnetHashFinder.matcher(magnetURI);
-		if (matcher.find()) {
-			return UrlUtils.decodeSHA1Hash(matcher.group(1));
+		
+		Matcher matcher = patMagnetSHA1HashFinder.matcher(magnetURI);
+		
+		if ( matcher.find()){
+			
+			return( decodeSHA1Hash(matcher.group(1)));
 		}
+		
+		matcher = patMagnetMultiHashFinder.matcher(magnetURI);
+		
+		if ( matcher.find()){
+			
+			return( decodeTruncatedMultiHash( matcher.group(1)));
+		}
+		
 		return null;
 	}
 
-
+		/**
+		 * decodes a sha1 or sha256 multihash as found in a magnet URI and truncates to 20 bytes
+		 * @param hash_str
+		 * @return
+		 */
+	
+	public static byte[] 
+	decodeTruncatedHashFromMagnetURI(
+		String hash_str ) 
+	{
+		if ( hash_str == null ){
+			
+			return( null );
+		}
+		
+		byte[] hash = decodeSHA1Hash( hash_str );
+		
+		if ( hash == null ){
+			
+			hash = decodeTruncatedMultiHash( hash_str );
+		}
+		
+		return( hash );
+	}
+		
+	private static byte[] 
+	decodeTruncatedMultiHash(
+		String 	hash_str )
+	{
+		byte[] hash = decodeMultiHash( hash_str );
+		
+		if ( hash != null ){
+			
+			if ( hash.length > 20 ){
+				
+				byte[] trunc = new byte[20];
+			
+				System.arraycopy( hash, 0, trunc, 0, 20 );
+			
+				return( trunc );
+			}
+		}
+		
+		return( hash );
+	}
+	
+		/**
+		 * Decodes a hex or base32 encoded sha1, sha256 or multihash
+		 * @param hash_str
+		 * @return
+		 */
+	
+	public static byte[]
+	decodeTruncatedHash(
+		String		hash_str )
+	{
+		byte[] hash = decodeTruncatedHashFromMagnetURI( hash_str );
+		
+		if ( hash == null ){
+			
+			hash = decodeSHA256Hash( hash_str );
+			
+			if ( hash != null ){
+				
+				byte[] trunc = new byte[20];
+			
+				System.arraycopy( hash, 0, trunc, 0, 20 );
+			
+				return( trunc );
+			}
+		}
+		
+		return( hash );
+	}
+	
 	public static byte[]
 	decodeSHA1Hash(
 		String	str )
@@ -592,6 +708,95 @@ public class UrlUtils
 		return( hash );
 	}
 
+	private static byte[]
+	decodeSHA256Hash(
+		String	str )
+	{
+		if ( str == null ){
+
+			return( null );
+		}
+
+		str = str.trim();
+
+		byte[] hash = null;
+
+		try{
+			if ( str.length() == 64 ){
+
+				hash = ByteFormatter.decodeString( str );
+
+			}else if ( str.length() == 52 ){
+
+				hash = Base32.decode( str );
+			}
+		}catch( Throwable e ){
+		}
+
+		if ( hash != null ){
+
+			if ( hash.length != 32 ){
+
+				hash = null;
+			}
+		}
+
+		return( hash );
+	}
+	
+	private static byte[]
+	decodeMultiHash(
+		String	str )
+	{
+		if ( str == null ){
+
+			return( null );
+		}
+
+		str = str.trim();
+
+		byte[] hash = null;
+
+		try{
+			int len = str.length();
+			
+			byte[] multi_hash;
+			
+				// support both sha1 and sha256 multi-hash formats (2-byte hash type prefix adds 4 chars to string)
+			
+			if ( len == 4 + 40 || len == 4 + 64 ){
+
+				multi_hash = ByteFormatter.decodeString( str );
+
+					// prefix extends size in base32 by 4 chars for sha1 and 3 for sha256
+				
+			}else if ( len == 4 + 32 || len == 3 + 52 ){
+
+				multi_hash = Base32.decode( str );
+				
+			}else{
+				
+				return( null );
+			}
+			
+			if ( multi_hash[0] == 0x11 && multi_hash[1] == 0x14 && multi_hash.length == 2 + 20 ){
+					
+				hash = new byte[20];
+					
+				System.arraycopy( multi_hash, 2, hash, 0, 20 );
+					
+			}else if ( multi_hash[0] == 0x12 && multi_hash[1] == 0x20 && multi_hash.length == 2 + 32 ){
+			
+				hash = new byte[32];
+				
+				System.arraycopy( multi_hash, 2, hash, 0, 32 );
+			}
+		}catch( Throwable e ){
+		}
+
+		return( hash );
+	}
+	
 	public static URL
 	getRawURL(
 		String		url )
@@ -835,49 +1040,65 @@ public class UrlUtils
 		// accept raw hash of 40 hex chars
 		if (accept_magnets ){
 
-			if ( text_prefix.matches("^[a-fA-F0-9]{40}$")) {
-
-				// convert from HEX to raw bytes
-				byte[] infohash = ByteFormatter.decodeString(text_prefix.toUpperCase());
-				// convert to BASE32
-				return "magnet:?xt=urn:btih:" + Base32.encode(infohash) + text_suffix;
+			for ( int i=0;i<2;i++){
+				
+				int hex_len = i==0?40:64;		// sha1/sha256
+					
+				if ( text_prefix.matches("^[a-fA-F0-9]{"+hex_len+"}$")) {
+	
+					// convert from HEX to raw bytes
+					byte[] infohash = ByteFormatter.decodeString(text_prefix.toUpperCase());
+					// convert to BASE32
+					return( getMagnetURI(infohash) + text_suffix );
+				}
+	
+				String temp_text = text_prefix.replaceAll( "\\s+", "" );
+	
+				if ( temp_text.matches("^[a-fA-F0-9]{"+hex_len+"}$")) {
+	
+					// convert from HEX to raw bytes
+					byte[] infohash = ByteFormatter.decodeString(temp_text.toUpperCase());
+					// convert to BASE32
+					return( getMagnetURI(infohash) + text_suffix );
+				}
 			}
+	
+			for ( int i=0;i<2;i++){
+				
+				int b32_len	= i==0?32:52;	// sha1/sha256
 
-			String temp_text = text_prefix.replaceAll( "\\s+", "" );
-
-			if ( temp_text.matches("^[a-fA-F0-9]{40}$")) {
-
-				// convert from HEX to raw bytes
-				byte[] infohash = ByteFormatter.decodeString(temp_text.toUpperCase());
-				// convert to BASE32
-				return "magnet:?xt=urn:btih:" + Base32.encode(infohash) + text_suffix;
+				// accept raw hash of 32 base-32 chars
+				if ( text_prefix.matches("^[a-zA-Z2-7]{" + b32_len + "}$")) {
+					return( getMagnetURI(Base32.decode(text_prefix)) + text_suffix );
+				}
 			}
-		}
+			
+			if ( guess ){
+				
+				for ( int i=0;i<2;i++){
+	
+					int hex_len = i==0?40:64;		// sha1/sha256
+					int b32_len	= i==0?32:52;		// sha1/sha256
 
-		// accept raw hash of 32 base-32 chars
-		if (accept_magnets && text_prefix.matches("^[a-zA-Z2-7]{32}$")) {
-			return "magnet:?xt=urn:btih:" + text_prefix + text_suffix;
-		}
-
-		// javascript:loadOrAlert('WVOPRHRPFSCLAW7UWHCXCH7QNQIU6TWG')
-
-		// accept raw hash of 32 base-32 chars, with garbage around it
-		if (accept_magnets && guess) {
-			Pattern pattern = Pattern.compile("[^a-zA-Z2-7][a-zA-Z2-7]{32}[^a-zA-Z2-7]");
-			Matcher matcher = pattern.matcher(text);
-			if (matcher.find()) {
-				String hash = text.substring(matcher.start() + 1, matcher.start() + 33);
-				return "magnet:?xt=urn:btih:" + hash;
-			}
-
-			pattern = Pattern.compile("[^a-fA-F0-9][a-fA-F0-9]{40}[^a-fA-F0-9]");
-			matcher = pattern.matcher(text);
-			if (matcher.find()) {
-				String hash = text.substring(matcher.start() + 1, matcher.start() + 41);
-				// convert from HEX to raw bytes
-				byte[] infohash = ByteFormatter.decodeString(hash.toUpperCase());
-				// convert to BASE32
-				return "magnet:?xt=urn:btih:" + Base32.encode(infohash);
+						// accept raw hash of 32 base-32 chars, with garbage around it
+				
+					Pattern pattern = Pattern.compile("[^a-zA-Z2-7]([a-zA-Z2-7]{" + b32_len + "})[^a-zA-Z2-7]");
+					Matcher matcher = pattern.matcher(text);
+					if (matcher.find()) {
+						String infohash = matcher.group(1);
+						return( getMagnetURI(Base32.decode(infohash)));
+					}
+		
+					pattern = Pattern.compile("[^a-fA-F0-9]([a-fA-F0-9]{" + hex_len + "})[^a-fA-F0-9]");
+					matcher = pattern.matcher(text);
+					if (matcher.find()) {
+						String hash = matcher.group(1);
+						// convert from HEX to raw bytes
+						byte[] infohash = ByteFormatter.decodeString(hash.toUpperCase());
+						// convert to BASE32
+						return( getMagnetURI(infohash) );
+					}
+				}
 			}
 		}
 
@@ -892,27 +1113,33 @@ public class UrlUtils
 			return text;
 		}
 
-		// accept raw hash of 40 hex chars
-		if (text.matches("^[a-fA-F0-9]{40}$")) {
-			// convert from HEX to raw bytes
-			byte[] infohash = ByteFormatter.decodeString(text.toUpperCase());
-			// convert to BASE32
-			return "magnet:?xt=urn:btih:" + Base32.encode(infohash);
-		}
+		for ( int i=0;i<2;i++){
+			
+			int hex_len = i==0?40:64;		// sha1/sha256
+			int b32_len	= i==0?32:52;		// sha1/sha256
 
-		String temp_text = text.replaceAll( "\\s+", "" );
-		if (temp_text.matches("^[a-fA-F0-9]{40}$")) {
-			// convert from HEX to raw bytes
-			byte[] infohash = ByteFormatter.decodeString(temp_text.toUpperCase());
-			// convert to BASE32
-			return "magnet:?xt=urn:btih:" + Base32.encode(infohash);
+			// accept raw hash of 40 hex chars
+			if (text.matches("^[a-fA-F0-9]{" + hex_len + "}$")) {
+				// convert from HEX to raw bytes
+				byte[] infohash = ByteFormatter.decodeString(text.toUpperCase());
+				// convert to BASE32
+				return( getMagnetURI(infohash));
+			}
+	
+			String temp_text = text.replaceAll( "\\s+", "" );
+			if (temp_text.matches("^[a-fA-F0-9]{" + hex_len + "}$")) {
+				// convert from HEX to raw bytes
+				byte[] infohash = ByteFormatter.decodeString(temp_text.toUpperCase());
+				// convert to BASE32
+				return( getMagnetURI(infohash));
+			}
+	
+			// accept raw hash of 32 base-32 chars
+			if (text.matches("^[a-zA-Z2-7]{" + b32_len + "}$")) {
+				return( getMagnetURI(Base32.decode(text)));
+			}
 		}
-
-		// accept raw hash of 32 base-32 chars
-		if (text.matches("^[a-zA-Z2-7]{32}$")) {
-			return "magnet:?xt=urn:btih:" + text;
-		}
-
+		
 		Pattern pattern;
 		Matcher matcher;
 
@@ -975,23 +1202,27 @@ public class UrlUtils
 		}
 
 		// accept raw hash of 32 base-32 chars, with garbage around it
-		if (true) {
-			text = "!" + text + "!";
-			pattern = Pattern.compile("[^a-zA-Z2-7][a-zA-Z2-7]{32}[^a-zA-Z2-7]");
+		
+		for ( int i=0;i<2;i++){
+			
+			int hex_len = i==0?40:64;		// sha1/sha256
+			int b32_len	= i==0?32:52;		// sha1/sha256
+
+			pattern = Pattern.compile("[^a-zA-Z2-7]([a-zA-Z2-7]{" + b32_len + "})[^a-zA-Z2-7]");
 			matcher = pattern.matcher(text);
 			if (matcher.find()) {
-				String hash = text.substring(matcher.start() + 1, matcher.start() + 33);
-				return "magnet:?xt=urn:btih:" + hash;
+				String hash = matcher.group();
+				return( getMagnetURI(Base32.decode(hash)));
 			}
 
-			pattern = Pattern.compile("[^a-fA-F0-9][a-fA-F0-9]{40}[^a-fA-F0-9]");
+			pattern = Pattern.compile("[^a-fA-F0-9]([a-fA-F0-9]{" + hex_len + "})[^a-fA-F0-9]");
 			matcher = pattern.matcher(text);
 			if (matcher.find()) {
-				String hash = text.substring(matcher.start() + 1, matcher.start() + 41);
+				String hash = matcher.group();
 				// convert from HEX to raw bytes
 				byte[] infohash = ByteFormatter.decodeString(hash.toUpperCase());
 				// convert to BASE32
-				return "magnet:?xt=urn:btih:" + Base32.encode(infohash);
+				return( getMagnetURI(infohash));
 			}
 		}
 
@@ -2218,49 +2449,5 @@ public class UrlUtils
 		}
 
 		throw( last_error );
-	}
-
-
-	public static void main(String[] args) {
-
-		//MagnetURIHandler.getSingleton();
-
-		System.out.println( URLEncoder.encode( "http://a.b.c/fred?a=10&b=20"));
-
-		byte[] infohash = ByteFormatter.decodeString("1234567890123456789012345678901234567890");
-		String[] test = {
-				"http://moo.com",
-				"http%3A%2F/moo%2Ecom",
-				"magnet:?moo",
-				"magnet%3A%3Fxt=urn:btih:26",
-				"magnet%3A//%3Fmooo",
-				"magnet:?xt=urn:btih:" + Base32.encode(infohash),
-				"aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd",
-				"magnet:?dn=OpenOffice.org_2.0.3_Win32Intel_install.exe&xt=urn:sha1:PEMIGLKMNFI4HZ4CCHZNPKZJNMAAORKN&xt=urn:tree:tiger:JMIJVWHCQUX47YYH7O4XIBCORNU2KYKHBBC6DHA&xt=urn:ed2k:1c0804541f34b6583a383bb8f2cec682&xl=96793015&xs=http://mirror.switch.ch/ftp/mirror/OpenOffice/stable/2.0.3/OOo_2.0.3_Win32Intel_install.exe%3Fa%3D10%26b%3D20",
-				};
-		for (int i = 0; i < test.length; i++) {
-			System.out.println( test[i] );
-			System.out.println("URLDecoder.decode: -> " + URLDecoder.decode(test[i]));
-			System.out.println("decode:            -> " + decode(test[i]));
-			System.out.println("decodeIf:          -> " + decodeIfNeeded(test[i]));
-			System.out.println("isURL:             -> " + isURL(test[i]));
-			System.out.println("parse:             -> " + parseTextForURL(test[i], true));
-		}
-
-		String[] testEncode = {
-			"a b"
-		};
-		for (int i = 0; i < testEncode.length; i++) {
-			String txt = testEncode[i];
-			try {
-				System.out.println("URLEncoder.encode: " + txt + " -> "
-						+ URLEncoder.encode(txt, "UTF8"));
-			} catch (UnsupportedEncodingException e) {
-			}
-			System.out.println("URLEncoder.encode: " + txt + " -> "
-					+ URLEncoder.encode(txt));
-			System.out.println("encode: " + txt + " -> " + encode(txt));
-		}
-
 	}
 }

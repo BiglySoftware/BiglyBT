@@ -218,7 +218,7 @@ LightWeightSeedManager
 							});
 			}
 
-			log( "Added LWS: " + name + ", " + UrlUtils.getMagnetURI( hash.getBytes()));
+			log( "Added LWS: " + name + ", " + ByteFormatter.encodeString( hash.getBytes()));
 		}
 
 		lws.start();
@@ -279,7 +279,7 @@ LightWeightSeedManager
 			}
 		}
 
-		log( "Added LWS: " + lws.getName() + ", " + UrlUtils.getMagnetURI( lws.getHash().getBytes()));
+		log( "Removed LWS: " + lws.getName() + ", " + ByteFormatter.encodeString( lws.getHash().getBytes()));
 	}
 
 	protected void

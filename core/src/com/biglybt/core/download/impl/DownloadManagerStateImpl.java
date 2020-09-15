@@ -4597,15 +4597,16 @@ DownloadManagerStateImpl
     	}
     	
     	@Override
-    	public byte[][] 
-    	getHashes() 
+    	public byte[]
+    	getV2Hash() 
+    	
     		throws TOTorrentException
     	{
-    		if ( getTorrentType() == TOTorrent.TT_V1_V2 ){
+    		if ( getTorrentType() != TOTorrent.TT_V1 ){
     			
     			if ( fixup()){
 
-    				return( delegate.getHashes());
+    				return( delegate.getV2Hash());
     				
     			}else{
     				
@@ -4613,7 +4614,8 @@ DownloadManagerStateImpl
     			}
     			
     		}else{
-    			return( new byte[][]{ getHash()});
+    			
+    			return( null );
     		}
     	}
 
@@ -4627,16 +4629,16 @@ DownloadManagerStateImpl
     	}
     	
     	@Override
-    	public HashWrapper[]
-    	getHashWrappers() 
+    	public HashWrapper
+    	getV2HashWrapper() 
     	
     		throws TOTorrentException
     	{
-    		if ( getTorrentType() == TOTorrent.TT_V1_V2 ){
+    		if ( getTorrentType() != TOTorrent.TT_V1 ){
     			
     			if ( fixup()){
 
-    				return( delegate.getHashWrappers());
+    				return( delegate.getV2HashWrapper());
     				
     			}else{
     				
@@ -4645,7 +4647,7 @@ DownloadManagerStateImpl
     			
     		}else{
     			
-    			return( new HashWrapper[]{ getHashWrapper()});
+    			return( null );
     		}
     	}
 

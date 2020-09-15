@@ -379,34 +379,51 @@ MagnetURIHandlerImpl
 
 					original_params.put( lhs, "" );
 
-					lc_params.put( lhs.toLowerCase( MessageText.LOCALE_ENGLISH ), "" );
+					lc_params.put( lhs.toLowerCase( Locale.US ), "" );
 
 				}else{
 
 					try{
 						String	lhs 	= arg.substring( 0, pos ).trim();
-						String	lc_lhs 	= lhs.toLowerCase( MessageText.LOCALE_ENGLISH );
+						String	lc_lhs 	= lhs.toLowerCase( Locale.US );
 
 						String	rhs = UrlUtils.decode( arg.substring( pos+1 ).trim());
 
 						if ( lc_lhs.equals( "xt" )){
 
-							if ( rhs.toLowerCase( MessageText.LOCALE_ENGLISH ).startsWith( "urn:btih:" )){
+								// currently we always take the btih over btmh
+							
+							String lc_rhs = rhs.toLowerCase( Locale.US );
+							
+							if ( lc_rhs.startsWith( "urn:btih:" )){
 
 								original_params.put( lhs, rhs );
 
-								lc_params.put( lhs, rhs );
+								lc_params.put( lc_lhs, rhs );
 
 							}else{
 
 								String existing = lc_params.get( "xt" );
 
-								if ( 	existing == null ||
-										( !existing.toLowerCase( MessageText.LOCALE_ENGLISH ).startsWith( "urn:btih:" ) && rhs.startsWith( "urn:sha1:" ))){
-
+								if ( existing == null ){
+									
 									original_params.put( lhs, rhs );
 
-									lc_params.put( lhs, rhs );
+									lc_params.put( lc_lhs, rhs );
+									
+								}else{
+									
+									String lc_existing =  existing.toLowerCase( Locale.US );
+									
+									if ( lc_existing.startsWith( "urn:btih:" ) || lc_existing.startsWith( "urn:btmh:" )){
+										
+											// keep these
+									}else{
+
+										original_params.put( lhs, rhs );
+
+										lc_params.put( lc_lhs, rhs );
+									}
 								}
 							}
 						}else{
@@ -451,7 +468,7 @@ MagnetURIHandlerImpl
 
 			String urn = (String)lc_params.get( "xt" );
 
-			if ( urn != null && urn.toLowerCase( MessageText.LOCALE_ENGLISH ).startsWith( "urn:btih:")){
+			if ( urn != null && ( urn.toLowerCase( Locale.US).startsWith( "urn:btih:") || urn.toLowerCase( Locale.US).startsWith( "urn:btmh:"))){
 
 				for ( MagnetURIHandlerListener listener: listeners ){
 
@@ -522,7 +539,7 @@ MagnetURIHandlerImpl
 
 			}else{
 
-				String	lc_urn = urn.toLowerCase( MessageText.LOCALE_ENGLISH );
+				String	lc_urn = urn.toLowerCase( Locale.US  );
 
 				try{
 
@@ -594,12 +611,16 @@ MagnetURIHandlerImpl
 
 				String urn = (String)lc_params.get( "xt" );
 
-				if ( urn == null || !( urn.toLowerCase( MessageText.LOCALE_ENGLISH ).startsWith( "urn:sha1:") || urn.toLowerCase( MessageText.LOCALE_ENGLISH ).startsWith( "urn:btih:"))){
+				if ( 	urn == null || 
+						!( 	urn.toLowerCase( Locale.US ).startsWith( "urn:sha1:") || 
+							urn.toLowerCase( Locale.US ).startsWith( "urn:btih:") ||
+							urn.toLowerCase( Locale.US ).startsWith( "urn:btmh:"))){
+					
 					if (Logger.isEnabled())
 						Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING,
 								"MagnetURIHandler: " + "invalid command - '" + get + "'"));
 
-					throw( new IOException( "Invalid magnet URI - no urn:sha1 or urn:btih argument supplied." ));
+					throw( new IOException( "Invalid magnet URI - no urn:sha1, urn:btih or urn:btmh argument supplied." ));
 				}
 
 				String	encoded = urn.substring(9);
@@ -649,16 +670,16 @@ MagnetURIHandlerImpl
 					Logger.log(new LogEvent(LOGID, "MagnetURIHandler: download of '"
 							+ encoded + "' starts (initial sources=" + s.length + ")"));
 
-				byte[] _sha1 = UrlUtils.decodeSHA1Hash( encoded );
+				byte[] _magnet_hash = UrlUtils.decodeTruncatedHashFromMagnetURI( encoded );
 
-				if ( _sha1 == null ){
+				if ( _magnet_hash == null ){
 
-					_sha1 = new byte[20];	// dummy to still allow &fl links to work...
+					_magnet_hash = new byte[20];	// dummy to still allow &fl links to work...
 
 					//throw( new Exception( "Invalid info hash '" + encoded + "'" ));
 				}
 
-				final byte[] sha1 = _sha1;
+				final byte[] magnet_hash = _magnet_hash;
 
 				byte[] data = null;
 
@@ -772,7 +793,7 @@ MagnetURIHandlerImpl
 														}
 													}
 												},
-												sha1,
+												magnet_hash,
 												f_arg_str,
 												s,
 												DOWNLOAD_TIMEOUT );

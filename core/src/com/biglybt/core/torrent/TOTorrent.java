@@ -218,16 +218,6 @@ TOTorrent
 	getHash()
 
 		throws TOTorrentException;
-
-	/**
-	 * @return 1 or two hashes. First entry same as getHash, second is V2 hash for a hybrid torrent
-	 * @throws TOTorrentException
-	 */
-	
-	public byte[][]
-	getHashes()
-
-		throws TOTorrentException;
 	
 	/**
 	 * convenience method to get a wrapped hash for performance purposes
@@ -241,13 +231,18 @@ TOTorrent
 		throws TOTorrentException;
 
 	/**
-	 * See above description of getHashes
-	 * @return
+	 * 
+	 * @return SHA256 hash for hybrid/v2 torrents, null for v1
 	 * @throws TOTorrentException
 	 */
 	
-	public HashWrapper[]
-	getHashWrappers()
+	public byte[]
+	getV2Hash()
+
+		throws TOTorrentException;
+
+	public HashWrapper
+	getV2HashWrapper()
 
 		throws TOTorrentException;
 

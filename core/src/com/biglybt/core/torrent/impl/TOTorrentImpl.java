@@ -106,11 +106,11 @@ TOTorrentImpl
 
 	private byte[]		torrent_hash_override;
 
-	private byte[]		torrent_hash;
+	private byte[]		torrent_hash;		
 	private HashWrapper	torrent_hash_wrapper;
 
-	private byte[]		torrent_hash_hybrid_v2;
-	private HashWrapper	torrent_hash_wrapper_hybrid_v2;
+	private byte[]		torrent_hash_v2;
+	private HashWrapper	torrent_hash_wrapper_v2;
 
 	private boolean				simple_torrent;
 	private TOTorrentFileImpl[]	files;
@@ -820,8 +820,8 @@ TOTorrentImpl
 	}
 	
 	@Override
-	public byte[][]
-	getHashes()
+	public byte[]
+	getV2Hash()
 
 		throws TOTorrentException
 	{
@@ -834,7 +834,7 @@ TOTorrentImpl
 			setHashFromInfo( info );
 		}
 
-		return( torrent_type == TT_V1_V2?new byte[][]{ torrent_hash, torrent_hash_hybrid_v2 }:new byte[][]{torrent_hash});
+		return( torrent_hash_v2 );
 	}
 
 	@Override
@@ -852,8 +852,8 @@ TOTorrentImpl
 	}
 
 	@Override
-	public HashWrapper[] 
-	getHashWrappers() 
+	public HashWrapper
+	getV2HashWrapper() 
 			
 		throws TOTorrentException
 	{
@@ -862,7 +862,7 @@ TOTorrentImpl
 			getHash();
 		}
 		
-		return( torrent_type == TT_V1_V2?new HashWrapper[]{ torrent_hash_wrapper, torrent_hash_wrapper_hybrid_v2 }:new HashWrapper[]{torrent_hash_wrapper});
+		return( torrent_hash_wrapper_v2 );
 	}
 	
 	@Override
@@ -908,23 +908,21 @@ TOTorrentImpl
 					
 					MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
 					
-					byte[] full_hash = sha256.digest( encoded );
+					torrent_hash_v2 = sha256.digest( encoded );
 					
-					torrent_hash_hybrid_v2 = new byte[20];
-					
-					System.arraycopy( full_hash, 0, torrent_hash_hybrid_v2, 0, 20 );
-
-					torrent_hash_wrapper_hybrid_v2 = new HashWrapper( torrent_hash_hybrid_v2 );
+					torrent_hash_wrapper_v2 = new HashWrapper( torrent_hash_v2 );
 					
 				}else if ( torrent_type == TT_V2 ){
 					
 					MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
 					
-					byte[] full_hash = sha256.digest( encoded );
+					torrent_hash_v2 = sha256.digest( encoded );
+					
+					torrent_hash_wrapper_v2 = new HashWrapper( torrent_hash_v2 );
 					
 					torrent_hash = new byte[20];
 					
-					System.arraycopy( full_hash, 0, torrent_hash, 0, 20 );
+					System.arraycopy( torrent_hash_v2, 0, torrent_hash, 0, 20 );
 					
 				}else{
 					

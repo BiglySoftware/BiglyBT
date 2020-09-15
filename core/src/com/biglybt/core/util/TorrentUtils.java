@@ -3669,11 +3669,11 @@ TorrentUtils
 		}
 
 		@Override
-		public byte[][] 
-		getHashes() 
+		public byte[]
+		getV2Hash() 
 			throws TOTorrentException
 		{
-			return( delegate.getHashes());
+			return( delegate.getV2Hash());
 		}
 		
 		@Override
@@ -3686,11 +3686,11 @@ TorrentUtils
 		}
 
 		@Override
-		public HashWrapper[] 
-		getHashWrappers() 
+		public HashWrapper
+		getV2HashWrapper() 
 			throws TOTorrentException
 		{	
-			return( delegate.getHashWrappers());
+			return( delegate.getV2HashWrapper());
 		}
 		
 	   	@Override
