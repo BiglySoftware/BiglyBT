@@ -563,7 +563,7 @@ public class TorrentFolderWatcher {
 														
 													}else{
 														
-														root = new File( move_loc, FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName(torrent), true ));
+														root = FileUtil.newFile( move_loc, FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName(torrent), true ));
 													}
 													
 													if (( tag_save_location.getTagMoveOnCompleteOptions() & TagFeatureFileLocation.FL_DATA ) != 0 ){
@@ -579,7 +579,7 @@ public class TorrentFolderWatcher {
 																continue;
 															}
 															
-															File file_loc = new File( root, files[j].getRelativePath());
+															File file_loc = FileUtil.newFile( root, files[j].getRelativePath());
 															
 															if ( !file_loc.exists()){
 																

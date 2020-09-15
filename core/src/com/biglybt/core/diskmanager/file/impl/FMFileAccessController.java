@@ -184,9 +184,9 @@ FMFileAccessController
 				
 				if ( ( type == FMFile.FT_PIECE_REORDER || type == FMFile.FT_PIECE_REORDER_COMPACT ) && target_type == FMFile.FT_LINEAR ){
 				
-					new File(control_dir,controlFileName).delete();
-					
-					new File( control_dir, controlFileName + REORDER_SUFFIX ).delete();
+					FileUtil.newFile(control_dir,controlFileName).delete();
+
+					FileUtil.newFile( control_dir, controlFileName + REORDER_SUFFIX ).delete();
 
 					type		= FMFile.FT_LINEAR;
 					file_access = new FMFileAccessLinear( owner );

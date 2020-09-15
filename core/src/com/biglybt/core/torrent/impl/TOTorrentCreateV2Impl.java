@@ -23,12 +23,7 @@ import java.io.*;
 import java.util.*;
 
 import com.biglybt.core.torrent.TOTorrentException;
-import com.biglybt.core.util.ByteArrayHashMap;
-import com.biglybt.core.util.ByteEncodedKeyHashMap;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.SHA256;
-import com.biglybt.core.util.TorrentUtils;
+import com.biglybt.core.util.*;
 
 import java.security.*;
 
@@ -252,7 +247,7 @@ TOTorrentCreateV2Impl
 				continue;
 			}
 			
-			File file = new File( dir, name );
+			File file = FileUtil.newFile( dir, name );
 			
 			if ( file.isFile()){
 				
@@ -319,7 +314,7 @@ TOTorrentCreateV2Impl
 					leaf_count = 1;
 				}
 				
-				FileInputStream fis = new FileInputStream(file);
+				FileInputStream fis = FileUtil.newFileInputStream(file);
 				
 				List<byte[]> leaf_digests = new ArrayList<>( leaf_count );
 	

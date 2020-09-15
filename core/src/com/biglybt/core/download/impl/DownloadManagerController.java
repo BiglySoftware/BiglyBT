@@ -1367,7 +1367,7 @@ DownloadManagerController
 			
 				if ( dms_torrent.isExportable()){
 				
-					if ( TorrentUtils.propagateExportability( dms_torrent, new File( download_manager.getTorrentFileName()))){
+					if ( TorrentUtils.propagateExportability( dms_torrent, FileUtil.newFile( download_manager.getTorrentFileName()))){
 						
 						dms.setBooleanAttribute( DownloadManagerState.AT_TORRENT_EXPORT_PROPAGATED, true );
 					}

@@ -295,7 +295,7 @@ AEThreadMonitor
 		
 		File logDir = AEDiagnostics.getLogDir();
 		
-		FileUtil.writeStringAsFile( new File( logDir, "ThreadDump.log" ), dump );
+		FileUtil.writeStringAsFile( FileUtil.newFile( logDir, "ThreadDump.log" ), dump );
 	}
 
 	private void

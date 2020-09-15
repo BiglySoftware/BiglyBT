@@ -91,7 +91,7 @@ FMFilePadding
 
 		throws FMFileManagerException
 	{
-		file = new File( file.getParentFile(), new_name );
+		file = FileUtil.newFile( file.getParentFile(), new_name );
 	}
 
 	public void

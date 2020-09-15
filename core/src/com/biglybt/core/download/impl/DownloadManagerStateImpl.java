@@ -572,7 +572,7 @@ DownloadManagerStateImpl
 			return;
 		}
 
-		try( 	FileInputStream fis = new FileInputStream( file );
+		try( 	FileInputStream fis = FileUtil.newFileInputStream( file );
 				BufferedInputStream is = new BufferedInputStream( new GZIPInputStream( fis ))){
 
 			try{
