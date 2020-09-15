@@ -226,14 +226,17 @@ DiskManagerUtil
 		    	
 		    	if ( !FileUtil.areFilePathsIdentical( to_link, existing_file )){
 	        		
-		            if ( !FileUtil.renameFile( existing_file, to_link )){
-
-		            	String error = "Failed to rename '" + existing_file.toString() + "' to '" + to_link.toString() + "'";
-		            			
-		                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR, error ));
-
-		                return( error );
-		            }
+		    		if ( existing_file.exists()){
+		    			
+			            if ( !FileUtil.renameFile( existing_file, to_link )){
+	
+			            	String error = "Failed to rename '" + existing_file.toString() + "' to '" + to_link.toString() + "'";
+			            			
+			                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR, error ));
+	
+			                return( error );
+			            }
+		    		}
 		    	}
 		    }else{
 
