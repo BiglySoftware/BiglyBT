@@ -1211,14 +1211,14 @@ public class UrlUtils
 			pattern = Pattern.compile("[^a-zA-Z2-7]([a-zA-Z2-7]{" + b32_len + "})[^a-zA-Z2-7]");
 			matcher = pattern.matcher(text);
 			if (matcher.find()) {
-				String hash = matcher.group();
+				String hash = matcher.group(1);
 				return( getMagnetURI(Base32.decode(hash)));
 			}
 
 			pattern = Pattern.compile("[^a-fA-F0-9]([a-fA-F0-9]{" + hex_len + "})[^a-fA-F0-9]");
 			matcher = pattern.matcher(text);
 			if (matcher.find()) {
-				String hash = matcher.group();
+				String hash = matcher.group(1);
 				// convert from HEX to raw bytes
 				byte[] infohash = ByteFormatter.decodeString(hash.toUpperCase());
 				// convert to BASE32
