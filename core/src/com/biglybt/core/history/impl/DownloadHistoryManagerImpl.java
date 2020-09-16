@@ -898,6 +898,7 @@ DownloadHistoryManagerImpl
 	{
 		private final long 		uid;
 		private final byte[]	hash;
+		private final byte[]	hash_v2;
 		private final long		size;
 		private final String	name;
 		private final long		add_time;
@@ -917,21 +918,25 @@ DownloadHistoryManagerImpl
 
 			uid		= DownloadHistoryManagerImpl.getUID( dm );
 
-			byte[]	h = null;
-
+			byte[]	h 	= null;
+			byte[]	h2 	= null;
+			
 			TOTorrent torrent = dm.getTorrent();
 
 			if ( torrent != null ){
 
 				try{
-					h = torrent.getHash();
+					h 	= torrent.getHash();
 
+					h2 	= torrent.getV2Hash();
+					
 				}catch( Throwable e ){
 				}
 			}
 
 			hash	= h;
-
+			hash_v2	= h2;
+			
 			name	= dm.getDisplayName();
 
 			size	= dm.getSize();
@@ -958,7 +963,8 @@ DownloadHistoryManagerImpl
 			try{
 				uid		= (Long)map.get( "u" );
 				hash	= (byte[])map.get("h");
-
+				hash_v2	= (byte[])map.get( "v" );
+				
 				name 			= new String((byte[])map.get( "n"), Constants.UTF_8 );
 				save_location 	= new String((byte[])map.get( "s"), Constants.UTF_8 );
 
@@ -1003,6 +1009,11 @@ DownloadHistoryManagerImpl
 
 			map.put( "u", uid );
 			map.put( "h", hash );
+			
+			if ( hash_v2 != null ){
+				map.put( "v", hash_v2 );
+			}
+			
 			map.put( "n", name.getBytes( Constants.UTF_8 ));
 			map.put( "z", size );
 			map.put( "s", save_location.getBytes( Constants.UTF_8 ));
