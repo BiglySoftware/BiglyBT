@@ -53,7 +53,7 @@ DownloadStubImpl
 	private final byte[]					hash;
 	private final long						size;
 	private final long						date_created;
-	private final String					save_path;
+	private String							save_path;
 	private final String					main_tracker;
 	private final DownloadStubFileImpl[]	files;
 	private final String[]					manual_tags;
@@ -315,6 +315,18 @@ DownloadStubImpl
 		return( save_path );
 	}
 
+		/**
+		 * Can ONLY be used before the stub is initially saved
+		 * @param sp
+		 */
+	
+	protected void
+	setSavePath(
+		String	sp )
+	{
+		save_path = sp;
+	}
+	
 	@Override
 	public String 
 	getMainTracker()

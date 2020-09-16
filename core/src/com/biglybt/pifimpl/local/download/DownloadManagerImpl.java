@@ -1354,8 +1354,19 @@ DownloadManagerImpl
 		try{
 			core_dm.getDownloadState().exportState( ARCHIVE_DIR );
 
+			String old_save_path = stub.getSavePath();
+			
 			download.remove( false, false );
 
+				// might have a 'move on remove' action setup
+			
+			String save_path_after_remove = download.getSavePath();
+			
+			if ( !old_save_path.contentEquals( save_path_after_remove )){
+				
+				stub.setSavePath( save_path_after_remove );
+			}
+			
 			synchronized( download_stubs ){
 
 				download_stubs.add( stub );
