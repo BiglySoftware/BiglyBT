@@ -1089,6 +1089,14 @@ DownloadHistoryManagerImpl
 		{
 			return( hash );
 		}
+		
+		@Override
+		public byte[]
+		getTorrentV2Hash()
+		{
+			return( hash_v2 );
+		}
+		
 
 		@Override
 		public String

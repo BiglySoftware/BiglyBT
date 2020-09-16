@@ -599,7 +599,7 @@ public class SBC_DownloadHistoryView
 
 							download.setRedownloading();
 
-							String magnet = UrlUtils.getMagnetURI( download.getTorrentHash(), download.getName(), null );
+							String magnet = UrlUtils.getMagnetURI( download.getTorrentHash(), download.getTorrentV2Hash(), download.getName(), null );
 
 							TorrentOpener.openTorrent( magnet );
 						}

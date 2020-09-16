@@ -206,6 +206,27 @@ public class UrlUtils
 
 		return( magnet_uri );
 	}
+	
+	public static String
+	getMagnetURI(
+		byte[]		hash,
+		byte[]		hash_v2,
+		String		name,
+		String[]	networks )
+	{
+		String magnet_uri = getMagnetURI( hash );
+
+		if ( hash_v2 != null ){
+			
+			magnet_uri += "&xt=urn:btmh:" + "1220" + ByteFormatter.encodeString( hash_v2 );
+		}
+
+		magnet_uri += encodeName( name );
+
+		magnet_uri += encodeNetworks( networks );
+
+		return( magnet_uri );
+	}
 
 	private static String
 	encodeName(

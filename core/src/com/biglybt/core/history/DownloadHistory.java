@@ -31,6 +31,9 @@ DownloadHistory
 	public byte[]
 	getTorrentHash();
 
+	public byte[]
+	getTorrentV2Hash();
+	
 	public String
 	getName();
 
