@@ -172,7 +172,7 @@ FMFileManagerImpl
 
 				// System.out.println( "setLink:" + source + " -> " + target );
 
-				if ( target != null && !source.equals(target)){
+				if ( target != null && !FileUtil.areFilePathsIdentical( source, target )){
 
 					if ( index >= 0 ){
 
