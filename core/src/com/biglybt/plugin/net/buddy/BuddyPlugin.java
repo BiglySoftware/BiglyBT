@@ -388,6 +388,12 @@ BuddyPlugin
 		final BooleanParameter tracker_enable 		= config.addBooleanParameter2("azbuddy.tracker.enabled", "azbuddy.tracker.enabled", true );
 		final BooleanParameter tracker_so_enable 	= config.addBooleanParameter2("azbuddy.tracker.seeding.only.enabled", "azbuddy.tracker.seeding.only.enabled", false );
 
+			// nasty hack but the existing text has a \t prefix that causes UI weirdness but I don't want to change it and
+			// end up with missing translations...
+		
+		tracker_so_enable.setLabelText( MessageText.getString("azbuddy.tracker.seeding.only.enabled").trim());
+		tracker_so_enable.setIndent( 1, true );
+		
 		final BooleanParameter buddies_lan_local 	= config.addBooleanParameter2("azbuddy.tracker.con.lan.local", "azbuddy.tracker.con.lan.local", true );
 
 		buddies_lan_local.addListener(
