@@ -958,6 +958,23 @@ SubscriptionManagerUI
 					"subscriptions.config.mark.read.after",
 					subs_man.getAutoDownloadMarkReadAfterDays());
 
+		final BooleanParameter hash_dirs = configModel.addBooleanParameter2(
+				"subscriptions.config.addhashdirs",
+				"subscriptions.config.addhashdirs",
+				subs_man.getAddHashDirs());
+
+		hash_dirs.addListener(
+			new ParameterListener()
+			{
+				@Override
+				public void
+				parameterChanged(
+					Parameter param )
+				{
+					subs_man.setAddHashDirs( hash_dirs.getValue());
+				}
+			});
+		
 		configModel.createGroup(
 			"subscriptions.config.auto",
 			new Parameter[]{
@@ -965,6 +982,7 @@ SubscriptionManagerUI
 					min_auto_start_size,
 					max_auto_start_size,
 					mark_as_read_after,
+					hash_dirs,
 			});
 
 			// int param fires intermediate events so we have to rely on the save :(

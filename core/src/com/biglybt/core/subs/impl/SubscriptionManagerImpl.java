@@ -107,6 +107,7 @@ SubscriptionManagerImpl
 	private static final String CONFIG_AUTO_START_MIN_MB 	= "subscriptions.auto.start.min.mb";
 	private static final String CONFIG_AUTO_START_MAX_MB 	= "subscriptions.auto.start.max.mb";
 	private static final String CONFIG_AUTO_MARK_READ	 	= "subscriptions.auto.dl.mark.read.days";
+	private static final String CONFIG_ADD_HASHES		 	= "subscriptions.auto.dl.add.hashes";
 
 	private static final String	CONFIG_RSS_ENABLE			= "subscriptions.config.rss_enable";
 
@@ -7586,6 +7587,24 @@ SubscriptionManagerImpl
 		}
 	}
 
+	@Override
+	public boolean
+	getAddHashDirs()
+	{
+		return( COConfigurationManager.getBooleanParameter( CONFIG_ADD_HASHES ));
+	}
+
+	@Override
+	public void
+	setAddHashDirs(
+		boolean		b )
+	{
+		if ( b != getAddHashDirs()){
+
+			COConfigurationManager.setParameter( CONFIG_ADD_HASHES, b );
+		}
+	}
+	
 	protected boolean
 	shouldAutoStart(
 		Torrent		torrent )

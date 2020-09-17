@@ -225,6 +225,13 @@ SubscriptionManager
 	public String
 	getRateLimits();
 
+	public boolean
+	getAddHashDirs();
+	
+	public void
+	setAddHashDirs(
+		boolean	b );
+	
 	public void
 	addListener(
 		SubscriptionManagerListener	listener );

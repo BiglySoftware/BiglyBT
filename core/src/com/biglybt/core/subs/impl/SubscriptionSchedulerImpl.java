@@ -20,11 +20,13 @@
 
 package com.biglybt.core.subs.impl;
 
+import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.impl.web.WebEngine;
 import com.biglybt.core.proxy.AEProxyFactory;
@@ -484,13 +486,51 @@ SubscriptionSchedulerImpl
 										manager.addPrepareTrigger( hash, new Subscription[]{ subs }, new SubscriptionResult[]{ result } );
 
 										try{
+											File data_location 	= null;
+											File torrent_location	= null;
+											
+											if ( manager.getAddHashDirs()){
+												
+												String torrent_name = FileUtil.convertOSSpecificChars( torrent.getName(), false );
+												
+												String hash_str = ByteFormatter.encodeString( hash ).substring( 0, 8 );
+												
+												String data_dir = COConfigurationManager.getStringParameter("Default save path");
+
+												if ( data_dir != null && !data_dir.isEmpty()){
+													
+													data_location = FileUtil.newFile( data_dir, torrent_name + "_" + hash_str );
+												}
+												
+												if ( COConfigurationManager.getBooleanParameter("Save Torrent Files")){
+
+											      	String torrent_dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
+
+											      	if ( torrent_dir != null && !torrent_dir.isEmpty()){
+
+											      		torrent_location = FileUtil.newFile( torrent_dir, torrent_name + "_" + hash_str + ".torrent" );
+											      		
+											      		try{
+													    	torrent.writeToFile( torrent_location );
+													    	
+											      		}catch( Throwable e ){
+											      			
+											      			Debug.out( e );
+											      			
+											      			torrent_location = null;
+											      		}
+											      	}
+												}
+											}
+										    
+										    
 											if ( auto_start && !stop_override ){
 
-												download = dm.addDownload( torrent );
+												download = dm.addDownload( torrent, torrent_location, data_location );
 
 											}else{
 
-												download = dm.addDownloadStopped( torrent, null, null );
+												download = dm.addDownloadStopped( torrent, torrent_location, data_location );
 											}
 										}finally{
 

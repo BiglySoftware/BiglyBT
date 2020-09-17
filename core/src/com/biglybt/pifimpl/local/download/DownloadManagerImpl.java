@@ -385,7 +385,7 @@ DownloadManagerImpl
 		    	throw( new DownloadException("DownloadManager::addDownload: default torrent save directory must be configured" ));
 		    }
 
-		    torrent_file = FileUtil.newFile( torrent_dir, torrent.getName() + ".torrent" );
+		    torrent_file = FileUtil.newFile( torrent_dir, FileUtil.convertOSSpecificChars( torrent.getName(), false ) + ".torrent" );
 
 		    try{
 		    	torrent.writeToFile( torrent_file );
