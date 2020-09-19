@@ -84,7 +84,7 @@ DownloadManagerStateImpl
 	}
 	
 	private static boolean disable_interim_saves;
-	private static LoggerChannel 	save_log;
+	// private static LoggerChannel 	save_log;
 	
 	
 	static{
@@ -93,6 +93,7 @@ DownloadManagerStateImpl
 			(n)->{
 				disable_interim_saves = COConfigurationManager.getBooleanParameter( n );
 				
+				/*
 				if ( disable_interim_saves && Constants.isCVSVersion() && save_log == null ){
 					
 					save_log = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getLogger().getChannel( "DownloadStateSaves" );
@@ -101,6 +102,7 @@ DownloadManagerStateImpl
 
 					save_log.setForce( true );
 				}
+				*/
 			});
 	}
 
@@ -1239,10 +1241,12 @@ DownloadManagerStateImpl
 					Logger.log(new LogEvent(torrent, LOGID, "Saving state for download '"
 							+ TorrentUtils.getLocalisedName(torrent) + "'"));
 
+				/*
 				if ( save_log != null ){
 					
 					save_log.log( TorrentUtils.getLocalisedName(torrent) + ": " + Debug.getCompressedStackTrace());
 				}
+				*/
 				
 				torrent.setAdditionalMapProperty( ATTRIBUTE_KEY, attributes );
 
