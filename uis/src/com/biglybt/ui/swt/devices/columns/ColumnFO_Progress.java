@@ -49,7 +49,7 @@ public class ColumnFO_Progress
 {
 	private static final int borderWidth = 1;
 
-	public static final String COLUMN_ID = "file_ops.progress";
+	public static final String COLUMN_ID = "fileops_progress";
 
 	private static Font fontText;
 
