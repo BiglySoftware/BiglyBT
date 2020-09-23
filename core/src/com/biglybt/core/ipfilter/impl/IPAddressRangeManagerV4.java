@@ -19,6 +19,8 @@
 
 package com.biglybt.core.ipfilter.impl;
 
+import java.net.Inet4Address;
+
 /**
  * @author parg
  *
@@ -37,10 +39,9 @@ import com.biglybt.core.tracker.protocol.PRHelpers;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
-import com.biglybt.core.util.UnresolvableHostManager;
 
 public class
-IPAddressRangeManager
+IPAddressRangeManagerV4
 {
 	private static final LogIDs LOGID = LogIDs.CORE;
 
@@ -56,7 +57,7 @@ IPAddressRangeManager
 	protected final AEMonitor	this_mon	= new AEMonitor( "IPAddressRangeManager" );
 
 	protected
-	IPAddressRangeManager()
+	IPAddressRangeManagerV4()
 	{
 	}
 
@@ -96,39 +97,6 @@ IPAddressRangeManager
 
 	public Object
 	isInRange(
-		String	ip )
-	{
-			// optimise for pretty normal case where there are no ranges
-
-		if ( entries.size() == 0 ){
-
-			return( null );
-		}
-
-		try{
-			this_mon.enter();
-
-			long address_long = addressToInt( ip );
-
-			if ( address_long < 0 ){
-
-				address_long += 0x100000000L;
-			}
-
-			Object res = isInRange( address_long );
-
-			// LGLogger.log( "IPAddressRangeManager: checking '" + ip + "' against " + entries.size() + "/" + merged_entries.length + " -> " + res );
-
-			return( res );
-
-		}finally{
-
-			this_mon.exit();
-		}
-	}
-
-	public Object
-	isInRange(
 		InetAddress	ip )
 	{
 			// optimise for pretty normal case where there are no ranges
@@ -137,11 +105,18 @@ IPAddressRangeManager
 
 			return( null );
 		}
+		
+		if ( !(ip instanceof Inet4Address )){
+			
+			Debug.out( "Only IPv4 supported" );
+			
+			return( null );
+		}
 
 		try{
 			this_mon.enter();
 
-			long address_long = addressToInt( ip );
+			long address_long = PRHelpers.addressToInt( ip );
 
 			if ( address_long < 0 ){
 
@@ -160,7 +135,7 @@ IPAddressRangeManager
 		}
 	}
 
-	protected Object
+	private Object
 	isInRange(
 		long	address_long )
 	{
@@ -260,27 +235,7 @@ IPAddressRangeManager
 		}
 	}
 
-	protected int
-	addressToInt(
-		String		address )
-	{
-		try{
-			return( PRHelpers.addressToInt( address ));
-
-		}catch( UnknownHostException e ){
-
-			return( UnresolvableHostManager.getPseudoAddress( address ));
-		}
-	}
-
-	protected int
-	addressToInt(
-		InetAddress	address )
-	{
-		return( PRHelpers.addressToInt( address ));
-	}
-
-	protected void
+	private void
 	checkRebuild()
 	{
 		try{
@@ -313,7 +268,7 @@ IPAddressRangeManager
 		}
 	}
 
-	protected void
+	private void
 	rebuild()
 	{
 		if (Logger.isEnabled())
@@ -432,7 +387,7 @@ IPAddressRangeManager
 	 * @param diff
 	 * @return
 	 */
-	protected int signum(long diff) {
+	private int signum(long diff) {
 		if (diff > 0) {
 			return 1;
 		}
@@ -444,7 +399,7 @@ IPAddressRangeManager
 		return 0;
 	}
 
-	protected long
+	public long
 	getTotalSpan()
 	{
 		checkRebuild();
@@ -457,7 +412,7 @@ IPAddressRangeManager
 	main(
 		String[]	args )
 	{
-		IPAddressRangeManager manager = new IPAddressRangeManager();
+		IPAddressRangeManagerV4 manager = new IPAddressRangeManagerV4();
 
 		/*
 		Object[] testBlockIPs1 = {

@@ -28,6 +28,7 @@ package com.biglybt.core.tracker.protocol;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HostNameToIPResolver;
 
@@ -44,6 +45,11 @@ PRHelpers
 
 		byte[]	bytes = i_address.getAddress();
 
+		if ( Constants.IS_CVS_VERSION && bytes.length > 4 ){
+			
+			Debug.out( "hmm" );
+		}
+		
 		int	resp = (bytes[0]<<24)&0xff000000 | (bytes[1] << 16)&0x00ff0000 | (bytes[2] << 8)&0x0000ff00 | bytes[3]&0x000000ff;
 
 		// System.out.println( "addressToInt: " + address + " -> " + Integer.toHexString(resp));
@@ -56,6 +62,11 @@ PRHelpers
 		InetAddress		i_address )
 	{
 		byte[]	bytes = i_address.getAddress();
+
+		if ( Constants.IS_CVS_VERSION && bytes.length > 4 ){
+			
+			Debug.out( "hmm" );
+		}
 
 		int	resp = (bytes[0]<<24)&0xff000000 | (bytes[1] << 16)&0x00ff0000 | (bytes[2] << 8)&0x0000ff00 | bytes[3]&0x000000ff;
 
@@ -105,6 +116,11 @@ PRHelpers
 		InetAddress i_address = HostNameToIPResolver.syncResolve(address);
 
 		byte[]	bytes = i_address.getAddress();
+
+		if ( Constants.IS_CVS_VERSION && bytes.length > 4 ){
+			
+			Debug.out( "hmm" );
+		}
 
 		System.arraycopy( bytes, 0, buffer, offset, 4 );
 	}

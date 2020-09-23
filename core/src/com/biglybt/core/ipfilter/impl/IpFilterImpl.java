@@ -29,6 +29,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -40,25 +41,21 @@ import com.biglybt.core.ipfilter.*;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
-import com.biglybt.core.tracker.protocol.PRHelpers;
 import com.biglybt.core.util.*;
 
 public class
 IpFilterImpl
 	implements IpFilter
 {
-	private static final LogIDs LOGID = LogIDs.CORE;
-
-	private final static long BAN_IP_PERSIST_TIME	= 7*24*60*60*1000L;
+	protected static final LogIDs LOGID = LogIDs.CORE;
 
 	private final static int MAX_BLOCKS_TO_REMEMBER = 500;
 
 	private static IpFilterImpl ipFilter;
+	
 	static final AEMonitor	class_mon	= new AEMonitor( "IpFilter:class" );
 
-	private final IPAddressRangeManager	range_manager = new IPAddressRangeManager();
-
-	private final Map<Integer,BannedIpImpl>			bannedIps;
+	private final IPAddressRangeManagerV4	range_manager_v4 = new IPAddressRangeManagerV4();
 
     //Map ip blocked -> matching range
 
@@ -69,6 +66,7 @@ IpFilterImpl
 
 	private long	last_update_time;
 
+	private final IPBannerImpl		ipBanner;
 
 	final CopyOnWriteList<IPFilterListener>	listenerz = new CopyOnWriteList<>(true);
 
@@ -117,33 +115,26 @@ IpFilterImpl
 	{
 	  ipFilter = this;
 
-	  bannedIps = new HashMap();
-
 	  ipsBlocked = new LinkedList();
 
-		blockedListChangedDispatcher = new FrequencyLimitedDispatcher(
-				new AERunnable() {
-					@Override
-					public void runSupport() {
-						for ( IPFilterListener listener: listenerz ){
-							try {
-								listener.IPBlockedListChanged(IpFilterImpl.this);
-							} catch (Exception e) {
-								Debug.out(e);
-							}
-						}
-					}
-				}, 10000);
+	  blockedListChangedDispatcher = new FrequencyLimitedDispatcher(
+			  new AERunnable() {
+				  @Override
+				  public void runSupport() {
+					  for ( IPFilterListener listener: listenerz ){
+						  try {
+							  listener.IPBlockedListChanged(IpFilterImpl.this);
+						  } catch (Exception e) {
+							  Debug.out(e);
+						  }
+					  }
+				  }
+			  }, 10000);
 
-		ipFilterAutoLoader = new IpFilterAutoLoaderImpl(this);
+	  ipFilterAutoLoader = new IpFilterAutoLoaderImpl(this);
 
-		try{
-		  loadBannedIPs();
-
-	  }catch( Throwable e ){
-
-		  Debug.printStackTrace(e);
-	  }
+	  ipBanner = new IPBannerImpl( this );
+	  
 	  try{
 
 	  	loadFilters(true, true);
@@ -206,9 +197,12 @@ IpFilterImpl
 		throws Exception
 	{
 		if ( COConfigurationManager.getBooleanParameter( "Ip Filter Clear On Reload" )){
-			range_manager.clearAllEntries();
+			
+			range_manager_v4.clearAllEntries();
 		}
+		
 		markAsUpToDate();
+		
 		loadFilters(allowAsyncDownloading, false);
 	}
 
@@ -226,7 +220,7 @@ IpFilterImpl
 
 			List filters = new ArrayList();
 			map.put("ranges",filters);
-			List entries = range_manager.getEntries();
+			List entries = range_manager_v4.getEntries();
 			Iterator iter = entries.iterator();
 			while(iter.hasNext()) {
 			  IpRange range = (IpRange) iter.next();
@@ -344,119 +338,7 @@ IpFilterImpl
 				+ "ms to load all IP Filters"));
 	}
 
-	protected void
-	loadBannedIPs()
-	{
-		if ( !COConfigurationManager.getBooleanParameter("Ip Filter Banning Persistent" )){
 
-			return;
-		}
-
-		try{
-			class_mon.enter();
-
-			Map	map = FileUtil.readResilientConfigFile( "banips.config" );
-
-			List	ips = (List)map.get( "ips" );
-
-			if ( ips != null ){
-
-				long	now = SystemTime.getCurrentTime();
-
-				for (int i=0;i<ips.size();i++){
-
-					Map	entry = (Map)ips.get(i);
-
-					String	ip 		= new String((byte[])entry.get("ip"));
-					String	desc 	= new String((byte[])entry.get("desc"), "UTF-8");
-					Long	ltime	= (Long)entry.get("time");
-
-					long	time = ltime.longValue();
-
-					boolean	drop	= false;
-
-					if ( time > now ){
-
-						time	= now;
-
-					}else if ( now - time >= BAN_IP_PERSIST_TIME ){
-
-						drop	= true;
-
-					    if (Logger.isEnabled()){
-
-								Logger.log(
-									new LogEvent(
-										LOGID, LogEvent.LT_INFORMATION,
-										"Persistent ban dropped as too old : "
-											+ ip + ", " + desc));
-					      }
-					}
-
-					if ( !drop ){
-
-						int	int_ip = range_manager.addressToInt( ip );
-
-						bannedIps.put( new Integer( int_ip ), new BannedIpImpl(ip, desc, time ));
-					}
-				}
-			}
-		}catch( Throwable e ){
-
-			Debug.printStackTrace(e);
-
-		}finally{
-
-			class_mon.exit();
-		}
-	}
-
-	protected void
-	saveBannedIPs()
-	{
-		if ( COConfigurationManager.getBooleanParameter("Ip Filter Banning Persistent" )){
-
-			try{
-				class_mon.enter();
-	
-				Map	map = new HashMap();
-	
-				List	ips = new ArrayList();
-	
-				Iterator	it = bannedIps.values().iterator();
-	
-				while( it.hasNext()){
-	
-					BannedIpImpl	bip = (BannedIpImpl)it.next();
-	
-					if ( bip.isTemporary()){
-	
-						continue;
-					}
-	
-					Map	entry = new HashMap();
-	
-					entry.put( "ip", bip.getIp());
-					entry.put( "desc", bip.getTorrentName().getBytes( "UTF-8" ));
-					entry.put( "time", new Long( bip.getBanningTime()));
-	
-					ips.add( entry );
-				}
-	
-				map.put( "ips", ips );
-	
-				FileUtil.writeResilientConfigFile( "banips.config", map );
-	
-			}catch( Throwable e ){
-	
-				Debug.printStackTrace(e);
-	
-			}finally{
-	
-				class_mon.exit();
-			}
-		}
-	}
 
   @Override
   public boolean
@@ -487,7 +369,7 @@ IpFilterImpl
 	{
 		//In all cases, block banned ip addresses
 
-		  if(isBanned(ipAddress)){
+		  if( ipBanner.isBanned(ipAddress)){
 
 			  return true;
 		  }
@@ -505,18 +387,11 @@ IpFilterImpl
 		  return( false );
 	  }
 
-	  	// don't currently support IPv6
-
-	  if (ipAddress.contains(":")){
-
-		  return( false );
-	  }
-
 	  	//never block lan local addresses
 
 	  if ( AddressUtils.isLANLocalAddress( ipAddress ) == AddressUtils.LAN_LOCAL_YES ){
 
-	  	return false;
+		  return false;
 	  }
 
 	  if ( torrent_hash != null ){
@@ -529,8 +404,29 @@ IpFilterImpl
 
 	  boolean allow = ip_filter_allow;
 
-	  IpRange	match = (IpRange)range_manager.isInRange( ipAddress );
-
+	  InetAddress ia;
+	  
+	  try{
+		  ia = HostNameToIPResolver.syncResolve(ipAddress);
+			
+	  }catch( Throwable e ){
+		  
+		  Debug.out( e );
+		  
+		  return( false );
+	  }
+	  
+	  IpRange	match;
+	  
+	  if ( ia instanceof Inet4Address ){
+		  
+		  match = (IpRange)range_manager_v4.isInRange( ia );
+		  
+	  }else{
+		  
+		  return( false );
+	  }
+	  
 	  if ( match == null || allow ){
 
 		  IpRange explict_deny = checkExternalHandlers( torrent_hash, ipAddress );
@@ -615,7 +511,7 @@ IpFilterImpl
 	{
 		//In all cases, block banned ip addresses
 
-		if(isBanned(ipAddress)){
+		if( ipBanner.isBanned(ipAddress)){
 
 			return true;
 		}
@@ -628,13 +524,6 @@ IpFilterImpl
 	  	// never bounce the local machine (peer guardian has a range that includes it!)
 
 	  if ( ipAddress.isLoopbackAddress() || ipAddress.isLinkLocalAddress() || ipAddress.isSiteLocalAddress()){
-
-		  return( false );
-	  }
-
-	  	// don't currently support IPv6
-
-	  if ( ipAddress instanceof Inet6Address ){
 
 		  return( false );
 	  }
@@ -657,8 +546,17 @@ IpFilterImpl
 
 	  boolean allow = ip_filter_allow;
 
-	  IpRange	match = (IpRange)range_manager.isInRange( ipAddress );
+	  IpRange	match;
+	  
+	  if ( ipAddress instanceof Inet4Address ){
+	  
+		  match = (IpRange)range_manager_v4.isInRange( ipAddress );
 
+	  }else{
+		  
+		  return( false );
+	  }
+	  
 	  if ( match == null || allow ){
 
 		  	// get here if
@@ -817,46 +715,6 @@ IpFilterImpl
 		return( true );
 	}
 
-
-
-	private boolean
-	isBanned(
-		InetAddress ipAddress)
-	{
-	  try{
-	  	class_mon.enter();
-
-		int	address = range_manager.addressToInt( ipAddress );
-
-		Integer	i_address = new Integer( address );
-
-	    return( bannedIps.get(i_address) != null );
-
-	  }finally{
-
-	  	class_mon.exit();
-	  }
-	}
-
-	private boolean
-	isBanned(
-		String ipAddress)
-	{
-	  try{
-	  	class_mon.enter();
-
-		int	address = range_manager.addressToInt( ipAddress );
-
-		Integer	i_address = new Integer( address );
-
-	    return( bannedIps.get(i_address) != null );
-
-	  }finally{
-
-	  	class_mon.exit();
-	  }
-	}
-
 	@Override
 	public boolean
 	getInRangeAddressesAreAllowed()
@@ -879,7 +737,8 @@ IpFilterImpl
 		try{
 			class_mon.enter();
 
-			List entries = range_manager.getEntries();
+			List entries = range_manager_v4.getEntries();
+			
 			IpRange[]	res = new IpRange[entries.size()];
 
 			entries.toArray( res );
@@ -933,7 +792,7 @@ IpFilterImpl
 
 			((IpRangeImpl)range).setAddedToRangeList( false );
 
-			range_manager.removeRange( range );
+			range_manager_v4.removeRange( range );
 
 		}finally{
 
@@ -944,15 +803,17 @@ IpFilterImpl
 	}
 
 	@Override
-	public int getNbRanges() {
-		List entries = range_manager.getEntries();
+	public int 
+	getNbRanges() 
+	{
+		List entries = range_manager_v4.getEntries();
 
-	  return entries.size();
+		return entries.size();
 	}
 
 	protected void
 	setValidOrNot(
-		IpRange		range,
+		IpRange			range,
 		boolean			valid )
 	{
 		try{
@@ -973,11 +834,11 @@ IpFilterImpl
 
 		if ( valid ){
 
-			range_manager.addRange( range );
+			range_manager_v4.addRange( range );
 
 		}else{
 
-			range_manager.removeRange( range );
+			range_manager_v4.removeRange( range );
 		}
 	}
 
@@ -1005,440 +866,7 @@ IpFilterImpl
 		return( ban( ipAddress, torrent_name, manual, 0 ));
 	}
 
-	@Override
-	public boolean
-	ban(
-		String 		ipAddress,
-		String		torrent_name,
-		boolean		manual,
-		int			for_mins )
-	{
-			// always allow manual bans through
 
-		if ( !manual ){
-
-			for ( IPFilterListener listener: listenerz ){
-
-				try{
-					if ( !listener.canIPBeBanned( ipAddress )){
-
-						return( false );
-					}
-
-				}catch( Throwable e ){
-
-					Debug.printStackTrace(e);
-				}
-			}
-		}
-
-		boolean	block_ban = false;
-
-		List	new_bans = new ArrayList();
-
-		boolean temporary = for_mins > 0;
-
-		try{
-			class_mon.enter();
-
-			int	address = range_manager.addressToInt( ipAddress );
-
-			Integer	i_address = new Integer( address );
-
-			if ( bannedIps.get(i_address) == null ){
-
-				BannedIpImpl	new_ban = new BannedIpImpl( ipAddress, torrent_name, temporary );
-
-				new_bans.add( new_ban );
-
-				bannedIps.put( i_address, new_ban );
-
-				if ( temporary ){
-
-					addTemporaryBan( new_ban, for_mins );
-				}
-					// check for block-banning, but only for real addresses
-
-				if ( !UnresolvableHostManager.isPseudoAddress( ipAddress )){
-
-					long	l_address = address;
-
-			    	if ( l_address < 0 ){
-
-						l_address += 0x100000000L;
-			     	}
-
-					long	start 	= l_address & 0xffffff00;
-					long	end		= start+256;
-
-					int	hits = 0;
-
-					for (long i=start;i<end;i++){
-
-						Integer	a = new Integer((int)i);
-
-						if ( bannedIps.get(a) != null ){
-
-							hits++;
-						}
-					}
-
-					int	hit_limit = COConfigurationManager.getIntParameter("Ip Filter Ban Block Limit");
-
-					if ( hits >= hit_limit ){
-
-						block_ban	= true;
-
-						for (long i=start;i<end;i++){
-
-							Integer	a = new Integer((int)i);
-
-							if ( bannedIps.get(a) == null ){
-
-								BannedIpImpl	new_block_ban = new BannedIpImpl( PRHelpers.intToAddress((int)i), torrent_name + " [block ban]", temporary );
-
-								new_bans.add( new_block_ban );
-
-								bannedIps.put( a, new_block_ban );
-
-								addTemporaryBan( new_block_ban, for_mins );
-							}
-						}
-					}
-				}
-
-				saveBannedIPs();
-			}
-		}finally{
-
-			class_mon.exit();
-		}
-
-		for (int i=0;i<new_bans.size();i++){
-
-			BannedIp entry	= (BannedIp)new_bans.get(i);
-
-			for ( IPFilterListener listener: listenerz ){
-
-				try{
-					listener.IPBanned( entry );
-
-				}catch( Throwable e ){
-
-					Debug.printStackTrace(e);
-				}
-			}
-		}
-
-		if ( new_bans.size() > 0 ){
-			
-			for ( IPFilterListener listener: listenerz ){
-
-				try{
-					listener.IPBanListChanged( this );
-
-				}catch( Throwable e ){
-
-					Debug.printStackTrace(e);
-				}
-			}	
-		}
-		
-		return( block_ban );
-	}
-
-	TimerEventPeriodic		unban_timer;
-	final Map<Long,List<String>>	unban_map 			= new TreeMap<>();
-	final Map<String,Long>		unban_map_reverse	= new HashMap<>();
-
-
-	private void
-	addTemporaryBan(
-		BannedIpImpl		ban,
-		int					mins )
-	{
-			// class_mon already held on entry
-
-		if ( unban_timer == null ){
-
-			unban_timer =
-				SimpleTimer.addPeriodicEvent(
-					"Unbanner",
-					30*1000,
-					new TimerEventPerformer() {
-
-						@Override
-						public void
-						perform(
-							TimerEvent event)
-						{
-							List<String> to_unban = new ArrayList<>();
-							
-							try{
-								class_mon.enter();
-
-								long now = SystemTime.getMonotonousTime();
-
-								Iterator<Map.Entry<Long,List<String>>> it = unban_map.entrySet().iterator();
-
-								while( it.hasNext()){
-
-									Map.Entry<Long,List<String>> entry = it.next();
-
-									if ( entry.getKey() <= now ){
-
-										it.remove();
-
-										for ( String ip: entry.getValue()){
-
-											unban_map_reverse.remove( ip );
-
-											to_unban.add( ip );	// unban invokes listeners, defer until out of class_mon
-										}
-									}else{
-
-										break;
-									}
-								}
-
-								if ( unban_map.size() == 0 ){
-
-									unban_timer.cancel();
-
-									unban_timer = null;
-								}
-							}finally{
-
-								class_mon.exit();
-							}
-							
-							for ( String ip: to_unban ){
-								
-								unban( ip );
-							}
-						}
-					});
-		}
-
-		String 	ip 		= ban.getIp();
-
-		long	expiry = SystemTime.getMonotonousTime() + mins*60*1000L;
-
-		expiry = (( expiry + 29999 ) / 30000 ) * 30000;
-
-		Long	old_expiry = unban_map_reverse.get( ip );
-
-		if ( old_expiry != null ){
-
-			List<String>	list = unban_map.get( old_expiry );
-
-			if ( list != null ){
-
-				list.remove( ip );
-
-				if ( list.size() == 0 ){
-
-					unban_map.remove( old_expiry );
-				}
-			}
-		}
-
-		unban_map_reverse.put( ip, expiry );
-
-		List<String>	list = unban_map.get( expiry );
-
-		if ( list == null ){
-
-			list = new ArrayList<>(1);
-
-			unban_map.put( expiry, list );
-		}
-
-		list.add( ip );
-	}
-
-	@Override
-	public BannedIp[]
-	getBannedIps()
-	{
-		try{
-			class_mon.enter();
-
-			BannedIp[]	res = new BannedIp[bannedIps.size()];
-
-			bannedIps.values().toArray(res);
-
-			return( res );
-
-		}finally{
-
-			class_mon.exit();
-		}
-  	}
-
-	@Override
-	public int
-	getNbBannedIps()
-	{
-		return( bannedIps.size());
-	}
-
-	@Override
-	public void
-	clearBannedIps()
-	{
-		try{
-			class_mon.enter();
-
-			bannedIps.clear();
-
-			unban_map.clear();
-
-			unban_map_reverse.clear();
-
-			saveBannedIPs();
-
-		}finally{
-
-			class_mon.exit();
-		}
-				
-		for ( IPFilterListener listener: listenerz ){
-
-			try{
-				listener.IPBanListChanged( this );
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
-			}
-		}
-	}
-
-	@Override
-	public void
-	unban(String ipAddress)
-	{
-		boolean hit = false;
-		
-		try{
-			class_mon.enter();
-
-			int	address = range_manager.addressToInt( ipAddress );
-
-			Integer	i_address = new Integer( address );
-
-			BannedIpImpl entry = bannedIps.remove(i_address);
-
-			if ( entry != null ){
-
-				hit = true;
-				
-				if ( !entry.isTemporary()){
-
-					saveBannedIPs();
-				}
-			}
-
-		}finally{
-
-			class_mon.exit();
-		}
-		
-		if ( hit ){
-			
-			for ( IPFilterListener listener: listenerz ){
-	
-				try{
-					listener.IPBanListChanged( this );
-	
-				}catch( Throwable e ){
-	
-					Debug.printStackTrace(e);
-				}
-			}
-		}
-	}
-
-	@Override
-	public void
-	unban(String ipAddress, boolean block)
-	{
-		boolean	hit = false;
-
-		if ( block ){
-
-			int	address = range_manager.addressToInt( ipAddress );
-
-			long	l_address = address;
-
-	    	if ( l_address < 0 ){
-
-				l_address += 0x100000000L;
-	     	}
-
-			long	start 	= l_address & 0xffffff00;
-			long	end		= start+256;
-
-			try{
-				class_mon.enter();
-
-				for (long i=start;i<end;i++){
-
-					Integer	a = new Integer((int)i);
-
-					if ( bannedIps.remove(a) != null ){
-
-						hit = true;
-					}
-				}
-
-				if ( hit ){
-
-					saveBannedIPs();
-				}
-			}finally{
-
-				class_mon.exit();
-			}
-
-
-		}else{
-
-			try{
-				class_mon.enter();
-
-				int	address = range_manager.addressToInt( ipAddress );
-
-				Integer	i_address = new Integer( address );
-
-				if ( bannedIps.remove(i_address) != null ){
-
-					hit = true;
-					
-					saveBannedIPs();
-				}
-
-			}finally{
-
-				class_mon.exit();
-			}
-		}
-		
-		if ( hit ){
-			
-			for ( IPFilterListener listener: listenerz ){
-
-				try{
-					listener.IPBanListChanged( this );
-
-				}catch( Throwable e ){
-
-					Debug.printStackTrace(e);
-				}
-			}
-		}
-	}
 
 
 	@Override
@@ -1571,7 +999,7 @@ IpFilterImpl
 	public long
 	getTotalAddressesInRange()
 	{
-		return( range_manager.getTotalSpan());
+		return( range_manager_v4.getTotalSpan());
 	}
 
 	@Override
@@ -1604,5 +1032,77 @@ IpFilterImpl
 		IpFilterExternalHandler h )
 	{
 		external_handlers.remove( h );
+	}
+	
+	protected CopyOnWriteList<IPFilterListener>
+	getListeners()
+	{
+		return( listenerz );
+	}
+	
+		// banning methods
+	
+	protected void
+	banListChanged()
+	{
+		for ( IPFilterListener listener: listenerz ){
+
+			try{
+				listener.IPBanListChanged( this );
+
+			}catch( Throwable e ){
+
+				Debug.printStackTrace(e);
+			}
+		}
+	}
+	
+	@Override
+	public boolean 
+	ban(
+		String 		ipAddress, 
+		String 		torrent_name, 
+		boolean 	manual, 
+		int 		for_mins )
+	{
+		return( ipBanner.ban( ipAddress, torrent_name, manual, for_mins ));
+	}
+	
+	@Override
+	public void 
+	clearBannedIps()
+	{
+		ipBanner.clearBannedIps();
+	}
+	
+	@Override
+	public BannedIp[] 
+	getBannedIps()
+	{
+		return( ipBanner.getBannedIps());
+	}
+	
+	@Override
+	public int 
+	getNbBannedIps()
+	{
+		return( ipBanner.getNbBannedIps());
+	}
+	
+	@Override
+	public void 
+	unban(
+		String ipAddress )
+	{
+		ipBanner.unban(ipAddress );
+	}
+	
+	@Override
+	public void 
+	unban(
+		String 		ipAddress, 
+		boolean 	block )
+	{
+		ipBanner.unban( ipAddress, block );
 	}
 }
