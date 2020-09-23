@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2020.xx.yy | BiglyBT 2.5.0.1
+
 2020.09.21 | BiglyBT 2.5.0.0
 
 FEATURE: Core  | Support BitTorrent Protocol Specification v2 (BEP 52) [Parg]
