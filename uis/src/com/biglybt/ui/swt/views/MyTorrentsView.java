@@ -2764,7 +2764,9 @@ public class MyTorrentsView
 
 						for ( Tag t: pending_tag_changes ){
 				
-							boolean should_be_visible	= (filterOnly?t.getFlag( Tag.FL_IS_FILTER ):t.isVisible())&& !hiddenTags.contains( t );
+							boolean manual = t.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL;
+							
+							boolean should_be_visible	= (manual&&filterOnly?t.getFlag( Tag.FL_IS_FILTER ):t.isVisible())&& !hiddenTags.contains( t );
 							boolean is_visible			= allTags.contains( t );
 
 							if ( should_be_visible != is_visible ){

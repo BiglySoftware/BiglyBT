@@ -443,51 +443,67 @@ public class TagSettingsView
 						}
 					});
 
-			boolean allManual = true;
+			boolean allManual 	= true;
+			boolean hasCat		= false;
 			
 			for ( Tag t: tags ){
 				
-				if ( t.getTagType().getTagType() != TagType.TT_DOWNLOAD_MANUAL ){
+				int type = t.getTagType().getTagType() ;
+				
+				if ( type != TagType.TT_DOWNLOAD_MANUAL ){
 					
 					allManual = false;
+				}
+				
+				if ( type == TagType.TT_DOWNLOAD_CATEGORY ){
 					
-					break;
+					hasCat = true;
 				}
 			}
 
-			// Field: Visible
+				// for categories the show-in-library/tab and library button visibility isn't controlled
+				// by the visibility (or is-filter) settings
 
-			params.viewInSideBar = new BooleanSwtParameter(cSection2, "viewInSidebar",
-					"TagSettings.viewInSideBar", null,
-					new BooleanSwtParameter.ValueProcessor() {
-						@Override
-						public Boolean getValue(BooleanSwtParameter p) {
-							int isTagVisible = -1;
-							for (Tag tag : tags) {
-								isTagVisible = updateIntBoolean(tag.isVisible(), isTagVisible);
-							}
-							return isTagVisible == 2 ? null : (isTagVisible == 1);
-						}
+			boolean 	hasVisibility 	= !hasCat;
+			
+			if ( hasVisibility ){
 
-						@Override
-						public boolean setValue(BooleanSwtParameter p, Boolean value) {
-							boolean changed = tags.length == 0;
-							for (Tag tag : tags) {
-								if (!tag.isVisible() == value) {
-									tag.setVisible(value);
-									changed = true;
+				
+				// Field: Visible
+	
+				params.viewInSideBar = new BooleanSwtParameter(cSection2, "viewInSidebar",
+						"TagSettings.viewInSideBar", null,
+						new BooleanSwtParameter.ValueProcessor() {
+							@Override
+							public Boolean getValue(BooleanSwtParameter p) {
+								int isTagVisible = -1;
+								for (Tag tag : tags) {
+									isTagVisible = updateIntBoolean(tag.isVisible(), isTagVisible);
 								}
+								return isTagVisible == 2 ? null : (isTagVisible == 1);
 							}
-							return changed;
-						}
-					});
-			gd = new GridData();
-			gd.horizontalSpan = allManual?1:4;
-			params.viewInSideBar.setLayoutData(gd);
-
-			// Field: is filter
+	
+							@Override
+							public boolean setValue(BooleanSwtParameter p, Boolean value) {
+								boolean changed = tags.length == 0;
+								for (Tag tag : tags) {
+									if (!tag.isVisible() == value) {
+										tag.setVisible(value);
+										changed = true;
+									}
+								}
+								return changed;
+							}
+						});
+				gd = new GridData();
+				gd.horizontalSpan = allManual?1:4;
+				params.viewInSideBar.setLayoutData(gd);	
+			}
 			
 			if ( allManual ){
+				
+				// Field: is filter
+			
 				
 				params.isFilter = new BooleanSwtParameter(cSection2, "isFilter",
 						"TagSettings.isFilter", null,

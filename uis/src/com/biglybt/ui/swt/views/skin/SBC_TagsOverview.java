@@ -1044,11 +1044,20 @@ public class SBC_TagsOverview
 
 				if ( uiFunctions != null ){
 
-					if ( !COConfigurationManager.getBooleanParameter("Library.TagInSideBar")){
-
-						COConfigurationManager.setParameter("Library.TagInSideBar", true );
+					if ( tag instanceof Category ){
+						
+						if ( !COConfigurationManager.getBooleanParameter("Library.CatInSideBar")){
+							
+							COConfigurationManager.setParameter("Library.CatInSideBar", true );
+						}
+					}else{
+						
+						if ( !COConfigurationManager.getBooleanParameter("Library.TagInSideBar")){
+	
+							COConfigurationManager.setParameter("Library.TagInSideBar", true );
+						}
 					}
-
+					
 					if ( !tag.isVisible()){
 
 						tag.setVisible( true );
