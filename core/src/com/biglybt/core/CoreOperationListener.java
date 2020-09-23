@@ -29,6 +29,14 @@ CoreOperationListener
 		 */
 
 	public boolean
-	operationCreated(
-		CoreOperation operation );
+	operationExecuteRequest(
+		CoreOperation 		operation );
+	
+	public void
+	operationAdded(
+		CoreOperation		operation );
+	
+	public void
+	operationRemoved(
+		CoreOperation		operation );
 }

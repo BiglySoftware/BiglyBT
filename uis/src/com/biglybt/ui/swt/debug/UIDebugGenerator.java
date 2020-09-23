@@ -311,41 +311,42 @@ public class UIDebugGenerator
 		}
 
 		CoreWaiterSWT.waitForCore(TriggerInThread.ANY_THREAD,
-				new CoreRunningListener() {
+			new CoreRunningListener() {
 
-					@Override
-					public void coreRunning(Core core) {
-						core.createOperation(CoreOperation.OP_PROGRESS,
-								new CoreOperationTask() {
-									
-									@Override
-									public String getName(){
-										return null;
-									}
-									@Override
-									public void run(CoreOperation operation) {
-										try {
+				@Override
+				public void coreRunning(Core core) {
+					core.executeOperation(
+						CoreOperation.OP_PROGRESS,
+						new CoreOperationTask() {
+							
+							@Override
+							public String getName(){
+								return null;
+							}
+							@Override
+							public void run(CoreOperation operation) {
+								try {
 
-											File fEvidence = new File(path, "evidence.log");
-											PrintWriter pw = new PrintWriter(fEvidence, "UTF-8");
+									File fEvidence = new File(path, "evidence.log");
+									PrintWriter pw = new PrintWriter(fEvidence, "UTF-8");
 
-											AEDiagnostics.generateEvidence(pw);
+									AEDiagnostics.generateEvidence(pw);
 
-											pw.close();
+									pw.close();
 
-										} catch (IOException e) {
+								} catch (IOException e) {
 
-											Debug.printStackTrace(e);
-										}
-									}
+									Debug.printStackTrace(e);
+								}
+							}
 
-									@Override
-									public ProgressCallback getProgressCallback() {
-										return null;
-									}
-								});
-					}
-				});
+							@Override
+							public ProgressCallback getProgressCallback() {
+								return null;
+							}
+						});
+				}
+			});
 
 		try {
 			final File outFile = new File(SystemProperties.getUserPath(), "debug.zip");

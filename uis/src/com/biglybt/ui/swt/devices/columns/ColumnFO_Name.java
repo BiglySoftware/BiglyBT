@@ -20,31 +20,23 @@
 
 package com.biglybt.ui.swt.devices.columns;
 
-import com.biglybt.ui.swt.debug.ObfuscateCellText;
-import com.biglybt.ui.swt.debug.UIDebugGenerator;
-import com.biglybt.core.devices.TranscodeFile;
+
+import com.biglybt.core.CoreOperation;
 
 import com.biglybt.pif.ui.tables.*;
 
-/**
- * @author TuxPaper
- * @created Feb 26, 2009
- *
- */
-public class ColumnTJ_Name
-	implements TableCellRefreshListener, ObfuscateCellText,
-	TableCellDisposeListener, TableColumnExtraInfoListener
+public class ColumnFO_Name
+	implements TableCellRefreshListener, TableColumnExtraInfoListener
 {
-	public static final String COLUMN_ID = "transcode_name";
+	public static final String COLUMN_ID = "fileops_name";
 
 	/**
 	 *
 	 * @param sTableID
 	 */
-	public ColumnTJ_Name(TableColumn column) {
+	public ColumnFO_Name(TableColumn column) {
 		column.initialize(TableColumn.ALIGN_LEAD, TableColumn.POSITION_LAST, 215);
 		column.addListeners(this);
-		column.setObfuscation(true);
 		column.setRefreshInterval(TableColumn.INTERVAL_GRAPHIC);
 		column.setType(TableColumn.TYPE_TEXT_ONLY);
 	}
@@ -58,13 +50,18 @@ public class ColumnTJ_Name
 	}
 
 	@Override
-	public void refresh(TableCell cell) {
-		TranscodeFile tf = (TranscodeFile) cell.getDataSource();
-		if (tf == null) {
+	public void 
+	refresh(
+		TableCell cell )
+	{
+		CoreOperation op = (CoreOperation) cell.getDataSource();
+		
+		if ( op == null ){
+			
 			return;
 		}
 
-		String text = tf.getName();
+		String text = op.getTask().getName();
 
 		if ( text == null || text.length() == 0 ){
 
@@ -72,15 +69,5 @@ public class ColumnTJ_Name
 		}
 
 		cell.setText(text);
-	}
-
-	@Override
-	public String getObfuscatedText(TableCell cell) {
-		return( UIDebugGenerator.obfuscateDownloadName(cell.getDataSource()));
-	}
-
-	@Override
-	public void dispose(TableCell cell) {
-
 	}
 }

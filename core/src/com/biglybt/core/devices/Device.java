@@ -35,6 +35,7 @@ Device
 	public static final int DT_CONTENT_DIRECTORY	= 2;
 	public static final int DT_MEDIA_RENDERER		= 3;
 	public static final int DT_INTERNET				= 4;
+	public static final int DT_DISK_OPS				= 5;
 
 	public int
 	getType();

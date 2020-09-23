@@ -58,7 +58,7 @@ ProgressWindow
 			{
 				@Override
 				public boolean
-				operationCreated(
+				operationExecuteRequest(
 					CoreOperation operation )
 				{
 					if ( 	( 	operation.getOperationType() == CoreOperation.OP_FILE_MOVE ||
@@ -75,6 +75,20 @@ ProgressWindow
 					}
 
 					return( false );
+				}
+				
+				@Override
+				public void 
+				operationAdded(
+					CoreOperation operation )
+				{
+				}
+				
+				@Override
+				public void 
+				operationRemoved(
+					CoreOperation operation )
+				{
 				}
 			});
 	}

@@ -2577,7 +2577,7 @@ public class FileUtil {
 	{
 		Core core = CoreFactory.getSingleton();
 
-		core.createOperation( op_type, task );
+		core.executeOperation( op_type, task );
 	}
 		
 	

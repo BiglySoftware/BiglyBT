@@ -190,6 +190,7 @@ DeviceManagerUI
 	private boolean	offline_menus_setup;
 
 	private MdiEntry mdiEntryOverview;
+	private MdiEntry mdiEntryDiskOps;
 
 	private boolean needsAddAllDevices;
 
@@ -1506,6 +1507,36 @@ DeviceManagerUI
 			}
 		}
 
+		mdiEntryDiskOps= mdi.getEntry(SideBar.SIDEBAR_SECTION_DISK_OPS);
+
+		if (mdiEntryDiskOps == null) {
+			mdiEntryDiskOps = mdi.createEntryFromSkinRef(
+					SideBar.SIDEBAR_HEADER_DEVICES, SideBar.SIDEBAR_SECTION_DISK_OPS,
+					"diskopsview", MessageText.getString("mdi.entry.about.diskops"),
+					new ViewTitleInfo()
+					{
+						@Override
+						public Object
+						getTitleInfoProperty(
+							int propertyID )
+						{
+							if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
+
+								
+							}
+							if ( propertyID == TITLE_INDICATOR_TEXT ){
+
+								
+							}
+
+							return( null );
+						}
+					},
+					null, false, SideBar.SIDEBAR_SECTION_DEVICES );
+
+			mdiEntryDiskOps.setImageLeftID("image.sidebar.aboutdiskops");
+		}
+		
 		if (rebuild) {
 			for (categoryView category : categories) {
 				category.destroy();

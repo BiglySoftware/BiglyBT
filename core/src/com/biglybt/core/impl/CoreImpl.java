@@ -224,8 +224,9 @@ CoreImpl
 	
 	private boolean					ll_started;
 	
-	private final List				operation_listeners		= new ArrayList();
-
+	private final List<CoreOperationListener>				operation_listeners		= new ArrayList<>();
+	private final CopyOnWriteList<CoreOperation>			operations				= new CopyOnWriteList<>();
+	
 	private final CopyOnWriteList<PowerManagementListener>	power_listeners = new CopyOnWriteList<>();
 
 	final AESemaphore			stopping_sem	= new AESemaphore( "Core::stopping" );
@@ -3195,12 +3196,12 @@ CoreImpl
 
 	@Override
 	public void
-	createOperation(
-		final int					type,
-		CoreOperationTask task )
+	executeOperation(
+		int						type,
+		CoreOperationTask 		task )
 	{
-		final CoreOperationTask[] f_task = { task };
-
+		CoreOperationTask f_task = task;
+		
 		CoreOperation op =
 				new CoreOperation()
 				{
@@ -3215,30 +3216,85 @@ CoreImpl
 					public CoreOperationTask
 					getTask()
 					{
-						return( f_task[0] );
+						return( f_task );
 					}
 				};
 
 
-		for (int i=0;i<operation_listeners.size();i++){
-
-				// don't catch exceptions here as we want errors from task execution to propagate
-				// back to the invoker
-
-			if (((CoreOperationListener)operation_listeners.get(i)).operationCreated( op )){
-
-				f_task[0] = null;
+		try{
+			addOperation( op );
+			
+			for ( CoreOperationListener l: operation_listeners ){
+	
+					// don't catch exceptions here as we want errors from task execution to propagate
+					// back to the invoker
+	
+				if ( l.operationExecuteRequest( op )){
+	
+					task = null;
+					
+					break;
+				}
 			}
-		}
-
-			// nobody volunteeered to run it for us, we'd better do it
-
-		if ( f_task[0] != null ){
-
-			task.run( op );
+	
+				// nobody volunteeered to run it for us, we'd better do it
+	
+			if ( task != null ){
+	
+				task.run( op );
+			}
+		}finally{
+			
+			removeOperation( op );
 		}
 	}
 
+	@Override
+	public void
+	addOperation(
+		CoreOperation		op )
+	{
+		operations.add( op );
+		
+		for ( CoreOperationListener l: operation_listeners ){
+			
+			try{
+				l.operationAdded( op );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	@Override
+	public void
+	removeOperation(
+		CoreOperation		op )
+	{
+		operations.remove( op );
+		
+		for ( CoreOperationListener l: operation_listeners ){
+			
+			try{
+				l.operationRemoved( op );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	@Override
+	public List<CoreOperation>
+	getOperations()
+	{
+		return( operations.getList());
+	}
+	
+	
 	@Override
 	public void
 	addLifecycleListener(

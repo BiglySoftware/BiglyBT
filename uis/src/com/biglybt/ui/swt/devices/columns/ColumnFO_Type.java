@@ -20,32 +20,24 @@
 
 package com.biglybt.ui.swt.devices.columns;
 
-import com.biglybt.ui.swt.debug.ObfuscateCellText;
-import com.biglybt.ui.swt.debug.UIDebugGenerator;
-import com.biglybt.core.devices.TranscodeFile;
 
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.pif.ui.tables.*;
 
-/**
- * @author TuxPaper
- * @created Feb 26, 2009
- *
- */
-public class ColumnTJ_Name
-	implements TableCellRefreshListener, ObfuscateCellText,
-	TableCellDisposeListener, TableColumnExtraInfoListener
+public class ColumnFO_Type
+	implements TableCellRefreshListener, TableColumnExtraInfoListener
 {
-	public static final String COLUMN_ID = "transcode_name";
+	public static final String COLUMN_ID = "fileops_type";
 
 	/**
 	 *
 	 * @param sTableID
 	 */
-	public ColumnTJ_Name(TableColumn column) {
-		column.initialize(TableColumn.ALIGN_LEAD, TableColumn.POSITION_LAST, 215);
+	public ColumnFO_Type(TableColumn column) {
+		column.initialize(TableColumn.ALIGN_LEAD, TableColumn.POSITION_LAST, 60);
 		column.addListeners(this);
-		column.setObfuscation(true);
-		column.setRefreshInterval(TableColumn.INTERVAL_GRAPHIC);
+		column.setRefreshInterval(TableColumn.INTERVAL_INVALID_ONLY);
 		column.setType(TableColumn.TYPE_TEXT_ONLY);
 	}
 
@@ -58,29 +50,59 @@ public class ColumnTJ_Name
 	}
 
 	@Override
-	public void refresh(TableCell cell) {
-		TranscodeFile tf = (TranscodeFile) cell.getDataSource();
-		if (tf == null) {
+	public void 
+	refresh(
+		TableCell cell )
+	{
+		CoreOperation op = (CoreOperation) cell.getDataSource();
+		
+		if ( op == null ){
+			
 			return;
 		}
 
-		String text = tf.getName();
+		int type = op.getOperationType();
 
-		if ( text == null || text.length() == 0 ){
-
-			return;
+		String	suffix;
+		
+		switch( type ){
+			
+			case CoreOperation.OP_FILE_MOVE:{
+				
+				suffix = "move";
+				
+				break;
+			}
+			case CoreOperation.OP_DOWNLOAD_EXPORT:{
+				
+				suffix = "export";
+				
+				break;
+			}
+			case CoreOperation.OP_DOWNLOAD_ALLOCATION:{
+				
+				suffix = "alloc";
+				
+				break;
+			}
+			case CoreOperation.OP_DOWNLOAD_CHECKING:{
+				
+				suffix = "check";
+				
+				break;
+			}
+			case CoreOperation.OP_DOWNLOAD_MOVE_INTERNAL:{
+				
+				suffix = "move";
+				
+				break;
+			}
+			default:{
+				
+				suffix = "unknown";
+			}
 		}
 
-		cell.setText(text);
-	}
-
-	@Override
-	public String getObfuscatedText(TableCell cell) {
-		return( UIDebugGenerator.obfuscateDownloadName(cell.getDataSource()));
-	}
-
-	@Override
-	public void dispose(TableCell cell) {
-
+		cell.setText( MessageText.getString( "label.fop." + suffix ));
 	}
 }

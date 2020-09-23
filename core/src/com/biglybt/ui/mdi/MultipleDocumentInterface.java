@@ -75,6 +75,8 @@ public interface MultipleDocumentInterface
 	public static final String SIDEBAR_SECTION_SUBSCRIPTIONS = "Subscriptions";
 
 	public static final String SIDEBAR_SECTION_DEVICES = "Devices";
+	
+	public static final String SIDEBAR_SECTION_DISK_OPS = "DiskOps";
 
 	public static final String SIDEBAR_SECTION_ACTIVITIES = "Activity";
 

@@ -25,6 +25,7 @@ package com.biglybt.core;
  */
 
 import java.io.File;
+import java.util.List;
 
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.instancemanager.ClientInstanceManager;
@@ -181,10 +182,21 @@ Core
 	getLockFile();
 
 	public void
-	createOperation(
+	executeOperation(
 		int							type,
-		CoreOperationTask task );
+		CoreOperationTask 			task );
 
+	public void
+	addOperation(
+		CoreOperation		op );
+	
+	public void
+	removeOperation(
+		CoreOperation		op );
+
+	public List<CoreOperation>
+	getOperations();
+	
 	public void
 	addLifecycleListener(
 		CoreLifecycleListener l );
