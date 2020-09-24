@@ -393,12 +393,53 @@ IpRangeV6Impl
 		return( true );
 	}
 	
+	private int
+	compare(
+		byte[]		s1,
+		byte[]		s2 )
+	{
+		if ( s1 == null && s2 == null ){
+			return( 0 );
+		}else if ( s1 == null ){
+			return( 1 );
+		}else if ( s2 == null ){
+			return( -1 );
+		}else{
+			for ( int i=0;i<s1.length;i++){
+				
+				int	i1 = ((int)s1[i])&0xff;
+				int	i2 = ((int)s2[i])&0xff;
+				
+				int res = i1 - i2;
+				
+				if ( res != 0 ){
+					
+					return( res );
+				}
+			}
+		}	
+		
+		return( 0 );
+	}
+	
 	@Override
 	public int 
 	compareStartIpTo(
 		IpRange other) 
 	{
-		return( 0 );
+		if ( other instanceof IpRangeV6Impl ){
+			
+			IpRangeV6Impl o = (IpRangeV6Impl)other;
+			
+			byte[]	s1 	= start_prefix;
+			byte[]	s2	= o.start_prefix;
+			
+			return( compare( s1, s2 ));
+			
+		}else{
+			
+			return( 0 );
+		}
 	}
 
 	@Override
@@ -406,12 +447,26 @@ IpRangeV6Impl
 	compareEndIpTo(
 		IpRange other) 
 	{
-		return( 0 );
+		if ( other instanceof IpRangeV6Impl ){
+			
+			IpRangeV6Impl o = (IpRangeV6Impl)other;
+			
+			byte[]	s1 	= end_prefix;
+			byte[]	s2	= o.end_prefix;
+			
+			return( compare( s1, s2 ));
+		}else{
+			
+			return( 0 );
+		}
 	}
 	
 	public String 
 	toString() 
 	{
-		return( getDescription() + " : " + getStartIp());
+		String start 	= getStartIp();
+		String end		= getEndIp();
+		
+		return( getDescription() + " : " + start + (start.equals( end )?"":(" - " + end )));
 	}
 }
