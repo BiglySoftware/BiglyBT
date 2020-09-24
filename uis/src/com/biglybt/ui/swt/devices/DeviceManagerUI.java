@@ -39,6 +39,8 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.CoreOperationListener;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.devices.*;
@@ -1507,7 +1509,7 @@ DeviceManagerUI
 			}
 		}
 
-		mdiEntryDiskOps= mdi.getEntry(SideBar.SIDEBAR_SECTION_DISK_OPS);
+		mdiEntryDiskOps = mdi.getEntry(SideBar.SIDEBAR_SECTION_DISK_OPS);
 
 		if (mdiEntryDiskOps == null) {
 			mdiEntryDiskOps = mdi.createEntryFromSkinRef(
@@ -1535,6 +1537,60 @@ DeviceManagerUI
 					null, false, SideBar.SIDEBAR_SECTION_DEVICES );
 
 			mdiEntryDiskOps.setImageLeftID("image.sidebar.aboutdiskops");
+			
+			Core core = CoreFactory.getSingleton();
+
+			ViewTitleInfo viewTitleInfo =
+				new ViewTitleInfo()
+				{					
+					@Override
+					public Object
+					getTitleInfoProperty(
+						int pid )
+					{
+						if ( pid == TITLE_INDICATOR_TEXT ){
+							
+							int ops = core.getOperations().size();
+							
+							if ( ops > 0 ){
+							
+								return( "" + ops );
+							}
+						}
+						
+						return( null );
+					}
+				};
+								
+			mdiEntryDiskOps.setViewTitleInfo(viewTitleInfo);
+			
+			CoreOperationListener opListener =
+				new CoreOperationListener(){
+					
+					@Override
+					public void operationRemoved(CoreOperation operation){
+						ViewTitleInfoManager.refreshTitleInfo(viewTitleInfo);
+						mdiEntryDiskOps.redraw();
+					}
+					
+					@Override
+					public boolean operationExecuteRequest(CoreOperation operation){
+						return false;
+					}
+					
+					@Override
+					public void operationAdded(CoreOperation operation){
+						ViewTitleInfoManager.refreshTitleInfo(viewTitleInfo);
+						mdiEntryDiskOps.redraw();
+					}
+				};
+				
+			core.addOperationListener( opListener );
+			
+			mdiEntryDiskOps.addListener((MdiCloseListener)(ev,u)->{
+				
+				core.removeOperationListener( opListener );
+			});			
 		}
 		
 		if (rebuild) {
