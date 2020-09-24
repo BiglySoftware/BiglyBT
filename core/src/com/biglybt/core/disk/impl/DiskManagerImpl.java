@@ -435,6 +435,13 @@ DiskManagerImpl
     }
 
     @Override
+    public DownloadManager 
+    getDownload()
+    {
+    	return( download_manager );
+    }
+    
+    @Override
     public void
     start()
     {

@@ -31,6 +31,7 @@ import com.biglybt.core.disk.impl.piecemapper.*;
 import com.biglybt.core.diskmanager.access.DiskAccessController;
 import com.biglybt.core.diskmanager.cache.CacheFile;
 import com.biglybt.core.diskmanager.cache.CacheFileOwner;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.LocaleUtilDecoder;
@@ -109,6 +110,13 @@ LWSDiskManager
 		return( getName());
 	}
 
+	@Override
+	public DownloadManager
+	getDownload()
+	{
+		return( null );
+	}
+	
 	@Override
 	public int
 	getCacheMode()

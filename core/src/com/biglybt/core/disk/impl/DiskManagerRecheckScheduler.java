@@ -32,6 +32,7 @@ import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.RealTimeInfo;
 
@@ -81,6 +82,8 @@ DiskManagerRecheckScheduler
 	{
 		CoreOperationTask.ProgressCallback progress = 
 				new ProgressCallback(){
+				
+					final DownloadManager dm = helper.getDownload();
 					
 					@Override
 					public void setTaskState(int state){
@@ -100,7 +103,7 @@ DiskManagerRecheckScheduler
 					public int 
 					getProgress()
 					{
-						return( helper.getCompleteRecheckStatus());
+						return( dm==null?-1:dm.getStats().getCompleted());
 					}
 				};
 				

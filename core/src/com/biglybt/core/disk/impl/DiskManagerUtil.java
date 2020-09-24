@@ -1647,6 +1647,14 @@ DiskManagerUtil
 		        	public String getDisplayName(){
 		        		return( "" );
 		        	}
+	        		
+	        		@Override
+	        		public DownloadManager
+	        		getDownload()
+	        		{
+	        			return( dm );
+	        		}
+	        		
 					@Override
 					public boolean stop(boolean closing){
 						return false;

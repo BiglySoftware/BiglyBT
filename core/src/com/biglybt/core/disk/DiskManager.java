@@ -25,6 +25,7 @@ import java.io.File;
 
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMap;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.DirectByteBuffer;
@@ -59,6 +60,13 @@ DiskManager
 	public static final int BLOCK_SIZE_KB 	= 16;
 	public static final int BLOCK_SIZE 		= BLOCK_SIZE_KB*1024;
 
+		/**
+		 * @return MAY BE NULL
+		 */
+	
+	public DownloadManager
+	getDownload();
+	
 	/**
 	 * Start checking/allocating
 	 */
