@@ -1643,6 +1643,10 @@ DiskManagerUtil
 	        DiskManagerHelper disk_manager =
 	        	new DiskManagerHelper(){
 					
+	        		@Override
+		        	public String getDisplayName(){
+		        		return( "" );
+		        	}
 					@Override
 					public boolean stop(boolean closing){
 						return false;

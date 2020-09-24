@@ -72,7 +72,7 @@ DiskManagerAllocationScheduler
 				public String
 				getName()
 				{
-					return( "arse" );
+					return( helper.getDisplayName());
 				}
 				
 				public void

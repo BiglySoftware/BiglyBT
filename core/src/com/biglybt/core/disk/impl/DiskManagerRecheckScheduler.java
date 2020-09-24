@@ -22,8 +22,14 @@ package com.biglybt.core.disk.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.AEMonitor;
@@ -32,6 +38,8 @@ import com.biglybt.core.util.RealTimeInfo;
 public class
 DiskManagerRecheckScheduler
 {
+	private static Core core = CoreFactory.getSingleton();
+
 	static int	 	strategy;
 	static boolean 	smallest_first;
 	static int		max_active;
@@ -63,15 +71,79 @@ DiskManagerRecheckScheduler
  				param_listener );
     }
 
-	private final List<DiskManagerRecheckInstance>		instances		= new ArrayList<>();
-	private final AEMonitor								instance_mon	= new AEMonitor( "DiskManagerRecheckScheduler" );
+	private final List<Object[]>		instances		= new ArrayList<>();
+	private final AEMonitor				instance_mon	= new AEMonitor( "DiskManagerRecheckScheduler" );
 
 	public DiskManagerRecheckInstance
 	register(
 		DiskManagerHelper	helper,
 		boolean				low_priority )
 	{
+		CoreOperationTask.ProgressCallback progress = 
+				new ProgressCallback(){
+					
+					@Override
+					public void setTaskState(int state){
+					}
+					
+					@Override
+					public int getSupportedTaskStates(){
+						return( 0 );
+					}
+					
+					@Override
+					public String getSubTaskName(){
+						return null;
+					}
+					
+					@Override
+					public int 
+					getProgress()
+					{
+						return( helper.getCompleteRecheckStatus());
+					}
+				};
+				
+			CoreOperationTask task =
+				new CoreOperationTask()
+				{
+					public String
+					getName()
+					{
+						return( helper.getDisplayName());
+					}
+					
+					public void
+					run(
+						CoreOperation operation )
+					{
+					}
+					
+					public ProgressCallback
+					getProgressCallback()
+					{
+						return( progress );
+					}
+				};
+				
+			CoreOperation op = 
+				new CoreOperation()
+				{
+					public int
+					getOperationType()
+					{
+						return( CoreOperation.OP_DOWNLOAD_CHECKING );
+					}
+		
+					public CoreOperationTask
+					getTask()
+					{
+						return( task );
+					}
+				};
 		try{
+
+					
 			instance_mon.enter();
 
 			DiskManagerRecheckInstance	res =
@@ -81,21 +153,23 @@ DiskManagerRecheckScheduler
 						(int)helper.getTorrent().getPieceLength(),
 						low_priority );
 
-			instances.add( res );
+			instances.add( new Object[]{ res, op });
 
+			core.addOperation( op );
+			
 			if ( smallest_first ){
 
 				Collections.sort(
 						instances,
-						new Comparator<DiskManagerRecheckInstance>()
+						new Comparator<Object[]>()
 						{
 							@Override
 							public int
 							compare(
-								DiskManagerRecheckInstance	o1,
-								DiskManagerRecheckInstance	o2 )
+								Object[] 	o1,
+								Object[]	o2 )
 							{
-								long	comp = o1.getMetric() - o2.getMetric();
+								long	comp = ((DiskManagerRecheckInstance)o1[0]).getMetric() - ((DiskManagerRecheckInstance)o2[0]).getMetric();
 
 								if ( comp < 0 ){
 
@@ -152,7 +226,7 @@ DiskManagerRecheckScheduler
 
 			for ( int i=0;i<Math.min( max_active, instances.size());i++){
 				
-				if ( instances.get(i) == instance ){
+				if ( instances.get(i)[0] == instance ){
 	
 					boolean	low_priority = instance.isLowPriority();
 	
@@ -215,8 +289,21 @@ DiskManagerRecheckScheduler
 		try{
 			instance_mon.enter();
 
-			instances.remove( instance );
+			Iterator<Object[]>	it = instances.iterator();
 			
+			while( it.hasNext()){
+			
+				Object[] entry = it.next();
+				
+				if ( entry[0] == instance ){
+					
+					it.remove();
+					
+					core.removeOperation((CoreOperation)entry[1]);
+					
+					break;
+				}
+			}			
 		}finally{
 
 			instance_mon.exit();

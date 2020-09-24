@@ -102,6 +102,12 @@ LWSDiskManager
 		return( lws.getName());
 	}
 
+	@Override
+	public String 
+	getDisplayName()
+	{
+		return( getName());
+	}
 
 	@Override
 	public int

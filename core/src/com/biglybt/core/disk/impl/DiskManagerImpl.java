@@ -426,6 +426,13 @@ DiskManagerImpl
         resume_handler  = new RDResumeHandler( this, checker );
 
     }
+    
+    @Override
+    public String 
+    getDisplayName()
+    {
+    	return( download_manager.getDisplayName());
+    }
 
     @Override
     public void

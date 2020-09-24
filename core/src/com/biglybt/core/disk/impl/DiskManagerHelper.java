@@ -36,6 +36,9 @@ public interface
 DiskManagerHelper
 	extends DiskManager
 {
+	public String
+	getDisplayName();
+	
 	public DiskAccessController
 	getDiskAccessController();
 
