@@ -191,7 +191,7 @@ public class IpFilterAutoLoaderImpl
 						continue;
 					}
 
-					IpRangeImpl ipRange = new IpRangeImpl(description, startIp, endIp,
+					IpRangeV4Impl ipRange = new IpRangeV4Impl(description, startIp, endIp,
 							true);
 
 					//System.out.println(parseMode + ":" + description + ";" + ipRange.getStartIp());
@@ -399,7 +399,7 @@ public class IpFilterAutoLoaderImpl
 						}
 						int endIp = ByteFormatter.byteArrayToInt(ipBytes);
 
-						IpRangeImpl ipRange = new IpRangeImpl(description, startIp, endIp,
+						IpRangeV4Impl ipRange = new IpRangeV4Impl(description, startIp, endIp,
 								true);
 
 						ipRange.setAddedToRangeList(true);
@@ -444,7 +444,7 @@ public class IpFilterAutoLoaderImpl
 						String description = descIdx < descs.length && descIdx >= 0
 								? descs[descIdx] : "";
 
-						IpRangeImpl ipRange = new IpRangeImpl(description, startIp, endIp,
+						IpRangeV4Impl ipRange = new IpRangeV4Impl(description, startIp, endIp,
 								true);
 
 						ipRange.setAddedToRangeList(true);

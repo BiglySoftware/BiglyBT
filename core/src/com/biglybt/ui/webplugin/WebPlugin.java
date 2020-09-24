@@ -1237,7 +1237,7 @@ WebPlugin
 
 				if ( range.length() > 7 ){
 
-					IPRange ip_range	= plugin_interface.getIPFilter().createRange(true);
+					IPRange ip_range	= plugin_interface.getIPFilter().createRange(range.contains( ":" )?2:1, true);
 
 					int	sep = range.indexOf("-");
 
@@ -1751,11 +1751,12 @@ WebPlugin
 											break;
 										}
 
-										// Support ranges (copied from code in setupAccess)
-										IPRange ip_range	= plugin_interface.getIPFilter().createRange(true);
-										
 										String aTrimmed = a.trim();
 
+											// Support ranges (copied from code in setupAccess)
+										
+										IPRange ip_range	= plugin_interface.getIPFilter().createRange(aTrimmed.contains( ":" )?2:1, true);
+										
 										int	sep = aTrimmed.indexOf("-");
 
 										if ( sep == -1 ){

@@ -32,31 +32,31 @@ IpRange
 
 	public void
 	setDescription(
-		String	str );
+			String	str );
 
 	public boolean
 	isValid();
 
-  public boolean
-  isSessionOnly();
+	public boolean
+	isSessionOnly();
 
 	public String
 	getStartIp();
 
 	public void
 	setStartIp(
-		String	str );
+			String	str );
 
 	public String
 	getEndIp();
 
 	public void
 	setEndIp(
-		String	str );
+			String	str );
 
-  public void
-  setSessionOnly(
-    boolean sessionOnly );
+	public void
+	setSessionOnly(
+			boolean sessionOnly );
 
 	public boolean isInRange(String ipAddress);
 
@@ -68,61 +68,9 @@ IpRange
 
 	public int
 	compareEndIpTo(
-	    IpRange other );
+		IpRange other );
 
 	public int
 	compareDescription(
-		IpRange other );
-
-	/**
-	 * @return
-	 */
-	long getEndIpLong();
-
-	/**
-	 * @return
-	 */
-	long getStartIpLong();
-
-	/**
-	 * @return
-	 */
-	public long getMergedEndLong();
-
-	/**
-	 * @return
-	 */
-	public IpRange[] getMergedEntries();
-
-	/**
-	 *
-	 */
-	public void resetMergeInfo();
-
-	/**
-	 * @return
-	 */
-	public boolean getMerged();
-
-	/**
-	 *
-	 */
-	public void setMerged();
-
-	/**
-	 * @param endIpLong
-	 */
-	public void setMergedEnd(long endIpLong);
-
-	/**
-	 * @param e2
-	 */
-	public void addMergedEntry(IpRange e2);
-
-	/**
-	 * @return
-	 *
-	 * @since 3.0.1.5
-	 */
-	public boolean getAddedToRangeList();
+			IpRange other );
 }

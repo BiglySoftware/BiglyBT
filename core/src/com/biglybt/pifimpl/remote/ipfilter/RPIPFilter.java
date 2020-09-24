@@ -185,6 +185,7 @@ RPIPFilter
 	@Override
 	public IPRange
 	createRange(
+		int		address_type,
 		boolean this_session_only )
 	{
 		notSupported();

@@ -56,6 +56,7 @@ IpFilterImpl
 	static final AEMonitor	class_mon	= new AEMonitor( "IpFilter:class" );
 
 	private final IPAddressRangeManagerV4	range_manager_v4 = new IPAddressRangeManagerV4();
+	private final IPAddressRangeManagerV6	range_manager_v6 = new IPAddressRangeManagerV6();
 
     //Map ip blocked -> matching range
 
@@ -199,6 +200,8 @@ IpFilterImpl
 		if ( COConfigurationManager.getBooleanParameter( "Ip Filter Clear On Reload" )){
 			
 			range_manager_v4.clearAllEntries();
+			
+			range_manager_v6.clearAllEntries();
 		}
 		
 		markAsUpToDate();
@@ -219,21 +222,32 @@ IpFilterImpl
 
 
 			List filters = new ArrayList();
+			
 			map.put("ranges",filters);
-			List entries = range_manager_v4.getEntries();
-			Iterator iter = entries.iterator();
-			while(iter.hasNext()) {
-			  IpRange range = (IpRange) iter.next();
-			  if(range.isValid() && ! range.isSessionOnly()) {
-				String description =  range.getDescription();
-				String startIp = range.getStartIp();
-				String endIp = range.getEndIp();
-				Map mapRange = new HashMap();
-				mapRange.put("description",description.getBytes( "UTF-8" ));
-				mapRange.put("start",startIp);
-				mapRange.put("end",endIp);
-				filters.add(mapRange);
-			  }
+			
+			List<Iterator<IpRangeImpl>> iters = 
+					Arrays.asList( range_manager_v4.getEntries().iterator(), range_manager_v6.getEntries().iterator());
+			
+			for ( Iterator<IpRangeImpl> iter: iters ){
+			
+				while(iter.hasNext()){
+					
+					IpRangeImpl range = iter.next();
+				  
+				  if(range.isValid() && ! range.isSessionOnly()) {
+					String description =  range.getDescription();
+					String startIp = range.getStartIp();
+					String endIp = range.getEndIp();
+					Map mapRange = new HashMap();
+					mapRange.put("description",description.getBytes( "UTF-8" ));
+					mapRange.put("start",startIp);
+					mapRange.put("end",endIp);
+					if ( !range.isV4()){
+						mapRange.put("type",2L);
+					}
+					filters.add(mapRange);
+				  }
+				}
 			}
 
 		  	FileOutputStream fos  = null;
@@ -297,8 +311,18 @@ IpFilterImpl
 				  String description =  new String((byte[])range.get("description"), "UTF-8");
 				  String startIp =  new String((byte[])range.get("start"));
 				  String endIp = new String((byte[])range.get("end"));
-
-				  IpRangeImpl ipRange = new IpRangeImpl(description,startIp,endIp,false);
+				  Number type = (Number)range.get( "type" );
+				  
+				  IpRangeImpl ipRange;
+				  
+				  if ( type == null || type.intValue() == 1 ){
+					  
+					  ipRange = new IpRangeV4Impl(description,startIp,endIp,false);
+					  
+				  }else{
+					  
+					  ipRange = new IpRangeV6Impl(description,startIp,endIp,false);
+				  }
 
 				  ipRange.setAddedToRangeList(true);
 
@@ -420,11 +444,11 @@ IpFilterImpl
 	  
 	  if ( ia instanceof Inet4Address ){
 		  
-		  match = (IpRange)range_manager_v4.isInRange( ia );
+		  match = range_manager_v4.isInRange((Inet4Address)ia );
 		  
 	  }else{
 		  
-		  return( false );
+		  match = range_manager_v6.isInRange((Inet6Address)ia );
 	  }
 	  
 	  if ( match == null || allow ){
@@ -550,11 +574,11 @@ IpFilterImpl
 	  
 	  if ( ipAddress instanceof Inet4Address ){
 	  
-		  match = (IpRange)range_manager_v4.isInRange( ipAddress );
+		  match = range_manager_v4.isInRange((Inet4Address)ipAddress );
 
 	  }else{
 		  
-		  return( false );
+		  match = range_manager_v6.isInRange((Inet6Address)ipAddress );
 	  }
 	  
 	  if ( match == null || allow ){
@@ -631,24 +655,24 @@ IpFilterImpl
 	{
 		if ( external_handlers.size() > 0 ){
 
-			Iterator it = external_handlers.iterator();
-
-			while( it.hasNext()){
-
-				if (((IpFilterExternalHandler)it.next()).isBlocked( torrent_hash, address )){
-
-					return( new IpRangeImpl( "External handler", address, address, true ));
-				}
+			try{
+				InetAddress ia = HostNameToIPResolver.syncResolve(address);
+				  
+				return( checkExternalHandlers( torrent_hash, ia ));
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
 			}
 		}
-
+		
 		return( null );
 	}
 
 	protected IpRange
 	checkExternalHandlers(
-		byte[]		torrent_hash,
-		InetAddress	address )
+		byte[]			torrent_hash,
+		InetAddress		address )
 	{
 		if ( external_handlers.size() > 0 ){
 
@@ -660,7 +684,14 @@ IpFilterImpl
 
 					String	ip = address.getHostAddress();
 
-					return( new IpRangeImpl( "External handler", ip, ip, true ));
+					if ( address instanceof Inet4Address ){
+					
+						return( new IpRangeV4Impl( "External handler", ip, ip, true ));
+						
+					}else{
+						
+						return( new IpRangeV6Impl( "External handler", (Inet6Address)address, true ));
+					}
 				}
 			}
 		}
@@ -737,7 +768,13 @@ IpFilterImpl
 		try{
 			class_mon.enter();
 
-			List entries = range_manager_v4.getEntries();
+			List<IpRange> entries_v4 = range_manager_v4.getEntries();
+			List<IpRange> entries_v6 = range_manager_v6.getEntries();
+			
+			List<IpRange>	entries = new ArrayList<>( entries_v4.size() + entries_v6.size());
+			
+			entries.addAll( entries_v4 );
+			entries.addAll( entries_v6 );
 			
 			IpRange[]	res = new IpRange[entries.size()];
 
@@ -753,9 +790,11 @@ IpFilterImpl
 
 	@Override
 	public IpRange
-	createRange(boolean sessionOnly)
+	createRange(
+		int			addressType,
+		boolean 	sessionOnly)
 	{
-		return ( new IpRangeImpl("","","",sessionOnly));
+		return ( addressType==1?new IpRangeV4Impl("","","",sessionOnly):new IpRangeV6Impl("","","",sessionOnly));
 	}
 
 	@Override
@@ -790,10 +829,18 @@ IpFilterImpl
 		try{
 			class_mon.enter();
 
-			((IpRangeImpl)range).setAddedToRangeList( false );
+			IpRangeImpl r = (IpRangeImpl)range;
+			
+			r.setAddedToRangeList( false );
 
-			range_manager_v4.removeRange( range );
+			if ( r.isV4()){
+			
+				range_manager_v4.removeRange((IpRangeV4Impl)range );
 
+			}else{
+				
+				range_manager_v6.removeRange((IpRangeV6Impl)range );
+			}
 		}finally{
 
 			class_mon.exit();
@@ -806,9 +853,7 @@ IpFilterImpl
 	public int 
 	getNbRanges() 
 	{
-		List entries = range_manager_v4.getEntries();
-
-		return entries.size();
+		return( range_manager_v4.getEntryCount() + range_manager_v6.getEntryCount());
 	}
 
 	protected void
@@ -816,13 +861,15 @@ IpFilterImpl
 		IpRange			range,
 		boolean			valid )
 	{
+		IpRangeImpl r = (IpRangeImpl)range;
+
 		try{
 			class_mon.enter();
 
 				// this is an optimisation to deal with the way safepeer validates stuff
 				// before adding it in
 
-			if ( !range.getAddedToRangeList()){
+			if ( !r.getAddedToRangeList()){
 
 				return;
 			}
@@ -831,14 +878,27 @@ IpFilterImpl
 
 			class_mon.exit();
 		}
-
+		
 		if ( valid ){
 
-			range_manager_v4.addRange( range );
+			if ( r.isV4()){
+			
+				range_manager_v4.addRange((IpRangeV4Impl)range );
 
+			}else{
+				
+				range_manager_v6.addRange((IpRangeV6Impl)range );
+			}
 		}else{
 
-			range_manager_v4.removeRange( range );
+			if ( r.isV4()){
+			
+				range_manager_v4.removeRange((IpRangeV4Impl)range );
+				
+			}else{
+				
+				range_manager_v6.removeRange((IpRangeV6Impl)range );
+			}
 		}
 	}
 
@@ -993,13 +1053,6 @@ IpFilterImpl
 	getLastUpdateTime()
 	{
 		return( last_update_time );
-	}
-
-	@Override
-	public long
-	getTotalAddressesInRange()
-	{
-		return( range_manager_v4.getTotalSpan());
 	}
 
 	@Override

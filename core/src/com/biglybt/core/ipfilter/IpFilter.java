@@ -72,6 +72,7 @@ IpFilter
 
 	public IpRange
 	createRange(
+		int		addressType,
 		boolean sessionOnly);
 
 	public void
@@ -152,9 +153,6 @@ IpFilter
 
 	public long
 	getLastUpdateTime();
-
-	public long
-	getTotalAddressesInRange();
 
 	public void
 	addListener(

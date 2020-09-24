@@ -77,8 +77,6 @@ public class ConfigSectionIPFilter
 				BCFG_IP_FILTER_ALLOW, "ConfigView.section.ipfilter.allow");
 		add(deny);
 
-		deny.addListener(p -> setPercentageBlocked());
-
 		// row persist banning
 
 		add(new BooleanParameterImpl(BCFG_IP_FILTER_BANNING_PERSISTENT,
@@ -205,32 +203,5 @@ public class ConfigSectionIPFilter
 			add("IPEditor",
 					new UIParameterImpl(paramContextIPEditor, null));
 		}
-	}
-
-	protected void setPercentageBlocked() {
-		if (filter == null || percentage_blocked == null) {
-			return;
-		}
-		long nbIPsBlocked = filter.getTotalAddressesInRange();
-
-		if (COConfigurationManager.getBooleanParameter(BCFG_IP_FILTER_ALLOW)) {
-
-			nbIPsBlocked = 0x100000000L - nbIPsBlocked;
-		}
-
-		int percentIPsBlocked = (int) (nbIPsBlocked * 1000L
-				/ (256L * 256L * 256L * 256L));
-
-		String nbIps = "" + nbIPsBlocked;
-		String percentIps = DisplayFormatters.formatPercentFromThousands(
-				percentIPsBlocked);
-
-		percentage_blocked.setLabelText(
-				MessageText.getString("ConfigView.section.ipfilter.totalIPs",
-						new String[]{
-								nbIps,
-								percentIps
-						}));
-
 	}
 }

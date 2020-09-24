@@ -141,11 +141,11 @@ IpFilterManagerImpl
 	public void cacheAllDescriptions() {
 		IpRange[] ranges = getIPFilter().getRanges();
 		for (int i = 0; i < ranges.length; i++) {
-			Object info = ((IpRangeImpl)ranges[i]).getDescRef();
+			Object info = ((IpRangeV4Impl)ranges[i]).getDescRef();
 			if (info instanceof Integer) {
 				byte[] desc = getDescription(info);
 				Object[] data = { desc, info };
-				((IpRangeImpl)ranges[i]).setDescRef(data);
+				((IpRangeV4Impl)ranges[i]).setDescRef(data);
 			}
 		}
 	}
@@ -154,10 +154,10 @@ IpFilterManagerImpl
 	public void clearDescriptionCache() {
 		IpRange[] ranges = getIPFilter().getRanges();
 		for (int i = 0; i < ranges.length; i++) {
-			Object info = ((IpRangeImpl)ranges[i]).getDescRef();
+			Object info = ((IpRangeV4Impl)ranges[i]).getDescRef();
 			if (info instanceof Object[]) {
 				Integer data = (Integer)((Object[])info)[1];
-				((IpRangeImpl)ranges[i]).setDescRef(data);
+				((IpRangeV4Impl)ranges[i]).setDescRef(data);
 			}
 		}
 	}

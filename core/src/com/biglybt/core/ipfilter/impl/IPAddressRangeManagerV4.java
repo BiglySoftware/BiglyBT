@@ -26,18 +26,16 @@ import java.net.Inet4Address;
  *
  */
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.*;
 
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
-import com.biglybt.core.ipfilter.IpRange;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.tracker.protocol.PRHelpers;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.IdentityHashSet;
 import com.biglybt.core.util.SystemTime;
 
 public class
@@ -45,14 +43,14 @@ IPAddressRangeManagerV4
 {
 	private static final LogIDs LOGID = LogIDs.CORE;
 
-	protected final ArrayList entries = new ArrayList();
+	protected final Set<IpRangeV4Impl> entries = new IdentityHashSet<>();
 
 	protected long		total_span;
 
 	protected boolean	rebuild_required;
 	protected long		last_rebuild_time;
 
-	protected IpRange[] mergedRanges = new IpRange[0];
+	protected IpRangeV4Impl[] mergedRanges = new IpRangeV4Impl[0];
 
 	protected final AEMonitor	this_mon	= new AEMonitor( "IPAddressRangeManager" );
 
@@ -61,8 +59,8 @@ IPAddressRangeManagerV4
 	{
 	}
 
-	public void
-	addRange(IpRange range)
+	protected void
+	addRange(IpRangeV4Impl range)
 	{
 		try{
 			this_mon.enter();
@@ -81,7 +79,7 @@ IPAddressRangeManagerV4
 		}
 	}
 
-	public void removeRange(IpRange range) {
+	protected void removeRange(IpRangeV4Impl range) {
 		try{
 			this_mon.enter();
 
@@ -95,9 +93,9 @@ IPAddressRangeManagerV4
 		}
 	}
 
-	public Object
+	public IpRangeV4Impl
 	isInRange(
-		InetAddress	ip )
+		Inet4Address	ip )
 	{
 			// optimise for pretty normal case where there are no ranges
 
@@ -106,13 +104,6 @@ IPAddressRangeManagerV4
 			return( null );
 		}
 		
-		if ( !(ip instanceof Inet4Address )){
-			
-			Debug.out( "Only IPv4 supported" );
-			
-			return( null );
-		}
-
 		try{
 			this_mon.enter();
 
@@ -123,7 +114,7 @@ IPAddressRangeManagerV4
 				address_long += 0x100000000L;
 			}
 
-			Object res = isInRange( address_long );
+			IpRangeV4Impl res = isInRange( address_long );
 
 			// LGLogger.log( "IPAddressRangeManager: checking '" + ip + "' against " + entries.size() + "/" + merged_entries.length + " -> " + res );
 
@@ -135,7 +126,7 @@ IPAddressRangeManagerV4
 		}
 	}
 
-	private Object
+	private IpRangeV4Impl
 	isInRange(
 		long	address_long )
 	{
@@ -160,7 +151,7 @@ IPAddressRangeManagerV4
 
 				current = (bottom+top)/2;
 
-				IpRange	e = mergedRanges[current];
+				IpRangeV4Impl	e = mergedRanges[current];
 
 				long	this_start 	= e.getStartIpLong();
 				long 	this_end	= e.getMergedEndLong();
@@ -198,14 +189,14 @@ IPAddressRangeManagerV4
 
 			if ( top >= 0 && bottom < mergedRanges.length && bottom <= top ){
 
-				IpRange	e = mergedRanges[current];
+				IpRangeV4Impl	e = mergedRanges[current];
 
 				if ( address_long <= e.getEndIpLong()){
 
 					return( e );
 				}
 
-				IpRange[]	merged = e.getMergedEntries();
+				IpRangeV4Impl[]	merged = e.getMergedEntries();
 
 				if ( merged == null ){
 
@@ -216,7 +207,7 @@ IPAddressRangeManagerV4
 
 				for (int i=0;i<merged.length;i++){
 
-					IpRange	me = merged[i];
+					IpRangeV4Impl	me = merged[i];
 
 					if ( me.getStartIpLong() <= address_long && me.getEndIpLong() >= address_long ){
 
@@ -275,7 +266,7 @@ IPAddressRangeManagerV4
 			Logger.log(new LogEvent(LOGID, "IPAddressRangeManager: rebuilding "
 					+ entries.size() + " entries starts"));
 
-		IpRange[]	ents = new IpRange[entries.size()];
+		IpRangeV4Impl[]	ents = new IpRangeV4Impl[entries.size()];
 
 		entries.toArray(ents);
 
@@ -288,13 +279,13 @@ IPAddressRangeManagerV4
 
 		Arrays.sort(
 			ents,
-			new Comparator<IpRange>()
+			new Comparator<IpRangeV4Impl>()
 			{
 				@Override
 				public int
 				compare(
-					IpRange e1,
-					IpRange e2 )
+					IpRangeV4Impl e1,
+					IpRangeV4Impl e2 )
 				{
 					long diff = e1.getStartIpLong() - e2.getStartIpLong();
 
@@ -313,7 +304,7 @@ IPAddressRangeManagerV4
 
 		for (int i=0;i<ents.length;i++){
 
-			IpRange	entry = ents[i];
+			IpRangeV4Impl	entry = ents[i];
 
 			if ( entry.getMerged()){
 
@@ -328,7 +319,7 @@ IPAddressRangeManagerV4
 
 				long	end_pos = entry.getMergedEndLong();
 
-				IpRange	e2 = ents[pos++];
+				IpRangeV4Impl	e2 = ents[pos++];
 
 				if (!e2.getMerged()){
 
@@ -359,7 +350,7 @@ IPAddressRangeManagerV4
 		}
 		*/
 
-		mergedRanges = new IpRange[me.size()];
+		mergedRanges = new IpRangeV4Impl[me.size()];
 
 		me.toArray( mergedRanges );
 
@@ -367,7 +358,7 @@ IPAddressRangeManagerV4
 
 		for (int i=0;i<mergedRanges.length;i++){
 
-			IpRange	e = mergedRanges[i];
+			IpRangeV4Impl	e = mergedRanges[i];
 
 				// span is inclusive
 
@@ -398,15 +389,6 @@ IPAddressRangeManagerV4
 
 		return 0;
 	}
-
-	public long
-	getTotalSpan()
-	{
-		checkRebuild();
-
-		return( total_span );
-	}
-
 
 	public static void
 	main(
@@ -477,7 +459,7 @@ IPAddressRangeManagerV4
 			String	start 	= PRHelpers.intToAddress( ip1 );
 			String	end		= PRHelpers.intToAddress( ip2 );
 
-			manager.addRange( new IpRangeImpl("test_" + i, start, end, true ));
+			manager.addRange( new IpRangeV4Impl("test_" + i, start, end, true ));
 		}
 
 		/*
@@ -515,11 +497,29 @@ IPAddressRangeManagerV4
 		}
 	}
 
-	public ArrayList getEntries() {
-		return entries;
+	protected List
+	getEntries()
+	{
+		try{
+			this_mon.enter();
+		
+			return( new ArrayList<>( entries ));
+			
+		}finally{
+
+			this_mon.exit();
+		}
 	}
 
-	public void clearAllEntries() {
+	protected int
+	getEntryCount()
+	{
+		return( entries.size());
+	}
+	
+	protected void 
+	clearAllEntries() 
+	{
 		try{
 			this_mon.enter();
 

@@ -128,9 +128,10 @@ IPFilterImpl
 	@Override
 	public IPRange
 	createRange(
-		boolean this_session_only )
+		int			address_type,
+		boolean 	this_session_only )
 	{
-		return( new IPRangeImpl( this, filter.createRange( this_session_only )));
+		return( new IPRangeImpl( this, filter.createRange( address_type, this_session_only )));
 	}
 
 	@Override
@@ -154,7 +155,7 @@ IPFilterImpl
 		String		end_ip,
 		boolean		this_session_only )
 	{
-		IPRange	range = createRange( this_session_only );
+		IPRange	range = createRange( 1, this_session_only );
 
 		range.setDescription( description );
 

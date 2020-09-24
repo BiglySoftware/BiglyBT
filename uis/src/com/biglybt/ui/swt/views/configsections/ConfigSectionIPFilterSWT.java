@@ -39,12 +39,15 @@ import com.biglybt.core.ipfilter.*;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.config.ConfigSectionIPFilter;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.IpFilterEditor;
 import com.biglybt.ui.swt.pif.UISWTParameterContext;
-
+import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.pif.ui.config.BooleanParameter;
 
 public class ConfigSectionIPFilterSWT
@@ -131,9 +134,7 @@ public class ConfigSectionIPFilterSWT
 
 		private IPFilterListener filterListener;
 
-		private Label percentage_blocked;
-
-		boolean noChange;
+		volatile boolean noChange;
 
 		@Override
 		public void create(Composite gFilter) {
@@ -258,14 +259,6 @@ public class ConfigSectionIPFilterSWT
 				editRange((IpRange) selection[0].getData());
 			});
 
-			percentage_blocked = new Label(cArea, SWT.WRAP | SWT.RIGHT);
-			gridData = new GridData(
-					GridData.VERTICAL_ALIGN_FILL | GridData.FILL_HORIZONTAL);
-			percentage_blocked.setLayoutData(gridData);
-			percentage_blocked.setLayoutData(
-					Utils.getWrappableLabelGridData(1, GridData.HORIZONTAL_ALIGN_FILL));
-			setPercentageBlocked();
-
 			table.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseDoubleClick(MouseEvent arg0) {
@@ -356,6 +349,23 @@ public class ConfigSectionIPFilterSWT
 				}
 			};
 			filter.addListener(filterListener);
+			
+			UIUpdaterSWT.getInstance().addUpdater(
+				new UIUpdatable() {
+					@Override
+					public void updateUI() {
+						if (gFilter.isDisposed()) {
+							UIUpdaterSWT.getInstance().removeUpdater(this);
+						} else {
+							refresh();
+						}
+					}
+
+					@Override
+					public String getUpdateUIName() {
+						return ("IPFilter ConfigView" );
+					}
+				});
 		}
 
 		private void resizeTable() {
@@ -367,20 +377,14 @@ public class ConfigSectionIPFilterSWT
 
 		public void removeRange(IpRange range) {
 			filter.removeRange(range);
-			//noChange = false;
-			//refreshControl();
 		}
 
 		public void editRange(IpRange range) {
-			new IpFilterEditor(CoreFactory.getSingleton(), table.getShell(), range);
-			noChange = false;
-			//refreshControl();
+			new IpFilterEditor(CoreFactory.getSingleton(), table.getShell(), range,()->{noChange=false;});
 		}
 
 		public void addRange() {
-			new IpFilterEditor(CoreFactory.getSingleton(), table.getShell(), null);
-			//noChange = false;
-			//refreshControl();
+			new IpFilterEditor(CoreFactory.getSingleton(), table.getShell(), null,null);
 		}
 
 		public void refresh() {
@@ -427,29 +431,5 @@ public class ConfigSectionIPFilterSWT
 
 			filter.removeListener(filterListener);
 		}
-
-		protected void setPercentageBlocked() {
-			long nbIPsBlocked = filter.getTotalAddressesInRange();
-
-			if (COConfigurationManager.getBooleanParameter("Ip Filter Allow")) {
-
-				nbIPsBlocked = 0x100000000L - nbIPsBlocked;
-			}
-
-			int percentIPsBlocked = (int) (nbIPsBlocked * 1000L
-					/ (256L * 256L * 256L * 256L));
-
-			String nbIps = "" + nbIPsBlocked;
-			String percentIps = DisplayFormatters.formatPercentFromThousands(
-					percentIPsBlocked);
-
-			Messages.setLanguageText(percentage_blocked,
-					"ConfigView.section.ipfilter.totalIPs", new String[] {
-						nbIps,
-						percentIps
-					});
-
-		}
-
 	}
 }

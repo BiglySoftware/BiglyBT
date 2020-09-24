@@ -41,12 +41,14 @@ IPFilter
 		/**
 		 * creates a new range but *doesn't* add it to the list. Use the add method
 		 * to add it
+		 * @param address_type - 1= ipv4, 2=ipv6
 		 * @param this_session_only	// not persisted if "this_session_only" is true
 		 * @return
 		 */
 
 	public IPRange
 	createRange(
+		int		address_type,
 		boolean this_session_only );
 
 		/**

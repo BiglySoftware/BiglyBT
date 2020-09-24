@@ -41,22 +41,23 @@ public class IpFilterEditor {
 
   Core core;
 
-  IpRange range;
-
-  boolean newRange;
-
+  boolean done = false;
+  
   public
   IpFilterEditor(
-  		Core _core,
-  		Shell parent,
-		final IpRange _range)
+	Core 		_core,
+	Shell 		parent,
+	IpRange 	existing_range,
+	Runnable	run_when_done )
   {
   	core	= _core;
-    this.range = _range;
-    if (range == null) {
-      newRange = true;
-      range = core.getIpFilterManager().getIPFilter().createRange(false);
-    }
+
+  	String existing_desc 	= existing_range==null?null:existing_range.getDescription();
+  	String existing_start 	= existing_range==null?null:existing_range.getStartIp();
+  	String existing_end		= existing_range==null?null:existing_range.getEndIp();
+  	
+  	IpRange new_v4 = core.getIpFilterManager().getIPFilter().createRange(1,false);
+  	IpRange new_v6 = core.getIpFilterManager().getIPFilter().createRange(2,false);
 
     final Shell shell = ShellFactory.createShell(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
     Messages.setLanguageText(shell,"ConfigView.section.ipfilter.editFilter");
@@ -93,6 +94,7 @@ public class IpFilterEditor {
     Messages.setLanguageText(ok, "Button.ok");
     shell.setDefaultButton(ok);
 
+    ok.setEnabled(existing_range!=null);
     gridData = new GridData(GridData.HORIZONTAL_ALIGN_END | GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 2;
     gridData.widthHint = 100;
@@ -100,47 +102,100 @@ public class IpFilterEditor {
     ok.addListener(SWT.Selection, new Listener() {
       @Override
       public void handleEvent(Event arg0) {
-        range.setDescription( textDescription.getText());
-        range.setStartIp( textStartIp.getText());
-        range.setEndIp( textEndIp.getText());
-        range.checkValid();
-        if (newRange) {
-          core.getIpFilterManager().getIPFilter().addRange(range);
-        }
-         shell.dispose();
+    	if ( existing_range == null ){
+    		new_v4.setDescription( textDescription.getText());
+    		new_v4.setStartIp( textStartIp.getText());
+    		new_v4.setEndIp( textEndIp.getText());
+    		new_v4.checkValid();
+    		if ( new_v4.isValid()){
+    			core.getIpFilterManager().getIPFilter().addRange(new_v4);
+    		}else{
+    			new_v6.setDescription( textDescription.getText());
+    			new_v6.setStartIp( textStartIp.getText());
+    			new_v6.setEndIp( textEndIp.getText());
+    			new_v6.checkValid();
+       			core.getIpFilterManager().getIPFilter().addRange(new_v6);
+    		}
+    	}else{
+    		existing_range.setDescription( textDescription.getText());
+    		existing_range.setStartIp( textStartIp.getText());
+    		existing_range.setEndIp( textEndIp.getText());
+    		existing_range.checkValid();
+    	}
+ 
+    	done	= true;
+    	
+        shell.dispose();
       }
     });
 
     textStartIp.addModifyListener(new ModifyListener() {
       @Override
       public void modifyText(ModifyEvent event) {
-        range.setStartIp( textStartIp.getText());
-        range.checkValid();
-        if(range.isValid())
-          ok.setEnabled(true);
-        else
-          ok.setEnabled(false);
+    	boolean valid = false;
+      
+    	if ( existing_range == null ){
+    		new_v4.setStartIp( textStartIp.getText());
+    		new_v4.checkValid();
+    		valid = new_v4.isValid();
+    		if ( !valid ){
+    			new_v6.setStartIp( textStartIp.getText());
+    			new_v6.checkValid();
+        		valid = new_v6.isValid();
+    		}
+    	}else{
+    		existing_range.setStartIp( textStartIp.getText());
+    		existing_range.checkValid();
+    		valid = existing_range.isValid();
+    	}
+        ok.setEnabled(valid);
       }
     });
 
     textEndIp.addModifyListener(new ModifyListener() {
           @Override
           public void modifyText(ModifyEvent event) {
-            range.setEndIp( textEndIp.getText());
-            range.checkValid();
-            if(range.isValid())
-              ok.setEnabled(true);
-            else
-              ok.setEnabled(false);
+          	boolean valid = false;
+            
+        	if ( existing_range == null ){
+        		new_v4.setEndIp( textEndIp.getText());
+        		new_v4.checkValid();
+        		valid = new_v4.isValid();
+        		if ( !valid ){
+        			new_v6.setEndIp( textEndIp.getText());
+        			new_v6.checkValid();
+            		valid = new_v6.isValid();
+        		}
+        	}else{
+        		existing_range.setEndIp( textEndIp.getText());
+        		existing_range.checkValid();
+        		valid = existing_range.isValid();
+        	}
+            ok.setEnabled(valid);
           }
      });
 
-    if (range != null) {
-          textDescription.setText(range.getDescription());
-          textStartIp.setText(range.getStartIp());
-          textEndIp.setText(range.getEndIp());
+    if (existing_range != null) {
+          textDescription.setText(existing_range.getDescription());
+          textStartIp.setText(existing_range.getStartIp());
+          textEndIp.setText(existing_range.getEndIp());
     }
 
+    shell.addListener(
+    	SWT.Dispose, (ev)->{ 		
+    		if ( !done && existing_range != null ){
+    			existing_range.setDescription( existing_desc);
+        		existing_range.setStartIp( existing_start );
+        		existing_range.setEndIp( existing_end );
+        		existing_range.checkValid();
+    		} 
+    		
+    		if ( run_when_done != null ){
+    			
+    			run_when_done.run();
+    		}
+    	});
+    
     shell.pack();
     Utils.centerWindowRelativeTo(shell, parent);
     shell.open();
