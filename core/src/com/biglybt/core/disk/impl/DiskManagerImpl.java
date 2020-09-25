@@ -1357,7 +1357,7 @@ DiskManagerImpl
     {
     		// on success will have incremented 'allocated' by 'target_length
     	
-        while( started ){
+        while( started && !stopping ){
 
             if ( allocation_scheduler.getPermission( this )){
 

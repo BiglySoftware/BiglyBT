@@ -27,13 +27,17 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
-import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AsyncDispatcher;
 
 public class
 DiskManagerAllocationScheduler
 {
 	private static Core core = CoreFactory.getSingleton();
 	
+	private static AsyncDispatcher async = new AsyncDispatcher(2000);
+
 	private final Object lock = new Object();
 	
 	private final List<Object[]>	instances		= new ArrayList<>();
@@ -43,9 +47,15 @@ DiskManagerAllocationScheduler
 	register(
 		DiskManagerHelper	helper )
 	{
+		Object[] my_entry = { helper, null, false };
+		
 		CoreOperationTask.ProgressCallback progress = 
 			new CoreOperationTask.ProgressCallbackAdapter()
 			{
+				final DownloadManager dm = helper.getDownload();
+
+				boolean	cancelled;
+				
 				@Override
 				public int 
 				getProgress()
@@ -62,18 +72,68 @@ DiskManagerAllocationScheduler
 				
 				@Override
 				public int 
+				getSupportedTaskStates()
+				{
+					return( ST_PAUSE | ST_RESUME | ST_CANCEL );
+				}
+				
+				@Override
+				public int 
 				getTaskState()
 				{
 					synchronized( lock ){
 
-						if ( instances.get(0)[0] == helper ){
+						if ( cancelled ){
 							
-							return( ST_NONE );
-							
-						}else{
-							
-							return( ST_QUEUED );
+							return( ST_CANCEL );
 						}
+						
+						if ((Boolean)my_entry[2]){
+							
+							return( ST_PAUSE );
+						}
+						
+						for ( Object[] entry: instances ){
+													
+							if (!(Boolean)entry[2]){
+
+									// first not paused entry
+								
+								if ( entry[0] == helper ){
+							
+									return( ST_NONE );
+								}
+								
+								break;
+							}
+						}
+							
+						return( ST_QUEUED );
+					}
+				}
+				
+				@Override
+				public void 
+				setTaskState(
+					int state )
+				{
+					if ( state == ST_CANCEL ){
+						
+						cancelled = true;
+						
+						if ( dm != null ){
+							
+							async.dispatch( AERunnable.create( ()->{
+									dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+							}));							
+						}
+					}else if ( state == ST_PAUSE ){
+						
+						my_entry[2] = true;
+						
+					}else if ( state == ST_RESUME ){
+						
+						my_entry[2]	= false;
 					}
 				}
 			};
@@ -110,9 +170,11 @@ DiskManagerAllocationScheduler
 				}
 			};
 			
+		my_entry[1] = op;
+		
 		synchronized( lock ){
 
-			instances.add( new Object[]{ helper, op });
+			instances.add( my_entry );
 
 			core.addOperation( op );	
 		}
@@ -124,9 +186,19 @@ DiskManagerAllocationScheduler
 	{
 		synchronized( lock ){
 
-			if ( instances.get(0)[0] == helper ){
+			for ( Object[] entry: instances ){
+				
+				if ((Boolean)entry[2]){
+					
+					continue;	// paused
+				}
+			
+				if ( entry[0] == helper ){
 
-				return( true );
+					return( true );
+				}
+				
+				break;
 			}
 		}
 

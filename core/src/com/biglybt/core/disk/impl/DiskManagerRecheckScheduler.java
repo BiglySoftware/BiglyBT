@@ -89,7 +89,7 @@ DiskManagerRecheckScheduler
 				{
 					final DownloadManager dm = helper.getDownload();
 						
-					boolean cancelled;
+					volatile boolean cancelled;
 					
 					@Override
 					public int 
