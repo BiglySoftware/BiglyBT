@@ -34,8 +34,9 @@ DiskManagerAllocationScheduler
 {
 	private static Core core = CoreFactory.getSingleton();
 	
-	private final List<Object[]>	instances		= new ArrayList();
-	private final AEMonitor			instance_mon	= new AEMonitor( "DiskManagerAllocationScheduler" );
+	private final Object lock = new Object();
+	
+	private final List<Object[]>	instances		= new ArrayList<>();
 
 
 	public void
@@ -57,6 +58,23 @@ DiskManagerAllocationScheduler
 				getSize()
 				{
 					return( helper.getSizeExcludingDND());
+				}
+				
+				@Override
+				public int 
+				getTaskState()
+				{
+					synchronized( lock ){
+
+						if ( instances.get(0)[0] == helper ){
+							
+							return( ST_NONE );
+							
+						}else{
+							
+							return( ST_QUEUED );
+						}
+					}
 				}
 			};
 			
@@ -91,34 +109,25 @@ DiskManagerAllocationScheduler
 					return( task );
 				}
 			};
-		try{
-			instance_mon.enter();
+			
+		synchronized( lock ){
 
 			instances.add( new Object[]{ helper, op });
 
-			core.addOperation( op );
-			
-		}finally{
-
-			instance_mon.exit();
+			core.addOperation( op );	
 		}
 	}
 
 	protected boolean
 	getPermission(
-		DiskManagerHelper	instance )
+		DiskManagerHelper	helper )
 	{
-		try{
-			instance_mon.enter();
+		synchronized( lock ){
 
-			if ( instances.get(0)[0] == instance ){
+			if ( instances.get(0)[0] == helper ){
 
 				return( true );
 			}
-
-		}finally{
-
-			instance_mon.exit();
 		}
 
 		try{
@@ -133,10 +142,9 @@ DiskManagerAllocationScheduler
 
 	protected void
 	unregister(
-		DiskManagerHelper	instance )
+		DiskManagerHelper	helper )
 	{
-		try{
-			instance_mon.enter();
+		synchronized( lock ){
 
 			Iterator<Object[]> it = instances.iterator();
 			
@@ -144,7 +152,7 @@ DiskManagerAllocationScheduler
 				
 				Object[] entry = it.next();
 				
-				if ( entry[0] == instance ){
+				if ( entry[0] == helper ){
 				
 					it.remove();
 					
@@ -153,9 +161,6 @@ DiskManagerAllocationScheduler
 					break;
 				}
 			}
-		}finally{
-
-			instance_mon.exit();
 		}
 	}
 }

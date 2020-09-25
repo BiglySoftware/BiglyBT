@@ -1,7 +1,5 @@
 /*
- * Created on Feb 26, 2009
- *
- * Copyright (C) Azureus Software, Inc, All Rights Reserved.
+ * Copyright (C) Bigly Software, Inc, All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +33,7 @@ public class ColumnFO_Type
 	 * @param sTableID
 	 */
 	public ColumnFO_Type(TableColumn column) {
-		column.initialize(TableColumn.ALIGN_LEAD, TableColumn.POSITION_LAST, 60);
+		column.initialize(TableColumn.ALIGN_LEAD, TableColumn.POSITION_LAST, 70);
 		column.addListeners(this);
 		column.setRefreshInterval(TableColumn.INTERVAL_INVALID_ONLY);
 		column.setType(TableColumn.TYPE_TEXT_ONLY);

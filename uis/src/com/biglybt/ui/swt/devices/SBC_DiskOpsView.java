@@ -18,8 +18,6 @@
 
 package com.biglybt.ui.swt.devices;
 
-import java.io.File;
-import java.net.URL;
 import java.util.List;
 import java.util.*;
 
@@ -32,7 +30,10 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationListener;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.CoreRunningListener;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
@@ -41,7 +42,6 @@ import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.devices.columns.*;
-import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.views.skin.SkinView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -54,6 +54,7 @@ import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pifimpl.local.PluginInitializer;
 
 
@@ -132,6 +133,14 @@ public class SBC_DiskOpsView
 						new ColumnFO_Progress(column);
 					}
 				});
+		
+		tableManager.registerColumn(CoreOperation.class, ColumnFO_Status.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnFO_Status(column);
+					}
+				});
 
 		TableColumnManager tcm = TableColumnManager.getInstance();
 		
@@ -140,6 +149,7 @@ public class SBC_DiskOpsView
 				ColumnFO_Name.COLUMN_ID,
 				ColumnFO_Size.COLUMN_ID,
 				ColumnFO_Progress.COLUMN_ID,
+				ColumnFO_Status.COLUMN_ID,
 		};
 		
 		tcm.setDefaultColumnNames( TABLE_DISK_OPS, defaultLibraryColumns );
@@ -283,7 +293,45 @@ public class SBC_DiskOpsView
 				{
 					if ( e.stateMask == 0 && e.keyCode == SWT.DEL ){
 
+						Object[] selectedDS;
 						
+						synchronized (this) {
+							
+							if ( tvDiskOps == null ){
+								
+								selectedDS = new Object[0];
+							}
+							
+							selectedDS = tvDiskOps.getSelectedDataSources().toArray();
+						}
+						
+						boolean did_something = false;
+						
+						for ( Object ds: selectedDS ){
+														
+							CoreOperation	op = (CoreOperation)ds;
+							
+							ProgressCallback prog = op.getTask().getProgressCallback();
+							
+							int	states = prog.getSupportedTaskStates();
+							
+							if ((states & ProgressCallback.ST_CANCEL ) != 0 ){
+																		
+								prog.setTaskState( ProgressCallback.ST_CANCEL );
+								
+								did_something = true;
+							}
+						}
+						
+						if ( did_something ){
+							
+							UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+							
+							if (uiFunctions != null) {
+								
+								uiFunctions.refreshIconBar();
+							}
+						}
 						e.doit = false;
 					}
 				}
@@ -373,6 +421,68 @@ public class SBC_DiskOpsView
 	refreshToolBarItems(
 		Map<String, Long> list) 
 	{
+		Object[] selectedDS;
+		
+		synchronized (this) {
+			
+			if (tvDiskOps == null) {
+				return;
+			}
+			
+			selectedDS = tvDiskOps.getSelectedDataSources().toArray();
+		}
+		
+		if ( selectedDS.length == 0 ){
+			
+			return;
+		}
+
+		boolean can_start 	= false;
+		boolean can_stop	= false;
+		
+		boolean	can_remove	= true;
+		
+		for ( Object ds: selectedDS ){
+		
+			CoreOperation	op = (CoreOperation)ds;
+			
+			ProgressCallback prog = op.getTask().getProgressCallback();
+			
+			int	states = prog.getSupportedTaskStates();
+			
+			int state = prog.getTaskState();
+
+			if ((states & ProgressCallback.ST_PAUSE ) != 0 ){
+				
+				if ( state == ProgressCallback.ST_NONE || state == ProgressCallback.ST_QUEUED ){
+				
+					can_stop = true;
+				}
+			}
+			if ((states & ProgressCallback.ST_RESUME ) != 0 ){
+				
+				if ( state == ProgressCallback.ST_PAUSE ){
+				
+					can_start = true;
+				}
+			}
+			if ((states & ProgressCallback.ST_CANCEL ) == 0 ){
+				
+				can_remove = false;
+				
+			}else{
+				
+				if ( state == ProgressCallback.ST_CANCEL ){
+					
+					can_remove = false;
+				}
+			}
+		}
+		
+		list.put("stop", can_stop ? UIToolBarItem.STATE_ENABLED : 0);
+		list.put("start", can_start ? UIToolBarItem.STATE_ENABLED : 0);
+		list.put("remove", can_remove ? UIToolBarItem.STATE_ENABLED : 0);
+
 	}
 
 	@Override
@@ -382,9 +492,88 @@ public class SBC_DiskOpsView
 		long 		activationType,
 	    Object 		datasource ) 
 	{
+		Object[] selectedDS;
+		
+		synchronized (this) {
+			
+			if ( tvDiskOps == null ){
+				
+				return( false );
+			}
+			
+			selectedDS = tvDiskOps.getSelectedDataSources().toArray();
+		}
+		
+		if ( selectedDS.length == 0 ){
+			
+			return( false );
+		}
+	
+		String itemKey = item.getID();
 
+		boolean	is_start_stop 	= itemKey.equals( "startstop" );
+		boolean	is_start 		= itemKey.equals( "start" );
+		boolean	is_stop 		= itemKey.equals( "stop" );
+		boolean	is_remove 		= itemKey.equals( "remove" );
+		
+		boolean	did_something = false;
+		
+		for ( Object ds: selectedDS ){
+			
+			CoreOperation	op = (CoreOperation)ds;
+			
+			ProgressCallback prog = op.getTask().getProgressCallback();
+			
+			int	states = prog.getSupportedTaskStates();
+			
+			int state = prog.getTaskState();
 
-		return false;
+			if ((states & ProgressCallback.ST_PAUSE ) != 0 ){
+				
+				if ( state == ProgressCallback.ST_NONE || state == ProgressCallback.ST_QUEUED ){
+				
+					if ( is_stop || is_start_stop ){
+						
+						prog.setTaskState( ProgressCallback.ST_PAUSE );
+						
+						did_something = true;
+					}
+				}
+			}
+			if ((states & ProgressCallback.ST_RESUME ) != 0 ){
+				
+				if ( state == ProgressCallback.ST_PAUSE ){
+				
+					if ( is_start || is_start_stop ){
+						
+						prog.setTaskState( ProgressCallback.ST_RESUME );
+						
+						did_something = true;
+					}
+				}
+			}
+			if ((states & ProgressCallback.ST_CANCEL ) != 0 ){
+				
+				if ( is_remove ){
+					
+					prog.setTaskState( ProgressCallback.ST_CANCEL );
+					
+					did_something = true;
+				}
+			}
+		}
+		
+		if ( did_something ){
+			
+			UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+			
+			if (uiFunctions != null) {
+				
+				uiFunctions.refreshIconBar();
+			}
+		}
+		
+		return( did_something );
 	}
 
 	@Override

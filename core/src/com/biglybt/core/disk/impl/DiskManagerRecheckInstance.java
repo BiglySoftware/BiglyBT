@@ -27,6 +27,9 @@ DiskManagerRecheckInstance
 	private final int							piece_length;
 	private final boolean						low_priority;
 
+	private boolean		active;
+	private boolean		paused;
+	
 	protected
 	DiskManagerRecheckInstance(
 		DiskManagerRecheckScheduler	_scheduler,
@@ -70,6 +73,32 @@ DiskManagerRecheckInstance
 		return( scheduler.getPermission( this ));
 	}
 
+	protected boolean
+	isActive()
+	{
+		return( active );
+	}
+	
+	protected void
+	setActive(
+		boolean		b )
+	{
+		active	= b;
+	}
+	
+	protected boolean
+	isPaused()
+	{
+		return( paused );
+	}
+	
+	protected void
+	setPaused(
+		boolean		b )
+	{
+		paused	= b;
+	}
+	
 	public void
 	unregister()
 	{

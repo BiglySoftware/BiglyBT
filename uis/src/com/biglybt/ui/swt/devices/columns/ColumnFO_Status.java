@@ -1,7 +1,5 @@
 /*
- * Created on Feb 26, 2009
- *
- * Copyright (C) Azureus Software, Inc, All Rights Reserved.
+ * Copyright (C) Bigly Software, Inc, All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,20 +21,20 @@ package com.biglybt.ui.swt.devices.columns;
 
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask.ProgressCallback;
-import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.pif.ui.tables.*;
 
-public class ColumnFO_Size
+public class ColumnFO_Status
 	implements TableCellRefreshListener, TableColumnExtraInfoListener
 {
-	public static final String COLUMN_ID = "fileops_size";
+	public static final String COLUMN_ID = "fileops_status";
 
 	/**
 	 *
 	 * @param sTableID
 	 */
-	public ColumnFO_Size(TableColumn column) {
-		column.initialize(TableColumn.ALIGN_TRAIL,TableColumn.POSITION_LAST, 60);
+	public ColumnFO_Status(TableColumn column) {
+		column.initialize(TableColumn.ALIGN_LEAD, TableColumn.POSITION_LAST, 80);
 		column.addListeners(this);
 		column.setRefreshInterval(TableColumn.INTERVAL_GRAPHIC);
 		column.setType(TableColumn.TYPE_TEXT_ONLY);
@@ -62,10 +60,34 @@ public class ColumnFO_Size
 			return;
 		}
 
-		ProgressCallback prog = op.getTask().getProgressCallback();
-				
-		long size = prog==null?-1:prog.getSize();
+		ProgressCallback cb = op.getTask().getProgressCallback();
 		
-		cell.setText( size<=0?"":DisplayFormatters.formatByteCountToKiBEtc( size ));
+		if ( cb == null ){
+			
+			return;
+		}
+		
+		int state = cb.getTaskState();
+		
+		String text;
+		
+		if ( state == ProgressCallback.ST_CANCEL ){
+			
+			text = MessageText.getString( "Progress.reporting.status.canceled" );
+			
+		}else if ( state == ProgressCallback.ST_PAUSE ){	
+				
+			text = MessageText.getString( "ManagerItem.paused" );
+			
+		}else if ( state == ProgressCallback.ST_QUEUED ){	
+				
+			text = MessageText.getString( "ManagerItem.queued" );
+			
+		}else{
+			
+			text = "";
+		}
+		
+		cell.setText(text);
 	}
 }

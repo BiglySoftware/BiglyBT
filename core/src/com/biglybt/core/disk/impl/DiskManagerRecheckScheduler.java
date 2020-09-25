@@ -29,11 +29,11 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
-import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.RealTimeInfo;
 
 public class
@@ -44,6 +44,8 @@ DiskManagerRecheckScheduler
 	static int	 	strategy;
 	static boolean 	smallest_first;
 	static int		max_active;
+	
+	private static AsyncDispatcher async = new AsyncDispatcher(2000);
 	
     static{
 
@@ -72,24 +74,104 @@ DiskManagerRecheckScheduler
  				param_listener );
     }
 
-	private final List<Object[]>		instances		= new ArrayList<>();
-	private final AEMonitor				instance_mon	= new AEMonitor( "DiskManagerRecheckScheduler" );
+    private final Object				lock			= new Object();
+	private final List<Object[]>		entries			= new ArrayList<>();
 
 	public DiskManagerRecheckInstance
 	register(
 		DiskManagerHelper	helper,
 		boolean				low_priority )
 	{
+		Object[] my_entry = new Object[]{ null, null };
+		
 		CoreOperationTask.ProgressCallback progress = 
 				new CoreOperationTask.ProgressCallbackAdapter()
 				{
 					final DownloadManager dm = helper.getDownload();
-										
+						
+					boolean cancelled;
+					
 					@Override
 					public int 
 					getProgress()
 					{
 						return( dm==null?-1:dm.getStats().getCompleted());
+					}
+					
+					@Override
+					public int 
+					getSupportedTaskStates()
+					{
+						return( ST_PAUSE | ST_RESUME | ST_CANCEL );
+					}
+					
+					@Override
+					public int 
+					getTaskState()
+					{
+						if ( cancelled ){
+							
+							return( ST_CANCEL );
+						}
+						
+						synchronized( lock ){
+
+							DiskManagerRecheckInstance inst = (DiskManagerRecheckInstance)my_entry[0];
+							
+							if ( inst == null ){
+								
+								return( ST_NONE );
+								
+							}else{
+								
+								if ( inst.isPaused()){
+									
+									return( ST_PAUSE );
+									
+								}else if ( inst.isActive()){
+									
+									return( ST_NONE );
+									
+								}else{
+									
+									return( ST_QUEUED );
+								}
+							}
+						}
+					}
+					
+					@Override
+					public void 
+					setTaskState(
+						int state )
+					{
+						if ( state == ST_CANCEL ){
+							
+							cancelled = true;
+							
+							if ( dm != null ){
+								
+								async.dispatch( AERunnable.create( ()->{
+										dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+								}));							
+							}
+						}else if ( state == ST_PAUSE ){
+							
+							DiskManagerRecheckInstance inst = (DiskManagerRecheckInstance)my_entry[0];
+							
+							if ( inst != null ){
+								
+								inst.setPaused( true );
+							}
+						}else if ( state == ST_RESUME ){
+							
+							DiskManagerRecheckInstance inst = (DiskManagerRecheckInstance)my_entry[0];
+							
+							if ( inst != null ){
+								
+								inst.setPaused( false );
+							}
+						}
 					}
 					
 					@Override
@@ -131,10 +213,8 @@ DiskManagerRecheckScheduler
 						return( task );
 					}
 				};
-		try{
-
-					
-			instance_mon.enter();
+			
+		synchronized( lock ){
 
 			DiskManagerRecheckInstance	res =
 				new DiskManagerRecheckInstance(
@@ -143,14 +223,17 @@ DiskManagerRecheckScheduler
 						(int)helper.getTorrent().getPieceLength(),
 						low_priority );
 
-			instances.add( new Object[]{ res, op });
+			my_entry[0]	= res;
+			my_entry[1]	= op;
+			
+			entries.add( my_entry );
 
 			core.addOperation( op );
 			
 			if ( smallest_first ){
 
 				Collections.sort(
-						instances,
+						entries,
 						new Comparator<Object[]>()
 						{
 							@Override
@@ -177,10 +260,6 @@ DiskManagerRecheckScheduler
 			}
 
 			return( res );
-
-		}finally{
-
-			instance_mon.exit();
 		}
 	}
 
@@ -211,12 +290,22 @@ DiskManagerRecheckScheduler
 		boolean	result 	= false;
 		int		delay	= 250;
 
-		try{
-			instance_mon.enter();
+		synchronized( lock ){
 
-			for ( int i=0;i<Math.min( max_active, instances.size());i++){
+			int	to_process = max_active;
+			
+			for ( int i=0; to_process > 0 && i<entries.size();i++){
 				
-				if ( instances.get(i)[0] == instance ){
+				Object[] entry = (Object[])entries.get(i);
+				
+				DiskManagerRecheckInstance this_inst = (DiskManagerRecheckInstance)entry[0];
+				
+				if ( this_inst.isPaused()){
+					
+					continue;
+				}
+				
+				if ( this_inst == instance ){
 	
 					boolean	low_priority = instance.isLowPriority();
 	
@@ -251,12 +340,11 @@ DiskManagerRecheckScheduler
 			            result	= true;
 					}
 					
+					instance.setActive( result );
+					
 					break;
 				}
 			}
-		}finally{
-
-			instance_mon.exit();
 		}
 
 		if ( delay > 0 ){
@@ -276,10 +364,9 @@ DiskManagerRecheckScheduler
 	unregister(
 		DiskManagerRecheckInstance	instance )
 	{
-		try{
-			instance_mon.enter();
+		synchronized( lock ){
 
-			Iterator<Object[]>	it = instances.iterator();
+			Iterator<Object[]>	it = entries.iterator();
 			
 			while( it.hasNext()){
 			
@@ -294,9 +381,6 @@ DiskManagerRecheckScheduler
 					break;
 				}
 			}			
-		}finally{
-
-			instance_mon.exit();
 		}
 	}
 }

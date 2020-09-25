@@ -4861,6 +4861,8 @@ DownloadManagerImpl
 					private ProgressCallback callback = 
 						new ProgressCallbackAdapter()
 						{
+							private volatile int	current_state = ProgressCallback.ST_NONE;
+							
 							@Override
 							public int 
 							getProgress()
@@ -4902,18 +4904,36 @@ DownloadManagerImpl
 							setTaskState(
 								int state )
 							{
+								if ( current_state == ProgressCallback.ST_CANCEL ){
+									
+									return;
+								}
+								
 								if ( state == ProgressCallback.ST_PAUSE ){
 									
 									setMoveState( ProgressListener.ST_PAUSED );
 									
+									current_state = state;
+									
+
 								}else if ( state == ProgressCallback.ST_RESUME ){
 									
 									setMoveState( ProgressListener.ST_NORMAL );
 
+									current_state = ProgressCallback.ST_NONE;									
+
 								}else if ( state == ProgressCallback.ST_CANCEL ){
 									
 									setMoveState( ProgressListener.ST_CANCELLED );
+									
+									current_state = ProgressCallback.ST_CANCEL;									
 								}
+							}
+							
+							public int
+							getTaskState()
+							{
+								return( current_state );
 							}
 						};
 		  

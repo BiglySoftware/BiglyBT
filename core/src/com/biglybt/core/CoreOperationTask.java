@@ -41,9 +41,11 @@ CoreOperationTask
 		public int ST_PAUSE		= 0x0001;
 		public int ST_RESUME	= 0x0002;
 		public int ST_CANCEL	= 0x0004;
-		
+
 		public int ST_SUBTASKS	= 0x0008;
 		
+		public int ST_QUEUED	= 0x0010;	// differentiates between active (ST_NONE) and active but currently not scheduled
+
 		public int ST_BUTTONS	= ST_PAUSE | ST_RESUME | ST_CANCEL;
 		
 		public int STYLE_NONE		= 0x0000;
@@ -89,6 +91,9 @@ CoreOperationTask
 		
 		public int
 		getSupportedTaskStates();
+		
+		public int
+		getTaskState();
 		
 		public void
 		setTaskState(
@@ -152,6 +157,12 @@ CoreOperationTask
 		setTaskState(
 			int		state )
 		{
+		}
+		
+		public int
+		getTaskState()
+		{
+			return( ST_NONE );
 		}
 	}
 }
