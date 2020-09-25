@@ -256,28 +256,40 @@ IpRangeV4Impl
 	}
 
 	@Override
-	public int compareStartIpTo(IpRange other) {
-		long l = getStartIpLong() - ((IpRangeV4Impl) other).getStartIpLong();
-
-		if (l < 0) {
-			return (-1);
-		} else if (l > 0) {
-			return (1);
-		} else {
-			return (0);
+	public int 
+	compareStartIpTo(
+			IpRange other) 
+	{
+		if ( other instanceof IpRangeV4Impl ){
+			
+			long l = getStartIpLong() - ((IpRangeV4Impl) other).getStartIpLong();
+	
+			if (l < 0) {
+				return (-1);
+			} else if (l > 0) {
+				return (1);
+			} else {
+				return (0);
+			}
+		}else{
+			return( -1 );
 		}
 	}
 
 	@Override
 	public int compareEndIpTo(IpRange other) {
-		long l = getEndIpLong() - ((IpRangeV4Impl) other).getEndIpLong();
-
-		if (l < 0) {
-			return (-1);
-		} else if (l > 0) {
-			return (1);
+		if ( other instanceof IpRangeV4Impl ){
+			long l = getEndIpLong() - ((IpRangeV4Impl) other).getEndIpLong();
+	
+			if (l < 0) {
+				return (-1);
+			} else if (l > 0) {
+				return (1);
+			}
+			return (0);
+		}else{
+			return( -1 );
 		}
-		return (0);
 	}
 
 	protected long getMergedEndLong() {

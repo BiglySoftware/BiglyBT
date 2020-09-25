@@ -438,7 +438,7 @@ IpRangeV6Impl
 			
 		}else{
 			
-			return( 0 );
+			return( 1 );
 		}
 	}
 
@@ -457,7 +457,7 @@ IpRangeV6Impl
 			return( compare( s1, s2 ));
 		}else{
 			
-			return( 0 );
+			return( 1 );
 		}
 	}
 	
