@@ -814,11 +814,11 @@ DisplayFormatters
 
 				if ( diskManager != null ){
 
-					int	mp = diskManager.getMoveProgress();
+					long[]	mp = diskManager.getMoveProgress();
 
-					if ( mp != -1 ){
+					if ( mp != null ){
 
-						tmp = ManagerItem_moving + ": "	+ formatPercentFromThousands( mp );
+						tmp = ManagerItem_moving + ": "	+ formatPercentFromThousands( (int)mp[0] );
 
 					}else{
 						int done = diskManager.getCompleteRecheckStatus();
@@ -847,11 +847,11 @@ DisplayFormatters
 			}
 			case DownloadManager.STATE_STOPPED:
 				
-				int	mp = manager.getMoveProgress();
+				long[]	mp = manager.getMoveProgress();
 				
-				if ( mp != -1 ){
+				if ( mp != null ){
 					
-					 tmp = ManagerItem_moving + ": "	+ formatPercentFromThousands( mp );
+					 tmp = ManagerItem_moving + ": "	+ formatPercentFromThousands( (int)mp[0] );
 					 
 				}else{
 					

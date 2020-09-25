@@ -1824,8 +1824,8 @@ DiskManagerUtil
 					}
 					
 					@Override
-					public int getMoveProgress(){
-						return 0;
+					public long[] getMoveProgress(){
+						return null;
 					}
 					
 					@Override

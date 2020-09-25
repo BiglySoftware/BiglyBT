@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Display;
 
 import com.biglybt.core.*;
 import com.biglybt.core.CoreOperationTask.ProgressCallback;
+import com.biglybt.core.CoreOperationTask.ProgressCallbackAdapter;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
@@ -741,43 +742,13 @@ public class Initializer
 					AESemaphore stop_sem = new AESemaphore( "stop" );
 					
 					ProgressCallback	prog = 
-						new ProgressCallback()
+						new ProgressCallbackAdapter()
 						{
-							private volatile int 	percent = 0;
-							private volatile String	subtask = "";
-							
 							@Override
 							public int 
 							getStyle()
 							{
 								return( STYLE_NO_CLOSE | STYLE_MODAL );
-							}
-							public int
-							getProgress()
-							{
-								return( percent );
-							}
-							
-							@Override
-							public void 
-							setProgress(
-								int _percent )
-							{
-								percent = _percent;
-							}
-							
-							public String
-							getSubTaskName()
-							{
-								return( subtask );
-							}
-							
-							@Override
-							public void 
-							setSubTaskName(
-								String name )
-							{
-								subtask	= name;
 							}
 							
 							@Override
@@ -791,12 +762,6 @@ public class Initializer
 							getSupportedTaskStates()
 							{
 								return( ProgressCallback.ST_SUBTASKS );
-							}
-							
-							public void
-							setTaskState(
-								int		state )
-							{
 							}
 						};
 						
@@ -827,8 +792,7 @@ public class Initializer
 											run(
 												CoreOperation operation)
 											{
-												try{
-													
+												try{												
 													stop_sem.reserve();
 													
 												}catch( Throwable e ){

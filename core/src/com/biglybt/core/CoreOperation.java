@@ -27,7 +27,6 @@ CoreOperation
 	public static final int	OP_DOWNLOAD_EXPORT			= 4;
 	public static final int	OP_DOWNLOAD_ALLOCATION		= 5;
 	public static final int	OP_DOWNLOAD_CHECKING		= 6;
-	public static final int	OP_DOWNLOAD_MOVE_INTERNAL	= 7;
 
 	public int
 	getOperationType();

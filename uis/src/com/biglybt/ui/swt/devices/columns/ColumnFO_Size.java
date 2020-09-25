@@ -22,22 +22,23 @@ package com.biglybt.ui.swt.devices.columns;
 
 
 import com.biglybt.core.CoreOperation;
-import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.ui.tables.*;
 
-public class ColumnFO_Type
+public class ColumnFO_Size
 	implements TableCellRefreshListener, TableColumnExtraInfoListener
 {
-	public static final String COLUMN_ID = "fileops_type";
+	public static final String COLUMN_ID = "fileops_size";
 
 	/**
 	 *
 	 * @param sTableID
 	 */
-	public ColumnFO_Type(TableColumn column) {
+	public ColumnFO_Size(TableColumn column) {
 		column.initialize(TableColumn.ALIGN_LEAD, TableColumn.POSITION_LAST, 60);
 		column.addListeners(this);
-		column.setRefreshInterval(TableColumn.INTERVAL_INVALID_ONLY);
+		column.setRefreshInterval(TableColumn.INTERVAL_GRAPHIC);
 		column.setType(TableColumn.TYPE_TEXT_ONLY);
 	}
 
@@ -61,42 +62,10 @@ public class ColumnFO_Type
 			return;
 		}
 
-		int type = op.getOperationType();
-
-		String	suffix;
+		ProgressCallback prog = op.getTask().getProgressCallback();
+				
+		long size = prog==null?-1:prog.getSize();
 		
-		switch( type ){
-			
-			case CoreOperation.OP_FILE_MOVE:{
-				
-				suffix = "move";
-				
-				break;
-			}
-			case CoreOperation.OP_DOWNLOAD_EXPORT:{
-				
-				suffix = "export";
-				
-				break;
-			}
-			case CoreOperation.OP_DOWNLOAD_ALLOCATION:{
-				
-				suffix = "alloc";
-				
-				break;
-			}
-			case CoreOperation.OP_DOWNLOAD_CHECKING:{
-				
-				suffix = "check";
-				
-				break;
-			}
-			default:{
-				
-				suffix = "unknown";
-			}
-		}
-
-		cell.setText( MessageText.getString( "label.fop." + suffix ));
+		cell.setText( size<=0?"":DisplayFormatters.formatByteCountToKiBEtc( size ));
 	}
 }

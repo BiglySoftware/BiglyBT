@@ -91,6 +91,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.DragDropUtils;
+import com.biglybt.ui.swt.views.PeersGeneralView;
 import com.biglybt.ui.swt.views.skin.SkinView;
 import com.biglybt.ui.swt.views.skin.SkinViewManager;
 import com.biglybt.ui.swt.views.skin.SkinViewManager.SkinViewManagerListener;
@@ -192,7 +193,6 @@ DeviceManagerUI
 	private boolean	offline_menus_setup;
 
 	private MdiEntry mdiEntryOverview;
-	private MdiEntry mdiEntryDiskOps;
 
 	private boolean needsAddAllDevices;
 
@@ -1509,90 +1509,98 @@ DeviceManagerUI
 			}
 		}
 
-		mdiEntryDiskOps = mdi.getEntry(SideBar.SIDEBAR_SECTION_DISK_OPS);
-
-		if (mdiEntryDiskOps == null) {
-			mdiEntryDiskOps = mdi.createEntryFromSkinRef(
-					SideBar.SIDEBAR_HEADER_DEVICES, SideBar.SIDEBAR_SECTION_DISK_OPS,
-					"diskopsview", MessageText.getString("mdi.entry.about.diskops"),
-					new ViewTitleInfo()
-					{
-						@Override
-						public Object
-						getTitleInfoProperty(
-							int propertyID )
-						{
-							if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
-
-								
-							}
-							if ( propertyID == TITLE_INDICATOR_TEXT ){
-
-								
-							}
-
-							return( null );
-						}
-					},
-					null, false, SideBar.SIDEBAR_SECTION_DEVICES );
-
-			mdiEntryDiskOps.setImageLeftID("image.sidebar.aboutdiskops");
-			
-			Core core = CoreFactory.getSingleton();
-
-			ViewTitleInfo viewTitleInfo =
-				new ViewTitleInfo()
-				{					
-					@Override
-					public Object
-					getTitleInfoProperty(
-						int pid )
-					{
-						if ( pid == TITLE_INDICATOR_TEXT ){
-							
-							int ops = core.getOperations().size();
-							
-							if ( ops > 0 ){
-							
-								return( "" + ops );
-							}
-						}
-						
-						return( null );
-					}
-				};
-								
-			mdiEntryDiskOps.setViewTitleInfo(viewTitleInfo);
-			
-			CoreOperationListener opListener =
-				new CoreOperationListener(){
-					
-					@Override
-					public void operationRemoved(CoreOperation operation){
-						ViewTitleInfoManager.refreshTitleInfo(viewTitleInfo);
-						mdiEntryDiskOps.redraw();
-					}
-					
-					@Override
-					public boolean operationExecuteRequest(CoreOperation operation){
-						return false;
-					}
-					
-					@Override
-					public void operationAdded(CoreOperation operation){
-						ViewTitleInfoManager.refreshTitleInfo(viewTitleInfo);
-						mdiEntryDiskOps.redraw();
-					}
-				};
-				
-			core.addOperationListener( opListener );
-			
-			mdiEntryDiskOps.addListener((MdiCloseListener)(ev,u)->{
-				
-				core.removeOperationListener( opListener );
-			});			
-		}
+			// registering the view makes it elibigle for quicklinks
 		
+		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_DISK_OPS,
+				new MdiEntryCreationListener() {
+					@Override
+					public MdiEntry createMDiEntry(String id) {
+						MdiEntry mdiEntryDiskOps = mdi.createEntryFromSkinRef(
+								SideBar.SIDEBAR_HEADER_DEVICES, SideBar.SIDEBAR_SECTION_DISK_OPS,
+								"diskopsview", MessageText.getString("mdi.entry.about.diskops"),
+								new ViewTitleInfo()
+								{
+									@Override
+									public Object
+									getTitleInfoProperty(
+										int propertyID )
+									{
+										if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
+
+											
+										}
+										if ( propertyID == TITLE_INDICATOR_TEXT ){
+
+											
+										}
+
+										return( null );
+									}
+								},
+								null, false, SideBar.SIDEBAR_SECTION_DEVICES );
+						
+						mdiEntryDiskOps.setImageLeftID("image.sidebar.aboutdiskops");
+						
+						Core core = CoreFactory.getSingleton();
+
+						ViewTitleInfo viewTitleInfo =
+							new ViewTitleInfo()
+							{					
+								@Override
+								public Object
+								getTitleInfoProperty(
+									int pid )
+								{
+									if ( pid == TITLE_INDICATOR_TEXT ){
+										
+										int ops = core.getOperations().size();
+										
+										if ( ops > 0 ){
+										
+											return( "" + ops );
+										}
+									}
+									
+									return( null );
+								}
+							};
+											
+						mdiEntryDiskOps.setViewTitleInfo(viewTitleInfo);
+						
+						CoreOperationListener opListener =
+							new CoreOperationListener(){
+								
+								@Override
+								public void operationRemoved(CoreOperation operation){
+									ViewTitleInfoManager.refreshTitleInfo(viewTitleInfo);
+									mdiEntryDiskOps.redraw();
+								}
+								
+								@Override
+								public boolean operationExecuteRequest(CoreOperation operation){
+									return false;
+								}
+								
+								@Override
+								public void operationAdded(CoreOperation operation){
+									ViewTitleInfoManager.refreshTitleInfo(viewTitleInfo);
+									mdiEntryDiskOps.redraw();
+								}
+							};
+							
+						core.addOperationListener( opListener );
+						
+						mdiEntryDiskOps.addListener((MdiCloseListener)(ev,u)->{
+							
+							core.removeOperationListener( opListener );
+						});		
+						
+						return mdiEntryDiskOps;
+					}
+				});
+	
+		mdi.loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_DISK_OPS, false );
+			
 		if (rebuild) {
 			for (categoryView category : categories) {
 				category.destroy();

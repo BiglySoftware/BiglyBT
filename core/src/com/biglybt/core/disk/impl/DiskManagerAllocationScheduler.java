@@ -27,7 +27,6 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
-import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.util.AEMonitor;
 
 public class
@@ -44,25 +43,20 @@ DiskManagerAllocationScheduler
 		DiskManagerHelper	helper )
 	{
 		CoreOperationTask.ProgressCallback progress = 
-			new ProgressCallback(){
-				
+			new CoreOperationTask.ProgressCallbackAdapter()
+			{
 				@Override
-				public void setTaskState(int state){
-				}
-				
-				@Override
-				public int getSupportedTaskStates(){
-					return( 0 );
-				}
-				
-				@Override
-				public String getSubTaskName(){
-					return null;
-				}
-				
-				@Override
-				public int getProgress(){
+				public int 
+				getProgress()
+				{
 					return( helper.getPercentAllocated());
+				}
+				
+				@Override
+				public long 
+				getSize()
+				{
+					return( helper.getSizeExcludingDND());
 				}
 			};
 			
@@ -73,12 +67,6 @@ DiskManagerAllocationScheduler
 				getName()
 				{
 					return( helper.getDisplayName());
-				}
-				
-				public void
-				run(
-					CoreOperation operation )
-				{
 				}
 				
 				public ProgressCallback

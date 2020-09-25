@@ -549,10 +549,10 @@ DownloadManager
 
     	/**
     	 * Progress of a move operation
-    	 * @return -1: not moving otherwise 0->1000
+    	 * @return null: not moving otherwise [ 0->1000, size ]
     	 */
     
-    public int
+    public long[]
     getMoveProgress();
     
         /**

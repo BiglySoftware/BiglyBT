@@ -595,10 +595,10 @@ LWSDiskManager
 	}
 
     @Override
-    public int
+    public long[]
     getMoveProgress()
     {
-    	return( -1 );
+    	return( null );
     }
 
     @Override

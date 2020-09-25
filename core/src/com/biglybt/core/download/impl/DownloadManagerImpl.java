@@ -4718,11 +4718,11 @@ DownloadManagerImpl
 	  return( crypto_level );
   }
 
-  private volatile int 		move_progress	= -1;
+  private volatile long[]	move_progress	= null;
   private volatile String	move_subtask	= "";
   private volatile int 		move_state		= ProgressListener.ST_NORMAL;
   
-  public int
+  public long[]
   getMoveProgress()
   {
 	  DiskManager	dm = getDiskManager();
@@ -4859,13 +4859,24 @@ DownloadManagerImpl
 					}
 					
 					private ProgressCallback callback = 
-						new ProgressCallback()
+						new ProgressCallbackAdapter()
 						{
 							@Override
 							public int 
 							getProgress()
 							{
-								return( getMoveProgress());
+								long[] mp = getMoveProgress();
+								
+								return( mp==null?-1:(int)mp[0]);
+							}
+							
+							@Override
+							public long 
+							getSize()
+							{
+								long[] mp = getMoveProgress();
+								
+								return( mp==null?-1:mp[1] );
 							}
 							
 							@Override
@@ -5052,7 +5063,7 @@ DownloadManagerImpl
 				{
 					total_done += num;
 					
-					move_progress = total_size==0?0:(int)(Math.min( 1000, (1000*total_done)/total_size ));
+					move_progress = new long[]{ total_size==0?0:(int)(Math.min( 1000, (1000*total_done)/total_size )), total_size };
 				}
 				
 				@Override
@@ -5065,12 +5076,12 @@ DownloadManagerImpl
 				public void
 				complete()
 				{
-					move_progress = 1000;
+					move_progress = new long[]{ 1000, total_size };
 				}
 		  	};
 
 		  try{
-			  move_progress = 0;
+			  move_progress = new long[2];
 			  move_subtask	= "";
 			  
 			  if ( FileUtil.areFilePathsIdentical( old_file, new_save_location )){
@@ -5177,7 +5188,7 @@ DownloadManagerImpl
 			  
 			  pl.complete();
 			  
-			  move_progress = -1;
+			  move_progress = null;
 			  move_subtask	= "";
 			  move_state	= ProgressListener.ST_NORMAL;
 		  }

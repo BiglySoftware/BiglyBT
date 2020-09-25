@@ -274,7 +274,7 @@ DiskManagerImpl
     private boolean				checking_enabled = true;
 
     private volatile boolean	move_in_progress;
-    private volatile int		move_progress;
+    private volatile long[]		move_progress;
     private volatile File		move_subtask;
     private volatile int		move_state = ProgressListener.ST_NORMAL;
     
@@ -2338,7 +2338,7 @@ DiskManagerImpl
     }
 
     @Override
-    public int
+    public long[]
     getMoveProgress()
     {
     	if ( move_in_progress ){
@@ -2346,7 +2346,7 @@ DiskManagerImpl
     		return( move_progress );
     	}
 
-    	return( -1 );
+    	return( null );
     }
 
     @Override
@@ -2623,7 +2623,7 @@ DiskManagerImpl
             boolean files_moved = true;
             if (move_files) {
             	try{
-            		move_progress		= 0;
+            		move_progress		= new long[2];
             		move_subtask		= null;
             		move_state			= ProgressListener.ST_NORMAL;
             		move_in_progress 	= true;
@@ -3092,7 +3092,7 @@ DiskManagerImpl
 
 									  long	pretend_bytes_moved = bytes_moved + pretend_bytes;
 
-									  move_progress = (int)( 1000*pretend_bytes_moved/f_total_bytes);
+									  move_progress = new long[]{ (int)( 1000*pretend_bytes_moved/f_total_bytes), f_total_bytes };
 
 									  // System.out.println( "pretend prog: " + move_progress );
 								  }
@@ -3146,7 +3146,7 @@ DiskManagerImpl
 
 									  long	done_bytes = current_file_bs[0] + file_length;
 
-									  move_progress = (int)( 1000*done_bytes/f_total_bytes);
+									  move_progress = new long[]{ (int)( 1000*done_bytes/f_total_bytes), f_total_bytes };
 
 									  last_progress_bytes[0]	= done_bytes;
 									  last_progress_update[0]	= SystemTime.getMonotonousTime();
@@ -3219,7 +3219,7 @@ DiskManagerImpl
 	
 							  current_file_bs[0] = done_bytes;
 	
-							  move_progress = (int)( 1000*done_bytes/total_bytes);
+							  move_progress = new long[]{ (int)( 1000*done_bytes/total_bytes), total_bytes };
 	
 							  last_progress_bytes[0]	= done_bytes;
 							  last_progress_update[0]	= SystemTime.getMonotonousTime();
@@ -3259,7 +3259,7 @@ DiskManagerImpl
 						  for (int j=0;j<i;j++){
 	
 							  move_subtask		=  old_files[j];
-							  move_progress 	= (int)( 1000*bytes_moved/total_bytes);
+							  move_progress 	= new long[]{ (int)( 1000*bytes_moved/total_bytes), total_bytes };
 								
   						  	  long bytes_this_file =  file_lengths_to_move[j];
 
@@ -3296,7 +3296,7 @@ DiskManagerImpl
 	  						  				  total_done = bytes_this_file;
 	  						  			  }
 	
-	  						  			  move_progress = (int)( 1000*(bytes_moved_at_start-total_done)/f_total_bytes); 
+	  						  			  move_progress = new long[]{ (int)( 1000*(bytes_moved_at_start-total_done)/f_total_bytes), f_total_bytes }; 
 	  						  		  }
 	  						  	  };
 							  

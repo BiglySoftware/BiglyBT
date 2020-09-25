@@ -852,33 +852,33 @@ DownloadImpl
 	}
 
  	@Override
-  public boolean
+ 	public boolean
 	isComplete()
  	{
  		return download_manager.isDownloadComplete(false);
  	}
 
  	@Override
-  public boolean isComplete(boolean bIncludeDND) {
+ 	public boolean isComplete(boolean bIncludeDND) {
  		return download_manager.isDownloadComplete(bIncludeDND);
  	}
 
  	@Override
-  public boolean
+ 	public boolean
  	isChecking()
  	{
  		return( download_stats.getCheckingDoneInThousandNotation() != -1 );
  	}
 
  	@Override
-  public boolean
+ 	public boolean
  	isMoving()
  	{
  		com.biglybt.core.disk.DiskManager dm = download_manager.getDiskManager();
 
  		if ( dm != null ){
 
- 			return( dm.getMoveProgress() != -1 );
+ 			return( dm.getMoveProgress() != null );
  		}
 
  		return( false );

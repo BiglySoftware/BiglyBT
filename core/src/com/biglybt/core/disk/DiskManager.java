@@ -279,11 +279,12 @@ DiskManager
 	getCompleteRecheckStatus();
 
 		/**
-		 * When a download's data is moving (for completion or removal events) this gives the progress in 1000 notation. -1 if nothing's going on
+		 * When a download's data is moving (for completion or removal events) this gives the [progress in 1000 notation,total_size]
+		 * null if nothing's going on
 		 * @return
 		 */
 
-	public int
+	public long[]
 	getMoveProgress();
 
 	public File

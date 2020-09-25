@@ -81,29 +81,22 @@ DiskManagerRecheckScheduler
 		boolean				low_priority )
 	{
 		CoreOperationTask.ProgressCallback progress = 
-				new ProgressCallback(){
-				
+				new CoreOperationTask.ProgressCallbackAdapter()
+				{
 					final DownloadManager dm = helper.getDownload();
-					
-					@Override
-					public void setTaskState(int state){
-					}
-					
-					@Override
-					public int getSupportedTaskStates(){
-						return( 0 );
-					}
-					
-					@Override
-					public String getSubTaskName(){
-						return null;
-					}
-					
+										
 					@Override
 					public int 
 					getProgress()
 					{
 						return( dm==null?-1:dm.getStats().getCompleted());
+					}
+					
+					@Override
+					public long 
+					getSize()
+					{
+						return( helper.getSizeExcludingDND());
 					}
 				};
 				
@@ -115,13 +108,7 @@ DiskManagerRecheckScheduler
 					{
 						return( helper.getDisplayName());
 					}
-					
-					public void
-					run(
-						CoreOperation operation )
-					{
-					}
-					
+										
 					public ProgressCallback
 					getProgressCallback()
 					{

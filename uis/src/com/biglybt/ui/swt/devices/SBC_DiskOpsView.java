@@ -117,6 +117,14 @@ public class SBC_DiskOpsView
 					}
 				});
 		
+		tableManager.registerColumn(CoreOperation.class, ColumnFO_Size.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnFO_Size(column);
+					}
+				});
+		
 		tableManager.registerColumn(CoreOperation.class, ColumnFO_Progress.COLUMN_ID,
 				new TableColumnCreationListener() {
 					@Override
@@ -130,6 +138,7 @@ public class SBC_DiskOpsView
 		String[] defaultLibraryColumns = {
 				ColumnFO_Type.COLUMN_ID,
 				ColumnFO_Name.COLUMN_ID,
+				ColumnFO_Size.COLUMN_ID,
 				ColumnFO_Progress.COLUMN_ID,
 		};
 		
@@ -309,7 +318,6 @@ public class SBC_DiskOpsView
 		return(	type == CoreOperation.OP_DOWNLOAD_ALLOCATION || 
 				type == CoreOperation.OP_DOWNLOAD_CHECKING || 
 				type == CoreOperation.OP_DOWNLOAD_EXPORT || 
-				type == CoreOperation.OP_DOWNLOAD_MOVE_INTERNAL || 
 				type == CoreOperation.OP_FILE_MOVE ); 
 	}
 

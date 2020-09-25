@@ -1164,7 +1164,7 @@ TagManagerImpl
 
 											if ( manager.getAssumedComplete()){
 
-												if ( dm.getMoveProgress() == -1 && dm.getCompleteRecheckStatus() == -1 ){
+												if ( dm.getMoveProgress() == null && dm.getCompleteRecheckStatus() == -1 ){
 
 													long	now = SystemTime.getMonotonousTime();
 

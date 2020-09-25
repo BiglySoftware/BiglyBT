@@ -25,9 +25,11 @@ CoreOperationTask
 	public String
 	getName();
 	
-	public void
+	public default void
 	run(
-		CoreOperation operation );
+		CoreOperation operation )
+	{
+	}
 	
 	public ProgressCallback
 	getProgressCallback();
@@ -63,6 +65,13 @@ CoreOperationTask
 		{
 		}
 		
+		public long
+		getSize();
+		
+		public void
+		setSize(
+			long		size );
+		
 		public String
 		getSubTaskName();
 		
@@ -90,8 +99,9 @@ CoreOperationTask
 	ProgressCallbackAdapter
 		implements ProgressCallback
 	{
-		private int 	thousandths;
-		private String	subtask;
+		private volatile int 	thousandths;
+		private volatile long	size;
+		private volatile String	subtask;
 		
 		public int
 		getProgress()
@@ -104,6 +114,19 @@ CoreOperationTask
 			int		_thousandths )
 		{
 			thousandths = _thousandths;
+		}
+		
+		public long
+		getSize()
+		{
+			return( size );
+		}
+		
+		public void
+		setSize(
+			long		_size )
+		{
+			size	= _size;
 		}
 				
 		public String
