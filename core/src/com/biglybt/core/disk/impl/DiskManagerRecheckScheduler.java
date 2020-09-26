@@ -214,21 +214,19 @@ DiskManagerRecheckScheduler
 					}
 				};
 			
-		synchronized( lock ){
-
-			DiskManagerRecheckInstance	res =
+		DiskManagerRecheckInstance	res =
 				new DiskManagerRecheckInstance(
 						this,
 						helper.getTorrent().getSize(),
 						(int)helper.getTorrent().getPieceLength(),
 						low_priority );
 
-			my_entry[0]	= res;
-			my_entry[1]	= op;
-			
-			entries.add( my_entry );
+		my_entry[0]	= res;
+		my_entry[1]	= op;
 
-			core.addOperation( op );
+		synchronized( lock ){
+		
+			entries.add( my_entry );
 			
 			if ( smallest_first ){
 
@@ -258,9 +256,11 @@ DiskManagerRecheckScheduler
 							}
 						});
 			}
-
-			return( res );
 		}
+		
+		core.addOperation( op );	
+
+		return( res );
 	}
 
 	public int
@@ -364,23 +364,33 @@ DiskManagerRecheckScheduler
 	unregister(
 		DiskManagerRecheckInstance	instance )
 	{
-		synchronized( lock ){
+		CoreOperation	to_remove = null;
 
-			Iterator<Object[]>	it = entries.iterator();
-			
-			while( it.hasNext()){
-			
-				Object[] entry = it.next();
+		try{
+			synchronized( lock ){
+	
+				Iterator<Object[]>	it = entries.iterator();
 				
-				if ( entry[0] == instance ){
+				while( it.hasNext()){
+				
+					Object[] entry = it.next();
 					
-					it.remove();
-					
-					core.removeOperation((CoreOperation)entry[1]);
-					
-					break;
-				}
-			}			
+					if ( entry[0] == instance ){
+						
+						it.remove();
+						
+						to_remove = (CoreOperation)entry[1];
+						
+						break;
+					}
+				}			
+			}
+		}finally{
+			
+			if ( to_remove != null ){
+			
+				core.removeOperation( to_remove );
+			}
 		}
 	}
 }

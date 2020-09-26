@@ -175,9 +175,9 @@ DiskManagerAllocationScheduler
 		synchronized( lock ){
 
 			instances.add( my_entry );
-
-			core.addOperation( op );	
 		}
+		
+		core.addOperation( op );	
 	}
 
 	protected boolean
@@ -216,22 +216,32 @@ DiskManagerAllocationScheduler
 	unregister(
 		DiskManagerHelper	helper )
 	{
-		synchronized( lock ){
-
-			Iterator<Object[]> it = instances.iterator();
-			
-			while( it.hasNext()){
+		CoreOperation	to_remove = null;
+		
+		try{
+			synchronized( lock ){
+	
+				Iterator<Object[]> it = instances.iterator();
 				
-				Object[] entry = it.next();
-				
-				if ( entry[0] == helper ){
-				
-					it.remove();
+				while( it.hasNext()){
 					
-					core.removeOperation((CoreOperation)entry[1]);
+					Object[] entry = it.next();
 					
-					break;
+					if ( entry[0] == helper ){
+					
+						it.remove();
+						
+						to_remove = (CoreOperation)entry[1];
+						
+						break;
+					}
 				}
+			}
+		}finally{
+			
+			if ( to_remove != null ){
+			
+				core.removeOperation( to_remove );
 			}
 		}
 	}
