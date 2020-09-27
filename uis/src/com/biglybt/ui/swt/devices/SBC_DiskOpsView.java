@@ -325,12 +325,7 @@ public class SBC_DiskOpsView
 						
 						if ( did_something ){
 							
-							UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
-							
-							if (uiFunctions != null) {
-								
-								uiFunctions.refreshIconBar();
-							}
+							refreshToolbar();
 						}
 						e.doit = false;
 					}
@@ -354,7 +349,107 @@ public class SBC_DiskOpsView
 		Menu menu ) 
 	{
 
+		Object[] selectedDS;
+		
+		synchronized (this) {
+			
+			if ( tvDiskOps == null ){
+				return;
+			}
+			
+			selectedDS = tvDiskOps.getSelectedDataSources().toArray();
+		}
+		
+		if ( selectedDS.length == 0 ){
+			
+			return;
+		}
 
+		List<ProgressCallback>	can_start 	= new ArrayList<>();
+		List<ProgressCallback>	can_stop 	= new ArrayList<>();
+		List<ProgressCallback>	can_remove 	= new ArrayList<>();
+		
+		for ( Object ds: selectedDS ){
+		
+			CoreOperation	op = (CoreOperation)ds;
+			
+			ProgressCallback prog = op.getTask().getProgressCallback();
+			
+			int	states = prog.getSupportedTaskStates();
+			
+			int state = prog.getTaskState();
+
+			if ((states & ProgressCallback.ST_PAUSE ) != 0 ){
+				
+				if ( state == ProgressCallback.ST_NONE || state == ProgressCallback.ST_QUEUED ){
+				
+					can_stop.add( prog );
+				}
+			}
+			if ((states & ProgressCallback.ST_RESUME ) != 0 ){
+				
+				if ( state == ProgressCallback.ST_PAUSE ){
+				
+					can_start.add( prog );
+				}
+			}
+			if ((states & ProgressCallback.ST_CANCEL ) != 0 ){
+								
+				if ( state != ProgressCallback.ST_CANCEL ){
+					
+					can_remove.add( prog );
+				}
+			}
+		}
+		
+		MenuItem mi = new MenuItem( menu, SWT.PUSH );
+		Messages.setLanguageText( mi, "v3.MainWindow.button.resume" );
+		
+		mi.addListener(SWT.Selection,(ev)->{
+			for ( ProgressCallback cb: can_start ){
+				cb.setTaskState( ProgressCallback.ST_RESUME );
+			}
+			refreshToolbar();
+		});
+		
+		mi.setEnabled( !can_start.isEmpty());
+		
+		mi = new MenuItem( menu, SWT.PUSH );
+		Messages.setLanguageText( mi, "v3.MainWindow.button.pause" );
+		
+		mi.addListener(SWT.Selection,(ev)->{
+			for ( ProgressCallback cb: can_stop ){
+				cb.setTaskState( ProgressCallback.ST_PAUSE );
+			}
+			refreshToolbar();
+		});
+		
+		mi.setEnabled( !can_stop.isEmpty());
+
+		mi = new MenuItem( menu, SWT.PUSH );
+		Messages.setLanguageText( mi, "UpdateWindow.cancel" );
+		
+		mi.addListener(SWT.Selection,(ev)->{
+			for ( ProgressCallback cb: can_remove ){
+				cb.setTaskState( ProgressCallback.ST_CANCEL );
+			}
+			refreshToolbar();
+		});
+		
+		mi.setEnabled( !can_remove.isEmpty());
+
+		new MenuItem( menu, SWT.SEPARATOR );
+	}
+	
+	private void
+	refreshToolbar()
+	{
+		UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+		
+		if ( uiFunctions != null ){
+			
+			uiFunctions.refreshIconBar();
+		}
 	}
 	
 	private boolean
@@ -565,12 +660,7 @@ public class SBC_DiskOpsView
 		
 		if ( did_something ){
 			
-			UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
-			
-			if (uiFunctions != null) {
-				
-				uiFunctions.refreshIconBar();
-			}
+			refreshToolbar();
 		}
 		
 		return( did_something );
