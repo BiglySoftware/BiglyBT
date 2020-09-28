@@ -186,16 +186,21 @@ DiskManagerImpl
 
 	static volatile boolean	missing_file_dl_restart_enabled;
 	
+	static boolean	skip_comp_dl_file_checks;
+
 	static{
 		 COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 				ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART,
+				ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS,
 			},
 			new ParameterListener(){
 				@Override
 				public void parameterChanged(String parameterName) {
 										
 					missing_file_dl_restart_enabled = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART );
+	    	    	skip_comp_dl_file_checks		= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS );
+
 				}
 			});
 	}
@@ -1057,6 +1062,8 @@ DiskManagerImpl
 
         long alloc_strategy = state.getLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY );
 
+		boolean skip_file_checks = skip_comp_dl_file_checks && download_manager.isDownloadComplete(false);
+
         boolean	alloc_ok = false;
         
         try{
@@ -1190,112 +1197,127 @@ DiskManagerImpl
 
                 boolean mustExistOrAllocate = ( !compact ) || RDResumeHandler.fileMustExist(download_manager, fileInfo);
 
-                	// delete compact files that do not contain pieces we need
-
-                if (!mustExistOrAllocate && cache_file.exists()){
-
-					data_file.delete();
-                }
-
-                if ( cache_file.exists() ){
-
-                	boolean did_allocate = false;
+                if ( skip_file_checks ){
                 	
-                    try {
-
-                        //make sure the existing file length isn't too large
-
-                        long    existing_length = fileInfo.getCacheFile().getLength();
-
-                        if(  existing_length > target_length ){
-
-                            if ( COConfigurationManager.getBooleanParameter("File.truncate.if.too.large")){
-
-                                fileInfo.setAccessMode( DiskManagerFileInfo.WRITE );
-
-                                cache_file.setLength( target_length );
-
-                                fileInfo.setAccessMode( DiskManagerFileInfo.READ );
-
-                                Debug.out( "Existing data file length too large [" +existing_length+ ">" +target_length+ "]: " +data_file.getAbsolutePath() + ", truncating" );
-
-                            }else{
-
-                                setErrorState( "Existing data file length too large [" +existing_length+ ">" +target_length+ "]: " + data_file.getAbsolutePath() );
-
-                                return( fail_result );
-                            }
-                        }else if ( existing_length < target_length ){
-
-                        	if ( !compact ){
-                        		
-	                        		// file is too small
-
-	                         	if ( !allocateFile( fileInfo, data_file, existing_length, target_length, stop_after_start, alloc_strategy )){
-
-	                      			// aborted
-
-	                         		return( fail_result );
-	                         	}
-	                         	
-	                         	did_allocate = true;
-                        	}
-                        }
-                    }catch (Throwable e) {
-                    	Debug.out(e);
-
-                    	fileAllocFailed( data_file, target_length, false, e );
-
-                        setErrorState();
-
-                        return( fail_result );
-                    }
-
-                    if ( !did_allocate ){
-                    
-                    	allocated += target_length;
-                    }
-
-                } else if ( mustExistOrAllocate ){
-
-                		//we need to allocate it
-                        //make sure it hasn't previously been allocated
-
-                    if ( download_manager.isDataAlreadyAllocated() ){
-
-                        setErrorState( 
-                        	DiskManager.ET_FILE_MISSING, 
-                        	MessageText.getString( "DownloadManager.error.datamissing" ) + ": " + data_file.getAbsolutePath());
-
-                        return( fail_result );
-                    }
-
-
-                    try{
-
-                    	if ( !allocateFile( fileInfo, data_file, -1, target_length, stop_after_start, alloc_strategy )){
-
-                      			// aborted
-
-                    		return( fail_result );
-                    	}
-
-                    }catch( Throwable e ){
-
-                    	fileAllocFailed( data_file, target_length, true, e );
-
-                        setErrorState();
-
-                        return( fail_result );
-                    }
-
-                    numNewFiles++;
-
+                	if ( mustExistOrAllocate ){
+                		
+                		allocated += target_length;
+                		
+                	}else{
+                		
+	                	allocate_not_required += target_length;
+	                	
+	                	notRequiredFiles++;
+                	}
                 }else{
-
-                	allocate_not_required += target_length;
                 	
-                	notRequiredFiles++;
+                		// delete compact files that do not contain pieces we need
+                	
+	                if (!mustExistOrAllocate && cache_file.exists()){
+	
+						data_file.delete();
+	                }
+	
+	                if ( cache_file.exists() ){
+	
+	                	boolean did_allocate = false;
+	                	
+	                    try {
+	
+	                        //make sure the existing file length isn't too large
+	
+	                        long    existing_length = fileInfo.getCacheFile().getLength();
+	
+	                        if(  existing_length > target_length ){
+	
+	                            if ( COConfigurationManager.getBooleanParameter("File.truncate.if.too.large")){
+	
+	                                fileInfo.setAccessMode( DiskManagerFileInfo.WRITE );
+	
+	                                cache_file.setLength( target_length );
+	
+	                                fileInfo.setAccessMode( DiskManagerFileInfo.READ );
+	
+	                                Debug.out( "Existing data file length too large [" +existing_length+ ">" +target_length+ "]: " +data_file.getAbsolutePath() + ", truncating" );
+	
+	                            }else{
+	
+	                                setErrorState( "Existing data file length too large [" +existing_length+ ">" +target_length+ "]: " + data_file.getAbsolutePath() );
+	
+	                                return( fail_result );
+	                            }
+	                        }else if ( existing_length < target_length ){
+	
+	                        	if ( !compact ){
+	                        		
+		                        		// file is too small
+	
+		                         	if ( !allocateFile( fileInfo, data_file, existing_length, target_length, stop_after_start, alloc_strategy )){
+	
+		                      			// aborted
+	
+		                         		return( fail_result );
+		                         	}
+		                         	
+		                         	did_allocate = true;
+	                        	}
+	                        }
+	                    }catch (Throwable e) {
+	                    	Debug.out(e);
+	
+	                    	fileAllocFailed( data_file, target_length, false, e );
+	
+	                        setErrorState();
+	
+	                        return( fail_result );
+	                    }
+	
+	                    if ( !did_allocate ){
+	                    
+	                    	allocated += target_length;
+	                    }
+	
+	                } else if ( mustExistOrAllocate ){
+	
+	                		//we need to allocate it
+	                        //make sure it hasn't previously been allocated
+	
+	                    if ( download_manager.isDataAlreadyAllocated() ){
+	
+	                        setErrorState( 
+	                        	DiskManager.ET_FILE_MISSING, 
+	                        	MessageText.getString( "DownloadManager.error.datamissing" ) + ": " + data_file.getAbsolutePath());
+	
+	                        return( fail_result );
+	                    }
+	
+	
+	                    try{
+	
+	                    	if ( !allocateFile( fileInfo, data_file, -1, target_length, stop_after_start, alloc_strategy )){
+	
+	                      			// aborted
+	
+	                    		return( fail_result );
+	                    	}
+	
+	                    }catch( Throwable e ){
+	
+	                    	fileAllocFailed( data_file, target_length, true, e );
+	
+	                        setErrorState();
+	
+	                        return( fail_result );
+	                    }
+	
+	                    numNewFiles++;
+	
+	                }else{
+	
+	                	allocate_not_required += target_length;
+	                	
+	                	notRequiredFiles++;
+	                }
                 }
             }
 

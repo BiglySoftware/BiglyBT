@@ -22,6 +22,7 @@ package com.biglybt.core.disk.impl.resume;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
@@ -67,13 +68,15 @@ RDResumeHandler
 
 	static boolean	use_fast_resume;
 	static boolean	use_fast_resume_recheck_all;
+	static boolean	skip_comp_dl_file_checks;
 
 	static{
 
 		COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 					"Use Resume",
-					"On Resume Recheck All" },
+					"On Resume Recheck All",
+					ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS },
 			new ParameterListener() {
 	    	    @Override
 		        public void
@@ -82,6 +85,7 @@ RDResumeHandler
 	    	    {
 	    	    	use_fast_resume				= COConfigurationManager.getBooleanParameter("Use Resume");
 	    	    	use_fast_resume_recheck_all	= COConfigurationManager.getBooleanParameter("On Resume Recheck All");
+	    	    	skip_comp_dl_file_checks	= COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS);
 	    	    }
 	    	 });
 	}
@@ -168,20 +172,29 @@ RDResumeHandler
 				DiskManagerPiece[]	pieces	= disk_manager.getPieces();
 
 
-				// calculate the current file sizes up front for performance reasons
-				DiskManagerFileInfo[]	files = disk_manager.getFiles();
-				Map	file_sizes = new HashMap();
-
-				for (int i=0;i<files.length;i++){
-					try{
-						Long	len = new Long(((DiskManagerFileInfoImpl)files[i]).getCacheFile().getLength());
-						file_sizes.put( files[i], len );
-					}catch( CacheFileManagerException e ){
-						Debug.printStackTrace(e);
+					// calculate the current file sizes up front for performance reasons
+				
+				final Map<DiskManagerFileInfo,Long>	file_sizes;
+								
+				if ( skip_comp_dl_file_checks && disk_manager.getDownloadManager().isDownloadComplete(false)){
+					
+					file_sizes = null;
+					
+				}else{
+					
+					DiskManagerFileInfo[]	files = disk_manager.getFiles();
+					
+					file_sizes = new HashMap<>();
+	
+					for (int i=0;i<files.length;i++){
+						try{
+							Long	len = new Long(((DiskManagerFileInfoImpl)files[i]).getCacheFile().getLength());
+							file_sizes.put( files[i], len );
+						}catch( CacheFileManagerException e ){
+							Debug.printStackTrace(e);
+						}
 					}
 				}
-
-
 
 				if ( resumeEnabled ){
 
@@ -330,45 +343,48 @@ RDResumeHandler
 
 								// at least check that file sizes are OK for this piece to be valid
 
-							DMPieceList list = disk_manager.getPieceList(i);
+							if ( file_sizes != null ){
 
-							for (int j=0;j<list.size();j++){
+								DMPieceList list = disk_manager.getPieceList(i);
 
-								DMPieceMapEntry	entry = list.get(j);
+								for (int j=0;j<list.size();j++){
 
-								Long	file_size 		= (Long)file_sizes.get(entry.getFile());
-
-								if ( file_size == null ){
-
-									piece_state	= PIECE_NOT_DONE;
-									pieceCannotExist = true;
-
-									if (Logger.isEnabled())
-										Logger.log(new LogEvent(disk_manager, LOGID,
-												LogEvent.LT_WARNING, "Piece #" + i
-														+ ": file is missing, " + "fails re-check."));
-
-									break;
-								}
-
-								long	expected_size 	= entry.getOffset() + entry.getLength();
-
-								if ( file_size.longValue() < expected_size ){
-
-									piece_state	= PIECE_NOT_DONE;
-									pieceCannotExist = true;
-
-									if ( file_size > 0 ){
-											// we get 0 for DND files, don't bother logging
-										
+									DMPieceMapEntry	entry = list.get(j);
+									
+									Long	file_size 		= (Long)file_sizes.get(entry.getFile());
+	
+									if ( file_size == null ){
+	
+										piece_state	= PIECE_NOT_DONE;
+										pieceCannotExist = true;
+	
 										if (Logger.isEnabled())
 											Logger.log(new LogEvent(disk_manager, LOGID,
 													LogEvent.LT_WARNING, "Piece #" + i
-															+ ": file is too small, fails re-check. File size = "
-															+ file_size + ", piece needs " + expected_size));
+															+ ": file is missing, " + "fails re-check."));
+	
+										break;
 									}
-									
-									break;
+								
+									long	expected_size 	= entry.getOffset() + entry.getLength();
+	
+									if ( file_size.longValue() < expected_size ){
+	
+										piece_state	= PIECE_NOT_DONE;
+										pieceCannotExist = true;
+	
+										if ( file_size > 0 ){
+												// we get 0 for DND files, don't bother logging
+											
+											if (Logger.isEnabled())
+												Logger.log(new LogEvent(disk_manager, LOGID,
+														LogEvent.LT_WARNING, "Piece #" + i
+																+ ": file is too small, fails re-check. File size = "
+																+ file_size + ", piece needs " + expected_size));
+										}
+										
+										break;
+									}
 								}
 							}
 						}
@@ -524,24 +540,28 @@ RDResumeHandler
 						boolean pieceCannotExist = false;
 
 						// check if there is an underlying file for this piece, if not set it to not done
-						DMPieceList list = disk_manager.getPieceList(i);
-
-						for (int j=0;j<list.size();j++){
-							DMPieceMapEntry	entry = list.get(j);
-
-							Long	file_size 		= (Long)file_sizes.get(entry.getFile());
-							if ( file_size == null ){
-								pieceCannotExist = true;
-								break;
-							}
-
-							long	expected_size 	= entry.getOffset() + entry.getLength();
-							if ( file_size.longValue() < expected_size ){
-								pieceCannotExist = true;
-								break;
+						
+						if ( file_sizes != null ){
+							
+							DMPieceList list = disk_manager.getPieceList(i);
+	
+							for (int j=0;j<list.size();j++){
+								DMPieceMapEntry	entry = list.get(j);
+	
+								Long	file_size 		= (Long)file_sizes.get(entry.getFile());
+								if ( file_size == null ){
+									pieceCannotExist = true;
+									break;
+								}
+	
+								long	expected_size 	= entry.getOffset() + entry.getLength();
+								if ( file_size.longValue() < expected_size ){
+									pieceCannotExist = true;
+									break;
+								}
 							}
 						}
-
+						
 						if(pieceCannotExist)
 						{
 							disk_manager.getPiece(i).setDone(false);
