@@ -366,13 +366,6 @@ RPIPFilter
 	}
 
 	@Override
-	public void
-	markAsUpToDate()
-	{
-		notSupported();
-	}
-
-	@Override
 	public long
 	getLastUpdateTime()
 	{

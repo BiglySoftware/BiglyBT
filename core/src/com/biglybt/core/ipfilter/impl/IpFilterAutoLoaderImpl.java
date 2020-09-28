@@ -30,6 +30,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.*;
 import com.biglybt.core.ipfilter.IpRange;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -51,10 +52,7 @@ public class IpFilterAutoLoaderImpl
 {
 	static final LogIDs LOGID = LogIDs.CORE;
 
-	public static final String CFG_AUTOLOAD_LAST 	= "Ip Filter Autoload Last Date";
-	public static final String CFG_AUTOLOAD_DAYS 	= "Ip Filter Autoload Days";
-
-	public static final String CFG_AUTOLOAD_FILE = "Ip Filter Autoload File";
+	public static final String CFG_AUTOLOAD_LAST 	= ConfigKeys.IPFilter.ICFG_IP_FILTER_AUTOLOAD_LAST;	// used in xmwebui
 
 
 	static final AEMonitor class_mon = new AEMonitor(
@@ -66,11 +64,8 @@ public class IpFilterAutoLoaderImpl
 
 	public IpFilterAutoLoaderImpl(IpFilterImpl ipFilter) {
 		this.ipFilter = ipFilter;
-		COConfigurationManager.setLongDefault(CFG_AUTOLOAD_LAST, 0);
-		COConfigurationManager.setLongDefault(CFG_AUTOLOAD_DAYS, 7);
-		COConfigurationManager.setStringDefault(CFG_AUTOLOAD_FILE, "");
 
-		COConfigurationManager.addParameterListener(CFG_AUTOLOAD_DAYS, parameterName -> setNextAutoDownload(false));
+		COConfigurationManager.addParameterListener(ConfigKeys.IPFilter.ICFG_IP_FILTER_AUTOLOAD_DAYS, parameterName -> setNextAutoDownload(false));
 	}
 
 	/**
@@ -222,13 +217,13 @@ public class IpFilterAutoLoaderImpl
 
 					((IpRange) it.next()).checkValid();
 				}
-
-				ipFilter.markAsUpToDate();
 			}
 		} finally {
 
 			class_mon.exit();
 		}
+		
+		ipFilter.markAsUpToDate();
 	}
 
 	private int getP2BFileVersion(InputStream is) {
@@ -266,219 +261,46 @@ public class IpFilterAutoLoaderImpl
 		return -1;
 	}
 
-	protected void loadOtherFilters(boolean allowAsyncDownloading,
-			boolean loadOldWhileAsyncDownloading) {
-		int p2bVersion = -1;
-		try {
+	protected void 
+	loadOtherFilters(
+		boolean allowAsyncDownloading,
+		boolean loadOldWhileAsyncDownloading) 
+	{
+		boolean setFileReloadTimer = false;
+		
+		try{
 			class_mon.enter();
 
-			List new_ipRanges = new ArrayList(1024);
+			List<IpRangeImpl> new_ipRanges = new ArrayList<>(1024);
 
-			InputStream fin = null;
-			BufferedInputStream bin = null;
-			boolean isURL = false;
 			try {
-				//open the file
-				String file = COConfigurationManager.getStringParameter(CFG_AUTOLOAD_FILE);
-				Logger.log(new LogEvent(LOGID, "IP Filter file: " + file));
-				File filtersFile = FileUtil.newFile(file);
-				if (filtersFile.exists()) {
-					isURL = false;
-				} else {
-					if (!UrlUtils.isURL(file)) {
-						return;
-					}
-
-					isURL = true;
-
-					filtersFile = FileUtil.getUserFile("ipfilter.dl");
-					if (filtersFile.exists()) {
-						if (allowAsyncDownloading) {
-							Logger.log(new LogEvent(LOGID, "Downloading " + file + "  async"));
-
-							downloadFiltersAsync(new URL(file));
-
-							if (!loadOldWhileAsyncDownloading) {
-								return;
-							}
-						}
-					} else {
-						// no old dl, download sync now
-						Logger.log(new LogEvent(LOGID, "sync Downloading " + file));
-						try {
-							ResourceDownloader rd = ResourceDownloaderFactoryImpl.getSingleton().create(
-									new URL(file));
-							fin = rd.download();
-							FileUtil.copyFile(fin, filtersFile);
-							setNextAutoDownload(true);
-						} catch (ResourceDownloaderException e) {
-							return;
-						}
-					}
+				
+				boolean isURL = loadIPv4( allowAsyncDownloading, loadOldWhileAsyncDownloading, new_ipRanges );
+				
+				if ( !isURL ){
+					
+					setFileReloadTimer = true;
 				}
-
-				fin = FileUtil.newFileInputStream(filtersFile);
-				bin = new BufferedInputStream(fin, 16384);
-
-				// extract (g)zip'd file and open that
-				byte[] headerBytes = new byte[2];
-				bin.mark(3);
-				bin.read(headerBytes, 0, 2);
-				bin.reset();
-
-				if (headerBytes[1] == (byte) 0x8b && headerBytes[0] == 0x1f) {
-					GZIPInputStream gzip = new GZIPInputStream(bin);
-
-					filtersFile = FileUtil.getUserFile("ipfilter.ext");
-					FileUtil.copyFile(gzip, filtersFile);
-					fin = FileUtil.newFileInputStream(filtersFile);
-					bin = new BufferedInputStream(fin, 16384);
-				} else if (headerBytes[0] == 0x50 && headerBytes[1] == 0x4b) {
-					// We pick the largest file in the zip, but we should someday consider
-					// merging all files into zip into one, if there's a case where
-					// a zip file contains multiple ip list files.
-					long largestSize = 0;
-					long largestPos = -1;
-					ZipInputStream zip = new ZipInputStream(bin);
-
-					ZipEntry zipEntry = zip.getNextEntry();
-					int zipPos = 0;
-					while (zipEntry != null) {
-						zipPos++;
-						long size = zipEntry.getSize();
-						if (size > largestSize) {
-							largestPos = zipPos;
-						}
-						zipEntry = zip.getNextEntry();
-					}
-
-					if (largestPos < 0) {
-						return;
-					}
-					bin.close();
-					fin.close();
-					fin = FileUtil.newFileInputStream(filtersFile);
-					bin = new BufferedInputStream(fin, 16384);
-					zip = new ZipInputStream(bin);
-					for (int i = 0; i < largestPos; i++) {
-						zip.getNextEntry();
-					}
-
-					filtersFile = FileUtil.getUserFile("ipfilter.ext");
-					FileUtil.copyFile(zip, filtersFile);
-					fin = FileUtil.newFileInputStream(filtersFile);
-					bin = new BufferedInputStream(fin, 16384);
+				
+				isURL = loadIPv6( allowAsyncDownloading, loadOldWhileAsyncDownloading, new_ipRanges );
+				
+				if ( !isURL ){
+					
+					setFileReloadTimer = true;
 				}
-
-				bin.mark(8);
-
-				p2bVersion = getP2BFileVersion(bin);
-
-				if (p2bVersion < 1 || p2bVersion > 3) {
-					bin.reset();
-					loadDATFilters(bin);
-					return;
-				}
-
-				byte[] descBytes = new byte[255];
-				byte[] ipBytes = new byte[4];
-				String encoding = p2bVersion == 1 ? "ISO-8859-1" : "UTF-8";
-
-				if (p2bVersion == 1 || p2bVersion == 2) {
-					while (true) {
-						String description = readString(bin, descBytes, encoding);
-
-						int read = bin.read(ipBytes);
-						if (read < 4) {
-							break;
-						}
-						int startIp = ByteFormatter.byteArrayToInt(ipBytes);
-						read = bin.read(ipBytes);
-						if (read < 4) {
-							break;
-						}
-						int endIp = ByteFormatter.byteArrayToInt(ipBytes);
-
-						IpRangeV4Impl ipRange = new IpRangeV4Impl(description, startIp, endIp,
-								true);
-
-						ipRange.setAddedToRangeList(true);
-
-						new_ipRanges.add(ipRange);
-					}
-				} else { // version 3
-					int read = bin.read(ipBytes);
-					if (read < 4) {
-						return;
-					}
-					int numDescs = ByteFormatter.byteArrayToInt(ipBytes);
-					String[] descs = new String[numDescs];
-					for (int i = 0; i < numDescs; i++) {
-						descs[i] = readString(bin, descBytes, encoding);
-					}
-
-					read = bin.read(ipBytes);
-					if (read < 4) {
-						return;
-					}
-					int numRanges = ByteFormatter.byteArrayToInt(ipBytes);
-					for (int i = 0; i < numRanges; i++) {
-						read = bin.read(ipBytes);
-						if (read < 4) {
-							return;
-						}
-						int descIdx = ByteFormatter.byteArrayToInt(ipBytes);
-
-						read = bin.read(ipBytes);
-						if (read < 4) {
-							return;
-						}
-						int startIp = ByteFormatter.byteArrayToInt(ipBytes);
-
-						read = bin.read(ipBytes);
-						if (read < 4) {
-							return;
-						}
-						int endIp = ByteFormatter.byteArrayToInt(ipBytes);
-
-						String description = descIdx < descs.length && descIdx >= 0
-								? descs[descIdx] : "";
-
-						IpRangeV4Impl ipRange = new IpRangeV4Impl(description, startIp, endIp,
-								true);
-
-						ipRange.setAddedToRangeList(true);
-
-						new_ipRanges.add(ipRange);
-					}
-				}
-			} catch (IOException e) {
-				Debug.out(e);
+				
 			} finally {
 
-				if (bin != null) {
-					try {
-						bin.close();
-					} catch (Throwable e) {
-					}
-				}
-				if (fin != null) {
-					try {
-						fin.close();
-					} catch (Throwable e) {
-					}
-				}
-
-				Iterator it = new_ipRanges.iterator();
+	
+				Iterator<IpRangeImpl> it = new_ipRanges.iterator();
 
 				while (it.hasNext()) {
 
-					((IpRange) it.next()).checkValid();
+					it.next().checkValid();
 				}
 
-				ipFilter.markAsUpToDate();
-
-				if (!isURL) {
+				if ( setFileReloadTimer ){
+					
 					setFileReloadTimer();
 				}
 			}
@@ -486,8 +308,382 @@ public class IpFilterAutoLoaderImpl
 
 			class_mon.exit();
 		}
+		
+		ipFilter.markAsUpToDate();
 	}
 
+	private boolean
+	loadIPv4(
+		boolean 			allowAsyncDownloading,
+		boolean 			loadOldWhileAsyncDownloading,
+		List<IpRangeImpl>	new_ipRanges )
+	{
+		int p2bVersion = -1;
+		
+		InputStream fin = null;
+		BufferedInputStream bin = null;
+		boolean isURL = false;
+
+
+		try{
+			//open the file
+			String file = COConfigurationManager.getStringParameter(ConfigKeys.IPFilter.SCFG_IP_FILTER_AUTOLOAD_FILE);
+			Logger.log(new LogEvent(LOGID, "IP Filter file: " + file));
+			File filtersFile = FileUtil.newFile(file);
+			if (filtersFile.exists()) {
+				isURL = false;
+			} else {
+				if (!UrlUtils.isURL(file)) {
+					return( isURL );
+				}
+	
+				isURL = true;
+	
+				filtersFile = FileUtil.getUserFile("ipfilter.dl");
+				if (filtersFile.exists()) {
+					if (allowAsyncDownloading) {
+						Logger.log(new LogEvent(LOGID, "Downloading " + file + "  async"));
+	
+						downloadFiltersAsync(new URL(file), false );
+	
+						if (!loadOldWhileAsyncDownloading) {
+							return( isURL );
+						}
+					}
+				} else {
+					// no old dl, download sync now
+					Logger.log(new LogEvent(LOGID, "sync Downloading " + file));
+					try {
+						ResourceDownloader rd = ResourceDownloaderFactoryImpl.getSingleton().create(
+								new URL(file));
+						fin = rd.download();
+						FileUtil.copyFile(fin, filtersFile);
+						setNextAutoDownload(true);
+					} catch (ResourceDownloaderException e) {
+						return( isURL );
+					}
+				}
+			}
+	
+			fin = FileUtil.newFileInputStream(filtersFile);
+			bin = new BufferedInputStream(fin, 16384);
+	
+			// extract (g)zip'd file and open that
+			byte[] headerBytes = new byte[2];
+			bin.mark(3);
+			bin.read(headerBytes, 0, 2);
+			bin.reset();
+	
+			if (headerBytes[1] == (byte) 0x8b && headerBytes[0] == 0x1f) {
+				GZIPInputStream gzip = new GZIPInputStream(bin);
+	
+				filtersFile = FileUtil.getUserFile("ipfilter.ext");
+				FileUtil.copyFile(gzip, filtersFile);
+				fin = FileUtil.newFileInputStream(filtersFile);
+				bin = new BufferedInputStream(fin, 16384);
+			} else if (headerBytes[0] == 0x50 && headerBytes[1] == 0x4b) {
+				// We pick the largest file in the zip, but we should someday consider
+				// merging all files into zip into one, if there's a case where
+				// a zip file contains multiple ip list files.
+				long largestSize = 0;
+				long largestPos = -1;
+				ZipInputStream zip = new ZipInputStream(bin);
+	
+				ZipEntry zipEntry = zip.getNextEntry();
+				int zipPos = 0;
+				while (zipEntry != null) {
+					zipPos++;
+					long size = zipEntry.getSize();
+					if (size > largestSize) {
+						largestPos = zipPos;
+					}
+					zipEntry = zip.getNextEntry();
+				}
+	
+				if (largestPos < 0) {
+					return( isURL );
+				}
+				bin.close();
+				fin.close();
+				fin = FileUtil.newFileInputStream(filtersFile);
+				bin = new BufferedInputStream(fin, 16384);
+				zip = new ZipInputStream(bin);
+				for (int i = 0; i < largestPos; i++) {
+					zip.getNextEntry();
+				}
+	
+				filtersFile = FileUtil.getUserFile("ipfilter.ext");
+				FileUtil.copyFile(zip, filtersFile);
+				fin = FileUtil.newFileInputStream(filtersFile);
+				bin = new BufferedInputStream(fin, 16384);
+			}
+	
+			bin.mark(8);
+	
+			p2bVersion = getP2BFileVersion(bin);
+	
+			if (p2bVersion < 1 || p2bVersion > 3) {
+				bin.reset();
+				loadDATFilters(bin);
+				return( isURL );
+			}
+	
+			byte[] descBytes = new byte[255];
+			byte[] ipBytes = new byte[4];
+			String encoding = p2bVersion == 1 ? "ISO-8859-1" : "UTF-8";
+	
+			if (p2bVersion == 1 || p2bVersion == 2) {
+				while (true) {
+					String description = readString(bin, descBytes, encoding);
+	
+					int read = bin.read(ipBytes);
+					if (read < 4) {
+						break;
+					}
+					int startIp = ByteFormatter.byteArrayToInt(ipBytes);
+					read = bin.read(ipBytes);
+					if (read < 4) {
+						break;
+					}
+					int endIp = ByteFormatter.byteArrayToInt(ipBytes);
+	
+					IpRangeV4Impl ipRange = new IpRangeV4Impl(description, startIp, endIp,
+							true);
+	
+					ipRange.setAddedToRangeList(true);
+	
+					new_ipRanges.add(ipRange);
+				}
+			} else { // version 3
+				int read = bin.read(ipBytes);
+				if (read < 4) {
+					return( isURL );
+				}
+				int numDescs = ByteFormatter.byteArrayToInt(ipBytes);
+				String[] descs = new String[numDescs];
+				for (int i = 0; i < numDescs; i++) {
+					descs[i] = readString(bin, descBytes, encoding);
+				}
+	
+				read = bin.read(ipBytes);
+				if (read < 4) {
+					return( isURL );
+				}
+				int numRanges = ByteFormatter.byteArrayToInt(ipBytes);
+				for (int i = 0; i < numRanges; i++) {
+					read = bin.read(ipBytes);
+					if (read < 4) {
+						return( isURL );
+					}
+					int descIdx = ByteFormatter.byteArrayToInt(ipBytes);
+	
+					read = bin.read(ipBytes);
+					if (read < 4) {
+						return( isURL );
+					}
+					int startIp = ByteFormatter.byteArrayToInt(ipBytes);
+	
+					read = bin.read(ipBytes);
+					if (read < 4) {
+						return( isURL );
+					}
+					int endIp = ByteFormatter.byteArrayToInt(ipBytes);
+	
+					String description = descIdx < descs.length && descIdx >= 0
+							? descs[descIdx] : "";
+	
+					IpRangeV4Impl ipRange = new IpRangeV4Impl(description, startIp, endIp,
+							true);
+	
+					ipRange.setAddedToRangeList(true);
+	
+					new_ipRanges.add(ipRange);
+				}
+			}
+		} catch (IOException e) {
+			Debug.out(e);
+		} finally {
+
+			if (bin != null) {
+				try {
+					bin.close();
+				} catch (Throwable e) {
+				}
+			}
+			if (fin != null) {
+				try {
+					fin.close();
+				} catch (Throwable e) {
+				}
+			}
+		}
+		
+		return( isURL );
+	}
+	
+	private boolean
+	loadIPv6(
+		boolean 			allowAsyncDownloading,
+		boolean 			loadOldWhileAsyncDownloading,
+		List<IpRangeImpl>	new_ipRanges )
+	{		
+		InputStream fin = null;
+		BufferedInputStream bin = null;
+		boolean isURL = false;
+
+
+		try{
+			//open the file
+			String file = COConfigurationManager.getStringParameter(ConfigKeys.IPFilter.SCFG_IP_FILTER_V6_AUTOLOAD_FILE);
+			Logger.log(new LogEvent(LOGID, "IPv6 Filter file: " + file));
+			File filtersFile = FileUtil.newFile(file);
+			if (filtersFile.exists()) {
+				isURL = false;
+			} else {
+				if (!UrlUtils.isURL(file)) {
+					return( isURL );
+				}
+	
+				isURL = true;
+	
+				filtersFile = FileUtil.getUserFile("ipfilterv6.dl");
+				if (filtersFile.exists()) {
+					if (allowAsyncDownloading) {
+						Logger.log(new LogEvent(LOGID, "Downloading " + file + "  async"));
+	
+						downloadFiltersAsync(new URL(file), false );
+	
+						if (!loadOldWhileAsyncDownloading) {
+							return( isURL );
+						}
+					}
+				} else {
+					// no old dl, download sync now
+					Logger.log(new LogEvent(LOGID, "sync Downloading " + file));
+					try {
+						ResourceDownloader rd = ResourceDownloaderFactoryImpl.getSingleton().create(
+								new URL(file));
+						fin = rd.download();
+						FileUtil.copyFile(fin, filtersFile);
+						setNextAutoDownload(true);
+					} catch (ResourceDownloaderException e) {
+						return( isURL );
+					}
+				}
+			}
+	
+			fin = FileUtil.newFileInputStream(filtersFile);
+			bin = new BufferedInputStream(fin, 16384);
+	
+			// extract (g)zip'd file and open that
+			byte[] headerBytes = new byte[2];
+			bin.mark(3);
+			bin.read(headerBytes, 0, 2);
+			bin.reset();
+	
+			if (headerBytes[1] == (byte) 0x8b && headerBytes[0] == 0x1f) {
+				GZIPInputStream gzip = new GZIPInputStream(bin);
+	
+				filtersFile = FileUtil.getUserFile("ipfilterv6.ext");
+				FileUtil.copyFile(gzip, filtersFile);
+				fin = FileUtil.newFileInputStream(filtersFile);
+				bin = new BufferedInputStream(fin, 16384);
+			} else if (headerBytes[0] == 0x50 && headerBytes[1] == 0x4b) {
+				// We pick the largest file in the zip, but we should someday consider
+				// merging all files into zip into one, if there's a case where
+				// a zip file contains multiple ip list files.
+				long largestSize = 0;
+				long largestPos = -1;
+				ZipInputStream zip = new ZipInputStream(bin);
+	
+				ZipEntry zipEntry = zip.getNextEntry();
+				int zipPos = 0;
+				while (zipEntry != null) {
+					zipPos++;
+					long size = zipEntry.getSize();
+					if (size > largestSize) {
+						largestPos = zipPos;
+					}
+					zipEntry = zip.getNextEntry();
+				}
+	
+				if (largestPos < 0) {
+					return( isURL );
+				}
+				bin.close();
+				fin.close();
+				fin = FileUtil.newFileInputStream(filtersFile);
+				bin = new BufferedInputStream(fin, 16384);
+				zip = new ZipInputStream(bin);
+				for (int i = 0; i < largestPos; i++) {
+					zip.getNextEntry();
+				}
+	
+				filtersFile = FileUtil.getUserFile("ipfilterv6.ext");
+				FileUtil.copyFile(zip, filtersFile);
+				fin = FileUtil.newFileInputStream(filtersFile);
+				bin = new BufferedInputStream(fin, 16384);
+			}
+	
+			LineNumberReader lnr = new LineNumberReader( new InputStreamReader( bin, Constants.UTF_8 ));
+	
+			while( true ){
+				
+				String line = lnr.readLine();
+				
+				if ( line == null ){
+					
+					break;
+				}
+				
+				line = line.trim();
+				
+				if ( line.isEmpty() || line.startsWith( "#" )){
+					
+					continue;
+				}
+				
+				String[] bits = line.split( ",", 2 );
+				
+				if ( bits.length != 2 ){
+					
+					Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING,
+							"unrecognized line while reading ip filter: " + line));
+				}else{
+					
+					String	address = bits[0].trim();
+					String	desc	= bits[1].trim();
+			
+					IpRangeV6Impl ipRange = new IpRangeV6Impl( desc, address, "", true );
+	
+					ipRange.setAddedToRangeList(true);
+	
+					new_ipRanges.add(ipRange);
+				}
+			}
+		} catch (IOException e) {
+			Debug.out(e);
+		} finally {
+
+			if (bin != null) {
+				try {
+					bin.close();
+				} catch (Throwable e) {
+				}
+			}
+			if (fin != null) {
+				try {
+					fin.close();
+				} catch (Throwable e) {
+				}
+			}
+		}
+		
+		return( isURL );
+	}
+	
+	
+	
 	/**
 	 *
 	 *
@@ -501,22 +697,46 @@ public class IpFilterAutoLoaderImpl
 		}
 		timerEventFilterReload = SimpleTimer.addPeriodicEvent("IP Filter download",
 				60000, new TimerEventPerformer() {
-					long lastFileModified;
+				long lastFileModified;
+				long lastFileV6Modified;
 
 					@Override
 					public void perform(TimerEvent event) {
 						event.cancel();
 
-						String file = COConfigurationManager.getStringParameter(CFG_AUTOLOAD_FILE);
-						File filtersFile = FileUtil.newFile(file);
-						if (!filtersFile.exists()) {
-							return;
+						boolean doReload = false;
+						
+						{
+							String file = COConfigurationManager.getStringParameter(ConfigKeys.IPFilter.SCFG_IP_FILTER_AUTOLOAD_FILE);
+							File filtersFile = FileUtil.newFile(file);
+							if (filtersFile.exists()) {
+						
+								long fileModified = filtersFile.lastModified();
+		
+								if (lastFileModified == 0) {
+									lastFileModified = fileModified;
+								} else if (lastFileModified != fileModified) {
+									doReload = true;
+								}
+							}
 						}
-						long fileModified = filtersFile.lastModified();
-
-						if (lastFileModified == 0) {
-							lastFileModified = fileModified;
-						} else if (lastFileModified != fileModified) {
+						
+						{
+							String file = COConfigurationManager.getStringParameter(ConfigKeys.IPFilter.SCFG_IP_FILTER_V6_AUTOLOAD_FILE);
+							File filtersFile = FileUtil.newFile(file);
+							if (filtersFile.exists()) {
+						
+								long fileModified = filtersFile.lastModified();
+		
+								if (lastFileV6Modified == 0) {
+									lastFileV6Modified = fileModified;
+								} else if (lastFileV6Modified != fileModified) {
+									doReload = true;
+								}
+							}
+						}
+						
+						if ( doReload ){
 							try {
 								// reload will create a new periodic time
 								ipFilter.reload();
@@ -532,9 +752,8 @@ public class IpFilterAutoLoaderImpl
 	 *
 	 * @since 3.0.1.5
 	 */
-	void downloadFiltersAsync(URL url) {
-		ResourceDownloader rd = ResourceDownloaderFactoryImpl.getSingleton().create(
-				url);
+	void downloadFiltersAsync(URL url, boolean v6) {
+		ResourceDownloader rd = ResourceDownloaderFactoryImpl.getSingleton().create(url);
 		// old dl exists, load old one while new one downloads async
 		rd.addListener(new ResourceDownloaderAdapter() {
 			// @see com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderAdapter#reportPercentComplete(com.biglybt.pif.utils.resourcedownloader.ResourceDownloader, int)
@@ -555,7 +774,8 @@ public class IpFilterAutoLoaderImpl
 					Logger.log(new LogEvent(LOGID, "downloaded.. copying"));
 
 					try {
-						FileUtil.copyFile(data, FileUtil.getUserFile("ipfilter.dl"));
+						FileUtil.copyFile(data, FileUtil.getUserFile( v6?"ipfilterv6.dl":"ipfilter.dl"));
+						
 						AEThread thread = new AEThread("reload ipfilters", true) {
 							@Override
 							public void runSupport() {
@@ -593,17 +813,17 @@ public class IpFilterAutoLoaderImpl
 		long lastDL;
 
 		if (updateLastDownloadedDate) {
-			COConfigurationManager.setParameter(CFG_AUTOLOAD_LAST, now);
+			COConfigurationManager.setParameter(ConfigKeys.IPFilter.ICFG_IP_FILTER_AUTOLOAD_LAST, now);
 			lastDL = now;
 		} else {
-			lastDL = COConfigurationManager.getLongParameter(CFG_AUTOLOAD_LAST);
+			lastDL = COConfigurationManager.getLongParameter(ConfigKeys.IPFilter.ICFG_IP_FILTER_AUTOLOAD_LAST);
 			if (lastDL > now) {
 				lastDL = now;
-				COConfigurationManager.setParameter(CFG_AUTOLOAD_LAST, now);
+				COConfigurationManager.setParameter(ConfigKeys.IPFilter.ICFG_IP_FILTER_AUTOLOAD_LAST, now);
 			}
 		}
 
-		int	reloadPeriod = COConfigurationManager.getIntParameter( CFG_AUTOLOAD_DAYS );
+		int	reloadPeriod = COConfigurationManager.getIntParameter( ConfigKeys.IPFilter.ICFG_IP_FILTER_AUTOLOAD_DAYS );
 		
 		if ( reloadPeriod < 1 ){
 			reloadPeriod = 1;
@@ -620,10 +840,16 @@ public class IpFilterAutoLoaderImpl
 				new TimerEventPerformer() {
 					@Override
 					public void perform(TimerEvent event) {
-						String file = COConfigurationManager.getStringParameter(CFG_AUTOLOAD_FILE);
+						String file = COConfigurationManager.getStringParameter( ConfigKeys.IPFilter.SCFG_IP_FILTER_AUTOLOAD_FILE);
 						try {
-							downloadFiltersAsync(new URL(file));
-						} catch (MalformedURLException e) {
+							downloadFiltersAsync(new URL(file), false );
+						} catch (Throwable e) {
+						}
+						
+						file = COConfigurationManager.getStringParameter( ConfigKeys.IPFilter.SCFG_IP_FILTER_V6_AUTOLOAD_FILE);
+						try {
+							downloadFiltersAsync(new URL(file), true );
+						} catch (Throwable e) {
 						}
 					}
 				});

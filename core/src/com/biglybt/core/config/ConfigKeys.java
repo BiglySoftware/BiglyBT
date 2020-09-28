@@ -230,7 +230,10 @@ public final class ConfigKeys {
 		public static final String FCFG_IP_FILTER_BAN_DISCARD_RATIO = "Ip Filter Ban Discard Ratio";
 		public static final String ICFG_IP_FILTER_BAN_DISCARD_MIN_KB = "Ip Filter Ban Discard Min KB";
 		public static final String ICFG_IP_FILTER_BAN_BLOCK_LIMIT = "Ip Filter Ban Block Limit";
+		public static final String ICFG_IP_FILTER_AUTOLOAD_DAYS = "Ip Filter Autoload Days";
+		public static final String ICFG_IP_FILTER_AUTOLOAD_LAST = "Ip Filter Autoload Last Date";
 		public static final String SCFG_IP_FILTER_AUTOLOAD_FILE = "Ip Filter Autoload File";
+		public static final String SCFG_IP_FILTER_V6_AUTOLOAD_FILE = "Ip Filter V6 Autoload File";
 		public static final String BCFG_IP_FILTER_CLEAR_ON_RELOAD = "Ip Filter Clear On Reload";
 		public static final String BCFG_IP_FILTER_ENABLE_DESCRIPTION_CACHE = "Ip Filter Enable Description Cache";
 	}

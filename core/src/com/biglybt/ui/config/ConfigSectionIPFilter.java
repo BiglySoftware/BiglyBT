@@ -148,7 +148,7 @@ public class ConfigSectionIPFilter
 		btnLoadNow.addListener(p -> {
 			btnLoadNow.setEnabled(false);
 			COConfigurationManager.setParameter(
-					IpFilterAutoLoaderImpl.CFG_AUTOLOAD_LAST, 0);
+					ICFG_IP_FILTER_AUTOLOAD_LAST, 0);
 			try {
 				if (UrlUtils.isURL(pathParameter.getValue())) {
 					// Note: We don't have a way to detect when async is done, sot the
@@ -163,18 +163,53 @@ public class ConfigSectionIPFilter
 			btnLoadNow.setEnabled(true);
 		});
 
+			// IPv6 File - really should just have one 'load' button as it reloads both v4+v6 but hey
+		
+		// TODO: Check if it allows urls
+		FileParameterImpl pathV6Parameter = new FileParameterImpl(
+				SCFG_IP_FILTER_V6_AUTOLOAD_FILE,
+				"ConfigView.section.ipfilter.autoload.v6.file",
+				"*.txt",
+				"*.*");
+		add(pathV6Parameter);
+		pathV6Parameter.setDialogTitleKey(
+				"ConfigView.section.ipfilter.autoload.v6.file");
+
+		ActionParameterImpl btnV6LoadNow = new ActionParameterImpl(null,
+				"ConfigView.section.ipfilter.autoload.loadnow");
+		add(btnV6LoadNow);
+		btnV6LoadNow.addListener(p -> {
+			btnV6LoadNow.setEnabled(false);
+			COConfigurationManager.setParameter(
+					ICFG_IP_FILTER_AUTOLOAD_LAST, 0);
+			try {
+				if (UrlUtils.isURL(pathV6Parameter.getValue())) {
+					// Note: We don't have a way to detect when async is done, sot the
+					// button disabling sucks
+					filter.reload();
+				} else {
+					filter.reloadSync();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			btnV6LoadNow.setEnabled(true);
+		});
+		
+		
+		
 		ParameterGroupImpl pgPathAndLoad = new ParameterGroupImpl(null,
-				pathParameter, btnLoadNow);
+				pathParameter, btnLoadNow, pathV6Parameter, btnV6LoadNow );
 		add("pgPathAndLoad", pgPathAndLoad, listAutoLoad);
 		pgPathAndLoad.setNumberOfColumns(2);
 
 		// reload period
 
 		int initial_reload_period = COConfigurationManager.getIntParameter(
-				IpFilterAutoLoaderImpl.CFG_AUTOLOAD_DAYS);
+				ICFG_IP_FILTER_AUTOLOAD_DAYS);
 
 		IntParameterImpl reload_period = new IntParameterImpl(
-				IpFilterAutoLoaderImpl.CFG_AUTOLOAD_DAYS,
+				ICFG_IP_FILTER_AUTOLOAD_DAYS,
 				"ConfigView.section.ipfilter.autoload.period", 1, 31);
 		add(reload_period, listAutoLoad);
 

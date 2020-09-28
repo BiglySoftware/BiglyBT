@@ -276,13 +276,6 @@ IPFilterImpl
 	}
 
 	@Override
-	public void
-	markAsUpToDate()
-	{
-		filter.markAsUpToDate();
-	}
-
-	@Override
 	public long
 	getLastUpdateTime()
 	{

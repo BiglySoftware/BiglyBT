@@ -256,7 +256,10 @@ public class ConfigurationDefaults {
     def.put("Ip Filter Ban Discard Min KB", new Long(128));
     def.put("Ip Filter Banning Persistent", TRUE);
     def.put("Ip Filter Enable Description Cache", TRUE);
-    def.put("Ip Filter Autoload File", "");
+    def.put(ConfigKeys.IPFilter.SCFG_IP_FILTER_AUTOLOAD_FILE, "" );
+    def.put(ConfigKeys.IPFilter.SCFG_IP_FILTER_V6_AUTOLOAD_FILE, "");
+    def.put(ConfigKeys.IPFilter.ICFG_IP_FILTER_AUTOLOAD_LAST, ZERO );
+    def.put(ConfigKeys.IPFilter.ICFG_IP_FILTER_AUTOLOAD_DAYS, 7L );
     def.put("Ip Filter Clear On Reload", TRUE );
 
     def.put("Allow Same IP Peers",FALSE);

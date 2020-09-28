@@ -148,9 +148,6 @@ IpFilter
 	setInRangeAddressesAreAllowed(
 		boolean	b );
 
-	public void
-	markAsUpToDate();
-
 	public long
 	getLastUpdateTime();
 

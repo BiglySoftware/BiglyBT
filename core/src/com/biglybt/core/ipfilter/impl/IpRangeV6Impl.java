@@ -467,6 +467,6 @@ IpRangeV6Impl
 		String start 	= getStartIp();
 		String end		= getEndIp();
 		
-		return( getDescription() + " : " + start + (start.equals( end )?"":(" - " + end )));
+		return( getDescription() + " : " + start + (start.equals( end )||end.isEmpty()?"":(" - " + end )));
 	}
 }

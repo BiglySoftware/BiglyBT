@@ -120,15 +120,20 @@ IpFilterImpl
 
 	  blockedListChangedDispatcher = new FrequencyLimitedDispatcher(
 			  new AERunnable() {
+				  
+				  AsyncDispatcher disp = new AsyncDispatcher(1000);
+				  
 				  @Override
 				  public void runSupport() {
-					  for ( IPFilterListener listener: listenerz ){
-						  try {
-							  listener.IPBlockedListChanged(IpFilterImpl.this);
-						  } catch (Exception e) {
-							  Debug.out(e);
+					  disp.dispatch( AERunnable.create( ()->{
+						  for ( IPFilterListener listener: listenerz ){
+							  try {
+								  listener.IPBlockedListChanged(IpFilterImpl.this);
+							  } catch (Exception e) {
+								  Debug.out(e);
+							  }
 						  }
-					  }
+					  }));
 				  }
 			  }, 10000);
 
@@ -351,13 +356,14 @@ IpFilterImpl
 
 		  		((IpRange)it.next()).checkValid();
 		  	}
-
-		  	markAsUpToDate();
 		  }
 		}finally{
 
 			class_mon.exit();
 		}
+		
+	  	markAsUpToDate();
+
 		Logger.log(new LogEvent(LOGID, (System.currentTimeMillis() - startTime)
 				+ "ms to load all IP Filters"));
 	}
@@ -1039,8 +1045,7 @@ IpFilterImpl
 		COConfigurationManager.setParameter( "Ip Filter Enabled", enabled );
 	}
 
-	@Override
-	public void
+	protected void
 	markAsUpToDate()
 	{
 	  	last_update_time	= SystemTime.getCurrentTime();
