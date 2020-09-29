@@ -28,7 +28,6 @@ import java.net.Inet4Address;
 
 import java.util.*;
 
-import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -48,7 +47,7 @@ IPAddressRangeManagerV4
 	protected long		total_span;
 
 	protected boolean	rebuild_required;
-	protected long		last_rebuild_time;
+	protected long		last_rebuild_time = -1;
 
 	protected IpRangeV4Impl[] mergedRanges = new IpRangeV4Impl[0];
 
@@ -238,13 +237,11 @@ IPAddressRangeManagerV4
 					// is a slow process. Therefore prevent frequent rebuilds at the
 					// cost of delaying the effect of the change
 
-				long	now = SystemTime.getCurrentTime();
-
-				long	secs_since_last_build = (now - last_rebuild_time)/1000;
+				long	now = SystemTime.getMonotonousTime();
 
 					// allow one second per 2000 entries
 
-				if ( secs_since_last_build > entries.size()/2000 ){
+				if ( last_rebuild_time == -1 || (now - last_rebuild_time)/1000 > entries.size()/2000 ){
 
 					last_rebuild_time	= now;
 
@@ -524,8 +521,6 @@ IPAddressRangeManagerV4
 			this_mon.enter();
 
 			entries.clear();
-
-			IpFilterManagerFactory.getSingleton().deleteAllDescriptions();
 
 			rebuild_required	= true;
 

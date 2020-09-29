@@ -207,6 +207,8 @@ IpFilterImpl
 			range_manager_v4.clearAllEntries();
 			
 			range_manager_v6.clearAllEntries();
+			
+			IpFilterManagerFactory.getSingleton().deleteAllDescriptions();
 		}
 		
 		markAsUpToDate();

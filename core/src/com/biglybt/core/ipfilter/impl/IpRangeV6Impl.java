@@ -182,6 +182,44 @@ IpRangeV6Impl
 					start_prefix = address.getAddress();
 					
 					start_mask = Integer.parseInt( str.substring( pos+1 ));
+					
+					if ( start_mask < 0 ){
+						start_mask = 0;
+					}else if ( start_mask > 128 ){
+						start_mask = 128;
+					}
+					
+						// ensure there aren't extra bits in the prefix
+									
+					int whole_bytes = (start_mask/8);
+					
+					int	rem = start_mask%8;
+					
+					if ( rem > 0 ){
+						
+						byte	mask = (byte)(  0xff << (8-rem));
+						
+						byte b = start_prefix[whole_bytes+1];
+						
+						byte	masked = (byte)(b&mask);
+							
+						if ( masked != b ){
+						
+							start_prefix[whole_bytes+1]	= masked;
+							
+							System.out.println( "clearing extra bits in " + str );
+						}
+					}
+					
+					for ( int i=whole_bytes+1; i<start_prefix.length;i++){
+						
+						if ( start_prefix[i] != 0 ){
+							
+							System.out.println( "clearing extra byte " + i + " in " + str );
+							
+							start_prefix[i] = 0;
+						}
+					}
 				}
 			}
 		}catch( Throwable e ){
@@ -221,6 +259,44 @@ IpRangeV6Impl
 					end_prefix = address.getAddress();
 					
 					end_mask = Integer.parseInt( str.substring( pos+1 ));
+					
+					if ( end_mask < 0 ){
+						end_mask = 0;
+					}else if ( end_mask > 128 ){
+						end_mask = 128;
+					}
+					
+						// ensure there aren't extra bits in the prefix
+									
+					int whole_bytes = (end_mask/8);
+					
+					int	rem = end_mask%8;
+					
+					if ( rem > 0 ){
+						
+						byte	mask = (byte)(  0xff << (8-rem));
+						
+						byte b = end_prefix[whole_bytes+1];
+						
+						byte	masked = (byte)(b&mask);
+							
+						if ( masked != b ){
+						
+							end_prefix[whole_bytes+1]	= masked;
+							
+							System.out.println( "clearing extra bits in " + str );
+						}
+					}
+					
+					for ( int i=whole_bytes+1; i<end_prefix.length;i++){
+						
+						if ( end_prefix[i] != 0 ){
+							
+							System.out.println( "clearing extra byte " + i + " in " + str );
+							
+							end_prefix[i] = 0;
+						}
+					}
 				}
 			}
 			
@@ -246,6 +322,18 @@ IpRangeV6Impl
 			
 			return( "" );
 		}
+	}
+	
+	protected byte[]
+	getStartPrefix()
+	{
+		return( start_prefix );
+	}
+	
+	protected int
+	getStartMask()
+	{
+		return( start_mask );
 	}
 	
 	@Override
@@ -376,11 +464,22 @@ IpRangeV6Impl
 			
 		}else{
 			
-			for ( int i=0;i< start_mask; i++ ){
+			int	whole_bytes = start_mask/8;
+			
+			for ( int i=0; i<whole_bytes; i++ ){
+				
+				if ( bytes[i] != start_prefix[i] ){
+					
+					return( false );
+				}
+			}
+			
+			for ( int i=whole_bytes*8; i<start_mask; i++ ){
 				
 				byte mask = (byte)( 1<<(7-(i%8)));
 				
 				int b1 = start_prefix[i/8] & mask;
+				
 				int b2 = bytes[i/8] & mask;
 				
 				if ( b1 != b2 ){

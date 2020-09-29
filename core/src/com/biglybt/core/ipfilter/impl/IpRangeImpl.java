@@ -20,6 +20,7 @@ package com.biglybt.core.ipfilter.impl;
 
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.ipfilter.IpRange;
+import com.biglybt.core.util.Constants;
 
 public abstract class 
 IpRangeImpl
@@ -57,14 +58,12 @@ IpRangeImpl
 
 	@Override
 	public String getDescription() {
-		return new String(IpFilterManagerFactory.getSingleton().getDescription(
-				descRef));
+		return new String(IpFilterManagerFactory.getSingleton().getDescription(descRef), Constants.UTF_8 );
 	}
 
 	@Override
 	public void setDescription(String str) {
-		descRef = IpFilterManagerFactory.getSingleton().addDescription(this,
-				str.getBytes());
+		descRef = IpFilterManagerFactory.getSingleton().addDescription(this, str.getBytes( Constants.UTF_8 ));
 	}
 
 	@Override

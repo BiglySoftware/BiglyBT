@@ -33,20 +33,16 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.CoreFactory;
-import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys.*;
 import com.biglybt.core.ipfilter.*;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
-import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.config.ConfigSectionIPFilter;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.IpFilterEditor;
 import com.biglybt.ui.swt.pif.UISWTParameterContext;
-import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.pif.ui.config.BooleanParameter;
 
@@ -138,6 +134,9 @@ public class ConfigSectionIPFilterSWT
 
 		@Override
 		public void create(Composite gFilter) {
+			
+			paramContextIPEditor = this;
+			
 			// table
 			comparator = new FilterComparator();
 			IpFilterManager ipFilterManager = CoreFactory.getSingleton().getIpFilterManager();

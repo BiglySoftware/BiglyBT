@@ -43,6 +43,8 @@ IpFilterManagerImpl
 {
 	protected static final IpFilterManagerImpl		singleton	= new IpFilterManagerImpl();
 
+	private Object lock = new Object();
+	
 	private RandomAccessFile rafDescriptions = null;
 
 	/**
@@ -54,54 +56,58 @@ IpFilterManagerImpl
 	}
 
 	@Override
-	public Object addDescription(IpRange range, byte[] description) {
-		//if (true) return;
-		if (rafDescriptions == null) {
+	public Object 
+	addDescription(
+		IpRange range, byte[] description) 
+	{
+		synchronized( lock ){
+			if (rafDescriptions == null) {
+				return null;
+			}
+	
+			try {
+				if (description == null || description.length == 0)
+					return null;
+	
+				int start;
+				int end;
+				start = (int)rafDescriptions.getFilePointer();
+				int len = (int)rafDescriptions.length();
+	
+				//System.out.println(len - 0x1FFFFFF);
+				if (len + 61 >= 0x1FFFFFF) {
+					// we could try to fit a desc < 61, but why bother.. at this point
+					// we have at least 550,072 ranges
+					return null;
+				}
+	
+				if (start != len) {
+					rafDescriptions.seek(len);
+					start = (int)rafDescriptions.getFilePointer();
+				}
+	
+				// last 25: position
+				// 26 - 31 (6, 61 chars max): len
+	
+				if (description.length <= 61) {
+					rafDescriptions.write(description);
+				} else {
+					rafDescriptions.write(description, 0,  61);
+				}
+				end = (int)rafDescriptions.getFilePointer();
+	
+				//System.out.println("add " + new String(description, 0, (end - start)) + "; " + start + " - " + end);
+	
+				int info = start + ((end - start) << 25);
+	
+				return new Integer(info);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	
 			return null;
 		}
-
-		try {
-			if (description == null || description.length == 0)
-				return null;
-
-			int start;
-			int end;
-			start = (int)rafDescriptions.getFilePointer();
-			int len = (int)rafDescriptions.length();
-
-			//System.out.println(len - 0x1FFFFFF);
-			if (len + 61 >= 0x1FFFFFF) {
-				// we could try to fit a desc < 61, but why bother.. at this point
-				// we have at least 550,072 ranges
-				return null;
-			}
-
-			if (start != len) {
-				rafDescriptions.seek(len);
-				start = (int)rafDescriptions.getFilePointer();
-			}
-
-			// last 25: position
-			// 26 - 31 (6, 61 chars max): len
-
-			if (description.length <= 61) {
-				rafDescriptions.write(description);
-			} else {
-				rafDescriptions.write(description, 0,  61);
-			}
-			end = (int)rafDescriptions.getFilePointer();
-
-			//System.out.println("add " + new String(description, 0, (end - start)) + "; " + start + " - " + end);
-
-			int info = start + ((end - start) << 25);
-
-			return new Integer(info);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return null;
 	}
 
 	@Override
@@ -111,29 +117,31 @@ IpFilterManagerImpl
 			return (byte[])(((Object[])info)[0]);
 		}
 
-		if (rafDescriptions == null || !(info instanceof Integer)) {
-			return "".getBytes();
-		}
-
-		try {
-			int posInfo = ((Integer)info).intValue();
-			int pos = posInfo & 0x1FFFFFF;
-			int len = posInfo >> 25;
-
-			if (len < 0) {
-				throw new IllegalArgumentException(getClass().getName() + ": invalid posInfo [" + posInfo +"], pos [" + pos + "], len [" + len + "]");
+		synchronized( lock ){
+			if (rafDescriptions == null || !(info instanceof Integer)) {
+				return "".getBytes();
 			}
-
-			if (rafDescriptions.getFilePointer() != pos) {
-				rafDescriptions.seek(pos);
+	
+			try {
+				int posInfo = ((Integer)info).intValue();
+				int pos = posInfo & 0x1FFFFFF;
+				int len = posInfo >> 25;
+	
+				if (len < 0) {
+					throw new IllegalArgumentException(getClass().getName() + ": invalid posInfo [" + posInfo +"], pos [" + pos + "], len [" + len + "]");
+				}
+	
+				if (rafDescriptions.getFilePointer() != pos) {
+					rafDescriptions.seek(pos);
+				}
+	
+				byte[] bytes = new byte[len];
+				rafDescriptions.read(bytes);
+	
+				return bytes;
+			} catch (IOException e) {
+				return "".getBytes();
 			}
-
-			byte[] bytes = new byte[len];
-			rafDescriptions.read(bytes);
-
-			return bytes;
-		} catch (IOException e) {
-			return "".getBytes();
 		}
 	}
 
@@ -163,15 +171,19 @@ IpFilterManagerImpl
 	}
 
 	@Override
-	public void deleteAllDescriptions() {
-		if (rafDescriptions != null) {
-  		try {
-  			rafDescriptions.close();
-  		} catch (IOException e) {
-  		}
-  		rafDescriptions = null;
+	public void 
+	deleteAllDescriptions() 
+	{
+		synchronized( lock ){
+			if (rafDescriptions != null) {
+	  		try {
+	  			rafDescriptions.close();
+	  		} catch (IOException e) {
+	  		}
+	  		rafDescriptions = null;
+			}
 		}
-
+		
 		parameterChanged(null);
 	}
 
@@ -196,25 +208,32 @@ IpFilterManagerImpl
 	}
 
 	@Override
-	public void parameterChanged(String parameterName) {
+	public void 
+	parameterChanged(
+		String parameterName) 
+	{
 		boolean enable = COConfigurationManager.getBooleanParameter("Ip Filter Enable Description Cache");
-		if (enable && rafDescriptions == null) {
-			File fDescriptions = FileUtil.getUserFile("ipfilter.cache");
-			try {
-				if (fDescriptions.exists()) {
-					fDescriptions.delete();
+		
+		synchronized( lock ){
+			
+			if (enable && rafDescriptions == null) {
+				File fDescriptions = FileUtil.getUserFile("ipfilter.cache");
+				try {
+					if (fDescriptions.exists()) {
+						fDescriptions.delete();
+					}
+					rafDescriptions = new RandomAccessFile(fDescriptions, "rw");
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				rafDescriptions = new RandomAccessFile(fDescriptions, "rw");
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} else if (!enable && rafDescriptions != null) {
+				try {
+					rafDescriptions.close();
+				} catch (IOException e) {
+				}
+				rafDescriptions = null;
 			}
-		} else if (!enable && rafDescriptions != null) {
-			try {
-				rafDescriptions.close();
-			} catch (IOException e) {
-			}
-			rafDescriptions = null;
 		}
 	}
 }
