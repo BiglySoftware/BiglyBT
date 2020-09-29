@@ -199,19 +199,21 @@ IpRangeV6Impl
 						
 						byte	mask = (byte)(  0xff << (8-rem));
 						
-						byte b = start_prefix[whole_bytes+1];
+						byte b = start_prefix[whole_bytes];
 						
 						byte	masked = (byte)(b&mask);
 							
 						if ( masked != b ){
 						
-							start_prefix[whole_bytes+1]	= masked;
+							start_prefix[whole_bytes]	= masked;
 							
 							System.out.println( "clearing extra bits in " + str );
 						}
+						
+						whole_bytes++;
 					}
 					
-					for ( int i=whole_bytes+1; i<start_prefix.length;i++){
+					for ( int i=whole_bytes; i<start_prefix.length;i++){
 						
 						if ( start_prefix[i] != 0 ){
 							
@@ -276,19 +278,21 @@ IpRangeV6Impl
 						
 						byte	mask = (byte)(  0xff << (8-rem));
 						
-						byte b = end_prefix[whole_bytes+1];
+						byte b = end_prefix[whole_bytes];
 						
 						byte	masked = (byte)(b&mask);
 							
 						if ( masked != b ){
 						
-							end_prefix[whole_bytes+1]	= masked;
+							end_prefix[whole_bytes]	= masked;
 							
 							System.out.println( "clearing extra bits in " + str );
 						}
+						
+						whole_bytes++;
 					}
 					
-					for ( int i=whole_bytes+1; i<end_prefix.length;i++){
+					for ( int i=whole_bytes; i<end_prefix.length;i++){
 						
 						if ( end_prefix[i] != 0 ){
 							
@@ -474,28 +478,26 @@ IpRangeV6Impl
 				}
 			}
 			
-			for ( int i=whole_bytes*8; i<start_mask; i++ ){
+			int	rem = start_mask%8;
+			
+			if ( rem > 0 ){
 				
-				byte mask = (byte)( 1<<(7-(i%8)));
+				byte	mask = (byte)(  0xff << (8-rem));
+								
+				return( (byte)( bytes[whole_bytes] & mask ) == start_prefix[ whole_bytes ] );
 				
-				int b1 = start_prefix[i/8] & mask;
-				
-				int b2 = bytes[i/8] & mask;
-				
-				if ( b1 != b2 ){
-					
-					return( false );
-				}
+			}else{
+		
+				return( true );
 			}
 		}
-		
-		return( true );
 	}
 	
 	private int
 	compare(
 		byte[]		s1,
-		byte[]		s2 )
+		byte[]		s2,
+		int			len )
 	{
 		if ( s1 == null && s2 == null ){
 			return( 0 );
@@ -504,7 +506,7 @@ IpRangeV6Impl
 		}else if ( s2 == null ){
 			return( -1 );
 		}else{
-			for ( int i=0;i<s1.length;i++){
+			for ( int i=0;i<len;i++){
 				
 				int	i1 = ((int)s1[i])&0xff;
 				int	i2 = ((int)s2[i])&0xff;
@@ -533,7 +535,9 @@ IpRangeV6Impl
 			byte[]	s1 	= start_prefix;
 			byte[]	s2	= o.start_prefix;
 			
-			return( compare( s1, s2 ));
+			int len = (Math.max( start_mask, o.start_mask ) + 7 )/8;
+			
+			return( compare( s1, s2, len ));
 			
 		}else{
 			
@@ -553,7 +557,10 @@ IpRangeV6Impl
 			byte[]	s1 	= end_prefix;
 			byte[]	s2	= o.end_prefix;
 			
-			return( compare( s1, s2 ));
+			int len = (Math.max( end_mask, o.end_mask ) + 7 )/8;
+			
+			return( compare( s1, s2, len ));
+
 		}else{
 			
 			return( 1 );

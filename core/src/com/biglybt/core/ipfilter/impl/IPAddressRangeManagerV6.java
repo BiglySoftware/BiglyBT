@@ -97,7 +97,9 @@ IPAddressRangeManagerV6
 		synchronized( ranges ){
 			
 			ranges.clear();
-						
+				
+			range_count = 0;
+			
 			rebuild_required	= true;
 		}
 	}
@@ -185,6 +187,11 @@ IPAddressRangeManagerV6
 				}
 			}
 			
+			if ( sorted_ranges == null ){
+
+				return( null );
+			}
+
 			int res = Arrays.binarySearch( sorted_ranges, ia_range, range_comparator );
 			
 			if ( res >= 0 ){
