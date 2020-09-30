@@ -4970,6 +4970,11 @@ DownloadManagerImpl
 									
 								}
 								
+								if ( callback.getTaskState() == ProgressCallback.ST_CANCEL ){
+									
+									throw( new RuntimeException( "Cancelled" ));
+								}
+								
 								synchronized( move_tasks ){
 									
 									for ( CoreOperationTask task: move_tasks ){
@@ -4983,10 +4988,6 @@ DownloadManagerImpl
 												if ( state == ProgressCallback.ST_QUEUED ){
 													
 													ready = true;
-													
-												}else if ( state == ProgressCallback.ST_CANCEL ){
-													
-													throw( new RuntimeException( "Cancelled" ));
 												}
 											}
 											

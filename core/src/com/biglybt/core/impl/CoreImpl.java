@@ -3200,8 +3200,6 @@ CoreImpl
 		int						type,
 		CoreOperationTask 		task )
 	{
-		CoreOperationTask f_task = task;
-		
 		CoreOperation op =
 				new CoreOperation()
 				{
@@ -3216,11 +3214,12 @@ CoreImpl
 					public CoreOperationTask
 					getTask()
 					{
-						return( f_task );
+						return( task );
 					}
 				};
 
-
+		boolean	run_it = true;
+				
 		try{
 			addOperation( op );
 			
@@ -3231,7 +3230,7 @@ CoreImpl
 	
 				if ( l.operationExecuteRequest( op )){
 	
-					task = null;
+					run_it = false;
 					
 					break;
 				}
@@ -3239,13 +3238,16 @@ CoreImpl
 	
 				// nobody volunteeered to run it for us, we'd better do it
 	
-			if ( task != null ){
+			if ( run_it ){
 	
 				task.run( op );
 			}
 		}finally{
 			
-			removeOperation( op );
+			if ( run_it ){
+				
+				removeOperation( op );
+			}
 		}
 	}
 
@@ -3273,10 +3275,6 @@ CoreImpl
 	removeOperation(
 		CoreOperation		op )
 	{
-			// may have already been removed as there is a hack in the progress window to explicitly
-			// remove the operation when it completes due to nasty swt dispatch loops causing removes to get delayed
-			// when there are multiple windows...
-		
 		if ( operations.remove( op )){
 		
 			for ( CoreOperationListener l: operation_listeners ){

@@ -106,7 +106,7 @@ ProgressWindow
 	
 	private boolean	task_paused;
 	
-	protected
+	private
 	ProgressWindow(
 		final CoreOperation operation )
 	{
@@ -222,9 +222,9 @@ ProgressWindow
 					error[0] = new RuntimeException( e );
 
 				}finally{
-
-						// hack to deal with the existence of the nasty swt dispatch loops here causing issues with multiple
-						// progress window completion
+					
+						// report complete now as the SWT dispatch loop below might not exit until other windows
+						// has closed their loops...
 					
 					CoreFactory.getSingleton().removeOperation( operation );
 					
