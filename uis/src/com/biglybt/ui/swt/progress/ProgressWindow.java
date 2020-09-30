@@ -20,6 +20,7 @@
 package com.biglybt.ui.swt.progress;
 
 import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -222,6 +223,11 @@ ProgressWindow
 
 				}finally{
 
+						// hack to deal with the existence of the nasty swt dispatch loops here causing issues with multiple
+						// progress window completion
+					
+					CoreFactory.getSingleton().removeOperation( operation );
+					
 					Utils.execSWTThread(
 							new Runnable()
 							{
@@ -583,6 +589,42 @@ ProgressWindow
 						progress.setTaskState( ProgressCallback.ST_CANCEL );
 					}
 				});
+				
+				Utils.execSWTThreadLater(
+					250,
+					new Runnable()
+					{
+						@Override
+						public void run(){
+							if ( comp.isDisposed()){
+								return;
+							}
+							
+							int state = progress.getTaskState();
+							
+							if ( state == ProgressCallback.ST_CANCEL ){
+								
+								shell.dispose();
+								
+							}else{
+								
+								if ( state == ProgressCallback.ST_PAUSE ){
+									
+									bPause.setEnabled( false );
+									
+									bResume.setEnabled( true );
+									
+								}else{
+									
+									bPause.setEnabled( true );
+									
+									bResume.setEnabled( false );
+								}
+								
+								Utils.execSWTThreadLater( 250, this );
+							}
+						}
+					});
 				
 				shell.setDefaultButton( bPause );
 				

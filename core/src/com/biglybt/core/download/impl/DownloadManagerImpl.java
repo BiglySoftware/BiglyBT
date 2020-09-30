@@ -4813,6 +4813,8 @@ DownloadManagerImpl
 	  moveDataFiles( destination, new_name, false );
   }
 
+  private static List<CoreOperationTask>	move_tasks = new ArrayList<>();
+  
   public void
   moveDataFiles(
 	final File 		destination,
@@ -4853,6 +4855,8 @@ DownloadManagerImpl
 		  FileUtil.runAsTask(
 				new CoreOperationTask()
 				{
+					private boolean		queued = true;
+					
 					@Override
 					public String getName(){
 						return( getDisplayName());
@@ -4933,6 +4937,11 @@ DownloadManagerImpl
 							public int
 							getTaskState()
 							{
+								if ( current_state == ProgressCallback.ST_NONE && queued ){
+									
+									return( ProgressCallback.ST_QUEUED );
+								}
+								
 								return( current_state );
 							}
 						};
@@ -4942,18 +4951,72 @@ DownloadManagerImpl
 					run(
 						CoreOperation operation)
 					{
+						boolean ready;
+						
+						synchronized( move_tasks ){
+							
+							move_tasks.add( this );
+							
+							ready = move_tasks.size() == 1;
+						}
+						
 						try{
-							if ( live ){
-
-								moveDataFilesSupport0( destination, new_name );
-
-							}else{
-
-								moveDataFilesSupport( destination, new_name );
+							while( !ready ){
+								
+								try{
+									Thread.sleep( 500 );
+									
+								}catch( Throwable e ){
+									
+								}
+								
+								synchronized( move_tasks ){
+									
+									for ( CoreOperationTask task: move_tasks ){
+										
+										int state = task.getProgressCallback().getTaskState();
+										
+										if ( state != ProgressCallback.ST_PAUSE ){
+											
+											if ( task == this ){
+												
+												if ( state == ProgressCallback.ST_QUEUED ){
+													
+													ready = true;
+													
+												}else if ( state == ProgressCallback.ST_CANCEL ){
+													
+													throw( new RuntimeException( "Cancelled" ));
+												}
+											}
+											
+											break;
+										}
+									}
+								}
 							}
-						}catch( DownloadManagerException e ){
-
-							throw( new RuntimeException( e ));
+							
+							queued = false;
+							
+							try{
+								if ( live ){
+	
+									moveDataFilesSupport0( destination, new_name );
+	
+								}else{
+	
+									moveDataFilesSupport( destination, new_name );
+								}
+							}catch( DownloadManagerException e ){
+	
+								throw( new RuntimeException( e ));
+							}
+						}finally{
+							
+							synchronized( move_tasks ){
+								
+								move_tasks.remove( this );
+							}
 						}
 					}
 					

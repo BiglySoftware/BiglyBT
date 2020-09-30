@@ -3273,16 +3273,21 @@ CoreImpl
 	removeOperation(
 		CoreOperation		op )
 	{
-		operations.remove( op );
+			// may have already been removed as there is a hack in the progress window to explicitly
+			// remove the operation when it completes due to nasty swt dispatch loops causing removes to get delayed
+			// when there are multiple windows...
 		
-		for ( CoreOperationListener l: operation_listeners ){
-			
-			try{
-				l.operationRemoved( op );
+		if ( operations.remove( op )){
+		
+			for ( CoreOperationListener l: operation_listeners ){
 				
-			}catch( Throwable e ){
-				
-				Debug.out( e );
+				try{
+					l.operationRemoved( op );
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
 			}
 		}
 	}

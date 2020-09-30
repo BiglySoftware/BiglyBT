@@ -2675,16 +2675,28 @@ public class TorrentUtil
 
 				File target = new File(path);
 
+					// we can do this in parallel as the core manages queueing of move ops now
+				
 				for (int i = 0; i < dms.length; i++) {
 
-					try {
-						dms[i].moveDataFilesLive(target);
+					DownloadManager dm = dms[i];
+					
+					AEThread2.createAndStartDaemon( "File Mover" , ()->{
+								
+							// get back onto SWT thread to cause progress dialog window to be shown
+						
+						Utils.execSWTThread(()->{
+							
+							try{
+								
+								dm.moveDataFilesLive(target);
 
-					} catch (Throwable e) {
+							}catch( Throwable e ){
 
-						Logger.log(new LogAlert(dms[i], LogAlert.REPEATABLE,
-								"Download data move operation failed", e));
-					}
+								Logger.log(new LogAlert(dm, LogAlert.REPEATABLE,
+										"Download data move operation failed", e));
+							}});
+					});
 				}
 			}
 		}
