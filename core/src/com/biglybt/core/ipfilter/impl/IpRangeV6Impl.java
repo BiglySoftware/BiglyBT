@@ -21,6 +21,7 @@ package com.biglybt.core.ipfilter.impl;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.Arrays;
+import java.util.Locale;
 
 import com.biglybt.core.ipfilter.IpRange;
 import com.biglybt.core.util.AddressUtils;
@@ -133,13 +134,13 @@ IpRangeV6Impl
 	
 		throws Exception
 	{
-		str = str.trim();
+		str = str.trim().toLowerCase( Locale.US );
 		
 		char[] chars = str.toCharArray();
 		
 		for ( char c: chars ){
 			
-			if ( Character.isDigit( c ) || c == ':' || c == '[' || c == ']' ){
+			if ( Character.isDigit( c ) || ( c >= 'a' && c <= 'f' ) || c == ':' || c == '[' || c == ']' ){
 				
 			}else{
 				
