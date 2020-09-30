@@ -705,12 +705,23 @@ BuddyPluginView
 					{
 						Set<ChatInstance> current_instances = menu_latest_instances;
 
+							// might be a lot of chats, just pick first 3
+						
+						int rem = 3;
+						
 						for ( ChatInstance chat: current_instances ){
 
 							if ( chat.getMessageOutstanding()){
 
 								try{
 									openChat( chat.getClone());
+									
+									rem--;
+									
+									if ( rem == 0 ){
+										
+										break;
+									}
 
 								}catch( Throwable e ){
 
