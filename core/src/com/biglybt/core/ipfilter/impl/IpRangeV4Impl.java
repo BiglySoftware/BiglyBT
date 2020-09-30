@@ -337,4 +337,11 @@ IpRangeV4Impl
 			my_merged_entries = x;
 		}
 	}
+	
+	@Override
+	public String 
+	getStringSlow()
+	{
+		return( toString());
+	}
 }

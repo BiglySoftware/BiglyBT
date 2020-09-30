@@ -844,4 +844,128 @@ AddressUtils
 		
 		return( true );
 	}
+	
+
+	public static String 
+	getShortForm(
+		Inet6Address	a )
+	{
+       return( getShortForm( a.getHostAddress()));
+	}
+	
+	private static String 
+	getShortForm(
+		String	str )
+	{
+			// see https://tools.ietf.org/html/rfc5952
+		
+		char[] chars = str.toCharArray();
+		
+        int		char_count = chars.length;
+        
+        char[] temp = new char[char_count];
+        
+        int pos = 0;
+        
+        boolean leading = true;
+        
+        int current_run_index 	= -1;
+        int current_run_length 	= -1;
+        
+        int best_run_index 	= -1;
+        int best_run_length	= -1;
+        
+        for ( int i=0;i<char_count;i++){
+        	
+        	char c = chars[i];
+        	
+        	if ( c == ':' ){
+        
+        		temp[pos++] = ':';
+        		
+        		leading = true;
+        		
+        		continue;
+        	}
+        	
+        	if ( c == '0' ){
+        		
+        		if ( leading ){
+        			
+        			if ( i == char_count -1 || chars[i+1] == ':' ){
+        				        				
+        				if ( current_run_index == -1 ){
+        					
+        					current_run_index 	= pos;
+        					
+        					current_run_length	= 1;
+        					
+        				}else{
+        					
+        					current_run_length++;
+        				}
+        				
+           				temp[pos++] = '0';
+        			}
+        			
+        			continue;
+        		}
+        	}else{
+        		
+        		leading = false;
+        	}
+        	
+  			if ( current_run_index != -1 ){
+        				
+   				if ( current_run_length > best_run_length ){
+        					
+   					best_run_length	= current_run_length;
+   					best_run_index	= current_run_index;
+   				}
+        				
+   				current_run_index = -1;
+   			}
+          		
+       		temp[pos++] = c;
+        }
+        
+        if ( current_run_index != -1 ){
+
+        	if ( current_run_length > best_run_length ){
+
+        		best_run_length	= current_run_length;
+        		best_run_index	= current_run_index;
+        	}
+        }
+			
+        if ( best_run_length > 1 ){
+        	        	
+        	int	copy_from = best_run_index + best_run_length*2-1;
+        	
+        	if ( copy_from >= pos ){
+        	
+               	temp[best_run_index] = ':';
+
+        		pos = best_run_index + 1;
+        		
+        	}else{
+        		
+        		int x = best_run_index;
+        	
+	        	for ( int i=copy_from;i<pos;i++){
+	        		
+	        		temp[x++] = temp[i];
+	        	}
+        	
+	        	pos = x;
+        	}
+        	
+        	if ( best_run_index == 0 ){
+        	
+        		return( ":" + new String( temp, 0, pos ));
+        	}
+        }
+        
+        return( new String( temp, 0, pos ));
+    }
 }

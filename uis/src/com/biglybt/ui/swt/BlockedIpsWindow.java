@@ -257,7 +257,7 @@ BlockedIpsWindow
       } else {
         sbBlocked.append(' ');
         sbBlocked.append(inRange);
-        sbBlocked.append(range.toString());
+        sbBlocked.append(range.getStringSlow());
         sbBlocked.append('\n');
       }
     }

@@ -23,6 +23,7 @@ import java.net.InetAddress;
 import java.util.Arrays;
 
 import com.biglybt.core.ipfilter.IpRange;
+import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HostNameToIPResolver;
 
@@ -328,6 +329,23 @@ IpRangeV6Impl
 		}
 	}
 	
+	private String 
+	getStartIpSlow() 
+	{
+		if (( flags & FLAG_INVALID_START ) != 0 ){
+	
+			return( "" );
+		}
+		
+		try{
+			return( AddressUtils.getShortForm((Inet6Address)InetAddress.getByAddress( start_prefix )) + (start_mask==128?"":( "/" + start_mask )));
+			
+		}catch( Throwable e ){
+			
+			return( "" );
+		}
+	}
+	
 	protected byte[]
 	getStartPrefix()
 	{
@@ -380,6 +398,30 @@ IpRangeV6Impl
 			
 			try{
 				return( InetAddress.getByAddress( end_prefix ).getHostAddress() + (end_mask==128?"":( "/" + end_mask )));
+				
+			}catch( Throwable e ){
+				
+				return( "" );
+			}
+		}
+	}
+	
+	private String 
+	getEndIpSlow() 
+	{
+		if (( flags & FLAG_INVALID_END ) != 0 ){
+			
+			return( "" );
+		}
+		
+		if ( end_prefix == null ){
+			
+			return( "" );
+			
+		}else{
+			
+			try{
+				return( AddressUtils.getShortForm((Inet6Address)InetAddress.getByAddress( end_prefix )) + (end_mask==128?"":( "/" + end_mask )));
 				
 			}catch( Throwable e ){
 				
@@ -572,6 +614,15 @@ IpRangeV6Impl
 	{
 		String start 	= getStartIp();
 		String end		= getEndIp();
+		
+		return( getDescription() + " : " + start + (start.equals( end )||end.isEmpty()?"":(" - " + end )));
+	}
+	
+	public String 
+	getStringSlow() 
+	{
+		String start 	= getStartIpSlow();
+		String end		= getEndIpSlow();
 		
 		return( getDescription() + " : " + start + (start.equals( end )||end.isEmpty()?"":(" - " + end )));
 	}

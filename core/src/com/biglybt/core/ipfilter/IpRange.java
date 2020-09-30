@@ -73,4 +73,7 @@ IpRange
 	public int
 	compareDescription(
 			IpRange other );
+	
+	public String
+	getStringSlow();
 }
