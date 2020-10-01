@@ -66,6 +66,9 @@ public class ColumnFO_Size
 				
 		long size = prog==null?-1:prog.getSize();
 		
-		cell.setText( size<=0?"":DisplayFormatters.formatByteCountToKiBEtc( size ));
+		if ( cell.setSortValue( size )){
+		
+			cell.setText( size<=0?"":DisplayFormatters.formatByteCountToKiBEtc( size ));
+		}
 	}
 }

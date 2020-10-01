@@ -71,23 +71,36 @@ public class ColumnFO_Status
 		
 		String text;
 		
+		int sort;
+		
 		if ( state == ProgressCallback.ST_CANCEL ){
 			
 			text = MessageText.getString( "Progress.reporting.status.canceled" );
+			
+			sort = 3;
 			
 		}else if ( state == ProgressCallback.ST_PAUSE ){	
 				
 			text = MessageText.getString( "ManagerItem.paused" );
 			
+			sort = 2;
+			
 		}else if ( state == ProgressCallback.ST_QUEUED ){	
 				
 			text = MessageText.getString( "ManagerItem.queued" );
 			
+			sort = 1;
+			
 		}else{
 			
 			text = "";
+			
+			sort = 0;
 		}
 		
-		cell.setText(text);
+		if ( cell.setSortValue( sort )){
+		
+			cell.setText(text);
+		}
 	}
 }
