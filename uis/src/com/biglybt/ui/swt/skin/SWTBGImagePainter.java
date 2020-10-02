@@ -44,8 +44,6 @@ public class SWTBGImagePainter
 {
 	private static boolean DEBUG = false;
 
-	private static boolean TEST_SWT_PAINTING = false; //Constants.isOSX;
-
 	private Rectangle lastResizeRect = Utils.EMPTY_RECT;
 
 	private final Shell shell;
@@ -80,6 +78,9 @@ public class SWTBGImagePainter
 
 	private final Control control;
 
+		// horrible hack for toolbar on OSX 
+	private final boolean useBGImage;
+	
 	private boolean bDirty;
 
 	private int fdWidth = -1;
@@ -88,10 +89,11 @@ public class SWTBGImagePainter
 
 	private ImageLoader imageLoader = null;
 
-	private SWTBGImagePainter(Control control, int tileMode) {
+	private SWTBGImagePainter(Control control, int tileMode, boolean useGBImage ) {
 		this.control = control;
 		this.shell = control.getShell();
 		this.tileMode = tileMode;
+		this.useBGImage = useGBImage;
 		control.setData("BGPainter", this);
 	}
 
@@ -101,7 +103,7 @@ public class SWTBGImagePainter
 
 	public SWTBGImagePainter(Control control, Image bgImageLeft,
 			Image bgImageRight, Image bgImage, int tileMode) {
-		this(control, tileMode);
+		this(control, tileMode, true );
 		setImages(bgImageLeft, bgImageRight, bgImage);
 
 		if (bDirty) {
@@ -110,19 +112,17 @@ public class SWTBGImagePainter
 			}
 		}
 
-		if (!TEST_SWT_PAINTING) {
-			control.addListener(SWT.Resize, this);
-			control.addListener(SWT.Paint, this);
-			control.getShell().addListener(SWT.Show, this);
-		}
+		control.addListener(SWT.Resize, this);
+		control.addListener(SWT.Paint, this);
+		control.getShell().addListener(SWT.Show, this);
 
 		control.addListener(SWT.Dispose, this);
 	}
 
 	public SWTBGImagePainter(Control control, ImageLoader imageLoader,
 			String bgImageLeftId,
-			String bgImageRightId, String bgImageId, int tileMode) {
-		this(control, tileMode);
+			String bgImageRightId, String bgImageId, int tileMode, boolean useBGImage ) {
+		this(control, tileMode, useBGImage);
 		setImage(imageLoader, bgImageLeftId, bgImageRightId, bgImageId);
 
 		if (bDirty) {
@@ -131,13 +131,17 @@ public class SWTBGImagePainter
 			}
 		}
 
-		if (!TEST_SWT_PAINTING) {
-			control.addListener(SWT.Resize, this);
-			control.addListener(SWT.Paint, this);
-			control.getShell().addListener(SWT.Show, this);
-		}
+		control.addListener(SWT.Resize, this);
+		control.addListener(SWT.Paint, this);
+		control.getShell().addListener(SWT.Show, this);
 
 		control.addListener(SWT.Dispose, this);
+	}
+	
+	public Image
+	getLatestImage()
+	{
+		return( lastImage );
 	}
 
 	public void dispose() {
@@ -145,14 +149,17 @@ public class SWTBGImagePainter
 			return;
 		}
 
-		if (!TEST_SWT_PAINTING) {
-			control.removeListener(SWT.Resize, this);
-			control.removeListener(SWT.Paint, this);
-			control.getShell().removeListener(SWT.Show, this);
-		}
+		control.removeListener(SWT.Resize, this);
+		control.removeListener(SWT.Paint, this);
+		control.getShell().removeListener(SWT.Show, this);
 
 		control.removeListener(SWT.Dispose, this);
-		control.setBackgroundImage(null);
+		if ( useBGImage ){
+			control.setBackgroundImage(null);
+		}else{
+			control.setData( "BGImage", null );
+			control.redraw();
+		}
 		FormData formData = (FormData) control.getLayoutData();
 		formData.width = SWT.DEFAULT;
 		formData.height = SWT.DEFAULT;
@@ -247,24 +254,7 @@ public class SWTBGImagePainter
 			imgSrcRightBounds = Utils.EMPTY_RECT;
 		}
 
-
-		if (TEST_SWT_PAINTING) {
-			control.removeListener(SWT.Resize, this);
-			control.removeListener(SWT.Paint, this);
-
-			if (imgSrcRight == null && imgSrcLeft == null
-					&& tileMode == SWTSkinUtils.TILE_NONE) {
-				control.setBackgroundImage(imgSrc);
-			} else {
-				control.addListener(SWT.Resize, this);
-				control.addListener(SWT.Paint, this);
-				bDirty = true;
-				buildBackground(control);
-			}
-		} else {
-			bDirty = true;
-		}
-
+		bDirty = true;
 
 		if ((tileMode & SWTSkinUtils.TILE_BOTH) != SWTSkinUtils.TILE_BOTH) {
 			int width = SWT.DEFAULT;
@@ -334,18 +324,7 @@ public class SWTBGImagePainter
 		}
 		imageLoader.releaseImage(imgSrcRightID);
 
-		if (TEST_SWT_PAINTING) {
-			control.removeListener(SWT.Resize, this);
-			control.removeListener(SWT.Paint, this);
-
-			control.addListener(SWT.Resize, this);
-			control.addListener(SWT.Paint, this);
-			bDirty = true;
-			buildBackground(control);
-		} else {
-			bDirty = true;
-		}
-
+		bDirty = true;
 
 		if ((tileMode & SWTSkinUtils.TILE_BOTH) != SWTSkinUtils.TILE_BOTH) {
 			int width = SWT.DEFAULT;
@@ -435,7 +414,13 @@ public class SWTBGImagePainter
 				System.out.println("- size " + control.getData("ConfigID"));
 			}
 			Image image = new Image(shell.getDisplay(), 1, 1);
-			control.setBackgroundImage(image);
+			
+			if ( useBGImage ){
+				control.setBackgroundImage(image);
+			}else{
+				control.setData( "BGImage", image );
+				control.redraw();
+			}
 
 			if (lastImage != null) {
 				lastImage.dispose();
@@ -452,10 +437,23 @@ public class SWTBGImagePainter
 		}
 
 		Composite parent = control.getParent();
-		Image imgBG = parent.getBackgroundImage();
-
-		if (imgBG != null && imgBG.isDisposed()) {
-			imgBG = null;
+		
+		Image imgBG;
+		
+		if ( useBGImage ){
+			imgBG = parent.getBackgroundImage();
+	
+			if (imgBG != null && imgBG.isDisposed()) {
+				imgBG = null;
+			}
+		}else{
+			
+			imgBG = lastImage;
+			
+			if ( imgBG != null && imgBG.isDisposed()){
+				
+				imgBG = lastImage = null;;
+			}
 		}
 
 		Rectangle imgBGBounds = imgBG == null ? new Rectangle(0, 0, 1, 1)
@@ -482,12 +480,6 @@ public class SWTBGImagePainter
 		if (!bDirty && compositeArea.equals(lastBounds)
 				&& imgBGBounds.width == lastShellBGSize.x
 				&& imgBGBounds.height == lastShellBGSize.y) {
-			inEvent = false;
-			return;
-		}
-
-		if (TEST_SWT_PAINTING && !bDirty && compositeArea.width == lastBounds.width
-				&& compositeArea.height == lastBounds.height) {
 			inEvent = false;
 			return;
 		}
@@ -549,7 +541,12 @@ public class SWTBGImagePainter
 			GC gc = new GC(newImage);
 			try {
 
-				control.setBackgroundImage(null);
+				if ( useBGImage ){
+					control.setBackgroundImage(null);
+				}else{
+					control.setData( "BGImage", null );
+					control.redraw();
+				}
 				gc.setBackground(control.getBackground());
 				gc.fillRectangle(0, 0, size.x, size.y);
 
@@ -608,7 +605,12 @@ public class SWTBGImagePainter
 				gc.dispose();
 			}
 
-			control.setBackgroundImage(newImage);
+			if ( useBGImage ){
+				control.setBackgroundImage(newImage);
+			}else{
+				control.setData( "BGImage", newImage );
+				control.redraw();
+			}
 
 			if (lastImage != null) {
 				lastImage.dispose();
@@ -699,18 +701,16 @@ public class SWTBGImagePainter
 						+ event + ";" + control.isVisible());
 			}
 
-			if (!TEST_SWT_PAINTING) {
-				buildBackground(control);
-			}
+			buildBackground(control);
+			
 		} else if (event.type == SWT.Show) {
 			if (DEBUG) {
 				System.out.println("BGPaint:S: " + control.getData("ConfigID") + ";"
 						+ event + ";" + control.isVisible());
 			}
 
-			if (!TEST_SWT_PAINTING) {
-				buildBackground(control);
-			}
+			buildBackground(control);
+			
 		} else if (event.type == SWT.Dispose) {
 			if (DEBUG) {
 				System.out.println("dispose.. " + lastImage + ";"

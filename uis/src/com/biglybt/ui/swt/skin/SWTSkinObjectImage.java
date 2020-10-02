@@ -82,6 +82,13 @@ public class SWTSkinObjectImage
 				}
 
 				final Canvas control = (Canvas) e.widget;
+				
+				Image bgImage = (Image)control.getParent().getData( "BGImage" );
+				
+				if ( bgImage != null && !bgImage.isDisposed()){
+					e.gc.drawImage( bgImage, 0, 0 );
+				}
+				
 				Image imgSrc = (Image) control.getData("image");
 
 				Integer drawAlpha = (Integer) control.getData("drawAlpha");

@@ -452,7 +452,7 @@ public class SWTSkinObjectBasic
 //			painter = new SWTBGImagePainter(control, imageBGLeft, imageBGRight,
 //					imageBG, tileMode);
 			painter = new SWTBGImagePainter(control, imageLoader, idLeft, idRight,
-					id, tileMode);
+					id, tileMode,false);
 		} else {
 			//System.out.println("setImage " + sConfigID + "  " + sSuffix);
 			painter.setImage(imageLoader, idLeft, idRight, id);
