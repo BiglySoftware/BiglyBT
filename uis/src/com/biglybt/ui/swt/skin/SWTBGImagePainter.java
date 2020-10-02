@@ -163,7 +163,6 @@ public class SWTBGImagePainter
 			control.setBackgroundImage(null);
 		}else{
 			control.setData( "BGImage", null );
-			control.redraw();
 		}
 		FormData formData = (FormData) control.getLayoutData();
 		formData.width = SWT.DEFAULT;
@@ -424,7 +423,6 @@ public class SWTBGImagePainter
 				control.setBackgroundImage(image);
 			}else{
 				control.setData( "BGImage", image );
-				control.redraw();
 			}
 
 			if (lastImage != null) {
@@ -550,12 +548,11 @@ public class SWTBGImagePainter
 					control.setBackgroundImage(null);
 				}else{
 					control.setData( "BGImage", null );
-					control.redraw();
 				}
 				gc.setBackground(control.getBackground());
 				gc.fillRectangle(0, 0, size.x, size.y);
 
-				if (imgBG != null) {
+				if (imgBG != null && useBGImage ) {
 					for (int y = 0; y < size.y; y += imgBGBounds.height) {
 						for (int x = 0; x < size.x; x += imgBGBounds.width) {
 							gc.drawImage(imgBG, x - ofs.x, y - ofs.y);
@@ -614,7 +611,6 @@ public class SWTBGImagePainter
 				control.setBackgroundImage(newImage);
 			}else{
 				control.setData( "BGImage", newImage );
-				control.redraw();
 			}
 
 			if (lastImage != null) {
