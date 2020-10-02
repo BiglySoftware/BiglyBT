@@ -78,7 +78,12 @@ public class SWTBGImagePainter
 
 	private final Control control;
 
-		// horrible hack for toolbar on OSX 
+		// horrible hack for toolbar on OSX 11 (BugSur) - setBackgroundImage as used for building the toolbar doesn't work
+		// and I couldn't figure out how to fix - so instead of setting the background of this control the desired
+		// image is stored in data item "BGImage" and picked up in the SWTSkinObjectImage paint code and drawn 
+		// under the toolbar icon. Yeah, I know. If you try and explicitly paint the background onto this control 
+		// then a background gets drawn over it by something and I couldn't work out how to prevent that.
+	
 	private final boolean useBGImage;
 	
 	private boolean bDirty;
@@ -702,6 +707,12 @@ public class SWTBGImagePainter
 			}
 
 			buildBackground(control);
+			
+			if ( !useBGImage ){
+				if ( lastImage != null && !lastImage.isDisposed()){
+					event.gc.drawImage( lastImage, 0, 0 );
+				}
+			}
 			
 		} else if (event.type == SWT.Show) {
 			if (DEBUG) {
