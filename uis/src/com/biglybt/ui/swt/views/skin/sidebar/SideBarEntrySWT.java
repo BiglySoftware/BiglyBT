@@ -807,6 +807,17 @@ public class SideBarEntrySWT
 					maxIndicatorWidth = width;
 				}
 				gc.setForeground(text_color);
+				
+				
+				// I REALLY can't explain this, but on OSX if the textIndicator is '0' then it is getting rendered in
+				// BLACK even when the text_color is set to WHITE. I've spend ages looking into it and got nowhere. Interestingly
+				// if I prefix it with a zero-width unicode space the problem is solved.
+				// Feel free to try and figure it out if you have time on your hands...
+				
+				if ( Constants.isOSX ){
+					textIndicator = "\u200b" + textIndicator;
+				}
+				
 				GCStringPrinter.printString(gc, textIndicator, new Rectangle(startX,
 						startY + textOffsetY, width, height), true, false, SWT.CENTER);
 			}
