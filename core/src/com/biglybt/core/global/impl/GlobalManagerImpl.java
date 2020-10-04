@@ -1048,8 +1048,10 @@ public class GlobalManagerImpl
           					initialState = DownloadManager.STATE_QUEUED;
           				}
           				
-          				save_download_state.put( "forceStart", new Long( force?1:0 ));
+          				if ( save_download_state != null ){
           				
+          					save_download_state.put( "forceStart", new Long( force?1:0 ));
+          				}
           			}else{
           			
           				paused_list.put( hw, force );
