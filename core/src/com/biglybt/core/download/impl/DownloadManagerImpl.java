@@ -1881,10 +1881,7 @@ DownloadManagerImpl
 		
 		new_save_path = FileUtil.getCanonicalFileSafe( new_save_path );
 
-		String old_path = old_save_path.getPath();
-		String new_path = new_save_path.getPath();
-
-		//System.out.println( "update_file_links: " + old_path +  " -> " + new_path );
+		//System.out.println( "update_file_links: " + old_save_path +  " -> " + new_save_path );
 
 		LinkFileMap links = download_manager_state.getFileLinks();
 
@@ -1916,10 +1913,8 @@ DownloadManagerImpl
 
 				from = FileUtil.getCanonicalFileSafe( from );
 
-				String  from_s  = from.getAbsolutePath();
-				String  to_s    = to.getAbsolutePath();
-
-				updateFileLink( file_index, old_path, new_path, from_s, to_s, from_indexes, from_links, to_links );
+				updateFileLink( file_index, old_save_path, new_save_path, from, to, 
+					from_indexes, from_links, to_links );
 
 			}catch( Exception e ){
 
@@ -1944,19 +1939,22 @@ DownloadManagerImpl
 	private void
 	updateFileLink(
 		int				file_index,
-		String 			old_path,
-		String 			new_path,
-		String 			from_loc,
-		String 			to_loc,
+		File 			old_path,
+		File 			new_path,
+		File 			from_loc,
+		File 			to_loc,
 		List<Integer>	from_indexes,
 		List<File> 		from_links,
 		List<File> 		to_links )
 	{
 		//System.out.println( "ufl: " + file_index + "\n  " + old_path + " - " + new_path + "\n  " + from_loc + " - " + to_loc );
 
+		String old_path_str = old_path.getPath();
+		String new_path_str = new_path.getPath();
+
 		if ( torrent.isSimpleTorrent()){
 
-			if ( !old_path.equals( from_loc )){
+			if (!FileUtil.areFilePathsIdentical(old_path, from_loc)) {
 
 				throw new RuntimeException("assert failure: old_path=" + old_path + ", from_loc=" + from_loc);
 			}
@@ -1964,7 +1962,7 @@ DownloadManagerImpl
 			//System.out.println( "   adding " + old_path + " -> null" );
 
 			from_indexes.add( 0 );
-			from_links.add( FileUtil.newFile(old_path));
+			from_links.add(old_path);
 			to_links.add( null );
 
 				// in general links on simple torrents aren't used, instead the download's save-path is switched to the
@@ -1976,61 +1974,46 @@ DownloadManagerImpl
 				// alternative directory. Thus fixing up the link becomes a case of taking the target file name from the old link
 				// and making it the target file naem of the new link within the new path's parent folder
 
-
-			String new_path_parent;
-			int pos = new_path.lastIndexOf( File.separatorChar );
-			if ( pos != -1 ){
-				new_path_parent = new_path.substring( 0, pos );
-			}else{
+			File new_path_parent = new_path.getParentFile();
+			if (new_path_parent == null) {
 				Debug.out( "new_path " + new_path + " missing file separator, not good" );
 
 				new_path_parent = new_path;
 			}
 
-			String to_loc_name;
-			pos = to_loc.lastIndexOf( File.separatorChar );
-			if ( pos != -1 ){
-				to_loc_name = to_loc.substring( pos+1 );
-			}else{
-				Debug.out( "to_loc " + to_loc + " missing file separator, not good" );
+			String to_loc_name = to_loc.getName();
 
-				to_loc_name = to_loc;
-			}
-
-			String to_loc_to_use = new_path_parent + File.separatorChar + to_loc_name;
+			File to_loc_to_use = FileUtil.newFile(new_path_parent, to_loc_name);
 
 			//System.out.println( "   adding " + new_path + " -> " + to_loc_to_use );
 			from_indexes.add( 0 );
-			from_links.add(FileUtil.newFile(new_path));
-			to_links.add( FileUtil.newFile(to_loc_to_use));
+			from_links.add( new_path );
+			to_links.add( to_loc_to_use );
 
 		}else{
 
-			String from_loc_to_use = FileUtil.translateMoveFilePath( old_path, new_path, from_loc );
+			String from_loc_to_use = FileUtil.translateMoveFilePath( old_path_str, 
+				new_path_str, from_loc.getAbsolutePath() );
 
 			if ( from_loc_to_use == null ){
 
 				return;
 			}
 
-			String to_loc_to_use = FileUtil.translateMoveFilePath( old_path, new_path, to_loc );
-
-			if ( to_loc_to_use == null ){
-
-				to_loc_to_use = to_loc;
-			}
+			String to_loc_to_use = FileUtil.translateMoveFilePath( old_path_str, 
+				new_path_str, to_loc.getAbsolutePath() );
 
 				// delete old
 
 			from_indexes.add( file_index );
-			from_links.add(FileUtil.newFile(from_loc));
+			from_links.add( from_loc );
 			to_links.add( null );
 
 				// add new
 
 			from_indexes.add( file_index );
 			from_links.add( FileUtil.newFile(from_loc_to_use));
-			to_links.add( FileUtil.newFile(to_loc_to_use));
+			to_links.add( to_loc_to_use == null ? to_loc : FileUtil.newFile(to_loc_to_use));
 		}
 	}
 
