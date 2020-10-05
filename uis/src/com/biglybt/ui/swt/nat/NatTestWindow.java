@@ -123,7 +123,7 @@ public class NatTestWindow {
 	serverTCPListenPort = COConfigurationManager.getIntParameter( "TCP.Listen.Port" );
 	serverUDPListenPort = COConfigurationManager.getIntParameter( "UDP.Listen.Port" );
 
-    final Shell shell = ShellFactory.createMainShell(SWT.BORDER | SWT.TITLE | SWT.CLOSE);
+    final Shell shell = ShellFactory.createMainShell(SWT.BORDER | SWT.TITLE | SWT.CLOSE | SWT.RESIZE );
     shell.setText(MessageText.getString("configureWizard.nat.title"));
     Utils.setShellIcon(shell);
 
@@ -347,8 +347,17 @@ public class NatTestWindow {
 		}
 	});
 
-    shell.pack();
-    Utils.centreWindow(shell);
+	boolean hasMetrics = Utils.hasShellMetricsConfig( "NatTestWindow.metrics" );
+	
+	Utils.linkShellMetricsToConfig( shell, "NatTestWindow.metrics" );
+	
+	if ( !hasMetrics ){
+		
+		shell.pack();
+		
+		Utils.centreWindow(shell);
+	}
+	
     shell.open();
   }
 
