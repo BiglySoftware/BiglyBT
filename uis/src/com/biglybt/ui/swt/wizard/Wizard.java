@@ -56,6 +56,9 @@ public class Wizard {
 	private final static int DEFAULT_WIDTH = 500;
   List<WizardListener>		listeners = new ArrayList<>(1);
 
+  private final String	wizardKey;
+  private final boolean	hasShellMetrics;
+  
   Display display;
   Shell wizardWindow;
   Label title;
@@ -84,34 +87,17 @@ public class Wizard {
   	String 			keyTitle,
   	boolean 		modal )
   {
-    this( modal );
-
-    setTitleKey( keyTitle );
+    this( keyTitle, modal, DEFAULT_WIDTH );
   }
 
   public
   Wizard(
-  	String 			keyTitle,
-  	boolean 		modal,
-  	int				width )
+	String		keyTitle,
+  	boolean 	modal,
+  	int			width )
   {
-    this( modal, width );
-
-    setTitleKey( keyTitle );
-  }
-
-  public
-  Wizard(
-	boolean modal )
-  {
-	  this( modal, DEFAULT_WIDTH );
-  }
-
-  public
-  Wizard(
-  	boolean modal,
-  	int		width )
-  {
+	wizardKey = "Wizard.shell:" + keyTitle;
+	  
   	int style = SWT.DIALOG_TRIM | SWT.RESIZE;
   	if (modal) {
   		style |= SWT.APPLICATION_MODAL;
@@ -128,6 +114,12 @@ public class Wizard {
     wizardWindow.setLayout(layout);
     Utils.setShellIcon(wizardWindow);
 
+    Messages.setLanguageText( wizardWindow, keyTitle );
+    
+    hasShellMetrics = Utils.hasShellMetricsConfig( wizardKey );
+    
+    Utils.linkShellMetricsToConfig(wizardWindow, wizardKey);
+    
     Composite cTitle = new Composite(wizardWindow, SWT.NULL);
     Color white = Colors.getSystemColor(display, SWT.COLOR_WHITE);
     cTitle.setBackground(white);
@@ -282,9 +274,10 @@ public class Wizard {
 		}
 	});
 
- 	wizardHeight = wizardWindow.computeSize(width,SWT.DEFAULT).y - 50;
- 	wizardWindow.setSize(width, 400);
-
+ 	if ( !hasShellMetrics ){
+ 		wizardHeight = wizardWindow.computeSize(width,SWT.DEFAULT).y - 50;
+ 		wizardWindow.setSize(width, 400);
+ 	}
   }
 
   private void
@@ -343,7 +336,7 @@ public class Wizard {
     currentPanel.show();
     panel.layout();
     panel.redraw();
-    insureSize();
+    ensureSize();
   }
 
 	private void
@@ -407,10 +400,6 @@ public class Wizard {
     this.errorMessage.setText(errorMessage);
   }
 
-  public void setTitleKey(String key) {
-    Messages.setLanguageText(wizardWindow, key);
-  }
-
   public void setNextEnabled(boolean enabled) {
     this.next.setEnabled(enabled);
 	setDefaultButton();
@@ -429,8 +418,10 @@ public class Wizard {
   public void setFirstPanel(IWizardPanel<?> panel) {
     this.currentPanel = panel;
     refresh();
-    insureSize();
-    Utils.centreWindow( wizardWindow );
+    ensureSize();
+    if ( !hasShellMetrics ){
+    	Utils.centreWindow( wizardWindow );
+    }
     wizardWindow.open();
   }
 
@@ -509,12 +500,13 @@ public class Wizard {
     return currentPanel;
   }
 
-  private void insureSize() {
-  	//panel.pack();
-  	Point p = panel.computeSize(wizardWindow.getSize().x,SWT.DEFAULT);
-  	int height = p.y + wizardHeight;
-  	if(height > wizardWindow.getSize().y)
-  		wizardWindow.setSize(p.x,height);
+  private void ensureSize() {
+  	if ( !hasShellMetrics ){
+	  	Point p = panel.computeSize(wizardWindow.getSize().x,SWT.DEFAULT);
+	  	int height = p.y + wizardHeight;
+	  	if(height > wizardWindow.getSize().y)
+	  		wizardWindow.setSize(p.x,height);
+  	}
   }
 
   public void
