@@ -22,12 +22,16 @@
 
 package com.biglybt.ui.swt.views.tableitems.peers;
 
+import java.net.InetAddress;
+
+
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.ui.swt.debug.ObfuscateCellText;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.pif.ui.tables.TableCellToolTipListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 
 /**
@@ -37,7 +41,7 @@ import com.biglybt.pif.ui.tables.TableColumnInfo;
  */
 public class IpItem
        extends CoreTableColumnSWT
-       implements TableCellRefreshListener, ObfuscateCellText
+       implements TableCellRefreshListener, ObfuscateCellText, TableCellToolTipListener
 {
 	public static final String COLUMN_ID = "ip";
 
@@ -78,9 +82,47 @@ public class IpItem
     }
   }
 
-  @Override
-  public String getObfuscatedText(TableCell cell) {
-	String text = cell.getText();
-  	return text.length() > 3?text.substring(0, 3):text;
-  }
+	@Override
+	public void 
+	cellHover(
+		TableCell cell) 
+	{
+		PEPeer peer = (PEPeer)cell.getDataSource();
+		
+		String str;
+		
+		if ( peer == null ){
+			str = "";
+		}else{
+			String ip = peer.getIp();
+			
+			InetAddress ia = peer.getAlternativeIPv6();
+			
+			if ( ia != null ){
+				String alt = ia.getHostAddress();
+				
+				if (ip.equals( alt )){
+					str = ip;
+				}else{
+					str = ip + " (" + alt + ")";
+				}
+			}else{
+				str = ip;
+			}
+		}
+		cell.setToolTip( str );
+	}
+
+	@Override
+	public void 
+	cellHoverComplete(
+		TableCell cell) 
+	{	
+	}
+	
+	@Override
+	public String getObfuscatedText(TableCell cell) {
+		String text = cell.getText();
+		return text.length() > 3?text.substring(0, 3):text;
+	}
 }
