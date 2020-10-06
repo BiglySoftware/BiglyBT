@@ -151,17 +151,31 @@ FMFileLimited
 	getLength()
 
 		throws FMFileManagerException
-	{
+	{		
+		boolean got_mon = false;
+		
 		try{
-			this_mon.enter();
-
+			do{	
+				long length_cache = getLengthCache();
+				
+				if ( length_cache >= 0 ){
+					
+					return( length_cache );
+				}
+			}while( !this_mon.enter(250));
+			
+			got_mon = true;
+			
 			ensureOpen( "FMFileLimited:getLength" );
 
 			return( getLengthSupport());
 
 		}finally{
 
-			this_mon.exit();
+			if ( got_mon ){
+			
+				this_mon.exit();
+			}
 		}
 	}
 

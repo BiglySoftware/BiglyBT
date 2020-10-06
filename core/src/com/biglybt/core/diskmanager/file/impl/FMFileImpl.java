@@ -82,6 +82,8 @@ FMFileImpl
 
 	protected final AEMonitor			this_mon	= new AEMonitor( "FMFile" );
 
+	private volatile long		length_cache = -1;
+	
 	private boolean				clone;
 
 	protected
@@ -301,6 +303,11 @@ FMFileImpl
 		try{
 			this_mon.enter();
 
+				// when a file is being moved we want to prevent other operations from being blocked simply if they want
+				// to read the file length
+			
+			length_cache = getLength();
+			
 			TOTorrentFile tf = owner.getTorrentFile();
 
 			String	new_canonical_path;
@@ -381,6 +388,8 @@ FMFileImpl
 			}
 		}finally{
 
+			length_cache = -1;
+			
 			this_mon.exit();
 		}
 	}
@@ -395,6 +404,8 @@ FMFileImpl
 		try{
 			this_mon.enter();
 
+			length_cache = getLength();
+			
 			String	new_canonical_path;
 
 			File 	new_linked_file = FileUtil.newFile( linked_file.getParentFile(), new_name );
@@ -471,6 +482,8 @@ FMFileImpl
 			}
 		}finally{
 
+			length_cache = -1;
+			
 			this_mon.exit();
 		}
 	}
@@ -498,6 +511,12 @@ FMFileImpl
 		}
 	}
 
+	protected long
+	getLengthCache()
+	{
+		return( length_cache );
+	}
+	
 	protected long
 	getLengthSupport()
 
@@ -527,7 +546,7 @@ FMFileImpl
 		long		length )
 
 		throws FMFileManagerException
-	{
+	{		
 		try{
 			file_access.setLength( fa, length );
 
