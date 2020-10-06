@@ -2766,6 +2766,8 @@ DiskManagerImpl
 		  }
 	
 		  try{
+			  reader.setSuspended( true );
+			  
 			  boolean simple_torrent = download_manager.getTorrent().isSimpleTorrent();
 	
 			  // absolute save location does not follow links
@@ -3387,6 +3389,8 @@ DiskManagerImpl
 	
 		  }finally{
 	
+			  reader.setSuspended( false );
+			  
 			  synchronized( got_there ){
 	
 				  got_there[0] = true;

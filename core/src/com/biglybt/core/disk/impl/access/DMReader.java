@@ -38,6 +38,10 @@ DMReader
 	public void
 	stop();
 
+	public void
+	setSuspended(
+		boolean		suspended );
+	
 	public DirectByteBuffer
 	readBlock(
 		int pieceNumber,

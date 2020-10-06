@@ -48,20 +48,23 @@ DMReaderImpl
 {
 	private static final LogIDs LOGID = LogIDs.DISK;
 
-	final DiskManagerHelper		disk_manager;
-	final DiskAccessController	disk_access;
+	private final DiskManagerHelper		disk_manager;
+	private final DiskAccessController	disk_access;
 
-	int						async_reads;
-	final Set						read_requests		= new HashSet();
-	final AESemaphore				async_read_sem = new AESemaphore("DMReader:asyncReads");
+	private int								async_reads;
+	private final Set<Object[]>				read_requests		= new HashSet<>();
+	private final AESemaphore				async_read_sem = new AESemaphore("DMReader:asyncReads");
 
+	private final List<Object[]>			suspended_requests	= new ArrayList<>();
+	
 	private boolean					started;
-	boolean					stopped;
+	private boolean					stopped;
+	private int						suspended;
+	
+	private long					total_read_ops;
+	private long					total_read_bytes;
 
-	long					total_read_ops;
-	long					total_read_bytes;
-
-	protected final AEMonitor	this_mon	= new AEMonitor( "DMReader" );
+	private final AEMonitor	this_mon	= new AEMonitor( "DMReader" );
 
 	public
 	DMReaderImpl(
@@ -103,6 +106,8 @@ DMReaderImpl
 	{
 		int	read_wait;
 
+		List<Object[]>		suspended = null;
+
 		try{
 			this_mon.enter();
 
@@ -115,11 +120,28 @@ DMReaderImpl
 
 			read_wait	= async_reads;
 
+			if ( !suspended_requests.isEmpty()){
+				
+				suspended = new ArrayList<>( suspended_requests );
+				
+				suspended_requests.clear();
+			}
 		}finally{
 
 			this_mon.exit();
 		}
 
+		if ( suspended != null ){
+			
+			for ( Object[] susp: suspended ){
+				
+				DiskManagerReadRequest			request 	= (DiskManagerReadRequest)susp[0];
+				DiskManagerReadRequestListener	listener 	= (DiskManagerReadRequestListener)susp[1];
+
+				listener.readFailed( request, new Exception( "Disk Reader stopped" ));
+			}
+		}
+		
 		long	log_time 		= SystemTime.getCurrentTime();
 
 		for (int i=0;i<read_wait;i++){
@@ -148,6 +170,93 @@ DMReaderImpl
 	}
 
 	@Override
+	public void 
+	setSuspended(
+		boolean 	b )
+	{
+		List<Object[]>		to_run = null;
+		
+		try{
+			this_mon.enter();
+		
+			if ( b ){
+				
+				suspended++;
+				
+			}else{
+				
+				suspended--;
+				
+				if ( suspended == 0 ){
+					
+					to_run = new ArrayList<>( suspended_requests );
+					
+					suspended_requests.clear();
+				}
+			}
+		}finally{
+
+			this_mon.exit();
+		}
+
+		if ( to_run != null ){
+			
+			for ( Object[] susp: to_run ){
+								
+				DiskManagerReadRequest			request 	= (DiskManagerReadRequest)susp[0];
+				DiskManagerReadRequestListener	listener 	= (DiskManagerReadRequestListener)susp[1];
+				
+				Object[]						request_wrapper = (Object[])susp[2];
+				DiskManagerReadRequestListener	l				= (DiskManagerReadRequestListener)susp[3];
+				List<Object[]>					chunks			= (List<Object[]>)susp[4];
+						
+				DirectByteBuffer buffer = DirectByteBufferPool.getBuffer( DirectByteBuffer.AL_DM_READ, request.getLength());
+
+				if ( buffer == null ) { // Fix for bug #804874
+
+					Debug.out("DiskManager::readBlock:: ByteBufferPool returned null buffer");
+
+					listener.readFailed( request, new Exception( "Out of memory" ));
+					
+					continue;
+				}
+				
+				try{
+					this_mon.enter();
+
+					if ( stopped ){
+
+						buffer.returnToPool();
+
+						listener.readFailed( request, new Exception( "Disk reader has been stopped" ));
+
+						continue;
+					}
+					
+					if ( suspended > 0 ){
+						
+						suspended_requests.add( new Object[]{ request_wrapper, request, l, chunks });
+						
+						buffer.returnToPool();
+						
+						continue;
+					}
+
+					async_reads++;
+
+					read_requests.add( request_wrapper );
+
+				}finally{
+
+					this_mon.exit();
+				}
+
+				new requestDispatcher( request, l, buffer, chunks );
+			}
+		}
+	}
+	
+	@Override
 	public DiskManagerReadRequest
 	createReadRequest(
 		int pieceNumber,
@@ -165,11 +274,11 @@ DMReaderImpl
 		try{
 			this_mon.enter();
 
-			Iterator	it = read_requests.iterator();
+			Iterator<Object[]>	it = read_requests.iterator();
 
 			while( it.hasNext()){
 
-				DiskManagerReadRequest	request = (DiskManagerReadRequest)((Object[])it.next())[0];
+				DiskManagerReadRequest	request = (DiskManagerReadRequest)(it.next())[0];
 
 				if ( request.getPieceNumber() == piece_number ){
 
@@ -348,7 +457,7 @@ DMReaderImpl
 
 			fileOffset += offset - previousFilesLength;
 
-			List	chunks = new ArrayList();
+			List<Object[]>	chunks = new ArrayList<>();
 
 			int	buffer_position = 0;
 
@@ -470,6 +579,15 @@ DMReaderImpl
 
 					return;
 				}
+				
+				if ( suspended > 0 ){
+					
+					suspended_requests.add( new Object[]{ request, listener, request_wrapper, l, chunks });
+					
+					buffer.returnToPool();
+					
+					return;
+				}
 
 				async_reads++;
 
@@ -504,7 +622,7 @@ DMReaderImpl
 		private final DiskManagerReadRequest		dm_request;
 		final DiskManagerReadRequestListener		listener;
 		private final DirectByteBuffer				buffer;
-		private final List							chunks;
+		private final List<Object[]>				chunks;
 
 		private final int	buffer_length;
 
@@ -516,7 +634,7 @@ DMReaderImpl
 			DiskManagerReadRequest			_request,
 			DiskManagerReadRequestListener	_listener,
 			DirectByteBuffer				_buffer,
-			List							_chunks )
+			List<Object[]>					_chunks )
 		{
 			dm_request	= _request;
 			listener	= _listener;
