@@ -174,6 +174,8 @@ DMReaderImpl
 	setSuspended(
 		boolean 	b )
 	{
+		boolean				wait_for_requests = false;
+		
 		List<Object[]>		to_run = null;
 		
 		try{
@@ -183,6 +185,10 @@ DMReaderImpl
 				
 				suspended++;
 				
+				if ( suspended == 1 ){
+					
+					wait_for_requests = async_reads > 0;
+				}
 			}else{
 				
 				suspended--;
@@ -199,6 +205,31 @@ DMReaderImpl
 			this_mon.exit();
 		}
 
+		while( wait_for_requests ){
+			
+			try{
+				Thread.sleep(100);
+				
+			}catch( Throwable e ){
+				
+			}
+			
+			try{
+				this_mon.enter();
+			
+				if ( stopped ){
+					
+					break;
+				}
+				
+				wait_for_requests = async_reads > 0;
+				
+			}finally{
+
+				this_mon.exit();
+			}
+		}
+		
 		if ( to_run != null ){
 			
 			for ( Object[] susp: to_run ){
