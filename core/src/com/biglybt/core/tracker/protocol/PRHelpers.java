@@ -105,26 +105,6 @@ PRHelpers
 		}
 	}
 
-	public static void
-	addressTo4ByteArray(
-		String		address,
-		byte[]		buffer,
-		int			offset )
-
-		throws UnknownHostException
-	{
-		InetAddress i_address = HostNameToIPResolver.syncResolve(address);
-
-		byte[]	bytes = i_address.getAddress();
-
-		if ( Constants.IS_CVS_VERSION && bytes.length > 4 ){
-			
-			Debug.out( "hmm" );
-		}
-
-		System.arraycopy( bytes, 0, buffer, offset, 4 );
-	}
-
 	public static String
 	DNSToIPAddress(
 		String		dns_name )
