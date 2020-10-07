@@ -95,6 +95,15 @@ DiskManagerRecheckScheduler
 					public int 
 					getProgress()
 					{
+						int complete_recheck_status = helper.getCompleteRecheckStatus();
+						
+						if ( complete_recheck_status != -1 ){
+							
+								// rechecking when a download completes (i.e. not a manual recheck )
+							
+							return( complete_recheck_status );
+						}
+						
 						return( dm==null?-1:dm.getStats().getCompleted());
 					}
 					
