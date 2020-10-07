@@ -1509,17 +1509,52 @@ DeviceManagerUI
 			}
 		}
 
-			// registering the view makes it elibigle for quicklinks
+		if ( mdi.getEntry( SideBar.SIDEBAR_HEADER_DEVICES  ) == null ){
+			
+			registerDiskOps( mdi, SideBar.SIDEBAR_HEADER_TRANSFERS, true );
+
+		}else{
+			
+			registerDiskOps( mdi, SideBar.SIDEBAR_HEADER_DEVICES, false );
+			
+			mdi.loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_DISK_OPS, false );
+		}
 		
+		if (rebuild) {
+			for (categoryView category : categories) {
+				category.destroy();
+			}
+		}
+
+		categories.clear();
+		
+		buildCategories( side_bar_view_type == SBV_FULL);
+
+		sidebar_built = true;
+
+		return mdiEntryOverview;
+	}
+
+	public static void
+	registerDiskOps(
+		MultipleDocumentInterface		mdi,
+		String							parent,
+		boolean							closeable )
+	{
+			// registering the view makes it elibigle for quicklinks
+			
 		if ( mdi.getEntry(SideBar.SIDEBAR_SECTION_DISK_OPS ) == null ){
 			
-			mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_DISK_OPS,
+			mdi.registerEntry(
+					MultipleDocumentInterface.SIDEBAR_SECTION_DISK_OPS,
 					new MdiEntryCreationListener() {
 						@Override
 						public MdiEntry createMDiEntry(String id) {
 							MdiEntry mdiEntryDiskOps = mdi.createEntryFromSkinRef(
-									SideBar.SIDEBAR_HEADER_DEVICES, SideBar.SIDEBAR_SECTION_DISK_OPS,
-									"diskopsview", MessageText.getString("mdi.entry.about.diskops"),
+									parent, 
+									SideBar.SIDEBAR_SECTION_DISK_OPS,
+									"diskopsview", 
+									MessageText.getString("mdi.entry.about.diskops"),
 									new ViewTitleInfo()
 									{
 										@Override
@@ -1539,7 +1574,7 @@ DeviceManagerUI
 											return( null );
 										}
 									},
-									null, false, SideBar.SIDEBAR_SECTION_DEVICES );
+									null, closeable, SideBar.SIDEBAR_SECTION_DEVICES );
 							
 							mdiEntryDiskOps.setImageLeftID("image.sidebar.aboutdiskops");
 							
@@ -1601,24 +1636,8 @@ DeviceManagerUI
 						}
 					});
 		}
-		
-		mdi.loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_DISK_OPS, false );
-			
-		if (rebuild) {
-			for (categoryView category : categories) {
-				category.destroy();
-			}
-		}
-
-		categories.clear();
-		
-		buildCategories( side_bar_view_type == SBV_FULL);
-
-		sidebar_built = true;
-
-		return mdiEntryOverview;
 	}
-
+	
 	private void buildCategories( boolean full ) {
 		
 		if ( full ){

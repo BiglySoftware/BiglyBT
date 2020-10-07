@@ -76,23 +76,21 @@ public class SBC_DiskOpsView
 
 
 	@Override
-	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
-		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
-			@Override
-			public void coreRunning(Core core) {
-				initColumns(core);
-			}
-		});
-
+	public Object 
+	skinObjectInitialShow(
+		SWTSkinObject skinObject, 
+		Object params) 
+	{
+		initColumns();
 
 		return null;
 	}
 
 	private void 
-	initColumns(
-		Core core) 
+	initColumns()
 	{
 		if ( columnsAdded ){
+			
 			return;
 		}
 		

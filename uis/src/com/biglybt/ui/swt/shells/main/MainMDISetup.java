@@ -61,6 +61,7 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.devices.DeviceManagerUI;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
@@ -1311,6 +1312,18 @@ public class MainMDISetup
 							MultipleDocumentInterface.SIDEBAR_SECTION_ALLPIECES );
 				}
 			});
+			
+			menuItem = uim.getMenuManager().addMenuItem(
+					MenuManager.MENU_MENUBAR, "diskops.view.heading");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_DISK_OPS );
+				}
+			});
+
 		}
 
 		//		System.out.println("Activate sidebar " + startTab + " took "
@@ -1338,6 +1351,8 @@ public class MainMDISetup
 					}
 				});
 
+		DeviceManagerUI.registerDiskOps( mdi, MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, true );
+		
 		setupCatsTags( mdi );
 		
 		sb_transfers = new SB_Transfers(mdi, false);
