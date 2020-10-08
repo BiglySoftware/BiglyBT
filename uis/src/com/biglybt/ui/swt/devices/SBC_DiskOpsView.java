@@ -31,7 +31,6 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationListener;
 import com.biglybt.core.CoreOperationTask.ProgressCallback;
-import com.biglybt.core.CoreRunningListener;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
