@@ -4841,8 +4841,17 @@ DownloadManagerImpl
 					private boolean		queued = true;
 					
 					@Override
-					public String getName(){
+					public String 
+					getName()
+					{
 						return( getDisplayName());
+					}
+										
+					@Override
+					public DownloadManager 
+					getDownload()
+					{
+						return( DownloadManagerImpl.this );
 					}
 					
 					private ProgressCallback callback = 
@@ -5415,10 +5424,19 @@ DownloadManagerImpl
 			  new CoreOperationTask()
 			  {
 				  @Override
-					public String getName(){
-						return( getDisplayName());
+				  public String 
+				  getName()
+				  {
+					  return( getDisplayName());
 				  }
-				  
+
+				  @Override
+				  public DownloadManager 
+				  getDownload()
+				  {
+					  return( DownloadManagerImpl.this );
+				  }
+					
 				  @Override
 				  public void
 				  run(

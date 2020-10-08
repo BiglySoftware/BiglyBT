@@ -1899,11 +1899,23 @@ public class FilesViewMenuUtil
 			FileUtil.runAsTask(new CoreOperationTask() {
 				
 				@Override
-				public String getName(){
+				public String 
+				getName()
+				{
 					return fileInfo.getFile( true ).getName();
 				}
+				
 				@Override
-				public ProgressCallback getProgressCallback() {
+				public DownloadManager
+				getDownload()
+				{
+					return( manager );
+				}
+				
+				@Override
+				public ProgressCallback 
+				getProgressCallback() 
+				{
 					return null;
 				}
 
@@ -1988,11 +2000,23 @@ public class FilesViewMenuUtil
 			FileUtil.runAsTask(new CoreOperationTask() {
 				
 				@Override
-				public String getName(){
+				public String 
+				getName()
+				{
 					return fileInfo.getFile( true ).getName();
 				}
+				
 				@Override
-				public ProgressCallback getProgressCallback() {
+				public DownloadManager
+				getDownload()
+				{
+					return( manager );
+				}
+				
+				@Override
+				public ProgressCallback 
+				getProgressCallback() 
+				{
 					return null;
 				}
 

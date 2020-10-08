@@ -36,6 +36,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
@@ -697,10 +698,19 @@ public class NameItem extends CoreTableColumnSWT implements
 		FileUtil.runAsTask(new CoreOperationTask()
 		{
 			@Override
-			public String getName(){
-				// TODO Auto-generated method stub
+			public String 
+			getName()
+			{
 				return fileInfo.getFile(true).getName();
 			}
+			
+			@Override
+			public DownloadManager
+			getDownload()
+			{
+				return( fileInfo.getDownloadManager());
+			}
+			
 			@Override
 			public void run(CoreOperation operation) {
 				result[0] = fileInfo.setLink(target);

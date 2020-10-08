@@ -147,6 +147,13 @@ DiskManagerAllocationScheduler
 					return( helper.getDisplayName());
 				}
 				
+				@Override
+				public DownloadManager 
+				getDownload()
+				{
+					return( helper.getDownload());
+				}
+				
 				public ProgressCallback
 				getProgressCallback()
 				{

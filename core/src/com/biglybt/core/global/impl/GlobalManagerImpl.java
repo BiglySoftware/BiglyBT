@@ -35,6 +35,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.CoreOperationListener;
+import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
@@ -631,7 +634,7 @@ public class GlobalManagerImpl
         		// as this process kicks off tag constraint validation and this may depend on the download state
         		// tags existing (e.g. hasTag( "Seeding" )
         	
-        	ds_tagger = new DownloadStateTagger();
+        	ds_tagger = new DownloadStateTagger( core );
         }
 
     	loadDownloads();
@@ -4545,6 +4548,9 @@ public class GlobalManagerImpl
 		private final TagDownloadWithState	tag_complete;
 		private final TagDownloadWithState	tag_incomplete;
 
+		private final TagDownloadWithState	tag_moving;
+		private final TagDownloadWithState	tag_checking;
+
 		private final TagDownloadWithState	tag_paused;
 
 		int user_mode = -1;
@@ -4571,7 +4577,7 @@ public class GlobalManagerImpl
 				});
 		}
 
-		DownloadStateTagger()
+		DownloadStateTagger(Core core)
 		{
 			super( TagType.TT_DOWNLOAD_STATE, TagDownload.FEATURES & ~TagFeature.TF_NOTIFICATIONS, "tag.type.ds" );
 
@@ -4591,6 +4597,8 @@ public class GlobalManagerImpl
 			tag_inactive			= new MyTag( 9, "tag.type.ds.inact", false, false, false, false, TagFeatureRunState.RSC_START_STOP_PAUSE );
 			tag_complete			= new MyTag( 10, "tag.type.ds.comp", true, true, false, true, TagFeatureRunState.RSC_START_STOP_PAUSE );
 			tag_incomplete			= new MyTag( 11, "tag.type.ds.incomp", true, true, true, true, TagFeatureRunState.RSC_START_STOP_PAUSE );
+			tag_moving				= new MyTag( 12, "tag.type.ds.mov", false, false, false, false, TagFeatureRunState.RSC_STOP_PAUSE );
+			tag_checking			= new MyTag( 13, "tag.type.ds.chk", false, false, false, false, TagFeatureRunState.RSC_STOP_PAUSE );
 
 			if ( tag_active.isColorDefault()){
 				tag_active.setColor( new int[]{ 96, 160, 96 });
@@ -4599,6 +4607,78 @@ public class GlobalManagerImpl
 			if ( tag_error.isColorDefault()){
 				tag_error.setColor( new int[]{ 132, 16, 58 });
 			}
+			
+			core.addOperationListener(
+				new CoreOperationListener(){
+
+					@Override
+					public void 
+					operationAdded(
+						CoreOperation operation )
+					{
+						process( operation, true );
+					}
+
+					@Override
+					public void 
+					operationRemoved(
+						CoreOperation operation )
+					{
+						process( operation, false );
+					}
+
+					private void
+					process(
+						CoreOperation		operation,
+						boolean				added )
+					{
+						int type = operation.getOperationType();
+
+						if ( type == CoreOperation.OP_DOWNLOAD_CHECKING || type == CoreOperation.OP_FILE_MOVE ){
+
+							CoreOperationTask task = operation.getTask();
+
+							DownloadManager dm = task.getDownload();
+
+							if ( dm == null ){
+
+								return;
+							}
+
+								// too lazy to ref count these in case > 1 active at same time...
+							
+							if ( type == CoreOperation.OP_DOWNLOAD_CHECKING ){
+
+								if ( added ){
+
+									tag_checking.addTaggable( dm );
+									
+								}else{
+									
+									tag_checking.removeTaggable( dm );
+								}
+							}else{
+								
+								if ( added ){
+
+									tag_moving.addTaggable( dm );
+									
+								}else{
+									
+									tag_moving.removeTaggable( dm );
+								}
+							}
+						}
+					}
+					
+					@Override
+					public boolean 
+					operationExecuteRequest(
+							CoreOperation operation )
+					{
+						return false;
+					}
+				});
 		}
 		
 		private void

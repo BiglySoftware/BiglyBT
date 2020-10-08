@@ -19,11 +19,16 @@
 
 package com.biglybt.core;
 
+import com.biglybt.core.download.DownloadManager;
+
 public interface
 CoreOperationTask
 {
 	public String
 	getName();
+	
+	public DownloadManager
+	getDownload();
 	
 	public default void
 	run(

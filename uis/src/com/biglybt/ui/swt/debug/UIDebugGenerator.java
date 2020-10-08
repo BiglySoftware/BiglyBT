@@ -323,6 +323,14 @@ public class UIDebugGenerator
 							public String getName(){
 								return null;
 							}
+							
+							@Override
+							public DownloadManager 
+							getDownload()
+							{
+								return null;
+							}
+							
 							@Override
 							public void run(CoreOperation operation) {
 								try {
