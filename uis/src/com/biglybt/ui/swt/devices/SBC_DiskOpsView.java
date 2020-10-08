@@ -43,6 +43,7 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.devices.columns.*;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.views.skin.InfoBarUtil;
 import com.biglybt.ui.swt.views.skin.SkinView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
@@ -83,6 +84,21 @@ public class SBC_DiskOpsView
 	{
 		initColumns();
 
+		new InfoBarUtil(
+				skinObject,
+				"diskopsview.infobar",
+				false,
+				"diskops.infobar",
+				"diskops.view.infobar" )
+				{
+					@Override
+					public boolean
+					allowShow()
+					{
+						return( true );
+					}
+				};
+				
 		return null;
 	}
 
@@ -214,7 +230,7 @@ public class SBC_DiskOpsView
 		// tvDiskOps.setRowDefaultHeightEM(1.5f);
 		tvDiskOps.setHeaderVisible( true );
 
-		tableParent = new Composite(control, SWT.NONE);
+		tableParent = new Composite(control, SWT.BORDER);
 		tableParent.setLayoutData(Utils.getFilledFormData());
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = layout.verticalSpacing = layout.horizontalSpacing = 0;
