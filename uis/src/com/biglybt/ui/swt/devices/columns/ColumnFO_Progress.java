@@ -28,6 +28,7 @@ import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.internat.MessageText.MessageTextListener;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
@@ -54,12 +55,6 @@ public class ColumnFO_Progress
 	String	na_text;
 
 	Color textColor;
-
-	NumberFormat percentage_format = NumberFormat.getPercentInstance();
-	{
-		percentage_format.setMinimumFractionDigits(0);
-		percentage_format.setMaximumFractionDigits(0);
-	}
 
 	public ColumnFO_Progress(final TableColumn column) {
 		column.initialize(TableColumn.ALIGN_LEAD, TableColumn.POSITION_LAST, 145);
@@ -191,7 +186,7 @@ public class ColumnFO_Progress
 
 		}else{
 
-			sText = percentage_format.format( progress/1000.0 );
+			sText = DisplayFormatters.formatPercentFromThousands( progress );
 		}
 
 		GCStringPrinter.printString(gcImage, sText, new Rectangle(bounds.x + 4,
