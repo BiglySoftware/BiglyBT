@@ -51,6 +51,7 @@ import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.MenuBuildUtils;
+import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
@@ -1575,10 +1576,11 @@ public class TabbedMDI
 		}
 		
 		{
-			com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem(id + "._end_", "menu.pop.out");
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-			menuItem.addFillListener(
+			MenuItem menuParentItem = menuManager.addMenuItem( id + "._end_", "label.pop.out");
+			menuParentItem.setStyle(MenuItem.STYLE_MENU );
+			menuParentItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			
+			menuParentItem.addFillListener(
 				new com.biglybt.pif.ui.menus.MenuItemFillListener() {
 
 					@Override
@@ -1597,7 +1599,10 @@ public class TabbedMDI
 					}
 				});
 
-			menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
+			MenuItem menuItemIndependent = menuManager.addMenuItem( menuParentItem, "menu.independent");
+			MenuItem menuItemOnTop		 = menuManager.addMenuItem( menuParentItem, "menu.on.top");
+					
+			com.biglybt.pif.ui.menus.MenuItemListener listener = new com.biglybt.pif.ui.menus.MenuItemListener() {
 				@Override
 				public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
 
@@ -1616,7 +1621,7 @@ public class TabbedMDI
 							new SkinnedDialog(
 									"skin3_dlg_sidebar_popout",
 									"shell",
-									null,	// standalone
+									menu==menuItemOnTop?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
 									SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
 
 					SWTSkin skin = skinnedDialog.getSkin();
@@ -1642,7 +1647,10 @@ public class TabbedMDI
 						skinnedDialog.close();
 					}
 				}
-			});
+			};
+			
+			menuItemIndependent.addListener( listener );
+			menuItemOnTop.addListener( listener );
 		}
 	}
 	

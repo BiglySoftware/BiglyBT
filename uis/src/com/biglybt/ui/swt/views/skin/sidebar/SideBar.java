@@ -42,6 +42,7 @@ import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.FixedHTMLTransfer;
 import com.biglybt.ui.swt.FixedURLTransfer;
+import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
@@ -358,10 +359,12 @@ public class SideBar
 		}
 		
 		{
-			MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "menu.pop.out");
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-	
-			menuItem.addFillListener(
+			MenuItem menuParentItem = menuManager.addMenuItem( "sidebar._end_", "label.pop.out");
+			menuParentItem.setStyle(MenuItem.STYLE_MENU );
+			menuParentItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+
+			
+			menuParentItem.addFillListener(
 				new MenuItemFillListener() {
 	
 					@Override
@@ -372,7 +375,10 @@ public class SideBar
 					}
 				});
 	
-			menuItem.addListener(new MenuItemListener() {
+			MenuItem menuItemIndependent = menuManager.addMenuItem( menuParentItem, "menu.independent");
+			MenuItem menuItemOnTop		 = menuManager.addMenuItem( menuParentItem, "menu.on.top");
+
+			MenuItemListener listener = new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
 					SideBarEntrySWT sbe = getCurrentEntry();
@@ -382,7 +388,7 @@ public class SideBar
 								new SkinnedDialog(
 										"skin3_dlg_sidebar_popout",
 										"shell",
-										null,	// standalone
+										menu==menuItemOnTop?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
 										SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
 	
 						SWTSkin skin = skinnedDialog.getSkin();
@@ -401,7 +407,10 @@ public class SideBar
 						}
 					}
 				}
-			});
+			};
+			
+			menuItemIndependent.addListener( listener );
+			menuItemOnTop.addListener( listener );
 		}
 	}
 
