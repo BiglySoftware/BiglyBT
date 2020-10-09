@@ -24,14 +24,16 @@ import java.util.List;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
-
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterListener;
 
 import static com.biglybt.core.config.ConfigKeys.*;
+import static com.biglybt.core.config.ConfigKeys.File.ICFG_TB_CONFIRM_DELETE_CONTENT;
 import static com.biglybt.core.config.ConfigKeys.Transfer.*;
 
 public class ConfigSectionTransfer
@@ -322,6 +324,23 @@ public class ConfigSectionTransfer
 				BCFG_ALLOW_SAME_IP_PEERS, "ConfigView.label.allowsameip");
 		add(allowSameIP, Parameter.MODE_INTERMEDIATE);
 
+		// both IPv4 and IPv6 connections
+		
+		int[] values = { 0, 1, 2 };
+		
+		String[] labels = {
+				MessageText.getString("label.allow.both"),
+				MessageText.getString("label.ban.ipv4"),
+				MessageText.getString("label.ban.ipv6"),
+		};
+		
+		IntListParameterImpl paramDualIPAction = 
+			new IntListParameterImpl(
+				ICFG_IPv4_IPv6_CONN_ACTION, "ConfigView.label.dual.con.behaviour",
+				values, labels);
+		
+		add(paramDualIPAction, Parameter.MODE_INTERMEDIATE);	
+		
 		// lazy bit field
 		BooleanParameterImpl lazybf = new BooleanParameterImpl(
 				BCFG_USE_LAZY_BITFIELD, "ConfigView.label.lazybitfield");

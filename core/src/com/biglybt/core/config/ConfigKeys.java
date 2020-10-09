@@ -400,6 +400,7 @@ public final class ConfigKeys {
 		public static final String BCFG_UP_RATE_LIMITS_INCLUDE_PROTOCOL = "Up Rate Limits Include Protocol";
 		public static final String BCFG_DOWN_RATE_LIMITS_INCLUDE_PROTOCOL = "Down Rate Limits Include Protocol";
 		public static final String BCFG_ALLOW_SAME_IP_PEERS = "Allow Same IP Peers";
+		public static final String ICFG_IPv4_IPv6_CONN_ACTION = "Dual IPV4 IPV6 Connection Action";
 		public static final String BCFG_USE_LAZY_BITFIELD = "Use Lazy Bitfield";
 		public static final String BCFG_PEERCONTROL_HIDE_PIECE = "peercontrol.hide.piece";
 		public static final String BCFG_PEERCONTROL_HIDE_PIECE_DS = "peercontrol.hide.piece.ds";
