@@ -70,21 +70,24 @@ public class PeerManager implements CoreStatsProvider {
 
 	private static final AEMonitor	timer_mon = new AEMonitor( "PeerManager:timeouts" );
 	private static AEThread2	timer_thread;
-	static final Set	timer_targets = new HashSet();
+	static final Set<PeerManagerRegistrationImpl>	timer_targets = new HashSet<>();
 
 	
 	private static boolean enable_public_tcp_peers	= true;
 	private static boolean enable_public_udp_peers	= true;
+	private static boolean socks_data				= false;
 
 	static{
 		COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 				ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE,
-				ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE},
+				ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE,
+				ConfigKeys.Connection.BCFG_PROXY_DATA_ENABLE},
 			(ignore)->{
 				{
 					enable_public_tcp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE );
 					enable_public_udp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE );
+					socks_data					= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PROXY_DATA_ENABLE );
 				}
 			});
 	}
@@ -134,11 +137,11 @@ public class PeerManager implements CoreStatsProvider {
 
 									idle_time = 0;
 
-									Iterator	it = timer_targets.iterator();
+									Iterator<PeerManagerRegistrationImpl>	it = timer_targets.iterator();
 
 									while( it.hasNext()){
 
-										PeerManagerRegistrationImpl	registration = (PeerManagerRegistrationImpl)it.next();
+										PeerManagerRegistrationImpl	registration = it.next();
 
 										if ( !registration.timeoutCheck()){
 
@@ -1071,6 +1074,23 @@ public class PeerManager implements CoreStatsProvider {
 				connection.close( "Network '" + net_cat + "' is not enabled" );
 
 				return;
+			}
+			
+			if ( net_cat == AENetworkClassifier.AT_PUBLIC ){
+				
+				if ( socks_data ){
+					
+					boolean socks_active = NetworkAdmin.getSingleton().isSocksActive();
+					
+					boolean lan_local = connection.isLANLocal();
+
+					if ( socks_active && !lan_local ){
+					
+						connection.close( "Incoming connections not supported when SOCKS data proxy enabled" );
+
+						return;
+					}
+				}
 			}
 
 			InetAddress address_mbn = is_address.getAddress();
