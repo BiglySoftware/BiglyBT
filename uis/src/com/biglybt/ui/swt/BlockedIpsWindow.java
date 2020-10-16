@@ -19,6 +19,9 @@
  */
 package com.biglybt.ui.swt;
 
+import java.util.Arrays;
+import java.util.Comparator;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.DisposeEvent;
@@ -264,6 +267,23 @@ BlockedIpsWindow
 
     BannedIp[]	banned_ips = core.getIpFilterManager().getIPFilter().getBannedIps();
 
+    Arrays.sort(
+    	banned_ips,
+    	new Comparator<BannedIp>(){
+    		public int compare(BannedIp o1, BannedIp o2) {
+       			long l1 = o1.getBanningTime();
+       			long l2 = o2.getBanningTime();
+    			
+       			if ( l1 == l2 ){
+       				return( 0 );
+       			}else if ( l1 < l2 ){
+       				return( -1 );
+       			}else{
+       				return( 1 );
+       			}
+    		};
+		});
+    
     for(int i=0;i<banned_ips.length;i++){
     	BannedIp bIp = banned_ips[i];
       sbBanned.append(DisplayFormatters.formatTimeStamp(bIp.getBanningTime()));
