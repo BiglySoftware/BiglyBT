@@ -641,6 +641,7 @@ public class ConfigurationDefaults {
     def.put( "peercontrol.hide.piece", FALSE );
     def.put( "peercontrol.scheduler.use.priorities", TRUE );
     def.put( "peercontrol.prefer.udp", FALSE );
+    def.put( ConfigKeys.Connection.BCFG_PEERCONTROL_PREFER_IPV6_CONNECTIONS, FALSE );
 
     def.put( "File.truncate.if.too.large", FALSE);
     def.put( "Enable System Tray", TRUE);

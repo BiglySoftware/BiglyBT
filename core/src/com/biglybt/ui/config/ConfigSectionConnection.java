@@ -222,6 +222,12 @@ public class ConfigSectionConnection
 				"ConfigView.section.connection.prefer.udp");
 		add(paramPreferUDP, Parameter.MODE_ADVANCED);
 
+		BooleanParameterImpl paramPreferIPv6 = new BooleanParameterImpl(
+				BCFG_PEERCONTROL_PREFER_IPV6_CONNECTIONS,
+				"ConfigView.section.connection.prefer.ipv6");
+		add(paramPreferIPv6, Parameter.MODE_ADVANCED);
+
+		
 		if (userMode < 2) {
 			// wiki link
 

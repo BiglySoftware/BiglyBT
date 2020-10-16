@@ -27,7 +27,6 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
-import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.DiskManagerReadRequest;
@@ -35,7 +34,6 @@ import com.biglybt.core.impl.CoreImpl;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.networkmanager.*;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
-import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
 import com.biglybt.core.peer.*;
 import com.biglybt.core.peer.impl.PEPeerControl;
@@ -332,6 +330,8 @@ implements PEPeerTransport
 	private static boolean enable_public_tcp_peers	= true;
 	private static boolean enable_public_udp_peers	= true;
 	
+	private static boolean prefer_ipv6;
+	
 	static {
 		rnd.setSeed(SystemTime.getHighPrecisionCounter());
 		sessionSecret = new byte[20];
@@ -343,7 +343,8 @@ implements PEPeerTransport
 					"Peer.Fast.Initial.Unchoke.Enabled",
 					"Bias Upload Enable",
 					ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE,
-					ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE},
+					ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE,
+					ConfigKeys.Connection.BCFG_PEERCONTROL_PREFER_IPV6_CONNECTIONS },
 				(ignore)->{
 					{
 						final String  prop = System.getProperty(SystemProperties.SYSPROP_LAZY_BITFIELD);
@@ -358,6 +359,8 @@ implements PEPeerTransport
 						
 						enable_public_tcp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE );
 						enable_public_udp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE );
+						
+						prefer_ipv6			= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_PREFER_IPV6_CONNECTIONS );
 					}
 				});
 	}
@@ -2608,33 +2611,67 @@ implements PEPeerTransport
 			}
 		}
 
-		if( sameIdentity ) {
+		if ( sameIdentity ){
+			
 			boolean close = true;
 
-			if( connection.isLANLocal() ) {   //this new connection is lan-local
+			PEPeerTransport existing = manager.getTransportFromIdentity( peer_id );
 
-				PEPeerTransport existing = manager.getTransportFromIdentity( peer_id );
+			if ( existing != null ){
 
-				if( existing != null ){
+				String	existing_ip = existing.getIp();
 
-					String	existing_ip = existing.getIp();
+				if ( connection.isLANLocal()){   //this new connection is lan-local
 
 					// normally we don't allow a lan-local to replace a lan-local connection. There is
 					// however one exception - where the existing connection comes from the gateway address
 					// and therefore actually denotes an effectively non-lan-local connection. Unfortunately
-					// we don't have a good way of finding the default gateway, so just go for ending in .1
+					// we don't have a good way of finding the default gateway, so just go for ending in .1 or .254
 
 					if ( 	!existing.isLANLocal() ||
-							( existing_ip.endsWith( ".1" ) && !existing_ip.equals( ip ))) {  //so drop the existing connection if it is an external (non lan-local) one
+							(( existing_ip.endsWith( ".1" ) || existing_ip.endsWith( ".254" ) ) && !existing_ip.equals( ip ))) {  //so drop the existing connection if it is an external (non lan-local) one
 
-						Debug.outNoStack( "Dropping existing non-lanlocal peer connection [" +existing+ "] in favour of [" + this + "]" );
-						manager.removePeer( existing );
+						String msg = "Dropping existing non-lanlocal peer connection [" +existing+ "] in favour of [" + this + "]";
+								
+						Debug.outNoStack( msg );
+						
+						manager.removePeer( existing, msg );
+						
 						close = false;
+					}
+				}else{
+					
+					boolean this_ipv6		= ip.contains( ":" );
+					boolean existing_ipv6 	= existing_ip.contains( ":" );
+					
+					if ( this_ipv6 != existing_ipv6 ){
+					
+						boolean close_existing;
+						
+						if ( prefer_ipv6 ){
+							
+							close_existing = this_ipv6;
+									
+						}else{
+							
+							close_existing = existing_ipv6;
+							
+						}
+						
+						if ( close_existing ){
+							
+							String msg = "Dropping existing peer connection [" +existing+ "] in favour of [" + this + "]";
+
+							manager.removePeer( existing, msg );
+							
+							close = false;
+						}
 					}
 				}
 			}
 
-			if( close ) {
+			if ( close ){
+				
 				if ( Constants.IS_CVS_VERSION ){
 					try{
 						List<PEPeer> peers = manager.getPeers();
@@ -2660,8 +2697,11 @@ implements PEPeerTransport
 					}catch( Throwable e ){
 					}
 				}
+				
 				closeConnectionInternally( "peer matches already-connected peer id" );
+				
 				handshake.destroy();
+				
 				return;
 			}
 		}
