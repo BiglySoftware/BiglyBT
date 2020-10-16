@@ -373,6 +373,13 @@ AEProxySelectorImpl
 
 			List<Proxy> proxies = existing_selector.select( uri );
 
+			if ( !proxies.isEmpty()){
+			
+					// have to copy as returned in not modifiable...
+				
+				proxies = new ArrayList<>( proxies );
+			}
+			
 			Iterator<Proxy> it = proxies.iterator();
 
 			while( it.hasNext()){
