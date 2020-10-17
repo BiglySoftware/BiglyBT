@@ -148,6 +148,7 @@ public final class ConfigKeys {
 		public static final String SCFG_RENAME_INCOMPLETE_FILES_EXTENSION = "Rename Incomplete Files Extension";
 		public static final String BCFG_ENABLE_SUBFOLDER_FOR_DND_FILES = "Enable Subfolder for DND Files";
 		public static final String SCFG_SUBFOLDER_FOR_DND_FILES = "Subfolder for DND Files";
+		/** Despite name, this is the DND file prefix when SCFG_SUBFOLDER_FOR_DND_FILES is true */
 		public static final String BCFG_USE_INCOMPLETE_FILE_PREFIX = "Use Incomplete File Prefix";
 		public static final String BCFG_DOWNLOAD_HISTORY_ENABLED = "Download History Enabled";
 		public static final String BCFG_FILES_AUTO_TAG_ENABLE = "Files Auto Tag Enable";
