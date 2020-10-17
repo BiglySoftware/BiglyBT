@@ -1589,7 +1589,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 						// but, banning is no good for peer types that get pieces reserved
 						// to them for other reasons, such as special seed peers
 						if(needsMD5CheckOnCompletion(i))
-							badPeerDetected(reservingPeer, i);
+							badPeerDetected(reservingPeer, i, "Peer is too slow" );
 						else if(pt != null)
 							closeAndRemovePeer(pt, "Reserved piece data timeout; 120 seconds", true);
 
@@ -2725,7 +2725,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 					if(non_discarded == 0 || ((float) discarded) / non_discarded >= ban_peer_discard_ratio){
 
-						badPeerDetected(peer.getIp(), -1);
+						badPeerDetected(peer.getIp(), -1, "Discard ratio exceeded (slow peer?)");
 					}
 				}
 			}
@@ -3790,7 +3790,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 										final PEPieceWriteImpl write = (PEPieceWriteImpl) iterPerBlock.next();
 										if(!Arrays.equals(write.getHash(), correctHash)){
 											// Bad peer found here
-											badPeerDetected(write.getSender(), pieceNumber);
+											badPeerDetected(write.getSender(), pieceNumber, "Hash check failed (block)" );
 										}
 									}
 								}
@@ -3855,7 +3855,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 								bad_peer.sendBadPiece(pieceNumber);
 							}
 
-							badPeerDetected(bad_ip, pieceNumber);
+							badPeerDetected(bad_ip, pieceNumber, "Hash fail (piece)");
 
 							// and let's reset the whole piece
 							pePiece.reset();
@@ -3958,7 +3958,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 	}
 
-	private void badPeerDetected(String ip, int piece_number){
+	private void badPeerDetected(String ip, int piece_number, String reason ){
 		boolean hash_fail = piece_number >= 0;
 
 		// note that peer can be NULL but things still work in the main
@@ -4002,7 +4002,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 				// if a block-ban occurred, check other connections
 
-				if(ip_filter.ban(ip, getDisplayName(), false)){
+				if(ip_filter.ban(ip, getDisplayName() + ": " + reason, false)){
 
 					checkForBannedConnections();
 				}

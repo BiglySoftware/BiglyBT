@@ -5250,12 +5250,19 @@ implements PEPeerTransport
 					pex_item.dropConnectedPeer( dropped[i] );
 				}
 			}
-		}
-		else {
+		}else{
+			
+			String reason;
+			
+			if ( !peer_exchange_supported ){
+				reason = "Peer Exchange not supported by this peer";
+			}else if ( pex_item == null ){
+				reason = "Peer is not eligible for Peer Exchange (e.g. hiding listen port)";
+			}else{
+				reason = "Peer Exchange disabled for this download";
+			}
 			if (Logger.isEnabled())
-				Logger.log(new LogEvent(this, LOGID,
-						"Peer Exchange disabled for this download, "
-						+ "dropping received exchange message"));
+				Logger.log(new LogEvent(this, LOGID, reason + ", " + "dropping received PEX message"));
 		}
 	}
 
