@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.StringTokenizer;
 
+import javax.swing.JOptionPane;
+
 import org.apache.commons.cli.*;
 import org.apache.commons.cli.Option.Builder;
 
@@ -147,11 +149,17 @@ public class Main
 
 						String msg = "There appears to be another process already listening on socket [127.0.0.1:"
 								+ Constants.INSTANCE_PORT
-								+ "].\n\nLocate and terminate the other program or change the control port - <a href=\""
-								             + Wiki.COMMANDLINE_OPTIONS__CHANGING_CONTROL_PORT
-								             + "\">see the wiki for details</a>.";
+								+ "].\n\nLocate and terminate the other program or change the control port\n\n" +
+								"See the wiki for details, " +  Wiki.COMMANDLINE_OPTIONS__CHANGING_CONTROL_PORT;
 
 						System.err.println(msg);
+						
+						try{
+							JOptionPane.showMessageDialog( null, msg, "Error", JOptionPane.ERROR_MESSAGE );
+							
+						}catch( Throwable e ){
+						}
+						
 						return;
 
 					} else {
