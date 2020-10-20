@@ -119,21 +119,16 @@ public class FileUtil {
 		 
 		  		// on Windows we get a true if they differ in case :(
 		  
-		  String p1 = f1.getParent();
-		  String p2 = f2.getParent();
-		  
-		  boolean same_parent = p1 == p2 || ( p1 != null && p1.equals( p2 ));
-
-		  if ( 	same_parent &&
-				!f1.getName().equals( f2.getName()) && 
-				f1.getName().equalsIgnoreCase( f2.getName())){
-
-			  return( false );
-
-		  }else{
-
-			  return( true );
-		  }
+	    	if ( 	Objects.equals(f1.getParent(), f2.getParent()) &&
+	    			!f1.getName().equals( f2.getName()) && 
+	    			f1.getName().equalsIgnoreCase( f2.getName())){
+	    		
+	    		return( false );
+	    		
+	    	}else{
+	    		
+	    		return( true );
+	    	}
 	  }else{
 
 		  return( false );
@@ -2857,15 +2852,15 @@ public class FileUtil {
 		}
 	}
 
-	public static String
+	public static File
 	translateMoveFilePath(
-		String old_root,
-		String new_root,
-		String file_to_move )
+		File old_root,
+		File new_root,
+		File file_to_move )
 	{
 			// we're trying to get the bit from the file_to_move beyond the old_root and append it to the new_root
 
-		if ( !file_to_move.startsWith(old_root)){
+		if (!isAncestorOf(old_root, file_to_move)) {
 
 			return null;
 		}
@@ -2884,41 +2879,9 @@ public class FileUtil {
 			return( file_to_move );
 		}
 
-		String file_suffix = file_to_move.substring(old_root.length());
+		String file_suffix = getRelativePath(old_root, file_to_move);
 
-		if ( file_suffix.startsWith(File.separator )){
-
-			file_suffix = file_suffix.substring(1);
-
-		}else{
-				// hack to deal with special known case of this
-				// old_root:  c:\fred\jim.dat
-				// new_root:  c:\temp\egor\grtaaaa
-				// old_file:  c:\fred\jim.dat.az!
-
-			if ( new_root.endsWith( File.separator )){
-
-				Debug.out( "Hmm, this is not going to work out well... " + old_root + ", " + new_root + ", " + file_to_move );
-
-			}else{
-
-					// deal with case where new root already has the right suffix
-
-				if ( new_root.endsWith( file_suffix )){
-
-					return( new_root );
-				}
-
-				return( new_root + file_suffix );
-			}
-		}
-
-		if ( new_root.endsWith(File.separator)){
-
-			new_root = new_root.substring( 0, new_root.length()-1 );
-		}
-
-		return new_root + File.separator + file_suffix;
+		return newFile(new_root, file_suffix);
 	}
 
 	public static boolean
