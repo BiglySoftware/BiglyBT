@@ -2023,9 +2023,6 @@ DownloadManagerImpl
 	{
 		//System.out.println( "ufl: " + file_index + "\n  " + old_path + " - " + new_path + "\n  " + from_loc + " - " + to_loc );
 
-		String old_path_str = old_path.getPath();
-		String new_path_str = new_path.getPath();
-
 		if ( torrent.isSimpleTorrent()){
 
 			if (!FileUtil.areFilePathsIdentical(old_path, from_loc)) {
@@ -2066,16 +2063,16 @@ DownloadManagerImpl
 
 		}else{
 
-			String from_loc_to_use = FileUtil.translateMoveFilePath( old_path_str, 
-				new_path_str, from_loc.getAbsolutePath() );
+			File from_loc_to_use = FileUtil.translateMoveFilePath( old_path, 
+				new_path, from_loc );
 
 			if ( from_loc_to_use == null ){
 
 				return;
 			}
 
-			String to_loc_to_use = FileUtil.translateMoveFilePath( old_path_str, 
-				new_path_str, to_loc.getAbsolutePath() );
+			File to_loc_to_use = FileUtil.translateMoveFilePath( old_path, 
+				new_path, to_loc );
 
 				// delete old
 
@@ -2086,8 +2083,8 @@ DownloadManagerImpl
 				// add new
 
 			from_indexes.add( file_index );
-			from_links.add( FileUtil.newFile(from_loc_to_use));
-			to_links.add( to_loc_to_use == null ? to_loc : FileUtil.newFile(to_loc_to_use));
+			from_links.add( from_loc_to_use);
+			to_links.add( to_loc_to_use == null ? to_loc : to_loc_to_use);
 		}
 	}
 
