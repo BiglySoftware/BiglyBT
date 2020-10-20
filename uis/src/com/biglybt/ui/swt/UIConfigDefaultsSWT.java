@@ -131,6 +131,7 @@ public class UIConfigDefaultsSWT
 		}
 
 		def.addParameter("suppress_file_download_dialog", false);
+		def.addParameter("Suppress File Move Dialog", false);
 		def.addParameter("Suppress Sharing Dialog", false);
 		def.addParameter("auto_remove_inactive_items", false);
 		def.addParameter("show_torrents_menu", true);

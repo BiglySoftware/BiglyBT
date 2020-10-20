@@ -73,6 +73,10 @@ public class ConfigSectionInterfaceDisplaySWT
 		add(new BooleanParameterImpl("suppress_file_download_dialog",
 				"ConfigView.section.interface.display.suppress.file.download.dialog"),
 				listVarious);
+		
+		add(new BooleanParameterImpl("Suppress File Move Dialog",
+				"ConfigView.section.interface.display.suppress.file.move.dialog"),
+				listVarious);
 
 		add(new BooleanParameterImpl("Suppress Sharing Dialog",
 				"ConfigView.section.interface.display.suppress.sharing.dialog"),

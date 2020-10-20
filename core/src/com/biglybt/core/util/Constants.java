@@ -65,7 +65,7 @@ Constants
 	public static final String NAT_TEST_SERVER_HTTP		= "http://nettest.biglybt.com/";
 	public static final String NAT_TEST_SERVER_V6_HTTP	= "http://nettest.biglybt.com/";	// nettest.biglybt.com loadbalancer both v4+v6
 
-	public static final String PAIRING_SERVER			= "pair.vuze.com";
+	public static final String PAIRING_SERVER			= "pair.biglybt.com";
 	public static final String WEB_REMOTE_SERVER		= "remote.vuze.com";
 
 	public static final String SPEED_TEST_SERVER	= "speedtest.vuze.com";
@@ -150,7 +150,7 @@ Constants
 	public static final String BIGLY_PEER_ID						= "BI";
 
 	
-	public static final String BIGLYBT_VERSION  = "2.5.0.1_B01";
+	public static final String BIGLYBT_VERSION  = "2.5.0.1_B16";
 	
 	//public static final String BUILD_VERSION  = "@build.version@";   //Ant replace - believed dead
 	public static final String SUBVERSION		= "";

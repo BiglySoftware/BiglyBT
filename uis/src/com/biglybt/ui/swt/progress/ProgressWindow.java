@@ -45,6 +45,7 @@ import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationListener;
 import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.CoreOperationTask.ProgressCallback;
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class
@@ -62,15 +63,36 @@ ProgressWindow
 				operationExecuteRequest(
 					CoreOperation operation )
 				{
-					if ( 	( 	operation.getOperationType() == CoreOperation.OP_FILE_MOVE ||
-								operation.getOperationType() == CoreOperation.OP_DOWNLOAD_EXPORT ||
-								operation.getOperationType() == CoreOperation.OP_PROGRESS )&&
+					int type = operation.getOperationType();
+					
+					if ( 	( 	type == CoreOperation.OP_FILE_MOVE ||
+								type == CoreOperation.OP_DOWNLOAD_EXPORT ||
+								type == CoreOperation.OP_PROGRESS ) &&
 							Utils.isThisThreadSWT()){
 
-						if ( operation.getTask() != null ){
+						CoreOperationTask task = operation.getTask();
+						
+						if ( task != null ){
 
-							new ProgressWindow( operation );
+							if ( 	type ==  CoreOperation.OP_FILE_MOVE && 
+									COConfigurationManager.getBooleanParameter("Suppress File Move Dialog" )){
 
+								AEThread2.createAndStartDaemon( "Core Operation", ()->{
+									
+									try{
+										task.run( operation );
+										
+									}finally{
+										
+										core.removeOperation( operation );
+									}
+								});
+								
+							}else{
+								
+								new ProgressWindow( operation );
+							}
+							
 							return( true );
 						}
 					}
