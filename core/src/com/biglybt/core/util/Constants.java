@@ -66,7 +66,7 @@ Constants
 	public static final String NAT_TEST_SERVER_V6_HTTP	= "http://nettest.biglybt.com/";	// nettest.biglybt.com loadbalancer both v4+v6
 
 	public static final String PAIRING_SERVER			= "pair.biglybt.com";
-	public static final String WEB_REMOTE_SERVER		= "remote.vuze.com";
+	public static final String WEB_REMOTE_SERVER		= "remote.biglybt.com";
 
 	public static final String SPEED_TEST_SERVER	= "speedtest.vuze.com";
 
