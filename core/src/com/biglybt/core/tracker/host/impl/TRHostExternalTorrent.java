@@ -333,6 +333,16 @@ TRHostExternalTorrent
 	}
 	
 	@Override
+	public TOTorrent 
+	selectHybridHashType(
+		int type ) 
+		
+		throws TOTorrentException
+	{
+		throw( new TOTorrentException( "Not supported", TOTorrentException.RT_CREATE_FAILED ));
+	}
+	
+	@Override
     public void
 	setHashOverride(
 		byte[] hash )

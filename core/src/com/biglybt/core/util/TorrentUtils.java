@@ -130,7 +130,7 @@ TorrentUtils
 	public static final String		TORRENT_AZ_PROP_INITIAL_LINKAGE2		= "initial_linkage2";
 	public static final String		TORRENT_AZ_PROP_ORIGINAL_HASH			= "original_hash";
 	public static final String		TORRENT_AZ_PROP_HASHTREE_STATE			= "hash_tree";
-
+	public static final String		TORRENT_AZ_PROP_HYBRID_HASH_V2			= "hybrid_hash_v2";
 	private static final String		MEM_ONLY_TORRENT_PATH		= "?/\\!:mem_only:!\\/?";
 
 	private static final long		PC_MARKER = RandomUtils.nextLong();
@@ -505,6 +505,13 @@ TorrentUtils
 		return( str );
 	}
 
+	public static void
+	clearTorrentFileName(
+		TOTorrent		torrent )
+	{
+		torrent.removeAdditionalProperty( "torrent filename" );
+	}
+	
 	public static void
 	copyToFile(
 		TOTorrent		torrent,
@@ -3691,6 +3698,16 @@ TorrentUtils
 			throws TOTorrentException
 		{	
 			return( delegate.getV2HashWrapper());
+		}
+
+		@Override
+		public TOTorrent 
+		selectHybridHashType(
+			int type ) 
+			
+			throws TOTorrentException
+		{
+			return( delegate.selectHybridHashType(type));
 		}
 		
 	   	@Override

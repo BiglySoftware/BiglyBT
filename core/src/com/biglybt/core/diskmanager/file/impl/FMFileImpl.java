@@ -34,6 +34,7 @@ import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.diskmanager.file.FMFileOwner;
 import com.biglybt.core.diskmanager.file.impl.FMFileAccess.FileAccessor;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 
@@ -968,9 +969,24 @@ FMFileImpl
 			int	read_access 		= 0;
 			int write_access		= 0;
 			int	write_access_lax	= 0;
+			int	write_access_hybrid	= 0;
 
 			TOTorrentFile	my_torrent_file = owner.getTorrentFile();
+			TOTorrent		my_torrent		= my_torrent_file==null?null:my_torrent_file.getTorrent();
+			
+			byte[] my_v2_hash = null;
+			
+			if ( my_torrent != null && my_torrent.getTorrentType() == TOTorrent.TT_V1_V2 ){
+				
+				try{
+					my_v2_hash = my_torrent.getV2Hash();
+					
+				}catch( Throwable e ){
 
+					Debug.out( e );
+				}
+			}
+			
 			StringBuilder	users_sb = owners.size()==1?null:new StringBuilder( 128 );
 
 			for (Iterator it=owners.iterator();it.hasNext();){
@@ -985,9 +1001,30 @@ FMFileImpl
 
 					TOTorrentFile this_tf = this_owner.getTorrentFile();
 
-					if ( my_torrent_file != null && this_tf != null && my_torrent_file.getLength() == this_tf.getLength()){
+					if ( my_torrent_file != null && this_tf != null ){
+						
+						if ( my_torrent_file.getLength() == this_tf.getLength()){
 
-						write_access_lax++;
+							write_access_lax++;
+						}
+						
+						if ( my_v2_hash != null ){
+							
+							TOTorrent	this_torrent = this_tf.getTorrent();
+							
+							if ( this_torrent != null && this_torrent.getTorrentType() == TOTorrent.TT_V1_V2 ){
+								
+								try{
+									if ( Arrays.equals( my_v2_hash, this_torrent.getV2Hash())){
+									
+										write_access_hybrid++;
+									}
+								}catch( Throwable e ){
+									
+									Debug.out( e );
+								}
+							}
+						}
 					}
 
 					if ( users_sb != null ){
@@ -1015,8 +1052,14 @@ FMFileImpl
 			if ( 	write_access > 1 ||
 					( write_access == 1 && read_access > 0 )){
 
-					// relax locking if strict is disabled and torrent file is same size
+					// relax locking for shared hybrid swarms				
 
+				if ( write_access_hybrid == write_access ){
+
+					return;
+				}
+				
+					// relax locking if strict is disabled and torrent file is same size
 
 				if ( !COConfigurationManager.getBooleanParameter( "File.strict.locking" )){
 

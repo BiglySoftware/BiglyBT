@@ -1355,7 +1355,7 @@ DownloadManagerController
 	
 		TOTorrent dms_torrent = dms.getTorrent();
 		
-		if ( dms_torrent.getTorrentType() == TOTorrent.TT_V2 ){
+		if ( dms_torrent.getEffectiveTorrentType() == TOTorrent.TT_V2 ){
 		
 			if ( !dms.getBooleanAttribute( DownloadManagerState.AT_TORRENT_EXPORT_PROPAGATED )){
 
@@ -1576,7 +1576,7 @@ DownloadManagerController
 
 		if ( secrets_map.size() == 0 ){
 
-			if ( torrent.getTorrentType() == TOTorrent.TT_V2 ){
+			if ( torrent.getEffectiveTorrentType() == TOTorrent.TT_V2 ){
 				
 				TOTorrentFile[] files = torrent.getFiles();
 				

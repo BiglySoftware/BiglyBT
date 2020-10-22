@@ -22,6 +22,7 @@ package com.biglybt.core.torrent;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +60,42 @@ TOTorrent
 	
 	public int
 	getTorrentType();
+	
+		/**
+		 * For hybrid torrents this indicates whether it is acting as a v1 or v2 swarm
+		 * @return
+		 */
+	
+	public default int
+	getEffectiveTorrentType()
+	{
+		int type = getTorrentType();
+		
+		if ( type == TT_V1_V2 ){
+			
+			try{
+				byte[] hash 	= getHash();
+				byte[] v2_hash 	= getV2Hash();
+				
+				for ( int i=0;i<hash.length;i++){
+					
+					if ( hash[i] != v2_hash[i] ){
+						
+						return( TT_V1 );
+					}
+				}
+				
+				return( TT_V2 );
+				
+			}catch( Throwable e ){
+				
+				return( type );
+			}
+		}else{
+			
+			return( type );
+		}
+	}
 	
 		/**
 		 * Is the torrent in a fit state to export and share?
@@ -246,6 +283,12 @@ TOTorrent
 
 		throws TOTorrentException;
 
+	public TOTorrent
+	selectHybridHashType(
+		int		type )
+	
+		throws TOTorrentException;
+	
 	public void
 	setHashOverride(
 		byte[]		hash )

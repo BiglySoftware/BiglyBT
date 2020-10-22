@@ -4656,6 +4656,23 @@ DownloadManagerStateImpl
     	}
 
     	@Override
+    	public TOTorrent 
+    	selectHybridHashType(
+    		int type ) 
+    		
+    		throws TOTorrentException
+    	{
+    		if ( fixup()){
+    			
+    			return( delegate.selectHybridHashType(type));
+    			
+    		}else{
+    			
+    			throw( new TOTorrentException( "fixup failed", TOTorrentException.RT_CREATE_FAILED ));
+    		}
+    	}
+    	
+    	@Override
 	    public void
     	setHashOverride(
     		byte[] hash )

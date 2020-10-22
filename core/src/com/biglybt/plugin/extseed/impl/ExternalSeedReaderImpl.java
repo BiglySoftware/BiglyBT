@@ -345,7 +345,7 @@ ExternalSeedReaderImpl
 				return( false );
 			}
 
-			if ( PluginCoreUtils.unwrap( torrent ).getTorrentType() == TOTorrent.TT_V2 ){
+			if ( PluginCoreUtils.unwrap( torrent ).getEffectiveTorrentType() == TOTorrent.TT_V2 ){
 				
 					// don't activate if we are missing any piece hashes (safe hack for the mo)
 				

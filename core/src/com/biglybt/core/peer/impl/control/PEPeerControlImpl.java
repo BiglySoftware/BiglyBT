@@ -531,7 +531,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		torrent = disk_mgr.getTorrent();
 
-		if(torrent.getTorrentType() == TOTorrent.TT_V2){
+		if ( torrent.getEffectiveTorrentType() == TOTorrent.TT_V2 ){
 
 			hash_handler = new PEPeerControlHashHandlerImpl(this, torrent, disk_mgr);
 

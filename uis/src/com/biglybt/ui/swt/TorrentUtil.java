@@ -2347,7 +2347,7 @@ public class TorrentUtil
 		final MenuItem itemManualScrape = new MenuItem(menuTracker, SWT.PUSH);
 		Messages.setLanguageText(itemManualScrape,
 				"GeneralView.label.trackerscrapeupdate");
-		//itemManualUpdate.setImage(ImageRepository.getImage("edit_trackers"));
+		
 		itemManualScrape.addListener(SWT.Selection, new ListenerDMTask(dms, true, true) {
 			@Override
 			public void run(DownloadManager dm) {
@@ -2356,6 +2356,69 @@ public class TorrentUtil
 		});
 		itemManualScrape.setEnabled(manualScrape);
 
+			// enable hybrid v2 swarm
+		
+		List<DownloadManager>	can_v2 = new ArrayList<>();
+		
+		for ( DownloadManager dm: dms ){
+			
+			TOTorrent torrent = dm.getTorrent();
+			
+			if ( torrent != null &&  torrent.getTorrentType() == TOTorrent.TT_V1_V2 ){
+			
+				try{
+					byte[] v2_hash = torrent.getV2Hash();
+					
+					byte[] truncated_v2_hash = new byte[20];
+					
+					System.arraycopy( v2_hash, 0, truncated_v2_hash, 0, 20 );
+					
+					if ( dm.getGlobalManager().getDownloadManager( new HashWrapper( truncated_v2_hash )) == null ){
+						
+						can_v2.add( dm );
+						
+					}
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}else{
+			
+				can_v2.clear();
+				
+				break;
+			}
+		}
+		
+		final MenuItem itemHybridV2 = new MenuItem(menuTracker, SWT.PUSH);
+		Messages.setLanguageText( itemHybridV2,	"GeneralView.label.run.hybrid.v2");
+		
+		itemHybridV2.addListener(SWT.Selection, new ListenerDMTask(can_v2.toArray(new DownloadManager[0]), true, true) {
+			@Override
+			public void run(DownloadManager dm) {
+				
+				TOTorrent torrent = dm.getTorrent();
+				
+				try{
+					TOTorrent other = torrent.selectHybridHashType( TOTorrent.TT_V2 );
+					
+					File temp_file = AETemporaryFileHandler.createTempFile();
+
+					TorrentUtils.setDisplayName( other, dm.getDisplayName() + " (v2)");
+
+					TorrentUtils.writeToFile( other, temp_file, false );
+										
+					dm.getGlobalManager().addDownloadManager( temp_file.getAbsolutePath(), dm.getSaveLocation().getAbsolutePath());
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+		});
+		
+		itemHybridV2.setEnabled( !can_v2.isEmpty());
+		
 		// download link
 
 		final MenuItem itemTorrentDL = new MenuItem(menuTracker, SWT.PUSH);

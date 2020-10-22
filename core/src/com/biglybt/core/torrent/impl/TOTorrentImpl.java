@@ -105,7 +105,7 @@ TOTorrentImpl
 	private int			number_of_pieces;
 
 	private byte[]		torrent_hash_override;
-
+	
 	private byte[]		torrent_hash;		
 	private HashWrapper	torrent_hash_wrapper;
 
@@ -902,15 +902,43 @@ TOTorrentImpl
 				
 				if ( torrent_type == TT_V1_V2 ){
 					
-					SHA1Hasher s = new SHA1Hasher();
+					Map private_props = getAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES );
 					
-					torrent_hash = s.calculateHash( encoded );
+					boolean hybrid_hash_is_v2 = false;
 					
-					MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
+					if ( private_props != null ){
+						
+						Number	l = (Long)private_props.get( TorrentUtils.TORRENT_AZ_PROP_HYBRID_HASH_V2 );
+						
+						if ( l != null ){
+							
+							hybrid_hash_is_v2 = ((Number)l).longValue() == 1;
+						}
+					}
 					
-					torrent_hash_v2 = sha256.digest( encoded );
-					
-					torrent_hash_wrapper_v2 = new HashWrapper( torrent_hash_v2 );
+					if ( hybrid_hash_is_v2 ){
+						
+						MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
+						
+						torrent_hash_v2 = sha256.digest( encoded );
+						
+						torrent_hash_wrapper_v2 = new HashWrapper( torrent_hash_v2 );
+						
+						torrent_hash = new byte[20];
+						
+						System.arraycopy( torrent_hash_v2, 0, torrent_hash, 0, 20 );
+						
+					}else{
+						SHA1Hasher s = new SHA1Hasher();
+						
+						torrent_hash = s.calculateHash( encoded );
+						
+						MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
+						
+						torrent_hash_v2 = sha256.digest( encoded );
+						
+						torrent_hash_wrapper_v2 = new HashWrapper( torrent_hash_v2 );
+					}
 					
 				}else if ( torrent_type == TT_V2 ){
 					
@@ -944,6 +972,45 @@ TOTorrentImpl
 		}
 	}
 
+	@Override
+	public TOTorrent 
+	selectHybridHashType(
+		int		type )
+		
+		throws TOTorrentException
+	{
+		if ( torrent_type != TT_V1_V2 ){
+		
+			throw( new TOTorrentException( 	"Torrent isn't hybrid", TOTorrentException.RT_CREATE_FAILED ));
+		}
+		
+		TOTorrent clone = TOTorrentFactory.deserialiseFromBEncodedByteArray( serialiseToByteArray());
+
+		TorrentUtils.clearTorrentFileName( clone );
+		
+		Map<String,Object> private_props = (Map<String,Object>)clone.getAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES );
+
+		if ( type == TT_V1 ){
+			
+			if ( private_props != null ){
+				
+				private_props.remove( TorrentUtils.TORRENT_AZ_PROP_HYBRID_HASH_V2 );
+			}
+		}else if ( type == TT_V2 ){
+			
+			if ( private_props == null ){
+				
+				private_props = new HashMap<>();
+			}
+			
+			private_props.put( TorrentUtils.TORRENT_AZ_PROP_HYBRID_HASH_V2, 1L );
+			
+			clone.setAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES, private_props );
+		}
+		
+		return( clone );
+	}
+	
 	@Override
 	public void
 	setHashOverride(
