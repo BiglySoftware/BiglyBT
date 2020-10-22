@@ -778,6 +778,13 @@ RelatedContentManager
 							continue;
 						}
 
+						if ( to_torrent.getTorrentType() == TOTorrent.TT_V1_V2 && to_torrent.getEffectiveTorrentType() == TOTorrent.TT_V2 ){
+						
+								// secondary swarm torrent
+							
+							continue;
+						}
+						
 						LinkedList<DownloadInfo>			download_infos1;
 						LinkedList<DownloadInfo>			download_infos2;
 
