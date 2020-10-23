@@ -310,6 +310,11 @@ DiskManagerRecheckScheduler
 
 			int	to_process = max_active;
 			
+			if ( to_process <= 0 ){
+				
+				to_process = Integer.MAX_VALUE;		// 0 -> unlimited
+			}
+			
 			for ( int i=0; to_process > 0 && i<entries.size();i++){
 				
 				Object[] entry = (Object[])entries.get(i);
@@ -320,6 +325,8 @@ DiskManagerRecheckScheduler
 					
 					continue;
 				}
+				
+				to_process--;
 				
 				if ( this_inst == instance ){
 	
