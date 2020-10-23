@@ -48,7 +48,12 @@ InfoParameterImpl
 	public InfoParameterImpl(String configKey, String labelKey, String value) {
 		super(configKey, labelKey);
 
+
+			// not sure we should even be setting a config value on 'info' params...
+		
 		if (configKey == null) {
+			setValue( value );
+		}else if ( value != null ){
 			setValue( value );
 		}
 	}
