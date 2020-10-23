@@ -172,10 +172,16 @@ public class TorrentInfoView
 			
 			int tt = torrent.getTorrentType();
 			
-			boolean v1 = tt==TOTorrent.TT_V1 || tt==TOTorrent.TT_V1_V2;
-			boolean v2 = tt==TOTorrent.TT_V2 || tt==TOTorrent.TT_V1_V2;
+			String tt_str = MessageText.getString( "label.torrent.type" ) + ": " + MessageText.getString( "label.torrent.type." + tt );
 			
-			blabel.setText( LocaleTorrentUtil.getCurrentTorrentEncoding( torrent ) + "; V1=" + (v1?"Y":"N") + ", V2=" + (v2?"Y":"N"));
+			int ett = torrent.getEffectiveTorrentType();
+			
+			if ( ett != tt ){
+				
+				tt_str += ", " + MessageText.getString( "label.effective" ) + ": " + MessageText.getString( "label.torrent.type." + ett );
+			}
+			
+			blabel.setText( LocaleTorrentUtil.getCurrentTorrentEncoding( torrent ) + "; " + tt_str );
 		}
 			// trackers
 

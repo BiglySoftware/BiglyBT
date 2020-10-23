@@ -6264,9 +6264,15 @@ public class OpenTorrentOptionsWindow
 				so = skin.getSkinObject("torrentinfo-encoding");
 				if (so instanceof SWTSkinObjectText) {
 					SWTSkinObjectText soTorrentEncoding = (SWTSkinObjectText) so;
-					soTorrentEncoding.setText(
-							MessageText.getString("TorrentInfoView.torrent.encoding") + ": "
-									+ getEncodingName(torrent));
+					
+					String enc_str = MessageText.getString("TorrentInfoView.torrent.encoding") + ": "
+							+ getEncodingName(torrent);
+					
+					int tt = torrent.getTorrentType();
+					
+					enc_str += "; " + MessageText.getString( "label.torrent.type" ) + ": " + MessageText.getString( "label.torrent.type." + tt );
+
+					soTorrentEncoding.setText( enc_str );
 					Control control = so.getControl();
 					if (control.getData("hasMouseL") == null) {
 						control.addMouseListener(new MouseAdapter() {
