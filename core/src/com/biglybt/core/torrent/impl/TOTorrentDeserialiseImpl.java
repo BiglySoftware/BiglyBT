@@ -571,17 +571,23 @@ TOTorrentDeserialiseImpl
 					if ( sets.length > 0 ){
 
 						setAnnounceURL( sets[0].getAnnounceURLs()[0]);
+						
 					}else{
-
+						
+						/*
+						 * might as well soldier on
 						throw( new TOTorrentException( 	"ANNOUNCE_URL malformed ('" + announce_url + "' and no usable announce list)",
 														TOTorrentException.RT_DECODE_FAILS ));
-
+						*/
 					}
 
 				}else{
-
+					
+					/*
+					 * might as well soldier on
 					throw( new TOTorrentException( 	"ANNOUNCE_URL malformed ('" + announce_url + "'",
 													TOTorrentException.RT_DECODE_FAILS ));
+					*/
 				}
 			}
 
