@@ -94,6 +94,7 @@ public class SystemProperties {
 	public static final String SYSPROP_FOLDER_TORRENT						= migrate( "azureus.folder.torrent" );
 	public static final String SYSPROP_THREAD_MON_ENABLE					= migrate( "biglybt.thread.monitor.enable" );
 	public static final String SYSPROP_MEMORY_MON_ENABLE					= migrate( "biglybt.memory.monitor.enable" );
+	public static final String SYSPROP_THREAD_MON_USERONLY					= migrate( "biglybt.thread.monitor.user.time" );
 
 		
 	private static String

@@ -38,6 +38,8 @@ public class
 AEThreadMonitor
 	implements ThreadStuff, AEDiagnosticsEvidenceGenerator 
 {
+	private static final boolean THREAD_USER_TIME = !System.getProperty( SystemProperties.SYSPROP_THREAD_MON_USERONLY, "0" ).equals( "0" );
+			
 	private final ThreadMXBean	thread_bean;
 
 	private final LinkedList<String>	memory_history	= new LinkedList<>();
@@ -64,7 +66,29 @@ AEThreadMonitor
 			return( 0 );
 		}
 
-		return( thread_bean.getCurrentThreadCpuTime());
+		if ( THREAD_USER_TIME ){
+			
+			return( thread_bean.getCurrentThreadUserTime());
+			
+		}else{
+		
+			return( thread_bean.getCurrentThreadCpuTime());
+		}
+	}
+	
+	private long
+	getThreadCpuTime(
+		ThreadMXBean		bean,
+		long				thread_id )
+	{
+		if ( THREAD_USER_TIME ){
+			
+			return( bean.getThreadUserTime( thread_id ));
+			
+		}else{
+			
+			return( bean.getThreadCpuTime( thread_id ));
+		}
 	}
 	
 	@Override
@@ -181,7 +205,7 @@ AEThreadMonitor
 
 				long	id = ids[i];
 
-				long	time = bean.getThreadCpuTime( id )/1000000;	// nanos -> millis
+				long	time = getThreadCpuTime( bean, id )/1000000;	// nanos -> millis
 
 				Long	old_time = last_times.get( id );
 
@@ -319,8 +343,8 @@ AEThreadMonitor
 			@Override
 			public int compare(ThreadInfo o1, ThreadInfo o2) {
 
-				long diff = threadBean.getThreadCpuTime(o2.getThreadId())
-						- threadBean.getThreadCpuTime(o1.getThreadId());
+				long diff = getThreadCpuTime( threadBean, o2.getThreadId())
+						- getThreadCpuTime(threadBean, o1.getThreadId());
 				if (diff == 0) {
 					return o1.getThreadName().compareToIgnoreCase(o2.getThreadName());
 				}
@@ -332,7 +356,7 @@ AEThreadMonitor
 			try {
 				ThreadInfo threadInfo = threadInfos.get(i);
 
-				long lCpuTime = threadBean.getThreadCpuTime(threadInfo.getThreadId());
+				long lCpuTime = getThreadCpuTime(threadBean,threadInfo.getThreadId());
 				if (lCpuTime == 0)
 					break;
 
