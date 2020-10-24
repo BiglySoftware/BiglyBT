@@ -214,10 +214,11 @@ TorrentImpl
 
 	@Override
 	public byte[] 
-	getV2Hash()
+	getFullHash(
+		int		type )
 	{
 		try{
-			return( torrent.getV2Hash());
+			return( torrent.getFullHash( type ));
 
 		}catch( TOTorrentException e ){
 

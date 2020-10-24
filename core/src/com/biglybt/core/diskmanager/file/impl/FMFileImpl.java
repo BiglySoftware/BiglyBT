@@ -979,7 +979,7 @@ FMFileImpl
 			if ( my_torrent != null && my_torrent.getTorrentType() == TOTorrent.TT_V1_V2 ){
 				
 				try{
-					my_v2_hash = my_torrent.getV2Hash();
+					my_v2_hash = my_torrent.getFullHash( TOTorrent.TT_V2 );
 					
 				}catch( Throwable e ){
 
@@ -1015,7 +1015,7 @@ FMFileImpl
 							if ( this_torrent != null && this_torrent.getTorrentType() == TOTorrent.TT_V1_V2 ){
 								
 								try{
-									if ( Arrays.equals( my_v2_hash, this_torrent.getV2Hash())){
+									if ( Arrays.equals( my_v2_hash, this_torrent.getFullHash( TOTorrent.TT_V2 ))){
 									
 										write_access_hybrid++;
 									}

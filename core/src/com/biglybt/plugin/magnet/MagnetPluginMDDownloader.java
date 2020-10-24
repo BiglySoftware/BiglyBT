@@ -821,17 +821,13 @@ MagnetPluginMDDownloader
 
 				if ( !Arrays.equals( hash, torrent_hash )){
 
-					byte[] v2_hash = torrent.getV2Hash();
+					byte[] truncated_v2_hash = torrent.getTruncatedHash( TOTorrent.TT_V2 );
 					
 					boolean ok = false;
 					
-					if ( v2_hash != null ){
+					if ( truncated_v2_hash != null ){
 					
-						byte[]	trunc = new byte[20];
-						
-						System.arraycopy( v2_hash, 0, trunc, 0, 20 );
-						
-						ok = Arrays.equals( hash, trunc );
+						ok = Arrays.equals( hash, truncated_v2_hash );
 					}
 					
 					if ( !ok ){

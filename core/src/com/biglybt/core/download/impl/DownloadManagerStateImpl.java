@@ -4602,25 +4602,19 @@ DownloadManagerStateImpl
     	
     	@Override
     	public byte[]
-    	getV2Hash() 
+    	getFullHash(
+    		int		type ) 
     	
     		throws TOTorrentException
     	{
-    		if ( getTorrentType() != TOTorrent.TT_V1 ){
-    			
-    			if ( fixup()){
+   			if ( fixup()){
 
-    				return( delegate.getV2Hash());
+   				return( delegate.getFullHash( type ));
+   				
+   			}else{
     				
-    			}else{
-    				
-    				return( null );
-    			}
-    			
-    		}else{
-    			
-    			return( null );
-    		}
+   				return( null );
+   			}
     	}
 
     	@Override
@@ -4632,29 +4626,6 @@ DownloadManagerStateImpl
     		return( torrent_hash_wrapper );
     	}
     	
-    	@Override
-    	public HashWrapper
-    	getV2HashWrapper() 
-    	
-    		throws TOTorrentException
-    	{
-    		if ( getTorrentType() != TOTorrent.TT_V1 ){
-    			
-    			if ( fixup()){
-
-    				return( delegate.getV2HashWrapper());
-    				
-    			}else{
-    				
-    				return( null );
-    			}
-    			
-    		}else{
-    			
-    			return( null );
-    		}
-    	}
-
     	@Override
     	public TOTorrent 
     	selectHybridHashType(

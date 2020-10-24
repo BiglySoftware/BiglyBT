@@ -307,11 +307,19 @@ TRHostExternalTorrent
 
 	@Override
 	public byte[]
-	getV2Hash() 
+	getFullHash(
+		int	type ) 
 	
 		throws TOTorrentException
 	{
-		return( null );
+		if ( type == TT_V1 ){
+			
+			return( hash );
+			
+		}else{
+			
+			return( null );
+		}
 	}
 	
 	@Override
@@ -321,15 +329,6 @@ TRHostExternalTorrent
 		throws TOTorrentException
 	{
 		return( hash_wrapper );
-	}
-
-	@Override
-	public HashWrapper
-	getV2HashWrapper() 
-	
-		throws TOTorrentException
-	{	
-		return( null );
 	}
 	
 	@Override

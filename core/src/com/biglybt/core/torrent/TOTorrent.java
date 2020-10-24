@@ -74,7 +74,7 @@ TOTorrent
 			
 			try{
 				byte[] hash 	= getHash();
-				byte[] v2_hash 	= getV2Hash();
+				byte[] v2_hash 	= getFullHash( TT_V2 );
 				
 				for ( int i=0;i<hash.length;i++){
 					
@@ -268,20 +268,36 @@ TOTorrent
 
 	/**
 	 * 
-	 * @return SHA256 hash for hybrid/v2 torrents, null for v1
+	 * @return SHA1 hash for v1/hybrid torrents, SHA256 hash for hybrid/v2 torrents
 	 * @throws TOTorrentException
 	 */
 	
 	public byte[]
-	getV2Hash()
+	getFullHash(
+		int		type )
 
 		throws TOTorrentException;
 
-	public HashWrapper
-	getV2HashWrapper()
-
-		throws TOTorrentException;
-
+	public default byte[]
+	getTruncatedHash(
+		int		type )
+	
+		throws TOTorrentException
+	{
+		byte[]	hash = getFullHash( type );
+				
+		if ( type == TT_V2 && hash != null ){
+			
+			byte[]	trunc = new byte[20];
+			
+			System.arraycopy( hash, 0, trunc, 0, 20 );
+			
+			return( trunc );
+		}
+		
+		return( hash );
+	}
+	
 	public TOTorrent
 	selectHybridHashType(
 		int		type )

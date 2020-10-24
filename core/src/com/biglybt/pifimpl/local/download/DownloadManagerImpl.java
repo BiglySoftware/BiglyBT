@@ -751,15 +751,11 @@ DownloadManagerImpl
 						// support looking up by truncated v2 hash so that magnet downloads for hybrid torrents using just
 						// the btmh urn at least find content in our library
 					
-					byte[] v2 = torrent.getV2Hash();
+					byte[] v2_trunc = torrent.getTruncatedHash( TOTorrent.TT_V2 );
 					
-					if ( v2 != null ){
-						
-						byte[] trunc = new byte[20];
-						
-						System.arraycopy( v2, 0, trunc, 0, 20 );
-						
-						if ( Arrays.equals( trunc, hash )){
+					if ( v2_trunc != null ){
+												
+						if ( Arrays.equals( v2_trunc, hash )){
 
 							return( getDownload( torrent ));
 						}

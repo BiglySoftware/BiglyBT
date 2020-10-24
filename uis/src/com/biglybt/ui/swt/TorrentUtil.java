@@ -2367,12 +2367,8 @@ public class TorrentUtil
 			if ( torrent != null &&  torrent.getTorrentType() == TOTorrent.TT_V1_V2 ){
 			
 				try{
-					byte[] v2_hash = torrent.getV2Hash();
-					
-					byte[] truncated_v2_hash = new byte[20];
-					
-					System.arraycopy( v2_hash, 0, truncated_v2_hash, 0, 20 );
-					
+					byte[] truncated_v2_hash = torrent.getTruncatedHash( TOTorrent.TT_V2 );
+										
 					if ( dm.getGlobalManager().getDownloadManager( new HashWrapper( truncated_v2_hash )) == null ){
 						
 						can_v2.add( dm );

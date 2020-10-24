@@ -109,6 +109,9 @@ TOTorrentImpl
 	private byte[]		torrent_hash;		
 	private HashWrapper	torrent_hash_wrapper;
 
+	private byte[]		torrent_hash_v1;
+	private HashWrapper	torrent_hash_wrapper_v1;
+	
 	private byte[]		torrent_hash_v2;
 	private HashWrapper	torrent_hash_wrapper_v2;
 
@@ -821,7 +824,8 @@ TOTorrentImpl
 	
 	@Override
 	public byte[]
-	getV2Hash()
+	getFullHash(
+		int		type )
 
 		throws TOTorrentException
 	{
@@ -834,7 +838,7 @@ TOTorrentImpl
 			setHashFromInfo( info );
 		}
 
-		return( torrent_hash_v2 );
+		return( type==TT_V1?torrent_hash_v1:torrent_hash_v2 );
 	}
 
 	@Override
@@ -849,20 +853,6 @@ TOTorrentImpl
 		}
 
 		return( torrent_hash_wrapper );
-	}
-
-	@Override
-	public HashWrapper
-	getV2HashWrapper() 
-			
-		throws TOTorrentException
-	{
-		if ( torrent_hash_wrapper == null ){
-
-			getHash();
-		}
-		
-		return( torrent_hash_wrapper_v2 );
 	}
 	
 	@Override
@@ -916,28 +906,25 @@ TOTorrentImpl
 						}
 					}
 					
+					SHA1Hasher s = new SHA1Hasher();
+					
+					torrent_hash_v1 		= s.calculateHash( encoded );
+					torrent_hash_wrapper_v1 = new HashWrapper( torrent_hash_v1 );
+
+					MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
+					
+					torrent_hash_v2 		= sha256.digest( encoded );
+					torrent_hash_wrapper_v2 = new HashWrapper( torrent_hash_v2 );
+					
 					if ( hybrid_hash_is_v2 ){
-						
-						MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
-						
-						torrent_hash_v2 = sha256.digest( encoded );
-						
-						torrent_hash_wrapper_v2 = new HashWrapper( torrent_hash_v2 );
-						
+												
 						torrent_hash = new byte[20];
 						
 						System.arraycopy( torrent_hash_v2, 0, torrent_hash, 0, 20 );
 						
 					}else{
-						SHA1Hasher s = new SHA1Hasher();
-						
-						torrent_hash = s.calculateHash( encoded );
-						
-						MessageDigest sha256 = MessageDigest.getInstance( "SHA-256" );
-						
-						torrent_hash_v2 = sha256.digest( encoded );
-						
-						torrent_hash_wrapper_v2 = new HashWrapper( torrent_hash_v2 );
+
+						torrent_hash = torrent_hash_v1;
 					}
 					
 				}else if ( torrent_type == TT_V2 ){
@@ -957,6 +944,10 @@ TOTorrentImpl
 					SHA1Hasher s = new SHA1Hasher();
 	
 					torrent_hash = s.calculateHash( encoded );
+					
+					torrent_hash_v1 		= torrent_hash;
+					torrent_hash_wrapper_v1 = new HashWrapper( torrent_hash_v1 );
+
 				}
 			}else{
 

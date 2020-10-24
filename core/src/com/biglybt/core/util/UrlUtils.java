@@ -443,9 +443,16 @@ public class UrlUtils
 		Torrent		torrent,
 		String[]	networks )
 	{
-		String	magnet_str = getMagnetURI( torrent.getHash());
+		byte[] v1_hash = torrent.getFullHash( TOTorrent.TT_V1 );
+		
+		if ( v1_hash == null ){
+			
+			v1_hash = torrent.getHash();	// this'll be the truncated v2 hash
+		}
+		
+		String	magnet_str = getMagnetURI( v1_hash );
 
-		byte[] v2_hash = torrent.getV2Hash();
+		byte[] v2_hash = torrent.getFullHash( TOTorrent.TT_V2 );
 		
 		if ( v2_hash != null ){
 			

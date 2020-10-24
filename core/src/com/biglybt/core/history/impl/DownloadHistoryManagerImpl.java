@@ -918,7 +918,7 @@ DownloadHistoryManagerImpl
 
 			uid		= DownloadHistoryManagerImpl.getUID( dm );
 
-			byte[]	h 	= null;
+			byte[]	h1 	= null;
 			byte[]	h2 	= null;
 			
 			TOTorrent torrent = dm.getTorrent();
@@ -926,15 +926,20 @@ DownloadHistoryManagerImpl
 			if ( torrent != null ){
 
 				try{
-					h 	= torrent.getHash();
+					h1 	= torrent.getFullHash( TOTorrent.TT_V1 );
 
-					h2 	= torrent.getV2Hash();
+					if ( h1 == null ){
+						
+						h1 = torrent.getHash();
+					}
+					
+					h2 	= torrent.getFullHash( TOTorrent.TT_V2 );
 					
 				}catch( Throwable e ){
 				}
 			}
 
-			hash	= h;
+			hash	= h1;
 			hash_v2	= h2;
 			
 			name	= dm.getDisplayName();

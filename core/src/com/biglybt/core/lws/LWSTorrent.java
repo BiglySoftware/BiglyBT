@@ -309,10 +309,16 @@ LWSTorrent
 
 	@Override
 	public byte[]
-	getV2Hash() throws 
-		TOTorrentException
+	getFullHash(
+		int	type )
+	
+		throws TOTorrentException
 	{
-		return( null );
+		if ( type == TT_V1 ){
+			return( getHash());
+		}else{
+			return( null );
+		}
 	}
 	
 	@Override
@@ -322,14 +328,6 @@ LWSTorrent
 		throws TOTorrentException
 	{
 		return( lws.getHash());
-	}
-
-	@Override
-	public HashWrapper
-	getV2HashWrapper() 
-		throws TOTorrentException
-	{	
-		return( null );
 	}
 	
 	@Override

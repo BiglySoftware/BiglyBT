@@ -65,7 +65,8 @@ Torrent
 		 */
 	
 	public default byte[]
-	getV2Hash()
+	getFullHash(
+		int	type )
 	{
 		return( null );
 	}
