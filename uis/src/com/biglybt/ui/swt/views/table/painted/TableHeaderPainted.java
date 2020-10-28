@@ -180,7 +180,7 @@ public class TableHeaderPainted
 			} else {
 				e.gc.setForeground(line);
 			}
-			e.gc.drawLine(x + w - 1, 0, x + w - 1, headerHeight - 1);
+			e.gc.drawLine(x + w - 1, 1, x + w - 1, headerHeight - 1);
 			if (doingDrop && !droppingAfterHeader) {
 				e.gc.setLineWidth(2);
 				e.gc.setForeground(fg);
