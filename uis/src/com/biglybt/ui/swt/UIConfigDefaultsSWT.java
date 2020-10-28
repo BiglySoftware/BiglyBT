@@ -212,6 +212,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Table.useTree", false);
 		def.addParameter("Table.tooltip.disable", false);
 		def.addParameter("Table.sort.intuitive", false);
+		def.addParameter("Dark Table Colors", false );
 
 		if ("az2".equalsIgnoreCase(COConfigurationManager.getStringParameter("ui", "az3"))) {
 			def.addParameter("v3.Show Welcome", false);

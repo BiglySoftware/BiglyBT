@@ -298,11 +298,11 @@ public class TableRowPainted
 		if (isTableEnabled) {
 	  		altColor = Colors.alternatingColors[pos >= 0 ? pos % 2 : 0];
 	  		if (altColor == null) {
-	  			altColor = gc.getDevice().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+	  			altColor = TablePaintedUtils.getColour( gc, SWT.COLOR_LIST_BACKGROUND );
 	  		}
 	  		if (isSelected) {
 	  			Color color;
-	  			color = gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION);
+	  			color = TablePaintedUtils.getColour(gc, SWT.COLOR_LIST_SELECTION);
 	  			gc.setBackground(color);
 	  		} else {
 	  			gc.setBackground(altColor);
@@ -317,23 +317,23 @@ public class TableRowPainted
 	
 	  		if (isSelected) {
 	  			shadowColor = fg;
-	  			fg = gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT);
+	  			fg = TablePaintedUtils.getColour(gc,SWT.COLOR_LIST_SELECTION_TEXT);
 	  		} else {
 	  			if (fg == null) {
-	  				fg = gc.getDevice().getSystemColor(SWT.COLOR_LIST_FOREGROUND);
+	  				fg = TablePaintedUtils.getColour(gc,SWT.COLOR_LIST_FOREGROUND);
 	  			}
 	  		}
 		} else {
 			Device device = gc.getDevice();
-			altColor = Colors.getSystemColor(device, SWT.COLOR_WIDGET_BACKGROUND);
+			altColor = TablePaintedUtils.getColour(device, SWT.COLOR_WIDGET_BACKGROUND);
 			if (isSelected) {
-				bg = Colors.getSystemColor(device, SWT.COLOR_WIDGET_LIGHT_SHADOW);
+				bg = TablePaintedUtils.getColour(device, SWT.COLOR_WIDGET_LIGHT_SHADOW);
 			} else {
 				bg = altColor;
 			}
 			gc.setBackground(bg);
 
-			fg = Colors.getSystemColor(device, SWT.COLOR_WIDGET_NORMAL_SHADOW);
+			fg = TablePaintedUtils.getColour(device, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 		}
 		
 		if ( isAttention ){

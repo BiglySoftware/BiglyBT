@@ -127,13 +127,13 @@ public class TableHeaderPainted
 		Color c1, c2, fg;
 
 		if (tv.isEnabled()) {
-			c1 = Colors.getSystemColor(e.display, SWT.COLOR_LIST_BACKGROUND);
-			c2 = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_BACKGROUND);
-			fg = Colors.getSystemColor(e.display, SWT.COLOR_LIST_FOREGROUND);
+			c1 = TablePaintedUtils.getColour(e.display, SWT.COLOR_LIST_BACKGROUND);
+			c2 = TablePaintedUtils.getColour(e.display, SWT.COLOR_WIDGET_BACKGROUND);
+			fg = TablePaintedUtils.getColour(e.display, SWT.COLOR_LIST_FOREGROUND);
 		} else {
-			c1 = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_BACKGROUND);
-			c2 = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW);
-			fg = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW);
+			c1 = TablePaintedUtils.getColour(e.display, SWT.COLOR_WIDGET_BACKGROUND);
+			c2 = TablePaintedUtils.getColour(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW);
+			fg = TablePaintedUtils.getColour(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 		}
 
 		Color line = c2;

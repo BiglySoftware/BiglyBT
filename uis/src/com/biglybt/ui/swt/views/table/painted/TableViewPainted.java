@@ -1393,7 +1393,7 @@ public class TableViewPainted
 			defaultRowHeight = minRowHeight;
 		}
 
-		cTable.setBackground(Colors.getSystemColor(parent.getDisplay(), SWT.COLOR_LIST_BACKGROUND));
+		cTable.setBackground(TablePaintedUtils.getColour(parent.getDisplay(), SWT.COLOR_LIST_BACKGROUND));
 
 		clientArea = cTable.getClientArea();
 
@@ -1750,14 +1750,13 @@ public class TableViewPainted
 							gc.setBackground(color);
 						}
 						if (color == null) {
-							gc.setBackground(gc.getDevice().getSystemColor(
-									SWT.COLOR_LIST_BACKGROUND));
+							gc.setBackground(TablePaintedUtils.getColour(gc, SWT.COLOR_LIST_BACKGROUND));
 						}
 						gc.fillRectangle(drawBounds.x, yDirty, drawBounds.width, rowHeight);
 						yDirty += rowHeight;
 					}
 				} else {
-					gc.setBackground(gc.getDevice().getSystemColor(cTable.isEnabled() ?
+					gc.setBackground(TablePaintedUtils.getColour(gc,cTable.isEnabled() ?
 							SWT.COLOR_LIST_BACKGROUND : SWT.COLOR_WIDGET_BACKGROUND));
 					gc.fillRectangle(drawBounds.x, yDirty, drawBounds.width, h);
 				}
@@ -1767,7 +1766,12 @@ public class TableViewPainted
 			Utils.setClipping(gc, drawBounds);
 			TableColumnCore[] visibleColumns = getVisibleColumns();
 			int x = DIRECT_DRAW ? -clientArea.x : 0;
-			gc.setAlpha(20);
+			if ( TablePaintedUtils.isDark()){
+				gc.setAlpha(120);
+				gc.setForeground( TablePaintedUtils.getColour(gc,SWT.COLOR_WIDGET_BACKGROUND ));
+			}else{
+				gc.setAlpha(20);
+			}
 			for (TableColumnCore column : visibleColumns) {
 				x += column.getWidth();
 	
@@ -1783,7 +1787,7 @@ public class TableViewPainted
 
 	private Color getColorLine() {
 		if (colorLine == null) {
-			colorLine = Colors.getSystemColor(cTable.getDisplay(), SWT.COLOR_LIST_BACKGROUND);
+			colorLine = TablePaintedUtils.getColour(cTable.getDisplay(), SWT.COLOR_LIST_BACKGROUND);
 			HSLColor hslColor = new HSLColor();
 			hslColor.initHSLbyRGB(colorLine.getRed(), colorLine.getGreen(),
 					colorLine.getBlue());

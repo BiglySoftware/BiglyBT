@@ -95,6 +95,11 @@ public class ConfigSectionInterfaceColorSWT
 			add(colorParm, listOverride);
 		}
 
+		BooleanParameterImpl dark_tables = new BooleanParameterImpl(
+				"Dark Table Colors", "ConfigView.section.style.dark.tables");
+		add(dark_tables, listOverride);
+
+		
 		add(new ParameterGroupImpl("ConfigView.section.style.colorOverrides",
 				listOverride));
 	}
