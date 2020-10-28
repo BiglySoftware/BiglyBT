@@ -36,6 +36,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.views.table.painted.TablePaintedUtils;
 /**
  * @author Olivier Chalouhi
  * @author MjrTom
@@ -241,14 +242,14 @@ public class Colors implements ParameterListener {
 		}, false);
 	}
 
-	private void allocateColorAltRow() {
+	public void allocateColorAltRow() {
 		if (display == null || display.isDisposed())
 			return;
 
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				Color colorTables = Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND);
+				Color colorTables = TablePaintedUtils.getColour(display, SWT.COLOR_LIST_BACKGROUND);
 				HSLColor hslColor = new HSLColor();
 				hslColor.initHSLbyRGB(colorTables.getRed(), colorTables.getGreen(),
 						colorTables.getBlue());
@@ -352,10 +353,6 @@ public class Colors implements ParameterListener {
   }
 
   private void allocateNonDynamicColors() {
-		allocateColorWarning();
-		allocateColorError();
-		allocateColorAltRow();
-
 		black = ColorCache.getColor(display, 0, 0, 0);
 		light_grey = ColorCache.getColor(display, 192, 192, 192);
 		dark_grey = ColorCache.getColor(display, 96, 96, 96);
@@ -373,6 +370,10 @@ public class Colors implements ParameterListener {
 		background = ColorCache.getColor(display, 248, 248, 248);
 		red_ConsoleView = ColorCache.getColor(display, 255, 192, 192);
 		cyan = ColorCache.getColor(display, 0, 255, 255);
+		
+		allocateColorWarning();
+		allocateColorError();
+		allocateColorAltRow();
 	}
 
   private Display display;
@@ -412,10 +413,10 @@ public class Colors implements ParameterListener {
 
 
 	  display = Utils.getDisplay();
-    allocateDynamicColors( true );
-    allocateNonDynamicColors();
+	  allocateDynamicColors( true );
+	  allocateNonDynamicColors();
 
-    addColorsChangedListener(this);
+	  addColorsChangedListener(this);
   }
 
   public static Colors getInstance() {
