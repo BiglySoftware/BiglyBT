@@ -5149,7 +5149,7 @@ public class Utils
 	public static boolean
 	isDarkAppearanceWindows()
 	{
-		return( display.isSystemDarkTheme());
+		return( Constants.isWindows && Display.isSystemDarkTheme());
 	}
 	
 	public static void
