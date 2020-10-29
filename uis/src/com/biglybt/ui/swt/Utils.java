@@ -244,6 +244,8 @@ public class Utils
 		BUTTON_MARGIN = Constants.isOSX ? (smallOSXControl ? 10 : 12) : 6;
 	}
 
+	private static Display		display;
+	
 	private static Set<DiskManagerFileInfo>	quick_view_active = new HashSet<>();
 	private static TimerEventPeriodic		quick_view_event;
 
@@ -251,8 +253,10 @@ public class Utils
 	
 	public static void
 	initialize(
-		Display		display )
+		Display		_display )
 	{
+		display	= _display;
+		
 		isGTK3 = isGTK && System.getProperty("org.eclipse.swt.internal.gtk.version",
 				"2").startsWith("3");
 		
@@ -5135,6 +5139,17 @@ public class Utils
 		}
 		
 		return( is_dark_appearance );
+	}
+	
+	/**
+	 * Hack to switch some things to dark on Windows until proper support available
+	 * @return
+	 */
+	
+	public static boolean
+	isDarkAppearanceWindows()
+	{
+		return( display.isSystemDarkTheme());
 	}
 	
 	public static void

@@ -26,7 +26,6 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.swt.components.shell.ShellManager;
 
-import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 

@@ -44,6 +44,24 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
  */
 public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 
+	protected final Color bg_colour;
+	protected final Color fg_colour;
+	protected final Color fg_text_colour;
+	
+	{
+		if ( Utils.isDarkAppearanceWindows() || Utils.isDarkAppearance()){
+		
+			fg_text_colour 	= Colors.white;
+			fg_colour 		= Colors.blues[Colors.BLUES_MIDDARK];
+			bg_colour 		= Colors.black;
+			
+		}else{
+			
+			fg_text_colour	= null;
+			fg_colour 		= Colors.blues[Colors.BLUES_DARKEST];
+			bg_colour 		= Colors.blues[Colors.BLUES_LIGHTEST];
+		}
+	}
 	//
 	// These are components which are related to the bar itself.
 	//
@@ -105,8 +123,8 @@ public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 		// We create a label just so we can attach the menu to it.
 		assertConstructing();
 		Label result = new Label(splash, SWT.NONE);
-	    result.setBackground(Colors.blues[Colors.BLUES_LIGHTEST]);
-	    result.setForeground(Colors.blues[Colors.BLUES_DARKEST]);
+	    result.setBackground(bg_colour);
+	    result.setForeground(fg_colour);
 	    result.setText("");
 	    result.addMouseListener(this.mListener);
 	    result.addMouseMoveListener(this.mMoveListener);
@@ -119,8 +137,8 @@ public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 	protected final Label createFixedTextLabel(String msg_key, boolean add_colon, boolean bold) {
 		assertConstructing();
 	    Label result = new Label(splash, SWT.NONE);
-	    result.setBackground(Colors.blues[Colors.BLUES_LIGHTEST]);
-	    result.setForeground(Colors.blues[Colors.BLUES_DARKEST]);
+	    result.setBackground(bg_colour);
+	    result.setForeground(fg_colour);
 	    result.setText(MessageText.getString(msg_key) + ((add_colon) ? ":" : ""));
 	    if (bold) {
 	    	if (this.bold_font == null) {
@@ -146,7 +164,7 @@ public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 	protected final Label createFixedLabel(int width) {
 		assertConstructing();
 	    Label result = new Label(splash, SWT.NONE);
-	    result.setBackground(Colors.white);
+	    result.setBackground(bg_colour);
 	    result.setSize(width, SWT.DEFAULT );
 	    result.setLocation(this.xSize, 0);
 	    result.addMouseListener(this.mListener);
@@ -166,7 +184,8 @@ public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 		width = (int)(width * width_multiplier );
 		assertConstructing();
 		DoubleBufferedLabel result = new DoubleBufferedLabel(splash, (centered ? SWT.CENTER : SWT.NULL) | SWT.DOUBLE_BUFFERED );
-	    result.setBackground(Colors.blues[Colors.BLUES_LIGHTEST]);
+	    result.setBackground(bg_colour);
+	    result.setForeground(fg_text_colour);
 	    result.setText("");
 	    result.addMouseListener(this.mListener);
 	    result.addMouseMoveListener(this.mMoveListener);
@@ -200,7 +219,7 @@ public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 	protected final ProgressBar createProgressBar(int min, int max, int width, final ProgressBarText pbt) {
 		width = (int)(width * width_multiplier );
 		final ProgressBar result = new ProgressBar(splash, SWT.SMOOTH);
-		result.setBackground(Colors.blues[Colors.BLUES_LIGHTEST]);
+		result.setBackground(bg_colour);
 		result.setForeground(Colors.blues[Colors.BLUES_MIDLIGHT]);
 		result.setMinimum(min);
 		result.setMaximum(max);
@@ -270,7 +289,7 @@ public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 
 			splash.setAlpha( alpha );
 		}
-
+		
 		manager.register(this);
 		final DisposeListener mainDisposeListener;
 		main.addDisposeListener(mainDisposeListener = new DisposeListener() {
@@ -379,8 +398,8 @@ public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 	      }
 	    };
 
-	    splash.setBackground(Colors.blues[Colors.BLUES_LIGHTEST]);
-	    splash.setForeground(Colors.blues[Colors.BLUES_DARKEST]);
+		splash.setBackground( bg_colour );
+	    splash.setForeground( fg_colour );
 	    splash.addMouseListener(mListener);
 	    splash.addMouseMoveListener(mMoveListener);
 	    lDrag.addMouseListener(mListener);
