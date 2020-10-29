@@ -41,8 +41,12 @@ FMFileAccessLinear
 
 	private static final boolean	DEBUG			= true;
 	private static final boolean	DEBUG_VERBOSE	= false;
-
+	
+	/* Android: Use Compile-Time constants to optimize code removal
 	private static final boolean USE_MMAP = System.getProperty(SystemProperties.SYSPROP_IO_USEMMAP,"false") == "true";
+	 */
+
+	private static final boolean USE_MMAP = false;
 
 	private final FMFileImpl		owner;
 

@@ -20,7 +20,6 @@ package com.biglybt.core.util;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
@@ -73,8 +72,9 @@ Constants
 
 	public static final String[] APP_DOMAINS = { "azureusplatform.com", "azureus.com", "aelitis.com", "vuze.com", "biglybt.com" };
 
-	public static final Charset UTF_8		= StandardCharsets.UTF_8; 		// Charset.forName("UTF-8");
-	public static final Charset ISO_8859_1	= StandardCharsets.ISO_8859_1;	// Charset.forName("ISO-8859-1");
+	// Android: StandardCharsets minSDK 19
+	public static final Charset UTF_8		= Charset.forName("UTF-8");
+	public static final Charset ISO_8859_1	= Charset.forName("ISO-8859-1");
 
 	@Deprecated
 	public static final String DEFAULT_ENCODING 	= "UTF8";
@@ -151,14 +151,19 @@ Constants
 	public static final String SUBVERSION		= "";
 	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "3600" + "-").getBytes();  //MUST be 8 chars long!
 
+	/* Android: Never do CVS-only stuff
 	private static final boolean FORCE_NON_CVS = System.getProperty( "az.force.noncvs", "0" ).equals( "1" );
 
 	public static final boolean IS_CVS_VERSION = isCVSVersion( BIGLYBT_VERSION ) && !FORCE_NON_CVS;
+	 */
+
+	public static final boolean IS_CVS_VERSION = false;
 
 	public static final String  OSName 		= System.getProperty("os.name","");
 	public static final String  OSArch 		= System.getProperty("os.arch","");
 	public static final String  OSVersion	= System.getProperty("os.version","");
 
+	/* Android: Use Compile-Time constants to optimize code removal
 	public static final boolean isOSX			= OSName.toLowerCase().startsWith("mac os");
 	public static final boolean isLinux			= OSName.equalsIgnoreCase("Linux");
 	public static final boolean isSolaris		= OSName.equalsIgnoreCase("SunOS");
@@ -168,10 +173,39 @@ Constants
 	public static final boolean isWindows98		= OSName.equalsIgnoreCase("Windows 98");
 	public static final boolean isWindows2000	= OSName.equalsIgnoreCase("Windows 2000");
 	public static final boolean isWindowsME		= OSName.equalsIgnoreCase("Windows ME");
-	public static final boolean isWindows9598ME	= isWindows95 || isWindows98 || isWindowsME;
+	public static final boolean isWindows9598ME	= isWindows95 || isWindows98 || isWindowsME;	
+	 */
+
+	public static final boolean isOSX				= false;
+	public static final boolean isLinux			= false;
+	public static final boolean isSolaris			= false;
+	public static final boolean isFreeBSD			= false;
+	public static final boolean isWindowsXP		= false;
+	public static final boolean isWindows95		= false;
+	public static final boolean isWindows98		= false;
+	public static final boolean isWindows2000		= false;
+	public static final boolean isWindowsME		= false;
+	public static final boolean isWindows9598ME	= false;
 
 	public static boolean isSafeMode = false;
 
+	public static final boolean isWindows	= false;
+	public static final boolean isUnix = true;
+
+	public static final boolean isWindowsVista = false;
+	public static final boolean isWindowsVistaSP2OrHigher = false;
+	public static final boolean isWindowsVistaOrHigher = false;
+	public static final boolean isWindows7OrHigher = false;
+	public static final boolean isWindows8OrHigher = false;
+	public static final boolean isWindows10OrHigher = false;
+
+
+	public static final boolean is64Bit = true;
+	public static final boolean isOS64Bit = true;
+
+	public static final boolean isOSX_10_8_OrHigher = false;
+
+	/* Android: Use Compile-Time constants to optimize code removal
 	public static final boolean isWindows	= OSName.toLowerCase().startsWith("windows");
 	// If it isn't windows or osx, it's most likely an unix flavor
 	public static final boolean isUnix = !isWindows && !isOSX;
@@ -269,7 +303,7 @@ Constants
 					
 					isWindows11OrHigher = false;
 				}
-				*/
+				* /
 				
 				if ( isWindowsVista ){
 
@@ -368,6 +402,9 @@ Constants
 		isAndroid = System.getProperty("java.vm.name", "").equalsIgnoreCase("Dalvik")
 				|| System.getProperty("java.vendor", "").contains("Android");
 	}
+*/
+
+	public static final boolean	isAndroid = true;
 
 	// Android is roughly 1.8 (reports as 0 for java.version)
 
@@ -393,6 +430,7 @@ Constants
 		API_LEVEL		= api_level;
 	}
 
+	/* Android: Use Compile-Time constants to optimize code removal
 	public static final boolean isJava7OrHigher = !isAndroid;
 	public static final boolean isJava8OrHigher;
 	public static final boolean isJava9OrHigher;
@@ -462,6 +500,14 @@ Constants
 		isJava12OrHigher	= _12plus;
 		isJava18OrHigher	= _18plus;
 	}
+*/
+	public static final boolean isJava7OrHigher = true;
+	public static final boolean isJava8OrHigher = false;
+	public static final boolean isJava9OrHigher = false;
+	public static final boolean isJava10OrHigher = false;
+	public static final boolean isJava11OrHigher = false;
+	public static final boolean isJava12OrHigher = false;
+	public static final boolean isJava18OrHigher = false;
 
 	public static final String	FILE_WILDCARD = isWindows?"*.*":"*";
 
