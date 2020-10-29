@@ -5113,7 +5113,7 @@ public class Utils
 	static Boolean is_dark_appearance;
 		
 	public static boolean
-	isDarkAppearance()
+	isDarkAppearanceNative()
 	{
 		if ( is_dark_appearance == null ) {
 			
@@ -5147,9 +5147,16 @@ public class Utils
 	 */
 	
 	public static boolean
-	isDarkAppearanceWindows()
+	isDarkAppearancePartial()
 	{
-		return( Constants.isWindows && Display.isSystemDarkTheme());
+		try{
+			return( !Constants.isOSX && Display.isSystemDarkTheme());
+			
+		}catch( Throwable e ){
+			
+		}
+		
+		return( false );
 	}
 	
 	public static void

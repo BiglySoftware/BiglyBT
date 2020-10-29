@@ -49,7 +49,7 @@ public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 	protected final Color fg_text_colour;
 	
 	{
-		if ( Utils.isDarkAppearanceWindows() || Utils.isDarkAppearance()){
+		if ( Utils.isDarkAppearanceNative() || Utils.isDarkAppearancePartial()){
 		
 			fg_text_colour 	= Colors.white;
 			fg_colour 		= Colors.blues[Colors.BLUES_MIDDARK];

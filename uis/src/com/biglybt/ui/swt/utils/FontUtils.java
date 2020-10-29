@@ -248,7 +248,7 @@ public class FontUtils
 					return;
 				}
 
-				if (h > 10 && (Utils.isGTK3 || Utils.isDarkAppearance())) {
+				if (h > 10 && (Utils.isGTK3 || Utils.isDarkAppearanceNative())) {
 					// GTK3 and OSX dark mode has border included in clientArea
 					h -= 6;
 				}

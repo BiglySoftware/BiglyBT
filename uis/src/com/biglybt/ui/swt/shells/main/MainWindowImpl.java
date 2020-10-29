@@ -1863,7 +1863,7 @@ public class MainWindowImpl
 	private void attachSearchBox(SWTSkinObject skinObject) {
 		Composite cArea = (Composite) skinObject.getControl();
 
-		boolean DARK_MODE = Utils.isDarkAppearance();
+		boolean DARK_MODE = Utils.isDarkAppearanceNative();
 		
 		if (Utils.isGTK3 || DARK_MODE) {
 			// TextBox on GTK3/SWT and OSX/Dark will expand box to fit it's hugeness

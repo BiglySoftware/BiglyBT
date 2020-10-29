@@ -50,7 +50,7 @@ public class SkinPropertiesImpl
 {
 	private static final LogIDs LOGID = LogIDs.UI3;
 
-	private static final boolean DARK_MODE = Utils.isDarkAppearance();
+	private static final boolean DARK_MODE = Utils.isDarkAppearanceNative();
 
 	public static final String PATH_SKIN_DEFS = "com/biglybt/ui/skin/";
 

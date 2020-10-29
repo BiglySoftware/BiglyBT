@@ -64,7 +64,7 @@ import com.biglybt.util.MapUtils;
 public class SideBarEntrySWT
 	extends BaseMdiEntry
 {
-	private static final boolean DARK_MODE = Utils.isDarkAppearance();
+	private static final boolean DARK_MODE = Utils.isDarkAppearanceNative();
 	
 	private static final boolean PAINT_BG = !Constants.isUnix;
 
