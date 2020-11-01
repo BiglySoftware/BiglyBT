@@ -355,8 +355,18 @@ TorrentUtils
 
 		throws TOTorrentException
 	{
-		return( TOTorrentFactory.deserialiseFromMap( torrent.serialiseToMap()));
+		try{
+				// have to go to byte-array level when cloning otherwise nested Map entries end up being shared between
+				// the original and the clone...
+			
+			return( TOTorrentFactory.deserialiseFromBEncodedByteArray( BEncoder.encode( torrent.serialiseToMap())));
+			
+		}catch( IOException e ){
+			
+			throw( new TOTorrentException( "Failed to clone torrent", TOTorrentException.RT_DECODE_FAILS, e ));
+		}
 	}
+	
 
 	public static void
 	setMemoryOnly(

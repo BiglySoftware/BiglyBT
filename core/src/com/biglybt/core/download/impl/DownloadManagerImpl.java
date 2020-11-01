@@ -5516,8 +5516,29 @@ DownloadManagerImpl
 	  File	old_file = FileUtil.newFile( getTorrentFileName() );
 
 	  if ( !old_file.exists()){
-		  Debug.out( "torrent file doesn't exist!" );
-		  return;
+		  
+		  // used to fail here but we might as well use our internal copy of the torrent file
+		  
+		  TOTorrent internal_torrent = download_manager_state.getTorrent();
+		  
+		  try{
+			  TOTorrent clone = TorrentUtils.cloneTorrent( internal_torrent );
+			  
+			  clone.removeAdditionalProperties();
+			  
+			  TorrentUtils.writeToFile( clone, old_file, false );
+			  
+		  }catch( Throwable e ){
+			  
+			  Debug.out( e );
+		  }
+		  
+		  if ( !old_file.exists()){
+		  
+			  Debug.out( "torrent file '" + old_file + "' doesn't exist!" );
+		  
+			  return;
+		  }
 	  }
 
 	  if (new_parent_dir == null) {new_parent_dir = old_file.getParentFile();}
