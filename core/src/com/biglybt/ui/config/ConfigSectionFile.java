@@ -374,7 +374,8 @@ public class ConfigSectionFile
 		pgPriorityExt.setNumberOfColumns(2);
 
 		add(new StringParameterImpl(SCFG_FILE_AUTO_SEQUENTIAL_EXTS,
-				"ConfigView.label.sequential.exts"), Parameter.MODE_INTERMEDIATE);
+				"ConfigView.label.sequential.exts"), Parameter.MODE_INTERMEDIATE,
+				listExt);
 
 		// quick view
 
