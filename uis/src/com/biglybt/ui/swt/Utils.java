@@ -77,7 +77,6 @@ import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pif.UISWTStatusEntry;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
-import com.biglybt.ui.swt.shells.AdvRenameWindow;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.systray.TrayItemDelegate;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -5111,7 +5110,7 @@ public class Utils
 	}
 	
 	static Boolean is_dark_appearance;
-		
+	
 	public static boolean
 	isDarkAppearanceNative()
 	{
@@ -5149,14 +5148,28 @@ public class Utils
 	public static boolean
 	isDarkAppearancePartial()
 	{
+		if ( Constants.isOSX ){
+			
+			return( false );
+		}
+			
+		boolean is_system_dark_theme = false;
+		
 		try{
-			return( !Constants.isOSX && Display.isSystemDarkTheme());
+			Class<?> displayClass = Class.forName( "org.eclipse.swt.widgets.Display" );
 			
-		}catch( Throwable e ){
+			Method method = displayClass.getMethod( "isSystemDarkTheme" );
+					
+			is_system_dark_theme = (Boolean)method.invoke(null);
+		
+		}catch( Throwable e ) {
 			
+			Debug.out( e );
+			
+			is_system_dark_theme = false;
 		}
 		
-		return( false );
+		return( is_system_dark_theme );
 	}
 	
 	public static void
