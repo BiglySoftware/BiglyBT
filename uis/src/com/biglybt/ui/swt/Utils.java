@@ -5162,11 +5162,11 @@ public class Utils
 					
 			is_system_dark_theme = (Boolean)method.invoke(null);
 		
+		}catch( NoSuchMethodException e ){
+		
 		}catch( Throwable e ) {
 			
 			Debug.out( e );
-			
-			is_system_dark_theme = false;
 		}
 		
 		return( is_system_dark_theme );
