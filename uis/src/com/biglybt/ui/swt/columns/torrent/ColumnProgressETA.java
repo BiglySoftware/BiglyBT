@@ -327,7 +327,9 @@ public class ColumnProgressETA
 
 		String tooltip = null;
 		
-		if ( dm.getState() == DownloadManager.STATE_QUEUED ){
+		int dm_state = dm.getState();
+		
+		if ( dm_state == DownloadManager.STATE_QUEUED ){
 			
 			tooltip = MessageText.getString( "ManagerItem.queued.tooltip" );
 		}
@@ -392,8 +394,13 @@ public class ColumnProgressETA
 				boundsImgBG.height + 1);
 
 		int pctWidth = (int) (percentDone * (progressWidth) / 1000);
-		gc.setBackground(
+		if ( dm_state == DownloadManager.STATE_DOWNLOADING || dm_state == DownloadManager.STATE_SEEDING ){
+		
+			gc.setBackground(
 				percentDone == 1000 || dm.isDownloadComplete(false) ? cBGcd : cBGdl);
+		}else{
+			gc.setBackground( Colors.light_grey );
+		}
 		gc.fillRectangle(xStart + xRelProgressFillStart,
 				yStart + yRelProgressFillStart, pctWidth, boundsImgBG.height);
 		if (progressWidth > pctWidth) {
