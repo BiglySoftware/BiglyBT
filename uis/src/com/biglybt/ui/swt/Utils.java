@@ -193,6 +193,16 @@ public class Utils
 		SWT_REVISION = rev;
 	}
 	
+	private static volatile boolean	dark_misc_things = false;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Dark Misc Colors",
+			(n)->{
+				dark_misc_things = COConfigurationManager.getBooleanParameter( "Dark Misc Colors" );
+			});
+	}
+	
 	static void initStatic() {
 		
 		if (DEBUG_SWTEXEC) {
@@ -5153,6 +5163,11 @@ public class Utils
 			return( false );
 		}
 			
+		if ( !dark_misc_things ){
+			
+			return( false );
+		}
+		
 		boolean is_system_dark_theme = false;
 		
 		try{
