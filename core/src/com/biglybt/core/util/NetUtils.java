@@ -27,7 +27,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import com.biglybt.core.security.SESecurityManager;
-import com.biglybt.core.security.impl.SESecurityManagerImpl;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl.runnableWithException;
 
 public class
@@ -382,7 +381,8 @@ NetUtils
 
 							if ( ifs != null ){
 								
-								NetworkInterface best = null;
+								NetworkInterface 	best 			= null;
+								boolean				best_has_ias 	= false;
 								
 								for ( NetworkInterface x: ifs ){
 									
@@ -392,17 +392,33 @@ NetUtils
 																						
 										if ( p.matcher( dn ).find()){
 											
+											boolean has_ias = false;
+											
+											Enumeration<InetAddress> ias = x.getInetAddresses();
+
+											while( ias.hasMoreElements()){
+												InetAddress ia = ias.nextElement();
+												if ( ia instanceof Inet4Address ){
+													has_ias = true;
+													break;
+												}else{
+													if ( AddressUtils.isGlobalAddressV6(ia)){
+														has_ias = true;
+														break;
+													}
+												}
+											}
+											
 											if ( best == null ){
 											
-												best = x;
+												best 			= x;
+												best_has_ias	= has_ias;
 												
 											}else{
 												
-												boolean has_ias = x.getInetAddresses().hasMoreElements();
-
 												if ( has_ias ){
-													
-													if ( best.getInetAddresses().hasMoreElements()){
+																									
+													if ( best_has_ias ){
 												
 														best = null;
 														
@@ -414,7 +430,8 @@ NetUtils
 														
 													}else{
 													
-														best = x;
+														best 			= x;
+														best_has_ias	= has_ias;
 													}
 												}
 											}
