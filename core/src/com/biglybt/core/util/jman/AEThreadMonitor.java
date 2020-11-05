@@ -38,7 +38,28 @@ public class
 AEThreadMonitor
 	implements ThreadStuff, AEDiagnosticsEvidenceGenerator 
 {
-	private static final boolean THREAD_USER_TIME = !System.getProperty( SystemProperties.SYSPROP_THREAD_MON_USERONLY, "0" ).equals( "0" );
+	private static final boolean THREAD_USER_TIME;
+	
+	static{
+		String prop = System.getProperty( SystemProperties.SYSPROP_THREAD_MON_USERONLY, null );
+		
+		if ( prop == null ){
+			
+			if ( Constants.isLinux ){
+				
+					// prevents pthread crash on linux
+				
+				THREAD_USER_TIME = true;
+				
+			}else{
+				
+				THREAD_USER_TIME = false;
+			}
+		}else{
+			
+			THREAD_USER_TIME = !prop.equals( "0" );
+		}
+	}
 			
 	private final ThreadMXBean	thread_bean;
 

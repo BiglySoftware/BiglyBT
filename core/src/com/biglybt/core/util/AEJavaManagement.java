@@ -40,7 +40,12 @@ AEJavaManagement
 			// not seeing any progress on https://bugs.java.com/bugdatabase/view_bug.do?bug_id=JDK-8245768 
 			// so setting linux default to disabled for the moment
 			
-			thread_prop = ( Constants.isWindows || Constants.isOSX )?"1":"0";
+			// thread_prop = ( Constants.isWindows || Constants.isOSX )?"1":"0";
+			
+			// Seems that using user-time on Linux (see SYSPROP_THREAD_MON_USERONLY) works around the bug so we switch
+			// from disabling entirely on Linux to defaulting to user-time
+			
+			thread_prop = "1";
 		}
 		
 		if ( thread_prop.equals( "0" )){
