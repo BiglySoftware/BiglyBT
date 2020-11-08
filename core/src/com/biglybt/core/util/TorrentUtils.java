@@ -3710,7 +3710,35 @@ TorrentUtils
 			
 			throws TOTorrentException
 		{
-			return( delegate.selectHybridHashType(type));
+			TOTorrent result;
+			
+				// make sure pieces are current
+
+			try{
+		   		getMonitor().enter();
+	
+		   		boolean[]	restored = restoreState( true, true );
+	
+		   		result = delegate.selectHybridHashType(type);
+	
+		   		if ( restored[0] ){
+	
+		   			discardPieces( SystemTime.getCurrentTime(), true );
+		   		}
+	
+		   		if ( restored[1]){
+	
+					for (Iterator it = torrentFluffKeyset.iterator(); it.hasNext();){
+	
+						delegate.setAdditionalMapProperty((String) it.next(), fluffThombstone);
+					}
+				}
+			}finally{
+	
+				getMonitor().exit();
+			}
+			
+			return( result );
 		}
 		
 	   	@Override

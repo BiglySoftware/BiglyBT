@@ -2025,8 +2025,16 @@ DownloadManagerController
 		DiskManagerFileInfo[] files = fileFacadeSet.getFiles();
 
 		for (int i = 0; i < files.length; i++) {
+			
 			DiskManagerFileInfo fileInfo = files[i];
-			if (!fileInfo.isSkipped()) {
+			
+			if ( fileInfo.getTorrentFile().isPadFile()){
+				
+				continue;
+			}
+			
+			if (!fileInfo.isSkipped()){
+				
 				try {
 					long start = SystemTime.getMonotonousTime();
 

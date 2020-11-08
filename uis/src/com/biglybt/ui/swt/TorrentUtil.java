@@ -55,6 +55,7 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerInitialisationAdapter;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
@@ -2371,8 +2372,26 @@ public class TorrentUtil
 										
 					if ( dm.getGlobalManager().getDownloadManager( new HashWrapper( truncated_v2_hash )) == null ){
 						
-						can_v2.add( dm );
+						boolean compatible = true;
 						
+						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+						
+						for ( DiskManagerFileInfo file: files ){
+							
+							if ( file.getTorrentFile().isPadFile()){
+								
+							}else if ( file.getStorageType() != DiskManagerFileInfo.ST_LINEAR || file.getLink() != null ){
+								
+								compatible = false;
+								
+								break;
+							}
+						}
+						
+						if ( compatible ){
+						
+							can_v2.add( dm );
+						}
 					}
 				}catch( Throwable e ){
 					
@@ -2391,20 +2410,75 @@ public class TorrentUtil
 		
 		itemHybridV2.addListener(SWT.Selection, new ListenerDMTask(can_v2.toArray(new DownloadManager[0]), true, true) {
 			@Override
-			public void run(DownloadManager dm) {
+			public void run(DownloadManager old_manager ) {
 				
-				TOTorrent torrent = dm.getTorrent();
+				TOTorrent torrent = old_manager.getTorrent();
 				
 				try{
 					TOTorrent other = torrent.selectHybridHashType( TOTorrent.TT_V2 );
 					
 					File temp_file = AETemporaryFileHandler.createTempFile();
 
-					TorrentUtils.setDisplayName( other, dm.getDisplayName() + " (v2)");
-
 					TorrentUtils.writeToFile( other, temp_file, false );
+												
+					File save_loc = old_manager.getSaveLocation();
+						
+					String	save_parent = save_loc.getParentFile().getAbsolutePath();
+					String	save_file	= save_loc.getName();
+					
+					old_manager.getGlobalManager().addDownloadManager( 
+							temp_file.getAbsolutePath(),
+							other.getHash(),
+							save_parent,
+							save_file,
+							DownloadManager.STATE_WAITING,
+							true,
+							old_manager.getAssumedComplete(),
+							new DownloadManagerInitialisationAdapter(){
+								
+								@Override
+								public void 
+								initialised(
+									DownloadManager new_manager, 
+									boolean 		for_seeding)
+								{
+									DiskManagerFileInfoSet old_file_info_set = old_manager.getDiskManagerFileInfoSet();
+									DiskManagerFileInfoSet new_file_info_set = new_manager.getDiskManagerFileInfoSet();
+
+									DiskManagerFileInfo[] old_file_infos = old_file_info_set.getFiles();
+									
+									DownloadManagerState new_dms = new_manager.getDownloadState();
+
+									new_dms.setDisplayName( old_manager.getDisplayName() + " (v2)");
+									try {
+										new_dms.suppressStateSave(true);
+									
+										boolean[] to_skip = new boolean[old_file_infos.length];
 										
-					dm.getGlobalManager().addDownloadManager( temp_file.getAbsolutePath(), dm.getSaveLocation().getAbsolutePath());
+										for ( int i=0; i < old_file_infos.length; i++ ){
+											
+											if ( old_file_infos[i].isSkipped()){
+												
+												to_skip[i] = true;
+											}
+										}
+
+										new_file_info_set.setSkipped(to_skip, true);
+	
+									} finally {
+	
+										new_dms.suppressStateSave(false);
+									}
+								}
+								
+								@Override
+								public int 
+								getActions()
+								{
+									return 0;
+								}
+							});
+							
 					
 				}catch( Throwable e ){
 					

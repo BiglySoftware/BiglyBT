@@ -999,7 +999,15 @@ TOTorrentImpl
 			clone.setAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES, private_props );
 		}
 		
-		return( clone );
+		try{
+				// recreate with new properties so result represents this
+			
+			return( TOTorrentFactory.deserialiseFromBEncodedByteArray( BEncoder.encode( clone.serialiseToMap())));
+			
+		}catch( Throwable e ){
+			
+			throw( new TOTorrentException( "Encode failed", TOTorrentException.RT_CREATE_FAILED, e ));
+		}
 	}
 	
 	@Override
