@@ -3195,7 +3195,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			
 		private boolean		has_been_viewed;
 		
-		private volatile long		last_bind_fail = -1;
+		private volatile String		last_bind_fail = null;
 		
 		private boolean		destroyed;
 
@@ -3871,6 +3871,17 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			throws Exception
 		{
+			if ( timeout != -1 ){
+				
+				if ( getNetwork() == AENetworkClassifier.AT_I2P ){
+					
+					if ( !I2PHelpers.isI2POperational()){
+						
+						return;
+					}
+				}
+			}
+			
 			boolean	inform_avail = false;
 
 			if ( timeout == -1 ){
@@ -3885,7 +3896,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			
 			synchronized( binding_lock ){
 
-				last_bind_fail = -1;
+				last_bind_fail = null;
 				
 				binding_sem = new AESemaphore( "bpb:bind" );
 
@@ -3977,7 +3988,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 						}catch( Throwable e ){
 
-							last_bind_fail = SystemTime.getMonotonousTime();
+							last_bind_fail = Debug.getNestedExceptionMessage( e );
 							
 							throw( new Exception( e ));
 						}
@@ -4015,14 +4026,19 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private void 
 		checkRebind()
 		{
-			if ( last_bind_fail >= 0 ){
+			String last_fail = last_bind_fail;
+			
+			if ( last_fail != null ){
 				
 				try{
 					bind( msgsync_pi, null, 1000 );
 					
 				}catch( Throwable e ){
 					
-					Debug.out( e );
+					if ( !last_fail.equals( last_bind_fail )){
+					
+						Debug.out( e );
+					}
 				}
 			}
 		}

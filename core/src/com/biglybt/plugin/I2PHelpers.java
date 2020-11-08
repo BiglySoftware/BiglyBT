@@ -29,6 +29,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -41,6 +42,23 @@ I2PHelpers
 
 	private static boolean i2p_installing = false;
 
+	public static boolean
+	isI2POperational()
+	{
+		PluginManager pm = CoreFactory.getSingleton().getPluginManager();
+		
+		PluginInterface pi = pm.getPluginInterfaceByID( "azneti2phelper" );
+		
+		if ( pi != null ){
+			
+			return( pi.getPluginState().isOperational());
+			
+		}else{
+			
+			return( false );
+		}
+	}
+	
 	public static boolean
 	isI2PInstalled()
 	{
