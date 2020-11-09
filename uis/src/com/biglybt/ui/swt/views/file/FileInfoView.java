@@ -337,11 +337,13 @@ public class FileInfoView
 				    			widgetSelected(
 				    				SelectionEvent e)
 				    			{
-				    				dm_piece.reset();
-
 				    				if ( pe_piece != null ){
 
 				    					pe_piece.reset();
+				    					
+				    				}else{
+				    					
+					    				dm_piece.reset();
 				    				}
 				    			}
 				    		});

@@ -1540,11 +1540,13 @@ public class PieceInfoView
 		widgetSelected(
 			SelectionEvent e)
 		{
-			dm_piece.reset();
-
 			if ( pm_piece != null ){
 
 				pm_piece.reset();
+				
+			}else{
+				
+				dm_piece.reset();
 			}
 		}
 	}

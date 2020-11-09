@@ -99,37 +99,17 @@ public class PEPieceImpl
 
 		requested =new String[nbBlocks];
 
-			// easiest way to deal with the fact that pad files are effectively already downloaded (contents is just array of zero bytes) is to wait until
-			// a piece is allocated for downloading and then set the pad blocks as written. If you try and do this via presetting resume data then you end
-			// up with potentially a load of partial pieces on startup
-		
-		DMPieceList pl = dmPiece.getPieceList();
-		
-		if ( pl.size() == 2 ){
-			
-			DMPieceMapEntry pme2 = pl.get( 1 );
-			
-			if ( pme2.getFile().getTorrentFile().isPadFile()){
-			
-				DMPieceMapEntry pme1 = pl.get( 0 );
+		fixupPadFile();
 
-				int	len1 = pme1.getLength();
-				
-				int pad_block_start = ( len1 + DiskManager.BLOCK_SIZE - 1 ) / DiskManager.BLOCK_SIZE;
-				
-				for ( int i=pad_block_start; i<nbBlocks; i++ ){
-					
-					dmPiece.setWritten( i );
-				}
-			}
+		final boolean[] written =dmPiece.getWritten();
+		
+		if ( written == null ){
+			
+			downloaded = new boolean[nbBlocks];
+		}else{
+			downloaded =(boolean[])written.clone();
 		}
 		
-        final boolean[] written =dmPiece.getWritten();
-		if (written ==null)
-			downloaded =new boolean[nbBlocks];
-		else
-			downloaded =(boolean[])written.clone();
-
         writers =new String[nbBlocks];
 		writes =new ArrayList(0);
 	}
@@ -707,17 +687,52 @@ public class PEPieceImpl
 
 		return result;
 	}
+	
+	private void
+	fixupPadFile()
+	{
+		// easiest way to deal with the fact that pad files are effectively already downloaded (contents is just array of zero bytes) is to wait until
+		// a piece is allocated for downloading and then set the pad blocks as written. If you try and do this via presetting resume data then you end
+		// up with potentially a load of partial pieces on startup
+
+		DMPieceList pl = dmPiece.getPieceList();
+
+		if ( pl.size() == 2 ){
+
+			DMPieceMapEntry pme2 = pl.get( 1 );
+
+			if ( pme2.getFile().getTorrentFile().isPadFile()){
+
+				DMPieceMapEntry pme1 = pl.get( 0 );
+
+				int	len1 = pme1.getLength();
+
+				int pad_block_start = ( len1 + DiskManager.BLOCK_SIZE - 1 ) / DiskManager.BLOCK_SIZE;
+
+				for ( int i=pad_block_start; i<nbBlocks; i++ ){
+
+					dmPiece.setWritten( i );
+				}
+			}
+		}
+	}
 
 	@Override
 	public void reset()
 	{
 		dmPiece.reset();
-		for (int i =0; i <nbBlocks; i++)
-		{
+		
+		fixupPadFile();
+		
+		boolean[] written = dmPiece.getWritten();
+		
+		for (int i =0; i <nbBlocks; i++){
+		
             requested[i] =null;
-			downloaded[i] =false;
+			downloaded[i] = written==null?false:written[i];
 			writers[i] =null;
 		}
+		
 		fully_downloaded = false;
 		time_last_download = 0;
 		reservedBy =null;
