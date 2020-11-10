@@ -21,7 +21,10 @@
 package com.biglybt.ui.swt.views.stats;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +80,7 @@ GeneralOpsPanel
 
 	private ActivityFilter	filter;
 
-	private Map<Activity,ActivityDetail>	activity_map = new HashMap<>();
+	private Map<Activity,ActivityDetail>	activity_map = new IdentityHashMap<>();
 
 	private TimerEventPeriodic timeout_timer;
 
@@ -438,14 +441,47 @@ GeneralOpsPanel
 
 			ActivityDetail details = activity_map.get( activity );
 
-			if ( details == null ){
+			if ( details == null && !removed ){
 
 				details = new ActivityDetail( activity );
 
 				activity_map.put( activity, details );
+				
+					// seeing an undiagnosed leak in this area, put a hard limit on how many activities we retain...
+				
+				if ( activity_map.size() > 250 ){
+				
+					List<ActivityDetail> entries = new ArrayList<>( activity_map.values());
+					
+					Collections.sort(
+						entries,
+						new Comparator<ActivityDetail>()
+						{
+							public int
+							compare(
+								ActivityDetail	a1,
+								ActivityDetail	a2 )
+							{
+								long res = a1.getCreateTime() - a2.getCreateTime();
+								
+								if ( res < 0 ){
+									return( -1 );
+								}else if ( res > 0 ){
+									return( 1 );
+								}else{
+									return( 0 );
+								}
+							}
+						});
+					
+					for ( int i=0; i<Math.min(50, entries.size()); i++ ){
+						
+						activity_map.remove( entries.get( i ).getActivity());
+					}
+				}
 			}
 
-			if ( removed ){
+			if ( details != null && removed ){
 
 				details.setComplete();
 			}
@@ -782,6 +818,8 @@ GeneralOpsPanel
 	private class
 	ActivityDetail
 	{
+		private final long		create_time	= SystemTime.getMonotonousTime();
+		
 		private Activity		activity;
 		private long			complete_time = -1;
 
@@ -797,6 +835,12 @@ GeneralOpsPanel
 			activity	= _act;
 		}
 
+		private long
+		getCreateTime()
+		{
+			return( create_time );
+		}
+		
 		private Activity
 		getActivity()
 		{

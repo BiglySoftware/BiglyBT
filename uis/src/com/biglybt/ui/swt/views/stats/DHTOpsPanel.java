@@ -21,6 +21,8 @@
 package com.biglybt.ui.swt.views.stats;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +32,7 @@ import org.eclipse.swt.widgets.Composite;
 import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.control.DHTControlActivity;
 import com.biglybt.core.dht.control.DHTControlListener;
-
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.swt.views.stats.GeneralOpsPanel.Activity;
 import com.biglybt.ui.swt.views.stats.GeneralOpsPanel.Node;
 import com.biglybt.ui.swt.views.stats.GeneralOpsPanel.State;
@@ -70,13 +72,18 @@ DHTOpsPanel
 		
 		boolean removed = type == DHTControlListener.CT_REMOVED;
 		
+		List<ActivityHolder>	expired = null;
+		
 		synchronized( activity_map ){
 			
 			if ( removed ){
 				
 				holder = activity_map.remove( activity );
 				
-				activity_reverse_map.remove( holder );
+				if ( holder != null ){
+				
+					activity_reverse_map.remove( holder );
+				}
 				
 			}else{
 				
@@ -89,11 +96,60 @@ DHTOpsPanel
 					activity_map.put( activity, holder );
 					
 					activity_reverse_map.put( holder, activity );
+					
+						// seeing an undiagnosed leak in this area where activities build up - put a hard limit
+						// on how many we'll keep track of
+					
+					if ( activity_map.size() > 250 ){
+						
+						List<ActivityHolder> holders = new ArrayList<>( activity_map.values());
+						
+						Collections.sort(
+							holders,
+							new Comparator<ActivityHolder>()
+							{
+								public int
+								compare(
+									ActivityHolder	a1,
+									ActivityHolder	a2 )
+								{
+									long res = a1.getCreateTime() - a2.getCreateTime();
+									
+									if ( res < 0 ){
+										return( -1 );
+									}else if ( res > 0 ){
+										return( 1 );
+									}else{
+										return( 0 );
+									}
+								}
+							});
+						
+						expired = holders.subList(0,  Math.min( holders.size(), 50 ));
+						
+						for ( ActivityHolder h: expired ){
+							
+							activity_map.remove( h.getActivity());
+							
+							activity_reverse_map.remove( h );
+						}
+					}
 				}
 			}
 		}
 		
-		gop.activityChanged( holder, removed );
+		if ( expired != null ){
+		
+			for ( ActivityHolder h: expired ){
+			
+				gop.activityChanged( h, true );
+			}
+		}
+		
+		if ( holder != null ){
+		
+			gop.activityChanged( holder, removed );
+		}
 	}
 
 
@@ -210,6 +266,8 @@ DHTOpsPanel
 	ActivityHolder
 		implements GeneralOpsPanel.Activity
 	{
+		private final long						create_time = SystemTime.getMonotonousTime();
+		
 		private final DHTControlActivity		delegate;
 				
 		private
@@ -217,6 +275,18 @@ DHTOpsPanel
 			DHTControlActivity	_delegate )
 		{
 			delegate = _delegate;
+		}
+		
+		public DHTControlActivity
+		getActivity()
+		{
+			return( delegate );
+		}
+		
+		public long
+		getCreateTime()
+		{
+			return( create_time );
 		}
 				
 		public String
