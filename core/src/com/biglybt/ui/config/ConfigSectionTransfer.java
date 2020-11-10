@@ -359,10 +359,24 @@ public class ConfigSectionTransfer
 
 		hap.addEnabledOnSelection(hapds);
 
-		// prioritise first/last pieces
-		add(new BooleanParameterImpl(BCFG_PRIORITIZE_FIRST_PIECE,
-				"ConfigView.label.prioritizefirstpiece"), Parameter.MODE_INTERMEDIATE);
+			// prioritise first/last pieces
+		
+		BooleanParameterImpl pfp = new BooleanParameterImpl(BCFG_PRIORITIZE_FIRST_PIECE,
+				"ConfigView.label.prioritizefirstpiece");
+		
+		add( pfp, Parameter.MODE_INTERMEDIATE);
 
+			// prioritise first/last pieces Force
+		
+		BooleanParameterImpl pfpf = new BooleanParameterImpl(BCFG_PRIORITIZE_FIRST_PIECE_FORCE,
+				"ConfigView.label.prioritizefirstpiece.force");
+		
+		pfpf.setIndent( 1, true );
+
+		add( pfpf, Parameter.MODE_INTERMEDIATE);
+
+		pfp.addEnabledOnSelection( pfpf );
+		
 		// Further prioritize High priority files according to % complete and size of file
 		add(new BooleanParameterImpl(BCFG_PRIORITIZE_MOST_COMPLETED_FILES,
 				"ConfigView.label.prioritizemostcompletedfiles"),

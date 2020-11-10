@@ -407,6 +407,7 @@ public final class ConfigKeys {
 		public static final String BCFG_PEERCONTROL_HIDE_PIECE = "peercontrol.hide.piece";
 		public static final String BCFG_PEERCONTROL_HIDE_PIECE_DS = "peercontrol.hide.piece.ds";
 		public static final String BCFG_PRIORITIZE_FIRST_PIECE = "Prioritize First Piece";
+		public static final String BCFG_PRIORITIZE_FIRST_PIECE_FORCE = "Prioritize First Piece Force";
 		public static final String BCFG_PRIORITIZE_MOST_COMPLETED_FILES = "Prioritize Most Completed Files";
 		public static final String SCFG_IGNORE_PEER_PORTS = "Ignore.peer.ports";
 		public static final String BCFG_LAN_SPEED_ENABLED = "LAN Speed Enabled";

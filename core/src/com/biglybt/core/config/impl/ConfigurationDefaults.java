@@ -407,7 +407,8 @@ public class ConfigurationDefaults {
     def.put( "Watch Torrent Always Rename", FALSE );
     def.put( "Watch Torrent Folder Path", "" );
     def.put( "Watch Torrent Folder Path Count", ONE );
-    def.put( "Prioritize First Piece", FALSE );
+    def.put( ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE, FALSE );
+    def.put( ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE_FORCE, FALSE );
     def.put( "Prioritize Most Completed Files", FALSE );
     def.put( "Piece Picker Request Hint Enabled", TRUE );
     def.put( "Use Lazy Bitfield", FALSE );

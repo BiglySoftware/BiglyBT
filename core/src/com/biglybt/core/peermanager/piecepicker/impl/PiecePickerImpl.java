@@ -22,9 +22,8 @@ package com.biglybt.core.peermanager.piecepicker.impl;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.disk.*;
-import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMap;
 import com.biglybt.core.logging.LogEvent;
@@ -119,12 +118,6 @@ implements PiecePicker
 	
 	private static final long END_GAME_MODE_TIMEOUT				= 120*1000;
 	
-	
-	protected static volatile boolean	firstPiecePriority	=COConfigurationManager.getBooleanParameter("Prioritize First Piece" );
-	protected static volatile boolean	completionPriority	=COConfigurationManager.getBooleanParameter("Prioritize Most Completed Files");
-	/** event # of user settings controlling priority changes */
-	protected static volatile long		paramPriorityChange =Long.MIN_VALUE;
-
 	private static final int	NO_REQUEST_BACKOFF_MAX_MILLIS	= 5*1000;
 	private static final int	NO_REQUEST_BACKOFF_MAX_LOOPS	= NO_REQUEST_BACKOFF_MAX_MILLIS / PeerControlScheduler.SCHEDULE_PERIOD_MILLIS;
 
@@ -232,37 +225,41 @@ implements PiecePicker
 
 	private volatile CopyOnWriteSet<Integer>	forced_pieces;
 
-	static
-	{
-		class ParameterListenerImpl
-		implements ParameterListener
-		{
-			@Override
-			public final void parameterChanged(final String parameterName)
-			{
-				if (parameterName.equals("Prioritize Most Completed Files"))
-				{
-					completionPriority =COConfigurationManager.getBooleanParameter(parameterName);
-					paramPriorityChange++;	// this is a user's priority change event
-				} else if (parameterName.equals("Prioritize First Piece"))
-				{
-					firstPiecePriority =COConfigurationManager.getBooleanParameter(parameterName);
-					paramPriorityChange++;	// this is a user's priority change event
-			    }else if ( parameterName.equals( "Piece Picker Request Hint Enabled" )){
-			    	enable_request_hints = COConfigurationManager.getBooleanParameter(parameterName);
-				}
+	protected static volatile boolean	firstPiecePriority;
+	protected static volatile boolean	firstPiecePriorityForce;
+	protected static volatile boolean	completionPriority;
+	
+		/** event # of user settings controlling priority changes */
+	
+	protected static volatile long		paramPriorityChange = Long.MIN_VALUE;
 
-				includeLanPeersInReqLimiting = ! COConfigurationManager.getBooleanParameter("LAN Speed Enabled");
-			}
-		}
+	static{
 
-		final ParameterListenerImpl	parameterListener =new ParameterListenerImpl();
-
-		COConfigurationManager.addParameterListener("Prioritize Most Completed Files", parameterListener);
-		COConfigurationManager.addAndFireParameterListener("Prioritize First Piece", parameterListener);
-		COConfigurationManager.addAndFireParameterListener("Piece Picker Request Hint Enabled", parameterListener);
-		COConfigurationManager.addAndFireParameterListener("LAN Speed Enabled", parameterListener);
-
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				"Prioritize Most Completed Files",
+				ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE,	
+				ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE_FORCE	
+			},
+			(n)->{
+				completionPriority 		= COConfigurationManager.getBooleanParameter( "Prioritize Most Completed Files" );			
+				firstPiecePriority 		= COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE );
+				firstPiecePriorityForce = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE_FORCE );
+				
+				paramPriorityChange++;	// this is a user's priority change event
+			  
+			});
+		
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[]{
+					"Piece Picker Request Hint Enabled",
+					"LAN Speed Enabled"
+				},
+				(n)->{
+					
+			    	enable_request_hints			= COConfigurationManager.getBooleanParameter( "Piece Picker Request Hint Enabled" );
+					includeLanPeersInReqLimiting 	= !COConfigurationManager.getBooleanParameter( "LAN Speed Enabled" );
+				});
 	}
 
 
@@ -1248,8 +1245,10 @@ implements PiecePicker
 		final int[]		newPriorities   =new int[nbPieces];
 
 		// locals are a tiny bit faster
-		final boolean firstPiecePriorityL =firstPiecePriority;
-		final boolean completionPriorityL =completionPriority;
+		
+		final boolean firstPiecePriorityL 		= firstPiecePriority;
+		final boolean firstPiecePriorityForceL 	= firstPiecePriorityForce;
+		final boolean completionPriorityL 		= completionPriority;
 
 		final DMPieceMap	pieceMap = diskManager.getPieceMap();
 
@@ -1258,13 +1257,16 @@ implements PiecePicker
 		try
 		{
 			final boolean rarestOverride = calcRarestAllowed() < 1;
-			// calculate all base (starting) priorities for all pieces needing requesting
+			
+				// calculate all base (starting) priorities for all pieces needing requesting
+			
 			final int nbConnects =peerControl.getNbPeers() +peerControl.getNbSeeds();
-			for (int i =0; i <nbPieces; i++)
-			{
+			
+			for (int i =0; i <nbPieces; i++){
+				
 				final DiskManagerPiece dmPiece =dmPieces[i];
 
-				if (dmPiece.isDone()){
+				if ( dmPiece.isDone()){
 
 					if ( forced != null && forced.contains( i )){
 
@@ -1279,27 +1281,36 @@ implements PiecePicker
 							}
 						}
 					}
+					
 					continue;	// nothing to do for pieces not needing requesting
 				}
 
-				int startPriority =Integer.MIN_VALUE;
+				int startPriority = Integer.MIN_VALUE;
 
-				final DMPieceList pieceList =pieceMap.getPieceList(dmPiece.getPieceNumber());
-				final int pieceListSize =pieceList.size();
-				for (int j =0; j <pieceListSize; j++)
-				{
-					final DiskManagerFileInfo fileInfo =pieceList.get(j).getFile();
-					final long downloaded =fileInfo.getDownloaded();
-					final long length =fileInfo.getLength();
-					if (length >0 &&downloaded <length &&!fileInfo.isSkipped())
-					{
-						int priority =0;
+				final DMPieceList pieceList = pieceMap.getPieceList(dmPiece.getPieceNumber());
+				
+				final int pieceListSize = pieceList.size();
+				
+				boolean pieceHasFirstLastPriority = false;
+				
+				for ( int j=0; j<pieceListSize; j++ ){
+					
+					final DiskManagerFileInfo fileInfo = pieceList.get(j).getFile();
+					
+					final long downloaded = fileInfo.getDownloaded();
+					
+					final long length = fileInfo.getLength();
+					
+					if ( length > 0 && downloaded < length && !fileInfo.isSkipped()){
+						
+						int priority = 0;
+						
 						// user option "prioritize first and last piece"
 						// TODO: should prioritize ~10% from edges of file
 
 						boolean hasFirstLastPriority = false;
 
-						if (firstPiecePriorityL &&fileInfo.getNbPieces() >FIRST_PIECE_MIN_NB){
+						if ( firstPiecePriorityL &&fileInfo.getNbPieces() > FIRST_PIECE_MIN_NB ){
 
 							/* backed out for the moment - reverting to old first/last piece only
                         	int lastFirstPiece = fileInfo.getFirstPieceNumber() + FIRST_PIECE_RANGE_PERCENT * (fileInfo.getLastPieceNumber() - fileInfo.getFirstPieceNumber()) / 100;
@@ -1313,8 +1324,9 @@ implements PiecePicker
                             }
 							 */
 
-							if (i == fileInfo.getFirstPieceNumber() ||i == fileInfo.getLastPieceNumber()){
-								hasFirstLastPriority = true;
+							if  ( i == fileInfo.getFirstPieceNumber() || i == fileInfo.getLastPieceNumber()){
+								
+								pieceHasFirstLastPriority = hasFirstLastPriority = true;
 							}
 						}
 
@@ -1366,7 +1378,7 @@ implements PiecePicker
 								priority +=(PRIORITY_W_COMPLETION *downloaded) /diskManager.getTotalLength();
 							}
 						}
-
+						
 						if ( priority > startPriority ){
 
 							startPriority = priority;
@@ -1374,19 +1386,34 @@ implements PiecePicker
 					}
 				}
 
-				if (startPriority >=0)
-				{
+				if ( startPriority >=0 ){
+					
+					if ( pieceHasFirstLastPriority && firstPiecePriorityForceL ){
+						
+						startPriority += PRIORITY_FORCED;
+					}
+
 					dmPiece.setNeeded();
-					foundPieceToDownload =true;
-					final int avail =availability[i];
-					// nbconnects is async calculate so may be wrong - make sure we don't decrease pri by accident
-					if (avail >0 && nbConnects > avail )
-					{   // boost priority for rarity
-						startPriority +=nbConnects -avail;
-//						startPriority +=(PRIORITY_W_RARE +peerControl.getNbPeers()) /avail;
-						// Boost priority even a little more if it's a globally rarest piece
-						if (!rarestOverride &&avail <=globalMinOthers)
-							startPriority +=nbConnects /avail;
+					
+					foundPieceToDownload = true;
+					
+					final int avail = availability[i];
+					
+						// nbconnects is async calculate so may be wrong - make sure we don't decrease pri by accident
+					
+					if (avail >0 && nbConnects > avail ){ 
+						
+							// boost priority for rarity
+						
+						startPriority += nbConnects -avail;
+						
+							//	startPriority +=(PRIORITY_W_RARE +peerControl.getNbPeers()) /avail;
+							// Boost priority even a little more if it's a globally rarest piece
+						
+						if ( !rarestOverride &&avail <=globalMinOthers){
+							
+							startPriority += nbConnects /avail;
+						}
 					}
 
 					if ( provider_piece_rtas != null ){
@@ -1401,7 +1428,7 @@ implements PiecePicker
 
 					}else if ( forced != null && forced.contains( i )){
 
-						startPriority 	= PRIORITY_FORCED;
+						startPriority += PRIORITY_FORCED;
 					}
 				}else{
 
@@ -1410,8 +1437,8 @@ implements PiecePicker
 
 				newPriorities[i] = startPriority;
 			}
-		} catch (Throwable e)
-		{
+		} catch (Throwable e){
+			
 			Debug.printStackTrace(e);
 		}
 
@@ -1450,7 +1477,7 @@ implements PiecePicker
 					continue;
 				}
 				
-				if ( priority != PRIORITY_FORCED ){
+				if ( priority < PRIORITY_FORCED ){
 				
 					if ( do_file_priorities ){
 						
@@ -1501,6 +1528,7 @@ implements PiecePicker
 	}
 
 
+	/*
 	private boolean isRarestOverride()
 	{
 		final int nbSeeds =peerControl.getNbSeeds();
@@ -1526,7 +1554,8 @@ implements PiecePicker
 		}
 		return rarestOverride;
 	}
-
+	*/
+	
 	private final SpeedTokenDispenser dispenser = PeerControlSchedulerFactory.getSingleton(0).getSpeedTokenDispenser();
 
 	/**
