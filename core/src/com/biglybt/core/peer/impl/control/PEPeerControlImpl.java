@@ -2773,46 +2773,50 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		DiskManagerPiece dm_piece = dm_pieces[pieceNumber];
 
-		if(!dm_piece.isDone()){
+		PEPiece pePiece = pePieces[pieceNumber];
 
-			final PEPiece pePiece = pePieces[pieceNumber];
-
-			if(pePiece != null){
-
-				Object user_data = request.getUserData();
-
-				String key;
-
-				if(user_data instanceof String){
-
-					key = (String) user_data;
-
-				}else if(user_data instanceof PEPeer){
-
-					key = ((PEPeer) user_data).getIp();
-
-				}else{
-
-					key = "<none>";
-				}
-
-				pePiece.setWritten(key, request.getOffset() / DiskManager.BLOCK_SIZE);
-
-			}else{
-
+		if ( pePiece == null ){
+			
+				// we need to construct a temporary PEPiece as it has the side effect of setting up
+				// the written state of pad files and without doing this the piece won't appear to be done when it 
+				// actually is
+			
+				// also
+			
 				// this is a way of fixing a 99.9% bug where a dmpiece is left in a
 				// fully downloaded state with the underlying pe_piece null. Possible
 				// explanation is
 				// that a slow peer sends an entire piece at around the time a pe_piece gets
 				// reset
 				// due to inactivity.
-
+	
 				// we also get here when recovering data that has come in late after the piece
 				// has
 				// been abandoned
+			
+			pePiece = new PEPieceImpl( piecePicker, dm_piece, 0 );
+		}
+		
+		if ( !dm_piece.isDone()){
 
-				dm_piece.setWritten(request.getOffset() / DiskManager.BLOCK_SIZE);
+			Object user_data = request.getUserData();
+
+			String key;
+
+			if (user_data instanceof String){
+
+				key = (String) user_data;
+
+			}else if (user_data instanceof PEPeer){
+
+				key = ((PEPeer) user_data).getIp();
+
+			}else{
+
+				key = "<none>";
 			}
+
+			pePiece.setWritten(key, request.getOffset() / DiskManager.BLOCK_SIZE);
 		}
 	}
 
