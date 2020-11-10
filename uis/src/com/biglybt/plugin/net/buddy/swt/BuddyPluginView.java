@@ -1400,7 +1400,7 @@ BuddyPluginView
 				Utils.setTT(beta_status, text );
 			}
 
-			buildMenu( instances );
+			buildMenu( instances, false );
 
 			setBetaStatus( bs_chat_gray );
 		}
@@ -1624,7 +1624,7 @@ BuddyPluginView
 												tt_text += (tt_text.length()==0?"":"\n") + instance_map.get( chat ) + " - " + short_name;
 											}
 
-											buildMenu( current_instances );
+											buildMenu( current_instances, true );
 
 											if ( has_new ){
 
@@ -1747,7 +1747,8 @@ BuddyPluginView
 
 	private void
 	buildMenu(
-		final Set<ChatInstance>	current_instances )
+		Set<ChatInstance>		current_instances,
+		boolean					is_pending_messages )
 	{
 		if ( menu_items.size() == 0 || !menu_latest_instances.equals( current_instances )){
 
@@ -1762,11 +1763,22 @@ BuddyPluginView
 
 			MenuContext mc = beta_status.getMenuContext();
 
+			MenuItem mi;
+			
+			if ( is_pending_messages ){
+				
+				mi = menu_manager.addMenuItem( mc, "![" + MessageText.getString( "TableColumn.header.chat.msg.out" ) + "]!" );
+
+				mi.setEnabled( false );
+			
+				menu_items.add( mi );
+			}
+			
 			for ( final ChatInstance chat: sortChats( current_instances )){
 
 				String	short_name = chat.getShortName();
 
-				MenuItem mi = menu_manager.addMenuItem( mc, "!" + short_name + "!" );
+				mi = menu_manager.addMenuItem( mc, "!" + short_name + "!" );
 
 				mi.addListener(
 					new MenuItemListener() {
@@ -1786,6 +1798,58 @@ BuddyPluginView
 
 				menu_items.add( mi );
 			}
+			
+			if ( is_pending_messages ){
+				
+				List<ChatInstance>	chats = plugin.getBeta().getChats();
+
+				Set<ChatInstance>	faves = new HashSet<>();
+				
+				for ( ChatInstance chat: chats ){
+
+					if ( !current_instances.contains( chat )){
+
+						if ( chat.isFavourite()){
+
+							faves.add( chat );
+						}
+					}
+				}
+				
+				if ( !faves.isEmpty()){
+				
+					mi = menu_manager.addMenuItem( mc, "![" + MessageText.getString( "label.favorites" ) + "]!" );
+
+					mi.setEnabled( false );
+			
+					menu_items.add( mi );
+
+					for ( final ChatInstance chat: sortChats( faves )){
+
+						String	short_name = chat.getShortName();
+
+						mi = menu_manager.addMenuItem( mc, "!" + short_name + "!" );
+
+						mi.addListener(
+							new MenuItemListener() {
+
+								@Override
+								public void selected(MenuItem menu, Object target) {
+
+									try{
+										openChat( chat.getClone());
+
+									}catch( Throwable e ){
+
+										Debug.out( e );
+									}
+								}
+							});
+
+						menu_items.add( mi );
+					}
+				}
+			}
 
 			boolean	need_sep = true;
 
@@ -1793,7 +1857,7 @@ BuddyPluginView
 
 			if ( current_instances.size() > 1 ){
 
-				MenuItem mi = menu_manager.addMenuItem( mc, "sep1" );
+				mi = menu_manager.addMenuItem( mc, "sep1" );
 
 				need_sep = false;
 
@@ -1827,7 +1891,7 @@ BuddyPluginView
 
 			if ( need_sep ){
 
-				MenuItem mi = menu_manager.addMenuItem( mc, "sep2" );
+				mi = menu_manager.addMenuItem( mc, "sep2" );
 
 				mi.setStyle( MenuItem.STYLE_SEPARATOR );
 
@@ -1836,10 +1900,12 @@ BuddyPluginView
 
 				// create channel
 
-			MenuItem mi = menu_manager.addMenuItem( mc, "chat.view.create.chat" );
+			mi = menu_manager.addMenuItem( mc, "chat.view.create.chat" );
 
 			mi.setStyle( MenuItem.STYLE_MENU );
 
+			menu_items.add( mi );
+			
 			BuddyUIUtils.createChat( menu_manager, mi, false, new BuddyUIUtils.ChatCreationListener(){
 				
 				@Override
@@ -1889,7 +1955,6 @@ BuddyPluginView
 					UISWTInstance.VIEW_MAIN, FriendsView.VIEW_ID, null));
 
 			menu_items.add( mi );
-
 
 			menu_latest_instances = current_instances;
 		}
