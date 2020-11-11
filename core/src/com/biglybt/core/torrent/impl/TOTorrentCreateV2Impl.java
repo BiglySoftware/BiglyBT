@@ -23,6 +23,7 @@ import java.io.*;
 import java.util.*;
 
 import com.biglybt.core.torrent.TOTorrentException;
+import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 
 import java.security.*;
@@ -420,6 +421,57 @@ TOTorrentCreateV2Impl
 		}catch( Throwable e ){
 			
 			throw( new TOTorrentException( "V2 file processing failed", TOTorrentException.RT_READ_FAILS, e ));
+		}
+	}
+	
+	protected static void
+	setV2FileHashes(
+		TOTorrentImpl	torrent )
+	{
+		Map<String,Object> file_tree = (Map<String,Object>)torrent.getAdditionalInfoProperties().get( TOTorrentImpl.TK_V2_FILE_TREE );
+		
+		if ( file_tree != null ){
+			
+			try{
+				long piece_length = torrent.getPieceLength();
+				
+				List<TOTorrentFileImpl>	v2_files = new ArrayList<>();
+				
+				long[] torrent_offset	= { 0 };
+				long[] pad_details 		= { 0, 0 };
+				
+				lashUpV2Files( torrent, v2_files, new LinkedList<byte[]>(), file_tree, piece_length, torrent_offset, pad_details );
+				
+				TOTorrentFileImpl[]	v1_files = torrent.getFiles();
+				
+				if ( v1_files.length == v2_files.size()){
+				
+					for ( int i=0; i<v1_files.length; i++){
+					
+						TOTorrentFileImpl v1_file = v1_files[i];
+						
+						if ( !v1_file.isPadFile()){
+						
+							TOTorrentFileImpl v2_file = v2_files.get(i);
+							
+							if ( v1_file.getLength() == v2_file.getLength()){
+							
+								v1_files[i].setRootHash( v2_file.getHashTree().getRootHash());
+								
+							}else{
+								
+								Debug.out( "Inconsistent v1/v2 file lengths" );
+							}
+						}
+					}
+				}else{
+					
+					Debug.out( "Inconsistent v1/v2 files" );
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
 		}
 	}
 	

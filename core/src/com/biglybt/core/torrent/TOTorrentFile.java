@@ -67,6 +67,9 @@ TOTorrentFile
 	public TOTorrentFileHashTree
 	getHashTree();
 	
+	public byte[]
+	getRootHash();
+	
 	public Map
 	getAdditionalProperties();
 }

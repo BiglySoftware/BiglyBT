@@ -51,8 +51,9 @@ TOTorrentFileImpl
 	private final boolean	is_utf8;
 
 	private boolean		attr_pad_file;
-	
+
 	private final TOTorrentFileHashTreeImpl	hash_tree;
+	private byte[]	root_hash;
 	
 	
 	protected
@@ -168,7 +169,8 @@ TOTorrentFileImpl
 		last_piece_number	= (int)(( _torrent_offset + file_length - 1 ) /  torrent.getPieceLength());
 
 		hash_tree	= _v2_root_hash==null?null:new TOTorrentFileHashTreeImpl( this, _v2_root_hash );
-
+		root_hash	= _v2_root_hash;
+		
 		is_utf8				= false;
 
 		checkComponents();
@@ -272,6 +274,20 @@ TOTorrentFileImpl
 	getHashTree()
 	{
 		return( hash_tree );
+	}
+	
+	@Override
+	public byte[]
+	getRootHash()
+	{
+		return( root_hash );
+	}
+	
+	protected void
+	setRootHash(
+		byte[]		h )
+	{
+		root_hash	= h;
 	}
 	
 	@Override

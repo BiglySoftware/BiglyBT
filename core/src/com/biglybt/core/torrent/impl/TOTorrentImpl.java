@@ -178,7 +178,11 @@ TOTorrentImpl
 						setSimpleTorrent( true );
 					}
 				}
+			}else if ( torrent_type == TT_V1_V2 ){
+									
+				TOTorrentCreateV2Impl.setV2FileHashes( this );
 			}
+				
 		}finally{
 		
 			constructing = false;
@@ -1177,7 +1181,7 @@ TOTorrentImpl
 	}
 
 	@Override
-	public TOTorrentFile[]
+	public TOTorrentFileImpl[]
 	getFiles()
 	{
 		return( files );
