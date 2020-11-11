@@ -280,6 +280,11 @@ TOTorrentFileImpl
 	public byte[]
 	getRootHash()
 	{
+		if ( root_hash == null && !attr_pad_file ){
+			
+			torrent.fixupRootHashes();
+		}
+		
 		return( root_hash );
 	}
 	

@@ -132,6 +132,7 @@ TOTorrentImpl
 	protected final AEMonitor this_mon 	= new AEMonitor( "TOTorrent" );
 
 	private boolean	constructing = true;
+	private boolean fixed_up_root_hashes;
 	
 	/**
 	 * Constructor for deserialisation
@@ -180,12 +181,27 @@ TOTorrentImpl
 				}
 			}else if ( torrent_type == TT_V1_V2 ){
 									
-				TOTorrentCreateV2Impl.setV2FileHashes( this );
+				// defer until needed
+				// TOTorrentCreateV2Impl.setV2FileHashes( this );
 			}
 				
 		}finally{
 		
 			constructing = false;
+		}
+	}
+	
+	protected void
+	fixupRootHashes()
+	{
+		if ( torrent_type == TT_V1_V2 ){
+			
+			if ( !fixed_up_root_hashes ){
+				
+				TOTorrentCreateV2Impl.setV2FileHashes( this );
+				
+				fixed_up_root_hashes = true;
+			}
 		}
 	}
 	
