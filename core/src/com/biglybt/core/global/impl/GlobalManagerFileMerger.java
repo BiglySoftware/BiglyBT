@@ -46,6 +46,7 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerManagerListenerAdapter;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginAdapter;
 import com.biglybt.pif.PluginInterface;
@@ -92,7 +93,8 @@ GlobalManagerFileMerger
 	final List<SameSizeFiles>				sames 		= new ArrayList<>();
 	final Set<DownloadManager>				sames_dms	= new IdentityHashSet<>();
 	
-	final AsyncDispatcher		read_write_dispatcher = new AsyncDispatcher( "GMFM" );
+	final AsyncDispatcher		read_write_dispatcher 	= new AsyncDispatcher( "GMFM" );
+	final AsyncDispatcher 		sync_dispatcher 		= new AsyncDispatcher( "GMFM:serial" );
 
 	private TimerEventPeriodic	timer_event;
 
@@ -426,12 +428,89 @@ GlobalManagerFileMerger
 			}
 
 			if ( changed || force ){
-				
+								
 				List<Set<DiskManagerFileInfo>>			interesting = new LinkedList<>();
 
-				Set<DownloadManager> merging_downloads = new IdentityHashSet<>();
-								
+				Set<DownloadManager> merging_downloads = new IdentityHashSet<>();	
+				
+				ByteArrayHashMap<Set<DiskManagerFileInfo>>		root_hash_map = new ByteArrayHashMap<>();
+				
 				for ( int loop=0;loop<2;loop++){
+					
+					List<Set<DiskManagerFileInfo>>			interesting_root_hashes = new LinkedList<>();
+
+					for ( DownloadManager dm: dm_map.values()){
+						
+						TOTorrent torrent = dm.getTorrent();
+
+						if ( torrent == null ){
+
+							continue;
+						}
+						
+						if ( torrent.getTorrentType() == TOTorrent.TT_V1 ){
+							
+							continue;
+						}
+
+						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+
+						boolean dm_is_merging = merging_downloads.contains( dm );
+								
+						for ( DiskManagerFileInfo file: files ){
+							
+								// filter out small files
+
+							if ( file.getLength() == 0 || ( file.getNbPieces() < min_pieces && !dm_is_merging )){
+
+								continue;
+							}
+							
+							TOTorrentFile torrent_file = file.getTorrentFile();
+							
+							if ( torrent_file.isPadFile()){
+								
+								continue;
+							}
+							
+							byte[] root_hash = torrent_file.getRootHash();
+							
+							if ( root_hash != null ){
+								
+								Set<DiskManagerFileInfo> set = root_hash_map.get( root_hash );
+								
+								if ( set == null ){
+									
+									set = new HashSet<>();
+									
+									root_hash_map.put( root_hash, set );
+								}
+								
+								set.add( file );
+								
+								if ( set.size() == 2 ){
+									
+									interesting_root_hashes.add( set );
+								}
+							}
+						}
+					}
+					
+					Set<DiskManagerFileInfo>	files_already_allocated = new HashSet<>();
+					
+						// currently if we have hash based same-sets then we don't consider them against non-hash based files of same size
+						// as quite unlikely scenario and makes things simple
+					
+					if ( !interesting_root_hashes.isEmpty()){
+										
+						interesting.addAll( interesting_root_hashes );
+						
+						for ( Set<DiskManagerFileInfo> set: interesting_root_hashes ){
+							
+							files_already_allocated.addAll( set );
+						}
+					}
+									
 					
 					Map<String,Object>						tolerance_map = new HashMap<>();
 
@@ -454,6 +533,16 @@ GlobalManagerFileMerger
 									
 							for ( DiskManagerFileInfo file: files ){
 	
+								if ( files_already_allocated.contains( file )){
+									
+									continue;
+								}
+								
+								if ( file.getTorrentFile().isPadFile()){
+									
+									continue;
+								}
+								
 									// filter out small files
 	
 								if ( file.getLength() == 0 || ( file.getNbPieces() < min_pieces && !dm_is_merging )){
@@ -505,6 +594,16 @@ GlobalManagerFileMerger
 
 						for ( DiskManagerFileInfo file: files ){
 	
+							if ( files_already_allocated.contains( file )){
+								
+								continue;
+							}
+							
+							if ( file.getTorrentFile().isPadFile()){
+								
+								continue;
+							}
+
 								// filter out small files
 	
 							if ( file.getLength() == 0 || ( file.getNbPieces() < min_pieces && !dm_is_merging )){
@@ -786,8 +885,6 @@ GlobalManagerFileMerger
 				DownloadManagerPeerListenerEx dmpl =
 					new DownloadManagerPeerListenerEx(){
 
-						final AsyncDispatcher dispatcher = new AsyncDispatcher( "GMFM:serial" );
-
 						final Object		lock = this;
 
 						DiskManager	current_disk_manager;
@@ -845,7 +942,7 @@ GlobalManagerFileMerger
 								return;
 							}
 
-							dispatcher.dispatch(
+							sync_dispatcher.dispatch(
 								new AERunnable()
 								{
 									@Override
@@ -884,7 +981,7 @@ GlobalManagerFileMerger
 								return;
 							}
 
-							dispatcher.dispatch(
+							sync_dispatcher.dispatch(
 								new AERunnable()
 								{
 									@Override
@@ -948,7 +1045,7 @@ GlobalManagerFileMerger
 						peerManagerRemoved(
 							PEPeerManager manager)
 						{
-							dispatcher.dispatch(
+							sync_dispatcher.dispatch(
 								new AERunnable()
 								{
 									@Override
