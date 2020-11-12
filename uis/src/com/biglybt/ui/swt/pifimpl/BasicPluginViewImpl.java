@@ -425,9 +425,17 @@ BasicPluginViewImpl
 				
 				@Override
 				public void parameterChanged(String name){
-					boolean	paused = COConfigurationManager.getBooleanParameter( name, false );
 					
-					buttonPause.setSelection( paused );
+					if ( buttonPause.isDisposed()){
+						
+						COConfigurationManager.removeParameterListener( name, this );
+						
+					}else{
+						
+						boolean	paused = COConfigurationManager.getBooleanParameter( name, false );
+						
+						buttonPause.setSelection( paused );
+					}
 				}
 			});
     }
