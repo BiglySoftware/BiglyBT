@@ -432,12 +432,12 @@ GlobalManagerFileMerger
 				List<Set<DiskManagerFileInfo>>			interesting = new LinkedList<>();
 
 				Set<DownloadManager> merging_downloads = new IdentityHashSet<>();	
-				
-				ByteArrayHashMap<Set<DiskManagerFileInfo>>		root_hash_map = new ByteArrayHashMap<>();
-				
+								
 				for ( int loop=0;loop<2;loop++){
 					
 					List<Set<DiskManagerFileInfo>>			interesting_root_hashes = new LinkedList<>();
+
+					ByteArrayHashMap<Set<DiskManagerFileInfo>>		root_hash_map = new ByteArrayHashMap<>();
 
 					for ( DownloadManager dm: dm_map.values()){
 						
