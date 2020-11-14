@@ -198,8 +198,23 @@ public class TextViewerWindow {
 			}
 		});
 
-    shell.pack();
-	Utils.centreWindow( shell );
+	boolean	pack = true;
+	
+	if ( sTitleID != null ){
+		
+		if ( Utils.linkShellMetricsToConfig( shell, "TextViewerWindow:" + sTitleID )){
+	
+			pack = false;
+		}
+	}
+	
+	if ( pack ){
+		
+		shell.pack();
+		
+		Utils.centreWindow( shell );
+	}
+	
     shell.open();
 
     if ( modal && !defer_modal ){
