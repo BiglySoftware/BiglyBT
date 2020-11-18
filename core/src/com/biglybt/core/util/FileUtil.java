@@ -50,6 +50,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
+import com.sun.xml.internal.ws.util.StringUtils;
 
 /**
  * File utility class.
@@ -106,18 +107,23 @@ public class FileUtil {
 		 
 		  		// on Windows we get a true if they differ in case :(
 		  
-	    	if ( 	f1.getParent().equals( f2.getParent()) &&
-	    			!f1.getName().equals( f2.getName()) && 
-	    			f1.getName().equalsIgnoreCase( f2.getName())){
-	    		
-	    		return( false );
-	    		
-	    	}else{
-	    		
-	    		return( true );
-	    	}
-	  }else{
+		  String p1 = f1.getParent();
+		  String p2 = f2.getParent();
 		  
+		  boolean same_parent = p1 == p2 || ( p1 != null && p1.equals( p2 ));
+
+		  if ( 	same_parent &&
+				!f1.getName().equals( f2.getName()) && 
+				f1.getName().equalsIgnoreCase( f2.getName())){
+
+			  return( false );
+
+		  }else{
+
+			  return( true );
+		  }
+	  }else{
+
 		  return( false );
 	  }
   }
