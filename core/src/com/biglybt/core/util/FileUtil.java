@@ -50,7 +50,6 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
-import com.sun.xml.internal.ws.util.StringUtils;
 
 /**
  * File utility class.
