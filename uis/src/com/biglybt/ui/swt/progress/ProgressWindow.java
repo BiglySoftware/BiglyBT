@@ -539,78 +539,114 @@ ProgressWindow
 
 				// buttons
 		
+				boolean 	has_pause_resume 	= ( states & ( ProgressCallback.ST_PAUSE | ProgressCallback.ST_RESUME  )) != 0;
+				boolean 	has_cancel			= ( states & ProgressCallback.ST_CANCEL ) != 0;
+				
+					// must have something...
+				
+				if ( !has_pause_resume ){
+					has_cancel = true;
+				}
+				
+				int	 num_buttons = 0;
+				
+				if ( has_pause_resume  )num_buttons+=2;
+				if ( has_cancel  )num_buttons++;
+				
 				Composite comp = new Composite(shell,SWT.NULL);
 				gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 				gridData.grabExcessHorizontalSpace = true;
 				gridData.horizontalSpan = 2;
 				comp.setLayoutData(gridData);
 				GridLayout layoutButtons = new GridLayout();
-				layoutButtons.numColumns = 3;
+				layoutButtons.numColumns = num_buttons;
 				comp.setLayout(layoutButtons);
 				comp.setBackground( Colors.white );
 		
 				List<Button> buttons = new ArrayList<>();
 		
-				Button bPause = new Button(comp,SWT.PUSH);
-				bPause.setText(MessageText.getString("v3.MainWindow.button.pause"));
-				gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
-				gridData.grabExcessHorizontalSpace = true;
-				//gridData.widthHint = 70;
-				bPause.setLayoutData(gridData);
-				buttons.add( bPause );
-		
-				Button bResume = new Button(comp,SWT.PUSH);
-				bResume.setText(MessageText.getString("v3.MainWindow.button.resume"));
-				gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
-				gridData.grabExcessHorizontalSpace = false;
-				//gridData.widthHint = 70;
-				bResume.setLayoutData(gridData);
-				buttons.add( bResume );
-
+				Button bPause;
+				Button bResume;
+				Button bCancel;
 				
-				Button bCancel = new Button(comp,SWT.PUSH);
-				bCancel.setText(MessageText.getString("UpdateWindow.cancel"));
-				gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
-				gridData.grabExcessHorizontalSpace = false;
-				//gridData.widthHint = 70;
-				bCancel.setLayoutData(gridData);
-				buttons.add( bCancel );
-
+				if ( has_pause_resume ){
+					bPause = new Button(comp,SWT.PUSH);
+					bPause.setText(MessageText.getString("v3.MainWindow.button.pause"));
+					gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
+					gridData.grabExcessHorizontalSpace = true;
+					//gridData.widthHint = 70;
+					bPause.setLayoutData(gridData);
+					buttons.add( bPause );
+					
+					bResume = new Button(comp,SWT.PUSH);
+					bResume.setText(MessageText.getString("v3.MainWindow.button.resume"));
+					gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
+					gridData.grabExcessHorizontalSpace = false;
+					//gridData.widthHint = 70;
+					bResume.setLayoutData(gridData);
+					buttons.add( bResume );
+				}else{
+					bPause	= null;
+					bResume = null;
+				}
+				
+				if ( has_cancel ){
+					bCancel = new Button(comp,SWT.PUSH);
+					bCancel.setText(MessageText.getString("UpdateWindow.cancel"));
+					gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
+					gridData.grabExcessHorizontalSpace = false;
+					//gridData.widthHint = 70;
+					bCancel.setLayoutData(gridData);
+					buttons.add( bCancel );
+				}else{
+					bCancel = null;
+				}
+				
 				Utils.makeButtonsEqualWidth( buttons );
 				
-				bResume.setEnabled( false );
+				if ( has_pause_resume ){
+					
+						// if we have resume then we have pause
+					
+					bResume.setEnabled( false );
+					
+					bPause.addListener(SWT.Selection,new Listener() {
+						@Override
+						public void handleEvent(Event e) {
+							task_paused	= true;
+							bPause.setEnabled( false );
+							bResume.setEnabled( true );
+							shell.setDefaultButton( bResume );
+							progress.setTaskState( ProgressCallback.ST_PAUSE );
+						}
+					});
+					
+					bResume.addListener(SWT.Selection,new Listener() {
+						@Override
+						public void handleEvent(Event e) {
+							task_paused	= false;
+							bPause.setEnabled( true );
+							bResume.setEnabled( false );
+							shell.setDefaultButton( bPause );
+							progress.setTaskState( ProgressCallback.ST_RESUME );
+						}
+					});
+				}
 				
-				bPause.addListener(SWT.Selection,new Listener() {
-					@Override
-					public void handleEvent(Event e) {
-						task_paused	= true;
-						bPause.setEnabled( false );
-						bResume.setEnabled( true );
-						shell.setDefaultButton( bResume );
-						progress.setTaskState( ProgressCallback.ST_PAUSE );
-					}
-				});
-				
-				bResume.addListener(SWT.Selection,new Listener() {
-					@Override
-					public void handleEvent(Event e) {
-						task_paused	= false;
-						bPause.setEnabled( true );
-						bResume.setEnabled( false );
-						shell.setDefaultButton( bPause );
-						progress.setTaskState( ProgressCallback.ST_RESUME );
-					}
-				});
-		
-				bCancel.addListener(SWT.Selection,new Listener() {
-					@Override
-					public void handleEvent(Event e) {
-						bPause.setEnabled( false );
-						bResume.setEnabled( false );
-						bCancel.setEnabled( false );
-						progress.setTaskState( ProgressCallback.ST_CANCEL );
-					}
-				});
+				if ( bCancel != null ){
+					
+					bCancel.addListener(SWT.Selection,new Listener() {
+						@Override
+						public void handleEvent(Event e) {
+							if ( has_pause_resume ){
+								bPause.setEnabled( false );
+								bResume.setEnabled( false );
+							}
+							bCancel.setEnabled( false );
+							progress.setTaskState( ProgressCallback.ST_CANCEL );
+						}
+					});
+				}
 				
 				Utils.execSWTThreadLater(
 					250,
@@ -630,17 +666,20 @@ ProgressWindow
 								
 							}else{
 								
-								if ( state == ProgressCallback.ST_PAUSE ){
+								if ( has_pause_resume ){
 									
-									bPause.setEnabled( false );
-									
-									bResume.setEnabled( true );
-									
-								}else{
-									
-									bPause.setEnabled( true );
-									
-									bResume.setEnabled( false );
+									if ( state == ProgressCallback.ST_PAUSE ){
+										
+										bPause.setEnabled( false );
+										
+										bResume.setEnabled( true );
+										
+									}else{
+										
+										bPause.setEnabled( true );
+										
+										bResume.setEnabled( false );
+									}
 								}
 								
 								Utils.execSWTThreadLater( 250, this );
@@ -648,7 +687,7 @@ ProgressWindow
 						}
 					});
 				
-				shell.setDefaultButton( bPause );
+				shell.setDefaultButton( has_pause_resume?bPause:bCancel );
 				
 				shell.addDisposeListener(
 					new DisposeListener(){

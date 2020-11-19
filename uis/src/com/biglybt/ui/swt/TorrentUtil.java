@@ -19,6 +19,7 @@ package com.biglybt.ui.swt;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -28,6 +29,9 @@ import java.util.function.Consumer;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.ui.UIFunctions.TagReturner;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
@@ -65,8 +69,10 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentCreator;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFactory;
+import com.biglybt.core.torrent.TOTorrentProgressListener;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.util.TRTrackerUtils;
 import com.biglybt.core.util.*;
@@ -2357,58 +2363,84 @@ public class TorrentUtil
 		});
 		itemManualScrape.setEnabled(manualScrape);
 
-			// enable hybrid v2 swarm
+			// enable hybrid v2 swarm, create hybrid/v2
 		
-		List<DownloadManager>	can_v2 = new ArrayList<>();
+		List<DownloadManager>	can_v2_from_hybrid 	= new ArrayList<>();
+		List<DownloadManager>	can_create_from_v1 	= new ArrayList<>();
 		
 		for ( DownloadManager dm: dms ){
 			
 			TOTorrent torrent = dm.getTorrent();
 			
-			if ( torrent != null &&  torrent.getTorrentType() == TOTorrent.TT_V1_V2 ){
+			if ( torrent != null ){
+				
+				int tt = torrent.getTorrentType();
 			
-				try{
-					byte[] truncated_v2_hash = torrent.getTruncatedHash( TOTorrent.TT_V2 );
-										
-					if ( dm.getGlobalManager().getDownloadManager( new HashWrapper( truncated_v2_hash )) == null ){
-						
-						boolean compatible = true;
-						
-						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-						
-						for ( DiskManagerFileInfo file: files ){
+				if ( tt == TOTorrent.TT_V1 && !torrent.getPrivate()){
+				
+					boolean	all_complete = true;
+					
+					for ( DiskManagerFileInfo file: dm.getDiskManagerFileInfoSet().getFiles()){
+					
+						if ( file.isSkipped() || file.getDownloaded() != file.getLength()){
 							
-							if ( file.getTorrentFile().isPadFile()){
-								
-							}else if ( file.getStorageType() != DiskManagerFileInfo.ST_LINEAR || file.getLink() != null ){
-								
-								compatible = false;
-								
-								break;
-							}
+							all_complete = false;
+							
+							break;
 						}
-						
-						if ( compatible ){
-						
-							can_v2.add( dm );
+												
+						if ( file.getFile(false ).length() != file.getTorrentFile().getLength()){
+							
+							all_complete = false;
+							
+							break;
 						}
 					}
-				}catch( Throwable e ){
 					
-					Debug.out( e );
+					if ( all_complete ){
+						
+						can_create_from_v1.add( dm );	
+					}
+				}else if ( tt == TOTorrent.TT_V1_V2 ){
+					
+					try{
+						byte[] truncated_v2_hash = torrent.getTruncatedHash( TOTorrent.TT_V2 );
+											
+						if ( dm.getGlobalManager().getDownloadManager( new HashWrapper( truncated_v2_hash )) == null ){
+							
+							boolean compatible = true;
+							
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							for ( DiskManagerFileInfo file: files ){
+								
+								if ( file.getTorrentFile().isPadFile()){
+									
+								}else if ( file.getStorageType() != DiskManagerFileInfo.ST_LINEAR || file.getLink() != null ){
+									
+									compatible = false;
+									
+									break;
+								}
+							}
+							
+							if ( compatible ){
+							
+								can_v2_from_hybrid.add( dm );
+							}
+						}
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
 				}
-			}else{
-			
-				can_v2.clear();
-				
-				break;
 			}
 		}
 		
 		final MenuItem itemHybridV2 = new MenuItem(menuTracker, SWT.PUSH);
 		Messages.setLanguageText( itemHybridV2,	"GeneralView.label.run.hybrid.v2");
 		
-		itemHybridV2.addListener(SWT.Selection, new ListenerDMTask(can_v2.toArray(new DownloadManager[0]), true, true) {
+		itemHybridV2.addListener(SWT.Selection, new ListenerDMTask(can_v2_from_hybrid.toArray(new DownloadManager[0]), true, true) {
 			@Override
 			public void run(DownloadManager old_manager ) {
 				
@@ -2449,7 +2481,8 @@ public class TorrentUtil
 									
 									DownloadManagerState new_dms = new_manager.getDownloadState();
 
-									new_dms.setDisplayName( old_manager.getDisplayName() + " (v2)");
+									new_dms.setDisplayName( old_manager.getDisplayName() + " ("+ MessageText.getString( "label.hybrid" ).toLowerCase() + ") (v2)");
+									
 									try {
 										new_dms.suppressStateSave(true);
 									
@@ -2487,7 +2520,207 @@ public class TorrentUtil
 			}
 		});
 		
-		itemHybridV2.setEnabled( !can_v2.isEmpty());
+		itemHybridV2.setEnabled( !can_v2_from_hybrid.isEmpty());
+		
+		final MenuItem itemV1Hybrid = new MenuItem(menuTracker, SWT.PUSH);
+		Messages.setLanguageText( itemV1Hybrid,	"menu.create.hybrid.from.v1");
+		
+		final MenuItem itemV1V2 = new MenuItem(menuTracker, SWT.PUSH);
+		Messages.setLanguageText( itemV1V2,	"menu.create.v2.from.v1");
+			
+		ListenerDMTask	v1Listener = 
+			new ListenerDMTask(can_create_from_v1.toArray(new DownloadManager[0]), true, false) 
+			{
+				boolean	create_hybrid;
+				
+				@Override
+				public void 
+				handleEvent(
+					Event event )
+				{
+					create_hybrid = event.widget == itemV1Hybrid;
+					
+					super.handleEvent(event);
+				}
+				
+				@Override
+				public void 
+				run(
+					DownloadManager old_manager )
+				{
+					try{
+						File save_loc = old_manager.getSaveLocation();
+	
+						TOTorrentCreator creator = 
+								TOTorrentFactory.createFromFileOrDirWithComputedPieceLength(
+									create_hybrid?TOTorrent.TT_V1_V2:TOTorrent.TT_V2, 
+									save_loc, TorrentUtils.getDecentralisedEmptyURL(), false );
+						
+						int[] 		progress 	= { 0 };
+						String[]	task		= { "" };
+						
+						creator.addListener(
+							new TOTorrentProgressListener(){
+								
+								@Override
+								public void 
+								reportProgress(
+									int percent_complete)
+								{
+									synchronized( progress ){
+										
+										progress[0] = percent_complete;
+									}
+								}
+								
+								@Override
+								public void 
+								reportCurrentTask(
+									String task_description )
+								{
+									synchronized( task ){
+										
+										task[0] = task_description;
+									}
+								}
+							});
+						
+						Core core = CoreFactory.getSingleton();
+										
+						core.executeOperation(
+								CoreOperation.OP_PROGRESS,
+								new CoreOperationTask() {
+									
+									@Override
+									public String 
+									getName()
+									{
+										return( MessageText.getString( "wizard.maketorrent.progresstitle" ));
+									}
+									
+									@Override
+									public DownloadManager 
+									getDownload()
+									{
+										return null;
+									}
+									
+									@Override
+									public void 
+									run(
+										CoreOperation operation ) 
+									{
+										try {
+	
+											TOTorrent torrent = creator.create();
+	
+											File temp_file = AETemporaryFileHandler.createTempFile();
+	
+											TorrentUtils.writeToFile( torrent, temp_file, false );
+																		
+											File save_loc = old_manager.getSaveLocation();
+												
+											String	save_parent = save_loc.getParentFile().getAbsolutePath();
+											String	save_file	= save_loc.getName();
+											
+											old_manager.getGlobalManager().addDownloadManager( 
+													temp_file.getAbsolutePath(),
+													torrent.getHash(),
+													save_parent,
+													save_file,
+													DownloadManager.STATE_WAITING,
+													true,
+													true,
+													new DownloadManagerInitialisationAdapter(){
+														
+														@Override
+														public void 
+														initialised(
+															DownloadManager new_manager, 
+															boolean 		for_seeding)
+														{
+															DownloadManagerState new_dms = new_manager.getDownloadState();
+	
+															String type_str = create_hybrid?MessageText.getString( "label.hybrid" ).toLowerCase():"v2";
+															
+															new_dms.setDisplayName( old_manager.getDisplayName() + " (" + type_str + ")");
+														}
+														
+														@Override
+														public int 
+														getActions()
+														{
+															return 0;
+														}
+													});
+													
+										}catch( Throwable e ){
+	
+											Debug.printStackTrace(e);
+										}
+									}
+	
+									@Override
+									public ProgressCallback 
+									getProgressCallback() 
+									{
+										return( 
+											new ProgressCallbackAdapter()
+											{
+												@Override
+												public int 
+												getSupportedTaskStates()
+												{
+													return( ST_SUBTASKS | ST_CANCEL );
+												}
+												
+												@Override
+												public void 
+												setTaskState(
+													int state )
+												{
+													if (( state & ST_CANCEL ) != 0 ){
+														
+														creator.cancel();
+													}
+												}
+												
+												
+												@Override
+												public int 
+												getProgress()
+												{
+													synchronized( progress ){
+														
+														return( progress[0] * 10 );
+													}
+												}
+												
+												@Override
+												public String 
+												getSubTaskName()
+												{
+													synchronized( task ){
+														
+														return( task[0]);
+													}
+												}
+											});
+									}
+								});
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+			}
+		};
+		
+		itemV1Hybrid.addListener( SWT.Selection, v1Listener );
+		itemV1V2.addListener( SWT.Selection, v1Listener );
+
+		itemV1Hybrid.setEnabled( !can_create_from_v1.isEmpty());
+		itemV1V2.setEnabled( !can_create_from_v1.isEmpty());
+
 		
 		// download link
 

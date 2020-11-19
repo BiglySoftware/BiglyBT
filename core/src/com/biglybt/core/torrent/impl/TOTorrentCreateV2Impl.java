@@ -23,7 +23,6 @@ import java.io.*;
 import java.util.*;
 
 import com.biglybt.core.torrent.TOTorrentException;
-import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 
 import java.security.*;
