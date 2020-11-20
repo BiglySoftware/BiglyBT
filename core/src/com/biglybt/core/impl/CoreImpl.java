@@ -1648,7 +1648,10 @@ CoreImpl
 						// it has been a minute - turn off logging if it is enabled as this can significantly
 						// slow things down
 					
-					Logger.setClosingTakingTooLong();
+					if ( System.getProperty( "user.is.fubar99", "0" ).equals( "0")){
+					
+						Logger.setClosingTakingTooLong();
+					}
 					
 					last_progress.set( SystemTime.getMonotonousTime());
 					
