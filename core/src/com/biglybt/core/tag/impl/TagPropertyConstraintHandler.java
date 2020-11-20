@@ -2095,6 +2095,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_FILE_NAMES_SELECTED	= 34;
 		private static final int	KW_FILE_EXTS			= 35;
 		private static final int	KW_FILE_EXTS_SELECTED	= 36;
+		private static final int	KW_TORRENT_TYPE			= 37;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2177,6 +2178,10 @@ TagPropertyConstraintHandler
 			keyword_map.put( "max_up", 					new int[]{KW_MAX_UP,				DEP_RUNNING });
 			keyword_map.put( "maxdown", 				new int[]{KW_MAX_DOWN,				DEP_RUNNING });
 			keyword_map.put( "max_down", 				new int[]{KW_MAX_DOWN,				DEP_RUNNING });
+			
+			keyword_map.put( "torrent_type",			new int[]{KW_TORRENT_TYPE,			DEP_STATIC });
+			keyword_map.put( "torrenttype", 			new int[]{KW_TORRENT_TYPE,			DEP_STATIC });
+
 		}
 
 		private class
@@ -3930,6 +3935,12 @@ TagPropertyConstraintHandler
 							case KW_MAX_DOWN:{
 								
 								return( dm.getStats().getDownloadRateLimitBytesPerSecond());
+							}
+							case KW_TORRENT_TYPE:{
+								
+								TOTorrent t = dm.getTorrent();
+
+								return( t==null?0:t.getTorrentType());
 							}
 							default:{
 
