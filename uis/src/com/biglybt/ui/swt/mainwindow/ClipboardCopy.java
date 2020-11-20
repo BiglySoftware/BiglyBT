@@ -20,6 +20,8 @@
  */
 package com.biglybt.ui.swt.mainwindow;
 
+import java.util.LinkedList;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -33,6 +35,7 @@ import org.eclipse.swt.widgets.MenuItem;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnableObject;
+import com.biglybt.pif.PluginInterface;
 import com.biglybt.ui.swt.Utils;
 
 
@@ -42,21 +45,67 @@ import com.biglybt.ui.swt.Utils;
  */
 public class ClipboardCopy {
 
-	  private static String MENU_ITEM_KEY 		= "ClipboardCopy.mi";
-	  private static String MOUSE_LISTENER_KEY 	= "ClipboardCopy.ml";
+	private static String MENU_ITEM_KEY 		= "ClipboardCopy.mi";
+	private static String MOUSE_LISTENER_KEY 	= "ClipboardCopy.ml";
 	
-  public static void
-  copyToClipBoard(
-    final String    data )
-  {
+	private static LinkedList<Object[]>	history = new LinkedList<>();
+	
+	public static void
+	copyToClipBoard(
+		String    data )
+	{
+		copyToClipBoard( data, null );
+	}
+	  
+	public static void
+	copyToClipBoard(
+		String    			data,
+		PluginInterface		originator )
+	{
+		synchronized( history ){
+			
+			history.add( new Object[]{ data, originator });
+					
+			if ( history.size() > 32 ){
+				
+				history.removeLast();
+			}
+		}
+			
 		Utils.execSWTThread(
 				() -> new Clipboard(Utils.getDisplay()).setContents(new Object[] {
-					data.replaceAll("\\x00", " ")
+						data.replaceAll("\\x00", " ")
 				}, new Transfer[] {
-					TextTransfer.getInstance()
+						TextTransfer.getInstance()
 				}));
-  }
+	}
+	
+		/**
+		 * 
+		 * @return originator of the clipboard text if known
+		 */
+	
+	public static PluginInterface
+	getOriginator(
+		String		text )
+	{
+		if ( text != null ){
 
+			synchronized( history ){
+
+				for ( Object[] entry: history ){
+
+					if ( text.equals( (String)entry[0] )){
+
+						return((PluginInterface)entry[1]);
+					}
+				}
+			}
+		}
+
+		return( null );
+	}
+	 
   public static String
   copyFromClipboard()
   {

@@ -95,7 +95,7 @@ import com.biglybt.ui.swt.welcome.WelcomeWindow;
 import com.biglybt.util.MapUtils;
 import com.biglybt.util.NavigationHelper;
 import com.biglybt.util.NavigationHelper.navigationListener;
-
+import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 
@@ -1726,7 +1726,6 @@ public class MainWindowImpl
 			configMonitorClipboardListener = new ParameterListener() {
 
 				private volatile AEThread2 monitor_thread;
-				private Clipboard clipboard;
 
 				private String last_text;
 
@@ -1736,11 +1735,6 @@ public class MainWindowImpl
 					boolean enabled = COConfigurationManager.getBooleanParameter(parameterName);
 
 					if (enabled) {
-
-						if (clipboard == null) {
-
-							clipboard = new Clipboard(Display.getDefault());
-						}
 
 						if (monitor_thread == null) {
 
@@ -1756,12 +1750,12 @@ public class MainWindowImpl
 														@Override
 														public void
 														run() {
-															if (monitor_thread != new_thread[0] || clipboard == null) {
+															if ( monitor_thread != new_thread[0] ){
 
 																return;
 															}
 
-															String text = (String) clipboard.getContents(TextTransfer.getInstance());
+															String text = (String)ClipboardCopy.copyFromClipboard();
 
 															if (text != null && text.length() <= 2048) {
 
@@ -1769,7 +1763,24 @@ public class MainWindowImpl
 
 																	last_text = text;
 
-																	TorrentOpener.openTorrentsFromClipboard(text);
+																	PluginInterface pi = ClipboardCopy.getOriginator( text );
+																	
+																	boolean ignore = false;
+																	
+																		// ignore media server content URIs
+																	
+																	if ( pi != null ){
+																		
+																		if ( pi.getPluginID().equals( "azupnpav" )){
+																			
+																			ignore = true;
+																		}
+																	}
+																	
+																	if ( !ignore ){
+																	
+																		TorrentOpener.openTorrentsFromClipboard(text);
+																	}
 																}
 															}
 														}
@@ -1814,13 +1825,6 @@ public class MainWindowImpl
 
 						monitor_thread = null;
 						last_text = null;
-
-						if (clipboard != null) {
-
-							clipboard.dispose();
-
-							clipboard = null;
-						}
 					}
 				}
 			};

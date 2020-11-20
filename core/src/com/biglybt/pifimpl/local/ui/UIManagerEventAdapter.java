@@ -46,7 +46,7 @@ UIManagerEventAdapter
 		 * @return very occasionally this may be NULL
 		 */
 
-	protected PluginInterface
+	public PluginInterface
 	getPluginInterface()
 	{
 		return( pi );

@@ -19,6 +19,8 @@
 
 package com.biglybt.pif.ui;
 
+import com.biglybt.pif.PluginInterface;
+
 public interface
 UIManagerEvent
 {
@@ -50,6 +52,9 @@ UIManagerEvent
 
 	public static final int ET_CALLBACK_MSG_SELECTION			= 100;		// data is Long - MT_OK etc
 
+	public PluginInterface
+	getPluginInterface();
+	
 	public int
 	getType();
 

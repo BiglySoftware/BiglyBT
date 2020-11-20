@@ -438,7 +438,7 @@ UISWTInstanceImpl
 			}
 			case UIManagerEvent.ET_COPY_TO_CLIPBOARD:
 			{
-				ClipboardCopy.copyToClipBoard((String)data);
+				ClipboardCopy.copyToClipBoard( (String)data, event.getPluginInterface());
 
 				break;
 			}
