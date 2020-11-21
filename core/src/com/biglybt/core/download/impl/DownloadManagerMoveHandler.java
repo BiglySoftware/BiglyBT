@@ -39,12 +39,12 @@ public class DownloadManagerMoveHandler extends DownloadManagerMoveHandlerUtils 
 
 	private static boolean isApplicableDownload(DownloadManager dm) {
 		if (!dm.isPersistent()) {
-			logInfo(describe(dm) + " is not persistent.", dm);
+			logInfo(describe(dm) + " is not persistent, auto-move disabled.", dm);
 			return false;
 		}
 
 		if (dm.getDownloadState().getFlag(DownloadManagerState.FLAG_DISABLE_AUTO_FILE_MOVE)) {
-			logInfo(describe(dm) + " has exclusion flag set.", dm);
+			logInfo(describe(dm) + " has auto-move exclusion flag set.", dm);
 			return false;
 		}
 

@@ -71,6 +71,8 @@ public class FileUtil {
 
   private static final FileHandler fileHandling;
 
+  private static AEDiagnosticsLogger file_logger;
+  
   static {
 
 	  try
@@ -3045,6 +3047,38 @@ public class FileUtil {
 			return( false );
 		}
 	}
+	
+	public static void
+	log(
+		String		str )
+	{
+		log( str, null );
+	}
+	
+	public static void
+	log(
+		String		str, 
+		Throwable	error )
+	{
+		synchronized( FileUtil.class ){
+			
+			if ( file_logger == null ){
+				
+				file_logger = AEDiagnostics.getLogger( "DiskOps" );
+				
+				file_logger.enableTimeStamp( true );
+				
+				file_logger.setForced( true );
+			}
+		}
+		
+		file_logger.log( str );
+		
+		if ( error != null ){
+			file_logger.log(error );
+		}
+	}
+	
 		/**
 		 * Gets the encoding that should be used when writing script files (currently only
 		 * tested for windows as this is where an issue can arise...)

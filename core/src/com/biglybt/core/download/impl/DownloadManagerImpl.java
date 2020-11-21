@@ -5155,8 +5155,12 @@ DownloadManagerImpl
 					move_progress = new long[]{ 1000, total_size };
 				}
 		  	};
+			
+		  String log_str = "Move \"" + getDisplayName() + "\" from  " + current_save_location + " to " + new_save_location;
 
 		  try{
+			  FileUtil.log( log_str + " starts" );
+
 			  move_progress = new long[2];
 			  move_subtask	= "";
 			  
@@ -5267,6 +5271,8 @@ DownloadManagerImpl
 			  move_progress = null;
 			  move_subtask	= "";
 			  move_state	= ProgressListener.ST_NORMAL;
+			  
+			  FileUtil.log( log_str + " ends" );
 		  }
 	  }else{
 		  dm.moveDataFiles( new_save_location.getParentFile(), new_save_location.getName(), null );

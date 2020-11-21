@@ -22,6 +22,7 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.LogRelation;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.util.FileUtil;
 
 /**
  * @author Allan Crooks
@@ -31,6 +32,13 @@ public class DownloadManagerMoveHandlerUtils {
 
     // Helper log functions.
 	static void logInfo(String message, DownloadManager dm) {
+		if ( dm != null && message != null ){
+			String name = dm.getDisplayName();
+			if ( !message.contains( name )){
+				message = name + ": " + message;
+			}
+		}
+		FileUtil.log( message );
 		LogRelation lr = (dm instanceof LogRelation) ? (LogRelation)dm : null;
 		if (lr == null) {return;}
 		if (!Logger.isEnabled()) {return;}
@@ -38,6 +46,13 @@ public class DownloadManagerMoveHandlerUtils {
 	}
 
 	static void logWarn(String message, DownloadManager dm) {
+		if ( dm != null && message != null ){
+			String name = dm.getDisplayName();
+			if ( !message.contains( name )){
+				message = name + ": " + message;
+			}
+		}
+		FileUtil.log( message );
 		LogRelation lr = (dm instanceof LogRelation) ? (LogRelation)dm : null;
 		if (lr == null) {return;}
 		if (!Logger.isEnabled()) {return;}
@@ -45,6 +60,13 @@ public class DownloadManagerMoveHandlerUtils {
 	}
 
 	static void logError(String message, DownloadManager dm, Throwable e) {
+		if ( dm != null && message != null ){
+			String name = dm.getDisplayName();
+			if ( !message.contains( name )){
+				message = name + ": " + message;
+			}
+		}
+		FileUtil.log( message, e );
 		LogRelation lr = (dm instanceof LogRelation) ? (LogRelation)dm : null;
 		if (lr == null) {return;}
 		if (!Logger.isEnabled()) {return;}

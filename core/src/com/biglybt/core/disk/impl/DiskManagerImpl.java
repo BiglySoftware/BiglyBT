@@ -2675,6 +2675,7 @@ DiskManagerImpl
 
   // Helper function
   private void logMoveFileError(File destination_path, String message) {
+	  FileUtil.log( download_manager.getDisplayName() + ": failed to move to " + destination_path + ", " + message );
       Logger.log(new LogEvent(this, LOGID, LogEvent.LT_ERROR, message));
       Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
                       LogAlert.AT_ERROR, "DiskManager.alert.movefilefails"),
@@ -2724,9 +2725,12 @@ DiskManagerImpl
 			  garbage += remaining_excluding_dnd;
 		  }
 
-		File move_to_dir = loc_change.download_location == null
-				? download_manager.getAbsoluteSaveLocation().getParentFile()
-				: loc_change.download_location;
+		  final File current_save_location = download_manager.getAbsoluteSaveLocation();
+		  
+		  final File move_to_dir = 
+				loc_change.download_location == null?
+						current_save_location.getParentFile(): 
+						loc_change.download_location;
 
 		  final String new_name = loc_change.download_name;
 	
@@ -2765,7 +2769,11 @@ DiskManagerImpl
 					  });
 		  }
 	
+		  String log_str = "Move \"" + download_manager.getDisplayName() + "\" from  " + current_save_location + " to " + move_to_dir;
+		  
 		  try{
+			  FileUtil.log( log_str + " starts" );
+			  
 			  reader.setSuspended( true );
 			  
 			  boolean simple_torrent = download_manager.getTorrent().isSimpleTorrent();
@@ -2774,7 +2782,7 @@ DiskManagerImpl
 			  // 		for simple: /temp/simple.avi
 			  //		for complex: /temp/complex
 	
-			  final File save_location = download_manager.getAbsoluteSaveLocation();
+			  final File save_location = current_save_location;
 	
 			  // It is important that we are able to get the canonical form of the directory to
 			  // move to, because later code determining new file paths will break otherwise.
@@ -3395,6 +3403,8 @@ DiskManagerImpl
 	
 				  got_there[0] = true;
 			  }
+			  
+			  FileUtil.log( log_str + " ends" );
 		  }
 	  }
 
