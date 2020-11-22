@@ -1606,11 +1606,16 @@ DeviceManagerUI
 							
 							CoreOperationListener opListener =
 								new CoreOperationListener(){
+									FrequencyLimitedDispatcher disp = 
+										new FrequencyLimitedDispatcher(
+											AERunnable.create(()->{
+												ViewTitleInfoManager.refreshTitleInfo(viewTitleInfo);
+												mdiEntryDiskOps.redraw();
+											}),1000);
 									
 									@Override
 									public void operationRemoved(CoreOperation operation){
-										ViewTitleInfoManager.refreshTitleInfo(viewTitleInfo);
-										mdiEntryDiskOps.redraw();
+										disp.dispatch();
 									}
 									
 									@Override
@@ -1620,8 +1625,7 @@ DeviceManagerUI
 									
 									@Override
 									public void operationAdded(CoreOperation operation){
-										ViewTitleInfoManager.refreshTitleInfo(viewTitleInfo);
-										mdiEntryDiskOps.redraw();
+										disp.dispatch();
 									}
 								};
 								
