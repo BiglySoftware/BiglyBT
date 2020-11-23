@@ -1409,12 +1409,12 @@ public class TableRowPainted
 		if (heightUseAccessors == newHeight) {
 			return false;
 		}
-		int oldHeight = heightUseAccessors;
+		int oldHeightToReport = isHidden?0:heightUseAccessors;
 		heightUseAccessors = newHeight;
 		if (trigger && !initializing) {
 			int heightToReport = isHidden?0:newHeight;
-			if ( oldHeight != heightToReport ){
-				heightChanged(oldHeight, heightToReport);
+			if ( oldHeightToReport != heightToReport ){
+				heightChanged(oldHeightToReport, heightToReport);
 			}
 		}
 
