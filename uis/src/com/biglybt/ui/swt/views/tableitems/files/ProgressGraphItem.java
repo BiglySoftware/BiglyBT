@@ -118,7 +118,7 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 
 			int percentDone = 0;
 			int sortOrder;
-			if (diskManager == null){
+			if (fileInfo == null){
 				sortOrder = -1;
 			}else{
 				long length = fileInfo.getLength();
