@@ -74,38 +74,44 @@ public class SWTSkinPropertiesImpl
 
 	@Override
 	public SWTColorWithAlpha getColorWithAlpha(String sID) {
-		Color color;
-		if (colorMap.containsKey(sID)) {
-			return colorMap.get(sID);
+		SWTColorWithAlpha colorInfo;
+		synchronized( colorMap ){
+			colorInfo = colorMap.get(sID);
 		}
-
-		int alpha = 255;
-		try {
-			int[] rgb = getColorValue(sID);
-			if (rgb[0] > -1) {
-				color = ColorCache.getSchemedColor(Utils.getDisplay(), rgb[0], rgb[1], rgb[2]);
-				if (rgb.length > 3) {
-					alpha = rgb[3];
+		if ( colorInfo == null ){
+			Color color;
+			int alpha = 255;
+			try {
+				int[] rgb = getColorValue(sID);
+				if (rgb[0] > -1) {
+					color = ColorCache.getSchemedColor(Utils.getDisplay(), rgb[0], rgb[1], rgb[2]);
+					if (rgb.length > 3) {
+						alpha = rgb[3];
+					}
+				} else {
+					color = ColorCache.getColor(Utils.getDisplay(), getStringValue(sID));
 				}
-			} else {
-				color = ColorCache.getColor(Utils.getDisplay(), getStringValue(sID));
+			} catch (Exception e) {
+				//				IMP.getLogger().log(LoggerChannel.LT_ERROR,
+				//						"Failed loading color : color." + colorNames[i]);
+				color = null;
 			}
-		} catch (Exception e) {
-			//				IMP.getLogger().log(LoggerChannel.LT_ERROR,
-			//						"Failed loading color : color." + colorNames[i]);
-			color = null;
+	
+			colorInfo = new SWTColorWithAlpha(color, alpha);
+			synchronized( colorMap ){
+				colorMap.put(sID, colorInfo);
+			}
 		}
-
-		SWTColorWithAlpha colorInfo = new SWTColorWithAlpha(color, alpha);
-		colorMap.put(sID, colorInfo);
-
+		
 		return colorInfo;
 	}
 
 	@Override
 	public void clearCache() {
 		super.clearCache();
-		colorMap.clear();
+		synchronized( colorMap ){
+			colorMap.clear();
+		}
 	}
 
 	// @see SWTSkinProperties#getColor(java.lang.String, org.eclipse.swt.graphics.Color)
@@ -143,6 +149,8 @@ public class SWTSkinPropertiesImpl
 	}
 
 	public static void destroyStatics() {
-		colorMap.clear();
+		synchronized( colorMap ){
+			colorMap.clear();
+		}
 	}
 }
