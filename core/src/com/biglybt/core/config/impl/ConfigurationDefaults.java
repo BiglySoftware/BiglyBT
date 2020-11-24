@@ -752,7 +752,8 @@ public class ConfigurationDefaults {
     def.put( "br.backup.auto.everydays", ONE );
     def.put( "br.backup.auto.everyhours", ZERO );
     def.put( "br.backup.auto.retain", 5L );
-
+    def.put( ConfigKeys.BackupRestore.BCFG_BACKUP_PLUGINS, TRUE );
+    
     //temp section for SpeedManagerAlgorithmProviderV2
 
     try{

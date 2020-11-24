@@ -120,7 +120,12 @@ public class ConfigSectionBackupRestore
 		});
 
 		//
+		
+		BooleanParameterImpl paramDoPlugins = new BooleanParameterImpl(
+				BCFG_BACKUP_PLUGINS, "br.backup.do.plugins");
 
+		add(paramDoPlugins, listBackupParams);
+		
 		IntParameterImpl paramBackupDays = new IntParameterImpl(
 				ICFG_BACKUP_AUTO_EVERYDAYS, ICFG_BACKUP_AUTO_EVERYDAYS, 0,
 				Integer.MAX_VALUE);

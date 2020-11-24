@@ -22,7 +22,6 @@ package com.biglybt.core.backup.impl;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -31,6 +30,7 @@ import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.backup.BackupManager;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.custom.CustomizationManagerFactory;
@@ -900,7 +900,16 @@ BackupManagerImpl
 
 								continue;
 							}
+															
+							if ( name.equals( "plugins" )){
 							
+								if ( !COConfigurationManager.getBooleanParameter( ConfigKeys.BackupRestore.BCFG_BACKUP_PLUGINS )){
+
+									listener.reportProgress( "Not backing up plugins due to configuration settings" );
+									
+									continue;
+								}
+							}
 						}else if ( 	name.equals( ".lock" ) ||
 									name.equals( ".azlock" ) ||
 									name.equals( "update.properties" ) ||
