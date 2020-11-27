@@ -1235,7 +1235,7 @@ GlobalManagerStatsImpl
 					
 						CountryDetails cd = it.next();
 						
-						my_stats.put( cd.getCC(), new long[]{ cd.getAverageReceived(), cd.getAverageSent() } );
+						my_stats.put( cd.getCC(), new long[]{ cd.getAverageReceived(), cd.getAverageSent(), cd.getTotalReceived(), cd.getTotalSent() } );
 					}
 					
 					as_local_latest	= my_sample;

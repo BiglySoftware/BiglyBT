@@ -55,6 +55,9 @@ XferStatsPanel
 	private static final int ALPHA_FOCUS = 255;
 	private static final int ALPHA_NOFOCUS = 150;
 
+	private final boolean	is_global;
+	private final String	config_key;
+	
 	private Display display;
 
 	private BufferedLabel	header_label;
@@ -62,8 +65,7 @@ XferStatsPanel
 	
 	private Scale scale	 = new Scale();
 
-	private boolean	show_samples = COConfigurationManager.getBooleanParameter( "XferStats.show.samples" );
-	
+	private boolean	button1_selected;
 	
 	private boolean mouseLeftDown = false;
 	private boolean mouseRightDown = false;
@@ -94,8 +96,14 @@ XferStatsPanel
 	public 
 	XferStatsPanel(
 		Composite 	composite,
-		boolean		show_header )
+		boolean		_is_global )
 	{
+		is_global	= _is_global;
+		
+		config_key = is_global?"XferStats.show.samples":"XferStats.local.show.rates";
+		
+		button1_selected 	= COConfigurationManager.getBooleanParameter( config_key );
+
 		display = composite.getDisplay();
 
 		Color white = ColorCache.getColor(display,255,255,255);
@@ -108,74 +116,61 @@ XferStatsPanel
 	    layout.numColumns = 2;
 	    panel.setLayout(layout);
 	    panel.setBackground( white );
+	    		    	
+    		// header
 	    
-	    if ( show_header ){
-		    	
-	    		// header
-		    
-		    header_label = new BufferedLabel( panel, SWT.DOUBLE_BUFFERED );
-		    GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
-		    grid_data.horizontalIndent = 5;
-		    header_label.setLayoutData(grid_data);
-		    header_label.getControl().setBackground( white );
-		    
-		    	// controls
-		    
-		    Composite controls = new Composite(panel,SWT.NULL);
-		    layout = new GridLayout();
-		    layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 
-		    		layout.marginHeight = layout.marginWidth = 0;
-		    layout.numColumns = 3;
-		    
-		    controls.setLayout(layout);
-		    
-		    Label label = new Label( controls, SWT.NULL );
-		    label.setBackground( white );
-		    Messages.setLanguageText( label, "ConfigView.section.display" );
-		    
-		    Button sample_button	= new Button( controls, SWT.RADIO );
-		    sample_button.setBackground( white );
-		    Messages.setLanguageText( sample_button, "label.samples" );
-		    sample_button.setSelection( show_samples );
-		    
-		    
-		    Button tp_button	= new Button( controls, SWT.RADIO );
-		    tp_button.setBackground( white );
-		    Messages.setLanguageText( tp_button, "label.throughput" );
-		    tp_button.setSelection( !show_samples );
-	
-		    SelectionAdapter sa = 
-		    	new SelectionAdapter(){
-		    		@Override
-		    		public void widgetSelected(SelectionEvent e){
-		    			show_samples = sample_button.getSelection();
-		    			COConfigurationManager.setParameter( "XferStats.show.samples", show_samples );
-		    			requestRefresh();
-		    		}
-				};
-		    
-		    sample_button.addSelectionListener( sa );
-		    tp_button.addSelectionListener( sa );
-		    
-	    }else{
+	    header_label = new BufferedLabel( panel, SWT.DOUBLE_BUFFERED );
+	    GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
+	    grid_data.horizontalIndent = 5;
+	    header_label.setLayoutData(grid_data);
+	    header_label.getControl().setBackground( white );
+	    
+	    if ( !is_global ){
 	    	
-	    	Label label = new Label( panel, SWT.DOUBLE_BUFFERED );
-	    	
-		    GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
-		    grid_data.horizontalSpan = 2;
-		    grid_data.horizontalIndent = 5;
-		    label.setLayoutData(grid_data);
-		    label.setBackground( white );
-			  
-		    Messages.setLanguageText( label, "XferStatsView.local.header" );
-		    
-	    	show_samples = true;
+	    	Messages.setLanguageText( header_label.getWidget(), "XferStatsView.local.header" );
 	    }
+	    	// controls
+	    
+	    Composite controls = new Composite(panel,SWT.NULL);
+	    layout = new GridLayout();
+	    layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 
+	    		layout.marginHeight = layout.marginWidth = 0;
+	    layout.numColumns = 3;
+	    
+	    controls.setLayout(layout);
+	    
+	    Label label = new Label( controls, SWT.NULL );
+	    label.setBackground( white );
+	    Messages.setLanguageText( label, "ConfigView.section.display" );
+	    
+	    Button button1	= new Button( controls, SWT.RADIO );
+	    button1.setBackground( white );
+	    Messages.setLanguageText( button1, is_global?"label.samples":"Pieces.column.speed" );
+	    button1.setSelection( button1_selected );
+	    
+	    
+	    Button button2	= new Button( controls, SWT.RADIO );
+	    button2.setBackground( white );
+	    Messages.setLanguageText( button2, is_global?"label.throughput":"SpeedView.stats.total" );
+	    button2.setSelection( !button1_selected );
+
+	    SelectionAdapter sa = 
+	    	new SelectionAdapter(){
+	    		@Override
+	    		public void widgetSelected(SelectionEvent e){
+	    			button1_selected = button1.getSelection();
+	    			COConfigurationManager.setParameter( config_key, button1_selected );
+	    			requestRefresh();
+	    		}
+			};
+	    
+		button1.addSelectionListener( sa );
+		button2.addSelectionListener( sa );
 	    
 	    	// canvas
 	    
 		canvas = new Canvas(panel,SWT.NO_BACKGROUND);
-		GridData grid_data = new GridData( GridData.FILL_BOTH );
+		grid_data = new GridData( GridData.FILL_BOTH );
 		grid_data.horizontalSpan = 2;
 		
 		canvas.setLayoutData( grid_data );
@@ -426,21 +421,28 @@ XferStatsPanel
 	getBPSForDisplay(
 		long	bytes )
 	{
-		if ( show_samples ){
+		if ( is_global || button1_selected ){
 			
-			bytes = bytes/60;
+			if ( button1_selected ){
+				
+				bytes = bytes/60;
+				
+			}else{
+				
+				if ( tp_ratio == 0 ){
+					
+					return( "" );
+				}
+			
+				bytes = (long)(( tp_ratio * bytes)/60);
+			}
+			
+			return( DisplayFormatters.formatByteCountToKiBEtcPerSec( bytes ));
 			
 		}else{
 			
-			if ( tp_ratio == 0 ){
-				
-				return( "" );
-			}
-		
-			bytes = (long)(( tp_ratio * bytes)/60);
+			return( DisplayFormatters.formatByteCountToKiBEtc( bytes ));
 		}
-		
-		return( DisplayFormatters.formatByteCountToKiBEtcPerSec( bytes ));
 	}
 	
 	public void
@@ -530,7 +532,8 @@ XferStatsPanel
 			
 			latest_sequence = my_stats.getSequence();
 			
-			if ( header_label != null ){
+			if ( is_global ){
+				
 				float samples 		= my_stats.getSamples();
 				float population	= my_stats.getEstimatedPopulation();
 				
@@ -601,8 +604,19 @@ XferStatsPanel
 					
 					long[]	to_counts	= entry2.getValue();
 					
-					long	to_recv = to_counts[0];
-					long	to_sent = to_counts[1];
+					long	to_recv;
+					long	to_sent;
+					
+					if ( is_global || button1_selected ){
+						
+						to_recv = to_counts[0];
+						to_sent = to_counts[1];
+						
+					}else{
+						
+						to_recv = to_counts[2];
+						to_sent = to_counts[3];
+					}
 					
 					Image to_image = ImageRepository.getCountryFlag( to_cc, false );
 	

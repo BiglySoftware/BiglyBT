@@ -307,6 +307,7 @@ public class UIConfigDefaultsSWT
 		}
 		
 		def.addParameter( "XferStats.show.samples", true );
+		def.addParameter( "XferStats.local.show.rates", true );
 		def.addParameter( "browser.external.non.pub", true );
 		def.addParameter( "browser.external.test.url", Constants.URL_CLIENT_HOME );
 
