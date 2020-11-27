@@ -15,7 +15,7 @@ msgstr ""
 "X-Crowdin-Language: ja\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 438\n"
-"PO-Revision-Date: 2020-07-10 10:26\n"
+"PO-Revision-Date: 2020-11-27 15:13\n"
 
 msgid "test"
 msgstr ""
@@ -24,47 +24,47 @@ msgid "onlyEng"
 msgstr ""
 
 msgid "donation_line1"
-msgstr ""
+msgstr "BiglyBTはフリーソフトウェア製品ですが、開発と保守には多くの費用がかかります。 利用によって利益を得られたと思われる場合は、以下のいずれかの方法でサポートにご協力下さい:"
 
 msgid "donation_title"
-msgstr ""
+msgstr "BiglyBT をサポート"
 
 msgid "donation_monthly_title"
-msgstr ""
+msgstr "毎月支払う"
 
 msgid "donation_onetime_title"
-msgstr ""
+msgstr "一度きりの支払"
 
 msgid "donation_bitcoin_title"
-msgstr ""
+msgstr "Bitcoin"
 
 msgid "donation_monthly_description"
-msgstr ""
+msgstr "開発者に毎月コーヒーをプレゼントする"
 
 msgid "donation_monthly_per_month"
-msgstr ""
+msgstr "／月"
 
 msgid "donation_onetime_amount"
-msgstr ""
+msgstr "量 (%1):"
 
 msgid "donation_onetime_description"
-msgstr ""
+msgstr "金額は任意で:)"
 
 msgid "donation_bitcoin_description"
-msgstr ""
+msgstr "%1、または %2の寄付をお勧めします。 :)"
 
 msgid "donation_bitcoin_addresses"
-msgstr ""
+msgstr "BCH/BTC/BSG/BSV Address:"
 
 msgid "donation_crypto_title"
-msgstr ""
+msgstr "仮想通貨"
 
 msgid "donation_crypto_description"
-msgstr ""
+msgstr "お気に入りのコインやトークンが表示されていない場合は、お知らせ下さい。アドレスを追加します。"
 
 msgid "no_thanks"
-msgstr ""
+msgstr "結構です。"
 
 msgid "close"
-msgstr ""
+msgstr "閉じる"
 
