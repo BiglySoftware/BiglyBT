@@ -1883,73 +1883,78 @@ public class FileUtil {
 
     			// recover by moving files back
 
-      		for (int i=0;i<last_ok;i++){
-
-				File	ff = files[i];
-				File	tf = newFile( to_file, ff.getName());
-
-    			try{
-    				// null - We don't want to use the file filter, it only refers to source paths.
-    				
-                    if ( !renameFile( 
-                    		tf, 
-                    		ff, 
-                    		false, 
-                    		null, 
-                    		new ProgressListener()
-                    		{
-                    			public void
-                    			setTotalSize(
-                    				long	size )
-                    			{
-                    			}
-                    			
-                    			@Override
-                    			public void 
-                    			setCurrentFile(File file)
-                    			{
-                    				if ( pl != null ){
-                    					try{
-                    						pl.setCurrentFile( file );
-                    					}catch( Throwable e ){
-                    						Debug.out( e );
-                    					}
-                    				}
-                    			}
-                    			public void
-                    			bytesDone(
-                    				long	num )
-                    			{
-                    				if ( pl != null ){
-                    					try{
-                    						pl.bytesDone( -num );
-                    					}catch( Throwable e ){
-                    						Debug.out( e );
-                    					}
-                    				}
-                    			}
-                    			
-                    			public int
-                    			getState()
-                    			{
-                    				return( ST_NORMAL );
-                    			}
-                    			
-                    			public void
-                    			complete()
-                    			{
-                    				
-                    			}
-                    		}))
-                    {
-    					Debug.out( "renameFile: recovery - failed to move file '" + tf.toString()
-										+ "' to '" + ff.toString() + "'" );
-    				}
-    			}catch( Throwable e ){
-    				Debug.out("renameFile: recovery - failed to move file '" + tf.toString()
-									+ "' to '" + ff.toString() + "'", e);
-
-    			}
+    		if ( last_ok > 0 ){
+    			
+    			log( "Rename cancelled/failed, returning " + last_ok + " files to " + from_file.getAbsolutePath() + " from " + to_file.getAbsolutePath());
+    		
+	      		for (int i=0;i<last_ok;i++){
+	
+					File	ff = files[i];
+					File	tf = newFile( to_file, ff.getName());
+	
+	    			try{
+	    				// null - We don't want to use the file filter, it only refers to source paths.
+	    				
+	                    if ( !renameFile( 
+	                    		tf, 
+	                    		ff, 
+	                    		false, 
+	                    		null, 
+	                    		new ProgressListener()
+	                    		{
+	                    			public void
+	                    			setTotalSize(
+	                    				long	size )
+	                    			{
+	                    			}
+	                    			
+	                    			@Override
+	                    			public void 
+	                    			setCurrentFile(File file)
+	                    			{
+	                    				if ( pl != null ){
+	                    					try{
+	                    						pl.setCurrentFile( file );
+	                    					}catch( Throwable e ){
+	                    						Debug.out( e );
+	                    					}
+	                    				}
+	                    			}
+	                    			public void
+	                    			bytesDone(
+	                    				long	num )
+	                    			{
+	                    				if ( pl != null ){
+	                    					try{
+	                    						pl.bytesDone( -num );
+	                    					}catch( Throwable e ){
+	                    						Debug.out( e );
+	                    					}
+	                    				}
+	                    			}
+	                    			
+	                    			public int
+	                    			getState()
+	                    			{
+	                    				return( ST_NORMAL );
+	                    			}
+	                    			
+	                    			public void
+	                    			complete()
+	                    			{
+	                    				
+	                    			}
+	                    		})){
+	                    
+	    					Debug.out( "renameFile: recovery - failed to move file '" + tf.toString()
+											+ "' to '" + ff.toString() + "'" );
+	    				}
+	    			}catch( Throwable e ){
+	    				Debug.out("renameFile: recovery - failed to move file '" + tf.toString()
+										+ "' to '" + ff.toString() + "'", e);
+	
+	    			}
+	      		}
       		}
 
       		return( false );
@@ -3075,6 +3080,7 @@ public class FileUtil {
 		file_logger.log( str );
 		
 		if ( error != null ){
+			
 			file_logger.log(error );
 		}
 	}
