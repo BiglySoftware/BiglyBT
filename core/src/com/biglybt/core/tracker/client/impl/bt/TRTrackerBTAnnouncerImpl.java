@@ -3058,7 +3058,7 @@ TRTrackerBTAnnouncerImpl
 		 							Logger.logTextResource(new LogAlert(torrent,
 		 									LogAlert.UNREPEATABLE, LogAlert.AT_WARNING,
 											"TrackerClient.announce.warningmessage"), new String[] {
-											announce_data_provider.getName(), warning_message });
+											announce_data_provider.getName() + " - " + UrlUtils.getBaseURL( url ), warning_message });
 		 						}
 							}
 	 					}
