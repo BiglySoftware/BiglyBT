@@ -15,10 +15,10 @@ msgstr ""
 "X-Crowdin-Language: fr\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 438\n"
-"PO-Revision-Date: 2020-07-10 10:23\n"
+"PO-Revision-Date: 2020-11-28 15:43\n"
 
 msgid "test"
-msgstr ""
+msgstr "Test en anglais"
 
 msgid "onlyEng"
 msgstr "Uniquement en anglais"
