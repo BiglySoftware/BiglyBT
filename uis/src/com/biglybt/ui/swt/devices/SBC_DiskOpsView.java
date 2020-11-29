@@ -154,6 +154,14 @@ public class SBC_DiskOpsView
 						new ColumnFO_Status(column);
 					}
 				});
+		
+		tableManager.registerColumn(CoreOperation.class, ColumnFO_SubTask.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnFO_SubTask(column);
+					}
+				});
 
 		TableColumnManager tcm = TableColumnManager.getInstance();
 		
