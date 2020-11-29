@@ -238,6 +238,8 @@ DiskManagerImpl
     private long		allocate_not_required;
     private long        remaining;
 
+    private volatile String	allocation_task;
+    
     	// this used to drive end-of-download detection, careful that it is accurate at all times (there was a bug where it wasn't and caused downloads to prematurely recheck...)
     
     private volatile long	remaining_excluding_dnd;
@@ -1104,6 +1106,8 @@ DiskManagerImpl
 
                 String relative_data_file = pm_info.getRelativeDataPath();
 
+                allocation_task = relative_data_file;
+
                 DiskManagerFileInfoImpl fileInfo;
 
                 try{
@@ -1133,7 +1137,7 @@ DiskManagerImpl
                 
                 CacheFile   cache_file      = fileInfo.getCacheFile();
                 File        data_file       = fileInfo.getFile(true);
-
+                
                 String  file_key = data_file.getAbsolutePath();
 
                 if ( Constants.isWindows ){
@@ -1339,6 +1343,8 @@ DiskManagerImpl
 
             allocation_scheduler.unregister( this );
 
+            allocation_task = null;
+            
             if ( alloc_ok ){
             
             	if ( allocated + allocate_not_required != totalLength ){
@@ -1601,6 +1607,13 @@ DiskManagerImpl
         return((int) (((allocated+allocate_not_required) * 1000) / totalLength ));
     }
 
+    @Override
+    public String 
+    getAllocationTask()
+    {
+    	return( allocation_task );
+    }
+    
     @Override
     public long
     getRemaining() {

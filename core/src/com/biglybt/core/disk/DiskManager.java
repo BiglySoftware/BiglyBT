@@ -251,6 +251,12 @@ DiskManager
 	public int
 	getPercentAllocated();
 
+	public default String
+	getAllocationTask()
+	{
+		return( null );
+	}
+
 	public String
 	getErrorMessage();
 

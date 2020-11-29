@@ -71,10 +71,17 @@ DiskManagerAllocationScheduler
 				}
 				
 				@Override
+				public String 
+				getSubTaskName()
+				{
+					return( helper.getAllocationTask());
+				}				
+				
+				@Override
 				public int 
 				getSupportedTaskStates()
 				{
-					return( ST_PAUSE | ST_RESUME | ST_CANCEL );
+					return( ST_PAUSE | ST_RESUME | ST_CANCEL | ST_SUBTASKS );
 				}
 				
 				@Override
