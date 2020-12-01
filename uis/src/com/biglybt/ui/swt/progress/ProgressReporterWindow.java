@@ -193,7 +193,7 @@ public class ProgressReporterWindow
 
 		shell = ShellFactory.createMainShell(shellStyle);
 		shell.setText(MessageText.getString("progress.window.title"));
-
+		
 		Utils.setShellIcon(shell);
 
 		GridLayout gLayout = new GridLayout();
@@ -425,6 +425,8 @@ public class ProgressReporterWindow
 		formatLastPanel(null);
 		scrollChild.layout();
 
+		boolean alreadyPositioned = Utils.linkShellMetricsToConfig( shell, "com.biglybt.ui.swt.progress.ProgressReporterWindow" );
+
 		/*
 		 * Set the shell size if it's different that the computed size
 		 */
@@ -433,23 +435,25 @@ public class ProgressReporterWindow
 			shell.layout(false);
 		}
 
-		/*
-		 * Centers the window
-		 */
-
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		if (null == uiFunctions) {
+		if ( !alreadyPositioned ){
 			/*
-			 * Centers on the active monitor
+			 * Centers the window
 			 */
-			Utils.centreWindow(shell);
-		} else {
-			/*
-			 * Centers on the main application window
-			 */
-			Utils.centerWindowRelativeTo(shell, uiFunctions.getMainShell());
+	
+			UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
+			if (null == uiFunctions) {
+				/*
+				 * Centers on the active monitor
+				 */
+				Utils.centreWindow(shell);
+			} else {
+				/*
+				 * Centers on the main application window
+				 */
+				Utils.centerWindowRelativeTo(shell, uiFunctions.getMainShell());
+			}
 		}
-
+		
 		if ( COConfigurationManager.getBooleanParameter( "Reduce Auto Activate Window" )){
 			
 			shell.setVisible( true );
