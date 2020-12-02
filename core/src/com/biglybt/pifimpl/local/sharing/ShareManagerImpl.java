@@ -40,7 +40,6 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.tracker.util.TRTrackerUtils;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.download.Download;
 import com.biglybt.pif.sharing.*;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentAttribute;
@@ -650,6 +649,13 @@ ShareManagerImpl
 			
 		throws ShareException
 	{
+		if ( !initialised ){
+		
+				// need to force this in order to populate the torrent map
+			
+			initialise();
+		}
+		
 		synchronized( torrent_map ){
 			
 			return( torrent_map.get( torrent_hash ));
