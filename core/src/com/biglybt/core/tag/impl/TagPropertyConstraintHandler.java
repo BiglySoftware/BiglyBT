@@ -48,6 +48,8 @@ import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadListener;
+import com.biglybt.pif.sharing.ShareException;
+import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 public class
@@ -64,7 +66,8 @@ TagPropertyConstraintHandler
 	
 	private final Core core;
 	private final TagManagerImpl	tag_manager;
-
+	private final ShareManager		share_manager;
+	
 	
 	private boolean		initialised;
 	private boolean 	initial_assignment_complete;
@@ -110,29 +113,42 @@ TagPropertyConstraintHandler
 	{
 		core				= null;
 		tag_manager			= null;
+		share_manager		= null;
 	}
 
 	protected
 	TagPropertyConstraintHandler(
-		Core _core,
+		Core 			_core,
 		TagManagerImpl	_tm )
 	{
 		core			= _core;
 		tag_manager		= _tm;
 
-		if( core != null ){
-
-			core.addLifecycleListener(
-				new CoreLifecycleAdapter()
-				{
-					@Override
-					public void
-					stopping(Core core)
-					{
-						stopping	= true;
-					}
-				});
+		ShareManager sm;
+		
+		try{
+			sm	= core.getPluginManager().getDefaultPluginInterface().getShareManager();
+			
+		}catch(  Throwable e ){
+			
+			Debug.out( e );
+			
+			sm = null;
 		}
+		
+		share_manager = sm;
+		
+		core.addLifecycleListener(
+			new CoreLifecycleAdapter()
+			{
+				@Override
+				public void
+				stopping(Core core)
+				{
+					stopping	= true;
+				}
+			});
+		
 		
 		tag_manager.addTaggableLifecycleListener(
 			Taggable.TT_DOWNLOAD,
@@ -2051,6 +2067,7 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_SUPER_SEEDING	= 32;		
 		private static final int FT_IS_SEQUENTIAL		= 33;		
 		private static final int FT_TAG_POSITION		= 34;		
+		private static final int FT_IS_SHARE			= 35;		
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2287,6 +2304,12 @@ TagPropertyConstraintHandler
 				}else if ( func_name.equals( "isPrivate" )){
 
 					fn_type = FT_IS_PRIVATE;
+
+					params_ok = num_params == 0;
+					
+				}else if ( func_name.equals( "isShare" )){
+
+					fn_type = FT_IS_SHARE;
 
 					params_ok = num_params == 0;
 
@@ -2843,6 +2866,23 @@ TagPropertyConstraintHandler
 						TOTorrent t = dm.getTorrent();
 
 						return( t != null && t.getPrivate());
+					}
+					case FT_IS_SHARE:{
+
+						ShareManager sm = handler.share_manager;
+						
+						if ( sm == null ){
+							
+							return( false );
+						}
+							
+						try{
+							return( sm.lookupShare( dm.getTorrent().getHash()) != null );
+							
+						}catch( Throwable e ){
+							
+							return( false );
+						}
 					}
 					case FT_IS_FORCE_START:{
 

@@ -400,23 +400,6 @@ ShareResourceFileOrDirImpl
 
 		item.serialiseItem( map );
 	}
-
-	@Override
-	protected ShareResource 
-	lookupShare(byte[] torrent_hash){
-		try{
-			if ( Arrays.equals( item.getTorrent().getHash(), torrent_hash )){
-				
-				return( this );
-			}
-			
-		}catch( Throwable e ){
-			
-			Debug.out( e );
-		}
-		
-		return( null );
-	}
 	
 	@Override
 	protected void
