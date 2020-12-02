@@ -705,15 +705,21 @@ public class FilesView
 			
 			List<FilesViewNodeInner>	nodes = Arrays.asList( node );
 			
-			if ( node.isExpanded()){
-								
-				doTreeAction(nodes, 1, false );
+			try{
+				tv.setRedrawEnabled( false );
 				
-			}else{
+				if ( node.isExpanded()){
 									
-				doTreeAction(nodes, 0, false );
+					doTreeAction(nodes, 1, false );
+					
+				}else{
+										
+					doTreeAction(nodes, 0, false );
+				}
+			}finally{
+				
+				tv.setRedrawEnabled( true );
 			}
-			
 			return;
 			
 		}else if ( fileInfo.getIndex() == -1 ){

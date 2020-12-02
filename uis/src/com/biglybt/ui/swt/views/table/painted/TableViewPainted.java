@@ -162,7 +162,8 @@ public class TableViewPainted
 	private int totalHeight = 0;
 
 	private boolean redrawTableScheduled;
-
+	private int		redrawTableDisabled;
+	
 	private ScrollBar hBar;
 
 	private ScrollBar vBar;
@@ -3218,11 +3219,39 @@ public class TableViewPainted
 		});
 	}
 
-	public void redrawTable() {
+	@Override
+	public void 
+	setRedrawEnabled(
+		boolean enabled)
+	{
 		synchronized (TableViewPainted.this) {
-			if (redrawTableScheduled) {
+			
+			if ( enabled ){
+				
+				redrawTableDisabled--;
+				
+			}else{
+				
+				redrawTableDisabled++;
+			}
+		}
+		
+		if ( enabled ){
+			
+			redrawTable();
+		}
+	}
+	
+	public void 
+	redrawTable()
+	{
+		synchronized (TableViewPainted.this) {
+			
+			if ( redrawTableScheduled || redrawTableDisabled > 0 ){
+				
 				return;
 			}
+			
 			redrawTableScheduled = true;
 		}
 

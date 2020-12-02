@@ -270,6 +270,8 @@ public interface TableViewSWT<DATASOURCETYPE>
 
 	void tableInvalidate();
 
+	void setRedrawEnabled( boolean enabled );
+	
 	void showRow(TableRowCore rowToShow);
 
 	TableRowCore getRowQuick(int index);
