@@ -1963,7 +1963,7 @@ TagDownloadWithState
 									
 								}else{
 																		
-									String magnet = UrlUtils.getMagnetURI( torrent );
+									String magnet = UrlUtils.getMagnetURI( torrent.getHash());
 									
 									for ( int i=messages.size()-1;i>=0;i--){
 										
