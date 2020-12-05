@@ -238,7 +238,7 @@ SubscriptionSchedulerImpl
 				}
 			}
 
-			List	waiting = (List)active_subscription_downloaders.get( subs );
+			List<AESemaphore>	waiting = active_subscription_downloaders.get( subs );
 
 			if ( waiting != null ){
 
@@ -252,7 +252,7 @@ SubscriptionSchedulerImpl
 
 				sem = null;
 				
-				active_subscription_downloaders.put( subs, new ArrayList());
+				active_subscription_downloaders.put( subs, new ArrayList<>());
 				
 				downloader = new SubscriptionDownloader(manager, (SubscriptionImpl)subs );
 			}
@@ -277,22 +277,28 @@ SubscriptionSchedulerImpl
 				// only release waiters and fire event if this thread did the actual download
 			
 			if ( downloader != null ){
+
+				try{	
+					((SubscriptionImpl)subs).fireDownloaded();
+
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
 				
 				synchronized( active_subscription_downloaders ){
 	
-					List waiting = (List)active_subscription_downloaders.remove( subs );
+					List<AESemaphore> waiting = active_subscription_downloaders.remove( subs );
 	
 					if ( waiting != null ){
 	
-						for (int i=0;i<waiting.size();i++){
-	
-							((AESemaphore)waiting.get(i)).release();
+						for ( AESemaphore waiter: waiting ){
+							
+							waiter.release();
 						}
 					}
 				}
 			}
-			
-			((SubscriptionImpl)subs).fireDownloaded();
 		}
 	}
 
