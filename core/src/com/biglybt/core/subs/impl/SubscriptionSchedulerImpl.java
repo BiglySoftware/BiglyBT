@@ -290,9 +290,9 @@ SubscriptionSchedulerImpl
 						}
 					}
 				}
-	
-				((SubscriptionImpl)subs).fireDownloaded();
 			}
+			
+			((SubscriptionImpl)subs).fireDownloaded();
 		}
 	}
 
