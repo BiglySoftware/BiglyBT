@@ -60,12 +60,11 @@ SubscriptionSchedulerImpl
 
 	private SubscriptionManagerImpl		manager;
 
-	private Map	active_subscription_downloaders = new HashMap();
-	private boolean active_subs_download_is_auto;
+	private Map<Subscription, List<AESemaphore>>	active_subscription_downloaders = new IdentityHashMap<>();
 
 	private Map<String,Long>	rate_limit_map = new HashMap<>();
 
-	private Set	active_result_downloaders		= new HashSet();
+	private Set<String>	active_result_downloaders		= new HashSet<>();
 
 	private ThreadPool	result_downloader = new ThreadPool( "SubscriptionDownloader", 5, true );
 
@@ -173,9 +172,8 @@ SubscriptionSchedulerImpl
 
 		throws SubscriptionException
 	{
-		SubscriptionDownloader downloader;
-
-		AESemaphore	sem = null;
+		SubscriptionDownloader 	downloader;
+		AESemaphore				sem;
 
 		String rate_limits = manager.getRateLimits().trim();
 
@@ -248,22 +246,22 @@ SubscriptionSchedulerImpl
 
 				waiting.add( sem );
 
-				if ( !is_auto ){
-
-					active_subs_download_is_auto = false;
-				}
+				downloader = null;
+				
 			}else{
 
+				sem = null;
+				
 				active_subscription_downloaders.put( subs, new ArrayList());
-
-				active_subs_download_is_auto = is_auto;
+				
+				downloader = new SubscriptionDownloader(manager, (SubscriptionImpl)subs );
 			}
-
-			downloader = new SubscriptionDownloader(manager, (SubscriptionImpl)subs );
 		}
 
+			// either downloader or sem is non-null
+		
 		try{
-			if ( sem == null ){
+			if ( downloader != null ){
 
 				downloader.download();
 
@@ -276,24 +274,25 @@ SubscriptionSchedulerImpl
 
 		}finally{
 
-			boolean	was_auto;
-
-			synchronized( active_subscription_downloaders ){
-
-				List waiting = (List)active_subscription_downloaders.remove( subs );
-
-				if ( waiting != null ){
-
-					for (int i=0;i<waiting.size();i++){
-
-						((AESemaphore)waiting.get(i)).release();
+				// only release waiters and fire event if this thread did the actual download
+			
+			if ( downloader != null ){
+				
+				synchronized( active_subscription_downloaders ){
+	
+					List waiting = (List)active_subscription_downloaders.remove( subs );
+	
+					if ( waiting != null ){
+	
+						for (int i=0;i<waiting.size();i++){
+	
+							((AESemaphore)waiting.get(i)).release();
+						}
 					}
 				}
-
-				was_auto = active_subs_download_is_auto;
+	
+				((SubscriptionImpl)subs).fireDownloaded();
 			}
-
-			((SubscriptionImpl)subs).fireDownloaded( was_auto );
 		}
 	}
 
@@ -333,13 +332,15 @@ SubscriptionSchedulerImpl
 					public void
 					runSupport()
 					{
-							// need to fix up to the latest history due to the lazy nature of things :(
-
-						SubscriptionResult result = subs.getHistory().getResult( original_result.getID());
-
 						boolean	success = false;
 
+						SubscriptionResult result = null;
+						
+							// need to fix up to the latest history due to the lazy nature of things :(
 						try{
+
+							result = subs.getHistory().getResult( original_result.getID());
+
 							if ( result == null ){
 
 								log( subs.getName() + ": result has been deleted - " + original_result.getID());
@@ -581,7 +582,7 @@ SubscriptionSchedulerImpl
 						}finally{
 
 							try{
-								if ( !success ){
+								if ( result != null && !success ){
 
 									if ( dl.startsWith( "azplug:" ) || dl.startsWith( "chat:" )){
 
@@ -613,14 +614,16 @@ SubscriptionSchedulerImpl
 							}catch( Throwable e ){
 
 								Debug.out( e );
+								
+							}finally{
+
+								synchronized( active_result_downloaders ){
+	
+									active_result_downloaders.remove( key );
+								}
+	
+								calculateSchedule();
 							}
-
-							synchronized( active_result_downloaders ){
-
-								active_result_downloaders.remove( key );
-							}
-
-							calculateSchedule();
 						}
 					}
 				});

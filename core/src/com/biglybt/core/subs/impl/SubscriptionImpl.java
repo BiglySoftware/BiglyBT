@@ -2196,8 +2196,7 @@ SubscriptionImpl
 	}
 
 	protected void
-	fireDownloaded(
-		boolean	was_auto )
+	fireDownloaded()
 	{
 
 		Iterator it = listeners.iterator();
@@ -2205,7 +2204,7 @@ SubscriptionImpl
 		while( it.hasNext()){
 
 			try{
-				((SubscriptionListener)it.next()).subscriptionDownloaded( this, was_auto );
+				((SubscriptionListener)it.next()).subscriptionDownloaded( this );
 
 			}catch( Throwable e ){
 

@@ -160,7 +160,7 @@ public class SubscriptionMDIEntry implements SubscriptionListener, ViewTitleInfo
 	}
 
 	@Override
-	public void subscriptionDownloaded(Subscription subs, boolean auto) {
+	public void subscriptionDownloaded(Subscription subs) {
 	}
 
 	@Override

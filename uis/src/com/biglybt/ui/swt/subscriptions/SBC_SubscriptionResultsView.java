@@ -931,8 +931,7 @@ SBC_SubscriptionResultsView
 	@Override
 	public void
 	subscriptionDownloaded(
-		Subscription		subs,
-		boolean				auto )
+		Subscription		subs )
 	{
 	}
 

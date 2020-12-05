@@ -774,7 +774,7 @@ SubscriptionManagerUI
 							@Override
 							public void
 							subscriptionDownloaded(
-								Subscription subs, boolean auto )
+								Subscription subs )
 							{
 								SubscriptionResult[] results = subs.getResults( false );
 

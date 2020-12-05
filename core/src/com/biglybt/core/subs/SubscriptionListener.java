@@ -33,6 +33,5 @@ SubscriptionListener
 
 	public void
 	subscriptionDownloaded(
-		Subscription		subs,
-		boolean				auto );
+		Subscription		subs );
 }
