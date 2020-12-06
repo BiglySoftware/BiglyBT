@@ -2092,14 +2092,14 @@ CoreImpl
 										
 										break;
 									}
+								
+									Thread.sleep(1*1000);
+								
+									loops++;
 								}
-
-								Thread.sleep(1*1000);
-								
-								loops++;
-								
 							}catch( Throwable e ){
 
+								Debug.out( e );
 							}
 						}
 					}.start();
