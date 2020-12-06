@@ -109,7 +109,7 @@ MagnetPlugin
 	private static final int	SECONDARY_LOOKUP_DELAY		= 20*1000;
 	private static final int	SECONDARY_LOOKUP_MAX_TIME	= 2*60*1000;
 
-	private static final int	MD_LOOKUP_DELAY_SECS_DEFAULT		= 20;
+	private static final int	MD_LOOKUP_DELAY_SECS_DEFAULT		= 0;
 
 
 	private static final String	PLUGIN_NAME				= "Magnet URI Handler";
