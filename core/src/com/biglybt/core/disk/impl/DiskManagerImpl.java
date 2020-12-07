@@ -1068,9 +1068,9 @@ DiskManagerImpl
 
         boolean	alloc_ok = false;
         
+        DiskManagerAllocationScheduler.AllocationInstance allocation_instance = null;
+        
         try{
-            allocation_scheduler.register( this );
-
             setState( ALLOCATING );
 
             allocated 				= 0;
@@ -1256,7 +1256,12 @@ DiskManagerImpl
 	                        		
 		                        		// file is too small
 	
-		                         	if ( !allocateFile( fileInfo, data_file, existing_length, target_length, stop_after_start, alloc_strategy )){
+	                        		if ( allocation_instance == null ){
+	                        			
+	                        			allocation_instance = allocation_scheduler.register( this );
+	                        		}
+	                        		
+		                         	if ( !allocateFile( allocation_instance, fileInfo, data_file, existing_length, target_length, stop_after_start, alloc_strategy )){
 	
 		                      			// aborted
 	
@@ -1297,8 +1302,12 @@ DiskManagerImpl
 	
 	
 	                    try{
+                    		if ( allocation_instance == null ){
+                    			
+                    			allocation_instance = allocation_scheduler.register( this );
+                    		}
 	
-	                    	if ( !allocateFile( fileInfo, data_file, -1, target_length, stop_after_start, alloc_strategy )){
+	                    	if ( !allocateFile( allocation_instance, fileInfo, data_file, -1, target_length, stop_after_start, alloc_strategy )){
 	
 	                      			// aborted
 	
@@ -1341,7 +1350,10 @@ DiskManagerImpl
 
         }finally{
 
-            allocation_scheduler.unregister( this );
+        	if ( allocation_instance != null ){
+            
+        		allocation_instance.unregister();
+        	}
 
             allocation_task = null;
             
@@ -1374,12 +1386,13 @@ DiskManagerImpl
 
     private boolean
     allocateFile(
-    	DiskManagerFileInfoImpl		fileInfo,
-    	File						data_file,
-    	long						existing_length,	// -1 if not exists
-    	long						target_length,
-    	boolean[]					stop_after_start,
-    	long						alloc_strategy )
+    	DiskManagerAllocationScheduler.AllocationInstance	allocation_instance,
+    	DiskManagerFileInfoImpl								fileInfo,
+    	File												data_file,
+    	long												existing_length,	// -1 if not exists
+    	long												target_length,
+    	boolean[]											stop_after_start,
+    	long												alloc_strategy )
 
     	throws Throwable
     {
@@ -1387,7 +1400,7 @@ DiskManagerImpl
     	
         while( started && !stopping ){
 
-            if ( allocation_scheduler.getPermission( this )){
+            if ( allocation_instance.getPermission()){
 
                 break;
             }

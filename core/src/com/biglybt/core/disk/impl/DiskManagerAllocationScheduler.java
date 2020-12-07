@@ -43,7 +43,7 @@ DiskManagerAllocationScheduler
 	private final List<Object[]>	instances		= new ArrayList<>();
 
 
-	public void
+	public AllocationInstance
 	register(
 		DiskManagerHelper	helper )
 	{
@@ -192,9 +192,11 @@ DiskManagerAllocationScheduler
 		}
 		
 		core.addOperation( op );	
+		
+		return( new AllocationInstance( helper ));
 	}
 
-	protected boolean
+	private boolean
 	getPermission(
 		DiskManagerHelper	helper )
 	{
@@ -226,7 +228,7 @@ DiskManagerAllocationScheduler
 		return( false );
 	}
 
-	protected void
+	private void
 	unregister(
 		DiskManagerHelper	helper )
 	{
@@ -257,6 +259,30 @@ DiskManagerAllocationScheduler
 			
 				core.removeOperation( to_remove );
 			}
+		}
+	}
+	
+	public class
+	AllocationInstance
+	{
+		private final DiskManagerHelper		helper;
+		
+		AllocationInstance(
+			DiskManagerHelper		_helper )
+		{
+			helper	= _helper;
+		}
+		
+		public boolean
+		getPermission()
+		{
+			return( DiskManagerAllocationScheduler.this.getPermission( helper ));
+		}
+		
+		public void
+		unregister()
+		{
+			DiskManagerAllocationScheduler.this.unregister( helper );
 		}
 	}
 }
