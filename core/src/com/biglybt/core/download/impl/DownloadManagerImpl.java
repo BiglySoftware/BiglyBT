@@ -5259,7 +5259,7 @@ DownloadManagerImpl
 					  {  
 						  boolean do_it = files_to_move.contains(f);
 						  
-						  if ( f.isFile()){
+						  if ( f != null && f.isFile()){
 							  
 							  if ( do_it ){
 								  
@@ -5268,6 +5268,8 @@ DownloadManagerImpl
 							  }else{
 								  
 								  files_skipped[0]++;
+								  
+								  FileUtil.log( "File not selected for move: " + f.getAbsolutePath());
 							  }
 						  }
 						  
