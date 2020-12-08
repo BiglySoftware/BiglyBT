@@ -306,7 +306,7 @@ DMCheckerImpl
 	 	new AEThread2("DMChecker::completeRecheck", true )
 			{
 		  		@Override
-				  public void
+				public void
 				run()
 		  		{
 		  			DiskManagerRecheckInstance	recheck_inst = disk_manager.getRecheckScheduler().register( disk_manager, true );

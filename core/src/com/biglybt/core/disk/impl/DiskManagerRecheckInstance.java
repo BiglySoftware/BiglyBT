@@ -19,6 +19,8 @@
 
 package com.biglybt.core.disk.impl;
 
+import com.biglybt.core.util.AESemaphore;
+
 public class
 DiskManagerRecheckInstance
 {
@@ -27,6 +29,8 @@ DiskManagerRecheckInstance
 	private final int							piece_length;
 	private final boolean						low_priority;
 
+	private final AESemaphore	 				slot_sem;
+	
 	private boolean		active;
 	private boolean		paused;
 	
@@ -41,6 +45,8 @@ DiskManagerRecheckInstance
 		metric			= (_low_priority?0:0x7000000000000000L) + _size;
 		piece_length	= _piece_length;
 		low_priority	= _low_priority;
+		
+		slot_sem		= new AESemaphore( "DiskManagerRecheckInstance::slotsem", scheduler.getPieceConcurrency( this ));
 	}
 
 	protected long
@@ -48,13 +54,7 @@ DiskManagerRecheckInstance
 	{
 		return( metric );
 	}
-
-	public int
-	getPieceConcurrency()
-	{
-		return( scheduler.getPieceConcurrency( this ));
-	}
-			
+	
 	protected int
 	getPieceLength()
 	{
@@ -67,6 +67,18 @@ DiskManagerRecheckInstance
 		return( low_priority );
 	}
 
+	public void
+	reserveSlot()
+	{
+		slot_sem.reserve();
+	}
+	
+	public void
+	releaseSlot()
+	{
+		slot_sem.release();
+	}
+	
 	public boolean
 	getPermission()
 	{
