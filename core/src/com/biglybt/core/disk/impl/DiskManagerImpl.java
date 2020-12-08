@@ -2846,7 +2846,9 @@ DiskManagerImpl
 							  old_file  = linked_file;
 	
 						  }else{
-	
+							  
+							  FileUtil.log( "File linkage prohibits move: " + linked_file.getCanonicalPath() + " / " + save_location.getCanonicalPath());
+							  
 							  link_only[i] = true;
 						  }
 	
@@ -2860,6 +2862,8 @@ DiskManagerImpl
 	
 						  }else{
 	
+							  FileUtil.log( "File linkage prohibits move: " + linked_file.getCanonicalPath() + " / " + save_location.getCanonicalPath());
+
 							  link_only[i] = true;
 						  }
 					  }
