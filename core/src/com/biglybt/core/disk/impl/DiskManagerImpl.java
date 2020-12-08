@@ -2795,7 +2795,13 @@ DiskManagerImpl
 					  });
 		  }
 	
-		  String log_str = "Move \"" + download_manager.getDisplayName() + "\" from  " + current_save_location + " to " + move_to_dir;
+		  String log_str = "Move active \"" + download_manager.getDisplayName() + "\" from  " + current_save_location + " to " + move_to_dir;
+		  
+		  int	files_accepted 		= 0;
+		  int	files_skipped		= 0;
+		  int	files_done			= 0;
+		  long	total_size_bytes	= 0;
+		  long	total_done_bytes	= 0;
 		  
 		  try{
 			  FileUtil.log( log_str + " starts" );
@@ -2820,9 +2826,7 @@ DiskManagerImpl
 	
 			  File[]    old_files   = new File[files.length];
 			  boolean[] link_only   = new boolean[files.length];
-	
-			  long	total_bytes 		= 0;
-	
+		
 			  final long[]	file_lengths_to_move	 	= new long[files.length];
 	
 			  for (int i=0; i < files.length; i++) {
@@ -2975,9 +2979,15 @@ DiskManagerImpl
 	
 				  new_files[i]  = new_file;
 	
-				  if ( !link_only[i] ){
+				  if ( link_only[i] ){
+					  
+					  files_skipped++;
+					  
+				  }else{
 	
-					  total_bytes += file_lengths_to_move[i] = old_file.length();
+					  files_accepted++;
+					  
+					  total_size_bytes += file_lengths_to_move[i] = old_file.length();
 	
 					  if ( new_file.exists()){
 	
@@ -3015,9 +3025,9 @@ DiskManagerImpl
 	
 			  // lazy here for rare case where all non-zero length files are links
 	
-			  if ( total_bytes == 0 ){
+			  if ( total_size_bytes == 0 ){
 	
-				  total_bytes = 1;
+				  total_size_bytes = 1;
 			  }
 	
 			  long	done_bytes = 0;
@@ -3025,7 +3035,7 @@ DiskManagerImpl
 			  final Object	progress_lock = new Object();
 			  final int[] 	current_file_index 	= { 0 };
 			  final long[]	current_file_bs		= { 0 };
-			  final long		f_total_bytes		= total_bytes;
+			  final long	f_total_bytes		= total_size_bytes;
 	
 			  final long[]	last_progress_bytes		= { 0 };
 			  final long[]	last_progress_update 	= { SystemTime.getMonotonousTime() };
@@ -3269,6 +3279,10 @@ DiskManagerImpl
 	
 						  files[i].moveFile( new_root_dir, new_file, link_only[i], pl );
 	
+						  files_done++;
+						  
+						  total_done_bytes += file_lengths_to_move[i];
+						  
 						  synchronized( progress_lock ){
 	
 							  current_file_index[0] = i+1;
@@ -3277,7 +3291,7 @@ DiskManagerImpl
 	
 							  current_file_bs[0] = done_bytes;
 	
-							  move_progress = new long[]{ (int)( 1000*done_bytes/total_bytes), total_bytes };
+							  move_progress = new long[]{ (int)( 1000*done_bytes/total_size_bytes), total_size_bytes };
 	
 							  last_progress_bytes[0]	= done_bytes;
 							  last_progress_update[0]	= SystemTime.getMonotonousTime();
@@ -3317,7 +3331,7 @@ DiskManagerImpl
 						  for (int j=0;j<i;j++){
 	
 							  move_subtask		=  old_files[j];
-							  move_progress 	= new long[]{ (int)( 1000*bytes_moved/total_bytes), total_bytes };
+							  move_progress 	= new long[]{ (int)( 1000*bytes_moved/total_size_bytes), total_size_bytes };
 								
   						  	  long bytes_this_file =  file_lengths_to_move[j];
 
@@ -3390,9 +3404,9 @@ DiskManagerImpl
 	
 			  long	elapsed_secs = ( SystemTime.getMonotonousTime() - start )/1000;
 	
-			  if ( total_bytes > 10*1024*1024 && elapsed_secs > 10 ){
+			  if ( total_size_bytes > 10*1024*1024 && elapsed_secs > 10 ){
 	
-				  long	bps = total_bytes / elapsed_secs;
+				  long	bps = total_size_bytes / elapsed_secs;
 	
 				  if ( average_config_key != null ){
 	
@@ -3430,7 +3444,11 @@ DiskManagerImpl
 				  got_there[0] = true;
 			  }
 			  
-			  FileUtil.log( log_str + " ends" );
+			  FileUtil.log( 
+						 log_str + 
+						 	" ends (files accepted=" + files_accepted + 
+						 	", skipped=" + files_skipped + ", done=" + files_done +
+						 	"; bytes total=" + total_size_bytes + ", done=" + total_done_bytes + ")");
 		  }
 	  }
 

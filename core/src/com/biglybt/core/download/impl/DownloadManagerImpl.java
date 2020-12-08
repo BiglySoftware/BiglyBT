@@ -5112,17 +5112,21 @@ DownloadManagerImpl
 
 		  new_save_location = FileUtil.getCanonicalFileSafe( new_save_location );
 
+		  int[]		files_accepted 		= { 0 };
+		  int[]		files_skipped		= { 0 };
+		  int[]		files_done			= { 0 };
+		  long[]	total_size_bytes	= { 0 };
+		  long[]	total_done_bytes	= { 0 };
+		  
+		  
 		  FileUtil.ProgressListener	pl = 
 			new FileUtil.ProgressListener()
 		  	{
-			  	private long	total_size;
-			  	private long	total_done;
-			  	
 				public void
 				setTotalSize(
 					long	size )
 				{
-					total_size = size;
+					total_size_bytes[0] = size;
 				}
 				
 				@Override
@@ -5130,6 +5134,8 @@ DownloadManagerImpl
 				setCurrentFile(
 					File file )
 				{
+					files_done[0]++;
+					
 					move_subtask = file.getName();
 				}
 				
@@ -5137,9 +5143,11 @@ DownloadManagerImpl
 				bytesDone(
 					long	num )
 				{
-					total_done += num;
+					total_done_bytes[0] += num;
 					
-					move_progress = new long[]{ total_size==0?0:(int)(Math.min( 1000, (1000*total_done)/total_size )), total_size };
+					long total_size = total_size_bytes[0];
+					
+					move_progress = new long[]{ total_size==0?0:(int)(Math.min( 1000, (1000*total_done_bytes[0])/total_size )), total_size };
 				}
 				
 				@Override
@@ -5152,11 +5160,11 @@ DownloadManagerImpl
 				public void
 				complete()
 				{
-					move_progress = new long[]{ 1000, total_size };
+					move_progress = new long[]{ 1000, total_size_bytes[0] };
 				}
 		  	};
 			
-		  String log_str = "Move \"" + getDisplayName() + "\" from  " + current_save_location + " to " + new_save_location;
+		  String log_str = "Move inactive \"" + getDisplayName() + "\" from  " + current_save_location + " to " + new_save_location;
 
 		  try{
 			  FileUtil.log( log_str + " starts" );
@@ -5174,6 +5182,9 @@ DownloadManagerImpl
 				  
 				  pl.setTotalSize( file.getFile( true ).length());
 	
+				  files_accepted[0] = 1;
+				  files_done[0]		= 1;
+				  
 				  if ( file.setLinkAtomic( new_save_location, pl )){
 					  
 					  setTorrentSaveDir( new_save_location, true);
@@ -5211,7 +5222,7 @@ DownloadManagerImpl
 				  
 				  // The files we move must be limited to those mentioned in the torrent.
 				  
-				  final HashSet files_to_move = new HashSet();
+				  final HashSet<File> files_to_move = new HashSet<>();
 	
 				  // Required for the adding of parent directories logic.
 				  
@@ -5238,9 +5249,30 @@ DownloadManagerImpl
 						  added_entry = files_to_move.add(f);
 					  }
 				  }
-				  FileFilter ff = new FileFilter() {
+				  FileFilter ff = 
+					new FileFilter() 
+				  	{
 					  @Override
-					  public boolean accept(File f) {return files_to_move.contains(f);}
+					  	public boolean 
+					  	accept(
+					  	    File f )
+					  {  
+						  boolean do_it = files_to_move.contains(f);
+						  
+						  if ( f.isFile()){
+							  
+							  if ( do_it ){
+								  
+								  files_accepted[0]++;
+								  
+							  }else{
+								  
+								  files_skipped[0]++;
+							  }
+						  }
+						  
+						  return( do_it );
+					  }
 				  };
 	
 				  pl.setTotalSize( total_size );
@@ -5272,7 +5304,11 @@ DownloadManagerImpl
 			  move_subtask	= "";
 			  move_state	= ProgressListener.ST_NORMAL;
 			  
-			  FileUtil.log( log_str + " ends" );
+			  FileUtil.log( 
+					 log_str + 
+					 	" ends (files accepted=" + files_accepted[0] + 
+					 	", skipped=" + files_skipped[0] + ", done=" + files_done[0] +
+					 	"; bytes total=" + total_size_bytes[0] + ", done=" + total_done_bytes[0] + ")");
 		  }
 	  }else{
 		  dm.moveDataFiles( new_save_location.getParentFile(), new_save_location.getName(), null );
