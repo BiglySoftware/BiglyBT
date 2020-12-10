@@ -3026,20 +3026,16 @@ DiskManagerImpl
 			  }
 	
 			  final String average_config_key	= _average_config_key;
-	
-			  // lazy here for rare case where all non-zero length files are links
-	
-			  if ( total_size_bytes == 0 ){
-	
-				  total_size_bytes = 1;
-			  }
-	
+				  
+			  	// lazy here for rare case where all non-zero length files are links
+
+			  long stats_total_bytes = total_size_bytes==0?1:total_size_bytes;
+		
 			  long	done_bytes = 0;
 	
 			  final Object	progress_lock = new Object();
 			  final int[] 	current_file_index 	= { 0 };
 			  final long[]	current_file_bs		= { 0 };
-			  final long	f_total_bytes		= total_size_bytes;
 	
 			  final long[]	last_progress_bytes		= { 0 };
 			  final long[]	last_progress_update 	= { SystemTime.getMonotonousTime() };
@@ -3164,7 +3160,7 @@ DiskManagerImpl
 
 									  long	pretend_bytes_moved = bytes_moved + pretend_bytes;
 
-									  move_progress = new long[]{ (int)( 1000*pretend_bytes_moved/f_total_bytes), f_total_bytes };
+									  move_progress = new long[]{ (int)( 1000*pretend_bytes_moved/stats_total_bytes), stats_total_bytes };
 
 									  // System.out.println( "pretend prog: " + move_progress );
 								  }
@@ -3218,7 +3214,7 @@ DiskManagerImpl
 
 									  long	done_bytes = current_file_bs[0] + file_length;
 
-									  move_progress = new long[]{ (int)( 1000*done_bytes/f_total_bytes), f_total_bytes };
+									  move_progress = new long[]{ (int)( 1000*done_bytes/stats_total_bytes), stats_total_bytes };
 
 									  last_progress_bytes[0]	= done_bytes;
 									  last_progress_update[0]	= SystemTime.getMonotonousTime();
@@ -3295,7 +3291,7 @@ DiskManagerImpl
 	
 							  current_file_bs[0] = done_bytes;
 	
-							  move_progress = new long[]{ (int)( 1000*done_bytes/total_size_bytes), total_size_bytes };
+							  move_progress = new long[]{ (int)( 1000*done_bytes/stats_total_bytes), stats_total_bytes };
 	
 							  last_progress_bytes[0]	= done_bytes;
 							  last_progress_update[0]	= SystemTime.getMonotonousTime();
@@ -3335,7 +3331,7 @@ DiskManagerImpl
 						  for (int j=0;j<i;j++){
 	
 							  move_subtask		=  old_files[j];
-							  move_progress 	= new long[]{ (int)( 1000*bytes_moved/total_size_bytes), total_size_bytes };
+							  move_progress 	= new long[]{ (int)( 1000*bytes_moved/stats_total_bytes), stats_total_bytes };
 								
   						  	  long bytes_this_file =  file_lengths_to_move[j];
 
@@ -3372,7 +3368,7 @@ DiskManagerImpl
 	  						  				  total_done = bytes_this_file;
 	  						  			  }
 	
-	  						  			  move_progress = new long[]{ (int)( 1000*(bytes_moved_at_start-total_done)/f_total_bytes), f_total_bytes }; 
+	  						  			  move_progress = new long[]{ (int)( 1000*(bytes_moved_at_start-total_done)/stats_total_bytes), stats_total_bytes }; 
 	  						  		  }
 	  						  	  };
 							  
