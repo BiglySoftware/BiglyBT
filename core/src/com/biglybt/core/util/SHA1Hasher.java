@@ -20,108 +20,212 @@
 package com.biglybt.core.util;
 
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 
 /**
  * SHA-1 hasher utility frontend.
  */
-public final class SHA1Hasher {
-  private final SHA1 sha1;
+public final class 
+SHA1Hasher 
+{
+	private static final boolean	use_digest;
 
+	static{
 
-  /**
-   * Create a new SHA1Hasher instance
-   */
-  public SHA1Hasher() {
-    sha1 = new SHA1();
-  }
+		boolean	ud;
+		
+		try{
+			new DigestImpl();
+			
+			ud = true;
+			
+		}catch( Throwable e ){
+			
+			ud = false;
+		}
+		
+		use_digest = ud;
+	}
 
+	private final Impl		impl;
+	
+	public
+	SHA1Hasher()
+	{
+		if ( use_digest ){
+			
+			Impl i;
+			
+			try{
+				i	= new DigestImpl();
+				
+			}catch( Throwable e ){
+				
+					// shouldn't happen
+				
+				i = new LocalImpl();
+			}
+			
+			impl = i;
+			
+		}else{
+			
+			impl	= new LocalImpl();
+		}
+	}
+	
+	public byte[] 
+	calculateHash( 
+		byte[] bytes ) 
+	{
+		return( impl.calculateHash(bytes));
+	}
 
-  /**
-   * Calculate the SHA-1 hash for the given bytes.
-   * @param bytes data to hash
-   * @return 20-byte hash
-   */
-  public byte[] calculateHash( byte[] bytes ) {
-    ByteBuffer buff = ByteBuffer.wrap( bytes );
-    return calculateHash( buff );
-  }
+	public byte[] 
+	calculateHash( 
+		ByteBuffer buffer ) 
+	{
+		return( impl.calculateHash(buffer));
+	}
 
+	public void
+	update( 
+		byte[] data ) 
+	{
+		impl.update(data);
+	}
+	
+	public void 
+	update( 
+		byte[] 	data, 
+		int		pos, 
+		int 	len ) 
+	{
+		impl.update(data, pos, len);
+	}
 
-  /**
-   * Calculate the SHA-1 hash for the given buffer.
-   * @param buffer data to hash
-   * @return 20-byte hash
-   */
-  public byte[] calculateHash( ByteBuffer buffer ) {
-    sha1.reset();
-    return sha1.digest( buffer );
-  }
+	public byte[] 
+	getDigest() 
+	{
+		return( impl.getDigest());
+	}
+	
+	private interface
+	Impl
+	{
+		public byte[] 
+		calculateHash( 
+			byte[] bytes ); 
 
+		public byte[] 
+		calculateHash( 
+			ByteBuffer buffer );
+		
+		public void
+		update( 
+			byte[] data );
+		
+		public void 
+		update( 
+			byte[] 	data, 
+			int 	pos, 
+			int 	len );
+		
+		public byte[] 
+		getDigest() ;
+	}
+	
+	private static class
+	DigestImpl
+		implements Impl
+	{
+		private final MessageDigest	md;
 
-  /**
-   * Start or continue a hash calculation with the given data.
-   * @param data input
-   */
-  public void update( byte[] data ) {
-  	update( ByteBuffer.wrap( data ));
-  }
+		private 
+		DigestImpl()
+			throws NoSuchAlgorithmException
+		{
+			md = MessageDigest.getInstance( "SHA-1" );
+		}
+		
+		public byte[] 
+		calculateHash( 
+			byte[] bytes ) 
+		{
+			md.reset();
+			
+			md.update( bytes );
+			
+			return( md.digest());
+		}
 
+		public byte[] 
+		calculateHash( 
+			ByteBuffer buffer ) 
+		{
+			md.reset();
+			
+			md.update( buffer );
+			
+			return( md.digest());
+		}
 
-  /**
-   * Start or continue a hash calculation with the given data,
-   * starting at the given position, for the given length.
-   * @param data input
-   * @param pos start position
-   * @param len length
-   */
-  public void update( byte[] data, int pos, int len ) {
-  	update( ByteBuffer.wrap( data, pos, len ));
-  }
+		public void
+		update( byte[] data ) 
+		{
+			md.update( data );
+		}
 
+		public void 
+		update( 
+			byte[] data, int pos, int len ) 
+		{
+			md.update( data, pos, len );
+		}
 
-  /**
-   * Start or continue a hash calculation with the given data.
-   * @param buffer data input
-   */
-  public void update( ByteBuffer buffer ) {
-    sha1.update( buffer );
-  }
+		public byte[] 
+		getDigest() 
+		{
+			return( md.digest());
+		}
+	}
+	
+	private static class
+	LocalImpl
+		implements Impl
+	{
+	  private final SHA1 sha1;
 
+	  private LocalImpl() {
+	    sha1 = new SHA1();
+	  }
 
-  /**
-   * Finish the hash calculation.
-   * @return 20-byte hash
-   */
-  public byte[] getDigest() {
-  	return sha1.digest();
-  }
+	  public byte[] calculateHash( byte[] bytes ) {
+	    ByteBuffer buff = ByteBuffer.wrap( bytes );
+	    return calculateHash( buff );
+	  }
+	 
+	  public byte[] calculateHash( ByteBuffer buffer ) {
+	    sha1.reset();
+	    return sha1.digest( buffer );
+	  }
+ 
+	  public void update( byte[] data ) {
+	  	update( ByteBuffer.wrap( data ));
+	  }
 
-  public HashWrapper getHash() {
-  	return new HashWrapper(sha1.digest());
-  }
+	  public void update( byte[] data, int pos, int len ) {
+	  	update( ByteBuffer.wrap( data, pos, len ));
+	  }
 
-  /**
-   * Resets the hash calculation.
-   */
-  public void reset() {
-    sha1.reset();
-  }
+	  public void update( ByteBuffer buffer ) {
+	    sha1.update( buffer );
+	  }
 
-
-  /**
-   * Save the current hasher state for later resuming.
-   */
-  public void saveHashState() {
-    sha1.saveState();
-  }
-
-
-  /**
-   * Restore the hasher state from previous save.
-   */
-  public void restoreHashState() {
-    sha1.restoreState();
-  }
-
+	  public byte[] getDigest() {
+	  	return sha1.digest();
+	  }
+	}
 }

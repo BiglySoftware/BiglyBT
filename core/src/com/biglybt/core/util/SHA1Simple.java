@@ -396,7 +396,7 @@ public final class SHA1Simple {
 
 		return( result );
 	}
-
+  	/*
   public static void
   main(
 	String[]	args )
@@ -431,4 +431,5 @@ public final class SHA1Simple {
 
 	  System.out.println( "End" );
   }
+  */
 }

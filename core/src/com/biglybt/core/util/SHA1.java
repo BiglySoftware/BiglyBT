@@ -21,6 +21,7 @@
 package com.biglybt.core.util;
 
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
 
 
 /**
@@ -491,4 +492,41 @@ public final class SHA1 {
 	}
 
 
+	public static void
+	main(
+		String[]		args )
+	{
+		byte[]	data = new byte[1024*1024];
+
+		for ( int x=0;x<32;x++){
+			try{
+				long start = System.currentTimeMillis();
+				
+				if ( false ){
+					MessageDigest md = MessageDigest.getInstance( "SHA1" );
+					
+					for (int i=0; i<100;i++ ){
+		
+						md.update( data );
+					}
+					
+					md.digest();
+				}else{
+					SHA1 sha1 = new SHA1();
+					
+					for (int i=0; i<100;i++ ){
+						
+						sha1.update( ByteBuffer.wrap( data ));
+					}
+					
+					sha1.digest();
+					
+				}
+				System.out.println( "elapsed=" + (System.currentTimeMillis() - start ));
+				
+			}catch( Throwable e ){
+				e.printStackTrace();
+			}
+		}
+	}
 }

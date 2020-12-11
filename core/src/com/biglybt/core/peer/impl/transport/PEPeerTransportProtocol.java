@@ -1130,7 +1130,7 @@ implements PEPeerTransport
 		sha1.update(sessionSecret);
 		sha1.update(manager.getTargetHash());
 		sha1.update(getIp().getBytes());
-		mySessionID = sha1.getHash();
+		mySessionID = new HashWrapper(sha1.getDigest());
 		checkForReconnect(mySessionID);
 	}
 
