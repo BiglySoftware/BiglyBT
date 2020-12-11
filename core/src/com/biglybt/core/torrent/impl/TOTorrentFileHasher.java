@@ -26,7 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Vector;
+import java.util.*;
 
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.util.ED2KHasher;
@@ -36,26 +36,30 @@ import com.biglybt.core.util.SHA1Hasher;
 public class
 TOTorrentFileHasher
 {
-	protected final boolean	do_other_per_file_hash;
-	protected final int		piece_length;
+	private static byte[]	fake_sha1_hash = new byte[20];
+	
+	private final boolean	do_other_per_file_hash;
+	private final int		piece_length;
 
-	protected final Vector	pieces = new Vector();
+	private final List<byte[]>	pieces = new LinkedList<>();
 
-	protected final byte[]	buffer;
-	protected int		buffer_pos;
+	private final byte[]	buffer;
+	private int				buffer_pos;
 
-	protected SHA1Hasher					overall_sha1_hash;
-	protected ED2KHasher					overall_ed2k_hash;
+	private SHA1Hasher					overall_sha1_hash;
+	private ED2KHasher					overall_ed2k_hash;
 
-	protected byte[]						sha1_digest;
-	protected byte[]						ed2k_digest;
+	private byte[]						sha1_digest;
+	private byte[]						ed2k_digest;
 
-	protected byte[]						per_file_sha1_digest;
-	protected byte[]						per_file_ed2k_digest;
+	private byte[]						per_file_sha1_digest;
+	private byte[]						per_file_ed2k_digest;
 
-	protected final TOTorrentFileHasherListener	listener;
+	private final TOTorrentFileHasherListener	listener;
 
-	protected boolean						cancelled;
+	private boolean		skip_hashing;
+	
+	private boolean		cancelled;
 
 	protected
 	TOTorrentFileHasher(
@@ -76,174 +80,229 @@ TOTorrentFileHasher
 
 		buffer = new byte[piece_length];
 	}
-
-	long
+	
+	protected void
+	setSkipHashing(
+		boolean	b )
+	{
+		skip_hashing = b;
+	}
+	
+	protected long
 	add(
 		File		_file )
 
 		throws TOTorrentException
 	{
-		long		file_length = 0;
-
-		InputStream is = null;
-
-		SHA1Hasher	sha1_hash		= null;
-		ED2KHasher	ed2k_hash		= null;
-
-		try{
-			if ( do_other_per_file_hash ){
-
-				sha1_hash		= new SHA1Hasher();
-				ed2k_hash		= new ED2KHasher();
-			}
-
-			is = new BufferedInputStream(FileUtil.newFileInputStream( _file ), 65536);
-
-			while(true){
-
-				if ( cancelled ){
-
-					throw( new TOTorrentException( 	"TOTorrentCreate: operation cancelled",
-													TOTorrentException.RT_CANCELLED ));
+		if ( skip_hashing ){
+			
+			long	file_length = _file.length();
+			
+			long 	rem = file_length;
+			
+			while( rem > 0 ){
+				
+				int len = (int)Math.min( rem, piece_length - buffer_pos );
+				
+				rem	-= len;
+				
+				buffer_pos += len;
+				
+				if ( buffer_pos == piece_length ){
+					
+					pieces.add( fake_sha1_hash );
+					
+					buffer_pos = 0;
 				}
-
-				int	len = is.read( buffer, buffer_pos, piece_length - buffer_pos );
-
-				if ( len > 0 ){
-
-					if ( do_other_per_file_hash ){
-
-						sha1_hash.update( buffer, buffer_pos, len );
-						ed2k_hash.update( buffer, buffer_pos, len );
+			}
+			
+			return( file_length );
+			
+		}else{
+			long		file_length = 0;
+	
+			InputStream is = null;
+	
+			SHA1Hasher	sha1_hash		= null;
+			ED2KHasher	ed2k_hash		= null;
+	
+			try{
+				if ( do_other_per_file_hash ){
+	
+					sha1_hash		= new SHA1Hasher();
+					ed2k_hash		= new ED2KHasher();
+				}
+	
+				is = new BufferedInputStream(FileUtil.newFileInputStream( _file ), 65536);
+	
+				while(true){
+	
+					if ( cancelled ){
+	
+						throw( new TOTorrentException( 	"TOTorrentCreate: operation cancelled",
+														TOTorrentException.RT_CANCELLED ));
 					}
-
-
-					file_length += len;
-
-					buffer_pos += len;
-
-					if ( buffer_pos == piece_length ){
-
-						// hash this piece
-
-						byte[] hash = new SHA1Hasher().calculateHash(buffer);
-
-						if ( overall_sha1_hash != null ){
-
-							overall_sha1_hash.update( buffer );
-							overall_ed2k_hash.update( buffer );
+	
+					int	len = is.read( buffer, buffer_pos, piece_length - buffer_pos );
+	
+					if ( len > 0 ){
+	
+						if ( do_other_per_file_hash ){
+	
+							sha1_hash.update( buffer, buffer_pos, len );
+							ed2k_hash.update( buffer, buffer_pos, len );
 						}
-
-						pieces.add( hash );
-
-						if ( listener != null ){
-
-							listener.pieceHashed( pieces.size() );
+	
+	
+						file_length += len;
+	
+						buffer_pos += len;
+	
+						if ( buffer_pos == piece_length ){
+	
+							// hash this piece
+	
+							byte[] hash = new SHA1Hasher().calculateHash(buffer);
+	
+							if ( overall_sha1_hash != null ){
+	
+								overall_sha1_hash.update( buffer );
+								overall_ed2k_hash.update( buffer );
+							}
+	
+							pieces.add( hash );
+	
+							if ( listener != null ){
+	
+								listener.pieceHashed( pieces.size() );
+							}
+	
+							buffer_pos = 0;
 						}
-
-						buffer_pos = 0;
+					}else{
+	
+						break;
 					}
-				}else{
-
-					break;
+				}
+	
+				if ( do_other_per_file_hash ){
+	
+					per_file_sha1_digest = sha1_hash.getDigest();
+					per_file_ed2k_digest = ed2k_hash.getDigest();
+				}
+	
+			}catch( TOTorrentException e ){
+	
+				throw( e );
+	
+			}catch( Throwable e ){
+	
+				throw( new TOTorrentException( 	"TOTorrentFileHasher: file read fails '" + e.toString() + "'",
+												TOTorrentException.RT_READ_FAILS ));
+			}finally {
+				if (is != null) {
+					try {
+						is.close();
+					}
+					catch (Exception e) {
+					}
 				}
 			}
 
-			if ( do_other_per_file_hash ){
-
-				per_file_sha1_digest = sha1_hash.getDigest();
-				per_file_ed2k_digest = ed2k_hash.getDigest();
-			}
-
-		}catch( TOTorrentException e ){
-
-			throw( e );
-
-		}catch( Throwable e ){
-
-			throw( new TOTorrentException( 	"TOTorrentFileHasher: file read fails '" + e.toString() + "'",
-											TOTorrentException.RT_READ_FAILS ));
-		}finally {
-			if (is != null) {
-				try {
-					is.close();
-				}
-				catch (Exception e) {
-				}
-			}
+			return( file_length );
 		}
-
-		return( file_length );
 	}
 
-	void
+	protected void
 	addPad(
 		int		pad_length)
 
 		throws TOTorrentException
 	{
-		InputStream is = null;
-
-		try{
-
-			is = new ByteArrayInputStream( new byte[ pad_length ]);
-
-			while(true){
-
-				if ( cancelled ){
-
-					throw( new TOTorrentException( 	"TOTorrentCreate: operation cancelled",
-													TOTorrentException.RT_CANCELLED ));
-				}
-
-				int	len = is.read( buffer, buffer_pos, piece_length - buffer_pos );
-
-				if ( len > 0 ){
-
-
-					buffer_pos += len;
-
-					if ( buffer_pos == piece_length ){
-
-						// hash this piece
-
-						byte[] hash = new SHA1Hasher().calculateHash(buffer);
-
-						if ( overall_sha1_hash != null ){
-
-							overall_sha1_hash.update( buffer );
-							overall_ed2k_hash.update( buffer );
-						}
-
-						pieces.add( hash );
-
-						if ( listener != null ){
-
-							listener.pieceHashed( pieces.size() );
-						}
-
-						buffer_pos = 0;
-					}
-				}else{
-
-					break;
+		if ( skip_hashing ){
+						
+			long 	rem = pad_length;
+			
+			while( rem > 0 ){
+				
+				int len = (int)Math.min( rem, piece_length - buffer_pos );
+				
+				rem	-= len;
+				
+				buffer_pos += len;
+				
+				if ( buffer_pos == piece_length ){
+					
+					pieces.add( fake_sha1_hash );
+					
+					buffer_pos = 0;
 				}
 			}
+		}else{
+			
+			InputStream is = null;
 
-		}catch( TOTorrentException e ){
-
-			throw( e );
-
-		}catch( Throwable e ){
-
-			throw( new TOTorrentException( 	"TOTorrentFileHasher: file read fails '" + e.toString() + "'",
-											TOTorrentException.RT_READ_FAILS ));
-		}finally {
-			if (is != null) {
-				try {
-					is.close();
+			try{
+	
+				is = new ByteArrayInputStream( new byte[ pad_length ]);
+	
+				while(true){
+	
+					if ( cancelled ){
+	
+						throw( new TOTorrentException( 	"TOTorrentCreate: operation cancelled",
+														TOTorrentException.RT_CANCELLED ));
+					}
+	
+					int	len = is.read( buffer, buffer_pos, piece_length - buffer_pos );
+	
+					if ( len > 0 ){
+	
+	
+						buffer_pos += len;
+	
+						if ( buffer_pos == piece_length ){
+	
+							// hash this piece
+	
+							byte[] hash = new SHA1Hasher().calculateHash(buffer);
+	
+							if ( overall_sha1_hash != null ){
+	
+								overall_sha1_hash.update( buffer );
+								overall_ed2k_hash.update( buffer );
+							}
+	
+							pieces.add( hash );
+	
+							if ( listener != null ){
+	
+								listener.pieceHashed( pieces.size() );
+							}
+	
+							buffer_pos = 0;
+						}
+					}else{
+	
+						break;
+					}
 				}
-				catch (Exception e) {
+	
+			}catch( TOTorrentException e ){
+	
+				throw( e );
+	
+			}catch( Throwable e ){
+	
+				throw( new TOTorrentException( 	"TOTorrentFileHasher: file read fails '" + e.toString() + "'",
+												TOTorrentException.RT_READ_FAILS ));
+			}finally {
+				if (is != null) {
+					try {
+						is.close();
+					}
+					catch (Exception e) {
+					}
 				}
 			}
 		}
@@ -273,7 +332,7 @@ TOTorrentFileHasher
 
 				System.arraycopy( buffer, 0, rem, 0, buffer_pos );
 
-				pieces.addElement(new SHA1Hasher().calculateHash(rem));
+				pieces.add(new SHA1Hasher().calculateHash(rem));
 
 				if ( overall_sha1_hash != null ){
 
@@ -297,7 +356,7 @@ TOTorrentFileHasher
 
 			byte[][] res = new byte[pieces.size()][];
 
-			pieces.copyInto( res );
+			pieces.toArray( res );
 
 			return( res );
 

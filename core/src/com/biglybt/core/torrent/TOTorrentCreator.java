@@ -45,6 +45,12 @@ TOTorrentCreator
 
 		throws TOTorrentException;
 
+	public TOTorrent
+	create(
+		boolean		skip_hashing )
+
+		throws TOTorrentException;
+
 	public long
 	getTorrentDataSizeFromFileOrDir()
 

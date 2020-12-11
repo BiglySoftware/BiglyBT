@@ -257,7 +257,8 @@ TOTorrentCreateImpl
 	}
 
 	protected void
-	create()
+	create(
+		boolean		skip_hashing )
 
 		throws TOTorrentException
 	{
@@ -294,7 +295,7 @@ TOTorrentCreateImpl
 
 			if ( add_v1 ){
 				
-				int ignored = createV1();
+				int ignored = createV1( skip_hashing );
 		
 					// linkage map doesn't include ignored files, if it is supplied, so take account of this when
 					// checking that linkages have resolved correctly
@@ -311,7 +312,7 @@ TOTorrentCreateImpl
 				
 				linked_tf_map.clear();
 				
-				int ignored = createV2();
+				int ignored = createV2( skip_hashing );
 				
 					// linkage map doesn't include ignored files, if it is supplied, so take account of this when
 					// checking that linkages have resolved correctly
@@ -365,7 +366,8 @@ TOTorrentCreateImpl
 	}
 
 	private int
-	createV1()
+	createV1(
+		boolean		skip_hashing )
 	
 		throws TOTorrentException
 	{
@@ -385,6 +387,11 @@ TOTorrentCreateImpl
 					(int)piece_length,
 					progress_listeners.size()==0?null:this );
 
+		if ( skip_hashing ){
+			
+			file_hasher.setSkipHashing( true );
+		}
+		
 		int	ignored = 0;
 
 		try{
@@ -442,7 +449,8 @@ TOTorrentCreateImpl
 	}
 
 	private int
-	createV2()
+	createV2(
+		boolean		skip_hashing )	// not implemented yet
 	
 		throws TOTorrentException
 	{

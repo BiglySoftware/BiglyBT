@@ -127,6 +127,16 @@ TOTorrentCreatorImpl
 
 		throws TOTorrentException
 	{
+		return( create( false ));
+	}
+	
+	@Override
+	public TOTorrent
+	create(
+		boolean		skip_hashing )
+
+		throws TOTorrentException
+	{
 		try{
 			if ( announce_url == null ){
 
@@ -174,7 +184,7 @@ TOTorrentCreatorImpl
 				torrent.addListener( l );
 			}
 
-			torrent.create();
+			torrent.create( skip_hashing );
 
 			return( torrent );
 

@@ -256,7 +256,7 @@ MagnetPluginMDDownloader
 						announce_url,
 						16*1024 );
 
-			TOTorrent meta_torrent = creator.create();
+			TOTorrent meta_torrent = creator.create( true );
 
 			String[] bits = args.split( "&" );
 
