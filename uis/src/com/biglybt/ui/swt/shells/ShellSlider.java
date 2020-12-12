@@ -61,44 +61,23 @@ public class ShellSlider
 			return;
 
 		Display display = shell.getDisplay();
-		display.syncExec(new Runnable() {
-			@Override
-			public void run() {
-				if (shell.isDisposed())
-					return;
+		display.syncExec(() -> {
+			if (shell.isDisposed()) {
+				return;
+			}
 
-				switch (ShellSlider.this.direction) {
-					case SWT.UP:
-					default:
-						shell.setLocation(endBounds.x, endBounds.y);
-						Rectangle displayBounds = null;
-						try {
-							boolean ok = false;
-							Monitor[] monitors = shell.getDisplay().getMonitors();
-							for (int i = 0; i < monitors.length; i++) {
-								Monitor monitor = monitors[i];
-								displayBounds = monitor.getBounds();
-								if (displayBounds.contains(endBounds.x, endBounds.y)) {
-									ok = true;
-									break;
-								}
-							}
-							if (!ok) {
-								displayBounds = shell.getMonitor().getBounds();
-							}
-						} catch (Throwable t) {
-							displayBounds = shell.getDisplay().getBounds();
-						}
+			switch (direction) {
+				case SWT.UP:
+				default:
+					shellBounds = new Rectangle(endBounds.x, endBounds.y
+							+ endBounds.height, endBounds.width, 0);
+					break;
+			}
+			shell.setBounds(shellBounds);
+			shell.setVisible(true);
 
-						shellBounds = new Rectangle(endBounds.x, displayBounds.y
-								+ displayBounds.height, endBounds.width, 0);
-						break;
-				}
-				shell.setBounds(shellBounds);
-				shell.setVisible(true);
-
-				if (DEBUG)
-					System.out.println("Slide In: " + shell.getText());
+			if (DEBUG) {
+				System.out.println("Slide In: " + shell.getText());
 			}
 		});
 	}
