@@ -551,7 +551,7 @@ MagnetPluginMDDownloader
 													}
 												}
 
-												listener.reportProgress( 0, md_size );
+												reportProgress( listener, 0, md_size );
 
 												new AEThread2( "" )
 												{
@@ -609,7 +609,7 @@ MagnetPluginMDDownloader
 
 																						completed	= true;
 
-																						listener.reportProgress( md_size, md_size );
+																						reportProgress( listener, md_size, md_size );
 
 																						running_sem.releaseForever();
 																					}
@@ -617,7 +617,7 @@ MagnetPluginMDDownloader
 
 																				if ( !completed ){
 
-																					listener.reportProgress( dl_size, md_size );
+																					reportProgress( listener, dl_size, md_size );
 																				}
 
 																			}catch( Throwable e ){
@@ -1057,6 +1057,17 @@ MagnetPluginMDDownloader
 				complete_sem.releaseForever();
 			}
 		}
+	}
+
+	private void reportProgress(DownloadListener listener, int downloaded,
+			int total_size) {
+		DownloadManagerState downloadState = core_dm.getDownloadState();
+		if (downloaded == 0 && total_size > 0) {
+			downloadState.setLongAttribute("magnet.torrent.size", total_size);
+		}
+		downloadState.setLongAttribute("magnet.torrent.downloaded", downloaded);
+
+		listener.reportProgress(downloaded, total_size);
 	}
 
 	protected interface
