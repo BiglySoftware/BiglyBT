@@ -21,6 +21,7 @@
 
 package com.biglybt.core.torrentdownloader.impl;
 
+import javax.net.ssl.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -29,8 +30,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
-
-import javax.net.ssl.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
@@ -41,12 +40,11 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrentdownloader.TorrentDownloader;
 import com.biglybt.core.torrentdownloader.TorrentDownloaderCallBackInterface;
 import com.biglybt.core.util.*;
-import com.biglybt.core.util.protocol.magnet.MagnetConnection;
-import com.biglybt.core.util.protocol.magnet.MagnetConnection2;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
-import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
 import com.biglybt.pifimpl.local.utils.xml.rss.RSSUtils;
+
+import com.biglybt.pif.clientid.ClientIDGenerator;
 
 /**
  * @author Tobias Minich
@@ -1179,19 +1177,11 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
     closeConnection();
   }
 
-  protected void
-  closeConnection()
-  {
-	if ( con instanceof MagnetConnection ){
-	  	((MagnetConnection)con).disconnect();
-
-	} else if ( con instanceof MagnetConnection2 ){
-	  	((MagnetConnection2)con).disconnect();
-
-	} else if (con instanceof HttpURLConnection) {
-		((HttpURLConnection)con).disconnect();
+	protected void closeConnection() {
+		if (con instanceof HttpURLConnection) {
+			((HttpURLConnection) con).disconnect();
+		}
 	}
-  }
 
   @Override
   public void setDownloadPath(String path, String file) {
