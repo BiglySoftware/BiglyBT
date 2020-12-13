@@ -289,7 +289,36 @@ MagnetPluginMDDownloader
 					}
 				}
 			}
-
+			
+			List<String>	extras = plugin.getExtraTrackers();
+						
+			for ( String extra: extras ){
+				
+				try{
+					if ( trackers.contains( extra )){
+						
+						continue;
+					}
+					
+					URL url = new URL( extra );
+					
+					String net = AENetworkClassifier.categoriseAddress( url.getHost());
+					
+					if ( net == AENetworkClassifier.AT_PUBLIC ){
+						
+						if ( networks.isEmpty() || networks.contains( AENetworkClassifier.AT_PUBLIC )){
+							
+							trackers.add( extra );
+						}
+					}else if ( networks.contains( net )){
+						
+						trackers.add( extra );
+					}
+				}catch( Throwable e ){
+					
+				}
+			}
+				
 			if ( trackers.size() > 0 ){
 
 					// stick the decentralised one we created above in position 0 - this will be

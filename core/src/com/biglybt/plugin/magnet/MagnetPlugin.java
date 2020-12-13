@@ -75,6 +75,7 @@ import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.IntParameter;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.StringListParameter;
+import com.biglybt.pif.ui.config.StringParameter;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
@@ -111,6 +112,7 @@ MagnetPlugin
 
 	private static final int	MD_LOOKUP_DELAY_SECS_DEFAULT		= 0;
 
+	private static final String[] MD_EXTRA_TRACKERS = { "udp://tracker.opentrackr.org:1337/announce" }; 
 
 	private static final String	PLUGIN_NAME				= "Magnet URI Handler";
 	private static final String PLUGIN_CONFIGSECTION_ID = "plugins.magnetplugin";
@@ -137,6 +139,7 @@ MagnetPlugin
 	// private BooleanParameter 	secondary_lookup; removed
 	private BooleanParameter 	md_lookup;
 	private IntParameter	 	md_lookup_delay;
+	private StringParameter 	md_extra_trackers;
 	private IntParameter	 	timeout_param;
 	private StringListParameter	sources_param;
 	private IntParameter	 	sources_extra_param;
@@ -188,7 +191,18 @@ MagnetPlugin
 		md_lookup 			= config.addBooleanParameter2( "MagnetPlugin.use.md.download", "MagnetPlugin.use.md.download", true );
 		md_lookup_delay		= config.addIntParameter2( "MagnetPlugin.use.md.download.delay", "MagnetPlugin.use.md.download.delay", MD_LOOKUP_DELAY_SECS_DEFAULT );
 
+		String et_default = "";
+		
+		for ( String etd: MD_EXTRA_TRACKERS ){
+			et_default += (et_default.isEmpty()?"":"\n") + etd;
+		}
+		
+		md_extra_trackers = config.addStringParameter2( "MagnetPlugin.md.extra.trackers", "MagnetPlugin.md.extra.trackers", et_default);
+		
+		md_extra_trackers.setMultiLine( 3 );
+		
 		md_lookup.addEnabledOnSelection( md_lookup_delay );
+		md_lookup.addEnabledOnSelection( md_extra_trackers );
 
 		timeout_param		= config.addIntParameter2( "MagnetPlugin.timeout.secs", "MagnetPlugin.timeout.secs", PLUGIN_DOWNLOAD_TIMEOUT_SECS_DEFAULT );
 
@@ -1323,6 +1337,28 @@ MagnetPlugin
 		}
 	}
 
+	public List<String>
+	getExtraTrackers()
+	{
+		String extra = md_extra_trackers.getValue();
+		
+		List<String> result = new ArrayList<>();
+		
+		String[] bits = extra.split( "\n" );
+		
+		for ( String bit: bits ){
+			
+			bit = bit.trim();
+			
+			if ( !bit.isEmpty()){
+				
+				result.add( bit );
+			}
+		}
+		
+		return( result );
+	}
+	
 	public byte[]
 	badge()
 	{
