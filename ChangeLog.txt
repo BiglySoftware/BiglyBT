@@ -53,6 +53,13 @@ CHANGE: UI     | Added tracker URL to warning messages [Parg]
 CHANGE: UI     | Remember position of the progress reporter dialog [Parg]
 CHANGE: UI     | Slide alert from bottom of destination instead of display bottom [TuxPaper]
 CHANGE: UI     | Show move progress for downloads in a queued or downloading state [Parg]
+CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
+CHANGE: UI     | sl_SI: Slovenian translation update [upwinxp]
+CHANGE: UI     | tr_TR: Turkish translation update [BouRock]
+CHANGE: UI     | ja_JP: Japanese translation update [ayano.midori]
+CHANGE: UI     | fr_FR: French translation update [GMartigny]
+CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
+
 
 BUGFIX: Core   | Fix removal from read-only collection [Parg]
 BUGFIX: Core   | Fix NPE causing magnet downloads not to be recovered [Parg]
