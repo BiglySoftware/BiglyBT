@@ -44,6 +44,7 @@ import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.diskmanager.file.impl.FMFileAccess.FileAccessor;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -2575,6 +2576,28 @@ public class FileUtil {
 		return new_root + File.separator + file_suffix;
 	}
 
+	public static boolean
+	hasTask(
+		DownloadManager	dm )
+	{
+		Core core = CoreFactory.getSingleton();
+
+		List<CoreOperation> ops = core.getOperations();
+
+		for ( CoreOperation op: ops ){
+
+			if ( op.getOperationType() == CoreOperation.OP_FILE_MOVE ){
+
+				if ( dm == op.getTask().getDownload()){
+
+					return( true );
+				}
+			}
+		}
+
+		return( false );
+	}
+	
 	public static void
 	runAsTask(
 		CoreOperationTask task )

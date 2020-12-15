@@ -24,6 +24,7 @@ package com.biglybt.core.download.impl;
  *
  */
 
+import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
@@ -4814,6 +4815,10 @@ DownloadManagerImpl
 		  throw new DownloadManagerException("canMoveDataFiles is false!");
 	  }
 
+	  if ( FileUtil.hasTask( this )){
+		  
+		  throw( new DownloadManagerException( "Move operation already in progress" ));
+	  }	  
 
 	  /**
 	   * Test to see if the download is to be moved somewhere where it already
