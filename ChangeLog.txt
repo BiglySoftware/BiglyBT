@@ -1,7 +1,73 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2020.xx.yy | BiglyBT 2.5.0.1
+2020.12.yy | BiglyBT 2.6.0.0
+
+
+FEATURE: Tag   | Added new download-state tags for 'moving' and 'checking' [Parg]
+FEATURE: Tag   | Added torrent_type tag constraint keyword [Parg]
+FEATURE: Tag   | Added isShare() tag constraint function [Parg]
+
+FEATURE: Core  | IPv6 IP filter support [Parg]
+FEATURE: Core  | Option to skip file existence checks for complete downloads [Parg]
+FEATURE: Core  | Added option to ban either IPv4 or IPv6 addresses when attempts made to dual-connect by remote peers [Parg]
+FEATURE: Core  | Option to explicitly run the v2 swarm on a hybrid download [Parg]
+FEATURE: Core  | Option to force first/last piece priority when sequential downloading [Parg]
+FEATURE: Core  | Update swarm merging to use v2 root hashes [Parg]
+FEATURE: Core  | Option to create a hybrid/v2 downloaded from a completed v1 download [Parg]
+FEATURE: Core  | Added dedicated log file to capture file related actions [Parg]
+FEATURE: Core  | Option to skip the backup of the plugins folder [Parg]
+FEATURE: Core  | Added additional trackers for metadata peer discovery and default [Parg]
+
+FEATURE: UI    | New 'Disk Operations' view [Parg]
+FEATURE: UI    | Show alternative IPv6 address in peer IP tooltip [Parg]
+FEATURE: UI    | Pop-out windows can now be either independent or 'always on top' of BiglyBT [Parg]
+FEATURE: UI    | Show a basic (AWT) error dialog if startup fails [Parg]
+FEATURE: UI    | Option to suppress the file-move progress dialog [Parg]
+FEATURE: UI    | Show more torrent version info [Parg]
+FEATURE: UI    | Option to use dark themed tables [Parg]
+FEATURE: UI    | Dark theme support for minibars [Parg]
+FEATURE: UI    | New v2 root hash Files View column [Parg]
+FEATURE: UI    | Added total bytes transferred view option to local country stats [Parg]
+
+CHANGE: Core   | Suspend disk-read operations during file move [Parg]
+CHANGE: Core   | Kick incoming public connections when SOCKS data proxy active [Parg]
+CHANGE: Core   | Don't abandon torrent decode on invalid announce url(s) [Parg]
+CHANGE: Core   | Option to use user-thread-cpu-time when monitoring [Parg]
+CHANGE: Core   | If torrent file is missing from save location on a 'move' operation then use internal copy [Parg]
+CHANGE: Core   | Only use global IPv6 addresses when checking bind pattern validity [Parg]
+CHANGE: Core   | Tidy up subscription downloader [Parg]
+CHANGE: Core   | Drop metadata download create delay default to 0 seconds [Parg]
+CHANGE: Core   | Switch to using JVM SHA1 implementation [Parg]
+
+CHANGE: UI     | Category side bar visibility changes [Parg]
+CHANGE: UI     | Limit number of chat windows opened when status icon double-clicked [Parg]
+CHANGE: UI     | Improve toolbar in dark theme [Parg]
+CHANGE: UI     | Remember wizard size/location [Parg]
+CHANGE: UI     | Sort blocked-ip list [Parg]
+CHANGE: UI     | Change progress bar colour to grey for inactive downloads [Parg]
+CHANGE: UI     | Always show favourites in status bar chat menu [Parg]
+CHANGE: UI     | Remember batch file rename dialog position and size [Parg]
+CHANGE: UI     | Improve performance of collapse/expand-all in Files View [Parg]
+CHANGE: UI     | Added tracker URL to warning messages [Parg]
+CHANGE: UI     | Remember position of the progress reporter dialog [Parg]
+CHANGE: UI     | Slide alert from bottom of destination instead of display bottom [TuxPaper]
+CHANGE: UI     | Show move progress for downloads in a queued or downloading state [Parg]
+
+BUGFIX: Core   | Fix removal from read-only collection [Parg]
+BUGFIX: Core   | Fix NPE causing magnet downloads not to be recovered [Parg]
+BUGFIX: Core   | Ensure we have a peer-manager piece when writing a block [Parg]
+BUGFIX: Core   | Added a hard limit on DDB graph activity retention to fix memory leak [Parg]
+BUGFIX: Core   | Fix duplicated swarm merge file sets [Parg]
+BUGFIX: Core   | VM killer thread was broken [Parg]
+BUGFIX: Core   | Skip pointless hashing of metadata fake download content [Parg]
+
+BUGFIX: UI     | Fix OSX sidebar indicator rendering 0 in black [Parg]
+BUGFIX: UI     | Ensure the info-parameter entries show the latest values [Parg]
+BUGFIX: UI     | Ignore media server URIs when monitoring clipboard for torrent links [Parg]
+BUGFIX: UI     | Fix inconsistent table depth when hidden rows removed from a table [Parg]
+BUGFIX: UI     | Fix Files View piece column sort when download stopped [Parg]
+
 
 2020.09.21 | BiglyBT 2.5.0.0
 
