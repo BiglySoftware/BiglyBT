@@ -797,17 +797,40 @@ DisplayFormatters
 		String	tmp = "";
 
 		switch (state) {
-			case DownloadManager.STATE_QUEUED:
-				tmp = ManagerItem_queued;
-				break;
+			case DownloadManager.STATE_QUEUED:{
+				
+				long[]	mp = manager.getMoveProgress();
+				
+				if ( mp != null ){
+					
+					 tmp = ManagerItem_moving + ": "	+ formatPercentFromThousands( (int)mp[0] );
+					 
+				}else{	 
 
-			case DownloadManager.STATE_DOWNLOADING:
-				tmp = ManagerItem_downloading;
-				if ( manager.isSwarmMerging()){
-					tmp += " + " + ManagerItem_swarmMerge;
+					tmp = ManagerItem_queued;
+				}
+				
+				break;
+			}
+			case DownloadManager.STATE_DOWNLOADING:{
+				
+				long[]	mp = manager.getMoveProgress();
+				
+				if ( mp != null ){
+					
+					 tmp = ManagerItem_moving + ": "	+ formatPercentFromThousands( (int)mp[0] );
+					 
+				}else{
+					
+					tmp = ManagerItem_downloading;
+					
+					if ( manager.isSwarmMerging()){
+						
+						tmp += " + " + ManagerItem_swarmMerge;
+					}
 				}
 				break;
-
+			}
 			case DownloadManager.STATE_SEEDING:{
 
 				DiskManager diskManager = manager.getDiskManager();
