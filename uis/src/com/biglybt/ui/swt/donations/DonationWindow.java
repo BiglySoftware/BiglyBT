@@ -65,6 +65,8 @@ public class DonationWindow
 
 	static BrowserWrapper.BrowserFunction browserFunction;
 
+	private static int extraHeight;
+
 	public static void 
 	checkForDonationPopup() 
 	{
@@ -208,6 +210,7 @@ public class DonationWindow
 			Label label = new Label(shell, SWT.NONE);
 			FontUtils.setFontHeight(label, 13, SWT.BOLD);
 			label.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
+			extraHeight = label.computeSize(-1, -1).y;
 			new AEThread2("YearStats", true) {
 				@Override
 				public void run() {
@@ -319,7 +322,7 @@ public class DonationWindow
 						if (strings.length > 2) {
 							try {
 								int w = Integer.parseInt(strings[1]);
-								int h = Integer.parseInt(strings[2]);
+								int h = Integer.parseInt(strings[2]) + extraHeight;
 
 								Rectangle computeTrim = shell.computeTrim(0, 0, w, h);
 								shell.setSize(computeTrim.width, computeTrim.height);
