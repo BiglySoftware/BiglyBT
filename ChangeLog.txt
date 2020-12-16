@@ -29,6 +29,7 @@ FEATURE: UI    | Option to use dark themed tables [Parg]
 FEATURE: UI    | Dark theme support for minibars [Parg]
 FEATURE: UI    | New v2 root hash Files View column [Parg]
 FEATURE: UI    | Added total bytes transferred view option to local country stats [Parg]
+FEATURE: UI    | Added total bytes up/down in last year to donation window [TuxPaper]
 
 CHANGE: Core   | Suspend disk-read operations during file move [Parg]
 CHANGE: Core   | Kick incoming public connections when SOCKS data proxy active [Parg]
