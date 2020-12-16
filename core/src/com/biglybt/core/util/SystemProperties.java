@@ -95,6 +95,7 @@ public class SystemProperties {
 	public static final String SYSPROP_THREAD_MON_ENABLE					= migrate( "biglybt.thread.monitor.enable" );
 	public static final String SYSPROP_MEMORY_MON_ENABLE					= migrate( "biglybt.memory.monitor.enable" );
 	public static final String SYSPROP_THREAD_MON_USERONLY					= migrate( "biglybt.thread.monitor.user.time" );
+	public static final String SYSPROP_LOGGING_DISABLE_STOP_ON_SLOW_CLOSE	= migrate( "biglybt.logging.disable.stop.on.slow.close" );
 
 		
 	private static String

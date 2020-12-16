@@ -1648,7 +1648,7 @@ CoreImpl
 						// it has been a minute - turn off logging if it is enabled as this can significantly
 						// slow things down
 					
-					if ( System.getProperty( "user.is.fubar99", "0" ).equals( "0")){
+					if ( System.getProperty( SystemProperties.SYSPROP_LOGGING_DISABLE_STOP_ON_SLOW_CLOSE, "0" ).equals( "0" )){
 					
 						Logger.setClosingTakingTooLong();
 					}
