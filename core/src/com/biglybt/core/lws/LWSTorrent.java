@@ -571,7 +571,7 @@ LWSTorrent
 	public String
 	getRelationText()
 	{
-		return "LWTorrent: '" + new String(getName()) + "'";
+		return "Internal: '" + new String(getName()) + "'";
 	}
 
 	@Override

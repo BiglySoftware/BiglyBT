@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.biglybt.core.logging.LogRelation;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.util.Debug;
@@ -46,6 +47,7 @@ import com.biglybt.pifimpl.local.download.DownloadAnnounceResultImpl;
 
 public class
 LWSDownload
+	extends LogRelation
 	implements Download
 {
 	private final LightWeightSeed				lws;
@@ -1051,5 +1053,19 @@ LWSDownload
 	@Override
 	public DiskManagerFileInfo getPrimaryFile() {
 		return null;
+	}
+	
+	@Override
+	public String
+	getRelationText()
+	{
+		return "Internal: '" + new String(getName()) + "'";
+	}
+
+	@Override
+	public Object[]
+	getQueryableInterfaces()
+	{
+		return new Object[] { lws };
 	}
 }

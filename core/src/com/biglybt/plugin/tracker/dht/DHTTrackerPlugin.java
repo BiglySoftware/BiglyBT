@@ -1113,7 +1113,7 @@ DHTTrackerPlugin
 
 					if ( run_data == null ){
 
-						log( download,	"Monitoring '" + download.getName() + "': " + register_reason);
+						log( download,	"Monitoring: " + register_reason);
 
 						int[] cache = run_data_cache.remove( download );
 
@@ -1450,7 +1450,7 @@ DHTTrackerPlugin
 
 			if ( registration == null ){
 
-				log( dl, "Registering download as " + (dht_flags == DHTPlugin.FLAG_SEEDING?"Seeding":"Downloading"));
+				log( dl, "Registering as " + (dht_flags == DHTPlugin.FLAG_SEEDING?"Seeding":"Downloading"));
 
 				registration = new RegistrationDetails( dl, reg_type, put_details, dht_flags );
 
@@ -1471,7 +1471,7 @@ DHTTrackerPlugin
 						registration.getFlags() != dht_flags ||
 						!registration.getPutDetails().sameAs( put_details )){
 
-					log( dl,(registration==null?"Registering":"Re-registering") + " download as " + (dht_flags == DHTPlugin.FLAG_SEEDING?"Seeding":"Downloading"));
+					log( dl,(registration==null?"Registering":"Re-registering") + " as " + (dht_flags == DHTPlugin.FLAG_SEEDING?"Seeding":"Downloading"));
 
 					registration.update( put_details, dht_flags );
 
@@ -1735,21 +1735,21 @@ DHTTrackerPlugin
 
 				if ( target_type == REG_TYPE_FULL ){
 
-					log( download, "Registration of '" + target.getDesc() + "' skipped as disabled due to use of SOCKS proxy");
+					log( download, target.getDesc( "Registration" ) + " skipped as disabled due to use of SOCKS proxy");
 				}
 			}else if ( download.getFlag( Download.FLAG_METADATA_DOWNLOAD )){
 
-				log( download, "Registration of '" + target.getDesc() + "' skipped as metadata download");
+				log( download, target.getDesc( "Registration" ) + " skipped as metadata download");
 
 			}else if ( target_type == REG_TYPE_DERIVED && dht.isSleeping()){
 
-				log( download, "Registration of '" + target.getDesc() + "' skipped as sleeping");
+				log( download, target.getDesc( "Registration" ) + " skipped as sleeping");
 
 			}else{
 
 				dht.put(
 					target.getHash(),
-					"Tracker reg of '" + download.getName() + "'" + target.getDesc() + " -> " + encoded,
+					download.getName() + ": " + target.getDesc( "Put" ) + " -> " + encoded,
 					encoded_bytes,
 					flags,
 					false,
@@ -1794,7 +1794,7 @@ DHTTrackerPlugin
 							if ( target.getType() == REG_TYPE_FULL ){
 
 								log( 	download,
-										"Registration of '" + target.getDesc() + "' completed (elapsed="	+ TimeFormatter.formatColonMillis((SystemTime.getCurrentTime() - start)) + ")");
+										target.getDesc( "Registration" ) + " completed (elapsed="	+ TimeFormatter.formatColonMillis((SystemTime.getCurrentTime() - start)) + ")");
 							}
 
 								// decreaseActive( dl );
@@ -1848,7 +1848,7 @@ DHTTrackerPlugin
 			final boolean is_complete = isComplete( download );
 
 			dht.get(target.getHash(),
-					"Tracker announce for '" + download.getName() + "'" + target.getDesc(),
+					download.getName() + ": " + target.getDesc( "Announce" ),
 					is_complete?DHTPlugin.FLAG_SEEDING:DHTPlugin.FLAG_DOWNLOADING,
 					NUM_WANT,
 					target_type==REG_TYPE_FULL?ANNOUNCE_TIMEOUT:ANNOUNCE_DERIVED_TIMEOUT,
@@ -2099,7 +2099,7 @@ DHTTrackerPlugin
 										seed_count + leecher_count > 1 )){
 
 								log( 	download,
-										"Get of '" + target.getDesc() + "' completed (elapsed=" + TimeFormatter.formatColonMillis(SystemTime.getCurrentTime() - start)
+										target.getDesc("Announce") + " completed (elapsed=" + TimeFormatter.formatColonMillis(SystemTime.getCurrentTime() - start)
 												+ "), addresses=" + addresses.size() + ", seeds="
 												+ seed_count + ", leechers=" + leecher_count);
 							}
@@ -2304,7 +2304,7 @@ DHTTrackerPlugin
 
 										DownloadAnnounceResultPeer peer = temp.remove( rand.nextInt( temp.size()));
 
-										log( download, "Injecting derived peer " + peer.getAddress() + " into " + download.getName());
+										log( download, "Injecting derived peer " + peer.getAddress());
 
 										Map<Object,Object>	user_data = new HashMap<>();
 
@@ -2629,7 +2629,7 @@ DHTTrackerPlugin
 
 				dht.remove(
 						target.getHash(),
-						"Tracker dereg of '" + download.getName() + "'" + target.getDesc(),
+						download.getName() + ": " + target.getDesc( "Remove" ),
 						new DHTPluginOperationListener()
 						{
 							@Override
@@ -2671,7 +2671,7 @@ DHTTrackerPlugin
 								if ( target.getType() == REG_TYPE_FULL ){
 
 									log( 	download,
-											"Unregistration of '" + target.getDesc() + "' completed (elapsed="
+											target.getDesc( "Unregistration" ) + " completed (elapsed="
 												+ TimeFormatter.formatColonMillis(SystemTime.getCurrentTime() - start) + ")");
 								}
 
@@ -2705,7 +2705,7 @@ DHTTrackerPlugin
 
 			dht.remove(
 					target.getHash(),
-					"Tracker dereg of '" + download.getName() + "'" + target.getDesc(),
+					download.getName() + ": " + target.getDesc( "Remove" ),
 					new DHTPluginOperationListener()
 					{
 						@Override
@@ -2747,7 +2747,7 @@ DHTTrackerPlugin
 							if ( target.getType() == REG_TYPE_FULL ){
 
 								log( 	download,
-										"Unregistration of '" + target.getDesc() + "' completed (elapsed="
+										target.getDesc( "Unregistration" ) + " completed (elapsed="
 										+ TimeFormatter.formatColonMillis(SystemTime.getCurrentTime() - start) + ")");
 							}
 
@@ -3013,7 +3013,7 @@ DHTTrackerPlugin
 
 									int	total = leechers + seeds;
 
-									log( torrent,
+									log( f_ready_download,
 											"Presence query: availability="+
 											(total==INTERESTING_AVAIL_MAX?(INTERESTING_AVAIL_MAX+"+"):(total+"")) + ",div=" + diversified +
 											" (elapsed=" + TimeFormatter.formatColonMillis(SystemTime.getCurrentTime() - start) + ")");
@@ -3051,7 +3051,7 @@ DHTTrackerPlugin
 
 											dht.put(
 												torrent.getHash(),
-												"Presence store '" + f_ready_download.getName() + "'",
+												"Presence store for '" + f_ready_download.getName() + "'",
 												"0".getBytes(),	// port 0, no connections
 												(byte)0,
 												new DHTPluginOperationListener()
@@ -3832,15 +3832,7 @@ DHTTrackerPlugin
 		Download		download,
 		String			str )
 	{
-		log( download.getTorrent(), str );
-	}
-
-	private void
-	log(
-		Torrent			torrent,
-		String			str )
-	{
-		log.log( torrent, LoggerChannel.LT_INFORMATION, str );
+		log.log( download, LoggerChannel.LT_INFORMATION, str );
 	}
 
 	public TrackerPeerSource
@@ -4590,14 +4582,15 @@ DHTTrackerPlugin
 		}
 
 		public String
-		getDesc()
+		getDesc(
+			String	prefix )
 		{
 			if ( type != REG_TYPE_FULL ){
 
-				return( "(" + desc + ")" );
+				return( prefix + " (" + desc + ")" );
 			}
 
-			return( "" );
+			return( prefix );
 		}
 	}
 

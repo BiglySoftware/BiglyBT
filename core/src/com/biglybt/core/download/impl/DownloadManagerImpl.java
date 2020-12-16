@@ -6835,7 +6835,7 @@ DownloadManagerImpl
 	 */
 	@Override
 	public String getRelationText() {
-		return "TorrentDLM: '" + getDisplayName() + "'";
+		return "Download: '" + getDisplayName() + "'";
 	}
 
 
