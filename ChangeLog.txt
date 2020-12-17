@@ -1,8 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2020.12.yy | BiglyBT 2.6.0.0
-
+2020.12.17 | BiglyBT 2.6.0.0
 
 FEATURE: Tag   | Added new download-state tags for 'moving' and 'checking' [Parg]
 FEATURE: Tag   | Added torrent_type tag constraint keyword [Parg]
@@ -61,7 +60,6 @@ CHANGE: UI     | ja_JP: Japanese translation update [ayano.midori]
 CHANGE: UI     | fr_FR: French translation update [GMartigny]
 CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
 
-
 BUGFIX: Core   | Fix removal from read-only collection [Parg]
 BUGFIX: Core   | Fix NPE causing magnet downloads not to be recovered [Parg]
 BUGFIX: Core   | Ensure we have a peer-manager piece when writing a block [Parg]
@@ -75,7 +73,6 @@ BUGFIX: UI     | Ensure the info-parameter entries show the latest values [Parg]
 BUGFIX: UI     | Ignore media server URIs when monitoring clipboard for torrent links [Parg]
 BUGFIX: UI     | Fix inconsistent table depth when hidden rows removed from a table [Parg]
 BUGFIX: UI     | Fix Files View piece column sort when download stopped [Parg]
-
 
 2020.09.21 | BiglyBT 2.5.0.0
 
