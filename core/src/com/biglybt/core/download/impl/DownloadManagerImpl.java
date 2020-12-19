@@ -542,8 +542,9 @@ DownloadManagerImpl
 	private long		resume_time;
 
 	final GlobalManager globalManager;
-	private String torrentFileName;
-
+	private String 		torrentFileName;
+	private boolean 	torrentFileExplicitlyDeleted;
+	
 	private boolean	open_for_seeding;
 
 	private String	display_name	= "";
@@ -4456,8 +4457,10 @@ DownloadManagerImpl
 	protected void
 	deleteTorrentFile()
 	{
+		torrentFileExplicitlyDeleted = true;
+		
 		if ( torrentFileName != null ){
-
+			
 			TorrentUtils.delete(FileUtil.newFile(torrentFileName),getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ));
 		}
 	}
@@ -5567,19 +5570,24 @@ DownloadManagerImpl
 	  if ( !old_file.exists()){
 		  
 		  // used to fail here but we might as well use our internal copy of the torrent file
+		  // don't resurrect it if the user has explicity deleted it (on removal, required  for
+		  // 'move on remove' to work correctly when user requests torrent delete in removal dialog)
 		  
-		  TOTorrent internal_torrent = download_manager_state.getTorrent();
+		  if ( !torrentFileExplicitlyDeleted ){
 		  
-		  try{
-			  TOTorrent clone = TorrentUtils.cloneTorrent( internal_torrent );
+			  TOTorrent internal_torrent = download_manager_state.getTorrent();
 			  
-			  clone.removeAdditionalProperties();
-			  
-			  TorrentUtils.writeToFile( clone, old_file, false );
-			  
-		  }catch( Throwable e ){
-			  
-			  Debug.out( e );
+			  try{
+				  TOTorrent clone = TorrentUtils.cloneTorrent( internal_torrent );
+				  
+				  clone.removeAdditionalProperties();
+				  
+				  TorrentUtils.writeToFile( clone, old_file, false );
+				  
+			  }catch( Throwable e ){
+				  
+				  Debug.out( e );
+			  }
 		  }
 		  
 		  if ( !old_file.exists()){
