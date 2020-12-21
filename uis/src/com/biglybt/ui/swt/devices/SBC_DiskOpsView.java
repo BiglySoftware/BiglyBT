@@ -396,29 +396,32 @@ public class SBC_DiskOpsView
 			
 			ProgressCallback prog = op.getTask().getProgressCallback();
 			
-			int	states = prog.getSupportedTaskStates();
-			
-			int state = prog.getTaskState();
-
-			if ((states & ProgressCallback.ST_PAUSE ) != 0 ){
+			if ( prog != null ){
 				
-				if ( state == ProgressCallback.ST_NONE || state == ProgressCallback.ST_QUEUED ){
+				int	states = prog.getSupportedTaskStates();
 				
-					can_stop.add( prog );
-				}
-			}
-			if ((states & ProgressCallback.ST_RESUME ) != 0 ){
-				
-				if ( state == ProgressCallback.ST_PAUSE ){
-				
-					can_start.add( prog );
-				}
-			}
-			if ((states & ProgressCallback.ST_CANCEL ) != 0 ){
-								
-				if ( state != ProgressCallback.ST_CANCEL ){
+				int state = prog.getTaskState();
+	
+				if ((states & ProgressCallback.ST_PAUSE ) != 0 ){
 					
-					can_remove.add( prog );
+					if ( state == ProgressCallback.ST_NONE || state == ProgressCallback.ST_QUEUED ){
+					
+						can_stop.add( prog );
+					}
+				}
+				if ((states & ProgressCallback.ST_RESUME ) != 0 ){
+					
+					if ( state == ProgressCallback.ST_PAUSE ){
+					
+						can_start.add( prog );
+					}
+				}
+				if ((states & ProgressCallback.ST_CANCEL ) != 0 ){
+									
+					if ( state != ProgressCallback.ST_CANCEL ){
+						
+						can_remove.add( prog );
+					}
 				}
 			}
 		}

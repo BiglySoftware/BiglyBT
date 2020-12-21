@@ -74,6 +74,17 @@ public class FileUtil {
 
   private static AEDiagnosticsLogger file_logger;
   
+  private static final ThreadLocal<IdentityHashSet<CoreOperationTask>>		tls	=
+	new ThreadLocal<IdentityHashSet<CoreOperationTask>>()
+	{
+	  @Override
+	  public IdentityHashSet<CoreOperationTask>
+	  initialValue()
+	  {
+		  return( new IdentityHashSet<CoreOperationTask>());
+	  }
+	};
+
   static {
 
 	  try
@@ -2588,9 +2599,17 @@ public class FileUtil {
 
 			if ( op.getOperationType() == CoreOperation.OP_FILE_MOVE ){
 
-				if ( dm == op.getTask().getDownload()){
+				CoreOperationTask task = op.getTask();
+				
+				if ( task != null && dm == task.getDownload()){
 
-					return( true );
+						// allow recursive task creation for the same download - this happens
+						// when doing a quick-rename of a single file torrent's file from FilesView...
+					
+					if ( !tls.get().contains( task ) ){
+						
+						return( true );
+					}
 				}
 			}
 		}
@@ -2610,9 +2629,17 @@ public class FileUtil {
 		int					op_type,
 		CoreOperationTask 	task )
 	{
-		Core core = CoreFactory.getSingleton();
-
-		core.executeOperation( op_type, task );
+		try{
+			tls.get().add( task );
+		
+			Core core = CoreFactory.getSingleton();
+	
+			core.executeOperation( op_type, task );
+			
+		}finally{
+			
+			tls.get().remove( task );
+		}
 	}
 		
 	
