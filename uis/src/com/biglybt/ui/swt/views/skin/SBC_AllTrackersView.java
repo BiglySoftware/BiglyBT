@@ -1146,9 +1146,14 @@ public class SBC_AllTrackersView
 					
 					String[] val = prop.getStringList();
 					
-					has_any_constraint = val.length > 0;
+					if ( val != null && val.length > 0 ){
+						
+						String constraint = val[0];
+											
+						has_any_constraint = constraint != null && !constraint.trim().isEmpty();
 					
-					has_true_constraint = has_any_constraint && val[0].equalsIgnoreCase( "true" );
+						has_true_constraint = has_any_constraint && constraint.equalsIgnoreCase( "true" );
+					}
 				}
 			}
 			
