@@ -2898,34 +2898,27 @@ DiskManagerImpl
 				   * the relative path.
 				   */
 	
-				  String old_parent_path = old_file.getCanonicalFile().getParent();
+					File old_parent = old_file.getParentFile();
 	
-				  String sub_path;
 	
 				  /**
 				   * Calculate the sub path of where the file lives compared to the new save location.
-				   *
-				   * The code here has changed from what it used to be to fix bug 1636342:
-				   *   https://sourceforge.net/tracker/?func=detail&atid=575154&aid=1636342&group_id=84122
 				   */
-	
-				  if ( old_parent_path.startsWith(move_from_dir.getPath())){
-	
-					  sub_path = old_parent_path.substring(move_from_dir.getPath().length());
-	
-				  }else{
-	
-					  logMoveFileError(move_to_dir, "Could not determine relative path for file - " + old_parent_path);
-	
-					  throw new IOException("relative path assertion failed: move_from_dir=\"" + move_from_dir + "\", old_parent_path=\"" + old_parent_path + "\"");
+
+					String sub_path = FileUtil.getRelativePath(move_from_dir, old_parent);
+
+					if ( sub_path == null ){
+
+						logMoveFileError(move_to_dir,
+								"Could not determine relative path for file - " + old_parent);
+
+						throw new IOException(
+								"relative path assertion failed: move_from_dir=\""
+										+ move_from_dir + "\", old_parent_path=\"" + old_parent
+										+ "\"");
 				  }
 	
 				  //create the destination dir
-	
-				  if ( sub_path.startsWith( File.separator )){
-	
-					  sub_path = sub_path.substring(1);
-				  }
 	
 				  // We may be doing a rename, and if this is a simple torrent, we have to keep the names in sync.
 	
@@ -2960,7 +2953,7 @@ DiskManagerImpl
 							  boolean assert_expected_old_name = expected_old_name.equals(save_location.getName());
 							  if (!assert_expected_old_name) {
 								  Debug.out("Assertion check for renaming file in multi-name torrent " + (assert_expected_old_name ? "passed" : "failed") + "\n" +
-										  "  Old parent path: " + old_parent_path + "\n" +
+										  "  Old parent path: " + old_parent + "\n" +
 										  "  Subpath: " + sub_path + "\n" +
 										  "  Sub-subpath: " + sub_sub_path + "\n" +
 										  "  Expected old name: " + expected_old_name + "\n" +
