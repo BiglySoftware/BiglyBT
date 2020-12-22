@@ -643,19 +643,21 @@ FMFileImpl
 				ok = true;
 
 			}catch( Throwable f ){
+				
+				Debug.printStackTrace( f );
 			}
 
 			if ( !ok ){
 
 				Debug.printStackTrace( e );
 
-				throw( new FMFileManagerException( "open fails", e ));
+				throw( new FMFileManagerException( "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
 			}
 		}catch( Throwable e ){
 
 			Debug.printStackTrace( e );
 
-			throw( new FMFileManagerException( "open fails", e ));
+			throw( new FMFileManagerException( "open fails for '" + linked_file.getAbsolutePath() + "'", e ));
 		}
 	}
 
