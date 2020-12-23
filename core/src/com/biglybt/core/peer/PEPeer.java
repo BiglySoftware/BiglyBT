@@ -30,6 +30,7 @@ import java.util.Map;
 
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
+import com.biglybt.core.networkmanager.NetworkConnectionBase;
 import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.tag.Taggable;
@@ -283,6 +284,9 @@ PEPeer
   /** To store arbitrary objects against a peer. */
   public void setUserData (Object key, Object value);
 
+  public NetworkConnectionBase
+  getNetworkConnection();
+  
   /**
    * Get the connection that backs this peer.
    * @return connection

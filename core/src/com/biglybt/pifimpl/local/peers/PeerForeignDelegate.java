@@ -33,6 +33,7 @@ import java.util.*;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
+import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.NetworkConnectionBase;
 import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.peer.*;
@@ -922,6 +923,13 @@ PeerForeignDelegate
 		}
 	}
 
+	@Override
+	public NetworkConnectionBase
+	getNetworkConnection()
+	{
+		return( network_connection );
+	}
+	
 	@Override
 	public Connection
 	getPluginConnection()

@@ -262,6 +262,16 @@ NetworkAdmin
 	
 	public abstract boolean	hasDHTIPV6();
 
+		/**
+		 * 
+		 * @param address
+		 * @return { NetworkInterface, InetAddress (best intf address)}, {NetworkInterface} or {InetAddress (nomatch, same as arg)}
+		 */
+	
+	public abstract Object[]
+	getInterfaceForAddress(
+		InetAddress					address );
+	
 	public abstract void
 	addPropertyChangeListener(
 		NetworkAdminPropertyChangeListener	listener );

@@ -36,6 +36,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipfilter.*;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
+import com.biglybt.core.networkmanager.NetworkConnectionBase;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.admin.NetworkAdminASN;
 import com.biglybt.core.networkmanager.admin.NetworkAdminASNListener;
@@ -6616,6 +6617,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			}
 		}
 
+		@Override
+		public NetworkConnectionBase getNetworkConnection(){
+			return(null);
+		}
+		
 		public Connection getPluginConnection(){
 			return(null);
 		}

@@ -18,7 +18,11 @@
  */
 package com.biglybt.core.peer.util;
 
+import java.net.DatagramSocket;
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -26,6 +30,11 @@ import java.util.Set;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.networkmanager.NetworkConnectionBase;
+import com.biglybt.core.networkmanager.Transport;
+import com.biglybt.core.networkmanager.TransportBase;
+import com.biglybt.core.networkmanager.TransportEndpoint;
+import com.biglybt.core.networkmanager.TransportStartpoint;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.util.*;
@@ -651,6 +660,194 @@ public class PeerUtils {
 		return( net );
 	}
 
+	private static final Object	ni_key 		= new Object();
+	private static final Object	ni_null 	= new Object();
+
+	public static NetworkInterface
+	getLocalNetworkInterface(
+		PEPeer	peer )
+	{
+		if ( network_admin == null ){
+			
+			return( null );
+		}
+
+		NetworkInterface result = null;
+
+		try{	
+			Object data = peer.getUserData( ni_key );
+				
+			if ( data instanceof NetworkInterface ){
+				
+				result = (NetworkInterface)data;
+				
+			}else if ( data == ni_null ){
+							
+			}else{
+				
+				NetworkConnectionBase con = peer.getNetworkConnection();
+				
+				if ( con != null ){
+					
+					TransportBase tb = con.getTransportBase();
+					
+					if ( tb instanceof Transport ){
+		
+						Transport transport = (Transport)tb;
+		
+						TransportStartpoint start = transport.getTransportStartpoint();
+		
+						if ( start != null ){
+		
+							InetSocketAddress socket_address = start.getProtocolStartpoint().getAddress();
+		
+							if ( socket_address != null ){
+		
+								InetAddress address = socket_address.getAddress();
+				
+								Object[] details = network_admin.getInterfaceForAddress( address );
+								
+								Object o = details[0];
+								
+								if ( o instanceof NetworkInterface ){
+									
+									result = (NetworkInterface)o;
+									
+									peer.setUserData( ni_key, result );
+									
+								}else{
+									
+									peer.setUserData( ni_key, ni_null );
+								}
+							}else{
+								//System.out.println( "addr null" );
+							}
+						}else{
+							
+							if ( !transport.isTCP()){
+								
+								TransportEndpoint end = transport.getTransportEndpoint();
+	
+									// if we have a bind address then assume this is being honoured
+								
+								InetAddress udp_bind = null;
+								
+								if ( end != null ){
+									
+									InetSocketAddress socket_address = end.getProtocolEndpoint().getAddress();
+									
+									if ( socket_address != null ){
+	
+										int type;
+										
+										if ( socket_address.getAddress() instanceof Inet4Address ){
+											
+											type = NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4;
+											
+										}else{
+											
+											type = NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6;
+										}
+										
+										try{
+											udp_bind = network_admin.getSingleHomedServiceBindAddress( type );
+											
+										}catch( Throwable e ){
+											
+										}
+									}	
+								}
+								
+								if ( udp_bind == null ){
+								
+									udp_bind = network_admin.getSingleHomedServiceBindAddress();
+								}
+								
+								if ( udp_bind != null && !udp_bind.isAnyLocalAddress()){
+									
+									Object[] details = network_admin.getInterfaceForAddress( udp_bind );
+									
+									Object o = details[0];
+									
+									if ( o instanceof NetworkInterface ){
+										
+										result = (NetworkInterface)o;
+										
+										peer.setUserData( ni_key, result );
+										
+									}else{
+										
+										peer.setUserData( ni_key, ni_null );
+									}	
+								}else{
+								
+										// no bind address, with UDP the best I think we can do is ask the OS which
+										// route it would use to get the the destination - not the same as how the destination
+										// reached us if incoming but meh
+																	
+									if ( end != null ){
+										
+										InetSocketAddress socket_address = end.getProtocolEndpoint().getAddress();
+										
+										if ( socket_address != null ){
+											
+											try{
+												DatagramSocket s = new DatagramSocket();
+											
+												try{
+													s.connect( socket_address.getAddress(), 0);
+												
+													InetAddress local = s.getLocalAddress();
+													
+													if ( !local.isAnyLocalAddress()){
+														
+														Object[] details = network_admin.getInterfaceForAddress( local );
+														
+														Object o = details[0];
+														
+														if ( o instanceof NetworkInterface ){
+															
+															result = (NetworkInterface)o;
+															
+															peer.setUserData( ni_key, result );
+															
+														}else{
+															
+															peer.setUserData( ni_key, ni_null );
+														}	
+													}
+												}finally{
+													
+													s.close();
+												}
+												
+											}catch( Throwable e ){
+											
+												peer.setUserData( ni_key, ni_null );
+											}
+										}
+									}
+								}
+							}else{
+								//System.out.println( "tb " + tb );
+							}
+						}
+					}else{
+						//System.out.println( "tb " + tb );
+					}
+				}else{
+					
+					//System.out.println( "con null" );
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+		return( result );
+	}
+	
 	/*
 	public static void
 	main(

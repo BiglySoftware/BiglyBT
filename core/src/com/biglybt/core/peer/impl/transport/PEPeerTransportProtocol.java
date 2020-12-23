@@ -4884,6 +4884,13 @@ implements PEPeerTransport
 	}
 
 	@Override
+	public NetworkConnectionBase
+	getNetworkConnection()
+	{
+		return( connection );
+	}
+	
+	@Override
 	public Connection getPluginConnection() {
 		return plugin_connection;
 	}

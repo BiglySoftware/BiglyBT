@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.biglybt.core.disk.DiskManagerReadRequest;
+import com.biglybt.core.networkmanager.NetworkConnectionBase;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peermanager.peerdb.PeerItem;
 import com.biglybt.core.torrent.TOTorrentFileHashTree;
@@ -123,8 +124,7 @@ PEPeerTransport
    * @param reason for closure
    */
 	public void closeConnection( String reason );
-
-
+	
 	@Override
 	public boolean
 	transferAvailable();

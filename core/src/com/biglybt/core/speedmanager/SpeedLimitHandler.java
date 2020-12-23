@@ -21,6 +21,7 @@
 package com.biglybt.core.speedmanager;
 
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -159,7 +160,8 @@ SpeedLimitHandler
 
 	private final Object extensions_lock = new Object();
 
-	private final List<String>	auto_peer_set_queue = new ArrayList<>();
+	private final List<String>	auto_peer_set_queue_client 	= new ArrayList<>();
+	private final List<String>	auto_peer_set_queue_intf	= new ArrayList<>();
 	
 	private
 	SpeedLimitHandler(
@@ -1078,6 +1080,7 @@ SpeedLimitHandler
 					Set<String>	categories_or_tags = new HashSet<>();
 
 					Pattern client_pattern	= null;
+					Pattern intf_pattern	= null;
 					
 					PeerSet set = null;
 
@@ -1137,7 +1140,16 @@ SpeedLimitHandler
 									
 								}catch( Throwable e ){
 									
-									throw( new Exception( "Invalid pattern - '" + rhs + "'" ));
+									throw( new Exception( "Invalid client pattern - '" + rhs + "'" ));
+								}
+							}else if ( lc_lhs.equals( "intf" )){
+								
+								try{
+									intf_pattern = Pattern.compile( rhs, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+									
+								}catch( Throwable e ){
+									
+									throw( new Exception( "Invalid intf pattern - '" + rhs + "'" ));
 								}
 							}else{
 
@@ -1186,7 +1198,12 @@ SpeedLimitHandler
 						throw( new Exception());
 					}
 
-					set.setParameters( inverse, up_lim, down_lim, peer_up_lim, peer_down_lim, categories_or_tags, client_pattern );
+					if ( client_pattern != null && intf_pattern != null ){
+						
+						throw( new Exception( "Both client and intf can't be set at the same time" ));
+					}
+					
+					set.setParameters( inverse, up_lim, down_lim, peer_up_lim, peer_down_lim, categories_or_tags, client_pattern, intf_pattern );
 
 				}catch( Throwable e ){
 
@@ -2153,16 +2170,25 @@ SpeedLimitHandler
 					
 					dispatcher.dispatch( AERunnable.create(
 						()->{
-							List<String>	todo;
+							List<String>	todo_clients;
+							List<String>	todo_intf;
 							
-							synchronized( auto_peer_set_queue ){
+							synchronized( auto_peer_set_queue_client ){
 							
-								todo = new ArrayList<>( auto_peer_set_queue );
+								todo_clients = new ArrayList<>( auto_peer_set_queue_client );
 								
-								auto_peer_set_queue.clear();
+								auto_peer_set_queue_client.clear();
 							}
 							
-							if ( todo.isEmpty()){
+							synchronized( auto_peer_set_queue_intf ){
+								
+								todo_intf = new ArrayList<>( auto_peer_set_queue_intf );
+								
+								auto_peer_set_queue_intf.clear();
+							}
+
+							
+							if ( todo_clients.isEmpty() && todo_intf.isEmpty()){
 								
 								return;
 							}
@@ -2171,7 +2197,7 @@ SpeedLimitHandler
 		
 								Map<String,PeerSet>	added = new HashMap<>();
 								
-								for ( String name: todo ){
+								for ( String name: todo_clients ){
 								
 									if ( name.isEmpty()){
 										
@@ -2200,7 +2226,7 @@ SpeedLimitHandler
 										try{
 											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
 											
-											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern );
+											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern, null );
 											
 											set.addCIDRorCCetc( "all" );
 												
@@ -2215,6 +2241,38 @@ SpeedLimitHandler
 									}
 								}
 								
+								for ( String name: todo_intf ){
+									
+									if ( name.isEmpty()){
+										
+										name = "?";
+									}
+									
+									String set_name = MessageText.getString( "label.interface.short" ) + "_" + name;
+									
+									PeerSet set = current_ip_sets.get( set_name );
+									
+									if ( set == null ){
+																														
+										set = new PeerSet( set_name );
+										
+										try{
+											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
+											
+											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), null, pattern );
+											
+											set.addCIDRorCCetc( "all" );
+												
+											set.setGroup( MessageText.getString( "label.interface.short" ) + "_" + MessageText.getString( "wizard.maketorrent.auto" ));
+											
+											added.put( set_name, set );
+																						
+										}catch( Throwable e ){
+											
+											Debug.out( e );
+										}
+									}
+								}
 								if ( !added.isEmpty()){
 									
 									initialiseIPSets( added );
@@ -2237,58 +2295,78 @@ SpeedLimitHandler
 	initialiseIPSets(
 		Map<String,PeerSet>		sets )
 	{
-		Set<Integer>		id_allocated	= new HashSet<>();
-		Map<PeerSet,Integer>	id_map 		= new HashMap<>();
-		int					id_max		= -1;
+		String config_max_key = "speed.limit.handler.ipset_n.max";
+		
+		Set<Integer>			id_allocated	= new HashSet<>();
+		Map<PeerSet,Integer>	id_map 			= new HashMap<>();
+		int						id_max			= COConfigurationManager.getIntParameter( config_max_key, -1 );
 
-		for ( int i=0;i<2;i++ ){
-
+		int	original_id_max = id_max;
+		
+		for ( int i=0; i<2; i++ ){
+			
 			for ( PeerSet s: i==0?current_ip_sets.values():sets.values()){
-
+					
 				String name = s.getName();
-
+	
 				try{
 					String config_key = "speed.limit.handler.ipset_n." + Base32.encode( name.getBytes( "UTF-8" ));
-
-					if ( i == 0 ){
-
-						int existing = COConfigurationManager.getIntParameter( config_key, -1 );
-
-						if ( existing != -1 ){
-
-							if ( id_allocated.contains( existing )){
-							
-								COConfigurationManager.removeParameter( config_key );	// clash
-								
-							}else{
-								
-								id_allocated.add( existing );
-								
-								id_map.put( s, existing );
-
-								id_max = Math.max( id_max, existing );
-							}
-						}
-					}else{
-
-						Integer tag_id = id_map.get( s );
-
-						if ( tag_id == null ){
-
-							tag_id = ++id_max;
-
-							COConfigurationManager.setParameter( config_key, tag_id );
-						}
-
-						s.initialise( tag_id );
+	
+					int existing = COConfigurationManager.getIntParameter( config_key, -1 );
+					
+					if ( existing != -1 ){
 						
-						current_ip_sets.put( s.getName(), s );
+						if ( id_allocated.contains( existing )){
+							
+							COConfigurationManager.removeParameter( config_key );	// clash
+							
+						}else{
+							
+							id_allocated.add( existing );
+							
+							id_map.put( s, existing );
+	
+							id_max = Math.max( id_max, existing );
+						}
 					}
 				}catch( Throwable e ){
-
+	
 					Debug.out( e );
 				}
 			}
+		}
+			
+		for ( PeerSet s: sets.values()){
+
+			String name = s.getName();
+
+			try{
+				String config_key = "speed.limit.handler.ipset_n." + Base32.encode( name.getBytes( "UTF-8" ));
+
+				Integer tag_id = id_map.get( s );
+
+				if ( tag_id == null ){
+
+					tag_id = ++id_max;
+
+					COConfigurationManager.setParameter( config_key, tag_id );
+				}
+
+				s.initialise( tag_id );
+						
+				current_ip_sets.put( s.getName(), s );
+					
+			}catch( Throwable e ){
+
+				Debug.out( e );
+			}
+		}
+		
+		if ( id_max > original_id_max ){
+			
+			COConfigurationManager.setParameter( config_max_key, id_max );
+			
+			COConfigurationManager.setDirty();
 		}
 	}
 	
@@ -5461,6 +5539,7 @@ SpeedLimitHandler
 		private int				peer_down_lim;
 
 		private Pattern			client_pattern;
+		private Pattern			intf_pattern;
 		
 		private String			group;
 		
@@ -5505,7 +5584,8 @@ SpeedLimitHandler
 				}
 			}
 			
-			if ( client_pattern != null && client_pattern.pattern().equals( "auto" )){
+			if ( 	( client_pattern != null && client_pattern.pattern().equals( "auto" )) ||
+					( intf_pattern != null && intf_pattern.pattern().equals( "auto" ))){
 				
 				if ( tag != null ){
 					
@@ -5522,7 +5602,8 @@ SpeedLimitHandler
 			int				_peer_up_lim,
 			int				_peer_down_lim,
 			Set<String>		_cats_or_tags,
-			Pattern			_client_pattern )
+			Pattern			_client_pattern,
+			Pattern			_intf_pattern )
 		{
 			inverse	= _inverse;
 
@@ -5544,11 +5625,16 @@ SpeedLimitHandler
 
 			categories_or_tags = _cats_or_tags.size()==0?null:_cats_or_tags;
 			
-			client_pattern = _client_pattern;
+			client_pattern 	= _client_pattern;
+			intf_pattern 	= _intf_pattern;
 			
 			if ( client_pattern != null && client_pattern.pattern().equals( "auto" )){
 				
 				setGroup( MessageText.getString( "Peers.column.client" ) + "_" + MessageText.getString( "wizard.maketorrent.auto" ));
+				
+			}else  if ( intf_pattern != null && intf_pattern.pattern().equals( "auto" )){
+				
+				setGroup( MessageText.getString( "label.interface.short" ) + "_" + MessageText.getString( "wizard.maketorrent.auto" ));
 			}
 		}
 
@@ -5564,6 +5650,13 @@ SpeedLimitHandler
 		{
 			return( client_pattern );
 		}
+		
+		public Pattern
+		getIntfPattern()
+		{
+			return( intf_pattern );
+		}
+
 		
 		private int
 		getPeerUpLimit()
@@ -5874,7 +5967,8 @@ SpeedLimitHandler
 					", Inverse=" + inverse +
 					", Categories/Tags=" + (categories_or_tags==null?"[]":String.valueOf(categories_or_tags)) +
 					", Peer_Up=" + format( peer_up_lim ) + ", Peer_Down=" + format( peer_down_lim )) +
-					", Client=" + (client_pattern==null?"":client_pattern);
+					", Client=" + (client_pattern==null?"":client_pattern) +
+					", Intf=" + (intf_pattern==null?"":intf_pattern);
 
 		}
 
@@ -6063,7 +6157,9 @@ SpeedLimitHandler
 			private boolean
 			deferEOS()
 			{
-				return( ip_set.client_pattern != null );
+					// we might not match this peer set as not yet applied client/intf matching...
+				
+				return( ip_set.client_pattern != null || ip_set.intf_pattern != null );
 			}
 			
 			private void
@@ -6091,18 +6187,32 @@ SpeedLimitHandler
 			 * @return 0=defer, 1=yes, 2=no, 3=remove
 			 */
 			
-			
 			private int
 			canAdd(
 				PEPeer		peer )
 			{
-				Pattern client_pattern = ip_set.client_pattern;
+				Pattern client_pattern 	= ip_set.client_pattern;
+				Pattern intf_pattern 	= ip_set.intf_pattern;
 				
-				if ( client_pattern == null ){
+				if ( client_pattern == null && intf_pattern == null ){
 					
 					return( 1 );
+					
+				}else if ( client_pattern != null ){
+					
+					return( canAddClient( peer, client_pattern ));
+					
+				}else{
+					
+					return( canAddIntf( peer, intf_pattern ));
 				}
-				
+			}
+			
+			private int
+			canAddClient(
+				PEPeer		peer,
+				Pattern		client_pattern )
+			{
 				boolean auto_client = client_pattern.pattern().equals( "auto" );
 				
 				boolean	result = false;
@@ -6129,11 +6239,11 @@ SpeedLimitHandler
 							}
 						}
 						
-						synchronized( auto_peer_set_queue ){
+						synchronized( auto_peer_set_queue_client ){
 							
-							if ( !auto_peer_set_queue.contains( client )){
+							if ( !auto_peer_set_queue_client.contains( client )){
 							
-								auto_peer_set_queue.add( client );
+								auto_peer_set_queue_client.add( client );
 							
 								auto_peer_set_checker.dispatch();
 							}
@@ -6188,11 +6298,11 @@ SpeedLimitHandler
 								}
 							}
 							
-							synchronized( auto_peer_set_queue ){
+							synchronized( auto_peer_set_queue_client ){
 								
-								if ( !auto_peer_set_queue.contains( client )){
+								if ( !auto_peer_set_queue_client.contains( client )){
 								
-									auto_peer_set_queue.add( client );
+									auto_peer_set_queue_client.add( client );
 								
 									auto_peer_set_checker.dispatch();
 								}
@@ -6206,6 +6316,59 @@ SpeedLimitHandler
 							result = true;
 						}
 					}
+				}
+				
+				if ( result ){
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY )){
+
+						return( 3 );
+					}
+				}
+				
+				return( result?1:2 );
+			}
+			
+			private int
+			canAddIntf(
+				PEPeer		peer,
+				Pattern		intf_pattern )
+			{			
+				boolean auto_intf = intf_pattern.pattern().equals( "auto" );
+				
+				boolean	result = false;
+				
+				NetworkInterface	ni = PeerUtils.getLocalNetworkInterface( peer );
+				
+				String intf_name;
+				
+				if ( ni != null ){
+					
+					intf_name = ni.getName();
+					
+				}else{
+					
+					intf_name = "?";
+				}
+
+				if ( auto_intf ){
+											
+					synchronized( auto_peer_set_queue_intf ){
+						
+						if ( !auto_peer_set_queue_intf.contains( intf_name )){
+						
+							auto_peer_set_queue_intf.add( intf_name );
+						
+							auto_peer_set_checker.dispatch();
+						}
+					}
+					
+					return( 2 );
+				}
+				
+				if ( intf_pattern.matcher( intf_name ).find()){
+					
+					result = true;
 				}
 				
 				if ( result ){
