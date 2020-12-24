@@ -2273,6 +2273,7 @@ SpeedLimitHandler
 										}
 									}
 								}
+								
 								if ( !added.isEmpty()){
 									
 									initialiseIPSets( added );
@@ -3477,7 +3478,7 @@ SpeedLimitHandler
 		result.add( "#            day_of_week: mon|tue|wed|thu|fri|sat|sun" );
 		result.add( "#        time: hh:mm - 24 hour clock; 00:00=midnight; local time" );
 		result.add( "#        extension: (start_tag|stop_tag|pause_tag|resume_tag):<tag_name> (enable_priority|disable_priority)" );
-		result.add( "#    peer_set <set_name>=[<CIDR_specs...>|CC list|Network List|<prior_set_name>] [,inverse=[yes|no]] [,up=<limit>] [,down=<limit>] [peer_up=<limit>] [peer_down=<limit>] [,cat=<cat names>] [,tag=<tag names>] [,client=<regular expression>|auto]" );
+		result.add( "#    peer_set <set_name>=[<CIDR_specs...>|CC list|Network List|<prior_set_name>] [,inverse=[yes|no]] [,up=<limit>] [,down=<limit>] [peer_up=<limit>] [peer_down=<limit>] [,cat=<cat names>] [,tag=<tag names>] [,client=<regular expression>|auto] [,intf=<regular expression>|auto]" );
 		result.add( "#    net_limit (hourly|daily|weekly|monthly)[(:<profile>|$<tag>)] [total=<limit>] [up=<limit>] [down=<limit>]");
 		result.add( "#    priority_(up|down) <id>=<tag_name> [,<id>=<tag_name>]+ [,freq=<secs>] [,max=<limit>] [,probe=<cycles>]" );
 		result.add( "#" );
@@ -3496,6 +3497,7 @@ SpeedLimitHandler
 		result.add( "#     peer_set Europe=EU;AD;AL;AT;BA;BE;BG;BY;CH;CS;CZ;DE;DK;EE;ES;FI;FO;FR;FX;GB;GI;GR;HR;HU;IE;IS;IT;LI;LT;LU;LV;MC;MD;MK;MT;NL;NO;PL;PT;RO;SE;SI;SJ;SK;SM;UA;VA" );
 		result.add( "#     peer_set Blorp=Europe;US" );
 		result.add( "#     peer_set BiglyBTPeers=Public;I2P;Tor,client=BiglyBT.*" );
+		result.add( "#     peer_set AutoIntf=all,intf=auto" );
 		result.add( "#" );
 		result.add( "# When multiple rules apply the one further down the list of rules take precedence" );
 		result.add( "# Currently peer_set limits are not schedulable" );
@@ -5559,6 +5561,8 @@ SpeedLimitHandler
 		initialise(
 			int		tag_id )
 		{
+			// System.out.println( "init " + name + " -> " + tag_id );
+			
 			if ( ip_set_tag_type != null ){
 
 				tag_impl	= new TagPeerImpl( this, tag_id );
