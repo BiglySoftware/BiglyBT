@@ -1334,6 +1334,8 @@ public class MyTorrentsView
 
 								names.add( name );
 							}
+							
+							names.add( dm.getSaveLocation().getAbsolutePath());		// always throw in matching against the full save path
 
 						} else if (i == 5) {
 							List<String> names = new ArrayList<String>();
