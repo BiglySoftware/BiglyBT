@@ -61,6 +61,8 @@ TagBase
 	protected static final String	AT_RSS_ENABLE					= "rss.enable";
 	protected static final String	AT_RATELIMIT_UP_PRI				= "rl.uppri";
 	protected static final String	AT_XCODE_TARGET					= "xcode.to";
+	
+	protected static final String	AT_FL_PREVENT_DELETE			= "fl.pd";
 	protected static final String	AT_FL_MOVE_COMP					= "fl.comp";
 	protected static final String	AT_FL_MOVE_COMP_OPT				= "fl.comp.o";
 	protected static final String	AT_FL_MOVE_REM					= "fl.rem";
@@ -762,6 +764,32 @@ TagBase
 				tag_type.fireMetadataChanged( this );
 
 				tag_type.getTagManager().checkRSSFeeds( this, enable );
+			}
+		}
+	}
+	
+	public boolean
+	getPreventDelete()
+	{
+		if ( tag_fl != null ){
+		
+			return( readBooleanAttribute( AT_FL_PREVENT_DELETE, false ));
+		}
+		
+		return( false );
+	}
+	
+	public void
+	setPreventDelete(
+		boolean		b )
+	{
+		if ( tag_fl != null ){
+		
+			if ( getPreventDelete() != b ){
+			
+				writeBooleanAttribute( AT_FL_PREVENT_DELETE, b );
+		
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}

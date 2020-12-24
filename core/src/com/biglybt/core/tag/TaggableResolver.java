@@ -42,4 +42,22 @@ TaggableResolver
 	public void
 	requestAttention(
 		String		id );
+	
+	public void
+	addLifecycleControlListener(
+		LifecycleControlListener		l );
+	
+	public void
+	removeLifecycleControlListener(
+		LifecycleControlListener		l );
+
+	interface
+	LifecycleControlListener
+	{
+		public void
+		canTaggableBeRemoved(
+			Taggable		taggble )
+		
+			throws Exception;
+	}
 }

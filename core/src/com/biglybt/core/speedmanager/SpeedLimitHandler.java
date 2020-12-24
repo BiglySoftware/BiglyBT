@@ -6008,6 +6008,13 @@ SpeedLimitHandler
 					
 					super.setActionEnabled( actions, true );
 				}
+				
+				int[] colour = COConfigurationManager.getRGBParameter( "speed.limit.handler.ipset_n." + getTagID() + ".color" );
+				
+				if ( colour != null ){
+					
+					super.setColor( colour );
+				}
 			}
 
 			@Override
@@ -6036,6 +6043,15 @@ SpeedLimitHandler
 				
 					COConfigurationManager.setParameter( "speed.limit.handler.ipset_n." + getTagID() + ".eos", enabled?TagFeatureExecOnAssign.ACTION_DESTROY:-1);
 				}
+			}
+			
+			@Override
+			public void 
+			setColor(int[] rgb)
+			{
+				super.setColor(rgb);
+				
+				COConfigurationManager.setRGBParameter( "speed.limit.handler.ipset_n." + getTagID() + ".color", rgb, null );
 			}
 			
 			private void

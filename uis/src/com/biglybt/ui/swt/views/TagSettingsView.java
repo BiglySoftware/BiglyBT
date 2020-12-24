@@ -24,13 +24,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
@@ -111,6 +109,8 @@ public class TagSettingsView
 		public StringListSwtParameter	max_aggregate_sr_action;
 
 		public BooleanSwtParameter	max_aggregate_sr_priority;
+
+		private BooleanSwtParameter preventDeletion;
 
 		public folderOption 		initalSaveFolder;
 		public BooleanSwtParameter	initalSaveData;
@@ -966,6 +966,27 @@ public class TagSettingsView
 					gd = new GridData(SWT.FILL, SWT.NONE, true, false, 4, 1);
 					gFiles.setLayoutData(gd);
 
+					params.preventDeletion = new BooleanSwtParameter(gFiles,
+							"tag.prevent_delete", "label.prevent.dl.delete",
+							null, new BooleanSwtParameter.ValueProcessor() {
+								@Override
+								public Boolean getValue(BooleanSwtParameter p) {
+									return(fl.getPreventDelete());
+								}
+
+								@Override
+								public boolean setValue(BooleanSwtParameter p, Boolean value) {
+									if (fl.getPreventDelete() == value) {
+										return false;
+									}
+									fl.setPreventDelete(value);
+									return true;
+								}
+							});
+					gd = new GridData();
+					gd.horizontalSpan = 8;
+					params.preventDeletion.setLayoutData(gd);
+					
 					if ( fl.supportsTagInitialSaveFolder()){
 
 						params.initalSaveFolder =

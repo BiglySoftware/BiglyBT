@@ -460,6 +460,10 @@ COConfigurationManager
 		return ConfigurationManager.getInstance().setRGBParameter(parameter, rgb, override);
 	}
 
+	public static int[] getRGBParameter(String parameter ) {
+		return ConfigurationManager.getInstance().getRGBParameter(parameter);
+	}
+
 	public static float
 	getFloatParameter(
 		String		_name)

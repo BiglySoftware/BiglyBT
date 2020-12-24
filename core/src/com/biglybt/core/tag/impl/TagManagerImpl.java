@@ -2153,6 +2153,23 @@ TagManagerImpl
 		}
 	}
 
+	public TaggableResolver
+	getResolver(
+		long		taggable_type )
+	{
+		synchronized( lifecycle_handlers ){
+
+			LifecycleHandlerImpl handler = lifecycle_handlers.get( taggable_type );
+			
+			if ( handler != null ){
+				
+				return( handler.resolver );
+			}
+		}
+		
+		return( null );
+	}
+	
 	@Override
 	public void
 	addTaggableLifecycleListener(

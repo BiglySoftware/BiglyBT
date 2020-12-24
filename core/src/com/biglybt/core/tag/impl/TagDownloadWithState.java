@@ -46,7 +46,7 @@ import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 public class
 TagDownloadWithState
 	extends TagWithState
-	implements TagDownload
+	implements TagDownload, TaggableResolver.LifecycleControlListener
 {
 	private static Object	FP_DL_KEY = new Object();
 	
@@ -77,6 +77,8 @@ TagDownloadWithState
 	private boolean	supports_xcode;
 	private boolean	supports_file_location;
 
+	private boolean	prevent_delete;
+	
 	private String	notification_pub = "";
 		
 	final Object	rate_lock = new Object();
@@ -260,6 +262,18 @@ TagDownloadWithState
 
 		notification_pub					= getNotifyMessageChannel();
 		
+		prevent_delete = getPreventDelete();
+		
+		if ( prevent_delete ){
+			
+			TaggableResolver resolver = getTagType().getResolver();
+			
+			if ( resolver != null ){
+			
+				resolver.addLifecycleControlListener( this );
+			}
+		}
+		
 		addTagListener(
 			new TagListener()
 			{
@@ -292,7 +306,7 @@ TagDownloadWithState
 						
 						updateFPSeeding( manager, true );
 					}
-					
+										
 					ncp_pub_list_mutate_index.incrementAndGet();
 				}
 
@@ -1414,6 +1428,42 @@ TagDownloadWithState
 		getTagType().fireMetadataChanged( this );
 
 		checkFPSeeding();
+	}
+	
+	public void
+	setPreventDelete(
+		boolean		b )
+	{
+		super.setPreventDelete( b );
+		
+		if ( prevent_delete != b ){
+			
+			prevent_delete = b;
+				
+			TaggableResolver resolver = getTagType().getResolver();
+			
+			if ( prevent_delete && resolver != null ){
+				
+				resolver.addLifecycleControlListener( this );
+				
+			}else{
+				
+				resolver.removeLifecycleControlListener( this );
+			}
+		}
+	}
+	
+	public void
+	canTaggableBeRemoved(
+		Taggable		taggable )
+	
+		throws Exception
+	{
+		if ( prevent_delete && hasTaggable( taggable )){
+			
+			
+			throw( new Exception( "Download removal prevented by Tag '" + getTagName() + "'" ));
+		}
 	}
 	
 	@Override

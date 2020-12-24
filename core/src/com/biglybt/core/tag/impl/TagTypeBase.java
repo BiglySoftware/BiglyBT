@@ -144,6 +144,12 @@ TagTypeBase
 		return( manager );
 	}
 
+	protected TaggableResolver
+	getResolver()
+	{
+		return( manager.getResolver( tag_type ));
+	}
+	
 	protected Taggable
 	resolveTaggable(
 		String		id )

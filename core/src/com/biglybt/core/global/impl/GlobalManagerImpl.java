@@ -253,7 +253,8 @@ public class GlobalManagerImpl
 	private final Map<HashWrapper,Map>			saved_download_manager_state	= new HashMap<>();
 	private final Map<HashWrapper,Boolean> 		paused_list_initial 			= new HashMap<>();
 
-
+	private Map<LifecycleControlListener,GlobalManagerDownloadWillBeRemovedListener>	lcl_map = new HashMap<>();
+	
 	private int							next_seed_piece_recheck_index;
 
 	private final TorrentFolderWatcher torrent_folder_watcher;
@@ -3410,6 +3411,67 @@ public class GlobalManagerImpl
 		if ( dm != null ){
 
 			dm.requestAttention();
+		}
+	}
+	
+	@Override
+	public void 
+	addLifecycleControlListener(
+		LifecycleControlListener l )
+	{
+		synchronized( lcl_map ){
+			
+			if ( lcl_map.containsKey( l )){
+				
+				Debug.out( "Listener already added" );
+			}
+			
+			GlobalManagerDownloadWillBeRemovedListener gl = 
+				new GlobalManagerDownloadWillBeRemovedListener(){
+					
+					@Override
+					public void 
+					downloadWillBeRemoved(
+						DownloadManager manager, 
+						boolean remove_torrent, 
+						boolean remove_data )
+					
+						throws GlobalManagerDownloadRemovalVetoException
+					{
+				
+						try{
+							l.canTaggableBeRemoved( manager );
+							
+						}catch( Throwable e ){
+							
+							throw( new GlobalManagerDownloadRemovalVetoException( Debug.getNestedExceptionMessage( e )));
+						}
+					}
+				};
+				
+			lcl_map.put( l, gl );
+			
+			addDownloadWillBeRemovedListener( gl );
+		}
+	}
+	
+	@Override
+	public void 
+	removeLifecycleControlListener(
+		LifecycleControlListener l )
+	{
+		synchronized( lcl_map ){
+			
+			GlobalManagerDownloadWillBeRemovedListener gl = lcl_map.remove( l );
+			
+			if ( gl == null ){
+				
+				Debug.out( "Listener not found" );
+				
+			}else{
+				
+				removeDownloadWillBeRemovedListener( gl );
+			}
 		}
 	}
 

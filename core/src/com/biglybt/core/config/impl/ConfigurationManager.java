@@ -687,6 +687,22 @@ ConfigurationManager
 		return changed;
 	}
 
+	public int[] getRGBParameter(String parameter) {
+		
+		int	r = getIntParameter( parameter + ".red", -1 );
+		int	g = getIntParameter( parameter + ".green", -1 );
+		int	b = getIntParameter( parameter + ".blue", -1 );
+		
+		if ( 	r < 0 || r > 255 ||
+				g < 0 || g > 255 ||
+				b < 0 || b > 255 ){
+			
+			return( null );
+		}
+		
+		return( new int[]{ r, g, b });
+	}	
+	
 	public Object
   getParameter(
 	String	name )

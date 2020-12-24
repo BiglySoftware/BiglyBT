@@ -31,6 +31,13 @@ TagFeatureFileLocation
 	public static final long	FL_BOTH			= FL_DATA | FL_TORRENT;
 	public static final long	FL_DEFAULT		= FL_DATA;
 
+	public boolean
+	getPreventDelete();
+	
+	public void
+	setPreventDelete(
+		boolean		b );
+	
 		// initial location
 
 	public boolean
