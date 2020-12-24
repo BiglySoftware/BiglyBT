@@ -824,6 +824,12 @@ public class SBC_DownloadHistoryView
 
 			o_name = names;
 
+		}else if ( filter.startsWith( "f:" )){
+
+			filter = filter.substring( 2 );
+
+			o_name = ds.getSaveLocation();
+
 		}else{
 
 			o_name = ds.getName();
