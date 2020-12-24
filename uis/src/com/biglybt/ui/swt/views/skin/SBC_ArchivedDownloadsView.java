@@ -212,6 +212,23 @@ public class SBC_ArchivedDownloadsView
 					}
 				});
 
+		tableManager.registerColumn(DownloadStub.class,
+				ColumnArchiveDLCompDate.COLUMN_ID,
+				new TableColumnCoreCreationListener() {
+					@Override
+					public TableColumnCore createTableColumnCore(
+							Class<?> forDataSourceType, String tableID, String columnID) {
+						return new ColumnDateSizer(DownloadStub.class, columnID,
+								TableColumnCreator.DATE_COLUMN_WIDTH, tableID) {
+						};
+					}
+
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnArchiveDLCompDate(column);
+					}
+				});
+		
 		tableManager.setDefaultColumnNames(TABLE_NAME,
 				new String[] {
 					ColumnArchiveDLName.COLUMN_ID,
@@ -756,6 +773,7 @@ public class SBC_ArchivedDownloadsView
 
 			boolean result = !match_result;
 
+			boolean	try_save_path = true;
 
 			for ( DownloadStubFile file: files ){
 
@@ -765,10 +783,20 @@ public class SBC_ArchivedDownloadsView
 
 					result = match_result;
 
+					try_save_path = false;
+					
 					break;
 				}
 			}
 
+			if ( try_save_path ){
+				
+				if ( pattern.matcher( ds.getSavePath()).find()){
+
+					result = match_result;
+				}
+			}
+			
 			return( result );
 
 		}else{

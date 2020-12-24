@@ -1353,7 +1353,7 @@ DownloadManagerImpl
 			category = null;
 		}
 		
-		DownloadStubImpl stub = new DownloadStubImpl( this,	download, manual_tags, category,  gm_data );
+		DownloadStubImpl stub = new DownloadStubImpl( this,	download, core_dm, manual_tags, category,  gm_data );
 
 		try{
 			informAdded( stub, true );

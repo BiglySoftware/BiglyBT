@@ -101,6 +101,9 @@ DownloadStub
 		public long
 		getCreationDate();
 
+		public long
+		getCompletionDate();
+
 		public String[]
 		getManualTags();
 

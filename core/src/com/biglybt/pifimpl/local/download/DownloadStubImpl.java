@@ -27,13 +27,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.StringInterner;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TorrentUtils;
-import com.biglybt.core.util.TrackersUtil;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.download.DownloadRemovalVetoException;
@@ -53,6 +54,7 @@ DownloadStubImpl
 	private final byte[]					hash;
 	private final long						size;
 	private final long						date_created;
+	private final long						date_completed;
 	private String							save_path;
 	private final String					main_tracker;
 	private final DownloadStubFileImpl[]	files;
@@ -69,6 +71,7 @@ DownloadStubImpl
 	DownloadStubImpl(
 		DownloadManagerImpl		_manager,
 		DownloadImpl			_download,
+		DownloadManager			_core_dm,
 		String[]				_manual_tags,
 		String					_category,
 		Map<String,Object>		_gm_map )
@@ -114,6 +117,17 @@ DownloadStubImpl
 			
 			main_tracker = null;
 		}
+		
+		DownloadManagerState dms = _core_dm.getDownloadState();
+		
+		long comp = dms.getLongAttribute( DownloadManagerState.AT_COMPLETE_LAST_TIME );
+
+		if ( comp == 0 ){
+
+			comp = dms.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME );	// nothing recorded either way
+		}
+		
+		date_completed = comp;
 	}
 
 	protected
@@ -178,6 +192,8 @@ DownloadStubImpl
 			
 			main_tracker	= StringInterner.intern( tracker );
 		}
+		
+		date_completed	= MapUtils.getMapLong( _map, "dc", 0 );
 	}
 
 	public Map<String,Object>
@@ -236,6 +252,11 @@ DownloadStubImpl
 		if ( main_tracker != null ){
 			
 			MapUtils.setMapString(map, "tr", main_tracker );
+		}
+		
+		if ( date_completed > 0 ){
+			
+			map.put( "dc", date_completed );
 		}
 		
 		return( map );
@@ -307,7 +328,14 @@ DownloadStubImpl
 	{
 		return( date_created );
 	}
-
+	
+	@Override
+	public long 
+	getCompletionDate()
+	{
+		return( date_completed );
+	}
+	
 	@Override
 	public String
 	getSavePath()
