@@ -74,13 +74,15 @@ TagBase
 	protected static final String	AT_FL_MOVE_ASSIGN				= "fl.ass";
 	protected static final String	AT_FL_MOVE_ASSIGN_OPT			= "fl.ass.o";
 
-	protected static final String	AT_RATELIMIT_MIN_SR				= "rl.minsr";
-	protected static final String	AT_RATELIMIT_MAX_SR				= "rl.maxsr";
-	protected static final String	AT_RATELIMIT_MAX_SR_ACTION		= "rl.maxsr.a";
-	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR	= "rl.maxaggsr";
+	protected static final String	AT_RATELIMIT_MIN_SR						= "rl.minsr";
+	protected static final String	AT_RATELIMIT_MAX_SR						= "rl.maxsr";
+	protected static final String	AT_RATELIMIT_MAX_SR_ACTION				= "rl.maxsr.a";
+	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR			= "rl.maxaggsr";
 	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR_ACTION	= "rl.maxaggsr.a";
 	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY	= "rl.maxaggsr.p";
 	protected static final String	AT_RATELIMIT_FP_SEEDING					= "rl.fps";
+	protected static final String	AT_RATELIMIT_BOOST						= "rl.bst";
+	
 	protected static final String	AT_PROPERTY_PREFIX				= "pp.";
 	//protected static final String	AT_EOA_PREFIX					= "eoa.";	// meh, should be used but copy/paste error resulted in AT_PROPERTY_PREFIX being used instead 
 	protected static final String	AT_BYTES_UP						= "b.up";
@@ -794,6 +796,32 @@ TagBase
 		}
 	}
 
+	public boolean
+	getTagBoost()
+	{
+		if ( tag_rl != null ){
+			
+			return( readBooleanAttribute( AT_RATELIMIT_BOOST, false ));
+		}
+		
+		return( false );
+	}
+
+	public void
+	setTagBoost(
+		boolean		boost )
+	{
+		if ( tag_rl != null ){
+			
+			if ( getTagBoost() != boost ){
+			
+				writeBooleanAttribute( AT_RATELIMIT_BOOST, boost );
+		
+				tag_type.fireMetadataChanged( this );
+			}
+		}
+	}
+	
 		// initial save location
 
 	public boolean

@@ -102,6 +102,13 @@ TagFeatureRateLimit
 	public void
 	setTagUploadPriority(
 		int		priority );
+	
+	public boolean
+	getTagBoost();
+
+	public void
+	setTagBoost(
+		boolean		boost );
 
 		// min share ratio
 

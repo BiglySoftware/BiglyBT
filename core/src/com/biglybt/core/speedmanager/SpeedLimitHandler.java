@@ -67,6 +67,8 @@ import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl;
+import com.biglybt.plugin.net.buddy.BuddyPlugin;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 
 public class
 SpeedLimitHandler
@@ -162,6 +164,8 @@ SpeedLimitHandler
 
 	private final List<String>	auto_peer_set_queue_client 	= new ArrayList<>();
 	private final List<String>	auto_peer_set_queue_intf	= new ArrayList<>();
+	
+	private volatile	BuddyPlugin buddy_plugin;
 	
 	private
 	SpeedLimitHandler(
@@ -291,6 +295,17 @@ SpeedLimitHandler
 		setNetLimitPauseAllActive( COConfigurationManager.getBooleanParameter( "speed.limit.handler.schedule.nl_pa_active", false ));
 	}
 
+	private BuddyPlugin
+	getBuddyPlugin()
+	{
+		if ( buddy_plugin == null ){
+			
+			buddy_plugin = BuddyPluginUtils.getPlugin();
+		}
+		
+		return( buddy_plugin );
+	}
+	
 	private void
 	setRulePauseAllActive(
 		boolean	active )
@@ -5982,10 +5997,12 @@ SpeedLimitHandler
 			implements TagPeer, TagFeatureExecOnAssign
 		{
 			private final PeerSet		ip_set;
-			private final Object	UPLOAD_PRIORITY_ADDED_KEY = new Object();
+			
+			private final Object	UPLOAD_PRIORITY_ADDED_KEY 	= new Object();
+			private final Object	BOOSTED_KEY 				= new Object();
 
-			private int upload_priority;
-
+			private int 		upload_priority;
+			
 			private final Set<PEPeer>	added_peers 	= new HashSet<>();
 			private final Set<PEPeer>	pending_peers 	= new HashSet<>();
 
@@ -6000,7 +6017,11 @@ SpeedLimitHandler
 				
 				addTag();
 
+					// these tags aget added and removed so we need to remember the config separately so we can reset it
+				
 				upload_priority = COConfigurationManager.getIntParameter( "speed.limit.handler.ipset_n." + tag_id + ".uppri", 0 );
+				
+				setTagBoost( COConfigurationManager.getBooleanParameter( "speed.limit.handler.ipset_n." + tag_id + ".boost", false ));
 				
 				int actions = COConfigurationManager.getIntParameter( "speed.limit.handler.ipset_n." + tag_id + ".eos", -1 );
 				
@@ -6522,6 +6543,11 @@ SpeedLimitHandler
 					((PEPeer)t).updateAutoUploadPriority( UPLOAD_PRIORITY_ADDED_KEY, true );
 				}
 
+				if ( getTagBoost()){
+				
+					setBoost((PEPeer)t, true );
+				}
+				
 				super.addTaggable( t );
 			}
 
@@ -6535,6 +6561,11 @@ SpeedLimitHandler
 					((PEPeer)t).updateAutoUploadPriority( UPLOAD_PRIORITY_ADDED_KEY, false );
 				}
 
+				if ( getTagBoost()){
+					
+					setBoost((PEPeer)t, false );
+				}
+				
 				super.removeTaggable( t );
 			}
 
@@ -6741,6 +6772,68 @@ SpeedLimitHandler
 
 			@Override
 			public void
+			setTagBoost(
+				boolean		boost )
+			{
+				super.setTagBoost( boost );
+				
+				COConfigurationManager.setParameter( "speed.limit.handler.ipset_n." + getTagID() + ".boost", boost );
+
+				List<PEPeer> peers = getTaggedPeers();
+
+				for ( PEPeer peer: peers ){
+
+					setBoost( peer, boost );
+				}
+			}
+
+			private void
+			setBoost(
+				PEPeer		pe_peer,
+				boolean		boost )
+			{			
+				BuddyPlugin bp = getBuddyPlugin();
+				
+				if ( bp != null ){
+				
+					boolean is_boosted = pe_peer.getUserData( BOOSTED_KEY ) != null;
+					
+					if ( boost || is_boosted ){
+						
+						try{
+							Download download = PluginCoreUtils.wrap( core.getGlobalManager().getDownloadManager( new HashWrapper( pe_peer.getManager().getHash())));
+							
+							Peer peer = PluginCoreUtils.wrap( pe_peer );
+							
+							if ( download != null && peer != null ){
+							
+								if ( boost ){
+									
+									if ( !bp.isPartialBuddy( download, peer )){
+										
+										bp.setPartialBuddy( download, peer, true );
+										
+										pe_peer.setUserData( BOOSTED_KEY, "" );
+									}
+								}else{
+									
+										// must be boosted here
+									
+									bp.setPartialBuddy( download, peer, false );
+									
+									pe_peer.setUserData( BOOSTED_KEY, null );
+								}
+							}					
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+				}
+			}
+			
+			@Override
+			public void
 			removeTag()
 			{
 				if ( upload_priority > 0 ){
@@ -6750,6 +6843,8 @@ SpeedLimitHandler
 					for ( PEPeer peer: peers ){
 
 						peer.updateAutoUploadPriority( UPLOAD_PRIORITY_ADDED_KEY, false );
+						
+						setBoost( peer, false );
 					}
 				}
 
