@@ -81,6 +81,7 @@ SpeedLimitHandler
 	private static final Object	RLU_TO_BE_REMOVED_KEY = new Object();
 
 	private static final Object PEER_LT_WAIT_START_KEY	= new Object();
+	private static final Object PEER_ASN_WAIT_START_KEY	= new Object();
 	
 	public static SpeedLimitHandler
 	getSingleton(
@@ -1096,6 +1097,7 @@ SpeedLimitHandler
 
 					Pattern client_pattern	= null;
 					Pattern intf_pattern	= null;
+					Pattern asn_pattern		= null;
 					
 					PeerSet set = null;
 
@@ -1166,6 +1168,15 @@ SpeedLimitHandler
 									
 									throw( new Exception( "Invalid intf pattern - '" + rhs + "'" ));
 								}
+							}else if ( lc_lhs.equals( "asn" )){
+								
+								try{
+									asn_pattern = Pattern.compile( rhs, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+									
+								}catch( Throwable e ){
+									
+									throw( new Exception( "Invalid asn pattern - '" + rhs + "'" ));
+								}
 							}else{
 
 								String name = lhs;
@@ -1213,12 +1224,17 @@ SpeedLimitHandler
 						throw( new Exception());
 					}
 
-					if ( client_pattern != null && intf_pattern != null ){
+					int	pattern_count = 0;
+					if ( client_pattern != null )pattern_count++;
+					if ( intf_pattern != null )pattern_count++;
+					if ( asn_pattern != null )pattern_count++;
+					
+					if ( pattern_count > 1 ){
 						
-						throw( new Exception( "Both client and intf can't be set at the same time" ));
+						throw( new Exception( "Only one of client, intf and asn pattern can be set for a peer set" ));
 					}
 					
-					set.setParameters( inverse, up_lim, down_lim, peer_up_lim, peer_down_lim, categories_or_tags, client_pattern, intf_pattern );
+					set.setParameters( inverse, up_lim, down_lim, peer_up_lim, peer_down_lim, categories_or_tags, client_pattern, intf_pattern, asn_pattern );
 
 				}catch( Throwable e ){
 
@@ -2241,7 +2257,7 @@ SpeedLimitHandler
 										try{
 											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
 											
-											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern, null );
+											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern, null, null );
 											
 											set.addCIDRorCCetc( "all" );
 												
@@ -2274,7 +2290,7 @@ SpeedLimitHandler
 										try{
 											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
 											
-											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), null, pattern );
+											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), null, pattern, null );
 											
 											set.addCIDRorCCetc( "all" );
 												
@@ -3493,7 +3509,7 @@ SpeedLimitHandler
 		result.add( "#            day_of_week: mon|tue|wed|thu|fri|sat|sun" );
 		result.add( "#        time: hh:mm - 24 hour clock; 00:00=midnight; local time" );
 		result.add( "#        extension: (start_tag|stop_tag|pause_tag|resume_tag):<tag_name> (enable_priority|disable_priority)" );
-		result.add( "#    peer_set <set_name>=[<CIDR_specs...>|CC list|Network List|<prior_set_name>] [,inverse=[yes|no]] [,up=<limit>] [,down=<limit>] [peer_up=<limit>] [peer_down=<limit>] [,cat=<cat names>] [,tag=<tag names>] [,client=<regular expression>|auto] [,intf=<regular expression>|auto]" );
+		result.add( "#    peer_set <set_name>=[<CIDR_specs...>|CC list|Network List|<prior_set_name>] [,inverse=[yes|no]] [,up=<limit>] [,down=<limit>] [peer_up=<limit>] [peer_down=<limit>] [,cat=<cat names>] [,tag=<tag names>] [,client=<regular expression>|auto] [,intf=<regular expression>|auto] [,asn=<regular expression>]" );
 		result.add( "#    net_limit (hourly|daily|weekly|monthly)[(:<profile>|$<tag>)] [total=<limit>] [up=<limit>] [down=<limit>]");
 		result.add( "#    priority_(up|down) <id>=<tag_name> [,<id>=<tag_name>]+ [,freq=<secs>] [,max=<limit>] [,probe=<cycles>]" );
 		result.add( "#" );
@@ -5557,6 +5573,7 @@ SpeedLimitHandler
 
 		private Pattern			client_pattern;
 		private Pattern			intf_pattern;
+		private Pattern			asn_pattern;
 		
 		private String			group;
 		
@@ -5622,7 +5639,8 @@ SpeedLimitHandler
 			int				_peer_down_lim,
 			Set<String>		_cats_or_tags,
 			Pattern			_client_pattern,
-			Pattern			_intf_pattern )
+			Pattern			_intf_pattern,
+			Pattern			_asn_pattern )
 		{
 			inverse	= _inverse;
 
@@ -5646,12 +5664,13 @@ SpeedLimitHandler
 			
 			client_pattern 	= _client_pattern;
 			intf_pattern 	= _intf_pattern;
+			asn_pattern		= _asn_pattern;
 			
 			if ( client_pattern != null && client_pattern.pattern().equals( "auto" )){
 				
 				setGroup( MessageText.getString( "Peers.column.client" ) + "_" + MessageText.getString( "wizard.maketorrent.auto" ));
 				
-			}else  if ( intf_pattern != null && intf_pattern.pattern().equals( "auto" )){
+			}else if ( intf_pattern != null && intf_pattern.pattern().equals( "auto" )){
 				
 				setGroup( MessageText.getString( "label.interface.short" ) + "_" + MessageText.getString( "wizard.maketorrent.auto" ));
 			}
@@ -5669,13 +5688,6 @@ SpeedLimitHandler
 		{
 			return( client_pattern );
 		}
-		
-		public Pattern
-		getIntfPattern()
-		{
-			return( intf_pattern );
-		}
-
 		
 		private int
 		getPeerUpLimit()
@@ -5987,7 +5999,8 @@ SpeedLimitHandler
 					", Categories/Tags=" + (categories_or_tags==null?"[]":String.valueOf(categories_or_tags)) +
 					", Peer_Up=" + format( peer_up_lim ) + ", Peer_Down=" + format( peer_down_lim )) +
 					", Client=" + (client_pattern==null?"":client_pattern) +
-					", Intf=" + (intf_pattern==null?"":intf_pattern);
+					", Intf=" + (intf_pattern==null?"":intf_pattern) +
+					", ASN=" + (asn_pattern==null?"":asn_pattern);
 
 		}
 
@@ -6198,9 +6211,9 @@ SpeedLimitHandler
 			private boolean
 			deferEOS()
 			{
-					// we might not match this peer set as not yet applied client/intf matching...
+					// we might not match this peer set as not yet applied client/intf.asn matching...
 				
-				return( ip_set.client_pattern != null || ip_set.intf_pattern != null );
+				return( ip_set.client_pattern != null || ip_set.intf_pattern != null || ip_set.asn_pattern != null );
 			}
 			
 			private void
@@ -6234,8 +6247,9 @@ SpeedLimitHandler
 			{
 				Pattern client_pattern 	= ip_set.client_pattern;
 				Pattern intf_pattern 	= ip_set.intf_pattern;
+				Pattern asn_pattern 	= ip_set.asn_pattern;
 				
-				if ( client_pattern == null && intf_pattern == null ){
+				if ( client_pattern == null && intf_pattern == null && asn_pattern == null ){
 					
 					return( 1 );
 					
@@ -6243,9 +6257,13 @@ SpeedLimitHandler
 					
 					return( canAddClient( peer, client_pattern ));
 					
-				}else{
+				}else if ( intf_pattern != null ){
 					
 					return( canAddIntf( peer, intf_pattern ));
+					
+				}else{
+					
+					return( canAddASN( peer, asn_pattern ));
 				}
 			}
 			
@@ -6423,6 +6441,54 @@ SpeedLimitHandler
 				return( result?1:2 );
 			}
 			
+			private int
+			canAddASN(
+				PEPeer		peer,
+				Pattern		asn_pattern )
+			{
+				boolean	result = false;
+				
+				String as_name	= PeerUtils.getASN( peer );
+				
+				if ( as_name != null ){
+					
+					if ( !as_name.isEmpty()){
+						
+						if ( asn_pattern.matcher( as_name ).find()){
+						
+							result = true;
+						}
+					}
+				}else{
+						// we want to give a bit more time for asn lookup
+									
+					Long start = (Long)peer.getUserData( PEER_ASN_WAIT_START_KEY );
+					
+					long now = SystemTime.getMonotonousTime();
+					
+					if ( start == null ){
+						
+						peer.setUserData( PEER_ASN_WAIT_START_KEY, now );
+						
+						return( 0 );
+						
+					}else if ( now - start < 20*1000 ){
+					
+						return( 0 );
+					}
+				}
+				
+				if ( result ){
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY )){
+
+						return( 3 );
+					}
+				}
+				
+				return( result?1:2 );
+			}
+				
 			private void
 			add(
 				PeerManager		peer_manager,

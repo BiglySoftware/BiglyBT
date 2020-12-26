@@ -22,21 +22,14 @@
 
 package com.biglybt.ui.swt.views.tableitems.peers;
 
-import java.net.InetAddress;
-
 import com.biglybt.core.peer.PEPeer;
-import com.biglybt.core.util.AENetworkClassifier;
-
-import com.biglybt.core.networkmanager.admin.*;
+import com.biglybt.core.peer.util.PeerUtils;
 
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
-/**
- *
- */
 public class ASItem
        extends CoreTableColumnSWT
        implements TableCellRefreshListener
@@ -63,46 +56,15 @@ public class ASItem
 
     if ( peer != null ){
 
-    	text = (String)peer.getUserData( ASItem.class );
-
+    	text = PeerUtils.getASN( peer );
+    	
     	if ( text == null ){
-
+    		
     		text = "";
-
-    		peer.setUserData( ASItem.class, text );
-
-    		String peer_ip = peer.getIp();
-
-    		if ( AENetworkClassifier.categoriseAddress( peer_ip ) == AENetworkClassifier.AT_PUBLIC ){
-
-	    		try{
-		    		NetworkAdmin.getSingleton().lookupASN(
-		    			InetAddress.getByName( peer_ip ),
-		    			new NetworkAdminASNListener()
-		    			{
-		    				@Override
-						    public void
-		    				success(
-		    					NetworkAdminASN		asn )
-		    				{
-		    					peer.setUserData( ASItem.class, asn.getAS() + " - " + asn.getASName());
-		    				}
-
-		    				@Override
-						    public void
-		    				failed(
-		    					NetworkAdminException	error )
-		    				{
-		    				}
-		    			});
-
-		    	}catch( Throwable e ){
-		    	}
-    		}
     	}
     }
 
-    if (!cell.setSortValue(text) && cell.isValid()){
+    if ( !cell.setSortValue(text) && cell.isValid()){
 
       return;
     }

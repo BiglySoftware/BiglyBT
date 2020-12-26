@@ -36,6 +36,9 @@ import com.biglybt.core.networkmanager.TransportBase;
 import com.biglybt.core.networkmanager.TransportEndpoint;
 import com.biglybt.core.networkmanager.TransportStartpoint;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.networkmanager.admin.NetworkAdminASN;
+import com.biglybt.core.networkmanager.admin.NetworkAdminASNListener;
+import com.biglybt.core.networkmanager.admin.NetworkAdminException;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.peers.Peer;
@@ -848,6 +851,80 @@ public class PeerUtils {
 		return( result );
 	}
 	
+	private static final Object	asn_key 		= new Object();
+	private static final Object	asn_pending 	= new Object();
+
+		/**
+		 * 
+		 * @param peer
+		 * @return null if lookup pending, "" or ASN otherwise
+		 */
+	
+	public static String
+	getASN(
+		PEPeer		peer )
+	{
+		if ( network_admin == null ){
+			
+			return( "" );
+		}
+
+    	Object o = peer.getUserData( asn_key );
+
+    	if ( o instanceof String ){
+    		
+    		return((String)o);
+    		
+    	}else if ( o == asn_pending ){   	
+    		
+    		return( null );
+    		
+    	}else{
+    	
+       		String peer_ip = peer.getIp();
+
+    		if ( AENetworkClassifier.categoriseAddress( peer_ip ) == AENetworkClassifier.AT_PUBLIC ){
+
+        		peer.setUserData( asn_key, asn_pending );
+
+	    		try{
+		    		NetworkAdmin.getSingleton().lookupASN(
+		    			InetAddress.getByName( peer_ip ),
+		    			new NetworkAdminASNListener()
+		    			{
+		    				@Override
+						    public void
+		    				success(
+		    					NetworkAdminASN		asn )
+		    				{
+		    					peer.setUserData( asn_key, asn.getASName());
+		    				}
+
+		    				@Override
+						    public void
+		    				failed(
+		    					NetworkAdminException	error )
+		    				{
+		    					peer.setUserData( asn_key, "" );
+		    				}
+		    			});
+		    		
+		    		return( null );
+
+		    	}catch( Throwable e ){
+		    		
+		    		peer.setUserData( asn_key, "" );
+		    		
+		    		return( "" );
+		    	}
+    		}else{
+    			
+    			peer.setUserData( asn_key, "" );
+    			
+    			return( "" );
+    		}
+    	}
+	}
 	/*
 	public static void
 	main(
