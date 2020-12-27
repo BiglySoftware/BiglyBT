@@ -401,8 +401,8 @@ public class TabbedMDI_Ren
 						if (tabFolder.getSimple() || tabFolder.getSingle()) {
 							Rectangle drawRect = sp.getCalculatedDrawRect();
 							if (drawRect != null) {
-								gc.setBackground(display.getSystemColor(SWT.COLOR_BLACK));
-								gc.setForeground(display.getSystemColor(SWT.COLOR_WHITE));
+								gc.setBackground(Colors.getSystemColor( display, SWT.COLOR_BLACK));
+								gc.setForeground(Colors.getSystemColor( display, SWT.COLOR_WHITE));
 								gc.drawFocus(drawRect.x - 1, drawRect.y - 1, drawRect.width + 2,
 										drawRect.height + 2);
 							}

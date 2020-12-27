@@ -360,7 +360,7 @@ public class MessageSlideShell
 		}
 
 		if (colorFG == null) {
-			colorFG = Colors.getSystemColor(display, SWT.COLOR_BLACK);
+			//colorFG = Colors.getSystemColor(display, SWT.COLOR_BLACK);
 		}
 
 		FormLayout shellLayout = new FormLayout();

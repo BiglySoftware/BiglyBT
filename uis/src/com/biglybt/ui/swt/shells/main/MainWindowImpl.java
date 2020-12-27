@@ -1927,8 +1927,10 @@ public class MainWindowImpl
 		Color colorSearchTextBG = properties.getColor("color.search.text.bg");
 		Color colorSearchTextFG = properties.getColor("color.search.text.fg");
 
-		if (colorSearchTextBG != null) {
-			text.setBackground(colorSearchTextBG);
+		if ( !Utils.isDarkAppearancePartial()) {
+			if (colorSearchTextBG != null) {
+				text.setBackground(colorSearchTextBG);
+			}
 		}
 
 		final TextWithHistory twh = new TextWithHistory( "mainwindow.search.history", text );

@@ -525,9 +525,16 @@ public class Colors implements ParameterListener {
 		if (Utils.isGTK3) {
 			if (id == SWT.COLOR_INFO_BACKGROUND) {
 				return ColorCache.getColor(d, 0, 0,0 );
-			}
-			if (id == SWT.COLOR_INFO_FOREGROUND) {
+			}else  if (id == SWT.COLOR_INFO_FOREGROUND) {
 				return ColorCache.getColor(d, 255, 255,255 );
+			}else {
+				if ( Utils.isDarkAppearancePartial()) {
+					if ( id == SWT.COLOR_BLACK ) {
+						return( white );
+					}else if ( id == SWT.COLOR_WHITE ) {
+						return( black );
+					}
+				}
 			}
 		}
 		return d.getSystemColor(id);

@@ -381,7 +381,9 @@ ProgressWindow
 		layout.numColumns = 2;
 		shell.setLayout(layout);
 
-		shell.setBackground( Colors.white );
+		Color bg = Utils.isDarkAppearancePartial()?null:Colors.white;
+		
+		shell.setBackground( bg );
 		
 		if ( task != null ){
 			
@@ -399,7 +401,7 @@ ProgressWindow
 				GridData gridData = new GridData( GridData.FILL_HORIZONTAL );
 				gridData.horizontalSpan = 2;
 				lName.setLayoutData(gridData);
-				lName.setBackground( Colors.white );
+				lName.setBackground( bg );
 				
 				lName.setFont( bold_font );
 				
@@ -421,7 +423,7 @@ ProgressWindow
 					gridData.horizontalSpan = 2;
 					gridData.horizontalIndent = 25;
 					subtask_label.setLayoutData(gridData);
-					subtask_label.setBackground( Colors.white );
+					subtask_label.setBackground( bg );
 				}
 			}
 		}
@@ -496,7 +498,7 @@ ProgressWindow
 					}
 				});
 
-	    	canvas.setBackground( Colors.white );
+	    	canvas.setBackground( bg );
 		}
 
 
@@ -505,7 +507,7 @@ ProgressWindow
 		label.setText(MessageText.getString( resource ));
 		GridData gridData = new GridData();
 		label.setLayoutData(gridData);
-		label.setBackground( Colors.white );
+		label.setBackground( bg );
 		
 		if ( progress != null ){
 		
@@ -518,12 +520,12 @@ ProgressWindow
 			layoutProgress.numColumns = 1;
 			layoutProgress.marginWidth = layoutProgress.marginHeight = 0;
 			compProg.setLayout(layoutProgress);
-			compProg.setBackground( Colors.white );
+			compProg.setBackground( bg );
 			
 			progress_bar = new ProgressBar(compProg,SWT.HORIZONTAL );
 			progress_bar.setMinimum(0);
 			progress_bar.setMaximum(1000);
-			progress_bar.setBackground( Colors.white );
+			progress_bar.setBackground( bg );
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
 			gridData.widthHint = 400;
 			progress_bar.setLayoutData(gridData);
@@ -561,7 +563,7 @@ ProgressWindow
 				GridLayout layoutButtons = new GridLayout();
 				layoutButtons.numColumns = num_buttons;
 				comp.setLayout(layoutButtons);
-				comp.setBackground( Colors.white );
+				comp.setBackground( bg );
 		
 				List<Button> buttons = new ArrayList<>();
 		
