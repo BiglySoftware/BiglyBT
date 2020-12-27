@@ -211,7 +211,7 @@ NetworkAdminASNLookupImpl
 				}
 			}catch( Throwable e ){
 
-				Debug.outNoStack( "ASN lookup for '" + asn_query+ "' failed: " + e.getMessage());
+				Debug.outNoStack( "ASN lookup " + address + " (" + ip_result + ") for '" + asn_query+ "' failed: " + e.getMessage());
 			}
 		}
 
@@ -296,6 +296,19 @@ NetworkAdminASNLookupImpl
 		}
 
 		String as 			= (String)map.get( "as" );
+		
+			// seems we can get multiple AS space separated here (e..g 223.206.19.*)
+		
+		if ( as != null ){
+						
+			int pos = as.indexOf( " " );
+			
+			if ( pos > 0 ){
+				
+				as = as.substring( 0, pos ).trim();
+			}
+		}
+		
 		String asn 			= (String)map.get( "as name" );
 		String bgp_prefix	= (String)map.get( "bgp prefix" );
 
