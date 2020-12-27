@@ -6009,7 +6009,42 @@ public class OpenTorrentOptionsWindow
 
 			if ( COConfigurationManager.getBooleanParameter( "open.torrent.window.rename.on.tlf.change" )){
 
-				torrentOptions.setManualRename( newDir.getName());
+				TorrentOpenFileOptions[] files = torrentOptions.getFiles();
+				
+					// if only one file is left selected then use this as the new name rather than
+					// the most likely less useful folder name
+				
+				TorrentOpenFileOptions	single_file = null;
+				
+				for ( TorrentOpenFileOptions file: files ){
+					
+					if ( file.isToDownload()){
+						
+						if ( single_file == null ){
+							
+							single_file = file;
+							
+						}else{
+							
+							single_file = null;
+							
+							break;
+						}
+					}
+				}
+				
+				String new_name;
+				
+				if ( single_file == null ){
+					
+					new_name = newDir.getName();
+					
+				}else{
+					
+					new_name = single_file.getDestFileName();
+				}
+				
+				torrentOptions.setManualRename( new_name );
 
 			}else{
 
