@@ -23,31 +23,25 @@
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import java.util.List;
+import java.util.Objects;
 
-import com.biglybt.core.download.DownloadManager;
-import com.biglybt.pif.download.Download;
-import com.biglybt.pif.ui.tables.TableCell;
-import com.biglybt.pif.ui.tables.TableCellRefreshListener;
-import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.core.tag.*;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
-import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagManager;
-import com.biglybt.core.tag.TagManagerFactory;
-import com.biglybt.core.tag.TagType;
-import com.biglybt.core.tag.TagUtils;
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ui.tables.*;
 
 /** Display Category torrent belongs to.
  *
  * @author TuxPaper
  */
 public class TagsItem
-       extends CoreTableColumnSWT
-       implements TableCellRefreshListener
+	extends CoreTableColumnSWT
+	implements TableCellRefreshListener, TableCellToolTipListener
 {
-	private static TagManager tag_manager = TagManagerFactory.getTagManager();
+	private static final TagManager tag_manager = TagManagerFactory.getTagManager();
 
-	public static final Class DATASOURCE_TYPE = Download.class;
+	public static final Class<Download> DATASOURCE_TYPE = Download.class;
 
 	public static final String COLUMN_ID = "tags";
 
@@ -64,27 +58,76 @@ public class TagsItem
 
 	@Override
 	public void refresh(TableCell cell) {
-		String sTags = null;
-		DownloadManager dm = (DownloadManager)cell.getDataSource();
-		if (dm != null) {
-			List<Tag> tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
+		StringBuilder sb = new StringBuilder();
 
-			if ( tags.size() > 0 ){
+		try {
+			Taggable taggable = (Taggable) cell.getDataSource();
+			if (taggable == null) {
+				return;
+			}
 
-				tags = TagUtils.sortTags( tags );
+			List<Tag> tags = tag_manager.getTagsForTaggable(
+					TagType.TT_DOWNLOAD_MANUAL, taggable);
 
-				for ( Tag t: tags ){
+			if (tags.isEmpty()) {
+				return;
+			}
 
-					String str = t.getTagName( true );
+			tags = TagUtils.sortTags(tags);
 
-					if ( sTags == null ){
-						sTags = str;
-					}else{
-						sTags += ", " + str;
+			for (Tag tag : tags) {
+				if (sb.length() != 0) {
+					sb.append(", ");
+				}
+				sb.append(tag.getTagName(true));
+			}
+
+		} finally {
+			cell.setText(sb.toString());
+		}
+	}
+
+	@Override
+	public void cellHover(TableCell cell) {
+		Taggable taggable = (Taggable) cell.getDataSource();
+		if (taggable == null) {
+			return;
+		}
+
+		List<Tag> tags = tag_manager.getTagsForTaggable(TagType.TT_DOWNLOAD_MANUAL,
+				taggable);
+		tags = TagUtils.sortTags(tags);
+		String group = null;
+		boolean firstInGroup = true;
+		StringBuilder sb = new StringBuilder();
+		for (Tag tag : tags) {
+			String newGroup = tag.getGroup();
+			if (!Objects.equals(group, newGroup)) {
+				group = newGroup;
+				if (sb.length() > 0) {
+					sb.append('\n');
+					if (group == null) {
+						sb.append('\n');
 					}
 				}
+				if (group != null) {
+					sb.append(group).append(": ");
+				}
+				firstInGroup = true;
 			}
+			if (firstInGroup) {
+				firstInGroup = false;
+			} else {
+				sb.append(", ");
+			}
+			sb.append(tag.getTagName(true));
 		}
-		cell.setText((sTags == null) ? "" : sTags );
+
+		cell.setToolTip(sb.toString());
+	}
+
+	@Override
+	public void cellHoverComplete(TableCell cell) {
+		cell.setToolTip(null);
 	}
 }
