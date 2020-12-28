@@ -293,7 +293,7 @@ DiskManager
 	public long[]
 	getMoveProgress();
 
-	public File
+	public String
 	getMoveSubTask();
 	
 	public void

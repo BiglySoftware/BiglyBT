@@ -602,7 +602,7 @@ LWSDiskManager
     }
 
     @Override
-    public File 
+    public String 
     getMoveSubTask()
     {
     	return( null );

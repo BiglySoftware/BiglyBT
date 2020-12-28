@@ -83,7 +83,7 @@ import com.biglybt.platform.PlatformManagerFactory;
 public class
 DiskManagerImpl
     extends LogRelation
-    implements DiskManagerHelper
+    implements DiskManagerHelper, DiskManagerUtil.MoveTaskAapter
 {
 	private static final int DM_FREE_PIECELIST_TIMEOUT	= 120*1000;
 
@@ -2398,15 +2398,20 @@ DiskManagerImpl
     }
 
     @Override
-    public File 
+    public String 
     getMoveSubTask()
     {
     	if ( move_in_progress ){
 
-    		return( move_subtask );
+    		File f = move_subtask;
+    		
+    		if ( f != null ){
+    			
+    			return( f.getName());
+    		}
     	}
 
-    	return( null );
+    	return( "" );
     }
     
     @Override
@@ -2605,7 +2610,7 @@ DiskManagerImpl
         			perform(
         				SaveLocationChange move_details )
         			{
-        				moveFiles( move_details, true, op_status );
+        				moveDownloadFilesWhenEndedOrRemoved0( move_details, op_status );
         			}
         		});
 
@@ -2614,7 +2619,7 @@ DiskManagerImpl
 
         if ( move_details != null ){
 
-        	moveFiles( move_details, true, op_status );
+        	moveDownloadFilesWhenEndedOrRemoved0( move_details, op_status );
         }
 
         return true;
@@ -2633,6 +2638,24 @@ DiskManagerImpl
           }
 
       }
+    }
+    
+    private void
+    moveDownloadFilesWhenEndedOrRemoved0(
+   		SaveLocationChange 	loc_change,
+       	OperationStatus		op_status )	
+    {
+    	Runnable target = ()->{
+    		moveFiles( loc_change, true, op_status );
+    	};
+    	
+    	try{
+    		DiskManagerUtil.runMoveTask( download_manager, target, this );
+    		
+    	}catch( Throwable e ){
+    		
+    		Debug.out( e );
+    	}
     }
 
     @Override

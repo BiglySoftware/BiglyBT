@@ -20,6 +20,10 @@
 
 package com.biglybt.core.disk.impl;
 
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
+import com.biglybt.core.CoreOperationTask.ProgressCallbackAdapter;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
@@ -30,6 +34,7 @@ import com.biglybt.core.diskmanager.cache.CacheFile;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerFactory;
 import com.biglybt.core.diskmanager.cache.CacheFileOwner;
 import com.biglybt.core.download.*;
+import com.biglybt.core.download.impl.DownloadManagerImpl;
 import com.biglybt.core.download.impl.DownloadManagerStatsImpl;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.LocaleUtilDecoder;
@@ -39,6 +44,7 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.FileUtil.ProgressListener;
 
 import java.io.File;
 import java.io.IOException;
@@ -1819,7 +1825,7 @@ DiskManagerUtil
 					}
 					
 					@Override
-					public File getMoveSubTask(){
+					public String getMoveSubTask(){
 						return null;
 					}
 					
@@ -2015,5 +2021,216 @@ DiskManagerUtil
 			
 			return( null );
 		}
-	}	
+	}
+	
+	private static List<CoreOperationTask>	move_tasks = new ArrayList<>();
+	  
+	public static void
+	runMoveTask(
+		DownloadManager		download_manager,
+		Runnable			target,
+		MoveTaskAapter		adapter )
+	
+		throws DownloadManagerException
+	{
+		  try{
+			  FileUtil.runAsTask(
+					new CoreOperationTask()
+					{
+						private boolean		queued = true;
+						
+						@Override
+						public String 
+						getName()
+						{
+							return( download_manager.getDisplayName());
+						}
+											
+						@Override
+						public DownloadManager 
+						getDownload()
+						{
+							return( download_manager );
+						}
+						
+						private ProgressCallback callback = 
+							new ProgressCallbackAdapter()
+							{
+								private volatile int	current_state = ProgressCallback.ST_NONE;
+								
+								@Override
+								public int 
+								getProgress()
+								{
+									long[] mp = adapter.getMoveProgress();
+									
+									return( mp==null?-1:(int)mp[0]);
+								}
+								
+								@Override
+								public long 
+								getSize()
+								{
+									long[] mp = adapter.getMoveProgress();
+									
+									return( mp==null?-1:mp[1] );
+								}
+								
+								@Override
+								public String 
+								getSubTaskName()
+								{
+									return( adapter.getMoveSubTask());
+								}
+								
+								@Override
+								public int 
+								getSupportedTaskStates()
+								{
+									return( 
+										ProgressCallback.ST_PAUSE |  
+										ProgressCallback.ST_RESUME |
+										ProgressCallback.ST_CANCEL |
+										ProgressCallback.ST_SUBTASKS );
+								}
+								
+								@Override
+								public void 
+								setTaskState(
+									int state )
+								{
+									if ( current_state == ProgressCallback.ST_CANCEL ){
+										
+										return;
+									}
+									
+									if ( state == ProgressCallback.ST_PAUSE ){
+										
+										adapter.setMoveState( ProgressListener.ST_PAUSED );
+										
+										current_state = state;
+										
+									}else if ( state == ProgressCallback.ST_RESUME ){
+										
+										adapter.setMoveState( ProgressListener.ST_NORMAL );
+
+										current_state = ProgressCallback.ST_NONE;									
+
+									}else if ( state == ProgressCallback.ST_CANCEL ){
+										
+										adapter.setMoveState( ProgressListener.ST_CANCELLED );
+										
+										current_state = ProgressCallback.ST_CANCEL;									
+									}
+								}
+								
+								public int
+								getTaskState()
+								{
+									if ( current_state == ProgressCallback.ST_NONE && queued ){
+										
+										return( ProgressCallback.ST_QUEUED );
+									}
+									
+									return( current_state );
+								}
+							};
+			  
+						@Override
+						public void
+						run(
+							CoreOperation operation)
+						{
+							boolean ready;
+							
+							synchronized( move_tasks ){
+								
+								move_tasks.add( this );
+								
+								ready = move_tasks.size() == 1;
+							}
+							
+							try{
+								while( !ready ){
+									
+									try{
+										Thread.sleep( 500 );
+										
+									}catch( Throwable e ){
+										
+									}
+									
+									if ( callback.getTaskState() == ProgressCallback.ST_CANCEL ){
+										
+										throw( new RuntimeException( "Cancelled" ));
+									}
+									
+									synchronized( move_tasks ){
+										
+										for ( CoreOperationTask task: move_tasks ){
+											
+											int state = task.getProgressCallback().getTaskState();
+											
+											if ( state != ProgressCallback.ST_PAUSE ){
+												
+												if ( task == this ){
+													
+													if ( state == ProgressCallback.ST_QUEUED ){
+														
+														ready = true;
+													}
+												}
+												
+												break;
+											}
+										}
+									}
+								}
+								
+								queued = false;
+								
+								target.run();
+								
+							}finally{
+								
+								synchronized( move_tasks ){
+									
+									move_tasks.remove( this );
+								}
+							}
+						}
+						
+						@Override
+						public ProgressCallback 
+						getProgressCallback()
+						{
+							return( callback );
+						}
+					});
+		  }catch( RuntimeException e ){
+
+			  Throwable cause = e.getCause();
+
+			  if ( cause instanceof DownloadManagerException ){
+
+				  throw((DownloadManagerException)cause);
+			  }
+
+			  throw( e );
+		  }
+	  }
+	
+	public interface
+	MoveTaskAapter
+	{
+		public long[]
+		getMoveProgress();
+		
+		public String
+		getMoveSubTask();
+		
+		public void
+		setMoveState(
+			int	state );
+	}
 }
