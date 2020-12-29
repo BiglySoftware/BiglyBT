@@ -182,6 +182,14 @@ public class SinglePeerDownloader implements RateControlledEntity {
   public String
   getString()
   {
-	  return( "SPD: " + connection.getString());
+	  int[] temp = rate_handler.getCurrentNumBytesAllowed();
+	  
+	  String ba = "";
+	  
+	  for ( int t: temp ){
+		  ba += (ba.isEmpty()?"":",") + t;
+	  }
+	  
+	  return( "SPD: bytes_allowed=" + ba + " " + connection.getString());
   }
 }

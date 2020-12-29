@@ -226,7 +226,15 @@ public class SinglePeerUploader implements RateControlledEntity {
   public String
   getString()
   {
-	  return( "SPU: bytes_allowed=" + rate_handler.getCurrentNumBytesAllowed() + " " + connection.getString());
+	  int[] temp = rate_handler.getCurrentNumBytesAllowed();
+	  
+	  String ba = "";
+	  
+	  for ( int t: temp ){
+		  ba += (ba.isEmpty()?"":",") + t;
+	  }
+	  
+	  return( "SPU: bytes_allowed=" + ba + " " + connection.getString());
   }
 
 }

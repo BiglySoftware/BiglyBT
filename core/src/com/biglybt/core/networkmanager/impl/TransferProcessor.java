@@ -173,6 +173,14 @@ TransferProcessor
    * @param group rate limit group
    */
   public void registerPeerConnection( NetworkConnectionBase connection, boolean upload ) {
+	  
+	if ( connection.isClosed()){
+		
+		Debug.out( "Connection is closed" );
+		
+		return;
+	}
+	
     final ConnectionData conn_data = new ConnectionData();
 
     try {  connections_mon.enter();
@@ -432,6 +440,13 @@ TransferProcessor
 	final NetworkConnectionBase 	connection,
 	int 							partition_id )
   {
+	  if ( connection.isClosed()){
+
+		  Debug.out( "Connection is closed" );
+
+		  return;
+	  }
+		
     ConnectionData connection_data = null;
 
     try{

@@ -119,6 +119,13 @@ PeerForeignNetworkConnection
 	}
 	
 	@Override
+	public boolean 
+	isClosed()
+	{
+		return( delegate.isClosed());
+	}
+	
+	@Override
 	public String
 	getString()
 	{

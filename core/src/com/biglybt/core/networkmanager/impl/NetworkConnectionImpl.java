@@ -235,6 +235,12 @@ NetworkConnectionImpl
     is_connected = false;
   }
 
+  @Override
+  public boolean 
+  isClosed()
+  {
+	  return( closed );
+  }
 
   @Override
   public void notifyOfException(Throwable error ) {
@@ -352,6 +358,11 @@ NetworkConnectionImpl
 	@Override
 	public void 
 	resetLANLocalStatus(){
+		if ( closed ){
+			
+			return;
+		}
+		
 		if ( is_lan_local != AddressUtils.LAN_LOCAL_MAYBE ){
 			
 			NetworkManager nm = NetworkManager.getSingleton();
@@ -379,8 +390,13 @@ NetworkConnectionImpl
 	public String
 	getString()
 	{
-		return( "tran=" + (transport==null?"null":transport.getDescription()+",w_ready=" + transport.isReadyForWrite(null)+",r_ready=" + transport.isReadyForRead( null ))+ ",in=" + incoming_message_queue.getPercentDoneOfCurrentMessage() +
-				",out=" + (outgoing_message_queue==null?0:outgoing_message_queue.getTotalSize()) + ",owner=" + (connection_listener==null?"null":connection_listener.getDescription()));
+		return( "tran=" + (transport==null?"null":transport.getDescription()+
+				",closed/con=" + closed + "/" + is_connected +
+				",w_ready=" + transport.isReadyForWrite(null)+
+				",r_ready=" + transport.isReadyForRead( null ))+ 
+				",in=" + incoming_message_queue.getPercentDoneOfCurrentMessage() +
+				",out=" + (outgoing_message_queue==null?0:outgoing_message_queue.getTotalSize()) + 
+				",owner=" + (connection_listener==null?"null":connection_listener.getDescription()));
 	}
 
 	protected static class

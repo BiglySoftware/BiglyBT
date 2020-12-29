@@ -809,8 +809,11 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
       if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
         //copy-on-write
         ArrayList high_new = new ArrayList( high_priority_entities );
-        high_new.remove( entity );
-        high_priority_entities = high_new;
+        if ( high_new.remove( entity )){
+        	high_priority_entities = high_new;
+        }else{
+        	Debug.out( "entity not found" );
+        }
       }
       else {
         //copy-on-write
@@ -820,8 +823,11 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 	        boosted_priority_entities = boosted_new;
     	}else{
 	        ArrayList norm_new = new ArrayList( normal_priority_entities );
-	        norm_new.remove( entity );
-	        normal_priority_entities = norm_new;
+	        if ( norm_new.remove( entity )){
+	        	normal_priority_entities = norm_new;
+	        }else{
+	        	Debug.out( "entity not found" );
+	        }
     	}
       }
 

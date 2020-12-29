@@ -67,6 +67,9 @@ NetworkConnectionBase
 
 	public void resetLANLocalStatus();
 	
+	public boolean
+	isClosed();
+	
 	public void
 	setUploadLimit(
 		int		limit );
