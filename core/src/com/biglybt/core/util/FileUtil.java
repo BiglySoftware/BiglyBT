@@ -2171,11 +2171,49 @@ public class FileUtil {
 
     		to_os = null;
 
-    		if ( !from_file.delete()){
-    			Debug.out( "renameFile: failed to delete '"
-    					+ from_file.toString() + "'" );
-
-    			throw( new Exception( "Failed to delete '" + from_file.toString() + "'"));
+    			// sometimes the file can be locked (by AV?)
+    		
+    		long del_retry_start = 0;
+    		
+    		while( true ){
+    			
+	    		if ( from_file.delete()){
+	    			
+	    			break;
+	    		}
+	    		
+	    		long now = SystemTime.getMonotonousTime();
+	    		
+	    		if ( del_retry_start == 0 ){
+	    			
+	    			del_retry_start = now;
+	    			
+	    		}else if ( now - del_retry_start < 10*1000 ){
+	    			
+	    			try{
+	    				
+	    				Thread.sleep( 250 );
+	    				
+	    			}catch( Throwable e ){
+	    				
+	    			}
+	    		}else{
+	    			
+	    			Debug.out( "renameFile: failed to delete '"
+	    					+ from_file.toString() + "'" );
+	
+	    			throw( new Exception( "Failed to delete '" + from_file.toString() + "'"));
+	    		}
+	    		
+	    		if ( pl != null ){
+	    		
+	    			int state =  pl.getState();
+	    			
+	    			if ( state == ProgressListener.ST_CANCELLED ){
+						
+						throw( new IOException( "Cancelled" ));
+	    			}
+	    		}
     		}
 
     		success	= true;
