@@ -3190,7 +3190,10 @@ BuddyPluginViewInstance
 
 						PartialBuddy buddy = (PartialBuddy)selection[i].getData();
 
-						buddy.remove();
+						if ( buddy != null ){
+							
+							buddy.remove();
+						}
 					}
 				}
 			});
