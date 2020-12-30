@@ -25,7 +25,7 @@ import java.util.List;
 
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -352,17 +352,23 @@ public class TorrentInfoView
 
 			final FakeTableCell	cell = cells[i];
 
-			label = new Label(gColumns, SWT.NULL);
+			CLabel cLabel = new CLabel(gColumns, SWT.NULL);
 			gridData = new GridData();
 			if ( i%2 == 1 ){
 				gridData.horizontalIndent = 16;
 			}
-			label.setLayoutData(gridData);
-			String key = ((TableColumnCore) cell.getTableColumn()).getTitleLanguageKey();
-			label.setText(MessageText.getString(key) + ": ");
-			Utils.setTT(label,MessageText.getString(key + ".info", ""));
-			label.setData("ColumnName", cell.getTableColumn().getName());
-			DragSource dragSource = DragDropUtils.createDragSource(label, DND.DROP_MOVE | DND.DROP_COPY);
+			cLabel.setLayoutData(gridData);
+			TableColumnCore tc = (TableColumnCore) cell.getTableColumn();
+			String key = tc.getTitleLanguageKey();
+			cLabel.setText(MessageText.getString(key) + ": ");
+			Utils.setTT(cLabel,MessageText.getString(key + ".info", ""));
+			String iconReference = tc.getIconReference();
+			if (iconReference != null) {
+				Utils.setMenuItemImage(cLabel, iconReference);
+			}
+			
+			cLabel.setData("ColumnName", tc.getName());
+			DragSource dragSource = DragDropUtils.createDragSource(cLabel, DND.DROP_MOVE | DND.DROP_COPY);
 			dragSource.setTransfer( new Transfer[] { TextTransfer.getInstance() });
 			dragSource.addDragListener(this);
 
