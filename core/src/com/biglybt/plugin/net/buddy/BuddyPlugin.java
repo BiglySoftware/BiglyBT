@@ -1200,9 +1200,10 @@ BuddyPlugin
 	setPartialBuddy(
 		Download	download,
 		Peer		peer,
-		boolean		b )
+		boolean		is_partial,
+		boolean		manual )
 	{
-		if ( b ){
+		if ( is_partial ){
 			
 			if ( !isClassicEnabled()){
 				
@@ -1212,13 +1213,13 @@ BuddyPlugin
 		
 		BuddyPluginTracker tracker = getTracker();
 		
-		if ( b ){
+		if ( is_partial ){
 			
-			tracker.addPartialBuddy( download, peer );
+			tracker.addPartialBuddy( download, peer, manual );
 			
 		}else{
 			
-			tracker.removePartialBuddy( download, peer );
+			tracker.removePartialBuddy( download, peer, manual );
 		}
 	}
 	

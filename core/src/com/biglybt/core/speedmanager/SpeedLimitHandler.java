@@ -6874,18 +6874,19 @@ SpeedLimitHandler
 							if ( download != null && peer != null ){
 							
 								if ( boost ){
+											
+									if ( !is_boosted ){
 									
-									if ( !bp.isPartialBuddy( download, peer )){
-										
-										bp.setPartialBuddy( download, peer, true );
+										bp.setPartialBuddy( download, peer, true, false );
 										
 										pe_peer.setUserData( BOOSTED_KEY, "" );
 									}
+						
 								}else{
 									
 										// must be boosted here
 									
-									bp.setPartialBuddy( download, peer, false );
+									bp.setPartialBuddy( download, peer, false, false );
 									
 									pe_peer.setUserData( BOOSTED_KEY, null );
 								}

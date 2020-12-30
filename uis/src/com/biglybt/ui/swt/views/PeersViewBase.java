@@ -789,7 +789,7 @@ PeersViewBase
 		
 						if ( dm != null ){
 							
-							bp.setPartialBuddy( PluginCoreUtils.wrap( dm ), p_peer, sel );
+							bp.setPartialBuddy( PluginCoreUtils.wrap( dm ), p_peer, sel, true );
 						}
 					}
 				}

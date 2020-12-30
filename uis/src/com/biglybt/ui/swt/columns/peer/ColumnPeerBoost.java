@@ -123,7 +123,7 @@ ColumnPeerBoost
 				
 				if ( download != null ){
 															
-					bp.setPartialBuddy( download, peer, set );
+					bp.setPartialBuddy( download, peer, set, true );
 				}
 			}catch( Throwable e ){
 				
