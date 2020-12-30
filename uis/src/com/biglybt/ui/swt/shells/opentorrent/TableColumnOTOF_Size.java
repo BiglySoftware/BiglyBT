@@ -17,17 +17,22 @@
 
 package com.biglybt.ui.swt.shells.opentorrent;
 
+import java.text.NumberFormat;
+
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.torrent.impl.TorrentOpenFileOptions;
 import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
 
+import com.biglybt.pif.ui.tables.*;
+
 public class TableColumnOTOF_Size
-implements TableCellRefreshListener, TableColumnExtraInfoListener, TableCellSWTPaintListener
+	implements TableCellRefreshListener, TableColumnExtraInfoListener,
+	TableCellSWTPaintListener, TableCellToolTipListener
 {
 	public static final String COLUMN_ID = "size";
 
@@ -82,4 +87,22 @@ implements TableCellRefreshListener, TableColumnExtraInfoListener, TableCellSWTP
 		}
 	}
 
+	@Override
+	public void cellHover(TableCell cell) {
+		Object ds = cell.getDataSource();
+		if (!(ds instanceof TorrentOpenFileOptions)) {
+			return;
+		}
+		TorrentOpenFileOptions tfi = (TorrentOpenFileOptions) ds;
+
+		String tooltip = NumberFormat.getInstance().format(tfi.lSize) + " "
+			+ MessageText.getString("DHTView.transport.bytes");
+
+		cell.setToolTip(tooltip);
+	}
+
+	@Override
+	public void cellHoverComplete(TableCell cell) {
+		cell.setToolTip(null);
+	}
 }
