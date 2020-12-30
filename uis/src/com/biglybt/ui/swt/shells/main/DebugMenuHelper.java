@@ -234,6 +234,11 @@ public class DebugMenuHelper
 				logAlert = new LogAlert(true, LogAlert.AT_ERROR, "ShortText");
 				logAlert.details = "Details";
 				Logger.log(logAlert);
+
+				logAlert = new LogAlert(true, LogAlert.AT_WARNING, "Forced Alert");
+				logAlert.forceNotify = true;
+				logAlert.details = "Details: \n\n" + text;
+				Logger.log(logAlert);
 			}
 		});
 
