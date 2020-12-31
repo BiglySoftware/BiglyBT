@@ -805,7 +805,7 @@ public class OpenTorrentOptionsWindow
 						public void
 						runSupport()
 						{
-							TorrentOpener.addTorrent( instance.getOptions());
+							instance.getOptions().addToDownloadManager();
 
 						}
 					});

@@ -25,21 +25,24 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
+import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerInitialisationAdapter;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.impl.DownloadManagerAdapter;
+import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
-import com.biglybt.core.torrent.PlatformTorrentUtils;
-import com.biglybt.core.torrent.TOTorrent;
-import com.biglybt.core.torrent.TOTorrentFile;
+import com.biglybt.core.torrent.*;
 import com.biglybt.core.util.*;
 import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 
 
 /**
@@ -1685,5 +1688,305 @@ public class TorrentOpenOptions
 			
 			dm.pause( false );
 		}
+	}
+
+	public boolean addToDownloadManager() {
+
+		try {
+			if (getTorrent() == null) {
+				return false;
+			}
+
+			final DownloadManagerInitialisationAdapter dmia = new DownloadManagerInitialisationAdapter() {
+
+				@Override
+				public int
+				getActions()
+				{
+					return( ACT_ASSIGNS_TAGS );
+				}
+
+				@Override
+				public void
+				initialised(
+					DownloadManager dm,
+					boolean for_seeding )
+				{
+					DiskManagerFileInfoSet file_info_set = dm.getDiskManagerFileInfoSet();
+
+					DiskManagerFileInfo[] fileInfos = file_info_set.getFiles();
+
+					boolean reorder_mode = COConfigurationManager.getBooleanParameter("Enable reorder storage mode");
+					int reorder_mode_min_mb = COConfigurationManager.getIntParameter("Reorder storage mode min MB");
+
+					DownloadManagerState dms = dm.getDownloadState();
+
+					try {
+						dms.suppressStateSave(true);
+
+						boolean[] toSkip = new boolean[fileInfos.length];
+						boolean[] toCompact = new boolean[fileInfos.length];
+						boolean[] toReorderCompact = new boolean[fileInfos.length];
+
+						int[] priorities = null;
+
+						int comp_num = 0;
+						int reorder_comp_num = 0;
+
+						final TorrentOpenFileOptions[] files = getFiles();
+
+						for (int iIndex = 0; iIndex < fileInfos.length; iIndex++) {
+							DiskManagerFileInfo fileInfo = fileInfos[iIndex];
+							if (iIndex < files.length && files[iIndex].lSize == fileInfo.getLength()) {
+								// Always pull destination file from fileInfo and not from
+								// TorrentFileInfo because the destination may have changed
+								// by magic code elsewhere
+								File fDest = fileInfo.getFile(true);
+								if (files[iIndex].isLinked()) {
+
+									fDest = files[iIndex].getDestFileFullName();
+
+									fDest = new File( fDest.getParentFile(), FileUtil.convertOSSpecificChars( fDest.getName(), false ));
+
+									// Can't use fileInfo.setLink(fDest) as it renames
+									// the existing file if there is one
+
+									dms.setFileLink(iIndex,
+										fileInfo.getFile(false), fDest);
+								}
+
+								if ( files[iIndex].isToDownload()){
+
+									int	priority = files[iIndex].getPriority();
+
+									if ( priority != 0 ){
+
+										if ( priorities == null ){
+
+											priorities = new int[fileInfos.length];
+										}
+
+										priorities[iIndex] = priority;
+									}
+								}else{
+									toSkip[iIndex] = true;
+
+									if (!fDest.exists()) {
+
+										if (reorder_mode
+											&& (fileInfo.getLength() / (1024 * 1024)) >= reorder_mode_min_mb) {
+
+											toReorderCompact[iIndex] = true;
+
+											reorder_comp_num++;
+
+										} else {
+
+											toCompact[iIndex] = true;
+
+											comp_num++;
+										}
+									}
+								}
+							}
+						}
+
+						// rename display name based on whether the user has manually renamed either the only file in
+						// a single file torrent or the top-level-folder in a multi-file torrent
+
+						if ( files.length == 1 ){
+
+							TorrentOpenFileOptions file = files[0];
+
+							if ( file.isManualRename()){
+
+								String fileRename = file.getDestFileName();
+
+								if ( fileRename != null && fileRename.length() > 0 ){
+
+									dms.setDisplayName( fileRename );
+								}
+							}
+						}else{
+
+							String folderRename = getManualRename();
+
+							if ( 	folderRename != null &&
+								folderRename.length() > 0 ){
+
+								dms.setDisplayName( folderRename );
+							}
+						}
+
+
+						if (comp_num > 0) {
+
+							file_info_set.setStorageTypes(toCompact,
+								DiskManagerFileInfo.ST_COMPACT);
+						}
+
+						if (reorder_comp_num > 0) {
+
+							file_info_set.setStorageTypes(toReorderCompact,
+								DiskManagerFileInfo.ST_REORDER_COMPACT);
+						}
+
+						file_info_set.setSkipped(toSkip, true);
+
+						if ( priorities != null ){
+
+							file_info_set.setPriority( priorities );
+						}
+
+						int	maxUp = getMaxUploadSpeed();
+
+						int kInB = DisplayFormatters.getKinB();
+
+						if ( maxUp > 0 ){
+							dm.getStats().setUploadRateLimitBytesPerSecond( maxUp*kInB );
+						}
+
+						int	maxDown = getMaxDownloadSpeed();
+
+						if ( maxDown > 0 ){
+							dm.getStats().setDownloadRateLimitBytesPerSecond( maxDown*kInB );
+						}
+
+						if (disableIPFilter) {
+
+							dms.setFlag(
+								DownloadManagerState.FLAG_DISABLE_IP_FILTER, true);
+						}
+
+						if (peerSource != null) {
+							for (String peerSourceID : peerSource.keySet()) {
+								boolean enable = peerSource.get(peerSourceID);
+								dms.setPeerSourceEnabled(peerSourceID, enable);
+							}
+						}
+
+						Map<String,Boolean> enabledNetworks = getEnabledNetworks();
+
+						if ( enabledNetworks != null ){
+
+							if ( !dms.getFlag( DownloadManagerState.FLAG_INITIAL_NETWORKS_SET )){
+
+								for (String net : enabledNetworks.keySet()) {
+									boolean enable = enabledNetworks.get(net);
+									dms.setNetworkEnabled(net, enable);
+								}
+							}
+						}
+
+						String user_comment = getUserComment();
+
+						if ( user_comment != null && !user_comment.isEmpty()){
+
+							dms.setUserComment( user_comment);
+						}
+
+						List<Tag> initialTags = getInitialTags();
+
+						for ( Tag t: initialTags ){
+
+							t.addTaggable( dm );
+						}
+
+						List<List<String>> trackers = getTrackers( true );
+
+						if ( trackers != null ){
+
+							TOTorrent torrent = dm.getTorrent();
+
+							TorrentUtils.listToAnnounceGroups( trackers, torrent);
+
+							try{
+
+								TorrentUtils.writeToFile(torrent);
+
+							}catch ( Throwable e2 ){
+
+								Debug.printStackTrace(e2);
+							}
+						}
+
+						if ( getSequentialDownload()) {
+
+							dms.setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, true );
+						}
+
+						TorrentOpenOptions.addModeDuringCreate( getStartMode(), dm );
+
+						File moc = getMoveOnComplete();
+
+						if ( moc != null ){
+
+							dms.setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, moc.getAbsolutePath());
+						}
+
+						Map<String,Object>	md = getInitialMetadata();
+
+						if ( md != null ){
+
+							TorrentUtils.setInitialMetadata( dm, md );
+						}
+					} finally {
+
+						dms.suppressStateSave(false);
+					}
+				}
+			};
+
+			CoreFactory.addCoreRunningListener(core -> {
+				TOTorrent torrent = getTorrent();
+				byte[] hash = null;
+				try {
+					hash = torrent.getHash();
+				} catch (TOTorrentException e1) {
+				}
+
+				int startMode = getStartMode();
+
+				int iStartState = TorrentOpenOptions.addModePreCreate( startMode );
+
+				GlobalManager gm = core.getGlobalManager();
+
+				DownloadManager dm = gm.addDownloadManager(getTorrentFile(),
+					hash, getParentDir(), getSubDir(),
+					iStartState, true,
+					startMode == TorrentOpenOptions.STARTMODE_SEEDING, dmia);
+
+				// If dm is null, most likely there was an error printed.. let's hope
+				// the user was notified and skip the error quietly.
+				// We don't have to worry about deleting the file (info.bDelete..)
+				// since gm.addDown.. will handle it.
+
+				if ( dm == null ){
+
+					return;
+				}
+
+				if ( getQueueLocation() == TorrentOpenOptions.QUEUELOCATION_TOP ){
+
+					gm.moveTop(new DownloadManager[] {
+						dm
+					});
+				}
+
+				TorrentOpenOptions.addModePostCreate(startMode, dm );
+			});
+
+		} catch (Exception e) {
+			UIFunctions uif = UIFunctionsManager.getUIFunctions();
+			if (uif != null) {
+				uif.showErrorMessage("OpenTorrentWindow.mb.openError",
+					Debug.getStackTrace(e), new String[] {
+						sOriginatingLocation,
+						e.getMessage()
+					});
+			}
+			return false;
+		}
+		return true;
 	}
 }
