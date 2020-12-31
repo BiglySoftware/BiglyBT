@@ -19,8 +19,8 @@ package com.biglybt.ui.swt.shells.main;
 import java.io.File;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
@@ -180,7 +180,7 @@ public class UIFunctionsImpl
 
 		if ( shell == null ){
 
-			return( VS_MINIMIZED_TO_TRAY );		// not sure about this
+			return( VS_TRAY_ONLY );		// not sure about this
 
 		}else{
 
@@ -188,33 +188,31 @@ public class UIFunctionsImpl
 
 			final AESemaphore sem = new AESemaphore( "getVisibilityState" );
 
-			if (
-				Utils.execSWTThread(
-					new AERunnable()
-					{
-						@Override
-						public void
-						runSupport()
-						{
-							try{
-								if ( !shell.isVisible()){
+			boolean success = Utils.execSWTThread(() -> {
+				try {
+					if (shell.isDisposed()) {
 
-									result[0] = VS_MINIMIZED_TO_TRAY;
+						result[0] = VS_TRAY_ONLY;
 
-								}else if ( shell.getMinimized()){
+					} else if (!shell.isVisible()) {
 
-									result[0] = VS_MINIMIZED;
+						result[0] = VS_MINIMIZED_TO_TRAY;
 
-								}else{
+					} else if (shell.getMinimized()) {
 
-									result[0] = VS_ACTIVE;
-								}
-							}finally{
+						result[0] = VS_MINIMIZED;
 
-								sem.release();
-							}
-						}
-					})){
+					} else {
+
+						result[0] = VS_ACTIVE;
+					}
+				} finally {
+
+					sem.release();
+				}
+			});
+
+			if (success) {
 
 				sem.reserve( 30*1000 );	// shouldn't block as if this is SWT thread code will run immediately, otherwise SWT thread shoudl be quick
 			}
@@ -1077,6 +1075,7 @@ public class UIFunctionsImpl
 		return( addTorrentWithOptions( torrentOptions, add_options ));
 	}
 
+	// TODO: move to TorrentUtils, with calls to UIF when needed
 	@Override
 	public boolean
 	addTorrentWithOptions(
@@ -1142,178 +1141,168 @@ public class UIFunctionsImpl
 					
 					delete_delegated = can_merge_private;
 					
-					Utils.execSWTThread(new AERunnable() {
-						@Override
-						public void runSupport() {
+					if ( can_merge_private ){
+						
+							// we have to modify the new, private torrent, for this to work. (can't do this if it isn't private as support for
+							// hash override isn't supported in DHT, magnet xfer,...
+						
+						String text_base = MessageText.getString(MSG_ALREADY_EXISTS
+								+ ".text", new String[] {
+							":" + torrentOptions.sOriginatingLocation,
+							fExistingName,
+							MessageText.getString(MSG_ALREADY_EXISTS_NAME),
+						});
 
-							if ( can_merge_private ){
+						String text = text_base + "\n\n" + MessageText.getString("openTorrentWindow.mb.alreadyExists.add.dup");
+
+						UIFunctionsUserPrompter promptSepDL = getUserPrompter(
+							MessageText.getString(MSG_ALREADY_EXISTS + ".title"), text,
+							new String[]{
+								MessageText.getString("Button.yes"),
+								MessageText.getString("Button.no")
+							}, 1);
+
+						promptSepDL.open(result -> {
+							if ( result == 0 ){ // Yes
+
+								try{
+									File tmp_dir = AETemporaryFileHandler.getTempDirectory();
+									
+									byte[] hash_ov = RandomUtils.nextSecureHash();
+									
+									String	hash_str = ByteFormatter.encodeString( hash_ov,  0, 4 );
+									
+									String new_file_name;
+									
+									if ( torrentOptions.getTorrentFile() == null ){
+										
+										new_file_name = hash_str;
+										
+									}else{
+										
+										new_file_name = new File( torrentOptions.getTorrentFile()).getName();
+										
+										int pos = new_file_name.lastIndexOf( "." );
+										
+										if ( pos != -1 ){
+											
+											new_file_name = new_file_name.substring( 0, pos );
+										}
+										
+										new_file_name += "_" + hash_str;
+									}
+									
+									new_file_name += ".torrent";
+									
+									File new_file = new File( tmp_dir, new_file_name );
+									
+									byte[] existing_hash = torrent.getHash();
+									
+									torrent.setHashOverride( hash_ov );
+									
+									TorrentUtils.setOriginalHash( torrent, existing_hash );
+									
+									torrent.serialiseToBEncodedFile( new_file );
+									
+									torrentOptions.setTorrentFile( new_file.getAbsolutePath());
+									
+									addTorrentWithOptionsSupport( torrentOptions, addOptions, false );
+									
+								}catch( Throwable e ){
+									
+									Debug.out( e );
+								}
+							}else if ( existing_torrent.getPrivate()){
+									
+								String text1 = text_base + "\n\n" + MessageText.getString("openTorrentWindow.mb.alreadyExists.add.replace");
+
+								UIFunctionsUserPrompter promptTrackers = getUserPrompter(
+									MessageText.getString(MSG_ALREADY_EXISTS + ".title"), text1,
+									new String[]{
+										MessageText.getString("Button.yes"),
+										MessageText.getString("Button.no")
+									}, 1);
+
+								promptTrackers.open(result1 -> {
+									if ( result1 == 0 ){ // Yes
+										
+										List<List<String>> new_trackers = TorrentUtils.announceGroupsToList( new_torrent );
+										
+										TorrentUtils.listToAnnounceGroups( new_trackers, existing_torrent );
+									}
+									
+									torrentOptions.deleteTorrent();
+								});
+							}else{
 								
-									// we have to modify the new, private torrent, for this to work. (can't do this if it isn't private as support for
-									// hash override isn't supported in DHT, magnet xfer,...
+								torrentOptions.deleteTorrent();
+							}
+						});
+														
+					}else{
+						
+						long	existed_for = SystemTime.getCurrentTime() - fExistingDownload.getCreationTime();
+
+						if (getVisibilityState() != VS_ACTIVE	&& !can_merge) {
+
+
+								// seems we're getting some double additions (linux user reported but could be a general issue) so
+								// don't warn if the matching download has been added recently
+
+							if ( existed_for > 15*1000 ){
 								
-								String text_base = MessageText.getString(MSG_ALREADY_EXISTS
+								forceNotify(STATUSICON_NONE,
+										MessageText.getString(MSG_ALREADY_EXISTS + ".title"),
+										MessageText.getString(MSG_ALREADY_EXISTS + ".text",
+												new String[] {
+													":" + torrentOptions.sOriginatingLocation, // : prefix is deliberate to disable click on ref in message as might be an unwanted action
+													fExistingName,
+													MessageText.getString(MSG_ALREADY_EXISTS_NAME),
+								}), null, new Object[] {
+									fExistingDownload
+								}, -1);
+
+							}
+						} else {
+
+							if (can_merge) {
+
+								String text = MessageText.getString(MSG_ALREADY_EXISTS
 										+ ".text", new String[] {
 									":" + torrentOptions.sOriginatingLocation,
 									fExistingName,
 									MessageText.getString(MSG_ALREADY_EXISTS_NAME),
 								});
 
-								String text = text_base + "\n\n" + MessageText.getString("openTorrentWindow.mb.alreadyExists.add.dup");
+								text += "\n\n"
+										+ MessageText.getString("openTorrentWindow.mb.alreadyExists.merge");
 
-								MessageBoxShell mb = 
-										new MessageBoxShell(SWT.YES | SWT.NO,
-												MessageText.getString(MSG_ALREADY_EXISTS + ".title"), text);
+								UIFunctionsUserPrompter promptTrackers = getUserPrompter(
+									MessageText.getString(MSG_ALREADY_EXISTS + ".title"), text,
+									new String[]{
+										MessageText.getString("Button.yes"),
+										MessageText.getString("Button.no")
+									}, 0);
 
-								mb.setDefaultButtonUsingStyle( SWT.NO );
-								
-								mb.open(new UserPrompterResultListener() {
-									@Override
-									public void prompterClosed(int result) {
-										if ( result == SWT.YES ){
+								promptTrackers.open(result -> {
+									if (result == 0) { // Yes
 
-											try{
-												File tmp_dir = AETemporaryFileHandler.getTempDirectory();
-												
-												byte[] hash_ov = RandomUtils.nextSecureHash();
-												
-												String	hash_str = ByteFormatter.encodeString( hash_ov,  0, 4 );
-												
-												String new_file_name;
-												
-												if ( torrentOptions.getTorrentFile() == null ){
-													
-													new_file_name = hash_str;
-													
-												}else{
-													
-													new_file_name = new File( torrentOptions.getTorrentFile()).getName();
-													
-													int pos = new_file_name.lastIndexOf( "." );
-													
-													if ( pos != -1 ){
-														
-														new_file_name = new_file_name.substring( 0, pos );
-													}
-													
-													new_file_name += "_" + hash_str;
-												}
-												
-												new_file_name += ".torrent";
-												
-												File new_file = new File( tmp_dir, new_file_name );
-												
-												byte[] existing_hash = torrent.getHash();
-												
-												torrent.setHashOverride( hash_ov );
-												
-												TorrentUtils.setOriginalHash( torrent, existing_hash );
-												
-												torrent.serialiseToBEncodedFile( new_file );
-												
-												torrentOptions.setTorrentFile( new_file.getAbsolutePath());
-												
-												addTorrentWithOptionsSupport( torrentOptions, addOptions, false );
-												
-											}catch( Throwable e ){
-												
-												Debug.out( e );
-											}
-										}else if ( existing_torrent.getPrivate()){
-												
-											String text = text_base + "\n\n" + MessageText.getString("openTorrentWindow.mb.alreadyExists.add.replace");
-
-											MessageBoxShell mb = 
-													new MessageBoxShell(SWT.YES | SWT.NO,
-															MessageText.getString(MSG_ALREADY_EXISTS + ".title"), text);
-
-											mb.setDefaultButtonUsingStyle( SWT.NO );
-											
-											mb.open(new UserPrompterResultListener() {
-												@Override
-												public void prompterClosed(int result) {
-													if ( result == SWT.YES ){
-														
-														List<List<String>> new_trackers = TorrentUtils.announceGroupsToList( new_torrent );
-														
-														TorrentUtils.listToAnnounceGroups( new_trackers, existing_torrent );
-													}
-													
-													torrentOptions.deleteTorrent();
-												}
-											});
-										}else{
-											
-											torrentOptions.deleteTorrent();
-										}
+										TorrentUtils.mergeAnnounceURLs(
+												torrentOptions.getTorrent(),
+												fExistingDownload.getTorrent());
 									}
 								});
-																
-							}else{
-								
-								long	existed_for = SystemTime.getCurrentTime() - fExistingDownload.getCreationTime();
-	
-								Shell mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
-	
-								if ((Display.getDefault().getActiveShell() == null
-										|| !mainShell.isVisible() || mainShell.getMinimized())
-										&& (!can_merge)) {
-	
-	
-										// seems we're getting some double additions (linux user reported but could be a general issue) so
-										// don't warn if the matching download has been added recently
-	
-									if ( existed_for > 15*1000 ){
-	
-										new MessageSlideShell(Display.getCurrent(), SWT.ICON_INFORMATION,
-												MSG_ALREADY_EXISTS, null, new String[] {
-													":" + torrentOptions.sOriginatingLocation, // : prefix is deliberate to disable click on ref in message as might be an unwanted action
-													fExistingName,
-													MessageText.getString(MSG_ALREADY_EXISTS_NAME),
-												}, new Object[] {
-													fExistingDownload
-												}, -1);
-									}
-								} else {
-	
-									if (can_merge) {
-	
-										String text = MessageText.getString(MSG_ALREADY_EXISTS
-												+ ".text", new String[] {
-											":" + torrentOptions.sOriginatingLocation,
-											fExistingName,
-											MessageText.getString(MSG_ALREADY_EXISTS_NAME),
-										});
-	
-										text += "\n\n"
-												+ MessageText.getString("openTorrentWindow.mb.alreadyExists.merge");
-	
-										MessageBoxShell mb = new MessageBoxShell(SWT.YES | SWT.NO,
-												MessageText.getString(MSG_ALREADY_EXISTS + ".title"), text);
-	
-										mb.open(new UserPrompterResultListener() {
-											@Override
-											public void prompterClosed(int result) {
-												if (result == SWT.YES) {
-	
-													TorrentUtils.mergeAnnounceURLs(
-															torrentOptions.getTorrent(),
-															fExistingDownload.getTorrent());
-												}
-											}
-										});
-									} else {
-	
-										if ( existed_for > 15*1000 ){
-	
-											TorrentUIUtilsV3.showTorrentAlreadyAdded(
-												":" + torrentOptions.sOriginatingLocation,
-												fExistingName );
-										}
-									}
+							} else {
+
+								if ( existed_for > 15*1000 ){
+
+									TorrentUIUtilsV3.showTorrentAlreadyAdded(
+										":" + torrentOptions.sOriginatingLocation,
+										fExistingName );
 								}
 							}
 						}
-					});
+					}
 				}
 
 				if ( !delete_delegated ){
@@ -1342,42 +1331,30 @@ public class UIFunctionsImpl
 
 						}else{
 
-							Utils.execSWTThread(new AERunnable() {
-								@Override
-								public void runSupport() {
+							String existingName = archived.getName();
 
-									Shell mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
+							if (getVisibilityState() != VS_ACTIVE) {
 
-									String existingName = archived.getName();
-
-									if (	Display.getDefault().getActiveShell() == null ||
-											!mainShell.isVisible() ||
-											mainShell.getMinimized()){
-
-										new MessageSlideShell(
-												Display.getCurrent(),
-												SWT.ICON_INFORMATION,
-												"OpenTorrentWindow.mb.inArchive", null,
-												new String[] {
+								forceNotify(STATUSICON_NONE,
+										MessageText.getString(
+												"OpenTorrentWindow.mb.inArchive.title"),
+										MessageText.getString(
+												"OpenTorrentWindow.mb.inArchive.text", new String[] {
 													existingName
-												},
-												new Object[0],
-												-1 );
+								}), null, new Object[0], -1);
 
-									}else{
+							}else{
 
-										MessageBoxShell mb =
-												new MessageBoxShell(
-													SWT.OK,
-													"OpenTorrentWindow.mb.inArchive",
-													new String[] {
-														existingName
-													});
-
-										mb.open(null);
-									}
-								}
-							});
+								getUserPrompter(
+										MessageText.getString(
+												"OpenTorrentWindow.mb.inArchive.title"),
+										MessageText.getString(
+												"OpenTorrentWindow.mb.inArchive.text", new String[] {
+													existingName
+								}), new String[] {
+									MessageText.getString("Button.ok"),
+								}, 0).open(null);
+							}
 
 							return( true );
 						}
@@ -1400,26 +1377,18 @@ public class UIFunctionsImpl
 
 							if ( SystemTime.getCurrentTime() - redownloaded > 60*10*1000 ){
 
-								Utils.execSWTThread(new AERunnable() {
-									@Override
-									public void runSupport() {
-										Shell mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
+								if ( getVisibilityState() != VS_TRAY_ONLY){
 
-										if ( mainShell != null && !mainShell.isDisposed()){
+									forceNotify(STATUSICON_NONE,
+										MessageText.getString(
+											"OpenTorrentWindow.mb.inHistory.title"),
+										MessageText.getString(
+											"OpenTorrentWindow.mb.inHistory.text", new String[] {
+												torrentOptions.getTorrentName(),
+												new SimpleDateFormat().format( new Date( existing[0] ))
+											}), null, new Object[0], -1);
 
-											new MessageSlideShell(
-												mainShell.getDisplay(), SWT.ICON_INFORMATION,
-												"OpenTorrentWindow.mb.inHistory", null,
-												new String[] {
-														torrentOptions.getTorrentName(),
-														new SimpleDateFormat().format( new Date( existing[0] ))
-												},
-												new Object[] {
-
-												}, -1);
-										}
-									}
-								});
+								}
 							}
 						}
 					}catch( Throwable e ){
@@ -1455,10 +1424,12 @@ public class UIFunctionsImpl
 
 			String showAgainMode = COConfigurationManager.getStringParameter(ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS);
 
-			if ( 	is_featured ||
-					is_silent ||
-					(	showAgainMode != null && ((showAgainMode.equals(ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_NEVER)) || (showAgainMode.equals(ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_MANY)
-							&& torrentOptions.getFiles() != null && torrentOptions.getFiles().length == 1)))){
+			if (is_featured || is_silent
+					|| (ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_NEVER.equals(
+							showAgainMode)
+							|| (ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_MANY.equals(
+									showAgainMode) && torrentOptions.getFiles() != null
+									&& torrentOptions.getFiles().length == 1))) {
 
 					// we're about to silently add the download - ensure that it is going to be saved somewhere vaguely sensible
 					// as the current save location is simply taken from the 'default download' config which can be blank (for example)
@@ -1500,7 +1471,7 @@ public class UIFunctionsImpl
 
 					t_man.optionsAccepted( torrentOptions );
 
-					boolean ok = TorrentOpener.addTorrent(torrentOptions);
+					boolean ok = torrentOptions.addToDownloadManager();
 
 					t_man.optionsRemoved( torrentOptions );
 
@@ -1515,23 +1486,17 @@ public class UIFunctionsImpl
 
 				}else{
 
-					MessageBoxShell mb =
-						new MessageBoxShell(
-							SWT.OK | SWT.ICON_ERROR,
-							"OpenTorrentWindow.mb.invaliddefsave",
-							new String[]{ save_loc });
-
-					mb.open(
-						new UserPrompterResultListener()
-						{
-							@Override
-							public void
-							prompterClosed(
-								int result)
-							{
-								OpenTorrentOptionsWindow.addTorrent( torrentOptions );
-							}
-						});
+					UIFunctionsUserPrompter mb = getUserPrompter(
+						MessageText.getString(
+							"OpenTorrentWindow.mb.invaliddefsave.title"),
+						MessageText.getString(
+							"OpenTorrentWindow.mb.invaliddefsave.text", new String[]{
+								save_loc
+							}), new String[]{
+							MessageText.getString("Button.ok"),
+						}, 0);
+					mb.setIconResource("error");
+					mb.open(res -> OpenTorrentOptionsWindow.addTorrent( torrentOptions ));
 				}
 
 				return( true );
