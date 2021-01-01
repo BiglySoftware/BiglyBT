@@ -44,6 +44,7 @@ import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.SWTViewListener;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.SkinView;
@@ -106,6 +107,8 @@ public abstract class BaseMDI
 	private String[] preferredOrder;
 
 	private String closeableConfigFile = null;
+
+	private SWTViewListener swtViewListener;
 
 	private volatile boolean 	initialized;
 	private volatile boolean	closed;
@@ -526,50 +529,55 @@ public abstract class BaseMDI
 	
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
-		final UIManager ui_manager = PluginInitializer.getDefaultInterface().getUIManager();
-		ui_manager.addUIListener(new UIManagerListener() {
-			@Override
-			public void UIDetached(UIInstance instance) {
-			}
-
-			@Override
-			public void UIAttached(UIInstance instance) {
-				if (instance instanceof UISWTInstance) {
-					ui_manager.removeUIListener(this);
-
-					final AESemaphore wait_sem = new AESemaphore( "SideBar:wait" );
-
-					Utils.execSWTThread(new AERunnable() {
-						@Override
-						public void runSupport() {
-							try{
-								try {
-									loadCloseables();
-								} catch (Throwable t) {
-									Debug.out(t);
+		
+		if ( closeableConfigFile != null ){
+			
+			final UIManager ui_manager = PluginInitializer.getDefaultInterface().getUIManager();
+			
+			ui_manager.addUIListener(new UIManagerListener() {
+				@Override
+				public void UIDetached(UIInstance instance) {
+				}
+	
+				@Override
+				public void UIAttached(UIInstance instance) {
+					if (instance instanceof UISWTInstance) {
+						ui_manager.removeUIListener(this);
+	
+						final AESemaphore wait_sem = new AESemaphore( "SideBar:wait" );
+	
+						Utils.execSWTThread(new AERunnable() {
+							@Override
+							public void runSupport() {
+								try{
+									try {
+										loadCloseables();
+									} catch (Throwable t) {
+										Debug.out(t);
+									}
+	
+									setupPluginViews();
+	
+								}finally{
+	
+									initialized = true;
+									
+									wait_sem.release();
 								}
-
-								setupPluginViews();
-
-							}finally{
-
-								initialized = true;
-								
-								wait_sem.release();
 							}
+						});
+	
+							// we need to wait for the loadCloseables to complete as there is code in MainMDISetup that runs on the 'UIAttachedComplete'
+							// callback that needs the closables to be loaded (when setting 'start tab') otherwise the order gets broken
+	
+						if ( !wait_sem.reserve(10*1000)){
+	
+							Debug.out( "eh?");
 						}
-					});
-
-						// we need to wait for the loadCloseables to complete as there is code in MainMDISetup that runs on the 'UIAttachedComplete'
-						// callback that needs the closables to be loaded (when setting 'start tab') otherwise the order gets broken
-
-					if ( !wait_sem.reserve(10*1000)){
-
-						Debug.out( "eh?");
 					}
 				}
-			}
-		});
+			});
+		}
 
 		return null;
 	}
@@ -591,6 +599,11 @@ public abstract class BaseMDI
 			}
 		}
 
+		if ( swtViewListener != null ){
+		
+			ViewManagerSWT.getInstance().removeSWTViewListener( swtViewListener );
+		}
+		
 		return null;
 	}
 
@@ -744,8 +757,8 @@ public abstract class BaseMDI
 
 		// When a new Plugin View is added, check out auto-open list to see if
 		// the user had it open
-		ViewManagerSWT vi = ViewManagerSWT.getInstance();
-		vi.addSWTViewListener((forDSTypeOrViewID, builder) -> {
+		
+		swtViewListener = (forDSTypeOrViewID, builder) -> {
 			if (forDSTypeOrViewID != null
 					&& !forDSTypeOrViewID.equals(UISWTInstance.VIEW_MAIN)) {
 				return;
@@ -760,10 +773,12 @@ public abstract class BaseMDI
 			if (o instanceof Map<?, ?>) {
 				processAutoOpenMap(builder.getViewID(), (Map<?, ?>) o, builder);
 			}
-		});
+		};
+		
+		ViewManagerSWT.getInstance().addSWTViewListener( swtViewListener );
 	}
 
-	public void loadCloseables() {
+	private void loadCloseables() {
 		if (closeableConfigFile == null) {
 			return;
 		}
@@ -840,7 +855,7 @@ public abstract class BaseMDI
 		}
 	}
 
-	public void saveCloseables(){
+	protected void saveCloseables(){
 		saveCloseables( false );
 	}
 	
