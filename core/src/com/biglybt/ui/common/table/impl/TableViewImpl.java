@@ -1387,6 +1387,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 		ArrayList<TableRowCore> itemsToRemove;
 
+		boolean	hadSelected;
+		
 		synchronized (rows_sync) {
 
 			itemsToRemove = new ArrayList<>(mapDataSourceToRow.values());
@@ -1398,6 +1400,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 			listUnfilteredDataSources.clear();
 
+			hadSelected = !selectedRows.isEmpty();
+			
 			selectedRows.clear();
 			listSelectedCoreDataSources = null;
 
@@ -1406,6 +1410,11 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			}
 		}
 
+		if ( hadSelected ){
+			
+			triggerTabViewsDataSourceChanged();
+		}
+		
 			// parg - added this to ensure resources associated with rows (e.g. graphics) are released properly
 			// not sure if any of the other things that normally happen on row-removal are also required to happen here
 			// e.g. triggerListenerRowRemoved(item); and uiRemoveRows(...)
@@ -1496,6 +1505,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			triggerSelectionChangeListeners( new TableRowCore[0], deselected );
 			
 			triggerDeselectionListeners( deselected );
+			
+			triggerTabViewsDataSourceChanged();
 		}
 
 		if (DEBUGADDREMOVE) {
