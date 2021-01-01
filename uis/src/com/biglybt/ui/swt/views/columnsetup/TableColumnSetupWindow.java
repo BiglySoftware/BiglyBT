@@ -1576,5 +1576,15 @@ public class TableColumnSetupWindow
 				}
 			}
 		}
+		
+		if ( tvAvail != null ){
+			
+			tvAvail.delete();
+		}
+		
+		if ( tvChosen != null ){
+			
+			tvChosen.delete();
+		}
 	}
 }
