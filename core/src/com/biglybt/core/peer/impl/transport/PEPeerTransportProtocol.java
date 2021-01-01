@@ -255,11 +255,36 @@ implements PEPeerTransport
 
 	private int upload_priority_auto;
 
-	private static final class DisconnectedTransportQueue extends LinkedHashMap
+	private static final class DisconnectedTransportQueue extends LinkedHashMap<HashWrapper,DisconnectedTransportQueue.QueueEntry>
 	{
 		public DisconnectedTransportQueue()
 		{
 			super(20,0.75F);
+			
+			DisconnectedTransportQueue queue = this;
+			
+			SimpleTimer.addPeriodicEvent( "dtw:cleaner", 60*1000, (ev)->{
+				
+				synchronized( queue ){
+					Iterator<QueueEntry> it = values().iterator();
+
+					long now = SystemTime.getMonotonousTime();
+
+					while(it.hasNext()){
+						
+						QueueEntry eldest = it.next();
+						
+						if( now - eldest.addTime > MAX_CACHE_AGE){
+							
+							it.remove();
+							
+						}else{
+							
+							break;
+						}
+					}
+				}
+			});
 		}
 
 		private static final long MAX_CACHE_AGE = 2*60*1000;
@@ -269,13 +294,13 @@ implements PEPeerTransport
 		private void performCleaning() {
 			if(size() > 20)
 			{
-				Iterator it = values().iterator();
+				Iterator<QueueEntry> it = values().iterator();
 
 				long now = SystemTime.getMonotonousTime();
 
 				while(it.hasNext() && size() > 20)
 				{
-					QueueEntry eldest = (QueueEntry)it.next();
+					QueueEntry eldest = it.next();
 					if( now - eldest.addTime > MAX_CACHE_AGE){
 						it.remove();
 					}else{
@@ -297,7 +322,7 @@ implements PEPeerTransport
 
 		// hardcap at 100
 		@Override
-		protected boolean removeEldestEntry(Map.Entry eldest) {
+		protected boolean removeEldestEntry(Map.Entry<HashWrapper,QueueEntry> eldest) {
 			return size() > 100;
 		}
 
@@ -308,7 +333,7 @@ implements PEPeerTransport
 
 		synchronized public PEPeerTransportProtocol remove(HashWrapper key) {
 			performCleaning();
-			QueueEntry entry = (QueueEntry)super.remove(key);
+			QueueEntry entry = super.remove(key);
 			if(entry != null)
 				return entry.transport;
 			else
