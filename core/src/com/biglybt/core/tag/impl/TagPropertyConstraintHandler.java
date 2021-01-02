@@ -37,6 +37,7 @@ import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.*;
@@ -48,7 +49,6 @@ import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadListener;
-import com.biglybt.pif.sharing.ShareException;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
@@ -56,11 +56,14 @@ public class
 TagPropertyConstraintHandler
 	implements TagTypeListener, DownloadListener
 {
-	private static final Object DM_LISTENER_ADDED				= new Object();
+	private static final Object DM_LISTENERS_ADDED				= new Object();
+	
 	private static final Object DM_FILE_NAMES 					= new Object();
 	private static final Object DM_FILE_NAMES_SELECTED 			= new Object();
 	private static final Object DM_FILE_EXTS					= new Object();
 	private static final Object DM_FILE_EXTS_SELECTED			= new Object();
+	private static final Object DM_FILE_PATHS					= new Object();
+	private static final Object DM_FILE_PATHS_SELECTED			= new Object();
 	
 	private static final String		EVAL_CTX_COLOURS = "colours";
 	
@@ -103,7 +106,22 @@ TagPropertyConstraintHandler
 			public void filePriorityChanged(DownloadManager download, DiskManagerFileInfo file){
 				download.setUserData( DM_FILE_NAMES_SELECTED, null );
 				download.setUserData( DM_FILE_EXTS_SELECTED, null );
+				download.setUserData( DM_FILE_PATHS_SELECTED, null );
 			}
+		};
+		
+	private DownloadManagerStateAttributeListener dms_listener = 
+		new DownloadManagerStateAttributeListener()
+		{
+			public void 
+			attributeEventOccurred(
+				DownloadManager download, 
+				String 			attribute, 
+				int 			event_type)
+			{
+				download.setUserData( DM_FILE_PATHS, null );
+				download.setUserData( DM_FILE_PATHS_SELECTED, null );
+			};	
 		};
 		
 	private TimerEventPeriodic		timer;
@@ -295,16 +313,21 @@ TagPropertyConstraintHandler
 	}
 
 	private void
-	checkDMListener(
+	checkDMListeners(
 		DownloadManager		dm )
 	{
-		synchronized( DM_LISTENER_ADDED ){
+		synchronized( DM_LISTENERS_ADDED ){
 			
-			if ( dm.getUserData( DM_LISTENER_ADDED ) == null ){
+			if ( dm.getUserData( DM_LISTENERS_ADDED ) == null ){
 				
 				dm.addListener( dm_listener );
 				
-				dm.setUserData( DM_LISTENER_ADDED, "" );
+				dm.getDownloadState().addListener( 
+					dms_listener, 
+					DownloadManagerState.AT_FILE_LINKS2, 
+					DownloadManagerStateAttributeListener.WRITTEN );
+				
+				dm.setUserData( DM_LISTENERS_ADDED, "" );
 			}
 		}
 	}
@@ -2113,6 +2136,8 @@ TagPropertyConstraintHandler
 		private static final int	KW_FILE_EXTS			= 35;
 		private static final int	KW_FILE_EXTS_SELECTED	= 36;
 		private static final int	KW_TORRENT_TYPE			= 37;
+		private static final int	KW_FILE_PATHS			= 38;
+		private static final int	KW_FILE_PATHS_SELECTED	= 39;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2198,6 +2223,11 @@ TagPropertyConstraintHandler
 			
 			keyword_map.put( "torrent_type",			new int[]{KW_TORRENT_TYPE,			DEP_STATIC });
 			keyword_map.put( "torrenttype", 			new int[]{KW_TORRENT_TYPE,			DEP_STATIC });
+			
+			keyword_map.put( "filepaths", 				new int[]{KW_FILE_PATHS,			DEP_STATIC });
+			keyword_map.put( "file_paths", 				new int[]{KW_FILE_PATHS,			DEP_STATIC });
+			keyword_map.put( "filepathsselected",		new int[]{KW_FILE_PATHS_SELECTED,	DEP_STATIC });
+			keyword_map.put( "file_paths_selected",		new int[]{KW_FILE_PATHS_SELECTED,	DEP_STATIC });
 
 		}
 
@@ -3434,6 +3464,30 @@ TagPropertyConstraintHandler
 					
 					return( result );
 					
+			}else if ( str.equals( "file_paths" ) || str.equals( "filepaths" )){
+				
+				kw = KW_FILE_PATHS;
+				
+				String[] result = (String[])dm.getUserData( DM_FILE_PATHS);
+				
+				if ( result == null ){
+					
+					DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+					
+					result = new String[files.length];
+					
+					for ( int i=0;i<files.length;i++){
+						
+						result[i] = files[i].getFile( true ).getAbsolutePath();
+					}					
+					
+					dm.setUserData( DM_FILE_PATHS, result );
+					
+					handler.checkDMListeners( dm );
+				}
+				
+				return( result );
+					
 			}else if ( str.equals( "file_exts_selected" ) || str.equals( "fileextsselected" )){
 				
 				kw = KW_FILE_EXTS_SELECTED;
@@ -3465,16 +3519,47 @@ TagPropertyConstraintHandler
 					
 					dm.setUserData( DM_FILE_EXTS_SELECTED, result );
 					
-					handler.checkDMListener( dm );
+					handler.checkDMListeners( dm );
 				}
 				
 				return( result );
 				
 				}else if ( str.equals( "file_names_selected" ) || str.equals( "filenamesselected" )){
+						
+						kw = KW_FILE_NAMES_SELECTED;
+						
+						String[] result = (String[])dm.getUserData( DM_FILE_NAMES_SELECTED );
+						
+						if ( result == null ){
+							
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							List<String>	names = new ArrayList<>( files.length );
+							
+							for ( int i=0;i<files.length;i++){
+								
+								if ( files[i].isSkipped()){
+									
+									continue;
+								}
+								
+								names.add( files[i].getFile( false ).getName());
+							}
+							
+							result = names.toArray( new String[0] );
+							
+							dm.setUserData( DM_FILE_NAMES_SELECTED, result );
+							
+							handler.checkDMListeners( dm );
+						}
+						
+						return( result );
 					
-					kw = KW_FILE_NAMES_SELECTED;
+				}else if ( str.equals( "file_paths_selected" ) || str.equals( "filepathsselected" )){
+				
+					kw = KW_FILE_PATHS_SELECTED;
 					
-					String[] result = (String[])dm.getUserData( DM_FILE_NAMES_SELECTED );
+					String[] result = (String[])dm.getUserData( DM_FILE_PATHS_SELECTED );
 					
 					if ( result == null ){
 						
@@ -3489,18 +3574,18 @@ TagPropertyConstraintHandler
 								continue;
 							}
 							
-							names.add( files[i].getFile( false ).getName());
+							names.add( files[i].getFile( true ).getAbsolutePath());
 						}
 						
 						result = names.toArray( new String[0] );
 						
-						dm.setUserData( DM_FILE_NAMES_SELECTED, result );
+						dm.setUserData( DM_FILE_PATHS_SELECTED, result );
 						
-						handler.checkDMListener( dm );
+						handler.checkDMListeners( dm );
 					}
 					
 					return( result );
-					
+
 				}else if ( str.equals( "save_path" ) || str.equals( "savepath" )){
 					
 					kw = KW_SAVE_PATH;
