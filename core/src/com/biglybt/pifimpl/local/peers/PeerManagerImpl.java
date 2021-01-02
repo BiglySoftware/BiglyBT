@@ -26,6 +26,7 @@ package com.biglybt.pifimpl.local.peers;
  */
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerListener;
@@ -52,8 +53,9 @@ public class
 PeerManagerImpl
 	implements PeerManager
 {
-	private static final String	PEPEER_DATA_KEY	= PeerManagerImpl.class.getName();
-
+	private static final String			PEPEER_DATA_KEY	= PeerManagerImpl.class.getName();
+	private static final AtomicLong		PEPEER_DATA_KEY_AL = new AtomicLong();
+	
 	protected PEPeerManager	manager;
 
 	protected static AEMonitor	pm_map_mon	= new AEMonitor( "PeerManager:Map" );
@@ -540,16 +542,19 @@ PeerManagerImpl
 	getPeerForPEPeer(
 		PEPeer	pe_peer )
 	{
-		PeerImpl	peer = (PeerImpl)pe_peer.getData( PEPEER_DATA_KEY );
-
-		if ( peer == null ){
-
-			peer = new PeerImpl( pe_peer );
-
-			pe_peer.setData( PEPEER_DATA_KEY, peer );
+		synchronized( PEPEER_DATA_KEY ){
+			
+			PeerImpl	peer = (PeerImpl)pe_peer.getData( PEPEER_DATA_KEY );
+	
+			if ( peer == null ){
+	
+				peer = new PeerImpl( pe_peer );
+	
+				pe_peer.setData( PEPEER_DATA_KEY, peer );
+			}
+	
+			return( peer );
 		}
-
-		return( peer );
 	}
 
 	@Override
@@ -735,8 +740,9 @@ PeerManagerImpl
 	CoreListener
 		implements PEPeerManagerListener, DiskManagerListener
 	{
+		private final String	CL_KEY = PEPEER_DATA_KEY + "." + PEPEER_DATA_KEY_AL.incrementAndGet();
+		
 		private PeerManagerListener2		listener;
-		private Map<PEPeer, Peer>			peer_map = new HashMap<>();
 
 		private
 		CoreListener(
@@ -752,13 +758,19 @@ PeerManagerImpl
 		{
 			PeerImpl pi = getPeerForPEPeer( peer );
 
-			peer_map.put( peer, pi );
-
-			fireEvent(
-				PeerManagerEvent.ET_PEER_ADDED,
-				pi,
-				null,
-				null );
+			synchronized( CL_KEY ){
+				
+				if ( peer.getUserData( CL_KEY ) == null ){
+				
+					peer.setUserData( CL_KEY, 1 );
+				
+					fireEvent(
+						PeerManagerEvent.ET_PEER_ADDED,
+						pi,
+						null,
+						null );
+				}
+			}
 		}
 
 		@Override
@@ -767,17 +779,22 @@ PeerManagerImpl
 			PEPeerManager manager,
 			PEPeer peer )
 		{
-			PeerImpl  pi = (PeerImpl)peer_map.remove( peer );
+			PeerImpl pi = getPeerForPEPeer( peer );
 
-			if ( pi == null ){
+			synchronized( CL_KEY ){
 
-			}else{
-
-				fireEvent(
-					PeerManagerEvent.ET_PEER_REMOVED,
-					pi,
-					null,
-					null );
+				Integer i = (Integer)peer.getUserData( CL_KEY );
+				
+				if ( i != null && i == 1 ){
+					
+					peer.setUserData( CL_KEY, 2 );
+					
+					fireEvent(
+						PeerManagerEvent.ET_PEER_REMOVED,
+						pi,
+						null,
+						null );
+				}
 			}
 		}
 
@@ -793,8 +810,6 @@ PeerManagerImpl
 			if ( finder != null ){
 
 				pi = getPeerForPEPeer( finder );
-
-				peer_map.put( finder, pi );
 
 			}else{
 
@@ -845,8 +860,6 @@ PeerManagerImpl
 			int 			pieceNumber)
 		{
 			PeerImpl pi = getPeerForPEPeer( peer );
-
-			peer_map.put( peer, pi );
 
 			fireEvent(
 				PeerManagerEvent.ET_PEER_SENT_BAD_DATA,
