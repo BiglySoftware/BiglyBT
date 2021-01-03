@@ -1227,10 +1227,12 @@ implements PEPeerTransport
 		String client_name = (String)ClientIDManagerImpl.getSingleton().getProperty(  manager.getTargetHash(), ClientIDGenerator.PR_CLIENT_NAME );
 		int localTcpPort = manager.getTCPListeningPortNumber();
 		String tcpPortOverride = COConfigurationManager.getStringParameter("TCP.Listen.Port.Override");
-		try
-		{
-			localTcpPort = Integer.parseInt(tcpPortOverride);
+		try{
+			if ( !tcpPortOverride.isEmpty()){
+				localTcpPort = Integer.parseInt(tcpPortOverride);
+			}
 		} catch (NumberFormatException e)	{} // ignore as invalid input
+		
 		boolean require_crypto = NetworkManager.getCryptoRequired( manager.getAdapter().getCryptoLevel());
 
 		Map data_dict = new HashMap();
@@ -1297,11 +1299,11 @@ implements PEPeerTransport
 		int local_udp2_port = UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber();
 		String tcpPortOverride = COConfigurationManager.getStringParameter("TCP.Listen.Port.Override");
 
-		try
-		{
-			local_tcp_port = Integer.parseInt(tcpPortOverride);
-		} catch (NumberFormatException e)
-		{} // ignore as invalid input
+		try{
+			if ( !tcpPortOverride.isEmpty()){
+				local_tcp_port = Integer.parseInt(tcpPortOverride);
+			}
+		} catch (NumberFormatException e){} // ignore as invalid input
 
 		boolean require_crypto = NetworkManager.getCryptoRequired(manager.getAdapter().getCryptoLevel());
 
