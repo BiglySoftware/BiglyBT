@@ -282,6 +282,9 @@ TOTorrentImpl
 					ok = temp.createNewFile();
 
 				}catch( Throwable e ){
+					throw new TOTorrentException(
+							"Insufficient permissions to write '" + temp + "'",
+							TOTorrentException.RT_WRITE_FAILS, e);
 				}
 
 				if ( !ok ){
