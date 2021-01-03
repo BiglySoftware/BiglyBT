@@ -758,18 +758,25 @@ PeerManagerImpl
 		{
 			PeerImpl pi = getPeerForPEPeer( peer );
 
+			boolean	fire = false;
+			
 			synchronized( CL_KEY ){
 				
 				if ( peer.getUserData( CL_KEY ) == null ){
 				
 					peer.setUserData( CL_KEY, 1 );
 				
-					fireEvent(
-						PeerManagerEvent.ET_PEER_ADDED,
-						pi,
-						null,
-						null );
+					fire = true;
 				}
+			}
+			
+			if ( fire ){
+				
+				fireEvent(
+					PeerManagerEvent.ET_PEER_ADDED,
+					pi,
+					null,
+					null );
 			}
 		}
 
@@ -781,6 +788,8 @@ PeerManagerImpl
 		{
 			PeerImpl pi = getPeerForPEPeer( peer );
 
+			boolean	fire = false;
+
 			synchronized( CL_KEY ){
 
 				Integer i = (Integer)peer.getUserData( CL_KEY );
@@ -789,12 +798,17 @@ PeerManagerImpl
 					
 					peer.setUserData( CL_KEY, 2 );
 					
-					fireEvent(
-						PeerManagerEvent.ET_PEER_REMOVED,
-						pi,
-						null,
-						null );
+					fire = true;
 				}
+			}
+			
+			if ( fire ){
+				
+				fireEvent(
+					PeerManagerEvent.ET_PEER_REMOVED,
+					pi,
+					null,
+					null );
 			}
 		}
 
