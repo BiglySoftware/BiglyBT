@@ -2192,7 +2192,12 @@ DownloadManagerImpl
 		try{
 			if ( torrent != null ){
 				
-				return( new HashWrapper( TorrentUtils.getOriginalHash( torrent )));
+				byte[] orig = TorrentUtils.getOriginalHash( torrent );
+				
+				if ( orig != null ){
+				
+					return( new HashWrapper( orig ));
+				}
 			}
 		}catch( Throwable e ){
 			
