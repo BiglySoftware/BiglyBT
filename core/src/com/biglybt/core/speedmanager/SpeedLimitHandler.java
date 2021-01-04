@@ -68,7 +68,7 @@ import com.biglybt.pif.ui.model.BasicPluginViewModel;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
-import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils; 
 
 public class
 SpeedLimitHandler
@@ -2487,7 +2487,7 @@ SpeedLimitHandler
 		ip_set_rate_limiters_down.clear();
 		ip_set_rate_limiters_up.clear();
 
-		boolean	has_cats_or_tags = false;
+		Set<String>	has_cats_or_tags = new HashSet<>();
 
 		for ( PeerSet set: current_ip_sets.values()){
 
@@ -2495,9 +2495,11 @@ SpeedLimitHandler
 
 			ip_set_rate_limiters_up.put( set.getName(), set.getUpLimiter());
 
-			if ( set.getCategoriesOrTags() != null ){
+			Set<String> cot = set.getCategoriesOrTags();
+			
+			if ( cot != null ){
 
-				has_cats_or_tags = true;
+				has_cats_or_tags.addAll( cot );
 			}
 
 			set.removeAllPeers();
@@ -2567,7 +2569,7 @@ SpeedLimitHandler
 		private final Object		lock = SpeedLimitHandler.this;
 
 		private final com.biglybt.pif.download.DownloadManager		download_manager;
-		private final boolean													has_cats_or_tags;
+		private final Set<String>									has_cats_or_tags;
 
 		final List<Runnable>	listener_removers = new ArrayList<>();
 
@@ -2576,7 +2578,7 @@ SpeedLimitHandler
 		private
 		DML(
 			com.biglybt.pif.download.DownloadManager		_download_manager,
-			boolean													_has_cats_or_tags )
+			Set<String>										_has_cats_or_tags )
 		{
 			download_manager	= _download_manager;
 			has_cats_or_tags	= _has_cats_or_tags;
@@ -2620,13 +2622,15 @@ SpeedLimitHandler
 					return;
 				}
 
-				if ( has_cats_or_tags ){
+				if ( !has_cats_or_tags.isEmpty()){
 
 						// attribute listener
-
+					
 					final DownloadAttributeListener attr_listener = new
 							DownloadAttributeListener()
 							{
+								String current_cat = download.getAttribute( category_attribute );
+
 								@Override
 								public void
 								attributeEventOccurred(
@@ -2634,7 +2638,14 @@ SpeedLimitHandler
 									TorrentAttribute 	attribute,
 									int 				event_type )
 								{
-									checkIPSets();
+									String old_cat = current_cat;
+									
+									current_cat = download.getAttribute( category_attribute );
+									
+									if ( has_cats_or_tags.contains( old_cat ) || has_cats_or_tags.contains( current_cat )){
+									
+										checkIPSets();
+									}
 								}
 							};
 
@@ -2661,7 +2672,10 @@ SpeedLimitHandler
 								Tag 		tag,
 								Taggable 	tagged)
 							{
-								checkIPSets();
+								if ( has_cats_or_tags.contains( tag.getTagName( true ))){
+								
+									checkIPSets();
+								}
 							}
 
 							@Override
@@ -2670,10 +2684,12 @@ SpeedLimitHandler
 								Tag 		tag,
 								Taggable 	tagged)
 							{
-								checkIPSets();
+								if ( has_cats_or_tags.contains( tag.getTagName( true ))){
+								
+									checkIPSets();
+								}
 							}
 						};
-
 
 						download.addAttributeListener( attr_listener, category_attribute, DownloadAttributeListener.WRITTEN );
 
@@ -2682,12 +2698,12 @@ SpeedLimitHandler
 						listener_removers.add(
 							new Runnable(){
 								@Override
-								public void run(){
+								public void run()
+								{
+									download.removeAttributeListener( attr_listener, category_attribute, DownloadAttributeListener.WRITTEN );
 
-								download.removeAttributeListener( attr_listener, category_attribute, DownloadAttributeListener.WRITTEN );
-
-								tt.removeTagListener( core_download, tag_listener );
-							}});
+									tt.removeTagListener( core_download, tag_listener );
+								}});
 					}
 
 					// peer listener
@@ -2696,7 +2712,8 @@ SpeedLimitHandler
 					new DownloadPeerListener()
 					{
 						private Runnable 	pm_listener_remover;
-
+						private PeerManager	current_pm;
+						
 						@Override
 						public void
 						peerManagerAdded(
@@ -2737,12 +2754,20 @@ SpeedLimitHandler
 
 								peer_manager.addListener( listener );
 
+								if ( pm_listener_remover != null ){
+									
+									Debug.out( "Old listener still active" );
+								}
+								
+								current_pm = peer_manager;
+								
 								pm_listener_remover =
 									new Runnable(){
 										@Override
-										public void run(){
-										peer_manager.removeListener( listener );
-									}};
+										public void run()
+										{
+											peer_manager.removeListener( listener );
+										}};
 
 								listener_removers.add( pm_listener_remover );
 							}
@@ -2758,13 +2783,20 @@ SpeedLimitHandler
 							Download		download,
 							PeerManager		peer_manager )
 						{
-							synchronized( lock ){
+							synchronized( lock ){ 
 
-								if ( pm_listener_remover != null && listener_removers.contains( pm_listener_remover  )){
+								if ( peer_manager != current_pm ){
+									
+									Debug.out( "PM mismatch: " + current_pm + "/" + peer_manager );
+								}
+								
+								current_pm = null;
+								
+								if ( listener_removers.remove( pm_listener_remover  )){
 
 									pm_listener_remover.run();
-
-									listener_removers.remove( pm_listener_remover );
+									
+									pm_listener_remover = null;
 								}
 							}
 						}
@@ -2775,9 +2807,11 @@ SpeedLimitHandler
 				listener_removers.add(
 					new Runnable(){
 						@Override
-						public void run(){
-						download.removePeerListener( peer_listener );
-					}});
+						public void run()
+						{
+							download.removePeerListener( peer_listener );
+						}
+					});
 			}
 		}
 
@@ -5962,11 +5996,15 @@ SpeedLimitHandler
 		private void
 		destroy()
 		{
-			if ( tag_impl != null ){
-
-				tag_impl.removeTag();
+			TagPeerImpl tag = tag_impl;
+			
+			if ( tag != null ){
 
 				tag_impl = null;
+
+				tag.removeAll();
+				
+				tag.removeTag();
 			}
 		}
 
