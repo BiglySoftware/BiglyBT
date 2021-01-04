@@ -1387,6 +1387,14 @@ public class PieceInfoView
 	peerManagerRemoved(
 		PEPeerManager	manager )
 	{
+		PiecePicker pp = manager.getPiecePicker();
+
+		if ( pp != null && current_pp == pp){
+			
+			pp.removeListener( this );
+			
+			current_pp = null;
+		}
 	}
 
 	@Override
