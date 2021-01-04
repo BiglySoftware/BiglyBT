@@ -193,25 +193,34 @@ public abstract class BaseMdiEntry
 	}
 	
 	protected void destroyEntry( boolean userInitiated ) {
-		triggerCloseListeners( userInitiated );
-
-		try {
-			setEventListener(null, null, false);
-		} catch (UISWTViewEventCancelledException ignore) {
+		try{
+			triggerCloseListeners( userInitiated );
+	
+			try {
+				setEventListener(null, null, false);
+			} catch (UISWTViewEventCancelledException ignore) {
+			}
+	
+			SWTSkinObject so = getSkinObject();
+			if (so != null) {
+				setSkinObjectMaster(null);
+				so.getSkin().removeSkinObject(so);
+			}
+	
+			// Fires off destroy event and destroys SWT widgets
+			super.closeView();
+			
+		}finally{
+			destroyEntryAlways();
 		}
-
-		ViewTitleInfoManager.removeListener(this);
-
-		SWTSkinObject so = getSkinObject();
-		if (so != null) {
-			setSkinObjectMaster(null);
-			so.getSkin().removeSkinObject(so);
-		}
-
-		// Fires off destroy event and destroys SWT widgets
-		super.closeView();
 	}
 
+	protected void destroyEntryAlways()
+	{
+			// we gotta always do this regardless - might be called > once
+		ViewTitleInfoManager.removeListener(this);		
+	}
+	
 	public Object getDatasourceCore() {
 		return datasource;
 	}

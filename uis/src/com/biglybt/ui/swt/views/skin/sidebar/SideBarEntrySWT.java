@@ -406,6 +406,7 @@ public class SideBarEntrySWT
 
 		//System.out.println(id + " destroyEntry " + swtItem + "; " + Debug.getCompressedStackTrace());
 		if (swtItem == null) {
+			destroyEntryAlways();
 			return;
 		}
 

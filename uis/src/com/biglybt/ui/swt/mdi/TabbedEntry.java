@@ -409,6 +409,7 @@ public class TabbedEntry
 		}
 
 		if (swtItem == null) {
+			destroyEntryAlways();
 			return;
 		}
 
