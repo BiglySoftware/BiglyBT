@@ -72,9 +72,7 @@ SESTSConnectionImpl
 	private final int	AES_KEY_SIZE_BYTES = AES_IV1.length;
 
 
-	private static long					last_incoming_sts_create;
-
-	private static List					connections	= new ArrayList();
+	private static List<SESTSConnectionImpl>					connections	= new ArrayList<>();
 
 	static{
 
@@ -88,13 +86,13 @@ SESTSConnectionImpl
 				perform(
 					TimerEvent event )
 				{
-					List	to_close = new ArrayList();
+					List<SESTSConnectionImpl>	to_close = new ArrayList<>();
 
 					synchronized( connections ){
 
 						for (int i=0;i<connections.size();i++){
 
-							SESTSConnectionImpl connection = (SESTSConnectionImpl)connections.get(i);
+							SESTSConnectionImpl connection = connections.get(i);
 
 							if ( connection.crypto_complete.isReleasedForever()){
 
@@ -121,13 +119,15 @@ SESTSConnectionImpl
 
 					for (int i=0;i<to_close.size();i++){
 
-						((SESTSConnectionImpl)to_close.get(i)).reportFailed( new Exception( "Timeout during crypto setup" ));
+						to_close.get(i).reportFailed( new Exception( "Timeout during crypto setup" ));
 					}
 				}
 
 			});
 	}
 
+	private static AsyncDispatcher	dispatcher = new AsyncDispatcher( "SESTSAsync" );
+	
 	private static final int			BLOOM_RECREATE				= 30*1000;
 	private static final int			BLOOM_INCREASE				= 500;
 	private static BloomFilter			generate_bloom				= BloomFilterFactory.createAddRemove4Bit(BLOOM_INCREASE);
@@ -145,7 +145,7 @@ SESTSConnectionImpl
 
 	private CryptoSTSEngine	sts_engine;
 
-	private CopyOnWriteList	listeners = new CopyOnWriteList();
+	private CopyOnWriteList<GenericMessageConnectionListener>	listeners = new CopyOnWriteList<>();
 
 	private boolean		sent_keys;
 	private boolean		sent_auth;
@@ -284,29 +284,6 @@ SESTSConnectionImpl
 
 				throw( new IOException( "Too many recent connection attempts (sts)"));
 			}
-
-			/*
-			 * This is a bad idea as it just backs up the processing loop
-			 * 
-			long	since_last = now - last_incoming_sts_create;
-
-			long	delay = 100 - since_last;
-
-				// limit key gen operations to 10 a second
-
-			if ( delay > 0 && delay < 100 ){
-
-				try{
-		    		Logger.log(	new LogEvent(LOGID, "STS: too many recent connection attempts, delaying " + delay ));
-
-					Thread.sleep( delay );
-
-				}catch( Throwable e ){
-				}
-			}
-			*/
-			
-			last_incoming_sts_create = now;
 		}
 	}
 
@@ -847,7 +824,7 @@ SESTSConnectionImpl
 				throw( new MessageException( "Crypto isn't setup" ));
 			}
 
-			List listeners_ref = listeners.getList();
+			List<GenericMessageConnectionListener> listeners_ref = listeners.getList();
 
 			MessageException	last_error = null;
 
@@ -867,7 +844,7 @@ SESTSConnectionImpl
 				}
 
 				try{
-					((GenericMessageConnectionListener)listeners_ref.get(i)).receive( this, message_to_deliver );
+					listeners_ref.get(i).receive( this, message_to_deliver );
 
 					if ( message_to_deliver == message ){
 
@@ -927,27 +904,21 @@ SESTSConnectionImpl
 			// submission of a message which then block this thread awaiting crypto completion. "this" thread
 			// is currently the selector thread which then screws the crypto protocol...
 
-		new AEThread2( "SESTSConnection:connected", true )
-		{
-			@Override
-			public void
-			run()
-			{
-				List listeners_ref = listeners.getList();
+		dispatcher.dispatch( AERunnable.create(()->{
+			
+			List<GenericMessageConnectionListener> listeners_ref = listeners.getList();
 
-				for (int i=0;i<listeners_ref.size();i++){
+			for (int i=0;i<listeners_ref.size();i++){
 
-					try{
-						((GenericMessageConnectionListener)listeners_ref.get(i)).connected( SESTSConnectionImpl.this );
+				try{
+					listeners_ref.get(i).connected( SESTSConnectionImpl.this );
 
-					}catch( Throwable e ){
+				}catch( Throwable e ){
 
-						Debug.printStackTrace( e );
-					}
+					Debug.printStackTrace( e );
 				}
 			}
-		}.start();
-
+		}));
 	}
 
 	protected void
@@ -956,37 +927,31 @@ SESTSConnectionImpl
 	{
 		setFailed();
 
-		new AEThread2( "SESTSConnection:failed", true )
-		{
-			@Override
-			public void
-			run()
-			{
-				try{
-					List listeners_ref = listeners.getList();
+		dispatcher.dispatch( AERunnable.create(()->{
+			try{
+				List<GenericMessageConnectionListener> listeners_ref = listeners.getList();
 
-					for (int i=0;i<listeners_ref.size();i++){
-
-						try{
-							((GenericMessageConnectionListener)listeners_ref.get(i)).failed( SESTSConnectionImpl.this, error );
-
-						}catch( Throwable e ){
-
-							Debug.printStackTrace( e );
-						}
-					}
-				}finally{
+				for (int i=0;i<listeners_ref.size();i++){
 
 					try{
-						close();
+						listeners_ref.get(i).failed( SESTSConnectionImpl.this, error );
 
 					}catch( Throwable e ){
 
-						Debug.printStackTrace(e);
+						Debug.printStackTrace( e );
 					}
 				}
+			}finally{
+
+				try{
+					close();
+
+				}catch( Throwable e ){
+
+					Debug.printStackTrace(e);
+				}
 			}
-		}.start();
+		}));
 	}
 
 	@Override
