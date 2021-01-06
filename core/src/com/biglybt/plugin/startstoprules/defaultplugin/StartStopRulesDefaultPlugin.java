@@ -1471,7 +1471,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		final int	maxDLs;
 		
 		int numWaitingOrDLing; // Running Count
-
+		
+		boolean	higherDLtoStart;
+		
 		ProcessTagVars(
 			int		max )
 		{
@@ -2239,8 +2241,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 									(ivars.numWaitingOrDLing >= maxDLs && ivars.higherDLtoStart);
 
 			for (ProcessTagVars tvars: tagVars ){
-				if ( tvars.numWaitingOrDLing > tvars.maxDLs ){
+				if ( 	tvars.numWaitingOrDLing > tvars.maxDLs || 
+						(tvars.numWaitingOrDLing >= tvars.maxDLs && tvars.higherDLtoStart)){
+					
 					bOverLimit = true;
+					
 					break;
 				}
 			}
@@ -2332,19 +2337,20 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			}
 		}
 
-		if (state == Download.ST_QUEUED) {
+		boolean tvarsMaxDLsExceeded = false;
+		
+		if ( state == Download.ST_QUEUED ){
 			if ((maxDownloads == 0) || 
 				(ivars.numWaitingOrDLing < maxDLs)) {
-				
-				boolean okToQueue = true;
-				
+								
 				for (ProcessTagVars tvars: tagVars ){
 					if ( tvars.numWaitingOrDLing >= tvars.maxDLs){						
-						okToQueue = false;
+						tvarsMaxDLsExceeded = true;
+						break;
 					}
 				}
 				
-				if ( okToQueue ){
+				if ( !tvarsMaxDLsExceeded ){
 					try {
 						if (bDebugLog) {
 							String s = "   restart: QUEUED && numWaitingOrDLing ("
@@ -2382,7 +2388,16 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		if (download.getSeedingRank() >= 0
 				&& (state == Download.ST_QUEUED || state == Download.ST_READY
 						|| state == Download.ST_WAITING || state == Download.ST_PREPARING)) {
-			ivars.higherDLtoStart = true;
+			
+			if ( tvarsMaxDLsExceeded ){
+				for (ProcessTagVars tvars: tagVars ){
+					if ( tvars.numWaitingOrDLing >= tvars.maxDLs ){
+						tvars.higherDLtoStart = true;
+					}
+				}
+			}else{
+				ivars.higherDLtoStart = true;
+			}
 		}
 
 		if (bDebugLog) {
