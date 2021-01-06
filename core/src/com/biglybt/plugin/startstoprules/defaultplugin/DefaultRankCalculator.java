@@ -16,6 +16,7 @@
  */
 package com.biglybt.plugin.startstoprules.defaultplugin;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,6 +25,9 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagFeatureRateLimit;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
@@ -222,7 +226,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 
 	private final StartStopRulesDefaultPlugin rules;
 
-
+	private TagFeatureRateLimit[] tagsWithDLLimits = {};
 
 	// state-caches for sorting
 
@@ -255,6 +259,8 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 
 		dm_state.addListener( this, DownloadManagerState.AT_PARAMETERS, DownloadManagerStateAttributeListener.WRITTEN );
 
+		setupTagData();
+		
 		try {
 			downloadData_this_mon.enter();
 
@@ -551,6 +557,37 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		}
 		return bActivelySeeding;
 	}
+	
+	private void
+	setupTagData()
+	{
+		if ( dl.isComplete() || !rules.hasTagDLLimits()){
+			tagsWithDLLimits = new TagFeatureRateLimit[0];
+		}else{
+			List<Tag> tags = rules.getTagManager().getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, core_dm );
+
+			List<TagFeatureRateLimit> temp = new ArrayList<>();
+			
+			for ( Tag tag: tags ){
+				if ( tag instanceof TagFeatureRateLimit ){
+					TagFeatureRateLimit t = (TagFeatureRateLimit)tag;
+				
+					if ( t.getMaxActiveDownloads() > 0 ){
+						
+						temp.add( t );
+					}
+				}
+			}
+			
+			tagsWithDLLimits = temp.toArray( new TagFeatureRateLimit[temp.size()] );
+		}
+	}
+	
+	public TagFeatureRateLimit[]
+	getTagsWithDLLimits()
+	{
+		return( tagsWithDLLimits );
+	}
 
 	/** Assign Seeding Rank based on RankType
 	 * @return New Seeding Rank Value
@@ -583,6 +620,8 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 
 		int newSR = 0;
 
+		setupTagData();
+		
 		// make undownloaded sort to top so they can start first.
 		if (!dl.isComplete()) {
 			newSR = SR_COMPLETE_STARTS_AT + (10000 - dl.getPosition());

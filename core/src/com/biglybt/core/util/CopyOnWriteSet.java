@@ -141,6 +141,11 @@ CopyOnWriteSet<T>
 
 			if ( visible ){
 
+				if ( !set.contains( o )){
+					
+					return( false );
+				}
+				
 				Set<T> new_set;
 
 				if ( is_identify ){

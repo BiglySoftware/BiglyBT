@@ -97,6 +97,8 @@ public class TagSettingsView
 		public BooleanSwtParameter uploadPriority;
 		public BooleanSwtParameter boost;
 
+		public IntSwtParameter maxActiveDownloads;
+
 		public BooleanSwtParameter firstPrioritySeeding;
 
 		public FloatSwtParameter min_sr;
@@ -603,6 +605,7 @@ public class TagSettingsView
 				boolean supportsTagUploadLimit = true;
 				boolean hasTagUploadPriority = true;
 				boolean supportsFPSeeding = true;
+				boolean supportsMaxDLS = true;
 				boolean supportsBoost = true;
 				for (TagFeatureRateLimit rl : rls) {
 					supportsTagDownloadLimit &= rl.supportsTagDownloadLimit();
@@ -613,7 +616,8 @@ public class TagSettingsView
 							
 					if ( tt != TagType.TT_DOWNLOAD_MANUAL ){
 					
-						supportsFPSeeding = false;
+						supportsFPSeeding 	= false;
+						supportsMaxDLS		= false;
 					}
 					if ( tt != TagType.TT_PEER_IPSET ){
 						
@@ -992,6 +996,39 @@ public class TagSettingsView
 				
 				cols_used = 0;
 				
+				if (supportsMaxDLS){
+					params.maxActiveDownloads = new IntSwtParameter(gTransfer,
+							"tag.maxActiveDownloads", "ConfigView.label.maxdownloads.short", null, 0, Integer.MAX_VALUE,
+							new IntSwtParameter.ValueProcessor() {
+								@Override
+								public Integer getValue(IntSwtParameter p) {
+									int limit = rls[0].getMaxActiveDownloads();
+									if (numTags > 1) {
+										for (int i = 1; i < rls.length; i++) {
+											int nextLimit = rls[i].getMaxActiveDownloads();
+											if (nextLimit != limit) {
+												return 0;
+											}
+										}
+									}
+									return limit;
+								}
+
+								@Override
+								public boolean setValue(IntSwtParameter p, Integer value) {
+									if (value == null) {
+										return false;
+									}
+									for (TagFeatureRateLimit rl : rls) {
+										rl.setMaxActiveDownloads(value);
+									}
+									return true;
+								}
+							});
+
+					cols_used += 2;
+				}
+				
 				if (supportsFPSeeding) {
 					params.firstPrioritySeeding = new BooleanSwtParameter(gTransfer,
 							"tag.firstPrioritySeeding", "label.first.priority.seeding", null,
@@ -1018,9 +1055,14 @@ public class TagSettingsView
 									return changed;
 								}
 							});
+					cols_used += 2;
+				}
+				
+				if ( cols_used > 0 && cols_used < gTransferCols){			
+					Label lab = new Label( gTransfer, SWT.NULL );
 					gd = new GridData();
 					gd.horizontalSpan = gTransferCols - cols_used;
-					params.firstPrioritySeeding.setLayoutData(gd);
+					lab.setLayoutData(gd);						
 				}
 			}
 			
