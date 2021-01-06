@@ -2239,8 +2239,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 									(ivars.numWaitingOrDLing >= maxDLs && ivars.higherDLtoStart);
 
 			for (ProcessTagVars tvars: tagVars ){
-				if ( 	tvars.numWaitingOrDLing > tvars.maxDLs ||
-						(tvars.numWaitingOrDLing >= tvars.maxDLs && ivars.higherDLtoStart)){
+				if ( tvars.numWaitingOrDLing > tvars.maxDLs ){
 					bOverLimit = true;
 					break;
 				}
