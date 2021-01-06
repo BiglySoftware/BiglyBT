@@ -900,7 +900,7 @@ SESTSConnectionImpl
 	protected void
 	reportConnected()
 	{
-			// we've got to take this off the current thread to avoid the connection even causing immediate
+			// we've got to take this off the current thread to avoid the connection event causing immediate
 			// submission of a message which then block this thread awaiting crypto completion. "this" thread
 			// is currently the selector thread which then screws the crypto protocol...
 
