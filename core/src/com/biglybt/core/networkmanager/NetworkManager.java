@@ -175,6 +175,7 @@ public class NetworkManager {
 	 }
 	 
 	  upload_processor = new TransferProcessor(
+			  this,
 			  TransferProcessor.TYPE_UPLOAD,
 			  new LimitedRateGroup()
 			  {
@@ -206,6 +207,7 @@ public class NetworkManager {
 			  write_controllers.size() > 1 );
 	  
 	  download_processor = new TransferProcessor(
+			  this,
 			  TransferProcessor.TYPE_DOWNLOAD,
 			  new LimitedRateGroup()
 			  {
@@ -237,6 +239,7 @@ public class NetworkManager {
 			  read_controllers.size() > 1 );
 	  
 	  lan_upload_processor = new TransferProcessor(
+			  this,
 			  TransferProcessor.TYPE_UPLOAD,
 			  new LimitedRateGroup()
 			  {
@@ -268,6 +271,7 @@ public class NetworkManager {
 			  write_controllers.size() > 1 );
 	  
 	  lan_download_processor = new TransferProcessor(
+			  this,
 			  TransferProcessor.TYPE_DOWNLOAD,
 			  new LimitedRateGroup()
 			  {
@@ -498,13 +502,20 @@ public class NetworkManager {
    * Remove an upload entity from write processing.
    * @param entity to remove
    */
-  public void removeWriteEntity( RateControlledEntity entity ) {
+  public boolean removeWriteEntity( RateControlledEntity entity ) {
 	  if ( write_controllers.size() == 1 ){
-		  write_controllers.get(0).removeWriteEntity( entity );
+		  return( write_controllers.get(0).removeWriteEntity( entity ));
 	  }else{
+		  boolean found = false;
+		  
 		  for (WriteController write_controller: write_controllers ){
-			  write_controller.removeWriteEntity( entity );
+			  if ( write_controller.removeWriteEntity( entity )){
+				  
+				  found = true;
+			  }
 		  }
+		  
+		  return( found );
 	  }
   }
 
@@ -531,13 +542,19 @@ public class NetworkManager {
    * Remove a download entity from read processing.
    * @param entity to remove
    */
-  public void removeReadEntity( RateControlledEntity entity ) {
+  public boolean removeReadEntity( RateControlledEntity entity ) {
 	  if ( read_controllers.size() == 1 ){
-		  read_controllers.get(0).removeReadEntity( entity );
+		  return( read_controllers.get(0).removeReadEntity( entity ));
 	  }else{
+		  boolean found = false;
+		  
 		  for (ReadController read_controller: read_controllers ){
-			  read_controller.removeReadEntity( entity );
+			  if ( read_controller.removeReadEntity( entity )){
+				  found = true;
+			  }
 		  }
+		  
+		  return( found );
 	  }
   }
 

@@ -400,24 +400,40 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
    * Remove the given entity from the controller.
    * @param entity to remove from read processing
    */
-  public void removeReadEntity( RateControlledEntity entity ) {
+  public boolean removeReadEntity( RateControlledEntity entity ) {
+	boolean found = false;
     try {  entities_mon.enter();
       if( entity.getPriority() == RateControlledEntity.PRIORITY_HIGH ) {
         //copy-on-write
         ArrayList<RateControlledEntity> high_new = new ArrayList<>(high_priority_entities);
-        high_new.remove( entity );
-        high_priority_entities = high_new;
+        if ( high_new.remove( entity )){
+        	
+        	high_priority_entities = high_new;
+        	
+        	found = true;
+        }else{
+        	Debug.out( "entity not found" );
+        }
       }
       else {
         //copy-on-write
         ArrayList<RateControlledEntity> norm_new = new ArrayList<>(normal_priority_entities);
-        norm_new.remove( entity );
-        normal_priority_entities = norm_new;
+       
+        if ( norm_new.remove( entity )){
+        
+        	normal_priority_entities = norm_new;
+        	
+        	found = true;
+        }else{
+        	Debug.out( "entity not found" );
+        }
       }
 
       entity_count = normal_priority_entities.size() + high_priority_entities.size();
     }
     finally {  entities_mon.exit();  }
+    
+    return( found );
   }
 
   public int
