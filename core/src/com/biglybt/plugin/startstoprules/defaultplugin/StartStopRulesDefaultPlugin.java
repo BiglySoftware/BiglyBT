@@ -124,8 +124,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	private static final int SMOOTHING_PERIOD 		= SMOOTHING_PERIOD_SECS*1000;
 
 	private TagManager tag_manager;
-	
-	private CopyOnWriteSet<TagFeatureRateLimit>	tags_with_dl_limit	= new CopyOnWriteSet<>(true);
+		
+	private volatile boolean tagsHaveDLLimits;
 	
 	private com.biglybt.core.util.average.Average globalDownloadSpeedAverage = AverageFactory.MovingImmediateAverage(SMOOTHING_PERIOD/PROCESS_CHECK_PERIOD );
 
@@ -265,6 +265,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		
 		if ( tag_manager != null && tag_manager.isEnabled()){
 			
+			Map<TagFeatureRateLimit,Integer>	tags_with_dl_limit	= new IdentityHashMap<>();
+
 			TagType tt = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL );
 			
 			TagListener tag_listener =
@@ -302,13 +304,19 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					{
 						if ( tag instanceof TagFeatureRateLimit ){
 						
-							if (((TagFeatureRateLimit)tag).getMaxActiveDownloads() > 0 ){
+							TagFeatureRateLimit t = (TagFeatureRateLimit)tag;
+							
+							int max = t.getMaxActiveDownloads();
+							
+							if ( max > 0 ){
 									
 								synchronized( tags_with_dl_limit ){
 								
-									tags_with_dl_limit.add((TagFeatureRateLimit)tag );
+									tags_with_dl_limit.put( t, max );
 									
 									tag.addTagListener( tag_listener, false );
+									
+									tagsHaveDLLimits = true;
 								}
 								
 								requestProcessCycle( null );
@@ -324,21 +332,31 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 							
 							TagFeatureRateLimit t = (TagFeatureRateLimit)tag;
 							
-							if ( t.getMaxActiveDownloads() > 0 ){
+							int max = t.getMaxActiveDownloads();
+
+							if ( max > 0 ){
 								
-								boolean added = false;
+								boolean changed = false;
 								
 								synchronized( tags_with_dl_limit ){
 								
-									if ( tags_with_dl_limit.add( t )){
+									Integer old = tags_with_dl_limit.get( t );
+									
+									if ( old == null ){
+										
+										tags_with_dl_limit.put( t, max );
 										
 										tag.addTagListener( tag_listener, false );
 										
-										added = true;
+										tagsHaveDLLimits = true;
+										
+									}else if ( old != max ){
+										
+										tags_with_dl_limit.put( t, max );
 									}
 								}
 								
-								if ( added ){
+								if ( changed ){
 									
 									requestProcessCycle( null );
 								}
@@ -348,9 +366,14 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 								
 								synchronized( tags_with_dl_limit ){
 								
-									if ( tags_with_dl_limit.remove( t )){
+									if ( tags_with_dl_limit.remove( t ) != null ){
 									
 										tag.removeTagListener( tag_listener );
+										
+										if ( tags_with_dl_limit.isEmpty()){
+											
+											tagsHaveDLLimits = false;
+										}
 										
 										removed = true;
 									}
@@ -374,9 +397,14 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 							
 							synchronized( tags_with_dl_limit ){
 								
-								if ( tags_with_dl_limit.remove((TagFeatureRateLimit)tag )){
+								if ( tags_with_dl_limit.remove((TagFeatureRateLimit)tag ) != null ){
 								
 									tag.removeTagListener( tag_listener );
+									
+									if ( tags_with_dl_limit.isEmpty()){
+										
+										tagsHaveDLLimits = false;
+									}
 									
 									removed = true;
 								}
@@ -508,7 +536,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	public boolean 
 	hasTagDLLimits()
 	{
-		return( !tags_with_dl_limit.isEmpty());
+		return( tagsHaveDLLimits );
 	}
 	
 	private void recalcAllSeedingRanks(boolean force) {
