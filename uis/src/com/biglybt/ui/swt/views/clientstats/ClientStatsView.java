@@ -22,11 +22,14 @@ import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.ui.common.table.TableView;
+import com.biglybt.ui.common.table.TableViewFilterCheck;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
@@ -34,6 +37,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManagerListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerListener;
 import com.biglybt.core.peer.PEPeerManager;
@@ -45,7 +49,9 @@ import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
@@ -67,7 +73,7 @@ import com.biglybt.util.MapUtils;
 public class ClientStatsView
 	extends TableViewTab<ClientStatsDataSource>
 	implements TableLifeCycleListener, GlobalManagerListener,
-	DownloadManagerPeerListener
+	DownloadManagerPeerListener, TableViewFilterCheck<ClientStatsDataSource>
 {
 	private static final String CONFIG_FILE = "ClientStats.dat";
 
@@ -123,33 +129,25 @@ public class ClientStatsView
 
 	@Override
 	public Composite initComposite(Composite composite) {
-		parent = new Composite(composite, SWT.BORDER);
-		parent.setLayout(new FormLayout());
-		Layout layout = composite.getLayout();
-		if (layout instanceof GridLayout) {
+		Composite parent = new Composite(composite, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = layout.marginWidth = 0;
+		parent.setLayout(layout);
+
+		Layout compositeLayout = composite.getLayout();
+		if (compositeLayout instanceof GridLayout) {
 			parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		} else if (layout instanceof FormLayout) {
+		} else if (compositeLayout instanceof FormLayout) {
 			parent.setLayoutData(Utils.getFilledFormData());
 		}
+		
+		Composite cTop = new Composite(parent, SWT.NONE);
 
-		return parent;
-	}
+		cTop.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		cTop.setLayout(new FormLayout());
 
-	@Override
-	public void tableViewTabInitComplete() {
-		Composite cTV = (Composite) parent.getChildren()[0];
-		Composite cBottom = new Composite(parent, SWT.None);
-		FormData fd;
-		fd = Utils.getFilledFormData();
-		fd.bottom = new FormAttachment(cBottom);
-		cTV.setLayoutData(fd);
-		fd = Utils.getFilledFormData();
-		fd.top = null;
-		cBottom.setLayoutData(fd);
-		cBottom.setLayout(new FormLayout());
-
-		Button btnCopy = new Button(cBottom, SWT.PUSH);
-		btnCopy.setLayoutData(new FormData());
+		
+		Button btnCopy = new Button(cTop, SWT.PUSH);
 		btnCopy.setText("Copy");
 		btnCopy.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -181,8 +179,7 @@ public class ClientStatsView
 			}
 		});
 
-		Button btnCopyShort = new Button(cBottom, SWT.PUSH);
-		btnCopyShort.setLayoutData(new FormData());
+		Button btnCopyShort = new Button(cTop, SWT.PUSH);
 		btnCopyShort.setText("Copy > 1%");
 		btnCopyShort.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -348,9 +345,44 @@ public class ClientStatsView
 				ClipboardCopy.copyToClipBoard(sb.toString());
 			}
 		});
+		
+			
+		
+		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
+		Text bubbleTextWidget = bubbleTextBox.getTextWidget();
+		bubbleTextWidget.setMessage(MessageText.getString("Button.search") + "..." );
+		FontUtils.fontToWidgetHeight(bubbleTextWidget);
+
+		FormData fd = new FormData();
+		btnCopy.setLayoutData( fd );
+
 		fd = new FormData();
 		fd.left = new FormAttachment(btnCopy, 5);
 		btnCopyShort.setLayoutData(fd);
+	
+		
+		fd = Utils.getFilledFormData();
+		fd.width = 150;
+		fd.left = null;
+		bubbleTextBox.getParent().setLayoutData(fd);
+		
+		tv.enableFilterCheck(bubbleTextWidget, this, true );
+
+		Composite tableParent = new Composite(parent, SWT.NONE);
+
+		tableParent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		GridLayout gridLayout = new GridLayout();
+		gridLayout.horizontalSpacing = gridLayout.verticalSpacing = 0;
+		gridLayout.marginHeight = gridLayout.marginWidth = 0;
+		tableParent.setLayout(gridLayout);
+
+		parent.setTabList(new Control[] {tableParent, cTop});
+
+		return tableParent;
+	}
+
+	@Override
+	public void tableViewTabInitComplete() {
 	}
 
 	@Override
@@ -534,6 +566,42 @@ public class ClientStatsView
 		}
 	}
 
+	
+	@Override
+	public boolean
+	filterCheck(
+		ClientStatsDataSource ds, String filter, boolean regex )
+	{
+
+		try {			
+			String name = ds.client;
+
+			String s = regex ? filter : "\\Q" + filter.replaceAll("[|;]", "\\\\E|\\\\Q") + "\\E";
+
+			boolean	match_result = true;
+
+			if ( regex && s.startsWith( "!" )){
+
+				s = s.substring(1);
+
+				match_result = false;
+			}
+
+			Pattern pattern = RegExUtil.getCachedPattern( "csv:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+
+			return( pattern.matcher(name).find() == match_result );
+
+		} catch (Exception e) {
+
+			return true;
+		}
+	}
+
+	@Override
+	public void filterSet(String filter)
+	{
+		// System.out.println( filter );
+	}
 	private void save(String filename) {
 		Map<String, Object> map = new HashMap<>();
 		synchronized (mapData) {
