@@ -48,6 +48,7 @@ import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
@@ -148,7 +149,7 @@ public class ClientStatsView
 
 		
 		Button btnCopy = new Button(cTop, SWT.PUSH);
-		btnCopy.setText("Copy");
+		Messages.setLanguageText( btnCopy, "label.copy" );
 		btnCopy.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -180,7 +181,7 @@ public class ClientStatsView
 		});
 
 		Button btnCopyShort = new Button(cTop, SWT.PUSH);
-		btnCopyShort.setText("Copy > 1%");
+		btnCopyShort.setText( MessageText.getString( "label.copy" ) + " > 1%");
 		btnCopyShort.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
