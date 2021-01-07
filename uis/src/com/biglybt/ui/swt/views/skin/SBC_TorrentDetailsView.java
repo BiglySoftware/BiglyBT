@@ -31,6 +31,7 @@ import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.UIFunctions;
@@ -336,6 +337,21 @@ public class SBC_TorrentDetailsView
 										DownloadManager manager = DataSourceUtils.getDM(ds);
 										if (dm.equals(manager)) {
 											mdi.closeEntry(entry,false);
+										}else if ( manager == null ){
+											try{
+													// if we've been restored after a restart then the ds is base32 hash - here the dm has been removed
+													// so getDM(ds) returns null - check hash instead
+												
+												String ds_hash = DataSourceUtils.getHash( ds );
+												
+												String dm_hash = Base32.encode( dm.getTorrent().getHash());
+												
+												if ( ds_hash.equals( dm_hash )){
+													
+													mdi.closeEntry(entry,false);
+												}
+											}catch( Throwable e ){
+											}											
 										}
 									}
 								};
