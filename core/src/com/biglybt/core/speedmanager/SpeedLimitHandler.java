@@ -1098,6 +1098,9 @@ SpeedLimitHandler
 					Pattern client_pattern	= null;
 					Pattern intf_pattern	= null;
 					Pattern asn_pattern		= null;
+					boolean client_pattern_inverse	= false;
+					boolean intf_pattern_inverse	= false;
+					boolean asn_pattern_inverse		= false;
 					
 					PeerSet set = null;
 
@@ -1153,6 +1156,11 @@ SpeedLimitHandler
 							}else if ( lc_lhs.equals( "client" )){
 								
 								try{
+									if ( rhs.startsWith( "!" )){
+										rhs = rhs.substring(1);
+										client_pattern_inverse = true;
+									}
+									
 									client_pattern = Pattern.compile( rhs, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 									
 								}catch( Throwable e ){
@@ -1162,6 +1170,11 @@ SpeedLimitHandler
 							}else if ( lc_lhs.equals( "intf" )){
 								
 								try{
+									if ( rhs.startsWith( "!" )){
+										rhs = rhs.substring(1);
+										intf_pattern_inverse = true;
+									}
+									
 									intf_pattern = Pattern.compile( rhs, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 									
 								}catch( Throwable e ){
@@ -1171,6 +1184,11 @@ SpeedLimitHandler
 							}else if ( lc_lhs.equals( "asn" )){
 								
 								try{
+									if ( rhs.startsWith( "!" )){
+										rhs = rhs.substring(1);
+										asn_pattern_inverse = true;
+									}
+									
 									asn_pattern = Pattern.compile( rhs, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 									
 								}catch( Throwable e ){
@@ -1234,7 +1252,11 @@ SpeedLimitHandler
 						throw( new Exception( "Only one of client, intf and asn pattern can be set for a peer set" ));
 					}
 					
-					set.setParameters( inverse, up_lim, down_lim, peer_up_lim, peer_down_lim, categories_or_tags, client_pattern, intf_pattern, asn_pattern );
+					set.setParameters( 
+							inverse, up_lim, down_lim, peer_up_lim, peer_down_lim, categories_or_tags, 
+							client_pattern, client_pattern_inverse, 
+							intf_pattern, intf_pattern_inverse,
+							asn_pattern, asn_pattern_inverse );
 
 				}catch( Throwable e ){
 
@@ -2257,7 +2279,7 @@ SpeedLimitHandler
 										try{
 											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
 											
-											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern, null, null );
+											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern, false, null, false, null, false );
 											
 											set.addCIDRorCCetc( "all" );
 												
@@ -2290,7 +2312,7 @@ SpeedLimitHandler
 										try{
 											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
 											
-											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), null, pattern, null );
+											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), null, false, pattern, false, null, false );
 											
 											set.addCIDRorCCetc( "all" );
 												
@@ -5609,6 +5631,10 @@ SpeedLimitHandler
 		private Pattern			intf_pattern;
 		private Pattern			asn_pattern;
 		
+		private boolean			client_pattern_inverse;
+		private boolean			intf_pattern_inverse;
+		private boolean			asn_pattern_inverse;
+		
 		private String			group;
 		
 		private TagPeerImpl		tag_impl;
@@ -5673,8 +5699,11 @@ SpeedLimitHandler
 			int				_peer_down_lim,
 			Set<String>		_cats_or_tags,
 			Pattern			_client_pattern,
+			boolean			_client_pattern_inverse,
 			Pattern			_intf_pattern,
-			Pattern			_asn_pattern )
+			boolean			_intf_pattern_inverse,
+			Pattern			_asn_pattern,
+			boolean			_asn_pattern_inverse )
 		{
 			inverse	= _inverse;
 
@@ -5699,6 +5728,10 @@ SpeedLimitHandler
 			client_pattern 	= _client_pattern;
 			intf_pattern 	= _intf_pattern;
 			asn_pattern		= _asn_pattern;
+			
+			client_pattern_inverse	= _client_pattern_inverse;
+			intf_pattern_inverse	= _intf_pattern_inverse;
+			asn_pattern_inverse		= _asn_pattern_inverse;
 			
 			if ( client_pattern != null && client_pattern.pattern().equals( "auto" )){
 				
@@ -6036,9 +6069,9 @@ SpeedLimitHandler
 					", Inverse=" + inverse +
 					", Categories/Tags=" + (categories_or_tags==null?"[]":String.valueOf(categories_or_tags)) +
 					", Peer_Up=" + format( peer_up_lim ) + ", Peer_Down=" + format( peer_down_lim )) +
-					", Client=" + (client_pattern==null?"":client_pattern) +
-					", Intf=" + (intf_pattern==null?"":intf_pattern) +
-					", ASN=" + (asn_pattern==null?"":asn_pattern);
+					", Client=" + (client_pattern==null?"":(client_pattern_inverse?"!":"")+client_pattern) +
+					", Intf=" + (intf_pattern==null?"":(intf_pattern_inverse?"!":"")+intf_pattern) +
+					", ASN=" + (asn_pattern==null?"":(asn_pattern_inverse?"!":"")+asn_pattern);
 
 		}
 
@@ -6353,6 +6386,10 @@ SpeedLimitHandler
 						
 						result = true;
 					}
+					
+					if ( client_pattern_inverse ){
+						result = !result;
+					}
 				}else{
 						// we want to give a bit more time for the extension handshake to arrive
 					
@@ -6412,6 +6449,10 @@ SpeedLimitHandler
 							
 							result = true;
 						}
+						
+						if ( client_pattern_inverse ){
+							result = !result;
+						}
 					}
 				}
 				
@@ -6468,6 +6509,10 @@ SpeedLimitHandler
 					result = true;
 				}
 				
+				if ( intf_pattern_inverse ){
+					result = !result;
+				}
+				
 				if ( result ){
 					
 					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY )){
@@ -6495,6 +6540,10 @@ SpeedLimitHandler
 						if ( asn_pattern.matcher( as_name ).find()){
 						
 							result = true;
+						}
+						
+						if ( asn_pattern_inverse ){
+							result = !result;
 						}
 					}
 				}else{
