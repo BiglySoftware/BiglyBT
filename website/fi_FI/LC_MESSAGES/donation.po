@@ -15,56 +15,56 @@ msgstr ""
 "X-Crowdin-Language: fi\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 438\n"
-"PO-Revision-Date: 2020-07-10 10:24\n"
+"PO-Revision-Date: 2021-01-06 08:12\n"
 
 msgid "test"
-msgstr ""
+msgstr "Kokeile englanniksi"
 
 msgid "onlyEng"
-msgstr ""
+msgstr "Vain englanniksi"
 
 msgid "donation_line1"
-msgstr ""
+msgstr "Vaikka BiglyBT on ilmainen ohjelmisto, sen kehitys ja ylläpito maksaa paljon. Jos uskot hyötyneesi sen käytöstä, harkitse tukemistamme jollakin seuraavista tavoista:"
 
 msgid "donation_title"
-msgstr ""
+msgstr "Tue BiglyBT:tä"
 
 msgid "donation_monthly_title"
-msgstr ""
+msgstr "Kuukausittainen Kiitos"
 
 msgid "donation_onetime_title"
-msgstr ""
+msgstr "Yksittäinen uhraus"
 
 msgid "donation_bitcoin_title"
-msgstr ""
+msgstr "Bitcoin"
 
 msgid "donation_monthly_description"
-msgstr ""
+msgstr "Tarjoa kehittäjille kahvia kuukausittain"
 
 msgid "donation_monthly_per_month"
-msgstr ""
+msgstr "/kk"
 
 msgid "donation_onetime_amount"
-msgstr ""
+msgstr "Summa (%1):"
 
 msgid "donation_onetime_description"
-msgstr ""
+msgstr "Kaikkia summia arvostetaan :)"
 
 msgid "donation_bitcoin_description"
-msgstr ""
+msgstr "Ehdotamme lahjoituksen summaksi %1 tai %2. :)"
 
 msgid "donation_bitcoin_addresses"
-msgstr ""
+msgstr "BCH/BTC/BSG/BSV-osoite:"
 
 msgid "donation_crypto_title"
-msgstr ""
+msgstr "Kryptovaluutta"
 
 msgid "donation_crypto_description"
-msgstr ""
+msgstr "Kerro meille, jos suosimaasi kryptovaluuttaa ei ole listattu, niin lisäämme osoitteen :)"
 
 msgid "no_thanks"
-msgstr ""
+msgstr "Ei kiitos."
 
 msgid "close"
-msgstr ""
+msgstr "Sulje"
 
