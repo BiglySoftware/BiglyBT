@@ -95,6 +95,9 @@ DownloadManager
 	
 	public static final Object UD_KEY_STOP_REASON = Download.UD_KEY_STOP_REASON;
 	
+	public boolean
+	isConstructed();
+	
     public void
     initialize();
 
@@ -147,6 +150,16 @@ DownloadManager
     recheckFile(
         DiskManagerFileInfo     file );
 
+    	/**
+    	 * Instructions that file given files need allocation - used when switching file storage types/skipped state  
+    	 * Will pause and resume the download if it is active
+    	 * @param files
+    	 */
+    
+    public void
+    requestAllocation(
+    	List<DiskManagerFileInfo>		files );
+    
     	/**
     	 * Use with care - introduced to support speed tests whereby we want to avoid checking the
     	 * virtual torrent used for the test

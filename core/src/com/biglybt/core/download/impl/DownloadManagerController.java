@@ -197,6 +197,8 @@ DownloadManagerController
 
 	private DownloadManagerStateAttributeListener	dm_attribute_listener;
 	
+	private Object			external_rate_limiters_cow_lock = new Object();
+	
 	private List<Object[]>	external_rate_limiters_cow;
 
 	private String 	errorDetail;
@@ -699,7 +701,10 @@ DownloadManagerController
 
 			SimpleTimer.addTickReceiver( this );
 
-			limiters = external_rate_limiters_cow;
+			synchronized( external_rate_limiters_cow_lock ){
+			
+				limiters = external_rate_limiters_cow;
+			}
 
 		}finally{
 
@@ -1620,30 +1625,41 @@ DownloadManagerController
 		LimitedRateGroup	group,
 		boolean				upload )
 	{
+		final boolean not_stopping = getState() != DownloadManager.STATE_STOPPING;	// locking issue here on stop :(
+		
 		PEPeerManager	pm;
 
 		try{
-			control_mon.enter();
-
-			ArrayList<Object[]>	new_limiters = new ArrayList<>(external_rate_limiters_cow == null ? 1 : external_rate_limiters_cow.size() + 1);
-
-			if ( external_rate_limiters_cow != null ){
-
-				new_limiters.addAll( external_rate_limiters_cow );
+			if ( not_stopping ){
+				
+				control_mon.enter();
 			}
 
-			new_limiters.add( new Object[]{ group, Boolean.valueOf(upload)});
-
-			external_rate_limiters_cow = new_limiters;
-
+			synchronized( external_rate_limiters_cow_lock ){
+				
+				ArrayList<Object[]>	new_limiters = new ArrayList<>(external_rate_limiters_cow == null ? 1 : external_rate_limiters_cow.size() + 1);
+	
+				if ( external_rate_limiters_cow != null ){
+	
+					new_limiters.addAll( external_rate_limiters_cow );
+				}
+	
+				new_limiters.add( new Object[]{ group, Boolean.valueOf(upload)});
+	
+				external_rate_limiters_cow = new_limiters;
+			}
+			
 			pm	= peer_manager;
 
 		}finally{
 
-			control_mon.exit();
+			if ( not_stopping ){
+				
+				control_mon.exit();
+			}
 		}
 
-		if ( pm != null ){
+		if ( not_stopping && pm != null ){
 
 			pm.addRateLimiter(group, upload);
 		}
@@ -1653,8 +1669,7 @@ DownloadManagerController
 	getRateLimiters(
 		boolean	upload )
 	{
-		try{
-			control_mon.enter();
+		synchronized( external_rate_limiters_cow_lock ){
 
 			if ( external_rate_limiters_cow == null ){
 
@@ -1674,9 +1689,6 @@ DownloadManagerController
 
 				return( result.toArray( new LimitedRateGroup[ result.size() ]));
 			}
-		}finally{
-
-			control_mon.exit();
 		}
 	}
 
@@ -1685,11 +1697,16 @@ DownloadManagerController
 		LimitedRateGroup	group,
 		boolean				upload )
 	{
+		final boolean not_stopping = getState() != DownloadManager.STATE_STOPPING;	// locking issue here on stop :(
+
 		PEPeerManager	pm;
 
 		try{
-			control_mon.enter();
-
+			if ( not_stopping ){
+			
+				control_mon.enter();
+			}
+			
 			if ( external_rate_limiters_cow != null ){
 
 				ArrayList<Object[]>	new_limiters = new ArrayList<>(external_rate_limiters_cow.size() - 1);
@@ -1718,10 +1735,13 @@ DownloadManagerController
 
 		}finally{
 
-			control_mon.exit();
+			if ( not_stopping ){
+			
+				control_mon.exit();
+			}
 		}
 
-		if ( pm != null ){
+		if ( not_stopping && pm != null ){
 
 			pm.removeRateLimiter(group, upload);
 		}
@@ -1937,6 +1957,8 @@ DownloadManagerController
 			setFailed( DownloadManager.ET_INSUFFICIENT_SPACE, MessageText.getString( "DiskManager.error.nospace" ) );
 			
 		}else{
+			
+			Debug.out( cause );
 			
 			setFailed( DownloadManager.ET_OTHER, reason + ": " + Debug.getNestedExceptionMessage( cause ));
 		}
@@ -2894,6 +2916,11 @@ DownloadManagerController
 		DiskManagerFileInfoSet delegate;
 		fileInfoFacade[] facadeFiles = new fileInfoFacade[0];	// default before torrent avail
 
+		@Override
+		public void load(int[] priorities, boolean[] skipped){
+			delegate.load(priorities, skipped);
+		}
+		
 		@Override
 		public DiskManagerFileInfo[] getFiles() {
 			return facadeFiles;

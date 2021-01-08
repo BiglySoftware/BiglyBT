@@ -50,6 +50,7 @@ DownloadManagerState
 	public static final String AT_TRACKER_CLIENT_EXTENSIONS	= "trackerclientextensions";
 	public static final String AT_FILE_LINKS_DEPRECATED		= "filelinks";
 	public static final String AT_FILE_LINKS2				= "filelinks2";
+	public static final String AT_FILE_ALLOC_REQUEST		= "allocreq";		// Map
 	public static final String AT_FILE_STORE_TYPES			= "storetypes";
 	public static final String AT_FILE_DOWNLOADED			= "filedownloaded";
 	public static final String AT_FLAGS						= "flags";

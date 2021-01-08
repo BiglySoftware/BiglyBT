@@ -98,6 +98,15 @@ DiskManagerFileInfoImpl
   	}
   }
 
+	protected void
+	load(
+		int		_priority,
+		boolean	_skipped )
+	{
+		priority				= _priority;
+		skipped_internal		= _skipped;
+	}
+	
   	@Override
 	  public String
   	getCacheFileOwnerName()
@@ -387,32 +396,33 @@ DiskManagerFileInfoImpl
    * @param skipped
    */
   @Override
-  public void setSkipped(boolean _skipped) {
+  public void setSkipped(boolean skipped) {
 
 	int	existing_st = getStorageType();
 
 	  // currently a non-skipped file must be linear
 
-	if ( !_skipped && existing_st == ST_COMPACT ){
+	if ( !skipped && existing_st == ST_COMPACT ){
 		if ( !setStorageType( ST_LINEAR )){
 			return;
 		}
 	}
 
-	if ( !_skipped && existing_st == ST_REORDER_COMPACT ){
+	if ( !skipped && existing_st == ST_REORDER_COMPACT ){
 		if ( !setStorageType( ST_REORDER )){
 			return;
 		}
 	}
 
-	setSkippedInternal( _skipped );
+	setSkippedInternal( skipped );
+	
 	diskManager.skippedFileSetChanged( this );
-	if(!_skipped)
-	{
-		boolean[] toCheck = new boolean[diskManager.getFileSet().nbFiles()];
-		toCheck[file_index] = true;
-		DiskManagerUtil.doFileExistenceChecks(diskManager.getFileSet(), toCheck, diskManager.getDownloadState().getDownloadManager(), true);
-	}
+		
+	boolean[] toCheck = new boolean[diskManager.getFileSet().nbFiles()];
+		
+	toCheck[file_index] = true;
+		
+	DiskManagerUtil.doFileExistenceChecksAfterSkipChange(diskManager.getFileSet(), toCheck, skipped, diskManager.getDownloadState().getDownloadManager());
   }
 
 	protected void

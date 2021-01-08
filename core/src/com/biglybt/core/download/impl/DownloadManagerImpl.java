@@ -499,6 +499,8 @@ DownloadManagerImpl
 				}
 			});
 
+	private boolean			constructed;
+	
 	private Object 			init_lock = new Object();
 	private boolean			initialised;
 	private List<Runnable>	post_init_tasks = new ArrayList<>();
@@ -876,6 +878,15 @@ DownloadManagerImpl
 				Debug.printStackTrace(e);
 			}
 		}
+		
+		constructed	= true;
+	}
+	
+	@Override
+	public boolean 
+	isConstructed()
+	{
+		return( constructed );
 	}
 	
 	private void
@@ -2467,6 +2478,48 @@ DownloadManagerImpl
 	  	}
 	  }
 
+    @Override
+    public void
+    requestAllocation(
+    	List<DiskManagerFileInfo>		files )
+    {
+    	if ( files.isEmpty()){
+    		
+    		return;
+    	}
+    	
+    	boolean paused = pause( true );
+    	
+    	try{  	  		
+    		Map reqs = download_manager_state.getMapAttribute( DownloadManagerState.AT_FILE_ALLOC_REQUEST );
+    		
+    		if ( reqs == null ){
+    			
+    			reqs = new HashMap<>();
+    			
+    		}else{
+    			
+    			reqs = new HashMap<>( reqs );
+    		}
+    		
+    		for ( DiskManagerFileInfo file: files ){
+    			
+    			reqs.put( String.valueOf( file.getIndex()), "" );
+    		}
+    		
+    		download_manager_state.setMapAttribute( DownloadManagerState.AT_FILE_ALLOC_REQUEST, reqs );
+    		
+    		setDataAlreadyAllocated( false );
+    		
+    	}finally{
+    		
+    		if ( paused ){
+    			
+    			resume();
+    		}
+    	}
+    }
+    
   	@Override
 	  public void
   	startDownload()

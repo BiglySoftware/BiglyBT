@@ -61,8 +61,6 @@ public class RemainingItem
 		});
 	}
 
-    private boolean bLastValueEstimate = false;
-
   @Override
   public void refresh(TableCell cell) {
     long lRemaining = getRemaining(cell);
@@ -71,11 +69,7 @@ public class RemainingItem
       return;
     }
 
-    if (bLastValueEstimate) {
-      cell.setText("~ " + DisplayFormatters.formatByteCountToKiBEtc(lRemaining));
-    } else {
-      cell.setText(DisplayFormatters.formatByteCountToKiBEtc(lRemaining));
-    }
+    cell.setText(DisplayFormatters.formatByteCountToKiBEtc(lRemaining));
   }
 
   private long getRemaining(TableCell cell) {

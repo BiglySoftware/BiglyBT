@@ -1260,7 +1260,12 @@ RDResumeHandler
 		return pivot;
 	}
 
-	public static boolean fileMustExist(DownloadManager download_manager, DiskManagerFileInfo file) {
+	public static boolean 
+	fileMustExist(
+		DownloadManager 			download_manager,
+		DiskManagerFileInfoSet		fileSet,
+		DiskManagerFileInfo 		file) 
+	{
 
 		Map resumeData = getResumeData( download_manager );
 
@@ -1268,7 +1273,7 @@ RDResumeHandler
 
 		boolean sharesAnyNeededPieces = false;
 
-		DiskManagerFileInfo[] files = download_manager.getDiskManagerFileInfo();
+		DiskManagerFileInfo[] files = fileSet.getFiles();
 		int firstPiece = file.getFirstPieceNumber();
 		int lastPiece = file.getLastPieceNumber();
 

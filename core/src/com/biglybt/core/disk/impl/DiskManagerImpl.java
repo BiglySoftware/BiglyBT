@@ -1054,12 +1054,11 @@ DiskManagerImpl
     {
     	int[] fail_result = { -1, -1, -1 };
 
-        Set file_set    = new HashSet();
+        Set<String> file_set    = new HashSet<>();
 
         DMPieceMapperFile[] pm_files = piece_mapper.getFiles();
 
-        DiskManagerFileInfoImpl[] allocated_files = new DiskManagerFileInfoImpl[pm_files.length];
-
+        
         DownloadManagerState	state = download_manager.getDownloadState();
 
         long alloc_strategy = state.getLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY );
@@ -1068,8 +1067,14 @@ DiskManagerImpl
 
         boolean	alloc_ok = false;
         
+        DiskManagerFileInfoImpl[] allocated_files = new DiskManagerFileInfoImpl[pm_files.length];
+
         DiskManagerAllocationScheduler.AllocationInstance allocation_instance = null;
+             
+        	// alloc_requests are expected to need allocating so don't treat them as unexpected
         
+		Map alloc_requests = state.getMapAttribute( DownloadManagerState.AT_FILE_ALLOC_REQUEST );
+		
         try{
             setState( ALLOCATING );
 
@@ -1091,6 +1096,44 @@ DiskManagerImpl
 
 			String incomplete_suffix = state.getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
 
+			for ( int i=0;i<pm_files.length;i++ ){
+
+				if ( stopping ){
+
+					setErrorState( "File allocation interrupted - download is stopping" );
+
+					return( fail_result );
+				}
+
+				DMPieceMapperFile pm_info = pm_files[i];
+
+				String relative_data_file = pm_info.getRelativeDataPath();
+
+				allocation_task = relative_data_file;
+
+				DiskManagerFileInfoImpl fileInfo;
+
+				try{
+					int storage_type = DiskManagerUtil.convertDMStorageTypeFromString( storage_types[i]);
+
+					fileInfo = createFileInfo( state, pm_info, i, root_dir, relative_data_file, storage_type );
+
+					allocated_files[i] = fileInfo;
+
+					pm_info.setFileInfo( fileInfo );
+
+				}catch ( Exception e ){
+
+					setErrorState( Debug.getNestedExceptionMessage(e) + " (allocateFiles:" + relative_data_file.toString() + ")" );
+
+					return( fail_result );
+				}
+			}
+
+			DiskManagerFileInfoSetImpl allocated_fileset = new DiskManagerFileInfoSetImpl( allocated_files ,this );
+
+			DiskManagerUtil.loadFilePriorities( download_manager, allocated_fileset );		
+			
             for ( int i=0;i<pm_files.length;i++ ){
 
             	if ( stopping ){
@@ -1108,23 +1151,7 @@ DiskManagerImpl
 
                 allocation_task = relative_data_file;
 
-                DiskManagerFileInfoImpl fileInfo;
-
-                try{
-                    int storage_type = DiskManagerUtil.convertDMStorageTypeFromString( storage_types[i]);
-
-                    fileInfo = createFileInfo( state, pm_info, i, root_dir, relative_data_file, storage_type );
-
-                    allocated_files[i] = fileInfo;
-
-                    pm_info.setFileInfo( fileInfo );
-
-                }catch ( Exception e ){
-
-                    setErrorState( Debug.getNestedExceptionMessage(e) + " (allocateFiles:" + relative_data_file.toString() + ")" );
-
-                    return( fail_result );
-                }
+                DiskManagerFileInfoImpl fileInfo = allocated_files[i];
 
                 if ( fileInfo.getTorrentFile().isPadFile()){
                 	
@@ -1199,7 +1226,7 @@ DiskManagerImpl
 
                 boolean compact = st == CacheFile.CT_COMPACT || st == CacheFile.CT_PIECE_REORDER_COMPACT;
 
-                boolean mustExistOrAllocate = ( !compact ) || RDResumeHandler.fileMustExist(download_manager, fileInfo);
+                boolean mustExistOrAllocate = ( !compact ) || RDResumeHandler.fileMustExist(download_manager, allocated_fileset, fileInfo);
 
                 if ( skip_file_checks ){
                 	
@@ -1323,7 +1350,10 @@ DiskManagerImpl
 	                        return( fail_result );
 	                    }
 	
-	                    numNewFiles++;
+	                    if ( alloc_requests == null || !alloc_requests.containsKey( String.valueOf( i ))){
+	                    
+	                    	numNewFiles++;
+	                    }
 	
 	                }else{
 	
@@ -1338,9 +1368,7 @@ DiskManagerImpl
                 // entries have been populated
 
             files   = allocated_files;
-            fileset = new DiskManagerFileInfoSetImpl(files,this);
-
-            loadFilePriorities();
+            fileset = allocated_fileset;
 
             download_manager.setDataAlreadyAllocated( true );
 
@@ -1356,6 +1384,11 @@ DiskManagerImpl
         	}
 
             allocation_task = null;
+            
+            if ( alloc_requests != null ){
+            	
+        		state.setMapAttribute( DownloadManagerState.AT_FILE_ALLOC_REQUEST, null );
+            }
             
             if ( alloc_ok ){
             
@@ -3838,12 +3871,6 @@ DiskManagerImpl
         }
         listeners.dispatch(LDT_PRIOCHANGED, file);
     }
-
-  private void
-  loadFilePriorities()
-  {
-      DiskManagerUtil.loadFilePriorities( download_manager, fileset );
-  }
 
   protected void
   storeFilePriorities()

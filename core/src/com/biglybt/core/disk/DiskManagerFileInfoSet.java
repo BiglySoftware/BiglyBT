@@ -22,7 +22,14 @@ package com.biglybt.core.disk;
  * @author Aaron Grunthal
  * @create 01.05.2008
  */
-public interface DiskManagerFileInfoSet {
+public interface 
+DiskManagerFileInfoSet 
+{
+	public void
+	load(
+		int[]		priorities,
+		boolean[]	skipped );
+	
 	/**
 	 * Sets a file's storage type to <code>newStorageType</code> only if <code>toChanged</code> is true for the index.
 	 *
@@ -55,6 +62,8 @@ public interface DiskManagerFileInfoSet {
 	 * @param setSkipped Whether to set file as skipped or unskipped, when toChange[i] is true
 	 */
 	public void setSkipped(boolean[] toChange, boolean setSkipped);
+	
 	public DiskManagerFileInfo[] getFiles();
+	
 	public int nbFiles();
 }

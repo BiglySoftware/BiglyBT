@@ -157,59 +157,101 @@ DiskManagerUtil
 	}
 
 	public static void
-	doFileExistenceChecks(
+	doFileExistenceChecksAfterSkipChange(
 		DiskManagerFileInfoSet 	fileSet,
 		boolean[] 				toCheck,
-		DownloadManager 		dm,
-		boolean 				allowAlloction )
+		boolean					isSkipped,
+		DownloadManager 		dm )
 	{
+			// we can end up here during construction, the file situation should be correct so no point
+			// in running the tests
+		
+		if ( !dm.isConstructed()){
+			
+			return;
+		}
+		
 		DiskManagerFileInfo[] files = fileSet.getFiles();
 
-		int lastPieceScanned = -1;
-		int windowStart = -1;
-		int windowEnd = -1;
+		boolean[]	interesting = new boolean[files.length];
+		
+		for (int i = 0; i<files.length;i++ ){
+			
+			DiskManagerFileInfo file = files[i];
+			
+			if ( toCheck[i] ){
+			
+				interesting[i] = true;
+				
+				int firstPiece 	= file.getFirstPieceNumber();
 
+				for ( int j=i-1; j>=0; j-- ){
+					
+					if ( files[j].getLastPieceNumber() == firstPiece ){
+				
+						interesting[j] = true;
+						
+					}else{
+						
+						break;
+					}
+				}
+				
+				int lastPiece 	= file.getLastPieceNumber();
+
+				for ( int j=i+1; j<files.length; j++ ){
+					
+					if ( files[j].getFirstPieceNumber() == lastPiece ){
+				
+						interesting[j] = true;
+						
+					}else{
+						
+						break;
+					}
+				}
+			}
+		}
+		
+		List<DiskManagerFileInfo>	reallocs = new ArrayList<>();
+		
 		String[] types = DiskManagerImpl.getStorageTypes(dm);
 
-		// sweep over all files to see if adjacent files of changed files can be deleted or need allocation
-		for(int i = 0; i< files.length;i++)
-		{
-			int firstPiece = files[i].getFirstPieceNumber();
-			int lastPiece = files[i].getLastPieceNumber();
+		for ( int i=0; i<interesting.length; i++ ){
+			
+			if ( interesting[i] ){
 
-			if(toCheck[i])
-			{ // found a file that changed, scan adjacent files
-				if(lastPieceScanned < firstPiece)
-				{ // haven't checked the preceding files, slide backwards
-					windowStart = firstPiece;
-					while(i > 0 && files[i-1].getLastPieceNumber() >= windowStart)
-						i--;
-				}
-
-				if(windowEnd < lastPiece)
-					windowEnd = lastPiece;
-			}
-
-			if((windowStart <= firstPiece && firstPiece <= windowEnd) || (windowStart <= lastPiece && lastPiece <= windowEnd))
-			{ // file falls in current scanning window, check it
-				File currentFile = files[i].getFile(true);
-				if(!RDResumeHandler.fileMustExist(dm, files[i]))
-				{
-					int	st = convertDMStorageTypeFromString( types[i] );
-					if( st == DiskManagerFileInfo.ST_COMPACT || st == DiskManagerFileInfo.ST_REORDER_COMPACT ){
-						currentFile.delete();
+				DiskManagerFileInfo file = files[i];
+				
+				if ( RDResumeHandler.fileMustExist(dm, fileSet, file )){
+					
+					if ( !isSkipped ){
+						
+						if ( !file.exists()){
+							
+							reallocs.add( file );
+						}
 					}
-				} else if(allowAlloction && !files[i].exists())	{
-					/*
-					 * file must exist, does not exist and we probably just changed to linear
-					 * mode, assume that (re)allocation of adjacent files is necessary
-					 */
-					dm.setDataAlreadyAllocated(false);
+				}else{
+					
+					if ( isSkipped ){
+						
+						int	st = convertDMStorageTypeFromString( types[i] );
+						
+						if ( st == DiskManagerFileInfo.ST_COMPACT || st == DiskManagerFileInfo.ST_REORDER_COMPACT ){
+							
+							File currentFile = file.getFile(true);
+							
+							currentFile.delete();
+						}
+					}
 				}
-				lastPieceScanned = lastPiece;
 			}
-
-
+		}
+		
+		if ( !reallocs.isEmpty()){
+			
+			dm.requestAllocation( reallocs );
 		}
 	}
 
@@ -346,6 +388,15 @@ DiskManagerUtil
 		protected long    downloaded;
 		protected String  last_error;
 		
+		protected void
+		load(
+			int		_priority,
+			boolean	_skipped )
+		{
+			priority				= _priority;
+			skipped_internal		= _skipped;
+		}
+		
 		protected abstract File
 		setSkippedInternal( boolean skipped );
 	}
@@ -392,6 +443,13 @@ DiskManagerUtil
 
 		        final DiskManagerFileInfoSet fileSetSkeleton = new DiskManagerFileInfoSet() {
 
+		        	@Override
+		        	public void load(int[] priorities, boolean[] skipped){
+		        		for ( int i=0;i<priorities.length;i++){
+		        			res[i].load(priorities[i],skipped[i]);
+		        		}
+		        	}
+		        	
 					@Override
 					public DiskManagerFileInfo[] getFiles() {
 						return res;
@@ -501,15 +559,13 @@ DiskManagerUtil
 							download_manager.getDownloadState().setFileLinks( from_indexes, from_links, to_links );
 						}
 
-						if(!setSkipped){
-							doFileExistenceChecks(this, toChange, download_manager, true);
-						}
-
 						for(int i=0;i<res.length;i++){
 							if(toChange[i]){
 								listener.filePriorityChanged(res[i]);
 							}
 						}
+
+						doFileExistenceChecksAfterSkipChange(this, toChange, setSkipped, download_manager );
 					}
 
 					@Override
@@ -657,8 +713,6 @@ DiskManagerUtil
 
 							DiskManagerImpl.storeFileDownloaded( download_manager, res, true, false );
 
-							doFileExistenceChecks(this, toChange, download_manager, newStorageType == FileSkeleton.ST_LINEAR || newStorageType == FileSkeleton.ST_REORDER );
-
 						} finally {
 							dmState.suppressStateSave(false);
 							dmState.save(false);
@@ -693,21 +747,21 @@ DiskManagerUtil
 
 		            	@Override
 			            public void
-		            	setSkipped(boolean _skipped)
+		            	setSkipped(boolean skipped)
 		            	{
-		            		if ( !_skipped && getStorageType() == ST_COMPACT ){
+		            		if ( !skipped && getStorageType() == ST_COMPACT ){
 		            			if ( !setStorageType( ST_LINEAR )){
 		            				return;
 		            			}
 		            		}
 
-		            		if ( !_skipped && getStorageType() == ST_REORDER_COMPACT ){
+		            		if ( !skipped && getStorageType() == ST_REORDER_COMPACT ){
 		            			if ( !setStorageType( ST_REORDER )){
 		            				return;
 		            			}
 		            		}
 
-		            		File to_link = setSkippedInternal( _skipped );
+		            		File to_link = setSkippedInternal( skipped );
 
 		            		DiskManagerImpl.storeFilePriorities( download_manager, res );
 
@@ -716,13 +770,13 @@ DiskManagerUtil
 		            			download_manager.getDownloadState().setFileLink( file_index, getFile( false ), to_link );
 		            		}
 
-		            		if ( !_skipped ){
-		            			boolean[] toCheck = new boolean[fileSetSkeleton.nbFiles()];
-		            			toCheck[file_index] = true;
-		            			doFileExistenceChecks(fileSetSkeleton, toCheck, download_manager, true);
-		            		}
-
 		            		listener.filePriorityChanged( this );
+
+	            			boolean[] toCheck = new boolean[fileSetSkeleton.nbFiles()];
+		            			
+	            			toCheck[file_index] = true;
+		            			
+	            			doFileExistenceChecksAfterSkipChange( fileSetSkeleton, toCheck, skipped, download_manager );
 		            	}
 
 		            	@Override
@@ -1502,8 +1556,8 @@ DiskManagerUtil
 
 	static void
 	loadFilePriorities(
-		DownloadManager         download_manager,
-		DiskManagerFileInfoSet   fileSet )
+		DownloadManager         	download_manager,
+		DiskManagerFileInfoSet   	fileSet )
 	{
 		//  TODO: remove this try/catch.  should only be needed for those upgrading from previous snapshot
 		try {
@@ -1534,10 +1588,9 @@ DiskManagerUtil
 				}
 			}
 
-			fileSet.setPriority(prio);
-			fileSet.setSkipped(toSkip, true);
-
+			fileSet.load( prio, toSkip );
 		}
+		
 		catch (Throwable t) {Debug.printStackTrace( t );}
 	}
 

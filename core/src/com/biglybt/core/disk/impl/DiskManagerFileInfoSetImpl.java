@@ -38,6 +38,13 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 	}
 
 	@Override
+	public void load(int[] priorities, boolean[] skipped){
+		for ( int i=0;i<priorities.length;i++){
+			files[i].load( priorities[i], skipped[i] );
+		}
+	}
+	
+	@Override
 	public DiskManagerFileInfo[] getFiles() {
 		return files;
 	}
@@ -124,20 +131,21 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 					}
 				}
 			}
-			for (int i = 0; i < files.length; i++)
-				if (toChange[i])
-				{
+			
+			for (int i = 0; i < files.length; i++){
+				if (toChange[i]){
+				
 					files[i].setSkippedInternal( setSkipped );
-					diskManager.skippedFileSetChanged(files[i]);
+					
+					diskManager.skippedFileSetChanged( files[i] );
 				}
-
-			if(!setSkipped)
-				DiskManagerUtil.doFileExistenceChecks(this, toChange, diskManager.getDownloadState().getDownloadManager(), true);
-
-		} finally {
+			}
+		}finally{
+			
 			dmState.suppressStateSave(false);
 		}
-
+			
+		DiskManagerUtil.doFileExistenceChecksAfterSkipChange(this, toChange, setSkipped,  diskManager.getDownloadState().getDownloadManager());
 	}
 
 	@Override
@@ -189,7 +197,7 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 
 			dm_state.setListAttribute(DownloadManagerState.AT_FILE_STORE_TYPES, types);
 
-			DiskManagerUtil.doFileExistenceChecks(this, toChange, dm_state.getDownloadManager(), true);
+			//DiskManagerUtil.doFileExistenceChecks(this, toChange, dm_state.getDownloadManager(), true);
 
 		} finally {
 			dm_state.suppressStateSave(false);
