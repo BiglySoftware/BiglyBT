@@ -582,8 +582,10 @@ DiskManagerUtil
 						try {
 							dmState.suppressStateSave(true);
 
-							for(int i=0;i<res.length;i++)
-							{
+							boolean	recalc_dl = false;
+							
+							for(int i=0;i<res.length;i++){
+							
 								if(!toChange[i])
 									continue;
 
@@ -690,11 +692,13 @@ DiskManagerUtil
 								setSkipped( toSkip, true );
 							}
 
-							for(int i=0;i<res.length;i++)
-							{
-								if(!toChange[i])
+							for(int i=0;i<res.length;i++){
+								
+								if(!toChange[i]){
+								
 									continue;
-
+								}
+								
 								// download's not running, update resume data as necessary
 
 								int cleared = RDResumeHandler.storageTypeChanged( download_manager, res[i] );
@@ -704,11 +708,19 @@ DiskManagerUtil
 								// storage type changes we don't have the problem of dealing with
 								// the last piece being smaller than torrent piece size
 
-								if (cleared > 0)
-								{
+								if ( cleared > 0 ){
+								
 									res[i].downloaded = res[i].downloaded - cleared * res[i].getTorrentFile().getTorrent().getPieceLength();
+									
 									if (res[i].downloaded < 0) res[i].downloaded = 0;
+									
+									recalc_dl = true;
 								}
+							}
+							
+							if ( recalc_dl ){
+								
+								download_manager.getStats().setDownloadCompletedBytes( -1 );	// force recalc
 							}
 
 							DiskManagerImpl.storeFileDownloaded( download_manager, res, true, false );
@@ -1650,6 +1662,22 @@ DiskManagerUtil
 		DownloadManager		dm )
 	{
 		try{
+			TOTorrent torrent = dm.getTorrent();
+			
+			if ( torrent == null ){
+				
+				return( new DiskManagerPiece[0] );
+			}
+			
+	        DMPieceMapper piece_mapper    = DMPieceMapperFactory.create( torrent );
+
+	        int nbPieces    = torrent.getNumberOfPieces();
+	    	
+	        int pieceLength     = (int)torrent.getPieceLength();
+	        int lastPieceLength = piece_mapper.getLastPieceLength();
+	
+	        DiskManagerPiece[] pieces      = new DiskManagerPiece[nbPieces];
+
 			DiskManagerFileInfoSet file_set = 
 				getFileInfoSkeleton(
 					dm,
@@ -1667,17 +1695,8 @@ DiskManagerUtil
 						public void filePriorityChanged(DiskManagerFileInfo file){
 						}
 					});
-			
-			DiskManagerFileInfo[] files = file_set.getFiles();
-			
-			TOTorrent torrent = dm.getTorrent();
-			
-			if ( torrent == null ){
 				
-				return( new DiskManagerPiece[0] );
-			}
-			
-	        DMPieceMapper piece_mapper    = DMPieceMapperFactory.create( torrent );
+			DiskManagerFileInfo[] files = file_set.getFiles();
 	
 	        LocaleUtilDecoder   locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );
 	
@@ -1692,12 +1711,6 @@ DiskManagerUtil
 	        
 	        DMPieceMap piece_map = piece_mapper.getPieceMap();       
 	        	        	        
-	        int nbPieces    = torrent.getNumberOfPieces();
-	
-	        int pieceLength     = (int)torrent.getPieceLength();
-	        int lastPieceLength = piece_mapper.getLastPieceLength();
-	
-	        DiskManagerPiece[] pieces      = new DiskManagerPiece[nbPieces];
 	
 	        DiskManagerHelper disk_manager =
 	        	new DiskManagerHelper(){

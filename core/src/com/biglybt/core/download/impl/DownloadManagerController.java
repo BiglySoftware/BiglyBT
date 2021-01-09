@@ -180,7 +180,8 @@ DownloadManagerController
 	private volatile DiskManager 			disk_manager_use_accessors;
 	private DiskManagerListener				disk_manager_listener_use_accessors;
 
-	private DiskManagerPiece[]				disk_manager_pieces_snapshot;
+	private Object							disk_manager_pieces_snapshot_lock = new Object();
+	private volatile DiskManagerPiece[]		disk_manager_pieces_snapshot;
 	
 	final FileInfoFacadeSet		fileFacadeSet = new FileInfoFacadeSet();
 	boolean					files_facade_destroyed;
@@ -2151,6 +2152,8 @@ DownloadManagerController
 		// if it's more than one file just do the scan anyway
 		fileFacadeSet.makeSureFilesFacadeFilled(false);
 		calculateCompleteness( fileFacadeSet.facadeFiles );
+		
+		disk_manager_pieces_snapshot = null;
 	}
 
 	protected void
@@ -2249,8 +2252,7 @@ DownloadManagerController
 	public DiskManagerPiece[] 
 	getDiskManagerPiecesSnapshot()
 	{
-		try{
-			control_mon.enter();
+		synchronized( disk_manager_pieces_snapshot_lock ){
 		
 			if ( disk_manager_pieces_snapshot == null ){
 				
@@ -2258,10 +2260,6 @@ DownloadManagerController
 			}
 			
 			return( disk_manager_pieces_snapshot );
-			
-		}finally{
-			
-			control_mon.exit();
 		}
 	}
 
