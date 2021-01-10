@@ -141,7 +141,7 @@ public class FilesView
 
   public static final String MSGID_PREFIX = "FilesView";
 
-	private DownloadManager[] managers = new DownloadManager[0];
+  private DownloadManager[] managers = new DownloadManager[0];
 
   public boolean hide_dnd_files;
   public boolean tree_view;
@@ -343,6 +343,38 @@ public class FilesView
 		return tableParent;
 	}
 
+	private void
+	addManagerListeners(
+		DownloadManager[]		managers )
+	{
+		if ( managers == null ){
+			return;
+		}
+		
+		for (DownloadManager manager: managers ){
+			manager.getDownloadState().addListener(this,
+					DownloadManagerState.AT_FILE_LINKS2,
+					DownloadManagerStateAttributeListener.WRITTEN);
+
+			manager.addListener(this);
+		}
+	}
+	
+	private void
+	removeManagerListeners(
+		DownloadManager[]		managers )
+	{
+		if ( managers == null ){
+			return;
+		}
+
+		for (DownloadManager manager: managers ){
+			manager.getDownloadState().removeListener(this,
+					DownloadManagerState.AT_FILE_LINKS2,
+					DownloadManagerStateAttributeListener.WRITTEN);
+			manager.removeListener(this);
+		}
+	}
 
   // @see TableDataSourceChangedListener#tableDataSourceChanged(java.lang.Object)
 	@Override
@@ -359,12 +391,7 @@ public class FilesView
 		
 		if (tv != null) {
 	
-			for (DownloadManager manager: managers ){
-				manager.getDownloadState().removeListener(this,
-						DownloadManagerState.AT_FILE_LINKS2,
-						DownloadManagerStateAttributeListener.WRITTEN);
-				manager.removeListener(this);
-			}
+			removeManagerListeners( managers );
 		}
 
 		if (tags != null && tags.length > 0 && tag_listener != null) {
@@ -416,13 +443,7 @@ public class FilesView
 			return;
 		}
 
-		for (DownloadManager manager: managers ){
-			manager.getDownloadState().addListener(this,
-					DownloadManagerState.AT_FILE_LINKS2,
-					DownloadManagerStateAttributeListener.WRITTEN);
-
-			manager.addListener(this);
-		}
+		addManagerListeners( managers );
 
 		if (!tv.isDisposed()) {
 
@@ -1175,6 +1196,9 @@ public class FilesView
 				hide_dnd_files = COConfigurationManager.getBooleanParameter(
 						"FilesView.hide.dnd");
 				COConfigurationManager.addParameterListener("FilesView.hide.dnd", this);
+				
+				addManagerListeners( managers );
+				
 				break;
 			}
 
@@ -1182,14 +1206,9 @@ public class FilesView
 				COConfigurationManager.removeParameterListener("FilesView.hide.dnd",
 						this);
 
-				for (DownloadManager manager : managers) {
-					manager.getDownloadState().removeListener(this,
-							DownloadManagerState.AT_FILE_LINKS2,
-							DownloadManagerStateAttributeListener.WRITTEN);
-
-					manager.removeListener(this);
-				}
-
+				removeManagerListeners( managers );
+				
+				break;
 			}
 		}
 	}
