@@ -36,7 +36,6 @@ import java.util.Set;
 
 import com.biglybt.core.util.*;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -63,7 +62,6 @@ import com.biglybt.ui.swt.columns.torrent.ColumnUnopened;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.sharing.ShareUtils;
-import com.biglybt.ui.swt.shells.AdvRenameWindow;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.shells.RevertFileLocationsWindow;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
@@ -1453,7 +1451,7 @@ public class FilesViewMenuUtil
 				dm.setFilePriorities(fileInfos, -1);
 			}
 
-			boolean paused = setSkipped(dm, fileInfos, skipped, delete_action, prompt );
+			boolean paused = setSkipped(dm, fileInfos, skipped, delete_action?1:0, prompt );
 
 			if (paused) {
 
@@ -1462,6 +1460,38 @@ public class FilesViewMenuUtil
 		}
 	}
 
+	public static void setSkipped( List<DiskManagerFileInfo> file_list, boolean skipped, int delete_action, boolean prompt ) {
+
+		if (file_list == null || file_list.size() == 0) {
+			return;
+		}
+
+		Map<DownloadManager, ArrayList<DiskManagerFileInfo>> mapDMtoDMFI = new IdentityHashMap<>();
+
+		for ( DiskManagerFileInfo file: file_list ){
+
+			DownloadManager dm = file.getDownloadManager();
+			ArrayList<DiskManagerFileInfo> listFileInfos = mapDMtoDMFI.get(dm);
+			if (listFileInfos == null) {
+				listFileInfos = new ArrayList<>(1);
+				mapDMtoDMFI.put(dm, listFileInfos);
+			}
+			listFileInfos.add(file);
+		}
+
+		for (DownloadManager dm : mapDMtoDMFI.keySet()) {
+			ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
+			DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
+
+			boolean paused = setSkipped(dm, fileInfos, skipped, delete_action, prompt );
+
+			if (paused) {
+
+				dm.resume();
+			}
+		}
+	}
+	
 	private static void changePriorityManual(final List<DiskManagerFileInfo> file_list) {
 
 		SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
@@ -1509,7 +1539,7 @@ public class FilesViewMenuUtil
 				for (DownloadManager dm : mapDMtoDMFI.keySet()) {
 					ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
 					DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
-					boolean paused = setSkipped(dm, fileInfos, false, false,true);
+					boolean paused = setSkipped(dm, fileInfos, false, 0, true);
 
 					if (paused) {
 
@@ -1578,7 +1608,7 @@ public class FilesViewMenuUtil
 		for (DownloadManager dm : mapDMtoDMFI.keySet()) {
 			ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
 			DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
-			boolean paused = setSkipped(dm, fileInfos, false, false, true);
+			boolean paused = setSkipped(dm, fileInfos, false, 0, true);
 
 			if (paused) {
 
@@ -2084,9 +2114,25 @@ public class FilesViewMenuUtil
 		}
 	}
 	
-	// Returns true if it was paused here.
-	private static boolean setSkipped(DownloadManager manager,
-			DiskManagerFileInfo[] infos, boolean skipped, boolean delete_action, boolean prompt ) {
+		// Returns true if it was paused here.
+	
+	/**
+	 * 
+	 * @param manager
+	 * @param infos
+	 * @param skipped
+	 * @param delete_action  0 - not delete (explicit DND), 1 - delete, 2 - delete if file doesn't exist, DND otherwise
+	 * @param prompt
+	 * @return
+	 */
+	private static boolean 
+	setSkipped(
+		DownloadManager			manager,
+		DiskManagerFileInfo[]	infos, 
+		boolean 				skipped, 
+		int 					delete_action, 
+		boolean 				prompt ) 
+	{
 		// if we're not managing the download then don't do anything other than
 		// change the file's priority
 
@@ -2149,7 +2195,7 @@ public class FilesViewMenuUtil
 				}
 
 				if (perform_check && existing_file.exists()) {
-					if (delete_action) {
+					if (delete_action == 1) {
 						
 						if ( prompt ){
 							MessageBoxShell mb = new MessageBoxShell(SWT.OK | SWT.CANCEL,
@@ -2188,7 +2234,7 @@ public class FilesViewMenuUtil
 				}
 				// File does not exist.
 				else {
-					new_storage_type = delete_action?compact_target:non_compact_target;
+					new_storage_type = delete_action != 0?compact_target:non_compact_target;
 				}
 			}else{
 				new_storage_type = non_compact_target;
@@ -2246,9 +2292,20 @@ public class FilesViewMenuUtil
 		}
 
 		if (ok) {
+			boolean[] toChange = new boolean[nbFiles];
+			
+			for (int i = 0; i < infos.length; i++) {
+				if ( infos[i].isSkipped() != skipped ){
+					toChange[infos[i].getIndex()] = true;
+				}
+			}
+			
+			manager.getDiskManagerFileInfoSet().setSkipped(toChange, skipped );
+			/*
 			for (int i = 0; i < infos.length; i++) {
 				infos[i].setSkipped(skipped);
 			}
+			*/
 		}
 
 		return paused;

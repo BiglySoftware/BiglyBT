@@ -1297,33 +1297,45 @@ public class FilesView
 		}else if ( e.character == ' ' ){
 		
 			Object[] data_sources = tv.getSelectedDataSources().toArray();
+						
+			List<DiskManagerFileInfo>	files = new ArrayList<>();
 			
-			TableRowCore[] rows = tv.getRowsAndSubRows( false );
-			
+			boolean all_skipped = true;
+
 			for ( int i=0;i<data_sources.length;i++ ){
-				DiskManagerFileInfo file = (DiskManagerFileInfo)data_sources[i];
 				
+				DiskManagerFileInfo file = (DiskManagerFileInfo)data_sources[i];
+												
 				if ( file instanceof FilesViewNodeInner ){
 					
-					int state = ((FilesViewNodeInner)file).getSkippedState();
-											
-					file.setSkipped( state != 0 );
-	
+					FilesViewNodeInner inner = (FilesViewNodeInner)file;
+					
+					inner.getFiles( files, true );
+					
+					if ( all_skipped ){
+						
+						int state = inner.getSkippedState();
+												
+						if ( state != 0 ){
+							
+							all_skipped = false;
+						}
+					}
 				}else{
 				
-					file.setSkipped( !file.isSkipped());
-				}
-				
-				for ( TableRowCore row: rows ){
-					
-					if ( row.getDataSource(true) == file ){
+					files.add( file );
+
+					if ( all_skipped ){
 						
-						row.redraw( true );
-						
-						break;
+						if ( !file.isSkipped()){
+							
+							all_skipped = false;
+						}
 					}
 				}
 			}
+			
+			FilesViewMenuUtil.setSkipped( files, !all_skipped, 2, true );
 		}
 	}
 
