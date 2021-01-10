@@ -522,7 +522,19 @@ public class FilesView
 		
 		if ( file != null ){
 			
-			TableRowCore[] rows = tv.getVisibleRows();
+			TableRowCore[] rows;
+			
+			if ( tree_view ){
+				
+					// have to get all rows, not just visible ones, as changed file might be collasped
+					// but we still want to update parent state
+				
+				rows = tv.getRowsAndSubRows( true );	
+				
+			}else{
+				
+				rows = tv.getVisibleRows();
+			}
 			
 			for ( TableRowCore row: rows ){
 				
