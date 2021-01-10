@@ -705,9 +705,9 @@ BuddyPluginView
 					{
 						Set<ChatInstance> current_instances = menu_latest_instances;
 
-							// might be a lot of chats, just pick first 3
+							// might be a lot of chats, just pick first 10
 						
-						int rem = 3;
+						int rem = 10;
 						
 						for ( ChatInstance chat: current_instances ){
 
