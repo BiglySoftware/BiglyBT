@@ -1294,6 +1294,36 @@ public class FilesView
 		if (e.keyCode == SWT.F2 && (e.stateMask & SWT.MODIFIER_MASK) == 0) {
 			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), true, false,false);
 			e.doit = false;
+		}else if ( e.character == ' ' ){
+		
+			Object[] data_sources = tv.getSelectedDataSources().toArray();
+			
+			TableRowCore[] rows = tv.getRowsAndSubRows( false );
+			
+			for ( int i=0;i<data_sources.length;i++ ){
+				DiskManagerFileInfo file = (DiskManagerFileInfo)data_sources[i];
+				
+				if ( file instanceof FilesViewNodeInner ){
+					
+					int state = ((FilesViewNodeInner)file).getSkippedState();
+											
+					file.setSkipped( state != 0 );
+	
+				}else{
+				
+					file.setSkipped( !file.isSkipped());
+				}
+				
+				for ( TableRowCore row: rows ){
+					
+					if ( row.getDataSource(true) == file ){
+						
+						row.redraw( true );
+						
+						break;
+					}
+				}
+			}
 		}
 	}
 
