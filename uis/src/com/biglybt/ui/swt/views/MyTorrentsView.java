@@ -71,6 +71,8 @@ import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
+import com.biglybt.ui.swt.shells.GCStringPrinter;
+import com.biglybt.ui.swt.shells.GCStringPrinter.URLInfo;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.FontUtils;
@@ -1033,8 +1035,6 @@ public class MyTorrentsView
 
 		Label spacer = null;
 
-		int	max_rd_height = 0;
-
 		allTags = tags;
 
 		if ( buttonListener == null) {
@@ -1161,24 +1161,40 @@ public class MyTorrentsView
 			};
 		}
 
+		TagGroup currentGroup = null;
+				
 		for ( final Tag tag: tags ){
+			
 			boolean isCat = (tag instanceof Category);
+
+			TagGroup tg = tag.getGroupContainer();
+			
+			if ( tg != currentGroup && currentGroup != null && !currentGroup.getTags().isEmpty()){
+								
+				Divider div = new Divider( cCategoriesAndTags, SWT.NULL );
+				
+  				RowData rd = new RowData();
+  				
+  				div.setLayoutData(rd);
+			}
+
+			currentGroup = tg;
 
 			TagCanvas button = new TagCanvas(cCategoriesAndTags, tag, false, true);
 			button.setTrigger(buttonListener);
 			button.setCompact(true,COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons.ImageOverride" ));
 
 			if (isCat) {
-  			if (spacer == null) {
-  				spacer = new Label(cCategoriesAndTags, SWT.NONE);
-  				RowData rd = new RowData();
-  				rd.width = 8;
-  				spacer.setLayoutData(rd);
-  				spacer.moveAbove(null);
-  			}
-  			button.moveAbove(spacer);
+				if (spacer == null) {
+					spacer = new Label(cCategoriesAndTags, SWT.NONE);
+					RowData rd = new RowData();
+					rd.width = 8;
+					spacer.setLayoutData(rd);
+					spacer.moveAbove(null);
+				}
+				button.moveAbove(spacer);
 			}
-
+			
 			button.addKeyListener(this);
 			if ( fontButton == null) {
 				fontButton = FontUtils.getFontWithStyle(button.getFont(), SWT.NONE, 0.8f);
@@ -1197,14 +1213,6 @@ public class MyTorrentsView
 				CategoryUIUtils.setupCategoryMenu(menu, (Category) tag);
 			} else {
 				TagUIUtils.createSideBarMenuItemsDelayed(menu, tag);
-			}
-		}
-
-		if ( max_rd_height > 0 ){
-			RowLayout layout = (RowLayout)cCategoriesAndTags.getLayout();
-			int top_margin = ( 24 - max_rd_height + 1 )/2;
-			if (top_margin > 0 ){
-				layout.marginTop = top_margin;
 			}
 		}
 
@@ -3548,6 +3556,64 @@ public class MyTorrentsView
 		this.currentTagsAny = currentTagsAny;
 		synchronized( currentTagsLock ){
 			setCurrentTags(_currentTags);
+		}
+	}
+	
+	private class 
+	Divider
+		extends Canvas 
+		implements PaintListener
+	{
+		public 
+		Divider(
+			Composite 	parent, 
+			int 		style ) 
+		{
+			super( parent, style | SWT.DOUBLE_BUFFERED );
+
+			addPaintListener(this);
+		}
+		
+		public void 
+		paintControl(
+			PaintEvent e) 
+		{
+			Rectangle clientArea = getClientArea();
+
+			int x = clientArea.x + ( clientArea.width / 2 );
+			e.gc.setAlpha(50);
+			e.gc.drawLine(x, 3, x, clientArea.height - 3);
+		}
+
+		@Override
+		public Point computeSize(int wHint, int hHint) {
+			return computeSize(wHint, hHint, true);
+		}
+
+		@Override
+		public Point computeSize(int wHint, int hHint, boolean changed) {
+			try {
+				Point pt = computeSize(wHint, hHint, changed, false);
+
+				return pt;
+			} catch (Throwable t) {
+				return new Point(0, 0);
+			}
+		}
+
+		public Point computeSize(int wHint, int hHint, boolean changed, boolean realWidth) {
+			
+			for ( Control c: getParent().getChildren()){
+				
+				if ( c instanceof TagCanvas ){
+					
+					Point p = c.computeSize(wHint, hHint, changed);
+					
+					return( new Point( 5, p.y ));
+				}
+			}
+			
+			return( new Point(0,0));
 		}
 	}
 }
