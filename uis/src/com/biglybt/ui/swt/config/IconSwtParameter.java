@@ -69,7 +69,12 @@ public class IconSwtParameter
 			dialog.setFilterNames(new String[] { "Images (gif, jpg, png, tiff, ico, bmp", "All" });
 			String file = getValue();
 			if (file != null) {
-				dialog.setFilterPath(file);
+				File f = new File(file);
+				
+				if ( f.exists()){
+					dialog.setFilterPath(f.getParent());
+					dialog.setFileName( f.getName());
+				}
 			}
 
 			String newFile = dialog.open();

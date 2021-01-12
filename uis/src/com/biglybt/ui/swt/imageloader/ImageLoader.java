@@ -740,42 +740,7 @@ public class ImageLoader
 			images = findResources(sKey);
 
 			if (images == null) {
-				String	cache_key = sKey.hashCode() + ".ico";
-				if ( cached_resources.contains( cache_key )){
-					File cache = new File( cache_dir, cache_key );
-					if (cache.exists()) {
-						try {
-							FileInputStream fis = new FileInputStream(cache);
-
-							try {
-								byte[] imageBytes = FileUtil.readInputStreamAsByteArray(fis);
-								InputStream is = new ByteArrayInputStream(imageBytes);
-
-								org.eclipse.swt.graphics.ImageLoader swtImageLoader = new org.eclipse.swt.graphics.ImageLoader();
-								ImageData[] imageDatas = swtImageLoader.load(is);
-								images = new Image[imageDatas.length];
-								for (int i = 0; i < imageDatas.length; i++) {
-									images[i] = new Image(Display.getCurrent(), imageDatas[i]);
-								}
-
-								try {
-									is.close();
-								} catch (IOException e) {
-								}
-							} finally {
-								fis.close();
-							}
-						} catch (Throwable e) {
-							Debug.printStackTrace(e);
-						}
-					}
-				}else{
-					cached_resources.remove( cache_key );
-				}
-
-				if (images == null) {
 					images = new Image[0];
-				}
 			}
 
 			for (int i = 0; i < images.length; i++) {
@@ -1241,12 +1206,7 @@ public class ImageLoader
 			return null;
 		}
 
-		String imageKey;
-		if (maxSize == null) {
-			imageKey = url;
-		} else {
-			imageKey = maxSize.x + "x" + maxSize.y + ";" + url;
-		}
+		String imageKey = url;
 		
 		return( getUrlImageSupport( url, imageKey, maxSize, l ));
 	}
@@ -1267,9 +1227,12 @@ public class ImageLoader
 		final 		ImageDownloaderListener l) 
 	{
 		if (!Utils.isThisThreadSWT()) {
+			
 			Debug.out("Called on non-SWT thread");
+			
 			return null;
 		}
+		
 		if (l == null || file == null) {
 			return null;
 		}
@@ -1277,16 +1240,12 @@ public class ImageLoader
 		try{
 			String url = file.toURI().toURL().toExternalForm();
 	
-			String imageKey;
-			if (maxSize == null) {
-				imageKey = url;
-			} else {
-				imageKey = maxSize.x + "x" + maxSize.y + ";" + url;
-			}
+			String imageKey = url;
 			
 			long lastModified = file.lastModified();
 			
 			if ( lastModified > 0 ){
+				
 				imageKey += ";" + lastModified;
 			}
 			
@@ -1303,18 +1262,30 @@ public class ImageLoader
 	private Image 
 	getUrlImageSupport(
 		String 						url, 
-		String 						imageKey,
+		String 						baseImageKey,
 		Point  						maxSize,
 		ImageDownloaderListener 	l) 
 	{
-
-		if (imageExists(imageKey)) {
-			Image image = getImage(imageKey);
-			l.imageDownloaded(image, imageKey, true);
+		String sizedImageKey;
+		
+		if (maxSize == null) {
+			sizedImageKey = baseImageKey;
+		} else {
+			sizedImageKey = maxSize.x + "x" + maxSize.y + ";" + baseImageKey;
+		}
+	
+			// we can't use imageExists, getImage etc for these images as they are cached in the cache_dir in their
+			// full size and then resized from this - those other methods don't know maxSize so can't do that
+		
+		ImageLoaderRefInfo refInfoFromImageMap = getRefInfoFromImageMap(sizedImageKey);
+		if ( refInfoFromImageMap != null ){
+			Image image = refInfoFromImageMap.getImages()[0];
+			refInfoFromImageMap.addref();
+			l.imageDownloaded(image, sizedImageKey, true);
 			return image;
 		}
 
-		final String cache_key = imageKey.hashCode() + ".ico";
+		final String cache_key = baseImageKey.hashCode() + ".ico";
 
 		final File cache_file = new File( cache_dir, cache_key );
 
@@ -1339,8 +1310,8 @@ public class ImageLoader
 								image = newImage;
 							}
 						}
-						putRefInfoToImageMap(imageKey, new ImageLoaderRefInfo(image));
-						l.imageDownloaded(image, imageKey, true);
+						putRefInfoToImageMap(sizedImageKey, new ImageLoaderRefInfo(image));
+						l.imageDownloaded(image, sizedImageKey, true);
 						return image;
 					} finally {
 						fis.close();
@@ -1355,7 +1326,6 @@ public class ImageLoader
 			}
 		}
 
-		final String f_imageKey = imageKey;
 		ImageBytesDownloader.loadImage(url,
 				new ImageBytesDownloader.ImageDownloaderListener() {
 					@Override
@@ -1365,32 +1335,38 @@ public class ImageLoader
 							public void runSupport() {
 									// no synchronization here - might have already been
 									// downloaded
-								if (imageExists(f_imageKey)) {
-									Image image = getImage(f_imageKey);
-									l.imageDownloaded(image, imageKey, false);
+								ImageLoaderRefInfo refInfoFromImageMap = getRefInfoFromImageMap(sizedImageKey);
+								if ( refInfoFromImageMap != null ){
+									Image image = refInfoFromImageMap.getImages()[0];
+									refInfoFromImageMap.addref();
+									l.imageDownloaded(image, sizedImageKey, true);
 									return;
 								}
+								
 								FileUtil.writeBytesAsFile(cache_file.getAbsolutePath(), imageBytes);
+								
 								cached_resources.add( cache_key );
+								
 								InputStream is = new ByteArrayInputStream(imageBytes);
+								
 								try {
-  								Image image = new Image(Display.getCurrent(), is);
-  								try {
-  									is.close();
-  								} catch (IOException e) {
-  								}
-  								if (maxSize != null) {
-  									Image newImage = resizeImageIfLarger(image, maxSize);
-  									if (newImage != null) {
-  										image.dispose();
-  										image = newImage;
-  									}
-  								}
-  								putRefInfoToImageMap(f_imageKey, new ImageLoaderRefInfo(image));
-  								l.imageDownloaded(image, imageKey, false);
+									Image image = new Image(Display.getCurrent(), is);
+									try {
+										is.close();
+									} catch (IOException e) {
+									}
+									if (maxSize != null) {
+										Image newImage = resizeImageIfLarger(image, maxSize);
+										if (newImage != null) {
+											image.dispose();
+											image = newImage;
+										}
+									}
+									putRefInfoToImageMap(sizedImageKey, new ImageLoaderRefInfo(image));
+									l.imageDownloaded(image, sizedImageKey, false);
 								} catch (SWTException swte) {
 									//  org.eclipse.swt.SWTException: Unsupported or unrecognized format
-									System.err.println(swte.getMessage() + " for " + f_imageKey + " at " + cache_file);
+									System.err.println(swte.getMessage() + " for " + sizedImageKey + " at " + cache_file);
 								}
 							}
 						});
