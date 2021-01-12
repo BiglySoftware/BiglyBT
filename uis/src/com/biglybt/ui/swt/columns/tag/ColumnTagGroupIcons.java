@@ -167,24 +167,22 @@ public class ColumnTagGroupIcons
 			for ( String file: files ){
 				
 				try{
-					String resource = new File( file ).toURI().toURL().toExternalForm();		
-				
-					ImageLoader.getInstance().getUrlImage(
-							  resource, 
-							  new Point( w-1, bounds.height),
-							  new ImageLoader.ImageDownloaderListener(){
+					ImageLoader.getInstance().getFileImage(
+							new File( file ),
+							new Point( w-1, bounds.height),
+							new ImageLoader.ImageDownloaderListener(){
 			
-								  @Override
-								  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+								@Override
+								public void imageDownloaded(Image image, String key, boolean returnedImmediately){
 									  							  
-									 if ( image != null && returnedImmediately ){
+									if ( image != null && returnedImmediately ){
 
-										 images.add( image );
+										images.add( image );
 										 
-										 keys.add( key );
+										keys.add( key );
 									 }
-								  }
-							  });
+								}
+							});
 					
 				}catch( Throwable e ){
 				}

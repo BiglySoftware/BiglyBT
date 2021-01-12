@@ -562,12 +562,10 @@ public class TagUIUtils
 		if ( image_file != null ){
 			
 			try{
-				String resource = new File( image_file ).toURI().toURL().toExternalForm();
-														
-				ImageLoader.getInstance().getUrlImage(
-						  resource, 
-						  new Point( 16, 16 ),
-						  new ImageLoader.ImageDownloaderListener(){
+				ImageLoader.getInstance().getFileImage(
+						new File( image_file ), 
+						new Point( 16, 16 ),
+						new ImageLoader.ImageDownloaderListener(){
 		
 							  @Override
 							  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
@@ -597,12 +595,10 @@ public class TagUIUtils
 		if ( image_file != null ){
 			
 			try{
-				String resource = new File( image_file ).toURI().toURL().toExternalForm();
-														
-				ImageLoader.getInstance().getUrlImage(
-						  resource, 
-						  new Point( 16, 16 ),
-						  new ImageLoader.ImageDownloaderListener(){
+				ImageLoader.getInstance().getFileImage(
+						new File( image_file ), 
+						new Point( 16, 16 ),
+						new ImageLoader.ImageDownloaderListener(){
 		
 							  @Override
 							  public void imageDownloaded(Image image, String key, boolean returnedImmediately){

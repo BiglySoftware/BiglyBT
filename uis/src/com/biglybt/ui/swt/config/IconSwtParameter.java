@@ -119,6 +119,7 @@ public class IconSwtParameter
 		if (img != null && !img.isDisposed()) {
 			if (!iconChooser.isDisposed()) {
 				iconChooser.setImage(null);
+				Utils.setTT( iconChooser, "" );
 			}
 			img.dispose();
 			img = null;
@@ -143,18 +144,22 @@ public class IconSwtParameter
 
 			gc.dispose();
 			iconChooser.setImage(img);
+			Utils.setTT( iconChooser, "" );
 
 		} else {
 			try {
-				String resource = new File(file).toURI().toURL().toExternalForm();
-
-				ImageLoader.getInstance().getUrlImage(resource, new Point(w, h),
+				File f = new File(file);
+				
+				ImageLoader.getInstance().getFileImage( f, new Point(w, h),
 						(image, key, returnedImmediately) -> {
 
 							iconChooser.setImage(image);
 							
 							if (image != null) {
 								imgResource = key;
+								Utils.setTT( iconChooser, f.getAbsolutePath());
+							}else{
+								Utils.setTT( iconChooser, "" );
 							}
 							
 							if ( !returnedImmediately ){

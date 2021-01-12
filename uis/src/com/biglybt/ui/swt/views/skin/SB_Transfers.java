@@ -2312,10 +2312,8 @@ public class SB_Transfers
 						@Override
 						public void run(){
 							try{
-								String resource = new File( fif ).toURI().toURL().toExternalForm();
-								
-								ImageLoader.getInstance().getUrlImage(
-									resource, 
+								ImageLoader.getInstance().getFileImage(
+									new File( fif ), 
 									new Point( 20, 14 ),
 									new ImageLoader.ImageDownloaderListener(){
 										

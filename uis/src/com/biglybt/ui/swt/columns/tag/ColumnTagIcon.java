@@ -80,16 +80,14 @@ public class ColumnTagIcon
 
 		if ( file != null ){
 			try{
-				String resource = new File( file ).toURI().toURL().toExternalForm();
-				
 				Point size = cell.getSize();
 				
 				size.x -= 2;
 				size.y -= 2;
 				
-				ImageLoader.getInstance().getUrlImage(
-						  resource, 
-						  size,
+				ImageLoader.getInstance().getFileImage(
+						 new File( file ), 
+						size,
 						(image, key, returnedImmediately) -> {
 
 							if ( image != null && returnedImmediately ){

@@ -17,6 +17,7 @@
 package com.biglybt.ui.swt.imageloader;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1233,7 +1234,7 @@ public class ImageLoader
 	public Image getUrlImage(String url, final Point maxSize,
 			final ImageDownloaderListener l) {
 		if (!Utils.isThisThreadSWT()) {
-			Debug.out("getUrlImage called on non-SWT thread");
+			Debug.out("Called on non-SWT thread");
 			return null;
 		}
 		if (l == null || url == null) {
@@ -1246,6 +1247,66 @@ public class ImageLoader
 		} else {
 			imageKey = maxSize.x + "x" + maxSize.y + ";" + url;
 		}
+		
+		return( getUrlImageSupport( url, imageKey, maxSize, l ));
+	}
+	
+	/**
+	 * 
+	 * @param file
+	 * @param lastModified > 0 -> image key will include this for caching purposes
+	 * @param maxSize		non-null -> image will be resized if required
+	 * @param l
+	 * @return
+	 */
+	
+	public Image 
+	getFileImage( 
+		File 		file, 
+		Point 		maxSize,
+		final 		ImageDownloaderListener l) 
+	{
+		if (!Utils.isThisThreadSWT()) {
+			Debug.out("Called on non-SWT thread");
+			return null;
+		}
+		if (l == null || file == null) {
+			return null;
+		}
+		
+		try{
+			String url = file.toURI().toURL().toExternalForm();
+	
+			String imageKey;
+			if (maxSize == null) {
+				imageKey = url;
+			} else {
+				imageKey = maxSize.x + "x" + maxSize.y + ";" + url;
+			}
+			
+			long lastModified = file.lastModified();
+			
+			if ( lastModified > 0 ){
+				imageKey += ";" + lastModified;
+			}
+			
+			return( getUrlImageSupport( url, imageKey, maxSize, l ));
+			
+		}catch( MalformedURLException e ){
+			
+			Debug.out( e );
+			
+			return( null );
+		}
+	}
+	
+	private Image 
+	getUrlImageSupport(
+		String 						url, 
+		String 						imageKey,
+		Point  						maxSize,
+		ImageDownloaderListener 	l) 
+	{
 
 		if (imageExists(imageKey)) {
 			Image image = getImage(imageKey);
@@ -1253,7 +1314,7 @@ public class ImageLoader
 			return image;
 		}
 
-		final String cache_key = url.hashCode() + ".ico";
+		final String cache_key = imageKey.hashCode() + ".ico";
 
 		final File cache_file = new File( cache_dir, cache_key );
 

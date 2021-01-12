@@ -148,10 +148,8 @@ public class CategoryIconsItem
 			for ( String file: files ){
 				
 				try{
-					String resource = new File( file ).toURI().toURL().toExternalForm();		
-				
-					ImageLoader.getInstance().getUrlImage(
-							  resource, 
+					ImageLoader.getInstance().getFileImage(
+							new File( file ), 
 							  new Point( w-1, bounds.height),
 							  new ImageLoader.ImageDownloaderListener(){
 			

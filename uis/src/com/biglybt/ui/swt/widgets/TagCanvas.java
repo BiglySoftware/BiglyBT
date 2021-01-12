@@ -696,9 +696,9 @@ public class TagCanvas
 		String iconFile = tag.getImageFile();
 		if (iconFile != null) {
 			try {
-				String resource = new File(iconFile).toURI().toURL().toExternalForm();
-
-				ImageLoader.getInstance().getUrlImage(resource, MAX_IMAGE_SIZE,
+				File file = new File( iconFile );
+				
+				ImageLoader.getInstance().getFileImage( file, MAX_IMAGE_SIZE,
 						(image, key, returnedImmediately) -> {
 							if (image == null) {
 								return;
