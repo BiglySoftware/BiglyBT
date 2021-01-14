@@ -1260,6 +1260,17 @@ RDResumeHandler
 		return pivot;
 	}
 
+	/**
+	 * @deprecated Kept for xmwebui 
+	 */
+	public static boolean
+	fileMustExist(
+		DownloadManager 			download_manager,
+		DiskManagerFileInfo 		file)
+	{
+		return fileMustExist(download_manager, download_manager.getDiskManagerFileInfoSet(), file);
+	}
+
 	public static boolean 
 	fileMustExist(
 		DownloadManager 			download_manager,
