@@ -3581,8 +3581,8 @@ public class MyTorrentsView
 			Rectangle clientArea = getClientArea();
 
 			int x = clientArea.x + ( clientArea.width / 2 );
-			e.gc.setAlpha(50);
-			e.gc.drawLine(x, 3, x, clientArea.height - 3);
+			e.gc.setAlpha(80);
+			e.gc.drawLine(x, 2, x, clientArea.height - 3);
 		}
 
 		@Override
