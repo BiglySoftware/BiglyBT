@@ -1,0 +1,63 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion 14
+        multiDexEnabled true
+    }
+
+
+    compileOptions {
+        encoding = "UTF-8"
+
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+
+    sourceSets {
+        main {
+            java {
+                srcDirs = [
+                    'core/src/'
+                ]
+                exclude 'com/biglybt/core/util/dns/**'
+                exclude 'com/biglybt/core/util/jman/**'
+                exclude 'com/biglybt/internat/**'
+                exclude 'com/biglybt/core/devices/**'
+                exclude 'com/biglybt/platform/unix/**'
+                exclude 'com/biglybt/platform/macosx/**'
+                exclude 'com/biglybt/platform/win32/**'
+
+                exclude 'com/biglybt/update/CoreUpdateChecker**'
+                exclude 'com/biglybt/core/util/spi/AENameServiceDescriptor**'
+                exclude 'com/biglybt/core/download/StreamManager**'
+                exclude 'com/biglybt/ui/webplugin/WebPluginAccessController**'
+                exclude 'com/biglybt/core/security/impl/SETrustingManager**'
+                exclude 'com/biglybt/core/update/impl/ClientRestarterImpl**'
+            }
+
+            resources {
+                includes = ['com/biglybt/ui/android/internat/*.properties']
+                srcDirs = [
+                        'uis/src'
+                ]
+            }
+        }
+    }
+    namespace 'core'
+    lint {
+        abortOnError false
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs_nio:${desugarVersion}"
+    //noinspection GradleDependency
+    implementation 'commons-cli:commons-cli:1.4'
+}
