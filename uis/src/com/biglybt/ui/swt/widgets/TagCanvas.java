@@ -724,7 +724,14 @@ public class TagCanvas
 								return;
 							}
 
-							Utils.execSWTThread(() -> setImage(image, key));
+							if ( isDisposed()){
+								
+								com.biglybt.ui.swt.imageloader.ImageLoader.getInstance().releaseImage( key );
+								
+							}else{
+								
+								Utils.execSWTThread(() -> setImage(image, key));
+							}
 						});
 			} catch (Throwable e) {
 				Debug.out(e);

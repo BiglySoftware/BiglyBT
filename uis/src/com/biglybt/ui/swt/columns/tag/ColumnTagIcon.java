@@ -92,7 +92,10 @@ public class ColumnTagIcon
 
 							if ( image != null && returnedImmediately ){
 
-								Utils.drawImageCenterScaleDown(gc, image, cell.getBounds());
+								if ( !gc.isDisposed()){
+								
+									Utils.drawImageCenterScaleDown(gc, image, cell.getBounds());
+								}
 
 								ImageLoader.getInstance().releaseImage( key );
 							}

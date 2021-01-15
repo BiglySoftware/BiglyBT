@@ -20,6 +20,7 @@
 
 package com.biglybt.core.tag.impl;
 
+import java.io.File;
 import java.util.*;
 
 import com.biglybt.activities.LocalActivityManager;
@@ -148,32 +149,52 @@ TagWithState
 	
 				String[] bits = prop.getStringList();
 	
-				if ( bits == null || bits.length == 0 ){
+				if ( bits != null && bits.length > 0 ){
 	
-					return;
-				}
-				
-				Map<String,List<List<String>>> templates = TrackersUtil.getInstance().getMultiTrackers();
-				
-				for ( String bit: bits ){
+					Map<String,List<List<String>>> templates = TrackersUtil.getInstance().getMultiTrackers();
 					
-					String[] temp = bit.split( ":" );
-
-					String t_name = temp[1];
-
-					List<List<String>> template_trackers = templates.get( t_name );
-					
-					if ( template_trackers != null ){
+					for ( String bit: bits ){
 						
-						Map tt_map = new HashMap();
+						String[] temp = bit.split( ":" );
+	
+						String t_name = temp[1];
+	
+						List<List<String>> template_trackers = templates.get( t_name );
 						
-						tt_map.put( "name", t_name );
-						
-						tt_map.put( "template", template_trackers );
-						
-						vf.addComponent( VuzeFileComponent.COMP_TYPE_TRACKER_TEMPLATE, tt_map );
+						if ( template_trackers != null ){
+							
+							Map tt_map = new HashMap();
+							
+							tt_map.put( "name", t_name );
+							
+							tt_map.put( "template", template_trackers );
+							
+							vf.addComponent( VuzeFileComponent.COMP_TYPE_TRACKER_TEMPLATE, tt_map );
+						}
 					}
 				}
+			}
+		}
+		
+		String image_file = getImageFile();
+		
+		if ( image_file != null ){
+		
+			try{
+				
+				File file = FileUtil.newFile( image_file );
+				 
+				byte[] bytes = FileUtil.readFileAsByteArray( file );
+				
+				if ( bytes != null ){
+					
+					map.put( "_img_file", file.getName());
+					
+					map.put( "_img_bytes", bytes );
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
 			}
 		}
 	}

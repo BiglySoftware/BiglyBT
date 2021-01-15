@@ -20,10 +20,15 @@
 
 package com.biglybt.core.tag.impl;
 
+import java.io.File;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.biglybt.core.tag.*;
+import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.SystemProperties;
+import com.biglybt.util.MapUtils;
 
 public class
 TagTypeDownloadManual
@@ -113,6 +118,50 @@ TagTypeDownloadManual
 		new_tag.setSupportsTagTranscode( true );
 		new_tag.setSupportsFileLocation( true );
 
+		String image_file = MapUtils.getMapString( details, "_img_file", null );
+		
+		if ( image_file != null ){
+			
+			byte[] image_bytes = (byte[])details.get( "_img_bytes" );
+			
+			if ( image_bytes != null ){
+			
+				try{
+					File img_dir = FileUtil.newFile( SystemProperties.getUserPath(), "tagicons" );
+					
+					if ( !img_dir.exists()){
+						
+						img_dir.mkdirs();
+					}
+					
+					int pos = image_file.indexOf( '.' );
+					
+					String prefix = pos==-1?image_file:image_file.substring( 0, pos );
+					String suffix = pos==-1?"":image_file.substring( pos );
+					
+					for ( int i=0;i<32;i++){
+						
+						File img_file = FileUtil.newFile( img_dir, (i==0?prefix:(prefix+"_"+i)) + suffix );
+						
+						if ( !img_file.exists()){
+							
+							FileUtil.writeBytesAsFile( img_file.getAbsolutePath(), image_bytes );
+							
+							if ( img_file.exists()){
+								
+								new_tag.setImageFile( img_file.getAbsolutePath());
+							}
+							
+							break;
+						}
+					}
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+		}
+		
 		return( new_tag );
 	}
 }

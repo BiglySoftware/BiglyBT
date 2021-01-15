@@ -198,17 +198,20 @@ TagBase
 
 				tag_limits = (TagFeatureLimits)this;
 			}
-			
-			if ( group != null ){
-				
-				tag_type.setTagGroup( this, null, group );
-			}
 		}
 	}
 
 	protected void
 	initialized()
 	{
+			// need to defer group setting until this point as the tag-group can have listeners and we 
+			// don't want the Tag to 'escape' to the world before it is initialized
+		
+		if ( group != null ){
+			
+			tag_type.setTagGroup( this, null, group );
+		}
+		
 		loadPersistentStuff();
 
 		loadTransientStuff();
