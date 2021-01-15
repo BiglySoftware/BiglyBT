@@ -1589,7 +1589,7 @@ DownloadManagerStatsImpl
   public long
   getRemainingExcludingDND()
   {
-		DiskManager	dm = getDiskManagerIfNotTransient();
+	  DiskManager	dm = download_manager.getDiskManager();
 
 	  if (dm != null) {
 	  	return dm.getRemainingExcludingDND();
@@ -1610,7 +1610,7 @@ DownloadManagerStatsImpl
 	public long
 	getSizeExcludingDND()
 	{
-		DiskManager	dm = getDiskManagerIfNotTransient();
+	  DiskManager	dm = download_manager.getDiskManager();
 
 	  if (dm != null) {
 	  	return dm.getSizeExcludingDND();
