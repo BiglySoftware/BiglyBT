@@ -87,7 +87,7 @@ public class FullUpdateWindow
 			final Shell parentShell = Utils.findAnyShell();
 
 			final Shell shell = current_shell =
-				ShellFactory.createShell(parentShell, SWT.BORDER | SWT.APPLICATION_MODAL | SWT.TITLE | SWT.DIALOG_TRIM );
+				ShellFactory.createShell(parentShell, SWT.BORDER | SWT.APPLICATION_MODAL | SWT.TITLE | SWT.RESIZE | SWT.DIALOG_TRIM );
 
 			if (shell == null) {
 				return;
