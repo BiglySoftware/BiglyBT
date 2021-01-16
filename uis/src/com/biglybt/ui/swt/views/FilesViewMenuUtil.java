@@ -1943,6 +1943,13 @@ public class FilesViewMenuUtil
 				}
 				
 				@Override
+				public String[] 
+				getAffectedFileSystems()
+				{
+					return( FileUtil.getFileStoreNames( manager.getAbsoluteSaveLocation(), target ));
+				}
+				
+				@Override
 				public ProgressCallback 
 				getProgressCallback() 
 				{
@@ -2043,6 +2050,13 @@ public class FilesViewMenuUtil
 					return( manager );
 				}
 				
+				@Override
+				public String[] 
+				getAffectedFileSystems()
+				{
+					return( FileUtil.getFileStoreNames( manager.getAbsoluteSaveLocation(), target ));
+				}
+
 				@Override
 				public ProgressCallback 
 				getProgressCallback() 

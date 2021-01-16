@@ -2094,6 +2094,7 @@ DiskManagerUtil
 	public static void
 	runMoveTask(
 		DownloadManager		download_manager,
+		File				destination,
 		Runnable			target,
 		MoveTaskAapter		adapter )
 	
@@ -2119,6 +2120,13 @@ DiskManagerUtil
 							return( download_manager );
 						}
 						
+						@Override
+						public String[] 
+						getAffectedFileSystems()
+						{
+							return( FileUtil.getFileStoreNames( download_manager.getAbsoluteSaveLocation(), destination ));
+						}
+					
 						private ProgressCallback callback = 
 							new ProgressCallbackAdapter()
 							{
@@ -2132,7 +2140,7 @@ DiskManagerUtil
 									
 									return( mp==null?-1:(int)mp[0]);
 								}
-								
+							
 								@Override
 								public long 
 								getSize()

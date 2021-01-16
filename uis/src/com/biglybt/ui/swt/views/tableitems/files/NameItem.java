@@ -712,6 +712,14 @@ public class NameItem extends CoreTableColumnSWT implements
 			}
 			
 			@Override
+			public String[] 
+			getAffectedFileSystems()
+			{
+				return( FileUtil.getFileStoreNames( fileInfo.getDownloadManager().getAbsoluteSaveLocation(), target ));
+			}
+
+			
+			@Override
 			public void run(CoreOperation operation) {
 				result[0] = fileInfo.setLink(target);
 			}

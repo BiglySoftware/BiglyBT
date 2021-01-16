@@ -20,6 +20,7 @@
 package com.biglybt.core;
 
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.util.FileUtil;
 
 public interface
 CoreOperationTask
@@ -29,6 +30,19 @@ CoreOperationTask
 	
 	public DownloadManager
 	getDownload();
+	
+	public default String[]
+	getAffectedFileSystems()
+	{
+		DownloadManager dm = getDownload();
+		
+		if ( dm != null ){
+			
+			return( FileUtil.getFileStoreNames( dm.getAbsoluteSaveLocation()));
+		}
+		
+		return( null );
+	}
 	
 	public default void
 	run(

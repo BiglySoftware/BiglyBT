@@ -2682,8 +2682,15 @@ DiskManagerImpl
     		moveFiles( loc_change, true, op_status );
     	};
     	
+    	File destination = loc_change.download_location;
+    	
+    	if ( destination == null ){
+    	
+    		destination = download_manager.getAbsoluteSaveLocation();
+    	}
+    	
     	try{
-    		DiskManagerUtil.runMoveTask( download_manager, target, this );
+    		DiskManagerUtil.runMoveTask( download_manager, destination, target, this );
     		
     	}catch( Throwable e ){
     		

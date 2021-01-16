@@ -4906,7 +4906,7 @@ DownloadManagerImpl
 			}
 	  };
 	  	  
-	  DiskManagerUtil.runMoveTask( this, target, this );
+	  DiskManagerUtil.runMoveTask( this, destination, target, this );
   }
 
   void
@@ -5340,46 +5340,53 @@ DownloadManagerImpl
 	  
 	  try{
 		  FileUtil.runAsTask(
-			  CoreOperation.OP_DOWNLOAD_EXPORT,
-			  new CoreOperationTask()
-			  {
-				  @Override
-				  public String 
-				  getName()
+				  CoreOperation.OP_DOWNLOAD_EXPORT,
+				  new CoreOperationTask()
 				  {
-					  return( getDisplayName());
-				  }
-
-				  @Override
-				  public DownloadManager 
-				  getDownload()
-				  {
-					  return( DownloadManagerImpl.this );
-				  }
-					
-				  @Override
-				  public void
-				  run(
-						  CoreOperation operation)
-				  {
-					  try{
-						  copyDataFiles( parent_dir );
-
-						  copyTorrentFile( parent_dir );
-
-					  }catch( Throwable e ){
-
-						  throw( new RuntimeException( e ));
+					  @Override
+					  public String 
+					  getName()
+					  {
+						  return( getDisplayName());
 					  }
-				  }
 
-				  @Override
-				  public ProgressCallback 
-				  getProgressCallback()
-				  {
-					  return( null );
-				  }
-			  });
+					  @Override
+					  public DownloadManager 
+					  getDownload()
+					  {
+						  return( DownloadManagerImpl.this );
+					  }
+
+					  @Override
+					  public String[] 
+					  getAffectedFileSystems()
+					  {
+						  return( FileUtil.getFileStoreNames( getAbsoluteSaveLocation(), parent_dir ));
+					  }
+
+					  @Override
+					  public void
+					  run(
+							  CoreOperation operation)
+					  {
+						  try{
+							  copyDataFiles( parent_dir );
+
+							  copyTorrentFile( parent_dir );
+
+						  }catch( Throwable e ){
+
+							  throw( new RuntimeException( e ));
+						  }
+					  }
+
+					  @Override
+					  public ProgressCallback 
+					  getProgressCallback()
+					  {
+						  return( null );
+					  }
+				  });
 		  
 	  }catch( Throwable e ){
 		  

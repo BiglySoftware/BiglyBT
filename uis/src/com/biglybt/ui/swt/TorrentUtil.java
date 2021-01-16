@@ -2606,6 +2606,13 @@ public class TorrentUtil
 									}
 									
 									@Override
+									public String[] 
+									getAffectedFileSystems()
+									{
+										return( FileUtil.getFileStoreNames( save_loc ));
+									}
+
+									@Override
 									public void 
 									run(
 										CoreOperation operation ) 
