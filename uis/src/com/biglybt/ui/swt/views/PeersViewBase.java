@@ -1,5 +1,6 @@
 package com.biglybt.ui.swt.views;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.*;
@@ -618,6 +619,8 @@ PeersViewBase
 		long	maxUp				= 0;
 
 		boolean onlyMyPeer = true;
+		boolean hasIPv4 = false;
+		boolean hasIPv6 = false;
 		
 		if ( hasSelection ){
 			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
@@ -627,6 +630,28 @@ PeersViewBase
 
 				if ( !peer.isMyPeer()){
 					onlyMyPeer = false;
+					
+					String ip = peer.getIp();
+					
+					if ( ip.indexOf( "." ) != -1 ){
+						hasIPv4 = true;
+					}else{
+						hasIPv6 = true;
+					}
+					
+					InetAddress alt = peer.getAlternativeIPv6();
+					
+					if ( alt != null ){
+						
+						if ( alt instanceof Inet4Address ){
+							
+							hasIPv4 = true;
+							
+						}else{
+							
+							hasIPv6 = true;
+						}
+					}
 				}
 				PEPeerManager m = peer.getManager();
 
@@ -875,20 +900,103 @@ PeersViewBase
 		
 		kick_item.setEnabled( !onlyMyPeer );
 
-		final MenuItem ban_item = new MenuItem(menu, SWT.PUSH);
+		final MenuItem ban_item;
+		
+		if ( hasIPv4 && hasIPv6 ){
+		
+			final Menu ban_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
 
-		Messages.setLanguageText(ban_item, "PeersView.menu.kickandban");
-		ban_item.addListener(SWT.Selection, new PeersRunner(peers) {
-			@Override
-			public void run(PEPeer peer) {
-				if ( !peer.isMyPeer()){
-					String msg = MessageText.getString("PeersView.menu.kickandban.reason");
-					IpFilterManagerFactory.getSingleton().getIPFilter().ban(peer.getIp(),
-							msg, true );
-					peer.getManager().removePeer(peer, "Peer kicked and banned");
+			ban_item = new MenuItem( menu, SWT.CASCADE);
+
+			ban_item.setMenu( ban_menu );
+			
+			Messages.setLanguageText( ban_item, "PeersView.menu.kickandban" );
+
+			MenuItem ban_v4_item = new MenuItem( ban_menu, SWT.PUSH );
+			
+			ban_v4_item.setText( "IPv4" );
+			
+			MenuItem ban_v6_item = new MenuItem( ban_menu, SWT.PUSH );
+			
+			ban_v6_item.setText( "IPv6" );
+			
+			MenuItem ban_v4v6_item = new MenuItem( ban_menu, SWT.PUSH );
+			
+			ban_v4v6_item.setText( "IPv4 + IPv6" );
+			
+			Listener l = new PeersRunner(peers) {
+				@Override
+				public void run( Event e, PEPeer peer) {
+					if ( !peer.isMyPeer()){
+						String msg = MessageText.getString("PeersView.menu.kickandban.reason");
+						
+						boolean v4 = e.widget==ban_v4_item||e.widget==ban_v4v6_item;
+						boolean v6 = e.widget==ban_v6_item||e.widget==ban_v4v6_item;
+						
+						String ip = peer.getIp();
+						
+						InetAddress ia = peer.getAlternativeIPv6();
+						
+						boolean do_ip;
+						
+						if ( ip.indexOf( '.' ) != -1 ){
+															
+							do_ip = v4;
+							
+						}else{
+							
+							do_ip = v6;
+						}
+						
+						if ( do_ip ){
+											
+							IpFilterManagerFactory.getSingleton().getIPFilter().ban( ip, msg, true );
+						}
+						
+						if ( ia != null ){
+							
+							boolean do_ia;
+							
+							if ( ia instanceof Inet4Address ){
+																
+								do_ia = v4;
+								
+							}else{
+								
+								do_ia = v6;
+							}
+							
+							if ( do_ia ){
+												
+								IpFilterManagerFactory.getSingleton().getIPFilter().ban( ia.getHostAddress(), msg, true );
+							}
+						}
+							
+						peer.getManager().removePeer(peer, "Peer kicked and banned");
+					}
 				}
-			}
-		});
+			};
+			
+			ban_v4_item.addListener( SWT.Selection, l );
+			ban_v6_item.addListener( SWT.Selection, l );
+			ban_v4v6_item.addListener( SWT.Selection, l );
+		}else{
+			
+			ban_item = new MenuItem(menu, SWT.PUSH);
+
+			Messages.setLanguageText(ban_item, "PeersView.menu.kickandban");
+			ban_item.addListener(SWT.Selection, new PeersRunner(peers) {
+				@Override
+				public void run(PEPeer peer) {
+					if ( !peer.isMyPeer()){
+						String msg = MessageText.getString("PeersView.menu.kickandban.reason");
+						IpFilterManagerFactory.getSingleton().getIPFilter().ban(peer.getIp(),
+								msg, true );
+						peer.getManager().removePeer(peer, "Peer kicked and banned");
+					}
+				}
+			});
+		}
 
 		ban_item.setEnabled( !onlyMyPeer );
 
@@ -1319,27 +1427,42 @@ PeersViewBase
 		@Override
 		public void
 		handleEvent(
-				Event e)
+			Event e)
 		{
-			if ( !run( peers )){
+			if ( !run( e, peers )){
 
 				for ( PEPeer peer: peers ){
 
-					run( peer );
+					run( e, peer );
 				}
 			}
 		}
 
 		public void
 		run(
-				PEPeer peer)
+			Event	e,
+			PEPeer peer)
 		{
-
+			run( peer );
 		}
 
 		public boolean
 		run(
-				PEPeer[]	peers )
+			Event		e,
+			PEPeer[]	peers )
+		{
+			return( run( peers ));
+		}
+		
+		public void
+		run(
+			PEPeer peer)
+		{
+		}
+
+		public boolean
+		run(
+			PEPeer[]	peers )
 		{
 			return( false );
 		}
