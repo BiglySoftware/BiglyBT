@@ -108,6 +108,13 @@ CoreOperationTask
 			return( 0 );
 		}
 		
+		public boolean
+		isAutoPause();
+		
+		public void
+		setAutoPause(
+			boolean		b );
+	
 		public int
 		getSupportedTaskStates();
 		
@@ -123,9 +130,10 @@ CoreOperationTask
 	ProgressCallbackAdapter
 		implements ProgressCallback
 	{
-		private volatile int 	thousandths;
-		private volatile long	size;
-		private volatile String	subtask;
+		private volatile int 		thousandths;
+		private volatile long		size;
+		private volatile String		subtask;
+		private volatile boolean	auto_pause;
 		
 		public int
 		getProgress()
@@ -164,6 +172,19 @@ CoreOperationTask
 			String	name )
 		{
 			subtask = name;
+		}
+		
+		public boolean
+		isAutoPause()
+		{
+			return( auto_pause );
+		}
+		
+		public void
+		setAutoPause(
+			boolean		b )
+		{
+			auto_pause = b;
 		}
 		
 		public int

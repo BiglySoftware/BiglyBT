@@ -606,6 +606,7 @@ public class ConfigurationDefaults {
     def.put( "Alert on close", FALSE );
     def.put( "diskmanager.hashchecking.strategy", ONE );
     def.put( "diskmanager.hashchecking.smallestfirst", TRUE );
+    def.put( ConfigKeys.File.BCFG_DISKMANAGER_ONE_OP_PER_FS, FALSE );
     def.put( "diskmanager.hashchecking.maxactive", ONE );
     def.put( "Default Start Torrents Stopped", FALSE);
     def.put( "Default Start Torrents Stopped Auto Pause", FALSE );

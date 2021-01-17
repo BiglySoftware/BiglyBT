@@ -38,6 +38,7 @@ import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.DHTListener;
 import com.biglybt.core.dht.speed.DHTSpeedTester;
 import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerFactory;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
@@ -337,8 +338,9 @@ CoreImpl
 			if (DEBUG_STARTUPTIME) {
 				logTime("Init1");
 			}
-	
-	
+		
+			DiskManagerFactory.initialise( this );
+			
 			NetworkManager.getSingleton();
 	
 			if (DEBUG_STARTUPTIME) {

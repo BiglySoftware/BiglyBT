@@ -83,6 +83,11 @@ public class ColumnFO_Status
 				
 			text = MessageText.getString( "ManagerItem.paused" );
 			
+			if ( cb.isAutoPause()){
+				
+				text += " (" + MessageText.getString( "wizard.maketorrent.auto" ) + ")";
+			}
+			
 			sort = 2;
 			
 		}else if ( state == ProgressCallback.ST_QUEUED ){	

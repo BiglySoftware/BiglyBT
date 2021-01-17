@@ -2097,18 +2097,27 @@ public class FileUtil {
     {
     	if ( mToPath != null && mPath_getFileStore != null ){
     		
-			try{
-				/* FileStore is minSDK 26 on Android
-				*/
-
-				/* Path */ Object path = mToPath.invoke( file );
-
-				/* FileStore */ Object fs = mPath_getFileStore.invoke(null, path);
+    			// file has to exist to have a filestore so walk up the tree if necessary
+    		
+    		File temp = file;
+    		
+    		while( temp != null ){
+    			
+				try{
+					/* FileStore is minSDK 26 on Android
+					*/
+	
+					/* Path */ Object path = mToPath.invoke( temp );
+	
+					/* FileStore */ Object fs = mPath_getFileStore.invoke(null, path);
+					
+					return( fs );
+					
+				}catch( Throwable e ){
+				}
 				
-				return( fs );
-				
-			}catch( Throwable e ){
-			}
+				temp = temp.getParentFile();
+    		}
     	}
     	
     	return( null );

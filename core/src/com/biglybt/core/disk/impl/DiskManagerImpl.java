@@ -1439,10 +1439,12 @@ DiskManagerImpl
             }
         }
 
-        if ( !started ){
+        if ( stopping || !started ){
 
                 // allocation interrupted
 
+        	setErrorState( "File allocation interrupted - download is stopping" );
+        	
             return( false );
         }
 

@@ -76,6 +76,10 @@ public class ConfigSectionFilePerformance
 		add(recheck_max_active, Parameter.MODE_INTERMEDIATE);
 		recheck_max_active.setMinValue(0);
 		
+		add(new BooleanParameterImpl(
+				BCFG_DISKMANAGER_ONE_OP_PER_FS,
+				"ConfigView.section.file.one.op.per.fs"));	
+		
 		// diskmanager.perf.cache.enable
 
 		BooleanParameterImpl disk_cache = new BooleanParameterImpl(
