@@ -28,6 +28,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AsyncDispatcher;
 
@@ -40,214 +41,85 @@ DiskManagerAllocationScheduler
 
 	private final Object lock = new Object();
 	
-	private final List<Object[]>	instances		= new ArrayList<>();
+	private final List<AllocationInstance>	instances		= new ArrayList<>();
 
 
 	public AllocationInstance
 	register(
 		DiskManagerHelper	helper )
-	{
-		Object[] my_entry = { helper, null, false };
-		
-		CoreOperationTask.ProgressCallback progress = 
-			new CoreOperationTask.ProgressCallbackAdapter()
-			{
-				final DownloadManager dm = helper.getDownload();
-
-				boolean	cancelled;
+	{		
+		AllocationInstance instance = new AllocationInstance( helper );
 				
-				@Override
-				public int 
-				getProgress()
-				{
-					return( helper.getPercentAllocated());
-				}
-				
-				@Override
-				public long 
-				getSize()
-				{
-					return( helper.getSizeExcludingDND());
-				}
-				
-				@Override
-				public String 
-				getSubTaskName()
-				{
-					return( helper.getAllocationTask());
-				}				
-				
-				@Override
-				public int 
-				getSupportedTaskStates()
-				{
-					return( ST_PAUSE | ST_RESUME | ST_CANCEL | ST_SUBTASKS );
-				}
-				
-				@Override
-				public int 
-				getTaskState()
-				{
-					synchronized( lock ){
-
-						if ( cancelled ){
-							
-							return( ST_CANCEL );
-						}
-						
-						if ((Boolean)my_entry[2]){
-							
-							return( ST_PAUSE );
-						}
-						
-						for ( Object[] entry: instances ){
-													
-							if (!(Boolean)entry[2]){
-
-									// first not paused entry
-								
-								if ( entry[0] == helper ){
-							
-									return( ST_NONE );
-								}
-								
-								break;
-							}
-						}
-							
-						return( ST_QUEUED );
-					}
-				}
-				
-				@Override
-				public void 
-				setTaskState(
-					int state )
-				{
-					if ( state == ST_CANCEL ){
-						
-						cancelled = true;
-						
-						if ( dm != null ){
-							
-							async.dispatch( AERunnable.create( ()->{
-									dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
-							}));							
-						}
-					}else if ( state == ST_PAUSE ){
-						
-						my_entry[2] = true;
-						
-					}else if ( state == ST_RESUME ){
-						
-						my_entry[2]	= false;
-					}
-				}
-			};
-			
-		CoreOperationTask task =
-			new CoreOperationTask()
-			{
-				public String
-				getName()
-				{
-					return( helper.getDisplayName());
-				}
-				
-				@Override
-				public DownloadManager 
-				getDownload()
-				{
-					return( helper.getDownload());
-				}
-				
-				public ProgressCallback
-				getProgressCallback()
-				{
-					return( progress );
-				}
-			};
-			
-		CoreOperation op = 
-			new CoreOperation()
-			{
-				public int
-				getOperationType()
-				{
-					return( CoreOperation.OP_DOWNLOAD_ALLOCATION );
-				}
-	
-				public CoreOperationTask
-				getTask()
-				{
-					return( task );
-				}
-			};
-			
-		my_entry[1] = op;
-		
 		synchronized( lock ){
 
-			instances.add( my_entry );
+			instances.add( instance );
 		}
+		
+		CoreOperation op = instance.getOperation();
 		
 		core.addOperation( op );	
 		
-		return( new AllocationInstance( helper ));
+		return( instance );
 	}
 
 	private boolean
-	getPermission(
-		DiskManagerHelper	helper )
+	canRun(
+		AllocationInstance		instance )
 	{
-		synchronized( lock ){
-
-			for ( Object[] entry: instances ){
-				
-				if ((Boolean)entry[2]){
-					
-					continue;	// paused
-				}
+		boolean	result;
+		
+		if ( DiskManagerOperationScheduler.isEnabled()){
+		
+				// scheduler is managing things via pause/resume so we defer to it
 			
-				if ( entry[0] == helper ){
-
-					return( true );
-				}
+			result = !instance.isPaused();
+			
+		}else{
+		
+			result = false;
+			
+			synchronized( lock ){
+	
+				for ( AllocationInstance this_inst: instances ){
+					
+					if ( this_inst.isPaused()){
+						
+						continue;	// paused
+					}
 				
-				break;
+					if ( this_inst == instance ){
+	
+						result = true;
+					}
+					
+					break;
+				}
 			}
 		}
 
-		try{
-			Thread.sleep( 250 );
-
-		}catch( Throwable e ){
-
-		}
-
-		return( false );
+		return( result );
 	}
 
 	private void
 	unregister(
-		DiskManagerHelper	helper )
+		AllocationInstance		instance )
 	{
 		CoreOperation	to_remove = null;
 		
 		try{
 			synchronized( lock ){
 	
-				Iterator<Object[]> it = instances.iterator();
+				Iterator<AllocationInstance> it = instances.iterator();
 				
 				while( it.hasNext()){
 					
-					Object[] entry = it.next();
+					AllocationInstance this_inst = it.next();
 					
-					if ( entry[0] == helper ){
+					if (  this_inst == instance ){
 					
 						it.remove();
 						
-						to_remove = (CoreOperation)entry[1];
+						to_remove = this_inst.getOperation();
 						
 						break;
 					}
@@ -266,23 +138,204 @@ DiskManagerAllocationScheduler
 	AllocationInstance
 	{
 		private final DiskManagerHelper		helper;
+		private final CoreOperation			operation;
+		
+		private final boolean				always_run;
+		
+		private volatile boolean 	paused;
 		
 		AllocationInstance(
 			DiskManagerHelper		_helper )
 		{
 			helper	= _helper;
+			
+			always_run = helper.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+			
+			CoreOperationTask.ProgressCallback progress = 
+				new CoreOperationTask.ProgressCallbackAdapter()
+				{
+					final DownloadManager dm = helper.getDownload();
+
+					boolean	cancelled;
+					
+					@Override
+					public int 
+					getProgress()
+					{
+						return( helper.getPercentAllocated());
+					}
+					
+					@Override
+					public long 
+					getSize()
+					{
+						return( helper.getSizeExcludingDND());
+					}
+					
+					@Override
+					public String 
+					getSubTaskName()
+					{
+						return( helper.getAllocationTask());
+					}				
+					
+					@Override
+					public int 
+					getSupportedTaskStates()
+					{
+						if ( always_run ){
+						
+							return( ST_CANCEL | ST_SUBTASKS );
+
+						}else{
+							
+							return( ST_PAUSE | ST_RESUME | ST_CANCEL | ST_SUBTASKS );
+						}
+					}
+					
+					@Override
+					public int 
+					getTaskState()
+					{
+						synchronized( lock ){
+
+							if ( cancelled ){
+								
+								return( ST_CANCEL );
+							}
+							
+							if ( isPaused()){
+								
+								return( ST_PAUSE );
+								
+							}else if ( canRun( AllocationInstance.this )){
+									
+								return( ST_NONE );
+								
+							}else{
+								
+								return( ST_QUEUED );
+							}
+						}
+					}
+					
+					@Override
+					public void 
+					setTaskState(
+						int state )
+					{
+						if ( state == ST_CANCEL ){
+							
+							cancelled = true;
+							
+							if ( dm != null ){
+								
+								async.dispatch( AERunnable.create( ()->{
+										dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+								}));							
+							}
+						}else if ( !always_run ){
+							
+							if ( state == ST_PAUSE ){
+							
+								setPaused( true );
+							
+							}else if ( state == ST_RESUME ){
+								
+								setPaused( false );
+							}
+						}
+					}
+				};
+				
+			CoreOperationTask task =
+				new CoreOperationTask()
+				{
+					public String
+					getName()
+					{
+						return( helper.getDisplayName());
+					}
+					
+					@Override
+					public DownloadManager 
+					getDownload()
+					{
+						return( helper.getDownload());
+					}
+					
+					public ProgressCallback
+					getProgressCallback()
+					{
+						return( progress );
+					}
+				};
+				
+			operation = 
+				new CoreOperation()
+				{
+					public int
+					getOperationType()
+					{
+						return( CoreOperation.OP_DOWNLOAD_ALLOCATION );
+					}
+		
+					public CoreOperationTask
+					getTask()
+					{
+						return( task );
+					}
+				};
+		}
+		
+		protected CoreOperation
+		getOperation()
+		{
+			return( operation );
+		}
+		
+		protected boolean
+		isPaused()
+		{
+			return( paused );
+		}
+		
+		protected void
+		setPaused(
+			boolean		b )
+		{
+			paused	= b;
 		}
 		
 		public boolean
 		getPermission()
 		{
-			return( DiskManagerAllocationScheduler.this.getPermission( helper ));
+			if ( always_run ){
+				
+				return( true );
+				
+			}else{
+			
+				boolean result = DiskManagerAllocationScheduler.this.canRun( this );
+				
+				if ( !result ){
+					
+					try{
+						Thread.sleep( 250 );
+			
+					}catch( Throwable e ){
+			
+					}
+				}
+			
+				return( result );
+			}
 		}
 		
 		public void
 		unregister()
 		{
-			DiskManagerAllocationScheduler.this.unregister( helper );
+			DiskManagerAllocationScheduler.this.unregister( this );
 		}
 	}
 }

@@ -32,7 +32,9 @@ import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.RealTimeInfo;
 
@@ -74,189 +76,33 @@ DiskManagerRecheckScheduler
  				param_listener );
     }
 
-    private final Object				lock			= new Object();
-	private final List<Object[]>		entries			= new ArrayList<>();
+    private final Object								lock			= new Object();
+	private final List<DiskManagerRecheckInstance>		entries			= new ArrayList<>();
 
 	public DiskManagerRecheckInstance
 	register(
 		DiskManagerHelper	helper,
 		boolean				low_priority )
-	{
-		Object[] my_entry = new Object[]{ null, null };
-		
-		CoreOperationTask.ProgressCallback progress = 
-				new CoreOperationTask.ProgressCallbackAdapter()
-				{
-					final DownloadManager dm = helper.getDownload();
-						
-					volatile boolean cancelled;
-					
-					@Override
-					public int 
-					getProgress()
-					{
-						int complete_recheck_status = helper.getCompleteRecheckStatus();
-						
-						if ( complete_recheck_status != -1 ){
-							
-								// rechecking when a download completes (i.e. not a manual recheck )
-							
-							return( complete_recheck_status );
-						}
-						
-						return( dm==null?-1:dm.getStats().getCompleted());
-					}
-					
-					@Override
-					public int 
-					getSupportedTaskStates()
-					{
-						return( ST_PAUSE | ST_RESUME | ST_CANCEL );
-					}
-					
-					@Override
-					public int 
-					getTaskState()
-					{
-						if ( cancelled ){
-							
-							return( ST_CANCEL );
-						}
-						
-						synchronized( lock ){
-
-							DiskManagerRecheckInstance inst = (DiskManagerRecheckInstance)my_entry[0];
-							
-							if ( inst == null ){
-								
-								return( ST_NONE );
-								
-							}else{
-								
-								if ( inst.isPaused()){
-									
-									return( ST_PAUSE );
-									
-								}else if ( inst.isActive()){
-									
-									return( ST_NONE );
-									
-								}else{
-									
-									return( ST_QUEUED );
-								}
-							}
-						}
-					}
-					
-					@Override
-					public void 
-					setTaskState(
-						int state )
-					{
-						if ( state == ST_CANCEL ){
-							
-							cancelled = true;
-							
-							if ( dm != null ){
-								
-								async.dispatch( AERunnable.create( ()->{
-										dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
-								}));							
-							}
-						}else if ( state == ST_PAUSE ){
-							
-							DiskManagerRecheckInstance inst = (DiskManagerRecheckInstance)my_entry[0];
-							
-							if ( inst != null ){
-								
-								inst.setPaused( true );
-							}
-						}else if ( state == ST_RESUME ){
-							
-							DiskManagerRecheckInstance inst = (DiskManagerRecheckInstance)my_entry[0];
-							
-							if ( inst != null ){
-								
-								inst.setPaused( false );
-							}
-						}
-					}
-					
-					@Override
-					public long 
-					getSize()
-					{
-						return( helper.getSizeExcludingDND());
-					}
-				};
-				
-			CoreOperationTask task =
-				new CoreOperationTask()
-				{
-					public String
-					getName()
-					{
-						return( helper.getDisplayName());
-					}
-						
-					@Override
-					public DownloadManager
-					getDownload()
-					{
-						return( helper.getDownload());
-					}
-					
-					public ProgressCallback
-					getProgressCallback()
-					{
-						return( progress );
-					}
-				};
-				
-			CoreOperation op = 
-				new CoreOperation()
-				{
-					public int
-					getOperationType()
-					{
-						return( CoreOperation.OP_DOWNLOAD_CHECKING );
-					}
-		
-					public CoreOperationTask
-					getTask()
-					{
-						return( task );
-					}
-				};
-			
-		DiskManagerRecheckInstance	res =
-				new DiskManagerRecheckInstance(
-						this,
-						helper.getTorrent().getSize(),
-						(int)helper.getTorrent().getPieceLength(),
-						low_priority );
-
-		my_entry[0]	= res;
-		my_entry[1]	= op;
+	{			
+		DiskManagerRecheckInstance	instance = new DiskManagerRecheckInstance( helper, low_priority );
 
 		synchronized( lock ){
 		
-			entries.add( my_entry );
+			entries.add( instance );
 			
 			if ( smallest_first ){
 
 				Collections.sort(
 						entries,
-						new Comparator<Object[]>()
+						new Comparator<DiskManagerRecheckInstance>()
 						{
 							@Override
 							public int
 							compare(
-								Object[] 	o1,
-								Object[]	o2 )
+								DiskManagerRecheckInstance 	o1,
+								DiskManagerRecheckInstance	o2 )
 							{
-								long	comp = ((DiskManagerRecheckInstance)o1[0]).getMetric() - ((DiskManagerRecheckInstance)o2[0]).getMetric();
+								long	comp = o1.getMetric() - o2.getMetric();
 
 								if ( comp < 0 ){
 
@@ -274,29 +120,9 @@ DiskManagerRecheckScheduler
 			}
 		}
 		
-		core.addOperation( op );	
+		core.addOperation( instance.getOperation());	
 
-		return( res );
-	}
-
-	public int
-	getPieceConcurrency(
-		DiskManagerRecheckInstance	instance )
-	{
-		int piece_length = instance.getPieceLength();
-		
-		if ( strategy <= 1 ){
-		
-			return( piece_length>32*1024*1024?1:2 );
-			
-		}else{
-			
-				// limit to 32MB
-			
-			int num = 32*1024*1024/piece_length;
-			
-			return( Math.min( 8, num ));
-		}
+		return( instance );
 	}
 	
 	protected boolean
@@ -317,10 +143,8 @@ DiskManagerRecheckScheduler
 			
 			for ( int i=0; to_process > 0 && i<entries.size();i++){
 				
-				Object[] entry = (Object[])entries.get(i);
-				
-				DiskManagerRecheckInstance this_inst = (DiskManagerRecheckInstance)entry[0];
-				
+				DiskManagerRecheckInstance this_inst = entries.get(i);
+								
 				if ( this_inst.isPaused()){
 					
 					continue;
@@ -392,17 +216,17 @@ DiskManagerRecheckScheduler
 		try{
 			synchronized( lock ){
 	
-				Iterator<Object[]>	it = entries.iterator();
+				Iterator<DiskManagerRecheckInstance>	it = entries.iterator();
 				
 				while( it.hasNext()){
 				
-					Object[] entry = it.next();
+					DiskManagerRecheckInstance entry = it.next();
 					
-					if ( entry[0] == instance ){
+					if ( entry == instance ){
 						
 						it.remove();
 						
-						to_remove = (CoreOperation)entry[1];
+						to_remove = (CoreOperation)entry.getOperation();
 						
 						break;
 					}
@@ -416,4 +240,259 @@ DiskManagerRecheckScheduler
 			}
 		}
 	}
+	
+	public class
+	DiskManagerRecheckInstance
+	{
+		private final DiskManagerHelper				helper;
+		private final CoreOperation					op;
+		private final long							metric;
+		private final int							piece_length;
+		private final boolean						low_priority;
+
+		private final AESemaphore	 				slot_sem;
+		
+		private volatile boolean		active;
+		private volatile boolean		paused;
+		
+		protected
+		DiskManagerRecheckInstance(
+			DiskManagerHelper			_helper,
+			boolean						_low_priority )
+		{
+			helper		= _helper;
+			
+			TOTorrent	torrent = helper.getTorrent();
+			
+			long	size = torrent.getSize();
+				
+			metric			= (_low_priority?0:0x7000000000000000L) + size;
+			piece_length	= (int)torrent.getPieceLength();
+			low_priority	= _low_priority;
+			
+			slot_sem		= new AESemaphore( "DiskManagerRecheckInstance::slotsem", getPieceConcurrency());
+						
+			CoreOperationTask.ProgressCallback progress = 
+				new CoreOperationTask.ProgressCallbackAdapter()
+				{
+					final DownloadManager dm = helper.getDownload();
+						
+					volatile boolean cancelled;
+					
+					@Override
+					public int 
+					getProgress()
+					{
+						int complete_recheck_status = helper.getCompleteRecheckStatus();
+						
+						if ( complete_recheck_status != -1 ){
+							
+								// rechecking when a download completes (i.e. not a manual recheck )
+							
+							return( complete_recheck_status );
+						}
+						
+						return( dm==null?-1:dm.getStats().getCompleted());
+					}
+					
+					@Override
+					public int 
+					getSupportedTaskStates()
+					{
+						return( ST_PAUSE | ST_RESUME | ST_CANCEL );
+					}
+					
+					@Override
+					public int 
+					getTaskState()
+					{
+						if ( cancelled ){
+							
+							return( ST_CANCEL );
+						}
+						
+						synchronized( lock ){
+
+							if ( isPaused()){
+								
+								return( ST_PAUSE );
+								
+							}else if ( isActive()){
+								
+								return( ST_NONE );
+								
+							}else{
+								
+								return( ST_QUEUED );
+							}
+						}
+					}
+					
+					@Override
+					public void 
+					setTaskState(
+						int state )
+					{
+						if ( state == ST_CANCEL ){
+							
+							cancelled = true;
+							
+							if ( dm != null ){
+								
+								async.dispatch( AERunnable.create( ()->{
+										dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+								}));							
+							}
+						}else if ( state == ST_PAUSE ){
+							
+							setPaused( true );
+							
+						}else if ( state == ST_RESUME ){
+							
+							setPaused( false );
+						}
+					}
+					
+					@Override
+					public long 
+					getSize()
+					{
+						return( helper.getSizeExcludingDND());
+					}
+				};
+				
+			CoreOperationTask task =
+				new CoreOperationTask()
+				{
+					public String
+					getName()
+					{
+						return( helper.getDisplayName());
+					}
+						
+					@Override
+					public DownloadManager
+					getDownload()
+					{
+						return( helper.getDownload());
+					}
+					
+					public ProgressCallback
+					getProgressCallback()
+					{
+						return( progress );
+					}
+				};
+				
+			op = 
+				new CoreOperation()
+				{
+					public int
+					getOperationType()
+					{
+						return( CoreOperation.OP_DOWNLOAD_CHECKING );
+					}
+		
+					public CoreOperationTask
+					getTask()
+					{
+						return( task );
+					}
+				};
+		}
+
+		private int
+		getPieceConcurrency()
+		{
+			int piece_length = getPieceLength();
+			
+			if ( strategy <= 1 ){
+			
+				return( piece_length>32*1024*1024?1:2 );
+				
+			}else{
+				
+					// limit to 32MB
+				
+				int num = 32*1024*1024/piece_length;
+				
+				return( Math.min( 8, num ));
+			}
+		}
+
+		protected CoreOperation
+		getOperation()
+		{
+			return( op );
+		}
+		
+		protected long
+		getMetric()
+		{
+			return( metric );
+		}
+		
+		protected int
+		getPieceLength()
+		{
+			return( piece_length );
+		}
+
+		protected boolean
+		isLowPriority()
+		{
+			return( low_priority );
+		}
+
+		public void
+		reserveSlot()
+		{
+			slot_sem.reserve();
+		}
+		
+		public void
+		releaseSlot()
+		{
+			slot_sem.release();
+		}
+		
+		public boolean
+		getPermission()
+		{
+			return( DiskManagerRecheckScheduler.this.getPermission( this ));
+		}
+
+		protected boolean
+		isActive()
+		{
+			return( active );
+		}
+		
+		protected void
+		setActive(
+			boolean		b )
+		{
+			active	= b;
+		}
+		
+		protected boolean
+		isPaused()
+		{
+			return( paused );
+		}
+		
+		protected void
+		setPaused(
+			boolean		b )
+		{
+			paused	= b;
+		}
+		
+		public void
+		unregister()
+		{
+			DiskManagerRecheckScheduler.this.unregister( this );
+		}
+	}
+
 }

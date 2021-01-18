@@ -27,7 +27,7 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
 import com.biglybt.core.disk.impl.DiskManagerImpl;
-import com.biglybt.core.disk.impl.DiskManagerRecheckInstance;
+import com.biglybt.core.disk.impl.DiskManagerRecheckScheduler.DiskManagerRecheckInstance;
 import com.biglybt.core.disk.impl.access.DMChecker;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;

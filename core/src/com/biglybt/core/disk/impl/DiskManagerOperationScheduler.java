@@ -41,10 +41,16 @@ DiskManagerOperationScheduler
 		new DiskManagerOperationScheduler( core );
 	}
 	
+	private static boolean	enabled;
+
+	public static boolean
+	isEnabled()
+	{
+		return( enabled );
+	}
+
 	private final Core		core;
-	
-	private boolean	enabled;
-	
+		
 	private List<Operation>		operations = new LinkedList<>();
 	
 	private TimerEventPeriodic	timer;
@@ -61,7 +67,7 @@ DiskManagerOperationScheduler
 				checkConfig();
 			});
 	}
-	
+		
 	private void
 	checkConfig()
 	{
