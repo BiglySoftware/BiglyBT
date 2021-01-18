@@ -3585,11 +3585,11 @@ public class TorrentUtil
 		}
 	}
 
-	public static boolean shouldStopGroup(Object[] datasources) {
+	public static Boolean shouldStopGroupTest(Object[] datasources) {
 		DownloadManager[] dms = toDMS(datasources);
 		DiskManagerFileInfo[] dmfi = toDMFI(datasources);
 		if (dms.length == 0 && dmfi.length == 0) {
-			return true;
+			return null;
 		}
 		for (DownloadManager dm : dms) {
 			int state = dm.getState();
@@ -3618,7 +3618,10 @@ public class TorrentUtil
 		if (dms.length == 0 && dmfi.length == 0) {
 			return;
 		}
-		boolean doStop = shouldStopGroup(datasources);
+		Boolean doStop = shouldStopGroupTest(datasources);
+		if ( doStop == null ){
+			doStop = true;
+		}
 		if (doStop) {
 			stopDataSources(datasources, force_or_pause);
 		} else {

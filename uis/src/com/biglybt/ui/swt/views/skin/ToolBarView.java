@@ -968,22 +968,47 @@ public class ToolBarView
 			UIToolBarItem ssItem = tbm.getToolBarItem("startstop");
 			if (ssItem != null){
 
-				boolean shouldStopGroup;
+				boolean shouldStopGroup = false;
 
 					// if no selected content set then use the 'start' key to determine the start/stop
 					// toolbar state (required for archived downloads)
 					// alternative solution would be for the view to start updating the current selected
 					// content which is a little painful
 
-				if ( 	currentContent.length == 0 &&
-						mapStates.containsKey( "start" ) &&
-						(!mapStates.containsKey( "stop" ) || (mapStates.get("stop") & UIToolBarItem.STATE_ENABLED) == 0) &&
-						( mapStates.get("start") & UIToolBarItem.STATE_ENABLED) > 0 ){
-
-					shouldStopGroup = false;
+				boolean use_other_states = false;
+				
+				if ( currentContent.length == 0 ){
+					
+					use_other_states = true;
 
 				}else{
-					shouldStopGroup = TorrentUtil.shouldStopGroup(currentContent);
+					
+					Boolean test = TorrentUtil.shouldStopGroupTest(currentContent);
+					
+					if ( test == null ){
+						
+						// no dms or files in the selected content so revert to using the existence of other
+						// keys
+						
+						use_other_states = true;
+						
+					}else{
+						
+						shouldStopGroup = test;
+					}
+				}
+				
+				if ( use_other_states ){
+					
+					if ( 	( mapStates.containsKey( "start" ) && ( mapStates.get("start") & UIToolBarItem.STATE_ENABLED) > 0 ) &&
+							(!mapStates.containsKey( "stop" ) || (mapStates.get("stop") & UIToolBarItem.STATE_ENABLED) == 0 )){
+					
+						shouldStopGroup = false;
+						
+					}else{
+						
+						shouldStopGroup = true;
+					}
 				}
 
 				ssItem.setTextID(shouldStopGroup ? "iconBar.stop" : "iconBar.start");

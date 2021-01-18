@@ -625,6 +625,9 @@ public class SBC_DiskOpsView
 		
 		list.put("stop", can_stop ? UIToolBarItem.STATE_ENABLED : 0);
 		list.put("start", can_start ? UIToolBarItem.STATE_ENABLED : 0);
+		
+		list.put("startstop", can_start ||  can_stop? UIToolBarItem.STATE_ENABLED : 0);
+		
 		list.put("remove", can_remove ? UIToolBarItem.STATE_ENABLED : 0);
 
 	}
@@ -672,43 +675,53 @@ public class SBC_DiskOpsView
 			
 			int state = prog.getTaskState();
 
+			boolean ds_did_something = false;
+			
 			if ((states & ProgressCallback.ST_PAUSE ) != 0 ){
 				
-				if ( state == ProgressCallback.ST_NONE || state == ProgressCallback.ST_QUEUED ){
+				if ( is_stop || is_start_stop ){
+
+					if ( state == ProgressCallback.ST_NONE || state == ProgressCallback.ST_QUEUED ){
 				
-					if ( is_stop || is_start_stop ){
-						
 						prog.setTaskState( ProgressCallback.ST_PAUSE );
 						
-						did_something = true;
+						ds_did_something = true;
+					
+					}else if ( prog.isAutoPause()){
+					
+						prog.setAutoPause( false );
+					
+						ds_did_something = true;
 					}
-				}else if ( prog.isAutoPause()){
-					
-					prog.setAutoPause( false );
-					
-					did_something = true;
 				}
 			}
-			if ((states & ProgressCallback.ST_RESUME ) != 0 ){
+			
+			if ( !ds_did_something && (states & ProgressCallback.ST_RESUME ) != 0 ){
 				
-				if ( state == ProgressCallback.ST_PAUSE ){
-				
-					if ( is_start || is_start_stop ){
-						
+				if ( is_start || is_start_stop ){
+
+					if ( state == ProgressCallback.ST_PAUSE ){
+										
 						prog.setTaskState( ProgressCallback.ST_RESUME );
 						
-						did_something = true;
+						ds_did_something = true;
 					}
 				}
 			}
-			if ((states & ProgressCallback.ST_CANCEL ) != 0 ){
+			
+			if ( !ds_did_something && ( states & ProgressCallback.ST_CANCEL ) != 0 ){
 				
 				if ( is_remove ){
 					
 					prog.setTaskState( ProgressCallback.ST_CANCEL );
 					
-					did_something = true;
+					ds_did_something = true;
 				}
+			}
+			
+			if ( ds_did_something ){
+				
+				did_something = true;
 			}
 		}
 		
