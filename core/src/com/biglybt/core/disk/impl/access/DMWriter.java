@@ -22,6 +22,7 @@ package com.biglybt.core.disk.impl.access;
 import com.biglybt.core.disk.DiskManagerException;
 import com.biglybt.core.disk.DiskManagerWriteRequest;
 import com.biglybt.core.disk.DiskManagerWriteRequestListener;
+import com.biglybt.core.disk.impl.DiskManagerAllocationScheduler;
 import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
 import com.biglybt.core.util.DirectByteBuffer;
 
@@ -40,10 +41,11 @@ DMWriter
 
 	public boolean
 	zeroFile(
-		DiskManagerFileInfoImpl file,
-		long					start_from,
-		long 					overall_length,
-		ProgressListener		listener )
+		DiskManagerAllocationScheduler.AllocationInstance	alloc_inst,
+		DiskManagerFileInfoImpl 							file,
+		long												start_from,
+		long 												overall_length,
+		ProgressListener									listener )
 		
 		throws DiskManagerException;
 

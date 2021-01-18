@@ -133,7 +133,7 @@ DiskManagerOperationScheduler
 
 			if (( op.cb.getTaskState() & ProgressCallback.ST_PAUSE ) != 0 ){
 				
-				if ( !op.resumed ){
+				if ( op.cb.isAutoPause()){
 					
 					boolean	busy = false;
 					
@@ -148,9 +148,7 @@ DiskManagerOperationScheduler
 					}
 					
 					if ( !busy ){
-						
-						op.resumed = true;
-						
+												
 						for ( String fs: op.fs ){
 							
 							active_fs.add( fs );
@@ -227,9 +225,7 @@ DiskManagerOperationScheduler
 		private final CoreOperation		op;
 		private final ProgressCallback	cb;
 		private final String[]			fs;
-		
-		private boolean		resumed;	// we only pause on addition and then auto-resume once
-		
+				
 		Operation(
 			CoreOperation		_op,
 			ProgressCallback	_cb,

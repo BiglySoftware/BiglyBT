@@ -420,7 +420,9 @@ public class SBC_DiskOpsView
 	
 				if ((states & ProgressCallback.ST_PAUSE ) != 0 ){
 					
-					if ( state == ProgressCallback.ST_NONE || state == ProgressCallback.ST_QUEUED ){
+					if ( 	state == ProgressCallback.ST_NONE || 
+							state == ProgressCallback.ST_QUEUED ||
+							( state == ProgressCallback.ST_PAUSE && prog.isAutoPause())){
 					
 						can_stop.add( prog );
 					}
@@ -459,7 +461,12 @@ public class SBC_DiskOpsView
 		
 		mi.addListener(SWT.Selection,(ev)->{
 			for ( ProgressCallback cb: can_stop ){
-				cb.setTaskState( ProgressCallback.ST_PAUSE );
+				if ( cb.getTaskState() == ProgressCallback.ST_PAUSE ){				
+					cb.setAutoPause( false );
+				}else{
+				
+					cb.setTaskState( ProgressCallback.ST_PAUSE );
+				}
 			}
 			refreshToolbar();
 		});
@@ -589,7 +596,9 @@ public class SBC_DiskOpsView
 
 			if ((states & ProgressCallback.ST_PAUSE ) != 0 ){
 				
-				if ( state == ProgressCallback.ST_NONE || state == ProgressCallback.ST_QUEUED ){
+				if ( 	state == ProgressCallback.ST_NONE || 
+						state == ProgressCallback.ST_QUEUED ||
+						( state == ProgressCallback.ST_PAUSE && prog.isAutoPause())){
 				
 					can_stop = true;
 				}
@@ -673,6 +682,11 @@ public class SBC_DiskOpsView
 						
 						did_something = true;
 					}
+				}else if ( prog.isAutoPause()){
+					
+					prog.setAutoPause( false );
+					
+					did_something = true;
 				}
 			}
 			if ((states & ProgressCallback.ST_RESUME ) != 0 ){

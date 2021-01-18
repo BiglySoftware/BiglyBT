@@ -142,7 +142,7 @@ DiskManagerAllocationScheduler
 		
 		private final boolean				always_run;
 		
-		private volatile boolean 	paused;
+		private volatile boolean 			paused;
 		
 		AllocationInstance(
 			DiskManagerHelper		_helper )

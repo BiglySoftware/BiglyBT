@@ -22,6 +22,7 @@ package com.biglybt.core.disk.impl.access.impl;
 import java.util.*;
 
 import com.biglybt.core.disk.*;
+import com.biglybt.core.disk.impl.DiskManagerAllocationScheduler;
 import com.biglybt.core.disk.impl.DiskManagerFileInfoImpl;
 import com.biglybt.core.disk.impl.DiskManagerHelper;
 import com.biglybt.core.disk.impl.access.DMWriter;
@@ -163,10 +164,11 @@ DMWriterImpl
 	@Override
 	public boolean
 	zeroFile(
-		DiskManagerFileInfoImpl file,
-		long					start_from,
-		long 					overall_length,
-		ProgressListener		listener )
+		DiskManagerAllocationScheduler.AllocationInstance		allocation_instance,
+		DiskManagerFileInfoImpl 								file,
+		long													start_from,
+		long 													overall_length,
+		ProgressListener										listener )
 				
 		throws DiskManagerException
 	{
@@ -207,8 +209,30 @@ DMWriterImpl
 
 					buffer.position(DirectByteBuffer.SS_DW, 0);
 
+					long	time = SystemTime.getMonotonousTime();
+					
 					while ( remainder > 0 && !stopped ){
 
+						long	now = SystemTime.getMonotonousTime();
+
+						if ( now - time >= 250 ){
+							
+							time = now;
+							
+							while( !stopped ){
+	
+								if ( allocation_instance.getPermission()){
+	
+									break;
+								}
+							}
+						
+							if ( stopped ){
+							
+								break;
+							}
+						}
+					       
 						int	write_size = buffer_size;
 
 						if ( remainder < write_size ){

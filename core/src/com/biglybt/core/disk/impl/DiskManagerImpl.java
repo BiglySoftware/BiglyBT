@@ -1536,10 +1536,10 @@ DiskManagerImpl
 	        				start_from = existing_length;
 	        			}
 	        		}
-	        		
-	        			
+	        		        			
 	        		successfulAlloc = 
 	        			writer.zeroFile( 
+	        				allocation_instance,
 	        				fileInfo, 
 	        				start_from, 
 	        				target_length,

@@ -77,19 +77,23 @@ public class ColumnFO_Status
 			
 			text = MessageText.getString( "Progress.reporting.status.canceled" );
 			
-			sort = 3;
+			sort = 4;
 			
 		}else if ( state == ProgressCallback.ST_PAUSE ){	
-				
-			text = MessageText.getString( "ManagerItem.paused" );
-			
+							
 			if ( cb.isAutoPause()){
+			
+				text = MessageText.getString( "TrackerActivityView.scheduled" );
 				
-				text += " (" + MessageText.getString( "wizard.maketorrent.auto" ) + ")";
+				sort = 3;
+
+			}else{
+				
+				text = MessageText.getString( "ManagerItem.paused" );
+				
+				sort = 2;
 			}
-			
-			sort = 2;
-			
+						
 		}else if ( state == ProgressCallback.ST_QUEUED ){	
 				
 			text = MessageText.getString( "ManagerItem.queued" );
