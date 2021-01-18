@@ -147,6 +147,14 @@ public class SBC_DiskOpsView
 					}
 				});
 		
+		tableManager.registerColumn(CoreOperation.class, ColumnFO_Percent.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnFO_Percent(column);
+					}
+				});
+		
 		tableManager.registerColumn(CoreOperation.class, ColumnFO_Status.COLUMN_ID,
 				new TableColumnCreationListener() {
 					@Override
