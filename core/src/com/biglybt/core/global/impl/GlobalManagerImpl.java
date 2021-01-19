@@ -1659,6 +1659,11 @@ public class GlobalManagerImpl
 
 	  canDownloadManagerBeRemoved( manager, remove_torrent, remove_data );
 
+	  if ( ds_tagger != null ){
+	  
+		  ds_tagger.removeInitiated( manager );
+	  }
+	  
 	  manager.stopIt(DownloadManager.STATE_STOPPED, remove_torrent, remove_data, true );
 
 	  synchronized( managers_lock ){
@@ -4609,12 +4614,15 @@ public class GlobalManagerImpl
 		private final TagDownloadWithState	tag_inactive;
 		private final TagDownloadWithState	tag_complete;
 		private final TagDownloadWithState	tag_incomplete;
-
 		private final TagDownloadWithState	tag_moving;
 		private final TagDownloadWithState	tag_checking;
-
+		private final TagDownloadWithState	tag_deleting;
 		private final TagDownloadWithState	tag_paused;
+		
+			// extends the above and you need to extend derived_tags below...
 
+		private final TagDownloadWithState[]	derived_tags;
+		
 		int user_mode = -1;
 
 		{
@@ -4661,7 +4669,19 @@ public class GlobalManagerImpl
 			tag_incomplete			= new MyTag( 11, "tag.type.ds.incomp", true, true, true, true, TagFeatureRunState.RSC_START_STOP_PAUSE );
 			tag_moving				= new MyTag( 12, "tag.type.ds.mov", false, false, false, false, TagFeatureRunState.RSC_STOP_PAUSE );
 			tag_checking			= new MyTag( 13, "tag.type.ds.chk", false, false, false, false, TagFeatureRunState.RSC_STOP_PAUSE );
+			tag_deleting			= new MyTag( 14, "tag.type.ds.del", false, false, false, false, TagFeatureRunState.RSC_NONE );
 
+			derived_tags = new TagDownloadWithState[]{
+					tag_active,
+					tag_inactive,
+					tag_complete,
+					tag_incomplete,
+					tag_moving,
+					tag_checking,
+					tag_deleting,
+					tag_paused,
+			};
+			
 			if ( tag_active.isColorDefault()){
 				tag_active.setColor( new int[]{ 96, 160, 96 });
 			}
@@ -4969,6 +4989,13 @@ public class GlobalManagerImpl
 		}
 
 		void
+		removeInitiated(
+			DownloadManager		manager )
+		{
+			tag_deleting.addTaggable( manager );
+		}
+		
+		void
 		remove(
 			DownloadManager		manager )
 		{
@@ -4981,27 +5008,12 @@ public class GlobalManagerImpl
 
 			synchronized( this ){
 
-				if ( tag_active.hasTaggable( manager )){
+				for ( TagDownloadWithState tag: derived_tags ){
+					
+					if ( tag.hasTaggable( manager )){
 
-					tag_active.removeTaggable( manager );
-
-				}else{
-
-					tag_inactive.removeTaggable( manager );
-				}
-
-				if ( tag_complete.hasTaggable( manager )){
-
-					tag_complete.removeTaggable( manager );
-
-				}else{
-
-					tag_incomplete.removeTaggable( manager );
-				}
-
-				if ( tag_paused.hasTaggable( manager )){
-
-					tag_paused.removeTaggable( manager );
+						tag.removeTaggable( manager );
+					}
 				}
 			}
 		}
