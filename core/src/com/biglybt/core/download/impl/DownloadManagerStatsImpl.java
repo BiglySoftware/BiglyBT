@@ -1591,9 +1591,14 @@ DownloadManagerStatsImpl
   {
 	  DiskManager	dm = download_manager.getDiskManager();
 
-	  if (dm != null) {
-	  	return dm.getRemainingExcludingDND();
-	  }
+		if (dm != null) {
+			int state = dm.getState();
+			// INITIALIZING and ALLOCATING states returns sizes that include DND.
+			if (state != DiskManager.INITIALIZING
+					&& state != DiskManager.ALLOCATING) {
+				return dm.getRemainingExcludingDND();
+			}
+		}
 
 	  long remaining = getRemaining();
 	  long rem = ( remaining - ( getSkippedFileSetSize() - saved_skipped_but_downloaded ));
@@ -1612,9 +1617,14 @@ DownloadManagerStatsImpl
 	{
 	  DiskManager	dm = download_manager.getDiskManager();
 
-	  if (dm != null) {
-	  	return dm.getSizeExcludingDND();
-	  }
+		if (dm != null) {
+			int state = dm.getState();
+			// INITIALIZING and ALLOCATING states returns sizes that include DND.
+			if (state != DiskManager.INITIALIZING
+					&& state != DiskManager.ALLOCATING) {
+				return dm.getSizeExcludingDND();
+			}
+		}
 
   	long totalLength = download_manager.getSize();
   	return totalLength - getSkippedFileSetSize();
