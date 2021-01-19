@@ -285,6 +285,7 @@ public class NetworkAdminSpeedTesterBTImpl
             speed_download.moveTo( 1 );
 
             speed_download.setFlag( Download.FLAG_DISABLE_AUTO_FILE_MOVE, true );
+            speed_download.setFlag( Download.FLAG_DISABLE_STOP_AFTER_ALLOC, true );
 
             core_download.initialize();
 

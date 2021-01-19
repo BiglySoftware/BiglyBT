@@ -6911,6 +6911,7 @@ SubscriptionManagerImpl
 					download = dm.addDownload( t, torrent_file, data_file );
 
 					download.setFlag( Download.FLAG_DISABLE_AUTO_FILE_MOVE, true );
+					download.setFlag( Download.FLAG_DISABLE_STOP_AFTER_ALLOC, true );
 
 					download.setBooleanAttribute( ta_subs_download, true );
 

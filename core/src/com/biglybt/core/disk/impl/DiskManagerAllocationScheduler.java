@@ -27,6 +27,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.util.AERunnable;
@@ -149,104 +150,10 @@ DiskManagerAllocationScheduler
 		{
 			helper	= _helper;
 			
-			always_run = helper.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+			always_run = 	helper.getTotalLength() < 1024*1024 ||
+							helper.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
 			
-			CoreOperationTask.ProgressCallback progress = 
-				new CoreOperationTask.ProgressCallbackAdapter()
-				{
-					final DownloadManager dm = helper.getDownload();
-
-					boolean	cancelled;
-					
-					@Override
-					public int 
-					getProgress()
-					{
-						return( helper.getPercentAllocated());
-					}
-					
-					@Override
-					public long 
-					getSize()
-					{
-						return( helper.getSizeExcludingDND());
-					}
-					
-					@Override
-					public String 
-					getSubTaskName()
-					{
-						return( helper.getAllocationTask());
-					}				
-					
-					@Override
-					public int 
-					getSupportedTaskStates()
-					{
-						if ( always_run ){
-						
-							return( ST_CANCEL | ST_SUBTASKS );
-
-						}else{
-							
-							return( ST_PAUSE | ST_RESUME | ST_CANCEL | ST_SUBTASKS );
-						}
-					}
-					
-					@Override
-					public int 
-					getTaskState()
-					{
-						synchronized( lock ){
-
-							if ( cancelled ){
-								
-								return( ST_CANCEL );
-							}
-							
-							if ( isPaused()){
-								
-								return( ST_PAUSE );
-								
-							}else if ( canRun( AllocationInstance.this )){
-									
-								return( ST_NONE );
-								
-							}else{
-								
-								return( ST_QUEUED );
-							}
-						}
-					}
-					
-					@Override
-					public void 
-					setTaskState(
-						int state )
-					{
-						if ( state == ST_CANCEL ){
-							
-							cancelled = true;
-							
-							if ( dm != null ){
-								
-								async.dispatch( AERunnable.create( ()->{
-										dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
-								}));							
-							}
-						}else if ( !always_run ){
-							
-							if ( state == ST_PAUSE ){
-							
-								setPaused( true );
-							
-							}else if ( state == ST_RESUME ){
-								
-								setPaused( false );
-							}
-						}
-					}
-				};
+			Callback progress = new Callback();
 				
 			CoreOperationTask task =
 				new CoreOperationTask()
@@ -336,6 +243,104 @@ DiskManagerAllocationScheduler
 		unregister()
 		{
 			DiskManagerAllocationScheduler.this.unregister( this );
+		}
+	
+		class
+		Callback
+			extends CoreOperationTask.ProgressCallbackAdapter
+		{
+			final DownloadManager dm = helper.getDownload();
+
+			boolean	cancelled;
+			
+			@Override
+			public int 
+			getProgress()
+			{
+				return( helper.getPercentAllocated());
+			}
+			
+			@Override
+			public long 
+			getSize()
+			{
+				return( helper.getSizeExcludingDND());
+			}
+			
+			@Override
+			public String 
+			getSubTaskName()
+			{
+				return( helper.getAllocationTask());
+			}				
+			
+			@Override
+			public int 
+			getSupportedTaskStates()
+			{
+				if ( always_run ){
+				
+					return( ST_CANCEL | ST_SUBTASKS );
+
+				}else{
+					
+					return( ST_PAUSE | ST_RESUME | ST_CANCEL | ST_SUBTASKS );
+				}
+			}
+			
+			@Override
+			public int 
+			getTaskState()
+			{
+				synchronized( lock ){
+
+					if ( cancelled ){
+						
+						return( ST_CANCEL );
+					}
+					
+					if ( isPaused()){
+						
+						return( ST_PAUSE );
+						
+					}else if ( canRun( AllocationInstance.this )){
+							
+						return( ST_NONE );
+						
+					}else{
+						
+						return( ST_QUEUED );
+					}
+				}
+			}
+			
+			@Override
+			public void 
+			setTaskState(
+				int state )
+			{
+				if ( state == ST_CANCEL ){
+					
+					cancelled = true;
+					
+					if ( dm != null ){
+						
+						async.dispatch( AERunnable.create( ()->{
+								dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+						}));							
+					}
+				}else if ( !always_run ){
+					
+					if ( state == ST_PAUSE ){
+					
+						setPaused( true );
+					
+					}else if ( state == ST_RESUME ){
+						
+						setPaused( false );
+					}
+				}
+			}
 		}
 	}
 }

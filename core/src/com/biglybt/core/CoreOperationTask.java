@@ -233,7 +233,15 @@ CoreOperationTask
 		compareTo(
 			ProgressCallback o)
 		{
-			return( 0 );
+			long l = getSize() - o.getSize();
+			
+			if ( l < 0 ){
+				return( -1 );
+			}else if ( l > 0 ){
+				return( 1 );
+			}else{
+				return( 0 );
+			}
 		}
 	}
 }
