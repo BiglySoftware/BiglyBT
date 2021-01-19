@@ -76,7 +76,7 @@ public class ColumnFO_Progress
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
 		info.addCategories(new String[] {
-			TableColumn.CAT_ESSENTIAL,
+			TableColumn.CAT_ESSENTIAL, TableColumn.CAT_PROGRESS
 		});
 		info.setProficiency(TableColumnInfo.PROFICIENCY_BEGINNER);
 	}

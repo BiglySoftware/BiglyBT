@@ -114,7 +114,7 @@ DiskManagerOperationScheduler
 	private void
 	schedule()
 	{
-		Set<String>	active_fs = new HashSet<>();
+		Map<String, int[]>	fs_queue_pos = new HashMap<>();
 		
 		for ( Operation op: operations ){
 			
@@ -124,39 +124,51 @@ DiskManagerOperationScheduler
 				
 				for ( String fs: op.fs ){
 					
-					active_fs.add( fs );
+					int[] x = fs_queue_pos.get( fs );
+					
+					if ( x == null ){
+					
+						fs_queue_pos.put( fs, new int[]{ 1 });
+					}
 				}
 			}
 		}
 		
 		for ( Operation op: operations ){
 
-			if (( op.cb.getTaskState() & ProgressCallback.ST_PAUSE ) != 0 ){
+			ProgressCallback cb = op.cb;
+			
+			if (( cb.getTaskState() & ProgressCallback.ST_PAUSE ) != 0 ){
 				
-				if ( op.cb.isAutoPause()){
-					
-					boolean	busy = false;
+				if ( cb.isAutoPause()){
+										
+					int	pos = 0;
 					
 					for ( String fs: op.fs ){
 					
-						if ( active_fs.contains( fs )){
+						int[]	count = fs_queue_pos.get( fs );
+						
+						if ( count != null ){
+														
+							pos = Math.max( pos, count[0] );
 							
-							busy = true;
+							count[0]++;
 							
-							break;
+						}else{
+							
+							fs_queue_pos.put( fs, new int[]{ 1 });
 						}
 					}
 					
-					if ( !busy ){
+					if ( pos == 0 ){
+																		
+						cb.setTaskState( ProgressCallback.ST_RESUME );
+						
+						cb.setAutoPause( false );
+						
+					}else{
 												
-						for ( String fs: op.fs ){
-							
-							active_fs.add( fs );
-						}
-						
-						op.cb.setTaskState( ProgressCallback.ST_RESUME );
-						
-						op.cb.setAutoPause( false );
+						cb.setOrder( pos );
 					}
 				}
 			}

@@ -21,20 +21,19 @@ package com.biglybt.ui.swt.devices.columns;
 
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask.ProgressCallback;
-import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.ui.tables.*;
 
-public class ColumnFO_Percent
+public class ColumnFO_Order
 	implements TableCellRefreshListener, TableColumnExtraInfoListener
 {
-	public static final String COLUMN_ID = "fileops_percent";
+	public static final String COLUMN_ID = "fileops_order";
 
 	/**
 	 *
 	 * @param sTableID
 	 */
-	public ColumnFO_Percent(TableColumn column) {
-		column.initialize(TableColumn.ALIGN_TRAIL, TableColumn.POSITION_INVISIBLE, 55 );
+	public ColumnFO_Order(TableColumn column) {
+		column.initialize(TableColumn.ALIGN_TRAIL, TableColumn.POSITION_INVISIBLE, 30 );
 		column.addListeners(this);
 		column.setRefreshInterval(TableColumn.INTERVAL_GRAPHIC);
 		column.setType(TableColumn.TYPE_TEXT_ONLY);
@@ -55,7 +54,7 @@ public class ColumnFO_Percent
 	{
 		CoreOperation op =  (CoreOperation)cell.getDataSource();
 
-		int progress = -1;
+		int order = -1;
 		
 		if ( op != null ){
 			
@@ -63,15 +62,18 @@ public class ColumnFO_Percent
 		
 			if ( cb != null ){
 				
-				progress = cb.getProgress();
+				if ( cb.isAutoPause()){
+				
+					order = cb.getOrder();
+				}
 			}
 		}
 
-		if (!cell.setSortValue(progress) && cell.isValid()){
+		if (!cell.setSortValue(order) && cell.isValid()){
 			
 		      return;
 		}	
 		
-		cell.setText( DisplayFormatters.formatPercentFromThousands( progress ));
+		cell.setText( order <=0?"":String.valueOf( order ));
 	}
 }

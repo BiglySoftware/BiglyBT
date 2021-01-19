@@ -2224,6 +2224,13 @@ DiskManagerUtil
 								ready = move_tasks.size() == 1;
 							}
 							
+							if ( DiskManagerOperationScheduler.isEnabled()){
+							
+									// we don't need to handle scheduling
+								
+								ready = true;
+							}
+							
 							try{
 								while( !ready ){
 									

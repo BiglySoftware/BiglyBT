@@ -116,6 +116,13 @@ CoreOperationTask
 			boolean		b );
 	
 		public int
+		getOrder();
+		
+		public void
+		setOrder(
+			int		order );
+		
+		public int
 		getSupportedTaskStates();
 		
 		public int
@@ -134,6 +141,7 @@ CoreOperationTask
 		private volatile long		size;
 		private volatile String		subtask;
 		private volatile boolean	auto_pause;
+		private volatile int	 	order;
 		
 		public int
 		getProgress()
@@ -186,6 +194,20 @@ CoreOperationTask
 		{
 			auto_pause = b;
 		}
+		
+		public int
+		getOrder()
+		{
+			return( order );
+		}
+		
+		public void
+		setOrder(
+			int		_order )
+		{
+			order = _order;
+		}
+
 		
 		public int
 		getSupportedTaskStates()

@@ -179,6 +179,14 @@ public class SBC_DiskOpsView
 					}
 				});
 
+		tableManager.registerColumn(CoreOperation.class, ColumnFO_Order.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnFO_Order(column);
+					}
+				});
+
 		TableColumnManager tcm = TableColumnManager.getInstance();
 		
 		String[] defaultLibraryColumns = {
