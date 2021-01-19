@@ -28,6 +28,8 @@ CoreOperation
 	public static final int	OP_DOWNLOAD_ALLOCATION		= 5;
 	public static final int	OP_DOWNLOAD_CHECKING		= 6;
 
+	public static final int[] OP_SORT_ORDER = { -1, -1, 3, 0, 4, 2, 1 };
+	
 	public int
 	getOperationType();
 

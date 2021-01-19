@@ -29,6 +29,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
@@ -272,94 +273,7 @@ DiskManagerRecheckScheduler
 			
 			slot_sem		= new AESemaphore( "DiskManagerRecheckInstance::slotsem", getPieceConcurrency());
 						
-			CoreOperationTask.ProgressCallback progress = 
-				new CoreOperationTask.ProgressCallbackAdapter()
-				{
-					final DownloadManager dm = helper.getDownload();
-						
-					volatile boolean cancelled;
-					
-					@Override
-					public int 
-					getProgress()
-					{
-						int complete_recheck_status = helper.getCompleteRecheckStatus();
-						
-						if ( complete_recheck_status != -1 ){
-							
-								// rechecking when a download completes (i.e. not a manual recheck )
-							
-							return( complete_recheck_status );
-						}
-						
-						return( dm==null?-1:dm.getStats().getCompleted());
-					}
-					
-					@Override
-					public int 
-					getSupportedTaskStates()
-					{
-						return( ST_PAUSE | ST_RESUME | ST_CANCEL );
-					}
-					
-					@Override
-					public int 
-					getTaskState()
-					{
-						if ( cancelled ){
-							
-							return( ST_CANCEL );
-						}
-						
-						synchronized( lock ){
-
-							if ( isPaused()){
-								
-								return( ST_PAUSE );
-								
-							}else if ( isActive()){
-								
-								return( ST_NONE );
-								
-							}else{
-								
-								return( ST_QUEUED );
-							}
-						}
-					}
-					
-					@Override
-					public void 
-					setTaskState(
-						int state )
-					{
-						if ( state == ST_CANCEL ){
-							
-							cancelled = true;
-							
-							if ( dm != null ){
-								
-								async.dispatch( AERunnable.create( ()->{
-										dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
-								}));							
-							}
-						}else if ( state == ST_PAUSE ){
-							
-							setPaused( true );
-							
-						}else if ( state == ST_RESUME ){
-							
-							setPaused( false );
-						}
-					}
-					
-					@Override
-					public long 
-					getSize()
-					{
-						return( helper.getSizeExcludingDND());
-					}
-				};
+			Callback progress = new Callback();
 				
 			CoreOperationTask task =
 				new CoreOperationTask()
@@ -493,6 +407,122 @@ DiskManagerRecheckScheduler
 		{
 			DiskManagerRecheckScheduler.this.unregister( this );
 		}
-	}
 
+		class
+		Callback
+			extends CoreOperationTask.ProgressCallbackAdapter
+		{
+			final DiskManagerRecheckInstance	inst = DiskManagerRecheckInstance.this;
+			
+			final DownloadManager dm = helper.getDownload();
+				
+			volatile boolean cancelled;
+		
+			
+			@Override
+			public int 
+			getProgress()
+			{
+				int complete_recheck_status = helper.getCompleteRecheckStatus();
+				
+				if ( complete_recheck_status != -1 ){
+					
+						// rechecking when a download completes (i.e. not a manual recheck )
+					
+					return( complete_recheck_status );
+				}
+				
+				return( dm==null?-1:dm.getStats().getCompleted());
+			}
+			
+			@Override
+			public int 
+			getSupportedTaskStates()
+			{
+				return( ST_PAUSE | ST_RESUME | ST_CANCEL );
+			}
+			
+			@Override
+			public int 
+			getTaskState()
+			{
+				if ( cancelled ){
+					
+					return( ST_CANCEL );
+				}
+				
+				synchronized( lock ){
+
+					if ( isPaused()){
+						
+						return( ST_PAUSE );
+						
+					}else if ( isActive()){
+						
+						return( ST_NONE );
+						
+					}else{
+						
+						return( ST_QUEUED );
+					}
+				}
+			}
+			
+			@Override
+			public void 
+			setTaskState(
+				int state )
+			{
+				if ( state == ST_CANCEL ){
+					
+					cancelled = true;
+					
+					if ( dm != null ){
+						
+						async.dispatch( AERunnable.create( ()->{
+								dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+						}));							
+					}
+				}else if ( state == ST_PAUSE ){
+					
+					setPaused( true );
+					
+				}else if ( state == ST_RESUME ){
+					
+					setPaused( false );
+				}
+			}
+			
+			@Override
+			public long 
+			getSize()
+			{
+				return( helper.getSizeExcludingDND());
+			}
+			
+			@Override
+			public int 
+			compareTo(
+				ProgressCallback o )
+			{
+				if ( o instanceof Callback ){
+				
+					Callback other = (Callback)o;
+					
+					long l = getMetric() - other.inst.getMetric();
+					
+					if ( l < 0 ){
+						return(-1 );
+					}else if ( l > 0 ){
+						return( 1 );
+					}else{
+						return( 0 );
+					}
+				}else{
+					
+					return( 0 );
+				}
+			}
+		}
+	}
 }

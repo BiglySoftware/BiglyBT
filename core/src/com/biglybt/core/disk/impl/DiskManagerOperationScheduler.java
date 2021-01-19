@@ -51,9 +51,10 @@ DiskManagerOperationScheduler
 
 	private final Core		core;
 		
-	private List<Operation>		operations = new LinkedList<>();
+	private List<Operation>		operations = new ArrayList<>();
 	
 	private TimerEventPeriodic	timer;
+	
 	
 	private
 	DiskManagerOperationScheduler(
@@ -202,6 +203,8 @@ DiskManagerOperationScheduler
 						
 						operations.add( new Operation( operation, cb, fs ));
 						
+						Collections.sort( operations );
+						
 						schedule();
 					}
 				}
@@ -233,6 +236,7 @@ DiskManagerOperationScheduler
 	
 	private static class
 	Operation
+		implements Comparable<Operation>
 	{
 		private final CoreOperation		op;
 		private final ProgressCallback	cb;
@@ -250,6 +254,24 @@ DiskManagerOperationScheduler
 			cb.setTaskState( ProgressCallback.ST_PAUSE  );
 			
 			cb.setAutoPause( true );
+		}
+		
+		@Override
+		public int 
+		compareTo(
+			Operation other )
+		{
+			int t1 = op.getOperationType();
+			int t2 = other.op.getOperationType();
+			
+			if ( t1 == t2 ){
+				
+				return( cb.compareTo( other.cb ));
+				
+			}else{
+				
+				return( CoreOperation.OP_SORT_ORDER[ t1 ] - CoreOperation.OP_SORT_ORDER[ t2 ]);
+			}
 		}
 	}
 }

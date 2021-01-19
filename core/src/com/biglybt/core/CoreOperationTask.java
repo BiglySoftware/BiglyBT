@@ -55,6 +55,7 @@ CoreOperationTask
 	
 	public interface
 	ProgressCallback
+		extends Comparable<ProgressCallback>
 	{
 		public int ST_NONE		= 0x0000;
 		public int ST_PAUSE		= 0x0001;
@@ -225,6 +226,14 @@ CoreOperationTask
 		getTaskState()
 		{
 			return( ST_NONE );
+		}
+		
+		@Override
+		public int 
+		compareTo(
+			ProgressCallback o)
+		{
+			return( 0 );
 		}
 	}
 }
