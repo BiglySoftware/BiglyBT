@@ -123,7 +123,7 @@ DiskManagerOperationScheduler
 				
 				op.cb.setAutoPause( false );
 				
-				for ( String fs: op.fs ){
+				for ( String fs: op.unique_fs ){
 					
 					int[] x = fs_queue_pos.get( fs );
 					
@@ -145,7 +145,7 @@ DiskManagerOperationScheduler
 										
 					int	pos = 0;
 					
-					for ( String fs: op.fs ){
+					for ( String fs: op.unique_fs ){
 					
 						int[]	count = fs_queue_pos.get( fs );
 						
@@ -240,7 +240,7 @@ DiskManagerOperationScheduler
 	{
 		private final CoreOperation		op;
 		private final ProgressCallback	cb;
-		private final String[]			fs;
+		private final String[]			unique_fs;
 				
 		Operation(
 			CoreOperation		_op,
@@ -249,7 +249,12 @@ DiskManagerOperationScheduler
 		{
 			op		= _op;
 			cb		= _cb;
-			fs		= _fs;
+		
+			Set<String> temp_fs = new HashSet<>();
+			
+			temp_fs.addAll( Arrays.asList( _fs ));
+			
+			unique_fs = temp_fs.toArray( new String[ temp_fs.size()] );
 			
 			cb.setTaskState( ProgressCallback.ST_PAUSE  );
 			

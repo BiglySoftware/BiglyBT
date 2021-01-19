@@ -22,8 +22,6 @@ package com.biglybt.core.disk.impl;
 
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
-import com.biglybt.core.CoreOperationTask.ProgressCallback;
-import com.biglybt.core.CoreOperationTask.ProgressCallbackAdapter;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
@@ -34,7 +32,6 @@ import com.biglybt.core.diskmanager.cache.CacheFile;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerFactory;
 import com.biglybt.core.diskmanager.cache.CacheFileOwner;
 import com.biglybt.core.download.*;
-import com.biglybt.core.download.impl.DownloadManagerImpl;
 import com.biglybt.core.download.impl.DownloadManagerStatsImpl;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.LocaleUtilDecoder;
@@ -2138,7 +2135,7 @@ DiskManagerUtil
 								{
 									long[] mp = adapter.getMoveProgress();
 									
-									return( mp==null?-1:(int)mp[0]);
+									return( mp==null?0:(int)mp[0]);
 								}
 							
 								@Override
@@ -2147,7 +2144,7 @@ DiskManagerUtil
 								{
 									long[] mp = adapter.getMoveProgress();
 									
-									return( mp==null?-1:mp[1] );
+									return( mp==null?download_manager.getStats().getSizeExcludingDND():mp[1] );
 								}
 								
 								@Override
@@ -2223,46 +2220,59 @@ DiskManagerUtil
 								
 								ready = move_tasks.size() == 1;
 							}
-							
-							if ( DiskManagerOperationScheduler.isEnabled()){
-							
-									// we don't need to handle scheduling
-								
-								ready = true;
-							}
-							
+														
 							try{
-								while( !ready ){
+								if ( DiskManagerOperationScheduler.isEnabled()){
 									
-									try{
-										Thread.sleep( 500 );
+									while( callback.getTaskState() == ProgressCallback.ST_PAUSE ){
 										
-									}catch( Throwable e ){
-										
+										try{
+											Thread.sleep( 500 );
+											
+										}catch( Throwable e ){
+											
+										}
 									}
 									
 									if ( callback.getTaskState() == ProgressCallback.ST_CANCEL ){
-										
+											
 										throw( new RuntimeException( "Cancelled" ));
 									}
+
+								}else{
 									
-									synchronized( move_tasks ){
+									while( !ready ){
 										
-										for ( CoreOperationTask task: move_tasks ){
+										try{
+											Thread.sleep( 500 );
 											
-											int state = task.getProgressCallback().getTaskState();
+										}catch( Throwable e ){
 											
-											if ( state != ProgressCallback.ST_PAUSE ){
+										}
+										
+										if ( callback.getTaskState() == ProgressCallback.ST_CANCEL ){
+											
+											throw( new RuntimeException( "Cancelled" ));
+										}
+										
+										synchronized( move_tasks ){
+											
+											for ( CoreOperationTask task: move_tasks ){
 												
-												if ( task == this ){
+												int state = task.getProgressCallback().getTaskState();
+												
+												if ( state != ProgressCallback.ST_PAUSE ){
 													
-													if ( state == ProgressCallback.ST_QUEUED ){
+													if ( task == this ){
 														
-														ready = true;
+														if ( state == ProgressCallback.ST_QUEUED ){
+															
+															ready = true;
+														}
 													}
+													
+													break;
 												}
-												
-												break;
 											}
 										}
 									}
