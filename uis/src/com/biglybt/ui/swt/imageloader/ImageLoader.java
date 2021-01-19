@@ -1279,7 +1279,11 @@ public class ImageLoader
 		
 		ImageLoaderRefInfo refInfoFromImageMap = getRefInfoFromImageMap(sizedImageKey);
 		if ( refInfoFromImageMap != null ){
-			Image image = refInfoFromImageMap.getImages()[0];
+			Image[] images = refInfoFromImageMap.getImages();
+			if ( images == null || images.length == 0 ){
+				return( null );
+			}
+			Image image = images[0];
 			refInfoFromImageMap.addref();
 			l.imageDownloaded(image, sizedImageKey, true);
 			return image;
@@ -1337,7 +1341,11 @@ public class ImageLoader
 									// downloaded
 								ImageLoaderRefInfo refInfoFromImageMap = getRefInfoFromImageMap(sizedImageKey);
 								if ( refInfoFromImageMap != null ){
-									Image image = refInfoFromImageMap.getImages()[0];
+									Image[] images = refInfoFromImageMap.getImages();
+									if ( images == null || images.length == 0 ){
+										return;
+									}
+									Image image = images[0];
 									refInfoFromImageMap.addref();
 									l.imageDownloaded(image, sizedImageKey, true);
 									return;
