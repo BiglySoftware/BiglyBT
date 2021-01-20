@@ -24,7 +24,9 @@ android {
         main {
             java {
                 srcDirs = [
-                    'core/src/'
+                    'core/src/',
+                    'uis/src/com/biglybt/ui/android/internat/',
+                    'uis/src/com/biglybt/ui/none/internat/'
                 ]
                 exclude 'com/biglybt/core/util/dns/**'
                 exclude 'com/biglybt/core/util/jman/**'
