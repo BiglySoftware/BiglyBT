@@ -466,14 +466,27 @@ public class SBC_ChatOverview
 					}
 				});
 
-
-			// last
-
 		tableManager.registerColumn(ChatInstance.class, ColumnChatStatus.COLUMN_ID,
 				new TableColumnCreationListener() {
 					@Override
 					public void tableColumnCreated(TableColumn column) {
 						new ColumnChatStatus(column);
+					}
+				});
+		
+		tableManager.registerColumn(ChatInstance.class, ColumnChatNick.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnChatNick(column);
+					}
+				});
+		
+		tableManager.registerColumn(ChatInstance.class, ColumnChatNickShared.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnChatNickShared(column);
 					}
 				});
 
