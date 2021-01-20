@@ -28,4 +28,22 @@ DiskAccessControllerStats
 
 	public long
 	getTotalReadBytes();
+	
+	public long
+	getReadRequestsQueued();
+	
+	public long
+	getReadBytesQueued();
+	
+	public long
+	getTotalWriteRequests();
+
+	public long
+	getTotalWriteBytes();
+	
+	public long
+	getWriteRequestsQueued();
+	
+	public long
+	getWriteBytesQueued();
 }

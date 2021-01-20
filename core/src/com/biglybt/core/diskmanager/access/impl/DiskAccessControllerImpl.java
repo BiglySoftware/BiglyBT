@@ -268,21 +268,54 @@ DiskAccessControllerImpl
 		return(
 			new DiskAccessControllerStats()
 			{
-				final long	read_total_req 		= read_dispatcher.getTotalRequests();
-				final long	read_total_bytes 	= read_dispatcher.getTotalBytes();
-
 				@Override
 				public long
 				getTotalReadRequests()
 				{
-					return( read_total_req );
+					return( read_dispatcher.getTotalRequests());
 				}
 
 				@Override
 				public long
 				getTotalReadBytes()
 				{
-					return( read_total_bytes );
+					return( read_dispatcher.getTotalBytes() );
+				}
+				
+				public long
+				getReadRequestsQueued()
+				{
+					return( read_dispatcher.getQueueSize());
+				}
+				
+				public long
+				getReadBytesQueued()
+				{
+					return( read_dispatcher.getQueuedBytes());				
+				}
+				
+				public long
+				getTotalWriteRequests()
+				{
+					return( write_dispatcher.getTotalRequests());		
+				}				
+
+				public long
+				getTotalWriteBytes()
+				{
+					return( write_dispatcher.getTotalBytes() );
+				}
+				
+				public long
+				getWriteRequestsQueued()
+				{
+					return( write_dispatcher.getQueueSize());
+				}
+				
+				public long
+				getWriteBytesQueued()
+				{
+					return( write_dispatcher.getQueuedBytes());
 				}
 			});
 	}

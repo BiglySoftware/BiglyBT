@@ -24,6 +24,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.disk.DiskManagerFactory;
+import com.biglybt.core.diskmanager.access.DiskAccessControllerFactory;
+import com.biglybt.core.diskmanager.access.DiskAccessControllerStats;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerFactory;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerStats;
 import com.biglybt.core.internat.MessageText;
@@ -33,6 +36,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.graphics.SpeedGraphic;
+import com.biglybt.ui.swt.components.graphics.ValueFormater;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
@@ -47,8 +51,9 @@ public class CacheView
 
   public static final String MSGID_PREFIX = "CacheView";
 
-  CacheFileManagerStats stats;
-
+  CacheFileManagerStats 		cfmStats;
+  DiskAccessControllerStats		dacStats;
+  
   Composite panel;
 
   BufferedLabel lblInUse,lblSize,lblPercentUsed;
@@ -71,13 +76,45 @@ public class CacheView
 
   SpeedGraphic rffGraph,rfcGraph,wtcGraph,wtfGraph;
 
+  Canvas  diskReadsQueued, diskWritesQueued;
+  
+  SpeedGraphic	drqGraph, dwqGraph;
+  
   public CacheView() {
     try {
-      stats = CacheFileManagerFactory.getSingleton().getStats();
+      cfmStats = CacheFileManagerFactory.getSingleton().getStats();
+      
+      dacStats = DiskManagerFactory.getDiskAccessController().getStats();
+      
       rfcGraph = SpeedGraphic.getInstance();
       wtcGraph = SpeedGraphic.getInstance();
       rffGraph = SpeedGraphic.getInstance();
       wtfGraph = SpeedGraphic.getInstance();
+         
+      drqGraph =
+		  SpeedGraphic.getInstance(
+			new ValueFormater()
+			{
+			    @Override
+			    public String
+			    format(int value)
+			    {
+			         return( DisplayFormatters.formatByteCountToKiBEtc(value*(long)DisplayFormatters.getKinB()));
+			    }
+			});
+	  
+      dwqGraph =
+		  SpeedGraphic.getInstance(
+			new ValueFormater()
+			{
+			    @Override
+			    public String
+			    format(int value)
+			    {
+			         return( DisplayFormatters.formatByteCountToKiBEtc(value*(long)DisplayFormatters.getKinB()));
+			    }
+			});
+      
     } catch(Exception e) {
     	Debug.printStackTrace( e );
     }
@@ -260,9 +297,11 @@ public class CacheView
     lbl.setLayoutData(gridData);
     Messages.setLanguageText(lbl,"CacheView.speeds.writes");
 
+	// cache from cache
+
     lbl = new Label(gCacheSpeeds,SWT.NULL);
     Messages.setLanguageText(lbl,"CacheView.speeds.fromCache");
-
+    
     readsFromCache = new Canvas(gCacheSpeeds,SWT.NO_BACKGROUND);
     gridData = new GridData(GridData.FILL_BOTH);
     readsFromCache.setLayoutData(gridData);
@@ -274,6 +313,8 @@ public class CacheView
     writesToCache.setLayoutData(gridData);
     wtcGraph.initialize(writesToCache);
 
+    	// cache from file
+    
     lbl = new Label(gCacheSpeeds,SWT.NULL);
     Messages.setLanguageText(lbl,"CacheView.speeds.fromFile");
 
@@ -286,16 +327,34 @@ public class CacheView
     gridData = new GridData(GridData.FILL_BOTH);
     writesToFile.setLayoutData(gridData);
     wtfGraph.initialize(writesToFile);
-  }
+    
+    	// disk read/write queues
+    
+    lbl = new Label(gCacheSpeeds,SWT.NULL);
+    Messages.setLanguageText(lbl,"CacheView.disk.queues");
 
+    diskReadsQueued = new Canvas(gCacheSpeeds,SWT.NO_BACKGROUND);
+    gridData = new GridData(GridData.FILL_BOTH);
+    diskReadsQueued.setLayoutData(gridData);
+    drqGraph.initialize(diskReadsQueued);
+
+    diskWritesQueued = new Canvas(gCacheSpeeds,SWT.NO_BACKGROUND);
+    gridData = new GridData(GridData.FILL_BOTH);
+    diskWritesQueued.setLayoutData(gridData);
+    dwqGraph.initialize(diskWritesQueued);  
+  }
+  
   /* (non-Javadoc)
    * @see com.biglybt.ui.swt.views.stats.PeriodicViewUpdate#periodicUpdate()
    */
   public void periodicUpdate() {
-    rfcGraph.addIntValue((int)stats.getAverageBytesReadFromCache());
-    rffGraph.addIntValue((int)stats.getAverageBytesReadFromFile());
-    wtcGraph.addIntValue((int)stats.getAverageBytesWrittenToCache());
-    wtfGraph.addIntValue((int)stats.getAverageBytesWrittenToFile());
+    rfcGraph.addIntValue((int)cfmStats.getAverageBytesReadFromCache());
+    rffGraph.addIntValue((int)cfmStats.getAverageBytesReadFromFile());
+    wtcGraph.addIntValue((int)cfmStats.getAverageBytesWrittenToCache());
+    wtfGraph.addIntValue((int)cfmStats.getAverageBytesWrittenToFile());
+    
+    drqGraph.addIntValue((int)(dacStats.getReadBytesQueued()/DisplayFormatters.getKinB()));
+    dwqGraph.addIntValue((int)(dacStats.getWriteBytesQueued()/DisplayFormatters.getKinB()));
   }
 
   private void generateWritesGroup() {
@@ -387,6 +446,9 @@ public class CacheView
     rffGraph.dispose();
     wtcGraph.dispose();
     wtfGraph.dispose();
+    
+    drqGraph.dispose();
+    dwqGraph.dispose();
   }
 
   private Composite getComposite() {
@@ -401,10 +463,10 @@ public class CacheView
 		return;
 	}
 
-    lblSize.setText(DisplayFormatters.formatByteCountToKiBEtc(stats.getSize()));
-    lblInUse.setText(DisplayFormatters.formatByteCountToKiBEtc(stats.getUsedSize()));
+    lblSize.setText(DisplayFormatters.formatByteCountToKiBEtc(cfmStats.getSize()));
+    lblInUse.setText(DisplayFormatters.formatByteCountToKiBEtc(cfmStats.getUsedSize()));
 
-    int perThousands = (int) ((1000 * stats.getUsedSize()) / stats.getSize());
+    int perThousands = (int) ((1000 * cfmStats.getUsedSize()) / cfmStats.getSize());
     lblPercentUsed.setText(DisplayFormatters.formatPercentFromThousands(perThousands));
     pbInUse.setSelection(perThousands);
 
@@ -419,6 +481,9 @@ public class CacheView
     rffGraph.refresh(false);
     wtcGraph.refresh(false);
     wtfGraph.refresh(false);
+    
+    drqGraph.refresh(false);
+    dwqGraph.refresh(false);
   }
 
   /**
@@ -426,10 +491,10 @@ public class CacheView
    */
   private void refrehReads() {
     int perThousands;
-    long readsFromCache = stats.getBytesReadFromCache();
-    long readsFromFile = stats.getBytesReadFromFile();
-    long nbReadsFromCache = stats.getCacheReadCount();
-    long nbReadsFromFile = stats.getFileReadCount();
+    long readsFromCache = cfmStats.getBytesReadFromCache();
+    long readsFromFile = cfmStats.getBytesReadFromFile();
+    long nbReadsFromCache = cfmStats.getCacheReadCount();
+    long nbReadsFromFile = cfmStats.getFileReadCount();
     lblNumberReadsFromCache.setText("" + nbReadsFromCache);
     lblNumberReadsFromFile.setText("" + nbReadsFromFile);
 
@@ -475,10 +540,10 @@ public class CacheView
 
   private void refreshWrites() {
     int perThousands;
-    long writesToCache = stats.getBytesWrittenToCache();
-    long writesToFile = stats.getBytesWrittenToFile();
-    long nbWritesToCache = stats.getCacheWriteCount();
-    long nbWritesToFile = stats.getFileWriteCount();
+    long writesToCache = cfmStats.getBytesWrittenToCache();
+    long writesToFile = cfmStats.getBytesWrittenToFile();
+    long nbWritesToCache = cfmStats.getCacheWriteCount();
+    long nbWritesToFile = cfmStats.getFileWriteCount();
     lblNumberWritesToCache.setText("" + nbWritesToCache);
     lblNumberWritesToFile.setText("" + nbWritesToFile);
 
