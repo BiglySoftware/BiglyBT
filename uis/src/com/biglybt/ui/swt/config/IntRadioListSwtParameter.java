@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -114,6 +115,7 @@ public class IntRadioListSwtParameter
 			radios[i].setText(displayStrings[i]);
 			radios[i].setData("value", values[i]);
 			radios[i].addListener(SWT.Selection, listener);
+			radios[i].setLayoutData(new RowData());	// buttons need this on linux at least
 		}
 
 		if (valueProcessor != null) {

@@ -26,6 +26,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
@@ -127,17 +128,25 @@ public class BooleanSwtParameter
 			if (toolong) {
 				// Checkbox and text are two separate widgets
 				checkBox = new Button(ourParent, SWT.CHECK);
-				GridData gridData = new GridData();
-				if (Constants.isUnix) {
-					gridData.horizontalIndent = 4;
+				if (doGridData(ourParent)) {
+					GridData gridData = new GridData();
+					if (Constants.isUnix) {
+						gridData.horizontalIndent = 4;
+					}
+					checkBox.setLayoutData(gridData);
+				}else{
+					checkBox.setLayoutData(new RowData());	// buttons need this on linux at least
 				}
-				checkBox.setLayoutData(gridData);
-
+				
 				cbText = new Label(ourParent, SWT.WRAP);
 				Messages.setLanguageText(cbText, labelKey);
-				gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
-				gridData.horizontalIndent = Constants.isOSX ? -4 : 3;
-				cbText.setLayoutData(gridData);
+				
+				if (doGridData(ourParent)) {
+					GridData gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
+					gridData.horizontalIndent = Constants.isOSX ? -4 : 3;
+					cbText.setLayoutData(gridData);
+				}
+				
 				cbText.addListener(SWT.MouseDown, event -> {
 					if (event.button == 1) {
 						checkBox.forceFocus();
@@ -182,6 +191,8 @@ public class BooleanSwtParameter
 					GridData gridData = new GridData();
 					gridData.horizontalSpan = 2;
 					checkBox.setLayoutData(gridData);
+				}else{
+					checkBox.setLayoutData(new RowData());	// buttons need this on linux at least
 				}
 			}
 
@@ -195,6 +206,8 @@ public class BooleanSwtParameter
 				GridData gridData = new GridData();
 				gridData.horizontalSpan = 2;
 				checkBox.setLayoutData(gridData);
+			}else{
+				checkBox.setLayoutData(new RowData());	// buttons need this on linux at least
 			}
 		}
 		setMainControl(checkBox);
