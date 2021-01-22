@@ -71,15 +71,14 @@ public class PlatformVuzeActivitiesMessenger
 						entries = new ActivitiesEntry[entriesList.size()];
 						int i = 0;
 						for (Iterator iter = entriesList.iterator(); iter.hasNext();) {
-							Map platformEntry = (Map) iter.next();
-							if (platformEntry == null) {
-								continue;
-							}
-
-							entries[i] = ActivitiesManager.createEntryFromMap(
-									platformEntry, false);
-							if (entries[i] != null) {
-								i++;
+							Object obj = iter.next();
+							if  ( obj instanceof Map ){
+								Map platformEntry = (Map)obj;
+								entries[i] = ActivitiesManager.createEntryFromMap(
+										platformEntry, false);
+								if (entries[i] != null) {
+									i++;
+								}
 							}
 						}
 					}
