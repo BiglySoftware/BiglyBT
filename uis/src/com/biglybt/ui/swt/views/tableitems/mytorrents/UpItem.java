@@ -154,5 +154,6 @@ public class UpItem
       return;
 
     cell.setText(DisplayFormatters.formatByteCountToKiBEtc(value));
+    cell.setToolTip( String.valueOf( value ));
   }
 }

@@ -159,5 +159,6 @@ public class DownItem
     if (!cell.setSortValue(value) && cell.isValid())
       return;
     cell.setText(DisplayFormatters.formatByteCountToKiBEtc(value));
+    cell.setToolTip( String.valueOf( value ));
   }
 }
