@@ -136,6 +136,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	private boolean					standalone_windows;
 	private boolean					windows_to_sidebar;
 	private boolean					use_ip_filter;
+	private boolean					enable_auto_dl_chats;
 	private boolean					hide_ratings;
 	private boolean					hide_search_subs;
 
@@ -237,6 +238,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		standalone_windows		= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.standalone.windows", false );
 		windows_to_sidebar		= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.windows.to.sidebar", false );
 		use_ip_filter			= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.ip.filter.enable", true );
+		enable_auto_dl_chats	= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.enable.auto.dl.chat", true );
 		hide_ratings			= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.hide.ratings", false );
 		hide_search_subs		= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.hide.search_subs", false );
 
@@ -394,6 +396,23 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	}
 
 
+	public boolean
+	getEnableAutoDownloadChats()
+	{
+		return( enable_auto_dl_chats );
+	}
+
+	public void
+	setEnableAutoDownloadChats(
+		boolean		b )
+	{
+		enable_auto_dl_chats			= b;
+
+		COConfigurationManager.setParameter( "azbuddy.dchat.ui.enable.auto.dl.chat", b );
+
+		COConfigurationManager.setDirty();
+	}
+	
 	public boolean
 	getHideRatings()
 	{

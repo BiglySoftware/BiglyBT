@@ -543,6 +543,26 @@ BuddyPluginViewInstance
 		grid_data.horizontalSpan = 3;
 		ui_area_checks.setLayoutData(grid_data);
 
+			// generate and look for dl-specific messages
+		
+		final Button do_dl_chats = new Button( ui_area_checks, SWT.CHECK );
+
+		do_dl_chats.setText( lu.getLocalisedMessageText( "azbuddy.dchat.ui.enable.auto.dl.chat" ));
+
+		do_dl_chats.setSelection( plugin_beta.getEnableAutoDownloadChats());
+
+		do_dl_chats.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent ev )
+					{
+						plugin_beta.setEnableAutoDownloadChats( do_dl_chats.getSelection());
+					}
+				});	
+		
 			// hide ratings
 
 		final Button hide_ratings = new Button( ui_area_checks, SWT.CHECK );

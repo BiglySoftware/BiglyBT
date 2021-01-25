@@ -5736,6 +5736,13 @@ SubscriptionManagerImpl
 									return;
 								}
 
+								BuddyPluginBeta beta = BuddyPluginUtils.getBetaPlugin();
+
+								if ( beta == null || !beta.getEnableAutoDownloadChats()){
+									
+									return;
+								}
+								
 								final ChatInstance chat = BuddyPluginUtils.getChat( download );
 
 								if ( chat != null ){

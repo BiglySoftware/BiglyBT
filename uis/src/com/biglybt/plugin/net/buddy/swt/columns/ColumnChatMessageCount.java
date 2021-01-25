@@ -60,7 +60,8 @@ public class ColumnChatMessageCount
 
 			BuddyPluginBeta beta = BuddyPluginUtils.getBetaPlugin();
 
-			if ( beta != null ){
+			if ( beta != null && beta.getEnableAutoDownloadChats()){
+				
 				ChatInstance chat = beta.peekChatInstance(dl);
 
 				if (chat != null){
