@@ -201,8 +201,9 @@ public class ProgressReporterPanel
 		 */
 
 		nameLabel = new Label(progressPanel, SWT.WRAP);
-		nameLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false, 4, 1));
+		GridData gd = new GridData( GridData.FILL_HORIZONTAL );
+		gd.horizontalSpan = 4;
+		nameLabel.setLayoutData( gd );
 
 		pBar = new AZProgressBar(progressPanel, pReport.isIndeterminate());
 		pBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -220,8 +221,9 @@ public class ProgressReporterPanel
 				false));
 
 		statusLabel = new Label(progressPanel, SWT.NONE);
-		statusLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false,
-				2, 1));
+		gd = new GridData( GridData.FILL_HORIZONTAL );
+		gd.horizontalSpan = 4;
+		statusLabel.setLayoutData( gd );
 
 		/*
 		 * Creates the detail section
@@ -456,6 +458,8 @@ public class ProgressReporterPanel
 				getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run() {
+						boolean changed = false;
+						
 						if (null != nameLabel && !nameLabel.isDisposed()) {
 							nameLabel.setText(formatForDisplay(pReport.getName()));
 						}
@@ -467,8 +471,12 @@ public class ProgressReporterPanel
 						appendToDetail(pReport.getMessage(), false);
 						appendToDetail(pReport.getDetailMessage(), false);
 						synchProgressBar(pReport);
-						synchActionLabels(pReport);
-						resizeContent();
+						
+						changed |= synchActionLabels(pReport);
+						
+						if ( changed ){
+							resizeContent();
+						}
 					}
 				});
 				break;
@@ -620,12 +628,12 @@ public class ProgressReporterPanel
 	 * Display the appropriate text for the action labels
 	 * based on what action can be taken
 	 */
-	private void synchActionLabels(IProgressReport pReport) {
+	private boolean synchActionLabels(IProgressReport pReport) {
 		if (null == actionLabel_remove || null == actionLabel_cancel
 				|| null == actionLabel_retry || actionLabel_remove.isDisposed()
 				|| actionLabel_cancel.isDisposed()
 				|| actionLabel_retry.isDisposed()) {
-			return;
+			return( false );
 		}
 
 		/*
@@ -652,33 +660,42 @@ public class ProgressReporterPanel
 		 *
 		 */
 
-		showActionLabel(actionLabel_cancel, false);
-		showActionLabel(actionLabel_remove, false);
-		showActionLabel(actionLabel_retry, false);
-
+		boolean show_remove	= false;
+		boolean show_retry	= false;
+		boolean show_cancel	= false;
+		
 		if (pReport.isDone()) {
-			showActionLabel(actionLabel_remove, true);
+			show_remove = true;
 		} else if (pReport.isInErrorState()) {
+			show_remove = true;
 			if (pReport.isRetryAllowed()) {
-				showActionLabel(actionLabel_retry, true);
-				showActionLabel(actionLabel_remove, true);
-			} else {
-				showActionLabel(actionLabel_remove, true);
+				show_retry	= true;
 			}
-
 		} else if (pReport.isCanceled()) {
+			show_remove = true;
 			if (pReport.isRetryAllowed()) {
-				showActionLabel(actionLabel_retry, true);
-				showActionLabel(actionLabel_remove, true);
-			} else {
-				showActionLabel(actionLabel_remove, true);
+				show_retry	= true;
 			}
 
 		} else {
-			showActionLabel(actionLabel_cancel, true);
-			actionLabel_cancel.setEnabled(pReport.isCancelAllowed());
+			show_cancel = true;
+		}
+		
+		boolean changed = false;
+		
+		changed |= showActionLabel( actionLabel_remove, show_remove );
+		changed |= showActionLabel( actionLabel_retry, show_retry );
+		changed |= showActionLabel( actionLabel_cancel, show_cancel );
+		
+		if ( show_cancel ){
+			boolean ok = pReport.isCancelAllowed();
+			if ( actionLabel_cancel.isEnabled() != ok ){
+				actionLabel_cancel.setEnabled( ok );
+				changed = true;
+			}
 		}
 
+		return( changed );
 	}
 
 	/**
@@ -686,14 +703,21 @@ public class ProgressReporterPanel
 	 * @param label
 	 * @param showIt
 	 */
-	private void showActionLabel(Label label, boolean showIt) {
-		((GridData) label.getLayoutData()).widthHint = (showIt) ? 16 : 0;
+	private boolean showActionLabel(Label label, boolean showIt) {
+		GridData gd = (GridData)label.getLayoutData();
+		int wh = showIt?16:0;
+		if ( gd.widthHint != wh ){
+			gd.widthHint = wh;
+			return( true );
+		}else{
+			return( false );
+		}
 	}
 	
 	FrequencyLimitedDispatcher disp = new FrequencyLimitedDispatcher(
 			AERunnable.create(()->{
 				Utils.execSWTThread(()->{resizeContentSupport();});
-			}), 5000 );
+			}), 250 );
 
 	/**
 	 * Resizes the content of this panel to fit within the shell and to layout children control appropriately
@@ -705,7 +729,7 @@ public class ProgressReporterPanel
 	}
 	
 	private void resizeContentSupport() {
-		if ( !detailSection.isCollapsed() && !isDisposed()) {
+		if (!isDisposed()) {
 			layout(true, true);
 		}
 	}
