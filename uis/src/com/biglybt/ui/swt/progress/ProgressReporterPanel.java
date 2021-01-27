@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.twistie.ITwistieListener;
@@ -692,7 +693,7 @@ public class ProgressReporterPanel
 	FrequencyLimitedDispatcher disp = new FrequencyLimitedDispatcher(
 			AERunnable.create(()->{
 				Utils.execSWTThread(()->{resizeContentSupport();});
-			}), 250 );
+			}), 5000 );
 
 	/**
 	 * Resizes the content of this panel to fit within the shell and to layout children control appropriately
@@ -704,7 +705,7 @@ public class ProgressReporterPanel
 	}
 	
 	private void resizeContentSupport() {
-		if (!isDisposed()) {
+		if ( !detailSection.isCollapsed() && !isDisposed()) {
 			layout(true, true);
 		}
 	}
