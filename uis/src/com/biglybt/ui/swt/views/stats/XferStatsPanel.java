@@ -77,7 +77,8 @@ XferStatsPanel
 	private int alpha = 255;
 
 	private boolean autoAlpha = false;
-
+	private boolean	initialised;
+	
 	private AggregateStats		my_stats;
 
 	private long	latest_sequence	= Long.MAX_VALUE;
@@ -196,9 +197,12 @@ XferStatsPanel
 					e.gc.setBackground(Colors.getSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND));
 					e.gc.fillRectangle(e.x, e.y, e.width, e.height);
 
-					e.gc.drawText(
+					if ( !initialised ){
+						
+						e.gc.drawText(
 							MessageText.getString( "v3.MainWindow.view.wait"), 10,
 							10, true);
+					}
 				}
 			}
 		});
@@ -410,11 +414,15 @@ XferStatsPanel
 		canvas.setLayoutData(data);
 	}
 
-	protected void
+	public void
 	init(
 		AggregateStats		_stats )
 	{
+		initialised	= true;
+		
 		my_stats	= _stats;
+		
+		requestRefresh();
 	}
 	
 	private String

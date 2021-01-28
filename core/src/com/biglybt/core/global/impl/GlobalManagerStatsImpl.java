@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,6 +54,7 @@ import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Average;
 import com.biglybt.core.util.Debug;
@@ -106,7 +108,10 @@ GlobalManagerStatsImpl
     private static final Object	PEER_DATA_KEY 		= new Object();
     private static final Object	PEER_DATA_FINAL_KEY = new Object();
    
-    private List<PEPeer>	removed_peers = new LinkedList<>();
+    private static final Object	DOWNLOAD_DATA_KEY = new Object();
+
+    
+    private Map<DownloadManager,List<PEPeer>>	removed_peers = new IdentityHashMap<>();
     
 	protected
 	GlobalManagerStatsImpl()
@@ -129,6 +134,8 @@ GlobalManagerStatsImpl
 				downloadManagerAdded(
 					DownloadManager	dm )
 				{
+					dm.setUserData( DOWNLOAD_DATA_KEY, new AggregateStatsDownloadWrapper() );
+
 					dm.addPeerListener(
 						new DownloadManagerPeerListener(){
 							
@@ -210,7 +217,16 @@ GlobalManagerStatsImpl
 									
 									synchronized( PEER_DATA_KEY ){
 									
-										removed_peers.add( peer );
+										List<PEPeer> peers = removed_peers.get( dm );
+										
+										if ( peers == null ){
+											
+											peers = new LinkedList<>();
+											
+											removed_peers.put( dm, peers );
+										}
+										
+										peers.add( peer );
 									}
 								}
 							}
@@ -567,19 +583,29 @@ GlobalManagerStatsImpl
 							
 						}
 						
-						List<List<PEPeer>>	peer_lists = new LinkedList<>();
+						List<DownloadManager>	all_dms = manager.getDownloadManagers();
+						
+						List<AggregateStatsDownloadWrapper>	dms_list	= new ArrayList<>( all_dms.size() * 2 );
+						List<List<PEPeer>>					peer_lists 	= new ArrayList<>( all_dms.size() * 2 );
 						
 						synchronized( PEER_DATA_KEY ){
 							
 							if ( !removed_peers.isEmpty()){
 						
-								peer_lists.add( removed_peers );
+								for ( Map.Entry<DownloadManager,List<PEPeer>> entry: removed_peers.entrySet()){
+																		
+									AggregateStatsDownloadWrapper as = (AggregateStatsDownloadWrapper)entry.getKey().getUserData( DOWNLOAD_DATA_KEY );
 								
-								removed_peers = new LinkedList<>();
+									dms_list.add( as );
+																		
+									peer_lists.add( entry.getValue());
+								}
+								
+								removed_peers.clear();
 							}
 						}
 						
-						for ( DownloadManager dm: manager.getDownloadManagers()){
+						for ( DownloadManager dm: all_dms ){
 							
 							PEPeerManager pm = dm.getPeerManager();
 							
@@ -588,6 +614,10 @@ GlobalManagerStatsImpl
 								List<PEPeer> peers = pm.getPeers();
 								
 								if ( !peers.isEmpty()){
+										
+									AggregateStatsDownloadWrapper as = (AggregateStatsDownloadWrapper)dm.getUserData( DOWNLOAD_DATA_KEY );
+									
+									dms_list.add( as );
 									
 									peer_lists.add( peers );
 								}
@@ -600,18 +630,28 @@ GlobalManagerStatsImpl
 						
 						Map<String,long[]>	updates = new HashMap<>();
 						
-						for ( List<PEPeer> peers: peer_lists ){
+						for ( int i=0; i<dms_list.size();i++){
+						
+							AggregateStatsDownloadWrapper	dms 	= dms_list.get( i );
+							List<PEPeer> 					peers 	= peer_lists.get( i );
 						
 							for ( PEPeer peer: peers ){
 								
-								if ( peer.getPeerState() != PEPeer.TRANSFERING ){
+								int peer_state = peer.getPeerState();
+								
+								if ( 	peer_state != PEPeer.TRANSFERING &&
+										peer_state != PEPeer.CLOSING && 
+										peer_state != PEPeer.DISCONNECTED ){
 									
 									continue;
 								}
 								
 								if ( peer.isLANLocal()){
 									
-									continue;
+									if ( !AddressUtils.isExplicitLANRateLimitAddress( peer.getIp())){
+										
+										continue;
+									}
 								}
 								
 								PEPeerStats stats = peer.getStats();
@@ -655,18 +695,41 @@ GlobalManagerStatsImpl
 										
 										String cc = details.cc;
 			
-										long[] totals = updates.get( cc );
+										{
+											// global
+										 
+											long[] totals = updates.get( cc );
+											
+											if ( totals == null ){
+												
+												totals = new long[]{ diff_sent, diff_recv };
+												
+												updates.put( cc, totals );
+												
+											}else{
+											
+												totals[0] += diff_sent;
+												totals[1] += diff_recv;
+											}
+										}
 										
-										if ( totals == null ){
+										if ( dms != null ){
 											
-											totals = new long[]{ diff_sent, diff_recv };
+											// download specific
+										 
+											long[] totals = dms.updates.get( cc );
 											
-											updates.put( cc, totals );
+											if ( totals == null ){
+												
+												totals = new long[]{ diff_sent, diff_recv };
+												
+												dms.updates.put( cc, totals );
+												
+											}else{
 											
-										}else{
-										
-											totals[0] += diff_sent;
-											totals[1] += diff_recv;
+												totals[0] += diff_sent;
+												totals[1] += diff_recv;
+											}
 										}
 									}
 									
@@ -674,6 +737,11 @@ GlobalManagerStatsImpl
 									details.recv	= recv;
 								}
 							}
+						}
+						
+						for ( AggregateStatsDownloadWrapper dms: dms_list ){
+							
+							dms.updateComplete();
 						}
 						
 						long	total_diff_sent	= 0;
@@ -1176,6 +1244,21 @@ GlobalManagerStatsImpl
 		return( as_local_wrapper );
 	}
 	
+	@Override
+	public AggregateStats 
+	getAggregateLocalStats(
+		DownloadManager dm )
+	{
+		AggregateStats as =(AggregateStats)dm.getUserData( DOWNLOAD_DATA_KEY );
+		
+		if ( as == null ){
+			
+			Debug.out( "AggregateStats are null for " + dm.getDisplayName());
+		}
+		
+		return( as );
+	}
+	
 	private class
 	AggregateStatsWrapper
 		implements AggregateStats
@@ -1283,6 +1366,168 @@ GlobalManagerStatsImpl
 			}		
 		}
 	}
+	
+	private class
+	AggregateStatsDownloadWrapper
+		implements AggregateStats
+	{
+		private AtomicInteger					dl_country_details_seq		= new AtomicInteger();
+		private Map<String,CountryDetails>		dl_country_details 		= new ConcurrentHashMap<>();
+
+		private int		last_local_seq = -1;
+		
+		private Map<String,Map<String,long[]>>	as_local_latest = new HashMap<>();
+		
+			// working storage
+		
+		private Map<String,long[]>	updates = new HashMap<>();
+		
+		AggregateStatsDownloadWrapper()
+		{
+		}
+		
+		protected void
+		updateComplete()
+		{
+			try{
+				Set<CountryDetails>	updated = new HashSet<>();
+				
+				for ( Map.Entry<String,long[]> entry: updates.entrySet()){
+					
+					String	cc 		= entry.getKey();
+					long[]	totals 	= entry.getValue();
+						
+					long	diff_sent	= totals[0];
+					long	diff_recv	= totals[1];
+					
+					CountryDetailsImpl cd = (CountryDetailsImpl)dl_country_details.get( cc );
+					
+					if ( cd == null ){
+						
+						cd = new CountryDetailsImpl( cc );
+						
+						dl_country_details.put( cc, cd );
+					}
+					
+					updated.add( cd );
+					
+					if ( diff_sent > 0 ){
+					
+						cd.last_sent	= diff_sent;
+						cd.total_sent	+= diff_sent;
+	
+						cd.sent_average.update( diff_sent );
+						
+						//total_diff_sent += diff_sent;
+						
+					}else{
+						
+						cd.last_sent	= 0;
+						
+						cd.sent_average.update( diff_sent );
+					}
+					
+					if ( diff_recv > 0 ){
+						
+						cd.last_recv	= diff_recv;
+						cd.total_recv	+= diff_recv;
+	
+						cd.recv_average.update( diff_recv );
+						
+						//total_diff_recv += diff_recv;
+						
+					}else{
+						
+						cd.last_recv	= 0;
+						
+						cd.recv_average.update( diff_recv );
+					}
+				}
+				
+				for ( CountryDetails cd: dl_country_details.values()){
+					
+					if ( !updated.contains( cd )){
+						
+						CountryDetailsImpl cdi = (CountryDetailsImpl)cd;
+						
+						cdi.last_recv 	= 0;
+						cdi.last_sent	= 0;
+						
+						cdi.recv_average.update( 0 );
+						cdi.sent_average.update( 0 );
+					}
+				}
+				
+				dl_country_details_seq.incrementAndGet();
+				
+			}finally{
+				
+				updates.clear();
+			}
+		}
+		
+		public int
+		getSamples()
+		{
+			return( -1 );
+		}
+		
+		public int
+		getEstimatedPopulation()
+		{
+			return( -1 );		
+		}
+		
+		public int
+		getSequence()
+		{
+			int seq = dl_country_details_seq.get();
+			
+			if ( seq != last_local_seq ){
+				
+				Iterator<CountryDetails> it = dl_country_details.values().iterator();
+				
+				Map<String,Map<String,long[]>> my_sample = new HashMap<>();
+				
+				Map<String,long[]>	my_stats = new HashMap<>();
+				
+				my_sample.put( country_my_cc, my_stats );
+				
+				while( it.hasNext()){
+				
+					CountryDetails cd = it.next();
+					
+					my_stats.put( cd.getCC(), new long[]{ cd.getAverageReceived(), cd.getAverageSent(), cd.getTotalReceived(), cd.getTotalSent() } );
+				}
+				
+				as_local_latest	= my_sample;
+						
+				last_local_seq = seq;
+			}
+			
+			return( seq );	
+		}
+		
+		public long
+		getLatestReceived()
+		{
+			return( -1 );		
+		}
+		
+		public long
+		getLatestSent()
+		{
+			return( -1 );		
+		}
+		
+		public Map<String,Map<String,long[]>>
+		getStats()
+		{
+			
+			return( as_local_latest );	
+		}
+	}
+	
 	
 	private static class
 	AggregateStatsImpl

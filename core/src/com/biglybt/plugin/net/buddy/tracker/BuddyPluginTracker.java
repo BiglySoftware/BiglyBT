@@ -437,7 +437,7 @@ BuddyPluginTracker
 
 						if ( lan && !peer.isLANLocal()){
 
-							AddressUtils.addLANRateLimitAddress( ip );
+							AddressUtils.addExplicitLANRateLimitAddress( ip );
 
 							peer.resetLANLocalStatus();
 						}
@@ -762,7 +762,7 @@ outer:
 										
 					InetSocketAddress isa = AddressUtils.getSocketAddress( pb.getIP());
 					
-					AddressUtils.addLANRateLimitAddress( isa );
+					AddressUtils.addExplicitLANRateLimitAddress( isa );
 					
 					if ( !peer.isLANLocal()){
 					
@@ -872,7 +872,7 @@ outer:
 				
 				InetSocketAddress isa = AddressUtils.getSocketAddress( pb.getIP());
 
-				AddressUtils.removeLANRateLimitAddress( isa );
+				AddressUtils.removeExplicitLANRateLimitAddress( isa );
 			}
 		}catch( Throwable e ){
 			
@@ -970,7 +970,7 @@ outer:
 					
 					InetSocketAddress isa = AddressUtils.getSocketAddress( pb.getIP());
 
-					AddressUtils.removeLANRateLimitAddress( isa );
+					AddressUtils.removeExplicitLANRateLimitAddress( isa );
 					
 					peer.resetLANLocalStatus();
 				}

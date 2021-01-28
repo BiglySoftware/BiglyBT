@@ -1038,7 +1038,7 @@ ClientInstanceManagerImpl
 
 	@Override
 	public void
-	addLANAddress(InetSocketAddress isa)
+	addExplicitLANAddress(InetSocketAddress isa)
 	{
 		if ( isa.getPort() != 0 ){
 			
@@ -1049,8 +1049,16 @@ ClientInstanceManagerImpl
 	}
 
 	@Override
+	public boolean 
+	isExplicitLANAddress(
+		InetSocketAddress isa )
+	{
+		return( explicit_addresses.contains( isa ));
+	}
+	
+	@Override
 	public void 
-	removeLANAddress(InetSocketAddress isa)
+	removeExplicitLANAddress(InetSocketAddress isa)
 	{
 		if ( isa.getPort() != 0 ){
 			

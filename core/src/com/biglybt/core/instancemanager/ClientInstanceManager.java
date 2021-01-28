@@ -76,13 +76,17 @@ ClientInstanceManager
 		throws PatternSyntaxException;
 
 	public void
-	addLANAddress(
+	addExplicitLANAddress(
 		InetSocketAddress	address );
 
 	public void
-	removeLANAddress(
+	removeExplicitLANAddress(
 		InetSocketAddress	address );
 
+	public boolean
+	isExplicitLANAddress(
+		InetSocketAddress	address );
+	
 	public boolean
 	getIncludeWellKnownLANs();
 

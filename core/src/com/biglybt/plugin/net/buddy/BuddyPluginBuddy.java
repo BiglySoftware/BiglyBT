@@ -2032,7 +2032,7 @@ BuddyPluginBuddy
 	{
 		if ( plugin_network.getPeersAreLANLocal()){
 
-			AddressUtils.addLANRateLimitAddress( address );
+			AddressUtils.addExplicitLANRateLimitAddress( address );
 		}
 	}
 	
@@ -2489,7 +2489,7 @@ BuddyPluginBuddy
 
 		if ( ip != null ){
 
-			AddressUtils.removeLANRateLimitAddress( ip );
+			AddressUtils.removeExplicitLANRateLimitAddress( ip );
 		}
 	}
 

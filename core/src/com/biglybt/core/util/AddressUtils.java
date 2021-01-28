@@ -59,7 +59,7 @@ AddressUtils
 			});
 	}
 
-	private static ClientInstanceManager instance_manager;
+	private static volatile ClientInstanceManager instance_manager;
 
 	private static ClientInstanceManager
 	getInstanceManager()
@@ -308,7 +308,7 @@ AddressUtils
 
 	
 	public static void
-	addLANRateLimitAddress(
+	addExplicitLANRateLimitAddress(
 		InetSocketAddress		address )
 	{
 		synchronized( pending_addresses ){
@@ -341,7 +341,7 @@ AddressUtils
 											for ( InetSocketAddress address : pending_addresses ){
 
 												try{
-													im.addLANAddress( address );
+													im.addExplicitLANAddress( address );
 
 												}catch( Throwable e ){
 
@@ -360,26 +360,65 @@ AddressUtils
 				}
 			}else{
 
-				im.addLANAddress( address );
+				im.addExplicitLANAddress( address );
 			}
 		}
 	}
 
+	public static boolean
+	isExplicitLANRateLimitAddress(
+		InetSocketAddress	address )
+	{
+		synchronized( pending_addresses ){
+			
+			if ( pending_addresses.contains( address )){
+				
+				return( true );
+				
+			}else{
+				
+				ClientInstanceManager im = getInstanceManager();
+
+				if ( im != null && im.isInitialized()){
+
+					return( im.isExplicitLANAddress( address ));
+					
+				}else{
+					
+					return( false );
+				}
+			}
+		}
+	}
+	
+	public static boolean
+	isExplicitLANRateLimitAddress(
+		String 	ip )
+	{
+		try{
+			return( isExplicitLANRateLimitAddress( getSocketAddress( ip )));
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+			return( false );
+		}
+	}
+	
 	public static void
-	removeLANRateLimitAddress(
+	removeExplicitLANRateLimitAddress(
 			InetSocketAddress		address )
 	{
 		synchronized( pending_addresses ){
 
+			pending_addresses.remove( address );
+
 			ClientInstanceManager im = getInstanceManager();
 
-			if ( im == null || !im.isInitialized()){
+			if ( im != null && im.isInitialized()){
 
-				pending_addresses.remove( address );
-
-			}else{
-
-				im.removeLANAddress( address );
+				im.removeExplicitLANAddress( address );
 			}
 		}
 	}

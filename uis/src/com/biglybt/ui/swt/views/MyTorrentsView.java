@@ -3316,6 +3316,9 @@ public class MyTorrentsView
 
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
 				LoggerView.MSGID_PREFIX, null, LoggerView.class));
+		
+		vm.registerView(Download.class, new UISWTViewBuilderCore(
+				DownloadXferStatsView.MSGID_PREFIX, null, DownloadXferStatsView.class));
 
 		vm.setCoreViewsRegistered(Download.class);
 	}

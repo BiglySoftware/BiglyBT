@@ -23,6 +23,7 @@ package com.biglybt.core.global;
 import java.net.InetAddress;
 import java.util.*;
 
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.CopyOnWriteList;
 
 /**
@@ -194,4 +195,8 @@ GlobalManagerStats
 	
 	public AggregateStats
 	getAggregateLocalStats();
+	
+	public AggregateStats
+	getAggregateLocalStats(
+		DownloadManager		dm );
 }
