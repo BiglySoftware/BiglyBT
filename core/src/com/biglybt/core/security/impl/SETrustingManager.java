@@ -10,6 +10,7 @@ import javax.net.ssl.X509TrustManager;
 
 public class
 SETrustingManager
+//noinspection newapi Instantiation is try/catched and there's a fallback
         extends X509ExtendedTrustManager {
     private X509TrustManager delegate;
 

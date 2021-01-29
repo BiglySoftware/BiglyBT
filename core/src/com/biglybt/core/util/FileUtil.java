@@ -119,6 +119,7 @@ public class FileUtil {
 		 
 		  		// on Windows we get a true if they differ in case :(
 		  
+//noinspection newapi: L$r8$backportedMethods$utility$Objects$2$equals;->equals(Ljava/lang/Object;Ljava/lang/Object;)Z
 	    	if ( 	Objects.equals(f1.getParent(), f2.getParent()) &&
 	    			!f1.getName().equals( f2.getName()) && 
 	    			f1.getName().equalsIgnoreCase( f2.getName())){

@@ -181,6 +181,7 @@ UIManagerImpl
 	destroy(
 		final BasicPluginViewModel		model )
 	{
+		//noinspection newapi: desguared to Lj$/util/Map$-EL;->remove(Ljava/util/Map;Ljava/lang/Object;Ljava/lang/Object;)Z
 		view_model_map.remove(getBasicPluginViewModelKey(model), model);
 		fireEvent( pi, UIManagerEvent.ET_PLUGIN_VIEW_MODEL_DESTROYED, model );
 	}
