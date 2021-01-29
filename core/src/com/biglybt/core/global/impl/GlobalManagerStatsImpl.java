@@ -604,8 +604,17 @@ GlobalManagerStatsImpl
 								removed_peers.clear();
 							}
 						}
+
+						List<AggregateStatsDownloadWrapper>	dms_complete = new ArrayList<>( all_dms.size());
 						
 						for ( DownloadManager dm: all_dms ){
+							
+							AggregateStatsDownloadWrapper as = (AggregateStatsDownloadWrapper)dm.getUserData( DOWNLOAD_DATA_KEY );
+
+							if ( as != null ){
+							
+								dms_complete.add( as );
+							}
 							
 							PEPeerManager pm = dm.getPeerManager();
 							
@@ -614,9 +623,7 @@ GlobalManagerStatsImpl
 								List<PEPeer> peers = pm.getPeers();
 								
 								if ( !peers.isEmpty()){
-										
-									AggregateStatsDownloadWrapper as = (AggregateStatsDownloadWrapper)dm.getUserData( DOWNLOAD_DATA_KEY );
-									
+																			
 									dms_list.add( as );
 									
 									peer_lists.add( peers );
@@ -739,7 +746,7 @@ GlobalManagerStatsImpl
 							}
 						}
 						
-						for ( AggregateStatsDownloadWrapper dms: dms_list ){
+						for ( AggregateStatsDownloadWrapper dms: dms_complete ){
 							
 							dms.updateComplete();
 						}
@@ -1293,7 +1300,6 @@ GlobalManagerStatsImpl
 				return( -1 );
 			}else{
 				return( as_remote_latest.getEstimatedPopulation());
-
 			}		
 		}
 		
@@ -1371,8 +1377,8 @@ GlobalManagerStatsImpl
 	AggregateStatsDownloadWrapper
 		implements AggregateStats
 	{
-		private AtomicInteger					dl_country_details_seq		= new AtomicInteger();
-		private Map<String,CountryDetails>		dl_country_details 		= new ConcurrentHashMap<>();
+		private AtomicInteger						dl_country_details_seq		= new AtomicInteger();
+		private Map<String,CountryDetailsImpl>		dl_country_details 		= new ConcurrentHashMap<>();
 
 		private int		last_local_seq = -1;
 		
@@ -1382,6 +1388,8 @@ GlobalManagerStatsImpl
 		
 		private Map<String,long[]>	updates = new HashMap<>();
 		
+		private boolean	inactive;
+		
 		AggregateStatsDownloadWrapper()
 		{
 		}
@@ -1389,6 +1397,41 @@ GlobalManagerStatsImpl
 		protected void
 		updateComplete()
 		{
+			if ( updates.isEmpty()){
+				
+				if ( !inactive ){
+					
+					boolean has_active = false;
+					
+					for ( CountryDetailsImpl cd: dl_country_details.values()){
+					
+						cd.last_recv 	= 0;
+						cd.last_sent	= 0;
+						
+						if ( cd.recv_average.update( 0 ) != 0 ){
+							
+							has_active = true;
+						}
+						
+						if ( cd.sent_average.update( 0 ) != 0 ){
+							
+							has_active = true;
+						}
+					}
+					
+					if ( !has_active ){
+						
+						inactive = true;
+					}
+					
+					dl_country_details_seq.incrementAndGet();
+				}
+				
+				return;
+			}
+			
+			inactive = false;
+			
 			try{
 				Set<CountryDetails>	updated = new HashSet<>();
 				
@@ -1485,7 +1528,7 @@ GlobalManagerStatsImpl
 			
 			if ( seq != last_local_seq ){
 				
-				Iterator<CountryDetails> it = dl_country_details.values().iterator();
+				Iterator<CountryDetailsImpl> it = dl_country_details.values().iterator();
 				
 				Map<String,Map<String,long[]>> my_sample = new HashMap<>();
 				
