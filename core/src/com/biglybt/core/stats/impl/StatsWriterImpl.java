@@ -532,6 +532,7 @@ StatsWriterImpl
 	formatDate(
 		long	millis )
 	{
+		//noinspection newapi: Desguared via j$/time/format/DateTimeFormatter, etc
 		return( DateTimeFormatter.ISO_LOCAL_DATE_TIME.format( new Date( millis ).toInstant().atZone( ZoneId.systemDefault())));
 	}
 	

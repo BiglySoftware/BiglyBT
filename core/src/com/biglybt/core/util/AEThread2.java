@@ -20,7 +20,8 @@
 
 package com.biglybt.core.util;
 
-import java.util.concurrent.ConcurrentLinkedDeque;
+import com.biglybt.util.ConcurrentLinkedDeque;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
 
