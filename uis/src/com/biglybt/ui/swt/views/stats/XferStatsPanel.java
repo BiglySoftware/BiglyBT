@@ -26,6 +26,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 
 import java.util.*;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
@@ -38,13 +39,16 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.util.DisplayFormatters;
 
 
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.views.PeersViewBase;
 
 
 public class
@@ -211,6 +215,95 @@ XferStatsPanel
 			@Override
 			public void mouseUp(MouseEvent event) {
 				scale.mouseUp( event );
+				
+				if ( event.button == 3 ){
+					
+					Menu menu = canvas.getMenu();
+
+    				if ( menu != null && !menu.isDisposed()){
+
+    					menu.dispose();
+    				}
+
+    				Node closest = null;
+
+    	    		int		closest_distance = Integer.MAX_VALUE;
+
+    	    		int x = event.x;
+    	    		int y = event.y;
+    	    		
+    	    		for ( Object[] entry: currentPositions ){
+
+    	       			int		e_x = (Integer)entry[0];
+    	     			int		e_y = (Integer)entry[1];
+
+    	       			long	x_diff = x - e_x;
+    	       			long	y_diff = y - e_y;
+
+    	       			int distance = (int)Math.sqrt( x_diff*x_diff + y_diff*y_diff );
+
+    	       			if ( distance < closest_distance ){
+
+    	       				closest_distance 	= distance;
+    	       				closest				= (Node)entry[2];
+    	       			}
+    	    		}
+
+    	    		if ( closest_distance <= 30 ){
+    	    			
+	    				menu = new Menu( canvas );
+			    				
+	    				SpeedLimitHandler slh = SpeedLimitHandler.getSingleton(CoreFactory.getSingleton());
+	    				
+	    				List<SpeedLimitHandler.PeerSet> peer_sets = slh.getPeerSets();
+	    				
+	    				boolean	has_auto = false;
+	    				
+	    				String target_cc	= closest.cc;
+	    				
+	    				String target_name = target_cc + " " + MessageText.getString( "TableColumn.header.peers" );
+	    				
+	    				for ( SpeedLimitHandler.PeerSet peer_set: peer_sets ){
+	    				
+	    					if ( peer_set.getName().equals( target_name )){
+	    						
+	    						has_auto = true;
+	    					}
+	    				}
+	    				
+	    				if ( has_auto ){
+	    					
+	    					MenuItem edit_slh_item = new MenuItem( menu, SWT.PUSH );
+	    					
+	    					Messages.setLanguageText( edit_slh_item, "menu.edit.peer.set.config");
+	    			
+	    					edit_slh_item.addListener(
+	    						SWT.Selection,
+	    						(e)->{
+	    							Utils.editSpeedLimitHandlerConfig( slh );
+	    						});
+	    					
+	    				}else{
+	    					
+	    					MenuItem auto_cat_item = new MenuItem( menu, SWT.PUSH );
+	    					
+	    					Messages.setLanguageText( auto_cat_item, "menu.add.peerset.for.cc", getCCString( target_cc ));
+	    			
+	    					auto_cat_item.addListener(
+	    						SWT.Selection,
+	    						(e)->{
+	    							slh.addConfigLine( "peer_set " + target_name + "=" + target_cc + ",group=" + MessageText.getString( "TableColumn.header.Country" ) , true );
+	    						});
+	    				}
+	    					    				
+						final Point cursorLocation = Display.getCurrent().getCursorLocation();
+	
+						menu.setLocation( cursorLocation.x, cursorLocation.y );
+	
+	    				menu.setVisible( true );
+    	    		}
+				}
+				
 				refresh();
 			}
 			@Override
@@ -585,6 +678,8 @@ XferStatsPanel
 			float	lhs = scale.getMinX();
 			float	rhs = scale.getMaxX() - flag_width -10;
 				
+			boolean hide_nodes = origins.size() > 1;
+			
 			for ( int i=0;i<3;i++){
 				
 				int flag_x 	= (int)( -1000 + scale.getReverseHeight( 5 ));
@@ -608,7 +703,24 @@ XferStatsPanel
 				}else{
 					
 					nodes 	= origins;
-					flag_y	= -flag_height/2;
+					
+					if ( dests_recv.isEmpty() && dests_sent.isEmpty()){
+						
+						flag_y	= -flag_height/2;
+						
+					}else if ( dests_recv.isEmpty()){
+						
+						flag_y	= (int)( -1000 + text_height );
+						
+					}else if ( dests_sent.isEmpty()){
+						
+						flag_y	= (int)( 1000 - flag_height - text_height - scale.getReverseHeight( 5 ));
+						
+					}else{
+						
+						flag_y	= -flag_height/2;
+					}
+					
 					odd		= true;
 				}
 		
@@ -631,8 +743,8 @@ XferStatsPanel
 					pad = 0;
 					
 				}else{
-				
-					pad = (int)((( rhs - lhs) - nodes.size() * 2 * flag_width ) / 2 );
+									
+					pad = (int)((( lhs + 2000 ) -  ( nodes.size() * 2 * flag_width ) / 2 ));
 				}
 				
 				for ( Node node: nodes ){
@@ -643,10 +755,17 @@ XferStatsPanel
 					if ( 	node.x_pos > rhs || 
 							node.x_pos < lhs ){
 						
-						node.hidden = true;
+						if ( hide_nodes ){
 						
-						flag_x += flag_width;
-										
+							node.hidden = true;
+							
+							flag_x += flag_width;
+							
+						}else{
+							
+							flag_x += flag_width * 2;
+						}
+						
 					}else{
 														
 						flag_x += flag_width * 2;
@@ -759,6 +878,30 @@ XferStatsPanel
 		{
 			img.dispose();
 		}
+	}
+	
+	private String
+	getCCString(
+		String		cc )
+	{
+		String str = cc;
+		
+		try{
+			Locale country_locale = new Locale( "", cc );
+
+			country_locale.getISO3Country();
+			
+			String name = country_locale.getDisplayCountry( Locale.getDefault());
+			
+			if ( name != null && !name.isEmpty()){
+				
+				str = name + " (" + cc + ")";
+			}
+			
+		}catch( Throwable e ){				
+		}
+		
+		return( str );
 	}
 	
 	private class
@@ -1015,22 +1158,7 @@ XferStatsPanel
 		private String
 		getToolTip()
 		{
-			String tt = cc;
-						
-			try{
-				Locale country_locale = new Locale( "", cc );
-
-				country_locale.getISO3Country();
-				
-				String name = country_locale.getDisplayCountry( Locale.getDefault());
-				
-				if ( name != null && !name.isEmpty()){
-					
-					tt = name + " (" + cc + ")";
-				}
-				
-			}catch( Throwable e ){				
-			}
+			String tt = getCCString( cc );
 			
 			if ( type == 0 ){
 				

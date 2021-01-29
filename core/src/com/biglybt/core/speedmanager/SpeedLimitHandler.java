@@ -1102,6 +1102,8 @@ SpeedLimitHandler
 					boolean intf_pattern_inverse	= false;
 					boolean asn_pattern_inverse		= false;
 					
+					String group	= null;
+					
 					PeerSet set = null;
 
 					for ( String arg: args ){
@@ -1195,6 +1197,10 @@ SpeedLimitHandler
 									
 									throw( new Exception( "Invalid asn pattern - '" + rhs + "'" ));
 								}
+							}else if ( lc_lhs.equals( "group" )){
+
+								group = rhs;
+								
 							}else{
 
 								String name = lhs;
@@ -1256,7 +1262,7 @@ SpeedLimitHandler
 							inverse, up_lim, down_lim, peer_up_lim, peer_down_lim, categories_or_tags, 
 							client_pattern, client_pattern_inverse, 
 							intf_pattern, intf_pattern_inverse,
-							asn_pattern, asn_pattern_inverse );
+							asn_pattern, asn_pattern_inverse, group );
 
 				}catch( Throwable e ){
 
@@ -2279,7 +2285,7 @@ SpeedLimitHandler
 										try{
 											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
 											
-											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern, false, null, false, null, false );
+											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern, false, null, false, null, false, null );
 											
 											set.addCIDRorCCetc( "all" );
 												
@@ -2312,7 +2318,7 @@ SpeedLimitHandler
 										try{
 											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
 											
-											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), null, false, pattern, false, null, false );
+											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), null, false, pattern, false, null, false, null );
 											
 											set.addCIDRorCCetc( "all" );
 												
@@ -2980,6 +2986,10 @@ SpeedLimitHandler
 					if ( details != null && details.length > 0 ){
 
 						peer_cc = details[0];
+						
+					}else{
+						
+						peer_cc = "??";
 					}
 				}
 
@@ -5703,7 +5713,8 @@ SpeedLimitHandler
 			Pattern			_intf_pattern,
 			boolean			_intf_pattern_inverse,
 			Pattern			_asn_pattern,
-			boolean			_asn_pattern_inverse )
+			boolean			_asn_pattern_inverse,
+			String			_group )
 		{
 			inverse	= _inverse;
 
@@ -5732,7 +5743,7 @@ SpeedLimitHandler
 			client_pattern_inverse	= _client_pattern_inverse;
 			intf_pattern_inverse	= _intf_pattern_inverse;
 			asn_pattern_inverse		= _asn_pattern_inverse;
-			
+						
 			if ( client_pattern != null && client_pattern.pattern().equals( "auto" )){
 				
 				setGroup( MessageText.getString( "Peers.column.client" ) + "_" + MessageText.getString( "wizard.maketorrent.auto" ));
@@ -5740,6 +5751,10 @@ SpeedLimitHandler
 			}else if ( intf_pattern != null && intf_pattern.pattern().equals( "auto" )){
 				
 				setGroup( MessageText.getString( "label.interface.short" ) + "_" + MessageText.getString( "wizard.maketorrent.auto" ));
+				
+			}else if ( _group != null ){
+				
+				setGroup( _group );
 			}
 		}
 
@@ -5914,7 +5929,7 @@ SpeedLimitHandler
 			networks.addAll( other.networks );
 		}
 
-		private String
+		public String
 		getName()
 		{
 			return( name );
