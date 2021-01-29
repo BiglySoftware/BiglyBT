@@ -41,7 +41,6 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 
 
@@ -66,11 +65,6 @@ XferStatsPanel
 	private Scale scale	 = new Scale();
 
 	private boolean	button1_selected;
-	
-	private boolean mouseLeftDown = false;
-	private boolean mouseRightDown = false;
-	private int xDown;
-	private int yDown;
 
 	private Image img;
 
@@ -211,21 +205,12 @@ XferStatsPanel
 
 			@Override
 			public void mouseDown(MouseEvent event) {
-				if(event.button == 1) mouseLeftDown = true;
-				if(event.button == 3) mouseRightDown = true;
-				xDown = event.x;
-				yDown = event.y;
-				scale.saveMinX = scale.minX;
-				scale.saveMaxX = scale.maxX;
-				scale.saveMinY = scale.minY;
-				scale.saveMaxY = scale.maxY;
-				scale.saveRotation = scale.rotation;
+				scale.mouseDown( event );
 			}
 
 			@Override
 			public void mouseUp(MouseEvent event) {
-				if(event.button == 1) mouseLeftDown = false;
-				if(event.button == 3) mouseRightDown = false;
+				scale.mouseUp( event );
 				refresh();
 			}
 			@Override
@@ -244,37 +229,11 @@ XferStatsPanel
 		canvas.addListener(SWT.MouseWheel, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				// System.out.println(event.count);
-				scale.saveMinX = scale.minX;
-				scale.saveMaxX = scale.maxX;
-				scale.saveMinY = scale.minY;
-				scale.saveMaxY = scale.maxY;
-
-				int deltaY = event.count * -5;
-				// scaleFactor>1 means zoom in, this happens when
-				// deltaY<0 which happens when the mouse is moved up.
-				float scaleFactor = 1 - (float) deltaY / 300;
-				if(scaleFactor <= 0) scaleFactor = 0.01f;
-
-				// Scalefactor of e.g. 3 makes elements 3 times larger
-				float moveFactor = 1 - 1/scaleFactor;
-
-				Canvas canvas = ((Canvas) event.widget);
-				Point canvasSize = canvas.getSize();
-				// event.x, event.y are relative to control
-				float mouseXpct = (event.x + 1) / (float) canvasSize.x;
-				float mouseYpct = (event.y + 1) / (float) canvasSize.y;
-				float xOfs = (mouseXpct - 0.5f) * (scale.saveMaxX - scale.saveMinX);
-				float yOfs = (mouseYpct - 0.5f) * (scale.saveMaxY - scale.saveMinY);
-
-				float centerX = ((scale.saveMinX + scale.saveMaxX)/2) + xOfs;
-				scale.minX = scale.saveMinX + moveFactor * (centerX - scale.saveMinX);
-				scale.maxX = scale.saveMaxX - moveFactor * (scale.saveMaxX - centerX);
-
-				float centerY = (scale.saveMinY + scale.saveMaxY)/2 + yOfs;
-				scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
-				scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
-				refresh();
+				
+					// zooming doesn't work properly as the stats canvas adapts to zoom to keep flag spacing
+					/// etc. the same
+				//scale.mouseWheel(event);
+				//refresh();
 			}
 		});
 
@@ -282,60 +241,7 @@ XferStatsPanel
 			@Override
 			public void mouseMove(MouseEvent event) {
 				
-				if(mouseLeftDown && (event.stateMask & SWT.MOD4) == 0) {
-					int deltaX = event.x - xDown;
-					int deltaY = event.y - yDown;
-					float width = scale.width;
-					float height = scale.height;
-					float ratioX = (scale.saveMaxX - scale.saveMinX) / width;
-					float ratioY = (scale.saveMaxY - scale.saveMinY) / height;
-					float realDeltaX = deltaX * ratioX;
-					float realDeltaY  = deltaY * ratioY;
-					scale.minX = scale.saveMinX - realDeltaX;
-					scale.maxX = scale.saveMaxX - realDeltaX;
-					scale.minY = scale.saveMinY - realDeltaY;
-					scale.maxY = scale.saveMaxY - realDeltaY;
-					requestRefresh();
-				}
-				if(mouseRightDown || (mouseLeftDown && (event.stateMask & SWT.MOD4) > 0)) {
-					int deltaX = event.x - xDown;
-					int deltaY = event.y - yDown;
-					int diffX = Math.abs(deltaX);
-					int diffY = Math.abs(deltaY);
-					// Don't start rotating until a few px movement.  Helps when
-					// user just wants to zoom (move up/down) or rotate (move left/right) 
-					// and doesn't have steady hand
-					if (diffY > diffX && diffX <= 3) {
-						deltaX = 0;
-					}
-					if (diffY > diffX && diffY <= 3) {
-						deltaY = 0;
-					}
-					scale.rotation = scale.saveRotation - (float) deltaX / 100;
-
-					// scaleFactor>1 means zoom in, this happens when
-					// deltaY<0 which happens when the mouse is moved up.
-					float scaleFactor = 1 - (float) deltaY / 300;
-					if(scaleFactor <= 0) scaleFactor = 0.01f;
-
-					// Scalefactor of e.g. 3 makes elements 3 times larger
-					float moveFactor = 1 - 1/scaleFactor;
-
-					Canvas canvas = ((Canvas) event.widget);
-					Point canvasSize = canvas.getSize();
-					// event.x, event.y are relative to control
-					float mouseXpct = (xDown + 1) / (float) canvasSize.x;
-					float mouseYpct = (yDown + 1) / (float) canvasSize.y;
-					float xOfs = (mouseXpct - 0.5f) * (scale.saveMaxX - scale.saveMinX);
-					float yOfs = (mouseYpct - 0.5f) * (scale.saveMaxY - scale.saveMinY);
-
-					float centerX = (scale.saveMinX + scale.saveMaxX)/2 + xOfs;
-					scale.minX = scale.saveMinX + moveFactor * (centerX - scale.saveMinX);
-					scale.maxX = scale.saveMaxX - moveFactor * (scale.saveMaxX - centerX);
-
-					float centerY = (scale.saveMinY + scale.saveMaxY)/2 + yOfs;
-					scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
-					scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
+				if ( scale.mouseMove( event )){
 					requestRefresh();
 				}
 			}
@@ -497,8 +403,7 @@ XferStatsPanel
 			return;
 		}
 
-		scale.width 	= size.width;
-		scale.height 	= size.height;
+		scale.setSize( size );
 
 		boolean needNewImage = img == null || img.isDisposed();
 		if (!needNewImage) {
@@ -677,8 +582,8 @@ XferStatsPanel
 			List<Node>	dests_recv = new ArrayList<>( dest_recv_map.values());
 			List<Node>	dests_sent = new ArrayList<>( dest_sent_map.values());
 			
-			float	lhs = scale.minX;
-			float	rhs = scale.maxX - flag_width -10;
+			float	lhs = scale.getMinX();
+			float	rhs = scale.getMaxX() - flag_width -10;
 				
 			for ( int i=0;i<3;i++){
 				
