@@ -35,16 +35,14 @@ For code portability and easy merging it is strongly advised to use JDK features
 covered by the minimum Android SDK level. 
 The currently minimum SDK level is `15` (Android 4.0.3 - Ice Cream Sandwich)
 
-Generally, Android embraces the Java 7 API as well as a subset of Java 8 features.
+Generally, Android embraces the Java 7 API as well as a growing subset of Java 8+ features.
 
-Please consult the [Android API](https://developer.android.com/reference/packages) for details on API levels.
+The supported subset of Java 8+ features are listed at [Use  Java 8 language features and APIs](https://developer.android.com/studio/write/java8-support) and [Java 8+ APIs available through desugaring](https://developer.android.com/studio/write/java8-support-table)
 
 
 ### Known limitations and restrictions
 
- * `java.lang.Long#compare(long, long)` - android level 19 (restricted)
- * `try-with-resources` - android level 19 (restricted)
+ * `java.nio.file.*` - android level 26
  * `java.nio.charset.StandardCharsets` - android level 19 (restricted)
- * `java.util.stream`, `java.util.function` etc - android level 24+ (unsupported)
-
+ * `java.util.Locale.Builder` - android level 21
 
