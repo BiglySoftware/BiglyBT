@@ -788,18 +788,7 @@ ShareHosterPlugin
 			try{
 				download_being_removed	= dl;
 
-					// the resource has gone! stop torrent if running to permit
-					// deletion
-
-				try{
-					dl.stop();
-
-				}catch( Throwable e ){
-
-					// ignore this as it might already be stopped
-				}
-
-				dl.remove();
+				dl.stopAndRemove(false, false);
 
 			}catch( Throwable e ){
 

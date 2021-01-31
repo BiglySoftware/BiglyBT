@@ -797,20 +797,31 @@ DownloadImpl
 				dl_state == DownloadManager.STATE_ERROR 	||
 				dl_state == DownloadManager.STATE_QUEUED ){
 
-			GlobalManager globalManager = download_manager.getGlobalManager();
-
-			try{
-
-				globalManager.removeDownloadManager(download_manager, delete_torrent, delete_data);
-
-			}catch( GlobalManagerDownloadRemovalVetoException e ){
-
-				throw( new DownloadRemovalVetoException( e.getMessage()));
-			}
+			stopAndRemove(delete_torrent, delete_data);
 
 		}else{
 
 			throw( new DownloadRemovalVetoException( MessageText.getString("plugin.download.remove.veto.notstopped")));
+		}
+	}
+
+	@Override
+	public void
+	stopAndRemove(
+		boolean	delete_torrent,
+		boolean	delete_data )
+
+		throws DownloadException, DownloadRemovalVetoException
+	{
+		GlobalManager gm = download_manager.getGlobalManager();
+
+		try {
+
+			gm.removeDownloadManager(download_manager, delete_torrent, delete_data);
+
+		} catch (GlobalManagerDownloadRemovalVetoException e) {
+
+			throw (new DownloadRemovalVetoException(e.getMessage()));
 		}
 	}
 

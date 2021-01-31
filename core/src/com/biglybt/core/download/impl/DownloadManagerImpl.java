@@ -2274,6 +2274,14 @@ DownloadManagerImpl
 	public void
 	initialize()
 	{
+		if (isDestroyed()) {
+			if (Logger.isEnabled()) {
+				Logger.log(new LogEvent(this, LogIDs.CORE, LogEvent.LT_ERROR,
+						"Initialize called after destroyed"));
+			}
+			return;
+		}
+
 	  	// entry:  valid if waiting, stopped or queued
 	  	// exit: error, ready or on the way to error
 

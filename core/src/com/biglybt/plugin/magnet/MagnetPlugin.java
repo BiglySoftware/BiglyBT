@@ -785,13 +785,7 @@ MagnetPlugin
 							for ( Download download: to_delete ){
 	
 								try{
-									download.stop();
-	
-								}catch( Throwable e ){
-								}
-	
-								try{
-									download.remove( true, true );
+									download.stopAndRemove( true, true );
 	
 								}catch( Throwable e ){
 	

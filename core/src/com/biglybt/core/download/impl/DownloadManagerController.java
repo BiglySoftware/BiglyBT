@@ -319,6 +319,14 @@ DownloadManagerController
 
 		try{
 			control_mon.enter();
+			
+			if (download_manager.isDestroyed()) {
+				if (Logger.isEnabled()) {
+					Logger.log(new LogEvent(this, LogIDs.CORE, LogEvent.LT_ERROR,
+							"startDownload() after manager is destroyed"));
+				}
+				return;
+			}
 
 			if ( getState() != DownloadManager.STATE_READY ){
 

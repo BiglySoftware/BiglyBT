@@ -489,6 +489,12 @@ LWSDownload
 	}
 
 	@Override
+	public void stopAndRemove(boolean delete_torrent, boolean delete_data)
+			throws DownloadException, DownloadRemovalVetoException {
+		throw (new DownloadRemovalVetoException("no way"));
+	}
+
+	@Override
 	public boolean
 	isRemoved()
 	{

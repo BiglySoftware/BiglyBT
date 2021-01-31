@@ -1001,13 +1001,7 @@ MagnetPluginMDDownloader
 					}
 					
 					try{
-						download.stop();
-
-					}catch( Throwable e ){
-					}
-
-					try{
-						download.remove();
+						download.stopAndRemove(false, false);
 
 					}catch( Throwable e ){
 

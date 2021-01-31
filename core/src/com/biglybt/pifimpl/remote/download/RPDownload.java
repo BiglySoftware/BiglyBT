@@ -234,6 +234,19 @@ RPDownload
 
 			return( null );
 
+		}else if ( method.equals( "stopAndRemove")){
+
+			try{
+				Object[] params = request.getParams();
+				delegate.stopAndRemove((Boolean) params[0], (Boolean) params[1]);
+
+			}catch( Throwable e ){
+
+				return( new RPReply(e));
+			}
+
+			return( null );
+
 		}else if ( method.equals( "setForceStart[boolean]")){
 
 			boolean	b = ((Boolean)request.getParams()[0]).booleanValue();
@@ -495,6 +508,33 @@ RPDownload
 	{
 		try{
 			_dispatcher.dispatch( new RPRequest( this, "remove", null )).getResponse();
+
+		}catch( RPException e ){
+
+			Throwable cause = e.getCause();
+
+			if ( cause instanceof DownloadException ){
+
+				throw((DownloadException)cause);
+			}
+
+			if ( cause instanceof DownloadRemovalVetoException ){
+
+				throw((DownloadRemovalVetoException)cause);
+			}
+
+			throw( e );
+		}
+	}
+
+	@Override
+	public void stopAndRemove(boolean delete_torrent, boolean delete_data)
+		throws DownloadException, DownloadRemovalVetoException
+	{
+		try{
+			_dispatcher.dispatch( new RPRequest( this, "stopAndRemove", new Object[] {
+				delete_torrent, delete_data
+			} )).getResponse();
 
 		}catch( RPException e ){
 

@@ -7312,13 +7312,7 @@ SubscriptionManagerImpl
 		boolean			remove_data )
 	{
 		try{
-			download.stop();
-
-		}catch( Throwable e ){
-		}
-
-		try{
-			download.remove( true, remove_data );
+			download.stopAndRemove( true, remove_data );
 
 			log( "Removed download '" + download.getName() + "'" );
 

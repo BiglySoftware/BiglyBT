@@ -317,6 +317,17 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 		throws DownloadException;
 
 	/**
+	 * @since BiglyBT 2.6.0.1
+	 */
+	public void
+	stopAndRemove(
+		boolean	delete_torrent,
+		boolean	delete_data )
+
+		throws DownloadException, DownloadRemovalVetoException;
+
+
+	/**
 	 * See lifecycle description above
 	 * @throws DownloadException
    *
