@@ -83,6 +83,11 @@ public class ConfigSectionFileMove
 
 		copyDontMove.addEnabledOnSelection(moveIfSameDrive);
 
+		BooleanParameterImpl ignoreOriginDelete = new BooleanParameterImpl(
+				BCFG_FILE_MOVE_ORIGIN_DELETE_FAIL_IS_WARNING,	"ConfigView.label.move.origin.del.fail.is.warn");
+		add(ignoreOriginDelete);
+
+		
 		add(new BooleanParameterImpl(BCFG_FILE_MOVE_SUBDIR_IS_DEFAULT,
 				"ConfigView.label.subdir_is_in_default"));
 	}

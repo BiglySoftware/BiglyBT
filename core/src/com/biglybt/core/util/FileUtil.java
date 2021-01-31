@@ -19,6 +19,8 @@
 
 package com.biglybt.core.util;
 
+import static com.biglybt.core.config.ConfigKeys.File.BCFG_FILE_MOVE_ORIGIN_DELETE_FAIL_IS_WARNING;
+
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -43,6 +45,7 @@ import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.diskmanager.file.impl.FMFileAccess.FileAccessor;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.logging.LogEvent;
@@ -2288,8 +2291,15 @@ public class FileUtil {
 	    			}
 	    		}else{
 	    			
-	    			Debug.out( "renameFile: failed to delete '"
-	    					+ from_file.toString() + "'" );
+	    			
+	    			if ( COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_FILE_MOVE_ORIGIN_DELETE_FAIL_IS_WARNING )){
+	    				
+	    				log( "Warning: failed to delete " + from_file.getAbsolutePath() + " after moving via copy" );
+	    				
+	    				break;
+	    			}
+	    			
+	    			Debug.out( "renameFile: failed to delete '" + from_file.toString() + "'" );
 	
 	    			throw( new Exception( "Failed to delete '" + from_file.toString() + "'"));
 	    		}
