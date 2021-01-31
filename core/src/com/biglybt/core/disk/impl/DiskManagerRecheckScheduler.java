@@ -91,34 +91,31 @@ DiskManagerRecheckScheduler
 		
 			entries.add( instance );
 			
-			if ( smallest_first ){
+			Collections.sort(
+				entries,
+				new Comparator<DiskManagerRecheckInstance>()
+				{
+					@Override
+					public int
+					compare(
+						DiskManagerRecheckInstance 	o1,
+						DiskManagerRecheckInstance	o2 )
+					{
+						long	comp = o1.getMetric() - o2.getMetric();
 
-				Collections.sort(
-						entries,
-						new Comparator<DiskManagerRecheckInstance>()
-						{
-							@Override
-							public int
-							compare(
-								DiskManagerRecheckInstance 	o1,
-								DiskManagerRecheckInstance	o2 )
-							{
-								long	comp = o1.getMetric() - o2.getMetric();
+						if ( comp < 0 ){
 
-								if ( comp < 0 ){
+							return( -1 );
 
-									return( -1 );
+						}else if ( comp == 0 ){
 
-								}else if ( comp == 0 ){
+							return( 0 );
 
-									return( 0 );
-
-								}else{
-									return( 1 );
-								}
-							}
-						});
-			}
+						}else{
+							return( 1 );
+						}
+					}
+				});
 		}
 		
 		core.addOperation( instance.getOperation());	
@@ -264,10 +261,20 @@ DiskManagerRecheckScheduler
 			helper		= _helper;
 			
 			TOTorrent	torrent = helper.getTorrent();
-			
-			long	size = torrent.getSize();
+						
+			long _metric			= (_low_priority?0x7000000000000000L:0L);
+
+			if ( smallest_first ){
 				
-			metric			= (_low_priority?0:0x7000000000000000L) + size;
+					// size only of relevance if smallest first (otherwise addition order rules)
+				
+				long	size = torrent.getSize();
+				
+				_metric += size;
+			}
+			
+			metric			= _metric;
+			
 			piece_length	= (int)torrent.getPieceLength();
 			low_priority	= _low_priority;
 			

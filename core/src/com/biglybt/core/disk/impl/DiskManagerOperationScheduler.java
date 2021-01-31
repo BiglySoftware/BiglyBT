@@ -115,6 +115,59 @@ DiskManagerOperationScheduler
 	private void
 	schedule()
 	{
+			// detect manual interference with operations
+		
+		for ( Operation op: operations ){
+			
+			if (( op.cb.getTaskState() & ProgressCallback.ST_PAUSE ) == 0 ){
+
+				op.we_paused_it = false;
+				
+			}else{
+				
+				op.we_resumed_it = false;
+			}
+		}
+	
+			// for check operations we make an exception and will re-pause an active one if order has changed
+
+		Map<String,Operation>	first_check_per_fs = new HashMap<>();
+				
+		for ( Operation op: operations ){
+		
+			if ( op.op.getOperationType() == CoreOperation.OP_DOWNLOAD_CHECKING ){
+				
+				for ( String fs: op.unique_fs ){
+					
+					if ( first_check_per_fs.get( fs ) == null ){
+						
+						first_check_per_fs.put( fs, op );
+						
+					}else{
+						
+						ProgressCallback cb = op.cb;
+						
+							// not first check for this FS
+						
+						if (( cb.getTaskState() & ProgressCallback.ST_PAUSE ) == 0 ){
+							
+								// operation is running, pause it but only if we ran it
+							
+							if ( op.we_resumed_it ){
+								
+								cb.setTaskState( ProgressCallback.ST_PAUSE  );
+								
+								cb.setAutoPause( true );
+								
+								op.we_paused_it 	= true;
+								op.we_resumed_it 	= false;
+							}
+						}
+					}
+				}
+			}
+		}
+				
 		Map<String, int[]>	fs_queue_pos = new HashMap<>();
 		
 		for ( Operation op: operations ){
@@ -166,6 +219,9 @@ DiskManagerOperationScheduler
 						cb.setTaskState( ProgressCallback.ST_RESUME );
 						
 						cb.setAutoPause( false );
+						
+						op.we_resumed_it 	= true;
+						op.we_paused_it		= false;
 						
 					}else{
 												
@@ -241,7 +297,10 @@ DiskManagerOperationScheduler
 		private final CoreOperation		op;
 		private final ProgressCallback	cb;
 		private final String[]			unique_fs;
-				
+			
+		private boolean	we_paused_it;
+		private boolean we_resumed_it;
+		
 		Operation(
 			CoreOperation		_op,
 			ProgressCallback	_cb,
@@ -259,6 +318,8 @@ DiskManagerOperationScheduler
 			cb.setTaskState( ProgressCallback.ST_PAUSE  );
 			
 			cb.setAutoPause( true );
+			
+			we_paused_it = true;
 		}
 		
 		@Override
