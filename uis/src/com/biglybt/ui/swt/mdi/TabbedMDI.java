@@ -1616,36 +1616,8 @@ public class TabbedMDI
 					}else if ( data instanceof TabbedEntry ){
 						target = (TabbedEntry)data;
 					}
-					
-					SkinnedDialog skinnedDialog =
-							new SkinnedDialog(
-									"skin3_dlg_sidebar_popout",
-									"shell",
-									menu==menuItemOnTop?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
-									SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
 
-					SWTSkin skin = skinnedDialog.getSkin();
-
-					SWTSkinObjectContainer cont = target.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
-
-					if ( cont != null ){
-
-						String ds_str = "";
-						Object ds = target.getDatasourceCore();
-						DownloadManager dm = DataSourceUtils.getDM(ds);
-
-						if (dm != null) {
-							ds_str = dm.getDisplayName();
-						}
-
-						skinnedDialog.setTitle( target.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
-
-						skinnedDialog.open();
-
-					}else{
-
-						skinnedDialog.close();
-					}
+					popoutEntry( target, menu==menuItemOnTop );
 				}
 			};
 			
@@ -1654,6 +1626,43 @@ public class TabbedMDI
 		}
 	}
 	
+	public void
+	popoutEntry(
+		MdiEntry	_entry,
+		boolean		onTop )
+	{
+		TabbedEntry	target = (TabbedEntry)_entry;
+		
+		SkinnedDialog skinnedDialog =
+				new SkinnedDialog(
+						"skin3_dlg_sidebar_popout",
+						"shell",
+						onTop?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
+						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+
+		SWTSkin skin = skinnedDialog.getSkin();
+
+		SWTSkinObjectContainer cont = target.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
+
+		if ( cont != null ){
+
+			String ds_str = "";
+			Object ds = target.getDatasourceCore();
+			DownloadManager dm = DataSourceUtils.getDM(ds);
+
+			if (dm != null) {
+				ds_str = dm.getDisplayName();
+			}
+
+			skinnedDialog.setTitle( target.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
+
+			skinnedDialog.open();
+
+		}else{
+
+			skinnedDialog.close();
+		}
+	}
 	
 	@Override
 	public void fillMenu(Menu menu, final MdiEntry entry, String menuID) {

@@ -26,6 +26,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
@@ -94,24 +95,71 @@ QuickLinksView
 			Menu	menu = new Menu( toolBar );
 			
 			toolBar.setMenu( menu );
-
+			
 			if ( toolBar.getItemCount() > 0 ){
+
+				menu.addListener( SWT.Show, (e)->{
+					Point loc = toolBar.toControl( toolBar.getDisplay().getCursorLocation());
+					
+					toolBar.setData( "current_qli", toolBar.getItem( loc ));
+				});
+
+				Menu popMenu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+
+				MenuItem popItem = new MenuItem( menu, SWT.CASCADE);
+
+				Messages.setLanguageText( popItem, "label.pop.out" );
+
+				popItem.setMenu( popMenu );
 				
-				MenuItem itemRemove = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+				MenuItem itemPopIndependent = new MenuItem( popMenu, SWT.PUSH );
+				
+				Messages.setLanguageText(itemPopIndependent, "menu.independent");
+
+				MenuItem itemPopOnTop = new MenuItem( popMenu, SWT.PUSH );
+				
+				Messages.setLanguageText( itemPopOnTop, "menu.on.top");
+
+				Listener popListener = (e)->{
+					
+					ToolItem ti = (ToolItem)toolBar.getData( "current_qli" );
+
+					if ( ti != null ){
+						
+						MenuItem mi = (MenuItem)e.widget;
+						
+						boolean onTop = mi == itemPopOnTop;
+										
+						QuickLinkItem qli = (QuickLinkItem)ti.getData( "qli" );
+						
+						if ( qli != null ){
+						
+							if ( qli.ds_map == null ){
+								
+								mdi.popoutEntryByID( qli.mdi_id, null, onTop );
+									
+							}else{
+									
+								Object ds = DataSourceResolver.importDataSource( qli.ds_map );
+									
+								mdi.popoutEntryByID( qli.mdi_id, ds, onTop );
+							}
+						}
+					}
+				};
+				
+				itemPopIndependent.addListener( SWT.Selection, popListener);
+				itemPopOnTop.addListener( SWT.Selection, popListener);				
+				
+				MenuItem itemRemove = new MenuItem( menu, SWT.PUSH );
 				
 				Messages.setLanguageText(itemRemove, "Button.remove");
 				
 				Utils.setMenuItemImage(itemRemove, "delete");
-	
-				menu.addListener( SWT.Show, (e)->{
-					Point loc = toolBar.toControl( toolBar.getDisplay().getCursorLocation());
 					
-					itemRemove.setData( toolBar.getItem( loc ));
-				});
-				
 				itemRemove.addListener( SWT.Selection, (e)->{
 									
-					ToolItem ti = (ToolItem)itemRemove.getData();
+					ToolItem ti = (ToolItem)toolBar.getData( "current_qli" );
 					
 					if ( ti != null ){
 							
@@ -386,13 +434,13 @@ QuickLinksView
 			
 			if ( qli.ds_map == null ){
 				
-				mdi.showEntryByID( qli.mdi_id );
+				mdi.showEntryByID( qli.mdi_id, null );
 					
 			}else{
 					
 				Object ds = DataSourceResolver.importDataSource( qli.ds_map );
 					
-				mdi.showEntryByID(	qli.mdi_id, ds );
+				mdi.showEntryByID( qli.mdi_id, ds );
 			}
 		});
 		

@@ -527,6 +527,24 @@ public abstract class BaseMDI
 		return loadEntryByID(id, true, false, datasource);
 	}
 	
+	public void popoutEntryByID(String id, Object datasource, boolean onTop ) {
+		
+		if ( loadEntryByID( id, false, false, datasource )){
+			
+			MdiEntry entry = getEntry(id);
+			
+			if ( entry != null ){
+				
+				popoutEntry( entry, onTop );
+			}
+		}
+	}
+	
+	public abstract void
+	popoutEntry(
+		MdiEntry	entry,
+		boolean		onTop );
+	
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
 		
