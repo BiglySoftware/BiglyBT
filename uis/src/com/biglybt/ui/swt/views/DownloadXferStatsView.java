@@ -92,7 +92,9 @@ public class DownloadXferStatsView
 	dataSourceChanged(
 		Object		ds )
 	{
-		current_dm = DataSourceUtils.getDM( ds );
+		DownloadManager[] dms = DataSourceUtils.getDMs( ds );
+		
+		current_dm = dms.length==1?dms[0]:null;
 		
 		Utils.execSWTThread(()->{
 			

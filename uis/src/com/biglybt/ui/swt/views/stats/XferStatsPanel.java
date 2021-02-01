@@ -44,6 +44,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.speedmanager.SpeedLimitHandler;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 
 
@@ -847,9 +848,9 @@ XferStatsPanel
 		}finally{
 			
 			gc.dispose();
-		}
 
-		canvas.redraw();
+			canvas.redraw();
+		}
 	}
 
 
