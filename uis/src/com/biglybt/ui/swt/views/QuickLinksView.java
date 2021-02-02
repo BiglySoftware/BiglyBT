@@ -38,6 +38,7 @@ import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.BEncoder;
 import com.biglybt.core.util.DataSourceResolver;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.swt.Messages;
@@ -134,16 +135,7 @@ QuickLinksView
 						
 						if ( qli != null ){
 						
-							if ( qli.ds_map == null ){
-								
-								mdi.popoutEntryByID( qli.mdi_id, null, onTop );
-									
-							}else{
-									
-								Object ds = DataSourceResolver.importDataSource( qli.ds_map );
-									
-								mdi.popoutEntryByID( qli.mdi_id, ds, onTop );
-							}
+							qli.popOut( mdi, onTop );
 						}
 					}
 				};
@@ -222,6 +214,28 @@ QuickLinksView
 				
 				setVisible( false );
 			});
+		});
+		
+		toolBar.addListener( SWT.MouseDoubleClick, ev->{	
+			
+			System.out.println( "dbl" );
+			
+			if ( toolBar.getItemCount() > 0 ){
+
+				Point loc = toolBar.toControl( toolBar.getDisplay().getCursorLocation());
+					
+				ToolItem ti = toolBar.getItem( loc );
+				
+				if ( ti != null ){
+					
+					QuickLinkItem qli = (QuickLinkItem)ti.getData( "qli" );
+					
+					if ( qli != null ){
+					
+						qli.popOut( mdi, true );
+					}
+				}
+			}
 		});
 		
 		synchronized( qlItems ){
@@ -432,16 +446,7 @@ QuickLinksView
 			
 		item.addListener( SWT.Selection, ev->{
 			
-			if ( qli.ds_map == null ){
-				
-				mdi.showEntryByID( qli.mdi_id, null );
-					
-			}else{
-					
-				Object ds = DataSourceResolver.importDataSource( qli.ds_map );
-					
-				mdi.showEntryByID( qli.mdi_id, ds );
-			}
+			qli.show( mdi );
 		});
 		
 		item.setData( "qli", qli );
@@ -485,6 +490,9 @@ QuickLinksView
 		final String					tt_id;
 		final Map<String,Object>		ds_map;
 		
+		long	last_show		= -1;
+		long	last_pop		= -1;
+		
 		QuickLinkItem(
 			String					_mdi_id,
 			String					_image_id,
@@ -523,6 +531,74 @@ QuickLinksView
 			}
 			
 			return( map );
+		}
+		
+		void 
+		show(
+			BaseMDI		mdi )
+		{
+				// problem is when we double-click to pop-out we end up with a sequence of
+				// 1) select
+				// 2) double click
+				// 3) select
+			
+			long	now = SystemTime.getMonotonousTime();
+			
+			if ( last_pop >= 0 && now - last_pop < 1000 ){
+				
+				return;
+			}
+			
+			last_show = now;
+			
+			Utils.execSWTThreadLater( 500, ()->{
+				
+				long	nownow = SystemTime.getMonotonousTime();
+				
+				if ( last_pop > 0 && nownow - last_pop < 1000 ){
+					
+					return;
+				}
+				
+				last_show = nownow;
+				
+				if ( ds_map == null ){
+					
+					mdi.showEntryByID( mdi_id, null );
+						
+				}else{
+						
+					Object ds = DataSourceResolver.importDataSource( ds_map );
+						
+					mdi.showEntryByID( mdi_id, ds );
+				}
+			});
+		}
+		
+		void 
+		popOut(
+			BaseMDI		mdi,
+			boolean		onTop )
+		{
+			long	now = SystemTime.getMonotonousTime();
+			
+			if ( last_pop >= 0 && now - last_pop < 500 ){
+				
+				return;
+			}
+			
+			last_pop = now;
+			
+			if ( ds_map == null ){
+				
+				mdi.popoutEntryByID( mdi_id, null, onTop );
+					
+			}else{
+					
+				Object ds = DataSourceResolver.importDataSource( ds_map );
+					
+				mdi.popoutEntryByID( mdi_id, ds, onTop );
+			}
 		}
 	}
 }
