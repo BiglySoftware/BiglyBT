@@ -983,7 +983,20 @@ public class SideBar
 
 							break;
 						}
+						case SWT.MouseDoubleClick: {
+							
+							int indent = END_INDENT ? tree.getClientArea().width - 1 : 0;
+							treeItem = tree.getItem(new Point(indent, event.y));
+							SideBarEntrySWT entry = (SideBarEntrySWT) ((treeItem == null || treeItem.isDisposed())
+									? null : treeItem.getData("MdiEntry"));
 
+							if ( entry != null ){
+								
+								popoutEntry( entry, true );
+							}
+							
+							break;
+						}
 						case SWT.Dispose: {
 							fontHeader.dispose();
 							if (dropTarget != null && !dropTarget.isDisposed()) {
@@ -1024,6 +1037,7 @@ public class SideBar
 
 		tree.addListener(SWT.Selection, treeListener);
 		tree.addListener(SWT.Dispose, treeListener);
+		tree.addListener(SWT.MouseDoubleClick, treeListener);
 
 		// For icons
 		tree.addListener(SWT.MouseUp, treeListener);
