@@ -1780,7 +1780,7 @@ public class TabbedMDI
 					skinnedDialog.setTitle(((UISWTViewCore) parentView).getFullTitle()
 							+ (ds_str.length() == 0 ? "" : (" - " + ds_str)));
 
-					skinnedDialog.open();
+					skinnedDialog.open( "mdi.popout:" + currentEntry.getId(), true );
 
 				} else {
 
