@@ -1656,7 +1656,7 @@ public class TabbedMDI
 
 			skinnedDialog.setTitle( target.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
 
-			skinnedDialog.open();
+			skinnedDialog.open( "mdi.popout:" + target.getId(), true );
 
 		}else{
 

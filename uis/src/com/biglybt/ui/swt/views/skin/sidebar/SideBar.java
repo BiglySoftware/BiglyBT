@@ -417,7 +417,7 @@ public class SideBar
 	
 			skinnedDialog.setTitle( sbe.getTitle());
 	
-			skinnedDialog.open();
+			skinnedDialog.open( "mdi.popout:" + sbe.getId(), true );
 	
 		}else{
 	
