@@ -217,9 +217,7 @@ QuickLinksView
 		});
 		
 		toolBar.addListener( SWT.MouseDoubleClick, ev->{	
-			
-			System.out.println( "dbl" );
-			
+						
 			if ( toolBar.getItemCount() > 0 ){
 
 				Point loc = toolBar.toControl( toolBar.getDisplay().getCursorLocation());
