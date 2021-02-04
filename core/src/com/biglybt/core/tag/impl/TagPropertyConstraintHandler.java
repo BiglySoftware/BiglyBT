@@ -39,6 +39,8 @@ import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.download.impl.DownloadManagerAdapter;
+import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
@@ -65,6 +67,8 @@ TagPropertyConstraintHandler
 	private static final Object DM_FILE_PATHS					= new Object();
 	private static final Object DM_FILE_PATHS_SELECTED			= new Object();
 	
+	private static final Object DM_PEER_SETS					= new Object();
+	
 	private static final String		EVAL_CTX_COLOURS = "colours";
 	
 	private final Core core;
@@ -72,7 +76,8 @@ TagPropertyConstraintHandler
 	private final ShareManager		share_manager;
 	
 	
-	private boolean		initialised;
+	private volatile boolean		initialised;
+	
 	private boolean 	initial_assignment_complete;
 	private boolean		stopping;
 
@@ -196,6 +201,8 @@ TagPropertyConstraintHandler
 
 										initialised = true;
 
+										checkRecompiles();
+										
 										apply( core.getGlobalManager().getDownloadManagers(), true );
 									}
 								}
@@ -221,6 +228,22 @@ TagPropertyConstraintHandler
 			});
 	}
 
+	private void
+	checkRecompiles()
+	{
+		for ( Tag tag: constrained_tags.keySet()){
+			
+			if ( tag.getTransientProperty( Tag.TP_CONSTRAINT_ERROR ) != null ){
+	
+				TagFeatureProperties tfp = (TagFeatureProperties)tag;
+
+				TagProperty prop = tfp.getProperty( TagFeatureProperties.PR_CONSTRAINT );
+
+				handleProperty(prop);
+			}
+		}
+	}
+	
 	private static Object	process_lock = new Object();
 	private static int		processing_disabled_count;
 
@@ -441,17 +464,135 @@ TagPropertyConstraintHandler
 				timer =
 					SimpleTimer.addPeriodicEvent(
 						"tag:constraint:timer",
-						30*1000,
+						5*1000,
 						new TimerEventPerformer() {
 
+							int tick_count = 0;
+							
 							@Override
 							public void
 							perform(
 								TimerEvent event)
 							{
-								apply_history.clear();
+								tick_count++;
+								
+								Set<Tag>				peer_sets 	= new HashSet<>();
+								List<TagConstraint>		ps_constraints;
+								
+								List<DownloadManager>	ps_changed	= Collections.emptyList();
+								
+								synchronized( constrained_tags ){
+									
+									ps_constraints = new ArrayList<>( constrained_tags.size());
+									
+									for ( TagConstraint tc: constrained_tags.values()){
+											
+										Set<Tag> tags = tc.getDependsOnTags();
+									
+										boolean added = false;
+										
+										for ( Tag tag: tags ){
+											
+											if ( tag.getTagType().getTagType() == TagType.TT_PEER_IPSET ){
+												
+												peer_sets.add( tag );
+												
+												added = true;
+											}
+										}
+										
+										if ( added ){
+											
+											ps_constraints.add( tc );
+										}
+									}
+								}
+								
+								if ( !peer_sets.isEmpty()){
+									
+									GlobalManager gm = core.getGlobalManager();
+									
+									Map<DownloadManager,Set<Tag>>	dm_map = new IdentityHashMap<>();
+									
+									for ( Tag ps: peer_sets ){
+										
+										Set<Taggable> peers = ps.getTagged();
+										
+										for ( Taggable peer: peers ){
+											
+											PEPeer pe_peer = (PEPeer)peer;
+											
+											byte[] dl_hash = pe_peer.getManager().getHash();
+											
+											DownloadManager dm = gm.getDownloadManager(  new HashWrapper( dl_hash ));
+											
+											if ( dm != null ){
+												
+												Set<Tag> s = dm_map.get( dm );
+														
+												if ( s == null ){
+													
+													s = new HashSet<>();
+													
+													dm_map.put( dm, s );
+												}
+												
+												s.add( ps );
+											}
+										}
+									}
+									
+									
+									List<DownloadManager> all_dms = gm.getDownloadManagers();
+									
+									ps_changed = new ArrayList<>( all_dms.size());
+									
+									for ( DownloadManager dm: all_dms ){
+										
+										Set<Tag>	current	= dm_map.get( dm );
+										
+										Set<Tag>	existing = (Set<Tag>)dm.getUserData( DM_PEER_SETS );
+										
+										if ( current != existing ){
+											
+											if ( current == null ){
+												
+												dm.setUserData( DM_PEER_SETS, null );
+												
+												ps_changed.add( dm );
+												
+											}else if ( existing == null ){
+												
+												dm.setUserData( DM_PEER_SETS, current );
+												
+												ps_changed.add( dm );
+												
+											}else{
+												
+												if ( !existing.equals( current )){
+													
+													dm.setUserData( DM_PEER_SETS, current );
+													
+													ps_changed.add( dm );
+												}
+											}
+										}
+									}
+								}
+								
+								if ( tick_count % 6 == 0 ){
+								
+									apply_history.clear();
 
-								apply();
+									apply();
+									
+								}else{
+									
+									if ( !ps_changed.isEmpty()){
+										
+										apply( ps_changed, ps_constraints );
+									}
+								}
 							}
 						});
 
@@ -825,6 +966,34 @@ TagPropertyConstraintHandler
 	}
 
 	private void
+	apply(
+		List<DownloadManager> 	dms,
+		List<TagConstraint>		cons )	
+	{
+		synchronized( constrained_tags ){
+
+			if ( !initialised ){
+
+				return;
+			}
+		}
+
+		dispatcher.dispatch(
+			new AERunnable()
+			{
+				@Override
+				public void
+				runSupport()
+				{
+					for ( TagConstraint con: cons ){
+
+						con.apply( dms );
+					}
+				}
+			});
+	}
+	
+	private void
 	apply()
 	{
 		synchronized( constrained_tags ){
@@ -928,6 +1097,8 @@ TagPropertyConstraintHandler
 		private int		depends_on_level			= DEP_STATIC;
 
 		private Set<Tag>		dependent_on_tags;
+		private boolean			dependent_on_peer_sets;
+		
 		private boolean			must_check_dependencies;
 		
 		private Average			activity_average = Average.getInstance( 1000, 60 );
@@ -980,11 +1151,13 @@ TagPropertyConstraintHandler
 				// System.out.println( "Compiled:\n" + constraint + " \n->\n" + compiled_expr.getString());
 				
 			}catch( Throwable e ){
-
-				Debug.out( e );
 				
 				setError( "Invalid constraint: " + Debug.getNestedExceptionMessage( e ));
 
+				if ( handler.initialised ){
+					
+					Debug.out( e );					
+				}
 			}finally{
 
 				expr = compiled_expr;
@@ -1059,7 +1232,10 @@ TagPropertyConstraintHandler
 		{
 			tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, str );
 			
-			Debug.out( str );
+			if ( handler.initialised ){
+			
+				Debug.out( str );
+			}
 		}
 		
 		private boolean
@@ -2307,13 +2483,21 @@ TagPropertyConstraintHandler
 							
 							for ( Tag t: tags ){
 								
-								if ( t.getTagType().hasTagTypeFeature( TagFeature.TF_PROPERTIES )){
+								TagType tt = t.getTagType();
+								
+								if ( 	tt.hasTagTypeFeature( TagFeature.TF_PROPERTIES ) ||
+										tt.getTagType() == TagType.TT_PEER_IPSET ){
 									
 									if ( dependent_on_tags == null ){
 								
 										dependent_on_tags = new HashSet<Tag>();
 									}
 								
+									if ( tt.getTagType() == TagType.TT_PEER_IPSET ){
+									
+										dependent_on_peer_sets = true;
+									}
+									
 									dependent_on_tags.add( t );
 								}
 							}
@@ -2641,6 +2825,22 @@ TagPropertyConstraintHandler
 							}
 						}
 
+						if ( dependent_on_peer_sets ){
+						
+							Set<Tag>	ps_tags = (Set<Tag>)dm.getUserData( DM_PEER_SETS );
+							
+							if ( ps_tags != null ){
+								
+								for ( Tag t: ps_tags ){
+
+									if ( t.getTagName( true ).equals( tag_name )){
+
+										return( true );
+									}
+								}
+							}
+						}
+						
 						return( false );
 					}
 					case FT_HAS_TAG_AGE:{
