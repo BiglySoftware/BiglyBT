@@ -1623,7 +1623,7 @@ public class TableViewPainted
 			FrequencyLimitedDispatcher(
 				AERunnable.create(()->{
 					Utils.execSWTThread(()->{
-						if ( cTable.isDisposed()){
+						if ( cTable == null || cTable.isDisposed()){
 							return;
 						}
 						if (DEBUG_SELECTION) {
