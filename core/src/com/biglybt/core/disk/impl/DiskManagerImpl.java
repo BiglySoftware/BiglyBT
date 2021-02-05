@@ -1656,6 +1656,13 @@ DiskManagerImpl
     }
 
     @Override
+    public long[]
+    getLatency()
+    {
+    	return( new long[]{ reader.getLatency(), writer.getLatency() });
+    }
+    
+    @Override
     public String 
     getAllocationTask()
     {

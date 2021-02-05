@@ -65,6 +65,9 @@ DMWriter
 	hasOutstandingWriteRequestForPiece(
 		int		piece_number );
 	
+	public long
+	getLatency();
+	
 	public interface
 	ProgressListener
 	{

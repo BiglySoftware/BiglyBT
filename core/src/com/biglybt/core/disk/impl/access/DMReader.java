@@ -70,4 +70,7 @@ DMReader
 
 	public long[]
 	getStats();
+	
+	public long
+	getLatency();
 }

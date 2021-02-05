@@ -20,6 +20,7 @@
 package com.biglybt.core.disk.impl.access.impl;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerReadRequest;
@@ -51,6 +52,8 @@ DMReaderImpl
 	private final DiskManagerHelper		disk_manager;
 	private final DiskAccessController	disk_access;
 
+	private final ConcurrentHashMap<DiskAccessRequest,String>		active_requests = new ConcurrentHashMap<>();
+	
 	private int								async_reads;
 	private final Set<Object[]>				read_requests		= new HashSet<>();
 	private final AESemaphore				async_read_sem = new AESemaphore("DMReader:asyncReads");
@@ -64,6 +67,8 @@ DMReaderImpl
 	private long					total_read_ops;
 	private long					total_read_bytes;
 
+	private volatile long			latency;
+	
 	private final AEMonitor	this_mon	= new AEMonitor( "DMReader" );
 
 	public
@@ -332,6 +337,22 @@ DMReaderImpl
 		return( new long[]{ total_read_ops, total_read_bytes });
 	}
 
+	@Override
+	public long
+	getLatency()
+	{
+		long	result = latency;
+		
+		long now = SystemTime.getMonotonousTime();
+		
+		for ( DiskAccessRequest req: active_requests.keySet()){
+			
+			result = Math.max( result, now - req.getCreateMonoTime());
+		}
+		
+		return( result );
+	}
+	
 		// returns null if the read can't be performed
 
 	@Override
@@ -722,10 +743,22 @@ DMReaderImpl
 								new DiskAccessRequestListener()
 								{
 									@Override
+									public void 
+									requestQueued(
+										DiskAccessRequest request)
+									{
+										active_requests.put( request, "" );
+									}
+									
+									@Override
 									public void
 									requestComplete(
 										DiskAccessRequest	request )
 									{
+										latency = SystemTime.getMonotonousTime() - request.getCreateMonoTime();
+										
+										active_requests.remove( request );
+										
 										sem.release();
 									}
 
@@ -825,11 +858,19 @@ DMReaderImpl
 			}
 
 			disk_access.queueReadRequest(
-				(CacheFile)stuff[0],
-				((Long)stuff[1]).longValue(),
-				buffer,
-				cache_policy,
-				l );
+					(CacheFile)stuff[0],
+					((Long)stuff[1]).longValue(),
+					buffer,
+					cache_policy,
+					l );
+		}
+
+		@Override
+		public void 
+		requestQueued(
+			DiskAccessRequest request)
+		{
+			active_requests.put( request, "" );
 		}
 
 		@Override
@@ -837,6 +878,10 @@ DMReaderImpl
 		requestComplete(
 			DiskAccessRequest	request )
 		{
+			latency = SystemTime.getMonotonousTime() - request.getCreateMonoTime();
+
+			active_requests.remove( request );
+			
 			dispatch();
 		}
 

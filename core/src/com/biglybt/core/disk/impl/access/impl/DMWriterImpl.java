@@ -20,6 +20,7 @@
 package com.biglybt.core.disk.impl.access.impl;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.impl.DiskManagerAllocationScheduler;
@@ -51,12 +52,14 @@ DMWriterImpl
 
 	private static final int		MIN_ZERO_BLOCK	= 1*1024*1024;	// must be mult of 1024 (see init below)
 
-	final DiskManagerHelper		disk_manager;
-	final DiskAccessController	disk_access;
+	private final DiskManagerHelper		disk_manager;
+	private final DiskAccessController	disk_access;
 
-	int				async_writes;
-	final Set				write_requests		= new HashSet();
-	final AESemaphore		async_write_sem 	= new AESemaphore("DMWriter::asyncWrite");
+	private final ConcurrentHashMap<DiskAccessRequest,String>		active_requests = new ConcurrentHashMap<>();
+
+	private int						async_writes;
+	private final Set				write_requests		= new HashSet();
+	private final AESemaphore		async_write_sem 	= new AESemaphore("DMWriter::asyncWrite");
 
 	private boolean	started;
 
@@ -67,6 +70,9 @@ DMWriterImpl
 	private boolean	complete_recheck_in_progress;
 
 	final AEMonitor		this_mon	= new AEMonitor( "DMWriter" );
+
+	private volatile long			latency;
+	
 
 	public
 	DMWriterImpl(
@@ -253,10 +259,22 @@ DMWriterImpl
 								new DiskAccessRequestListener()
 								{
 									@Override
+									public void 
+									requestQueued(
+										DiskAccessRequest request)
+									{
+										active_requests.put( request, "" );
+									}	
+									
+									@Override
 									public void
 									requestComplete(
 										DiskAccessRequest	request )
 									{
+										latency = SystemTime.getMonotonousTime() - request.getCreateMonoTime();
+
+										active_requests.remove( request );
+								
 										sem.release();
 									}
 
@@ -615,6 +633,22 @@ DMWriterImpl
 		}
 	}
 
+	@Override
+	public long
+	getLatency()
+	{
+		long	result = latency;
+		
+		long now = SystemTime.getMonotonousTime();
+		
+		for ( DiskAccessRequest req: active_requests.keySet()){
+			
+			result = Math.max( result, now - req.getCreateMonoTime());
+		}
+		
+		return( result );
+	}
+	
 	protected class
 	requestDispatcher
 		implements DiskAccessRequestListener
@@ -681,6 +715,14 @@ DMWriterImpl
 							doRequest(
 								new DiskAccessRequestListener()
 								{
+									@Override
+									public void 
+									requestQueued(
+										DiskAccessRequest request)
+									{
+										// don't need to track this, done in doRequest
+									}	
+
 									@Override
 									public void
 									requestComplete(
@@ -780,10 +822,22 @@ DMWriterImpl
 				new DiskAccessRequestListener()
 				{
 					@Override
+					public void 
+					requestQueued(
+						DiskAccessRequest request)
+					{
+						active_requests.put( request, "" );
+					}	
+					
+					@Override
 					public void
 					requestComplete(
 						DiskAccessRequest	request )
 					{
+						latency = SystemTime.getMonotonousTime() - request.getCreateMonoTime();
+
+						active_requests.remove( request );
+						
 						l.requestComplete( request );
 
 						file.dataWritten( request.getOffset(), request.getSize(), request.getUserData());
@@ -834,6 +888,14 @@ DMWriterImpl
 				handover_buffer,
 				delegate_listener );
 		}
+
+		@Override
+		public void 
+		requestQueued(
+			DiskAccessRequest request)
+		{
+			// don't need to track latency here as done in doRequest
+		}	
 
 		@Override
 		public void

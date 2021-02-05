@@ -23,6 +23,10 @@ public interface
 DiskAccessRequestListener
 {
 	public void
+	requestQueued(
+		DiskAccessRequest	request );
+
+	public void
 	requestComplete(
 		DiskAccessRequest	request );
 

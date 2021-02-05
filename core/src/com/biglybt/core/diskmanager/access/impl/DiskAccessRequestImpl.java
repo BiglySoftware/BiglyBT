@@ -25,6 +25,7 @@ import com.biglybt.core.diskmanager.cache.CacheFile;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerException;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.SystemTime;
 
 public class
 DiskAccessRequestImpl
@@ -35,6 +36,7 @@ DiskAccessRequestImpl
 	protected static final short	OP_WRITE			= 2;
 	protected static final short	OP_WRITE_AND_FREE	= 3;
 
+	private final long						create_time = SystemTime.getMonotonousTime();
 
 	private final CacheFile					file;
 	private final long						offset;
@@ -66,6 +68,13 @@ DiskAccessRequestImpl
 		size = buffer.remaining( DirectByteBuffer.SS_FILE );
 	}
 
+	@Override
+	public long 
+	getCreateMonoTime()
+	{
+		return( create_time );
+	}
+	
 	@Override
 	public int
 	getSize()

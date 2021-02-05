@@ -25,6 +25,9 @@ import com.biglybt.core.util.DirectByteBuffer;
 public interface
 DiskAccessRequest
 {
+	public long
+	getCreateMonoTime();
+	
 	public CacheFile
 	getFile();
 
