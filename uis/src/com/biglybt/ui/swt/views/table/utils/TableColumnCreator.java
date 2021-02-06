@@ -308,6 +308,7 @@ public class TableColumnCreator
 		c.put(SuperSeedingItem.COLUMN_ID, new cInfo(SuperSeedingItem.class, SuperSeedingItem.DATASOURCE_TYPE));
 
 		c.put(DiskLatencyItem.COLUMN_ID, new cInfo(DiskLatencyItem.class, DiskLatencyItem.DATASOURCE_TYPE));
+		c.put(UploadHealthItem.COLUMN_ID, new cInfo(UploadHealthItem.class, UploadHealthItem.DATASOURCE_TYPE));
 
 		// Core columns are implementors of TableColumn to save one class creation
 		// Otherwise, we'd have to create a generic TableColumnImpl class, pass it
