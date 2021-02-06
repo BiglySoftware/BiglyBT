@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
@@ -81,6 +82,9 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	 */
 	private static int SEEDONLY_SHIFT = SPRATIO_BASE_LIMIT + 1;
 
+	private static final long HIGH_LATENCY_MILLIS 			= 2500;
+	private static final long HIGH_LATENCY_RECOVERY_MILLIS 	= 60*1000;
+	
 	/**
 	 * For loading config settings
 	 */
@@ -191,19 +195,24 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 
 	protected final Download dl;
 	private final DownloadManager	core_dm;
+	
+		// downloading rate controls
+	
 	private boolean bActivelyDownloading;
+	private long 	lDLActivelyChangedOnMono;
+	private long	lDownloadingHighLatencyTimeMono = -1;
 
-	private long lDLActivelyChangedOn;
-
+		// seeding rate controls
+	
 	private boolean bActivelySeeding;
+	private long 	lCDActivelyChangedOnMono;
+	private long	lSeedingHighLatencyTimeMono = -1;
 
-	private long lCDActivelyChangedOn;
-
-	private long staleCDSince;
+	private long staleCDSinceMono;
 
 	private long staleCDOffset;
 
-	private long lastStaleCDRefresh;
+	private long lastStaleCDRefreshMono;
 
 	private boolean bIsFirstPriority;
 
@@ -457,22 +466,68 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 			bIsActive = true;
 		} else {
 			// activity based on DL Average
+			
+			long nowMono = SystemTime.getMonotonousTime();
+
 			bIsActive = (stats.getDownloadAverage() >= minSpeedForActiveDL);
 
+			if ( !bIsActive ){
+				
+					// check downloading isn't being choked by high disk latency
+				
+				DiskManager dm = core_dm.getDiskManager();
+				
+				if ( dm != null ){
+					
+					long[] latency = dm.getLatency();
+					
+					if ( latency[1] > HIGH_LATENCY_MILLIS ){
+						
+						if ( lDownloadingHighLatencyTimeMono == -1 ){
+							
+							if (rules.bDebugLog){
+								
+								rules.log.log(dl.getTorrent(), LoggerChannel.LT_INFORMATION,
+										"download speed is low but write latency high, ignoring");
+							}
+						}
+						
+						lDownloadingHighLatencyTimeMono = nowMono;
+						
+						bIsActive = true;	// treat as still active
+						
+					}else{
+						
+						if ( lDownloadingHighLatencyTimeMono != -1 ){
+							
+								// give things time to recover
+							
+							if ( nowMono - lDownloadingHighLatencyTimeMono > HIGH_LATENCY_RECOVERY_MILLIS ){
+								
+								lDownloadingHighLatencyTimeMono = -1;
+								
+							}else{
+								
+								bIsActive = true;
+							}
+						}
+					}
+				}
+			}
+			
 			if (bActivelyDownloading != bIsActive) {
-				long now = SystemTime.getCurrentTime();
 				// Change
-				if (lDLActivelyChangedOn == -1) {
+				if (lDLActivelyChangedOnMono == -1) {
 					// Start Timer
-					lDLActivelyChangedOn = now;
+					lDLActivelyChangedOnMono = nowMono;
 					bIsActive = !bIsActive;
-				} else if (now - lDLActivelyChangedOn < ACTIVE_CHANGE_WAIT) {
+				} else if (nowMono - lDLActivelyChangedOnMono < ACTIVE_CHANGE_WAIT) {
 					// Continue as old state until timer finishes
 					bIsActive = !bIsActive;
 				}
 			} else {
 				// no change, reset timer
-				lDLActivelyChangedOn = -1;
+				lDLActivelyChangedOnMono = -1;
 			}
 		}
 
@@ -511,37 +566,79 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 			// Not active if we aren't seeding
 			// Not active if we are AutoStarting 0 Peers, and peer count == 0
 			bIsActive = false;
-			staleCDSince = -1;
+			staleCDSinceMono = -1;
 		} else if (SystemTime.getCurrentTime() - stats.getTimeStarted() <= FORCE_ACTIVE_FOR) {
 			bIsActive = true;
-			staleCDSince = -1;
+			staleCDSinceMono = -1;
 		} else {
 			bIsActive = (stats.getUploadAverage() >= minSpeedForActiveSeeding);
 
+			long nowMono = SystemTime.getMonotonousTime();
+
+				// check seeding isn't being choked by high disk latency
+				
+			DiskManager dm = core_dm.getDiskManager();
+			
+			if ( dm != null ){
+				
+				long[] latency = dm.getLatency();
+				
+				if ( latency[0] > HIGH_LATENCY_MILLIS ){
+					
+					if ( lSeedingHighLatencyTimeMono == -1 ){
+						
+						if (rules.bDebugLog){
+							
+							rules.log.log(dl.getTorrent(), LoggerChannel.LT_INFORMATION,
+									"seeding speed is low but read latency high, ignoring");
+						}
+					}
+					
+					lSeedingHighLatencyTimeMono = nowMono;
+					
+					bIsActive = true;	// treat as still active
+					
+				}else{
+					
+					if ( lSeedingHighLatencyTimeMono != -1 ){
+						
+							// give things time to recover
+						
+						if ( nowMono - lSeedingHighLatencyTimeMono > HIGH_LATENCY_RECOVERY_MILLIS ){
+							
+							lSeedingHighLatencyTimeMono = -1;
+							
+						}else{
+							
+							bIsActive = true;
+						}
+					}
+				}
+			}
+		
 			if (bActivelySeeding != bIsActive) {
-				long now = SystemTime.getCurrentTime();
 				// Change
-				if (lCDActivelyChangedOn < 0) {
+				if (lCDActivelyChangedOnMono < 0) {
 					// Start Timer
-					lCDActivelyChangedOn = now;
+					lCDActivelyChangedOnMono = nowMono;
 					bIsActive = !bIsActive;
-				} else if (now - lCDActivelyChangedOn < ACTIVE_CHANGE_WAIT) {
+				} else if (nowMono - lCDActivelyChangedOnMono < ACTIVE_CHANGE_WAIT) {
 					// Continue as old state until timer finishes
 					bIsActive = !bIsActive;
 				}
 
 				if (bActivelySeeding != bIsActive) {
   				if (bIsActive) {
-  					staleCDSince = -1;
+  					staleCDSinceMono = -1;
   					staleCDOffset = 0;
   				} else {
-  					staleCDSince = System.currentTimeMillis();
+  					staleCDSinceMono = nowMono;
   				}
 				}
 
 			} else {
 				// no change, reset timer
-				lCDActivelyChangedOn = -1;
+				lCDActivelyChangedOnMono = -1;
 			}
 		}
 
@@ -1235,11 +1332,11 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 			return true;
 		}
 
-		if (staleCDSince > 0) {
-			long now = SystemTime.getCurrentTime();
-			if (now - lastStaleCDRefresh > STALE_REFRESH_INTERVAL) {
-				staleCDOffset += (now - lastStaleCDRefresh) / STALE_REFRESH_INTERVAL;
-				lastStaleCDRefresh = now;
+		if (staleCDSinceMono > 0) {
+			long nowMono = SystemTime.getMonotonousTime();
+			if (nowMono - lastStaleCDRefreshMono > STALE_REFRESH_INTERVAL) {
+				staleCDOffset += (nowMono - lastStaleCDRefreshMono) / STALE_REFRESH_INTERVAL;
+				lastStaleCDRefreshMono = nowMono;
 				if (rules.bDebugLog) {
 					rules.log.log(dl.getTorrent(), LoggerChannel.LT_INFORMATION,
 							"somethingChanged: staleCD changeChecker");

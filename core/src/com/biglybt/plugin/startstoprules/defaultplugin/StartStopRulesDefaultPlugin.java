@@ -45,14 +45,10 @@ import com.biglybt.pif.PluginListener;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.*;
 import com.biglybt.pif.logging.LoggerChannel;
-import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
-import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
