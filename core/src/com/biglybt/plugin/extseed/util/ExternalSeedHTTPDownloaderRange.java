@@ -94,10 +94,14 @@ ExternalSeedHTTPDownloaderRange
 
 		throws ExternalSeedException
 	{
-		download( 	new String[]{ "Range" }, new String[]{ "bytes=" + offset + "-" + (offset+length-1)},
-					length,
-					listener,
-					con_fail_is_perm_fail );
+		// Android sets "Accept-Encoding" to "gzip" by default, which causes some servers to ignore the range request
+		download(new String[] {
+			"Range",
+			"Accept-Encoding"
+		}, new String[] {
+			"bytes=" + offset + "-" + (offset + length - 1),
+			"identity"
+		}, length, listener, con_fail_is_perm_fail);
 	}
 
 	public void
