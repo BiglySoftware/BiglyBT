@@ -649,6 +649,9 @@ redirect_loop:
 									if ( !do_all_file ){
 
 										connection.setRequestProperty( "Range", "bytes=" + offset + "-" + (offset+length-1));
+
+										// Android sets "Accept-Encoding" to "gzip" by default, which causes some servers to ignore the range request
+										connection.setRequestProperty("Accept-Encoding", "identity");
 									}
 
 									connection.setConnectTimeout( 20*1000 );
