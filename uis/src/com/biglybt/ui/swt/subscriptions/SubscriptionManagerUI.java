@@ -898,7 +898,26 @@ SubscriptionManagerUI
 				}
 			});
 
+		final IntParameter def_check =
+				configModel.addIntParameter2(
+					"subscriptions.config.def.check",
+					"subscriptions.config.def.check",
+					subs_man.getDefaultCheckFrequencyMins());
 
+		def_check.setMinValue( 5 );
+
+		def_check.addListener(
+				new ParameterListener()
+				{
+					@Override
+					public void
+					parameterChanged(
+						Parameter param )
+					{
+						subs_man.setDefaultCheckFrequencyMins(def_check.getValue());
+					}
+				});
+		
 			// rate limits
 
 		final StringParameter rate_limits = configModel.addStringParameter2(

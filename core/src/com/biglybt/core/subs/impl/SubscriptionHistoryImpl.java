@@ -541,6 +541,11 @@ SubscriptionHistoryImpl
 
 				long	interval_min = ((Long)schedule.get( "interval" )).longValue();
 
+				if ( interval_min <= 0 ){
+					
+					interval_min = manager.getDefaultCheckFrequencyMins();
+				}
+				
 				if ( interval_min == Integer.MAX_VALUE || interval_min == Long.MAX_VALUE ){
 
 					return( Long.MAX_VALUE );
@@ -578,18 +583,23 @@ SubscriptionHistoryImpl
 
 		if ( schedule.size() == 0  ){
 
-			return( DEFAULT_CHECK_INTERVAL_MINS );
+			return( manager.getDefaultCheckFrequencyMins());
 
 		}else{
 
 			try{
 				int	interval_min = ((Long)schedule.get( "interval" )).intValue();
 
+				if ( interval_min <= 0 ){
+					
+					interval_min = manager.getDefaultCheckFrequencyMins();
+				}
+				
 				return( interval_min );
 
 			}catch( Throwable e ){
 
-				return( DEFAULT_CHECK_INTERVAL_MINS );
+				return( manager.getDefaultCheckFrequencyMins());
 			}
 		}
 	}

@@ -642,7 +642,7 @@ SearchUtils
 
 						Map<String, Object> mapSchedule = new HashMap<>();
 						mapSchedule.put("days", Collections.EMPTY_LIST);
-						mapSchedule.put("interval", 120); // minutes
+						mapSchedule.put("interval", new Long(-1)); 
 						payload.put("schedule", mapSchedule);
 
 						Map<String, Object> mapOptions = new HashMap<>();

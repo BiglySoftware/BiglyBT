@@ -150,6 +150,13 @@ SubscriptionManager
 	getScheduler();
 
 	public int
+	getDefaultCheckFrequencyMins();
+	
+	public void
+	setDefaultCheckFrequencyMins(
+		int		mins );
+	
+	public int
 	getMaxNonDeletedResults();
 
 	public void

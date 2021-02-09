@@ -23,7 +23,7 @@ package com.biglybt.core.subs;
 public interface
 SubscriptionHistory
 {
-	public static final int	DEFAULT_CHECK_INTERVAL_MINS		= 120;
+	public static final int	DEFAULT_CHECK_INTERVAL_MINS		= -1;	// Switched from 120 to -1 when configurable default introduced, use this to select configured default
 
 	public boolean
 	isEnabled();
