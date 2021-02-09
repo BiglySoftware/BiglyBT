@@ -1370,16 +1370,17 @@ SubscriptionManagerUI
 
 						if ( !sub.isSearchTemplate()){
 
-							if ( sub.getHistory().isEnabled()){
+							// manual update, ignore enabled state as this controls auto-updates
+							// if ( sub.getHistory().isEnabled()){
 
 								try{
-									sched.downloadAsync( sub, true );
+									sched.downloadAsync( sub, false );
 
 								}catch( Throwable e ){
 
 									Debug.out( e );
 								}
-							}
+							// }
 						}
 					}
 				}
