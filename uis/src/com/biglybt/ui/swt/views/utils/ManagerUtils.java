@@ -127,7 +127,6 @@ import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.UserPrompterResultListener;
 
 /**
  * @author Olivier
@@ -3036,6 +3035,158 @@ public class ManagerUtils {
 								}
 							});
 
+					boolean[]	handled = new boolean[dms.length ];
+					
+					int			num_handled = 0;
+					
+						// first level of processing - look for simple root folder changes								
+					
+					for ( int i=0;i<dms.length;i++){
+
+						DownloadManager			dm = dms[i];
+
+						int dm_indent = 0;
+
+						synchronized( quit ){
+							if ( quit[0] ){
+								break;
+							}
+						}
+
+						if ( !dm.isPersistent()){
+
+							continue;
+						}
+
+						TOTorrent torrent = dm.getTorrent();
+
+						if ( torrent == null ){
+
+							continue;
+						}
+
+						DiskManagerFileInfo[]	selected_files 	= dm_files==null?null:dm_files[i];
+
+						if ( selected_files != null ){
+							
+							continue;
+						}
+						
+						File save_loc = dm.getAbsoluteSaveLocation();
+
+						String save_loc_str = save_loc.getAbsolutePath();
+						
+						if ( !torrent.isSimpleTorrent()){
+							
+							if ( !save_loc_str.endsWith( File.separator )){
+								
+								save_loc_str += File.separator;
+							}
+						}
+						
+						String save_name = save_loc.getName();
+						
+
+						for ( String root: search_roots ){
+
+							if ( handled[i] ){
+								break;
+							}
+							
+							synchronized( quit ){
+								if ( quit[0] ){
+									break;
+								}
+							}
+
+							File root_dir = new File( root );
+							
+							File test_loc = new File( root_dir, save_name );
+							
+							if ( test_loc.exists()){
+						
+								DiskManagerFileInfo[]	dm_files = dm.getDiskManagerFileInfoSet().getFiles();					
+						
+								if ( torrent.isSimpleTorrent()){
+									
+									if ( dm_files[0].getLength() == test_loc.length()){
+										
+										dm_files[0].setLinkAtomic( test_loc );
+										
+										dm.setTorrentSaveDir( test_loc, true );
+										
+										handled[i] = true;
+										
+										num_handled++;
+										
+										logLine(viewer, dm_indent, "Download '" + dm.getDisplayName() + "' relocated from '" + save_loc.getParent() + "' to '" + root + "'" );
+										
+										break;
+									}
+								}else{
+									
+									boolean	all_good = true;
+									
+									for ( DiskManagerFileInfo file: dm_files ){
+										
+										if ( !all_good ){
+											
+											break;
+										}
+										
+										if ( file.getTorrentFile().isPadFile() || file.getDownloaded() == 0 ){
+											
+											continue;
+										}
+										
+										File source_file = file.getFile( true );
+										
+										String source_file_str = source_file.getAbsolutePath();
+										
+										if ( source_file_str.startsWith( save_loc_str )){
+											
+												// is in the folder hierarchy so needs to exist
+											
+											File target_file = new File( test_loc, source_file_str.substring( save_loc_str.length()));
+											
+											if ( target_file.exists()){
+												
+												if ( !file.isSkipped()){
+													
+													if ( file.getLength() != target_file.length()){
+														
+														all_good = false;
+													}
+												}
+											}else{
+												
+												all_good = false;
+											}
+										}
+									}
+									
+									if ( all_good ){
+									
+										dm.setTorrentSaveDir( test_loc, true );
+										
+										handled[i] = true;
+										
+										num_handled++;
+										
+										logLine(viewer, dm_indent, "Download '" + dm.getDisplayName() + "' relocated from '" + save_loc.getParent() + "' to '" + root + "'" );
+										
+										break;
+									}
+								}
+							}
+						}		
+					}
+					
+					if ( num_handled == handled.length ){
+						
+						return;
+					}
+							
 					int file_count	= 0;
 
 					int	downloads_modified = 0;
@@ -3087,6 +3238,11 @@ public class ManagerUtils {
 
 					for ( int i=0;i<dms.length;i++){
 
+						if ( handled[i] ){
+							
+							continue;
+						}
+						
 						DownloadManager			dm 				= dms[i];
 
 						int dm_indent = 0;
