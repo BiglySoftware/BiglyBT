@@ -3043,181 +3043,182 @@ public class ManagerUtils {
 					
 						// first level of processing - look for simple root folder changes								
 					
-					for ( int i=0;i<dms.length;i++){
-
-						DownloadManager			dm = dms[i];
-
-						int dm_indent = 0;
-
-						synchronized( quit ){
-							if ( quit[0] ){
-								break;
-							}
-						}
-
-						if ( !dm.isPersistent()){
-
-							continue;
-						}
-
-						TOTorrent torrent = dm.getTorrent();
-
-						if ( torrent == null ){
-
-							continue;
-						}
-
-						DiskManagerFileInfo[]	selected_files 	= dm_files==null?null:dm_files[i];
-
-						if ( selected_files != null ){
-							
-							continue;
-						}
-						
-						File save_loc = dm.getAbsoluteSaveLocation();
-
-						String save_loc_str = save_loc.getAbsolutePath();
-						
-						if ( !torrent.isSimpleTorrent()){
-							
-							if ( !save_loc_str.endsWith( File.separator )){
-								
-								save_loc_str += File.separator;
-							}
-						}
-						
-						String save_name = save_loc.getName();
-						
-outer:
-						for ( String root: search_roots ){
-
-							if ( handled[i] ){
-								break;
-							}
-							
+					if ( mode == 0 ){
+						for ( int i=0;i<dms.length;i++){
+	
+							DownloadManager			dm = dms[i];
+	
+							int dm_indent = 0;
+	
 							synchronized( quit ){
 								if ( quit[0] ){
 									break;
 								}
 							}
-
-							File root_dir = new File( root );
+	
+							if ( !dm.isPersistent()){
+	
+								continue;
+							}
+	
+							TOTorrent torrent = dm.getTorrent();
+	
+							if ( torrent == null ){
+	
+								continue;
+							}
+	
+							DiskManagerFileInfo[]	selected_files 	= dm_files==null?null:dm_files[i];
+	
+							if ( selected_files != null ){
+								
+								continue;
+							}
 							
-							File test_loc = new File( root_dir, save_name );
+							File save_loc = dm.getAbsoluteSaveLocation();
+	
+							String save_loc_str = save_loc.getAbsolutePath();
 							
-							if ( test_loc.exists()){
-						
-								DiskManagerFileInfo[]	dm_files = dm.getDiskManagerFileInfoSet().getFiles();					
-						
-								if ( torrent.isSimpleTorrent()){
+							if ( !torrent.isSimpleTorrent()){
+								
+								if ( !save_loc_str.endsWith( File.separator )){
 									
-										// if originating file exists then bail completely
-									
-									if ( dm_files[0].getFile( true ).exists()){
-										
-										break outer;
-									}
-									
-									if ( dm_files[0].getLength() == test_loc.length()){
-										
-										dm_files[0].setLinkAtomic( test_loc );
-										
-										dm.setTorrentSaveDir( test_loc, true );
-										
-										handled[i] = true;
-										
-										downloads_modified++;
-										
-										dm.forceRecheck();
-										
-										logLine(viewer, dm_indent, "Download '" + dm.getDisplayName() + "' relocated from '" + save_loc.getParent() + "' to '" + root + "'" );
-										
-										break;
-									}
-								}else{
-									
-									boolean	all_good = true;
-									
-									for ( DiskManagerFileInfo file: dm_files ){
-										
-										if ( !all_good ){
-											
-											break;
-										}
-										
-										if ( file.getTorrentFile().isPadFile()){
-											
-											continue;
-										}
-										
-										File source_file = file.getFile( true );
-										
-										if ( source_file.exists()){
-											
-												// if originating file exists then bail completely
-
-											break outer;
-										}
-										
-										String source_file_str = source_file.getAbsolutePath();
-										
-										if ( source_file_str.startsWith( save_loc_str )){
-											
-												// is in the folder hierarchy so might need to exist
-											
-											File target_file = new File( test_loc, source_file_str.substring( save_loc_str.length()));
-											
-											if ( target_file.exists()){
-												
-												if ( file.isSkipped()){
-													
-													// don't know what size it should be to cover
-													// partial pieces so assume ok
-													
-												}else{
-													
-													if ( file.getLength() != target_file.length()){
-														
-														all_good = false;
-													}
-												}
-											}else{
-												
-												if ( file.isSkipped() && file.getDownloaded() == 0 ){
-													
-													// file doesn't need to exist
-												
-												}else{
-												
-													all_good = false;
-												}
-											}
-										}
-									}
-									
-									if ( all_good ){
-									
-										dm.setTorrentSaveDir( test_loc, true );
-										
-										handled[i] = true;
-										
-										downloads_modified++;
-										
-										dm.forceRecheck();
-										
-										logLine(viewer, dm_indent, "Download '" + dm.getDisplayName() + "' relocated from '" + save_loc.getParent() + "' to '" + root + "'" );
-										
+									save_loc_str += File.separator;
+								}
+							}
+							
+							String save_name = save_loc.getName();
+							
+							outer:
+							for ( String root: search_roots ){
+	
+								if ( handled[i] ){
+									break;
+								}
+								
+								synchronized( quit ){
+									if ( quit[0] ){
 										break;
 									}
 								}
-							}
-						}		
+	
+								File root_dir = new File( root );
+								
+								File test_loc = root_dir.getName().equals( save_name )?root_dir:new File( root_dir, save_name );
+								
+								if ( test_loc.exists()){
+							
+									DiskManagerFileInfo[]	dm_files = dm.getDiskManagerFileInfoSet().getFiles();					
+							
+									if ( torrent.isSimpleTorrent()){
+										
+											// if originating file exists then bail completely
+										
+										if ( dm_files[0].getFile( true ).exists()){
+											
+											break outer;
+										}
+										
+										if ( dm_files[0].getLength() == test_loc.length()){
+											
+											dm_files[0].setLinkAtomic( test_loc );
+											
+											dm.setTorrentSaveDir( test_loc, true );
+											
+											handled[i] = true;
+											
+											downloads_modified++;
+											
+											dm.forceRecheck();
+											
+											logLine(viewer, dm_indent, "Download '" + dm.getDisplayName() + "' relocated from '" + save_loc.getParent() + "' to '" + root + "'" );
+											
+											break;
+										}
+									}else{
+										
+										boolean	all_good = true;
+										
+										for ( DiskManagerFileInfo file: dm_files ){
+											
+											if ( !all_good ){
+												
+												break;
+											}
+											
+											if ( file.getTorrentFile().isPadFile()){
+												
+												continue;
+											}
+											
+											File source_file = file.getFile( true );
+											
+											if ( source_file.exists()){
+												
+													// if originating file exists then bail completely
+	
+												break outer;
+											}
+											
+											String source_file_str = source_file.getAbsolutePath();
+											
+											if ( source_file_str.startsWith( save_loc_str )){
+												
+													// is in the folder hierarchy so might need to exist
+												
+												File target_file = new File( test_loc, source_file_str.substring( save_loc_str.length()));
+												
+												if ( target_file.exists()){
+													
+													if ( file.isSkipped()){
+														
+														// don't know what size it should be to cover
+														// partial pieces so assume ok
+														
+													}else{
+														
+														if ( file.getLength() != target_file.length()){
+															
+															all_good = false;
+														}
+													}
+												}else{
+													
+													if ( file.isSkipped() && file.getDownloaded() == 0 ){
+														
+														// file doesn't need to exist
+													
+													}else{
+													
+														all_good = false;
+													}
+												}
+											}
+										}
+										
+										if ( all_good ){
+										
+											dm.setTorrentSaveDir( test_loc, true );
+											
+											handled[i] = true;
+											
+											downloads_modified++;
+											
+											dm.forceRecheck();
+											
+											logLine(viewer, dm_indent, "Download '" + dm.getDisplayName() + "' relocated from '" + save_loc.getParent() + "' to '" + root + "'" );
+											
+											break;
+										}
+									}
+								}
+							}		
+						}
 					}
 					
 					if ( downloads_modified < handled.length ){
 							
-						int file_count	= 0;
-	
+						int file_count	= 0;	
 	
 						long bfm_start = SystemTime.getMonotonousTime();
 	
