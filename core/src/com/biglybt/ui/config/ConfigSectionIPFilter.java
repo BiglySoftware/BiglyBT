@@ -27,7 +27,6 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManager;
-import com.biglybt.core.ipfilter.impl.IpFilterAutoLoaderImpl;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pifimpl.local.ui.config.*;
@@ -115,6 +114,14 @@ public class ConfigSectionIPFilter
 				"ConfigView.section.ipfilter.blockbanning", 0, 256);
 		add(block_banning, listBlockBanning);
 
+		// don't ban LAN
+		
+		BooleanParameterImpl dont_ban_lan = new BooleanParameterImpl(
+				BCFG_IP_FILTER_DONT_BAN_LAN,
+				"ConfigView.section.ipfilter.dontbanlan");
+		add(dont_ban_lan, listBlockBanning);
+
+		
 		// triggers
 
 		enable_bad_data_banning.addEnabledOnSelection(block_banning, discard_ratio,

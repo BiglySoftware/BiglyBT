@@ -27,8 +27,13 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.instancemanager.*;
+import com.biglybt.core.ipfilter.BannedIp;
+import com.biglybt.core.ipfilter.IPFilterListener;
+import com.biglybt.core.ipfilter.IpFilter;
+import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -177,6 +182,8 @@ ClientInstanceManagerImpl
 
 	private volatile boolean		initialised;
 
+	private final IpFilter	ip_filter;
+	
 	private volatile Map<InetSocketAddress,InetSocketAddress>			tcp_lan_to_ext	= new HashMap<>();
 	private volatile Map<InetSocketAddress,InetSocketAddress>			udp_lan_to_ext	= new HashMap<>();
 	private volatile Map<InetSocketAddress,InetSocketAddress>			udp2_lan_to_ext	= new HashMap<>();
@@ -207,6 +214,60 @@ ClientInstanceManagerImpl
 
 		my_instance	= new ClientMyInstanceImpl( adapter, this );
 
+		ip_filter	= IpFilterManagerFactory.getSingleton().getIPFilter();
+
+		ip_filter.addListener(
+			new IPFilterListener(){
+				
+				@Override
+				public boolean canIPBeBlocked(String ip, byte[] torrent_hash){
+					return( true );
+				}
+				
+				@Override
+				public boolean 
+				canIPBeBanned(
+					String ip )
+				{
+					if ( COConfigurationManager.getBooleanParameter( ConfigKeys.IPFilter.BCFG_IP_FILTER_DONT_BAN_LAN )){
+						
+						try{
+							InetSocketAddress isa;
+						
+							if ( AENetworkClassifier.categoriseAddress( ip ) == AENetworkClassifier.AT_PUBLIC ){
+								
+								isa = new InetSocketAddress( InetAddress.getByName( ip ), 0 );
+								
+							}else{
+							
+								isa = InetSocketAddress.createUnresolved( ip, 0 );
+							}
+						
+							return( !isLANAddress( isa ));
+							
+						}catch( Throwable e ){
+							
+							return( true );
+						}
+					}else{
+						
+						return( true );
+					}
+				}
+				
+				@Override
+				public void IPFilterEnabledChanged(boolean is_enabled){
+				}
+				
+				@Override
+				public void IPBlockedListChanged(IpFilter filter){
+				}
+				
+				@Override
+				public void IPBanned(BannedIp ip){
+				}
+			});
+		
 		new ClientPortClashHandler( this );
 	}
 

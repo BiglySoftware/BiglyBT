@@ -235,6 +235,7 @@ public final class ConfigKeys {
 		public static final String FCFG_IP_FILTER_BAN_DISCARD_RATIO = "Ip Filter Ban Discard Ratio";
 		public static final String ICFG_IP_FILTER_BAN_DISCARD_MIN_KB = "Ip Filter Ban Discard Min KB";
 		public static final String ICFG_IP_FILTER_BAN_BLOCK_LIMIT = "Ip Filter Ban Block Limit";
+		public static final String BCFG_IP_FILTER_DONT_BAN_LAN = "Ip Filter Dont Ban LAN";
 		public static final String ICFG_IP_FILTER_AUTOLOAD_DAYS = "Ip Filter Autoload Days";
 		public static final String ICFG_IP_FILTER_AUTOLOAD_LAST = "Ip Filter Autoload Last Date";
 		public static final String SCFG_IP_FILTER_AUTOLOAD_FILE = "Ip Filter Autoload File";
