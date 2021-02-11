@@ -92,6 +92,12 @@ public class ConfigSectionFile
 		paramShowSep.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(paramShowSep, listDefaultDir);
 
+		IntParameterImpl autoClose = new IntParameterImpl(
+				ICFG_UI_ADDTORRENT_OPENOPTIONS_AUTO_CLOSE_SECS,
+				"ConfigView.label.showopentorrentoptions.autoclose");
+		add( autoClose, Parameter.MODE_INTERMEDIATE, listDefaultDir);
+
+		
 		// def dir: autoSave -> auto-rename
 
 		BooleanParameterImpl autoSaveAutoRename = new BooleanParameterImpl(

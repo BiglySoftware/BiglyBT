@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BufferedLabel;
 
 public abstract class StandardButtonsArea
 {
@@ -38,6 +39,8 @@ public abstract class StandardButtonsArea
 
 	private Button[] buttons;
 
+	private BufferedLabel label;
+	
 	private Map<Integer, Boolean> buttonsEnabled = new HashMap<>();
 
 	private static final int BUTTON_PADDING = 2;
@@ -143,6 +146,25 @@ public abstract class StandardButtonsArea
 		fd.right = new FormAttachment(cCenterH, 0, SWT.LEFT);
 		cButtonArea.setLayoutData(fd);
 
+		Composite cLabelArea = new Composite(cBottomArea, SWT.NONE);
+		fd = new FormData();
+		fd.top = new FormAttachment(cButtonArea, 0, SWT.TOP);
+		fd.bottom = new FormAttachment(cButtonArea, 0, SWT.BOTTOM);
+		fd.right = new FormAttachment(cButtonArea, 0, SWT.LEFT);
+		fd.left = new FormAttachment(0, 0);
+		cLabelArea.setLayoutData(fd);
+		
+		GridLayout gridLayout = new GridLayout();
+		gridLayout.marginBottom = gridLayout.marginTop = gridLayout.marginLeft = gridLayout.marginRight = 0;
+		gridLayout.marginWidth = gridLayout.marginHeight = 0;
+		
+		cLabelArea.setLayout( gridLayout );
+		
+		label = new BufferedLabel( cLabelArea, SWT.DOUBLE_BUFFERED );
+		GridData gridData = new GridData( GridData.FILL_BOTH );
+		gridData.verticalAlignment = SWT.CENTER;
+		label.setLayoutData( gridData);
+		
 		RowLayout rowLayout = new RowLayout(SWT.HORIZONTAL);
 		rowLayout.center = true;
 		rowLayout.spacing = 8;
@@ -246,5 +268,11 @@ public abstract class StandardButtonsArea
 
 	public Button[] getButtons() {
 		return buttons;
+	}
+	
+	public BufferedLabel
+	getLabel()
+	{
+		return( label );
 	}
 }

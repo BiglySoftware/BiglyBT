@@ -20,6 +20,7 @@ package com.biglybt.ui.swt;
 import java.io.File;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.SystemProperties;
@@ -320,5 +321,7 @@ public class UIConfigDefaultsSWT
 		
 		def.addParameter( "Peers View Show Local Peer", false);
 		def.addParameter( "Pieces View Show Uploading", false);
+		
+		def.addParameter( ConfigKeys.File.ICFG_UI_ADDTORRENT_OPENOPTIONS_AUTO_CLOSE_SECS, 0 );
 	}
 }
