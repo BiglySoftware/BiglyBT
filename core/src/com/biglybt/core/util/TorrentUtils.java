@@ -3770,6 +3770,23 @@ TorrentUtils
 			throw( new TOTorrentException( "Can't amend private attribute", TOTorrentException.RT_WRITE_FAILS ));
 		}
 
+	  	@Override
+	    public String
+		getSource()
+	   	{
+	 		return( delegate.getSource());
+	   	}
+
+		@Override
+	    public void
+		setSource(
+			String	str )
+		
+			throws TOTorrentException
+	   	{
+			throw( new TOTorrentException( "Can't amend source attribute", TOTorrentException.RT_WRITE_FAILS ));
+		}
+		
 		@Override
 		public boolean
 		hasSameHashAs(

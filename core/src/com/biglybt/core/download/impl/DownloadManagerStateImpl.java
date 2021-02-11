@@ -4706,6 +4706,31 @@ DownloadManagerStateImpl
     	}
 
     	@Override
+	    public String
+    	getSource()
+       	{
+	   		if ( fixup()){
+	
+				return( delegate.getSource());
+			}
+	   		
+	   		return( null );
+       	}
+
+    	@Override
+	    public void
+    	setSource(
+    		String	str )
+    	
+    		throws TOTorrentException
+	   	{
+  	   		if ( fixup()){
+
+				delegate.setSource( str );
+			}
+    	}
+    	
+    	@Override
 	    public void
     	setAdditionalStringProperty(
     		String		name,

@@ -203,6 +203,13 @@ public class ProgressPanel extends AbstractWizardPanel<NewTorrentWizard> impleme
 
       TorrentUtils.setPrivate( torrent, wizard.getPrivateTorrent());	// this will change the hash so do it before setting the URL!  	
 
+      String source = wizard.getSource();
+      
+      if ( source != null && !source.isEmpty()){
+    	  
+    	  torrent.setSource( source );
+      }
+      
       if ( tracker_type == NewTorrentWizard.TT_DECENTRAL ){
 
       	TorrentUtils.setDecentralised( torrent );

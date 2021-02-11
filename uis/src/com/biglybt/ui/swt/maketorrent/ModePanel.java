@@ -428,6 +428,25 @@ public class ModePanel extends AbstractWizardPanel<NewTorrentWizard> {
         ((NewTorrentWizard) wizard).setComment(comment.getText());
       }
     });
+    
+    //Line:
+    //Source: [               ]
+    label = new Label(panel, SWT.NULL);
+    Messages.setLanguageText(label, "wizard.source");
+
+    final Text source = new Text(panel, SWT.BORDER);
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData.horizontalSpan = 5;
+    source.setLayoutData(gridData);
+    source.setText(((NewTorrentWizard) wizard).getSource());
+
+    source.addListener(SWT.Modify, new Listener() {
+      @Override
+      public void handleEvent(Event event) {
+        ((NewTorrentWizard) wizard).setSource(source.getText());
+      }
+    });
+    
   }
 
   /*

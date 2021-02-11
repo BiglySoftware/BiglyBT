@@ -876,6 +876,15 @@ public class GeneralView
 			});
 		}
 
+    String privateAndSourceStr = MessageText.getString("GeneralView."+(torrent != null && torrent.getPrivate()?"yes":"no"));
+    
+    String source = torrent.getSource();
+    
+    if ( source != null ){
+    	
+    	privateAndSourceStr += ", " + MessageText.getString( "wizard.source") + ": " + source;
+    }
+    
     setInfos(
       manager.getDisplayName(),
 	  DisplayFormatters.formatByteCountToKiBEtc(manager.getSize()),
@@ -887,8 +896,7 @@ public class GeneralView
       manager.getTorrentComment(),
       creation_date,
       manager.getDownloadState().getUserComment(),
-      MessageText.getString("GeneralView."+(torrent != null && torrent.getPrivate()?"yes":"no"))
-      );
+      privateAndSourceStr);
 
 
     //A special layout, for OS X and Linux, on which for some unknown reason
@@ -1431,7 +1439,7 @@ public class GeneralView
     final String 	_comment,
 	final String 	_creation_date,
 	final String 	_user_comment,
-	final String 	isPrivate) {
+	final String 	isPrivateAndSource) {
     if (display == null || display.isDisposed())
 			return;
 		Utils.execSWTThread(new AERunnable()
@@ -1453,7 +1461,7 @@ public class GeneralView
 				pieceNumber.setText(_pieceData); //$NON-NLS-1$
 				pieceSize.setText(_pieceLength);
 				creation_date.setText(_creation_date);
-				privateStatus.setText(isPrivate);
+				privateStatus.setText(isPrivateAndSource);
 				boolean do_relayout = false;
 				do_relayout = setCommentAndFormatLinks(lblComment, _comment.length() > 5000 && Constants.isWindowsXP ? _comment.substring(0, 5000) : _comment ) | do_relayout;
 				do_relayout = setCommentAndFormatLinks(user_comment, _user_comment) | do_relayout;

@@ -367,6 +367,22 @@ TRHostExternalTorrent
 	{
 	}
 
+   	@Override
+    public String
+	getSource()
+   	{
+ 		return( null );
+   	}
+
+	@Override
+    public void
+	setSource(
+		String	str )
+	
+		throws TOTorrentException
+   	{
+	}
+	
 	@Override
 	public boolean
 	hasSameHashAs(

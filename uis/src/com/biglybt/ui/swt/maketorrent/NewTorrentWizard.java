@@ -54,6 +54,7 @@ NewTorrentWizard
 	private static String	default_open_dir 	= COConfigurationManager.getStringParameter( "CreateTorrent.default.open", "" );
 	private static String	default_save_dir 	= COConfigurationManager.getStringParameter( "CreateTorrent.default.save", "" );
 	private static String	comment 			= COConfigurationManager.getStringParameter( "CreateTorrent.default.comment", "" );
+	private static String	source 				= COConfigurationManager.getStringParameter( "CreateTorrent.default.source", "" );
 	private static int 		tracker_type 		= COConfigurationManager.getIntParameter( "CreateTorrent.default.trackertype", TT_LOCAL );
 
 	static{
@@ -197,6 +198,17 @@ NewTorrentWizard
   String getComment() {
     return (comment);
   }
+  
+  void setSource(String s) {
+	  source = s.trim();
+
+	  COConfigurationManager.setParameter("CreateTorrent.default.source",source);
+  }
+
+  String getSource() {
+	  return (source);
+  }
+  
   private void createDropTarget(final Control control) {
     DropTarget dropTarget = new DropTarget(control, DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
     dropTarget.setTransfer(new Transfer[] { FixedURLTransfer.getInstance(), FileTransfer.getInstance()});

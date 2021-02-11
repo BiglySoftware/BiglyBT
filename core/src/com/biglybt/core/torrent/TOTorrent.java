@@ -334,6 +334,20 @@ TOTorrent
 
 		throws TOTorrentException;
 
+		/**
+		 * Note - changing the source CHANGES THE TORRENT HASH
+		 * @param source
+		 */
+	
+	public void
+	setSource(
+		String	source )
+	
+		throws TOTorrentException;
+	
+	public String
+	getSource();
+	
 	/**
 	 * The additional properties are used for holding non-core data for Azureus' own user
 	 * @param name		name of the property (e.g. "encoding")
