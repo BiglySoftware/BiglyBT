@@ -137,6 +137,7 @@ XferStatsPanel
 	    layout.numColumns = 3;
 	    
 	    controls.setLayout(layout);
+	    controls.setBackground( white );
 	    
 	    Label label = new Label( controls, SWT.NULL );
 	    label.setBackground( white );
