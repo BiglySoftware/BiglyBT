@@ -27,6 +27,7 @@ import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.tag.TagGroup;
 import com.biglybt.core.util.*;
@@ -1079,7 +1080,7 @@ PeersViewBase
 		
 		ban_for_item.setEnabled( !onlyMyPeer );
 
-		addPeersMenu( download_specific, "", menu );
+		addPeersMenu( download_specific, "", menu, peers );
 	}
 	
 	private static String
@@ -1112,9 +1113,10 @@ PeersViewBase
 	
 	protected static boolean
 	addPeersMenu(
-		final DownloadManager 	man,
-		String					column_name,
-		Menu					menu )
+		DownloadManager 	man,
+		String				column_name,
+		Menu				menu,
+		PEPeer[]			peers )
 	{
 		new MenuItem( menu, SWT.SEPARATOR);
 
@@ -1312,39 +1314,73 @@ PeersViewBase
 			}
 		}
 		
+		addPeerSetMenu( menu, peers );
+		
+		return( true );
+	}
+	
+	public static void
+	addPeerSetMenu(
+		Menu		menu,
+		PEPeer[]	peers )
+	{
+		String	peer_cc = null;
+		
+		if ( peers.length == 1 ){
+			
+			String[] details = PeerUtils.getCountryDetails( peers[0] );
+			
+			if ( details != null && details.length > 0 ){
+		
+				peer_cc = details[0];
+				
+			}else{
+				
+				peer_cc = PeerUtils.CC_UNKNOWN;
+			}
+		}
+		
+		addPeerSetMenu( menu, true, peer_cc );
+	}
+	
+	public static void
+	addPeerSetMenu(
+		Menu		menu,
+		boolean		do_auto_cat,
+		String		peer_cc )
+	{
 		SpeedLimitHandler slh = SpeedLimitHandler.getSingleton(CoreFactory.getSingleton());
 		
 		List<SpeedLimitHandler.PeerSet> peer_sets = slh.getPeerSets();
 		
-		boolean	has_auto = false;
+		boolean	has_auto_cat 	= false;
+		boolean	has_cc_peer_set = false;
 		
+		String peer_cc_set_name = peer_cc==null?null:( peer_cc + " " + MessageText.getString( "TableColumn.header.peers" ));
+
 		for ( SpeedLimitHandler.PeerSet peer_set: peer_sets ){
+					
+			if ( do_auto_cat ){
 		
-			Pattern pattern = peer_set.getClientPattern();
+				Pattern pattern = peer_set.getClientPattern();
+
+				if ( pattern != null && pattern.pattern().equals( "auto" )){
+		
+					has_auto_cat = true;
+				}
+			}
 			
-			if ( pattern != null ){
+			if ( peer_cc_set_name != null ){
 				
-				if ( pattern.pattern().equals( "auto" )){
-		
-					has_auto = true;
+				if ( peer_set.getName().equals( peer_cc_set_name )){
+					
+					has_cc_peer_set = true;
 				}
 			}
 		}
 		
-		if ( has_auto ){
-			
-			MenuItem edit_slh_item = new MenuItem( menu, SWT.PUSH );
-			
-			Messages.setLanguageText( edit_slh_item, "menu.edit.peer.set.config");
-	
-			edit_slh_item.addListener(
-				SWT.Selection,
-				(e)->{
-					Utils.editSpeedLimitHandlerConfig( slh );
-				});
-			
-		}else{
-			
+		if ( do_auto_cat && !has_auto_cat ){
+						
 			MenuItem auto_cat_item = new MenuItem( menu, SWT.PUSH );
 			
 			Messages.setLanguageText( auto_cat_item, "menu.add.auto.client.peerset");
@@ -1356,7 +1392,31 @@ PeersViewBase
 				});
 		}
 		
-		return( true );
+		if ( peer_cc_set_name != null && !has_cc_peer_set ){
+			
+			MenuItem auto_cat_item = new MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText( auto_cat_item, "menu.add.peerset.for.cc", Utils.getCCString( peer_cc ));
+	
+			auto_cat_item.addListener(
+				SWT.Selection,
+				(e)->{
+					slh.addConfigLine( "peer_set " + peer_cc_set_name + "=" + peer_cc + ",group=" + MessageText.getString( "TableColumn.header.Country" ) , true );
+				});
+		}
+		
+		if ( has_auto_cat || has_cc_peer_set ){
+			
+			MenuItem edit_slh_item = new MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText( edit_slh_item, "menu.edit.peer.set.config");
+	
+			edit_slh_item.addListener(
+				SWT.Selection,
+				(e)->{
+					Utils.editSpeedLimitHandlerConfig( slh );
+				});
+		}
 	}
 	
 	@Override
@@ -1376,7 +1436,7 @@ PeersViewBase
 		String 	sColumnName, 
 		Menu 	menuThisColumn)
 	{
-		if ( addPeersMenu( null, sColumnName, menuThisColumn )){
+		if ( addPeersMenu( null, sColumnName, menuThisColumn, new PEPeer[0] )){
 
 			new MenuItem( menuThisColumn, SWT.SEPARATOR );
 		}

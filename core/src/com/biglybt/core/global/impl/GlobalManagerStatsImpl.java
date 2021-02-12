@@ -674,7 +674,7 @@ GlobalManagerStatsImpl
 										
 										String[] dets = PeerUtils.getCountryDetails(peer);
 				
-										details = new PeerDetails( dets==null||dets.length<1?"??":dets[0] );
+										details = new PeerDetails( dets==null||dets.length<1?PeerUtils.CC_UNKNOWN:dets[0] );
 										
 										long[] init_data = (long[])peer.getUserData( PEER_DATA_INIT_KEY );
 										
@@ -1021,7 +1021,7 @@ GlobalManagerStatsImpl
 			
 			if ( o_details == null || o_details.length < 1 ){
 			
-				originator_cc = "??";
+				originator_cc = PeerUtils.CC_UNKNOWN;
 				
 			}else{
 			

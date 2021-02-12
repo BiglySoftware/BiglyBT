@@ -243,7 +243,7 @@ public class PeersView
 	@Override
 	public void addThisColumnSubMenu(String columnName, Menu menuThisColumn) {
 		
-		if ( addPeersMenu( manager, columnName, menuThisColumn )){
+		if ( addPeersMenu( manager, columnName, menuThisColumn, new PEPeer[0] )){
 
 			new MenuItem( menuThisColumn, SWT.SEPARATOR );
 		}

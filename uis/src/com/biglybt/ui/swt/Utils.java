@@ -5585,4 +5585,28 @@ public class Utils
 			}
 		}
 	}
+	
+	public static String
+	getCCString(
+		String		cc )
+	{
+		String str = cc;
+		
+		try{
+			Locale country_locale = new Locale( "", cc );
+
+			country_locale.getISO3Country();
+			
+			String name = country_locale.getDisplayCountry( Locale.getDefault());
+			
+			if ( name != null && !name.isEmpty()){
+				
+				str = name + " (" + cc + ")";
+			}
+			
+		}catch( Throwable e ){				
+		}
+		
+		return( str );
+	}
 }

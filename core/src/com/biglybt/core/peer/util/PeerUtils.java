@@ -51,6 +51,8 @@ import com.biglybt.pifimpl.local.PluginCoreUtils;
  */
 public class PeerUtils {
 
+	public static final String	CC_UNKNOWN = "??";
+	
    private static final String	CONFIG_MAX_CONN_PER_TORRENT	= "Max.Peer.Connections.Per.Torrent";
    private static final String	CONFIG_MAX_CONN_TOTAL		= "Max.Peer.Connections.Total";
 

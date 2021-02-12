@@ -47,6 +47,7 @@ import com.biglybt.core.util.DisplayFormatters;
 
 
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.views.PeersViewBase;
 
 
 public class
@@ -258,48 +259,7 @@ XferStatsPanel
     	    			
 	    				menu = new Menu( canvas );
 			    				
-	    				SpeedLimitHandler slh = SpeedLimitHandler.getSingleton(CoreFactory.getSingleton());
-	    				
-	    				List<SpeedLimitHandler.PeerSet> peer_sets = slh.getPeerSets();
-	    				
-	    				boolean	has_auto = false;
-	    				
-	    				String target_cc	= closest.cc;
-	    				
-	    				String target_name = target_cc + " " + MessageText.getString( "TableColumn.header.peers" );
-	    				
-	    				for ( SpeedLimitHandler.PeerSet peer_set: peer_sets ){
-	    				
-	    					if ( peer_set.getName().equals( target_name )){
-	    						
-	    						has_auto = true;
-	    					}
-	    				}
-	    				
-	    				if ( has_auto ){
-	    					
-	    					MenuItem edit_slh_item = new MenuItem( menu, SWT.PUSH );
-	    					
-	    					Messages.setLanguageText( edit_slh_item, "menu.edit.peer.set.config");
-	    			
-	    					edit_slh_item.addListener(
-	    						SWT.Selection,
-	    						(e)->{
-	    							Utils.editSpeedLimitHandlerConfig( slh );
-	    						});
-	    					
-	    				}else{
-	    					
-	    					MenuItem auto_cat_item = new MenuItem( menu, SWT.PUSH );
-	    					
-	    					Messages.setLanguageText( auto_cat_item, "menu.add.peerset.for.cc", getCCString( target_cc ));
-	    			
-	    					auto_cat_item.addListener(
-	    						SWT.Selection,
-	    						(e)->{
-	    							slh.addConfigLine( "peer_set " + target_name + "=" + target_cc + ",group=" + MessageText.getString( "TableColumn.header.Country" ) , true );
-	    						});
-	    				}
+	    				PeersViewBase.addPeerSetMenu( menu, false, closest.cc );
 	    					    				
 						final Point cursorLocation = Display.getCurrent().getCursorLocation();
 	
@@ -885,30 +845,6 @@ XferStatsPanel
 		}
 	}
 	
-	private String
-	getCCString(
-		String		cc )
-	{
-		String str = cc;
-		
-		try{
-			Locale country_locale = new Locale( "", cc );
-
-			country_locale.getISO3Country();
-			
-			String name = country_locale.getDisplayCountry( Locale.getDefault());
-			
-			if ( name != null && !name.isEmpty()){
-				
-				str = name + " (" + cc + ")";
-			}
-			
-		}catch( Throwable e ){				
-		}
-		
-		return( str );
-	}
-	
 	private class
 	Link
 	{
@@ -1163,7 +1099,7 @@ XferStatsPanel
 		private String
 		getToolTip()
 		{
-			String tt = getCCString( cc );
+			String tt = Utils.getCCString( cc );
 			
 			if ( type == 0 ){
 				
