@@ -26,7 +26,6 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 
 import java.util.*;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
@@ -44,12 +43,10 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.speedmanager.SpeedLimitHandler;
-import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 
 
 import com.biglybt.ui.swt.utils.ColorCache;
-import com.biglybt.ui.swt.views.PeersViewBase;
 
 
 public class
@@ -107,7 +104,8 @@ XferStatsPanel
 		display = composite.getDisplay();
 
 		Color white = ColorCache.getColor(display,255,255,255);
-
+		Color dark_grey = Colors.dark_grey;
+		
 		Composite panel = new Composite(composite,SWT.NULL);
 	    GridLayout layout = new GridLayout();
 	    layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 
@@ -124,6 +122,7 @@ XferStatsPanel
 	    grid_data.horizontalIndent = 5;
 	    header_label.setLayoutData(grid_data);
 	    header_label.getControl().setBackground( white );
+	    header_label.getControl().setForeground( dark_grey );
 	    
 	    if ( !is_global ){
 	    	
@@ -141,16 +140,20 @@ XferStatsPanel
 	    
 	    Label label = new Label( controls, SWT.NULL );
 	    label.setBackground( white );
+	    label.setForeground( dark_grey );
+
 	    Messages.setLanguageText( label, "ConfigView.section.display" );
 	    
 	    Button button1	= new Button( controls, SWT.RADIO );
 	    button1.setBackground( white );
+	    button1.setForeground( dark_grey );
 	    Messages.setLanguageText( button1, is_global?"label.samples":"Pieces.column.speed" );
 	    button1.setSelection( button1_selected );
 	    
 	    
 	    Button button2	= new Button( controls, SWT.RADIO );
 	    button2.setBackground( white );
+	    button2.setForeground( dark_grey );
 	    Messages.setLanguageText( button2, is_global?"label.throughput":"SpeedView.stats.total" );
 	    button2.setSelection( !button1_selected );
 
