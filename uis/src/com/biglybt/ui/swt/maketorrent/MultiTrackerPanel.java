@@ -102,7 +102,7 @@ public class MultiTrackerPanel extends AbstractWizardPanel<NewTorrentWizard> imp
       public void handleEvent(Event e) {
         List group = new ArrayList();
         List tracker = new ArrayList();
-        tracker.add(((NewTorrentWizard)wizard).trackerURL);
+        tracker.add(wizard.getTrackerURL());
         group.add(tracker);
         new MultiTrackerEditor(wizard.getWizardWindow(), null,group,MultiTrackerPanel.this);
       }
@@ -235,7 +235,7 @@ public class MultiTrackerPanel extends AbstractWizardPanel<NewTorrentWizard> imp
     if(selection == -1) {
       List group = new ArrayList();
       List tracker = new ArrayList();
-      tracker.add(((NewTorrentWizard)wizard).trackerURL);
+      tracker.add(wizard.getTrackerURL());
       group.add(tracker);
       ((NewTorrentWizard)wizard).trackers = group;
       ((NewTorrentWizard)wizard).multiTrackerConfig = "";
@@ -250,7 +250,7 @@ public class MultiTrackerPanel extends AbstractWizardPanel<NewTorrentWizard> imp
   }
 
   private void setNext() {
-    String trackerUrl = ((NewTorrentWizard)wizard).trackerURL;
+    String trackerUrl = wizard.getTrackerURL();
     List groups = ((NewTorrentWizard)wizard).trackers;
     Iterator iterGroups = groups.iterator();
     while(iterGroups.hasNext()) {

@@ -147,7 +147,9 @@ public class ModePanel extends AbstractWizardPanel<NewTorrentWizard> {
 
     }else if ( tracker_type == NewTorrentWizard.TT_EXTERNAL ){
 
-      setTrackerUrl( NewTorrentWizard.TT_EXTERNAL_DEFAULT );
+    	if ( !wizard.isValidTracker( wizard.getTrackerURL())){
+    		setTrackerUrl( NewTorrentWizard.TT_EXTERNAL_DEFAULT );
+    	}
 
     }else{
 
@@ -176,18 +178,16 @@ public class ModePanel extends AbstractWizardPanel<NewTorrentWizard> {
     btnExternalTracker.setSelection(tracker_type==NewTorrentWizard.TT_EXTERNAL);
     labelExternalAnnounce.setEnabled(tracker_type==NewTorrentWizard.TT_EXTERNAL);
 
-
-
     tracker = new Combo(panel, SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 3;
     tracker.setLayoutData(gridData);
-    List trackers = TrackersUtil.getInstance().getTrackersList();
-    Iterator iter = trackers.iterator();
-    while (iter.hasNext()) {
-      tracker.add((String) iter.next());
+    
+    List<String> trackers = TrackersUtil.getInstance().getTrackersList();
+    for ( String t: trackers ){
+      tracker.add( t );
     }
-
+ 
     tracker.addModifyListener(new ModifyListener() {
       /*
 			 * (non-Javadoc)
@@ -494,11 +494,11 @@ public class ModePanel extends AbstractWizardPanel<NewTorrentWizard> {
   }
 
   void updateTrackerURL() {
-    tracker.setText(((NewTorrentWizard) wizard).trackerURL);
+    tracker.setText( wizard.getTrackerURL());
   }
 
   void setTrackerUrl(String url) {
-    ((NewTorrentWizard) wizard).trackerURL = url;
+    wizard.setTrackerURL(url);
     String config = ((NewTorrentWizard) wizard).multiTrackerConfig;
     if(config.equals("")) {
 	    List list = (List) ((NewTorrentWizard) wizard).trackers.get(0);
