@@ -870,9 +870,11 @@ public class TorrentMenuFancy
 		createActionButton(dms, cQuickCommands, "MyTorrentsView.menu.queue",
 				"start", start,
 				(ListenerGetOffSWT) event -> TorrentUtil.queueDataSources(dms, true));
-
+		
 		// Force Start
-		if (userMode > 0) {
+		
+		if ( TorrentUtil.isForceStartVisible( dms )) {
+			
 			boolean forceStart = false;
 			boolean forceStartEnabled = false;
 

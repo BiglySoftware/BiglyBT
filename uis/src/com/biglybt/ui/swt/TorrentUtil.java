@@ -1517,7 +1517,8 @@ public class TorrentUtil
 		itemQueue.setEnabled(start);
 
 		// Force Start
-		if (userMode > 0) {
+		if ( isForceStartVisible( dms )){
+			
 			final MenuItem itemForceStart = new MenuItem(menu, SWT.CHECK);
 			Messages.setLanguageText(itemForceStart, "MyTorrentsView.menu.forceStart");
 			Utils.setMenuItemImage(itemForceStart, "forcestart");
@@ -4606,5 +4607,41 @@ public class TorrentUtil
 				removeDownloadStubs(dms, deleteFailed, true);
 			}
 		}
+	}
+	
+	
+	public static boolean
+	isForceStartVisible(
+		DownloadManager[]	dms )
+	{
+		int userMode = COConfigurationManager.getIntParameter("User Mode");
+		
+		if ( userMode > 0 ){
+			
+			return( true );
+		}
+		
+		if ( COConfigurationManager.getBooleanParameter( "Always Show Force Start", false )){
+			
+			return( true );
+		}
+		
+		for ( DownloadManager dm: dms ){
+		
+			TOTorrent torrent = dm.getTorrent();
+			
+			if ( torrent != null && torrent.getPrivate()){
+				
+					// some private trackers have seed time limits and to make things simple for
+					// non-advanced users to keep their torrents seeding we make force start
+					// visible regardless of mode
+				
+				COConfigurationManager.setParameter( "Always Show Force Start", true );
+					
+				return( true );
+			}
+		}
+		
+		return( false );
 	}
 }
