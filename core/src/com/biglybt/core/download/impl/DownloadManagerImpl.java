@@ -6810,16 +6810,25 @@ DownloadManagerImpl
 							public int
 							getStatus()
 							{
+								if ( !enabled ){
+
+									return( ST_DISABLED );
+								}
+								
 								PEPeerManager delegate = fixup();
 
 								if ( delegate == null ){
 
-									return( ST_STOPPED );
-
-								}else if ( !enabled ){
-
-									return( ST_DISABLED );
-
+									if ( _tracker_client_for_queued_download == null ){
+								
+										return( ST_STOPPED );
+										
+									}else{
+									
+											// ready for activation requests
+										
+										return( ST_ONLINE );
+									}
 								}else{
 
 									return( ST_ONLINE );
