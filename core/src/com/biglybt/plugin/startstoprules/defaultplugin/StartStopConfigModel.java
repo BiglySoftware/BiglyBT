@@ -444,6 +444,9 @@ public class StartStopConfigModel
 		addDefaultedBooleanParam(model, "Use Super Seeding",
 				"ConfigView.label.userSuperSeeding");
 
+		addDefaultedBooleanParam(model, "Enable Light Seeding",
+				"ConfigView.label.enableLightSeeding");
+
 		model.addBooleanParameter2("StartStopManager_bAutoReposition",
 				"ConfigView.label.seeding.autoReposition", false);
 

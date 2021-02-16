@@ -367,6 +367,9 @@ DownloadManager
     public boolean
     isDownloadComplete(boolean bIncludingDND);
 
+    public void
+    checkPartialSeeding();
+    
     public String
     getTrackerStatus();
 

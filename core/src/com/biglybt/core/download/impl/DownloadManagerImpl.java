@@ -96,15 +96,19 @@ DownloadManagerImpl
 	private final static long SCRAPE_INITDELAY_ERROR_TORRENTS = 1000 * 60 * 10;
 	private final static long SCRAPE_INITDELAY_STOPPED_TORRENTS = 1000 * 60 * 3;
 
-	static int upload_when_busy_min_secs;
-	static int max_connections_npp_extra;
-
+	private static int 		upload_when_busy_min_secs;
+	private static int 		max_connections_npp_extra;
+	private static boolean	disable_partial_seeding;
+	
+	
 	private static final ClientIDManagerImpl client_id_manager = ClientIDManagerImpl.getSingleton();
 
 	static{
 		COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 				"max.uploads.when.busy.inc.min.secs",
+				"Non-Public Peer Extra Connections Per Torrent",
+				"Enable Light Seeding",
 			},
 			new ParameterListener()
 			{
@@ -116,6 +120,8 @@ DownloadManagerImpl
 					upload_when_busy_min_secs = COConfigurationManager.getIntParameter( "max.uploads.when.busy.inc.min.secs" );
 
 					max_connections_npp_extra = COConfigurationManager.getIntParameter( "Non-Public Peer Extra Connections Per Torrent" );
+					
+					disable_partial_seeding = !COConfigurationManager.getBooleanParameter( "Enable Light Seeding" );
 				}
 			});
 	}
@@ -571,7 +577,8 @@ DownloadManagerImpl
 	private volatile Map<String,Object[]>	url_group_map 		= new HashMap<>();
 	private volatile long					url_group_map_uid	= -1;
 	
-	TRTrackerAnnouncer 				tracker_client;
+	private volatile TRTrackerAnnouncer 				_tracker_client;
+	private volatile TRTrackerAnnouncer 				_tracker_client_for_queued_download;
 	
 	private final TRTrackerAnnouncerListener		tracker_client_listener =
 			new TRTrackerAnnouncerListener()
@@ -657,7 +664,7 @@ DownloadManagerImpl
 				TRTrackerAnnouncerRequest	request,
 				TRTrackerAnnouncerResponse	response)
 			{
-				if ( tracker_client == null ){
+				if ( _tracker_client == null ){
 
 					response.setPeers(new TRTrackerAnnouncerResponsePeer[0]);
 				}
@@ -1108,7 +1115,7 @@ DownloadManagerImpl
 
 					 		}else if (attribute_name.equals(DownloadManagerState.AT_NETWORKS)){
 
-					 			TRTrackerAnnouncer tc = tracker_client;
+					 			TRTrackerAnnouncer tc = getTrackerClient();
 
 					 			if ( tc != null ){
 
@@ -2316,14 +2323,16 @@ DownloadManagerImpl
 			try{
 				this_mon.enter();
 
-				if ( tracker_client != null ){
+				stopQueuedTrackerClient();
+				
+				if ( _tracker_client != null ){
 
 					Debug.out( "DownloadManager: initialize called with tracker client still available" );
 
-					tracker_client.destroy();
+					_tracker_client.destroy();
 				}
 
-				tracker_client =
+				_tracker_client =
 					TRTrackerAnnouncerFactory.create(
 						torrent,
 						new TRTrackerAnnouncerFactory.DataProvider()
@@ -2343,11 +2352,11 @@ DownloadManagerImpl
 							}
 						});
 
-				tracker_client.setTrackerResponseCache( download_manager_state.getTrackerResponseCache());
+				_tracker_client.setTrackerResponseCache( download_manager_state.getTrackerResponseCache());
 
-				tracker_client.addListener( tracker_client_listener );
+				_tracker_client.addListener( tracker_client_listener );
 
-				tracker_client.addListener( tracker_client_stats_listener );
+				_tracker_client.addListener( tracker_client_stats_listener );
 				
 			}finally{
 
@@ -2375,7 +2384,264 @@ DownloadManagerImpl
 		}
 	}
 
+    public void
+    checkPartialSeeding()
+    {
+    	if ( canStartPartialSeed()){
+    		
+    		try{
+      			this_mon.enter();
 
+      			if ( _tracker_client == null ){
+      				
+      				startQueuedTrackerClient();
+      			}
+    		}finally{
+    			
+    			this_mon.exit();
+    		}
+    	}
+    }
+    
+    private boolean
+    canStartPartialSeed()
+    {
+    	if ( disable_partial_seeding ){
+    		
+    		return(false );
+    	}
+    	
+    	if ( torrent == null || !torrent.getPrivate()){
+    		
+    		return( false );
+    	}
+    	
+    	if ( _tracker_client_for_queued_download != null ){
+    		
+    		return( false );
+    	}
+    	
+    	if ( getState() != DownloadManager.STATE_QUEUED ){
+    		
+    		return( false );
+    	}
+    	
+    	if ( !isDownloadComplete( false )){
+    		
+    		return( false );
+    	}
+    	
+		return( true );
+    }
+    
+	private void
+	startQueuedTrackerClient()
+	{
+		if ( _tracker_client_for_queued_download == null ){
+							
+			try{
+				_tracker_client_for_queued_download = 
+					TRTrackerAnnouncerFactory.create(
+							torrent,
+							new TRTrackerAnnouncerFactory.DataProvider()
+							{
+								@Override
+								public String[]
+								getNetworks()
+								{
+									return( download_manager_state.getNetworks());
+								}
+								
+								@Override
+								public HashWrapper 
+								getTorrentHashOverride()
+								{
+									return( DownloadManagerImpl.this.getTorrentHashOverride());
+								}
+							});
+  				
+				_tracker_client_for_queued_download.addListener(
+  					new TRTrackerAnnouncerListener(){
+						
+						@Override
+						public void 
+						urlRefresh()
+						{
+						}
+						
+						@Override
+						public void 
+						urlChanged(
+							TRTrackerAnnouncer announcer, 
+							URL old_url, 
+							URL new_url, 
+							boolean explicit)
+						{
+						}
+						
+						@Override
+						public void 
+						receivedTrackerResponse(
+							TRTrackerAnnouncerRequest 		request, 
+							TRTrackerAnnouncerResponse 		response)
+						{
+							if ( response.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE ){
+							
+								// don't need to do anything as scrape result will have been injected
+							}
+						}
+					});
+  				
+				_tracker_client_for_queued_download.setAnnounceDataProvider(
+  					new TRTrackerAnnouncerDataProvider(){
+						
+						@Override
+						public void 
+						setPeerSources(
+							String[] allowed_sources)
+						{
+							DownloadManagerState	dms = getDownloadState();
+
+							String[]	sources = PEPeerSource.PS_SOURCES;
+
+							for (int i=0;i<sources.length;i++){
+
+								String	s = sources[i];
+
+								boolean	ok = false;
+
+								for (int j=0;j<allowed_sources.length;j++){
+
+									if ( s.equals( allowed_sources[j] )){
+
+										ok = true;
+
+										break;
+									}
+								}
+
+								if ( !ok ){
+
+									dms.setPeerSourcePermitted( s, false );
+								}
+							}	
+						}
+						
+						@Override
+						public boolean 
+						isPeerSourceEnabled(String peer_source)
+						{
+							return( controller.isPeerSourceEnabled( peer_source ));
+						}
+						
+						@Override
+						public int 
+						getUploadSpeedKBSec(boolean estimate)
+						{
+							return( 0 );
+						}
+						
+						@Override
+						public long 
+						getTotalSent()
+						{
+							return( 0 );
+						}
+						
+						@Override
+						public long 
+						getTotalReceived()
+						{
+							return( 0 );
+						}
+						
+						@Override
+						public int 
+						getTCPListeningPortNumber()
+						{
+							return( controller.getTCPListeningPortNumber());
+						}
+						
+						@Override
+						public long 
+						getRemaining()
+						{
+							return( stats.getRemaining());
+						}
+						
+						@Override
+						public int 
+						getPendingConnectionCount()
+						{
+							return( 0 );
+						}
+						
+						@Override
+						public String 
+						getName()
+						{
+							return( getDisplayName());
+						}
+						
+						@Override
+						public int 
+						getMaxNewConnectionsAllowed(
+							String network)
+						{
+							return( controller.getMaxConnections()[0]);
+						}
+						
+						@Override
+						public long 
+						getFailedHashCheck()
+						{
+							return( 0 );
+						}
+						
+						@Override
+						public String 
+						getExtensions()
+						{
+							return( controller.getTrackerClientExtensions());
+						}
+						
+						@Override
+						public int 
+						getCryptoLevel()
+						{
+							return( DownloadManagerImpl.this.getCryptoLevel());
+						}
+						
+						@Override
+						public int 
+						getConnectedConnectionCount()
+						{
+							return( 0 );
+						}
+					});
+  				
+				_tracker_client_for_queued_download.update( true );
+  				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	private void
+	stopQueuedTrackerClient()
+	{
+		if ( _tracker_client_for_queued_download != null ){
+
+			_tracker_client_for_queued_download.stop( false );
+			
+			_tracker_client_for_queued_download.destroy();
+			
+			_tracker_client_for_queued_download = null;
+		}
+	}
+	
 	@Override
 	public void
 	setStateWaiting()
@@ -2411,7 +2677,17 @@ DownloadManagerImpl
 	  public int
   	getSubState()
   	{
-  		return( controller.getSubState());
+  		int	substate = controller.getSubState();
+  		
+  		if ( substate == DownloadManager.STATE_QUEUED ){
+  			
+  			if ( _tracker_client_for_queued_download != null ){
+  				
+  				return( DownloadManager.STATE_SEEDING );
+  			}
+  		}
+  		
+  		return( substate );
   	}
 
   	@Override
@@ -2593,6 +2869,7 @@ DownloadManagerImpl
 
 			controller.stopIt(state_after_stopping, remove_torrent, remove_data,for_removal );
 
+			
 		} finally {
 
 			download_manager_state.setActive(false);
@@ -2938,7 +3215,14 @@ DownloadManagerImpl
 	  public TRTrackerAnnouncer
   	getTrackerClient()
   	{
-  		return( tracker_client );
+  		TRTrackerAnnouncer result = _tracker_client;
+  		
+  		if ( _tracker_client != null ){
+  			
+  			return( _tracker_client );
+  		}
+  		
+  		return( _tracker_client_for_queued_download );
   	}
 
 	@Override
@@ -3153,9 +3437,9 @@ DownloadManagerImpl
 		// this is called asynchronously when a response is received
 
  	@Override
-  public void
+ 	public void
  	setTrackerScrapeResponse(
-  	TRTrackerScraperResponse	response )
+ 		TRTrackerScraperResponse	response )
  	{
   			// this is a reasonable place to pick up the change in active url caused by this scrape
   			// response and update the torrent's url accordingly
@@ -3943,7 +4227,7 @@ DownloadManagerImpl
 
 		if ( (peer.isSeed() || peer.isRelativeSeed()) && isDownloadComplete( false )){
 
-			TRTrackerAnnouncer	announcer = tracker_client;
+			TRTrackerAnnouncer	announcer = getTrackerClient();
 
 			if ( announcer != null ){
 
@@ -4081,24 +4365,33 @@ DownloadManagerImpl
   		try{
   			this_mon.enter();
 
-  			if ( tracker_client != null ){
+  			if ( _tracker_client != null ){
 
-				tracker_client.addListener( stopping_tracker_client_listener );
+  				_tracker_client.addListener( stopping_tracker_client_listener );
 
-  				tracker_client.removeListener( tracker_client_listener );
+  				_tracker_client.removeListener( tracker_client_listener );
 
- 				download_manager_state.setTrackerResponseCache(	tracker_client.getTrackerResponseCache());
+ 				download_manager_state.setTrackerResponseCache(	_tracker_client.getTrackerResponseCache());
 
  				// we have serialized what we need -> can destroy retained stuff now
- 				tracker_client.getLastResponse().setPeers(new TRTrackerAnnouncerResponsePeer[0]);
+ 				_tracker_client.getLastResponse().setPeers(new TRTrackerAnnouncerResponsePeer[0]);
 
  				// currently only report this for complete downloads...
 
- 				tracker_client.stop( for_queue && isDownloadComplete( false ));
+ 				_tracker_client.stop( for_queue && isDownloadComplete( false ));
 
-  				tracker_client.destroy();
+ 				_tracker_client.destroy();
 
-  				tracker_client = null;
+ 				_tracker_client = null;
+  			}
+  			
+  			if ( for_queue && canStartPartialSeed()){
+  				
+  				startQueuedTrackerClient();
+  				
+  			}else{
+  			
+  				stopQueuedTrackerClient();
   			}
 		}finally{
 
@@ -4164,7 +4457,7 @@ DownloadManagerImpl
 	    	informDownloadEnded();
 	    }
 
-	    TRTrackerAnnouncer	tc = tracker_client;
+	    TRTrackerAnnouncer	tc = getTrackerClient();
 
 	    if ( tc != null ){
 
@@ -6735,7 +7028,7 @@ DownloadManagerImpl
 	 */
 	@Override
 	public Object[] getQueryableInterfaces() {
-		return new Object[] { tracker_client };
+		return new Object[] { getTrackerClient() };
 	}
 
 	public String toString() {
@@ -6846,7 +7139,7 @@ DownloadManagerImpl
 
 			controller.generateEvidence(writer);
 
-			TRTrackerAnnouncer announcer = tracker_client;
+			TRTrackerAnnouncer announcer = getTrackerClient();
 
 			if ( announcer != null ){
 

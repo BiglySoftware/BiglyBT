@@ -937,6 +937,8 @@ DownloadManagerController
 					download_manager.deleteTorrentFile();
 				}
 
+				download_manager.informStopped( null, stateAfterStopping==DownloadManager.STATE_QUEUED );
+
 				setState( _stateAfterStopping, false );
 
 				return;

@@ -272,6 +272,7 @@ DisplayFormatters
 	private static String	ManagerItem_downloading;
 	private static String	ManagerItem_swarmMerge;
 	private static String	ManagerItem_seeding;
+	private static String	ManagerItem_lightseeding;
 	private static String	ManagerItem_superseeding;
 	private static String	ManagerItem_stopping;
 	private static String	ManagerItem_stopped;
@@ -301,6 +302,7 @@ DisplayFormatters
 		ManagerItem_swarmMerge			= getResourceString( "TableColumn.header.mergeddata", "swarm merge" );
 		ManagerItem_seeding				= getResourceString( "ManagerItem.seeding", "seeding" );
 		ManagerItem_superseeding		= getResourceString( "ManagerItem.superseeding", "superseeding" );
+		ManagerItem_lightseeding		= getResourceString( "ManagerItem.lightseeding", "lightseeding" );
 		ManagerItem_stopping			= getResourceString( "ManagerItem.stopping", "stopping" );
 		ManagerItem_stopped				= getResourceString( "ManagerItem.stopped", "stopped" );
 		ManagerItem_paused				= getResourceString( "ManagerItem.paused", "paused" );
@@ -807,7 +809,16 @@ DisplayFormatters
 					 
 				}else{	 
 
-					tmp = ManagerItem_queued;
+					int substate = manager.getSubState();
+					
+					if ( substate == DownloadManager.STATE_SEEDING ){
+						
+						tmp = ManagerItem_lightseeding;
+						
+					}else{
+					
+						tmp = ManagerItem_queued;
+					}
 				}
 				
 				break;

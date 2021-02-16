@@ -267,6 +267,7 @@ public class ConfigurationDefaults {
     def.put("Allow Same IP Peers",FALSE);
     def.put(ConfigKeys.Transfer.ICFG_IPv4_IPv6_CONN_ACTION, ZERO );
     def.put("Use Super Seeding",FALSE);
+    def.put("Enable Light Seeding", TRUE);
     def.put("StartStopManager_bAddForDownloadingSR1", TRUE);
     
     def.put("Start On Login", FALSE );

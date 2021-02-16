@@ -3738,6 +3738,8 @@ public class GlobalManagerImpl
 
         		if ( manager.isDownloadComplete( false )){
 
+        			manager.checkPartialSeeding();
+        			
         			potentially_seeding = true;
         		} else {
 
