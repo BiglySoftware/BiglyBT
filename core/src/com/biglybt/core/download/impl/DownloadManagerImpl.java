@@ -24,7 +24,6 @@ package com.biglybt.core.download.impl;
  *
  */
 
-import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
@@ -53,6 +52,7 @@ import com.biglybt.core.tag.TaggableResolver;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
 import com.biglybt.core.tracker.client.*;
@@ -98,7 +98,7 @@ DownloadManagerImpl
 
 	private static int 		upload_when_busy_min_secs;
 	private static int 		max_connections_npp_extra;
-	private static boolean	disable_partial_seeding;
+	private static int		default_light_seeding_status;
 	
 	
 	private static final ClientIDManagerImpl client_id_manager = ClientIDManagerImpl.getSingleton();
@@ -121,7 +121,7 @@ DownloadManagerImpl
 
 					max_connections_npp_extra = COConfigurationManager.getIntParameter( "Non-Public Peer Extra Connections Per Torrent" );
 					
-					disable_partial_seeding = !COConfigurationManager.getBooleanParameter( "Enable Light Seeding" );
+					default_light_seeding_status = COConfigurationManager.getBooleanParameter( "Enable Light Seeding" )?1:2;
 				}
 			});
 	}
@@ -577,8 +577,9 @@ DownloadManagerImpl
 	private volatile Map<String,Object[]>	url_group_map 		= new HashMap<>();
 	private volatile long					url_group_map_uid	= -1;
 	
-	private volatile TRTrackerAnnouncer 				_tracker_client;
-	private volatile TRTrackerAnnouncer 				_tracker_client_for_queued_download;
+	private volatile TRTrackerAnnouncer 			_tracker_client;
+	private volatile TRTrackerAnnouncer 			_tracker_client_for_queued_download;
+	private volatile int							light_seeding_status = 0;
 	
 	private final TRTrackerAnnouncerListener		tracker_client_listener =
 			new TRTrackerAnnouncerListener()
@@ -652,42 +653,6 @@ DownloadManagerImpl
 					requestTrackerAnnounce( true );
 				}
 			};
-
-				// a second listener used to catch and propagate the "stopped" event
-
-	private final TRTrackerAnnouncerListener		stopping_tracker_client_listener =
-		new TRTrackerAnnouncerListener()
-		{
-			@Override
-			public void
-			receivedTrackerResponse(
-				TRTrackerAnnouncerRequest	request,
-				TRTrackerAnnouncerResponse	response)
-			{
-				if ( _tracker_client == null ){
-
-					response.setPeers(new TRTrackerAnnouncerResponsePeer[0]);
-				}
-
-				tracker_listeners.dispatch( LDT_TL_ANNOUNCERESULT, response );
-			}
-
-			@Override
-			public void
-			urlChanged(
-				TRTrackerAnnouncer	announcer,
-				URL 				old_url,
-				URL					new_url,
-				boolean 			explicit )
-			{
-			}
-
-			@Override
-			public void
-			urlRefresh()
-			{
-			}
-		};
 
 		// a third listener responsible for tracking the stats up/down reports
 	
@@ -908,6 +873,8 @@ DownloadManagerImpl
 		
 		url_group_map_uid = t_group.getUID();
 		
+		int	overall_ls = 0;
+		
 		for ( TOTorrentAnnounceURLSet set: t_group.getAnnounceURLSets()){
 			
 			URL[] urls = set.getAnnounceURLs();
@@ -921,9 +888,26 @@ DownloadManagerImpl
 					String key = all_trackers.ingestURL( u );
 					
 					new_map.put( key, new Object[]{ u, g });
+					
+					overall_ls = Math.max( overall_ls, getLightSeedTrackerStatus( key ));
+				}
+			}else{
+				for ( URL u: urls ){
+					
+					String key = all_trackers.ingestURL( u );
+										
+					overall_ls = Math.max( overall_ls, getLightSeedTrackerStatus( key ));
 				}
 			}
 		}
+		
+		URL announce_url = torrent.getAnnounceURL();
+		
+		String announce_key = all_trackers.ingestURL( announce_url );
+		
+		overall_ls = Math.max( overall_ls, getLightSeedTrackerStatus( announce_key ));
+		
+		light_seeding_status = overall_ls;
 		
 		if ( Constants.isCVSVersion()){
 			
@@ -974,6 +958,33 @@ DownloadManagerImpl
 		url_group_map = new_map;
 	}
 
+	private int
+	getLightSeedTrackerStatus(
+		String		name )
+	{
+		if ( name != null ){
+			
+			AllTrackersTracker tracker = all_trackers.getTracker( name );
+			
+			if ( tracker != null ){
+				
+				Map<String,Object>	options = tracker.getOptions();
+				
+				if ( options != null ){
+					
+					Number n = (Number)options.get( AllTrackersTracker.OPT_LIGHT_SEEDING );
+					
+					if ( n != null ){
+						
+						return( n.intValue());
+					}
+				}
+			}
+		}
+		
+		return( 0 );
+	}
+	
 	protected int
 	getTrackerURLGroup(
 		String		key )
@@ -2385,59 +2396,78 @@ DownloadManagerImpl
 	}
 
     public void
-    checkPartialSeeding()
+    checkLightSeeding(
+    	boolean		full_sync )
     {
-    	if ( canStartPartialSeed()){
+    	if ( full_sync ){
     		
-    		try{
-      			this_mon.enter();
-
-      			if ( _tracker_client == null ){
-      				
-      				startQueuedTrackerClient();
-      			}
-    		}finally{
-    			
-    			this_mon.exit();
+    		if ( torrent != null ){
+    		
+    			buildURLGroupMap( torrent );
     		}
     	}
-    }
-    
-    private boolean
-    canStartPartialSeed()
-    {
-    	if ( disable_partial_seeding ){
+    	
+    	int status = light_seeding_status;
+    	
+    	if ( status == 0 ){
     		
-    		return(false );
+    		status = default_light_seeding_status;
     	}
     	
+	   	if ( status == 2 ){
+	    		
+	   		if ( _tracker_client_for_queued_download != null ){
+	   			
+	   			try{
+	   	  			this_mon.enter();
+	   	  				
+	   	 			stopQueuedTrackerClient();
+	   	  			
+	   			}finally{
+	   				
+	   				this_mon.exit();
+	   			}
+	   		}
+	   		
+    		return;
+    	}
+    	
+	   	if ( _tracker_client_for_queued_download != null ){
+    		
+    		return;
+    	}
+
     	if ( torrent == null || !torrent.getPrivate()){
     		
-    		return( false );
+    		return;
     	}
-    	
-    	if ( _tracker_client_for_queued_download != null ){
-    		
-    		return( false );
-    	}
-    	
+    	    	
     	if ( getState() != DownloadManager.STATE_QUEUED ){
     		
-    		return( false );
+    		return;
     	}
     	
     	if ( !isDownloadComplete( false )){
     		
-    		return( false );
+    		return;
     	}
-    	
-		return( true );
-    }
+		
+		try{
+  			this_mon.enter();
+  				
+ 			startQueuedTrackerClient();
+  			
+		}finally{
+			
+			this_mon.exit();
+		}
+	}
+
     
 	private void
 	startQueuedTrackerClient()
 	{
-		if ( _tracker_client_for_queued_download == null ){
+		if ( _tracker_client == null && _tracker_client_for_queued_download == null ){
 							
 			try{
 				_tracker_client_for_queued_download = 
@@ -3212,17 +3242,17 @@ DownloadManagerImpl
   	}
 
   	@Override
-	  public TRTrackerAnnouncer
+	public TRTrackerAnnouncer
   	getTrackerClient()
   	{
   		TRTrackerAnnouncer result = _tracker_client;
   		
-  		if ( _tracker_client != null ){
+  		if ( result == null ){
   			
-  			return( _tracker_client );
+  			result = _tracker_client_for_queued_download;
   		}
   		
-  		return( _tracker_client_for_queued_download );
+  		return( result );
   	}
 
 	@Override
@@ -4367,7 +4397,41 @@ DownloadManagerImpl
 
   			if ( _tracker_client != null ){
 
-  				_tracker_client.addListener( stopping_tracker_client_listener );
+  				_tracker_client.addListener(
+  					new TRTrackerAnnouncerListener()
+					{
+						@Override
+						public void
+						receivedTrackerResponse(
+							TRTrackerAnnouncerRequest	request,
+							TRTrackerAnnouncerResponse	response)
+						{
+							if ( _tracker_client == null ){
+
+								response.setPeers(new TRTrackerAnnouncerResponsePeer[0]);
+							}
+
+							tracker_listeners.dispatch( LDT_TL_ANNOUNCERESULT, response );
+							
+							checkLightSeeding( false );
+						}
+
+						@Override
+						public void
+						urlChanged(
+							TRTrackerAnnouncer	announcer,
+							URL 				old_url,
+							URL					new_url,
+							boolean 			explicit )
+						{
+						}
+
+						@Override
+						public void
+						urlRefresh()
+						{
+						}
+					});
 
   				_tracker_client.removeListener( tracker_client_listener );
 
@@ -4384,15 +4448,9 @@ DownloadManagerImpl
 
  				_tracker_client = null;
   			}
+  			  			
+			stopQueuedTrackerClient();
   			
-  			if ( for_queue && canStartPartialSeed()){
-  				
-  				startQueuedTrackerClient();
-  				
-  			}else{
-  			
-  				stopQueuedTrackerClient();
-  			}
 		}finally{
 
 			this_mon.exit();

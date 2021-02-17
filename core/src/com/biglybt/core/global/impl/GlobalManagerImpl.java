@@ -64,6 +64,8 @@ import com.biglybt.core.tag.impl.TagDownloadWithState;
 import com.biglybt.core.tag.impl.TagTypeWithState;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
+import com.biglybt.core.tracker.AllTrackersManager;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.tracker.util.TRTrackerUtils;
 import com.biglybt.core.tracker.util.TRTrackerUtilsListener;
@@ -274,6 +276,9 @@ public class GlobalManagerImpl
 	private boolean seeding_only_mode 				= false;
 	private boolean potentially_seeding_only_mode	= false;
 
+	private final 	AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
+	private long	all_trackers_options_mut = all_trackers.getOptionsMutationCount();
+	
 	private final FrequencyLimitedDispatcher	check_seeding_only_state_dispatcher =
 		new FrequencyLimitedDispatcher(
 			new AERunnable(){ @Override
@@ -3722,6 +3727,14 @@ public class GlobalManagerImpl
     boolean seeding_set 			= false;
     boolean	potentially_seeding	= false;
 
+    long curr_mut = all_trackers.getOptionsMutationCount();
+    
+    boolean full_sync = curr_mut != all_trackers_options_mut;
+    
+    if ( full_sync ){
+    	all_trackers_options_mut = curr_mut;
+    }
+    
 	  DownloadManager[] managers = managers_list_cow;
 
 	  for( DownloadManager manager: managers ){
@@ -3738,7 +3751,7 @@ public class GlobalManagerImpl
 
         		if ( manager.isDownloadComplete( false )){
 
-        			manager.checkPartialSeeding();
+        			manager.checkLightSeeding( full_sync );
         			
         			potentially_seeding = true;
         		} else {

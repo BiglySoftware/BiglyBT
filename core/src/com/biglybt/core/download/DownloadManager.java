@@ -368,7 +368,8 @@ DownloadManager
     isDownloadComplete(boolean bIncludingDND);
 
     public void
-    checkPartialSeeding();
+    checkLightSeeding(
+    	boolean	full_sync );
     
     public String
     getTrackerStatus();

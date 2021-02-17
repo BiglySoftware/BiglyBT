@@ -1015,8 +1015,6 @@ public class SBC_AllTrackersView
 			// options
 		
 		Menu options_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
-
-		boolean opt_enabled = trackers.size() == 1;
 				
 		MenuItem options_item = new MenuItem( menu, SWT.CASCADE);
 
@@ -1024,62 +1022,130 @@ public class SBC_AllTrackersView
 
 		options_item.setMenu( options_menu );
 		
-		MenuItem itemOptCryptoPort = new MenuItem(options_menu, SWT.CHECK);
+			// light seeding
+		
+		Menu ls_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+				
+		MenuItem ls_item = new MenuItem( options_menu, SWT.CASCADE);
 
-		Messages.setLanguageText( itemOptCryptoPort, "menu.tracker.cryptoport.disabled" );
+		Messages.setLanguageText( ls_item, "ManagerItem.lightseeding" );
 
-		itemOptCryptoPort.setEnabled( opt_enabled );
+		ls_item.setMenu( ls_menu );
+			
+		MenuItem ls_default = new MenuItem( ls_menu, SWT.RADIO );
+		Messages.setLanguageText( ls_default, "label.default" );
+		
+		MenuItem ls_enabled = new MenuItem( ls_menu, SWT.RADIO );
+		Messages.setLanguageText( ls_enabled, "label.enabled" );
+		
+		MenuItem ls_disabled = new MenuItem( ls_menu, SWT.RADIO );
+		Messages.setLanguageText( ls_disabled, "label.disabled" );
+		
+		MenuItem[] ls_items = { ls_default, ls_enabled, ls_disabled };
+		
+			// cryptoport
+		
+		Menu cp_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+		
+		MenuItem cp_item = new MenuItem( options_menu, SWT.CASCADE);
+
+		cp_item.setText( "cryptoport" );
+
+		cp_item.setMenu( cp_menu );
+			
+		MenuItem cp_default = new MenuItem( cp_menu, SWT.RADIO );
+		Messages.setLanguageText( cp_default, "label.default" );
+		
+		MenuItem cp_enabled = new MenuItem( cp_menu, SWT.RADIO );
+		Messages.setLanguageText( cp_enabled, "label.enabled" );
+		
+		MenuItem cp_disabled = new MenuItem( cp_menu, SWT.RADIO );
+		Messages.setLanguageText( cp_disabled, "label.disabled" );
+
+		MenuItem[] cp_items = { cp_default, cp_enabled, cp_disabled };
+	
+		boolean opt_enabled = trackers.size() == 1;
+
+		ls_item.setEnabled( opt_enabled );
+		cp_item.setEnabled( opt_enabled );
 		
 		if ( opt_enabled ){
 			
 			AllTrackersTracker tracker = trackers.get(0);
 			
+			/* allow configuration in the absence of torrents, doesn't harm anything as
+			 * if the tracker ends up being public it light seeding is ignored anyway
+			if ( tracker.getPrivatePercentage() == 0 ){
+				
+				ls_item.setEnabled( false );
+			}
+			*/
+			
 			Map<String,Object> init_options = tracker.getOptions();
+			
+			int	ls_state 	= 0;
+			int cp_state	= 0;
 			
 			if ( init_options != null ){
 				
-				Number opt = (Number)init_options.get( AllTrackersTracker.OPT_CRYPTO_PORT );
+				Number opt = (Number)init_options.get( AllTrackersTracker.OPT_LIGHT_SEEDING );
 				
-				if ( opt != null && opt.intValue() == 2 ){
+				if ( opt != null ){
 					
-					itemOptCryptoPort.setSelection( true );
+					ls_state = opt.intValue();
+				}
+				
+				opt = (Number)init_options.get( AllTrackersTracker.OPT_CRYPTO_PORT );
+				
+				if ( opt != null ){
+					
+					cp_state = opt.intValue();
 				}
 			}
+			
+			ls_items[ls_state].setSelection( true );
+			cp_items[cp_state].setSelection( true );
 		
-			itemOptCryptoPort.addListener(
-				SWT.Selection,
-				(e)->{
+			Listener l = (e)->{
 										
-					Map<String,Object> options = tracker.getOptions();
-					
-					boolean	sel = itemOptCryptoPort.getSelection();
-					
-					if ( sel ){
-						
-						if ( options == null ){
-							
-							options = new HashMap<>();
-						}
+				Map<String,Object> options = tracker.getOptions();
 				
-						options.put( AllTrackersTracker.OPT_CRYPTO_PORT, 2 );
-						
-						tracker.setOptions( options );
-						
-					}else{
-						
-						if ( options != null ){
-							
-							options.remove( AllTrackersTracker.OPT_CRYPTO_PORT );
-							
-							if ( options.isEmpty()){
-								
-								options = null;
-							}
-							
-							tracker.setOptions( options );
-						}
+				if ( options == null ){
+					
+					options = new HashMap<>();
+				}
+				
+				int new_ls_state = 0;
+				int new_cp_state = 0;
+				
+				for ( int i=0; i<ls_items.length;i++){
+					if ( ls_items[i].getSelection()){
+						new_ls_state = i;
+						break;
 					}
-				});
+				}
+				
+				for ( int i=0; i<cp_items.length;i++){
+					if ( cp_items[i].getSelection()){
+						new_cp_state = i;
+						break;
+					}
+				}
+													
+				options.put( AllTrackersTracker.OPT_LIGHT_SEEDING, new_ls_state );
+					
+				options.put( AllTrackersTracker.OPT_CRYPTO_PORT, new_cp_state );
+				
+				tracker.setOptions( options );
+			};
+			
+			for ( MenuItem mi: ls_items ){
+				mi.addListener( SWT.Selection, l );
+			}
+			
+			for ( MenuItem mi: cp_items ){
+				mi.addListener( SWT.Selection, l );
+			}
 		}
 		
 			// edit templates
@@ -1514,7 +1580,7 @@ public class SBC_AllTrackersView
 					}
 				}
 			}
-		}else{
+		}else if ( type == AllTrackersEvent.ET_TRACKER_REMOVED ){
 			
 			tv.removeDataSources( entries.toArray( new AllTrackersViewEntry[0] ));
 		}

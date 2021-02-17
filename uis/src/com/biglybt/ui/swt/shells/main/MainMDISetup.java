@@ -905,7 +905,10 @@ public class MainMDISetup
 								@Override
 								public void trackerEventOccurred(AllTrackersEvent event)
 								{
-									if ( event.getEventType() != AllTrackersEvent.ET_TRACKER_UPDATED ){
+									int type = event.getEventType();
+									
+									if ( 	type == AllTrackersEvent.ET_TRACKER_ADDED || 
+											type == AllTrackersEvent.ET_TRACKER_REMOVED ){
 									
 										ViewTitleInfoManager.refreshTitleInfo( title_info );
 									}

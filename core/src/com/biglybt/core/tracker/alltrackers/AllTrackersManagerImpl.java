@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -114,6 +115,8 @@ AllTrackersManagerImpl
 	private Map<String, LoggerChannel>	logging_keys = new HashMap<>();
 	
 	private Map<HashWrapper,String>		dm_name_cache = new HashMap<>();
+	
+	private AtomicLong	options_mutation_count = new AtomicLong();
 	
 	private
 	AllTrackersManagerImpl()
@@ -790,6 +793,13 @@ AllTrackersManagerImpl
 	}
 	
 	@Override
+	public long 
+	getOptionsMutationCount()
+	{
+		return( options_mutation_count.get());
+	}
+	
+	@Override
 	public String
 	ingestURL(
 		URL		url )
@@ -932,6 +942,19 @@ AllTrackersManagerImpl
 		String						cmd )
 	{
 		update_queue.add( new Object[]{ tracker, cmd } );
+	}
+	
+	@Override
+	public AllTrackersTracker 
+	getTracker(
+		String		name )
+	{
+		if ( name == null ){
+			
+			return( null );
+		}
+		
+		return( host_map.get( name ));
 	}
 	
 	@Override
@@ -1614,6 +1637,8 @@ AllTrackersManagerImpl
 			Map<String, Object> _options)
 		{
 			options = _options;
+			
+			options_mutation_count.incrementAndGet();
 		}
 		
 		@Override

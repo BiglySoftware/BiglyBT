@@ -111,6 +111,10 @@ AllTrackersManager
 		
 		public AllTrackersTracker
 		getTracker(
+			String	name  );
+		
+		public AllTrackersTracker
+		getTracker(
 			URL		url );
 		
 		public boolean
@@ -125,6 +129,9 @@ AllTrackersManager
 		public File
 		getLogFile(
 			String		short_key );
+		
+		public long
+		getOptionsMutationCount();
 		
 		public void
 		registerAnnounceStatsProvider(
@@ -155,9 +162,9 @@ AllTrackersManager
 	public interface
 	AllTrackersEvent
 	{
-		public final int ET_TRACKER_ADDED	= 0;
-		public final int ET_TRACKER_UPDATED	= 1;
-		public final int ET_TRACKER_REMOVED	= 2;
+		public final int ET_TRACKER_ADDED			= 0;
+		public final int ET_TRACKER_UPDATED			= 1;
+		public final int ET_TRACKER_REMOVED			= 2;
 		
 		public int
 		getEventType();
@@ -169,7 +176,8 @@ AllTrackersManager
 	public interface
 	AllTrackersTracker
 	{
-		public static final String	OPT_CRYPTO_PORT	= "cp";	// Number 0=default;1=enable;2=disable
+		public static final String	OPT_CRYPTO_PORT		= "cp";	// Number 0=default;1=enable;2=disable
+		public static final String	OPT_LIGHT_SEEDING	= "ls";	// Number 0=default;1=enable;2=disable
 		
 		public String
 		getTrackerName();
