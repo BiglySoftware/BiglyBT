@@ -194,7 +194,16 @@ public class StatusItem
 							break;
 						}
 						case DownloadManager.STATE_QUEUED:{
-							sort_value		= 700;
+							
+							if ( dm.getSubState() == DownloadManager.STATE_SEEDING ){
+								
+								sort_value		= 750;	// light seeding
+								
+							}else{
+								
+								sort_value		= 700;
+							}
+							
 							break;
 						}
 						case DownloadManager.STATE_STOPPED:{
@@ -281,7 +290,11 @@ public class StatusItem
 							break;
 						}
 						case DownloadManager.STATE_QUEUED:{
-							sort_value = 700;
+							if ( dm.getSubState() == DownloadManager.STATE_SEEDING ){
+								sort_value = 810;
+							}else{
+								sort_value = 700;
+							}
 							break;
 						}
 						case DownloadManager.STATE_ERROR:{
