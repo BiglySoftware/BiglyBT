@@ -244,7 +244,8 @@ public class TrackerView
 		}
 		final Object[] sources = tv.getSelectedDataSources().toArray();
 
-		boolean	found_tracker		= false;
+		List<TrackerPeerSource>	found_trackers		= new ArrayList<>();
+		
 		boolean	found_dht_tracker	= false;
 		boolean	update_ok 			= false;
 		boolean delete_ok			= false;
@@ -255,7 +256,7 @@ public class TrackerView
 
 			if ( ps.getType() == TrackerPeerSource.TP_TRACKER ){
 
-				found_tracker = true;
+				found_trackers.add( ps );
 
 			}
 
@@ -283,6 +284,8 @@ public class TrackerView
 
 		boolean	needs_sep = false;
 
+		boolean found_tracker = !found_trackers.isEmpty();
+		
 		if ( found_tracker || found_dht_tracker ){
 
 			final MenuItem update_item = new MenuItem( menu, SWT.PUSH);
@@ -388,6 +391,22 @@ public class TrackerView
 				edit_item.setEnabled( torrent != null && !TorrentUtils.isReallyPrivate( torrent ));
 			}
 
+			if ( found_trackers.size() == 1 ){
+
+				TrackerPeerSource tps = found_trackers.get(0);
+				
+				if ( tps.getURL() != null ){
+					final MenuItem allt_item = new MenuItem( menu, SWT.PUSH);
+	
+					Messages.setLanguageText(allt_item, "menu.show.in.all.trackers");
+	
+					allt_item.addListener(
+						SWT.Selection, (ev)->{
+							showInAllTrackers( tps );
+						});
+				}
+			}
+			
 			needs_sep = true;
 		}
 
@@ -595,18 +614,25 @@ public class TrackerView
 		
 			TrackerPeerSource source = (TrackerPeerSource)rows[0].getDataSource();
 			
-			URL url = source.getURL();
-			
-			if ( url != null ){
-				
-				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+			showInAllTrackers( source );
+		}
+	}
 	
-				if ( uif != null ){
-					
-					uif.getMDI().showEntryByID(
-							MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS,
-							url );
-				}
+	private void
+	showInAllTrackers(
+		TrackerPeerSource	source )
+	{
+		URL url = source.getURL();
+		
+		if ( url != null ){
+			
+			UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+			if ( uif != null ){
+				
+				uif.getMDI().showEntryByID(
+						MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS,
+						url );
 			}
 		}
 	}
