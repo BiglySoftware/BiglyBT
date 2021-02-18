@@ -2246,12 +2246,12 @@ DownloadImpl
 	}
 
   @Override
-  public int getSeedingRank() {
+  public SeedingRank getSeedingRank() {
     return download_manager.getSeedingRank();
   }
 
 	@Override
-	public void setSeedingRank(int rank) {
+	public void setSeedingRank(SeedingRank rank) {
 		download_manager.setSeedingRank(rank);
 	}
 

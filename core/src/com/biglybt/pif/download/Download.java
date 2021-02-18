@@ -989,14 +989,14 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 *
 	 * @return Seeding Rank
 	 */
-	public int getSeedingRank();
+	public SeedingRank getSeedingRank();
 
 	/**
 	 * The torrents with the highest rankings will be seeded first.
 	 *
 	 * @param rank New Ranking
 	 */
-	public void setSeedingRank(int rank);
+	public void setSeedingRank(SeedingRank rank);
 
   /**
    * Get the local peerID advertised to the download swarm.
@@ -1108,4 +1108,20 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * @since 5.0.0.1
 	 */
 	public DiskManagerFileInfo getPrimaryFile();
+	
+	public interface
+	SeedingRank
+	{
+		public default int
+		getRank()
+		{
+			return( 0 );
+		}
+		
+		public default boolean
+		isLightSeedEligible()
+		{
+			return( false );
+		}
+	}
 }

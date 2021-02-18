@@ -40,6 +40,7 @@ import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.Download.SeedingRank;
 import com.biglybt.pif.download.DownloadAnnounceResult;
 import com.biglybt.pif.download.DownloadScrapeResult;
 
@@ -525,9 +526,9 @@ DownloadManager
     public void setDataAlreadyAllocated( boolean already_allocated );
 
 
-    public void setSeedingRank(int rank);
+    public void setSeedingRank(SeedingRank rank);
 
-    public int getSeedingRank();
+    public SeedingRank getSeedingRank();
 
     public boolean isSwarmMerging();
     

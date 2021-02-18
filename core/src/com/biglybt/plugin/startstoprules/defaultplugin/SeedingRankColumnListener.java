@@ -77,7 +77,7 @@ public class SeedingRankColumnListener implements
 			return;
 
 
-		long sr = dl.getSeedingRank();
+		long sr = dl.getSeedingRank().getRank();
 
 		String sText = "";
 		if (sr >= 0) {
@@ -137,7 +137,7 @@ public class SeedingRankColumnListener implements
 			sText = "* " + sText;
 		cell.setText(sText);
 		if (bDebugLog) {
-			cell.setToolTip("FP:\n" + dlData.sExplainFP + "\n" + "SR:" + dlData.sExplainSR
+			cell.setToolTip("FP:\n" + dlData._sExplainFP + "\n" + "SR:" + dlData._sExplainSR
 					+ "\n" + "TRACE:\n" + dlData.sTrace);
 		} else {
 			cell.setToolTip(null);

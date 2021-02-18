@@ -999,10 +999,10 @@ RPDownload
 	}
 
   @Override
-  public int getSeedingRank() {
+  public SeedingRank getSeedingRank() {
 		notSupported();
 
-		return( 0 );
+		return( null );
   }
 
  	@Override
@@ -1105,7 +1105,7 @@ RPDownload
 		 * @see com.biglybt.pif.download.Download#setSeedingRank(int)
 		 */
 		@Override
-		public void setSeedingRank(int rank) {
+		public void setSeedingRank(SeedingRank rank) {
 			// TODO Auto-generated method stub
 
 		}

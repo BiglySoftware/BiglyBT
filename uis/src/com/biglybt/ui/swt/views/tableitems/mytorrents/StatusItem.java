@@ -326,7 +326,7 @@ public class StatusItem
 				
 				if ( dl != null ){
 					
-					sort_value += dl.getSeedingRank();
+					sort_value += dl.getSeedingRank().getRank();
 				}
 			}else{
 				

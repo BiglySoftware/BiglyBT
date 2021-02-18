@@ -44,6 +44,7 @@ import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginListener;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.*;
+import com.biglybt.pif.download.Download.SeedingRank;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManagerListener;
@@ -551,8 +552,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 			// Check Group #1: Ones that always should run since they set things
 			for (int i = 0; i < dlDataArray.length; i++) {
-				if (force)
-					dlDataArray[i].getDownloadObject().setSeedingRank(0);
+				if (force){
+					dlDataArray[i].resetSeedingRank();
+				}
 				dlDataArray[i].recalcSeedingRank();
 			}
 		} finally {
@@ -1094,7 +1096,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			Collection<DefaultRankCalculator> allDownloads = downloadDataMap.values();
 			DefaultRankCalculator[] dlDataArray = allDownloads.toArray(new DefaultRankCalculator[0]);
 			for (int i = 0; i < dlDataArray.length; i++) {
-				dlDataArray[i].getDownloadObject().setSeedingRank(0);
+				dlDataArray[i].resetSeedingRank();
 			}
 			try {
 				ranksToRecalc_mon.enter();
@@ -1134,8 +1136,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 										pi.getUIManager().showTextMessage(
 												null,
 												null,
-												"FP:\n" + dlData.sExplainFP + "\n" + "SR:"
-														+ dlData.sExplainSR + "\n" + "TRACE:\n"
+												"FP:\n" + dlData._sExplainFP + "\n" + "SR:"
+														+ dlData._sExplainSR + "\n" + "TRACE:\n"
 														+ dlData.sTrace);
 								}
 							}
@@ -1333,7 +1335,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						bScrapeOk = scrapeResultOk(download);
 						if (calcSeedsNoUs(download,download.getAggregatedScrapeResult( false )) == 0 && bScrapeOk)
 							bOkToStartSeeding = true;
-						else if ((download.getSeedingRank() > 0)
+						else if ((download.getSeedingRank().getRank() > 0)
 								&& (state == Download.ST_QUEUED || state == Download.ST_READY)
 								&& (SystemTime.getMonotonousTime() - monoStartedOn > MIN_SEEDING_STARTUP_WAIT))
 							bOkToStartSeeding = true;
@@ -1539,7 +1541,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			for (int i = 0; i < recalcArray.length; i++) {
 				DefaultRankCalculator rankObj = (DefaultRankCalculator) recalcArray[i];
 				if (bDebugLog) {
-					long oldSR = rankObj.dl.getSeedingRank();
+					long oldSR = rankObj.dl.getSeedingRank().getRank();
 					rankObj.recalcSeedingRank();
 					String s = "recalc seeding rank.  old/new=" + oldSR + "/"
 							+ rankObj.dl.getSeedingRank();
@@ -1601,7 +1603,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						
 			int posComplete = 0;
 			
-			List<DefaultRankCalculator>	incompleteDownloads = new ArrayList<>();
+			List<DefaultRankCalculator>	incompleteDownloads = new ArrayList<>(dlDataArray.length);
+			List<DefaultRankCalculator>	completeDownloads 	= new ArrayList<>(dlDataArray.length);
 
 			// Loop 2 of 2:
 			// - Start/Stop torrents based on criteria
@@ -1707,10 +1710,37 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					}
 					handleInCompleteDownload(dlData, vars, tvars, totals);
 				} else {
+					
+					completeDownloads.add( dlData );
+					
 					handleCompletedDownload(dlDataArray, dlData, vars, totals);
 				}
 			} // Loop 2/2 (Start/Stopping)
 
+			ProcessVarsComplete	cvars = vars.comp;
+
+			int free_slots =  totals.maxSeeders - cvars.numWaitingOrSeeding;
+			
+			boolean hasFreeSeedingSlots =  free_slots > 0;
+			
+			int	num_new_light_seeds = free_slots * 2;
+			
+			for ( DefaultRankCalculator data: completeDownloads ){
+					
+				if ( data.updateLightSeedEligibility( hasFreeSeedingSlots )){
+					
+					if ( hasFreeSeedingSlots ){
+						
+						num_new_light_seeds--;
+						
+						if ( num_new_light_seeds <= 0 ){
+							
+							break;
+						}
+					}
+				}
+			}
+			
 			processDownloadingRules( incompleteDownloads );
 
 			if (bDebugLog) {
@@ -2409,7 +2439,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			somethingChanged = true;
 		}
 
-		if (download.getSeedingRank() >= 0
+		if (download.getSeedingRank().getRank() >= 0
 				&& (state == Download.ST_QUEUED || state == Download.ST_READY
 						|| state == Download.ST_WAITING || state == Download.ST_PREPARING)) {
 			
@@ -2484,7 +2514,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				"CD state=" + sStates.charAt(state),
 				"shareR=" + download.getStats().getShareRatio(),
 				"nWorCDing=" + cvars.numWaitingOrSeeding,
-				"sr=" + download.getSeedingRank(),
+				"sr=" + download.getSeedingRank().getRank(),
 				"hgherQd=" + boolDebug(cvars.higherCDtoStart),
 				"maxCDrs=" + totals.maxSeeders,
 				"FP=" + boolDebug(isFP),
@@ -2533,7 +2563,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				return;
 			}
 
-			int rank = download.getSeedingRank();
+			int rank = download.getSeedingRank().getRank();
 
 			// Short Circuit: if rank is set to IGNORED, we can skip everything
 			// except when:
@@ -2870,7 +2900,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					"CD state=" + sStates.charAt(download.getState()),
 					"shareR=" + download.getStats().getShareRatio(),
 					"nWorCDing=" + cvars.numWaitingOrSeeding,
-					"sr=" + download.getSeedingRank(),
+					"sr=" + download.getSeedingRank().getRank(),
 					"hgherQd=" + boolDebug(cvars.higherCDtoStart),
 					"maxCDrs=" + totals.maxSeeders,
 					"FP=" + boolDebug(isFP),

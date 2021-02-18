@@ -63,6 +63,7 @@ import com.biglybt.core.util.FileUtil.ProgressListener;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.Download.SeedingRank;
 import com.biglybt.pif.download.DownloadAnnounceResult;
 import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.download.savelocation.SaveLocationChange;
@@ -290,6 +291,8 @@ DownloadManagerImpl
 			}
     };
 
+    private static final SeedingRank defaultSeedingRank = new SeedingRank(){};
+    
 	public static void
 	addGlobalDownloadListener(
 		DownloadManagerListener listener )
@@ -695,7 +698,7 @@ DownloadManagerImpl
 
 	private long	creation_time	= SystemTime.getCurrentTime();
 
-	private int iSeedingRank;
+	private SeedingRank seedingRank = defaultSeedingRank;
 
 	private boolean	dl_identity_obtained;
 	private byte[]	dl_identity;
@@ -2406,14 +2409,22 @@ DownloadManagerImpl
     			buildURLGroupMap( torrent );
     		}
     	}
+    
+    	int status;
     	
-    	int status = light_seeding_status;
-    	
-    	if ( status == 0 ){
-    		
-    		status = default_light_seeding_status;
-    	}
-    	
+       	if ( seedingRank.isLightSeedEligible()){
+       		
+	    	status = light_seeding_status;
+	    	
+	    	if ( status == 0 ){
+	    		
+	    		status = default_light_seeding_status;
+	    	}
+       	}else{
+       		
+       		status = 2;
+       	}
+       	
 	   	if ( status == 2 ){
 	    		
 	   		if ( _tracker_client_for_queued_download != null ){
@@ -5046,13 +5057,13 @@ DownloadManagerImpl
   }
 
   @Override
-  public void setSeedingRank(int rank) {
-    iSeedingRank = rank;
+  public void setSeedingRank(SeedingRank rank) {
+    seedingRank = rank;
   }
 
   @Override
-  public int getSeedingRank() {
-    return iSeedingRank;
+  public SeedingRank getSeedingRank() {
+    return seedingRank;
   }
 
   @Override
@@ -7170,7 +7181,7 @@ DownloadManagerImpl
 				+ controller.getDiskListenerCount() + "; Peer=" + peer_listeners.size()
 				+ "; Tracker=" + tracker_listeners.size());
 
-			writer.println("SR: " + iSeedingRank);
+			writer.println("SR: " + seedingRank.getRank());
 
 
 			String sFlags = "";

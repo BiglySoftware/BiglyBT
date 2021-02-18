@@ -87,7 +87,7 @@ StartStopRulesDefaultPluginSWTUI
 			String lastText = "";
 
 			public String formatString() {
-				return "FP:\n" + dlData.sExplainFP + "\n" + "SR:" + dlData.sExplainSR
+				return "FP:\n" + dlData._sExplainFP + "\n" + "SR:" + dlData._sExplainSR
 						+ "\n" + "TRACE:\n" + dlData.sTrace;
 			}
 

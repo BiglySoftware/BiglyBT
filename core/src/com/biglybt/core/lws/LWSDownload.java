@@ -908,16 +908,16 @@ LWSDownload
 
 
 	@Override
-	public int
+	public SeedingRank
 	getSeedingRank()
 	{
-		return( 0 );
+		return( null );
 	}
 
 	@Override
 	public void
 	setSeedingRank(
-		int rank)
+		SeedingRank rank)
 	{
 		notSupported();
 	}
