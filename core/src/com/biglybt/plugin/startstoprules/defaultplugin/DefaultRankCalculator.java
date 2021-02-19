@@ -35,6 +35,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
+import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.PluginConfig;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadScrapeResult;
@@ -994,13 +995,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		}finally{
 			
 			if ( !is_test ){
-			
-				if (rules.bDebugLog){
-					if (downloadSR.isLightSeedEligible()){
-						sExplainSR += "Light-Seeding eligible\n";
-					}
-				}
-				
+							
 				_sExplainSR = sExplainSR;
 			}
 		}
@@ -1454,7 +1449,11 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		updateLightSeedEligibility(
 			boolean		has_slots )
 		{
-			boolean avail = has_slots && rank == SR_0PEERS && rankNP >= SR_IGNORED_LESS_THAN;
+			boolean avail = 
+					has_slots && 
+					rank == SR_0PEERS && 
+					rankNP >= SR_IGNORED_LESS_THAN && 
+					TorrentUtils.getPrivate(core_dm.getTorrent());
 			
 			if ( light_seed_eligible != avail ){
 				
@@ -1555,11 +1554,21 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 					sText = "* " + sText;
 				}
 			}
+			
+			String ls_str = "Light-Seeding eligible";
+			
+			if ( verbose ){
+				if ( downloadSR.isLightSeedEligible()){
+					sText += "\n" + ls_str;
+				}
+			}
+			
 			String tt;
 			
 			if (rules.bDebugLog) {
-				tt = "FP:\n" + _sExplainFP + "\n" + "SR:" + _sExplainSR
-						+ "\n" + "TRACE:\n" + sTrace;
+				tt = 	"FP:\n" + _sExplainFP + "\n" + 
+						"SR:" + _sExplainSR + (verbose||!downloadSR.isLightSeedEligible()?"":(ls_str+"\n"))+ "\n"
+						 + "TRACE:\n" + sTrace;
 			}else{
 				tt = null;
 			}
