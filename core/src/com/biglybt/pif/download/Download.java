@@ -1123,5 +1123,12 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 		{
 			return( false );
 		}
+		
+		public default String[]
+		getStatus(
+			boolean	verbose )
+		{
+			return( new String[]{ "", null });
+		}
 	}
 }

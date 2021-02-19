@@ -44,7 +44,6 @@ import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginListener;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.*;
-import com.biglybt.pif.download.Download.SeedingRank;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManagerListener;
@@ -473,7 +472,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						
 						seedingRankColumn.initialize(TableColumn.ALIGN_TRAIL, TableColumn.POSITION_LAST, 80, TableColumn.INTERVAL_LIVE);
 	
-						TableCellRefreshListener columnListener = new SeedingRankColumnListener( downloadDataMap, plugin_config);
+						TableCellRefreshListener columnListener = new SeedingRankColumnListener( StartStopRulesDefaultPlugin.this );
 						
 						seedingRankColumn.addCellRefreshListener(columnListener);
 	
@@ -1719,25 +1718,37 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 			ProcessVarsComplete	cvars = vars.comp;
 
-			int free_slots =  totals.maxSeeders - cvars.numWaitingOrSeeding;
+			final int free_slots =  totals.maxSeeders - cvars.numWaitingOrSeeding;
 			
 			boolean hasFreeSeedingSlots =  free_slots > 0;
 			
-			int	num_new_light_seeds = free_slots * 2;
-			
-			for ( DefaultRankCalculator data: completeDownloads ){
-					
-				if ( data.updateLightSeedEligibility( hasFreeSeedingSlots )){
-					
-					if ( hasFreeSeedingSlots ){
-						
-						num_new_light_seeds--;
-						
-						if ( num_new_light_seeds <= 0 ){
+			if ( hasFreeSeedingSlots ){
 							
-							break;
-						}
+				int	num_new_light_seeds = free_slots * 2;
+				
+				int	numComp = completeDownloads.size();
+				
+				int pos = RandomUtils.nextInt( numComp );
+				
+				for ( int i=0; i < numComp && num_new_light_seeds > 0; i++ ){
+						
+					DefaultRankCalculator data = completeDownloads.get( pos );
+					
+					if ( ++pos >= numComp ){
+						
+						pos = 0;
 					}
+					
+					if ( data.updateLightSeedEligibility( true )){
+													
+						num_new_light_seeds--;
+					}
+				}
+			}else{
+					
+				for ( DefaultRankCalculator data: completeDownloads ){
+						
+					data.updateLightSeedEligibility( false );
 				}
 			}
 			
@@ -1760,7 +1771,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					"maxA=" + totals.maxActive,
 				};
 				printDebugChanges("<<process() ", mainDebugEntries, mainDebugEntries2,
-						"", "", true, null);
+						"freeS=" + free_slots, "", true, null);
 			}
 		} finally {
 			if (now > 0) {

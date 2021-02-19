@@ -26,16 +26,17 @@ import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureRateLimit;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.pif.PluginConfig;
 import com.biglybt.pif.download.Download;
-import com.biglybt.pif.download.Download.SeedingRank;
 import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.download.DownloadStats;
 import com.biglybt.pif.logging.LoggerChannel;
@@ -994,6 +995,12 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 			
 			if ( !is_test ){
 			
+				if (rules.bDebugLog){
+					if (downloadSR.isLightSeedEligible()){
+						sExplainSR += "Light-Seeding eligible\n";
+					}
+				}
+				
 				_sExplainSR = sExplainSR;
 			}
 		}
@@ -1415,7 +1422,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		return( downloadSR.updateLightSeedEligibility( has_slots ));
 	}
 	
-	private static class
+	private class
 	SR
 		implements Download.SeedingRank
 	{
@@ -1468,10 +1475,96 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 			return( rank );
 		}
 		
+		@Override
 		public boolean
 		isLightSeedEligible()
 		{
 			return( light_seed_eligible );
+		}
+		
+		@Override
+		public String[]
+		getStatus(
+			boolean	verbose )
+		{
+			long sr = rank;
+			
+			String sText = "";
+			if (sr >= 0) {
+				if (getCachedIsFP())
+					sText += MessageText.getString("StartStopRules.firstPriority") + " ";
+
+				if (iRankType == StartStopRulesDefaultPlugin.RANK_TIMED) {
+					//sText += "" + sr + " ";
+					if (sr > DefaultRankCalculator.SR_TIMED_QUEUED_ENDS_AT) {
+						long timeStarted = dl.getStats().getTimeStartedSeeding();
+						long timeLeft;
+
+						long lMsTimeToSeedFor = minTimeAlive;
+						if (iTimed_MinSeedingTimeWithPeers > 0) {
+	  					PeerManager peerManager = dl.getPeerManager();
+	  					if (peerManager != null) {
+	  						int connectedLeechers = peerManager.getStats().getConnectedLeechers();
+	  						if (connectedLeechers > 0) {
+	  							lMsTimeToSeedFor = iTimed_MinSeedingTimeWithPeers;
+	  						}
+	  					}
+						}
+
+						if (dl.isForceStart())
+							timeLeft = Constants.CRAPPY_INFINITY_AS_INT;
+						else if (timeStarted <= 0)
+							timeLeft = lMsTimeToSeedFor;
+						else
+							timeLeft = (lMsTimeToSeedFor - (SystemTime.getCurrentTime() - timeStarted));
+
+						sText += TimeFormatter.format(timeLeft / 1000);
+					} else if (sr > 0) {
+						sText += MessageText.getString("StartStopRules.waiting");
+					}
+				} else if (sr > 0) {
+					if ( verbose ){
+						sText += MessageText.getString( "SubscriptionResults.column.rank" ) + " " + sr;
+					}else{
+						sText += String.valueOf(sr);
+					}
+				}
+			} else if (sr == DefaultRankCalculator.SR_FP0PEERS)
+				sText = MessageText.getString("StartStopRules.FP0Peers");
+			else if (sr == DefaultRankCalculator.SR_FP_SPRATIOMET)
+				sText = MessageText.getString("StartStopRules.SPratioMet");
+			else if (sr == DefaultRankCalculator.SR_RATIOMET)
+				sText = MessageText.getString("StartStopRules.ratioMet");
+			else if (sr == DefaultRankCalculator.SR_NUMSEEDSMET)
+				sText = MessageText.getString("StartStopRules.numSeedsMet");
+			else if (sr == DefaultRankCalculator.SR_NOTQUEUED)
+				sText = "";
+			else if (sr == DefaultRankCalculator.SR_0PEERS)
+				sText = MessageText.getString("StartStopRules.0Peers");
+			else if (sr == DefaultRankCalculator.SR_SHARERATIOMET)
+				sText = MessageText.getString("StartStopRules.shareRatioMet");
+			else {
+				sText = "ERR" + sr;
+			}
+			// Add a Star if it's before minTimeAlive
+			if (SystemTime.getCurrentTime() - dl.getStats().getTimeStartedSeeding() < minTimeAlive){
+				if ( verbose ){
+				
+					sText = "< " + MessageText.getString( "ConfigView.label.minSeedingTime" ) + "; " + sText;
+				}else{
+					sText = "* " + sText;
+				}
+			}
+			String tt;
+			
+			if (rules.bDebugLog) {
+				tt = "FP:\n" + _sExplainFP + "\n" + "SR:" + _sExplainSR
+						+ "\n" + "TRACE:\n" + sTrace;
+			}else{
+				tt = null;
+			}
+			
+			return( new String[]{ sText, tt });
 		}
 	}
 }
