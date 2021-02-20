@@ -57,7 +57,7 @@ DownloadingRankColumnListener
 		if (dlData == null)
 			return;
 
-		int position = dlData.dl.getPosition();
+		int position = dlData.getPosition();
 
 		cell.setSortValue( position );
 
@@ -69,7 +69,7 @@ DownloadingRankColumnListener
 			}
 			cell.setToolTip(
 				dlr +
-				"TRACE:\n" + dlData.sTrace );
+				"TRACE:\n" + dlData.getTrace());
 		} else {
 			cell.setToolTip(null);
 		}

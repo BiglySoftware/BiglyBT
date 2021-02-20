@@ -52,7 +52,7 @@ StartStopRulesDefaultPluginSWTUI
 		GridData gd;
 		shell.setLayout(layout);
 
-		shell.setText("Debug for " + dlData.getDownloadObject().getName());
+		shell.setText("Debug for " + dlData.getName());
 
 		final Text txtFP = new Text(shell, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL);
 		gd = new GridData(GridData.FILL_BOTH);
@@ -87,8 +87,8 @@ StartStopRulesDefaultPluginSWTUI
 			String lastText = "";
 
 			public String formatString() {
-				return "FP:\n" + dlData._sExplainFP + "\n" + "SR:" + dlData._sExplainSR
-						+ "\n" + "TRACE:\n" + dlData.sTrace;
+				return "FP:\n" + dlData.getExplainFP() + "\n" + "SR:" + dlData.getExplainSR()
+						+ "\n" + "TRACE:\n" + dlData.getTrace();
 			}
 
 			public void setText(final String s) {
