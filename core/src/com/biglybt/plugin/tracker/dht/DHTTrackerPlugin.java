@@ -1820,10 +1820,13 @@ DHTTrackerPlugin
 
 		final long[]	max_retry = { 0 };
 
-		final boolean do_alt =
+		boolean metadata_download = download.getFlag( Download.FLAG_METADATA_DOWNLOAD );
+		
+		boolean do_alt = 
 			alt_lookup_handler != null &&
-			(!( download.getFlag( Download.FLAG_LOW_NOISE ) || download.getFlag( Download.FLAG_LIGHT_WEIGHT )));
-
+				(	metadata_download || 
+					(! ( download.getFlag( Download.FLAG_LOW_NOISE ) || download.getFlag( Download.FLAG_LIGHT_WEIGHT ))));
+	
 		int	num_done = 0;
 
 		for (int i=0;i<targets.length;i++){
@@ -1919,23 +1922,27 @@ DHTTrackerPlugin
 						alternativePeerRead(
 							InetSocketAddress		peer )
 						{
-							boolean	try_injection = false;
+							boolean	try_injection = metadata_download;
 
 							synchronized( this ){
 
 								if ( complete ){
 
-									try_injection = addresses.size() < 5;
+									try_injection |= addresses.size() < 5;
 
 								}else{
 
 									try{
 										addresses.add( peer.getAddress().getHostAddress());
+										
 										ports.add( peer.getPort());
-										udp_ports.add( 0 );
+										
+										udp_ports.add( peer.getPort());
+										
 										flags.add( null );
 
 										is_seeds.add( false );
+										
 										leecher_count++;
 
 									}catch( Throwable e ){
@@ -1953,7 +1960,7 @@ DHTTrackerPlugin
 										PEPeerSource.PS_DHT,
 										peer.getAddress().getHostAddress(),
 										peer.getPort(),
-										0,
+										peer.getPort(),
 										NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ));
 								}
 							}
@@ -1965,6 +1972,10 @@ DHTTrackerPlugin
 							DHTPluginContact	originator,
 							DHTPluginValue		value )
 						{
+							String 	peer_ip			= null;
+							int		peer_tcp_port	= 0;
+							int		peer_udp_port	= 0;
+							
 							synchronized( this ){
 
 								if ( complete ){
@@ -2030,12 +2041,16 @@ DHTTrackerPlugin
 										}catch( Throwable e ){
 										}
 
-										addresses.add(
-												ip_str==null?originator.getAddress().getAddress().getHostAddress():ip_str);
+										
+										peer_ip 		= ip_str==null?originator.getAddress().getAddress().getHostAddress():ip_str;
+										peer_tcp_port	= tcp_port;
+										peer_udp_port	= udp_port==-1?originator.getAddress().getPort():udp_port;
+										
+										addresses.add( peer_ip );
+										
+										ports.add( peer_tcp_port );
 
-										ports.add( new Integer( tcp_port ));
-
-										udp_ports.add( new Integer( udp_port==-1?originator.getAddress().getPort():udp_port));
+										udp_ports.add( peer_udp_port );
 
 										flags.add( flag_str );
 
@@ -2066,6 +2081,21 @@ DHTTrackerPlugin
 
 									// in case we get crap back (someone spamming the DHT) just
 									// silently ignore
+								}
+							}
+							
+							if ( metadata_download && peer_ip != null ){
+								
+								PeerManager pm = download.getPeerManager();
+									
+								if ( pm != null ){
+
+									pm.peerDiscovered(
+										PEPeerSource.PS_DHT,
+										peer_ip,
+										peer_tcp_port,
+										peer_udp_port,
+										NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ));
 								}
 							}
 						}

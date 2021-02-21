@@ -741,6 +741,8 @@ DHTTrackerPluginAlt
 
 				if ( reply == null ){
 
+					// System.out.println( "Error: " + reply );
+					
 						// error response, ignore
 
 					return;
@@ -794,6 +796,8 @@ DHTTrackerPluginAlt
 							found_peers.add( addr );
 						}
 
+						// System.out.println("Found peer: " + addr );
+						
 						hit_count++;
 
 						listener.foundPeer( addr );
