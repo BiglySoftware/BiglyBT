@@ -46,6 +46,7 @@ import com.biglybt.core.content.RelatedContentManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerAvailability;
 import com.biglybt.core.download.DownloadManagerFactory;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.LocaleUtilDecoder;
 import com.biglybt.core.internat.MessageText;
@@ -5957,7 +5958,18 @@ public class OpenTorrentOptionsWindow
 		protected void renameFilenames(final TorrentOpenFileOptions torrentFileInfo) {
 			SimpleTextEntryWindow dialog = new SimpleTextEntryWindow(
 					"FilesView.rename.filename.title", "FilesView.rename.filename.text");
-			dialog.setPreenteredText(torrentFileInfo.getOriginalFileName(), false); // false -> it's not "suggested", it's a previous value
+			
+			String fileName = torrentFileInfo.getOriginalFileName();
+			
+			dialog.setPreenteredText(fileName, false); // false -> it's not "suggested", it's a previous value
+			
+			int pos = fileName.lastIndexOf( '.' );
+
+			if ( pos > 0 ){
+
+				dialog.selectPreenteredTextRange( new int[]{ 0, pos });
+			}
+					
 			dialog.allowEmptyInput(false);
 			dialog.setRememberLocationSize( "file.rename.dialog.pos" );
 			dialog.prompt(new UIInputReceiverListener() {
