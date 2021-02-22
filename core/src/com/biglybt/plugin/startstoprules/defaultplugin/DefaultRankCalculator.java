@@ -19,11 +19,8 @@ package com.biglybt.plugin.startstoprules.defaultplugin;
 
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.tag.TagFeatureRateLimit;
-import com.biglybt.core.util.SystemTime;
-import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.download.DownloadScrapeResult;
-import com.biglybt.pif.download.DownloadStats;
 import com.biglybt.pif.torrent.Torrent;
 
 public interface 

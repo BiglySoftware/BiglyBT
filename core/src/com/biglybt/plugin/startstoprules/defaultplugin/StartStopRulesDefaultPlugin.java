@@ -139,8 +139,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	/** Used only for RANK_TIMED. Recalculate ranks on a timer */
 	private RecalcSeedingRanksTask recalcSeedingRanksTask;
 
-	/** Map to relate downloadData to a Download */
-	private static Map<Download, DefaultRankCalculator> downloadDataMap = Collections.synchronizedMap(new HashMap<Download, DefaultRankCalculator>());
+	/** Map to relate downloadData to a Download OR reserved slot  */
+	private static Map<Object, DefaultRankCalculator> downloadDataMap = Collections.synchronizedMap(new HashMap<>());
 
 	/**
 	 * this is used to reduce the number of comperator invocations
@@ -1707,38 +1707,41 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			} // Loop 2/2 (Start/Stopping)
 
 			ProcessVarsComplete	cvars = vars.comp;
+			
+			int free_slots =  totals.maxSeeders - cvars.numWaitingOrSeeding;
 
-			final int free_slots =  totals.maxSeeders - cvars.numWaitingOrSeeding;
-			
-			boolean hasFreeSeedingSlots =  free_slots > 0;
-			
-			if ( hasFreeSeedingSlots ){
+			if ( !completeDownloads.isEmpty()){
+								
+				boolean hasFreeSeedingSlots =  free_slots > 0;
+				
+				if ( hasFreeSeedingSlots ){
+								
+					int	num_new_light_seeds = free_slots * 2;
+					
+					int	numComp = completeDownloads.size();
+					
+					int pos = RandomUtils.nextInt( numComp );
+					
+					for ( int i=0; i < numComp && num_new_light_seeds > 0; i++ ){
 							
-				int	num_new_light_seeds = free_slots * 2;
-				
-				int	numComp = completeDownloads.size();
-				
-				int pos = RandomUtils.nextInt( numComp );
-				
-				for ( int i=0; i < numComp && num_new_light_seeds > 0; i++ ){
+						DefaultRankCalculator data = completeDownloads.get( pos );
 						
-					DefaultRankCalculator data = completeDownloads.get( pos );
-					
-					if ( ++pos >= numComp ){
+						if ( ++pos >= numComp ){
+							
+							pos = 0;
+						}
 						
-						pos = 0;
+						if ( data.updateLightSeedEligibility( true )){
+														
+							num_new_light_seeds--;
+						}
 					}
-					
-					if ( data.updateLightSeedEligibility( true )){
-													
-						num_new_light_seeds--;
-					}
-				}
-			}else{
-					
-				for ( DefaultRankCalculator data: completeDownloads ){
+				}else{
 						
-					data.updateLightSeedEligibility( false );
+					for ( DefaultRankCalculator data: completeDownloads ){
+							
+						data.updateLightSeedEligibility( false );
+					}
 				}
 			}
 			

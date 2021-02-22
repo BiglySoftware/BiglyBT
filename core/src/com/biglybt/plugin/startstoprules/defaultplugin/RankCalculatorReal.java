@@ -42,7 +42,6 @@ import com.biglybt.pif.PluginConfig;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadActivationEvent;
 import com.biglybt.pif.download.DownloadAnnounceResult;
-import com.biglybt.pif.download.Download.SeedingRank;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.download.DownloadStats;
