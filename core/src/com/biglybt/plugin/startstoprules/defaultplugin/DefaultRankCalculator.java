@@ -92,13 +92,13 @@ DefaultRankCalculator
 	
 	public int
 	getCoreState();
-	
-	public Torrent
-	getTorrent();
-	
+		
 	public String
 	getName();
 		
+	public boolean
+	supportsPosition();
+
 	public int
 	getPosition();
 	
@@ -130,6 +130,9 @@ DefaultRankCalculator
 	
 	public boolean
 	isComplete();
+	
+	public boolean
+	isControllable();
 	
 	public void
 	initialize()
@@ -269,6 +272,9 @@ DefaultRankCalculator
 	public String
 	getTrace();
 	
+	public Object
+	getRelatedTo();
+
 	public void
 	destroy();	
 }

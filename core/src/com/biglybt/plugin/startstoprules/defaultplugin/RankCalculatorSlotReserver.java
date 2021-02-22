@@ -17,26 +17,41 @@
 
 package com.biglybt.plugin.startstoprules.defaultplugin;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
+import com.biglybt.core.logging.LogRelation;
 import com.biglybt.core.tag.TagFeatureRateLimit;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.download.DownloadScrapeResult;
-import com.biglybt.pif.torrent.Torrent;
 
 public class 
 RankCalculatorSlotReserver 
+	extends LogRelation
 	implements DefaultRankCalculator
 {
+	private final static AtomicInteger	uuid_gen = new AtomicInteger( 1 );
+	
+	private final int uid = uuid_gen.getAndIncrement();
+	
 	@Override
 	public int 
 	compareTo(
 		DefaultRankCalculator o)
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		if ( o instanceof RankCalculatorSlotReserver ){
+			
+			RankCalculatorSlotReserver other = (RankCalculatorSlotReserver)o;
+			
+			return( uid - other.uid );
+			
+		}else{
+			
+			return( -1 );
+		}
 	}
 	
 	public int
@@ -50,19 +65,19 @@ RankCalculatorSlotReserver
 	{
 		return( DownloadManager.STATE_SEEDING );
 	}
-	
-	public Torrent
-	getTorrent()
-	{
-		return( null );
-	}
-	
+		
 	public String
 	getName()
 	{
-		return( "slot reserver" );
+		return( "Light-Seed: Slot " + uid );
 	}
 		
+	public boolean
+	supportsPosition()
+	{
+		return( false );
+	}
+	
 	public int
 	getPosition()
 	{
@@ -81,6 +96,13 @@ RankCalculatorSlotReserver
 		int	pos )
 	{
 		Debug.out( "no" );
+	}
+	
+	@Override
+	public boolean 
+	isControllable()
+	{
+		return( false );
 	}
 	
 	public boolean 
@@ -160,25 +182,25 @@ RankCalculatorSlotReserver
 	public boolean
 	isFirstPriority()
 	{
-		return( false );
+		return( true );
 	}
 	
 	public boolean
 	getCachedIsFP()
 	{
-		return( false );
+		return( true );
 	}
 	
 	public int
 	getSeedingRank()
 	{
-		return( 0 );
+		return( SR_TIMED_QUEUED_ENDS_AT + 2 );
 	}
 	
 	public boolean
 	getActivelySeeding()
 	{
-		return( false );
+		return( true );
 	}
 	
 	public boolean
@@ -374,6 +396,18 @@ RankCalculatorSlotReserver
 	getTrace()
 	{
 		return( "" );
+	}
+	
+	public Object
+	getRelatedTo()
+	{
+		return( this );
+	}
+	
+	public String
+	getRelationText() 
+	{
+		return( getName());
 	}
 	
 	public void

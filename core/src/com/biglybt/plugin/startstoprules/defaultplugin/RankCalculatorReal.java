@@ -343,7 +343,7 @@ RankCalculatorReal
 	{
 		if ( !( obj instanceof RankCalculatorReal )){
 			
-			return( -1 );
+			return( 1 );
 		}
 		
 		RankCalculatorReal dlData = (RankCalculatorReal)obj;
@@ -392,8 +392,8 @@ RankCalculatorReal
 		return dl.getPosition() - dlData.dl.getPosition();
 	}
 	
-	public Torrent
-	getTorrent()
+	public Object
+	getRelatedTo()
 	{
 		return( dl.getTorrent());
 	}
@@ -430,6 +430,12 @@ RankCalculatorReal
 		core_dm.getDownloadState().removeListener( l, attribute, event_type );
 	}
 	
+	public boolean
+	supportsPosition()
+	{
+		return( true );
+	}
+	
 	public int
 	getPosition()
 	{
@@ -448,6 +454,13 @@ RankCalculatorReal
 		int	pos )
 	{
 		dl.moveTo( pos );
+	}
+	
+	@Override
+	public boolean 
+	isControllable()
+	{
+		return( true );
 	}
 	
 	public boolean 
