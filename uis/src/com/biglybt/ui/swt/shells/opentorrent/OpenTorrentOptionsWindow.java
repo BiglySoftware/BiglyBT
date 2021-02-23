@@ -4243,8 +4243,8 @@ public class OpenTorrentOptionsWindow
 				public void handleEvent(Event event) {
 					TorrentOpenFileOptions[] infos = tvFiles.getSelectedDataSources().toArray(
 							new TorrentOpenFileOptions[0]);
-					if (infos.length == 1) {
-						renameFilenames(infos[0]);
+					if (infos.length > 0 ) {
+						renameFilenames(infos);
 					}
 				}
 			});
@@ -5434,8 +5434,8 @@ public class OpenTorrentOptionsWindow
 					if (e.keyCode == SWT.F2 && (e.stateMask & SWT.MODIFIER_MASK) == 0) {
 						TorrentOpenFileOptions[] infos = tvFiles.getSelectedDataSources().toArray(
 								new TorrentOpenFileOptions[0]);
-						if (infos.length == 1) {
-							renameFilenames(infos[0]);
+						if (infos.length > 0) {
+							renameFilenames(infos);
 						}
 						e.doit = false;
 						return;
@@ -5612,7 +5612,7 @@ public class OpenTorrentOptionsWindow
 
 						// rename
 
-					if (infos.length == 1) {
+					if (infos.length > 0 ) {
 						item = new MenuItem(menu, SWT.PUSH);
 						Messages.setLanguageText(item, "FilesView.menu.rename_only");
 						item.addSelectionListener(new SelectionAdapter() {
@@ -5620,7 +5620,7 @@ public class OpenTorrentOptionsWindow
 							@Override
 							public void widgetSelected(SelectionEvent e) {
 
-								renameFilenames(infos[0]);
+								renameFilenames(infos);
 							}
 						});
 					}
@@ -5913,7 +5913,7 @@ public class OpenTorrentOptionsWindow
 
 					boolean hasRowsSelected = rows.length > 0;
 					if (btnRename != null && !btnRename.isDisposed()) {
-						btnRename.setEnabled(rows.length == 1);
+						btnRename.setEnabled(rows.length > 0 );
 					}
 					if (btnRetarget != null && !btnRetarget.isDisposed()) {
 						btnRetarget.setEnabled(hasRowsSelected);
@@ -5955,7 +5955,22 @@ public class OpenTorrentOptionsWindow
 			});
 		}
 
-		protected void renameFilenames(final TorrentOpenFileOptions torrentFileInfo) {
+		protected void 
+		renameFilenames(TorrentOpenFileOptions[] torrentFileInfos) 
+		{
+			renameFilenames(torrentFileInfos, 0);
+		}
+		
+		protected void 
+		renameFilenames(TorrentOpenFileOptions[] torrentFileInfos, int index)
+		{
+			if ( index >= torrentFileInfos.length ){
+				
+				return;
+			}
+			
+			TorrentOpenFileOptions torrentFileInfo = torrentFileInfos[index];
+			
 			SimpleTextEntryWindow dialog = new SimpleTextEntryWindow(
 					"FilesView.rename.filename.title", "FilesView.rename.filename.text");
 			
@@ -5988,6 +6003,10 @@ public class OpenTorrentOptionsWindow
 						row.invalidate(true);
 						row.refresh(true);
 					}
+					
+					Utils.execSWTThreadLater(1, ()->{
+						renameFilenames( torrentFileInfos, index+1 );
+					});
 				}
 			});
 		}
