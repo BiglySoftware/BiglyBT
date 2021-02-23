@@ -34,6 +34,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.DownloadManagerStateFactory;
 import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
 import com.biglybt.core.security.CryptoManagerFactory;
 import com.biglybt.core.tag.Tag;
@@ -637,47 +638,7 @@ RelatedContentManager
 		COConfigurationManager.setParameter( "rcm.global.filter.active_only", b );
 	}
 		
-	private int[]
-	getAggregateSeedsLeechers(
-		DownloadManagerState		state )
-	{
-		String cache = state.getAttribute( DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE );
 
-		int	[] result = null;
-
-		if ( cache != null ){
-
-			String[]	bits = cache.split(",");
-
-			if ( bits.length == 3 ){
-
-				try{
-					long 	updated_mins = Long.parseLong( bits[0] );
-
-					long	mins = SystemTime.getCurrentTime()/(1000*60);
-
-					long	age_mins = mins - updated_mins;
-
-					long WEEK_MINS = 7*24*60;
-
-					if ( age_mins <= WEEK_MINS ){
-
-						int seeds = Integer.parseInt( bits[1] );
-						int peers = Integer.parseInt( bits[2] );
-
-						if ( seeds >= 0 && peers >= 0 ){
-
-							result = new int[]{ seeds, peers };
-						}
-					}
-				}catch( Throwable e ){
-
-				}
-			}
-		}
-
-		return( result );
-	}
 
 	private DHTPluginInterface
 	selectDHT(
@@ -805,7 +766,7 @@ RelatedContentManager
 
 						int	seeds_leechers;
 
-						int[]	aggregate_seeds_leechers = getAggregateSeedsLeechers( state );
+						int[]	aggregate_seeds_leechers = DownloadManagerStateFactory.getCachedAggregateScrapeSeedsLeechers( state );
 
 						if ( aggregate_seeds_leechers == null ){
 
@@ -1287,7 +1248,7 @@ RelatedContentManager
 					int leechers 	= -1;
 					int seeds 		= -1;
 
-					int[]	aggregate_seeds_leechers = getAggregateSeedsLeechers( state );
+					int[]	aggregate_seeds_leechers = DownloadManagerStateFactory.getCachedAggregateScrapeSeedsLeechers( state );
 
 					if ( aggregate_seeds_leechers == null ){
 

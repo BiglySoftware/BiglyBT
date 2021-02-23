@@ -1189,9 +1189,12 @@ DownloadImpl
 						
 						if ( dl_state != DownloadManager.STATE_DOWNLOADING && dl_state != DownloadManager.STATE_SEEDING ){
 
-								// not running, who cares
+							if ( mins - updated_mins < 3*60 ){
+
+									// too recent
 							
-							do_update = false;
+								do_update = false;
+							}
 						}
 					}
 				}

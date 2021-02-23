@@ -214,9 +214,9 @@ DefaultRankCalculator
 	getLastScrapeResultOk();
 	
 	public void
-	setLastScrapeResultOk(
-		boolean		b );
-		
+	scrapeReceived(
+		DownloadScrapeResult		result );
+	
 	public int
 	getLastModifiedScrapeResultPeers();
 	

@@ -28,6 +28,7 @@ import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
+import com.biglybt.core.download.DownloadManagerStateFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureRateLimit;
@@ -47,7 +48,6 @@ import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.download.DownloadStats;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.peers.PeerManager;
-import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 /**
@@ -203,7 +203,6 @@ RankCalculatorReal
 	int lastModifiedScrapeResultPeers = 0;
 	int lastModifiedScrapeResultSeeds = 0;
 	int lastModifiedShareRatio = 0;
-	// modified by a listener in StartStopRulesDefaultPlugin
 	boolean lastScrapeResultOk = false;
 
 	/**
@@ -231,6 +230,19 @@ RankCalculatorReal
 
 		dm_state.addListener( this, DownloadManagerState.AT_PARAMETERS, DownloadManagerStateAttributeListener.WRITTEN );
 
+			// one of the main reasons to use the cache is for 0-peers ignore. a lot of instability in
+			// seed rank can be caused by seeds that aren't first-priority due to 0 peers but on startup
+			// they get flagged as FP until a scrape comes in at which point they switch to 'ignored'
+		
+		int[] scrapeCache = DownloadManagerStateFactory.getCachedAggregateScrapeSeedsLeechers( dm_state );
+		
+		if ( scrapeCache != null ){
+				// we don't know if the cached seeds includes us or not so assume it doesn't
+			lastScrapeResultOk	= true;
+			lastModifiedScrapeResultSeeds	= Math.max( scrapeCache[0], 0 );
+			lastModifiedScrapeResultPeers	= Math.max( scrapeCache[1], 0 );
+		}
+		
 		setupTagData();
 		
 		try {
@@ -628,7 +640,7 @@ RankCalculatorReal
 		if (numPeersAsFullCopy != 0 && numSeeds >= iFakeFullCopySeedStart)
 			numSeeds += numPeers /numPeersAsFullCopy;
 
-		return numSeeds;
+		return Math.max(numSeeds,0);
 	}
 
 	/**
@@ -659,7 +671,7 @@ RankCalculatorReal
 				}
 			}
 		}
-		return numPeers;
+		return Math.max(numPeers,0);
 	}
 
 	/**
@@ -912,10 +924,24 @@ RankCalculatorReal
 	}
 	
 	public void
-	setLastScrapeResultOk(
-		boolean		b )
+	scrapeReceived(
+		DownloadScrapeResult		result )
 	{
-		lastScrapeResultOk = b;
+		if ( result.getResponseType() == DownloadScrapeResult.RT_SUCCESS ){
+					
+			updateScrapeCache();
+			
+			lastScrapeResultOk = true;
+		}
+	}
+	
+	private void
+	updateScrapeCache()
+	{
+		DownloadScrapeResult sr = dl.getAggregatedScrapeResult( false );
+		
+		lastModifiedScrapeResultPeers = calcPeersNoUs(dl,sr);
+		lastModifiedScrapeResultSeeds = calcSeedsNoUs(dl,sr);
 	}
 	
 	public int
@@ -1033,9 +1059,8 @@ RankCalculatorReal
 			// here we are seeding
 	
 			lastModifiedShareRatio = stats.getShareRatio();
-			DownloadScrapeResult sr = dl.getAggregatedScrapeResult( false );
-			lastModifiedScrapeResultPeers = calcPeersNoUs(dl,sr);
-			lastModifiedScrapeResultSeeds = calcSeedsNoUs(dl,sr);
+			
+			updateScrapeCache();
 	
 			boolean bScrapeResultsOk = (lastModifiedScrapeResultPeers > 0 || lastModifiedScrapeResultSeeds > 0
 					|| lastScrapeResultOk) && (lastModifiedScrapeResultPeers >= 0 && lastModifiedScrapeResultSeeds >= 0);
@@ -1217,16 +1242,23 @@ RankCalculatorReal
 	
 			// SeedCount and SPRatio require Scrape Results..
 			if (bScrapeResultsOk) {
-				if ( iRankType == StartStopRulesDefaultPlugin.RANK_PEERCOUNT )
-				{
+				if ( iRankType == StartStopRulesDefaultPlugin.RANK_PEERCOUNT ){
+					if (rules.bDebugLog){
+						sExplainSR += "  PeerCount seeds=" + lastModifiedScrapeResultSeeds + "peers=" + lastModifiedScrapeResultPeers +"\n";
+					}
+					
 					if(lastModifiedScrapeResultPeers > lastModifiedScrapeResultSeeds * 10)
 						newSR = 100 * lastModifiedScrapeResultPeers * 10;
 					else
 						newSR = (int)((long)100 * lastModifiedScrapeResultPeers * lastModifiedScrapeResultPeers/(lastModifiedScrapeResultSeeds+1));
 				}
 				else if ((iRankType == StartStopRulesDefaultPlugin.RANK_SEEDCOUNT)
-						&& (iRankTypeSeedFallback == 0 || iRankTypeSeedFallback > lastModifiedScrapeResultSeeds))
-				{
+						&& (iRankTypeSeedFallback == 0 || iRankTypeSeedFallback > lastModifiedScrapeResultSeeds)){
+				
+					if (rules.bDebugLog){
+						sExplainSR += "  SeedCount seeds=" + lastModifiedScrapeResultSeeds +"\n";
+					}
+
 					if (lastModifiedScrapeResultSeeds < 10000)
 						newSR = 10000 - lastModifiedScrapeResultSeeds;
 					else
@@ -1237,11 +1269,20 @@ RankCalculatorReal
 				} else { // iRankType == RANK_SPRATIO or we are falling back
 					if (lastModifiedScrapeResultPeers != 0) {
 						if (lastModifiedScrapeResultSeeds == 0) {
-							if (lastModifiedScrapeResultPeers >= minPeersToBoostNoSeeds)
+							if (lastModifiedScrapeResultPeers >= minPeersToBoostNoSeeds){
 								newSR += SPRATIO_BASE_LIMIT;
+								
+								if (rules.bDebugLog){
+									sExplainSR += "  Seed:Peer ratio=" + lastModifiedScrapeResultSeeds + ":" + lastModifiedScrapeResultPeers +"\n";
+								}
+							}
 						} else { // numSeeds != 0 && numPeers != 0
 							float x = (float) lastModifiedScrapeResultSeeds / lastModifiedScrapeResultPeers;
 							newSR += SPRATIO_BASE_LIMIT / ((x + 1) * (x + 1));
+							
+							if (rules.bDebugLog){
+								sExplainSR += "  Seed:Peer ratio=" + lastModifiedScrapeResultSeeds + ":" + lastModifiedScrapeResultPeers +"\n";
+							}
 						}
 					}
 				}

@@ -294,8 +294,8 @@ RankCalculatorSlotReserver
 	}
 	
 	public void
-	setLastScrapeResultOk(
-		boolean		b )
+	scrapeReceived(
+		DownloadScrapeResult		result )
 	{
 	}
 		
