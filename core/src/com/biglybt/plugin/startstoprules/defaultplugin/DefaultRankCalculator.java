@@ -203,9 +203,24 @@ DefaultRankCalculator
 	public void
 	resetSeedingRank();
 	
+		/*
+		 * Long.MAX_VALUE = not eligible
+		 * otherwise time elapsed since eligible
+		 */
+	
+	public long
+	getLightSeedEligibility();
+	
 	public boolean
 	updateLightSeedEligibility(
 		boolean	b );
+	
+	public RankCalculatorSlotReserver
+	getReservedSlot();
+	
+	public void
+	setReservedSlot(
+		RankCalculatorSlotReserver	slot );
 	
 	public TagFeatureRateLimit[]
 	getTagsWithDLLimits();

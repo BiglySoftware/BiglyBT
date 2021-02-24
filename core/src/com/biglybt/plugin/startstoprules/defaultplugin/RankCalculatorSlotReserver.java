@@ -274,6 +274,12 @@ RankCalculatorSlotReserver
 	{
 	}
 	
+	public long
+	getLightSeedEligibility()
+	{
+		return( Long.MAX_VALUE );
+	}
+	
 	public boolean
 	updateLightSeedEligibility(
 		boolean	b )
@@ -285,6 +291,19 @@ RankCalculatorSlotReserver
 	getTagsWithDLLimits()
 	{
 		return( new TagFeatureRateLimit[0] );
+	}
+	
+	public RankCalculatorSlotReserver
+	getReservedSlot()
+	{
+		return( null );
+	}
+	
+	public void
+	setReservedSlot(
+		RankCalculatorSlotReserver	slot )
+	{
+		Debug.out( "no" );
 	}
 	
 	public boolean

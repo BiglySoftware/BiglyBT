@@ -2412,7 +2412,7 @@ DownloadManagerImpl
     
     	int status;
     	
-       	if ( seedingRank.isLightSeedEligible()){
+       	if ( seedingRank.getLightSeedEligibility() == 0 ){
        		
 	    	status = light_seeding_status;
 	    	
@@ -2444,11 +2444,6 @@ DownloadManagerImpl
     	}
     	
 	   	if ( _tracker_client_for_queued_download != null ){
-    		
-    		return;
-    	}
-
-    	if ( torrent == null || !torrent.getPrivate()){
     		
     		return;
     	}

@@ -35,6 +35,7 @@ import com.biglybt.core.tag.TagFeatureRateLimit;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
@@ -205,6 +206,8 @@ RankCalculatorReal
 	int lastModifiedShareRatio = 0;
 	boolean lastScrapeResultOk = false;
 
+	private RankCalculatorSlotReserver	reservedSlot;
+	
 	/**
 	 * Default Initializer
 	 *
@@ -1722,7 +1725,13 @@ RankCalculatorReal
 	public void
 	resetSeedingRank()
 	{
-		downloadSR.update( 0, 0 );
+		downloadSR.reset();
+	}
+	
+	public long
+	getLightSeedEligibility()
+	{
+		return( downloadSR.getLightSeedEligibility());
 	}
 	
 	public boolean
@@ -1732,6 +1741,36 @@ RankCalculatorReal
 		return( downloadSR.updateLightSeedEligibility( has_slots ));
 	}
 	
+	public RankCalculatorSlotReserver
+	getReservedSlot()
+	{
+		return( reservedSlot );
+	}
+	
+	public void
+	setReservedSlot(
+		RankCalculatorSlotReserver	slot )
+	{
+		if ( slot != null ){
+		
+			if ( reservedSlot != null ){
+				
+				Debug.out( "hmm" );;
+			}
+			
+			reservedSlot = slot;
+			
+		}else{ 
+			
+			if ( reservedSlot == null ){
+				
+				Debug.out( "hmm" );;
+			}
+			
+			reservedSlot = null;			
+		}
+	}
+	
 	private class
 	SR
 		implements Download.SeedingRank
@@ -1739,11 +1778,26 @@ RankCalculatorReal
 		private int			rank;
 		private int			rankNP;
 		
-		private boolean		light_seed_eligible;
+			// Long.MAX_VALUE = never eligible
+			// -1 = currently eligible
+			// other = mono time that we transitioned from eligible -> ineligible
+		
+		private long		light_seed_eligible = Long.MAX_VALUE;
 		
 		private
 		SR()
 		{
+		}
+		
+		private void
+		reset()
+		{
+			rank	= 0;
+			rankNP	= 0;
+			
+				// we get this relatively frequently due to config saves (not always user-invoked either)
+				// don't mess with light seed eligibility as this will cause all light-seeds to be periodically
+				// reset for no reason
 		}
 		
 		private void
@@ -1756,7 +1810,12 @@ RankCalculatorReal
 			
 			if ( rank != SR_0PEERS || rankNP < SR_IGNORED_LESS_THAN ){
 			
-				light_seed_eligible	= false;
+					// not eligible
+				
+				if ( light_seed_eligible == -1 ){
+				
+					light_seed_eligible = SystemTime.getMonotonousTime();
+				}
 			}
 		}
 		
@@ -1770,15 +1829,47 @@ RankCalculatorReal
 					rankNP >= SR_IGNORED_LESS_THAN && 
 					TorrentUtils.getPrivate(core_dm.getTorrent());
 			
-			if ( light_seed_eligible != avail ){
+			if ( avail ){
 				
-				light_seed_eligible = avail;
+					// we are eligible
+				
+				if ( light_seed_eligible == -1 ){
+				
+						// already eligible, no change
+					
+					return( false );
+				}
+				
+				if ( light_seed_eligible != Long.MAX_VALUE ){
+				
+						// bit of a grace period to stop flip-flopping
+					
+					long time_since_not_eligible = SystemTime.getMonotonousTime() - light_seed_eligible;
+					
+					if ( time_since_not_eligible < 2*60*1000 ){
+						
+						return( false );
+					}
+				}
+				
+				light_seed_eligible = -1;
 				
 				return( true );
 				
 			}else{
 				
-				return( false );
+					// not eligible
+				
+				boolean result = light_seed_eligible == -1;
+				
+				if ( result ){
+				
+						// we were eligible, start timer
+					
+					light_seed_eligible = SystemTime.getMonotonousTime();
+				}
+				
+				return( result );
 			}
 		}
 		
@@ -1790,10 +1881,21 @@ RankCalculatorReal
 		}
 		
 		@Override
-		public boolean
-		isLightSeedEligible()
+		public long
+		getLightSeedEligibility()
 		{
-			return( light_seed_eligible );
+			if ( light_seed_eligible == -1 ){
+				
+				return( 0 );
+				
+			}else if ( light_seed_eligible == Long.MAX_VALUE ){
+				
+				return( light_seed_eligible );
+				
+			}else{
+			
+				return( SystemTime.getMonotonousTime() - light_seed_eligible );
+			}
 		}
 		
 		@Override
@@ -1873,7 +1975,7 @@ RankCalculatorReal
 			String ls_str = "Light-Seeding eligible";
 			
 			if ( verbose ){
-				if ( downloadSR.isLightSeedEligible()){
+				if ( downloadSR.getLightSeedEligibility() == 0 ){
 					sText += "\n" + ls_str;
 				}
 			}
@@ -1882,7 +1984,7 @@ RankCalculatorReal
 			
 			if (rules.bDebugLog) {
 				tt = 	"FP:\n" + _sExplainFP + "\n" + 
-						"SR:" + _sExplainSR + (verbose||!downloadSR.isLightSeedEligible()?"":(ls_str+"\n"))+ "\n"
+						"SR:" + _sExplainSR + (verbose||downloadSR.getLightSeedEligibility()!=0?"":(ls_str+"\n"))+ "\n"
 						 + "TRACE:\n" + sTrace;
 			}else{
 				tt = null;

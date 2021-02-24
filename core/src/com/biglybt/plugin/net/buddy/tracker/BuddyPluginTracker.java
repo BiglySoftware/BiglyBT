@@ -1987,6 +1987,7 @@ outer:
 
 			if ( 	announce == null ||
 					announce.getResponseType() != DownloadAnnounceResult.RT_SUCCESS ||
+					announce.getPeers() == null ||
 					announce.getPeers().length < 2 ){
 
 				return( false );

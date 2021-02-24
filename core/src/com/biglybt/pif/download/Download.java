@@ -1118,10 +1118,10 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 			return( 0 );
 		}
 		
-		public default boolean
-		isLightSeedEligible()
+		public default long
+		getLightSeedEligibility()
 		{
-			return( false );
+			return( Long.MAX_VALUE );
 		}
 		
 		public default String[]
