@@ -200,8 +200,8 @@ DefaultRankCalculator
 	public void
 	recalcSeedingRank();
 	
-	public void
-	resetSeedingRank();
+	//public void
+	//resetSeedingRank();
 	
 		/*
 		 * Long.MAX_VALUE = not eligible
@@ -221,6 +221,9 @@ DefaultRankCalculator
 	public void
 	setReservedSlot(
 		RankCalculatorSlotReserver	slot );
+	
+	public boolean
+	activationRequest();
 	
 	public TagFeatureRateLimit[]
 	getTagsWithDLLimits();

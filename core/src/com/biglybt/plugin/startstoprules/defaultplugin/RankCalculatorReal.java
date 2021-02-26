@@ -207,6 +207,7 @@ RankCalculatorReal
 	boolean lastScrapeResultOk = false;
 
 	private RankCalculatorSlotReserver	reservedSlot;
+	private long	lastActivationAnnounce;
 	
 	/**
 	 * Default Initializer
@@ -650,6 +651,12 @@ RankCalculatorReal
 	 * Get # of peers not including us
 	 *
 	 */
+	
+	private int calcPeersNoUs()
+	{
+		return( calcPeersNoUs(dl,dl.getAggregatedScrapeResult( false )));
+	}
+	
 	private int calcPeersNoUs(Download download, DownloadScrapeResult sr) {
 		int numPeers = 0;
 		if (sr.getScrapeStartTime() > 0) {
@@ -667,12 +674,17 @@ RankCalculatorReal
 					&& ar.getResponseType() == DownloadAnnounceResult.RT_SUCCESS)
 				numPeers = ar.getNonSeedCount();
 
+			/*
+			 The problem here is that we don't know if the activation attempt came from a seed or a peer
+			 so assuming it is a peer opens us up to lots of invalid transitions out of a 0-peers state
+			 Reworked to force an announce on an activation attempt
 			if (numPeers == 0) {
 				DownloadActivationEvent activationState = download.getActivationState();
 				if (activationState != null) {
 					numPeers = activationState.getActivationCount();
 				}
 			}
+			*/
 		}
 		return Math.max(numPeers,0);
 	}
@@ -792,11 +804,11 @@ RankCalculatorReal
 		// when bAutoStart0Peers
 		if (iRankType == StartStopRulesDefaultPlugin.RANK_TIMED
 				&& !isFirstPriority()
-				&& !(bAutoStart0Peers && calcPeersNoUs(dl,dl.getAggregatedScrapeResult( false )) == 0 && lastScrapeResultOk)) {
+				&& !(bAutoStart0Peers && calcPeersNoUs() == 0 && lastScrapeResultOk)) {
 			bIsActive = (state == Download.ST_SEEDING);
 
 		} else if (state != Download.ST_SEEDING
-				|| (bAutoStart0Peers && calcPeersNoUs(dl,dl.getAggregatedScrapeResult( false )) == 0)) {
+				|| (bAutoStart0Peers && calcPeersNoUs() == 0)) {
 			// Not active if we aren't seeding
 			// Not active if we are AutoStarting 0 Peers, and peer count == 0
 			bIsActive = false;
@@ -1722,11 +1734,13 @@ RankCalculatorReal
 		return false;
 	}
 	
+	/*
 	public void
 	resetSeedingRank()
 	{
 		downloadSR.reset();
 	}
+	*/
 	
 	public long
 	getLightSeedEligibility()
@@ -1755,7 +1769,7 @@ RankCalculatorReal
 		
 			if ( reservedSlot != null ){
 				
-				Debug.out( "hmm" );;
+				Debug.out( "hmm" );
 			}
 			
 			reservedSlot = slot;
@@ -1764,11 +1778,40 @@ RankCalculatorReal
 			
 			if ( reservedSlot == null ){
 				
-				Debug.out( "hmm" );;
+				Debug.out( "hmm" );
 			}
 			
 			reservedSlot = null;			
 		}
+	}
+	
+	@Override
+	public boolean 
+	activationRequest()
+	{
+		if ( dl.isComplete()){
+						
+			int peers = calcPeersNoUs();
+			
+			if ( peers <= 0 && downloadSR.getRank() == SR_0PEERS ){
+						
+					// try and kick us out of 0-peers state - we don't know how valid the activation
+					// request is so need to rely on the tracker
+				
+				long now = SystemTime.getMonotonousTime();
+					
+				if ( lastActivationAnnounce == 0 || now - lastActivationAnnounce > 5*60*1000 ){
+						
+					lastActivationAnnounce = now;
+						
+					dl.requestTrackerAnnounce( true );
+				}
+				
+				return( true );
+			}			
+		}
+
+		return( false );	
 	}
 	
 	private class
@@ -1789,6 +1832,10 @@ RankCalculatorReal
 		{
 		}
 		
+		/* I can't think of a good reason ever to set the rank back to 0, when things change a recalculation
+		 * will update as required. Setting to 0 just risks instability in sort order and associated
+		 * start/stop functionality
+		 
 		private void
 		reset()
 		{
@@ -1799,6 +1846,7 @@ RankCalculatorReal
 				// don't mess with light seed eligibility as this will cause all light-seeds to be periodically
 				// reset for no reason
 		}
+		*/
 		
 		private void
 		update(
@@ -1972,11 +2020,15 @@ RankCalculatorReal
 				}
 			}
 			
-			String ls_str = "Light-Seeding eligible";
+			String ls_str 	= "Light-Seeding eligible";
+			String has_slot = "Light-Seeding active";
 			
 			if ( verbose ){
 				if ( downloadSR.getLightSeedEligibility() == 0 ){
 					sText += "\n" + ls_str;
+				}
+				if ( reservedSlot != null ){
+					sText += "\n" + has_slot;
 				}
 			}
 			
@@ -1984,8 +2036,11 @@ RankCalculatorReal
 			
 			if (rules.bDebugLog) {
 				tt = 	"FP:\n" + _sExplainFP + "\n" + 
-						"SR:" + _sExplainSR + (verbose||downloadSR.getLightSeedEligibility()!=0?"":(ls_str+"\n"))+ "\n"
-						 + "TRACE:\n" + sTrace;
+						"SR:" + _sExplainSR + 
+						(verbose||downloadSR.getLightSeedEligibility()!=0?"":(ls_str+"\n"))+ 
+						(verbose||reservedSlot==null?"":(has_slot+"\n"))+ "\n" +
+						"TRACE:\n" + sTrace +
+						"  Free Slots: " + rules.getSlotStatus();
 			}else{
 				tt = null;
 			}

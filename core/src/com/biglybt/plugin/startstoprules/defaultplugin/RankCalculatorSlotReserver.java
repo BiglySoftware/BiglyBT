@@ -306,6 +306,13 @@ RankCalculatorSlotReserver
 		Debug.out( "no" );
 	}
 	
+	@Override
+	public boolean 
+	activationRequest()
+	{
+		return( false );
+	}
+	
 	public boolean
 	getLastScrapeResultOk()
 	{

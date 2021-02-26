@@ -227,8 +227,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	private Tag		fp_tag;
 	
-	private int										numReservedSeedingSlots	= 4;
-	private LinkedList<RankCalculatorSlotReserver>	reservedSlots = new LinkedList<>();
+	private volatile int							numReservedSeedingSlots	= 0;
+	private LinkedList<RankCalculatorSlotReserver>	reservedSlots 			= new LinkedList<>();
+	private Set<DefaultRankCalculator>				reservedSlotsAllocated 	= new IdentityHashSet<>();
+	
+	private String slotStatus = "";
 	
 	public static void
 	load(
@@ -438,15 +441,6 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			public void closedownComplete() { /* not implemented */
 			}
 		});
-
-		for ( int i=0;i<numReservedSeedingSlots;i++){
-			
-			RankCalculatorSlotReserver slot = new RankCalculatorSlotReserver();
-			
-			reservedSlots.add( slot );
-			
-			rankCalculatorMap.put( slot, slot );
-		}
 		
 		Runnable r = new Runnable() {
 			@Override
@@ -551,7 +545,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		return( tagsHaveDLLimits );
 	}
 	
-	private void recalcAllSeedingRanks(boolean force) {
+	private void recalcAllSeedingRanks() {
 		if (closingDown) {
 			return;
 		}
@@ -566,10 +560,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			}
 
 			// Check Group #1: Ones that always should run since they set things
+			
 			for (int i = 0; i < dlDataArray.length; i++) {
-				if (force){
-					dlDataArray[i].resetSeedingRank();
-				}
+				
 				dlDataArray[i].recalcSeedingRank();
 			}
 		} finally {
@@ -591,7 +584,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				return;
 			}
 			// System.out.println("RecalcAllSeedingRanks");
-			recalcAllSeedingRanks(false);
+			recalcAllSeedingRanks();
 		}
 
 		/**
@@ -763,27 +756,26 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		public boolean activationRequested(DownloadActivationEvent event) {
 			//System.out.println("StartStop: activation request: count = "
 			//		+ event.getActivationCount());
+			
 			Download download = event.getDownload();
+			
 			DefaultRankCalculator dlData = rankCalculatorMap.get(download);
 
 			if (bDebugLog) {
 				log.log(download, LoggerChannel.LT_INFORMATION, ">> somethingChanged: ActivationRequest");
 			}
 
-			// ok to be null
-			requestProcessCycle(dlData);
+			if ( dlData != null ){
+			
+				if ( dlData.activationRequest()){
+					
+					requestProcessCycle( dlData );
 
-			if (download.isComplete()) {
-				// quick and dirty check: keep connection if scrape peer count is 0
-				// there's a (good?) chance we'll start in the next process cycle
-				DownloadScrapeResult sr = event.getDownload().getAggregatedScrapeResult();
-				int numPeers = sr.getNonSeedCount();
-				if (numPeers <= 0) {
-					return true;
+					return( true );
 				}
 			}
-
-			return false;
+				
+			return( false );
 		}
 	}
 
@@ -851,20 +843,33 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			if ( dlData != null ) {
 				dlData.removeStateAttributeListener(
 						download_state_attribute_listener, DownloadManagerState.AT_TRANSIENT_FLAGS, DownloadManagerStateAttributeListener.WRITTEN );
-									
-				RankCalculatorSlotReserver reservedSlot = dlData.getReservedSlot();
-					
-				if ( reservedSlot != null ){
-				
-					try{
-						this_mon.enter();
+													
+				try{
+					this_mon.enter();
+						
+					RankCalculatorSlotReserver reservedSlot = dlData.getReservedSlot();
+						
+					if ( reservedSlot != null ){
 
-						reservedSlots.add(reservedSlot);
+						reservedSlotsAllocated.remove( dlData );
 						
-					}finally{
-						
-						this_mon.exit();
+						if ( reservedSlots.size() + reservedSlotsAllocated.size() < numReservedSeedingSlots ){
+							
+							reservedSlots.add(reservedSlot);
+							
+						}else{
+							
+							synchronized( rankCalculatorMap ){
+								
+								rankCalculatorMap.remove( reservedSlot );
+								
+								sortedArrayCache = null;
+							}
+						}
 					}
+				}finally{
+						
+					this_mon.exit();
 				}
 				
 				dlData.destroy();
@@ -1023,7 +1028,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				// shorten recalc for timed rank type, since the calculation is fast and we want to stop on the second
 				if (iRankType == RANK_TIMED) {
 					if (recalcSeedingRanksTask == null) {
-						recalcAllSeedingRanks(false);
+						recalcAllSeedingRanks();
 						recalcSeedingRanksTask = new RecalcSeedingRanksTask();
 						SimpleTimer.addPeriodicEvent("StartStop:recalcSR", 1000,
 								recalcSeedingRanksTask);
@@ -1100,6 +1105,42 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				}
 			}
 			
+			int numslots = plugin_config.getUnsafeIntParameter( "Light Seed Slots Reserved" );
+			
+			int diff = numslots - numReservedSeedingSlots;
+			
+			numReservedSeedingSlots = numslots;
+			
+			if ( diff > 0 ){
+				
+				for ( int i=0;i<diff;i++){
+					
+					RankCalculatorSlotReserver slot = new RankCalculatorSlotReserver();
+					
+					reservedSlots.add( slot );
+					
+					synchronized( rankCalculatorMap ){
+						
+						rankCalculatorMap.put( slot, slot );
+						
+						sortedArrayCache = null;
+					}
+				}
+			}else if ( diff < 0 ){
+				
+				for ( int i=-diff; i > 0 && !reservedSlots.isEmpty();i-- ){
+					
+					RankCalculatorSlotReserver slot = reservedSlots.removeFirst();
+					
+					synchronized( rankCalculatorMap ){
+					
+						rankCalculatorMap.remove( slot );
+						
+						sortedArrayCache = null;
+					}
+				}
+			}
+				
 			/*
 			 // limit _maxActive and maxDownloads based on TheColonel's specs
 
@@ -1127,10 +1168,13 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			// force a recalc on all downloads by setting SR to 0, scheduling
 			// a recalc on next process, and requsting a process cycle
 			Collection<DefaultRankCalculator> allDownloads = rankCalculatorMap.values();
-			DefaultRankCalculator[] dlDataArray = allDownloads.toArray(new DefaultRankCalculator[0]);
-			for (int i = 0; i < dlDataArray.length; i++) {
-				dlDataArray[i].resetSeedingRank();
-			}
+			
+			//DefaultRankCalculator[] dlDataArray = allDownloads.toArray(new DefaultRankCalculator[0]);
+			
+			//for (int i = 0; i < dlDataArray.length; i++) {
+			//	dlDataArray[i].resetSeedingRank();
+			//}
+			
 			try {
 				ranksToRecalc_mon.enter();
 
@@ -1346,18 +1390,6 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				}
 
 				int state = dlData.getState();
-				
-				if ( state != Download.ST_SEEDING ){						
-						
-					RankCalculatorSlotReserver reservedSlot = dlData.getReservedSlot();
-						
-					if ( reservedSlot != null ){
-							
-						dlData.setReservedSlot( null );
-							
-						reservedSlots.add(reservedSlot);
-					}
-				}
 				
 				// No stats colllected on error or stopped torrents
 				if (state == Download.ST_ERROR || state == Download.ST_STOPPED) {
@@ -1599,6 +1631,49 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				processTotalZeroRecalcs++;
 			}
 
+				// reclaim any reserved slots that are no longer active
+			
+			Iterator<DefaultRankCalculator> it = reservedSlotsAllocated.iterator();
+			
+			while( it.hasNext()){
+				
+				DefaultRankCalculator dlData = it.next();
+					
+				int	state = dlData.getState();
+				
+				if ( 	state != Download.ST_SEEDING &&
+						state != Download.ST_PREPARING &&
+						state != Download.ST_READY &&
+						state != Download.ST_WAITING ){
+				
+					RankCalculatorSlotReserver reservedSlot = dlData.getReservedSlot();
+					
+					if ( reservedSlot != null ){
+						
+						dlData.setReservedSlot( null );
+						
+						it.remove();
+
+						if ( reservedSlots.size() + reservedSlotsAllocated.size() < numReservedSeedingSlots ){
+						
+							reservedSlots.add(reservedSlot);
+							
+						}else{
+							
+							synchronized( rankCalculatorMap ){
+						
+								rankCalculatorMap.remove( reservedSlot );
+								
+								sortedArrayCache = null;
+							}
+						}
+					}else{
+						
+						Debug.out( "eh?" );
+					}
+				}
+			}
+			
 			// pull the data into a local array, so we don't have to lock/synchronize
 			
 			DefaultRankCalculator[] dlDataArray;
@@ -1641,13 +1716,15 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			
 			ProcessVars vars = new ProcessVars();
 
+			ProcessVarsComplete	cvars = vars.comp;
+			
 			Map<TagFeatureRateLimit,ProcessTagVars>	tvarsMap = new IdentityHashMap<>();
 			
 			// pre-included Forced Start torrents so a torrent "above" it doesn't
 			// start (since normally it would start and assume the torrent below it
 			// would stop)
 			
-			vars.comp.numWaitingOrSeeding = totals.forcedSeeding; // Running Count
+			cvars.numWaitingOrSeeding = totals.forcedSeeding; // Running Count
 			
 			if ( ENABLE_DLOG ){
 				dlog.log( "***** START" );
@@ -1810,6 +1887,20 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						data.updateLightSeedEligibility( false );
 					}
 				}
+			}
+			
+			if ( bDebugLog ){
+				if ( totals.maxActive==0){
+					slotStatus = "Unlimited";
+				}else{
+					int currFree	= ( totals.maxSeeders + maxStalledSeeding ) - ( cvars.numWaitingOrSeeding + cvars.stalledSeeders );
+					int globFree	= ( totals.maxSeeders + maxStalledSeeding + maxOverLimitSeeding ) - ( totals.activelyCDing + totals.waitingToSeed + totals.stalledSeeders );
+
+					slotStatus = 	"Seed=" + Math.max( Math.min( currFree, globFree ), 0 ) + ", " +
+									"Light=" + Math.min( reservedSlots.size(), numReservedSeedingSlots );
+				}
+			}else{
+				slotStatus = "";
 			}
 			
 			processDownloadingRules( incompleteDownloads );
@@ -2659,6 +2750,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			// (1) torrent is force started
 			// (2) the torrent is in ready or seeding state (we have to stop the torrent)
 			// (3) we auto start 0 peers
+			
 			if (rank < DefaultRankCalculator.SR_IGNORED_LESS_THAN
 					&& !dlData.isForceStart() && !stateReadyOrSeeding
 					&& !bAutoStart0Peers) {
@@ -2774,11 +2866,13 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			
 			boolean atLimit = !( underCurrentLimit && underGlobalLimit );
 			
+			boolean controllable = dlData.isControllable();
+			
 			boolean okToQueue = 
+					controllable &&
 					stateReadyOrSeeding &&
 					(!isFP || (isFP && atLimit )) && 
-					(!dlData.isForceStart()) &&
-					dlData.isControllable();
+					(!dlData.isForceStart());
 
 				// XXX do we want changes to take effect immediately  ?
 			
@@ -2810,32 +2904,36 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			//       so they will always start first
 
 			boolean okToStart =
+					controllable &&
 					!okToQueue &&
 					(state == Download.ST_QUEUED) &&
-					(rank >= DefaultRankCalculator.SR_IGNORED_LESS_THAN ) && 
+					(rank >= DefaultRankCalculator.SR_IGNORED_LESS_THAN ); 
 					//&& (cvars.stalledSeeders < maxStalledSeeding)	// This test is bad as it stops all new seeds from starting once stalled max is hit. 
 																	// regardless of maxSeeders. Remember that stalled are not counted in numWaitingOrSeeding
 																	// fixed by incorporating in above maxActive test
-					!cvars.higherCDtoStart;
 
+			boolean higherCDPrevents = cvars.higherCDtoStart;
+			
 			boolean slotAvailable = underCurrentLimit && underGlobalLimit;
 			
 			RankCalculatorSlotReserver	reservedSlot = null;
-			
-			if ( okToStart && !slotAvailable ){
+						
+			if ( okToStart && ( higherCDPrevents || !slotAvailable )){
 				
 				if ( 	dlData.getLightSeedEligibility() < 30*1000 && 
 						dlData.getReservedSlot() == null && 
 						!reservedSlots.isEmpty()){
-					
+									
 					reservedSlot = reservedSlots.removeFirst();
 					
 					slotAvailable = true;
+					
+					higherCDPrevents = false;	// override this
 				}
 			}
 			
 			try{
-				if ( okToStart && slotAvailable ){
+				if ( okToStart && slotAvailable && !higherCDPrevents ){
 					
 					try {
 						if (bDebugLog)
@@ -2873,6 +2971,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						if ( reservedSlot != null ){
 							
 							dlData.setReservedSlot( reservedSlot );
+							
+							reservedSlotsAllocated.add( dlData );
 							
 							reservedSlot = null;
 							
@@ -2947,9 +3047,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			
 			boolean bForceStop = false;
 			// Start download if ready and slot is available
-			if (state == Download.ST_READY
-					&& totals.activelyCDing < totals.maxSeeders) {
-
+			if (	state == Download.ST_READY &&
+					controllable ){
 				if (rank >= DefaultRankCalculator.SR_IGNORED_LESS_THAN
 						|| dlData.isForceStart()) {
 					try {
@@ -3206,6 +3305,12 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				}
 			}
 		}
+	}
+	
+	protected String
+	getSlotStatus()
+	{
+		return( slotStatus );
 	}
 	
 	@Override

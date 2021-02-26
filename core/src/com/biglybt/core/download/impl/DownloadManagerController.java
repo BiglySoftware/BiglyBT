@@ -215,7 +215,7 @@ DownloadManagerController
 	private static final int			ACTIVATION_REBUILD_TIME		= 10*60*1000;
 	private static final int			BLOOM_SIZE					= 64;
 	private volatile BloomFilter		activation_bloom;
-	private volatile long				activation_bloom_create_time	= SystemTime.getCurrentTime();
+	private volatile long				activation_bloom_create_time	= SystemTime.getMonotonousTime();
 	private volatile int				activation_count;
 	private volatile long				activation_count_time;
 
@@ -1268,8 +1268,12 @@ DownloadManagerController
 
 	  				activation_bloom = null;
 
-	  				if ( state_set_by_method == DownloadManager.STATE_STOPPED ){
+	  				if ( 	state_set_by_method == DownloadManager.STATE_STOPPED ||
+	  						state_set_by_method == DownloadManager.STATE_DOWNLOADING ||
+	  						state_set_by_method == DownloadManager.STATE_SEEDING ){
 
+	  						// don't need this anymore once stopped or active
+	  					
 	  					activation_count = 0;
 	  				}
 	  			}
@@ -1775,11 +1779,15 @@ DownloadManagerController
 	{
 		if ( getState() == DownloadManager.STATE_QUEUED ){
 
+			long	now = SystemTime.getMonotonousTime();
+
 			BloomFilter	bloom = activation_bloom;
 
 			if ( bloom == null ){
 
 				activation_bloom = bloom = BloomFilterFactory.createAddRemove4Bit( BLOOM_SIZE );
+				
+				activation_bloom_create_time = now;
 			}
 
 			byte[]	address_bytes = AddressUtils.getAddressBytes(address);
@@ -1800,12 +1808,11 @@ DownloadManagerController
 
 			Logger.log(new LogEvent(this, LogIDs.CORE, "Activate request for " + getDisplayName() + " from " + address ));
 
-			long	now = SystemTime.getCurrentTime();
 
 				// we don't really care about the bloom filter filling up and giving false positives
 				// as activation events should be fairly rare
 
-			if ( now < activation_bloom_create_time || now - activation_bloom_create_time > ACTIVATION_REBUILD_TIME ){
+			if ( now - activation_bloom_create_time > ACTIVATION_REBUILD_TIME ){
 
 				activation_bloom = BloomFilterFactory.createAddRemove4Bit( BLOOM_SIZE );
 
@@ -1883,13 +1890,11 @@ DownloadManagerController
 			// in the absence of any new activations we persist the last count for the activation rebuild
 			// period
 
-		long	now = SystemTime.getCurrentTime();
+		long	now = SystemTime.getMonotonousTime();
 
-		if ( now < activation_count_time ){
-
-			activation_count_time = now;
-
-		}else if ( now - activation_count_time > ACTIVATION_REBUILD_TIME ){
+		if ( 	activation_count > 0 && 
+				activation_count_time != 0 &&
+				now - activation_count_time > ACTIVATION_REBUILD_TIME ){
 
 			activation_count = 0;
 		}
