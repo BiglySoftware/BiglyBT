@@ -1147,6 +1147,9 @@ DownloadImpl
 	getAggregatedScrapeResult(
 		boolean		allow_caching )
 	{
+		if ( getName().equals( "plugins_azupnpav_0.6.6.zip" )){
+			System.out.println( "arse" );
+		}
 		DownloadScrapeResult	result = getAggregatedScrapeResultSupport( allow_caching );
 
 		if ( result != null ){

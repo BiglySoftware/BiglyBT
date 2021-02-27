@@ -74,6 +74,8 @@ DefaultRankCalculator
 	/** Seeding Rank value when download is marked as Share Ratio Met */
 	public static final int SR_SHARERATIOMET = -8;
 
+	public static final int SR_NOSCRAPE = -9;
+
 	public static final String[] SR_NEGATIVE_DEBUG = {
 		"?",
 		"Not Qd",
@@ -82,7 +84,8 @@ DefaultRankCalculator
 		"# CDs Met",
 		"FP 0 Peers",
 		"0 Peers",
-		"Share Ratio Met"
+		"Share Ratio Met",
+		"No Scrape"
 	};
 	
 	

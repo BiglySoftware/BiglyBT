@@ -144,6 +144,14 @@ DownloadManagerStateFactory
 	getCachedAggregateScrapeSeedsLeechers(
 		DownloadManagerState		state )
 	{
+		return( getCachedAggregateScrapeSeedsLeechers( state, 7*24*60 ));
+	}
+	
+	public static int[]
+	getCachedAggregateScrapeSeedsLeechers(
+		DownloadManagerState		state,
+		int							max_age_mins )
+	{
 		String cache = state.getAttribute( DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE );
 
 		int	[] result = null;
@@ -161,9 +169,7 @@ DownloadManagerStateFactory
 
 					long	age_mins = mins - updated_mins;
 
-					long WEEK_MINS = 7*24*60;
-
-					if ( age_mins <= WEEK_MINS ){
+					if ( age_mins <= max_age_mins || max_age_mins == Integer.MAX_VALUE ){
 
 						int seeds = Integer.parseInt( bits[1] );
 						int peers = Integer.parseInt( bits[2] );

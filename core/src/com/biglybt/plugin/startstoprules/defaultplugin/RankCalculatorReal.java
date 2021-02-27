@@ -42,7 +42,6 @@ import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.PluginConfig;
 import com.biglybt.pif.download.Download;
-import com.biglybt.pif.download.DownloadActivationEvent;
 import com.biglybt.pif.download.DownloadAnnounceResult;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.download.DownloadScrapeResult;
@@ -238,7 +237,7 @@ RankCalculatorReal
 			// seed rank can be caused by seeds that aren't first-priority due to 0 peers but on startup
 			// they get flagged as FP until a scrape comes in at which point they switch to 'ignored'
 		
-		int[] scrapeCache = DownloadManagerStateFactory.getCachedAggregateScrapeSeedsLeechers( dm_state );
+		int[] scrapeCache = DownloadManagerStateFactory.getCachedAggregateScrapeSeedsLeechers( dm_state, Integer.MAX_VALUE );
 		
 		if ( scrapeCache != null ){
 				// we don't know if the cached seeds includes us or not so assume it doesn't
@@ -1055,7 +1054,7 @@ RankCalculatorReal
 		try{
 			DownloadStats stats = dl.getStats();
 	
-			int newSR = 0;
+			int newSR;
 	
 			setupTagData();
 			
@@ -1172,12 +1171,13 @@ RankCalculatorReal
 					sExplainSR += "  Ranking Type set to none.. blanking seeding rank\n";
 	
 				// everythink ok!
-				return newSR;
+				
+				return 0;
 			}
 	
 			if (iRankType == StartStopRulesDefaultPlugin.RANK_TIMED) {
 				if (bIsFirstPriority) {
-					newSR += SR_TIMED_QUEUED_ENDS_AT + 1;
+					newSR = SR_TIMED_QUEUED_ENDS_AT + 1;
 					return newSR;
 				}
 	
@@ -1227,6 +1227,7 @@ RankCalculatorReal
 										"somethingChanged: strange timer change");
 						}
 					}
+					
 					return newSR;
 				} else { // ST_QUEUED
 					// priority goes to ones who haven't been seeded for long
@@ -1262,48 +1263,61 @@ RankCalculatorReal
 						sExplainSR += "  PeerCount seeds=" + lastModifiedScrapeResultSeeds + "peers=" + lastModifiedScrapeResultPeers +"\n";
 					}
 					
-					if(lastModifiedScrapeResultPeers > lastModifiedScrapeResultSeeds * 10)
+					if(lastModifiedScrapeResultPeers > lastModifiedScrapeResultSeeds * 10){
+						
 						newSR = 100 * lastModifiedScrapeResultPeers * 10;
-					else
+						
+					}else{
+						
 						newSR = (int)((long)100 * lastModifiedScrapeResultPeers * lastModifiedScrapeResultPeers/(lastModifiedScrapeResultSeeds+1));
-				}
-				else if ((iRankType == StartStopRulesDefaultPlugin.RANK_SEEDCOUNT)
+					}
+				}else if ((iRankType == StartStopRulesDefaultPlugin.RANK_SEEDCOUNT)
 						&& (iRankTypeSeedFallback == 0 || iRankTypeSeedFallback > lastModifiedScrapeResultSeeds)){
 				
 					if (rules.bDebugLog){
 						sExplainSR += "  SeedCount seeds=" + lastModifiedScrapeResultSeeds +"\n";
 					}
 
-					if (lastModifiedScrapeResultSeeds < 10000)
+					if (lastModifiedScrapeResultSeeds < 10000){
 						newSR = 10000 - lastModifiedScrapeResultSeeds;
-					else
+					}else{
 						newSR = 1;
+					}
+					
 					// shift over to make way for fallback
 					newSR *= SEEDONLY_SHIFT;
 	
-				} else { // iRankType == RANK_SPRATIO or we are falling back
+				}else{ // iRankType == RANK_SPRATIO or we are falling back
+					
 					if (lastModifiedScrapeResultPeers != 0) {
 						if (lastModifiedScrapeResultSeeds == 0) {
 							if (lastModifiedScrapeResultPeers >= minPeersToBoostNoSeeds){
-								newSR += SPRATIO_BASE_LIMIT;
+								newSR = SPRATIO_BASE_LIMIT;
 								
 								if (rules.bDebugLog){
 									sExplainSR += "  Seed:Peer ratio=" + lastModifiedScrapeResultSeeds + ":" + lastModifiedScrapeResultPeers +"\n";
 								}
+							}else{
+								newSR = 0;
 							}
 						} else { // numSeeds != 0 && numPeers != 0
 							float x = (float) lastModifiedScrapeResultSeeds / lastModifiedScrapeResultPeers;
-							newSR += SPRATIO_BASE_LIMIT / ((x + 1) * (x + 1));
+							newSR = (int)( SPRATIO_BASE_LIMIT / ((x + 1) * (x + 1)));
 							
 							if (rules.bDebugLog){
 								sExplainSR += "  Seed:Peer ratio=" + lastModifiedScrapeResultSeeds + ":" + lastModifiedScrapeResultPeers +"\n";
 							}
 						}
+					}else{
+						newSR = 0;
 					}
 				}
 			} else {
+								
 				if (rules.bDebugLog)
 					sExplainSR += "  Can't calculate SR, no scrape results\n";
+				
+				return( SR_NOSCRAPE );
 			}
 	
 			if (staleCDOffset > 0) {
@@ -2007,6 +2021,8 @@ RankCalculatorReal
 				sText = MessageText.getString("StartStopRules.0Peers");
 			else if (sr == DefaultRankCalculator.SR_SHARERATIOMET)
 				sText = MessageText.getString("StartStopRules.shareRatioMet");
+			else if (sr == DefaultRankCalculator.SR_NOSCRAPE)
+				sText = MessageText.getString("StartStopRules.noScrape");
 			else {
 				sText = "ERR" + sr;
 			}

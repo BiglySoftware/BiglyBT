@@ -136,7 +136,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	protected LoggerChannel log;
 	
-	private final boolean ENABLE_DLOG = false;
+	private final boolean ENABLE_DLOG = true;
 	protected LoggerChannel dlog;
 
 	/** Used only for RANK_TIMED. Recalculate ranks on a timer */
@@ -155,7 +155,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	private volatile boolean somethingChanged;
 
-	private Set ranksToRecalc = new LightHashSet();
+	private Set<DefaultRankCalculator> ranksToRecalc = new LightHashSet();
 
 	private AEMonitor ranksToRecalc_mon = new AEMonitor("ranksToRecalc");
 
@@ -2672,7 +2672,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 		ProcessVarsComplete	cvars = vars.comp;
 
-		if ( ENABLE_DLOG ){
+		if ( ENABLE_DLOG && false ){
 			
 			dlog.log( 
 				dlData.getName() + 
@@ -2943,7 +2943,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 									+ totals.maxSeeders + ")";
 	
 						if ( ENABLE_DLOG ){
-							dlog.log( "    starting" );
+							dlog.log( "    starting " + dlData.getName() + 
+											": rank=" + rank + 
+											", cvars=" + cvars.numWaitingOrSeeding + ", " + cvars.stalledSeeders + 
+											", totals=" + totals.maxSeeders + ", " + totals.activelyCDing + ", " + totals.waitingToSeed + ", " + totals.stalledSeeders + 
+											", limits=" + maxStalledSeeding + ", " + maxOverLimitSeeding );
 						}
 						
 							/* If you come here wondering why you have so many active seeds when the max
