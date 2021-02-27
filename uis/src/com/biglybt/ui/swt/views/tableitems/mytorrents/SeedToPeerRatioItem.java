@@ -89,7 +89,7 @@ public class SeedToPeerRatioItem
         peers = dm.getNbPeers();
         if (peers == 0 || trackerPeerCount > peers) {
         	if (trackerPeerCount <= 0) {
-          	peers = dm.getActivationCount();
+        		//peers = dm.getActivationCount(); crap info
         	} else {
         		peers = trackerPeerCount;
         	}

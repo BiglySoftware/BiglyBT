@@ -3759,9 +3759,16 @@ DownloadManagerImpl
 	{
 		TRTrackerAnnouncer tc = getTrackerClient();
 
-		if ( tc != null)
+		if ( tc != null ){
 
 			tc.update( force );
+			
+		}else{
+			
+				// do the next best thing (and needed for incoming activation requests to a queued seed)
+			
+			requestTrackerScrape( force );
+		}
 	}
 
 	@Override

@@ -136,7 +136,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	protected LoggerChannel log;
 	
-	private final boolean ENABLE_DLOG = true;
+	private final boolean ENABLE_DLOG = false;
 	protected LoggerChannel dlog;
 
 	/** Used only for RANK_TIMED. Recalculate ranks on a timer */

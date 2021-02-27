@@ -244,6 +244,16 @@ RankCalculatorReal
 			lastScrapeResultOk	= true;
 			lastModifiedScrapeResultSeeds	= Math.max( scrapeCache[0], 0 );
 			lastModifiedScrapeResultPeers	= Math.max( scrapeCache[1], 0 );
+			
+		}
+			
+		long cache = dm_state.getLongAttribute( DownloadManagerState.AT_SCRAPE_CACHE );
+
+		if ( cache != -1 ){
+
+			lastScrapeResultOk				= true;
+			lastModifiedScrapeResultSeeds	= Math.max(lastModifiedScrapeResultSeeds,(int)((cache>>32)&0x00ffffff));
+			lastModifiedScrapeResultPeers	=  Math.max(lastModifiedScrapeResultPeers,(int)(cache&0x00ffffff));
 		}
 		
 		setupTagData();

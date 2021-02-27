@@ -230,11 +230,13 @@ public class PeersItem extends CoreTableColumnSWT implements
 			}
 
 			long totalPeers = lTotalPeers;
+			/* crap info
 			if (totalPeers <= 0) {
 				if (dm != null) {
 					totalPeers = dm.getActivationCount();
 				}
 			}
+			*/
 
 			long value = lConnectedPeers * 10000000;
 			if (totalPeers > 0)
