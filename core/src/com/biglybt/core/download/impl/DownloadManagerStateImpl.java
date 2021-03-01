@@ -1597,6 +1597,16 @@ DownloadManagerStateImpl
 		String		name,
 		String		value )
 	{
+		setAttribute( name,value, true );
+	}
+	
+	@Override
+	public void
+	setAttribute(
+		String		name,
+		String		value,
+		boolean		set_dirty )
+	{
 
 		if ( name.equals( AT_CATEGORY )){
 
@@ -1626,7 +1636,7 @@ DownloadManagerStateImpl
 			}
 		}
 
-		setStringAttribute( name, value );
+		setStringAttribute( name, value, set_dirty );
 	}
 
 	@Override
@@ -1706,11 +1716,11 @@ DownloadManagerStateImpl
 
 		if ( category != null ){
 
-			setStringAttribute( AT_CATEGORY, category.getName());
+			setStringAttribute( AT_CATEGORY, category.getName(), true );
 
 		}else{
 
-			setStringAttribute( AT_CATEGORY, null );
+			setStringAttribute( AT_CATEGORY, null, true );
 		}
 	}
 
@@ -1726,7 +1736,7 @@ DownloadManagerStateImpl
 	setTrackerClientExtensions(
 		String		value )
 	{
-		setStringAttribute( AT_TRACKER_CLIENT_EXTENSIONS, value );
+		setStringAttribute( AT_TRACKER_CLIENT_EXTENSIONS, value, true );
 	}
 
     @Override
@@ -1736,7 +1746,7 @@ DownloadManagerStateImpl
 
     @Override
     public void setDisplayName(String value) {
-    	this.setStringAttribute(AT_DISPLAY_NAME, value);
+    	this.setStringAttribute(AT_DISPLAY_NAME, value, true);
     }
 
     @Override
@@ -1746,7 +1756,7 @@ DownloadManagerStateImpl
 
     @Override
     public void setUserComment(String value) {
-    	this.setStringAttribute(AT_USER_COMMENT, value);
+    	this.setStringAttribute(AT_USER_COMMENT, value, true);
     }
 
     @Override
@@ -2445,7 +2455,8 @@ DownloadManagerStateImpl
 	protected void
 	setStringAttribute(
 		final String	attribute_name,
-		final String	attribute_value )
+		final String	attribute_value,
+		boolean			set_dirty )
 	{
 		boolean	changed	= false;
 
@@ -2460,7 +2471,10 @@ DownloadManagerStateImpl
 
 					changed = true;
 					
-					setDirty( attribute_name == DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE );
+					if ( set_dirty ){
+					
+						setDirty( attribute_name == DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE );
+					}
 				}
 			}else{
 
@@ -2470,7 +2484,9 @@ DownloadManagerStateImpl
 				if (existing_bytes == null || !Arrays.equals(existing_bytes, new_bytes)) {
 					attributes.put(attribute_name, new_bytes);
 					changed = true;
-					setDirty( attribute_name == DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE );
+					if ( set_dirty ){
+						setDirty( attribute_name == DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE );
+					}
 				}
 			}
 		}finally{
@@ -3274,6 +3290,15 @@ DownloadManagerStateImpl
 		{
 		}
 
+		@Override
+		public void
+		setAttribute(
+			String		name,
+			String		value,
+			boolean		setDirty )
+		{
+		}
+		
 		@Override
 		public String
 		getAttribute(

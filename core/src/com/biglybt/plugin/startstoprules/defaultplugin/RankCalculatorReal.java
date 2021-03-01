@@ -28,7 +28,6 @@ import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
-import com.biglybt.core.download.DownloadManagerStateFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureRateLimit;
@@ -237,25 +236,21 @@ RankCalculatorReal
 			// seed rank can be caused by seeds that aren't first-priority due to 0 peers but on startup
 			// they get flagged as FP until a scrape comes in at which point they switch to 'ignored'
 		
-		int[] scrapeCache = DownloadManagerStateFactory.getCachedAggregateScrapeSeedsLeechers( dm_state, Integer.MAX_VALUE );
+		DownloadScrapeResult sr = dl.getAggregatedScrapeResult( false );
+
+		int	srSeeds = Math.max( sr.getSeedCount(), 0 );
+		int	srPeers = Math.max( sr.getNonSeedCount(), 0 );
 		
-		if ( scrapeCache != null ){
+		if ( sr.getScrapeStartTime() > 0 || srSeeds > 0 || srPeers > 0 ){
+
 				// we don't know if the cached seeds includes us or not so assume it doesn't
+			
 			lastScrapeResultOk	= true;
-			lastModifiedScrapeResultSeeds	= Math.max( scrapeCache[0], 0 );
-			lastModifiedScrapeResultPeers	= Math.max( scrapeCache[1], 0 );
 			
+			lastModifiedScrapeResultSeeds	= srSeeds;
+			lastModifiedScrapeResultPeers	= srPeers;	
 		}
-			
-		long cache = dm_state.getLongAttribute( DownloadManagerState.AT_SCRAPE_CACHE );
-
-		if ( cache != -1 ){
-
-			lastScrapeResultOk				= true;
-			lastModifiedScrapeResultSeeds	= Math.max(lastModifiedScrapeResultSeeds,(int)((cache>>32)&0x00ffffff));
-			lastModifiedScrapeResultPeers	=  Math.max(lastModifiedScrapeResultPeers,(int)(cache&0x00ffffff));
-		}
-		
+				
 		setupTagData();
 		
 		try {

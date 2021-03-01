@@ -83,9 +83,9 @@ DownloadImpl
 	private int			latest_state		= ST_STOPPED;
 	private boolean 	latest_forcedStart;
 
-	private DownloadAnnounceResultImpl		last_announce_result 	= new DownloadAnnounceResultImpl(this,null);
-	private DownloadScrapeResultImpl		last_scrape_result		= new DownloadScrapeResultImpl( this, null );
-	private AggregateScrapeResult			last_aggregate_scrape	= new AggregateScrapeResult( this );
+	private final DownloadAnnounceResultImpl	last_announce_result 	= new DownloadAnnounceResultImpl(this,null);
+	private final DownloadScrapeResultImpl		last_scrape_result		= new DownloadScrapeResultImpl( this, null );
+	private final AggregateScrapeResult			aggregate_scrape;
 
     private TorrentImpl torrent = null;
 
@@ -117,6 +117,8 @@ DownloadImpl
 		manager				= _manager;
 		download_manager	= _dm;
 		download_stats		= new DownloadStatsImpl( download_manager );
+
+		aggregate_scrape		= new AggregateScrapeResult( this, download_manager );
 
 		activation_state =
 			new DownloadActivationEvent()
@@ -1147,10 +1149,13 @@ DownloadImpl
 	getAggregatedScrapeResult(
 		boolean		allow_caching )
 	{
-		DownloadScrapeResult	result = getAggregatedScrapeResultSupport( allow_caching );
+		updateAggregatedScrapeResult( allow_caching );
+	
+		int	new_seeds 		= aggregate_scrape.getSeedCount();
+		int new_leechers	= aggregate_scrape.getNonSeedCount();
 
-		if ( result != null ){
-
+		if ( new_seeds >= 0 || new_leechers >= 0 ){
+			
 			String cache = download_manager.getDownloadState().getAttribute( DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE );
 
 			boolean	do_update = true;
@@ -1176,11 +1181,14 @@ DownloadImpl
 					}catch( Throwable e ){
 
 					}
+					
+						// rate limit updates - important to reduce the need to serialise download state
+						// frequently, especially for inactive torrents
 
 					if ( mins - updated_mins < 15 ){
 
 							// too recent
-						
+							
 						do_update = false;
 						
 					}else{
@@ -1199,49 +1207,42 @@ DownloadImpl
 					}
 				}
 			}
-
-			if ( do_update ){
-
-				int	new_seeds 		= result.getSeedCount();
-				int new_leechers	= result.getNonSeedCount();
 				
-				if ( new_seeds != old_seeds || new_leechers != old_leechers ){
+			if ( new_seeds != old_seeds || new_leechers != old_leechers ){
 					
-					String str = mins + "," + new_seeds + "," + new_leechers;
-	
-					download_manager.getDownloadState().setAttribute( DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE, str  );
-				}
+				String str = mins + "," + new_seeds + "," + new_leechers;
+						
+					// Converted the do_update to a setDirty indicator. This results in the scrape update being
+					// persisted if anything else causes the state to be persisted as opposed to throwing the
+					// update away if do_update = false
+				
+				download_manager.getDownloadState().setAttribute( DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE, str, do_update  );
 			}
 		}
 
-		return( result );
+		return( aggregate_scrape );
 	}
 
 	private volatile long 					last_asr_calc = -1;
-	private volatile DownloadScrapeResult	last_asr;
 	
-	private DownloadScrapeResult
-	getAggregatedScrapeResultSupport(
+	private void
+	updateAggregatedScrapeResult(
 		boolean	allow_caching )
 	{
 		long	now = SystemTime.getMonotonousTime();
-		
-		DownloadScrapeResult last = last_asr;
-		
-		if ( allow_caching && last != null && now - last_asr_calc < 10*1000 ){
+				
+		if ( allow_caching && now - last_asr_calc < 10*1000 ){
 			
-			return( last );
+			return;
 		}
 		
-		last_asr = last = getAggregatedScrapeResultSupport0();
+		updateAggregatedScrapeResult();
 		
 		last_asr_calc = now;
-		
-		return( last );
 	}
 	
-	private DownloadScrapeResult
-	getAggregatedScrapeResultSupport0()
+	private void
+	updateAggregatedScrapeResult()
 	{
 		List<TRTrackerScraperResponse> responses = download_manager.getGoodTrackerScrapeResponses();
 
@@ -1348,13 +1349,7 @@ DownloadImpl
 
 			// System.out.println( download_manager.getDisplayName() + ": " + best_peers + "/" + best_seeds + "/" + best_resp );
 
-			last_aggregate_scrape.update( best_resp, best_seeds, best_peers, best_time );
-
-			return( last_aggregate_scrape );
-
-		}else{
-
-			return( getLastScrapeResult());
+			aggregate_scrape.update( best_resp, best_seeds, best_peers, best_time );
 		}
 	}
 
@@ -2591,7 +2586,7 @@ DownloadImpl
 
 	 }
 
-	private static class
+	 private static class
 	 AggregateScrapeResult
 	 	implements DownloadScrapeResult
 	 {
@@ -2606,9 +2601,39 @@ DownloadImpl
 
 		private
 		AggregateScrapeResult(
-			Download		_dl )
+			Download		_dl,
+			DownloadManager	_dm )
 		{
 			dl	= _dl;
+
+			try{			
+				DownloadManagerState dm_state = _dm.getDownloadState();
+				
+				String ag_cache = dm_state.getAttribute( DownloadManagerState.AT_AGGREGATE_SCRAPE_CACHE );
+
+				if ( ag_cache != null ){
+	
+					String[]	bits = ag_cache.split(",");
+	
+					if ( bits.length == 3 ){
+	
+						time_secs = Integer.parseInt( bits[0] )*60;
+							
+						seeds 		= Integer.parseInt( bits[1] );
+						leechers 	= Integer.parseInt( bits[2] );
+					}
+				}else{
+					
+					long cache = dm_state.getLongAttribute( DownloadManagerState.AT_SCRAPE_CACHE );
+
+					if ( cache != -1 ){
+
+						seeds		= (int)((cache>>32)&0x00ffffff);
+						leechers	= (int)(cache&0x00ffffff);
+					}			
+				}
+			}catch( Throwable e ){
+			}
 		}
 
 		private void

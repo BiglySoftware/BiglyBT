@@ -382,6 +382,7 @@ DownloadManagerState
 	// General access - make sure you use an AT_ value defined above when calling
 	// these methods.
 	public void setAttribute(String	name, String value);
+	public void setAttribute(String	name, String value, boolean setDirty);
 	public String getAttribute(String name);
 	public void	setMapAttribute(String name, Map value);
 	public Map getMapAttribute(String name);

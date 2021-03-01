@@ -244,6 +244,15 @@ LWSDiskManagerState
 	}
 
 	@Override
+	public void 
+	setAttribute(
+		String name, 
+		String value, 
+		boolean setDirty)
+	{
+	}
+	
+	@Override
 	public String
 	getAttribute(
 		String		name )
