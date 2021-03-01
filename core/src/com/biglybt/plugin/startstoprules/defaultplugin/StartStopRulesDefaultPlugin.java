@@ -173,7 +173,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	/** Maximimum # of stalled torrents that are in seeding mode */
 	private int maxStalledSeeding;
-	private int maxOverLimitSeeding = 10;
+	private int maxOverLimitSeeding;
 	private boolean stalledSeedingIgnoreZP;
 	
 	private int _maxActive;
@@ -1104,6 +1104,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					}
 				}
 			}
+			
+			maxOverLimitSeeding = plugin_config.getUnsafeIntParameter( "Flexible Seed Slots" );
 			
 			int numslots = plugin_config.getUnsafeIntParameter( "Light Seed Slots Reserved" );
 			

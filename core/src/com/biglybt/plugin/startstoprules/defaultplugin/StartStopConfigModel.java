@@ -450,6 +450,10 @@ public class StartStopConfigModel
 		model.addIntParameter2("Light Seed Slots Reserved",
 				"ConfigView.label.light.seeding.reserved.slots", 4, 0,
 				1024);
+		
+		model.addIntParameter2("Flexible Seed Slots",
+				"ConfigView.label.seeding.flexible.slots", 5, 0,
+				1024);
 
 		model.addBooleanParameter2("StartStopManager_bAutoReposition",
 				"ConfigView.label.seeding.autoReposition", false);
