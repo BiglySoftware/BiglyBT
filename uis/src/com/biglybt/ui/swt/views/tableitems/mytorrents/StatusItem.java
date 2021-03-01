@@ -160,25 +160,30 @@ public class StatusItem
 			tooltip = null;
 		}
 		
-		SeedingRank sr = dm.getSeedingRank();
+		if ( 	state != DownloadManager.STATE_STOPPED && 
+				state != DownloadManager.STATE_ERROR &&
+				dm.isDownloadComplete( false )){
 		
-		String[] status = sr.getStatus( true );
+			SeedingRank sr = dm.getSeedingRank();
 		
-		tooltip = tooltip==null?status[0]:(tooltip+"\n\n"+status[0]);
+			String[] status = sr.getStatus( true );
 		
-		if ( status[1] != null ){
+			tooltip = tooltip==null?status[0]:(tooltip+"\n\n"+status[0]);
+		
+			if ( status[1] != null ){
 			
-			tooltip += "\n\n" + status[1];
+				tooltip += "\n\n" + status[1];
+			}
 		}
 		
 		long	sort_value;
 		
 		String	text;
-		
+				
 		if ( showTrackerErrors && dm.isUnauthorisedOnTracker() && state != DownloadManager.STATE_ERROR ){
 
 			text = dm.getTrackerStatus();
-
+			
 			sort_value = 1100;
 			
 		}else{
@@ -323,6 +328,11 @@ public class StatusItem
 				
 				sort_value = 0;	// not used
 			}
+		}
+
+		if ( tooltip != null ){
+			
+			tooltip = text + "\n\n" + tooltip;
 		}
 
 		if ( sort_order == 1 ){
