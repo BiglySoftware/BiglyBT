@@ -51,6 +51,7 @@ public final class ConfigKeys {
 		public static final String ICFG_HTTP_DATA_LISTEN_PORT = "HTTP.Data.Listen.Port";
 		public static final String ICFG_HTTP_DATA_LISTEN_PORT_OVERRIDE = "HTTP.Data.Listen.Port.Override";
 		public static final String BCFG_WEBSEED_ACTIVATION_USES_AVAILABILITY = "webseed.activation.uses.availability";
+		public static final String BCFG_WEBSEED_ACTIVATION_MIN_SPEED_KBPS = "webseed.activation.min.speed.kbps";
 		public static final String BCFG_PREFIX_PEER_SRC_SELECTION_DEF = "Peer Source Selection Default.";
 		public static final String BCFG_PREFIX_NETWORK_SELECTION_DEF = "Network Selection Default.";
 		public static final String BCFG_NETWORK_SELECTION_PROMPT = "Network Selection Prompt";

@@ -22,6 +22,7 @@ package com.biglybt.plugin.extseed.impl;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.torrent.TOTorrent;
@@ -51,10 +52,14 @@ ExternalSeedReaderImpl
 	public static final int TOP_PIECE_PRIORITY			= 100*1000;
 
 	private static boolean	use_avail_to_activate;
+	private static int		min_download_speed_default;
 
 	static{
-		COConfigurationManager.addAndFireParameterListener(
-				"webseed.activation.uses.availability",
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[]{
+					ConfigKeys.Connection.BCFG_WEBSEED_ACTIVATION_USES_AVAILABILITY,
+					ConfigKeys.Connection.BCFG_WEBSEED_ACTIVATION_MIN_SPEED_KBPS,	
+				},
 				new ParameterListener()
 				{
 					@Override
@@ -62,7 +67,8 @@ ExternalSeedReaderImpl
 					parameterChanged(
 						String name )
 					{
-						use_avail_to_activate = COConfigurationManager.getBooleanParameter( name );
+						use_avail_to_activate 		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_WEBSEED_ACTIVATION_USES_AVAILABILITY );
+						min_download_speed_default 	= COConfigurationManager.getIntParameter( ConfigKeys.Connection.BCFG_WEBSEED_ACTIVATION_MIN_SPEED_KBPS )*DisplayFormatters.getKinB();
 					}
 				});
 	}
@@ -100,11 +106,12 @@ ExternalSeedReaderImpl
 
 	private int[]		priority_offsets;
 
-	private boolean		fast_activate;
-	private int			min_availability;
-	private int			min_download_speed;
-	private int			max_peer_speed;
-	private long		valid_until;
+	private boolean		ws_fast_activate;
+	private int			ws_min_availability;
+	private int			ws_min_download_speed;
+	private int			ws_max_peer_speed;
+	private long		ws_valid_until;
+	
 	private boolean		transient_seed;
 
 	private int			reconnect_delay	= RECONNECT_DEFAULT;
@@ -132,15 +139,15 @@ ExternalSeedReaderImpl
 
 		host_net = AENetworkClassifier.categoriseAddress( host );
 
-		fast_activate 		= getBooleanParam( _params, "fast_start", false );
-		min_availability 	= getIntParam( _params, "min_avail", 1 );	// default is avail based
-		min_download_speed	= getIntParam( _params, "min_speed", 0 );
-		max_peer_speed		= getIntParam( _params, "max_speed", 0 );
-		valid_until			= getIntParam( _params, "valid_ms", 0 );
+		ws_fast_activate 		= getBooleanParam( _params, "fast_start", false );
+		ws_min_availability 	= getIntParam( _params, "min_avail", 1 );	// default is avail based
+		ws_min_download_speed	= getIntParam( _params, "min_speed", 0 );
+		ws_max_peer_speed		= getIntParam( _params, "max_speed", 0 );
+		ws_valid_until			= getIntParam( _params, "valid_ms", 0 );
 
-		if ( valid_until > 0 ){
+		if ( ws_valid_until > 0 ){
 
-			valid_until += getSystemTime();
+			ws_valid_until += getSystemTime();
 		}
 
 		transient_seed		= getBooleanParam( _params, "transient", false );
@@ -323,7 +330,7 @@ ExternalSeedReaderImpl
 
 				// next obvious things like validity and the fact that we're complete
 
-			if ( valid_until > 0 && getSystemTime() > valid_until ){
+			if ( ws_valid_until > 0 && getSystemTime() > ws_valid_until ){
 
 				return( false );
 			}
@@ -443,25 +450,27 @@ ExternalSeedReaderImpl
 				return( true );
 			}
 
-			if ( fast_activate || !early_days ){
+			if ( ws_fast_activate || !early_days ){
 
-				if ( min_availability > 0 ){
+				if ( ws_min_availability > 0 ){
 
 					float availability = download.getStats().getAvailability();
 
-					if ( availability < min_availability){
+					if ( availability < ws_min_availability){
 
-						log( getName() + ": activating as availability is poor" );
+						log( getName() + ": activating as availability is poor (<" + ws_min_availability + ")" );
 
 						return( true );
 					}
 				}
 
-				if ( min_download_speed > 0 ){
+				int min_speed = ws_min_download_speed>0?ws_min_download_speed:min_download_speed_default;
 
-					if ( peer_manager.getStats().getDownloadAverage() < min_download_speed ){
+				if ( min_speed > 0 ){
 
-						log( getName() + ": activating as speed is slow" );
+					if ( peer_manager.getStats().getDownloadAverage() < min_speed ){
+
+						log( getName() + ": activating as speed is slow (<" + DisplayFormatters.formatByteCountToKiBEtcPerSec( min_speed ) + ")" );
 
 						return( true );
 					}
@@ -504,7 +513,7 @@ ExternalSeedReaderImpl
 		try{
 				// obvious stuff first
 
-			if ( valid_until > 0 && getSystemTime() > valid_until ){
+			if ( ws_valid_until > 0 && getSystemTime() > ws_valid_until ){
 
 				return( true );
 			}
@@ -526,11 +535,11 @@ ExternalSeedReaderImpl
 
 			if ( use_avail_to_activate ){
 
-				if ( min_availability > 0 ){
+				if ( ws_min_availability > 0 ){
 
 					float availability = peer_manager.getDownload().getStats().getAvailability();
 
-					if ( availability >= min_availability + 1 ){
+					if ( availability >= ws_min_availability + 1 ){
 
 						reason =  "availability is good";
 
@@ -538,13 +547,15 @@ ExternalSeedReaderImpl
 					}
 				}
 
-				if ( min_download_speed > 0 ){
+				int min_speed = ws_min_download_speed>0?ws_min_download_speed:min_download_speed_default;
+				
+				if ( min_speed > 0 ){
 
 					long	my_speed 		= peer.getStats().getDownloadAverage();
 
 					long	overall_speed 	= peer_manager.getStats().getDownloadAverage();
 
-					if ( overall_speed - my_speed > 2 * min_download_speed ){
+					if ( overall_speed - my_speed > 2 * min_speed ){
 
 						reason += (reason.length()==0?"":", ") + "speed is good";
 
@@ -599,13 +610,13 @@ ExternalSeedReaderImpl
 
 					}else{
 
-						if ( max_peer_speed > 0 ){
+						if ( ws_max_peer_speed > 0 ){
 
 							PeerStats ps = peer.getStats();
 
-							if ( ps != null && ps.getDownloadRateLimit() != max_peer_speed ){
+							if ( ps != null && ps.getDownloadRateLimit() != ws_max_peer_speed ){
 
-								ps.setDownloadRateLimit( max_peer_speed );
+								ps.setDownloadRateLimit( ws_max_peer_speed );
 							}
 						}
 					}
@@ -615,13 +626,13 @@ ExternalSeedReaderImpl
 
 						if ( readyToActivate( peer_manager, peer, time_since_started )){
 
-							if ( max_peer_speed > 0 ){
+							if ( ws_max_peer_speed > 0 ){
 
 								PeerStats ps = peer.getStats();
 
 								if ( ps != null ){
 
-									ps.setDownloadRateLimit( max_peer_speed );
+									ps.setDownloadRateLimit( ws_max_peer_speed );
 								}
 							}
 

@@ -1750,8 +1750,10 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					try {
 						dlData.initialize();
 
-						String s = "initialize: state is waiting";
-						log.log(dlData.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
+						if (bDebugLog){
+							String s = "initialize: state is waiting";
+							log.log(dlData.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
+						}
 					} catch (Exception ignore) {
 						/*ignore*/
 					}
@@ -1779,9 +1781,12 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					if (state == Download.ST_STOPPED || state == Download.ST_QUEUED) {
 						try {
 							dlData.restart();
-							String s = "restart: isForceStart";
-							log.log(dlData.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
-							dlData.appendTrace( s + "\n" );
+							
+							if (bDebugLog){
+								String s = "restart: isForceStart";
+								log.log(dlData.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
+								dlData.appendTrace( s + "\n" );
+							}
 						} catch (DownloadException e) {
 						}
 
@@ -1791,9 +1796,12 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					if (state == Download.ST_READY) {
 						try {
 							dlData.start();
-							String s = "Start: isForceStart";
-							log.log(dlData.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
-							dlData.appendTrace( s + "\n" );
+							
+							if (bDebugLog){
+								String s = "Start: isForceStart";
+								log.log(dlData.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
+								dlData.appendTrace( s + "\n" );
+							}
 						} catch (DownloadException e) {
 							/* ignore */
 						}

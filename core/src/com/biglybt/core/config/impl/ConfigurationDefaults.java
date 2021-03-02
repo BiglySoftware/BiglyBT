@@ -155,7 +155,8 @@ public class ConfigurationDefaults {
     def.put("Listen.Port.Randomize.Range", RandomUtils.LISTEN_PORT_MIN + "-" + RandomUtils.LISTEN_PORT_MAX );
     def.put(ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE, TRUE );
     def.put(ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE, TRUE );
-    def.put("webseed.activation.uses.availability", TRUE );
+    def.put(ConfigKeys.Connection.BCFG_WEBSEED_ACTIVATION_USES_AVAILABILITY, TRUE );
+    def.put(ConfigKeys.Connection.BCFG_WEBSEED_ACTIVATION_MIN_SPEED_KBPS, 5 );
     def.put("IPV6 Enable Support", FALSE );
     def.put(ConfigKeys.Connection.BCFG_IPV_6_CHECK_MULTIPLE_ADDRESS_CHECKS, TRUE );
     def.put("IPV6 Prefer Addresses",FALSE );

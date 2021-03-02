@@ -22,9 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 
@@ -274,6 +276,10 @@ public class ConfigSectionConnection
 
 		if (userMode > 0) {
 
+			String[] units = {
+					DisplayFormatters.getRateUnit(DisplayFormatters.UNIT_KB)
+				};
+			
 			/////////////////////// WebSeeds ///////////////////
 
 			BooleanParameterImpl paramWebSeedAct = new BooleanParameterImpl(
@@ -281,8 +287,20 @@ public class ConfigSectionConnection
 					"ConfigView.section.connection.webseed.act.on.avail");
 			add(paramWebSeedAct);
 
+			IntParameterImpl paramWebSeedMinSpeed = new IntParameterImpl(
+					BCFG_WEBSEED_ACTIVATION_MIN_SPEED_KBPS,
+					"");
+			
+			paramWebSeedMinSpeed.setLabelText(MessageText.getString(
+					"ConfigView.section.connection.webseed.min.speed.kbps", units));
+
+			paramWebSeedMinSpeed.setIndent(1,  true );
+			add(paramWebSeedMinSpeed);
+		
+			paramWebSeedAct.addEnabledOnSelection( paramWebSeedMinSpeed );
+			
 			add("pgWS", new ParameterGroupImpl(
-					"ConfigView.section.connection.group.webseed", paramWebSeedAct));
+					"ConfigView.section.connection.group.webseed", paramWebSeedAct, paramWebSeedMinSpeed ));
 		}
 
 		if (userMode > 0) {
