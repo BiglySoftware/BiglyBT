@@ -1124,6 +1124,12 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 			return( Long.MAX_VALUE );
 		}
 		
+		public default void
+		setActivationStatus(
+			String	str )
+		{
+		}
+				
 		public default String[]
 		getStatus(
 			boolean	verbose )

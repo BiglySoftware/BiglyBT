@@ -2412,6 +2412,8 @@ DownloadManagerImpl
     
     	int status;
     	
+    	String debug;
+    	
        	if ( seedingRank.getLightSeedEligibility() == 0 ){
        		
 	    	status = light_seeding_status;
@@ -2419,12 +2421,20 @@ DownloadManagerImpl
 	    	if ( status == 0 ){
 	    		
 	    		status = default_light_seeding_status;
+	    		
+	    		debug = (status==1?"active":"inactive") + " (default)";
+	    		
+	    	}else{
+	    		
+	    		debug = (status==1?"active":"inactive") + " (explicit)";
 	    	}
        	}else{
        		
        		status = 2;
+       		
+       		debug = "inactive";
        	}
-       	
+       	       	
 	   	if ( status == 2 ){
 	    		
 	   		if ( _tracker_client_for_queued_download != null ){
@@ -2439,22 +2449,30 @@ DownloadManagerImpl
 	   				this_mon.exit();
 	   			}
 	   		}
-	   		
+	   	
+	       	seedingRank.setActivationStatus( debug );
+
     		return;
     	}
     	
 	   	if ( _tracker_client_for_queued_download != null ){
-    		
+
+	       	seedingRank.setActivationStatus( debug );
+
     		return;
     	}
     	    	
     	if ( getState() != DownloadManager.STATE_QUEUED ){
     		
+           	seedingRank.setActivationStatus( debug + " but not queued" );
+
     		return;
     	}
     	
     	if ( !isDownloadComplete( false )){
     		
+           	seedingRank.setActivationStatus( debug + " but not complete" );
+
     		return;
     	}
 		
@@ -2463,6 +2481,8 @@ DownloadManagerImpl
   				
  			startQueuedTrackerClient();
   			
+ 			seedingRank.setActivationStatus( debug );
+ 			
 		}finally{
 			
 			this_mon.exit();

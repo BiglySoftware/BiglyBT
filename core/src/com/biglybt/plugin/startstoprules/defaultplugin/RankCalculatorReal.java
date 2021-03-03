@@ -1846,6 +1846,8 @@ RankCalculatorReal
 		
 		private long		light_seed_eligible = Long.MAX_VALUE;
 		
+		private String		activation_status = "";
+		
 		private
 		SR()
 		{
@@ -1964,6 +1966,14 @@ RankCalculatorReal
 				return( SystemTime.getMonotonousTime() - light_seed_eligible );
 			}
 		}
+				
+		@Override
+		public void 
+		setActivationStatus(
+			String str)
+		{
+			activation_status = str;
+		}
 		
 		@Override
 		public String[]
@@ -2042,6 +2052,12 @@ RankCalculatorReal
 			}
 			
 			String ls_str 	= "Light-Seeding eligible";
+			
+			if ( activation_status != null && !activation_status.isEmpty()){
+				
+				ls_str += ": " + activation_status;
+			}
+			
 			String has_slot = "Light-Seeding active";
 			
 			if ( verbose ){
