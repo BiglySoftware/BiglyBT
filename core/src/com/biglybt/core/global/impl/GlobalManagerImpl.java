@@ -3723,88 +3723,108 @@ public class GlobalManagerImpl
   protected void
   checkSeedingOnlyStateSupport()
   {
-    boolean seeding 			= false;
-    boolean seeding_set 			= false;
-    boolean	potentially_seeding	= false;
+	  boolean seeding 			= false;
+	  boolean seeding_set 			= false;
+	  boolean	potentially_seeding	= false;
 
-    long curr_mut = all_trackers.getOptionsMutationCount();
-    
-    boolean full_sync = curr_mut != all_trackers_options_mut;
-    
-    if ( full_sync ){
-    	all_trackers_options_mut = curr_mut;
-    }
-    
+	  long curr_mut = all_trackers.getOptionsMutationCount();
+
+	  boolean full_sync = curr_mut != all_trackers_options_mut;
+
+	  if ( full_sync ){
+		  all_trackers_options_mut = curr_mut;
+	  }
+
 	  DownloadManager[] managers = managers_list_cow;
 
+	  boolean	got_result = false;
+	  
 	  for( DownloadManager manager: managers ){
 
-        PEPeerManager pm = manager.getPeerManager();
+		  int	state = manager.getState();
 
-        int	state = manager.getState();
+		  if ( got_result ){
+			  
+			  if ( state == DownloadManager.STATE_QUEUED ){
 
-        if ( manager.getDiskManager() == null || pm == null ){
+				  if ( manager.isDownloadComplete( false )){
 
-        		// download not running
+					  manager.checkLightSeeding( full_sync );
+				  }
+			  }
+			  
+			  continue;
+		  }
 
-        	if ( state == DownloadManager.STATE_QUEUED ){
+		  PEPeerManager pm = manager.getPeerManager();
 
-        		if ( manager.isDownloadComplete( false )){
+		  if ( pm == null ){
 
-        			manager.checkLightSeeding( full_sync );
-        			
-        			potentially_seeding = true;
-        		} else {
+			  	// download not running
 
-        			// Queued and Incomplete means we aren't "only seeding".  This
-        			// download WILL start, it just hasn't yet for various reasons
-        			// (1st Priority, etc)
-          		seeding 			= false;
+			  if ( state == DownloadManager.STATE_QUEUED ){
 
-          		// can't break out, because we still need to calculate
-          		// potentially_seeding.  Set a flag so we don't set "seeding"
-          		// back to true
-          		seeding_set = true;
+				  if ( manager.isDownloadComplete( false )){
 
-        		}
-        	}
+					  manager.checkLightSeeding( full_sync );
 
-        	continue;
-        }
+					  potentially_seeding = true;
+					  
+				  } else {
 
-        if ( state == DownloadManager.STATE_DOWNLOADING ){
+						  // Queued and Incomplete means we aren't "only seeding".  This
+						  // download WILL start, it just hasn't yet for various reasons
+						  // (1st Priority, etc)
+					  
+					  seeding 	= false;
+	
+						  // can't break out, because we still need to calculate
+						  // potentially_seeding.  Set a flag so we don't set "seeding"
+						  // back to true
+					  
+					  seeding_set = true;
 
-        	if (!pm.hasDownloadablePiece()){
+				  }
+			  }
 
-        			// complete DND file
+			  continue;
+		  }
 
-        		if (!seeding_set) {
+		  if ( state == DownloadManager.STATE_DOWNLOADING ){
 
-        			seeding = true;
-        		}
+			  if (!pm.hasDownloadablePiece()){
 
-        	}else{
+				  	// complete DND file
 
-        		seeding 			= false;
-        		potentially_seeding	= false;
+				  if (!seeding_set) {
 
-        		break;
-        	}
-        }else if ( state == DownloadManager.STATE_SEEDING ){
+					  seeding = true;
+				  }
 
-      		if (!seeding_set) {
+			  }else{
 
-      			seeding = true;
-      		}
-        }
-    }
+				  seeding 				= false;
+				  potentially_seeding	= false;
 
-    if ( seeding ){
+				  got_result = true;
+				  
+				  //  break; want to carry on any update remaining light-seed status
+			  }
+		  }else if ( state == DownloadManager.STATE_SEEDING ){
 
-    	potentially_seeding = true;
-    }
+			  if (!seeding_set) {
 
-    setSeedingOnlyState( seeding, potentially_seeding );
+				  seeding = true;
+			  }
+		  }
+	  }
+
+	  if ( seeding ){
+
+		  potentially_seeding = true;
+	  }
+
+	  setSeedingOnlyState( seeding, potentially_seeding );
   }
 
 
