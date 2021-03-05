@@ -3416,7 +3416,9 @@ addressLoop:
 
 		Map<InetAddress,int[]>	public_lookup_map 		= new HashMap<>();
 		Map<String,int[]>		non_public_lookup_map 	= new HashMap<>();
-
+		
+		boolean ignore_bind_for_lan_addresses = COConfigurationManager.getBooleanParameter(ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_FOR_LAN );
+		
 		for ( NetworkConnectionBase connection: connections ){
 
 			TransportBase tb = connection.getTransportBase();
@@ -3442,12 +3444,12 @@ addressLoop:
 						if ( socket_address != null ){
 	
 							InetAddress address = socket_address.getAddress();
-	
+								
 							int[]	counts = public_lookup_map.get( address );
 	
 							if ( counts == null ){
 	
-								counts = new int[2];
+								counts = new int[3];
 	
 								public_lookup_map.put( address, counts );
 							}
@@ -3459,6 +3461,13 @@ addressLoop:
 							}else{
 	
 								counts[1]++;
+							
+								if (	ignore_bind_for_lan_addresses &&
+										AddressUtils.isLANLocalAddress( notional_address ) == AddressUtils.LAN_LOCAL_YES && 
+										!AddressUtils.isExplicitLANRateLimitAddress(notional_address)){
+								
+									counts[2]++;
+								}
 							}
 						}
 					}
@@ -3505,13 +3514,22 @@ addressLoop:
 			str += "\n" + MessageText.getString( "label.missing" ) + ": " + missing;
 		}
 
-		boolean	unbound_connections = false;
+		boolean	bad_connections = false;
 
 		if ( public_lookup_map.size() + non_public_lookup_map.size() == 0 ){
 
 			str += "\n" + MessageText.getString( "label.no.connections" );
 
 		}else{
+			
+			Set<InetAddress>	extra = new HashSet<>();
+			
+			InetAddress[] asb = additionalServiceBindIPs;
+			
+			if ( asb != null ){
+				
+				extra.addAll( Arrays.asList( asb ));
+			}
 
 			String con_str = "";
 
@@ -3529,23 +3547,33 @@ addressLoop:
 					
 					continue;
 					
-				}else if ( address.isAnyLocalAddress()){
-				
-
-					s = "*";
-
-					unbound_connections = true;
-
 				}else{
-
-					s = address.getHostAddress();
-
+					
+					if ( address.isAnyLocalAddress()){
+					
+						s = "*";
+		
+					}else{
+	
+						s = address.getHostAddress();
+					}
+	
 					if ( !bindable.contains( address )){
-
-						unbound_connections = true;
+						
+						// things are OK if
+						// 		any incoming connections are via an extra service bind AND
+						//		any outgoing connections are to a LAN address
+						
+						if ( 	counts[1] != counts[2] ||
+								( counts[0] != 0 && !extra.contains( address ))){
+	
+							// Debug.out( "BAD: " + address + "/" + counts[0] + "/" + counts[1] + "/" + counts[2] + " - extra=" + extra );
+							
+							bad_connections = true;
+						}
 					}
 				}
-
+				
 				s += " - " + MessageText.getString( "label.in" ) + "=" + counts[0] + ", " + MessageText.getString( "label.out" ) + "=" + counts[1];
 
 				con_str += (con_str.length()==0?"":"; ") + s.toLowerCase();
@@ -3566,7 +3594,7 @@ addressLoop:
 			str += "\n" + MessageText.getString( "label.connections" ) + ": " + con_str;
 		}
 
-		if ( unbound_connections ){
+		if ( bad_connections ){
 
 			status = enforceBind?BS_ERROR:BS_WARNING;
 		}
