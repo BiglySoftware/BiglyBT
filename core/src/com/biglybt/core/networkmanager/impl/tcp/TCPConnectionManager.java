@@ -25,6 +25,7 @@ import java.nio.channels.UnresolvedAddressException;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
@@ -114,18 +115,20 @@ public class TCPConnectionManager {
 			});
   }
 
-  int rcv_size;
-  int snd_size;
-  String ip_tos;
-  int local_bind_port;
-
+  int 		rcv_size;
+  int 		snd_size;
+  String 	ip_tos;
+  int 		local_bind_port;
+  boolean	ignore_bind_for_lan_addresses;
+  
   {
 	  COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 				"network.tcp.socket.SO_RCVBUF",
 				"network.tcp.socket.SO_SNDBUF",
 				"network.tcp.socket.IPDiffServ",
-				"network.bind.local.port"
+				"network.bind.local.port",
+				ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_FOR_LAN,
 			},
 			new ParameterListener()
 			{
@@ -141,6 +144,8 @@ public class TCPConnectionManager {
 					ip_tos = COConfigurationManager.getStringParameter( "network.tcp.socket.IPDiffServ" );
 
 					local_bind_port = COConfigurationManager.getIntParameter( "network.bind.local.port" );
+					
+					ignore_bind_for_lan_addresses = COConfigurationManager.getBooleanParameter(ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_FOR_LAN );
 				}
 			});
   }
@@ -395,7 +400,18 @@ public class TCPConnectionManager {
 
 				  }else{
 					  
-					  bindIP = NetworkAdmin.getSingleton().getMultiHomedOutgoingRoundRobinBindAddress(request.address.getAddress());
+					  InetSocketAddress isa = request.address;
+							  
+					  if ( 	ignore_bind_for_lan_addresses &&
+							AddressUtils.isLANLocalAddress( isa ) == AddressUtils.LAN_LOCAL_YES && 
+							!AddressUtils.isExplicitLANRateLimitAddress(isa)){
+						  
+						  bindIP = null;
+						  
+					  }else{
+					  
+						  bindIP = NetworkAdmin.getSingleton().getMultiHomedOutgoingRoundRobinBindAddress(isa.getAddress());
+					  }
 					  
 					  if ( bindIP != null ) {
 						  	// ignore bind for plugin proxies as we connect directly to them - if they need to
