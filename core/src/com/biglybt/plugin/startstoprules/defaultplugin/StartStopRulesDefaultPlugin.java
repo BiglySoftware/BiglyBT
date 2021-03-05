@@ -976,12 +976,17 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 			int iNewRankType = plugin_config.getUnsafeIntParameter("StartStopManager_iRankType");
 			minSpeedForActiveSeeding = plugin_config.getUnsafeIntParameter("StartStopManager_iMinSpeedForActiveSeeding");
-			maxStalledSeeding = plugin_config.getUnsafeIntParameter("StartStopManager_iMaxStalledSeeding");
-			if (maxStalledSeeding <= 0) {
-				// insanity :)
-				maxStalledSeeding = 999;
+			if (minSpeedForActiveSeeding == 0) {
+				maxStalledSeeding = 0;
+				stalledSeedingIgnoreZP = false;
+			} else {
+				maxStalledSeeding = plugin_config.getUnsafeIntParameter("StartStopManager_iMaxStalledSeeding");
+				if (maxStalledSeeding <= 0) {
+					// insanity :)
+					maxStalledSeeding = 999;
+				}
+				stalledSeedingIgnoreZP = plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxStalledSeedingIgnoreZP");
 			}
-			stalledSeedingIgnoreZP = plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxStalledSeedingIgnoreZP");
 			_maxActive = plugin_config.getUnsafeIntParameter("max active torrents");
 			_maxActiveWhenSeedingEnabled = plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxActiveTorrentsWhenSeedingEnabled");
 			_maxActiveWhenSeeding = plugin_config.getUnsafeIntParameter("StartStopManager_iMaxActiveTorrentsWhenSeeding");

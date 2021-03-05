@@ -605,7 +605,8 @@ public class StartStopConfigModel
 		System.arraycopy(activeDLValues, 0, activeSeedingValues, 0,
 				activeSeedingValues.length);
 
-		model.addIntListParameter2("StartStopManager_iMinSpeedForActiveSeeding",
+		IntListParameter minSpeedForActiveSeeding = model.addIntListParameter2(
+				"StartStopManager_iMinSpeedForActiveSeeding",
 				"ConfigView.label.minSpeedForActiveSeeding", activeSeedingValues,
 				activeSeedingLabels, 512);
 
@@ -620,6 +621,15 @@ public class StartStopConfigModel
 				"StartStopManager_bMaxStalledSeedingIgnoreZP",
 				"ConfigView.label.maxStalledSeedingIgnoreZP", true);
 		maxStalledSeedingIgnoreZP.setIndent(1, true);
+
+		ParameterListener minSpeedForActiveSeedingListener = p -> {
+			boolean enabled = minSpeedForActiveSeeding.getValue() != 0;
+			maxStalledSeeding.setEnabled(enabled);
+			maxStalledSeedingIgnoreZP.setEnabled(enabled);
+		};
+		minSpeedForActiveSeeding.addListener(minSpeedForActiveSeedingListener);
+		minSpeedForActiveSeedingListener.parameterChanged(null);
+
 
 		model.addBooleanParameter2("StartStopManager_bStopOnceBandwidthMet",
 				"ConfigView.label.queue.stoponcebandwidthmet", true);
