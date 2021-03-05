@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemProperties;
 import com.biglybt.core.util.SystemTime;
@@ -65,9 +66,18 @@ ClientOtherInstanceImpl
 		Map<String,Object>	props = (Map<String,Object>)map.get( "pr" );
 
 		try{
+			List<InetAddress>	internal_addresses = new ArrayList<>(2);
+			
+			internal_addresses.add( internal_address );
+			
 			if ( !int_ip.equals("0.0.0.0")){
 
 				internal_address = InetAddress.getByName( int_ip );
+				
+				if ( !internal_addresses.contains( internal_address )){
+					
+					internal_addresses.add( 0, internal_address );
+				}
 			}
 
 			InetAddress	external_address = InetAddress.getByName( ext_ip );
@@ -76,7 +86,7 @@ ClientOtherInstanceImpl
 
 			if ( internal_address instanceof Inet4Address == external_address instanceof Inet4Address ){
 
-				return( new ClientOtherInstanceImpl(id, app_id, internal_address, external_address, tcp, udp, udp_other, props ));
+				return( new ClientOtherInstanceImpl(id, app_id, internal_addresses, external_address, tcp, udp, udp_other, props ));
 			}
 
 			return( null );
@@ -89,22 +99,25 @@ ClientOtherInstanceImpl
 		return( null );
 	}
 
-	private final String					id;
-	private final String					app_id;
-	private List					internal_addresses	= new ArrayList();
-	private InetAddress				external_address;
-	private int						tcp_port;
-	private int						udp_port;
-	private final int						udp_non_data_port;
-	private final Map<String,Object>		props;
+	private final String				id;
+	private final String				app_id;
+	
+	private final CopyOnWriteList<InetAddress>		internal_addresses	= new CopyOnWriteList<>();
+	
+	private InetAddress					external_address;
+	private int							tcp_port;
+	private int							udp_port;
+	private final int					udp_non_data_port;
+	private final Map<String,Object>	props;
 
 	private long	alive_time;
 
 
-	protected ClientOtherInstanceImpl(
+	protected 
+	ClientOtherInstanceImpl(
 		String					_id,
 		String					_app_id,
-		InetAddress				_internal_address,
+		List<InetAddress>		_internal_addresses,
 		InetAddress				_external_address,
 		int						_tcp_port,
 		int						_udp_port,
@@ -114,7 +127,7 @@ ClientOtherInstanceImpl
 		id					= _id;
 		app_id				= _app_id;
 
-		internal_addresses.add( _internal_address );
+		internal_addresses.addAll( _internal_addresses );
 
 		external_address	= _external_address;
 		tcp_port			= _tcp_port;
@@ -132,21 +145,22 @@ ClientOtherInstanceImpl
 	{
 		alive_time	= SystemTime.getCurrentTime();
 
-		InetAddress	new_address = new_inst.getInternalAddress();
+		List<InetAddress>	new_addresses = new_inst.getInternalAddresses();
 
 		boolean	same = true;
 
-		if ( !internal_addresses.contains( new_address )){
-
-			same	= false;
-
-			List	new_addresses = new ArrayList( internal_addresses );
-
-			new_addresses.add( 0, new_address );
-
-			internal_addresses	= new_addresses;
+		int	pos = 0;
+		
+		for ( InetAddress new_address: new_addresses ){
+			
+			if ( !internal_addresses.contains( new_address )){
+	
+				same	= false;
+	
+				internal_addresses.add( pos++, new_address );
+			}
 		}
-
+		
 		same	 = 	same &&
 					external_address.equals( new_inst.external_address ) &&
 					tcp_port == new_inst.tcp_port  &&
@@ -178,14 +192,14 @@ ClientOtherInstanceImpl
 	public InetAddress
 	getInternalAddress()
 	{
-		return((InetAddress)internal_addresses.get(0));
+		return( internal_addresses.get(0));
 	}
 
 	@Override
-	public List
+	public List<InetAddress>
 	getInternalAddresses()
 	{
-		return( new ArrayList( internal_addresses ));
+		return( internal_addresses.getList());
 	}
 
 	@Override

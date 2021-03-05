@@ -645,13 +645,18 @@ LocalTrackerPlugin
 
 		if ( peer_manager != null ){
 
-			String	peer_ip			= inst.getInternalAddress().getHostAddress();
-			int		peer_tcp_port	= inst.getTCPListenPort();
-			int		peer_udp_port	= inst.getUDPListenPort();
-
-			log.log( "    " + download.getName() + ": Injecting peer " + peer_ip + ":" + peer_tcp_port + "/" + peer_udp_port);
-
-			peer_manager.addPeer( peer_ip, peer_tcp_port, peer_udp_port, false );
+			List<InetAddress> addresses = inst.getInternalAddresses();
+			
+			for ( InetAddress address: addresses ){
+				
+				String	peer_ip			= address.getHostAddress();
+				int		peer_tcp_port	= inst.getTCPListenPort();
+				int		peer_udp_port	= inst.getUDPListenPort();
+	
+				log.log( "    " + download.getName() + ": Injecting peer " + peer_ip + ":" + peer_tcp_port + "/" + peer_udp_port);
+	
+				peer_manager.addPeer( peer_ip, peer_tcp_port, peer_udp_port, false );
+			}
 		}
 
 		return( is_seed?3:2 );

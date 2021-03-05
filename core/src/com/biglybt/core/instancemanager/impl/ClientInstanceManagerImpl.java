@@ -862,28 +862,33 @@ ClientInstanceManagerImpl
 	addAddresses(
 		ClientInstance inst )
 	{
-		InetAddress	internal_address 	= inst.getInternalAddress();
+		List<InetAddress>	internal_addresses 	= inst.getInternalAddresses();
+
 		InetAddress	external_address	= inst.getExternalAddress();
 		int			tcp					= inst.getTCPListenPort();
 		int			udp					= inst.getUDPListenPort();
 		int			udp2				= inst.getUDPNonDataListenPort();
 
-		modifyAddresses( internal_address, external_address, tcp, udp, udp2, true );
+		for ( InetAddress internal_address: internal_addresses ){
+			
+			modifyAddresses( internal_address, external_address, tcp, udp, udp2, true );
+		}
 	}
 
 	protected void
 	removeAddresses(
-		ClientOtherInstanceImpl inst )
+		ClientInstance inst )
 	{
-		List		internal_addresses 	= inst.getInternalAddresses();
+		List<InetAddress>	internal_addresses 	= inst.getInternalAddresses();
+		
 		InetAddress	external_address	= inst.getExternalAddress();
 		int			tcp					= inst.getTCPListenPort();
 		int			udp					= inst.getUDPListenPort();
 		int			udp2				= inst.getUDPNonDataListenPort();
 
-		for (int i=0;i<internal_addresses.size();i++){
+		for ( InetAddress internal_address: internal_addresses ){
 
-			modifyAddresses( (InetAddress)internal_addresses.get(i), external_address, tcp, udp, udp2, false );
+			modifyAddresses( internal_address, external_address, tcp, udp, udp2, false );
 		}
 	}
 

@@ -19,6 +19,8 @@
 
 package com.biglybt.core.instancemanager.impl;
 
+import java.net.InetAddress;
+import java.util.List;
 import java.util.Map;
 
 import com.biglybt.core.instancemanager.ClientInstance;
@@ -68,9 +70,18 @@ ClientInstanceImpl
 			id = id.substring(0,8) + "...";
 		}
 
+		List<InetAddress> internal_addresses = getInternalAddresses();
+		
+		String int_str = "";
+		
+		for ( InetAddress ia: internal_addresses ){
+			
+			int_str += (int_str.isEmpty()?"":";") + ia.getHostAddress();
+		}
+		
 		return( "id=" + id +
 				",ap=" + getApplicationID() +
-				",int=" + getInternalAddress().getHostAddress() +
+				",int=" + int_str +
 				",ext=" + getExternalAddress().getHostAddress() +
 				",tcp=" + getTCPListenPort() +
 				",udp=" + getUDPListenPort() +

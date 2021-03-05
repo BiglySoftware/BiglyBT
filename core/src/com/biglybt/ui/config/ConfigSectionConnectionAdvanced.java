@@ -89,6 +89,14 @@ public class ConfigSectionConnectionAdvanced
 		add("ifList", paramInterfaceList, listSocket);
 		paramInterfaceList.setTextSelectable(true);
 
+		StringParameterImpl paramAdditionServiceBind = new StringParameterImpl(SCFG_NETWORK_ADDITIONAL_SERVICE_BINDS,
+				"ConfigView.label.additional.service.bind");
+		add(paramAdditionServiceBind, listSocket);
+		
+		BooleanParameterImpl paramIgnoreBindLAN = new BooleanParameterImpl(
+				BCFG_NETWORK_IGNORE_BIND_FOR_LAN, "ConfigView.label.ignore.bind.for.lan");
+		add(paramIgnoreBindLAN, listSocket);
+
 		BooleanParameterImpl paramCheckBind = new BooleanParameterImpl(
 				BCFG_CHECK_BIND_IP_ON_START, "network.check.ipbinding");
 		add(paramCheckBind, listSocket);

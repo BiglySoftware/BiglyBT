@@ -120,6 +120,8 @@ NetworkAdminImpl
 	private boolean						IPv6_enabled;
 	private boolean						preferIPv6;
 	
+	private InetAddress[]				additionalServiceBindIPs;
+	
 	private volatile boolean			testedIPv6Routing;
 	
 	{
@@ -155,7 +157,7 @@ NetworkAdminImpl
 
 	private boolean logged_bind_force_issue;
 
-	private final CopyOnWriteList	listeners = new CopyOnWriteList();
+	private final CopyOnWriteList<NetworkAdminPropertyChangeListener>	listeners = new CopyOnWriteList<>();
 
 
 	final NetworkAdminRouteListener
@@ -276,6 +278,12 @@ NetworkAdminImpl
 
 		checkDefaultBindAddress( true );
 
+		COConfigurationManager.addAndFireParameterListener(
+			ConfigKeys.Connection.SCFG_NETWORK_ADDITIONAL_SERVICE_BINDS,	
+			(n)->{
+					setupAdditionalServiceBindIPs( COConfigurationManager.getStringParameter( n ));
+				});
+		
 		AEDiagnostics.addWeakEvidenceGenerator( this );
 
 		if (System.getProperty("skip.dns.spi.test", "0").equals("0")) {
@@ -724,6 +732,22 @@ NetworkAdminImpl
 		return toReturn != null ? toReturn : (v6 ? localhostV6 : localhostV4);
 	}
 
+	private void
+	setupAdditionalServiceBindIPs(
+		String		str )
+	{
+		List<InetAddress> addrs = parseAddresses( str );
+		
+		InetAddress[] latest = addrs.isEmpty()?null:addrs.toArray( new InetAddress[addrs.size()]);
+		
+		if ( !Arrays.equals( latest, additionalServiceBindIPs )){
+		
+			additionalServiceBindIPs = latest;
+			
+			firePropertyChange( NetworkAdmin.PR_ADDITIONAL_SERVICE_ADDRESS );
+		}
+	}
+	
 	@Override
 	public InetAddress[] getMultiHomedServiceBindAddresses(boolean nio)
 	{
@@ -733,7 +757,22 @@ NetworkAdminImpl
 			if(bindIPs[i].isAnyLocalAddress())
 				return new InetAddress[] {nio && !supportsIPv6withNIO && bindIPs[i] instanceof Inet6Address ? anyLocalAddressIPv4 : bindIPs[i]};
 		}
-		return bindIPs;
+		
+		InetAddress[] extra = additionalServiceBindIPs;
+		
+		if ( extra != null ){
+			
+			InetAddress[] result = new InetAddress[bindIPs.length+extra.length];
+			
+			System.arraycopy( bindIPs, 0, result, 0, bindIPs.length );
+			System.arraycopy( extra, 0, result, bindIPs.length, extra.length );
+			
+			return( result );
+			
+		}else{
+		
+			return bindIPs;
+		}
 	}
 
 	@Override
@@ -917,14 +956,20 @@ NetworkAdminImpl
 		return( calcBindAddresses( bind_to, false ));
 	}
 
-	private InetAddress[] calcBindAddresses(final String addressString, boolean enforceBind)
+	private static List<InetAddress>
+	parseAddresses(
+		String		str )
 	{
+		if ( str == null ){
+			str = "";
+		}
+	
 		ArrayList<InetAddress> addrs = new ArrayList<>();
 
 		Pattern addressSplitter = Pattern.compile(";");
 		Pattern interfaceSplitter = Pattern.compile("[\\]\\[]");
 
-		String[] tokens = addressSplitter.split(addressString);
+		String[] tokens = addressSplitter.split(str);
 
 addressLoop:
 		for(int i=0;i<tokens.length;i++)
@@ -997,6 +1042,14 @@ addressLoop:
 					}
 			}
 		}
+
+		return( addrs );
+	}
+	
+	private InetAddress[] 
+	calcBindAddresses(final String addressString, boolean enforceBind)
+	{
+		List<InetAddress> addrs = parseAddresses( addressString );
 
 		if ( !IPv6_enabled ){
 
@@ -2168,12 +2221,10 @@ addressLoop:
 	firePropertyChange(
 		String	property )
 	{
-		Iterator it = listeners.iterator();
-
-		while( it.hasNext()){
+		for ( NetworkAdminPropertyChangeListener l: listeners ){
 
 			try{
-				((NetworkAdminPropertyChangeListener)it.next()).propertyChanged( property );
+				l.propertyChanged( property );
 
 			}catch( Throwable e ){
 

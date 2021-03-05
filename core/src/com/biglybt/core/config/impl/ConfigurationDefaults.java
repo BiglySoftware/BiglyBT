@@ -468,7 +468,10 @@ public class ConfigurationDefaults {
     def.put( "Enforce Bind IP", FALSE);
     def.put( "Enforce Bind IP Pause", FALSE);
     def.put( "Show IP Bindings Icon", TRUE );
-
+    def.put( ConfigKeys.Connection.SCFG_NETWORK_ADDITIONAL_SERVICE_BINDS, "" );
+    def.put( ConfigKeys.Connection.BCFG_NETWORK_IGNORE_BIND_FOR_LAN, FALSE );
+    
+    
     def.put( "Stats Period", Long.valueOf(30) );
     def.put( "Stats Export Peer Details", FALSE );
     def.put( "Stats Export File Details", FALSE );

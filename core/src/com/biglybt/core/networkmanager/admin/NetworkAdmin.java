@@ -34,9 +34,10 @@ NetworkAdmin
 {
 	private static NetworkAdmin	singleton;
 
-	public static final String PR_NETWORK_INTERFACES	= "Network Interfaces";
-	public static final String PR_DEFAULT_BIND_ADDRESS	= "Default Bind IP";
-	public static final String PR_AS					= "AS";
+	public static final String PR_NETWORK_INTERFACES			= "Network Interfaces";
+	public static final String PR_DEFAULT_BIND_ADDRESS			= "Default Bind IP";
+	public static final String PR_ADDITIONAL_SERVICE_ADDRESS	= "Additional Service Address";
+	public static final String PR_AS							= "AS";
 
 	public static final int			IP_PROTOCOL_VERSION_AUTO		= 0;
 	public static final int			IP_PROTOCOL_VERSION_REQUIRE_V4	= 1;

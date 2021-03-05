@@ -79,7 +79,9 @@ public final class ConfigKeys {
 		public static final String BCFG_IPV_4_PREFER_STACK = "IPV4 Prefer Stack";
 		public static final String BCFG_IPV_4_IGNORE_NI_ADDRESSES = "IPV4 Ignore Network Addresses";
 		public static final String BCFG_IPV_6_IGNORE_NI_ADDRESSES = "IPV6 Ignore Network Addresses";
-
+		public static final String SCFG_NETWORK_ADDITIONAL_SERVICE_BINDS = "Additional Service Bind IPs";
+		public static final String BCFG_NETWORK_IGNORE_BIND_FOR_LAN = "Ignore Bind For LAN";
+		
 		public static final String SCFG_DNS_ALT_SERVERS = "DNS Alt Servers";
 		public static final String BCFG_DNS_ALT_SERVERS_SOCKS_ENABLE = "DNS Alt Servers SOCKS Enable";
 		public static final String BCFG_NETWORK_TRANSPORT_ENCRYPTED_REQUIRE = "network.transport.encrypted.require";

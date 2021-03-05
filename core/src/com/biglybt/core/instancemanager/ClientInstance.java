@@ -35,7 +35,7 @@ ClientInstance
 	public InetAddress
 	getInternalAddress();
 
-	public List
+	public List<InetAddress>
 	getInternalAddresses();
 
 	public InetAddress

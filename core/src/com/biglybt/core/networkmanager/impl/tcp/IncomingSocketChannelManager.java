@@ -128,7 +128,8 @@ public class IncomingSocketChannelManager
     		propertyChanged(
     			String		property )
     		{
-    			if ( property == NetworkAdmin.PR_DEFAULT_BIND_ADDRESS ){
+    			if ( 	property == NetworkAdmin.PR_DEFAULT_BIND_ADDRESS ||
+    					property == NetworkAdmin.PR_ADDITIONAL_SERVICE_ADDRESS ){
 
 			        InetAddress[] addresses = NetworkAdmin.getSingleton().getMultiHomedServiceBindAddresses(true);
 
@@ -390,8 +391,8 @@ public class IncomingSocketChannelManager
 				COConfigurationManager.setParameter(port_config_key, tcp_listen_port);
 			}
 
-			if (COConfigurationManager.getBooleanParameter(port_enable_config_key))
-			{
+			if (COConfigurationManager.getBooleanParameter(port_enable_config_key)){
+			
 				last_non_local_connection_time = COConfigurationManager.getLongParameter( "network.tcp.port." + tcp_listen_port + ".last.nonlocal.incoming", 0 );
 
 				if ( last_non_local_connection_time > SystemTime.getCurrentTime()){
@@ -399,8 +400,8 @@ public class IncomingSocketChannelManager
 					last_non_local_connection_time = SystemTime.getCurrentTime();
 				}
 
-				if (serverSelectors.length == 0)
-				{
+				if (serverSelectors.length == 0){
+				
 					InetSocketAddress address;
 					InetAddress[] bindAddresses = getEffectiveBindAddresses();
 
@@ -415,11 +416,12 @@ public class IncomingSocketChannelManager
 						if(!NetworkAdmin.getSingleton().hasIPV6Potential(true) && bindAddress instanceof Inet6Address)
 							continue;
 
-						if (bindAddress != null)
+						if (bindAddress != null){
 							address = new InetSocketAddress(bindAddress, tcp_listen_port);
-						else
+						}else{
 							address = new InetSocketAddress(tcp_listen_port);
-
+						}
+						
 						VirtualServerChannelSelector serverSelector;
 
 						if(bindAddresses.length == 1)
