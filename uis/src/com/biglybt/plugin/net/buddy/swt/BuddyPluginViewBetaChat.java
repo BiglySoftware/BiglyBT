@@ -2868,8 +2868,10 @@ BuddyPluginViewBetaChat
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(component, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
 		Text bubbleTextWidget = bubbleTextBox.getTextWidget();
-		FontUtils.fontToWidgetHeight(bubbleTextWidget);
 		bubbleTextWidget.setMessage(MessageText.getString("Button.search") + "..." );
+		grid_data = new GridData();
+		grid_data.widthHint = 100;
+		bubbleTextBox.getMainWidget().setLayoutData(grid_data);
 		
 		bubbleTextWidget.addModifyListener(
 			(e)->{
