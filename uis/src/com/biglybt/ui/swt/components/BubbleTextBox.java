@@ -466,7 +466,7 @@ public class BubbleTextBox
 		int right = -WIDTH_PADDING;
 		boolean isClearButtonVisible = !textWidget.getText().isEmpty();
 		if (isClearButtonVisible) {
-			right -= WIDTH_CLEAR - (WIDTH_PADDING / 2);
+			right -= (WIDTH_CLEAR + (WIDTH_PADDING / 2));
 		}
 		if (allowRegex) {
 			GC gc = new GC(this.textWidget);
