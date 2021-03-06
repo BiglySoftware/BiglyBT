@@ -141,7 +141,7 @@ public class SWTSkinObjectTextbox
 		updateFont("");
 
 
-		if ((style & SWT.SINGLE) > 0) {
+		if (!doBubble && (style & SWT.SINGLE) > 0) {
 			// If we set a height for a single line textbox, but didn't set the font
 			// size, then force the font size to the widget height.
 			int fixedHeight = properties.getIntValue(sConfigID + ".height", -1);
@@ -215,6 +215,11 @@ public class SWTSkinObjectTextbox
 			// Can't use properties.getPxValue for fonts, because
 			// font.height isn't necessarily in px.
 			String sSize = properties.getStringValue(sPrefix + ".size" + suffix);
+			if (sSize == null && bubbleTextBox != null) {
+				// BubbleTextBox will fit font into cBubble, but (at least on GTK3) we must start at a small font
+				// to prevent textWidget from forcing cBubble larger than needed
+				sSize = "8";
+			}
 			if (sSize != null) {
 				sSize = sSize.trim();
 
