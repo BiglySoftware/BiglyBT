@@ -279,6 +279,7 @@ public class BubbleTextBox
 			boolean textIsBlank = text.length() == 0;
 			validateFilterRegex();
 			if (textWasBlank != textIsBlank) {
+				setupTextWidgetLayoutData();
 				cBubble.redraw();
 			}
 			refilter();
@@ -462,16 +463,22 @@ public class BubbleTextBox
 		FormData fd = new FormData();
 		fd.top = new FormAttachment(cCenterV, 0, SWT.CENTER);
 		fd.left = new FormAttachment(0, 17);
-		int right;
+		int right = -WIDTH_PADDING;
+		boolean isClearButtonVisible = !textWidget.getText().isEmpty();
+		if (isClearButtonVisible) {
+			right -= WIDTH_CLEAR - (WIDTH_PADDING / 2);
+		}
 		if (allowRegex) {
 			GC gc = new GC(this.textWidget);
 			gc.setFont(FONT_REGEX_BUTTON);
 			Point regexTextSize = gc.textExtent(REGEX_BUTTON_TEXT);
 			gc.dispose();
-			right = PADDING_RIGHT_DEF - regexTextSize.x - WIDTH_PADDING
-					- REGEX_BUTTON_PADDING - 1;
-		} else {
-			right = PADDING_RIGHT_DEF;
+			right -= (regexTextSize.x + REGEX_BUTTON_PADDING);
+			if (isClearButtonVisible) {
+				right -= WIDTH_PADDING;
+			} else {
+				right -= (WIDTH_PADDING / 2);
+			}
 		}
 		fd.right = new FormAttachment(100, right);
 		textWidget.setLayoutData(fd);
