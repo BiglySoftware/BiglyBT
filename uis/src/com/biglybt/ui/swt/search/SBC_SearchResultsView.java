@@ -22,7 +22,6 @@
 
 package com.biglybt.ui.swt.search;
 
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -41,7 +40,6 @@ import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.columns.search.ColumnSearchResultSite;
 import com.biglybt.ui.swt.columns.searchsubs.*;
-import com.biglybt.ui.swt.imageloader.ImageLoader.ImageDownloaderListener;
 import com.biglybt.ui.swt.search.SearchResultsTabArea.SearchQuery;
 import com.biglybt.ui.swt.utils.SearchSubsUtils;
 import com.biglybt.ui.swt.views.skin.VuzeMessageBox;
@@ -69,7 +67,6 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
-import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
@@ -122,8 +119,6 @@ SBC_SearchResultsView
 
 	private Composite			table_parent;
 
-
-	private Text txtFilter;
 
 	private final Object filter_lock = new Object();
 
@@ -189,11 +184,6 @@ SBC_SearchResultsView
 					initColumns( core );
 				}
 			});
-
-		SWTSkinObjectTextbox soFilterBox = (SWTSkinObjectTextbox) getSkinObject("filterbox");
-		if (soFilterBox != null) {
-			txtFilter = soFilterBox.getTextControl();
-		}
 
 		if ( vitality_images == null ){
 
@@ -862,7 +852,7 @@ SBC_SearchResultsView
 					}
 
 					if ( tv_subs_results != null) {
-						tv_subs_results.setFilterText("");
+						tv_subs_results.setFilterText("", false);
 					}
 				}
 			});
@@ -1221,8 +1211,9 @@ SBC_SearchResultsView
 		tableManager.setDefaultSortColumnName(TABLE_SR, ColumnSearchSubResultRank.COLUMN_ID);
 
 
-		if (txtFilter != null) {
-			tv_subs_results.enableFilterCheck(txtFilter, this);
+		SWTSkinObjectTextbox soFilterBox = (SWTSkinObjectTextbox) getSkinObject("filterbox");
+		if (soFilterBox != null) {
+			tv_subs_results.enableFilterCheck(soFilterBox.getBubbleTextBox(), this);
 		}
 
 		tv_subs_results.setRowDefaultHeight(COConfigurationManager.getIntParameter( "Search Subs Row Height" ));

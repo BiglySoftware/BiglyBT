@@ -453,4 +453,5 @@ public interface TableView<DATASOURCETYPE>
 
 	void removeExpansionChangeListener(TableExpansionChangeListener listener);
 
+	boolean isTableSelected();
 }

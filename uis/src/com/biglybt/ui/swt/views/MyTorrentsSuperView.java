@@ -18,8 +18,7 @@ package com.biglybt.ui.swt.views;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
@@ -41,6 +40,7 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.DelayedListenerMultiCombiner;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -99,7 +99,7 @@ public class MyTorrentsSuperView
 	private Composite child2;
 
 
-	private final Text txtFilter;
+	private final BubbleTextBox filterBox;
 
 
 	private final Composite cCats;
@@ -115,26 +115,18 @@ public class MyTorrentsSuperView
 
 	private MyTorrentsView viewWhenDeactivated;
 
-  public MyTorrentsSuperView(Text txtFilter, Composite cCats, Object initialDS) {
-  	this.txtFilter 	= txtFilter;
-	this.cCats 		= cCats;
-	this.initialDS	= initialDS;
-	
-		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
-			@Override
-			public void coreRunning(Core core) {
-				Utils.execSWTThread(new AERunnable() {
-					@Override
-					public void runSupport() {
-						TableColumnManager tcManager = TableColumnManager.getInstance();
-						tcManager.addColumns(getCompleteColumns());
-						tcManager.addColumns(getIncompleteColumns());
-					}
-				});
-			}
-		});
-  }
+	public MyTorrentsSuperView(BubbleTextBox filterBox, Composite cCats,
+			Object initialDS) {
+		this.filterBox = filterBox;
+		this.cCats = cCats;
+		this.initialDS = initialDS;
 
+		CoreFactory.addCoreRunningListener(core -> Utils.execSWTThread(() -> {
+			TableColumnManager tcManager = TableColumnManager.getInstance();
+			tcManager.addColumns(getCompleteColumns());
+			tcManager.addColumns(getIncompleteColumns());
+		}));
+	}
 
   public Composite getComposite() {
     return form;
@@ -357,11 +349,13 @@ public class MyTorrentsSuperView
     torrentview = createTorrentView(core,
 				SB_Transfers.getTableIdFromDataSource( TableManager.TABLE_MYTORRENTS_INCOMPLETE, dataSource ), false, getIncompleteColumns(),
 				switch_kids?child2:child1);
+		KeyListener keyListenerTV = filterBox != null ? filterBox.getKeyListener() : null;
 
     seedingview = createTorrentView(core,
     		SB_Transfers.getTableIdFromDataSource( TableManager.TABLE_MYTORRENTS_COMPLETE, dataSource) , true, getCompleteColumns(),
 				switch_kids?child1:child2);
-    
+    KeyListener keyListenerSV = filterBox != null ? filterBox.getKeyListener() : null;
+
     if ( split_horizontally ){
     	
     		// the sub-tabs are shared by both leecher/seeding views so we have to inform them which is
@@ -385,6 +379,31 @@ public class MyTorrentsSuperView
 			});
     }
 
+		if (filterBox != null) {
+			filterBox.setKeyListener(new KeyListener() {
+				@Override
+				public void keyPressed(KeyEvent e) {
+					MyTorrentsView currentView = getCurrentView();
+					if (currentView == seedingview && keyListenerSV != null) {
+						keyListenerSV.keyPressed(e);
+					}
+					if (currentView == torrentview && keyListenerTV != null) {
+						keyListenerTV.keyPressed(e);
+					}
+				}
+
+				@Override
+				public void keyReleased(KeyEvent e) {
+					MyTorrentsView currentView = getCurrentView();
+					if (currentView == seedingview && keyListenerSV != null) {
+						keyListenerSV.keyReleased(e);
+					}
+					if (currentView == torrentview && keyListenerTV != null) {
+						keyListenerTV.keyReleased(e);
+					}
+				}
+			});
+		}
     	// delegate selections from the incomplete view to the sub-tabs owned by the seeding view
 
 		SelectedContentManager.addCurrentlySelectedContentListener(
@@ -474,9 +493,9 @@ public class MyTorrentsSuperView
   private MyTorrentsView getCurrentView() {
     // wrap in a try, since the controls may be disposed
     try {
-      if (torrentview != null && torrentview.isTableFocus()) {
+      if (torrentview != null && torrentview.getTableView().isTableSelected()) {
         lastSelectedView = torrentview;
-      } else if (seedingview != null && seedingview.isTableFocus()) {
+      } else if (seedingview != null &&seedingview.getTableView().isTableSelected()) {
       	lastSelectedView = seedingview;
       }
     } catch (Exception ignore) {/*ignore*/}
@@ -682,7 +701,7 @@ public class MyTorrentsSuperView
 			support_tabs = true;
 		}
 						
-		MyTorrentsView view = new MyTorrentsView( _core, tableID, isSeedingView, columns, txtFilter, cCats, support_tabs  );
+		MyTorrentsView view = new MyTorrentsView( _core, tableID, isSeedingView, columns, filterBox, cCats, support_tabs  );
 
 		try {
 			UISWTViewBuilderCore builder = new UISWTViewBuilderCore(

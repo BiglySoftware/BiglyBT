@@ -20,12 +20,13 @@ package com.biglybt.ui.swt.views.skin;
 
 import com.biglybt.core.Core;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
+
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.views.MyTorrentsView;
 
 import com.biglybt.core.torrent.PlatformTorrentUtils;
@@ -38,12 +39,13 @@ public class MyTorrentsView_Big
 	private final int torrentFilterMode;
 	private int defaultRowHeight;
 
-	public MyTorrentsView_Big(Core _core, int torrentFilterMode, Object dataSource,
-	                          TableColumnCore[] basicItems, Text txtFilter, Composite cCatsTags) {
+	public MyTorrentsView_Big(Core _core, int torrentFilterMode,
+			Object dataSource, TableColumnCore[] basicItems, BubbleTextBox txtFilter,
+			Composite cCatsTags) {
 		super( true );
 		defaultRowHeight = 40;
 		this.torrentFilterMode = torrentFilterMode;
-		this.txtFilter = txtFilter;
+		this.filterBox = txtFilter;
 		this.cCategoriesAndTags = cCatsTags;
 		Class<?> forDataSourceType;
 		switch (torrentFilterMode) {

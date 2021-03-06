@@ -55,6 +55,7 @@ import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import com.biglybt.ui.swt.views.skin.InfoBarUtil;
 import com.biglybt.ui.swt.views.skin.SkinView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -327,8 +328,6 @@ public class SBC_ChatOverview
 
 	TableViewSWT<ChatInstance> tv;
 
-	private Text txtFilter;
-
 	private Composite table_parent;
 
 	private boolean columnsAdded = false;
@@ -592,8 +591,9 @@ public class SBC_ChatOverview
 			tv = TableViewFactory.createTableViewSWT(ChatInstance.class, TABLE_CHAT, TABLE_CHAT,
 					new TableColumnCore[0], ColumnChatName.COLUMN_ID, SWT.MULTI
 							| SWT.FULL_SELECTION | SWT.VIRTUAL);
-			if (txtFilter != null) {
-				tv.enableFilterCheck(txtFilter, this);
+			SWTSkinObjectTextbox soFilterBox = (SWTSkinObjectTextbox) getSkinObject("filterbox");
+			if (soFilterBox != null) {
+				tv.enableFilterCheck(soFilterBox.getBubbleTextBox(), this);
 			}
 			tv.setRowDefaultHeightEM(1);
 
@@ -869,6 +869,6 @@ public class SBC_ChatOverview
 
 	@Override
 	public boolean filterCheck(ChatInstance ds, String filter, boolean regex) {
-		return false;
+		return true;
 	}
 }

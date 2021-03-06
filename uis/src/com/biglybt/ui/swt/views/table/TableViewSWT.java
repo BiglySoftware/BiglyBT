@@ -29,6 +29,8 @@ import org.eclipse.swt.widgets.Text;
 import com.biglybt.pif.ui.tables.TableRowMouseEvent;
 import com.biglybt.pif.ui.tables.TableRowMouseListener;
 import com.biglybt.pif.ui.tables.TableRowRefreshListener;
+
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 
@@ -133,15 +135,15 @@ public interface TableViewSWT<DATASOURCETYPE>
 	String getFilterText();
 
 	/**
-	 * @param filterCheck
-	 *
-	 * @since 4.1.0.9
+	 * @deprecated Remove after 2.6.0.1 (RCM uses it)
 	 */
 	void enableFilterCheck(Text txtFilter, com.biglybt.ui.common.table.TableViewFilterCheck<DATASOURCETYPE> filterCheck);
-	
-	void enableFilterCheck(Text txtFilter, com.biglybt.ui.common.table.TableViewFilterCheck<DATASOURCETYPE> filterCheck, boolean filterSubRows);
 
-	Text getFilterControl();
+	void enableFilterCheck(BubbleTextBox txtFilter, com.biglybt.ui.common.table.TableViewFilterCheck<DATASOURCETYPE> filterCheck);
+	
+	void enableFilterCheck(BubbleTextBox txtFilter, com.biglybt.ui.common.table.TableViewFilterCheck<DATASOURCETYPE> filterCheck, boolean filterSubRows);
+
+	boolean hasFilterControl();
 
 	/**
 	 * @since 4.7.0.1
@@ -155,7 +157,7 @@ public interface TableViewSWT<DATASOURCETYPE>
 	 *
 	 * @since 4.1.0.8
 	 */
-	void setFilterText(String s);
+	void setFilterText(String s, boolean force);
 
 	/**
 	 * @param composite

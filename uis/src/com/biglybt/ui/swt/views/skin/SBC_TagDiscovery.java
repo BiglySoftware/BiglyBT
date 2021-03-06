@@ -93,8 +93,6 @@ public class SBC_TagDiscovery
 
 	TableViewSWT<TagDiscovery> tv;
 
-	private Text txtFilter;
-
 	private Composite table_parent;
 
 	private boolean columnsAdded = false;
@@ -524,9 +522,13 @@ public class SBC_TagDiscovery
 			tv = TableViewFactory.createTableViewSWT(TagDiscovery.class,
 					TABLE_TAGDISCOVERY, TABLE_TAGDISCOVERY, new TableColumnCore[0],
 					ColumnTagName.COLUMN_ID, SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
-			if (txtFilter != null) {
-				tv.enableFilterCheck(txtFilter, this);
+
+			SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) getSkinObject(
+				"filterbox");
+			if (soFilter != null) {
+				tv.enableFilterCheck(soFilter.getBubbleTextBox(), this);
 			}
+
 			tv.setRowDefaultHeightEM(1);
 
 			table_parent = new Composite(control, SWT.BORDER);
@@ -626,7 +628,7 @@ public class SBC_TagDiscovery
 	// @see TableViewFilterCheck#filterCheck(java.lang.Object, java.lang.String, boolean)
 	@Override
 	public boolean filterCheck(TagDiscovery ds, String filter, boolean regex) {
-		return false;
+		return true;
 	}
 
 }

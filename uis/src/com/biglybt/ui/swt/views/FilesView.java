@@ -66,7 +66,6 @@ import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
-import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.file.FileInfoView;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -304,31 +303,30 @@ public class FilesView
 		lblHeader = new BufferedLabel(cTop, SWT.CENTER | ( Constants.isLinux?0: SWT.DOUBLE_BUFFERED));
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
-		Text bubbleTextWidget = bubbleTextBox.getTextWidget();
-		FontUtils.fontToWidgetHeight(bubbleTextWidget);
-		bubbleTextWidget.setMessage(MessageText.getString("TorrentDetailsView.filter"));
+		Composite mainBubbleWidget = bubbleTextBox.getMainWidget();
+		bubbleTextBox.setMessage(MessageText.getString("TorrentDetailsView.filter"));
 
 		FormData fd = Utils.getFilledFormData();
 		fd.left = null;
-		bubbleTextBox.getParent().setLayoutData(fd);
+		mainBubbleWidget.setLayoutData(fd);
 
 		fd = new FormData();
-		fd.top = new FormAttachment(bubbleTextBox.getParent(), 10, SWT.CENTER);
+		fd.top = new FormAttachment(mainBubbleWidget, 10, SWT.CENTER);
 		fd.left = new FormAttachment(0, 0);
 		btnShowDND.setLayoutData(fd);
 
 		fd = new FormData();
-		fd.top = new FormAttachment(bubbleTextBox.getParent(), 10, SWT.CENTER);
+		fd.top = new FormAttachment(mainBubbleWidget, 10, SWT.CENTER);
 		fd.left = new FormAttachment(btnShowDND, 10);
 		btnTreeView.setLayoutData(fd);
 		
 		fd = new FormData();
-		fd.top = new FormAttachment(bubbleTextBox.getParent(), 10, SWT.CENTER);
+		fd.top = new FormAttachment(mainBubbleWidget, 10, SWT.CENTER);
 		fd.left = new FormAttachment(btnTreeView, 10);
-		fd.right = new FormAttachment(bubbleTextBox.getParent(), -10);
+		fd.right = new FormAttachment(mainBubbleWidget, -10);
 		lblHeader.setLayoutData(fd);
 
-		tv.enableFilterCheck(bubbleTextWidget, this, true );
+		tv.enableFilterCheck(bubbleTextBox, this, true );
 
 		Composite tableParent = new Composite(parent, SWT.NONE);
 
@@ -616,7 +614,7 @@ public class FilesView
 			return( true );
 		}
 
-		if ( tv.getFilterControl() == null ){
+		if ( !tv.hasFilterControl() ){
 
 				// view has no visible filter control so ignore any current filter as the
 				// user's going to get confused...
@@ -631,25 +629,34 @@ public class FilesView
 			return( true );
 		}
 		
+		boolean filterOnPath = filter.startsWith("p:");
+		if (filterOnPath) {
+			filter = filter.substring(2);
+		}
+		
 		try {			
 			File file = ds.getFile(true);
 
 			String name;
 			
-			if ( filter.startsWith( File.separator )){
-				
-				filter = filter.substring( 1 );
-				
-				if ( filter.isEmpty()){
-					
-					return( true );
-				}
-				
+			if (filterOnPath) {
 				name = file.getAbsolutePath();
-				
-			}else{
-				
-				name = file.getName();
+			} else {
+				if ( filter.startsWith( File.separator )){
+					
+					filter = filter.substring( 1 );
+					
+					if ( filter.isEmpty()){
+						
+						return( true );
+					}
+					
+					name = file.getAbsolutePath();
+					
+				}else{
+					
+					name = file.getName();
+				}
 			}
 
 			String s = regex ? filter : "\\Q" + filter.replaceAll("[|;]", "\\\\E|\\\\Q") + "\\E";

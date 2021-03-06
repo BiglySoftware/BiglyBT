@@ -21,17 +21,17 @@ package com.biglybt.ui.swt.views.table.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
 
-import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
@@ -41,7 +41,6 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
@@ -60,27 +59,7 @@ public class TableViewSWT_Common
 	private long lCancelSelectionTriggeredOn = -1;
 	private long lastSelectionTriggeredOn = -1;
 
-	private static final int ASYOUTYPE_MODE_FIND = 0;
-	private static final int ASYOUTYPE_MODE_FILTER = 1;
-	private static final int ASYOUTYPE_MODE = ASYOUTYPE_MODE_FILTER;
 	private static final int ASYOUTYPE_UPDATEDELAY = 300;
-
-	private static Color COLOR_FILTER_REGEX;
-	private static Color COLOR_FILTER_NO_REGEX;
-	
-	static{
-		COConfigurationManager.addWeakParameterListener((n)->{
-			
-			COLOR_FILTER_NO_REGEX 	= Utils.getConfigColor( "table.filter.active.colour", Colors.fadedBlue );
-			COLOR_FILTER_REGEX 		= Utils.getConfigColor( "table.filter.regex.colour", Colors.fadedYellow );
-			
-		}, true, "table.filter.active.colour", "table.filter.regex.colour" );	
-	}
-	
-	
-	private Font FONT_NO_REGEX;
-	private Font FONT_REGEX;
-	private Font FONT_REGEX_ERROR;
 
 	private List<TableViewSWTMenuFillListener> listenersMenuFill = new ArrayList<>(
 			1);
@@ -468,7 +447,9 @@ public class TableViewSWT_Common
 		//       method.
 
 		TableViewSWTFilter<?> filter = tv.getSWTFilter();
-		if (event.widget != null && filter != null && event.widget == filter.widget) {
+		boolean inFilterBox = filter != null && filter.filterBox != null
+				&& filter.filterBox.isOurWidget(event.widget);
+		if (inFilterBox) {
 			if (event.character == SWT.DEL || event.character == SWT.BS) {
 				handleSearchKeyPress(event);
 				return;
@@ -516,14 +497,11 @@ public class TableViewSWT_Common
 		if (event.stateMask == SWT.MOD1) {
 			switch (key) {
 				case 'a': { // CTRL+A select all Torrents
-					if (filter == null || event.widget != filter.widget) {
+					if (filter == null || !inFilterBox) {
 						if (!tv.isSingleSelection()) {
 							tv.selectAll();
 							event.doit = false;
 						}
-					} else {
-						filter.widget.selectAll();
-						event.doit = false;
 					}
 					break;
 				}
@@ -551,7 +529,7 @@ public class TableViewSWT_Common
 					tv.sortRows(true);
 					break;
 				case 'v':
-					if ( filter == null || event.widget != filter.widget ){
+					if ( filter == null || !inFilterBox){
 						
 						Clipboard clipboard = new Clipboard(Display.getDefault());
 						
@@ -573,7 +551,7 @@ public class TableViewSWT_Common
 		}
 
 		if (event.stateMask == 0) {
-			if (filter != null && filter.widget == event.widget) {
+			if (filter != null && inFilterBox) {
 				if (event.keyCode == SWT.ARROW_DOWN) {
 					tv.requestFocus( 2 );
 						// for detailed library views we want to give the seeding section a chance to grab
@@ -605,17 +583,12 @@ public class TableViewSWT_Common
 
 	private void handleSearchKeyPress(KeyEvent e) {
 		TableViewSWTFilter<?> filter = tv.getSWTFilter();
-		if (filter == null || e.widget == filter.widget) {
+		if (filter == null || (filter.filterBox != null
+				&& filter.filterBox.isOurWidget(e.widget))) {
 			return;
 		}
 
 		String newText = null;
-
-		// normal character: jump to next item with a name beginning with this character
-		if (ASYOUTYPE_MODE == ASYOUTYPE_MODE_FIND) {
-			if (System.currentTimeMillis() - filter.lastFilterTime > 3000)
-				newText = "";
-		}
 
 		if (e.keyCode == SWT.BS) {
 			if (e.stateMask == SWT.CONTROL) {
@@ -631,148 +604,24 @@ public class TableViewSWT_Common
 			return;
 		}
 
-		if (ASYOUTYPE_MODE == ASYOUTYPE_MODE_FILTER) {
-			if (filter != null && filter.widget != null && !filter.widget.isDisposed()) {
-				filter.widget.setFocus();
-			}
-			tv.setFilterText(newText);
-//		} else {
-//			TableCellCore[] cells = getColumnCells("name");
-//
-//			//System.out.println(sLastSearch);
-//
-//			Arrays.sort(cells, TableCellImpl.TEXT_COMPARATOR);
-//			int index = Arrays.binarySearch(cells, filter.text,
-//					TableCellImpl.TEXT_COMPARATOR);
-//			if (index < 0) {
-//
-//				int iEarliest = -1;
-//				String s = filter.regex ? filter.text : "\\Q" + filter.text + "\\E";
-//				Pattern pattern = Pattern.compile(s, Pattern.CASE_INSENSITIVE);
-//				for (int i = 0; i < cells.length; i++) {
-//					Matcher m = pattern.matcher(cells[i].getText());
-//					if (m.find() && (m.start() < iEarliest || iEarliest == -1)) {
-//						iEarliest = m.start();
-//						index = i;
-//					}
-//				}
-//
-//				if (index < 0)
-//					// Insertion Point (best guess)
-//					index = -1 * index - 1;
-//			}
-//
-//			if (index >= 0) {
-//				if (index >= cells.length)
-//					index = cells.length - 1;
-//				TableRowCore row = cells[index].getTableRowCore();
-//				int iTableIndex = row.getIndex();
-//				if (iTableIndex >= 0) {
-//					setSelectedRows(new TableRowCore[] {
-//						row
-//					});
-//				}
-//			}
-//			filter.lastFilterTime = System.currentTimeMillis();
+		if (filter.filterBox != null && !filter.filterBox.isDisposed()) {
+			filter.filterBox.setFocus();
 		}
+		tv.setFilterText(newText, false);
 		e.doit = false;
 	}
 
-	public void
-	validateFilterRegex()
-	{
-		TableViewSWTFilter<?> filter = tv.getSWTFilter();
-		
-		Text widget = filter.widget;
-				
-		Color old_bg = (Color)widget.getData( "TVSWTC:filter.bg" );
-		if ( old_bg == null ){
-			old_bg = widget.getBackground();
-			widget.setData( "TVSWTC:filter.bg", old_bg);
-		}
-		Color old_fg = (Color)widget.getData( "TVSWTC:filter.fg" );
-		if ( old_fg == null ){
-			old_fg = widget.getForeground();
-			widget.setData( "TVSWTC:filter.fg", old_fg);
-		}
-		if (filter.regex) {
-			if ( FONT_NO_REGEX == null ){
-				Font font = widget.getFont();
-				
-				FontData[] fd = font.getFontData();
-				for (int i = 0; i < fd.length; i++) {
-					fd[i].setStyle(SWT.NORMAL);
-				}
-				FONT_NO_REGEX = new Font( widget.getDisplay(), fd );
-				
-				fd = FONT_NO_REGEX.getFontData();
-				for (int i = 0; i < fd.length; i++) {
-					fd[i].setStyle(SWT.BOLD);
-				}
-				FONT_REGEX = new Font( widget.getDisplay(), fd );
-				
-				for (int i = 0; i < fd.length; i++) {
-					fd[i].setStyle(SWT.ITALIC);
-				}
-				FONT_REGEX_ERROR = new Font( widget.getDisplay(), fd );
-				
-				widget.addDisposeListener(
-					(e)->{
-						FONT_NO_REGEX.dispose();
-						FONT_REGEX.dispose();
-						FONT_REGEX_ERROR.dispose();
-					});
-			}
-			
-
-			try {
-				Pattern.compile(filter.nextText, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-				
-				widget.setBackground(COLOR_FILTER_REGEX);
-				widget.setForeground( old_fg );
-				
-				widget.setFont( FONT_REGEX );
-
-				if ( filter.nextText.isEmpty()){
-					Messages.setLanguageTooltip(widget,"MyTorrentsView.filter.tooltip");
-				}else{
-					Utils.setTT(widget, null); // prevent TT from appearing as you type into field
-				}
-			} catch (Exception e) {
-				widget.setBackground(Colors.colorErrorBG);
-				widget.setForeground( old_fg );
-				Utils.setTT(widget,e.getMessage());
-				widget.setFont( FONT_REGEX_ERROR );
-			}
-		} else {
-			Color bg = filter.nextText==null||filter.nextText.isEmpty()?old_bg:COLOR_FILTER_NO_REGEX;
-			Color fg = bg==COLOR_FILTER_NO_REGEX?Colors.getInstance().getReadableColor(bg):old_bg;
-			widget.setBackground( bg );
-			widget.setForeground( fg );
-			if ( filter.nextText.isEmpty()){
-				Messages.setLanguageTooltip(widget,"MyTorrentsView.filter.tooltip");
-			}else{
-				Utils.setTT(widget, null); // prevent TT from appearing as you type into field
-			}
-			if ( FONT_NO_REGEX != null ){
-				widget.setFont( FONT_NO_REGEX );
-			}
-		}
-	}
-
-	public void setFilterText(String s) {
+	public void setFilterText(String s, boolean force) {
 		TableViewSWTFilter<?> filter = tv.getSWTFilter();
 		if (filter == null) {
 			return;
 		}
 		filter.nextText = s;
-		if (filter != null && filter.widget != null && !filter.widget.isDisposed()) {
-			if (!filter.nextText.equals(filter.widget.getText())) {
-				filter.widget.setText(filter.nextText);
-				filter.widget.setSelection(filter.nextText.length());
+		if (filter.filterBox != null && !filter.filterBox.isDisposed()) {
+			if (!filter.nextText.equals(filter.filterBox.getText())) {
+				filter.filterBox.setText(filter.nextText);
+				filter.filterBox.setSelection(filter.nextText.length());
 			}
-
-			validateFilterRegex();
 		}
 
 		if (filter.eventUpdate != null) {
@@ -793,7 +642,8 @@ public class TableViewSWT_Common
 							return;
 						}
 						filter.eventUpdate = null;
-						if (filter.nextText != null && !filter.nextText.equals(filter.text)) {
+						if (filter.nextText != null
+								&& (force || !filter.nextText.equals(filter.text))) {
 							filter.text = filter.nextText;
 							filter.checker.filterSet(filter.text);
 							tv.refilter();

@@ -165,7 +165,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
 			BubbleTextBox bubbleTextBox = new BubbleTextBox(cLeftSide, SWT.BORDER
 					| SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
 			final Text txtFilter = bubbleTextBox.getTextWidget();
-			Composite cFilterArea = bubbleTextBox.getParent();
+			Composite cFilterArea = bubbleTextBox.getMainWidget();
 
       txtFilter.setMessage(MessageText.getString("ConfigView.filter"));
       txtFilter.addModifyListener(e -> filterTree(txtFilter.getText()));

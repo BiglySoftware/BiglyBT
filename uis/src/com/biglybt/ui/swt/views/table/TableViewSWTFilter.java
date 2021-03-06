@@ -18,15 +18,9 @@
 
 package com.biglybt.ui.swt.views.table;
 
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.widgets.Text;
-
 import com.biglybt.ui.common.table.impl.TableViewImpl.filter;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 
 public class TableViewSWTFilter<DATASOURCETYPE> extends filter {
-	public Text widget = null;
-
-	public ModifyListener widgetModifyListener;
-	public KeyListener widgetKeyListener;
+	public BubbleTextBox filterBox = null;
 }

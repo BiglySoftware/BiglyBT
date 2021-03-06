@@ -95,8 +95,6 @@ SBC_SubscriptionResultsView
 	private Composite			table_parent;
 
 
-	private Text txtFilter;
-
 	private final Object filter_lock = new Object();
 
 
@@ -197,11 +195,6 @@ SBC_SubscriptionResultsView
 						}
 					});
 			}
-		}
-
-		SWTSkinObjectTextbox soFilterBox = (SWTSkinObjectTextbox) getSkinObject("filterbox");
-		if (soFilterBox != null) {
-			txtFilter = soFilterBox.getTextControl();
 		}
 
 		final SWTSkinObject soFilterArea = getSkinObject("filterarea");
@@ -1064,9 +1057,10 @@ SBC_SubscriptionResultsView
 				tcc.setDefaultSortAscending( true );
 			}
 		}
-		
-		if (txtFilter != null) {
-			tv_subs_results.enableFilterCheck(txtFilter, this);
+
+		SWTSkinObjectTextbox soFilterBox = (SWTSkinObjectTextbox) getSkinObject("filterbox");
+		if (soFilterBox != null) {
+			tv_subs_results.enableFilterCheck(soFilterBox.getBubbleTextBox(), this);
 		}
 
 		tv_subs_results.setRowDefaultHeight(COConfigurationManager.getIntParameter( "Search Subs Row Height" ));

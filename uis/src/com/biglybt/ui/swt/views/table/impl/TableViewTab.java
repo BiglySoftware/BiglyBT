@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEDiagnosticsEvidenceGenerator;
@@ -31,6 +30,7 @@ import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -50,7 +50,7 @@ public abstract class TableViewTab<DATASOURCETYPE>
 	private final String propertiesPrefix;
 	private Composite composite;
 	private UISWTView swtView;
-	private Text filterTextControl;
+	private BubbleTextBox filterTextControl;
 	private TableViewFilterCheckEx<DATASOURCETYPE> filterCheck;
 
 
@@ -234,7 +234,7 @@ public abstract class TableViewTab<DATASOURCETYPE>
 		return swtView;
 	}
 
-	public void enableFilterCheck(Text textControl,
+	public void enableFilterCheck(BubbleTextBox textControl,
 			TableViewFilterCheckEx<DATASOURCETYPE> filter_check_handler) {
 		if (tv != null) {
 			tv.enableFilterCheck(textControl, filter_check_handler);

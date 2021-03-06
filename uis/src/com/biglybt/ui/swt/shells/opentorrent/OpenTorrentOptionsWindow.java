@@ -5402,9 +5402,7 @@ public class OpenTorrentOptionsWindow
 
 				soFilesFilter.setVisible( true );
 
-				Text text = soFilesFilter.getTextControl();
-
-				tvFiles.enableFilterCheck(text, this);
+				tvFiles.enableFilterCheck(soFilesFilter.getBubbleTextBox(), this);
 
 			}else{
 				if ( soFilesFilter != null ){

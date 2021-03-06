@@ -2510,6 +2510,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		this.provideIndexesOnRemove = provideIndexesOnRemove;
 	}
 
+	@Override
 	public boolean isTableSelected() {
 		return SelectedContentManager.getCurrentlySelectedTableView() == this;
 	}

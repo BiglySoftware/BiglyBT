@@ -35,22 +35,17 @@ import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.columns.dlhistory.*;
 import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.Text;
-import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManagerEvent;
 import com.biglybt.core.history.DownloadHistory;
 import com.biglybt.core.history.DownloadHistoryEvent;
 import com.biglybt.core.history.DownloadHistoryListener;
 import com.biglybt.core.history.DownloadHistoryManager;
-import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.HashWrapper;
@@ -87,8 +82,6 @@ public class SBC_DownloadHistoryView
 			(DownloadHistoryManager) CoreFactory.getSingleton().getGlobalManager().getDownloadHistoryManager();
 
 	private TableViewSWT<DownloadHistory> tv;
-
-	private Text txtFilter;
 
 	private Composite table_parent;
 
@@ -264,13 +257,6 @@ public class SBC_DownloadHistoryView
 	{
 		super.skinObjectShown( skinObject, params );
 
-		SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox)getSkinObject( "filterbox" );
-
-		if ( soFilter != null ){
-
-			txtFilter = soFilter.getTextControl();
-		}
-
 		SWTSkinObject so_list = getSkinObject( "dl-history-list" );
 
 		if ( so_list != null ){
@@ -328,9 +314,10 @@ public class SBC_DownloadHistoryView
 					ColumnDLHistoryName.COLUMN_ID,
 					SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
-			if ( txtFilter != null){
-
-				tv.enableFilterCheck( txtFilter, this );
+			SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) getSkinObject(
+				"filterbox");
+			if (soFilter != null) {
+				tv.enableFilterCheck(soFilter.getBubbleTextBox(), this);
 			}
 
 			tv.setRowDefaultHeightEM(1);

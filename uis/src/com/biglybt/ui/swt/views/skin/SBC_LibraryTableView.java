@@ -52,6 +52,7 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
@@ -138,7 +139,7 @@ public class SBC_LibraryTableView
 
 		SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) skin.getSkinObject(
 				"library-filter", soParent.getParent());
-		Text txtFilter = soFilter == null ? null : soFilter.getTextControl();
+		BubbleTextBox txtFilter = soFilter == null ? null : soFilter.getBubbleTextBox();
 
 		SWTSkinObjectContainer soCats = (SWTSkinObjectContainer) skin.getSkinObject(
 				"library-categories", soParent.getParent());

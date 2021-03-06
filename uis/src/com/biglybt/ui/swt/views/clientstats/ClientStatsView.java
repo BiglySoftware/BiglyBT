@@ -365,9 +365,9 @@ public class ClientStatsView
 		fd = Utils.getFilledFormData();
 		fd.width = 150;
 		fd.left = null;
-		bubbleTextBox.getParent().setLayoutData(fd);
+		bubbleTextBox.getMainWidget().setLayoutData(fd);
 		
-		tv.enableFilterCheck(bubbleTextWidget, this, true );
+		tv.enableFilterCheck(bubbleTextBox, this, true );
 
 		Composite tableParent = new Composite(parent, SWT.NONE);
 

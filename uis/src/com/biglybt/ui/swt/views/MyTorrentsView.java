@@ -64,6 +64,7 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.*;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
@@ -71,12 +72,7 @@ import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
-import com.biglybt.ui.swt.shells.GCStringPrinter;
-import com.biglybt.ui.swt.shells.GCStringPrinter.URLInfo;
-import com.biglybt.ui.swt.utils.ColorCache;
-import com.biglybt.ui.swt.utils.DragDropUtils;
-import com.biglybt.ui.swt.utils.FontUtils;
-import com.biglybt.ui.swt.utils.SWTRunnable;
+import com.biglybt.ui.swt.utils.*;
 import com.biglybt.ui.swt.views.piece.PieceInfoView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
@@ -192,7 +188,7 @@ public class MyTorrentsView
   private Composite cTablePanel;
   private Font fontButton = null;
   protected Composite cCategoriesAndTags;
-  protected Text txtFilter = null;
+  protected BubbleTextBox filterBox = null;
   private Menu	tableHeaderMenu = null;
   private TimerEventPeriodic	txtFilterUpdateEvent;
 
@@ -211,7 +207,6 @@ public class MyTorrentsView
 	protected boolean viewActive;
 	private TableSelectionListener defaultSelectedListener;
 
-	private Composite filterParent;
 	private ViewUtils.ViewTitleExtraInfo	vtxi;
 	
 	protected boolean neverShowTagButtons;
@@ -272,12 +267,13 @@ public class MyTorrentsView
   		String				tableID,
   		boolean 			isSeedingView,
   		TableColumnCore[]	basicItems,
-  		Text 				txtFilter,
+		  BubbleTextBox 				filterBox,
   		Composite 			cCatsAndTags,
   		boolean				supportsTabs )
   {
 		super("MyTorrentsView");
-		this.txtFilter = txtFilter;
+		this.filterBox = filterBox;
+		filterBox.setTooltip(MessageText.getString("MyTorrentsView.filter.tooltip"));
 		this.cCategoriesAndTags = cCatsAndTags;
 		this.supportsTabs = supportsTabs;
 		init(core, tableID, isSeedingView
@@ -440,23 +436,6 @@ public class MyTorrentsView
 				}
 			}
 		}, true);
-
-		if (txtFilter != null) {
-			filterParent = txtFilter.getParent();
-			if (Constants.isWindows) {
-				// dirty hack because window's filter box is within a bubble of it's own
-				filterParent = filterParent.getParent();
-			}
-
-			Menu menuFilterHeader = getHeaderMenu(txtFilter);
-			filterParent.setMenu( menuFilterHeader );
-			Control[] children = filterParent.getChildren();
-			for (Control control : children) {
-				if (control != txtFilter) {
-					control.setMenu(menuFilterHeader);
-				}
-			}
-		}
 	}
 
 	@Override
@@ -473,17 +452,29 @@ public class MyTorrentsView
 
   protected void 
   tableViewInitialized() 
-  {
-  	tv.addKeyListener(this);
+	{
+		tv.addKeyListener(this);
 
-    createTabs();
+		createTabs();
 
-    if (txtFilter == null){
-    	
-    	tv.enableFilterCheck(null, this);
-    	
-    }else if ( filterParent != null ){
-			
+		if (filterBox == null) {
+
+			tv.enableFilterCheck((BubbleTextBox) null, this);
+
+		} else {
+
+			Composite mainWidget = filterBox.getMainWidget();
+			Composite filterParent = mainWidget.getParent();
+
+			Menu menuFilterHeader = getHeaderMenu();
+			filterParent.setMenu(menuFilterHeader);
+			Control[] children = filterParent.getChildren();
+			for (Control control : children) {
+				if (control != mainWidget) {
+					control.setMenu(menuFilterHeader);
+				}
+			}
+
     	Composite comp = filterParent;
     	
     	Object x = null;
@@ -595,15 +586,15 @@ public class MyTorrentsView
   }
 
   private Menu
-  getHeaderMenu(
-		Control		control )
+  getHeaderMenu()
   {
 	  if ( tableHeaderMenu != null ){
 
 		  return( tableHeaderMenu );
 	  }
 
-	  tableHeaderMenu = new Menu(control.getShell(), SWT.POP_UP );
+	  Composite composite = tv.getComposite();
+	  tableHeaderMenu = new Menu(composite.getShell(), SWT.POP_UP );
 
 	  MenuItem	showItem = new MenuItem( tableHeaderMenu, SWT.CASCADE );
 	  Messages.setLanguageText( showItem, "ConfigView.label.ui_switcher_button" );
@@ -675,11 +666,12 @@ public class MyTorrentsView
 	  MenuItem searchActive = new MenuItem( searchMenu, SWT.PUSH );
 	  Messages.setLanguageText(searchActive, "dialog.active.color" );
 	  searchActive.addListener( SWT.Selection, (ev)->{
-		  RGB res = Utils.showColorDialog( control, Utils.getConfigColor( "table.filter.active.colour", Colors.fadedBlue ).getRGB());
+		  Shell shell = getComposite().getShell();
+		  RGB res = Utils.showColorDialog( shell, Utils.getConfigColor( "table.filter.active.colour", Colors.fadedBlue ).getRGB());
 
 		  if ( res != null ){
 
-			  Utils.setConfigColor( "table.filter.active.colour", ColorCache.getColor( control.getShell().getDisplay(), res ) );
+			  Utils.setConfigColor( "table.filter.active.colour", ColorCache.getColor( shell.getDisplay(), res ) );
 		  }
 	  });
 	  
@@ -963,6 +955,7 @@ public class MyTorrentsView
 			cCategoriesAndTags.setLayoutData(gridData);
 			cCategoriesAndTags.moveAbove(null);
 
+			Composite filterParent = filterBox == null ? null : filterBox.getMainWidget().getParent();
 			if ( filterParent != null ){
 					// inherit the background of the search filter - best that can be done to make things look ok
 				Color background = filterParent.getBackground();
@@ -990,8 +983,7 @@ public class MyTorrentsView
 		rowLayout.spacing = 3;
 		rowLayout.wrap = true;
 
-	    Menu menu = getHeaderMenu(cTableParentPanel);
-	    cTableParentPanel.setMenu( menu );
+		cTableParentPanel.setMenu(getHeaderMenu());
 
 	    if ( Constants.isOSX ){
 
@@ -1020,7 +1012,7 @@ public class MyTorrentsView
 					});
 	    }
 
-	    tv.enableFilterCheck(txtFilter, this);
+		tv.enableFilterCheck(filterBox, this);
 	}
 
   /**
@@ -1531,6 +1523,7 @@ public class MyTorrentsView
 
 	private void swt_viewChanged(final TableView<DownloadManager> view) {
 
+		Composite filterParent = filterBox == null ? null : filterBox.getMainWidget().getParent();
 		if ( filterParent != null && !filterParent.isDisposed()){
 
 			if ( vtxi != null){
@@ -2303,7 +2296,7 @@ public class MyTorrentsView
 		if (e.stateMask == SWT.MOD1) {
 			switch (key) {
 				case 'a': // CTRL+A select all Torrents
-					if (e.widget != txtFilter) {
+					if (filterBox == null || !filterBox.isOurWidget(e.widget)) {
 						tv.selectAll();
 						e.doit = false;
 					}
@@ -2369,20 +2362,12 @@ public class MyTorrentsView
 
 
 		// DEL remove selected Torrents
-		if (e.stateMask == 0 && e.keyCode == SWT.DEL && e.widget != txtFilter) {
-			Utils.getOffOfSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-					TorrentUtil.removeDataSources(tv.getSelectedDataSources().toArray());
-				}
-			});
+		if (e.stateMask == 0 && e.keyCode == SWT.DEL && (filterBox == null
+				|| !filterBox.isOurWidget(e.widget))) {
+			Utils.getOffOfSWTThread(() -> TorrentUtil.removeDataSources(
+					tv.getSelectedDataSources().toArray()));
 			e.doit = false;
 			return;
-		}
-
-		if (e.keyCode != SWT.BS) {
-			if ((e.stateMask & (~SWT.SHIFT)) != 0 || e.character < 32)
-				return;
 		}
 	}
 

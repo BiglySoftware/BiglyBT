@@ -36,7 +36,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
@@ -52,6 +51,8 @@ import com.biglybt.ui.swt.utils.FontUtils;
 public class SWTSkinObjectTextbox
 	extends SWTSkinObjectBasic
 {
+	private BubbleTextBox bubbleTextBox;
+
 	private Text textWidget;
 
 	private Composite cBubble;
@@ -89,10 +90,8 @@ public class SWTSkinObjectTextbox
 			}
 			if (Arrays.binarySearch(styles, "search") >= 0) {
 				style |= SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL;
-				if (Constants.isWindows || Utils.isGTK3) {
-					// GTK3's TextBox with search icon and cancel icon can't have 0 width (invisible without taking up layout space)
-					doBubble = true;
-				}
+				// Our bubble can do search icon, cancel, and regex icon
+				doBubble = true;
 			}
 		} else {
 			style |= SWT.SINGLE;
@@ -105,9 +104,9 @@ public class SWTSkinObjectTextbox
 		if (!doBubble) {
 			textWidget = new Text(createOn, style);
 		} else {
-			BubbleTextBox bubbleTextBox = new BubbleTextBox(createOn, style);
+			bubbleTextBox = new BubbleTextBox(createOn, style);
 			textWidget = bubbleTextBox.getTextWidget();
-			cBubble = bubbleTextBox.getParent();
+			cBubble = bubbleTextBox.getMainWidget();
 		}
 
 		textWidget.addListener(SWT.KeyDown, event -> {
@@ -275,5 +274,9 @@ public class SWTSkinObjectTextbox
 				textWidget.setData("Font" + suffix, textWidgetFont);
 			}
 		}
+	}
+
+	public BubbleTextBox getBubbleTextBox() {
+		return bubbleTextBox;
 	}
 }

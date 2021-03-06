@@ -45,6 +45,8 @@ import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.TextWithHistory;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BubbleTextBox;
+import com.biglybt.ui.swt.components.BubbleTextBox.BubbleTextBoxChangeListener;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -76,7 +78,7 @@ import com.biglybt.pif.ui.tables.TableRowMouseListener;
 public class TableViewPainted
 	extends TableViewImpl<Object>
 	implements ParameterListener, TableViewSWT<Object>, ObfuscateImage,
-	MessageTextListener
+	MessageTextListener, BubbleTextBoxChangeListener
 {
 	private static final boolean hasGetScrollBarMode = SWT.getVersion() >= 3821;
 
@@ -354,7 +356,7 @@ public class TableViewPainted
 				if ( event.keyCode == SWT.ESC ){
 					TableViewSWTFilter<?> filter = getSWTFilter();
 					if ( filter != null ){
-						filter.widget.setText( "" );
+						filter.filterBox.setText( "" );
 					}
 				}
 				if ( getComposite().isDisposed()){
@@ -1938,31 +1940,38 @@ public class TableViewPainted
 	}
 
 	@Override
+	public void enableFilterCheck(Text txtFilter, TableViewFilterCheck<Object> filterCheck) {
+		Object o = txtFilter.getData("BubbleTextBox");
+		if (o instanceof BubbleTextBox) {
+			enableFilterCheck((BubbleTextBox) o, filterCheck, false);
+		}
+	}
+
+	@Override
 	public void 
-	enableFilterCheck(Text txtFilter, TableViewFilterCheck<Object> filterCheck) {
+	enableFilterCheck(BubbleTextBox txtFilter, TableViewFilterCheck<Object> filterCheck) {
 		enableFilterCheck( txtFilter, filterCheck, false );
 	}
 	@Override
 	public void 
 	enableFilterCheck(
-		Text txtFilter,
-	    TableViewFilterCheck<Object> filterCheck,
-	    boolean						 filterSubRows ) 
+		BubbleTextBox filterBox,
+		TableViewFilterCheck<Object> filterCheck,
+		boolean						 filterSubRows ) 
 	{
 		this.filterSubRows = filterSubRows;
-		
+
 		TableViewSWTFilter<?> filter = getSWTFilter();
 		if (filter != null) {
-			if (filter.widget != null && !filter.widget.isDisposed()) {
-				filter.widget.removeKeyListener(tvSWTCommon);
-				filter.widget.removeKeyListener(filter.widgetKeyListener);
-				filter.widget.removeModifyListener(filter.widgetModifyListener);
+			if (filter.filterBox != null && !filter.filterBox.isDisposed()) {
+				filter.filterBox.setKeyListener(null);
+				filter.filterBox.removeBubbleTextBoxChangeListenener(this);
 			}
 		} else {
 			this.filter = filter = new TableViewSWTFilter();
 		}
-		filter.widget = txtFilter;
-		if (txtFilter != null) {
+		filter.filterBox = filterBox;
+		if (filterBox != null) {
 			
 			Class<?> cla = getDataSourceType();
 			
@@ -1978,61 +1987,29 @@ public class TableViewPainted
 			
 				// must create this before adding other listeners so it gets priority over key events
 			
-			TextWithHistory twh = new TextWithHistory( "tableviewpainted.search" + historyKey, "table.filter.history", txtFilter );
+			TextWithHistory twh = new TextWithHistory(
+					"tableviewpainted.search" + historyKey, "table.filter.history",
+					filterBox.getTextWidget());
 			
 				// disable as interferes with key-down into search results feature 
 			
 			twh.setKeDownShowsHistory( false );
 			
-			txtFilter.addListener( SWT.FocusOut, (ev)->{
-				String text = txtFilter.getText().trim();
+			filterBox.getTextWidget().addListener( SWT.FocusOut, (ev)->{
+				String text = filterBox.getText().trim();
 				if ( !text.isEmpty()){
 					twh.addHistory( text );
 				}
 			});
 			
-			txtFilter.addKeyListener(tvSWTCommon);
+			filterBox.setKeyListener(tvSWTCommon);
 
-			filter.widgetModifyListener = new ModifyListener() {
-				@Override
-				public void modifyText(ModifyEvent e) {
-					setFilterText(((Text) e.widget).getText());
-				}
-			};
-			txtFilter.addModifyListener(filter.widgetModifyListener);
-			
-			final TableViewSWTFilter f_filter = filter;
-			
-			filter.widgetKeyListener = new KeyAdapter(){
-				public void keyPressed(KeyEvent event){
-					int key = event.character;
-					if (key <= 26 && key > 0) {
-						key += 'a' - 1;
-					}
-
-					if (event.stateMask == SWT.MOD1) {
-						switch (key) {
-							case 'x': { // CTRL+X: RegEx search switch
-								f_filter.regex = !f_filter.regex;
-								tvSWTCommon.validateFilterRegex();
-								refilter();
-								event.doit = false;	// prevent sound from this key
-							}
-							break;
-						}
-					}
-				}};
-			
-			txtFilter.addKeyListener(filter.widgetKeyListener);
-			
-			if (txtFilter.getText().length() == 0) {
-				txtFilter.setText(filter.text);
-			} else {
-				filter.text = filter.nextText = txtFilter.getText();
+			if (filterBox.getText().length() == 0) {
+				filterBox.setText(filter.text);
 			}
-			
 
-
+			filterBox.setAllowRegex(true);
+			filterBox.addBubbleTextBoxChangeListener(this);
 		} else {
 			filter.text = filter.nextText = "";
 		}
@@ -2050,12 +2027,12 @@ public class TableViewPainted
 	}
 	
 	@Override
-	public Text
-	getFilterControl()
+	public boolean
+	hasFilterControl()
 	{
 		TableViewSWTFilter<?> filter = getSWTFilter();
 
-		return( filter==null?null:filter.widget );
+		return( filter != null && !filter.filterBox.isDisposed() );
 	}
 
 	@Override
@@ -2065,21 +2042,20 @@ public class TableViewPainted
 			return;
 		}
 
-		if (filter.widget != null && !filter.widget.isDisposed()) {
-			filter.widget.removeKeyListener(tvSWTCommon);
-			filter.widget.removeKeyListener(filter.widgetKeyListener);
-			filter.widget.removeModifyListener(filter.widgetModifyListener);
+		if (filter.filterBox != null && !filter.filterBox.isDisposed()) {
+			filter.filterBox.setKeyListener(null);
+			filter.filterBox.removeBubbleTextBoxChangeListenener(this);
 		}
-		filter = null;
+		this.filter = null;
 	}
 
 	/* (non-Javadoc)
 	 * @see com.biglybt.ui.swt.views.table.TableViewSWT#setFilterText(java.lang.String)
 	 */
 	@Override
-	public void setFilterText(String s) {
+	public void setFilterText(String s, boolean force) {
 		if (tvSWTCommon != null) {
-			tvSWTCommon.setFilterText(s);
+			tvSWTCommon.setFilterText(s, force);
 		}
 	}
 
@@ -2916,7 +2892,7 @@ public class TableViewPainted
 					message = "";
 				}
 
-				setFilterText(message);
+				setFilterText(message, false);
 			}
 		});
 	}
@@ -3406,5 +3382,19 @@ public class TableViewPainted
 
 	public boolean isEnabled() {
 		return cTable.isEnabled();
+	}
+
+	@Override
+	public void bubbleTextBoxChanged(BubbleTextBox bubbleTextBox) {
+		boolean changed;
+		if (filter != null) {
+			changed = bubbleTextBox.isRegexEnabled() != filter.regex;
+			if (changed) {
+				filter.regex = !filter.regex;
+			}
+		} else {
+			changed = false;
+		}
+		setFilterText(bubbleTextBox.getText(), changed);
 	}
 }

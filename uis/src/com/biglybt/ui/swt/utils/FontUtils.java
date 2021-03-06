@@ -221,6 +221,10 @@ public class FontUtils
 	}
 
 	public static void fontToWidgetHeight(Text text) {
+		fontToWidgetHeight(text, null);
+	}
+
+	public static void fontToWidgetHeight(Text text, Runnable runOnFontSizeChange) {
 		text.addListener(SWT.Resize, new Listener() {
 			Font lastFont = null;
 			int	lastHeight = -1;
@@ -281,6 +285,10 @@ public class FontUtils
 
 				}else{
 					Utils.disposeSWTObjects(lastFont);
+				}
+				
+				if (runOnFontSizeChange != null) {
+					runOnFontSizeChange.run();
 				}
 
 				lastFont = font;

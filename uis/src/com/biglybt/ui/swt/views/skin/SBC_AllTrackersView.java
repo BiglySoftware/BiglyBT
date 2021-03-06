@@ -85,8 +85,6 @@ public class SBC_AllTrackersView
 
 	TableViewSWT<AllTrackersViewEntry> tv;
 
-	private Text txtFilter;
-
 	private Composite table_parent;
 
 	private boolean columnsAdded = false;
@@ -316,13 +314,6 @@ public class SBC_AllTrackersView
 	{
 		super.skinObjectShown( skinObject, params );
 
-		SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox)getSkinObject( "filterbox" );
-
-		if ( soFilter != null ){
-
-			txtFilter = soFilter.getTextControl();
-		}
-
 		SWTSkinObject so_list = getSkinObject( "all-trackers-list" );
 
 		if ( so_list != null ){
@@ -383,9 +374,10 @@ public class SBC_AllTrackersView
 					ColumnAllTrackersTracker.COLUMN_ID,
 					SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
-			if ( txtFilter != null){
-
-				tv.enableFilterCheck( txtFilter, this );
+			SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) getSkinObject(
+				"filterbox");
+			if (soFilter != null) {
+				tv.enableFilterCheck(soFilter.getBubbleTextBox(), this);
 			}
 
 			tv.setRowDefaultHeightEM(1);

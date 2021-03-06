@@ -36,12 +36,7 @@ import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.*;
-import com.biglybt.core.util.AEThread2;
-import com.biglybt.core.util.Base32;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.RegExUtil;
-import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.*;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
@@ -92,8 +87,6 @@ public class SBC_TagsOverview
 	public static final Class<Tag> PLUGIN_DS_TYPE = Tag.class;
 
 	TableViewSWT<Tag> tv;
-
-	private Text txtFilter;
 
 	private Composite table_parent;
 
@@ -562,13 +555,6 @@ public class SBC_TagsOverview
 	{
 		super.skinObjectShown(skinObject, params);
 
-		SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox)getSkinObject( "filterbox" );
-
-		if ( soFilter != null ){
-
-			txtFilter = soFilter.getTextControl();
-		}
-
 		SWTSkinObject so_list = getSkinObject("tags-list");
 
 		if (so_list != null) {
@@ -639,9 +625,12 @@ public class SBC_TagsOverview
 					TABLE_TAGS, new TableColumnCore[0], ColumnTagName.COLUMN_ID,
 					SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
-			if ( txtFilter != null ){
-				tv.enableFilterCheck(txtFilter, this);
+			SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) getSkinObject(
+					"filterbox");
+			if (soFilter != null) {
+				tv.enableFilterCheck(soFilter.getBubbleTextBox(), this);
 			}
+
 			tv.setRowDefaultHeightEM(1);
 
 			table_parent = new Composite(control, SWT.BORDER);

@@ -22,10 +22,10 @@ import com.biglybt.core.Core;
 
 
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
 
 import com.biglybt.pif.download.Download;
 
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.common.table.TableColumnCore;
 
@@ -37,13 +37,13 @@ public class MyTorrentsView_Small
 		Core 				_core, 
 		int 				torrentFilterMode, 
 		Object 				dataSource,
-        TableColumnCore[] 	basicItems,
-	    Text 				txtFilter, 
-	    Composite 			cCatsTags) 
+		TableColumnCore[] 	basicItems,
+		BubbleTextBox txtFilter, 
+		Composite 			cCatsTags) 
 	{
 		super( true );
 
-		this.txtFilter 			= txtFilter;
+		this.filterBox = txtFilter;
 		this.cCategoriesAndTags = cCatsTags;
 		
 		init( _core, SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, false, dataSource), Download.class, basicItems );

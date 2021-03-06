@@ -291,12 +291,12 @@ public class TableColumnSetupWindow
 		cTableAvail.setLayout(gridLayout);
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTableAvail, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
-		bubbleTextBox.getTextWidget().setMessage(MessageText.getString("column.setup.search"));
+		bubbleTextBox.setMessage(MessageText.getString("column.setup.search"));
 		GridData gd = new GridData(SWT.RIGHT,SWT.CENTER,true,false);
-		bubbleTextBox.getParent().setLayoutData( gd );
+		bubbleTextBox.getMainWidget().setLayoutData( gd );
 
 		tvAvail.enableFilterCheck(
-			bubbleTextBox.getTextWidget(),
+			bubbleTextBox,
 			new TableViewFilterCheck<TableColumn>()
 			{
 				@Override
