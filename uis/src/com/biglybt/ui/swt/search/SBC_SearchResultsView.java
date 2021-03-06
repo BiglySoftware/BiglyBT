@@ -22,6 +22,7 @@
 
 package com.biglybt.ui.swt.search;
 
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,6 +30,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.util.*;
+import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.RememberedDecisionsManager;
