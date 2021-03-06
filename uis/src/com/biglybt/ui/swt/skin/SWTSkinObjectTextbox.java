@@ -215,7 +215,7 @@ public class SWTSkinObjectTextbox
 			// Can't use properties.getPxValue for fonts, because
 			// font.height isn't necessarily in px.
 			String sSize = properties.getStringValue(sPrefix + ".size" + suffix);
-			if (sSize == null && bubbleTextBox != null) {
+			if (Utils.isGTK3 && sSize == null && bubbleTextBox != null) {
 				// BubbleTextBox will fit font into cBubble, but (at least on GTK3) we must start at a small font
 				// to prevent textWidget from forcing cBubble larger than needed
 				sSize = "8";
