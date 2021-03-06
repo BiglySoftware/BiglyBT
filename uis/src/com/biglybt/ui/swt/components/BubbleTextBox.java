@@ -192,11 +192,11 @@ public class BubbleTextBox
 		cCenterV.setVisible(false);
 		cCenterV.setLayoutData(fd);
 
-		setupTextWidgetLayoutData();
-
 		INDENT_OVAL = 6;
 		WIDTH_CLEAR = 7;
 		WIDTH_PADDING = 6;
+
+		setupTextWidgetLayoutData();
 
 		cBubble.addPaintListener(this);
 
