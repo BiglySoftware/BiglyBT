@@ -268,7 +268,7 @@ public class FontUtils
 				//System.out.println("h=" + h + ";lh=" + lineHeightPX + ";" + getFontHeightInPX(text.getFont()) );
 
 				if ( h == lastHeight ){
-					//return;
+					return;
 				}
 
 				float pctAdjust = h / (float) lineHeightPX;
