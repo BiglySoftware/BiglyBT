@@ -51,8 +51,6 @@ public class BubbleTextBox
 
 	public static final String REGEX_BUTTON_TEXT = ".\u2731";
 
-	public static final int PADDING_RIGHT_DEF = -15;
-
 	private static final int REGEX_BUTTON_PADDING = 4;
 
 	private static final int BUTTON_NONE = 0;
@@ -62,8 +60,6 @@ public class BubbleTextBox
 	private static final int BUTTON_CLEAR = 1;
 
 	private static Font FONT_REGEX_BUTTON;
-
-	private final Composite cCenterV;
 
 	private static Color COLOR_FILTER_REGEX;
 
@@ -79,9 +75,7 @@ public class BubbleTextBox
 
 	private final Composite cBubble;
 
-	private static final int PADDING_TOP = (Utils.isGTK3) ? 1 : 2;
-
-	private static final int PADDING_BOTTOM = (Utils.isGTK3) ? 2 : 2;
+	private static final int TEXTBOX_VPADDING = (Utils.isGTK3) ? 1 : 4;
 
 	private final int INDENT_OVAL;
 
@@ -121,8 +115,6 @@ public class BubbleTextBox
 	public BubbleTextBox(Composite parent, int style) {
 		cBubble = new Composite(parent, SWT.DOUBLE_BUFFERED);
 		FormLayout layout = new FormLayout();
-		layout.marginTop = PADDING_TOP;
-		layout.marginBottom = PADDING_BOTTOM;
 		cBubble.setLayout(layout);
 
 		textWidget = new Text(cBubble, style & ~(SWT.BORDER | SWT.SEARCH)) {
@@ -137,18 +129,17 @@ public class BubbleTextBox
 					Rectangle area = getParent().getClientArea();
 					//System.out.println("computedSize = " + point  + "; parent.h=" + area.height);
 
-					// Bug in SWT: When there's no border, computed size chops off a few
-					// pixels in height (probably because GTK3 shows a border when focused)
-					point.y += 2;
-
 					// Bug in SWT: Seems Text widget on GTK3 doesn't obey parent's fixed height
-					if (area.height > 0 && point.y > area.height) {
-						point.y = area.height;
+					int diff = TEXTBOX_VPADDING * 2;
+					if (area.height > diff) {
+						//if (point.y != area.height - diff) System.out.println("Set textbox height=" + point.y);
+						point.y = area.height - diff;
 					}
 				}
 				return point;
 			}
 		};
+		cBubble.addListener(SWT.Resize, e -> setupTextWidgetLayoutData());
 
 		// Temporary hack until we remove TableViewPainted.enableFilterCheck(Text txtFilter, TableViewFilterCheck<Object> filterCheck)
 		textWidget.setData("BubbleTextBox", this);
@@ -180,17 +171,6 @@ public class BubbleTextBox
 			textWidget.setForeground(
 					Colors.getSystemColor(display, SWT.COLOR_LIST_FOREGROUND));
 		}
-
-		FormData fd;
-
-		cCenterV = new Composite(cBubble, SWT.NO_BACKGROUND);
-		fd = new FormData();
-		fd.width = 1;
-		fd.height = 1;
-		fd.top = new FormAttachment(0);
-		fd.bottom = new FormAttachment(100);
-		cCenterV.setVisible(false);
-		cCenterV.setLayoutData(fd);
 
 		INDENT_OVAL = 6;
 		WIDTH_CLEAR = 7;
@@ -460,24 +440,35 @@ public class BubbleTextBox
 	}
 
 	private void setupTextWidgetLayoutData() {
+		int bubbleHeight = cBubble.getClientArea().height;
+		//System.out.println("setupTextWidgetLayoutData; bubbleHeight=" + bubbleHeight);
 		FormData fd = new FormData();
-		fd.top = new FormAttachment(cCenterV, 0, SWT.CENTER);
-		fd.left = new FormAttachment(0, 17);
-		int right = -WIDTH_PADDING;
-		boolean isClearButtonVisible = !textWidget.getText().isEmpty();
-		if (isClearButtonVisible) {
-			right -= (WIDTH_CLEAR + (WIDTH_PADDING / 2));
+		fd.top = new FormAttachment(0, TEXTBOX_VPADDING);
+		fd.bottom = new FormAttachment(100, -TEXTBOX_VPADDING);
+		if (bubbleHeight > 0) {
+			fd.height = Math.max(1, bubbleHeight - (TEXTBOX_VPADDING * 2));
 		}
-		if (allowRegex) {
-			GC gc = new GC(this.textWidget);
-			gc.setFont(FONT_REGEX_BUTTON);
-			Point regexTextSize = gc.textExtent(REGEX_BUTTON_TEXT);
-			gc.dispose();
-			right -= (regexTextSize.x + REGEX_BUTTON_PADDING);
+		fd.left = new FormAttachment(0, 17);
+		boolean isClearButtonVisible = !textWidget.getText().isEmpty();
+		int right;
+		if (!allowRegex && !isClearButtonVisible && bubbleHeight > 0) {
+			right = -(bubbleHeight / 2);
+		} else {
+			right = -WIDTH_PADDING;
 			if (isClearButtonVisible) {
-				right -= WIDTH_PADDING;
-			} else {
-				right -= (WIDTH_PADDING / 2);
+				right -= (WIDTH_PADDING + WIDTH_CLEAR + (WIDTH_PADDING / 2));
+			}
+			if (allowRegex) {
+				GC gc = new GC(this.textWidget);
+				gc.setFont(FONT_REGEX_BUTTON);
+				Point regexTextSize = gc.textExtent(REGEX_BUTTON_TEXT);
+				gc.dispose();
+				right -= (regexTextSize.x + REGEX_BUTTON_PADDING);
+				if (isClearButtonVisible) {
+					right -= WIDTH_PADDING;
+				} else {
+					right -= (WIDTH_PADDING / 2);
+				}
 			}
 		}
 		fd.right = new FormAttachment(100, right);
