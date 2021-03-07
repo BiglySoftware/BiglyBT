@@ -201,7 +201,7 @@ public class BubbleTextBox
 		cBubble.addListener(SWT.MouseMove, event -> {
 			int mouseNowOverButton = BUTTON_NONE;
 			Rectangle r = (Rectangle) event.widget.getData("XArea");
-			if (r != null && r.contains(event.x, event.y)) {
+			if (r != null && r.contains(event.x, event.y) && !text.isEmpty()) {
 				mouseNowOverButton = BUTTON_CLEAR;
 			} else {
 				r = (Rectangle) event.widget.getData("RegexArea");
