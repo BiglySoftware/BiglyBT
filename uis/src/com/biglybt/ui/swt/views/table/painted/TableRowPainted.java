@@ -68,6 +68,8 @@ public class TableRowPainted
 	
 	private boolean initializing = true;
 
+	private boolean inPaintItem;
+	
 	private Color colorFG = null;
 
 	private Object			colorLock = new Object();
@@ -535,6 +537,13 @@ public class TableRowPainted
 		}
 	}
 	
+	@Override
+	public boolean 
+	isInPaintItem() 
+	{
+		return inPaintItem;
+	}
+	
 	private boolean swt_paintCell(GC gc, Rectangle cellBounds,
 			TableCellSWTBase cell, Color shadowColor) {
 		// Only called from swt_PaintGC, so we can assume GC, cell are valid
@@ -544,7 +553,11 @@ public class TableRowPainted
 
 		boolean gcChanged = false;
 		try {
-
+			if ( inPaintItem ){
+				Debug.out( "hmm");
+				return( false );
+			}
+			inPaintItem = true;
 			gc.setTextAntialias(SWT.DEFAULT);
 
 			TableViewSWT<?> view = (TableViewSWT<?>) getView();
@@ -753,6 +766,8 @@ public class TableRowPainted
 			}
 		} catch (Exception e) {
 			Debug.out(cell.getTableID() + ":" + cell.getTableColumn().getName(), e );
+		}finally{
+			inPaintItem = false;
 		}
 
 		return gcChanged;

@@ -550,14 +550,6 @@ public abstract class TableRowSWTBase
 	}
 
 	/* (non-Javadoc)
-	 * @see TableRowCore#isInPaintItem()
-	 */
-	@Override
-	public boolean isInPaintItem() {
-		return false;
-	}
-
-	/* (non-Javadoc)
 	 * @see com.biglybt.pif.ui.tables.TableRow#getDataSource()
 	 */
 	@Override
