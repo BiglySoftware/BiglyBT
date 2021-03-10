@@ -28,4 +28,11 @@ DiskManagerRequest
 	public void
 	requestEnds(
 		boolean	ok );
+	
+	public boolean
+	getErrorIsFatal();
+	
+	public void
+	setErrorIsFatal(
+		boolean		b );
 }

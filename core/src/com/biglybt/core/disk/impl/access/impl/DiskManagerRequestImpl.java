@@ -54,7 +54,8 @@ DiskManagerRequestImpl
 	private long	start_time;
 	private String	name;
 
-
+	private boolean	error_is_fatal = true;
+	
 	protected abstract String
 	getName();
 
@@ -97,4 +98,18 @@ DiskManagerRequestImpl
 			}
 		}
 	}
+	
+	@Override
+	public boolean 
+	getErrorIsFatal()
+	{
+		return( error_is_fatal );
+	}
+	
+	public void 
+	setErrorIsFatal(
+		boolean b )
+	{
+		error_is_fatal = b;
+	};
 }

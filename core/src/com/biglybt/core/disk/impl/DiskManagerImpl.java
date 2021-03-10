@@ -624,7 +624,7 @@ DiskManagerImpl
 
 	        if ( newFiles == 0 ){
 
-	            resume_handler.checkAllPieces(false, (p)->{ percentDone = p; });
+	            resume_handler.checkAllPieces(false, download_manager.isForceRechecking(), (p)->{ percentDone = p; });
 
 	            	// unlikely to need piece list, force discard
 
@@ -636,7 +636,7 @@ DiskManagerImpl
 
 	                //  if not a fresh torrent, check pieces ignoring fast resume data
 
-	            resume_handler.checkAllPieces(true, (p)->{ percentDone = p; });
+	            resume_handler.checkAllPieces(true, download_manager.isForceRechecking(), (p)->{ percentDone = p; });
 	        }
         }
 

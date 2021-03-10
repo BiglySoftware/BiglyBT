@@ -2747,7 +2747,7 @@ DownloadManagerImpl
   	}
 
   	@Override
-	  public boolean
+	public boolean
   	canForceRecheck()
   	{
 		if ( getTorrent() == null ){
@@ -2761,21 +2761,27 @@ DownloadManagerImpl
   	}
 
   	@Override
-	  public void
+	public void
   	forceRecheck()
   	{
   		controller.forceRecheck(null);
   	}
 
   	@Override
-	  public void
+	public void
   	forceRecheck(final ForceRecheckListener l)
   	{
   		controller.forceRecheck(l);
   	}
 
   	@Override
-	  public void
+  	public boolean 
+  	isForceRechecking()
+  	{
+  		return( controller.isForceRechecking());
+  	}
+  	@Override
+	public void
   	setPieceCheckingEnabled(
   		boolean enabled )
   	{

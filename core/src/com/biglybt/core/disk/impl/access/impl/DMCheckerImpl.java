@@ -767,6 +767,8 @@ DMCheckerImpl
 
 		   	read_request.setUseCache( !request.isAdHoc());
 
+		   	read_request.setErrorIsFatal( request.getErrorIsFatal());
+		   	
 			disk_manager.enqueueReadRequest(
 				read_request,
 				new DiskManagerReadRequestListener()

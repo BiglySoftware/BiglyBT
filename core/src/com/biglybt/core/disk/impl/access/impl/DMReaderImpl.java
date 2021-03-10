@@ -659,8 +659,11 @@ DMReaderImpl
 				buffer.returnToPool();
 			}
 
-			disk_manager.setFailed( DiskManager.ET_READ_ERROR, "Disk read error", e );
-
+			if ( request.getErrorIsFatal()){
+				
+				disk_manager.setFailed( DiskManager.ET_READ_ERROR, "Disk read error", e );
+			}
+			
 			Debug.printStackTrace( e );
 
 			listener.readFailed( request, e );
@@ -948,8 +951,11 @@ DMReaderImpl
 				}
 			}
 			
-			disk_manager.setFailed( error, "Disk read error", cause );
-
+			if ( dm_request.getErrorIsFatal()){
+			
+				disk_manager.setFailed( error, "Disk read error", cause );
+			}
+			
 			Debug.printStackTrace( cause );
 
 			listener.readFailed( dm_request, cause );

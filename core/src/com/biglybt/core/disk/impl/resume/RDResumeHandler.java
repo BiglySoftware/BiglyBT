@@ -20,6 +20,7 @@
 package com.biglybt.core.disk.impl.resume;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
@@ -34,6 +35,7 @@ import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerException;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -136,6 +138,7 @@ RDResumeHandler
 	public void
 	checkAllPieces(
 		boolean 			newfiles,
+		boolean				forceRecheck,
 		ProgressListener	listener )
 	{
 		//long	start = System.currentTimeMillis();
@@ -144,6 +147,32 @@ RDResumeHandler
 			 
         final List<DiskManagerCheckRequest>	failed_pieces = new ArrayList<>();
 
+        Consumer<Throwable> forceRecheckErrorReporter =
+        	new Consumer<Throwable>(){
+        		private boolean reported;
+        		
+				@Override
+				public void 
+				accept(
+					Throwable cause)
+				{
+					synchronized( this ){
+						
+						if ( reported ){
+							
+							return;
+						}
+						
+						reported = true;
+					}
+					
+					String msg = disk_manager.getDisplayName() + ": One or more piece checks failed: " + Debug.getNestedExceptionMessage( cause );
+					
+            		Logger.log(new LogAlert( disk_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR, msg));
+
+				}
+        	};
+        
         listener.percentDone( 0 );
         
 		try{
@@ -398,8 +427,9 @@ RDResumeHandler
 
 								// We only need to recheck pieces that are marked as not-ok
 								// if the resume data is invalid or explicit recheck needed
-							if(pieceCannotExist)
-							{
+							
+							if (pieceCannotExist){
+								
 								dm_piece.setDone( false );
 								
 							} else if ( piece_state == PIECE_RECHECK_REQUIRED || !resumeValid ){
@@ -435,6 +465,11 @@ RDResumeHandler
 
 										request.setLowPriority( true );
 
+										if ( forceRecheck ){
+										
+											request.setErrorIsFatal( false );
+										}
+										
 										checker.enqueueCheckRequest(
 											request,
 											new DiskManagerCheckRequestListener()
@@ -477,6 +512,11 @@ RDResumeHandler
 													DiskManagerCheckRequest 	request,
 													Throwable		 			cause )
 												{
+													if ( forceRecheck ){
+														
+														forceRecheckErrorReporter.accept( cause );
+													}
+													
 													complete();
 												}
 
@@ -604,6 +644,11 @@ RDResumeHandler
 
 							request.setLowPriority( true );
 
+							if ( forceRecheck ){
+								
+								request.setErrorIsFatal( false );
+							}
+							
 							checker.enqueueCheckRequest(
 									request,
 									new DiskManagerCheckRequestListener()
@@ -646,6 +691,11 @@ RDResumeHandler
 											DiskManagerCheckRequest 	request,
 											Throwable		 			cause )
 										{
+											if ( forceRecheck ){
+											
+												forceRecheckErrorReporter.accept( cause );
+											}
+											
 											complete();
 										}
 

@@ -122,16 +122,24 @@ DownloadManager
     public void
     startDownload();
 
-    public boolean canForceRecheck();
+    public boolean 
+    canForceRecheck();
 
-    public void forceRecheck();
+    public boolean
+    isForceRechecking();
+    
+    public void 
+    forceRecheck();
 
 		/**
 		 * @param l
 		 *
 		 * @since 3.0.0.7
 		 */
-		void forceRecheck(ForceRecheckListener l);
+    
+	public void 
+	forceRecheck(
+		ForceRecheckListener l);
 
         /**
          * Reset the file download state to totally undownloaded. Download must be stopped

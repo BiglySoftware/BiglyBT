@@ -172,8 +172,9 @@ DownloadManagerController
 
 	private volatile int		state_set_by_method = DownloadManager.STATE_START_OF_DAY;
 	private volatile int		substate;
-	volatile boolean 	force_start;
-
+	private volatile boolean 	force_start;
+	private volatile boolean	is_force_rechecking;
+	
 		// to try and ensure people don't start using disk_manager without properly considering its
 		// access implications we've given it a silly name
 
@@ -822,8 +823,15 @@ DownloadManagerController
 	  	           	(state == DownloadManager.STATE_ERROR && getDiskManager() == null));
 	}
 
+	protected boolean
+	isForceRechecking()
+	{
+		return( is_force_rechecking );
+	}
+	
 	public void
-	forceRecheck(final ForceRecheckListener l)
+	forceRecheck(
+		final ForceRecheckListener l)
 	{
 		try{
 			control_mon.enter();
@@ -835,7 +843,16 @@ DownloadManagerController
 				return;
 			}
 
-			final int start_state = DownloadManagerController.this.getState();
+			if ( is_force_rechecking ){
+				
+				Debug.out( "DownloadManagerController::forceRecheck: already active" );
+				
+				return;
+			}
+			
+			is_force_rechecking = true;
+			
+			int start_state = DownloadManagerController.this.getState();
 
 				// remove resume data
 
@@ -844,7 +861,7 @@ DownloadManagerController
 	  			// For extra protection from a plugin stopping a checking torrent,
 	  			// fake a forced start.
 
-	  		final boolean wasForceStarted = force_start;
+	  		boolean wasForceStarted = force_start;
 
 	  		force_start = true;
 
@@ -856,7 +873,23 @@ DownloadManagerController
 
 	  		initializeDiskManagerSupport(
 	  			DownloadManager.STATE_CHECKING,
-	  			new forceRecheckDiskManagerListener(wasForceStarted, start_state, l));
+	  			new ForceRecheckDiskManagerListener(
+	  				wasForceStarted, 
+	  				start_state, 
+	  				new ForceRecheckListener()
+	  				{
+	  					public void 
+	  					forceRecheckComplete(
+	  						DownloadManager dm)
+	  					{
+	  						is_force_rechecking = false;
+	  						
+	  						if ( l != null ){
+	  							
+	  							l.forceRecheckComplete(dm);
+	  						}
+	  					}
+	  				}));
 
 		}finally{
 
@@ -3455,7 +3488,7 @@ DownloadManagerController
 		}
 	}
 
-	public class forceRecheckDiskManagerListener
+	public class ForceRecheckDiskManagerListener
 		implements DiskManagerListener
 	{
 		private final boolean wasForceStarted;
@@ -3464,7 +3497,7 @@ DownloadManagerController
 
 		private final ForceRecheckListener l;
 
-		public forceRecheckDiskManagerListener(boolean wasForceStarted,
+		public ForceRecheckDiskManagerListener(boolean wasForceStarted,
 				int start_state, ForceRecheckListener l) {
 			this.wasForceStarted = wasForceStarted;
 			this.start_state = start_state;
@@ -3482,7 +3515,8 @@ DownloadManagerController
 
 					download_manager.setAssumedComplete(false);
 
-					if (l != null) {
+					if ( l != null ){
+						
 						l.forceRecheckComplete(download_manager);
 					}
 
@@ -3575,9 +3609,10 @@ DownloadManagerController
 					}
 
 					download_manager.setAssumedComplete(false);
-
 				}
-				if (l != null) {
+				
+				if ( l != null ){
+					
 					l.forceRecheckComplete(download_manager);
 				}
 			}
