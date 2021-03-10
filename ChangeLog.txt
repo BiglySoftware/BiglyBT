@@ -24,6 +24,7 @@ FEATURE: Core  | New 'Light-Seeding' mode for private torrents with zero-peers [
 FEATURE: Core  | Make webseed activation minimum rate configurable [Parg]
 FEATURE: Core  | Option to specify additional bind addresses for incoming connections [Parg]
 FEATURE: Core  | Option to ignore bind addresses for outgoing connections to LAN addresses [Parg]
+FEATURE: Core  | Complete a force-recheck operation regardless of errors to find all bad pieces [Parg]
 FEATURE: UI    | Support 'f:' prefix to search on save path in Download History view [Parg]
 FEATURE: UI    | Added 'date completed' to Archive view [Parg]
 FEATURE: UI    | Added move-on-complete disk operation [Parg]
