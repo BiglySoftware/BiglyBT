@@ -76,10 +76,6 @@ CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
 CHANGE: UI     | ja_JP: Japanese translation update [ayano.midori]
 CHANGE: UI     | sv_SE: Swedish translation update [Dyras]
 
-CHANGE: UI     | fr_FR: French translation update [GMartigny]
-
-
-
 BUGFIX: Tag    | Fix memory retention by Peer Sets for inactive downloads [Parg]
 BUGFIX: Tag    | Fix potential recursion on Tag group assignment [Parg]
 BUGFIX: Core   | Don't resurrect torrent file if it has been explicitly deleted [Parg]
