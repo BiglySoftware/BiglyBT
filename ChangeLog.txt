@@ -67,6 +67,18 @@ CHANGE: UI     | Added seeding rank information to the Status column tooltip [Pa
 CHANGE: UI     | Don't pre-select file extension in torrent options rename dialog [Parg]
 CHANGE: UI     | Allow multiple files to be selected+renamed in torrent options [Parg]
 CHANGE: UI     | Show both the ASN and the AS in the peers column [Parg]
+CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
+CHANGE: UI     | no_NO: Norwegian translation update [lislei]
+CHANGE: UI     | tr_TR: Turkish translation update [BouRock]
+CHANGE: UI     | sl_SI: Slovenian translation update [upwinxp]
+CHANGE: UI     | de_DE: German translation update [gerstemann]
+CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
+CHANGE: UI     | ja_JP: Japanese translation update [ayano.midori]
+CHANGE: UI     | sv_SE: Swedish translation update [Dyras]
+
+CHANGE: UI     | fr_FR: French translation update [GMartigny]
+
+
 
 BUGFIX: Tag    | Fix memory retention by Peer Sets for inactive downloads [Parg]
 BUGFIX: Tag    | Fix potential recursion on Tag group assignment [Parg]
