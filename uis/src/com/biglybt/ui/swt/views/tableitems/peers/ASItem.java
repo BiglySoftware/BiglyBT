@@ -56,11 +56,17 @@ public class ASItem
 
     if ( peer != null ){
 
-    	text = PeerUtils.getASN( peer );
+    	String[] details = PeerUtils.getASandASN( peer );
     	
-    	if ( text == null ){
+    	if ( details != null ){
+    		    		
+    		String as 	= details[0];
+    		String asn 	= details[1];
     		
-    		text = "";
+    		if ( !as.isEmpty() || !asn.isEmpty()){
+    		
+    			text = details[1] + " (" + details[0] + ")";
+    		}
     	}
     }
 

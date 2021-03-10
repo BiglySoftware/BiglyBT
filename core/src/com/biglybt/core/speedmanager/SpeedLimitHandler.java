@@ -6546,20 +6546,36 @@ SpeedLimitHandler
 			{
 				boolean	result = false;
 				
-				String as_name	= PeerUtils.getASN( peer );
+				String[] as_details	= PeerUtils.getASandASN( peer );
 				
-				if ( as_name != null ){
+				if ( as_details != null ){
 					
-					if ( !as_name.isEmpty()){
+					String as 	= as_details[0];
+					String asn 	= as_details[1];
+					
+					boolean matched = false;
+					
+					if ( !as.isEmpty()){
 						
-						if ( asn_pattern.matcher( as_name ).find()){
+						if ( asn_pattern.matcher( as ).find()){
+							
+							result = true;
+							
+							matched = true;
+						}
+					}
+					
+					if ( !matched && !asn.isEmpty()){
+						
+						if ( asn_pattern.matcher( asn ).find()){
 						
 							result = true;
 						}
+					}
+					
+					if ( asn_pattern_inverse ){
 						
-						if ( asn_pattern_inverse ){
-							result = !result;
-						}
+						result = !result;
 					}
 				}else{
 						// we want to give a bit more time for asn lookup

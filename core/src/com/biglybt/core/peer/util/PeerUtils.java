@@ -856,6 +856,8 @@ public class PeerUtils {
 	private static final Object	asn_key 		= new Object();
 	private static final Object	asn_pending 	= new Object();
 
+	private static final String[]	asn_failed = { "", "" };
+	
 		/**
 		 * 
 		 * @param peer
@@ -866,16 +868,36 @@ public class PeerUtils {
 	getASN(
 		PEPeer		peer )
 	{
+		String[] result = getASandASN( peer );
+		
+		if ( result != null ){
+			
+			return( result[1] );
+		}
+		
+		return( null );
+	}
+	
+		/**
+		 * 
+		 * @param peer
+		 * @return null if pending, String[] of { as, asn } or { "", "" } if unavailable
+		 */
+	
+	public static String[]
+	getASandASN(
+		PEPeer		peer )
+	{
 		if ( network_admin == null ){
 			
-			return( "" );
+			return( asn_failed );
 		}
 
     	Object o = peer.getUserData( asn_key );
 
-    	if ( o instanceof String ){
+    	if ( o instanceof String[] ){
     		
-    		return((String)o);
+    		return((String[])o);
     		
     	}else if ( o == asn_pending ){   	
     		
@@ -899,7 +921,7 @@ public class PeerUtils {
 		    				success(
 		    					NetworkAdminASN		asn )
 		    				{
-		    					peer.setUserData( asn_key, asn.getASName());
+		    					peer.setUserData( asn_key, new String[]{ asn.getAS(), asn.getASName() });
 		    				}
 
 		    				@Override
@@ -907,7 +929,7 @@ public class PeerUtils {
 		    				failed(
 		    					NetworkAdminException	error )
 		    				{
-		    					peer.setUserData( asn_key, "" );
+		    					peer.setUserData( asn_key, asn_failed );
 		    				}
 		    			});
 		    		
@@ -915,18 +937,19 @@ public class PeerUtils {
 
 		    	}catch( Throwable e ){
 		    		
-		    		peer.setUserData( asn_key, "" );
+		    		peer.setUserData( asn_key, asn_failed );
 		    		
-		    		return( "" );
+		    		return( asn_failed );
 		    	}
     		}else{
     			
-    			peer.setUserData( asn_key, "" );
+    			peer.setUserData( asn_key, asn_failed );
     			
-    			return( "" );
+    			return( asn_failed );
     		}
     	}
 	}
+	
 	/*
 	public static void
 	main(
