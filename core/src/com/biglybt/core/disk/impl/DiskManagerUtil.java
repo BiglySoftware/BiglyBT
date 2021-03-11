@@ -25,6 +25,7 @@ import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
+import com.biglybt.core.disk.DiskManager.DownloadEndedProgress;
 import com.biglybt.core.disk.impl.piecemapper.*;
 import com.biglybt.core.disk.impl.resume.RDResumeHandler;
 import com.biglybt.core.diskmanager.access.DiskAccessController;
@@ -1759,7 +1760,7 @@ DiskManagerUtil
 					}
 					
 					@Override
-					public void moveDataFiles(File new_parent_dir, String dl_name, OperationStatus op_status){
+					public void moveDataFiles(File new_parent_dir, String dl_name ){
 					}
 					
 					@Override
@@ -1958,7 +1959,15 @@ DiskManagerUtil
 					}
 					
 					@Override
-					public void downloadEnded(OperationStatus op_status){
+					public DownloadEndedProgress
+					downloadEnded()
+					{
+						return( new DownloadEndedProgress(){
+							@Override
+							public boolean isComplete(){
+								return( true );
+							}
+						});
 					}
 					
 					@Override

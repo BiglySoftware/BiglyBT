@@ -2607,20 +2607,31 @@ DiskManagerImpl
     }
 
     @Override
-    public void downloadEnded(OperationStatus op_status ) {
-        moveDownloadFilesWhenEndedOrRemoved( false, true, op_status );
+    public DownloadEndedProgress 
+    downloadEnded() 
+    {
+        DownloadEndedProgressImpl progress = new DownloadEndedProgressImpl();
+
+        AEThread2.createAndStartDaemon( "DownloadEnded", ()->{
+        	
+        		moveDownloadFilesWhenEndedOrRemoved( false, true, progress );
+        	});
+        
+        return( progress );
     }
 
     @Override
-    public void downloadRemoved () {
-        moveDownloadFilesWhenEndedOrRemoved(true, true, null );
+    public void 
+    downloadRemoved() 
+    {
+        moveDownloadFilesWhenEndedOrRemoved( true, true, new DownloadEndedProgressImpl());
     }
 
-    private boolean
+    private void
     moveDownloadFilesWhenEndedOrRemoved(
-    	final boolean 			removing,
-    	final boolean 			torrent_file_exists,
-    	final OperationStatus	op_status )
+    	boolean 					removing,
+    	boolean 					torrent_file_exists,
+    	DownloadEndedProgressImpl	progress )
     {
       try {
         start_stop_mon.enter();
@@ -2633,17 +2644,38 @@ DiskManagerImpl
          * download has finished. We only want this to apply when the download has finished,
          * not if the user restarts the (already completed) download.
          */
-        if (ending) {
-            if (this.alreadyMoved) {return false;}
+                
+        if ( ending ){
+        	
+            if ( this.alreadyMoved ){
+            	
+            	progress.setComplete();
+            	
+            	return;
+            }
+            
             this.alreadyMoved = true;
         }
 
-        SaveLocationChange move_details;
-        if (removing) {
-        	move_details = DownloadManagerMoveHandler.onRemoval(this.download_manager);
+        
+        
+        if ( removing ){
+        	
+        	SaveLocationChange remove_details = DownloadManagerMoveHandler.onRemoval(this.download_manager);
 
+        	if ( remove_details != null ){
+        		
+        		moveDownloadFilesWhenEndedOrRemoved0( remove_details, progress );
+        		
+        	}else{
+        		
+        		progress.setComplete();
+        	}
         }else{
-        	DownloadManagerMoveHandler.onCompletion(
+        	
+        	boolean[] delegated = { false };
+        	
+       		DownloadManagerMoveHandler.onCompletion(
         		this.download_manager,
         		new DownloadManagerMoveHandler.MoveCallback()
         		{
@@ -2652,43 +2684,50 @@ DiskManagerImpl
         			perform(
         				SaveLocationChange move_details )
         			{
-        				moveDownloadFilesWhenEndedOrRemoved0( move_details, op_status );
+        				delegated[0] = true;
+        				
+        				moveDownloadFilesWhenEndedOrRemoved0( move_details, progress );
         			}
         		});
 
-        	move_details = null;
+        	if ( !delegated[0] ){
+        	
+        		progress.setComplete();
+        	}
         }
 
-        if ( move_details != null ){
+        return;
 
-        	moveDownloadFilesWhenEndedOrRemoved0( move_details, op_status );
-        }
-
-        return true;
-
-      }
-      finally{
+      }finally{
 
           start_stop_mon.exit();
 
           if (!removing) {
+        	  
               try{
                   saveResumeData(false);
+                  
               }catch( Throwable e ){
+            	  
                   setFailed( DiskManager.ET_OTHER, "Resume data save fails", e );
               }
           }
-
       }
     }
     
     private void
     moveDownloadFilesWhenEndedOrRemoved0(
-   		SaveLocationChange 	loc_change,
-       	OperationStatus		op_status )	
+   		SaveLocationChange 			loc_change,
+   		DownloadEndedProgressImpl	progress )	
     {
     	Runnable target = ()->{
-    		moveFiles( loc_change, true, op_status );
+    		try{
+    			moveFiles( loc_change, true );
+    			
+    		}finally{
+ 
+    			progress.setComplete();
+    		}
     	};
     	
     	File destination = loc_change.download_location;
@@ -2703,6 +2742,8 @@ DiskManagerImpl
     		
     	}catch( Throwable e ){
     		
+    		progress.setComplete();
+    		
     		Debug.out( e );
     	}
     }
@@ -2711,29 +2752,29 @@ DiskManagerImpl
     public void
     moveDataFiles(
     	File 				new_parent_dir,
-    	String 				new_name,
-    	OperationStatus		op_status )
+    	String 				new_name )
     {
     	SaveLocationChange loc_change = new SaveLocationChange();
 
     	loc_change.download_location 	= new_parent_dir;
     	loc_change.download_name 		= new_name;
 
-    	moveFiles( loc_change, false, op_status );
+    	moveFiles( loc_change, false );
     }
 
     protected void
     moveFiles(
-    	SaveLocationChange 	loc_change,
-    	boolean 			change_to_read_only,
-    	OperationStatus		op_status )
+    	SaveLocationChange 				loc_change,
+    	boolean 						change_to_read_only )
     {
     	boolean move_files = false;
-    	if (loc_change.hasDownloadChange()) {
-    		move_files = !this.isFileDestinationIsItself(loc_change);
+    	
+    	if ( loc_change.hasDownloadChange()){
+    		
+    		move_files = !this.isFileDestinationIsItself( loc_change );
     	}
 
-        try {
+        try{
             start_stop_mon.enter();
 
             /**
@@ -2741,14 +2782,16 @@ DiskManagerImpl
              * only intended for use within this method.
              */
             boolean files_moved = true;
-            if (move_files) {
+            
+            if ( move_files ){
+            	
             	try{
             		move_progress		= new long[2];
             		move_subtask		= null;
             		move_state			= ProgressListener.ST_NORMAL;
             		move_in_progress 	= true;
             		
-            		files_moved = moveDataFiles0(loc_change, change_to_read_only, op_status );
+            		files_moved = moveDataFiles0(loc_change, change_to_read_only );
 
             	}finally{
 
@@ -2759,16 +2802,17 @@ DiskManagerImpl
             }
 
             if (loc_change.hasTorrentChange() && ( files_moved || !move_files )){
+            	
                 moveTorrentFile(loc_change);
             }
-        }
-        catch(Exception e) {
+        }catch( Throwable e ){
+        	
             Debug.printStackTrace(e);
-        }
-        finally{
+            
+        }finally{
 
         	start_stop_mon.exit();
-    }
+        }
   }
 
   // Helper function
@@ -2803,11 +2847,10 @@ DiskManagerImpl
   	  
 	  private boolean 
 	  moveDataFiles0(
-			  SaveLocationChange loc_change, 
-			  final boolean change_to_read_only, 
-			  OperationStatus op_status ) 
-	
-					  throws Exception  
+		  SaveLocationChange 			loc_change, 
+		  final boolean 				change_to_read_only )
+	  
+		  throws Exception  
 	  {
 	
 		  // there is a time race condition here between a piece being marked as complete and the
@@ -2847,25 +2890,6 @@ DiskManagerImpl
 		  if ( files == null ){return false;}
 	
 		  if (isFileDestinationIsItself(loc_change)) {return false;}
-	
-		  final boolean[]	got_there = { false };
-	
-		  if ( op_status != null ){
-	
-			  op_status.gonnaTakeAWhile(
-					  new GettingThere()
-					  {
-						  @Override
-						  public boolean
-						  hasGotThere()
-						  {
-							  synchronized( got_there ){
-	
-								  return( got_there[0] );
-							  }
-						  }
-					  });
-		  }
 	
 		  String log_str = "Move active \"" + download_manager.getDisplayName() + "\" from  " + current_save_location + " to " + move_to_dir;
 		  
@@ -3503,12 +3527,7 @@ DiskManagerImpl
 		  }finally{
 	
 			  reader.setSuspended( false );
-			  
-			  synchronized( got_there ){
-	
-				  got_there[0] = true;
-			  }
-			  
+			  			  
 			  FileUtil.log( 
 						 log_str + 
 						 	" ends (files accepted=" + files_accepted + 
@@ -4145,4 +4164,23 @@ DiskManagerImpl
 		}
 	}
 
+	private static class
+	DownloadEndedProgressImpl
+		implements DownloadEndedProgress
+	{
+		private volatile boolean complete;
+		
+		private void
+		setComplete()
+		{
+			complete = true;
+		}
+		
+		@Override
+		public boolean 
+		isComplete()
+		{
+			return( complete );
+		}
+	}
 }

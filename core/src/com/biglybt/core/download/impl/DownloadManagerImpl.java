@@ -5587,7 +5587,7 @@ DownloadManagerImpl
 					 	"; bytes total=" + total_size_bytes[0] + ", done=" + total_done_bytes[0] + ")");
 		  }
 	  }else{
-		  dm.moveDataFiles( new_save_location.getParentFile(), new_save_location.getName(), null );
+		  dm.moveDataFiles( new_save_location.getParentFile(), new_save_location.getName());
 	  }
 	  
 	  	// this is a manual move - we want to prevent any future move-on-complete from kicking in and moving the files

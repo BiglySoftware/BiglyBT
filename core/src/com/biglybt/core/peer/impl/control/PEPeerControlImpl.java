@@ -31,7 +31,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
-import com.biglybt.core.disk.DiskManager.GettingThere;
+import com.biglybt.core.disk.DiskManager.DownloadEndedProgress;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipfilter.*;
 import com.biglybt.core.logging.*;
@@ -512,7 +512,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	private final boolean is_metadata_download;
 	private int metadata_infodict_size;
 
-	private GettingThere finish_in_progress;
+	private DownloadEndedProgress finish_in_progress;
 
 	private long last_seed_disconnect_time;
 
@@ -823,12 +823,14 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	}
 
 	@Override
-	public void schedule(){
-		if(finish_in_progress != null){
+	public void 
+	schedule()
+	{
+		if ( finish_in_progress != null ){
 
 			// System.out.println( "Finish in prog" );
 
-			if(finish_in_progress.hasGotThere()){
+			if ( finish_in_progress.isComplete()){
 
 				finish_in_progress = null;
 
@@ -850,7 +852,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			processPieceChecks();
 
-			if(finish_in_progress != null){
+			if ( finish_in_progress != null ){
 
 				// get off the scheduler thread while potentially long running operations
 				// complete
@@ -876,7 +878,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			checkCompletionState(); // pick up changes in completion caused by dnd file changes
 
-			if(finish_in_progress != null){
+			if ( finish_in_progress != null ){
 
 				// get off the scheduler thread while potentially long running operations
 				// complete
@@ -2043,42 +2045,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			adapter.setStateSeeding(start_of_day);
 
-			final AESemaphore waiting_it = new AESemaphore("PEC:DE");
-
-			new AEThread2("PEC:DE"){
-				@Override
-				public void run(){
-					try{
-						disk_mgr.downloadEnded(new DiskManager.OperationStatus(){
-							@Override
-							public void gonnaTakeAWhile(GettingThere gt){
-								boolean async_set = false;
-
-								synchronized(PEPeerControlImpl.this){
-
-									if(finish_in_progress == null){
-
-										finish_in_progress = gt;
-
-										async_set = true;
-									}
-								}
-
-								if(async_set){
-
-									waiting_it.release();
-								}
-							}
-						});
-					}finally{
-
-						waiting_it.release();
-					}
-				}
-			}.start();
-
-			waiting_it.reserve();
-
+			finish_in_progress = disk_mgr.downloadEnded();
+			
 		}else{
 
 			seeding_mode = false;

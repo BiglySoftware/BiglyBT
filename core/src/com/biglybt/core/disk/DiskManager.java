@@ -269,9 +269,8 @@ DiskManager
 	public int
 	getErrorType();
 
-	public void
-	downloadEnded(
-		OperationStatus		op_status );
+	public DownloadEndedProgress
+	downloadEnded();
 
     public void
     downloadRemoved();
@@ -279,8 +278,7 @@ DiskManager
 	public void
 	moveDataFiles(
 		File 				new_parent_dir,
-		String 				dl_name,
-		OperationStatus 	op_status );
+		String 				dl_name );
 
 		/**
 		 * returns -1 if no recheck in progress, percentage complete in 1000 notation otherwise
@@ -387,25 +385,17 @@ DiskManager
 	generateEvidence(
 		IndentWriter		writer );
 
-	public interface
-	OperationStatus
-	{
-		public void
-		gonnaTakeAWhile(
-			GettingThere	gt );
-	}
-
-	public interface
-	GettingThere
-	{
-		public boolean
-		hasGotThere();
-	}
-
 	public long getSizeExcludingDND();
 
 	public int getPercentDoneExcludingDND();
 
 	public long
 	getPriorityChangeMarker();
+	
+	public interface
+	DownloadEndedProgress
+	{
+		public boolean
+		isComplete();
+	}
 }

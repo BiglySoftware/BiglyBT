@@ -23,6 +23,7 @@ package com.biglybt.core.lws;
 import java.io.File;
 
 import com.biglybt.core.disk.*;
+import com.biglybt.core.disk.DiskManager.DownloadEndedProgress;
 import com.biglybt.core.disk.impl.*;
 import com.biglybt.core.disk.impl.access.DMAccessFactory;
 import com.biglybt.core.disk.impl.access.DMChecker;
@@ -572,17 +573,22 @@ LWSDiskManager
 	}
 
 	@Override
-	public void
-	downloadEnded( OperationStatus op_status )
+	public DownloadEndedProgress
+	downloadEnded()
 	{
+		return( new DownloadEndedProgress(){
+			@Override
+			public boolean isComplete(){
+				return( true );
+			}
+		});
 	}
 
 	@Override
 	public void
 	moveDataFiles(
 		File 				new_parent_dir,
-		String 				new_name,
-		OperationStatus		op_status )
+		String 				new_name )
 	{
 		throw( new RuntimeException( "moveDataFiles not implemented" ));
 	}
