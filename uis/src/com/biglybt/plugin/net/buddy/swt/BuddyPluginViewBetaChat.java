@@ -2871,6 +2871,7 @@ BuddyPluginViewBetaChat
 		bubbleTextWidget.setMessage(MessageText.getString("Button.search") + "..." );
 		grid_data = new GridData();
 		grid_data.widthHint = 100;
+		grid_data.heightHint = (int) (FontUtils.getFontHeightInPX(bubbleTextWidget.getFont()) * 1.4);
 		bubbleTextBox.getMainWidget().setLayoutData(grid_data);
 		
 		bubbleTextWidget.addModifyListener(

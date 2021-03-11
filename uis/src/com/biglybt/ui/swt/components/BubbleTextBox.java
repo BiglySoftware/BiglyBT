@@ -75,7 +75,7 @@ public class BubbleTextBox
 
 	private final Composite cBubble;
 
-	private static final int TEXTBOX_VPADDING = (Utils.isGTK3) ? 1 : 4;
+	private static final int TEXTBOX_VPADDING = (Utils.isGTK3) ? 1 : 3;
 
 	private final int INDENT_OVAL;
 

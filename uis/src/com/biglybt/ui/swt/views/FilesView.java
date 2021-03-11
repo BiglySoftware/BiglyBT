@@ -66,6 +66,7 @@ import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.file.FileInfoView;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -306,8 +307,9 @@ public class FilesView
 		Composite mainBubbleWidget = bubbleTextBox.getMainWidget();
 		bubbleTextBox.setMessage(MessageText.getString("TorrentDetailsView.filter"));
 
-		FormData fd = Utils.getFilledFormData();
-		fd.left = null;
+		FormData fd = new FormData();
+		fd.right = new FormAttachment(100, 0);
+		fd.height = (int) (FontUtils.getFontHeightInPX(mainBubbleWidget.getFont()) * 1.4);
 		mainBubbleWidget.setLayoutData(fd);
 
 		fd = new FormData();

@@ -47,6 +47,7 @@ import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -293,6 +294,7 @@ public class TableColumnSetupWindow
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTableAvail, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
 		bubbleTextBox.setMessage(MessageText.getString("column.setup.search"));
 		GridData gd = new GridData(SWT.RIGHT,SWT.CENTER,true,false);
+		gd.heightHint = (int) (FontUtils.getFontHeightInPX(bubbleTextBox.getTextWidget().getFont()) * 1.4);
 		bubbleTextBox.getMainWidget().setLayoutData( gd );
 
 		tvAvail.enableFilterCheck(

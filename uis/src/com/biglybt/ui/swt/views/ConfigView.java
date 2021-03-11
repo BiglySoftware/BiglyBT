@@ -181,6 +181,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
       formData.bottom = new FormAttachment(100, -5);
 			formData.left = new FormAttachment(0, 2);
 			formData.right = new FormAttachment(100, -2);
+	    formData.height = (int) (FontUtils.getFontHeightInPX(txtFilter.getFont()) * 1.4);
 	    cFilterArea.setLayoutData(formData);
 
       formData = new FormData();
