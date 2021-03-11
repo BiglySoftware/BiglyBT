@@ -2001,7 +2001,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	private void checkFinished(final boolean start_of_day){
 		final boolean all_pieces_done = disk_mgr.getRemainingExcludingDND() == 0;
 
-		if(all_pieces_done){
+		if ( all_pieces_done ){
 
 			seeding_mode = true;
 
@@ -2011,27 +2011,21 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			piecePicker.clearEndGameChunks();
 
-			if(!start_of_day)
+			if ( !start_of_day ){
+				
 				adapter.setStateFinishing();
-
+			}
+			
 			_timeFinished = SystemTime.getCurrentTime();
-			final List<PEPeerTransport> peer_transports = peer_transports_cow;
-
-			// remove previous snubbing
-			for(int i = 0; i < peer_transports.size(); i++){
-				final PEPeerTransport pc = peer_transports.get(i);
-				pc.setSnubbed(false);
+			
+				// remove previous snubbing
+			
+			for ( PEPeerTransport pc: peer_transports_cow ){
+				
+				pc.setSnubbed( false );
 			}
+			
 			setNbPeersSnubbed(0);
-
-			final boolean checkPieces = COConfigurationManager.getBooleanParameter("Check Pieces on Completion");
-
-			// re-check all pieces to make sure they are not corrupt, but only if we weren't
-			// already complete
-			if(checkPieces && !start_of_day){
-				final DiskManagerCheckRequest req = disk_mgr.createCheckRequest(-1, new Integer(CHECK_REASON_COMPLETE));
-				disk_mgr.enqueueCompleteRecheckRequest(req, this);
-			}
 
 			_timeStartedSeeding = SystemTime.getCurrentTime();
 			_timeStartedSeeding_mono = SystemTime.getMonotonousTime();
@@ -2040,13 +2034,30 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				disk_mgr.saveResumeData(false);
 
 			}catch(Throwable e){
+				
 				Debug.out("Failed to save resume data", e);
 			}
 
+				// this will kick off any async move operations if needed
+			
+			finish_in_progress = disk_mgr.downloadEnded();
+
+			boolean checkPieces = COConfigurationManager.getBooleanParameter("Check Pieces on Completion");
+
+				// re-check all pieces to make sure they are not corrupt, but only if we weren't
+				// already complete
+				// this is low priority so do it after the move - we want to move to complete quickly to
+				// minimise the chance of something messing with it
+			
+			if ( checkPieces && !start_of_day ){
+				
+				DiskManagerCheckRequest req = disk_mgr.createCheckRequest(-1, new Integer(CHECK_REASON_COMPLETE));
+				
+				disk_mgr.enqueueCompleteRecheckRequest(req, this);
+			}
+			
 			adapter.setStateSeeding(start_of_day);
 
-			finish_in_progress = disk_mgr.downloadEnded();
-			
 		}else{
 
 			seeding_mode = false;
