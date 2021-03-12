@@ -1452,6 +1452,20 @@ DownloadManagerImpl
 					Debug.out( e );
 				}
 
+				File existing_location = core_dm.getSaveLocation();
+				
+				String stub_location = stub.getSavePath();
+				
+				if ( stub_location != null && !stub_location.isEmpty()){
+					
+					File f_stub = FileUtil.newFile( stub_location );
+					
+					if ( !f_stub.equals( existing_location )){
+						
+						core_dm.setTorrentSaveDir( f_stub, true );
+					}
+				}
+				
 				synchronized( download_stubs ){
 
 					download_stubs.remove( stub );
