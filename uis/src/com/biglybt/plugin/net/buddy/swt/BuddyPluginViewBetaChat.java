@@ -2883,17 +2883,21 @@ BuddyPluginViewBetaChat
 			});
 		
 		bubbleTextWidget.addKeyListener(
-				KeyListener.keyPressedAdapter((e)->{
-										
-					if ( e.character == '\r' ){
+				new KeyAdapter()
+				{
+					public void 
+					keyPressed(KeyEvent e)
+					{
+						if ( e.character == '\r' ){
 						
-						search( "\n" );
-						
-					}else if ( e.keyCode == SWT.ESC ){
-						
-						bubbleTextWidget.setText( "" );
+							search( "\n" );
+							
+						}else if ( e.keyCode == SWT.ESC ){
+							
+							bubbleTextWidget.setText( "" );
+						}
 					}
-				}));
+				});
 		
 		Image image = ImageLoader.getInstance().getImage( "cog_down" );
 		menu_drop.setImage( image );
