@@ -310,6 +310,7 @@ public class FilesView
 		FormData fd = new FormData();
 		fd.right = new FormAttachment(100, 0);
 		fd.height = (int) (FontUtils.getFontHeightInPX(mainBubbleWidget.getFont()) * 1.4);
+		fd.width = 140;
 		mainBubbleWidget.setLayoutData(fd);
 
 		fd = new FormData();
