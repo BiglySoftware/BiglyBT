@@ -38,8 +38,17 @@ GlobalManagerListener
 	downloadManagerRemoved(
 		DownloadManager	dm );
 
-	public void
-	destroyInitiated();
+	public default void
+	destroyInitiated()
+	{
+	}
+	
+	public default void
+	destroyInitiated(
+		GlobalMangerProgressListener	l )
+	{
+		destroyInitiated();
+	}
 
 	public void
 	destroyed();

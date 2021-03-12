@@ -46,12 +46,6 @@ GlobalManagerAdapter
 
 	@Override
 	public void
-	destroyInitiated()
-	{
-	}
-
-	@Override
-	public void
 	destroyed()
 	{
 	}

@@ -129,7 +129,9 @@ public class GlobalManagerImpl
 
 						}else if ( type == LDT_DESTROY_INITIATED ){
 
-							target.destroyInitiated();
+							GlobalMangerProgressListener progress = (GlobalMangerProgressListener)value;
+							
+							target.destroyInitiated( progress);
 
 						}else if ( type == LDT_DESTROYED ){
 
@@ -1788,7 +1790,7 @@ public class GlobalManagerImpl
 
 	  stats.save();
 
-	  informDestroyInitiated();
+	  informDestroyInitiated( listener );
 
 	  if ( host_support != null ){
 		  host_support.destroy();
@@ -3529,10 +3531,10 @@ public class GlobalManagerImpl
   		listeners_and_event_listeners.dispatch( LDT_DESTROYED, null, true );
   }
 
-  public void
-  informDestroyInitiated()
+  private void
+  informDestroyInitiated(GlobalMangerProgressListener progress )
   {
-	  listeners_and_event_listeners.dispatch( LDT_DESTROY_INITIATED, null, true );
+	  listeners_and_event_listeners.dispatch( LDT_DESTROY_INITIATED, progress, true );
   }
 
  	@Override

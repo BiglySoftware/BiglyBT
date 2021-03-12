@@ -37,6 +37,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerListener;
+import com.biglybt.core.global.GlobalMangerProgressListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
@@ -2040,18 +2041,24 @@ PluginInitializer
 
   @Override
   public void
-  destroyInitiated()
+  destroyInitiated(
+	GlobalMangerProgressListener progress ) 
   {
-	  List plugin_interfaces;
+	  List<PluginInterfaceImpl> plugin_interfaces;
 
 	  synchronized( s_plugin_interfaces ){
 
 		  plugin_interfaces = new ArrayList( s_plugin_interfaces );
 	  }
 
-	  for (int i=0;i<plugin_interfaces.size();i++){
+	  for (PluginInterfaceImpl pi: plugin_interfaces ){
 
-		  ((PluginInterfaceImpl)plugin_interfaces.get(i)).closedownInitiated();
+		  if ( progress != null ){
+			  
+			  progress.reportCurrentTask( MessageText.getString( "ManagerItem.stopping" ) + " " + pi.getPluginName());
+		  }
+		  
+		  pi.closedownInitiated();
 	  }
 
 	  if ( default_plugin != null ){
