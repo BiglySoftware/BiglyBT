@@ -43,7 +43,6 @@ import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
-import com.biglybt.core.security.SESecurityManager;
 import com.biglybt.core.util.*;
 import com.biglybt.core.versioncheck.VersionCheckClient;
 import com.biglybt.pif.*;
@@ -2048,22 +2047,41 @@ PluginInitializer
 
 	  synchronized( s_plugin_interfaces ){
 
-		  plugin_interfaces = new ArrayList( s_plugin_interfaces );
+		  plugin_interfaces = new ArrayList<>( s_plugin_interfaces );
 	  }
 
-	  for (PluginInterfaceImpl pi: plugin_interfaces ){
+	  	// reverse order - really only to ensure that built in ones get stopped before slower ones
+	  	// in particular the I2P Helper plugin can take a long time to stop and we would prefer that
+	  	// the start-stop rules plugin (built-in so loaded later) stops early
+	  	// Also it does make sense to stop them in the opposite order, kinda
+
+	  Collections.reverse( plugin_interfaces );
+	  
+	  for ( PluginInterfaceImpl pi: plugin_interfaces ){
 
 		  if ( progress != null ){
 			  
 			  progress.reportCurrentTask( MessageText.getString( "ManagerItem.stopping" ) + " " + pi.getPluginName());
 		  }
 		  
-		  pi.closedownInitiated();
+		  try{
+			  pi.closedownInitiated();
+			  
+		  }catch( Throwable e ){
+			  
+			  Debug.out( e );
+		  }
 	  }
 
 	  if ( default_plugin != null ){
 
-		  default_plugin.closedownInitiated();
+		  try{
+			  default_plugin.closedownInitiated();
+			  
+		  }catch( Throwable e ){
+			  
+			  Debug.out( e );
+		  }
 	  }
   }
 
@@ -2071,21 +2089,35 @@ PluginInitializer
   public void
   destroyed()
   {
-	  List plugin_interfaces;
+	  List<PluginInterfaceImpl> plugin_interfaces;
 
 	  synchronized( s_plugin_interfaces ){
 
-		  plugin_interfaces = new ArrayList( s_plugin_interfaces );
+		  plugin_interfaces = new ArrayList<>( s_plugin_interfaces );
 	  }
 
-	  for (int i=0;i<plugin_interfaces.size();i++){
+	  Collections.reverse( plugin_interfaces );
+	  
+	  for ( PluginInterfaceImpl pi: plugin_interfaces ){
 
-		  ((PluginInterfaceImpl)plugin_interfaces.get(i)).closedownComplete();
+		  try{
+			  pi.closedownComplete();
+			  
+		  }catch( Throwable e ){
+			  
+			  Debug.out( e );
+		  }
 	  }
 
 	  if ( default_plugin != null ){
 
-		  default_plugin.closedownComplete();
+		  try{
+			  default_plugin.closedownComplete();
+			  
+		  }catch( Throwable e ){
+			  
+			  Debug.out( e );
+		  }
 	  }
   }
 
