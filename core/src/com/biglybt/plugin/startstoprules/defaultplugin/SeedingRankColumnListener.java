@@ -32,12 +32,6 @@ public class
 SeedingRankColumnListener 
 	implements TableCellRefreshListener
 {
-	private StartStopRulesDefaultPlugin		plugin;
-	
-	public SeedingRankColumnListener(StartStopRulesDefaultPlugin _plugin) {
-		plugin = _plugin;
-	}
-
 	@Override
 	public void refresh(TableCell cell) {
 		Download dl = (Download) cell.getDataSource();
@@ -52,12 +46,23 @@ SeedingRankColumnListener
 			dlData = StartStopRulesDefaultPlugin.getRankCalculator( dl );
 			cell.setSortValue(dlData);
 		}
-		if (dlData == null)
+		if (dlData == null){
 			return;
-
-		String[] status = dl.getSeedingRank().getStatus( false );
+		}
 		
-		cell.setText(status[0]);
+		int state = dlData.getState();
+		
+		String[] status = dl.getSeedingRank().getStatus( false );
+
+		if ( state == Download.ST_STOPPED || state == Download.ST_ERROR ){
+			
+			cell.setText( "" );
+			
+		}else{
+						
+			cell.setText(status[0]);
+		}
+		
 		cell.setToolTip(status[1] );
 	}
 }

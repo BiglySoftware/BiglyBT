@@ -482,7 +482,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						
 						seedingRankColumn.initialize(TableColumn.ALIGN_TRAIL, TableColumn.POSITION_LAST, 80, TableColumn.INTERVAL_LIVE);
 	
-						TableCellRefreshListener columnListener = new SeedingRankColumnListener( StartStopRulesDefaultPlugin.this );
+						TableCellRefreshListener columnListener = new SeedingRankColumnListener();
 						
 						seedingRankColumn.addCellRefreshListener(columnListener);
 	

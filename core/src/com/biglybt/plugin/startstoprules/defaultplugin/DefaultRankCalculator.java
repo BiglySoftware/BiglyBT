@@ -21,7 +21,6 @@ import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.tag.TagFeatureRateLimit;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.download.DownloadScrapeResult;
-import com.biglybt.pif.torrent.Torrent;
 
 public interface 
 DefaultRankCalculator 

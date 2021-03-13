@@ -368,6 +368,21 @@ RankCalculatorReal
 		
 		RankCalculatorReal dlData = (RankCalculatorReal)obj;
 		
+			// stopped/error always to bottom
+		
+		int state1 = dl.getState();
+		boolean stopped1 = state1 == Download.ST_STOPPED || state1 == Download.ST_ERROR;
+		int state2 = dlData.dl.getState();
+		boolean stopped2 = state2 == Download.ST_STOPPED || state2 == Download.ST_ERROR;
+		
+		if ( stopped1 && stopped2 ){
+			return( dl.getPosition() - dlData.dl.getPosition());
+		}else if ( stopped1 ){
+			return( 1 );
+		}else if ( stopped2 ){
+			return( -1 );
+		}
+		
 		// Test FP.  FP goes to top
 		if (dlData.bIsFirstPriority && !bIsFirstPriority)
 			return 1;
