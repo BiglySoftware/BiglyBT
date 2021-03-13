@@ -243,7 +243,7 @@ BasePanel
 			minY = saveMinY + moveFactor * (centerY - saveMinY);
 			maxY = saveMaxY - moveFactor * (saveMaxY - centerY);
 
-			System.out.println( "wheel->" + minX + ", " + minY + ", " + maxX + ", " + maxY );
+			//System.out.println( "wheel->" + minX + ", " + minY + ", " + maxX + ", " + maxY );
 			
 			disableAutoScale = true;
 		}
