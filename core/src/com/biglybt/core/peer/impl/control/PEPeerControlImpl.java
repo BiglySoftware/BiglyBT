@@ -2038,6 +2038,12 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				Debug.out("Failed to save resume data", e);
 			}
 
+				// NOTE: setStateSeeding has the side effect of marking the download as complete (calls setAssumedComplete)
+				// which needs to be done BEFORE informing the disk manager that the download has ended as this processes
+				// the 'move on complete' actions which will fail if assumedComplete isn't true
+			
+			adapter.setStateSeeding(start_of_day);
+
 				// this will kick off any async move operations if needed
 			
 			finish_in_progress = disk_mgr.downloadEnded();
@@ -2056,8 +2062,6 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				disk_mgr.enqueueCompleteRecheckRequest(req, this);
 			}
 			
-			adapter.setStateSeeding(start_of_day);
-
 		}else{
 
 			seeding_mode = false;

@@ -541,7 +541,7 @@ DownloadManagerImpl
 	 * - implies that the user completed the download at one point<br>
 	 * - Checks if there's Data Missing when torrent is done (or torrent load)
 	 */
-	private boolean assumedComplete;
+	private volatile boolean assumedComplete;
 
 	/**
 	 * forceStarted torrents can't/shouldn't be automatically stopped
