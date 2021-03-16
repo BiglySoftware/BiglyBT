@@ -1042,9 +1042,7 @@ WebPlugin
 		PairingManager pm = PairingManagerFactory.getSingleton();
 
 		URL url = pm.getServiceURL();
-		
-		url = UrlUtils.setProtocol( url, "http" );
-	
+			
 		String res = url.toExternalForm() + "/web/test?sid=" + sid;
 
 		if ( pm.isEnabled()){
