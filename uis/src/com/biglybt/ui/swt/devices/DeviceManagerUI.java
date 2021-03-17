@@ -3152,6 +3152,42 @@ DeviceManagerUI
 
 				}
 
+				if ( true ){
+					need_sep = true;
+	
+					final MenuItem menu_ra = menu_manager.addMenuItem(
+							"sidebar." + key, "menu.add.file");
+					menu_ra.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+					menu_ra.addListener(
+						new MenuItemListener()
+						{
+							@Override
+							public void
+							selected(
+								MenuItem menu,
+								Object target)
+							{
+								Utils.execSWTThread(()->{
+									
+									FileDialog dialog =
+											new FileDialog(  Utils.findAnyShell(), SWT.SYSTEM_MODAL | SWT.SAVE );
+
+										dialog.setFilterPath( TorrentOpener.getFilterPathData() );
+
+										dialog.setText(MessageText.getString("wizard.maketorrent.choosefile"));
+
+										String path = TorrentOpener.setFilterPathData( dialog.open());
+
+										if ( path != null ){
+											
+											handleDrop(renderer, new String[]{ path } );
+										}
+								});
+							}
+						});
+				}
+				
 				if ( renderer.canRestrictAccess()){
 
 					need_sep = true;
