@@ -2876,8 +2876,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			//
 			//   3) It hasn't been force started and is controllable
   		
-			boolean underCurrentLimit 	= totals.maxActive != 0 && cvars.numWaitingOrSeeding + cvars.stalledSeeders < totals.maxSeeders + maxStalledSeeding ;
-			boolean	underGlobalLimit	= totals.maxActive != 0 && totals.activelyCDing + totals.waitingToSeed + totals.stalledSeeders <  totals.maxSeeders + maxStalledSeeding + maxOverLimitSeeding;
+			boolean underCurrentLimit 	= totals.maxActive == 0 || cvars.numWaitingOrSeeding + cvars.stalledSeeders < totals.maxSeeders + maxStalledSeeding ;
+			boolean	underGlobalLimit	= totals.maxActive == 0 || totals.activelyCDing + totals.waitingToSeed + totals.stalledSeeders <  totals.maxSeeders + maxStalledSeeding + maxOverLimitSeeding;
 			
 			boolean atLimit = !( underCurrentLimit && underGlobalLimit );
 			
