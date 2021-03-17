@@ -4872,8 +4872,10 @@ public class GlobalManagerImpl
 						new_tag = old_tag;
 					}
 					break;
-				case DownloadManager.STATE_DOWNLOADING:
 				case DownloadManager.STATE_FINISHING:
+					new_tag = old_tag;	// get here for incomplete + complete downloads - transient state so ignore
+					break;
+				case DownloadManager.STATE_DOWNLOADING:
 					new_tag = tag_downloading;
 					break;
 				case DownloadManager.STATE_SEEDING:
