@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2021.03.yy | BiglyBT 2.7.0.0
+2021.03.18 | BiglyBT 2.7.0.0
 
 FEATURE: Tag   | Option to prevent removal of a download when assigned to a tag [Parg]
 FEATURE: Tag   | Added file_paths and file_paths_selected Tag constraint variables [Parg]
@@ -46,6 +46,7 @@ FEATURE: UI    | Option to auto-accept torrents in the torrent open dialog after
 FEATURE: UI    | Added 'Show in All Trackers view' menu item for Sources view [Parg]
 FEATURE: UI    | Search boxes now have a 'regular expression' toggle button [TuxPaper]
 FEATURE: UI    | Show plugin stop events in closedown UI as some can take a while [Parg]
+FEATURE: UI    | Right-click option on renderers to add files [Parg]
 
 CHANGE: Tag    | Include last modification date on Tag icon cache to permit edits [Parg]
 CHANGE: Tag    | Include spacer between Tag groups in Library tag buttons [Parg]
