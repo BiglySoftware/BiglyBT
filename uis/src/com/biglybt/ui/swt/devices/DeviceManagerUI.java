@@ -3171,18 +3171,41 @@ DeviceManagerUI
 								Utils.execSWTThread(()->{
 									
 									FileDialog dialog =
-											new FileDialog(  Utils.findAnyShell(), SWT.SYSTEM_MODAL | SWT.SAVE );
+											new FileDialog(  Utils.findAnyShell(), SWT.SYSTEM_MODAL | SWT.OPEN | SWT.MULTI );
 
-										dialog.setFilterPath( TorrentOpener.getFilterPathData() );
+									String filter_path = TorrentOpener.getFilterPathData() ;
+									
+									dialog.setFilterPath( filter_path );
 
-										dialog.setText(MessageText.getString("wizard.maketorrent.choosefile"));
+									dialog.setText(MessageText.getString("wizard.maketorrent.choosefile"));
 
-										String path = TorrentOpener.setFilterPathData( dialog.open());
+									String str = dialog.open();
+									
+									String path = TorrentOpener.setFilterPathData( str );
 
-										if ( path != null ){
+									if ( path != null ){
+																			
+										String[]	paths;
+										
+										String[] names = dialog.getFileNames();
+										
+										if ( names != null && names.length > 0 ){
 											
-											handleDrop(renderer, new String[]{ path } );
+											filter_path = dialog.getFilterPath();
+
+											paths = new String[ names.length ];
+											
+											for ( int i=0; i<names.length;i++ ){
+												
+												paths[i] = filter_path + File.separator + names[i];
+											}
+										}else{
+										
+											paths = new String[]{ path };
 										}
+										
+										handleDrop(renderer, paths );
+									}
 								});
 							}
 						});
