@@ -238,15 +238,18 @@ ConfigurationManager
     load(CONFIG_FILENAME);
 
     try {
-      String[] keys = propertiesMap.keySet().toArray(new String[0]);
-      for (String key : keys) {
-      	if (key == null) {
-      		continue;
-      	}
-  			if (key.startsWith("SideBar.Expanded.AutoOpen.") || key.startsWith("NameColumn.wrapText.")) {
-  				removeParameter(key);
-  			}
-  		}
+    	String[] keys = propertiesMap.keySet().toArray(new String[0]);
+    	for (String key : keys) {
+    		if (key == null) {
+    			continue;
+    		}
+    			// remove old potentially non-ascii keys
+    		if ( 	key.startsWith("SideBar.Expanded.") || 
+    				key.startsWith("NameColumn.wrapText.")) {
+    			
+    			removeParameter(key);
+    		}
+    	}
     } catch (Exception e) {
     	// not sure if I can do Debug.out here.. could be in that evil
     	// preinitialization loop of dooom

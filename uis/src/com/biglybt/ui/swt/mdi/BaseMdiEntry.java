@@ -845,15 +845,23 @@ public abstract class BaseMdiEntry
 
 	// @see MdiEntry#setDefaultExpanded(boolean)
 	@Override
-	public void setDefaultExpanded(boolean defaultExpanded) {
-		COConfigurationManager.setBooleanDefault("SideBar.Expanded." + id,
-				defaultExpanded);
+	public void 
+	setDefaultExpanded(
+		boolean defaultExpanded) 
+	{
+		String configID = "SideBar.Expanded2." + Base32.encode( id.getBytes( Constants.UTF_8 ));
+		
+		COConfigurationManager.setBooleanDefault( configID, defaultExpanded );
 	}
 
 	@Override
-	public boolean isExpanded() {
+	public boolean 
+	isExpanded() 
+	{
+		String configID = "SideBar.Expanded2." + Base32.encode( id.getBytes( Constants.UTF_8 ));
+
 		return isExpanded == null
-				? COConfigurationManager.getBooleanParameter("SideBar.Expanded." + id)
+				? COConfigurationManager.getBooleanParameter(configID)
 				: isExpanded;
 			}
 
@@ -861,18 +869,24 @@ public abstract class BaseMdiEntry
 	 * @see MdiEntry#setExpanded(boolean)
 	 */
 	@Override
-	public void setExpanded(boolean expanded) {
+	public void 
+	setExpanded(boolean expanded) 
+	{
+		String configID = "SideBar.Expanded2." + Base32.encode( id.getBytes( Constants.UTF_8 ));
+
 		isExpanded = expanded;
+		
 		boolean defExpanded = true;
-		try {
+		
+		try{
 			defExpanded = ConfigurationDefaults.getInstance().getBooleanParameter(
-					"SideBar.Expanded." + id);
+					configID);
 		} catch (ConfigurationParameterNotFoundException e) {
 		}
 		if (isExpanded == defExpanded) {
-			COConfigurationManager.removeParameter("SideBar.Expanded." + id);
+			COConfigurationManager.removeParameter(configID);
 		} else {
-			COConfigurationManager.setParameter("SideBar.Expanded." + id, isExpanded);
+			COConfigurationManager.setParameter(configID, isExpanded);
 		}
 	}
 
