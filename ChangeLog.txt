@@ -1,7 +1,11 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2021.xx.yy | BiglyBT 2.7.0.1
+2021.03.20 | BiglyBT 2.7.0.2
+
+BUGFIX: Core   | Fix startup timing issue causing UI hangs and proxy-plugin issues [Parg]
+BUGFIX: UI     | Custom date formats were getting corrupted by CrowdIn in some locales [Parg]
+BUGFIX: UI     | Sidebar expansion state recording was resulting in potentially non-ASCII config keys [Parg]
 
 2021.03.18 | BiglyBT 2.7.0.0
 
