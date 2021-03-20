@@ -93,12 +93,37 @@ public class TimeFormatter {
 				
 				if ( bit.length() > 0 ){
 					
+						// CrowdIn has this bug whereby a source string with a '' ends up being
+						// ingested as ' 
+					
+					boolean added = false;
+					
 					try{
 						new SimpleDateFormat( bit );
 					
 						list.add( bit );
+					
+						added = true;
 						
 					}catch( Throwable e ){
+						
+						if ( bit.contains( "'" )){
+							
+							bit = bit.replaceAll( "'", "''" );
+							
+							try{
+								new SimpleDateFormat( bit );
+							
+								list.add( bit );
+								
+								added = true;
+								
+							}catch( Throwable f ){
+							}
+						}
+					}
+					
+					if ( !added ){
 						
 						System.err.println( "Invalid date format: " + bit );
 					}
