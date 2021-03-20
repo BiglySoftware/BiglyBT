@@ -675,12 +675,7 @@ ResourceDownloaderURLImpl
 				this_mon.exit();
 			}
 
-			try{
-				if ( !CoreFactory.isCoreAvailable()){
-						// debug for Havokdan early start issue
-					Debug.out( "Core not avaiable for " + original_url );
-				}
-				
+			try{				
 				URL	outer_url = new URL( original_url.toString().replaceAll( " ", "%20" ));
 
 					// some authentications screw up without an explicit port number here
