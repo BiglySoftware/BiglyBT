@@ -36,6 +36,7 @@ import java.util.zip.ZipException;
 
 import javax.net.ssl.*;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
@@ -675,6 +676,11 @@ ResourceDownloaderURLImpl
 			}
 
 			try{
+				if ( !CoreFactory.isCoreAvailable()){
+						// debug for Havokdan early start issue
+					Debug.out( "Core not avaiable for " + original_url );
+				}
+				
 				URL	outer_url = new URL( original_url.toString().replaceAll( " ", "%20" ));
 
 					// some authentications screw up without an explicit port number here

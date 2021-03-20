@@ -58,21 +58,24 @@ AEPluginProxyHandler
 	private static boolean	enable_plugin_proxies_with_socks;
 
 	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Proxy.SOCKS.disable.plugin.proxies",
+			new ParameterListener() {
+				@Override
+				public void
+				parameterChanged(
+					String parameterName)
+				{
+					enable_plugin_proxies_with_socks = !COConfigurationManager.getBooleanParameter( parameterName );
+				}
+			});
+	}
+	
+	public static void
+	initialise(
+		Core		core )
+	{
 		try{
-			COConfigurationManager.addAndFireParameterListener(
-				"Proxy.SOCKS.disable.plugin.proxies",
-				new ParameterListener() {
-					@Override
-					public void
-					parameterChanged(
-						String parameterName)
-					{
-						enable_plugin_proxies_with_socks = !COConfigurationManager.getBooleanParameter( parameterName );
-					}
-				});
-
-			Core core = CoreFactory.getSingleton();
-
 			PluginInterface default_pi = core.getPluginManager().getDefaultPluginInterface();
 
 			default_pi.addEventListener(

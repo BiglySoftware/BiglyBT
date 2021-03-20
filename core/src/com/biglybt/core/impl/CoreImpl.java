@@ -71,6 +71,7 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.peermanager.PeerManager;
 import com.biglybt.core.peermanager.nat.PeerNATTraverser;
+import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxySelectorFactory;
 import com.biglybt.core.security.BGSpongy;
 import com.biglybt.core.security.CryptoManager;
@@ -361,6 +362,8 @@ CoreImpl
 				logTime("Init PluginInitializer");
 			}
 	
+			AEProxyFactory.initialise( this );
+			
 			BGSpongy.initialize( this );
 
 			instance_manager =

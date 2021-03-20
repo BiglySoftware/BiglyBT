@@ -25,6 +25,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
+import com.biglybt.core.Core;
 import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
 import com.biglybt.core.proxy.impl.AEProxyAddressMapperImpl;
 import com.biglybt.core.proxy.impl.AEProxyImpl;
@@ -39,6 +40,13 @@ import com.biglybt.plugin.dht.DHTPluginInterface;
 public class
 AEProxyFactory
 {
+	public static void
+	initialise(
+		Core	core )
+	{
+		AEPluginProxyHandler.initialise( core );
+	}
+	
 		/**
 		 * @param port				0 = free port
 		 * @param connect_timeout	0 = no timeout
