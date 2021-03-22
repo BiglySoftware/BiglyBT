@@ -3019,47 +3019,51 @@ TRTrackerBTAnnouncerImpl
 
 	 					// handle any user warnings in the response
 
+	 				String warning_message = null;
+	 				
 	 				try{
 	 					byte[]	b_warning_message = (byte[])metaData.get( "warning message" );
-
-	 					if ( 	b_warning_message != null &&
-								COConfigurationManager.getBooleanParameter( "Tracker Client Show Warnings" )){
-
-	 						String	warning_message = new String(b_warning_message);
-
-								// don't report the same message twice per torrent
-
-							if ( !warning_message.equals( last_tracker_message )){
-
-								last_tracker_message	= warning_message;
-
-								boolean	log_it = false;
-
-									// only report a given message once per tracker
-
-								try{
-									class_mon.enter();
-
-									String last_warning_message = (String)tracker_report_map.get( url.getHost());
-
-									if ( 	last_warning_message == null ||
-											!warning_message.equals( last_warning_message )){
-
-										log_it	= true;
-
-										tracker_report_map.put( url.getHost(), warning_message );
+	 					
+	 					if ( b_warning_message != null ){
+	 						
+	 						warning_message = new String(b_warning_message);
+	 					
+	 						if ( COConfigurationManager.getBooleanParameter( "Tracker Client Show Warnings" )){
+	
+									// don't report the same message twice per torrent
+	
+								if ( !warning_message.equals( last_tracker_message )){
+	
+									last_tracker_message	= warning_message;
+	
+									boolean	log_it = false;
+	
+										// only report a given message once per tracker
+	
+									try{
+										class_mon.enter();
+	
+										String last_warning_message = (String)tracker_report_map.get( url.getHost());
+	
+										if ( 	last_warning_message == null ||
+												!warning_message.equals( last_warning_message )){
+	
+											log_it	= true;
+	
+											tracker_report_map.put( url.getHost(), warning_message );
+										}
+									}finally{
+	
+										class_mon.exit();
 									}
-								}finally{
-
-									class_mon.exit();
+	
+									if ( log_it ){
+			 							Logger.logTextResource(new LogAlert(torrent,
+			 									LogAlert.UNREPEATABLE, LogAlert.AT_WARNING,
+												"TrackerClient.announce.warningmessage"), new String[] {
+												announce_data_provider.getName() + " - " + UrlUtils.getBaseURL( url ), warning_message });
+			 						}
 								}
-
-								if ( log_it ){
-		 							Logger.logTextResource(new LogAlert(torrent,
-		 									LogAlert.UNREPEATABLE, LogAlert.AT_WARNING,
-											"TrackerClient.announce.warningmessage"), new String[] {
-											announce_data_provider.getName() + " - " + UrlUtils.getBaseURL( url ), warning_message });
-		 						}
 							}
 	 					}
 	 				}catch( Throwable e ){
@@ -3801,44 +3805,54 @@ TRTrackerBTAnnouncerImpl
 
 				    		// 16 bytes for v6 + 2 bytes for port
 
-						final int entry_size = 18;
-
-						final byte[] rawAddr = new byte[16];
-
-						for (int i=0; i<v6peers.length; i+=entry_size ){
-
-							System.arraycopy( v6peers, i, rawAddr, 0, 16 );
-
-							String ip = InetAddress.getByAddress(rawAddr).getHostAddress();
-
-				    		int	po1 = 0xFF & v6peers[i+16];
-				    		int	po2 = 0xFF & v6peers[i+17];
-
-							int tcp_port = po1*256 + po2;
-
-							if (tcp_port < 0 || tcp_port > 65535){
-
-								if (Logger.isEnabled()){
-
-									Logger.log(new LogEvent(torrent, LOGID, LogEvent.LT_ERROR, "Invalid compactv6 peer port given: " + ip + ": " + tcp_port));
+				    	try{
+							final int entry_size = 18;
+	
+							final byte[] rawAddr = new byte[16];
+	
+							for (int i=0; i<v6peers.length; i+=entry_size ){
+	
+								System.arraycopy( v6peers, i, rawAddr, 0, 16 );
+	
+								String ip = InetAddress.getByAddress(rawAddr).getHostAddress();
+	
+					    		int	po1 = 0xFF & v6peers[i+16];
+					    		int	po2 = 0xFF & v6peers[i+17];
+	
+								int tcp_port = po1*256 + po2;
+	
+								if (tcp_port < 0 || tcp_port > 65535){
+	
+									if (Logger.isEnabled()){
+	
+										Logger.log(new LogEvent(torrent, LOGID, LogEvent.LT_ERROR, "Invalid compactv6 peer port given: " + ip + ": " + tcp_port));
+									}
+	
+									continue;
 								}
-
-								continue;
+	
+								byte[] peer_peer_id = TRTrackerAnnouncerFactoryImpl.getAnonymousPeerId( ip, tcp_port );
+	
+								short protocol = DownloadAnnounceResultPeer.PROTOCOL_NORMAL;
+	
+								TRTrackerAnnouncerResponsePeerImpl peer = new TRTrackerAnnouncerResponsePeerImpl(PEPeerSource.PS_BT_TRACKER, peer_peer_id, ip, tcp_port, 0, 0, protocol, TRTrackerAnnouncer.AZ_TRACKER_VERSION_1, (short) 0);
+	
+								if (Logger.isEnabled()){
+	
+									Logger.log(new LogEvent(torrent, LOGID, "COMPACTv6 PEER: " + peer.getString()));
+								}
+	
+								valid_meta_peers.add(peer);
 							}
-
-							byte[] peer_peer_id = TRTrackerAnnouncerFactoryImpl.getAnonymousPeerId( ip, tcp_port );
-
-							short protocol = DownloadAnnounceResultPeer.PROTOCOL_NORMAL;
-
-							TRTrackerAnnouncerResponsePeerImpl peer = new TRTrackerAnnouncerResponsePeerImpl(PEPeerSource.PS_BT_TRACKER, peer_peer_id, ip, tcp_port, 0, 0, protocol, TRTrackerAnnouncer.AZ_TRACKER_VERSION_1, (short) 0);
-
+				    	}catch( Throwable e ){
+				    		
+				    		// seen corrupt v6 peers being returned
+				    		
 							if (Logger.isEnabled()){
-
-								Logger.log(new LogEvent(torrent, LOGID, "COMPACTv6 PEER: " + peer.getString()));
+								
+								Logger.log(new LogEvent(torrent, LOGID, LogEvent.LT_ERROR, "Invalid compactv6: " + Base32.encode( v6peers )));
 							}
-
-							valid_meta_peers.add(peer);
-						}
+				    	}
 					}
 
 
@@ -3850,6 +3864,10 @@ TRTrackerBTAnnouncerImpl
 
 					TRTrackerAnnouncerResponseImpl resp = new TRTrackerAnnouncerResponseImpl( url, torrent_hash_actual, TRTrackerAnnouncerResponse.ST_ONLINE, time_to_wait, peers );
 
+					if ( warning_message != null ){
+						
+						resp.setAdditionalInfo( warning_message );
+					}
 						//reset failure retry interval on successful connect
 
 					failure_added_time = 0;
@@ -3891,7 +3909,7 @@ TRTrackerBTAnnouncerImpl
 						int downloaded 	= downloaded_l == null ? -1 : downloaded_l.intValue();
 
 						if (complete < 0 || incomplete < 0) {
-							resp.setFailureReason(MessageText.getString(
+							resp.setAdditionalInfo(MessageText.getString(
 									"Tracker.announce.ignorePeerSeed",
 									new String[] { (complete < 0
 											? MessageText.getString("MyTorrentsView.seeds") + " == "

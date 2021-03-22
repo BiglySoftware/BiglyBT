@@ -35,8 +35,8 @@ TRTrackerAnnouncerResponseImpl
 	private final URL				url;
 	private final HashWrapper		hash;
 	private final int				status;
-	private final long			time_to_wait;
-	private String			failure_reason;
+	private final long				time_to_wait;
+	private String					additional_info;
 
 	private boolean			was_udp_probe		= false;
 	private int				scrape_complete		= -1;
@@ -68,13 +68,13 @@ TRTrackerAnnouncerResponseImpl
 		HashWrapper	_hash,
 		int			_status,
 		long		_time_to_wait,
-		String		_failure_reason )
+		String		_additional_info )
 	{
 		url				= _url;
 		hash			= _hash;
 		status			= _status;
 		time_to_wait	= _time_to_wait;
-		failure_reason	= _failure_reason;
+		additional_info	= _additional_info;
 	}
 
 	public
@@ -142,19 +142,21 @@ TRTrackerAnnouncerResponseImpl
 			str = "Failed";
 		}
 
-		if ( failure_reason != null && failure_reason.length() > 0 ){
+		if ( additional_info != null && additional_info.length() > 0 ){
 
-			str += " - " + failure_reason;
+				// we need to use () here as code in StatusItem expects this...
+			
+			str += " (" + additional_info + ")";
 		}
 
 		return( str );
 	}
 
 	public void
-	setFailureReason(
-		String reason)
+	setAdditionalInfo(
+		String info )
 	{
-		failure_reason = reason;
+		additional_info = info;
 	}
 
 	public void
@@ -180,7 +182,7 @@ TRTrackerAnnouncerResponseImpl
 	public String
 	getAdditionalInfo()
 	{
-		return( failure_reason );
+		return( additional_info );
 	}
 
 	@Override
@@ -280,9 +282,15 @@ TRTrackerAnnouncerResponseImpl
 	{
 		String	str = "url=" + url + ", status=" + getStatus() + ", probe=" + was_udp_probe;
 
+		String info = getAdditionalInfo();
+		
 		if ( getStatus() != ST_ONLINE ){
 
-			str +=", error=" + getAdditionalInfo();
+			str +=", error=" + info;
+			
+		}else if ( info != null && !info.isEmpty()){
+			
+			str +=", info=" + info;
 		}
 
 		str += ", time_to_wait=" + time_to_wait;

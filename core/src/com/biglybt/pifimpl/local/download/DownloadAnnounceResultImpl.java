@@ -131,6 +131,13 @@ DownloadAnnounceResultImpl
 	}
 
 	@Override
+	public String 
+	getAdditionalInfo()
+	{
+		return( response==null?null:response.getAdditionalInfo());
+	}
+	
+	@Override
 	public URL
 	getURL()
 	{

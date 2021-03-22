@@ -105,6 +105,17 @@ DownloadAnnounceResult
 	getError();
 
 		/**
+		 * @Since 2.7.0.3 - additional info extended to include warning messages from trackers
+		 * @returns error/warnings/additional info
+		 */
+	
+	public default String
+	getAdditionalInfo()
+	{
+		return( getError());
+	}
+	
+		/**
 		 * The URL for the tracker.
 		 * @return WILL BE NULL if the torrent isn't running
 		 */
