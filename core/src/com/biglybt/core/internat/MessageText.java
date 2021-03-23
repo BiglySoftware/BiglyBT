@@ -876,7 +876,17 @@ public class MessageText {
 		} else {
 			localeBuilder.setRegion(savedLocaleStrings[1]);
 			if (savedLocaleStrings.length == 3) {
-				localeBuilder.setVariant(savedLocaleStrings[2]);
+				try{
+					// Java support for IETF BCP 47 causes this to throw exceptions if the variant doesn't follow
+					// certain restrictions. On OSX (at least) Locale.getDefault() returns zh_CN_Hans for simplified
+					// chinese OS locale, the "Hans" is malformed wrt BCP 47 and causes an init fail. Could be that
+					// the bug was seen when a Java 1.8 run set "locale" and then the JVM was updated to cause this error
+					
+					localeBuilder.setVariant(savedLocaleStrings[2]);
+					
+				}catch( Throwable e ){
+					
+				}
 			}
 		}
 
