@@ -3020,13 +3020,18 @@ public class TableViewPainted
 					menu.setData(MENUKEY_IS_HEADER, true);
 
 				} else {
-					TableRowCore row = getTableRowWithCursor();
-					boolean noRow = row == null;
-
-					// If shell is not active, right clicking on a row will
-					// result in a MenuDetect, but not a MouseDown or MouseUp
-					if (!isSelected(row)) {
-						setSelectedRows(new TableRowCore[] { row });
+					boolean noRow;
+					if (event.detail == SWT.MENU_KEYBOARD) {
+						noRow = getFocusedRow() == null;
+					} else {
+						TableRowCore row = getTableRowWithCursor();
+						noRow = row == null;
+	
+						// If shell is not active, right clicking on a row will
+						// result in a MenuDetect, but not a MouseDown or MouseUp
+						if (!isSelected(row)) {
+							setSelectedRows(new TableRowCore[] { row });
+						}
 					}
 
 					menu.setData(MENUKEY_IN_BLANK_AREA, noRow);
