@@ -1139,6 +1139,10 @@ public class SideBar
 
 		final Menu menuTree = new Menu(tree);
 		tree.setMenu(menuTree);
+		
+		tree.addMenuDetectListener(e -> {
+			menuTree.setData("MenuSource", e.detail);
+		});
 
 		menuTree.addMenuListener(new MenuListener() {
 			boolean bShown = false;
@@ -1170,14 +1174,23 @@ public class SideBar
 
 				bShown = true;
 
-				Point ptMouse = tree.toControl(e.display.getCursorLocation());
+				Object oMenuSource = menuTree.getData("MenuSource");
+				int menuSource = (oMenuSource instanceof Number)
+						? ((Number) oMenuSource).intValue() : SWT.MENU_MOUSE;
 
-				int indent = END_INDENT ? tree.getClientArea().width - 1 : 0;
-				TreeItem treeItem = tree.getItem(new Point(indent, ptMouse.y));
-				if (treeItem == null) {
-					return;
+				SideBarEntrySWT entry;
+				if (menuSource != SWT.MENU_KEYBOARD) {
+					Point ptMouse = tree.toControl(e.display.getCursorLocation());
+	
+					int indent = END_INDENT ? tree.getClientArea().width - 1 : 0;
+					TreeItem treeItem = tree.getItem(new Point(indent, ptMouse.y));
+					if (treeItem == null) {
+						return;
+					}
+					entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
+				} else {
+					entry = getCurrentEntry();
 				}
-				SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
 
 				fillMenu(menuTree, entry, "sidebar");
 
