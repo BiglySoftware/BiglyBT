@@ -313,10 +313,10 @@ public class MyTorrentsView
 
 	protected boolean showMyOwnMenu(MenuEvent e) {
 		Display d = e.widget.getDisplay();
-		if (d == null)
+		if (d.isDisposed()) {
 			return false;
+		}
 
-		Object[] dataSources = tv.getSelectedDataSources(true);
 		final DownloadManager[] dms = getSelectedDownloads();
 
 		boolean hasSelection = (dms.length > 0);
@@ -324,13 +324,26 @@ public class MyTorrentsView
 		if (!hasSelection) {
 			return false;
 		}
-		Point pt = e.display.getCursorLocation();
-		pt = tv.getTableComposite().toControl(pt.x, pt.y);
+		Point cursorLocation = e.display.getCursorLocation();
+		Composite tableComposite = tv.getTableComposite();
+		Point pt = tableComposite.toControl(cursorLocation.x, cursorLocation.y);
 		TableColumnCore column = tv.getTableColumnByOffset(pt.x);
 
-		boolean isSeedingView = Download.class.equals(forDataSourceType) || DownloadTypeComplete.class.equals(forDataSourceType);
+		Point locationOnDiplay = new Point(cursorLocation.x - 5,
+				cursorLocation.y - 16);
+		TableRowSWT focusedRow = (TableRowSWT) tv.getFocusedRow();
+		if (focusedRow != null) {
+			Rectangle bounds = focusedRow.getBounds();
+			if (!bounds.contains(pt)) {
+				locationOnDiplay = tableComposite.toDisplay(
+						new Point(bounds.x, bounds.y + bounds.height - 1));
+			}
+		}
+
+		boolean isSeedingView = Download.class.equals(forDataSourceType)
+				|| DownloadTypeComplete.class.equals(forDataSourceType);
 		new TorrentMenuFancy(tv, isSeedingView, getComposite().getShell(), dms,
-				tv.getTableID()).showMenu(column, oldMenu);
+				tv.getTableID()).showMenu(locationOnDiplay, column, oldMenu);
 		return true;
 	}
 

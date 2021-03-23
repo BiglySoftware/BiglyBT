@@ -400,7 +400,7 @@ public class TorrentMenuFancy
 
 	}
 
-	public void showMenu(TableColumnCore acolumn, final Menu fallbackMenu ) {
+	public void showMenu(Point locationOnDiplay, TableColumnCore acolumn, final Menu fallbackMenu ) {
 		this.column = acolumn;
 		Display d = parentShell.getDisplay();
 
@@ -509,9 +509,7 @@ public class TorrentMenuFancy
 			addHeader(HEADER_OTHER, HEADER_MSG_PREFIX + HEADER_OTHER, null);
 		}
 
-		originalShellLocation = d.getCursorLocation();
-		originalShellLocation.x -= 5;
-		originalShellLocation.y -= 16;
+		originalShellLocation = locationOnDiplay;
 
 		shell.setLocation(originalShellLocation);
 
