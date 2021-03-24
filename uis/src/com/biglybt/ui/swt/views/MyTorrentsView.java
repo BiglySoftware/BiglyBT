@@ -292,11 +292,17 @@ public class MyTorrentsView
     	oldMenu = tableComposite.getMenu();
     	Menu menu = new Menu(tableComposite);
     	tableComposite.setMenu(menu);
+			tableComposite.addMenuDetectListener(
+					e -> menu.setData("MenuSource", e.detail));
     	menu.addMenuListener(new MenuListener() {
 
   			@Override
 			  public void menuShown(MenuEvent e) {
-  				if (!showMyOwnMenu(e)) {
+				  Object oMenuSource = menu.getData("MenuSource");
+				  int menuSource = (oMenuSource instanceof Number)
+					  ? ((Number) oMenuSource).intValue() : SWT.MENU_MOUSE;
+				  
+  				if (!showMyOwnMenu(e, menuSource != SWT.MENU_KEYBOARD)) {
   					oldMenu.setVisible(true);
   				}
   			}
@@ -309,7 +315,7 @@ public class MyTorrentsView
   	super.tableViewTabInitComplete();
   }
 
-	protected boolean showMyOwnMenu(MenuEvent e) {
+	protected boolean showMyOwnMenu(MenuEvent e, boolean isMouseEvent) {
 		Display d = e.widget.getDisplay();
 		if (d.isDisposed()) {
 			return false;
@@ -329,17 +335,14 @@ public class MyTorrentsView
 
 		Point locationOnDiplay = new Point(cursorLocation.x - 5,
 				cursorLocation.y - 16);
-		TableRowSWT focusedRow = (TableRowSWT) tv.getFocusedRow();
-		if (focusedRow != null) {
-			// There may be code that already adjusts row bounds to not include
-			// scroll position, but until I find it, this will do
-			Rectangle bounds = focusedRow.getBounds();
-			Rectangle clientArea = tv.getClientArea();
-			bounds.y -= clientArea.y;
-			bounds.x -= clientArea.x;
-			if (!bounds.contains(pt)) {
-				locationOnDiplay = tableComposite.toDisplay(
-						new Point(bounds.x, bounds.y + bounds.height - 1));
+		if (!isMouseEvent) {
+			TableRowPainted focusedRow = (TableRowPainted) tv.getFocusedRow();
+			if (focusedRow != null) {
+				Rectangle bounds = focusedRow.getDrawBounds();
+				if (!bounds.contains(pt)) {
+					locationOnDiplay = tableComposite.toDisplay(
+							new Point(bounds.x, bounds.y + bounds.height - 1));
+				}
 			}
 		}
 
