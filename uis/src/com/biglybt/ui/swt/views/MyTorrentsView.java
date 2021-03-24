@@ -23,8 +23,8 @@ package com.biglybt.ui.swt.views;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
@@ -74,9 +74,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.utils.*;
 import com.biglybt.ui.swt.views.piece.PieceInfoView;
-import com.biglybt.ui.swt.views.table.TableViewSWT;
-import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
-import com.biglybt.ui.swt.views.table.TableViewSWTPanelCreator;
+import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
@@ -333,10 +331,13 @@ public class MyTorrentsView
 				cursorLocation.y - 16);
 		TableRowSWT focusedRow = (TableRowSWT) tv.getFocusedRow();
 		if (focusedRow != null) {
-			TableRowSWT rowAtCursor = tv.getTableRow(pt.x, pt.y, true);
-			
-			if (rowAtCursor != focusedRow) {
-				Rectangle bounds = focusedRow.getBounds();
+			// There may be code that already adjusts row bounds to not include
+			// scroll position, but until I find it, this will do
+			Rectangle bounds = focusedRow.getBounds();
+			Rectangle clientArea = tv.getClientArea();
+			bounds.y -= clientArea.y;
+			bounds.x -= clientArea.x;
+			if (!bounds.contains(pt)) {
 				locationOnDiplay = tableComposite.toDisplay(
 						new Point(bounds.x, bounds.y + bounds.height - 1));
 			}
