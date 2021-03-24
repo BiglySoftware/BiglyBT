@@ -333,8 +333,10 @@ public class MyTorrentsView
 				cursorLocation.y - 16);
 		TableRowSWT focusedRow = (TableRowSWT) tv.getFocusedRow();
 		if (focusedRow != null) {
-			Rectangle bounds = focusedRow.getBounds();
-			if (!bounds.contains(pt)) {
+			TableRowSWT rowAtCursor = tv.getTableRow(pt.x, pt.y, true);
+			
+			if (rowAtCursor != focusedRow) {
+				Rectangle bounds = focusedRow.getBounds();
 				locationOnDiplay = tableComposite.toDisplay(
 						new Point(bounds.x, bounds.y + bounds.height - 1));
 			}
