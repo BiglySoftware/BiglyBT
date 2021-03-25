@@ -93,6 +93,7 @@ PEPeerManager
     public int	getNbPeersWithUploadQueued();
     public int	getNbPeersWithUploadBlocked();
     public int	getNbPeersUnchoked();
+    public int	getNbPeersUnchoking();
 
     /** Often better to use getPiece(pieceNumber)
      */

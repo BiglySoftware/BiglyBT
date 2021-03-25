@@ -381,6 +381,9 @@ DiskManager
 	public long[]
 	getReadStats();
 
+	public long[]
+	getWriteStats();
+
 	public void
 	generateEvidence(
 		IndentWriter		writer );

@@ -1834,6 +1834,11 @@ DiskManagerUtil
 					}
 					
 					@Override
+					public long[] getWriteStats(){
+						return null;
+					}
+					
+					@Override
 					public long getPriorityChangeMarker(){
 						return 0;
 					}

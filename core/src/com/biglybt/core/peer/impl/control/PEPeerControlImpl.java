@@ -322,6 +322,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	private int connections_with_queued_data;
 	private int connections_with_queued_data_blocked;
 	private int connections_unchoked;
+	private int connections_unchoking;
 	private int outbound_message_count;
 
 	private List<PEPeerTransport> sweepList = Collections.emptyList();
@@ -2310,6 +2311,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	}
 
 	@Override
+	public int getNbPeersUnchoking(){
+		return(connections_unchoking);
+	}
+
+	@Override
 	public int[] getAvailability(){
 		return piecePicker.getAvailability();
 	}
@@ -2540,13 +2546,14 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		int con_queued = 0;
 		int con_blocked = 0;
 		int con_unchoked = 0;
+		int con_unchoking = 0;
 		int out_messages = 0;
 
 		for(Iterator<PEPeerTransport> it = peer_transports.iterator(); it.hasNext();){
 
 			final PEPeerTransport pc = it.next();
 
-			if(pc.getPeerState() == PEPeer.TRANSFERING){
+			if ( pc.getPeerState() == PEPeer.TRANSFERING ){
 
 				if(!pc.isChokedByMe()){
 
@@ -2555,6 +2562,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 					out_messages += pc.getIncomingRequestedPieceNumberCount();
 				}
 
+				if ( !pc.isChokingMe()){
+					
+					con_unchoking++;
+				}
+				
 				Connection connection = pc.getPluginConnection();
 
 				if(connection != null){
@@ -2632,6 +2644,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		connections_with_queued_data = con_queued;
 		connections_with_queued_data_blocked = con_blocked;
 		connections_unchoked = con_unchoked;
+		connections_unchoking = con_unchoking;
 		outbound_message_count = out_messages;
 
 		_stats.update(stats_tick_count);

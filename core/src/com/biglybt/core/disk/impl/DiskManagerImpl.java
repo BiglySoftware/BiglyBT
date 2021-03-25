@@ -2306,6 +2306,18 @@ DiskManagerImpl
 
 		return( reader.getStats());
 	}
+	
+	@Override
+	public long[]
+	getWriteStats()
+	{
+		if ( writer == null ){
+
+			return( new long[]{ 0, 0, 0, 0 });
+		}
+
+		return( writer.getStats());
+	}
 
 	@Override
 	public DMPieceMap

@@ -58,8 +58,10 @@ DMWriterImpl
 	private final ConcurrentHashMap<DiskAccessRequest,String>		active_requests = new ConcurrentHashMap<>();
 
 	private int						async_writes;
-	private final Set				write_requests		= new HashSet();
-	private final AESemaphore		async_write_sem 	= new AESemaphore("DMWriter::asyncWrite");
+	private long					async_writes_bytes;
+	
+	private final Set<DiskManagerWriteRequest>	write_requests		= new HashSet<>();
+	private final AESemaphore					async_write_sem 	= new AESemaphore("DMWriter::asyncWrite");
 
 	private boolean	started;
 
@@ -71,9 +73,11 @@ DMWriterImpl
 
 	final AEMonitor		this_mon	= new AEMonitor( "DMWriter" );
 
+	private long					total_write_ops;
+	private long					total_write_bytes;
+
 	private volatile long			latency;
 	
-
 	public
 	DMWriterImpl(
 		DiskManagerHelper	_disk_manager )
@@ -377,11 +381,7 @@ DMWriterImpl
 		try{
 			this_mon.enter();
 
-			Iterator	it = write_requests.iterator();
-
-			while( it.hasNext()){
-
-				DiskManagerWriteRequest	request = (DiskManagerWriteRequest)it.next();
+			for ( DiskManagerWriteRequest request: write_requests ){
 
 				if ( request.getPieceNumber() == piece_number ){
 
@@ -453,7 +453,7 @@ DMWriterImpl
 				int	buffer_position = buffer.position(DirectByteBuffer.SS_DW);
 				int buffer_limit	= buffer.limit(DirectByteBuffer.SS_DW);
 
-				// final long	write_length = buffer_limit - buffer_position;
+				final long	write_length = buffer_limit - buffer_position;
 
 				int previousFilesLength = 0;
 
@@ -580,10 +580,15 @@ DMWriterImpl
 
 								async_writes--;
 
+								async_writes_bytes -= write_length;
+								
 								if ( !write_requests.remove( request )){
 
 									Debug.out( "request not found" );
 								}
+								
+								total_write_ops++;
+								total_write_bytes	+= write_length;
 
 								if ( stopped ){
 
@@ -611,6 +616,8 @@ DMWriterImpl
 
 						async_writes++;
 
+						async_writes_bytes += write_length;
+						
 						write_requests.add( request );
 					}
 
@@ -633,6 +640,13 @@ DMWriterImpl
 		}
 	}
 
+	@Override
+	public long[]
+	getStats()
+	{
+		return( new long[]{ total_write_ops, total_write_bytes, async_writes, async_writes_bytes });
+	}
+	
 	@Override
 	public long
 	getLatency()

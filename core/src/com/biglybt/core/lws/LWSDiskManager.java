@@ -138,6 +138,13 @@ LWSDiskManager
 	}
 
 	@Override
+	public long[]
+	getWriteStats()
+	{
+		return( new long[]{ 0, 0, 0, 0 } );
+	}
+	
+	@Override
 	public void
 	start()
 	{

@@ -65,6 +65,14 @@ DMWriter
 	hasOutstandingWriteRequestForPiece(
 		int		piece_number );
 	
+		/**
+		 * 4 entries, total write-ops, total write-bytes, outstanding write-ops, outstanding write-bytes
+		 * @return
+		 */
+	
+	public long[]
+	getStats();
+
 	public long
 	getLatency();
 	
