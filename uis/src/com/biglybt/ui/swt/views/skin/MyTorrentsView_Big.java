@@ -32,6 +32,7 @@ import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.common.table.TableView;
 
 public class MyTorrentsView_Big
 	extends MyTorrentsView
@@ -61,7 +62,7 @@ public class MyTorrentsView_Big
 				break;
 		}
 
-		TableViewSWT<DownloadManager> tv = init(_core,
+		TableView<DownloadManager> tv = init(_core,
 				SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true,
 						dataSource),
 				forDataSourceType, basicItems);
