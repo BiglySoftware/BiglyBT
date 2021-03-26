@@ -157,8 +157,15 @@ public class TableCellPainted
 	 */
 	@Override
 	public int getMaxLines() {
-		// TODO
-		return 1;
+		int lineHeight = tableRow.getLineHeight();
+		if (lineHeight == 0) {
+			return 1;
+		}
+		int maxLines = getHeight() / lineHeight;
+		if (maxLines < 1) {
+			return 1;
+		}
+		return maxLines;
 	}
 
 	/* (non-Javadoc)

@@ -1437,6 +1437,11 @@ public class TableRowPainted
 	}
 
 	@Override
+	public int getLineHeight() {
+		return getViewPainted().getLineHeight();
+	}
+
+	@Override
 	public TableCellCore getTableCellCore(String name) {
 		if (isRowDisposed()) {
 			return null;

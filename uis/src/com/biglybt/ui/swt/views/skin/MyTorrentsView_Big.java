@@ -37,13 +37,11 @@ public class MyTorrentsView_Big
 	extends MyTorrentsView
 {
 	private final int torrentFilterMode;
-	private int defaultRowHeight;
 
 	public MyTorrentsView_Big(Core _core, int torrentFilterMode,
 			Object dataSource, TableColumnCore[] basicItems, BubbleTextBox txtFilter,
 			Composite cCatsTags) {
 		super( true );
-		defaultRowHeight = 40;
 		this.torrentFilterMode = torrentFilterMode;
 		this.filterBox = txtFilter;
 		this.cCategoriesAndTags = cCatsTags;
@@ -62,8 +60,12 @@ public class MyTorrentsView_Big
 				forDataSourceType = Download.class;
 				break;
 		}
-		
-		init( _core, SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true, dataSource), forDataSourceType, basicItems );
+
+		TableViewSWT<DownloadManager> tv = init(_core,
+				SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true,
+						dataSource),
+				forDataSourceType, basicItems);
+		tv.setRowDefaultHeightEM(2);
 	}
 
 
@@ -93,10 +95,4 @@ public class MyTorrentsView_Big
 		boolean neverPlay = DownloadTypeIncomplete.class.equals(getForDataSourceType());
 		SBC_LibraryTableView.doDefaultClick(rows, stateMask, neverPlay, origin );
 	}
-
-	@Override
-	protected int getRowDefaultHeight() {
-		return defaultRowHeight;
-	}
-
 }

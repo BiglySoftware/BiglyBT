@@ -113,6 +113,10 @@ public class TableViewPainted
 
 	private int defaultRowHeight = 17;
 
+	private int lineHeight;
+
+	protected float iHeightEM = -1;
+
 	/**
 	 * Rows visible to user.  We assume this list is always up to date
 	 */
@@ -261,8 +265,6 @@ public class TableViewPainted
 
 
 	protected boolean isFocused;
-
-	protected float iHeightEM = -1;
 
 	/**
 	 * Main Initializer
@@ -1015,6 +1017,10 @@ public class TableViewPainted
 		}
 	}
 
+	public int getLineHeight() {
+		return lineHeight;
+	}
+
 	/* (non-Javadoc)
 	 * @see TableView#getRow(int, int)
 	 */
@@ -1398,7 +1404,8 @@ public class TableViewPainted
 		cTable = new Canvas(cTableComposite, SWT.NO_BACKGROUND | SWT.H_SCROLL | SWT.V_SCROLL);
 		cTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-		int minRowHeight = FontUtils.getFontHeightInPX(cTable.getFont());
+		lineHeight = FontUtils.getFontHeightInPX(cTable.getFont());
+		int minRowHeight = lineHeight;
 		if (iHeightEM > 0) {
 			defaultRowHeight = (int) ((minRowHeight * iHeightEM) + iHeightEM);
 			iHeightEM = -1;

@@ -192,6 +192,13 @@ public interface TableRowCore extends TableRow
 
 	public int getHeight();
 
+	/**
+	 * @return Height in px of one standard line of text.<br/>
+	 *         # of rows of text can be calculated by using 
+	 *         {@link #getHeight()} / {@link #getLineHeight()}
+	 */
+	public int getLineHeight();
+
 	public TableRowCore getSubRow(int i);
 
 	public void setSortColumn(String... columnIDs);
