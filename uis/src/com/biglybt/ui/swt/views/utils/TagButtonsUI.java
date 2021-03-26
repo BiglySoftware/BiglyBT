@@ -39,6 +39,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
+import com.biglybt.ui.swt.widgets.TagPainter;
 
 /**
  * @author TuxPaper
@@ -79,9 +80,9 @@ public class TagButtonsUI
 			Menu menu = new Menu(tagCanvas);
 			tagCanvas.setMenu(menu);
 
-			MenuBuildUtils.addMaintenanceListenerForMenu(menu, (menu1, menuEvent) -> {
-				TagUIUtils.createSideBarMenuItems(menu1, tagCanvas.getTag());
-			});
+			MenuBuildUtils.addMaintenanceListenerForMenu(menu,
+					(menu1, menuEvent) -> TagUIUtils.createSideBarMenuItems(menu1,
+							tagCanvas.getTagPainter().getTag()));
 		} : null;
 
 		tags = TagUtils.sortTags(tags);
@@ -184,15 +185,16 @@ public class TagButtonsUI
 		Set<Tag> tag_set = new HashSet<>(tags);
 
 		for (TagCanvas widget : tagWidgets) {
+			TagPainter painter = widget.getTagPainter();
 
-			Tag tag = widget.getTag();
+			Tag tag = painter.getTag();
 			if (tag == null) {
 				continue;
 			}
 
 			boolean select = tag_set.contains(tag);
 
-			widget.setSelected(select);
+			painter.setSelected(select);
 		}
 	}
 
@@ -204,8 +206,9 @@ public class TagButtonsUI
 		}
 
 		for (TagCanvas tagCanvas : tagWidgets) {
-			if (tagCanvas.isSelected()) {
-				result.add(tagCanvas.getTag());
+			TagPainter painter = tagCanvas.getTagPainter();
+			if (painter.isSelected()) {
+				result.add(painter.getTag());
 			}
 		}
 
@@ -218,7 +221,7 @@ public class TagButtonsUI
 		}
 
 		for (TagCanvas tagWidget : new ArrayList<>( tagWidgets )) {
-			tagWidget.updateState(taggables);
+			tagWidget.getTagPainter().updateState(taggables);
 		}
 
 		return false;
@@ -228,7 +231,7 @@ public class TagButtonsUI
 		disableAuto = b;
 		Utils.execSWTThread(() -> {
 			for (TagCanvas tagWidget : tagWidgets) {
-				tagWidget.setDisableAuto(disableAuto);
+				tagWidget.getTagPainter().setDisableAuto(disableAuto);
 			}
 		});
 	}
@@ -236,8 +239,8 @@ public class TagButtonsUI
 	public void setEnableWhenNoTaggables(boolean enableWhenNoTaggables) {
 		this.enableWhenNoTaggables = enableWhenNoTaggables;
 		Utils.execSWTThread(() -> {
-			for (TagCanvas tagWidget : tagWidgets) {
-				tagWidget.setEnableWhenNoTaggables(enableWhenNoTaggables);
+			for (TagCanvas widget : tagWidgets) {
+				widget.getTagPainter().setEnableWhenNoTaggables(enableWhenNoTaggables);
 			}
 		});
 	}
@@ -315,18 +318,19 @@ public class TagButtonsUI
 		}
 		
 		for (TagCanvas tagWidget : tagWidgets) {
-			if (tag.equals(tagWidget.getTag())) {
+			TagPainter painter = tagWidget.getTagPainter();
+			if (tag.equals(painter.getTag())) {
 				Composite parent = tagWidget.getParent();
 				String oldGroup = (parent instanceof Group) ? ((Group) parent).getText()
 						: "";
-				String newGroup = tagWidget.getTag().getGroup();
+				String newGroup = painter.getTag().getGroup();
 				if (newGroup == null) {
 					newGroup = "";
 				}
 				if (!oldGroup.equals(newGroup)) {
 					return UPDATETAG_REQUIRES_REBUILD;
 				}
-				tagWidget.updateState(taggables);
+				painter.updateState(taggables);
 				return UPDATETAG_SUCCESS;
 			}
 		}

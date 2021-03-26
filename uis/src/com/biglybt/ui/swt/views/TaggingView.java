@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.biglybt.core.category.Category;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
@@ -34,6 +33,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.category.Category;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
@@ -48,8 +48,8 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
-import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
+import com.biglybt.ui.swt.widgets.TagPainter;
 
 /**
  * View showing tags set on selected taggable item(s).  Sometimes easier than
@@ -302,22 +302,24 @@ public class TaggingView
 		layout.marginHeight = layout.marginWidth = 0;
 		cTagComposite.setLayout(layout);
 		sc.setContent(cTagComposite);
-		
+
 		Composite tagArea = tagButtonsUI.buildTagGroup(listAllTags, cTagComposite,
 			true, new TagButtonTrigger() {
 				@Override
-				public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag, int stateMask, boolean longPress) {
+				public void tagButtonTriggered(TagPainter painter, int stateMask,
+						boolean longPress) {
 					if (taggables == null || longPress) {
 						return;
 					}
-					boolean doTag = !(tagCanvas.isSelected() && !tagCanvas.isGrayed());
+					Tag tag = painter.getTag();
+					boolean doTag = !(painter.isSelected() && !painter.isGrayed());
 					for (Taggable taggable : taggables) {
 						if (doTag) {
 							tag.addTaggable(taggable);
 						} else {
 							tag.removeTaggable(taggable);
 						}
-						tagCanvas.setSelected(doTag);
+						painter.setSelected(doTag);
 					}
 				}
 

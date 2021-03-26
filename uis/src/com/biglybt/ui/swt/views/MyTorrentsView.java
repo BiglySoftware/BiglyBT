@@ -84,6 +84,7 @@ import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
+import com.biglybt.ui.swt.widgets.TagPainter;
 
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
@@ -353,8 +354,8 @@ public class MyTorrentsView
 		return true;
 	}
 
-	public void init(Core _core, String tableID,
-	                 Class<?> forDataSourceType, TableColumnCore[] basicItems) {
+	public TableViewSWT<DownloadManager> init(Core _core, String tableID,
+			Class<?> forDataSourceType, TableColumnCore[] basicItems) {
 
 		this.forDataSourceType = forDataSourceType;
 		this.isCompletedOnly = forDataSourceType.equals(DownloadTypeComplete.class);
@@ -455,6 +456,8 @@ public class MyTorrentsView
 				}
 			}
 		}, true);
+
+    return tv;
 	}
 
 	@Override
@@ -1053,20 +1056,21 @@ public class MyTorrentsView
 			buttonListener = new TagButtonTrigger() {
 
 				@Override
-				public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag,
-						int stateMask, boolean longPress) {
+				public void tagButtonTriggered(TagPainter painter, int stateMask,
+						boolean longPress) {
+					Tag tag = painter.getTag();
 					if (longPress) {
-						handleLongPress(tagCanvas, tag);
+						handleLongPress(painter, tag);
 						return;
 					}
 
 					boolean add = (stateMask & SWT.MOD1) != 0;
 
-					boolean isSelected = tagCanvas.isSelected();
+					boolean isSelected = painter.isSelected();
 
 					if (isSelected) {
 						removeTagFromCurrent(tag);
-						tagCanvas.setSelected(!isSelected);
+						painter.setSelected(!isSelected);
 					} else {
 						if (add) {
 							Category catAll = CategoryManager.getCategory(Category.TYPE_ALL);
@@ -1085,10 +1089,10 @@ public class MyTorrentsView
 									setCurrentTags(newTags);
 								}
 							}
-							tagCanvas.setSelected(!isSelected);
+							painter.setSelected(!isSelected);
 						} else {
 							setCurrentTags(tag);
-							setSelection(tagCanvas.getParent());
+							setSelection(painter.getControl().getParent());
 						}
 					}
 				}
@@ -1109,13 +1113,13 @@ public class MyTorrentsView
 						if (!(control instanceof TagCanvas)) {
 							continue;
 						}
-						TagCanvas tagCanvas = (TagCanvas) control;
-						boolean selected = selectedTags.remove(tagCanvas.getTag());
-						tagCanvas.setSelected(selected);
+						TagPainter painter = ((TagCanvas) control).getTagPainter();
+						boolean selected = selectedTags.remove(painter.getTag());
+						painter.setSelected(selected);
 					}
 				}
 
-				private void handleLongPress(TagCanvas tagCanvas, Tag tag) {
+				private void handleLongPress(TagPainter painter, Tag tag) {
 					if (tv == null) {
 						return;
 					}
@@ -1155,13 +1159,13 @@ public class MyTorrentsView
 					}
 
 					// Quick Visual
-					boolean wasSelected = tagCanvas.isSelected();
-					tagCanvas.setGrayed(true);
-					tagCanvas.setSelected(true);
+					boolean wasSelected = painter.isSelected();
+					painter.setGrayed(true);
+					painter.setSelected(true);
 
 					Utils.execSWTThreadLater(200, () -> {
-						tagCanvas.setGrayed(false);
-						tagCanvas.setSelected(wasSelected);
+						painter.setGrayed(false);
+						painter.setSelected(wasSelected);
 					});
 				}
 
@@ -1192,8 +1196,11 @@ public class MyTorrentsView
 			currentGroup = tg;
 
 			TagCanvas button = new TagCanvas(cCategoriesAndTags, tag, false, true);
+			TagPainter painter = button.getTagPainter();
 			button.setTrigger(buttonListener);
-			button.setCompact(true,COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons.ImageOverride" ));
+			painter.setCompact(true,
+					COConfigurationManager.getBooleanParameter(
+							"Library.ShowTagButtons.ImageOverride"));
 
 			if (isCat) {
 				if (spacer == null) {
@@ -1213,7 +1220,7 @@ public class MyTorrentsView
 			button.setFont(fontButton);
 
 			if (isCurrent(tag)) {
-				button.setSelected(true);
+				painter.setSelected(true);
 			}
 
 			Menu menu = new Menu( button );
@@ -2808,11 +2815,11 @@ public class MyTorrentsView
 						if (!(child instanceof TagCanvas)) {
 							continue;
 						}
-						TagCanvas tagCanvas = (TagCanvas) child;
-						if (ourPendingTags.remove(tagCanvas.getTag())) {
-							boolean selected = tagCanvas.isSelected();
-							tagCanvas.updateState(null);
-							tagCanvas.setSelected(selected);
+						TagPainter painter = ((TagCanvas) child).getTagPainter();
+						if (ourPendingTags.remove(painter.getTag())) {
+							boolean selected = painter.isSelected();
+							painter.updateState(null);
+							painter.setSelected(selected);
 						}
 					}
 				}

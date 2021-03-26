@@ -46,7 +46,6 @@ import com.biglybt.core.content.RelatedContentManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerAvailability;
 import com.biglybt.core.download.DownloadManagerFactory;
-import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.LocaleUtilDecoder;
 import com.biglybt.core.internat.MessageText;
@@ -95,8 +94,8 @@ import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.TrackerNameItem;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI;
-import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
+import com.biglybt.ui.swt.widgets.TagPainter;
 import com.biglybt.util.JSONUtils;
 import com.biglybt.util.MapUtils;
 
@@ -5136,19 +5135,21 @@ public class OpenTorrentOptionsWindow
 			
 			tagButtonsUI.buildTagGroup(tags, tagButtonsArea, false,
 					new TagButtonTrigger() {
-						public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag,
-							int stateMask, boolean longPress) {
+						@Override
+						public void tagButtonTriggered(TagPainter painter, int stateMask,
+								boolean longPress) {
 							if (longPress) {
 								return;
 							}
+							Tag tag = painter.getTag();
 							List<Tag> tags = torrentOptions.getInitialTags();
 							
-							boolean tagSelected = !tagCanvas.isSelected();
+							boolean tagSelected = !painter.isSelected();
 							
 							if ( !tagSelected ){
 								if ( !torrentOptions.canDeselectTag( tag )){
 									
-									tagCanvas.setSelected( true );
+									painter.setSelected( true );
 									
 									return;
 								}
@@ -5195,6 +5196,7 @@ public class OpenTorrentOptionsWindow
 							updateStartOptionsHeader();
 						}
 
+						@Override
 						public Boolean tagSelectedOverride(Tag tag) {
 							List<Tag> initialTags = building[0]?initialTagsCache:torrentOptions.getInitialTags();
 							if (initialTags.contains(tag)) {

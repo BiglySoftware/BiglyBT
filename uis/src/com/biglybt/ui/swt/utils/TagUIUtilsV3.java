@@ -42,6 +42,7 @@ import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.ui.swt.views.skin.StandardButtonsArea;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI;
 import com.biglybt.ui.swt.widgets.TagCanvas;
+import com.biglybt.ui.swt.widgets.TagPainter;
 
 /**
  * @author TuxPaper
@@ -255,11 +256,12 @@ public class TagUIUtilsV3
 					public Boolean tagSelectedOverride(Tag tag){
 						return null;
 					}
-					
+
 					@Override
-					public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag, int stateMask, boolean longPress){
-						boolean doTag = !tagCanvas.isSelected();
-						tagCanvas.setSelected(doTag);
+					public void tagButtonTriggered(TagPainter painter, int stateMask,
+							boolean longPress) {
+						boolean doTag = !painter.isSelected();
+						painter.setSelected(doTag);
 					}
 				});
 			
