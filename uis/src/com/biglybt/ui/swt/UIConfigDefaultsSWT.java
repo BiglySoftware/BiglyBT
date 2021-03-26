@@ -323,5 +323,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter( "Pieces View Show Uploading", false);
 		
 		def.addParameter( ConfigKeys.File.ICFG_UI_ADDTORRENT_OPENOPTIONS_AUTO_CLOSE_SECS, 0 );
+		
+		def.addParameter( "DownloadActivity.show.eta", true );
 	}
 }

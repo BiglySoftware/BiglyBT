@@ -516,18 +516,6 @@ public class TabbedEntry
 	public void setSelectable(boolean selectable) {
 	}
 
-	// @see MdiEntrySWT#addListener(MdiSWTMenuHackListener)
-	@Override
-	public void addListener(MdiSWTMenuHackListener l) {
-		// TODO Auto-generated method stub
-	}
-
-	// @see MdiEntrySWT#removeListener(MdiSWTMenuHackListener)
-	@Override
-	public void removeListener(MdiSWTMenuHackListener l) {
-		// TODO Auto-generated method stub
-	}
-
 	// @see BaseMdiEntry#setParentID(java.lang.String)
 	@Override
 	public void setParentEntryID(String parentEntryID) {
