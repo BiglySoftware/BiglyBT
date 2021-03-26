@@ -1170,17 +1170,29 @@ DownloadManagerController
 
 
   	@Override
-	  public void
+	public void
   	setStateSeeding(
   		boolean	never_downloaded )
 	{
 		// should already be finishing, but make sure (if it already is, there
 		// won't be a trigger)
+  		
 		setStateFinishing();
 
 		download_manager.downloadEnded(never_downloaded);
 
-		setState(DownloadManager.STATE_SEEDING, true);
+		setState( DownloadManager.STATE_SEEDING, true);
+		
+		if ( !never_downloaded ){
+			
+	    	if ( !COConfigurationManager.getBooleanParameter( "StartStopManager_bRetainForceStartWhenComplete" )){
+	
+	    		if (isForceStart()){
+	
+		    		setForceStart(false);
+	    		}
+	    	}
+		}
 	}
 
   	public boolean

@@ -334,19 +334,17 @@ DownloadManagerImpl
 	private static final int LDT_TL_ANNOUNCERESULT		= 1;
 	private static final int LDT_TL_SCRAPERESULT		= 2;
 
-	final ListenerManager	tracker_listeners 	= ListenerManager.createManager(
+	final ListenerManager<DownloadManagerTrackerListener>	tracker_listeners 	= ListenerManager.createManager(
 			"DM:TrackerListenDispatcher",
-			new ListenerManagerDispatcher()
+			new ListenerManagerDispatcher<DownloadManagerTrackerListener>()
 			{
 				@Override
 				public void
 				dispatch(
-					Object		_listener,
+					DownloadManagerTrackerListener		listener,
 					int			type,
 					Object		value )
 				{
-					DownloadManagerTrackerListener	listener = (DownloadManagerTrackerListener)_listener;
-
 					if ( type == LDT_TL_ANNOUNCERESULT ){
 
 						listener.announceResult((TRTrackerAnnouncerResponse)value);
@@ -469,19 +467,17 @@ DownloadManagerImpl
 
 		// one static async manager for them all
 
-	static final ListenerManager	piece_listeners_aggregator 	= ListenerManager.createAsyncManager(
+	static final ListenerManager<DownloadManagerPieceListener>	piece_listeners_aggregator 	= ListenerManager.createAsyncManager(
 			"DM:PieceListenAggregatorDispatcher",
-			new ListenerManagerDispatcher()
+			new ListenerManagerDispatcher<DownloadManagerPieceListener>()
 			{
 				@Override
 				public void
 				dispatch(
-					Object		_listener,
-					int			type,
-					Object		value )
+					DownloadManagerPieceListener	listener,
+					int								type,
+					Object							value )
 				{
-					DownloadManagerPieceListener	listener = (DownloadManagerPieceListener)_listener;
-
 					if ( type == LDT_PE_PIECE_ADDED ){
 
 						listener.pieceAdded((PEPiece)value);
@@ -493,14 +489,14 @@ DownloadManagerImpl
 				}
 			});
 
-	private final ListenerManager	piece_listeners 	= ListenerManager.createManager(
+	private final ListenerManager<DownloadManagerPieceListener>	piece_listeners 	= ListenerManager.createManager(
 			"DM:PieceListenDispatcher",
-			new ListenerManagerDispatcher()
+			new ListenerManagerDispatcher<DownloadManagerPieceListener>()
 			{
 				@Override
 				public void
 				dispatch(
-					Object		listener,
+					DownloadManagerPieceListener		listener,
 					int			type,
 					Object		value )
 				{
@@ -519,7 +515,7 @@ DownloadManagerImpl
 
 	private final AEMonitor	piece_listeners_mon	= new AEMonitor( "DM:DownloadManager:PeiceL" );
 
-	private final List	current_pieces	= new ArrayList();
+	private final List<PEPiece>	current_pieces	= new ArrayList<>();
 
 	final DownloadManagerController	controller;
 	private final DownloadManagerStatsImpl	stats;
@@ -688,7 +684,7 @@ DownloadManagerImpl
 			};
 		
 		
-	private final CopyOnWriteList	activation_listeners = new CopyOnWriteList();
+	private final CopyOnWriteList<DownloadManagerActivationListener>	activation_listeners = new CopyOnWriteList<>();
 
 	private final long						scrape_random_seed	= SystemTime.getCurrentTime();
 
@@ -3828,12 +3824,9 @@ DownloadManagerImpl
 	{
 			// activation request for a queued torrent
 
-		for (Iterator it = activation_listeners.iterator();it.hasNext();){
-
-			DownloadManagerActivationListener	listener = (DownloadManagerActivationListener)it.next();
+		for ( DownloadManagerActivationListener listener: activation_listeners ){
 
 			try{
-
 				if ( listener.activateRequest( count )){
 
 					return( true );
@@ -4540,14 +4533,6 @@ DownloadManagerImpl
 		boolean	never_downloaded )
 	{
 	    if ( !never_downloaded ){
-
-	    	if ( !COConfigurationManager.getBooleanParameter( "StartStopManager_bRetainForceStartWhenComplete" )){
-
-	    		if (isForceStart()){
-
-    	    		setForceStart(false);
-	    		}
-	    	}
 
 	    	setAssumedComplete(true);
 
