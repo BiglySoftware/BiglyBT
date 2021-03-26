@@ -22,11 +22,17 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.*;
 
 import com.biglybt.core.tag.*;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
+import com.biglybt.ui.swt.views.table.TableCellSWT;
+import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
+import com.biglybt.ui.swt.widgets.TagPainter;
 
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.*;
@@ -37,13 +43,18 @@ import com.biglybt.pif.ui.tables.*;
  */
 public class TagsItem
 	extends CoreTableColumnSWT
-	implements TableCellRefreshListener, TableCellToolTipListener
+	implements TableCellRefreshListener, TableCellToolTipListener,
+	TableCellSWTPaintListener, TableCellAddedListener
 {
 	private static final TagManager tag_manager = TagManagerFactory.getTagManager();
 
 	public static final Class<Download> DATASOURCE_TYPE = Download.class;
 
 	public static final String COLUMN_ID = "tags";
+
+	private static Font fontOneLine = null;
+
+	private static Font fontMultiLine = null;
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
@@ -54,6 +65,12 @@ public class TagsItem
 	public TagsItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_LEAD, 70, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
+	}
+
+	@Override
+	public void cellAdded(TableCell cell) {
+		cell.setMarginHeight(1);
+		cell.setMarginHeight(1);
 	}
 
 	@Override
@@ -83,7 +100,7 @@ public class TagsItem
 			}
 
 		} finally {
-			cell.setText(sb.toString());
+			cell.setSortValue(sb.toString());
 		}
 	}
 
@@ -129,5 +146,96 @@ public class TagsItem
 	@Override
 	public void cellHoverComplete(TableCell cell) {
 		cell.setToolTip(null);
+	}
+
+	@Override
+	public void cellPaint(GC gc, TableCellSWT cell) {
+		Taggable taggable = (Taggable) cell.getDataSource();
+		if (taggable == null) {
+			return;
+		}
+
+		Point cellSize = cell.getSize();
+
+		Font oldFont = gc.getFont();
+
+		int maxLines = cell.getMaxLines();
+		if (maxLines == 1) {
+			if (fontOneLine == null) {
+				fontOneLine = FontUtils.getFontWithHeight(gc.getFont(), cellSize.y - 2,
+						SWT.DEFAULT);
+			}
+			gc.setFont(fontOneLine);
+		} else {
+			if (fontMultiLine == null) {
+				fontMultiLine = FontUtils.getFontWithHeight(gc.getFont(),
+						((cellSize.y - 2) / maxLines), SWT.DEFAULT);
+			}
+			gc.setFont(fontMultiLine);
+		}
+
+		List<Tag> tags = tag_manager.getTagsForTaggable(TagType.TT_DOWNLOAD_MANUAL,
+				taggable);
+		tags = TagUtils.sortTags(tags);
+		int x = 0;
+		int y = 0;
+		int lineHeight = 0;
+		Rectangle bounds = cell.getBounds();
+
+		Map<TagPainter, Rectangle> mapTagPainting = new LinkedHashMap<>();
+
+		for (Tag tag : tags) {
+			TagPainter painter = new TagPainter(tag);
+			painter.setCompact(true, false);
+			painter.paddingContentY = 1;
+			painter.paddingContentX0 = 2;
+			painter.paddingContentX1 = 4;
+			painter.setMinWidth(16);
+			Point size = painter.getSize(gc);
+			if (size == null) {
+				continue;
+			}
+			int endX = x + size.x;
+
+			if (endX > cellSize.x && y + lineHeight + 1 <= cellSize.y) {
+				x = 0;
+				endX = size.x;
+				y += lineHeight + 1;
+				lineHeight = size.y;
+			} else {
+				lineHeight = Math.max(lineHeight, size.y);
+			}
+			if (y > cellSize.y) {
+				break;
+			}
+
+			int clipW = endX > cellSize.x ? cellSize.x - x : size.x;
+			int clipH = y + size.y > cellSize.y ? cellSize.y - y : size.y;
+
+			mapTagPainting.put(painter,
+					new Rectangle(bounds.x + x, bounds.y + y, clipW, clipH));
+
+			x = endX + 1;
+			if (x > cellSize.x) {
+				break;
+			}
+		}
+		Rectangle clipping = gc.getClipping();
+
+		int endY = y + lineHeight;
+		int yOfs = (cellSize.y - endY) / 2;
+		if (yOfs < 0) {
+			yOfs = 0;
+		}
+		for (TagPainter painter : mapTagPainting.keySet()) {
+			Rectangle clip = mapTagPainting.get(painter);
+			clip.y += yOfs;
+			gc.setClipping(clip);
+			painter.paint(taggable, gc, clip.x, clip.y);
+			painter.dispose();
+		}
+
+		gc.setClipping(clipping);
+		gc.setFont(oldFont);
 	}
 }
