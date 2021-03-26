@@ -71,6 +71,11 @@ public class FontUtils
 
 	public static Font getFontWithHeight(Font baseFont, int heightInPixels,
 			int style) {
+		return getFontWithHeight(baseFont, heightInPixels, style, true);
+	}
+
+	private static Font getFontWithHeight(Font baseFont, int heightInPixels,
+			int style, boolean runAgain) {
 		boolean destroyBaseFont = style != SWT.DEFAULT;
 		if (destroyBaseFont) {
 			baseFont = getFontWithStyle(baseFont, style, 1.0f);
@@ -81,7 +86,9 @@ public class FontUtils
 		if (destroyBaseFont) {
 			baseFont.dispose();
 		}
-		return font;
+		// new font might still be bigger than requested height due to Fonts being fonts
+		return runAgain ? getFontWithHeight(font, heightInPixels, style, false)
+				: font;
 	}
 
 		// Used by azemp plugin
@@ -116,6 +123,7 @@ public class FontUtils
 		GC gc = new GC(font.getDevice());
 		try {
 			gc.setFont(font);
+			gc.setTextAntialias(SWT.ON);
 			return gc.textExtent(Utils.GOOD_STRING).y;
 		} finally {
 			gc.dispose();
@@ -333,6 +341,7 @@ public class FontUtils
 	public static double getCharacterWidth(Font f) {
 		GC gc = new GC(f.getDevice());
 		gc.setFont(f);
+		gc.setTextAntialias(SWT.ON);
 		FontMetrics metrics = gc.getFontMetrics();
 		double d;
 		try {
@@ -373,6 +382,7 @@ public class FontUtils
 		try {
 			GC gc = new GC(device);
 			gc.setFont(font);
+			gc.setTextAntialias(SWT.ON);
 			width = gc.textExtent(text).x;
 			gc.dispose();
 		} catch (Exception ex) {
