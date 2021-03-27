@@ -66,6 +66,13 @@ AsyncDispatcher
 
 	public void
 	dispatch(
+		Runnable	r )
+	{
+		dispatch( AERunnable.create( r ));
+	}
+	
+	public void
+	dispatch(
 		AERunnable	target )
 	{
 		dispatch( target, false );

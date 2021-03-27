@@ -1187,9 +1187,8 @@ public class FilesViewMenuUtil
 		} finally {
 			if ( affected_files.size() > 0 ){
 
-				Utils.getOffOfSWTThread(new AERunnable() {
-					@Override
-					public void runSupport() {
+				AEThread2.createAndStartDaemon( "FilesViewWaiter", ()->{
+					
 						for ( int i=0;i<affected_files.size();i++){
 							task_sem.reserve();
 						}
@@ -1199,8 +1198,7 @@ public class FilesViewMenuUtil
 						}
 
 						invalidateRows( tv, affected_files );
-					}
-				});
+					});
 			}
 		}
 	}
@@ -1217,13 +1215,17 @@ public class FilesViewMenuUtil
 
 		Set<TableRowCore>	done = new HashSet<>();
 
+		TableRowCore[]	all_rows = null;
+		
 		for ( DiskManagerFileInfo file: files ){
 
 			TableRowCore row =  tv.getRow(file);
 
 			if ( row == null ){
 
-				row = tv.getRow( file.getDownloadManager());
+				DownloadManager dm = file.getDownloadManager();
+				 
+				row = tv.getRow( dm );
 
 				if ( row != null ){
 
@@ -1277,6 +1279,29 @@ public class FilesViewMenuUtil
 								}
 							}
 							
+						}
+					}else{
+					
+						if ( all_rows == null ){
+							
+							all_rows = tv.getRowsAndSubRows( false );
+						}
+						
+						for ( TableRowCore r: all_rows ){
+							
+							Object o = r.getDataSource( true );
+							
+							if ( o instanceof DiskManagerFileInfo ){
+								
+								DiskManagerFileInfo f = (DiskManagerFileInfo)o;
+								
+								if ( f.getDownloadManager() == dm && f.getIndex() == file.getIndex()){
+									
+									row = r;
+									
+									break;
+								}
+							}
 						}
 					}
 				}
@@ -1843,7 +1868,7 @@ public class FilesViewMenuUtil
 
 	// same code is used in tableitems.files.NameItem
 	
-	private static final AESemaphore moveCopyFileSem = new AESemaphore( "moveCopyFile", 1 );
+	private static final AsyncDispatcher moveCopyDispatcher = new AsyncDispatcher( "moveCopyFile" );
 	
 	private static void
 	moveFile(
@@ -1854,27 +1879,15 @@ public class FilesViewMenuUtil
 		boolean						dont_delete_existing,
 		Runnable					done )
 	{
-		Utils.getOffOfSWTThread(new AERunnable() {
-			@Override
-			public void runSupport(){
-				moveCopyFileSem.reserve();
-					
-				moveFileSupport(
-					manager, fileInfo, source, target, dont_delete_existing, 
-					new Runnable()
-					{
-						public void 
-						run()
-						{
-							moveCopyFileSem.release();
-							
-							if ( done != null ){
-								
-								done.run();
-							}
-						};
-					});
-			}
+		moveCopyDispatcher.dispatch(()->{					
+			moveFileSupport(
+				manager, fileInfo, source, target, dont_delete_existing, 
+				()->{
+					if ( done != null ){
+						
+						done.run();
+					}
+				});
 		});
 	}
 	
@@ -1970,27 +1983,16 @@ public class FilesViewMenuUtil
 		boolean						dont_delete_existing,
 		Runnable					done )
 	{
-		Utils.getOffOfSWTThread(new AERunnable() {
-			@Override
-			public void runSupport(){
-				moveCopyFileSem.reserve();
+		moveCopyDispatcher.dispatch(()->{
 					
-				copyFileSupport(
-					manager, fileInfo, source, target, dont_delete_existing, 
-					new Runnable()
-					{
-						public void 
-						run()
-						{
-							moveCopyFileSem.release();
-							
-							if ( done != null ){
-								
-								done.run();
-							}
-						};
-					});
-			}
+			copyFileSupport(
+				manager, fileInfo, source, target, dont_delete_existing, 
+				()->{				
+					if ( done != null ){
+						
+						done.run();
+					}
+				});
 		});
 	}
 	
@@ -2015,7 +2017,7 @@ public class FilesViewMenuUtil
 		}
 
 		try{
-
+			
 			FileUtil.runAsTask(new CoreOperationTask() {
 				
 				@Override
@@ -2556,11 +2558,11 @@ public class FilesViewMenuUtil
 		    	}
 			}
 		}finally{
+			
 			if ( affected_files.size() > 0 ){
 
-				Utils.getOffOfSWTThread(new AERunnable() {
-					@Override
-					public void runSupport() {
+				AEThread2.createAndStartDaemon( "FilesViewWaiter", ()->{
+					
 						for ( int i=0;i<affected_files.size();i++){
 							task_sem.reserve();
 						}
@@ -2569,8 +2571,7 @@ public class FilesViewMenuUtil
 						}
 
 						invalidateRows( tv, affected_files );
-					}
-				});
+					});		
 			}
 		}
 	}
