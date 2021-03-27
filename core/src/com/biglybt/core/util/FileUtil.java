@@ -19,8 +19,6 @@
 
 package com.biglybt.core.util;
 
-import static com.biglybt.core.config.ConfigKeys.File.BCFG_FILE_MOVE_ORIGIN_DELETE_FAIL_IS_WARNING;
-
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;

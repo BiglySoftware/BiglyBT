@@ -21,6 +21,7 @@
 package com.biglybt.ui.swt.views;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1025,6 +1026,7 @@ public class FilesViewMenuUtil
 									moveFile(
 										manager,
 										file,
+										existing_file,
 										target_file,
 										dont_delete_existing,
 										new Runnable()
@@ -1168,6 +1170,7 @@ public class FilesViewMenuUtil
 					moveFile(
 						fileInfo.getDownloadManager(),
 						fileInfo,
+						existing_file,
 						ff_target,
 						f_dont_delete_existing,
 						new Runnable()
@@ -1743,6 +1746,7 @@ public class FilesViewMenuUtil
 				moveFile(
 						fileInfo.getDownloadManager(),
 						fileInfo,
+						existing_file,
 						f_target,
 						false,
 						new Runnable() {
@@ -1843,11 +1847,12 @@ public class FilesViewMenuUtil
 	
 	private static void
 	moveFile(
-		final DownloadManager 			manager,
-		final DiskManagerFileInfo 		fileInfo,
-		final File 						target,
-		boolean							dont_delete_existing,
-		final Runnable					done )
+		DownloadManager 			manager,
+		DiskManagerFileInfo 		fileInfo,
+		File						source,
+		File 						target,
+		boolean						dont_delete_existing,
+		Runnable					done )
 	{
 		Utils.getOffOfSWTThread(new AERunnable() {
 			@Override
@@ -1855,7 +1860,7 @@ public class FilesViewMenuUtil
 				moveCopyFileSem.reserve();
 					
 				moveFileSupport(
-					manager, fileInfo, target, dont_delete_existing, 
+					manager, fileInfo, source, target, dont_delete_existing, 
 					new Runnable()
 					{
 						public void 
@@ -1874,12 +1879,96 @@ public class FilesViewMenuUtil
 	}
 	
 	private static void
+	hardLinkFile(
+		DownloadManager 			manager,
+		DiskManagerFileInfo 		file_info,
+		File						source,
+		File 						target,
+		Runnable					done )
+	{
+			// this behaviour should be put further down in the core but I'd rather not
+			// do so close to release :(
+
+		manager.setUserData("is_changing_links", true);
+
+			// I don't link this one bit, but there's a lot of things I don't like and this isn't the worst
+		
+		manager.setUserData("set_link_dont_delete_existing", true);
+		
+		String failure_msg = null;
+		
+		try{
+			try{
+				Files.createLink( target.toPath(), source.toPath());
+					
+			}catch( Throwable e ){
+			
+				failure_msg =
+					MessageText.getString( 
+						"hardlink.failed.text", 
+						new String[]{ target.toString(), source.toString(), Debug.getNestedExceptionMessage(e) });
+			}
+			
+			if ( failure_msg == null ){
+			
+				boolean ok = file_info.setLink(target);
+	
+				if ( !ok ){
+	
+					target.delete();
+					
+					String error = file_info.getLastError();
+					
+					if ( error == null ){
+						
+						error = MessageText.getString( "SpeedView.stats.unknown" );
+					}
+					
+					failure_msg = 
+						MessageText.getString( 
+							"hardlink.failed.text", 
+							new String[]{ target.toString(), source.toString(), error });
+				}
+			}
+			
+			if ( failure_msg != null ){
+				
+				new MessageBoxShell(
+					SWT.ICON_ERROR | SWT.OK,
+					MessageText.getString("hardlink.failed.title"),
+					failure_msg ).open(
+						new UserPrompterResultListener() {
+	
+							@Override
+							public void prompterClosed(int result) {
+								if ( done != null ){
+									done.run();
+								}
+							}
+						});
+	
+			}
+		}finally{
+			manager.setUserData("is_changing_links", false);
+			manager.setUserData("set_link_dont_delete_existing", null);
+
+			if ( failure_msg == null ){
+
+				if ( done != null ){
+					done.run();
+				}
+			}
+		}
+	}
+	
+	private static void
 	copyFile(
-		final DownloadManager 			manager,
-		final DiskManagerFileInfo 		fileInfo,
-		final File 						target,
-		boolean							dont_delete_existing,
-		final Runnable					done )
+		DownloadManager 			manager,
+		DiskManagerFileInfo 		fileInfo,
+		File						source,
+		File 						target,
+		boolean						dont_delete_existing,
+		Runnable					done )
 	{
 		Utils.getOffOfSWTThread(new AERunnable() {
 			@Override
@@ -1887,7 +1976,7 @@ public class FilesViewMenuUtil
 				moveCopyFileSem.reserve();
 					
 				copyFileSupport(
-					manager, fileInfo, target, dont_delete_existing, 
+					manager, fileInfo, source, target, dont_delete_existing, 
 					new Runnable()
 					{
 						public void 
@@ -1907,11 +1996,12 @@ public class FilesViewMenuUtil
 	
 	private static void
 	moveFileSupport(
-		final DownloadManager 			manager,
-		final DiskManagerFileInfo 		fileInfo,
-		final File 						target,
-		boolean							dont_delete_existing,
-		final Runnable					done )
+		DownloadManager 			manager,
+		DiskManagerFileInfo 		fileInfo,
+		File						source,
+		File 						target,
+		boolean						dont_delete_existing,
+		Runnable					done )
 	{
 
 		// this behaviour should be put further down in the core but I'd rather not
@@ -1946,7 +2036,7 @@ public class FilesViewMenuUtil
 				public String[] 
 				getAffectedFileSystems()
 				{
-					return( FileUtil.getFileStoreNames( manager.getAbsoluteSaveLocation(), target ));
+					return( FileUtil.getFileStoreNames( source, target ));
 				}
 				
 				@Override
@@ -2015,11 +2105,12 @@ public class FilesViewMenuUtil
 
 	private static void
 	copyFileSupport(
-		final DownloadManager 			manager,
-		final DiskManagerFileInfo 		fileInfo,
-		final File 						target,
-		boolean							dont_delete_existing,
-		final Runnable					done )
+		DownloadManager 			manager,
+		DiskManagerFileInfo 		fileInfo,
+		File						source,
+		File 						target,
+		boolean						dont_delete_existing,
+		Runnable					done )
 	{
 
 		// this behaviour should be put further down in the core but I'd rather not
@@ -2054,7 +2145,7 @@ public class FilesViewMenuUtil
 				public String[] 
 				getAffectedFileSystems()
 				{
-					return( FileUtil.getFileStoreNames( manager.getAbsoluteSaveLocation(), target ));
+					return( FileUtil.getFileStoreNames( source, target ));
 				}
 
 				@Override
@@ -2364,11 +2455,11 @@ public class FilesViewMenuUtil
 	{
 		RevertFileLocationsWindow window = new RevertFileLocationsWindow();
 		
-		window.open(( ok, copy, retain )->{
+		window.open(( ok, hard_link, copy, retain )->{
 				
 			if ( ok ){
 				
-				revertFiles( tv, files, copy, retain );
+				revertFiles( tv, files, hard_link, copy, retain );
 			}
 		});
 	}
@@ -2377,6 +2468,7 @@ public class FilesViewMenuUtil
 	revertFiles(
 		final TableView<?>					tv,
 		List<DiskManagerFileInfo>			files,
+		boolean								hard_link,
 		boolean								copy,
 		boolean								retain_names )
 	{
@@ -2430,39 +2522,34 @@ public class FilesViewMenuUtil
 							
 							affected_files.add( file_info );
 
-							if ( copy ){
+							if ( hard_link ){
+							
+								hardLinkFile(
+									manager,
+									file_info,
+									source,
+									target,
+									()->{ task_sem.release(); });
+								
+							}else if ( copy ){
 								
 								copyFile(
-										manager,
-										file_info,
-										target,
-										true,
-										new Runnable()
-										{
-											@Override
-											public void
-											run()
-											{
-												task_sem.release();													
-											}
-										});
+									manager,
+									file_info,
+									source,
+									target,
+									true,
+									()->{ task_sem.release(); });
 								
 							}else{
 								
 								moveFile(
 									manager,
 									file_info,
+									source,
 									target,
 									true,
-									new Runnable()
-									{
-										@Override
-										public void
-										run()
-										{
-											task_sem.release();													
-										}
-									});
+									()->{ task_sem.release(); });
 							}
 			    		}
 			    	}

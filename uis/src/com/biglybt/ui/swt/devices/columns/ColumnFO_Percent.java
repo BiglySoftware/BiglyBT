@@ -72,6 +72,6 @@ public class ColumnFO_Percent
 		      return;
 		}	
 		
-		cell.setText( DisplayFormatters.formatPercentFromThousands( progress ));
+		cell.setText( progress<0?"":DisplayFormatters.formatPercentFromThousands( progress ));
 	}
 }
