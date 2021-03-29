@@ -133,11 +133,9 @@ public class RevertFileLocationsWindow
 				
 				RememberedDecisionsManager.setRemembered("revert.file.locations", decisions );
 
-				Utils.getOffOfSWTThread(new AERunnable() {
-					@Override
-					public void runSupport() {
+				AEThread2.createAndStartDaemon("RevertFiles", ()->{
+					
 						resultListener.closed( true, hard_link, copy, retain );
-					}
 				});
 
 				shell.dispose();

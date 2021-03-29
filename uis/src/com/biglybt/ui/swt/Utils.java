@@ -3338,8 +3338,15 @@ public class Utils
 	private static Map truncatedTextCache = new HashMap();
 
 	public static final String THREAD_NAME_OFFSWT = "GetOffSWT";
-	private static ThreadPool tp = new ThreadPool(THREAD_NAME_OFFSWT, 3, true);
+	private static ThreadPool tp = new ThreadPool(THREAD_NAME_OFFSWT, 10, true);
 
+	static{
+		if ( Constants.isCVSVersion()){
+		
+			tp.setWarnWhenFull();
+		}
+	}
+	
 	private static class TruncatedTextResult {
 		String text;
 		int maxWidth;
