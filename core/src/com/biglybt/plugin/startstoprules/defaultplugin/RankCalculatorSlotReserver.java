@@ -182,13 +182,13 @@ RankCalculatorSlotReserver
 	public boolean
 	isFirstPriority()
 	{
-		return( true );
+		return( false );
 	}
 	
 	public boolean
 	getCachedIsFP()
 	{
-		return( true );
+		return( false );
 	}
 	
 	public int
