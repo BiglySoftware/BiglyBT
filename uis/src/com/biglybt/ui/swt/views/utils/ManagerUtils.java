@@ -28,6 +28,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -2541,6 +2542,14 @@ public class ManagerUtils {
 		}
 	}
 	
+	private static final int LOCATE_MODE_LINK		= 0;
+	private static final int LOCATE_MODE_COPY		= 1;
+	private static final int LOCATE_MODE_MOVE		= 2;
+	
+	private static final int LOCATE_MODE_LINK_BLANK		= 0;
+	private static final int LOCATE_MODE_LINK_INTERNAL	= 1;
+	private static final int LOCATE_MODE_LINK_HARD		= 2;
+
 	private static void
 	locateFilesSupport(
 		final DownloadManager[]			dms,
@@ -2602,7 +2611,9 @@ public class ManagerUtils {
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		c_mode.setLayout( layout);
-				
+		
+			// mode 
+		
 		Combo mode_combo = new Combo( c_mode, SWT.READ_ONLY );
 		FormData	fd = new FormData();
 		fd.top=new FormAttachment(c_mode,0);
@@ -2614,11 +2625,29 @@ public class ManagerUtils {
 				MessageText.getString( "label.copy" ) + "    ",
 				MessageText.getString( "label.move" ) + "    ");
 		
+			// link mode
+		
+		Combo link_combo = new Combo( c_mode, SWT.READ_ONLY );
+		fd = new FormData();
+		fd.top=new FormAttachment(c_mode,0);
+		fd.bottom=new FormAttachment(100);
+		fd.left=new FormAttachment(mode_combo,2 );
+		link_combo.setLayoutData( fd );
+		
+		link_combo.setItems(
+				"    ",	
+				MessageText.getString( "tag.type.internal" ) + "    ",	// shitty layout doesn't give sufficient width for all options
+				MessageText.getString( "label.hard" ) + "    " );
+			
+		Utils.setTT( link_combo, MessageText.getString( "label.link.type" ));
+		
+			// tolerance
+		
 		CLabel tolerance = new CLabel( c_mode, SWT.CENTER );
 		fd = new FormData();
 		fd.top=new FormAttachment(c_mode,0);
 		fd.bottom=new FormAttachment(100,-2);
-		fd.left=new FormAttachment(mode_combo );
+		fd.left=new FormAttachment(link_combo );
 		tolerance.setLayoutData( fd );
 		tolerance.setText( MessageText.getString( "label.tolerance.pct" ));
 		
@@ -2655,6 +2684,8 @@ public class ManagerUtils {
 					
 					int mode = mode_combo.getSelectionIndex();
 					
+					int link_type = link_combo.getSelectionIndex();
+					
 					int tolerance = spinner.getSelection();
 					
 					boolean include_skipped = so_include_skipped.isChecked();
@@ -2668,7 +2699,7 @@ public class ManagerUtils {
 							public void
 							run()
 							{
-								locateFiles( dms, dm_files, shell, roots, mode, tolerance, include_skipped );
+								locateFiles( dms, dm_files, shell, roots, mode, link_type, tolerance, include_skipped );
 							}
 						});
 					
@@ -2720,9 +2751,17 @@ public class ManagerUtils {
 					
 					buttonsArea.setButtonEnabled( SWT.OK, can_search );
 					
-					int mode = COConfigurationManager.getIntParameter( "find.files.search.mode", 0 );
+					int mode = COConfigurationManager.getIntParameter( "find.files.search.mode", LOCATE_MODE_LINK );
 					
 					mode_combo.select( mode );
+					
+					int link_mode = COConfigurationManager.getIntParameter( "find.files.search.mode.link", LOCATE_MODE_LINK_INTERNAL );
+					
+					boolean link_enabled = mode == LOCATE_MODE_LINK;
+					
+					link_combo.select( link_enabled?link_mode:LOCATE_MODE_LINK_BLANK );
+					
+					link_combo.setEnabled( link_enabled );
 				}
 			};
 			
@@ -2822,7 +2861,24 @@ public class ManagerUtils {
 					state_changed.run();
 				}
 			});
-				
+			
+		link_combo.addSelectionListener(
+			new SelectionAdapter(){
+				@Override
+				public void widgetSelected(SelectionEvent e){
+					int index = link_combo.getSelectionIndex();
+					
+					if ( index == LOCATE_MODE_LINK_BLANK ){
+						
+						index = LOCATE_MODE_LINK_INTERNAL;
+					}
+					
+					COConfigurationManager.setParameter( "find.files.search.mode.link", index );
+					
+					state_changed.run();
+				}
+			});
+		
 		spinner.addListener(
 				SWT.Selection, 
 				(e)->{
@@ -2832,9 +2888,9 @@ public class ManagerUtils {
 						
 						int index = mode_combo.getSelectionIndex();
 						
-						if ( index == 0 ){
+						if ( index == LOCATE_MODE_LINK ){
 						
-							index = 1;
+							index = LOCATE_MODE_COPY;
 						
 							mode_combo.select( index );
 							
@@ -2966,6 +3022,7 @@ public class ManagerUtils {
 		Shell							shell,
 		String[]						search_roots,
 		int								mode,
+		int								link_type,
 		int								tolerance,
 		boolean							include_skipped )
 	{
@@ -3043,7 +3100,8 @@ public class ManagerUtils {
 					
 						// first level of processing - look for simple root folder changes								
 					
-					if ( mode == 0 ){
+					if ( mode == LOCATE_MODE_LINK ){
+						
 						for ( int i=0;i<dms.length;i++){
 	
 							DownloadManager			dm = dms[i];
@@ -3362,8 +3420,9 @@ public class ManagerUtils {
 							int skipped				= 0;
 							int unskipped_count		= 0;
 	
-							int	action_count = 0;
-	
+							int	action_count 		= 0;
+							int internal_link_count	= 0;
+							
 							try{
 	
 								download_loop:
@@ -3833,34 +3892,80 @@ public class ManagerUtils {
 																}
 															}
 	
-															if ( mode == 0 ){
+															if ( mode == LOCATE_MODE_LINK ){
 	
 																try{
 																	dm.setUserData( "set_link_dont_delete_existing", true );
 	
 																	logLine( viewer, action_indent, "Linking to " + candidate );
 	
-																	if ( file.setLink( candidate )){
-	
-																		logLine( viewer, action_indent+1, "Link successful" );
-	
-																		dm_files.add( candidate.getAbsolutePath());
-	
-																		actions_established.put( file, candidate );
-	
-																		action_count++;
-	
-																		matched = true;
-	
-																		if ( action_count > MAX_LINKS ){
-	
-																			logLine( viewer, action_indent+2, LINK_LIMIT_MSG );
-	
-																			break download_loop;
+																	boolean do_internal_link = true;
+																	
+																	if ( link_type == LOCATE_MODE_LINK_HARD ){
+																																		
+																		File original = file.getFile( false );
+																	
+																		if ( original.exists()){
+		
+																			original.delete();
 																		}
-																	}else{
-	
-																		logLine( viewer, action_indent+1, "Link failed" );
+																		
+																		try{
+																			Files.createLink( original.toPath(), candidate.toPath());
+																			
+																			if ( file.setLink( original )){
+																				
+																				do_internal_link = false;
+																				
+																				logLine( viewer, action_indent+1, "Hard Link successful" );
+																				
+																				dm_files.add( candidate.getAbsolutePath());
+																				
+																				actions_established.put( file, candidate );
+			
+																				action_count++;
+			
+																				matched = true;
+																				
+																			}else{
+																				
+																				original.delete();
+																				
+																				logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link" );
+
+																			}
+																		}catch( Throwable e ){
+																			
+																			logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: " + Debug.getNestedExceptionMessage( e ));
+																		}
+																	}
+																	
+																	if ( do_internal_link ){
+																		
+																		if ( file.setLink( candidate )){
+		
+																			logLine( viewer, action_indent+1, "Link successful" );
+		
+																			dm_files.add( candidate.getAbsolutePath());
+		
+																			actions_established.put( file, candidate );
+		
+																			action_count++;
+		
+																			internal_link_count++;
+																			
+																			matched = true;
+		
+																			if ( internal_link_count > MAX_LINKS ){
+		
+																				logLine( viewer, action_indent+2, LINK_LIMIT_MSG );
+		
+																				break download_loop;
+																			}
+																		}else{
+		
+																			logLine( viewer, action_indent+1, "Link failed" );
+																		}
 																	}
 																}finally{
 	
@@ -3883,7 +3988,7 @@ public class ManagerUtils {
 																	parent.mkdirs();
 																}
 	
-																if ( mode == 1 ){
+																if ( mode == LOCATE_MODE_COPY ){
 	
 																	logLine( viewer, action_indent, "Copying " + candidate + " to " + target );
 	
@@ -3903,7 +4008,7 @@ public class ManagerUtils {
 	
 																		logLine( viewer, action_indent+1, "Copy failed" );
 																	}
-																}else{
+																}else if ( mode == LOCATE_MODE_MOVE ){
 	
 																	logLine( viewer, action_indent, "Moving " + candidate + " to " + target );
 	
@@ -3923,6 +4028,9 @@ public class ManagerUtils {
 	
 																		logLine( viewer, action_indent+1, "Move failed" );
 																	}
+																}else{
+																	
+																	Debug.out( "derp" );
 																}
 															}
 	
@@ -4126,32 +4234,76 @@ public class ManagerUtils {
 													}
 												}
 	
-												if ( mode == 0 ){
+												if ( mode == LOCATE_MODE_LINK ){
 	
 													try{
 														dm.setUserData( "set_link_dont_delete_existing", true );
 	
 														logLine( viewer, action_indent, "Linking to " + source_file );
 	
-														if ( file.setLink( source_file )){
-	
-															logLine( viewer, action_indent+1, "Linked successful" );
-	
-															fixed_files.add( file );
-	
-															actions_ok++;
-	
-															action_count++;
-	
-															if ( action_count > MAX_LINKS ){
-	
-																logLine( viewer, action_indent+2, LINK_LIMIT_MSG );
-	
-																break;
+														boolean do_internal_link = true;
+														
+														if ( link_type == LOCATE_MODE_LINK_HARD ){
+																															
+															File original = file.getFile( false );
+														
+															if ( original.exists()){
+
+																original.delete();
 															}
-														}else{
-	
-															logLine( viewer, action_indent+1, "Link failed" );
+															
+															try{
+																Files.createLink( original.toPath(), source_file.toPath());
+																
+																if ( file.setLink( original )){
+																	
+																	do_internal_link = false;
+																	
+																	logLine( viewer, action_indent+1, "Hard Link successful" );
+																	
+																	fixed_files.add( file );
+																	
+																	actions_ok++;
+
+																	action_count++;
+																	
+																}else{
+																	
+																	original.delete();
+																	
+																	logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link" );
+
+																}
+															}catch( Throwable e ){
+																
+																logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: " + Debug.getNestedExceptionMessage( e ));
+															}
+														}
+														
+														if ( do_internal_link ){
+															
+															if ( file.setLink( source_file )){
+		
+																logLine( viewer, action_indent+1, "Linked successful" );
+		
+																fixed_files.add( file );
+		
+																actions_ok++;
+		
+																action_count++;
+		
+																internal_link_count++;
+																
+																if ( internal_link_count > MAX_LINKS ){
+		
+																	logLine( viewer, action_indent+2, LINK_LIMIT_MSG );
+		
+																	break;
+																}
+															}else{
+		
+																logLine( viewer, action_indent+1, "Link failed" );
+															}
 														}
 													}finally{
 	
@@ -4167,7 +4319,7 @@ public class ManagerUtils {
 														target.delete();
 													}
 	
-													if ( mode == 1 ){
+													if ( mode == LOCATE_MODE_COPY ){
 	
 														logLine( viewer, action_indent, "Copying " + source_file + " to " + target );
 	
@@ -4187,7 +4339,7 @@ public class ManagerUtils {
 	
 															logLine( viewer, action_indent+1, "Copy failed" );
 														}
-													}else{
+													}else if ( mode == LOCATE_MODE_MOVE ){
 	
 														logLine( viewer, action_indent, "Moving " + source_file + " to " + target );
 	
@@ -4207,13 +4359,16 @@ public class ManagerUtils {
 	
 															logLine( viewer, action_indent+1, "Move failed" );
 														}
+													}else{
+														
+														Debug.out( "derp" );
 													}
 												}
 											}
 										}
 									}
 	
-									String action_str = mode==0?"Linked":(mode==1?"Copied":"Moved" );
+									String action_str = mode==LOCATE_MODE_LINK?"Linked":(mode==LOCATE_MODE_COPY?"Copied":"Moved" );
 	
 									logLine( viewer, dm_indent, action_str + " " + actions_ok + " of " + unmatched_files.size());
 								}
