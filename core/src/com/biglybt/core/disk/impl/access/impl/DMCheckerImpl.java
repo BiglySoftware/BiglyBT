@@ -407,6 +407,13 @@ DMCheckerImpl
 					  	       					complete();
 					  	       				}			  	       			}
 
+					  	       			@Override
+					  	       			public boolean 
+					  	       			isFailureInteresting()
+					  	       			{	
+					  	       				return( listener.isFailureInteresting());
+					  	       			}
+					  	       			
 					  	       			protected void
 					  	       			complete()
 					  	       			{
@@ -555,8 +562,12 @@ DMCheckerImpl
 									Logger.log(new LogEvent(disk_manager, LOGID, LogEvent.LT_INFORMATION,
 												"Piece " + request.getPieceNumber() + " passed hash check."));
 								}else{
-									Logger.log(new LogEvent(disk_manager, LOGID, LogEvent.LT_WARNING,
-												"Piece " + request.getPieceNumber() + " failed hash check."));
+									Logger.log(
+										new LogEvent(
+											disk_manager, 
+											LOGID, 
+											listener.isFailureInteresting()?LogEvent.LT_WARNING:LogEvent.LT_INFORMATION,
+											"Piece " + request.getPieceNumber() + " failed hash check."));
 								}
 							}
 						}
@@ -603,6 +614,13 @@ DMCheckerImpl
 												"Piece " + request.getPieceNumber() + " failed hash check - " + Debug.getNestedExceptionMessage( cause )));
 							}
 						}
+					}
+					
+					@Override
+					public boolean 
+					isFailureInteresting()
+					{
+						return( listener.isFailureInteresting());
 					}
 					
 					@Override

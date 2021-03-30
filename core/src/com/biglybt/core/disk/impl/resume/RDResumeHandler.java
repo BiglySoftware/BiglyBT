@@ -527,6 +527,13 @@ RDResumeHandler
 
 													pending_checks_sem.release();
 												}
+												
+												@Override
+												public boolean 
+												isFailureInteresting()
+												{
+													return( false );
+												}
 											});
 
 										pending_check_num++;
@@ -706,6 +713,13 @@ RDResumeHandler
 											
 											pending_checks_sem.release();
 										}
+										
+										@Override
+										public boolean 
+										isFailureInteresting()
+										{
+											return( false );
+										}
 									});
 
 							pending_check_num++;
@@ -832,6 +846,13 @@ RDResumeHandler
 																				Throwable		 			cause )
 																			{
 																				sem.release();
+																			}
+																			
+																			@Override
+																			public boolean 
+																			isFailureInteresting()
+																			{
+																				return( false );
 																			}
 																		});
 															}catch( Throwable e ){

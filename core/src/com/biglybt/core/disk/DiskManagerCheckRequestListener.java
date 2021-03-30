@@ -49,6 +49,12 @@ DiskManagerCheckRequestListener
 		return( false );
 	}
 	
+	public default boolean
+	isFailureInteresting()
+	{
+		return( true );
+	}
+	
 	public interface
 	HashListener
 	{
