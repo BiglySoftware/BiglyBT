@@ -21,6 +21,7 @@ package com.biglybt.core.util;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
+import java.nio.file.NoSuchFileException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
@@ -461,7 +462,7 @@ public class Debug {
 
 				this_message = "Unknown host " + e.getMessage();
 
-			}else if ( e instanceof FileNotFoundException ){
+			}else if ( e instanceof FileNotFoundException || e instanceof NoSuchFileException ){
 
 				this_message = "File not found: " + e.getMessage();
 
