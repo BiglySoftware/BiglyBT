@@ -3908,6 +3908,15 @@ public class ManagerUtils {
 																		if ( original.exists()){
 		
 																			original.delete();
+																			
+																		}else{
+																			
+																			File o_parent = original.getParentFile();
+																			
+																			if ( !o_parent.exists()){
+																				
+																				o_parent.mkdirs();
+																			}
 																		}
 																		
 																		try{
@@ -3936,7 +3945,7 @@ public class ManagerUtils {
 																			}
 																		}catch( Throwable e ){
 																			
-																			logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: " + Debug.getNestedExceptionMessage( e ));
+																			logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: Error=" + Debug.getNestedExceptionMessage( e ));
 																		}
 																	}
 																	
@@ -4250,6 +4259,15 @@ public class ManagerUtils {
 															if ( original.exists()){
 
 																original.delete();
+																
+															}else{
+																
+																File o_parent = original.getParentFile();
+																
+																if ( !o_parent.exists()){
+																	
+																	o_parent.mkdirs();
+																}
 															}
 															
 															try{
@@ -4276,7 +4294,7 @@ public class ManagerUtils {
 																}
 															}catch( Throwable e ){
 																
-																logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: " + Debug.getNestedExceptionMessage( e ));
+																logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: Error=" + Debug.getNestedExceptionMessage( e ));
 															}
 														}
 														
