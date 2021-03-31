@@ -3170,6 +3170,13 @@ public class ManagerUtils {
 							
 									if ( torrent.isSimpleTorrent()){
 										
+										if (	mode == LOCATE_MODE_LINK &&
+												link_type == LOCATE_MODE_LINK_HARD ){
+											
+												// we don't want to relocate the download if a file is found
+											
+											break outer;
+										}
 											// if originating file exists then bail completely
 										
 										if ( dm_files[0].getFile( true ).exists()){
@@ -3900,7 +3907,7 @@ public class ManagerUtils {
 																	logLine( viewer, action_indent, "Linking to " + candidate );
 	
 																	boolean do_internal_link = true;
-																	
+																																		
 																	if ( link_type == LOCATE_MODE_LINK_HARD ){
 																																		
 																		File original = file.getFile( false );
