@@ -17,6 +17,8 @@
  */
 package com.biglybt.ui.swt.views;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -47,6 +49,7 @@ import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
@@ -159,6 +162,9 @@ public class GeneralView
   BufferedLabel hashFails;
   BufferedLabel shareRatio;
 
+  Canvas		thumbImage;
+  Image 		tImage;
+  
   private int graphicsUpdate = COConfigurationManager.getIntParameter("Graphics Update");
 
   private boolean	piecesImageRefreshNeeded;
@@ -272,7 +278,9 @@ public class GeneralView
     updateAvailability();
     updatePiecesInfo(true);
 
-    refresh();
+    loadThumb();
+    
+    refresh( true );
     
     Utils.updateScrolledComposite(scrolled_comp);
     //Utils.changeBackgroundComposite(genComposite,MainWindow.getWindow().getBackground());
@@ -489,44 +497,58 @@ public class GeneralView
     gridData = new GridData(GridData.FILL_BOTH);
     gInfo.setLayoutData(gridData);
 
-    GridLayout layoutInfo = new GridLayout();
-    layoutInfo.numColumns = 4;
+    GridLayout layoutInfo = new GridLayout(4,true);
     gInfo.setLayout(layoutInfo);
 
-    label = new Label(gInfo, SWT.LEFT);
-    Messages.setLanguageText(label, "GeneralView.label.filename"); //$NON-NLS-1$
-    fileName = new BufferedLabel(gInfo, SWT.LEFT);
+    Composite cInfoLeft = new Composite( gInfo, SWT.NULL );
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    fileName.setLayoutData(gridData);
+    gridData.horizontalSpan=3;
+    cInfoLeft.setLayoutData(gridData);
+    GridLayout layout =  new GridLayout( 2, false );
+    layout.marginHeight=layout.marginLeft=layout.marginRight=layout.marginWidth=0;
+    cInfoLeft.setLayout(layout);
+    
+    Composite cInfoRight = new Composite( gInfo, SWT.NULL );
+    gridData = new GridData(GridData.FILL_BOTH);
+    cInfoRight.setLayoutData(gridData);
+    layout =  new GridLayout( 2, false );
+    layout.marginHeight=layout.marginLeft=layout.marginRight=layout.marginWidth=0;
+    cInfoRight.setLayout(layout);
 
-    label = new Label(gInfo, SWT.LEFT);
+    
+    label = new Label(cInfoLeft, SWT.LEFT);
+    Messages.setLanguageText(label, "GeneralView.label.filename"); //$NON-NLS-1$
+    fileName = new BufferedLabel(cInfoLeft, SWT.LEFT);
+    //gridData = new GridData(GridData.FILL_HORIZONTAL);
+    //fileName.setLayoutData(gridData);
+
+    label = new Label(cInfoRight, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.status"); //$NON-NLS-1$
-    torrentStatus = new BufferedLabel(gInfo, SWT.LEFT | SWT.DOUBLE_BUFFERED );
+    torrentStatus = new BufferedLabel(cInfoRight, SWT.LEFT | SWT.DOUBLE_BUFFERED );
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     torrentStatus.setLayoutData(gridData);
 
-    label = new Label(gInfo, SWT.LEFT);
+    label = new Label(cInfoLeft, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.savein"); //$NON-NLS-1$
-    saveIn = new BufferedLabel(gInfo, SWT.LEFT);
-    gridData = new GridData(GridData.FILL_HORIZONTAL);
-    gridData.horizontalSpan = 3;
-    saveIn.setLayoutData(gridData);
+    saveIn = new BufferedLabel(cInfoLeft, SWT.LEFT);
+    //gridData = new GridData(GridData.FILL_HORIZONTAL);
+    //saveIn.setLayoutData(gridData);
 
-    label = new Label(gInfo, SWT.LEFT);
+    label = new Label(cInfoLeft, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.totalsize"); //$NON-NLS-1$
-    fileSize = new BufferedLabel(gInfo, SWT.LEFT);
+    fileSize = new BufferedLabel(cInfoLeft, SWT.LEFT);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     fileSize.setLayoutData(gridData);
 
-    label = new Label(gInfo, SWT.LEFT);
+    label = new Label(cInfoRight, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.numberofpieces"); //$NON-NLS-1$
-    pieceNumber = new BufferedLabel(gInfo, SWT.LEFT);
+    pieceNumber = new BufferedLabel(cInfoRight, SWT.LEFT);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     pieceNumber.setLayoutData(gridData);
 
-    label = new Label(gInfo, SWT.LEFT);
+    label = new Label(cInfoLeft, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.hash"); //$NON-NLS-1$
-    hash = new BufferedLabel(gInfo, SWT.LEFT);
+    hash = new BufferedLabel(cInfoLeft, SWT.LEFT);
     Messages.setLanguageText(hash.getWidget(), "GeneralView.label.hash.tooltip", true);
 
     gridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -564,9 +586,9 @@ public class GeneralView
     });
 
 
-    label = new Label(gInfo, SWT.LEFT);
+    label = new Label(cInfoRight, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.size");
-    pieceSize = new BufferedLabel(gInfo, SWT.LEFT);
+    pieceSize = new BufferedLabel(cInfoRight, SWT.LEFT);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     pieceSize.setLayoutData(gridData);
 
@@ -605,7 +627,7 @@ public class GeneralView
 	    	}
 		};
 		  
-    label = new Label(gInfo, SWT.LEFT);
+    label = new Label(cInfoLeft, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.creationdate");
     
     Menu cd_menu = new Menu(label.getShell(),SWT.POP_UP);
@@ -615,7 +637,7 @@ public class GeneralView
 	mi_cd1.addSelectionListener( cd_listener );
 	label.setMenu( cd_menu );
 
-    creation_date = new BufferedLabel(gInfo, SWT.LEFT);
+    creation_date = new BufferedLabel(cInfoLeft, SWT.LEFT);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     creation_date.setLayoutData(gridData);
 
@@ -640,9 +662,9 @@ public class GeneralView
 	
 	creation_date.getControl().setMenu( cd_menu );
 
-    label = new Label(gInfo, SWT.LEFT);
+    label = new Label(cInfoRight, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.private");
-    privateStatus = new BufferedLabel(gInfo, SWT.LEFT);
+    privateStatus = new BufferedLabel(cInfoRight, SWT.LEFT);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     privateStatus.setLayoutData(gridData);
 
@@ -652,14 +674,74 @@ public class GeneralView
     gridData.horizontalSpan = 4;
     label.setLayoutData(gridData);
 
+    
+    Composite cCommentsThumb = new Composite( gInfo, SWT.NULL );
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData.horizontalSpan=4;
+    cCommentsThumb.setLayoutData(gridData);
+    layout = new GridLayout( 4, true );
+    layout.marginHeight=layout.marginLeft=layout.marginRight=layout.marginWidth=0;
+    cCommentsThumb.setLayout( layout);
 
-    label = new Label(gInfo, SWT.LEFT);
+    Composite cComments = new Composite( cCommentsThumb, SWT.NULL );
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData.horizontalSpan=3;
+    cComments.setLayoutData(gridData);
+    layout =  new GridLayout( 2, false );
+    layout.marginHeight=layout.marginLeft=layout.marginRight=layout.marginWidth=0;
+    cComments.setLayout(layout);
+    
+    Group gThumb = new Group( cCommentsThumb, SWT.NULL );
+    gridData = new GridData(GridData.FILL_BOTH);
+    gThumb.setLayoutData(gridData);
+    layout =  new GridLayout( 1, false );
+    layout.marginHeight=layout.marginLeft=layout.marginRight=layout.marginWidth=0;
+    gThumb.setLayout(layout);
+    
+    Messages.setLanguageText(gThumb, "label.thumbnail" );
+    
+    thumbImage = new Canvas(gThumb, SWT.NULL);
+    gridData = new GridData(GridData.FILL_BOTH);
+    gridData.heightHint = 100;
+    thumbImage.setLayoutData(gridData);
+    
+    Menu thumbMenu = new Menu( thumbImage );
+    thumbImage.setMenu( thumbMenu );
+    
+    MenuItem mi = new MenuItem( thumbMenu, SWT.PUSH );
+    Messages.setLanguageText(mi, "MyTorrentsView.menu.torrent.set.thumb");
+    
+    mi.addListener(SWT.Selection, (ev)->{
+    	setThumb();
+    });
+    
+    mi = new MenuItem( thumbMenu, SWT.SEPARATOR );
+
+    mi = new MenuItem( thumbMenu, SWT.PUSH );
+    Messages.setLanguageText(mi, "Button.clear");
+    
+    mi.addListener(SWT.Selection, (ev)->{
+    	clearThumb();
+    });
+    
+    
+    thumbImage.addMouseListener(
+    	new MouseAdapter(){
+    		@Override
+    		public void mouseDoubleClick(MouseEvent ev){
+    			setThumb();
+    		}
+		});
+    
+    label = new Label(cComments, SWT.LEFT);
+    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
+    label.setLayoutData(gridData);
     label.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
     label.setForeground(Colors.blue);
     Messages.setLanguageText(label, "GeneralView.label.user_comment");
 
     try {
-    	user_comment = new Link(gInfo, SWT.LEFT | SWT.WRAP);
+    	user_comment = new Link(cComments, SWT.LEFT | SWT.WRAP);
     	((Link)user_comment).addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -667,11 +749,10 @@ public class GeneralView
 				}
 			});
     } catch (Throwable e) {
-    	user_comment = new Label(gInfo, SWT.LEFT | SWT.WRAP);
+    	user_comment = new Label(cComments, SWT.LEFT | SWT.WRAP);
     }
 
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    gridData.horizontalSpan = 3;
     user_comment.setLayoutData(gridData);
 
     label.addMouseListener(new MouseAdapter() {
@@ -685,13 +766,13 @@ public class GeneralView
         public void mouseDown(MouseEvent arg0) {editComment();}
       });
 
-    label = new Label(gInfo, SWT.LEFT);
+    label = new Label(cComments, SWT.LEFT);
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
     label.setLayoutData(gridData);
     Messages.setLanguageText(label, "GeneralView.label.comment");
 
     try {
-    	lblComment = new Link(gInfo, SWT.LEFT | SWT.WRAP);
+    	lblComment = new Link(cComments, SWT.LEFT | SWT.WRAP);
     	((Link)lblComment).addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -699,12 +780,16 @@ public class GeneralView
 				}
 			});
     } catch (Throwable e) {
-    	lblComment = new Label(gInfo, SWT.LEFT | SWT.WRAP);
+    	lblComment = new Label(cComments, SWT.LEFT | SWT.WRAP);
     }
-    gridData = new GridData(GridData.FILL_BOTH);
-    gridData.horizontalSpan = 3;
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
     lblComment.setLayoutData(gridData);
 
+    Composite pad1 = new Composite(cComments, SWT.NULL);
+    gridData = new GridData(GridData.FILL_BOTH);
+    gridData.horizontalSpan = 2;
+    pad1.setLayoutData(gridData);
+    
     ClipboardCopy.addCopyToClipMenu( 
     	lblComment,
     	new ClipboardCopy.copyToClipProvider(){
@@ -736,6 +821,39 @@ public class GeneralView
       }
     });
 
+    thumbImage.addListener(SWT.Paint, new Listener() {
+        @Override
+        public void handleEvent(Event e) {
+        	if (tImage == null || tImage.isDisposed()) {
+        		return;
+        	}
+        	
+        	Rectangle cellBounds = thumbImage.getBounds();
+        	
+        	Rectangle imgBounds = tImage.getBounds();
+        	
+			int dstWidth;
+			int dstHeight;
+			if (imgBounds.height > cellBounds.height) {
+				dstHeight = cellBounds.height;
+				dstWidth = imgBounds.width * cellBounds.height / imgBounds.height;
+			} else if (imgBounds.width > cellBounds.width) {
+				dstWidth = cellBounds.width - 4;
+				dstHeight = imgBounds.height * cellBounds.width / imgBounds.width;
+			} else {
+				dstWidth = imgBounds.width;
+				dstHeight = imgBounds.height;
+			}
+			
+			e.gc.drawImage(
+				tImage, 
+				0, 0, imgBounds.width, imgBounds.height, 
+				(cellBounds.width-dstWidth)/2, (cellBounds.height-dstHeight)/2, dstWidth, dstHeight );
+        }
+      });
+    
+    loadThumb();
+    
     genComposite.layout();
   }
 
@@ -743,12 +861,121 @@ public class GeneralView
     return genComposite;
   }
 
-  public void refresh() {
+  private void
+  loadThumb()
+  {
+	  TOTorrent torrent = manager.getTorrent();
+
+	  if ( torrent != null ){
+		  
+		  final byte[] imageBytes = PlatformTorrentUtils.getContentThumbnail(torrent);
+		  
+		  if ( imageBytes != null ){
+			  
+			  try{
+				  ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+				  
+				  Image image = new Image(Display.getDefault(), bis);
+				  
+				  if ( tImage != null ){
+					  
+					  tImage.dispose();
+				  }
+	
+				  tImage = image;
+				  
+			  }catch( Throwable f ){
+	
+			  }
+		  }else{
+			  
+			  if ( tImage != null ){
+				  
+				  tImage.dispose();
+				  
+				  tImage = null;
+			  }
+		  }
+		  
+		  thumbImage.redraw();
+	  }
+  }
+  
+  private void
+  setThumb()
+  {
+	  FileDialog fDialog = new FileDialog(thumbImage.getShell(), SWT.OPEN | SWT.MULTI);
+
+	  fDialog.setText(MessageText.getString("MainWindow.dialog.choose.thumb"));
+
+	  String path = fDialog.open();
+
+	  if ( path == null ){
+
+		  return;
+	  }
+
+	  File file = new File( path );
+
+	  try{
+		  byte[] thumbnail = FileUtil.readFileAsByteArray( file );
+
+		  String name = file.getName();
+
+		  int	pos = name.lastIndexOf( "." );
+
+		  String ext;
+
+		  if ( pos != -1 ){
+
+			  ext = name.substring( pos+1 );
+
+		  }else{
+
+			  ext = "";
+		  }
+
+		  String type = HTTPUtils.guessContentTypeFromFileType( ext );
+
+		  try{
+			  TOTorrent torrent = manager.getTorrent();
+
+			  PlatformTorrentUtils.setContentThumbnail( torrent, thumbnail, type );
+
+			  loadThumb();
+			  
+		  }catch( Throwable e ){
+
+		  }
+	  }catch( Throwable e ){
+
+		  Debug.out( e );
+	  }
+  }
+  
+  private void
+  clearThumb()
+  {
+	  try{
+		  TOTorrent torrent = manager.getTorrent();
+
+		  PlatformTorrentUtils.setContentThumbnail( torrent, null, "" );
+
+		  loadThumb();
+		  
+	  }catch( Throwable e ){
+
+	  }
+  }
+  
+
+  
+  public void refresh(boolean force) {
     if(gFile == null || gFile.isDisposed() || manager == null)
       return;
 
     loopFactor++;
-    if ((loopFactor % graphicsUpdate) == 0) {
+    if ( force || (loopFactor % graphicsUpdate) == 0) {
       updateAvailability();
       availabilityImage.redraw();
       updatePiecesInfo(false);
@@ -866,23 +1093,25 @@ public class GeneralView
       	distributedCopies
     );
 
-    TOTorrent	torrent = manager.getTorrent();
+    TOTorrent	torrent_maybe_null = manager.getTorrent();
 
     String creation_date = DisplayFormatters.formatDate(manager.getTorrentCreationDate()*1000);
-    byte[] created_by = torrent == null ? null : torrent.getCreatedBy();
+    byte[] created_by = torrent_maybe_null == null ? null : torrent_maybe_null.getCreatedBy();
     if (created_by != null) {
 			creation_date = MessageText.getString("GeneralView.torrent_created_on_and_by", new String[] {
 					creation_date, new String(created_by, Constants.DEFAULT_ENCODING_CHARSET)
 			});
 		}
 
-    String privateAndSourceStr = MessageText.getString("GeneralView."+(torrent != null && torrent.getPrivate()?"yes":"no"));
+    String privateAndSourceStr = MessageText.getString("GeneralView."+(torrent_maybe_null != null && torrent_maybe_null.getPrivate()?"yes":"no"));
     
-    String source = torrent.getSource();
-    
-    if ( source != null ){
-    	
-    	privateAndSourceStr += ", " + MessageText.getString( "wizard.source") + ": " + source;
+    if ( torrent_maybe_null != null ){
+	    String source = torrent_maybe_null.getSource();
+	    
+	    if ( source != null ){
+	    	
+	    	privateAndSourceStr += ", " + MessageText.getString( "wizard.source") + ": " + source;
+	    }
     }
     
     setInfos(
@@ -890,7 +1119,7 @@ public class GeneralView
 	  DisplayFormatters.formatByteCountToKiBEtc(manager.getSize()),
 	  DisplayFormatters.formatDownloadStatus(manager), manager.getState()==DownloadManager.STATE_ERROR,
       manager.getSaveLocation().toString(),
-      TorrentUtils.nicePrintTorrentHash(torrent),
+      TorrentUtils.nicePrintTorrentHash(torrent_maybe_null),
       piecesDoneAndSum,
       manager.getPieceLength(),
       manager.getTorrentComment(),
@@ -907,13 +1136,19 @@ public class GeneralView
   }
 
   public void delete() {
-	if (aImage != null)
+	if (aImage != null){
 		aImage.dispose();
-	aImage = null;
-	if (pImage != null)
+		aImage = null;
+	}
+	if (pImage != null){
 		pImage.dispose();
-	pImage = null;
+		pImage = null;
+	}
   
+	if ( tImage != null ){
+		tImage.dispose();
+		tImage = null;
+	}
 	Utils.disposeComposite(genComposite);
 	
 	viewBuilt = false;
@@ -1599,7 +1834,7 @@ public class GeneralView
     		break;
 
       case UISWTViewEvent.TYPE_REFRESH:
-        refresh();
+        refresh(false);
         break;
 
       case UISWTViewEvent.TYPE_OBFUSCATE:
