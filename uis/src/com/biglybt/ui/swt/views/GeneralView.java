@@ -33,6 +33,7 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -676,7 +677,7 @@ public class GeneralView
 
     
     Composite cCommentsThumb = new Composite( gInfo, SWT.NULL );
-    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData = new GridData(GridData.FILL_BOTH);
     gridData.horizontalSpan=4;
     cCommentsThumb.setLayoutData(gridData);
     layout = new GridLayout( 4, true );
@@ -684,15 +685,22 @@ public class GeneralView
     cCommentsThumb.setLayout( layout);
 
     Composite cComments = new Composite( cCommentsThumb, SWT.NULL );
-    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData = new GridData(GridData.FILL_BOTH);
     gridData.horizontalSpan=3;
     cComments.setLayoutData(gridData);
     layout =  new GridLayout( 2, false );
     layout.marginHeight=layout.marginLeft=layout.marginRight=layout.marginWidth=0;
     cComments.setLayout(layout);
     
-    Group gThumb = new Group( cCommentsThumb, SWT.NULL );
-    gridData = new GridData(GridData.FILL_BOTH);
+    Composite cThumb = new Composite( cCommentsThumb, SWT.NULL );
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    cThumb.setLayoutData(gridData);
+    layout =  new GridLayout( 1, false );
+    layout.marginHeight=layout.marginLeft=layout.marginRight=layout.marginWidth=0;
+    cThumb.setLayout(layout);
+
+    Group gThumb = new Group( cThumb, SWT.NULL );
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
     gThumb.setLayoutData(gridData);
     layout =  new GridLayout( 1, false );
     layout.marginHeight=layout.marginLeft=layout.marginRight=layout.marginWidth=0;
@@ -700,9 +708,18 @@ public class GeneralView
     
     Messages.setLanguageText(gThumb, "label.thumbnail" );
     
-    thumbImage = new Canvas(gThumb, SWT.NULL);
-    gridData = new GridData(GridData.FILL_BOTH);
-    gridData.heightHint = 100;
+    thumbImage = new Canvas(gThumb, SWT.NULL){
+    	@Override
+    	public Point computeSize(int wHint, int hHint, boolean changed){
+    		Point size = super.computeSize(wHint, hHint, changed);
+
+    		size.y = size.x*9/16;
+    	
+    		return( size );
+    	}
+    };
+    
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
     thumbImage.setLayoutData(gridData);
     
     Menu thumbMenu = new Menu( thumbImage );
@@ -784,11 +801,19 @@ public class GeneralView
     }
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     lblComment.setLayoutData(gridData);
-
+    
+    
     Composite pad1 = new Composite(cComments, SWT.NULL);
     gridData = new GridData(GridData.FILL_BOTH);
     gridData.horizontalSpan = 2;
+    gridData.heightHint = 0;
     pad1.setLayoutData(gridData);
+    
+    Composite pad2 = new Composite(cThumb, SWT.NULL);
+    gridData = new GridData(GridData.FILL_BOTH);
+    gridData.horizontalSpan = 1;
+    gridData.heightHint = 0;
+    pad2.setLayoutData(gridData);
     
     ClipboardCopy.addCopyToClipMenu( 
     	lblComment,
@@ -845,7 +870,15 @@ public class GeneralView
 				dstHeight = imgBounds.height;
 			}
 			
-			e.gc.drawImage(
+			GC gc = e.gc;
+			
+			gc.setAdvanced( true );
+			
+			gc.setAntialias(SWT.ON);
+			  
+			gc.setInterpolation(SWT.HIGH);
+			  
+			gc.drawImage(
 				tImage, 
 				0, 0, imgBounds.width, imgBounds.height, 
 				(cellBounds.width-dstWidth)/2, (cellBounds.height-dstHeight)/2, dstWidth, dstHeight );
@@ -1702,7 +1735,7 @@ public class GeneralView
 				do_relayout = setCommentAndFormatLinks(user_comment, _user_comment) | do_relayout;
 				if (do_relayout)
 				{
-					gInfo.layout();
+					gInfo.layout(true, true);
 					Utils.updateScrolledComposite(scrolled_comp);
 				}
 			}
