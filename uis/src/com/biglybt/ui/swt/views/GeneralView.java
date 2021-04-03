@@ -882,10 +882,37 @@ public class GeneralView
 			}catch( Throwable e ){
 			}
 			  
-			gc.drawImage(
-				tImage, 
-				0, 0, imgBounds.width, imgBounds.height, 
-				(cellBounds.width-dstWidth)/2, (cellBounds.height-dstHeight)/2, dstWidth, dstHeight );
+				// draw off-screen otherwise performance sucks...
+				// we don't come through here often so don't bother caching scaled image
+			
+			Image 	tempImage 	= null;
+			GC 		tempGC 		= null;
+			
+			try{
+				tempImage = new Image(display, imgBounds.width, imgBounds.height);
+				
+				tempGC = new GC(tempImage);
+				
+				tempGC.setBackground( gc.getBackground());
+				
+				tempGC.fillRectangle(imgBounds);
+			
+				tempGC.drawImage(
+					tImage, 
+					0, 0, imgBounds.width, imgBounds.height, 
+					(cellBounds.width-dstWidth)/2, (cellBounds.height-dstHeight)/2, dstWidth, dstHeight );
+								
+				gc.drawImage( tempImage, 0, 0 );
+				
+			}finally{
+			
+				if ( tempImage != null ){
+					tempImage.dispose();
+				}
+				if ( tempGC != null ){
+					tempGC.dispose();
+				}
+			}
         }
       });
     
