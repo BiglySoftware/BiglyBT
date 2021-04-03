@@ -20,6 +20,9 @@ package com.biglybt.ui.swt.views;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -43,6 +46,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
@@ -725,23 +729,104 @@ public class GeneralView
     Menu thumbMenu = new Menu( thumbImage );
     thumbImage.setMenu( thumbMenu );
     
-    MenuItem mi = new MenuItem( thumbMenu, SWT.PUSH );
-    Messages.setLanguageText(mi, "MyTorrentsView.menu.torrent.set.thumb");
-    
-    mi.addListener(SWT.Selection, (ev)->{
-    	setThumb();
-    });
-    
-    mi = new MenuItem( thumbMenu, SWT.SEPARATOR );
+    thumbMenu.addMenuListener(
+    	new MenuAdapter(){
+    		@Override
+    		public void 
+    		menuShown(
+    			MenuEvent e)
+    		{
+    			for ( MenuItem mi: thumbMenu.getItems()){
+    				mi.dispose();
+    			}
+    			
+    			java.util.List<DiskManagerFileInfo>	images = new ArrayList<>();
+    			
+    			for ( DiskManagerFileInfo fi: manager.getDiskManagerFileInfoSet().getFiles()){
+    			
+    				if ( HTTPUtils.isImageFileType( fi.getExtension())){
+    					
+    					long	len = fi.getLength();
+    					
+    					if ( fi.getDownloaded() == len ){
+    						
+    						File file = fi.getFile( true );
+    						
+    						if ( file.exists() && file.length() == len ){
+    							
+    							images.add( fi );
+    						}
+    					}
+    				}
+    			}
+    			
+    			Collections.sort( 
+    				images,
+    				new Comparator<DiskManagerFileInfo>(){
+    					@Override
+    					public int compare(DiskManagerFileInfo o1, DiskManagerFileInfo o2){
+    						long diff = o2.getLength() - o1.getLength();
+    						if ( diff < 0 ){
+    							return( -1 );
+    						}else if ( diff > 0 ){
+    							return( 1 );
+    						}else{
+    							return( 0 );
+    						}
+    					}
+					});
+    			
+    			int rem = 15;
+    			
+    			for ( DiskManagerFileInfo fi: images ){
+    			
+    				rem--;
+    				
+    				if ( rem < 0 ){
+    					
+    					MenuItem mi = new MenuItem( thumbMenu, SWT.PUSH );
+        				
+    					mi.setText( "..." );
+    					
+    					mi.setEnabled( false );
+    					
+    					break;
+    				}
+    				
+    				MenuItem mi = new MenuItem( thumbMenu, SWT.PUSH );
+    				
+					mi.setText( fi.getTorrentFile().getRelativePath());
+					
+					mi.addListener( SWT.Selection, (ev)->{
+						
+						setThumb( fi.getFile( true ));
+					});
+    			}
+    			
+    			if ( thumbMenu.getItemCount() > 0 ){
+      			
+    				new MenuItem( thumbMenu, SWT.SEPARATOR );
+    			}
+    			
+    			MenuItem mi = new MenuItem( thumbMenu, SWT.PUSH );
+    			Messages.setLanguageText(mi, "MyTorrentsView.menu.torrent.set.thumb");
 
-    mi = new MenuItem( thumbMenu, SWT.PUSH );
-    Messages.setLanguageText(mi, "Button.clear");
-    
-    mi.addListener(SWT.Selection, (ev)->{
-    	clearThumb();
-    });
-    
-    
+    			mi.addListener(SWT.Selection, (ev)->{
+    				setThumb();
+    			});
+
+    			mi = new MenuItem( thumbMenu, SWT.SEPARATOR );
+
+    			mi = new MenuItem( thumbMenu, SWT.PUSH );
+    			Messages.setLanguageText(mi, "Button.clear");
+
+    			mi.addListener(SWT.Selection, (ev)->{
+    				clearThumb();
+    			});
+
+    		}
+		});
+       
     thumbImage.addMouseListener(
     	new MouseAdapter(){
     		@Override
@@ -863,7 +948,7 @@ public class GeneralView
 				dstHeight = cellBounds.height;
 				dstWidth = imgBounds.width * cellBounds.height / imgBounds.height;
 			} else if (imgBounds.width > cellBounds.width) {
-				dstWidth = cellBounds.width - 4;
+				dstWidth = cellBounds.width;
 				dstHeight = imgBounds.height * cellBounds.width / imgBounds.width;
 			} else {
 				dstWidth = imgBounds.width;
@@ -889,13 +974,13 @@ public class GeneralView
 			GC 		tempGC 		= null;
 			
 			try{
-				tempImage = new Image(display, imgBounds.width, imgBounds.height);
+				tempImage = new Image(display, cellBounds.width, cellBounds.height);
 				
 				tempGC = new GC(tempImage);
 				
 				tempGC.setBackground( gc.getBackground());
 				
-				tempGC.fillRectangle(imgBounds);
+				tempGC.fillRectangle(0, 0, cellBounds.width, cellBounds.height);
 			
 				tempGC.drawImage(
 					tImage, 
@@ -928,36 +1013,32 @@ public class GeneralView
   private void
   loadThumb()
   {
-	  TOTorrent torrent = manager.getTorrent();
+	  if ( tImage != null && !tImage.isDisposed()){
+		  
+		  tImage.dispose();
+	  }
+	  
+	  tImage = null;
 
-	  if ( torrent != null ){
+	  if ( !thumbImage.isDisposed()){
 		  
-		  final byte[] imageBytes = PlatformTorrentUtils.getContentThumbnail(torrent);
-		  
-		  if ( imageBytes != null ){
+		  TOTorrent torrent = manager.getTorrent();
+	
+		  if ( torrent != null ){
 			  
-			  try{
-				  ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+			  final byte[] imageBytes = PlatformTorrentUtils.getContentThumbnail(torrent);
+			  
+			  if ( imageBytes != null ){
 				  
-				  Image image = new Image(Display.getDefault(), bis);
-				  
-				  if ( tImage != null ){
+				  try{
+					  ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
 					  
-					  tImage.dispose();
+					  Image image = new Image(Display.getDefault(), bis);
+					  	
+					  tImage = image;
+					  
+				  }catch( Throwable f ){
 				  }
-	
-				  tImage = image;
-				  
-			  }catch( Throwable f ){
-	
-			  }
-		  }else{
-			  
-			  if ( tImage != null ){
-				  
-				  tImage.dispose();
-				  
-				  tImage = null;
 			  }
 		  }
 		  
@@ -981,6 +1062,13 @@ public class GeneralView
 
 	  File file = new File( path );
 
+	  setThumb( file );
+  }
+  
+  private void
+  setThumb(
+	File		file )
+  {
 	  try{
 		  byte[] thumbnail = FileUtil.readFileAsByteArray( file );
 
