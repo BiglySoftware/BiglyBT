@@ -242,7 +242,9 @@ public class MyTorrentsView
 	private volatile int[]	dmCounts = new int[3];
 	private AtomicInteger	dmCountMutations	= new AtomicInteger(0);
 	private volatile int	dmCountLast			= -1;
-	
+
+	final Set<TableRowCore> listRowsToRefresh = new HashSet<>();
+
 	public MyTorrentsView( boolean supportsTabs ) {
 		super("MyTorrentsView");
 		this.supportsTabs = supportsTabs;
@@ -2654,24 +2656,56 @@ public class MyTorrentsView
 
   // DownloadManagerListener Functions
   @Override
-  public void stateChanged(DownloadManager manager, int state) {
-	  final TableRowCore row = tv.getRow(manager);
-	  if (row != null) {
-		  Utils.getOffOfSWTThread(new AERunnable() {
-			  @Override
-			  public void runSupport() {
-				  row.refresh(true);
-				  if (row.isSelected()) {
-					  updateSelectedContentRateLimited();
-				  }
-			  }
-		  });
-	  }
-	  
-	  if (isOurDownloadManager(manager)) {
-		  dmCountMutations.incrementAndGet();
-	  }
-  }
+	public void stateChanged(DownloadManager manager, int state) {
+		if (isOurDownloadManager(manager)) {
+			dmCountMutations.incrementAndGet();
+		}
+
+		TableRowCore row = tv.getRow(manager);
+		if (row == null) {
+			return;
+		}
+
+		// Usually get stateChanged trigger for every torrent on first display
+		// Queue them up, otherwise ThreadPool warns of too many
+		synchronized (listRowsToRefresh) {
+			if (!listRowsToRefresh.contains(row)) {
+				listRowsToRefresh.add(row);
+				if (listRowsToRefresh.size() > 1) {
+					return;
+				}
+			}
+		}
+
+		Utils.getOffOfSWTThread(() -> {
+			// wait between 10ms and 50ms for new state changes
+			int count = listRowsToRefresh.size();
+			for (int i = 0; i < 5; i++) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+				}
+				int newCount = listRowsToRefresh.size();
+				if (newCount == count) {
+					break;
+				}
+				count = newCount;
+			}
+
+			TableRowCore[] rows;
+			synchronized (listRowsToRefresh) {
+				rows = listRowsToRefresh.toArray(
+						new TableRowCore[listRowsToRefresh.size()]);
+				listRowsToRefresh.clear();
+			}
+			for (TableRowCore rowToRefresh : rows) {
+				rowToRefresh.refresh(true);
+				if (rowToRefresh.isSelected()) {
+					updateSelectedContentRateLimited();
+				}
+			}
+		});
+	}
 
   // DownloadManagerListener
   @Override
