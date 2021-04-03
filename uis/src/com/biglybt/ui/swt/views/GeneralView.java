@@ -848,7 +848,7 @@ public class GeneralView
 
     thumbImage.addListener(SWT.Paint, new Listener() {
         @Override
-        public void handleEvent(Event e) {
+        public void handleEvent(Event ev) {
         	if (tImage == null || tImage.isDisposed()) {
         		return;
         	}
@@ -870,13 +870,17 @@ public class GeneralView
 				dstHeight = imgBounds.height;
 			}
 			
-			GC gc = e.gc;
+			GC gc = ev.gc;
 			
-			gc.setAdvanced( true );
+			try{
+				gc.setAdvanced( true );
 			
-			gc.setAntialias(SWT.ON);
+				gc.setAntialias(SWT.ON);
 			  
-			gc.setInterpolation(SWT.HIGH);
+				gc.setInterpolation(SWT.HIGH);
+				
+			}catch( Throwable e ){
+			}
 			  
 			gc.drawImage(
 				tImage, 

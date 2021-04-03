@@ -34,8 +34,8 @@ public class HTTPUtils {
 
 	private static final String	default_type	= "application/octet-stream";
 
-	private static final Map	file_types		= new HashMap();
-	private static final Set	compression		= new HashSet();
+	private static final Map<String,String>	file_types		= new HashMap<>();
+	private static final Set<String>	compression		= new HashSet<>();
 
 	static {
 		file_types.put("html", "text/html");
@@ -50,6 +50,7 @@ public class HTTPUtils {
 		file_types.put("tiff", "image/tiff");
 		file_types.put("bmp", "image/bmp");
 		file_types.put("png", "image/png");
+		file_types.put("ico", "image/x-icon");
 		file_types.put("torrent", "application/x-bittorrent");
 		file_types.put("tor", "application/x-bittorrent");
 		file_types.put("vuze", "application/x-vuze");
