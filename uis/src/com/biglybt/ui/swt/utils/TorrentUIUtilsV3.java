@@ -343,7 +343,7 @@ public class TorrentUIUtilsV3
 
 			// add torrent size here to differentiate meta-data downloads from actuals
 
-		final String id = "Thumbnail." + hash + "." + torrent.getSize() + "." + thumbnailVersion;
+		final String id = "Thumbnail." + hash + "." + torrent.getSize() + "." + thumbnailVersion + (big ? ".big" : "");
 
 		Image image = imageLoaderThumb.imageAdded(id) ? imageLoaderThumb.getImage(id) : null;
 		//System.out.println("image = " + image);
