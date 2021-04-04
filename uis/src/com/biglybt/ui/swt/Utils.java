@@ -2221,6 +2221,15 @@ public class Utils
 		int srcX, int srcY, int srcWidth, int srcHeight, 
 		int destX, int destY, int destWidth, int destHeight) 
 	{
+		if ( srcWidth <= 100 ){
+			
+				// messing with offscreen images for icons messes up transparency - just do it
+			
+			gc.drawImage(image, srcX, srcY, srcWidth, srcHeight, destX, destY, destWidth, destHeight);
+			
+			return;
+		}
+		
 		Image 	tempImage 	= getResizedImage(image, srcX, srcY, srcWidth, srcHeight, destWidth, destHeight);
 				
 		try{
