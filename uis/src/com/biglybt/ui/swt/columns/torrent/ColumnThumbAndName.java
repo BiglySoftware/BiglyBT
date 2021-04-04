@@ -419,12 +419,12 @@ public class ColumnThumbAndName
 									w = w * 9 / 10;
 									h = h * 9 / 10;
 								}
-								gc.drawImage(image, srcBounds.x, srcBounds.y, srcBounds.width,
+								Utils.drawImageViaOffScreen(gc, image, srcBounds.x, srcBounds.y, srcBounds.width,
 										srcBounds.height, x, y, w, h);
 							} else {
 								int w = dstWidth * 3 / 8;
 								int h = dstHeight * 3 / 8;
-								gc.drawImage(image, srcBounds.x, srcBounds.y, srcBounds.width,
+								Utils.drawImageViaOffScreen(gc, image, srcBounds.x, srcBounds.y, srcBounds.width,
 										srcBounds.height, x + dstWidth - w, y + dstHeight - h, w, h);
 							}
 						}
@@ -544,12 +544,12 @@ public class ColumnThumbAndName
 									w = w * 9 / 10;
 									h = h * 9 / 10;
 								}
-								gc.drawImage(image, srcBounds.x, srcBounds.y, srcBounds.width,
+								Utils.drawImageViaOffScreen(gc, image, srcBounds.x, srcBounds.y, srcBounds.width,
 										srcBounds.height, x, y, w, h);
 							} else {
 								int w = dstWidth * 3 / 8;
 								int h = dstHeight * 3 / 8;
-								gc.drawImage(image, srcBounds.x, srcBounds.y, srcBounds.width,
+								Utils.drawImageViaOffScreen(gc,image, srcBounds.x, srcBounds.y, srcBounds.width,
 										srcBounds.height, x + dstWidth - w, y + dstHeight - h, w, h);
 							}
 						}

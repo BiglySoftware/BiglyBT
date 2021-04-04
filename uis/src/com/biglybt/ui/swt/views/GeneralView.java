@@ -954,19 +954,14 @@ public class GeneralView
 				dstWidth = imgBounds.width;
 				dstHeight = imgBounds.height;
 			}
+						  
+			Utils.drawImageViaOffScreen( 
+				ev.gc,
+				tImage, 
+				0, 0, imgBounds.width, imgBounds.height, 
+				(cellBounds.width-dstWidth)/2, (cellBounds.height-dstHeight)/2, dstWidth, dstHeight );
 			
-			GC gc = ev.gc;
-			
-			try{
-				gc.setAdvanced( true );
-			
-				gc.setAntialias(SWT.ON);
-			  
-				gc.setInterpolation(SWT.HIGH);
-				
-			}catch( Throwable e ){
-			}
-			  
+			/*
 				// draw off-screen otherwise performance sucks...
 				// we don't come through here often so don't bother caching scaled image
 			
@@ -998,6 +993,8 @@ public class GeneralView
 					tempGC.dispose();
 				}
 			}
+			
+			*/
         }
       });
     

@@ -20,6 +20,11 @@
 
 package com.biglybt.ui.swt;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DirectColorModel;
+import java.awt.image.IndexColorModel;
+import java.awt.image.WritableRaster;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -2209,18 +2214,56 @@ public class Utils
 
 	}
 
-    private static boolean drawImage(GC gc, Image image, Rectangle dstRect,
-			Rectangle clipping, int hOffset, int vOffset, boolean clearArea) {
-		return drawImage(gc, image, new Point(0, 0), dstRect, clipping, hOffset,
-				vOffset, clearArea);
-	}
+	public static void 
+	drawImageViaOffScreen(
+		GC			gc,
+		Image 		image, 
+		int srcX, int srcY, int srcWidth, int srcHeight, 
+		int destX, int destY, int destWidth, int destHeight) 
+	{
+		try{
+			gc.setAdvanced( true );		
+			gc.setAntialias(SWT.ON);
+			gc.setInterpolation(SWT.HIGH);
+			
+		}catch( Throwable e ){
+		}
 
-    private static boolean drawImage(GC gc, Image image, Rectangle dstRect,
-			Rectangle clipping, int hOffset, int vOffset) {
-		return drawImage(gc, image, new Point(0, 0), dstRect, clipping, hOffset,
-				vOffset, false);
+		Image 	tempImage 	= null;
+		GC 		tempGC 		= null;
+		
+		try{
+				// AWT based code is slow and doesn't support all images - just try it for larger ones (thumbnails at the moment )
+			
+			if ( destWidth > 100 ){
+				
+				tempImage = resizeImage(image, destWidth, destHeight);
+				
+			}else{
+				
+				tempImage = new Image(gc.getDevice(), destWidth, destHeight);
+				
+				tempGC = new GC(tempImage);
+						
+				tempGC.drawImage(
+					image, 
+					srcX, srcY, srcWidth, srcHeight, 
+					0, 0, destWidth, destHeight );
+			}
+			
+			gc.drawImage( tempImage, destX, destY );
+			
+		}finally{
+		
+			if ( tempImage != null ){
+				tempImage.dispose();
+			}
+			if ( tempGC != null ){
+				tempGC.dispose();
+			}
+		}
 	}
-
+	
 	public static boolean drawImage(GC gc, Image image, Point srcStart,
 			Rectangle dstRect, Rectangle clipping, int hOffset, int vOffset,
 			boolean clearArea) {
@@ -5615,5 +5658,146 @@ public class Utils
 		}
 		
 		return( str );
+	}
+	
+	/**
+	 * Resizes an image, using the given scaling factor. Constructs a new image resource, please take care of resource
+	 * disposal if you no longer need the original one. This method is optimized for quality, not for speed.
+	 * 
+	 * @param image source image
+	 * @return scaled image
+	 */
+	public static Image 
+	resizeImage(
+		Image 	image,
+		int		newWidth,
+		int		newHeight )
+	{
+	    int oldwidth 	= image.getBounds().width;
+	    
+	    // convert to buffered image
+	    BufferedImage img = convertToAWT(image.getImageData());
+
+	    // determine scaling mode for best result: if downsizing, use area averaging, if upsizing, use smooth scaling
+	    // (usually bilinear).
+	    int mode = newWidth < oldwidth ? BufferedImage.SCALE_AREA_AVERAGING : BufferedImage.SCALE_SMOOTH;
+	    java.awt.Image scaledImage = img.getScaledInstance(newWidth, newHeight, mode);
+
+	    // convert the scaled image back to a buffered image
+	    img = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+	    img.getGraphics().drawImage(scaledImage, 0, 0, null);
+
+	    // reconstruct swt image
+	    ImageData imageData = convertToSWT(img);
+	    return new Image(image.getDevice(), imageData);
+	}
+
+	private static BufferedImage 
+	convertToAWT(
+		ImageData data) 
+	{
+        ColorModel colorModel = null;
+        PaletteData palette = data.palette;
+        if (palette.isDirect) {
+    		ImageData transparencyMask = data.getTransparencyType() != SWT.TRANSPARENCY_ALPHA?data.getTransparencyMask() : null;
+
+            BufferedImage bufferedImage = new BufferedImage(data.width,
+                    data.height, BufferedImage.TYPE_INT_ARGB);
+            for (int y = 0; y < data.height; y++) {
+                for (int x = 0; x < data.width; x++) {
+                    int pixel = data.getPixel(x, y);
+                    RGB rgb = palette.getRGB(pixel);
+                    int alpha = data.getAlpha(x, y);
+                    if ( transparencyMask != null ){
+                    	int mask = transparencyMask.getPixel(x, y);
+                    	if ( mask == 0 ){
+                    		alpha = 0;
+                    	}
+                    }            
+                    bufferedImage.setRGB(x, y, alpha << 24
+                            | rgb.red << 16 | rgb.green << 8 | rgb.blue);
+                }
+            }
+            return bufferedImage;
+        } else {
+            RGB[] rgbs = palette.getRGBs();
+            byte[] red = new byte[rgbs.length];
+            byte[] green = new byte[rgbs.length];
+            byte[] blue = new byte[rgbs.length];
+            for (int i = 0; i < rgbs.length; i++) {
+                RGB rgb = rgbs[i];
+                red[i] = (byte) rgb.red;
+                green[i] = (byte) rgb.green;
+                blue[i] = (byte) rgb.blue;
+            }
+            if (data.transparentPixel != -1) {
+                colorModel = new IndexColorModel(data.depth, rgbs.length, red,
+                        green, blue, data.transparentPixel);
+            } else {
+                colorModel = new IndexColorModel(data.depth, rgbs.length, red,
+                        green, blue);
+            }
+            BufferedImage bufferedImage = new BufferedImage(colorModel,
+                    colorModel.createCompatibleWritableRaster(data.width,
+                            data.height), false, null);
+            WritableRaster raster = bufferedImage.getRaster();
+            int[] pixelArray = new int[1];
+            for (int y = 0; y < data.height; y++) {
+                for (int x = 0; x < data.width; x++) {
+                    int pixel = data.getPixel(x, y);
+                    pixelArray[0] = pixel;
+                    raster.setPixel(x, y, pixelArray);
+                }
+            }
+            return bufferedImage;
+        }
+    }
+
+	private static ImageData 
+	convertToSWT(
+		BufferedImage bufferedImage) 
+	{
+		if (bufferedImage.getColorModel() instanceof DirectColorModel) {
+			DirectColorModel colorModel = (DirectColorModel)bufferedImage.getColorModel();
+			PaletteData palette = new PaletteData(colorModel.getRedMask(), colorModel.getGreenMask(), colorModel.getBlueMask());
+			ImageData data = new ImageData(bufferedImage.getWidth(), bufferedImage.getHeight(), colorModel.getPixelSize(), palette);
+			for (int y = 0; y < data.height; y++) {
+				for (int x = 0; x < data.width; x++) {
+					int rgb = bufferedImage.getRGB(x, y);
+					int pixel = palette.getPixel(new RGB((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF));
+					data.setPixel(x, y, pixel);
+					if (colorModel.hasAlpha()) {
+						data.setAlpha(x, y, (rgb >> 24) & 0xFF);
+					}
+				}
+			}
+			return data;
+		} else if (bufferedImage.getColorModel() instanceof IndexColorModel) {
+			IndexColorModel colorModel = (IndexColorModel)bufferedImage.getColorModel();
+			int size = colorModel.getMapSize();
+			byte[] reds = new byte[size];
+			byte[] greens = new byte[size];
+			byte[] blues = new byte[size];
+			colorModel.getReds(reds);
+			colorModel.getGreens(greens);
+			colorModel.getBlues(blues);
+			RGB[] rgbs = new RGB[size];
+			for (int i = 0; i < rgbs.length; i++) {
+				rgbs[i] = new RGB(reds[i] & 0xFF, greens[i] & 0xFF, blues[i] & 0xFF);
+			}
+			PaletteData palette = new PaletteData(rgbs);
+			ImageData data = new ImageData(bufferedImage.getWidth(), bufferedImage.getHeight(), colorModel.getPixelSize(), palette);
+			data.transparentPixel = colorModel.getTransparentPixel();
+			WritableRaster raster = bufferedImage.getRaster();
+			int[] pixelArray = new int[1];
+			for (int y = 0; y < data.height; y++) {
+				for (int x = 0; x < data.width; x++) {
+					raster.getPixel(x, y, pixelArray);
+					data.setPixel(x, y, pixelArray[0]);
+				}
+			}
+			return data;
+		}
+		return null;
 	}
 }
