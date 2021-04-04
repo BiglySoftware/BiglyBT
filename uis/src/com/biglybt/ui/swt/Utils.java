@@ -2215,42 +2215,15 @@ public class Utils
 	}
 
 	public static void 
-	drawImageViaOffScreen(
+	drawResizedImage(
 		GC			gc,
 		Image 		image, 
 		int srcX, int srcY, int srcWidth, int srcHeight, 
 		int destX, int destY, int destWidth, int destHeight) 
 	{
+		Image 	tempImage 	= getResizedImage(image, srcX, srcY, srcWidth, srcHeight, destWidth, destHeight);
+				
 		try{
-			gc.setAdvanced( true );		
-			gc.setAntialias(SWT.ON);
-			gc.setInterpolation(SWT.HIGH);
-			
-		}catch( Throwable e ){
-		}
-
-		Image 	tempImage 	= null;
-		GC 		tempGC 		= null;
-		
-		try{
-				// AWT based code is slow and doesn't support all images - just try it for larger ones (thumbnails at the moment )
-			
-			if ( destWidth > 100 ){
-				
-				tempImage = resizeImage(image, destWidth, destHeight);
-				
-			}else{
-				
-				tempImage = new Image(gc.getDevice(), destWidth, destHeight);
-				
-				tempGC = new GC(tempImage);
-						
-				tempGC.drawImage(
-					image, 
-					srcX, srcY, srcWidth, srcHeight, 
-					0, 0, destWidth, destHeight );
-			}
-			
 			gc.drawImage( tempImage, destX, destY );
 			
 		}finally{
@@ -2258,6 +2231,53 @@ public class Utils
 			if ( tempImage != null ){
 				tempImage.dispose();
 			}
+		}
+	}
+	
+	public static Image 
+	getResizedImage(
+		Image 		image, 
+		int srcX, int srcY, int srcWidth, int srcHeight, 
+		int destWidth, int destHeight) 
+	{
+		GC 		tempGC 		= null;
+		
+		try{
+				// AWT based code is slow and doesn't support all images - just try it for larger ones (thumbnails at the moment )
+			
+			Image tempImage;
+			
+			if ( destWidth > 100 ){
+				
+				tempImage = resizeImage(image, destWidth, destHeight);
+				
+			}else{
+				
+				tempImage = new Image(image.getDevice(), destWidth, destHeight);
+				
+				tempGC = new GC(tempImage);
+				
+				try{
+					// weirdly any of these options cause transparency issues on Windows, the same as those
+					// encounted by the AWT resize method!
+					
+					//tempGC.setAdvanced( true );		
+					//tempGC.setAntialias(SWT.ON);
+					//tempGC.setInterpolation(SWT.HIGH);
+					
+				}catch( Throwable e ){
+				}
+				
+				tempGC.drawImage(
+					image, 
+					srcX, srcY, srcWidth, srcHeight, 
+					0, 0, destWidth, destHeight );
+			}
+			
+			return( tempImage );
+			
+		}finally{
+		
 			if ( tempGC != null ){
 				tempGC.dispose();
 			}

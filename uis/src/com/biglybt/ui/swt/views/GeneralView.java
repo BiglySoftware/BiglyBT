@@ -169,6 +169,8 @@ public class GeneralView
 
   Canvas		thumbImage;
   Image 		tImage;
+  Image			tImageResized;
+  String		tImageResizedKey = "";
   
   private int graphicsUpdate = COConfigurationManager.getIntParameter("Graphics Update");
 
@@ -955,46 +957,28 @@ public class GeneralView
 				dstHeight = imgBounds.height;
 			}
 						  
-			Utils.drawImageViaOffScreen( 
-				ev.gc,
-				tImage, 
-				0, 0, imgBounds.width, imgBounds.height, 
-				(cellBounds.width-dstWidth)/2, (cellBounds.height-dstHeight)/2, dstWidth, dstHeight );
+			int dstX = (cellBounds.width-dstWidth)/2;
+			int dstY = (cellBounds.height-dstHeight)/2;
 			
-			/*
-				// draw off-screen otherwise performance sucks...
-				// we don't come through here often so don't bother caching scaled image
+			String resizeKey = imgBounds.width + ":" + imgBounds.height + ":" + dstWidth + ":" + dstHeight;
 			
-			Image 	tempImage 	= null;
-			GC 		tempGC 		= null;
-			
-			try{
-				tempImage = new Image(display, cellBounds.width, cellBounds.height);
+			if ( tImageResized == null || !tImageResizedKey.equals( resizeKey )){
 				
-				tempGC = new GC(tempImage);
-				
-				tempGC.setBackground( gc.getBackground());
-				
-				tempGC.fillRectangle(0, 0, cellBounds.width, cellBounds.height);
-			
-				tempGC.drawImage(
-					tImage, 
-					0, 0, imgBounds.width, imgBounds.height, 
-					(cellBounds.width-dstWidth)/2, (cellBounds.height-dstHeight)/2, dstWidth, dstHeight );
-								
-				gc.drawImage( tempImage, 0, 0 );
-				
-			}finally{
-			
-				if ( tempImage != null ){
-					tempImage.dispose();
+				if ( tImageResized != null && !tImageResized.isDisposed()){
+					
+					tImageResized.dispose();
 				}
-				if ( tempGC != null ){
-					tempGC.dispose();
-				}
+				
+				tImageResized =
+					Utils.getResizedImage( 
+						tImage, 
+						0, 0, imgBounds.width, imgBounds.height, 
+						dstWidth, dstHeight );
+				
+				tImageResizedKey = resizeKey;
 			}
 			
-			*/
+			ev.gc.drawImage( tImageResized, dstX, dstY );
         }
       });
     
@@ -1015,7 +999,13 @@ public class GeneralView
 		  tImage.dispose();
 	  }
 	  
-	  tImage = null;
+	  if ( tImageResized != null && !tImageResized.isDisposed()){
+		  
+		  tImageResized.dispose();
+	  }
+	  
+	  tImage 		= null;
+	  tImageResized	= null;
 
 	  if ( !thumbImage.isDisposed()){
 		  
@@ -1299,6 +1289,10 @@ public class GeneralView
 	if ( tImage != null ){
 		tImage.dispose();
 		tImage = null;
+	}
+	if ( tImageResized != null ){
+		tImageResized.dispose();
+		tImageResized = null;
 	}
 	Utils.disposeComposite(genComposite);
 	
