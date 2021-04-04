@@ -1050,6 +1050,8 @@ public class GeneralView
 
 	  fDialog.setText(MessageText.getString("MainWindow.dialog.choose.thumb"));
 
+	  fDialog.setFilterPath( manager.getSaveLocation().getAbsolutePath());
+	  
 	  String path = fDialog.open();
 
 	  if ( path == null ){
