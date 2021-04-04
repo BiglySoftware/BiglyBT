@@ -388,13 +388,14 @@ public class SpeedScaleShell
 		composite.addPaintListener(new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e) {
-				int x = WIDTH_NO_PADDING * value / maxValue;
+				int valueRange = maxValue - minValue;
+				int x = WIDTH_NO_PADDING * (value - minValue) / valueRange;
 				if (x < 0) {
 					x = 0;
 				} else if (x > WIDTH_NO_PADDING) {
 					x = WIDTH_NO_PADDING;
 				}
-				int startX = WIDTH_NO_PADDING * startValue / maxValue;
+				int startX = WIDTH_NO_PADDING * (startValue - minValue) / valueRange;
 				if (startX < 0) {
 					startX = 0;
 				} else if (startX > WIDTH_NO_PADDING) {
@@ -607,8 +608,8 @@ public class SpeedScaleShell
 		Point location = display.getCursorLocation();
 
 		location.y -= getBaselinePos();
-		int x = (int) (WIDTH_NO_PADDING
-				* (value > maxValue ? 1 : (double) value / maxValue));
+		int x = (int) (WIDTH_NO_PADDING * (value > maxValue ? 1
+				: ((double) value / maxValue) - (double) minValue));
 		location.x -= PADDING_X0 + x;
 
 		Rectangle bounds = new Rectangle(location.x, location.y, WIDTH, HEIGHT);
@@ -675,7 +676,8 @@ public class SpeedScaleShell
 			x0 = PADDING_X0 + WIDTH_NO_PADDING;
 		}
 
-		return (x0 - PADDING_X0) * maxValue / WIDTH_NO_PADDING;
+		return ((x0 - PADDING_X0) * (maxValue - minValue) / WIDTH_NO_PADDING)
+				+ minValue;
 	}
 
 	public int getValue() {
