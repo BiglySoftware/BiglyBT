@@ -2266,7 +2266,10 @@ public class Utils
 			return;
 		}
 		
-		if ( hasAlpha( image )){
+			// On my windows machine I have some icons that do have transparency but fail to 
+			// exhibit it in a testable way in hasAlpha - hence the source size test
+		
+		if ( srcWidth <= 128 || hasAlpha( image )){
 			
 				// messing with offscreen images for icons messes up transparency - just do it
 			
