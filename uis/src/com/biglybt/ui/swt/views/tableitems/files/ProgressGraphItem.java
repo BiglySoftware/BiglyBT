@@ -17,15 +17,18 @@
  */
 package com.biglybt.ui.swt.views.tableitems.files;
 
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -47,6 +50,16 @@ import com.biglybt.pif.ui.tables.*;
 public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAddedListener, TableCellDisposeListener, TableCellVisibilityListener {
 	private static final int	borderWidth	= 1;
 
+	private static Color badAvailColor;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+				"generalview.avail.bad.colour",
+				(n)->{
+					badAvailColor = Utils.getConfigColor( n, Colors.maroon );
+				});
+	}
+	  
 	/** Default Constructor */
 	public ProgressGraphItem() {
 		super("pieces", TableManager.TABLE_TORRENT_FILES);
@@ -97,6 +110,7 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 		private long	last_draw_time	= SystemTime.getCurrentTime();
 		private boolean	bNoRed			= false;
 		private boolean	was_running		= false;
+		private long	lastUnavailabilityIndicator	= 0;
 
 		public Cell(TableCell cell) {
 			cell.setFillCell(false);
@@ -112,10 +126,6 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 		public void refresh(TableCell cell, boolean sortOnly) {
 			final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
 			
-			DownloadManager dm = fileInfo==null?null:fileInfo.getDownloadManager();
-			
-			final DiskManager diskManager = dm == null ? null : dm.getDiskManager();
-
 			int percentDone = 0;
 			int sortOrder;
 			if (fileInfo == null){
@@ -146,6 +156,45 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 			if (x1 < 10 || y1 < 3)
 				return;
 
+			DownloadManager dm = fileInfo==null?null:fileInfo.getDownloadManager();
+			
+			DiskManager diskManager = dm==null?null:dm.getDiskManager();
+			
+			PEPeerManager peerManager = dm==null?null:dm.getPeerManager();
+
+			int[] available = null;
+			
+				// we don't want to be continually recalculating availability so we use an indicator
+				// that will *probably* change when available pieces change
+			
+			long unavailabilityIndicator = 0;
+			
+			if ( peerManager != null && badAvailColor != null ){
+				
+				long runningFor = SystemTime.getMonotonousTime() - peerManager.getTimeStarted( true );
+				
+				PiecePicker piece_picker = peerManager.getPiecePicker();
+				
+				float minAvail = dm.getStats().getAvailability();
+				
+				if ( runningFor > 60*1000 && minAvail >= 0 && minAvail < 1 ){
+					
+					DiskManagerPiece[] dmPieces = diskManager.getPieces();
+					
+					available = piece_picker.getAvailability();
+					
+					int firstPiece = fileInfo.getFirstPieceNumber();
+					
+					int lastPiece = fileInfo.getLastPieceNumber();
+					
+					for ( int i=firstPiece;i<=lastPiece;i++){
+						if ( available[i] <= 0 && dmPieces[i].isNeeded()){
+							unavailabilityIndicator += i;
+						}
+					}
+				}
+			}
+			
 			// we want to run through the image part once one the transition from with a disk diskManager (running)
 			// to without a disk diskManager (stopped) in order to clear the pieces view
 			boolean running = diskManager != null;
@@ -155,14 +204,21 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 				Image img = ((UISWTGraphic) graphic).getImage();
 				hasGraphic = img != null && !img.isDisposed();
 			}
-			final boolean bImageBufferValid = (lastPercentDone == percentDone)
-					&& cell.isValid() && bNoRed && running == was_running && hasGraphic;
-
-			if (bImageBufferValid)
+			
+			if (	cell.isValid() &&
+					lastPercentDone == percentDone &&
+					bNoRed && 
+					running == was_running && 
+					unavailabilityIndicator == lastUnavailabilityIndicator && 
+					hasGraphic ){
+				
 				return;
+			}
 
 			was_running = running;
 			lastPercentDone = percentDone;
+			lastUnavailabilityIndicator = unavailabilityIndicator;
+			
 			Image piecesImage = null;
 
 			if (graphic instanceof UISWTGraphic)
@@ -180,9 +236,8 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 				gcImage.fillRectangle(1, 1, newWidth - 2, newHeight - 2);
 			} else if (fileInfo != null) {
 				// dm may be null if this is a skeleton file view
-				PEPeerManager peer_manager = dm == null ? null : dm.getPeerManager();
-				PEPiece[] pe_pieces = peer_manager == null ? null : peer_manager.getPieces();
-
+				PEPiece[] pe_pieces = peerManager == null ? null : peerManager.getPieces();
+				
 				int firstPiece = fileInfo.getFirstPieceNumber();
 				int nbPieces = fileInfo.getNbPieces();
 				if ( nbPieces < 0 ){
@@ -202,6 +257,7 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 					int nbAvailable = 0;
 					boolean written = false;
 					boolean partially_written = false;
+					boolean bad_avail = false;
 					// nbPieces > 0 check case: last file in torrent is 0 byte and starts on a new piece
 					if (firstPiece >= 0 && nbPieces > 0) {
 						for (int j = a0; j < a1; j++) {
@@ -216,6 +272,10 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 								continue;
 							}
 
+							if ( available != null && available[this_index] <= 0 && dm_pieces != null && dm_pieces[this_index].isNeeded()){
+								bad_avail = true;
+							}
+							
 							if (pe_pieces != null) {
 								PEPiece pe_piece = pe_pieces[this_index];
 								if (pe_piece != null) {
@@ -238,7 +298,11 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 					} else {
 						nbAvailable = 1;
 					}
-					gcImage.setBackground(written ? Colors.red : partially_written ? Colors.grey : Colors.blues[(nbAvailable * Colors.BLUES_DARKEST) / (a1 - a0)]);
+					if ( bad_avail ){
+						gcImage.setBackground( badAvailColor );
+					}else{
+						gcImage.setBackground(written ? Colors.red : partially_written ? Colors.grey : Colors.blues[(nbAvailable * Colors.BLUES_DARKEST) / (a1 - a0)]);
+					}
 					gcImage.fillRectangle(i, 1, 1, newHeight - 2);
 					if (written)
 						bNoRed = false;
