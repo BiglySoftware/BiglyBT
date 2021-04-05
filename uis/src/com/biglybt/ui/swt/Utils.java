@@ -2214,6 +2214,44 @@ public class Utils
 
 	}
 
+	public static boolean
+	hasAlpha(
+		Image		image )
+	{
+		ImageData data = image.getImageData();
+		
+		int tt = data.getTransparencyType();
+		
+		if ( tt == SWT.TRANSPARENCY_NONE ){
+			return( false );
+		}else if ( tt == SWT.TRANSPARENCY_PIXEL ){
+			return( data.transparentPixel != -1 );
+			
+		}else if ( tt == SWT.TRANSPARENCY_MASK ){
+			ImageData tm = data.getTransparencyMask();
+			if ( tm == null ){
+				return( false );
+			}
+			for ( int x=0;x<tm.width;x++){
+				for ( int y=0;y<tm.height;y++){
+					if ( tm.getPixel(x, y) == 0 ){
+						return( true );
+					}
+				}
+			}
+			return( false );
+		}else{
+			for ( int x=0;x<data.width;x++){
+				for ( int y=0;y<data.height;y++){
+					if ( data.getAlpha(x, y) != 255 ){
+						return( true );
+					}
+				}
+			}
+			return( false );
+		}
+	}
+	
 	public static void 
 	drawResizedImage(
 		GC			gc,
@@ -2221,7 +2259,14 @@ public class Utils
 		int srcX, int srcY, int srcWidth, int srcHeight, 
 		int destX, int destY, int destWidth, int destHeight) 
 	{
-		if ( srcWidth <= 100 ){
+		if ( srcWidth == destWidth && srcHeight == destHeight ){
+			
+			gc.drawImage(image, srcX, srcY, srcWidth, srcHeight, destX, destY, destWidth, destHeight);
+			
+			return;
+		}
+		
+		if ( hasAlpha( image )){
 			
 				// messing with offscreen images for icons messes up transparency - just do it
 			
