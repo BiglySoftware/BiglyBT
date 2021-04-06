@@ -91,14 +91,14 @@ ConcurrentHasher
 			processor_num	= 1;
 		}
 
-			// one more that proc num seems to improve performance ;)
+			// triple keeps processors pretty busy
 
-		for (int i=0;i<processor_num + 1;i++){
+		for (int i=0;i<processor_num*3;i++){
 
 			scheduler_sem.release();
 		}
 
-		final ThreadPool pool	= new ThreadPool( "ConcurrentHasher", 64 );
+		final ThreadPool pool	= new ThreadPool( "ConcurrentHasher", processor_num<64?64:128 );
 
 		new AEThread2("ConcurrentHasher:scheduler", true )
 		{
