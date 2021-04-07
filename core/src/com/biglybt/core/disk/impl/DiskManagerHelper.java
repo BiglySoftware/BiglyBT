@@ -104,10 +104,14 @@ DiskManagerHelper
 
 	public void
     skippedFileSetChanged(
-	    	DiskManagerFileInfo	file );
+	   	DiskManagerFileInfo	file );
 
 	public void
 	priorityChanged(
+		DiskManagerFileInfo	file );
+
+	public void
+	storageTypeChanged(
 		DiskManagerFileInfo	file );
 
 	public String

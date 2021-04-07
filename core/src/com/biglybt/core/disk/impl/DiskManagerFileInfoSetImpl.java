@@ -197,8 +197,12 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 
 			dm_state.setListAttribute(DownloadManagerState.AT_FILE_STORE_TYPES, types);
 
-			//DiskManagerUtil.doFileExistenceChecks(this, toChange, dm_state.getDownloadManager(), true);
-
+			for (int i = 0; i < files.length; i++){
+				if (toChange[i]){
+									
+					diskManager.storageTypeChanged( files[i] );
+				}
+			}
 		} finally {
 			dm_state.suppressStateSave(false);
 			dm_state.save(false);

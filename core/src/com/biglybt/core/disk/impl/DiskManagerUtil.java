@@ -728,6 +728,14 @@ DiskManagerUtil
 							dmState.save(false);
 						}
 
+							// hijack the priority change event to report storage change to detect DND->delete 'priority' change
+						
+						for(int i=0;i<res.length;i++){
+							if(toChange[i]){
+								listener.filePriorityChanged(res[i]);
+							}
+						}
+						
 						return modified;
 					}
 		        };
@@ -2030,6 +2038,10 @@ DiskManagerUtil
 										
 					@Override
 					public void priorityChanged(DiskManagerFileInfo file){
+					}
+					
+					@Override
+					public void storageTypeChanged(DiskManagerFileInfo file){
 					}
 					
 					@Override

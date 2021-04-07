@@ -810,21 +810,28 @@ LWSDiskManager
 	}
 
   	@Override
-	  public void
+	public void
     skippedFileSetChanged(
   	   	DiskManagerFileInfo	file )
   	{
   	}
 
   	@Override
-	  public void
+	public void
   	priorityChanged(
   		DiskManagerFileInfo	file )
   	{
   	}
 
   	@Override
-	  public File
+  	public void 
+  	storageTypeChanged(
+  			DiskManagerFileInfo file)
+  	{
+  	}
+  	
+  	@Override
+	public File
   	getSaveLocation()
   	{
   		return( save_file );

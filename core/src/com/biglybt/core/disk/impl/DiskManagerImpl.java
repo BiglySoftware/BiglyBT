@@ -3919,6 +3919,15 @@ DiskManagerImpl
         listeners.dispatch(LDT_PRIOCHANGED, file);
     }
 
+    @Override
+    public void
+    storageTypeChanged(
+        DiskManagerFileInfo file )
+    {
+    		// hijacking priority change so we pick up switch between DND+Delete 'priorities'
+        listeners.dispatch(LDT_PRIOCHANGED, file);
+    }
+
   protected void
   storeFilePriorities()
   {

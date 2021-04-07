@@ -38,6 +38,7 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
@@ -548,7 +549,7 @@ public class NameItem extends CoreTableColumnSWT implements
 				if ( inExpando ){
 					inArea = true;
 				
-					if (event.eventType == TableCellMouseEvent.EVENT_MOUSEDOWN) {
+					if (event.eventType == TableCellMouseEvent.EVENT_MOUSEDOWN && event.button == 1) {
 			
 						if (row instanceof TableRowCore) {
 							TableRowCore rowCore = (TableRowCore) row;
@@ -588,44 +589,47 @@ public class NameItem extends CoreTableColumnSWT implements
 					}
 					
 					inArea = true;
-					if (event.eventType == TableCellMouseEvent.EVENT_MOUSEDOWN) {
+					if (event.eventType == TableCellMouseEvent.EVENT_MOUSEDOWN && event.button == 1 ) {
 						if (row instanceof TableRowCore) {
 							TableRowCore rowCore = (TableRowCore) row;
 							if ( rowCore != null ){
 							
-								if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
+								Utils.getOffOfSWTThread( AERunnable.create(()->{
 									
-									FilesView.FilesViewTreeNode node = (FilesView.FilesViewTreeNode)fileInfo;
+									if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
+										
+										FilesView.FilesViewTreeNode node = (FilesView.FilesViewTreeNode)fileInfo;
+										
+										if ( !node.isLeaf()){
 									
-									if ( !node.isLeaf()){
-								
-										int old_skipped = node.getSkippedState();
-										
-										boolean new_skipped;
-										
-										if ( old_skipped == 0 ){
-											new_skipped = false;
-										}else if ( old_skipped == 1 ){
-											new_skipped = true;
-										}else{
-											new_skipped = true;
+											int old_skipped = node.getSkippedState();
+											
+											boolean new_skipped;
+											
+											if ( old_skipped == 0 ){
+												new_skipped = false;
+											}else if ( old_skipped == 1 ){
+												new_skipped = true;
+											}else{
+												new_skipped = true;
+											}
+											
+											node.setSkipped( new_skipped );
+											
+											return;
 										}
-										
-										node.setSkipped( new_skipped );
-										
-										return;
 									}
-								}
-								
-								if ( ( event.keyboardState & SWT.SHIFT ) != 0 && !fileInfo.isSkipped()){
 									
-									FilesViewMenuUtil.changePriority(
-											FilesViewMenuUtil.PRIORITY_DELETE,
-											Collections.singletonList(fileInfo), false );
-								}else{
-								
-									ManagerUtils.setFileSkipped( fileInfo, !fileInfo.isSkipped());
-								}
+									if ( ( event.keyboardState & SWT.SHIFT ) != 0 && !fileInfo.isSkipped()){
+										
+										FilesViewMenuUtil.changePriority(
+												FilesViewMenuUtil.PRIORITY_DELETE,
+												Collections.singletonList(fileInfo), false );
+									}else{
+									
+										ManagerUtils.setFileSkipped( fileInfo, !fileInfo.isSkipped());
+									}
+								}));
 							}
 						}
 					}
