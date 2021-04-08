@@ -743,25 +743,37 @@ public class SBC_ArchivedDownloadsView
 		String 			filter,
 		boolean 		regex)
 	{
-		if ( filter.toLowerCase( Locale.US ).startsWith( "f:" )){
+		boolean do_files = filter.toLowerCase( Locale.US ).startsWith( "f:" );
+		
+		if ( do_files ){
 
 			filter = filter.substring(2).trim();
+		}
+		
+		boolean	match_result = true;
 
-			DownloadStubFile[] files = ds.getStubFiles();
-
-			String s = regex ? filter : "\\Q" + filter.replaceAll("\\s*[|;]\\s*", "\\\\E|\\\\Q") + "\\E";
-
-			boolean	match_result = true;
-
-			if ( regex && s.startsWith( "!" )){
-
-				s = s.substring(1);
+		String expr;
+		
+		if ( regex ){
+			
+			expr = filter;
+			
+			if ( expr.startsWith( "!" )){
+				
+				expr = expr.substring(1);
 
 				match_result = false;
 			}
+		}else{
+			
+			expr = RegExUtil.convertAndOrToExpr( filter );
+		}
 
-			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+		if ( do_files ){
 
+			DownloadStubFile[] files = ds.getStubFiles();
+
+			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 			boolean result = !match_result;
 
@@ -795,18 +807,7 @@ public class SBC_ArchivedDownloadsView
 
 			String name = ds.getName();
 
-			String s = regex ? filter : "\\Q" + filter.replaceAll("\\s*[|;]\\s*", "\\\\E|\\\\Q") + "\\E";
-
-			boolean	match_result = true;
-
-			if ( regex && s.startsWith( "!" )){
-
-				s = s.substring(1);
-
-				match_result = false;
-			}
-
-			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 			return( pattern.matcher(name).find() == match_result );
 		}

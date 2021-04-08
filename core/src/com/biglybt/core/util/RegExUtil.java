@@ -79,6 +79,40 @@ RegExUtil
 		}
 	}
 
+	public static String
+	convertAndOrToExpr(
+		String		str )
+	{
+		str = str.replaceAll("\s*[|;]\s*", "|" );
+		
+		if ( str.contains( " " )){
+			
+			String[] bits = str.split( " " );
+			
+			String s = "";
+			
+				// implement 'and' for spaces - (?=.*xxx)(?=.*yyy)
+			
+			for ( String bit: bits ){
+				
+				bit = bit.trim();
+				
+				if ( !bit.isEmpty()){
+				
+					bit = "\\Q" + bit.replaceAll("[|]", "\\\\E|\\\\Q") + "\\E";
+					
+					s += "(?=.*" + bit + ")";
+				}
+			}
+			
+			return( s );
+			
+		}else{
+		
+			return( "\\Q" + str.replaceAll("[|]", "\\\\E|\\\\Q") + "\\E" );
+		}
+	}
+	
 	public static boolean
 	mightBeEvil(
 		String	str )

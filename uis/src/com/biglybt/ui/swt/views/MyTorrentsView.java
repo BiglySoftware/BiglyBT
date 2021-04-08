@@ -1407,32 +1407,7 @@ public class MyTorrentsView
 					}
 				}else{
 					
-					if ( tmpSearch.contains( " " )){
-						
-						String[] bits = tmpSearch.split( " " );
-						
-						String s = "";
-						
-							// implement 'and' for spaces - (?=.*xxx)(?=.*yyy)
-						
-						for ( String bit: bits ){
-							
-							bit = bit.trim();
-							
-							if ( !bit.isEmpty()){
-							
-								bit = "\\Q" + bit.replaceAll("[|;]", "\\\\E|\\\\Q") + "\\E";
-								
-								s += "(?=.*" + bit + ")";
-							}
-						}
-						
-						expr = s;
-						
-					}else{
-					
-						expr = "\\Q" + tmpSearch.replaceAll("[|;]", "\\\\E|\\\\Q") + "\\E";
-					}
+					expr = RegExUtil.convertAndOrToExpr( tmpSearch );
 				}
 
 				Pattern pattern = RegExUtil.getCachedPattern( "tv:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);

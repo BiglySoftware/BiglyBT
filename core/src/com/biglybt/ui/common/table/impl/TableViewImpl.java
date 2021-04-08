@@ -20,6 +20,7 @@ package com.biglybt.ui.common.table.impl;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 import com.biglybt.core.config.impl.ConfigurationManager;
@@ -655,8 +656,16 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 			for (DATASOURCETYPE dst : unfilteredArray) {
 				boolean bHave = existing.contains(dst);
-				boolean isOurs = filter.checker.filterCheck(dst, filter.text,
-						filter.regex);
+				boolean isOurs;
+				
+				try{
+					isOurs = filter.checker.filterCheck(dst, filter.text,filter.regex);
+					
+				}catch( PatternSyntaxException e ){
+					// get this with malformed filter regex, ignore
+					isOurs = true;
+				}	
+				
 				if (!isOurs) {
 					if (bHave) {
 						listRemoves.add(dst);
@@ -697,7 +706,13 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			return( true );
 		}
 
-		return( filter.checker.filterCheck( ds, filter.text, filter.regex ));
+		try{
+			return( filter.checker.filterCheck( ds, filter.text, filter.regex ));
+			
+		}catch( PatternSyntaxException e ){
+			// get this with malformed filter regex, ignore		
+			return( false );
+		}
 	}
 
 	protected abstract boolean
@@ -796,11 +811,15 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 					+ Debug.getCompressedStackTrace(4));
 		}
 
-		if (!skipFilterCheck && filter != null
-				&& !filter.checker.filterCheck(dataSource, filter.text, filter.regex)) {
-			return;
+		try{
+			if (!skipFilterCheck && filter != null
+					&& !filter.checker.filterCheck(dataSource, filter.text, filter.regex)) {
+				return;
+			}
+		}catch( PatternSyntaxException e ){
+			// get this with malformed filter regex, ignore
 		}
-
+		
 		if (DataSourceCallBackUtil.IMMEDIATE_ADDREMOVE_DELAY == 0) {
 			reallyAddDataSources(new Object[] {
 				dataSource
@@ -866,11 +885,15 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 		if (DataSourceCallBackUtil.IMMEDIATE_ADDREMOVE_DELAY == 0) {
 			if (!skipFilterCheck && filter != null) {
-				for (int i = 0; i < dataSources.length; i++) {
-					if (!filter.checker.filterCheck(dataSources[i], filter.text,
-							filter.regex)) {
-						dataSources[i] = null;
+				try{
+					for (int i = 0; i < dataSources.length; i++) {
+						if (!filter.checker.filterCheck(dataSources[i], filter.text,
+								filter.regex)) {
+							dataSources[i] = null;
+						}
 					}
+				}catch( PatternSyntaxException e ){
+					// get this with malformed filter regex, ignore
 				}
 			}
 			reallyAddDataSources(dataSources);
@@ -889,12 +912,18 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				if (dataSource == null) {
 					continue;
 				}
-				if (!skipFilterCheck
-						&& filter != null
-						&& !filter.checker.filterCheck(dataSource, filter.text,
-								filter.regex)) {
-					continue;
+				
+				try{
+					if (!skipFilterCheck
+							&& filter != null
+							&& !filter.checker.filterCheck(dataSource, filter.text,
+									filter.regex)) {
+						continue;
+					}
+				}catch( PatternSyntaxException e ){
+					// get this with malformed filter regex, ignore
 				}
+				
 				dataSourcesToRemove.remove(dataSource); // may be pending removal, override
 
 				if (dataSourcesToAdd.containsKey(dataSource)) {

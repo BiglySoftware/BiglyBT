@@ -827,18 +827,26 @@ public class SBC_DownloadHistoryView
 
 		}
 
-		String s = regex ? filter : "\\Q" + filter.replaceAll("\\s*[|;]\\s*", "\\\\E|\\\\Q") + "\\E";
-
 		boolean	match_result = true;
 
-		if ( regex && s.startsWith( "!" )){
+		String expr;
+		
+		if ( regex ){
+			
+			expr = filter;
+			
+			if ( expr.startsWith( "!" )){
+				
+				expr = expr.substring(1);
 
-			s = s.substring(1);
-
-			match_result = false;
+				match_result = false;
+			}
+		}else{
+			
+			expr = RegExUtil.convertAndOrToExpr( filter );
 		}
 
-		Pattern pattern = RegExUtil.getCachedPattern( "downloadhistoryview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+		Pattern pattern = RegExUtil.getCachedPattern( "downloadhistoryview:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 		boolean bOurs;
 
