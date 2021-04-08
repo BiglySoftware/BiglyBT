@@ -169,6 +169,22 @@ TextWithHistory
 				}
 			});
 
+			// we rely on getting key events before other components - in particular
+			// the arrow_down event to move into the search history area has to be grabbed by us
+			// before the table view gets it and uses it to move focus into the table
+		
+			// obviously messing with listener ordering is not the best solution but it works (for now...)
+		
+		Listener[] old_down = text.getListeners( SWT.KeyDown );
+		Listener[] old_up	= text.getListeners( SWT.KeyUp );
+		
+		for ( Listener l: old_down ){
+			text.removeListener( SWT.KeyDown, l );
+		}
+		for ( Listener l: old_up ){
+			text.removeListener( SWT.KeyUp, l );
+		}
+		
 		text.addKeyListener(new KeyAdapter(){
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -211,6 +227,13 @@ TextWithHistory
 				}
 			}
 		});
+		
+		for ( Listener l: old_down ){
+			text.addListener( SWT.KeyDown, l );
+		}
+		for ( Listener l: old_up ){
+			text.addListener( SWT.KeyUp, l );
+		}
 		
 			// double-click with no current search shows history
 		
