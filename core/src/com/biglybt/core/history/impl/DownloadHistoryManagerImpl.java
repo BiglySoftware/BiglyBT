@@ -294,6 +294,38 @@ DownloadHistoryManagerImpl
 								}
 							}, DownloadManagerState.AT_CANONICAL_SD_DMAP, DownloadManagerStateAttributeListener.WRITTEN );
 
+						DownloadManagerStateFactory.addGlobalListener(
+								new DownloadManagerStateAttributeListener() {
+
+									@Override
+									public void
+									attributeEventOccurred(
+										DownloadManager 	dm,
+										String 				attribute,
+										int 				event_type )
+									{
+										synchronized( lock ){
+
+											if ( !( enabled && isMonitored(dm))){
+
+												return;
+											}
+
+											long uid = getUID( dm );
+
+											DownloadHistoryImpl dh = getActiveHistory().get( uid );
+
+											if ( dh != null ){
+
+												if ( dh.updateName( dm )){
+
+													historyUpdated( dh, DownloadHistoryEvent.DHE_HISTORY_MODIFIED, UPDATE_TYPE_ACTIVE );
+												}
+											}
+										}
+									}
+								}, DownloadManagerState.AT_DISPLAY_NAME, DownloadManagerStateAttributeListener.WRITTEN );
+
 						if ( enabled ){
 
 							if ( !FileUtil.resilientConfigFileExists( CONFIG_ACTIVE_FILE )){
@@ -900,9 +932,9 @@ DownloadHistoryManagerImpl
 		private final byte[]	hash;
 		private final byte[]	hash_v2;
 		private final long		size;
-		private final String	name;
 		private final long		add_time;
 		
+		private String			name;
 		private String			save_location;
 		private String[]		tags			= NO_TAGS;
 		private long			complete_time	= -1;
@@ -1072,6 +1104,24 @@ DownloadHistoryManagerImpl
 			if ( !loc.equals( old_location )){
 
 				save_location = loc;
+
+				return( true );
+
+			}else{
+
+				return( false );
+			}
+		}
+		
+		boolean
+		updateName(
+			DownloadManager		dm )
+		{
+			String name2 = dm.getDisplayName();
+			
+			if ( !name.equals( name2 )){
+
+				name = name2;
 
 				return( true );
 
