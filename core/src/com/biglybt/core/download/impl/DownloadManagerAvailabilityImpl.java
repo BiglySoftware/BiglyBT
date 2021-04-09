@@ -545,7 +545,7 @@ DownloadManagerAvailabilityImpl
 
 							if ( delegate == null ){
 
-								return( -1 );
+								return( Integer.MIN_VALUE );
 							}
 
 							return( delegate.getSecondsToUpdate());

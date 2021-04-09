@@ -1630,7 +1630,7 @@ TRTrackerAnnouncerMuxer
 						return( summary.getSecondsToUpdate());
 					}
 
-					return( -1 );
+					return( Integer.MIN_VALUE );
 				}
 
 				@Override

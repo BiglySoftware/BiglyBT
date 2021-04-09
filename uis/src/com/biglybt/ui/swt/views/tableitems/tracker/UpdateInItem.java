@@ -76,6 +76,10 @@ UpdateInItem
 
 				secs = ps.getSecondsToUpdate();
 
+				if ( secs == Integer.MIN_VALUE ){
+					
+					show_blank = true;
+				}
 			}else{
 
 				secs = -1;

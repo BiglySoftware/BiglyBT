@@ -109,7 +109,7 @@ TrackerPeerSourceAdapter
 	public int
 	getSecondsToUpdate()
 	{
-		return( -1 );
+		return( Integer.MIN_VALUE );
 	}
 
 	@Override

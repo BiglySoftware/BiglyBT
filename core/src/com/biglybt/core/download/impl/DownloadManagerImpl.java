@@ -6168,10 +6168,10 @@ DownloadManagerImpl
 														max_comp = comp;
 													}
 
+													status_str = resp.getStatusString();
+
 													if ( resp.getStatus() != TRTrackerScraperResponse.ST_INITIALIZING ){
-
-														status_str = resp.getStatusString();
-
+														
 														int	time	= resp.getScrapeTime();
 
 														if ( time > max_time ){
@@ -6422,7 +6422,14 @@ DownloadManagerImpl
 
 									if ( delegate == null ){
 
-										return( -1 );
+										int next = (Integer)getScrape()[3];
+										
+										if ( next < Integer.MAX_VALUE ){
+											
+											return((int)( next - (SystemTime.getCurrentTime()/1000)));
+										}
+										
+										return( Integer.MIN_VALUE );
 									}
 
 									return( delegate.getSecondsToUpdate());

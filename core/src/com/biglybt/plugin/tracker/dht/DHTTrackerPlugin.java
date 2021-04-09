@@ -4082,7 +4082,7 @@ DHTTrackerPlugin
 
 					if ( next_time < 0 ){
 
-						return( -1 );
+						return( Integer.MIN_VALUE );
 					}
 
 					return((int)(( next_time - SystemTime.getCurrentTime())/1000 ));

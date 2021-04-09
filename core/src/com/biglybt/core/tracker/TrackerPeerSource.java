@@ -89,6 +89,11 @@ TrackerPeerSource
 	public int
 	getLastUpdate();
 
+		/**
+		 * 
+		 * @return Integer.MIN_VAL -> no details available
+		 * 
+		 */
 	public int
 	getSecondsToUpdate();
 

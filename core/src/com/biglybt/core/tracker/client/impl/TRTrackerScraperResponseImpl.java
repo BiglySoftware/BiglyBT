@@ -29,6 +29,7 @@ import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.StringInterner;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimeFormatter;
 
 public abstract class
 TRTrackerScraperResponseImpl
@@ -203,7 +204,34 @@ TRTrackerScraperResponseImpl
 
   @Override
   public String getStatusString() {
-    return sStatus;
+    String str = sStatus;
+        
+    if ( status != TRTrackerScraperResponse.ST_SCRAPING ){
+    	
+    	if ( status == TRTrackerScraperResponse.ST_ONLINE ){
+    		
+	    	long prev = SystemTime.getCurrentTime() - scrapeStartTime;
+	    	
+	    	if ( scrapeStartTime > 0 && prev > 0 ){
+	    		
+	    		long upate_mins = (prev/(1000*60)) + 1;
+	    		
+	    		str += " (" + upate_mins + TimeFormatter.getShortSuffix( TimeFormatter.TS_MINUTE) + ")";
+	    	}
+    	}else{
+    		
+	    	long next = nextScrapeStartTime - SystemTime.getCurrentTime();
+	    	
+	    	if ( next > 0 ){
+	    		
+	    		long upate_mins = (next/(1000*60)) + 1;
+	    		
+	    		str += " (< " + upate_mins + TimeFormatter.getShortSuffix( TimeFormatter.TS_MINUTE) + ")";
+	    	}
+    	}
+    }
+    
+    return( str );
   }
 
   @Override
