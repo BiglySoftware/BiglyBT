@@ -669,7 +669,7 @@ BackupManagerImpl
 			}
 		}else{
 
-			if ( !FileUtil.copyFile( from_file, to_file )){
+			if ( !FileUtil.copyFileWithDates( from_file, to_file )){
 
 				try{
 					Thread.sleep( 5000 );
@@ -677,7 +677,7 @@ BackupManagerImpl
 				}catch( Throwable e ){
 				}
 
-				if ( !FileUtil.copyFile( from_file, to_file )){
+				if ( !FileUtil.copyFileWithDates( from_file, to_file )){
 
 						// a few exceptions here (e.g. dasu plugin has a 'lock' file that breaks things)
 

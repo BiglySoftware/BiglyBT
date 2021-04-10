@@ -1337,19 +1337,72 @@ public class FileUtil {
     }
     */
 
-    public static boolean copyFile( final File _source, final File _dest ) {
-      try {
-    	File parent = _dest.getParentFile();
-    	if ( !parent.exists()){
-    		parent.mkdirs();
+    public static boolean 
+    copyFileWithDates( 
+    	File 	from_file, 
+    	File 	to_file ) 
+    {
+		FileTime from_last_modified = null;
+		FileTime from_last_access	= null;
+		FileTime from_created		= null;
+		
+   		try{
+			BasicFileAttributeView from_attributes_view 	= Files.getFileAttributeView( from_file.toPath(), BasicFileAttributeView.class);
+
+			BasicFileAttributes from_attributes = from_attributes_view.readAttributes();
+
+			from_last_modified 	= from_attributes.lastModifiedTime();
+			from_last_access	= from_attributes.lastAccessTime();
+			from_created		= from_attributes.creationTime();
+			
+		}catch( Throwable e ){
+		}
+   		
+    	try{
+    		File parent = to_file.getParentFile();
+    		
+    		if ( !parent.exists()){
+    			
+    			parent.mkdirs();
+    		}
+    		
+    		copyFile( newFileInputStream( from_file ), newFileOutputStream( to_file ) );
+    		
+    		try{
+    			BasicFileAttributeView to_attributes_view 		= Files.getFileAttributeView( to_file.toPath(), BasicFileAttributeView.class);
+
+   				to_attributes_view.setTimes( from_last_modified, from_last_access, from_created );
+    		
+    		}catch( Throwable e ){
+    		}
+    		
+    		return( true );
+    		
+    	}catch( Throwable e ) {
+    		
+    		Debug.out( "Copy failed for " + from_file, e );
+    		
+    		return( false );
     	}
-        copyFile( newFileInputStream( _source ), newFileOutputStream( _dest ) );
-        return true;
-      }
-      catch( Throwable e ) {
-      	Debug.out( "Copy failed for " + _source, e );
-        return false;
-      }
+    }
+    
+    public static boolean 
+    copyFile( 
+    	final File _source, 
+    	final File _dest ) 
+    {
+    	try {
+    		File parent = _dest.getParentFile();
+    		if ( !parent.exists()){
+    			parent.mkdirs();
+    		}
+    		copyFile( newFileInputStream( _source ), newFileOutputStream( _dest ) );
+    		return true;
+    	}
+    	catch( Throwable e ) {
+    		Debug.out( "Copy failed for " + _source, e );
+    		return false;
+    	}
     }
 
     public static void copyFileWithException( final File _source, final File _dest ) throws IOException{
