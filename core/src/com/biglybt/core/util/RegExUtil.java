@@ -83,7 +83,7 @@ RegExUtil
 	convertAndOrToExpr(
 		String		str )
 	{
-		str = str.replaceAll("\s*[|;]\s*", "|" );
+		str = str.replaceAll("\\s*[|;]\\s*", "|" );
 		
 		if ( str.contains( " " )){
 			
