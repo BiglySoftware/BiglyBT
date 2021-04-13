@@ -179,6 +179,9 @@ public class OSXAccess
 	// 1.11
 	public static native boolean canSetDefaultApp();
 
+	// 1.12
+	public static native void disableAppNap();
+
 
 	public static boolean isLoaded() {
 		return bLoaded;

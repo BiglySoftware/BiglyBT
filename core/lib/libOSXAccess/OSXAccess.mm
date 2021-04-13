@@ -35,7 +35,7 @@
 #include "LaunchServicesWrapper.h"
 #endif
 
-#define VERSION "1.12"
+#define VERSION "1.13"
 
 #define assertNot0(a) if (a == 0) { fprintf(stderr, "%s is 0\n", #a); return; }
 void fillServiceInfo(io_service_t service, JNIEnv *env, jobject hashMap, jmethodID methPut);

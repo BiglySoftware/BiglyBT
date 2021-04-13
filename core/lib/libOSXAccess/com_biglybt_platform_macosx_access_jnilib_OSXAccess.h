@@ -111,6 +111,14 @@ JNIEXPORT jstring JNICALL Java_com_biglybt_platform_macosx_access_jnilib_OSXAcce
 JNIEXPORT jboolean JNICALL Java_com_biglybt_platform_macosx_access_jnilib_OSXAccess_canSetDefaultApp
   (JNIEnv *, jclass);
 
+/*
+ * Class:     com_biglybt_platform_macosx_access_jnilib_OSXAccess
+ * Method:    disableAppNap
+ * Signature: ()Z
+ */
+JNIEXPORT void JNICALL Java_com_biglybt_platform_macosx_access_jnilib_OSXAccess_disableAppNap
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif
