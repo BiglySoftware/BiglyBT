@@ -179,7 +179,7 @@ public class OSXAccess
 	// 1.11
 	public static native boolean canSetDefaultApp();
 
-	// 1.12
+	// 1.13
 	public static native void disableAppNap();
 
 
