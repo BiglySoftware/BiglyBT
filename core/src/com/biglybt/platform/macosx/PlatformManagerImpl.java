@@ -169,6 +169,17 @@ public class PlatformManagerImpl implements PlatformManager, AEDiagnosticsEviden
 	        } catch (Throwable t) {
 	        	// likely java.lang.UnsatisfiedLinkError -- older version
 	        }
+	        
+	        try{
+	        	double version = Double.parseDouble(getVersion());
+	        	
+	        	if ( version >= 1.13 ){
+	        		
+	        		OSXAccess.disableAppNap();
+	        	}
+	        }catch( Throwable e ){
+	        	e.printStackTrace();
+	        }
         }
 
         if (hasVMOptions()) {
