@@ -40,6 +40,7 @@ import com.biglybt.pifimpl.local.ui.config.ColorParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 import com.biglybt.ui.config.ConfigSectionImpl;
+import com.biglybt.ui.swt.ConfigKeysSWT;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.BaseSwtParameter;
@@ -84,6 +85,9 @@ public class ConfigSectionInterfaceColorSWT
 		
 		List<Parameter> listOverride = new ArrayList<>();
 
+		add(new BooleanParameterImpl(ConfigKeysSWT.BCFG_FORCE_GRAYSCALE,
+			"ConfigView.section.style.forceGrayscale"), listOverride);
+		
 		for (String s : sColorsToOverride) {
 			if (Utils.TABLE_GRIDLINE_IS_ALTERNATING_COLOR
 					&& s.equals("altRow")) {

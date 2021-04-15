@@ -20,4 +20,5 @@ package com.biglybt.ui.swt;
 
 public interface ConfigKeysSWT {
 	String ICFG_TABLE_HEADER_HEIGHT = "Table.headerHeight";
+	String BCFG_FORCE_GRAYSCALE = "ForceNoColor";
 }

@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.RGB;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.*;
+import com.biglybt.ui.swt.ConfigKeysSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
@@ -59,6 +60,22 @@ public class ColorCache
 		"COLOR_TITLE_BACKGROUND",
 	};
 	private static TimerEventPeriodic timerColorCacheChecker;
+	
+	private static boolean forceNoColor;
+	
+	static {
+		forceNoColor = COConfigurationManager.getBooleanParameter(
+				ConfigKeysSWT.BCFG_FORCE_GRAYSCALE);
+		COConfigurationManager.addParameterListener(
+				ConfigKeysSWT.BCFG_FORCE_GRAYSCALE, name -> {
+					if (forceNoColor == COConfigurationManager.getBooleanParameter(
+							name)) {
+						return;
+					}
+					forceNoColor = !forceNoColor;
+					reset();
+				});
+	}
 
 
 	public static void
@@ -155,8 +172,17 @@ public class ColorCache
 				} else if (blue > 255) {
 					blue = 255;
 				}
-				color = new Color(device, red, green, blue);
-				colorsToDispose.add(color);
+				
+				if (forceNoColor && (blue != red || blue != green)) {
+					double brightness = Math.sqrt(
+							red * red * 0.299 + green * green * 0.587 + blue * blue * 0.114);
+					int grayscale = (int) brightness;
+					color = getColor(device, grayscale, grayscale, grayscale);
+				} else {
+					color = new Color(device, red, green, blue);
+					colorsToDispose.add(color);
+				}
+
 			} catch (IllegalArgumentException e) {
 				Debug.out("One Invalid: " + red + ";" + green + ";" + blue, e);
 			}
