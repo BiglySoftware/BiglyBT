@@ -1395,7 +1395,29 @@ public class PlatformManagerImpl implements PlatformManager, AEDiagnosticsEviden
   		if (mod_name != null && mod_name.endsWith(".app")) {
   			return mod_name;
   		}
-		return( SystemProperties.getApplicationPath() + SystemProperties.getApplicationName() + ".app" );
+  		
+  		String app_path = SystemProperties.getApplicationPath();
+  		
+  		String app_name = SystemProperties.getApplicationName() + ".app";
+  		
+		String result = app_path + app_name;
+		
+		if ( !new File( result ).exists()){
+			
+				// since restructuring the install layout the app_path is /Applications/BiglyBT/.biglybt
+			
+			if ( app_path.endsWith( "/.biglybt/" )){
+				
+				String test = app_path.substring( 0, app_path.length()-9) + app_name;
+				
+				if ( new File( test ).exists()){
+					
+					result = test;
+				}
+			}
+		}
+		
+		return( result );
     }
 
   	/**
