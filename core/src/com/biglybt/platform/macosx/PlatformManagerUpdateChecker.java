@@ -340,20 +340,60 @@ PlatformManagerUpdateChecker
 						installer.addResource( resource_name, zip, false );
 
 						String appDir = installer.getInstallDir();
-						String contentsResourceJava = "Contents/Resources/Java/";
-						if (name.startsWith(contentsResourceJava)) {
-							// trying to install something into the "Java" dir
-							// New installs have the "Java" dir as the Install dir.
-							name = name.substring(contentsResourceJava.length());
-						}
-
-						String target = appDir + File.separator + name;
-
-						installer.addMoveAction( resource_name, target );
-
-						if ( name.endsWith( ".jnilib" ) || name.endsWith( "JavaApplicationStub" )){
-
-							installer.addChangeRightsAction( "755", target );
+						
+						String dotBiglyBT = ".biglybt/";
+						
+						if ( name.startsWith( dotBiglyBT )) {
+							
+							if ( appDir.endsWith( ".biglybt" )){
+								
+									// this is the expected case
+								
+								name = name.substring( dotBiglyBT.length());
+	
+								String target = appDir + File.separator + name;
+	
+								installer.addMoveAction( resource_name, target );
+	
+								if ( name.endsWith( ".jnilib" ) || name.endsWith( "JavaApplicationStub" )){
+	
+									installer.addChangeRightsAction( "755", target );
+								}
+							}else{
+								
+									// dump directly into appdir
+								
+								name = name.substring( name.lastIndexOf( "/" ) + 1 );
+								
+								String target = appDir + File.separator + name;
+	
+								installer.addMoveAction( resource_name, target );
+	
+								if ( name.endsWith( ".jnilib" ) || name.endsWith( "JavaApplicationStub" )){
+	
+									installer.addChangeRightsAction( "755", target );
+								}
+							}
+							
+						}else {
+						
+								// old layout
+							
+							String contentsResourceJava = "Contents/Resources/Java/";
+							if (name.startsWith(contentsResourceJava)) {
+								// trying to install something into the "Java" dir
+								// New installs have the "Java" dir as the Install dir.
+								name = name.substring(contentsResourceJava.length());
+							}
+	
+							String target = appDir + File.separator + name;
+	
+							installer.addMoveAction( resource_name, target );
+	
+							if ( name.endsWith( ".jnilib" ) || name.endsWith( "JavaApplicationStub" )){
+	
+								installer.addChangeRightsAction( "755", target );
+							}
 						}
 					}
 				}
