@@ -1572,9 +1572,17 @@ TRTrackerBTAnnouncerImpl
 
 			  			// if we've got some kind of response then return it
 
-					if ( message.size() > 0 ){
+			  		int size = message.size();
+			  		
+					if ( size > 0 ){
 
 						return( message.toByteArray());
+						
+					}else if ( stopped && failure_reason== null ){
+						
+							// some trackers don't bother returning anything on a 'stopped' event, grrr
+						
+						return( BEncoder.encode( new HashMap()));
 					}
 
 					if ( failure_reason == null ){
