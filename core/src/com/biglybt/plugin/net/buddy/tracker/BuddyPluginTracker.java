@@ -1227,6 +1227,8 @@ outer:
 
 			if ( tracked_downloads.remove( download )){
 
+				PluginCoreUtils.unwrap( download ).getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, false );
+
 				download_set_id++;
 
 				downloadData download_data = (downloadData)download.getUserData( BuddyPluginTracker.class );
