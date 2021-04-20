@@ -446,7 +446,8 @@ implements PEPeerTransport
 
 		diskManager =manager.getDiskManager();
 		piecePicker =manager.getPiecePicker();
-		nbPieces =diskManager.getNbPieces();
+		
+		nbPieces =manager.getNbPieces();
 
 
 		InetSocketAddress notional_address = _connection.getEndpoint().getNotionalAddress();

@@ -3083,79 +3083,90 @@ TRTrackerBTAnnouncerImpl
 
 					try {
 						if ( !metaData.containsKey( "interval" )){
-							throw( new Exception( "interval missing" ));
-						}
-
-						tracker_interval = time_to_wait = ((Long) metaData.get("interval")).longValue();
-
-						Long raw_min_interval = (Long) metaData.get("min interval");
-
-						if (Logger.isEnabled()) {
-							Logger.log(new LogEvent(torrent, LOGID, LogEvent.LT_INFORMATION,
-									"Received from announce: 'interval' = " + time_to_wait
-											+ "; 'min interval' = " + raw_min_interval));
-						}
-
-						// guard against crazy return values
-						if (time_to_wait < 0 || time_to_wait > 0xffffffffL) {
-							time_to_wait = 0xffffffffL;
-						}
-
-						if (raw_min_interval != null) {
-							tracker_min_interval = min_interval = raw_min_interval.longValue();
-
-							// ignore useless values
-							// Note: Many trackers set min_interval and interval the same.
-							if (min_interval < 1) {
-								if (Logger.isEnabled()) {
-									Logger.log(new LogEvent(
-											torrent,
-											LOGID,
-											LogEvent.LT_INFORMATION,
-											"Tracker being silly and "
-													+ "returning a 'min interval' of less than 1 second ("
-													+ min_interval + ")"));
-								}
-								min_interval = 0;
-							} else if (min_interval > time_to_wait) {
-								if (Logger.isEnabled()) {
-									Logger.log(new LogEvent(
-											torrent,
-											LOGID,
-											LogEvent.LT_INFORMATION,
-											"Tracker being silly and "
-													+ "returning a 'min interval' ("
-													+ min_interval
-													+ ") greater than recommended announce 'interval'"
-													+ " (" + time_to_wait + ")"));
-								}
-								min_interval = 0;
+							
+								// deal with trackers that return empty response on 'stop'
+							
+							if ( stopped ){
+							
+								time_to_wait = 60;	// irrelevant as stopped
+								
+							}else{
+								
+								throw( new Exception( "interval missing" ));
 							}
-						} else {
-							// tracker owners complain we announce too much but then never
-							// implement "min interval".  So take it into our own hands
-							// and enforce a min_interval of interval when there is no
-							// "min interval"
-							min_interval = time_to_wait > 30 ? time_to_wait - 10 : time_to_wait;
-						}
+						}else{
 
-						if(userMinInterval != 0)
-						{
-							time_to_wait = Math.max(userMinInterval, time_to_wait);
-							min_interval = Math.max(min_interval, userMinInterval);
+							tracker_interval = time_to_wait = ((Long) metaData.get("interval")).longValue();
+	
+							Long raw_min_interval = (Long) metaData.get("min interval");
+	
 							if (Logger.isEnabled()) {
 								Logger.log(new LogEvent(torrent, LOGID, LogEvent.LT_INFORMATION,
-										"Overriding with user settings: 'interval' = " + time_to_wait
-												+ "; 'min interval' = " + min_interval));
+										"Received from announce: 'interval' = " + time_to_wait
+												+ "; 'min interval' = " + raw_min_interval));
 							}
-						}
+	
+							// guard against crazy return values
+							if (time_to_wait < 0 || time_to_wait > 0xffffffffL) {
+								time_to_wait = 0xffffffffL;
+							}
+	
+							if (raw_min_interval != null) {
+								tracker_min_interval = min_interval = raw_min_interval.longValue();
+	
+								// ignore useless values
+								// Note: Many trackers set min_interval and interval the same.
+								if (min_interval < 1) {
+									if (Logger.isEnabled()) {
+										Logger.log(new LogEvent(
+												torrent,
+												LOGID,
+												LogEvent.LT_INFORMATION,
+												"Tracker being silly and "
+														+ "returning a 'min interval' of less than 1 second ("
+														+ min_interval + ")"));
+									}
+									min_interval = 0;
+								} else if (min_interval > time_to_wait) {
+									if (Logger.isEnabled()) {
+										Logger.log(new LogEvent(
+												torrent,
+												LOGID,
+												LogEvent.LT_INFORMATION,
+												"Tracker being silly and "
+														+ "returning a 'min interval' ("
+														+ min_interval
+														+ ") greater than recommended announce 'interval'"
+														+ " (" + time_to_wait + ")"));
+									}
+									min_interval = 0;
+								}
+							} else {
+								// tracker owners complain we announce too much but then never
+								// implement "min interval".  So take it into our own hands
+								// and enforce a min_interval of interval when there is no
+								// "min interval"
+								min_interval = time_to_wait > 30 ? time_to_wait - 10 : time_to_wait;
+							}
+	
+							if(userMinInterval != 0)
+							{
+								time_to_wait = Math.max(userMinInterval, time_to_wait);
+								min_interval = Math.max(min_interval, userMinInterval);
+								if (Logger.isEnabled()) {
+									Logger.log(new LogEvent(torrent, LOGID, LogEvent.LT_INFORMATION,
+											"Overriding with user settings: 'interval' = " + time_to_wait
+													+ "; 'min interval' = " + min_interval));
+								}
+							}
 
 
-						// roll back 10 seconds to make sure we announce before the tracker
-						// times us out.  This is done after min_interval in order not to
-						// mess up the "ignore useless values"
-						if (time_to_wait > 30){
-							time_to_wait -= 10;
+							// roll back 10 seconds to make sure we announce before the tracker
+							// times us out.  This is done after min_interval in order not to
+							// mess up the "ignore useless values"
+							if (time_to_wait > 30){
+								time_to_wait -= 10;
+							}
 						}
 						
 						if ( metaData.containsKey( "failure reason")){
@@ -3174,7 +3185,7 @@ TRTrackerBTAnnouncerImpl
     										"Problems with Tracker, will retry in "
     												+ getErrorRetryInterval() + "ms"));
 
-    				       return( new TRTrackerAnnouncerResponseImpl( url, torrent_hash_actual, TRTrackerAnnouncerResponse.ST_OFFLINE, getErrorRetryInterval(), "Unknown cause" ));
+    				       return( new TRTrackerAnnouncerResponseImpl( url, torrent_hash_actual, TRTrackerAnnouncerResponse.ST_OFFLINE, getErrorRetryInterval(), "Unknown cause: " + Debug.getNestedExceptionMessage(e)));
 
     				     }
 

@@ -137,6 +137,15 @@ Transport
   unbindConnection(
 		NetworkConnection	connection );
 
+  public Object
+  getUserData(
+		Object	key );
+  
+  public void
+  setUserData(
+		Object	key ,
+		Object	value );
+  
   public void
   setTrace(
 		boolean	on );

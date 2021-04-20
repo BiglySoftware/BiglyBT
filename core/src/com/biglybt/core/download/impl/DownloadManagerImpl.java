@@ -78,6 +78,7 @@ import com.biglybt.plugin.tracker.local.LocalTrackerPlugin;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.*;
 
@@ -2183,7 +2184,7 @@ DownloadManagerImpl
 							
 				for ( PeerManagerRegistration r: others ){
 						
-					int port = r.getLocalPort( true );
+					int port = r.getHashOverrideLocalPort( true );
 						
 					if ( port > 0 ){
 						
@@ -2485,6 +2486,19 @@ DownloadManagerImpl
 		}
 	}
 
+    protected boolean
+    isLightSeedTracker(
+    	InetSocketAddress	isa )
+    {
+    	TRTrackerAnnouncer ta = _tracker_client_for_queued_download;
+    	
+    	if ( ta != null ){
+    		
+    		return( TorrentUtils.isTrackerAddress( ta.getTorrent(), isa ));
+    	}
+    	
+    	return( false );
+    }
     
 	private void
 	startQueuedTrackerClient()

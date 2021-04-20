@@ -1574,8 +1574,22 @@ DownloadManagerController
 	}
 	
 	@Override
+	public byte[] 
+	getPeerID()
+	{
+		return( download_manager.getTrackerClient().getPeerId());
+	}
+	
+	@Override
 	public int 
-	getLocalPort(
+	getNbPieces()
+	{
+		return( download_manager.getTorrent().getNumberOfPieces());
+	}
+	
+	@Override
+	public int 
+	getHashOverrideLocalPort(
 		boolean	only_if_allocated )
 	{
 		return( download_manager.getTCPPortOverride( only_if_allocated ));
@@ -1818,12 +1832,17 @@ DownloadManagerController
 	}
 
 	@Override
-	public boolean
+	public int
 	activateRequest(
 		InetSocketAddress	address )
 	{
 		if ( getState() == DownloadManager.STATE_QUEUED ){
 
+			if ( download_manager.isLightSeedTracker( address )){
+				
+				return( AT_ACCEPTED_PROBE );
+			}
+			
 			long	now = SystemTime.getMonotonousTime();
 
 			BloomFilter	bloom = activation_bloom;
@@ -1848,7 +1867,7 @@ DownloadManagerController
 							LogEvent.LT_WARNING,
 							"Activate request for " + getDisplayName() + " from " + address + " denied as too many recently received" ));
 
-				return( false );
+				return( AT_DECLINED );
 			}
 
 			Logger.log(new LogEvent(this, LogIDs.CORE, "Activate request for " + getDisplayName() + " from " + address ));
@@ -1868,10 +1887,13 @@ DownloadManagerController
 
 			activation_count_time = now;
 
-			return( download_manager.activateRequest( activation_count ));
+			if ( download_manager.activateRequest( activation_count )){
+				
+				return( AT_ACCEPTED );
+			}
 		}
 
-		return( false );
+		return( AT_DECLINED );
 	}
 
 	@Override

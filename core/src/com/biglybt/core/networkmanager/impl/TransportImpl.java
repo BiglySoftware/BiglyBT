@@ -433,6 +433,31 @@ TransportImpl
 	{
 	}
 
+	@Override
+	public Object 
+	getUserData(
+		Object		key )
+	{
+		if ( filter != null ){
+			
+			return( filter.getHelper().getUserData( key ));
+		}
+		
+		return( null );
+	}
+	
+	@Override
+	public void 
+	setUserData(
+		Object		key,
+		Object		value )
+	{
+		if ( filter != null ){
+			
+			filter.getHelper().setUserData( key, value );
+		}
+	}
+	
 	private void
 	registerSelectHandling()
 	{

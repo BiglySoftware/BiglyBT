@@ -585,6 +585,16 @@ NetworkConnectionImpl
 		}
 
 		@Override
+		public Object getUserData(Object key){
+			return( transport.getUserData(key));
+		}
+		
+		@Override
+		public void setUserData(Object key, Object value){
+			transport.setUserData(key, value);
+		}
+		
+		@Override
 		public void
 		setTrace(
 			boolean	on )

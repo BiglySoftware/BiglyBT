@@ -42,6 +42,7 @@ import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.peermanager.PeerManager;
 import com.biglybt.core.peermanager.PeerManagerRegistration;
 import com.biglybt.core.peermanager.PeerManagerRegistrationAdapter;
+import com.biglybt.core.peermanager.messaging.bittorrent.BTHandshake;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.util.AddressUtils;
@@ -80,7 +81,7 @@ LightWeightSeed
 
 	private PeerManagerRegistration		peer_manager_registration;
 
-	volatile PEPeerManager		peer_manager;
+	private volatile PEPeerManager		peer_manager;
 	private volatile LWSDiskManager		disk_manager;
 	private LWSDownload					pseudo_download;
 	private volatile LWSTorrent			torrent_facade;
@@ -89,7 +90,7 @@ LightWeightSeed
 	private TOTorrent					actual_torrent;
 
 	private boolean		is_running;
-	long		last_activity_time;
+	private	long		last_activity_time;
 	private int			activation_state		= ACT_NONE;
 
 	protected
@@ -170,8 +171,29 @@ LightWeightSeed
 	}
 	
 	@Override
+	public byte[] 
+	getPeerID()
+	{
+		return( announcer.getPeerId());
+	}
+	
+	@Override
+	public int
+	getNbPieces()
+	{
+		return( torrent_facade.getNumberOfPieces());
+	}
+	
+	@Override
 	public int 
-	getLocalPort(
+	getExtendedMessagingMode()
+	{
+		return( BTHandshake.AZ_RESERVED_MODE );
+	}
+	
+	@Override
+	public int 
+	getHashOverrideLocalPort(
 		boolean only_if_allocated )
 	{
 		return( 0 );
@@ -225,13 +247,13 @@ LightWeightSeed
 	}
 
 	@Override
-	public boolean
+	public int
 	activateRequest(
 		InetSocketAddress		remote_address )
 	{
 		ensureActive( "Incoming[" + AddressUtils.getHostAddress( remote_address ) + "]", ACT_INCOMING );
 
-		return( true );
+		return( AT_ACCEPTED );
 	}
 
 	@Override
@@ -295,9 +317,9 @@ LightWeightSeed
 				torrent_facade = new LWSTorrent( this );
 			}
 
-			peer_manager_registration = PeerManager.getSingleton().registerLegacyManager( hash, this );
-
 			announcer = createAnnouncer();
+
+			peer_manager_registration = PeerManager.getSingleton().registerLegacyManager( hash, this );
 
 			pseudo_download = new LWSDownload( this, announcer );
 

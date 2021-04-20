@@ -55,15 +55,11 @@ PeerManagerRegistration
 
 	public void
 	unregister();
-
-    // XXX: Doesn't appear to be used.
-    public String
-	getDescription();
     
     public List<PeerManagerRegistration>
     getOtherRegistrationsForHash();
     
     public int 
-    getLocalPort(
+    getHashOverrideLocalPort(
     	boolean	only_if_allocated );
 }

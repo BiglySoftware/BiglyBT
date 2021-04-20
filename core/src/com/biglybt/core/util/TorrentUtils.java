@@ -21,6 +21,8 @@
 package com.biglybt.core.util;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -5679,6 +5681,70 @@ TorrentUtils
 		dns_threads.checkTimeouts();
 	}
 
+	private static Set<String>		tracker_hosts		= new HashSet<>();
+	private static Set<String>		tracker_addresses	= new HashSet<>();
+	
+	public static boolean
+	isTrackerAddress(
+		TOTorrent				torrent,
+		InetSocketAddress		isa )
+	{
+		try{
+			byte[] hash = torrent.getHash();
+	
+			Set<String>	hosts = getUniqueTrackerHosts( torrent, false );
+	
+			synchronized( tracker_hosts ){
+				
+				for ( String host: hosts ){
+					
+					if ( !tracker_hosts.contains( host )){
+						
+						tracker_hosts.add( host );
+						
+						if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_PUBLIC ){
+							
+							try{
+								List<InetAddress> host_addresses;
+								
+								try{
+									host_addresses = DNSUtils.getSingleton().getAllByName( host );
+									
+								}catch( Throwable e ){
+									
+									host_addresses = Arrays.asList( InetAddress.getAllByName( host ));
+								}
+								
+								for ( InetAddress a: host_addresses ){
+																	
+									tracker_addresses.add( a.getHostAddress() );
+								}
+							}catch( Throwable e ){
+								
+							}
+						}else{
+							
+							tracker_addresses.add( host );
+						}
+					}
+				}
+				
+				if ( isa.isUnresolved()){
+					
+					return( tracker_addresses.contains( isa.getHostName()));
+					
+				}else{
+					
+					return( tracker_addresses.contains( isa.getAddress().getHostAddress()));
+				}
+			}
+		}catch( Throwable e ){
+			
+		}
+		
+		return( false );
+	}
+	
 	public static void
 	main(
 		String[]	args )

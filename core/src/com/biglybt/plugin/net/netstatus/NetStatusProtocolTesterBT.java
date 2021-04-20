@@ -116,8 +116,27 @@ NetStatusProtocolTesterBT
 				}
 				
 				@Override
+				public int getNbPieces(){
+					return 1;
+				}
+				
+				@Override
 				public int 
-				getLocalPort(
+				getExtendedMessagingMode()
+				{
+					return( BTHandshake.AZ_RESERVED_MODE );
+				}
+				
+				@Override
+				public byte[] 
+				getPeerID()
+				{
+					return( peer_id );
+				}
+				
+				@Override
+				public int 
+				getHashOverrideLocalPort(
 					boolean only_if_allocated )
 				{
 					return( 0 );
@@ -144,11 +163,11 @@ NetStatusProtocolTesterBT
 	          	}
 
 	          	@Override
-		        public boolean
+		        public int
 	          	activateRequest(
 	          		InetSocketAddress		remote_address )
 	          	{
-	          		return( true );
+	          		return( AT_ACCEPTED );
 	          	}
 
 	          	@Override

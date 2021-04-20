@@ -4043,6 +4043,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	}
 
 	@Override
+	public int getNbPieces(){
+		return( _nbPieces );
+	}
+	
+	@Override
 	public PEPiece[] getPieces(){
 		return pePieces;
 	}

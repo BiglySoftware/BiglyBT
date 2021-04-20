@@ -26,15 +26,28 @@ import com.biglybt.core.networkmanager.NetworkConnection;
 public interface
 PeerManagerRegistrationAdapter
 {
+	public static int AT_DECLINED			= 0;
+	public static int AT_ACCEPTED			= 1;
+	public static int AT_ACCEPTED_PROBE		= 2;
+	
 	public byte[]
 	getHashOverride();
 	
+	public int
+	getHashOverrideLocalPort(
+		boolean	only_if_allocated );
+
 	public byte[][]
 	getSecrets();
 
 	public int
-	getLocalPort(
-		boolean	only_if_allocated );
+	getNbPieces();
+	
+	public int
+	getExtendedMessagingMode();
+	
+	public byte[]
+	getPeerID();
 	
 	public boolean
 	manualRoute(
@@ -44,7 +57,13 @@ PeerManagerRegistrationAdapter
 	isPeerSourceEnabled(
 		String		peer_source );
 
-	public boolean
+		/**
+		 * 
+		 * @param remote_address
+		 * @return one of the AT_ constants
+		 */
+	
+	public int
 	activateRequest(
 		InetSocketAddress		remote_address );
 

@@ -95,6 +95,8 @@ PEPeerManager
     public int	getNbPeersUnchoked();
     public int	getNbPeersUnchoking();
 
+    public int	getNbPieces();
+    
     /** Often better to use getPiece(pieceNumber)
      */
 	public PEPiece[]	getPieces();
