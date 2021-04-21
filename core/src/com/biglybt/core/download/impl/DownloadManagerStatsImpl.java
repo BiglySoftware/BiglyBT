@@ -1282,7 +1282,7 @@ DownloadManagerStatsImpl
 					
 					if ( consolidated == null ){
 						
-						consolidated = vals;
+						consolidated = vals.clone();
 						
 					}else{
 						
