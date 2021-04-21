@@ -1536,11 +1536,6 @@ AllTrackersManagerImpl
 				total_down	= new_down;
 			}
 			
-			if ( req.getURL().getHost().contains( "dimeadozen" )){
-				
-				System.out.println( session_id + ": up=" + up + ", down=" + down + ", totals=" + total_up + "/" + total_down );
-				
-			}
 			if ( req.isStopRequest() && session_stats != null ){
 				
 				long[]	values = session_stats.remove( session_id );
