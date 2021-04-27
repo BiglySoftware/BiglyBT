@@ -402,6 +402,9 @@ public class TorrentUIUtilsV3
 			} else {
 				DiskManagerFileInfo primaryFile = dm.getDownloadState().getPrimaryFile();
 				path = primaryFile == null ? null : primaryFile.getFile(true).getName();
+				if ( path == null ){
+					path = dm.getSaveLocation().getAbsolutePath();
+				}
 			}
 			if (path != null) {
 				image = ImageRepository.getPathIcon(path, big, false);
