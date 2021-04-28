@@ -87,7 +87,7 @@ SBC_SubscriptionResultsView
 
 	private static boolean columnsAdded = false;
 
-	private static TableRowSWT.ColorRequester colour_requester = ()->1;
+	private static TableViewSWT.ColorRequester colour_requester = ()->1;
 	
 	private TableViewSWT<SubscriptionResultFilterable> tv_subs_results;
 

@@ -1709,6 +1709,14 @@ public class TableViewPainted
 					drawBounds = canvasImage.getBounds();
 				}
 			}
+			
+			synchronized( visibleRows_sync ){
+				
+				for ( TableColumnPainted tcp: paintedColumns.values()){
+					
+					tcp.sync();
+				}
+			}
 		}
 		
 		try{
@@ -2042,6 +2050,24 @@ public class TableViewPainted
 		return( filter != null && !filter.filterBox.isDisposed() );
 	}
 
+	private Map<TableColumnCore,TableColumnPainted>	paintedColumns = new HashMap<>();
+	
+	protected TableColumnPainted
+	getColumnPainted(
+		TableColumnCore		c )
+	{
+		TableColumnPainted tcp = paintedColumns.get( c );
+		
+		if ( tcp == null ){
+						
+			tcp = new TableColumnPainted( c );
+			
+			paintedColumns.put( c, tcp );
+		}
+		
+		return( tcp );
+	}
+	
 	@Override
 	public void disableFilterCheck() {
 		TableViewSWTFilter<?> filter = getSWTFilter();

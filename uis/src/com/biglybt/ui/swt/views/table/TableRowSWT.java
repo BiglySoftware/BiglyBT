@@ -18,6 +18,8 @@
 package com.biglybt.ui.swt.views.table;
 
 import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.swt.views.table.TableViewSWT.ColorRequester;
+
 import org.eclipse.swt.graphics.*;
 
 /**
@@ -105,11 +107,4 @@ public interface TableRowSWT extends TableRowCore
 	public int getFullHeight();
 
 	boolean isShown();
-	
-	interface
-	ColorRequester
-	{
-		public int
-		getPriority();
-	}
 }

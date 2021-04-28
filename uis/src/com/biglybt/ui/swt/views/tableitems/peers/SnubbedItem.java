@@ -26,6 +26,7 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
+import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.pif.ui.tables.*;
 
 
@@ -38,7 +39,7 @@ public class SnubbedItem
 	extends CoreTableColumnSWT
 	implements TableCellRefreshListener
 {
-	private static TableRowSWT.ColorRequester	color_requester = ()-> 1;
+	private static TableViewSWT.ColorRequester	color_requester = ()-> 1;
 
 	public SnubbedItem(String table_id) {
 		super("S", ALIGN_CENTER, POSITION_INVISIBLE, 20, table_id);

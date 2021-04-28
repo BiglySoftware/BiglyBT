@@ -129,7 +129,7 @@ public class MyTrackerView
 		tcManager.setDefaultColumnNames( TableManager.TABLE_MYTRACKER, basicItems );
 	}
 	
-	private static TableRowSWT.ColorRequester	color_requester = ()-> 20;
+	private static TableViewSWT.ColorRequester	color_requester = ()-> 20;
 
 	private Menu			menuCategory;
 

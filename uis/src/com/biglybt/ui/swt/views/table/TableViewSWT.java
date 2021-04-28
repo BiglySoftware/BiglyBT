@@ -283,4 +283,11 @@ public interface TableViewSWT<DATASOURCETYPE>
 	TableViewSWT_TabsCommon getTabsCommon();
 
 	void invokeExpansionChangeListeners( TableRowCore row, boolean expanded );
+	
+	interface
+	ColorRequester
+	{
+		public int
+		getPriority();
+	}
 }

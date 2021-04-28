@@ -26,6 +26,7 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
+import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.pif.ui.tables.*;
 
 /**
@@ -39,7 +40,7 @@ public class LANItem
 {
 	public static final String COLUMN_ID = "lan";
 
-	private static TableRowSWT.ColorRequester	color_requester = ()-> 2;
+	private static TableViewSWT.ColorRequester	color_requester = ()-> 2;
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {

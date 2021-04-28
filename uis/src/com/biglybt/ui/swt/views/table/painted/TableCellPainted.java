@@ -30,10 +30,9 @@ import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableRow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
-import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableCellSWTBase;
-
+import com.biglybt.ui.swt.views.table.impl.TableColumnSWTBase;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableRowCore;
 
@@ -56,7 +55,7 @@ public class TableCellPainted
 
 	// private Color colorBG;
 
-	public TableCellPainted(TableRowSWT row, TableColumnCore column, int pos) {
+	public TableCellPainted(TableRowPainted row, TableColumnPainted column, int pos) {
 		super(row, column);
 		constructionCompleter();
 	}
@@ -67,7 +66,7 @@ public class TableCellPainted
 	{
 		constructionComplete();
 
-		tableColumn.invokeCellAddedListeners(TableCellPainted.this);
+		tableColumnCore.invokeCellAddedListeners(TableCellPainted.this);
 	}
 
 	/* (non-Javadoc)
@@ -80,8 +79,8 @@ public class TableCellPainted
 		//if (isDisposed()) {
 		//	return null;
 		//}
-		TableRowCore row = tableRow;
-		TableColumnCore col = tableColumn;
+		TableRowCore row = tableRowSWT;
+		TableColumnCore col = tableColumnCore;
 
 		if (row == null || col == null) {
 			return (null);
@@ -94,7 +93,7 @@ public class TableCellPainted
 	 */
 	@Override
 	public TableColumn getTableColumn() {
-		return tableColumn;
+		return tableColumnCore;
 	}
 
 	/* (non-Javadoc)
@@ -102,7 +101,7 @@ public class TableCellPainted
 	 */
 	@Override
 	public TableRow getTableRow() {
-		return tableRow;
+		return tableRowSWT;
 	}
 
 	/* (non-Javadoc)
@@ -110,7 +109,7 @@ public class TableCellPainted
 	 */
 	@Override
 	public String getTableID() {
-		return tableRow==null?null:tableRow.getTableID();
+		return tableRowSWT==null?null:tableRowSWT.getTableID();
 	}
 
 	@SuppressWarnings("null")
@@ -149,7 +148,7 @@ public class TableCellPainted
 	 */
 	@Override
 	public boolean isShown() {
-		return !isDisposed() && tableRow != null && tableRow.getView().isColumnVisible(tableColumn);
+		return !isDisposed() && tableRowSWT != null && tableRowSWT.getView().isColumnVisible(tableColumnCore);
 	}
 
 	/* (non-Javadoc)
@@ -157,7 +156,7 @@ public class TableCellPainted
 	 */
 	@Override
 	public int getMaxLines() {
-		int lineHeight = tableRow.getLineHeight();
+		int lineHeight = tableRowSWT.getLineHeight();
 		if (lineHeight == 0) {
 			return 1;
 		}
@@ -176,7 +175,7 @@ public class TableCellPainted
 		if (isDisposed()) {
 			return -1;
 		}
-		return tableColumn.getWidth() - 2 - (getMarginWidth() * 2);
+		return tableColumnCore.getWidth() - 2 - (getMarginWidth() * 2);
 	}
 
 	@Override
@@ -184,7 +183,7 @@ public class TableCellPainted
 		if (isDisposed()) {
 			return -1;
 		}
-		return tableColumn.getWidth() - 2;
+		return tableColumnCore.getWidth() - 2;
 	}
 
 	/* (non-Javadoc)
@@ -193,10 +192,10 @@ public class TableCellPainted
 	@Override
 	public int getHeight() {
 		if (bounds == null) {
-			if (tableRow == null) {
+			if (tableRowSWT == null) {
 				return 20; // probably disposed
 			}
-			return tableRow.getView().getRowDefaultHeight();
+			return tableRowSWT.getView().getRowDefaultHeight();
 		}
 		return bounds.height - (getMarginHeight() * 2);
 	}
@@ -263,11 +262,11 @@ public class TableCellPainted
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				if (isDisposed() || tableRow == null) {
+				if (isDisposed() || tableRowSWT == null) {
 					return;
 				}
 				if (isMouseOver()) {
-					TableViewSWT<?> view = (TableViewSWT<?>) tableRow.getView();
+					TableViewSWT<?> view = (TableViewSWT<?>) tableRowSWT.getView();
 					if (view != null) {
 						Composite composite = view.getComposite();
 						if (composite != null && !composite.isDisposed()) {
@@ -287,13 +286,13 @@ public class TableCellPainted
 	@Override
 	public void redraw() {
 
-		if (tableRow==null || !tableRow.isVisible() || redrawScheduled) {
+		if (tableRowSWT==null || !tableRowSWT.isVisible() || redrawScheduled) {
 			return;
 		}
 		redrawScheduled = true;
 		if (DEBUG_CELLPAINT) {
 			System.out.println(SystemTime.getCurrentTime() + "r"
-					+ tableRow.getIndex() + "c" + tableColumn.getPosition()
+					+ tableRowSWT.getIndex() + "c" + tableColumnCore.getPosition()
 					+ "} cellredraw via " + Debug.getCompressedStackTrace());
 		}
 		Utils.execSWTThread(new AERunnable() {
@@ -306,11 +305,11 @@ public class TableCellPainted
 				redrawScheduled = false;
 				if (DEBUG_CELLPAINT) {
 					System.out.println(SystemTime.getCurrentTime() + "r"
-							+ tableRow.getIndex() + "c" + tableColumn.getPosition()
+							+ tableRowSWT.getIndex() + "c" + tableColumnCore.getPosition()
 							+ "] cellredraw @ " + bounds);
 				}
-				if (bounds != null && tableRow != null) {
-					TableViewPainted view = (TableViewPainted) tableRow.getView();
+				if (bounds != null && tableRowSWT != null) {
+					TableViewPainted view = (TableViewPainted) tableRowSWT.getView();
 					if (view != null) {
 						view.swt_updateCanvasImage(bounds, false);
 					}
@@ -364,14 +363,14 @@ public class TableCellPainted
 
 	@Override
 	public Rectangle getBoundsOnDisplay() {
-		if (isDisposed() || tableRow == null) {
+		if (isDisposed() || tableRowSWT == null) {
 			return null;
 		}
 		Rectangle bounds = getBoundsRaw();
 		if (bounds == null) {
 			return null;
 		}
-		TableViewPainted tv = ((TableViewPainted) tableRow.getView());
+		TableViewPainted tv = ((TableViewPainted) tableRowSWT.getView());
 		if (tv == null) {
 			return null;
 		}

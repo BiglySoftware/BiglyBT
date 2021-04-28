@@ -31,6 +31,7 @@ import com.biglybt.pif.ui.tables.TableRow;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
+import com.biglybt.ui.swt.views.table.TableViewSWT;
 
 /**
  *
@@ -43,7 +44,7 @@ public class ClientItem
 {
 	public static final String COLUMN_ID = "client";
 
-	private static TableRowSWT.ColorRequester	color_requester = ()-> 3;
+	private static TableViewSWT.ColorRequester	color_requester = ()-> 3;
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {

@@ -21,14 +21,9 @@ package com.biglybt.ui.swt.views.table.impl;
 import java.util.*;
 
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.widgets.Display;
-import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -36,7 +31,6 @@ import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.common.table.TableCellCore;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.common.table.TableView;
-import com.biglybt.ui.swt.utils.ColorCache;
 
 @SuppressWarnings("rawtypes")
 public abstract class TableRowSWTBase
@@ -56,7 +50,7 @@ public abstract class TableRowSWTBase
 
 	private int visibleRowIndex = -1;
 	
-	protected Map<String, TableCellCore> mTableCells;
+	protected Map<String, TableCellSWTBase> mTableCells;
 
 	private boolean bDisposed;
 
