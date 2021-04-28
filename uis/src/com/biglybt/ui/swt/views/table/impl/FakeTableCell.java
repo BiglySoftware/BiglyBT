@@ -695,18 +695,6 @@ public class FakeTableCell
 				Map<String, Object> data = new LightHashMap<>(1);
 
 				@Override
-				public void setForegroundToErrorColor() {
-				}
-
-				@Override
-				public void setForeground(int[] rgb) {
-				}
-
-				@Override
-				public void setForeground(int red, int green, int blue) {
-				}
-
-				@Override
 				public void removeMouseListener(TableRowMouseListener listener) {
 				}
 

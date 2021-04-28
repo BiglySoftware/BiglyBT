@@ -129,6 +129,8 @@ public class MyTrackerView
 		tcManager.setDefaultColumnNames( TableManager.TABLE_MYTRACKER, basicItems );
 	}
 	
+	private static TableRowSWT.ColorRequester	color_requester = ()-> 20;
+
 	private Menu			menuCategory;
 
 	private TableViewSWT<TRHostTorrent> tv;
@@ -376,7 +378,7 @@ public class MyTrackerView
 			  Color fg = row.getForeground();
 
 			  if (fg != null && fg.equals(Colors.blues[Colors.BLUES_MIDDARK])) {
-				  row.setForeground(Colors.blues[Colors.BLUES_MIDDARK]);
+				  row.requestForegroundColor( color_requester, Colors.blues[Colors.BLUES_MIDDARK]);
 			  }
 		  }
 		}

@@ -1235,31 +1235,6 @@ public class TableRowPainted
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.views.table.impl.TableRowSWTBase#setForeground(org.eclipse.swt.graphics.Color)
-	 */
-	@Override
-	public boolean setForeground(Color color) {
-		if (isRowDisposed()) {
-			return false;
-		}
-		if (color == colorFG || (color != null && color.equals(colorFG))
-				|| (colorFG != null && colorFG.equals(color))) {
-			return false;
-		}
-
-		colorFG = color;
-		//delays redraw until after.  Could use execSWTThreadLater
-		Utils.getOffOfSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				redraw(false, false);
-			}
-		});
-
-		return true;
-	}
-
 
 	@Override
 	public Color getForeground() {

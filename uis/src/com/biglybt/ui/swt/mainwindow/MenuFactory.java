@@ -3082,12 +3082,6 @@ public class MenuFactory
 			  @Override
 			  public int getIndex() {notSupported(); return 0;}
 			  @Override
-			  public void setForeground(int red, int green, int blue) {setForegroundDebug(); notSupported();}
-			  @Override
-			  public void setForeground(int[] rgb) {setForegroundDebug(); notSupported();}
-			  @Override
-			  public void setForegroundToErrorColor() {setForegroundDebug(); notSupported();}
-			  @Override
 			  public boolean isValid() {notSupported(); return false;}
 			  @Override
 			  public TableCell getTableCell(String sColumnName) {notSupported(); return null;}

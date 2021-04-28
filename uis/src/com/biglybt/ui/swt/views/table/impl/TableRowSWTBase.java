@@ -582,65 +582,6 @@ public abstract class TableRowSWTBase
 	}
 	
 	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.views.table.TableRowSWT#setForeground(org.eclipse.swt.graphics.Color)
-	 */
-	@Override
-	public abstract boolean setForeground(Color c);
-
-	/* (non-Javadoc)
-	 * @see com.biglybt.pif.ui.tables.TableRow#setForeground(int, int, int)
-	 */
-	@Override
-	public void setForeground(int red, int green, int blue) {
-		setForeground2(red, green, blue);
-	}
-
-	public boolean setForeground2(int red, int green, int blue) {
-		if (red < 0 || green < 0 || blue < 0) {
-			return setForeground((Color) null);
-		}
-		return setForeground(new RGB(red, green, blue));
-	}
-
-	private boolean setForeground(final RGB rgb) {
-		Color colorFG = getForeground();
-		boolean changed = colorFG == null || colorFG.isDisposed()
-				|| !colorFG.getRGB().equals(rgb);
-		if (changed) {
-			Utils.execSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-					setForeground(ColorCache.getColor(Display.getCurrent(), rgb));
-				}
-			});
-		}
-		return changed;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.biglybt.pif.ui.tables.TableRow#setForeground(int[])
-	 */
-	@Override
-	public void setForeground(int[] rgb) {
-		setForeground2(rgb);
-	}
-
-	public boolean setForeground2(int[] rgb) {
-		if (rgb == null || rgb.length < 3) {
-			return setForeground((Color) null);
-		}
-		return setForeground2(rgb[0], rgb[1], rgb[2]);
-	}
-
-	/* (non-Javadoc)
-	 * @see com.biglybt.pif.ui.tables.TableRow#setForegroundToErrorColor()
-	 */
-	@Override
-	public void setForegroundToErrorColor() {
-		this.setForeground(Colors.colorError);
-	}
-
-	/* (non-Javadoc)
 	 * @see com.biglybt.pif.ui.tables.TableRow#isValid()
 	 */
 	@Override

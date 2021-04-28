@@ -32,17 +32,7 @@ public interface TableRowSWT extends TableRowCore
 
 	public boolean setIconSize(Point pt);
 
-	/** Retreive the color of the row
-	 *
-	 * @return color of the row
-	 */
 	public Color getForeground();
-
-	/** Set the color of the row
-	 *
-	 * @param c new color
-	 */
-	public boolean setForeground(Color c);
 
 	public Color getBackground();
 
