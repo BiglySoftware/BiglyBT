@@ -34,6 +34,9 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
 import org.eclipse.swt.SWT;
@@ -43,6 +46,9 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MenuAdapter;
+import org.eclipse.swt.events.MenuEvent;
+import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.*;
@@ -593,6 +599,167 @@ public class Utils
 		}
 	}	
 	
+	public interface
+	ColorButton
+	{
+		public Button
+		getButton();
+		
+		public void
+		setColor(
+			int[]		rgb );
+	}
+	
+	public static ColorButton
+	createColorButton(
+		Composite		composite,
+		Point			size,
+		int[]			existingColor,
+		int[]			defaultColor,
+		Consumer<int[]>	listener )
+	{
+		int[][] currentColor = { existingColor };
+		
+		Button colorChooser = new Button( composite, SWT.PUSH );
+		
+		Image[]		img = { null };
+		
+		Runnable imageDisposer = ()->{
+			Image old = img[0];
+			if ( old != null && !old.isDisposed()){
+				old.dispose();
+			}
+			img[0] = null;
+		};
+		
+		Runnable imageUpdater = ()->{
+			imageDisposer.run();
+			
+			int w = size.x;
+			int h = size.y;
+			Image newImage = new Image(display, w, h);
+			GC gc = new GC(newImage);
+			try {
+				int[] rgb = currentColor[0];
+				
+				if ( rgb != null ){
+					Color color = ColorCache.getColor(display, rgb[0], rgb[1], rgb[2]);
+					if (color != null) {
+						gc.setBackground(color);
+						gc.fillRectangle(0, 0, w, h);
+					}
+				}else{
+					gc.setBackground( Colors.white );
+					gc.fillRectangle( 0, 0, w, h );
+					gc.setBackground( Colors.grey );
+					gc.fillRectangle( 3, (h/2)-1, w-6, 2 );
+				}
+			} finally {
+				gc.dispose();
+			}
+			
+			img[0] = newImage;
+			
+			colorChooser.setImage(newImage);
+		};
+		
+		imageUpdater.run();
+		
+		Menu menu = new Menu(colorChooser);
+		colorChooser.setMenu(menu);
+		MenuItem mi = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(mi,
+				"ConfigView.section.style.colorOverrides.reset");
+		
+		mi.addListener(SWT.Selection, (e) ->{
+			currentColor[0] = defaultColor;
+			listener.accept( defaultColor );
+			imageUpdater.run(); 
+		});
+
+		Supplier<Boolean>	isDefaultValue = ()->{
+				if ( defaultColor == null && currentColor[0] == null ){
+					return( true );
+				}else if ( defaultColor == null || currentColor[0] == null ){
+					return( false );
+				}else{
+					return( Arrays.equals( defaultColor, currentColor[0] ));
+				}
+		};
+		
+		try{
+			menu.addMenuListener( MenuListener.menuShownAdapter(
+				    	(e)->{ mi.setEnabled( !isDefaultValue.get());}));
+		
+		}catch( Throwable e ){
+			
+				// last win32 SWT 4757
+			
+			menu.addMenuListener(
+				new MenuAdapter(){
+					@Override
+					public void menuShown(MenuEvent e){
+						mi.setEnabled( !isDefaultValue.get());
+					}
+				});
+		}
+		
+		colorChooser.addListener( SWT.Dispose, e->imageDisposer.run());		
+
+		colorChooser.addListener(SWT.Selection, e -> {
+			ColorDialog cd = new ColorDialog(composite.getShell());
+
+			List<RGB> custom_colours = Utils.getCustomColors();
+
+			int[] rgb = currentColor[0];
+			
+			if ( rgb != null && rgb.length == 3) {
+
+				RGB colour = new RGB(rgb[0], rgb[1], rgb[2]);
+
+				custom_colours.remove(colour);
+
+				custom_colours.add(0, colour);
+
+				cd.setRGB(colour);
+			}
+
+			cd.setRGBs(custom_colours.toArray(new RGB[0]));
+
+			RGB newColor = cd.open();
+
+			if ( newColor != null) {
+
+				Utils.updateCustomColors(cd.getRGBs());
+
+				currentColor[0] = new int[]{ newColor.red, newColor.green,	newColor.blue };
+
+				listener.accept( currentColor[0] );
+			
+				imageUpdater.run();
+			}
+		});
+
+		return( 
+			new ColorButton()
+			{
+				@Override
+				public Button 
+				getButton()
+				{
+					return( colorChooser );
+				}
+				
+				@Override
+				public void 
+				setColor(int[] rgb)
+				{
+					currentColor[0] = rgb;
+					
+					imageUpdater.run();
+				}
+			});
+	}
 	
 	public static RGB
 	showColorDialog(

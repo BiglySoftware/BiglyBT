@@ -21,18 +21,22 @@
 package com.biglybt.ui.swt.views.columnsetup;
 
 import java.util.*;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.Tag;
 import com.biglybt.core.util.*;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.table.*;
@@ -40,10 +44,14 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.Utils.ColorButton;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.config.ColorSwtParameter;
+import com.biglybt.ui.swt.config.SwtParameterValueProcessor;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
@@ -82,7 +90,7 @@ public class TableColumnSetupWindow
 
 	private Composite cCategories;
 
-	private TableViewSWT tvChosen;
+	private TableViewSWT<TableColumnCore> tvChosen;
 
 	private Composite cTableChosen;
 
@@ -536,12 +544,21 @@ public class TableColumnSetupWindow
 
 		ImageLoader imageLoader = ImageLoader.getInstance();
 
+		Button[] alignButtons = new Button[3];
+		
+		Consumer<Integer> updateAlignButtons = (align)->{
+			alignButtons[0].setBackground( align==TableColumn.ALIGN_LEAD?Colors.fadedBlue:null);
+			alignButtons[1].setBackground( align==TableColumn.ALIGN_CENTER?Colors.fadedBlue:null);
+			alignButtons[2].setBackground( align==TableColumn.ALIGN_TRAIL?Colors.fadedBlue:null);
+		};
+		
 		Button btnLeft = new Button(cColumnButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnLeft, "alignleft");
 		btnLeft.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				alignChosen( TableColumnCore.ALIGN_LEAD);
+				updateAlignButtons.accept( TableColumnCore.ALIGN_LEAD );
 			}
 
 			@Override
@@ -555,6 +572,7 @@ public class TableColumnSetupWindow
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				alignChosen( TableColumnCore.ALIGN_CENTER );
+				updateAlignButtons.accept( TableColumnCore.ALIGN_CENTER );
 			}
 
 			@Override
@@ -568,6 +586,7 @@ public class TableColumnSetupWindow
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				alignChosen( TableColumnCore.ALIGN_TRAIL );
+				updateAlignButtons.accept( TableColumnCore.ALIGN_TRAIL );
 			}
 
 			@Override
@@ -575,6 +594,29 @@ public class TableColumnSetupWindow
 			}
 		});
 
+		alignButtons[0] = btnLeft;
+		alignButtons[1] = btnCentre;
+		alignButtons[2] = btnRight;
+		
+		ColorButton colorForeground = 
+				Utils.createColorButton( 
+					cColumnButtonArea, new Point( 16, 16 ), null, null,
+					(rgb)->{
+						setChosenColor( rgb, true );
+					});
+				
+		Button btnForeground = colorForeground.getButton();
+		
+		ColorButton colorBackground = 
+				Utils.createColorButton( 
+					cColumnButtonArea, new Point( 16, 16 ), null, null,
+					(rgb)->{
+						setChosenColor( rgb, false );
+					});
+				
+		Button btnBackground= colorBackground.getButton();
+
+		
 		Button btnUp = new Button(cColumnButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnUp, "up");
 		btnUp.addSelectionListener(new SelectionListener() {
@@ -651,16 +693,38 @@ public class TableColumnSetupWindow
 			{
 				@Override
 				public void selectionChanged(TableRowCore[] selected_rows, TableRowCore[] deselected_rows){
-					
-					boolean hasSelection = !tvChosen.getSelectedDataSources().isEmpty();
-					
+										
 					Utils.execSWTThread(()->{
+						
+						List<Object> ds = tvChosen.getSelectedDataSources();
+						
+						boolean hasSelection = ds.size() > 0;
+
 						btnLeft.setEnabled( hasSelection );
 						btnCentre.setEnabled( hasSelection );
 						btnRight.setEnabled( hasSelection );
+						btnForeground.setEnabled( hasSelection );
+						btnBackground.setEnabled( hasSelection );
 						btnUp.setEnabled( hasSelection );
 						btnDown.setEnabled( hasSelection );
 						btnDel.setEnabled( hasSelection );
+						
+						if ( hasSelection && ds.size() == 1 ){
+							
+							TableColumnCore tc = (TableColumnCore)ds.get(0);
+							
+							colorForeground.setColor(tc.getForegroundColor());
+							colorBackground.setColor(tc.getBackgroundColor());
+							
+							int align = tc.getAlignment();
+							
+							updateAlignButtons.accept( align );
+						}else{
+							colorForeground.setColor( null );
+							colorBackground.setColor( null );
+							
+							updateAlignButtons.accept( -1 );
+						}
 					});
 				}
 			}, true);
@@ -811,6 +875,10 @@ public class TableColumnSetupWindow
 		  						setHasChanges( false );
 		  						
 		  						btnCancel.setEnabled(false);
+		  						
+		  						updateAlignButtons.accept( -1 );
+		  						colorForeground.setColor( null );
+								colorBackground.setColor( null );
 							}
 						}
 					});
@@ -870,10 +938,25 @@ public class TableColumnSetupWindow
 		fd.bottom = new FormAttachment(btnLeft, 0, SWT.BOTTOM);
 		btnRight.setLayoutData(fd);
 
+			// colours
+		
+		fd = new FormData();
+		fd.left = new FormAttachment(btnRight, 3);
+		fd.top = new FormAttachment(btnLeft, 0, SWT.TOP);
+		fd.bottom = new FormAttachment(btnLeft, 0, SWT.BOTTOM);
+		btnForeground.setLayoutData(fd);
+
+		fd = new FormData();
+		fd.left = new FormAttachment(btnForeground, 3);
+		fd.top = new FormAttachment(btnLeft, 0, SWT.TOP);
+		fd.bottom = new FormAttachment(btnLeft, 0, SWT.BOTTOM);
+		btnBackground.setLayoutData(fd);
+
+
 			// move
 
 		fd = new FormData();
-		fd.left = new FormAttachment(0, 3);
+		fd.left = new FormAttachment(btnCentre, 0, SWT.LEFT );
 		fd.top = new FormAttachment(btnLeft, 2);
 		btnUp.setLayoutData(fd);
 
@@ -1108,11 +1191,13 @@ public class TableColumnSetupWindow
 	 */
 	protected void removeSelectedChosen() {
 		Object[] datasources = tvChosen.getSelectedDataSources().toArray();
+		TableColumnCore[] cols = new TableColumnCore[datasources.length];
 		for (int i = 0; i < datasources.length; i++) {
 			TableColumnCore column = (TableColumnCore) datasources[i];
+			cols[i] = column;
 			mapNewVisibility.put(column, Boolean.FALSE);
 		}
-		tvChosen.removeDataSources(datasources);
+		tvChosen.removeDataSources(cols);
 		tvChosen.processDataSourceQueue();
 		for (int i = 0; i < datasources.length; i++) {
 			TableRowSWT row = (TableRowSWT) tvAvail.getRow((TableColumn)datasources[i]);
@@ -1199,6 +1284,24 @@ public class TableColumnSetupWindow
 		setHasChanges( true );
 	}
 
+	protected void setChosenColor( int[] rgb, boolean fg ) {
+		TableRowCore[] selectedRows = tvChosen.getSelectedRows();
+		for (int i = 0; i < selectedRows.length; i++) {
+			TableRowCore row = selectedRows[i];
+			TableColumnCore column = (TableColumnCore) row.getDataSource();
+			if (column != null) {
+				if ( fg ){
+					column.setForegroundColor(rgb);
+				}else{
+					column.setBackgroundColor(rgb);
+				}
+			}
+		}
+		tvChosen.tableInvalidate();
+		tvChosen.refreshTable(true);
+		
+		setHasChanges( true );
+	}
 
 	/**
 	 *
@@ -1224,7 +1327,7 @@ public class TableColumnSetupWindow
 	 *
 	 * @since 4.0.0.5
 	 */
-	private TableViewSWT<?> createTVChosen() {
+	private TableViewSWT<TableColumnCore> createTVChosen() {
 		final TableColumnManager tcm = TableColumnManager.getInstance();
 		TableColumnCore[] columnTVChosen = tcm.getAllTableColumnCoreAsArray(
 				TableColumn.class, TABLEID_CHOSEN);
@@ -1239,7 +1342,7 @@ public class TableColumnSetupWindow
 			}
 		}
 
-		final TableViewSWT<?> tvChosen = TableViewFactory.createTableViewSWT(
+		final TableViewSWT<TableColumnCore> tvChosen = TableViewFactory.createTableViewSWT(
 				TableColumn.class, TABLEID_CHOSEN, TABLEID_CHOSEN, columnTVChosen,
 				ColumnTC_ChosenColumn.COLUMN_ID, SWT.FULL_SELECTION | SWT.VIRTUAL
 						| SWT.MULTI);

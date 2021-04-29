@@ -2059,7 +2059,11 @@ public class TableViewPainted
 		TableColumnPainted tcp = paintedColumns.get( c );
 		
 		if ( tcp == null ){
-						
+				
+				// force a sync next draw to pick up initial state
+			
+			mutationCount.incrementAndGet();
+			
 			tcp = new TableColumnPainted( c );
 			
 			paintedColumns.put( c, tcp );

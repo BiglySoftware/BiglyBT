@@ -242,6 +242,44 @@ public class Colors implements ParameterListener {
 		}, false);
 	}
 
+	public RGB
+	getAlternativeRowColor(
+		Color		normal )
+	{
+		HSLColor hslColor = new HSLColor();
+		hslColor.initHSLbyRGB(normal.getRed(), normal.getGreen(),
+				normal.getBlue());
+
+		int lum = hslColor.getLuminence();
+		int sat = hslColor.getSaturation();
+		int hue = hslColor.getHue();
+		if (lum > 127) {
+			lum -= 10;
+			sat = 127;
+			hue = 155;
+		} else {
+			lum += 30; // it's usually harder to see difference in darkness
+		}
+		hslColor.setLuminence(lum);
+		hslColor.setHue(hue);
+		hslColor.setSaturation(sat);
+
+		//HSLColor blueHSL = new HSLColor();
+		//RGB rgb = blues[BLUES_DARKEST].getRGB();
+		//blueHSL.initHSLbyRGB(rgb.red, rgb.green, rgb.blue);
+		//int blueHue = blueHSL.getHue();
+		//int altHue = hslColor.getHue();
+		//if (blueHue > altHue) {
+		//	altHue += 11;
+		//} else {
+		//	altHue -= 11;
+		//}
+		//hslColor.setHue(blueHue);
+		
+		return( new RGB(hslColor.getRed(),
+						hslColor.getGreen(), hslColor.getBlue()));
+	}
+	
 	public void allocateColorAltRow() {
 		if (display == null || display.isDisposed())
 			return;
@@ -250,37 +288,10 @@ public class Colors implements ParameterListener {
 			@Override
 			public void runSupport() {
 				Color colorTables = TablePaintedUtils.getColour(display, SWT.COLOR_LIST_BACKGROUND);
-				HSLColor hslColor = new HSLColor();
-				hslColor.initHSLbyRGB(colorTables.getRed(), colorTables.getGreen(),
-						colorTables.getBlue());
 
-				int lum = hslColor.getLuminence();
-				int sat = hslColor.getSaturation();
-				int hue = hslColor.getHue();
-				if (lum > 127) {
-					lum -= 10;
-					sat = 127;
-					hue = 155;
-				} else {
-					lum += 30; // it's usually harder to see difference in darkness
-				}
-				hslColor.setLuminence(lum);
-				hslColor.setHue(hue);
-				hslColor.setSaturation(sat);
-
-				//HSLColor blueHSL = new HSLColor();
-				//RGB rgb = blues[BLUES_DARKEST].getRGB();
-				//blueHSL.initHSLbyRGB(rgb.red, rgb.green, rgb.blue);
-				//int blueHue = blueHSL.getHue();
-				//int altHue = hslColor.getHue();
-				//if (blueHue > altHue) {
-				//	altHue += 11;
-				//} else {
-				//	altHue -= 11;
-				//}
-				//hslColor.setHue(blueHue);
-				colorAltRow = new AllocateColor("altRow", new RGB(hslColor.getRed(),
-						hslColor.getGreen(), hslColor.getBlue()), colorAltRow).getColor();
+				RGB altRGB = getAlternativeRowColor( colorTables );
+				
+				colorAltRow = new AllocateColor("altRow", altRGB, colorAltRow).getColor();
 
 				alternatingColors[1] = colorAltRow;
 			}

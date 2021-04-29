@@ -21,7 +21,8 @@ package com.biglybt.ui.swt.views.table.impl;
 import org.eclipse.swt.graphics.Color;
 
 import com.biglybt.ui.common.table.TableColumnCore;
-import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.views.table.TableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT.ColorRequester;
 
@@ -30,6 +31,9 @@ TableColumnSWTBase
 	implements TableColumnSWT
 {
 	private final TableColumnCore		core;
+	
+	private Color fg;
+	private Color bg;
 	
 	protected
 	TableColumnSWTBase(
@@ -48,7 +52,27 @@ TableColumnSWTBase
 	public void
 	sync()
 	{
+		int[] rgb = core.getForegroundColor();
 		
+		if ( rgb != null ){
+			
+			fg = ColorCache.getColor( Utils.getDisplay(), rgb );
+			
+		}else{
+			
+			fg = null;
+		}
+		
+		rgb = core.getBackgroundColor();
+		
+		if ( rgb != null ){
+			
+			bg = ColorCache.getColor( Utils.getDisplay(), rgb );
+			
+		}else{
+			
+			bg = null;
+		}
 	}
 	
 	public void
@@ -71,6 +95,13 @@ TableColumnSWTBase
 	public Color 
 	getForeground()
 	{
-		return( null );
+		return( fg );
+	}
+	
+	@Override
+	public Color 
+	getBackground()
+	{
+		return( bg );
 	}
 }

@@ -37,4 +37,7 @@ TableColumnSWT
 	requestBackgroundColor(
 		ColorRequester		requester,
 		Color				color );
+	
+	public Color
+	getBackground();
 }

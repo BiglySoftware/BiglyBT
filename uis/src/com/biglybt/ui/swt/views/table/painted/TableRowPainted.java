@@ -303,10 +303,17 @@ public class TableRowPainted
 
 		Color altColor;
 		Color bg;
+		
+		boolean isAltColor = false;
+		
 		if (isTableEnabled) {
-	  		altColor = Colors.alternatingColors[pos >= 0 ? pos % 2 : 0];
+			int altIndex = pos >= 0 ? pos % 2 : 0;
+			
+	  		altColor = Colors.alternatingColors[altIndex];
 	  		if (altColor == null) {
 	  			altColor = TablePaintedUtils.getColour( gc, SWT.COLOR_LIST_BACKGROUND );
+	  		}else{
+	  			isAltColor = altIndex==1;
 	  		}
 	  		if (isSelected) {
 	  			Color color;
@@ -407,7 +414,7 @@ public class TableRowPainted
 							continue;
 						}
 						
-						if (swt_paintCell(gc, cellSWT.getBounds(), cellSWT, shadowColor)) {
+						if (swt_paintCell(gc, cellSWT.getBounds(), cellSWT, shadowColor, isAltColor)) {
 							// row color may have changed; this would update the color
 							// for all new cells.  However, setting color triggers a
 							// row redraw that will fix up the UI
@@ -519,7 +526,7 @@ public class TableRowPainted
 			GC gc = new GC(image);
 			
 			try{
-				swt_paintCell( gc, image.getBounds(), (TableCellSWTBase)cell, null );
+				swt_paintCell( gc, image.getBounds(), (TableCellSWTBase)cell, null, false );
 			
 				if ( isExpanded()){
 					
@@ -551,7 +558,7 @@ public class TableRowPainted
 	}
 	
 	private boolean swt_paintCell(GC gc, Rectangle cellBounds,
-			TableCellSWTBase cell, Color shadowColor) {
+			TableCellSWTBase cell, Color shadowColor, boolean isAltColor ) {
 		// Only called from swt_PaintGC, so we can assume GC, cell are valid
 		if (cellBounds == null) {
 			return false;
@@ -610,9 +617,20 @@ public class TableRowPainted
 			
 			
 			Color bg = cell.getBackgroundSWT();
+			if ( bg == null ){
+				bg = cell.getTableColumnSWT().getBackground();
+			}
 			if (bg != null) {
 				gcChanged = true;
 				gc.setBackground(bg);
+				if ( !isAltColor ){
+					int alpha = gc.getAlpha();
+					gc.setAlpha(200 );
+					gc.fillRectangle(cellBounds);
+					gc.setAlpha( alpha );
+				}else{
+					gc.fillRectangle(cellBounds);
+				}
 			}
 
 			//if (cell.getTableColumn().getClass().getSimpleName().equals("ColumnUnopened")) {

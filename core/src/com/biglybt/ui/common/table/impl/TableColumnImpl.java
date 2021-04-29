@@ -105,6 +105,9 @@ public class TableColumnImpl
 
 	private long lLastSortValueChange;
 
+	private int[] foregroundColor;
+	private int[] backgroundColor;
+	
 	/** Table the column belongs to */
 	private String sTableID;
 
@@ -392,6 +395,40 @@ public class TableColumnImpl
 		return iAlignment;
 	}
 
+	@Override
+	public int[] 
+	getForegroundColor()
+	{
+		return( foregroundColor );
+	}
+	
+	@Override
+	public void
+	setForegroundColor(
+		int[]		rgb )
+	{
+		foregroundColor = rgb;
+		
+		markDirty();
+	}
+	
+	@Override
+	public int[] 
+	getBackgroundColor()
+	{
+		return( backgroundColor );
+	}
+	
+	@Override
+	public void
+	setBackgroundColor(
+		int[]		rgb )
+	{
+		backgroundColor = rgb;
+		
+		markDirty();
+	}
+	
 	@Override
 	public void addCellRefreshListener(TableCellRefreshListener listener) {
 		try {
@@ -1212,6 +1249,21 @@ public class TableColumnImpl
 			int align = ((Number) list[pos]).intValue();
 			setAlignment( align );
 		}
+		pos++;
+		if (list.length >= (pos + 1) && (list[pos] instanceof List)) {
+			List<Number> fgList = (List<Number>)list[pos];
+			if ( fgList.size() == 3 ){
+				setForegroundColor( new int[]{ fgList.get(0).intValue(), fgList.get(1).intValue(), fgList.get(2).intValue()});
+			}
+		}
+		pos++;
+		if (list.length >= (pos + 1) && (list[pos] instanceof List)) {
+			List<Number> bgList = (List<Number>)list[pos];
+			if ( bgList.size() == 3 ){
+				setBackgroundColor( new int[]{ bgList.get(0).intValue(), bgList.get(1).intValue(), bgList.get(2).intValue()});
+			}
+		}		
+		
 		firstLoad = list.length == 0;
 		postConfigLoad();
 	}
@@ -1243,6 +1295,18 @@ public class TableColumnImpl
 				return;
 			}
 		}
+		List<Integer> fgList = new ArrayList<>();
+		if ( foregroundColor != null ){
+			for ( int i: foregroundColor ){
+				fgList.add(i);
+			}
+		}
+		List<Integer> bgList = new ArrayList<>();
+		if ( backgroundColor != null ){
+			for ( int i: backgroundColor ){
+				bgList.add(i);
+			}
+		}
 		String sItemPrefix = "Column." + sName;
 		mapSettings.put(sItemPrefix, Arrays.asList(new Object[] {
 			new Integer(bVisible ? 1 : 0),
@@ -1251,7 +1315,8 @@ public class TableColumnImpl
 			new Integer(auto_tooltip ? 1 : 0),
 			new Integer(lLastSortValueChange == 0 ? -1 : (bSortAscending ? 1 : 0)),
 			userData != null ? userData : Collections.EMPTY_MAP,
-			new Integer(iAlignment == iDefaultAlignment ? -1 : iAlignment)
+			new Integer(iAlignment == iDefaultAlignment ? -1 : iAlignment),
+			fgList, bgList
 		}));
 		isDirty = false;
 		// cleanup old config

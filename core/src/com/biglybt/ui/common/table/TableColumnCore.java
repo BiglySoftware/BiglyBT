@@ -368,6 +368,20 @@ public interface TableColumnCore
 	public boolean hasInplaceEditorListener();
 
 	void setInplaceEditorListener(TableCellInplaceEditorListener l);
-
+	
+	public int[]
+	getForegroundColor();
+	
+	public void
+	setForegroundColor(
+		int[]		rgb );
+	
+	public int[]
+	getBackgroundColor();
+	
+	public void
+	setBackgroundColor(
+		int[]		rgb );
+	
 	boolean isDirty();
 }
