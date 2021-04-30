@@ -554,6 +554,7 @@ public class TableColumnSetupWindow
 		
 		Button btnLeft = new Button(cColumnButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnLeft, "alignleft");
+		Messages.setLanguageTooltip(btnLeft, "MyTracker.column.left" );
 		btnLeft.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -568,6 +569,7 @@ public class TableColumnSetupWindow
 
 		Button btnCentre = new Button(cColumnButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnCentre, "aligncentre");
+		Messages.setLanguageTooltip(btnCentre, "label.center" );
 		btnCentre.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -582,6 +584,8 @@ public class TableColumnSetupWindow
 
 		Button btnRight = new Button(cColumnButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnRight, "alignright");
+		Messages.setLanguageTooltip(btnRight, "label.right" );
+		
 		btnRight.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -600,7 +604,7 @@ public class TableColumnSetupWindow
 		
 		ColorButton colorForeground = 
 				Utils.createColorButton( 
-					cColumnButtonArea, new Point( 16, 16 ), null, null,
+					cColumnButtonArea, new Point( 16, 16 ), true, null, null,
 					(rgb)->{
 						setChosenColor( rgb, true );
 					});
@@ -609,7 +613,7 @@ public class TableColumnSetupWindow
 		
 		ColorButton colorBackground = 
 				Utils.createColorButton( 
-					cColumnButtonArea, new Point( 16, 16 ), null, null,
+					cColumnButtonArea, new Point( 16, 16 ), false, null, null,
 					(rgb)->{
 						setChosenColor( rgb, false );
 					});
@@ -619,6 +623,7 @@ public class TableColumnSetupWindow
 		
 		Button btnUp = new Button(cColumnButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnUp, "up");
+		Messages.setLanguageTooltip(btnUp, "label.move.up" );
 		btnUp.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -632,6 +637,7 @@ public class TableColumnSetupWindow
 
 		Button btnDown = new Button(cColumnButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnDown, "down");
+		Messages.setLanguageTooltip(btnDown, "label.move.down" );
 		btnDown.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -645,6 +651,7 @@ public class TableColumnSetupWindow
 
 		Button btnDel = new Button(cColumnButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnDel, "delete2");
+		Messages.setLanguageTooltip(btnDel, "MySharesView.menu.remove" );
 		btnDel.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {

@@ -35,7 +35,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
@@ -614,6 +613,7 @@ public class Utils
 	createColorButton(
 		Composite		composite,
 		Point			size,
+		boolean			isForeground,
 		int[]			existingColor,
 		int[]			defaultColor,
 		Consumer<int[]>	listener )
@@ -621,6 +621,8 @@ public class Utils
 		int[][] currentColor = { existingColor };
 		
 		Button colorChooser = new Button( composite, SWT.PUSH );
+		
+		Messages.setLanguageTooltip(colorChooser,isForeground?"label.foreground.color":"label.background.color" );
 		
 		Image[]		img = { null };
 		
@@ -637,27 +639,100 @@ public class Utils
 			
 			int w = size.x;
 			int h = size.y;
+			
+			int offset = 5;
+
 			Image newImage = new Image(display, w, h);
 			GC gc = new GC(newImage);
-			try {
+						
+			try {				
 				int[] rgb = currentColor[0];
 				
+				Color bg = Colors.getSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND);
+				Color fg = Colors.getSystemColor(display, SWT.COLOR_WIDGET_FOREGROUND);
+				Color border = Colors.getSystemColor(display, SWT.COLOR_WIDGET_BORDER);
+
+				gc.setBackground( bg );
+				gc.fillRectangle( 0, 0, w, h );
+				
+				Rectangle	fg_rect = new Rectangle( 0, 0, w-offset-1, h-offset-1 );
+				Rectangle	bg_rect = new Rectangle( offset, offset, w-offset-1, h-offset-1 );
+				
+				Color color = null;
+				
 				if ( rgb != null ){
-					Color color = ColorCache.getColor(display, rgb[0], rgb[1], rgb[2]);
-					if (color != null) {
-						gc.setBackground(color);
-						gc.fillRectangle(0, 0, w, h);
-					}
-				}else{
-					gc.setBackground( Colors.white );
-					gc.fillRectangle( 0, 0, w, h );
-					gc.setBackground( Colors.grey );
-					gc.fillRectangle( 3, (h/2)-1, w-6, 2 );
+					
+					color = ColorCache.getColor(display, rgb[0], rgb[1], rgb[2]);
 				}
-			} finally {
+				
+				boolean stripe = false;
+				
+				if ( color == null ){
+					
+					color = Colors.getSystemColor(display, SWT.COLOR_WIDGET_NORMAL_SHADOW );
+					
+					stripe = true;
+				}
+				
+				if ( isForeground ){
+					gc.setBackground(bg);
+					gc.fillRectangle(bg_rect);
+					gc.setBackground(border);
+					gc.drawRectangle(bg_rect);
+					gc.setBackground(color);
+					
+					gc.fillRectangle(fg_rect);
+					if ( stripe ){
+						drawStriped(gc, fg_rect.x, fg_rect.y, fg_rect.width, fg_rect.height,1,1,false);
+					}
+							
+					gc.setBackground(border);
+					gc.drawRectangle(fg_rect);
+				}else{							
+					gc.setBackground(color);
+					
+					gc.fillRectangle(bg_rect);
+					if ( stripe ){
+						drawStriped(gc, bg_rect.x, bg_rect.y, bg_rect.width, bg_rect.height,1,1,false);
+					}
+
+					gc.setBackground(border);
+					gc.drawRectangle(bg_rect);
+					
+					gc.setBackground(fg);
+					gc.fillRectangle(fg_rect);
+					gc.setBackground(border);
+					gc.drawRectangle(fg_rect);
+
+				}
+			}finally{
+				
 				gc.dispose();
 			}
 			
+			ImageData id = newImage.getImageData();
+			
+			newImage.dispose();	
+
+			for ( int i=0;i<w;i++){
+				for ( int j=0;j<h;j++){
+					id.setAlpha(i,j,255);
+				}
+			}
+			
+			for ( int i=0;i<offset;i++){
+				for ( int j=h-offset;j<h;j++){
+					id.setAlpha(i,j,0);
+				}
+			}
+			for ( int i=w-offset;i<w;i++){
+				for ( int j=0;j<offset;j++){
+					id.setAlpha(i,j,0);
+				}
+			}
+					
+			newImage = new Image( display,id );
+						
 			img[0] = newImage;
 			
 			colorChooser.setImage(newImage);
