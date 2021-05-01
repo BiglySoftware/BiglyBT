@@ -858,7 +858,7 @@ public class TableViewSWT_Common
 			itemChangeTable.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event e) {
-					showColumnEditor();
+					showColumnEditor( column );
 				}
 			});
 
@@ -1000,13 +1000,13 @@ public class TableViewSWT_Common
 		}
 	}
 
-	public void showColumnEditor() {
+	public void showColumnEditor(TableColumnCore column) {
 		TableRowCore focusedRow = tv.getFocusedRow();
 		if (focusedRow == null || focusedRow.isRowDisposed()) {
 			focusedRow = tv.getRow(0);
 		}
 		String tableID = tv.getTableID();
-		new TableColumnSetupWindow(tv.getDataSourceType(), tableID, focusedRow,
+		new TableColumnSetupWindow(tv.getDataSourceType(), tableID, column, focusedRow,
 				TableStructureEventDispatcher.getInstance(tableID)).open();
 	}
 
@@ -1203,7 +1203,7 @@ public class TableViewSWT_Common
 		itemChangeTable.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				showColumnEditor();
+				showColumnEditor( column );
 			}
 		});
 

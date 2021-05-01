@@ -36,7 +36,6 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.tag.Tag;
 import com.biglybt.core.util.*;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.table.*;
@@ -47,8 +46,6 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.Utils.ColorButton;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.config.ColorSwtParameter;
-import com.biglybt.ui.swt.config.SwtParameterValueProcessor;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -120,8 +117,14 @@ public class TableColumnSetupWindow
 	private Button btnApply;
 	private Button btnExport;
 		
-	public TableColumnSetupWindow(final Class<?> forDataSourceType, String _tableID,
-			TableRow sampleRow, TableStructureModificationListener<?> _listener) {
+	public 
+	TableColumnSetupWindow(
+		Class<?> 		forDataSourceType, 
+		String 			_tableID,
+		TableColumnCore	selectedColumn,
+		TableRow 		sampleRow, 
+		TableStructureModificationListener<?> _listener) 
+	{
 		this.sampleRow = sampleRow;
 		this.listener = _listener;
 		FormData fd;
@@ -749,9 +752,20 @@ public class TableColumnSetupWindow
 				tvChosen.addDataSource(columnsCurrentOrder[i]);
 			}
 		}
-		tvChosen.processDataSourceQueue();
+		tvChosen.processDataSourceQueueSync();
 
-
+		if ( selectedColumn != null ){
+			
+			TableRowCore row = tvChosen.getRow( selectedColumn );
+			
+			if ( row != null ){
+				
+				tvChosen.setSelectedRows( new TableRowCore[]{ row } );
+				
+				Utils.execSWTThreadLater( 100, ()->{ tvChosen.showRow( row ); });
+			}
+		}
+		
 		Button btnReset = new Button(cResultButtonArea, SWT.PUSH);
   		Messages.setLanguageText(btnReset, "Button.reset");
   		

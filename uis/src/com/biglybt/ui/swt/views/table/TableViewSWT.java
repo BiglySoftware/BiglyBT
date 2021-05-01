@@ -258,8 +258,6 @@ public interface TableViewSWT<DATASOURCETYPE>
 
 	void expandColumns();
 
-	void showColumnEditor();
-
 	boolean isTabViewsEnabled();
 
 	public void setExpandEnabled( boolean b );

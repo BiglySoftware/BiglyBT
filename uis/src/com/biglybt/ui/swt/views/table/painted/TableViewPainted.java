@@ -3110,13 +3110,6 @@ public class TableViewPainted
 	}
 
 	@Override
-	public void showColumnEditor() {
-		if (tvSWTCommon != null) {
-			tvSWTCommon.showColumnEditor();
-		}
-	}
-
-	@Override
 	public TableRowCore getFocusedRow() {
 		return focusedRow;
 	}
