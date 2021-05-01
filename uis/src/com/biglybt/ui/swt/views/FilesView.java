@@ -1331,52 +1331,79 @@ public class FilesView
 
 	// @see org.eclipse.swt.events.KeyListener#keyPressed(org.eclipse.swt.events.KeyEvent)
 	@Override
-	public void keyPressed(KeyEvent e) {
-		if (e.keyCode == SWT.F2 && (e.stateMask & SWT.MODIFIER_MASK) == 0) {
-			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), true, false,false);
-			e.doit = false;
-		}else if ( e.character == ' ' ){
-		
-			Object[] data_sources = tv.getSelectedDataSources().toArray();
-						
-			List<DiskManagerFileInfo>	files = new ArrayList<>();
+	public void 
+	keyPressed(
+		KeyEvent e) 
+	{
+		if ( e.keyCode == SWT.F2 && (e.stateMask & SWT.MODIFIER_MASK) == 0 ){
 			
-			boolean all_skipped = true;
-
-			for ( int i=0;i<data_sources.length;i++ ){
-				
-				DiskManagerFileInfo file = (DiskManagerFileInfo)data_sources[i];
-												
-				if ( file instanceof FilesViewNodeInner ){
-					
-					FilesViewNodeInner inner = (FilesViewNodeInner)file;
-					
-					inner.getFiles( files, true );
-					
-					if ( all_skipped ){
-						
-						int state = inner.getSkippedState();
-												
-						if ( state != 0 ){
+			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), true, false,false);
+			
+			e.doit = false;
+			
+		}else{
+			
+			Composite table_composite = tv.getComposite();
+			
+			char character = e.character;
+			
+			if ( 	e.widget == table_composite &&
+					( character == ' ' || character == '+' || character == '-' )){
+		
+				Object[] data_sources = tv.getSelectedDataSources().toArray();
 							
-							all_skipped = false;
+				List<DiskManagerFileInfo>	files = new ArrayList<>();
+				
+				boolean all_skipped = true;
+	
+				for ( int i=0;i<data_sources.length;i++ ){
+					
+					DiskManagerFileInfo file = (DiskManagerFileInfo)data_sources[i];
+													
+					if ( file instanceof FilesViewNodeInner ){
+						
+						FilesViewNodeInner inner = (FilesViewNodeInner)file;
+						
+						inner.getFiles( files, true );
+						
+						if ( all_skipped ){
+							
+							int state = inner.getSkippedState();
+													
+							if ( state != 0 ){
+								
+								all_skipped = false;
+							}
 						}
-					}
-				}else{
-				
-					files.add( file );
-
-					if ( all_skipped ){
-						
-						if ( !file.isSkipped()){
+					}else{
+					
+						files.add( file );
+	
+						if ( all_skipped ){
 							
-							all_skipped = false;
+							if ( !file.isSkipped()){
+								
+								all_skipped = false;
+							}
 						}
 					}
 				}
-			}
+				
+				if ( character == ' ' ){
+					
+					FilesViewMenuUtil.setSkipped( files, !all_skipped, 2, true );
+				}else{
+					
+					for ( DiskManagerFileInfo file: files ){
+						
+						int pri = file.getPriority();
+						
+						file.setPriority( character=='+'?pri+1:pri-1);
+					}
+				}
 			
-			FilesViewMenuUtil.setSkipped( files, !all_skipped, 2, true );
+				e.doit = false;
+			}  
 		}
 	}
 
