@@ -45,7 +45,6 @@ import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.logging.LoggerChannel;
 
 /**
  * @author parg

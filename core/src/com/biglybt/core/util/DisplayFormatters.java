@@ -281,6 +281,7 @@ DisplayFormatters
 	private static String	ManagerItem_error;
 	private static String	ManagerItem_forced;
 	private static String	ManagerItem_moving;
+	private static String	ManagerItem_unallocated;
 
 	private static String	yes;
 	private static String	no;
@@ -310,6 +311,7 @@ DisplayFormatters
 		ManagerItem_error				= getResourceString( "ManagerItem.error", "error" );
 		ManagerItem_forced				= getResourceString( "ManagerItem.forced", "forced" );
 		ManagerItem_moving				= getResourceString( "ManagerItem.moving", "moving" );
+		ManagerItem_unallocated			= getResourceString( "label.unallocated", "unallocated" );
 		yes								= getResourceString( "GeneralView.yes", "Yes" );
 		no								= getResourceString( "GeneralView.no", "No" );
 	}
@@ -897,6 +899,13 @@ DisplayFormatters
 							sr = MessageText.getString( sr.substring( 1, sr.length() - 1 ));
 						}
 						tmp += " (" + sr + ")";
+					}else{
+						if ( 	!manager.isDataAlreadyAllocated() && 
+								//manager.getStats().getSecondsDownloading() == 0 &&
+								!manager.isDownloadComplete( false )){
+							
+							tmp += " (" + ManagerItem_unallocated + ")";
+						}
 					}
 				}
 				
