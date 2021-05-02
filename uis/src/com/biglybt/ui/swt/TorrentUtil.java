@@ -419,7 +419,8 @@ public class TorrentUtil
 		boolean allScanSelected = true;
 		boolean allScanNotSelected = true;
 
-		boolean allStopped			 = true;
+		boolean allStopped			= true;
+		boolean allAllocatable		= true;
 		boolean	allResumeIncomplete	 = true;
 
 		boolean	hasClearableLinks = false;
@@ -485,6 +486,8 @@ public class TorrentUtil
 				boolean stopped = ManagerUtils.isStopped(dm);
 
 				allStopped &= stopped;
+
+				allAllocatable &= stopped && !dm.isDataAlreadyAllocated() && !dm.isDownloadComplete( false );		
 
 				fileMove = fileMove && dm.canMoveDataFiles();
 				
@@ -984,6 +987,26 @@ public class TorrentUtil
 
 		itemClearLinks.setEnabled(hasClearableLinks);
 
+		// allocate
+
+		MenuItem itemFileAlloc = new MenuItem(menuFiles, SWT.PUSH);
+		Messages.setLanguageText(itemFileAlloc,
+				"label.allocate");
+		itemFileAlloc.addListener(SWT.Selection, new ListenerDMTask(
+				dms) {
+			@Override
+			public void run(DownloadManager dm) {
+				
+				dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY, DownloadManagerState.FAS_ZERO_NEW_STOP );
+				
+				dm.getDownloadState().setFlag( DownloadManagerState.FLAG_DISABLE_STOP_AFTER_ALLOC, false );
+				
+				ManagerUtils.queue( dm, null );
+			}
+		});
+
+		itemFileAlloc.setEnabled(allAllocatable);
+		
 			// clear allocation
 
 		MenuItem itemFileClearAlloc = new MenuItem(menuFiles, SWT.PUSH);

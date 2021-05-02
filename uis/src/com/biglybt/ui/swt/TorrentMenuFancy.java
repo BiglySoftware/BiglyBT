@@ -1269,6 +1269,7 @@ public class TorrentMenuFancy
 							boolean	hasClearableLinks = false;
 							boolean hasRevertableFiles	= false;
 							boolean lrrecheck			= false;
+							boolean allAllocatable		= true;
 							
 							for (DownloadManager dm : dms) {
 								boolean stopped = ManagerUtils.isStopped(dm);
@@ -1306,7 +1307,8 @@ public class TorrentMenuFancy
 								}
 								
 								lrrecheck = lrrecheck || ManagerUtils.canLowResourceRecheck(dm);
-										
+																
+								allAllocatable &= stopped && !dm.isDataAlreadyAllocated() && !dm.isDownloadComplete( false );		
 							}
 
 							boolean fileRescan = allScanSelected || allScanNotSelected;
@@ -1388,6 +1390,27 @@ public class TorrentMenuFancy
 							});
 
 							itemClearLinks.setEnabled(hasClearableLinks);
+							
+								// allocate
+
+							MenuItem itemFileAlloc = new MenuItem(menu, SWT.PUSH);
+							Messages.setLanguageText(itemFileAlloc,
+									"label.allocate");
+							itemFileAlloc.addListener(SWT.Selection, new ListenerDMTask(
+									dms) {
+								@Override
+								public void run(DownloadManager dm) {
+									
+									dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY, DownloadManagerState.FAS_ZERO_NEW_STOP );
+									
+									dm.getDownloadState().setFlag( DownloadManagerState.FLAG_DISABLE_STOP_AFTER_ALLOC, false );
+									
+									ManagerUtils.queue( dm, null );
+								}
+							});
+	
+							itemFileAlloc.setEnabled(allAllocatable);
+					
 								// clear allocation
 
 							MenuItem itemFileClearAlloc = new MenuItem(menu, SWT.PUSH);
