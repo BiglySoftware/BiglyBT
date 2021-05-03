@@ -3632,11 +3632,11 @@ public class TorrentUtil
 		return false;
 	}
 
-	public static void stopOrStartDataSources(Object[] datasources) {
-		stopOrStartDataSources(datasources,false);
+	public static void stopOrStartDataSources(Object[] datasources, boolean startStoppedParents) {
+		stopOrStartDataSources(datasources,startStoppedParents,false);
 	}
 	
-	public static void stopOrStartDataSources(Object[] datasources,boolean force_or_pause) {
+	public static void stopOrStartDataSources(Object[] datasources, boolean startStoppedParents, boolean force_or_pause) {
 		DownloadManager[] dms = toDMS(datasources);
 		DiskManagerFileInfo[] dmfi = toDMFI(datasources);
 		if (dms.length == 0 && dmfi.length == 0) {
@@ -3649,7 +3649,7 @@ public class TorrentUtil
 		if (doStop) {
 			stopDataSources(datasources, force_or_pause);
 		} else {
-			queueDataSources(datasources, true, force_or_pause);
+			queueDataSources(datasources, startStoppedParents, force_or_pause);
 		}
 	}
 

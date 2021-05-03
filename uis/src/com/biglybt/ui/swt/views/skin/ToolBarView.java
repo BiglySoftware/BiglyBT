@@ -565,7 +565,7 @@ public class ToolBarView
 			public void toolBarItemActivated_OffSWT(ToolBarItem item,
 					long activationType, Object datasource) {
 				ISelectedContent[] selected = SelectedContentManager.getCurrentlySelectedContent();
-				TorrentUtil.queueDataSources(selected,true,activationType == ACTIVATIONTYPE_HELD);
+				TorrentUtil.queueDataSources(selected,false,activationType == ACTIVATIONTYPE_HELD);
 			}
 		});
 		
@@ -843,6 +843,8 @@ public class ToolBarView
 			ISelectedContent[] currentContent = SelectedContentManager.getCurrentlySelectedContent();
 			//System.out.println("_refreshCoreToolBarItems(" + currentContent.length + ", " + entry + " via " + Debug.getCompressedStackTrace());
 
+			boolean allFiles = currentContent.length > 0;
+			
 			synchronized (dm_listener_map) {
 
 				Map<DownloadManager, DownloadManagerListener> copy = new IdentityHashMap<>(
@@ -854,6 +856,10 @@ public class ToolBarView
 
 					if (dm != null) {
 
+						if ( content.getFileIndex() == -1 ){
+							allFiles = false;
+						}
+						
 						copy.remove(dm);
 
 						// so in files view we can have multiple selections that map onto the SAME download manager
@@ -965,6 +971,18 @@ public class ToolBarView
 				}
 			}
 
+			UIToolBarItem startItem = tbm.getToolBarItem("start");
+			
+			if ( startItem != null ){
+				startItem.setTextID( allFiles? "iconBar.startFiles" : "iconBar.start" );
+			}
+			
+			UIToolBarItem stopItem = tbm.getToolBarItem("stop");
+			
+			if ( stopItem != null ){
+				stopItem.setTextID( allFiles? "iconBar.stopFiles" : "iconBar.start" );
+			}
+		
 			UIToolBarItem ssItem = tbm.getToolBarItem("startstop");
 			if (ssItem != null){
 
@@ -1011,9 +1029,14 @@ public class ToolBarView
 					}
 				}
 
-				ssItem.setTextID(shouldStopGroup ? "iconBar.stop" : "iconBar.start");
-				ssItem.setImageID("image.toolbar.startstop."
-						+ (shouldStopGroup ? "stop" : "start"));
+				if ( allFiles ){
+					ssItem.setTextID(shouldStopGroup ? "iconBar.stopFiles" : "iconBar.startFiles");
+
+				}else{
+					ssItem.setTextID(shouldStopGroup ? "iconBar.stop" : "iconBar.start");
+				}
+				
+				ssItem.setImageID("image.toolbar.startstop." + (shouldStopGroup ? "stop" : "start"));
 
 				// fallback to handle start/stop settings when no explicit selected content (e.g. for devices transcode view)
 

@@ -2611,7 +2611,7 @@ public class MyTorrentsView
       return true;
     }
     if(itemKey.equals("start")){
-      TorrentUtil.queueDataSources(tv.getSelectedDataSources().toArray(), true);
+      TorrentUtil.queueDataSources(tv.getSelectedDataSources().toArray(), false);
       return true;
     }
     if(itemKey.equals("stop")){
@@ -2619,7 +2619,7 @@ public class MyTorrentsView
       return true;
     }
     if (itemKey.equals("startstop")) {
-    	TorrentUtil.stopOrStartDataSources(tv.getSelectedDataSources().toArray());
+    	TorrentUtil.stopOrStartDataSources(tv.getSelectedDataSources().toArray(), false );
     	return true;
     }
     if(itemKey.equals("remove")){
