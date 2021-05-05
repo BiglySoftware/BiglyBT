@@ -1864,6 +1864,12 @@ public class TableColumnImpl
 			setAlignment( iDefaultAlignment );
 		}
 		setNameOverride( null );
+		if ( foregroundColor != null ){
+			setForegroundColor( null );
+		}
+		if ( backgroundColor != null ){
+			setBackgroundColor( null );
+		}
 	}
 
 	/* (non-Javadoc)
