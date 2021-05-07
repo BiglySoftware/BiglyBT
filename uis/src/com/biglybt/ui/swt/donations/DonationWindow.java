@@ -176,7 +176,7 @@ public class DonationWindow
 		}
 		final Shell parentShell = Utils.findAnyShell();
 		shell = ShellFactory.createShell(parentShell,
-				SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
+				SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE);
 		shell.setLayout(new GridLayout(1, true));
 		if (parentShell != null) {
 			parentShell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
