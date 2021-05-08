@@ -1285,8 +1285,8 @@ public class MyTorrentsView
 					if ( constraint == null || !sLastSearch.equals( lastSearchConstraintString )){
 						
 						lastSearchConstraintString = sLastSearch;
-						
-						constraint = tagManager.compileConstraint( sLastSearch );
+												
+						constraint = lastSearchConstraint = tagManager.compileConstraint( sLastSearch );
 					}
 					
 					if ( constraint != null && constraint.getError() == null ){
