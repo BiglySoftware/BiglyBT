@@ -1028,11 +1028,11 @@ TagPropertyConstraintHandler
 			});
 	}
 
-	private TagConstraint.ConstraintExpr
+	public TagConstraint
 	compileConstraint(
 		String		expr )
 	{
-		return( new TagConstraint( this, null, expr, null, true ).expr );
+		return( new TagConstraint( this, null, expr, null, true ));
 	}
 
 	private static Pattern comp_op_pattern = Pattern.compile( "(.+?)(==|!=|>=|>|<=|<)(.+)");
@@ -1081,9 +1081,10 @@ TagPropertyConstraintHandler
 	
 	private static class
 	TagConstraint
+		implements com.biglybt.core.tag.TagConstraint
 	{
 		private final TagPropertyConstraintHandler	handler;
-		private final Tag							tag;
+		private final Tag							tag_maybe_null;
 		private final String						constraint;
 		private final boolean						enabled;
 		
@@ -1103,6 +1104,8 @@ TagPropertyConstraintHandler
 		
 		private Average			activity_average = Average.getInstance( 1000, 60 );
 		
+		private String 			error;
+		
 		private
 		TagConstraint(
 			TagPropertyConstraintHandler	_handler,
@@ -1111,8 +1114,9 @@ TagPropertyConstraintHandler
 			String							options,
 			boolean							_enabled )
 		{
-			handler		= _handler;
-			tag			= _tag;
+			handler			= _handler;
+			tag_maybe_null	= _tag;
+			
 			constraint	= _constraint;
 			enabled		= _enabled;
 			
@@ -1140,10 +1144,7 @@ TagPropertyConstraintHandler
 			
 			ConstraintExpr compiled_expr = null;
 
-			if ( tag != null ){
-			
-				tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, null );
-			}
+			setError( null );
 			
 			try{
 				compiled_expr = compileStart( constraint, new HashMap<String,ConstraintExpr>());
@@ -1154,10 +1155,6 @@ TagPropertyConstraintHandler
 				
 				setError( "Invalid constraint: " + Debug.getNestedExceptionMessage( e ));
 
-				if ( handler.initialised ){
-					
-					Debug.out( e );					
-				}
 			}finally{
 
 				expr = compiled_expr;
@@ -1203,13 +1200,13 @@ TagPropertyConstraintHandler
 				
 			}else{
 				
-				if ( tag != null ){
+				if ( tag_maybe_null != null ){
 					
-					if (((TagFeatureExecOnAssign)tag).isAnyActionEnabled()){
+					if (((TagFeatureExecOnAssign)tag_maybe_null).isAnyActionEnabled()){
 						
 						must_check_dependencies = true;
 						
-					}else if ( (((TagFeatureLimits)tag).getMaximumTaggables() > 0 )){
+					}else if ( (((TagFeatureLimits)tag_maybe_null).getMaximumTaggables() > 0 )){
 						
 						must_check_dependencies = true;
 						
@@ -1226,16 +1223,28 @@ TagPropertyConstraintHandler
 		{
 			return( enabled );
 		}
+		
 		private void
 		setError(
 			String		str )
 		{
-			tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, str );
+			error = null;
 			
-			if ( handler.initialised ){
-			
-				Debug.out( str );
+			if ( tag_maybe_null != null ){
+				
+				tag_maybe_null.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, str );
+				
+				if ( str != null && handler.initialised ){
+				
+					Debug.out( str );
+				}
 			}
+		}
+		
+		public String
+		getError()
+		{
+			return( expr==null?"Failed to compile":error );
 		}
 		
 		private boolean
@@ -1497,7 +1506,7 @@ TagPropertyConstraintHandler
 				return;
 			}
 
-			Set<Taggable>	existing = tag.getTagged();
+			Set<Taggable>	existing = tag_maybe_null.getTagged();
 
 			applySupport( existing, dm, is_new );
 		}
@@ -1521,7 +1530,7 @@ TagPropertyConstraintHandler
 				return;
 			}
 
-			Set<Taggable>	existing = tag.getTagged();
+			Set<Taggable>	existing = tag_maybe_null.getTagged();
 
 			for ( DownloadManager dm: dms ){
 
@@ -1627,7 +1636,7 @@ TagPropertyConstraintHandler
 
 						if ( canAddTaggable( dm )){
 
-							tag.addTaggable( dm );
+							tag_maybe_null.addTaggable( dm );
 						}
 					}
 				}
@@ -1642,9 +1651,9 @@ TagPropertyConstraintHandler
 							return;
 						}
 
-						if ( tag.hasTaggable( dm )){
+						if ( tag_maybe_null.hasTaggable( dm )){
 						
-							tag.removeTaggable( dm );
+							tag_maybe_null.removeTaggable( dm );
 						}
 					}
 				}
@@ -1678,7 +1687,7 @@ TagPropertyConstraintHandler
 		{
 			long	now = SystemTime.getMonotonousTime();
 
-			Map<DownloadManager,Long> recent_dms = handler.apply_history.get( tag );
+			Map<DownloadManager,Long> recent_dms = handler.apply_history.get( tag_maybe_null );
 
 			if ( recent_dms != null ){
 
@@ -1686,7 +1695,7 @@ TagPropertyConstraintHandler
 
 				if ( time != null && now - time < 1000 ){
 
-					System.out.println( "Not applying constraint as too recently actioned: " + dm.getDisplayName() + "/" + tag.getTagName( true ));
+					System.out.println( "Not applying constraint as too recently actioned: " + dm.getDisplayName() + "/" + tag_maybe_null.getTagName( true ));
 
 					return( false );
 				}
@@ -1696,7 +1705,7 @@ TagPropertyConstraintHandler
 
 				recent_dms = new HashMap<>();
 
-				handler.apply_history.put( tag, recent_dms );
+				handler.apply_history.put( tag_maybe_null, recent_dms );
 			}
 
 			recent_dms.put( dm, now );
@@ -1704,6 +1713,13 @@ TagPropertyConstraintHandler
 			return( true );
 		}
 
+		public boolean
+		testConstraint(
+			DownloadManager		dm )
+		{
+			return( testConstraint( dm, null ));
+		}
+		
 		private boolean
 		testConstraint(
 			DownloadManager		dm,
@@ -1728,11 +1744,11 @@ TagPropertyConstraintHandler
 				
 				boolean result = (Boolean)expr.eval( context, dm, dm_tags, debug );
 				
-				if ( result ){
+				if ( result && tag_maybe_null != null ){
 					
 					long[] colours = (long[])context.get( EVAL_CTX_COLOURS );
 					
-					tag.setColors( colours );
+					tag_maybe_null.setColors( colours );
 				}
 								
 				return( result );
@@ -2691,8 +2707,7 @@ TagPropertyConstraintHandler
 							}
 						}catch( Throwable e ) {
 							
-							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
-
+							setError( "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
 						}
 					}
 				}else if ( func_name.equals( "javascript" )){
@@ -2864,7 +2879,7 @@ TagPropertyConstraintHandler
 						
 						if ( target == null ){
 							
-							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Tag '" + tag_name + "' not found" );
+							setError( "Tag '" + tag_name + "' not found" );
 							
 							return( 0 );
 						}				
@@ -2927,7 +2942,7 @@ TagPropertyConstraintHandler
 						
 						if ( target == null ){
 							
-							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Tag '" + tag_name + "' not found" );
+							setError( "Tag '" + tag_name + "' not found" );
 							
 							return( 0 );
 							
@@ -2957,7 +2972,7 @@ TagPropertyConstraintHandler
 						
 						if ( target == null ){
 							
-							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Tag '" + tag_name + "' not found" );
+							setError( "Tag '" + tag_name + "' not found" );
 							
 							return( -1 );
 							
@@ -3249,7 +3264,7 @@ TagPropertyConstraintHandler
 							
 							String pat_str = "\\Q" + s2.replaceAll("[|]", "\\\\E|\\\\Q") + "\\E";
 
-							Pattern pattern = RegExUtil.getCachedPattern( "tag:constraint:" + tag.getTagUID(), pat_str, case_insensitive?0:(Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
+							Pattern pattern = RegExUtil.getCachedPattern( "tag:constraint:" + tag_maybe_null.getTagUID(), pat_str, case_insensitive?0:(Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
 
 							for ( String s1: s1s ){
 							
@@ -3373,7 +3388,7 @@ TagPropertyConstraintHandler
 
 						Object result =
 							handler.tag_manager.evalScript(
-								tag,
+								tag_maybe_null,
 								"javascript( " + (String)params[0] + ")",
 								dm,
 								"inTag" );
@@ -4173,7 +4188,7 @@ TagPropertyConstraintHandler
 							}
 							case KW_TAG_AGE:{
 
-								long tag_added = tag.getTaggableAddedTime( dm );
+								long tag_added = tag_maybe_null.getTaggableAddedTime( dm );
 
 								if ( tag_added <= 0 ){
 
@@ -4299,15 +4314,5 @@ TagPropertyConstraintHandler
 				return( func_name + "(" + params_expr.getString() + ")" );
 			}
 		}
-	}
-
-	public static void
-	main(
-		String[]	args )
-	{
-		TagPropertyConstraintHandler handler = new TagPropertyConstraintHandler();
-
-		//System.out.println( handler.compileConstraint( "!(hasTag(\"bil\") && (hasTag( \"fred\" ))) || hasTag(\"toot\")" ).getString());
-		System.out.println( handler.compileConstraint( "hasTag(  Seeding Only ) && seeding_for > h2s(10) || hasTag(\"sdsd\") " ).getString());
 	}
 }

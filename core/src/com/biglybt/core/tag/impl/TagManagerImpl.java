@@ -3348,6 +3348,20 @@ TagManagerImpl
 		}
 	}
 	
+	
+	@Override
+	public TagConstraint 
+	compileConstraint(
+		String expression ) 
+	{
+		if ( constraint_handler == null ){
+			
+			return( null );
+		}
+		
+		return( constraint_handler.compileConstraint( expression ));
+	}
+	
 	@Override
 	public VuzeFile 
 	exportTags(

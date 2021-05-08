@@ -129,6 +129,9 @@ public class MyTorrentsView
 
 	private static final AsyncDispatcher	dispatcher = new AsyncDispatcher();
 	
+	private static final TagManager tagManager = TagManagerFactory.getTagManager();
+
+	
 	private Core core;
 
   private GlobalManager globalManager;
@@ -191,7 +194,9 @@ public class MyTorrentsView
   private Menu	tableHeaderMenu = null;
   private TimerEventPeriodic	txtFilterUpdateEvent;
 
-
+  private String		lastSearchConstraintString;
+  private TagConstraint	lastSearchConstraint;
+  
   private Object	currentTagsLock = new Object();
   private Tag[]		_currentTags;
   private List<Tag>	allTags;
@@ -585,7 +590,6 @@ public class MyTorrentsView
 				    }
 			    }
 			    
-			    TagManager tagManager = TagManagerFactory.getTagManager();
 			    TagType ttManual = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
 			    TagType ttCat = tagManager.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
 			    ttManual.addTagTypeListener(this, false);
@@ -788,7 +792,6 @@ public class MyTorrentsView
 					}
 			    }
 			    
-			    TagManager tagManager = TagManagerFactory.getTagManager();
 			    TagType ttManual = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
 			    TagType ttCat = tagManager.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
 			    ttManual.removeTagTypeListener(MyTorrentsView.this);
@@ -904,7 +907,7 @@ public class MyTorrentsView
     	boolean filterOnly = COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons.FiltersOnly" );
     	
     	ArrayList<Tag> tagsManual = new ArrayList<>(
-    			TagManagerFactory.getTagManager().getTagType(
+    			tagManager.getTagType(
     					TagType.TT_DOWNLOAD_MANUAL).getTags());
     	
     	for (Tag tag : tagsManual) {
@@ -944,7 +947,7 @@ public class MyTorrentsView
 
     	if ( !hideAllCats ){
     		ArrayList<Tag> tagsCat = new ArrayList<>(
-    				TagManagerFactory.getTagManager().getTagType(
+    				tagManager.getTagType(
     						TagType.TT_DOWNLOAD_CATEGORY).getTags());
     		if (showAll) {
     			tags_to_show.addAll(tagsCat);
@@ -1261,12 +1264,39 @@ public class MyTorrentsView
 	}
 
 	@Override
-	public boolean filterCheck(DownloadManager dm, String sLastSearch, boolean bRegexSearch) {
+	public boolean 
+	filterCheck(
+		DownloadManager 	dm, 
+		String 				sLastSearch, 
+		boolean 			bRegexSearch) 
+	{
 		if ( dm == null ){
 			return( false );
 		}
+		
 		boolean bOurs;
 		if (sLastSearch.length() > 0) {
+			
+			if ( !bRegexSearch ){
+				
+				try{
+					TagConstraint constraint = lastSearchConstraint;
+					
+					if ( constraint == null || !sLastSearch.equals( lastSearchConstraintString )){
+						
+						lastSearchConstraintString = sLastSearch;
+						
+						constraint = tagManager.compileConstraint( sLastSearch );
+					}
+					
+					if ( constraint != null && constraint.getError() == null ){
+						
+						return( constraint.testConstraint( dm ));
+					}
+				}catch( Throwable e ){		
+				}
+			}
+			
 			try {
 				String	comment = dm.getDownloadState().getUserComment();
 				if ( comment == null ){
@@ -1370,7 +1400,6 @@ public class MyTorrentsView
 
 							o_name = names;
 
-							TagManager tagManager = TagManagerFactory.getTagManager();
 							List<Tag> tags = tagManager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
 
 							if ( tags.size() > 0 ){
