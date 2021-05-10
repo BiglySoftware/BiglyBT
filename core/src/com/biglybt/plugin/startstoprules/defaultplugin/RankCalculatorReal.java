@@ -36,6 +36,7 @@ import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.TorrentUtils;
@@ -526,7 +527,7 @@ RankCalculatorReal
 	public boolean
 	isMoving()
 	{
-		return( dl.isMoving());
+		return( dl.isMoving() || FileUtil.hasTask( core_dm ));
 	}
 	
 	public boolean
