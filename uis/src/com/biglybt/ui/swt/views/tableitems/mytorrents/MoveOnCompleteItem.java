@@ -19,8 +19,14 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
+import java.io.File;
+import java.util.List;
+
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagFeatureFileLocation;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.TableCell;
@@ -54,7 +60,42 @@ implements TableCellRefreshListener
 	public void refresh(TableCell cell) {
 		DownloadManager dm = (DownloadManager)cell.getDataSource();
 
-		String target = (dm == null) ? null : dm.getDownloadState().getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
+		String target;
+		
+		if ( dm == null ){
+			
+			target = null;
+		}else{
+		 
+			target = dm.getDownloadState().getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
+			
+			if ( target == null ){
+								
+				List<Tag> moc_tags = TagUtils.getActiveMoveOnCompleteTags( dm, true, (str)->{});
+				
+				String str = "";
+				
+				if ( !moc_tags.isEmpty()){
+					
+					for ( Tag tag: moc_tags ){
+						
+						TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+						
+						File file = fl.getTagMoveOnCompleteFolder();
+						
+						if ( file != null ){
+							
+							str += (str.isEmpty()?"":", ") + tag.getTagName(true) + "->" + file.getAbsolutePath();
+						}
+					}
+				}
+				
+				if ( !str.isEmpty()){
+					
+					target = "(" + str + ")";
+				}
+			}
+		}
 
 		if ( target == null ){
 			

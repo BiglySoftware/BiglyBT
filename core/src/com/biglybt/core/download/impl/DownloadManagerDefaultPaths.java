@@ -27,6 +27,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeature;
 import com.biglybt.core.tag.TagFeatureFileLocation;
 import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.savelocation.DefaultSaveLocationManager;
@@ -226,84 +227,24 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
     	
     	if ( move_to_target == null ){
     		
-	    	List<Tag> dm_tags = TagManagerFactory.getTagManager().getTagsForTaggable( dm );
+    		List<Tag>	applicable_tags = 
+    			TagUtils.getActiveMoveOnCompleteTags( dm, false,(str)->logInfo( str, dm ));
+			
+    		if ( !applicable_tags.isEmpty()){
+    			
+		    	Tag tag_target = applicable_tags.get(0);
+		
+				TagFeatureFileLocation fl = (TagFeatureFileLocation)tag_target;
+		
+				move_to_target = fl.getTagMoveOnCompleteFolder();
+				
+				long	options = fl.getTagMoveOnCompleteOptions();
 	
-	    	if ( dm_tags != null ){
-	
-		    	List<Tag>	applicable_tags = new ArrayList<>();
-		
-		    	for ( Tag tag: dm_tags ){
-		
-		    		if ( tag.getTagType().hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
-		
-		    			TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
-		
-		    			if ( fl.supportsTagMoveOnComplete()){
-		
-			    			File move_to = fl.getTagMoveOnCompleteFolder();
-		
-			    			if ( move_to != null ){
-		
-			    				if ( !move_to.exists()){
-		
-			    					move_to.mkdirs();
-			    				}
-		
-			    				if ( move_to.isDirectory() && move_to.canWrite()){
-		
-			    					applicable_tags.add( tag );
-		
-			    				}else{
-		
-			    					logInfo( "Ignoring invalid tag move-to location: " + move_to, dm );
-			    				}
-			    			}
-		    			}
-		    		}
-		    	}	    	
-	
-		    	if ( !applicable_tags.isEmpty()){
-		
-			    	if ( applicable_tags.size() > 1 ){
-			
-			    		Collections.sort(
-			    			applicable_tags,
-			    			new Comparator<Tag>()
-			    			{
-			    				@Override
-							    public int
-			    				compare(
-			    					Tag o1,
-			    					Tag o2)
-			    				{
-			    					return( o1.getTagID() - o2.getTagID());
-			    				}
-			    			});
-			
-			    		String str = "";
-			
-			    		for ( Tag tag: applicable_tags ){
-			
-			    			str += (str.length()==0?"":", ") + tag.getTagName( true );
-			    		}
-			
-			    		logInfo( "Multiple applicable tags found: " + str + " - selecting first", dm );
-			    	}
-			
-			    	Tag tag_target = applicable_tags.get(0);
-			
-					TagFeatureFileLocation fl = (TagFeatureFileLocation)tag_target;
-			
-					move_to_target = fl.getTagMoveOnCompleteFolder();
-					
-					long	options = fl.getTagMoveOnCompleteOptions();
-		
-					move_data 		= ( options&TagFeatureFileLocation.FL_DATA ) != 0;
-					move_torrent 	= ( options&TagFeatureFileLocation.FL_TORRENT ) != 0;
-					
-					context_str = "Tag '" + tag_target.getTagName( true ) + "' move-on-complete directory";
-					mi_str		= "Tag Move on Completion";
-		    	}
+				move_data 		= ( options&TagFeatureFileLocation.FL_DATA ) != 0;
+				move_torrent 	= ( options&TagFeatureFileLocation.FL_TORRENT ) != 0;
+				
+				context_str = "Tag '" + tag_target.getTagName( true ) + "' move-on-complete directory";
+				mi_str		= "Tag Move on Completion";
 	    	}
     	}   	
 

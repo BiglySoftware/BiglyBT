@@ -20,6 +20,7 @@ package com.biglybt.core.tag;
 
 import java.io.File;
 import java.util.*;
+import java.util.function.Consumer;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
@@ -28,10 +29,14 @@ import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 
-public class TagUtils{
-
+public class 
+TagUtils
+{
+	private static final Object MOC_CACHE = new Object();
+	
 	private static final Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
 
 	private static final Comparator<Tag> tag_comparator = 
@@ -460,5 +465,98 @@ public class TagUtils{
 		}
 		
 		return( null );
+	}
+	
+	public static List<Tag>
+	getActiveMoveOnCompleteTags(
+		DownloadManager			dm,
+		boolean					allow_caching,
+		Consumer<String>		logger )
+	{
+		if ( allow_caching ){
+			
+			Object[] cache = (Object[])dm.getUserData( MOC_CACHE );
+			
+			if ( cache != null ){
+				
+				if ( SystemTime.getMonotonousTime() - (Long)cache[0] < 10*1000 ){
+					
+					return((List<Tag>)cache[1]);
+				}
+			}
+		}
+				
+    	List<Tag> dm_tags = TagManagerFactory.getTagManager().getTagsForTaggable( dm );
+
+    	List<Tag>	applicable_tags = new ArrayList<>();
+
+    	if ( dm_tags != null ){
+	
+	    	for ( Tag tag: dm_tags ){
+	
+	    		if ( tag.getTagType().hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
+	
+	    			TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+	
+	    			if ( fl.supportsTagMoveOnComplete()){
+	
+		    			File move_to = fl.getTagMoveOnCompleteFolder();
+	
+		    			if ( move_to != null ){
+	
+		    				if ( !move_to.exists()){
+	
+		    					move_to.mkdirs();
+		    				}
+	
+		    				if ( move_to.isDirectory() && move_to.canWrite()){
+	
+		    					applicable_tags.add( tag );
+	
+		    				}else{
+			    						
+	    						logger.accept( "Ignoring invalid tag move-to location: " + move_to );
+		    				}
+		    			}
+	    			}
+	    		}
+	    	}	    	
+
+	    	if ( !applicable_tags.isEmpty()){
+	
+		    	if ( applicable_tags.size() > 1 ){
+		
+		    		Collections.sort(
+		    			applicable_tags,
+		    			new Comparator<Tag>()
+		    			{
+		    				@Override
+						    public int
+		    				compare(
+		    					Tag o1,
+		    					Tag o2)
+		    				{
+		    					return( o1.getTagID() - o2.getTagID());
+		    				}
+		    			});
+		
+		    		String str = "";
+		
+		    		for ( Tag tag: applicable_tags ){
+		
+		    			str += (str.length()==0?"":", ") + tag.getTagName( true );
+		    		}
+				    		
+		   			logger.accept( "Multiple applicable tags found: " + str + " - selecting first" );
+		    	}
+	    	}
+    	}
+
+    	if ( allow_caching ){
+			
+			dm.setUserData( MOC_CACHE, new Object[]{ SystemTime.getMonotonousTime(), applicable_tags });
+    	}
+    	
+    	return( applicable_tags );
 	}
 }
