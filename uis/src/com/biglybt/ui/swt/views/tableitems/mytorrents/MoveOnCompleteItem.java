@@ -65,14 +65,10 @@ implements TableCellRefreshListener
 		if ( dm == null ){
 			
 			target = null;
-			
 		}else{
 		 
 			target = dm.getDownloadState().getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
 			
-			/* 
-			 * Can't satisfy user and I've lost interest
-			 
 			if ( target == null ){
 								
 				List<Tag> moc_tags = TagUtils.getActiveMoveOnCompleteTags( dm, true, (str)->{});
@@ -101,7 +97,6 @@ implements TableCellRefreshListener
 					target = "(" + str + ")";
 				}
 			}
-			*/
 		}
 
 		if ( target == null ){
