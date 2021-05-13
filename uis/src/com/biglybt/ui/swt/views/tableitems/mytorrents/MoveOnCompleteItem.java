@@ -85,7 +85,9 @@ implements TableCellRefreshListener
 						
 						if ( file != null ){
 							
-							str += (str.isEmpty()?"":", ") + tag.getTagName(true) + "->" + file.getAbsolutePath();
+							str += 	(str.isEmpty()?"":", ") + 
+									(moc_tags.size()==1?"":(tag.getTagName(true) + "->" )) + 
+									file.getAbsolutePath();
 						}
 					}
 				}
