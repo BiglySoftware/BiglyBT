@@ -60,20 +60,23 @@ implements TableCellRefreshListener
 	public void refresh(TableCell cell) {
 		DownloadManager dm = (DownloadManager)cell.getDataSource();
 
-		String target;
+		String text;
+		String tt		= null;
 		
 		if ( dm == null ){
 			
-			target = null;
+			text = null;
+			
 		}else{
 		 
-			target = dm.getDownloadState().getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
+			text = dm.getDownloadState().getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
 			
-			if ( target == null ){
+			if ( text == null ){
 								
 				List<Tag> moc_tags = TagUtils.getActiveMoveOnCompleteTags( dm, true, (str)->{});
 				
-				String str = "";
+				String str_text = "";
+				String str_tt	= "";
 				
 				if ( !moc_tags.isEmpty()){
 					
@@ -85,29 +88,36 @@ implements TableCellRefreshListener
 						
 						if ( file != null ){
 							
-							str += 	(str.isEmpty()?"":", ") + 
-									(moc_tags.size()==1?"":(tag.getTagName(true) + "->" )) + 
-									file.getAbsolutePath();
+							str_text += (str_text.isEmpty()?"":", ") + 
+										(moc_tags.size()==1?"":(tag.getTagName(true) + "->" )) + 
+										file.getAbsolutePath();
+							
+							str_tt += 	(str_tt.isEmpty()?"":", ") + 
+										tag.getTagName(true) + "->" + 
+										file.getAbsolutePath();
 						}
 					}
 				}
 				
-				if ( !str.isEmpty()){
+				if ( !str_text.isEmpty()){
 					
-					target = "(" + str + ")";
+					text	= "(" + str_text + ")";
+					tt		= str_tt;
 				}
 			}
 		}
 
-		if ( target == null ){
+		if ( text == null ){
 			
-			target = "";
+			text = "";
 		}
 		
-		if ( !cell.setSortValue(target) && cell.isValid()){
+		cell.setToolTip(tt);
+		
+		if ( !cell.setSortValue(text) && cell.isValid()){
 			return;
 		}
 		
-		cell.setText( target );
+		cell.setText( text );
 	}
 }
