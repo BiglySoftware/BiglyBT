@@ -90,7 +90,7 @@ public class TabbedMDI
 	
 	private CTabFolder tabFolder;
 
-	private LinkedList<MdiEntry>	select_history = new LinkedList<>();
+	private LinkedList<TabbedEntry>	select_history = new LinkedList<>();
 
 	protected boolean minimized;
 
@@ -393,32 +393,14 @@ public class TabbedMDI
 				if ( entry != null ){
 					entry.setUserInitiatedClose();
 				}
-				if (select_history.remove(entry)) {
+				
+				TabbedEntry prev = getPrevious( entry );
 
-					if (select_history.size() > 0) {
-
-						final MdiEntry next = select_history.getLast();
-
-						if (!next.isEntryDisposed() && next != entry) {
-
-							// If tabfolder's selected entry is the one we are closing,
-							// CTabFolder will try to move to next CTabItem.  Disable
-							// this feature by moving tabfolder's selection away from us
-							CTabItem[] items = tabFolder.getItems();
-							for (int i = 0; i < items.length; i++) {
-								CTabItem item = items[i];
-								TabbedEntry scanEntry = getEntryFromTabItem(item);
-								if (scanEntry == next) {
-									tabFolder.setSelection(item);
-									break;
-								}
-							}
-
-							showEntry(next);
-						}
-					}
+				if ( prev != null ){
+					
+					showEntry( prev );
 				}
-
+				
 				// since showEntry is slightly delayed, we must slightly delay
 				// the closing of the entry the user clicked.  Otherwise, it would close
 				// first, and the first tab would auto-select (on windows), and then
@@ -981,21 +963,54 @@ public class TabbedMDI
 		COConfigurationManager.setParameter("tab.once." + id, true);
 	}
 
+	private TabbedEntry
+	getPrevious(
+		TabbedEntry		current )
+	{
+		if ( select_history.remove(current)){
+
+			if (select_history.size() > 0) {
+
+				final TabbedEntry next = select_history.getLast();
+
+				if (!next.isEntryDisposed() && next != current) {
+
+					// If tabfolder's selected entry is the one we are closing,
+					// CTabFolder will try to move to next CTabItem.  Disable
+					// this feature by moving tabfolder's selection away from us
+					CTabItem[] items = tabFolder.getItems();
+					for (int i = 0; i < items.length; i++) {
+						CTabItem item = items[i];
+						TabbedEntry scanEntry = getEntryFromTabItem(item);
+						if (scanEntry == next) {
+							tabFolder.setSelection(item);
+							break;
+						}
+					}
+
+					return( next );
+				}
+			}
+		}
+		
+		return( null );
+	}
+	
 	@Override
-	public void showEntry(final MdiEntry newEntry) {
-		if (newEntry == null) {
+	public void showEntry(final MdiEntry _newEntry) {
+		if (_newEntry == null) {
 			return;
 		}
 
-		if (newEntry != null) {
-  		select_history.remove( newEntry );
+		TabbedEntry newEntry = (TabbedEntry)_newEntry;
+		
+		select_history.remove( newEntry );
 
-  		select_history.add( newEntry );
+		select_history.add( newEntry );
 
-  		if ( select_history.size() > 64 ){
+		if ( select_history.size() > 64 ){
 
-  			select_history.removeFirst();
-  		}
+			select_history.removeFirst();
 		}
 
 		MdiEntry oldEntry = getCurrentEntry();
@@ -1106,6 +1121,27 @@ public class TabbedMDI
 		return entry;
 	}
 
+	protected BaseMdiEntry closeEntryByID(String id, boolean userInitiated) {
+
+		TabbedEntry existing = getEntry(id);
+
+		TabbedEntry prev  = getPrevious( existing );
+		
+		BaseMdiEntry entry = super.closeEntryByID(id, userInitiated);
+		
+		if (entry == null || Utils.isDisplayDisposed()) {
+			
+			return entry;
+		}
+		
+		if ( userInitiated && prev != null ){
+		
+			showEntry(prev);
+		}
+		
+		return( entry );
+	}
+	
 	@Override
 	public void updateUI() {
 		if (getMinimized() || !isVisible()) {
