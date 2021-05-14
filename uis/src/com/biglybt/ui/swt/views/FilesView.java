@@ -109,6 +109,7 @@ public class FilesView
     new DoneItem(),
     new PercentItem(),
     new FirstPieceItem(),
+    new LastPieceItem(),
     new PieceCountItem(),
     new RemainingPiecesItem(),
     new PiecesDoneAndCountItem(),
