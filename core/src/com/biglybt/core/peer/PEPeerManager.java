@@ -132,6 +132,9 @@ PEPeerManager
 
 	public long getTimeStartedSeeding( boolean mono_time );
 
+	public String
+	getConnectHealth();
+	
 	public void
 	addListener(
 		PEPeerManagerListener	l );
@@ -277,11 +280,9 @@ PEPeerManager
 		String	reason );
 
 	public void
-	peerAdded(PEPeer pc);
-
-	public void
-	peerRemoved(PEPeer pc);
-
+	informFullyConnected(
+		PEPeer	peer );
+	
 	public DiskManagerReadRequest
 	createDiskManagerRequest(
 	   int pieceNumber,

@@ -1336,6 +1336,19 @@ public class PeerManager implements CoreStatsProvider {
 
 			public PEPeerManagerAdapter	getAdapter(){ log(); return( null ); }
 
+			@Override
+			public void 
+			informFullyConnected(PEPeer peer)
+			{
+			}
+			
+			@Override
+			public String 
+			getConnectHealth()
+			{
+				log();return( "" );
+			}
+			
 			public void
 			start()
 			{log(); 

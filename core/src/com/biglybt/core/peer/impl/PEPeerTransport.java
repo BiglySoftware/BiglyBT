@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.biglybt.core.disk.DiskManagerReadRequest;
-import com.biglybt.core.networkmanager.NetworkConnectionBase;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peermanager.peerdb.PeerItem;
 import com.biglybt.core.torrent.TOTorrentFileHashTree;
@@ -43,6 +42,15 @@ PEPeerTransport
   public static final int CONNECTION_CONNECTING             = 1;
   public static final int CONNECTION_WAITING_FOR_HANDSHAKE  = 2;
   public static final int CONNECTION_FULLY_ESTABLISHED      = 4;
+
+  public static final int CP_UNKNOWN				= 0;
+  public static final int CP_CONNECTING				= 1;
+  public static final int CP_CONNECT_OK				= 2;
+  public static final int CP_CONNECT_FAILED			= 3;
+  public static final int CP_RECEIVED_DATA			= 4;
+
+	public int
+	getOutboundConnectionProgress();
 
   		/**
   		 * Start message processing for the peer

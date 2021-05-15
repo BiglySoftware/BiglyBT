@@ -20,8 +20,6 @@ package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.peer.PEPeerManager;
-import com.biglybt.core.util.DisplayFormatters;
-
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
@@ -30,19 +28,19 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 
 public class
-UploadHealthItem
+ConnectHealthItem
 	extends CoreTableColumnSWT
     implements TableCellRefreshListener
 {
 	public static final Class DATASOURCE_TYPE = Download.class;
 
-	public static final String COLUMN_ID = "upload.health";
+	public static final String COLUMN_ID = "connect.health";
 
 	public
-	UploadHealthItem(
+	ConnectHealthItem(
 		String sTableID)
 	{
-		super( DATASOURCE_TYPE, COLUMN_ID, ALIGN_CENTER, 70, sTableID );
+		super( DATASOURCE_TYPE, COLUMN_ID, ALIGN_CENTER, 100, sTableID );
 		setRefreshInterval(INTERVAL_LIVE);
 	}
 
@@ -63,29 +61,6 @@ UploadHealthItem
 
 	  	PEPeerManager pm = (dm==null)?null:dm.getPeerManager();
 	  	
-	  	long	sort_val;
-	  	String	str;
-	  	
-	  	if ( pm == null ){
-	  	
-	  		sort_val 	= -1;
-	  		str			= "";
-	  	}else{
-			  int queued_bytes = pm.getBytesQueuedForUpload();
-			  
-			  int peers_with_upq 	= pm.getNbPeersWithUploadQueued();
-			  int peers_with_block	= pm.getNbPeersWithUploadBlocked();
-
-			  sort_val = ( queued_bytes << 32 ) | ( peers_with_upq << 16 ) | peers_with_block;
-			  
-			  str =  DisplayFormatters.formatByteCountToKiBEtc( queued_bytes ) + "/" + peers_with_upq + "/" + peers_with_block;
-	  	}
-
-	    if ( !cell.setSortValue(sort_val) && cell.isValid()){
-
-	    	return;
-	    }
-
-	    cell.setText( str );
+	    cell.setText( pm==null?"":pm.getConnectHealth());
 	}
 }

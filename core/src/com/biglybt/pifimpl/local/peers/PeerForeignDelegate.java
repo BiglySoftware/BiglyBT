@@ -167,6 +167,13 @@ PeerForeignDelegate
 	}
 	
 	@Override
+	public int 
+	getOutboundConnectionProgress()
+	{
+		return( CP_UNKNOWN );
+	}
+	
+	@Override
 	public void
 	start()
 	{

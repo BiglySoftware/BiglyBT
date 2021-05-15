@@ -46,6 +46,7 @@ import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
 import com.biglybt.core.peer.*;
 import com.biglybt.core.peer.impl.*;
+import com.biglybt.core.peer.impl.transport.PEPeerTransportProtocol;
 import com.biglybt.core.peer.util.PeerIdentityDataID;
 import com.biglybt.core.peer.util.PeerIdentityManager;
 import com.biglybt.core.peer.util.PeerUtils;
@@ -123,8 +124,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	private static final long RESERVED_PIECE_TIMEOUT_MILLIS = 120 * 1000;
 
-	private static final Object DUP_PEER_CC_KEY = new Object();
-	private static final Object DUP_PEER_AS_KEY = new Object();
+	private static final Object CON_HEALTH_DONE_KEY = new Object();
+	private static final Object DUP_PEER_CC_KEY 	= new Object();
+	private static final Object DUP_PEER_AS_KEY 	= new Object();
 
 	// config
 
@@ -308,6 +310,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	private int hidden_piece;
 
+	private static final int OB_PS_STATS_HISTORY_SIZE = 100;
+	private boolean[][]	ob_ps_stats_history = new boolean[PEPeerSource.PS_SOURCES.length][OB_PS_STATS_HISTORY_SIZE];
+	private int[]		ob_ps_stats			= new int[PEPeerSource.PS_SOURCES.length];
+	private int[]		ob_ps_stats_pos		= new int[PEPeerSource.PS_SOURCES.length];
+	
 	private final AEMonitor this_mon = new AEMonitor("PEPeerControl");
 
 	private long ip_filter_last_update_time;
@@ -3406,20 +3413,147 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	}
 
 	@Override
-	public void peerAdded(PEPeer pc){
+	public void 
+	informFullyConnected(
+		PEPeer peer )
+	{
+		updateConnectHealth((PEPeerTransport)peer );
+	}
+	
+	private void
+	updateConnectHealth(
+		PEPeerTransport	pc )
+	{
+		if ( !pc.isIncoming()){
+			
+			int	state = pc.getOutboundConnectionProgress();
+			
+			if ( state != PEPeerTransportProtocol.CP_UNKNOWN ){
+			
+					// 'connected' states don't mean much when we have a SOCKS proxy or plugin-proxy...
+					// we should at least have received a handshake in return as we don't send the bitfield
+					// until after handshaking so it isn't as if the other peer can quickly disconnect
+					// on seeing, for example, we're a seed and they're one too
+
+				boolean ok = state == PEPeerTransportProtocol.CP_RECEIVED_DATA;
+			
+				String ps = pc.getPeerSource();
+			
+				synchronized( ob_ps_stats ){
+					
+					if ( pc.getUserData( CON_HEALTH_DONE_KEY ) == null ){
+						
+						pc.setUserData( CON_HEALTH_DONE_KEY, "" );
+					
+						boolean[] 	stats_history;
+						int			stats_index;
+						
+						if ( ps == PEPeerSource.PS_BT_TRACKER ){
+						
+							stats_history = ob_ps_stats_history[stats_index=0];
+							
+						}else if ( ps == PEPeerSource.PS_DHT ){
+							
+							stats_history = ob_ps_stats_history[stats_index=1];
+							
+						}else if ( ps == PEPeerSource.PS_OTHER_PEER ){
+							
+							stats_history = ob_ps_stats_history[stats_index=2];
+							
+						}else if ( ps == PEPeerSource.PS_PLUGIN ){
+							
+							stats_history = ob_ps_stats_history[stats_index=3];
+							
+						}else{
+							
+							stats_history = ob_ps_stats_history[stats_index=4];
+						}
+						
+						int pos = ob_ps_stats_pos[stats_index]++;
+						
+						if ( pos < OB_PS_STATS_HISTORY_SIZE ){
+							
+							if ( ok ){
+								
+								ob_ps_stats[stats_index]++;
+							}
+							
+							stats_history[pos] = ok;
+							
+						}else{
+							pos = pos%OB_PS_STATS_HISTORY_SIZE;
+							
+							if ( stats_history[pos]){
+								
+								if ( !ok ){
+									ob_ps_stats[stats_index]--;
+								}
+							}else{
+								
+								if ( ok ){
+									ob_ps_stats[stats_index]++;
+								}
+							}
+							
+							stats_history[pos] = ok;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	@Override
+	public String 
+	getConnectHealth()
+	{		
+		String 	str = "";
+			
+		for ( int i=0;i<ob_ps_stats.length;i++){
+			
+			String ps = PEPeerSource.PS_SOURCES[i];
+			
+			if ( ps == PEPeerSource.PS_INCOMING ){
+				
+				continue;
+			}
+			
+			int events = Math.min( ob_ps_stats_pos[i], OB_PS_STATS_HISTORY_SIZE );
+			
+			if ( events > 0 ){
+				
+				str += (str.isEmpty()?"":", " ) + ps + "=" + ((ob_ps_stats[i]*100)/events) + "%";
+			}
+		}
+		
+		return( str );
+	}
+	
+
+	private void 
+	peerAdded(
+		PEPeerTransport pc)
+	{
 		adapter.addPeer(pc); // async downloadmanager notification
 
 		// sync peermanager notification
-		final ArrayList peer_manager_listeners = peer_manager_listeners_cow;
+		final ArrayList<PEPeerManagerListener> peer_manager_listeners = peer_manager_listeners_cow;
 
-		for(int i = 0; i < peer_manager_listeners.size(); i++){
-			((PEPeerManagerListener) peer_manager_listeners.get(i)).peerAdded(this, pc);
+		for( PEPeerManagerListener peer: peer_manager_listeners ){
+			peer.peerAdded(this, pc);
 		}
 	}
 
-	@Override
-	public void peerRemoved(PEPeer pc){
-		if(is_running && !seeding_mode && (prefer_udp || prefer_udp_default)){
+	private void 
+	peerRemoved(
+		PEPeerTransport pc)
+	{
+		if ( is_running ){
+			
+			updateConnectHealth( pc );
+		}
+		
+		if (is_running && !seeding_mode && (prefer_udp || prefer_udp_default)){
 
 			int udp = pc.getUDPListenPort();
 
@@ -3483,10 +3617,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		adapter.removePeer(pc); // async downloadmanager notification
 
 		// sync peermanager notification
-		final ArrayList peer_manager_listeners = peer_manager_listeners_cow;
+		final ArrayList<PEPeerManagerListener> peer_manager_listeners = peer_manager_listeners_cow;
 
-		for(int i = 0; i < peer_manager_listeners.size(); i++){
-			((PEPeerManagerListener) peer_manager_listeners.get(i)).peerRemoved(this, pc);
+		for( PEPeerManagerListener peer: peer_manager_listeners ){
+			
+			peer.peerRemoved(this, pc);
 		}
 	}
 

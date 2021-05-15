@@ -148,8 +148,10 @@ implements PEPeerTransport
 
 	private boolean identityAdded = false;  //needed so we don't remove id's in closeAll() on duplicate connection attempts
 
-	protected int connection_state = PEPeerTransport.CONNECTION_PENDING;
-
+	private int connection_state = PEPeerTransport.CONNECTION_PENDING;
+	
+	private int outbound_connection_progress	= CP_UNKNOWN;
+	
 	private String client = ""; // Client name to show to user.
 	private String client_peer_id = ""; // Client name derived from the peer ID.
 	private String client_handshake = ""; // Client name derived from the handshake.
@@ -813,8 +815,6 @@ implements PEPeerTransport
 				priority,
 				new NetworkConnection.ConnectionListener()
 				{
-					private boolean	connect_ok;
-
 					@Override
 					public final int
 					connectStarted(
@@ -822,6 +822,8 @@ implements PEPeerTransport
 					{
 						connection_state = PEPeerTransport.CONNECTION_CONNECTING;
 
+						outbound_connection_progress = CP_CONNECTING;
+						
 						if ( default_connect_timeout <= 0 ){
 
 							return( default_connect_timeout );
@@ -835,7 +837,7 @@ implements PEPeerTransport
 					connectSuccess(
 						ByteBuffer remaining_initial_data )
 					{
-						connect_ok = true;
+						outbound_connection_progress = CP_CONNECT_OK;
 
 						if( closing ) {
 							//Debug.out( "PEPeerTransportProtocol::connectSuccess() called when closing." );
@@ -866,6 +868,8 @@ implements PEPeerTransport
 					connectFailure(
 						Throwable failure_msg )
 					{
+						outbound_connection_progress = CP_CONNECT_FAILED;
+						
 						closeConnectionInternally( "failed to establish outgoing connection: " + failure_msg.getMessage(), true, true );
 					}
 
@@ -878,7 +882,16 @@ implements PEPeerTransport
 							Debug.out( "error.getMessage() == null", error );
 						}
 
-						closeConnectionInternally( "connection exception: " + error.getMessage(), !connect_ok, true );
+							// this method can be called anytime, not just during connection
+						
+						boolean connecting = outbound_connection_progress == CP_CONNECTING;
+							
+						if ( connecting ){
+							
+							outbound_connection_progress = CP_CONNECT_FAILED;
+						}
+						
+						closeConnectionInternally( "connection exception: " + error.getMessage(), connecting, true );
 					}
 
 					@Override
@@ -970,7 +983,22 @@ implements PEPeerTransport
 		return( peer_source );
 	}
 
-
+	@Override
+	public int
+	getOutboundConnectionProgress()
+	{
+		int cp = outbound_connection_progress;
+		
+		if ( cp == CP_CONNECT_OK ){
+			
+			if ( last_message_received_time > 0 ){
+				
+				cp = CP_RECEIVED_DATA;
+			}
+		}
+		
+		return( cp );
+	}
 
 	/**
 	 * Close the peer connection from within the PEPeerTransport object.
@@ -2591,7 +2619,7 @@ implements PEPeerTransport
 		    Logger.log(new LogEvent(this, LOGID,
 		    		"Received handshake with reserved bytes: " +
 		    			ByteFormatter.nicePrint(handshake.getReserved(), false)));
-
+		
 		PeerIdentityDataID  my_peer_data_id = manager.getPeerIdentityDataID();
 
 		if(getConnectionState() == CONNECTION_FULLY_ESTABLISHED)
@@ -5079,7 +5107,10 @@ implements PEPeerTransport
 	private void changePeerState( int new_state ) {
 		current_peer_state = new_state;
 
-		if( current_peer_state == PEPeer.TRANSFERING ) {   //YUCK!
+		if ( current_peer_state == PEPeer.TRANSFERING ){
+			
+			manager.informFullyConnected( this );
+			
 			doPostHandshakeProcessing();
 		}
 
