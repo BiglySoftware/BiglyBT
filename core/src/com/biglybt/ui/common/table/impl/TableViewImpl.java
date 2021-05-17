@@ -2477,20 +2477,26 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	protected void
 	reaffirmSelection()
 	{
-		List<TableRowCore> oldSelectionList = new ArrayList<>();
-
-		synchronized (rows_sync) {
-			if (selectedRows.size() == 0 ){
-				return;
+			// we don't want an inactive table to grab back selection when something else changes
+			// (e.g. a new row is added to it)
+		
+		if ( isTableFocused()){
+			
+			List<TableRowCore> oldSelectionList = new ArrayList<>();
+	
+			synchronized (rows_sync) {
+				if (selectedRows.size() == 0 ){
+					return;
+				}
+	
+				oldSelectionList.addAll(selectedRows);
 			}
-
-			oldSelectionList.addAll(selectedRows);
+			
+			TableRowCore[] rows = oldSelectionList.toArray(new TableRowCore[0]);
+			
+			triggerSelectionChangeListeners( rows, rows );
+			triggerSelectionListeners(rows);
 		}
-		
-		TableRowCore[] rows = oldSelectionList.toArray(new TableRowCore[0]);
-		
-		triggerSelectionChangeListeners( rows, rows );
-		triggerSelectionListeners(rows);
 	}
 
 	public abstract boolean isSingleSelection();
@@ -2543,4 +2549,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	public boolean isTableSelected() {
 		return SelectedContentManager.getCurrentlySelectedTableView() == this;
 	}
+	
+	protected abstract boolean
+	isTableFocused();
 }

@@ -3415,6 +3415,13 @@ public class TableViewPainted
 		return tv == this || (tv == null && isFocused) || (tv != this && tv != null && tv.getSelectedRowsSize() == 0);
 	}
 
+	@Override
+	protected boolean
+	isTableFocused()
+	{
+		return( isFocused );
+	}
+	
 	public boolean isEnabled() {
 		return cTable.isEnabled();
 	}
