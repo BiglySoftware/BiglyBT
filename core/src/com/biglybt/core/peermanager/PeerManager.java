@@ -1344,7 +1344,7 @@ public class PeerManager implements CoreStatsProvider {
 			
 			@Override
 			public String 
-			getConnectHealth()
+			getConnectHealth( boolean verbose )
 			{
 				log();return( "" );
 			}

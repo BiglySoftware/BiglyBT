@@ -133,7 +133,8 @@ PEPeerManager
 	public long getTimeStartedSeeding( boolean mono_time );
 
 	public String
-	getConnectHealth();
+	getConnectHealth(
+		boolean	verbose );
 	
 	public void
 	addListener(

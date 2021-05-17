@@ -23,6 +23,7 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.pif.ui.tables.TableCellToolTipListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
@@ -30,7 +31,7 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 public class
 ConnectHealthItem
 	extends CoreTableColumnSWT
-    implements TableCellRefreshListener
+    implements TableCellRefreshListener, TableCellToolTipListener
 {
 	public static final Class DATASOURCE_TYPE = Download.class;
 
@@ -61,6 +62,26 @@ ConnectHealthItem
 
 	  	PEPeerManager pm = (dm==null)?null:dm.getPeerManager();
 	  	
-	    cell.setText( pm==null?"":pm.getConnectHealth());
+	    cell.setText( pm==null?"":pm.getConnectHealth( false ));
+	}
+	
+	@Override
+	public void 
+	cellHover(
+		TableCell cell)
+	{
+		DownloadManager dm = (DownloadManager)cell.getDataSource();
+
+	  	PEPeerManager pm = (dm==null)?null:dm.getPeerManager();
+	  	
+	    cell.setToolTip( pm==null?"":pm.getConnectHealth( true ));	
+	}
+	
+	@Override
+	public void 
+	cellHoverComplete(
+		TableCell cell)
+	{
+		cell.setToolTip(null);
 	}
 }

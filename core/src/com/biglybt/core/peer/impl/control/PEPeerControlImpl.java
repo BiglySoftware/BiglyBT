@@ -3481,6 +3481,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 							stats_history[pos] = ok;
 							
 						}else{
+							
 							pos = pos%OB_PS_STATS_HISTORY_SIZE;
 							
 							if ( stats_history[pos]){
@@ -3505,7 +3506,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	
 	@Override
 	public String 
-	getConnectHealth()
+	getConnectHealth(
+		boolean		verbose )
 	{		
 		String 	str = "";
 			
@@ -3523,6 +3525,10 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			if ( events > 0 ){
 				
 				str += (str.isEmpty()?"":", " ) + ps + "=" + ((ob_ps_stats[i]*100)/events) + "%";
+				
+				if ( verbose ){
+					str +=  " (" + ob_ps_stats[i] + "/" + events + ")";
+				}
 			}
 		}
 		
