@@ -1,30 +1,14 @@
-
-105_SDK = /Developer-3.2.6/SDKs/MacOSX10.5.sdk
-105_ARCHS = -arch x86_64
-105_LFLAGS = -bundle -isysroot $(105_SDK) $(105_ARCHS) -framework JavaVM -framework AppKit -framework IOKit -mmacosx-version-min=10.5
-105_LFLAGS = -bundle -isysroot $(105_SDK) $(105_ARCHS) -framework JavaVM -framework AppKit -framework IOKit -mmacosx-version-min=10.5
-105_CFLAGS = -c $(105_ARCHS) -I $(104_SDK)/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/AE.framework/Versions/A/Headers  -mmacosx-version-min=10.5
-
-# building 10.6 won't work because I can't be bothered to fix it up
-106_SDK = /Developer-3.2.6/SDKs/MacOSX10.6.sdk
-106_ARCHS = -arch i386 -arch x86_64
-106_LFLAGS = -bundle -isysroot $(106_SDK) $(106_ARCHS) -framework JavaVM -framework AppKit -framework IOKit -mmacosx-version-min=10.6
-106_CFLAGS = -c $(106_ARCHS) -I $(104_SDK)/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/AE.framework/Versions/A/Headers
+SDK = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+ARCHS = -arch arm64  -arch x86_64
+LFLAGS = -bundle -isysroot $(SDK) $(ARCHS) -framework JavaNativeFoundation -framework AppKit -framework IOKit -mmacosx-version-min=10.14 -F/System/Library/Frameworks/
+CFLAGS = -c $(ARCHS) -mmacosx-version-min=10.14
+OBJECTS = OSXAccess.o IONotification.o LaunchServicesWrapper.o DisableAppNap.o
 
 
-105_OBJECTS = OSXAccess.o IONotification.o LaunchServicesWrapper.o DisableAppNap.o
 OUTLIB = libOSXAccess
 
 all:
-	echo 10.5 10.6
-
-10.5:
-	g++ $(105_CFLAGS) OSXAccess.mm IONotification.m  LaunchServicesWrapper.m DisableAppNap.c
-	g++ -o $(OUTLIB)_10.5.jnilib $(105_LFLAGS) $(105_OBJECTS)
-	rm -f *.o
-
-10.6:
-	g++ $(106_CFLAGS) OSXAccess.mm IONotification.m  LaunchServicesWrapper.m DisableAppNap.c
-	g++ -o $(OUTLIB)_10.6.jnilib $(106_LFLAGS) $(105_OBJECTS)
+	g++ $(CFLAGS) OSXAccess.mm IONotification.m  LaunchServicesWrapper.m DisableAppNap.c
+	g++ -o $(OUTLIB)_10.5.jnilib $(LFLAGS) $(OBJECTS)
 	rm -f *.o
 
