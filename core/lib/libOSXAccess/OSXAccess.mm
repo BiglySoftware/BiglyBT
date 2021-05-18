@@ -16,7 +16,7 @@
  */
 
 #include <Carbon/Carbon.h>
-#include <JavaVM/jni.h>
+#include "JavaVM/jni.h"
 #ifdef CARBON
 #include <AEDataModel.h>
 #endif

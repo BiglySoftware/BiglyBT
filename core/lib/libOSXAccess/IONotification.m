@@ -27,7 +27,7 @@
 #include <IOKit/storage/IOMedia.h>
 #include <IOKit/IOBSD.h>
 #include <sys/mount.h>
-#include <JavaVM/jni.h>
+#include "JavaVM/jni.h"
 
 #import "IONotification.h"
 
