@@ -206,6 +206,11 @@ public class AboutWindow {
 			}
 		};
 
+	Button copy = new Button( gSys, SWT.PUSH );
+	copy.setLayoutData( new GridData( GridData.HORIZONTAL_ALIGN_END ));
+	copy.setText( MessageText.getString( "label.copy" ));
+	copy.addListener( SWT.Selection,(ev)->{ClipboardCopy.copyToClipBoard(about_text);});
+	
     for (int i = 0; i < link[0].length; i++) {
       final CLabel linkLabel = new CLabel(gInternet, SWT.NONE);
       if (link[0][i].startsWith("!")) {
