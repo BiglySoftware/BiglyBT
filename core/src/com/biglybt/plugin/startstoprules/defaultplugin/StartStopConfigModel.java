@@ -156,21 +156,24 @@ public class StartStopConfigModel
 		listFP.add(model.createGroup(null, firstPriorityType));
 
 		// row
-		String[] minQueueLabels = new String[55];
-		int[] minQueueValues = new int[55];
-		minQueueLabels[0] = "1:2 (" + 0.5 + ")";
-		minQueueValues[0] = 500;
-		minQueueLabels[1] = "3:4 (" + 0.75 + ")";
-		minQueueValues[1] = 750;
-		minQueueLabels[2] = "1:1";
-		minQueueValues[2] = 1000;
-		minQueueLabels[3] = "5:4 (" + 1.25 + ")";
-		minQueueValues[3] = 1250;
-		minQueueLabels[4] = "3:2 (" + 1.50 + ")";
-		minQueueValues[4] = 1500;
-		minQueueLabels[5] = "7:4 (" + 1.75 + ")";
-		minQueueValues[5] = 1750;
-		for (int i = 6; i < minQueueLabels.length; i++) {
+		String[] minQueueLabels = new String[56];
+		int[] minQueueValues = new int[56];
+		int mqpos = 0;
+		minQueueLabels[mqpos] = MessageText.getString("ConfigView.text.ignore");
+		minQueueValues[mqpos++] = 0;
+		minQueueLabels[mqpos] = "1:2 (" + 0.5 + ")";
+		minQueueValues[mqpos++] = 500;
+		minQueueLabels[mqpos] = "3:4 (" + 0.75 + ")";
+		minQueueValues[mqpos++] = 750;
+		minQueueLabels[mqpos] = "1:1";
+		minQueueValues[mqpos++] = 1000;
+		minQueueLabels[mqpos] = "5:4 (" + 1.25 + ")";
+		minQueueValues[mqpos++] = 1250;
+		minQueueLabels[mqpos] = "3:2 (" + 1.50 + ")";
+		minQueueValues[mqpos++] = 1500;
+		minQueueLabels[mqpos] = "7:4 (" + 1.75 + ")";
+		minQueueValues[mqpos++] = 1750;
+		for (int i = mqpos; i < minQueueLabels.length; i++) {
 			minQueueLabels[i] = i - 4 + ":1";
 			minQueueValues[i] = (i - 4) * 1000;
 		}

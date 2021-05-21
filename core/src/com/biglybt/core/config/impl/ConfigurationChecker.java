@@ -663,11 +663,13 @@ ConfigurationChecker
 	      changed = true;
 	    }
 
+	    /* Relaxed restriction on this: https://github.com/BiglySoftware/BiglyBT/issues/2110
 	    int minQueueingShareRatio = COConfigurationManager.getIntParameter("StartStopManager_iFirstPriority_ShareRatio");
 	    if (minQueueingShareRatio < 500) {
 	      COConfigurationManager.setParameter("StartStopManager_iFirstPriority_ShareRatio", 500);
 	      changed = true;
 	    }
+	    */
 
 	    int iSeedingMin = COConfigurationManager.getIntParameter("StartStopManager_iFirstPriority_SeedingMinutes");
 	    if (iSeedingMin < 90 && iSeedingMin != 0) {
