@@ -4841,6 +4841,28 @@ public class OpenTorrentOptionsWindow
 						cmbDataDirChanged();
 					}
 				}});
+			
+			new MenuItem( more_menu, SWT.SEPARATOR );
+			 
+			MenuItem opt = new MenuItem( more_menu, SWT.CHECK );
+			
+			opt.setSelection( COConfigurationManager.getBooleanParameter( "open.torrent.window.rename.on.tlf.change" ));
+
+			Messages.setLanguageText(opt, "OpenTorrentWindow.tlf.rename");
+
+			opt.addSelectionListener(
+					new SelectionAdapter()
+					{
+						@Override
+						public void
+						widgetSelected(
+								SelectionEvent e )
+						{
+							COConfigurationManager.setParameter(
+									"open.torrent.window.rename.on.tlf.change",
+									((MenuItem)e.widget).getSelection());
+						}
+					});
 		}
 
 		private void setupStartOptions(SWTSkinObjectExpandItem so) {
