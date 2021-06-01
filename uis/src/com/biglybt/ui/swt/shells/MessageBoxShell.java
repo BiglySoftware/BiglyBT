@@ -118,6 +118,9 @@ public class MessageBoxShell
 
 	protected boolean isRemembered;
 
+	private boolean supportsApplyToAll;
+	private boolean	applyToAll;
+	
 	private String iconImageID;
 
 	private UserPrompterResultListener resultListener;
@@ -671,10 +674,8 @@ public class MessageBoxShell
 		}
 
 
-		// Remember Me
-		Button checkRemember = null;
 		if (rememberID != null) {
-			checkRemember = new Button(shell, SWT.CHECK);
+			Button checkRemember = new Button(shell, SWT.CHECK);
 			checkRemember.setText(rememberText);
 			checkRemember.setSelection(rememberByDefault);
 			isRemembered = rememberByDefault;
@@ -698,6 +699,19 @@ public class MessageBoxShell
 					}
 				}
 			});
+			
+		}else if ( supportsApplyToAll ) {
+			Button appkyToAll = new Button(shell, SWT.CHECK);
+			appkyToAll.setText(MessageText.getString( "label.apply.to.all" ));
+			
+			appkyToAll.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					Button button = (Button) event.widget;
+					applyToAll = button.getSelection();
+				}
+			});
+
 		} else if (needSpacer)  {
 			Button spacer = new Button(shell, SWT.CHECK);
 			spacer.setVisible(false);
@@ -1301,6 +1315,18 @@ public class MessageBoxShell
 		return cbEnabled;
 	}
 
+	public void
+	setApplyToAllEnabled()
+	{
+		supportsApplyToAll = true;
+	}
+	
+	public boolean
+	getApplyToAll()
+	{
+		return( applyToAll );
+	}
+	
 	public Shell getParent() {
 		return parent;
 	}

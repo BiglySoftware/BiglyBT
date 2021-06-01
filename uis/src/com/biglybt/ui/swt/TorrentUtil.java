@@ -1812,9 +1812,13 @@ public class TorrentUtil
 
 		int i = 0;
 		try {
+			boolean applyToAll = false;
+			int		applyToAllDecision = SWT.NO;
+			
 			for (; i < dms.length; i++) {
 				File target = destinations[i];
 				if (target.exists()) {
+					/*
 					MessageBox mb = new MessageBox(parentShell, SWT.ICON_QUESTION
 							| SWT.YES | SWT.NO);
 					mb.setText(MessageText.getString("exportTorrentWizard.process.outputfileexists.title"));
@@ -1825,7 +1829,42 @@ public class TorrentUtil
 					if (result == SWT.NO) {
 						return;
 					}
-
+					*/
+					
+					int result;
+					
+					if ( applyToAll ){
+						
+						result = applyToAllDecision;
+						
+					}else{
+						MessageBoxShell mb = new MessageBoxShell( SWT.YES | SWT.NO,
+								MessageText.getString("exportTorrentWizard.process.outputfileexists.title"),
+								dms[i].getDisplayName() + "\n\n" + 
+								MessageText.getString("exportTorrentWizard.process.outputfileexists.message" ));
+						
+						if ( dms.length > 1 ){
+							
+							mb.setApplyToAllEnabled();
+						}
+						
+						mb.open( null );
+						
+						result = mb.waitUntilClosed();
+						
+						applyToAll = mb.getApplyToAll();
+							
+						if ( applyToAll ){
+						
+							applyToAllDecision = result;
+						}
+					}
+					
+					if ( result == SWT.NO ){
+						
+						continue;
+					}
+					
 					if (!target.delete()) {
 						throw (new Exception("Failed to delete file"));
 					}
