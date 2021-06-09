@@ -19,9 +19,11 @@
 
 package com.biglybt.core.util;
 
+import java.net.InetAddress;
 
 public class
 IPToHostNameResolverRequest
+	extends AERunnable
 {
 	protected final String						ip;
 	protected IPToHostNameResolverListener	listener;
@@ -35,6 +37,33 @@ IPToHostNameResolverRequest
 		listener	= _listener;
 	}
 
+	@Override
+	public void 
+	runSupport()
+	{
+		IPToHostNameResolverListener l = listener;
+		
+		if ( l != null ){
+
+			if ( AENetworkClassifier.categoriseAddress( ip ) == AENetworkClassifier.AT_PUBLIC ){
+
+				try{
+					InetAddress addr = InetAddress.getByName( ip );
+
+					l.IPResolutionComplete( addr.getHostName(), true );
+
+				}catch( Throwable e ){
+
+					l.IPResolutionComplete( ip, false );
+
+				}
+			}else{
+
+				l.IPResolutionComplete( ip, true );
+			}
+		}		
+	}
+	
 	public void
 	cancel()
 	{
