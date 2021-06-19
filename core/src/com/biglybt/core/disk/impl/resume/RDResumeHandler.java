@@ -210,15 +210,6 @@ RDResumeHandler
 					DiskManagerFileInfo[]	files = disk_manager.getFiles();
 					
 					file_sizes = new HashMap<>();
-	
-					for (int i=0;i<files.length;i++){
-						try{
-							Long	len = new Long(((DiskManagerFileInfoImpl)files[i]).getCacheFile().getLength());
-							file_sizes.put( files[i], len );
-						}catch( CacheFileManagerException e ){
-							Debug.printStackTrace(e);
-						}
-					}
 				}
 
 				if ( resumeEnabled ){
@@ -376,9 +367,26 @@ RDResumeHandler
 
 									DMPieceMapEntry	entry = list.get(j);
 									
-									Long	file_size 		= (Long)file_sizes.get(entry.getFile());
-	
+									DiskManagerFileInfo file = entry.getFile();
+									
+									Long file_size = file_sizes.get( file );
+									
 									if ( file_size == null ){
+									
+										try{
+											file_size = new Long(((DiskManagerFileInfoImpl)file).getCacheFile().getLength());
+																						
+										}catch( CacheFileManagerException e ){
+											
+											Debug.printStackTrace(e);
+											
+											file_size = -1L;
+										}
+										
+										file_sizes.put( file, file_size );
+									}
+
+									if ( file_size == -1 ){
 	
 										piece_state	= PIECE_NOT_DONE;
 										pieceCannotExist = true;
