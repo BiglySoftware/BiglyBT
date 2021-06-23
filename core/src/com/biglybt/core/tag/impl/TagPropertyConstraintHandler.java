@@ -51,6 +51,7 @@ import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadListener;
+import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
@@ -4132,19 +4133,33 @@ TagPropertyConstraintHandler
 									seeds = Math.max( seeds, response.getSeeds());
 								}
 
+								Download dl = PluginCoreUtils.wrap( dm );
+
+								if ( dl != null ){
+									
+									seeds = Math.max( seeds, dl.getAggregatedScrapeResult().getSeedCount());
+								}
+								
 								return( Math.max( 0, seeds ));
 							}
 							case KW_PEER_COUNT:{
 
 								TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
 
-								int	peers = dm.getNbSeeds();
+								int	peers = dm.getNbPeers();
 
 								if ( response != null && response.isValid()){
 
 									peers = Math.max( peers, response.getPeers());
 								}
 
+								Download dl = PluginCoreUtils.wrap( dm );
+
+								if ( dl != null ){
+									
+									peers = Math.max( peers, dl.getAggregatedScrapeResult().getNonSeedCount());
+								}
+								
 								return( Math.max( 0, peers ));
 							}
 							case KW_SEED_PEER_RATIO:{
@@ -4160,6 +4175,16 @@ TagPropertyConstraintHandler
 									peers = Math.max( peers, response.getPeers());
 								}
 
+								Download dl = PluginCoreUtils.wrap( dm );
+
+								if ( dl != null ){
+									
+									DownloadScrapeResult sr = dl.getAggregatedScrapeResult();
+									
+									seeds = Math.max( seeds, sr.getSeedCount());
+									peers = Math.max( peers, sr.getNonSeedCount());
+								}
+								
 								float ratio;
 
 								if ( peers < 0 || seeds < 0 ){
