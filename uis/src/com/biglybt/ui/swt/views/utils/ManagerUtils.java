@@ -2545,6 +2545,7 @@ public class ManagerUtils {
 	private static final int LOCATE_MODE_LINK		= 0;
 	private static final int LOCATE_MODE_COPY		= 1;
 	private static final int LOCATE_MODE_MOVE		= 2;
+	private static final int LOCATE_MODE_PIECE		= 3;
 	
 	private static final int LOCATE_MODE_LINK_BLANK		= 0;
 	private static final int LOCATE_MODE_LINK_INTERNAL	= 1;
@@ -2623,7 +2624,8 @@ public class ManagerUtils {
 		mode_combo.setItems(
 				MessageText.getString( "label.link" ) + "    ",	// shitty layout doesn't give sufficient width for all options
 				MessageText.getString( "label.copy" ) + "    ",
-				MessageText.getString( "label.move" ) + "    ");
+				MessageText.getString( "label.move" ) + "    ",
+				MessageText.getString( "Peers.column.piece" ) + "    ");
 		
 			// link mode
 		
@@ -3412,7 +3414,7 @@ public class ManagerUtils {
 													}else if ( diff > 0 ){
 														return( 1 );
 													}else{
-														return( 0 );
+														return( o1.getIndex() - o2.getIndex());
 													}
 												}
 											});
@@ -3708,347 +3710,440 @@ public class ManagerUtils {
 	
 													byte[]	buffer = new byte[(int)piece_size];
 	
-													for ( File candidate: candidates ){
-	
-														synchronized( quit ){
-															if ( quit[0] ){
-																break;
-															}
-														}
-	
-														long 	file_to_stop_at;
-														long 	allowed_fails;
-	
-														int		failed_pieces	= 0;
-	
-														if ( tolerance == 0 ){
-	
-															file_to_stop_at = overall_to_stop_at;
-	
-															allowed_fails = 0;
-	
-														}else{
-	
-															long this_file_length = candidate.length();
-	
-															// might be too long, bring it back within range
-	
-															if ( this_file_length > file_length ){
-	
-																this_file_length = file_length;
-															}
-	
-															file_to_stop_at = this_file_length - piece_size;
-	
-															allowed_fails = (( tolerance*this_file_length/100 ) + (piece_size-1)) / piece_size;
-														}
-	
-														log( viewer, test_indent, "Testing " + candidate + (allowed_fails==0?"":(" (max fails=" + allowed_fails + ")" )) + " - " );
-	
-														RandomAccessFile raf = null;
-	
-														boolean	error 			= false;
-														boolean	hash_failed		= false;
-	
-														long	log_start	= SystemTime.getMonotonousTime();
-														long	last_ok_log = log_start;
-														long	dot_count	= 0;
-	
-														try{
-															raf = new RandomAccessFile( candidate, "r" );
-	
-															long 	file_offset 	= to_file_offset;
-															int		piece_number 	= to_piece_number;
-	
-															while( file_offset < file_to_stop_at ){
-	
-																synchronized( quit ){
-																	if ( quit[0] ){
-																		break;
-																	}
-																}
-	
-																raf.seek( file_offset );
-	
-																raf.read( buffer );
-	
-																byte[] required_hash = pieces[piece_number];
-																
-																boolean match;
-																
-																if ( required_hash != null ){
-																	ConcurrentHasherRequest req = 
-																		hasher.addRequest( 
-																			ByteBuffer.wrap( buffer ), 
-																			required_hash.length==20?1:2,
-																			(int)piece_size,
-																			to_file.getLength());
+													RandomAccessFile 	to_raf 			= null;
+													boolean				to_raf_tried 	= false;
+													
+													try{
+														for ( File from_file: candidates ){
 		
-																	byte[] hash = req.getResult();
-		
-																	match = Arrays.equals( required_hash, hash );
-																	
-																}else{
-																	
-																	match = false;
+															synchronized( quit ){
+																if ( quit[0] ){
+																	break;
 																}
-	
-																if ( match ){
-	
-																	long now = SystemTime.getMonotonousTime();
-	
-																	long elapsed = now - log_start;
-	
-																	long delay = Math.min( LOG_TICK_DOT_MIN + ( (LOG_TICK_DOT_MAX-LOG_TICK_DOT_MIN) * elapsed )/60000, LOG_TICK_DOT_MAX );																
-	
-																	if ( now - last_ok_log >= delay ){
-	
-																		last_ok_log = now;
-	
-																		if ( dot_count == 80 ){
-	
-																			logLine( viewer, 0, "" );
+															}
+		
+															long 	file_to_stop_at;
+															long 	allowed_fails;
+		
+															int		matched_pieces	= 0;
+															int		failed_pieces	= 0;
+															int		copied_pieces	= 0;
+		
+															if ( tolerance == 0 ){
+		
+																file_to_stop_at = overall_to_stop_at;
+		
+																allowed_fails = 0;
+		
+															}else{
+		
+																long this_file_length = from_file.length();
+		
+																// might be too long, bring it back within range
+		
+																if ( this_file_length > file_length ){
+		
+																	this_file_length = file_length;
+																}
+		
+																file_to_stop_at = this_file_length - piece_size;
+		
+																allowed_fails = (( tolerance*this_file_length/100 ) + (piece_size-1)) / piece_size;
+															}
+		
+															log( viewer, test_indent, "Testing " + from_file + (allowed_fails==0?"":(" (max fails=" + allowed_fails + ")" )) + " - " );
+		
+															RandomAccessFile from_raf = null;
+		
+															boolean	error 			= false;
+															boolean	hash_failed		= false;
+		
+															long	log_start	= SystemTime.getMonotonousTime();
+															long	last_ok_log = log_start;
+															long	dot_count	= 0;
+		
+															try{
+																from_raf = new RandomAccessFile( from_file, "r" );
+		
+																long 	file_offset 	= to_file_offset;
+																int		piece_number 	= to_piece_number;
+		
+																while( file_offset < file_to_stop_at ){
+		
+																	synchronized( quit ){
+																		if ( quit[0] ){
+																			break;
 																		}
-	
-																		dot_count++;
-	
-																		log( viewer, 0, "." );
 																	}
-																}else{
-	
-																	failed_pieces++;
-	
-																	if ( failed_pieces > allowed_fails ){
-	
-																		logLine( viewer, 0, "X" );
-	
-																		hash_failed = true;
-	
-																		failed_candidates.add( candidate.getAbsolutePath());	
-	
-																		break;
-	
-																	}else{
-	
-																		log( viewer, 0, "x" );
-																	}
-																}
-	
-																file_offset += piece_size;
-																piece_number++;
-															}
-														}catch( Throwable e ){
-	
-															Debug.out( e );
-	
-															logLine( viewer, 0, "X" );
-	
-															error = true;
-	
-														}finally{
-	
-															if ( raf != null ){
-	
-																try{
-																	raf.close();
-	
-																}catch( Throwable e ){
-	
-																}
-															}
-														}
-	
-														if ( !( error || hash_failed )){
-	
-															logLine( viewer, 0, " Matched" + (failed_pieces==0?"":(" (fails=" + failed_pieces + ")")));
-	
-															int action_indent = test_indent+1;
-	
-															if ( file.getStorageType() != DiskManagerFileInfo.ST_LINEAR ){
-																
-																boolean worked = file.setStorageType( DiskManagerFileInfo.ST_LINEAR, true );
-																
-																logLine( viewer, action_indent, "Setting storage type to linear - " + ( worked?"OK":"Failed" ));
-															}
-	
-															if ( file.isSkipped()){
-	
-																File existing = file.getFile( true );
-	
-																boolean existed = existing.exists();
-	
-																file.setSkipped( false );
-	
-																boolean worked = !file.isSkipped();
-	
-																if ( worked ){
-	
-																	unskipped_count++;
-																}
-	
-																logLine( viewer, action_indent, "Setting priority to normal - " + ( worked?"OK":"Failed" ));
-	
-																if ( !existed && existing.exists()){
-	
-																	existing.delete();
-																}
-															}
-	
-															if ( mode == LOCATE_MODE_LINK ){
-	
-																try{
-																	dm.setUserData( "set_link_dont_delete_existing", true );
-	
-																	logLine( viewer, action_indent, "Linking to " + candidate );
-	
-																	boolean do_internal_link = true;
-																	
-																	if ( link_type == LOCATE_MODE_LINK_HARD ){
-																																		
-																		File original = file.getFile( false );
-																	
-																		if ( original.exists()){
 		
-																			original.delete();
-																			
-																		}else{
-																			
-																			File o_parent = original.getParentFile();
-																			
-																			if ( !o_parent.exists()){
-																				
-																				o_parent.mkdirs();
+																	from_raf.seek( file_offset );
+		
+																	from_raf.read( buffer );
+		
+																	byte[] required_hash = pieces[piece_number];
+																	
+																	boolean match;
+																	
+																	if ( required_hash != null ){
+																		ConcurrentHasherRequest req = 
+																			hasher.addRequest( 
+																				ByteBuffer.wrap( buffer ), 
+																				required_hash.length==20?1:2,
+																				(int)piece_size,
+																				to_file.getLength());
+			
+																		byte[] hash = req.getResult();
+			
+																		match = Arrays.equals( required_hash, hash );
+																		
+																	}else{
+																		
+																		match = false;
+																	}
+		
+																	if ( match ){
+		
+																		matched_pieces++;
+																		
+																		long now = SystemTime.getMonotonousTime();
+		
+																		long elapsed = now - log_start;
+		
+																		long delay = Math.min( LOG_TICK_DOT_MIN + ( (LOG_TICK_DOT_MAX-LOG_TICK_DOT_MIN) * elapsed )/60000, LOG_TICK_DOT_MAX );																
+		
+																		if ( now - last_ok_log >= delay ){
+		
+																			last_ok_log = now;
+		
+																			if ( dot_count == 80 ){
+		
+																				logLine( viewer, 0, "" );
 																			}
+		
+																			dot_count++;
+		
+																			log( viewer, 0, "." );
 																		}
 																		
-																		try{
-																			Files.createLink( original.toPath(), candidate.toPath());
+																		if ( mode == LOCATE_MODE_PIECE ){
 																			
-																			if ( file.setLink( original )){
+																			if ( to_raf == null && !to_raf_tried ){
 																				
-																				do_internal_link = false;
+																				to_raf_tried = true;
 																				
-																				logLine( viewer, action_indent+1, "Hard Link successful" );
+																				int action_indent = test_indent+1;
 																				
-																				dm_files.add( candidate.getAbsolutePath());
+																				if ( file.getStorageType() != DiskManagerFileInfo.ST_LINEAR ){
+																					
+																					boolean worked = file.setStorageType( DiskManagerFileInfo.ST_LINEAR, true );
+																					
+																					logLine( viewer, action_indent, "Setting storage type to linear - " + ( worked?"OK":"Failed" ));
+																				}
+						
+																				File existing = file.getFile( true );
+
+																				if ( file.isSkipped()){
+												
+																					boolean existed = existing.exists();
+						
+																					file.setSkipped( false );
+						
+																					boolean worked = !file.isSkipped();
+						
+																					if ( worked ){
+						
+																						unskipped_count++;
+																					}
+						
+																					logLine( viewer, action_indent, "Setting priority to normal - " + ( worked?"OK":"Failed" ));
+						
+																					if ( !existed && existing.exists()){
+						
+																						existing.delete();
+																					}
+																				}
 																				
-																				actions_established.put( file, candidate );
+																				if ( !existing.exists()){
+																					
+																					existing.getParentFile().mkdirs();
+																				}
+																				
+																				to_raf = new RandomAccessFile( existing, "rw" );
+																			}
+																			
+																			if ( to_raf != null ){
+																				
+																				to_raf.seek( file_offset );
+																				
+																				to_raf.write( buffer );
+
+																				copied_pieces++;
+																				
+																				if ( !actions_established.containsKey( file )){
+																					
+																					actions_established.put( file, from_file );
+																					
+																					action_count++;
+																				}
+																			}
+																		}
+																	}else{
+		
+																		failed_pieces++;
+		
+																		if ( failed_pieces > allowed_fails && mode != LOCATE_MODE_PIECE ){
+		
+																			logLine( viewer, 0, "X" );
+		
+																			hash_failed = true;
+		
+																			failed_candidates.add( from_file.getAbsolutePath());	
+		
+																			break;
+		
+																		}else{
+		
+																			log( viewer, 0, "x" );
+																		}
+																	}
+		
+																	file_offset += piece_size;
+																	piece_number++;
+																}
+															}catch( Throwable e ){
+		
+																Debug.out( e );
+		
+																logLine( viewer, 0, "X" );
+		
+																error = true;
+		
+															}finally{
+		
+																if ( from_raf != null ){
+		
+																	try{
+																		from_raf.close();
+		
+																	}catch( Throwable e ){
+		
+																	}
+																}
+															}
+		
+															if ( !( error || hash_failed )){
+		
+																if ( mode == LOCATE_MODE_PIECE ){
+																	
+																	logLine( viewer, 0, " Copied " + copied_pieces + " pieces" );
+
+																		// continue onto next candidate as may have other pieces
+																	
+																}else{
+																	
+																	logLine( viewer, 0, " Matched" + (failed_pieces==0?"":(" (fails=" + failed_pieces + ")")));
+			
+																	int action_indent = test_indent+1;
+			
+																	if ( file.getStorageType() != DiskManagerFileInfo.ST_LINEAR ){
+																		
+																		boolean worked = file.setStorageType( DiskManagerFileInfo.ST_LINEAR, true );
+																		
+																		logLine( viewer, action_indent, "Setting storage type to linear - " + ( worked?"OK":"Failed" ));
+																	}
+			
+																	if ( file.isSkipped()){
+			
+																		File existing = file.getFile( true );
+			
+																		boolean existed = existing.exists();
+			
+																		file.setSkipped( false );
+			
+																		boolean worked = !file.isSkipped();
+			
+																		if ( worked ){
+			
+																			unskipped_count++;
+																		}
+			
+																		logLine( viewer, action_indent, "Setting priority to normal - " + ( worked?"OK":"Failed" ));
+			
+																		if ( !existed && existing.exists()){
+			
+																			existing.delete();
+																		}
+																	}
+			
+																	if ( mode == LOCATE_MODE_LINK ){
+			
+																		try{
+																			dm.setUserData( "set_link_dont_delete_existing", true );
+			
+																			logLine( viewer, action_indent, "Linking to " + from_file );
+			
+																			boolean do_internal_link = true;
+																			
+																			if ( link_type == LOCATE_MODE_LINK_HARD ){
+																																				
+																				File original = file.getFile( false );
+																			
+																				if ( original.exists()){
+				
+																					original.delete();
+																					
+																				}else{
+																					
+																					File o_parent = original.getParentFile();
+																					
+																					if ( !o_parent.exists()){
+																						
+																						o_parent.mkdirs();
+																					}
+																				}
+																				
+																				try{
+																					Files.createLink( original.toPath(), from_file.toPath());
+																					
+																					if ( file.setLink( original )){
+																						
+																						do_internal_link = false;
+																						
+																						logLine( viewer, action_indent+1, "Hard Link successful" );
+																						
+																						dm_files.add( from_file.getAbsolutePath());
+																						
+																						actions_established.put( file, from_file );
+					
+																						action_count++;
+					
+																						matched = true;
+																						
+																					}else{
+																						
+																						original.delete();
+																						
+																						logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link" );
+		
+																					}
+																				}catch( Throwable e ){
+																					
+																					logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: Error=" + Debug.getNestedExceptionMessage( e ));
+																				}
+																			}
+																			
+																			if ( do_internal_link ){
+																				
+																				if ( file.setLink( from_file )){
+				
+																					logLine( viewer, action_indent+1, "Link successful" );
+				
+																					dm_files.add( from_file.getAbsolutePath());
+				
+																					actions_established.put( file, from_file );
+				
+																					action_count++;
+				
+																					internal_link_count++;
+																					
+																					matched = true;
+				
+																					if ( internal_link_count > MAX_LINKS ){
+				
+																						logLine( viewer, action_indent+2, LINK_LIMIT_MSG );
+				
+																						break download_loop;
+																					}
+																				}else{
+				
+																					logLine( viewer, action_indent+1, "Link failed" );
+																				}
+																			}
+																		}finally{
+			
+																			dm.setUserData( "set_link_dont_delete_existing", null );
+			
+																		}
+																	}else{
+			
+																		File target = file.getFile( true );
+			
+																		if ( target.exists()){
+			
+																			target.delete();
+																		}
+			
+																		File parent = target.getParentFile();
+			
+																		if ( !parent.exists()){
+			
+																			parent.mkdirs();
+																		}
+			
+																		if ( mode == LOCATE_MODE_COPY ){
+			
+																			logLine( viewer, action_indent, "Copying " + from_file + " to " + target );
+			
+																			boolean ok = FileUtil.copyFile( from_file,  target );
+			
+																			if ( ok ){
+			
+																				logLine( viewer, action_indent+1, "Copy successful" );
+			
+																				actions_established.put( file, from_file );
 			
 																				action_count++;
 			
 																				matched = true;
-																				
+			
 																			}else{
-																				
-																				original.delete();
-																				
-																				logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link" );
-
+			
+																				logLine( viewer, action_indent+1, "Copy failed" );
 																			}
-																		}catch( Throwable e ){
-																			
-																			logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: Error=" + Debug.getNestedExceptionMessage( e ));
-																		}
-																	}
-																	
-																	if ( do_internal_link ){
-																		
-																		if ( file.setLink( candidate )){
-		
-																			logLine( viewer, action_indent+1, "Link successful" );
-		
-																			dm_files.add( candidate.getAbsolutePath());
-		
-																			actions_established.put( file, candidate );
-		
-																			action_count++;
-		
-																			internal_link_count++;
-																			
-																			matched = true;
-		
-																			if ( internal_link_count > MAX_LINKS ){
-		
-																				logLine( viewer, action_indent+2, LINK_LIMIT_MSG );
-		
-																				break download_loop;
+																		}else if ( mode == LOCATE_MODE_MOVE ){
+			
+																			logLine( viewer, action_indent, "Moving " + from_file + " to " + target );
+			
+																			boolean ok = FileUtil.renameFile( from_file,  target );
+			
+																			if ( ok ){
+			
+																				logLine( viewer, action_indent+1, "Move successful" );
+			
+																				actions_established.put( file, from_file );
+			
+																				action_count++;
+			
+																				matched = true;
+			
+																			}else{
+			
+																				logLine( viewer, action_indent+1, "Move failed" );
 																			}
 																		}else{
-		
-																			logLine( viewer, action_indent+1, "Link failed" );
+																			
+																			Debug.out( "derp" );
 																		}
 																	}
-																}finally{
-	
-																	dm.setUserData( "set_link_dont_delete_existing", null );
-	
-																}
-															}else{
-	
-																File target = file.getFile( true );
-	
-																if ( target.exists()){
-	
-																	target.delete();
-																}
-	
-																File parent = target.getParentFile();
-	
-																if ( !parent.exists()){
-	
-																	parent.mkdirs();
-																}
-	
-																if ( mode == LOCATE_MODE_COPY ){
-	
-																	logLine( viewer, action_indent, "Copying " + candidate + " to " + target );
-	
-																	boolean ok = FileUtil.copyFile( candidate,  target );
-	
-																	if ( ok ){
-	
-																		logLine( viewer, action_indent+1, "Copy successful" );
-	
-																		actions_established.put( file, candidate );
-	
-																		action_count++;
-	
-																		matched = true;
-	
-																	}else{
-	
-																		logLine( viewer, action_indent+1, "Copy failed" );
-																	}
-																}else if ( mode == LOCATE_MODE_MOVE ){
-	
-																	logLine( viewer, action_indent, "Moving " + candidate + " to " + target );
-	
-																	boolean ok = FileUtil.renameFile( candidate,  target );
-	
-																	if ( ok ){
-	
-																		logLine( viewer, action_indent+1, "Move successful" );
-	
-																		actions_established.put( file, candidate );
-	
-																		action_count++;
-	
-																		matched = true;
-	
-																	}else{
-	
-																		logLine( viewer, action_indent+1, "Move failed" );
-																	}
-																}else{
-																	
-																	Debug.out( "derp" );
+			
+																	break;
 																}
 															}
-	
-															break;
+														}
+													}finally{
+													
+														if ( to_raf != null ){
+															
+															try{
+																
+																to_raf.close();
+																
+															}catch( Throwable e ){
+																
+																Debug.out( e );
+															}
 														}
 													}
-	
 												}
 	
 												if ( !matched ){
@@ -4144,6 +4239,11 @@ public class ManagerUtils {
 	
 										DiskManagerFileInfo file = entry.getKey();
 	
+										if ( actions_established.containsKey( file )){
+											
+											continue;
+										}
+										
 										if ( selected_file_indexes != null ){
 	
 											if ( !selected_file_indexes.contains( file.getIndex())){
@@ -4339,7 +4439,7 @@ public class ManagerUtils {
 														target.delete();
 													}
 	
-													if ( mode == LOCATE_MODE_COPY ){
+													if ( mode == LOCATE_MODE_COPY || mode == LOCATE_MODE_PIECE ){
 	
 														logLine( viewer, action_indent, "Copying " + source_file + " to " + target );
 	
@@ -4388,7 +4488,7 @@ public class ManagerUtils {
 										}
 									}
 	
-									String action_str = mode==LOCATE_MODE_LINK?"Linked":(mode==LOCATE_MODE_COPY?"Copied":"Moved" );
+									String action_str = mode==LOCATE_MODE_LINK?"Linked":(mode==LOCATE_MODE_COPY||mode==LOCATE_MODE_PIECE?"Copied":"Moved" );
 	
 									logLine( viewer, dm_indent, action_str + " " + actions_ok + " of " + unmatched_files.size());
 								}
