@@ -885,6 +885,31 @@ AllTrackersManagerImpl
 		return( existing_tracker );
 	}
 	
+	private void
+	unregister(
+		String		name )
+	{
+		AllTrackersTrackerImpl existing_tracker = host_map.remove( name );
+		
+		if ( existing_tracker != null ){
+			
+			for ( AllTrackersListener listener: listeners ){
+				
+				List<AllTrackersTracker>	trackers = new ArrayList<>();
+				
+				trackers.add( existing_tracker );
+				
+				try{
+					listener.trackerEventOccurred( new AllTrackersEventImpl( AllTrackersEvent.ET_TRACKER_REMOVED, trackers ));
+	
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+		}
+	}
+	
 	@Override
 	public void 
 	updateTracker(
@@ -1276,6 +1301,20 @@ AllTrackersManagerImpl
 		isRegistered()
 		{
 			return( registered );
+		}
+		
+		@Override
+		public boolean 
+		isRemovable()
+		{
+			return( num_private + num_public == 0 );
+		}
+		
+		@Override
+		public void 
+		remove()
+		{
+			unregister( name );
 		}
 		
 		@Override

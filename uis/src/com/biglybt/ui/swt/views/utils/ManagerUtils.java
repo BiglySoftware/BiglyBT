@@ -2578,7 +2578,7 @@ public class ManagerUtils {
 			}
 		}
 		
-		final SkinnedDialog dialog = new SkinnedDialog( loader, "skin3_dlg_findfiles", "shell", shell,  SWT.DIALOG_TRIM );
+		final SkinnedDialog dialog = new SkinnedDialog( loader, "skin3_dlg_findfiles", "shell", shell,  SWT.DIALOG_TRIM | SWT.RESIZE );
 		
 		SWTSkin skin = dialog.getSkin();
 

@@ -71,6 +71,7 @@ import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 
 
@@ -253,13 +254,20 @@ public class SBC_AllTrackersView
 						new ColumnAllTrackersResponseTime(column);
 					}
 				});
-
 		
 		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersHasPrivate.COLUMN_ID,
 				new TableColumnCreationListener() {
 					@Override
 					public void tableColumnCreated(TableColumn column) {
 						new ColumnAllTrackersHasPrivate(column);
+					}
+				});
+		
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersRemovable.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersRemovable(column);
 					}
 				});
 
@@ -512,30 +520,25 @@ public class SBC_AllTrackersView
 			return( false );
 		}
 
-		/*
+		boolean didSomething = false;
+		
 		List<Object> datasources = tv.getSelectedDataSources();
 
-		if ( datasources.size() > 0 ){
-
-			List<AllTrackersViewEntry>	dms = new ArrayList<>(datasources.size());
-
-			for ( Object o: datasources ){
-
-				dms.add((AllTrackersViewEntry)o);
-			}
-
+		for ( Object o: datasources ){
+			
+			AllTrackersViewEntry entry = (AllTrackersViewEntry)o;
+			
 			String id = item.getID();
 
 			if ( id.equals("remove")) {
 
+				entry.remove();
+				
+				didSomething = true;
 			}
-
-
-			return true;
-		}
-		*/
+		}		
 		
-		return false;
+		return( didSomething );
 	}
 
 	@Override
@@ -549,19 +552,21 @@ public class SBC_AllTrackersView
 			return;
 		}
 
-		boolean canEnable = false;
+		List<Object> datasources = tv.getSelectedDataSources();
+		
+		boolean canRemove = !datasources.isEmpty();
 
-		Object[] datasources = tv.getSelectedDataSources().toArray();
-
-		if ( datasources.length > 0 ){
-
-			canEnable = true;
+		for ( Object o: datasources ){
+			
+			AllTrackersViewEntry entry = (AllTrackersViewEntry)o;
+			
+			if ( !entry.isRemovable()){
+				
+				canRemove = false;
+			}
 		}
 
-		//list.put( "start", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
-		//list.put( "startstop", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
-
-		//list.put( "remove", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
+		list.put( "remove", canRemove ? UIToolBarItem.STATE_ENABLED : 0);
 	}
 	
 	private MdiEntrySWT getActiveView() {
@@ -862,6 +867,8 @@ public class SBC_AllTrackersView
 
 		Set<String>	assoc_templates = new TreeSet<>();
 		
+		boolean canRemove = hasSelection;
+		
 		for ( AllTrackersTracker tracker: trackers ){
 			
 			String str = tracker.getTrackerName().toLowerCase( Locale.US );
@@ -871,6 +878,11 @@ public class SBC_AllTrackersView
 			if ( list != null ){
 				
 				assoc_templates.addAll( list );
+			}
+			
+			if ( !tracker.isRemovable()){
+				
+				canRemove = false;
 			}
 		}
 		
@@ -1139,6 +1151,23 @@ public class SBC_AllTrackersView
 				mi.addListener( SWT.Selection, l );
 			}
 		}
+		
+			// remove
+
+		MenuItem itemRemove = new MenuItem(menu, SWT.PUSH );
+
+		Messages.setLanguageText(itemRemove, "MySharesView.menu.remove");
+		Utils.setMenuItemImage(itemRemove, "delete");
+
+		itemRemove.addListener(SWT.Selection, (ev)->{
+			
+			for ( AllTrackersTracker t: trackers ){
+				
+				t.remove();
+			}			
+		});
+		
+		itemRemove.setEnabled( canRemove );
 		
 			// edit templates
 		
@@ -1800,6 +1829,20 @@ public class SBC_AllTrackersView
 		getTag()
 		{
 			return( getSelectionTag());
+		}
+		
+		@Override
+		public boolean 
+		isRemovable()
+		{
+			return( tracker.isRemovable());
+		}
+		
+		@Override
+		public void 
+		remove()
+		{
+			tracker.remove();
 		}
 	}
 }

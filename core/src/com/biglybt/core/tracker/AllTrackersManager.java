@@ -231,6 +231,12 @@ AllTrackersManager
 		
 		public int
 		getPrivatePercentage();
+		
+		public boolean
+		isRemovable();
+		
+		public void
+		remove();
 	}
 	
 	public interface
