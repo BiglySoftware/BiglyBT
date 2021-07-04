@@ -83,6 +83,13 @@ public class PiecesView
 	}
 	
 	@Override
+	protected 
+	String getTableID()
+	{
+		return(TableManager.TABLE_TORRENT_PIECES );
+	}
+	
+	@Override
 	public TableViewSWT<PEPiece> 
 	initYourTableView() 
 	{

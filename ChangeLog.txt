@@ -27,6 +27,7 @@ FEATURE: UI    | Allow first priority share ratio to be set to 'ignore' [Parg]
 FEATURE: UI    | Added copy button to About info [Parg]
 FEATURE: UI    | Added 'apply to all' option to torrent export dialog [Parg]
 FEATURE: UI    | Add 'rename on top level folder change' item to 'More' menu in OTO win [Parg]
+FEATURE: UI    | Added filter box for all-pieces view to filter download/file name [Parg]
 
 CHANGE: Core   | Move transition from force-download -> not-force-seeding later [Parg]
 CHANGE: Core   | Increase hash scheduler limits as current not stressing cpu [Parg]

@@ -57,6 +57,13 @@ public class PiecesSuperView
 	}
 
 	@Override
+	protected 
+	String getTableID()
+	{
+		return(TableManager.TABLE_ALL_PIECES );
+	}
+	
+	@Override
 	public TableViewSWT<PEPiece> initYourTableView()
 	{
 		return( initYourTableView( TableManager.TABLE_ALL_PIECES ));
