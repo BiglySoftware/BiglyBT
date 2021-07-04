@@ -3,6 +3,7 @@ BIGLYBT CHANGELOG
 
 2021.07.yy | BiglyBT 2.8.0.0
 
+FEATURE: Tag   | Support Tag Constraints in Library filter expressions [Parg]
 FEATURE: Core  | Add hard-link option to revert-files [Parg]
 FEATURE: Core  | Support hard-link option in 'search-for-existing-files' [Parg]
 FEATURE: Core  | Support NAT testing for Light Seeds [Parg]
@@ -20,7 +21,6 @@ FEATURE: UI    | Option to force non-system colors to grayscale [TuxPaper]
 FEATURE: UI    | Added info about last/next scrape time to tracker status [Parg]
 FEATURE: UI    | Table column foreground/background color settings [Parg]
 FEATURE: UI    | Use +/- keys to change priority in Files View [Parg]
-FEATURE: UI    | Support Tag Constraints in Library filter expressions [Parg]
 FEATURE: UI    | New 'connect health' column to show success of outgoing connections [Parg]
 FEATURE: UI    | Added last-piece-number column to Files View [Parg]
 FEATURE: UI    | Allow first priority share ratio to be set to 'ignore' [Parg]
@@ -68,6 +68,7 @@ BUGFIX: UI     | Toolbar should only act on Files or Downloads, not both; Better
 BUGFIX: UI     | Fix search constraint caching [Parg]
 BUGFIX: UI     | Fix next selection on ctrl+w close in classic UI [Parg]
 BUGFIX: UI     | Don't re-affirm table selection if not focused [Parg]
+BUGFIX: UI     | All Trackers view doesn't implement !regex correctly [Parg]
 
 2021.03.20 | BiglyBT 2.7.0.2
 

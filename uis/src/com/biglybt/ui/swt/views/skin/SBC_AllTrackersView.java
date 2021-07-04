@@ -1,4 +1,4 @@
-/* 
+ /* 
  * Copyright (C) Bigly Software, Inc, All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1654,7 +1654,7 @@ public class SBC_AllTrackersView
 
 		boolean result = pattern.matcher(name).find() == match_result;
 		
-		if ( !result ){
+		if ( result != match_result ){
 			
 			String status = tracker.getStatusString();
 			
