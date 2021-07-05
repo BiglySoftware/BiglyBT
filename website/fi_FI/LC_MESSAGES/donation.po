@@ -15,7 +15,7 @@ msgstr ""
 "X-Crowdin-Language: fi\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 438\n"
-"PO-Revision-Date: 2021-01-06 08:12\n"
+"PO-Revision-Date: 2021-07-05 08:11\n"
 
 msgid "test"
 msgstr "Kokeile englanniksi"
@@ -39,7 +39,7 @@ msgid "donation_bitcoin_title"
 msgstr "Bitcoin"
 
 msgid "donation_monthly_description"
-msgstr "Tarjoa kehittäjille kahvia kuukausittain"
+msgstr "Tarjoa kehittäjille joka kuukausi kahvit"
 
 msgid "donation_monthly_per_month"
 msgstr "/kk"
