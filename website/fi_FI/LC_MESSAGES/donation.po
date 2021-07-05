@@ -15,7 +15,7 @@ msgstr ""
 "X-Crowdin-Language: fi\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 438\n"
-"PO-Revision-Date: 2021-07-05 08:11\n"
+"PO-Revision-Date: 2021-07-05 08:41\n"
 
 msgid "test"
 msgstr "Kokeile englanniksi"
@@ -30,7 +30,7 @@ msgid "donation_title"
 msgstr "Tue BiglyBT:tä"
 
 msgid "donation_monthly_title"
-msgstr "Kuukausittainen Kiitos"
+msgstr "Kuukausittainen kiitos"
 
 msgid "donation_onetime_title"
 msgstr "Yksittäinen uhraus"
