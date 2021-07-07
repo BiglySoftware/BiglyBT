@@ -108,7 +108,7 @@ public abstract class ECPoint
         this.preCompInfo = preCompInfo;
     }
 
-    public abstract byte[] getEncoded();
+    public abstract byte[] getEncoded( boolean ignore );
 
     public abstract ECPoint add(ECPoint b);
     public abstract ECPoint subtract(ECPoint b);
@@ -189,7 +189,7 @@ public abstract class ECPoint
          * return the field element encoded with point compression. (S 4.3.6)
          */
         @Override
-        public byte[] getEncoded()
+        public byte[] getEncoded(boolean ignore)
         {
             if (this.isInfinity())
             {
@@ -385,7 +385,7 @@ public abstract class ECPoint
          * @see org.gudy.bouncycastle.math.ec.ECPoint#getEncoded()
          */
         @Override
-        public byte[] getEncoded()
+        public byte[] getEncoded(boolean ignore)
         {
             if (this.isInfinity())
             {

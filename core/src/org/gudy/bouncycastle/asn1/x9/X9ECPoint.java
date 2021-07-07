@@ -44,6 +44,6 @@ public class X9ECPoint
     @Override
     public DERObject getDERObject()
     {
-        return new DEROctetString(p.getEncoded());
+        return new DEROctetString(p.getEncoded(false));
     }
 }
