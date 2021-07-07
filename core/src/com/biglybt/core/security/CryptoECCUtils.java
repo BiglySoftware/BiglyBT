@@ -141,7 +141,7 @@ CryptoECCUtils
    			throw( new CryptoManagerException( "Invalid public key" ));
    		}
 
-   		return ((ECPublicKey)pubkey).getQ().getEncoded();
+   		return ((ECPublicKey)pubkey).getQ().getEncoded(false);
    	}
 
 
