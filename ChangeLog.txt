@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2021.07.yy | BiglyBT 2.8.0.0
+2021.07.09 | BiglyBT 2.8.0.0
 
 FEATURE: Tag   | Support Tag Constraints in Library filter expressions [Parg]
 FEATURE: Core  | Add hard-link option to revert-files [Parg]
