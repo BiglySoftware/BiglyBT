@@ -49,6 +49,8 @@ CHANGE: UI     | Show Tag move-on-complete actions in Library column when no exp
 CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
 CHANGE: UI     | tr_TR: Turkish translation update [BouRock,Snn1452]
 CHANGE: UI     | sl_SI: Slovenian translation update [upwinxp]
+CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
+CHANGE: UI     | ru_RU: Russian translation update [jdPhobos]
 
 BUGFIX: Core   | Fix possible startup fail due to invalid "locale" setting [Parg]
 BUGFIX: Core   | Don't make reserved slots first-priority as it borks download limits [Parg]
