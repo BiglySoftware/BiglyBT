@@ -4,6 +4,7 @@
 AUTOUPDATE_SCRIPT=1 # change to 0 if you don't want your changes overwritten on next SCRIPT_VERSION change
 JAVA_PROGRAM_DIR=""	# use full path to java bin dir, ex. "/usr/java/j2sdk1.4.2/bin/"
 #PROGRAM_DIR="/home/username/apps/biglybt"	# use full path to BiglyBT bin dir
+#INSTALL_DIR="$HOME/.biglybt"
 JAVA_PROPS="-Djava.net.preferIPv4Stack=true"
 
 #######################################
@@ -99,7 +100,7 @@ runJavaOutput()
 	RESULT=`${JAVA_PROGRAM_DIR}java \
 		-cp "${CLASSPATH}" \
 		"-Djava.library.path=${PROGRAM_DIR}" \
-		"-Dazureus.install.path=${PROGRAM_DIR}" \
+		"-Dazureus.install.path=${INSTALL_DIR}" \
 		"-Dazureus.script=$0" \
 		"-Dawt.useSystemAAFontSettings=gasp" \
 		${JAVA_PROPS} \
@@ -179,6 +180,11 @@ else
 	fi
 fi
 
+# by default INSTALL DIR is equal to PROGRAM DIR
+if [ -z "$INSTALL_DIR" ]; then
+    INSTALL_DIR=${PROGRAM_DIR}
+fi
+
 OLDPATH=$PWD
 
 # Change path here so we can do for loop on program dirs with spaces
@@ -218,7 +224,7 @@ echo $MSG_LOADING
 ${JAVA_PROGRAM_DIR}java -Xmx256m \
 	-cp "${CLASSPATH}" \
 	"-Djava.library.path=${PROGRAM_DIR}" \
-	"-Dazureus.install.path=${PROGRAM_DIR}" \
+	"-Dazureus.install.path=${INSTALL_DIR}" \
 	"-Dazureus.script=$0" \
 	${JAVA_PROPS} \
 	${JAVA_ARGS} \
