@@ -516,6 +516,7 @@ public class SBC_DiskOpsView
 		return(	type == CoreOperation.OP_DOWNLOAD_ALLOCATION || 
 				type == CoreOperation.OP_DOWNLOAD_CHECKING || 
 				type == CoreOperation.OP_DOWNLOAD_EXPORT || 
+				type == CoreOperation.OP_DOWNLOAD_COPY || 
 				type == CoreOperation.OP_FILE_MOVE ); 
 	}
 

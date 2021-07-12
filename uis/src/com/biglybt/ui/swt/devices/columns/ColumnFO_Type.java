@@ -77,6 +77,12 @@ public class ColumnFO_Type
 				
 				break;
 			}
+			case CoreOperation.OP_DOWNLOAD_COPY:{
+				
+				suffix = "copy";
+				
+				break;
+			}
 			case CoreOperation.OP_DOWNLOAD_ALLOCATION:{
 				
 				suffix = "alloc";

@@ -27,8 +27,9 @@ CoreOperation
 	public static final int	OP_DOWNLOAD_EXPORT			= 4;
 	public static final int	OP_DOWNLOAD_ALLOCATION		= 5;
 	public static final int	OP_DOWNLOAD_CHECKING		= 6;
+	public static final int	OP_DOWNLOAD_COPY			= 7;
 
-	public static final int[] OP_SORT_ORDER = { -1, -1, 3, 0, 4, 1, 2 };
+	public static final int[] OP_SORT_ORDER = { -1, -1, 3, 0, 4, 1, 2, 5 };
 	
 	public int
 	getOperationType();

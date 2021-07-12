@@ -67,6 +67,7 @@ ProgressWindow
 					
 					if ( 	( 	type == CoreOperation.OP_FILE_MOVE ||
 								type == CoreOperation.OP_DOWNLOAD_EXPORT ||
+								type == CoreOperation.OP_DOWNLOAD_COPY ||
 								type == CoreOperation.OP_PROGRESS ) &&
 							Utils.isThisThreadSWT()){
 
@@ -142,6 +143,8 @@ ProgressWindow
 			resource = "progress.window.msg.filemove";
 		}else if ( op_type == CoreOperation.OP_DOWNLOAD_EXPORT ){
 			resource = "progress.window.msg.dlexport";
+		}else if ( op_type == CoreOperation.OP_DOWNLOAD_COPY ){
+			resource = "progress.window.msg.dlcopy";
 		}else{
 			resource = "progress.window.msg.progress";
 			

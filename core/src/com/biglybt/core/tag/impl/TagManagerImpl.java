@@ -32,11 +32,16 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreComponent;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreLifecycleAdapter;
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerException;
 import com.biglybt.core.download.DownloadManagerInitialisationAdapter;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.impl.DownloadManagerImpl;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
@@ -1188,8 +1193,85 @@ TagManagerImpl
 										Thread.sleep( 1000 );
 									}
 
-									manager.copyDataFiles( new_loc );
+									// manager.copyDataFiles( new_loc );
 
+									
+									try{
+										FileUtil.runAsTask(
+												CoreOperation.OP_DOWNLOAD_COPY,
+												new CoreOperationTask()
+												{
+													@Override
+													public String 
+													getName()
+													{
+														return( manager.getDisplayName());
+													}
+
+													@Override
+													public DownloadManager 
+													getDownload()
+													{
+														return( manager );
+													}
+
+													@Override
+													public String[] 
+													getAffectedFileSystems()
+													{
+														return( FileUtil.getFileStoreNames( manager.getAbsoluteSaveLocation(), new_loc ));
+													}
+
+													@Override
+													public void
+													run(
+															CoreOperation operation)
+													{
+														try{
+															manager.copyDataFiles( new_loc );
+
+														}catch( Throwable e ){
+
+															throw( new RuntimeException( e ));
+														}
+													}
+
+													@Override
+													public ProgressCallback 
+													getProgressCallback()
+													{
+														return( null );
+													}
+												});
+
+									}catch( Throwable e ){
+
+										Throwable f = e.getCause();
+
+										if ( f instanceof DownloadManagerException ){
+
+											throw((DownloadManagerException)f);
+										}
+
+										throw( new DownloadManagerException( "Copy failed", e ));
+									}
+									
+									
+									
+									
+									
+									
+									
+									
+									
+									
+									
+									
+									
+									
+									
+									
+									
 									Logger.logTextResource(
 										new LogAlert(
 											manager,
