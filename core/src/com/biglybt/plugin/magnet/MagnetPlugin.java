@@ -134,7 +134,7 @@ MagnetPlugin
 
 	private boolean			first_download	= true;
 
-	private static final int	PLUGIN_DOWNLOAD_TIMEOUT_SECS_DEFAULT 	= 10*60;	// needs to be fairly large as non-public downloads can take a while...
+	private static final int	PLUGIN_DOWNLOAD_TIMEOUT_SECS_DEFAULT 	= 0;	// increased to infinite; (needs to be fairly large as non-public downloads can take a while...)
 
 	// private BooleanParameter 	secondary_lookup; removed
 	private BooleanParameter 	md_lookup;
