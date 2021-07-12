@@ -1141,9 +1141,7 @@ public class MainStatusBar
 	 * @since 4.0.0.1
 	 */
 	private void addStatusBarMenu(Composite cSB) {
-		if (!Constants.isCVSVersion()) {
-			return;
-		}
+
 		Menu menu = new Menu(cSB);
 		cSB.setMenu(menu);
 
