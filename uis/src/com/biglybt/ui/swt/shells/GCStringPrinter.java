@@ -481,7 +481,7 @@ public class GCStringPrinter
 								str = str.substring( 0, str.length()-2);
 							}
 							prev.lineOutputed = truncate( str );
-							cutoff = true;
+							truncated = cutoff = true;
 							if (DEBUG) {
 								System.out.println("set cutoff");
 							}
