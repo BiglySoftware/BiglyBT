@@ -140,6 +140,7 @@ CoreOperationTask
 	{
 		private volatile int 		thousandths;
 		private volatile long		size;
+		private volatile int		state	= ST_NONE;
 		private volatile String		subtask;
 		private volatile boolean	auto_pause;
 		private volatile int	 	order;
@@ -213,19 +214,25 @@ CoreOperationTask
 		public int
 		getSupportedTaskStates()
 		{
-			return( ST_NONE );
+			return( state );
 		}
 		
 		public void
 		setTaskState(
-			int		state )
+			int		_state )
 		{
+			if ( _state == ST_RESUME ){
+				
+				_state = ST_NONE;
+			}
+			
+			state	= _state;
 		}
 		
 		public int
 		getTaskState()
 		{
-			return( ST_NONE );
+			return( state );
 		}
 		
 		@Override

@@ -3208,14 +3208,19 @@ public class TorrentUtil
 
 				for (int i = 0; i < dms.length; i++) {
 
-					try {
-						dms[i].exportDownload(target);
+					int f_i = i;
+					
+					AEThread2.createAndStartDaemon(
+						"Exporter",
+						()->{
+							try{
+								dms[f_i].exportDownload(target);
+							} catch (Throwable e) {
 
-					} catch (Throwable e) {
-
-						Logger.log(new LogAlert(dms[i], LogAlert.REPEATABLE,
-								"Download export operation failed", e));
-					}
+								Logger.log(new LogAlert(dms[f_i], LogAlert.REPEATABLE,
+										"Download export operation failed", e));
+							}
+						});
 				}
 			}
 		}

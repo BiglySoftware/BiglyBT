@@ -27,6 +27,7 @@ package com.biglybt.core.download.impl;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
@@ -5601,7 +5602,8 @@ DownloadManagerImpl
   @Override
 	public void
 	copyDataFiles(
-		File	dest_parent_dir )
+		File									dest_parent_dir,
+		CoreOperationTask.ProgressCallback		cb )
 
 		throws DownloadManagerException
 	{
@@ -5621,6 +5623,85 @@ DownloadManagerImpl
 
 	  DiskManagerFileInfo[] files = controller.getDiskManagerFileInfoSet().getFiles();
 
+	  FileUtil.ProgressListener pl = null;
+			  
+	  if ( cb != null ){
+		  
+		  long	_total_size = 0;
+		  
+		  for ( DiskManagerFileInfo file: files ){
+
+			  if ( !file.isSkipped() && file.getDownloaded() == file.getLength()){
+				  
+				  _total_size += file.getLength();
+			  }
+		  }
+		  
+		  long total_size = _total_size;
+		  
+		  cb.setSize( total_size );
+		  
+		  pl = 
+			new FileUtil.ProgressListener()
+		  	{
+			  	long	total_done 	= 0;
+			  	
+				public void
+				setTotalSize(
+					long	size )
+				{
+					// not used
+				}
+				
+				@Override
+				public void 
+				setCurrentFile(
+					File file )
+				{
+					cb.setSubTaskName( file.getName());
+				}
+				
+				public void
+				bytesDone(
+					long	num )
+				{
+					if ( total_size > 0 ){
+						
+						total_done += num;
+						
+						long prog = (total_done*1000)/total_size;
+						
+						cb.setProgress((int)prog);
+					}
+				}
+				
+				@Override
+				public int 
+				getState()
+				{
+					switch( cb.getTaskState()){
+					
+						case ProgressCallback.ST_PAUSE:{
+							return( ProgressListener.ST_PAUSED );
+						}
+						case ProgressCallback.ST_CANCEL:{
+							return( ProgressListener.ST_CANCELLED );
+						}
+						default:{
+							return( ProgressListener.ST_NORMAL );
+						}
+					}
+				}
+				
+				public void
+				complete()
+				{
+					cb.setProgress( 1000 );
+				}
+		  	};
+	  }
+	  
+	  
 	  if ( torrent.isSimpleTorrent()){
 
 		  File file_from = files[0].getFile( true );
@@ -5636,7 +5717,7 @@ DownloadManagerImpl
 				  }
 			  }else{
 
-				  FileUtil.copyFileWithException( file_from, file_to );
+				  FileUtil.copyFileWithException( file_from, file_to, pl );
 			  }
 		  }catch( Throwable e ){
 
@@ -5685,7 +5766,7 @@ DownloadManagerImpl
 									  }
 								  }
 
-								  FileUtil.copyFileWithException( file_from, file_to );
+								  FileUtil.copyFileWithException( file_from, file_to, pl );
 							  }
 						  }
 					  }catch( Throwable e ){
@@ -5713,7 +5794,7 @@ DownloadManagerImpl
 	  }
 	  
 	  try{
-		  FileUtil.copyFileWithException( file, FileUtil.newFile( parent_dir, file.getName()));
+		  FileUtil.copyFileWithException( file, FileUtil.newFile( parent_dir, file.getName()), null);
 		  
 	  }catch( Throwable e ){
 		  
@@ -5740,6 +5821,19 @@ DownloadManagerImpl
 				  CoreOperation.OP_DOWNLOAD_EXPORT,
 				  new CoreOperationTask()
 				  {
+					  private ProgressCallback cb =
+						  new CoreOperationTask.ProgressCallbackAdapter()
+						  {
+						  	  private int state = ST_NONE;
+						  	
+							  @Override
+							  public int 
+							  getSupportedTaskStates()
+							  {
+								  return( ST_PAUSE | ST_RESUME | ST_CANCEL | ST_SUBTASKS );
+							  }
+						  };
+
 					  @Override
 					  public String 
 					  getName()
@@ -5764,10 +5858,10 @@ DownloadManagerImpl
 					  @Override
 					  public void
 					  run(
-							  CoreOperation operation)
+						  CoreOperation operation)
 					  {
 						  try{
-							  copyDataFiles( parent_dir );
+							  copyDataFiles( parent_dir, cb );
 
 							  copyTorrentFile( parent_dir );
 
@@ -5781,7 +5875,7 @@ DownloadManagerImpl
 					  public ProgressCallback 
 					  getProgressCallback()
 					  {
-						  return( null );
+						  return( cb );
 					  }
 				  });
 		  

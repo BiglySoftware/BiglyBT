@@ -1201,6 +1201,8 @@ TagManagerImpl
 												CoreOperation.OP_DOWNLOAD_COPY,
 												new CoreOperationTask()
 												{
+													private ProgressCallback cb = new CoreOperationTask.ProgressCallbackAdapter();
+													
 													@Override
 													public String 
 													getName()
@@ -1228,7 +1230,7 @@ TagManagerImpl
 															CoreOperation operation)
 													{
 														try{
-															manager.copyDataFiles( new_loc );
+															manager.copyDataFiles( new_loc, cb );
 
 														}catch( Throwable e ){
 
@@ -1240,7 +1242,7 @@ TagManagerImpl
 													public ProgressCallback 
 													getProgressCallback()
 													{
-														return( null );
+														return( cb );
 													}
 												});
 

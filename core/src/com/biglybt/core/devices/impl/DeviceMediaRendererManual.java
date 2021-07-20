@@ -587,7 +587,7 @@ DeviceMediaRendererManual
 						}
 
 						try{
-							FileUtil.copyFileWithException( file, target );
+							FileUtil.copyFileWithException( file, target, null );
 
 							log( "Copied file '" + file + ": to " + copy_to );
 

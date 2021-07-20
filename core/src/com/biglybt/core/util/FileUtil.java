@@ -1388,8 +1388,8 @@ public class FileUtil {
     
     public static boolean 
     copyFile( 
-    	final File _source, 
-    	final File _dest ) 
+    	File 	_source, 
+    	File 	_dest ) 
     {
     	try {
     		File parent = _dest.getParentFile();
@@ -1405,18 +1405,34 @@ public class FileUtil {
     	}
     }
 
-    public static void copyFileWithException( final File _source, final File _dest ) throws IOException{
-         copyFile( newFileInputStream( _source ), newFileOutputStream( _dest ) );
+    public static void 
+    copyFileWithException( 
+    	File 				_source, 
+    	File 				_dest,
+    	ProgressListener	pl ) 
+    		
+    	throws IOException
+    {
+         copyFile( newFileInputStream( _source ), newFileOutputStream( _dest ), pl );
     }
 
-    public static boolean copyFile( final File _source, final OutputStream _dest, boolean closeInputStream ) {
-        try {
+    public static boolean 
+    copyFile( 
+    	File 			_source, 
+    	OutputStream 	_dest, 
+    	boolean 		closeInputStream ) 
+    {
+        try{
+        	
           copyFile( newFileInputStream( _source ), _dest, closeInputStream );
+          
           return true;
-        }
-        catch( Throwable e ) {
+          
+        }catch( Throwable e ){
+        	
         	Debug.printStackTrace( e );
-          return false;
+          
+        	return false;
         }
       }
 
@@ -1524,6 +1540,17 @@ public class FileUtil {
     }
 
     public static void
+    copyFile(
+      InputStream   	is,
+      OutputStream  	os,
+      ProgressListener	pl )
+
+    	throws IOException
+    {
+    	copyFile(is,os,true,pl);
+    }
+    
+    public static void
 	copyFile(
 		InputStream		is,
 		OutputStream	os,
@@ -1564,6 +1591,77 @@ public class FileUtil {
     	}
 	}
 
+    public static void
+	copyFile(
+		InputStream			is,
+		OutputStream		os,
+		boolean 			closeInputStream,
+		ProgressListener	pl )
+
+		throws IOException
+	{
+    	try{
+
+    		if ( !(is instanceof BufferedInputStream )){
+
+    			is = new BufferedInputStream(is,128*1024);
+    		}
+
+    		byte[]	buffer = new byte[128*1024];
+
+      		while(true){
+
+    			if ( pl != null ){
+    				
+    				while( true ){
+    					
+    					int state =  pl.getState();
+    					
+    					if ( state == ProgressListener.ST_PAUSED ){
+    			
+    						try{
+    							Thread.sleep(250);
+    						}catch( Throwable e ){
+    						}
+    						
+    					}else if ( state == ProgressListener.ST_CANCELLED ){
+    						    						
+    						throw( new IOException( "Cancelled" ));
+    						
+    					}else{
+    						
+    						break;
+    					}
+    				}
+    			}	
+    			
+    			int	len = is.read(buffer);
+
+    			if ( len == -1 ){
+
+    				break;
+    			}
+
+    			os.write( buffer, 0, len );
+    			
+    			if ( pl != null ){
+    				
+    				pl.bytesDone( len );
+    			}
+    		}
+    	}finally{
+    		try{
+    			if(closeInputStream){
+    			  is.close();
+    			}
+    		}catch( IOException e ){
+
+    		}
+
+    		os.close();
+    	}
+	}
+    
     public static void
     copyFileOrDirectory(
     	File	from_file_or_dir,

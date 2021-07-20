@@ -23,6 +23,7 @@ package com.biglybt.core.download;
 import java.io.File;
 import java.util.List;
 
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
@@ -610,7 +611,8 @@ DownloadManager
 
     public void
     copyDataFiles(
-    	File	parent_dir )
+    	File				parent_dir,
+    	ProgressCallback	progress )
 
     	throws DownloadManagerException;
 
