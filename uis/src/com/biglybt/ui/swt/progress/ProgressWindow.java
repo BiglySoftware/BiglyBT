@@ -24,6 +24,7 @@ import com.biglybt.core.CoreFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -39,8 +40,11 @@ import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DelayedEvent;
+import com.biglybt.ui.swt.UIExitUtilsSWT;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.UIExitUtilsSWT.canCloseListener;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationListener;
 import com.biglybt.core.CoreOperationTask;
@@ -51,10 +55,109 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 public class
 ProgressWindow
 {
+	private static canCloseListener canCloseListener;
+	
 	public static void
 	register(
 		Core core )
 	{
+		canCloseListener = new canCloseListener() {
+			@Override
+			public boolean
+			canClose()
+			{
+				try{
+					Supplier<String> getActiveOps = ()->{
+						List<CoreOperation> ops = core.getOperations();
+
+						String active = "";
+						
+						for ( CoreOperation op: ops ){
+							
+							int type = op.getOperationType();
+							
+							if (	type == CoreOperation.OP_DOWNLOAD_CHECKING ||
+									type == CoreOperation.OP_DOWNLOAD_COPY ||
+									type == CoreOperation.OP_DOWNLOAD_EXPORT ||
+									type == CoreOperation.OP_FILE_MOVE ){
+								
+								CoreOperationTask task = op.getTask();
+								
+								if ( task != null ){
+						
+									if ( active.length() > 128 ){
+										
+										active += ", ...";
+										
+										break;
+									}
+									
+									active += ( active.isEmpty()?"":", ") + task.getName();							
+								}							
+							}
+						}
+						
+						return( active );
+					};
+					
+					String active = getActiveOps.get();
+					
+					if ( active.isEmpty()){
+						
+						return( true );
+						
+					}else{
+						
+						String title = MessageText.getString("coreops.active.quit.title");
+						String text = MessageText.getString(
+								"coreops.active.quit.text",
+								new String[] {
+									active
+								});
+	
+						MessageBoxShell mb = new MessageBoxShell(
+								title,
+								text,
+								new String[] {
+										MessageText.getString("UpdateWindow.quit"),
+										MessageText.getString("Content.alert.notuploaded.button.abort")
+								}, 1);
+	
+						mb.open(null);
+		
+						AEThread2.createAndStartDaemon( "opschecker", ()->{
+							
+							while( true ){
+								try{
+									Thread.sleep( 250 );
+								
+								}catch( Throwable e ){
+								}
+								
+								if ( getActiveOps.get().isEmpty()){
+								
+									mb.close();
+									
+									break;
+								}
+							}
+						});
+						
+						mb.waitUntilClosed();
+
+						return( mb.getResult() == 0 || getActiveOps.get().isEmpty());
+					}
+				}catch ( Throwable e ){
+
+					Debug.out(e);
+
+					return true;
+				}
+			}
+		};
+		
+		UIExitUtilsSWT.addListener(canCloseListener);
+		
 		core.addOperationListener(
 			new CoreOperationListener()
 			{
@@ -117,6 +220,12 @@ ProgressWindow
 			});
 	}
 
+	public static void
+	unregister()
+	{
+		UIExitUtilsSWT.removeListener(canCloseListener);
+	}
+	
 	private volatile Shell 			shell;
 	private volatile boolean 		task_complete;
 

@@ -318,6 +318,7 @@ public class Initializer
 		ColorCache2.dispose();
 		FontUtils.dispose();
 		SWTSkinPropertiesImpl.destroyStatics();
+		ProgressWindow.unregister();
 	}
 
 	/**
