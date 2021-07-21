@@ -40,6 +40,7 @@ import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DelayedEvent;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.swt.UIExitUtilsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.UIExitUtilsSWT.canCloseListener;
@@ -125,9 +126,14 @@ ProgressWindow
 	
 						mb.open(null);
 		
+						boolean[]	close_on_idle = { false };
+						
 						AEThread2.createAndStartDaemon( "opschecker", ()->{
 							
+							long	idle_start = -1;
+							
 							while( true ){
+								
 								try{
 									Thread.sleep( 250 );
 								
@@ -136,16 +142,48 @@ ProgressWindow
 								
 								if ( getActiveOps.get().isEmpty()){
 								
-									mb.close();
+									long now = SystemTime.getMonotonousTime();
 									
-									break;
+									if ( idle_start == -1 ){
+										
+										idle_start = now;
+										
+									}else{
+										
+										if ( now - idle_start > 2500 ){
+									
+											synchronized( close_on_idle ){
+												
+												close_on_idle[0] = true;
+											}
+											
+											mb.close();
+										
+											break;
+										}
+									}
+								}else{
+									
+									idle_start = -1;
 								}
 							}
 						});
 						
 						mb.waitUntilClosed();
 
-						return( mb.getResult() == 0 || getActiveOps.get().isEmpty());
+						int result = mb.getResult();
+						
+						if ( result == 0 ){
+							
+							return( true );
+							
+						}else{
+							
+							synchronized( close_on_idle ){
+								
+								return( close_on_idle[0] );
+							}
+						}
 					}
 				}catch ( Throwable e ){
 
