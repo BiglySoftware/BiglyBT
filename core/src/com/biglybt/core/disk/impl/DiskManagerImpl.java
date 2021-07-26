@@ -2249,6 +2249,10 @@ DiskManagerImpl
             		
             	}else{
                 
+            			// include download name so that alerts raised give some context
+            		
+            		msg = getDisplayName() + ": " + msg;
+            		
             		Logger.log(new LogAlert(DiskManagerImpl.this, LogAlert.UNREPEATABLE, LogAlert.AT_ERROR, msg));
             	}
             	
