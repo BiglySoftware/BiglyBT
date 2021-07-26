@@ -20,7 +20,9 @@
 
 package com.biglybt.ui.swt.mainwindow;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
@@ -210,12 +212,15 @@ public class SystemWarningWindow
 		spText.calculateMetrics();
 
 		gc.setFont(fontCount);
-		String sCount = MessageText.getString("label.xOfTotal",
+		String sCountAndTime = MessageText.getString("label.xOfTotal",
 				new String[] {
 					"" + historyPosition + 1,
 					"" + getWarningCount()
 				});
-		spCount = new GCStringPrinter(gc, sCount, printArea, true, false, SWT.WRAP);
+		
+		sCountAndTime += " " + new SimpleDateFormat().format( new Date( logAlert.when ));
+		
+		spCount = new GCStringPrinter(gc, sCountAndTime, printArea, true, false, SWT.WRAP);
 		spCount.calculateMetrics();
 
 		gc.setFont(fontTitle);
@@ -328,15 +333,18 @@ public class SystemWarningWindow
 				Rectangle printArea;
 				printArea = new Rectangle(BORDER_X, BORDER_Y0 + sizeTitle.y + GAP_Y_TITLE_COUNT,
 						WIDTH, 100);
-				String sCount = MessageText.getString("label.xOfTotal",
+				String sCountAndTime = MessageText.getString("label.xOfTotal",
 						new String[] {
 							"" + (historyPosition + 1),
 							"" + getWarningCount()
 						});
+				
+				sCountAndTime += " " + new SimpleDateFormat().format( new Date( logAlert.when ));
+
 				e.gc.setAlpha(180);
 				Font lastFont = e.gc.getFont();
 				e.gc.setFont(fontCount);
-				spCount = new GCStringPrinter(e.gc, sCount, printArea, true, false,
+				spCount = new GCStringPrinter(e.gc, sCountAndTime, printArea, true, false,
 						SWT.WRAP | SWT.TOP);
 				spCount.printString();
 				e.gc.setAlpha(255);

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.GeneralUtils;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 /**
@@ -37,6 +38,8 @@ public class LogAlert implements com.biglybt.pif.logging.LogAlert {
 
 	public static final boolean UNREPEATABLE = false;
 
+	public final long when = SystemTime.getCurrentTime();
+	
 	public final int entryType;
 
 	public Throwable err = null;
