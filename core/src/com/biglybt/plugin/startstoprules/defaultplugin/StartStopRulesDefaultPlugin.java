@@ -1719,7 +1719,20 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			}
 
 			// Sort: SeedingRank Desc, Position Desc
-			Arrays.sort(dlDataArray);
+			
+			// unfortunately the comparables aren't stable and can result in TimSort throwing a wobbly and
+			// 'general contract violated' exception. We don't really care so...
+			
+			for ( int i=0;i<10;i++){
+				
+				try{
+					Arrays.sort(dlDataArray);
+					
+					break;
+					
+				}catch( IllegalArgumentException e ){
+				}
+			}
 			
 			ProcessVars vars = new ProcessVars();
 
