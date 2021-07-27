@@ -69,6 +69,9 @@ TagPropertyConstraintHandler
 	private static final Object DM_FILE_PATHS					= new Object();
 	private static final Object DM_FILE_PATHS_SELECTED			= new Object();
 	
+	private static final Object DM_NAME							= new Object();
+	private static final Object DM_SAVE_PATH					= new Object();
+
 	private static final Object DM_PEER_SETS					= new Object();
 	
 	private static final String		EVAL_CTX_COLOURS = "colours";
@@ -140,6 +143,8 @@ TagPropertyConstraintHandler
 		new DownloadManagerStateAttributeListener()
 		{
 			private Object[] keys = {
+				DM_NAME,
+				DM_SAVE_PATH,
 				DM_FILE_PATHS,
 				DM_FILE_PATHS_SELECTED };
 
@@ -388,11 +393,23 @@ TagPropertyConstraintHandler
 				
 				dm.addListener( dm_listener );
 				
-				dm.getDownloadState().addListener( 
+				DownloadManagerState dms = dm.getDownloadState();
+				
+				dms.addListener( 
 					dms_listener, 
 					DownloadManagerState.AT_FILE_LINKS2, 
 					DownloadManagerStateAttributeListener.WRITTEN );
 				
+				dms.addListener( 
+						dms_listener, 
+						DownloadManagerState.AT_CANONICAL_SD_DMAP, 
+						DownloadManagerStateAttributeListener.WRITTEN );
+				
+				dms.addListener( 
+						dms_listener, 
+						DownloadManagerState.AT_DISPLAY_NAME, 
+						DownloadManagerStateAttributeListener.WRITTEN );
+
 				dm.setUserData( DM_LISTENERS_ADDED, "" );
 			}
 		}
@@ -3793,6 +3810,10 @@ TagPropertyConstraintHandler
 
 					kw = KW_NAME;
 					
+					dm.setUserData( DM_NAME, "" );	// just a marker
+					
+					depends_on_names_etc = true;
+					
 					return( new String[]{ dm.getDisplayName()});
 
 				}else if ( str.equals( "file_names" ) || str.equals( "filenames" )){
@@ -3984,12 +4005,20 @@ TagPropertyConstraintHandler
 					
 					kw = KW_SAVE_PATH;
 					
+					depends_on_names_etc = true;
+					
+					dm.setUserData( DM_SAVE_PATH, "" );	// just a marker
+					
 					return( new String[]{ dm.getAbsoluteSaveLocation().getAbsolutePath()});
 					
 				}else if ( str.equals( "save_folder" ) || str.equals( "savefolder" )){
 					
 					kw = KW_SAVE_FOLDER;
 					
+					depends_on_names_etc = true;
+					
+					dm.setUserData( DM_SAVE_PATH, "" );	// just a marker
+
 					File save_loc = dm.getAbsoluteSaveLocation().getAbsoluteFile();
 					
 					File save_folder = save_loc.getParentFile();
