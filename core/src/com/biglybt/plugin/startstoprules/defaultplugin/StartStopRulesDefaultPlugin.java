@@ -2618,6 +2618,12 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					} catch (Exception ignore) {/*ignore*/
 					}
 					state = dlData.getState();
+				}else{
+					if ( bDebugLog ){
+						String s = "Not starting, tag max exceeded";
+						log.log(dlData.getRelatedTo(), LoggerChannel.LT_INFORMATION, s);
+						dlData.appendTrace( s + "\n" );
+					}
 				}
 			}
 		}
