@@ -456,6 +456,7 @@ public class ConfigurationDefaults {
     def.put( "Play Notification Added File", "" );
 
     def.put( Tag.BCFG_TRACKER_AUTO_TAG_INTERESTING_TRACKERS, TRUE );
+    def.put( Tag.ICFG_TAG_AUTO_FULL_REAPPLY_PERIOD_SECS, 30 );
     
     //default torrent directory option
     def.put( "Save Torrent Files", TRUE );

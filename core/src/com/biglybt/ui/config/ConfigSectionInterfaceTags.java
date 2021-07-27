@@ -40,6 +40,8 @@ public class ConfigSectionInterfaceTags
 
 	public static final String SECTION_ID = "style.tags";
 
+	private boolean generalBuilt;
+	
 	public 
 	ConfigSectionInterfaceTags() 
 	{
@@ -53,6 +55,22 @@ public class ConfigSectionInterfaceTags
 		buildFiles();
 		
 		buildTracker();
+	}
+	
+	protected void
+	buildGeneral()
+	{
+		if ( generalBuilt ){
+			return;
+		}
+		
+		generalBuilt = true;
+	
+		IntParameterImpl autoReapply = new IntParameterImpl(
+				ICFG_TAG_AUTO_FULL_REAPPLY_PERIOD_SECS,
+				"tag.auto.reapply.period", 0, Integer.MAX_VALUE );
+		
+		add( autoReapply, Parameter.MODE_INTERMEDIATE );
 	}
 	
 	private void

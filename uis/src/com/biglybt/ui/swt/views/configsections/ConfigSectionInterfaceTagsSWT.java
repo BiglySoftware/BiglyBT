@@ -35,6 +35,8 @@ ConfigSectionInterfaceTagsSWT
 	public void 
 	build() 
 	{
+		super.buildGeneral();
+		
 		boolean isAZ3 = Utils.isAZ3UI();
 		
 		List<Parameter> listLibrary = new ArrayList<>();

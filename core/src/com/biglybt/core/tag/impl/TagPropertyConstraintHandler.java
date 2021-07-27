@@ -31,6 +31,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -61,9 +62,9 @@ TagPropertyConstraintHandler
 {
 	private static final Object DM_LISTENERS_ADDED				= new Object();
 	
-	private static final Object DM_FILE_NAMES 					= new Object();
+	private static final Object DM_FILE_NAMES 					= new Object();		// torrent names, never change
 	private static final Object DM_FILE_NAMES_SELECTED 			= new Object();
-	private static final Object DM_FILE_EXTS					= new Object();
+	private static final Object DM_FILE_EXTS					= new Object();		// torrent exts, never change
 	private static final Object DM_FILE_EXTS_SELECTED			= new Object();
 	private static final Object DM_FILE_PATHS					= new Object();
 	private static final Object DM_FILE_PATHS_SELECTED			= new Object();
@@ -103,42 +104,83 @@ TagPropertyConstraintHandler
 			},
 			5000 );
 
-	final IdentityHashMap<DownloadManager,List<TagConstraint>>	freq_lim_pending = new IdentityHashMap<>();
+	final IdentityHashMap<DownloadManager,Set<TagConstraint>>	freq_lim_pending = new IdentityHashMap<>();
 
 	private DownloadManagerListener dm_listener = 
 		new DownloadManagerAdapter(){
 			
+			private Object[] keys = {
+				DM_FILE_NAMES_SELECTED,
+				DM_FILE_EXTS_SELECTED,
+				DM_FILE_PATHS_SELECTED };
+		
 			@Override
-			public void filePriorityChanged(DownloadManager download, DiskManagerFileInfo file){
-				download.setUserData( DM_FILE_NAMES_SELECTED, null );
-				download.setUserData( DM_FILE_EXTS_SELECTED, null );
-				download.setUserData( DM_FILE_PATHS_SELECTED, null );
+			public void 
+			filePriorityChanged(
+				DownloadManager 	download, 
+				DiskManagerFileInfo file )
+			{
+				boolean changed = false;
+				
+				for ( Object key: keys ){
+					if ( download.getUserData( key ) != null ){
+					
+						changed = true;
+					}
+					download.setUserData( key, null );
+				}
+				
+				if ( changed ){
+					nameEtcChanged( download );
+				}
 			}
 		};
 		
 	private DownloadManagerStateAttributeListener dms_listener = 
 		new DownloadManagerStateAttributeListener()
 		{
+			private Object[] keys = {
+				DM_FILE_PATHS,
+				DM_FILE_PATHS_SELECTED };
+
 			public void 
 			attributeEventOccurred(
 				DownloadManager download, 
 				String 			attribute, 
 				int 			event_type)
 			{
-				download.setUserData( DM_FILE_PATHS, null );
-				download.setUserData( DM_FILE_PATHS_SELECTED, null );
+				boolean changed = false;
+				
+				for ( Object key: keys ){
+					if ( download.getUserData( key ) != null ){
+					
+						changed = true;
+					}
+					download.setUserData( key, null );
+				}
+				
+				if ( changed ){
+					nameEtcChanged( download );
+				}
 			};	
 		};
-		
-	private TimerEventPeriodic		timer;
-
-	private
-	TagPropertyConstraintHandler()
+	
+	private volatile int	apply_all_secs;
+	
 	{
-		core				= null;
-		tag_manager			= null;
-		share_manager		= null;
+		COConfigurationManager.addAndFireParameterListener(
+			ConfigKeys.Tag.ICFG_TAG_AUTO_FULL_REAPPLY_PERIOD_SECS,
+			(n)->{
+				apply_all_secs = COConfigurationManager.getIntParameter(n);
+				
+				if ( apply_all_secs <= 0 ){
+					apply_all_secs = 0;
+				}else if ( apply_all_secs < 10 ){
+					apply_all_secs = 10;
+				}
+			});
 	}
+	private TimerEventPeriodic		timer;
 
 	protected
 	TagPropertyConstraintHandler(
@@ -462,13 +504,17 @@ TagPropertyConstraintHandler
 
 			if ( timer == null ){
 
+				int TICK_SECS = 5;
+				
 				timer =
 					SimpleTimer.addPeriodicEvent(
 						"tag:constraint:timer",
-						5*1000,
+						TICK_SECS*1000,
 						new TimerEventPerformer() {
 
 							int tick_count = 0;
+							
+							boolean apply_done = false;
 							
 							@Override
 							public void
@@ -584,8 +630,29 @@ TagPropertyConstraintHandler
 								if ( tick_count % 6 == 0 ){
 								
 									apply_history.clear();
-
-									apply();
+								}
+								
+								boolean did_apply_all = false;
+								
+								if ( apply_all_secs == 0 ){
+								
+									if ( !apply_done ){
+										
+										did_apply_all = applyAll();											
+									}
+								}else{
+									
+									int apply_all_ticks = apply_all_secs/TICK_SECS;
+								
+									if ( tick_count % apply_all_ticks == 0 ){
+								
+										did_apply_all = applyAll();											
+									}
+								}
+								
+								if ( did_apply_all ){
+									
+									apply_done = true;
 									
 								}else{
 									
@@ -645,7 +712,7 @@ TagPropertyConstraintHandler
 				{
 					synchronized( freq_lim_pending ){
 
-						for ( Map.Entry<DownloadManager,List<TagConstraint>> entry: freq_lim_pending.entrySet()){
+						for ( Map.Entry<DownloadManager,Set<TagConstraint>> entry: freq_lim_pending.entrySet()){
 
 							for ( TagConstraint con: entry.getValue()){
 
@@ -659,14 +726,11 @@ TagPropertyConstraintHandler
 			});
 	}
 
-	@Override
 	public void
-	stateChanged(
-		Download		download,
-		int				old_state,
-		int				new_state )
+	nameEtcChanged(
+		DownloadManager		dm )
 	{
-		List<TagConstraint>	interesting = new ArrayList<>();
+		Set<TagConstraint>	interesting = new HashSet<>();
 
 		synchronized( constrained_tags ){
 
@@ -677,7 +741,52 @@ TagPropertyConstraintHandler
 
 			for ( TagConstraint tc: constrained_tags.values()){
 
-				if ( tc.dependOnDownloadState()){
+				if ( tc.dependsOnNameEtc()){
+
+					interesting.add( tc );
+				}
+			}
+		}
+
+		if ( interesting.size() > 0 ){
+
+			synchronized( freq_lim_pending ){
+
+				Set<TagConstraint> existing = freq_lim_pending.get( dm );
+				
+				if ( existing == null ){
+				
+					freq_lim_pending.put( dm, interesting );
+					
+				}else{
+					
+					existing.addAll( interesting );
+				}
+			}
+
+			freq_lim_dispatcher.dispatch();
+		}
+	}
+	
+	@Override
+	public void
+	stateChanged(
+		Download		download,
+		int				old_state,
+		int				new_state )
+	{
+		Set<TagConstraint>	interesting = new HashSet<>();
+
+		synchronized( constrained_tags ){
+
+			if ( !initialised ){
+
+				return;
+			}
+
+			for ( TagConstraint tc: constrained_tags.values()){
+
+				if ( tc.dependsOnDownloadState()){
 
 					interesting.add( tc );
 				}
@@ -690,7 +799,16 @@ TagPropertyConstraintHandler
 
 			synchronized( freq_lim_pending ){
 
-				freq_lim_pending.put( dm, interesting );
+				Set<TagConstraint> existing = freq_lim_pending.get( dm );
+				
+				if ( existing == null ){
+				
+					freq_lim_pending.put( dm, interesting );
+					
+				}else{
+					
+					existing.addAll( interesting );
+				}
 			}
 
 			freq_lim_dispatcher.dispatch();
@@ -994,14 +1112,14 @@ TagPropertyConstraintHandler
 			});
 	}
 	
-	private void
-	apply()
+	private boolean
+	applyAll()
 	{
 		synchronized( constrained_tags ){
 
 			if ( constrained_tags.size() == 0 || !initialised ){
 
-				return;
+				return( false );
 			}
 		}
 
@@ -1027,6 +1145,8 @@ TagPropertyConstraintHandler
 					}
 				}
 			});
+		
+		return( true );
 	}
 
 	public TagConstraint
@@ -1096,6 +1216,7 @@ TagPropertyConstraintHandler
 		private final ConstraintExpr	expr;
 
 		private boolean	depends_on_download_state;
+		private boolean depends_on_names_etc;
 		private int		depends_on_level			= DEP_STATIC;
 
 		private Set<Tag>		dependent_on_tags;
@@ -1249,10 +1370,16 @@ TagPropertyConstraintHandler
 		}
 		
 		private boolean
-		dependOnDownloadState()
+		dependsOnDownloadState()
 		{
 			return( depends_on_download_state );
 		}			
+		
+		private boolean
+		dependsOnNameEtc()
+		{
+			return( depends_on_names_etc );
+		}
 		
 		private ConstraintExpr
 		compileStart(
@@ -2434,7 +2561,7 @@ TagPropertyConstraintHandler
 
 			private final int	fn_type;
 
-			private IdentityHashMap<DownloadManager, Object[]>	matches_cache = new IdentityHashMap<>();
+			private Map<String, Object[]>	matches_cache = new HashMap<>();
 						
 			private
 			ConstraintExprFunction(
@@ -3267,13 +3394,42 @@ TagPropertyConstraintHandler
 
 							Pattern pattern = RegExUtil.getCachedPattern( "tag:constraint:" + tag_maybe_null.getTagUID(), pat_str, case_insensitive?0:(Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
 
+							String key = dm.getInternalName();
+							
+							if ( !key.isEmpty()){
+								
+								Object[] cache = matches_cache.get( key );
+								
+								if ( cache != null ){
+									
+									if ( cache[1] == pattern ){
+										
+										String[] old_s1s = (String[])cache[0];
+										
+										if ( s1s == old_s1s || Arrays.equals( old_s1s, s1s )){
+										
+											return((Boolean)cache[2]);
+										}
+									}
+								}
+							}
+							
+							boolean result = false;
+							
 							for ( String s1: s1s ){
 							
 								if ( pattern.matcher( s1 ).find()){
 									
-									return( true );
+									result = true;
+									
+									break;
 								}
 							}
+							
+							matches_cache.put( key, new Object[]{ s1s, pattern, result });
+
+							return( result );
+							
 						}else{
 							
 							if ( case_insensitive ){
@@ -3358,16 +3514,26 @@ TagPropertyConstraintHandler
 								}
 							}
 							
-							Object[] cache = matches_cache.get( dm );
+							String key = dm.getInternalName();
 							
-							if ( cache != null ){
+							if ( !key.isEmpty()){
 								
-								if ( cache[0] == s1s && cache[1] == pattern ){
+								Object[] cache = matches_cache.get( key );
+								
+								if ( cache != null ){
 									
-									return((Boolean)cache[2]);
+									if ( cache[1] == pattern ){
+										
+										String[] old_s1s = (String[])cache[0];
+										
+										if ( s1s == old_s1s || Arrays.equals( old_s1s, s1s )){
+										
+											return((Boolean)cache[2]);
+										}
+									}
 								}
 							}
-														
+							
 							boolean result = false;
 							
 							for ( String s1: s1s ){
@@ -3380,7 +3546,7 @@ TagPropertyConstraintHandler
 								}
 							}
 							
-							matches_cache.put( dm, new Object[]{ s1s, pattern, result });
+							matches_cache.put( key, new Object[]{ s1s, pattern, result });
 							
 							return( result );
 						}
@@ -3647,6 +3813,8 @@ TagPropertyConstraintHandler
 						}
 						
 						dm.setUserData( DM_FILE_NAMES, result );
+						
+						depends_on_names_etc = true;
 					}
 					
 					return( result );
@@ -3676,6 +3844,8 @@ TagPropertyConstraintHandler
 						result = exts.toArray( new String[0] );
 						
 						dm.setUserData( DM_FILE_EXTS, result );
+						
+						depends_on_names_etc = true;
 					}
 					
 					return( result );
@@ -3698,6 +3868,8 @@ TagPropertyConstraintHandler
 					}					
 					
 					dm.setUserData( DM_FILE_PATHS, result );
+					
+					depends_on_names_etc = true;
 					
 					handler.checkDMListeners( dm );
 				}
@@ -3735,6 +3907,8 @@ TagPropertyConstraintHandler
 					
 					dm.setUserData( DM_FILE_EXTS_SELECTED, result );
 					
+					depends_on_names_etc = true;
+					
 					handler.checkDMListeners( dm );
 				}
 				
@@ -3742,34 +3916,36 @@ TagPropertyConstraintHandler
 				
 				}else if ( str.equals( "file_names_selected" ) || str.equals( "filenamesselected" )){
 						
-						kw = KW_FILE_NAMES_SELECTED;
+					kw = KW_FILE_NAMES_SELECTED;
+					
+					String[] result = (String[])dm.getUserData( DM_FILE_NAMES_SELECTED );
+					
+					if ( result == null ){
 						
-						String[] result = (String[])dm.getUserData( DM_FILE_NAMES_SELECTED );
+						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
 						
-						if ( result == null ){
+						List<String>	names = new ArrayList<>( files.length );
+						
+						for ( int i=0;i<files.length;i++){
 							
-							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-							
-							List<String>	names = new ArrayList<>( files.length );
-							
-							for ( int i=0;i<files.length;i++){
+							if ( files[i].isSkipped()){
 								
-								if ( files[i].isSkipped()){
-									
-									continue;
-								}
-								
-								names.add( files[i].getFile( false ).getName());
+								continue;
 							}
 							
-							result = names.toArray( new String[0] );
-							
-							dm.setUserData( DM_FILE_NAMES_SELECTED, result );
-							
-							handler.checkDMListeners( dm );
+							names.add( files[i].getFile( false ).getName());
 						}
 						
-						return( result );
+						result = names.toArray( new String[0] );
+						
+						dm.setUserData( DM_FILE_NAMES_SELECTED, result );
+						
+						depends_on_names_etc = true;
+						
+						handler.checkDMListeners( dm );
+					}
+					
+					return( result );
 					
 				}else if ( str.equals( "file_paths_selected" ) || str.equals( "filepathsselected" )){
 				
@@ -3796,6 +3972,8 @@ TagPropertyConstraintHandler
 						result = names.toArray( new String[0] );
 						
 						dm.setUserData( DM_FILE_PATHS_SELECTED, result );
+						
+						depends_on_names_etc = true;
 						
 						handler.checkDMListeners( dm );
 					}
