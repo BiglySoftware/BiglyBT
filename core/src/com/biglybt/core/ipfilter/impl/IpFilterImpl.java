@@ -439,6 +439,11 @@ IpFilterImpl
 	  InetAddress ia;
 	  
 	  try{
+		  if ( HostNameToIPResolver.isNonDNSName(ipAddress)){
+			  
+			  return( false );
+		  }
+		  
 		  ia = HostNameToIPResolver.syncResolve(ipAddress);
 			
 	  }catch( Throwable e ){

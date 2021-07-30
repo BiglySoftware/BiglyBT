@@ -725,6 +725,11 @@ IPBannerImpl
 		String		address )
 	{
 		try{
+			if ( HostNameToIPResolver.isNonDNSName( address )){
+				
+				return( address );
+			}
+			
 			return( decodeAddress( HostNameToIPResolver.syncResolve(address)));
 
 		}catch( Throwable e ){
