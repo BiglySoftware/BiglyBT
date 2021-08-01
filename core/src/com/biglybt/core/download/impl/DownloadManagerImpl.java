@@ -5788,13 +5788,33 @@ DownloadManagerImpl
   {
 	  File	file = FileUtil.newFile( getTorrentFileName() );
 
+	  File target = FileUtil.newFile( parent_dir, file.getName());
+	  
 	  if ( !file.exists()){
+		  
+		  		// try to recover using internal torrent
+		  
+		  TOTorrent internal_torrent = download_manager_state.getTorrent();
+		  
+		  try{
+			  TOTorrent clone = TorrentUtils.cloneTorrent( internal_torrent );
+			  
+			  clone.removeAdditionalProperties();
+			  
+			  TorrentUtils.writeToFile( clone, target, false );
+			  
+			  return;
+			  
+		  }catch( Throwable e ){
+			  
+			  Debug.out( e );
+		  }
 		  
 		  throw( new DownloadManagerException( "Torrent file '" + file + "' doesn't exist" ));
 	  }
 	  
 	  try{
-		  FileUtil.copyFileWithException( file, FileUtil.newFile( parent_dir, file.getName()), null);
+		  FileUtil.copyFileWithException( file, target, null);
 		  
 	  }catch( Throwable e ){
 		  
