@@ -33,6 +33,7 @@ import java.util.*;
 import com.biglybt.core.Core;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerInitialisationAdapter;
@@ -1464,6 +1465,32 @@ DownloadManagerImpl
 						
 						core_dm.setTorrentSaveDir( f_stub, true );
 					}
+				}
+				
+				try{
+					
+					File	torrent_file = FileUtil.newFile( core_dm.getTorrentFileName() );
+
+					if ( !torrent_file.exists()){
+						
+						// user might have moved torrent file backup location, see if the
+						// torrent exists there
+						
+						String save_dir = COConfigurationManager.getDirectoryParameter( ConfigKeys.File.SCFG_GENERAL_DEFAULT_TORRENT_DIRECTORY );
+
+						if ( !save_dir.isEmpty()){
+							
+							File	test_file = FileUtil.newFile( save_dir, torrent_file.getName());
+
+							if ( test_file.exists()){
+								
+								core_dm.setTorrentFileName( test_file.getAbsolutePath());
+							}
+						}
+					}
+				}catch( Throwable e ){
+					
+					Debug.out( e );
 				}
 				
 				synchronized( download_stubs ){
