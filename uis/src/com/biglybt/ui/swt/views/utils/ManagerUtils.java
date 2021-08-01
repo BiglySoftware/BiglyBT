@@ -4733,7 +4733,8 @@ public class ManagerUtils {
 							Map<String,Object>	options = new HashMap<>();
 
 							options.put( "Subscription", true );
-							options.put( "Name", MessageText.getString( "label.more" ) + ": " + expression);
+							//options.put( "Name", MessageText.getString( "label.more" ) + ": " + expression);
+							options.put( "Name", expression);
 
 							pi.getIPC().invoke(
 								"lookupByExpression",
