@@ -754,7 +754,8 @@ public class ConfigurationDefaults {
     def.put("FileBrowse.usePathFinder", FALSE);
 
     def.put( "Beta Programme Enabled", FALSE );
-    def.put( "def.deletetorrent", TRUE );
+    def.put( ConfigKeys.File.BCFG_DEF_DELETETORRENT, TRUE );
+    def.put( ConfigKeys.File.BCFG_DEF_DELETEALLSELECTED, FALSE );
     def.put( "tb.confirm.delete.content", Long.valueOf(0) ); // 0=ask; 1=delete content; 2=delete torrent
 
     def.put( "br.backup.auto.enable", FALSE );

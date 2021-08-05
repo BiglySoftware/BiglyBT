@@ -544,6 +544,12 @@ public class ConfigSectionFile
 		paramDeleteTorrentFile.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(paramDeleteTorrentFile, Parameter.MODE_INTERMEDIATE, listDeletion);
 
+		BooleanParameterImpl paramDeleteAllDefault = new BooleanParameterImpl(
+				BCFG_DEF_DELETEALLSELECTED, "ConfigView.section.file.delete.all.selected");
+		paramDeleteAllDefault.setAllowedUiTypes(UIInstance.UIT_SWT);
+		add(paramDeleteAllDefault, Parameter.MODE_INTERMEDIATE, listDeletion);
+
+		
 		try {
 			final PlatformManager platform = PlatformManagerFactory.getPlatformManager();
 

@@ -55,6 +55,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
@@ -4389,7 +4390,7 @@ public class TorrentUtil
 				continue;
 			}
 
-			boolean deleteTorrent = COConfigurationManager.getBooleanParameter("def.deletetorrent");
+			boolean deleteTorrent = COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_DEF_DELETETORRENT);
 
 			int confirm = COConfigurationManager.getIntParameter("tb.confirm.delete.content");
 			boolean doPrompt = confirm == 0 | forcePrompt;
@@ -4426,11 +4427,16 @@ public class TorrentUtil
 						defaultButtonPos);
 				int numLeft = (dms.length - i);
 				if (numLeft > 1) {
-					mb.setRemember("na", false, MessageText.getString(
-							"v3.deleteContent.applyToAll", new String[] {
-								"" + numLeft
+					mb.setRemember(
+							"na", 
+							COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_DEF_DELETEALLSELECTED), 
+							MessageText.getString(
+								"v3.deleteContent.applyToAll", new String[] {
+									"" + numLeft
 							}));
-					// never store remember state
+					
+						// never store remember state
+					
 					mb.setRememberOnlyIfButton(-3);
 				}
 				mb.setRelatedObject(dm);
@@ -4565,7 +4571,7 @@ public class TorrentUtil
 
 			DownloadStubEx dm = dms[i];
 
-			boolean deleteTorrent = COConfigurationManager.getBooleanParameter("def.deletetorrent");
+			boolean deleteTorrent = COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_DEF_DELETETORRENT);
 
 			int confirm = COConfigurationManager.getIntParameter("tb.confirm.delete.content");
 			boolean doPrompt = confirm == 0 | forcePrompt;
@@ -4598,7 +4604,10 @@ public class TorrentUtil
 						defaultButtonPos);
 				int numLeft = (dms.length - i);
 				if (numLeft > 1) {
-					mb.setRemember("na", false, MessageText.getString(
+					mb.setRemember(
+						"na", 
+						COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_DEF_DELETEALLSELECTED),
+						MessageText.getString(
 							"v3.deleteContent.applyToAll", new String[] {
 								"" + numLeft
 							}));

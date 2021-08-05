@@ -169,6 +169,7 @@ public final class ConfigKeys {
 		public static final String SCFG_FILE_CHARACTER_CONVERSIONS = "File.Character.Conversions";
 		public static final String ICFG_TB_CONFIRM_DELETE_CONTENT = "tb.confirm.delete.content";
 		public static final String BCFG_DEF_DELETETORRENT = "def.deletetorrent";
+		public static final String BCFG_DEF_DELETEALLSELECTED = "def.deleteallselected";
 		public static final String BCFG_MOVE_DELETED_DATA_TO_RECYCLE_BIN = "Move Deleted Data To Recycle Bin";
 		public static final String BCFG_FILE_DELETE_INCLUDE_FILES_OUTSIDE_SAVE_DIR = "File.delete.include_files_outside_save_dir";
 		public static final String BCFG_DELETE_PARTIAL_FILES_ON_LIBRARY_REMOVAL = "Delete Partial Files On Library Removal";
