@@ -412,6 +412,7 @@ public class ConfigurationDefaults {
     def.put( "Watch Torrent Folder Path", "" );
     def.put( "Watch Torrent Folder Path Count", ONE );
     def.put( ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE, FALSE );
+    def.put( ConfigKeys.Transfer.ICFG_PRIORITIZE_FIRST_MB, 0 );
     def.put( ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE_FORCE, FALSE );
     def.put( "Prioritize Most Completed Files", FALSE );
     def.put( "Piece Picker Request Hint Enabled", TRUE );

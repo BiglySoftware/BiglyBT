@@ -131,9 +131,10 @@ implements PiecePicker
 	protected final Map					peerListeners;
 	private final PEPeerManagerListener	peerManagerListener;
 
-	protected final int			nbPieces;
-	protected final DiskManagerPiece[]	dmPieces;
-	protected final PEPiece[]			pePieces;
+	private final int					nbPieces;
+	private final DiskManagerPiece[]	dmPieces;
+	private final PEPiece[]				pePieces;
+	private final int					pieceSize;
 
 	private final List<PEPiece>	rarestStartedPieces; //List of pieces started as rarest first
 
@@ -226,6 +227,7 @@ implements PiecePicker
 	private volatile CopyOnWriteSet<Integer>	forced_pieces;
 
 	protected static volatile boolean	firstPiecePriority;
+	protected static volatile long		firstPriorityBytes;
 	protected static volatile boolean	firstPiecePriorityForce;
 	protected static volatile boolean	completionPriority;
 	
@@ -239,11 +241,15 @@ implements PiecePicker
 			new String[]{
 				"Prioritize Most Completed Files",
 				ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE,	
+				ConfigKeys.Transfer.ICFG_PRIORITIZE_FIRST_MB,	
 				ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE_FORCE	
 			},
 			(n)->{
+				long MB = DisplayFormatters.getMinB();
+				
 				completionPriority 		= COConfigurationManager.getBooleanParameter( "Prioritize Most Completed Files" );			
 				firstPiecePriority 		= COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE );
+				firstPriorityBytes 		= COConfigurationManager.getIntParameter( ConfigKeys.Transfer.ICFG_PRIORITIZE_FIRST_MB )*MB;
 				firstPiecePriorityForce = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE_FORCE );
 				
 				paramPriorityChange++;	// this is a user's priority change event
@@ -271,6 +277,7 @@ implements PiecePicker
 		diskManager = peerControl.getDiskManager();
 		dmPieces =diskManager.getPieces();
 		nbPieces =diskManager.getNbPieces();
+		pieceSize = diskManager.getPieceLength();
 		nbPiecesDone =0;
 
 		pePieces = pc.getPieces();
@@ -1252,6 +1259,17 @@ implements PiecePicker
 
 		final DMPieceMap	pieceMap = diskManager.getPieceMap();
 
+		final int priorityPieces;
+		
+		if ( firstPriorityBytes > 0 ){
+			
+			priorityPieces = (int)(( firstPriorityBytes + pieceSize -1 ) / pieceSize);
+			
+		}else{
+			
+			priorityPieces = 1;
+		}
+		
 		CopyOnWriteSet<Integer>	forced = forced_pieces;
 
 		try
@@ -1309,9 +1327,12 @@ implements PiecePicker
 						// TODO: should prioritize ~10% from edges of file
 
 						boolean hasFirstLastPriority = false;
-
-						if ( firstPiecePriorityL &&fileInfo.getNbPieces() > FIRST_PIECE_MIN_NB ){
-
+						int		flpOffset = 0;
+						
+						int nbPieces = fileInfo.getNbPieces();
+								
+						if ( firstPiecePriorityL && nbPieces > FIRST_PIECE_MIN_NB ){
+							
 							/* backed out for the moment - reverting to old first/last piece only
                         	int lastFirstPiece = fileInfo.getFirstPieceNumber() + FIRST_PIECE_RANGE_PERCENT * (fileInfo.getLastPieceNumber() - fileInfo.getFirstPieceNumber()) / 100;
 
@@ -1324,9 +1345,32 @@ implements PiecePicker
                             }
 							 */
 
-							if  ( i == fileInfo.getFirstPieceNumber() || i == fileInfo.getLastPieceNumber()){
+							
+							if ( priorityPieces > 1 ){
 								
-								pieceHasFirstLastPriority = hasFirstLastPriority = true;
+								int fp = fileInfo.getFirstPieceNumber();
+								int lp = fileInfo.getLastPieceNumber();
+								
+								int pp = Math.min( nbPieces, priorityPieces);
+								
+								if ( i >= fp && i < fp + pp ){
+									
+									pieceHasFirstLastPriority = hasFirstLastPriority = true;
+									
+									flpOffset = fp - i;	// 0 -> negative pp
+									
+								}else if ( i <= lp && i > lp - pp ){
+											
+									pieceHasFirstLastPriority = hasFirstLastPriority = true;
+									
+									flpOffset = i - lp;	// 0 -> negative pp
+								}
+							}else{
+
+								if  ( i == fileInfo.getFirstPieceNumber() || i == fileInfo.getLastPieceNumber()){
+									
+									pieceHasFirstLastPriority = hasFirstLastPriority = true;
+								}
 							}
 						}
 
@@ -1354,6 +1398,8 @@ implements PiecePicker
 
 								adjustment = (( PRIORITY_W_FILE_RANGE * ( relative_file_priority+1 )) / range ) - 1;
 
+								adjustment += flpOffset;
+								
 							}else{
 
 								adjustment = ( PRIORITY_W_FILE_RANGE*relative_file_priority ) / range;
@@ -1365,7 +1411,7 @@ implements PiecePicker
 
 							if ( hasFirstLastPriority ){
 
-								priority += PRIORITY_W_FIRSTLAST;
+								priority += PRIORITY_W_FIRSTLAST + flpOffset;
 							}
 						}
 
@@ -2616,7 +2662,7 @@ implements PiecePicker
 	
 							reserved_pieces++;
 	
-							if ( reserved_pieces * diskManager.getPieceLength() > END_GAME_MODE_RESERVED_TRIGGER ){
+							if ( reserved_pieces * pieceSize > END_GAME_MODE_RESERVED_TRIGGER ){
 	
 								return;
 							}
@@ -2636,7 +2682,7 @@ implements PiecePicker
 	
 			boolean	use_rta_egm = rta_providers.size() > 0;
 	
-			long	remaining = active_pieces * (long)diskManager.getPieceLength();
+			long	remaining = active_pieces * (long)pieceSize;
 	
 			long	trigger	= use_rta_egm?RTA_END_GAME_MODE_SIZE_TRIGGER:END_GAME_MODE_SIZE_TRIGGER;
 	
