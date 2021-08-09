@@ -429,11 +429,17 @@ public class AdvRenameWindow
 		if ((renameDecisions & RENAME_DISPLAY) > 0) {
 			btnDisplayName.setSelection(true);
 		}
-		if ((renameDecisions & RENAME_SAVEPATH) > 0) {
-			btnSavePath.setSelection(true);
-		}
-		if ((renameDecisions & RENAME_TORRENT) > 0) {
-			btnTorrent.setSelection(true);
+		
+		if ( dm.canMoveDataFiles()){
+			if ((renameDecisions & RENAME_SAVEPATH) > 0) {
+				btnSavePath.setSelection(true);
+			}
+			if ((renameDecisions & RENAME_TORRENT) > 0) {
+				btnTorrent.setSelection(true);
+			}
+		}else{
+			btnSavePath.setEnabled( false );
+			btnTorrent.setEnabled( false );
 		}
 		
 			// separator
@@ -487,44 +493,48 @@ public class AdvRenameWindow
 		if ((renameDecisions & RENAME_DISPLAY) > 0) {
 			dm.getDownloadState().setDisplayName(newDisplayName);
 		}
-		if ((renameDecisions & RENAME_SAVEPATH) > 0) {
-			try {
+		if ( dm.canMoveDataFiles()){
+			
+			if ((renameDecisions & RENAME_SAVEPATH) > 0) {
+				try {
 
-				try{
-					if ( dm.getTorrent().isSimpleTorrent()){
+					try{
+						if ( dm.getTorrent().isSimpleTorrent()){
 
-				    	String dnd_sf = dm.getDownloadState().getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
+							String dnd_sf = dm.getDownloadState().getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
 
-				    	if ( dnd_sf != null ){
+							if ( dnd_sf != null ){
 
-				    		dnd_sf = dnd_sf.trim();
+								dnd_sf = dnd_sf.trim();
 
-				    		String existing_name = dm.getSaveLocation().getName();
+								String existing_name = dm.getSaveLocation().getName();
 
-				    		if ( existing_name.endsWith( dnd_sf )){
+								if ( existing_name.endsWith( dnd_sf )){
 
-				    			if ( !newSavePath.endsWith( dnd_sf )){
+									if ( !newSavePath.endsWith( dnd_sf )){
 
-				    				newSavePath += dnd_sf;
-				    			}
-				    		}
-				    	}
+										newSavePath += dnd_sf;
+									}
+								}
+							}
+						}
+					}catch( Throwable e ){
 					}
-				}catch( Throwable e ){
+					dm.renameDownload(newSavePath);
+				} catch (Exception e) {
+					Logger.log(new LogAlert(dm, LogAlert.REPEATABLE,
+							"Download data rename operation failed", e));
 				}
-				dm.renameDownload(newSavePath);
-			} catch (Exception e) {
-				Logger.log(new LogAlert(dm, LogAlert.REPEATABLE,
-						"Download data rename operation failed", e));
 			}
-		}
-		if ((renameDecisions & RENAME_TORRENT) > 0) {
-			try {
-				dm.renameTorrentSafe(newTorrentName);
-  		} catch (Exception e) {
-  			Logger.log(new LogAlert(dm, LogAlert.REPEATABLE,
-  					"Torrent rename operation failed", e));
-  		}
+			
+			if ((renameDecisions & RENAME_TORRENT) > 0) {
+				try {
+					dm.renameTorrentSafe(newTorrentName);
+				} catch (Exception e) {
+					Logger.log(new LogAlert(dm, LogAlert.REPEATABLE,
+							"Torrent rename operation failed", e));
+				}
+			}
 		}
 	}
 }
