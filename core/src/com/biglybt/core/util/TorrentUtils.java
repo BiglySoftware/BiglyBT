@@ -2221,8 +2221,15 @@ TorrentUtils
 	{
 		Map<String,Object>	metadata = new HashMap<>();
 
-		try{		
+		try{				
 			DownloadManagerState	dms = dm.getDownloadState();
+			
+			String name = dms.getDisplayName();
+			
+			if ( name != null ){
+			
+				MapUtils.setMapString( metadata, "dn", name );
+			}
 			
 			String comment = dms.getUserComment();
 			
@@ -2278,7 +2285,14 @@ TorrentUtils
 			}
 			
 			DownloadManagerState	dms = dm.getDownloadState();
-	
+
+			String name = MapUtils.getMapString( metadata, "dn", null );
+
+			if ( name != null ){
+				
+				dms.setDisplayName( name );
+			}
+				
 			String comment = MapUtils.getMapString( metadata, "comment", null );
 			
 			if ( comment != null ){
