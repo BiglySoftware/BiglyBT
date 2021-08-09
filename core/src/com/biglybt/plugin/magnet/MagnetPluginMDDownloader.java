@@ -820,8 +820,26 @@ MagnetPluginMDDownloader
 
 			download_manager.addListener( dl_listener, true );
 
+			Download[] existing = download_manager.getDownloads();
+			
+				// add this one after the last existing metadata download
+			
+			int	move_to = 1;
+			
+			for ( Download e: existing ){
+				
+				if ( e == download ){
+					continue;
+				}
+				
+				if ( e.getFlag( Download.FLAG_METADATA_DOWNLOAD )){
+					
+					move_to = Math.max( move_to, e.getPosition()+1 );
+				}
+			}
+			
 			try{
-				download.moveTo(1);
+				download.moveTo( move_to );
 
 				download.setForceStart( true );
 

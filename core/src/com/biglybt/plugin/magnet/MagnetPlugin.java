@@ -663,7 +663,7 @@ MagnetPlugin
 						Debug.printStackTrace(e);
 					}
 
-					return( recoverableDownload( muh_listener, hash, args, sources, Collections.emptyList(), Collections.emptyMap(), timeout, false ));
+					return( recoverableDownload( muh_listener, hash, args, sources, Collections.emptyList(), Collections.emptyMap(), timeout, SystemTime.getCurrentTime(), false ));
 				}
 
 				@Override
@@ -924,7 +924,34 @@ MagnetPlugin
 			
 			ThreadPool tp = new ThreadPool( "Magnet Recovery", conc, true );
 			
-			for ( Map map: active.values()){
+			List<Map> sorted = new ArrayList<Map>( active.values());
+			
+			Collections.sort(
+				sorted,
+				(m1, m2)->{
+					Long t1 = (Long)m1.get("added" );
+					Long t2 = (Long)m2.get("added" );
+					
+					if ( t1 == t2 ){
+						return(0);
+					}else if ( t1 == null ){
+						return( -1 );
+					}else if ( t2 == null ){
+						return( 1 );
+					}else{
+						long diff = t1 - t2;
+						
+						if ( diff < 0 ){
+							return( -1 );
+						}else if ( diff == 0 ){
+							return( 0 );
+						}else{
+							return( 1 );
+						}
+					}
+				});
+			
+			for ( Map map: sorted ){
 					
 				//System.out.println( "Recovering: " + map );
 					
@@ -981,6 +1008,8 @@ MagnetPlugin
 										
 					long timeout = ((Number)map.get( "timeout" )).longValue();
 					
+					Long added_time = (Long)map.get( "added" );
+										
 					final InetSocketAddress[] f_sources = sources;
 					
 					tp.run(
@@ -990,7 +1019,7 @@ MagnetPlugin
 							runSupport()
 							{
 								try{
-									byte[] result = recoverableDownload( null, hash, args, f_sources, f_tags, other_metadata, timeout, true );
+									byte[] result = recoverableDownload( null, hash, args, f_sources, f_tags, other_metadata, timeout, added_time, true );
 									
 									if ( result != null ){
 										
@@ -1060,7 +1089,13 @@ MagnetPlugin
 								}
 							}
 						});
-														
+					
+						// we want the metadata downloads to be added in the correct order. as the thread pool
+						// will fire things off concurrently we add this hack to give things a chance to 
+						// end up correct...
+					
+					Thread.sleep(500);
+					
 				}catch( Throwable e ){
 					
 					Debug.out( e );
@@ -1128,6 +1163,7 @@ MagnetPlugin
 		List<String>								tags,
 		Map<String,Object>							other_metadata,
 		final long									timeout,
+		Long										added_time,
 		boolean										is_recovering )
 	
 		throws MagnetURIHandlerException
@@ -1145,6 +1181,11 @@ MagnetPlugin
 				
 				map.put( "hash", hash );
 				map.put( "args", args );
+				
+				if ( added_time != null ){
+					
+					map.put( "added", added_time );
+				}
 				
 				List<Map> l_sources = new ArrayList<>();
 				
