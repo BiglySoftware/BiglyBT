@@ -1928,7 +1928,7 @@ public class TorrentOpenOptions
 
 						if ( md != null ){
 
-							TorrentUtils.setInitialMetadata( dm, md );
+							TorrentUtils.setInitialMetadata( dm, md, true );
 						}
 					} finally {
 

@@ -127,6 +127,7 @@ MagnetPlugin
 
 	protected static final Object	DM_TAG_CACHE 		= new Object();
 	protected static final Object	DM_CATEGORY_CACHE 	= new Object();
+	protected static final Object	DM_DN_CHANGED	 	= new Object();
 	
 	private PluginInterface		plugin_interface;
 
@@ -1439,7 +1440,7 @@ MagnetPlugin
 			
 			tags = (List<String>)dm.getUserData( DM_TAG_CACHE );
 			
-			other_metadata = TorrentUtils.getInitialMetadata( dm );
+			other_metadata = getInitialMetadata( dm );
 			
 			String category = (String)dm.getUserData( DM_CATEGORY_CACHE );
 			
@@ -1716,7 +1717,7 @@ MagnetPlugin
 			}
 		}
 		
-		Map<String,Object>	other_metadata = TorrentUtils.getInitialMetadata( from_dm );
+		Map<String,Object>	other_metadata = getInitialMetadata( from_dm );
 	
 		if ( !other_metadata.isEmpty()){
 		
@@ -1736,6 +1737,20 @@ MagnetPlugin
 	}
 	
 	protected void
+	setDNChanged(
+		DownloadManager		dm )
+	{
+		dm.setUserData( DM_DN_CHANGED, "" );
+	}
+	
+	protected Map<String,Object>
+	getInitialMetadata(
+		DownloadManager	dm )
+	{
+		return( TorrentUtils.getInitialMetadata( dm, dm.getUserData( DM_DN_CHANGED ) != null ));
+	}
+	
+	protected void
 	setInitialMetadata(
 		TOTorrent			torrent,
 		DownloadManager		from_dm )
@@ -1749,7 +1764,7 @@ MagnetPlugin
 			TorrentUtils.setInitialTags( torrent, tag_names );
 		}
 		
-		Map<String,Object>	other_metadata = TorrentUtils.getInitialMetadata( from_dm );
+		Map<String,Object>	other_metadata = getInitialMetadata( from_dm );
 		
 		if ( !other_metadata.isEmpty()){
 			
@@ -1785,7 +1800,7 @@ MagnetPlugin
 		
 		if ( other_metadata != null && !other_metadata.isEmpty()){
 			
-			TorrentUtils.setInitialMetadata( to_dm, other_metadata );
+			TorrentUtils.setInitialMetadata( to_dm, other_metadata, true );
 		}
 	}
 	

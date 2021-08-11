@@ -2217,18 +2217,22 @@ TorrentUtils
 	
 	public static Map<String,Object>
 	getInitialMetadata(
-		DownloadManager		dm )
+		DownloadManager		dm,
+		boolean				include_dn )
 	{
 		Map<String,Object>	metadata = new HashMap<>();
 
 		try{				
 			DownloadManagerState	dms = dm.getDownloadState();
 			
-			String name = dms.getDisplayName();
-			
-			if ( name != null ){
-			
-				MapUtils.setMapString( metadata, "dn", name );
+			if ( include_dn ){
+				
+				String name = dms.getDisplayName();
+				
+				if ( name != null ){
+				
+					MapUtils.setMapString( metadata, "dn", name );
+				}
 			}
 			
 			String comment = dms.getUserComment();
@@ -2276,7 +2280,8 @@ TorrentUtils
 	public static void
 	setInitialMetadata(
 		DownloadManager			dm,
-		Map<String,Object>		metadata )
+		Map<String,Object>		metadata,
+		boolean					include_dn )
 	{
 		try{
 			if ( metadata == null || metadata.isEmpty()){
@@ -2286,13 +2291,16 @@ TorrentUtils
 			
 			DownloadManagerState	dms = dm.getDownloadState();
 
-			String name = MapUtils.getMapString( metadata, "dn", null );
-
-			if ( name != null ){
+			if ( include_dn ){
 				
-				dms.setDisplayName( name );
+				String name = MapUtils.getMapString( metadata, "dn", null );
+	
+				if ( name != null ){
+					
+					dms.setDisplayName( name );
+				}
 			}
-				
+			
 			String comment = MapUtils.getMapString( metadata, "comment", null );
 			
 			if ( comment != null ){

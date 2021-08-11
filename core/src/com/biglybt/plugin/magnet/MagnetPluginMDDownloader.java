@@ -39,6 +39,7 @@ import com.biglybt.pif.disk.DiskManagerEvent;
 import com.biglybt.pif.disk.DiskManagerListener;
 import com.biglybt.pif.disk.DiskManagerRequest;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadAttributeListener;
 import com.biglybt.pif.download.DownloadManager;
 import com.biglybt.pif.download.DownloadManagerListener;
 import com.biglybt.pif.download.DownloadPeerListener;
@@ -49,6 +50,8 @@ import com.biglybt.pifimpl.local.PluginCoreUtils;
 public class
 MagnetPluginMDDownloader
 {
+	final private static Object			SETUP_LOCK = new Object();
+	
 	final private static Set<String>	active_set = new HashSet<>();
 
 	final private PluginInterface		plugin_interface;
@@ -434,9 +437,16 @@ MagnetPluginMDDownloader
 					}
 				}
 			}
+			
+			state.addListener(
+				(d,a,t)->{
+					plugin.setDNChanged( core_dm );
+				},
+				DownloadManagerState.AT_DISPLAY_NAME,
+				DownloadAttributeListener.WRITTEN );
 
 			plugin.setInitialMetadata( core_dm, tags, initial_metadata );
-			
+
 			final Set<String> peer_networks = new HashSet<>();
 
 			final List<Map<String,Object>> peers_for_cache = new ArrayList<>();
@@ -819,32 +829,40 @@ MagnetPluginMDDownloader
 				};
 
 			download_manager.addListener( dl_listener, true );
-
-			Download[] existing = download_manager.getDownloads();
-			
-				// add this one after the last existing metadata download
-			
-			int	move_to = 1;
-			
-			for ( Download e: existing ){
-				
-				if ( e == download ){
-					continue;
-				}
-				
-				if ( e.getFlag( Download.FLAG_METADATA_DOWNLOAD )){
-					
-					move_to = Math.max( move_to, e.getPosition()+1 );
-				}
-			}
 			
 			try{
-				download.moveTo( move_to );
-
-				download.setForceStart( true );
-
-				download.setFlag( Download.FLAG_DISABLE_AUTO_FILE_MOVE, true );
-
+				synchronized( SETUP_LOCK ){
+					
+					Download[] existing = download_manager.getDownloads();
+	
+					// add this one after the last existing metadata download
+	
+					int	move_to = 1;
+	
+					for ( Download e: existing ){
+	
+						// we check force-start here as we don't want to pick up other metadata downloads
+						// in the process of being added that have yet to be moved to the correct location
+						// via the code below
+	
+						if ( e == download || !e.isForceStart()){
+	
+							continue;
+						}
+	
+						if ( e.getFlag( Download.FLAG_METADATA_DOWNLOAD )){
+	
+							move_to = Math.max( move_to, e.getPosition()+1 );
+						}
+					}
+	
+					download.moveTo( move_to );
+	
+					download.setForceStart( true );
+	
+					download.setFlag( Download.FLAG_DISABLE_AUTO_FILE_MOVE, true );
+				}
+				
 				running_sem.reserve();
 
 			}finally{
