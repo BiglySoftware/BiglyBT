@@ -114,23 +114,32 @@ public class AdvRenameWindow
 						
 			txtInput.setText( str );
 			
-			int	pos = str.lastIndexOf( '.' );
+			if ( dm.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
 			
-			if ( pos <= 0 ){
+					// name is made up in this case, ignore suffix
 				
 				txtInput.selectAll();
 				
 			}else{
 				
-				String ext = str.substring( pos+1 );
+				int	pos = str.lastIndexOf( '.' );
 				
-				if ( ext.contains( " " )){
+				if ( pos <= 0 ){
 					
 					txtInput.selectAll();
 					
 				}else{
-				
-					txtInput.setSelection( 0, pos );
+					
+					String ext = str.substring( pos+1 );
+					
+					if ( ext.contains( " " )){
+						
+						txtInput.selectAll();
+						
+					}else{
+					
+						txtInput.setSelection( 0, pos );
+					}
 				}
 			}
 			

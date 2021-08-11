@@ -4842,6 +4842,34 @@ public class OpenTorrentOptionsWindow
 					}
 				}});
 			
+			MenuItem rename_dn_item = new MenuItem( more_menu, SWT.PUSH);
+
+			rename_dn_item.setText( MessageText.getString( "MyTorrentsView.menu.rename.displayed" ) + "..." );
+			
+			rename_dn_item.addListener( SWT.Selection, (ev)->{
+				String msg_key_prefix = "MyTorrentsView.menu.rename.displayed.enter.";
+
+				SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+						msg_key_prefix + "title", msg_key_prefix + "message");
+				entryWindow.setPreenteredText( torrentOptions.getDisplayName(), false);
+				entryWindow.maintainWhitespace( true );	// apparently users want to be able to prefix with spaces
+				entryWindow.prompt(new UIInputReceiverListener() {
+					@Override
+					public void UIInputReceiverClosed(UIInputReceiver entryWindow) {
+						if (!entryWindow.hasSubmittedInput()) {
+							return;
+						}
+						String value = entryWindow.getSubmittedInput();
+						if (value != null && value.length() > 0) {
+							torrentOptions.setDisplayName(value);
+							updateDialogTitle();
+						}
+					}
+				});
+			});
+			
+			rename_dn_item.setEnabled( isSingleOptions );
+			
 			new MenuItem( more_menu, SWT.SEPARATOR );
 			 
 			MenuItem opt = new MenuItem( more_menu, SWT.CHECK );
