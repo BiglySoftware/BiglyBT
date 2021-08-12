@@ -20,6 +20,7 @@
 
 package com.biglybt.core.tracker.server.impl;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -32,6 +33,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.tracker.server.*;
 import com.biglybt.core.util.*;
@@ -121,12 +123,26 @@ TRTrackerServerImpl
 								
 								if ( tr_enable ){
 									
+									InetAddress bind = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress();
+									
+									String bind_option = null;
+									
+									if ( bind != null && !bind.isAnyLocalAddress()){
+										
+										bind_option = bind.getHostAddress();
+									}
+
 									if ( i2p_enable ) {
 										
 										Map<String,Object>	options = new HashMap<>();
 					
 										options.put( AEProxyFactory.SP_PORT, port );
 					
+										if ( bind_option != null ){
+											
+											options.put( AEProxyFactory.SP_BIND, bind_option );
+										}
+										
 										Map<String,Object> reply =
 												AEProxyFactory.getPluginServerProxy(
 													"Tracker",
@@ -160,6 +176,11 @@ TRTrackerServerImpl
 					
 										options.put( AEProxyFactory.SP_PORT, port );
 					
+										if ( bind_option != null ){
+											
+											options.put( AEProxyFactory.SP_BIND, bind_option );
+										}
+
 										Map<String,Object> reply =
 												AEProxyFactory.getPluginServerProxy(
 													"Tracker",

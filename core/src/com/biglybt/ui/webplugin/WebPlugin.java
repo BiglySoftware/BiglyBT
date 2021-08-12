@@ -1433,6 +1433,13 @@ WebPlugin
 
 							options.put( AEProxyFactory.SP_PORT, server_port );
 
+							InetAddress bind = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress();
+							
+							if ( bind != null && !bind.isAnyLocalAddress()){
+								
+								options.put( AEProxyFactory.SP_BIND, bind.getHostAddress());
+							}
+
 							Map<String,Object> reply =
 									AEProxyFactory.getPluginServerProxy(
 										plugin_interface.getPluginName(),
@@ -1474,6 +1481,13 @@ WebPlugin
 							Map<String,Object>	options = new HashMap<>();
 
 							options.put( AEProxyFactory.SP_PORT, server_port );
+
+							InetAddress bind = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress();
+							
+							if ( bind != null && !bind.isAnyLocalAddress()){
+								
+								options.put( AEProxyFactory.SP_BIND, bind.getHostAddress());
+							}
 
 							Map<String,Object> reply =
 									AEProxyFactory.getPluginServerProxy(
