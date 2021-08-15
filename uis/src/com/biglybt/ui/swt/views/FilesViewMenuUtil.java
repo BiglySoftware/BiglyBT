@@ -49,6 +49,7 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.menus.MenuManager;
@@ -444,7 +445,8 @@ public class FilesViewMenuUtil
 		boolean all_normal_pri 			= true;
 		boolean all_low_pri 			= true;
 		boolean	all_complete			= true;
-
+		boolean	all_pad					= true;
+		
 		boolean	any_relocated			= false;
 
 		final List<DiskManagerFileInfo>		files_with_links = new ArrayList<>();
@@ -468,6 +470,13 @@ public class FilesViewMenuUtil
 
 				DiskManagerFileInfo file_info = files[i];
 
+				TOTorrentFile tf = file_info.getTorrentFile();
+				
+				if ( tf != null && !tf.isPadFile()){
+					
+					all_pad = false;
+				}
+			
 				if (open && file_info.getAccessMode() != DiskManagerFileInfo.READ) {
 
 					open = false;
@@ -538,6 +547,11 @@ public class FilesViewMenuUtil
 			}
 		}
 
+		if ( all_pad ){
+			
+			itemPriority.setEnabled( false );
+		}
+		
 		if ( itemOpen != null ){
 			
 			// we can only open files if they are read-only
