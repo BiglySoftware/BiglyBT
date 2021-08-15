@@ -1137,6 +1137,14 @@ public class UrlUtils
 	parseTextForMagnets(
 		String		text )
 	{
+		return( parseTextForMagnets( text, true ));
+	}
+	
+	public static String
+	parseTextForMagnets(
+		String		text,
+		boolean		check_raw_embeded_hashes )
+	{
 		if (text.startsWith("magnet:") || text.startsWith( "maggot:" )){
 			return text;
 		}
@@ -1229,28 +1237,31 @@ public class UrlUtils
 			}
 		}
 
-		// accept raw hash of 32 base-32 chars, with garbage around it
-		
-		for ( int i=0;i<2;i++){
+		if ( check_raw_embeded_hashes ){
 			
-			int hex_len = i==0?40:64;		// sha1/sha256
-			int b32_len	= i==0?32:52;		// sha1/sha256
-
-			pattern = Pattern.compile("[^a-zA-Z2-7]([a-zA-Z2-7]{" + b32_len + "})[^a-zA-Z2-7]");
-			matcher = pattern.matcher(text);
-			if (matcher.find()) {
-				String hash = matcher.group(1);
-				return( getMagnetURI(Base32.decode(hash)));
-			}
-
-			pattern = Pattern.compile("[^a-fA-F0-9]([a-fA-F0-9]{" + hex_len + "})[^a-fA-F0-9]");
-			matcher = pattern.matcher(text);
-			if (matcher.find()) {
-				String hash = matcher.group(1);
-				// convert from HEX to raw bytes
-				byte[] infohash = ByteFormatter.decodeString(hash.toUpperCase());
-				// convert to BASE32
-				return( getMagnetURI(infohash));
+			// accept raw hash of 32 base-32 chars, with garbage around it
+			
+			for ( int i=0;i<2;i++){
+				
+				int hex_len = i==0?40:64;		// sha1/sha256
+				int b32_len	= i==0?32:52;		// sha1/sha256
+	
+				pattern = Pattern.compile("[^a-zA-Z2-7]([a-zA-Z2-7]{" + b32_len + "})[^a-zA-Z2-7]");
+				matcher = pattern.matcher(text);
+				if (matcher.find()) {
+					String hash = matcher.group(1);
+					return( getMagnetURI(Base32.decode(hash)));
+				}
+	
+				pattern = Pattern.compile("[^a-fA-F0-9]([a-fA-F0-9]{" + hex_len + "})[^a-fA-F0-9]");
+				matcher = pattern.matcher(text);
+				if (matcher.find()) {
+					String hash = matcher.group(1);
+					// convert from HEX to raw bytes
+					byte[] infohash = ByteFormatter.decodeString(hash.toUpperCase());
+					// convert to BASE32
+					return( getMagnetURI(infohash));
+				}
 			}
 		}
 

@@ -3960,7 +3960,11 @@ public class TorrentUtil
 
 			String retry_url = UrlUtils.parseTextForMagnets(torrentName);
 			if (retry_url == null) {
-				retry_url = UrlUtils.parseTextForMagnets(sFirstChunk);
+				
+					// to many html files these days have non-torrent related raw hashes in them
+					// so don't look for these
+				
+				retry_url = UrlUtils.parseTextForMagnets(sFirstChunk,false);
 			}
 
 			if (retry_url != null) {
