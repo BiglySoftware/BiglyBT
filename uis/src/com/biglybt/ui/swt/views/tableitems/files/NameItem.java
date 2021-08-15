@@ -38,6 +38,7 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
@@ -308,38 +309,49 @@ public class NameItem extends CoreTableColumnSWT implements
 			String check_key;
 			boolean is_ro = false;
 			
-			if ( is_leaf ){
-				if (fileInfo.isSkipped()){
-					
-					int	st = fileInfo.getStorageType();
-					
-					if ( 	st == DiskManagerFileInfo.ST_COMPACT ||
-							st == DiskManagerFileInfo.ST_REORDER_COMPACT ){
-						
-						check_key = "check_no";
-					}else{
-						check_key = "check_no_grey";
-					}
-				}else{
-					if ( fileInfo.getLength() == fileInfo.getDownloaded()){
-						check_key = "check_ro_yes";
-						is_ro = true;
-					}else{
-						check_key = "check_yes";
-					}
-				}
+			TOTorrentFile tf = fileInfo.getTorrentFile();
+			
+			if ( tf != null && tf.isPadFile()){
+				
+				is_ro = true;
+				
+				check_key = "check_ro_no";
+				
 			}else{
-				if ( is_skipped == 0 ){
-					check_key = "check_no";
-				}else if ( is_skipped == 1 ){
-					if ( fileInfo.getLength() == fileInfo.getDownloaded()){
-						check_key = "check_ro_yes";
-						is_ro = true;
+				
+				if ( is_leaf ){
+					if (fileInfo.isSkipped()){
+						
+						int	st = fileInfo.getStorageType();
+						
+						if ( 	st == DiskManagerFileInfo.ST_COMPACT ||
+								st == DiskManagerFileInfo.ST_REORDER_COMPACT ){
+							
+							check_key = "check_no";
+						}else{
+							check_key = "check_no_grey";
+						}
 					}else{
-						check_key = "check_yes";
+						if ( fileInfo.getLength() == fileInfo.getDownloaded()){
+							check_key = "check_ro_yes";
+							is_ro = true;
+						}else{
+							check_key = "check_yes";
+						}
 					}
 				}else{
-					check_key = "check_maybe";
+					if ( is_skipped == 0 ){
+						check_key = "check_no";
+					}else if ( is_skipped == 1 ){
+						if ( fileInfo.getLength() == fileInfo.getDownloaded()){
+							check_key = "check_ro_yes";
+							is_ro = true;
+						}else{
+							check_key = "check_yes";
+						}
+					}else{
+						check_key = "check_maybe";
+					}
 				}
 			}
 			
