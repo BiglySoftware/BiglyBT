@@ -2910,8 +2910,8 @@ public class TagUIUtils
 				groups.add( group );
 			}
 		}
-		
-		TagUtils.sortTagGroups( groups );
+
+		groups = TagUtils.sortTagGroups( groups );
 		
 		Menu groups_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
 		MenuItem groups_item = new MenuItem(menu, SWT.CASCADE );

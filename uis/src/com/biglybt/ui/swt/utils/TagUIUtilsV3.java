@@ -88,7 +88,7 @@ public class TagUIUtilsV3
 				}
 			}
 
-			TagUtils.sortTagGroups( listGroups );
+			listGroups = TagUtils.sortTagGroups( listGroups );
 			
 			soGroupBox.setVisible(listGroups.size() > 0);
 			soGroup.setList(listGroups.toArray(new String[0]));
