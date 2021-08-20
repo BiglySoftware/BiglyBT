@@ -216,10 +216,10 @@ public class SavePathPanel extends AbstractWizardPanel<NewTorrentWizard> {
     Messages.setLanguageText(label, "wizard.maketorrent.filesize");
 
     Label file_size_label = new Label(gFileStuff, SWT.NULL);
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData.horizontalSpan=3;
+    file_size_label.setLayoutData(gridData);
     file_size_label.setText( DisplayFormatters.formatByteCountToKiBEtc(file_size));
-
-    label = new Label(gFileStuff, SWT.NULL);
-    label = new Label(gFileStuff, SWT.NULL);
 
     	// piece count
 
@@ -227,10 +227,11 @@ public class SavePathPanel extends AbstractWizardPanel<NewTorrentWizard> {
     Messages.setLanguageText(label, "wizard.maketorrent.piececount");
 
     final Label piece_count_label = new Label(gFileStuff, SWT.NULL);
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData.horizontalSpan=3;
+    piece_count_label.setLayoutData(gridData);
     piece_count_label.setText( ""+piece_count );
-    label = new Label(gFileStuff, SWT.NULL);
-    label = new Label(gFileStuff, SWT.NULL);
-
+ 
    		// piece size
 
     label = new Label(gFileStuff, SWT.NULL);
