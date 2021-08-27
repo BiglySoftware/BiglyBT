@@ -505,15 +505,19 @@ public class TableViewPainted
 					}
 					updateTable = true;
 				} else if (event.keyCode == SWT.END) {
-					TableRowCore lastRow = getRow(getRowCount() - 1);
-					if ((event.stateMask & SWT.SHIFT) != 0) {
-						selectRowsTo(lastRow);
-					} else if (event.stateMask == 0) {
-  					setSelectedRows(new TableRowCore[] {
-  						lastRow
-  					});
+					//TableRowCore lastRow = getRow(getRowCount() - 1);
+					TableRowCore[] rows = getRowsAndSubRows( false );
+					if ( rows.length > 0 ){
+						TableRowCore lastRow = rows[rows.length-1];
+						if ((event.stateMask & SWT.SHIFT) != 0) {
+							selectRowsTo(lastRow);
+						} else if (event.stateMask == 0) {
+	  					setSelectedRows(new TableRowCore[] {
+	  						lastRow
+	  					});
+						}
+						updateTable = true;
 					}
-					updateTable = true;
 				} else if (event.keyCode == SWT.ARROW_RIGHT && event.stateMask == 0) {
 					if (event.stateMask == 0 && focusedRow != null && !focusedRow.isExpanded() && canHaveSubItems()) {
 						focusedRow.setExpanded(true);
