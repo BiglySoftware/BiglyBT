@@ -3220,13 +3220,15 @@ public class TableViewPainted
 			int newHeight) {
 
 		synchronized (heightChangeSync) {
-  		totalHeight += (newHeight - oldHeight);
-  		//System.out.println("Height delta: " + (newHeight - oldHeight) + ";ttl=" + totalHeight);
-
-  		if (qdRowHeightChanged) {
-  			return;
-  		}
-  		qdRowHeightChanged = true;
+			totalHeight += (newHeight - oldHeight);
+			//System.out.println("Height delta: " + (newHeight - oldHeight) + ";ttl=" + totalHeight);
+			if ( totalHeight < 0 ){
+				Debug.out( "eh?" );
+			}
+			if (qdRowHeightChanged) {
+				return;
+			}
+			qdRowHeightChanged = true;
 		}
 		Utils.execSWTThreadLater(0, new SWTRunnable() {
 			@Override

@@ -1422,7 +1422,30 @@ public class TableRowPainted
 	@Override
 	public boolean setHeight(int newHeight) {
 		TableRowCore parentRowCore = getParentRowCore();
-		boolean trigger = parentRowCore == null || parentRowCore.isExpanded();
+		boolean trigger;
+		
+		if ( parentRowCore == null ){
+			trigger = true;
+			
+		}else{
+			boolean expanded = parentRowCore.isExpanded();
+			
+			while( expanded ){
+				
+				parentRowCore = parentRowCore.getParentRowCore();
+				
+				if ( parentRowCore == null ){
+					
+					break;
+					
+				}else{
+					
+					expanded = parentRowCore.isExpanded();
+				}
+			}
+			
+			trigger = expanded;
+		}
 
 		return setHeight(newHeight, trigger);
 	}
