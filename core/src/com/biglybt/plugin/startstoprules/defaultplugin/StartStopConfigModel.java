@@ -156,8 +156,8 @@ public class StartStopConfigModel
 		listFP.add(model.createGroup(null, firstPriorityType));
 
 		// row
-		String[] minQueueLabels = new String[56];
-		int[] minQueueValues = new int[56];
+		String[] minQueueLabels = new String[57];
+		int[] minQueueValues = new int[57];
 		int mqpos = 0;
 		minQueueLabels[mqpos] = MessageText.getString("ConfigView.text.ignore");
 		minQueueValues[mqpos++] = 0;
@@ -173,9 +173,11 @@ public class StartStopConfigModel
 		minQueueValues[mqpos++] = 1500;
 		minQueueLabels[mqpos] = "7:4 (" + 1.75 + ")";
 		minQueueValues[mqpos++] = 1750;
+		minQueueLabels[mqpos] = "2:1";
+		minQueueValues[mqpos++] = 2000;
 		for (int i = mqpos; i < minQueueLabels.length; i++) {
-			minQueueLabels[i] = i - 4 + ":1";
-			minQueueValues[i] = (i - 4) * 1000;
+			minQueueLabels[i] = i - 5 + ":1";
+			minQueueValues[i] = (i - 5) * 1000;
 		}
 		listFP.add(
 				model.addIntListParameter2("StartStopManager_iFirstPriority_ShareRatio",
