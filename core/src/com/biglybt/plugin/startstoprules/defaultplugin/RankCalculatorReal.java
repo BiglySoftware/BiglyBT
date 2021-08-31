@@ -21,6 +21,7 @@ package com.biglybt.plugin.startstoprules.defaultplugin;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
@@ -37,6 +38,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.LightHashMap;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.TorrentUtils;
@@ -208,6 +210,8 @@ RankCalculatorReal
 	private RankCalculatorSlotReserver	reservedSlot;
 	private long	lastActivationAnnounce;
 	
+	private Map<Object,Object> userData;
+
 	/**
 	 * Default Initializer
 	 *
@@ -383,6 +387,21 @@ RankCalculatorReal
 		}else if ( stopped2 ){
 			return( -1 );
 		}
+		
+		return( compareToIgnoreStopped(obj));
+	}
+	
+	@Override
+	public int 
+	compareToIgnoreStopped(
+		DefaultRankCalculator obj) 
+	{
+		if ( !( obj instanceof RankCalculatorReal )){
+			
+			return( 1 );
+		}
+		
+		RankCalculatorReal dlData = (RankCalculatorReal)obj;
 		
 		// Test FP.  FP goes to top
 		if (dlData.bIsFirstPriority && !bIsFirstPriority)
@@ -2099,6 +2118,39 @@ RankCalculatorReal
 			}
 			
 			return( new String[]{ sText, tt });
+		}
+	}
+	
+	@Override
+	public void 
+	setUserData(
+		Object key, 
+		Object value) 
+	{
+		synchronized( this ){
+			
+			if ( userData == null ){
+				
+				userData = new LightHashMap<>(2);
+			}
+			
+			userData.put( key,  value );
+		}
+	}
+	
+	@Override
+	public Object 
+	getUserData(
+		Object key)
+	{
+		synchronized( this ){
+			
+			if ( userData == null ){
+				
+				return( null );
+			}
+			
+			return( userData.get( key ));
 		}
 	}
 }

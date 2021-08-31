@@ -24,6 +24,7 @@ import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.logging.LogRelation;
 import com.biglybt.core.tag.TagFeatureRateLimit;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.LightHashMap;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.download.DownloadScrapeResult;
@@ -36,6 +37,14 @@ RankCalculatorSlotReserver
 	private final static AtomicInteger	uuid_gen = new AtomicInteger( 1 );
 	
 	private final int uid = uuid_gen.getAndIncrement();
+	
+	@Override
+	public int 
+	compareToIgnoreStopped(
+		DefaultRankCalculator obj) 
+	{
+		return( compareTo( obj ));
+	}
 	
 	@Override
 	public int 
@@ -436,6 +445,22 @@ RankCalculatorSlotReserver
 		return( getName());
 	}
 	
+	@Override
+	public void 
+	setUserData(
+		Object key, 
+		Object value) 
+	{
+	}
+	
+	@Override
+	public Object 
+	getUserData(
+		Object key)
+	{
+		return( null );
+	}
+		
 	public void
 	destroy()
 	{

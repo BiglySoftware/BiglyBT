@@ -33,25 +33,38 @@ public class
 SeedingRankColumnListener 
 	implements TableCellRefreshListener
 {
+	private static final Object		KEY = new Object();
+	
 	@Override
 	public void refresh(TableCell cell) {
 		Download dl = (Download) cell.getDataSource();
 		if (dl == null)
 			return;
 
-		DefaultRankCalculator dlData = null;
+		DefaultRankCalculator dlData;
 		Object o = cell.getSortValue();
 		if (o instanceof DefaultRankCalculator)
 			dlData = (DefaultRankCalculator) o;
 		else {
 			dlData = StartStopRulesDefaultPlugin.getRankCalculator( dl );
 		}
-		cell.setSortValue(dlData);
-
+		
 		if (dlData == null){
+			cell.setSortValue( -1 );
 			return;
 		}
-				
+			
+		Sorter	comp = (Sorter)dlData.getUserData( KEY );
+		
+		if ( comp == null ){
+			
+			comp = new Sorter( dlData );
+			
+			dlData.setUserData( KEY, comp );
+		}
+		
+		cell.setSortValue( comp );	
+
 		SeedingRank sr = dl.getSeedingRank();
 		
 		String[] status = sr.getStatus( false );
@@ -72,5 +85,26 @@ SeedingRankColumnListener
 		*/
 		
 		cell.setToolTip(status[1] );
+	}
+	
+	private class
+	Sorter
+		implements Comparable<Sorter>
+	{
+		private DefaultRankCalculator		drc;
+		
+		Sorter(
+			DefaultRankCalculator		_drc )
+		{
+			drc = _drc;
+		}
+		
+		@Override
+		public int 
+		compareTo(
+			Sorter o)
+		{
+			return( drc.compareToIgnoreStopped( o.drc ));
+		}
 	}
 }

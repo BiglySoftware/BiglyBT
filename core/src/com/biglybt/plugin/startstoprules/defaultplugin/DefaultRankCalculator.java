@@ -295,6 +295,18 @@ DefaultRankCalculator
 	public Object
 	getRelatedTo();
 
+	public int
+	compareToIgnoreStopped(
+		DefaultRankCalculator	other );
+	
+	public Object
+	getUserData(
+		Object		key );
+	
+	public void
+	setUserData(
+		Object		key, 
+		Object		value );
 	public void
 	destroy();	
 }
