@@ -23,6 +23,7 @@
 package com.biglybt.plugin.startstoprules.defaultplugin;
 
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.Download.SeedingRank;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 
@@ -44,15 +45,21 @@ SeedingRankColumnListener
 			dlData = (DefaultRankCalculator) o;
 		else {
 			dlData = StartStopRulesDefaultPlugin.getRankCalculator( dl );
-			cell.setSortValue(dlData);
 		}
+		cell.setSortValue(dlData);
+
 		if (dlData == null){
 			return;
 		}
+				
+		SeedingRank sr = dl.getSeedingRank();
 		
-		int state = dlData.getState();
+		String[] status = sr.getStatus( false );
+
+		cell.setText(status[0]);
 		
-		String[] status = dl.getSeedingRank().getStatus( false );
+		/* 
+ 		int state = dlData.getState();
 
 		if ( state == Download.ST_STOPPED || state == Download.ST_ERROR ){
 			
@@ -62,6 +69,7 @@ SeedingRankColumnListener
 						
 			cell.setText(status[0]);
 		}
+		*/
 		
 		cell.setToolTip(status[1] );
 	}
