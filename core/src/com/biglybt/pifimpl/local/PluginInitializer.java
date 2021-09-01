@@ -47,6 +47,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.core.versioncheck.VersionCheckClient;
 import com.biglybt.pif.*;
 import com.biglybt.pif.platform.PlatformManagerException;
+import com.biglybt.pif.utils.ScriptProvider;
 import com.biglybt.pifimpl.local.launch.PluginLauncherImpl;
 import com.biglybt.pifimpl.local.ui.UIManagerImpl;
 import com.biglybt.pifimpl.local.update.UpdateManagerImpl;
@@ -443,6 +444,57 @@ PluginInitializer
 
   	AEDiagnostics.addWeakEvidenceGenerator( this );
 
+  	ScriptProvider provider = 
+			new ScriptProvider()
+			{
+				@Override
+				public String
+				getProviderName()
+				{
+					return( "plugin" );
+				}
+			
+				@Override
+				public String
+				getScriptType()
+				{
+					return( ST_PLUGIN );
+				}
+			
+				@Override
+				public Object
+				eval(
+					String					script,
+					Map<String,Object>		bindings )
+					
+					throws Exception
+				{
+					String[] bits = script.split( ",", 2 );
+					
+					if ( bits.length != 2 ){
+						
+						throw( new Exception( "Malformed script" ));
+					}
+					
+					String pid = bits[0].trim();
+					
+					PluginInterface plugin_interface = getPluginManager().getPluginInterfaceByID( pid );
+					
+					if ( plugin_interface == null ){
+						
+						throw( new Exception( "Plugin script: plugin id " + pid + " not installed/loaded" ));
+					}
+					
+					Map<String,Object> args = new HashMap<>( bindings );
+					
+					args.put( "script", bits[1].trim());
+					
+					return( plugin_interface.getIPC().invoke( "evalScript", new Object[]{ args }));
+				}
+			};
+				
+	getDefaultInterfaceSupport().getUtilities().registerScriptProvider( provider );
+		
   	this.core.addLifecycleListener(
 	    	new CoreLifecycleAdapter()
 			{

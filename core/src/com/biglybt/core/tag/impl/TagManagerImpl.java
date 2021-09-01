@@ -34,14 +34,12 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
-import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerException;
 import com.biglybt.core.download.DownloadManagerInitialisationAdapter;
 import com.biglybt.core.download.DownloadManagerState;
-import com.biglybt.core.download.impl.DownloadManagerImpl;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
@@ -1329,26 +1327,33 @@ TagManagerImpl
 	{
 		String script_type = "";
 
-		if ( script.length() >=10 && script.substring(0,10).toLowerCase( Locale.US ).startsWith( "javascript" )){
-
-			int	p1 = script.indexOf( '(' );
-
-			int	p2 = script.lastIndexOf( ')' );
-
-			if ( p1 != -1 && p2 != -1 ){
-
-				script = script.substring( p1+1, p2 ).trim();
-
-				if ( script.startsWith( "\"" ) && script.endsWith( "\"" )){
-
-					script = script.substring( 1, script.length()-1 );
+		script = script.trim();
+		
+		if ( script.length() >=10 ){
+			
+			String start = script.substring(0,10).toLowerCase( Locale.US );
+		
+			if ( start.startsWith( "javascript" ) || start.startsWith( "plugin" )){
+				
+				int	p1 = script.indexOf( '(' );
+	
+				int	p2 = script.lastIndexOf( ')' );
+	
+				if ( p1 != -1 && p2 != -1 ){
+	
+					script = script.substring( p1+1, p2 ).trim();
+	
+					if ( script.startsWith( "\"" ) && script.endsWith( "\"" )){
+	
+						script = script.substring( 1, script.length()-1 );
+					}
+	
+						// allow people to escape " if it makes them feel better
+	
+					script = script.replaceAll( "\\\\\"", "\"" );
+	
+					script_type = start.startsWith( "javascript" )?ScriptProvider.ST_JAVASCRIPT:ScriptProvider.ST_PLUGIN;
 				}
-
-					// allow people to escape " if it makes them feel better
-
-				script = script.replaceAll( "\\\\\"", "\"" );
-
-				script_type = ScriptProvider.ST_JAVASCRIPT;
 			}
 		}
 

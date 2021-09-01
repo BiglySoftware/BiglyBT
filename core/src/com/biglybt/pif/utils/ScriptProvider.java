@@ -28,6 +28,7 @@ public interface
 ScriptProvider
 {
 	public static final String	ST_JAVASCRIPT	= "javascript";
+	public static final String	ST_PLUGIN		= "plugin";
 
 	public String
 	getProviderName();
