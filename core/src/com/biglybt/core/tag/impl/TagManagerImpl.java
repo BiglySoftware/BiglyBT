@@ -1415,7 +1415,7 @@ TagManagerImpl
 			}
 		}
 
-		if ( !provider_found ){
+		if ( script_type == ScriptProvider.ST_JAVASCRIPT && !provider_found ){
 
 			if ( !js_plugin_install_tried ){
 
