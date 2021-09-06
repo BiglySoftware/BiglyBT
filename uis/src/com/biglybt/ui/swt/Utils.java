@@ -203,6 +203,8 @@ public class Utils
 	
 	private static volatile boolean	dark_misc_things = false;
 	
+	private static String SHELL_METRICS_DISABLED_KEY = "utils:shmd";
+	
 	static{
 		COConfigurationManager.addAndFireParameterListener(
 			"Dark Misc Colors",
@@ -2321,6 +2323,44 @@ public class Utils
 
 		return bDidResize;
 	}
+	
+	public static void
+	setShellMetricsConfigEnabled(
+		Shell		shell,
+		boolean		enabled )
+	{
+		int[] disabled_count = (int[])shell.getData( SHELL_METRICS_DISABLED_KEY );
+		
+		if ( enabled ){
+			
+			if ( disabled_count == null || disabled_count[0] <= 0 ){
+				
+				Debug.out( "eh" );
+				
+			}else{
+				
+				disabled_count[0]--;
+				
+				if ( disabled_count[0] == 0 ){
+					
+					shell.setData( SHELL_METRICS_DISABLED_KEY, null );
+				}
+			}
+		}else{
+			
+			if ( disabled_count == null ){
+				
+				disabled_count = new int[]{1};
+				
+				shell.setData( SHELL_METRICS_DISABLED_KEY, disabled_count );
+				
+			}else{
+				
+				disabled_count[0]++;
+			}
+		}
+		
+	}
 
 	public static boolean hasShellMetricsConfig( String sConfigPrefix )
 	{
@@ -2373,6 +2413,11 @@ public class Utils
 		@Override
 		public void handleEvent(Event event) {
 			Shell shell = (Shell) event.widget;
+			
+			if ( shell.getData( SHELL_METRICS_DISABLED_KEY ) != null ){
+				
+				return;
+			}
 			
 			currentState = calcState(shell);
 

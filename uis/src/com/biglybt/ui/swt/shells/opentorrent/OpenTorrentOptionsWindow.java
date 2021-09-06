@@ -705,7 +705,15 @@ public class OpenTorrentOptionsWindow
 								rect.x = max_x + 16;
 								rect.y = max_y + 16;
 		
-								shell.setBounds( rect );
+								try{
+									Utils.setShellMetricsConfigEnabled( shell, false );
+								
+									shell.setBounds( rect );
+									
+								}finally{
+									
+									Utils.setShellMetricsConfigEnabled( shell, true );
+								}
 							}
 						}
 	
