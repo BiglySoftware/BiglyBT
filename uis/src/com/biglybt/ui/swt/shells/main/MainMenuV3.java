@@ -30,6 +30,9 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemProperties;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.common.table.TableStructureEventDispatcher;
+import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.skin.SkinConstants;
@@ -45,6 +48,7 @@ import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinUtils;
 import com.biglybt.ui.swt.views.QuickLinksView;
+import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.skin.SkinViewManager;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 
@@ -435,8 +439,34 @@ public class MainMenuV3
 						}
 					}
 				});
+				
+				needsSep = true;
 			}
 
+			if (needsSep) {
+				MenuFactory.addSeparatorMenuItem(viewMenu);
+			}
+			
+			MenuFactory.addMenuItem(viewMenu, PREFIX_V2 + ".view.columnsetup", new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					
+					TableView<?> tv = SelectedContentManager.getCurrentlySelectedTableView();
+							
+					if ( tv == null ){
+						return;
+					}
+					
+					TableRowCore focusedRow = tv.getFocusedRow();
+					if (focusedRow == null || focusedRow.isRowDisposed()) {
+						focusedRow = tv.getRow(0);
+					}
+					String tableID = tv.getTableID();
+					new TableColumnSetupWindow(tv.getDataSourceType(), tableID, null, focusedRow,
+							TableStructureEventDispatcher.getInstance(tableID)).open();
+				}
+			});
+			
 			viewMenu.addMenuListener(new MenuListener() {
 
 				@Override
@@ -476,6 +506,13 @@ public class MainMenuV3
 							}
 						}
 					}
+					
+					TableView<?> tv = SelectedContentManager.getCurrentlySelectedTableView();
+					
+					MenuItem itemColumnSetup = MenuFactory.findMenuItem(viewMenu,
+							PREFIX_V2 + ".view.columnsetup");
+					
+					itemColumnSetup.setEnabled( tv != null );
 				}
 
 				@Override
