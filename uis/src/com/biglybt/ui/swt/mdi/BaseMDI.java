@@ -48,6 +48,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.SWTViewListener;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.SkinView;
+import com.biglybt.util.DataSourceUtils;
 import com.biglybt.util.MapUtils;
 
 import com.biglybt.pif.PluginInterface;
@@ -301,6 +302,24 @@ public abstract class BaseMDI
 		}
 	}
 
+	@Override
+	public MdiEntry 
+	getEntry(
+		String	id, Object datasource )
+	{
+		if ( datasource != null ){
+			
+			String hash = DataSourceUtils.getHash( datasource );
+	
+			if ( hash != null ){
+			
+				return( getEntry( id + "_" + hash ));
+			}
+		}
+		
+		return( getEntry( id ));
+	}
+	
 	/**
 	 * @param skinView
 	 * @return
@@ -527,20 +546,32 @@ public abstract class BaseMDI
 		return loadEntryByID(id, true, false, datasource);
 	}
 	
-	public void popoutEntryByID(String id, Object datasource, boolean onTop ) {
+	public boolean popoutEntryByID(String id, Object datasource, boolean onTop ) {
 		
-		if ( loadEntryByID( id, false, false, datasource )){
+		MdiEntry existing = getEntry( id, datasource );
+		
+		if ( existing != null ){
 			
-			MdiEntry entry = getEntry(id);
-			
-			if ( entry != null ){
+			return( popoutEntry( existing, onTop ));
+		}
+		
+		MdiEntry entry = loadAndGetEntryByID( id, false, false, datasource );
+		
+		if ( entry != null ){
 				
-				popoutEntry( entry, onTop );
+			try{
+				return( popoutEntry( entry, onTop ));
+				
+			}finally{
+				
+				entry.closeView();
 			}
 		}
+		
+		return( false );
 	}
 	
-	public abstract void
+	public abstract boolean
 	popoutEntry(
 		MdiEntry	entry,
 		boolean		onTop );
@@ -645,14 +676,26 @@ public abstract class BaseMDI
 	@Override
 	public boolean loadEntryByID(String id, boolean activate,
 	                             boolean onlyLoadOnce, Object datasource) {
+		
+		return( loadAndGetEntryByID( id, activate, onlyLoadOnce, datasource ) != null );
+	}
+
+	private MdiEntry 
+	loadAndGetEntryByID(
+		String		id, 
+		boolean		activate,                    
+		boolean		onlyLoadOnce, 
+		Object		datasource ) 
+	{
+
 		if (id == null) {
-			return false;
+			return( null );
 		}
 
 		@SuppressWarnings("deprecation")
 		boolean loadedOnce = wasEntryLoadedOnce(id);
 		if (loadedOnce && onlyLoadOnce) {
-			return false;
+			return( null );
 		}
 
 		MdiEntry entry = getEntry(id);
@@ -663,7 +706,7 @@ public abstract class BaseMDI
 			if (activate) {
 				showEntry(entry);
 			}
-			return true;
+			return( entry );
 		}
 
 		Map autoOpenInfo = new HashMap();
@@ -694,10 +737,10 @@ public abstract class BaseMDI
 			if (activate) {
 				showEntry(mdiEntry);
 			}
-			return true;
+			return( mdiEntry );
 		}
 
-		return false;
+		return( null );
 	}
 
 	protected abstract void setEntryLoadedOnce(String id);

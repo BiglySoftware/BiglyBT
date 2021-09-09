@@ -50,6 +50,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
@@ -1662,7 +1663,7 @@ public class TabbedMDI
 		}
 	}
 	
-	public void
+	public boolean
 	popoutEntry(
 		MdiEntry	_entry,
 		boolean		onTop )
@@ -1692,11 +1693,29 @@ public class TabbedMDI
 
 			skinnedDialog.setTitle( target.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
 
-			skinnedDialog.open( "mdi.popout:" + target.getId(), true );
+			
+			String metrics_id;
+			
+				// hack - we don't want to remember shell metrics on a per-download basis
+			
+			if ( target.getDatasource() instanceof Download ){
+				
+				metrics_id = MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS;
+				
+			}else{
+				
+				metrics_id = target.getId();
+			}
+		
+			skinnedDialog.open( "mdi.popout:" + metrics_id, true );
 
+			return( true );
+			
 		}else{
 
 			skinnedDialog.close();
+			
+			return( false );
 		}
 	}
 	

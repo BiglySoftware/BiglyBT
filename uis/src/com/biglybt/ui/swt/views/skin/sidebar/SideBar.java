@@ -63,6 +63,7 @@ import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
+import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.menus.MenuItem;
@@ -395,7 +396,7 @@ public class SideBar
 		}
 	}
 
-	public void
+	public boolean
 	popoutEntry(
 		MdiEntry	entry,
 		boolean		onTop )
@@ -417,11 +418,28 @@ public class SideBar
 	
 			skinnedDialog.setTitle( sbe.getTitle());
 	
-			skinnedDialog.open( "mdi.popout:" + sbe.getId(), true );
+			String metrics_id;
+			
+				// hack - we don't want to remember shell metrics on a per-download basis
+			
+			if ( sbe.getDatasource() instanceof Download ){
+				
+				metrics_id = MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS;
+				
+			}else{
+				
+				metrics_id = sbe.getId();
+			}
+			
+			skinnedDialog.open( "mdi.popout:" + metrics_id, true );
 	
+			return( true );
+			
 		}else{
 	
 			skinnedDialog.close();
+			
+			return( false );
 		}
 	}
 

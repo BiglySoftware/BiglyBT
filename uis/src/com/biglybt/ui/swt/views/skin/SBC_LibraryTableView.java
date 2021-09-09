@@ -385,6 +385,14 @@ public class SBC_LibraryTableView
 				ManagerUtils.browse( dm );
 				return;
 			}
+		}else if (mode.equals("6")) {
+
+				// pop out detailed view
+	
+			if ( UIFunctionsManager.getUIFunctions().getMDI().popoutEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, ds, true)){
+	
+				return;
+			}
 		}
 
 		if (neverPlay) {

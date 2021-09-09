@@ -831,7 +831,18 @@ public class FilesView
 				ManagerUtils.browse(fileInfo);
 
 				break;
+				
+			case "6":{
 
+				DownloadManager dm = fileInfo.getDownloadManager();
+				
+				if ( dm != null ){
+				
+					UIFunctionsManager.getUIFunctions().getMDI().popoutEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, dm, true );
+				}
+				
+				break;
+			}
 			default:
 
 				int file_index = fileInfo.getIndex();

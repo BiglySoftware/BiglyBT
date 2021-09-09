@@ -21,6 +21,7 @@ package com.biglybt.ui.mdi;
 import java.util.List;
 import java.util.Map;
 
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 
 public interface MultipleDocumentInterface
@@ -131,6 +132,8 @@ public interface MultipleDocumentInterface
 
 	public boolean showEntryByID(String id, Object datasource);
 
+	public boolean popoutEntryByID(String id, Object datasource, boolean onTop );
+
 	/**
 		 * If you prefix the 'preferedAfterID' string with '~' then the operation will actually
 		 * switch to 'preferedBeforeID'
@@ -152,6 +155,8 @@ public interface MultipleDocumentInterface
 
 	public MdiEntry getEntry(String id);
 
+	public MdiEntry getEntry(String id, Object datasource );
+	
 	public void addListener(MdiListener l);
 
 	public void removeListener(MdiListener l);

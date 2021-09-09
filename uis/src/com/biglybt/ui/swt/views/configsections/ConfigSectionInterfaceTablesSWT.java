@@ -275,6 +275,7 @@ public class ConfigSectionInterfaceTablesSWT
 			"ConfigView.option.dm.dblclick.launch",
 			"ConfigView.option.dm.dblclick.launch.qv",
 			"ConfigView.option.dm.dblclick.open.browser",
+			"ConfigView.option.dm.dblclick.details.pop",
 		};
 
 		String dblclickLabels[] = new String[dblclickOptions.length];
@@ -314,6 +315,7 @@ public class ConfigSectionInterfaceTablesSWT
 			"ConfigView.option.dm.dblclick.launch",
 			"ConfigView.option.dm.dblclick.launch.qv",
 			"ConfigView.option.dm.dblclick.open.browser",
+			"ConfigView.option.dm.dblclick.details.pop",
 		};
 
 		String enterLabels[] = new String[enterOptions.length];

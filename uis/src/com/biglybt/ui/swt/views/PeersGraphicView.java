@@ -613,9 +613,8 @@ public class PeersGraphicView
 										// ugly code to locate any associated 'PeersView' that we can locate the peer in
 	
 									try{
-										String dm_id = "DMDetails_" + Base32.encode( manager.getTorrent().getHash());
 	
-										MdiEntry mdi_entry = UIFunctionsManager.getUIFunctions().getMDI().getEntry( dm_id );
+										MdiEntry mdi_entry = UIFunctionsManager.getUIFunctions().getMDI().getEntry( MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, manager );
 	
 										if ( mdi_entry != null ){
 	
