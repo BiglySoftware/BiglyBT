@@ -170,21 +170,28 @@ TagPropertyConstraintHandler
 			};	
 		};
 	
-	private volatile int	apply_all_secs;
+	private static volatile int	apply_all_secs;
+	private static volatile int	target_share_ratio;
 	
-	{
-		COConfigurationManager.addAndFireParameterListener(
-			ConfigKeys.Tag.ICFG_TAG_AUTO_FULL_REAPPLY_PERIOD_SECS,
+	static{
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				ConfigKeys.Tag.ICFG_TAG_AUTO_FULL_REAPPLY_PERIOD_SECS,
+				"Stop Ratio",
+			},
 			(n)->{
-				apply_all_secs = COConfigurationManager.getIntParameter(n);
+				apply_all_secs = COConfigurationManager.getIntParameter(ConfigKeys.Tag.ICFG_TAG_AUTO_FULL_REAPPLY_PERIOD_SECS);
 				
 				if ( apply_all_secs <= 0 ){
 					apply_all_secs = 0;
 				}else if ( apply_all_secs < 10 ){
 					apply_all_secs = 10;
 				}
+				
+				target_share_ratio = (int)( 1000*COConfigurationManager.getFloatParameter( "Stop Ratio" ) );
 			});
 	}
+	
 	private TimerEventPeriodic		timer;
 
 	protected
@@ -542,15 +549,22 @@ TagPropertyConstraintHandler
 								
 								Set<Tag>				peer_sets 	= new HashSet<>();
 								List<TagConstraint>		ps_constraints;
+								List<TagConstraint>		time_constraints;
 								
 								List<DownloadManager>	ps_changed	= Collections.emptyList();
 								
 								synchronized( constrained_tags ){
 									
-									ps_constraints = new ArrayList<>( constrained_tags.size());
+									ps_constraints 		= new ArrayList<>( constrained_tags.size());
+									time_constraints 	= new ArrayList<>( constrained_tags.size());
 									
 									for ( TagConstraint tc: constrained_tags.values()){
 											
+										if ( tc.getDependsOnLevel() == TagConstraint.DEP_TIME ){
+											
+											time_constraints.add( tc );
+										}
+										
 										Set<Tag> tags = tc.getDependsOnTags();
 									
 										boolean added = false;
@@ -672,6 +686,13 @@ TagPropertyConstraintHandler
 									apply_done = true;
 									
 								}else{
+									
+									if ( !time_constraints.isEmpty()){
+									
+										GlobalManager gm = core.getGlobalManager();
+
+										apply( gm.getDownloadManagers(), time_constraints );
+									}
 									
 									if ( !ps_changed.isEmpty()){
 										
@@ -1317,6 +1338,12 @@ TagPropertyConstraintHandler
 		getString()
 		{
 			return( expr==null?"Failed to compile":expr.getString());
+		}
+		
+		private int
+		getDependsOnLevel()
+		{
+			return( depends_on_level );
 		}
 		
 		private Set<Tag>
@@ -2475,6 +2502,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_TORRENT_TYPE			= 37;
 		private static final int	KW_FILE_PATHS			= 38;
 		private static final int	KW_FILE_PATHS_SELECTED	= 39;
+		private static final int	KW_TARGET_RATIO			= 40;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2565,6 +2593,9 @@ TagPropertyConstraintHandler
 			keyword_map.put( "file_paths", 				new int[]{KW_FILE_PATHS,			DEP_STATIC });
 			keyword_map.put( "filepathsselected",		new int[]{KW_FILE_PATHS_SELECTED,	DEP_STATIC });
 			keyword_map.put( "file_paths_selected",		new int[]{KW_FILE_PATHS_SELECTED,	DEP_STATIC });
+			
+			keyword_map.put( "targetratio", 			new int[]{KW_TARGET_RATIO,			DEP_TIME });	// time because can change with config change
+			keyword_map.put( "target_ratio", 			new int[]{KW_TARGET_RATIO,			DEP_TIME });
 
 		}
 
@@ -4197,6 +4228,18 @@ TagPropertyConstraintHandler
 									return( new Float( sr/1000.0f ));
 								}
 							}
+							case KW_TARGET_RATIO:{
+
+								int tr = dm.getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_SHARE_RATIO );
+
+								if ( tr <= 0 ){
+
+									tr = target_share_ratio;
+								}
+
+								return( new Float( tr/1000.0f ));
+							}
+
 							case KW_PERCENT:{
 
 									// 0->1000
