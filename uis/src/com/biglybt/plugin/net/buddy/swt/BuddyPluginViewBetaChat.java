@@ -2815,10 +2815,21 @@ BuddyPluginViewBetaChat
 		big_font 	= new Font( display, new FontData( fontData.getName(), (int)(fontData.getHeight()*1.5), SWT.BOLD ));
 		small_font 	= new Font( display, new FontData( fontData.getName(), (int)(fontData.getHeight()*0.5), SWT.BOLD ));
 
-		ftux_dark_bg 	= new Color( display, 183, 200, 212 );
-		ftux_dark_fg 	= new Color( display, 0, 81, 134 );
-		ftux_light_bg 	= new Color( display, 236, 242, 246 );
+		boolean dark = Utils.isDarkAppearanceNative();
+		
+		if ( dark ){
+			Color bg = Colors.getSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND);
+			Color fg = Colors.getSystemColor(display, SWT.COLOR_WIDGET_FOREGROUND);
 
+			ftux_dark_bg = new Color( display, bg.getRGB());
+			ftux_dark_fg = new Color( display, fg.getRGB());
+			ftux_light_bg = new Color( display, bg.getRGB());
+		}else{
+	
+			ftux_dark_bg 	= new Color( display, 183, 200, 212 );
+			ftux_dark_fg 	= new Color( display, 0, 81, 134 );
+			ftux_light_bg 	= new Color( display, 236, 242, 246 );
+		}
 		
 		component.addDisposeListener(
 			new DisposeListener()

@@ -5555,7 +5555,23 @@ public class Utils
 				}
 			}else{
 				
-				is_dark_appearance = false;
+				boolean is_system_dark_theme = false;
+				
+				try{
+					Class<?> displayClass = Class.forName( "org.eclipse.swt.widgets.Display" );
+					
+					Method method = displayClass.getMethod( "isSystemDarkTheme" );
+							
+					is_system_dark_theme = (Boolean)method.invoke(null);
+				
+				}catch( NoSuchMethodException e ){
+				
+				}catch( Throwable e ) {
+					
+					Debug.out( e );
+				}
+				
+				is_dark_appearance = is_system_dark_theme;
 			}
 		}
 		

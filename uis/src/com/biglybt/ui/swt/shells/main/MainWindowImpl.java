@@ -1888,7 +1888,7 @@ public class MainWindowImpl
 			cArea= c2;
 		}
 
-		final Text text = new Text(cArea, DARK_MODE?SWT.BORDER:SWT.NONE);
+		final Text text = new Text(cArea, (DARK_MODE && !Utils.isGTK3 )?SWT.BORDER:SWT.NONE);
 		text.setMessage(MessageText.getString("v3.MainWindow.search.defaultText"));
 		FormData filledFormData = Utils.getFilledFormData();
 		text.setLayoutData(filledFormData);
