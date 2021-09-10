@@ -257,8 +257,14 @@ public class RemotePairingWindow
 					printArea.y = (fullHeight - boxSizeAndPadding - sizeAccess.y + textPadding) / 2;
 
 					sp.printString(e.gc, printArea, SWT.CENTER | SWT.TOP);
-					e.gc.setBackground(Colors.white);
-					e.gc.setForeground(Colors.blue);
+					
+					if ( Utils.isDarkAppearanceNative()) {
+						e.gc.setBackground(Colors.getSystemColor(control.getDisplay(), SWT.COLOR_WIDGET_BACKGROUND));
+						e.gc.setForeground(Colors.getSystemColor(control.getDisplay(), SWT.COLOR_WIDGET_FOREGROUND));
+					}else {
+						e.gc.setBackground(Colors.white);
+						e.gc.setForeground(Colors.blue);
+					}
 
 					int xStart = (fullWidth - allBoxesWidth) / 2;
 					int yStart = printArea.y + sizeAccess.y + textPadding;
