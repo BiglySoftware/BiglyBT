@@ -4,7 +4,7 @@
 AUTOUPDATE_SCRIPT=1 # change to 0 if you don't want your changes overwritten on next SCRIPT_VERSION change
 JAVA_PROGRAM_DIR=""	# use full path to java bin dir, ex. "/usr/java/j2sdk1.4.2/bin/"
 #PROGRAM_DIR="/home/username/apps/biglybt"	# use full path to BiglyBT bin dir
-JAVA_PROPS="-Djava.net.preferIPv4Stack=true"
+JAVA_PROPS=""
 
 #######################################
 
