@@ -5553,6 +5553,15 @@ public class Utils
 					
 					is_dark_appearance = false;
 				}
+			}else if ( Constants.isWindows ){
+				
+					// currently the logic below for Windows will return 'true' when dark theme
+					// is enabled even though SWT doesn't support it at all - in consequence it
+					// just borks up a few other things (search box text size in Library view for
+					// example )
+				
+				is_dark_appearance = false;
+				
 			}else{
 				
 				boolean is_system_dark_theme = false;
