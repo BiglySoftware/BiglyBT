@@ -3605,7 +3605,7 @@ TagPropertyConstraintHandler
 							handler.tag_manager.evalScript(
 								tag_maybe_null,
 								"javascript( " + (String)params[0] + ")",
-								dm,
+								Arrays.asList( dm ),
 								"inTag" );
 
 						if ( result instanceof Boolean ){

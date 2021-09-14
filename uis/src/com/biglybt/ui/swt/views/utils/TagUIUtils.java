@@ -988,10 +988,14 @@ public class TagUIUtils
 								{
 									TagManager tagManager = TagManagerFactory.getTagManager();
 									
-									TagType tt = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+									TagType tt = tagManager.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
 									
 									List<Tag> all_tags = new ArrayList<>( tt.getTags());
 
+									tt = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+
+									all_tags.addAll( tt.getTags());
+									
 									all_tags.remove( tag );
 									
 									TagUIUtilsV3.showTagSelectionDialog( 
@@ -3666,16 +3670,23 @@ public class TagUIUtils
 
 						boolean	selected = t_i.getSelection();
 
-						for ( DownloadManager dm: dms ){
-
-							if ( selected ){
-
-								t.addTaggable( dm );
-
-							}else{
-
-								t.removeTaggable( dm );
+						try{
+							t.addTaggableBatch( true );
+						
+							for ( DownloadManager dm: dms ){
+	
+								if ( selected ){
+	
+									t.addTaggable( dm );
+	
+								}else{
+	
+									t.removeTaggable( dm );
+								}
 							}
+						}finally{
+							
+							t.addTaggableBatch( false );
 						}
 					}
 				});

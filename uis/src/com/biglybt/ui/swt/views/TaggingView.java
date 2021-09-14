@@ -313,13 +313,21 @@ public class TaggingView
 					}
 					Tag tag = painter.getTag();
 					boolean doTag = !(painter.isSelected() && !painter.isGrayed());
-					for (Taggable taggable : taggables) {
-						if (doTag) {
-							tag.addTaggable(taggable);
-						} else {
-							tag.removeTaggable(taggable);
+					
+					try{
+						tag.addTaggableBatch( true );
+					
+						for (Taggable taggable : taggables) {
+							if (doTag) {
+								tag.addTaggable(taggable);
+							} else {
+								tag.removeTaggable(taggable);
+							}
+							painter.setSelected(doTag);
 						}
-						painter.setSelected(doTag);
+					}finally{
+						
+						tag.addTaggableBatch( false );
 					}
 				}
 

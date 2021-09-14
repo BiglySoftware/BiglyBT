@@ -170,6 +170,10 @@ Tag
 	getColors();
 	
 	public void
+	addTaggableBatch(
+		boolean		starts );
+	
+	public void
 	addTaggable(
 		Taggable	t );
 

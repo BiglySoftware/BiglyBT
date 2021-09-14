@@ -36,6 +36,13 @@ ScriptProvider
 	public String
 	getScriptType();
 
+	public default boolean
+	canEvalBatch(
+		String		script )
+	{
+		return( false );
+	}
+	
 	public Object
 	eval(
 		String					script,

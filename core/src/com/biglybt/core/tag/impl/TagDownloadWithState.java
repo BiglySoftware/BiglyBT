@@ -492,6 +492,59 @@ TagDownloadWithState
 			});
 	}
 	
+	private List<DownloadManager>	batch 		= new ArrayList<DownloadManager>();
+	private int						batch_depth	= 0;
+	
+	@Override
+	public void
+	addTaggableBatch(
+		boolean		starts )
+	{
+		List<DownloadManager> to_do = new ArrayList<>();
+		
+		synchronized( batch ){
+	
+			if ( starts ){
+				
+				batch_depth++;
+				
+			}else{
+				
+				batch_depth--;
+				
+				if ( batch_depth == 0 ){
+					
+					to_do.addAll( batch );
+					
+					batch.clear();
+				}
+			}
+		}
+		
+		if ( !to_do.isEmpty()){
+			
+			String script = getActionScript();
+
+			if ( script.length() > 0 ){
+				
+				rs_async.dispatch(
+						new AERunnable()
+						{
+							@Override
+							public void
+							runSupport()
+							{
+								TagManagerImpl.getSingleton().evalScript(
+									TagDownloadWithState.this,
+									script,
+									to_do,
+									"execAssign" );
+							}
+						});
+			}
+		}
+	}
+	
 	@Override
 	public void
 	addTaggable(
@@ -613,20 +666,30 @@ TagDownloadWithState
 
 						if ( script.length() > 0 ){
 
-							rs_async.dispatch(
-								new AERunnable()
-								{
-									@Override
-									public void
-									runSupport()
-									{
-										TagManagerImpl.getSingleton().evalScript(
-											TagDownloadWithState.this,
-											script,
-											dm,
-											"execAssign" );
-									}
-								});
+							synchronized( batch ){
+								
+								if ( batch_depth > 0 ){
+							
+									batch.add( dm );
+									
+								}else{
+							
+									rs_async.dispatch(
+										new AERunnable()
+										{
+											@Override
+											public void
+											runSupport()
+											{
+												TagManagerImpl.getSingleton().evalScript(
+													TagDownloadWithState.this,
+													script,
+													Arrays.asList( dm ),
+													"execAssign" );
+											}
+										});
+								}
+							}
 						}
 					}
 

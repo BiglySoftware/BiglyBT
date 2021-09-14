@@ -1944,6 +1944,13 @@ TagBase
 
 	@Override
 	public void
+	addTaggableBatch(
+		boolean		starts )
+	{
+	}
+	
+	@Override
+	public void
 	addTaggable(
 		Taggable	t )
 	{

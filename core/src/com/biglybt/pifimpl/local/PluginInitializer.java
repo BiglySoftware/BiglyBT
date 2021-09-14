@@ -46,6 +46,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
 import com.biglybt.core.versioncheck.VersionCheckClient;
 import com.biglybt.pif.*;
+import com.biglybt.pif.ipc.IPCInterface;
 import com.biglybt.pif.platform.PlatformManagerException;
 import com.biglybt.pif.utils.ScriptProvider;
 import com.biglybt.pifimpl.local.launch.PluginLauncherImpl;
@@ -462,6 +463,33 @@ PluginInitializer
 				}
 			
 				@Override
+				public boolean
+				canEvalBatch(
+					String					script )
+				{
+					String[] bits = script.split( ",", 2 );
+					
+					if ( bits.length != 2 ){
+						
+						return( false );
+					}
+					
+					String pid = bits[0].trim();
+					
+					if ( pid.endsWith( "+" )){
+						
+						PluginInterface plugin_interface = getPluginManager().getPluginInterfaceByID( pid.substring( 0, pid.length()-1));
+					
+						if ( plugin_interface != null ){
+						
+							return( plugin_interface.getIPC().canInvoke("evalBatchScript" , new Object[]{ new HashMap()}));
+						}
+					}
+					
+					return( false );
+				}
+				
+				@Override
 				public Object
 				eval(
 					String					script,
@@ -478,6 +506,13 @@ PluginInitializer
 					
 					String pid = bits[0].trim();
 					
+					boolean is_batch = pid.endsWith( "+" );
+					
+					if ( is_batch ){
+						
+						pid = pid.substring( 0, pid.length()-1);
+					}
+					
 					PluginInterface plugin_interface = getPluginManager().getPluginInterfaceByID( pid );
 					
 					if ( plugin_interface == null ){
@@ -489,7 +524,18 @@ PluginInitializer
 					
 					args.put( "script", bits[1].trim());
 					
-					return( plugin_interface.getIPC().invoke( "evalScript", new Object[]{ args }));
+					Object[] a_args = new Object[]{ args };
+					
+					IPCInterface ipc = plugin_interface.getIPC();
+					
+					if ( is_batch && ipc.canInvoke("evalBatchScript", a_args )){
+						
+						return( ipc.invoke( "evalBatchScript", a_args ));
+						
+					}else{
+					
+						return( ipc.invoke( "evalScript", a_args ));
+					}
 				}
 			};
 				

@@ -1320,10 +1320,10 @@ TagManagerImpl
 
 	protected Object
 	evalScript(
-		Tag					tag,
-		String				script,
-		DownloadManager		dm,
-		String				intent_key )
+		Tag						tag,
+		String					script,
+		List<DownloadManager>	dms,
+		String					intent_key )
 	{
 		String script_type = "";
 
@@ -1376,41 +1376,111 @@ TagManagerImpl
 
 				provider_found = true;
 
-				Download plugin_dm = PluginCoreUtils.wrap( dm );
+				if ( dms.size() > 1 && p.canEvalBatch( script )){
+													
+					Map<String,Object>	bindings = new HashMap<>();
+	
+					List<String>	intents 	= new ArrayList<>();
+					List<Download>	plugin_dms	= new ArrayList<>();
+						
+					for ( DownloadManager dm: dms ){
 
-				if ( plugin_dm == null ){
+						Download plugin_dm = PluginCoreUtils.wrap( dm );
+						
+						if ( plugin_dm == null ){
+		
+							continue;
+						}
 
-					return( null );	// deleted in the meantime
-				}
-
-				Map<String,Object>	bindings = new HashMap<>();
-
-
-				String dm_name = dm.getDisplayName();
-
-				if ( dm_name.length() > 32 ){
-
-					dm_name = dm_name.substring( 0, 29 ) + "...";
-				}
-
-				String intent = intent_key + "(\"" + tag.getTagName() + "\",\"" + dm_name + "\")";
-
-				bindings.put( "intent", intent );
-
-				bindings.put( "download", plugin_dm );
-
-				bindings.put( "tag", tag );
-
-				try{
-					Object result = p.eval( script, bindings );
-
-					return( result );
-
-				}catch( Throwable e ){
-
-					Debug.out( e );;
+						String dm_name = dm.getDisplayName();
+		
+						if ( dm_name.length() > 32 ){
+		
+							dm_name = dm_name.substring( 0, 29 ) + "...";
+						}
+		
+						String intent = intent_key + "(\"" + tag.getTagName() + "\",\"" + dm_name + "\")";
+						
+						intents.add( intent );
+						
+						plugin_dms.add( plugin_dm );
+					}
 					
-					return( e );
+					if ( intents.isEmpty()){
+						
+						return( null );
+					}
+					
+					bindings.put( "intents", intents );
+	
+					bindings.put( "downloads", plugin_dms );
+	
+					bindings.put( "tag", tag );
+	
+					try{
+						Object result = p.eval( script, bindings );
+	
+						return( result );
+	
+					}catch( Throwable e ){
+	
+						Debug.out( e );
+						
+						return( e );
+					}
+					
+				}else{
+					
+					List<Object>	results = new ArrayList<>();
+					
+					for ( DownloadManager dm: dms ){
+						
+						Download plugin_dm = PluginCoreUtils.wrap( dm );
+		
+						if ( plugin_dm == null ){
+		
+							continue; // deleted in the meantime
+						}
+		
+						Map<String,Object>	bindings = new HashMap<>();
+		
+		
+						String dm_name = dm.getDisplayName();
+		
+						if ( dm_name.length() > 32 ){
+		
+							dm_name = dm_name.substring( 0, 29 ) + "...";
+						}
+		
+						String intent = intent_key + "(\"" + tag.getTagName() + "\",\"" + dm_name + "\")";
+		
+						bindings.put( "intent", intent );
+		
+						bindings.put( "download", plugin_dm );
+		
+						bindings.put( "tag", tag );
+		
+						try{
+							Object result = p.eval( script, bindings );
+		
+							results.add( result );
+		
+						}catch( Throwable e ){
+		
+							Debug.out( e );
+							
+							results.add( e );
+						}
+					}
+					
+					if ( results.size() == 1 && dms.size() == 1 ){
+						
+						return( results.get( 0 ));
+						
+					}else{
+						
+						return( results );
+					}
 				}
 			}
 		}

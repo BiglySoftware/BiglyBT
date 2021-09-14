@@ -1850,16 +1850,23 @@ public class SB_Transfers
 							return;
 						}
 
-						for (DownloadManager dm : dms) {
-							if ( doAdd ){
-								if ( !tag.hasTaggable( dm )){
-									tag.addTaggable( dm );
-								}
-							}else{
-								if ( tag.hasTaggable( dm )){
-									tag.removeTaggable( dm );
+						try{
+							tag.addTaggableBatch( true );
+							
+							for (DownloadManager dm : dms) {
+								if ( doAdd ){
+									if ( !tag.hasTaggable( dm )){
+										tag.addTaggable( dm );
+									}
+								}else{
+									if ( tag.hasTaggable( dm )){
+										tag.removeTaggable( dm );
+									}
 								}
 							}
+						}finally{
+							
+							tag.addTaggableBatch( false );
 						}
 					}
 				};
