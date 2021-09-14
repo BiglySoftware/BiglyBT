@@ -800,12 +800,19 @@ public class SBC_TagsOverview
 							return;
 						}
 
-						for (DownloadManager dm : dms) {
-							if ( doAdd ){
-								tag.addTaggable( dm );
-							}else{
-								tag.removeTaggable( dm );
+						try{
+							tag.addTaggableBatch( true );
+						
+							for (DownloadManager dm : dms) {
+								if ( doAdd ){
+									tag.addTaggable( dm );
+								}else{
+									tag.removeTaggable( dm );
+								}
 							}
+						}finally{
+							
+							tag.addTaggableBatch( false );
 						}
 					}
 				});

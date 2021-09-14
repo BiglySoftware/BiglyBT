@@ -1149,18 +1149,25 @@ public class MyTorrentsView
 						}
 					}
 
-					for (Object obj : ds) {
-
-						if (obj instanceof DownloadManager) {
-
-							DownloadManager dm = (DownloadManager) obj;
-
-							if (doAdd) {
-								tag.addTaggable(dm);
-							} else {
-								tag.removeTaggable(dm);
+					try{
+						tag.addTaggableBatch( true );
+					
+						for (Object obj : ds) {
+	
+							if (obj instanceof DownloadManager) {
+	
+								DownloadManager dm = (DownloadManager) obj;
+	
+								if (doAdd) {
+									tag.addTaggable(dm);
+								} else {
+									tag.removeTaggable(dm);
+								}
 							}
 						}
+					}finally{
+						
+						tag.addTaggableBatch( false );
 					}
 
 					// Quick Visual
