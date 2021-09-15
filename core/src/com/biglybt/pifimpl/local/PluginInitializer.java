@@ -204,6 +204,13 @@ PluginInitializer
 					"azintrss",
 					"true",
 					"false"},
+			{	 PluginManagerDefaults.PID_SIMPLE_API,
+					/** {@link com.biglybt.plugin.simpleapi.SimpleAPIPlugin} */
+					"com.biglybt.plugin.simpleapi.SimpleAPIPlugin",
+					"azintsimpleapi",
+					"azintsimpleapi",
+					"true",
+					"false"},
         };
 
   /*

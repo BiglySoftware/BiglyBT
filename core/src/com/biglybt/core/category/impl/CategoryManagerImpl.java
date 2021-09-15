@@ -37,6 +37,7 @@ import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagDownload;
+import com.biglybt.core.tag.TagException;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.tag.impl.TagTypeBase;
 import com.biglybt.core.torrent.TOTorrent;
@@ -387,6 +388,29 @@ CategoryManagerImpl
 	  return( new ArrayList<Tag>( categories.values()));
   }
   
+  @Override
+  public Tag
+  createTag(
+	  String 	name,
+	  boolean	auto_add )
+
+	  throws TagException
+  {
+	  if ( !auto_add ){
+		  
+		  throw( new TagException( "Not supported - must be auto-add" ));
+	  }
+	  
+	  Category cat = getCategory( name );
+	  
+	  if ( cat == null ){
+		  
+		  cat = createCategory( name );
+	  }
+	  
+	  return( cat );
+  }
+	
   @Override
   protected void
   sync()
