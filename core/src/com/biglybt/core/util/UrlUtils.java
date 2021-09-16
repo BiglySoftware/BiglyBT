@@ -125,7 +125,10 @@ public class UrlUtils
 				Debug.out( "Invalid hash length " + length );
 			}
 
-			return( "magnet:?xt=urn:btih:" + Base32.encode( hash ));
+				// switched this as apparently the standard is base16...
+			
+			//return( "magnet:?xt=urn:btih:" + Base32.encode( hash ));
+			return( "magnet:?xt=urn:btih:" + ByteFormatter.encodeString( hash ).toLowerCase( Locale.US ));
 		}
 	}
 
