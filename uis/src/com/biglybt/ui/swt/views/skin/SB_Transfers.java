@@ -1602,10 +1602,12 @@ public class SB_Transfers
 							
 							MdiEntry entry;
 							
+							boolean closeable = true;
+							
 							if ( tag.getTaggableTypes() == Taggable.TT_DOWNLOAD ){
 							
 								entry = mdi.createEntryFromSkinRef(
-									parent_id, group_id, "library", tag_group, viewTitleInfo, tag.getGroupContainer(), false, prev_id );
+									parent_id, group_id, "library", tag_group, viewTitleInfo, tag.getGroupContainer(), closeable, prev_id );
 							
 							}else{
 								
@@ -1613,7 +1615,7 @@ public class SB_Transfers
 										PeersGeneralView.class);
 								builder.setParentEntryID(parent_id);
 								builder.setPreferredAfterID(prev_id).setInitialDatasource( tag.getGroupContainer() );
-								entry = mdi.createEntry(builder, false);
+								entry = mdi.createEntry(builder, closeable);
 
 								entry.setViewTitleInfo( viewTitleInfo );
 							}
@@ -1622,6 +1624,14 @@ public class SB_Transfers
 							
 							entry.setUserData( TAG_TAG_OR_GROUP_KEY, tag.getGroupContainer());
 
+							entry.addListener((e,user )->{
+								List<Tag> kids = tag.getGroupContainer().getTags();
+								
+								for ( Tag kid: kids ){
+									kid.setVisible( false );
+								}
+							});
+							
 							// remove header when there are no children
 							entry.addListener((parent, ch, user) -> {
 								String viewID = parent.getViewID();
