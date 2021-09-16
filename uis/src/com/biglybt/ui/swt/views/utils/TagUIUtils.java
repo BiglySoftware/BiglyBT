@@ -23,6 +23,7 @@ package com.biglybt.ui.swt.views.utils;
 import java.io.File;
 import java.util.*;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -731,51 +732,44 @@ public class TagUIUtils
 			new MenuItem( menu, SWT.SEPARATOR );
 		}
 		
-		MenuItem itemSetColor = new MenuItem(menu, SWT.PUSH);
-		Messages.setLanguageText(itemSetColor, "TagGroup.menu.setcolor");
-		itemSetColor.addListener(SWT.Selection, event -> {
-			ColorDialog cd = new ColorDialog(menu.getShell());
-
-			List<RGB> customColors = Utils.getCustomColors();
-			List<Tag> tags = tag_group.getTags();
-			Map<RGB, Long> mapDupCount = new HashMap<>();
-			for (Tag tag : tags) {
-				int[] color = tag.getColor();
-				if (color != null) {
-					RGB rgb = new RGB(color[0], color[1], color[2]);
-					if (!customColors.contains(rgb)) {
-						customColors.add(0, rgb);
-					} else {
-						Long count = mapDupCount.get(rgb);
-						mapDupCount.put(rgb, count == null ? 1 : count + 1);
-					}
+		boolean can_clear = false;
+		
+		for (Tag tag : tag_group.getTags()) {
+			if ( !tag.isColorDefault()){
+				can_clear = true;
+			}
+		}
+		addColourChooser(
+			menu,
+			"label.color",
+			can_clear,
+			tag_group,
+			(selected)->{
+				for (Tag tag : tag_group.getTags()) {
+					tag.setColor(selected==null?null:new int[] { selected.red, selected.green, selected.blue});
 				}
+			});
+	}
+	
+	public static void
+	addColourChooser(
+		Menu			menu,
+		String			item_resource,
+		boolean			can_clear,
+		TagGroup		tag_group,
+		Consumer<RGB>	receiver )
+	{
+		List<RGB>	existing = new ArrayList<>();
+		
+		for ( Tag tag: tag_group.getTags()){
+			int[] color = tag.getColor();
+			if (color != null) {
+				RGB rgb = new RGB(color[0], color[1], color[2]);
+				existing.add(rgb);
 			}
-			
-			long maxCount = 0;
-			RGB selectRGB = null;
-			for (RGB rgb : mapDupCount.keySet()) {
-				Long count = mapDupCount.get(rgb);
-				if (count != null && count > maxCount) {
-					maxCount = count;
-					selectRGB = rgb;
-				}
-			}
-			
-			cd.setRGBs(customColors.toArray(new RGB[0]));
-			if (selectRGB != null) {
-				cd.setRGB(selectRGB);
-			}
-
-			RGB rgbChosen = cd.open();
-			if (rgbChosen == null) {
-				return;
-			}
-			for (Tag tag : tags) {
-				tag.setColor(new int[] { rgbChosen.red, rgbChosen.green, rgbChosen.blue});
-			}
-
-		});
+		}
+		
+		MenuBuildUtils.addColourChooser(menu, item_resource, can_clear, existing, receiver);
 	}
 	
 	public static void
@@ -3066,7 +3060,11 @@ public class TagUIUtils
 		Menu		menu,
 		TagGroup	group )
 	{
-		if ( group.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+		int tt = group.getTagType().getTagType();
+		
+		boolean need_sep = false;
+		
+		if ( tt == TagType.TT_DOWNLOAD_MANUAL ){
 			
 				// exclusive 
 			
@@ -3143,10 +3141,22 @@ public class TagUIUtils
 					}
 				}});
 			
-			return( true );
+			need_sep = true;
 		}
 		
-		return( false );
+		if ( tt == TagType.TT_DOWNLOAD_MANUAL || tt == TagType.TT_PEER_IPSET ){
+			
+			addColourChooser(
+					menu,
+					"TagGroup.menu.defaultcolor",
+					group.getColor() != null,
+					group,
+					(selected)->{
+						group.setColor( selected==null?null:new int[]{ selected.red, selected.green, selected.blue } );
+					});
+		}	
+		
+		return( need_sep );
 	}
 	
 	public static void

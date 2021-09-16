@@ -687,7 +687,19 @@ TagBase
 	setColor(
 		int[]		rgb )
 	{
-
+		if ( rgb == null ){
+			
+			if ( group != null ){
+			
+				TagGroup tg = getGroupContainer();
+				
+				if ( tg != null ){
+					
+					rgb = tg.getColor();
+				}
+			}
+		}
+		
 		boolean changed = writeStringAttribute( AT_COLOR_ID, encodeRGB( rgb ));
 
 		colour = null;

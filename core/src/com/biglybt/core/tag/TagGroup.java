@@ -23,6 +23,13 @@ TagGroup
 	public File
 	getRootMoveOnAssignLocation();
 	
+	public void
+	setColor(
+		int[]		rgb );
+
+	public int[]
+	getColor();
+	
 	public TagType
 	getTagType();
 	

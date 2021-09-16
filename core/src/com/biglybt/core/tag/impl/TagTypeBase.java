@@ -706,6 +706,7 @@ TagTypeBase
  		
  		private boolean		exclusive;
  		private File		ass_root;
+ 		private int[]		group_colour;
  		
  		private CopyOnWriteList<Tag>	tags = new CopyOnWriteList<>();
  		
@@ -736,6 +737,18 @@ TagTypeBase
  				
  				ass_root = FileUtil.newFile( ar );
  			}
+ 			
+ 			List<Number>	gc = (List<Number>)map.get( "gc" );
+ 			
+ 			if ( gc != null ){
+ 				
+ 				group_colour = new int[gc.size()];
+ 				
+ 				for ( int i=0;i<group_colour.length;i++){
+ 					
+ 					group_colour[i] = gc.get(i).intValue();
+ 				}
+ 			}
  		}
  		
  		protected Map<String,Object>
@@ -751,6 +764,16 @@ TagTypeBase
  			if ( ass_root != null ){
  				
  				map.put( "ar", ass_root.getAbsolutePath());
+ 			}
+ 			
+ 			if ( group_colour != null ){
+ 				
+ 				List<Integer> list = new ArrayList<Integer>( group_colour.length );
+ 				for ( int i: group_colour ){
+ 					list.add(i);
+ 				}
+ 				
+ 				map.put( "gc", list );
  			}
  			
  			return( map );
@@ -817,6 +840,31 @@ TagTypeBase
  		}
  		
  		@Override
+ 		public int[] 
+ 		getColor()
+ 		{
+ 			return( group_colour );
+ 		}
+ 		
+ 		@Override
+ 		public void 
+ 		setColor(
+ 			int[] rgb)
+ 		{
+ 			group_colour = rgb;
+ 			
+ 			for ( Tag tag: tags ){
+ 				
+ 				if ( tag.isColorDefault()){
+ 				
+ 					tag.setColor( rgb );
+ 				}
+ 			}
+ 			
+ 			manager.tagGroupUpdated( TagTypeBase.this, this );
+ 		}
+ 		
+ 		@Override
  		public TagType 
  		getTagType()
  		{
@@ -847,6 +895,14 @@ TagTypeBase
 	 						
 	 						fl.setTagMoveOnAssignFolder( ass_root==null?null:FileUtil.newFile( ass_root, tag.getTagName( true )));
 	 					}
+	 				}
+	 			}
+	 			
+	 			if ( tag.isColorDefault()){
+	 				
+	 				if ( group_colour != null ){
+	 					
+	 					tag.setColor( group_colour );
 	 				}
 	 			}
 	 			

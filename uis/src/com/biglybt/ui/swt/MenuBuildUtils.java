@@ -21,17 +21,22 @@ package com.biglybt.ui.swt;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.events.MenuAdapter;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Menu;
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.ui.GraphicURI;
@@ -45,13 +50,13 @@ import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.shells.main.MainMenuV3;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.Tag;
 import com.biglybt.core.util.*;
 
 import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
-import com.biglybt.plugin.net.buddy.BuddyPluginUI;
 import com.biglybt.plugin.net.buddy.swt.BuddyUIUtils;
 
 
@@ -1459,5 +1464,69 @@ public class MenuBuildUtils {
 			
 			new org.eclipse.swt.widgets.MenuItem( menu, SWT.SEPARATOR );
 		}
+	}
+	
+	public static void
+	addColourChooser(
+		Menu			menu,
+		String			item_resource,
+		boolean			can_clear,
+		List<RGB>		existing,
+		Consumer<RGB>	receiver )
+	{
+		final Menu sel_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+
+		org.eclipse.swt.widgets.MenuItem sel_item = new org.eclipse.swt.widgets.MenuItem( menu, SWT.CASCADE);
+
+		Messages.setLanguageText( sel_item, item_resource );
+
+		sel_item.setMenu( sel_menu );
+		
+		org.eclipse.swt.widgets.MenuItem itemSetColor = new org.eclipse.swt.widgets.MenuItem(sel_menu, SWT.PUSH);
+		Messages.setLanguageText(itemSetColor, "label.set");
+		itemSetColor.addListener(SWT.Selection, event -> {
+			ColorDialog cd = new ColorDialog(menu.getShell());
+
+			List<RGB> customColors = Utils.getCustomColors();
+			
+			Map<RGB, Long> mapDupCount = new HashMap<>();
+			for ( RGB rgb: existing ){
+				if (!customColors.contains(rgb)) {
+					customColors.add(0, rgb);
+				} else {
+					Long count = mapDupCount.get(rgb);
+					mapDupCount.put(rgb, count == null ? 1 : count + 1);
+				}
+			}
+			
+			long maxCount = 0;
+			RGB selectRGB = null;
+			for (RGB rgb : mapDupCount.keySet()) {
+				Long count = mapDupCount.get(rgb);
+				if (count != null && count > maxCount) {
+					maxCount = count;
+					selectRGB = rgb;
+				}
+			}
+			
+			cd.setRGBs(customColors.toArray(new RGB[0]));
+			if (selectRGB != null) {
+				cd.setRGB(selectRGB);
+			}
+
+			RGB rgbChosen = cd.open();
+			
+			if ( rgbChosen != null ){
+			
+				receiver.accept(rgbChosen);
+			}	
+		});
+		
+		org.eclipse.swt.widgets.MenuItem clear_item = new org.eclipse.swt.widgets.MenuItem( sel_menu, SWT.PUSH);
+		Messages.setLanguageText(clear_item, "Button.clear");
+		clear_item.addListener(SWT.Selection, event -> {
+			receiver.accept(null);
+		});
+		clear_item.setEnabled( can_clear );
 	}
 }
