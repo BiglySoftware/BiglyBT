@@ -383,6 +383,10 @@ public class MyTorrentsSuperView
 			filterBox.setKeyListener(new KeyListener() {
 				@Override
 				public void keyPressed(KeyEvent e) {
+					if ( ignore(e)){
+						return;
+					}
+					
 					MyTorrentsView currentView = getCurrentView();
 					if (currentView == seedingview && keyListenerSV != null) {
 						keyListenerSV.keyPressed(e);
@@ -394,6 +398,9 @@ public class MyTorrentsSuperView
 
 				@Override
 				public void keyReleased(KeyEvent e) {
+					if ( ignore( e )){
+						return;
+					}
 					MyTorrentsView currentView = getCurrentView();
 					if (currentView == seedingview && keyListenerSV != null) {
 						keyListenerSV.keyReleased(e);
@@ -401,6 +408,19 @@ public class MyTorrentsSuperView
 					if (currentView == torrentview && keyListenerTV != null) {
 						keyListenerTV.keyReleased(e);
 					}
+				}
+				
+				private boolean
+				ignore(
+					KeyEvent	e )
+				{
+					if ( e.stateMask == SWT.MOD1 ){
+						int keyCode = e.keyCode;
+						if ( keyCode == 'c' || keyCode == 'v' ){
+							return(true);
+						}
+					}
+					return( false );
 				}
 			});
 		}
