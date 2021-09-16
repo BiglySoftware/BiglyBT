@@ -1252,6 +1252,16 @@ public class TagUIUtils
 
 		if ( tag_type.getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
 
+			MenuItem itemDuplicate = new MenuItem(menu, SWT.PUSH);
+			
+			Messages.setLanguageText(itemDuplicate,"Subscription.menu.duplicate");
+			itemDuplicate.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					duplicate( Collections.singletonList(tag));
+				}
+			});
+			
 			MenuItem itemExport = new MenuItem(menu, SWT.PUSH);
 			
 			Messages.setLanguageText(itemExport,"Subscription.menu.export");
@@ -3228,6 +3238,16 @@ public class TagUIUtils
 
 		createTagGroupMenu( menu, tag_type, tags );
 
+		MenuItem itemDuplicate = new MenuItem(menu, SWT.PUSH);
+		
+		Messages.setLanguageText(itemDuplicate,"Subscription.menu.duplicate");
+		itemDuplicate.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				duplicate(tags);
+			}
+		});
+		
 		MenuItem itemExport = new MenuItem(menu, SWT.PUSH);
 		
 		Messages.setLanguageText(itemExport,"Subscription.menu.export");
@@ -3918,6 +3938,18 @@ public class TagUIUtils
 			});
 	}
 
+	protected static void
+	duplicate(
+		final List<Tag>			tags )
+	{
+		TagManager tm = TagManagerFactory.getTagManager();
+		
+		for ( Tag tag: tags ){
+			
+			tm.duplicate( tag );
+		}
+	}
+	
 	public static void openRenameTagDialog(Tag tag) {
 		if (tag == null || tag.getTagType().isTagTypeAuto()) {
 			return;

@@ -1604,31 +1604,35 @@ public class SB_Transfers
 							
 							boolean closeable = true;
 							
+							TagGroup group = tag.getGroupContainer();
+
 							if ( tag.getTaggableTypes() == Taggable.TT_DOWNLOAD ){
 							
 								entry = mdi.createEntryFromSkinRef(
-									parent_id, group_id, "library", tag_group, viewTitleInfo, tag.getGroupContainer(), closeable, prev_id );
+									parent_id, group_id, "library", tag_group, viewTitleInfo, group, closeable, prev_id );
 							
 							}else{
 								
 								UISWTViewBuilderCore builder = new UISWTViewBuilderCore( group_id, null,
 										PeersGeneralView.class);
 								builder.setParentEntryID(parent_id);
-								builder.setPreferredAfterID(prev_id).setInitialDatasource( tag.getGroupContainer() );
+								builder.setPreferredAfterID(prev_id).setInitialDatasource( group );
 								entry = mdi.createEntry(builder, closeable);
 
 								entry.setViewTitleInfo( viewTitleInfo );
 							}
 							
 							setTagIcon( tag, entry, true );
-							
-							entry.setUserData( TAG_TAG_OR_GROUP_KEY, tag.getGroupContainer());
+														
+							entry.setUserData( TAG_TAG_OR_GROUP_KEY, group );
 
 							entry.addListener((e,user )->{
-								List<Tag> kids = tag.getGroupContainer().getTags();
-								
-								for ( Tag kid: kids ){
-									kid.setVisible( false );
+								if ( user ){
+									List<Tag> kids = group.getTags();
+									
+									for ( Tag kid: kids ){
+										kid.setVisible( false );
+									}
 								}
 							});
 							

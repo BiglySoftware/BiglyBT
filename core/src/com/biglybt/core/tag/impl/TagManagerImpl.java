@@ -3553,6 +3553,38 @@ TagManagerImpl
 		return( vf );
 	}
 	
+	@Override
+	public Tag 
+	duplicate(
+		Tag tag)
+	{
+		if ( tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+			
+			TagTypeDownloadManual tt = (TagTypeDownloadManual)tag.getTagType();
+
+			TagWithState tws = (TagWithState)tag;
+
+			Map	map = new HashMap();
+		
+			Map tag_map = new HashMap();
+	
+			VuzeFile	vf = VuzeFileHandler.getSingleton().create();
+			
+			tws.exportDetails( vf, tag_map, false );
+			
+			Map conf = getConf( tt, tws, false );
+						
+			TagDownloadWithState dup_tag = tt.importTag( tag_map, conf );
+			
+			tt.addTag( dup_tag );
+			
+			return( dup_tag );
+		}else{
+			
+			return( null );
+		}
+	}
+	
 	protected String
 	explain(
 		Tag				tag,
