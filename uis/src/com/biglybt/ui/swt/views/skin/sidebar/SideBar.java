@@ -1010,7 +1010,20 @@ public class SideBar
 
 							if ( entry != null ){
 								
-								popoutEntry( entry, true );
+									// don't trigger popout if double click is in close area or
+									// item has child and user is clicking in the expandy area 
+
+								Point cursorLocation = tree.toControl(event.display.getCursorLocation());
+								
+								if ( lastCloseAreaClicked == null || !lastCloseAreaClicked.contains(cursorLocation.x, cursorLocation.y)){
+																		
+									Integer offset = (Integer)treeItem.getData( "contentStartOffset" );
+									
+									if ( treeItem.getItemCount() == 0 || ( offset != null && event.x >= offset )){
+										
+										popoutEntry( entry, true );
+									}
+								}
 							}
 							
 							break;

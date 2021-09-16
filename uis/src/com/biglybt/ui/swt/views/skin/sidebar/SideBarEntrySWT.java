@@ -888,6 +888,8 @@ public class SideBarEntrySWT
 			imageLeft = getImageLeft(null);
 		}
 		
+		treeItem.setData("contentStartOffset", x0IndicatorOfs);
+		
 		if ( IMAGELEFT_HIDDEN ){
 			
 		}else if (imageLeft != null ) {
