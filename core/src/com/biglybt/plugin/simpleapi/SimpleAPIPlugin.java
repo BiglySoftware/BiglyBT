@@ -225,6 +225,11 @@ SimpleAPIPlugin
 					String hash 	= args.get( "hash" );
 					String tag_name	= args.get( "tag" );
 					
+					if ( tag_name == null ){
+						
+						tag_name	= args.get( "category" );
+					}
+					
 					if ( hash == null || tag_name == null ){
 				
 						throw( new Exception( "missing parameter" ));

@@ -837,6 +837,7 @@ public class TagUIUtils
 						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI,
 						TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC,
 						TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS,
+						TagFeatureExecOnAssign.ACTION_REMOVE_TAGS,
 						TagFeatureExecOnAssign.ACTION_HOST,
 						TagFeatureExecOnAssign.ACTION_PUBLISH };
 
@@ -853,6 +854,7 @@ public class TagUIUtils
 						"label.post.magnet.to.chat",
 						"label.init.save.loc.move",
 						"label.assign.tags",
+						"label.remove.tags",
 						"menu.host.on.tracker",
 						"menu.publish.on.tracker"};
 
@@ -957,11 +959,14 @@ public class TagUIUtils
 									}
 								});
 							
-						}else if ( action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS ){
+						}else if ( 	action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS ||
+									action_id == TagFeatureExecOnAssign.ACTION_REMOVE_TAGS){
+							
+							boolean is_assign = action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS;
 							
 							final MenuItem action_item = new MenuItem( eoa_menu, SWT.PUSH);
 
-							List<Tag> tags = tf_eoa.getTagAssigns();
+							List<Tag> tags = is_assign?tf_eoa.getTagAssigns():tf_eoa.getTagRemoves();
 
 							String msg = MessageText.getString( action_keys[i] );
 
@@ -1006,7 +1011,11 @@ public class TagUIUtils
 											@Override
 											public void selected(List<Tag> tags){
 												
-												tf_eoa.setTagAssigns( tags );
+												if ( is_assign ){
+													tf_eoa.setTagAssigns( tags );
+												}else{
+													tf_eoa.setTagRemoves( tags );
+												}
 											}
 										});
 								}

@@ -46,6 +46,7 @@ TagFeatureExecOnAssign
 	public static final int ACTION_ASSIGN_TAGS				= 0x0800;
 	public static final int ACTION_HOST						= 0x1000;
 	public static final int ACTION_PUBLISH					= 0x2000;
+	public static final int ACTION_REMOVE_TAGS				= 0x4000;
 
 	public static final int[] ACTIONS = {
 			ACTION_DESTROY,
@@ -62,6 +63,7 @@ TagFeatureExecOnAssign
 			ACTION_ASSIGN_TAGS,
 			ACTION_HOST,
 			ACTION_PUBLISH,
+			ACTION_REMOVE_TAGS,
 	};
 	
 	public int
@@ -100,6 +102,13 @@ TagFeatureExecOnAssign
 	setTagAssigns(
 		List<Tag>	tags );
 	
+	public List<Tag>
+	getTagRemoves();
+	
+	public void
+	setTagRemoves(
+		List<Tag>	tags );
+
 	public interface
 	OptionsTemplateHandler
 		extends DownloadManagerOptionsHandler

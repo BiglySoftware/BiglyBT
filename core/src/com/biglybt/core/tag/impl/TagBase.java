@@ -98,6 +98,7 @@ TagBase
 	protected static final String	AT_NOTIFICATION_PUBLISH			= "noti.pub";
 	protected static final String	AT_LIMIT_ORDERING				= "max.t.o";
 	protected static final String	AT_EOS_ASSIGN_TAGS				= "eos.at";
+	protected static final String	AT_EOS_REMOVE_TAGS				= "eos.rt";
 
 	private static final String[] EMPTY_STRING_LIST = {};
 
@@ -1936,6 +1937,61 @@ TagBase
 		writeStringListAttribute( AT_EOS_ASSIGN_TAGS, tag_uids);
 
 		setActionEnabled( TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS, !tags.isEmpty());
+		
+		tag_type.fireMetadataChanged( this );
+	}
+	
+		// remove tags
+		
+	public List<Tag>
+	getTagRemoves()
+	{
+		String[] tag_uids = readStringListAttribute( AT_EOS_REMOVE_TAGS, new String[0] );
+	
+		if ( tag_uids == null || tag_uids.length == 0 ){
+	
+			return( Collections.emptyList());
+		}
+		
+		List<Tag> result = new ArrayList<>();
+	
+		for ( String uid: tag_uids ){
+			
+			try{
+				Tag tag = tag_type.getTagManager().lookupTagByUID( Long.parseLong( uid ));
+				
+				if ( tag != null ){
+					
+					result.add( tag );
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		return( result );
+	}
+	
+	public void
+	setTagRemoves(
+		List<Tag>	tags )
+	{
+		if ( tags == null ){
+	
+			tags = new ArrayList<>();
+		}
+	
+		String[] tag_uids = new String[tags.size()];
+		
+		for ( int i=0;i<tag_uids.length;i++ ){
+			
+			tag_uids[i] = String.valueOf( tags.get(i).getTagUID());
+		}
+		
+		writeStringListAttribute( AT_EOS_REMOVE_TAGS, tag_uids);
+	
+		setActionEnabled( TagFeatureExecOnAssign.ACTION_REMOVE_TAGS, !tags.isEmpty());
 		
 		tag_type.fireMetadataChanged( this );
 	}

@@ -116,6 +116,7 @@ ColumnTagProperties
 						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI,
 						TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC,
 						TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS,
+						TagFeatureExecOnAssign.ACTION_REMOVE_TAGS,
 						TagFeatureExecOnAssign.ACTION_HOST,
 						TagFeatureExecOnAssign.ACTION_PUBLISH };
 
@@ -132,6 +133,7 @@ ColumnTagProperties
 						"label.post.magnet.to.chat",
 						"label.init.save.loc.move",
 						"label.assign.tags",
+						"label.remove.tags",
 						"menu.host.on.tracker",
 						"menu.publish.on.tracker"};
 
@@ -156,9 +158,10 @@ ColumnTagProperties
 								actions_str += (actions_str.length()==0?"":",") +
 										MessageText.getString( action_keys[i]) + "=" + script;
 								
-							}else if ( action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS ){
+							}else if ( 	action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS ||
+										action_id == TagFeatureExecOnAssign.ACTION_REMOVE_TAGS ){
 								
-								List<Tag> tags = eoa.getTagAssigns();
+								List<Tag> tags = action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS?eoa.getTagAssigns():eoa.getTagRemoves();
 								
 								String tag_str = "";
 								

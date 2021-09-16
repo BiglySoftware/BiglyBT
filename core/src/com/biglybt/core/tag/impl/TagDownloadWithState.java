@@ -819,6 +819,31 @@ TagDownloadWithState
 						}
 					}
 					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_REMOVE_TAGS )){
+						
+						List<Tag> tags = getTagRemoves();
+						
+						if ( !tags.isEmpty()){
+
+							rs_async.dispatch(
+								new AERunnable()
+								{
+									@Override
+									public void
+									runSupport()
+									{
+										for ( Tag t: tags ){
+										
+											if ( t.hasTaggable( dm )){
+											
+												t.removeTaggable( dm );
+											}
+										}
+									}
+								});
+						}
+					}
+
 					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_HOST )){
 
 						rs_async.dispatch(
@@ -2414,7 +2439,8 @@ TagDownloadWithState
 					TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC |
 					TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS |
 					TagFeatureExecOnAssign.ACTION_HOST |
-					TagFeatureExecOnAssign.ACTION_PUBLISH );
+					TagFeatureExecOnAssign.ACTION_PUBLISH |
+					TagFeatureExecOnAssign.ACTION_REMOVE_TAGS );
 
 		}else if ( getTagType().getTagType() == TagType.TT_DOWNLOAD_STATE ){
 
