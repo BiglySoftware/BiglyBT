@@ -288,7 +288,7 @@ public class BubbleTextBox
 					}
 				}
 
-				if (keyListener != null) {
+				if (keyListener != null && !ignoreListener( e )) {
 					keyListener.keyPressed(e);
 					if (!e.doit) {
 						return;
@@ -303,13 +303,27 @@ public class BubbleTextBox
 					return;
 				}
 
-				if (keyListener != null) {
+				if (keyListener != null && !ignoreListener( e )) {
 					keyListener.keyReleased(e);
 					if (!e.doit) {
 						return;
 					}
 				}
 				super.keyReleased(e);
+			}
+			
+			private boolean
+			ignoreListener(
+				KeyEvent e )
+			{
+				if ( e.stateMask == SWT.MOD1 ){
+					int keyCode = e.keyCode;
+						// we want copy/paste to be handled by the text box
+					if ( keyCode == 'c' || keyCode == 'v' ){
+						return(true);
+					}
+				}
+				return( false );
 			}
 		});
 	}
