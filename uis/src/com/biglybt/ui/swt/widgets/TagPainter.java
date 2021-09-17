@@ -215,8 +215,6 @@ public class TagPainter
 		if (lastUsedName == null) {
 			return;
 		}
-
-		Debug.out("");;
 		//System.out.println("paint " + lastUsedName + "; " + clientArea + "; " + e);
 
 		Color colorOrigBG = gc.getBackground();

@@ -28,6 +28,7 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
@@ -1529,6 +1530,15 @@ public class TagSettingsView
 						}
 					});
 
+						// ctrl+tab to exit the text box
+					
+					params.constraints.addListener( SWT.Traverse, (e)->{
+						if ( e.detail == SWT.TRAVERSE_TAB_NEXT && ( e.stateMask & SWT.MOD1 ) != 0 ){
+						
+							e.doit = true;
+						}
+					});
+					
 					params.constraintError = new Label(gConstraint, SWT.NULL );
 					params.constraintError.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
 					params.constraintError.setForeground( Colors.colorError);
