@@ -216,6 +216,7 @@ public class TagPainter
 			return;
 		}
 
+		Debug.out("");;
 		//System.out.println("paint " + lastUsedName + "; " + clientArea + "; " + e);
 
 		Color colorOrigBG = gc.getBackground();
@@ -596,6 +597,9 @@ public class TagPainter
 			needRedraw |= setEnabledNoRedraw(enableWhenNoTaggables);
 			if (!enableWhenNoTaggables) {
 				needRedraw |= setSelected(false, false);
+				if (needRedraw) {
+					redrawControl();
+				}
 				return needRedraw;
 			}
 		}
