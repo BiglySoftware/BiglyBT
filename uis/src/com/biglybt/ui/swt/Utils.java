@@ -3680,6 +3680,13 @@ public class Utils
 
 	public static void
 	makeButtonsEqualWidth(
+		Button...	buttons )
+	{
+		makeButtonsEqualWidth( Arrays.asList( buttons ));
+	}
+	
+	public static void
+	makeButtonsEqualWidth(
 		List<Button>	buttons )
 	{
 		int width = 75;

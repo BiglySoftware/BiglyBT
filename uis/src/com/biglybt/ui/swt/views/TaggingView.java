@@ -20,7 +20,10 @@ package com.biglybt.ui.swt.views;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -39,6 +42,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
+import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
@@ -64,6 +68,9 @@ public class TaggingView
 {
 	public static final String MSGID_PREFIX = "TaggingView";
 
+	private static Set<Tag>	copied_tag_assignment = new HashSet<>();
+	private static CopyOnWriteList<Consumer<String>>	cta_listeners = new CopyOnWriteList<>();
+	
 	private UISWTView swtView;
 
 	private ScrolledComposite sc;
@@ -73,6 +80,10 @@ public class TaggingView
 	private Composite parent;
 
 	private TagButtonsUI 	tagButtonsUI;
+	private Button			buttonCopy;
+	private Button			buttonPaste;
+	private Button			buttonClear;
+	private Button			buttonInvert;
 	private Button			buttonExplain;
 	private Composite mainComposite;
 
@@ -238,7 +249,7 @@ public class TaggingView
 		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		buttonComp.setLayoutData(layoutData);
 
-		GridLayout bcLayout = new GridLayout(hasGroup ? 3 : 2, false);
+		GridLayout bcLayout = new GridLayout(hasGroup ? 7 : 6, false);
 		bcLayout.marginHeight = 0;
 		buttonComp.setLayout(bcLayout);
 		GridData gridData;
@@ -249,12 +260,181 @@ public class TaggingView
 		Messages.setLanguageText(buttonAdd, "label.add.tag");
 		buttonAdd.addListener(SWT.Selection, event -> askForNewTag());
 
+		buttonCopy = new Button(buttonComp, SWT.PUSH);
+		gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+		buttonCopy.setLayoutData(gridData);
+		Messages.setLanguageText(buttonCopy, "label.copy");
+		Messages.setLanguageTooltip(buttonCopy,"tags.copy.tooltip");
+		
+		buttonCopy.addListener(SWT.Selection, event -> {
+			if ( taggables == null ){
+				return;
+			}
+			
+			TagManager tm = TagManagerFactory.getTagManager();
+			
+			copied_tag_assignment.clear();
+			
+			for (Taggable taggable : taggables) {
+				
+				List<Tag> has_tags = tm.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, taggable);
+								
+				for ( Tag tag: has_tags ){
+					
+					boolean[] auto = tag.isTagAuto();
+					
+					if ( !auto[0] && !auto[1] ){
+						
+						copied_tag_assignment.add( tag );
+					}
+				}
+			}
+			
+			for ( Consumer<String> c: cta_listeners ){
+				c.accept("");
+			}
+		});
+		
+		buttonPaste = new Button(buttonComp, SWT.PUSH);
+		gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+		buttonPaste.setLayoutData(gridData);
+		Messages.setLanguageText(buttonPaste, "label.paste");
+		Messages.setLanguageTooltip(buttonPaste,"tags.paste.tooltip");
+		
+		buttonPaste.addListener(SWT.Selection, event -> {
+			if ( taggables == null ){
+				return;
+			}
+
+			TagManager tm = TagManagerFactory.getTagManager();
+			for (Taggable taggable : taggables) {
+				
+				for ( Tag t: tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags()){
+					
+					boolean[] auto = t.isTagAuto();
+					
+					if ( !auto[0] && !auto[1] ){
+				
+						if ( !copied_tag_assignment.contains(t)){
+							
+							if ( t.hasTaggable(taggable)){
+								t.removeTaggable(taggable);
+							}
+						}
+					}
+				}
+				
+				for ( Tag t: copied_tag_assignment ){
+					if ( !t.hasTaggable(taggable)){
+						t.addTaggable(taggable);
+					}
+				}
+			}
+		});
+		
+		cta_listeners.add(
+			new Consumer<String>()
+			{
+				@Override
+				public void 
+				accept(String t){
+					if ( buttonPaste.isDisposed()){
+						cta_listeners.remove( this );
+					}else{
+						buttonPaste.setEnabled( !copied_tag_assignment.isEmpty());
+					}
+				}
+			});
+		
+		buttonPaste.setEnabled( !copied_tag_assignment.isEmpty());
+		
+		buttonClear = new Button(buttonComp, SWT.PUSH);
+		gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+		buttonClear.setLayoutData(gridData);
+		Messages.setLanguageText(buttonClear, "Button.clear");
+		Messages.setLanguageTooltip(buttonClear,"tags.clear.tooltip");
+		
+		buttonClear.addListener(SWT.Selection, event -> {
+			if ( taggables == null ){
+				return;
+			}
+			TagManager tm = TagManagerFactory.getTagManager();
+						
+			for (Taggable taggable : taggables) {
+				
+				List<Tag> has_tags = tm.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, taggable);
+								
+				for ( Tag tag: has_tags ){
+					
+					boolean[] auto = tag.isTagAuto();
+					
+					if ( !auto[0] && !auto[1] ){
+						
+						tag.removeTaggable(taggable);
+					}
+				}
+			}
+		});
+		
+		buttonInvert = new Button(buttonComp, SWT.PUSH);
+		gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+		buttonInvert.setLayoutData(gridData);
+		Messages.setLanguageText(buttonInvert, "label.invert");
+		Messages.setLanguageTooltip(buttonInvert,"tags.invert.tooltip");
+		
+		buttonInvert.addListener(SWT.Selection, event -> {
+			if ( taggables == null ){
+				return;
+			}
+
+			TagManager tm = TagManagerFactory.getTagManager();
+
+			List<Tag> all_tags = new ArrayList<>();
+			
+			for ( Tag t: tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags()){
+				
+				boolean[] auto = t.isTagAuto();
+				
+				if ( !auto[0] && !auto[1] ){
+			
+					all_tags.add( t );
+				}
+			}
+			
+			for (Taggable taggable : taggables) {
+				
+				List<Tag> has_tags = tm.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, taggable);
+				
+				Set<Tag>	tags_to_add = new HashSet<>( all_tags );
+				
+				for ( Tag tag: has_tags ){
+					
+					boolean[] auto = tag.isTagAuto();
+					
+					if ( !auto[0] && !auto[1] ){
+						
+						tag.removeTaggable( taggable );
+						
+						tags_to_add.remove( tag );
+					}
+				}
+				
+				for ( Tag tag: tags_to_add ){
+					
+					tag.addTaggable(taggable);
+				}
+			}
+		});
+		
 		buttonExplain = new Button(buttonComp, SWT.PUSH);
 		gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
 		buttonExplain.setLayoutData(gridData);
 		Messages.setLanguageText(buttonExplain, "button.explain");
 		buttonExplain.addListener(SWT.Selection, event -> explain());
 
+		Utils.makeButtonsEqualWidth( buttonCopy, buttonPaste, buttonClear, buttonInvert );
+		Utils.makeButtonsEqualWidth( buttonAdd, buttonInvert, buttonExplain );
+		
 		if (hasGroup) {
 			int layoutStyle = tagButtonsUI.getLayoutStyle();
 
@@ -400,6 +580,10 @@ public class TaggingView
 			}
 		}
 		
+		buttonCopy.setEnabled( taggables != null );
+		buttonPaste.setEnabled( taggables != null && !copied_tag_assignment.isEmpty());
+		buttonClear.setEnabled( taggables != null );
+		buttonInvert.setEnabled( taggables != null );
 		buttonExplain.setEnabled( has_constraint );
 	}
 
