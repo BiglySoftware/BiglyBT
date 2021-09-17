@@ -40,8 +40,6 @@ public class ConfigSectionInterfaceTags
 
 	public static final String SECTION_ID = "style.tags";
 
-	private boolean generalBuilt;
-	
 	public 
 	ConfigSectionInterfaceTags() 
 	{
@@ -50,22 +48,26 @@ public class ConfigSectionInterfaceTags
 
 
 	@Override
-	public void build() {
-
+	public void 
+	build() 
+	{
+		buildGeneral();
+		
+		buildUISpecific();
+		
 		buildFiles();
 		
 		buildTracker();
 	}
 	
 	protected void
+	buildUISpecific()
+	{
+	}
+	
+	protected void
 	buildGeneral()
 	{
-		if ( generalBuilt ){
-			return;
-		}
-		
-		generalBuilt = true;
-	
 		IntParameterImpl autoReapply = new IntParameterImpl(
 				ICFG_TAG_AUTO_FULL_REAPPLY_PERIOD_SECS,
 				"tag.auto.reapply.period", 0, Integer.MAX_VALUE );

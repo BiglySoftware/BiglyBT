@@ -32,11 +32,9 @@ ConfigSectionInterfaceTagsSWT
 	extends ConfigSectionInterfaceTags
 {
 	@Override
-	public void 
-	build() 
+	protected void 
+	buildUISpecific() 
 	{
-		super.buildGeneral();
-		
 		boolean isAZ3 = Utils.isAZ3UI();
 		
 		List<Parameter> listLibrary = new ArrayList<>();
@@ -118,7 +116,5 @@ ConfigSectionInterfaceTagsSWT
 		
 		add(new ParameterGroupImpl("ConfigView.section.style.library",
 				listLibrary));
-
-		super.build();
 	}
 }
