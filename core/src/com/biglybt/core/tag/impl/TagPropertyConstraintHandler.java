@@ -2503,6 +2503,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_FILE_PATHS			= 38;
 		private static final int	KW_FILE_PATHS_SELECTED	= 39;
 		private static final int	KW_TARGET_RATIO			= 40;
+		private static final int	KW_TAG_NAMES			= 41;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2596,6 +2597,8 @@ TagPropertyConstraintHandler
 			
 			keyword_map.put( "targetratio", 			new int[]{KW_TARGET_RATIO,			DEP_TIME });	// time because can change with config change
 			keyword_map.put( "target_ratio", 			new int[]{KW_TARGET_RATIO,			DEP_TIME });
+			keyword_map.put( "tagnames",				new int[]{KW_TAG_NAMES,				DEP_STATIC });
+			keyword_map.put( "tag_names",				new int[]{KW_TAG_NAMES,				DEP_STATIC });
 
 		}
 
@@ -3785,7 +3788,7 @@ TagPropertyConstraintHandler
 						
 						String str = (String)arg;
 						
-						String[] result = getStringKeyword( dm, str );
+						String[] result = getStringKeyword( dm, tags, str );
 							
 						if ( result == null ){
 		
@@ -3829,6 +3832,7 @@ TagPropertyConstraintHandler
 			private String[]
 			getStringKeyword(
 				DownloadManager		dm,
+				List<Tag>			tags,
 				String				str )
 			{
 				int		kw;
@@ -3871,11 +3875,68 @@ TagPropertyConstraintHandler
 					
 					return( result );
 					
-			}else if ( str.equals( "file_exts" ) || str.equals( "fileexts" )){
+				}else if ( str.equals( "file_exts" ) || str.equals( "fileexts" )){
+						
+						kw = KW_FILE_EXTS;
+						
+						String[] result = (String[])dm.getUserData( DM_FILE_EXTS);
+						
+						if ( result == null ){
+							
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							Set<String>	exts = new HashSet<>();
+							
+							for ( int i=0;i<files.length;i++){
+								
+								String ext = files[i].getExtension();
+								
+								if ( ext != null && !ext.isEmpty() && !exts.contains( ext )){
+									
+									exts.add( ext.toLowerCase( Locale.US ));
+								}
+							}
+							
+							result = exts.toArray( new String[0] );
+							
+							dm.setUserData( DM_FILE_EXTS, result );
+							
+							depends_on_names_etc = true;
+						}
+						
+						return( result );
+						
+				}else if ( str.equals( "file_paths" ) || str.equals( "filepaths" )){
 					
-					kw = KW_FILE_EXTS;
+					kw = KW_FILE_PATHS;
 					
-					String[] result = (String[])dm.getUserData( DM_FILE_EXTS);
+					String[] result = (String[])dm.getUserData( DM_FILE_PATHS);
+					
+					if ( result == null ){
+						
+						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+						
+						result = new String[files.length];
+						
+						for ( int i=0;i<files.length;i++){
+							
+							result[i] = files[i].getFile( true ).getAbsolutePath();
+						}					
+						
+						dm.setUserData( DM_FILE_PATHS, result );
+						
+						depends_on_names_etc = true;
+						
+						handler.checkDMListeners( dm );
+					}
+					
+					return( result );
+						
+				}else if ( str.equals( "file_exts_selected" ) || str.equals( "fileextsselected" )){
+					
+					kw = KW_FILE_EXTS_SELECTED;
+					
+					String[] result = (String[])dm.getUserData( DM_FILE_EXTS_SELECTED);
 					
 					if ( result == null ){
 						
@@ -3884,6 +3945,11 @@ TagPropertyConstraintHandler
 						Set<String>	exts = new HashSet<>();
 						
 						for ( int i=0;i<files.length;i++){
+							
+							if ( files[i].isSkipped()){
+								
+								continue;
+							}
 							
 							String ext = files[i].getExtension();
 							
@@ -3895,76 +3961,14 @@ TagPropertyConstraintHandler
 						
 						result = exts.toArray( new String[0] );
 						
-						dm.setUserData( DM_FILE_EXTS, result );
+						dm.setUserData( DM_FILE_EXTS_SELECTED, result );
 						
 						depends_on_names_etc = true;
+						
+						handler.checkDMListeners( dm );
 					}
 					
 					return( result );
-					
-			}else if ( str.equals( "file_paths" ) || str.equals( "filepaths" )){
-				
-				kw = KW_FILE_PATHS;
-				
-				String[] result = (String[])dm.getUserData( DM_FILE_PATHS);
-				
-				if ( result == null ){
-					
-					DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-					
-					result = new String[files.length];
-					
-					for ( int i=0;i<files.length;i++){
-						
-						result[i] = files[i].getFile( true ).getAbsolutePath();
-					}					
-					
-					dm.setUserData( DM_FILE_PATHS, result );
-					
-					depends_on_names_etc = true;
-					
-					handler.checkDMListeners( dm );
-				}
-				
-				return( result );
-					
-			}else if ( str.equals( "file_exts_selected" ) || str.equals( "fileextsselected" )){
-				
-				kw = KW_FILE_EXTS_SELECTED;
-				
-				String[] result = (String[])dm.getUserData( DM_FILE_EXTS_SELECTED);
-				
-				if ( result == null ){
-					
-					DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-					
-					Set<String>	exts = new HashSet<>();
-					
-					for ( int i=0;i<files.length;i++){
-						
-						if ( files[i].isSkipped()){
-							
-							continue;
-						}
-						
-						String ext = files[i].getExtension();
-						
-						if ( ext != null && !ext.isEmpty() && !exts.contains( ext )){
-							
-							exts.add( ext.toLowerCase( Locale.US ));
-						}
-					}
-					
-					result = exts.toArray( new String[0] );
-					
-					dm.setUserData( DM_FILE_EXTS_SELECTED, result );
-					
-					depends_on_names_etc = true;
-					
-					handler.checkDMListeners( dm );
-				}
-				
-				return( result );
 				
 				}else if ( str.equals( "file_names_selected" ) || str.equals( "filenamesselected" )){
 						
@@ -3995,6 +3999,24 @@ TagPropertyConstraintHandler
 						depends_on_names_etc = true;
 						
 						handler.checkDMListeners( dm );
+					}
+					
+					return( result );
+					
+				}else if ( str.equals( "tag_names" ) || str.equals( "tagnames" )){
+					
+					kw = KW_TAG_NAMES;
+					
+					String[] result = new String[tags.size()];
+					
+					for ( int i=0;i<tags.size();i++){
+						Tag tag = tags.get(i);
+						
+						if ( tag == tag_maybe_null ){
+							result[i] = "";
+						}else{
+							result[i] = tag.getTagName( true );
+						}
 					}
 					
 					return( result );
