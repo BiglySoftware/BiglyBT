@@ -36,6 +36,8 @@ public class ConfigSectionFileTorrents
 		extends ConfigSectionImpl {
 	public static final String SECTION_ID = "torrents";
 
+	private boolean skipTidy = false;
+	
 	public ConfigSectionFileTorrents() {
 		super(SECTION_ID, ConfigSection.SECTION_FILES);
 	}
@@ -96,9 +98,43 @@ public class ConfigSectionFileTorrents
 		List<Parameter> listWatchDirs = new ArrayList<>();
 		List<Parameter> listWatch = new ArrayList<>();
 
-		int num_folders = COConfigurationManager.getIntParameter(
-				ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT, 1);
+		int num_folders = COConfigurationManager.getIntParameter(ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT, 1);
 
+		boolean	tidied = false;
+
+		if ( skipTidy ){
+			
+			skipTidy = false;
+			
+		}else{
+			
+			for ( int i=num_folders-1; i>=1; i-- ){
+				String folder_path =
+						COConfigurationManager.getStringParameter("Watch Torrent Folder Path" + (i==0?"":(" " + i )));
+				String tag =
+						COConfigurationManager.getStringParameter("Watch Torrent Folder Tag" + (i==0?"":(" " + i )), null);
+				
+				if ( 	( folder_path == null || folder_path.isEmpty()) &&
+						( tag == null || tag.isEmpty())){
+					
+					num_folders--;
+					
+					tidied = true;
+					
+				}else{
+					
+					break;
+				}
+			}
+			
+			if ( tidied ){
+				
+				num_folders++;	// keep one empty one
+				
+				COConfigurationManager.setParameter(ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT, num_folders);
+			}
+		}
+		
 		for (int i = 0; i < num_folders; i++) {
 			DirectoryParameterImpl watchFolderPathParameter = new DirectoryParameterImpl(
 					SCFG_PREFIX_WATCH_TORRENT_FOLDER_PATH + (i == 0 ? "" : (" " + i)),
@@ -133,6 +169,9 @@ public class ConfigSectionFileTorrents
 
 			COConfigurationManager.setParameter(ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT,
 					num + 1);
+			
+			skipTidy = true;
+			
 			requestRebuild();
 
 		});
