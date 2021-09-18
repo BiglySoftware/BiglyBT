@@ -3573,7 +3573,10 @@ TagManagerImpl
 			tws.exportDetails( vf, tag_map, false );
 			
 			Map conf = getConf( tt, tws, false );
-						
+				
+			tag_map	= BEncoder.cloneMap(tag_map);
+			conf 	= BEncoder.cloneMap( conf );
+			
 			TagDownloadWithState dup_tag = tt.importTag( tag_map, conf );
 			
 			tt.addTag( dup_tag );
