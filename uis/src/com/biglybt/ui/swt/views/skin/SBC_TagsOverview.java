@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.util.*;
 import com.biglybt.ui.UIFunctions;
@@ -49,6 +50,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.columns.tag.*;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
@@ -628,7 +630,13 @@ public class SBC_TagsOverview
 			SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) getSkinObject(
 					"filterbox");
 			if (soFilter != null) {
-				tv.enableFilterCheck(soFilter.getBubbleTextBox(), this);
+				BubbleTextBox filter = soFilter.getBubbleTextBox();
+				tv.enableFilterCheck(filter, this);
+				
+				String tooltip = MessageText.getString("filter.tt.start");
+				tooltip += MessageText.getString("tagsoverview.filter.tt.line1");
+				
+				filter.setTooltip( tooltip );
 			}
 
 			tv.setRowDefaultHeightEM(1);
@@ -1119,9 +1127,29 @@ public class SBC_TagsOverview
 	}
 
 	@Override
-	public boolean filterCheck(Tag ds, String filter, boolean regex) {
-		String name = ds.getTagName( true );
-
+	public boolean 
+	filterCheck(
+		Tag 		ds, 
+		String 		filter, 
+		boolean 	regex ) 
+	{
+		String name;
+		
+		if ( filter.startsWith( "g:" )){
+			
+			filter = filter.substring( 2 );
+			
+			name = ds.getGroup();
+			
+			if ( name == null ){
+				
+				name = "";
+			}
+		}else{
+		
+			name = ds.getTagName( true );
+		}
+		
 		String s = regex ? filter : "\\Q" + filter.replaceAll("\\s*[|;]\\s*", "\\\\E|\\\\Q") + "\\E";
 
 		boolean	match_result = true;
