@@ -233,7 +233,7 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 * This reports that a download is being resumed in order to remove it from the paused set
 	 * Don't use this to actually resume a download, use resumeDownload !
 	 * @param dm
-	 * @return
+	 * @return true if download was paused AND was force started
 	 */
 	public boolean resumingDownload(DownloadManager dm);
 

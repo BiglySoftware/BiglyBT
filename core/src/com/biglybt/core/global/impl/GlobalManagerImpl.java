@@ -2381,9 +2381,9 @@ public class GlobalManagerImpl
 
 		        if ( this_manager == manager ){
 
-		        	paused_list.remove( hw );
+		        	Boolean force = paused_list.remove( hw );
 
-		        	return( true );
+		        	return( force != null && force );
 		        }
 		    }
 		}catch( Throwable e ){

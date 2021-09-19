@@ -2713,9 +2713,14 @@ DownloadManagerImpl
 	public void
 	setStateWaiting()
 	{
-		checkResuming();
+		if ( checkResuming()){
+			
+			setForceStart( true );
+			
+		}else{
 
-		controller.setStateWaiting();
+			controller.setStateWaiting();
+		}
 	}
 
   	public void
@@ -2725,16 +2730,21 @@ DownloadManagerImpl
   	}
 
   	@Override
-	  public void
+	public void
   	setStateQueued()
   	{
-  		checkResuming();
+  		if ( checkResuming()){
+  			
+  			setForceStart( true );
+  			
+  		}else{
 
-  		controller.setStateQueued();
+  			controller.setStateQueued();
+  		}
   	}
 
   	@Override
-	  public int
+	public int
   	getState()
   	{
   		return( controller.getState());
@@ -2949,10 +2959,10 @@ DownloadManagerImpl
 		}
 	}
 
-	private void
+	private boolean
 	checkResuming()
 	{
-		globalManager.resumingDownload( this );
+		return( globalManager.resumingDownload( this ));
 	}
 
 	@Override
