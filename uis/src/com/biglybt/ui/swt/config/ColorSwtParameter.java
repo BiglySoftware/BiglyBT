@@ -142,14 +142,71 @@ public class ColorSwtParameter
 
 		Menu menu = new Menu(colorChooser);
 		colorChooser.setMenu(menu);
-		MenuItem mi = new MenuItem(menu, SWT.PUSH);
-		Messages.setLanguageText(mi,
-				"ConfigView.section.style.colorOverrides.reset");
-		mi.addListener(SWT.Selection, (e) -> resetToDefault());
+		
+		MenuItem miCopy = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(miCopy,"label.copy");
+		miCopy.addListener(SWT.Selection, (e) -> {
+			int[] value = getValue();
+			if ( value != null ){
+				ClipboardCopy.copyToClipBoard( HTMLUtils.toColorHexString(value[0], value[1], value[2], 255));
+			}
+		});
 
+		MenuItem miPaste = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(miPaste,"label.paste");
+		miPaste.addListener(SWT.Selection, (e) -> {
+			String clip = ClipboardCopy.copyFromClipboard();
+						
+			try{
+				clip = clip.trim();
+				
+				if ( clip.startsWith( "#" )){
+					clip = clip.substring(1);
+				}
+				
+				long l = Long.parseLong( clip, 16 );
+				
+				setValue( new int[]{ (int)(l&0xff0000)>>16,(int)(l&0xff00)>>8,(int)(l&0xff)});
+				
+			}catch( Throwable f ){
+				
+			}
+		});
+
+		new MenuItem(menu, SWT.SEPARATOR );
+		
+		MenuItem miReset = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(miReset,
+				"ConfigView.section.style.colorOverrides.reset");
+		miReset.addListener(SWT.Selection, (e) -> resetToDefault());
+		
 		try{
 			menu.addMenuListener( MenuListener.menuShownAdapter(
-				    	(e)->{ mi.setEnabled( !isDefaultValue());}));
+				 (e)->{
+					miCopy.setEnabled(getValue()!=null);
+					
+					String clip = ClipboardCopy.copyFromClipboard();
+					
+					boolean paste_ok = false;
+					
+					try{
+						clip = clip.trim();
+						
+						if ( clip.startsWith( "#" )){
+							clip = clip.substring(1);
+						}
+						
+						long l = Long.parseLong( clip, 16 );
+						
+						paste_ok = l <= 0x00ffffffL;
+						
+					}catch( Throwable f ){
+						
+					}
+					
+					miPaste.setEnabled( paste_ok );
+				  	miReset.setEnabled( !isDefaultValue());
+				 }));
 		
 		}catch( Throwable e ){
 			
@@ -159,7 +216,7 @@ public class ColorSwtParameter
 				new MenuAdapter(){
 					@Override
 					public void menuShown(MenuEvent e){
-						mi.setEnabled( !isDefaultValue());
+						miReset.setEnabled( !isDefaultValue());
 					}
 				});
 		}
