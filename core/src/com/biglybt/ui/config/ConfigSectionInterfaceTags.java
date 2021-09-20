@@ -40,6 +40,8 @@ public class ConfigSectionInterfaceTags
 
 	public static final String SECTION_ID = "style.tags";
 
+	private boolean skipTidy = false;
+
 	public 
 	ConfigSectionInterfaceTags() 
 	{
@@ -89,9 +91,44 @@ public class ConfigSectionInterfaceTags
 		// filler
 		add("f0", new LabelParameterImpl(""), listAutoTag);
 
-		int num_tags = COConfigurationManager.getIntParameter(
-				ICFG_FILES_AUTO_TAG_COUNT, 1);
+		int num_tags = COConfigurationManager.getIntParameter( ICFG_FILES_AUTO_TAG_COUNT, 1);
+		
+		boolean	tidied = false;
 
+		if ( skipTidy ){
+			
+			skipTidy = false;
+			
+		}else{
+			
+			for ( int i=num_tags-1; i>=1; i-- ){
+				String exts =
+						COConfigurationManager.getStringParameter(SCFG_PREFIX_FILE_AUTO_TAG_EXTS + (i==0?"":(" " + i )));
+				String tag =
+						COConfigurationManager.getStringParameter(SCFG_PREFIX_FILE_AUTO_TAG_NAME + (i==0?"":(" " + i )), null);
+				
+				if ( 	( exts == null || exts.isEmpty()) &&
+						( tag == null || tag.isEmpty())){
+					
+					num_tags--;
+					
+					tidied = true;
+					
+				}else{
+					
+					break;
+				}
+			}
+			
+			if ( tidied ){
+				
+				num_tags++;	// keep one empty one
+				
+				COConfigurationManager.setParameter(ICFG_FILES_AUTO_TAG_COUNT, num_tags);
+			}
+			
+		}
+		
 		for (int i = 0; i < num_tags; i++) {
 
 			StringParameterImpl tagExts = new StringParameterImpl(
@@ -133,10 +170,11 @@ public class ConfigSectionInterfaceTags
 
 		addButton.addListener(param -> {
 
-			int num = COConfigurationManager.getIntParameter(
-					ICFG_FILES_AUTO_TAG_COUNT, 1);
+			int num = COConfigurationManager.getIntParameter( ICFG_FILES_AUTO_TAG_COUNT, 1);
 
 			COConfigurationManager.setParameter(ICFG_FILES_AUTO_TAG_COUNT, num + 1);
+
+			skipTidy = true;
 
 			requestRebuild();
 		});
