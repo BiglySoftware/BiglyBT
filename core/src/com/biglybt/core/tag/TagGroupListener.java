@@ -5,9 +5,17 @@ TagGroupListener
 {
 	public void
 	tagAdded(
-		Tag		tag );
+		TagGroup	group,
+		Tag			tag );
 	
 	public void
 	tagRemoved(
-		Tag		tag );
+		TagGroup	group,
+		Tag			tag );
+	
+	public default void
+	groupChanged(
+		TagGroup		group )
+	{
+	}
 }

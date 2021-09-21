@@ -1568,6 +1568,10 @@ public class SB_Transfers
 							
 							// Create Entry for Group
 						
+							TagGroup group = tag.getGroupContainer();
+
+							String gid= group_id;
+							
 							ViewTitleInfo viewTitleInfo =
 									new ViewTitleInfo()
 									{
@@ -1581,12 +1585,20 @@ public class SB_Transfers
 												return( tag_group );
 												
 											}else if ( pid == TITLE_INDICATOR_TEXT ){
-	
 												
-	
+												MdiEntry entry =  mdi.getEntry( gid );
+												
+												if ( entry != null && !entry.isExpanded()){
+												
+													return( String.valueOf( group.getTags().size()));
+												}
 											}else if ( pid == TITLE_INDICATOR_COLOR ){
 	
 	
+												int[] colour = group.getColor();
+												
+												return( colour );
+												
 											}else if ( pid == TITLE_INDICATOR_TEXT_TOOLTIP ){
 	
 												
@@ -1596,6 +1608,48 @@ public class SB_Transfers
 										}
 									};
 									
+							TagGroupListener tgl = 
+								new TagGroupListener(){
+									
+									@Override
+									public void tagRemoved(TagGroup group, Tag tag){
+										// TODO Auto-generated method stub
+										
+									}
+									
+									@Override
+									public void tagAdded(TagGroup group, Tag tag){
+										// TODO Auto-generated method stub
+										
+									}
+									@Override
+									public void groupChanged(TagGroup group){
+										// TODO Auto-generated method stub
+										TagGroupListener.super.groupChanged(group);
+									}
+									
+									private void
+									update()
+									{
+										MdiEntry entry =  mdi.getEntry( gid );
+
+										if ( entry != null ){
+										
+											if ( entry.isEntryDisposed()){
+												
+												group.removeListener( this );
+												
+											}else{
+											
+												ViewTitleInfoManager.refreshTitleInfo( viewTitleInfo );
+																				
+												requestRedraw( entry );
+											}
+										}
+									}
+								};
+							group.addListener( tgl, false );								
+							
 									// find where to locate this in the sidebar
 
 							String prev_id = getTagPosition( mdi, parent_id, tag_type, tag_group );
@@ -1604,8 +1658,6 @@ public class SB_Transfers
 							
 							boolean closeable = true;
 							
-							TagGroup group = tag.getGroupContainer();
-
 							if ( tag.getTaggableTypes() == Taggable.TT_DOWNLOAD ){
 							
 								entry = mdi.createEntryFromSkinRef(

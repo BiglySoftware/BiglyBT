@@ -447,12 +447,12 @@ public class MyTorrentsView
 						new TagGroupListener(){
 							
 							@Override
-							public void tagRemoved(Tag tag){
+							public void tagRemoved(TagGroup group, Tag tag){
 								setCurrentTagGroup( tg );
 							}
 							
 							@Override
-							public void tagAdded(Tag tag){
+							public void tagAdded(TagGroup group, Tag tag){
 								setCurrentTagGroup( tg );
 							}
 						}, false );

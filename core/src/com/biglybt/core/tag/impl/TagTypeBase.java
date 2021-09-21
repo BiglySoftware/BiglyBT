@@ -800,6 +800,8 @@ TagTypeBase
  				exclusive = b;
  				
  				manager.tagGroupUpdated( TagTypeBase.this, this );
+ 				
+ 				groupChanged();
  			}
  		}
  		
@@ -836,6 +838,8 @@ TagTypeBase
  				}
  				
  				manager.tagGroupUpdated( TagTypeBase.this, this );
+ 				
+ 				groupChanged();
  			}
  		}
  		
@@ -862,6 +866,8 @@ TagTypeBase
  			}
  			
  			manager.tagGroupUpdated( TagTypeBase.this, this );
+ 			
+ 			groupChanged();
  		}
  		
  		@Override
@@ -909,7 +915,7 @@ TagTypeBase
 	 			for( TagGroupListener l: listeners ){
 	 				
 	 				try{
-	 					l.tagAdded(tag);
+	 					l.tagAdded(this,tag);
 	 					
 	 				}catch( Throwable e ){
 	 					
@@ -930,7 +936,7 @@ TagTypeBase
 	 			for( TagGroupListener l: listeners ){
 	 				
 	 				try{
-	 					l.tagRemoved(tag);
+	 					l.tagRemoved(this,tag);
 	 					
 	 				}catch( Throwable e ){
 	 					
@@ -939,7 +945,20 @@ TagTypeBase
 	 			}
  			}
  		}
- 		
+ 		private void
+ 		groupChanged()
+ 		{
+ 			for( TagGroupListener l: listeners ){
+ 				
+ 				try{
+ 					l.groupChanged(this);
+ 					
+ 				}catch( Throwable e ){
+ 					
+ 					Debug.out( e );
+ 				}
+ 			}
+ 		}
  		
  		public void
  		addListener(
@@ -952,7 +971,7 @@ TagTypeBase
  				
  				for ( Tag t: tags ){
  					
- 					l.tagAdded( t );
+ 					l.tagAdded( this, t );
  				}
  			}
  		}
