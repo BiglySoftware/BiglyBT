@@ -70,7 +70,7 @@ public class TagPainter
 
 	protected final Tag tag;
 
-	private final Control control;
+	private final TagCanvas control;
 
 	public int paddingContentY = DEF_CONTENT_PADDING_Y;
 
@@ -103,7 +103,7 @@ public class TagPainter
 
 	private boolean disposed;
 
-	public TagPainter(Tag tag, Control control) {
+	public TagPainter(Tag tag, TagCanvas control) {
 		this.tag = tag;
 		this.control = control;
 	}
@@ -474,7 +474,9 @@ public class TagPainter
 		}
 		image = newImage;
 		this.imageID = key;
-		relayoutControl(true);
+		if ( control==null||control.isInitialised()){
+			relayoutControl(true);
+		}
 		return true;
 	}
 

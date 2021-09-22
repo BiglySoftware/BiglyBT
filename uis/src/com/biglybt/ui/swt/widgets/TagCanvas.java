@@ -52,6 +52,8 @@ public class TagCanvas
 		Boolean tagSelectedOverride(Tag tag);
 	}
 
+	private boolean	initialised;
+	
 	private final DropTarget dropTarget;
 
 	private final TagPainter painter; 
@@ -71,47 +73,60 @@ public class TagCanvas
 
 	public TagCanvas(Composite parent, Tag tag, boolean disableAuto,
 			boolean enableWhenNoTaggables) {
+
 		super(parent, SWT.DOUBLE_BUFFERED);
-		painter = new TagPainter(tag, this);
-		painter.enableWhenNoTaggables = enableWhenNoTaggables;
-
-		boolean[] auto = tag.isTagAuto();
 		
-		if (auto.length >= 2 && auto[0] && auto[1]) {
-			painter.font = FontUtils.getFontWithStyle(getFont(), SWT.ITALIC, 1.0f);
-			setFont(painter.font);
+		try{
+
+			painter = new TagPainter(tag, this);
+			painter.enableWhenNoTaggables = enableWhenNoTaggables;
+	
+			boolean[] auto = tag.isTagAuto();
+			
+			if (auto.length >= 2 && auto[0] && auto[1]) {
+				painter.font = FontUtils.getFontWithStyle(getFont(), SWT.ITALIC, 1.0f);
+				setFont(painter.font);
+			}
+	
+			painter.updateColors(getDisplay(), getForeground(), getBackground());
+	
+			painter.setDisableAuto(disableAuto);
+	
+			addListener(SWT.MouseDown, this);
+			addListener(SWT.MouseUp, this);
+			addListener(SWT.KeyDown, this);
+			addListener(SWT.FocusOut, this);
+			addListener(SWT.FocusIn, this);
+			addListener(SWT.Traverse, this);
+			addListener(SWT.MouseHover, this);
+			addListener(SWT.MouseExit, this);
+	
+			dropTarget = new DropTarget(this,
+					DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
+			Transfer[] types = new Transfer[] {
+				TextTransfer.getInstance()
+			};
+			dropTarget.setTransfer(types);
+			dropTarget.addDropListener(this);
+	
+			DragSource dragSource = DragDropUtils.createDragSource(this,
+					DND.DROP_COPY | DND.DROP_MOVE);
+			dragSource.setTransfer(TextTransfer.getInstance());
+			dragSource.addDragListener(this);
+	
+			painter.updateImage();
+			addPaintListener(this);
+		}finally{
+			initialised = true;
 		}
-
-		painter.updateColors(getDisplay(), getForeground(), getBackground());
-
-		painter.setDisableAuto(disableAuto);
-
-		addListener(SWT.MouseDown, this);
-		addListener(SWT.MouseUp, this);
-		addListener(SWT.KeyDown, this);
-		addListener(SWT.FocusOut, this);
-		addListener(SWT.FocusIn, this);
-		addListener(SWT.Traverse, this);
-		addListener(SWT.MouseHover, this);
-		addListener(SWT.MouseExit, this);
-
-		dropTarget = new DropTarget(this,
-				DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
-		Transfer[] types = new Transfer[] {
-			TextTransfer.getInstance()
-		};
-		dropTarget.setTransfer(types);
-		dropTarget.addDropListener(this);
-
-		DragSource dragSource = DragDropUtils.createDragSource(this,
-				DND.DROP_COPY | DND.DROP_MOVE);
-		dragSource.setTransfer(TextTransfer.getInstance());
-		dragSource.addDragListener(this);
-
-		painter.updateImage();
-		addPaintListener(this);
 	}
 
+	protected boolean
+	isInitialised()
+	{
+		return( initialised );
+	}
+	
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed) {
 		Point point = painter.computeSize(getDisplay(), getFont());
