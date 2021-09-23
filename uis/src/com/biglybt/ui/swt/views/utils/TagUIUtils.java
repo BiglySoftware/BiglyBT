@@ -30,6 +30,8 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
@@ -75,6 +77,7 @@ import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
+import com.biglybt.ui.swt.pif.UISWTInputReceiver;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
@@ -3180,6 +3183,53 @@ public class TagUIUtils
 					}
 				}});
 			
+			MenuItem rename_item = new MenuItem( menu, SWT.CASCADE);
+			
+			Messages.setLanguageText( rename_item, "MyTorrentsView.menu.rename" );
+	
+			rename_item.addSelectionListener(
+					new SelectionAdapter() {
+						@Override
+						public void
+						widgetSelected(
+							SelectionEvent e )
+						{
+							String name = group.getName();
+							
+							UISWTInputReceiver entry = new SimpleTextEntryWindow();
+							entry.setPreenteredText(name, false );
+							entry.maintainWhitespace(false);
+							entry.allowEmptyInput( false );
+							
+							entry.setLocalisedTitle(MessageText.getString("label.rename",
+									new String[] {
+										name
+									}));
+							
+							entry.prompt(new UIInputReceiverListener() {
+								@Override
+								public void UIInputReceiverClosed(UIInputReceiver entry) {
+									if (!entry.hasSubmittedInput()){
+
+										return;
+									}
+
+									String input = entry.getSubmittedInput().trim();
+
+									if ( input.length() > 0 ){
+
+										Utils.getOffOfSWTThread(()->{
+											for ( Tag t: group.getTags()){
+												
+												t.setGroup( input );
+											}
+										});
+									}
+								}
+							});
+						}
+					});
+			
 			need_sep = true;
 		}
 		
@@ -3193,6 +3243,8 @@ public class TagUIUtils
 					(selected)->{
 						group.setColor( selected==null?null:new int[]{ selected.red, selected.green, selected.blue } );
 					});
+			
+			need_sep = true;
 		}	
 		
 		return( need_sep );

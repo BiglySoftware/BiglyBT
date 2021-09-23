@@ -183,7 +183,13 @@ public abstract class BaseMdiEntry
 
 		if (mdi != null) {
 			MdiEntry entry = mdi.getEntry(id);
-			if (entry != null) {
+			
+			// it is possible the entry has been replaced in the meantime, if it
+			// has the tidyup for the old one will already have been done and we 
+			// don't want to go and remove the new replacement that is probably queued
+			// for addition in the SWT tubes
+			
+			if (entry == this ) {
 				mdi.closeEntryByID(id,userInitiated);
 				return;
 			}

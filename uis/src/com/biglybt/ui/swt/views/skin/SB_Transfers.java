@@ -1468,7 +1468,18 @@ public class SB_Transfers
 			
 			boolean is_group		= group != null && !group.isEmpty();
 			
-			boolean parent_is_group = parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." + (is_group?group:"" ));
+			boolean parent_is_group;
+			
+			String group_prefix = "Tag." + tag.getTagType().getTagType() + ".group.";
+			
+			if ( is_group ){
+				
+				parent_is_group = parent_id.equals( group_prefix + group );
+				
+			}else{
+				
+				parent_is_group = parent_id.startsWith( group_prefix );
+			}
 			
 			if ( is_group != parent_is_group ){
 				
@@ -1563,11 +1574,11 @@ public class SB_Transfers
 					if ( tag.getTaggableTypes() == Taggable.TT_DOWNLOAD || tag.getTaggableTypes() == Taggable.TT_PEER ){
 						
 						group_id = "Tag." + tag_type + ".group." + tag_group;
-						
+												
 						if ( mdi.getEntry( group_id ) == null ){
 							
 							// Create Entry for Group
-						
+													
 							TagGroup group = tag.getGroupContainer();
 
 							String gid= group_id;
@@ -1613,19 +1624,16 @@ public class SB_Transfers
 									
 									@Override
 									public void tagRemoved(TagGroup group, Tag tag){
-										// TODO Auto-generated method stub
-										
+										update();
 									}
 									
 									@Override
 									public void tagAdded(TagGroup group, Tag tag){
-										// TODO Auto-generated method stub
-										
+										update();
 									}
 									@Override
 									public void groupChanged(TagGroup group){
-										// TODO Auto-generated method stub
-										TagGroupListener.super.groupChanged(group);
+										update();
 									}
 									
 									private void
@@ -1648,6 +1656,7 @@ public class SB_Transfers
 										}
 									}
 								};
+								
 							group.addListener( tgl, false );								
 							
 									// find where to locate this in the sidebar
@@ -1689,12 +1698,36 @@ public class SB_Transfers
 							});
 							
 							// remove header when there are no children
-							entry.addListener((parent, ch, user) -> {
-								String viewID = parent.getViewID();
-								if (mdi.getChildrenOf(viewID).isEmpty()) {
-									mdi.closeEntry(parent,false);
-								}
-							});
+							entry.addListener(
+								new MdiChildCloseListener(){
+								
+									boolean closed;
+									
+									public void 
+									mdiChildEntryClosed(MdiEntry parent, MdiEntry child, boolean user){
+									
+										String viewID = parent.getViewID();
+										if (mdi.getChildrenOf(viewID).isEmpty()) {
+									
+											synchronized( this ){
+												if ( closed ){
+													return;
+												}
+												closed = true;
+											}
+											
+												// need to defer this in case there are outstanding sidebar
+												// additions that are located relative to this entry...
+											
+											mdi.runWhenIdle(()->{
+												
+												mdi.closeEntry(parent,false);
+												
+												
+											});
+										}
+									}
+								});
 
 
 							if ( entry instanceof MdiEntrySWT ){

@@ -1862,4 +1862,12 @@ public class TabbedMDI
 	public TabbedEntry getEntryBySkinView(Object skinView) {
 		return (TabbedEntry) super.getEntryBySkinView(skinView);
 	}
+	
+	@Override
+	public void 
+	runWhenIdle(
+		Runnable r )
+	{
+		r.run();	// nothing smart needed here maybe
+	}
 }

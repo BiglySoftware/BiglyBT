@@ -256,4 +256,8 @@ public interface MultipleDocumentInterface
 	String getViewID();
 
 	Class getDataSourceType();
+	
+	public void
+	runWhenIdle(
+		Runnable	r );
 }

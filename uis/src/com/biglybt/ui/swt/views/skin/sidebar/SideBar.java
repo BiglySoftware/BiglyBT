@@ -1694,10 +1694,17 @@ public class SideBar
 			entry.setImageLeftID("image.sidebar.plugin");
 		}
 
+		activityStart();
+		
 		Utils.execSWTThreadLater(0, new AERunnable() {
 			@Override
 			public void runSupport() {
-				_setupNewEntry(entry, id, expandParent, closeable);
+				try{
+					_setupNewEntry(entry, id, expandParent, closeable);
+				}finally{
+					
+					activityEnd();
+				}
 			}
 		});
 	}
@@ -1709,7 +1716,11 @@ public class SideBar
 			return;
 		}
 		
-		if ( getEntry( entry.getViewID()) != entry ){
+		String view_id = entry.getViewID();
+		
+		SideBarEntrySWT existing = getEntry( view_id );
+		
+		if ( existing != entry ){
 		
 				// entry has been deleted/replaced in the meantime
 			
@@ -2432,5 +2443,80 @@ public class SideBar
 	@Override
 	protected SideBarEntrySWT createEntryByCreationListener(String id, Map<?, ?> autoOpenInfo) {
 		return (SideBarEntrySWT) super.createEntryByCreationListener(id, autoOpenInfo);
+	}
+	
+	private List<Runnable> 	idle_pending = new ArrayList<>();	
+	private int				activity_count;
+	
+	private void
+	activityStart()
+	{
+		synchronized( idle_pending ){
+			
+			activity_count++;
+		}
+	}
+	
+	private void
+	activityEnd()
+	{
+		List<Runnable> to_run = null;
+		
+		synchronized( idle_pending ){
+			
+			activity_count--;
+			
+			if ( activity_count == 0 ){
+				
+				if ( !idle_pending.isEmpty()){
+					
+					to_run = new ArrayList<>( idle_pending );
+					
+					idle_pending.clear();
+				}
+			}
+		}
+		
+		if ( to_run != null ){
+			
+			List<Runnable> x = to_run;
+
+			Runnable doit = ()->{
+				for ( Runnable r: x ){
+					try{
+						r.run();
+					}catch( Throwable e ){
+						Debug.out(e);
+					}
+				}
+			};
+						
+			if ( Utils.isSWTThread()){
+			
+				Utils.getOffOfSWTThread( doit );
+				
+			}else{
+				
+				doit.run();
+			}
+		}
+	}
+	
+	@Override
+	public void 
+	runWhenIdle(
+		Runnable r )
+	{
+		synchronized( idle_pending ){
+			
+			if ( activity_count > 0 ){
+								
+				idle_pending.add( r );
+				
+				return;
+			}
+		}
+		
+		r.run();
 	}
 }
