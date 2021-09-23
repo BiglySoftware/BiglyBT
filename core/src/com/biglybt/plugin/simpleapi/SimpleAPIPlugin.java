@@ -239,14 +239,14 @@ SimpleAPIPlugin
 					
 					if ( hash_bytes == null ){
 						
-						throw( new Exception( "Invalid hash" ));
+						throw( new Exception( "Invalid hash (" + hash + ")" ));
 					}
 					
 					DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
 					
 					if ( dm == null ){
 						
-						throw( new Exception( "Download not found" ));
+						throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
 					}
 					
 					int tag_type = method.equals( "addtag" )?TagType.TT_DOWNLOAD_MANUAL:TagType.TT_DOWNLOAD_CATEGORY;
@@ -260,7 +260,47 @@ SimpleAPIPlugin
 						tag = tt.createTag( tag_name, true );
 					}
 					
-					tag.addTaggable( dm );
+					if ( !tag.hasTaggable( dm )){
+					
+						tag.addTaggable( dm );
+					}
+				}else if ( method.equals( "removetag" )){
+					
+					String hash 	= args.get( "hash" );
+					String tag_name	= args.get( "tag" );
+										
+					if ( hash == null || tag_name == null ){
+				
+						throw( new Exception( "missing parameter" ));
+					}
+					
+					byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
+					
+					if ( hash_bytes == null ){
+						
+						throw( new Exception( "Invalid hash (" + hash + ")" ));
+					}
+					
+					DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
+					
+					if ( dm == null ){
+						
+						throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
+					}
+										
+					TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+					
+					Tag tag = tt.getTag( tag_name, true );
+					
+					if ( tag == null ){
+					
+						throw( new Exception( "Tag '" + tag_name + "' not found" ));
+					}
+					
+					if ( tag.hasTaggable( dm )){
+							
+						tag.removeTaggable( dm );
+					}
 				}
 			}else{
 				
