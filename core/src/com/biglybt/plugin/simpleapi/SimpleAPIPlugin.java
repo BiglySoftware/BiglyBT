@@ -24,6 +24,8 @@ import java.io.*;
 import java.util.*;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.category.Category;
+import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.tag.Tag;
@@ -194,6 +196,10 @@ SimpleAPIPlugin
 				if ( bits.length == 2 ){
 					
 					args.put( bits[0].toLowerCase( Locale.US ),  UrlUtils.decode( bits[1] ));
+					
+				}else{
+					
+					args.put( bits[0].toLowerCase( Locale.US ), "" );
 				}
 			}
 		}
@@ -220,7 +226,7 @@ SimpleAPIPlugin
 				
 				TagManager tm = TagManagerFactory.getTagManager();
 				
-				if ( method.equals( "addtag" ) || method.equals( "addcategory" )){
+				if ( method.equals( "addtag" ) || method.equals( "addcategory" ) || method.equals( "setcategory" )){
 					
 					String hash 	= args.get( "hash" );
 					String tag_name	= args.get( "tag" );
@@ -251,19 +257,29 @@ SimpleAPIPlugin
 					
 					int tag_type = method.equals( "addtag" )?TagType.TT_DOWNLOAD_MANUAL:TagType.TT_DOWNLOAD_CATEGORY;
 					
-					TagType tt = tm.getTagType( tag_type );
-					
-					Tag tag = tt.getTag( tag_name, true );
-					
-					if ( tag == null ){
+					if ( tag_type == TagType.TT_DOWNLOAD_CATEGORY && tag_name.isEmpty()){
 						
-						tag = tt.createTag( tag_name, true );
+						Category uncat = CategoryManager.getCategory( Category.TYPE_UNCATEGORIZED );
+						
+						dm.getDownloadState().setCategory( uncat );
+						
+					}else{
+						
+						TagType tt = tm.getTagType( tag_type );
+						
+						Tag tag = tt.getTag( tag_name, true );
+						
+						if ( tag == null ){
+							
+							tag = tt.createTag( tag_name, true );
+						}
+						
+						if ( !tag.hasTaggable( dm )){
+						
+							tag.addTaggable( dm );
+						}
 					}
 					
-					if ( !tag.hasTaggable( dm )){
-					
-						tag.addTaggable( dm );
-					}
 				}else if ( method.equals( "removetag" )){
 					
 					String hash 	= args.get( "hash" );
