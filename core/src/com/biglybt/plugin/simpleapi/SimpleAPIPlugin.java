@@ -301,6 +301,58 @@ SimpleAPIPlugin
 							
 						tag.removeTaggable( dm );
 					}
+				}else if ( method.equals( "setnetworks" )){
+					
+					String hash 	= args.get( "hash" );
+					String networks	= args.get( "networks" );
+										
+					if ( hash == null || networks == null ){
+				
+						throw( new Exception( "missing parameter" ));
+					}
+					
+					byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
+					
+					if ( hash_bytes == null ){
+						
+						throw( new Exception( "Invalid hash (" + hash + ")" ));
+					}
+					
+					DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
+					
+					if ( dm == null ){
+						
+						throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
+					}
+
+					networks = networks.trim();
+					
+					if ( networks.isEmpty()){
+						
+						dm.getDownloadState().setNetworks( new String[0] );
+						
+					}else{
+						
+						String[] bits = networks.split( "," );
+						
+						String[] nets = new String[bits.length];
+								
+						for ( int i=0;i<bits.length;i++){
+							
+							String bit = bits[i].trim();
+						
+							String net = AENetworkClassifier.internalise( bit );
+							
+							if ( net == null ){
+								
+								throw( new Exception( "Invalid network (" + bit + ")" ));
+							}
+							
+							nets[i] = net;
+						}
+						
+						dm.getDownloadState().setNetworks( nets );
+					}
 				}
 			}else{
 				
