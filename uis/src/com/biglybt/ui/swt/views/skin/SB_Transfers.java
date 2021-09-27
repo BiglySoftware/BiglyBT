@@ -1343,7 +1343,24 @@ public class SB_Transfers
 							return "" + dms.size();
 						}
 					}
+				}else if ( propertyID == TITLE_INDICATOR_COLOR ){
+
+					TagType tag_type = category.getTagType();
+
+					int[] def_color = tag_type.getColorDefault();
+
+					int[] tag_color = category.getColor();
+
+					if ( tag_color != def_color ){
+
+						return( tag_color );
+					}
+
+				}else if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
+
+					return( TagUtils.getTagTooltip( category ));
 				}
+				
 				return null;
 			}
 		};
