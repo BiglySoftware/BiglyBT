@@ -21,6 +21,7 @@
 package com.biglybt.plugin.simpleapi;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.util.*;
 
 import com.biglybt.core.CoreFactory;
@@ -33,12 +34,16 @@ import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.PluginConfig;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.config.ConfigParameter;
+import com.biglybt.pif.config.ConfigParameterListener;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.tracker.web.TrackerWebPageRequest;
 import com.biglybt.pif.tracker.web.TrackerWebPageResponse;
 import com.biglybt.pif.ui.config.ActionParameter;
+import com.biglybt.pif.ui.config.HyperlinkParameter;
 import com.biglybt.pif.ui.config.StringParameter;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.ui.webplugin.WebPlugin;
@@ -102,6 +107,8 @@ SimpleAPIPlugin
 
 	private StringParameter		api_key;
 	
+	private HyperlinkParameter	test_param;
+	
 	public
 	SimpleAPIPlugin()
 	{
@@ -137,15 +144,42 @@ SimpleAPIPlugin
 				
 				api_key.setValue( createAPIKey());
 			}
+			
 			ActionParameter change = config.addActionParameter2( "plugin.simpleapi.apikey.new", "pairing.srp.setpw.doit" );
 			
 			change.addListener((n)->{
 				
 				api_key.setValue( createAPIKey());
+				
+				updateTestParam();
 			});
+			
+			test_param = config.addHyperlinkParameter2("plugin.simpleapi.test", "");
+		
+		}else if ( num == 2 ){
+			
+			updateTestParam();
 		}
 	}
 	
+	@Override
+	protected void
+	setupServer()
+	{
+		try{
+			super.setupServer();
+			
+		}finally{
+			updateTestParam();
+		}
+	}
+	
+	private void 
+	updateTestParam()
+	{
+		test_param.setHyperlink( getServerURL() + "?apikey=" + api_key.getValue() + "&method=test" );
+	}
+
 	private String
 	createAPIKey()
 	{
@@ -226,7 +260,11 @@ SimpleAPIPlugin
 				
 				TagManager tm = TagManagerFactory.getTagManager();
 				
-				if ( method.equals( "addtag" ) || method.equals( "addcategory" ) || method.equals( "setcategory" )){
+				if ( method.equals( "test" )){
+					
+					response.getOutputStream().write( "OK".getBytes( Constants.UTF_8 ));
+
+				}else if ( method.equals( "addtag" ) || method.equals( "addcategory" ) || method.equals( "setcategory" )){
 					
 					String hash 	= args.get( "hash" );
 					String tag_name	= args.get( "tag" );

@@ -1211,6 +1211,8 @@ WebPlugin
 
 			welcome_files[i] = FileUtil.newFile( file_root, welcome_pages[i] );
 		}
+		
+		initStage(2);
 	}
 
 	private void
@@ -2333,6 +2335,25 @@ WebPlugin
 		return( url.getPort()==-1?url.getDefaultPort():url.getPort());
 	}
 
+	protected String
+	getServerURL()
+	{
+		InetAddress bind_ip = getServerBindIP();
+
+		InetAddress address;
+		
+		if ( bind_ip.isAnyLocalAddress()){
+
+			address = NetworkAdmin.getSingleton().getLoopbackAddress();
+			
+		}else{
+
+			address = bind_ip;
+		}
+		
+		return( getProtocol().toLowerCase( Locale.US ) + "://" + UrlUtils.getURLForm( address, getPort()) + "/" );
+	}
+	
 	public int
 	getPort()
 	{
