@@ -1788,7 +1788,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 						// check that the row item hasn't been removed in the meantime while lock 
 						// not held
 					
-					if ( mapDataSourceToRow.containsKey( dataSource )){
+					if (row ==  mapDataSourceToRow.get( dataSource )){
 						try {
 							int index = 0;
 							if (sortedRows.size() > 0) {
