@@ -1785,64 +1785,69 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				}
 
 				synchronized (rows_sync) {
-  				try {
-  					int index = 0;
-  					if (sortedRows.size() > 0) {
-  						// If we are >= to the last item, then just add it to the end
-  						// instead of relying on binarySearch, which may return an item
-  						// in the middle that also is equal.
-  						TableRowCore lastRow = sortedRows.get(sortedRows.size() - 1);
-  						// todo: use multi-sort
-  						if (sortColumns.isEmpty() || sortColumns.get(0).compare(row, lastRow) >= 0) {
-  							index = sortedRows.size();
-  							sortedRows.add(row);
-  							if (DEBUGADDREMOVE) {
-  								debug("Adding new row to bottom");
-  							}
-  						} else {
-  							index = Collections.binarySearch(sortedRows, row, sortColumns.get(0));
-  							if (index < 0) {
-  								index = -1 * index - 1; // best guess
-  							}
-
-  							if (index > sortedRows.size()) {
-  								index = sortedRows.size();
-  							}
-
-  							if (DEBUGADDREMOVE) {
-  								debug("Adding new row at position " + index + " of "
-  										+ (sortedRows.size() - 1));
-  							}
-  							sortedRows.add(index, row);
-  						}
-  					} else {
-  						if (DEBUGADDREMOVE) {
-  							debug("Adding new row to bottom (1st Entry)");
-  						}
-  						index = sortedRows.size();
-  						sortedRows.add(row);
-  					}
-
-  					rowsAdded.add(row);
-
-  					// XXX Don't set table item here, it will mess up selected rows
-  					//     handling (which is handled in fillRowGaps called later on)
-  					//row.setTableItem(index);
-
-
-  					//row.setIconSize(ptIconSize);
-  				} catch (Exception e) {
-  					e.printStackTrace();
-  					Logger.log(new LogEvent(LOGID, "Error adding a row to table "
-  							+ getTableID(), e));
-  					try {
-  						if (!sortedRows.contains(row)) {
-  							sortedRows.add(row);
-  						}
-  					} catch (Exception e2) {
-  						Debug.out(e2);
-  					}
-  				}
+						// check that the row item hasn't been removed in the meantime while lock 
+						// not held
+					
+					if ( mapDataSourceToRow.containsKey( dataSource )){
+						try {
+							int index = 0;
+							if (sortedRows.size() > 0) {
+								// If we are >= to the last item, then just add it to the end
+								// instead of relying on binarySearch, which may return an item
+								// in the middle that also is equal.
+								TableRowCore lastRow = sortedRows.get(sortedRows.size() - 1);
+								// todo: use multi-sort
+								if (sortColumns.isEmpty() || sortColumns.get(0).compare(row, lastRow) >= 0) {
+									index = sortedRows.size();
+									sortedRows.add(row);
+									if (DEBUGADDREMOVE) {
+										debug("Adding new row to bottom");
+									}
+								} else {
+									index = Collections.binarySearch(sortedRows, row, sortColumns.get(0));
+									if (index < 0) {
+										index = -1 * index - 1; // best guess
+									}
+	
+									if (index > sortedRows.size()) {
+										index = sortedRows.size();
+									}
+	
+									if (DEBUGADDREMOVE) {
+										debug("Adding new row at position " + index + " of "
+												+ (sortedRows.size() - 1));
+									}
+									sortedRows.add(index, row);
+								}
+							} else {
+								if (DEBUGADDREMOVE) {
+									debug("Adding new row to bottom (1st Entry)");
+								}
+								index = sortedRows.size();
+								sortedRows.add(row);
+							}
+	
+							rowsAdded.add(row);
+	
+							// XXX Don't set table item here, it will mess up selected rows
+							//     handling (which is handled in fillRowGaps called later on)
+							//row.setTableItem(index);
+	
+	
+							//row.setIconSize(ptIconSize);
+						} catch (Exception e) {
+							e.printStackTrace();
+							Logger.log(new LogEvent(LOGID, "Error adding a row to table "
+									+ getTableID(), e));
+							try {
+								if (!sortedRows.contains(row)) {
+									sortedRows.add(row);
+								}
+							} catch (Exception e2) {
+								Debug.out(e2);
+							}
+						}
+					}
 				}
 			} // for dataSources
 

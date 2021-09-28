@@ -40,8 +40,10 @@ public interface TableRowCore extends TableRow
 	public void invalidate(boolean mustRefresh);
 
 	/**
-	 * Delete the row
+	 * Don't call this directly to delete a row, it won't work - it is for internal use to allow
+	 * an implementation to take action on deleting
 	 */
+	
 	public void delete();
 
 	/** Refresh all the cells in the row
