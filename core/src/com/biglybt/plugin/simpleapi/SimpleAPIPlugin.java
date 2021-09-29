@@ -21,7 +21,6 @@
 package com.biglybt.plugin.simpleapi;
 
 import java.io.*;
-import java.net.InetAddress;
 import java.util.*;
 
 import com.biglybt.core.CoreFactory;
@@ -34,11 +33,10 @@ import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.PluginConfig;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.config.ConfigParameter;
-import com.biglybt.pif.config.ConfigParameterListener;
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ipc.IPCException;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.tracker.web.TrackerWebPageRequest;
 import com.biglybt.pif.tracker.web.TrackerWebPageResponse;
@@ -250,167 +248,11 @@ SimpleAPIPlugin
 		}
 		
 		try{
-			String method = args.get( "method" );
-					
-			if ( method != null ){
+			String result = process( args );
 			
-				method = method.toLowerCase();
+			if ( result != null ){
 				
-				GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-				
-				TagManager tm = TagManagerFactory.getTagManager();
-				
-				if ( method.equals( "test" )){
-					
-					response.getOutputStream().write( "OK".getBytes( Constants.UTF_8 ));
-
-				}else if ( method.equals( "addtag" ) || method.equals( "addcategory" ) || method.equals( "setcategory" )){
-					
-					String hash 	= args.get( "hash" );
-					String tag_name	= args.get( "tag" );
-					
-					if ( tag_name == null ){
-						
-						tag_name	= args.get( "category" );
-					}
-					
-					if ( hash == null || tag_name == null ){
-				
-						throw( new Exception( "missing parameter" ));
-					}
-					
-					byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
-					
-					if ( hash_bytes == null ){
-						
-						throw( new Exception( "Invalid hash (" + hash + ")" ));
-					}
-					
-					DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
-					
-					if ( dm == null ){
-						
-						throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
-					}
-					
-					int tag_type = method.equals( "addtag" )?TagType.TT_DOWNLOAD_MANUAL:TagType.TT_DOWNLOAD_CATEGORY;
-					
-					if ( tag_type == TagType.TT_DOWNLOAD_CATEGORY && tag_name.isEmpty()){
-						
-						Category uncat = CategoryManager.getCategory( Category.TYPE_UNCATEGORIZED );
-						
-						dm.getDownloadState().setCategory( uncat );
-						
-					}else{
-						
-						TagType tt = tm.getTagType( tag_type );
-						
-						Tag tag = tt.getTag( tag_name, true );
-						
-						if ( tag == null ){
-							
-							tag = tt.createTag( tag_name, true );
-						}
-						
-						if ( !tag.hasTaggable( dm )){
-						
-							tag.addTaggable( dm );
-						}
-					}
-					
-				}else if ( method.equals( "removetag" )){
-					
-					String hash 	= args.get( "hash" );
-					String tag_name	= args.get( "tag" );
-										
-					if ( hash == null || tag_name == null ){
-				
-						throw( new Exception( "missing parameter" ));
-					}
-					
-					byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
-					
-					if ( hash_bytes == null ){
-						
-						throw( new Exception( "Invalid hash (" + hash + ")" ));
-					}
-					
-					DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
-					
-					if ( dm == null ){
-						
-						throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
-					}
-										
-					TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
-					
-					Tag tag = tt.getTag( tag_name, true );
-					
-					if ( tag == null ){
-					
-						throw( new Exception( "Tag '" + tag_name + "' not found" ));
-					}
-					
-					if ( tag.hasTaggable( dm )){
-							
-						tag.removeTaggable( dm );
-					}
-				}else if ( method.equals( "setnetworks" )){
-					
-					String hash 	= args.get( "hash" );
-					String networks	= args.get( "networks" );
-										
-					if ( hash == null || networks == null ){
-				
-						throw( new Exception( "missing parameter" ));
-					}
-					
-					byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
-					
-					if ( hash_bytes == null ){
-						
-						throw( new Exception( "Invalid hash (" + hash + ")" ));
-					}
-					
-					DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
-					
-					if ( dm == null ){
-						
-						throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
-					}
-
-					networks = networks.trim();
-					
-					if ( networks.isEmpty()){
-						
-						dm.getDownloadState().setNetworks( new String[0] );
-						
-					}else{
-						
-						String[] bits = networks.split( "," );
-						
-						String[] nets = new String[bits.length];
-								
-						for ( int i=0;i<bits.length;i++){
-							
-							String bit = bits[i].trim();
-						
-							String net = AENetworkClassifier.internalise( bit );
-							
-							if ( net == null ){
-								
-								throw( new Exception( "Invalid network (" + bit + ")" ));
-							}
-							
-							nets[i] = net;
-						}
-						
-						dm.getDownloadState().setNetworks( nets );
-					}
-				}
-			}else{
-				
-				throw( new Exception( "method missing" ));
+				response.getOutputStream().write( result.getBytes( Constants.UTF_8 ));
 			}
 			
 			return( true );
@@ -426,6 +268,236 @@ SimpleAPIPlugin
 			response.getOutputStream().write( Debug.getNestedExceptionMessage( e ).getBytes( Constants.UTF_8 ));
 			
 			return( true );
+		}
+	}
+	
+	private String
+	process(
+		Map<String,String>		args )
+	
+		throws Exception
+	{
+		String method = args.get( "method" );
+		
+		if ( method != null ){
+		
+			method = method.toLowerCase();
+			
+			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+			
+			TagManager tm = TagManagerFactory.getTagManager();
+			
+			if ( method.equals( "test" )){
+				
+				return( "OK" );
+
+			}else if ( method.equals( "addtag" ) || method.equals( "addcategory" ) || method.equals( "setcategory" )){
+				
+				String hash 	= args.get( "hash" );
+				String tag_name	= args.get( "tag" );
+				
+				if ( tag_name == null ){
+					
+					tag_name	= args.get( "category" );
+				}
+				
+				if ( hash == null || tag_name == null ){
+			
+					throw( new Exception( "missing parameter" ));
+				}
+				
+				byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
+				
+				if ( hash_bytes == null ){
+					
+					throw( new Exception( "Invalid hash (" + hash + ")" ));
+				}
+				
+				DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
+				
+				if ( dm == null ){
+					
+					throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
+				}
+				
+				int tag_type = method.equals( "addtag" )?TagType.TT_DOWNLOAD_MANUAL:TagType.TT_DOWNLOAD_CATEGORY;
+				
+				if ( tag_type == TagType.TT_DOWNLOAD_CATEGORY && tag_name.isEmpty()){
+					
+					Category uncat = CategoryManager.getCategory( Category.TYPE_UNCATEGORIZED );
+					
+					dm.getDownloadState().setCategory( uncat );
+					
+				}else{
+					
+					TagType tt = tm.getTagType( tag_type );
+					
+					Tag tag = tt.getTag( tag_name, true );
+					
+					if ( tag == null ){
+						
+						tag = tt.createTag( tag_name, true );
+					}
+					
+					if ( !tag.hasTaggable( dm )){
+					
+						tag.addTaggable( dm );
+					}
+				}
+				
+			}else if ( method.equals( "removetag" )){
+				
+				String hash 	= args.get( "hash" );
+				String tag_name	= args.get( "tag" );
+									
+				if ( hash == null || tag_name == null ){
+			
+					throw( new Exception( "missing parameter" ));
+				}
+				
+				byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
+				
+				if ( hash_bytes == null ){
+					
+					throw( new Exception( "Invalid hash (" + hash + ")" ));
+				}
+				
+				DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
+				
+				if ( dm == null ){
+					
+					throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
+				}
+									
+				TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+				
+				Tag tag = tt.getTag( tag_name, true );
+				
+				if ( tag == null ){
+				
+					throw( new Exception( "Tag '" + tag_name + "' not found" ));
+				}
+				
+				if ( tag.hasTaggable( dm )){
+						
+					tag.removeTaggable( dm );
+				}
+			}else if ( method.equals( "setnetworks" )){
+				
+				String hash 	= args.get( "hash" );
+				String networks	= args.get( "networks" );
+									
+				if ( hash == null || networks == null ){
+			
+					throw( new Exception( "missing parameter" ));
+				}
+				
+				byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
+				
+				if ( hash_bytes == null ){
+					
+					throw( new Exception( "Invalid hash (" + hash + ")" ));
+				}
+				
+				DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
+				
+				if ( dm == null ){
+					
+					throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
+				}
+
+				networks = networks.trim();
+				
+				if ( networks.isEmpty()){
+					
+					dm.getDownloadState().setNetworks( new String[0] );
+					
+				}else{
+					
+					String[] bits = networks.split( "," );
+					
+					String[] nets = new String[bits.length];
+							
+					for ( int i=0;i<bits.length;i++){
+						
+						String bit = bits[i].trim();
+					
+						String net = AENetworkClassifier.internalise( bit );
+						
+						if ( net == null ){
+							
+							throw( new Exception( "Invalid network (" + bit + ")" ));
+						}
+						
+						nets[i] = net;
+					}
+					
+					dm.getDownloadState().setNetworks( nets );
+				}
+			}
+		}else{
+			
+			throw( new Exception( "method missing" ));
+		}
+		
+		return( null );
+	}
+	
+	public Object
+	evalScript(
+		Map<String,Object>		eval_args )
+	
+		throws IPCException
+	{
+		String		intent		= (String)eval_args.get( "intent" );
+		
+		Download	download 	= (Download)eval_args.get( "download" );
+		
+		String		script		= (String)eval_args.get( "script" );
+		
+		script = script.trim();
+		
+		if ( script.length() > 2 && GeneralUtils.startsWithDoubleQuote( script ) && GeneralUtils.endsWithDoubleQuote(script)){
+			
+			script = script.substring( 1, script.length()-1 );
+			
+			script = script.trim();
+		}
+		
+		log_channel.log( intent + " - " + script );
+				
+		Map<String, String>	args = new HashMap<>();
+					
+		String[] arg_strs = script.split( "&" );
+		
+		for ( String arg_str: arg_strs ){
+			
+			String[]	bits = arg_str.split( "=" );
+			
+			if ( bits.length == 2 ){
+				
+				args.put( bits[0].toLowerCase( Locale.US ),  UrlUtils.decode( bits[1] ));
+				
+			}else{
+				
+				args.put( bits[0].toLowerCase( Locale.US ), "" );
+			}
+		}
+
+		args.put( "apikey,", api_key.getValue());
+		
+		args.put( "hash", ByteFormatter.encodeString( download.getTorrentHash()));
+		
+		try{
+			String result = process( args );
+			
+			return( result );
+			
+		}catch( Throwable e ){
+			
+			log_channel.log( "    error: " + Debug.getNestedExceptionMessage( e ));
+			
+			throw( new IPCException(e));
 		}
 	}
 }

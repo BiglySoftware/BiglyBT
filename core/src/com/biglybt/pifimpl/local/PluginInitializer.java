@@ -485,7 +485,11 @@ PluginInitializer
 					
 					if ( pid.endsWith( "+" )){
 						
-						PluginInterface plugin_interface = getPluginManager().getPluginInterfaceByID( pid.substring( 0, pid.length()-1));
+						pid = pid.substring( 0, pid.length()-1);
+						
+						pid = getFullPID( pid );
+
+						PluginInterface plugin_interface = getPluginManager().getPluginInterfaceByID( pid );
 					
 						if ( plugin_interface != null ){
 						
@@ -512,7 +516,7 @@ PluginInitializer
 					}
 					
 					String pid = bits[0].trim();
-					
+										
 					boolean is_batch = pid.endsWith( "+" );
 					
 					if ( is_batch ){
@@ -520,6 +524,8 @@ PluginInitializer
 						pid = pid.substring( 0, pid.length()-1);
 					}
 					
+					pid = getFullPID( pid );
+
 					PluginInterface plugin_interface = getPluginManager().getPluginInterfaceByID( pid );
 					
 					if ( plugin_interface == null ){
@@ -543,6 +549,20 @@ PluginInitializer
 					
 						return( ipc.invoke( "evalScript", a_args ));
 					}
+				}
+				
+				private String
+				getFullPID(
+					String	pid )
+				{
+						// shorthand
+					
+					if ( pid.equals( "simpleapi" )){
+						
+						return( "azintsimpleapi" );
+					}
+					
+					return( pid );
 				}
 			};
 				
