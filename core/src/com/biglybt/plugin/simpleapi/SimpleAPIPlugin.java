@@ -453,51 +453,86 @@ SimpleAPIPlugin
 		
 		Download	download 	= (Download)eval_args.get( "download" );
 		
-		String		script		= (String)eval_args.get( "script" );
+		String		scripts		= (String)eval_args.get( "script" );
 		
-		script = script.trim();
+		scripts = scripts.trim();
 		
-		if ( script.length() > 2 && GeneralUtils.startsWithDoubleQuote( script ) && GeneralUtils.endsWithDoubleQuote(script)){
+		if ( 	scripts.length() > 2 && 
+				GeneralUtils.startsWithDoubleQuote( scripts ) && 
+				GeneralUtils.endsWithDoubleQuote(scripts)){
 			
-			script = script.substring( 1, script.length()-1 );
+			scripts = scripts.substring( 1, scripts.length()-1 );
+			
+			scripts = scripts.trim();
+		}
+		
+		log_channel.log( intent + " - " + scripts );
+				
+		String[] script_strs = scripts.split( ";" );
+		
+		List<String>	results = new ArrayList<>();
+		
+		for ( String script: script_strs ){
 			
 			script = script.trim();
-		}
-		
-		log_channel.log( intent + " - " + script );
+			
+			if ( script.isEmpty()){
 				
-		Map<String, String>	args = new HashMap<>();
+				continue;
+			}
+			
+			Map<String, String>	args = new HashMap<>();
+						
+			String[] arg_strs = script.split( "&" );
+			
+			for ( String arg_str: arg_strs ){
+				
+				String[]	bits = arg_str.split( "=" );
+				
+				if ( bits.length == 2 ){
 					
-		String[] arg_strs = script.split( "&" );
+					args.put( bits[0].toLowerCase( Locale.US ),  UrlUtils.decode( bits[1] ));
+					
+				}else{
+					
+					args.put( bits[0].toLowerCase( Locale.US ), "" );
+				}
+			}
+	
+			args.put( "apikey,", api_key.getValue());
+			
+			args.put( "hash", ByteFormatter.encodeString( download.getTorrentHash()));
 		
-		for ( String arg_str: arg_strs ){
-			
-			String[]	bits = arg_str.split( "=" );
-			
-			if ( bits.length == 2 ){
+			try{
+				String result = process( args );
 				
-				args.put( bits[0].toLowerCase( Locale.US ),  UrlUtils.decode( bits[1] ));
+				if ( result != null ){
+					
+					results.add( result );
+				}
 				
-			}else{
+			}catch( Throwable e ){
 				
-				args.put( bits[0].toLowerCase( Locale.US ), "" );
+				log_channel.log( "    error: " + Debug.getNestedExceptionMessage( e ));
+				
+				throw( new IPCException(e));
 			}
 		}
-
-		args.put( "apikey,", api_key.getValue());
 		
-		args.put( "hash", ByteFormatter.encodeString( download.getTorrentHash()));
-		
-		try{
-			String result = process( args );
+		if ( results.isEmpty()){
 			
-			return( result );
+			return( null );
 			
-		}catch( Throwable e ){
+		}else{
 			
-			log_channel.log( "    error: " + Debug.getNestedExceptionMessage( e ));
+			String str = "";
 			
-			throw( new IPCException(e));
+			for ( String result: results ){
+				
+				str += (str.isEmpty()?"":";") + result;
+			}
+			
+			return( str );
 		}
 	}
 }
