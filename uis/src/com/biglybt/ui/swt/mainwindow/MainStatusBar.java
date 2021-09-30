@@ -847,6 +847,10 @@ public class MainStatusBar
 					return;
 				}
 
+				if ( current_alert != null && current_added && current_alert.isNative ){
+					return;
+				}
+				
 				ArrayList<LogAlert> alerts = Alerts.getUnviewedLogAlerts();
 				int count = alerts.size();
 

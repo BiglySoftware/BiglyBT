@@ -593,8 +593,30 @@ UserAlerts
 			
 			if ( do_native_tray ){
 				
-				if ( native_tray_icon == null ){
-					
+				displayNativeMessage( MessageText.getString( native_text ), item_name, popup_is_error );
+			}
+  		}catch( Throwable e ){
+
+  			Debug.printStackTrace( e );
+
+  		}finally{
+
+  			this_mon.exit();
+  		}
+  	}
+
+  	public boolean
+  	displayNativeMessage(
+  		String		caption,
+  		String		text,
+  		boolean		is_error )
+  	{
+  		try{ 		
+  			this_mon.enter();
+  			
+			if ( native_tray_icon == null ){
+				
+				try{
 					if ( SystemTray.isSupported()){
 						
 						SystemTray st = SystemTray.getSystemTray();
@@ -647,59 +669,62 @@ UserAlerts
 						
 				        st.add( native_tray_icon );
 					}
-				}
-			
-				if ( native_tray_icon != null ){
-				        					
-					native_tray_icon.displayMessage( MessageText.getString( native_text ), item_name, popup_is_error?MessageType.ERROR:MessageType.INFO );
+				}catch( Throwable e ){
 					
-					/* Unfortunately removing the icon also removes any messages associated with it
-					 * that may be in the notification area (on Windows 10 for example)
-					 
-					final int mine = ++native_message_count;
-					
-					SimpleTimer.addEvent(
-						"iconhider",
-						SystemTime.getOffsetTime( 30*1000 ),
-						new TimerEventPerformer(){
-							
-							@Override
-							public void perform(TimerEvent event){
-								try{
-									this_mon.enter();
-									
-									if ( native_message_count == mine ){
-										
-										try{
-											SystemTray st = SystemTray.getSystemTray();
-										
-											st.remove( native_tray_icon );
-											
-											native_tray_icon = null;
-											
-										}catch( Throwable e ){										
-										}
-									}
-									
-								}finally{
-									
-									this_mon.exit();
-								}
-							}
-						});
-					*/
+					Debug.out( e );
 				}
 			}
-  		}catch( Throwable e ){
-
-  			Debug.printStackTrace( e );
-
+		
+			if ( native_tray_icon != null ){
+			        					
+				native_tray_icon.displayMessage( caption, text, is_error?MessageType.ERROR:MessageType.INFO );
+				
+				/* Unfortunately removing the icon also removes any messages associated with it
+				 * that may be in the notification area (on Windows 10 for example)
+				 
+				final int mine = ++native_message_count;
+				
+				SimpleTimer.addEvent(
+					"iconhider",
+					SystemTime.getOffsetTime( 30*1000 ),
+					new TimerEventPerformer(){
+						
+						@Override
+						public void perform(TimerEvent event){
+							try{
+								this_mon.enter();
+								
+								if ( native_message_count == mine ){
+									
+									try{
+										SystemTray st = SystemTray.getSystemTray();
+									
+										st.remove( native_tray_icon );
+										
+										native_tray_icon = null;
+										
+									}catch( Throwable e ){										
+									}
+								}
+								
+							}finally{
+								
+								this_mon.exit();
+							}
+						}
+					});
+				*/
+				
+				return( true );
+			}
+			
+			return( false );
+			
   		}finally{
-
+  			
   			this_mon.exit();
   		}
   	}
-
 
   	private boolean
   	isDLFEnabled(

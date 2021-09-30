@@ -56,6 +56,8 @@ public class LogAlert implements com.biglybt.pif.logging.LogAlert {
 
 	public String details;
 
+	public boolean isNative;
+	
 	public boolean forceNotify;
 
 	/**

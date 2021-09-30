@@ -158,6 +158,16 @@ public class Alerts
 			l.alertHistoryAdded(alert);
 		}
 
+		if ( alert.isNative ){
+			
+			UserAlerts ua = UserAlerts.getSingleton();
+			
+			if ( ua == null || !ua.displayNativeMessage( alert.text, alert.details, alert.getType()==LogAlert.AT_ERROR )){
+				
+				alert.forceNotify = true;
+			}
+		}
+		
 		if ( alert.forceNotify ){
 
 			Utils.execSWTThread(new AERunnable() {
@@ -198,6 +208,8 @@ public class Alerts
 				}
 			});
 		}
+		
+
 	}
 
 	public static void initComplete() {

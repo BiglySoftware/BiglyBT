@@ -28,6 +28,8 @@ import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.logging.LogAlert;
+import com.biglybt.core.logging.Logger;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
@@ -271,6 +273,38 @@ SimpleAPIPlugin
 		}
 	}
 	
+	private DownloadManager
+	getDownloadFromHash(
+		Map<String,String>	args )
+	
+		throws Exception
+	{
+		GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+		
+		String hash 	= args.get( "hash" );
+
+		if ( hash == null ){
+			
+			throw( new Exception( "missing 'hash' parameter" ));
+		}
+		
+		byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
+		
+		if ( hash_bytes == null ){
+			
+			throw( new Exception( "Invalid hash (" + hash + ")" ));
+		}
+		
+		DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
+		
+		if ( dm == null ){
+			
+			throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
+		}
+
+		return( dm );
+	}
+	
 	private String
 	process(
 		Map<String,String>		args )
@@ -282,9 +316,7 @@ SimpleAPIPlugin
 		if ( method != null ){
 		
 			method = method.toLowerCase();
-			
-			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-			
+						
 			TagManager tm = TagManagerFactory.getTagManager();
 			
 			if ( method.equals( "test" )){
@@ -293,7 +325,8 @@ SimpleAPIPlugin
 
 			}else if ( method.equals( "addtag" ) || method.equals( "addcategory" ) || method.equals( "setcategory" )){
 				
-				String hash 	= args.get( "hash" );
+				DownloadManager dm = getDownloadFromHash( args );
+
 				String tag_name	= args.get( "tag" );
 				
 				if ( tag_name == null ){
@@ -301,25 +334,11 @@ SimpleAPIPlugin
 					tag_name	= args.get( "category" );
 				}
 				
-				if ( hash == null || tag_name == null ){
+				if ( tag_name == null ){
 			
 					throw( new Exception( "missing parameter" ));
 				}
-				
-				byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
-				
-				if ( hash_bytes == null ){
-					
-					throw( new Exception( "Invalid hash (" + hash + ")" ));
-				}
-				
-				DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
-				
-				if ( dm == null ){
-					
-					throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
-				}
-				
+																
 				int tag_type = method.equals( "addtag" )?TagType.TT_DOWNLOAD_MANUAL:TagType.TT_DOWNLOAD_CATEGORY;
 				
 				if ( tag_type == TagType.TT_DOWNLOAD_CATEGORY && tag_name.isEmpty()){
@@ -346,29 +365,16 @@ SimpleAPIPlugin
 				}
 				
 			}else if ( method.equals( "removetag" )){
-				
-				String hash 	= args.get( "hash" );
+
+				DownloadManager dm = getDownloadFromHash( args );
+
 				String tag_name	= args.get( "tag" );
 									
-				if ( hash == null || tag_name == null ){
+				if ( tag_name == null ){
 			
 					throw( new Exception( "missing parameter" ));
 				}
-				
-				byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
-				
-				if ( hash_bytes == null ){
-					
-					throw( new Exception( "Invalid hash (" + hash + ")" ));
-				}
-				
-				DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
-				
-				if ( dm == null ){
-					
-					throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
-				}
-									
+													
 				TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
 				
 				Tag tag = tt.getTag( tag_name, true );
@@ -383,29 +389,16 @@ SimpleAPIPlugin
 					tag.removeTaggable( dm );
 				}
 			}else if ( method.equals( "setnetworks" )){
-				
-				String hash 	= args.get( "hash" );
+	
+				DownloadManager dm = getDownloadFromHash( args );
+
 				String networks	= args.get( "networks" );
 									
-				if ( hash == null || networks == null ){
+				if ( networks == null ){
 			
 					throw( new Exception( "missing parameter" ));
 				}
-				
-				byte[] hash_bytes = UrlUtils.decodeTruncatedHash( hash );
-				
-				if ( hash_bytes == null ){
-					
-					throw( new Exception( "Invalid hash (" + hash + ")" ));
-				}
-				
-				DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash_bytes ));
-				
-				if ( dm == null ){
-					
-					throw( new Exception( "Download not found for hash " + ByteFormatter.encodeString(hash_bytes)));
-				}
-
+	
 				networks = networks.trim();
 				
 				if ( networks.isEmpty()){
@@ -434,6 +427,48 @@ SimpleAPIPlugin
 					
 					dm.getDownloadState().setNetworks( nets );
 				}
+			}else if ( method.equals( "alert" )){
+				
+				DownloadManager dm = getDownloadFromHash( args );
+
+				String caption	= args.get( "caption" );
+				
+				if ( caption == null ){
+					
+					caption = "";
+				}
+				
+				int atype = LogAlert.AT_INFORMATION;
+				
+				String type	= args.get( "type" );
+				
+				if ( type != null ){
+					
+					if ( type.equals( "info" )){
+						
+					}else if ( type.equals( "error" )){
+						
+						atype = LogAlert.AT_ERROR;
+						
+					}else{
+						throw( new Exception( "Invalid type (" + type + ")" ));
+					}
+				}
+				
+				LogAlert alert = new LogAlert( LogAlert.REPEATABLE, atype, caption );
+				
+				alert.details = dm.getDisplayName();
+				
+				String details	= args.get( "details" );
+
+				if ( details != null && !details.isEmpty()){
+					
+					alert.details += "\n\n" + details;
+				}
+				
+				alert.isNative = true;
+				
+				Logger.log( alert );
 			}
 		}else{
 			
