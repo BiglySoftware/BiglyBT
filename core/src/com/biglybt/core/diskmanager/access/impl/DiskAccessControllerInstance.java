@@ -303,6 +303,20 @@ DiskAccessControllerInstance
 
 				next_request_byte_log += REQUEST_BYTE_LOG_CHUNK;
 			}
+			
+				// This way of controlling queued data is obviously crap as it is only the requests
+				// that push the queued count over a MB boundary that end up getting blocked
+				// Could reduce it to the KB level but I'm not convinced that this blocking is a
+				// good thing so don't want to mess with it
+			
+			if ( mb_diff > 0 ){
+				
+					// if this request is going to take up some space allowance then we need
+					// to ensure that it will be released when the request is complete regardless
+					// of current queued byte conditions
+				
+				request.setSpaceAllowance( mb_diff );
+			}
 		}
 
 		if ( mb_diff > 0 ){
@@ -319,15 +333,11 @@ DiskAccessControllerInstance
 
 		synchronized( torrent_dispatcher_map ){
 
-			int	old_mb = (int)(request_bytes_queued/(1024*1024));
-
 			request_bytes_queued -= request.getSize();
 
-			int	new_mb = (int)(request_bytes_queued/(1024*1024));
-
-			mb_diff = old_mb - new_mb;
-
 			requests_queued--;
+			
+			mb_diff = request.getSpaceAllowance();
 		}
 
 		if ( mb_diff > 0 ){
@@ -928,50 +938,6 @@ DiskAccessControllerInstance
 					}
 				}
 			}
-		}
-	}
-
-	public static void
-	main(
-		String[]	args )
-	{
-		final groupSemaphore	sem = new groupSemaphore( 9 );
-
-		for (int i=0;i<10;i++){
-
-			new Thread()
-			{
-				@Override
-				public void
-				run()
-				{
-					int	count = 0;
-
-					while( true ){
-
-						int	group =RandomUtils.generateRandomIntUpto( 10 );
-
-						System.out.println( Thread.currentThread().getName() + " reserving " + group );
-
-						sem.reserveGroup( group );
-
-						try{
-							Thread.sleep(5 + RandomUtils.generateRandomIntUpto(5));
-
-						}catch( Throwable e ){
-						}
-
-						sem.releaseGroup( group );
-
-						count++;
-
-						if ( count %100 == 0 ){
-
-							System.out.println( Thread.currentThread().getName() + ": " + count + " ops" );
-						}
-					}
-				}
-			}.start();
 		}
 	}
 }

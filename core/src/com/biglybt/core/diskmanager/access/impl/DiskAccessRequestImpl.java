@@ -49,6 +49,8 @@ DiskAccessRequestImpl
 
 	private volatile boolean	cancelled;
 
+	private int	space_allowance;
+	
 	protected
 	DiskAccessRequestImpl(
 		CacheFile					_file,
@@ -270,6 +272,19 @@ DiskAccessRequestImpl
 		return( listener.getPriority());
 	}
 
+	protected void
+	setSpaceAllowance(
+		int		sa )
+	{
+		space_allowance = sa;
+	}
+	
+	protected int
+	getSpaceAllowance()
+	{
+		return( space_allowance );
+	}
+	
 	@Override
 	public Object 
 	getUserData()
