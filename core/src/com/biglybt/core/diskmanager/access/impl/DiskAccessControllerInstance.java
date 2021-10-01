@@ -38,9 +38,9 @@ DiskAccessControllerInstance
 	final boolean		invert_threads	= !COConfigurationManager.getBooleanParameter( "diskmanager.perf.queue.torrent.bias" );
 
 	final int	max_threads;
-	private int	max_mb_queued;
+	private int	max_kb_queued;
 
-	private final groupSemaphore	max_mb_sem;
+	private final groupSemaphore	max_kb_sem;
 
 	private long			request_bytes_queued;
 	private long			requests_queued;
@@ -94,9 +94,9 @@ DiskAccessControllerInstance
 		aggregation_request_limit	= _aggregation_request_limit;
 		aggregation_byte_limit		= _aggregation_byte_limit;
 
-		max_mb_queued		= _max_mb;
+		max_kb_queued		= _max_mb*1024;
 
-		max_mb_sem 			= new groupSemaphore( max_mb_queued );
+		max_kb_sem 			= new groupSemaphore( max_kb_queued );
 		max_threads			= _max_threads;
 
 		dispatchers	= new requestDispatcher[invert_threads?1:max_threads];
@@ -115,7 +115,7 @@ DiskAccessControllerInstance
 	protected long
 	getBlockCount()
 	{
-		return( max_mb_sem.getBlockCount());
+		return( max_kb_sem.getBlockCount());
 	}
 
 	protected long
@@ -266,26 +266,24 @@ DiskAccessControllerInstance
 	getSpaceAllowance(
 		DiskAccessRequestImpl	request )
 	{
-		int	mb_diff;
+		int	kb_diff;
 
 		synchronized( torrent_dispatcher_map ){
+			
+			int 	size = request.getSize();
+			
+			request_bytes_queued += size;
 
-			int	old_mb = (int)(request_bytes_queued/(1024*1024));
+			kb_diff = (size+1023)/1024;
 
-			request_bytes_queued += request.getSize();
-
-			int	new_mb = (int)(request_bytes_queued/(1024*1024));
-
-			mb_diff = new_mb - old_mb;
-
-			if ( mb_diff > max_mb_queued ){
+			if ( kb_diff > max_kb_queued ){
 
 					// if this request is bigger than the max allowed queueable then easiest
 					// approach is to bump up the limit
 
-				max_mb_sem.releaseGroup( mb_diff - max_mb_queued );
+				max_kb_sem.releaseGroup( kb_diff - max_kb_queued );
 
-				max_mb_queued	= mb_diff;
+				max_kb_queued	= kb_diff;
 			}
 
 			requests_queued++;
@@ -303,33 +301,18 @@ DiskAccessControllerInstance
 
 				next_request_byte_log += REQUEST_BYTE_LOG_CHUNK;
 			}
-			
-				// This way of controlling queued data is obviously crap as it is only the requests
-				// that push the queued count over a MB boundary that end up getting blocked
-				// Could reduce it to the KB level but I'm not convinced that this blocking is a
-				// good thing so don't want to mess with it
-			
-			if ( mb_diff > 0 ){
 				
-					// if this request is going to take up some space allowance then we need
-					// to ensure that it will be released when the request is complete regardless
-					// of current queued byte conditions
-				
-				request.setSpaceAllowance( mb_diff );
-			}
+			request.setSpaceAllowance( kb_diff );
 		}
 
-		if ( mb_diff > 0 ){
-
-			max_mb_sem.reserveGroup( mb_diff );
-		}
+		max_kb_sem.reserveGroup( kb_diff );
 	}
 
 	protected void
 	releaseSpaceAllowance(
 		DiskAccessRequestImpl	request )
 	{
-		int	mb_diff;
+		int	kb_diff;
 
 		synchronized( torrent_dispatcher_map ){
 
@@ -337,12 +320,12 @@ DiskAccessControllerInstance
 
 			requests_queued--;
 			
-			mb_diff = request.getSpaceAllowance();
+			kb_diff = request.getSpaceAllowance();
 		}
 
-		if ( mb_diff > 0 ){
+		if ( kb_diff > 0 ){
 
-			max_mb_sem.releaseGroup( mb_diff );
+			max_kb_sem.releaseGroup( kb_diff );
 		}
 	}
 
@@ -353,7 +336,7 @@ DiskAccessControllerInstance
 			name +
 			",agg=" + enable_aggregation +
 			",max_t=" + max_threads +
-			",max_mb=" + max_mb_queued +
+			",max_kb=" + max_kb_queued +
 			",q_byte=" + DisplayFormatters.formatByteCountToKiBEtc( request_bytes_queued ) +
 			",q_req=" + requests_queued +
 			",t_req=" + total_requests +
@@ -760,7 +743,7 @@ DiskAccessControllerInstance
 	{
 		private int value;
 
-		private final List	waiters = new LinkedList();
+		private final List<mutableInteger>	waiters = new LinkedList<>();
 
 		private long	blocks;
 

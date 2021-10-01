@@ -629,9 +629,9 @@ public class ConfigurationDefaults {
     def.put( "diskmanager.perf.cache.size", new Long(4));		// 4 MB
     def.put( "diskmanager.perf.cache.notsmallerthan", new Long(1024));	// 1024 K
     def.put( "diskmanager.perf.read.maxthreads", new Long(32));
-    def.put( "diskmanager.perf.read.maxmb", new Long(5));
+    def.put( "diskmanager.perf.read.maxmb", new Long(10));
     def.put( "diskmanager.perf.write.maxthreads", new Long(32));
-    def.put( "diskmanager.perf.write.maxmb", new Long(5));
+    def.put( "diskmanager.perf.write.maxmb", new Long(10));
     def.put( "diskmanager.perf.cache.trace", FALSE);
     def.put( "diskmanager.perf.cache.flushpieces", TRUE);
     def.put( "diskmanager.perf.read.aggregate.enable", FALSE );
