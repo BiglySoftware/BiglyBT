@@ -19,6 +19,9 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
+import java.io.File;
+
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
@@ -26,8 +29,14 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.pif.download.DownloadTypeComplete;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemFillListener;
+import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.pif.ui.tables.TableContextMenuItem;
+import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 
@@ -44,6 +53,7 @@ public class DateCompletedItem
 		super(DATASOURCE_TYPE, COLUMN_ID, TableColumnCreator.DATE_COLUMN_WIDTH, sTableID);
 
 		setMultiline(false);
+		addMenu();
 	}
 
 	@Override
@@ -62,6 +72,103 @@ public class DateCompletedItem
 	public DateCompletedItem(String tableID, boolean v) {
 		this(tableID);
 		setVisible(v);
+	}
+	
+	private void
+	addMenu()
+	{
+	    TableContextMenuItem menuItem = addContextMenuItem("MyTorrentsView.menu.datecomp.reset");
+	    menuItem.setHeaderCategory(MenuItem.HEADER_OTHER);
+	    menuItem.addFillListener(new MenuItemFillListener(){
+			
+			@Override
+			public void menuWillBeShown(MenuItem menu, Object target){
+				boolean enabled = false;
+				if (target != null) {
+					Object[] o = (Object[]) target;
+					for (Object object : o) {
+						if (object instanceof TableRowCore) {
+							object = ((TableRowCore) object).getDataSource(true);
+						}
+						if (object instanceof DownloadManager) {
+							DownloadManager dm = (DownloadManager) object;
+							if (dm.isDownloadComplete(false)) {
+								enabled = true;
+								break;
+							}
+						}
+					}
+				}
+				
+				menuItem.setEnabled(enabled);
+			}
+		});
+	    
+	    menuItem.addMultiListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				if (target == null) {
+					return;
+				}
+				Object[] o = (Object[]) target;
+				
+				Utils.getOffOfSWTThread(()->{
+					
+					for ( Object object : o ){
+						
+						if ( object instanceof TableRowCore ){
+							
+							TableRowCore row = (TableRowCore)object;
+							
+							object = row.getDataSource(true);
+					
+							if ( object instanceof DownloadManager){
+								
+								DownloadManager dm = (DownloadManager) object;
+								
+								if ( dm.isDownloadComplete(false)){
+									
+									long	last_mod = 0;
+										
+									DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+									
+									for ( DiskManagerFileInfo file: files ){
+										
+										if ( !file.isSkipped()){
+											
+											File f = file.getFile( true );
+											
+											if ( f.length() == file.getLength()){
+												
+												long mod = f.lastModified();
+												
+												if ( mod > last_mod ){
+													
+													last_mod = mod;
+												}
+											}
+										}
+									}
+									
+									if ( last_mod > 0 ){
+									
+										DownloadManagerState dms = dm.getDownloadState();
+										
+										dms.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME, last_mod );
+									
+										dms.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, last_mod );
+										
+										row.invalidate( true );
+										
+										row.refresh( true );
+									}
+								}
+							}
+						}
+					}});
+			}
+	    });
+
 	}
 
 	@Override
