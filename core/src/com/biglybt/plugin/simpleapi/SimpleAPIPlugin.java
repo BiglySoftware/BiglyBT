@@ -27,6 +27,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
@@ -426,6 +427,41 @@ SimpleAPIPlugin
 					}
 					
 					dm.getDownloadState().setNetworks( nets );
+				}
+			}else if ( method.equals( "setdownloadattribute" )){
+				
+				DownloadManager dm = getDownloadFromHash( args );
+
+				String name	= args.get( "name" );
+									
+				if ( name == null ){
+			
+					throw( new Exception( "missing 'name' parameter" ));
+				}
+				
+				String value	= args.get( "value" );
+				
+				if ( value == null ){
+			
+					throw( new Exception( "missing 'value' parameter" ));
+				}
+				
+				if ( name.equals( "completedon" )){
+					
+					try{
+						long time = Long.parseLong( value )*1000;
+						
+						DownloadManagerState dms = dm.getDownloadState();
+											
+						dms.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, time );
+
+					}catch( Throwable e ){
+							
+						throw( new Exception( "invalid 'value' parameter (" + value + ")" ));	
+					}
+				}else{
+					
+					throw( new Exception( "invalid 'name' parameter" ));
 				}
 			}else if ( method.equals( "alert" )){
 				
