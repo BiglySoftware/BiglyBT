@@ -454,6 +454,8 @@ SimpleAPIPlugin
 						DownloadManagerState dms = dm.getDownloadState();
 											
 						dms.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, time );
+						
+						dms.setLongAttribute( DownloadManagerState.AT_COMPLETE_LAST_TIME, time );
 
 					}catch( Throwable e ){
 							

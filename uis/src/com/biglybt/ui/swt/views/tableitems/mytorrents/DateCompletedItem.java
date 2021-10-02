@@ -158,6 +158,8 @@ public class DateCompletedItem
 									
 										dms.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, last_mod );
 										
+										dms.setLongAttribute( DownloadManagerState.AT_COMPLETE_LAST_TIME, last_mod );
+										
 										row.invalidate( true );
 										
 										row.refresh( true );
