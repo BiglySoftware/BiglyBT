@@ -218,7 +218,8 @@ SimpleAPIPlugin
 		
 		int pos = url.indexOf( '?' );
 		
-		Map<String, String>	args = new HashMap<>();
+		Map<String, String>			args 		= new HashMap<>();
+		Map<String, List<String>>	multi_args	= new HashMap<>();
 		
 		if ( pos != -1 ){
 			
@@ -228,14 +229,30 @@ SimpleAPIPlugin
 				
 				String[]	bits = arg_str.split( "=" );
 				
+				String name = bits[0].toLowerCase( Locale.US );
+				String value;
+				
 				if ( bits.length == 2 ){
 					
-					args.put( bits[0].toLowerCase( Locale.US ),  UrlUtils.decode( bits[1] ));
-					
+					value = UrlUtils.decode( bits[1] );
+										
 				}else{
 					
-					args.put( bits[0].toLowerCase( Locale.US ), "" );
+					value = "";
 				}
+				
+				args.put( name, value );
+				
+				List<String> multi_value = multi_args.get( name );
+				
+				if ( multi_value == null ){
+					
+					multi_value = new ArrayList<>();
+					
+					multi_args.put( name, multi_value );
+				}
+				
+				multi_value.add( value );
 			}
 		}
 		
@@ -251,7 +268,7 @@ SimpleAPIPlugin
 		}
 		
 		try{
-			String result = process( args );
+			String result = process( args, multi_args );
 			
 			if ( result != null ){
 				
@@ -308,7 +325,8 @@ SimpleAPIPlugin
 	
 	private String
 	process(
-		Map<String,String>		args )
+		Map<String,String>			args,
+		Map<String,List<String>>	multi_args )
 	
 		throws Exception
 	{
@@ -316,7 +334,7 @@ SimpleAPIPlugin
 		
 		if ( method != null ){
 		
-			method = method.toLowerCase();
+			method = method.toLowerCase( Locale.US );
 						
 			TagManager tm = TagManagerFactory.getTagManager();
 			
@@ -432,38 +450,102 @@ SimpleAPIPlugin
 				
 				DownloadManager dm = getDownloadFromHash( args );
 
-				String name	= args.get( "name" );
+				List<String> names	= multi_args.get( "name" );
 									
-				if ( name == null ){
+				if ( names == null ){
 			
 					throw( new Exception( "missing 'name' parameter" ));
 				}
 				
-				String value	= args.get( "value" );
+				List<String> values	= multi_args.get( "value" );
 				
-				if ( value == null ){
+				if ( values == null ){
 			
 					throw( new Exception( "missing 'value' parameter" ));
 				}
 				
-				if ( name.equals( "completedon" )){
+				if ( names.size() != values.size()){
 					
-					try{
-						long time = Long.parseLong( value )*1000;
+					throw( new Exception( "'name' and 'value' parameter count mismatch" ));
+				}
+				
+				for ( int i=0; i<names.size(); i++ ){
+					
+					String	name 	= names.get(i);
+					String	value	= values.get(i);
+				
+					name = name.toLowerCase( Locale.US );
+					
+					if ( name.equals( "completedon" )){
 						
-						DownloadManagerState dms = dm.getDownloadState();
-											
-						dms.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, time );
-						
-						dms.setLongAttribute( DownloadManagerState.AT_COMPLETE_LAST_TIME, time );
-
-					}catch( Throwable e ){
+						try{
+							long time = Long.parseLong( value )*1000;
 							
-						throw( new Exception( "invalid 'value' parameter (" + value + ")" ));	
+							DownloadManagerState dms = dm.getDownloadState();
+												
+							dms.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, time );
+							
+							dms.setLongAttribute( DownloadManagerState.AT_COMPLETE_LAST_TIME, time );
+	
+						}catch( Throwable e ){
+								
+							throw( new Exception( "invalid 'value' parameter (" + value + ")" ));	
+						}
+					}else if ( name.equals( "displayname" )){
+						
+						dm.getDownloadState().setDisplayName( value );
+						
+					}else if ( name.equals( "savepath" )){
+						
+						if ( value.contains( File.pathSeparator )){
+							
+							throw( new Exception( "invalid savepath, must not contain path separators" ));
+						}
+						
+						boolean save_loc_is_folder = dm.getSaveLocation().isDirectory();
+
+						String new_save_path	= FileUtil.convertOSSpecificChars( value, save_loc_is_folder );
+						
+						try{
+							if ( dm.getTorrent().isSimpleTorrent()){
+
+								String dnd_sf = dm.getDownloadState().getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
+
+								if ( dnd_sf != null ){
+
+									dnd_sf = dnd_sf.trim();
+
+									String existing_name = dm.getSaveLocation().getName();
+
+									if ( existing_name.endsWith( dnd_sf )){
+
+										if ( !new_save_path.endsWith( dnd_sf )){
+
+											new_save_path += dnd_sf;
+										}
+									}
+								}
+							}
+						}catch( Throwable e ){
+						}
+						
+						dm.renameDownload( new_save_path );
+						
+					}else if ( name.equals( "torrentname" )){
+						
+						if ( value.contains( File.pathSeparator )){
+							
+							throw( new Exception( "invalid torrentname, must not contain path separators" ));
+						}
+
+						String new_torrent_name	= FileUtil.convertOSSpecificChars( value, false );
+						
+						dm.renameTorrentSafe( new_torrent_name );
+						
+					}else{
+						
+						throw( new Exception( "invalid 'name' parameter (" + name + ")" ));
 					}
-				}else{
-					
-					throw( new Exception( "invalid 'name' parameter" ));
 				}
 			}else if ( method.equals( "alert" )){
 				
@@ -554,7 +636,8 @@ SimpleAPIPlugin
 				continue;
 			}
 			
-			Map<String, String>	args = new HashMap<>();
+			Map<String, String>			args 		= new HashMap<>();
+			Map<String, List<String>>	multi_args	= new HashMap<>();
 						
 			String[] arg_strs = script.split( "&" );
 			
@@ -562,14 +645,30 @@ SimpleAPIPlugin
 				
 				String[]	bits = arg_str.split( "=" );
 				
+				String name = bits[0].toLowerCase( Locale.US );
+				String value;
+				
 				if ( bits.length == 2 ){
 					
-					args.put( bits[0].toLowerCase( Locale.US ),  UrlUtils.decode( bits[1] ));
-					
+					value = UrlUtils.decode( bits[1] );
+										
 				}else{
 					
-					args.put( bits[0].toLowerCase( Locale.US ), "" );
+					value = "";
 				}
+				
+				args.put( name, value );
+				
+				List<String> multi_value = multi_args.get( name );
+				
+				if ( multi_value == null ){
+					
+					multi_value = new ArrayList<>();
+					
+					multi_args.put( name, multi_value );
+				}
+				
+				multi_value.add( value );
 			}
 	
 			args.put( "apikey,", api_key.getValue());
@@ -577,7 +676,7 @@ SimpleAPIPlugin
 			args.put( "hash", ByteFormatter.encodeString( download.getTorrentHash()));
 		
 			try{
-				String result = process( args );
+				String result = process( args, multi_args );
 				
 				if ( result != null ){
 					
