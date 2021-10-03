@@ -542,6 +542,10 @@ SimpleAPIPlugin
 						
 						dm.renameTorrentSafe( new_torrent_name );
 						
+					}else if ( name.equals( "usercomment" )){
+
+						dm.getDownloadState().setUserComment( value );
+						
 					}else{
 						
 						throw( new Exception( "invalid 'name' parameter (" + name + ")" ));
