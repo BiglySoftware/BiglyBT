@@ -189,6 +189,13 @@ PluginCoreUtils
 				}
 
 				@Override
+				public Boolean 
+				isSkipping()
+				{
+					return( info.isSkipping());
+				}
+				
+				@Override
 				public boolean
 				setLink(
 					File	link_destination )

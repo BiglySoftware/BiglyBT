@@ -78,7 +78,8 @@ public class NameItem extends CoreTableColumnSWT implements
 {
 	private static final String ID_CHECKHITAREA		= "checkHitArea";
 
-	private static final Object	KEY_OLD_CELL_TT	= new Object();
+	private static final Object	KEY_OLD_CELL_TT		= new Object();
+	private static final Object	KEY_PATH_ICON		= new Object();
 	
 	private static boolean NEVER_SHOW_TWISTY;
 	
@@ -320,7 +321,16 @@ public class NameItem extends CoreTableColumnSWT implements
 			}else{
 				
 				if ( is_leaf ){
-					if (fileInfo.isSkipped()){
+					Boolean isSkipped = null;
+					
+					if ( cell instanceof TableCellCore ){
+						isSkipped = fileInfo.isSkipping();
+					}
+					if ( isSkipped == null ){
+						isSkipped = fileInfo.isSkipped();
+					}
+					
+					if (isSkipped){
 						
 						int	st = fileInfo.getStorageType();
 						
@@ -383,8 +393,31 @@ public class NameItem extends CoreTableColumnSWT implements
 			return;
 		}
 
-		Image[] imgThumbnail = new Image[]{  fileInfo==null?null:ImageRepository.getPathIcon(fileInfo.getFile(true).getPath(),
-				cell.getHeight() > 32, false) };
+		Image[] imgThumbnail = null;
+
+		if ( fileInfo != null ){
+			
+			File file = fileInfo.getFile(true);
+					
+			Object piCache = cell.getData( KEY_PATH_ICON );
+		
+			if ( piCache != null ){
+				
+				Object[] temp = (Object[])piCache;
+				
+				if ( FileUtil.areFilePathsIdentical((File)temp[0],file )){
+					
+					imgThumbnail = (Image[])temp[1];
+				}
+			}
+			
+			if ( imgThumbnail == null ){
+			
+				imgThumbnail = new Image[]{ ImageRepository.getPathIcon(file.getPath(), cell.getHeight() > 32, false) };
+		
+				cell.setData( KEY_PATH_ICON, new Object[]{ file, imgThumbnail });
+			}
+		}
 
 		if (imgThumbnail != null && ImageLoader.isRealImage(imgThumbnail[0])) {
 			try {
@@ -547,7 +580,9 @@ public class NameItem extends CoreTableColumnSWT implements
 	public void cellMouseTrigger(TableCellMouseEvent event) {
 		if (event.eventType == TableCellMouseEvent.EVENT_MOUSEMOVE
 				|| event.eventType == TableRowMouseEvent.EVENT_MOUSEDOWN) {
-			TableRow row = event.cell.getTableRow();
+			TableCell cell = event.cell;
+			
+			TableRow row = cell.getTableRow();
 			if (row == null) {
 				return;
 			}
@@ -582,7 +617,7 @@ public class NameItem extends CoreTableColumnSWT implements
 				
 				if ( inCheck ){
 					
-					final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)event.cell.getDataSource();
+					final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)cell.getDataSource();
 
 					boolean realFile;
 					
@@ -626,6 +661,16 @@ public class NameItem extends CoreTableColumnSWT implements
 												new_skipped = true;
 											}
 											
+											// disconcerting if we don't force the checkbox state
+											// to update quickly...
+										
+											Utils.execSWTThreadLater( 100, ()->{
+												
+												cell.invalidate();
+												
+												rowCore.redraw( true );
+											});
+										
 											node.setSkipped( new_skipped );
 											
 											return;
@@ -639,6 +684,16 @@ public class NameItem extends CoreTableColumnSWT implements
 												Collections.singletonList(fileInfo), false );
 									}else{
 									
+											// disconcerting if we don't force the checkbox state
+											// to update quickly...
+										
+										Utils.execSWTThreadLater( 100, ()->{
+											
+											cell.invalidate();
+											
+											rowCore.redraw();
+										});
+																																																			
 										ManagerUtils.setFileSkipped( fileInfo, !fileInfo.isSkipped());
 									}
 								}));
@@ -647,9 +702,9 @@ public class NameItem extends CoreTableColumnSWT implements
 					}
 				}
 				
-				if ( event.cell instanceof TableCellCore ){
+				if ( cell instanceof TableCellCore ){
 					
-					TableCellCore cellCore = (TableCellCore)event.cell;
+					TableCellCore cellCore = (TableCellCore)cell;
 										
 					Object existingTT = cellCore.getToolTip();
 					
@@ -680,7 +735,7 @@ public class NameItem extends CoreTableColumnSWT implements
 			}
 			
 			if (event.eventType == TableCellMouseEvent.EVENT_MOUSEMOVE) {
-				((TableCellCore) event.cell).setCursorID(inArea ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW);
+				((TableCellCore)cell).setCursorID(inArea ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW);
 			}
 		}
 	}

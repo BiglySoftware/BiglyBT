@@ -1925,6 +1925,9 @@ public class FilesView
 		setSkipped(
 			boolean		b );
 		
+		public Boolean
+		isSkipping();
+		
 		public void
 		recheck();
 		
@@ -2113,6 +2116,37 @@ public class FilesView
 			}
 		}
 
+		@Override
+		public Boolean 
+		isSkipping()
+		{
+			Boolean result = null;
+			
+			for ( FilesViewTreeNode kid: kids.values()){
+				
+				Boolean k = kid.isSkipping();
+				
+				if ( k == null ){
+					
+					if ( result != null ){
+						
+						return( null );
+					}
+				}else{
+					
+					if ( result == null ){
+						
+						result = k;
+						
+					}else if ( result.booleanValue() != k ){
+						
+						return( null );
+					}
+				}
+			}
+			
+			return( result );
+		}
 
 		@Override
 		public boolean
@@ -2493,6 +2527,13 @@ public class FilesView
 			ManagerUtils.setFileSkipped( delegate, b );
 		}
 
+		@Override
+		public Boolean 
+		isSkipping()
+		{
+			return( delegate.isSkipping());
+		}
+		
 		@Override
 		public boolean
 		setLink(

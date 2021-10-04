@@ -122,6 +122,15 @@ RPDiskManagerFileInfo
 	{
 		notSupported();
 	}
+	
+	@Override
+	public Boolean 
+	isSkipping()
+	{
+		notSupported();
+		
+		return( null );
+	}
 
 	@Override
 	public int getNumericPriority() {

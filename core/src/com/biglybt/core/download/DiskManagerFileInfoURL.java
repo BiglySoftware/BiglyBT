@@ -263,6 +263,13 @@ DiskManagerFileInfoURL
 	}
 
 	@Override
+	public Boolean 
+	isSkipping()
+	{
+		return( null );
+	}
+	
+	@Override
 	public int
 	getNumericPriority()
 	{

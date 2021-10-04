@@ -85,6 +85,13 @@ DiskManagerFileInfoFile
 	}
 
 	@Override
+	public Boolean 
+	isSkipping()
+	{
+		return( null );
+	}
+	
+	@Override
 	public void
 	setDeleted(boolean b)
 	{

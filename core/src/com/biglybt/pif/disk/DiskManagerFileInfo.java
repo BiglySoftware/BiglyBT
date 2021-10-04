@@ -62,6 +62,9 @@ DiskManagerFileInfo
 	setSkipped(
 		boolean b );
 
+	public Boolean
+	isSkipping();
+	
 		/**
 		 * Mark the file as deleted or not (deleted means the file will be truncated to take up minimum
 		 * space). This is generally 0 <= X < 2*piece_length as pieces can span file boundaries.

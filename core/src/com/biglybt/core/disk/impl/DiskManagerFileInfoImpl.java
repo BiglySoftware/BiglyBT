@@ -65,6 +65,8 @@ DiskManagerFileInfoImpl
 
   protected boolean 	skipped_internal 	= false;
 
+  private volatile Boolean	skipping;
+  
   private String last_error = null;
   
   private volatile CopyOnWriteList<DiskManagerFileInfoListener>	listeners;	// save mem and allocate if needed later
@@ -398,33 +400,43 @@ DiskManagerFileInfoImpl
   @Override
   public void setSkipped(boolean skipped) {
 
-	int	existing_st = getStorageType();
-
-	  // currently a non-skipped file must be linear
-
-	if ( !skipped && existing_st == ST_COMPACT ){
-		if ( !setStorageType( ST_LINEAR )){
-			return;
-		}
-	}
-
-	if ( !skipped && existing_st == ST_REORDER_COMPACT ){
-		if ( !setStorageType( ST_REORDER )){
-			return;
-		}
-	}
-
-	setSkippedInternal( skipped );
+	  try{
+		skipping = skipped;
+		  
+		int	existing_st = getStorageType();
 	
-	diskManager.skippedFileSetChanged( this );
+		  // currently a non-skipped file must be linear
+	
+		if ( !skipped && existing_st == ST_COMPACT ){
+			if ( !setStorageType( ST_LINEAR )){
+				return;
+			}
+		}
+	
+		if ( !skipped && existing_st == ST_REORDER_COMPACT ){
+			if ( !setStorageType( ST_REORDER )){
+				return;
+			}
+		}
+	
+		setSkippedInternal( skipped );
 		
-	boolean[] toCheck = new boolean[diskManager.getFileSet().nbFiles()];
-		
-	toCheck[file_index] = true;
-		
-	DiskManagerUtil.doFileExistenceChecksAfterSkipChange(diskManager.getFileSet(), toCheck, skipped, diskManager.getDownloadState().getDownloadManager());
+		diskManager.skippedFileSetChanged( this );
+			
+		boolean[] toCheck = new boolean[diskManager.getFileSet().nbFiles()];
+			
+		toCheck[file_index] = true;
+			
+		DiskManagerUtil.doFileExistenceChecksAfterSkipChange(diskManager.getFileSet(), toCheck, skipped, diskManager.getDownloadState().getDownloadManager());
+	  }finally{
+		  skipping = null;
+	  }
   }
 
+  @Override
+  public Boolean isSkipping(){
+	  return( skipping );
+  }
 	protected void
 	setSkippedInternal(
 		boolean	_skipped )

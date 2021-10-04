@@ -455,4 +455,8 @@ public interface TableCell {
 	 * the cell's sort value based solely on your column's data.
 	 */
 	boolean useSimpleSortValue();
+	
+	public void setData( Object key, Object data );
+	
+	public Object getData( Object key );
 }

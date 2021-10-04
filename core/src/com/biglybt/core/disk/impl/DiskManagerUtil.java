@@ -752,6 +752,8 @@ DiskManagerUtil
 		            	// do not access this field directly, use lazyGetFile() instead
 		            	private WeakReference dataFile = new WeakReference(null);
 
+		            	private volatile Boolean skipping;
+		            	
 		            	@Override
 			            public void
 		            	setPriority(int b)
@@ -767,36 +769,46 @@ DiskManagerUtil
 			            public void
 		            	setSkipped(boolean skipped)
 		            	{
-		            		if ( !skipped && getStorageType() == ST_COMPACT ){
-		            			if ( !setStorageType( ST_LINEAR )){
-		            				return;
-		            			}
+		            		try{
+		            			skipping = skipped;
+			            		if ( !skipped && getStorageType() == ST_COMPACT ){
+			            			if ( !setStorageType( ST_LINEAR )){
+			            				return;
+			            			}
+			            		}
+	
+			            		if ( !skipped && getStorageType() == ST_REORDER_COMPACT ){
+			            			if ( !setStorageType( ST_REORDER )){
+			            				return;
+			            			}
+			            		}
+	
+			            		File to_link = setSkippedInternal( skipped );
+	
+			            		DiskManagerImpl.storeFilePriorities( download_manager, res );
+	
+			            		if ( to_link != null ){
+	
+			            			download_manager.getDownloadState().setFileLink( file_index, getFile( false ), to_link );
+			            		}
+	
+			            		listener.filePriorityChanged( this );
+	
+		            			boolean[] toCheck = new boolean[fileSetSkeleton.nbFiles()];
+			            			
+		            			toCheck[file_index] = true;
+			            			
+		            			doFileExistenceChecksAfterSkipChange( fileSetSkeleton, toCheck, skipped, download_manager );
+		            		}finally{
+		            			skipping = null;
 		            		}
-
-		            		if ( !skipped && getStorageType() == ST_REORDER_COMPACT ){
-		            			if ( !setStorageType( ST_REORDER )){
-		            				return;
-		            			}
-		            		}
-
-		            		File to_link = setSkippedInternal( skipped );
-
-		            		DiskManagerImpl.storeFilePriorities( download_manager, res );
-
-		            		if ( to_link != null ){
-
-		            			download_manager.getDownloadState().setFileLink( file_index, getFile( false ), to_link );
-		            		}
-
-		            		listener.filePriorityChanged( this );
-
-	            			boolean[] toCheck = new boolean[fileSetSkeleton.nbFiles()];
-		            			
-	            			toCheck[file_index] = true;
-		            			
-	            			doFileExistenceChecksAfterSkipChange( fileSetSkeleton, toCheck, skipped, download_manager );
 		            	}
 
+		            	@Override
+		            	public Boolean isSkipping(){
+		            		return( skipping );
+		            	}
+		            	 
 		            	@Override
 			            public int
 		            	getAccessMode()

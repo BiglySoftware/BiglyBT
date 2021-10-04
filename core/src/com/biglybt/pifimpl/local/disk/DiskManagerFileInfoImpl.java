@@ -65,6 +65,13 @@ DiskManagerFileInfoImpl
 	}
 
 	@Override
+	public Boolean 
+	isSkipping()
+	{
+		return( core.isSkipping());
+	}
+	
+	@Override
 	public int getNumericPriority() {
 		return( core.getPriority());
 	}

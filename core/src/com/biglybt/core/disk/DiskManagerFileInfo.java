@@ -141,6 +141,8 @@ DiskManagerFileInfo
 	 */
 	public boolean isSkipped();
 
+	public Boolean isSkipping();
+	
 		/**
 		 * Checks that the linked file exists (always returns true for pad files)
 		 * @return

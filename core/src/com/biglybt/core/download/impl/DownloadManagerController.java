@@ -3209,6 +3209,12 @@ DownloadManagerController
 			delegate.setSkipped(b);
 		}
 
+		@Override
+		public Boolean 
+		isSkipping()
+		{
+			return( delegate.isSkipping());
+		}
 
 		@Override
 		public boolean

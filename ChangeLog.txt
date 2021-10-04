@@ -1,7 +1,19 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2021.xx.yy | BiglyBT 2.8.0.1
+2021.10.yy | BiglyBT 2.9.0.0
+
+FEATURE: Core  | Support multiple concurrent data+torrent exports and Disk Ops queue [Parg]
+FEATURE: UI    | Added Disk Ops view entry when copying a download [Parg]
+FEATURE: UI    | Report active operations when quitting with option to abort [Parg]
+
+CHANGE: Core   | Changed default magnet download timeout to infinite [Parg]
+CHANGE: UI     | Status bar right-click menu should be for all [Parg]
+CHANGE: UI     | Added download name to disk manager alerts [Parg]
+CHANGE: UI     | Added date and time to log alert display [Parg]
+
+BUGFIX: UI     | Fix tooltip not always showing when going over y bounds & truncate line [TuxPaper]
+BUGFIX: Core   | Deal with instability in start/stop rules sorting [Parg]
 
 2021.07.09 | BiglyBT 2.8.0.0
 
