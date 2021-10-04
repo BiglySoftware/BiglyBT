@@ -321,11 +321,8 @@ public class NameItem extends CoreTableColumnSWT implements
 			}else{
 				
 				if ( is_leaf ){
-					Boolean isSkipped = null;
+					Boolean isSkipped = fileInfo.isSkipping();
 					
-					if ( cell instanceof TableCellCore ){
-						isSkipped = fileInfo.isSkipping();
-					}
 					if ( isSkipped == null ){
 						isSkipped = fileInfo.isSkipped();
 					}
