@@ -40,6 +40,7 @@ import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
@@ -81,6 +82,8 @@ public class ColumnThumbAndName
 	public static final String COLUMN_ID = "name";
 
 	private static final String ID_EXPANDOHITAREASHOW = "expandoHitAreaShow";
+
+	private static final Object	KEY_PATH_ICON		= new Object();
 
 	private static final boolean NEVER_SHOW_TWISTY =
 		!COConfigurationManager.getBooleanParameter("Table.useTree");
@@ -454,10 +457,33 @@ public class ColumnThumbAndName
 
 		int textX = cellBounds.x;
 
-		Image[] imgThumbnail = { ImageRepository.getPathIcon(fileInfo.getFile(true).getPath(),
-				cellBounds.height >= 20, false) };
+		Image[] imgThumbnail = null;
 
-		if ( showIcon && imgThumbnail != null && ImageLoader.isRealImage(imgThumbnail[0])) {
+		if ( showIcon && fileInfo != null ){
+			
+			File file = fileInfo.getFile(true);
+					
+			Object piCache = cell.getData( KEY_PATH_ICON );
+		
+			if ( piCache != null ){
+				
+				Object[] temp = (Object[])piCache;
+				
+				if ( FileUtil.areFilePathsIdentical((File)temp[0],file )){
+					
+					imgThumbnail = (Image[])temp[1];
+				}
+			}
+			
+			if ( imgThumbnail == null ){
+			
+				imgThumbnail = new Image[]{ ImageRepository.getPathIcon(file.getPath(), cellBounds.height >= 20, false) };
+		
+				cell.setData( KEY_PATH_ICON, new Object[]{ file, imgThumbnail });
+			}
+		}
+
+		if ( imgThumbnail != null && ImageLoader.isRealImage(imgThumbnail[0])) {
 			try {
 
 				if (cellBounds.height > 30) {
