@@ -1098,6 +1098,7 @@ public class TableRowPainted
 	@Override
 	public void setSubItems(Object[] datasources) {
 		setSubItems( datasources, true );
+		getViewPainted().sortRows(true);
 	}
 	
 	private void setSubItems(Object[] datasources, boolean triggerHeightListeners) {

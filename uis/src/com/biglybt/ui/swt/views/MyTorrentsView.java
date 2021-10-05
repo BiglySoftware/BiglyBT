@@ -2735,10 +2735,47 @@ public class MyTorrentsView
 
   // DownloadManagerListener
   @Override
-  public void filePriorityChanged(DownloadManager download,
-                                  DiskManagerFileInfo file) {
-	}
+  public void 
+  filePriorityChanged(
+	DownloadManager 		download,
+    DiskManagerFileInfo 	file ) 
+  {
+	  TableRowCore row = tv.getRow( download );
 
+	  if ( row == null ){
+		  
+		  return;
+	  }
+	  
+	  TableRowCore[] kids = row.getSubRowsWithNull();
+	  
+	  DiskManagerFileInfo[] files = getVisibleFiles( download );
+	  
+	  if ( kids.length != files.length ){
+		  
+		  row.setSubItems( files );
+		  
+	  }else{
+		  
+		  Set<Integer>	fileIndexes = new HashSet<>();
+		  
+		  for ( int i=0;i<kids.length;i++){
+			
+			  fileIndexes.add( files[i].getIndex());
+		  }
+		  
+		  for ( int i=0;i<kids.length;i++){
+			  
+			  if (!fileIndexes.contains(((DiskManagerFileInfo)kids[i].getDataSource( true )).getIndex())){
+				  
+				  row.setSubItems(files);
+				  
+				  return;
+			  }
+		  }
+	  }
+  }
+  
   // DownloadManagerListener
 	@Override
 	public void completionChanged(DownloadManager manager, boolean bCompleted) {
@@ -3405,45 +3442,60 @@ public class MyTorrentsView
 		if (rowCore.getSubItemCount() == 0 && dm.getTorrent() != null
 				&& !dm.getTorrent().isSimpleTorrent() && rowCore.isVisible()
 				&& dm.getNumFileInfos() > 0) {
-			DiskManagerFileInfoSet fileInfos = dm.getDiskManagerFileInfoSet();
-			if (fileInfos != null) {
-				DiskManagerFileInfo[] files = fileInfos.getFiles();
-				boolean copied = false;
-				int pos = 0;
-				for (int i = 0; i < files.length; i++) {
-					DiskManagerFileInfo fileInfo = files[i];
-					if ( fileInfo.getTorrentFile().isPadFile()){
-						continue;
-					}
-					if (	fileInfo.isSkipped()
-							&& (fileInfo.getStorageType() == DiskManagerFileInfo.ST_COMPACT || fileInfo.getStorageType() == DiskManagerFileInfo.ST_REORDER_COMPACT)) {
-						continue;
-					}
-					if (pos != i) {
-						if ( !copied ){
-								// we *MUSTN'T* modify the returned array!!!!
-
-							DiskManagerFileInfo[] oldFiles = files;
-							files = new DiskManagerFileInfo[files.length];
-							System.arraycopy(oldFiles, 0, files, 0, files.length);
-
-							copied = true;
-						}
-
-						files[pos] = files[i];
-					}
-					pos++;
-				}
-				if (pos != files.length) {
-					DiskManagerFileInfo[] oldFiles = files;
-					files = new DiskManagerFileInfo[pos];
-					System.arraycopy(oldFiles, 0, files, 0, pos);
-				}
+			
+			DiskManagerFileInfo[] files = getVisibleFiles( dm );
+			if ( files != null ){			
 				rowCore.setSubItems(files);
 			}
 		}
 	}
 
+	private DiskManagerFileInfo[]
+	getVisibleFiles(
+		DownloadManager		dm )
+	{
+		DiskManagerFileInfoSet fileInfos = dm.getDiskManagerFileInfoSet();
+		if (fileInfos != null) {
+			DiskManagerFileInfo[] files = fileInfos.getFiles();
+			boolean copied = false;
+			int pos = 0;
+			for (int i = 0; i < files.length; i++) {
+				DiskManagerFileInfo fileInfo = files[i];
+				if ( fileInfo.getTorrentFile().isPadFile()){
+					continue;
+				}
+				if (	fileInfo.isSkipped()
+						&& (fileInfo.getStorageType() == DiskManagerFileInfo.ST_COMPACT || fileInfo.getStorageType() == DiskManagerFileInfo.ST_REORDER_COMPACT)) {
+					continue;
+				}
+				if (pos != i) {
+					if ( !copied ){
+							// we *MUSTN'T* modify the returned array!!!!
+
+						DiskManagerFileInfo[] oldFiles = files;
+						files = new DiskManagerFileInfo[files.length];
+						System.arraycopy(oldFiles, 0, files, 0, files.length);
+
+						copied = true;
+					}
+
+					files[pos] = files[i];
+				}
+				pos++;
+			}
+			if (pos != files.length) {
+				DiskManagerFileInfo[] oldFiles = files;
+				files = new DiskManagerFileInfo[pos];
+				System.arraycopy(oldFiles, 0, files, 0, pos);
+			}
+			
+			return( files );
+			
+		}else{
+			return( null );
+		}
+	}
+	
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
 		boolean b = super.eventOccurred(event);

@@ -209,13 +209,6 @@ public class ColumnThumbAndName
 		Object ds = cell.getDataSource();
 		if (ds instanceof DiskManagerFileInfo) {
 			DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) ds;
-			if (fileInfo.isSkipped()
-					&& (fileInfo.getStorageType() == DiskManagerFileInfo.ST_COMPACT || fileInfo.getStorageType() == DiskManagerFileInfo.ST_REORDER_COMPACT)) {
-				TableRowCore row = (TableRowCore) cell.getTableRow();
-				if (row != null) {
-					row.getParentRowCore().removeSubRow(ds);
-				}
-			}
 			cell.setSortValue( getDisplayName( fileInfo ));
 			return;
 		}
