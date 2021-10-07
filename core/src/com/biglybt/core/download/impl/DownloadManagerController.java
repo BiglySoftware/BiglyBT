@@ -32,6 +32,7 @@ import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.impl.DiskManagerUtil;
 import com.biglybt.core.download.*;
 import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.global.GlobalManagerEvent;
 import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
@@ -883,6 +884,8 @@ DownloadManagerController
 	  						DownloadManager dm)
 	  					{
 	  						is_force_rechecking = false;
+	  						
+	  						download_manager.fireGlobalManagerEvent( GlobalManagerEvent.ET_RECHECK_COMPLETE,  true );
 	  						
 	  						if ( l != null ){
 	  							

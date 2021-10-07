@@ -430,6 +430,7 @@ public class ConfigurationDefaults {
     def.put( "Popup Download Finished", FALSE);
     def.put( "Popup File Finished", FALSE);
     def.put( "Popup Download Added", FALSE);
+    def.put( "Popup Check Complete", FALSE );
     def.put( "Notify Download Finished", FALSE);
     def.put( "Show Timestamp For Alerts", FALSE);
     def.put( "Request Attention On New Download", TRUE );
@@ -450,7 +451,7 @@ public class ConfigurationDefaults {
     def.put( "Play Download Error Announcement", FALSE);
     def.put( "Play Download Error Announcement Text", "Download Error");
     def.put( "Popup Download Error", FALSE);
-
+    
     def.put( "Play Notification Added Announcement", FALSE );
     def.put( "Play Notification Added Announcement Text", "Notification Added" );
     def.put( "Play Notification Added", FALSE );

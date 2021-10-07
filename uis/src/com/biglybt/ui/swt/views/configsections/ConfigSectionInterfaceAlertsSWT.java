@@ -134,6 +134,10 @@ public class ConfigSectionInterfaceAlertsSWT
 		BooleanParameterImpl popup_dl_error = new BooleanParameterImpl(
 				"Popup Download Error", "ConfigView.label.popupdownloaderror");
 		add(popup_dl_error, listPopup);
+		
+		BooleanParameterImpl popup_dl_checked = new BooleanParameterImpl(
+				"Popup Check Complete", "ConfigView.label.popupdownloadchecked");
+		add(popup_dl_checked, listPopup);
 
 		BooleanParameterImpl popup_file_completed = new BooleanParameterImpl(
 				"Popup File Finished", "ConfigView.label.popupfilefinished");

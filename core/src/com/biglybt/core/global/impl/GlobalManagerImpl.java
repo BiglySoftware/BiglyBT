@@ -3604,7 +3604,8 @@ public class GlobalManagerImpl
 	public void
 	fireGlobalManagerEvent(
 		final int 				type,
-		final DownloadManager 	param )
+		final DownloadManager 	dm,
+		Object					data )
 	{
 		listeners_and_event_listeners.dispatch(
 			LDT_EVENT,
@@ -3618,10 +3619,17 @@ public class GlobalManagerImpl
 				}
 
 				@Override
+				public Object 
+				getEventData()
+				{
+					return( data );
+				}
+				
+				@Override
 				public DownloadManager
 				getDownload()
 				{
-					return( param );
+					return( dm );
 				}
 			});
  	}

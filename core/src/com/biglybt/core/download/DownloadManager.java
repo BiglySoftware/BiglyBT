@@ -887,9 +887,17 @@ DownloadManager
     public void
     exportDownload( File parent_dir ) throws DownloadManagerException;
     
+    public default void
+    fireGlobalManagerEvent(
+    	int		event_type )
+    {
+    	fireGlobalManagerEvent( event_type, null );
+    }
+    
     public void
     fireGlobalManagerEvent(
-    	int		event_type );
+    	int		event_type,
+    	Object	event_data );
 
 		/**
 		 * Sets the priority for an array for files

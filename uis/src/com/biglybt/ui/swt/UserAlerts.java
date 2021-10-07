@@ -45,6 +45,8 @@ import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerAdapter;
+import com.biglybt.core.global.GlobalManagerEvent;
+import com.biglybt.core.global.GlobalManagerEventListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
@@ -72,6 +74,7 @@ UserAlerts
 	private final DiskManagerListener disk_listener;
 	private final DownloadManagerDiskListener dm_disk_listener;
 	private final GlobalManagerAdapter globalManagerListener;
+	private final GlobalManagerEventListener globalManagerEventListener;
 	private final ActivitiesListener activitiesListener;
 	private final GlobalManager global_manager;
 
@@ -283,6 +286,21 @@ UserAlerts
 	  };
 	  global_manager.addListener(globalManagerListener);
 
+	  globalManagerEventListener = new GlobalManagerEventListener(){
+		
+		@Override
+		public void 
+		eventOccurred(
+			GlobalManagerEvent event)
+		{
+			if ( event.getEventType() == GlobalManagerEvent.ET_RECHECK_COMPLETE ){
+				checkComplete( event.getDownload(), (Boolean)event.getEventData());
+			}
+		}
+	  };
+	  
+	  global_manager.addEventListener( globalManagerEventListener );
+	  
 	  activitiesListener = new ActivitiesListener() {
 
 		  @Override
@@ -400,6 +418,28 @@ UserAlerts
   			do_sound, sound_file );
   	}
 
+ 	private void
+  	checkComplete(
+  		DownloadManager			manager,
+  		boolean					explicit )
+  	{
+  		DownloadManagerState dm_state = manager.getDownloadState();
+
+		if ( dm_state.getFlag( DownloadManagerState.FLAG_LOW_NOISE) && !explicit ) {
+
+			return;
+		}
+		
+    	boolean do_popup 	= 	COConfigurationManager.getBooleanParameter( "Popup Check Complete" );
+
+		doStuff(
+	  			manager, manager.getDisplayName(),
+	  			do_popup, "popup.check.complete", false, 
+	  			false, null,
+	  			false, null,
+	  			false, null );
+  	}
+ 	
   	private long	last_error_speech;
   	private long	last_error_sound;
 
@@ -822,26 +862,26 @@ UserAlerts
   		}
   	}
 
-	public void dispose() {
-    if (singleton == this) {
-      singleton = null;
-	  }
+  	public void dispose() {
+  		if (singleton == this) {
+  			singleton = null;
+  		}
 
-		if (globalManagerListener != null) {
-    	global_manager.removeListener(globalManagerListener);
+  		global_manager.removeListener(globalManagerListener);
+  		global_manager.removeEventListener(globalManagerEventListener);
+  		
+  		List<DownloadManager> dms = global_manager.getDownloadManagers();
+  		for (DownloadManager dm : dms) {
+  			dm.removeListener(download_manager_listener);
+  			dm.removeDiskListener(dm_disk_listener);
 
-			List<DownloadManager> dms = global_manager.getDownloadManagers();
-			for (DownloadManager dm : dms) {
-				dm.removeListener(download_manager_listener);
-				dm.removeDiskListener(dm_disk_listener);
+  			DiskManager diskManager = dm.getDiskManager();
+  			if (diskManager != null) {
+  				diskManager.removeListener(disk_listener);
+  			}
+  		}
 
-				DiskManager diskManager = dm.getDiskManager();
-				if (diskManager != null) {
-					diskManager.removeListener(disk_listener);
-				}
-			}
-		}
 
-		ActivitiesManager.removeListener(activitiesListener);
-	}
+  		ActivitiesManager.removeListener(activitiesListener);
+  	}
 }

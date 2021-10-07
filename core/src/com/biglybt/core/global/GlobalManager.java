@@ -413,7 +413,8 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	public void
 	fireGlobalManagerEvent(
 		int					type,
-		DownloadManager 	param );
+		DownloadManager 	dm,
+		Object				data );
 
 	/**
 	 * @param listener

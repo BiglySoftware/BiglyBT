@@ -28,9 +28,11 @@ DiskManagerCheckRequestImpl
 {
 	private final int		piece_number;
 	private final Object	user_data;
+	
 	private boolean	low_priority;
 	private boolean	ad_hoc		= true;
-
+	private boolean	explicit;
+	
 	private byte[]	hash;
 
 	public
@@ -93,6 +95,21 @@ DiskManagerCheckRequestImpl
 		return( ad_hoc );
 	}
 
+	@Override
+	public boolean 
+	isExplicit()
+	{
+		return( explicit );
+	}
+	
+	@Override
+	public void 
+	setExplicit(
+		boolean	_explicit )
+	{
+		explicit = _explicit;
+	}
+	
 	@Override
 	public void
 	setHash(

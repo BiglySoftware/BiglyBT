@@ -26,10 +26,14 @@ public interface
 GlobalManagerEvent
 {
 	public static final int ET_REQUEST_ATTENTION = 1;
+	public static final int ET_RECHECK_COMPLETE	 = 2;
 
 	public int
 	getEventType();
 
 	public DownloadManager
 	getDownload();
+	
+	public Object
+	getEventData();
 }

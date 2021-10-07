@@ -4835,6 +4835,8 @@ public class ManagerUtils {
 
 				DiskManagerCheckRequest req = diskManager.createCheckRequest( -1, null );
 				
+				req.setExplicit( true );
+				
 				diskManager.enqueueCompleteRecheckRequest(
 					req,
 					new DiskManagerCheckRequestListener(){

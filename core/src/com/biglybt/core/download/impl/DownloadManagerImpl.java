@@ -7534,9 +7534,10 @@ DownloadManagerImpl
 	@Override
 	public void
 	fireGlobalManagerEvent(
-		int eventType )
+		int 	eventType,
+		Object	eventData )
 	{
-		globalManager.fireGlobalManagerEvent( eventType, this );
+		globalManager.fireGlobalManagerEvent( eventType, this, eventData );
 	}
 
 	/* (non-Javadoc)

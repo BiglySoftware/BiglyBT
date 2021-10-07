@@ -33,6 +33,7 @@ import com.biglybt.core.disk.impl.access.DMChecker;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 import com.biglybt.core.diskmanager.cache.CacheFile;
+import com.biglybt.core.global.GlobalManagerEvent;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -439,6 +440,13 @@ DMCheckerImpl
 		  	       		complete_recheck_in_progress	= false;
 
 		  	       		recheck_inst.unregister();
+		  	       		
+		  	       		if ( !stopped ){
+		  	       			
+		  	       			disk_manager.getDownload().fireGlobalManagerEvent(
+		  	       				GlobalManagerEvent.ET_RECHECK_COMPLETE,
+		  	       				request.isExplicit());
+		  	       		}
 		  	       }
 		        }
 		 	}.start();
