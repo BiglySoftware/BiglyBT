@@ -357,7 +357,7 @@ public class TableViewPainted
 			public void keyPressed(KeyEvent event) {
 				if ( event.keyCode == SWT.ESC ){
 					TableViewSWTFilter<?> filter = getSWTFilter();
-					if ( filter != null ){
+					if ( filter != null && filter.filterBox != null ){
 						filter.filterBox.setText( "" );
 					}
 				}
@@ -2051,7 +2051,7 @@ public class TableViewPainted
 	{
 		TableViewSWTFilter<?> filter = getSWTFilter();
 
-		return( filter != null && !filter.filterBox.isDisposed() );
+		return( filter != null && filter.filterBox != null && !filter.filterBox.isDisposed() );
 	}
 
 	private Map<TableColumnCore,TableColumnPainted>	paintedColumns = new HashMap<>();
