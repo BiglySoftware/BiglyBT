@@ -18,7 +18,9 @@
 
 package com.biglybt.ui.swt.mainwindow;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -171,6 +173,15 @@ public class PluginsMenuHelper
 
 	private static void createViewInfoMenuItems(Menu parent,
 			List<UISWTViewBuilderCore> list) {
+		
+		list = new ArrayList<>( list );
+		
+		Comparator<String> comp = FormattersImpl.getAlphanumericComparator2(true);
+		
+		Collections.sort( list, (m1,m2)->{
+			return( comp.compare(m1.getInitialTitle(),m2.getInitialTitle()));
+		});
+		
 		for (UISWTViewBuilderCore builder : list) {
 			createViewInfoMenuItem(parent, builder);
 		}
