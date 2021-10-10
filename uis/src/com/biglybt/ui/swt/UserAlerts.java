@@ -37,6 +37,7 @@ import com.biglybt.activities.ActivitiesConstants;
 import com.biglybt.activities.ActivitiesEntry;
 import com.biglybt.activities.ActivitiesListener;
 import com.biglybt.activities.ActivitiesManager;
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.*;
 import com.biglybt.core.download.DownloadManager;
@@ -54,7 +55,11 @@ import com.biglybt.core.util.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.platform.PlatformManagerException;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.model.BasicPluginViewModel;
 import com.biglybt.ui.swt.minibar.DownloadBar;
 
 import com.biglybt.ui.UIFunctions;
@@ -101,13 +106,29 @@ UserAlerts
     private TrayIcon	native_tray_icon;
     private int			native_message_count;
     
+    private final LoggerChannel log;
+    
 	public
 	UserAlerts(
 		GlobalManager	global_manager )
  	{
 	  this.global_manager = global_manager;
 	  singleton = this;
+	  
+	  PluginInterface plugin_interface = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface();
 
+	  log = plugin_interface.getLogger().getChannel( "Alerts" );
+
+	  UIManager	ui_manager = plugin_interface.getUIManager();
+
+	  BasicPluginViewModel model = ui_manager.createBasicPluginViewModel("ConfigView.section.interface.alerts" );
+
+	  model.getActivity().setVisible( false );
+	  model.getProgress().setVisible( false );
+
+	  model.attachLoggerChannel( log );
+
+		
 	  // @see com.biglybt.core.download.impl.DownloadManagerAdapter#stateChanged(com.biglybt.core.download.DownloadManager, int)
 // if state == STARTED, then open the details window (according to config)
 	  download_manager_listener = new DownloadManagerAdapter()
@@ -787,6 +808,16 @@ UserAlerts
 		final int iconID, final String title, final String text, final String details,
 		final Object[] relatedObjects, final int timeoutSecs)
 	{
+		if ( title != null && !title.isEmpty()){
+			log.log( title );
+		}
+		if ( text != null && !text.isEmpty()){
+			log.log( text );
+		}
+		if ( details != null && !details.isEmpty()){
+			log.log( details );
+		}
+		
 		UIFunctionsManager.execWithUIFunctions(
 			new UIFunctionsManager.UIFCallback() {
 
