@@ -91,6 +91,16 @@ public class PluginsMenuHelper
 		}
 		createViewInfoMenuItems(viewMenu, mainViewBuilders);
 
+		if ( viewMenu.getItemCount() > itemCount ){
+		
+			MenuFactory.addSeparatorMenuItem( viewMenu );
+		}
+		
+		MenuItem menu_plugin_logViews = MenuFactory.addLogsViewMenuItem(viewMenu);
+		ViewManagerSWT vi = ViewManagerSWT.getInstance();
+		List<UISWTViewBuilderCore> logViewBuilders = getLogViewBuilders(vi);
+		createViewInfoMenuItems(menu_plugin_logViews.getMenu(),	logViewBuilders);
+				
 		return viewMenu.getItemCount() > itemCount;
 	}
 
