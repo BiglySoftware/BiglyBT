@@ -544,7 +544,7 @@ public class MainMenuV3
 					MenuFactory.addSpeedLimitsToMenu(toolsMenu);
 
 					MenuFactory.addTransferBarToMenu(toolsMenu);
-					MenuFactory.addAllPeersMenuItem(toolsMenu);
+					//MenuFactory.addAllPeersMenuItem(toolsMenu);	moved to View menu
 					MenuFactory.addClientStatsMenuItem(toolsMenu);
 					MenuFactory.addBlockedIPsMenuItem(toolsMenu);
 
