@@ -59,6 +59,8 @@ import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableTooltips;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_Common;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
+import com.biglybt.util.MapUtils;
+
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
@@ -187,6 +189,7 @@ public class TableViewPainted
 	private DragSource dragSource;
 	private DropTarget dropTarget;
 	private boolean destroying;
+	private int rowMinHeight;
 
 	private class
 	RefreshTableRunnable
@@ -1007,7 +1010,7 @@ public class TableViewPainted
 
 	@Override
 	public void setRowDefaultHeightPX(int iHeight) {
-		if (iHeight > defaultRowHeight) {
+		if (iHeight != defaultRowHeight) {
 			defaultRowHeight = iHeight;
 
 			Utils.execSWTThread(new AERunnable() {
@@ -1021,8 +1024,14 @@ public class TableViewPainted
 		}
 	}
 
+	@Override
 	public int getLineHeight() {
 		return lineHeight;
+	}
+	
+	@Override
+	public int getRowMinHeight() {
+		return rowMinHeight;
 	}
 
 	/* (non-Javadoc)
@@ -1409,17 +1418,17 @@ public class TableViewPainted
 		cTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		lineHeight = FontUtils.getFontHeightInPX(cTable.getFont());
-		int minRowHeight = lineHeight;
+		rowMinHeight = lineHeight;
 		if (iHeightEM > 0) {
-			defaultRowHeight = (int) ((minRowHeight * iHeightEM) + iHeightEM);
+			defaultRowHeight = (int) ((rowMinHeight * iHeightEM) + iHeightEM);
 			iHeightEM = -1;
 		}
 
 		// good test
 		//cTable.setFont(FontUtils.getFontPercentOf(cTable.getFont(), 1.50f));
-		minRowHeight += Math.ceil(minRowHeight * 2.0 / 16.0);
-		if (defaultRowHeight < minRowHeight) {
-			defaultRowHeight = minRowHeight;
+		rowMinHeight += Math.ceil(rowMinHeight * 2.0 / 16.0);
+		if (defaultRowHeight < rowMinHeight) {
+			defaultRowHeight = rowMinHeight;
 		}
 
 		cTable.setBackground(TablePaintedUtils.getColour(parent.getDisplay(), SWT.COLOR_LIST_BACKGROUND));
@@ -1520,6 +1529,7 @@ public class TableViewPainted
 		if (DEBUG_WITH_SHELL) {
 	  		Shell shell = new Shell();
 	  		sCanvasImage = new Canvas(shell, SWT.DOUBLE_BUFFERED);
+	  		shell.setText(tableID);
 	  		shell.setLayout(new FillLayout());
 	  		sCanvasImage.addPaintListener(new PaintListener() {
 	  			@Override
@@ -1540,6 +1550,7 @@ public class TableViewPainted
 	  			}
 	  		});
 	  		shell.setVisible(true);
+	  		forceDebugShellRefresh(null);
 		}
 
 
@@ -1547,6 +1558,21 @@ public class TableViewPainted
 		cTable.addMouseMoveListener(tvSWTCommon);
 		cTable.addKeyListener(tvSWTCommon);
 		//composite.addSelectionListener(tvSWTCommon);
+		
+		cTable.addListener(SWT.MouseVerticalWheel, e -> {
+			if  (e.stateMask == 0) {
+				return;
+			}
+			if (e.widget != e.display.getCursorControl()) {
+				return;
+			}
+			if ((e.stateMask & SWT.MOD1) > 0) {
+				int newHeight = Math.min(
+						Math.max(getRowMinHeight(), getRowDefaultHeight() - e.count), 300);
+				setRowHeight(newHeight);
+				e.doit = false;
+			}
+		});
 
 		cTable.addTraverseListener(new TraverseListener() {
 			@Override
@@ -1617,6 +1643,9 @@ public class TableViewPainted
 			sortColumns[i] = tc;
 		}
 		setSortColumns(sortColumns, false);
+
+		Map tableConfigMap = tcManager.getTableConfigMap(tableID);
+		defaultRowHeight = MapUtils.getMapInt(tableConfigMap, "RowHeight", defaultRowHeight);
 
 		triggerLifeCycleListener(TableLifeCycleListener.EVENT_TABLELIFECYCLE_INITIALIZED);
 
@@ -2100,21 +2129,36 @@ public class TableViewPainted
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.views.table.TableViewSWT#enableSizeSlider(org.eclipse.swt.widgets.Composite, int, int)
-	 */
 	@Override
 	public boolean enableSizeSlider(Composite composite, int min, int max) {
-		// TODO
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.views.table.TableViewSWT#disableSizeSlider()
-	 */
 	@Override
-	public void disableSizeSlider() {
-		// TODO
+	public void setRowHeight(int newHeight) {
+		if (newHeight == defaultRowHeight) {
+			return;
+		}
+
+		// Note: Various library views use the same tableID (tags torrent list)
+		// Changing one will affect the rest on table re-initialization (restart or closing&re-opening view)
+		// We'll need a sub-id at some point to store settings for specific tables
+		TableColumnManager tcManager = TableColumnManager.getInstance();
+		Map tableConfigMap = tcManager.getTableConfigMap(tableID);
+		tableConfigMap.put("RowHeight", newHeight);
+		tcManager.setTableConfigMap(tableID, tableConfigMap);
+
+		setRowDefaultHeightPX(newHeight);
+		TableRowCore[] rows = getRowsAndSubRows(true);
+		if (rows.length == 0) {
+			return;
+		}
+		for (TableRowCore row : rows) {
+			((TableRowPainted) row).setHeight(newHeight, true);
+		}
+
+		// Bug: First row isn't being painted or something
+		Utils.execSWTThreadLater(0, () -> rows[0].redraw());
 	}
 
 	/* (non-Javadoc)
@@ -2606,7 +2650,7 @@ public class TableViewPainted
 
   		// paint event will handle any changedX or changedW
   		if (changedH || canvasChanged || refreshTable) {
-  			//System.out.println(changedX + ";" + changedY + ";" + changedH + ";" + canvasChanged);
+  			//System.out.println(changedX + ";cY=" + changedY + ";cH=" + changedH + ";cC=" + canvasChanged + ";rT=" + refreshTable);
   			//System.out.println("Redraw " + Debug.getCompressedStackTrace());
 
   			// run refreshTable on SWT (this) thread to ensure rows have been
@@ -2629,7 +2673,12 @@ public class TableViewPainted
 	}
 
 	private void forceDebugShellRefresh(Rectangle bounds) {
-		if (sCanvasImage == null) {
+		if (sCanvasImage == null || sCanvasImage.isDisposed()) {
+			return;
+		}
+
+		if (canvasImage == null || canvasImage.isDisposed()) {
+			sCanvasImage.getShell().setSize(0, 0);
 			return;
 		}
 		Point size = sCanvasImage.getShell().computeSize(
@@ -2642,8 +2691,8 @@ public class TableViewPainted
 				true);
 		}
 		sCanvasImage.update();
-		while (sCanvasImage.getDisplay().readAndDispatch()) {
-		}
+		//while (sCanvasImage.getDisplay().readAndDispatch()) {
+		//}
 	}
 
 	public void swt_updateCanvasImage(boolean immediateRedraw) {

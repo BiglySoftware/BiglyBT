@@ -1065,14 +1065,6 @@ SBC_SubscriptionResultsView
 
 		tv_subs_results.setRowDefaultHeight(COConfigurationManager.getIntParameter( "Search Subs Row Height" ));
 
-		SWTSkinObject soSizeSlider = getSkinObject("table-size-slider");
-		if (soSizeSlider instanceof SWTSkinObjectContainer) {
-			SWTSkinObjectContainer so = (SWTSkinObjectContainer) soSizeSlider;
-			if (!tv_subs_results.enableSizeSlider(so.getComposite(), 16, 100)) {
-				so.setVisible(false);
-			}
-		}
-
 		table_parent = new Composite(control, SWT.NONE);
 		table_parent.setLayoutData(Utils.getFilledFormData());
 		GridLayout layout = new GridLayout();

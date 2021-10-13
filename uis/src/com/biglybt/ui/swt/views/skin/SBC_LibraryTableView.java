@@ -247,15 +247,6 @@ public class SBC_LibraryTableView
 		view.initialize(viewComposite);
 
 
-		SWTSkinObject soSizeSlider = skin.getSkinObject("table-size-slider", soParent.getParent());
-		if (soSizeSlider instanceof SWTSkinObjectContainer) {
-			SWTSkinObjectContainer so = (SWTSkinObjectContainer) soSizeSlider;
-			if (tv != null && !tv.enableSizeSlider(so.getComposite(), 16, 100)) {
-				so.setVisible(false);
-			}
-		}
-
-
 		if (torrentFilterMode == SBC_LibraryView.TORRENTS_ALL
 				&& tv != null) {
 			tv.addRefreshListener(new TableRowRefreshListener() {

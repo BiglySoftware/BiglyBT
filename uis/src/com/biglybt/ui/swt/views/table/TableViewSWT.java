@@ -160,15 +160,9 @@ public interface TableViewSWT<DATASOURCETYPE>
 	void setFilterText(String s, boolean force);
 
 	/**
-	 * @param composite
-	 * @param min
-	 * @param max
-	 *
-	 * @since 4.1.0.9
+	 * @deprecated keep until 2902 (aercm calls it)
 	 */
 	boolean enableSizeSlider(Composite composite, int min, int max);
-
-	void disableSizeSlider();
 
 	/**
 	 * @param listener
@@ -281,6 +275,12 @@ public interface TableViewSWT<DATASOURCETYPE>
 	TableViewSWT_TabsCommon getTabsCommon();
 
 	void invokeExpansionChangeListeners( TableRowCore row, boolean expanded );
+
+	int getRowMinHeight();
+
+	int getLineHeight();
+
+	void setRowHeight(int value);
 	
 	interface
 	ColorRequester

@@ -912,55 +912,6 @@ public class TableColumnManager {
 		}
 	}
 
-	public Object getColumnData(String columnID, String key) {
-		Map mapTablesConfig = getTablesConfigMap();
-		Map mapColumns = MapUtils.getMapMap(mapTablesConfig, "Columns", null);
-		if (mapColumns != null) {
-			Map mapConfig = MapUtils.getMapMap(mapColumns, columnID, null);
-			if (mapConfig != null) {
-				return mapConfig.get(key);
-			}
-		}
-		return null;
-	}
-
-	public void setColumnData(String columnID, String key, Object value) {
-		synchronized (tablesConfig) {
-			Map mapTablesConfig = getTablesConfigMap();
-			Map mapColumns = MapUtils.getMapMap(mapTablesConfig, "Columns", null);
-			if (mapColumns == null) {
-				mapColumns = new LightHashMap(2);
-				mapTablesConfig.put("Columns", mapColumns);
-			}
-
-			Map mapConfig = MapUtils.getMapMap(mapColumns, columnID, null);
-			if (mapConfig == null) {
-				mapConfig = new LightHashMap(2);
-				mapColumns.put(columnID, mapConfig);
-			}
-
-			mapConfig.put(key, value);
-			markDirty();
-		}
-	}
-
-	public void removeColumnData(String columnID, String key) {
-		synchronized (tablesConfig) {
-			Map mapTablesConfig = getTablesConfigMap();
-  		Map mapColumns = MapUtils.getMapMap(mapTablesConfig, "Columns", null);
-  		if (mapColumns != null) {
-  			Map mapConfig = MapUtils.getMapMap(mapColumns, columnID, null);
-  			if (mapConfig != null) {
-  				mapConfig.remove(key);
-  				if (mapConfig.size() < 1) {
-  					mapColumns.remove(columnID);
-  				}
-					markDirty();
-  			}
-  		}
-		}
-	}
-
 	public void resetColumns(Class dataSourceType, String tableID) {
 		TableColumnCore[] allTableColumns = getAllTableColumnCoreAsArray(
 				dataSourceType, tableID);

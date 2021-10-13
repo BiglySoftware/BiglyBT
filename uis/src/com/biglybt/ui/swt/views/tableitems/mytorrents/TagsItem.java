@@ -158,12 +158,13 @@ public class TagsItem
 		Point cellSize = cell.getSize();
 
 		Font oldFont = gc.getFont();
+		
 
 		int maxLines = cell.getMaxLines();
 		if (maxLines == 1) {
 			if (fontOneLine == null) {
-				fontOneLine = FontUtils.getFontWithHeight(gc.getFont(), cellSize.y - 2,
-						SWT.DEFAULT);
+				fontOneLine = FontUtils.getFontWithHeight(oldFont,
+						(int) (FontUtils.getFontHeightInPX(oldFont) - 2), SWT.DEFAULT);
 			}
 			gc.setFont(fontOneLine);
 		} else {

@@ -2161,13 +2161,8 @@ public class TagUIUtils
 
 					Messages.setLanguageText( reapply_item, "label.reapply" );
 
-					reapply_item.addListener(SWT.Selection, new Listener() {
-						@Override
-						public void
-						handleEvent(Event event)
-						{
-							tp.syncListeners();
-						}});
+					reapply_item.addListener(SWT.Selection,
+							(ListenerGetOffSWT) event -> tp.syncListeners());
 
 					reapply_item.setEnabled( def_str.length() > 0 );
 

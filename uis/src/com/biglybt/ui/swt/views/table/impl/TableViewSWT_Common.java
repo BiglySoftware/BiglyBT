@@ -43,6 +43,7 @@ import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.shells.SpeedScaleShell;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
@@ -1054,8 +1055,8 @@ public class TableViewSWT_Common
 					break;
 				}
 			}
+			MenuItem menuSortByColumn = new MenuItem(menu, SWT.PUSH);
 			if (columnIsSort) {
-				MenuItem menuSortByColumn = new MenuItem(menu, SWT.PUSH);
 				Messages.setLanguageText(menuSortByColumn, "TableColumn.sort.reverse");
 				menuSortByColumn.addListener(SWT.Selection, e -> {
 					TableColumnCore tcc = (TableColumnCore) menu.getData("column");
@@ -1076,7 +1077,6 @@ public class TableViewSWT_Common
 					});
 				}
 			} else {
-				MenuItem menuSortByColumn = new MenuItem(menu, SWT.PUSH);
 				Messages.setLanguageText(menuSortByColumn, "TableColumn.sort.bythiscolumn");
 				menuSortByColumn.addListener(SWT.Selection, e -> {
 					TableColumnCore tcc = (TableColumnCore) menu.getData("column");
@@ -1208,6 +1208,44 @@ public class TableViewSWT_Common
 		});
 
 		menu.setData("column", column);
+
+		new MenuItem(menu, SWT.SEPARATOR);
+		final MenuItem itemSetRowHeight = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(itemSetRowHeight, "Table.menu.set.height");
+		itemSetRowHeight.addListener(SWT.Selection, event -> showRowHeightDialog());
+	}
+
+	private void showRowHeightDialog() {
+		int originalHeight = tv.getRowDefaultHeight();
+		SpeedScaleShell optionShell = new SpeedScaleShell() {
+			@Override
+			public void setValue(int value) {
+				super.setValue(value);
+				Utils.execSWTThreadLater(100, () -> tv.setRowHeight(getValue()));
+			}
+
+			@Override
+			public String getStringValue(int value, String sValue) {
+				if (sValue != null) {
+					return sValue;
+				}
+				return "" + value + " px";
+			}
+		};
+		optionShell.setMinValue(tv.getRowMinHeight());
+		int lineHeight = tv.getLineHeight();
+		optionShell.setMaxValue(lineHeight * 8 + 2);
+		for (int i = 1; i < 5; i++) {
+			optionShell.addOption(i == 1 ? MessageText.getString("Table.line.one")
+					: MessageText.getString("Table.line.many", new String[] {
+						String.valueOf(i)
+					}), i * lineHeight + 2);
+		}
+		if (optionShell.open(null, tv.getRowDefaultHeight(), false)) {
+			tv.setRowHeight(optionShell.getValue());
+		} else {
+			tv.setRowHeight(originalHeight);
+		}
 	}
 
 	public void addMenuFillListener(TableViewSWTMenuFillListener l) {
