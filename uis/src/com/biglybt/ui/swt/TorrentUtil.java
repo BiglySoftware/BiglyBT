@@ -3815,6 +3815,7 @@ public class TorrentUtil
 		text_entry.setMultiLine(true);
 		text_entry.setResizeable( true );
 		text_entry.setDetectURLs( true );
+		text_entry.setRememberLocationSize("ui.torrent.comment");
 		
 		text_entry.prompt(new UIInputReceiverListener() {
 			@Override
