@@ -70,9 +70,9 @@ public class FileUtil {
   private static final Method reflectOnUsableSpace;
 
   	// FileStore is minSDK 26 on Android
-  
-  private static final Method 	mPath_getFileStore;
-  private static final Method 	mToPath;
+
+	protected static final Method 	mPath_getFileStore;
+	protected static final Method 	mToPath;
 
 	
   private static char[]	char_conversion_mapping = null;
@@ -2247,32 +2247,7 @@ public class FileUtil {
     getFileStore(
     	File		file )
     {
-    	if ( mToPath != null && mPath_getFileStore != null ){
-    		
-    			// file has to exist to have a filestore so walk up the tree if necessary
-    		
-    		File temp = file;
-    		
-    		while( temp != null ){
-    			
-				try{
-					/* FileStore is minSDK 26 on Android
-					*/
-	
-					/* Path */ Object path = mToPath.invoke( temp );
-	
-					/* FileStore */ Object fs = mPath_getFileStore.invoke(null, path);
-					
-					return( fs );
-					
-				}catch( Throwable e ){
-				}
-				
-				temp = temp.getParentFile();
-    		}
-    	}
-    	
-    	return( null );
+    	return fileHandling.getFileStore(file);
     }
     
     public static String[]
