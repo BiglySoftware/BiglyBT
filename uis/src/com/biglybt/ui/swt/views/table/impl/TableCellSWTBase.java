@@ -1479,7 +1479,12 @@ public abstract class TableCellSWTBase
 		if (view == null) {
 			return false;
 		}
-		return view.getSortColumnCount() > 0;
+		// Since cells often use sort value to determine if they need to update
+		// their text, using simple sort value can prevent changes from being
+		// displayed
+		// Cells of sort columns are always invalid (afaik), so they always update properly
+		// Cells not in sort must not be simple to trigger new text
+		return view.getSortColumnCount() > 1 && view.hasSortColumn(tableColumnCore);
 	}
 	
 	@Override

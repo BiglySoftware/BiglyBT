@@ -410,10 +410,14 @@ public class TorrentUIUtilsV3
 				image = ImageRepository.getPathIcon(path, big, false);
 
 				if (image != null && !torrent.isSimpleTorrent()) {
-					Image[] images = new Image[] {
-						image,
-						ImageRepository.getPathIcon(new File(path).getParent(), false, false)
-					};
+					Image parentPathIcon = ImageRepository.getPathIcon(new File(path).getParent(), false, false);
+					Image[] images = parentPathIcon == null || parentPathIcon.isDisposed()
+							? new Image[] {
+								image
+							} : new Image[] {
+								image,
+								parentPathIcon
+							};
 					return images;
 				}
 			}

@@ -100,7 +100,6 @@ public class PiecesItem
 		if (marginHeight != -1) {
 			cell.setMarginHeight(marginHeight);
 		}
-		cell.setFillCell(true);
 	}
 
 	@Override
@@ -130,7 +129,23 @@ public class PiecesItem
 		DownloadManager infoObj = (DownloadManager) cell.getDataSource();
 		long lCompleted = (infoObj == null) ? 0 : infoObj.getStats().getCompleted();
 
-		boolean bForce = infoObj != null && infoObj.getUserData("PiecesImage") == null;
+		Image image = (Image) infoObj.getUserData("PiecesImage");
+
+		int newWidth = cell.getWidth();
+		if (newWidth <= 0)
+			return;
+		int newHeight = Math.min(cell.getHeight(), 32);
+
+		boolean bImageChanged;
+		Rectangle imageBounds;
+		if (image == null || image.isDisposed()) {
+			bImageChanged = true;
+		} else {
+			imageBounds = image.getBounds();
+			bImageChanged = imageBounds.width != newWidth
+				|| imageBounds.height != newHeight;
+		}
+		boolean bForce = infoObj != null || bImageChanged;
 
 		if (!cell.setSortValue(lCompleted) && cell.isValid() && !bForce) {
 			return;
@@ -140,11 +155,6 @@ public class PiecesItem
 			return;
 
 		//Compute bounds ...
-		int newWidth = cell.getWidth();
-		if (newWidth <= 0)
-			return;
-		int newHeight = cell.getHeight();
-
 		int x0 = borderVerticalSize;
 		int x1 = newWidth - 1 - borderVerticalSize;
 		int y0 = completionHeight + borderHorizontalSize + borderSplit;
@@ -159,17 +169,7 @@ public class PiecesItem
 			bImageBufferValid = false;
 		}
 
-		Image image = (Image) infoObj.getUserData("PiecesImage");
 		GC gcImage;
-		boolean bImageChanged;
-		Rectangle imageBounds;
-		if (image == null || image.isDisposed()) {
-			bImageChanged = true;
-		} else {
-			imageBounds = image.getBounds();
-			bImageChanged = imageBounds.width != newWidth
-					|| imageBounds.height != newHeight;
-		}
 		if (bImageChanged) {
 			if (image != null && !image.isDisposed()) {
 				image.dispose();

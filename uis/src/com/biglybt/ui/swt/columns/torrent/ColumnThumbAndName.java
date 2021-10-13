@@ -373,8 +373,9 @@ public class ColumnThumbAndName
 				}
 				int x = cellBounds.x;
 				textX = x + dstWidth + 3;
-				int minWidth = dstHeight * 7 / 4;
 				int imgPad = 0;
+				/* This puts big gaps when height is ludicrous
+				int minWidth = dstHeight * 7 / 4;
 				if (dstHeight > 25) {
 					if (dstWidth < minWidth) {
 						imgPad = ((minWidth - dstWidth + 1) / 2);
@@ -382,6 +383,7 @@ public class ColumnThumbAndName
 						textX = cellBounds.x + minWidth + 3;
 					}
 				}
+				*/
 				if (cellBounds.width - dstWidth - (imgPad * 2) < 100 && dstHeight > 18) {
 					dstWidth = Math.min(32, dstHeight);
 					x = cellBounds.x + ((32 - dstWidth + 1) / 2);
@@ -441,7 +443,7 @@ public class ColumnThumbAndName
 			}
 		}
 
-		cellPaintName(cell, gc, cellBounds, textX, originalBoundxsX);
+		cellPaintName(cell, gc, cell.getBounds(), textX, originalBoundxsX);
 	}
 
 	private void cellPaintFileInfo(GC gc, final TableCellSWT cell,
@@ -451,7 +453,7 @@ public class ColumnThumbAndName
 		int	originalBoundxsX = cellBounds.x;
 		
 		//System.out.println(cellArea);
-		int padding = 5 + (true ? cellBounds.height : 0);
+		int padding = 5 + Math.min(32, cellBounds.height);
 		cellBounds.x += padding;
 		cellBounds.width -= padding;
 
@@ -523,6 +525,8 @@ public class ColumnThumbAndName
 				textX = x + dstWidth + 3;
 				int minWidth = dstHeight;
 				int imgPad = 0;
+				/* This puts big gaps when height is ludicrous
+				int minWidth = dstHeight * 7 / 4;
 				if (dstHeight > 25) {
 					if (dstWidth < minWidth) {
 						imgPad = ((minWidth - dstWidth + 1) / 2);
@@ -530,6 +534,7 @@ public class ColumnThumbAndName
 						textX = cellBounds.x + minWidth + 3;
 					}
 				}
+				*/
 				if (cellBounds.width - dstWidth - (imgPad * 2) < 100 && dstHeight > 18) {
 					dstWidth = Math.min(32, dstHeight);
 					x = cellBounds.x + ((32 - dstWidth + 1) / 2);
@@ -657,9 +662,12 @@ public class ColumnThumbAndName
 		if (name == null)
 			name = "";
 
-		GCStringPrinter sp = new GCStringPrinter(gc, name, new Rectangle(textX,
-				cellBounds.y, cellBounds.x + cellBounds.width - textX,
-				cellBounds.height), true, true, getTableID().endsWith( ".big" )?SWT.WRAP:SWT.NULL );
+		// Bug in GCStringPrinter with WRAP when there's only room for one line
+		// (sometimes line will be overly truncated)
+		GCStringPrinter sp = new GCStringPrinter(gc, name,
+				new Rectangle(textX, cellBounds.y,
+						cellBounds.x + cellBounds.width - textX, cellBounds.height),
+				true, true, cell.getMaxLines() == 1 ? SWT.LEFT : SWT.LEFT | SWT.WRAP);
 		
 		boolean fit = sp.printString();
 

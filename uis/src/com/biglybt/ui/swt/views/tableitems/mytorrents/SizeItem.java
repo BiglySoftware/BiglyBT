@@ -50,8 +50,6 @@ public class SizeItem
 
 	public static final String COLUMN_ID = "size";
 
-	private static boolean DO_MULTILINE = true;
-
 	/** Default Constructor */
 	public SizeItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
@@ -71,20 +69,27 @@ public class SizeItem
 
 	@Override
 	public void refresh(TableCell cell) {
-		sizeitemsort value;
 		Object ds = cell.getDataSource();
+		boolean simpleSort = cell.useSimpleSortValue();
+		long remaining;
+		long size;
 		if (ds instanceof DownloadManager) {
 			DownloadManager dm = (DownloadManager) ds;
 
-			value = new sizeitemsort(dm.getStats().getSizeExcludingDND(),
-					dm.getStats().getRemainingExcludingDND());
+			remaining = dm.getStats().getRemainingExcludingDND();
+			size = dm.getStats().getSizeExcludingDND();
 		} else if (ds instanceof DiskManagerFileInfo) {
 			DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) ds;
-			value = new sizeitemsort(fileInfo.getLength(), fileInfo.getLength()
-					- fileInfo.getDownloaded());
+			remaining = fileInfo.getLength() - fileInfo.getDownloaded();
+			size = fileInfo.getLength();
 		} else {
 			return;
 		}
+
+		boolean showSecondLine = cell.getMaxLines() > 1 && remaining > 0
+				&& cell.getWidth() > 150;
+		sizeitemsort value = new sizeitemsort(size, simpleSort ? 0 : remaining,
+				showSecondLine);
 
 		// cell.setSortValue(value) always returns true and if I change it,
 		// I'm afraid something will break.. so use compareTo
@@ -100,9 +105,9 @@ public class SizeItem
 			s = DisplayFormatters.formatByteCountToKiBEtc(value.size);
 		}
 
-		if (DO_MULTILINE && cell.getMaxLines() > 1 && value.remaining > 0) {
+		if (showSecondLine) {
 			s += "\n"
-					+ DisplayFormatters.formatByteCountToKiBEtc(value.remaining, false,
+					+ DisplayFormatters.formatByteCountToKiBEtc(remaining, false,
 							false, 0) + " "
 					+ MessageText.getString("TableColumn.header.remaining");
 		}
@@ -126,9 +131,12 @@ public class SizeItem
 
 		private final long remaining;
 
-		public sizeitemsort(long size, long remaining) {
+		private final boolean showSecondLine;
+
+		public sizeitemsort(long size, long remaining, boolean showSecondLine) {
 			this.size = size;
 			this.remaining = remaining;
+			this.showSecondLine = showSecondLine;
 		}
 
 		@Override
@@ -139,8 +147,11 @@ public class SizeItem
 
 			sizeitemsort otherObj = (sizeitemsort) arg0;
 			if (size == otherObj.size) {
-				return remaining == otherObj.remaining ? 0
-						: remaining > otherObj.remaining ? 1 : -1;
+				if (remaining == otherObj.remaining) {
+					return showSecondLine == otherObj.showSecondLine ? 0
+							: showSecondLine ? 1 : -1;
+				}
+				return remaining > otherObj.remaining ? 1 : -1;
 			}
 			return size > otherObj.size ? 1 : -1;
 		}

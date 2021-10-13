@@ -451,8 +451,22 @@ public interface TableCell {
 	public String getClipboardText();
 
 	/**
-	 * When true, the user is sorting by multiple columns, and you should set 
+	 * When true, cell is part of a multi-column sort, and you should set 
 	 * the cell's sort value based solely on your column's data.
+	 * <p/>
+	 * Common scenario:<br/>
+	 * User sorts just by your column, you may want to sort by the main value,
+	 * and subsort by several secondary values.
+	 * When user sorts by multiple columns (including yours), your secondary 
+	 * values can prevent other sort columns from being applied.
+	 * <p/>
+	 * Example:<br/> 
+	 * When sorted by itself, the "unopened" column would look better if sorted
+	 * by last opened date. However, if 
+	 * useSimpleSortValue is not taken into account, and the user sorts by 
+	 * unopened + name, the order would not necessarily change. The end
+	 * result would be a sort by unopened, last opened, and then
+	 * 'bytes downloaded'.
 	 */
 	boolean useSimpleSortValue();
 	
