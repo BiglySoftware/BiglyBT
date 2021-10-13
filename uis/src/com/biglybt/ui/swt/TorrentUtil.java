@@ -3810,7 +3810,7 @@ public class TorrentUtil
 		text_entry.setTitle(msg_key_prefix + "title");
 		text_entry.setMessage(msg_key_prefix + "message");
 		text_entry.setPreenteredText(text, false);
-		text_entry.setWidthHint( 500 );
+		text_entry.setWidthHint( 800 );
 		text_entry.setLineHeight( 10 );
 		text_entry.setMultiLine(true);
 		text_entry.setResizeable( true );
