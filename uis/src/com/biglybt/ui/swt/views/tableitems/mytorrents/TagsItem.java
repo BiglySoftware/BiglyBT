@@ -197,7 +197,8 @@ public class TagsItem
 			}
 			int endX = x + size.x;
 
-			if (endX > cellSize.x && y + lineHeight + 1 <= cellSize.y) {
+			if (endX > cellSize.x
+					&& y + lineHeight + (lineHeight * 0.8) <= cellSize.y) {
 				x = 0;
 				endX = size.x;
 				y += lineHeight + 1;
