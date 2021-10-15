@@ -1265,7 +1265,23 @@ DownloadManagerImpl
 
 			return( false );
 		}
-
+		
+		/* Although this would seem to be the better thing to do it hides the actual cause
+		 * of the veto (e.g. tag prevents removal) and makes it hard for a user to diagnose the
+		 * reason. Better to allow things to go ahead and then fail on the removal attempt where
+		 * the user can be told of the cause.
+		 
+		try{
+			return( download.canBeRemoved());
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+			return( false );
+		}
+		*/
+		
 		return( true );
 	}
 

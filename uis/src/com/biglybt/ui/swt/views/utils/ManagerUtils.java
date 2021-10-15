@@ -86,6 +86,7 @@ import com.biglybt.pif.disk.DiskManagerEvent;
 import com.biglybt.pif.disk.DiskManagerListener;
 import com.biglybt.pif.disk.DiskManagerRequest;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadRemovalVetoException;
 import com.biglybt.pif.download.DownloadStub;
 import com.biglybt.pif.platform.PlatformManagerException;
 import com.biglybt.pif.sharing.*;
@@ -2335,6 +2336,16 @@ public class ManagerUtils {
 
 								run_when_complete.success( dm, stub );
 
+							}catch( DownloadRemovalVetoException e ){
+
+								run_when_complete.failed( dm, e );
+
+								if (!e.isSilent()) {
+									  UIFunctionsManager.getUIFunctions().forceNotify(
+											  UIFunctions.STATUSICON_ERROR,
+											  MessageText.getString( "globalmanager.download.remove.veto" ),
+											  e.getMessage(), dm.getName(), new Object[]{ dm }, -1 );
+								}
 							}catch( Throwable e ){
 
 								run_when_complete.failed( dm, e );
