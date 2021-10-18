@@ -41,6 +41,7 @@ import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.RandomUtils;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.download.DownloadManager;
