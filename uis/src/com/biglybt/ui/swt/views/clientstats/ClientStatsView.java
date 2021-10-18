@@ -578,7 +578,7 @@ public class ClientStatsView
 		try {			
 			String name = ds.client;
 
-			String s = regex ? filter : "\\Q" + filter.replaceAll("[|;]", "\\\\E|\\\\Q") + "\\E";
+			String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
 
 			boolean	match_result = true;
 

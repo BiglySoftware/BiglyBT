@@ -58,8 +58,7 @@ public class FieldMapping
 				&& !postFilterPattern.pattern().contains(
 						"\\\\Q" + searchQuery + "\\\\E"))) {
 			postFilterPattern = Pattern.compile(postFilterRequiresSearchQuery
-					? postFilter.replaceAll("%s",
-							"\\\\Q" + Matcher.quoteReplacement(searchQuery) + "\\\\E")
+					? postFilter.replaceAll("%s", Pattern.quote(searchQuery))
 					: postFilter, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 		}
 		return postFilterPattern;

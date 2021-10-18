@@ -3429,20 +3429,25 @@ TagPropertyConstraintHandler
 												
 						if ( s2.contains( "|" )){
 							
-							if ( s2.contains( " " )){
-								String[] bits = s2.split( "\\|");
+							String pat_str = "";
+							String[] bits = s2.split( "\\|");
+							boolean hasSpace = s2.contains( " " );
+							if (hasSpace) {
 								s2 = "";
-								for ( String bit: bits ){
-									bit = bit.trim();
-									if ( !bit.isEmpty()){
+							}
+							for ( String bit: bits ){
+								bit = bit.trim();
+								if ( !bit.isEmpty()){
+									if (hasSpace) {
 										s2 += (s2.isEmpty()?"":"|") + bit;
 									}
+									pat_str += (pat_str.isEmpty()?"":"|") + Pattern.quote(bit);
 								}
+							}
+							if (hasSpace) {
 								params[1] = "\"" + s2 + "\"";
 							}
 							
-							String pat_str = "\\Q" + s2.replaceAll("[|]", "\\\\E|\\\\Q") + "\\E";
-
 							Pattern pattern = RegExUtil.getCachedPattern( "tag:constraint:" + tag_maybe_null.getTagUID(), pat_str, case_insensitive?0:(Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
 
 							String key = dm.getInternalName();

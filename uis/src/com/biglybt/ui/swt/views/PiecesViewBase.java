@@ -660,7 +660,7 @@ public abstract class PiecesViewBase
         	}
         }
 
-		String s = regex ? filter : "\\Q" + filter.replaceAll("\\s*[|;]\\s*", "\\\\E|\\\\Q") + "\\E";
+		String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
 
 		boolean	match_result = true;
 

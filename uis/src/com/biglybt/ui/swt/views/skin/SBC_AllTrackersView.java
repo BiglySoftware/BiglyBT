@@ -1639,7 +1639,7 @@ public class SBC_AllTrackersView
 		
 		String name = tracker.getTrackerName();
 
-		String s = regex ? filter : "\\Q" + filter.replaceAll("\\s*[|;]\\s*", "\\\\E|\\\\Q") + "\\E";
+		String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
 
 		boolean	match_result = true;
 

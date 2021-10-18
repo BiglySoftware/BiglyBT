@@ -99,7 +99,7 @@ RegExUtil
 				
 				if ( !bit.isEmpty()){
 				
-					bit = "\\Q" + bit.replaceAll("[|]", "\\\\E|\\\\Q") + "\\E";
+					bit = splitAndQuote(bit, "[|]");
 					
 					s += "(?=.*" + bit + ")";
 				}
@@ -109,8 +109,17 @@ RegExUtil
 			
 		}else{
 		
-			return( "\\Q" + str.replaceAll("[|]", "\\\\E|\\\\Q") + "\\E" );
+			return( splitAndQuote(str, "[|]") );
 		}
+	}
+	
+	public static String
+	splitAndQuote(String s, String splitterRegex) {
+		String[] bits = s.split(splitterRegex);
+		for (int i = 0; i < bits.length; i++) {
+			bits[i] = Pattern.quote(bits[i]);
+		}
+		return String.join("|", bits);
 	}
 	
 	public static boolean

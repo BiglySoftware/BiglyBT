@@ -2283,7 +2283,7 @@ SpeedLimitHandler
 										set = new PeerSet( set_name );
 										
 										try{
-											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
+											Pattern pattern = Pattern.compile( "^" + Pattern.quote(name) + ".*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
 											
 											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern, false, null, false, null, false, null );
 											
@@ -2316,7 +2316,7 @@ SpeedLimitHandler
 										set = new PeerSet( set_name );
 										
 										try{
-											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
+											Pattern pattern = Pattern.compile( "^" + Pattern.quote(name) + ".*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
 											
 											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), null, false, pattern, false, null, false, null );
 											

@@ -120,10 +120,12 @@ public class Config
 				section.postBuild();
 			}
 
-			Pattern regex = isRegex ? Pattern.compile(s) : s.endsWith("*")
-					? Pattern.compile("^\\Q" + s.substring(0, s.length() - 1) + "\\E.*",
-							Pattern.CASE_INSENSITIVE)
-					: Pattern.compile("\\Q" + s + "\\E", Pattern.CASE_INSENSITIVE);
+			Pattern regex = isRegex ? Pattern.compile(s)
+					: s.endsWith("*")
+							? Pattern.compile(
+									"^" + Pattern.quote(s.substring(0, s.length() - 1)) + ".*",
+									Pattern.CASE_INSENSITIVE)
+							: Pattern.compile(Pattern.quote(s), Pattern.CASE_INSENSITIVE);
 			List<Parameter> results = section.search(regex);
 			if (!results.isEmpty()) {
 				count += results.size();

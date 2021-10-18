@@ -663,7 +663,7 @@ public class FilesView
 				}
 			}
 
-			String s = regex ? filter : "\\Q" + filter.replaceAll("[|;]", "\\\\E|\\\\Q") + "\\E";
+			String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
 
 			boolean	match_result = true;
 
