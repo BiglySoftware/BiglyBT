@@ -825,11 +825,22 @@ public class TorrentUtil
 		itemFileMoveData.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager[] dms) {
-				moveDataFiles(shell, dms);
+				moveDataFiles(shell, dms,false);
 			}
 		});
 		itemFileMoveData.setEnabled(fileMove);
 		
+		if ( userMode > 0 ){
+			final MenuItem itemFileMoveDataBatch = new MenuItem(menuFiles, SWT.PUSH);
+			Messages.setLanguageText(itemFileMoveDataBatch, "MyTorrentsView.menu.movedata.batch");
+			itemFileMoveDataBatch.addListener(SWT.Selection, new ListenerDMTask(dms) {
+				@Override
+				public void run(DownloadManager[] dms) {
+					moveDataFiles(shell, dms,true);
+				}
+			});
+			itemFileMoveData.setEnabled(fileMove);
+		}
 		final MenuItem itemFileMoveTorrent = new MenuItem(menuFiles, SWT.PUSH);
 		Messages.setLanguageText(itemFileMoveTorrent,
 				"MyTorrentsView.menu.movetorrent");
@@ -3087,53 +3098,240 @@ public class TorrentUtil
 		}
 	}
 
-	protected static void moveDataFiles(Shell shell, DownloadManager[] dms) {
+	protected static void 
+	moveDataFiles(
+		Shell 				shell, 
+		DownloadManager[] 	dms,
+		boolean				batch ) 
+	{
 		if (dms != null && dms.length > 0) {
 
-			DirectoryDialog dd = new DirectoryDialog(shell);
-
-			String filter_path = TorrentOpener.getFilterPathData();
-
-			// If we don't have a decent path, default to the path of the first
-			// torrent.
-			if (filter_path == null || filter_path.trim().length() == 0) {
-				filter_path = new File(dms[0].getTorrentFileName()).getParent();
-			}
-
-			dd.setFilterPath(filter_path);
-
-			dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
-
-			String path = dd.open();
-
-			if (path != null) {
-
-				TorrentOpener.setFilterPathData(path);
-
-				File target = new File(path);
-
-					// we can do this in parallel as the core manages queueing of move ops now
+			if ( batch ){
 				
-				for (int i = 0; i < dms.length; i++) {
-
-					DownloadManager dm = dms[i];
+				Map<String,DownloadManager>		dm_name_map = new HashMap<>();
+				
+				StringBuilder details = new StringBuilder( 32*1024 );
+				
+				for ( DownloadManager dm: dms ){
+										
+					dm_name_map.put( dm.getInternalName(), dm );	
 					
-					AEThread2.createAndStartDaemon( "File Mover" , ()->{
+					details.append( "# " + dm.getInternalName() + " - " );
+					details.append( dm.getDisplayName());
+					details.append( "\n\n" );
+					
+					details.append( "    " );
+					details.append( dm.getSaveLocation().getParentFile().getAbsolutePath());
+					details.append( "\n\n" );
+				}
+				
+				TextViewerWindow viewer =
+						new TextViewerWindow(
+		        			  Utils.findAnyShell(),
+		        			  "batch.move.title",
+		        			  "batch.move.text",
+		        			  details.toString(), true, true );
+
+				viewer.setEditable( true );
+				
+				viewer.setNonProportionalFont();
 								
-							// get back onto SWT thread to cause progress dialog window to be shown
-						
-						Utils.execSWTThread(()->{
+				viewer.addListener(
+					new TextViewerWindow.TextViewerWindowListener() {
+
+						@Override
+						public void closed(){
+							if ( !viewer.getOKPressed()){
+								return;
+							}
+								
+							String text = viewer.getText();
 							
-							try{
+							if ( text.equals( details.toString())){
 								
-								dm.moveDataFilesLive(target);
-
-							}catch( Throwable e ){
-
-								Logger.log(new LogAlert(dm, LogAlert.REPEATABLE,
-										"Download data move operation failed", e));
-							}});
+								return;
+							}
+							
+							String[] lines = text.split( "\n" );
+							
+							StringBuilder result = new StringBuilder( 23*1024 );
+							
+							List<Object[]> actions = new ArrayList<>();
+									
+							DownloadManager current_dm = null;
+							
+							for ( String line: lines ){
+								
+								line = line.trim();
+								
+								if ( line.isEmpty()){
+									
+									continue;
+								}
+								
+								if ( line.startsWith( "#" )){
+									
+									try{
+										String[] bits = line.split(  "\\s+", 3 );	
+									
+										current_dm = dm_name_map.get( bits[1].trim());
+											
+										if ( current_dm == null ){
+											
+											result.append( "Invalid line: " + line + ": download not found\n" );
+										}
+									}catch( Throwable e ){
+										
+										result.append( "Invalid line: " + line + "\n" );
+									}
+								}else{
+																		
+									try{										
+										String path = line.trim();
+										
+										if ( !current_dm.getSaveLocation().getParentFile().getAbsolutePath().equals( path )){
+										
+											actions.add( new Object[]{ current_dm, path } );
+										}
+									}catch( Throwable e ){
+										
+										result.append( "Invalid line: " + line + "\n" );
+									}
+								}
+							}
+							
+							if ( result.length() > 0 ){
+								
+								Utils.execSWTThreadLater(
+									1, 
+									new Runnable()
+									{
+										public void
+										run()
+										{
+											TextViewerWindow viewer =
+													new TextViewerWindow(
+									        			  Utils.findAnyShell(),
+									        			  "batch.move.title",
+									        			  "batch.retarget.error.text",
+									        			  result.toString(), true, true );
+											
+											viewer.setNonProportionalFont();
+											
+											viewer.goModal();
+										}
+									});
+								
+							}else if ( !actions.isEmpty()){
+								
+								for ( Object[] action: actions ){
+									
+									DownloadManager dm = (DownloadManager)action[0];
+									
+									String	path 	= (String)action[1];																
+										
+									result.append( "# " + dm.getInternalName() + " - " );
+									result.append( dm.getDisplayName());
+									result.append( "\n\n" );
+									
+									result.append( "    " + dm.getSaveLocation().getParentFile().getAbsolutePath() +  " -> " + path + "\n\n" );
+									
+									AEThread2.createAndStartDaemon( 
+										"File Mover" , 
+										()->{
+										
+												// get back onto SWT thread to cause progress dialog window to be shown
+											
+											Utils.execSWTThread(()->{
+												
+												try{
+													
+													dm.moveDataFilesLive( new File( path) );
+					
+												}catch( Throwable e ){
+					
+													Logger.log(new LogAlert(dm, LogAlert.REPEATABLE,
+															"Download data move operation failed", e));
+												}});
+										});
+								}
+								
+								if ( result.length() > 0 ){
+									
+									Utils.execSWTThreadLater(
+										1, 
+										new Runnable()
+										{
+											public void
+											run()
+											{
+												TextViewerWindow viewer =
+														new TextViewerWindow(
+										        			  Utils.findAnyShell(),
+										        			  "batch.move.title",
+										        			  "batch.retarget.result.text",
+										        			  result.toString(), true, true );
+												
+												viewer.setNonProportionalFont();
+												
+												viewer.goModal();
+											}
+										});
+								}
+							}
+						}
 					});
+				
+				viewer.goModal();
+				
+				
+			}else{
+				
+				DirectoryDialog dd = new DirectoryDialog(shell);
+	
+				String filter_path = TorrentOpener.getFilterPathData();
+	
+				// If we don't have a decent path, default to the path of the first
+				// torrent.
+				if (filter_path == null || filter_path.trim().length() == 0) {
+					filter_path = new File(dms[0].getTorrentFileName()).getParent();
+				}
+	
+				dd.setFilterPath(filter_path);
+	
+				dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+	
+				String path = dd.open();
+	
+				if (path != null) {
+	
+					TorrentOpener.setFilterPathData(path);
+	
+					File target = new File(path);
+	
+						// we can do this in parallel as the core manages queueing of move ops now
+					
+					for (int i = 0; i < dms.length; i++) {
+	
+						DownloadManager dm = dms[i];
+						
+						AEThread2.createAndStartDaemon( "File Mover" , ()->{
+									
+								// get back onto SWT thread to cause progress dialog window to be shown
+							
+							Utils.execSWTThread(()->{
+								
+								try{
+									
+									dm.moveDataFilesLive(target);
+	
+								}catch( Throwable e ){
+	
+									Logger.log(new LogAlert(dm, LogAlert.REPEATABLE,
+											"Download data move operation failed", e));
+								}});
+						});
+					}
 				}
 			}
 		}

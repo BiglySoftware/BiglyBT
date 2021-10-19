@@ -2445,9 +2445,21 @@ public class TorrentMenuFancy
 					new ListenerDMTask(dms) {
 						@Override
 						public void run(DownloadManager[] dms) {
-							TorrentUtil.moveDataFiles(parentShell, dms);
+							TorrentUtil.moveDataFiles(parentShell, dms,false);
 						}
 					});
+			
+			int userMode = COConfigurationManager.getIntParameter("User Mode");
+			
+			if ( userMode > 0 ){
+				createRow(detailArea, "MyTorrentsView.menu.movedata.batch", null,
+						new ListenerDMTask(dms) {
+							@Override
+							public void run(DownloadManager[] dms) {
+								TorrentUtil.moveDataFiles(parentShell, dms, true);
+							}
+						});
+			}
 		}
 		
 		if ( canSetMOC || canClearMOC ){
