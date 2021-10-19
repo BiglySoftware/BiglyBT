@@ -274,6 +274,8 @@ DiskManagerFileInfoImpl
 	setLinkAtomic(
 		File	link_destination )
 	{
+		last_error = "download must be stopped";
+		
 		Debug.out( "setLink: download must be stopped" );
 
 		return( false );
@@ -285,6 +287,8 @@ DiskManagerFileInfoImpl
 		File						link_destination,
 		FileUtil.ProgressListener	pl )
 	{
+		last_error = "download must be stopped";
+		
 		Debug.out( "setLink: download must be stopped" );
 
 		return( false );

@@ -1834,7 +1834,7 @@ public class FileUtil {
 		File		from_file,
 		File		to_file )
     {
-        return renameFile(from_file, to_file, true);
+        return( renameFile(from_file, to_file, true) == null );
    	}
 
     public static boolean
@@ -1843,10 +1843,10 @@ public class FileUtil {
  		File				to_file,
  		ProgressListener	pl )
     {
-         return renameFile(from_file, to_file, true, null, pl );
+         return( renameFile(from_file, to_file, true, null, pl ) == null );
     }
     
-    public static boolean
+    private static String
     renameFile(
         File        from_file,
         File        to_file,
@@ -1855,7 +1855,7 @@ public class FileUtil {
     	return renameFile(from_file, to_file, fail_on_existing_directory, null, null);
     }
     
-    public static boolean
+    public static String
     renameFile(
    		File        		from_file,
    		File        		to_file,
@@ -1879,9 +1879,9 @@ public class FileUtil {
 		}catch( Throwable e ){
 		}
    		
-    	boolean result = renameFileSupport( from_file, to_file, fail_on_existing_directory, file_filter, pl );
+    	String result = renameFileSupport( from_file, to_file, fail_on_existing_directory, file_filter, pl );
 
-    	if ( result ){
+    	if ( result == null ){
 
     			// try to maintain the file times if they now differ 
     		
@@ -1904,12 +1904,15 @@ public class FileUtil {
     			}
     		}catch( Throwable e ){
     		}
+    	}else{
+    		
+    		Debug.out( result );
     	}
 
     	return( result );
     }
         
-    private static boolean
+    private static String
     renameFileSupport(
     	File        		from_file,
     	File        		to_file,
@@ -1919,9 +1922,7 @@ public class FileUtil {
     {
     	if ( !from_file.exists()){
 
-    		Debug.out( "renameFile: source file '" + from_file + "' doesn't exist, failing" );
-
-    		return( false );
+    		return( "renameFile: source file '" + from_file + "' doesn't exist, failing" );
     	}
     	
     	boolean to_file_exists = to_file.exists();
@@ -1932,13 +1933,13 @@ public class FileUtil {
     			
     			if ( areFilePathsIdentical( from_file, to_file )){
     				
-    				return( true );	// nothing to do
+    				return( null );	// nothing to do
     				
     			}else{
     				
     				if ( from_file.renameTo( to_file )){
     					
-    					return( true );
+    					return( null );
     				}
     			}
     		}
@@ -1961,9 +1962,7 @@ public class FileUtil {
     	
         if ( to_file_exists && ( fail_on_existing_directory || from_file.isFile() || to_file.isFile())) {
 
-        	Debug.out( "renameFile: target file '" + to_file + "' already exists, failing" );
-
-            return( false );
+        	return( "renameFile: target file '" + to_file + "' already exists, failing" );
         }
         
 		if ( pl != null ){
@@ -1981,10 +1980,8 @@ public class FileUtil {
 					
 				}else if ( state == ProgressListener.ST_CANCELLED ){
 					
-					Debug.out( "renameFile: Cancelled" );
-					
-					return( false );
-					
+					return( "renameFile: Cancelled" );
+										
 				}else{
 					
 					break;
@@ -2016,11 +2013,13 @@ public class FileUtil {
 
     				// empty dir
 
-    			return( true );
+    			return( null );
     		}
 
     		int	last_ok = 0;
 
+    		String last_error = null;
+    		
     		if ( !to_file.exists()){
     			
     			to_file.mkdir();
@@ -2032,12 +2031,16 @@ public class FileUtil {
 				File	tf = newFile( to_file, ff.getName());
 
     			try{
-     				if ( renameFile( ff, tf, fail_on_existing_directory, file_filter, pl )){
+     				String res = renameFile( ff, tf, fail_on_existing_directory, file_filter, pl );
 
+     				if ( res == null ){
+     					
     					last_ok++;
 
     				}else{
 
+    					last_error = res;
+    					
     					break;
     				}
     			}catch( Throwable e ){
@@ -2062,7 +2065,7 @@ public class FileUtil {
     				}
     				else {
     					/* Should we log this? How should we log this? */
-    					return true;
+    					return( null );
     				}
 
     			}else{
@@ -2073,7 +2076,7 @@ public class FileUtil {
     				}
     			}
 
-    			return( true );
+    			return( null );
     		}
 
     			// recover by moving files back
@@ -2090,7 +2093,7 @@ public class FileUtil {
 	    			try{
 	    				// null - We don't want to use the file filter, it only refers to source paths.
 	    				
-	                    if ( !renameFile( 
+	                    if ( renameFile( 
 	                    		tf, 
 	                    		ff, 
 	                    		false, 
@@ -2139,7 +2142,7 @@ public class FileUtil {
 	                    			{
 	                    				
 	                    			}
-	                    		})){
+	                    		}) != null ){
 	                    
 	    					Debug.out( "renameFile: recovery - failed to move file '" + tf.toString()
 											+ "' to '" + ff.toString() + "'" );
@@ -2152,8 +2155,12 @@ public class FileUtil {
 	      		}
       		}
 
-      		return( false );
+    		if ( last_error != null ){
+      		
+    			return( last_error );
+    		}
 
+    		return( "failed to move one or more files" );
     	}else{
 
     		boolean	same_drive = false;
@@ -2231,7 +2238,7 @@ public class FileUtil {
     					}
     				}
     				
-    				return( true );
+    				return( null );
     				
     			}else{
     				
@@ -2279,7 +2286,7 @@ public class FileUtil {
     	return( result.toArray( new String[ result.size()] ));
     }
     		
-    private static boolean
+    private static String
     reallyCopyFile(
     	File				from_file,
     	File				to_file,
@@ -2441,14 +2448,13 @@ public class FileUtil {
 
     		success	= true;
 
-    		return( true );
+    		return( null );
 
     	}catch( Throwable e ){
 
-    		Debug.out( "renameFile: failed to rename '" + from_file.toString()
-    		+ "' to '" + to_file.toString() + "'", e );
-
-    		return( false );
+    		return( 
+    			"renameFile: failed to rename '" + from_file.toString()	+ 
+    				"' to '" + to_file.toString() + "': " + Debug.getNestedExceptionMessage(e));
 
     	}finally{
 

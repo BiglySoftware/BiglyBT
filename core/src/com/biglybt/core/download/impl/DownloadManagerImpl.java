@@ -5475,7 +5475,7 @@ DownloadManagerImpl
 					  
 				  }else{
 					  
-					  throw new DownloadManagerException( "rename operation failed");
+					  throw new DownloadManagerException( "Rename operation failed: " + file.getLastError());
 				  }
 	
 				  /*
@@ -5499,7 +5499,7 @@ DownloadManagerImpl
 							  LogAlert.AT_ERROR, "DiskManager.alert.movefilefails"),
 							  new String[] {old_file.toString(), "Target is sub-directory of files" });
 	
-					  throw( new DownloadManagerException( "rename operation failed" ));
+					  throw( new DownloadManagerException( "Rename operation failed: Target is sub-directory of files" ));
 				  }
 	
 				  long	total_size = 0;
@@ -5563,7 +5563,9 @@ DownloadManagerImpl
 	
 				  pl.setTotalSize( total_size );
 				  
-				  if ( FileUtil.renameFile( old_file, new_save_location, false, ff, pl )){
+				  String result = FileUtil.renameFile( old_file, new_save_location, false, ff, pl );
+				  
+				  if ( result == null ){
 	
 					  setTorrentSaveDir( new_save_location, true);
 	
@@ -5574,7 +5576,7 @@ DownloadManagerImpl
 						  TorrentUtils.recursiveEmptyDirDelete( new_save_location, false );
 					  }
 					  
-					  throw( new DownloadManagerException( "rename operation failed" ));
+					  throw( new DownloadManagerException( "Rename operation failed: " + result ));
 				  }
 	
 				  if (  current_save_location.isDirectory()){
