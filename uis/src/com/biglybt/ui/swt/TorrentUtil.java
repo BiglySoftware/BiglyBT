@@ -3098,7 +3098,7 @@ public class TorrentUtil
 		}
 	}
 
-	protected static void 
+	public static void 
 	moveDataFiles(
 		Shell 				shell, 
 		DownloadManager[] 	dms,

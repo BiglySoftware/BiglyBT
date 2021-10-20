@@ -59,6 +59,7 @@ import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
@@ -1955,6 +1956,35 @@ public class TagUIUtils
 							fl.setTagMoveOnAssignFolder( new File( path ));
 						}
 					}});
+			}
+			
+			int userMode = COConfigurationManager.getIntParameter("User Mode");
+			
+			if ( userMode > 0 && tag instanceof TagDownload){
+				
+				Set<DownloadManager>	downloads = ((TagDownload)tag).getTaggedDownloads();
+				
+				DownloadManager[] dms = downloads.toArray( new DownloadManager[0] );
+				
+				Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
+				
+				Arrays.sort( dms, (d1,d2)->{
+				
+					return( comp.compare( d1.getDisplayName(), d2.getDisplayName()));
+				});
+				
+				MenuItem itemFileMoveDataBatch = new MenuItem(files_menu, SWT.PUSH);
+				
+				Messages.setLanguageText(itemFileMoveDataBatch, "MyTorrentsView.menu.movedata.batch");
+				
+				itemFileMoveDataBatch.addListener(SWT.Selection, new ListenerDMTask(dms) {
+					@Override
+					public void run(DownloadManager[] dms) {
+						TorrentUtil.moveDataFiles(menu.getShell(), dms, true);
+					}
+				});
+				
+				itemFileMoveDataBatch.setEnabled( dms.length > 0 );
 			}
 		}
 	}

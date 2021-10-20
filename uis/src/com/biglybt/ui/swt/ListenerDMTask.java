@@ -29,7 +29,7 @@ import com.biglybt.core.util.Debug;
  * SWT {@link Listener} that walks through a list of {@link DownloadManager}
  * objects, executing {@link #run(DownloadManager)} for each.
  */
-abstract class ListenerDMTask
+public abstract class ListenerDMTask
 	implements Listener
 {
 	private DownloadManager[] dms;
