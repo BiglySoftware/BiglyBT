@@ -855,7 +855,7 @@ public class TableViewPainted
 			return( true );
 		}
 		
-		sortRows( true );
+		sortRows( true, false );
 		
 		if ( lastMC != mutationCount.get()){
 			

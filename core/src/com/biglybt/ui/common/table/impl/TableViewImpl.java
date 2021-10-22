@@ -19,6 +19,7 @@
 package com.biglybt.ui.common.table.impl;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
@@ -30,7 +31,6 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
-
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableRow;
 import com.biglybt.pif.ui.tables.TableRowRefreshListener;
@@ -57,6 +57,36 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	// Shorter name for ConfigManager, easier to read code
 	protected static final ConfigurationManager configMan = ConfigurationManager.getInstance();
 
+	private class
+	rowSorterRunnable
+		extends AERunnable
+	{
+		private AtomicBoolean	forceRefreshPending = new AtomicBoolean();
+
+		@Override
+		public void 
+		runSupport()
+		{
+			sortRows( forceRefreshPending.getAndSet( false ), false );
+		}
+		
+		public void 
+		setForceRefresh(
+			boolean fs)
+		{
+			if ( fs ){
+				
+				forceRefreshPending.set( true);
+			}
+		}
+	}
+
+	private rowSorterRunnable rowSorterRunnable = new rowSorterRunnable();
+	
+	private FrequencyLimitedDispatcher rowSorter = 
+		new FrequencyLimitedDispatcher(rowSorterRunnable, 250 );
+		
+			
 	/** TableID (from {@link com.biglybt.pif.ui.tables.TableManager})
 	 * of the table this class is
 	 * handling.  Config settings are stored with the prefix of
@@ -1565,8 +1595,21 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		_sortColumn(bForceDataRefresh, true, false);
 	}
 
-	public void sortRows(boolean bForceDataRefresh) {
-		_sortColumn(bForceDataRefresh, false, false);
+	public void 
+	sortRows(
+		boolean bForceDataRefresh, 
+		boolean async ) 
+	{
+		if ( async ){
+			
+			rowSorterRunnable.setForceRefresh(bForceDataRefresh);
+			
+			rowSorter.dispatch();
+			
+		}else{
+			
+			_sortColumn(bForceDataRefresh, false, false);
+		}
 	}
 
 	protected void _sortColumn(final boolean bForceDataRefresh, final boolean bFillGapsOnly,
@@ -2356,7 +2399,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			}
  			uiChangeColumnIndicator();
  			resetLastSortedOn();
- 			sortRows(columnsChanged);
+ 			sortRows(columnsChanged,false);
 			return columnsChanged;
 		}
 	}

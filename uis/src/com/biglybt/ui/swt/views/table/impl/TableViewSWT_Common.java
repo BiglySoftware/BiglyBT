@@ -484,7 +484,7 @@ public class TableViewSWT_Common
 					}
 				});
 			} else {
-				tv.sortRows(true);
+				tv.sortRows(true,false);
 			}
 			event.doit = false;
 			return;
@@ -527,7 +527,7 @@ public class TableViewSWT_Common
 				case 'g':
 					System.out.println("force sort");
 					tv.resetLastSortedOn();
-					tv.sortRows(true);
+					tv.sortRows(true,false);
 					break;
 				case 'v':
 					if ( filter == null || !inFilterBox){

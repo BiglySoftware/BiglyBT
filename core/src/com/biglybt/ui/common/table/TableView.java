@@ -193,7 +193,7 @@ public interface TableView<DATASOURCETYPE>
 	/**
 	 * Sort rows using the columns specified in {@link #getSortColumns()}
 	 */
-	void sortRows(boolean bForceDataRefresh);
+	void sortRows(boolean bForceDataRefresh,boolean async);
 
 	/**
 	 * @return
