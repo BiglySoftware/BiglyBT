@@ -526,8 +526,8 @@ public class GeneralView
     label = new Label(cInfoLeft, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.filename"); //$NON-NLS-1$
     fileName = new BufferedLabel(cInfoLeft, SWT.LEFT);
-    //gridData = new GridData(GridData.FILL_HORIZONTAL);
-    //fileName.setLayoutData(gridData);
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    fileName.setLayoutData(gridData);
 
     label = new Label(cInfoRight, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.status"); //$NON-NLS-1$
@@ -538,8 +538,8 @@ public class GeneralView
     label = new Label(cInfoLeft, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.savein"); //$NON-NLS-1$
     saveIn = new BufferedLabel(cInfoLeft, SWT.LEFT);
-    //gridData = new GridData(GridData.FILL_HORIZONTAL);
-    //saveIn.setLayoutData(gridData);
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    saveIn.setLayoutData(gridData);
 
     label = new Label(cInfoLeft, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.totalsize"); //$NON-NLS-1$
