@@ -19,7 +19,6 @@ package com.biglybt.ui.swt;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -31,7 +30,6 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
-import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.ui.UIFunctions.TagReturner;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
@@ -3257,6 +3255,8 @@ public class TorrentUtil
 								}
 								
 								if ( result.length() > 0 ){
+									
+									result.append( MessageText.getString( "batch.move.progress" ));
 									
 									Utils.execSWTThreadLater(
 										1, 
