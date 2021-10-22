@@ -1881,40 +1881,59 @@ public class MyTorrentsView
 	@Override
 	public void fillMenu(String sColumnName, final Menu menu) {
 		Object[] dataSources = tv.getSelectedDataSources(true);
-		DownloadManager[] dms = getSelectedDownloads();
+		DownloadManager[] selecteddms = getSelectedDownloads();
 
-		if (dms.length == 0 && dataSources.length > 0) {
-  		List<DiskManagerFileInfo> listFileInfos = new ArrayList<>();
-  		DownloadManager firstFileDM = null;
-  		for (Object ds : dataSources) {
-  			if (ds instanceof DiskManagerFileInfo) {
-  				DiskManagerFileInfo info = (DiskManagerFileInfo) ds;
-  				// for now, FilesViewMenuUtil.fillmenu can only handle one DM
-  				if (firstFileDM != null && !firstFileDM.equals(info.getDownloadManager())) {
-  					break;
-  				}
-  				firstFileDM = info.getDownloadManager();
-  				listFileInfos.add(info);
-  			}
-  		}
-  		if (listFileInfos.size() > 0) {
-  			FilesViewMenuUtil.fillMenu(
-  					tv,
-  					sColumnName,
-  					menu,
-  					new DownloadManager[]{ firstFileDM },
-  					new DiskManagerFileInfo[][]{ listFileInfos.toArray(new DiskManagerFileInfo[0])},
-  					false,
-  					false);
-  			return;
-  		}
+		if (selecteddms.length == 0 && dataSources.length > 0) {
+			
+			Map<DownloadManager,List<DiskManagerFileInfo>> map = new IdentityHashMap<>();
+
+			List<DownloadManager> dms = new ArrayList<>();
+
+			for (Object ds : dataSources) {
+				if (ds instanceof DiskManagerFileInfo) {
+					DiskManagerFileInfo info = (DiskManagerFileInfo) ds;
+					
+					DownloadManager dm = info.getDownloadManager();
+					
+					List<DiskManagerFileInfo> list = map.get(dm);
+
+					if ( list == null ){
+
+						list = new ArrayList<>(dm.getDiskManagerFileInfoSet().nbFiles());
+
+						map.put( dm, list );
+
+						dms.add( dm );
+					}
+
+					list.add( info );
+				}
+			}
+			
+			DownloadManager[] manager_list = dms.toArray( new DownloadManager[ dms.size()]);
+
+			DiskManagerFileInfo[][] files_list = new DiskManagerFileInfo[manager_list.length][];
+
+			for ( int i=0;i<manager_list.length;i++){
+
+				List<DiskManagerFileInfo> list =  map.get( manager_list[i] );
+
+				files_list[i] = list.toArray( new DiskManagerFileInfo[list.size()]);
+			}
+			
+			if ( files_list.length > 0 ){
+				
+				FilesViewMenuUtil.fillMenu(	tv,	sColumnName, menu, manager_list, files_list, false, false );
+				
+				return;
+			}
 		}
 
-		boolean hasSelection = (dms.length > 0);
+		boolean hasSelection = (selecteddms.length > 0);
 
 		if (hasSelection) {
 			boolean isSeedingView = Download.class.equals(forDataSourceType) || DownloadTypeComplete.class.equals(forDataSourceType);
-			TorrentUtil.fillTorrentMenu(menu, dms, core, true,
+			TorrentUtil.fillTorrentMenu(menu, selecteddms, core, true,
 					(isSeedingView) ? 2 : 1, tv);
 
 			// ---
