@@ -47,6 +47,7 @@ TagFeatureExecOnAssign
 	public static final int ACTION_HOST						= 0x1000;
 	public static final int ACTION_PUBLISH					= 0x2000;
 	public static final int ACTION_REMOVE_TAGS				= 0x4000;
+	public static final int ACTION_QUEUE					= 0x8000;
 
 	public static final int[] ACTIONS = {
 			ACTION_DESTROY,
@@ -64,6 +65,7 @@ TagFeatureExecOnAssign
 			ACTION_HOST,
 			ACTION_PUBLISH,
 			ACTION_REMOVE_TAGS,
+			ACTION_QUEUE,
 	};
 	
 	public int

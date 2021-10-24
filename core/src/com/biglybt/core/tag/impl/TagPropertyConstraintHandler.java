@@ -1643,12 +1643,18 @@ TagPropertyConstraintHandler
 		getOptions()
 		{
 			if ( auto_add ){
-				return( "am=1;" );
+				if ( auto_remove ){
+					return( "am=0;" );
+				}else{
+					return( "am=1;" );
+				}
 			}else if ( auto_remove ){
 				return( "am=2;" );
 			}else if ( new_only ){
 				return( "am=3" );
 			}else{
+				Debug.out(  "Hmm" );
+				
 				return( "am=0;" );
 			}
 		}
@@ -2455,6 +2461,8 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_SEQUENTIAL		= 33;		
 		private static final int FT_TAG_POSITION		= 34;		
 		private static final int FT_IS_SHARE			= 35;		
+		private static final int FT_IS_UNALLOCATED		= 36;		
+		private static final int FT_IS_QUEUED			= 37;		
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2794,6 +2802,22 @@ TagPropertyConstraintHandler
 
 					fn_type = FT_IS_NEW;
 
+					params_ok = num_params == 0;
+
+				}else if ( func_name.equals( "isUnallocated" )){
+
+					fn_type = FT_IS_UNALLOCATED;
+
+					depends_on_download_state = true;
+					
+					params_ok = num_params == 0;
+					
+				}else if ( func_name.equals( "isQueued" )){
+
+					fn_type = FT_IS_QUEUED;
+
+					depends_on_download_state = true;
+					
 					params_ok = num_params == 0;
 
 				}else if ( func_name.equals( "canArchive" )){
@@ -3371,9 +3395,19 @@ TagPropertyConstraintHandler
 						
 						return(  dm.getAssumedComplete() && !PlatformTorrentUtils.getHasBeenOpened(dm));
 					}
+					case FT_IS_UNALLOCATED:{
+						
+						return( !dm.isDataAlreadyAllocated());
+					}
 					case FT_IS_PAUSED:{
 
 						return( dm.isPaused());
+					}
+					case FT_IS_QUEUED:{
+
+						int state = dm.getState();
+
+						return( state == DownloadManager.STATE_QUEUED );
 					}
 					case FT_CAN_ARCHIVE:{
 

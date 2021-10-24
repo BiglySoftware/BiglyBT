@@ -599,7 +599,8 @@ TagDownloadWithState
 						}
 
 					}else if ( 	isActionEnabled( TagFeatureExecOnAssign.ACTION_STOP ) ||
-								isActionEnabled( TagFeatureExecOnAssign.ACTION_PAUSE )){
+								isActionEnabled( TagFeatureExecOnAssign.ACTION_PAUSE ) ||
+								isActionEnabled( TagFeatureExecOnAssign.ACTION_QUEUE )){
 
 						int	dm_state = dm.getState();
 
@@ -617,6 +618,10 @@ TagDownloadWithState
 										if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_STOP )){
 
 											dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+
+										}else if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_QUEUE )){
+
+											dm.stopIt( DownloadManager.STATE_QUEUED, false, false );
 
 										}else{
 
@@ -2432,6 +2437,7 @@ TagDownloadWithState
 					TagFeatureExecOnAssign.ACTION_FORCE_START |
 					TagFeatureExecOnAssign.ACTION_NOT_FORCE_START |
 					TagFeatureExecOnAssign.ACTION_STOP |
+					TagFeatureExecOnAssign.ACTION_QUEUE |
 					TagFeatureExecOnAssign.ACTION_PAUSE |
 					TagFeatureExecOnAssign.ACTION_SCRIPT |
 					TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE |
