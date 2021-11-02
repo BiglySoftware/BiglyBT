@@ -972,24 +972,31 @@ public class TabbedMDI
 
 			if (select_history.size() > 0) {
 
-				final TabbedEntry next = select_history.getLast();
-
-				if (!next.isEntryDisposed() && next != current) {
-
-					// If tabfolder's selected entry is the one we are closing,
-					// CTabFolder will try to move to next CTabItem.  Disable
-					// this feature by moving tabfolder's selection away from us
-					CTabItem[] items = tabFolder.getItems();
-					for (int i = 0; i < items.length; i++) {
-						CTabItem item = items[i];
-						TabbedEntry scanEntry = getEntryFromTabItem(item);
-						if (scanEntry == next) {
-							tabFolder.setSelection(item);
-							break;
+					// we can only do the crud below if we're on the SWT thread and this isn't
+					// always the case - fixing this properly is a bit of a job so hacking it atm
+					// (specifically unloading the mlDHT plugin in classic UI triggers this)
+				
+				if ( Utils.isSWTThread()){
+					
+					final TabbedEntry next = select_history.getLast();
+	
+					if (!next.isEntryDisposed() && next != current) {
+	
+						// If tabfolder's selected entry is the one we are closing,
+						// CTabFolder will try to move to next CTabItem.  Disable
+						// this feature by moving tabfolder's selection away from us
+						CTabItem[] items = tabFolder.getItems();
+						for (int i = 0; i < items.length; i++) {
+							CTabItem item = items[i];
+							TabbedEntry scanEntry = getEntryFromTabItem(item);
+							if (scanEntry == next) {
+								tabFolder.setSelection(item);
+								break;
+							}
 						}
+	
+						return( next );
 					}
-
-					return( next );
 				}
 			}
 		}
