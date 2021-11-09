@@ -39,6 +39,9 @@ TagFeatureProperties
 	getProperty(
 		String		name );
 
+	public String
+	getPropertiesString();
+	
 	public interface
 	TagProperty
 	{

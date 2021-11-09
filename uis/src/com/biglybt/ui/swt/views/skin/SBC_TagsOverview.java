@@ -503,6 +503,13 @@ public class SBC_TagsOverview
 					}
 				});
 
+		tableManager.registerColumn(Tag.class, ColumnTagEOA.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagEOA(column);
+					}
+				});
 		
 		tableManager.setDefaultColumnNames(TABLE_TAGS,
 				new String[] {
@@ -635,6 +642,7 @@ public class SBC_TagsOverview
 				
 				String tooltip = MessageText.getString("filter.tt.start");
 				tooltip += MessageText.getString("tagsoverview.filter.tt.line1");
+				tooltip += MessageText.getString("tagsoverview.filter.tt.line2");
 				
 				filter.setTooltip( tooltip );
 			}
@@ -1129,7 +1137,7 @@ public class SBC_TagsOverview
 	@Override
 	public boolean 
 	filterCheck(
-		Tag 		ds, 
+		Tag 		tag, 
 		String 		filter, 
 		boolean 	regex ) 
 	{
@@ -1139,15 +1147,27 @@ public class SBC_TagsOverview
 			
 			filter = filter.substring( 2 );
 			
-			name = ds.getGroup();
+			name = tag.getGroup();
 			
 			if ( name == null ){
 				
 				name = "";
 			}
+		}else if ( filter.startsWith( "p:" )){
+			
+			filter = filter.substring( 2 );
+			
+			if ( tag instanceof TagFeatureProperties ){
+				
+				name = ((TagFeatureProperties)tag).getPropertiesString();
+				
+			}else{
+				
+				name = "";
+			}
 		}else{
 		
-			name = ds.getTagName( true );
+			name = tag.getTagName( true );
 		}
 		
 		String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );

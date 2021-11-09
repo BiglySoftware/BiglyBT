@@ -130,4 +130,7 @@ TagFeatureExecOnAssign
 	setPostMessageChannel(
 		String		chat );
 	
+	public String
+	getEOAString();
+	
 }
