@@ -70,6 +70,7 @@ CHANGE: UI     | ru_RU: Russian translation update [jdPhobos]
 CHANGE: UI     | no_NO: Norwegian translation update [lislei]
 CHANGE: UI     | si_LK: Sinhala translation update [HelaBasa]
 CHANGE: UI     | ja_JP: Japanese translation update [ayano.midori]
+CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
 CHANGE: UI     | lv_LV: Latvian translation update [makrims]
 
 BUGFIX: Tag    | Fix Tag Group list sort order [TuxPaper]
