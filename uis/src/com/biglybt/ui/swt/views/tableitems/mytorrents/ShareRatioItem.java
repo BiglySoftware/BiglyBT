@@ -24,11 +24,18 @@ package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
+
+import java.text.DecimalFormat;
+
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.widgets.MessageBox;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
@@ -84,10 +91,33 @@ public class ShareRatioItem
 		public void selected(MenuItem menu, Object target) {
 			final Object[] dms = (Object[])target;
 
+			int existing = -1;
+
+			for (Object object : dms) {
+				if (object instanceof TableRowCore) {
+					TableRowCore rowCore = (TableRowCore) object;
+					object = rowCore.getDataSource(true);
+				}
+				if (object instanceof DownloadManager) {
+					int x = ((DownloadManager)object).getStats().getShareRatio();
+
+					if ( existing == -1 ){
+						existing = x;
+					}else if ( existing != x ){
+						existing = -1;
+						break;
+					}
+				}
+			}
+			
 			SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
 					"set.share.ratio.win.title", "set.share.ratio.win.msg");
 
-			entryWindow.setPreenteredText( "1.000", false );
+			DecimalFormat df = new DecimalFormat( "0.000");
+			df.setGroupingUsed(false);
+			df.setMaximumFractionDigits(3);
+
+			entryWindow.setPreenteredText( existing==-1?df.format( 1 ):df.format(existing/1000.0f), false );
 			entryWindow.selectPreenteredText( true );
 
 			entryWindow.prompt(new UIInputReceiverListener() {
@@ -100,7 +130,7 @@ public class ShareRatioItem
 					try{
 						String str = receiver.getSubmittedInput().trim();
 
-						int share_ratio = (int)( Float.parseFloat( str ) * 1000 );
+						int share_ratio = (int)( DisplayFormatters.parseFloat( df, str ) * 1000 );
 
 						for ( Object object: dms ){
 							if (object instanceof TableRowCore) {
@@ -114,9 +144,15 @@ public class ShareRatioItem
 
 					}catch( Throwable e ){
 
+						MessageBox mb = new MessageBox(Utils.findAnyShell(), SWT.ICON_ERROR | SWT.OK);
+
+						mb.setText(MessageText.getString("MyTorrentsView.dialog.NumberError.title"));
+						mb.setMessage(MessageText.getString("MyTorrentsView.dialog.NumberError.text"));
+
+						mb.open();
+
 						Debug.out( e );
 					}
-
 				}
 			});
 

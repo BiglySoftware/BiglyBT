@@ -977,7 +977,7 @@ DownloadManagerStatsImpl
 			// manipulate by updating downloaded to be one full copy and then uploaded as required
 
 		long	target_downloaded 	= total_size;
-		long	target_uploaded 	= ( ratio * total_size ) / 1000;
+		long	target_uploaded 	= ( ratio * total_size + 999) / 1000;
 
 		saved_data_bytes_downloaded	= target_downloaded - downloaded;
 		saved_data_bytes_uploaded	= target_uploaded - uploaded;

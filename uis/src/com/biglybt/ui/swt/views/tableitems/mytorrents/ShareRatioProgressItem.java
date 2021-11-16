@@ -20,12 +20,18 @@
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 
+import java.text.DecimalFormat;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.MessageBox;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStats;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.download.Download;
@@ -37,6 +43,7 @@ import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 
@@ -89,9 +96,11 @@ ShareRatioProgressItem
 				SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
 						"sr_prog.window.title", "sr_prog.window.message");
 
-				String	sr_str 	= DisplayFormatters.formatDecimal((double) existing_sr / 1000, 3);
+				DecimalFormat df = new DecimalFormat( "0.000");
+				df.setGroupingUsed(false);
+				df.setMaximumFractionDigits(3);
 
-				entryWindow.setPreenteredText( sr_str, false );
+				entryWindow.setPreenteredText( df.format(existing_sr/1000.0f), false );
 				entryWindow.selectPreenteredText( true );
 				entryWindow.setWidthHint( 400 );
 
@@ -107,7 +116,7 @@ ShareRatioProgressItem
 
 							if ( text.length() > 0 ){
 
-								float f = Float.parseFloat( text );
+								float f = DisplayFormatters.parseFloat( df, text );
 
 								int sr = (int)(f * 1000 );
 
@@ -115,6 +124,13 @@ ShareRatioProgressItem
 							}
 						}catch( Throwable e ){
 
+
+							MessageBox mb = new MessageBox(Utils.findAnyShell(), SWT.ICON_ERROR | SWT.OK);
+
+							mb.setText(MessageText.getString("MyTorrentsView.dialog.NumberError.title"));
+							mb.setMessage(MessageText.getString("MyTorrentsView.dialog.NumberError.text"));
+
+							mb.open();
 						}
 					}
 				});

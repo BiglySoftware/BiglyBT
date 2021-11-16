@@ -21,6 +21,7 @@
 package com.biglybt.ui.swt.views.utils;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -1465,7 +1466,11 @@ public class TagUIUtils
 
 				MenuItem itemSR = new MenuItem(menu, SWT.PUSH);
 
-				final String existing = String.valueOf( tf_rate_limit.getTagMinShareRatio()/1000.0f);
+				DecimalFormat df = new DecimalFormat( "0.000");
+				df.setGroupingUsed(false);
+				df.setMaximumFractionDigits(3);
+
+				final String existing = df.format( tf_rate_limit.getTagMinShareRatio()/1000.0f);
 
 				Messages.setLanguageText(itemSR, "menu.min.share.ratio", new String[]{existing} );
 
@@ -1485,38 +1490,39 @@ public class TagUIUtils
 									return;
 								}
 
-								try{
-									String text = receiver.getSubmittedInput().trim();
+								String text = receiver.getSubmittedInput().trim();
 
-									int	sr = 0;
+								int	sr = 0;
 
-									if ( text.length() > 0 ){
+								if ( text.length() > 0 ){
 
-										try{
-											float f = Float.parseFloat( text );
+									try{
+										float f = DisplayFormatters.parseFloat( df, text );
 
-											sr = (int)(f * 1000 );
+										sr = (int)(f * 1000 );
 
-											if ( sr < 0 ){
+										if ( sr < 0 ){
 
-												sr = 0;
+											sr = 0;
 
-											}else if ( sr == 0 && f > 0 ){
+										}else if ( sr == 0 && f > 0 ){
 
-												sr = 1;
-											}
-
-										}catch( Throwable e ){
-
-											Debug.out( e );
+											sr = 1;
 										}
 
 										tf_rate_limit.setTagMinShareRatio( sr );
 
-									}
-								}catch( Throwable e ){
+									}catch( Throwable e ){
 
-									Debug.out( e );
+										MessageBox mb = new MessageBox(Utils.findAnyShell(), SWT.ICON_ERROR | SWT.OK);
+
+										mb.setText(MessageText.getString("MyTorrentsView.dialog.NumberError.title"));
+										mb.setMessage(MessageText.getString("MyTorrentsView.dialog.NumberError.text"));
+
+										mb.open();
+
+										Debug.out( e );
+									}
 								}
 							}
 						});
@@ -1528,7 +1534,11 @@ public class TagUIUtils
 
 				MenuItem itemSR = new MenuItem(menu, SWT.PUSH);
 
-				final String existing = String.valueOf( tf_rate_limit.getTagMaxShareRatio()/1000.0f);
+				DecimalFormat df = new DecimalFormat( "0.000");
+				df.setGroupingUsed(false);
+				df.setMaximumFractionDigits(3);
+
+				final String existing = df.format( tf_rate_limit.getTagMaxShareRatio()/1000.0f);
 
 				Messages.setLanguageText(itemSR, "menu.max.share.ratio", new String[]{existing} );
 
@@ -1548,42 +1558,42 @@ public class TagUIUtils
 									return;
 								}
 
-								try{
-									String text = receiver.getSubmittedInput().trim();
+								String text = receiver.getSubmittedInput().trim();
 
-									int	sr = 0;
+								int	sr = 0;
 
-									if ( text.length() > 0 ){
+								if ( text.length() > 0 ){
 
-										try{
-											float f = Float.parseFloat( text );
+									try{
+										float f = DisplayFormatters.parseFloat( df, text );
 
-											sr = (int)(f * 1000 );
+										sr = (int)(f * 1000 );
 
-											if ( sr < 0 ){
+										if ( sr < 0 ){
 
-												sr = 0;
+											sr = 0;
 
-											}else if ( sr == 0 && f > 0 ){
+										}else if ( sr == 0 && f > 0 ){
 
-												sr = 1;
-											}
-
-										}catch( Throwable e ){
-
-											Debug.out( e );
+											sr = 1;
 										}
 
 										tf_rate_limit.setTagMaxShareRatio( sr );
 
-									}
-								}catch( Throwable e ){
+									}catch( Throwable e ){
 
-									Debug.out( e );
+										MessageBox mb = new MessageBox(Utils.findAnyShell(), SWT.ICON_ERROR | SWT.OK);
+
+										mb.setText(MessageText.getString("MyTorrentsView.dialog.NumberError.title"));
+										mb.setMessage(MessageText.getString("MyTorrentsView.dialog.NumberError.text"));
+
+										mb.open();
+
+										Debug.out( e );
+									}
 								}
 							}
 						});
-
 					}
 				});
 			}

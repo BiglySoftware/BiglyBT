@@ -18,6 +18,7 @@
 package com.biglybt.ui.swt.config;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pifimpl.local.ui.config.FloatParameterImpl;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -158,7 +160,7 @@ public class FloatSwtParameter
 			char[] chars = new char[e.text.length()];
 			e.text.getChars(0, chars.length, chars, 0);
 			for (char aChar : chars) {
-				if (!((aChar >= '0' && aChar <= '9') || aChar == '.')) {
+				if (!((aChar >= '0' && aChar <= '9') || aChar == DecimalFormatSymbols.getInstance().getDecimalSeparator())) {
 					e.doit = false;
 					return;
 				}
@@ -168,14 +170,17 @@ public class FloatSwtParameter
 		inputField.addListener(SWT.Modify, event -> {
 			// setText and user input will call this -- don't put text changes here
 			try {
-				validate(Float.parseFloat(inputField.getText()));
+				validate( DisplayFormatters.parseFloat(df, inputField.getText()));
 			} catch (Throwable ignore) {
+				ValidationInfo validationInfo = new ValidationInfo(false,
+						MessageText.getString("MyTorrentsView.dialog.NumberError.title"));
+				updateControl(validationInfo);
 			}
 		});
 
 		inputField.addListener(SWT.FocusOut, event -> {
 			try {
-				setValue(Float.parseFloat(inputField.getText()));
+				setValue(DisplayFormatters.parseFloat(df, inputField.getText()));
 			} catch (Throwable ignore) {
 			}
 		});

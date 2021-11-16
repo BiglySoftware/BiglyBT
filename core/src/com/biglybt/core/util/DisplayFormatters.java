@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -1361,6 +1362,33 @@ DisplayFormatters
 		format_map = map;
 	}
 
+	public static float
+	parseFloat(
+		DecimalFormat		df,
+		String				str )
+	
+		throws NumberFormatException
+	{
+		if ( str == null ){
+			throw( new NumberFormatException());
+		}
+		
+		str = str.trim();
+		
+		ParsePosition parsePosition = new ParsePosition(0);
+		 
+		float result = df.parse(str,parsePosition).floatValue();
+		
+		if ( parsePosition.getIndex() == str.length()){
+			
+			return( result );
+			
+		}else{
+			
+			throw( new NumberFormatException( "Invalid float: " + str ));
+		}
+	}
+	
 	public static String
 	formatCustomRate(
 		String		key,
