@@ -100,6 +100,7 @@ BUGFIX: UI     | Fixed bug with disposed rows being added to table views [Parg]
 BUGFIX: UI     | Fix library view sub-rows not updating correctly [Parg]
 BUGFIX: UI     | Fix occasional UI lag when switching skip status [Parg]
 BUGFIX: UI     | Use Pattern.quote instead of \Q..\E [TuxPaper]
+BUGFIX: UI     | Fix various issues with share ratio parsing/display [Parg]
 
 2021.07.09 | BiglyBT 2.8.0.0
 
