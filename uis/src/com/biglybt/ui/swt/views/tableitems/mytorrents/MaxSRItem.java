@@ -182,6 +182,6 @@ public class MaxSRItem
 		      return;
 		}
 
-		cell.setText( value==0?"": String.valueOf( value/1000.0f));
+		cell.setText( value==0?"": DisplayFormatters.formatDecimal( value/1000.0d, 3));
 	}
 }

@@ -30,6 +30,7 @@ import com.biglybt.pif.ui.tables.TableColumnInfo;
 
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureRateLimit;
+import com.biglybt.core.util.DisplayFormatters;
 
 
 
@@ -79,7 +80,7 @@ implements TableCellRefreshListener, TableColumnExtraInfoListener
 					return;
 				}
 
-				cell.setText( sr==0?"":String.valueOf( sr/1000.0f ));
+				cell.setText( sr==0?"":DisplayFormatters.formatDecimal( sr/1000.0d, 3 ));
 			}
 		}
 	}
