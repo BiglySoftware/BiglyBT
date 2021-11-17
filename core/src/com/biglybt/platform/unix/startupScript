@@ -4,13 +4,13 @@
 AUTOUPDATE_SCRIPT=1 # change to 0 if you don't want your changes overwritten on next SCRIPT_VERSION change
 JAVA_PROGRAM_DIR=""	# use full path to java bin dir, ex. "/usr/java/j2sdk1.4.2/bin/"
 #PROGRAM_DIR="/home/username/apps/biglybt"	# use full path to BiglyBT bin dir
-JAVA_PROPS="-Djava.net.preferIPv4Stack=true"
+JAVA_PROPS=""
 
 #######################################
 
 ######## YOU PROBABLY DO NOT WANT TO TOUCH ANYTHING BELOW! ########
 
-SCRIPT_VERSION=9
+SCRIPT_VERSION=10
 START_CLASS="com.biglybt.ui.Main"
 
 MSG_LOADING="Loading BiglyBT:"
@@ -120,7 +120,7 @@ moveInSWT()
 		# No swt dir
 		return;
 	fi
-	arch=`uname -p`
+	arch=`uname -m`
 	if [[ "$OSTYPE" = "FreeBSD" ]]; then
 			SWTFILE="swt/swt-bsd.jar"
 	elif [ -f "${PROGRAM_DIR}/swt/swt-${arch}.jar" ]; then
