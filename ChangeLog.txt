@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2021.11.yy | BiglyBT 2.9.0.0
+2021.11.17 | BiglyBT 2.9.0.0
 
 FEATURE: Tag   | Added full re-evaluation timer config [Parg] 
 FEATURE: Tag   | Added script type of 'plugin' to Tag execute-on-assign [Parg]
