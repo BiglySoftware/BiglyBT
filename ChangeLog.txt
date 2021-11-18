@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2022.xx.yy | BiglyBT 2.9.0.1
+
 2021.11.17 | BiglyBT 2.9.0.0
 
 FEATURE: Tag   | Added full re-evaluation timer config [Parg] 
@@ -19,7 +21,7 @@ FEATURE: Tag   | Tag Group sidebar indicator [Parg]
 FEATURE: Tag   | Can now rename Tag Groups [Parg]
 FEATURE: Tag   | Added addtag/removetag/setcategory to Simple API plugin [Parg]
 FEATURE: Tag   | Allow execute-on-assign to directly invoke Simple API methods [Parg]
-FAETURE: Tag   | Added isQueued() and isUnallocated() constraint methods [Parg]
+FEATURE: Tag   | Added isQueued() and isUnallocated() constraint methods [Parg]
 FEATURE: Tag   | Added "Queue" to execute-on-assign actions [Parg]
 FEATURE: Tag   | Separate "Execute On Assign" column in Tags Overview to show details [Parg]
 FEATURE: Core  | Support multiple concurrent data+torrent exports and Disk Ops queue [Parg]
