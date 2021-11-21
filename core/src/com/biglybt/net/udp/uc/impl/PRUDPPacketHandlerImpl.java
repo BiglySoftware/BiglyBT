@@ -801,7 +801,7 @@ PRUDPPacketHandlerImpl
 			}
 
 			Logger.log(new LogEvent(LOGID, "PRUDPPacketReceiver: "
-					+ "DatagramSocket bind failed on port " + port, e));
+					+ "DatagramSocket bind failed on port " + port + ", bind=" + target_bind_ip, e));
 
 		}finally{
 
