@@ -421,7 +421,9 @@ NetworkAdminImpl
 		String	error_str	= null;
 
 		try{
-			InetAddress ia = InetAddress.getByName( "dns.test.client.vuze.com" );
+				// not supposed to exist - SPI will return loopback if things are working OK
+			
+			InetAddress ia = InetAddress.getByName( DNS_SPI_TEST_HOST );
 
 			if ( ia.isLoopbackAddress()){
 

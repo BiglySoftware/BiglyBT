@@ -30,6 +30,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.PluginAdapter;
@@ -60,8 +61,6 @@ AENameServiceDescriptor
 	implements NameServiceDescriptor
 {
 		// used in NetworkAdminImpl - not direct fixup due to loading issues observed...
-
-	private static final String 		TEST_HOST	= "dns.test.client.vuze.com";
 
 	private final static NameService 	delegate_ns;
 	private final static Method 		delegate_ns_method_lookupAllHostAddr;
@@ -179,7 +178,7 @@ AENameServiceDescriptor
 
 				String host_name = (String)args[0];
 
-				if ( host_name.equals( TEST_HOST )){
+				if ( host_name.equals( NetworkAdmin.DNS_SPI_TEST_HOST )){
 
 					if ( delegate_ns == null ){
 
@@ -209,9 +208,14 @@ AENameServiceDescriptor
 
 					}catch( Throwable e ){
 
+						if ( e instanceof InvocationTargetException ){
+							
+							e = ((InvocationTargetException)e).getTargetException();
+						}
+						
 						if ( e instanceof UnknownHostException ){
 
-							// guess their DNS might be down - don't treat as complete fail
+								// guess their DNS might be down - don't treat as complete fail
 
 							System.err.println( "DNS resolution of " + host_name + " failed, DNS unavailable?" );
 

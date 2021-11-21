@@ -49,6 +49,11 @@ NetworkAdmin
 		PR_AS
 	};
 
+		// this is not supposed to exist, it is used to test that resolution is being
+		// intercepted
+	
+	public static final String 		DNS_SPI_TEST_HOST	= "dns.test.client.biglybt.com";
+	
 	public static synchronized NetworkAdmin
 	getSingleton()
 	{
