@@ -668,6 +668,8 @@ public class PeerUtils {
 	private static final Object	ni_key 		= new Object();
 	private static final Object	ni_null 	= new Object();
 
+	private static final Object	ni_address_key 		= new Object();
+
 	public static NetworkInterface
 	getLocalNetworkInterface(
 		PEPeer	peer )
@@ -719,6 +721,8 @@ public class PeerUtils {
 									result = (NetworkInterface)o;
 									
 									peer.setUserData( ni_key, result );
+									
+									peer.setUserData( ni_address_key, address );
 									
 								}else{
 									
@@ -780,6 +784,8 @@ public class PeerUtils {
 										
 										peer.setUserData( ni_key, result );
 										
+										peer.setUserData( ni_address_key, udp_bind );
+										
 									}else{
 										
 										peer.setUserData( ni_key, ni_null );
@@ -816,6 +822,8 @@ public class PeerUtils {
 															
 															peer.setUserData( ni_key, result );
 															
+															peer.setUserData( ni_address_key, local );
+															
 														}else{
 															
 															peer.setUserData( ni_key, ni_null );
@@ -851,6 +859,18 @@ public class PeerUtils {
 		}
 		
 		return( result );
+	}
+	
+	public static InetAddress
+	getLocalAddress(
+		PEPeer	peer )
+	{
+		if ( peer.getUserData( ni_key ) == null ){
+			
+			getLocalNetworkInterface( peer );
+		}
+		
+		return(InetAddress)peer.getUserData( ni_address_key );
 	}
 	
 	private static final Object	asn_key 		= new Object();

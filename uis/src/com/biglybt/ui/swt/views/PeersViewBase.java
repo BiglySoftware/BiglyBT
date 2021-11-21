@@ -118,6 +118,7 @@ PeersViewBase
 				new ASItem(table_id),
 				new IndexItem(table_id),
 				new ColumnPeerNetwork(table_id),
+				new LocalInterfaceItem(table_id),
 		};
 	}
 
