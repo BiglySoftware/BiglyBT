@@ -980,7 +980,7 @@ public class ToolBarView
 			UIToolBarItem stopItem = tbm.getToolBarItem("stop");
 			
 			if ( stopItem != null ){
-				stopItem.setTextID( allFiles? "iconBar.stopFiles" : "iconBar.start" );
+				stopItem.setTextID( allFiles? "iconBar.stopFiles" : "iconBar.stop" );
 			}
 		
 			UIToolBarItem ssItem = tbm.getToolBarItem("startstop");
