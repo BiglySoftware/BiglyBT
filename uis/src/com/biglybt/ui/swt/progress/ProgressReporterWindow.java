@@ -429,12 +429,15 @@ public class ProgressReporterWindow
 
 		/*
 		 * Set the shell size if it's different that the computed size
-		 */
+		
+		 * Hmm, why, if the user has resized it them so be it
+		 * 
 		if (!shell.getSize().equals(p)) {
 			shell.setSize(p);
 			shell.layout(false);
 		}
-
+		*/
+		
 		if ( !alreadyPositioned ){
 			/*
 			 * Centers the window
@@ -468,6 +471,12 @@ public class ProgressReporterWindow
 		}
 	}
 
+	public int
+	getStyle()
+	{
+		return( style );
+	}
+	
 	private void createPanels() {
 
 		int size = pReporters.length;
@@ -490,7 +499,7 @@ public class ProgressReporterWindow
 				/*
 				 * Create the reporter panel; adding the style bit for BORDER
 				 */
-				final ProgressReporterPanel panel = new ProgressReporterPanel(
+				final ProgressReporterPanel panel = new ProgressReporterPanel( this,
 						scrollChild, pReporters[i], style | BORDER);
 
 				panel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
