@@ -195,7 +195,7 @@ MagnetPluginMDDownloader
 	{
 		String	hash_str = ByteFormatter.encodeString( hash );
 
-		File tmp_dir 		= null;
+		File md_dir 		= null;
 		File data_file 		= null;
 		File torrent_file 	= null;
 
@@ -228,38 +228,64 @@ MagnetPluginMDDownloader
 				throw( new Exception( "download already exists" ));
 			}
 
-			tmp_dir = AETemporaryFileHandler.createTempDir();
+			File torrents_dir = FileUtil.getUserFile( "torrents" );
 
-			int	 rand = RandomUtils.generateRandomIntUpto( 10000 );
-
-			data_file 		= FileUtil.newFile( tmp_dir, hash_str + "_" + rand + ".torrent" );
-			torrent_file 	= FileUtil.newFile( tmp_dir, hash_str + "_" + rand + ".metatorrent" );
-
-			RandomAccessFile raf = new RandomAccessFile( data_file, "rw" );
-
-			try{
-				byte[] buffer = new byte[512*1024];
-
-				Arrays.fill( buffer, (byte)0xff );
-
-				for (long i=0;i<64*1024*1024;i+=buffer.length){
-
-					raf.write( buffer );
-				}
-			}finally{
-
-				raf.close();
+			md_dir = FileUtil.newFile( torrents_dir, "md", hash_str );
+			
+			if ( !md_dir.exists()){
+				
+				md_dir.mkdirs();
 			}
+			
+			data_file 		= FileUtil.newFile( md_dir, hash_str + ".torrent" );
+			torrent_file 	= FileUtil.newFile( md_dir, hash_str + ".metatorrent" );
 
+			int MD_TORRENT_SIZE = 64*1024*1024;
+			
+			if ( !data_file.exists() || data_file.length() != MD_TORRENT_SIZE ){
+			
+				RandomAccessFile raf = new RandomAccessFile( data_file, "rw" );
+
+				try{
+					byte[] buffer = new byte[512*1024];
+	
+					Arrays.fill( buffer, (byte)0xff );
+	
+					for (long i=0;i<MD_TORRENT_SIZE;i+=buffer.length){
+	
+						raf.write( buffer );
+					}
+				}finally{
+	
+					raf.close();
+				}
+			}
+			
 			URL announce_url = TorrentUtils.getDecentralisedURL( hash );
 
-			TOTorrentCreator creator =
-				TOTorrentFactory.createFromFileOrDirWithFixedPieceLength(
-						data_file,
-						announce_url,
-						16*1024 );
-
-			TOTorrent meta_torrent = creator.create( true );
+			TOTorrent meta_torrent = null;
+			
+			if ( torrent_file.exists()){
+				
+				try{
+					meta_torrent = TOTorrentFactory.deserialiseFromBEncodedFile( torrent_file );
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+			
+			if ( meta_torrent == null ){
+				
+				TOTorrentCreator creator =
+					TOTorrentFactory.createFromFileOrDirWithFixedPieceLength(
+							data_file,
+							announce_url,
+							16*1024 );
+	
+				meta_torrent = creator.create( true );
+			}
 
 			String[] bits = args.split( "&" );
 
@@ -352,11 +378,6 @@ MagnetPluginMDDownloader
 
 					ag.setAnnounceURLSets( url_sets );
 				}
-			}
-
-			if ( !data_file.delete()){
-
-				throw( new Exception( "Failed to delete " + data_file ));
 			}
 
 			meta_torrent.setHashOverride( hash );
@@ -874,9 +895,9 @@ MagnetPluginMDDownloader
 
 				byte[]	bytes = result.toByteArray();
 
-				Map	info = BDecoder.decode( bytes );
+				Map<String,Object>	info = BDecoder.decode( bytes );
 
-				Map	map = new HashMap();
+				Map<String,Object>	map = new HashMap<>();
 
 				map.put( "info", info );
 
@@ -1069,9 +1090,9 @@ MagnetPluginMDDownloader
 					data_file.delete();
 				}
 
-				if ( tmp_dir != null ){
+				if ( md_dir != null ){
 
-					tmp_dir.delete();
+					FileUtil.recursiveDeleteNoCheck( md_dir );
 				}
 			}catch( Throwable e ){
 
