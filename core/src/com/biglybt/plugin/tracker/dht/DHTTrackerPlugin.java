@@ -116,6 +116,8 @@ DHTTrackerPlugin
 	private static final int	DL_DERIVED_MAX_TRACK		= 20;
 	private static final int	DIRECT_INJECT_PEER_MAX		= 5;
 
+	private static final Object LATEST_REGISTER_REASON	= new Object();
+	
 	//private static final boolean ADD_ASN_DERIVED_TARGET			= false;
 	//private static final boolean ADD_NETPOS_DERIVED_TARGETS		= false;
 
@@ -923,7 +925,7 @@ DHTTrackerPlugin
 
 						register_type	= REG_TYPE_FULL;
 
-						register_reason = "decentralised";
+						register_reason = "Decentralised";
 
 					}else{
 
@@ -948,7 +950,7 @@ DHTTrackerPlugin
 
 							if ( !( ok || TEST_ALWAYS_TRACK )){
 
-								register_reason = "decentralised peer source disabled";
+								register_reason = "Decentralised peer source disabled";
 
 							}else{
 									// this will always be true since change to exclude queued...
@@ -967,7 +969,7 @@ DHTTrackerPlugin
 
 									register_type	= REG_TYPE_FULL;
 
-									register_reason = TEST_ALWAYS_TRACK?"testing always track":"torrent requests decentralised tracking";
+									register_reason = TEST_ALWAYS_TRACK?"Testing always track":"Torrent requests decentralised tracking";
 
 								}else if ( track_normal_when_offline.getValue()){
 
@@ -983,11 +985,11 @@ DHTTrackerPlugin
 
 											register_type	= REG_TYPE_FULL;
 
-											register_reason = "tracker unavailable (announce)";
+											register_reason = "Tracker unavailable (announce)";
 
 										}else{
 
-											register_reason = "tracker available (announce: " + result.getURL() + ")";
+											register_reason = "Tracker available (announce: " + result.getURL() + ")";
 										}
 									}else{
 
@@ -999,11 +1001,11 @@ DHTTrackerPlugin
 
 											register_type	= REG_TYPE_FULL;
 
-											register_reason = "tracker unavailable (scrape)";
+											register_reason = "Tracker unavailable (scrape)";
 
 										}else{
 
-											register_reason = "tracker available (scrape: " + result.getURL() + ")";
+											register_reason = "Tracker available (scrape: " + result.getURL() + ")";
 										}
 									}
 
@@ -1049,44 +1051,51 @@ DHTTrackerPlugin
 
 											register_type	= REG_TYPE_FULL;
 
-											register_reason = "limited online tracking";
+											register_reason = "Limited online tracking";
 										}
 									}
 								}else{
 									register_type	= REG_TYPE_FULL;
 
-									register_reason = "peer source enabled";
+									register_reason = "Peer source enabled";
 								}
 							}
 						}else{
 
-							register_reason = "decentralised backup disabled for the torrent";
+							register_reason = "Decentralised backup disabled for the torrent";
 						}
 					}
 				}else{
 
-					register_reason = "not public";
+					if ( public_net ){
+					
+						register_reason = MessageText.getString( "label.private" );
+						
+					}else{
+						
+						register_reason = MessageText.getString( "Scrape.status.networkdisabled" );
+					}
 				}
 			}else{
 
-				register_reason = "torrent is broken";
+				register_reason = "Torrent is broken";
 			}
 
 			if ( register_type == REG_TYPE_DERIVED ){
 
 				if ( register_reason.length() == 0 ){
 
-					register_reason = "derived";
+					register_reason = "Derived";
 
 				}else{
 
-					register_reason = "derived (overriding ' " + register_reason + "')";
+					register_reason = "Derived (overriding ' " + register_reason + "')";
 				}
 			}
 		}else if ( 	state == Download.ST_STOPPED ||
 					state == Download.ST_ERROR ){
 
-			register_reason	= "not running";
+			register_reason	= "Not running";
 
 			skip_log	= true;
 
@@ -1101,6 +1110,8 @@ DHTTrackerPlugin
 
 			register_reason	= "";
 		}
+
+		download.setUserData( LATEST_REGISTER_REASON, register_reason );
 
 		if ( register_reason.length() > 0 ){
 
@@ -1143,7 +1154,7 @@ DHTTrackerPlugin
 						}
 					}
 				}else{
-
+					
 					if ( run_data  != null ){
 
 						if ( !skip_log ){
@@ -3925,6 +3936,12 @@ DHTTrackerPlugin
 
 									status = TrackerPeerSource.ST_DISABLED;
 
+									String reason = (String)download.getUserData( LATEST_REGISTER_REASON );
+									
+									if ( reason != null && !reason.isEmpty()){
+										
+										new_status_str = reason;
+									}
 								}else{
 
 									status = TrackerPeerSource.ST_STOPPED;
