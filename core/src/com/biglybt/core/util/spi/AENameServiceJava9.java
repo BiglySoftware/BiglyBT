@@ -9,6 +9,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.TorrentUtils;
@@ -19,8 +20,6 @@ import com.biglybt.plugin.I2PHelpers;
 public class 
 AENameServiceJava9 
 {	
-	private static final String 		TEST_HOST	= "dns.test.client.vuze.com";
-
 	public static boolean
 	init()
 	{
@@ -95,7 +94,7 @@ AENameServiceJava9
 	
 					String host_name = (String)args[0];
 	
-					if ( host_name.equals( TEST_HOST )){
+					if ( host_name.equals( NetworkAdmin.DNS_SPI_TEST_HOST )){
 	
 						if ( delegate == null ){
 	
