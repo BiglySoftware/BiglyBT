@@ -71,7 +71,6 @@ public class TorrentUIUtilsV3
 
 	private final static String MSG_ALREADY_EXISTS_NAME = MSG_ALREADY_EXISTS + ".default.name";
 
-	//catches http://www.vuze.com/download/CHJW43PLS277RC7U3S5XRS2PZ4UUG7RS.torrent
 	private static final Pattern hashPattern = Pattern.compile("download/([A-Z0-9]{32})\\.torrent");
 
 	static ImageLoader imageLoaderThumb;

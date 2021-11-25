@@ -1620,8 +1620,6 @@ PlatformManagerImpl
 	{
 
 		try{
-				// see http://forum.vuze.com/thread.jspa?threadID=79692&tstart=0
-
 			String	az_exe_string	= getApplicationEXELocation().toString();
 
 			boolean	magnet_exe_managing = false;

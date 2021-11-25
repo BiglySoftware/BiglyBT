@@ -608,7 +608,7 @@ PRUDPPacketHandlerImpl
 
 							// one off attempt to recover by selecting an explicit one.
 							// on  Vista (at least) we sometimes fail with wildcard but succeeed
-							// with explicit (see http://forum.vuze.com/thread.jspa?threadID=77574&tstart=0)
+							// with explicit
 
 						if ( target_bind_ip.isAnyLocalAddress()){
 

@@ -634,7 +634,7 @@ AEWin32AccessImpl
     @Override
     public Map<File, Map> getAllDrives() {
 
-    	// gah, see http://pluscs.vuze.com/tickets/23804?col=1101604&page=1 we sometimes get crashes here
+    	// gah, we sometimes get crashes here
 
     	String	state_key = "awein32.getalldrives.state.2";
 

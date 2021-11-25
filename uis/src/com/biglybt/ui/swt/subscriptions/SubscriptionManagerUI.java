@@ -1485,7 +1485,6 @@ SubscriptionManagerUI
 
 							// always treat as collasped - due to various sidebar restructuring this had effectively been
 							// the case for quite a while and people complained when it reverted to the original way of working
-							// http://forum.vuze.com/Thread-Total-subscription-results-gone-in-Beta-19
 
 						boolean expanded = false;
 

@@ -166,19 +166,4 @@ outer:
 
 		return( success );
 	}
-
-	public static void
-	main(
-		String[]	args )
-	{
-		new MagnetURIHandlerClient().sendSetValue(
-				"AZMSG",
-				"AZMSG;1;torrent;is-ready",
-				30000 );
-
-		new MagnetURIHandlerClient().sendSetValue(
-				"AZMSG",
-				"AZMSG;1;torrent;load-torrent;{\"url\":\"http://www.vuze.com/download/VCCBRHY5GYNGFKPJSYQID4GB3XPTYGIG.torrent?referal=jws\",\"play-now\":true}",
-				30000 );
-	}
 }

@@ -396,7 +396,6 @@ public class PeerFilesView
 				if (img != null && !img.isDisposed()){
 					Utils.execSWTThread(() -> Utils.disposeSWTObjects(img));
 
-						// see http://forum.vuze.com/thread.jspa?threadID=117243
 						// could it be that it isn't being marked as disposed after disposal and
 						// being double-disposed?
 					((UISWTGraphic) graphic).setImage( null );

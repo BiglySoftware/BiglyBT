@@ -106,10 +106,6 @@ MagnetPlugin
 	public static final int	FL_DISABLE_MD_LOOKUP	= 0x00000001;
 	public static final int	FL_NO_MD_LOOKUP_DELAY	= 0x00000002;
 
-	private static final String	SECONDARY_LOOKUP 			= "http://magnet.vuze.com/";
-	private static final int	SECONDARY_LOOKUP_DELAY		= 20*1000;
-	private static final int	SECONDARY_LOOKUP_MAX_TIME	= 2*60*1000;
-
 	private static final int	MD_LOOKUP_DELAY_SECS_DEFAULT		= 0;
 
 	private static final String[] MD_EXTRA_TRACKERS = { "udp://tracker.opentrackr.org:1337/announce" }; 
@@ -2300,12 +2296,6 @@ MagnetPlugin
 			try{
 				long	remaining	= timeout;
 
-				boolean	sl_enabled				= false; // secondary_lookup.getValue() && FeatureAvailability.isMagnetSLEnabled();
-				boolean	sl_failed				= false;
-				long secondary_lookup_time 	= -1;
-
-				final Object[] secondary_result = { null };
-
 					// public DHT lookup
 
 				if ( networks_enabled.contains( AENetworkClassifier.AT_PUBLIC )){
@@ -2636,65 +2626,7 @@ MagnetPlugin
 
 								}else{
 
-									if ( sl_enabled ){
-
-										if ( secondary_lookup_time == -1 ){
-
-											long	base_time;
-
-											if ( last_found == -1 || now - overall_start > 60*1000 ){
-
-												base_time = overall_start;
-
-											}else{
-
-												base_time = last_found;
-											}
-
-											long	time_so_far = now - base_time;
-
-											if ( time_so_far > SECONDARY_LOOKUP_DELAY ){
-
-												secondary_lookup_time = SystemTime.getMonotonousTime();
-
-												doSecondaryLookup( listener, secondary_result, hash, networks_enabled, args );
-											}
-										}else{
-
-											try{
-												byte[] torrent = getSecondaryLookupResult( secondary_result );
-
-												if ( torrent != null ){
-
-													return( new DownloadResult( torrent, networks_enabled, additional_networks ));
-												}
-											}catch( ResourceDownloaderException e ){
-
-												sl_failed = true;
-
-												// ignore, we just continue processing
-											}
-										}
-									}
-
 									continue;
-								}
-							}
-
-							if ( sl_enabled ){
-
-									// check before we try another DHT contact
-
-								try{
-									byte[] torrent = getSecondaryLookupResult( secondary_result );
-
-									if ( torrent != null ){
-
-										return( new DownloadResult( torrent, networks_enabled, additional_networks ));
-									}
-								}catch( ResourceDownloaderException e ){
-
-									sl_failed = true;
 								}
 							}
 
@@ -2873,57 +2805,6 @@ MagnetPlugin
 				}
 
 					// DDB lookup process is complete or skipped
-					// If secondary lookup is active/doable then hang around until it completes
-
-				if ( sl_enabled && !sl_failed ){
-
-					if ( secondary_lookup_time == -1 ){
-
-						secondary_lookup_time = SystemTime.getMonotonousTime();
-
-						doSecondaryLookup(listener, secondary_result, hash, networks_enabled, args );
-					}
-
-					while( SystemTime.getMonotonousTime() - secondary_lookup_time < SECONDARY_LOOKUP_MAX_TIME ){
-
-						if ( listener != null && listener.cancelled()){
-
-							return( null );
-						}
-
-						try{
-							byte[] torrent = getSecondaryLookupResult( secondary_result );
-
-							if ( torrent != null ){
-
-								return( new DownloadResult( torrent, networks_enabled, additional_networks ));
-							}
-
-							synchronized( result_holder ){
-
-								if ( result_holder[0] != null ){
-
-									return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
-								}
-								
-								if ( manually_cancelled[0] ){
-									
-									throw( new Exception( "Manually cancelled" ));
-								}
-							}
-
-							Thread.sleep( 500 );
-
-						}catch( ResourceDownloaderException e ){
-
-								// get here when secondary lookup completes with fail
-
-							sl_failed = true;
-
-							break;
-						}
-					}
-				}
 
 					// lastly hang around until metadata download completes
 
@@ -2939,23 +2820,6 @@ MagnetPlugin
 						Thread.sleep( 500 );
 
 						remaining -= 500;
-
-						if ( !sl_failed ){
-
-							try{
-								byte[] torrent = getSecondaryLookupResult( secondary_result );
-
-								if ( torrent != null ){
-
-									return( new DownloadResult( torrent, networks_enabled, additional_networks ));
-								}
-							}catch( ResourceDownloaderException e ){
-
-									// get here when secondary lookup completes with fail
-
-								sl_failed = true;
-							}
-						}
 
 						synchronized( result_holder ){
 
@@ -3003,173 +2867,6 @@ MagnetPlugin
 				}
 			}
 		}
-	}
-
-	protected void
-	doSecondaryLookup(
-		final MagnetPluginProgressListener		listener,
-		final Object[]							result,
-		byte[]									hash,
-		Set<String>								networks_enabled,
-		String									args )
-	{
-		if ( listener != null ){
-			listener.reportActivity( getMessageText( "report.secondarylookup"));
-		}
-
-		PluginProxy	plugin_proxy = null;
-
-		try{
-			URL original_sl_url = new URL( SECONDARY_LOOKUP + "magnetLookup?hash=" + Base32.encode( hash ) + (args.length()==0?"":("&args=" + UrlUtils.encode( args ))));
-
-			URL 	sl_url	= original_sl_url;
-			Proxy	proxy	= null;
-
-			if ( !networks_enabled.contains( AENetworkClassifier.AT_PUBLIC )){
-
-				plugin_proxy = AEProxyFactory.getPluginProxy( "secondary magnet lookup", sl_url );
-
-				if ( plugin_proxy == null ){
-
-					throw( new NoRouteToHostException( "plugin proxy unavailable" ));
-
-				}else{
-
-					proxy 	= plugin_proxy.getProxy();
-					sl_url	= plugin_proxy.getURL();
-				}
-			}
-
-			ResourceDownloaderFactory rdf = plugin_interface.getUtilities().getResourceDownloaderFactory();
-
-			ResourceDownloader rd;
-
-			if ( proxy == null ){
-
-				rd = rdf.create( sl_url );
-
-			}else{
-
-				rd = rdf.create( sl_url, proxy );
-
-				rd.setProperty( "URL_HOST", original_sl_url.getHost());
-			}
-
-			final PluginProxy f_pp = plugin_proxy;
-
-			rd.addListener(
-				new ResourceDownloaderAdapter()
-				{
-					@Override
-					public boolean
-					completed(
-						ResourceDownloader	downloader,
-						InputStream			data )
-					{
-						try{
-							if ( listener != null ){
-								listener.reportActivity( getMessageText( "report.secondarylookup.ok" ));
-							}
-
-							synchronized( result ){
-
-								result[0] = data;
-							}
-
-							return( true );
-
-						}finally{
-
-							complete();
-						}
-					}
-
-					@Override
-					public void
-					failed(
-						ResourceDownloader			downloader,
-						ResourceDownloaderException e )
-					{
-						try{
-							synchronized( result ){
-
-								result[0] = e;
-							}
-
-							if ( listener != null ){
-								listener.reportActivity( getMessageText( "report.secondarylookup.fail" ));
-							}
-
-						}finally{
-
-							complete();
-						}
-					}
-
-					private void
-					complete()
-					{
-						if ( f_pp != null ){
-
-							f_pp.setOK( true );		// outcome doesn't really indicate whether the result was wholesome
-						}
-					}
-				});
-
-			rd.asyncDownload();
-
-		}catch( Throwable e ){
-
-			if ( plugin_proxy != null ){
-
-				plugin_proxy.setOK( true );		// tidy up, no indication of proxy badness here so say its ok
-			}
-
-			if ( listener != null ){
-				listener.reportActivity( getMessageText( "report.secondarylookup.fail", Debug.getNestedExceptionMessage( e ) ));
-			}
-		}
-	}
-
-	protected byte[]
-	getSecondaryLookupResult(
-		final Object[]	result )
-
-		throws ResourceDownloaderException
-	{
-		if ( result == null ){
-
-			return( null );
-		}
-
-		Object x;
-
-		synchronized( result ){
-
-			x = result[0];
-
-			result[0] = null;
-		}
-
-		if ( x instanceof InputStream ){
-
-			InputStream is = (InputStream)x;
-
-			try{
-				TOTorrent t = TOTorrentFactory.deserialiseFromBEncodedInputStream( is );
-
-				TorrentUtils.setPeerCacheValid( t );
-
-				return( BEncoder.encode( t.serialiseToMap()));
-
-			}catch( Throwable e ){
-			}
-		}else if ( x instanceof ResourceDownloaderException ){
-
-			throw((ResourceDownloaderException)x);
-		}
-
-		return( null );
 	}
 
 	protected String

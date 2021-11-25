@@ -2560,7 +2560,6 @@ implements PiecePicker
 							continue;
 						}
 	
-							// https://jira.vuze.com/browse/SUP-154
 							// If we have a piece reserved to a slow peer then this can prevent end-game
 							// mode from being entered and result poopy end-of-dl speeds
 	
@@ -2654,7 +2653,6 @@ implements PiecePicker
 							continue;
 						}
 	
-							// https://jira.vuze.com/browse/SUP-154
 							// If we have a piece reserved to a slow peer then this can prevent end-game
 							// mode from being entered and result poopy end-of-dl speeds
 	

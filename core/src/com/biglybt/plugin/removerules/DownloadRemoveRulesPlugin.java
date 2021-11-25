@@ -54,8 +54,6 @@ DownloadRemoveRulesPlugin
 
 	public static final int			MAX_SEED_TO_PEER_RATIO	= 10;	// 10 to 1
 
-	public static final String		UPDATE_TRACKER		= "tracker.update.vuze.com";	// needs to be lowercase
-
 	protected PluginInterface plugin_interface;
 	protected boolean				closing;
 
@@ -254,69 +252,6 @@ DownloadRemoveRulesPlugin
 				removeDownload( download, remove_unauthorised_data.getValue() );
 
 				return;
-			}
-		}
-
-		Torrent	torrent = download.getTorrent();
-
-		if ( torrent != null && torrent.getAnnounceURL() != null ){
-
-			String	url_string = torrent.getAnnounceURL().toString().toLowerCase();
-
-			if (url_string.contains(UPDATE_TRACKER)){
-
-					// emergency instruction from tracker
-
-				if ( 	( download_completed &&
-					status.contains("too many seeds")) ||
-					status.contains("too many peers")){
-
-					log.log(download.getTorrent(), LoggerChannel.LT_INFORMATION,
-							"Download '" + download.getName()
-									+ "' being removed on instruction from the tracker");
-
-					removeDownloadDelayed( download, false );
-
-				}else if ( download_completed && remove_update_torrents.getValue()){
-
-					long	seeds	= download.getLastScrapeResult().getSeedCount();
-					long	peers	= download.getLastScrapeResult().getNonSeedCount();
-
-						// try to maintain an upper bound on seeds that isn't going to
-						// kill the tracker
-
-					if ( seeds / ( peers==0?1:peers ) > MAX_SEED_TO_PEER_RATIO ){
-
-						log.log(download.getTorrent(), LoggerChannel.LT_INFORMATION,
-								"Download '" + download.getName()
-										+ "' being removed to reduce swarm size");
-
-						removeDownloadDelayed( download, false );
-
-					}else{
-
-						long	creation_time	= download.getCreationTime();
-
-						long	running_mins = ( SystemTime.getCurrentTime() - creation_time )/(60*1000);
-
-						if ( running_mins > 15 ){
-
-								// big is a relative term here and generally distinguishes between core updates
-								// and plugin updates
-
-							boolean	big_torrent = torrent.getSize() > 1024*1024;
-
-							if ( 	( seeds > AELITIS_BIG_TORRENT_SEED_LIMIT && big_torrent ) ||
-									( seeds > AELITIS_SMALL_TORRENT_SEED_LIMIT && !big_torrent )){
-
-
-								log.log( "Download '" + download.getName() + "' being removed to reduce swarm size" );
-
-								removeDownloadDelayed( download, false );
-							}
-						}
-					}
-				}
 			}
 		}
 	}

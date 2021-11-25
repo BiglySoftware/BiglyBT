@@ -2839,7 +2839,7 @@ implements PEPeerTransport
 
 			// disable fast if we have per-torrent upload limit as it is non-trivial to enforce for choked fast-start
 			// transfers as peer is in the multi-peer upload group (as choked) and in this mode the limit isn't
-			// enforced (see http://forum.vuze.com/thread.jspa?threadID=105262)
+			// enforced
 
 		fast_extension_enabled =
 			BTHandshake.FAST_EXTENSION_ENABLED &&
