@@ -3233,33 +3233,37 @@ public class MyTorrentsView
 		DownloadManager[]		old_dms,
 		DownloadManager[]		new_dms )
 	{
-		Utils.execSWTThread(
-			new Runnable()
-			{
-				public void
-				run()
+			// we need to force invocations of this to be executed in order
+		
+		dispatcher.dispatch(()->{
+			Utils.execSWTThread(
+				new Runnable()
 				{
-					for ( DownloadManager dm: old_dms ){
-						
-						TableRowCore row = tv.getRow( dm );
-						
-						if ( row != null ){
+					public void
+					run()
+					{
+						for ( DownloadManager dm: old_dms ){
 							
-							row.setRequestAttention( false );
+							TableRowCore row = tv.getRow( dm );
+							
+							if ( row != null ){
+								
+								row.setRequestAttention( false );
+							}
+						}
+						
+						for ( DownloadManager dm: new_dms ){
+							
+							TableRowCore row = tv.getRow( dm );
+							
+							if ( row != null ){
+								
+								row.setRequestAttention( true );
+							}
 						}
 					}
-					
-					for ( DownloadManager dm: new_dms ){
-						
-						TableRowCore row = tv.getRow( dm );
-						
-						if ( row != null ){
-							
-							row.setRequestAttention( true );
-						}
-					}
-				}
-			});
+				});
+		});
 	}
 	
   // globalmanagerlistener Functions
