@@ -367,6 +367,8 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 			int mono_secs = (int)((SystemTime.getMonotonousTime()-startTime)/1000);
 			int next_secs = 60;
 			
+			int last_xpos = -1;
+			
 			for (int x = 0; x < bounds.width - 71; x++){
 			
 				int position = currentPosition - x - 1;
@@ -401,12 +403,17 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 						Point p = gcImage.stringExtent( str );
 						
 						int xPos = xDraw-p.x/2;
-						
+												
 						if ( xPos >= 0 ){
 						
-							gcImage.setForeground(Colors.grey );
+							if ( last_xpos < 0 ||  xPos + p.x < last_xpos ){
+							
+								gcImage.setForeground(Colors.grey );
 
-							gcImage.drawText( str, xPos, 0, true );
+								gcImage.drawText( str, xPos, 0, true );
+								
+								last_xpos = xPos;
+							}
 						}
 					}
 				}
