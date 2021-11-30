@@ -1223,13 +1223,13 @@ RelatedContentManager
 		if ( to_info.getLevel() == 0 ){
 
 			try{
-				Download d = to_info.getRelatedToDownload();
+				Download to_download = to_info.getRelatedToDownload();
 
-				if ( d != null ){
+				if ( to_download != null ){
 
 					int	version	= RelatedContent.VERSION_INITIAL;
 
-					Torrent torrent = d.getTorrent();
+					Torrent torrent = to_download.getTorrent();
 
 					if ( torrent != null ){
 
@@ -1243,7 +1243,7 @@ RelatedContentManager
 						}
 					}
 
-					DownloadManagerState state = PluginCoreUtils.unwrap( d ).getDownloadState();
+					DownloadManagerState state = PluginCoreUtils.unwrap( to_download ).getDownloadState();
 
 					int leechers 	= -1;
 					int seeds 		= -1;
@@ -1278,7 +1278,7 @@ RelatedContentManager
 						map.put( "z", new Long( seeds ));
 					}
 
-					byte[][] keys = getKeys( d );
+					byte[][] keys = getKeys( to_download );
 
 					if ( keys[0] != null ){
 						map.put( "k", keys[0] );
@@ -1287,30 +1287,31 @@ RelatedContentManager
 						map.put( "w", keys[1] );
 					}
 
-					String[] _tags = getTags( d );
+					String[] _tags = getTags( to_download );
 
 					if ( _tags != null ){
 						map.put( "g", encodeTags( _tags ));
 					}
 
-					byte nets = getNetworks( d );
+					byte nets = getNetworks( to_download );
 
 					if ( nets != NET_PUBLIC ){
 						map.put( "o", new Long( nets&0xff ));
 					}
 				}
 			}catch( Throwable e ){
+				Debug.out(e);
 			}
 		}
+
+		Download from_download = from_info.getRelatedToDownload();
 
 		final Set<String>	my_tags = new HashSet<>();
 
 		try{
-			Download d = from_info.getRelatedToDownload();
+			if ( from_download != null ){
 
-			if ( d != null ){
-
-				String[] _tags = getTags( d );
+				String[] _tags = getTags( from_download );
 
 				if ( _tags != null ){
 
@@ -1322,8 +1323,12 @@ RelatedContentManager
 				}
 			}
 		}catch( Throwable e ){
+			
+			Debug.out(e);
 		}
 
+		Set<String>	my_tags_original = new HashSet<>( my_tags );
+		
 		long	size = to_info.getSize();
 
 		if ( size != 0 ){
@@ -1352,6 +1357,8 @@ RelatedContentManager
 
 					private Set<String>	entries = new HashSet<>();
 
+					private Set<String>	discovered_tags = new HashSet<>();
+					
 					@Override
 					public void
 					starts(
@@ -1395,6 +1402,11 @@ RelatedContentManager
 											synchronized( my_tags ){
 
 												my_tags.remove( tag );
+												
+												if ( !my_tags_original.contains( tag )){
+													
+													discovered_tags.add( tag );
+												}
 											}
 										}
 									}
@@ -1427,6 +1439,54 @@ RelatedContentManager
 						byte[]				key,
 						boolean				timeout_occurred )
 					{
+						if ( from_download != null ){
+							
+							synchronized( my_tags ){
+							
+								if ( !discovered_tags.isEmpty()){
+									
+									List<String> interesting = new ArrayList<>();
+									
+									for ( String tag: discovered_tags ){
+										
+										if ( tag.startsWith( "_" ) && tag.endsWith( "_" )){
+											
+											continue;
+										}
+										
+										interesting.add( tag );
+									}
+									
+									if ( !interesting.isEmpty()){
+
+										try{
+											DownloadManagerState dms = PluginCoreUtils.unwrap( from_download ).getDownloadState();
+											
+											String[] old = dms.getListAttribute( DownloadManagerState.AT_SWARM_TAGS );
+											
+											if ( old == null || old.length == 0 ){
+												
+												dms.setListAttribute( DownloadManagerState.AT_SWARM_TAGS, interesting.toArray( new String[0] ));
+												
+											}else{
+													
+												if ( old.length < 16 ){
+													
+													interesting.addAll( Arrays.asList( old ));
+													
+													if ( interesting.size() > old.length ){
+														
+														dms.setListAttribute( DownloadManagerState.AT_SWARM_TAGS, interesting.toArray( new String[0] ));
+													}
+												}
+											}
+										}catch( Throwable e ){
+											
+										}
+									}
+								}
+							}
+						}
 							// if we have something to say prioritise it somewhat
 
 						int f_cutoff = my_tags.size()>0?20:10;

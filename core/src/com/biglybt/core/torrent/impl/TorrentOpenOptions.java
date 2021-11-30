@@ -140,8 +140,9 @@ public class TorrentOpenOptions
 
 	private String 				userComment;
 	
-	private List<Tag>			initialTags = new ArrayList<>();
-	private Set<Tag>			autoTags	= new HashSet<>();
+	private List<Tag>			initialTags 	= new ArrayList<>();
+	private Set<Tag>			autoTags		= new HashSet<>();
+	private List<String>		swarmTags		= new ArrayList<>();
 	
 	private boolean				autoTaggingApplied;
 	
@@ -560,6 +561,15 @@ public class TorrentOpenOptions
 		initialTags = tags;
 	}
 
+	public void
+	addSwarmTag(
+		String	tag )
+	{
+		if ( !swarmTags.contains(tag)){
+			swarmTags.add( tag );
+		}
+	}
+	
 	public Map<String,Object>
 	getInitialMetadata()
 	{
@@ -1933,6 +1943,11 @@ public class TorrentOpenOptions
 							}
 						}
 
+						if ( !swarmTags.isEmpty()){
+							
+							dms.setListAttribute( DownloadManagerState.AT_SWARM_TAGS, swarmTags.toArray(new String[0]));
+						}
+						
 						if ( getSequentialDownload()) {
 
 							dms.setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, true );

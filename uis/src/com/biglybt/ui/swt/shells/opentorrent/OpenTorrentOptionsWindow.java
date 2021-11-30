@@ -1980,8 +1980,10 @@ public class OpenTorrentOptionsWindow
 
 						synchronized( listDiscoveredTags ){
 							for ( String tag: tag_cache ){
-								if ( !listDiscoveredTags.containsKey( tag )){
-									listDiscoveredTags.put( tag.toLowerCase(), new DiscoveredTag( tag, nets));
+								String lcTag = tag.toLowerCase();
+								if ( !listDiscoveredTags.containsKey( lcTag )){
+									listDiscoveredTags.put( lcTag, new DiscoveredTag( tag, nets));								
+									torrentOptions.addSwarmTag( tag );
 								}
 							}
 						}
@@ -1997,12 +1999,13 @@ public class OpenTorrentOptionsWindow
 								@Override
 								public void tagFound(String tag, String network) {
 
-									tag = tag.toLowerCase();
+									String lcTag = tag.toLowerCase();
 									synchronized( listDiscoveredTags ){
-										if (listDiscoveredTags.containsKey(tag)) {
+										if (listDiscoveredTags.containsKey(lcTag)) {
 											return;
 										}
-										listDiscoveredTags.put( tag, new DiscoveredTag( tag, nets));
+										listDiscoveredTags.put( lcTag, new DiscoveredTag( tag, nets));
+										torrentOptions.addSwarmTag( tag );
 									}
 
 									buildTagButtonPanel();

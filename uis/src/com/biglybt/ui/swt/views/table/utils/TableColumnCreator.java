@@ -311,6 +311,7 @@ public class TableColumnCreator
 		c.put(UploadHealthItem.COLUMN_ID, new cInfo(UploadHealthItem.class, UploadHealthItem.DATASOURCE_TYPE));
 		c.put(DownloadHealthItem.COLUMN_ID, new cInfo(DownloadHealthItem.class, DownloadHealthItem.DATASOURCE_TYPE));
 		c.put(ConnectHealthItem.COLUMN_ID, new cInfo(ConnectHealthItem.class, ConnectHealthItem.DATASOURCE_TYPE));
+		c.put(SwarmTagsItem.COLUMN_ID, new cInfo(SwarmTagsItem.class, SwarmTagsItem.DATASOURCE_TYPE));
 
 		// Core columns are implementors of TableColumn to save one class creation
 		// Otherwise, we'd have to create a generic TableColumnImpl class, pass it
