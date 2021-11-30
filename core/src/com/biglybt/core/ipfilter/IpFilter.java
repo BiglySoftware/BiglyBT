@@ -111,10 +111,10 @@ IpFilter
 		boolean	manual,
 		int		ban_for_mins );
 
-	public void
+	public boolean
 	unban(String ipAddress);
 
-	public void
+	public boolean
 	unban(String ipAddress, boolean block);
 
 	public int

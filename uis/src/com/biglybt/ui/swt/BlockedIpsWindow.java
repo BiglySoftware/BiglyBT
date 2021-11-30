@@ -106,125 +106,167 @@ BlockedIpsWindow
     	// text blocked area
 
     final StyledText textBlocked = new StyledText(window,SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-    Button btnClear = new Button(window,SWT.PUSH);
     textBlocked.setEditable(false);
 
+    Button btnClear = new Button(window,SWT.PUSH);
+    Messages.setLanguageText(btnClear,"Button.clear");
+
+	btnClear.addListener(SWT.Selection, (e)->{
+
+    	core.getIpFilterManager().getIPFilter().clearBlockedIPs();
+
+    	textBlocked.setText( "" );
+	});
+
     final StyledText textBanned = new StyledText(window,SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-    Button btnOk = new Button(window,SWT.PUSH);
-    Button btnReset = new Button(window,SWT.PUSH);
     textBanned.setEditable(false);
+	textBanned.setText(ipsBanned);
 
+    Label	blockedInfo = new Label(window, SWT.NULL);
+    Messages.setLanguageText(blockedInfo,"ConfigView.section.ipfilter.blockedinfo");
 
+    Label	bannedInfo = new Label(window, SWT.NULL);
+    Messages.setLanguageText(bannedInfo,"ConfigView.section.ipfilter.bannedinfo");
+
+    Label	lblUnban	= new Label(window,SWT.NULL );
+    Messages.setLanguageText(lblUnban,"ConfigView.section.ipfilter.unban");
+    
+    Text	textUnban	= new Text(window,SWT.BORDER );
+    
+    Button btnUnban = new Button(window,SWT.PUSH);
+    Messages.setLanguageText(btnUnban,"Button.unban");
+    
+    btnUnban.addListener(SWT.Selection, (ev)->{
+    	IpFilter filter = core.getIpFilterManager().getIPFilter();
+    	String[] ips = textUnban.getText().replace(';',',' ).split( "," );
+    	for ( String ip: ips ){
+    		ip = ip.trim();
+    		if ( !ip.isEmpty()){
+    			if ( filter.unban(ip)){
+    				textBanned.append( ip + " " + MessageText.getString( "ConfigView.section.ipfilter.list.unbanned" ) + "\n");
+    			}else{
+    				textBanned.append( ip + " " + MessageText.getString( "ConfigView.section.ipfilter.list.not.banned" ) + "\n" );
+    			}
+    		}
+    	}
+    	textBanned.setSelection(textBanned.getText().length());
+    });
+    
+    Button btnReset = new Button(window,SWT.PUSH);
+    Messages.setLanguageText(btnReset,"Button.unban.all");
+
+    btnReset.addListener(SWT.Selection, (e)->{
+
+       	core.getIpFilterManager().getIPFilter().clearBannedIps();
+       	core.getIpFilterManager().getBadIps().clearBadIps();
+
+       	textBanned.setText( "" );
+    });
+
+    Button btnOk = new Button(window,SWT.PUSH);
+    Messages.setLanguageText(btnOk,"Button.ok");
+
+	btnOk.addListener(SWT.Selection, (e)->{ window.dispose(); });
+	
+		// layout
+	
     formData = new FormData();
     formData.left = new FormAttachment(0,0);
     formData.right = new FormAttachment(100,0);
     formData.top = new FormAttachment(0,0);
     formData.bottom = new FormAttachment(40,0);
-		textBlocked.setLayoutData(formData);
-		textBlocked.setText(ipsBlocked);
 
-    // label blocked area
+    textBlocked.setLayoutData(formData);
+	textBlocked.setText(ipsBlocked);
 
-    Label	blockedInfo = new Label(window, SWT.NULL);
-    Messages.setLanguageText(blockedInfo,"ConfigView.section.ipfilter.blockedinfo");
+    	// label blocked area
+
     formData = new FormData();
-    formData.top = new FormAttachment(textBlocked);
+    formData.top = new FormAttachment(btnClear,0,SWT.CENTER);
     formData.right = new FormAttachment(btnClear);
     formData.left = new FormAttachment(0,0);
-		blockedInfo.setLayoutData(formData);
+	
+    blockedInfo.setLayoutData(formData);
 
     	// clear button
 
-
-    Messages.setLanguageText(btnClear,"Button.clear");
     formData = new FormData();
     formData.top = new FormAttachment(textBlocked);
-    formData.right = new FormAttachment(95,0 );
-    //formData.bottom = new FormAttachment(textBanned);
-    formData.width = 70;
-		btnClear.setLayoutData(formData);
-		btnClear.addListener(SWT.Selection, new Listener() {
-
-    @Override
-    public void handleEvent(Event e) {
-
-    	core.getIpFilterManager().getIPFilter().clearBlockedIPs();
-
-    	textBlocked.setText( "" );
-    }
-    });
-
+    formData.right = new FormAttachment(100,0);
+	
+    btnClear.setLayoutData(formData);
 
     	// text banned area
+    
     formData = new FormData();
     formData.left = new FormAttachment(0,0);
     formData.right = new FormAttachment(100,0);
     formData.top = new FormAttachment(btnClear);
+    formData.bottom = new FormAttachment(btnUnban);
+	
+    textBanned.setLayoutData(formData);
+
+    	// unban line
+    
+    formData = new FormData();
+    formData.left = new FormAttachment(0,0);
+    formData.top = new FormAttachment(btnUnban,0,SWT.CENTER);
+     lblUnban.setLayoutData(formData);
+    
+    formData = new FormData();
+    formData.left = new FormAttachment(lblUnban);
+    formData.right = new FormAttachment(btnUnban);
+    formData.top = new FormAttachment(btnUnban,0,SWT.CENTER);
+    textUnban.setLayoutData(formData);
+    
+    formData = new FormData();
+    formData.right = new FormAttachment(btnOk);
     formData.bottom = new FormAttachment(btnOk);
-		textBanned.setLayoutData(formData);
-		textBanned.setText(ipsBanned);
+    btnUnban.setLayoutData(formData);
 
     	// label banned area
 
-    Label	bannedInfo = new Label(window, SWT.NULL);
-    Messages.setLanguageText(bannedInfo,"ConfigView.section.ipfilter.bannedinfo");
     formData = new FormData();
     formData.right = new FormAttachment(btnReset);
     formData.left = new FormAttachment(0,0);
-    formData.bottom = new FormAttachment(100,0);
-		bannedInfo.setLayoutData(formData);
+    formData.top = new FormAttachment(btnOk,0,SWT.CENTER);
+    //formData.bottom = new FormAttachment(100,0);
 
+    bannedInfo.setLayoutData(formData);
+    
     	// reset button
 
-    Messages.setLanguageText(btnReset,"Button.reset");
     formData = new FormData();
     formData.right = new FormAttachment(btnOk);
     formData.bottom = new FormAttachment(100,0);
-    formData.width = 70;
-		btnReset.setLayoutData(formData);
-		btnReset.addListener(SWT.Selection, new Listener() {
-
-    @Override
-    public void handleEvent(Event e) {
-    	core.getIpFilterManager().getIPFilter().clearBannedIps();
-    	core.getIpFilterManager().getBadIps().clearBadIps();
-
-    	textBanned.setText( "" );
-    	}
-    });
+	
+    btnReset.setLayoutData(formData);
+	
     	// ok button
 
-    Messages.setLanguageText(btnOk,"Button.ok");
     formData = new FormData();
-    formData.right = new FormAttachment(95,0);
+    formData.right = new FormAttachment(100,0);
     formData.bottom = new FormAttachment(100,0);
-    formData.width = 70;
-		btnOk.setLayoutData(formData);
-		btnOk.addListener(SWT.Selection, new Listener() {
+	
+    btnOk.setLayoutData(formData);
 
-    @Override
-    public void handleEvent(Event e) {
-      window.dispose();
-    }
-    });
 
+    Utils.makeButtonsEqualWidth( btnUnban, btnClear, btnReset, btnOk );
+    
     window.setDefaultButton( btnOk );
 
-    window.addListener(SWT.Traverse, new Listener() {
-		@Override
-		public void handleEvent(Event e) {
-			if ( e.character == SWT.ESC){
-			     window.dispose();
-			 }
-		}
+    window.addListener(SWT.Traverse,(e)->{		
+		if ( e.character == SWT.ESC){
+		     window.dispose();
+		 }
     });
 
-		if (!Utils.linkShellMetricsToConfig(window, "BlockedIpsWindow")) {
-			window.setSize(620, 450);
-			if (!Constants.isOSX)
-				Utils.centreWindow(window);
-		}
-		window.layout();
+    if (!Utils.linkShellMetricsToConfig(window, "BlockedIpsWindow")) {
+    	window.setSize(620, 450);
+    	if (!Constants.isOSX)
+    		Utils.centreWindow(window);
+    }
+    window.layout();
     window.open();
     return window;
   }

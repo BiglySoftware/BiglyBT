@@ -1155,19 +1155,19 @@ IpFilterImpl
 	}
 	
 	@Override
-	public void 
+	public boolean 
 	unban(
 		String ipAddress )
 	{
-		ipBanner.unban(ipAddress );
+		return( ipBanner.unban(ipAddress ));
 	}
 	
 	@Override
-	public void 
+	public boolean 
 	unban(
 		String 		ipAddress, 
 		boolean 	block )
 	{
-		ipBanner.unban( ipAddress, block );
+		return( ipBanner.unban( ipAddress, block ));
 	}
 }

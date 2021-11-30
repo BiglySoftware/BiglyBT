@@ -587,7 +587,7 @@ IPBannerImpl
 		ipFilter.banListChanged();
 	}
 
-	public void
+	public boolean
 	unban(
 		String ipAddress )
 	{
@@ -632,9 +632,11 @@ IPBannerImpl
 			
 			ipFilter.banListChanged();
 		}
+		
+		return( hit );
 	}
 
-	public void
+	public boolean
 	unban(
 		String 		ipAddress, 
 		boolean 	block )
@@ -717,6 +719,8 @@ IPBannerImpl
 			
 			ipFilter.banListChanged();
 		}
+		
+		return( hit );
 	}
 	
 	
