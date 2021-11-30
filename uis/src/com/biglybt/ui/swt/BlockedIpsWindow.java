@@ -138,6 +138,8 @@ BlockedIpsWindow
     
     btnUnban.addListener(SWT.Selection, (ev)->{
     	IpFilter filter = core.getIpFilterManager().getIPFilter();
+    	BadIps badIPs = core.getIpFilterManager().getBadIps();
+    	
     	String[] ips = textUnban.getText().replace(';',',' ).split( "," );
     	for ( String ip: ips ){
     		ip = ip.trim();
@@ -147,6 +149,7 @@ BlockedIpsWindow
     			}else{
     				textBanned.append( ip + " " + MessageText.getString( "ConfigView.section.ipfilter.list.not.banned" ) + "\n" );
     			}
+    			badIPs.removeBadIp( ip );
     		}
     	}
     	textBanned.setSelection(textBanned.getText().length());

@@ -27,18 +27,21 @@ package com.biglybt.core.ipfilter;
 public interface
 BadIps
 {
-  public abstract int
+  public int
   addWarningForIp(String ip);
 
-  public abstract int
+  public int
   getNbWarningForIp(String ip);
 
-  public abstract int
+  public int
   getNbBadIps();
 
-  public abstract BadIp[]
+  public BadIp[]
   getBadIps();
 
-  public abstract void
+  public boolean
+  removeBadIp( String ip );
+  
+  public void
   clearBadIps();
 }

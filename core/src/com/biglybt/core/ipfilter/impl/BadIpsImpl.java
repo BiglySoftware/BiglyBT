@@ -35,7 +35,7 @@ public class BadIpsImpl implements BadIps {
   private static BadIps 	instance;
   private static final AEMonitor	class_mon	= new AEMonitor( "BadIps:class" );
 
-  private final Map 		bad_ip_map;
+  private final Map<String,BadIpImpl> 		bad_ip_map;
   private final AEMonitor	bad_ip_map_mon		= new AEMonitor( "BadIps:Map");
 
   public static BadIps
@@ -59,7 +59,7 @@ public class BadIpsImpl implements BadIps {
 
   public BadIpsImpl()
   {
-    bad_ip_map = new HashMap();
+    bad_ip_map = new HashMap<>();
   }
 
   @Override
@@ -70,7 +70,7 @@ public class BadIpsImpl implements BadIps {
     try{
     	bad_ip_map_mon.enter();
 
-    	BadIpImpl	bad_ip = (BadIpImpl)bad_ip_map.get( ip );
+    	BadIpImpl	bad_ip = bad_ip_map.get( ip );
 
     	if ( bad_ip == null ){
 
@@ -96,9 +96,9 @@ public class BadIpsImpl implements BadIps {
     try{
     	bad_ip_map_mon.enter();
 
-        BadIpImpl bad_ip = (BadIpImpl) bad_ip_map.get(ip);
+        BadIpImpl bad_ip = bad_ip_map.get(ip);
 
-      if(bad_ip == null) {
+      if ( bad_ip == null ){
 
         return 0;
 
@@ -130,6 +130,22 @@ public class BadIpsImpl implements BadIps {
     }
   }
 
+  @Override
+  public boolean 
+  removeBadIp(
+	String ip )
+  {
+	  try{
+		  bad_ip_map_mon.enter();
+
+		  return( bad_ip_map.remove(ip) != null );
+		  
+	  }finally{
+
+		  bad_ip_map_mon.exit();
+	  }
+  }
+  
   @Override
   public void
   clearBadIps()
