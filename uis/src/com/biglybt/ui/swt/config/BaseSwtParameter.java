@@ -47,8 +47,6 @@ import com.biglybt.pif.ui.config.ParameterWithSuffix;
 public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>, VALUETYPE>
 	implements SwtParameter<VALUETYPE>
 {
-	public final static String KEY_LABEL_ADDCOPYTOCLIPMENU = "AddCopyMenu";
-
 	protected final String paramID;
 
 	private Control relatedControl;
@@ -499,7 +497,6 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 			// rely on current value)
 			curControl.forceFocus();
 		}
-		boolean add_copy = curControl.getData(KEY_LABEL_ADDCOPYTOCLIPMENU) != null;
 
 		if (valueProcessor != null) {
 			if (!valueProcessor.isDefaultValue(thisTyped)) {
@@ -513,13 +510,17 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 				item.addListener(SWT.Selection, event -> resetToDefault());
 			} else if (valueProcessor.getDefaultValue(thisTyped) != null) {
 				MenuItem item = new MenuItem(menu, SWT.PUSH);
-				item.setText("Currently set to default value");
+				Messages.setLanguageText(item, "menu.config.is.default");
 				item.setEnabled(false);
 			}
 		}
-		if (add_copy && (curControl instanceof Label)) {
-			ClipboardCopy.addCopyToClipMenu(menu,
-					() -> ((Label) curControl).getText().trim());
+		String message = Messages.getLanguageForControl( curControl );
+		if ( message != null && !message.trim().isEmpty()){
+			
+			if ( menu.getItemCount() > 0 ){
+				new MenuItem( menu, SWT.SEPARATOR );
+			}
+			ClipboardCopy.addCopyToClipMenu(menu, "copy.config.param.name", message::trim );
 		}
 	}
 

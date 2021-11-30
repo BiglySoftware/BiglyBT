@@ -272,6 +272,15 @@ public class ClipboardCopy {
 	final Menu					menu,
 	final copyToClipProvider	provider )
   {
+	  addCopyToClipMenu( menu, "label.copy.to.clipboard", provider );
+  }
+
+  public static void
+  addCopyToClipMenu(
+	Menu				menu,
+	String				resource_key, 
+	copyToClipProvider	provider )
+  {
 	  for ( MenuItem e: menu.getItems()){
 		  
 		  if ( e.getData( MENU_ITEM_KEY ) != null ){
@@ -284,9 +293,7 @@ public class ClipboardCopy {
 
 	  item.setData( MENU_ITEM_KEY, "" );
 	  
-	  String	msg_text_id= "label.copy.to.clipboard";
-
-	  item.setText( MessageText.getString( msg_text_id ));
+	  item.setText( MessageText.getString( resource_key ));
 
 	  item.addSelectionListener(
 		  new SelectionAdapter()
@@ -300,7 +307,7 @@ public class ClipboardCopy {
 			  }
 		  });
   }
-
+  
   public static void
   removeCopyToClipMenu(
 	final Menu					menu )
