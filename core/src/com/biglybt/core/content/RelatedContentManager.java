@@ -1445,7 +1445,7 @@ RelatedContentManager
 							
 								if ( !discovered_tags.isEmpty()){
 									
-									List<String> interesting = new ArrayList<>();
+									Set<String> interesting = new HashSet<>();
 									
 									for ( String tag: discovered_tags ){
 										

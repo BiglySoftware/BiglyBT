@@ -565,6 +565,9 @@ public class TorrentOpenOptions
 	addSwarmTag(
 		String	tag )
 	{
+		if ( tag.startsWith( "_" ) && tag.endsWith( "_" )){
+			return;
+		}
 		if ( !swarmTags.contains(tag)){
 			swarmTags.add( tag );
 		}
