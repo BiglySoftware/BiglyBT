@@ -39,7 +39,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
-
+import com.biglybt.ui.swt.views.ConfigView;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterValidator.ValidationInfo;
 import com.biglybt.pif.ui.config.ParameterWithSuffix;
@@ -520,7 +520,19 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 			if ( menu.getItemCount() > 0 ){
 				new MenuItem( menu, SWT.SEPARATOR );
 			}
-			ClipboardCopy.addCopyToClipMenu(menu, "copy.config.param.name", message::trim );
+			
+			message = message.trim();
+			
+			String context = ConfigView.getSectionContext( curControl );
+			
+			if ( context != null ){
+				
+				message = context + ": " + message;
+			}
+			
+			String f_message = message;
+			
+			ClipboardCopy.addCopyToClipMenu(menu, "copy.config.param.name", ()->f_message );
 		}
 	}
 

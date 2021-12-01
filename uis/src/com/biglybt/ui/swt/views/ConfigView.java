@@ -74,8 +74,40 @@ public class ConfigView implements UISWTViewCoreEventListener {
 	public static final String SELECT_KEY	= "ConfigView.select_key";
 	public static final String TREEITEMDATA_CONFIGSECTION = "ConfigSectionSWT";
 	public static final String TREEITEMDATA_PANEL = "Panel";
+	public static final String TREEITEMDATA_ITEM = "ConfigView.TreeItem";
+	
 	private static Font groupFont = null;
 
+	
+	public static String
+	getSectionContext(
+			Control	c )
+	{
+		while( c != null ){
+
+			TreeItem item = (TreeItem)c.getData( TREEITEMDATA_ITEM );
+
+			if ( item != null ){
+
+				String	str = "";
+				
+				while( item != null ){
+					
+					str = item.getText() + ( str.isEmpty()?"":("->" + str));
+					
+					item = item.getParentItem();
+				}
+				
+				return( str );
+			}
+
+			c = c.getParent();
+		}
+
+		return( null );
+	}
+	  
+	  
 	final Map<TreeItem, BaseConfigSection> sections = new HashMap<>();
   // Only access on SWT Thread
 	final List<BaseConfigSection> sectionsCreated = new ArrayList<>(1);
@@ -424,6 +456,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
 				treeItem.setData(TREEITEMDATA_PANEL, sc);
 				treeItem.setData("ID", section.getConfigSectionID());
 				treeItem.setData(TREEITEMDATA_CONFIGSECTION, section);
+				sc.setData(TREEITEMDATA_ITEM, treeItem);
 
 				sections.put(treeItem, section);
 
