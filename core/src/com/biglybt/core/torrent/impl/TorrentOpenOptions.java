@@ -38,6 +38,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.util.*;
 import com.biglybt.plugin.I2PHelpers;
@@ -565,7 +566,7 @@ public class TorrentOpenOptions
 	addSwarmTag(
 		String	tag )
 	{
-		if ( tag.startsWith( "_" ) && tag.endsWith( "_" )){
+		if ( TagUtils.isInternalTagName( tag )){
 			return;
 		}
 		if ( !swarmTags.contains(tag)){

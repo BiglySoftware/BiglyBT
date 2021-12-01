@@ -35,6 +35,7 @@ import com.biglybt.core.content.RelatedContentManager.DownloadInfo;
 import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.bloom.BloomFilter;
 import com.biglybt.core.util.bloom.BloomFilterFactory;
@@ -328,7 +329,7 @@ RelatedContentSearcher
 
 												for ( String tag: tags ){
 
-													if ( !tag.startsWith( "_" )){
+													if ( !TagUtils.isInternalTagName( tag )){
 
 														return( tag );
 													}
@@ -1317,7 +1318,7 @@ RelatedContentSearcher
 
 											for ( String tag: tags ){
 
-												if ( !tag.startsWith( "_" )){
+												if ( !TagUtils.isInternalTagName( tag )){
 
 													return( tag );
 												}

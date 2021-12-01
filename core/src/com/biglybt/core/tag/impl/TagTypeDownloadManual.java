@@ -89,10 +89,11 @@ TagTypeDownloadManual
 		return( new_tag );
 	}
 
-	protected Tag
+	@Override
+	protected TagDownloadWithState
 	createTag(
-		int		tag_id,
-		Map		details )
+		int						tag_id,
+		Map<String,Object>		details )
 	{
 		TagDownloadWithState new_tag = new TagDownloadWithState( this, tag_id, details, true, true, true, true, TagFeatureRunState.RSC_START_STOP_PAUSE );
 

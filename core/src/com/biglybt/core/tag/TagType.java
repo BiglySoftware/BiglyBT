@@ -31,7 +31,8 @@ TagType
 	public static final int TT_DOWNLOAD_MANUAL		= 3;
 	public static final int TT_PEER_IPSET			= 4;
 	public static final int TT_DOWNLOAD_INTERNAL	= 5;
-	public static final int TT_TAG_SUGGESTION = 6;
+	public static final int TT_TAG_SUGGESTION 		= 6;
+	public static final int TT_SWARM_TAG	 		= 7;
 
 		/**
 		 * Unique type denoting this species of tag

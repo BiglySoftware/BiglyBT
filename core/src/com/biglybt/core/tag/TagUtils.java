@@ -559,4 +559,11 @@ TagUtils
     	
     	return( applicable_tags );
 	}
+	
+	public static boolean
+	isInternalTagName(
+		String		tag )
+	{
+		return( tag.startsWith("_") && tag.endsWith( "_" ));
+	}
 }

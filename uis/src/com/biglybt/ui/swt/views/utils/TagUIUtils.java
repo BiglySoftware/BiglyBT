@@ -4102,9 +4102,15 @@ public class TagUIUtils
 		if (tag == null) {
 			return false;
 		}
-		return tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL
-			|| ((tag instanceof Category)
-			&& ((Category) tag).getType() == Category.TYPE_USER);
+		
+		int tt = tag.getTagType().getTagType();
+		
+		if ( tt == TagType.TT_DOWNLOAD_MANUAL || tt == TagType.TT_SWARM_TAG ){
+			
+			return( true );
+		}
+		
+		return((tag instanceof Category) && ((Category) tag).getType() == Category.TYPE_USER );
 	}
 
 

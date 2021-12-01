@@ -7613,7 +7613,9 @@ public class OpenTorrentOptionsWindow
 			setGroup(MessageText.getString("tag.discovery.view.heading"));
 			setImageID("image.sidebar.rcm");
 
-			TagType tt = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL );
+			TagManager tm =TagManagerFactory.getTagManager();
+			
+			TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
 			List<Tag> tags = tt.getTags();
 			existingTag = getExistingTag(tags, _name);
 
@@ -7634,7 +7636,18 @@ public class OpenTorrentOptionsWindow
 					setDescription("[" + nets_str + "]");
 				}
 			}
-
+			
+			if ( !TagUtils.isInternalTagName( name )){
+				TagType tt_swarm = tm.getTagType( TagType.TT_SWARM_TAG );
+				Tag st = tt_swarm.getTag( name, true );
+				if ( st == null ){
+					try{
+						tt_swarm.createTag( name, true );
+					}catch( Throwable e ){
+						Debug.out( e );
+					}
+				}
+			}
 		}
 
 		@Override

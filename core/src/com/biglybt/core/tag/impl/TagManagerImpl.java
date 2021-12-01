@@ -853,6 +853,8 @@ TagManagerImpl
 				{
 					if ( component instanceof GlobalManager ){
 
+						initializeSwarmTags();
+						
 						GlobalManager global_manager = (GlobalManager)component;
 
 						global_manager.addDownloadManagerInitialisationAdapter(
@@ -1499,18 +1501,16 @@ TagManagerImpl
 	}
 
 	private void
-	resolverInitialized(
-		TaggableResolver		resolver )
+	loadTags(
+		TagTypeWithState		tt_with_state )
 	{
-		TagTypeDownloadManual ttdm = new TagTypeDownloadManual( resolver );
-
 		List<Tag> tags = new ArrayList<>();
 
 		synchronized( this ){
 
 			Map config = getConfig();
 
-			Map<String,Object> tt = (Map<String,Object>)config.get( String.valueOf( ttdm.getTagType()));
+			Map<String,Object> tt = (Map<String,Object>)config.get( String.valueOf( tt_with_state.getTagType()));
 
 			if ( tt != null ){
 
@@ -1524,7 +1524,7 @@ TagManagerImpl
 							int	tag_id 	= Integer.parseInt( key );
 							Map m		= (Map)entry.getValue();
 
-							tags.add( ttdm.createTag( tag_id, m ));
+							tags.add( tt_with_state.createTag( tag_id, m ));
 						}
 					}catch( Throwable e ){
 
@@ -1536,8 +1536,25 @@ TagManagerImpl
 
 		for ( Tag tag: tags ){
 
-			ttdm.addTag( tag );
+			tt_with_state.addTag( tag );
 		}
+	}
+	
+	private void
+	initializeSwarmTags()
+	{
+		TagTypeSwarmTag stt = new TagTypeSwarmTag();
+
+		loadTags( stt );
+	}
+	
+	private void
+	resolverInitialized(
+		TaggableResolver		resolver )
+	{
+		TagTypeDownloadManual ttdm = new TagTypeDownloadManual( resolver );
+
+		loadTags( ttdm );
 		
 		TagTypeDownloadInternal ttdi = new TagTypeDownloadInternal( resolver );
 	}

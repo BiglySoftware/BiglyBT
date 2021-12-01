@@ -24,6 +24,7 @@ public interface
 Taggable
 	extends com.biglybt.pif.tag.Taggable
 {
+	public static final int	TT_NONE			= 0x00000000;		
 	public static final int	TT_DOWNLOAD		= 0x00000002;		// DownloadManagers
 	public static final int	TT_PEER			= 0x00000004;		// PEPeers
 

@@ -21,8 +21,10 @@
 package com.biglybt.core.tag.impl;
 
 import java.util.List;
+import java.util.Map;
 
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagException;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.TaggableResolver;
 import com.biglybt.core.util.CopyOnWriteList;
@@ -95,6 +97,16 @@ TagTypeWithState
 		super.removeTaggable(_resolver, taggable );
 	}
 
+	protected Tag
+	createTag(
+		int					id,
+		Map<String,Object>	state )
+
+		throws TagException
+	{
+		throw( new TagException( "Not supported" ));
+	}
+	
 	@Override
 	public void
 	addTag(

@@ -41,6 +41,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLGroup;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
@@ -1449,7 +1450,7 @@ RelatedContentManager
 									
 									for ( String tag: discovered_tags ){
 										
-										if ( tag.startsWith( "_" ) && tag.endsWith( "_" )){
+										if ( TagUtils.isInternalTagName( tag )){
 											
 											continue;
 										}
@@ -2037,7 +2038,7 @@ RelatedContentManager
 
 										synchronized( tags ){
 
-											if ( !( tag.startsWith( "_" ) && tag.endsWith( "_" ))){
+											if ( !TagUtils.isInternalTagName( tag )){
 												
 												if ( !existing_tags.contains( tag )){
 

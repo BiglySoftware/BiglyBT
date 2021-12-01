@@ -2922,8 +2922,10 @@ public class SB_Transfers
 					synchronized (tag_listener_lock) {
 						int tt = tag_type.getTagType();
 						
-						if (	( tt != TagType.TT_DOWNLOAD_CATEGORY && tt != TagType.TT_DOWNLOAD_INTERNAL ) &&
-								tagTypeListener != null) {
+						if ( 	tt != TagType.TT_DOWNLOAD_CATEGORY &&
+								tt != TagType.TT_DOWNLOAD_INTERNAL &&
+								tt != TagType.TT_SWARM_TAG &&
+								tagTypeListener != null ){
 
 							tag_type.addTagTypeListener(tagTypeListener, true);
 						}

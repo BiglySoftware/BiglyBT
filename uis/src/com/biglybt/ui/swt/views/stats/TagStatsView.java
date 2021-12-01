@@ -128,7 +128,9 @@ public class TagStatsView
 
 	    for ( TagType tt: tm.getTagTypes()){
 
-	    	if ( tt.getTagType() != TagType.TT_DOWNLOAD_INTERNAL ){
+	    	int tag_type = tt.getTagType();
+	    	
+	    	if ( tag_type != TagType.TT_DOWNLOAD_INTERNAL && tag_type != TagType.TT_SWARM_TAG ){
 	    	
 	    		tt.addTagTypeListener( this, false );
 	    	}
