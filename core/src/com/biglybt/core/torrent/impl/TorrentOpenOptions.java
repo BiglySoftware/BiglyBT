@@ -63,7 +63,7 @@ public class TorrentOpenOptions
 	public final static int QUEUELOCATION_TOP = 0;
 
 	public final static String[] STARTMODE_KEYS = {
-			"OpenTorrentWindow.startMode.queued",
+			"OpenTorrentWindow.startMode.queuedstarted",
 			"OpenTorrentWindow.startMode.stopped",
 			"ManagerItem.paused",
 			"OpenTorrentWindow.startMode.forceStarted",
