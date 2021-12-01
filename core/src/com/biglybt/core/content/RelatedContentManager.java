@@ -1919,6 +1919,19 @@ RelatedContentManager
 				throw( new ContentException( "rcm is disabled" ));
 			}
 
+			Download from_download = getDownload( from_hash );
+			
+			Set<String> existing_tags;
+			
+			if ( from_download != null ){
+
+				existing_tags = getExplicitTags( from_download );
+				
+			}else{
+				
+				existing_tags = Collections.emptySet();
+			}
+			
 			final DHTPluginInterface dht_plugin = selectDHT( networks );
 
 			if ( dht_plugin == null ){
@@ -1946,8 +1959,10 @@ RelatedContentManager
 					true,
 					new DHTPluginOperationListener()
 					{
-						private Set<String>	tags = new HashSet<>();
-
+						private Set<String>	tags 		= new HashSet<>();
+						private Set<String>	swarm_tags	= new HashSet<>();
+						
+						
 						@Override
 						public void
 						starts(
@@ -2022,6 +2037,14 @@ RelatedContentManager
 
 										synchronized( tags ){
 
+											if ( !( tag.startsWith( "_" ) && tag.endsWith( "_" ))){
+												
+												if ( !existing_tags.contains( tag )){
+
+													swarm_tags.add( tag );
+												}
+											}
+											
 											if ( tags.contains( tag )){
 
 												continue;
@@ -2059,6 +2082,36 @@ RelatedContentManager
 							byte[]				key,
 							boolean				timeout_occurred )
 						{
+							if ( from_download != null ){
+								
+								synchronized( tags ){
+									
+									if ( !swarm_tags.isEmpty()){
+										
+										DownloadManagerState dms = PluginCoreUtils.unwrap( from_download ).getDownloadState();
+										
+										String[] old = dms.getListAttribute( DownloadManagerState.AT_SWARM_TAGS );
+										
+										if ( old == null || old.length == 0 ){
+											
+											dms.setListAttribute( DownloadManagerState.AT_SWARM_TAGS, swarm_tags.toArray( new String[0] ));
+											
+										}else{
+												
+											if ( old.length < 16 ){
+												
+												swarm_tags.addAll( Arrays.asList( old ));
+												
+												if ( swarm_tags.size() > old.length ){
+													
+													dms.setListAttribute( DownloadManagerState.AT_SWARM_TAGS, swarm_tags.toArray( new String[0] ));
+												}
+											}
+										}
+									}
+								}
+							}
+							
 							if ( listener != null ){
 
 								try{
@@ -2113,7 +2166,7 @@ RelatedContentManager
 		byte	net = NET_PUBLIC;
 
 		try{
-			Download download = plugin_interface.getDownloadManager().getDownload( hash );
+			Download download = getDownload( hash );
 
 			if ( download != null ){
 
@@ -4281,6 +4334,40 @@ RelatedContentManager
 		return( nets );
 	}
 
+	private Set<String>
+	getExplicitTags(
+		Download	download )
+	{
+		Set<String>	all_tags = new HashSet<>();
+
+		if ( tag_manager.isEnabled()){
+
+			String	cat_name = ta_category==null?null:download.getAttribute( ta_category );
+
+			if ( cat_name != null ){
+
+				Tag cat_tag = tag_manager.getTagType( TagType.TT_DOWNLOAD_CATEGORY ).getTag( cat_name, true );
+
+				if ( cat_tag != null && cat_tag.isPublic()){
+
+					all_tags.add( cat_name.toLowerCase( Locale.US ));
+				}
+			}
+
+			List<Tag> tags = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTagsForTaggable( PluginCoreUtils.unwrap( download ));
+
+			for ( Tag t: tags ){
+
+				if ( t.isPublic()){
+
+					all_tags.add( t.getTagName( true ).toLowerCase( Locale.US ));
+				}
+			}
+		}
+		
+		return( all_tags );
+	}
+	
 	private String[]
 	getTags(
 		Download	download )
