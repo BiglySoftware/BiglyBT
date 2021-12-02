@@ -1150,7 +1150,9 @@ public class TagUIUtils
 		}
 		*/
 
-		if ( tag_type.getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+		int tt = tag_type.getTagType();
+		
+		if ( tt == TagType.TT_DOWNLOAD_MANUAL || tt == TagType.TT_SWARM_TAG ){
 
 			needs_separator_next = true;
 
@@ -1159,7 +1161,7 @@ public class TagUIUtils
 			search.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event){
-					UIFunctionsManager.getUIFunctions().doSearch( "tag:" + tag.getTagName( true ));
+					UIFunctionsManager.getUIFunctions().doSearch( "tag:" + tag.getTagName( true ).replace( ' ', '+' ));
 				}});
 		}
 

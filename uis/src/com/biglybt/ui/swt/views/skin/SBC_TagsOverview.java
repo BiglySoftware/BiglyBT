@@ -1052,6 +1052,13 @@ public class SBC_TagsOverview
 
 				Tag tag = (Tag)obj;
 
+				int tt = tag.getTagType().getTagType();
+				
+				if ( tt == TagType.TT_DOWNLOAD_INTERNAL || tt == TagType.TT_SWARM_TAG ){
+					
+					return;
+				}
+				
 				UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 
 				if ( uiFunctions != null ){

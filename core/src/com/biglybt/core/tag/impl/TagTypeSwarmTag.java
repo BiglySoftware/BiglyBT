@@ -35,6 +35,8 @@ public class
 TagTypeSwarmTag
 	extends TagTypeWithState
 {
+	private static final int[] color_default = { 205, 200, 240 };
+
 	private final AtomicInteger	next_tag_id = new AtomicInteger(0);
 
 	protected
@@ -45,48 +47,61 @@ TagTypeSwarmTag
 		addTagType();
 		
 		DownloadManagerStateFactory.addGlobalListener(
-				new DownloadManagerStateAttributeListener() {
+			new DownloadManagerStateAttributeListener() {
 
-					@Override
-					public void
-					attributeEventOccurred(
-						DownloadManager 	dm,
-						String 				attribute,
-						int 				event_type )
-					{
-						String[] tags = dm.getDownloadState().getListAttribute( DownloadManagerState.AT_SWARM_TAGS );
+				@Override
+				public void
+				attributeEventOccurred(
+					DownloadManager 	dm,
+					String 				attribute,
+					int 				event_type )
+				{
+					String[] tags = dm.getDownloadState().getListAttribute( DownloadManagerState.AT_SWARM_TAGS );
+					
+					if ( tags != null && tags.length > 0 ){
 						
-						if ( tags != null && tags.length > 0 ){
+						for ( String tag: tags ){
 							
-							for ( String tag: tags ){
+							if ( TagUtils.isInternalTagName(tag)){
 								
-								if ( TagUtils.isInternalTagName(tag)){
+								continue;
+							}
+							
+							TagSwarmTagImpl st = (TagSwarmTagImpl)getTag( tag, true );
+							
+							if ( st == null ){
+								
+								try{
+									st = createTag( tag, true );
 									
-									continue;
+								}catch( Throwable e ){
+									
+									Debug.out( e );
 								}
+							}else{
 								
-								TagSwarmTagImpl st = (TagSwarmTagImpl)getTag( tag, true );
-								
-								if ( st == null ){
-									
-									try{
-										st = createTag( tag, true );
-										
-									}catch( Throwable e ){
-										
-										Debug.out( e );
-									}
-								}else{
-									
-									st.setLastSeenTime();
-								}
+								st.setLastSeenTime();
 							}
 						}
 					}
-				}, DownloadManagerState.AT_SWARM_TAGS, DownloadManagerStateAttributeListener.WRITTEN );
-
+				}
+			}, DownloadManagerState.AT_SWARM_TAGS, DownloadManagerStateAttributeListener.WRITTEN );
 	}
 
+	@Override
+	public boolean
+	isTagTypeAuto()
+	{
+		return( false );
+	}
+
+	@Override
+	public int[]
+    getColorDefault()
+	{
+		return( color_default );
+	}
+	
 	@Override
 	public boolean 
 	isTagTypePersistent()

@@ -28,7 +28,6 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
@@ -449,6 +448,7 @@ public class TagSettingsView
 
 			boolean allManual 	= true;
 			boolean hasCat		= false;
+			boolean hasSwarm	= false;
 			
 			for ( Tag t: tags ){
 				
@@ -463,6 +463,11 @@ public class TagSettingsView
 					
 					hasCat = true;
 				}
+				
+				if ( type == TagType.TT_SWARM_TAG ){
+					
+					hasSwarm = true;
+				}
 			}
 
 				// for categories the show-in-library/tab and library button visibility isn't controlled
@@ -470,7 +475,7 @@ public class TagSettingsView
 
 			boolean 	hasVisibility 	= !hasCat;
 			
-			if ( hasVisibility ){
+			if ( hasVisibility && !hasSwarm ){
 
 				
 				// Field: Visible
@@ -589,16 +594,17 @@ public class TagSettingsView
 
 			////////////////////
 
-			Group gTransfer = new Group(cMainComposite, SWT.NONE);
-			gTransfer.setText( MessageText.getString("label.transfer.settings"));
-			final int gTransferCols = 8;
-			gridLayout = new GridLayout(gTransferCols, false);
-			gTransfer.setLayout(gridLayout);
-
-			gd = new GridData(SWT.FILL, SWT.NONE, false, false, 4, 1);
-			gTransfer.setLayoutData(gd);
-
 			if (tagsAreTagFeatureRateLimit) {
+				
+				Group gTransfer = new Group(cMainComposite, SWT.NONE);
+				gTransfer.setText( MessageText.getString("label.transfer.settings"));
+				final int gTransferCols = 8;
+				gridLayout = new GridLayout(gTransferCols, false);
+				gTransfer.setLayout(gridLayout);
+
+				gd = new GridData(SWT.FILL, SWT.NONE, false, false, 4, 1);
+				gTransfer.setLayoutData(gd);
+
 				final TagFeatureRateLimit rls[] = new TagFeatureRateLimit[tags.length];
 				System.arraycopy(tags, 0, rls, 0, tags.length);
 
@@ -1951,7 +1957,6 @@ public class TagSettingsView
 		int[] tagColor = tags[0].getColor();
 		Set<String> listTagNames = new HashSet<>();
 		for (Tag tag : tags) {
-			TagType tt = tag.getTagType();
 			String s = tag.getTagName(true);
 			listTagNames.add(s);
 
