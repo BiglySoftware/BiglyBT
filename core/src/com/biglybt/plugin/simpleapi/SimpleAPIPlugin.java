@@ -546,6 +546,27 @@ SimpleAPIPlugin
 
 						dm.getDownloadState().setUserComment( value );
 						
+					}else if ( name.equals( "ipfilterenable" )){
+						
+						value = value.toLowerCase( Locale.US );
+						
+						boolean disable;
+						
+						if ( value.equals( "true" ) || value.equals( "1" ) || value.equals( "y" )){
+							
+							disable = false;
+							
+						}else if ( value.equals( "false" ) || value.equals( "0" ) || value.equals( "n" )){
+
+							disable = true;
+							
+						}else{
+							
+							throw( new Exception( "invalid boolean value (" + value + ")" ));
+						}
+						
+						dm.getDownloadState().setFlag( DownloadManagerState.FLAG_DISABLE_IP_FILTER, disable );
+						
 					}else{
 						
 						throw( new Exception( "invalid 'name' parameter (" + name + ")" ));
