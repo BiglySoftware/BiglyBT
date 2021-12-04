@@ -41,6 +41,8 @@ import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.ipfilter.IpFilter;
+import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.*;
@@ -170,6 +172,8 @@ TagPropertyConstraintHandler
 			};	
 		};
 	
+	private static IpFilter	ip_filter = IpFilterManagerFactory.getSingleton().getIPFilter();
+		
 	private static volatile int	apply_all_secs;
 	private static volatile int	target_share_ratio;
 	
@@ -2454,15 +2458,16 @@ TagPropertyConstraintHandler
 		private static final int FT_WEEKS_TO_SECS	= 26;
 		private static final int FT_GET_CONFIG		= 27;
 		private static final int FT_HAS_TAG_AGE		= 28;
-		private static final int FT_LOWERCASE		= 29;		
-		private static final int FT_SET_COLOURS		= 30;		
-		private static final int FT_IS_NEW			= 31;		
-		private static final int FT_IS_SUPER_SEEDING	= 32;		
-		private static final int FT_IS_SEQUENTIAL		= 33;		
-		private static final int FT_TAG_POSITION		= 34;		
-		private static final int FT_IS_SHARE			= 35;		
-		private static final int FT_IS_UNALLOCATED		= 36;		
-		private static final int FT_IS_QUEUED			= 37;		
+		private static final int FT_LOWERCASE		= 29;
+		private static final int FT_SET_COLOURS		= 30;
+		private static final int FT_IS_NEW			= 31;
+		private static final int FT_IS_SUPER_SEEDING	= 32;
+		private static final int FT_IS_SEQUENTIAL		= 33;
+		private static final int FT_TAG_POSITION		= 34;
+		private static final int FT_IS_SHARE			= 35;
+		private static final int FT_IS_UNALLOCATED		= 36;
+		private static final int FT_IS_QUEUED			= 37;
+		private static final int FT_IS_IP_FILTERED		= 38;
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2985,6 +2990,12 @@ TagPropertyConstraintHandler
 				}else if ( func_name.equals( "isSequential" )){
 
 					fn_type = FT_IS_SEQUENTIAL;
+
+					params_ok = num_params == 0;
+
+				}else if ( func_name.equals( "isIpFiltered" )){
+
+					fn_type = FT_IS_IP_FILTERED;
 
 					params_ok = num_params == 0;
 
@@ -3726,7 +3737,11 @@ TagPropertyConstraintHandler
 
 						return( dm.getDownloadState().getFlag(DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD ));
 					}
-
+					case FT_IS_IP_FILTERED:{
+						
+						return( ip_filter.isEnabled() && 
+								!dm.getDownloadState().getFlag(DownloadManagerState.FLAG_DISABLE_IP_FILTER ));
+					}
 				}
 
 				return( false );
