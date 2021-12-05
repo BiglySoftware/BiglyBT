@@ -21,14 +21,18 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
-import java.applet.Applet;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.ui.config.ConfigSectionImpl;
 
@@ -208,20 +212,7 @@ public class ConfigSectionInterfaceAlertsSWT
 				"ConfigView.section.interface.wavlocation");
 
 		e_pathParameter.addListener(param -> {
-			new AEThread2("SoundTest") {
-				@Override
-				public void run() {
-					try {
-						Applet.newAudioClip(
-								new File(e_pathParameter.getValue()).toURI().toURL()).play();
-
-						Thread.sleep(2500);
-
-					} catch (Throwable e) {
-
-					}
-				}
-			}.start();
+			GeneralUtils.playSound( e_pathParameter.getValue());
 		});
 	}
 }

@@ -17,8 +17,6 @@
  */
 package com.biglybt.ui.swt;
 
-import java.applet.Applet;
-import java.applet.AudioClip;
 import java.awt.Image;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
@@ -29,9 +27,12 @@ import java.awt.TrayIcon.MessageType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 
 import com.biglybt.activities.ActivitiesConstants;
 import com.biglybt.activities.ActivitiesEntry;
@@ -49,12 +50,11 @@ import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.global.GlobalManagerEvent;
 import com.biglybt.core.global.GlobalManagerEventListener;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.logging.LogAlert;
-import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
+import com.biglybt.plugin.net.buddy.swt.BuddyPluginView;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.platform.PlatformManagerException;
@@ -95,10 +95,7 @@ UserAlerts
 			singleton = null;
 		}
 	}
-
-  	private AudioClip 	audio_clip 		= null;
-  	private String		audio_resource	= "";
-
+	
     private AEMonitor	this_mon 	= new AEMonitor( "UserAlerts" );
 
     private boolean startup = true;
@@ -577,79 +574,8 @@ UserAlerts
 			if ( do_sound ){
 
 	    		String	file = COConfigurationManager.getStringParameter( sound_file );
-
-    			file = file.trim();
-
-	    			// turn "<default>" into blank
-
-	    		if ( file.startsWith( "<" )){
-
-	    			file	= "";
-	    		}
-
-	    		if ( audio_clip == null || !file.equals( audio_resource )){
-
-	    			audio_clip	= null;
-
-	    				// try explicit file
-
-	    			if ( file.length() != 0 ){
-
-	    				File	f = new File( file );
-
-	    				try{
-
-			    			if ( f.exists()){
-
-		    					URL	file_url = f.toURI().toURL();
-
-		    					audio_clip = Applet.newAudioClip( file_url );
-			    			}
-
-	    				}catch( Throwable  e ){
-
-	    					Debug.printStackTrace(e);
-
-	    				}finally{
-
-	    					if ( audio_clip == null ){
-	    						Logger.log(new LogAlert(relatedObject, LogAlert.UNREPEATABLE,
-										LogAlert.AT_ERROR, "Failed to load audio file '" + file
-												+ "'"));
-	    					}
-	    				}
-	    			}
-
-	    				// either non-explicit or explicit missing
-
-	    			if ( audio_clip == null ){
-
-	    				audio_clip = Applet.newAudioClip(UserAlerts.class.getClassLoader().getResource( default_sound ));
-
-	    			}
-
-	    			audio_resource	= file;
-	    		}
-
-	    		if ( audio_clip != null ){
-
-	            	new AEThread2("DownloadSound")
-					{
-		        		@Override
-				        public void
-		        		run()
-		        		{
-		        			try{
-		        				audio_clip.play();
-
-		        				Thread.sleep(2500);
-
-		        			}catch( Throwable e ){
-
-		        			}
-		        		}
-		        	}.start();
-		        }
+	    		
+	    		GeneralUtils.playSound( file );
 	    	}
 			
 			if ( do_native_tray ){

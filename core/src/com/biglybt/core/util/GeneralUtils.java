@@ -22,9 +22,12 @@ package com.biglybt.core.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.regex.Pattern;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -522,17 +525,96 @@ GeneralUtils
 			return( unit_values[index] );
 		}
 	}
-	
+
 	public static void
-	main(String[] args )
+	playSound(
+		String			sound_file )
 	{
-		System.out.println( getUnitMultiplier( "e", false ));
-		System.out.println( getUnitMultiplier( "e", true ));
-		System.out.println( getUnitMultiplier( "pb", false ));
-		System.out.println( getUnitMultiplier( "pb", true ));
-		System.out.println( getUnitMultiplier( "pib", false ));
-		System.out.println( getUnitMultiplier( "pib", true ));
+		File	file;
+		
+		if ( sound_file == null ){
+			
+			file = null;
+			
+		}else{
+			
+			sound_file = sound_file.trim();
+			
+			if ( sound_file.isEmpty()){
 				
-	
+				file = null;
+				
+			}else{
+				
+					// turn <default> into blank
+			
+				if ( sound_file.startsWith( "<" )){
+				
+					file = null;
+					
+				}else{
+					
+					File temp = new File( sound_file );
+					
+					if ( temp.exists()){
+						
+						file = temp;
+						
+					}else{
+						
+						Debug.out( "Audio file " + temp + " not found" );
+						
+						file = null;
+					}
+				}
+			}
+		}
+		
+		String default_sound 	= "com/biglybt/ui/icons/downloadFinished.wav";
+		
+		new AEThread2("SoundPlayer" ){
+			@Override
+			public void run() 
+			{
+				try{
+					AudioInputStream ais;
+					
+					if ( file == null ){
+		
+						ais = AudioSystem.getAudioInputStream( 
+									GeneralUtils.class.getClassLoader().getResourceAsStream( default_sound ));
+				
+					}else{
+		
+						ais  = AudioSystem.getAudioInputStream( file );
+					}
+					
+				    Clip clip = AudioSystem.getClip();
+		
+				    clip.open( ais );
+				        
+				    clip.start();
+					    
+				    /* deprecated
+				    	AudioClip clip;
+						
+						if ( file == null ){
+													
+							clip = Applet.newAudioClip(GeneralUtils.class.getClassLoader().getResource( default_sound ));
+
+						}else{
+							
+							clip = Applet.newAudioClip(file.toURI().toURL());
+						}
+						
+						clip.play();
+					*/
+					
+					Thread.sleep(2500);
+		
+				} catch (Throwable e) {
+				}
+			}
+		}.start();
 	}
 }

@@ -20,10 +20,6 @@
 
 package com.biglybt.plugin.net.buddy.swt;
 
-import java.applet.Applet;
-import java.applet.AudioClip;
-import java.io.File;
-import java.net.URL;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -97,8 +93,6 @@ BuddyPluginView
 	private Image iconIN;
 	private Image iconOUT;
 	private Image iconINOUT;
-
-	private	final String default_sound 	= "com/biglybt/ui/icons/downloadFinished.wav";
 
 	private TimerEventPeriodic periodicEventMsgCheck;
 	private statusUpdater statusUpdater;
@@ -1411,34 +1405,9 @@ BuddyPluginView
 	{
 		if ( plugin.getBeta().getSoundEnabled()){
 
-			final String sound_file = plugin.getBeta().getSoundFile();
+			String sound_file = plugin.getBeta().getSoundFile();
 
-			new AEThread2("BuddyPluginSound" ){
-				@Override
-				public void run() {
-					try {
-						AudioClip audio_clip = null;
-
-						if ( sound_file.length() == 0 ){
-
-							audio_clip = Applet.newAudioClip(BuddyPluginView.class.getClassLoader().getResource( default_sound ));
-
-						}else{
-
-							URL	file_url = new File( sound_file ).toURI().toURL();
-
-	    					audio_clip = Applet.newAudioClip( file_url );
-						}
-
-						audio_clip.play();
-
-						Thread.sleep(2500);
-
-					} catch (Throwable e) {
-
-					}
-				}
-			}.start();
+			GeneralUtils.playSound( sound_file );
 		}
 	}
 
