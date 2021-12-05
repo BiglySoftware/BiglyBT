@@ -605,13 +605,13 @@ CoreUpdateChecker
 
 									  System.arraycopy( old, 0, new_urls, 1, old.length );
 
-									  new_urls[0]= jar_file.toURL();
+									  new_urls[0]= jar_file.toURI().toURL();
 
 									  cl = new URLClassLoader( new_urls, cl );
 
 								  }else{
 
-									  cl = new URLClassLoader( new URL[]{jar_file.toURL()}, cl );
+									  cl = new URLClassLoader( new URL[]{jar_file.toURI().toURL()}, cl );
 								  }
 
 								  Class cla = cl.loadClass("com.biglybt.update.version.Patch");

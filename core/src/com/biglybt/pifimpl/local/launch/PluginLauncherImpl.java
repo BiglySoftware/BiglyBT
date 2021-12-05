@@ -495,7 +495,7 @@ PluginLauncherImpl
 
   			try {
 
-  				classLoader = extendClassLoader( root, classLoader, f.toURL());
+  				classLoader = extendClassLoader( root, classLoader, f.toURI().toURL());
 
   			}catch( Exception e){
 

@@ -22,7 +22,6 @@ package com.biglybt.core.config;
 
 import java.io.*;
 import java.net.URL;
-import java.security.AccessControlException;
 import java.security.Security;
 import java.util.List;
 import java.util.Map;
@@ -254,14 +253,7 @@ COConfigurationManager
 
 			}catch( Throwable e ){
 
-					// can happen in applet
-
-				if ( e instanceof AccessControlException ){
-
-				}else{
-
-					e.printStackTrace();
-				}
+				e.printStackTrace();
 			}
 		}
 	}

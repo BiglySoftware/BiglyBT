@@ -20,7 +20,6 @@ package com.biglybt.core.util;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.nio.charset.Charset;
-import java.security.AccessControlException;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
@@ -112,14 +111,7 @@ Constants
 			}
 		}catch( Throwable e ){
 
-			// can happen in applet
-
-			if ( e instanceof AccessControlException ){
-
-			}else{
-
-				e.printStackTrace();
-			}
+			e.printStackTrace();
 		}
 	}
 
@@ -150,7 +142,7 @@ Constants
 	public static final String BIGLY_PEER_ID						= "BI";
 
 	
-	public static final String BIGLYBT_VERSION  = "2.9.0.1_B01";
+	public static final String BIGLYBT_VERSION  = "2.9.0.1_B11";
 	
 	//public static final String BUILD_VERSION  = "@build.version@";   //Ant replace - believed dead
 	public static final String SUBVERSION		= "";

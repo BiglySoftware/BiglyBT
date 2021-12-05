@@ -711,7 +711,7 @@ NetStatusPluginTester
 								x509_cert = (java.security.cert.X509Certificate)cf.generateCertificate(new ByteArrayInputStream(cert.getEncoded()));
 							}
 
-							log( "        Certificate: " + x509_cert.getSubjectDN());
+							log( "        Certificate: " + x509_cert.getSubjectX500Principal().getName());
 
 							Collection<List<?>> alt_names = x509_cert.getSubjectAlternativeNames();
 

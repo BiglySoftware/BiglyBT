@@ -3956,10 +3956,12 @@ public class FileUtil {
 			Debug.out( "!" );
 			return super.toURI();
 		}
-		@Override
+		
+			/* deprecated */
+		
 		public URL toURL() throws MalformedURLException{
 			Debug.out( "!" );
-			return super.toURL();
+			return super.toURI().toURL();
 		}
 	}
 }

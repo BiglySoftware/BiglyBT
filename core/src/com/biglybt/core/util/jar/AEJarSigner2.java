@@ -104,7 +104,7 @@ AEJarSigner2
 		if ( tools_jar.exists()){
 
 			try{
-				ClassLoader cl = new URLClassLoader(new URL[]{tools_jar.toURL()},AEJarSigner2.class.getClassLoader());
+				ClassLoader cl = new URLClassLoader(new URL[]{tools_jar.toURI().toURL()},AEJarSigner2.class.getClassLoader());
 
 				JarSigner_class = cl.loadClass( "sun.security.tools.JarSigner" );
 

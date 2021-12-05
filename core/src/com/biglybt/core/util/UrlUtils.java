@@ -16,7 +16,6 @@
  */
 package com.biglybt.core.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
@@ -1312,7 +1311,8 @@ public class UrlUtils
 		try {
 			return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20");
 		} catch (UnsupportedEncodingException e) {
-			return URLEncoder.encode(s).replaceAll("\\+", "%20");
+			Debug.out(e);
+			return(s);
 		}
 	}
 
@@ -1339,7 +1339,9 @@ public class UrlUtils
 			}
 		} catch (UnsupportedEncodingException e) {
 
-			return( URLDecoder.decode(s));
+			Debug.out(e);
+			
+			return( s );
 		}
 	}
 

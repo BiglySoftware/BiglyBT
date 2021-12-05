@@ -682,7 +682,7 @@ public class MessageText {
         URL jarURL = new URL(sJar);
 
         // User dir overrides app dir which overrides jar file bundles
-        URL[] urls = {userBundleFile.toURL(), appBundleFile.toURL(), jarURL};
+        URL[] urls = {userBundleFile.toURI().toURL(), appBundleFile.toURI().toURL(), jarURL};
 
         /* This is debugging code, use it when things go wrong :) The line number
          * is approximate as the input stream is buffered by the reader...
