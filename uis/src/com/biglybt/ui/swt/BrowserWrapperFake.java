@@ -138,7 +138,7 @@ BrowserWrapperFake
 		link_label.setText( MessageText.getString( "ConfigView.label.please.visit.here" ));
 
 		link_label.setCursor(link_label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-		link_label.setForeground(Colors.blue);
+		link_label.setForeground( link_label.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
 		link_label.setBackground( Colors.white );
 
 		link_label.addMouseListener(new MouseAdapter() {

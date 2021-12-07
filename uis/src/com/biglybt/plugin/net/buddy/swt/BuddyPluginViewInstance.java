@@ -1615,7 +1615,7 @@ BuddyPluginViewInstance
 		    Messages.setLanguageText(control_val_pk, "ConfigView.copy.to.clipboard.tooltip", true);
 
 		    control_val_pk.setCursor(main.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-		    control_val_pk.setForeground(Colors.blue);
+		    control_val_pk.setForeground(main.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
 		    control_val_pk.addMouseListener(new MouseAdapter() {
 		    	@Override
 			    public void mouseDoubleClick(MouseEvent arg0) {

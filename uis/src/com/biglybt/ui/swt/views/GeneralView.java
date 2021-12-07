@@ -562,7 +562,7 @@ public class GeneralView
     hash.setLayoutData(gridData);
     	// click on hash -> copy to clipboard
     hash.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
-    hash.setForeground(Colors.blue);
+    hash.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
     label.addMouseListener(new MouseAdapter() {
     	@Override
 	    public void mouseDoubleClick(MouseEvent arg0) {
@@ -841,7 +841,7 @@ public class GeneralView
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
     label.setLayoutData(gridData);
     label.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
-    label.setForeground(Colors.blue);
+    label.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
     Messages.setLanguageText(label, "GeneralView.label.user_comment");
 
     try {

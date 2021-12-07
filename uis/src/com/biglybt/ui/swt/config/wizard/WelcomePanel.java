@@ -166,7 +166,7 @@ public class WelcomePanel extends AbstractWizardPanel<ConfigureWizard> {
 	    linkLabel.setText( MessageText.getString( messTexts[userMode] ) );
 	    linkLabel.setData( links[userMode] );
 	    linkLabel.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
-	    linkLabel.setForeground(Colors.blue);
+	    linkLabel.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
 	    gridData = new GridData(GridData.FILL_HORIZONTAL);
 	    gridData.horizontalIndent = 10;
 	    linkLabel.setLayoutData(gridData);
@@ -186,7 +186,7 @@ public class WelcomePanel extends AbstractWizardPanel<ConfigureWizard> {
 	    linkLabel1.setText( (userMode == 1)?MessageText.getString(messTexts[3]):"");
 	    linkLabel1.setData( links[3] );
 	    linkLabel1.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
-	    linkLabel1.setForeground(Colors.blue);
+	    linkLabel1.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
 	    gridData = new GridData(GridData.FILL_HORIZONTAL);
 	    gridData.horizontalIndent = 10;
 	    linkLabel1.setLayoutData( gridData );

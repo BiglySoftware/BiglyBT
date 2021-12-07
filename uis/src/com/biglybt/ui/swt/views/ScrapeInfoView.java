@@ -102,7 +102,7 @@ public class ScrapeInfoView
 		label = new Label(cScrapeInfoView, SWT.LEFT);
 		Messages.setLanguageText(label, "GeneralView.label.trackerurl"); //$NON-NLS-1$
 		label.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
-		label.setForeground(Colors.blue);
+		label.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
 		label.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDoubleClick(MouseEvent arg0) {
@@ -385,7 +385,7 @@ public class ScrapeInfoView
 			trackerUrlValue.setText(trackerURL);
 
 			if ((trackerURL.startsWith("http://") || trackerURL.startsWith("https://"))) {
-				trackerUrlValue.setForeground(Colors.blue);
+				trackerUrlValue.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
 				trackerUrlValue.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
 				Messages.setLanguageText(trackerUrlValue.getWidget(),
 						"GeneralView.label.trackerurlopen.tooltip", true);

@@ -122,7 +122,7 @@ SpeedTestPanel
         linkLabel.setText( Constants.APP_NAME + " Wiki Speed Test" );
         linkLabel.setData( Wiki.SPEED_TEST_FAQ);
         linkLabel.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
-        linkLabel.setForeground(Colors.blue);
+        linkLabel.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
         azwGridData = new GridData();
         azwGridData.horizontalIndent = 10;
         linkLabel.setLayoutData(azwGridData);

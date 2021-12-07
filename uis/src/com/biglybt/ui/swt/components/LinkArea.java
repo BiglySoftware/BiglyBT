@@ -189,7 +189,7 @@ LinkArea
 				sr.start = info.ofsStart;
 				sr.length = info.ofsEnd - info.ofsStart;
 				sr.underline = true;
-				sr.foreground = Colors.blue;
+				sr.foreground = styled_text.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND);
 
 				styled_text.setStyleRange(sr);
 			}

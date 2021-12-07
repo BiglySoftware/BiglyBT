@@ -110,25 +110,6 @@ public class ConfigSectionMode
 				paramInfoLink);
 		add("pgRadio", pgRadio);
 
-		/*
-		final Label linkLabel1 = new Label(gWiki, SWT.NULL);
-		linkLabel1.setText( (userMode == 1)?MessageText.getString(messTexts[3]):"");
-		linkLabel1.setData( links[3] );
-		linkLabel1.setCursor(linkLabel1.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-		linkLabel1.setForeground(Colors.blue);
-		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		gridData.horizontalIndent = 10;
-		Utils.setLayoutData(linkLabel1,  gridData );
-		linkLabel1.addMouseListener(new MouseAdapter() {
-		  public void mouseDoubleClick(MouseEvent arg0) {
-		    Utils.launch((String) ((Label) arg0.widget).getData());
-		  }
-		  public void mouseUp(MouseEvent arg0) {
-		    Utils.launch((String) ((Label) arg0.widget).getData());
-		  }
-		});
-		*/
-
 		add("gap1", new LabelParameterImpl(""));
 		add("gap2", new LabelParameterImpl(""));
 		add("gap3", new LabelParameterImpl(""));

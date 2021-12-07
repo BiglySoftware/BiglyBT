@@ -5794,7 +5794,7 @@ public class Utils
 				
 				range.start 		= result.length();
 				range.length		= t.length();
-				range.foreground	= Colors.blue;
+				range.foreground	= text.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND);
 				range.data			= url;
 				
 				ranges.add( range );

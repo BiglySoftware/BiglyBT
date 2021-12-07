@@ -428,7 +428,7 @@ public class TransferStatsView
     socksMore.setText( MessageText.getString( "label.more") + "..." );
     socksMore.setLayoutData(gridData);
     socksMore.setCursor(socksMore.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-    socksMore.setForeground(Colors.blue);
+    socksMore.setForeground(socksMore.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
     socksMore.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseDoubleClick(MouseEvent arg0) {

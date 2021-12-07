@@ -220,7 +220,7 @@ public class AboutWindow {
       }
       linkLabel.setData(link[1][i]);
       linkLabel.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
-      linkLabel.setForeground(Colors.blue);
+      linkLabel.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
       gridData = new GridData(GridData.FILL_HORIZONTAL);
       gridData.horizontalSpan = 1;
 			linkLabel.setLayoutData(gridData);
