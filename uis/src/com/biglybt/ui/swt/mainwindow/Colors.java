@@ -579,6 +579,7 @@ public class Colors implements ParameterListener {
 	getSlightlyFadedColor(
 		Color	c )
 	{
+		boolean darkMode = Utils.isDarkAppearanceNative();
 		HSLColor hslColor = new HSLColor();
 		hslColor.initHSLbyRGB(c.getRed(), c.getGreen(), c.getBlue());
 		
@@ -586,13 +587,13 @@ public class Colors implements ParameterListener {
 		int luminence = hslColor.getLuminence();
 		if (luminence < 20) {
 			if (iSat > 10) {
-				hslColor.setSaturation((int)(iSat / 1.25));
-				hslColor.brighten(1.12f);
+				hslColor.setSaturation((int)(iSat / (darkMode?1.12:1.25)));
+				hslColor.brighten((darkMode?1.06f:1.12f));
 			}
 		} else {
 			if (iSat > 10) {
-				hslColor.setSaturation((int)(iSat / 1.25));
-				hslColor.brighten(0.63f);
+				hslColor.setSaturation((int)(iSat / (darkMode?1.12:1.25)));
+				hslColor.brighten(darkMode?0.80f:0.63f);
 			} 
 		}
 
