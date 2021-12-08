@@ -93,12 +93,12 @@ public class ConfigView implements UISWTViewCoreEventListener {
 				
 				while( item != null ){
 					
-					str = item.getText() + ( str.isEmpty()?"":("->" + str));
+					str = "->" + item.getText() + str;
 					
 					item = item.getParentItem();
 				}
 				
-				return( str );
+				return( MessageText.getString( "ConfigView.title.full" ) + str );
 			}
 
 			c = c.getParent();
