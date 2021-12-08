@@ -2774,7 +2774,7 @@ BuddyPluginViewBetaChat
 			Image rss_image = ImageLoader.getInstance().getImage("image.sidebar.subscriptions");
 			rss_button.setImage(rss_image);
 			GridData grid_data = new GridData(GridData.FILL_HORIZONTAL );
-			grid_data.widthHint = rss_image.getBounds().width;
+			grid_data.widthHint = rss_image.getBounds().width+ (Constants.isLinux?20:0);
 			grid_data.heightHint = rss_image.getBounds().height;
 			rss_button.setLayoutData(grid_data);
 			//rss_button.setEnabled(false);
