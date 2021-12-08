@@ -233,14 +233,20 @@ IntegratedResourceBundle
 	 *
 	 * @since 3.1.1.1
 	 */
-  public String getString(String key, String def) {
+	public String getString(String key, String def) {
 		String s = (String) handleGetObject(key);
 		if (s == null) {
 			if (parent != null) {
 				s = parent.getString(key);
 			}
 			if (s == null) {
-				return def;
+				if ( added_strings != null ) {
+					s = added_strings.get( key );
+				}
+				
+				if ( s == null ){
+					return def;
+				}
 			}
 		}
 		return s;

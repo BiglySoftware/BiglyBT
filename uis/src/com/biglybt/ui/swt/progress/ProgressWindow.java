@@ -531,7 +531,7 @@ ProgressWindow
 		layout.numColumns = 2;
 		shell.setLayout(layout);
 
-		Color bg = Utils.isDarkAppearancePartial()?null:Colors.white;
+		Color bg = ( Utils.isDarkAppearanceNative() || Utils.isDarkAppearancePartial())?null:Colors.white;
 		
 		shell.setBackground( bg );
 		
@@ -578,7 +578,7 @@ ProgressWindow
 			}
 		}
 		
-		spinImages = ImageLoader.getInstance().getImages("working");
+		spinImages = ImageLoader.getInstance().getImagesWithDarkSupport("working");
 		
 		if ( spinImages == null || spinImages.length == 0 ){
 
@@ -893,7 +893,7 @@ ProgressWindow
 		}
 
 		if (spinImages != null) {
-			ImageLoader.getInstance().releaseImage("working");
+			ImageLoader.getInstance().releaseImageWithDarkSupport("working");
 			spinImages =  null;
 		}
 	}

@@ -699,6 +699,40 @@ public class ImageLoader
 		return new Image[0];
 	}
 
+	public Image[] 
+	getImagesWithDarkSupport(
+		String sKey) 
+	{
+		if ( Utils.isDarkAppearanceNative()){
+			String mod = sKey + "-dark";
+			boolean found = false;
+			for (SkinProperties sp : skinProperties) {
+				if ( sp.getStringArray( mod ) != null ){
+					found = true;
+					break;
+				}
+			}
+			if ( !found ){
+				for (SkinProperties sp : skinProperties){
+					String str = sp.getStringValue(sKey);
+					if ( str != null ){
+						int pos = str.lastIndexOf( '.' );
+						if ( pos != -1 ){
+							str = str.substring( 0, pos ) + "-dark" + str.substring(pos);
+						}
+						sp.addProperty(mod, str );
+						break;
+					}
+				}
+			}
+			
+			return( getImages( mod ));
+			
+		}else{
+			return( getImages( sKey ));
+		}
+	}
+	
 	public Image[] getImages(String sKey) {
 		if (sKey == null) {
 			return new Image[0];
@@ -1006,6 +1040,14 @@ public class ImageLoader
 		return 0;
 	}
 
+	public long releaseImageWithDarkSupport(String sKey) {
+		if ( Utils.isDarkAppearanceNative()){
+			String mod = sKey + "-dark";
+			return( releaseImage( mod ));
+		}else {
+			return( releaseImage( sKey ));
+		}
+	}
 	/**
 	 * Adds image to repository.  refcount will be 1, or if key already exists,
 	 * refcount will increase.

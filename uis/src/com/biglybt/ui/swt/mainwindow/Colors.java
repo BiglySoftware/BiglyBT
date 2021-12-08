@@ -533,46 +533,25 @@ public class Colors implements ParameterListener {
   }
 
 	public static Color getSystemColor (Device d, int id) {
-		if (Utils.isGTK3) {
-			if (id == SWT.COLOR_INFO_BACKGROUND) {
-				return ColorCache.getColor(d, 0, 0,0 );
-			}else  if (id == SWT.COLOR_INFO_FOREGROUND) {
-				return ColorCache.getColor(d, 255, 255,255 );
-			}else {
-				if ( Utils.isDarkAppearancePartial()) {
-					if ( id == SWT.COLOR_BLACK ) {
-						return( white );
-					}else if ( id == SWT.COLOR_WHITE ) {
-						return( black );
+		if ( !Utils.isDarkAppearanceNative()){
+			if (Utils.isGTK3) {
+				if (id == SWT.COLOR_INFO_BACKGROUND) {
+					return ColorCache.getColor(d, 0, 0,0 );
+				}else  if (id == SWT.COLOR_INFO_FOREGROUND) {
+					return ColorCache.getColor(d, 255, 255,255 );
+				}else {
+					if ( Utils.isDarkAppearancePartial()) {
+						if ( id == SWT.COLOR_BLACK ) {
+							return( white );
+						}else if ( id == SWT.COLOR_WHITE ) {
+							return( black );
+						}
 					}
 				}
 			}
 		}
-		return d.getSystemColor(id);
-	}
-	
-	public Color
-	getFadedColor(
-		Color	c )
-	{
-		HSLColor hslColor = new HSLColor();
-		hslColor.initHSLbyRGB(c.getRed(), c.getGreen(), c.getBlue());
 		
-		int iSat = hslColor.getSaturation();
-		int luminence = hslColor.getLuminence();
-		if (luminence < 20) {
-			if (iSat > 10) {
-				hslColor.setSaturation(iSat / 2);
-				hslColor.brighten(1.25f);
-			}
-		} else {
-			if (iSat > 10) {
-				hslColor.setSaturation(iSat / 2);
-				hslColor.brighten(0.75f);
-			} 
-		}
-
-		return( ColorCache.getColor(display, hslColor.getRed(),	hslColor.getGreen(), hslColor.getBlue()));
+		return d.getSystemColor(id);
 	}
 	
 	public Color
