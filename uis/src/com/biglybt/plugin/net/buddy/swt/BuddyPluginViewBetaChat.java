@@ -2481,7 +2481,7 @@ BuddyPluginViewBetaChat
 			StyleRange styleRange = new StyleRange();
 			styleRange.start = start;
 			styleRange.length = url_text.length();
-			styleRange.foreground = Colors.blue;
+			styleRange.foreground = parent.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND);
 			styleRange.underline = true;
 
 			styleRange.data = url;
@@ -4506,7 +4506,7 @@ BuddyPluginViewBetaChat
 
 					}else{
 
-						item.setForeground( bt_col_offset + 0, Colors.black );
+						item.setForeground( bt_col_offset + 0, Utils.isDarkAppearanceNative()?Colors.white:Colors.black );
 					}
 				}
 			}
@@ -6854,7 +6854,7 @@ BuddyPluginViewBetaChat
 									StyleRange styleRange 	= new MyStyleRange( message );
 									styleRange.start 		= this_style_start;
 									styleRange.length 		= this_style_length;
-									styleRange.foreground 	= Colors.blue;
+									styleRange.foreground 	= Utils.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND);
 									styleRange.underline 	= true;
 
 										// DON'T store the URL object because in their wisdom SWT invokes the .equals method

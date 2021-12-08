@@ -166,7 +166,7 @@ LinkLabel
 	public static void makeLinkedLabel(Label label, Runnable runnable) {
 		
 	    label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-	    label.setForeground(Colors.blue);
+	    label.setForeground(label.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
 	    label.addMouseListener(new MouseAdapter() {
 	      @Override
 	      public void mouseDoubleClick(MouseEvent e) {
