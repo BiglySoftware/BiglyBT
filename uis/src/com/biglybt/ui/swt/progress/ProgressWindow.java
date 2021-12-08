@@ -578,7 +578,7 @@ ProgressWindow
 			}
 		}
 		
-		spinImages = ImageLoader.getInstance().getImagesWithDarkSupport("working");
+		spinImages = ImageLoader.getInstance().getImages("working");
 		
 		if ( spinImages == null || spinImages.length == 0 ){
 
@@ -893,7 +893,7 @@ ProgressWindow
 		}
 
 		if (spinImages != null) {
-			ImageLoader.getInstance().releaseImageWithDarkSupport("working");
+			ImageLoader.getInstance().releaseImage("working");
 			spinImages =  null;
 		}
 	}
