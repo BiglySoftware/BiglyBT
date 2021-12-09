@@ -269,7 +269,11 @@ public class ImageLoader
 		
 		if ( values.length == 1 && values[0].equals( "null" )){
 			
-			return( new Image[]{ getNullImage() });
+			Image ni = getNullImage();
+			
+			addImage( "null", ni );
+			
+			return( new Image[]{ ni });
 		}
 		
 		Image[] images = null;
