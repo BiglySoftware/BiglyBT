@@ -751,7 +751,9 @@ public class SubscriptionWizard {
 		torrentColumn.setWidth(50);
 
 		final Composite compEmpty = new Composite(composite,SWT.NONE);
-		compEmpty.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
+		if ( !Utils.isDarkAppearanceNative()){
+			compEmpty.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
+		}
 		FillLayout fl = new FillLayout();
 		fl.marginHeight = 15;
 		fl.marginWidth = 15;
