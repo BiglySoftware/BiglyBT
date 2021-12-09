@@ -51,6 +51,7 @@ import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
@@ -240,15 +241,15 @@ public abstract class PiecesViewBase
 
 		if ( hasFilter ){
 			bubbleTextBox = new BubbleTextBox(header, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
-			Composite bubbleTextWidget = bubbleTextBox.getMainWidget();
 			
 			fd = Utils.getFilledFormData();
 			fd.width = 150;
 			fd.top = null;
-			fd.height = (int) (FontUtils.getFontHeightInPX(bubbleTextWidget.getFont()) * 1.4);
 			fd.right = new FormAttachment(100, -10);
 			fd.left = null;
-			bubbleTextWidget.setLayoutData(fd);
+			
+			bubbleTextBox.setMessageAndLayout( "" , fd);
+
 			bubbleTextBox.setAllowRegex( true );
 			
 			if ( tv != null ){

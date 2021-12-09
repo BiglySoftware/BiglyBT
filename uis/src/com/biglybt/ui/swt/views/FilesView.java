@@ -306,13 +306,12 @@ public class FilesView
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
 		Composite mainBubbleWidget = bubbleTextBox.getMainWidget();
-		bubbleTextBox.setMessage(MessageText.getString("TorrentDetailsView.filter"));
 
 		FormData fd = new FormData();
 		fd.right = new FormAttachment(100, 0);
-		fd.height = (int) (FontUtils.getFontHeightInPX(mainBubbleWidget.getFont()) * 1.4);
 		fd.width = 140;
-		mainBubbleWidget.setLayoutData(fd);
+		
+		bubbleTextBox.setMessageAndLayout(MessageText.getString("TorrentDetailsView.filter") , fd);
 
 		fd = new FormData();
 		fd.top = new FormAttachment(mainBubbleWidget, 10, SWT.CENTER);

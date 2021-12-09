@@ -28,10 +28,12 @@ import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.utils.FontUtils;
@@ -117,7 +119,16 @@ public class BubbleTextBox
 		FormLayout layout = new FormLayout();
 		cBubble.setLayout(layout);
 
-		textWidget = new Text(cBubble, style & ~(SWT.BORDER | SWT.SEARCH)) {
+		int textStyle;
+		if ( Constants.isOSX && Utils.isDarkAppearanceNative()){
+			
+				// if we don't force a border on OSX dark mode then it messes up
+			
+			textStyle = ( style | SWT.BORDER ) & ~(SWT.SEARCH);
+		}else{
+			textStyle = style & ~(SWT.BORDER | SWT.SEARCH);
+		}
+		textWidget = new Text(cBubble, textStyle ) {
 			@Override
 			protected void checkSubclass() {
 			}
@@ -125,7 +136,7 @@ public class BubbleTextBox
 			@Override
 			public Point computeSize(int wHint, int hHint, boolean changed) {
 				Point point = super.computeSize(wHint, hHint, changed);
-				if (Utils.isGTK3) {
+				if (Utils.isGTK3|| (Constants.isOSX && Utils.isDarkAppearanceNative())){
 					Rectangle area = getParent().getClientArea();
 					//System.out.println("computedSize = " + point  + "; parent.h=" + area.height);
 
@@ -328,6 +339,41 @@ public class BubbleTextBox
 		});
 	}
 
+	private int
+	getBubbleLayoutHeight()
+	{
+		float fontHeight = FontUtils.getFontHeightInPX(textWidget.getFont());
+		
+		if ( Constants.isOSX && Utils.isDarkAppearanceNative()){
+			
+			return((int)( fontHeight * 2.0 ));
+			
+		}else{
+			
+			return((int)( fontHeight * 1.4 ));
+		}
+	}
+	
+	public void
+	setMessageAndLayout(
+		String		msg,
+		GridData	gridData )
+	{
+		textWidget.setMessage( msg );
+		gridData.heightHint = getBubbleLayoutHeight();
+		cBubble.setLayoutData(gridData);
+	}
+	
+	public void
+	setMessageAndLayout(
+		String		msg,
+		FormData	formData )
+	{
+		textWidget.setMessage( msg );
+	    formData.height = getBubbleLayoutHeight();
+	    cBubble.setLayoutData(formData);
+	}	
+	
 	@Override
 	public void paintControl(PaintEvent e) {
 		Rectangle clientArea = cBubble.getClientArea();
@@ -351,8 +397,13 @@ public class BubbleTextBox
 		float heightOval = fontHeight * 0.7f;
 		float widthOval = heightOval;
 
-		Color colorFadedText = Colors.getSystemColor(e.display,
-				SWT.COLOR_WIDGET_NORMAL_SHADOW);
+		Color colorFadedText;
+		
+		if ( Utils.isGTK3 && Utils.isDarkAppearanceNative()){
+			colorFadedText = Colors.light_grey;		// COLOR_WIDGET_NORMAL_SHADOW is black :(
+		}else{
+			colorFadedText = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW);
+		}
 		e.gc.setForeground(colorFadedText);
 
 		int iconY = clientArea.y + ((clientArea.height - fontHeight + 1) / 2);
@@ -615,7 +666,7 @@ public class BubbleTextBox
 				regexIsError = false;
 
 				textWidget.setBackground(COLOR_FILTER_REGEX);
-				textWidget.setForeground(old_fg);
+				textWidget.setForeground(Colors.getInstance().getReadableColor(COLOR_FILTER_REGEX));
 				textWidget.setFont(FONT_REGEX);
 			} catch (Exception e) {
 				regexIsError = true;

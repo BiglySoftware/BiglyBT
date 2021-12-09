@@ -303,11 +303,11 @@ public class TableColumnSetupWindow
 		cTableAvail.setLayout(gridLayout);
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTableAvail, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
-		bubbleTextBox.setMessage(MessageText.getString("column.setup.search"));
+		
 		GridData gd = new GridData(SWT.RIGHT,SWT.CENTER,true,false);
 		gd.widthHint = 150;
-		gd.heightHint = (int) (FontUtils.getFontHeightInPX(bubbleTextBox.getTextWidget().getFont()) * 1.4);
-		bubbleTextBox.getMainWidget().setLayoutData( gd );
+				
+		bubbleTextBox.setMessageAndLayout( MessageText.getString("column.setup.search"), gd );
 
 		tvAvail.enableFilterCheck(
 			bubbleTextBox,

@@ -350,8 +350,6 @@ public class ClientStatsView
 			
 		
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
-		Text bubbleTextWidget = bubbleTextBox.getTextWidget();
-		bubbleTextWidget.setMessage(MessageText.getString("Button.search") + "..." );
 
 		FormData fd = new FormData();
 		btnCopy.setLayoutData( fd );
@@ -364,9 +362,9 @@ public class ClientStatsView
 		fd = Utils.getFilledFormData();
 		fd.width = 150;
 		fd.top = null;
-		fd.height = (int) (FontUtils.getFontHeightInPX(bubbleTextWidget.getFont()) * 1.4);
 		fd.left = null;
-		bubbleTextBox.getMainWidget().setLayoutData(fd);
+
+		bubbleTextBox.setMessageAndLayout(MessageText.getString("Button.search") + "..." , fd);
 		
 		tv.enableFilterCheck(bubbleTextBox, this, true );
 

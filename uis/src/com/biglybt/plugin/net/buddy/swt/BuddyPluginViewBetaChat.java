@@ -2878,12 +2878,13 @@ BuddyPluginViewBetaChat
 		status.setText( MessageText.getString( "PeersView.state.pending" ));
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(component, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
+
 		Text bubbleTextWidget = bubbleTextBox.getTextWidget();
-		bubbleTextWidget.setMessage(MessageText.getString("Button.search") + "..." );
-		grid_data = new GridData();
-		grid_data.widthHint = 100;
-		grid_data.heightHint = (int) (FontUtils.getFontHeightInPX(bubbleTextWidget.getFont()) * 1.4);
-		bubbleTextBox.getMainWidget().setLayoutData(grid_data);
+		
+		GridData gridData = new GridData();
+		gridData.widthHint = 100;
+
+		bubbleTextBox.setMessageAndLayout( MessageText.getString("Button.search") + "...", gridData );
 		
 		bubbleTextWidget.addModifyListener(
 			(e)->{

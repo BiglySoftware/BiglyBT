@@ -194,12 +194,12 @@ public class ConfigView implements UISWTViewCoreEventListener {
       FormLayout layout = new FormLayout();
       cLeftSide.setLayout(layout);
 
-			BubbleTextBox bubbleTextBox = new BubbleTextBox(cLeftSide, SWT.BORDER
-					| SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
-			final Text txtFilter = bubbleTextBox.getTextWidget();
-			Composite cFilterArea = bubbleTextBox.getMainWidget();
+      BubbleTextBox bubbleTextBox = new BubbleTextBox(cLeftSide, SWT.BORDER
+    		  | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
+      final Text txtFilter = bubbleTextBox.getTextWidget();
+      
+      Composite cFilterArea = bubbleTextBox.getMainWidget();
 
-      txtFilter.setMessage(MessageText.getString("ConfigView.filter"));
       txtFilter.addModifyListener(e -> filterTree(txtFilter.getText()));
 
       tree = new Tree(cLeftSide, SWT.NONE);
@@ -211,17 +211,17 @@ public class ConfigView implements UISWTViewCoreEventListener {
 
       formData = new FormData();
       formData.bottom = new FormAttachment(100, -5);
-			formData.left = new FormAttachment(0, 2);
-			formData.right = new FormAttachment(100, -2);
-	    formData.height = (int) (FontUtils.getFontHeightInPX(txtFilter.getFont()) * 1.4);
-	    cFilterArea.setLayoutData(formData);
-
+      formData.left = new FormAttachment(0, 2);
+      formData.right = new FormAttachment(100, -2);
+      
+      bubbleTextBox.setMessageAndLayout( MessageText.getString("ConfigView.filter"), formData );
+ 
       formData = new FormData();
       formData.top = new FormAttachment(0, 0);
       formData.left = new FormAttachment(0,0);
       formData.right = new FormAttachment(100,0);
-			formData.bottom = new FormAttachment(cFilterArea, -5);
-	    tree.setLayoutData(formData);
+      formData.bottom = new FormAttachment(cFilterArea, -5);
+      tree.setLayoutData(formData);
 
       Composite cRightSide = new Composite(form, SWT.NULL);
       configLayout = new GridLayout();

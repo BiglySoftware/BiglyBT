@@ -26,6 +26,7 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -1869,6 +1870,8 @@ public class MainWindowImpl
 
 		boolean DARK_MODE = Utils.isDarkAppearanceNative();
 		
+		/* doesn't appear to be needed anymore
+		 
 		if (Utils.isGTK3 || DARK_MODE) {
 			// TextBox on GTK3/SWT and OSX/Dark will expand box to fit it's hugeness
 			// Workaround by creating a composite in a fixed height composite
@@ -1887,10 +1890,25 @@ public class MainWindowImpl
 			c2.setLayoutData(filledFormData);
 			cArea= c2;
 		}
-
+		*/
+		
 		final Text text = new Text(cArea, (DARK_MODE && !Utils.isGTK3 )?SWT.BORDER:SWT.NONE);
 		text.setMessage(MessageText.getString("v3.MainWindow.search.defaultText"));
 		FormData filledFormData = Utils.getFilledFormData();
+		
+			// not great but as of Dec 2021 seems to be the best way to make things actually look ok...
+		
+		if ( Utils.isGTK3 ){	
+			if ( DARK_MODE ){
+				filledFormData.height = 20;
+			}else {
+				filledFormData.height = 19;
+				filledFormData.bottom = new FormAttachment(100,-1);
+			}
+		}else if ( Constants.isOSX && DARK_MODE ){
+			filledFormData.height = 19;
+		}
+		
 		text.setLayoutData(filledFormData);
 
 		text.setData("ObfuscateImage", new ObfuscateImage() {
