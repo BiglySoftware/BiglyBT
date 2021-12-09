@@ -142,6 +142,9 @@ public class SideBarToolTips
 
 		// We don't get mouse down notifications on trim or borders..
 		toolTipShell = new Shell(tree.getShell(), SWT.ON_TOP);
+		
+		UIUpdaterSWT.getInstance().addUpdater(this);
+
 		toolTipShell.addListener(SWT.Dispose, new Listener() {
 
 			@Override
@@ -149,6 +152,7 @@ public class SideBarToolTips
 				UIUpdaterSWT.getInstance().removeUpdater(SideBarToolTips.this);
 			}
 		});
+
 		FillLayout f = new FillLayout();
 		try {
 			f.marginWidth = 3;
@@ -199,8 +203,6 @@ public class SideBarToolTips
 
 		toolTipShell.setBounds(pt.x, pt.y, size.x, size.y);
 		toolTipShell.setVisible(true);
-		UIUpdaterSWT.getInstance().addUpdater(this);
-
 	}
 
 	/**
