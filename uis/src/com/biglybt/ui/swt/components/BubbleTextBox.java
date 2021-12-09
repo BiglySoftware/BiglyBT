@@ -434,8 +434,8 @@ public class BubbleTextBox
 			cBubble.setData("XArea", rXArea);
 
 			if (mouseOverButton == BUTTON_CLEAR) {
-				e.gc.setBackground(
-						Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW));
+				//e.gc.setBackground(
+				//		Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW));
 				e.gc.fillOval(rXArea.x, rXArea.y, rXArea.width, rXArea.height);
 
 				e.gc.setForeground(textWidget.getForeground());
@@ -467,17 +467,20 @@ public class BubbleTextBox
 					clientArea.height - 2);
 			cBubble.setData("RegexArea", regexArea);
 
+			/*
 			if (mouseOverButton == BUTTON_REGEX) {
 				e.gc.setBackground(
 						Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW));
-				e.gc.fillRoundRectangle(regexArea.x, regexArea.y, regexArea.width,
-						regexArea.height, 5, 5);
+				e.gc.fillRoundRectangle(regexArea.x, regexArea.y, regexArea.width-2,
+						regexArea.heigh-1, 5, 5);
 			}
-
+			*/
+			
 			if (regexEnabled) {
 				if (mouseOverButton != BUTTON_REGEX) {
-					e.gc.setBackground(
-							regexIsError ? Colors.colorErrorBG : Colors.colorAltRow);
+					if ( regexIsError ){
+						e.gc.setBackground(Colors.fadedRed );
+					}
 					e.gc.fillRoundRectangle(regexArea.x, clientArea.y,
 							regexArea.width - 2, clientArea.height - 1, 5, 5);
 					e.gc.setForeground(colorFadedText);
