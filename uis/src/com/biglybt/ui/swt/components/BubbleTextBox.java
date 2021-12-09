@@ -342,6 +342,10 @@ public class BubbleTextBox
 	private int
 	getBubbleLayoutHeight()
 	{
+			// Note we have the equivalent skin settings for this (in two places as of now)
+			// 		filterbox.height=1.4rem
+			//		filterbox.height._mac._dark=2.0rem
+		
 		float fontHeight = FontUtils.getFontHeightInPX(textWidget.getFont());
 		
 		if ( Constants.isOSX && Utils.isDarkAppearanceNative()){
