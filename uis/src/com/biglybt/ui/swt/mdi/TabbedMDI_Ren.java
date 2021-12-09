@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Display;
 
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -368,15 +369,76 @@ public class TabbedMDI_Ren
 							xDraw += imageWidth + 4; //INTERNAL_SPACING;
 						}
 					}
-					// draw close
+					
+						// draw close
+					
 					if (showingClose) {
-						try {
-							Method methDrawClose = CTabFolderRenderer.class.getDeclaredMethod(
-									"drawClose", GC.class, Rectangle.class, int.class);
-							methDrawClose.setAccessible(true);
-							methDrawClose.invoke(this, gc, closeRect, closeImageState);
-						} catch (Throwable t) {
-							t.printStackTrace();
+						
+						if ( closeImageState == 0 && Utils.isDarkAppearanceNative()){
+														
+								// OSX + Linux paint an almost black cross on a black background
+								// hack to take whatever the OS paints and lighten it
+							
+							Image img = new Image( gc.getDevice(), closeRect );
+							
+							GC gcImg = new GC( img );
+							
+							gcImg.setBackground(Colors.black);
+							gcImg.fillRectangle(0,0,closeRect.width,closeRect.height);
+							
+							try {
+								Method methDrawClose = CTabFolderRenderer.class.getDeclaredMethod(
+										"drawClose", GC.class, Rectangle.class, int.class);
+								methDrawClose.setAccessible(true);
+								methDrawClose.invoke(this, gcImg, new Rectangle(0,0,closeRect.width,closeRect.height), closeImageState);
+							} catch (Throwable t) {
+								t.printStackTrace();
+							}
+							
+							ImageData idata = img.getImageData();
+							PaletteData	pdata = idata.palette;
+							
+							int redMask 	= pdata.redMask;
+							int greenMask 	= pdata.greenMask;
+							int blueMask 	= pdata.blueMask;
+							int redShift 	= pdata.redShift;
+							int greenShift 	= pdata.greenShift;
+							int blueShift 	= pdata.blueShift;
+																				
+							for ( int i=0;i<closeRect.width;i++){
+								for ( int j=0;j<closeRect.height;j++){
+									int pixel = idata.getPixel(i,j);
+																	
+									int red = pixel & redMask;
+									red = (redShift < 0) ? (red >>> -redShift ): ( red << redShift );
+									int green = pixel & greenMask;
+									green = (greenShift < 0) ? ( green >>> -greenShift ) : ( green << greenShift );
+									int blue = pixel & blueMask;
+									blue = (blueShift < 0) ? ( blue >>> -blueShift ) : ( blue << blueShift );
+
+									int rgb = (red<<16)|(green<<8)|blue;
+									
+									if ( rgb != 0x000000 ){
+										Color c = new Color(new RGB(red+75,green+75,blue+75));
+										gc.setForeground(c);
+										gc.drawPoint(closeRect.x+i,closeRect.y+j);
+										c.dispose();
+									}
+								}
+							}							
+							
+							gcImg.dispose();
+							img.dispose();
+
+						}else{
+							try {
+								Method methDrawClose = CTabFolderRenderer.class.getDeclaredMethod(
+										"drawClose", GC.class, Rectangle.class, int.class);
+								methDrawClose.setAccessible(true);
+								methDrawClose.invoke(this, gc, closeRect, closeImageState);
+							} catch (Throwable t) {
+								t.printStackTrace();
+							}
 						}
 					}
 
