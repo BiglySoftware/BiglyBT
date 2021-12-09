@@ -269,7 +269,7 @@ public class ImageLoader
 		
 		if ( values.length == 1 && values[0].equals( "null" )){
 			
-			return( getNullImage());
+			return( new Image[]{ getNullImage() });
 		}
 		
 		Image[] images = null;
@@ -1123,29 +1123,14 @@ public class ImageLoader
 		return noImage;
 	}
 	
-	private Image[]
-	getNullImage() 
-	{
-		ImageLoaderRefInfo imageInfo = getRefInfoFromImageMap( "null" );
-		
-		if ( imageInfo != null ){
-			
-			imageInfo.addref();
-			
-			return( imageInfo.getImages());
-			
-		}else{
-			if ( nullImage == null ){
-				
-				Display display = Display.getDefault();
-			
-				nullImage = new Image(display, 1, 1);
-			}
-			
-			addImageNoDipose( "null", nullImage );
-			
-			return( new Image[]{ nullImage });
+	private Image getNullImage() {
+
+		if (nullImage == null) {
+			Display display = Display.getDefault();
+			final int SIZE = 1;
+			nullImage = new Image(display, SIZE, SIZE);
 		}
+		return nullImage;
 	}
 
 	public boolean imageExists(String name) {
@@ -1566,7 +1551,7 @@ public class ImageLoader
 						if ( images != null ){
 							for (int j = 0; j < images.length; j++) {
 								Image image = images[j];
-								if (isRealImage(image)) {
+								if (isRealImage(image) && image != nullImage){
 									image.dispose();
 								}
 							}
