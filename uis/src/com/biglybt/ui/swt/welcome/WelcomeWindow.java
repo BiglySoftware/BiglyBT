@@ -184,7 +184,9 @@ public class WelcomeWindow {
 				int style;
 				boolean setStyle;
 
-				helpPanel.setForeground(grey);
+				if ( !Utils.isDarkAppearanceNative()) {
+					helpPanel.setForeground(grey);
+				}
 
 				String[] lines = sWhatsNew.split("\\r?\\n");
 				for (int i = 0; i < lines.length; i++) {

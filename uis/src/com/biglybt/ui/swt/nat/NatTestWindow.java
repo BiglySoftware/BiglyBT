@@ -248,7 +248,10 @@ public class NatTestWindow {
     gridData.verticalAlignment = SWT.FILL;
     gridData.horizontalSpan = 3;
     textResults.setLayoutData(gridData);
-    textResults.setBackground(Colors.getSystemColor(panel.getDisplay(), SWT.COLOR_WHITE));
+    
+    if ( !Utils.isDarkAppearanceNative()) {
+    	textResults.setBackground(Colors.getSystemColor(panel.getDisplay(), SWT.COLOR_WHITE));
+    }
 
     bTestTCP.addListener(SWT.Selection, new Listener() {
       @Override

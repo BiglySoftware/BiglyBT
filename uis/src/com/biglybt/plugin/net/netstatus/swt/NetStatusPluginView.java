@@ -570,7 +570,7 @@ NetStatusPluginView
 
 							if ( f_log_type == LOG_NORMAL ){
 
-								color = Colors.black;
+								color = Utils.isDarkAppearanceNative()?null:Colors.black;
 
 							}else if ( f_log_type == LOG_SUCCESS ){
 
