@@ -240,7 +240,7 @@ DiskManagerUtil
 							
 							File currentFile = file.getFile(true);
 							
-							currentFile.delete();
+							FileUtil.deleteWithRecycle( currentFile, dm.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ));
 						}
 					}
 				}
