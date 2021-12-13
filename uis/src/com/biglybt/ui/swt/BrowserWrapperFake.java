@@ -36,6 +36,7 @@ import org.eclipse.swt.browser.StatusTextListener;
 import org.eclipse.swt.browser.TitleEvent;
 import org.eclipse.swt.browser.TitleListener;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
@@ -71,7 +72,9 @@ BrowserWrapperFake
 		Composite parent = _parent;
 
 		browser = new Composite(parent, SWT.NULL );
-		browser.setBackground( Colors.white );
+		
+		Color bg = Utils.isDarkAppearanceNative()?null:Colors.white;
+		browser.setBackground( bg );
 
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
@@ -84,7 +87,7 @@ BrowserWrapperFake
 			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 			grid_data.horizontalSpan = 3;
 			label.setLayoutData(grid_data);
-			label.setBackground( Colors.white );
+			label.setBackground( bg );
 
 			label = new Label(browser, SWT.NULL);
 			Messages.setLanguageText(label, "browser.internal.disabled.reenable");
@@ -112,7 +115,7 @@ BrowserWrapperFake
 			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 			grid_data.horizontalSpan = 3;
 			label.setLayoutData(grid_data);
-			label.setBackground( Colors.white );
+			label.setBackground( bg );
 		}
 
 			// details
@@ -124,14 +127,14 @@ BrowserWrapperFake
 		GridData grid_data = new GridData( GridData.FILL_BOTH );
 		grid_data.horizontalSpan = 3;
 		details.setLayoutData(grid_data);
-		details.setBackground( Colors.white );
+		details.setBackground( bg );
 
 			// url
 
 		Label label = new Label(details, SWT.NULL );
 		label.setText( "URL" );
 		label.setLayoutData(new GridData());
-		label.setBackground( Colors.white );
+		label.setBackground( bg );
 
 
 		link_label = new Label(details, SWT.WRAP);
@@ -139,7 +142,7 @@ BrowserWrapperFake
 
 		link_label.setCursor(link_label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		link_label.setForeground( link_label.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
-		link_label.setBackground( Colors.white );
+		link_label.setBackground( bg );
 
 		link_label.addMouseListener(new MouseAdapter() {
 			@Override
@@ -175,14 +178,14 @@ BrowserWrapperFake
 		label = new Label(details, SWT.NULL );
 		Messages.setLanguageText(label, "label.description" );
 		label.setLayoutData(new GridData());
-		label.setBackground( Colors.white );
+		label.setBackground( bg );
 
 		description_label = new Label(details, SWT.WRAP );
 		description_label.setText( "" );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL);
 		grid_data.horizontalIndent = 10;
 		description_label.setLayoutData(grid_data);
-		description_label.setBackground( Colors.white );
+		description_label.setBackground( bg );
 	}
 
 	@Override

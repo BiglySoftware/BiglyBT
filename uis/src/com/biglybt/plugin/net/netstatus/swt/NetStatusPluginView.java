@@ -578,7 +578,7 @@ NetStatusPluginView
 
 							}else if ( f_log_type == LOG_INFO ){
 
-								color = Colors.blue;
+								color = Colors.blues[Colors.BLUES_MIDDARK];
 
 							}else{
 

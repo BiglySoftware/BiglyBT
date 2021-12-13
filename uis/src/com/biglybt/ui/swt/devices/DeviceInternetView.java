@@ -38,6 +38,7 @@ import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
@@ -395,7 +396,7 @@ DeviceInternetView
 
 							if ( f_log_type == LOG_NORMAL ){
 
-								color = Colors.black;
+								color = Utils.isDarkAppearanceNative()?null:Colors.black;
 
 							}else if ( f_log_type == LOG_SUCCESS ){
 
@@ -403,7 +404,7 @@ DeviceInternetView
 
 							}else if ( f_log_type == LOG_INFO ){
 
-								color = Colors.blue;
+								color = Colors.blues[Colors.BLUES_MIDDARK];
 
 							}else{
 

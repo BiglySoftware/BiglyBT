@@ -3456,13 +3456,17 @@ public class OpenTorrentOptionsWindow
 			ratingComp2.setLayout(layout);
 			gridData = new GridData( GridData.FILL_BOTH );
 			ratingComp2.setLayoutData(gridData);
-			ratingComp2.setBackground( Colors.white );
+			if ( !Utils.isDarkAppearanceNative()) {
+				ratingComp2.setBackground( Colors.white );
+			}
 
 			final Label ratingText = new Label( ratingComp2, SWT.WRAP );
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
 			gridData.heightHint=ratingText.getFont().getFontData()[0].getHeight() * 2 + 16;
 			ratingText.setLayoutData(gridData);
-			ratingText.setBackground( Colors.white );
+			if ( !Utils.isDarkAppearanceNative()) {
+				ratingText.setBackground( Colors.white );
+			}
 
 			final boolean[]	az_rating_in_progress = { false };
 
