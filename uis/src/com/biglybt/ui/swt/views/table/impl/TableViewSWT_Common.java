@@ -52,8 +52,8 @@ import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.*;
 
-public class TableViewSWT_Common
-	implements MouseListener, MouseMoveListener, SelectionListener, KeyListener
+public abstract class TableViewSWT_Common
+	implements MouseListener, MouseMoveListener, SelectionListener, KeyListener, MenuDetectListener
 {
 
 	TableViewSWT<?> tv;
@@ -106,6 +106,40 @@ public class TableViewSWT_Common
 				if (event.skipCoreFunctionality) {
 					lCancelSelectionTriggeredOn = System.currentTimeMillis();
 				}
+			}
+		}
+	}
+	
+	public void 
+	menuDetected(
+		MenuDetectEvent e )
+	{
+		Composite comp = tv.getTableComposite();
+		
+		Point mapped = comp.getDisplay().map( null, comp, new Point( e.x, e.y ));
+		
+		TableColumnCore tc = tv.getTableColumnByOffset(mapped.x);
+		TableCellCore cell = tv.getTableCell( mapped.x, mapped.y );
+		
+		if ( tc != null && cell instanceof TableCellSWT ){
+			
+			TableCellMenuEvent event = new TableCellMenuEvent( cell, e );
+			
+			Rectangle clientArea = tv.getClientArea();
+						
+			event.x		= clientArea.x + mapped.x;
+			event.y		= mapped.y;
+			
+			tc.invokeCellMenuListeners( event );
+			
+			if ( !event.skipCoreFunctionality){
+				
+				cell.invokeMenuListeners(event);
+			}
+			
+			if ( event.skipCoreFunctionality ){
+					
+				e.doit = false;
 			}
 		}
 	}
@@ -279,7 +313,7 @@ public class TableViewSWT_Common
 
 	private TableCellMouseEvent createMouseEvent(TableCellCore cell, MouseEvent e,
 			int type, boolean allowOOB) {
-		TableCellMouseEvent event = new TableCellMouseEvent();
+		TableCellMouseEvent event = new TableCellMouseEvent( e );
 		event.cell = cell;
 		if (cell != null) {
 			event.row = cell.getTableRow();
@@ -309,7 +343,7 @@ public class TableViewSWT_Common
 
 	private TableRowMouseEvent createMouseEvent(TableRowSWT row, MouseEvent e,
 			int type, boolean allowOOB) {
-		TableCellMouseEvent event = new TableCellMouseEvent();
+		TableCellMouseEvent event = new TableCellMouseEvent( e );
 		event.row = row;
 		event.eventType = type;
 		event.button = e.button;

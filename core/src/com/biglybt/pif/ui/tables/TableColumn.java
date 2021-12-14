@@ -454,6 +454,10 @@ public interface TableColumn {
   */
   public void removeCellMouseListener(TableCellMouseListener listener);
 
+  public void addCellMenuListener(TableCellMenuListener listener);
+ 
+  public void removeCellMenuListener(TableCellMenuListener listener);
+
   /**
    * A listener is added for every type of cell listener the supplied object
    * implements

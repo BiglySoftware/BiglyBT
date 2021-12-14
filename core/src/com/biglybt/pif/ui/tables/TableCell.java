@@ -416,11 +416,15 @@ public interface TableCell {
   */
   public void removeMouseListener(TableCellMouseListener listener);
 
+  public void addMenuListener(TableCellMenuListener listener);
+  
+  public void removeMenuListener(TableCellMenuListener listener);
+  
   /**
    * A listener is added for every type of cell listener the supplied object
    * implements
    *
-   * @param listenerObject Object implementing some cell listeneters
+   * @param listenerObject Object implementing some cell listeners
    */
   public void addListeners(Object listenerObject);
 

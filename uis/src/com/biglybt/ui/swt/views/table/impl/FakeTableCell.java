@@ -266,6 +266,20 @@ public class FakeTableCell
 		}
 	}
 
+	@Override
+	public void 
+	addMenuListener(
+		TableCellMenuListener listener)
+	{
+	}
+	
+	@Override
+	public void
+	removeMenuListener(
+		TableCellMenuListener listener)
+	{
+	}
+	
 	public void addMouseMoveListener(TableCellMouseMoveListener listener) {
 		try {
 			this_mon.enter();
@@ -439,6 +453,10 @@ public class FakeTableCell
 			addMouseListener((TableCellMouseListener) listenerObject);
 		}
 
+		if (listenerObject instanceof TableCellMenuListener) {
+			addMenuListener((TableCellMenuListener) listenerObject);
+		}
+
 		if (listenerObject instanceof TableCellVisibilityListener)
 			addVisibilityListener((TableCellVisibilityListener) listenerObject);
 
@@ -480,6 +498,13 @@ public class FakeTableCell
 				Debug.printStackTrace(e);
 			}
 		}
+	}
+	
+	@Override
+	public void 
+	invokeMenuListeners(
+		TableCellMenuEvent event )
+	{
 	}
 
 	// @see com.biglybt.pif.ui.tables.TableCell#getDataSource()
@@ -1224,7 +1249,7 @@ public class FakeTableCell
 		if (isDisposed()) {
 			return null;
 		}
-		TableCellMouseEvent event = new TableCellMouseEvent();
+		TableCellMouseEvent event = new TableCellMouseEvent( e );
 		event.cell = this;
 		event.button = e.button;
 		event.keyboardState = e.stateMask;

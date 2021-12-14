@@ -139,6 +139,8 @@ public interface TableColumnCore
 	 */
 	public void invokeCellMouseListeners(TableCellMouseEvent event);
 
+	public void invokeCellMenuListeners(TableCellMenuEvent event);
+
 	/**
 	 * Send a visibility event to the cell's visibility listeners
 	 *

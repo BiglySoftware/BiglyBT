@@ -25,15 +25,23 @@ package com.biglybt.ui.swt.views.tableitems.mytorrents;
 import java.util.*;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MenuAdapter;
+import org.eclipse.swt.events.MenuDetectEvent;
+import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Widget;
 
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
+import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.ui.swt.widgets.TagPainter;
-
+import com.sun.glass.ui.MenuItem;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.*;
 
@@ -44,8 +52,10 @@ import com.biglybt.pif.ui.tables.*;
 public class TagsItem
 	extends CoreTableColumnSWT
 	implements TableCellRefreshListener, TableCellToolTipListener,
-	TableCellSWTPaintListener, TableCellAddedListener
+	TableCellSWTPaintListener, TableCellAddedListener, TableCellMenuListener
 {
+	private static final Object TAG_MAPPING_KEY = new Object();
+	
 	private static final TagManager tag_manager = TagManagerFactory.getTagManager();
 
 	public static final Class<Download> DATASOURCE_TYPE = Download.class;
@@ -104,6 +114,81 @@ public class TagsItem
 		}
 	}
 
+	@Override
+	public void 
+	menuEventOccurred(
+		TableCellMenuEvent e)
+	{
+		TableCell	_cell = e.cell;
+		
+		if ( !(_cell instanceof TableCellSWT )){
+			
+			return;
+		}
+		
+		TableCellSWT	cell = (TableCellSWT)_cell;
+		
+		Map<TagPainter, Rectangle> tagMapping = (Map<TagPainter, Rectangle>)cell.getData( TAG_MAPPING_KEY );
+		
+		Taggable taggable = (Taggable)cell.getDataSource();
+		
+		if ( taggable == null || tagMapping == null ){
+			
+			return;
+		}
+
+		Object	ev = e.baseEvent;
+		
+		if ( ev instanceof MenuDetectEvent ){
+			
+			Object data = ((MenuDetectEvent)ev).getSource();
+			
+			if ( data instanceof Control ){
+				
+				Point	pt = new Point( e.x, e.y );
+										
+				Tag target = null;
+				
+				for ( Map.Entry<TagPainter, Rectangle> entry: tagMapping.entrySet()){
+					
+					if ( entry.getValue().contains( pt )){
+						
+						target = entry.getKey().getTag();
+						
+						break;
+					}
+				}
+				
+				if ( target != null ){
+					
+					Menu menu = new Menu((Control)data);
+				
+					menu.addMenuListener(
+						new MenuAdapter(){
+							@Override
+							public void menuHidden(MenuEvent e){
+								menu.dispose();
+							}
+						});
+
+					org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+					
+					mi.setText( MessageText.getString( "label.tag" ) + ": " + target.getTagName( true ));
+					
+					mi.setEnabled( false );;
+					
+					new org.eclipse.swt.widgets.MenuItem( menu, SWT.SEPARATOR );
+					
+					TagUIUtils.createSideBarMenuItems( menu, target );
+				
+					menu.setVisible( true );
+							
+					e.skipCoreFunctionality = true;
+				}
+			}
+		}
+	}
+	
 	@Override
 	public void cellHover(TableCell cell) {
 		Taggable taggable = (Taggable) cell.getDataSource();
@@ -237,6 +322,7 @@ public class TagsItem
 			painter.dispose();
 		}
 
+		cell.setData( TAG_MAPPING_KEY, mapTagPainting );
 		gc.setClipping(clipping);
 		gc.setFont(oldFont);
 	}

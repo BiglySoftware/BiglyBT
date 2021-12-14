@@ -25,6 +25,15 @@ package com.biglybt.pif.ui.tables;
  */
 public class TableRowMouseEvent
 {
+	public final Object		baseEvent;
+	
+	public
+	TableRowMouseEvent(
+		Object		_baseEvent )
+	{
+		baseEvent	= _baseEvent;
+	}
+	
 	/**
 	 * eventType is triggered when mouse is pressed down
 	 *

@@ -248,7 +248,7 @@ public class ColumnImageClickArea
 		} else if (event.eventType == TableCellMouseEvent.EVENT_MOUSEUP
 				&& mouseDownOn) {
 			mouseDownOn = false;
-			TableCellMouseEvent mouseEvent = new TableCellMouseEvent();
+			TableCellMouseEvent mouseEvent = new TableCellMouseEvent( event.baseEvent );
 			mouseEvent.button = event.button;
 			mouseEvent.cell = event.cell;
 			mouseEvent.eventType = TableCellMouseEvent.EVENT_MOUSEUP; // EVENT_MOUSECLICK would be nice..

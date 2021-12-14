@@ -126,6 +126,8 @@ public class TableColumnImpl
 	private ArrayList<TableCellToolTipListener> cellToolTipListeners;
 
 	private ArrayList<TableCellMouseListener> cellMouseListeners;
+	
+	private ArrayList<TableCellMenuListener> cellMenuListeners;
 
 	private ArrayList<TableCellMouseMoveListener> cellMouseMoveListeners;
 
@@ -703,6 +705,38 @@ public class TableColumnImpl
 	}
 
 	@Override
+	public void addCellMenuListener(TableCellMenuListener listener) {
+		try {
+			this_mon.enter();
+
+			if (cellMenuListeners == null) {
+				cellMenuListeners = new ArrayList<>(1);
+			}
+
+			cellMenuListeners.add(listener);
+
+		} finally {
+			this_mon.exit();
+		}
+	}
+
+	@Override
+	public void removeCellMenuListener(TableCellMenuListener listener) {
+		try {
+			this_mon.enter();
+
+			if (cellMenuListeners == null) {
+				return;
+			}
+
+			cellMenuListeners.remove(listener);
+
+		} finally {
+			this_mon.exit();
+		}
+	}
+	
+	@Override
 	public boolean hasCellMouseMoveListener() {
 		return cellMouseMoveListeners != null && cellMouseMoveListeners.size() > 0;
 	}
@@ -882,6 +916,10 @@ public class TableColumnImpl
 
 		if (listenerObject instanceof TableCellMouseListener) {
 			addCellMouseListener((TableCellMouseListener) listenerObject);
+		}
+
+		if (listenerObject instanceof TableCellMenuListener) {
+			addCellMenuListener((TableCellMenuListener) listenerObject);
 		}
 
 		if (listenerObject instanceof TableCellVisibilityListener) {
@@ -1065,6 +1103,33 @@ public class TableColumnImpl
 		}
 	}
 
+	@Override
+	public void invokeCellMenuListeners(TableCellMenuEvent event) {
+	
+		ArrayList<TableCellMenuListener> listeners = cellMenuListeners;
+		
+		if ( listeners == null ){
+			
+			return;
+		}
+		
+		for ( TableCellMenuListener listener: listeners ){
+			
+			if ( event.skipCoreFunctionality ){
+				
+				return;
+			}
+			
+			try{
+				listener.menuEventOccurred( event );
+
+			}catch( Throwable e ){
+				
+				Debug.printStackTrace(e);
+			}
+		}
+	}
+	
 	@Override
 	public void invokeCellVisibilityListeners(TableCellCore cell, int visibility) {
 		if (cellVisibilityListeners == null) {

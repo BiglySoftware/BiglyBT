@@ -121,6 +121,8 @@ public abstract class TableCellSWTBase
 	private ArrayList<TableCellToolTipListener> tooltipListeners;
 
 	private ArrayList<TableCellMouseListener> cellMouseListeners;
+	
+	private ArrayList<TableCellMenuListener> cellMenuListeners;
 
 	private ArrayList<TableCellMouseMoveListener> cellMouseMoveListeners;
 
@@ -320,6 +322,36 @@ public abstract class TableCellSWTBase
 		}
 	}
 
+	@Override
+	public void addMenuListener(TableCellMenuListener listener) {
+		try {
+			this_mon.enter();
+
+			if (cellMenuListeners == null)
+				cellMenuListeners = new ArrayList(1);
+
+			cellMenuListeners.add(listener);
+
+		} finally {
+			this_mon.exit();
+		}
+	}
+
+	@Override
+	public void removeMenuListener(TableCellMenuListener listener) {
+		try {
+			this_mon.enter();
+
+			if (cellMenuListeners == null)
+				return;
+
+			cellMenuListeners.remove(listener);
+
+		} finally {
+			this_mon.exit();
+		}
+	}
+	
 	public void addMouseMoveListener(TableCellMouseMoveListener listener) {
 		try {
 			this_mon.enter();
@@ -496,6 +528,10 @@ public abstract class TableCellSWTBase
 			addMouseListener((TableCellMouseListener) listenerObject);
 		}
 
+		if (listenerObject instanceof TableCellMenuListener) {
+			addMenuListener((TableCellMenuListener) listenerObject);
+		}
+		
 		if (listenerObject instanceof TableCellVisibilityListener)
 			addVisibilityListener((TableCellVisibilityListener) listenerObject);
 
@@ -562,6 +598,37 @@ public abstract class TableCellSWTBase
 		}
 	}
 
+	@Override
+	public void 
+	invokeMenuListeners(
+		TableCellMenuEvent event ) 
+	{
+		
+		ArrayList<TableCellMenuListener> listeners = cellMenuListeners;
+		
+		if ( listeners == null ){
+			
+			return;
+		}
+		
+		for ( TableCellMenuListener listener: listeners ){
+			
+			if ( event.skipCoreFunctionality ){
+				
+				break;
+			}
+			
+			try{
+				listener.menuEventOccurred(event);
+
+			}catch ( Throwable e ){
+				
+				Debug.printStackTrace(e);
+			}
+		}
+	}
+
+	
 	@Override
 	public void invokeVisibilityListeners(int visibility,
 	                                      boolean invokeColumnListeners) {

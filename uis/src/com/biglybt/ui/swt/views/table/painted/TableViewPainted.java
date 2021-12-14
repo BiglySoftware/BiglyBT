@@ -1557,6 +1557,7 @@ public class TableViewPainted
 		cTable.addMouseListener(tvSWTCommon);
 		cTable.addMouseMoveListener(tvSWTCommon);
 		cTable.addKeyListener(tvSWTCommon);
+		cTable.addMenuDetectListener(tvSWTCommon);
 		//composite.addSelectionListener(tvSWTCommon);
 		
 		cTable.addListener(SWT.MouseVerticalWheel, e -> {

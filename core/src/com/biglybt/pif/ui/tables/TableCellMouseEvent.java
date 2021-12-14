@@ -27,6 +27,14 @@ package com.biglybt.pif.ui.tables;
  * @since 2.3.0.7
  */
 public class TableCellMouseEvent extends TableRowMouseEvent {
+	
+	public
+	TableCellMouseEvent(
+		Object	baseEvent )
+	{
+		super( baseEvent );
+	}
+	
 	/**
 	 * TableCell that the mouse trigger applies to
 	 *
