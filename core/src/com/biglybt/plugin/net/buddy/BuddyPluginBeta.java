@@ -28,6 +28,9 @@ import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -5817,6 +5820,19 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							
 							Debug.out(e);
 						}
+					}
+					
+					try{
+						if ( getNetwork() == AENetworkClassifier.AT_PUBLIC ){
+							
+							ZoneId zid = TimeZone.getDefault().toZoneId();
+							
+							ZoneOffset zo = LocalDateTime.now().atZone( zid ).getOffset();
+							
+							payload.put( "zo", zo.getTotalSeconds());
+						}
+					}catch( Throwable e ){
+						
 					}
 
 					options.put( "content", BEncoder.encode( payload ));
