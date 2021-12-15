@@ -18,9 +18,7 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
@@ -60,7 +58,7 @@ SwarmTagsItem
 
 			if ( tag_names != null && tag_names.length > 0 ){
 				
-				List<Tag>	tags = new ArrayList<>(tag_names.length);
+				Set<Tag>	tags = new HashSet<>(tag_names.length);
 				
 				for ( String tag_name: tag_names ){
 					
@@ -80,7 +78,7 @@ SwarmTagsItem
 					}
 				}
 				
-				return( tags );
+				return( new ArrayList<>( tags ));
 			}
 		}
 		
