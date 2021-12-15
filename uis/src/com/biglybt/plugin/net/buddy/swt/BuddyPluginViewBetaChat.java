@@ -3672,13 +3672,13 @@ BuddyPluginViewBetaChat
 
 			if ( DEBUG_ENABLED ){
 
-				System.out.println( participant.getName() + "/" + participant.getAddress() + " - pk=" + Base32.encode( participant.getPublicKey()));
+				System.out.println( participant.getName() + "/" + participant.getAddress() + "/" + participant.getZoneOffset() + " - pk=" + Base32.encode( participant.getPublicKey()));
 
 				List<ChatMessage>	messages = participant.getMessages();
 
 				for ( ChatMessage msg: messages ){
 
-					System.out.println( "    " + msg.getTimeStamp() + ", " + msg.getAddress() + " - " + msg.getMessage());
+					System.out.println( "    " + msg.getTimeStamp() + ", " + msg.getAddress() + "/" + msg.getZoneOffset() + " - " + msg.getMessage());
 				}
 			}
 
@@ -4301,6 +4301,30 @@ BuddyPluginViewBetaChat
 				});
 			
 			mi_profile.setEnabled( fk != null && participant.getProfileData() != null );
+			
+			final MenuItem mi_properties = new MenuItem( menu, SWT.PUSH );
+
+			mi_properties.setText( lu.getLocalisedMessageText( "Subscription.menu.properties" ));
+
+			List<String>	names 	= new ArrayList<String>();
+			List<String>	values 	= new ArrayList<String>();
+
+			names.add( "label.zone.offset" );
+			values.add( participant.getZoneOffset());
+			
+			mi_properties.addSelectionListener(
+				new SelectionAdapter() {
+
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent e )
+					{
+						new PropertiesWindow( participant.getName(), names, values );
+					}
+				});
+			
+			mi_properties.setEnabled( !names.isEmpty());
 			
 			new MenuItem(menu, SWT.SEPARATOR );
 

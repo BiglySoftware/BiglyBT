@@ -3066,6 +3066,16 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		}
 	}
 
+	public long
+	getMyZoneOffset()
+	{
+		ZoneId zid = TimeZone.getDefault().toZoneId();
+		
+		ZoneOffset zo = LocalDateTime.now().atZone( zid ).getOffset();
+		
+		return( zo.getTotalSeconds());
+	}
+
 	@Override
 	public void
 	generate(
@@ -5279,9 +5289,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			
 			return( magnet );
 		}
-		
-		
-		
+				
 		AsyncDispatcher	dispatcher = new AsyncDispatcher( "sendAsync" );
 
 		public void
@@ -5825,11 +5833,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					try{
 						if ( getNetwork() == AENetworkClassifier.AT_PUBLIC ){
 							
-							ZoneId zid = TimeZone.getDefault().toZoneId();
-							
-							ZoneOffset zo = LocalDateTime.now().atZone( zid ).getOffset();
-							
-							payload.put( "zo", zo.getTotalSeconds());
+							payload.put( "zo", getMyZoneOffset());
 						}
 					}catch( Throwable e ){
 						
@@ -5850,7 +5854,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				}
 			}
 		}
-
+		
 		public String
 		export()
 		{
@@ -6507,6 +6511,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private Boolean				is_me;
 
 		private byte[]				friend_key;
+		private long				zone_offset;
 		
 		private List<String>		profile_data_cache;
 		
@@ -6709,6 +6714,55 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 		
+		public String
+		getZoneOffset()
+		{
+			long zo = zone_offset;
+					
+			if ( zo == Long.MIN_VALUE ){
+				
+				return( MessageText.getString( "SpeedView.stats.unknown" ));
+				
+			}else{
+
+				long my_zo = getMyZoneOffset();
+				
+				if ( my_zo == zo ){
+					
+					return( "0" );
+					
+				}else{
+					
+					return( "" + formatZone( zo ) + " (" + formatZone( my_zo ) + ") -> " + formatZone( zo - my_zo ) );
+				}
+			}
+		}
+		
+		private String
+		formatZone(
+			long	zone )
+		{
+			long z = Math.abs( zone );
+			
+			long hour 	= z/(60*60);
+			long min	= z%(60*60);
+			
+			String str = (zone>=0?"+":"-") + String.valueOf(hour);
+			
+			if ( min != 0 ){
+				
+				String m = String.valueOf( min );
+				
+				if ( m.length() < 2 ){
+					m = "0" + m;
+				}
+				
+				str += ":" + m;
+			}
+			
+			return( str );
+		}
+		
 		public List<String>
 		getProfileData()
 		{
@@ -6860,6 +6914,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			if ( message.getMessageType() == ChatMessage.MT_NORMAL ){
 				
 				friend_key = message.getFriendKey();
+				
+				zone_offset = message.getZoneOffset();
 			}
 			
 			String new_nickname = message.getNickName();
@@ -6891,6 +6947,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			if ( message.getMessageType() == ChatMessage.MT_NORMAL ){
 				
 				friend_key = message.getFriendKey();
+				
+				zone_offset = message.getZoneOffset();
 			}
 			
 			String new_nickname = message.getNickName();
@@ -7250,6 +7308,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private int[]							nick_locations;
 
 		private byte[]		friend_key;
+		private long		zone_offset;
 		
 		private
 		ChatMessage(
@@ -7272,6 +7331,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			sequence = l_seq==null?0:l_seq.longValue();
 			
 			friend_key = (byte[])payload.get( "f_pk" );
+			
+			Number	l_zo = (Number)payload.get( "zo" );
+						
+			zone_offset = l_zo==null?Long.MIN_VALUE:l_zo.longValue();
 		}
 
 		protected int
@@ -7297,6 +7360,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		getFriendKey()
 		{
 			return( friend_key );
+		}
+		
+		public long
+		getZoneOffset()
+		{
+			return( zone_offset );
 		}
 		
 		private void

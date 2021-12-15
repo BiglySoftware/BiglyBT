@@ -21,7 +21,6 @@ package com.biglybt.ui.swt;
 
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
