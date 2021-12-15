@@ -175,6 +175,22 @@ TagTypeSwarmTag
 		}
 		
 		@Override
+		public void
+		addTaggable(
+			Taggable	t )
+		{
+			// not supported
+		}
+		
+		@Override
+		public void 
+		removeTaggable(
+			Taggable t)
+		{
+			// not supported
+		}
+		
+		@Override
 		protected boolean
 		getCanBePublicDefault()
 		{

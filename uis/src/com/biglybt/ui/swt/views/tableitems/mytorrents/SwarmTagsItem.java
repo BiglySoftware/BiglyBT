@@ -18,68 +18,72 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
-
-import com.biglybt.pif.download.Download;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.tables.TableCell;
-import com.biglybt.pif.ui.tables.TableCellRefreshListener;
-import com.biglybt.pif.ui.tables.TableColumnInfo;
-import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
+import com.biglybt.ui.swt.views.tableitems.TagsColumn;
 
 public class 
 SwarmTagsItem
-	extends CoreTableColumnSWT
-	implements TableCellRefreshListener
+	extends TagsColumn
 {
-	public static final Class DATASOURCE_TYPE = Download.class;
+	private static final TagManager tag_manager = TagManagerFactory.getTagManager();
 
+	private static final TagType	tag_type =  tag_manager.getTagType( TagType.TT_SWARM_TAG );
+	
 	public static final String COLUMN_ID = "swarm.tags";
 
 
 	public SwarmTagsItem(String sTableID) {
-		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_LEAD, 100, sTableID);
-		setRefreshInterval(INTERVAL_LIVE);
+		super(sTableID, COLUMN_ID );
 	}
 
 	@Override
-	public void fillTableColumnInfo(TableColumnInfo info) {
-		info.addCategories(new String[] {
-				CAT_CONTENT
-		});
-		info.setProficiency(TableColumnInfo.PROFICIENCY_INTERMEDIATE);
-	}
-
-	@Override
-	public void refresh(TableCell cell) {
+	public List<Tag> 
+	getTags(
+		TableCell cell)
+	{
 		DownloadManager dm = (DownloadManager)cell.getDataSource();
-		String text = "";
-
+		
 		if ( dm != null ){
 
-			String[] tags = dm.getDownloadState().getListAttribute( DownloadManagerState.AT_SWARM_TAGS );
+			String[] tag_names = dm.getDownloadState().getListAttribute( DownloadManagerState.AT_SWARM_TAGS );
 
-			if ( tags != null && tags.length > 0 ){
-
-				if ( tags.length > 1 ){
-
-					Arrays.sort( tags );
+			if ( tag_names != null && tag_names.length > 0 ){
+				
+				List<Tag>	tags = new ArrayList<>(tag_names.length);
+				
+				for ( String tag_name: tag_names ){
+					
+					try{
+						Tag tag = tag_type.getTag( tag_name, true );
+						
+						if ( tag == null ){
+							
+							tag = tag_type.createTag(tag_name, true );
+						}
+						
+						tags.add( tag );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
 				}
-
-				for ( String tag: tags ){
-
-					text += (text.isEmpty()?"":", ") + tag;
-				}
+				
+				return( tags );
 			}
 		}
-
-		if (!cell.setSortValue(text) && cell.isValid()){
-
-			return;
-		}
-
-		cell.setText (text) ;
+		
+		return( Collections.emptyList());
 	}
 }
