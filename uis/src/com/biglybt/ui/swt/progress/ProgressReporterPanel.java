@@ -375,6 +375,8 @@ public class ProgressReporterPanel
 				| SWT.WRAP);
 		detailListWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
+		detailListWidget.setEditable( false );
+		
 		/*
 		 * Add a default message instead of an empty box if there is no history;
 		 * remove this later when a real detail message arrive
