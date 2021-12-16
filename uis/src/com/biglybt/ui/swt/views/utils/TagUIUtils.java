@@ -1304,6 +1304,7 @@ public class TagUIUtils
 			@Override
 			public void handleEvent(Event event) {
 				UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+				tag.setTransientProperty( Tag.TP_SETTINGS_REQUESTED, true );
 				uiFunctions.getMDI().showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_TAGS, tag);
 			}
 		});
