@@ -108,9 +108,9 @@ GenericMessageDecoder
 
 					int	size = length_buffer.getInt();
 
-					if ( size > MAX_MESSAGE_LENGTH ){
+					if ( size > MAX_MESSAGE_LENGTH || size < 0 ){
 
-						Debug.out( "Message too large for generic payload (" + size + ")" );
+						Debug.out( "Message size invalid for generic payload (" + size + ", " + transport.getTransportEndpoint().getProtocolEndpoint().getAddress() + ")" );
 
 						throw( new IOException( "message too large" ));
 					}
