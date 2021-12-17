@@ -311,46 +311,40 @@ public class ConfigSectionFile
 
 		MFDRE.addEnabledOnSelection(MFDRInterval);
 	
-		// use resume
+		// resume
 
-		// resume data
-		BooleanParameterImpl bpUseResume = new BooleanParameterImpl(BCFG_USE_RESUME,
-				"ConfigView.label.usefastresume");
-		add(bpUseResume, Parameter.MODE_INTERMEDIATE);
-
-		List<Parameter> listResumeGroup = new ArrayList<>();
+		List<Parameter> listResume = new ArrayList<>();
 
 		IntParameterImpl paramSaveInterval = new IntParameterImpl(
 				ICFG_SAVE_RESUME_INTERVAL, "ConfigView.label.saveresumeinterval");
-		add(paramSaveInterval, Parameter.MODE_INTERMEDIATE, listResumeGroup);
+		add(paramSaveInterval, Parameter.MODE_INTERMEDIATE, listResume);
 		paramSaveInterval.setSuffixLabelKey("ConfigView.text.minutes");
 
 		BooleanParameterImpl recheck_all = new BooleanParameterImpl(
 				BCFG_ON_RESUME_RECHECK_ALL,
 				"ConfigView.section.file.resume.recheck.all");
-		add(recheck_all, Parameter.MODE_INTERMEDIATE, listResumeGroup);
+		add(recheck_all, Parameter.MODE_INTERMEDIATE, listResume);
 
 		// save peers
 
 		BooleanParameterImpl save_peers = new BooleanParameterImpl(
 				BCFG_FILE_SAVE_PEERS_ENABLE,
 				"ConfigView.section.file.save.peers.enable");
-		add(save_peers, Parameter.MODE_INTERMEDIATE, listResumeGroup);
+		add(save_peers, Parameter.MODE_INTERMEDIATE, listResume);
 
 		// save peers max
 
 		IntParameterImpl savePeersMax = new IntParameterImpl(
 				ICFG_FILE_SAVE_PEERS_MAX, "ConfigView.section.file.save.peers.max");
-		add(savePeersMax, Parameter.MODE_INTERMEDIATE, listResumeGroup);
+		add(savePeersMax, Parameter.MODE_INTERMEDIATE, listResume);
 		savePeersMax.setSuffixLabelKey(
 				"ConfigView.section.file.save.peers.pertorrent");
 
-		ParameterGroupImpl pgResumeGroup = new ParameterGroupImpl(null,
-				listResumeGroup);
+		ParameterGroupImpl pgResumeGroup = new ParameterGroupImpl("v3.MainWindow.button.resume",
+				listResume);
 		add("pgResumeGroup", pgResumeGroup);
-		pgResumeGroup.setIndent(1, false);
+		//pgResumeGroup.setIndent(1, false);
 
-		bpUseResume.addEnabledOnSelection(pgResumeGroup);
 		save_peers.addEnabledOnSelection(savePeersMax);
 
 		// disable interim state save 

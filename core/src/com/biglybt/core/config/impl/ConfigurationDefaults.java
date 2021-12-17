@@ -222,7 +222,6 @@ public class ConfigurationDefaults {
     def.put( "Max LAN Download Speed KBs", ZERO );
     def.put( "Max LAN Upload Speed KBs", ZERO );
 
-    def.put("Use Resume", TRUE);
     def.put("On Resume Recheck All", FALSE);
     def.put("Save Resume Interval", new Long(5));
     def.put("Check Pieces on Completion", TRUE);

@@ -139,7 +139,6 @@ public final class ConfigKeys {
 		public static final String BCFG_MISSING_FILE_DOWNLOAD_RESTART = "Missing File Download Restart Enable";
 		public static final String BCFG_SKIP_COMP_DL_FILE_CHECKS = "Skip Complete Download File Checks";
 		public static final String ICFG_MISSING_FILE_DOWNLOAD_RESTART_MINS = "Missing File Download Restart Period";
-		public static final String BCFG_USE_RESUME = "Use Resume";
 		public static final String ICFG_SAVE_RESUME_INTERVAL = "Save Resume Interval";
 		public static final String BCFG_ON_RESUME_RECHECK_ALL = "On Resume Recheck All";
 		public static final String BCFG_FILE_SAVE_PEERS_ENABLE = "File.save.peers.enable";

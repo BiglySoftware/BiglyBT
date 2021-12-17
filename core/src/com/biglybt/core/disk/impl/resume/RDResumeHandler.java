@@ -68,7 +68,7 @@ RDResumeHandler
 	public static final byte		PIECE_RECHECK_REQUIRED	= 2;
 	public static final byte		PIECE_STARTED			= 3;
 
-	static boolean	use_fast_resume;
+	// static boolean	use_fast_resume = true;	// made this permanent, setting it false really borks things
 	static boolean	use_fast_resume_recheck_all;
 	static boolean	skip_comp_dl_file_checks;
 
@@ -76,7 +76,6 @@ RDResumeHandler
 
 		COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
-					"Use Resume",
 					"On Resume Recheck All",
 					ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS },
 			new ParameterListener() {
@@ -85,7 +84,6 @@ RDResumeHandler
 				parameterChanged(
 					String  str )
 	    	    {
-	    	    	use_fast_resume				= COConfigurationManager.getBooleanParameter("Use Resume");
 	    	    	use_fast_resume_recheck_all	= COConfigurationManager.getBooleanParameter("On Resume Recheck All");
 	    	    	skip_comp_dl_file_checks	= COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS);
 	    	    }
@@ -181,7 +179,7 @@ RDResumeHandler
 			try{
 				check_in_progress	= true;
 
-				boolean resumeEnabled = use_fast_resume;
+				boolean resumeEnabled = true;	// changed this to always be enabled as disabling it leads to crap
 
 					//disable fast resume if a new file was created
 
@@ -977,6 +975,7 @@ RDResumeHandler
 
 		DiskManagerFileInfo[]	files = disk_manager.getFiles();
 
+		/*
 		if ( !use_fast_resume ){
 
 				// flush cache even if resume disable as this is a good point to ensure that data
@@ -989,7 +988,8 @@ RDResumeHandler
 
 			return;
 		}
-
+		*/
+		
 		boolean	was_complete = isTorrentResumeDataComplete( disk_manager.getDownloadManager().getDownloadState());
 
 		if ( was_complete && check_interrupted ){
