@@ -6733,7 +6733,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					
 				}else{
 					
-					return( "" + formatZone( zo ) + " (" + formatZone( my_zo ) + ") -> " + formatZone( zo - my_zo ) );
+					String str = new SimpleDateFormat("E hh:mm a").format( new Date( SystemTime.getCurrentTime() + ( zo - my_zo )*1000 ));
+					
+					return( "" + formatZone( zo ) + " (" + formatZone( my_zo ) + ") -> " + formatZone( zo - my_zo ) + " -> "+ str);
 				}
 			}
 		}
