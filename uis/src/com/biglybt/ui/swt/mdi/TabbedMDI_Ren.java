@@ -419,7 +419,7 @@ public class TabbedMDI_Ren
 									int rgb = (red<<16)|(green<<8)|blue;
 									
 									if ( rgb != 0x000000 ){
-										Color c = new Color(new RGB(red+75,green+75,blue+75));
+										Color c = new Color(gc.getDevice(),new RGB(red+75,green+75,blue+75));
 										gc.setForeground(c);
 										gc.drawPoint(closeRect.x+i,closeRect.y+j);
 										c.dispose();
