@@ -52,32 +52,32 @@ public class TCPConnectionManager {
   static int CONNECT_SELECT_LOOP_TIME			= 100;
   static int CONNECT_SELECT_LOOP_MIN_TIME		= 0;
 
-  static int MIN_SIMULTANIOUS_CONNECT_ATTEMPTS = 3;
-  public static int MAX_SIMULTANIOUS_CONNECT_ATTEMPTS;
+  static int MIN_SIMULTANEOUS_CONNECT_ATTEMPTS = 3;
+  public static int MAX_SIMULTANEOUS_CONNECT_ATTEMPTS;
 
   static int max_outbound_connections;
 
   static {
-    MAX_SIMULTANIOUS_CONNECT_ATTEMPTS = COConfigurationManager.getIntParameter( "network.max.simultaneous.connect.attempts" );
+    MAX_SIMULTANEOUS_CONNECT_ATTEMPTS = COConfigurationManager.getIntParameter( "network.max.simultaneous.connect.attempts" );
 
-    if( MAX_SIMULTANIOUS_CONNECT_ATTEMPTS < 1 ) { //should never happen, but hey
-   	 MAX_SIMULTANIOUS_CONNECT_ATTEMPTS = 1;
+    if( MAX_SIMULTANEOUS_CONNECT_ATTEMPTS < 1 ) { //should never happen, but hey
+   	 MAX_SIMULTANEOUS_CONNECT_ATTEMPTS = 1;
    	 COConfigurationManager.setParameter( "network.max.simultaneous.connect.attempts", 1 );
     }
 
-    MIN_SIMULTANIOUS_CONNECT_ATTEMPTS = MAX_SIMULTANIOUS_CONNECT_ATTEMPTS - 2;
+    MIN_SIMULTANEOUS_CONNECT_ATTEMPTS = MAX_SIMULTANEOUS_CONNECT_ATTEMPTS - 2;
 
-    if( MIN_SIMULTANIOUS_CONNECT_ATTEMPTS < 1 ) {
-      MIN_SIMULTANIOUS_CONNECT_ATTEMPTS = 1;
+    if( MIN_SIMULTANEOUS_CONNECT_ATTEMPTS < 1 ) {
+      MIN_SIMULTANEOUS_CONNECT_ATTEMPTS = 1;
     }
 
     COConfigurationManager.addParameterListener( "network.max.simultaneous.connect.attempts", new ParameterListener() {
       @Override
       public void parameterChanged(String parameterName ) {
-        MAX_SIMULTANIOUS_CONNECT_ATTEMPTS = COConfigurationManager.getIntParameter( "network.max.simultaneous.connect.attempts" );
-        MIN_SIMULTANIOUS_CONNECT_ATTEMPTS = MAX_SIMULTANIOUS_CONNECT_ATTEMPTS - 2;
-        if( MIN_SIMULTANIOUS_CONNECT_ATTEMPTS < 1 ) {
-          MIN_SIMULTANIOUS_CONNECT_ATTEMPTS = 1;
+        MAX_SIMULTANEOUS_CONNECT_ATTEMPTS = COConfigurationManager.getIntParameter( "network.max.simultaneous.connect.attempts" );
+        MIN_SIMULTANEOUS_CONNECT_ATTEMPTS = MAX_SIMULTANEOUS_CONNECT_ATTEMPTS - 2;
+        if( MIN_SIMULTANEOUS_CONNECT_ATTEMPTS < 1 ) {
+          MIN_SIMULTANEOUS_CONNECT_ATTEMPTS = 1;
         }
       }
     });
@@ -312,7 +312,7 @@ public class TCPConnectionManager {
   void
   addNewOutboundRequests()
   {
-	  while( pending_attempts.size() + pending_pp_attempts.size() < MIN_SIMULTANIOUS_CONNECT_ATTEMPTS ){
+	  while( pending_attempts.size() + pending_pp_attempts.size() < MIN_SIMULTANEOUS_CONNECT_ATTEMPTS){
 
 		  ConnectionRequest cr = null;
 
@@ -861,7 +861,7 @@ public class TCPConnectionManager {
     	//check if our connect queue is stalled, and expand if so
     
     if ( 	num_stalled_requests == pending_attempts.size() && 
-    		pending_attempts.size() + pending_pp_attempts.size() < MAX_SIMULTANIOUS_CONNECT_ATTEMPTS ){
+    		pending_attempts.size() + pending_pp_attempts.size() < MAX_SIMULTANEOUS_CONNECT_ATTEMPTS){
 
     	ConnectionRequest cr =null;
 
