@@ -4665,7 +4665,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			return(ct_def);
 		}
 
-		int max_sim_con = TCPConnectionManager.MAX_SIMULTANIOUS_CONNECT_ATTEMPTS;
+		int max_sim_con = TCPConnectionManager.MAX_SIMULTANEOUS_CONNECT_ATTEMPTS;
 
 		// high, let's not mess with things
 
@@ -4863,7 +4863,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 					// try and connect only as many as necessary
 
-					final int wanted = TCPConnectionManager.MAX_SIMULTANIOUS_CONNECT_ATTEMPTS
+					final int wanted = TCPConnectionManager.MAX_SIMULTANEOUS_CONNECT_ATTEMPTS
 							- num_waiting_establishments;
 
 					if(wanted > allowed){
@@ -4878,7 +4878,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 					int udp_remaining = UDPNetworkManager.getSingleton().getConnectionManager()
 							.getMaxOutboundPermitted();
 
-					while(num_waiting_establishments < TCPConnectionManager.MAX_SIMULTANIOUS_CONNECT_ATTEMPTS
+					while(num_waiting_establishments < TCPConnectionManager.MAX_SIMULTANEOUS_CONNECT_ATTEMPTS
 							&& (tcp_remaining > 0 || udp_remaining > 0)){
 
 						if(!is_running)
