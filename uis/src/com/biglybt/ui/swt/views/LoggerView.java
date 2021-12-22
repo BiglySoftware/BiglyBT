@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -553,6 +554,8 @@ public class LoggerView
 					if((inclusionFilter != null && !inclusionFilter.matcher(toAppend).find()) || (exclusionFilter != null && exclusionFilter.matcher(toAppend).find()))
 						continue;
 
+					int start = consoleText.getText().length();
+					
 					consoleText.append(toAppend);
 
 					int nbLinesNow = consoleText.getLineCount();
@@ -564,9 +567,23 @@ public class LoggerView
 					else if (event.entryType == LogEvent.LT_ERROR)
 						colorIdx = COLOR_ERR;
 
-					if (colors != null && colorIdx >= 0)
+					if (colors != null && colorIdx >= 0){
 						consoleText.setLineBackground(nbLinesBefore, nbLinesNow
 								- nbLinesBefore, colors[colorIdx]);
+						
+						if ( Utils.isDarkAppearanceNative()){
+							
+							boolean useBlack = Colors.isBlackTextReadable( colors[colorIdx] );
+							
+							if ( useBlack ){
+								StyleRange styleRange = new StyleRange();
+								styleRange.start = start;
+								styleRange.length = toAppend.length();
+								styleRange.foreground = Colors.black;
+								consoleText.setStyleRange(styleRange);
+							}
+						}
+					}
 				} catch (Exception e) {
 					// don't send it to log, we might be feeding ourselves
 					PrintStream ps = Logger.getOldStdErr();
