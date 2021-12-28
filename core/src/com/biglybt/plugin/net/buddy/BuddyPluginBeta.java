@@ -6742,18 +6742,18 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		
 		private String
 		formatZone(
-			long	zone )
+			long	zone_secs )
 		{
-			long z = Math.abs( zone );
+			long z = Math.abs( zone_secs );
 			
 			long hour 	= z/(60*60);
-			long min	= z%(60*60);
+			long sec	= z%(60*60);
 			
-			String str = (zone>=0?"+":"-") + String.valueOf(hour);
+			String str = (zone_secs>=0?"+":"-") + String.valueOf(hour);
 			
-			if ( min != 0 ){
+			if ( sec != 0 ){
 				
-				String m = String.valueOf( min );
+				String m = String.valueOf( sec/60 );
 				
 				if ( m.length() < 2 ){
 					m = "0" + m;
