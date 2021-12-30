@@ -683,7 +683,7 @@ public class MessageSlideShell
 					Rectangle area = canvas.getClientArea();
 					sp = new GCStringPrinter(e.gc, popupParams.text, area, true, false,
 							SWT.WRAP | SWT.TOP);
-					sp.setUrlColor(ColorCache.getColor(e.gc.getDevice(), "#0000ff"));
+					sp.setUrlColor(e.gc.getDevice().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
 					if (colorURL != null) {
 						sp.setUrlColor(colorURL);
 					}
