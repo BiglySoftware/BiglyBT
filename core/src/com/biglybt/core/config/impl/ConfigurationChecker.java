@@ -710,13 +710,12 @@ ConfigurationChecker
 	     * Special Patch for OSX users
 	     */
 	    if (Constants.isOSX) {
-	      boolean sound = COConfigurationManager.getBooleanParameter("Play Download Finished",true);
+
 	      // Command + Q destroys the window, then notifies SWT, making it
 	      // hard to do a confirmation exit.
 	      boolean confirmExit = COConfigurationManager.getBooleanParameter("confirmationOnExit");
 
-	      if ( sound || confirmExit ) {
-	        COConfigurationManager.setParameter("Play Download Finished",false);
+	      if ( confirmExit ) {
 	        COConfigurationManager.setParameter("confirmationOnExit",false);
 	        changed = true;
 	      }
