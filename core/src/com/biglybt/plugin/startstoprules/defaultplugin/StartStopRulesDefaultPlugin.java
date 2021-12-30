@@ -1078,6 +1078,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 							try {
 								fp_tag = tt.createTag( "First Priority", true );
 								
+								fp_tag.setPublic( false );
+								
 							}catch( Throwable e ){
 								
 								Debug.out( e );
@@ -1091,7 +1093,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					
 						try{
 							not_fp_tag = tt.createTag( "Not First Priority", true );
-														
+								
+							not_fp_tag.setPublic( false );
+							
 						}catch( Throwable e ){
 							
 							Debug.out( e );
