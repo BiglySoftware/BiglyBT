@@ -4584,35 +4584,42 @@ public class Utils
 		int			style )
 	{
 	    final Sash sash = new Sash(form, style );
-	    Image image = new Image(sash.getDisplay(), 9, SASH_WIDTH);
-	    ImageData imageData = image.getImageData();
-	    int[] row = new int[imageData.width];
-	    for (int i = 0; i < row.length; i++) {
-	    	if (imageData.depth == 16) {
-	    		row[i] = (i % 3) != 0 ? 0x7BDEF7BD : 0xDEF7BDEB;
-	    	} else {
-	    		row[i] = (i % 3) != 0 ? 0xE0E0E0 : 0x808080;
-	    		if (imageData.depth == 32) {
-	    			row[i] = (row[i] & 255) + (row[i] << 8);
-	    		}
-	    	}
-			}
-	    for (int y = 1; y < imageData.height - 1; y++) {
-	    	imageData.setPixels(0, y, row.length, row, 0);
-	    }
-	    Arrays.fill(row, imageData.depth == 16 ? 0x7BDEF7BD : 0xE0E0E0E0);
-	  	imageData.setPixels(0, 0, row.length, row, 0);
-	  	imageData.setPixels(0, imageData.height - 1, row.length, row, 0);
-	    image.dispose();
-	    image = new Image(sash.getDisplay(), imageData);
-	    sash.setBackgroundImage(image);
-	    sash.addDisposeListener(new DisposeListener() {
-				@Override
-				public void widgetDisposed(DisposeEvent e) {
-					sash.getBackgroundImage().dispose();
+	    
+	    if ( Utils.isDarkAppearanceNative()) {
+	    	
+	    	sash.setBackground( ColorCache.getColor( sash.getDisplay(), 81, 86, 88 ));
+	    	
+	    }else{
+		    Image image = new Image(sash.getDisplay(), 9, SASH_WIDTH);
+		    ImageData imageData = image.getImageData();
+		    int[] row = new int[imageData.width];
+		    for (int i = 0; i < row.length; i++) {
+		    	if (imageData.depth == 16) {
+		    		row[i] = (i % 3) != 0 ? 0x7BDEF7BD : 0xDEF7BDEB;
+		    	} else {
+		    		row[i] = (i % 3) != 0 ? 0xE0E0E0 : 0x808080;
+		    		if (imageData.depth == 32) {
+		    			row[i] = (row[i] & 255) + (row[i] << 8);
+		    		}
+		    	}
 				}
-			});
-
+		    for (int y = 1; y < imageData.height - 1; y++) {
+		    	imageData.setPixels(0, y, row.length, row, 0);
+		    }
+		    Arrays.fill(row, imageData.depth == 16 ? 0x7BDEF7BD : 0xE0E0E0E0);
+		  	imageData.setPixels(0, 0, row.length, row, 0);
+		  	imageData.setPixels(0, imageData.height - 1, row.length, row, 0);
+		    image.dispose();
+		    image = new Image(sash.getDisplay(), imageData);
+		    sash.setBackgroundImage(image);
+		    sash.addDisposeListener(new DisposeListener() {
+					@Override
+					public void widgetDisposed(DisposeEvent e) {
+						sash.getBackgroundImage().dispose();
+					}
+				});
+	    }
+	    
 	    return( sash );
 	}
 	
