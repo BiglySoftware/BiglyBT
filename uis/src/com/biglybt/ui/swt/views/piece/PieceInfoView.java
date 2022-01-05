@@ -294,7 +294,7 @@ public class PieceInfoView
 
 		topLabel = new BufferedLabel(pieceInfoComposite, SWT.DOUBLE_BUFFERED);
 		topLabel.getControl().setBackground(Colors.white);
-		gridData = new GridData(SWT.FILL, SWT.DEFAULT, false, false);
+		gridData = new GridData(SWT.FILL, SWT.DEFAULT, true, false);
 		topLabel.setLayoutData(gridData);
 
 		sc = new ScrolledComposite(pieceInfoComposite, SWT.V_SCROLL);
