@@ -19,7 +19,6 @@
 
 package com.biglybt.core.metasearch.impl.web;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.StringTokenizer;
 
