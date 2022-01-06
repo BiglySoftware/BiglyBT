@@ -23,11 +23,11 @@ package com.biglybt.core.subs.impl;
 import java.lang.ref.WeakReference;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.util.*;
@@ -514,7 +514,14 @@ SubscriptionResultImpl
 
 				result.put( SearchResult.PR_CATEGORY, category );
 			}
-
+			
+			List<String> tags = (List<String>)map.get( "tgs" );
+			
+			if ( tags != null && !tags.isEmpty()){
+				
+				result.put( SearchResult.PR_TAGS, tags.toArray( new String[tags.size()]));
+			}
+			
 			String contentType = (String)map.get( "ct" );
 
 			if ( contentType != null ){

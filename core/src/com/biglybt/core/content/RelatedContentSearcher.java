@@ -266,94 +266,123 @@ RelatedContentSearcher
 									getProperty(
 										int		property_name )
 									{
-										if ( property_name == SearchResult.PR_VERSION ){
+										switch( property_name ){
+										
+											case SearchResult.PR_VERSION:{
 
-											return( new Long( c.getVersion()));
+												return( new Long( c.getVersion()));
+											}
+											case SearchResult.PR_NAME:{
 
-										}else if ( property_name == SearchResult.PR_NAME ){
+												return( c.getTitle());
+											}
+											case SearchResult.PR_SIZE:{
 
-											return( c.getTitle());
+												return( c.getSize());
+											}
+											case SearchResult.PR_HASH:{
 
-										}else if ( property_name == SearchResult.PR_SIZE ){
+												return( hash );
+											}
+											case SearchResult.PR_RANK:{
 
-											return( c.getSize());
+													// this rank isn't that accurate, scale down
 
-										}else if ( property_name == SearchResult.PR_HASH ){
+												return( new Long( c.getRank() / 4 ));
+											}
+											case SearchResult.PR_SEED_COUNT:{	
 
-											return( hash );
+												return( new Long( c.getSeeds()));
+											}
+											case SearchResult.PR_LEECHER_COUNT:{
 
-										}else if ( property_name == SearchResult.PR_RANK ){
-
-												// this rank isn't that accurate, scale down
-
-											return( new Long( c.getRank() / 4 ));
-
-										}else if ( property_name == SearchResult.PR_SEED_COUNT ){
-
-											return( new Long( c.getSeeds()));
-
-										}else if ( property_name == SearchResult.PR_LEECHER_COUNT ){
-
-											return( new Long( c.getLeechers()));
-
-										}else if ( property_name == SearchResult.PR_SUPER_SEED_COUNT ){
+												return( new Long( c.getLeechers()));
+											}
+											case SearchResult.PR_SUPER_SEED_COUNT:{
 
 												return( new Long( 0 ));
+											}
+											case SearchResult.PR_PUB_DATE:{
 
-										}else if ( property_name == SearchResult.PR_PUB_DATE ){
+												long	date = c.getPublishDate();
 
-											long	date = c.getPublishDate();
+												if ( date <= 0 ){
 
-											if ( date <= 0 ){
+													return( null );
+												}
 
+												return( new Date( date ));
+											}
+											case SearchResult.PR_TORRENT_LINK:
+											case SearchResult.PR_DOWNLOAD_LINK:
+											case SearchResult.PR_DOWNLOAD_BUTTON_LINK:{
+
+												byte[] hash = c.getHash();
+
+												if ( hash != null ){
+
+													return( UrlUtils.getMagnetURI( hash, c.getTitle(), c.getNetworks()));
+												}
+												
 												return( null );
 											}
+											case SearchResult.PR_CATEGORY:{
 
-											return( new Date( date ));
-
-										}else if ( 	property_name == SearchResult.PR_TORRENT_LINK ||
-													property_name == SearchResult.PR_DOWNLOAD_LINK ||
-													property_name == SearchResult.PR_DOWNLOAD_BUTTON_LINK ){
-
-											byte[] hash = c.getHash();
-
-											if ( hash != null ){
-
-												return( UrlUtils.getMagnetURI( hash, c.getTitle(), c.getNetworks()));
-											}
-										}else if ( property_name == SearchResult.PR_CATEGORY ){
-
-											String[] tags = c.getTags();
-
-											if ( tags != null ){
-
-												for ( String tag: tags ){
-
-													if ( !TagUtils.isInternalTagName( tag )){
-
-														return( tag );
+												String[] tags = c.getTags();
+	
+												if ( tags != null ){
+	
+													for ( String tag: tags ){
+	
+														if ( !TagUtils.isInternalTagName( tag )){
+	
+															return( tag );
+														}
 													}
 												}
+												return( null );
 											}
+											case SearchResult.PR_TAGS:{
 
-										}else if ( property_name == RelatedContentManager.RCM_SEARCH_PROPERTY_TRACKER_KEYS ){
+												String[] tags = c.getTags();
+												
+												if ( tags != null ){
+	
+													List<String> result = new ArrayList<>( tags.length );
+	
+													for ( String tag: tags ){
+	
+														if ( !TagUtils.isInternalTagName( tag )){
+	
+															result.add( tag );
+														}
+													}
+													
+													return( result.toArray( new String[result.size()]));
+												}
+												return( null );
+											}
+											case RelatedContentManager.RCM_SEARCH_PROPERTY_TRACKER_KEYS:{
 
-											return( c.getTrackerKeys());
+												return( c.getTrackerKeys());
+											}
+											case RelatedContentManager.RCM_SEARCH_PROPERTY_WEB_SEED_KEYS:{
 
-										}else if ( property_name == RelatedContentManager.RCM_SEARCH_PROPERTY_WEB_SEED_KEYS ){
+												return( c.getWebSeedKeys());
+											}
+											case RelatedContentManager.RCM_SEARCH_PROPERTY_TAGS:{
 
-											return( c.getWebSeedKeys());
+												return( c.getTags());
+											}
+											case RelatedContentManager.RCM_SEARCH_PROPERTY_NETWORKS:{
 
-										}else if ( property_name == RelatedContentManager.RCM_SEARCH_PROPERTY_TAGS ){
-
-											return( c.getTags());
-
-										}else if ( property_name == RelatedContentManager.RCM_SEARCH_PROPERTY_NETWORKS ){
-
-											return( c.getNetworks());
+												return( c.getNetworks());
+											}
+											default:{
+												
+												return( null );
+											}
 										}
-
-										return( null );
 									}
 								};
 
@@ -1256,90 +1285,118 @@ RelatedContentSearcher
 								int		property_name )
 							{
 								try{
-									if ( property_name == SearchResult.PR_VERSION ){
+									switch( property_name ){
+										case SearchResult.PR_VERSION:{
 
-										return( MapUtils.importLong( map, "v", RelatedContent.VERSION_INITIAL ));
+											return( MapUtils.importLong( map, "v", RelatedContent.VERSION_INITIAL ));
+										}
+										case SearchResult.PR_NAME:{
 
-									}else if ( property_name == SearchResult.PR_NAME ){
+											return( title );
+										}
+										case SearchResult.PR_SIZE:{
 
-										return( title );
+											return( MapUtils.importLong( map, "s", 0 ));
+										}
+										case SearchResult.PR_HASH:{
 
-									}else if ( property_name == SearchResult.PR_SIZE ){
+											return( hash );
+										}
+										case SearchResult.PR_RANK:{
 
-										return( MapUtils.importLong( map, "s", 0 ));
+											return( MapUtils.importLong( map, "r", 0 ) / 4 );
+										}
+										case SearchResult.PR_SUPER_SEED_COUNT:{
 
-									}else if ( property_name == SearchResult.PR_HASH ){
+											return( 0L );
+										}
+										case SearchResult.PR_SEED_COUNT:{
 
-										return( hash );
+											return( MapUtils.importLong( map, "z", 0 ));
+										}
+										case SearchResult.PR_LEECHER_COUNT:{
 
-									}else if ( property_name == SearchResult.PR_RANK ){
+											return( MapUtils.importLong( map, "l", 0 ));
+										}
+										case SearchResult.PR_PUB_DATE:{
 
-										return( MapUtils.importLong( map, "r", 0 ) / 4 );
+											long date = MapUtils.importLong( map, "p", 0 )*60*60*1000L;
 
-									}else if ( property_name == SearchResult.PR_SUPER_SEED_COUNT ){
+											if ( date <= 0 ){
 
-										return( 0L );
+												return( null );
+											}
 
-									}else if ( property_name == SearchResult.PR_SEED_COUNT ){
+											return( new Date( date ));
+										}
+										case SearchResult.PR_TORRENT_LINK:
+										case SearchResult.PR_DOWNLOAD_LINK:
+										case SearchResult.PR_DOWNLOAD_BUTTON_LINK:{
 
-										return( MapUtils.importLong( map, "z", 0 ));
-
-									}else if ( property_name == SearchResult.PR_LEECHER_COUNT ){
-
-										return( MapUtils.importLong( map, "l", 0 ));
-
-									}else if ( property_name == SearchResult.PR_PUB_DATE ){
-
-										long date = MapUtils.importLong( map, "p", 0 )*60*60*1000L;
-
-										if ( date <= 0 ){
-
+											byte[] hash = (byte[])map.get( "h" );
+	
+											if ( hash != null ){
+	
+												return( UrlUtils.getMagnetURI( hash, title, RelatedContentManager.convertNetworks((byte) MapUtils.importLong( map, "o", RelatedContentManager.NET_PUBLIC ))));
+											}
 											return( null );
 										}
+										case SearchResult.PR_CATEGORY:{
 
-										return( new Date( date ));
-
-									}else if ( 	property_name == SearchResult.PR_TORRENT_LINK ||
-												property_name == SearchResult.PR_DOWNLOAD_LINK ||
-												property_name == SearchResult.PR_DOWNLOAD_BUTTON_LINK ){
-
-										byte[] hash = (byte[])map.get( "h" );
-
-										if ( hash != null ){
-
-											return( UrlUtils.getMagnetURI( hash, title, RelatedContentManager.convertNetworks((byte) MapUtils.importLong( map, "o", RelatedContentManager.NET_PUBLIC ))));
-										}
-
-									}else if ( property_name == SearchResult.PR_CATEGORY ){
-
-										String[] tags = manager.decodeTags((byte[])map.get( "g" ));
-
-										if ( tags != null ){
-
-											for ( String tag: tags ){
-
-												if ( !TagUtils.isInternalTagName( tag )){
-
-													return( tag );
+											String[] tags = manager.decodeTags((byte[])map.get( "g" ));
+	
+											if ( tags != null ){
+	
+												for ( String tag: tags ){
+	
+													if ( !TagUtils.isInternalTagName( tag )){
+	
+														return( tag );
+													}
 												}
 											}
+											return( null );
 										}
+										case SearchResult.PR_TAGS:{
 
-									}else if ( property_name == RelatedContentManager.RCM_SEARCH_PROPERTY_TRACKER_KEYS ){
+											String[] tags = manager.decodeTags((byte[])map.get( "g" ));
+	
+											if ( tags != null ){
+	
+												List<String> result = new ArrayList<>( tags.length );
+												
+												for ( String tag: tags ){
+	
+													if ( !TagUtils.isInternalTagName( tag )){
+	
+														result.add( tag );
+													}
+												}
+												
+												return( result.toArray( new String[ result.size()]));
+											}
+											return( null );
+										}
+										case RelatedContentManager.RCM_SEARCH_PROPERTY_TRACKER_KEYS:{
 
-										return( map.get( "k" ));
+											return( map.get( "k" ));
+										}
+										case RelatedContentManager.RCM_SEARCH_PROPERTY_WEB_SEED_KEYS:{
 
-									}else if ( property_name == RelatedContentManager.RCM_SEARCH_PROPERTY_WEB_SEED_KEYS ){
+											return( map.get( "w" ));
+										}
+										case RelatedContentManager.RCM_SEARCH_PROPERTY_TAGS:{
 
-										return( map.get( "w" ));
+											return( manager.decodeTags((byte[])map.get( "g" )));
+										}
+										case RelatedContentManager.RCM_SEARCH_PROPERTY_NETWORKS:{
 
-									}else if ( property_name == RelatedContentManager.RCM_SEARCH_PROPERTY_TAGS ){
-
-										return( manager.decodeTags((byte[])map.get( "g" )));
-
-									}else if ( property_name == RelatedContentManager.RCM_SEARCH_PROPERTY_NETWORKS ){
-
-										return( RelatedContentManager.convertNetworks((byte) MapUtils.importLong( map, "o", RelatedContentManager.NET_PUBLIC )));
+											return( RelatedContentManager.convertNetworks((byte) MapUtils.importLong( map, "o", RelatedContentManager.NET_PUBLIC )));
+										}
+										default:{
+											
+											return( null );
+										}
 									}
 
 								}catch( Throwable e ){

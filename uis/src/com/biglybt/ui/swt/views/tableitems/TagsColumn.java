@@ -70,6 +70,17 @@ TagsColumn
 		setRefreshInterval(INTERVAL_LIVE);
 	}
 
+	public 
+	TagsColumn(
+		Class	ds,
+		String 	tableID,
+		String	columnID ) 
+	{
+		super( ds, columnID, ALIGN_LEAD, 70, tableID);
+		
+		setRefreshInterval(INTERVAL_LIVE);
+	}
+	
 	@Override
 	public void cellAdded(TableCell cell) {
 		cell.setMarginHeight(1);
@@ -120,10 +131,8 @@ TagsColumn
 		TableCellSWT	cell = (TableCellSWT)_cell;
 		
 		Map<TagPainter, Rectangle> tagMapping = (Map<TagPainter, Rectangle>)cell.getData( TAG_MAPPING_KEY );
-		
-		Taggable taggable = (Taggable)cell.getDataSource();
-		
-		if ( taggable == null || tagMapping == null ){
+				
+		if ( tagMapping == null ){
 			
 			return;
 		}
@@ -224,10 +233,9 @@ TagsColumn
 
 	@Override
 	public void cellPaint(GC gc, TableCellSWT cell) {
-		Taggable taggable = (Taggable) cell.getDataSource();
-		if (taggable == null) {
-			return;
-		}
+		Object ds = cell.getDataSource();
+		
+		Taggable taggable = (ds instanceof Taggable)?(Taggable)ds:null;
 
 		Point cellSize = cell.getSize();
 

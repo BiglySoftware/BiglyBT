@@ -50,6 +50,7 @@ SearchResult
 															// always return teh 'download link'
 
 	public static final int	PR_ASSET_DATE			= 24;
+	public static final int	PR_TAGS					= 25;	// String[]
 
 		// if you add more properties make sure you amend the mapping in PluginEngine appropriately
 		// AND the reverse mapping in MetaSearchManagerImpl

@@ -246,6 +246,13 @@ SBC_SearchResult
 	}
 
 	@Override
+	public String[] 
+	getTags()
+	{
+		return( result.getTags());
+	}
+	
+	@Override
 	public long
 	getTime()
 	{

@@ -247,6 +247,12 @@ Result
 		}
 		
 		object.put("c", this.getCategory());
+		
+		String[] tags = this.getTags();
+		if ( tags != null && tags.length > 0 ){
+			object.put( "tgs", Arrays.asList( tags ));
+		}
+		
 		object.put("n",this.getName());
 
 		int	super_seeds = getNbSuperSeeds();

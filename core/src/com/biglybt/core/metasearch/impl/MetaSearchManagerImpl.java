@@ -1916,6 +1916,10 @@ MetaSearchManagerImpl
 
 	     				return( result.getCategory());
 	     			}
+	     			case PR_TAGS:{
+
+	     				return( result.getTags());
+	     			}
 	     			case PR_COMMENTS:{
 
 	     				return( new Long( result.getComments()));

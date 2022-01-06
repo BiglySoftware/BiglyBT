@@ -27,6 +27,9 @@ FilterableResult
 	public String
 	getCategory();
 	
+	public String[]
+	getTags();
+	
 	public long
 	getSize();
 	

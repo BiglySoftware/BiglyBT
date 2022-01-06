@@ -44,6 +44,7 @@ SubscriptionResultFilterable
 	private final String			torrent_link;
 	private final String			details_link;
 	private final String			category;
+	private final String[]			tags;
 
 	private long				time;
 	private long				seeds_peers_sort;
@@ -102,6 +103,8 @@ SubscriptionResultFilterable
 		details_link = (String)properties.get( SearchResult.PR_DETAILS_LINK );
 
 		category = (String)properties.get( SearchResult.PR_CATEGORY );
+		
+		tags = (String[])properties.get( SearchResult.PR_TAGS );
 
 		Date	ad = (Date)properties.get( SearchResult.PR_ASSET_DATE );
 		
@@ -298,6 +301,13 @@ SubscriptionResultFilterable
 		return( category );
 	}
 
+	@Override
+	public String[] 
+	getTags()
+	{
+		return( tags );
+	}
+	
 	@Override
 	public long
 	getTime()

@@ -19,8 +19,7 @@
 
 package com.biglybt.core.metasearch.impl.web;
 
-import java.util.Date;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import org.apache.commons.lang.Entities;
 
@@ -48,7 +47,8 @@ public class WebResult extends Result {
 	String contentType = "";
 	String name;
 	String category = "";
-
+	List<String>	tags = new ArrayList<>(1);
+	
 	String drmKey = null;
 
 	Date publishedDate;
@@ -107,8 +107,10 @@ public class WebResult extends Result {
 			}
 		}
 	}
+	
 	public void setCategoryFromHTML(String category) {
 		if(category != null) {
+			addTagFromHTML(category);	// hack, we currently just pick up cats
 			category = removeHTMLTags(category);
 			this.category = Entities.HTML40.unescape(category).trim();
 			/*int separator = this.category.indexOf(">");
@@ -123,6 +125,27 @@ public class WebResult extends Result {
 		}
 	}
 
+	public void 
+	addTagFromHTML(
+		String tag )
+	{	
+		if ( tag == null ){
+			return;
+		}
+		
+		tag = removeHTMLTags( tag );
+		tag = Entities.HTML40.unescape( tag ).trim();
+		
+		if ( !tag.isEmpty()){
+			
+			if ( !tags.contains( tag )){
+			
+				tags.add( tag );
+			}
+		}
+	}
+
+	
 	public void
 	setUID(
 		String	_uid )
@@ -450,6 +473,13 @@ public class WebResult extends Result {
 		return category;
 	}
 
+	@Override
+	public String[] 
+	getTags()
+	{
+		return( tags.toArray( new String[tags.size()]));
+	}
+	
 	@Override
 	public String getDownloadLink() {
 

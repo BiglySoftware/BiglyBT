@@ -74,6 +74,14 @@ PluginResult
 	}
 
 	@Override
+	public String[] 
+	getTags()
+	{
+		
+		return(getStringListProperty( SearchResult.PR_TAGS ));
+	}
+	
+	@Override
 	public void
 	setCategory(
 		String category )
@@ -395,6 +403,36 @@ PluginResult
 		}
 	}
 
+	protected String[]
+	getStringListProperty(
+		int		name )
+	{
+		return( getStringListProperty( name, new String[0] ));
+	}
+
+	protected String[]
+	getStringListProperty(
+		int		name,
+		String[]	def )
+	{
+		try{
+			String[]	l = (String[])getResultProperty( name );
+
+			if ( l == null ){
+
+				return( def );
+			}
+
+			return( l );
+
+		}catch( Throwable e ){
+
+			Debug.out( "Invalid value returned for String[] property " + name );
+
+			return( def );
+		}
+	}
+	
 	protected byte[]
 	getByteArrayProperty(
 		int		name )

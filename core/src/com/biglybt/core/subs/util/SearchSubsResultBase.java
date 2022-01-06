@@ -64,6 +64,9 @@ SearchSubsResultBase
 
 	public String
 	getCategory();
+	
+	public String[]
+	getTags();
 
 	public long
 	getTime();

@@ -772,6 +772,24 @@ SBC_SubscriptionResultsView
 
 		tableManager.registerColumn(
 			SubscriptionResultFilterable.class,
+			ColumnSearchSubResultTags.COLUMN_ID,
+				new TableColumnCoreCreationListener() 
+				{
+					@Override
+					public TableColumnCore 
+					createTableColumnCore(
+						Class<?> forDataSourceType, String tableID, String columnID )
+					{
+						return( new ColumnSearchSubResultTags(forDataSourceType, tableID, columnID ));
+					}
+				
+					@Override
+					public void tableColumnCreated(TableColumn column) {				
+					}
+				});
+
+		tableManager.registerColumn(
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultHash.COLUMN_ID,
 				new TableColumnCreationListener() {
 
