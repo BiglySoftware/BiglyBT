@@ -173,6 +173,39 @@ SubscriptionResultImpl
 
 			other_json_str = JSONUtils.encodeToJSON( other_json_map );
 		}
+				
+		boolean other_has_tgs = other_json_str.contains("\"tgs\"" );
+		
+		if ( other_has_tgs ){
+			
+			other_json_map 	= JSONUtils.decodeJSON( other_json_str );
+
+			List<String> my_tags 	= (List<String>)my_json_map.get( "tgs" );
+			
+			if ( my_tags != null ){
+			
+				boolean updated = false;
+				
+				List<String> other_tags = (List<String>)other_json_map.get( "tgs" );
+
+				for ( String t: my_tags ){
+					
+					if ( !other_tags.contains( t )){
+						
+						other_tags.add( t );
+						
+						updated = true;
+					}
+				}
+				
+				if ( updated ){
+					
+					other_json_map.put( "tgs", other_tags );
+
+					other_json_str = JSONUtils.encodeToJSON( other_json_map );
+				}
+			}
+		}
 		
 			// keep oldest pub date
 		

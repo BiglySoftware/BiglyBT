@@ -44,7 +44,6 @@ SubscriptionResultFilterable
 	private final String			torrent_link;
 	private final String			details_link;
 	private final String			category;
-	private final String[]			tags;
 
 	private long				time;
 	private long				seeds_peers_sort;
@@ -54,6 +53,7 @@ SubscriptionResultFilterable
 	private String				votes_comments;
 	private int					rank;
 	private long				asset_date;
+	private String[]			tags;
 
 	private LightHashMap<Object,Object>	user_data;
 
@@ -104,8 +104,6 @@ SubscriptionResultFilterable
 
 		category = (String)properties.get( SearchResult.PR_CATEGORY );
 		
-		tags = (String[])properties.get( SearchResult.PR_TAGS );
-
 		Date	ad = (Date)properties.get( SearchResult.PR_ASSET_DATE );
 		
 		if ( ad != null ){
@@ -140,6 +138,8 @@ SubscriptionResultFilterable
 				time = pt;
 			}
 		}
+
+		tags = (String[])properties.get( SearchResult.PR_TAGS );
 
 		long seeds 		= (Long)properties.get( SearchResult.PR_SEED_COUNT );
 		long leechers 	= (Long)properties.get( SearchResult.PR_LEECHER_COUNT );
