@@ -165,26 +165,31 @@ SubscriptionResultImpl
 
 		Map	other_json_map = null;
 		
+		boolean	other_json_map_updated	= false;
+		
 		if ( my_tf != null ){
 
 			other_json_map 	= JSONUtils.decodeJSON( other_json_str );
 
 			other_json_map.put( "tf", my_tf );
-
-			other_json_str = JSONUtils.encodeToJSON( other_json_map );
+			
+			other_json_map_updated = true;
 		}
-				
-		boolean other_has_tgs = other_json_str.contains("\"tgs\"" );
-		
-		if ( other_has_tgs ){
 			
-			other_json_map 	= JSONUtils.decodeJSON( other_json_str );
+		List<String> my_tags 	= (List<String>)my_json_map.get( "tgs" );
 
-			List<String> my_tags 	= (List<String>)my_json_map.get( "tgs" );
-			
-			if ( my_tags != null ){
-			
+		if ( my_tags != null && !my_tags.isEmpty()){
+
+			boolean other_has_tgs = other_json_str.contains("\"tgs\"" );
+		
+			if ( other_has_tgs ){
+							
 				boolean updated = false;
+
+				if ( other_json_map == null ){
+					
+					other_json_map 	= JSONUtils.decodeJSON( other_json_str );
+				}
 				
 				List<String> other_tags = (List<String>)other_json_map.get( "tgs" );
 
@@ -201,9 +206,19 @@ SubscriptionResultImpl
 				if ( updated ){
 					
 					other_json_map.put( "tgs", other_tags );
-
-					other_json_str = JSONUtils.encodeToJSON( other_json_map );
+					
+					other_json_map_updated = true;
 				}
+			}else{
+									
+				if ( other_json_map == null ){
+					
+					other_json_map 	= JSONUtils.decodeJSON( other_json_str );
+				}
+				
+				other_json_map.put( "tgs", my_tags );
+				
+				other_json_map_updated = true;
 			}
 		}
 		
@@ -242,9 +257,14 @@ SubscriptionResultImpl
 			if ( keep ){
 				
 				other_json_map.put( "ts", my_ts );
-
-				other_json_str = JSONUtils.encodeToJSON( other_json_map );
+				
+				other_json_map_updated = true;
 			}
+		}
+		
+		if ( other_json_map_updated ){
+			
+			other_json_str = JSONUtils.encodeToJSON( other_json_map );
 		}
 		
 		if ( my_json_str.equals( other_json_str )){
