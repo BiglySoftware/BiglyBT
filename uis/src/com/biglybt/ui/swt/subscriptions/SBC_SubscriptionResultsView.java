@@ -962,6 +962,21 @@ SBC_SubscriptionResultsView
 	private void
 	hideView()
 	{
+		synchronized( this ){
+
+			if ( tv_subs_results != null ){
+
+				tv_subs_results.delete();
+
+				tv_subs_results = null;
+			}
+
+			if ( ds != null ){
+
+				ds.removeListener( this );
+			}
+		}
+
 		Utils.disposeSWTObjects(new Object[] {
 			table_parent,
 		});
@@ -996,14 +1011,6 @@ SBC_SubscriptionResultsView
 	{
 		hideView();
 
-		synchronized( this ){
-
-			if ( ds != null ){
-
-				ds.removeListener( this );
-			}
-		}
-
 		return( super.skinObjectHidden(skinObject, params));
 	}
 
@@ -1013,24 +1020,7 @@ SBC_SubscriptionResultsView
 		SWTSkinObject 	skinObject,
 		Object 			params )
 	{
-		synchronized( this ){
-
-			if ( tv_subs_results != null ){
-
-				tv_subs_results.delete();
-
-				tv_subs_results = null;
-			}
-
-			if ( ds != null ){
-
-				ds.removeListener( this );
-			}
-		}
-
-		Utils.disposeSWTObjects(new Object[] {
-			table_parent,
-		});
+		hideView();
 
 		return( super.skinObjectDestroyed(skinObject, params));
 	}
