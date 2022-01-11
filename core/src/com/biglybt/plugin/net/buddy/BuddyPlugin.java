@@ -468,136 +468,128 @@ BuddyPlugin
 
 		beta_plugin = new BuddyPluginBeta( plugin_interface, this, beta_enabled_param );
 
-		final TableContextMenuItem menu_item_itorrents =
-			plugin_interface.getUIManager().getTableManager().addContextMenuItem(TableManager.TABLE_MYTORRENTS_INCOMPLETE, "azbuddy.contextmenu");
-		final TableContextMenuItem menu_item_ctorrents 	=
-			plugin_interface.getUIManager().getTableManager().addContextMenuItem(TableManager.TABLE_MYTORRENTS_COMPLETE, "azbuddy.contextmenu");
+		for ( String table_id: TableManager.TABLE_MYTORRENTS_ALL ){
+			TableContextMenuItem menu_item =
+				plugin_interface.getUIManager().getTableManager().addContextMenuItem(table_id, "azbuddy.contextmenu");
 
-		menu_item_itorrents.setStyle(TableContextMenuItem.STYLE_MENU);
-		menu_item_itorrents.setHeaderCategory(MenuItem.HEADER_SOCIAL);
-		menu_item_ctorrents.setStyle(TableContextMenuItem.STYLE_MENU);
-		menu_item_ctorrents.setHeaderCategory(MenuItem.HEADER_SOCIAL);
+			menu_item.setStyle(TableContextMenuItem.STYLE_MENU);
+			menu_item.setHeaderCategory(MenuItem.HEADER_SOCIAL);
+			
+			MenuItemFillListener	menu_fill_listener =
+					new MenuItemFillListener()
+					{
+						@Override
+						public void
+						menuWillBeShown(
+							MenuItem	menu,
+							Object		_target )
+						{
+							menu.removeAllChildItems();
 
-		MenuItemFillListener	menu_fill_listener =
-			new MenuItemFillListener()
-			{
-				@Override
-				public void
-				menuWillBeShown(
-					MenuItem	menu,
-					Object		_target )
-				{
-					menu.removeAllChildItems();
+							if ( !( isClassicEnabled() && isAvailable())){
 
-					if ( !( isClassicEnabled() && isAvailable())){
+								menu.setEnabled( false );
 
-						menu.setEnabled( false );
+								return;
+							}
 
-						return;
-					}
+							final List<Torrent>	torrents = new ArrayList<>();
 
-					final List<Torrent>	torrents = new ArrayList<>();
+							if ( _target instanceof TableRow ){
 
-					if ( _target instanceof TableRow ){
+								addDownload( torrents, (TableRow)_target );
 
-						addDownload( torrents, (TableRow)_target );
+							}else{
 
-					}else{
+								TableRow[] rows = (TableRow[])_target;
 
-						TableRow[] rows = (TableRow[])_target;
+								for ( TableRow row: rows ){
 
-						for ( TableRow row: rows ){
+									addDownload( torrents, row );
+								}
+							}
 
-							addDownload( torrents, row );
-						}
-					}
+							if ( torrents.size() == 0 ){
 
-					if ( torrents.size() == 0 ){
+								menu.setEnabled( false );
 
-						menu.setEnabled( false );
+							}else{
 
-					}else{
+								List<BuddyPluginBuddy> buddies = getBuddies();
 
-						List<BuddyPluginBuddy> buddies = getBuddies();
+								for (int i=0;i<buddies.size();i++){
 
-						boolean	incomplete = ((TableContextMenuItem)menu).getTableID() == TableManager.TABLE_MYTORRENTS_INCOMPLETE;
+									final BuddyPluginBuddy	buddy = (BuddyPluginBuddy)buddies.get(i);
 
-						TableContextMenuItem parent = incomplete?menu_item_itorrents:menu_item_ctorrents;
+									boolean online = buddy.isOnline( true );
 
-						for (int i=0;i<buddies.size();i++){
+									TableContextMenuItem item =
+										plugin_interface.getUIManager().getTableManager().addContextMenuItem(
+											menu_item,
+											"!" + ( buddy.getName() + ( buddy.isPublicNetwork()?"":(" (" + MessageText.getString( "label.anon.medium" ) + ")" ))  ) + (online?"":(" - " +  MessageText.getString( "label.disconnected" ))) + "!");
 
-							final BuddyPluginBuddy	buddy = (BuddyPluginBuddy)buddies.get(i);
+									item.addMultiListener(
+										new MenuItemListener()
+										{
+											@Override
+											public void
+											selected(
+												MenuItem 	menu,
+												Object 		target )
+											{
+												for ( Torrent torrent: torrents ){
 
-							boolean online = buddy.isOnline( true );
+													buddy.getPluginNetwork().getAZ2Handler().sendAZ2Torrent( torrent, buddy );
+												}
+											}
+										});
+									
+									item.setEnabled( online );
+								}
 
-							TableContextMenuItem item =
-								plugin_interface.getUIManager().getTableManager().addContextMenuItem(
-									parent,
-									"!" + ( buddy.getName() + ( buddy.isPublicNetwork()?"":(" (" + MessageText.getString( "label.anon.medium" ) + ")" ))  ) + (online?"":(" - " +  MessageText.getString( "label.disconnected" ))) + "!");
-
-							item.addMultiListener(
-								new MenuItemListener()
-								{
-									@Override
-									public void
-									selected(
-										MenuItem 	menu,
-										Object 		target )
-									{
-										for ( Torrent torrent: torrents ){
-
-											buddy.getPluginNetwork().getAZ2Handler().sendAZ2Torrent( torrent, buddy );
-										}
-									}
-								});
-							
-							item.setEnabled( online );
+								menu.setEnabled( true );
+							}
 						}
 
-						menu.setEnabled( true );
-					}
-				}
+						protected void
+						addDownload(
+							List<Torrent>		torrents,
+							TableRow			row )
+						{
+							Object obj = row.getDataSource();
 
-				protected void
-				addDownload(
-					List<Torrent>		torrents,
-					TableRow			row )
-				{
-					Object obj = row.getDataSource();
+							Download	download;
 
-					Download	download;
+							if ( obj instanceof Download ){
 
-					if ( obj instanceof Download ){
+								download = (Download)obj;
 
-						download = (Download)obj;
+							}else{
 
-					}else{
+								DiskManagerFileInfo file = (DiskManagerFileInfo)obj;
 
-						DiskManagerFileInfo file = (DiskManagerFileInfo)obj;
+								try{
+									download	= file.getDownload();
 
-						try{
-							download	= file.getDownload();
+								}catch( DownloadException e ){
 
-						}catch( DownloadException e ){
+									Debug.printStackTrace(e);
 
-							Debug.printStackTrace(e);
+									return;
+								}
+							}
 
-							return;
+							Torrent torrent = download.getTorrent();
+
+							if ( torrent != null && !TorrentUtils.isReallyPrivate( PluginCoreUtils.unwrap( torrent ))){
+
+								torrents.add( torrent );
+							}
 						}
-					}
-
-					Torrent torrent = download.getTorrent();
-
-					if ( torrent != null && !TorrentUtils.isReallyPrivate( PluginCoreUtils.unwrap( torrent ))){
-
-						torrents.add( torrent );
-					}
-				}
-			};
-
-		menu_item_itorrents.addFillListener( menu_fill_listener );
-		menu_item_ctorrents.addFillListener( menu_fill_listener );
-
+					};
+					
+			menu_item.addFillListener( menu_fill_listener );
+		}
 		buddy_tracker = new BuddyPluginTracker( this, tracker_enable, tracker_so_enable );
 
 		plugin_interface.getUIManager().addUIListener(

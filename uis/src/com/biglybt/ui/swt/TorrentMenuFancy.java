@@ -687,7 +687,7 @@ public class TorrentMenuFancy
 		List<com.biglybt.pif.ui.menus.MenuItem> listPluginItems = new ArrayList<>();
 
 		com.biglybt.pif.ui.menus.MenuItem[] items = TableContextMenuManager.getInstance().getAllAsArray(
-				tableID);
+				Utils.getBaseViewID(tableID));
 		listPluginItems.addAll(Arrays.asList(items));
 		items = MenuItemManager.getInstance().getAllAsArray(
 				MenuManager.MENU_DOWNLOAD_CONTEXT);

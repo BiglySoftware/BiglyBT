@@ -939,7 +939,7 @@ public abstract class TableViewSWT_Common
 		boolean enable_items = selectedRows.length > 0;
 
 		TableContextMenuItem[] items = TableContextMenuManager.getInstance().getAllAsArray(
-				sMenuID);
+				Utils.getBaseViewID(sMenuID));
 
 		if (items.length > 0 || menu_items.length > 0) {
 			new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
