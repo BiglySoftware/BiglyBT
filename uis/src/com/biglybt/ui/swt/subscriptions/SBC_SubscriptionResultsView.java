@@ -1361,11 +1361,29 @@ SBC_SubscriptionResultsView
 			}
 		}
 
-		// TODO: Need a mass delete option.  This one saves the Subscription History
-		// on each call..
+		Map<Subscription,List<String>>	result_map = new HashMap<>();
+		
 		for ( SubscriptionResultFilterable result: results ){
 
-			result.delete();
+			Subscription subs = result.getSubscription();
+			
+			List<String> ids = result_map.get( subs );
+			
+			if ( ids == null ){
+				
+				ids = new ArrayList<>();
+				
+				result_map.put( subs, ids );
+			}
+			
+			ids.add( result.getID());
+		}
+		
+		for ( Map.Entry<Subscription,List<String>> entry: result_map.entrySet()){
+		
+			List<String> ids =  entry.getValue();
+			
+			entry.getKey().getHistory().deleteResults( ids.toArray( new String[ids.size()]));
 		}
 
 		if ( focusRow != null ){

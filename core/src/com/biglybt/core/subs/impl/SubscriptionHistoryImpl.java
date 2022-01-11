@@ -726,7 +726,7 @@ SubscriptionHistoryImpl
 	deleteResults(
 		String[] result_ids )
 	{
-		ByteArrayHashMap rids = new ByteArrayHashMap();
+		ByteArrayHashMap<String> rids = new ByteArrayHashMap<>();
 
 		for (int i=0;i<result_ids.length;i++){
 
