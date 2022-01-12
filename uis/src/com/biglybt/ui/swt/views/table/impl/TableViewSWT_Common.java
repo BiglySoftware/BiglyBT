@@ -1022,6 +1022,12 @@ public abstract class TableViewSWT_Common
 				}
 			}
 
+			final MenuItem itemSelectAll = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(itemSelectAll, "Button.selectAll");
+			itemSelectAll.addListener(SWT.Selection, (ev)->{
+				tv.selectAll();
+			});
+			
 			if (tv.getSWTFilter() != null) {
 				final MenuItem itemFilter = new MenuItem(menu, SWT.PUSH);
 				Messages.setLanguageText(itemFilter, "MyTorrentsView.menu.filter");

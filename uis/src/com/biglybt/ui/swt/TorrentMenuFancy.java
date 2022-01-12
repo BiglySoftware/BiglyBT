@@ -1949,8 +1949,15 @@ public class TorrentMenuFancy
 					}
 				});
 
+		createRow(detailArea, "Button.selectAll", null, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				tv.selectAll();
+			}
+		});
+		
 			// Filter
-
+		
 		if (tv.getSWTFilter() != null) {
 			createRow(detailArea, "MyTorrentsView.menu.filter", null, new Listener() {
 				@Override
