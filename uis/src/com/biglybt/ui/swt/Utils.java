@@ -279,9 +279,13 @@ public class Utils
 		isGTK3 = isGTK && System.getProperty("org.eclipse.swt.internal.gtk.version",
 				"2").startsWith("3");
 		
-		display.addFilter( SWT.DragDetect, (ev)->{
-
-			dragDetectMask = ev.stateMask;
+			// if we're running Sleak this won't be the SWT thread...
+		
+		execSWTThread(()->{
+			display.addFilter( SWT.DragDetect, (ev)->{
+	
+				dragDetectMask = ev.stateMask;
+			});
 		});
 	}
 	
