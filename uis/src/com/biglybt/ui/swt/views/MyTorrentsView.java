@@ -769,8 +769,11 @@ public class MyTorrentsView
   	Utils.execSWTThread(new SWTRunnable() {
 			@Override
 			public void runWithDisplay(Display display) {
-				Utils.disposeSWTObjects(fontButton, tableHeaderMenu);
-				fontButton		= null;
+				Utils.disposeSWTObjects(tableHeaderMenu);
+				if ( fontButton != null ){
+					FontUtils.uncache( fontButton );
+					fontButton		= null;
+				}
 				tableHeaderMenu = null;
 			}
 		});
@@ -1227,7 +1230,7 @@ public class MyTorrentsView
 			
 			button.addKeyListener(this);
 			if ( fontButton == null) {
-				fontButton = FontUtils.getFontWithStyle(button.getFont(), SWT.NONE, 0.8f);
+				fontButton = FontUtils.cache( FontUtils.getFontWithStyle(button.getFont(), SWT.NONE, 0.8f));
 			}
 			button.setFont(fontButton);
 

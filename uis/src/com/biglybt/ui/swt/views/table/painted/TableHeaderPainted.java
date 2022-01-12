@@ -76,8 +76,8 @@ public class TableHeaderPainted
 			return;
 		}
 
-		fontHeader = FontUtils.getFontPercentOf(cHeaderArea.getFont(), 0.9f);
-		fontHeaderSmall = FontUtils.getFontPercentOf(fontHeader, 0.8f);
+		fontHeader = FontUtils.cache( FontUtils.getFontPercentOf(cHeaderArea.getFont(), 0.9f));
+		fontHeaderSmall = FontUtils.cache( FontUtils.getFontPercentOf(fontHeader, 0.8f));
 		cHeaderArea.setFont(fontHeader);
 
 		configMan.addParameterListener(ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT,
@@ -114,7 +114,12 @@ public class TableHeaderPainted
 		dt.addDropListener(new HeaderDropTargetListener());
 
 		cHeaderArea.addDisposeListener(
-				e -> Utils.disposeSWTObjects(ds, dt, fontHeader, fontHeaderSmall));
+				e -> {
+					FontUtils.uncache( fontHeader, fontHeaderSmall );
+					fontHeaderSmall = null;
+					fontHeader = null;
+					Utils.disposeSWTObjects(ds, dt );
+				});
 	}
 
 	private void paintHeader(PaintEvent e) {

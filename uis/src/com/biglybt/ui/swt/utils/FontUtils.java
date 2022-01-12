@@ -17,6 +17,7 @@
 package com.biglybt.ui.swt.utils;
 
 import java.lang.reflect.Method;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -24,6 +25,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 
 /**
@@ -69,6 +71,83 @@ public class FontUtils
 		}
 	}
 
+	private static Map<String,Object[]>	fontCache = new HashMap<>();
+	
+	public static Font
+	cache(
+		Font	f )
+	{
+		String key = getKey( f );
+		
+		Object[] existing = fontCache.get(key );
+		
+		if ( existing == null ){
+			
+			fontCache.put( key, new Object[]{ f, 0 });
+			
+			return( f );
+			
+		}else{
+	
+			existing[1] = ((Integer)existing[1]) + 1;
+			
+			f.dispose();
+			
+			return((Font)existing[0]);
+		}
+	}
+	
+	public static void
+	uncache(
+		Font...	fonts )
+	{
+		for ( Font f: fonts ){
+			
+			String key = getKey( f );
+			
+			Object[] existing = fontCache.get(key );
+
+			if ( existing == null ){
+				
+				Debug.out( "font not cached" );
+			}else{
+			
+				int count = (Integer)existing[1];
+				
+				if ( count > 0 ){
+					
+					existing[1] = count;
+					
+				}else{
+					
+					fontCache.remove( key );
+					
+					((Font)existing[0]).dispose();
+				}
+			}
+		}
+	}
+	
+	private static String
+	getKey(
+		Font	f )
+	{
+		FontData[] ds = f.getFontData();
+		
+		StringBuilder key = new StringBuilder( 32 );
+		
+		for ( FontData d: ds ){
+			
+			key.append( d.getName());
+			key.append( "/" );
+			key.append( d.getStyle());
+			key.append( "/" );
+			key.append( d.getHeight());
+		}
+		
+		return( key.toString());
+	}
+	
 	public static Font getFontWithHeight(Font baseFont, int heightInPixels,
 			int style) {
 		return getFontWithHeight(baseFont, heightInPixels, style, true);
@@ -283,8 +362,11 @@ public class FontUtils
 				//System.out.println("h=" + h + ";lh=" + lineHeightPX + "; " + pctAdjust);
 
 				lastHeight = h;
+				
 				Font font = FontUtils.getFontPercentOf(text.getFont(), pctAdjust);
-				font = ensureFontFitsHeight(font, h);
+				
+				font = cache( ensureFontFitsHeight(font, h));
+				
 				text.setFont(font);
 
 				if ( lastFont == null ){
@@ -296,16 +378,21 @@ public class FontUtils
 							if (text != null) {
 								text.setFont(null);
 							}
-							Utils.disposeSWTObjects(lastFont);
+							uncache( lastFont );
+							lastFont = null;
 						}
 					});
 
 				}else{
-					Utils.disposeSWTObjects(lastFont);
+					uncache( lastFont );
 				}
 				
 				if (runOnFontSizeChange != null) {
-					runOnFontSizeChange.run();
+					try{
+						runOnFontSizeChange.run();
+					}catch( Throwable e ){
+						Debug.out( e );
+					}
 				}
 
 				lastFont = font;

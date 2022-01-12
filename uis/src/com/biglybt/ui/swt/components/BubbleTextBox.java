@@ -158,10 +158,10 @@ public class BubbleTextBox
 		Runnable runOnFontSizeChange = () -> {
 			boolean existingFont = FONT_REGEX_BUTTON != null;
 			if (existingFont) {
-				FONT_REGEX_BUTTON.dispose();
+				FontUtils.uncache( FONT_REGEX_BUTTON );
 			}
-			FONT_REGEX_BUTTON = FontUtils.getFontWithStyle(textWidget.getFont(),
-					SWT.NORMAL, 1.0f);
+			FONT_REGEX_BUTTON = FontUtils.cache( FontUtils.getFontWithStyle(textWidget.getFont(),
+					SWT.NORMAL, 1.0f));
 			if (existingFont) {
 				cBubble.redraw();
 			}
@@ -170,7 +170,7 @@ public class BubbleTextBox
 		FontUtils.fontToWidgetHeight(textWidget, runOnFontSizeChange);
 		textWidget.addDisposeListener(e -> {
 			if (FONT_REGEX_BUTTON != null) {
-				FONT_REGEX_BUTTON.dispose();
+				FontUtils.uncache( FONT_REGEX_BUTTON );
 				FONT_REGEX_BUTTON = null;
 			}
 		});
