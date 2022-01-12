@@ -37,6 +37,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
@@ -1453,6 +1454,28 @@ public class TorrentMenuFancy
 							});
 							itemFileSetResumeComplete.setEnabled(allStopped&&allResumeIncomplete);
 
+								// mask dl comp
+							
+							boolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );
+							
+							MenuItem itemMaskDLComp = new MenuItem(menu, SWT.CHECK);
+							
+							if ( dms.length == 1 ){
+								itemMaskDLComp.setSelection(
+									globalMask ||
+									dms[0].getDownloadState().getBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP ));
+							}
+							
+							Messages.setLanguageText(itemMaskDLComp,
+									"ConfigView.label.hap");
+							itemMaskDLComp.addListener(SWT.Selection, new ListenerDMTask(dms) {
+								@Override
+								public void run(DownloadManager dm) {
+									dm.getDownloadState().setBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP, itemMaskDLComp.getSelection());
+								}
+							});
+							
+							itemMaskDLComp.setEnabled( dms.length == 1 && !globalMask );
 
 
 							if (userMode > 1 && isSeedingView) {

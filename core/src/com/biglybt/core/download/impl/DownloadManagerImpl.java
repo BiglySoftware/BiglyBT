@@ -1081,6 +1081,8 @@ DownloadManagerImpl
 					 			initial_state == DownloadManager.STATE_STOPPED ||
 					 			initial_state == DownloadManager.STATE_QUEUED );
 
+				 controller.setDownloadManagerState( download_manager_state );
+				 
 				 readParameters();
 
 					// establish any file links
@@ -1552,6 +1554,8 @@ DownloadManagerImpl
 
 				download_manager_state	= DownloadManagerStateImpl.getDownloadState( this );
 
+				controller.setDownloadManagerState( download_manager_state );
+				
 					// make up something vaguely sensible for save location
 
 				if ( torrent_save_file == null ){

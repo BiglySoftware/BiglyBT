@@ -164,7 +164,8 @@ DownloadManagerController
 	private final AEMonitor	state_mon		= new AEMonitor( "DownloadManagerController:State" );
 	final AEMonitor	facade_mon		= new AEMonitor( "DownloadManagerController:Facade" );
 
-	final DownloadManagerImpl			download_manager;
+	final DownloadManagerImpl		download_manager;
+	DownloadManagerState			download_manager_state;
 	final DownloadManagerStatsImpl	stats;
 
 		// these are volatile as we want to ensure that if a state is read it is always the
@@ -192,11 +193,11 @@ DownloadManagerController
 	private boolean					cached_has_dnd_files;
 	private boolean         		cached_values_set;
 
-	Set<String>				cached_networks;
+	private Set<String>				cached_networks;
 	final Object					cached_networks_lock = new Object();
 
 	private PeerManagerRegistration	peer_manager_registration;
-	PEPeerManager 			peer_manager;
+	private PEPeerManager 			peer_manager;
 
 	private DownloadManagerStateAttributeListener	dm_attribute_listener;
 	
@@ -263,6 +264,13 @@ DownloadManagerController
 	}
 
 	protected void
+	setDownloadManagerState(
+		DownloadManagerState	dms )
+	{
+		download_manager_state = dms;
+	}
+	
+	protected void
 	setInitialState(
 		int	initial_state )
 	{
@@ -275,8 +283,6 @@ DownloadManagerController
 			setState( initial_state, true );
 		}
 
-		DownloadManagerState state = download_manager.getDownloadState();
-
 		TOTorrent torrent = download_manager.getTorrent();
 
 		if (torrent != null) {
@@ -284,7 +290,7 @@ DownloadManagerController
 			try{
 				peer_manager_registration = PeerManager.getSingleton().registerLegacyManager( torrent.getHashWrapper(), this );
 
-				md_info_dict_size = state.getIntAttribute( DownloadManagerState.AT_MD_INFO_DICT_SIZE );
+				md_info_dict_size = download_manager_state.getIntAttribute( DownloadManagerState.AT_MD_INFO_DICT_SIZE );
 
 				if ( md_info_dict_size == 0 ){
 
@@ -296,7 +302,7 @@ DownloadManagerController
 						md_info_dict_size = -1;
 					}
 
-					state.setIntAttribute( DownloadManagerState.AT_MD_INFO_DICT_SIZE, md_info_dict_size );
+					download_manager_state.setIntAttribute( DownloadManagerState.AT_MD_INFO_DICT_SIZE, md_info_dict_size );
 				}
 
 			}catch( TOTorrentException e ){
@@ -305,8 +311,8 @@ DownloadManagerController
 			}
 		}
 
-		if (state.parameterExists(DownloadManagerState.PARAM_DND_FLAGS)) {
-			long flags = state.getLongParameter(DownloadManagerState.PARAM_DND_FLAGS);
+		if (download_manager_state.parameterExists(DownloadManagerState.PARAM_DND_FLAGS)) {
+			long flags = download_manager_state.getLongParameter(DownloadManagerState.PARAM_DND_FLAGS);
 			cached_complete_excluding_dnd = (flags & STATE_FLAG_COMPLETE_NO_DND) != 0;
 			cached_has_dnd_files = (flags & STATE_FLAG_HASDND) != 0;
 			cached_values_set = true;
@@ -366,12 +372,17 @@ DownloadManagerController
 				DownloadManagerRateController.removePeerManager( peer_manager );
 
 				peer_manager	= null;
-				
-				download_manager.getDownloadState().removeListener(
+								
+				download_manager_state.removeListener(
 						dm_attribute_listener,
 						DownloadManagerState.AT_FLAGS,
 						DownloadManagerStateAttributeListener.WRITTEN );
 				
+				download_manager_state.removeListener(
+						dm_attribute_listener,
+						DownloadManagerState.AT_MASK_DL_COMP,
+						DownloadManagerStateAttributeListener.WRITTEN );
+
 				dm_attribute_listener = null;
 			}
 
@@ -595,8 +606,6 @@ DownloadManagerController
 					setPeerSources(
 						String[]	allowed_sources )
 					{
-						DownloadManagerState	dms = download_manager.getDownloadState();
-
 						String[]	sources = PEPeerSource.PS_SOURCES;
 
 						for (int i=0;i<sources.length;i++){
@@ -617,7 +626,7 @@ DownloadManagerController
 
 							if ( !ok ){
 
-								dms.setPeerSourcePermitted( s, false );
+								download_manager_state.setPeerSourcePermitted( s, false );
 							}
 						}
 
@@ -659,12 +668,17 @@ DownloadManagerController
 			control_mon.enter();
 
 			peer_manager = temp;
-
+			
 			if ( dm_attribute_listener != null ) {
 				
-				download_manager.getDownloadState().removeListener(
+				download_manager_state.removeListener(
 						dm_attribute_listener,
 						DownloadManagerState.AT_FLAGS,
+						DownloadManagerStateAttributeListener.WRITTEN );
+				
+				download_manager_state.removeListener(
+						dm_attribute_listener,
+						DownloadManagerState.AT_MASK_DL_COMP,
 						DownloadManagerStateAttributeListener.WRITTEN );
 			}
 			
@@ -673,12 +687,17 @@ DownloadManagerController
 				boolean	did_set;
 				
 				@Override
-				public void attributeEventOccurred(DownloadManager download, String attribute, int event_type){
+				public void 
+				attributeEventOccurred(
+					DownloadManager download, 
+					String attribute, 
+					int event_type)
+				{
 					
 						// this fires on any flag change so make sure we only clear the seq flag if we set it
 						// otherwise this interferes with other seq settings
 					
-					boolean seq = download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD );
+					boolean seq = download_manager_state.getFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD );
 					
 					PiecePicker pp = temp.getPiecePicker();
 					
@@ -698,14 +717,23 @@ DownloadManagerController
 							pp.clearSequential();
 						}
 					}
+					
+					boolean mask = download_manager_state.getBooleanAttribute(DownloadManagerState.AT_MASK_DL_COMP );
+
+					temp.setMaskDownloadCompletion( mask );
 				}
 			};
 			
-			download_manager.getDownloadState().addListener(
+			download_manager_state.addListener(
 					dm_attribute_listener,
 					DownloadManagerState.AT_FLAGS,
 					DownloadManagerStateAttributeListener.WRITTEN );
 			
+			download_manager_state.addListener(
+					dm_attribute_listener,
+					DownloadManagerState.AT_MASK_DL_COMP,
+					DownloadManagerStateAttributeListener.WRITTEN );
+
 			dm_attribute_listener.attributeEventOccurred( null, null, -1 );	// set initial state
 			
 			DownloadManagerRateController.addPeerManager( peer_manager );
@@ -857,7 +885,7 @@ DownloadManagerController
 
 				// remove resume data
 
-	  		download_manager.getDownloadState().clearResumeData();
+			download_manager_state.clearResumeData();
 
 	  			// For extra protection from a plugin stopping a checking torrent,
 	  			// fake a forced start.
@@ -1004,18 +1032,20 @@ DownloadManagerController
 
 								stats.saveSessionTotals();
 
-								DownloadManagerState dmState = download_manager.getDownloadState();
-
-								dmState.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_LAST_ACTIVE_TIME, SystemTime.getCurrentTime());
+								download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_LAST_ACTIVE_TIME, SystemTime.getCurrentTime());
 
 								SimpleTimer.removeTickReceiver( DownloadManagerController.this );
 
 								DownloadManagerRateController.removePeerManager( peer_manager );
 
-
-								download_manager.getDownloadState().removeListener(
+								download_manager_state.removeListener(
 										dm_attribute_listener,
 										DownloadManagerState.AT_FLAGS,
+										DownloadManagerStateAttributeListener.WRITTEN );
+								
+								download_manager_state.removeListener(
+										dm_attribute_listener,
+										DownloadManagerState.AT_MASK_DL_COMP,
 										DownloadManagerStateAttributeListener.WRITTEN );
 
 								dm_attribute_listener = null;
@@ -1070,7 +1100,7 @@ DownloadManagerController
 								// we don't want to update the torrent if we're seeding
 
 								if ( !download_manager.getAssumedComplete()){
-									download_manager.getDownloadState().save(false);
+									download_manager_state.save(false);
 								}
 
 								setDiskManager( null, null );
@@ -1391,7 +1421,7 @@ DownloadManagerController
 		stopIt( DownloadManager.STATE_STOPPED, false, false, false );
 
 		if (forceRecheck) {
-			download_manager.getDownloadState().clearResumeData();
+			download_manager_state.clearResumeData();
 		}
 
 		download_manager.initialize();
@@ -1418,26 +1448,24 @@ DownloadManagerController
 	@Override
 	public void 
 	saveTorrentState()
-	{
-		DownloadManagerState dms = download_manager.getDownloadState();
-	
-		TOTorrent dms_torrent = dms.getTorrent();
+	{	
+		TOTorrent dms_torrent = download_manager_state.getTorrent();
 		
 		if ( dms_torrent.getEffectiveTorrentType() == TOTorrent.TT_V2 ){
 		
-			if ( !dms.getBooleanAttribute( DownloadManagerState.AT_TORRENT_EXPORT_PROPAGATED )){
+			if ( !download_manager_state.getBooleanAttribute( DownloadManagerState.AT_TORRENT_EXPORT_PROPAGATED )){
 
 					// this attribute is a hack to get the torrent to be serialised via the 'save'
 				
-				dms.setLongAttribute( DownloadManagerState.AT_TORRENT_SAVE_TIME, SystemTime.getCurrentTime());	
+				download_manager_state.setLongAttribute( DownloadManagerState.AT_TORRENT_SAVE_TIME, SystemTime.getCurrentTime());	
 			
-				dms.save( false );
+				download_manager_state.save( false );
 			
 				if ( dms_torrent.isExportable()){
 				
 					if ( TorrentUtils.propagateExportability( dms_torrent, FileUtil.newFile( download_manager.getTorrentFileName()))){
 						
-						dms.setBooleanAttribute( DownloadManagerState.AT_TORRENT_EXPORT_PROPAGATED, true );
+						download_manager_state.setBooleanAttribute( DownloadManagerState.AT_TORRENT_EXPORT_PROPAGATED, true );
 					}
 				}
 			}
@@ -1449,7 +1477,7 @@ DownloadManagerController
 	isPeerSourceEnabled(
 		String		peer_source )
 	{
-		return( download_manager.getDownloadState().isPeerSourceEnabled( peer_source ));
+		return( download_manager_state.isPeerSourceEnabled( peer_source ));
 	}
 
 	private void
@@ -1462,11 +1490,9 @@ DownloadManagerController
 				return;
 			}
 
-			DownloadManagerState state = download_manager.getDownloadState();
+			cached_networks = new HashSet<>(Arrays.asList(download_manager_state.getNetworks()));
 
-			cached_networks = new HashSet<>(Arrays.asList(state.getNetworks()));
-
-			state.addListener(
+			download_manager_state.addListener(
 				new DownloadManagerStateAttributeListener()
 				{
 					@Override
@@ -1476,11 +1502,9 @@ DownloadManagerController
 						String 				attribute,
 						int 				event_type )
 					{
-						DownloadManagerState state = download_manager.getDownloadState();
-
 						synchronized( cached_networks_lock ){
 
-							cached_networks = new HashSet<>(Arrays.asList(state.getNetworks()));
+							cached_networks = new HashSet<>(Arrays.asList(download_manager_state.getNetworks()));
 						}
 
 						PEPeerManager	pm = peer_manager;
@@ -1508,7 +1532,7 @@ DownloadManagerController
 
 		if ( cache == null ){
 
-			return( download_manager.getDownloadState().isNetworkEnabled( network ));
+			return( download_manager_state.isNetworkEnabled( network ));
 		}else{
 
 			return( cache.contains( network ));
@@ -1523,7 +1547,7 @@ DownloadManagerController
 
 		if ( cache == null ){
 
-			return( download_manager.getDownloadState().getNetworks());
+			return( download_manager_state.getNetworks());
 
 		}else{
 
@@ -1643,7 +1667,7 @@ DownloadManagerController
 
 		throws TOTorrentException
 	{
-		Map	secrets_map = download_manager.getDownloadState().getMapAttribute( DownloadManagerState.AT_SECRETS );
+		Map	secrets_map = download_manager_state.getMapAttribute( DownloadManagerState.AT_SECRETS );
 
 		if ( secrets_map == null ){
 
@@ -1676,7 +1700,7 @@ DownloadManagerController
 				secrets_map.put( "p1", torrent.getPieces()[0] );
 			}
 
-			download_manager.getDownloadState().setMapAttribute( DownloadManagerState.AT_SECRETS, secrets_map );
+			download_manager_state.setMapAttribute( DownloadManagerState.AT_SECRETS, secrets_map );
 		}
 
 		return((byte[])secrets_map.get( "p1" ));
@@ -1694,7 +1718,7 @@ DownloadManagerController
 	public long
 	getRandomSeed()
 	{
-		return( download_manager.getDownloadState().getLongParameter( DownloadManagerState.PARAM_RANDOM_SEED ));
+		return( download_manager_state.getLongParameter( DownloadManagerState.PARAM_RANDOM_SEED ));
 	}
 
 	public void
@@ -2270,10 +2294,10 @@ DownloadManagerController
 		cached_complete_excluding_dnd = complete_excluding_dnd;
 		cached_has_dnd_files = has_dnd_files;
 		cached_values_set = true;
-		DownloadManagerState state = download_manager.getDownloadState();
+		
 		long flags = (cached_complete_excluding_dnd ? STATE_FLAG_COMPLETE_NO_DND : 0) |
 								 (cached_has_dnd_files ? STATE_FLAG_HASDND : 0);
-		state.setLongParameter(DownloadManagerState.PARAM_DND_FLAGS, flags);
+		download_manager_state.setLongParameter(DownloadManagerState.PARAM_DND_FLAGS, flags);
 	}
 
 	/**
@@ -2586,7 +2610,7 @@ DownloadManagerController
 	public boolean
 	isPeerExchangeEnabled()
 	{
-		return( download_manager.getDownloadState().isPeerSourceEnabled( PEPeerSource.PS_OTHER_PEER ));
+		return( download_manager_state.isPeerSourceEnabled( PEPeerSource.PS_OTHER_PEER ));
 	}
 
 	@Override
@@ -2600,7 +2624,7 @@ DownloadManagerController
 	public boolean
 	isPeriodicRescanEnabled()
 	{
-		return( download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_SCAN_INCOMPLETE_PIECES ));
+		return( download_manager_state.getFlag( DownloadManagerState.FLAG_SCAN_INCOMPLETE_PIECES ));
 	}
 
 	@Override
@@ -2614,7 +2638,7 @@ DownloadManagerController
 	public String
 	getTrackerClientExtensions()
 	{
-		return( download_manager.getDownloadState().getTrackerClientExtensions());
+		return( download_manager_state.getTrackerClientExtensions());
 	}
 
 	@Override
@@ -2636,7 +2660,7 @@ DownloadManagerController
 	public boolean
 	isMetadataDownload()
 	{
-		return( download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD ));
+		return( download_manager_state.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD ));
 	}
 
 	@Override
@@ -3735,7 +3759,7 @@ DownloadManagerController
 
 								setFailed( "File check failed" );
 
-								download_manager.getDownloadState().clearResumeData();
+								download_manager_state.clearResumeData();
 
 							}else{
 
@@ -3771,7 +3795,7 @@ DownloadManagerController
 								stats.setSavedDownloadedUploaded( download_manager.getSize()*dl_copies, stats.getTotalDataBytesSent());
 							}
 
-							download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_ONLY_EVER_SEEDED, true );
+							download_manager_state.setFlag( DownloadManagerState.FLAG_ONLY_EVER_SEEDED, true );
 						}
 					}
 
@@ -3781,7 +3805,7 @@ DownloadManagerController
 					 * discard fluff once tentatively, will save memory for many active, seeding torrent-cases
 					 */
 					if ( completed == 1000 ){
-						download_manager.getDownloadState().discardFluff();
+						download_manager_state.discardFluff();
 					}
 				}
 			}finally{

@@ -1057,6 +1057,27 @@ public class TorrentUtil
 		});
 		itemFileSetResumeComplete.setEnabled(allStopped&&allResumeIncomplete);
 
+		// mask dl comp
+		
+		boolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );
+		
+		MenuItem itemMaskDLComp = new MenuItem(menuFiles, SWT.CHECK);
+		
+		if ( dms.length == 1 ){
+			itemMaskDLComp.setSelection(
+				globalMask ||
+				dms[0].getDownloadState().getBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP ));
+		}
+		
+		Messages.setLanguageText(itemMaskDLComp,
+				"ConfigView.label.hap");
+		itemMaskDLComp.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager dm) {
+				dm.getDownloadState().setBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP, itemMaskDLComp.getSelection());
+			}
+		});
+
 			// Advanced -> archive
 
 		final List<Download>	ar_dms = new ArrayList<>();

@@ -130,7 +130,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	// config
 
-	private static boolean disconnect_seeds_when_seeding;
+	private static boolean global_disconnect_seeds_when_seeding;
 	private static boolean enable_seeding_piece_rechecks;
 	private static int stalled_piece_timeout;
 	private static boolean fast_unchoke_new_peers;
@@ -139,7 +139,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	private static boolean udp_fallback_for_failed_connection;
 	private static boolean udp_fallback_for_dropped_connection;
 	private static boolean udp_probe_enabled;
-	private static boolean hide_a_piece;
+	private static boolean global_hide_a_piece;
+	private static boolean global_hide_a_piece_ds;
 	private static boolean prefer_udp_default;
 	private static int		dual_ipv4_ipv6_connection_action;
 	
@@ -162,7 +163,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				new ParameterListener(){
 					@Override
 					public void parameterChanged(String name){
-						disconnect_seeds_when_seeding = COConfigurationManager.getBooleanParameter("Disconnect Seed");
+						global_disconnect_seeds_when_seeding = COConfigurationManager.getBooleanParameter("Disconnect Seed");
 						enable_seeding_piece_rechecks = COConfigurationManager.getBooleanParameter("Seeding Piece Check Recheck Enable");
 						stalled_piece_timeout = COConfigurationManager.getIntParameter("peercontrol.stalled.piece.write.timeout", 60 * 1000);
 						fast_unchoke_new_peers = COConfigurationManager.getBooleanParameter("Peer.Fast.Initial.Unchoke.Enabled");
@@ -171,13 +172,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 						udp_fallback_for_failed_connection = COConfigurationManager.getBooleanParameter("peercontrol.udp.fallback.connect.fail");
 						udp_fallback_for_dropped_connection = COConfigurationManager.getBooleanParameter("peercontrol.udp.fallback.connect.drop");
 						udp_probe_enabled = COConfigurationManager.getBooleanParameter("peercontrol.udp.probe.enable");
-						hide_a_piece = COConfigurationManager.getBooleanParameter("peercontrol.hide.piece");
-						boolean hide_a_piece_ds = COConfigurationManager.getBooleanParameter("peercontrol.hide.piece.ds");
-
-						if(hide_a_piece && !hide_a_piece_ds){
-
-							disconnect_seeds_when_seeding = false;
-						}
+						global_hide_a_piece = COConfigurationManager.getBooleanParameter("peercontrol.hide.piece");
+						global_hide_a_piece_ds = COConfigurationManager.getBooleanParameter("peercontrol.hide.piece.ds");
 
 						prefer_udp_default = COConfigurationManager.getBooleanParameter("peercontrol.prefer.udp");
 						
@@ -308,6 +304,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	private int superSeedModeNumberOfAnnounces;
 	private SuperSeedPiece[] superSeedPieces;
 
+	private boolean local_hide_a_piece;
 	private int hidden_piece;
 
 	private static final int OB_PS_STATS_HISTORY_SIZE = 100;
@@ -531,8 +528,13 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	private final MyPeer my_peer = new MyPeer();
 
-	public PEPeerControlImpl(byte[] _peer_id, PEPeerManagerAdapter _adapter, DiskManager _diskManager,
-			int _partition_id){
+	public 
+	PEPeerControlImpl(
+		byte[] _peer_id, 
+		PEPeerManagerAdapter _adapter, 
+		DiskManager _diskManager,
+		int _partition_id )
+	{
 		_myPeerId = _peer_id;
 		adapter = _adapter;
 		disk_mgr = _diskManager;
@@ -589,8 +591,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		pePieces = new PEPieceImpl[_nbPieces];
 
-		hidden_piece = hide_a_piece ? ((int) (Math.abs(adapter.getRandomSeed()) % _nbPieces)) : -1;
-
+		initHiddenPiece();
+		
 		/*
 		 * if ( hidden_piece >= 0 ){
 		 * 
@@ -1398,7 +1400,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			return("Peer source '" + peer_source + "' is not enabled");
 		}
 
-		if(seeding_mode && disconnect_seeds_when_seeding){
+		if(seeding_mode && disconnectSeedsWhenSeeding()){
 
 			String key = address + ":" + tcp_port;
 
@@ -1667,14 +1669,20 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 						}
 					}
 				}
-
 			}
 
-			if(hidden_piece >= 0){
+			/*
+			 * Not sure when this code was added but it changes the hidden piece based on availability
+			 * I guess the intent was to work around a hidden piece happening to be stalling a download
+			 * when nobody else had it but us. 
+			 * However, changing the piece borks things and it was never designed to be changed so 
+			 * I'm removing this. If you don't like it talk to parg
+			 
+			if ( hidden_piece >= 0 ){
 
 				int hp_avail = piecePicker.getAvailability(hidden_piece);
 
-				if(hp_avail < (dm_pieces[hidden_piece].isDone() ? 2 : 1)){
+				if (hp_avail < (dm_pieces[hidden_piece].isDone() ? 2 : 1)){
 
 					int[] avails = piecePicker.getAvailability();
 
@@ -1694,16 +1702,16 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 						int backup = -1;
 
-						for(int i = 0; i < avails.length; i++){
+						for (int i = 0; i < avails.length; i++){
 
-							if(avails[i] > 0 && !dm_pieces[i].isDone() && pePieces[i] == null){
+							if ( avails[i] > 0 && !dm_pieces[i].isDone() && pePieces[i] == null ){
 
-								if(backup == -1){
+								if ( backup == -1 ){
 
 									backup = i;
 								}
 
-								if(num == 0){
+								if ( num == 0 ){
 
 									hidden_piece = i;
 
@@ -1716,13 +1724,14 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 							}
 						}
 
-						if(backup != -1){
+						if (backup != -1){
 
 							hidden_piece = backup;
 						}
 					}
 				}
 			}
+			*/
 		}
 	}
 
@@ -2504,7 +2513,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			return;
 		}
 
-		if(!disconnect_seeds_when_seeding){
+		if(!disconnectSeedsWhenSeeding()){
 			return;
 		}
 
@@ -3609,7 +3618,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			last_seed_disconnect_time = SystemTime.getCurrentTime();
 
-			if(seeding_mode && disconnect_seeds_when_seeding){
+			if(seeding_mode && disconnectSeedsWhenSeeding()){
 
 				String key = pc.getIp() + ":" + pc.getTCPListenPort();
 
@@ -5862,19 +5871,69 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 	}
 
+	private boolean
+	disconnectSeedsWhenSeeding()
+	{
+		if ( hidden_piece < 0 ){
+			
+			return( global_disconnect_seeds_when_seeding );
+			
+		}else{
+			
+			return( global_hide_a_piece_ds );
+		}
+	}
+	
+	private void
+	initHiddenPiece()
+	{
+		boolean was_hp = hidden_piece >= 0;
+		
+		hidden_piece = ( global_hide_a_piece || local_hide_a_piece )? ((int) (Math.abs(adapter.getRandomSeed()) % _nbPieces)) : -1;
+		
+		if ( was_hp != ( hidden_piece >= 0 )){
+			
+			removeAllPeers( "Hidden piece changed" );
+		}
+	}
+	
 	@Override
-	public long getHiddenBytes(){
-		if(hidden_piece < 0){
+	public void
+	setMaskDownloadCompletion(
+		boolean	mask )
+	{
+		if ( mask == local_hide_a_piece ){
+			
+			return;
+		}
+		
+		local_hide_a_piece = mask;
+		
+		if ( global_hide_a_piece ){
+			
+			return;
+		}
+		
+		initHiddenPiece();
+	}
+	
+	@Override
+	public long 
+	getHiddenBytes()
+	{
+		if ( hidden_piece < 0 ){
 
-			return(0);
+			return( 0 );
 		}
 
-		return(dm_pieces[hidden_piece].getLength());
+		return( dm_pieces[hidden_piece].getLength());
 	}
 
 	@Override
-	public int getHiddenPiece(){
-		return(hidden_piece);
+	public int 
+	getHiddenPiece()
+	{
+		return( hidden_piece );
 	}
 
 	@Override

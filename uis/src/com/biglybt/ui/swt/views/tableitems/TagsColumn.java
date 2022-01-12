@@ -243,7 +243,7 @@ TagsColumn
 		
 
 		int maxLines = cell.getMaxLines();
-		if (maxLines == 1) {
+		if (maxLines <= 1) {
 			if (fontOneLine == null) {
 				fontOneLine = FontUtils.getFontWithHeight(oldFont,
 						(int) (FontUtils.getFontHeightInPX(oldFont) - 2), SWT.DEFAULT);

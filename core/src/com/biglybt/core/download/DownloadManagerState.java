@@ -91,6 +91,7 @@ DownloadManagerState
 	public static final String AT_TORRENT_SAVE_TIME			= "tst";			// long
 	public static final String AT_TORRENT_EXPORT_PROPAGATED	= "tep";			// bool
 	public static final String AT_SWARM_TAGS				= "stag";			// list
+	public static final String AT_MASK_DL_COMP				= "mdlc";			// bool
 	
 	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
 

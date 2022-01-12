@@ -121,6 +121,8 @@ PEPeerManager
 
 	public long getRemaining();
 
+	public int getHiddenPiece();
+
 	public long getHiddenBytes();
 
 	public long getETA( boolean smoothed );
@@ -432,6 +434,10 @@ PEPeerManager
 	public int
 	getPartitionID();
 
+	public void
+	setMaskDownloadCompletion(
+		boolean	mask );
+	
 	public void
 	removeAllPeers(
 		String		reason );

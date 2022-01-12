@@ -1695,6 +1695,10 @@ public class PeerManager implements CoreStatsProvider {
 			getPartitionID(){ log(); return( 0 ); }
 
 			public void
+			setMaskDownloadCompletion(
+				boolean	mask ){ log(); }
+			
+			public void
 			removeAllPeers(
 					String		reason ){log(); }
 
