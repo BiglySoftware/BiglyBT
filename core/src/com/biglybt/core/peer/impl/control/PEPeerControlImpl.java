@@ -4540,13 +4540,13 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 
 		// Find a piece
-		boolean found = false;
+	
 		SuperSeedPiece piece = null;
 		boolean loopdone = false; // add loop status
 
-		while(!found){
+		while( true ){
 			piece = superSeedPieces[superSeedModeCurrentPiece];
-			if(piece.getLevel() > 0){
+			if ( piece.getLevel() > 0 || superSeedModeCurrentPiece == hidden_piece ){
 				piece = null;
 				superSeedModeCurrentPiece++;
 				if(superSeedModeCurrentPiece >= _nbPieces){
@@ -4565,7 +4565,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 					}
 				}
 			}else{
-				found = true;
+				break;	// piece ready to be allocated
 			}
 		}
 
