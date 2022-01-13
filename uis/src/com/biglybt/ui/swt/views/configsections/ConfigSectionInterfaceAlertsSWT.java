@@ -21,16 +21,10 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.pifimpl.local.ui.config.*;

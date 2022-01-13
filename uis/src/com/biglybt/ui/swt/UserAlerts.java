@@ -26,13 +26,9 @@ import java.awt.TrayIcon;
 import java.awt.TrayIcon.MessageType;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
 
 import com.biglybt.activities.ActivitiesConstants;
 import com.biglybt.activities.ActivitiesEntry;
@@ -54,7 +50,6 @@ import com.biglybt.core.util.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
-import com.biglybt.plugin.net.buddy.swt.BuddyPluginView;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.platform.PlatformManagerException;

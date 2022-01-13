@@ -28,6 +28,8 @@ import java.util.regex.Pattern;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineListener;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -591,6 +593,21 @@ GeneralUtils
 					
 				    Clip clip = AudioSystem.getClip();
 		
+				    clip.addLineListener(
+				    	new LineListener(){
+							
+							@Override
+							public void 
+							update(
+								LineEvent event)
+							{
+								if ( event.getType() == LineEvent.Type.STOP ){
+									
+									clip.close();
+								}
+							}
+						});
+						
 				    clip.open( ais );
 				        
 				    clip.start();
