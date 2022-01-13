@@ -53,7 +53,7 @@ TablePaintedUtils
 			});
 	}
 	
-	protected static boolean
+	public static boolean
 	isDark()
 	{
 		return( is_dark );

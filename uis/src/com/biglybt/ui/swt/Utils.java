@@ -89,7 +89,7 @@ import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.systray.TrayItemDelegate;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.SWTRunnable;
-
+import com.biglybt.ui.swt.views.table.painted.TablePaintedUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.disk.DiskManagerEvent;
@@ -936,7 +936,7 @@ public class Utils
 			return;
 		Color[] colors = {
 			Colors.getSystemColor(item.getDisplay(), SWT.COLOR_LIST_BACKGROUND),
-			Colors.colorAltRow
+			TablePaintedUtils.isDark()?Colors.colorAltRowDefault:Colors.colorAltRow
 		};
 		Color newColor = colors[item.getParent().indexOf(item) % colors.length];
 		if (!item.getBackground().equals(newColor)) {
@@ -965,7 +965,7 @@ public class Utils
 
 		Color[] colors = {
 			Colors.getSystemColor(table.getDisplay(), SWT.COLOR_LIST_BACKGROUND),
-			Colors.colorAltRow
+			TablePaintedUtils.isDark()?Colors.colorAltRowDefault:Colors.colorAltRow
 		};
 		int iFixedIndex = iTopIndex;
 		for (int i = iTopIndex; i <= iBottomIndex; i++) {

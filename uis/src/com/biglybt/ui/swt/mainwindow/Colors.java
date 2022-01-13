@@ -62,6 +62,7 @@ public class Colors implements ParameterListener {
   public static Color colorShiftRight;
   public static Color colorError;
   public static Color colorErrorBG;
+  public static Color colorAltRowDefault;	// Hack for non-dark tables when "dark tables" enabled
   public static Color colorAltRow;
   public static Color colorWarning;
   public static Color black;
@@ -381,6 +382,7 @@ public class Colors implements ParameterListener {
 		background = ColorCache.getColor(display, 248, 248, 248);
 		red_ConsoleView = ColorCache.getColor(display, 255, 192, 192);
 		cyan = ColorCache.getColor(display, 0, 255, 255);
+		colorAltRowDefault = ColorCache.getColor( display, 240,244,250);
 		
 		allocateColorWarning();
 		allocateColorError();
