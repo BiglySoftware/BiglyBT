@@ -24,8 +24,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.NoRouteToHostException;
-import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
 
@@ -36,8 +34,6 @@ import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
-import com.biglybt.core.proxy.AEProxyFactory;
-import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
@@ -84,10 +80,6 @@ import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.ui.tables.TableRow;
 import com.biglybt.pif.utils.LocaleListener;
 import com.biglybt.pif.utils.LocaleUtilities;
-import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
-import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderAdapter;
-import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderException;
-import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderFactory;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -911,6 +903,8 @@ MagnetPlugin
 		
 		boolean recover = magnet_recovery.getValue();
 
+		Set<String>	active_hashes = new HashSet<>(active.size());
+		
 		if ( recover && !active.isEmpty()){
 		
 			int conc = magnet_recovery_concurrency.getValue();
@@ -954,6 +948,8 @@ MagnetPlugin
 					
 				try{
 					byte[]	hash = (byte[])map.get( "hash" );
+					
+					active_hashes.add( ByteFormatter.encodeString( hash ));
 					
 					String args = MapUtils.getMapString( map, "args", "" );
 					
@@ -1099,6 +1095,41 @@ MagnetPlugin
 				}
 			}
 		}
+		
+		AEThread2.createAndStartDaemon( "MagnetPlugin:mdtidy", ()->{
+			
+			try{
+				File torrents_dir = FileUtil.getUserFile( "torrents" );
+
+				File md_dir = FileUtil.newFile( torrents_dir, "md" );
+				
+				File[] files = md_dir.listFiles();
+				
+				if ( files != null ){
+					
+					long now = SystemTime.getCurrentTime();
+					
+					for ( File f: files ){
+						
+						if ( now - f.lastModified() > 24*60*60*1000 ){
+					
+							String name = f.getName();
+							
+							if ( name.length() == 40 &&  !active_hashes.contains( name )){
+								
+								Debug.outNoStack( "Deleting dead magnet download storage for " + name );
+								
+								FileUtil.recursiveDeleteNoCheck( f );
+							}
+						}
+					}
+				}
+
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		});
 	}
 	
 	private void
