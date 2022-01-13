@@ -1635,8 +1635,12 @@ CoreImpl
 
 			return;
 		}
+		
+		int stall_mins = Math.max( 2, COConfigurationManager.getIntParameter( ConfigKeys.StartupShutdown.ICFG_STOP_FORCE_TERMINATE_AFTER ));
+		
+		long stall_millis = stall_mins * 60 * 1000;
 
-		final AtomicLong last_progress = new AtomicLong( SystemTime.getMonotonousTime());
+		AtomicLong last_progress = new AtomicLong( SystemTime.getMonotonousTime() );
 		
 		SimpleTimer.addEvent(
 			"ShutFail",
@@ -1657,12 +1661,10 @@ CoreImpl
 					
 						Logger.setClosingTakingTooLong();
 					}
-					
-					last_progress.set( SystemTime.getMonotonousTime());
-					
+										
 						// hang around while things are making progress
 					
-					while( SystemTime.getMonotonousTime() - last_progress.get() < 30*1000 ){
+					while( SystemTime.getMonotonousTime() - last_progress.get() < stall_millis ){
 						
 						try{
 							Thread.sleep(5000);
@@ -1816,6 +1818,8 @@ CoreImpl
 							int percent)
 						{
 							callback.setProgress( p_start + ((p_end-p_start)*percent)/100 );
+							
+							last_progress.set( SystemTime.getMonotonousTime());
 						}
 						
 						@Override
@@ -1824,6 +1828,8 @@ CoreImpl
 							String currentTask )
 						{
 							callback.setSubTaskName( currentTask );
+							
+							last_progress.set( SystemTime.getMonotonousTime());
 						}
 					});
 			}

@@ -283,6 +283,7 @@ public class ConfigurationDefaults {
     def.put("On Downloading Complete Do", "Nothing" );
     def.put("On Seeding Complete Do", "Nothing" );
     def.put("Stop Triggers Auto Reset", TRUE );
+    def.put( ConfigKeys.StartupShutdown.ICFG_STOP_FORCE_TERMINATE_AFTER, 2 );
     def.put("Prompt To Abort Shutdown", TRUE );
     def.put("Prevent Sleep Downloading", TRUE );
     def.put("Prevent Sleep FP Seeding", FALSE );

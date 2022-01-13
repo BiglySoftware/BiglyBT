@@ -202,13 +202,18 @@ public class ConfigSectionStartShutdown
 		enablePrompt.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add(enablePrompt, Parameter.MODE_INTERMEDIATE, listStop);
 
+		IntParameterImpl paramTerminateAfter = new IntParameterImpl(
+				ICFG_STOP_FORCE_TERMINATE_AFTER, "ConfigView.label.stop.term.after", 2, 100000);
+		paramTerminateAfter.setSuffixLabelKey("ConfigView.text.minutes");
+		add(paramTerminateAfter, Parameter.MODE_INTERMEDIATE, listStop);
+		
 		add("pgStop", new ParameterGroupImpl("ConfigView.label.stop", listStop));
-
+		
+		
 		//// Restart
 
 		IntParameterImpl paramRestartWhenIdle = new IntParameterImpl(
-				ICFG_AUTO_RESTART_WHEN_IDLE, "ConfigView.label.restart.auto", 0,
-				100000);
+				ICFG_AUTO_RESTART_WHEN_IDLE, "ConfigView.label.restart.auto", 0, 100000);
 		paramRestartWhenIdle.setSuffixLabelKey("ConfigView.text.minutes");
 		add(paramRestartWhenIdle);
 		paramRestartWhenIdle.setMinimumRequiredUserMode(

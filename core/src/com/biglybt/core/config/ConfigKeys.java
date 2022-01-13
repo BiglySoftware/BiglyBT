@@ -290,6 +290,7 @@ public final class ConfigKeys {
 		public static final String BCFG_RESUME_DOWNLOADS_ON_START = "Resume Downloads On Start";
 		public static final String BCFG_STOP_TRIGGERS_AUTO_RESET = "Stop Triggers Auto Reset";
 		public static final String BCFG_PROMPT_TO_ABORT_SHUTDOWN = "Prompt To Abort Shutdown";
+		public static final String ICFG_STOP_FORCE_TERMINATE_AFTER = "Force Terminate After Mins";
 		public static final String ICFG_AUTO_RESTART_WHEN_IDLE = "Auto Restart When Idle";
 		public static final String SCFG_ON_DOWNLOADING_COMPLETE_DO = "On Downloading Complete Do";
 		public static final String SCFG_ON_DOWNLOADING_COMPLETE_SCRIPT = "On Downloading Complete Script";
