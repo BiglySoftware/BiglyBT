@@ -142,7 +142,7 @@ public class FontUtils
 			key.append( "/" );
 			key.append( d.getStyle());
 			key.append( "/" );
-			key.append( d.getHeight());
+			key.append( getHeight(d));
 		}
 		
 		return( key.toString());
@@ -236,14 +236,18 @@ public class FontUtils
 	}
 
 	public static float getHeight(FontData[] fd) {
+		return( getHeight( fd[0] ));
+	}
+
+	public static float getHeight(FontData fd) {
 		if (mFontData_GetHeightF != null) {
 			try {
-				return ((Number) mFontData_GetHeightF.invoke(fd[0], new Object[] {})).floatValue();
+				return ((Number) mFontData_GetHeightF.invoke(fd, new Object[] {})).floatValue();
 			} catch (Throwable ignore) {
 			}
 		}
 
-		return fd[0].getHeight();
+		return fd.getHeight();
 	}
 
 	public static Font getFontWithStyle(Font baseFont, int style,
