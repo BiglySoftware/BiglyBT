@@ -699,142 +699,154 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 
     	if ( con instanceof HttpURLConnection ){
 
-	        Thread	status_reader =
-	        	new AEThread( "TorrentDownloader:statusreader" )
-				{
-	        		@Override
-			        public void
-					runSupport()
-	        		{
+    		TimerEventPeriodic[] ev = { null };
+    			
+    		try{
+				this_mon.enter();
+	    		
+				ev[0] = SimpleTimer.addPeriodicEvent(
+	    			"TorrentDownloader:statusreader", 100,
+	    			new TimerEventPerformer(){
+						
 	        			HttpURLConnection http_con = (HttpURLConnection)con;
-
+	
 	        			boolean changed_status	= false;
 	        			String	last_status		= "";
-
-	        			boolean	sleep = false;
-
+	
 	        			long	last_progress_update = SystemTime.getMonotonousTime();
-
-	        			while( true ){
-
+	
+						@Override
+						public void 
+						perform(
+							TimerEvent event )
+						{
+							TimerEventPeriodic	to_cancel = null;
+							
 	        				try{
-	        					if ( sleep ){
-
-	        						Thread.sleep(50);
-
-	        						sleep = false;
-	        					}
-
+	        					
 	        					try{
 	        						this_mon.enter();
-
+	
 	        						if ( !status_reader_run[0] ){
-
-	        							break;
+	
+	        							to_cancel = ev[0];
 	        						}
 	        					}finally{
-
+	
 	        						this_mon.exit();
 	        					}
-
-	        					String	s = http_con.getResponseMessage();
-
-	        					if ( s.equals( last_status )){
-
-	        						sleep = true;
-
-	        					}else{
-
-	        						last_status = s;
-
-	        						String lc_s = s.toLowerCase();
-
-	        						if ( !lc_s.startsWith("error:")){
-
-	        							if (s.toLowerCase().contains("alive")){
-
-	        								if ( percentDone < 10 ){
-
-	        									percentDone++;
-	        								}
-	        							}
-
-	        							boolean progress_update = false;
-
-	        	     					int	pos = s.indexOf( '%' );
-
-	                					if ( pos != -1 ){
-
-	                						int	 i;
-
-	                						for ( i=pos-1;i>=0;i--){
-
-	                							char	c = s.charAt(i);
-
-	                							if ( !Character.isDigit( c ) && c != ' ' ){
-
-	                								i++;
-
-	                								break;
-	                							}
-	                						}
-
-	                						try{
-
-	                								// keep < 100 until all done as there's some crappy code out there that treats
-	                								// 100% as done prematurely 
-	                							
-	                							percentDone = Math.min( 99, Integer.parseInt( s.substring( i, pos ).trim()));	
-	                							
-	                							progress_update = true;
-
-	                						}catch( Throwable e ){
-
-	                						}
-	                					}
-
-	                					if ( lc_s.startsWith("received")){
-
-	                						progress_update = true;
-	                					}
-
-	                					if ( progress_update ){
-
-	                						long now = SystemTime.getMonotonousTime();
-
-	                						if ( now - last_progress_update < 250 ){
-
-	                							continue;
-	                						}
-
-	                						last_progress_update = now;
-	                					}
-
-	        							setStatus(s);
-	        						}else{
-
-	        							error(http_con.getResponseCode(), s.substring(6));
-	        						}
-
-	        						changed_status	= true;
+	
+	        					if ( to_cancel == null ){
+	        						
+		        					String	s = http_con.getResponseMessage();
+		
+		        					if ( !s.equals( last_status )){
+		
+		        						last_status = s;
+		
+		        						String lc_s = s.toLowerCase();
+		
+		        						if ( !lc_s.startsWith("error:")){
+		
+		        							if (s.toLowerCase().contains("alive")){
+		
+		        								if ( percentDone < 10 ){
+		
+		        									percentDone++;
+		        								}
+		        							}
+		
+		        							boolean progress_update = false;
+		
+		        	     					int	pos = s.indexOf( '%' );
+		
+		                					if ( pos != -1 ){
+		
+		                						int	 i;
+		
+		                						for ( i=pos-1;i>=0;i--){
+		
+		                							char	c = s.charAt(i);
+		
+		                							if ( !Character.isDigit( c ) && c != ' ' ){
+		
+		                								i++;
+		
+		                								break;
+		                							}
+		                						}
+		
+		                						try{
+		
+		                								// keep < 100 until all done as there's some crappy code out there that treats
+		                								// 100% as done prematurely 
+		                							
+		                							percentDone = Math.min( 99, Integer.parseInt( s.substring( i, pos ).trim()));	
+		                							
+		                							progress_update = true;
+		
+		                						}catch( Throwable e ){
+		
+		                						}
+		                					}
+		
+		                					if ( lc_s.startsWith("received")){
+		
+		                						progress_update = true;
+		                					}
+		
+		                					if ( progress_update ){
+		
+		                						long now = SystemTime.getMonotonousTime();
+		
+		                						if ( now - last_progress_update < 250 ){
+		
+		                							return;
+		                						}
+		
+		                						last_progress_update = now;
+		                					}
+		
+		        							setStatus(s);
+		        							
+		        						}else{
+		
+		        							error(http_con.getResponseCode(), s.substring(6));
+		        						}
+		
+		        						changed_status	= true;
+		        					}
 	        					}
 	        				}catch( Throwable e ){
-
-	        					break;
+	
+	        					try{
+	        						this_mon.enter();
+	
+        							to_cancel = ev[0];
+	        				
+	        					}finally{
+	
+	        						this_mon.exit();
+	        					}
+	        				}
+	        			
+	        				if ( to_cancel != null ){
+	
+	        					if ( changed_status ){
+	
+	        						setStatus( "" );
+	        					}
+	        					
+	        					to_cancel.cancel();
 	        				}
 	        			}
-
-	        			if ( changed_status ){
-
-	        				setStatus( "" );
-	        			}
-	        		}
-				};
-
-			status_reader.setDaemon( true );
-
-			status_reader.start();
-    	}
+	    			});
+	    		
+    		}finally{
+    			
+				this_mon.exit();
+			}
+	    }
 
 		InputStream 		in		= null;
 		FileOutputStream 	fileout	= null;
