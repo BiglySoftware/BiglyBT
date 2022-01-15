@@ -156,23 +156,6 @@ MagnetPlugin
 		PluginInterface _plugin_interface )
 	{
 		plugin_interface	= _plugin_interface;
-
-		new AEThread2( "Grab DDB" ){
-			@Override
-			public void run()
-			{
-				try{
-					DistributedDatabase db = plugin_interface.getDistributedDatabase();
-					
-					synchronized( db_holder ){
-						
-						db_holder[0] = db;
-					}
-				}finally{
-					db_waiter.releaseForever();
-				}
-			}
-		}.start();
 		
 		MagnetURIHandler uri_handler = MagnetURIHandler.getSingleton();
 
@@ -884,7 +867,21 @@ MagnetPlugin
 									
 									recoverDownloads();
 									
-									plugin_interface.getDistributedDatabase();
+									try{
+										DistributedDatabase db = plugin_interface.getDistributedDatabase();
+										
+										synchronized( db_holder ){
+											
+											db_holder[0] = db;
+										}
+									}catch( Throwable e ){
+										
+										Debug.out( e );
+										
+									}finally{
+										
+										db_waiter.releaseForever();
+									}
 								}
 							};
 
@@ -956,6 +953,8 @@ MagnetPlugin
 	{
 		Map<String,Map> active;
 	
+		boolean recover = magnet_recovery.getValue();
+
 		synchronized( download_activities ){
 			
 			active = COConfigurationManager.getMapParameter( "MagnetPlugin.active.magnets", new HashMap());
@@ -964,12 +963,13 @@ MagnetPlugin
 				
 				active = BEncoder.cloneMap( active );
 				
-				COConfigurationManager.setParameter( "MagnetPlugin.active.magnets", new HashMap());
+				if ( !recover ){
+				
+					COConfigurationManager.setParameter( "MagnetPlugin.active.magnets", new HashMap());
+				}
 			}
 		}
 		
-		boolean recover = magnet_recovery.getValue();
-
 		Set<String>	active_hashes = new HashSet<>(active.size());
 		
 		if ( recover && !active.isEmpty()){
@@ -1013,9 +1013,10 @@ MagnetPlugin
 					
 				//System.out.println( "Recovering: " + map );
 					
+				byte[]	hash = (byte[])map.get( "hash" );
+				
 				try{
-					byte[]	hash = (byte[])map.get( "hash" );
-					
+
 					active_hashes.add( ByteFormatter.encodeString( hash ));
 					
 					String args = MapUtils.getMapString( map, "args", "" );
@@ -1178,6 +1179,18 @@ MagnetPlugin
 				}catch( Throwable e ){
 					
 					Debug.out( e );
+					
+					synchronized( download_activities ){
+						
+						Map temp = COConfigurationManager.getMapParameter( "MagnetPlugin.active.magnets", new HashMap());
+					
+						String hash_str = Base32.encode( hash );
+
+						temp.remove( hash_str );
+					}
+					
+					COConfigurationManager.setDirty();
+
 				}
 			}
 		}
