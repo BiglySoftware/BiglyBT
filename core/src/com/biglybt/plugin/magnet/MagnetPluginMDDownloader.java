@@ -146,16 +146,7 @@ MagnetPluginMDDownloader
 	{
 		return( core_dm );
 	}
-	
-	private boolean
-	isRunComplete()
-	{
-		synchronized( INSTANCE_LOCK ){
-			
-			return( run_complete );
-		}
-	}
-	
+		
 	private class
 	DownloadActivity
 	{
@@ -746,7 +737,7 @@ MagnetPluginMDDownloader
 																	// the downloadRemoved event is fired and the listener removed
 																	// so the removed event never fires...
 	
-																if ( isRunComplete()){
+																if (  run_complete ){
 	
 																	if ( timer_event != null ){
 	

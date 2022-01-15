@@ -116,6 +116,10 @@ MagnetPlugin
 	protected static final Object	DM_TAG_CACHE 		= new Object();
 	protected static final Object	DM_CATEGORY_CACHE 	= new Object();
 	protected static final Object	DM_DN_CHANGED	 	= new Object();
+		
+	private static DistributedDatabase[]	db_holder	= {null};
+	private static AESemaphore				db_waiter	= new AESemaphore( "Grab DDB" );
+
 	
 	private PluginInterface		plugin_interface;
 
@@ -153,6 +157,23 @@ MagnetPlugin
 	{
 		plugin_interface	= _plugin_interface;
 
+		new AEThread2( "Grab DDB" ){
+			@Override
+			public void run()
+			{
+				try{
+					DistributedDatabase db = plugin_interface.getDistributedDatabase();
+					
+					synchronized( db_holder ){
+						
+						db_holder[0] = db;
+					}
+				}finally{
+					db_waiter.releaseForever();
+				}
+			}
+		}.start();
+		
 		MagnetURIHandler uri_handler = MagnetURIHandler.getSingleton();
 
 		final LocaleUtilities lu = plugin_interface.getUtilities().getLocaleUtilities();
@@ -652,7 +673,53 @@ MagnetPlugin
 						Debug.printStackTrace(e);
 					}
 
-					return( recoverableDownload( muh_listener, hash, args, sources, Collections.emptyList(), Collections.emptyMap(), timeout, SystemTime.getCurrentTime(), false ));
+					Object[] result = { null };
+					
+					AESemaphore sem = new AESemaphore( "dlwait" );
+					
+					DownloadAsyncListener dl_listener =
+						new DownloadAsyncListener(){
+							
+							@Override
+							public void 
+							failed(
+								MagnetURIHandlerException error )
+							{
+								synchronized( result ){
+									result[0] = error;
+								}
+								sem.release();
+							}
+							
+							@Override
+							public void 
+							complete(
+								byte[] torrent_data ) 
+							{
+								synchronized( result ){
+									result[0] = torrent_data;
+								}
+								sem.release();
+							}
+						};
+						
+					recoverableDownload( muh_listener, hash, args, sources, Collections.emptyList(), Collections.emptyMap(), timeout, SystemTime.getCurrentTime(), false, dl_listener );
+		
+					sem.reserve();
+					
+					synchronized( result ){
+						
+						Object r = result[0];
+						
+						if ( r instanceof MagnetURIHandlerException ){
+							
+							throw((MagnetURIHandlerException)r);
+							
+						}else{
+							
+							return((byte[])r);
+						}
+					}
 				}
 
 				@Override
@@ -1011,75 +1078,94 @@ MagnetPlugin
 							public void
 							runSupport()
 							{
-								try{
-									byte[] result = recoverableDownload( null, hash, args, f_sources, f_tags, other_metadata, timeout, added_time, true );
-									
-									if ( result != null ){
+								DownloadAsyncListener dl_listener =
+									new DownloadAsyncListener(){
 										
-										TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( result );
+										@Override
+										public void 
+										failed(
+											MagnetURIHandlerException error )
+										{
+											Debug.out( error );
+										}
 										
-										String	torrent_name = FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName( torrent ) + ".torrent", false );
-										
-										File torrent_file;
-										
-										String dir = null;
-										
-									    if ( COConfigurationManager.getBooleanParameter("Save Torrent Files")){
-									    	
-											dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
-											
-											if ( dir != null ){
+										@Override
+										public void 
+										complete(
+											byte[] result )
+										{
+											if ( result != null ){
 												
-												if ( dir.length() > 0 ){
+												try{
+													TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( result );
 													
-													File f = FileUtil.newFile( dir );
+													String	torrent_name = FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName( torrent ) + ".torrent", false );
 													
-													if ( !f.exists()){
+													File torrent_file;
+													
+													String dir = null;
+													
+												    if ( COConfigurationManager.getBooleanParameter("Save Torrent Files")){
+												    	
+														dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
 														
-														f.mkdirs();
-													}
+														if ( dir != null ){
+															
+															if ( dir.length() > 0 ){
+																
+																File f = FileUtil.newFile( dir );
+																
+																if ( !f.exists()){
+																	
+																	f.mkdirs();
+																}
+																
+																if ( !( f.isDirectory() && f.canWrite())){
+																
+																	dir = null;
+																}
+															}else{
+																
+																dir = null;
+															}
+														}
+												    }
+												    
+												    if ( dir != null ){
+												    	
+												    	torrent_file = FileUtil.newFile( dir, torrent_name );
+												    	
+												    }else {
+												    	
+												    	torrent_file = FileUtil.newFile( AETemporaryFileHandler.getTempDirectory(), torrent_name );
+												    }
+												    
+												    if ( torrent_file.exists()){
+												    	
+												    	torrent_file = AETemporaryFileHandler.createTempFile();
+												    }
+												      
+												    TorrentUtils.writeToFile( torrent, torrent_file, false );
+															
+													UIFunctions uif = UIFunctionsManager.getUIFunctions();
 													
-													if ( !( f.isDirectory() && f.canWrite())){
+													TorrentOpenOptions torrentOptions = new TorrentOpenOptions( null );
 													
-														dir = null;
-													}
-												}else{
+													torrentOptions.setDeleteFileOnCancel( true );
+													torrentOptions.setTorrentFile( torrent_file.getAbsolutePath());
+													torrentOptions.setTorrent( torrent );
 													
-													dir = null;
+													uif.addTorrentWithOptions( false, torrentOptions );
+													
+												}catch( Throwable e ){
+													
+													Debug.out( e );
 												}
 											}
-									    }
-									    
-									    if ( dir != null ){
-									    	
-									    	torrent_file = FileUtil.newFile( dir, torrent_name );
-									    	
-									    }else {
-									    	
-									    	torrent_file = FileUtil.newFile( AETemporaryFileHandler.getTempDirectory(), torrent_name );
-									    }
-									    
-									    if ( torrent_file.exists()){
-									    	
-									    	torrent_file = AETemporaryFileHandler.createTempFile();
-									    }
-									      
-									    torrent.serialiseToBEncodedFile( torrent_file );
-										
-										UIFunctions uif = UIFunctionsManager.getUIFunctions();
-										
-										TorrentOpenOptions torrentOptions = new TorrentOpenOptions( null );
-										
-										torrentOptions.setDeleteFileOnCancel( true );
-										torrentOptions.setTorrentFile( torrent_file.getAbsolutePath());
-										torrentOptions.setTorrent( torrent );
-										
-										uif.addTorrentWithOptions( false, torrentOptions );
-									}
-								}catch( Throwable e ){
-									
-									Debug.out( e );
-								}
+										}
+									};
+								
+								recoverableDownload( null, hash, args, f_sources, f_tags, other_metadata, timeout, added_time, true, dl_listener );
 							}
 						});
 					
@@ -1182,7 +1268,7 @@ MagnetPlugin
 		}
 	}
 	
-	private byte[]
+	private void
 	recoverableDownload(
 		final MagnetURIHandlerProgressListener 		muh_listener,
 		final byte[]								hash,
@@ -1192,9 +1278,8 @@ MagnetPlugin
 		Map<String,Object>							other_metadata,
 		final long									timeout,
 		Long										added_time,
-		boolean										is_recovering )
-	
-		throws MagnetURIHandlerException
+		boolean										is_recovering,
+		DownloadAsyncListener						_dl_listener )
 	{
 		boolean recover = magnet_recovery.getValue();
 		
@@ -1202,6 +1287,21 @@ MagnetPlugin
 		
 		//System.out.println( "Starts: " + args );
 		
+		Runnable run_finally = ()->
+		{
+			if ( recover ){
+				
+				synchronized( download_activities ){
+					
+					Map active = COConfigurationManager.getMapParameter( "MagnetPlugin.active.magnets", new HashMap());
+				
+					active.remove( hash_str );
+				}
+				
+				COConfigurationManager.setDirty();
+			}
+		};
+
 		try{		
 			if ( recover ){
 
@@ -1271,92 +1371,104 @@ MagnetPlugin
 				
 				COConfigurationManager.setDirty();
 			}
-			
-			byte[] result = 
-				download(
-					muh_listener == null ? null : new MagnetPluginProgressListener()
+						
+			DownloadAsyncListener dl_listener = 
+				new DownloadAsyncListener(){
+					
+					@Override
+					public void 
+					failed(
+						MagnetURIHandlerException error )
 					{
-						@Override
-						public void
-						reportSize(
+						try{
+							_dl_listener.failed(error);
+							
+						}finally{
+							
+							run_finally.run();
+						}
+					}
+					
+					@Override
+					public void 
+					complete(
+						byte[] torrent_data)
+					{
+						try{
+							_dl_listener.complete(torrent_data);
+							
+						}finally{
+							
+							run_finally.run();
+						}
+					}
+				};
+				
+			downloadAsync(
+				muh_listener == null ? null : new MagnetPluginProgressListener()
+				{
+					@Override
+					public void
+					reportSize(
 							long	size )
-						{
-							muh_listener.reportSize( size );
-						}
-	
-						@Override
-						public void
-						reportActivity(
+					{
+						muh_listener.reportSize( size );
+					}
+
+					@Override
+					public void
+					reportActivity(
 							String	str )
-						{
-							muh_listener.reportActivity( str );
-						}
-	
-						@Override
-						public void
-						reportCompleteness(
+					{
+						muh_listener.reportActivity( str );
+					}
+
+					@Override
+					public void
+					reportCompleteness(
 							int		percent )
-						{
-							muh_listener.reportCompleteness( percent );
-						}
-	
-						@Override
-						public void
-						reportContributor(
+					{
+						muh_listener.reportCompleteness( percent );
+					}
+
+					@Override
+					public void
+					reportContributor(
 							InetSocketAddress	address )
-						{
-						}
-	
-						@Override
-						public boolean
-						cancelled()
-						{
-							return( muh_listener.cancelled());
-						}
-	
-						@Override
-						public boolean
-						verbose()
-						{
-							return( muh_listener.verbose());
-						}
-					},
-					hash,
-					args,
-					sources,
-					tags,
-					other_metadata,
-					timeout,
-					is_recovering?MagnetPlugin.FL_NO_MD_LOOKUP_DELAY:MagnetPlugin.FL_NONE );
-			
-			//System.out.println( "Done: " + args );
-			
-			return( result );
-			
+					{
+					}
+
+					@Override
+					public boolean
+					cancelled()
+					{
+						return( muh_listener.cancelled());
+					}
+
+					@Override
+					public boolean
+					verbose()
+					{
+						return( muh_listener.verbose());
+					}
+				},
+				hash,
+				args,
+				sources,
+				tags,
+				other_metadata,
+				timeout,
+				is_recovering?MagnetPlugin.FL_NO_MD_LOOKUP_DELAY:MagnetPlugin.FL_NONE,
+				dl_listener );
+						
 		}catch( Throwable e ) {
 			
-			//System.out.println( "Failed: " + args );
+			try{
+				_dl_listener.failed( new MagnetURIHandlerException( "Magnet download failed", e ));
+				
+			}finally{
 			
-			if ( e instanceof MagnetURIHandlerException ){
-				
-				throw((MagnetURIHandlerException)e);
-				
-			}else{
-	
-				throw( new MagnetURIHandlerException( "Magnet download failed", e ));
-			}
-		}finally {
-			
-			if ( recover ){
-				
-				synchronized( download_activities ){
-					
-					Map active = COConfigurationManager.getMapParameter( "MagnetPlugin.active.magnets", new HashMap());
-				
-					active.remove( hash_str );
-				}
-				
-				COConfigurationManager.setDirty();
+				run_finally.run();
 			}
 		}
 	}
@@ -1441,16 +1553,99 @@ MagnetPlugin
 
 		throws MagnetURIHandlerException
 	{
-		DownloadResult result = downloadSupport( listener, hash, args, sources, tags, other_metadata, timeout, flags );
-
-		if ( result == null ){
-
-			return( null );
+		Object[] result = { null };
+		
+		AESemaphore sem = new AESemaphore( "dlwait" );
+		
+		DownloadAsyncListener dl_listener =
+			new DownloadAsyncListener(){
+				
+				@Override
+				public void 
+				failed(
+					MagnetURIHandlerException error )
+				{
+					synchronized( result ){
+						result[0] = error;
+					}
+					sem.release();
+				}
+				
+				@Override
+				public void 
+				complete(
+					byte[] torrent_data ) 
+				{
+					synchronized( result ){
+						result[0] = torrent_data;
+					}
+					sem.release();
+				}
+			};
+			
+		downloadAsync( listener, hash, args, sources, tags, other_metadata, timeout, flags, dl_listener );
+		
+		sem.reserve();
+		
+		synchronized( result ){
+			
+			Object r = result[0];
+			
+			if ( r instanceof MagnetURIHandlerException ){
+				
+				throw((MagnetURIHandlerException)r);
+				
+			}else{
+				
+				return((byte[])r);
+			}
 		}
-
-		return( addTrackersAndWebSeedsEtc( result, args, tags, other_metadata  ));
 	}
 
+	public void
+	downloadAsync(
+		MagnetPluginProgressListener		listener,
+		byte[]								hash,
+		String								args,
+		InetSocketAddress[]					sources,
+		List<String>						tags,
+		Map<String,Object>					other_metadata,
+		long								timeout,
+		int									flags,
+		DownloadAsyncListener				dl_listener )
+
+		throws MagnetURIHandlerException
+	{
+		DownloadResultListener result_listener =
+			new DownloadResultListener(){
+				
+				@Override
+				public void 
+				failed(
+					MagnetURIHandlerException error )
+				{
+					dl_listener.failed(error);
+				}
+				
+				@Override
+				public void 
+				complete(
+					DownloadResult result ){
+
+					if ( result == null ){
+
+						dl_listener.complete( null );
+						
+					}else{
+
+						dl_listener.complete( addTrackersAndWebSeedsEtc( result, args, tags, other_metadata  ));
+					}
+				}
+			};
+			
+		downloadSupport( listener, hash, args, sources, tags, other_metadata, timeout, flags, result_listener );
+	}
+	
 	private byte[]
 	addTrackersAndWebSeedsEtc(
 		DownloadResult		result,
@@ -1861,53 +2056,110 @@ MagnetPlugin
 	private static class
 	DownloadActivity
 	{
-		private volatile DownloadResult				result;
-		private volatile MagnetURIHandlerException	error;
+		private boolean						result_set;
+		
+		private DownloadResult				result;
+		private MagnetURIHandlerException	error;
 
-		private AESemaphore		sem = new AESemaphore( "MP:DA" );
-
+		private List<DownloadResultListener>		listeners = new ArrayList<>(2);
+		
+		public void
+		addListener(
+			DownloadResultListener			l )
+		{
+			boolean already_done;
+			
+			synchronized( this ){
+				
+				already_done = result_set;
+					
+				if ( !already_done ){
+				
+					listeners.add( l );
+				}
+			}
+			
+			if ( already_done ){
+				
+				if ( error != null ){
+					
+					l.failed(error);
+					
+				}else{
+					
+					l.complete(result);
+				}
+			}
+		}
+		
 		public void
 		setResult(
 			DownloadResult	_result )
 		{
-			result	= _result;
+			List<DownloadResultListener> to_do;
+		
+			synchronized( this ){
+				
+				result_set = true;
+				
+				result	= _result;
 
-			sem.releaseForever();
+				to_do = listeners;
+				
+				listeners = new ArrayList<>();
+			}
+			
+			for ( DownloadResultListener l: to_do ){
+				
+				try{
+					l.complete(_result);
+					
+				}catch( Throwable e ){
+					
+					Debug.out(e);
+				}
+			}
 		}
+			
 
 		public void
 		setResult(
 			Throwable _error  )
 		{
-			if ( _error instanceof MagnetURIHandlerException ){
+			List<DownloadResultListener> to_do;
+			
+			synchronized( this ){
 
-				error = (MagnetURIHandlerException)_error;
+				result_set = true;
+			
+				if ( _error instanceof MagnetURIHandlerException ){
 
-			}else{
+					error = (MagnetURIHandlerException)_error;
 
-				error = new MagnetURIHandlerException( "Download failed", _error );
+				}else{
+
+					error = new MagnetURIHandlerException( "Download failed", _error );
+				}
+				
+				to_do = listeners;
+				
+				listeners = new ArrayList<>();
 			}
 
-			sem.releaseForever();
-		}
-
-		public DownloadResult
-		getResult()
-
-			throws MagnetURIHandlerException
-		{
-			sem.reserve();
-
-			if ( error != null ){
-
-				throw( error );
+			for ( DownloadResultListener l: to_do ){
+				
+				try{
+					l.failed( error );
+					
+				}catch( Throwable e ){
+					
+					Debug.out(e);
+				}
 			}
-
-			return( result );
 		}
 	}
 
-	private DownloadResult
+	private void
  	downloadSupport(
  		MagnetPluginProgressListener	listener,
  		byte[]							hash,
@@ -1916,9 +2168,8 @@ MagnetPlugin
  		List<String>					tags,
  		Map<String,Object>				initial_metadata,
  		long							timeout,
- 		int								flags )
-
- 		throws MagnetURIHandlerException
+ 		int								flags,
+ 		DownloadResultListener			_result_listener )
  	{
 		DownloadActivity	activity;
 		boolean				new_activity = false;
@@ -1937,13 +2188,29 @@ MagnetPlugin
 
  				new_activity = true;
  			}
+ 			
+ 			activity.addListener( _result_listener );
  		}
 
  		if ( new_activity ){
 
+ 			DownloadActivity f_activity = activity;
+ 			
 	 		try{
+	 			DownloadResultListener result_listener = 
+	 				new DownloadResultListener()
+	 				{
+		 				@Override
+		 				public void complete(DownloadResult result){
+		 					f_activity.setResult( result );
+		 				}
+		 				@Override
+	 					public void failed(MagnetURIHandlerException error){
+		 					f_activity.setResult(error);
+	 					}
+	 				};
 
-	 			activity.setResult( _downloadSupport( listener, hash, args, sources, tags, initial_metadata, timeout, flags ));
+	 			_downloadSupport( listener, hash, args, sources, tags, initial_metadata, timeout, flags, result_listener );
 
 	 		}catch( Throwable e ){
 
@@ -1957,37 +2224,9 @@ MagnetPlugin
 	 			}
 	 		}
  		}
-
- 		return( activity.getResult());
-
  	}
 
-	private DownloadResult
-	_downloadSupport(
-		final MagnetPluginProgressListener		listener,
-		final byte[]							hash,
-		final String							args,
-		final InetSocketAddress[]				sources,
-		List<String>							tags,
-		Map<String,Object>						initial_metadata,
-		long									_timeout,
-		int										flags )
-
-		throws MagnetURIHandlerException
-	{
-		DownloadManager[] download = { null };
-		
-		DownloadResult	result = _downloadSupport( listener, hash, args, sources, tags, initial_metadata, _timeout, flags, download );
-		
-		if ( result != null ){
-		
-			result.setDownload( download[0] );
-		}
-		
-		return( result );
-	}
-	
-	private DownloadResult
+	private void
 	_downloadSupport(
 		final MagnetPluginProgressListener		listener,
 		final byte[]							hash,
@@ -1997,9 +2236,50 @@ MagnetPlugin
 		Map<String,Object>						initial_metadata,
 		long									_timeout,
 		int										flags,
-		DownloadManager[]						cancelled_download )
-
-		throws MagnetURIHandlerException
+		DownloadResultListener					_result_listener )
+	{
+		DownloadManager[] download = { null };
+		
+		DownloadResultListener result_listener =
+			new DownloadResultListener(){
+				
+				@Override
+				public void 
+				failed(
+					MagnetURIHandlerException error)
+				{
+					_result_listener.failed( error );;
+				}
+				
+				@Override
+				public void 
+				complete(
+					DownloadResult result)
+				{
+					if ( result != null ){
+						
+						result.setDownload( download[0] );
+					}
+					
+					_result_listener.complete( result );
+				}
+			};
+			
+		_downloadSupport( listener, hash, args, sources, tags, initial_metadata, _timeout, flags, download, result_listener );
+	}
+	
+	private void
+	_downloadSupport(
+		final MagnetPluginProgressListener		listener,
+		final byte[]							hash,
+		final String							args,
+		final InetSocketAddress[]				sources,
+		List<String>							tags,
+		Map<String,Object>						initial_metadata,
+		long									_timeout,
+		int										flags,
+		DownloadManager[]						cancelled_download,
+		DownloadResultListener					result_listener )
 	{
 		final long	timeout;
 
@@ -2040,7 +2320,9 @@ MagnetPlugin
 		final Throwable[] 	result_error 		= { null };
 		final boolean[]		manually_cancelled	= { false };
 		
-		TimerEvent							md_delay_event = null;
+		TimerEventPeriodic[] final_timer = { null };
+		
+		TimerEvent[]						md_delay_event = { null };
 		final MagnetPluginMDDownloader[]	md_downloader = { null };
 
 		boolean	net_pub_default = isNetworkEnabled( AENetworkClassifier.AT_PUBLIC );
@@ -2196,7 +2478,9 @@ MagnetPlugin
 
 							if ( result_holder[0] != null ){
 
-								return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+								result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+								
+								return;
 							}
 						}
 					}
@@ -2214,7 +2498,9 @@ MagnetPlugin
 
 		if ( dummy_hash ){
 
-			return( null );
+			result_listener.complete( null );
+			
+			return;
 		}
 
 			// networks-enabled has either the networks inferrable from the magnet set up
@@ -2233,7 +2519,7 @@ MagnetPlugin
 				delay_millis = md_lookup_delay.getValue()*1000;
 			}
 
-			md_delay_event =
+			md_delay_event[0] =
 				SimpleTimer.addEvent(
 					"MagnetPlugin:md_delay",
 					delay_millis<=0?0:(SystemTime.getCurrentTime() + delay_millis ),
@@ -2342,30 +2628,6 @@ MagnetPlugin
 						first_download = false;
 					}
 
-				
-					// final DistributedDatabase db = plugin_interface.getDistributedDatabase();
-					// blocking call above, nasty
-					
-					DistributedDatabase[]	db_holder	= {null};
-					AESemaphore				db_waiter	= new AESemaphore( "grab db" );
-					
-					new AEThread2( "grab ddb" ){
-						@Override
-						public void run()
-						{
-							try{
-								DistributedDatabase db = plugin_interface.getDistributedDatabase();
-								
-								synchronized( db_holder ){
-									
-									db_holder[0] = db;
-								}
-							}finally{
-								db_waiter.release();
-							}
-						}
-					}.start();
-
 					while( true ){
 						
 						if ( db_waiter.reserve( 100 )){
@@ -2375,14 +2637,18 @@ MagnetPlugin
 						
 						if ( listener != null && listener.cancelled()){
 
-							return( null );
+							result_listener.complete( null );
+							
+							return;
 						}
 
 						synchronized( result_holder ){
 
 							if ( result_holder[0] != null ){
 
-								return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+								result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+								
+								return;
 							}
 							
 							if ( manually_cancelled[0] ){
@@ -2599,9 +2865,6 @@ MagnetPlugin
 							timeout,
 							DistributedDatabase.OP_EXHAUSTIVE_READ | DistributedDatabase.OP_PRIORITY_HIGH );
 
-						long 	overall_start 			= SystemTime.getMonotonousTime();
-						long 	last_found 				= -1;
-
 						AsyncDispatcher	dispatcher = new AsyncDispatcher();
 
 						while( remaining > 0 ){
@@ -2625,14 +2888,18 @@ MagnetPlugin
 
 								if ( listener != null && listener.cancelled()){
 
-									return( null );
+									result_listener.complete( null );
+									
+									return;
 								}
 
 								synchronized( result_holder ){
 
 									if ( result_holder[0] != null ){
 
-										return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+										result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+										
+										return;
 									}
 									
 									if ( manually_cancelled[0] ){
@@ -2650,8 +2917,6 @@ MagnetPlugin
 								remaining -= ( now - wait_start );
 
 								if ( got_sem ){
-
-									last_found = now;
 
 									break;
 
@@ -2800,7 +3065,9 @@ MagnetPlugin
 
 								if ( listener != null && listener.cancelled()){
 
-									return( null );
+									result_listener.complete( null );
+									
+									return;
 								}
 
 								boolean got_sem = contact_sem.reserve( 500 );
@@ -2809,7 +3076,9 @@ MagnetPlugin
 
 									if ( result_holder[0] != null ){
 
-										return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+										result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+										
+										return;
 									}
 									
 									if ( manually_cancelled[0] ){
@@ -2839,35 +3108,101 @@ MagnetPlugin
 
 					// lastly hang around until metadata download completes
 
-				if ( md_enabled ){
+				long ticks_left = remaining/500;
+				
+				if ( md_enabled && ticks_left > 0 ){
 
-					while( remaining > 0 ){
-
-						if ( listener != null && listener.cancelled()){
-
-							return( null );
-						}
-
-						Thread.sleep( 500 );
-
-						remaining -= 500;
-
-						synchronized( result_holder ){
-
-							if ( result_holder[0] != null ){
-
-								return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
-							}
-
-							if ( result_error[0] != null ){
-
-								break;
-							}
-						}
+						// we can move to a timer based completion now
+					
+					synchronized( result_holder ){
+						
+						final_timer[0] = 
+							SimpleTimer.addPeriodicEvent(
+								"magnet:md:waiter",
+								500,
+								new TimerEventPerformer(){
+									
+									int	tick = 0;
+									
+									@Override
+									public void perform(
+										TimerEvent event)
+									{
+										boolean	done = false;
+										
+										tick++;
+										
+										try{
+											synchronized( result_holder ){
+	
+												if ( listener != null && listener.cancelled()){
+													
+													done = true;
+													
+													result_listener.complete( null );
+													
+												}else{
+										
+													if ( result_holder[0] != null ){
+						
+														done = true;
+														
+														result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+																												
+													}else if ( result_error[0] != null ){
+						
+														done = true;
+														
+														result_listener.failed( new MagnetURIHandlerException( "MagnetURIHandler failed", result_error[0] ));
+													}
+												}
+												
+											
+												if ( !done && tick >= ticks_left ){
+													
+													done = true;
+													
+													result_listener.complete( null );
+												}
+											}
+										}catch( Throwable e ){
+											
+											Debug.out( e );
+										}
+										
+										if ( done ){
+											
+											synchronized( md_downloader ){
+												
+												try{
+													if ( md_delay_event[0] != null ){
+									
+														md_delay_event[0].cancel();
+									
+														MagnetPluginMDDownloader downloader = md_downloader[0];
+														
+														if ( downloader != null ){
+									
+															downloader.cancel();
+																
+															cancelled_download[0] = downloader.getDownloadManager();
+														}
+													}
+												}finally{
+													
+													final_timer[0].cancel();
+												}
+											}
+										}
+									}
+								});
 					}
-				}
+				}else{
 
-				return( null );		// nothing found
+					result_listener.complete( null );		// nothing found
+				
+					return;
+				}
 
 			}catch( Throwable e ){
 
@@ -2877,23 +3212,28 @@ MagnetPlugin
 					listener.reportActivity( getMessageText( "report.error", Debug.getNestedExceptionMessage(e)));
 				}
 
-				throw( new MagnetURIHandlerException( "MagnetURIHandler failed", e ));
+				result_listener.failed( new MagnetURIHandlerException( "MagnetURIHandler failed", e ));
+				
+				return;
 			}
 		}finally{
 
-			synchronized( md_downloader ){
-
-				if ( md_delay_event != null ){
-
-					md_delay_event.cancel();
-
-					MagnetPluginMDDownloader downloader = md_downloader[0];
-					
-					if ( downloader != null ){
-
-						downloader.cancel();
-							
-						cancelled_download[0] = downloader.getDownloadManager();
+			if ( final_timer[0] == null ){
+				
+				synchronized( md_downloader ){
+	
+					if ( md_delay_event[0] != null ){
+	
+						md_delay_event[0].cancel();
+	
+						MagnetPluginMDDownloader downloader = md_downloader[0];
+						
+						if ( downloader != null ){
+	
+							downloader.cancel();
+								
+							cancelled_download[0] = downloader.getDownloadManager();
+						}
 					}
 				}
 			}
@@ -2969,5 +3309,29 @@ MagnetPlugin
 		{
 			return( networks );
 		}
+	}
+	
+	private interface
+	DownloadResultListener
+	{
+		public void
+		complete(
+			DownloadResult		result );
+		
+		public void
+		failed(
+			MagnetURIHandlerException	error );
+	}
+	
+	private interface
+	DownloadAsyncListener
+	{
+		public void
+		complete(
+			byte[]		torrent_data );
+		
+		public void
+		failed(
+			MagnetURIHandlerException	error );
 	}
 }
