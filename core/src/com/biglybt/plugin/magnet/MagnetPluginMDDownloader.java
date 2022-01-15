@@ -220,7 +220,8 @@ MagnetPluginMDDownloader
 		{
 			activity_listener = _listener;
 			
-			boolean setup_complete = false;
+			boolean setup_started	= false;
+			boolean setup_complete	= false;
 			
 			try{
 				synchronized( ACTIVE_SET_LOCK ){
@@ -240,6 +241,8 @@ MagnetPluginMDDownloader
 					throw( new Exception( "download already exists" ));
 				}
 	
+				setup_started = true;
+
 				File torrents_dir = FileUtil.getUserFile( "torrents" );
 	
 				md_dir = FileUtil.newFile( torrents_dir, "md", hash_str );
@@ -874,7 +877,7 @@ MagnetPluginMDDownloader
 				}
 			}finally{
 	
-				if ( !setup_complete ){
+				if ( setup_started && !setup_complete ){
 				
 					tidyUp();
 				}
@@ -1066,9 +1069,7 @@ MagnetPluginMDDownloader
 						}catch( Throwable e ){
 	
 							reportFailed( manually_removed[0],  e );
-	
-							Debug.out( e );
-	
+		
 							throw( e );
 						}
 					}
