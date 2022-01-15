@@ -97,6 +97,7 @@ MagnetPlugin
 	public static final int	FL_NONE					= 0x00000000;
 	public static final int	FL_DISABLE_MD_LOOKUP	= 0x00000001;
 	public static final int	FL_NO_MD_LOOKUP_DELAY	= 0x00000002;
+	public static final int	FL_RECOVERING			= 0x00000004;
 
 	private static final int	MD_LOOKUP_DELAY_SECS_DEFAULT		= 0;
 
@@ -1471,7 +1472,7 @@ MagnetPlugin
 				tags,
 				other_metadata,
 				timeout,
-				is_recovering?MagnetPlugin.FL_NO_MD_LOOKUP_DELAY:MagnetPlugin.FL_NONE,
+				is_recovering?( MagnetPlugin.FL_NO_MD_LOOKUP_DELAY | MagnetPlugin.FL_RECOVERING ):MagnetPlugin.FL_NONE,
 				dl_listener );
 						
 		}catch( Throwable e ) {
@@ -2626,9 +2627,11 @@ MagnetPlugin
 			try{
 				long	remaining	= timeout;
 
+				boolean skip_dht = (flags & FL_RECOVERING ) != 0;
+						
 					// public DHT lookup
 
-				if ( networks_enabled.contains( AENetworkClassifier.AT_PUBLIC )){
+				if ( networks_enabled.contains( AENetworkClassifier.AT_PUBLIC ) && !skip_dht ){
 
 					boolean	is_first_download = first_download;
 
