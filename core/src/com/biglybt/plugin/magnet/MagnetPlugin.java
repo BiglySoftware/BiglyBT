@@ -1627,8 +1627,6 @@ MagnetPlugin
 		long								timeout,
 		int									flags,
 		DownloadAsyncListener				dl_listener )
-
-		throws MagnetURIHandlerException
 	{
 		DownloadResultListener result_listener =
 			new DownloadResultListener(){
