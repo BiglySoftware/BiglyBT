@@ -2450,6 +2450,11 @@ SpeedLimitHandler
 
 		for ( Download dm: downloads ){
 
+			if ( dm.getFlag( Download.FLAG_METADATA_DOWNLOAD )){
+
+				continue;
+			}
+			
 			PeerManager pm = dm.getPeerManager();
 
 			if ( pm != null ){
@@ -2643,6 +2648,11 @@ SpeedLimitHandler
 		downloadAdded(
 			final Download	download )
 		{
+			if ( download.getFlag( Download.FLAG_METADATA_DOWNLOAD )){
+				
+				return;
+			}
+			
 			synchronized( lock ){
 
 				if ( destroyed ){
