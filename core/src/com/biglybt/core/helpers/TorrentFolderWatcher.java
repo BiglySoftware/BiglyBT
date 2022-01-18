@@ -404,6 +404,11 @@ public class TorrentFolderWatcher {
 											
 											File imported = FileUtil.newFile(folder, file.getName() + ".imported");
 											
+											if ( imported.exists()){
+											
+												imported.delete();
+											}
+											
 											TorrentUtils.move(file, imported);
 										}
 									}
@@ -422,6 +427,11 @@ public class TorrentFolderWatcher {
 	
 										File imported = FileUtil.newFile(folder, file.getName() + ".imported");
 	
+										if ( imported.exists()){
+											
+											imported.delete();
+										}
+										
 										TorrentUtils.move(file, imported);
 	
 									}else{
@@ -607,6 +617,11 @@ public class TorrentFolderWatcher {
 	
 										File imported = FileUtil.newFile(folder, file.getName() + ".imported");
 	
+										if ( imported.exists()){
+											
+											imported.delete();
+										}
+										
 										TorrentUtils.move(file, imported);
 	
 										dm = global_manager.addDownloadManager(imported.getAbsolutePath(), hash,
