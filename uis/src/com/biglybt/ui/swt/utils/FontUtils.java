@@ -25,6 +25,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 
@@ -352,7 +353,7 @@ public class FontUtils
 					return;
 				}
 
-				if (h > 10 && (Utils.isGTK3 || Utils.isDarkAppearanceNative())) {
+				if (h > 10 && (Utils.isGTK3 || ( Constants.isOSX && Utils.isDarkAppearanceNative()))) {
 					// GTK3 and OSX dark mode has border included in clientArea
 					h -= 6;
 				}

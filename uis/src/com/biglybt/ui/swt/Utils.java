@@ -275,7 +275,30 @@ public class Utils
 		Display		_display )
 	{
 		display	= _display;
-		
+
+		if ( UI.useSystemTheme() && Constants.isWindows ){
+			
+			// OS.setTheme( true );
+			// requires recent SWT which requires Java 11+....
+			// support still flakey...
+			
+			display.setData("org.eclipse.swt.internal.win32.useDarkModeExplorerTheme", true );
+			display.setData("org.eclipse.swt.internal.win32.useShellTitleColoring",    true);
+			display.setData("org.eclipse.swt.internal.win32.menuBarForegroundColor",   true ? new Color(display, 0xD0, 0xD0, 0xD0) : null);
+			display.setData("org.eclipse.swt.internal.win32.menuBarBackgroundColor",   true ? new Color(display, 0x30, 0x30, 0x30) : null);
+			display.setData("org.eclipse.swt.internal.win32.menuBarBorderColor",       true ? new Color(display, 0x50, 0x50, 0x50) : null);
+			//display.setData("org.eclipse.swt.internal.win32.Canvas.use_WS_BORDER",     true);
+			//display.setData("org.eclipse.swt.internal.win32.List.use_WS_BORDER",       true);
+			//display.setData("org.eclipse.swt.internal.win32.Table.use_WS_BORDER",      true);
+			//display.setData("org.eclipse.swt.internal.win32.Text.use_WS_BORDER",       true);
+			//display.setData("org.eclipse.swt.internal.win32.Tree.use_WS_BORDER",       true);
+			//display.setData("org.eclipse.swt.internal.win32.Table.headerLineColor",    true ? new Color(display, 0x50, 0x50, 0x50) : null);
+			//display.setData("org.eclipse.swt.internal.win32.Label.disabledForegroundColor", true ? new Color(display, 0x80, 0x80, 0x80) : null);
+			//display.setData("org.eclipse.swt.internal.win32.Combo.useDarkTheme",       true);
+			display.setData("org.eclipse.swt.internal.win32.ProgressBar.useColors",    true);
+
+		}
+				
 		isGTK3 = isGTK && System.getProperty("org.eclipse.swt.internal.gtk.version",
 				"2").startsWith("3");
 		
@@ -5573,12 +5596,7 @@ public class Utils
 				}
 			}else if ( Constants.isWindows ){
 				
-					// currently the logic below for Windows will return 'true' when dark theme
-					// is enabled even though SWT doesn't support it at all - in consequence it
-					// just borks up a few other things (search box text size in Library view for
-					// example )
-				
-				is_dark_appearance = false;
+				is_dark_appearance = UI.useSystemTheme();
 				
 			}else{
 				

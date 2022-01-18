@@ -206,7 +206,7 @@ PlatformManager
 	
 		throws PlatformManagerException
 	{
-		throw new PlatformManagerException("Unsupported capability called on platform manager");
+		return( false );
 	}
 	
 		/**

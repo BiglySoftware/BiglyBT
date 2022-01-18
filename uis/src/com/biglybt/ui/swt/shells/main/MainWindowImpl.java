@@ -1892,7 +1892,7 @@ public class MainWindowImpl
 		}
 		*/
 		
-		final Text text = new Text(cArea, (DARK_MODE && !Utils.isGTK3 )?SWT.BORDER:SWT.NONE);
+		final Text text = new Text(cArea, (DARK_MODE && !( Utils.isGTK3 || Constants.isWindows ))?SWT.BORDER:SWT.NONE);
 		text.setMessage(MessageText.getString("v3.MainWindow.search.defaultText"));
 		FormData filledFormData = Utils.getFilledFormData();
 		
@@ -1907,6 +1907,8 @@ public class MainWindowImpl
 			}
 		}else if ( Constants.isOSX && DARK_MODE ){
 			filledFormData.height = 19;
+		}else if ( Constants.isWindows && DARK_MODE ){
+			filledFormData.height = 22;
 		}
 		
 		text.setLayoutData(filledFormData);

@@ -34,7 +34,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.util.Constants;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ColorParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
@@ -42,6 +41,7 @@ import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 import com.biglybt.ui.config.ConfigSectionImpl;
 import com.biglybt.ui.swt.ConfigKeysSWT;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.UI;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.BaseSwtParameter;
 import com.biglybt.ui.swt.config.ColorSwtParameter;
@@ -73,7 +73,7 @@ public class ConfigSectionInterfaceColorSWT
 	public void build() {
 		setDefaultUITypesForAdd(UIInstance.UIT_SWT);
 
-		if ( Constants.isOSX && SWT.getVersion() >= 4924 ){	// 4.12RC2
+		if ( UI.canUseSystemTheme()){
 			
 			add( new BooleanParameterImpl( "Use System Theme", "ConfigView.section.style.usesystemtheme"));
 		}

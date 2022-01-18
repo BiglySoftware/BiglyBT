@@ -28,6 +28,7 @@ import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.Display;
 
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.swt.Utils;
@@ -374,7 +375,7 @@ public class TabbedMDI_Ren
 					
 					if (showingClose) {
 						
-						if ( closeImageState == 0 && Utils.isDarkAppearanceNative()){
+						if ( closeImageState == 0 && Utils.isDarkAppearanceNative() && !Constants.isWindows ){
 														
 								// OSX + Linux paint an almost black cross on a black background
 								// hack to take whatever the OS paints and lighten it

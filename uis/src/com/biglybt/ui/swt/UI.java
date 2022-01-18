@@ -25,6 +25,7 @@ import java.util.Map;
 import com.biglybt.ui.common.UIConst;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.eclipse.swt.SWT;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreComponent;
@@ -55,31 +56,50 @@ public class UI
 {
 	private static final LogIDs LOGID = LogIDs.GUI;
 
+	private static volatile boolean useSystemTheme;
+	
 	private static boolean isFirstUI;
 
+	
+	public static boolean
+	canUseSystemTheme()
+	{
+		return(	Constants.isOSX && SWT.getVersion() >= 4924 || // 4.12RC2
+				Constants.isWindows10OrHigher && SWT.getVersion() >= 4948 );
+	}
+	
 	static{
-		
-		if ( Constants.isOSX ){
-			
-			COConfigurationManager.addAndFireParameterListener(
-				"Use System Theme",
-				(n)->{
 					
-					boolean ust = COConfigurationManager.getBooleanParameter( "Use System Theme" );
+		COConfigurationManager.addAndFireParameterListener(
+			"Use System Theme",
+			(n)->{
 				
-					try{
-						PlatformManagerFactory.getPlatformManager().setUseSystemTheme( ust );
-						
-					}catch( Throwable e ){
-						
-						ust = false;
-						
-						Debug.out( e );
-					}
+				useSystemTheme = COConfigurationManager.getBooleanParameter( "Use System Theme" );
+			
+				if ( useSystemTheme && !canUseSystemTheme()){
 					
-					System.setProperty( "org.eclipse.swt.display.useSystemTheme", ust?"true":"false" );
-				});
-	  	}
+					useSystemTheme = false;		
+					
+					COConfigurationManager.setParameter( "Use System Theme", false );
+					
+					return;
+				}
+				
+				try{
+					PlatformManagerFactory.getPlatformManager().setUseSystemTheme( useSystemTheme );
+					
+				}catch( Throwable e ){
+					
+					useSystemTheme = false;
+					
+					Debug.out( e );
+				}
+				
+				if ( Constants.isOSX ){
+
+					System.setProperty( "org.eclipse.swt.display.useSystemTheme", useSystemTheme?"true":"false" );
+				}
+			});
 	}
 	
 	protected final AEMonitor this_mon = new AEMonitor("swt.UI");
@@ -92,6 +112,12 @@ public class UI
 		super();
 	}
 
+	public static boolean
+	useSystemTheme()
+	{
+		return( useSystemTheme );
+	}
+	
 	protected static boolean isURI(String file_name) {
 		String file_name_lower = file_name.toLowerCase();
 
