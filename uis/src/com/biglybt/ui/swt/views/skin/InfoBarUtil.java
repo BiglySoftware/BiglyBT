@@ -95,6 +95,12 @@ public abstract class InfoBarUtil
 		});
 	}
 
+	public SWTSkinObject
+	getParentSkinObject()
+	{
+		return( forSO );
+	}
+	
 	protected void createInfoBar() {
 		Control control = forSO.getControl();
 		if (control == null || control.isDisposed()) {
@@ -185,6 +191,8 @@ public abstract class InfoBarUtil
 		created(parent);
 
 		soInfoBar.setVisible(true);
+		
+		control.addListener( SWT.Dispose, (ev)->{ soInfoBar.dispose();});
 	}
 
 	/**

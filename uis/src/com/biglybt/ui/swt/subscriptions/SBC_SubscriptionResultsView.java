@@ -53,7 +53,6 @@ import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.common.util.MenuItemManager;
-import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.selectedcontent.DownloadUrlInfo;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContent;
@@ -66,7 +65,9 @@ import com.biglybt.ui.swt.columns.subscriptions.ColumnSubResultNew;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
+import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.search.SBC_SearchResultsView;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.SearchSubsUtils;
@@ -89,9 +90,11 @@ SBC_SubscriptionResultsView
 
 	private static TableViewSWT.ColorRequester colour_requester = ()->1;
 	
+	private static LinkedList<MdiEntrySWT> activated_views	= new LinkedList<>();
+	
 	private TableViewSWT<SubscriptionResultFilterable> tv_subs_results;
 
-	private MdiEntry			mdi_entry;
+	private MdiEntrySWT			mdi_entry;
 	private Composite			table_parent;
 
 
@@ -145,8 +148,36 @@ SBC_SubscriptionResultsView
 			mdi_entry = mdi.getEntry( mdi_key );
 
 			if ( mdi_entry != null ){
-
+				
 				mdi_entry.addToolbarEnabler(this);
+				
+				MdiEntrySWT to_deactivate = null;
+				
+				synchronized( activated_views ){
+					
+					activated_views.add( mdi_entry );
+					
+					if ( activated_views.size() > 8 ){
+						
+						for ( MdiEntrySWT m: activated_views ){
+							
+							if ( m != mdi_entry ){
+							
+									// stand-alone views can cause confusion - don't deactive the one
+									// currently being built to avoid borkage...
+								
+								to_deactivate = m;
+								
+								break;
+							}
+						}
+					}
+				}
+				
+				if ( to_deactivate != null ){
+					
+					to_deactivate.triggerEvent( UISWTViewEvent.TYPE_DESTROY, null );
+				}
 			}
 		}
 				
@@ -190,8 +221,6 @@ SBC_SubscriptionResultsView
 
 						@Override
 						public void menuHidden(MenuEvent e) {
-							// TODO Auto-generated method stub
-
 						}
 					});
 			}
@@ -1020,9 +1049,23 @@ SBC_SubscriptionResultsView
 		SWTSkinObject 	skinObject,
 		Object 			params )
 	{
-		hideView();
+		try{
+			hideView();
+	
+			return( super.skinObjectDestroyed(skinObject, params));
+			
+		}finally{
+			
+			if ( mdi_entry != null ){
+			
+				mdi_entry.removeToolbarEnabler(this);
 
-		return( super.skinObjectDestroyed(skinObject, params));
+				synchronized( activated_views ){
+			
+					activated_views.remove( mdi_entry );
+				}
+			}
+		}
 	}
 
 	private void

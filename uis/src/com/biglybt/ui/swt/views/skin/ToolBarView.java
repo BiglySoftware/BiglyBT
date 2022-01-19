@@ -114,10 +114,10 @@ public class ToolBarView
 		return base;
 	}
 
-	// @see SkinView#showSupport(SWTSkinObject, java.lang.Object)
 	@Override
-	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
-		
+	public Object 
+	skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
+			
 		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals( "az2");
 
 		if (uiClassic && !"global-toolbar".equals(skinObject.getViewID())) {
@@ -634,7 +634,8 @@ public class ToolBarView
 	}
 	
 	@Override
-	public void currentlySelectedContentChanged(
+	public void 
+	currentlySelectedContentChanged(
 			ISelectedContent[] currentContent, String viewID) {
 		//System.err.println("currentlySelectedContentChanged " + viewID + ";" + currentContent + ";" + getMainSkinObject() + this + " via " + Debug.getCompressedStackTrace());
 		refreshCoreToolBarItems();
@@ -644,44 +645,58 @@ public class ToolBarView
 		}
 	}
 
-	// @see SkinView#skinObjectShown(SWTSkinObject, java.lang.Object)
 	@Override
-	public Object skinObjectShown(SWTSkinObject skinObject, Object params) {
+	public Object 
+	skinObjectShown(SWTSkinObject skinObject, Object params) {
 
 		if (showCalled) {
 			return null;
 		}
+				
 		showCalled = true;
 
 		Object object = super.skinObjectShown(skinObject, params);
 
-  	ToolBarItem[] allToolBarItems = tbm.getAllSWTToolBarItems();
-  	for (int i = 0; i < allToolBarItems.length; i++) {
-  		ToolBarItem toolBarItem = allToolBarItems[i];
-  		toolBarItem.addToolBarItemListener(this);
-  		uiFieldChanged(toolBarItem);
-  	}
-
-
-		SelectedContentManager.addCurrentlySelectedContentListener(this);
+		addActiveListeners();
+		
 		return object;
 	}
 
-	// @see SkinView#skinObjectHidden(SWTSkinObject, java.lang.Object)
 	@Override
-	public Object skinObjectHidden(SWTSkinObject skinObject, Object params) {
+	public Object 
+	skinObjectHidden(SWTSkinObject skinObject, Object params) {
 		showCalled = false;
-		SelectedContentManager.removeCurrentlySelectedContentListener(this);
 
-  	ToolBarItem[] allToolBarItems = tbm.getAllSWTToolBarItems();
-  	for (int i = 0; i < allToolBarItems.length; i++) {
-  		ToolBarItem toolBarItem = allToolBarItems[i];
-  		toolBarItem.removeToolBarItemListener(this);
-  	}
+		removeActiveListeners();
 
 		return super.skinObjectHidden(skinObject, params);
 	}
 
+	private void
+	addActiveListeners()
+	{
+		ToolBarItem[] allToolBarItems = tbm.getAllSWTToolBarItems();
+		for (int i = 0; i < allToolBarItems.length; i++) {
+			ToolBarItem toolBarItem = allToolBarItems[i];
+			toolBarItem.addToolBarItemListener(this);
+			uiFieldChanged(toolBarItem);
+		}
+
+		SelectedContentManager.addCurrentlySelectedContentListener(this);
+	}
+	
+	private void
+	removeActiveListeners()
+	{
+		SelectedContentManager.removeCurrentlySelectedContentListener(this);
+
+		ToolBarItem[] allToolBarItems = tbm.getAllSWTToolBarItems();
+		for (int i = 0; i < allToolBarItems.length; i++) {
+			ToolBarItem toolBarItem = allToolBarItems[i];
+			toolBarItem.removeToolBarItemListener(this);
+		}
+	}
+	
 	private void
 	removeItemListeners()
 	{
@@ -692,12 +707,15 @@ public class ToolBarView
 		COConfigurationManager.removeParameterListener( "IconBar.start.stop.separate", this );
 	}
 	
-	// @see SkinView#skinObjectDestroyed(SWTSkinObject, java.lang.Object)
 	@Override
-	public Object skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
+	public Object 
+	skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
+				
 		tbm.removeListener(this);
 
 		removeItemListeners();
+		
+		removeActiveListeners();
 		
 		COConfigurationManager.removeParameterListener( "IconBar.enabled", this );
 		

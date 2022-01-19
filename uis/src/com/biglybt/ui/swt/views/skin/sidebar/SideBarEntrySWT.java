@@ -450,7 +450,10 @@ public class SideBarEntrySWT
 		}
 		buildonSWTItemSet = false;
 
-		if (getSkinObject() != null) {
+		SWTSkinObject so = getSkinObject();
+		
+		if ( so != null && !so.isDisposed()){
+			
 			return true;
 		}
 
@@ -541,7 +544,12 @@ public class SideBarEntrySWT
 
 		if (control != null && !control.isDisposed()) {
 			control.setData("BaseMDIEntry", this);
-			control.addDisposeListener(e -> closeView());
+			
+			/* XXX Removed this because we can dispose of the control and still
+			  want the sidebar entry (ie. destroy on focus lost, rebuild on focus gain)
+
+			  control.addDisposeListener(e -> closeView());
+			 */
 		} else {
 			return false;
 		}
@@ -1266,12 +1274,14 @@ public class SideBarEntrySWT
 	@Override
 	protected void setToolbarVisibility(boolean visible) {
 		if (toolBarInfoBar != null) {
-			if (visible) {
-				toolBarInfoBar.show();
-			} else {
-				toolBarInfoBar.hide(false);
-			}
-			return;
+			if ( !toolBarInfoBar.getParentSkinObject().isDisposed()){
+				if (visible) {
+					toolBarInfoBar.show();
+				} else {
+					toolBarInfoBar.hide(false);
+				}
+				return;
+		}
 		}
 		SWTSkinObject soMaster = getSkinObjectMaster();
 		if (soMaster == null) {
@@ -1282,7 +1292,7 @@ public class SideBarEntrySWT
 			return;
 		}
 		SWTSkinObject soToolbar = skin.getSkinObject(SkinConstants.VIEWID_VIEW_TOOLBAR, soMaster);
-		if (soToolbar == null && visible) {
+		if (soToolbar == null && visible) {			
 			toolBarInfoBar = new InfoBarUtil(so, SO_ID_TOOLBAR, true, "", "") {
 				@Override
 				public boolean allowShow() {
