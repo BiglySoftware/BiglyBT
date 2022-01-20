@@ -80,7 +80,7 @@ NetUtils
 		}
 
 		if ( do_check ){
-
+			
 			final runnableWithException<SocketException> do_it =
 				new runnableWithException<SocketException>()
 				{
@@ -133,45 +133,53 @@ NetUtils
 
 						}finally{
 
-							synchronized( NetUtils.class ){
-
-								boolean changed = result.size() != current_interfaces.size();
-								
-								if ( !changed ){
-								
-									for ( int i=0;i<result.size();i++){
-										
-										if ( !result.get(i).equals( current_interfaces.get(i))){
-										
-											changed= true;
+							try{
+								synchronized( NetUtils.class ){
+	
+									boolean changed = result.size() != current_interfaces.size();
+									
+									if ( !changed ){
+									
+										for ( int i=0;i<result.size();i++){
 											
-											break;
+											if ( !result.get(i).equals( current_interfaces.get(i))){
+											
+												changed = true;
+												
+												break;
+											}
 										}
 									}
-								}
-								
-								check_in_progress	= false;
-								current_interfaces 	= result;
-
-								last_ni_check	= SystemTime.getMonotonousTime();
-								
-								SecurityManager sec = System.getSecurityManager();
-								
-								if ( sec instanceof SESecurityManager.MySecurityManager ){
 									
-									if (((SESecurityManager.MySecurityManager)sec).filterNetworkInterfaces( result )){
+									check_in_progress	= false;
+									current_interfaces 	= result;
+	
+									last_ni_check	= SystemTime.getMonotonousTime();
+									
+									try{
+										SecurityManager sec = System.getSecurityManager();
 										
-										changed = true;
+										if ( sec instanceof SESecurityManager.MySecurityManager ){
+											
+											if (((SESecurityManager.MySecurityManager)sec).filterNetworkInterfaces( result )){
+												
+												changed = true;
+											}
+										}
+									}catch( Throwable e ){
+																															
+										Debug.out( e );
+									}
+									
+									if ( changed ){
+									
+										host_or_address_map.clear();
 									}
 								}
-								
-								if ( changed ){
-								
-									host_or_address_map.clear();
-								}
-							}
+							}finally{
 
-							ni_sem.releaseForever();
+								ni_sem.releaseForever();
+							}
 						}
 					}
 				};
@@ -192,8 +200,12 @@ NetUtils
 							do_it.run();
 
 						}catch( SocketException e ){
-
+							
 							error[0] = e;
+							
+						}catch( Throwable e ){
+
+							error[0] = new SocketException(Debug.getNestedExceptionMessage(e));
 
 						}finally{
 

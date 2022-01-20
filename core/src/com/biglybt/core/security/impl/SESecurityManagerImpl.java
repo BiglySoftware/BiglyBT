@@ -1964,15 +1964,20 @@ SESecurityManagerImpl
 				
 				for ( NetworkInterface ni: interfaces ){
 					
-					for ( InterfaceAddress ia: ni.getInterfaceAddresses()){
-						
-						InetAddress address = ia.getAddress();
-						
-						if ( 	( filter_v6 && address instanceof Inet6Address ) ||
-								( filter_v4 && address instanceof Inet4Address )){
+					try{
+						for ( InterfaceAddress ia: ni.getInterfaceAddresses()){
 							
-							filtered.add( address.getHostAddress());
+							InetAddress address = ia.getAddress();
+							
+							if ( 	( filter_v6 && address instanceof Inet6Address ) ||
+									( filter_v4 && address instanceof Inet4Address )){
+								
+								filtered.add( address.getHostAddress());
+							}
 						}
+					}catch( Throwable e ){
+						
+						// seen NPE here from ni.getInterfaceAddresses()
 					}
 				}
 				
