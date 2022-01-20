@@ -1128,7 +1128,7 @@ public class MainMDISetup
 												section);
 						MdiEntry entry = mdi.createEntry(builder, true);
 
-						entry.setImageLeftID("image.sidebar.config");
+						entry.setImageLeftID("image.sidebar.cog");
 
 						return entry;
 					}
