@@ -208,7 +208,13 @@ public abstract class BaseMdiEntry
 			}
 	
 			SWTSkinObject so = getSkinObject();
-			if (so != null) {
+			if (so != null ){
+				
+				SWTSkinObject master = getSkinObjectMaster();
+				
+				if ( master != null && master != so ){
+					master.dispose();
+				}
 				setSkinObjectMaster(null);
 				so.getSkin().removeSkinObject(so);
 			}

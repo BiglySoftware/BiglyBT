@@ -34,6 +34,7 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
+import com.biglybt.ui.swt.Utils;
 
 /**
  * A convenience class for creating the Debug menu
@@ -204,7 +205,14 @@ public class DebugMenuHelper
 			}
 		});
 
-
+		item = new MenuItem(menuDebug, SWT.PUSH );
+		item.setText("Dump UI");
+		item.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				Utils.dump( uiFunctions.getMainShell());
+			}
+		});
 
 		return menuDebug;
 	}

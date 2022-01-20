@@ -288,6 +288,15 @@ public class DebugMenuHelper
 			});
 		}
 
+		item = new MenuItem(menuDebug, SWT.PUSH );
+		item.setText("Dump UI");
+		item.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				Utils.dump( uiFunctions.getMainShell());
+			}
+		});
+		
 		item = new MenuItem(menuDebug, SWT.NONE);
 		item.setText("Obfuscated Shell Image");
 		item.addSelectionListener(new SelectionAdapter() {

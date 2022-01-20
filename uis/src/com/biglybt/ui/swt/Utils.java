@@ -2748,13 +2748,24 @@ public class Utils
 	dump(
 		Control	comp )
 	{
-		PrintWriter pw = new PrintWriter( System.out );
+		File file = new File( AEDiagnostics.getLogDir(), "ui_dump.log" );
+		
+		try{
+			PrintWriter pw = new PrintWriter( new FileWriter( file ));
 
-		IndentWriter iw = new IndentWriter( pw );
+			IndentWriter iw = new IndentWriter( pw );
 
-		dump( iw, comp, new HashSet<>());
+			dump( iw, comp, new HashSet<>());
 
-		pw.flush();
+			pw.flush();
+			
+			System.out.println( "Dump written to " + file );
+						
+		}catch( Throwable e ){
+			
+			
+			Debug.out( e );
+		}
 	}
 
 	private static void
