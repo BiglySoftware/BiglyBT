@@ -1746,7 +1746,7 @@ DownloadManagerImpl
 		}
 	}
 
-	protected int
+	public int
 	getEffectiveUploadPriority()
 	{
 		return( upload_priority_manual + upload_priority_auto );

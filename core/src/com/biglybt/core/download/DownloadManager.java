@@ -549,6 +549,8 @@ DownloadManager
 
     public void updateAutoUploadPriority( Object key, boolean inc );
 
+    public int getEffectiveUploadPriority();
+    
 	/**
 	 * Returns the max uploads depending on whether the download is seeding and it has a separate
 	 * rate for this

@@ -35,8 +35,10 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
+import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagDownload;
 import com.biglybt.core.tag.TagFeatureRunState;
+import com.biglybt.core.tag.TagListener;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.impl.TagBase;
 import com.biglybt.core.util.*;
@@ -44,7 +46,7 @@ import com.biglybt.core.util.*;
 public class
 CategoryImpl
 	extends TagBase
-	implements Category, Comparable, TagDownload
+	implements Category, Comparable, TagDownload, TagListener
 {
   final String sName;
   private final int type;
@@ -150,6 +152,8 @@ CategoryImpl
     upload_speed	= maxup;
     download_speed	= maxdown;
     attributes = _attributes;
+    
+    addTagListener( this, true );
   }
 
   protected CategoryImpl(CategoryManagerImpl manager, String sName, int type, Map<String,String> _attributes) {
@@ -251,18 +255,6 @@ CategoryImpl
     	
         manager.addRateLimiter( upload_limiter, true );
         manager.addRateLimiter( download_limiter, false );
-
-        int pri = getIntAttribute( AT_UPLOAD_PRIORITY, -1 );
-
-        if ( pri > 0 ){
-
-      	  	// another call-during-construction issue to avoid here
-
-      	  if ( manager.getDownloadState() != null ){
-
-      		  manager.updateAutoUploadPriority( UPLOAD_PRIORITY_KEY, true );
-      	  }
-        }
     }
     
     super.addTaggable( manager );
@@ -303,18 +295,6 @@ CategoryImpl
 
         manager.removeRateLimiter( upload_limiter, true );
         manager.removeRateLimiter( download_limiter, false );
-
-        int pri = getIntAttribute( AT_UPLOAD_PRIORITY, -1 );
-
-        if ( pri > 0 ){
-
-      	  	// another call-during-construction issue to avoid here
-
-      	  if ( manager.getDownloadState() != null ){
-
-      		  manager.updateAutoUploadPriority( UPLOAD_PRIORITY_KEY, false );
-      	  }
-        }
     }
     
     super.removeTaggable( manager );
@@ -344,6 +324,42 @@ CategoryImpl
 		DownloadManager dm = (DownloadManager)t;
 		
 		removeManager( dm.getDownloadState());
+	}
+	
+	public void
+	taggableAdded(
+		Tag			tag,
+		Taggable	tagged )
+	{
+		DownloadManager manager = (DownloadManager)tagged;
+		
+		int pri = getIntAttribute( AT_UPLOAD_PRIORITY, -1 );
+
+		if ( pri > 0 ){
+
+			manager.updateAutoUploadPriority( UPLOAD_PRIORITY_KEY, true );
+		}	
+	}
+
+	public void
+	taggableSync(
+		Tag			tag )
+	{
+	}
+
+	public void
+	taggableRemoved(
+		Tag			tag,
+		Taggable	tagged )
+	{
+		DownloadManager manager = (DownloadManager)tagged;
+		
+		int pri = getIntAttribute( AT_UPLOAD_PRIORITY, -1 );
+
+		if ( pri > 0 ){
+
+			manager.updateAutoUploadPriority( UPLOAD_PRIORITY_KEY, false );
+		}
 	}
 	
   @Override
@@ -732,7 +748,9 @@ CategoryImpl
 
 		  destroyed = true;
 
-		  removeTag();
+		  removeTagListener( this );
+		  
+		  removeTag();		  
 	  }
   }
 
