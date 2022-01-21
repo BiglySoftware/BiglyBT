@@ -92,6 +92,13 @@ DiskManagerFactory
 		RDResumeHandler.setTorrentResumeDataComplete( download_manager_state );
 	}
 
+	public static void
+	setResumeDataTotallyIncomplete(
+		DownloadManagerState	download_manager_state )
+	{
+		RDResumeHandler.setTorrentResumeTotallyIncomplete( download_manager_state );
+	}
+	
 		/**
 		 * Sets resume data complete apart from a few random pieces. On torrent start these will be checked
 		 * This is used in the "open for seeding" mode to ensure that there's at least a chance that the

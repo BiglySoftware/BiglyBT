@@ -1637,6 +1637,13 @@ TorrentUtils
 	}
 
 	public static void
+	setResumeDataTotallyIncomplete(
+		DownloadManagerState	download_manager_state )
+	{
+		DiskManagerFactory.setResumeDataTotallyIncomplete( download_manager_state );
+	}
+	
+	public static void
 	setResumeDataCompletelyValid(
 		DownloadManagerState	download_manager_state )
 	{

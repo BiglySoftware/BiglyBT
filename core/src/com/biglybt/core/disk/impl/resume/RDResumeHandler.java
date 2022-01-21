@@ -204,9 +204,7 @@ RDResumeHandler
 					file_sizes = null;
 					
 				}else{
-					
-					DiskManagerFileInfo[]	files = disk_manager.getFiles();
-					
+										
 					file_sizes = new HashMap<>();
 				}
 
@@ -1413,6 +1411,28 @@ RDResumeHandler
 		clearResumeDataSupport( download_manager, file, true, false );
 	}
 
+	public static void
+	setTorrentResumeTotallyIncomplete(
+		DownloadManagerState	download_manager_state )
+	{
+		TOTorrent	torrent = download_manager_state.getTorrent();
+		
+		long	piece_count = torrent.getNumberOfPieces();
+
+		byte[] resume_pieces = new byte[(int)piece_count];
+
+		Arrays.fill( resume_pieces, PIECE_NOT_DONE );
+		
+		Map resumeMap = new HashMap();
+
+		resumeMap.put( "resume data", resume_pieces);
+		
+		resumeMap.put("valid", new Long(1));
+
+		saveResumeData(download_manager_state,resumeMap);
+	}
+
+	
 	public static void
 	setTorrentResumeDataNearlyComplete(
 		DownloadManagerState	download_manager_state )

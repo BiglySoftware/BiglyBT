@@ -380,6 +380,8 @@ MagnetPluginMDDownloader
 				
 				DownloadManagerState state = core_dm.getDownloadState();
 				
+				TorrentUtils.setResumeDataTotallyIncomplete( state );	// avoid any initial rechecking
+				
 				state.setDisplayName( display_name );
 	
 				if (	 networks.size() == 0 ||
