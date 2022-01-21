@@ -279,7 +279,7 @@ QuickLinksView
 		
 		addDefaultItem( mdi, toolBar, StatsView.VIEW_ID,"image.sidebar.stats", "Stats.title.full" );
 
-		addDefaultItem( mdi, toolBar, MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, "image.sidebar.config2", "ConfigView.title.full" );
+		addDefaultItem( mdi, toolBar, MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, "image.sidebar.cog", "ConfigView.title.full" );
 	}
 	
 	public static void
