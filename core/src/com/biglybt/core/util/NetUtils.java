@@ -20,8 +20,6 @@
 
 package com.biglybt.core.util;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.*;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -61,7 +59,7 @@ NetUtils
 	{
 		return( getNetworkInterfaces( false ));
 	}
-	
+
 	public static List<NetworkInterface>
 	getNetworkInterfaces(
 		boolean	up_only )
@@ -135,22 +133,22 @@ NetUtils
 								Debug.out( "Network interface enumeration took " + elapsed_millis + ": " + (old_period<current_check_millis?"increased":"decreased" ) + " refresh frequency to " + current_check_millis + "ms" );
 							}
 							*/
-							
+
 							if ( nis != null ){
 
 								while( nis.hasMoreElements()){
 
 									NetworkInterface ni = nis.nextElement();
-									
+
 									result_all.add( ni );
-									
+
 									try{
 										if ( ni.isUp()){
-											
+
 											result_up.add( ni );
 										}
 									}catch( Throwable e ){
-										
+
 									}
 								}
 							}
@@ -180,12 +178,12 @@ NetUtils
 									check_in_progress		= false;
 									current_all_interfaces 	= result_all;
 									current_up_interfaces	= result_up;
-									
+
 									last_ni_check	= SystemTime.getMonotonousTime();
 									
 									try{
 										changed = SESecurityManager.filterNetworkInterfaces( result_all );
-										
+
 									}catch( Throwable e ){
 																															
 										Debug.out( e );
@@ -569,37 +567,15 @@ NetUtils
 			se = e;
 		}
 
-		// Java 7 has getByIndex
-		try {
-			Method mGetByIndex = NetworkInterface.class.getDeclaredMethod(
-					"getByIndex", int.class);
-			List<NetworkInterface> list = new ArrayList<>();
-			int i = 0;
-			do {
-				//NetworkInterface nif = NetworkInterface.getByIndex(i);
-				NetworkInterface nif = null;
-				try {
-					nif = (NetworkInterface) mGetByIndex.invoke(null, i);
-				} catch (IllegalAccessException e) {
-					break;
-				} catch (InvocationTargetException ignore) {
-					// getByIndex throws SocketException
-				}
-				if (nif != null) {
-					list.add(nif);
-				} else if (i > 0) {
-					break;
-				}
-				i++;
-			} while (true);
-			if (list.size() > 0) {
-				return Collections.enumeration(list);
-			}
-		} catch (NoSuchMethodException ignore) {
+		final List<NetworkInterface> list = new ArrayList<>();
+
+		collectNetworkInterfacesByIndex(list);
+
+		if (!list.isEmpty()) {
+			return Collections.enumeration(list);
 		}
 
 		// Worst case, try some common interface names
-		List<NetworkInterface> list = new ArrayList<>();
 		final String[] commonNames = {
 			"lo",
 			"eth",
@@ -631,37 +607,56 @@ NetUtils
 			} catch (Throwable ignore) {
 			}
 		}
-		if (list.size() > 0) {
+
+		if (!list.isEmpty()) {
 			return Collections.enumeration(list);
 		}
 
 		throw se;
 	}
-		
+
+	private static void collectNetworkInterfacesByIndex(List<NetworkInterface> list) {
+		int i = 0;
+		do {
+			NetworkInterface nif = null;
+			try {
+				nif = NetworkInterface.getByIndex(i);
+			} catch (SocketException ignore) {
+			}
+			if (nif != null) {
+				list.add(nif);
+			} else if (i > 0) {
+				break;
+			}
+			i++;
+		} while (true);
+	}
+
 	public static List<String>
 	getTestDomains()
 	{
 		List<String>	result = new ArrayList<>();
-		
+
 		try{
 			String domains = COConfigurationManager.getStringParameter( ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN );
-			
+
 			String[] bits = domains.split("[,;]");
-			
+
 			for ( String bit: bits ){
-				
+
 				bit = bit.trim();
-				
+
 				if ( !bit.isEmpty()){
-					
+
 					result.add( bit );
 				}
 			}
 		}catch( Throwable e ){
-			
+
 			Debug.out( e );
 		}
-		
+
 		return( result );
 	}
+
 }
