@@ -136,7 +136,8 @@ implements PEPeerTransport
 	private static final byte RELATIVE_SEEDING_UPLOAD_ONLY_SEED = 0x02;
 	private byte relativeSeeding = RELATIVE_SEEDING_NONE;
 
-	private final boolean incoming;
+	private final boolean incoming_raw;
+	private boolean incoming_effective;
 
 	protected volatile boolean closing = false;
 	private volatile int current_peer_state;
@@ -442,8 +443,19 @@ implements PEPeerTransport
 		connection 		= _connection;
 		data			= _initial_user_data;
 
-		incoming = true;
+		incoming_raw = true;
 
+		Boolean b_incoming = (Boolean)connection.getEndpoint().getProperty( AEProxyAddressMapper.MAP_PROPERTY_CONNECTION_INCOMING );
+		
+		if ( b_incoming != null ){
+			
+			incoming_effective = b_incoming;
+			
+		}else{
+			
+			incoming_effective = true;
+		}
+		
 		is_metadata_download = manager.isMetadataDownload();
 
 		diskManager =manager.getDiskManager();
@@ -462,7 +474,7 @@ implements PEPeerTransport
 
 		peer_item_identity = PeerItemFactory.createPeerItem( ip, port, PeerItem.convertSourceID( _peer_source ), PeerItemFactory.HANDSHAKE_TYPE_PLAIN, 0, PeerItemFactory.CRYPTO_LEVEL_1, 0 );  //this will be recreated upon az handshake decode
 
-		plugin_connection = new ConnectionImpl(connection, incoming);
+		plugin_connection = new ConnectionImpl(connection, incoming_raw );
 
 		peer_stats = manager.createPeerStats( this );
 
@@ -476,7 +488,7 @@ implements PEPeerTransport
 		// split out connection initiation from constructor so we can get access to the peer transport
 		// before message processing starts
 
-		if ( incoming ){
+		if ( incoming_raw ){
 
 			//"fake" a connect request to register our listener
 			connection.connect(
@@ -603,7 +615,7 @@ implements PEPeerTransport
 
 		peer_item_identity = PeerItemFactory.createPeerItem( ip, tcp_listen_port, PeerItem.convertSourceID( _peer_source ), PeerItemFactory.HANDSHAKE_TYPE_PLAIN, _udp_port, crypto_level, 0 );  //this will be recreated upon az handshake decode
 
-		incoming = false;
+		incoming_raw = incoming_effective = false;
 
 		peer_stats = manager.createPeerStats( this );
 
@@ -733,7 +745,7 @@ implements PEPeerTransport
 					!_require_crypto_handshake,
 					manager.getSecrets( _crypto_level ));
 
-		plugin_connection = new ConnectionImpl(connection, incoming);
+		plugin_connection = new ConnectionImpl(connection, incoming_raw);
 
 		changePeerState( PEPeer.CONNECTING );
 
@@ -2007,7 +2019,7 @@ implements PEPeerTransport
 	public String getClient() {  return client;  }
 
 	@Override
-	public boolean isIncoming() {  return incoming;  }
+	public boolean isIncoming() {  return incoming_effective;  }
 
 
 	@Override
