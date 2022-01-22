@@ -32,6 +32,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -375,7 +376,9 @@ public class TabbedMDI_Ren
 					
 					if (showingClose) {
 						
-						if ( closeImageState == 0 && Utils.isDarkAppearanceNative() && !Constants.isWindows ){
+							// update - removed this hack for Linux after seeing hang :(
+						
+						if ( closeImageState == 0 && Utils.isDarkAppearanceNative() && Constants.isOSX ){
 														
 								// OSX + Linux paint an almost black cross on a black background
 								// hack to take whatever the OS paints and lighten it
@@ -396,7 +399,7 @@ public class TabbedMDI_Ren
 								t.printStackTrace();
 							}
 							
-							ImageData idata = img.getImageData();
+							ImageData idata = img.getImageData();	// linux hang here :(
 							PaletteData	pdata = idata.palette;
 							
 							int redMask 	= pdata.redMask;
@@ -431,6 +434,18 @@ public class TabbedMDI_Ren
 							gcImg.dispose();
 							img.dispose();
 
+						}else if ( closeImageState == 0 && Utils.isDarkAppearanceNative() && Constants.isLinux ){
+							
+							ImageLoader imageLoader = ImageLoader.getInstance();
+							
+							Image img = imageLoader.getImage( "image.tabfolder.close.up._dark" );
+							
+							Rectangle b = img.getBounds();
+							
+							gc.drawImage(img, closeRect.x+(closeRect.width-b.width)/2, closeRect.y+1+(closeRect.height-b.height)/2 );
+							
+							imageLoader.releaseImage( "image.tabfolder.close.up._dark" );
+							
 						}else{
 							try {
 								Method methDrawClose = CTabFolderRenderer.class.getDeclaredMethod(
