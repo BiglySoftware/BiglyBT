@@ -59,7 +59,8 @@ SubscriptionResultImpl
 	private byte[]		key2;
 	private boolean		read;
 	private boolean		deleted;
-
+	private int			deleted_last_seen_day;
+	
 	private String		result_json;
 
 	private WeakReference<Map<Integer,Object>>	props_ref = null;
@@ -128,6 +129,15 @@ SubscriptionResultImpl
 
 			deleted	= true;
 
+			Number l_dls = (Number)map.get( "dls" );
+			
+			if ( l_dls != null ){
+				
+				deleted_last_seen_day = l_dls.intValue();
+			}else{
+				
+				deleted_last_seen_day = (int)( SystemTime.getCurrentTime() / (1000*60*60*24 ));
+			}
 		}else{
 
 			try{
@@ -146,6 +156,8 @@ SubscriptionResultImpl
 	{
 		if ( deleted ){
 
+			deleted_last_seen_day = (int)( SystemTime.getCurrentTime() / (1000*60*60*24 ));
+			
 			return( false );
 		}
 
@@ -339,6 +351,8 @@ SubscriptionResultImpl
 
 			deleted	= true;
 
+			deleted_last_seen_day = (int)( SystemTime.getCurrentTime() / (1000*60*60*24 ));
+
 			history.updateResult( this );
 		}
 	}
@@ -356,6 +370,12 @@ SubscriptionResultImpl
 		return( deleted );
 	}
 
+	protected int
+	getDeletedLastSeen()
+	{
+		return( deleted_last_seen_day );
+	}
+	
 	protected Map
 	toBEncodedMap()
 	{
@@ -373,6 +393,13 @@ SubscriptionResultImpl
 
 			map.put( "deleted", new Long(1));
 
+			if ( deleted_last_seen_day == 0 ){
+				
+				deleted_last_seen_day = (int)( SystemTime.getCurrentTime() / (1000*60*60*24 ));
+			}
+			
+			map.put( "dls", deleted_last_seen_day );
+			
 		}else{
 
 			try{

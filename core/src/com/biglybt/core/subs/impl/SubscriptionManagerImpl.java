@@ -7681,15 +7681,58 @@ SubscriptionManagerImpl
 
 				Map	map = new HashMap();
 
-				List	list = new ArrayList( results.length );
+				List<Map>	list = new ArrayList<>( results.length );
 
 				map.put( "results", list );
 
-				for (int i=0;i<results.length;i++){
+				List<SubscriptionResultImpl>	deleted_old_results = new ArrayList<>( results.length );
+				
+				int now_days = (int)( SystemTime.getCurrentTime() / (1000*60*60*24 ));
 
-					list.add( results[i].toBEncodedMap());
+				for ( SubscriptionResultImpl result: results ){
+					
+					if ( result.isDeleted()){
+						
+						int days = result.getDeletedLastSeen();
+					
+						if ( days > 0 && now_days - days > 14 ){
+						
+							deleted_old_results.add( result );
+							
+						}else{
+							
+							list.add( result.toBEncodedMap());
+						}
+					}else{
+						
+						list.add( result.toBEncodedMap());
+					}
 				}
 
+				if ( deleted_old_results.size() > 10000 ){
+					
+					Collections.sort(
+						deleted_old_results,
+						(r1,r2)->{
+					
+							return( r2.getDeletedLastSeen() - r1.getDeletedLastSeen());
+						});
+					
+						// most recently deleted results are at the front of the list, save some
+						// of them
+					
+					for ( int i=0; i<5000; i++ ){
+						
+						list.add( deleted_old_results.get( i ).toBEncodedMap());
+					}
+				}else{
+					
+					for ( SubscriptionResultImpl result: deleted_old_results ){
+						
+						list.add( result.toBEncodedMap());
+					}
+				}
+				
 				FileUtil.writeResilientFile( f, map );
 
 			}catch( Throwable e ){
