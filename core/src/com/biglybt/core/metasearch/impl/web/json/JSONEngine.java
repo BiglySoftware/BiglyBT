@@ -370,6 +370,9 @@ JSONEngine
 
 						try{
 							boolean addResult = true;
+							
+							Set<Integer>	fields_mapped = new HashSet<>();
+							
 							for(int j = 0 ; j < mappings.length ; j++) {
 								String fieldFrom = mappings[j].getName();
 								if(fieldFrom == null) {
@@ -448,6 +451,12 @@ JSONEngine
 
 								if(fieldContent == null) {
 									continue;
+								}else if ( fieldContent.isEmpty()){
+										// support multiple mappings for the same entry such that
+										// earlier ones take priority over later empty ones
+									if ( fields_mapped.contains( fieldTo )){
+										continue;
+									}
 								}
 
 								Pattern filter = mappings[j].getPostFilterPattern(searchQuery);
@@ -459,6 +468,10 @@ JSONEngine
 									}
 								}
 
+								if (!fieldContent.isEmpty()){
+									fields_mapped.add( fieldTo );
+								}
+								
 								switch(fieldTo) {
 									case FIELD_NAME :
 										result.setNameFromHTML(fieldContent);
