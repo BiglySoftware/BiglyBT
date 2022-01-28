@@ -21,10 +21,15 @@ package com.biglybt.ui.swt.subscriptions;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
 import com.biglybt.ui.swt.columns.subscriptions.*;
+import com.biglybt.ui.swt.components.BubbleTextBox;
+import com.biglybt.ui.swt.components.BufferedLabel;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -39,6 +44,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
@@ -60,6 +66,7 @@ import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.subs.SubscriptionManagerListener;
+import com.biglybt.core.tag.TagFeatureProperties;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
@@ -75,16 +82,16 @@ import com.biglybt.ui.swt.utils.ColorCache;
 
 public class SubscriptionsView
 	implements SubscriptionManagerListener, UIPluginViewToolBarListener,
-	UISWTViewCoreEventListener
+	UISWTViewCoreEventListener, TableViewFilterCheck<Subscription>
 {
 	protected static final String TABLE_ID = "subscriptions";
 
-	private TableViewSWT view;
+	private TableViewSWT<Subscription> view;
 
 	private Composite viewComposite;
 
+	private Font textFont0;
 	private Font textFont1;
-
 	private Font textFont2;
 
 	private UISWTView swtView;
@@ -253,6 +260,9 @@ public class SubscriptionsView
 		if (viewComposite != null && !viewComposite.isDisposed()) {
 			viewComposite.dispose();
 		}
+		if(textFont0 != null && ! textFont0.isDisposed()) {
+			textFont0.dispose();
+		}
 		if(textFont1 != null && ! textFont1.isDisposed()) {
 			textFont1.dispose();
 		}
@@ -269,11 +279,86 @@ public class SubscriptionsView
 		return MessageText.getString("subscriptions.overview");
 	}
 
-	private void initialize(Composite parent) {
-
+	private void 
+	initialize(
+		Composite parent ) 
+	{
 		viewComposite = new Composite(parent,SWT.NONE);
 		viewComposite.setLayout(new FormLayout());
 
+		Font font = viewComposite.getFont();
+		
+		FontData fDatas[] = font.getFontData();
+		for(int i = 0 ; i < fDatas.length ; i++) {
+			fDatas[i].setStyle(SWT.BOLD);
+		}
+
+		textFont0 = new Font(viewComposite.getDisplay(),fDatas);
+		
+		fDatas = font.getFontData();
+		for(int i = 0 ; i < fDatas.length ; i++) {
+			fDatas[i].setHeight(150 * fDatas[i].getHeight() / 100);
+			if(Constants.isWindows) {
+				fDatas[i].setStyle(SWT.BOLD);
+			}
+		}
+
+		textFont1 = new Font(viewComposite.getDisplay(),fDatas);
+
+		fDatas = font.getFontData();
+		for(int i = 0 ; i < fDatas.length ; i++) {
+			fDatas[i].setHeight(120 * fDatas[i].getHeight() / 100);
+		}
+
+		textFont2 = new Font(viewComposite.getDisplay(),fDatas);
+
+		Composite topComposite = new Composite(viewComposite,SWT.NONE);
+		topComposite.setLayout(new FormLayout());
+		
+		Composite tableComposite = new Composite(viewComposite,SWT.NONE);
+		tableComposite.setLayout(new FormLayout());
+		
+		Composite bottomComposite = new Composite(viewComposite,SWT.BORDER);
+		bottomComposite.setLayout(new FormLayout());
+
+			// top section
+		
+		Label lblHeader = new Label(topComposite, SWT.NULL );
+
+		lblHeader.setFont( textFont0 );
+		lblHeader.setText( MessageText.getString( "subscriptions.overview"));
+		
+		Button btnAdd = new Button(topComposite, SWT.NULL );
+		btnAdd.setText(MessageText.getString( "subscriptions.add.tooltip") + "..." );
+		
+		btnAdd.addListener( SWT.Selection, (ev)->{
+			new SubscriptionWizard();
+
+			COConfigurationManager.setParameter( "subscriptions.wizard.shown", true );
+		});
+		
+		BubbleTextBox bubbleTextBox = new BubbleTextBox(topComposite, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
+		Composite mainBubbleWidget = bubbleTextBox.getMainWidget();
+
+		FormData fd = new FormData();
+		fd.left = new FormAttachment(0, 5);
+		fd.top = new FormAttachment(mainBubbleWidget, 0, SWT.CENTER );
+		
+		lblHeader.setLayoutData( fd );
+
+		fd = new FormData();
+		fd.right = new FormAttachment(mainBubbleWidget, -10);
+		fd.top = new FormAttachment(mainBubbleWidget, 0, SWT.CENTER );
+		btnAdd.setLayoutData( fd );
+	
+		fd = new FormData();
+		fd.right = new FormAttachment(100, -5);
+		fd.width = 140;
+		
+		bubbleTextBox.setMessageAndLayout( "", fd);
+		
+			// table section
+		
 		TableColumnCore[] columns = new TableColumnCore[] {
 				new ColumnSubscriptionNew(TABLE_ID),
 				new ColumnSubscriptionName(TABLE_ID),
@@ -301,6 +386,8 @@ public class SubscriptionsView
 		view = TableViewFactory.createTableViewSWT(Subscription.class, TABLE_ID, TABLE_ID,
 				columns, "name", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
+		view.enableFilterCheck(bubbleTextBox, this );
+		
 		view.addLifeCycleListener(new TableLifeCycleListener() {
 			@Override
 			public void tableLifeCycleEventOccurred(TableView tv, int eventType, Map<String, Object> data) {
@@ -455,39 +542,22 @@ public class SubscriptionsView
 
 		view.setRowDefaultHeightEM(1.4f);
 
-		view.initialize(viewComposite);
+		view.initialize(tableComposite);
 
-		final Composite composite = new Composite(viewComposite,SWT.BORDER);
-		composite.setBackground(ColorCache.getColor(composite.getDisplay(), "#F1F9F8"));
+			// bottom composite setup
+		
+		bottomComposite.setBackground(ColorCache.getColor(bottomComposite.getDisplay(), "#F1F9F8"));
 
-		Font font = composite.getFont();
-		FontData fDatas[] = font.getFontData();
-		for(int i = 0 ; i < fDatas.length ; i++) {
-			fDatas[i].setHeight(150 * fDatas[i].getHeight() / 100);
-			if(Constants.isWindows) {
-				fDatas[i].setStyle(SWT.BOLD);
-			}
-		}
-
-		textFont1 = new Font(composite.getDisplay(),fDatas);
-
-		fDatas = font.getFontData();
-		for(int i = 0 ; i < fDatas.length ; i++) {
-			fDatas[i].setHeight(120 * fDatas[i].getHeight() / 100);
-		}
-
-		textFont2 = new Font(composite.getDisplay(),fDatas);
-
-		Label preText = new Label(composite,SWT.NONE);
-		preText.setForeground(ColorCache.getColor(composite.getDisplay(), "#6D6F6E"));
+		Label preText = new Label(bottomComposite,SWT.NONE);
+		preText.setForeground(ColorCache.getColor(bottomComposite.getDisplay(), "#6D6F6E"));
 		preText.setFont(textFont1);
 		preText.setText(MessageText.getString("subscriptions.view.help.1"));
 
-		Label image = new Label(composite,SWT.NONE);
+		Label image = new Label(bottomComposite,SWT.NONE);
 		ImageLoader.getInstance().setLabelImage(image, "btn_rss_add");
 
-		Link postText = new Link(composite,SWT.NONE);
-		postText.setForeground(ColorCache.getColor(composite.getDisplay(), "#6D6F6E"));
+		Link postText = new Link(bottomComposite,SWT.NONE);
+		postText.setForeground(ColorCache.getColor(bottomComposite.getDisplay(), "#6D6F6E"));
 		postText.setFont(textFont2);
 		postText.setText(MessageText.getString("subscriptions.view.help.2"));
 
@@ -500,22 +570,9 @@ public class SubscriptionsView
 			}
 		});
 
-		Label close = new Label(composite,SWT.NONE);
+		Label close = new Label(bottomComposite,SWT.NONE);
 		ImageLoader.getInstance().setLabelImage(close, "image.dismissX");
-		close.setCursor(composite.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-		close.addListener(SWT.MouseUp, new Listener() {
-			@Override
-			public void handleEvent(Event arg0) {
-				COConfigurationManager.setParameter("subscriptions.view.showhelp", false);
-				composite.setVisible(false);
-				FormData data = (FormData) view.getComposite().getLayoutData();
-				data.bottom = new FormAttachment(100,0);
-				viewComposite.layout(true);
-			}
-		});
-
-		FormLayout layout = new FormLayout();
-		composite.setLayout(layout);
+		close.setCursor(bottomComposite.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 
 		FormData data;
 
@@ -541,28 +598,78 @@ public class SubscriptionsView
 		data.top = new FormAttachment(0,10);
 		close.setLayoutData(data);
 
+			// setup the three panels
+		
 		data = new FormData();
 		data.left = new FormAttachment(0,0);
 		data.right = new FormAttachment(100,0);
 		data.top = new FormAttachment(0,0);
-		data.bottom = new FormAttachment(composite,0);
-		viewComposite.setLayoutData(data);
+		topComposite.setLayoutData(data);
+
+		data = new FormData();
+		data.left = new FormAttachment(0,0);
+		data.right = new FormAttachment(100,0);
+		data.top = new FormAttachment(topComposite,0);
+		data.bottom = new FormAttachment(bottomComposite,0);
+		tableComposite.setLayoutData(data);
 
 		data = new FormData();
 		data.left = new FormAttachment(0,0);
 		data.right = new FormAttachment(100,0);
 		data.bottom = new FormAttachment(100,0);
-		composite.setLayoutData(data);
+		bottomComposite.setLayoutData(data);
+
+		close.addListener(SWT.MouseUp, new Listener() {
+			@Override
+			public void handleEvent(Event arg0) {
+				COConfigurationManager.setParameter("subscriptions.view.showhelp", false);
+				bottomComposite.setVisible(false);
+				FormData data = (FormData)tableComposite.getLayoutData();
+				data.bottom = new FormAttachment(100,0);
+				viewComposite.layout(true);
+			}
+		});
 
 		COConfigurationManager.setBooleanDefault("subscriptions.view.showhelp", true);
 		if(!COConfigurationManager.getBooleanParameter("subscriptions.view.showhelp")) {
-			composite.setVisible(false);
-			data = (FormData) viewComposite.getLayoutData();
+			bottomComposite.setVisible(false);
+			data = (FormData)tableComposite.getLayoutData();
 			data.bottom = new FormAttachment(100,0);
 			viewComposite.layout(true);
 		}
 	}
 
+	
+	public boolean 
+	filterCheck(
+		Subscription 	ds, 
+		String 			filter, 
+		boolean 		regex)
+	{
+		String name = ds.getName();
+				
+		String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
+
+		boolean	match_result = true;
+
+		if ( regex && s.startsWith( "!" )){
+
+			s = s.substring(1);
+
+			match_result = false;
+		}
+
+		Pattern pattern = RegExUtil.getCachedPattern( "subscriptions:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+
+		return( pattern.matcher(name).find() == match_result );
+	}
+
+	public void 
+	filterSet(
+		String filter)
+	{
+	}
+	
 	private void refresh() {
 		if ( view != null ){
 			view.refreshTable(false);
