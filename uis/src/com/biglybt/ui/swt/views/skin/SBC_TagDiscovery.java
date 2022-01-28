@@ -423,6 +423,11 @@ public class SBC_TagDiscovery
 												if ( tv == null ){
 													return;
 												}
+												
+												if ( TagUtils.isInternalTagName(tag)){
+													return;
+												}
+												
 												String key = Base32.encode(hash) + tag;
 
 												TagManager tm = TagManagerFactory.getTagManager();
