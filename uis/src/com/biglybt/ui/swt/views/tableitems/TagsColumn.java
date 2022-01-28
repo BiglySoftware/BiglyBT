@@ -237,8 +237,14 @@ TagsColumn
 		
 		Taggable taggable = (ds instanceof Taggable)?(Taggable)ds:null;
 
-		Point cellSize = cell.getSize();
+		Point 		cellSize 	= cell.getSize();
+		Rectangle 	bounds 		= cell.getBounds();
 
+			// adjust size to leave 1 pixel gaps left+right
+		
+		cellSize.x 	-= 3;
+		bounds.x 	+= 1;
+		
 		Font oldFont = gc.getFont();
 		
 
@@ -263,7 +269,6 @@ TagsColumn
 		int x = 0;
 		int y = 0;
 		int lineHeight = 0;
-		Rectangle bounds = cell.getBounds();
 
 		Map<TagPainter, Rectangle> mapTagPainting = new LinkedHashMap<>();
 
