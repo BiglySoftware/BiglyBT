@@ -353,6 +353,8 @@ RSSEngine
 
 					String	desc_size = null;
 
+					String potential_cdp_link = null;
+					
 					SimpleXMLParserDocumentNode node = item.getNode();
 
 					SimpleXMLParserDocumentNode[] children = node.getChildren();
@@ -408,6 +410,18 @@ RSSEngine
 
 						}else if(lc_child_name.equals( "comments" )){
 
+							if ( value.startsWith( "http" )){
+							
+								try{
+									String test_url = new URL( value ).toExternalForm();
+
+									if ( test_url.toLowerCase().startsWith( "http" )){
+
+										potential_cdp_link = test_url;
+									}
+								}catch( Throwable e ){
+								}
+							}
 							result.setCommentsFromHTML( value );
 
 						}else if ( lc_child_name.equals( "link" ) || lc_child_name.equals( "guid" )) {
@@ -878,7 +892,7 @@ RSSEngine
 					String latest_cdp_link  	= result.getCDPLink();
 					String latest_torrent_link	= result.getTorrentLink();
 					
-					if ( 	latest_cdp_link == null || 
+					if ( 	latest_cdp_link == null || latest_cdp_link.isEmpty() ||
 							( latest_cdp_link.length() > 0 && latest_cdp_link.equals( latest_torrent_link ))){
 						
 						try{
@@ -887,8 +901,15 @@ RSSEngine
 							if ( test_url.toLowerCase().startsWith( "http" )){
 
 								result.setCDPLink( test_url );
+								
+								potential_cdp_link = null;
 							}
 						}catch( Throwable e ){
+						}
+						
+						if ( potential_cdp_link != null ){
+							
+							result.setCDPLink( potential_cdp_link );
 						}
 					}
 					
