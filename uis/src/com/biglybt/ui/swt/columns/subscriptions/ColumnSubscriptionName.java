@@ -42,7 +42,7 @@ import com.biglybt.pif.ui.tables.*;
  */
 public class ColumnSubscriptionName
 	extends CoreTableColumnSWT
-	implements TableCellRefreshListener, TableCellSWTPaintListener, TableCellMouseListener
+	implements TableCellRefreshListener, TableCellSWTPaintListener, TableCellMouseListener, TableCellMouseMoveListener
 {
 	public static String COLUMN_ID = "name";
 
@@ -99,20 +99,33 @@ public class ColumnSubscriptionName
 		Subscription sub = (Subscription) cell.getDataSource();
 
 		if ( sub != null && !sub.isSearchTemplate()){
-
 			gc.drawImage(viewImage, bounds.x + bounds.width, bounds.y + bounds.height / 2 - imageHeight / 2);
 		}
 
 		imageLoader.releaseImage("ic_view");
 
+		
 			//gc.drawText(cell.getText(), bounds.x,bounds.y);
 	}
 
 	@Override
 	public void cellMouseTrigger(TableCellMouseEvent event) {
 
-		if (event.eventType == TableCellMouseEvent.EVENT_MOUSEUP
-				&& event.button == 1) {
+		int type = event.eventType;
+		
+		if ( type == TableCellMouseEvent.EVENT_MOUSEMOVE && event.cell instanceof TableCellSWT ){
+			
+			int cid = SWT.CURSOR_ARROW;
+			TableCellSWT cell = (TableCellSWT)event.cell;
+			int cellWidth = cell.getWidth();
+			if(event.x > cellWidth - imageWidth - 5 && event.x < cellWidth - 5) {
+				Subscription sub = (Subscription) cell.getDataSource();
+				if(sub != null && !sub.isSearchTemplate()){
+					cid = SWT.CURSOR_HAND;
+				}
+			}
+			cell.setCursorID( cid );
+		}else if (type == TableCellMouseEvent.EVENT_MOUSEUP && event.button == 1) {
 			TableCell cell = event.cell;
 			int cellWidth = cell.getWidth();
 			if(event.x > cellWidth - imageWidth - 5 && event.x < cellWidth - 5) {
