@@ -417,7 +417,7 @@ public class ProgressReporterWindow
 			((GridData) controls[i].getLayoutData()).exclude = true;
 		}
 
-		Point p = shell.computeSize(defaultShellWidth, SWT.DEFAULT);
+		Point defaultSize = shell.computeSize(defaultShellWidth, SWT.DEFAULT);
 
 		for (int i = 0; i < controls.length; i++) {
 			((GridData) controls[i].getLayoutData()).exclude = false;
@@ -439,6 +439,11 @@ public class ProgressReporterWindow
 		*/
 		
 		if ( !alreadyPositioned ){
+			
+			shell.setSize( defaultSize );
+			
+			shell.layout(false);
+			
 			/*
 			 * Centers the window
 			 */
