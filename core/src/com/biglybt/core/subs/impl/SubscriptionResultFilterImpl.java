@@ -320,7 +320,7 @@ SubscriptionResultFilterImpl
 
 			}catch( Throwable e ){
 
-				System.out.println( "Failed to compile pattern '" + strs[i] );
+				// System.out.println( "Failed to compile pattern '" + strs[i] );
 			}
 		}
 
