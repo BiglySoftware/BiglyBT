@@ -36,7 +36,7 @@ MagnetPluginUISWT
 	{
 		UISWTInstance	swt = (UISWTInstance)instance;
 
-		Image	image = swt.loadImage("com/biglybt/plugin/magnet/icons/magnet.gif");
+		Image	image = swt.loadImage("com/biglybt/plugin/magnet/icons/magnet.png");
 
 		for ( TableContextMenuItem menu: menus ){
 
