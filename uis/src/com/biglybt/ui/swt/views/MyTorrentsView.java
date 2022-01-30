@@ -1926,7 +1926,7 @@ public class MyTorrentsView
 			
 			if ( files_list.length > 0 ){
 				
-				FilesViewMenuUtil.fillMenu(	tv,	sColumnName, menu, manager_list, files_list, false, false );
+				FilesViewMenuUtil.fillMenu(	tv,	sColumnName, menu, manager_list, files_list, null, false, false );
 				
 				return;
 			}
@@ -2416,7 +2416,7 @@ public class MyTorrentsView
 		}
 
 		if (e.keyCode == SWT.F2 && (e.stateMask & SWT.MODIFIER_MASK) == 0) {
-			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), true, false,false);
+			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), null, true, false,false);
 			e.doit = false;
 			return;
 		}

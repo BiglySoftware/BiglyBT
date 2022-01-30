@@ -66,7 +66,6 @@ import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
-import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.file.FileInfoView;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -1002,17 +1001,31 @@ public class FilesView
 			
 			List<DiskManagerFileInfo> inner_files = new ArrayList<>();
 			
+			Map<DiskManagerFileInfo,String>	structure_map = new HashMap<>();
+			
 			for ( int i=0;i<data_sources.length;i++ ){
+				
 				DiskManagerFileInfo file = (DiskManagerFileInfo)data_sources[i];
 				
 				if ( file instanceof FilesView.FilesViewNodeInner ){
 
 					FilesView.FilesViewNodeInner inner = (FilesView.FilesViewNodeInner )file;
+				
+					List<DiskManagerFileInfo> temp = inner.getFiles( true );
 					
-					inner_files.addAll( inner.getFiles( true ));
+					FilesView.FilesViewNodeInner parent = inner.getParent();
+					
+					String path = parent==null?"":parent.getPath();
+					
+					for ( DiskManagerFileInfo f: temp ){
+						
+						structure_map.put( f, path );
+					}
+					
+					inner_files.addAll( temp );
 					
 					inners.add( inner );
-					
+									
 				}else{
 				
 					files.add( file );
@@ -1027,6 +1040,7 @@ public class FilesView
 					menu,
 					new DownloadManager[]{ managers[0] },
 					new DiskManagerFileInfo[][]{ files.toArray(new DiskManagerFileInfo[files.size()]) },
+					null,
 					false,
 					false );
 				
@@ -1066,6 +1080,7 @@ public class FilesView
 							menu,
 							new DownloadManager[]{ managers[0] },
 							new DiskManagerFileInfo[][]{ inner_files.toArray(new DiskManagerFileInfo[inner_files.size()]) },
+							structure_map,
 							false,
 							true );
 									
@@ -1118,7 +1133,7 @@ public class FilesView
 
 			if ( files_list.length > 0 ){
 				
-				FilesViewMenuUtil.fillMenu(tv, sColumnName, menu, manager_list, files_list, true, false );
+				FilesViewMenuUtil.fillMenu(tv, sColumnName, menu, manager_list, files_list, null, true, false );
 			}
 		}
 	}
@@ -1348,7 +1363,7 @@ public class FilesView
 	{
 		if ( e.keyCode == SWT.F2 && (e.stateMask & SWT.MODIFIER_MASK) == 0 ){
 			
-			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), true, false,false);
+			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), null, true, false,false);
 			
 			e.doit = false;
 			
@@ -1705,7 +1720,7 @@ public class FilesView
 
 				char file_separator = File.separatorChar;
 
-				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, dm.getDisplayName(), null );
+				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, dm.getDisplayName(), "", null );
 
 				tree_file_map.clear();
 				
@@ -1721,7 +1736,8 @@ public class FilesView
 
 					int	pos = 0;
 				
-
+					String subfolder = "";
+					
 					while( true ){
 
 						int p = path.indexOf( file_separator, pos );
@@ -1739,7 +1755,7 @@ public class FilesView
 							break;
 							
 						}else{
-
+									
 							bit = path.substring( pos, p );
 
 							pos = p+1;
@@ -1748,9 +1764,15 @@ public class FilesView
 
 							if ( n == null ){
 	
-								n = new FilesViewNodeInner( dm, bit, node );
+								n = new FilesViewNodeInner( dm, bit, subfolder, node );
 	
 								node.addChild( n );
+							}
+							
+							if ( subfolder.isEmpty()){
+								subfolder = bit;
+							}else{
+								subfolder += file_separator + bit;
 							}
 							node = n;
 						}
@@ -1794,7 +1816,7 @@ public class FilesView
 				
 				wait_until_idle = force_refresh;
 				
-				current_root = new FilesViewNodeInner( null, MessageText.getString( "label.downloads" ), null );
+				current_root = new FilesViewNodeInner( null, MessageText.getString( "label.downloads" ), "", null );
 				
 				tree_file_map.clear();
 				
@@ -1810,7 +1832,7 @@ public class FilesView
 				
 					num++;
 					
-					FilesViewNodeInner root =  new FilesViewNodeInner( dm, "(" + num + ") " + dm.getDisplayName(), current_root );
+					FilesViewNodeInner root =  new FilesViewNodeInner( dm, "(" + num + ") " + dm.getDisplayName(), "", current_root );
 	
 					current_root.addChild( root );
 					
@@ -1826,7 +1848,8 @@ public class FilesView
 	
 						int	pos = 0;
 					
-	
+						String subfolder = "";
+						
 						while( true ){
 	
 							int p = path.indexOf( file_separator, pos );
@@ -1844,7 +1867,7 @@ public class FilesView
 								break;
 								
 							}else{
-	
+									
 								bit = path.substring( pos, p );
 	
 								pos = p+1;
@@ -1853,10 +1876,17 @@ public class FilesView
 	
 								if ( n == null ){
 		
-									n = new FilesViewNodeInner( dm, bit, node );
+									n = new FilesViewNodeInner( dm, bit, subfolder, node );
 		
 									node.addChild( n );
 								}
+								
+								if ( subfolder.isEmpty()){
+									subfolder = bit;
+								}else{
+									subfolder += file_separator + bit;
+								}
+								
 								node = n;
 							}
 						}
@@ -1964,7 +1994,8 @@ public class FilesView
 		implements DiskManagerFileInfo, FilesViewTreeNode, TableRowSWTChildController
 	{
 		private final DownloadManager						dm;
-		private final String								name;
+		private final String								node_name;
+		private final String								node_path;
 		private final FilesViewNodeInner					parent;
 		private final Map<String,FilesViewTreeNode>			kids = new TreeMap<>( tree_comp );
 		
@@ -1976,12 +2007,14 @@ public class FilesView
 		private
 		FilesViewNodeInner(
 			DownloadManager			_dm,
-			String					_name,
+			String					_node_name,
+			String					_node_path,
 			FilesViewNodeInner		_parent )
 		{
-			dm		= _dm;
-			name	= _name;
-			parent	= _parent;
+			dm			= _dm;
+			node_name	= _node_name;
+			node_path	= _node_path;
+			parent		= _parent;
 		}
 		
 		@Override
@@ -2055,9 +2088,15 @@ public class FilesView
 		public String
 		getName()
 		{
-			return( name );
+			return( node_name );
 		}
 
+		protected String
+		getPath()
+		{
+			return( node_path );
+		}
+		
 		@Override
 		public boolean
 		isExpanded()
@@ -2379,7 +2418,7 @@ public class FilesView
 		public File
 		getFile( boolean follow_link )
 		{
-			return( new File( name ));
+			return( node_path.isEmpty()?new File(node_name):new File( node_path, node_name ));
 		}
 
 		@Override

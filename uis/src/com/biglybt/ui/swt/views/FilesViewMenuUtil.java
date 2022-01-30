@@ -93,9 +93,10 @@ public class FilesViewMenuUtil
 	fillMenu(
 		final TableView<?> 				tv,
 		String							columnName,
-		final Menu 						menu,
-		final DownloadManager[] 		manager_list,
-		final DiskManagerFileInfo[][] 	files_list,
+		Menu 							menu,
+		DownloadManager[] 				manager_list,
+		DiskManagerFileInfo[][] 		files_list,
+		Map<DiskManagerFileInfo,String>	structure_map,
 		boolean							multi_dl_view,
 		boolean							disable_multi_dialog_crud )
 	{
@@ -601,7 +602,7 @@ public class FilesViewMenuUtil
 				final boolean rename_it = ((Boolean) event.widget.getData("rename")).booleanValue();
 				final boolean retarget_it = ((Boolean) event.widget.getData("retarget")).booleanValue();
 				final boolean batch = ((Boolean) event.widget.getData("batch")).booleanValue();
-				rename(tv, all_files.toArray( new Object[all_files.size()]), rename_it, retarget_it, batch);
+				rename(tv, all_files.toArray( new Object[all_files.size()]), structure_map, rename_it, retarget_it, batch);
 			}
 		};
 
@@ -784,11 +785,12 @@ public class FilesViewMenuUtil
 
 	public static void
 	rename(
-		final TableView 	tv,
-		final Object[] 		datasources,
-		boolean 			rename_it,
-		boolean 			retarget_it,
-		boolean				batch )
+		final TableView 				tv,
+		final Object[] 					datasources,
+		Map<DiskManagerFileInfo,String>	structure_map,
+		boolean 						rename_it,
+		boolean 						retarget_it,
+		boolean							batch )
 	{
 		if (datasources.length == 0) {
 			return;
@@ -1083,14 +1085,14 @@ public class FilesViewMenuUtil
 				viewer.goModal();
 								
 			}else{
-				String save_dir = null;
+				String selected_save_dir = null;
 				if (!rename_it && retarget_it) {
 					// better count (text based on rename/retarget)
 					String s = MessageText.getString("label.num_selected", new String[] {
 						Integer.toString(datasources.length)
 					});
-					save_dir = askForSaveDirectory((DiskManagerFileInfo) datasources[0], s);
-					if (save_dir == null) {
+					selected_save_dir = askForSaveDirectory((DiskManagerFileInfo) datasources[0], s);
+					if (selected_save_dir == null) {
 						return;
 					}
 				}
@@ -1126,7 +1128,38 @@ public class FilesViewMenuUtil
 						continue;
 					} else {
 						// Parent directory has changed.
-						f_target = new File(save_dir, existing_file.getName());
+						
+						if ( structure_map != null ){
+							
+							String node = structure_map.get( fileInfo );
+							
+							if ( node != null ){
+								
+								String rel_path = fileInfo.getTorrentFile().getRelativePath();
+								
+								int pos = rel_path.lastIndexOf( File.separator );
+								
+								if ( pos != -1 ){
+									
+									rel_path = rel_path.substring( 0, pos );
+								
+									if ( rel_path.startsWith( node )){
+									
+										String subfolder = node.isEmpty()?rel_path:rel_path.substring( node.length() + 1);
+									
+										if ( !subfolder.isEmpty()){
+											
+											f_target = new File( new File( selected_save_dir, subfolder), existing_file.getName());
+										}
+									}
+								}
+							}
+						}
+						
+						if ( f_target == null ){
+						
+							f_target = new File(selected_save_dir, existing_file.getName());
+						}
 					}
 	
 					// So are we doing a rename?
