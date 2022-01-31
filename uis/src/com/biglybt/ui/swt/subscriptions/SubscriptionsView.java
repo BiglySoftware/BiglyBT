@@ -342,17 +342,17 @@ public class SubscriptionsView
 
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 5);
-		fd.top = new FormAttachment(mainBubbleWidget, 0, SWT.CENTER );
+		fd.top = new FormAttachment(btnAdd, 0, SWT.CENTER );
 		
 		lblHeader.setLayoutData( fd );
 
 		fd = new FormData();
 		fd.right = new FormAttachment(mainBubbleWidget, -10);
-		fd.top = new FormAttachment(mainBubbleWidget, 0, SWT.CENTER );
 		btnAdd.setLayoutData( fd );
 	
 		fd = new FormData();
 		fd.right = new FormAttachment(100, -5);
+		fd.bottom = new FormAttachment(btnAdd, 0, SWT.CENTER );
 		fd.width = 140;
 		
 		bubbleTextBox.setMessageAndLayout( "", fd);
