@@ -230,6 +230,9 @@ DefaultRankCalculator
 	public TagFeatureRateLimit[]
 	getTagsWithDLLimits();
 	
+	public TagFeatureRateLimit[]
+	getTagsWithCDLimits();
+	
 	public boolean
 	getLastScrapeResultOk();
 	

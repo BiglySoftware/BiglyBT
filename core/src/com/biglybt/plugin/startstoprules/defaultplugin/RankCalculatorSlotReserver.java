@@ -302,6 +302,12 @@ RankCalculatorSlotReserver
 		return( new TagFeatureRateLimit[0] );
 	}
 	
+	public TagFeatureRateLimit[]
+	getTagsWithCDLimits()
+	{
+		return( new TagFeatureRateLimit[0] );
+	}
+	
 	public RankCalculatorSlotReserver
 	getReservedSlot()
 	{

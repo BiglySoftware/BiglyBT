@@ -174,4 +174,11 @@ TagFeatureRateLimit
 	public void
 	setMaxActiveDownloads(
 		int		max );
+	
+	public int
+	getMaxActiveSeeds();
+	
+	public void
+	setMaxActiveSeeds(
+		int		max );
 }

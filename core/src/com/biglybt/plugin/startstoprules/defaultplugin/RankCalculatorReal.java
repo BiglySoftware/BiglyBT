@@ -61,7 +61,8 @@ public class
 RankCalculatorReal 
 	implements DefaultRankCalculator, DownloadManagerStateAttributeListener 
 {
-
+	private final static TagFeatureRateLimit[] NO_TAG_LIMITS = new TagFeatureRateLimit[0];
+			
 	/**
 	 * Force torrent to be "Actively Seeding/Downloading" for this many ms upon
 	 * start of torrent.
@@ -199,6 +200,7 @@ RankCalculatorReal
 	private final StartStopRulesDefaultPlugin rules;
 
 	private TagFeatureRateLimit[] tagsWithDLLimits = {};
+	private TagFeatureRateLimit[] tagsWithCDLimits = {};
 
 	// state-caches for sorting
 
@@ -943,25 +945,48 @@ RankCalculatorReal
 	private void
 	setupTagData()
 	{
-		if ( dl.isComplete() || !rules.hasTagDLLimits()){
-			tagsWithDLLimits = new TagFeatureRateLimit[0];
-		}else{
+		if ( rules.hasTagDLorCDLimits()){
+			
 			List<Tag> tags = rules.getTagManager().getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, core_dm );
 
-			List<TagFeatureRateLimit> temp = new ArrayList<>();
-			
-			for ( Tag tag: tags ){
-				if ( tag instanceof TagFeatureRateLimit ){
-					TagFeatureRateLimit t = (TagFeatureRateLimit)tag;
+			if ( tags.isEmpty()){
 				
-					if ( t.getMaxActiveDownloads() > 0 ){
-						
-						temp.add( t );
+				tagsWithDLLimits = tagsWithCDLimits = NO_TAG_LIMITS;
+				
+			}else{
+				boolean comp = dl.isComplete();
+				
+				List<TagFeatureRateLimit> lims = new ArrayList<>();
+				
+				for ( Tag tag: tags ){
+					if ( tag instanceof TagFeatureRateLimit ){
+						TagFeatureRateLimit t = (TagFeatureRateLimit)tag;
+					
+						if ( comp ){
+							if ( t.getMaxActiveSeeds() > 0 ){
+							
+								lims.add( t );
+							}
+						}else{
+							if ( t.getMaxActiveDownloads() > 0 ){
+							
+								lims.add( t );
+							}
+						}
 					}
 				}
+				
+				if ( comp ){
+					tagsWithDLLimits = NO_TAG_LIMITS;
+					tagsWithCDLimits = lims.toArray( new TagFeatureRateLimit[lims.size()] );
+	
+				}else{
+					tagsWithDLLimits = lims.toArray( new TagFeatureRateLimit[lims.size()] );
+					tagsWithCDLimits = NO_TAG_LIMITS;
+				}
 			}
-			
-			tagsWithDLLimits = temp.toArray( new TagFeatureRateLimit[temp.size()] );
+		}else{
+			tagsWithDLLimits = tagsWithCDLimits = NO_TAG_LIMITS;
 		}
 	}
 	
@@ -969,6 +994,12 @@ RankCalculatorReal
 	getTagsWithDLLimits()
 	{
 		return( tagsWithDLLimits );
+	}
+	
+	public TagFeatureRateLimit[]
+	getTagsWithCDLimits()
+	{
+		return( tagsWithCDLimits );
 	}
 	
 	public boolean

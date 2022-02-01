@@ -83,6 +83,7 @@ TagBase
 	protected static final String	AT_RATELIMIT_FP_SEEDING					= "rl.fps";
 	protected static final String	AT_RATELIMIT_BOOST						= "rl.bst";
 	protected static final String	AT_RATELIMIT_MAX_ACTIVE_DL				= "rl.maxadl";
+	protected static final String	AT_RATELIMIT_MAX_ACTIVE_CD				= "rl.maxacd";
 	
 	protected static final String	AT_PROPERTY_PREFIX				= "pp.";
 	//protected static final String	AT_EOA_PREFIX					= "eoa.";	// meh, should be used but copy/paste error resulted in AT_PROPERTY_PREFIX being used instead 
@@ -859,6 +860,32 @@ TagBase
 			if ( getMaxActiveDownloads() != max ){
 			
 				writeLongAttribute( AT_RATELIMIT_MAX_ACTIVE_DL, max );
+		
+				tag_type.fireMetadataChanged( this );
+			}
+		}
+	}
+	
+	public int
+	getMaxActiveSeeds()
+	{
+		if ( tag_rl != null ){
+			
+			return( readLongAttribute( AT_RATELIMIT_MAX_ACTIVE_CD, 0L ).intValue());
+		}
+		
+		return( 0 );
+	}
+
+	public void
+	setMaxActiveSeeds(
+		int			max )
+	{
+		if ( tag_rl != null ){
+			
+			if ( getMaxActiveSeeds() != max ){
+			
+				writeLongAttribute( AT_RATELIMIT_MAX_ACTIVE_CD, max );
 		
 				tag_type.fireMetadataChanged( this );
 			}

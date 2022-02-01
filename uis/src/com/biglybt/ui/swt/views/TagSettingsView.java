@@ -613,6 +613,7 @@ public class TagSettingsView
 				boolean hasTagUploadPriority = true;
 				boolean supportsFPSeeding = true;
 				boolean supportsMaxDLS = true;
+				boolean supportsMaxCDS = true;
 				boolean supportsBoost = true;
 				for (TagFeatureRateLimit rl : rls) {
 					supportsTagDownloadLimit &= rl.supportsTagDownloadLimit();
@@ -625,6 +626,7 @@ public class TagSettingsView
 					
 						supportsFPSeeding 	= false;
 						supportsMaxDLS		= false;
+						supportsMaxCDS		= false;
 					}
 					if ( tt != TagType.TT_PEER_IPSET ){
 						
@@ -1028,6 +1030,39 @@ public class TagSettingsView
 									}
 									for (TagFeatureRateLimit rl : rls) {
 										rl.setMaxActiveDownloads(value);
+									}
+									return true;
+								}
+							});
+
+					cols_used += 2;
+				}
+				
+				if (supportsMaxCDS){
+					params.maxActiveDownloads = new IntSwtParameter(gTransfer,
+							"tag.maxActiveSeeds", "ConfigView.label.maxseeding", null, 0, Integer.MAX_VALUE,
+							new IntSwtParameter.ValueProcessor() {
+								@Override
+								public Integer getValue(IntSwtParameter p) {
+									int limit = rls[0].getMaxActiveSeeds();
+									if (numTags > 1) {
+										for (int i = 1; i < rls.length; i++) {
+											int nextLimit = rls[i].getMaxActiveSeeds();
+											if (nextLimit != limit) {
+												return 0;
+											}
+										}
+									}
+									return limit;
+								}
+
+								@Override
+								public boolean setValue(IntSwtParameter p, Integer value) {
+									if (value == null) {
+										return false;
+									}
+									for (TagFeatureRateLimit rl : rls) {
+										rl.setMaxActiveSeeds(value);
 									}
 									return true;
 								}
