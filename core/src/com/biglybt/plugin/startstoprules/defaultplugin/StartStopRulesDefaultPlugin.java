@@ -3160,8 +3160,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						if ( tagLimitExceeded != null ){
 							
 							sDebugLine += " at tag limit, numWaitingOrSeeding + stalledSeeders("
-									+ ( tagLimitExceeded.numWaitingOrSeeding + "+" + tagLimitExceeded.stalledSeeders ) + ") >= maxSeeders + maxStalledSeeding("
-									+ ( tagLimitExceeded.maxCDs + "+" + maxStalledSeeding ) + ")";
+									+ ( tagLimitExceeded.numWaitingOrSeeding + "+" + tagLimitExceeded.stalledSeeders ) + ") >= maxSeeders("
+									+ ( tagLimitExceeded.maxCDs ) + ")";
 
 						}else if ( cvars.numWaitingOrSeeding + cvars.stalledSeeders >= totals.maxSeeders + maxStalledSeeding ){
 														
