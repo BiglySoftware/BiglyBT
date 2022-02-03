@@ -986,7 +986,12 @@ public class SideBar
 								}
 
 								if ( treeItem.getItemCount() > 0) {
-									if (!entry.isSelectable() || event.x < 20) {
+									
+									Integer rhs = (Integer)treeItem.getData( "expandoRHS" );
+									
+									int limit=rhs==null?20:rhs;
+									
+									if (!entry.isSelectable() || event.x < limit) {
 										// Note: On Windows, user can expand row by clicking the invisible area where the OS twisty would be
   									MdiEntry currentEntry = getCurrentEntry();
 										if (currentEntry != null && entry.getViewID().equals(

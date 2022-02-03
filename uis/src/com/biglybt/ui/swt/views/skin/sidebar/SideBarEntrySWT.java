@@ -1082,11 +1082,18 @@ public class SideBarEntrySWT
 			gc.setAntialias(SWT.ON);
 			Color oldBG = gc.getBackground();
 			gc.setBackground(Colors.getSystemColor(event.display, SWT.COLOR_LIST_FOREGROUND));
+			
 			int baseX = DO_EXPANDO_INDENT?itemBounds.x:EXPANDO_INDENT_INITIAL;
+			
+			int xStart = EXPANDO_WIDTH;
+			
+			int arrowSize = 8;
+
+			int yStart = itemBounds.height - (itemBounds.height + arrowSize) / 2;
+			
+			treeItem.setData( "expandoRHS", baseX - xStart + arrowSize );
+			
 			if (treeItem.getExpanded()) {
-				int xStart = EXPANDO_WIDTH;
-				int arrowSize = 8;
-				int yStart = itemBounds.height - (itemBounds.height + arrowSize) / 2;
 				gc.fillPolygon(new int[] {
 					baseX - xStart,
 					itemBounds.y + yStart,
@@ -1096,9 +1103,6 @@ public class SideBarEntrySWT
 					itemBounds.y + yStart + arrowSize,
 				});
 			} else {
-				int xStart = EXPANDO_WIDTH;
-				int arrowSize = 8;
-				int yStart = itemBounds.height - (itemBounds.height + arrowSize) / 2;
 				gc.fillPolygon(new int[] {
 					baseX - xStart,
 					itemBounds.y + yStart,
