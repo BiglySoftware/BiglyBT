@@ -583,6 +583,7 @@ AEPluginProxyHandler
 	private static Map<String,Long>	declines = new HashMap<>();
 
 	private static boolean tor_installing;
+	private static boolean tor_install_fail_reported;
 	
 	private static boolean
 	installTor(
@@ -683,19 +684,24 @@ AEPluginProxyHandler
 								try{
 									if ( result instanceof Throwable ){
 										
-										UIFunctionsUserPrompter prompter = 
-											uif.getUserPrompter(
-												MessageText.getString( "metasearch.addtemplate.failed.title"), 
-												MessageText.getString( "plugin.manual.install",
-													new String[]{ Constants.PLUGINS_WEB_SITE,
-													MessageText.getString( "aznettor.plugin.name" )}), 
-												new String[]{
-														MessageText.getString("Button.ok"),
-												}, 0);
-
-											prompter.setAutoCloseInMS(0);
+										if ( !tor_install_fail_reported ){
 											
-											prompter.open(null);
+											tor_install_fail_reported = true;
+										
+											UIFunctionsUserPrompter prompter = 
+												uif.getUserPrompter(
+													MessageText.getString( "metasearch.addtemplate.failed.title"), 
+													MessageText.getString( "plugin.manual.install",
+														new String[]{ Constants.PLUGINS_WEB_SITE,
+														MessageText.getString( "aznettor.plugin.name" )}), 
+													new String[]{
+															MessageText.getString("Button.ok"),
+													}, 0);
+	
+												prompter.setAutoCloseInMS(0);
+												
+												prompter.open(null);
+										}
 									}
 									
 									if ( callback != null ){
