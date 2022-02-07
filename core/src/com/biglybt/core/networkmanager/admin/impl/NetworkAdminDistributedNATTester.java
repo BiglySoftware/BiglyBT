@@ -181,7 +181,11 @@ NetworkAdminDistributedNATTester
 	 				
 	 				InetAddress bind_address = transport.getCurrentBindAddress();
 	
-	 				if ( !bind_address.isAnyLocalAddress()){
+	 				if ( bind_address == null ){
+	 					
+	 					logMessage( "DHT bind address invalid, not testing" );
+	 					
+	 				}else if ( !bind_address.isAnyLocalAddress()){
 	 			
 	 					logMessage( "DHT already bound, not testing" );
 	 					
