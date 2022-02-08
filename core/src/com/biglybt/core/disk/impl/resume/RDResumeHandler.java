@@ -1549,26 +1549,29 @@ RDResumeHandler
 				}
 				
 				Map		partialPieces	= (Map)resume_data.get("blocks");
-						
-				Iterator iter = partialPieces.entrySet().iterator();
-	
-				while (iter.hasNext()) {
-	
-					Map.Entry key = (Map.Entry)iter.next();
-	
-					int pieceNumber = Integer.parseInt((String)key.getKey());
-	
-					DiskManagerPiece	dm_piece = pieces[ pieceNumber ];
-	
-					if ( !dm_piece.isDone()){
-	
-						List blocks = (List)partialPieces.get(key.getKey());
-	
-						Iterator iterBlock = blocks.iterator();
-	
-						while (iterBlock.hasNext()) {
-	
-							dm_piece.setWritten(((Long)iterBlock.next()).intValue());
+					
+				if ( partialPieces != null ){
+					
+					Iterator iter = partialPieces.entrySet().iterator();
+		
+					while (iter.hasNext()) {
+		
+						Map.Entry key = (Map.Entry)iter.next();
+		
+						int pieceNumber = Integer.parseInt((String)key.getKey());
+		
+						DiskManagerPiece	dm_piece = pieces[ pieceNumber ];
+		
+						if ( !dm_piece.isDone()){
+		
+							List blocks = (List)partialPieces.get(key.getKey());
+		
+							Iterator iterBlock = blocks.iterator();
+		
+							while (iterBlock.hasNext()) {
+		
+								dm_piece.setWritten(((Long)iterBlock.next()).intValue());
+							}
 						}
 					}
 				}
