@@ -1646,7 +1646,9 @@ DiskManagerUtil
 	      }
 
 	      try{
-	          for (int i=0;i<files.length;i++){
+	    	  	// somehow it is possible to end up with a mismatch in files/downloaded size - handle best as possible
+	    	  
+	          for (int i=0, max=Math.min( files.length, downloaded.size());i<max;i++){
 
 	              files[i].setDownloaded(((Long)downloaded.get(i)).longValue());
 	          }
