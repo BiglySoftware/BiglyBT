@@ -397,6 +397,15 @@ public class SideBar
 	}
 
 	public boolean
+	canPopoutEntry(
+		MdiEntry	entry )
+	{
+		SideBarEntrySWT sbe = (SideBarEntrySWT)entry;
+		
+		return( sbe.canBuildStandAlone());
+	}
+	
+	public boolean
 	popoutEntry(
 		MdiEntry	entry,
 		boolean		onTop )
@@ -746,9 +755,8 @@ public class SideBar
 							SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
 							//System.out.println("PaintItem: " + event.item + ";" + event.index + ";" + event.detail + ";" + event.getBounds() + ";" + event.gc.getClipping());
 							if (entry != null) {
-								boolean selected = getCurrentEntry() == entry
-										&& entry.isSelectable();
-
+								boolean selected = getCurrentEntry() == entry;
+									
 								if (!selected) {
 									event.detail &= ~SWT.SELECTED;
 								} else {
@@ -837,7 +845,7 @@ public class SideBar
 								return;
 							}
 							SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
-							if (entry != null && entry.isSelectable()) {
+							if (entry != null ) {
 								Point cursorLocation = tree.toControl(event.display.getCursorLocation());
 								if (lastCloseAreaClicked != null && lastCloseAreaClicked.contains(cursorLocation.x, cursorLocation.y)) {
 									return;
@@ -991,15 +999,30 @@ public class SideBar
 									
 									int limit=rhs==null?20:rhs;
 									
-									if (!entry.isSelectable() || event.x < limit) {
-										// Note: On Windows, user can expand row by clicking the invisible area where the OS twisty would be
-  									MdiEntry currentEntry = getCurrentEntry();
-										if (currentEntry != null && entry.getViewID().equals(
-												currentEntry.getParentID())) {
-											showEntryByID(SIDEBAR_SECTION_LIBRARY);
+									if ( event.x < limit) {
+										
+											// Note: On Windows, user can expand row by clicking the invisible area where the OS twisty would be
+										
+										MdiEntry currentEntry = getCurrentEntry();
+										
+										String collapsedID = entry.getViewID();
+										
+										while( currentEntry != null ){
+											
+											String parentID = currentEntry.getParentID();
+											
+											if ( collapsedID.equals( parentID )) {
+											
+												showEntryByID( collapsedID );
+												
+												break;
+											}
+											
+											currentEntry = getEntry( parentID );
 										}
-  									entry.setExpanded(!wasExpanded);
-  									wasExpanded = !wasExpanded;
+
+										entry.setExpanded(!wasExpanded);
+										wasExpanded = !wasExpanded;
 									}
 								}
 							}
@@ -1018,6 +1041,8 @@ public class SideBar
 									// don't trigger popout if double click is in close area or
 									// item has child and user is clicking in the expandy area 
 
+								boolean done = false;
+								
 								Point cursorLocation = tree.toControl(event.display.getCursorLocation());
 								
 								if ( lastCloseAreaClicked == null || !lastCloseAreaClicked.contains(cursorLocation.x, cursorLocation.y)){
@@ -1026,7 +1051,18 @@ public class SideBar
 									
 									if ( treeItem.getItemCount() == 0 || ( offset != null && event.x >= offset )){
 										
-										popoutEntry( entry, true );
+										if ( canPopoutEntry(entry)){
+										
+											done = popoutEntry( entry, true );
+										}
+									}
+								}
+								
+								if ( !done ){
+									
+									if ( treeItem.getItemCount() > 0 ){
+										
+										entry.setExpanded( !entry.isExpanded());
 									}
 								}
 							}
@@ -1042,21 +1078,29 @@ public class SideBar
 
 							break;
 						}
-
 						case SWT.Collapse: {
 							SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
 							
 							MdiEntry currentEntry = getCurrentEntry();
 							
-							if (currentEntry != null
-									&& entry.getViewID().equals(currentEntry.getParentID())) {
+							String collapsedID = entry.getViewID();
+							
+							while( currentEntry != null ){
 								
-								showEntryByID(SIDEBAR_SECTION_LIBRARY);
+								String parentID = currentEntry.getParentID();
+								
+								if ( collapsedID.equals( parentID )) {
+								
+									showEntryByID( collapsedID );
+									
+									break;
+								}
+								
+								currentEntry = getEntry( parentID );
 							}
 						
 							break;
 						}
-
 					}
 				} catch (Exception e) {
 					Debug.out(e);
@@ -1912,7 +1956,7 @@ public class SideBar
 			return;
 		}
 
-		if (newEntry == null || !newEntry.isSelectable()) {
+		if (newEntry == null  ){
 			return;
 		}
 
