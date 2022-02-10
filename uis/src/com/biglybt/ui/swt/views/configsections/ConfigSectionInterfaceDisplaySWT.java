@@ -50,6 +50,7 @@ public class ConfigSectionInterfaceDisplaySWT
 	extends ConfigSectionImpl
 {
 	public static final String REFID_SECTION_SIDEBAR = "section-sidebar";
+	public static final String REFID_SECTION_TOOLBAR = "section-toolbar";
 
 	public static final String SECTION_ID = "display";
 
@@ -246,7 +247,7 @@ public class ConfigSectionInterfaceDisplaySWT
 		ParameterGroupImpl pgToolbarItems = new ParameterGroupImpl(null,
 				listToolbarItems).setNumberOfColumns2(0);
 		add("pgToolbarItems", pgToolbarItems, listToolbar);
-
+		
 		// row 3
 
 		add(new BooleanParameterImpl("IconBar.start.stop.separate",
@@ -255,6 +256,8 @@ public class ConfigSectionInterfaceDisplaySWT
 		ParameterGroupImpl pgToolbar = new ParameterGroupImpl(
 				"MainWindow.menu.view.iconbar", listToolbar);
 		add(pgToolbar);
+
+		pgToolbar.setReferenceID( REFID_SECTION_TOOLBAR );
 
 		// Group: sidebar
 		/////////

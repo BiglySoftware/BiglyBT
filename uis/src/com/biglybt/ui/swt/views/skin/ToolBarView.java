@@ -22,8 +22,11 @@ package com.biglybt.ui.swt.views.skin;
 import java.util.*;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.TableView;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.ISelectedVuzeFileContent;
 import com.biglybt.ui.selectedcontent.SelectedContentListener;
@@ -35,11 +38,14 @@ import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.skin.SWTSkinObjectText;
 import com.biglybt.ui.swt.utils.SWTRunnable;
+import com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceDisplaySWT;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 import com.biglybt.core.config.COConfigurationManager;
@@ -48,6 +54,7 @@ import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AERunnableBoolean;
 import com.biglybt.core.util.Debug;
@@ -67,8 +74,12 @@ import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
 import com.biglybt.ui.swt.toolbar.ToolBarItemSO;
 import com.biglybt.util.DLReferals;
+import com.biglybt.util.JSONUtils;
 import com.biglybt.util.PlayUtils;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+import org.json.simple.JSONObject;
 
 /**
  * @author TuxPaper
@@ -306,7 +317,11 @@ public class ToolBarView
 					skin.constructionEnd();
 				}
 				
-				Utils.relayout( soMain.getControl());
+				Composite comp = (Composite)soMain.getControl();
+				
+				addMenus( comp );
+				
+				Utils.relayout( comp );
 				
 					// record built state
 				
@@ -327,6 +342,50 @@ public class ToolBarView
 					}
 				}
 			});
+	}
+	private void
+	addMenus(
+		Composite comp )
+	{
+		for ( Control kid: comp.getChildren()){
+			
+			Menu menu = kid.getMenu();
+			
+			if ( menu != null ){
+				
+				menu.dispose();
+			}
+			
+			menu = new Menu( kid );
+					
+			kid.setMenu( menu );
+			
+			MenuItem mi = new MenuItem( menu, SWT.PUSH );
+			
+			mi.setText( MessageText.getString( "menu.toolbar.options"));
+			
+			mi.addListener( SWT.Selection, (ev)->{
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+				if ( uif != null ){
+
+					JSONObject args = new JSONObject();
+
+					args.put( "select", ConfigSectionInterfaceDisplaySWT.REFID_SECTION_TOOLBAR);
+					
+					String args_str = JSONUtils.encodeToJSON( args );
+					
+					uif.getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+							ConfigSectionInterfaceDisplaySWT.SECTION_ID + args_str );
+				}
+			});
+			
+			if ( kid instanceof Composite ){
+				
+				addMenus((Composite)kid);
+			}
+		}
 	}
 	
 	private void setupToolBarItems(boolean uiClassic) {
