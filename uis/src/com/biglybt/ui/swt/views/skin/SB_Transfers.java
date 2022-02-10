@@ -29,6 +29,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
+import org.json.simple.JSONObject;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -54,6 +55,7 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
+import com.biglybt.ui.config.ConfigSectionInterfaceTags;
 import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
@@ -68,11 +70,12 @@ import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
 import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.PeersGeneralView;
+import com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceDisplaySWT;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
-
+import com.biglybt.util.JSONUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
@@ -463,6 +466,39 @@ public class SB_Transfers
 			// show tags in sidebar
 
 		TagUIUtils.setupSideBarMenus( menuManager );
+		
+			// sidebar options
+		
+		menuItem = menuManager.addMenuItem("sidebar."
+				+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+				"");
+		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		menuItem.setStyle(MenuItem.STYLE_SEPARATOR);
+		
+		menuItem = menuManager.addMenuItem("sidebar."
+				+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+				"menu.sidebar.options");
+		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		menuItem.setStyle(MenuItem.STYLE_PUSH);
+		menuItem.addListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+				if ( uif != null ){
+
+					JSONObject args = new JSONObject();
+
+					args.put( "select", ConfigSectionInterfaceDisplaySWT.REFID_SECTION_SIDEBAR);
+					
+					String args_str = JSONUtils.encodeToJSON( args );
+					
+					uif.getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+							ConfigSectionInterfaceDisplaySWT.SECTION_ID + args_str );
+				}
+			}
+		});
 	}
 
 	protected MdiEntry createUnopenedEntry(MultipleDocumentInterface mdi) {

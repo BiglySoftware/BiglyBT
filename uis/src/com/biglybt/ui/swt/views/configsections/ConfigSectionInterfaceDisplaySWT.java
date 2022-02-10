@@ -49,6 +49,7 @@ import com.biglybt.pif.ui.config.Parameter;
 public class ConfigSectionInterfaceDisplaySWT
 	extends ConfigSectionImpl
 {
+	public static final String REFID_SECTION_SIDEBAR = "section-sidebar";
 
 	public static final String SECTION_ID = "display";
 
@@ -350,8 +351,9 @@ public class ConfigSectionInterfaceDisplaySWT
 				add(compact, listSideBar);
 			}
 
-			add(new ParameterGroupImpl("v3.MainWindow.menu.view.sidebar",
-					listSideBar));
+			ParameterGroupImpl group = add(new ParameterGroupImpl("v3.MainWindow.menu.view.sidebar", listSideBar));
+			
+			group.setReferenceID( REFID_SECTION_SIDEBAR );
 		}
 
 		// Group: status bar
