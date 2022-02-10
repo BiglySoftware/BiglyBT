@@ -96,45 +96,59 @@ public class SWTSkinButtonUtility
 				int et = event.type;
 				
 				if ( et == SWT.MouseDown || et == SWT.MouseUp ){
-					if (event.type == SWT.MouseDown) {
-						if (timerEvent == null) {
-							timerEvent = SimpleTimer.addEvent("MouseHold",
-									SystemTime.getOffsetTime(1000), new TimerEventPerformer() {
-										@Override
-										public void perform(TimerEvent event) {
-											timerEvent = null;
-	
-											if (!bDownPressed) {
-												return;
-											}
-											bDownPressed = false;
-	
-											boolean stillPressed = true;
-											for (ButtonListenerAdapter l : listeners) {
-												stillPressed &= !l.held(SWTSkinButtonUtility.this);
-											}
-											bDownPressed = stillPressed;
-										}
-									});
-						}
-						bDownPressed = true;
-						return;
-					} else {
-						if (timerEvent != null) {
-							timerEvent.cancel();
-							timerEvent = null;
-						}
-						if (!bDownPressed) {
+					if ( event.button == 1 ){
+						if (event.type == SWT.MouseDown) {
+							if (timerEvent == null) {
+								timerEvent = 
+									SimpleTimer.addEvent(
+										"MouseHold",
+										SystemTime.getOffsetTime(1000), 
+										(ev)->{
+											Utils.execSWTThread(()->{
+												timerEvent = null;
+		
+												if (!bDownPressed) {
+													return;
+												}
+												bDownPressed = false;
+		
+												boolean stillPressed = true;
+												
+												if ( Utils.getCursorControl() == event.widget ){
+													
+													for (ButtonListenerAdapter l : listeners) {
+														stillPressed &= !l.held(SWTSkinButtonUtility.this);
+													}
+												}
+												bDownPressed = stillPressed;
+											});
+										});
+							}
+							
+							bDownPressed = true;
 							return;
+						} else {
+							if (timerEvent != null) {
+								timerEvent.cancel();
+								timerEvent = null;
+							}
+							if (!bDownPressed) {
+								return;
+							}
 						}
+		
+						bDownPressed = false;
 					}
-	
-					bDownPressed = false;
-	
+					
 					if (isDisabled()) {
 						return;
 					}
 	
+					if ( et == SWT.MouseUp && Utils.getCursorControl() != event.widget ){
+						
+						return;
+					}
+					
 					for (ButtonListenerAdapter l : listeners) {
 						l.pressed(SWTSkinButtonUtility.this,
 								SWTSkinButtonUtility.this.skinObject, event.button, event.stateMask);

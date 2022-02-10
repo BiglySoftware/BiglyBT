@@ -37,8 +37,10 @@ public class SWTSkinImageChanger
 
 	private final int eventOn;
 
-	private final int eventOff;
+	//private final int eventOff;
 
+	private final int button;
+	
 	private Control lastControl;
 
 	/**
@@ -48,10 +50,11 @@ public class SWTSkinImageChanger
 	 * @param eventOff
 	 * @param eventOn
 	 */
-	public SWTSkinImageChanger(String suffix, int eventOn, int eventOff) {
+	public SWTSkinImageChanger(String suffix, int eventOn, int eventOff, int button ) {
 		this.suffix = suffix;
 		this.eventOn = eventOn;
-		this.eventOff = eventOff;
+		//this.eventOff = eventOff;
+		this.button = button;
 	}
 
 	@Override
@@ -61,6 +64,11 @@ public class SWTSkinImageChanger
 		if (control == null) {
 			return;
 		}
+		
+		if ( button != -1 && event.button != button ){
+			return;
+		}
+		
 		//System.out.println("event " + event.type + ";" + control.handle);
 
 		try {

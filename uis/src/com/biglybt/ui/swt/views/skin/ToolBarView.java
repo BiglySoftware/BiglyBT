@@ -1376,7 +1376,10 @@ public class ToolBarView
 	{
 		@Override
 		public void pressed(SWTSkinButtonUtility buttonUtility,
-		                    SWTSkinObject skinObject, int stateMask) {
+		                    SWTSkinObject skinObject, int button, int stateMask) {
+			if ( button != 1 ){
+				return;
+			}
 			ToolBarItem item = (ToolBarItem) buttonUtility.getSkinObject().getData(
 					"toolbaritem");
 			boolean rightClick = (stateMask & (SWT.BUTTON3 | SWT.MOD4)) > 0;

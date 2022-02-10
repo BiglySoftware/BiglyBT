@@ -56,8 +56,7 @@ public class SWTSkinUtils
 	static {
 		//imageOverListener = new SWTSkinImageChanger("-over", SWT.MouseEnter,
 		//		SWT.MouseExit);
-		imageDownListener = new SWTSkinImageChanger("-down", SWT.MouseDown,
-				SWT.MouseUp);
+		imageDownListener = new SWTSkinImageChanger("-down", SWT.MouseDown,	SWT.MouseUp, 1 );
 	}
 
 	public static int getAlignment(String sAlign, int def) {
