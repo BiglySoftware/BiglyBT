@@ -1563,7 +1563,7 @@ public class TorrentUtil
 				Utils.getOffOfSWTThread(new AERunnable() {
 					@Override
 					public void runSupport() {
-						queueDataSources(dms, true);
+						queueDataSources(dms, false);
 					}
 				});
 			}
@@ -3895,12 +3895,8 @@ public class TorrentUtil
 		}
 		return false;
 	}
-
-	public static void stopOrStartDataSources(Object[] datasources, boolean startStoppedParents) {
-		stopOrStartDataSources(datasources,startStoppedParents,false);
-	}
 	
-	public static void stopOrStartDataSources(Object[] datasources, boolean startStoppedParents, boolean force_or_pause) {
+	public static void stopOrStartDataSources(Object[] datasources, boolean extendedAction ) {
 		DownloadManager[] dms = toDMS(datasources);
 		DiskManagerFileInfo[] dmfi = toDMFI(datasources);
 		if (dms.length == 0 && dmfi.length == 0) {
@@ -3911,9 +3907,9 @@ public class TorrentUtil
 			doStop = true;
 		}
 		if (doStop) {
-			stopDataSources(datasources, force_or_pause);
+			stopDataSources(datasources, extendedAction);
 		} else {
-			queueDataSources(datasources, startStoppedParents, force_or_pause);
+			queueDataSources(datasources, extendedAction);
 		}
 	}
 
@@ -3943,16 +3939,15 @@ public class TorrentUtil
 		}
 	}
 
-	public static void queueDataSources(Object[] datasources,
-			boolean startStoppedParents) {
-		queueDataSources( datasources, startStoppedParents, false );
-	}
 	
-	public static void queueDataSources(Object[] datasources,
-			boolean startStoppedParents, boolean force) {
+	public static void 
+	queueDataSources(
+		Object[] datasources,
+		boolean extendedAction ) 
+	{
 		DownloadManager[] dms = toDMS(datasources);
 		for (DownloadManager dm : dms) {
-			if ( force ){
+			if ( extendedAction ){
 				dm.setForceStart( true );
 			}else{
 				ManagerUtils.queue(dm, null);
@@ -3963,14 +3958,10 @@ public class TorrentUtil
 			FilesViewMenuUtil.changePriority(FilesViewMenuUtil.PRIORITY_NORMAL,
 					Arrays.asList(fileInfos));
 
-			if (startStoppedParents) {
+			if (extendedAction) {
 				for (DiskManagerFileInfo fileInfo : fileInfos) {
 					if (fileInfo.getDownloadManager().getState() == DownloadManager.STATE_STOPPED) {
-						if ( force ){
-							fileInfo.getDownloadManager().setForceStart( true );
-						}else{
-							ManagerUtils.queue(fileInfo.getDownloadManager(), null);
-						}
+						ManagerUtils.queue(fileInfo.getDownloadManager(), null);
 					}
 				}
 			}

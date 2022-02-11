@@ -868,7 +868,7 @@ public class TorrentMenuFancy
 		// Queue
 		createActionButton(dms, cQuickCommands, "MyTorrentsView.menu.queue",
 				"start", start,
-				(ListenerGetOffSWT) event -> TorrentUtil.queueDataSources(dms, true));
+				(ListenerGetOffSWT) event -> TorrentUtil.queueDataSources(dms, false));
 		
 		// Force Start
 		

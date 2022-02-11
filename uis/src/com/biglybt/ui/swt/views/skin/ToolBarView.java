@@ -624,7 +624,7 @@ public class ToolBarView
 			public void toolBarItemActivated_OffSWT(ToolBarItem item,
 					long activationType, Object datasource) {
 				ISelectedContent[] selected = SelectedContentManager.getCurrentlySelectedContent();
-				TorrentUtil.queueDataSources(selected,false,activationType == ACTIVATIONTYPE_HELD);
+				TorrentUtil.queueDataSources(selected,activationType == ACTIVATIONTYPE_HELD);
 			}
 		});
 		

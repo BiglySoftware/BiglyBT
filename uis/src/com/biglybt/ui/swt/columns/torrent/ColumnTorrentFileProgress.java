@@ -291,7 +291,7 @@ public class ColumnTorrentFileProgress
 					@Override
 					public void handleEvent(Event event) {
 						if (fileInfo.getDownloadManager().getState() == DownloadManager.STATE_STOPPED) {
-							TorrentUtil.queueDataSources(new Object[] { dataSource }, true);
+							TorrentUtil.queueDataSources(new Object[] { dataSource }, false );
 						}
 
 						FilesViewMenuUtil.changePriority(FilesViewMenuUtil.PRIORITY_NORMAL,

@@ -185,7 +185,7 @@ public class CategoryUIUtils
 				List<?> managers = category.getDownloadManagers(gm.getDownloadManagers());
 
 				Object[] dms = managers.toArray();
-				TorrentUtil.queueDataSources(dms, true);
+				TorrentUtil.queueDataSources(dms, false);
 			}
 		});
 		itemQueue.setEnabled(start);
