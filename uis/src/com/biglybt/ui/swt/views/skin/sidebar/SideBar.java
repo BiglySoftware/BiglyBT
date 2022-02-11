@@ -29,10 +29,12 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
+import org.json.simple.JSONObject;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -59,8 +61,9 @@ import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
 import com.biglybt.ui.swt.views.QuickLinksView;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
+import com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceDisplaySWT;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
-
+import com.biglybt.util.JSONUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.download.Download;
@@ -1272,8 +1275,40 @@ public class SideBar
 					entry = getCurrentEntry();
 				}
 
-				fillMenu(menuTree, entry, "sidebar");
+				if ( entry != null ){
+				
+					fillMenu(menuTree, entry, "sidebar");
+				}
 
+				if ( entry == null || entry.getParentID() == null ){
+					
+					if ( menuTree.getItemCount() > 0 ){
+						
+						new org.eclipse.swt.widgets.MenuItem( menuTree, SWT.SEPARATOR );
+					}
+					
+					org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem( menuTree, SWT.PUSH );
+					
+					mi.setText( MessageText.getString( "menu.sidebar.options" ));
+					
+					mi.addListener( SWT.Selection, (ev)->{
+						UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+						if ( uif != null ){
+
+							JSONObject args = new JSONObject();
+
+							args.put( "select", ConfigSectionInterfaceDisplaySWT.REFID_SECTION_SIDEBAR);
+							
+							String args_str = JSONUtils.encodeToJSON( args );
+							
+							uif.getMDI().showEntryByID(
+									MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+									ConfigSectionInterfaceDisplaySWT.SECTION_ID + args_str );
+						}
+					});
+				}
+				
 				if (menuTree.getItemCount() == 0) {
 					Utils.execSWTThreadLater(0, new AERunnable() {
 						@Override

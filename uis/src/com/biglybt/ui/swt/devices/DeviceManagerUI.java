@@ -2286,7 +2286,7 @@ DeviceManagerUI
 
 		// options
 
-		de_menu_item = menu_manager.addMenuItem(parentID, "MainWindow.menu.view.configuration");
+		de_menu_item = menu_manager.addMenuItem(parentID, "menu.device.options");
 		de_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 		de_menu_item.addListener(new MenuItemListener() {
