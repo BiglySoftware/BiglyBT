@@ -91,11 +91,15 @@ import com.biglybt.pif.ui.tables.TableRowRefreshListener;
 public class FilesView
 	extends TableViewTab<DiskManagerFileInfo>
 	implements TableDataSourceChangedListener, TableSelectionListener,
-	TableViewSWTMenuFillListener, TableRefreshListener,
+	TableViewSWTMenuFillListener, TableRefreshListener, TableExpansionChangeListener,
 	DownloadManagerStateAttributeListener, DownloadManagerListener,
 	TableLifeCycleListener, TableViewFilterCheckEx<DiskManagerFileInfo>, KeyListener, ParameterListener,
 	UISWTViewCoreEventListener, ViewTitleInfo
 {
+	private static final Object	KEY_DM_TREE_STATE = new Object();
+	private static final int	ACTION_EXPAND 	= 0;
+	private static final int	ACTION_COLLAPSE = 1;
+	
 	public static final Class<com.biglybt.pif.disk.DiskManagerFileInfo> PLUGIN_DS_TYPE = com.biglybt.pif.disk.DiskManagerFileInfo.class;
 	boolean refreshing = false;
 
@@ -188,6 +192,7 @@ public class FilesView
 		tv.addMenuFillListener(this);
 		tv.addLifeCycleListener(this);
 		tv.addKeyListener(this);
+		tv.addExpansionChangeListener(this);
 
 		tv.addRefreshListener( 
 			new TableRowRefreshListener(){
@@ -752,11 +757,11 @@ public class FilesView
 				
 				if ( node.isExpanded()){
 									
-					doTreeAction(nodes, 1, false );
+					doTreeAction(nodes, ACTION_COLLAPSE, false );
 					
 				}else{
 										
-					doTreeAction(nodes, 0, false );
+					doTreeAction(nodes, ACTION_EXPAND, false );
 				}
 			}finally{
 				
@@ -904,11 +909,9 @@ public class FilesView
 		boolean									recursive,
 		boolean									test_only )
 	{
-		TableRowCore row = node_to_row_map.get( node );
-		
 		if ( !node.isExpanded()){
 			
-			if ( action == 0 ){
+			if ( action == ACTION_EXPAND ){
 								
 				if ( test_only ){
 				
@@ -916,7 +919,12 @@ public class FilesView
 					
 				}else{
 					
-					row.setExpanded( true );
+					TableRowCore row = node_to_row_map.get( node );
+					
+					if ( row != null ){
+					
+						row.setExpanded( true );
+					}
 				}
 			}
 		}
@@ -944,7 +952,7 @@ public class FilesView
 		
 		if ( node.isExpanded()){
 			
-			if ( action == 1 ){
+			if ( action == ACTION_COLLAPSE ){
 								
 				if ( test_only ){
 				
@@ -977,7 +985,12 @@ public class FilesView
 						}
 					}
 					
-					row.setExpanded( false );
+					TableRowCore row = node_to_row_map.get( node );
+					
+					if ( row != null ){
+					
+						row.setExpanded( false );
+					}
 				}
 			}
 		}
@@ -1053,10 +1066,10 @@ public class FilesView
 				mi.addListener(
 					SWT.Selection,
 					e->{
-						doTreeAction( inners, 0, false );
+						doTreeAction( inners, ACTION_EXPAND, false );
 					});
 				
-				mi.setEnabled( doTreeAction( inners, 0, true ));
+				mi.setEnabled( doTreeAction( inners, ACTION_EXPAND, true ));
 				
 				mi = new MenuItem( menu, SWT.PUSH );
 				
@@ -1065,10 +1078,10 @@ public class FilesView
 				mi.addListener(
 					SWT.Selection,
 					e->{
-						doTreeAction( inners, 1, false );
+						doTreeAction( inners, ACTION_COLLAPSE, false );
 					});
 				
-				mi.setEnabled( doTreeAction( inners, 1, true ));
+				mi.setEnabled( doTreeAction( inners, ACTION_COLLAPSE, true ));
 				
 				new MenuItem( menu, SWT.SEPARATOR );
 				
@@ -1566,6 +1579,61 @@ public class FilesView
 		disableTableWhenEmpty	= b;
 	}
 	
+	public void 
+	rowExpanded(
+		TableRowCore row )
+	{
+		updateTreeExpansionState( row, true );
+	}
+
+	public void 
+	rowCollapsed(
+		TableRowCore row )
+	{
+		updateTreeExpansionState( row, false );
+	}
+	
+	private void
+	updateTreeExpansionState(
+		TableRowCore	row,
+		boolean			expanded )
+	{
+		Object ds = row.getDataSource( true );
+		
+		if ( ds instanceof FilesViewNodeInner ){
+			
+			FilesViewNodeInner node = (FilesViewNodeInner)ds;
+			
+			DownloadManager dm = node.getDownloadManager();
+			
+			if ( dm != null ){
+				
+				int uid = node.getUID();
+				
+				synchronized( KEY_DM_TREE_STATE ){
+				
+					Map<Integer,Boolean> map = (Map<Integer,Boolean>)dm.getUserData( KEY_DM_TREE_STATE );
+					
+					if ( map == null ){
+						
+						map = new HashMap<>();
+						
+						dm.setUserData( KEY_DM_TREE_STATE, map );
+					}
+					
+					if ( expanded ){
+						
+						map.remove( uid );
+						
+					}else{
+						
+						map.put( uid, Boolean.TRUE );
+					}
+				}
+			}
+		}
+	}
+	
 	private void
 	updateTable()
 	{
@@ -1720,9 +1788,34 @@ public class FilesView
 
 				char file_separator = File.separatorChar;
 
-				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, dm.getDisplayName(), "", null );
+				int uid = 0;
+				
+				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, uid, dm.getDisplayName(), "", null );
 
 				tree_file_map.clear();
+				
+				Map<Integer,Boolean>	expansion_state;
+				
+				synchronized( KEY_DM_TREE_STATE ){
+					
+					expansion_state = (Map<Integer,Boolean>)dm.getUserData( KEY_DM_TREE_STATE );
+					
+					if ( expansion_state == null ){
+						
+						expansion_state = new HashMap<>();
+						
+					}else{
+						
+						expansion_state = new HashMap<>( expansion_state );
+					}
+				}
+				
+				if ( expansion_state.containsKey( uid )){
+					
+					root.setExpanded( false );
+				}
+				
+				uid++;
 				
 				DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
 
@@ -1764,8 +1857,15 @@ public class FilesView
 
 							if ( n == null ){
 	
-								n = new FilesViewNodeInner( dm, bit, subfolder, node );
+								n = new FilesViewNodeInner( dm, uid, bit, subfolder, node );
 	
+								if ( expansion_state.containsKey( uid )){
+									
+									n.setExpanded( false );
+								}
+								
+								uid++;
+								
 								node.addChild( n );
 							}
 							
@@ -1816,7 +1916,7 @@ public class FilesView
 				
 				wait_until_idle = force_refresh;
 				
-				current_root = new FilesViewNodeInner( null, MessageText.getString( "label.downloads" ), "", null );
+				current_root = new FilesViewNodeInner( null, -1,  MessageText.getString( "label.downloads" ), "", null );
 				
 				tree_file_map.clear();
 				
@@ -1825,15 +1925,40 @@ public class FilesView
 				tv.removeAllTableRows();
 
 				char file_separator = File.separatorChar;
-
+				
 				int num = 0;
 				
 				for ( DownloadManager dm: managers ){
 				
 					num++;
 					
-					FilesViewNodeInner root =  new FilesViewNodeInner( dm, "(" + num + ") " + dm.getDisplayName(), "", current_root );
+					int uid = 0;
+
+					FilesViewNodeInner root =  new FilesViewNodeInner( dm, uid, "(" + num + ") " + dm.getDisplayName(), "", current_root );
 	
+					Map<Integer,Boolean>	expansion_state;
+					
+					synchronized( KEY_DM_TREE_STATE ){
+						
+						expansion_state = (Map<Integer,Boolean>)dm.getUserData( KEY_DM_TREE_STATE );
+						
+						if ( expansion_state == null ){
+							
+							expansion_state = new HashMap<>();
+							
+						}else{
+							
+							expansion_state = new HashMap<>( expansion_state );
+						}
+					}
+					
+					if ( expansion_state.containsKey( uid )){
+						
+						root.setExpanded( false );
+					}
+					
+					uid++;
+					
 					current_root.addChild( root );
 					
 					DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
@@ -1876,8 +2001,15 @@ public class FilesView
 	
 								if ( n == null ){
 		
-									n = new FilesViewNodeInner( dm, bit, subfolder, node );
+									n = new FilesViewNodeInner( dm, uid, bit, subfolder, node );
 		
+									if ( expansion_state.containsKey( uid )){
+										
+										n.setExpanded( false );
+									}
+									
+									uid++;
+									
 									node.addChild( n );
 								}
 								
@@ -1994,6 +2126,7 @@ public class FilesView
 		implements DiskManagerFileInfo, FilesViewTreeNode, TableRowSWTChildController
 	{
 		private final DownloadManager						dm;
+		private final int									uid;
 		private final String								node_name;
 		private final String								node_path;
 		private final FilesViewNodeInner					parent;
@@ -2007,14 +2140,22 @@ public class FilesView
 		private
 		FilesViewNodeInner(
 			DownloadManager			_dm,
+			int						_uid,
 			String					_node_name,
 			String					_node_path,
 			FilesViewNodeInner		_parent )
 		{
 			dm			= _dm;
+			uid			= _uid;
 			node_name	= _node_name;
 			node_path	= _node_path;
 			parent		= _parent;
+		}
+		
+		protected int
+		getUID()
+		{
+			return( uid );
 		}
 		
 		@Override
