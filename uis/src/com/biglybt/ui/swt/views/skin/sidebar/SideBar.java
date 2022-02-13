@@ -1267,12 +1267,14 @@ public class SideBar
 	
 					int indent = END_INDENT ? tree.getClientArea().width - 1 : 0;
 					TreeItem treeItem = tree.getItem(new Point(indent, ptMouse.y));
-					if (treeItem == null) {
-						return;
+					if (treeItem != null) {
+					
+						entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
+					}else{
+						entry = null;
 					}
-					entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
 				} else {
-					entry = getCurrentEntry();
+					entry = getCurrentEntry(); 
 				}
 
 				if ( entry != null ){
