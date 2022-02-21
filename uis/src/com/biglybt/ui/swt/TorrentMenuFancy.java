@@ -62,6 +62,7 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.TableCellCore;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.common.table.TableStructureEventDispatcher;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.exporttorrent.wizard.ExportTorrentWizard;
@@ -70,6 +71,7 @@ import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.sharing.ShareUtils;
 import com.biglybt.ui.swt.views.FilesViewMenuUtil;
+import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.TableSelectedRowsListener;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.common.table.impl.TableContextMenuManager;
@@ -1990,6 +1992,18 @@ public class TorrentMenuFancy
 			});
 		}
 
+		createRow(detailArea, "MyTorrentsView.menu.editTableColumns", "columns", new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				TableRowCore focusedRow = tv.getFocusedRow();
+				if (focusedRow == null || focusedRow.isRowDisposed()) {
+					focusedRow = tv.getRow(0);
+				}
+				String tableID = tv.getTableID();
+				new TableColumnSetupWindow(tv.getDataSourceType(), tableID, column, focusedRow,
+						TableStructureEventDispatcher.getInstance(tableID)).open();
+			}
+		});
 	}
 
 	public void buildTorrentCustomMenu_Social(Composite detailArea) {

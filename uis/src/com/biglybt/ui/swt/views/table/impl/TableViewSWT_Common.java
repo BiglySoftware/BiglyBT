@@ -1038,6 +1038,18 @@ public abstract class TableViewSWT_Common
 					}
 				});
 			}
+			
+			MenuItem itemChangeTable = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(itemChangeTable,
+					"MyTorrentsView.menu.editTableColumns");
+			Utils.setMenuItemImage(itemChangeTable, "columns");
+
+			itemChangeTable.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event e) {
+					showColumnEditor( column );
+				}
+			});
 		}
 	}
 
