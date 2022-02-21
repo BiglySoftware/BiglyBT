@@ -1,7 +1,102 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2022.xx.yy | BiglyBT 2.9.0.1
+2022.02.yy | BiglyBT 3.0.0.0
+
+FEATURE: Tag   | Added "swarm tags" column to Library view [Parg]
+FEATURE: Tag   | Changed "swarm tags" into real tags [Parg]
+FEATURE: Tag   | Added "isIPFiltered()" Tag constraint function [Parg]
+FEATURE: Tag   | Subscription results now support Tags [Parg]
+FEATURE: Tag   | New 'max seeding torrents' Tag option  [Parg]
+FEATURE: Core  | Added ability to unban IPs in blocked/banned IPs window [Parg]
+FEATURE: Core  | Support for per-download completion masking [Parg]
+FEATURE: Core  | Make force-terminate on close period configurable [Parg]
+FEATURE: Core  | Added an "effective incoming" state for plugin connections [Parg]
+FEATURE: Plug  | Added IP Filter control to SimpleAPI plugin [Parg]
+FEATURE: UI    | Added new "local interface" peer view item [Parg]
+FEATURE: UI    | Added menu item to copy option name to clipboard [Parg]
+FEATURE: UI    | Added cell-specific menu support [Parg]
+FEATURE: UI    | Added timezone offset to public chat messages [Parg]
+FEATURE: UI    | Added chat member properties view [Parg]
+FEATURE: UI    | New "select all" context menu item for table views [Parg]
+FEATURE: UI    | Added library view item for upload priority [Parg]
+FEATURE: UI    | Added header to Subscription Results view supporting search and add [Parg]
+FEATURE: UI    | New "toolbar options" right-click menu [Parg]
+FEATURE: UI    | New "sidebar options" right-click menu links [Parg]
+FEATURE: UI    | Remember expansion state of File View tree [Parg]
+
+CHANGE: Tag    | First priority auto-tags should default to non-public [Parg]
+CHANGE: Tag    | Remove internal tag names from tag discoveries [Parg]
+CHANGE: Tag    | Added gap around tag icons [Parg]
+CHANGE: Core   | Re-use existing metadata download data on recovery [Parg]
+CHANGE: Core   | Remove unbanned IPs from bad data list too [Parg]
+CHANGE: Core   | Use delete-with-recycle for files set to priority "delete" [Parg]
+CHANGE: Core   | Removed option to disable resume data as this leads to unwanted behaviour [Parg]
+CHANGE: Core   | Wait for core to initialise before processing magnet requests [Parg]
+CHANGE: Core   | Remove resetting of 'play sound when download complete' on OSX [Parg]
+CHANGE: Core   | Recognise some more RSS Item attribute values [Parg]
+CHANGE: Core   | Improve multiple subscription result delete performance [Parg]
+CHANGE: Core   | Reworked metadata download management to make it event driven [Parg]
+CHANGE: Core   | Speed limit handler should ignore metadata downloads [Parg]
+CHANGE: Core   | Prune old deleted subscription results [Parg]
+CHANGE: Core   | Pick up RSS entry CDP links from comments fields [Parg]
+CHANGE: Core   | Retain folder hierarchy when moving intermediate nodes in File tree view [Parg]
+CHANGE: Plug   | Only report Tor Helper plugin install fail once [Parg]
+CHANGE: UI     | Resize subscription icons [Parg]
+CHANGE: UI     | Improve bind fail error message [Parg]
+CHANGE: UI     | Remember progress reporter dialog location, size and details expand state [Parg]
+CHANGE: UI     | Add additional DHT tracker details when not tracking [Parg]
+CHANGE: UI     | Stop annoying progress bar animation on Widows in cache view [Parg]
+CHANGE: UI     | Replace status bar LED GIFs with PNGs [ferdnyc]
+CHANGE: UI     | Improve chat icon transparency [Parg]
+CHANGE: UI     | Changed "queued" to "queued/started" in open-torrent-options dialog [Parg]
+CHANGE: UI     | Fixed spinner image in progress dialog in dark mode [Parg]
+CHANGE: UI     | Updated subscription column header icon for dark mode [Parg]
+CHANGE: UI     | Some chat panel dark mode fixes [Parg]
+CHANGE: UI     | Use common column for swarm tags [Parg]
+CHANGE: UI     | Fix readability of console error messages in dark mode [Parg]
+CHANGE: UI     | Improve library view sash in dark mode [Parg]
+CHANGE: UI     | Cache fonts to reduce memory usage [Parg]
+CHANGE: UI     | Fix config plugin table view in dark mode [Parg]
+CHANGE: UI     | Use a timer event to update download status to reduce thread usage [Parg]
+CHANGE: UI     | Limit number of active subscription views to save memory [Parg]
+CHANGE: UI     | Lots of dark mode icon tweaks [ferdnyc]
+CHANGE: UI     | Run PNGs through compressor [adem4ik]
+CHANGE: UI     | Better default size for progress reporter window [Parg]
+CHANGE: UI     | Allow all sidebar entries to be selectable to avoid annoying behaviour [Parg]
+CHANGE: UI     | Added right-click column-setup menu item for table rows [Parg]
+CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
+CHANGE: UI     | tr_TR: Turkish translation update [BouRock]
+CHANGE: UI     | sl_SI: Slovenian translation update [upwinxp]
+CHANGE: UI     | ru_RU: Russian translation update [adem4ik,frolovkirill7]
+CHANGE: UI     | it_IT: Italian translation update [GiorgioHerbie]
+CHANGE: UI     | ja_JP: Japanese translation update [ayano.midori]
+CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
+CHANGE: UI     | ar_SA: Arabic, Saudi Arabia translation update [islam171119712003]
+
+BUGFIX: Tag    | Ensure Settings tab is selected in Tags Overview when needed
+BUGFIX: Tag    | Fix Tag library view context menu missing items
+BUGFIX: Core   | Fix spurious DNS SPI load fail when network down
+BUGFIX: Core   | Fix some deprecations
+BUGFIX: Core   | Replaced deprecated use of Applet code for playing audio clips
+BUGFIX: Core   | Delete dead magnet download storage
+BUGFIX: Core   | Handle ".imported" file already existing on import
+BUGFIX: Core   | Fixed category upload-priority over restart
+BUGFIX: Core   | Stop metadata downloads performing pointless recheck
+BUGFIX: Core   | Handle errors when getting network interfaces better
+BUGFIX: Core   | More resilient file download stats loading
+BUGFIX: Core   | Partial pieces may be null
+BUGFIX: Core   | Fix exception when the DHT is unwell
+BUGFIX: UI     | Fix toolbar stop icon tooltip when separate start/stop items
+BUGFIX: UI     | Fix Library view attention highlight getting stuck on
+BUGFIX: UI     | Switched some link foreground colours to use system value
+BUGFIX: UI     | Fix Piece Map label formatting
+BUGFIX: UI     | Fix resource leak in Subscription Results view
+BUGFIX: UI     | Fix vanishing toolbar bug
+BUGFIX: UI     | Set cursor appropriately for subscriptions view buttons
+BUGFIX: UI     | Use the correct twisty hit ares in the sidebar
+BUGFIX: UI     | Toolbar buttons shouldn't activate on right-click
+BUGFIX: UI     | Fix long-press toolbar button behaviour somewhat
 
 2021.11.17 | BiglyBT 2.9.0.0
 
