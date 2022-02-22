@@ -383,10 +383,7 @@ public class SWTSkinObjectBasic
 
 	@Override
 	public void setBackground(String sConfigID, String sSuffix) {
-		Image imageBG;
-		Image imageBGLeft;
-		Image imageBGRight;
-
+		
 		if (sConfigID == null) {
 			return;
 		}
@@ -460,10 +457,10 @@ public class SWTSkinObjectBasic
 		if (Utils.isGTK3 && (control instanceof Composite)) {
 			((Composite) control).setBackgroundMode(SWT.INHERIT_DEFAULT);
 		}
-
-		// XXX Is this needed?  It causes flicker and slows things down.
-		//     Maybe a redraw instead (if anything at all)?
-		//control.update();
+			
+			// we need a redraw otherwise things get lost (e.g. the sidebar on/off toolbar switch button state doesn't get redrawn) 
+		
+		control.redraw();
 	}
 
 	// @see java.lang.Object#toString()
