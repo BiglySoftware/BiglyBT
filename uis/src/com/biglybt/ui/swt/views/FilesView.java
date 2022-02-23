@@ -96,7 +96,9 @@ public class FilesView
 	TableLifeCycleListener, TableViewFilterCheckEx<DiskManagerFileInfo>, KeyListener, ParameterListener,
 	UISWTViewCoreEventListener, ViewTitleInfo
 {
-	private static final Object	KEY_DM_TREE_STATE = new Object();
+	private static final Object	KEY_DM_TREE_STATE 		= new Object();
+	private static final Object	KEY_DM_SELECTION_STATE	= new Object();
+	
 	private static final int	ACTION_EXPAND 	= 0;
 	private static final int	ACTION_COLLAPSE = 1;
 	
@@ -281,10 +283,8 @@ public class FilesView
 				
 				COConfigurationManager.setParameter("FilesView.use.tree", tree_view);
 				
-					// grab before column visibility as this resets the selection :(
+				prepareSelectionState();
 				
-				selection_outstanding	= tv.getSelectedDataSources();
-
 				if ( tree_view ){
 					
 					TableColumnSWTUtils.changeColumnVisiblity( tv, tv.getTableColumn( "name" ), true );
@@ -448,6 +448,8 @@ public class FilesView
 			return;
 		}
 
+		prepareSelectionState();
+		
 		addManagerListeners( managers );
 
 		if (!tv.isDisposed()) {
@@ -468,23 +470,113 @@ public class FilesView
 		}
 	}
 
-	// @see TableSelectionListener#deselected(TableRowCore[])
 	@Override
 	public void deselected(TableRowCore[] rows) {
-		updateSelectedContent();
+		
 	}
 
-	// @see TableSelectionListener#focusChanged(TableRowCore)
 	@Override
 	public void focusChanged(TableRowCore focus) {
 	}
 
-	// @see TableSelectionListener#selected(TableRowCore[])
 	@Override
 	public void selected(TableRowCore[] rows) {
-		updateSelectedContent();
 	}
 
+	private void
+	prepareSelectionState()
+	{
+		if ( managers == null ){
+			return;
+		}
+		
+		Map<DownloadManager,Set<Integer>> pending = null;
+		
+		synchronized( KEY_DM_SELECTION_STATE ){
+			
+			for ( DownloadManager dm: managers ){
+	
+				Set<Integer> sel = (Set<Integer>)dm.getUserData( KEY_DM_SELECTION_STATE );
+				
+				if ( sel != null ){
+					
+					if ( pending == null ){
+						
+						pending = new IdentityHashMap<>();
+					}
+					
+					pending.put( dm, sel );
+				}
+			}
+		}
+		
+		selection_outstanding = pending;
+	}
+	
+	@Override
+	public void
+	selectionChanged(
+		TableRowCore[] 		selected_rows,
+		TableRowCore[] 		deselected_rows )
+	{	
+		Map<DownloadManager,Set<Integer>>	sel_map = new HashMap<>();
+		
+		IdentityHashSet<DownloadManager>	unselected_dms = new IdentityHashSet<>();
+		
+		if ( managers != null ){
+			
+			unselected_dms.addAll( Arrays.asList( managers ));
+		}
+		
+		List<Object> selected_objects = tv.getSelectedDataSources();
+		
+		for ( Object selected: selected_objects ){
+			
+			DiskManagerFileInfo file = (DiskManagerFileInfo)selected;
+			
+			DownloadManager dm = file.getDownloadManager();
+						
+			Set<Integer> sel = sel_map.get( dm );
+			
+			if ( sel == null ){
+				
+				sel = new HashSet<>();
+				
+				sel_map.put( dm, sel );
+			}
+			
+			if ( file instanceof FilesViewNodeInner ){
+				
+				int	uid = ((FilesViewNodeInner)file).getUID();
+				
+				sel.add( uid + 1000000000 );
+				
+			}else{
+				
+				sel.add( file.getIndex());
+			}
+		}
+		
+		synchronized( KEY_DM_SELECTION_STATE ){
+			
+			for ( Map.Entry<DownloadManager,Set<Integer>> entry: sel_map.entrySet()){
+			
+				DownloadManager dm = entry.getKey();
+				
+				dm.setUserData( KEY_DM_SELECTION_STATE, entry.getValue());
+				
+				unselected_dms.remove( dm );
+			}
+		
+			for ( DownloadManager dm: unselected_dms ){
+								
+				dm.setUserData( KEY_DM_SELECTION_STATE, null );
+			}
+		}
+		
+		updateSelectedContent();
+	}
+	
 	@Override
 	public void
 	stateChanged(
@@ -1153,8 +1245,8 @@ public class FilesView
 
 
  
-  private boolean 		force_refresh = false;
-  private List<Object> 	selection_outstanding = null;
+  private boolean 								force_refresh 			= false;
+  private Map<DownloadManager,Set<Integer>> 	selection_outstanding 	= null;
   
   @Override
   public void tableRefresh() {
@@ -1639,7 +1731,7 @@ public class FilesView
 	{
 		boolean	sync = false;
 		
-		List<Object>	to_select;
+		Map<DownloadManager,Set<Integer>>	to_select;
 		
 		if ( selection_outstanding != null  ){
 						
@@ -1691,50 +1783,33 @@ public class FilesView
 							List<TableRowCore>	selected_rows = new ArrayList<>();
 							
 							TableRowCore[] tv_rows = tv.getRowsAndSubRows(false);
-							
-							Map<DiskManagerFileInfo,TableRowCore>	file_to_row_map = new HashMap<>();
-							
+														
 							for ( TableRowCore tv_row: tv_rows ){
 								
 								DiskManagerFileInfo ds_file = (DiskManagerFileInfo)tv_row.getDataSource(true);
 								
-								if ( ds_file instanceof FilesViewNodeLeaf ){
+								Set<Integer> sel = to_select.get( ds_file.getDownloadManager());
+								
+								if ( sel != null ){
 									
-									DiskManagerFileInfo target = ((FilesViewNodeLeaf)ds_file).getTarget();
-									
-									file_to_row_map.put( target, tv_row );
-									
-								}else if ( ds_file instanceof FilesViewNodeInner ){
+									if ( ds_file instanceof FilesViewNodeInner ){
 											
-								}else{
-									
-									file_to_row_map.put( ds_file, tv_row );
-								}
-							}
-							
-							for ( Object o: to_select ){
-								
-								TableRowCore row = null;
-								
-								if ( o instanceof FilesViewTreeNode ){
-									
-									if ( o instanceof FilesViewNodeLeaf ){
+										FilesViewNodeInner node = (FilesViewNodeInner)ds_file;
 										
-										row = file_to_row_map.get( ((FilesViewNodeLeaf)o).getTarget());
+										if ( sel.contains( node.getUID() + 1000000000 )){
+											
+											selected_rows.add( tv_row );
+										}
+									}else{
+										
+										if ( sel.contains( ds_file.getIndex())){
+											
+											selected_rows.add( tv_row );
+										}
 									}
-								}else if ( o instanceof FilesViewNodeInner ){
-									
-								}else{
-									
-									row = file_to_row_map.get( o );
-								}
-								
-								if ( row != null ){
-							
-									selected_rows.add( row );
 								}
 							}
-							
+														
 							if ( !selected_rows.isEmpty()){
 								
 								tv.setSelectedRows( selected_rows.toArray( new TableRowCore[0]));
