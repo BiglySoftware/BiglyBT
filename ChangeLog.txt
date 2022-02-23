@@ -24,6 +24,7 @@ FEATURE: UI    | Added header to Subscription Results view supporting search and
 FEATURE: UI    | New "toolbar options" right-click menu [Parg]
 FEATURE: UI    | New "sidebar options" right-click menu links [Parg]
 FEATURE: UI    | Remember expansion state of File View tree [Parg]
+FEATURE: UI    | Remember row selection state in Files View across rebuilds [Parg]
 
 CHANGE: Tag    | First priority auto-tags should default to non-public [Parg]
 CHANGE: Tag    | Remove internal tag names from tag discoveries [Parg]
@@ -74,29 +75,31 @@ CHANGE: UI     | ja_JP: Japanese translation update [ayano.midori]
 CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
 CHANGE: UI     | ar_SA: Arabic, Saudi Arabia translation update [islam171119712003]
 
-BUGFIX: Tag    | Ensure Settings tab is selected in Tags Overview when needed
-BUGFIX: Tag    | Fix Tag library view context menu missing items
-BUGFIX: Core   | Fix spurious DNS SPI load fail when network down
-BUGFIX: Core   | Fix some deprecations
-BUGFIX: Core   | Replaced deprecated use of Applet code for playing audio clips
-BUGFIX: Core   | Delete dead magnet download storage
-BUGFIX: Core   | Handle ".imported" file already existing on import
-BUGFIX: Core   | Fixed category upload-priority over restart
-BUGFIX: Core   | Stop metadata downloads performing pointless recheck
-BUGFIX: Core   | Handle errors when getting network interfaces better
-BUGFIX: Core   | More resilient file download stats loading
-BUGFIX: Core   | Partial pieces may be null
-BUGFIX: Core   | Fix exception when the DHT is unwell
-BUGFIX: UI     | Fix toolbar stop icon tooltip when separate start/stop items
-BUGFIX: UI     | Fix Library view attention highlight getting stuck on
-BUGFIX: UI     | Switched some link foreground colours to use system value
-BUGFIX: UI     | Fix Piece Map label formatting
-BUGFIX: UI     | Fix resource leak in Subscription Results view
-BUGFIX: UI     | Fix vanishing toolbar bug
-BUGFIX: UI     | Set cursor appropriately for subscriptions view buttons
-BUGFIX: UI     | Use the correct twisty hit ares in the sidebar
-BUGFIX: UI     | Toolbar buttons shouldn't activate on right-click
-BUGFIX: UI     | Fix long-press toolbar button behaviour somewhat
+BUGFIX: Tag    | Ensure Settings tab is selected in Tags Overview when needed [Parg]
+BUGFIX: Tag    | Fix Tag library view context menu missing items [Parg]
+BUGFIX: Core   | Fix spurious DNS SPI load fail when network down [Parg]
+BUGFIX: Core   | Fix some deprecations [Parg]
+BUGFIX: Core   | Replaced deprecated use of Applet code for playing audio clips [Parg]
+BUGFIX: Core   | Delete dead magnet download storage [Parg]
+BUGFIX: Core   | Handle ".imported" file already existing on import [Parg]
+BUGFIX: Core   | Fixed category upload-priority over restart [Parg]
+BUGFIX: Core   | Stop metadata downloads performing pointless recheck [Parg]
+BUGFIX: Core   | Handle errors when getting network interfaces better [Parg]
+BUGFIX: Core   | More resilient file download stats loading [Parg]
+BUGFIX: Core   | Partial pieces may be null [Parg]
+BUGFIX: Core   | Fix exception when the DHT is unwell [Parg]
+BUGFIX: UI     | Fix toolbar stop icon tooltip when separate start/stop items [Parg]
+BUGFIX: UI     | Fix Library view attention highlight getting stuck on [Parg]
+BUGFIX: UI     | Switched some link foreground colours to use system value [Parg]
+BUGFIX: UI     | Fix Piece Map label formatting [Parg]
+BUGFIX: UI     | Fix resource leak in Subscription Results view [Parg]
+BUGFIX: UI     | Fix vanishing toolbar bug [Parg]
+BUGFIX: UI     | Set cursor appropriately for subscriptions view buttons [Parg]
+BUGFIX: UI     | Use the correct twisty hit ares in the sidebar [Parg]
+BUGFIX: UI     | Toolbar buttons shouldn't activate on right-click [Parg]
+BUGFIX: UI     | Fix long-press toolbar button behaviour somewhat [Parg]
+BUGFIX: UI     | Fix sidebar toggle toolbar button not updating selection state [Parg]
+BUGFIX: UI     | Try to prevent UI stall when file system unavailable [Parg]
 
 2021.11.17 | BiglyBT 2.9.0.0
 
