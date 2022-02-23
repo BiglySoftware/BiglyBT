@@ -3452,6 +3452,217 @@ public class FileUtil {
 			return( script_encoding );
 		}
 	}
+
+		// when a file is on an unavailable network share (for example) then this can trash the UI by hanging the SWT thread.
+	
+	private static Set<Path>		bad_roots = new HashSet<>();
+	
+	interface
+	FileOpWithTimeout<T>
+	{
+		public T
+		run()
+			throws IOException;
+	}
+	
+	private static <T> T
+	runFileOpWithTimeout(
+		File					file,
+		FileOpWithTimeout<T>	fo,
+		T						def )
+	{
+		try{
+			return( runFileOpWithTimeoutEx( file, fo, def, null ));
+						
+		}catch( Throwable e ){
+			
+			return( def );
+		}
+	}
+	
+	private static <T> T
+	runFileOpWithTimeoutEx(
+		File					file,
+		FileOpWithTimeout<T>	fo,
+		IOException				def_error )
+	
+		throws IOException
+	{
+		try{
+			return( runFileOpWithTimeoutEx( file, fo, null, def_error ));
+						
+		}catch( IOException e ){
+			
+			throw( e );
+			
+		}catch( Throwable e ){
+			
+			throw( def_error );
+		}
+	}
+	
+	private static <T> T
+	runFileOpWithTimeoutEx(
+		File					file,
+		FileOpWithTimeout<T>	fo,
+		T						def_result,
+		IOException				def_error )
+	
+		throws IOException
+	{		
+		synchronized( bad_roots ){
+	
+			if ( !bad_roots.isEmpty()){
+				
+				Path root_path = file.toPath().getRoot();
+
+				if ( bad_roots.contains( root_path )){
+				
+					if ( def_error == null ){
+						
+						return( def_result );
+						
+					}else{
+					
+						throw( def_error );
+					}
+				}
+			}
+		}
+		
+		long	start = SystemTime.getMonotonousTime();
+
+		try{			
+			return( fo.run());
+			
+		}finally{
+			
+			long	elapsed = SystemTime.getMonotonousTime() - start;
+			
+			if ( elapsed > 2500 ){
+				
+				Path root_path = file.toPath().getRoot();
+				
+				synchronized( bad_roots ){
+					
+					if ( !bad_roots.contains(root_path)){
+				
+						if ( bad_roots.size() > 1024 ){
+							
+							Debug.out( "Bad roots size limit exceeded for " + root_path );
+							
+						}else{
+							
+							bad_roots.add(root_path);
+							
+							if ( bad_roots.size() == 1 ){
+								
+								AEThread2.createAndStartDaemon( "BadRootChecker", ()->{
+									
+									while( true ){								
+										try{
+											Thread.sleep( 5000 );
+											
+										}catch( Throwable e ){
+											
+										}
+										
+										List<Path> to_check;
+										
+										synchronized( bad_roots ){
+											
+											to_check = new ArrayList<Path>( bad_roots );										
+										}
+										
+										for ( Path path: to_check ){
+											
+											try{
+												long check_start = SystemTime.getCurrentTime();
+												
+												File check_file = path.toFile();
+												
+												check_file.getCanonicalPath();
+												
+												check_file.exists();
+												
+												check_file.length();
+												
+												if ( SystemTime.getCurrentTime() - check_start < 250 ){
+													
+													Debug.out( "Root path " + root_path + " appears to be responding in a timely manner, enabling" );
+													
+													synchronized( bad_roots ){
+														
+														bad_roots.remove( path );
+														
+														if ( bad_roots.isEmpty()){
+															
+															return;
+														}
+													}
+												}
+											}catch( Throwable e ){
+												
+											}
+										}
+									}
+								});
+							}
+						
+							Debug.out( "Root path " + root_path + " isn't responding in a timely manner, disabling" );
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	public static long
+	lengthWithTimeout(
+		File		file )
+	{
+		return(runFileOpWithTimeout(file,()->{
+			return( file.length());
+		},0L));
+	}
+	
+	public static boolean
+	canReadWithTimeout(
+		File		file )
+	{
+		return(runFileOpWithTimeout(file,()->{
+			return( file.canRead());
+		},false));
+	}
+
+	public static boolean
+	isDirectoryWithTimeout(
+		File		file )
+	{
+		return(runFileOpWithTimeout(file,()->{
+			return( file.isDirectory());
+		},false));	
+	}
+	
+	public static boolean
+	existsWithTimeout(
+		File		file )
+	{
+		return(runFileOpWithTimeout(file,()->{
+			return( file.exists());
+		},false));	
+	}
+	
+	public static String
+	getCanonicalPathWithTimeout(
+		File		file )
+	
+		throws IOException
+	{
+		return(runFileOpWithTimeoutEx(file,()->{
+			return( file.getCanonicalPath());
+		}, new IOException( "File system not responding/slow" )));	
+	}
 	
 	public interface
 	ProgressListener

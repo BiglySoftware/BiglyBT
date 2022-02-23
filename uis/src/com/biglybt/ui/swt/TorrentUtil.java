@@ -4442,7 +4442,7 @@ public class TorrentUtil
 						if (!canRunFileInfo
 								&& fileInfo.getAccessMode() == DiskManagerFileInfo.READ
 								&& fileInfo.getDownloaded() == fileInfo.getLength()
-								&& fileInfo.getFile(true).exists()) {
+								&& FileUtil.existsWithTimeout( fileInfo.getFile(true))) {
 							canRunFileInfo = true;
 						}
 					}

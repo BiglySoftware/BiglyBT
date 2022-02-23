@@ -43,6 +43,7 @@ import com.biglybt.core.util.BEncoder;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.*;
@@ -201,7 +202,7 @@ FileHashItemBase
 
 		File f = file.getFile( true );
 
-		if ( f.length() != file.getLength() || !f.canRead()){
+		if ( FileUtil.lengthWithTimeout(f) != file.getLength() || !FileUtil.canReadWithTimeout( f )){
 
 			return( false );
 		}

@@ -27,6 +27,7 @@ import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
@@ -135,7 +136,7 @@ public class PathItem
     	
     	if ( parent != null ){
 		      try {
-		          path = parent.getCanonicalPath();
+		          path = FileUtil.getCanonicalPathWithTimeout( parent );
 		      }
 		      catch( IOException e ) {
 		          path = file.getParentFile().getAbsolutePath();
