@@ -1264,15 +1264,16 @@ public class TorrentMenuFancy
 						@Override
 						public void buildMenu(Menu menu) {
 
-							boolean allStopped = true;
-							boolean allScanSelected = true;
-							boolean allScanNotSelected = true;
-							boolean fileMove = true;
+							boolean allStopped 			= true;
+							boolean allScanSelected 	= true;
+							boolean allScanNotSelected 	= true;
+							boolean fileMove 			= true;
 							boolean allResumeIncomplete = true;
-							boolean	hasClearableLinks = false;
+							boolean	hasClearableLinks 	= false;
 							boolean hasRevertableFiles	= false;
 							boolean lrrecheck			= false;
 							boolean allAllocatable		= true;
+							boolean allMaskDC 			= true;
 							
 							for (DownloadManager dm : dms) {
 								boolean stopped = ManagerUtils.isStopped(dm);
@@ -1311,7 +1312,9 @@ public class TorrentMenuFancy
 								
 								lrrecheck = lrrecheck || ManagerUtils.canLowResourceRecheck(dm);
 																
-								allAllocatable &= stopped && !dm.isDataAlreadyAllocated() && !dm.isDownloadComplete( false );		
+								allAllocatable &= stopped && !dm.isDataAlreadyAllocated() && !dm.isDownloadComplete( false );	
+								
+								allMaskDC = allMaskDC && dms.getBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP );
 							}
 
 							boolean fileRescan = allScanSelected || allScanNotSelected;
@@ -1462,14 +1465,11 @@ public class TorrentMenuFancy
 							
 							MenuItem itemMaskDLComp = new MenuItem(menu, SWT.CHECK);
 							
-							if ( dms.length == 1 ){
-								itemMaskDLComp.setSelection(
-									globalMask ||
-									dms[0].getDownloadState().getBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP ));
+							if ( dms.length > 0 ){
+								itemMaskDLComp.setSelection( globalMask || allMaskDC );
 							}
 							
-							Messages.setLanguageText(itemMaskDLComp,
-									"ConfigView.label.hap");
+							Messages.setLanguageText(itemMaskDLComp,"ConfigView.label.hap");
 							itemMaskDLComp.addListener(SWT.Selection, new ListenerDMTask(dms) {
 								@Override
 								public void run(DownloadManager dm) {
@@ -1477,8 +1477,7 @@ public class TorrentMenuFancy
 								}
 							});
 							
-							itemMaskDLComp.setEnabled( dms.length == 1 && !globalMask );
-
+							itemMaskDLComp.setEnabled( dms.length > 0 && !globalMask );
 
 							if (userMode > 1 && isSeedingView) {
 

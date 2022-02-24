@@ -425,6 +425,8 @@ public class TorrentUtil
 		boolean	hasClearableLinks = false;
 		boolean	hasRevertableFiles = false;
 
+		boolean allMaskDC 			= true;
+		
 		if (hasSelection) {
 			for (int i = 0; i < dms.length; i++) {
 				DownloadManager dm = (DownloadManager) dms[i];
@@ -578,6 +580,8 @@ public class TorrentUtil
 
 					hasRevertableFiles = true;
 				}
+				
+				allMaskDC = allMaskDC && dm_state.getBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP );
 			}
 
 			fileRescan = allScanSelected || allScanNotSelected;
@@ -598,6 +602,7 @@ public class TorrentUtil
 			changeUrl = false;
 			recheck = false;
 			manualUpdate = false;
+			allMaskDC = false;
 		}
 
 		// === Root Menu ===
@@ -1063,10 +1068,8 @@ public class TorrentUtil
 		
 		MenuItem itemMaskDLComp = new MenuItem(menuFiles, SWT.CHECK);
 		
-		if ( dms.length == 1 ){
-			itemMaskDLComp.setSelection(
-				globalMask ||
-				dms[0].getDownloadState().getBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP ));
+		if ( dms.length> 0 ){
+			itemMaskDLComp.setSelection( globalMask || allMaskDC );
 		}
 		
 		Messages.setLanguageText(itemMaskDLComp,
@@ -1078,6 +1081,8 @@ public class TorrentUtil
 			}
 		});
 
+		itemMaskDLComp.setEnabled( dms.length > 0 && !globalMask );
+		
 			// Advanced -> archive
 
 		final List<Download>	ar_dms = new ArrayList<>();
