@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2022.02.yy | BiglyBT 3.0.0.0
+2022.02.25 | BiglyBT 3.0.0.0
 
 FEATURE: Tag   | Added "swarm tags" column to Library view [Parg]
 FEATURE: Tag   | Changed "swarm tags" into real tags [Parg]
