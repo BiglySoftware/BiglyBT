@@ -142,11 +142,11 @@ Constants
 	public static final String BIGLY_PEER_ID						= "BI";
 
 	
-	public static final String BIGLYBT_VERSION  = "3.0.0.0";
+	public static final String BIGLYBT_VERSION  = "3.0.0.1_B01";
 	
 	//public static final String BUILD_VERSION  = "@build.version@";   //Ant replace - believed dead
 	public static final String SUBVERSION		= "";
-	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "3000" + "-").getBytes();  //MUST be 8 chars long!
+	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "3001" + "-").getBytes();  //MUST be 8 chars long!
 
 	private static final boolean FORCE_NON_CVS = System.getProperty( "az.force.noncvs", "0" ).equals( "1" );
 
