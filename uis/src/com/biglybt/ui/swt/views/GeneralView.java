@@ -555,7 +555,9 @@ public class GeneralView
 
     label = new Label(cInfoLeft, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.hash"); //$NON-NLS-1$
-    hash = new BufferedLabel(cInfoLeft, SWT.LEFT);
+    hash = new BufferedLabel(cInfoLeft, SWT.LEFT, (ClipboardCopy.copyToClipProvider)()->{
+    	return(hash.getText().replaceAll(" ",""));
+    });
     Messages.setLanguageText(hash.getWidget(), "GeneralView.label.hash.tooltip", true);
 
     gridData = new GridData(GridData.FILL_HORIZONTAL);

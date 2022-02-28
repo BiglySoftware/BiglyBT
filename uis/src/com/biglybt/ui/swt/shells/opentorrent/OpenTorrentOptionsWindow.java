@@ -6435,7 +6435,7 @@ public class OpenTorrentOptionsWindow
 							public String
 							getText()
 							{
-								return( hash_str );
+								return( TorrentUtils.nicePrintTorrentHash( torrent, true ));
 							}
 						});
 					text.getControl().setData("hasClipMenu", true);

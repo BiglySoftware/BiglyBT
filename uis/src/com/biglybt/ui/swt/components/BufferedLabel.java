@@ -71,6 +71,19 @@ BufferedLabel
 			});
 	}
 
+	public
+	BufferedLabel(
+		Composite							composite,
+		int									attrs,
+		ClipboardCopy.copyToClipProvider	clip_provider )
+	{
+		super((attrs&SWT.DOUBLE_BUFFERED)==0?new Label( composite, attrs ):new DoubleBufferedLabel( composite, attrs ));
+
+		label = (Control)getWidget();
+
+		ClipboardCopy.addCopyToClipMenu( label, clip_provider );
+	}
+	
 	public boolean
 	isDisposed()
 	{
