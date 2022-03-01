@@ -133,6 +133,12 @@ public interface MdiEntry extends UIPluginView
 
 	public void removeListener(MdiEntryDropListener listener);
 
+	public void addAcceleratorListener(MdiAcceleratorListener listener );
+	
+	public void processAccelerator(char c, int stateMask );
+	
+	public void removeAcceleratorListener(MdiAcceleratorListener listener );
+	
 	public void setDatasource(Object ds);
 
 	/**

@@ -29,6 +29,7 @@ import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.menus.*;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.ui.mdi.MdiAcceleratorListener;
 import com.biglybt.ui.mdi.MdiCloseListener;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 
@@ -93,6 +94,12 @@ public class SubscriptionMDIEntry implements SubscriptionListener, ViewTitleInfo
 
 		subs.addListener(this);
 
+		mdiEntry.addAcceleratorListener((character,mask)->{
+			if (( character == 'c' || character == 'C' ) && mask== MdiAcceleratorListener.SHIFT ){
+				subs.getHistory().markAllResultsRead();
+			}
+		});
+		
 		mdiEntry.addListener(new MdiCloseListener() {
 			@Override
 			public void mdiEntryClosed(MdiEntry entry, boolean userClosed) {

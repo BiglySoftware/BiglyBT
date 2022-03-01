@@ -1104,6 +1104,16 @@ public class SideBar
 						
 							break;
 						}
+						case SWT.KeyDown:{
+						
+							MdiEntry currentEntry = getCurrentEntry();
+							
+							if ( currentEntry != null ){
+								
+								currentEntry.processAccelerator( event.character, event.stateMask );
+							}
+							break;
+						}
 					}
 				} catch (Exception e) {
 					Debug.out(e);
@@ -1131,6 +1141,10 @@ public class SideBar
 
 		// to disable collapsing
 		tree.addListener(SWT.Collapse, treeListener);
+		
+		// for accelerators
+		
+		tree.addListener(SWT.KeyDown, treeListener);
 
 
 		dropTarget = new DropTarget(tree, DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK

@@ -86,6 +86,8 @@ public abstract class BaseMdiEntry
 
 	private List<MdiSWTMenuHackListener> listMenuHackListners;
 
+	private List<MdiAcceleratorListener> listAcceleratorListeners = null;
+	
 	protected ViewTitleInfo viewTitleInfo;
 
 	/** Parent MDIEntry.  Doesn't mean that this view is embedded inside the parentID */
@@ -1152,7 +1154,47 @@ public abstract class BaseMdiEntry
 		}
 	}
 
-	
+	@Override
+	public void addAcceleratorListener(MdiAcceleratorListener l) {
+		synchronized (this) {
+			if (listAcceleratorListeners == null) {
+				listAcceleratorListeners = new ArrayList<>(1);
+			}
+			if (!listAcceleratorListeners.contains(l)) {
+				listAcceleratorListeners.add(l);
+			}
+		}
+	}
+
+	@Override
+	public void removeAcceleratorListener(MdiAcceleratorListener l) {
+		synchronized (this) {
+			if (listAcceleratorListeners == null) {
+				listAcceleratorListeners = new ArrayList<>(1);
+			}
+			listAcceleratorListeners.remove(l);
+		}
+	}
+
+	@Override
+	public void processAccelerator( char c, int mask) {
+		MdiAcceleratorListener[] listeners;
+		
+		synchronized (this) {
+			if (listAcceleratorListeners == null) {
+				return;
+			}
+			listeners = listAcceleratorListeners.toArray(new MdiAcceleratorListener[0]);
+		}
+		
+		for ( MdiAcceleratorListener l: listeners ){
+			try{
+				l.process(c, mask);
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
+		}
+	}
 	
 	@Override
 	public boolean
