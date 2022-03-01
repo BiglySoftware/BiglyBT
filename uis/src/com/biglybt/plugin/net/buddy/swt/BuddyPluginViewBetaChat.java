@@ -2527,13 +2527,17 @@ BuddyPluginViewBetaChat
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 2;
 		ftux_button_area.setLayoutData(grid_data);
-		ftux_button_area.setBackground( Colors.white );
+		if ( !Utils.isDarkAppearanceNative()){
+			ftux_button_area.setBackground( Colors.white );	
+		}
 
 		Label filler = new Label( ftux_button_area, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		filler.setLayoutData(grid_data);
-		filler.setBackground( Colors.white );
-
+		if ( !Utils.isDarkAppearanceNative()){
+			filler.setBackground( Colors.white );
+		
+		}
 		final Button ftux_accept = new Button( ftux_button_area, SWT.PUSH );
 		grid_data = new GridData();
 		grid_data.horizontalAlignment = SWT.RIGHT;
@@ -5826,7 +5830,7 @@ BuddyPluginViewBetaChat
 
 						original_msg = original_msg.substring( 1, original_msg.length()-1 );
 
-						info_colour = Colors.black;
+						info_colour = Utils.isDarkAppearanceNative()?Colors.light_grey:Colors.black;
 						info_font	= bold_font;
 
 					}else{
