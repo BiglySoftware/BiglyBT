@@ -482,8 +482,12 @@ public class TabbedMDI
   						event.doit = false;
   					}
   				}else{
-  					TabbedEntry current = getCurrentEntry();
-  					current.processAccelerator( event.character, event.stateMask );
+  					if (focus_control == tabFolder ){
+  						TabbedEntry current = getCurrentEntry();
+  						if ( current != null ){
+  							current.processAccelerator( event.character, event.stateMask );
+  						}
+  					}
   				}
   			}
   		});
