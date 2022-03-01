@@ -1666,24 +1666,28 @@ addressLoop:
 		
 		for( NetworkInterface iface : nis ){
 			
-			for ( InterfaceAddress ia: iface.getInterfaceAddresses()){
-				
-				if ( ia.getAddress().equals( address )){
+			try{
+				for ( InterfaceAddress ia: iface.getInterfaceAddresses()){
 					
-					boolean want_v4 = address instanceof Inet6Address;
-					
-					for ( InterfaceAddress x: iface.getInterfaceAddresses()){
-				
-						InetAddress xa = x.getAddress();
+					if ( ia.getAddress().equals( address )){
 						
-						if ( want_v4 == ( xa instanceof Inet4Address )){
-							
-							return( xa );
-						}
-					}
+						boolean want_v4 = address instanceof Inet6Address;
+						
+						for ( InterfaceAddress x: iface.getInterfaceAddresses()){
 					
-					return( null );
+							InetAddress xa = x.getAddress();
+							
+							if ( want_v4 == ( xa instanceof Inet4Address )){
+								
+								return( xa );
+							}
+						}
+						
+						return( null );
+					}
 				}
+			}catch( Throwable e ){
+				// ignore potential NPE in getInterfaceAddresses 
 			}
 		}
 		
@@ -3866,14 +3870,18 @@ addressLoop:
 			
 			for ( NetworkInterface ni: old_network_interfaces ){
 				
-				for ( InterfaceAddress ia: ni.getInterfaceAddresses()){
-					
-					InetAddress a = ia.getAddress();
-										
-					if ( AddressUtils.isGlobalAddressV6( a ) && !AddressUtils.isTeredo( a ) && !AddressUtils.is6to4( a )){
+				try{
+					for ( InterfaceAddress ia: ni.getInterfaceAddresses()){
 						
-						addresses.add( a );
-					}	
+						InetAddress a = ia.getAddress();
+											
+						if ( AddressUtils.isGlobalAddressV6( a ) && !AddressUtils.isTeredo( a ) && !AddressUtils.is6to4( a )){
+							
+							addresses.add( a );
+						}	
+					}
+				}catch( Throwable e ){
+					// ignore potential NPE in getInterfaceAddresses 
 				}
 			}
 			
