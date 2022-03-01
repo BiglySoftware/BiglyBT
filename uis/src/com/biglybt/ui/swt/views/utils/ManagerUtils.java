@@ -4914,4 +4914,62 @@ public class ManagerUtils {
 			advancedRename(list);
 		});
 	}
+	
+	public static void
+	viewLinks(
+		DownloadManager[]	dms )
+	{
+		StringBuilder details = new StringBuilder( 32*1024 );
+		
+		for ( DownloadManager dm: dms ){
+								
+			DiskManagerFileInfoSet fis = dm.getDiskManagerFileInfoSet();
+
+			DiskManagerFileInfo[] files = fis.getFiles();
+
+			boolean done_name = false;
+			
+			for ( DiskManagerFileInfo file_info: files ){
+
+				File file_link 		= file_info.getFile( true );
+				File file_nolink 	= file_info.getFile( false );
+
+				if ( !file_nolink.getAbsolutePath().equals( file_link.getAbsolutePath())){
+
+					if ( dms.length > 1 && !done_name ){
+						
+						done_name = true;
+					
+						if ( details.length() > 0 ){
+							details.append( "\n" );
+						}
+						
+						details.append( dm.getDisplayName());
+						details.append( "\n\n" );
+					}
+			
+					details.append( "    " );
+					details.append( file_nolink.getAbsolutePath());
+					details.append(" -> " );
+					details.append( file_link.getAbsolutePath());
+					details.append( "\n" );
+				}
+			}
+		}
+		
+		TextViewerWindow viewer =
+				new TextViewerWindow(
+        			  Utils.findAnyShell(),
+        			  "view.links.title",
+        			  "view.links.text",
+        			  details.toString(), true, true );
+
+		viewer.setEditable( false );
+		
+		viewer.setCancelEnabled( false );
+		
+		viewer.setNonProportionalFont();
+		
+		viewer.goModal();
+	}
 }

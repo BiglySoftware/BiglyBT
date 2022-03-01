@@ -969,6 +969,20 @@ public class TorrentUtil
 
 		itemRevertFiles.setEnabled(hasRevertableFiles);
 		
+			// view links
+		
+		final MenuItem itemViewLinks = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(itemViewLinks, "menu.view.links");
+		itemViewLinks.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void 
+			run(
+				DownloadManager[] dms)
+			{
+				ManagerUtils.viewLinks( dms );
+			}
+		});
+		
 			// clear links
 
 		final MenuItem itemClearLinks = new MenuItem(menuFiles, SWT.PUSH);

@@ -390,7 +390,10 @@ public class TextViewerWindow {
   {
 	  txtInfo.setEditable( editable );
 	 
-	  cancel_enabled = true;
+	  if ( editable ){
+		  
+		  cancel_enabled = true;
+	  }
 	  
 	  buildButtons();
   }
