@@ -481,6 +481,9 @@ public class TabbedMDI
   						selectNextTab(false);
   						event.doit = false;
   					}
+  				}else{
+  					TabbedEntry current = getCurrentEntry();
+  					current.processAccelerator( event.character, event.stateMask );
   				}
   			}
   		});
