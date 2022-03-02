@@ -40,6 +40,7 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
@@ -1129,8 +1130,8 @@ PeersViewBase
 		Menu				menu,
 		PEPeer[]			peers )
 	{
-		new MenuItem( menu, SWT.SEPARATOR);
-
+		MenuBuildUtils.addSeparator( menu );
+		
 		MenuItem copy_me_item = new MenuItem( menu, SWT.PUSH );
 
 		Messages.setLanguageText( copy_me_item, "menu.copy.my.peer");

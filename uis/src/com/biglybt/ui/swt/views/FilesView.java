@@ -1189,7 +1189,7 @@ public class FilesView
 							false,
 							true );
 									
-					MenuBuildUtils.addSeparater( menu );
+					MenuBuildUtils.addSeparator( menu );
 				}
 			}
 		}else{

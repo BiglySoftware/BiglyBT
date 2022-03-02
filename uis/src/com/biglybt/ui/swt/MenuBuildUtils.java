@@ -1451,7 +1451,7 @@ public class MenuBuildUtils {
 		 */
 	
 	public static void
-	addSeparater(
+	addSeparator(
 		Menu		menu )
 	{
 		if ( menu.isDisposed() || menu.getItemCount() == 0 ){

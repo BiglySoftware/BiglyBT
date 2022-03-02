@@ -1085,9 +1085,7 @@ public abstract class TableViewSWT_Common
 			// Add Plugin Context menus..
 			TableContextMenuItem[] items = column.getContextMenuItems(TableColumnCore.MENU_STYLE_HEADER);
 			if (items.length > 0) {
-				if (menu.getItemCount() > 0) {
-					new MenuItem(menu, SWT.SEPARATOR);
-				}
+				MenuBuildUtils.addSeparator( menu );
 
 				MenuBuildUtils.addPluginMenuItems(items, menu, true, true,
 					new MenuBuildUtils.MenuItemPluginMenuControllerImpl(
@@ -1095,9 +1093,7 @@ public abstract class TableViewSWT_Common
 
 			}
 
-			if (menu.getItemCount() > 0) {
-				new MenuItem(menu, SWT.SEPARATOR);
-			}
+			MenuBuildUtils.addSeparator( menu );
 
 			TableColumnCore[] sortColumns = tv.getSortColumns();
 			boolean columnIsSort = false;
