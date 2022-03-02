@@ -25,6 +25,7 @@ import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.util.PeerUtils;
@@ -1092,7 +1093,16 @@ PeersViewBase
 
 		InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
 		
-		int port = dm.getTCPListeningPortNumber();
+		int port;
+		
+		if ( dm == null ){
+			
+			port = TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber();
+			
+		}else{
+			
+			port = dm.getTCPListeningPortNumber();
+		}
 		
 		String	str = "";
 			
