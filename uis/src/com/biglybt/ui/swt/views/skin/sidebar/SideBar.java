@@ -256,6 +256,12 @@ public class SideBar
 		MenuManager menuManager = uim.getMenuManager();
 		
 		{
+			MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "sep");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			menuItem.setStyle(MenuItem.STYLE_SEPARATOR);
+		}
+		
+		{
 			MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "UpdateWindow.close");
 			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 				

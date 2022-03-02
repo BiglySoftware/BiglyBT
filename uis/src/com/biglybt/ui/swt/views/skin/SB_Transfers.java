@@ -1765,13 +1765,16 @@ public class SB_Transfers
 									@Override
 									public void menuWillBeShown(MdiEntry entry, Menu menuTree) {
 										
-										TagGroup tg = tag.getGroupContainer();
-										
-										addMenuCollapseAll( mdi, menuTree, entry.getViewID());
-										
-										new org.eclipse.swt.widgets.MenuItem( menuTree, SWT.SEPARATOR );
-										
-										TagUIUtils.createSideBarMenuItems(menuTree, tg );
+										if ( tag.getTaggableTypes() == Taggable.TT_DOWNLOAD ){
+											
+											TagGroup tg = tag.getGroupContainer();
+											
+											addMenuCollapseAll( mdi, menuTree, entry.getViewID());
+											
+											new org.eclipse.swt.widgets.MenuItem( menuTree, SWT.SEPARATOR );
+											
+											TagUIUtils.createSideBarMenuItems(menuTree, tg );
+										}
 									}
 								});
 							}

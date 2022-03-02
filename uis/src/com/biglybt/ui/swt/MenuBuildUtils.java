@@ -47,6 +47,7 @@ import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
+import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.shells.main.MainMenuV3;
 import com.biglybt.core.internat.MessageText;
@@ -305,11 +306,19 @@ public class MenuBuildUtils {
 
 			prev_was_separator = this_is_separator;
 
-			final org.eclipse.swt.widgets.MenuItem menuItem = new org.eclipse.swt.widgets.MenuItem(
-					parent, swt_style);
-
-			if (swt_style == SWT.SEPARATOR) {continue;}
-
+			final org.eclipse.swt.widgets.MenuItem menuItem;
+			
+			if ( this_is_separator ){
+				
+				addSeparator( parent );
+				
+				continue;
+				
+			}else{
+				
+				menuItem = new org.eclipse.swt.widgets.MenuItem( parent, swt_style );
+			}
+			
 			if (enable_items) {
 
 				if (style == TableContextMenuItem.STYLE_CHECK
