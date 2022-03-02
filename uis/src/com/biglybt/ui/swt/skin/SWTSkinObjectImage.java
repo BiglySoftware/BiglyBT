@@ -86,7 +86,10 @@ public class SWTSkinObjectImage
 				Image bgImage = (Image)control.getParent().getData( "BGImage" );
 				
 				if ( bgImage != null && !bgImage.isDisposed()){
+										
 					e.gc.drawImage( bgImage, 0, 0 );
+					
+					control.getParent().setData( "BGImageOld", bgImage );
 				}
 				
 				Image imgSrc = (Image) control.getData("image");
@@ -355,7 +358,14 @@ public class SWTSkinObjectImage
 
 				String oldImageID = (String) canvas.getData("ImageID");
 				if (sImageID != null && sImageID.equals(oldImageID)) {
-					return null;
+					
+						// background might have changed, check
+					Image bgImage 		= (Image)canvas.getParent().getData( "BGImage" );
+					Image bgImageOld 	= (Image)canvas.getParent().getData( "BGImageOld" );
+									
+					if ( bgImage == bgImageOld ){
+						return null;
+					}
 				}
 
 				ImageLoader imageLoader = skin.getImageLoader(properties);
