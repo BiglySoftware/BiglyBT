@@ -485,7 +485,9 @@ public class TabbedMDI
   					if (focus_control == tabFolder ){
   						TabbedEntry current = getCurrentEntry();
   						if ( current != null ){
-  							current.processAccelerator( event.character, event.stateMask );
+  							if ( current.processAccelerator( event.character, event.stateMask )){
+  								event.doit = false;
+  							}
   						}
   					}
   				}

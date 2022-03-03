@@ -1116,7 +1116,9 @@ public class SideBar
 							
 							if ( currentEntry != null ){
 								
-								currentEntry.processAccelerator( event.character, event.stateMask );
+								if ( currentEntry.processAccelerator( event.character, event.stateMask )){
+									event.doit = false;
+								}
 							}
 							break;
 						}

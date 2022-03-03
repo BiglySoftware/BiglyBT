@@ -25,10 +25,8 @@ import java.util.regex.Pattern;
 
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.ui.common.table.*;
-import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
 import com.biglybt.ui.swt.columns.subscriptions.*;
 import com.biglybt.ui.swt.components.BubbleTextBox;
-import com.biglybt.ui.swt.components.BufferedLabel;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
@@ -66,7 +64,6 @@ import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.subs.SubscriptionManagerListener;
-import com.biglybt.core.tag.TagFeatureProperties;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.core.vuzefile.VuzeFileHandler;

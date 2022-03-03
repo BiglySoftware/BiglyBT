@@ -135,7 +135,7 @@ public interface MdiEntry extends UIPluginView
 
 	public void addAcceleratorListener(MdiAcceleratorListener listener );
 	
-	public void processAccelerator(char c, int stateMask );
+	public boolean processAccelerator(char c, int stateMask );
 	
 	public void removeAcceleratorListener(MdiAcceleratorListener listener );
 	

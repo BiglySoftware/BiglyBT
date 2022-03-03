@@ -1177,23 +1177,28 @@ public abstract class BaseMdiEntry
 	}
 
 	@Override
-	public void processAccelerator( char c, int mask) {
+	public boolean processAccelerator( char c, int mask) {
 		MdiAcceleratorListener[] listeners;
 		
 		synchronized (this) {
 			if (listAcceleratorListeners == null) {
-				return;
+				return( false );
 			}
 			listeners = listAcceleratorListeners.toArray(new MdiAcceleratorListener[0]);
 		}
 		
 		for ( MdiAcceleratorListener l: listeners ){
 			try{
-				l.process(c, mask);
+				if ( l.process(c, mask)){
+					
+					return( true );
+				}
 			}catch( Throwable e ){
 				Debug.out( e );
 			}
 		}
+		
+		return( false );
 	}
 	
 	@Override

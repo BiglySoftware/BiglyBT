@@ -97,6 +97,9 @@ public class SubscriptionMDIEntry implements SubscriptionListener, ViewTitleInfo
 		mdiEntry.addAcceleratorListener((character,mask)->{
 			if (( character == 'c' || character == 'C' ) && mask== MdiAcceleratorListener.SHIFT ){
 				subs.getHistory().markAllResultsRead();
+				return( true );
+			}else{
+				return( false );
 			}
 		});
 		

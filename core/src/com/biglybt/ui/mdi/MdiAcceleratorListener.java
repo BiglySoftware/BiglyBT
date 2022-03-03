@@ -25,7 +25,7 @@ MdiAcceleratorListener
 	public static final int SHIFT 	= 1 << 17;
 	public static final int CTRL 	= 1 << 18;
 	
-	public void
+	public boolean
 	process(
 		char		c,
 		int			stateMask );
