@@ -44,6 +44,7 @@ import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.FixedHTMLTransfer;
 import com.biglybt.ui.swt.FixedURLTransfer;
+import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
@@ -1306,10 +1307,7 @@ public class SideBar
 
 				if ( entry == null || entry.getParentID() == null ){
 					
-					if ( menuTree.getItemCount() > 0 ){
-						
-						new org.eclipse.swt.widgets.MenuItem( menuTree, SWT.SEPARATOR );
-					}
+					MenuBuildUtils.addSeparator( menuTree );
 					
 					org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem( menuTree, SWT.PUSH );
 					
