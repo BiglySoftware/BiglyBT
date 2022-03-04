@@ -21,6 +21,7 @@
 package com.biglybt.core.tag.impl;
 
 import java.io.File;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -50,6 +51,7 @@ import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
@@ -2468,6 +2470,7 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_UNALLOCATED		= 36;
 		private static final int FT_IS_QUEUED			= 37;
 		private static final int FT_IS_IP_FILTERED		= 38;
+		private static final int FT_COUNT_TRACKERS		= 39;
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2996,6 +2999,12 @@ TagPropertyConstraintHandler
 				}else if ( func_name.equals( "isIpFiltered" )){
 
 					fn_type = FT_IS_IP_FILTERED;
+
+					params_ok = num_params == 0;
+
+				}else if ( func_name.equals( "countTrackers" )){
+
+					fn_type = FT_COUNT_TRACKERS;
 
 					params_ok = num_params == 0;
 
@@ -3741,6 +3750,32 @@ TagPropertyConstraintHandler
 						
 						return( ip_filter.isEnabled() && 
 								!dm.getDownloadState().getFlag(DownloadManagerState.FLAG_DISABLE_IP_FILTER ));
+					}
+					case FT_COUNT_TRACKERS:{
+						
+						TOTorrent torrent = dm.getTorrent();
+						
+						TOTorrentAnnounceURLSet[] sets = torrent.getAnnounceURLGroup().getAnnounceURLSets();
+						
+						int total = 0;
+						
+						if ( sets.length == 0 ){
+						
+							URL url = torrent.getAnnounceURL();
+							
+							if ( !TorrentUtils.isDecentralised( url )){
+								
+								total++;
+							}
+						}else{
+							
+							for ( TOTorrentAnnounceURLSet set: sets ){
+								
+								total += set.getAnnounceURLs().length;
+							}
+						}
+						
+						return( total );
 					}
 				}
 
