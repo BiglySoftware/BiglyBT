@@ -45,7 +45,7 @@ public class MyTorrentsView_Big
 		super( true );
 		this.torrentFilterMode = torrentFilterMode;
 		this.filterBox = txtFilter;
-		this.cCategoriesAndTags = cCatsTags;
+		this.cTitleCategoriesAndTags = cCatsTags;
 		Class<?> forDataSourceType;
 		switch (torrentFilterMode) {
 			case SBC_LibraryView.TORRENTS_COMPLETE:

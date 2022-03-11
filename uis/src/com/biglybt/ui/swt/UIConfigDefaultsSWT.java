@@ -237,6 +237,7 @@ public class UIConfigDefaultsSWT
 
 		def.addParameter( "Low Resource Silent Update Restart Enabled", true );
 
+		def.addParameter( "Library.ShowTitle", true );
 		def.addParameter( "Library.ShowCatButtons", false );
 		def.addParameter( "Library.ShowTagButtons", true );
 		def.addParameter( "Library.ShowTagButtons.FiltersOnly", false );

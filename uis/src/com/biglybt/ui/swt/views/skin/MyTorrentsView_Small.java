@@ -44,7 +44,7 @@ public class MyTorrentsView_Small
 		super( true );
 
 		this.filterBox = txtFilter;
-		this.cCategoriesAndTags = cCatsTags;
+		this.cTitleCategoriesAndTags = cCatsTags;
 		
 		init( _core, SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, false, dataSource), Download.class, basicItems );
 	}

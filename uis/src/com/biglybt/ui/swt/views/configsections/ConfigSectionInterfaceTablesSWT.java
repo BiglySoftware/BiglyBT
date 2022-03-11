@@ -47,6 +47,7 @@ import static com.biglybt.ui.swt.ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT;
 public class ConfigSectionInterfaceTablesSWT
 	extends ConfigSectionImpl
 {
+	public static final String REFID_SECTION_LIBRARY = "section-library";
 
 	public static final String SECTION_ID = "tables";
 
@@ -227,9 +228,12 @@ public class ConfigSectionInterfaceTablesSWT
 
 		add(new ParameterGroupImpl("ConfigView.section.global", listGeneral));
 
+			// Library section
+		
 		List<Parameter> listLibrary = new ArrayList<>();
 
-		// User tree
+		add(new BooleanParameterImpl("Library.ShowTitle",
+				"menu.show.title"), listLibrary);
 
 		add(new BooleanParameterImpl("Table.useTree",
 				"ConfigView.section.style.useTree"), listLibrary);
@@ -421,9 +425,11 @@ public class ConfigSectionInterfaceTablesSWT
 		add(new ParameterGroupImpl("ConfigView.section.style.launch",
 				listLaunchGroup));
 
-		add(new ParameterGroupImpl("ConfigView.section.style.library",
+		ParameterGroupImpl pgLibrary = add(new ParameterGroupImpl("ConfigView.section.style.library",
 				listLibrary));
 
+		pgLibrary.setReferenceID( REFID_SECTION_LIBRARY );
+		
 		List<Parameter> listSearchSubs = new ArrayList<>();
 
 		add(new BooleanParameterImpl("Search View Is Web View",

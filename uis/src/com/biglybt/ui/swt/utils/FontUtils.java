@@ -482,4 +482,25 @@ public class FontUtils
 		}
 		return width;
 	}
+	
+	public static void
+	setBold(
+		Control	control )
+	{
+		Font existing = control.getFont();
+		
+		if ( existing == null ){
+			
+			Debug.out( "no existing font" );
+			
+			return;
+			
+		}else{
+			Font f = cache( getFontWithStyle( existing, SWT.BOLD, 1.0f ));
+		
+			control.setFont( f );
+			
+			control.addListener( SWT.Dispose, (ev)->{ uncache( f ); });
+		}
+	}
 }
