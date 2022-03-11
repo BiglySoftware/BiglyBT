@@ -730,25 +730,31 @@ public class MyTorrentsView
 		  }
 	  });
 	  
+	  MenuItem menuEnableSimple;
 	  
+	  if ( Utils.isAZ3UI()){
 	  
-	  new MenuItem( tableHeaderMenu, SWT.SEPARATOR );
-
-	  	// enable simple views
-
-	  String rr = MessageText.getString( "ConfigView.section.security.restart.title" );
-
-	  final MenuItem menuEnableSimple = new MenuItem(tableHeaderMenu, SWT.CHECK);
-
-	  menuEnableSimple.setText( MessageText.getString( "ConfigView.section.style.EnableSimpleView" ) + " (" + rr + ")" );
-
-	  menuEnableSimple.addSelectionListener(new SelectionAdapter() {
-		  @Override
-		  public void widgetSelected(SelectionEvent e) {
-			  COConfigurationManager.setParameter(
-					  "Library.EnableSimpleView", menuEnableSimple.getSelection());
-		  }
-	  });
+		  new MenuItem( tableHeaderMenu, SWT.SEPARATOR );
+	
+		  	// enable simple views
+	
+		  String rr = MessageText.getString( "ConfigView.section.security.restart.title" );
+	
+		  menuEnableSimple = new MenuItem(tableHeaderMenu, SWT.CHECK);
+	
+		  menuEnableSimple.setText( MessageText.getString( "ConfigView.section.style.EnableSimpleView" ) + " (" + rr + ")" );
+	
+		  menuEnableSimple.addSelectionListener(new SelectionAdapter() {
+			  @Override
+			  public void widgetSelected(SelectionEvent e) {
+				  COConfigurationManager.setParameter(
+						  "Library.EnableSimpleView", menuEnableSimple.getSelection());
+			  }
+		  });
+	  }else{
+		  
+		  menuEnableSimple = null;
+	  }
 	  
 	  new MenuItem( tableHeaderMenu, SWT.SEPARATOR );
 
@@ -790,8 +796,10 @@ public class MyTorrentsView
 
 			  searchHistoryEnable.setSelection(COConfigurationManager.getBooleanParameter( "table.filter.history.enabled", true ));
 
-			  menuEnableSimple.setSelection(COConfigurationManager.getBooleanParameter( "Library.EnableSimpleView" ));
-
+			  if ( menuEnableSimple != null ){
+			  
+				  menuEnableSimple.setSelection(COConfigurationManager.getBooleanParameter( "Library.EnableSimpleView" ));
+			  }
 		  }
 
 		  @Override
@@ -1098,8 +1106,10 @@ public class MyTorrentsView
 			titleLab = new Label( cTitleCategoriesAndTags, SWT.NULL );
 			titleLab.setLayoutData( new RowData());
 			titleLab.setText( MessageText.getString( isCompletedOnly?"MySeedersView.header":"MyTorrentsView.header" ));
-			titleLab.setMenu( getHeaderMenu());			
-			FontUtils.setBold( titleLab );
+			titleLab.setMenu( getHeaderMenu());	
+			if ( Utils.isAZ3UI()){
+				FontUtils.setBold( titleLab );
+			}
 		}
 		
 		if (tags.size() == 0 ){
