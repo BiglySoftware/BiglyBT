@@ -215,7 +215,7 @@ public class MyTorrentsView
 
 	private ViewUtils.ViewTitleExtraInfo	vtxi;
 	
-	private boolean	showTableTitle = true;
+	private boolean	showTableTitle;
 	protected boolean neverShowTagButtons;
 	protected boolean neverShowCatButtons;
 	private boolean	showCatButtons;
@@ -487,8 +487,10 @@ public class MyTorrentsView
   protected void 
   tableViewInitialized() 
 	{
+	  	showTableTitle = COConfigurationManager.getBooleanParameter( "Library.ShowTitle" );
+	  
 		tv.addKeyListener(this);
-
+	
 		createTabs();
 
 		if (filterBox == null) {
