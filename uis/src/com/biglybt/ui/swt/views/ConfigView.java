@@ -18,6 +18,9 @@
 package com.biglybt.ui.swt.views;
 
 import java.util.List;
+
+import static com.biglybt.core.config.ConfigKeys.ICFG_USER_MODE;
+
 import java.util.*;
 
 import org.eclipse.swt.SWT;
@@ -772,13 +775,38 @@ public class ConfigView implements UISWTViewCoreEventListener {
 
 		return( result );
 	}
-
+	
 	private void
 	showSection(
 		TreeItem 	section,
 		boolean		focus,
 		Map			options )
 	{
+		int userMode = COConfigurationManager.getIntParameter(ICFG_USER_MODE);
+				
+		if ( showSectionSupport( section, focus, options )){
+				
+			return;
+		}
+		
+		if ( userMode < 2 ){
+					
+			userMode++;
+			
+			COConfigurationManager.setParameter(ICFG_USER_MODE, userMode );
+			
+			Utils.execSWTThreadLater( 250, ()->showSection( section, focus, options ));
+		}
+	}
+
+	private boolean
+	showSectionSupport(
+		TreeItem 	section,
+		boolean		focus,
+		Map			options )
+	{
+		boolean result = true;
+		
 		saveLatestSelection( section );
 
 		ScrolledComposite item = (ScrolledComposite)section.getData(TREEITEMDATA_PANEL);
@@ -816,13 +844,21 @@ public class ConfigView implements UISWTViewCoreEventListener {
 
 									item.setOrigin(origin);
 								});
+						
+					}else{
+						
+						result = false;
 					}
 				}
 			}
+			
 			if ( focus ){
+				
 				layoutConfigSection.topControl.traverse( SWT.TRAVERSE_TAB_NEXT);
 			}
 		}
+		
+		return( result );
 	}
 
 	private void hilightText(Composite c, String text) {
