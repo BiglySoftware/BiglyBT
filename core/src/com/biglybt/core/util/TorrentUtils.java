@@ -222,6 +222,50 @@ TorrentUtils
 			created_torrents_set.add( new HashWrapper((byte[])it.next()));
 		}
 	}
+	
+    static private volatile Set<String>	priority_file_exts 				= new HashSet<>();
+    static private volatile boolean		priority_file_exts_ignore_case 	= false;
+    
+    static{
+      	COConfigurationManager.addAndFireParameterListeners(
+    		new String[]{
+    			"priorityExtensions",
+    			"priorityExtensionsIgnoreCase" },
+    		new ParameterListener()
+    		{
+    			@Override
+			    public void
+    			parameterChanged(
+    				String parameterName )
+    			{
+    				Set<String> new_exts = new HashSet<>();
+    				
+    				String 	extensions = COConfigurationManager.getStringParameter("priorityExtensions","");
+					boolean bIgnoreCase = COConfigurationManager.getBooleanParameter("priorityExtensionsIgnoreCase");
+
+    				if(!extensions.equals("")) {
+    					StringTokenizer st = new StringTokenizer(extensions,";");
+    					while(st.hasMoreTokens()) {
+    						String extension = st.nextToken();
+    						extension = extension.trim();
+    						if(!extension.startsWith(".")){
+    							extension = "." + extension;
+    						}
+    						
+    						if ( bIgnoreCase ){
+    							extension = extension.toLowerCase( Locale.US );
+    						}
+    						
+    						new_exts.add( extension );
+    					}
+    				}
+    				
+    				priority_file_exts 				= new_exts;
+    				priority_file_exts_ignore_case	= bIgnoreCase;
+    			}
+    		});
+      	
+    }
 
 	static final AtomicLong	torrent_delete_level = new AtomicLong();
 	static long			torrent_delete_time;
@@ -5772,6 +5816,18 @@ TorrentUtils
 		}
 		
 		return( false );
+	}
+	
+	public static Set<String>
+	getFilePriorityExtensions()
+	{
+		return( priority_file_exts );
+	}
+	
+	public static boolean
+	getFilePriorityExtensionsIgnoreCase()
+	{
+		return( priority_file_exts_ignore_case );
 	}
 	
 	public static void

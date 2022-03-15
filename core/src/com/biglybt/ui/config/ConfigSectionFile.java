@@ -42,7 +42,8 @@ public class ConfigSectionFile
 	extends ConfigSectionImpl
 {
 
-	public static final String REFID_TORRENT_ADD_AUTO_SKIP = "torrent-add-auto-skip";
+	public static final String REFID_TORRENT_ADD_AUTO_SKIP 		= "torrent-add-auto-skip";
+	public static final String REFID_TORRENT_ADD_AUTO_PRIORITY	= "torrent-add-auto-priority";
 
 	public ConfigSectionFile() {
 		super(ConfigSection.SECTION_FILES, ConfigSection.SECTION_ROOT);
@@ -368,15 +369,15 @@ public class ConfigSectionFile
 				BCFG_PRIORITY_EXTENSIONS_IGNORE_CASE, "ConfigView.label.ignoreCase");
 		add(priorityExtensionsIgnoreCase, Parameter.MODE_INTERMEDIATE);
 
-		ParameterGroupImpl pgPriorityExt = new ParameterGroupImpl(null,
-				priorityExtensions, priorityExtensionsIgnoreCase);
+		ParameterGroupImpl pgPriorityExt = new ParameterGroupImpl(null,	priorityExtensions, priorityExtensionsIgnoreCase);
+		pgPriorityExt.setReferenceID(REFID_TORRENT_ADD_AUTO_PRIORITY);
 		add("pgPriorityExt", pgPriorityExt, listExt);
 		pgPriorityExt.setNumberOfColumns(2);
 
 		add(new StringParameterImpl(SCFG_FILE_AUTO_SEQUENTIAL_EXTS,
 				"ConfigView.label.sequential.exts"), Parameter.MODE_INTERMEDIATE,
 				listExt);
-
+		
 		// quick view
 
 		StringParameterImpl quickViewExts = new StringParameterImpl(
@@ -389,9 +390,10 @@ public class ConfigSectionFile
 
 		ParameterGroupImpl pgQV = new ParameterGroupImpl(null, quickViewExts,
 				quickViewMaxKB);
+		
 		add("pgQV", pgQV, listExt);
 		pgQV.setNumberOfColumns(2);
-
+		
 		// rename incomplete files
 
 		BooleanParameterImpl rename_incomplete = new BooleanParameterImpl(

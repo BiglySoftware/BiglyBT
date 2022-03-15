@@ -1900,6 +1900,9 @@ public class OpenTorrentOptionsWindow
 					"File.Torrent.AutoSkipFiles",
 					"File.Torrent.AutoSkipFiles.RegExp",
 					"File.Torrent.AutoSkipMinSizeKB",
+					
+					"priorityExtensions",
+					"priorityExtensionsIgnoreCase",
 				}, this );
 				
 				
@@ -2078,7 +2081,7 @@ public class OpenTorrentOptionsWindow
 		parameterChanged(String parameterName){
 			if ( isSingleOptions ){
 				
-				torrentOptions.applySkipConfig();
+				torrentOptions.applyPriorityAndSkipConfig();
 			}
 		}
 		
@@ -5533,6 +5536,16 @@ public class OpenTorrentOptionsWindow
 					});
 					item.setSelection(download);
 
+					boolean allPriorityAuto = true;
+					
+					for ( TorrentOpenFileOptions info: infos ){
+						
+						if ( !info.isPriorityAuto()){
+							
+							allPriorityAuto = false;
+							break;
+						}
+					}
 
 						// priority
 
@@ -5617,7 +5630,7 @@ public class OpenTorrentOptionsWindow
 
 											for (TorrentOpenFileOptions torrentFileInfo : infos) {
 
-												torrentFileInfo.setPriority( priority );
+												torrentFileInfo.setPriority( priority, false );
 											}
 										}
 									});
@@ -5652,7 +5665,10 @@ public class OpenTorrentOptionsWindow
 
 								for ( TorrentOpenFileOptions file: infos ){
 
-									file.setPriority( --next_priority );
+									if ( !file.isPriorityAuto()){
+									
+										file.setPriority( --next_priority, false );
+									}
 								}
 
 								return;
@@ -5664,10 +5680,15 @@ public class OpenTorrentOptionsWindow
 
 							for (TorrentOpenFileOptions torrentFileInfo : infos) {
 
-								torrentFileInfo.setPriority( priority );
+								if ( !torrentFileInfo.isPriorityAuto()){
+								
+									torrentFileInfo.setPriority( priority, false );
+								}
 							}
 						}
 					};
+					
+					itemPriority.setEnabled( !allPriorityAuto );
 
 					itemNumeric.addListener(SWT.Selection, priorityListener);
 					itemNumericAuto.addListener(SWT.Selection, priorityListener);
@@ -5820,7 +5841,37 @@ public class OpenTorrentOptionsWindow
 											((MenuItem)e.widget).getSelection());
 								 }
 							 });
+						 
+						 new MenuItem(menu, SWT.SEPARATOR );
 					}
+					
+						// auto-prioritise options
+						
+					item = new MenuItem(menu, SWT.PUSH);
+	
+					Messages.setLanguageText(item, "OpenTorrentWindow.show.priority.options");
+	
+					item.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) {
+							UIFunctions uif = UIFunctionsManager.getUIFunctions();
+	
+							if ( uif != null ){
+	
+								JSONObject args = new JSONObject();
+	
+								args.put( "select", ConfigSectionFile.REFID_TORRENT_ADD_AUTO_PRIORITY);
+								
+								String args_str = JSONUtils.encodeToJSON( args );
+								
+								uif.getMDI().showEntryByID(
+										MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+										"files" + args_str );
+							}
+						}
+					});
+
+						// auto-skip options
 					
 					item = new MenuItem(menu, SWT.PUSH);
 
@@ -5846,6 +5897,8 @@ public class OpenTorrentOptionsWindow
 						}
 					});
 
+						// auto-tag options
+					
 					item = new MenuItem(menu, SWT.PUSH);
 					
 					Messages.setLanguageText(item, "OpenTorrentWindow.show.autotag.options");
@@ -7354,6 +7407,9 @@ public class OpenTorrentOptionsWindow
 						"File.Torrent.AutoSkipFiles",
 						"File.Torrent.AutoSkipFiles.RegExp",
 						"File.Torrent.AutoSkipMinSizeKB",
+						
+						"priorityExtensions",
+						"priorityExtensionsIgnoreCase",
 					},this );
 		}
 	}

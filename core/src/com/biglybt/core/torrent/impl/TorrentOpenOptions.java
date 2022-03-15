@@ -685,7 +685,7 @@ public class TorrentOpenOptions
 		if (files == null && torrent != null) {
 			files = new TorrentOpenFileOptions[torrent.getFiles().length];
 
-			applySkipConfig();
+			applyPriorityAndSkipConfig();
 		}
 
 		return files;
@@ -710,7 +710,7 @@ public class TorrentOpenOptions
 	}
 
 	public void
-	applySkipConfig()
+	applyPriorityAndSkipConfig()
 	{
 		if ( torrent == null ){
 			
@@ -719,6 +719,10 @@ public class TorrentOpenOptions
 		
 		boolean[]	skip = TorrentUtils.getSkipFiles( torrent );
 		
+        Set<String>	priority_file_exts = TorrentUtils.getFilePriorityExtensions();
+
+        boolean priority_file_exts_ignore_case = TorrentUtils.getFilePriorityExtensionsIgnoreCase();
+        
 		TOTorrentFile[] tfiles = torrent.getFiles();
 
 		if ( skip == null ){
@@ -735,13 +739,51 @@ public class TorrentOpenOptions
 
 			boolean	wanted = !skip[i];
 
-			if ( files[i] == null ){
+			TorrentOpenFileOptions file = files[i];
+			
+			if ( file == null ){
 				
-				files[i] = new TorrentOpenFileOptions( this, i, orgFullName, orgFileName, torrentFile.getLength(), wanted );
+				file = files[i] = new TorrentOpenFileOptions( this, i, orgFullName, orgFileName, torrentFile.getLength(), wanted );
 				
 			}else{
+								
+				file.setToDownload( wanted );
+			}
+			
+			boolean	auto = false;
+			
+			if ( !priority_file_exts.isEmpty()){
 				
-				files[i].setToDownload( wanted );
+                String      ext  = orgFileName;
+
+                int separator = ext.lastIndexOf(".");
+
+                if ( separator != -1 ){
+
+                	ext = ext.substring( separator );
+                	
+                	if ( priority_file_exts_ignore_case ){
+                    	
+                		ext = ext.toLowerCase( Locale.US );
+                    }
+                	
+                	if ( priority_file_exts.contains( ext )){
+                		
+                		file.setPriority( 1, true );
+                		
+                		auto = true;
+                	}
+                }
+			}
+			
+			if ( !auto ){
+				
+					// reset auto indicator
+				
+				if ( file.isPriorityAuto()){
+				
+					file.setPriority( 0, false );
+				}
 			}
 		}
 		

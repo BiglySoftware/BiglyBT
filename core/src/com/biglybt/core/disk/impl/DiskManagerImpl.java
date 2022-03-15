@@ -140,49 +140,7 @@ DiskManagerImpl
     		});
     }
     
-    static volatile Set<String>	priority_file_exts 				= new HashSet<>();
-    static volatile boolean		priority_file_exts_ignore_case 	= false;
-    
-    static{
-      	COConfigurationManager.addAndFireParameterListeners(
-    		new String[]{
-    			"priorityExtensions",
-    			"priorityExtensionsIgnoreCase" },
-    		new ParameterListener()
-    		{
-    			@Override
-			    public void
-    			parameterChanged(
-    				String parameterName )
-    			{
-    				Set<String> new_exts = new HashSet<>();
-    				
-    				String 	extensions = COConfigurationManager.getStringParameter("priorityExtensions","");
-					boolean bIgnoreCase = COConfigurationManager.getBooleanParameter("priorityExtensionsIgnoreCase");
 
-    				if(!extensions.equals("")) {
-    					StringTokenizer st = new StringTokenizer(extensions,";");
-    					while(st.hasMoreTokens()) {
-    						String extension = st.nextToken();
-    						extension = extension.trim();
-    						if(!extension.startsWith(".")){
-    							extension = "." + extension;
-    						}
-    						
-    						if ( bIgnoreCase ){
-    							extension = extension.toLowerCase( Locale.US );
-    						}
-    						
-    						new_exts.add( extension );
-    					}
-    				}
-    				
-    				priority_file_exts 				= new_exts;
-    				priority_file_exts_ignore_case	= bIgnoreCase;
-    			}
-    		});
-      	
-    }
 
 	static volatile boolean	missing_file_dl_restart_enabled;
 	
@@ -1134,6 +1092,10 @@ DiskManagerImpl
 
 			DiskManagerUtil.loadFilePriorities( download_manager, allocated_fileset );		
 			
+            Set<String>	priority_file_exts = TorrentUtils.getFilePriorityExtensions();
+
+            boolean priority_file_exts_ignore_case = TorrentUtils.getFilePriorityExtensionsIgnoreCase();
+            
             for ( int i=0;i<pm_files.length;i++ ){
 
             	if ( stopping ){
@@ -1198,14 +1160,8 @@ DiskManagerImpl
                 }
 
                 fileInfo.setExtension(ext.substring(separator));
-
-                    //Added for Feature Request
-                    //[ 807483 ] Prioritize .nfo files in new torrents
-                    //Implemented a more general way of dealing with it.
-
-                Set<String>	pfe = priority_file_exts;
                 
-                if (!pfe.isEmpty()){
+                if (!priority_file_exts.isEmpty()){
                 	
                     String e = fileInfo.getExtension();
                     
@@ -1214,7 +1170,7 @@ DiskManagerImpl
                     	e = e.toLowerCase( Locale.US );
                     }
                     
-                    if ( pfe.contains( e )){
+                    if ( priority_file_exts.contains( e )){
                             
                     	fileInfo.setPriority(1);
                     }

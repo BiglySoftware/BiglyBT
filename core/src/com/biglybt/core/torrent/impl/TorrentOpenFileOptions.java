@@ -42,6 +42,7 @@ public class TorrentOpenFileOptions
 	/** Whether to download this file.  Probably should be switched to the DND state variable */
 	private boolean toDownload;
 	private int		priority;
+	private boolean	priority_auto;
 
 	private String destFileName;
 	private String destPathName;
@@ -200,11 +201,21 @@ public class TorrentOpenFileOptions
 		return( priority );
 	}
 
+	public boolean
+	isPriorityAuto()
+	{
+		return( priority_auto );
+	}
+	
 	public void
 	setPriority(
-		int	_priority )
+		int		_priority,
+		boolean	_auto )
 	{
+		priority_auto = _auto;
+		
 		priority = _priority;
+		
 		parent.filePriorityStateChanged(this, _priority);
 	}
 }
