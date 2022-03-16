@@ -2557,6 +2557,7 @@ public class ManagerUtils {
 	private static final int LOCATE_MODE_COPY		= 1;
 	private static final int LOCATE_MODE_MOVE		= 2;
 	private static final int LOCATE_MODE_PIECE		= 3;
+	private static final int LOCATE_MODE_RELOCATE	= 4;
 	
 	private static final int LOCATE_MODE_LINK_BLANK		= 0;
 	private static final int LOCATE_MODE_LINK_INTERNAL	= 1;
@@ -2636,7 +2637,9 @@ public class ManagerUtils {
 				MessageText.getString( "label.link" ) + "    ",	// shitty layout doesn't give sufficient width for all options
 				MessageText.getString( "label.copy" ) + "    ",
 				MessageText.getString( "label.move" ) + "    ",
-				MessageText.getString( "Peers.column.piece" ) + "    ");
+				MessageText.getString( "Peers.column.piece" ) + "    ",
+				MessageText.getString( "label.relocate" ) + "    "
+			);
 		
 			// link mode
 		
@@ -3115,7 +3118,8 @@ public class ManagerUtils {
 						// for hard links we don't want to think about switch the root folder as the 
 						// user explicitly wants to use hard links to refer to any files found
 					
-					if ( mode == LOCATE_MODE_LINK && link_type != LOCATE_MODE_LINK_HARD ){
+					if ( 	mode == LOCATE_MODE_RELOCATE || 
+							( mode == LOCATE_MODE_LINK && link_type != LOCATE_MODE_LINK_HARD )){
 						
 						for ( int i=0;i<dms.length;i++){
 	
@@ -3277,19 +3281,33 @@ public class ManagerUtils {
 											
 											downloads_modified++;
 											
-											dm.forceRecheck();
+											if ( mode != LOCATE_MODE_RELOCATE || !dm.isDownloadComplete( false )){
+											
+												dm.forceRecheck();
+											}
 											
 											logLine(viewer, dm_indent, "Download '" + dm.getDisplayName() + "' relocated from '" + save_loc.getParent() + "' to '" + root + "'" );
 											
 											break;
+											
+										}else{
+											
 										}
 									}
 								}
 							}		
+						
+							if ( !handled[i] ){
+							
+								if ( mode == LOCATE_MODE_RELOCATE ){
+								
+									logLine(viewer, dm_indent, "Download '" + dm.getDisplayName() + "' not relocated from '" + save_loc.getParent() + "' as compatible files not found" );
+								}
+							}
 						}
 					}
 					
-					if ( downloads_modified < handled.length ){
+					if ( downloads_modified < handled.length && mode != LOCATE_MODE_RELOCATE ){
 							
 						int file_count	= 0;	
 	
