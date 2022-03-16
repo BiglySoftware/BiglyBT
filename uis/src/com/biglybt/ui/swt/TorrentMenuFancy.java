@@ -2483,7 +2483,12 @@ public class TorrentMenuFancy
 			if ( !dm.canExportDownload()){
 				exportFiles = false;
 			}
-			if ( !dm.isDownloadComplete( false ) || dm.getState() == DownloadManager.STATE_ERROR ){
+			int state = dm.getState();
+			
+			if ( 	!dm.isDownloadComplete( false ) ||  
+					state == DownloadManager.STATE_ERROR || 
+					state == DownloadManager.STATE_STOPPED ){
+				
 				locateFiles = true;
 			}
 			
