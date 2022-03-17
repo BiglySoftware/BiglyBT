@@ -49,6 +49,8 @@ import com.biglybt.core.util.*;
 public class TCPConnectionManager {
   private static final LogIDs LOGID = LogIDs.NWMAN;
 
+  private static final int CONNECT_TIMEOUT_MIN	= 5000;
+  
   static int CONNECT_SELECT_LOOP_TIME			= 100;
   static int CONNECT_SELECT_LOOP_MIN_TIME		= 0;
 
@@ -1137,27 +1139,31 @@ public class TCPConnectionManager {
   private static class
   ConnectionRequest
   {
-    final InetSocketAddress address;
-    final PluginProxy		plugin_proxy;
-    final ConnectListener listener;
-    final long request_start_time;
-    long connect_start_time;
-    int connect_timeout;
-    SocketChannel channel;
     private final short		rand;
-    final int		priority;
     private final long		id;
+
+    private final InetSocketAddress address;
+    private final PluginProxy		plugin_proxy;
+    private final ConnectListener 	listener;
+    private final long 				request_start_time;
+    private final int				priority;
+    	
+   
+    private long 			connect_start_time;
+    private int 			connect_timeout;
+    private SocketChannel 	channel;
 
     ConnectionRequest( long _id, InetSocketAddress _address, PluginProxy pp, ConnectListener _listener, int _connect_timeout, int _priority  ) {
 
-      id	= _id;
-      address = _address;
-      plugin_proxy = pp;
-      listener = _listener;
-      connect_timeout	= _connect_timeout;
-      request_start_time = SystemTime.getMonotonousTime();
-      rand = (short)( RandomUtils.nextInt( Short.MAX_VALUE ));
-      priority = _priority;
+      id					= _id;
+      address 				= _address;
+      plugin_proxy 			= pp;
+      listener 				= _listener;
+      request_start_time 	= SystemTime.getMonotonousTime();
+      rand 					= (short)( RandomUtils.nextInt( Short.MAX_VALUE ));
+      priority 				= _priority;
+
+      setConnectTimeout( _connect_timeout );
     }
 
     int
@@ -1168,9 +1174,20 @@ public class TCPConnectionManager {
 
     void
     setConnectTimeout(
-    	int		_ct )
+    	int		ct )
     {
-    	connect_timeout = _ct;
+        if ( ct < CONNECT_TIMEOUT_MIN ){
+            
+        	connect_timeout		= CONNECT_TIMEOUT_MIN;
+      	  
+        	if ( Constants.IS_CVS_VERSION ){
+        		
+        		Debug.out( "Connect timeout too small: " + ct );
+        	}
+        }else{
+      	  
+        	connect_timeout = ct;
+        }
     }
 
     long
