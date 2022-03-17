@@ -832,12 +832,16 @@ implements PEPeerTransport
 					connectStarted(
 						int		default_connect_timeout )
 					{
+							// we can end up here twice when connecting to both TCP and uTP...
+						
 						connection_state = PEPeerTransport.CONNECTION_CONNECTING;
 
 						outbound_connection_progress = CP_CONNECTING;
 						
 						if ( default_connect_timeout <= 0 ){
 
+								// uTP case - timeouts handled separately
+							
 							return( default_connect_timeout );
 						}
 
