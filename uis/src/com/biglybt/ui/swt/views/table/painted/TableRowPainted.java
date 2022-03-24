@@ -191,6 +191,18 @@ public class TableRowPainted
 		return( isHidden );
 	}
 	
+	@Override
+	public void invalidate(boolean mustRefersh) {
+		super.invalidate(mustRefersh);
+		synchronized (lock) {
+			if (sortCells != null) {
+				for (TableCellSWTBase sortCell : sortCells) {
+					sortCell.invalidate(mustRefersh);
+				}
+			}
+		}
+	}
+	
 	private void buildCells() {
 		//debug("buildCells " + Debug.getCompressedStackTrace());
 		TableColumnCore[] visibleColumns = getView().getVisibleColumns();
