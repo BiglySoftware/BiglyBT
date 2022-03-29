@@ -229,6 +229,18 @@ public class ConfigSectionInterfaceDisplaySWT
 			add(new BooleanParameterImpl("IconBar.visible.bottom", "iconBar.bottom"),
 					listToolbarItems);
 		}
+		
+			// back forward
+		
+		add(new BooleanParameterImpl(
+				"IconBar.visible." + TorrentUtil.BF_ITEM_BACK,
+				"label.back"), listToolbarItems);
+		
+		add(new BooleanParameterImpl(
+				"IconBar.visible." + TorrentUtil.BF_ITEM_FORWARD,
+				"label.forward"), listToolbarItems);
+	
+			// other toolbar items
 
 		add(new BooleanParameterImpl(
 				"IconBar.visible." + TorrentUtil.TU_ITEM_RECHECK,

@@ -2600,4 +2600,30 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	
 	protected abstract boolean
 	isTableFocused();
+	
+	@Override
+	public boolean 
+	canMoveBack()
+	{
+		return true;
+	}
+	
+	@Override
+	public void 
+	moveBack()
+	{
+	}
+	
+	@Override
+	public boolean 
+	canMoveForward()
+	{
+		return true;
+	}
+	
+	@Override
+	public void 
+	moveForward()
+	{
+	}
 }

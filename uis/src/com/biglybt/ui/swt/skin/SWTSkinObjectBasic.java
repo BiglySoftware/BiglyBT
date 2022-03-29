@@ -457,10 +457,16 @@ public class SWTSkinObjectBasic
 		if (Utils.isGTK3 && (control instanceof Composite)) {
 			((Composite) control).setBackgroundMode(SWT.INHERIT_DEFAULT);
 		}
-			
-			// we need a redraw otherwise things get lost (e.g. the sidebar on/off toolbar switch button state doesn't get redrawn) 
+
+			// the "BGImage" hack stores the child's bg image on the parent control so we need to redraw
+			// the children to get things to update correctly
 		
-		control.redraw();
+		if ( control instanceof Composite ){
+			Control[] swtChildren = ((Composite) control).getChildren();
+			for ( Control c: swtChildren ){
+				c.redraw();
+			}
+		}
 	}
 
 	// @see java.lang.Object#toString()

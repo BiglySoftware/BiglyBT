@@ -454,4 +454,12 @@ public interface TableView<DATASOURCETYPE>
 	void removeExpansionChangeListener(TableExpansionChangeListener listener);
 
 	boolean isTableSelected();
+	
+	boolean canMoveBack();
+	
+	void moveBack();
+	
+	boolean canMoveForward();
+	
+	void moveForward();
 }

@@ -123,15 +123,22 @@ import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 public class TorrentUtil
 {
 	private static final String TU_GROUP			= "tu.group";
+	private static final String BF_GROUP			= "bf.group";
 	
 	public static final String	TU_ITEM_RECHECK			= "tui.recheck";
 	public static final String	TU_ITEM_CHECK_FILES		= "tui.checkfiles";
 	public static final String	TU_ITEM_SHOW_SIDEBAR	= "tui.showsidebar";
 	
-	private static final String[] TU_ITEMS = {
+	public static final String	BF_ITEM_BACK	= "bfi.back";
+	public static final String	BF_ITEM_FORWARD	= "bfi.forward";
+	
+	private static final String[] TB_ITEMS = {
 			TU_ITEM_RECHECK,
 			TU_ITEM_CHECK_FILES,
 			TU_ITEM_SHOW_SIDEBAR,
+			
+			BF_ITEM_BACK,
+			BF_ITEM_FORWARD,
 	};
 	
 	private static boolean	initialised;
@@ -146,7 +153,7 @@ public class TorrentUtil
 		
 		initialised = true;
 		
-		for ( String id: TU_ITEMS ){
+		for ( String id: TB_ITEMS ){
 		
 			String key = "IconBar.visible." + id;
 		
@@ -177,6 +184,69 @@ public class TorrentUtil
 							UIToolBarManager tbm = instance.getToolBarManager();
 							
 							if ( tbm != null ){
+								
+									// back							
+								
+								UIToolBarItem back_item = tbm.createToolBarItem( BF_ITEM_BACK );
+							
+								back_item.setGroupID( BF_GROUP );
+								
+								back_item.setImageID( "back" );
+								
+								back_item.setToolTipID( "label.back" );
+								
+								back_item.setDefaultActivationListener(new UIToolBarActivationListener() {
+									@Override
+									public boolean 
+									toolBarItemActivated(
+										ToolBarItem 	item, 
+										long 			activationType,
+									    Object 			datasource) 
+									{	
+										TableView tv = SelectedContentManager.getCurrentlySelectedTableView();
+
+										if ( tv != null ){
+										
+											tv.moveBack();
+										}
+										
+										return( true );
+									}});
+								
+								addItem( tbm, back_item );
+								
+								
+									// forward							
+								
+								UIToolBarItem forward_item = tbm.createToolBarItem( BF_ITEM_FORWARD );
+							
+								forward_item.setGroupID( BF_GROUP );
+								
+								forward_item.setImageID( "forward" );
+								
+								forward_item.setToolTipID( "label.forward" );
+								
+								forward_item.setDefaultActivationListener(new UIToolBarActivationListener() {
+									@Override
+									public boolean 
+									toolBarItemActivated(
+										ToolBarItem 	item, 
+										long 			activationType,
+									    Object 			datasource) 
+									{	
+										TableView tv = SelectedContentManager.getCurrentlySelectedTableView();
+	
+										if ( tv != null ){
+										
+											tv.moveForward();
+										}
+										
+										return( true );
+									}});
+								
+								addItem( tbm, forward_item );
+
+									// refresh
 								
 								UIToolBarItem refresh_item = tbm.createToolBarItem( TU_ITEM_RECHECK );
 							
@@ -4567,6 +4637,9 @@ public class TorrentUtil
 		boolean ss = COConfigurationManager.getBooleanParameter( "Show Side Bar" );
 		
 		mapNewToolbarStates.put( TU_ITEM_SHOW_SIDEBAR, UIToolBarItem.STATE_ENABLED | (ss?UIToolBarItem.STATE_DOWN:0));
+
+		mapNewToolbarStates.put( BF_ITEM_BACK, tv!=null&&tv.canMoveBack() ? UIToolBarItem.STATE_ENABLED : 0);
+		mapNewToolbarStates.put( BF_ITEM_FORWARD, tv!=null&&tv.canMoveForward() ? UIToolBarItem.STATE_ENABLED : 0);
 
 		return mapNewToolbarStates;
 	}
