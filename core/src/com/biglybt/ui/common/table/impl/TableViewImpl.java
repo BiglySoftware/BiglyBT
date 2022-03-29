@@ -220,7 +220,9 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	private boolean provideIndexesOnRemove = false;
 
-
+	
+	private LinkedList<HistoryEntry>	historyBefore 	= new LinkedList<>();
+	private LinkedList<HistoryEntry>	historyAfter	= new LinkedList<>();	
 
 	public TableViewImpl(Class<?> pluginDataSourceType, String _sTableID,
 			String _sPropertiesPrefix, Object rows_sync,
@@ -2341,6 +2343,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	@Override
 	public boolean setSortColumns(TableColumnCore[] newSortColumns, boolean allowOrderChange) {
+		return( setSortColumns( newSortColumns, allowOrderChange, true ));
+	}
+
+	private boolean setSortColumns(TableColumnCore[] newSortColumns, boolean allowOrderChange, boolean doHistory ) {
 		if (newSortColumns == null) {
 			return false;
 		}
@@ -2348,6 +2354,18 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			// did use sortColumn_mon
 
 		synchronized (rows_sync) {
+			TableColumnCore[] 	originalColumns 	= null;
+			boolean[]			originalAscending	= null;
+			
+			if ( doHistory ){
+				originalColumns 	= sortColumns.toArray( new TableColumnCore[sortColumns.size()]);
+				originalAscending	= new boolean[originalColumns.length];
+
+				for ( int i=0;i<originalColumns.length; i++){
+					originalAscending[i] = originalColumns[i].isSortAscending();
+				}
+			}
+			
 			boolean columnsChanged = sortColumns.size() != newSortColumns.length;
 			if (!columnsChanged) {
 				for (int i = 0; i < sortColumns.size(); i++) {
@@ -2397,6 +2415,16 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 					row.setSortColumn(sortColumnNames);
 				}
 			}
+			if ( doHistory && originalColumns.length > 0 ){
+				TableColumnCore[] 	newColumns 		= sortColumns.toArray( new TableColumnCore[sortColumns.size()]);
+				boolean[]			newAscending	= new boolean[newColumns.length];
+
+				for ( int i=0;i<newColumns.length; i++){
+					newAscending[i] = newColumns[i].isSortAscending();
+				}
+				addHistory( new HistorySort( originalColumns, originalAscending, newColumns, newAscending ));
+			}
+			
  			uiChangeColumnIndicator();
  			resetLastSortedOn();
  			sortRows(columnsChanged,false);
@@ -2433,6 +2461,11 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	public void setSelectedRows(final TableRowCore[] newSelectionArray,
 			final boolean trigger) {
+		setSelectedRows( newSelectionArray, trigger, true);
+	}
+	
+	private void setSelectedRows(final TableRowCore[] newSelectionArray,
+			final boolean trigger, boolean updateHistory ) {
 		if (isDisposed()) {
 			return;
 		}
@@ -2491,6 +2524,15 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 			somethingChanged = listNewlySelected.size() > 0
 					|| oldSelectionList.size() > 0;
+					
+			if ( somethingChanged && updateHistory ){
+				
+				addHistory( 
+					new HistorySelection( 
+						oldSelectionList.toArray( new TableRowCore[ oldSelectionList.size()]), 
+						selectedRows.toArray( new TableRowCore[ selectedRows.size()])));
+			}
+			
 			if (DEBUG_SELECTION) {
 				System.out.println(somethingChanged + "] +"
 						+ listNewlySelected.size() + "/-" + oldSelectionList.size()
@@ -2605,25 +2647,161 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	public boolean 
 	canMoveBack()
 	{
-		return true;
+		return( !historyBefore.isEmpty());
 	}
 	
 	@Override
 	public void 
 	moveBack()
 	{
+		HistoryEntry history;
+		
+		synchronized( rows_sync ){
+			
+			if ( historyBefore.isEmpty()){
+				
+				return;
+			}
+			
+			history = historyBefore.removeLast();
+			
+			historyAfter.addFirst( history );
+		}
+		
+		history.applyPrev();
 	}
 	
 	@Override
 	public boolean 
 	canMoveForward()
 	{
-		return true;
+		return( !historyAfter.isEmpty());
 	}
 	
 	@Override
 	public void 
 	moveForward()
 	{
+		HistoryEntry history;
+		
+		synchronized( rows_sync ){
+			
+			if ( historyAfter.isEmpty()){
+				
+				return;
+			}
+			
+			history = historyAfter.removeFirst();
+			
+			historyBefore.addLast( history );
+		}
+		
+		history.applyNext();
+	}
+	
+	private void
+	addHistory(
+		HistoryEntry		entry )
+	{
+		historyBefore.add( entry );
+		
+		if ( historyBefore.size() > 32 ){
+			
+			historyBefore.removeFirst();
+		}
+		
+		historyAfter.clear();
+	}
+	
+	private static interface
+	HistoryEntry
+	{
+		void
+		applyNext();
+		
+		void
+		applyPrev();
+	}
+	
+	private class
+	HistorySelection
+		implements HistoryEntry
+	{
+		private final TableRowCore[]	prevSel;
+		private final TableRowCore[]	nextSel;
+		
+		HistorySelection(
+			TableRowCore[]	_prev,
+			TableRowCore[]	_next )
+		{
+			prevSel = _prev;
+			nextSel	= _next;
+		}
+		
+		public void
+		applyNext()
+		{
+			apply( nextSel );
+		}
+		
+		public void
+		applyPrev()
+		{
+			apply( prevSel );
+		}
+		
+		private void
+		apply(
+			TableRowCore[]	sel )
+		{
+			setSelectedRows( sel, true, false ) ;
+		}
+	}
+	
+	private class
+	HistorySort
+		implements HistoryEntry
+	{
+		private final TableColumnCore[]	prevCols;
+		private final TableColumnCore[]	nextCols;
+		
+		private final boolean[]		prevAsc;
+		private final boolean[]		nextAsc;
+		
+		HistorySort(
+			TableColumnCore[]	pCols,
+			boolean[]			pAsc,
+			TableColumnCore[] 	nCols,
+			boolean[]			nAsc )
+		{
+			prevCols		= pCols;
+			prevAsc			= pAsc;
+			nextCols		= nCols;
+			nextAsc			= nAsc;
+		}
+		
+		public void
+		applyNext()
+		{
+			apply( nextCols, nextAsc );
+		}
+		
+		public void
+		applyPrev()
+		{
+			apply( prevCols, prevAsc );
+		}
+		
+		private void
+		apply(
+			TableColumnCore[]	columns,
+			boolean[]			asc )
+		{
+			for ( int i=0;i<columns.length;i++){
+				columns[i].setSortAscending(asc[i]);
+			}
+			
+			setSortColumns( columns, false, false );
+		}
 	}
 }
