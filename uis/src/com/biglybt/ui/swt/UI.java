@@ -169,14 +169,13 @@ public class UI
 	}
 
 	@Override
-	public String[] processArgs(CommandLine commands, String[] args) {
-		boolean showMainWindow = args.length == 0
-				|| COConfigurationManager.getBooleanParameter(
-						"Activate Window On External Download");
+	public String[] 
+	processArgs(
+		CommandLine commands, String[] args )
+	{
+		boolean showMainWindow = args.length == 0;	// no args, always show
 
-		boolean open = true;
-
-		if (commands.hasOption("closedown") || commands.hasOption("shutdown")) {
+		if ( commands.hasOption("closedown") || commands.hasOption("shutdown")){
 
 			// discard any pending updates as we need to shutdown immediately (this
 			// is called from installer to close running instance)
@@ -204,7 +203,7 @@ public class UI
 
 		}
 
-		if (commands.hasOption("restart")) {
+		if ( commands.hasOption("restart")){
 
 			UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 
@@ -216,14 +215,17 @@ public class UI
 			return null;
 		}
 
-		if (commands.hasOption("share")) {
-			showMainWindow = true;
+		boolean isAddingStuff 	= false;
+		boolean isOpen			= true;
 
-			open = false;
+		if (commands.hasOption("share")) {
+			isAddingStuff = true;
+
+			isOpen = false;
 		}
 
 		if (commands.hasOption("open")) {
-			showMainWindow = true;
+			isAddingStuff = true;
 		}
 		
 		String save_path = null;
@@ -321,7 +323,7 @@ public class UI
 
 					queued_torrents.add(new Object[] {
 						filename,
-						Boolean.valueOf(open),
+						Boolean.valueOf(isOpen),
 						save_path,
 					});
 
@@ -334,13 +336,20 @@ public class UI
 
 			if (!queued) {
 
-				handleFile(filename, open, save_path);
+				handleFile(filename, isOpen, save_path);
 			}
 		}
 
-		if (showMainWindow) {
-			showMainWindow();
+		if (	showMainWindow || 
+				( isAddingStuff && COConfigurationManager.getBooleanParameter("Activate Window On External Download"))){
+			
+			UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+			
+			if (uiFunctions != null) {
+				uiFunctions.bringToFront();
+			}
 		}
+		
 		return args;
 	}
 
@@ -403,13 +412,6 @@ public class UI
 			handleFile(file_name, open, save_path );
 		}
 		queued_torrents = null;
-	}
-
-	protected void showMainWindow() {
-		UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
-		if (uiFunctions != null) {
-			uiFunctions.bringToFront();
-		}
 	}
 
 	public static boolean isFirstUI() {
