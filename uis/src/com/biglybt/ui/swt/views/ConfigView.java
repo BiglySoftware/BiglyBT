@@ -952,6 +952,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
 	private void highlightControl(Control child, String text, boolean type1 ) {
 		child.setFont(headerFont);
 		
+		/*
 		if ( Utils.isGTK3 ){
 
 				// problem with checkbox/radio controls not supporting setting foreground text color
@@ -991,19 +992,23 @@ public class ConfigView implements UISWTViewCoreEventListener {
 
 				GridData gd = ld == null?new GridData():(GridData)ld;
 				
-				gd.minimumHeight = gd.heightHint = size.y + 2;
-				gd.minimumWidth = gd.widthHint = size.x + 2;
+				gd.minimumHeight = gd.heightHint = size.y + 4;
+				gd.minimumWidth = gd.widthHint = size.x + 4;
 				
 				child.setLayoutData( gd );
 			}
-		}else if ( Constants.isOSX && Utils.isDarkAppearanceNative()){
-			
-			child.setBackground(Colors.grey );
-
-		}else{
+		}else
+		*/
+		
+		if ( Constants.isWindows ){
 			
 			child.setBackground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_BACKGROUND));
+			
 			child.setForeground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_FOREGROUND));
+			
+		}else{
+			
+			child.setBackground(Utils.isDarkAppearanceNative()?Colors.grey:Colors.fadedYellow );
 		}
 		
 		if ( child instanceof Composite ){
