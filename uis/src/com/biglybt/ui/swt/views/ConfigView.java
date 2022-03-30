@@ -829,7 +829,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
 				
 				if ( select != null ){
 					
-					Control hit = hilightText2( item, select );
+					Control hit = highlightText2( item, select );
 					
 					if ( hit != null ){
 						
@@ -861,30 +861,30 @@ public class ConfigView implements UISWTViewCoreEventListener {
 		return( result );
 	}
 
-	private void hilightText(Composite c, String text) {
+	private void highlightText(Composite c, String text) {
 		Control[] children = c.getChildren();
 		for (Control child : children) {
 			if (child instanceof Composite) {
-				hilightText((Composite) child, text);
+				highlightText((Composite) child, text);
 			}
 
 			if (child instanceof Label) {
 				if (((Label) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child,text,true);
+					highlightControl(child,text,true);
 				}
 			} else if (child instanceof Group) {
 				if (((Group) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child,text,true);
+					highlightControl(child,text,true);
 				}
 			} else if (child instanceof Button) {
 				if (((Button) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child,text,true);
+					highlightControl(child,text,true);
 				}
 			} else if (child instanceof org.eclipse.swt.widgets.List) {
 				String[] items = ((org.eclipse.swt.widgets.List)child).getItems();
 				for (String item : items) {
 					if (item.toLowerCase().contains(text)) {
-						hilightControl(child,text,true);
+						highlightControl(child,text,true);
 						break;
 					}
 				}
@@ -892,26 +892,26 @@ public class ConfigView implements UISWTViewCoreEventListener {
 				String[] items = ((Combo)child).getItems();
 				for (String item : items) {
 					if (item.toLowerCase().contains(text)) {
-						hilightControl(child,text,true);
+						highlightControl(child,text,true);
 						break;
 					}
 				}
 			}else if (child instanceof Text) {
 				if (((Text) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child,text,true);
+					highlightControl(child,text,true);
 				}
 			}else if (child instanceof Spinner) {
 				if (((Spinner) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child,text,true);
+					highlightControl(child,text,true);
 				}
 			}
 		}
 	}
 	
-	private Control hilightText2(Composite c, String select) {
+	private Control highlightText2(Composite c, String select) {
 		String cSelectKey = (String)c.getData( SELECT_KEY );
 		if (select.equals(cSelectKey)){
-			hilightControl(c, "", false);
+			highlightControl(c, "", false);
 			return null;
 		}
 
@@ -920,7 +920,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
 		Control[] children = c.getChildren();
 		for (Control child : children) {
 			if (child instanceof Composite) {
-				Control x = hilightText2((Composite) child, select);
+				Control x = highlightText2((Composite) child, select);
 				if ( x != null ){
 					if ( first_control == null ){
 						first_control = x;
@@ -937,7 +937,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
 					first_control = child;
 				}
 								
-				hilightControl( child, select, false);
+				highlightControl( child, select, false);
 			}
 		}
 		
@@ -949,7 +949,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
 	 *
 	 * @since 4.5.1.1
 	 */
-	private void hilightControl(Control child, String text, boolean type1 ) {
+	private void highlightControl(Control child, String text, boolean type1 ) {
 		child.setFont(headerFont);
 		
 		if ( Utils.isGTK3 ){
@@ -980,7 +980,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
 
 				gc.setForeground(Colors.fadedRed );
 
-				gc.drawRectangle( cp.x-pp.x-1, cp.y-pp.y-1, width+2, height+2 );
+				gc.drawRectangle( cp.x-pp.x-2, cp.y-pp.y-2, width+4, height+4 );
 			});
 					
 			Object ld = child.getLayoutData();
@@ -996,7 +996,12 @@ public class ConfigView implements UISWTViewCoreEventListener {
 				
 				child.setLayoutData( gd );
 			}
+		}else if ( Constants.isOSX && Utils.isDarkAppearanceNative()){
+			
+			child.setBackground(Colors.grey );
+
 		}else{
+			
 			child.setBackground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_BACKGROUND));
 			child.setForeground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_FOREGROUND));
 		}
@@ -1004,9 +1009,9 @@ public class ConfigView implements UISWTViewCoreEventListener {
 		if ( child instanceof Composite ){
 			
 			if ( type1 ){
-				hilightText((Composite)child, text );
+				highlightText((Composite)child, text );
 			}else{
-				hilightText2((Composite)child, text );
+				highlightText2((Composite)child, text );
 			}
 		}
 	}
@@ -1077,7 +1082,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
 			// to layout correctly after their font is changed
 
 		if (filterText.length() > 0) {
-			hilightText(c, filterText);
+			highlightText(c, filterText);
 
 		}
 
