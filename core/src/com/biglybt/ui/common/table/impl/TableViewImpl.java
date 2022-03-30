@@ -2330,25 +2330,34 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		TableColumnCore[] sortColumns = getSortColumns();
 		List<TableColumnCore> listNewColumns = new ArrayList<>();
 		boolean alreadySortingByColumn = false;
+		Map<TableColumnCore,Boolean> originalAscMap = new HashMap<>();
 		for (TableColumnCore existingSortColumn : sortColumns) {
 			listNewColumns.add(existingSortColumn);
 			if (existingSortColumn == column) {
-				column.setSortAscending(!column.isSortAscending());
+				boolean asc = column.isSortAscending();
+				originalAscMap.put(column, asc);
+				column.setSortAscending(!asc);
 				alreadySortingByColumn = true;
 			}
 		}
 		if (!alreadySortingByColumn) {
 			listNewColumns.add(column);
 		}
-		setSortColumns(listNewColumns.toArray(new TableColumnCore[0]), false);
+		setSortColumns(listNewColumns.toArray(new TableColumnCore[0]), false,originalAscMap,true);
 	}
 
 	@Override
 	public boolean setSortColumns(TableColumnCore[] newSortColumns, boolean allowOrderChange) {
-		return( setSortColumns( newSortColumns, allowOrderChange, true ));
+		return( setSortColumns( newSortColumns, allowOrderChange, null, true ));
 	}
 
-	private boolean setSortColumns(TableColumnCore[] newSortColumns, boolean allowOrderChange, boolean doHistory ) {
+	private boolean 
+	setSortColumns(
+		TableColumnCore[] 				newSortColumns, 
+		boolean 						allowOrderChange,
+		Map<TableColumnCore,Boolean> 	originalAscMap,
+		boolean 						doHistory ) 
+	{
 		if (newSortColumns == null) {
 			return false;
 		}
@@ -2365,6 +2374,12 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 				for ( int i=0;i<originalColumns.length; i++){
 					originalAscending[i] = originalColumns[i].isSortAscending();
+					if ( originalAscMap != null ){
+						Boolean asc = originalAscMap.get(originalColumns[i]);
+						if ( asc != null ){
+							originalAscending[i] = asc;
+						}
+					}
 				}
 			}
 			
@@ -2848,7 +2863,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				columns[i].setSortAscending(asc[i]);
 			}
 			
-			setSortColumns( columns, false, false );
+			setSortColumns( columns, false, null, false );
 		}
 	}
 }

@@ -1108,9 +1108,7 @@ public abstract class TableViewSWT_Common
 				Messages.setLanguageText(menuSortByColumn, "TableColumn.sort.reverse");
 				menuSortByColumn.addListener(SWT.Selection, e -> {
 					TableColumnCore tcc = (TableColumnCore) menu.getData("column");
-
-					tcc.setSortAscending(!tcc.isSortAscending());
-					tv.setSortColumns(tv.getSortColumns(), false);
+					tv.addSortColumn( tcc ); // this flips sort if already added and does history...
 				});
 				if (sortColumns.length > 1) {
 					MenuItem menuRemoveSort = new MenuItem(menu, SWT.PUSH);
