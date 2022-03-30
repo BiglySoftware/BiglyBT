@@ -282,6 +282,10 @@ public interface TableView<DATASOURCETYPE>
 	 */
 	TableRowCore getFocusedRow();
 
+	public void
+	showRow(
+		TableRowCore	row );
+	
 	/**
 	 * @return
 	 */

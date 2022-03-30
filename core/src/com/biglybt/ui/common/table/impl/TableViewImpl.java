@@ -29,6 +29,8 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.pif.ui.tables.TableColumn;
@@ -2669,6 +2671,17 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 		
 		history.applyPrev();
+		
+		if ( 	SelectedContentManager.getCurrentlySelectedTableView() == this &&
+				( historyBefore.isEmpty() || historyAfter.size() == 1 )){
+			
+			UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+			
+		  	if ( uiFunctions != null ){
+		  		
+		  		uiFunctions.refreshIconBar();
+		  	}
+		}
 	}
 	
 	@Override
@@ -2697,6 +2710,17 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 		
 		history.applyNext();
+		
+		if ( 	SelectedContentManager.getCurrentlySelectedTableView() == this &&
+				( historyAfter.isEmpty() || historyBefore.size() == 1 )){
+			
+			UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+			
+		  	if ( uiFunctions != null ){
+		  		
+		  		uiFunctions.refreshIconBar();
+		  	}
+		}
 	}
 	
 	private void
@@ -2710,7 +2734,20 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			historyBefore.removeFirst();
 		}
 		
+		boolean historyAfterWasEmpty = historyAfter.isEmpty();
+		
 		historyAfter.clear();
+		
+		if ( 	SelectedContentManager.getCurrentlySelectedTableView() == this &&
+				( !historyAfterWasEmpty || historyBefore.size() == 1 )){
+			
+			UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+			
+		  	if ( uiFunctions != null ){
+		  		
+		  		uiFunctions.refreshIconBar();
+		  	}
+		}
 	}
 	
 	private static interface
@@ -2755,6 +2792,16 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			TableRowCore[]	sel )
 		{
 			setSelectedRows( sel, true, false ) ;
+			
+			if ( sel.length > 0 ){
+				
+				TableRowCore first = sel[0];
+				
+				if ( !first.isVisible()){
+				
+					showRow( first );
+				}
+			}
 		}
 	}
 	

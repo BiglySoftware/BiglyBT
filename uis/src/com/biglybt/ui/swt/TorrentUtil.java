@@ -208,13 +208,6 @@ public class TorrentUtil
 										if ( tv != null ){
 										
 											tv.moveBack();
-											
-											UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
-											
-										  	if ( uiFunctions != null ){
-										  		
-										  		uiFunctions.refreshIconBar();
-										  	}
 										}
 										
 										return( true );
@@ -246,13 +239,6 @@ public class TorrentUtil
 										if ( tv != null ){
 										
 											tv.moveForward();
-											
-											UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
-											
-										  	if ( uiFunctions != null ){
-										  		
-										  		uiFunctions.refreshIconBar();
-										  	}
 										}
 										
 										return( true );
