@@ -663,66 +663,96 @@ public class OpenTorrentOptionsWindow
 					/*
 					 * The bring-to-front logic for torrent addition is controlled by other parts of the code so we don't
 					 * want the dlg to override this behaviour (main example here is torrents passed from, say, a browser,
-					 * and the user has disabled the 'show vuze on external torrent add' feature)
+					 * and the user has disabled the 'show on external torrent add' feature)
 					 */
-
-				dlg.open("otow",false);
-
-				boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_SEP );
-
-				if ( separate_dialogs ){
-					
-						// don't want them appearing on top of each other
-					
-					synchronized( active_windows ){
+				
+				Runnable doOpen = ()->{
+					dlg.open("otow",false);
 	
-						int	num_active_windows = active_windows.size();
+					boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_SEP );
 	
-						Shell shell = dlg.getShell();
-	
-						if ( num_active_windows > 1 ){
-	
-							int	max_x = Integer.MIN_VALUE;
-							int max_y = Integer.MIN_VALUE;
-	
-							for ( OpenTorrentOptionsWindow window: active_windows.values()){
-	
-								if ( window == this || !window.isInitialised()){
-	
-									continue;
+					if ( separate_dialogs ){
+						
+							// don't want them appearing on top of each other
+						
+						synchronized( active_windows ){
+		
+							int	num_active_windows = active_windows.size();
+		
+							Shell shell = dlg.getShell();
+		
+							if ( num_active_windows > 1 ){
+		
+								int	max_x = Integer.MIN_VALUE;
+								int max_y = Integer.MIN_VALUE;
+		
+								for ( OpenTorrentOptionsWindow window: active_windows.values()){
+		
+									if ( window == this || !window.isInitialised()){
+		
+										continue;
+									}
+		
+									Rectangle rect = window.getBounds();
+		
+									max_x = Math.max( max_x, rect.x );
+									max_y = Math.max( max_y, rect.y );
 								}
-	
-								Rectangle rect = window.getBounds();
-	
-								max_x = Math.max( max_x, rect.x );
-								max_y = Math.max( max_y, rect.y );
+		
+								if ( max_x > Integer.MIN_VALUE ){
+									
+									Rectangle rect = shell.getBounds();
+			
+									rect.x = max_x + 16;
+									rect.y = max_y + 16;
+			
+									try{
+										Utils.setShellMetricsConfigEnabled( shell, false );
+									
+										shell.setBounds( rect );
+										
+									}finally{
+										
+										Utils.setShellMetricsConfigEnabled( shell, true );
+									}
+								}
 							}
-	
-							if ( max_x > Integer.MIN_VALUE ){
-								
-								Rectangle rect = shell.getBounds();
 		
-								rect.x = max_x + 16;
-								rect.y = max_y + 16;
+							//String before = "disp="+shell.getDisplay().getBounds()+",shell=" + shell.getBounds();
 		
-								try{
-									Utils.setShellMetricsConfigEnabled( shell, false );
+							Utils.verifyShellRect( shell, true );
+		
+							//Debug.outNoStack( "Opening torrent options dialog: " + before + " -> " + shell.getBounds());
+						}
+					}
+				};
+				
+					// annoying issue with OSX - if the dialog is opened when the main shell
+					// is minimized then it doesn't appear on de-minimizing until you manually
+					// select the BiglyBT window
+				
+				boolean wentAsync = false;
+				
+				Shell mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
+
+				if ( Constants.isOSX && mainShell.getMinimized()){
+				
+					wentAsync = true;
+					
+					mainShell.addShellListener( new ShellAdapter(){
+						@Override
+						public void shellActivated(ShellEvent e){
+							mainShell.removeShellListener(this);
+							if ( !dlg.isDisposed()){
+								doOpen.run();
 								
-									shell.setBounds( rect );
-									
-								}finally{
-									
-									Utils.setShellMetricsConfigEnabled( shell, true );
-								}
+								window_initialised = true;
 							}
 						}
-	
-						//String before = "disp="+shell.getDisplay().getBounds()+",shell=" + shell.getBounds();
-	
-						Utils.verifyShellRect( shell, true );
-	
-						//Debug.outNoStack( "Opening torrent options dialog: " + before + " -> " + shell.getBounds());
-					}
+					});
+				}else{
+					
+					doOpen.run();
 				}
 				
 				dlg.addCloseListener(new SkinnedDialog.SkinnedDialogClosedListener() {
@@ -760,8 +790,10 @@ public class OpenTorrentOptionsWindow
 					}
 				});
 
-				window_initialised = true;
-
+				if ( !wentAsync ){
+				
+					window_initialised = true;
+				}
 			}else{
 
 				Composite expand_area = new Composite( expand_stack_area, SWT.NULL );
