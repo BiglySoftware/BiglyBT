@@ -215,17 +215,20 @@ public class UI
 			return null;
 		}
 
-		boolean isAddingStuff 	= false;
 		boolean isOpen			= true;
 
-		if (commands.hasOption("share")) {
-			isAddingStuff = true;
+		if (commands.hasOption("share")){
+			
+			showMainWindow = true;
 
 			isOpen = false;
 		}
 
-		if (commands.hasOption("open")) {
-			isAddingStuff = true;
+		if (commands.hasOption("open")){
+			
+				// explicit open, force open regardless
+			
+			showMainWindow = true;
 		}
 		
 		String save_path = null;
@@ -341,7 +344,7 @@ public class UI
 		}
 
 		if (	showMainWindow || 
-				( isAddingStuff && COConfigurationManager.getBooleanParameter("Activate Window On External Download"))){
+				COConfigurationManager.getBooleanParameter( "Activate Window On External Download" )){
 			
 			UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 			
