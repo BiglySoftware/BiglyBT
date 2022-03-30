@@ -4469,9 +4469,7 @@ public class TorrentUtil
 			boolean canMoveUp = false;
 			boolean canMoveDown = false;
 			boolean canDownload = false;
-			
-			canCheckExist = true;
-			
+						
 			GlobalManager gm = null;
 			for (int i = 0; i < currentContent.length; i++) {
 				ISelectedContent content = currentContent[i];
@@ -4484,6 +4482,8 @@ public class TorrentUtil
 				}
 				if ( gm == null ){
 					gm = dm.getGlobalManager();
+					
+					canCheckExist = true;	// first time through with a dm, setup var
 				}
 
 				int state = dm.getState();
