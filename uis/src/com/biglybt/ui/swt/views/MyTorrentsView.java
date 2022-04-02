@@ -1030,8 +1030,7 @@ public class MyTorrentsView
 		if ( cTitleCategoriesAndTags == null ){
 			
 			cTitleCategoriesAndTags = new Composite(cTableParentPanel, SWT.NONE);
-			GridData gridData = new GridData(SWT.CENTER, SWT.CENTER, true, false);
-			cTitleCategoriesAndTags.setLayoutData(gridData);
+
 			cTitleCategoriesAndTags.moveAbove(null);
 			
 			RowLayout rowLayout = new RowLayout();
@@ -1043,8 +1042,7 @@ public class MyTorrentsView
 			rowLayout.spacing = 3;
 			rowLayout.wrap = true;
 
-		     cTitleCategoriesAndTags.setLayout(rowLayout);
-
+		    cTitleCategoriesAndTags.setLayout(rowLayout);
 
 			Composite filterParent = filterBox == null ? null : filterBox.getMainWidget().getParent();
 			if ( filterParent != null ){
@@ -1093,6 +1091,14 @@ public class MyTorrentsView
 		}else{
 		  	
 		  	Utils.disposeComposite(cTitleCategoriesAndTags, false);
+		}
+		
+		if ( showTableTitle ){
+			GridData gridData = new GridData(SWT.CENTER, SWT.CENTER, true, false);
+			cTitleCategoriesAndTags.setLayoutData(gridData);
+		}else{
+			GridData gridData = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
+			cTitleCategoriesAndTags.setLayoutData(gridData);
 		}
 	}
 

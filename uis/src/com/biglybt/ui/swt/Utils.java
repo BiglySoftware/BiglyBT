@@ -948,6 +948,18 @@ public class Utils
 		return rowLayout;
 	}
 
+	public static GridLayout getSimpleGridLayout(int cols){
+		GridLayout gridLayout = new GridLayout(cols,false);
+		gridLayout.horizontalSpacing = 0;
+		gridLayout.verticalSpacing = 0;
+		gridLayout.marginHeight = 0;
+		gridLayout.marginBottom = 0;
+		gridLayout.marginTop = 0;
+		gridLayout.marginLeft = 0;
+		gridLayout.marginRight = 0;
+		return( gridLayout );
+	}
+	
 	public static void alternateRowBackground(TableItem item) {
 		if (Utils.TABLE_GRIDLINE_IS_ALTERNATING_COLOR) {
 			if (!item.getParent().getLinesVisible())
