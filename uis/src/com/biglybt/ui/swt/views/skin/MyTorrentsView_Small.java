@@ -20,9 +20,6 @@ package com.biglybt.ui.swt.views.skin;
 
 import com.biglybt.core.Core;
 
-
-import org.eclipse.swt.widgets.Composite;
-
 import com.biglybt.pif.download.Download;
 
 import com.biglybt.ui.swt.components.BubbleTextBox;
@@ -38,13 +35,11 @@ public class MyTorrentsView_Small
 		int 				torrentFilterMode, 
 		Object 				dataSource,
 		TableColumnCore[] 	basicItems,
-		BubbleTextBox txtFilter, 
-		Composite 			cCatsTags) 
+		BubbleTextBox txtFilter )
 	{
 		super( true );
 
 		this.filterBox = txtFilter;
-		this.cTitleCategoriesAndTags = cCatsTags;
 		
 		init( _core, SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, false, dataSource), Download.class, basicItems );
 	}

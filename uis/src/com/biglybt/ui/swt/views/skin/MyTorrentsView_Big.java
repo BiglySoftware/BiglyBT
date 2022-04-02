@@ -19,7 +19,6 @@
 package com.biglybt.ui.swt.views.skin;
 
 import com.biglybt.core.Core;
-import org.eclipse.swt.widgets.Composite;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.pif.download.Download;
@@ -40,12 +39,10 @@ public class MyTorrentsView_Big
 	private final int torrentFilterMode;
 
 	public MyTorrentsView_Big(Core _core, int torrentFilterMode,
-			Object dataSource, TableColumnCore[] basicItems, BubbleTextBox txtFilter,
-			Composite cCatsTags) {
+			Object dataSource, TableColumnCore[] basicItems, BubbleTextBox txtFilter ){
 		super( true );
 		this.torrentFilterMode = torrentFilterMode;
 		this.filterBox = txtFilter;
-		this.cTitleCategoriesAndTags = cCatsTags;
 		Class<?> forDataSourceType;
 		switch (torrentFilterMode) {
 			case SBC_LibraryView.TORRENTS_COMPLETE:

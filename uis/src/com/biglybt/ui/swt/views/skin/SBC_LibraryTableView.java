@@ -141,31 +141,27 @@ public class SBC_LibraryTableView
 				"library-filter", soParent.getParent());
 		BubbleTextBox txtFilter = soFilter == null ? null : soFilter.getBubbleTextBox();
 
-		SWTSkinObjectContainer soCats = (SWTSkinObjectContainer) skin.getSkinObject(
-				"library-categories", soParent.getParent());
-		Composite cCats = soCats == null ? null : soCats.getComposite();
-
 		if (useBigTable) {
 			if (torrentFilterMode == SBC_LibraryView.TORRENTS_COMPLETE
 					|| torrentFilterMode == SBC_LibraryView.TORRENTS_INCOMPLETE
 					|| torrentFilterMode == SBC_LibraryView.TORRENTS_UNOPENED) {
 
-				swtViewListener = torrentView = new MyTorrentsView_Big(core, torrentFilterMode, initialDataSource, getColumnsSupport(), txtFilter, cCats);
+				swtViewListener = torrentView = new MyTorrentsView_Big(core, torrentFilterMode, initialDataSource, getColumnsSupport(), txtFilter);
 
 			} else {
-				swtViewListener = torrentView = new MyTorrentsView_Big(core, torrentFilterMode, initialDataSource, getColumnsSupport(), txtFilter, cCats);
+				swtViewListener = torrentView = new MyTorrentsView_Big(core, torrentFilterMode, initialDataSource, getColumnsSupport(), txtFilter);
 			}
 
 		} else {
 			String tableID = SB_Transfers.getTableIdFromFilterMode(	torrentFilterMode, false, initialDataSource );
 			if (torrentFilterMode == SBC_LibraryView.TORRENTS_COMPLETE) {
-				swtViewListener = torrentView = new MyTorrentsView(core, tableID, true, getColumnsSupport(), txtFilter, cCats,true);
+				swtViewListener = torrentView = new MyTorrentsView(core, tableID, true, getColumnsSupport(), txtFilter, true);
 
 			} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_INCOMPLETE) {
-				swtViewListener = torrentView = new MyTorrentsView(core, tableID, false, getColumnsSupport(), txtFilter, cCats,true);
+				swtViewListener = torrentView = new MyTorrentsView(core, tableID, false, getColumnsSupport(), txtFilter, true);
 
 			} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_UNOPENED) {
-				swtViewListener = torrentView = new MyTorrentsView(core, tableID, true, getColumnsSupport(), txtFilter,	cCats, true){
+				swtViewListener = torrentView = new MyTorrentsView(core, tableID, true, getColumnsSupport(), txtFilter,	 true){
 					@Override
 					public boolean isOurDownloadManager(DownloadManager dm) {
 						if (PlatformTorrentUtils.getHasBeenOpened(dm)) {
@@ -177,10 +173,10 @@ public class SBC_LibraryTableView
 			} else {
 				if ( Utils.getBaseViewID( tableID ).equals( TableManager.TABLE_MYTORRENTS_ALL_SMALL )){
 					
-					swtViewListener = torrentView = new MyTorrentsView_Small( core, torrentFilterMode, initialDataSource, getColumnsSupport(), txtFilter, cCats );
+					swtViewListener = torrentView = new MyTorrentsView_Small( core, torrentFilterMode, initialDataSource, getColumnsSupport(), txtFilter );
 					
 				}else{
-					swtViewListener = new MyTorrentsSuperView(txtFilter, cCats, initialDataSource ) {
+					swtViewListener = new MyTorrentsSuperView(txtFilter, initialDataSource ) {
 						@Override
 						public void initializeDone() {
 							MyTorrentsView seedingview = getSeedingview();

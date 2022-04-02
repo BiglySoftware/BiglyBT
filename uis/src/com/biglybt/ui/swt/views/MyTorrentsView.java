@@ -278,13 +278,11 @@ public class MyTorrentsView
   		boolean 			isSeedingView,
   		TableColumnCore[]	basicItems,
 		BubbleTextBox 		filterBox,
-  		Composite 			cTitleCatsAndTags,
   		boolean				supportsTabs )
   {
 		super("MyTorrentsView");
 		this.filterBox = filterBox;
 		filterBox.setTooltip(MessageText.getString("MyTorrentsView.filter.tooltip"));
-		this.cTitleCategoriesAndTags = cTitleCatsAndTags;
 		this.supportsTabs = supportsTabs;
 		init(core, tableID, isSeedingView
 				? DownloadTypeComplete.class : DownloadTypeIncomplete.class, basicItems);
@@ -1015,23 +1013,38 @@ public class MyTorrentsView
     tags_to_show = TagUtils.sortTags( tags_to_show );
 
    	buildHeaderArea();
-  	if (cTitleCategoriesAndTags != null && !cTitleCategoriesAndTags.isDisposed()) {
-  		Utils.disposeComposite(cTitleCategoriesAndTags, false);
-  	}
 
-    if (tags_to_show.size() > 0 || showTableTitle ) {
+    if ( tags_to_show.size() > 0 || showTableTitle ){
+    	
     	buildCatAndTag(tags_to_show);
+    	
     } else if (cTableParentPanel != null && !cTableParentPanel.isDisposed()) {
+    	
   		cTableParentPanel.layout();
   	}
   }
 
-	private void buildHeaderArea() {
-		if (cTitleCategoriesAndTags == null) {
+	private void 
+	buildHeaderArea()
+	{
+		if ( cTitleCategoriesAndTags == null ){
+			
 			cTitleCategoriesAndTags = new Composite(cTableParentPanel, SWT.NONE);
 			GridData gridData = new GridData(SWT.CENTER, SWT.CENTER, true, false);
 			cTitleCategoriesAndTags.setLayoutData(gridData);
 			cTitleCategoriesAndTags.moveAbove(null);
+			
+			RowLayout rowLayout = new RowLayout();
+			
+			rowLayout.marginTop = 2;
+			rowLayout.marginBottom = 1;
+			rowLayout.marginLeft = 3;
+			rowLayout.marginRight = 3;
+			rowLayout.spacing = 3;
+			rowLayout.wrap = true;
+
+		     cTitleCategoriesAndTags.setLayout(rowLayout);
+
 
 			Composite filterParent = filterBox == null ? null : filterBox.getMainWidget().getParent();
 			if ( filterParent != null ){
@@ -1042,55 +1055,45 @@ public class MyTorrentsView
 					cTableParentPanel.setBackground( background );
 				}
 			}
+			
+			cTableParentPanel.setMenu(getHeaderMenu());
+
+		    if ( Constants.isOSX ){
+
+		    		/* bug on OSX whereby the table is allowing menu-detect events to fire both on the table itself and the composite it
+		    		 * sits on - this results in the header-area menu appearing after a menu appears for the table itself
+		    		 * Doesn't happen on 10.6.8 but observed to happen on 10.9.4
+		    		 */
+
+			    cTableParentPanel.addListener(
+						SWT.MenuDetect,
+						new Listener() {
+
+							@Override
+							public void
+							handleEvent(
+								Event event )
+							{
+								Display display = cTableParentPanel.getDisplay();
+
+								Point pp_rel = display.map( null, cTableParentPanel, event.x, event.y );
+
+								Control hit = Utils.findChild(cTableParentPanel, pp_rel.x, pp_rel.y );
+
+								event.doit = hit == cTableParentPanel;
+							}
+						});
+		    }
+
+			tv.enableFilterCheck(filterBox, this);
+			
 		}else if ( cTitleCategoriesAndTags.isDisposed()){
+			
 			return;
-		}
-
-		RowLayout rowLayout;
-
-		if (cTitleCategoriesAndTags.getLayout() instanceof RowLayout){
-		  rowLayout = (RowLayout)cTitleCategoriesAndTags.getLayout();
 		}else{
-	      rowLayout = new RowLayout();
-	      cTitleCategoriesAndTags.setLayout(rowLayout);
+		  	
+		  	Utils.disposeComposite(cTitleCategoriesAndTags, false);
 		}
-		rowLayout.marginTop = 2;
-		rowLayout.marginBottom = 1;
-		rowLayout.marginLeft = 3;
-		rowLayout.marginRight = 3;
-		rowLayout.spacing = 3;
-		rowLayout.wrap = true;
-
-		cTableParentPanel.setMenu(getHeaderMenu());
-
-	    if ( Constants.isOSX ){
-
-	    		/* bug on OSX whereby the table is allowing menu-detect events to fire both on the table itself and the composite it
-	    		 * sits on - this results in the header-area menu appearing after a menu appears for the table itself
-	    		 * Doesn't happen on 10.6.8 but observed to happen on 10.9.4
-	    		 */
-
-		    cTableParentPanel.addListener(
-					SWT.MenuDetect,
-					new Listener() {
-
-						@Override
-						public void
-						handleEvent(
-							Event event )
-						{
-							Display display = cTableParentPanel.getDisplay();
-
-							Point pp_rel = display.map( null, cTableParentPanel, event.x, event.y );
-
-							Control hit = Utils.findChild(cTableParentPanel, pp_rel.x, pp_rel.y );
-
-							event.doit = hit == cTableParentPanel;
-						}
-					});
-	    }
-
-		tv.enableFilterCheck(filterBox, this);
 	}
 
   /**
@@ -1112,6 +1115,34 @@ public class MyTorrentsView
 			if ( Utils.isAZ3UI()){
 				FontUtils.setBold( titleLab );
 			}
+			titleLab.addPaintListener((ev)->{
+				Label l = (Label)ev.widget;
+						
+				String key = "MTV:title:fg";
+				
+				if ( Colors.isBlackTextReadable( ev.gc.getBackground())){
+					
+					Color c = (Color)l.getData( key );
+					
+					if ( c != null ){
+						
+						if ( !c.isDisposed()){
+							
+							l.setForeground( c );
+						}
+					}
+					
+					l.setData( key, null );
+					
+				}else{
+					
+					if ( l.getData( key ) == null ){
+						
+						l.setData( key, l.getForeground());
+					}
+					l.setForeground( Colors.white );
+				}
+			});
 		}
 		
 		if (tags.size() == 0 ){

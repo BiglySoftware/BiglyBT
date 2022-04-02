@@ -101,10 +101,6 @@ public class MyTorrentsSuperView
 
 	private final BubbleTextBox filterBox;
 
-
-	private final Composite cCats;
-
-
 	private final Object initialDS;
 	
 	private Object ds;
@@ -115,10 +111,8 @@ public class MyTorrentsSuperView
 
 	private MyTorrentsView viewWhenDeactivated;
 
-	public MyTorrentsSuperView(BubbleTextBox filterBox, Composite cCats,
-			Object initialDS) {
+	public MyTorrentsSuperView(BubbleTextBox filterBox, Object initialDS) {
 		this.filterBox = filterBox;
-		this.cCats = cCats;
 		this.initialDS = initialDS;
 
 		CoreFactory.addCoreRunningListener(core -> Utils.execSWTThread(() -> {
@@ -701,7 +695,7 @@ public class MyTorrentsSuperView
 			support_tabs = true;
 		}
 						
-		MyTorrentsView view = new MyTorrentsView( _core, tableID, isSeedingView, columns, filterBox, cCats, support_tabs  );
+		MyTorrentsView view = new MyTorrentsView( _core, tableID, isSeedingView, columns, filterBox, support_tabs  );
 
 		try {
 			UISWTViewBuilderCore builder = new UISWTViewBuilderCore(
