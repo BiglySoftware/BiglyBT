@@ -225,6 +225,7 @@ public class ConfigurationDefaults {
     def.put("On Resume Recheck All", FALSE);
     def.put("Save Resume Interval", new Long(5));
     def.put("Check Pieces on Completion", TRUE);
+    def.put("Check Pieces on Completion Before Move", FALSE);
     def.put("Merge Same Size Files", TRUE );
     def.put("Merge Same Size Files Extended", FALSE );
     def.put("Merge Same Size Files Tolerance", ZERO );

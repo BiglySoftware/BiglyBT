@@ -23,6 +23,7 @@ package com.biglybt.core.disk.impl;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.DiskManager.DownloadEndedProgress;
@@ -2281,8 +2282,47 @@ DiskManagerUtil
 					@Override
 					public void
 					run(
-							CoreOperation operation)
+						CoreOperation operation)
 					{
+						boolean has_scheduler = DiskManagerOperationScheduler.isEnabled();
+						
+							// if nothing is scheduling operations then we have to implement
+							// the 'recheck before move' ourselves (with a scheduler the move operation
+							// is guaranteed to be added after the recheck operation if so configured)
+						
+						if ( !has_scheduler ){
+							
+							while( true ){
+							
+								boolean checkBeforeMove	= COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_CHECK_PIECES_ON_COMPLETION_BEFORE_MOVE);
+
+								if ( checkBeforeMove ){
+									
+									DiskManager dm = download_manager.getDiskManager();
+									
+									if ( dm != null && dm.getCompleteRecheckStatus() >= 0 ){
+																				
+										try{
+											Thread.sleep( 500 );
+											
+										}catch( Throwable e ){
+											
+										}
+										
+										if ( callback.getTaskState() == ProgressCallback.ST_CANCEL ){
+
+											throw( new RuntimeException( "Cancelled" ));
+										}
+									}else{
+										
+										break;
+									}
+								}else{
+									
+									break;
+								}
+							}
+						}
 						boolean ready;
 
 						synchronized( move_tasks ){
@@ -2293,7 +2333,7 @@ DiskManagerUtil
 						}
 
 						try{
-							if ( DiskManagerOperationScheduler.isEnabled()){
+							if ( has_scheduler ){
 
 								while( callback.getTaskState() == ProgressCallback.ST_PAUSE ){
 

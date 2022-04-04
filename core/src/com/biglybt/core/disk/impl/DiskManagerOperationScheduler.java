@@ -128,6 +128,9 @@ DiskManagerOperationScheduler
 				op.we_resumed_it = false;
 			}
 		}
+		
+			// if we have a move and a check operation for the same download (common with move-on-complete and
+			// recheck-pieces-on-complete) then ensure the check 
 	
 			// for check operations we make an exception and will re-pause an active one if order has changed
 

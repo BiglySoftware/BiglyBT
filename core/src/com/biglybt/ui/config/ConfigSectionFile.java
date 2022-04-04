@@ -252,16 +252,21 @@ public class ConfigSectionFile
 		add(minmerge, Parameter.MODE_INTERMEDIATE);
 		minmerge.setIndent(1, true);
 
-		mergeSameSize.addEnabledOnSelection(minmerge);
-		
-		
+		mergeSameSize.addEnabledOnSelection(minmerge);		
 		
 		// check on complete
 		BooleanParameterImpl checkPiecesOnCompletion = new BooleanParameterImpl(
 				BCFG_CHECK_PIECES_ON_COMPLETION, "ConfigView.label.checkOncompletion");
 		add(checkPiecesOnCompletion, Parameter.MODE_INTERMEDIATE);
 
-		// check on complete
+		BooleanParameterImpl checkPiecesOnCompletionBeforeMove = new BooleanParameterImpl(
+				BCFG_CHECK_PIECES_ON_COMPLETION_BEFORE_MOVE, "ConfigView.label.checkOncompletionBeforeMove");
+		add(checkPiecesOnCompletionBeforeMove, Parameter.MODE_INTERMEDIATE);
+		checkPiecesOnCompletionBeforeMove.setIndent(1, true);
+		
+		checkPiecesOnCompletion.addEnabledOnSelection(checkPiecesOnCompletionBeforeMove);
+		
+		// check on seeding
 		BooleanParameterImpl seedingPieceCheckRecheck = new BooleanParameterImpl(
 				BCFG_SEEDING_PIECE_CHECK_RECHECK_ENABLE,
 				"ConfigView.label.checkOnSeeding");

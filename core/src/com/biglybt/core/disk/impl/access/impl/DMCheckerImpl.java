@@ -304,14 +304,17 @@ DMCheckerImpl
 		complete_recheck_progress		= 0;
 		complete_recheck_in_progress	= true;
 
+			// register the instance here rather than in the thread so that the operation is guaranteed to 
+			// exist when we return so the caller can rely on it
+		
+		DiskManagerRecheckInstance	recheck_inst = disk_manager.getRecheckScheduler().register( disk_manager, true );
+
 	 	new AEThread2("DMChecker::completeRecheck", true )
 			{
 		  		@Override
 				public void
 				run()
 		  		{
-		  			DiskManagerRecheckInstance	recheck_inst = disk_manager.getRecheckScheduler().register( disk_manager, true );
-
 		  			try{
 		  				final AESemaphore	sem = new AESemaphore( "DMChecker::completeRecheck" );
 

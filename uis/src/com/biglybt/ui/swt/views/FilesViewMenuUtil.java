@@ -2174,90 +2174,92 @@ public class FilesViewMenuUtil
 
 		try{
 
-			FileUtil.runAsTask(new CoreOperationTask() {
+			FileUtil.runAsTask(
+				CoreOperation.OP_DOWNLOAD_COPY,
+				new CoreOperationTask() {
 				
-				@Override
-				public String 
-				getName()
-				{
-					return fileInfo.getFile( true ).getName();
-				}
-				
-				@Override
-				public DownloadManager
-				getDownload()
-				{
-					return( manager );
-				}
-				
-				@Override
-				public String[] 
-				getAffectedFileSystems()
-				{
-					return( FileUtil.getFileStoreNames( source, target ));
-				}
-
-				@Override
-				public ProgressCallback 
-				getProgressCallback() 
-				{
-					return null;
-				}
-
-				@Override
-				public void run(CoreOperation operation) {
-					boolean went_async = false;
-
-					try{
-						File source = fileInfo.getFile( true );
-						
-						if ( source.exists()){
+					@Override
+					public String 
+					getName()
+					{
+						return fileInfo.getFile( true ).getName();
+					}
+					
+					@Override
+					public DownloadManager
+					getDownload()
+					{
+						return( manager );
+					}
+					
+					@Override
+					public String[] 
+					getAffectedFileSystems()
+					{
+						return( FileUtil.getFileStoreNames( source, target ));
+					}
+	
+					@Override
+					public ProgressCallback 
+					getProgressCallback() 
+					{
+						return null;
+					}
+	
+					@Override
+					public void run(CoreOperation operation) {
+						boolean went_async = false;
+	
+						try{
+							File source = fileInfo.getFile( true );
 							
-							FileUtil.copyFile( source, target ); 
-						}
-						
-						boolean ok = fileInfo.setLink(target);
-
-						if (!ok){
-
-							String msg = MessageText.getString("FilesView.copy.failed.text" );
-							
-							String error = fileInfo.getLastError();
-							
-							if ( error != null ){
+							if ( source.exists()){
 								
-								msg += ": " + error;
+								FileUtil.copyFile( source, target ); 
 							}
 							
-							new MessageBoxShell(
-								SWT.ICON_ERROR | SWT.OK,
-								MessageText.getString("FilesView.copy.failed.title"),
-								msg ).open(
-									new UserPrompterResultListener() {
-
-										@Override
-										public void prompterClosed(int result) {
-											if ( done != null ){
-												done.run();
+							boolean ok = fileInfo.setLink(target);
+	
+							if (!ok){
+	
+								String msg = MessageText.getString("FilesView.copy.failed.text" );
+								
+								String error = fileInfo.getLastError();
+								
+								if ( error != null ){
+									
+									msg += ": " + error;
+								}
+								
+								new MessageBoxShell(
+									SWT.ICON_ERROR | SWT.OK,
+									MessageText.getString("FilesView.copy.failed.title"),
+									msg ).open(
+										new UserPrompterResultListener() {
+	
+											@Override
+											public void prompterClosed(int result) {
+												if ( done != null ){
+													done.run();
+												}
 											}
-										}
-									});
-
-							went_async = true;
-						}
-					}finally{
-						manager.setUserData("is_changing_links", false);
-						manager.setUserData("set_link_dont_delete_existing", null);
-
-						if ( !went_async ){
-
-							if ( done != null ){
-								done.run();
+										});
+	
+								went_async = true;
+							}
+						}finally{
+							manager.setUserData("is_changing_links", false);
+							manager.setUserData("set_link_dont_delete_existing", null);
+	
+							if ( !went_async ){
+	
+								if ( done != null ){
+									done.run();
+								}
 							}
 						}
 					}
-				}
-			});
+				});
 		}catch( Throwable e ){
 			manager.setUserData("is_changing_links", false);
 			manager.setUserData("set_link_dont_delete_existing", null);

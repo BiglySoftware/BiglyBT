@@ -2063,22 +2063,40 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 				// this will kick off any async move operations if needed
 			
-			finish_in_progress = disk_mgr.downloadEnded();
+			boolean checkPieces = COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_CHECK_PIECES_ON_COMPLETION);
 
-			boolean checkPieces = COConfigurationManager.getBooleanParameter("Check Pieces on Completion");
-
+			boolean checkBeforeMove	= COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_CHECK_PIECES_ON_COMPLETION_BEFORE_MOVE);
+			
+			if ( !checkBeforeMove ){
+				
+				finish_in_progress = disk_mgr.downloadEnded();
+			}
+		
 				// re-check all pieces to make sure they are not corrupt, but only if we weren't
 				// already complete
 				// this is low priority so do it after the move - we want to move to complete quickly to
 				// minimise the chance of something messing with it
 			
+				// UNLESS user explicitly wants this :) The might if the move is to a network drive and 
+				// they don't want the recheck running over the network after the move but would rather have
+				// it done locally first and then moved
+			
 			if ( checkPieces && !start_of_day ){
 				
 				DiskManagerCheckRequest req = disk_mgr.createCheckRequest(-1, new Integer(CHECK_REASON_COMPLETE));
 				
+					// this call is guaranteed to register the recheck operation with the operation scheduler
+					// before returning and therefore it will be in the queue before any potential move
+					// operation is added in downloadEnded
+				
 				disk_mgr.enqueueCompleteRecheckRequest(req, this);
 			}
 			
+			if ( checkBeforeMove ){
+				
+				finish_in_progress = disk_mgr.downloadEnded();
+			}
+
 		}else{
 
 			seeding_mode = false;

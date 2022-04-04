@@ -131,6 +131,7 @@ public final class ConfigKeys {
 		public static final String ICFG_MERGE_SAME_SIZE_FILES_TOLERANCE = "Merge Same Size Files Tolerance";
 		public static final String ICFG_MERGE_SAME_SIZE_FILES_MIN_PIECES = "Merge Same Size Files Min Pieces";
 		public static final String BCFG_CHECK_PIECES_ON_COMPLETION = "Check Pieces on Completion";
+		public static final String BCFG_CHECK_PIECES_ON_COMPLETION_BEFORE_MOVE = "Check Pieces on Completion Before Move";
 		public static final String BCFG_SEEDING_PIECE_CHECK_RECHECK_ENABLE = "Seeding Piece Check Recheck Enable";
 		public static final String BCFG_FILE_STRICT_LOCKING = "File.strict.locking";
 		public static final String ICFG_MAX_FILE_LINKS_SUPPORTED = "Max File Links Supported";
