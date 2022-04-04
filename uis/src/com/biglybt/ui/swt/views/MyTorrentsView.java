@@ -584,6 +584,7 @@ public class MyTorrentsView
 						"Library.ShowTagButtons.CompOnly",
 						"Library.ShowTagButtons.FiltersOnly",
 						"Library.ShowTagButtons.ImageOverride",
+						"Library.ShowTagButtons.Align",
 						"Library.ShowTagButtons.Inclusive",
 					}, this);
 	
@@ -847,15 +848,19 @@ public class MyTorrentsView
 			    TorrentUtils.removePotentialTorrentDeletionListener( this );
 			    globalManager.removeListener(this);
 			    globalManager.removeEventListener( gm_event_listener );
-				COConfigurationManager.removeParameterListener("DND Always In Incomplete", this);
-				COConfigurationManager.removeParameterListener("User Mode", this);
-			    COConfigurationManager.removeParameterListener("Library.ShowTitle", this);
-			    COConfigurationManager.removeParameterListener("Library.ShowCatButtons", this);
-			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons", this);
-			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.CompOnly", this);
-			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.FiltersOnly", this);
-			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.ImageOverride", this );
-			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.Inclusive", this);
+				COConfigurationManager.removeParameterListeners(
+					new String[]{
+						"DND Always In Incomplete",
+						"User Mode",
+						"Library.ShowTitle",
+						"Library.ShowCatButtons",
+						"Library.ShowTagButtons",
+						"Library.ShowTagButtons.CompOnly",
+						"Library.ShowTagButtons.FiltersOnly",
+						"Library.ShowTagButtons.ImageOverride",
+						"Library.ShowTagButtons.Align",
+						"Library.ShowTagButtons.Inclusive" },
+					this);
        		}));
   }
 
@@ -1093,13 +1098,26 @@ public class MyTorrentsView
 		  	Utils.disposeComposite(cTitleCategoriesAndTags, false);
 		}
 		
-		if ( showTableTitle ){
-			GridData gridData = new GridData(SWT.CENTER, SWT.CENTER, true, false);
-			cTitleCategoriesAndTags.setLayoutData(gridData);
+		int align = COConfigurationManager.getIntParameter("Library.ShowTagButtons.Align" );
+		
+		int	swtAlign;
+		
+		if ( align == 0 ){
+			if ( showTableTitle ){
+				swtAlign = SWT.CENTER;
+			}else{
+				swtAlign = SWT.RIGHT;
+			}
+		}else if ( align == 1 ){
+			swtAlign = SWT.LEFT;
+		}else if ( align == 2 ){
+			swtAlign = SWT.CENTER;
 		}else{
-			GridData gridData = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
-			cTitleCategoriesAndTags.setLayoutData(gridData);
+			swtAlign = SWT.RIGHT;
 		}
+		
+		GridData gridData = new GridData(swtAlign, SWT.CENTER, true, false);
+		cTitleCategoriesAndTags.setLayoutData(gridData);
 	}
 
   /**
@@ -2679,6 +2697,7 @@ public class MyTorrentsView
 					parameterName.equals("Library.ShowTagButtons" ) ||
 					parameterName.equals("Library.ShowTagButtons.FiltersOnly" ) ||
 					parameterName.equals("Library.ShowTagButtons.ImageOverride" ) ||
+					parameterName.equals("Library.ShowTagButtons.Align" ) ||					
 					parameterName.equals("Library.ShowTagButtons.CompOnly" )){
 
 				createTabs();

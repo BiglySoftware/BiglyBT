@@ -21,8 +21,10 @@ package com.biglybt.ui.swt.views.configsections;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.IntListParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
 import com.biglybt.ui.config.ConfigSectionInterfaceTags;
 import com.biglybt.ui.swt.Utils;
@@ -103,8 +105,20 @@ ConfigSectionInterfaceTagsSWT
 		add(tag_inclusive,listLibrary);
 		tag_inclusive.setIndent(1, true);
 
-		show_tag.addEnabledOnSelection(show_filters_only, show_tag_comp_only, tag_inclusive);
+		show_tag.addEnabledOnSelection( show_filters_only, image_override, show_tag_comp_only, tag_inclusive );
 
+		IntListParameterImpl tag_align = new IntListParameterImpl(
+				"Library.ShowTagButtons.Align",
+				"ConfigView.section.style.ShowTagButtons.Align",
+				new int[]{ 0, 1, 2, 3 },
+				new String[]{ 
+					"", 
+					MessageText.getString( "label.left" ),
+					MessageText.getString( "label.center" ),
+					MessageText.getString( "label.right" )});					
+		
+		add(tag_align,listLibrary);
+		
 		BooleanParameterImpl col_config = new BooleanParameterImpl(
 				"Library.EnableSepColConfig",
 				"ConfigView.section.style.enableSeparateColConfig");

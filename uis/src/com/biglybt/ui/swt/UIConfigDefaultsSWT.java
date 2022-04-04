@@ -242,6 +242,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter( "Library.ShowTagButtons", true );
 		def.addParameter( "Library.ShowTagButtons.FiltersOnly", false );
 		def.addParameter( "Library.ShowTagButtons.ImageOverride", false );
+		def.addParameter( "Library.ShowTagButtons.Align", 0);
 		def.addParameter( "Library.ShowTagButtons.CompOnly", false );
 		def.addParameter( "Library.ShowTagButtons.Inclusive", true );
 		
