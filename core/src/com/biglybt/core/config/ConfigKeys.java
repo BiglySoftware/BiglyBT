@@ -197,6 +197,7 @@ public final class ConfigKeys {
 		public static final String ICFG_DISKMANAGER_HASHCHECKING_STRATEGY = "diskmanager.hashchecking.strategy";
 		public static final String BCFG_DISKMANAGER_HASHCHECKING_SMALLESTFIRST = "diskmanager.hashchecking.smallestfirst";
 		public static final String BCFG_DISKMANAGER_ONE_OP_PER_FS = "diskmanager.one.op.per.fs";
+		public static final String BCFG_DISKMANAGER_ONE_OP_PER_FS_CONC_READ = "diskmanager.one.op.per.fs.conc.read";
 		public static final String BCFG_DISKMANAGER_HASHCHECKING_MAX_ACTIVE = "diskmanager.hashchecking.maxactive";
 		public static final String BCFG_DISKMANAGER_PERF_CACHE_ENABLE = "diskmanager.perf.cache.enable";
 		public static final String ICFG_DISKMANAGER_PERF_CACHE_SIZE = "diskmanager.perf.cache.size";

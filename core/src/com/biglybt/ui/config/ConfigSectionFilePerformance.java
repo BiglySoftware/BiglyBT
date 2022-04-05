@@ -76,9 +76,18 @@ public class ConfigSectionFilePerformance
 		add(recheck_max_active, Parameter.MODE_INTERMEDIATE);
 		recheck_max_active.setMinValue(0);
 		
-		add(new BooleanParameterImpl(
+		BooleanParameterImpl one_per_fs = 
+			add(new BooleanParameterImpl(
 				BCFG_DISKMANAGER_ONE_OP_PER_FS,
 				"ConfigView.section.file.one.op.per.fs"));	
+		
+		BooleanParameterImpl one_per_fs_conc_read = 
+				add(new BooleanParameterImpl(
+					BCFG_DISKMANAGER_ONE_OP_PER_FS_CONC_READ,
+					"ConfigView.section.file.one.op.per.fs.conc.read"));	
+		one_per_fs_conc_read.setIndent( 1, true );
+		
+		one_per_fs.addEnabledOnSelection(one_per_fs_conc_read);
 		
 		// diskmanager.perf.cache.enable
 
