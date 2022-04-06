@@ -250,6 +250,25 @@ AEDiagnosticsLogger
 	log(
 		String	_str )
 	{
+		if ( AEDiagnostics.loggers_disabled ){
+			
+			synchronized( this ){
+				
+				if ( current_writer != null ){
+					
+					try{
+						current_writer.close();
+						
+					}finally{
+						
+						current_writer = null;
+					}
+				}
+			}
+			
+			return;
+		}
+		
 		if ( !AEDiagnostics.loggers_enabled ){
 
 			if ( !force ){

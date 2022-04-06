@@ -60,6 +60,7 @@ EngineImpl
 		COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 				"Logger.Enabled",
+				"Logger.DebugFiles.Disable",
 			},
 			new ParameterListener()
 			{
@@ -68,7 +69,9 @@ EngineImpl
 				parameterChanged(
 					String parameterName)
 				{
-					logging_enabled = COConfigurationManager.getBooleanParameter( "Logger.Enabled" );
+					logging_enabled = 
+						COConfigurationManager.getBooleanParameter( "Logger.Enabled" ) && 
+						!COConfigurationManager.getBooleanParameter( "Logger.DebugFiles.Disable" );
 				}
 			});
 	}

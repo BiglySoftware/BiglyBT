@@ -114,6 +114,8 @@ AEDiagnostics
 
 	protected static boolean	logging_enabled;
 	protected static boolean	loggers_enabled;
+	
+	protected static boolean	loggers_disabled;	// all these stupid vars.
 
 	private static final List<AEDiagnosticsEvidenceGenerator>		evidence_generators	= new ArrayList<>();
 	private static final Map<AEDiagnosticsEvidenceGenerator, Void>		weak_evidence_generators	= new WeakHashMap<>();
@@ -152,12 +154,13 @@ AEDiagnostics
 			debug_dir		= FileUtil.getUserFile( "logs" );
 
 			debug_save_dir	= FileUtil.newFile( debug_dir, "save" );
-
+			
 			COConfigurationManager.addAndFireParameterListeners(
 				new String[]{
 					"Logger.Enabled",
-					"Logger.DebugFiles.Enabled",
+					"Logger.DebugFiles.Enabled",		// don't think used anymore, always true...
 					"Logger.DebugFiles.Enabled.Force",
+					"Logger.DebugFiles.Disable",		// config to disable all debug files regardless
 					"Logger.DebugFiles.SizeKB",
 				},
 				new ParameterListener()
@@ -170,6 +173,8 @@ AEDiagnostics
 						logging_enabled = COConfigurationManager.getBooleanParameter( "Logger.Enabled" );
 
 						loggers_enabled = logging_enabled && COConfigurationManager.getBooleanParameter( "Logger.DebugFiles.Enabled");
+						
+						loggers_disabled = logging_enabled && COConfigurationManager.getBooleanParameter( "Logger.DebugFiles.Disable");
 
 						if ( !loggers_enabled ){
 

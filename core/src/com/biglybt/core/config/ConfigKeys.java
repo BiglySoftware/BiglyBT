@@ -256,6 +256,7 @@ public final class ConfigKeys {
 		public static final String SCFG_LOGGING_DIR = "Logging Dir";
 		public static final String ICFG_LOGGING_MAX_SIZE = "Logging Max Size";
 		public static final String SCFG_LOGGING_TIMESTAMP = "Logging Timestamp";
+		public static final String BCFG_LOGGER_DEBUG_FILES_DISABLE = "Logger.DebugFiles.Disable";
 		public static final String BCFG_LOGGER_DEBUG_FILES_FORCE = "Logger.DebugFiles.Enabled.Force";
 		public static final String ICFG_LOGGER_DEBUG_FILES_SIZE_KB = "Logger.DebugFiles.SizeKB";
 	}
