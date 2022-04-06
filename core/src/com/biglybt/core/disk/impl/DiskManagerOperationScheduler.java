@@ -306,7 +306,27 @@ DiskManagerOperationScheduler
 						
 						operations.add( new Operation( operation, cb, fs ));
 						
-						Collections.sort( operations );
+							// small chance of sort throwing error due to metrics updating due to
+							// 'check smallest first' relying on amount remaining to be rechecked 
+							// rather than absolute size
+						
+						for ( int i=0;i<10;i++){
+							
+							try{
+								Collections.sort( operations );
+								
+								break;
+								
+							}catch( IllegalArgumentException e ){
+								
+								try{
+									Thread.sleep(50);
+									
+								}catch( Throwable f ){
+									
+								}
+							}
+						}
 						
 						schedule();
 					}

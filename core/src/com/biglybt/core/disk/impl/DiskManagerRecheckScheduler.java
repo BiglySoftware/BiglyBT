@@ -91,6 +91,14 @@ DiskManagerRecheckScheduler
 		
 			entries.add( instance );
 			
+				// time to recalculate metrics if required - note this can cause consistency issued
+				// if other code also sorting, see DiskManagerOperationScheduler
+			
+			for ( DiskManagerRecheckInstance inst: entries ){
+				
+				inst.updateMetric();
+			}
+			
 			Collections.sort(
 				entries,
 				new Comparator<DiskManagerRecheckInstance>()
@@ -244,12 +252,13 @@ DiskManagerRecheckScheduler
 	{
 		private final DiskManagerHelper				helper;
 		private final CoreOperation					op;
-		private final long							metric;
 		private final int							piece_length;
 		private final boolean						low_priority;
 
 		private final AESemaphore	 				slot_sem;
 		
+		private long							metric;
+
 		private volatile boolean		active;
 		private volatile boolean		paused;
 		
@@ -261,23 +270,10 @@ DiskManagerRecheckScheduler
 			helper		= _helper;
 			
 			TOTorrent	torrent = helper.getTorrent();
-						
-			long _metric			= (_low_priority?0x7000000000000000L:0L);
-
-			if ( smallest_first ){
-				
-					// size only of relevance if smallest first (otherwise addition order rules)
-				
-				long	size = torrent.getSize();
-				
-				_metric += size;
-			}
-			
-			metric			= _metric;
-			
+									
 			piece_length	= (int)torrent.getPieceLength();
 			low_priority	= _low_priority;
-			
+						
 			slot_sem		= new AESemaphore( "DiskManagerRecheckInstance::slotsem", getPieceConcurrency());
 						
 			Callback progress = new Callback();
@@ -320,8 +316,39 @@ DiskManagerRecheckScheduler
 						return( task );
 					}
 				};
+				
+				updateMetric();
 		}
 
+		private void
+		updateMetric()
+		{
+			long _metric			= (low_priority?0x7000000000000000L:0L);
+
+			if ( smallest_first ){
+				
+					// size only of relevance if smallest first (otherwise addition order rules)
+				
+				TOTorrent	torrent = helper.getTorrent();
+
+				long	size_remaining = torrent.getSize();
+				
+				if ( helper.getDownload().getState() == DownloadManager.STATE_CHECKING ){
+					
+					int progress = op.getTask().getProgressCallback().getProgress();
+					
+					if ( progress > 0 ){
+						
+						size_remaining = (size_remaining * (1000-progress))/1000;
+					}
+				}
+				
+				_metric += size_remaining;
+			}
+			
+			metric			= _metric;
+
+		}
 		private int
 		getPieceConcurrency()
 		{
