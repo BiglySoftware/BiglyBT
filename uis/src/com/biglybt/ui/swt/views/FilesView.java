@@ -92,7 +92,7 @@ public class FilesView
 	extends TableViewTab<DiskManagerFileInfo>
 	implements TableDataSourceChangedListener, TableSelectionListener,
 	TableViewSWTMenuFillListener, TableRefreshListener, TableExpansionChangeListener,
-	DownloadManagerStateAttributeListener, DownloadManagerListener,
+	DownloadManagerListener,
 	TableLifeCycleListener, TableViewFilterCheckEx<DiskManagerFileInfo>, KeyListener, ParameterListener,
 	UISWTViewCoreEventListener, ViewTitleInfo
 {
@@ -357,9 +357,6 @@ public class FilesView
 		}
 		
 		for (DownloadManager manager: managers ){
-			manager.getDownloadState().addListener(this,
-					DownloadManagerState.AT_FILE_LINKS2,
-					DownloadManagerStateAttributeListener.WRITTEN);
 
 			manager.addListener(this);
 		}
@@ -374,9 +371,7 @@ public class FilesView
 		}
 
 		for (DownloadManager manager: managers ){
-			manager.getDownloadState().removeListener(this,
-					DownloadManagerState.AT_FILE_LINKS2,
-					DownloadManagerStateAttributeListener.WRITTEN);
+			
 			manager.removeListener(this);
 		}
 	}
@@ -614,7 +609,10 @@ public class FilesView
 		
 		if ( tree_view ){
 			
-			file = tree_file_map.get( file.getTorrentFile());
+			synchronized( tree_file_map ){
+			
+				file = tree_file_map.get( file.getTorrentFile());
+			}
 		}
 		
 		if ( file != null ){
@@ -667,7 +665,7 @@ public class FilesView
 			
 		}else{
 			
-			TableRowCore row = tv.getRow( file );
+			TableRowCore row = getRowForFile( file );
 			
 			if ( row != null ){
 				
@@ -678,6 +676,47 @@ public class FilesView
 		}
 	}
 
+	private TableRowCore
+	getRowForFile(
+		DiskManagerFileInfo		file )
+	{
+		if ( tree_view ){
+			
+			synchronized( tree_file_map ){
+			
+				file = tree_file_map.get( file.getTorrentFile());
+			}
+		}
+		
+		if ( file != null ){
+			
+			TableRowCore[] rows;
+			
+			if ( tree_view ){
+								
+				rows = tv.getRowsAndSubRows( false );	
+				
+			}else{
+				
+				rows = tv.getVisibleRows();
+			}
+			
+			for ( TableRowCore row: rows ){
+				
+				DiskManagerFileInfo row_file = (DiskManagerFileInfo)row.getDataSource( true );
+				
+				if ( 	row_file == file || 
+						( 	row_file.getIndex() == file.getIndex() && 
+							row_file.getDownloadManager() == file.getDownloadManager())){
+				
+					return( row );
+				}
+			}
+		}
+		
+		return( null );
+	}
+	
 	@Override
 	public boolean
 	filterCheck(
@@ -1327,18 +1366,6 @@ public class FilesView
 		}
 	}
 
-
-  // Used to notify us of when we need to refresh - normally for external changes to the
-  // file links.
-  @Override
-  public void attributeEventOccurred(DownloadManager dm, String attribute_name, int event_type) {
-  	Object oIsChangingLinks = dm.getUserData("is_changing_links");
-  	if ((oIsChangingLinks instanceof Boolean) && (Boolean) oIsChangingLinks) {
-  		return;
-  	}
-	  this.force_refresh = true;
-  }
-
 	@Override
 	public void tableLifeCycleEventOccurred(TableView tv, int eventType,
 			Map<String, Object> data) {
@@ -1867,93 +1894,96 @@ public class FilesView
 				
 				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, uid, dm.getDisplayName(), "", null );
 
-				tree_file_map.clear();
-				
-				Map<Integer,Boolean>	expansion_state;
-				
-				synchronized( KEY_DM_TREE_STATE ){
+				synchronized( tree_file_map ){
 					
-					expansion_state = (Map<Integer,Boolean>)dm.getUserData( KEY_DM_TREE_STATE );
+					tree_file_map.clear();
 					
-					if ( expansion_state == null ){
+					Map<Integer,Boolean>	expansion_state;
+					
+					synchronized( KEY_DM_TREE_STATE ){
 						
-						expansion_state = new HashMap<>();
+						expansion_state = (Map<Integer,Boolean>)dm.getUserData( KEY_DM_TREE_STATE );
 						
-					}else{
-						
-						expansion_state = new HashMap<>( expansion_state );
-					}
-				}
-				
-				if ( expansion_state.containsKey( uid )){
-					
-					root.setExpanded( false );
-				}
-				
-				uid++;
-				
-				DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
-
-				for ( DiskManagerFileInfo file: files ){
-
-					FilesViewNodeInner node = root;
-
-					TOTorrentFile t_file = file.getTorrentFile();
-
-					String path = t_file.getRelativePath();
-
-					int	pos = 0;
-				
-					String subfolder = "";
-					
-					while( true ){
-
-						int p = path.indexOf( file_separator, pos );
-
-						String	bit;
-
-						if ( p == -1 ){
-
-							FilesViewNodeLeaf leaf = new FilesViewNodeLeaf( path, file, node );
+						if ( expansion_state == null ){
 							
-							node.addFile( leaf );
-
-							tree_file_map.put( t_file, leaf );
-							
-							break;
+							expansion_state = new HashMap<>();
 							
 						}else{
-									
-							bit = path.substring( pos, p );
-
-							pos = p+1;
-						
-							FilesViewNodeInner n = (FilesViewNodeInner)node.getChild( bit );
-
-							if ( n == null ){
-	
-								n = new FilesViewNodeInner( dm, uid, bit, subfolder, node );
-	
-								if ( expansion_state.containsKey( uid )){
-									
-									n.setExpanded( false );
-								}
-								
-								uid++;
-								
-								node.addChild( n );
-							}
 							
-							if ( subfolder.isEmpty()){
-								subfolder = bit;
-							}else{
-								subfolder += file_separator + bit;
-							}
-							node = n;
+							expansion_state = new HashMap<>( expansion_state );
 						}
 					}
-				}			
-
+					
+					if ( expansion_state.containsKey( uid )){
+						
+						root.setExpanded( false );
+					}
+					
+					uid++;
+					
+					DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
+	
+					for ( DiskManagerFileInfo file: files ){
+	
+						FilesViewNodeInner node = root;
+	
+						TOTorrentFile t_file = file.getTorrentFile();
+	
+						String path = t_file.getRelativePath();
+	
+						int	pos = 0;
+					
+						String subfolder = "";
+						
+						while( true ){
+	
+							int p = path.indexOf( file_separator, pos );
+	
+							String	bit;
+	
+							if ( p == -1 ){
+	
+								FilesViewNodeLeaf leaf = new FilesViewNodeLeaf( path, file, node );
+								
+								node.addFile( leaf );
+	
+								tree_file_map.put( t_file, leaf );
+								
+								break;
+								
+							}else{
+										
+								bit = path.substring( pos, p );
+	
+								pos = p+1;
+							
+								FilesViewNodeInner n = (FilesViewNodeInner)node.getChild( bit );
+	
+								if ( n == null ){
+		
+									n = new FilesViewNodeInner( dm, uid, bit, subfolder, node );
+		
+									if ( expansion_state.containsKey( uid )){
+										
+										n.setExpanded( false );
+									}
+									
+									uid++;
+									
+									node.addChild( n );
+								}
+								
+								if ( subfolder.isEmpty()){
+									subfolder = bit;
+								}else{
+									subfolder += file_separator + bit;
+								}
+								node = n;
+							}
+						}
+					}			
+				}
+				
 				tv.addDataSource( root );
 
 				tv.processDataSourceQueueSync();
@@ -1990,114 +2020,117 @@ public class FilesView
 			if ( force_refresh || current_root == null || tv.getRowCount() == 0 ){
 				
 				wait_until_idle = force_refresh;
-				
-				current_root = new FilesViewNodeInner( null, -1,  MessageText.getString( "label.downloads" ), "", null );
-				
-				tree_file_map.clear();
-				
+								
 				force_refresh = false;
-
+				
 				tv.removeAllTableRows();
 
-				char file_separator = File.separatorChar;
+				synchronized( tree_file_map ){
 				
-				int num = 0;
-				
-				for ( DownloadManager dm: managers ){
-				
-					num++;
-					
-					int uid = 0;
+					current_root = new FilesViewNodeInner( null, -1,  MessageText.getString( "label.downloads" ), "", null );
 
-					FilesViewNodeInner root =  new FilesViewNodeInner( dm, uid, "(" + num + ") " + dm.getDisplayName(), "", current_root );
-	
-					Map<Integer,Boolean>	expansion_state;
+					tree_file_map.clear();
+						
+					char file_separator = File.separatorChar;
 					
-					synchronized( KEY_DM_TREE_STATE ){
+					int num = 0;
+					
+					for ( DownloadManager dm: managers ){
+					
+						num++;
 						
-						expansion_state = (Map<Integer,Boolean>)dm.getUserData( KEY_DM_TREE_STATE );
+						int uid = 0;
+	
+						FilesViewNodeInner root =  new FilesViewNodeInner( dm, uid, "(" + num + ") " + dm.getDisplayName(), "", current_root );
+		
+						Map<Integer,Boolean>	expansion_state;
 						
-						if ( expansion_state == null ){
+						synchronized( KEY_DM_TREE_STATE ){
 							
-							expansion_state = new HashMap<>();
+							expansion_state = (Map<Integer,Boolean>)dm.getUserData( KEY_DM_TREE_STATE );
 							
-						}else{
-							
-							expansion_state = new HashMap<>( expansion_state );
-						}
-					}
-					
-					if ( expansion_state.containsKey( uid )){
-						
-						root.setExpanded( false );
-					}
-					
-					uid++;
-					
-					current_root.addChild( root );
-					
-					DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
-
-					for ( DiskManagerFileInfo file: files ){
-	
-						FilesViewNodeInner node = root;
-	
-						TOTorrentFile t_file = file.getTorrentFile();
-	
-						String path = t_file.getRelativePath();
-	
-						int	pos = 0;
-					
-						String subfolder = "";
-						
-						while( true ){
-	
-							int p = path.indexOf( file_separator, pos );
-	
-							String	bit;
-	
-							if ( p == -1 ){
-	
-								FilesViewNodeLeaf leaf = new FilesViewNodeLeaf( path, file, node );
+							if ( expansion_state == null ){
 								
-								node.addFile( leaf );
-	
-								tree_file_map.put( t_file, leaf );
-								
-								break;
+								expansion_state = new HashMap<>();
 								
 							}else{
-									
-								bit = path.substring( pos, p );
-	
-								pos = p+1;
-							
-								FilesViewNodeInner n = (FilesViewNodeInner)node.getChild( bit );
-	
-								if ( n == null ){
-		
-									n = new FilesViewNodeInner( dm, uid, bit, subfolder, node );
-		
-									if ( expansion_state.containsKey( uid )){
-										
-										n.setExpanded( false );
-									}
-									
-									uid++;
-									
-									node.addChild( n );
-								}
 								
-								if ( subfolder.isEmpty()){
-									subfolder = bit;
-								}else{
-									subfolder += file_separator + bit;
-								}
-								
-								node = n;
+								expansion_state = new HashMap<>( expansion_state );
 							}
 						}
-					}			
+						
+						if ( expansion_state.containsKey( uid )){
+							
+							root.setExpanded( false );
+						}
+						
+						uid++;
+						
+						current_root.addChild( root );
+						
+						DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
+	
+						for ( DiskManagerFileInfo file: files ){
+		
+							FilesViewNodeInner node = root;
+		
+							TOTorrentFile t_file = file.getTorrentFile();
+		
+							String path = t_file.getRelativePath();
+		
+							int	pos = 0;
+						
+							String subfolder = "";
+							
+							while( true ){
+		
+								int p = path.indexOf( file_separator, pos );
+		
+								String	bit;
+		
+								if ( p == -1 ){
+		
+									FilesViewNodeLeaf leaf = new FilesViewNodeLeaf( path, file, node );
+									
+									node.addFile( leaf );
+		
+									tree_file_map.put( t_file, leaf );
+									
+									break;
+									
+								}else{
+										
+									bit = path.substring( pos, p );
+		
+									pos = p+1;
+								
+									FilesViewNodeInner n = (FilesViewNodeInner)node.getChild( bit );
+		
+									if ( n == null ){
+			
+										n = new FilesViewNodeInner( dm, uid, bit, subfolder, node );
+			
+										if ( expansion_state.containsKey( uid )){
+											
+											n.setExpanded( false );
+										}
+										
+										uid++;
+										
+										node.addChild( n );
+									}
+									
+									if ( subfolder.isEmpty()){
+										subfolder = bit;
+									}else{
+										subfolder += file_separator + bit;
+									}
+									
+									node = n;
+								}
+							}
+						}			
+					}
 				}
 				
 				tv.addDataSource( current_root );
