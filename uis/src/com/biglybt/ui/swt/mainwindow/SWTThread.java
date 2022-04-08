@@ -291,7 +291,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				}
 			}
 			
-			if (Constants.isWindows) {
+			if ( Constants.isWindows ){
 			
 				/* Windows "Bug" that Eclipse devs will never fix:
 				 * Bug 75766 - Allow mouse wheel to scroll without focus
@@ -349,10 +349,10 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 					}
 				});
 	
-			}
-			
-			if (Constants.isOSX ) {
+			}else if ( Constants.isOSX ){
+				
 				// sidebar not redrawing on mouse-wheel scroll
+				
 				display.addFilter(SWT.MouseWheel, e -> {
 					Widget focusControl = e.widget;
 					Control control = focusControl instanceof Control?(Control)focusControl:null;
@@ -379,8 +379,47 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 					}
 				});
 	
+			}else{
+				
+					// Problem on Linux where mouse scroll of a panel gets grabbed by a control
+					// on the panel and starts affecting that. For example, a combo box on a 
+					// settings panel
+				
+				display.addFilter(SWT.MouseWheel, e -> {
+					
+					Widget widget = e.widget;
+					
+					if ( widget instanceof Control ){
+						
+						Control control = (Control)widget;
+					
+						if ( 	control instanceof Combo || 
+								control instanceof Spinner ) {
+							
+							while ( control != null ){
+								
+								if ( control instanceof ScrolledComposite ){
+									
+									Long lastScroll = (Long)control.getData( "LastScrollTime" );
+									
+									if ( lastScroll != null ){
+										
+										if ( SystemTime.getMonotonousTime() - lastScroll < 1500 ){
+											
+											e.doit = false;
+											
+											return;
+										}
+									}
+								}
+								
+								control = control.getParent();
+							}
+						}
+					}
+				});
 			}
-	
+			
 			if (app != null) {
 				app.runInSWTThread();
 				runner = new Thread(new AERunnable() {

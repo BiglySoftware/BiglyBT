@@ -1094,6 +1094,12 @@ public class ConfigView implements UISWTViewCoreEventListener {
 		sectionsCreated.add(configSection);
 
 		item.setContent(c);
+		
+		c.addListener( SWT.Move, (ev)->{
+			
+				// for use in SWTThread when hacking scroll behaviour on Linux
+			item.setData("LastScrollTime", SystemTime.getMonotonousTime());
+		});
 	}
 
 	private static void buildUnavailableSection(Composite parent,
