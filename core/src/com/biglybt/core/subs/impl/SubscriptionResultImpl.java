@@ -485,6 +485,7 @@ SubscriptionResultImpl
 		return (Result.adjustLink((String)toJSONMap().get( "pl" )));
 	}
 
+	@Override
 	public String
 	getAssetHash()
 	{

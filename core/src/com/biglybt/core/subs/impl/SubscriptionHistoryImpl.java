@@ -138,17 +138,19 @@ SubscriptionHistoryImpl
 
 		synchronized( this ){
 
-			boolean	got_new_or_changed_result	= false;
+			boolean got_changed	= false;
 
 			LinkedHashMap<String,SubscriptionResultImpl> results_map = manager.loadResults( subs );
 
 			SubscriptionResultImpl[] existing_results = results_map.values().toArray( new SubscriptionResultImpl[results_map.size()] );
 
-			ByteArrayHashMap	result_key_map 	= new ByteArrayHashMap();
-			ByteArrayHashMap	result_key2_map = new ByteArrayHashMap();
+			ByteArrayHashMap<SubscriptionResultImpl>	result_key_map 	= new ByteArrayHashMap<>();
+			ByteArrayHashMap<SubscriptionResultImpl>	result_key2_map = new ByteArrayHashMap<>();
 
-			List	new_results = new ArrayList();
+			List<SubscriptionResultImpl>	updated_results = new ArrayList<>(existing_results.length+latest_results.length);
 
+			List<SubscriptionResultImpl>	new_results		= new ArrayList<>(latest_results.length);
+			
 			for (int i=0;i<existing_results.length;i++){
 
 				SubscriptionResultImpl r = existing_results[i];
@@ -162,7 +164,7 @@ SubscriptionHistoryImpl
 					result_key2_map.put( key2, r );
 				}
 
-				new_results.add( r );
+				updated_results.add( r );
 
 				if ( !r.isDeleted()){
 
@@ -202,7 +204,7 @@ SubscriptionHistoryImpl
 
 					last_new_result = now;
 
-					new_results.add( r );
+					updated_results.add( r );
 
 					result_key_map.put( r.getKey1(), r );
 
@@ -213,7 +215,7 @@ SubscriptionHistoryImpl
 						result_key2_map.put( key2, r );
 					}
 
-					got_new_or_changed_result = true;
+					new_results.add( r );
 
 					if ( r.getRead()){
 
@@ -232,7 +234,7 @@ SubscriptionHistoryImpl
 
 					if ( existing.updateFrom( r )){
 
-						got_new_or_changed_result = true;
+						got_changed = true;
 					}
 				}
 			}
@@ -241,9 +243,9 @@ SubscriptionHistoryImpl
 
 			if ( max_results > 0 && (new_unread + new_read ) > max_results ){
 
-				for (int i=0;i<new_results.size();i++){
+				for (int i=0;i<updated_results.size();i++){
 
-					SubscriptionResultImpl r = (SubscriptionResultImpl)new_results.get(i);
+					SubscriptionResultImpl r = (SubscriptionResultImpl)updated_results.get(i);
 
 					if ( !r.isDeleted()){
 
@@ -258,7 +260,7 @@ SubscriptionHistoryImpl
 
 						r.deleteInternal();
 
-						got_new_or_changed_result = true;
+						got_changed = true;
 
 						if (( new_unread + new_read ) <= max_results ){
 
@@ -268,11 +270,11 @@ SubscriptionHistoryImpl
 				}
 			}
 
-			if ( got_new_or_changed_result ){
+			if ( got_changed || !new_results.isEmpty()){
 
-				result = (SubscriptionResultImpl[])new_results.toArray( new SubscriptionResultImpl[new_results.size()]);
+				result = (SubscriptionResultImpl[])updated_results.toArray( new SubscriptionResultImpl[updated_results.size()]);
 
-				manager.saveResults( subs, result );
+				manager.saveResults( subs, result, new_results );
 
 			}else{
 
@@ -705,7 +707,16 @@ SubscriptionHistoryImpl
 
 				updateReadUnread( results );
 
-				manager.saveResults( subs, results );
+				List<SubscriptionResultImpl>	new_unread_results = null;
+								
+				if ( !result.getRead()){
+					
+					new_unread_results= new ArrayList<>(1);
+					
+					new_unread_results.add( result );
+				}
+				
+				manager.saveResults( subs, results, new_unread_results );
 			}
 		}
 
@@ -757,7 +768,7 @@ SubscriptionHistoryImpl
 
 				updateReadUnread( results );
 
-				manager.saveResults( subs, results );
+				manager.saveResults( subs, results, null );
 			}
 		}
 
@@ -795,7 +806,7 @@ SubscriptionHistoryImpl
 
 				updateReadUnread( results );
 
-				manager.saveResults( subs, results );
+				manager.saveResults( subs, results, null );
 			}
 		}
 
@@ -833,7 +844,7 @@ SubscriptionHistoryImpl
 
 				updateReadUnread( results );
 
-				manager.saveResults( subs, results );
+				manager.saveResults( subs, results, null );
 			}
 		}
 
@@ -871,7 +882,9 @@ SubscriptionHistoryImpl
 
 				updateReadUnread( results );
 
-				manager.saveResults( subs, results );
+				List<SubscriptionResultImpl> new_unread_results = Arrays.asList( results );
+				
+				manager.saveResults( subs, results, new_unread_results );
 			}
 		}
 
@@ -887,7 +900,7 @@ SubscriptionHistoryImpl
 		String[] 		result_ids,
 		boolean[]		reads )
 	{
-		ByteArrayHashMap rid_map = new ByteArrayHashMap();
+		ByteArrayHashMap<Boolean> rid_map = new ByteArrayHashMap<>();
 
 		for (int i=0;i<result_ids.length;i++){
 
@@ -896,7 +909,7 @@ SubscriptionHistoryImpl
 
 		boolean	changed = false;
 
-		List	newly_unread = new ArrayList();
+		List<SubscriptionResultImpl>	new_unread_results = new ArrayList<>( result_ids.length );
 
 		synchronized( this ){
 
@@ -927,7 +940,7 @@ SubscriptionHistoryImpl
 
 						if ( !read ){
 
-							newly_unread.add( result );
+							new_unread_results.add( result );
 						}
 					}
 				}
@@ -937,7 +950,7 @@ SubscriptionHistoryImpl
 
 				updateReadUnread( results );
 
-				manager.saveResults( subs, results );
+				manager.saveResults( subs, results, new_unread_results );
 			}
 		}
 
@@ -948,9 +961,9 @@ SubscriptionHistoryImpl
 
 		if ( isAutoDownload()){
 
-			for (int i=0;i<newly_unread.size();i++){
+			for (int i=0;i<new_unread_results.size();i++){
 
-				manager.getScheduler().download( subs, (SubscriptionResult)newly_unread.get(i));
+				manager.getScheduler().download( subs, (SubscriptionResult)new_unread_results.get(i));
 			}
 		}
 	}
@@ -969,7 +982,7 @@ SubscriptionHistoryImpl
 
 				results = new SubscriptionResultImpl[0];
 
-				manager.saveResults( subs, results );
+				manager.saveResults( subs, results, null );
 			}
 
 			updateReadUnread( results );
@@ -1029,7 +1042,7 @@ SubscriptionHistoryImpl
 
 				if ( changed ){
 
-					manager.saveResults( subs, results );
+					manager.saveResults( subs, results, null );
 				}
 			}
 		}
@@ -1202,7 +1215,7 @@ SubscriptionHistoryImpl
 	saveConfig(
 		int		reason )
 	{
-		Map	map = new HashMap();
+		Map<String,Object>	map = new HashMap<>();
 
 		map.put( "enabled", new Long( enabled?1:0 ));
 		map.put( "auto_dl", new Long( auto_dl?1:0 ));

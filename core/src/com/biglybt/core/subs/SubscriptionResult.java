@@ -44,6 +44,9 @@ SubscriptionResult
 	toPropertyMap();
 
 	public String
+	getAssetHash();
+	
+	public String
 	getDownloadLink();
 
 	public String

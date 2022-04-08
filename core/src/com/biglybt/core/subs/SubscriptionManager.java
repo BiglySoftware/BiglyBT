@@ -222,6 +222,13 @@ SubscriptionManager
 	public boolean
 	getActivateSubscriptionOnChange();
 
+	public void
+	setMarkResultsInLibraryRead(
+		boolean		b );
+	
+	public boolean
+	getMarkResultsInLibraryRead();
+	
 	public String
 	getRSSLink();
 

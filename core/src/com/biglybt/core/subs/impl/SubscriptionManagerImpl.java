@@ -119,8 +119,9 @@ SubscriptionManagerImpl
 	private static final String	CONFIG_DL_SUBS_ENABLE		= "subscriptions.config.dl_subs_enable";
 	private static final String	CONFIG_DL_RATE_LIMITS		= "subscriptions.config.rate_limits";
 
-	private static final String CONFIG_ACTIVATE_ON_CHANGE	= "subscriptions.config.activate.sub.on.change";
-
+	private static final String CONFIG_ACTIVATE_ON_CHANGE		= "subscriptions.config.activate.sub.on.change";
+	private static final String CONFIG_MARK_LIB_RESULTS_READ	= "subscriptions.config.mark.lib.results.read";
+	
 	private static final int DELETE_UNUSED_AFTER_MILLIS = 2*7*24*60*60*1000;
 
 	private static final int PUB_ASSOC_CONC_MAX;
@@ -536,6 +537,11 @@ SubscriptionManagerImpl
 									hash,
 									subs,
 									((Boolean)entry[1]).booleanValue());
+							}
+							
+							if ( !download.getFlag( Download.FLAG_METADATA_DOWNLOAD )){
+								
+								libraryMutated();
 							}
 						}
 					}
@@ -1457,7 +1463,6 @@ SubscriptionManagerImpl
 		boolean		b )
 	{
 		COConfigurationManager.setParameter( CONFIG_ACTIVATE_ON_CHANGE, b );
-
 	}
 
 	@Override
@@ -1467,6 +1472,21 @@ SubscriptionManagerImpl
 		return( COConfigurationManager.getBooleanParameter( CONFIG_ACTIVATE_ON_CHANGE, false ));
 	}
 
+	@Override
+	public void
+	setMarkResultsInLibraryRead(
+		boolean		b )
+	{
+		COConfigurationManager.setParameter( CONFIG_MARK_LIB_RESULTS_READ, b );
+	}
+	
+	@Override
+	public boolean
+	getMarkResultsInLibraryRead()
+	{
+		return( COConfigurationManager.getBooleanParameter( CONFIG_MARK_LIB_RESULTS_READ, true ));
+	}
+	
 	@Override
 	public String
 	getRSSLink()
@@ -7402,12 +7422,52 @@ SubscriptionManagerImpl
 		throw( new SubscriptionException( "Failed to extract engine id " + id ));
 	}
 
+	private static final Object 		LIB_MUTATION_KEY = new Object();
+	private static final AtomicInteger	lib_mutation_count = new AtomicInteger(0);
+	
+	private void
+	libraryMutated()
+	{
+			// check the active subscriptions now - others will have to wait until they are re-loaded
+			// This does leave inactive ones with potentially inaccurate num_read caches but we 
+			// probably don't want to go fully loading all subscriptions everytime a download is
+			// added
+		
+		Map<SubscriptionImpl,Object[]>	to_check;
+		
+		synchronized( result_cache ){
+			
+			lib_mutation_count.incrementAndGet();
+			
+			to_check = new HashMap<>( result_cache );
+			
+			result_cache.clear();
+		}
+		
+		for ( Map.Entry<SubscriptionImpl, Object[]>	entry: to_check.entrySet()){
+			
+			LinkedHashMap<String,SubscriptionResultImpl>	temp = (LinkedHashMap<String,SubscriptionResultImpl>)entry.getValue()[0];
+			
+			checkIfInLibrary( entry.getKey(), temp.values());
+		}
+	}
+	
 	protected LinkedHashMap<String,SubscriptionResultImpl>
 	loadResults(
 		SubscriptionImpl			subs )
-	{
+	{		
+		LinkedHashMap	results;
+		
+		boolean	check_results = false;
+		
 		synchronized( result_cache ){
 
+			Integer mut = (Integer)subs.getUserData( LIB_MUTATION_KEY );
+			
+			check_results = mut == null || mut != lib_mutation_count.get();
+			
+			subs.setUserData( LIB_MUTATION_KEY, lib_mutation_count.get());
+			
 			Object[]	entry = result_cache.get( subs );
 
 			if ( entry != null ){
@@ -7417,7 +7477,7 @@ SubscriptionManagerImpl
 				return((LinkedHashMap<String,SubscriptionResultImpl>)entry[0]);
 			}
 
-			LinkedHashMap	results = new LinkedHashMap<String,SubscriptionResultImpl>(1024);
+			results = new LinkedHashMap<String,SubscriptionResultImpl>(1024);
 
 			try{
 				File	f = getResultsFile( subs );
@@ -7471,9 +7531,14 @@ SubscriptionManagerImpl
 
 				result_cache.remove( oldest_sub );
 			}
-
-			return( results );
 		}
+		
+		if ( check_results ){
+		
+			checkIfInLibrary( subs, results.values());
+		}
+		
+		return( results );
 	}
 
 	protected void
@@ -7669,22 +7734,17 @@ SubscriptionManagerImpl
 
 	protected void
  	saveResults(
- 		SubscriptionImpl			subs,
- 		SubscriptionResultImpl[]	results )
- 	{
+ 		SubscriptionImpl				subs,
+ 		SubscriptionResultImpl[]		results,
+ 		List<SubscriptionResultImpl>	new_unread_results )
+ 	{		
+		List<SubscriptionResultImpl>	saved_results = new ArrayList<>( results.length );
+		
 		synchronized( result_cache ){
 
 			result_cache.remove( subs );
 
 			try{
-				File	f = getResultsFile( subs );
-
-				Map	map = new HashMap();
-
-				List<Map>	list = new ArrayList<>( results.length );
-
-				map.put( "results", list );
-
 				List<SubscriptionResultImpl>	deleted_old_results = new ArrayList<>( results.length );
 				
 				int now_days = (int)( SystemTime.getCurrentTime() / (1000*60*60*24 ));
@@ -7701,11 +7761,11 @@ SubscriptionManagerImpl
 							
 						}else{
 							
-							list.add( result.toBEncodedMap());
+							saved_results.add( result );
 						}
 					}else{
 						
-						list.add( result.toBEncodedMap());
+						saved_results.add( result );
 					}
 				}
 
@@ -7723,14 +7783,27 @@ SubscriptionManagerImpl
 					
 					for ( int i=0; i<5000; i++ ){
 						
-						list.add( deleted_old_results.get( i ).toBEncodedMap());
+						saved_results.add( deleted_old_results.get( i ));
 					}
 				}else{
 					
 					for ( SubscriptionResultImpl result: deleted_old_results ){
 						
-						list.add( result.toBEncodedMap());
+						saved_results.add( result );					
 					}
+				}
+				
+				File	f = getResultsFile( subs );
+
+				Map	map = new HashMap();
+
+				List<Map>	list = new ArrayList<>( results.length );
+
+				map.put( "results", list );
+
+				for ( SubscriptionResultImpl result: saved_results ){
+					
+					list.add( result.toBEncodedMap());
 				}
 				
 				FileUtil.writeResilientFile( f, map );
@@ -7740,8 +7813,65 @@ SubscriptionManagerImpl
 				log( "Failed to save results for '" + subs.getName(), e );
 			}
 		}
+		
+		if ( new_unread_results != null && !new_unread_results.isEmpty()){
+		
+			checkIfInLibrary( subs, new_unread_results );
+		}
  	}
 
+	private static AsyncDispatcher library_checker = new AsyncDispatcher( "Subs:libcheck" );
+	
+	private void
+	checkIfInLibrary(
+		SubscriptionImpl					subs,
+		Collection<SubscriptionResultImpl>	results )
+	{
+		if ( getMarkResultsInLibraryRead()){
+			
+			for ( SubscriptionResultImpl test_result: results ){
+				
+				if ( !test_result.isDeleted() && !test_result.getRead()){
+					
+					library_checker.dispatch(()->{
+						
+						List<String>			id_list 	= new ArrayList<>( results.size());
+						SubscriptionResultImpl	last_result = null;
+						
+						for ( SubscriptionResultImpl result: results ){
+												
+							int res = SubscriptionUtils.getHashStatus( result );
+							
+							if ( res == SubscriptionUtils.HS_LIBRARY ){
+								
+								last_result = result;
+								
+								id_list.add( result.getID());
+							}
+						}
+						
+						int hits = id_list.size();
+						
+						if ( hits == 1 ){
+							
+							last_result.setRead( true );
+							
+						}else if ( hits > 1 ){
+							
+							boolean[]	read = new boolean[hits];
+							
+							Arrays.fill(read, true );
+							
+							subs.getHistory().markResults( id_list.toArray(new String[hits]), read );
+						}
+					});
+					
+					break;
+				}
+			}
+		}
+	}
+	
 	private void
 	loadConfig()
 	{

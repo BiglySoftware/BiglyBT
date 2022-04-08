@@ -24,10 +24,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.impl.web.WebEngine;
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.util.Base32;
+import com.biglybt.core.util.HashWrapper;
+import com.biglybt.core.util.RandomUtils;
+import com.biglybt.core.util.SystemTime;
 
 public class
 SubscriptionUtils
@@ -136,6 +145,148 @@ SubscriptionUtils
 		}
 	}
 
+	private static final Object	HS_KEY = new Object();
+
+	public static final int HS_NONE			= 0;
+	public static final int HS_LIBRARY		= 1;
+	public static final int HS_ARCHIVE		= 2;
+	public static final int HS_HISTORY		= 3;
+	public static final int HS_UNKNOWN		= 4;
+	public static final int HS_FETCHING		= 5;
+
+	private static GlobalManager 								gm;
+	private static com.biglybt.pif.download.DownloadManager		dm;
+	private static DownloadHistoryManager						hm;
+	
+	public static int
+	getHashStatus(
+		SubscriptionResult	result )
+	{
+		if ( result == null || result.isDeleted()){
+
+			return( HS_NONE );
+		}
+
+		String hash_str = result.getAssetHash();
+
+		if ( hash_str == null ){
+
+			return( HS_UNKNOWN );
+		}
+
+		byte[] hash =  Base32.decode( hash_str );
+		
+		if ( hash == null ){
+
+			return( HS_UNKNOWN );
+		}
+		
+		long	now = SystemTime.getMonotonousTime();
+
+		synchronized( HS_KEY ){
+
+			if ( gm == null ){
+
+				Core core = CoreFactory.getSingleton();
+
+				gm = core.getGlobalManager();
+				dm = core.getPluginManager().getDefaultPluginInterface().getDownloadManager();
+				hm = (DownloadHistoryManager)gm.getDownloadHistoryManager();
+			}
+		}
+
+		int hs_result;
+
+		com.biglybt.core.download.DownloadManager dl = gm.getDownloadManager(new HashWrapper(hash));
+		
+		if ( dl != null ){
+			
+			hs_result = dl.getDownloadState().getFlag(DownloadManagerState.FLAG_METADATA_DOWNLOAD)?HS_FETCHING:HS_LIBRARY;
+
+		}else if ( dm.lookupDownloadStub( hash ) != null ){
+
+			hs_result = HS_ARCHIVE;
+
+		}else if ( hm.getDates(hash) != null ){
+
+			hs_result = HS_HISTORY;
+
+		}else{
+
+			hs_result = HS_NONE;
+		}
+
+		return( hs_result );
+	}
+	
+	public static int
+	getHashStatus(
+		SearchSubsResultBase	result )
+	{
+		if ( result == null ){
+
+			return( HS_NONE );
+		}
+
+		byte[] hash = result.getHash();
+
+		if ( hash == null || hash.length != 20 ){
+
+			return( HS_UNKNOWN );
+		}
+
+		long	now = SystemTime.getMonotonousTime();
+
+		Object[] entry = (Object[])result.getUserData( HS_KEY );
+
+		if ( entry != null ){
+
+			long time = (Long)entry[0];
+
+			if ( now - time < 10*1000 ){
+
+				return((Integer)entry[1] );
+			}
+		}
+
+		synchronized( HS_KEY ){
+
+			if ( gm == null ){
+
+				Core core = CoreFactory.getSingleton();
+
+				gm = core.getGlobalManager();
+				dm = core.getPluginManager().getDefaultPluginInterface().getDownloadManager();
+				hm = (DownloadHistoryManager)gm.getDownloadHistoryManager();
+			}
+		}
+
+		int hs_result;
+
+		com.biglybt.core.download.DownloadManager dl = gm.getDownloadManager(new HashWrapper(hash));
+		
+		if ( dl != null ){
+			
+			hs_result = dl.getDownloadState().getFlag(DownloadManagerState.FLAG_METADATA_DOWNLOAD)?HS_FETCHING:HS_LIBRARY;
+
+		}else if (dm.lookupDownloadStub( hash ) != null ){
+
+			hs_result = HS_ARCHIVE;
+
+		}else if ( hm.getDates(hash) != null ){
+
+			hs_result = HS_HISTORY;
+
+		}else{
+
+			hs_result = HS_NONE;
+		}
+
+		result.setUserData( HS_KEY, new Object[]{ now + RandomUtils.nextInt( 2500 ), hs_result });
+
+		return( hs_result );
+	}
+	
 	public static class
 	SubscriptionDownloadDetails
 	{

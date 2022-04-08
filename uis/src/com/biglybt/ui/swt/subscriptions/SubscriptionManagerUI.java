@@ -898,6 +898,25 @@ SubscriptionManagerUI
 				}
 			});
 
+			// mark results in library read
+	
+		final BooleanParameter mark_lib_results_read =
+			configModel.addBooleanParameter2(
+				"subscriptions.mark_results_in_lib.enable", "subscriptions.mark_results_in_lib.enable",
+				subs_man.getMarkResultsInLibraryRead());
+	
+		mark_lib_results_read.addListener(
+			new ParameterListener()
+			{
+				@Override
+				public void
+				parameterChanged(
+					Parameter param)
+				{
+					subs_man.setMarkResultsInLibraryRead( mark_lib_results_read.getValue());
+				}
+			});		
+		
 		final IntParameter def_check =
 				configModel.addIntParameter2(
 					"subscriptions.config.def.check",

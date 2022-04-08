@@ -19,8 +19,8 @@ package com.biglybt.ui.swt.columns.searchsubs;
 
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.subs.SubscriptionUtils;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
-import com.biglybt.ui.swt.utils.SearchSubsUtils;
 
 import com.biglybt.pif.ui.tables.*;
 
@@ -63,7 +63,7 @@ public class ColumnSearchSubResultExisting
 	public void refresh(TableCell cell) {
 		SearchSubsResultBase result = (SearchSubsResultBase)cell.getDataSource();
 
-		int status = SearchSubsUtils.getHashStatus( result );
+		int status = SubscriptionUtils.getHashStatus( result );
 
 		if ( !cell.setSortValue(status) && cell.isValid()){
 
