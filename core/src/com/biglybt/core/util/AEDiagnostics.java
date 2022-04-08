@@ -174,7 +174,7 @@ AEDiagnostics
 
 						loggers_enabled = logging_enabled && COConfigurationManager.getBooleanParameter( "Logger.DebugFiles.Enabled");
 						
-						loggers_disabled = logging_enabled && COConfigurationManager.getBooleanParameter( "Logger.DebugFiles.Disable");
+						loggers_disabled = COConfigurationManager.getBooleanParameter( "Logger.DebugFiles.Disable");
 
 						if ( !loggers_enabled ){
 
