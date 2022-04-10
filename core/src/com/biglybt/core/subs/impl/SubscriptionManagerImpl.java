@@ -7842,7 +7842,9 @@ SubscriptionManagerImpl
 												
 							int res = SubscriptionUtils.getHashStatus( result );
 							
-							if ( res == SubscriptionUtils.HS_LIBRARY ){
+							if ( 	res == SubscriptionUtils.HS_LIBRARY ||
+									res == SubscriptionUtils.HS_ARCHIVE || 
+									res == SubscriptionUtils.HS_HISTORY ){
 								
 								last_result = result;
 								
