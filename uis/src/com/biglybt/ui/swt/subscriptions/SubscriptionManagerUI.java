@@ -2827,16 +2827,21 @@ SubscriptionManagerUI
 						
 						Set<Subscription>	enabled = new HashSet<>();
 						
-						List<Subscription> menu_templates = new ArrayList<>();
+						List<Subscription> menu_templates 	= new ArrayList<>();
+						List<Subscription> menu_search		= new ArrayList<>();
 						
 						for ( Subscription subs: menu_subs ){
 							
-							if ( subs.isSubscriptionTemplate()){
+							if ( subs.isSearchTemplate()){
 								
-								menu_templates.add( subs );
+								menu_search.add( subs );
 								
 								continue;
-							}
+								
+							}else if ( subs.isSubscriptionTemplate()){
+								
+								menu_templates.add( subs );
+							}								
 							
 							List<Subscription> depends_on = subs.getDependsOn();
 							
@@ -2864,6 +2869,11 @@ SubscriptionManagerUI
 							}
 						}
 						
+						if ( menu_search.size() == menu_subs.length){
+							
+							return;
+						}
+						
 						Collections.sort( templates,(t1,t2)->t1.getName().compareTo(t2.getName()));
 						
 						for ( Subscription sub: templates ){
@@ -2883,6 +2893,11 @@ SubscriptionManagerUI
 
 							mi.addMultiListener((m,target)->{							
 								for ( Subscription s: menu_subs ){
+									
+									if ( s.isSearchTemplate()){
+										
+										continue;
+									}
 									
 									List<Subscription> deps = s.getDependsOn();
 									
