@@ -1726,7 +1726,7 @@ SubscriptionManagerImpl
 			throw( new SubscriptionException( "Failed to create subscription", e ));
 		}
 	}
-
+	
 	protected String
 	getUniqueName(
 		String	name )
@@ -2002,6 +2002,26 @@ SubscriptionManagerImpl
 		}
 	}
 
+	@Override
+	public Subscription 
+	createSubscriptionTemplate(
+		String name )
+	
+		throws SubscriptionException
+	{
+		try{
+			return( createRSS( name, new URL( "subscription:?type=template" ), -1, false, null ));
+			
+		}catch( SubscriptionException e ){
+			
+			throw( e );
+			
+		}catch( Throwable e ){
+
+			throw( new SubscriptionException( "Failed to create subscription template", e ));
+		}
+	}
+	
 	protected void
 	checkURL(
 		URL		url )
@@ -2012,7 +2032,11 @@ SubscriptionManagerImpl
 
 			String protocol = url.getProtocol().toLowerCase();
 
-			if ( ! ( protocol.equals( "tor" ) || protocol.equals( "azplug" ) || protocol.equals( "file" ) || protocol.equals( "vuze" ))){
+			if ( ! ( 	protocol.equals( "tor" ) || 
+						protocol.equals( "azplug" ) || 
+						protocol.equals( "file" ) || 
+						protocol.equals( "subscription" ) || 
+						protocol.equals( "vuze" ))){
 
 				throw( new SubscriptionException( "Invalid URL '" + url + "'" ));
 			}

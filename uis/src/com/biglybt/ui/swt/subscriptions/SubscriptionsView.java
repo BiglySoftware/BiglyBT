@@ -372,6 +372,7 @@ public class SubscriptionsView
 				new ColumnSubscriptionParent(TABLE_ID),
 				new ColumnSubscriptionError(TABLE_ID),
 				new ColumnSubscriptionNewestDate(TABLE_ID),
+				new ColumnSubscriptionDependsOn(TABLE_ID),
 
 		};
 

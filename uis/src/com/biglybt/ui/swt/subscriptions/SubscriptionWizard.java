@@ -59,6 +59,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.ByteFormatter;
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellAddedListener;
@@ -99,13 +100,15 @@ public class SubscriptionWizard {
 	private static final int MODE_SUBSCRIBE = 2;
 	private static final int MODE_CREATE_SEARCH = 3;
 	private static final int MODE_CREATE_RSS = 4;
+	private static final int MODE_CREATE_TEMPLATE = 5;
 
 	private static final int RANK_COLUMN_WIDTH = 85;
 	private static final String TABLE_SUB_WIZ = "SubscriptionWizard";
 
 	private final String TITLE_OPT_IN = MessageText.getString("Wizard.Subscription.optin.title");
 	private final String TITLE_SUBSCRIBE = MessageText.getString("Wizard.Subscription.subscribe.title");
-	private final String TITLE_CREATE = MessageText.getString("Wizard.Subscription.create.title");
+	private final String TITLE_CREATE_RSS = MessageText.getString("Wizard.Subscription.create.title");
+	private final String TITLE_CREATE_TEMPLATE = MessageText.getString("Wizard.Subscription.template.title");
 
 	Display display;
 	Shell shell;
@@ -134,18 +137,21 @@ public class SubscriptionWizard {
 	TabFolder createTabFolder;
 	TabItem   createRSSTabItem;
 	TabItem   createSearchTabItem;
+	TabItem   createTemplateTabItem;
 	Composite availableSubscriptionComposite;
 
 	Table libraryTable;
-	Listener rssSaveListener;
+	Listener saveListener;
 	Listener searchListener;
 
 	Text searchInput;
 	Text feedUrl;
 	Text subsName;
+	Text templateName;
 	Button anonCheck;
 
-	String subs_name_default;
+	int		mode;
+	String 	subs_name_default;
 
 	SubscriptionDownloadDetails[] availableSubscriptions;
 	Subscription[] subscriptions;
@@ -464,6 +470,10 @@ public class SubscriptionWizard {
 		createRSSTabItem.setText("  " + MessageText.getString("Wizard.Subscription.create.rss"));
 		createRSSTabItem.setControl(createCreateRSSComposite(createTabFolder));
 
+		createTemplateTabItem = new TabItem(createTabFolder,SWT.NONE);
+		createTemplateTabItem.setText("  " + MessageText.getString("Wizard.Subscription.create.template"));
+		createTemplateTabItem.setControl(createCreateTemplateComposite(createTabFolder));
+
 		createTabFolder.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -474,8 +484,10 @@ public class SubscriptionWizard {
 				TabItem selectedItem = selectedItems[0];
 				if(selectedItem == createRSSTabItem) {
 					setMode(MODE_CREATE_RSS);
-				} else {
+				} else if ( selectedItem == createSearchTabItem ){
 					setMode(MODE_CREATE_SEARCH);
+				}else{
+					setMode(MODE_CREATE_TEMPLATE);
 				}
 			}
 		});
@@ -509,7 +521,7 @@ public class SubscriptionWizard {
 //			}
 //		});
 
-		feedUrl.addListener (SWT.DefaultSelection, rssSaveListener);
+		feedUrl.addListener (SWT.DefaultSelection, saveListener);
 
 		feedUrl.addListener(SWT.Modify, new Listener() {
 			@Override
@@ -620,6 +632,58 @@ public class SubscriptionWizard {
 		return composite;
 	}
 
+	private Composite createCreateTemplateComposite(Composite parent) {
+		Composite composite = new Composite(parent,SWT.NONE);
+
+
+		Label subTitle = new Label(composite,SWT.WRAP);
+		
+		subTitle.setText(MessageText.getString("Wizard.Subscription.template.subtitle"));
+		
+		Label templateNameText = new Label(composite,SWT.WRAP);
+		templateNameText.setText( MessageText.getString( "TableColumn.header.name" ));
+
+		templateName = new Text(composite, SWT.BORDER);
+
+		templateName.addListener(SWT.Modify, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				
+				saveButton.setEnabled(!templateName.getText().isEmpty());
+			}
+		});
+		
+		FormLayout layout = new FormLayout();
+		layout.marginWidth = 50;
+		layout.marginTop = 25;
+		composite.setLayout(layout);
+
+		FormData data;
+		
+			// subtitle
+
+		data = new FormData();
+		data.top = new FormAttachment(0,0);
+		data.left = new FormAttachment(0,0);
+		data.right = new FormAttachment(100,0);
+		subTitle.setLayoutData(data);
+
+			// name
+
+		data = new FormData();
+		data.top = new FormAttachment(subTitle,10);
+		data.left = new FormAttachment(0,0);
+		templateNameText.setLayoutData(data);
+
+		data = new FormData();
+		data.top = new FormAttachment(templateNameText,0, SWT.CENTER );
+		data.left	= new FormAttachment(templateNameText, 5, SWT.RIGHT );
+		data.right 	= new FormAttachment(50);
+		templateName.setLayoutData(data);
+
+		return composite;
+	}
+	
 	private Composite createCreateSearchComposite(Composite parent) {
 		Composite composite = new Composite(parent,SWT.NONE);
 
@@ -1268,53 +1332,71 @@ public class SubscriptionWizard {
 		});
 
 
-		rssSaveListener = new Listener() {
+		saveListener = new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				try {
-					String url_str = feedUrl.getText();
-					URL	url = new URL(url_str);
-
-					Map user_data = new HashMap();
-
-					user_data.put( SubscriptionManagerUI.SUB_EDIT_MODE_KEY, Boolean.TRUE);
-
-					boolean	anonymous = anonCheck.getSelection();
-
-					String	subs_name = subsName.getText().trim();
-
-					if ( subs_name.length() == 0 ){
-
-						subs_name = url_str;
-					}
-
-					Subscription subRSS = SubscriptionManagerFactory.getSingleton().createRSS( subs_name, url, SubscriptionHistory.DEFAULT_CHECK_INTERVAL_MINS, anonymous, user_data );
-
-					if ( anonymous ){
-
-						subRSS.getHistory().setDownloadNetworks( new String[]{ AENetworkClassifier.AT_I2P });
-					}
-					
-					if ( frequency != 0 ){
+					if ( mode == MODE_CREATE_RSS ){
+						String url_str = feedUrl.getText();
+						URL	url = new URL(url_str);
+	
+						Map user_data = new HashMap();
+	
+						user_data.put( SubscriptionManagerUI.SUB_EDIT_MODE_KEY, Boolean.TRUE);
+	
+						boolean	anonymous = anonCheck.getSelection();
+	
+						String	subs_name = subsName.getText().trim();
+	
+						if ( subs_name.length() == 0 ){
+	
+							subs_name = url_str;
+						}
+	
+						Subscription subRSS = SubscriptionManagerFactory.getSingleton().createRSS( subs_name, url, SubscriptionHistory.DEFAULT_CHECK_INTERVAL_MINS, anonymous, user_data );
+	
+						if ( anonymous ){
+	
+							subRSS.getHistory().setDownloadNetworks( new String[]{ AENetworkClassifier.AT_I2P });
+						}
 						
-						subRSS.getHistory().setCheckFrequencyMins( frequency );
+						if ( frequency != 0 ){
+							
+							subRSS.getHistory().setCheckFrequencyMins( frequency );
+						}
+	
+						shell.close();
+	
+						final String key = "Subscription_" + ByteFormatter.encodeString(subRSS.getPublicKey());
+	
+						MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+						mdi.showEntryByID(key);
+						
+					}else{
+						
+						String	template_name = templateName.getText().trim();
+						
+						Subscription subTemplate = 
+								SubscriptionManagerFactory.getSingleton().createSubscriptionTemplate( template_name );
+
+						shell.close();
+						
+						final String key = "Subscription_" + ByteFormatter.encodeString(subTemplate.getPublicKey());
+	
+						MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+						mdi.showEntryByID(key);
 					}
-
-					shell.close();
-
-					final String key = "Subscription_" + ByteFormatter.encodeString(subRSS.getPublicKey());
-
-					MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-					mdi.showEntryByID(key);
 
 				} catch (Throwable e) {
 
+					Debug.out( e );
+					
 					Utils.reportError( e );
 				}
 			}
 		};
 
-		saveButton.addListener(SWT.Selection, rssSaveListener);
+		saveButton.addListener(SWT.Selection, saveListener);
 
 		addButton.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -1349,7 +1431,7 @@ public class SubscriptionWizard {
 		}
 	}
 
-	private void setMode(int mode) {
+	private void setMode(int _mode) {
 		addButton.setVisible(false);
 		searchButton.setVisible(false);
 		saveButton.setVisible(false);
@@ -1360,13 +1442,15 @@ public class SubscriptionWizard {
 
 		String titleText = TITLE_OPT_IN;
 
-		if ( mode != MODE_OPT_IN ){
+		if ( _mode != MODE_OPT_IN ){
 			if ( rss_feed_url != null ){
-				mode = MODE_CREATE_RSS;
+				_mode = MODE_CREATE_RSS;
 				feedUrl.setText( rss_feed_url.toExternalForm());
 				rss_feed_url = null;
 			}
 		}
+		mode = _mode;
+		
 		switch (mode) {
 		case MODE_SUBSCRIBE :
 			mainLayout.topControl = availableSubscriptionComposite;
@@ -1379,7 +1463,7 @@ public class SubscriptionWizard {
 		case MODE_CREATE_RSS :
 			mainLayout.topControl = createComposite;
 			createTabFolder.setSelection(createRSSTabItem);
-			titleText = TITLE_CREATE;
+			titleText = TITLE_CREATE_RSS;
 			availableButton.setVisible(true);
 			saveButton.setVisible(true);
 			shell.setDefaultButton(saveButton);
@@ -1388,10 +1472,18 @@ public class SubscriptionWizard {
 		case MODE_CREATE_SEARCH :
 			mainLayout.topControl = createComposite;
 			createTabFolder.setSelection(createSearchTabItem);
-			titleText = TITLE_CREATE;
+			titleText = TITLE_CREATE_RSS;
 			availableButton.setVisible(true);
 			searchButton.setVisible(true);
 			shell.setDefaultButton(searchButton);
+			break;
+
+		case MODE_CREATE_TEMPLATE :
+			mainLayout.topControl = createComposite;
+			createTabFolder.setSelection(createTemplateTabItem);
+			titleText = TITLE_CREATE_TEMPLATE;
+			saveButton.setVisible(true);
+			shell.setDefaultButton(saveButton);
 			break;
 
 		case MODE_OPT_IN:

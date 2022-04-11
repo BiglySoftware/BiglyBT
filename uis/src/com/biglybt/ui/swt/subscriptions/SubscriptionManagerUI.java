@@ -2014,6 +2014,9 @@ SubscriptionManagerUI
 					});
 				}
 			});
+			
+			addDependsOnSubMenu( menu_manager, menu_creator, all_subs );
+			
 			return;
 		}
 
@@ -2256,6 +2259,8 @@ SubscriptionManagerUI
 				}
 			});
 
+			addDependsOnSubMenu( menu_manager, menu_creator, all_subs );
+			
 				// view options
 			
 			menuItem = menu_creator.createMenu( "menu.view.options");
@@ -2773,6 +2778,132 @@ SubscriptionManagerUI
 		});
 	}
 
+	private static void
+	addDependsOnSubMenu(
+		MenuManager		menu_manager,
+		MenuCreator		menu_creator,
+		Subscription[]	menu_subs )	
+	{
+		MenuItem menuItem = menu_creator.createMenu( "menu.depends.on");
+
+		menuItem.setStyle( MenuItem.STYLE_MENU );
+
+		menuItem.addFillListener(
+			new MenuItemFillListener()
+			{
+				@Override
+				public void
+				menuWillBeShown(
+					MenuItem 	menu,
+					Object 		data )
+				{
+					menu.removeAllChildItems();
+
+					SubscriptionManager subs_man = SubscriptionManagerFactory.getSingleton();
+
+					Subscription[] all_subs = subs_man.getSubscriptions( true );
+
+					List<Subscription>	templates = new ArrayList<>();
+					
+					for ( Subscription sub: all_subs ){
+						
+						if ( sub.isSubscriptionTemplate()){
+							
+							templates.add( sub );
+						}
+					}
+					
+					if ( templates.isEmpty()){
+						
+						MenuItem mi = menu_manager.addMenuItem( menu, "menu.no.subs.templates" );
+
+						mi.setStyle( MenuItem.STYLE_RADIO );
+						
+						mi.setData( true );
+						
+						mi.setEnabled( false );
+						
+					}else{
+						
+						Set<Subscription>	enabled = new HashSet<>();
+						
+						List<Subscription> menu_templates = new ArrayList<>();
+						
+						for ( Subscription subs: menu_subs ){
+							
+							if ( subs.isSubscriptionTemplate()){
+								
+								menu_templates.add( subs );
+								
+								continue;
+							}
+							
+							List<Subscription> depends_on = subs.getDependsOn();
+							
+							if ( depends_on.isEmpty()){
+								
+								enabled.clear();
+								
+								break;
+								
+							}else{
+								
+								if ( enabled.isEmpty()){
+									
+									enabled.addAll( depends_on );
+									
+								}else{
+									
+									enabled.retainAll( depends_on );
+									
+									if ( enabled.isEmpty()){
+										
+										break;
+									}
+								}
+							}
+						}
+						
+						Collections.sort( templates,(t1,t2)->t1.getName().compareTo(t2.getName()));
+						
+						for ( Subscription sub: templates ){
+							
+							if ( menu_templates.contains( sub )){
+								
+								continue;
+							}
+							
+							MenuItem mi = menu_manager.addMenuItem( menu, "!" + sub.getName() + "!" );
+
+							mi.setStyle( MenuItem.STYLE_CHECK );
+							
+							boolean enable = enabled.contains( sub );
+							
+							mi.setData( enable );
+
+							mi.addMultiListener((m,target)->{							
+								for ( Subscription s: menu_subs ){
+									
+									List<Subscription> deps = s.getDependsOn();
+									
+									if ( enable ){
+										
+										deps.remove( sub );
+										
+									}else{
+										
+										deps.add( sub );
+									}
+									
+									s.setDependsOn( deps );
+								}
+							});
+						}
+					}
+				}
+			});
+	}
+	
 	private static void
 	addCategorySubMenu(
 		MenuManager				menu_manager,
@@ -3333,6 +3464,8 @@ SubscriptionManagerUI
 				selected(subs.toArray( new Subscription[0]));
 			}else if ( target instanceof Subscription ){
 				selected((Subscription)target);
+			}else{
+				Debug.out( "target " + target + " not handled" );
 			}
 		}
 

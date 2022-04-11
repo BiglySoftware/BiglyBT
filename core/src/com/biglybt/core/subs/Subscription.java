@@ -20,6 +20,8 @@
 
 package com.biglybt.core.subs;
 
+import java.util.List;
+
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl;
@@ -111,6 +113,19 @@ Subscription
 	public boolean
 	isShareable();
 
+	public boolean
+	isSubscriptionTemplate();
+	
+	public long
+	getMetadataMutationIndicator();
+	
+	public List<Subscription>
+	getDependsOn();
+	
+	public void
+	setDependsOn(
+		List<Subscription>	subs );
+	
 	@Override
 	public boolean
 	isSearchTemplate();

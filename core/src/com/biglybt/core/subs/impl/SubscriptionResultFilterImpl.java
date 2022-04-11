@@ -12,6 +12,7 @@ import org.json.simple.JSONObject;
 
 import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.core.metasearch.Result;
+import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionException;
 import com.biglybt.core.subs.SubscriptionResultFilter;
 import com.biglybt.core.util.DisplayFormatters;
@@ -227,6 +228,57 @@ SubscriptionResultFilterImpl
 	}
 	
 	@Override
+	public long 
+	getDependenciesVersion()
+	{
+		long result = 0;
+		
+		List<Subscription> deps = getDependsOn();
+		
+		for ( Subscription dep: deps ){
+			
+			result += dep.getMetadataMutationIndicator();
+		}
+		
+		return( result );
+	}
+	
+	@Override
+	public List<Subscription>
+	getDependsOn()
+	{
+		List<Subscription> result = new ArrayList<Subscription>();
+		
+		getDependsOn( subs, result );
+		
+		return( result );
+	}
+	
+	private void
+	getDependsOn(
+		Subscription 		subs,
+		List<Subscription>	result )
+	{
+		if ( subs != null ){
+			
+			List<Subscription> deps = subs.getDependsOn();
+			
+			if ( deps != null ){
+				
+				for ( Subscription dep: deps ){
+					
+					if ( !result.contains( dep )){
+						
+						result.add( dep );
+						
+						getDependsOn( dep, result );
+					}
+				}
+			}
+		}
+	}
+	
+	@Override
 	public void
 	save()
 
@@ -249,6 +301,7 @@ SubscriptionResultFilterImpl
 		subs.setDetails( subs.getName( false ), subs.isPublic(), map.toString());
 	}
 
+	@Override
 	public String
 	getString()
 	{
@@ -257,10 +310,10 @@ SubscriptionResultFilterImpl
 		res = addString( res, "-", getString(excludeTextFilters));
 
 		res = addString( res, "cat=", categoryFilter );
-		res = addString( res, "min-size=", minSize<=0?null:DisplayFormatters.formatByteCountToKiBEtc(minSize));
-		res = addString( res, "max-size=", maxSize<=0?null:DisplayFormatters.formatByteCountToKiBEtc(maxSize));
-		res = addString( res, "min-seeds=", minSeeds<=0?null:String.valueOf(minSeeds));
-		res = addString( res, "max-age=", maxAgeSecs<=0?null:TimeFormatter.format3( maxAgeSecs, null, true ) );
+		res = addString( res, ">=", minSize<=0?null:DisplayFormatters.formatByteCountToKiBEtc(minSize));
+		res = addString( res, "<=", maxSize<=0?null:DisplayFormatters.formatByteCountToKiBEtc(maxSize));
+		res = addString( res, "s>=", minSeeds<=0?null:String.valueOf(minSeeds));
+		res = addString( res, "a<=", maxAgeSecs<=0?null:TimeFormatter.format3( maxAgeSecs, null, true ) );
 
 		return( res );
 	}
@@ -377,9 +430,34 @@ SubscriptionResultFilterImpl
 		return fResults;
 	}
 	
-	@Override
 	public boolean 
 	isFiltered(
+		FilterableResult result )
+	{
+		if ( isFilteredSupport( result )){
+			
+			return( true );
+		}
+		
+		List<Subscription> deps = getDependsOn();
+		
+		for ( Subscription dep: deps ){
+			
+			try{
+				if (((SubscriptionImpl)dep).getFilters().isFiltered( result )){
+				
+					return( true );
+				}
+			}catch( Throwable e ){
+				
+			}
+		}
+		
+		return( false );
+	}
+	
+	public boolean 
+	isFilteredSupport(
 		FilterableResult result )
 	{
 		String name = result.getName();

@@ -69,6 +69,12 @@ SubscriptionManager
 		throws SubscriptionException;
 
 	public Subscription
+	createSubscriptionTemplate(
+		String		name )
+	
+		throws SubscriptionException;
+	
+	public Subscription
 	createFromURI(
 		String		uri )
 

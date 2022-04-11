@@ -114,6 +114,8 @@ SBC_SubscriptionResultsView
 
 	private Subscription	 			ds;
 	private SubscriptionResultFilter	ds_filter = SubscriptionResultFilter.getTransientFilter();
+	private Runnable 					pFilterUpdater;
+	private long						ds_filter_version = -1;
 	
 	private List<SubscriptionResultFilterable>	last_selected_content = new ArrayList<>();
 
@@ -268,7 +270,7 @@ SBC_SubscriptionResultsView
 
 			cFilters.setLayout( layout );
 
-			Runnable pFilterUpdater = null;
+			pFilterUpdater = null;
 
 			if ( ds != null && ds.isUpdateable()){
 
@@ -282,6 +284,9 @@ SBC_SubscriptionResultsView
 
 					pFilters.setLayout( layout );
 
+					final Label deplabel = new Label( pFilters, SWT.NONE );
+					deplabel.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
+					
 					final Label pflabel = new Label( pFilters, SWT.NONE );
 					pflabel.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 										
@@ -291,6 +296,48 @@ SBC_SubscriptionResultsView
 						public void
 						run()
 						{
+							if ( pflabel.isDisposed()){
+								
+								if ( pFilterUpdater == this ){
+									
+									pFilterUpdater = null;
+								}
+								
+								return;
+							}
+							
+							List<Subscription> deps = ds_filter.getDependsOn();
+							
+							if ( deps != null && !deps.isEmpty()){
+								
+								String str = "";
+								for ( Subscription dep: deps ){
+									str += (str.isEmpty()?"":"; ") + dep.getName();
+									
+									try{
+										str += " {" + dep.getFilters().getString() + "}";
+									}catch( Throwable e ){
+									}
+								}
+								
+								deplabel.setText( MessageText.getString( "subs.inherited.filters" ) + ": " + str );
+								
+								deplabel.setVisible( true );
+								GridData gd = (GridData)deplabel.getLayoutData();
+								if ( gd.widthHint == 0 ){
+									gd.widthHint = gd.heightHint = SWT.DEFAULT;
+									parent.getParent().getParent().layout(true, true);
+								}
+								
+							}else{
+								deplabel.setVisible( false );
+								GridData gd = (GridData)deplabel.getLayoutData();
+								if ( gd.widthHint != 0 ){
+									gd.widthHint = gd.heightHint = 0;
+									parent.getParent().getParent().layout(true, true);
+								}
+							}
+							
 							long kInB = DisplayFormatters.getKinB();
 							long mInB = kInB*kInB;
 
@@ -910,6 +957,16 @@ SBC_SubscriptionResultsView
 						}
 					});
 			}
+		}else if ( reason == CR_METADATA ){
+			
+			if ( pFilterUpdater != null ){
+				
+				Utils.execSWTThread(()->{
+					
+					pFilterUpdater.run();
+				});
+			}
+
 		}
 	}
 
@@ -1445,9 +1502,36 @@ SBC_SubscriptionResultsView
 	@Override
 	public void
 	updateUI()
-	{
+	{	
 		if ( tv_subs_results != null ){
 
+			SubscriptionResultFilter	rf = ds_filter;
+			
+			if ( rf != null ){
+			
+				long new_v = rf.getDependenciesVersion();
+				
+				long old_v = ds_filter_version;
+				
+				if ( old_v != new_v ){
+					
+					ds_filter_version = new_v;
+				
+					if ( old_v != -1 ){
+						
+						refilter_dispatcher.dispatch();
+						
+						if ( pFilterUpdater != null ){
+							
+							Utils.execSWTThread(()->{
+								
+								pFilterUpdater.run();
+							});
+						}
+					}
+				}
+			}
+			
 			tv_subs_results.refreshTable( false );
 		}
 	}
