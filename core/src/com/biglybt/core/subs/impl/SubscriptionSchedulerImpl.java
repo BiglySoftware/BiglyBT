@@ -974,7 +974,8 @@ SubscriptionSchedulerImpl
 	@Override
 	public void
 	subscriptionChanged(
-		Subscription		subscription )
+		Subscription		subscription,
+		int					reason )
 	{
 		calculateSchedule();
 	}

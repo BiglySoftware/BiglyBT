@@ -818,7 +818,7 @@ SubscriptionImpl
 			}
 		}
 		
-		manager.configDirty( this );
+		manager.configDirty( this, SubscriptionListener.CR_METADATA );
 		
 		fireChanged( SubscriptionListener.CR_METADATA );
 	}
@@ -869,7 +869,7 @@ SubscriptionImpl
 
 			singleton_sp_attempted = true;
 
-			manager.configDirty( this );
+			manager.configDirty( this, SubscriptionListener.CR_METADATA );
 		}
 	}
 
@@ -916,7 +916,7 @@ SubscriptionImpl
 	{
 		local_name = str;
 
-		manager.configDirty( this );
+		manager.configDirty( this, SubscriptionListener.CR_METADATA );
 
 		fireChanged(SubscriptionListener.CR_METADATA);
 	}
@@ -2300,7 +2300,7 @@ SubscriptionImpl
 			md_mutator.incrementAndGet();
 		}
 		
-		manager.configDirty( this );
+		manager.configDirty( this, reason );
 
 		Iterator it = listeners.iterator();
 

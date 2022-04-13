@@ -32,7 +32,8 @@ SubscriptionManagerListener
 
 	public void
 	subscriptionChanged(
-		Subscription		subscription );
+		Subscription		subscription,
+		int					reason );
 
 	public void
 	subscriptionSelected(

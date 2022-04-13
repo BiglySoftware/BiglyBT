@@ -309,9 +309,12 @@ SubscriptionResultFilterImpl
 
 		res = addString( res, "-", getString(excludeTextFilters));
 
+		long kInB = DisplayFormatters.getKinB();
+		long mInB = kInB*kInB;
+		
 		res = addString( res, "cat=", categoryFilter );
-		res = addString( res, ">=", minSize<=0?null:DisplayFormatters.formatByteCountToKiBEtc(minSize));
-		res = addString( res, "<=", maxSize<=0?null:DisplayFormatters.formatByteCountToKiBEtc(maxSize));
+		res = addString( res, ">=", minSize<=0?null:(minSize/mInB)+" MB");
+		res = addString( res, "<=", maxSize<=0?null:(maxSize/mInB)+" MB");
 		res = addString( res, "s>=", minSeeds<=0?null:String.valueOf(minSeeds));
 		res = addString( res, "a<=", maxAgeSecs<=0?null:TimeFormatter.format3( maxAgeSecs, null, true ) );
 

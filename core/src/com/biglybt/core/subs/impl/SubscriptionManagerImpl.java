@@ -2204,16 +2204,17 @@ SubscriptionManagerImpl
 
 	protected void
 	changeSubscription(
-		SubscriptionImpl		subs )
+		SubscriptionImpl		subs,
+		int						reason )
 	{
 		if ( !subs.isRemoved()){
 
-			Iterator it = listeners.iterator();
+			Iterator<SubscriptionManagerListener> it = listeners.iterator();
 
 			while( it.hasNext()){
 
 				try{
-					((SubscriptionManagerListener)it.next()).subscriptionChanged( subs );
+					it.next().subscriptionChanged( subs, reason );
 
 				}catch( Throwable e ){
 
@@ -7960,9 +7961,10 @@ SubscriptionManagerImpl
 
 	protected void
 	configDirty(
-		SubscriptionImpl		subs )
+		SubscriptionImpl		subs,
+		int						reason )
 	{
-		changeSubscription( subs );
+		changeSubscription( subs, reason );
 
 		configDirty();
 	}

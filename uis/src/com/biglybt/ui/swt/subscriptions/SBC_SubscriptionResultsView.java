@@ -315,7 +315,7 @@ SBC_SubscriptionResultsView
 									str += (str.isEmpty()?"":"; ") + dep.getName();
 									
 									try{
-										str += " {" + dep.getFilters().getString() + "}";
+										str += " {" + dep.getFilters().getString().replaceAll("&","&&") + "}";
 									}catch( Throwable e ){
 									}
 								}
