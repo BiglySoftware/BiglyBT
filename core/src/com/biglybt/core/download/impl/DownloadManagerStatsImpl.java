@@ -1641,9 +1641,15 @@ DownloadManagerStatsImpl
 		if (sizeExcludingDND < 0) {
 			return 0;
 		}
-		float pct = (sizeExcludingDND - getRemainingExcludingDND()) / (float) sizeExcludingDND;
+		long rem = getRemainingExcludingDND();
+		float pct = (sizeExcludingDND - rem) / (float) sizeExcludingDND;
 
-		return (int) (1000 * pct);
+		int result =  (int) (1000 * pct);
+		
+		if ( result == 1000 && rem > 0 ){
+			result = 999;
+		}
+		return( result );
 	}
 
 
