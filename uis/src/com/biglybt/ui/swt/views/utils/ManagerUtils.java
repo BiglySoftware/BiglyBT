@@ -3456,6 +3456,121 @@ public class ManagerUtils {
 							int	action_count 		= 0;
 							int internal_link_count	= 0;
 							
+								// pre-scan candidates to see if there is a preferred order for multiple-hits
+							
+							Map<String,int[]>	candidate_root_map = new HashMap<>();
+							boolean				has_multiple_candidates = false;
+							String				candidate_root_pref	= null;
+							int					candidate_root_pref_count	= 0;
+							
+							for ( final DiskManagerFileInfo file: files ){
+
+								if ( file.getTorrentFile().isPadFile()){
+									
+									continue;
+								}
+
+								if ( selected_file_indexes != null ){
+
+									if ( !selected_file_indexes.contains( file.getIndex())){
+
+										continue;
+									}
+								}
+
+								long	file_length = file.getLength();
+
+								if ( file.getDownloaded() == file_length ){
+
+									// edge case where file has been deleted but cached download info not reset yet
+
+									if ( file.getFile( true ).exists()){
+
+										already_complete++;
+
+										continue;
+									}
+								}
+
+								if ( !include_skipped ){
+
+									if ( file.isSkipped()){
+
+										skipped++;
+
+										continue;
+									}
+								}
+								
+								Set<File> candidates = file_map.get( file_length );
+
+								if ( candidates == null ){
+									
+									continue;
+								}
+								
+								if ( candidates.size() > 1 ){
+									
+									has_multiple_candidates = true;
+								}
+								
+								for ( File candidate: candidates ){
+									
+									File root = candidate;
+
+									String rel = file.getTorrentFile().getRelativePath();
+	
+									int pos = 0;
+	
+									while( root != null ){
+	
+										root = root.getParentFile();
+	
+										pos = rel.indexOf( File.separatorChar, pos );
+	
+										if ( pos >= 0 ){
+	
+											pos = pos+1;
+	
+										}else{
+	
+											break;
+										}
+									}
+									
+									if ( root != null ){
+										
+										String root_str = root.getAbsolutePath();
+										
+										int[] count = candidate_root_map.get( root_str );
+										
+										if ( count == null ){
+											
+											count = new int[]{ 0 };
+											
+											candidate_root_map.put( root_str, count );
+										}
+										
+										int num = ++count[0];
+										
+										if ( num > candidate_root_pref_count ){
+										
+											candidate_root_pref_count 	= num;
+											candidate_root_pref			= root_str;
+										}
+									}
+								}
+							}
+							
+							if ( has_multiple_candidates && candidate_root_map.size() > 1 ){
+								
+								logLine( viewer, dm_indent, "Multiple candidates, preferred root is " + candidate_root_pref );
+
+							}else{
+								
+								candidate_root_pref = null;
+							}
+							
 							try{
 	
 								download_loop:
@@ -3506,7 +3621,7 @@ public class ManagerUtils {
 											}
 										}
 	
-										Set<File> candidates = file_map.get( file_length );
+										Set<File> general_candidates = file_map.get( file_length );
 	
 										String extra_info = "";
 	
@@ -3592,37 +3707,37 @@ public class ManagerUtils {
 	
 												boolean duplicated = false;
 	
-												if ( candidates != null ){
+												if ( general_candidates != null ){
 	
-													candidates = new HashSet<>( candidates );
+													general_candidates = new HashSet<>( general_candidates );
 	
 													duplicated = true;
 												}
 	
 												for ( Set<File> s: extra_candidates ){
 	
-													if ( candidates == null ){
+													if ( general_candidates == null ){
 	
-														candidates = s;
+														general_candidates = s;
 	
 													}else{
 	
 														if ( !duplicated ){
 	
-															candidates = new HashSet<>( candidates );
+															general_candidates = new HashSet<>( general_candidates );
 	
 															duplicated = true;
 														}
 	
-														candidates.addAll( s );
+														general_candidates.addAll( s );
 													}
 												}
 											}
 										}
 	
-										if ( candidates != null ){
+										if ( general_candidates != null ){
 	
-											if ( candidates.size() > 0 ){
+											if ( general_candidates.size() > 0 ){
 	
 												// remove any incomplete files from existing downloads
 	
@@ -3650,7 +3765,7 @@ public class ManagerUtils {
 													}
 												}
 	
-												Iterator<File> it = candidates.iterator();
+												Iterator<File> it = general_candidates.iterator();
 	
 												while( it.hasNext()){
 	
@@ -3663,12 +3778,12 @@ public class ManagerUtils {
 												}
 											}
 	
-											if ( candidates.size() > 0 ){
-	
-												// duplicate now as this is download-specific
-	
-												candidates = new HashSet<>( candidates );
-	
+												// must duplicate as modified below
+											
+											LinkedList<File> dm_candidates = new LinkedList<>( general_candidates );
+											
+											if ( dm_candidates.size() > 0 ){
+		
 												// remove all files from this download
 	
 												if ( dm_files == null ){
@@ -3681,7 +3796,7 @@ public class ManagerUtils {
 													}
 												}
 	
-												Iterator<File> it = candidates.iterator();
+												Iterator<File> it = dm_candidates.iterator();
 	
 												while( it.hasNext()){
 	
@@ -3694,7 +3809,7 @@ public class ManagerUtils {
 												}
 											}
 	
-											if ( candidates.size() > 0 ){
+											if ( dm_candidates.size() > 0 ){
 	
 												boolean	matched = false;
 	
@@ -3735,7 +3850,7 @@ public class ManagerUtils {
 															viewer, file_indent,
 															to_file.getRelativePath() + 
 															" (size=" + DisplayFormatters.formatByteCountToKiBEtc(to_file.getLength()) +
-															(extra_info.isEmpty()?"":(", extra: " + extra_info )) + ")" + " - " + candidates.size() + " candidate(s)" );
+															(extra_info.isEmpty()?"":(", extra: " + extra_info )) + ")" + " - " + dm_candidates.size() + " candidate(s)" );
 	
 													byte[]	buffer = new byte[(int)piece_size];
 	
@@ -3743,7 +3858,24 @@ public class ManagerUtils {
 													boolean				to_raf_tried 	= false;
 													
 													try{
-														for ( File from_file: candidates ){
+														if ( dm_candidates.size() > 1 && candidate_root_pref != null ){
+															
+															for ( Iterator<File> it=dm_candidates.iterator(); it.hasNext();){
+																
+																File candidate = it.next();
+																
+																if ( candidate.getAbsolutePath().startsWith(candidate_root_pref)){
+																	
+																	it.remove();
+																	
+																	dm_candidates.addFirst( candidate );
+																	
+																	break;
+																}
+															}
+														}
+														
+														for ( File from_file: dm_candidates ){
 		
 															synchronized( quit ){
 																if ( quit[0] ){
