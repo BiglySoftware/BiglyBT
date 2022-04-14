@@ -945,11 +945,13 @@ SBC_SubscriptionResultsView
 	{
 		if ( reason == CR_RESULTS){
 
-			if ( tv_subs_results != null ) {
+			TableViewSWT<SubscriptionResultFilterable> tv = tv_subs_results;
+					
+			if ( tv != null ) {
 
 				reconcileResults( subs );
 
-				tv_subs_results.runForAllRows(
+				tv.runForAllRows(
 					new TableGroupRowRunner() {
 						@Override
 						public void run(TableRowCore row) {
