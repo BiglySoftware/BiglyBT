@@ -4565,7 +4565,7 @@ public class ManagerUtils {
 															
 															if ( file.setLink( source_file )){
 		
-																logLine( viewer, action_indent+1, "Linked successful" );
+																logLine( viewer, action_indent+1, "Link successful" );
 		
 																fixed_files.add( file );
 		
