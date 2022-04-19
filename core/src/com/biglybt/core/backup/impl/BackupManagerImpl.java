@@ -657,14 +657,17 @@ BackupManagerImpl
 	
 				File[] files = from_file.listFiles();
 	
-				for ( File f: files ){
-	
-					checkClosing();
-	
-					long[] temp = copyFilesSupport( f, FileUtil.newFile( to_file, f.getName()), depth+1 );
-	
-					total_files 	+= temp[0];
-					total_copied	+= temp[1];
+				if ( files != null ){
+					
+					for ( File f: files ){
+		
+						checkClosing();
+		
+						long[] temp = copyFilesSupport( f, FileUtil.newFile( to_file, f.getName()), depth+1 );
+		
+						total_files 	+= temp[0];
+						total_copied	+= temp[1];
+					}
 				}
 			}
 		}else{
@@ -954,6 +957,8 @@ BackupManagerImpl
 			}
 		}catch( Throwable e ){
 
+			Debug.out( e );
+			
 			_listener.reportError( e );
 		}
 	}
@@ -1292,6 +1297,8 @@ BackupManagerImpl
 			}
 		}catch( Throwable e ){
 
+			Debug.out( e );
+			
 			listener.reportError( e );
 		}
 	}
