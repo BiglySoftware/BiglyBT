@@ -56,6 +56,13 @@ public class ConfigSectionFileMove
 				BCFG_FILE_MOVE_DOWNLOAD_REMOVED_ONLY_IN_DEFAULT,
 				BCFG_FILE_MOVE_DOWNLOAD_REMOVED_MOVE_PARTIAL);
 
+		// add sub-dir
+		
+		BooleanParameterImpl addSubDir = new BooleanParameterImpl(
+				BCFG_FILE_MOVE_ADD_SUB_FOLDER,	"ConfigView.label.move.add.sub.dir");
+		add(addSubDir);
+
+		
 		// temp folder
 		
 		BooleanParameterImpl useTempFolder = new BooleanParameterImpl(

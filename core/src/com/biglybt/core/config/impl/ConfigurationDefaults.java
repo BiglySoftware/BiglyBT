@@ -731,6 +731,7 @@ public class ConfigurationDefaults {
     def.put( "Completed Files Directory", "" );
     def.put( "Move Only When In Default Save Dir", TRUE );
     def.put( "Move Torrent When Done", TRUE );
+    def.put( ConfigKeys.File.BCFG_FILE_MOVE_ADD_SUB_FOLDER, FALSE );
     def.put( ConfigKeys.File.SCFG_FILE_USE_TEMP_AND_MOVE_PATH, "" );
     def.put( ConfigKeys.File.BCFG_FILE_USE_TEMP_AND_MOVE_ENABLE, FALSE );
 

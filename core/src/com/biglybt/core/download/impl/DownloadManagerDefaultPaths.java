@@ -21,6 +21,7 @@ import java.io.File;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.tag.Tag;
@@ -37,6 +38,11 @@ import com.biglybt.pifimpl.local.download.DownloadImpl;
 
 public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils {
 
+	private static final int REASON_DEFAULTS	= 0;
+	private static final int REASON_INIT		= 1;
+	private static final int REASON_COMPLETE	= 2;
+	private static final int REASON_REMOVE		= 3;
+	
 	public final static DefaultSaveLocationManager DEFAULT_HANDLER = new DefaultSaveLocationManager() {
 		@Override
 		public SaveLocationChange onInitialization(Download d, boolean for_move, boolean on_event) {
@@ -50,25 +56,25 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 			if (on_event) {return null;}
 
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
-			return determinePaths(dm, UPDATE_FOR_MOVE_DETAILS[1], for_move, false); // 1 - incomplete downloads
+			return determinePaths(dm, UPDATE_FOR_MOVE_DETAILS[1], for_move, false, REASON_INIT); // 1 - incomplete downloads
 		}
 		@Override
 		public SaveLocationChange onCompletion(Download d, boolean for_move, boolean on_event) {
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
 			MovementInformation mi = getDownloadOrTagCompletionMovementInformation( dm, COMPLETION_DETAILS );
-			return determinePaths(dm, mi, for_move, false);
+			return determinePaths(dm, mi, for_move, false, REASON_COMPLETE);
 		}
 		@Override
 		public SaveLocationChange testOnCompletion(Download d, boolean for_move, boolean on_event) {
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
 			MovementInformation mi = getDownloadOrTagCompletionMovementInformation( dm, COMPLETION_DETAILS );
-			return determinePaths(dm, mi, for_move, true );
+			return determinePaths(dm, mi, for_move, true, REASON_COMPLETE );
 		}
 		@Override
 		public SaveLocationChange onRemoval(Download d, boolean for_move, boolean on_event) {
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
 			MovementInformation mi = getDownloadOrTagRemovalMovementInformation( dm, REMOVAL_DETAILS );
-			return determinePaths(dm, mi, for_move, false );
+			return determinePaths(dm, mi, for_move, false, REASON_REMOVE );
 		}
 		@Override
 		public boolean isInDefaultSaveDir(Download d) {
@@ -534,7 +540,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 		TargetSpecification ts = null;
 		for (int i=0; i<DEFAULT_DIRS.length; i++) {
 			ts = DEFAULT_DIRS[i];
-			File[] targets = ts.getTargets(null, ts);
+			File[] targets = ts.getTargets(null, ts, REASON_DEFAULTS);
 			if (targets[0] != null) {
 				results.add(targets[0]);
 			}
@@ -547,7 +553,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
     /**
      * This does the guts of determining appropriate file paths.
      */
-    static SaveLocationChange determinePaths(DownloadManager dm, MovementInformation mi, boolean check_source, boolean is_test) {
+    static SaveLocationChange determinePaths(DownloadManager dm, MovementInformation mi, boolean check_source, boolean is_test, int reason ) {
 		boolean proceed = !check_source || mi.source.matchesDownload(dm, mi, is_test );
 		if (!proceed) {
 			logInfo("Cannot consider " + describe(dm, mi) +
@@ -555,7 +561,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 			return null;
 		}
 
-		File[] target_paths = mi.target.getTargets(dm, mi);
+		File[] target_paths = mi.target.getTargets(dm, mi, reason);
 		if (target_paths[0] == null && target_paths[1] == null) {
 			logInfo("Unable to determine an appropriate target for " +
 			    describe(dm, mi) + ".", dm);
@@ -693,7 +699,49 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 
 	private static class TargetSpecification extends ParameterHelper {
 
-		public File[] getTargets(DownloadManager dm, ContextDescriptor cd) {
+		public File[] 
+		getTargets(
+			DownloadManager 	dm, 
+			ContextDescriptor 	cd,
+			int					reason ) 
+		{
+			File[] targets = getTargetsSupport(dm, cd);
+			
+			if ( dm != null && ( reason == REASON_COMPLETE || reason == REASON_REMOVE )){
+				
+				if ( COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_FILE_MOVE_ADD_SUB_FOLDER )){
+
+					String name = dm.getDisplayName();
+					
+					name = FileUtil.convertOSSpecificChars( name, true );
+					
+					if ( !name.isEmpty()){
+						
+						File	data_dir 	= targets[0];
+						
+						if ( data_dir != null ){
+							
+							targets[0] = new File( data_dir, name );
+						
+							File	torrent_dir	= targets[1];
+	
+							if ( torrent_dir != null && torrent_dir.equals( data_dir )){
+								
+								targets[1] = new File( torrent_dir, name );
+							}	
+						}
+					}
+				}
+			}
+			
+			return( targets );
+		}
+		
+		public File[] 
+		getTargetsSupport(
+			DownloadManager 	dm, 
+			ContextDescriptor 	cd ) 
+		{
 
 			File	data_target;
 			File	torrent_target;
