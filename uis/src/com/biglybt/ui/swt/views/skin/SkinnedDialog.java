@@ -20,6 +20,7 @@
 
 package com.biglybt.ui.swt.views.skin;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -159,6 +160,10 @@ public class SkinnedDialog
 	}
 
 	public void open(String idShellMetrics, boolean bringToFront ) {
+		open( idShellMetrics, bringToFront, null );
+	}
+	
+	public void open(String idShellMetrics, boolean bringToFront, Shell moveBelow ) {
 		if (disposed) {
 			Debug.out("can't opened disposed skinnedialog");
 			return;
@@ -178,7 +183,17 @@ public class SkinnedDialog
 		}
 
 		shell.setData( "bringToFront", bringToFront );
-		shell.open();
+		
+		if ( moveBelow == null ){
+			
+			shell.open();
+			
+		}else{
+
+			shell.moveBelow(moveBelow);
+
+			shell.setVisible(true);
+		}
 	}
 
 	public SWTSkin getSkin() {

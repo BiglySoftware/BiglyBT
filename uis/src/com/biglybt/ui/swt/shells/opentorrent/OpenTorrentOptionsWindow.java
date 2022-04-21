@@ -114,6 +114,8 @@ import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 public class OpenTorrentOptionsWindow
 	implements UIUpdatable
 {
+	private static final AtomicInteger	window_id_next = new AtomicInteger();
+	
 	private static final Map<HashWrapper,OpenTorrentOptionsWindow>	active_windows = new HashMap<>();
 
 	private static TimerEventPeriodic	active_window_checker;
@@ -272,6 +274,8 @@ public class OpenTorrentOptionsWindow
 	}
 
 
+	private final int window_id = window_id_next.incrementAndGet();
+	
 	private SkinnedDialog 			dlg;
 	private ImageLoader 			image_loader;
 	private SWTSkinObjectSash 		sash_object;
@@ -667,9 +671,32 @@ public class OpenTorrentOptionsWindow
 					 */
 				
 				Runnable doOpen = ()->{
-					dlg.open("otow",false);
-	
+					
 					boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_SEP );
+
+					OpenTorrentOptionsWindow moveBelow = null;
+					
+					if ( separate_dialogs ){
+												
+						synchronized( active_windows ){
+				
+							for ( OpenTorrentOptionsWindow window: active_windows.values()){
+		
+								if ( window == this || !window.isInitialised()){
+		
+									continue;
+								}
+								
+								if ( 	moveBelow == null || 
+										moveBelow.window_id < window.window_id ){
+									
+									moveBelow = window;
+								}
+							}
+						}
+					}
+					
+					dlg.open("otow",false,moveBelow==null?null:moveBelow.getShell());
 	
 					if ( separate_dialogs ){
 						
@@ -692,7 +719,7 @@ public class OpenTorrentOptionsWindow
 		
 										continue;
 									}
-		
+											
 									Rectangle rect = window.getBounds();
 		
 									max_x = Math.max( max_x, rect.x );
@@ -1776,6 +1803,12 @@ public class OpenTorrentOptionsWindow
 		}
 	}
 
+	private Shell
+	getShell()
+	{
+		return( dlg.getShell());
+	}
+	
 	private Rectangle
 	getBounds()
 	{
