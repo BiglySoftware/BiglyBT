@@ -117,10 +117,19 @@ FMFileUnlimited
 
 			got_mon = true;
 			
-			ensureOpen( "FMFileUnlimited:getLength" );
-
-			return( getLengthSupport());
-
+				// if the file doesn't exist then we don't want to ensure it is open to get the length
+				// as this will create the file
+			
+			if ( !exists()){
+				
+				return( 0 );
+				
+			}else{
+				
+				ensureOpen( "FMFileUnlimited:getLength" );
+	
+				return( getLengthSupport());
+			}
 		}finally{
 
 			if ( got_mon ){

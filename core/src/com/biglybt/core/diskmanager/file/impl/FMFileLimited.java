@@ -166,10 +166,19 @@ FMFileLimited
 			
 			got_mon = true;
 			
-			ensureOpen( "FMFileLimited:getLength" );
+				// if the file doesn't exist then we don't want to ensure it is open to get the length
+				// as this will create the file
+			
+			if ( !exists()){
+				
+				return( 0 );
+				
+			}else{
+			
+				ensureOpen( "FMFileLimited:getLength" );
 
-			return( getLengthSupport());
-
+				return( getLengthSupport());
+			}
 		}finally{
 
 			if ( got_mon ){
