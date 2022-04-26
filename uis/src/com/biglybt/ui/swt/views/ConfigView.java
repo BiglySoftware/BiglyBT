@@ -1008,7 +1008,7 @@ public class ConfigView implements UISWTViewCoreEventListener {
 			
 		}else{
 			
-			child.setBackground(Utils.isDarkAppearanceNative()?Colors.grey:Colors.fadedYellow );
+			child.setBackground(Utils.isDarkAppearanceNative()?Colors.dark_grey:Colors.fadedYellow );
 		}
 		
 		if ( child instanceof Composite ){
