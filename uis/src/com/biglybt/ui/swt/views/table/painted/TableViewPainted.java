@@ -2152,6 +2152,11 @@ public class TableViewPainted
 		setRowDefaultHeightPX(newHeight);
 		TableRowCore[] rows = getRowsAndSubRows(true);
 		if (rows.length == 0) {
+				// still want table to redraw (especially when using alternate line colours...)
+			Utils.execSWTThreadLater(0,()->{
+				swt_updateCanvasImage(false);
+			});
+			
 			return;
 		}
 		for (TableRowCore row : rows) {
