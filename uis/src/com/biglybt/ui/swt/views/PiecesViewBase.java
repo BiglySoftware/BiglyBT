@@ -44,19 +44,16 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
-import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
-import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
-import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
 import com.biglybt.core.util.CopyOnWriteSet;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.IdentityHashSet;
@@ -65,7 +62,6 @@ import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
-import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.mdi.MdiEntry;
@@ -80,9 +76,8 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.piece.MyPieceDistributionView;
-import com.biglybt.ui.swt.views.piece.PieceInfoView;
+import com.biglybt.ui.swt.views.piece.PieceMapView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -331,7 +326,7 @@ public abstract class PiecesViewBase
 		}
 
 		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
-			PieceInfoView.MSGID_PREFIX, null, PieceInfoView.class));
+			PieceMapView.MSGID_PREFIX, null, PieceMapView.class));
 
 		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
 			"MyPieceDistributionView", null, MyPieceDistributionView.class));
@@ -943,14 +938,14 @@ public abstract class PiecesViewBase
 	
 	  @Override
 	public void defaultSelected(TableRowCore[] rows, int keyMask, int origin) {
-	  // Show piece in PieceInfoView
+	  // Show piece in PieceMapView
 
 	  // Show subtab if we have one
 	  TableViewSWT_TabsCommon tabsCommon = tv.getTabsCommon();
 		if (tabsCommon != null) {
 			MultipleDocumentInterfaceSWT mdi = tabsCommon.getMDI();
 			if (mdi != null) {
-				mdi.showEntryByID(PieceInfoView.MSGID_PREFIX);
+				mdi.showEntryByID(PieceMapView.MSGID_PREFIX);
 				return;
 			}
 		}
@@ -960,8 +955,8 @@ public abstract class PiecesViewBase
 		}
 
 		// Show in sister tab
-		if (mdi != null && mdi.getEntry(PieceInfoView.MSGID_PREFIX ) != null ){
-			mdi.showEntryByID(PieceInfoView.MSGID_PREFIX, rows[0].getDataSource());
+		if (mdi != null && mdi.getEntry(PieceMapView.MSGID_PREFIX ) != null ){
+			mdi.showEntryByID(PieceMapView.MSGID_PREFIX, rows[0].getDataSource());
 		}else{
 			UIFunctions uif = UIFunctionsManager.getUIFunctions();
 			if (uif != null) {

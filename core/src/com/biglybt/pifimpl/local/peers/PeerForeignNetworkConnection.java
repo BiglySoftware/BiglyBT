@@ -140,7 +140,7 @@ PeerForeignNetworkConnection
 
 		peer_str += " " + peer.getIp() + ":" + peer.getPort();
 
-		return( "peer=" + peer_str + ",in=" + incoming_message_queue.getPercentDoneOfCurrentMessage() +
+		return( "peer=" + peer_str + ",in=" + incoming_message_queue.getCurrentMessageProgress() +
 				",out=" + outgoing_message_queue.getTotalSize());
 	}
 	protected class
@@ -212,10 +212,10 @@ PeerForeignNetworkConnection
 		}
 
 		@Override
-		public int
-		getPercentDoneOfCurrentMessage()
+		public int[]
+		getCurrentMessageProgress()
 		{
-			return( 0 );
+			return( null );
 		}
 
 		@Override
@@ -294,10 +294,10 @@ PeerForeignNetworkConnection
 		}
 
 		@Override
-		public int
-		getPercentDoneOfCurrentMessage()
+		public int[]
+		getCurrentMessageProgress()
 		{
-			return( 0 );
+			return( null );
 		}
 
 		@Override

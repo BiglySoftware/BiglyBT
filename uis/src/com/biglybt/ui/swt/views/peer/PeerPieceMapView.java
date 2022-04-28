@@ -1,5 +1,4 @@
 /*
- * File    : PeerInfoView.java
  * Created : Oct 2, 2005
  * By      : TuxPaper
  *
@@ -64,7 +63,6 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.utils.FontUtils;
-import com.biglybt.ui.swt.views.piece.PieceInfoView;
 import com.biglybt.util.MapUtils;
 
 import com.biglybt.pif.Plugin;
@@ -79,9 +77,11 @@ import com.biglybt.pif.PluginInterface;
  *
  * @todo on paint, paint cached image instead of recalc
  */
-public class PeerInfoView
+public class PeerPieceMapView
 	implements UISWTViewCoreEventListener
 {
+	public static final String VIEW_ID = "PeerPieceMapView";
+	
 	private final static int BLOCK_FILLSIZE = 14;
 
 	private final static int BLOCK_SPACING = 2;
@@ -140,7 +140,7 @@ public class PeerInfoView
 	 * Initialize
 	 *
 	 */
-	public PeerInfoView() {
+	public PeerPieceMapView() {
 		blockColors = new Color[] { Colors.blues[Colors.BLUES_DARKEST],
 				Colors.blues[Colors.BLUES_MIDLIGHT], Colors.fadedGreen, Colors.white,
 				Colors.red, Colors.fadedRed, Colors.black };
@@ -210,7 +210,7 @@ public class PeerInfoView
 	private void initialize(Composite composite) {
 		if (peerInfoComposite != null && !peerInfoComposite.isDisposed()) {
 			Logger.log(new LogEvent(LogIDs.GUI, LogEvent.LT_ERROR,
-					"PeerInfoView already initialized! Stack: "
+					"PeerPieceMapView already initialized! Stack: "
 							+ Debug.getStackTrace(true, false)));
 			delete();
 		}

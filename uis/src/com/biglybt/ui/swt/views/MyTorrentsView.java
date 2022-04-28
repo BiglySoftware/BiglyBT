@@ -75,7 +75,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.utils.*;
 import com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceTablesSWT;
-import com.biglybt.ui.swt.views.piece.PieceInfoView;
+import com.biglybt.ui.swt.views.piece.PieceMapView;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
@@ -3547,7 +3547,7 @@ public class MyTorrentsView
 				PiecesView.MSGID_PREFIX, null, PiecesView.class));
 
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
-				PieceInfoView.MSGID_PREFIX, null, PieceInfoView.class));
+				PieceMapView.MSGID_PREFIX, null, PieceMapView.class));
 
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
 				DownloadActivityView.MSGID_PREFIX, null, DownloadActivityView.class));

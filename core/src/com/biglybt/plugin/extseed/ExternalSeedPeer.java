@@ -916,10 +916,10 @@ ExternalSeedPeer
 	}
 
 	@Override
-	public int
-	getPercentDoneOfCurrentIncomingRequest()
+	public int[]
+	getCurrentIncomingRequestProgress()
 	{
-		return( reader.getPercentDoneOfCurrentIncomingRequest());
+		return( reader.getCurrentIncomingRequestProgress());
 	}
 
 	@Override
@@ -938,10 +938,10 @@ ExternalSeedPeer
 
 
 	@Override
-	public int
-	getPercentDoneOfCurrentOutgoingRequest()
+	public int[]
+	getCurrentOutgoingRequestProgress()
 	{
-		return( 0 );
+		return( null );
 	}
 
 	public Map
@@ -1029,7 +1029,7 @@ ExternalSeedPeer
 				public void notifyOfExternalSend(Message message ){}
 
 				@Override
-				public int getPercentDoneOfCurrentMessage(){ return( -1 );}
+				public int[] getCurrentMessageProgress(){ return( null );}
 
 				@Override
 				public int getDataQueuedBytes(){ return( 0 ); }
@@ -1057,7 +1057,7 @@ ExternalSeedPeer
 				public void notifyOfExternalReceive(Message message ){}
 
 				@Override
-				public int getPercentDoneOfCurrentMessage(){ return( ExternalSeedPeer.this.getPercentDoneOfCurrentIncomingRequest()); }
+				public int[] getCurrentMessageProgress(){ return( ExternalSeedPeer.this.getCurrentIncomingRequestProgress()); }
 			};
 
 		@Override

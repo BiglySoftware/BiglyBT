@@ -61,6 +61,23 @@ AEThread2
 		}.start();
 	}
 	
+	public static AEThread2
+	createAndStartDaemon2(
+		String			name,
+		Runnable		r )
+	{
+		AEThread2 thread = new AEThread2( name, true ){
+			@Override
+			public void run(){
+				
+				r.run();
+			}
+		};
+		
+		thread.start();
+		
+		return( thread );
+	}
 	//private static AtomicLong	total_starts	= new AtomicLong();
 	//private static AtomicLong	total_creates	= new AtomicLong();
 

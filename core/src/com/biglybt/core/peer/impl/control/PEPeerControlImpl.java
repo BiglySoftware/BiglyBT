@@ -6903,12 +6903,12 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			return(outgoing_requested_pieces);
 		}
 
-		public int getPercentDoneOfCurrentIncomingRequest(){
-			return(0);
+		public int[] getCurrentIncomingRequestProgress(){
+			return(null);
 		}
 
-		public int getPercentDoneOfCurrentOutgoingRequest(){
-			return(0);
+		public int[] getCurrentOutgoingRequestProgress(){
+			return(null);
 		}
 
 		public long getBytesRemaining(){

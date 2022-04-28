@@ -627,17 +627,17 @@ PeerImpl
 	}
 
 	@Override
-	public int
-	getPercentDoneOfCurrentIncomingRequest()
+	public int[]
+	getCurrentIncomingRequestProgress()
 	{
-		return( delegate.getPercentDoneOfCurrentIncomingRequest());
+		return( delegate.getCurrentIncomingRequestProgress());
 	}
 
 	@Override
-	public int
-	getPercentDoneOfCurrentOutgoingRequest()
+	public int[]
+	getCurrentOutgoingRequestProgress()
 	{
-		return( delegate.getPercentDoneOfCurrentOutgoingRequest());
+		return( delegate.getCurrentOutgoingRequestProgress());
 	}
 
 

@@ -5749,17 +5749,17 @@ implements PEPeerTransport
 	}
 
 	@Override
-	public int
-	getPercentDoneOfCurrentIncomingRequest()
+	public int[]
+	getCurrentIncomingRequestProgress()
 	{
-		return( connection.getIncomingMessageQueue().getPercentDoneOfCurrentMessage());
+		return( connection.getIncomingMessageQueue().getCurrentMessageProgress());
 	}
 
 	@Override
-	public int
-	getPercentDoneOfCurrentOutgoingRequest()
+	public int[]
+	getCurrentOutgoingRequestProgress()
 	{
-		return( connection.getOutgoingMessageQueue().getPercentDoneOfCurrentMessage());
+		return( connection.getOutgoingMessageQueue().getCurrentMessageProgress());
 	}
 
 	@Override

@@ -106,8 +106,8 @@ ExternalSeedReader
 	readBytes(
 		int	max );
 
-	public int
-	getPercentDoneOfCurrentIncomingRequest();
+	public int[]
+	getCurrentIncomingRequestProgress();
 
 	public int[]
    	getOutgoingRequestedPieceNumbers();

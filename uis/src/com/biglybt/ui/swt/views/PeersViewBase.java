@@ -49,7 +49,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.peer.PeerFilesView;
-import com.biglybt.ui.swt.views.peer.PeerInfoView;
+import com.biglybt.ui.swt.views.peer.PeerPieceMapView;
 import com.biglybt.ui.swt.views.peer.RemotePieceDistributionView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
@@ -371,7 +371,7 @@ PeersViewBase
 		}
 
 		vm.registerView(PLUGIN_DS_TYPE, new UISWTViewBuilderCore(
-				"PeerInfoView", null, PeerInfoView.class));
+				PeerPieceMapView.VIEW_ID, null, PeerPieceMapView.class));
 
 		vm.registerView(PLUGIN_DS_TYPE,
 				new UISWTViewBuilderCore("RemotePieceDistributionView", null,

@@ -44,10 +44,10 @@ public interface IncomingMessageQueue {
   getDecoder();
 
   /**
-   * Get the percentage of the current message that has already been received.
-   * @return percentage complete (0-99), or -1 if no message is currently being received
+   * Get the progress of the current message that is being received
+   * @return [size, done] or null
    */
-  public int getPercentDoneOfCurrentMessage();
+  public int[] getCurrentMessageProgress();
 
   /**
    * Receive (read) message(s) data from the underlying transport.

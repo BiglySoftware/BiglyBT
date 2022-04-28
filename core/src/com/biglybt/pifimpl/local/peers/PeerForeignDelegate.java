@@ -945,17 +945,17 @@ PeerForeignDelegate
 	}
 
 	@Override
-	public int
-	getPercentDoneOfCurrentIncomingRequest()
+	public int[]
+	getCurrentIncomingRequestProgress()
 	{
-		return( foreign.getPercentDoneOfCurrentIncomingRequest());
+		return( foreign.getCurrentIncomingRequestProgress());
 	}
 
 	@Override
-	public int
-	getPercentDoneOfCurrentOutgoingRequest()
+	public int[]
+	getCurrentOutgoingRequestProgress()
 	{
-		return( foreign.getPercentDoneOfCurrentOutgoingRequest());
+		return( foreign.getCurrentOutgoingRequestProgress());
 	}
 
 	@Override

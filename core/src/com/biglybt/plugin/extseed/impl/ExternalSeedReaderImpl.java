@@ -921,17 +921,17 @@ ExternalSeedReaderImpl
 	}
 
 	@Override
-	public int
-	getPercentDoneOfCurrentIncomingRequest()
+	public int[]
+	getCurrentIncomingRequestProgress()
 	{
 		ExternalSeedReaderRequest	cr = current_request;
 
 		if ( cr == null ){
 
-			return( -1 );
+			return( null );
 		}
 
-		return( cr.getPercentDoneOfCurrentIncomingRequest());
+		return( cr.getCurrentMessageProgress());
 	}
 
 	@Override

@@ -394,7 +394,7 @@ NetworkConnectionImpl
 				",closed/con=" + closed + "/" + is_connected +
 				",w_ready=" + transport.isReadyForWrite(null)+
 				",r_ready=" + transport.isReadyForRead( null ))+ 
-				",in=" + incoming_message_queue.getPercentDoneOfCurrentMessage() +
+				",in=" + incoming_message_queue.getCurrentMessageProgress() +
 				",out=" + (outgoing_message_queue==null?0:outgoing_message_queue.getTotalSize()) + 
 				",owner=" + (connection_listener==null?"null":connection_listener.getDescription()));
 	}

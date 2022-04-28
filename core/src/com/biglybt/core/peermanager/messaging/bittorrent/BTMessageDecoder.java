@@ -64,7 +64,7 @@ public class BTMessageDecoder implements MessageStreamDecoder {
   private final ArrayList messages_last_read = new ArrayList();
   private int protocol_bytes_last_read = 0;
   private int data_bytes_last_read = 0;
-  private int percent_complete = -1;
+  private int[] progress;
 
 
   public BTMessageDecoder() {
@@ -138,8 +138,8 @@ public class BTMessageDecoder implements MessageStreamDecoder {
 
 
   @Override
-  public int getPercentDoneOfCurrentMessage() {
-    return percent_complete;
+  public int[] getCurrentMessageProgress() {
+    return( progress );
   }
 
 
@@ -384,10 +384,10 @@ public class BTMessageDecoder implements MessageStreamDecoder {
         }
 
         reading_length_mode = true;  //see if we've already read the next message's length
-        percent_complete = -1;  //reset receive percentage
+        progress = null;  //reset receive percentage
       }
       else {  //only partial received so far
-        percent_complete = (payload_buffer.position( SS ) * 100) / message_length;  //compute receive percentage
+    	  progress = new int[]{ message_length, payload_buffer.position( SS )};
       }
     }
 

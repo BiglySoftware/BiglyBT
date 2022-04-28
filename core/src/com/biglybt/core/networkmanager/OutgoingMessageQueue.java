@@ -55,10 +55,9 @@ OutgoingMessageQueue
 
 
   /**
-   * Get the percentage of the current message that has already been sent out.
-   * @return percentage complete (0-99), or -1 if no message is currently being sent
+   * @return [ total, done] or null
    */
-  public int getPercentDoneOfCurrentMessage();
+  public int[] getCurrentMessageProgress();
 
 
   /**

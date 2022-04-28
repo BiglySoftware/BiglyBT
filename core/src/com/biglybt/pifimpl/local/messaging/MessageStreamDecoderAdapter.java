@@ -47,8 +47,8 @@ public class MessageStreamDecoderAdapter implements com.biglybt.core.peermanager
 
 
   @Override
-  public int getPercentDoneOfCurrentMessage() {
-    return -1;  //not implemented
+  public int[] getCurrentMessageProgress() {
+    return( null );
   }
 
 

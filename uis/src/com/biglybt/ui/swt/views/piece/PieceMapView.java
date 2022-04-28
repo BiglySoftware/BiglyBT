@@ -75,11 +75,11 @@ import com.biglybt.util.MapUtils;
  * @created Feb 26, 2007
  *
  */
-public class PieceInfoView
+public class PieceMapView
 	implements DownloadManagerPieceListener, DownloadManagerPeerListener, PiecePickerListener,
 	UISWTViewCoreEventListener
 {
-	public static final String	KEY_INSTANCE = "PieceInfoView::instance";
+	public static final String	KEY_INSTANCE = "PieceMapView::instance";
 	
 	private final static int BLOCK_FILLSIZE = 14;
 
@@ -97,7 +97,7 @@ public class PieceInfoView
 	private final static int BLOCKCOLOR_MERGE_WRITE	= 7;
 	private final static int BLOCKCOLOR_FORCED		= 8;
 
-	public static final String MSGID_PREFIX = "PieceInfoView";
+	public static final String MSGID_PREFIX = "PieceMapView";
 
 	private static final byte SHOW_BIG = 2;
 
@@ -179,7 +179,7 @@ public class PieceInfoView
 	 * Initialize
 	 *
 	 */
-	public PieceInfoView() {
+	public PieceMapView() {
 		
 	}
 
@@ -232,7 +232,7 @@ public class PieceInfoView
 	private void initialize(Composite composite) {
 		if (pieceInfoComposite != null && !pieceInfoComposite.isDisposed()) {
 			Logger.log(new LogEvent(LogIDs.GUI, LogEvent.LT_ERROR,
-					"PeerInfoView already initialized! Stack: "
+					"PieceMapView already initialized! Stack: "
 							+ Debug.getStackTrace(true, false)));
 			delete();
 		}
@@ -345,7 +345,7 @@ public class PieceInfoView
 		pieceInfoCanvas.addListener(SWT.KeyDown, new DoNothingListener());
 
 		pieceInfoCanvas.addListener(SWT.Resize, e -> {
-			synchronized (PieceInfoView.this) {
+			synchronized (PieceMapView.this) {
 //				log("resize.  af=" + alreadyFilling);
 			  if (alreadyFilling) {
 				  return;
@@ -368,7 +368,7 @@ public class PieceInfoView
 				} else {
 //					log("resize. no img");
 				}
-				synchronized (PieceInfoView.this) {
+				synchronized (PieceMapView.this) {
 					alreadyFilling = false;
 				}
 			});
@@ -636,7 +636,7 @@ public class PieceInfoView
 		}
 
 		Utils.execSWTThreadLater(0, () -> {
-			synchronized (PieceInfoView.this) {
+			synchronized (PieceMapView.this) {
 				if (!alreadyFilling) {
 					return;
 				}
@@ -655,7 +655,7 @@ public class PieceInfoView
 
 				refreshInfoCanvas();
 			} finally {
-				synchronized (PieceInfoView.this) {
+				synchronized (PieceMapView.this) {
 					alreadyFilling = false;
 				}
 			}
@@ -792,7 +792,7 @@ public class PieceInfoView
 		
 		int	result = -1;
 		
-		synchronized (PieceInfoView.this) {
+		synchronized (PieceMapView.this) {
 			alreadyFilling = false;
 		}
 

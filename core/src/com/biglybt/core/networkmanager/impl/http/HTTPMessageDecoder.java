@@ -209,10 +209,10 @@ HTTPMessageDecoder
 	}
 
 	@Override
-	public int
-	getPercentDoneOfCurrentMessage()
+	public int[]
+	getCurrentMessageProgress()
 	{
-		return( 0 );
+		return( null );
 	}
 
 	protected void

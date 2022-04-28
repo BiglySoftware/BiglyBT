@@ -59,7 +59,36 @@ public interface OutgoingMessageQueue {
    */
   public void notifyOfExternalSend( Message message );
 
-  public int getPercentDoneOfCurrentMessage();
+  public default int
+  getPercentDoneOfCurrentMessage()
+  {
+	  int[] progress = getCurrentMessageProgress();
+	  
+	  if ( progress == null ){
+	  
+		  return( -1 );
+		  
+	  }else{
+		  
+		  int length 	= progress[0];
+		  int done		= progress[1];
+		  
+		  if ( length <= 0 ){
+			  
+			  return( -1 );
+			  
+		  }else if ( done >= length ){
+			  
+			  return( 100 );
+			  
+		  }else{
+			  
+			  return((done*100)/length);
+		  }
+	  }
+  }
+  
+  public int[] getCurrentMessageProgress();
 
   public int getDataQueuedBytes();
 

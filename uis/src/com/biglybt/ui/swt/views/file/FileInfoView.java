@@ -1,5 +1,4 @@
 /*
- * File    : PeerInfoView.java
  * Created : Oct 2, 2005
  * By      : TuxPaper
  *
@@ -52,8 +51,6 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mdi.BaseMDI;
-import com.biglybt.ui.swt.mdi.TabbedEntry;
-import com.biglybt.ui.swt.mdi.TabbedMDI;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;

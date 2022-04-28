@@ -74,7 +74,7 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.utils.ColorCache;
-import com.biglybt.ui.swt.views.piece.PieceInfoView;
+import com.biglybt.ui.swt.views.piece.PieceMapView;
 import com.biglybt.util.MapUtils;
 
 /**
@@ -105,7 +105,7 @@ public class GeneralView
 		  COConfigurationManager.addAndFireParameterListener(
 		  	"PeersView.BlockView.Transfer",
 			(n)->{
-				transferringColor = PieceInfoView.getLegendColor( n );
+				transferringColor = PieceMapView.getLegendColor( n );
 			});
 		  
 		  COConfigurationManager.addAndFireParameterListener(

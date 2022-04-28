@@ -174,17 +174,17 @@ ExternalSeedReaderRequest
 		return( current_buffer.length );
 	}
 
-	public int
-	getPercentDoneOfCurrentIncomingRequest()
+	public int[]
+	getCurrentMessageProgress()
 	{
 		PeerReadRequest	req = current_request;
 
 		if ( req == null ){
 
-			return( 0 );
+			return( null );
 		}
 
-		return(( 100 * current_position ) / req.getLength() );
+		return( new int[]{ req.getLength(), current_position });
 
 	}
 

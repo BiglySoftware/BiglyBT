@@ -359,11 +359,69 @@ PEPeer
 	  return( new DiskManagerReadRequest[0]) ;
   }
   
-  public int
-  getPercentDoneOfCurrentIncomingRequest();
+  public default int
+  getPercentDoneOfCurrentIncomingRequest()
+  {
+	  int[] progress = getCurrentIncomingRequestProgress();
+	  
+	  if ( progress == null ){
+	  
+		  return( -1 );
+		  
+	  }else{
+		  
+		  int length 	= progress[0];
+		  int done		= progress[1];
+		  
+		  if ( length <= 0 ){
+			  
+			  return( -1 );
+			  
+		  }else if ( done >= length ){
+			  
+			  return( 100 );
+			  
+		  }else{
+			  
+			  return((done*100)/length);
+		  }
+	  }
+  }
+  
+  public int[]
+  getCurrentIncomingRequestProgress();
 
-  public int
-  getPercentDoneOfCurrentOutgoingRequest();
+  public default int
+  getPercentDoneOfCurrentOutgoingRequest()
+  {
+	  int[] progress = getCurrentOutgoingRequestProgress();
+	  
+	  if ( progress == null ){
+	  
+		  return( -1 );
+		  
+	  }else{
+		  
+		  int length 	= progress[0];
+		  int done		= progress[1];
+		  
+		  if ( length <= 0 ){
+			  
+			  return( -1 );
+			  
+		  }else if ( done >= length ){
+			  
+			  return( 100 );
+			  
+		  }else{
+			  
+			  return((done*100)/length);
+		  }
+	  }
+  }
+  
+  public int[]
+  getCurrentOutgoingRequestProgress();
 
   public long
   getBytesRemaining();

@@ -198,8 +198,8 @@ Peer
 		boolean 	closedOnError,
 		boolean 	attemptReconnect );
 
-	public int
-	getPercentDoneOfCurrentIncomingRequest();
+	public int[]
+	getCurrentIncomingRequestProgress();
 
 	public int[]
 	getOutgoingRequestedPieceNumbers();
@@ -207,8 +207,8 @@ Peer
 	public int
 	getOutgoingRequestCount();
 
-	public int
-	getPercentDoneOfCurrentOutgoingRequest();
+	public int[]
+	getCurrentOutgoingRequestProgress();
 
 
 	/**

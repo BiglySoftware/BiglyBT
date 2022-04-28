@@ -78,13 +78,9 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue{
 	  return( stream_decoder );
   }
 
-  /**
-   * Get the percentage of the current message that has already been received.
-   * @return percentage complete (0-99), or -1 if no message is currently being received
-   */
   @Override
-  public int getPercentDoneOfCurrentMessage() {
-    return stream_decoder.getPercentDoneOfCurrentMessage();
+  public int[] getCurrentMessageProgress() {
+    return stream_decoder.getCurrentMessageProgress();
   }
 
 

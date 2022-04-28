@@ -122,8 +122,8 @@ public class IncomingMessageQueueImpl implements IncomingMessageQueue {
   }
 
   @Override
-  public int getPercentDoneOfCurrentMessage() {
-    return core_queue.getPercentDoneOfCurrentMessage();
+  public int[] getCurrentMessageProgress() {
+    return core_queue.getCurrentMessageProgress();
   }
 
 }
