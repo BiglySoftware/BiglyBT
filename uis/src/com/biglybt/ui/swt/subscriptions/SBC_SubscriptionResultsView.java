@@ -86,6 +86,8 @@ SBC_SubscriptionResultsView
 {
 	public static final String TABLE_SR = "SubscriptionResults";
 
+	private final Object FILTER_KEY = new Object();	// not static as we want separate per view
+	
 	private static boolean columnsAdded = false;
 
 	private static TableViewSWT.ColorRequester colour_requester = ()->1;
@@ -922,7 +924,14 @@ SBC_SubscriptionResultsView
 				ds.addListener( this );
 				
 				try{
-					ds_filter = ds.getFilters();
+					ds_filter = (SubscriptionResultFilter)ds.getUserData( FILTER_KEY );
+					
+					if ( ds_filter == null ){
+						
+						ds_filter = ds.getFilters();
+						
+						ds.setUserData( FILTER_KEY, ds_filter );
+					}
 					
 				}catch( Throwable e ){
 					
