@@ -373,6 +373,8 @@ public class SubscriptionsView
 				new ColumnSubscriptionError(TABLE_ID),
 				new ColumnSubscriptionNewestDate(TABLE_ID),
 				new ColumnSubscriptionDependsOn(TABLE_ID),
+				new ColumnSubscriptionPublic(TABLE_ID),
+				new ColumnSubscriptionUpdatePeriod(TABLE_ID),
 
 		};
 

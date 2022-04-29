@@ -18,21 +18,19 @@
 
 package com.biglybt.ui.swt.columns.subscriptions;
 
-
-import java.util.List;
+import com.biglybt.pif.ui.tables.TableCell;
+import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 import com.biglybt.core.subs.Subscription;
 
-import com.biglybt.pif.ui.tables.*;
-import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
-
-public class ColumnSubscriptionDependsOn
+public class ColumnSubscriptionUpdatePeriod
 	extends CoreTableColumnSWT
 	implements TableCellRefreshListener
 {
-	public static String COLUMN_ID = "depends-on";
-
+	public static String COLUMN_ID = "update-period";
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
@@ -42,26 +40,26 @@ public class ColumnSubscriptionDependsOn
 		info.setProficiency(TableColumnInfo.PROFICIENCY_INTERMEDIATE);
 	}
 
-	/** Default Constructor */
-	public ColumnSubscriptionDependsOn(String sTableID) {
-		super(COLUMN_ID, POSITION_INVISIBLE, 150, sTableID);
+	public 
+	ColumnSubscriptionUpdatePeriod(
+		String sTableID) 
+	{
+		super(COLUMN_ID, POSITION_INVISIBLE, 100, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
-		setAlignment(ALIGN_LEAD);
+		setAlignment(ALIGN_TRAIL);
 	}
 
 	@Override
 	public void refresh(TableCell cell) {
-		String str = "";
+		int update = -1;
 		Subscription sub = (Subscription) cell.getDataSource();
 		if (sub != null) {
-			List<Subscription> deps = sub.getDependsOn();
-			
-			for ( Subscription dep: deps ){
-				str += (str.isEmpty()?"":", ") + dep.getName();
+			if ( !( sub.isSearchTemplate() || sub.isSubscriptionTemplate())){
+				update = sub.getHistory().getCheckFrequencyMins();
 			}
 		}
 
-		if (!cell.setSortValue(str) && cell.isValid()) {
+		if (!cell.setSortValue(update) && cell.isValid()) {
 			return;
 		}
 
@@ -69,6 +67,12 @@ public class ColumnSubscriptionDependsOn
 			return;
 		}
 
-		cell.setText( str );
+		if ( update < 0 ){
+			cell.setText( "" );
+		}else{
+			cell.setText("" + update);
+		}
+		return;
+
 	}
 }

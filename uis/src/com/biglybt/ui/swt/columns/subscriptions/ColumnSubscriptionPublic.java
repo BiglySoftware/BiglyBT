@@ -18,50 +18,51 @@
 
 package com.biglybt.ui.swt.columns.subscriptions;
 
-
-import java.util.List;
+import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.pif.ui.tables.TableCell;
+import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 import com.biglybt.core.subs.Subscription;
 
-import com.biglybt.pif.ui.tables.*;
-import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
-
-
-public class ColumnSubscriptionDependsOn
+public class ColumnSubscriptionPublic
 	extends CoreTableColumnSWT
 	implements TableCellRefreshListener
 {
-	public static String COLUMN_ID = "depends-on";
-
+	public static String COLUMN_ID = "public";
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
 		info.addCategories(new String[] {
-			CAT_ESSENTIAL,
+			CAT_SETTINGS,
 		});
 		info.setProficiency(TableColumnInfo.PROFICIENCY_INTERMEDIATE);
 	}
 
-	/** Default Constructor */
-	public ColumnSubscriptionDependsOn(String sTableID) {
-		super(COLUMN_ID, POSITION_INVISIBLE, 150, sTableID);
+	public 
+	ColumnSubscriptionPublic(
+		String sTableID) 
+	{
+		super(COLUMN_ID, ALIGN_CENTER, POSITION_INVISIBLE, 100, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
-		setAlignment(ALIGN_LEAD);
 	}
 
 	@Override
 	public void refresh(TableCell cell) {
-		String str = "";
+		Boolean pub = false;
 		Subscription sub = (Subscription) cell.getDataSource();
 		if (sub != null) {
-			List<Subscription> deps = sub.getDependsOn();
-			
-			for ( Subscription dep: deps ){
-				str += (str.isEmpty()?"":", ") + dep.getName();
+		
+			if ( !( sub.isSearchTemplate() || sub.isSubscriptionTemplate())){
+				
+				pub = sub.isPublic();
 			}
 		}
-
-		if (!cell.setSortValue(str) && cell.isValid()) {
+		
+		int sort = pub==null?0:(pub?1:2);
+		
+		if (!cell.setSortValue(sort) && cell.isValid()) {
 			return;
 		}
 
@@ -69,6 +70,6 @@ public class ColumnSubscriptionDependsOn
 			return;
 		}
 
-		cell.setText( str );
+		cell.setText( pub==null?"":DisplayFormatters.getYesNo( pub ));
 	}
 }
