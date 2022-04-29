@@ -26,31 +26,22 @@ import java.lang.reflect.Field;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.biglybt.core.Core;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import com.biglybt.core.global.GlobalManager;
-import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
-import com.biglybt.core.util.HashWrapper;
-import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.RegExUtil;
-import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.UrlUtils;
-import com.biglybt.pif.download.DownloadManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.download.DownloadManagerState;
 
 public class
 SearchSubsUtils
@@ -120,8 +111,10 @@ SearchSubsUtils
 		final SearchSubsResultBase[]	results,
 		Menu							menu )
 	{
-		boolean	has_hash = false;
-
+		boolean	has_hash 	= false;
+		boolean	all_read	= true;
+		boolean	all_unread	= true;
+		
 		for ( SearchSubsResultBase result: results ){
 
 			byte[] hash = result.getHash();
@@ -129,8 +122,12 @@ SearchSubsUtils
 			if ( hash != null ){
 
 				has_hash = true;
-
-				break;
+			}
+			
+			if ( result.getRead()){
+				all_unread = false;
+			}else{
+				all_read = false;
 			}
 		}
 
@@ -168,6 +165,38 @@ SearchSubsUtils
 		});
 
 		item.setEnabled( has_hash );
+		
+		new MenuItem(menu, SWT.SEPARATOR);
+		
+		item = new MenuItem(menu, SWT.PUSH);
+		item.setText(MessageText.getString("menu.mark.read"));
+		item.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+
+				for ( SearchSubsResultBase result: results ){
+
+					result.setRead( true );
+				}
+			}
+		});
+		
+		item.setEnabled( !all_read );
+		
+		item = new MenuItem(menu, SWT.PUSH);
+		item.setText(MessageText.getString("menu.mark.unread"));
+		item.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+
+				for ( SearchSubsResultBase result: results ){
+
+					result.setRead( false );
+				}
+			}
+		});
+		
+		item.setEnabled( !all_unread );
 	}
 
 	private static void launchURL(String s) {
