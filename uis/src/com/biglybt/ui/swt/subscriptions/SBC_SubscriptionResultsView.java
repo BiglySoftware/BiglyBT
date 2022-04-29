@@ -1344,7 +1344,7 @@ SBC_SubscriptionResultsView
 
 					item.setEnabled( results.length > 0 );
 
-					SearchSubsUtils.addMenu( results, menu );
+					SearchSubsUtils.addMenu( ds, results, menu );
 
 					new MenuItem(menu, SWT.SEPARATOR );
 

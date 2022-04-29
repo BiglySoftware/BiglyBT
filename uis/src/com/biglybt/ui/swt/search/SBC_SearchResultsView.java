@@ -1343,7 +1343,7 @@ SBC_SearchResultsView
 
 					item.setEnabled( results.length > 0 );
 
-					SearchSubsUtils.addMenu( results, menu );
+					SearchSubsUtils.addMenu( null, results, menu );
 
 					new MenuItem(menu, SWT.SEPARATOR );
 

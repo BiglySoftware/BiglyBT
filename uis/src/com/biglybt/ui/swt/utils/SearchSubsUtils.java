@@ -23,6 +23,7 @@
 package com.biglybt.ui.swt.utils;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +34,7 @@ import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
@@ -48,7 +50,7 @@ SearchSubsUtils
 {
 	public static boolean
 	addMenu(
-		final SearchSubsResultBase	result,
+		SearchSubsResultBase		result,
 		Menu						menu )
 	{
 		final byte[] hash = result.getHash();
@@ -108,8 +110,9 @@ SearchSubsUtils
 
 	public static void
 	addMenu(
-		final SearchSubsResultBase[]	results,
-		Menu							menu )
+		Subscription				subs_maybe_null,
+		SearchSubsResultBase[]		results,
+		Menu						menu )
 	{
 		boolean	has_hash 	= false;
 		boolean	all_read	= true;
@@ -174,9 +177,22 @@ SearchSubsUtils
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 
-				for ( SearchSubsResultBase result: results ){
-
-					result.setRead( true );
+				if ( subs_maybe_null == null || results.length == 1 ){
+					for ( SearchSubsResultBase result: results ){
+	
+						result.setRead( true );
+					}
+				}else{
+					String[]	ids 	= new String[results.length];
+					boolean[]	read	= new boolean[ids.length];
+					
+					Arrays.fill( read, true );
+					
+					for ( int i=0;i<ids.length;i++){
+						ids[i] = results[i].getID();
+					}
+					
+					subs_maybe_null.getHistory().markResults( ids, read );
 				}
 			}
 		});
@@ -189,9 +205,22 @@ SearchSubsUtils
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 
-				for ( SearchSubsResultBase result: results ){
-
-					result.setRead( false );
+				if ( subs_maybe_null == null || results.length == 1 ){
+					for ( SearchSubsResultBase result: results ){
+	
+						result.setRead( false );
+					}
+				}else{
+					String[]	ids 	= new String[results.length];
+					boolean[]	read	= new boolean[ids.length];
+					
+					Arrays.fill( read, false );
+					
+					for ( int i=0;i<ids.length;i++){
+						ids[i] = results[i].getID();
+					}
+					
+					subs_maybe_null.getHistory().markResults( ids, read );
 				}
 			}
 		});

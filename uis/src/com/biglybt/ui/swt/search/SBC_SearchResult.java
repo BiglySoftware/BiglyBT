@@ -139,6 +139,13 @@ SBC_SearchResult
 	}
 
 	@Override
+	public String 
+	getID()
+	{
+		return( result.getUID());
+	}
+	
+	@Override
 	public final String
 	getName()
 	{

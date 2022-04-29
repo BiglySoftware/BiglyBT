@@ -27,6 +27,9 @@ public interface
 SearchSubsResultBase
 {
 	public String
+	getID();
+
+	public String
 	getName();
 
 	public byte[]
