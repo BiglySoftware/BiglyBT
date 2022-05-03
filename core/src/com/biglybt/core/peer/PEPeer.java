@@ -388,6 +388,10 @@ PEPeer
 	  }
   }
   
+  /**
+   * @return null or { size, done }
+   */
+  
   public int[]
   getCurrentIncomingRequestProgress();
 

@@ -63,8 +63,8 @@ PeerForeignDelegate
 
 	protected volatile int		_lastPiece =-1;
 
-	private PeerManagerImpl		manager;
-	private Peer				foreign;
+	private final PeerManagerImpl		manager;
+	private final Peer					foreign;
 
 	private NetworkConnectionBase	network_connection;
 
@@ -775,7 +775,14 @@ PeerForeignDelegate
 	public PEPeerStats
 	getStats()
 	{
-		return( ((PeerStatsImpl)foreign.getStats()).getDelegate());
+		PeerStatsImpl ps = (PeerStatsImpl)foreign.getStats();
+		
+		if ( ps == null ){
+			
+			return( null );
+		}
+		
+		return( ps.getDelegate());
 	}
 
 

@@ -66,6 +66,7 @@ OutgoingMessageQueueImpl
   private MessageStreamEncoder stream_encoder;
   private Transport transport;
 
+  private int	progress_id;
   private int[] progress;
 
   private static final boolean TRACE_HISTORY = false;  //TODO
@@ -139,6 +140,7 @@ OutgoingMessageQueueImpl
     prev_sent.clear();
     listeners = new ArrayList();
     progress = null;
+    progress_id++;
     urgent_message = null;
   }
 
@@ -373,6 +375,7 @@ OutgoingMessageQueueImpl
 
       if ( queue.isEmpty()){
     	  progress = null;
+    	  progress_id++;
       }
     }finally{
       queue_mon.exit();
@@ -445,6 +448,7 @@ OutgoingMessageQueueImpl
 
       if ( queue.isEmpty()){
     	  progress = null;
+    	  progress_id++;
       }
     }finally{
       queue_mon.exit();
@@ -670,7 +674,7 @@ outer:
 							  }
 						  }
 
-						  progress = new int[]{ message_size, written };
+						  progress = new int[]{ message_size, written, progress_id };
 
 						  break;
 					  }
@@ -687,6 +691,7 @@ outer:
 
 
 						  progress = null;
+						  progress_id++;
 
 						  if( manual_listener_notify ) {
 							  NotificationItem item = new NotificationItem( NotificationItem.MESSAGE_SENT );

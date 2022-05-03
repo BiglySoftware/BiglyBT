@@ -59,6 +59,8 @@ public class AZMessageDecoder implements MessageStreamDecoder {
   private final ArrayList messages_last_read = new ArrayList();
   private int protocol_bytes_last_read = 0;
   private int data_bytes_last_read = 0;
+  
+  private int	progress_id;
   private int[] progress;
 
 
@@ -347,11 +349,12 @@ public class AZMessageDecoder implements MessageStreamDecoder {
 
         reading_length_mode = true;  //see if we've already read the next message's length
         progress = null;  //reset receive percentage
+        progress_id++;
         msg_id_bytes = null;
         msg_id_read_complete = false;
       }
       else {  //only partial received so far
-        progress = new int[]{ message_length, payload_buffer.position( SS ) };
+        progress = new int[]{ message_length, payload_buffer.position( SS ), progress_id };
       }
     }
 

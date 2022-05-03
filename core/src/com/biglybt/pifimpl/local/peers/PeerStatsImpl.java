@@ -34,10 +34,10 @@ public class
 PeerStatsImpl
 	implements PeerStats
 {
-	private PeerManagerImpl		peer_manager;
-	private PEPeerManager		manager;
-	private PEPeerStats			delegate;
-	private Peer				owner;
+	private final PeerManagerImpl	peer_manager;
+	private final PEPeerManager		manager;
+	private final PEPeerStats		delegate;
+	private final Peer				owner;
 
 	public
 	PeerStatsImpl(

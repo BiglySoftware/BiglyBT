@@ -184,7 +184,7 @@ ExternalSeedReaderRequest
 			return( null );
 		}
 
-		return( new int[]{ req.getLength(), current_position });
+		return( new int[]{ req.getLength(), current_position, req.getPieceNumber() });
 
 	}
 
