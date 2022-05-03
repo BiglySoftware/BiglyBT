@@ -1203,7 +1203,7 @@ implements PEPeerTransport
 			}
 			int old_down = getDownloadRateLimitBytesPerSecond();
 			if ( old_down != 0 ){
-				setUploadRateLimitBytesPerSecond( old_down );
+				setDownloadRateLimitBytesPerSecond( old_down );
 			}
 		}
 	}
