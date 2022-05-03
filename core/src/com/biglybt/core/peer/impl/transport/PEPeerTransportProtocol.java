@@ -1117,8 +1117,14 @@ implements PEPeerTransport
 		plugin_connection = null;
 
 		// only save stats if it's worth doing so; ignore rapid connect-disconnects
-		if (peer_stats.getTotalDataBytesReceived() > 0 || peer_stats.getTotalDataBytesSent() > 0 || SystemTime.getCurrentTime() - connection_established_time > 30 * 1000)
+		
+		if ( 	peer_stats.getTotalDataBytesReceived() > 0 || 
+				peer_stats.getTotalDataBytesSent() > 0 || 
+				getUploadRateLimitBytesPerSecond() != 0 ||
+				getDownloadRateLimitBytesPerSecond() != 0 ||
+				SystemTime.getCurrentTime() - connection_established_time > 30 * 1000){
 			recentlyDisconnected.put(mySessionID, this);
+		}
 	}
 
 	@Override
@@ -1191,6 +1197,14 @@ implements PEPeerTransport
 			setSnubbed(oldTransport.isSnubbed());
 			snubbed = oldTransport.snubbed;
 			last_good_data_time = oldTransport.last_good_data_time;
+			int old_up = getUploadRateLimitBytesPerSecond();
+			if ( old_up != 0 ){
+				setUploadRateLimitBytesPerSecond( old_up );
+			}
+			int old_down = getDownloadRateLimitBytesPerSecond();
+			if ( old_down != 0 ){
+				setUploadRateLimitBytesPerSecond( old_down );
+			}
 		}
 	}
 
