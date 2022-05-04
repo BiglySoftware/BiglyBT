@@ -1102,10 +1102,11 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		buffer.dispose();
 	}
 
-	static final int BUCKET_LENGTH 			= 1000;
-	static final int BUCKET_CAPACITY 		= DiskManager.BLOCK_SIZE;
-	static final int BIG_BUCKET_CAPACITY 	= 20*DiskManager.BLOCK_SIZE;
-	static final int MAX_BUCKETS			= 10;
+	static final int BUCKET_LENGTH 				= 1000;
+	static final int BUCKET_CAPACITY 			= DiskManager.BLOCK_SIZE;
+	static final int BIG_BUCKET_CAPACITY_MULT	= 20;
+	static final int BIG_BUCKET_CAPACITY 		= BIG_BUCKET_CAPACITY_MULT*BUCKET_CAPACITY;
+	static final int MAX_BUCKETS				= 10;
 
 	static final int BLOB_R = 3;
 
@@ -1198,12 +1199,22 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 			for ( List buckets: data_buckets ){
 				
 				boolean is_down = buckets == down_buckets;
-				
-				gc.setBackground(is_down?Colors.blues[Colors.BLUES_MIDDARK]:Colors.fadedGreen );
-				
+												
 				for ( BucketData bd: (List<BucketData>)buckets ){
-						
-					int percent = ( bd.bytes * 100 ) / BUCKET_CAPACITY;
+				
+					Color bg;
+					
+					boolean is_big = bd.capacity == BIG_BUCKET_CAPACITY;
+					
+					if ( is_down ){
+						bg=is_big?Colors.maroon:Colors.blues[Colors.BLUES_MIDDARK];
+					}else{
+						bg=is_big?Colors.fadedGreen:Colors.green;
+					}
+					
+					gc.setBackground( bg );
+
+					int percent = ( bd.bytes * 100 ) / bd.capacity;
 					
 					if ( is_down ){
 						
@@ -1252,6 +1263,8 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 	static class
 	PeerSubData
 	{
+		int					bucket_capacity = BUCKET_CAPACITY;
+		
 		long						last_update = -1;
 		
 		long						bytes	= 0;
@@ -1304,6 +1317,15 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 									
 			if ( now - last_tbc_update > 1000 ){
 				
+				if ( rate_bytes_per_sec > MAX_BUCKETS*BUCKET_CAPACITY ){
+					
+					bucket_capacity = BIG_BUCKET_CAPACITY;
+					
+				}else if ( rate_bytes_per_sec < MAX_BUCKETS*BUCKET_CAPACITY / 2 ){
+					
+					bucket_capacity = BUCKET_CAPACITY;
+				}
+				
 				last_tbc_update = now;
 				
 				long tbc_bytes_diff;
@@ -1329,7 +1351,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 					
 				}else{
 					
-					target_bucket_count = (int)((tbc_bytes_diff + BUCKET_CAPACITY-1 )/ BUCKET_CAPACITY ); 
+					target_bucket_count = (int)((tbc_bytes_diff + bucket_capacity-1 )/ bucket_capacity ); 
 												
 					target_bucket_count = Math.min( target_bucket_count, MAX_BUCKETS );
 					
@@ -1339,7 +1361,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 										
 						for ( int i=0;i<bucket_diff;i++){
 								
-							buckets.add( new BucketData());
+							buckets.add( new BucketData(bucket_capacity));
 						}
 					}
 				}
@@ -1349,7 +1371,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 							
 				if ( buckets.size() > 1 ){
 					
-					long space_between_buckets = BUCKET_CAPACITY / ( target_bucket_count + 1 );
+					long space_between_buckets = bucket_capacity / ( target_bucket_count + 1 );
 					
 					int	last_b = -1;
 
@@ -1369,7 +1391,18 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 								
 							if ( diff > 0 && diff < space_between_buckets ){
 									
-								bd.offset = Math.min( 256, diff );
+								int max;
+								
+								if ( bd.capacity == BIG_BUCKET_CAPACITY ){
+									
+									max = 256*BIG_BUCKET_CAPACITY_MULT;
+									
+								}else{
+									
+									max = 256;
+								}
+								
+								bd.offset = Math.min( max, diff );
 								
 							}else{
 								
@@ -1401,7 +1434,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 					
 					long bucket_bytes = bd.bytes;
 					
-					long rem = BUCKET_CAPACITY - bucket_bytes;
+					long rem = bd.capacity - bucket_bytes;
 					
 					if ( rem > avail ){
 						
@@ -1419,6 +1452,8 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 							
 						if ( buckets.size() < target_bucket_count ){
 						
+							bd.capacity = bucket_capacity;
+							
 							buckets.addFirst( bd );
 						}
 						
@@ -1432,9 +1467,17 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 	static class
 	BucketData
 	{
+		int capacity;
+		
 		int		bytes;
 		int		offset;
 		double	cx	= -1;
+		
+		BucketData(
+			int		_capacity )
+		{
+			capacity = _capacity;
+		}
 	}
 
 	protected void 
