@@ -272,14 +272,15 @@ public class ConfigSectionInterfaceTablesSWT
 
 		// double-click
 
-		String[] dblclickOptions = {
-			"ConfigView.option.dm.dblclick.play",
-			"ConfigView.option.dm.dblclick.details",
-			"ConfigView.option.dm.dblclick.show",
-			"ConfigView.option.dm.dblclick.launch",
-			"ConfigView.option.dm.dblclick.launch.qv",
-			"ConfigView.option.dm.dblclick.open.browser",
-			"ConfigView.option.dm.dblclick.details.pop",
+		String[][] dblclickOptions = {
+			{ "ConfigView.option.dm.dblclick.play", 			"0" },
+			{ "ConfigView.option.dm.dblclick.show", 			"2" },
+			{ "ConfigView.option.dm.dblclick.launch", 			"3" },
+			{ "ConfigView.option.dm.dblclick.launch.content",	"7" },
+			{ "ConfigView.option.dm.dblclick.launch.qv", 		"4" },
+			{ "ConfigView.option.dm.dblclick.open.browser", 	"5" },
+			{ "ConfigView.option.dm.dblclick.details", 			"1" },
+			{ "ConfigView.option.dm.dblclick.details.pop", 		"6" }
 		};
 
 		String dblclickLabels[] = new String[dblclickOptions.length];
@@ -287,8 +288,8 @@ public class ConfigSectionInterfaceTablesSWT
 
 		for (int i = 0; i < dblclickOptions.length; i++) {
 
-			dblclickLabels[i] = MessageText.getString(dblclickOptions[i]);
-			dblclickValues[i] = "" + i;
+			dblclickLabels[i] = MessageText.getString(dblclickOptions[i][0]);
+			dblclickValues[i] = dblclickOptions[i][1];
 		}
 		add(new StringListParameterImpl("list.dm.dblclick",
 				"ConfigView.label.dm.dblclick", dblclickValues, dblclickLabels),
@@ -311,15 +312,16 @@ public class ConfigSectionInterfaceTablesSWT
 
 		// enter action
 
-		String[] enterOptions = {
-			"ConfigView.option.dm.enter.sameasdblclick",
-			"ConfigView.option.dm.dblclick.play",
-			"ConfigView.option.dm.dblclick.details",
-			"ConfigView.option.dm.dblclick.show",
-			"ConfigView.option.dm.dblclick.launch",
-			"ConfigView.option.dm.dblclick.launch.qv",
-			"ConfigView.option.dm.dblclick.open.browser",
-			"ConfigView.option.dm.dblclick.details.pop",
+		String[][] enterOptions = {
+			{ "ConfigView.option.dm.enter.sameasdblclick", 		"-1" },
+			{ "ConfigView.option.dm.dblclick.play", 			"0" },
+			{ "ConfigView.option.dm.dblclick.show", 			"2" },
+			{ "ConfigView.option.dm.dblclick.launch", 			"3" },
+			{ "ConfigView.option.dm.dblclick.launch.content",	"7" },
+			{ "ConfigView.option.dm.dblclick.launch.qv", 		"4" },
+			{ "ConfigView.option.dm.dblclick.open.browser", 	"5" },
+			{ "ConfigView.option.dm.dblclick.details", 			"1" },
+			{ "ConfigView.option.dm.dblclick.details.pop", 		"6" },
 		};
 
 		String enterLabels[] = new String[enterOptions.length];
@@ -327,8 +329,8 @@ public class ConfigSectionInterfaceTablesSWT
 
 		for (int i = 0; i < enterOptions.length; i++) {
 
-			enterLabels[i] = MessageText.getString(enterOptions[i]);
-			enterValues[i] = "" + (i - 1);
+			enterLabels[i] = MessageText.getString(enterOptions[i][0]);
+			enterValues[i] = enterOptions[i][1];
 		}
 
 		add(new StringListParameterImpl("list.dm.enteraction",

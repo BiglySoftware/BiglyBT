@@ -20,6 +20,7 @@
 
 package com.biglybt.util;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.LinkedHashMap;
@@ -517,6 +518,56 @@ public class PlayUtils
 		return playableIndexes;
 	}
 
+	public static com.biglybt.core.disk.DiskManagerFileInfo
+	getBestPlayableFile(
+		DownloadManager		download )
+	{
+		com.biglybt.core.disk.DiskManagerFileInfo[] files = download.getDiskManagerFileInfoSet().getFiles();
+		
+		String exts = getPlayableFileExtensions();
+		
+		long largest = -1;
+		com.biglybt.core.disk.DiskManagerFileInfo best = null;
+		
+		for ( com.biglybt.core.disk.DiskManagerFileInfo fileInfo: files ){
+			
+			if ( fileInfo.isSkipped()){
+				
+				continue;
+			}
+			
+			File file = fileInfo.getFile( true );
+			
+			String name = file.getName();
+			
+			int extIndex = name.lastIndexOf(".");
+
+			if ( extIndex > -1 ){
+
+				String ext = name.substring(extIndex);
+
+				if ( ext != null ){
+
+					ext = ext.toLowerCase();
+
+					if ( exts.contains(ext)){
+
+						long size = file.length();
+						
+						if ( size > largest ){
+							
+							largest = size;
+							
+							best = fileInfo;
+						}
+					}
+				}
+			}
+		}
+		
+		return( best );
+	}
+	
 	private static boolean
 	isExternallyPlayable(
 		DiskManagerFileInfo	file )

@@ -946,6 +946,7 @@ public class FilesView
 
 			case "3":
 			case "4":
+			case "7":
 				if (fileInfo.getAccessMode() == DiskManagerFileInfo.READ) {
 
 					if (mode.equals("4") &&

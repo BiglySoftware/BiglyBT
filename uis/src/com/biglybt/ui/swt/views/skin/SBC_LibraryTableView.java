@@ -341,7 +341,7 @@ public class SBC_LibraryTableView
 				ManagerUtils.open(dm, openMode);
 				return;
 			}
-		}else if (mode.equals("3") || mode.equals("4")){
+		}else if (mode.equals("3") || mode.equals("4") || mode.equals( "7" )){
 
 			// Launch
 			DiskManagerFileInfo file = DataSourceUtils.getFileInfo(ds);
@@ -358,7 +358,19 @@ public class SBC_LibraryTableView
 			}
 			DownloadManager dm = DataSourceUtils.getDM(ds);
 			if (dm != null) {
+				if ( mode.equals( "7" )){
+					DiskManagerFileInfo best = PlayUtils.getBestPlayableFile( dm );
+					
+					if ( best != null ){
+						
+						TorrentUtil.runDataSources(new Object[]{ best });
+						
+						return;
+					}
+				}
+					
 				TorrentUtil.runDataSources(new Object[]{ dm });
+				
 				return;
 			}
 		}else if (mode.equals("5")) {

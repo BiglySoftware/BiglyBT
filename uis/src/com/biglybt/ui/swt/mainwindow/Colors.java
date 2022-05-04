@@ -143,10 +143,7 @@ public class Colors implements ParameterListener {
             - ((float) i / (float) (blues.length - 1));
         hslColor.blend(tR, tG, tB, blendBy);
         blues[i] = ColorCache.getColor(display, hslColor.getRed(),
-						hslColor.getGreen(), hslColor.getBlue());
-        
-        System.out.println( i + ": " + blues[i]);
-        
+						hslColor.getGreen(), hslColor.getBlue());        
         int iSat = hslColor.getSaturation();
         int luminence = hslColor.getLuminence();
         if (luminence < 20) {
