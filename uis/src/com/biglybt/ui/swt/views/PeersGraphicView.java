@@ -990,7 +990,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		} catch(Exception e) {
 		}
 
-		gcBuffer.setBackground(Colors.blues[Colors.BLUES_MIDLIGHT]);
+		gcBuffer.setBackground(Colors.bluesFixed[Colors.BLUES_MIDLIGHT]);
 
 		int nbPeers = sortedPeers.length;
 
@@ -1021,14 +1021,14 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 			// unchoked
 
 			if ( !peer.isChokingMe() || percent_received >= 0 ){
-				gcBuffer.setForeground(Colors.blues[1] );
+				gcBuffer.setForeground(Colors.bluesFixed[1] );
 				drawLine = true;
 			}
 
 			// unchoking
 
 			if ( !peer.isChokedByMe() || percent_sent >= 0 ){
-				gcBuffer.setForeground(Colors.blues[3]);
+				gcBuffer.setForeground(Colors.bluesFixed[3]);
 				drawLine = true;
 			}
 
@@ -1062,7 +1062,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 
 			drawArrows( peer, gcBuffer, drawLine, x0, y0, x1, y1, r, iAngle, FORCE_FULL_REPAINT );
 			
-			gcBuffer.setBackground(Colors.blues[Colors.BLUES_MIDDARK]);
+			gcBuffer.setBackground(Colors.bluesFixed[Colors.BLUES_MIDDARK]);
 			if(peer.isSnubbed()) {
 				gcBuffer.setBackground(Colors.grey);
 			}
@@ -1081,7 +1081,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 			}
 		}
 
-		gcBuffer.setBackground(Colors.blues[Colors.BLUES_MIDDARK]);
+		gcBuffer.setBackground(Colors.bluesFixed[Colors.BLUES_MIDDARK]);
 
 		data.me_hit_x = x0 - OWN_SIZE / 2;
 		data.me_hit_y = y0 - OWN_SIZE / 2;
@@ -1256,7 +1256,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 					boolean is_big = bd.capacity == BIG_BUCKET_CAPACITY;
 					
 					if ( is_down ){
-						bg=is_big?Colors.maroon:Colors.blues[Colors.BLUES_MIDDARK];
+						bg=is_big?Colors.maroon:Colors.bluesFixed[Colors.BLUES_MIDDARK];
 					}else{
 						bg=is_big?Colors.fadedGreen:Colors.green;
 					}

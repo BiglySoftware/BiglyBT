@@ -54,6 +54,21 @@ public class Colors implements ParameterListener {
   public static final int FADED_LIGHTEST = 0;
   public static final int FADED_DARKEST = 9;
 
+  	// sometimes we just want static colours (e.g when on Linux in dark mode the dynamic blues ain't great)
+  
+  public static final Color[] bluesFixed = {
+	  new Color(255, 255, 255 ),
+	  new Color(226, 240, 255 ),
+	  new Color(198, 226, 255 ),
+	  new Color(169, 212, 254 ),
+	  new Color(141, 198, 254 ),
+	  new Color(113, 184, 255 ),
+	  new Color(84, 170, 254 ),
+	  new Color(56, 156, 255 ),
+	  new Color(28, 142, 255 ),
+	  new Color(0, 128, 255 )
+  };
+  
   public static Color[] blues = new Color[BLUES_DARKEST + 1];
   public static Color[] faded = new Color[FADED_DARKEST + 1];
   public static Color colorProgressBar;
@@ -129,6 +144,9 @@ public class Colors implements ParameterListener {
         hslColor.blend(tR, tG, tB, blendBy);
         blues[i] = ColorCache.getColor(display, hslColor.getRed(),
 						hslColor.getGreen(), hslColor.getBlue());
+        
+        System.out.println( i + ": " + blues[i]);
+        
         int iSat = hslColor.getSaturation();
         int luminence = hslColor.getLuminence();
         if (luminence < 20) {
