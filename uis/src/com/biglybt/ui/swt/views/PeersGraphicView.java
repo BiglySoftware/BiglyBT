@@ -69,6 +69,7 @@ import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
@@ -100,9 +101,12 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
 public class PeersGraphicView
 implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 {
-
 	public static String MSGID_PREFIX = "PeersGraphicView";
 
+		// on OSX/Linux optimising arrow repaint doesn't work as the underlying canvas image is trashed between paint events
+	
+	private static final boolean FORCE_FULL_REPAINT = !Constants.isWindows;
+	
 	private final Object	DM_DATA_CACHE_KEY 		= new Object();	// not static as we want per-view data
 	private final Object	PEER_DATA_KEY 			= new Object();	// not static as we want per-view data
 
@@ -698,24 +702,35 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 				new PaintListener(){
 					@Override
 					public void paintControl(PaintEvent e) {
-						if ( full_redraw_pending ){
-							if (img != null && !img.isDisposed()) {
-								Rectangle bounds = img.getBounds();
-								if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
-									e.gc.drawImage(img, e.x, e.y, e.width, e.height, e.x, e.y, e.width,
-											e.height);
+						
+						if (img != null && !img.isDisposed()){
+							
+							Rectangle bounds = img.getBounds();
+							
+							if ( bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )){
+								
+								if ( full_redraw_pending || FORCE_FULL_REPAINT ){
+									
+									e.gc.drawImage(img, e.x, e.y, e.width, e.height, e.x, e.y, e.width,	e.height);
+											
+									full_redraw_pending = false;
+									
+									arrow_redraw_pending = FORCE_FULL_REPAINT;
 								}
-							} else {
-								e.gc.fillRectangle(e.x, e.y, e.width, e.height);
+								
+								if ( arrow_redraw_pending ){
+	
+									refreshArrows( e.gc, e.x, e.y, e.width, e.height );
+	
+									arrow_redraw_pending = false;
+								}
+								
+								return;
 							}
-							full_redraw_pending = false;
-
-						}else if ( arrow_redraw_pending ){
-
-							refreshArrows( e.gc, e.x, e.y, e.width, e.height );
-
-							arrow_redraw_pending = false;
 						}
+					
+						e.gc.setBackground(Colors.white);
+						e.gc.fillRectangle(e.x, e.y, e.width, e.height);
 					}
 				});
 
@@ -918,12 +933,12 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 
 	private void
 	render(
-			DownloadManager		manager,
-			ManagerData			data,
-			GC					gc,
-			PEPeer[] 			sortedPeers,
-			Point				panelSize,
-			Point				panelOffset )
+		DownloadManager		manager,
+		ManagerData			data,
+		GC					gc,
+		PEPeer[] 			sortedPeers,
+		Point				panelSize,
+		Point				panelOffset )
 	{
 		data.peer_hit_map.clear();
 
@@ -1045,8 +1060,8 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 			
 			peer_data.line_colour = drawLine?gcBuffer.getForeground():Colors.white;
 
-			drawArrows( peer, gcBuffer, drawLine, x0, y0, x1, y1, r, iAngle );
-
+			drawArrows( peer, gcBuffer, drawLine, x0, y0, x1, y1, r, iAngle, FORCE_FULL_REPAINT );
+			
 			gcBuffer.setBackground(Colors.blues[Colors.BLUES_MIDDARK]);
 			if(peer.isSnubbed()) {
 				gcBuffer.setBackground(Colors.grey);
@@ -1098,7 +1113,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		gcBuffer.dispose();
 
 		gc.drawImage(buffer,panelOffset.x,panelOffset.y);
-
+		
 		buffer.dispose();
 	}
 
@@ -1120,7 +1135,8 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		int		x1,
 		int		y1,
 		double	r,
-		int		iAngle )
+		int		iAngle,
+		boolean	lineOnly )
 	{
 		PeerData peer_data = (PeerData)peer.getUserData( PEER_DATA_KEY );
 
@@ -1154,6 +1170,11 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 				gc.setForeground( peer_data.line_colour );
 				
 				gc.drawLine( 0, 0,(int)r, 0 );
+				
+				if ( lineOnly ){
+					
+					return;
+				}
 			}
 		
 			List<BucketData>	down_buckets 		= peer_data.down_data.buckets;
@@ -1169,24 +1190,52 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 				return;
 			}
 
-			gc.setBackground( Colors.white );
-
-			List[] all_buckets = { down_buckets, down_dead_buckets, up_buckets, up_dead_buckets };
-			
-			for ( List buckets: all_buckets ){
+			if ( !FORCE_FULL_REPAINT ){
 				
-				for ( BucketData bd: (List<BucketData>)buckets ){
+				gc.setBackground( Colors.white );
+	
+				List[] all_buckets = { down_buckets, down_dead_buckets, up_buckets, up_dead_buckets };
 				
-					double old_cx = bd.cx;
-					double cy = 0;
+				for ( List buckets: all_buckets ){
 					
-					if ( old_cx >= 0 ){
+					for ( BucketData bd: (List<BucketData>)buckets ){
 					
-						gc.fillOval( (int)( old_cx-BLOB_R-1 ), (int)( cy-BLOB_R-1), BLOB_R*2+1+2, BLOB_R*2+1+2 );
+						double old_cx = bd.cx;
+						double cy = 0;
 						
-						gc.setForeground( peer_data.line_colour );
+						if ( old_cx >= 0 ){
 						
-						gc.drawLine((int)( old_cx-BLOB_R-1), 0, (int)( old_cx+BLOB_R+1 ), 0 );
+							boolean is_down = buckets == down_buckets;
+							boolean is_up	= buckets == up_buckets;
+							
+							boolean skip = false;
+							
+							if ( is_down || is_up ){
+								
+								int percent = ( bd.bytes * 100 ) / bd.capacity;
+								
+								if ( is_down ){
+									
+									percent = 100 - percent;
+								}
+							
+								double new_cx = OWN_SIZE/2 + BLOB_R + 2 + ( r - PEER_SIZE/2 - OWN_SIZE/2 - BLOB_R*2 -4 ) * percent / 100.0;	
+								
+								if ( old_cx == new_cx ){
+									
+									skip = true;
+								}
+							}
+							
+							if ( !skip ){
+								
+								gc.fillOval( (int)( old_cx-BLOB_R-1 ), (int)( cy-BLOB_R-1), BLOB_R*2+1+2, BLOB_R*2+1+2 );
+								
+								gc.setForeground( peer_data.line_colour );
+								
+								gc.drawLine((int)( old_cx-BLOB_R-1), 0, (int)( old_cx+BLOB_R+1 ), 0 );
+							}
+						}
 					}
 				}
 			}
@@ -1560,7 +1609,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 			int x1 = x0 + (int) (r * deltaYXs[iAngle]);
 			int y1 = y0 + (int) (r * deltaYYs[iAngle]);
 
-			drawArrows( peer, gc, false, x0, y0, x1, y1, r, iAngle );
+			drawArrows( peer, gc, false, x0, y0, x1, y1, r, iAngle, false );
 		}
 	}
 
