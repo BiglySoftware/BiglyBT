@@ -949,74 +949,33 @@ public class ConfigView implements UISWTViewCoreEventListener {
 	 *
 	 * @since 4.5.1.1
 	 */
-	private void highlightControl(Control child, String text, boolean type1 ) {
-		child.setFont(headerFont);
-		
-		/*
-		if ( Utils.isGTK3 ){
-
-				// problem with checkbox/radio controls not supporting setting foreground text color
-				// so use alternative 
-			
-			Composite parent = child.getParent();
-			if (parent == null) {
-				return;
-			}
-			
-			parent.addPaintListener(e -> {
-				GC gc = e.gc;
-
-				assert gc != null;
-				gc.setAdvanced(true);
-				gc.setAntialias(SWT.ON);
-
-				Point pp = parent.toDisplay(0, 0);
-				Point cp = child.toDisplay(0, 0 );
-
-				Rectangle bounds = child.getBounds();
-
-
-				int	width 	= bounds.width;
-				int height	= bounds.height;
-
-				gc.setForeground(Colors.fadedRed );
-
-				gc.drawRectangle( cp.x-pp.x-2, cp.y-pp.y-2, width+4, height+4 );
-			});
-					
-			Object ld = child.getLayoutData();
-			
-			if ( ld instanceof GridData || ld == null ){
-				
-				Point size = child.computeSize( SWT.DEFAULT,  SWT.DEFAULT );
-
-				GridData gd = ld == null?new GridData():(GridData)ld;
-				
-				gd.minimumHeight = gd.heightHint = size.y + 4;
-				gd.minimumWidth = gd.widthHint = size.x + 4;
-				
-				child.setLayoutData( gd );
-			}
-		}else
-		*/
+	private void highlightControl(Control control, String text, boolean type1 ) {
+		control.setFont(headerFont);
 		
 		if ( Constants.isWindows ){
 			
-			child.setBackground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_BACKGROUND));
+			control.setBackground(Colors.getSystemColor(control.getDisplay(), SWT.COLOR_INFO_BACKGROUND));
 			
-			child.setForeground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_FOREGROUND));
+			control.setForeground(Colors.getSystemColor(control.getDisplay(), SWT.COLOR_INFO_FOREGROUND));
 			
 		}else{
 			
-			child.setBackground(Utils.isDarkAppearanceNative()?Colors.dark_grey:Colors.fadedYellow );
+			control.setBackground(Utils.isDarkAppearanceNative()?Colors.dark_grey:Colors.fadedYellow );
 		}
 		
-		if ( child instanceof Composite ){
+		if ( control instanceof Composite ){
+			
+			Composite comp = (Composite)control;
+			
+			for ( Control kid: comp.getChildren()) {
+				
+				highlightControl( kid, text, type1 );
+			}
 			
 			if ( type1 ){
-				highlightText((Composite)child, text );
+				highlightText( comp, text );
 			}else{
-				highlightText2((Composite)child, text );
+				highlightText2( comp, text );
 			}
 		}
 	}
