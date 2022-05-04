@@ -56,19 +56,7 @@ public class Colors implements ParameterListener {
 
   	// sometimes we just want static colours (e.g when on Linux in dark mode the dynamic blues ain't great)
   
-  public static final Color[] bluesFixed = {
-	  new Color(255, 255, 255 ),
-	  new Color(226, 240, 255 ),
-	  new Color(198, 226, 255 ),
-	  new Color(169, 212, 254 ),
-	  new Color(141, 198, 254 ),
-	  new Color(113, 184, 255 ),
-	  new Color(84, 170, 254 ),
-	  new Color(56, 156, 255 ),
-	  new Color(28, 142, 255 ),
-	  new Color(0, 128, 255 )
-  };
-  
+  public static final Color[] bluesFixed  = new Color[BLUES_DARKEST + 1];
   public static Color[] blues = new Color[BLUES_DARKEST + 1];
   public static Color[] faded = new Color[FADED_DARKEST + 1];
   public static Color colorProgressBar;
@@ -112,6 +100,22 @@ public class Colors implements ParameterListener {
 	private final ParameterListener configListener;
 
   private void allocateBlues() {
+	  
+	  Color[] temp = {
+		  new Color(display, 255, 255, 255 ),
+		  new Color(display, 226, 240, 255 ),
+		  new Color(display, 198, 226, 255 ),
+		  new Color(display, 169, 212, 254 ),
+		  new Color(display, 141, 198, 254 ),
+		  new Color(display, 113, 184, 255 ),
+		  new Color(display, 84, 170, 254 ),
+		  new Color(display, 56, 156, 255 ),
+		  new Color(display, 28, 142, 255 ),
+		  new Color(display, 0, 128, 255 )
+	  };
+	  
+	  System.arraycopy( temp, 0, bluesFixed, 0, temp.length );
+	  
 	  int r = COConfigurationManager.getIntParameter("Color Scheme.red");
 	  int g = COConfigurationManager.getIntParameter("Color Scheme.green");
 	  int b = COConfigurationManager.getIntParameter("Color Scheme.blue");
