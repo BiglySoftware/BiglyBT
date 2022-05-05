@@ -23,10 +23,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.LinkedList;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.RowData;
@@ -151,6 +154,17 @@ public class OpenTorrentWindow
 			}
 		});
 
+		tb.addListener(SWT.KeyDown,(ev)->{
+
+			if ( ev.keyCode == SWT.CR || ev.keyCode == SWT.KEYPAD_CR ){
+
+				if (( ev.stateMask & ( SWT.SHIFT | SWT.CTRL | SWT.ALT )) != 0 ){
+					
+					openTorrent( SWT.OK );
+				}
+			}
+		});
+
 		SWTSkinObject soTopBar = skin.getSkinObject("add-buttons");
 		if (soTopBar instanceof SWTSkinObjectContainer) {
 			swt_addButtons(((SWTSkinObjectContainer) soTopBar).getComposite());
@@ -199,18 +213,7 @@ public class OpenTorrentWindow
 			buttonsArea = new StandardButtonsArea() {
 				@Override
 				protected void clicked(int intValue) {
-					String referrer = null;
-					if (referrer_combo != null) {
-						referrer = referrer_combo.getText().trim();
-					}
-
-					if (dlg != null) {
-						dlg.close();
-					}
-					if (intValue == SWT.OK && soTextArea != null
-							&& soTextArea.getText().length()>0) {
-						openTorrent(soTextArea.getText(), referrer);
-					}
+					openTorrent( intValue );
 				}
 			};
 			buttonsArea.setButtonIDs(new String[] {
@@ -240,6 +243,24 @@ public class OpenTorrentWindow
 				dispose();
 			}
 		});
+	}
+	
+	private void
+	openTorrent(
+		int	intValue )
+	{
+		String referrer = null;
+		if (referrer_combo != null) {
+			referrer = referrer_combo.getText().trim();
+		}
+
+		if (dlg != null) {
+			dlg.close();
+		}
+		if (intValue == SWT.OK && soTextArea != null
+				&& soTextArea.getText().length()>0) {
+			openTorrent(soTextArea.getText(), referrer);
+		}
 	}
 
 	protected void openTorrent(String text, String newReferrer) {
