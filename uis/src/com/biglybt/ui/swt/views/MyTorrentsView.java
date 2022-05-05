@@ -1466,6 +1466,8 @@ public class MyTorrentsView
 
 				String tmpSearch = sLastSearch;
 
+				tmpSearch = GeneralUtils.getConfusableEquivalent( tmpSearch );
+
 				for ( int i = 1; i < name_mapping.length; i++ ){
 
 					if ( tmpSearch.startsWith(name_mapping[i][0])) {
@@ -1575,7 +1577,11 @@ public class MyTorrentsView
 
 				if ( o_name instanceof String ){
 
-					bOurs = pattern.matcher((String)o_name).find() == match_result;
+					String name = (String)o_name;
+					
+					name = GeneralUtils.getConfusableEquivalent( name );
+					
+					bOurs = pattern.matcher( name ).find() == match_result;
 
 				}else{
 					List<String>	names = (List<String>)o_name;
@@ -1585,6 +1591,8 @@ public class MyTorrentsView
 					bOurs = !match_result;
 
 					for ( String name: names ){
+						name = GeneralUtils.getConfusableEquivalent(name);
+
 						if ( pattern.matcher( name ).find()){
 							bOurs = match_result;
 							break;

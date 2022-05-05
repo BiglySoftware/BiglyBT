@@ -42,6 +42,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIManager;
@@ -651,8 +652,12 @@ public class SubscriptionsView
 		String 			filter, 
 		boolean 		regex)
 	{
+		filter = GeneralUtils.getConfusableEquivalent(filter);
+
 		String name = ds.getName();
-				
+
+		name = GeneralUtils.getConfusableEquivalent( name );
+
 		String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
 
 		boolean	match_result = true;

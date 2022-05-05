@@ -19,6 +19,7 @@ package com.biglybt.ui.swt.shells.opentorrent;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.text.Normalizer;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -6057,11 +6058,15 @@ public class OpenTorrentOptionsWindow
 				return( true );
 			}
 
+			filter = GeneralUtils.getConfusableEquivalent(filter);
+			
 			try {
 				File file = ds.getDestFileFullName();
 
 				String name = filter.contains( File.separator )?file.getAbsolutePath():file.getName();
 
+				name = GeneralUtils.getConfusableEquivalent(name);
+				
 				String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
 
 				boolean	match_result = true;
@@ -6075,7 +6080,9 @@ public class OpenTorrentOptionsWindow
 
 				Pattern pattern = RegExUtil.getCachedPattern( "fv:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
-				return( pattern.matcher(name).find() == match_result );
+				boolean result = pattern.matcher(name).find() == match_result;
+				
+				return( result );
 
 			} catch (Exception e) {
 

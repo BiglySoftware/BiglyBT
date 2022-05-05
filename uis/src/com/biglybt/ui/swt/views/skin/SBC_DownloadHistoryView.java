@@ -52,6 +52,7 @@ import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
@@ -799,6 +800,8 @@ public class SBC_DownloadHistoryView
 		String 				filter,
 		boolean 			regex)
 	{
+		filter = GeneralUtils.getConfusableEquivalent(filter);
+
 		Object o_name;
 
 		if ( filter.startsWith( "t:" )){
@@ -852,7 +855,11 @@ public class SBC_DownloadHistoryView
 
 		if ( o_name instanceof String ){
 
-			bOurs = pattern.matcher((String)o_name).find() == match_result;
+			String name = (String)o_name;
+			
+			name = GeneralUtils.getConfusableEquivalent(name);
+			
+			bOurs = pattern.matcher( name ).find() == match_result;
 
 		}else{
 
@@ -863,6 +870,8 @@ public class SBC_DownloadHistoryView
 			bOurs = !match_result;
 
 			for ( String name: names ){
+
+				name = GeneralUtils.getConfusableEquivalent( name );
 
 				if ( pattern.matcher( name ).find()){
 

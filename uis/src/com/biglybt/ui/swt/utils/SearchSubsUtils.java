@@ -38,6 +38,7 @@ import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
@@ -258,6 +259,8 @@ SearchSubsUtils
 			return( true );
 		}
 
+		filter = GeneralUtils.getConfusableEquivalent(filter);
+
 		try{
 			boolean	hash_filter = filter.startsWith( "t:" );
 
@@ -303,6 +306,8 @@ SearchSubsUtils
 			}else{
 
 				String name = ds.getName();
+
+				name = GeneralUtils.getConfusableEquivalent(name);
 
 				return( pattern.matcher(name).find() == match_result );
 			}

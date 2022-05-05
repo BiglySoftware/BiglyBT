@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
@@ -743,6 +744,8 @@ public class SBC_ArchivedDownloadsView
 		String 			filter,
 		boolean 		regex)
 	{
+		filter = GeneralUtils.getConfusableEquivalent(filter);
+
 		boolean do_files = filter.toLowerCase( Locale.US ).startsWith( "f:" );
 		
 		if ( do_files ){
@@ -783,6 +786,8 @@ public class SBC_ArchivedDownloadsView
 
 				String name = file.getFile().getName();
 
+				name = GeneralUtils.getConfusableEquivalent( name );
+
 				if ( pattern.matcher( name ).find()){
 
 					result = match_result;
@@ -806,6 +811,8 @@ public class SBC_ArchivedDownloadsView
 		}else{
 
 			String name = ds.getName();
+
+			name = GeneralUtils.getConfusableEquivalent(name);
 
 			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 

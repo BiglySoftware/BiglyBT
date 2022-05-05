@@ -767,6 +767,8 @@ public class FilesView
 			return( true );
 		}
 		
+		filter = GeneralUtils.getConfusableEquivalent(filter);
+		
 		boolean filterOnPath = filter.startsWith("p:");
 		if (filterOnPath) {
 			filter = filter.substring(2);
@@ -797,6 +799,8 @@ public class FilesView
 				}
 			}
 
+			name = GeneralUtils.getConfusableEquivalent(name);
+			
 			String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
 
 			boolean	match_result = true;
