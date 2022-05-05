@@ -2280,6 +2280,7 @@ GeneralUtils
 		String[]	args )
 	{
 			// extract ascii subset of confusable chars
+			// http://www.unicode.org/Public/security/latest/confusables.txt
 		
 		try{
 			LineNumberReader lnr = new LineNumberReader( new FileReader( "confusables.txt" ));
