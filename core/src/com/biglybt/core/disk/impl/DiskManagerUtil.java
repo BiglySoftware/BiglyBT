@@ -241,7 +241,13 @@ DiskManagerUtil
 							
 							File currentFile = file.getFile(true);
 							
-							FileUtil.deleteWithRecycle( currentFile, dm.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ));
+								// don't bother recycling if partial file
+							
+							boolean no_recycle = currentFile.length() != file.getLength();
+							
+							FileUtil.deleteWithRecycle( 
+									currentFile, 
+									dm.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ) || no_recycle );
 						}
 					}
 				}
@@ -336,9 +342,13 @@ DiskManagerUtil
 			
 					        	}else{
 			
+									// don't bother recycling if partial file
+									
+									boolean no_recycle = existing_file.length() != file_info.getLength();
+			
 					                if ( FileUtil.deleteWithRecycle(
 					                		existing_file,
-					                		download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ))){
+					                		download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ) || no_recycle )){
 			
 						                    // new file, recheck
 			

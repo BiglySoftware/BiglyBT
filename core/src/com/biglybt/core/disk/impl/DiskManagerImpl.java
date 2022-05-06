@@ -3804,42 +3804,42 @@ DiskManagerImpl
                 }
             }
 
-					boolean delete;
+            boolean delete;
 
-					if (has_links) {
-						File linked_file = fm_factory.getFileLink( torrent, i, file );
-	
-						if ( linked_file == file ){
-	
-							delete  = true;
-	
-						}else{
-	
-							// only consider linked files for deletion if they are in the torrent save dir
-							// i.e. a rename probably instead of a retarget to an existing file elsewhere
-							// delete_if_not_in_dir does allow this behaviour to be overridden though.
-	
-							try{
-								if ( delete_if_not_in_dir || linked_file.getCanonicalPath().startsWith(root_full_path)){
-	
-									file    = linked_file;
-	
-									delete  = true;
-	
-								}else{
-	
-									delete = false;
-								}
-							}catch( Throwable e ){
-	
-								Debug.printStackTrace(e);
-	
-								delete = false;
-							}
-						}
-					} else {
-           	delete = true;
-					}
+            if (has_links) {
+            	File linked_file = fm_factory.getFileLink( torrent, i, file );
+
+            	if ( linked_file == file ){
+
+            		delete  = true;
+
+            	}else{
+
+            		// only consider linked files for deletion if they are in the torrent save dir
+            		// i.e. a rename probably instead of a retarget to an existing file elsewhere
+            		// delete_if_not_in_dir does allow this behaviour to be overridden though.
+
+            		try{
+            			if ( delete_if_not_in_dir || linked_file.getCanonicalPath().startsWith(root_full_path)){
+
+            				file    = linked_file;
+
+            				delete  = true;
+
+            			}else{
+
+            				delete = false;
+            			}
+            		}catch( Throwable e ){
+
+            			Debug.printStackTrace(e);
+
+            			delete = false;
+            		}
+            	}
+            } else {
+            	delete = true;
+            }
 
             if ( delete && file.exists() && !file.isDirectory()){
 
