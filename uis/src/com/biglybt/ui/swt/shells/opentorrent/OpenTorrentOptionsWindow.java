@@ -19,7 +19,6 @@ package com.biglybt.ui.swt.shells.opentorrent;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.text.Normalizer;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -4364,12 +4363,21 @@ public class OpenTorrentOptionsWindow
 						for (Object ds : selectedDataSources) {
 							TorrentOpenFileOptions file = (TorrentOpenFileOptions) ds;
 
-							try {
-								f_pi.getIPC().invoke("lookupBySize", new Object[] {
-									new Long(file.lSize)
-								});
-
-							} catch (Throwable e) {
+							try{
+								try{
+									f_pi.getIPC().invoke(
+										"lookupBySize", 
+											new Object[]{
+												new Long(file.lSize),
+												new String[]{ AENetworkClassifier.AT_PUBLIC },
+												file.getDestFileName() });
+										
+								}catch( Throwable e ){
+								
+									f_pi.getIPC().invoke(
+										"lookupBySize", new Object[]{new Long(file.lSize)});
+								}
+							}catch (Throwable e) {
 
 								Debug.out(e);
 							}

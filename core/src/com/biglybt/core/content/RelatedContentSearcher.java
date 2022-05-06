@@ -204,7 +204,29 @@ RelatedContentSearcher
 
 		throws SearchException
 	{
-		final String	term = fixupTerm( (String)search_parameters.get( SearchProvider.SP_SEARCH_TERM ));
+		final String	term 		= fixupTerm( (String)search_parameters.get( SearchProvider.SP_SEARCH_TERM ));
+
+		final long		file_size;
+		
+		if ( term != null ){
+			
+			long f = -1;
+			
+			if ( term.startsWith( "{file-size=") && term.endsWith( "}" )){
+				
+				try{
+					
+					f = Long.parseLong( term.substring(11,term.length()-1));
+					
+				}catch( Throwable e ){
+					
+				}
+			}
+			
+			file_size = f;
+		}else{
+			file_size = -1;
+		}
 
 		final boolean	is_popular = isPopularity( term );
 
@@ -230,8 +252,6 @@ RelatedContentSearcher
 			observer.complete();
 
 		}else{
-
-			boolean hasIPV4 = NetworkAdmin.getSingleton().hasIPV4Potential();
 			
 			new AEThread2( "RCM:search", true )
 			{
@@ -239,6 +259,61 @@ RelatedContentSearcher
 				public void
 				run()
 				{
+					if ( file_size > 0 ){
+												
+						try{
+							manager.lookupContent( 
+									file_size,
+								new RelatedContentLookupListener()
+								{
+									public void
+									lookupStart()
+									{
+										
+									}
+	
+									public void
+									contentFound(
+										RelatedContent[]	content )
+									{
+										for ( final RelatedContent c: content ){
+											
+											try{
+												observer.resultReceived(si, mapResult( c ));
+												
+											}catch( Throwable e ){
+												
+												Debug.out( e );
+											}
+										}
+									}
+									
+	
+									public void
+									lookupComplete()
+									{
+										observer.complete();
+									}
+	
+									public void
+									lookupFailed(
+										ContentException 	error )
+									{
+										observer.complete();
+									}
+								});
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+							
+							observer.complete();
+						}
+						
+						return;
+					}
+					
+					boolean hasIPV4 = NetworkAdmin.getSingleton().hasIPV4Potential();
+
 					boolean search_cvs_only = SEARCH_CVS_ONLY_DEFAULT;
 
 					final Set<String>	hashes_sync_me = new HashSet<>();
@@ -258,133 +333,7 @@ RelatedContentSearcher
 
 							hashes_sync_me.add( Base32.encode( hash ));
 
-							SearchResult result =
-								new SearchResult()
-								{
-									@Override
-									public Object
-									getProperty(
-										int		property_name )
-									{
-										switch( property_name ){
-										
-											case SearchResult.PR_VERSION:{
-
-												return( new Long( c.getVersion()));
-											}
-											case SearchResult.PR_NAME:{
-
-												return( c.getTitle());
-											}
-											case SearchResult.PR_SIZE:{
-
-												return( c.getSize());
-											}
-											case SearchResult.PR_HASH:{
-
-												return( hash );
-											}
-											case SearchResult.PR_RANK:{
-
-													// this rank isn't that accurate, scale down
-
-												return( new Long( c.getRank() / 4 ));
-											}
-											case SearchResult.PR_SEED_COUNT:{	
-
-												return( new Long( c.getSeeds()));
-											}
-											case SearchResult.PR_LEECHER_COUNT:{
-
-												return( new Long( c.getLeechers()));
-											}
-											case SearchResult.PR_SUPER_SEED_COUNT:{
-
-												return( new Long( 0 ));
-											}
-											case SearchResult.PR_PUB_DATE:{
-
-												long	date = c.getPublishDate();
-
-												if ( date <= 0 ){
-
-													return( null );
-												}
-
-												return( new Date( date ));
-											}
-											case SearchResult.PR_TORRENT_LINK:
-											case SearchResult.PR_DOWNLOAD_LINK:
-											case SearchResult.PR_DOWNLOAD_BUTTON_LINK:{
-
-												byte[] hash = c.getHash();
-
-												if ( hash != null ){
-
-													return( UrlUtils.getMagnetURI( hash, c.getTitle(), c.getNetworks()));
-												}
-												
-												return( null );
-											}
-											case SearchResult.PR_CATEGORY:{
-
-												String[] tags = c.getTags();
-	
-												if ( tags != null ){
-	
-													for ( String tag: tags ){
-	
-														if ( !TagUtils.isInternalTagName( tag )){
-	
-															return( tag );
-														}
-													}
-												}
-												return( null );
-											}
-											case SearchResult.PR_TAGS:{
-
-												String[] tags = c.getTags();
-												
-												if ( tags != null ){
-	
-													List<String> result = new ArrayList<>( tags.length );
-	
-													for ( String tag: tags ){
-	
-														if ( !TagUtils.isInternalTagName( tag )){
-	
-															result.add( tag );
-														}
-													}
-													
-													return( result.toArray( new String[result.size()]));
-												}
-												return( null );
-											}
-											case RelatedContentManager.RCM_SEARCH_PROPERTY_TRACKER_KEYS:{
-
-												return( c.getTrackerKeys());
-											}
-											case RelatedContentManager.RCM_SEARCH_PROPERTY_WEB_SEED_KEYS:{
-
-												return( c.getWebSeedKeys());
-											}
-											case RelatedContentManager.RCM_SEARCH_PROPERTY_TAGS:{
-
-												return( c.getTags());
-											}
-											case RelatedContentManager.RCM_SEARCH_PROPERTY_NETWORKS:{
-
-												return( c.getNetworks());
-											}
-											default:{
-												
-												return( null );
-											}
-										}
-									}
-								};
+							SearchResult result = mapResult( c );
 
 							observer.resultReceived( si, result );
 						}
@@ -733,6 +682,141 @@ RelatedContentSearcher
 		}
 
 		return( si );
+	}
+	
+	private SearchResult
+	mapResult(
+		RelatedContent		c )
+	{
+		SearchResult result =
+			new SearchResult()
+			{
+				@Override
+				public Object
+				getProperty(
+					int		property_name )
+				{
+					switch( property_name ){
+					
+						case SearchResult.PR_VERSION:{
+
+							return( new Long( c.getVersion()));
+						}
+						case SearchResult.PR_NAME:{
+
+							return( c.getTitle());
+						}
+						case SearchResult.PR_SIZE:{
+
+							return( c.getSize());
+						}
+						case SearchResult.PR_HASH:{
+
+							return( c.getHash());
+						}
+						case SearchResult.PR_RANK:{
+
+								// this rank isn't that accurate, scale down
+
+							return( new Long( c.getRank() / 4 ));
+						}
+						case SearchResult.PR_SEED_COUNT:{	
+
+							return( new Long( c.getSeeds()));
+						}
+						case SearchResult.PR_LEECHER_COUNT:{
+
+							return( new Long( c.getLeechers()));
+						}
+						case SearchResult.PR_SUPER_SEED_COUNT:{
+
+							return( new Long( 0 ));
+						}
+						case SearchResult.PR_PUB_DATE:{
+
+							long	date = c.getPublishDate();
+
+							if ( date <= 0 ){
+
+								return( null );
+							}
+
+							return( new Date( date ));
+						}
+						case SearchResult.PR_TORRENT_LINK:
+						case SearchResult.PR_DOWNLOAD_LINK:
+						case SearchResult.PR_DOWNLOAD_BUTTON_LINK:{
+
+							byte[] hash = c.getHash();
+
+							if ( hash != null ){
+
+								return( UrlUtils.getMagnetURI( hash, c.getTitle(), c.getNetworks()));
+							}
+							
+							return( null );
+						}
+						case SearchResult.PR_CATEGORY:{
+
+							String[] tags = c.getTags();
+
+							if ( tags != null ){
+
+								for ( String tag: tags ){
+
+									if ( !TagUtils.isInternalTagName( tag )){
+
+										return( tag );
+									}
+								}
+							}
+							return( null );
+						}
+						case SearchResult.PR_TAGS:{
+
+							String[] tags = c.getTags();
+							
+							if ( tags != null ){
+
+								List<String> result = new ArrayList<>( tags.length );
+
+								for ( String tag: tags ){
+
+									if ( !TagUtils.isInternalTagName( tag )){
+
+										result.add( tag );
+									}
+								}
+								
+								return( result.toArray( new String[result.size()]));
+							}
+							return( null );
+						}
+						case RelatedContentManager.RCM_SEARCH_PROPERTY_TRACKER_KEYS:{
+
+							return( c.getTrackerKeys());
+						}
+						case RelatedContentManager.RCM_SEARCH_PROPERTY_WEB_SEED_KEYS:{
+
+							return( c.getWebSeedKeys());
+						}
+						case RelatedContentManager.RCM_SEARCH_PROPERTY_TAGS:{
+
+							return( c.getTags());
+						}
+						case RelatedContentManager.RCM_SEARCH_PROPERTY_NETWORKS:{
+
+							return( c.getNetworks());
+						}
+						default:{
+							
+							return( null );
+						}
+					}
+				}
+			};
+			
+		return( result );
 	}
 
 	private String
@@ -2368,6 +2452,10 @@ outer:
 	isPopularity(
 		String		term )
 	{
+		if ( term == null ){
+			
+			return( false );
+		}
 		return( term.equals( "(.)" ));
 	}
 
