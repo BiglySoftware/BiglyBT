@@ -2601,6 +2601,12 @@ TRTrackerBTAnnouncerImpl
 
    			// gotta select an appropriate override based on network type
 
+   			// UDP protocol only support IPv4 overrides so select IPv4 over IPv6 if possible
+   		
+   		boolean is_udp = _url.getProtocol().equalsIgnoreCase( "udp" );
+   		
+   		boolean found_invalid_udp = false;
+   		
 		StringTokenizer	tok = new StringTokenizer( explicit_ips, ";" );
 
 		while( tok.hasMoreTokens()){
@@ -2613,6 +2619,22 @@ TRTrackerBTAnnouncerImpl
 
 				if ( cat == AENetworkClassifier.AT_PUBLIC ){
 
+					if ( is_udp ){
+						
+						try{
+							InetAddress i_address = HostNameToIPResolver.syncResolve(this_address);
+						
+							if ( i_address.getAddress().length != 4 ){
+					
+								found_invalid_udp = true;
+								
+								continue;
+							}
+						}catch( Throwable e ){
+							
+						}
+					}
+					
 					normal_explicit	= this_address;
 				}
 
@@ -2622,6 +2644,14 @@ TRTrackerBTAnnouncerImpl
 
 					break;
 				}
+			}
+		}
+		
+		if ( ip == null && found_invalid_udp && tracker_network == AENetworkClassifier.AT_PUBLIC ){
+			
+			if ( Constants.IS_CVS_VERSION ){
+				
+				Debug.outNoStack( "Announce for " + _url + ": no valid IPv4 override found");
 			}
 		}
    	}
