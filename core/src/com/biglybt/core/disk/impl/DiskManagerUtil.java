@@ -241,9 +241,10 @@ DiskManagerUtil
 							
 							File currentFile = file.getFile(true);
 							
-								// don't bother recycling if partial file
+								// these are compact files and can't be recovered as they just contain
+								// start/end piece data
 							
-							boolean no_recycle = currentFile.length() != file.getLength();
+							boolean no_recycle = true;
 							
 							FileUtil.deleteWithRecycle( 
 									currentFile, 
@@ -342,10 +343,12 @@ DiskManagerUtil
 			
 					        	}else{
 			
-									// don't bother recycling if partial file
+					        		int st = file_info.getStorageType();
+
+										// don't bother recycling if compact as just contain start/end piece data
 									
-									boolean no_recycle = existing_file.length() != file_info.getLength();
-			
+									boolean no_recycle = st == DiskManagerFileInfo.ST_COMPACT || st == DiskManagerFileInfo.ST_REORDER_COMPACT;
+									
 					                if ( FileUtil.deleteWithRecycle(
 					                		existing_file,
 					                		download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ) || no_recycle )){
