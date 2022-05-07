@@ -8,7 +8,7 @@ The general rule is to code in the style of the code around it.  If there's one 
 
 There are two main coding styles within BiglyBT for the simple reason that there are two grumpy main developers with their own style.
 
-One of the styles is documented at [BiglyBT/PreferencesJavaCodeStyleFormatter.xml](BiglyBT/PreferencesJavaCodeStyleFormatter.xml). This is an Eclipse formatter configuration file, which can be used in IntelliJ with [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter) plugin.
+One of the styles is documented at [PreferencesJavaCodeStyleFormatter.xml](PreferencesJavaCodeStyleFormatter.xml). This is an Eclipse formatter configuration file, which can be used in IntelliJ with [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter) plugin.
 
 ## Common Code Styles
 
