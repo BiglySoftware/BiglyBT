@@ -130,6 +130,8 @@ public class MyTorrentsView
 {
 	private static final LogIDs LOGID = LogIDs.GUI;
 
+	private static final Object KEY_DM_REMOVED_FROM_COMPLETE_TABLE_TIME = new Object();
+	
 	private static final AsyncDispatcher	dispatcher = new AsyncDispatcher();
 	
 	private static final TagManager tagManager = TagManagerFactory.getTagManager();
@@ -3696,11 +3698,23 @@ public class MyTorrentsView
 	}
 
 	@Override
-	public void rowAdded(TableRowCore row) {
+	public void 
+	rowAdded(
+		TableRowCore row ) 
+	{
 		if (row.getParentRowCore() == null) {
 			DownloadManager dm = (DownloadManager) row.getDataSource(true);
 			if ( dm.getDownloadState().getBooleanAttribute( DownloadManagerState.AT_FILES_EXPANDED )){
 				row.setExpanded(true);
+			}
+			if ( isIncompletedOnly ){
+					// if a download has removed from complete to incomplete then make it obvious
+				Long prev_removed = (Long)dm.getUserData( KEY_DM_REMOVED_FROM_COMPLETE_TABLE_TIME );
+				if ( prev_removed != null ){
+					if ( SystemTime.getMonotonousTime() - prev_removed < 5000 ){						
+						dm.requestAttention();
+					}
+				}
 			}
 			
 			boolean	was_selected;
@@ -3744,6 +3758,13 @@ public class MyTorrentsView
 	public void 
 	rowRemoved(TableRowCore row) 
 	{
+		if ( isCompletedOnly && row.getParentRowCore() == null ){
+			
+			DownloadManager dm = (DownloadManager)row.getDataSource( true );
+			
+			dm.setUserData( KEY_DM_REMOVED_FROM_COMPLETE_TABLE_TIME, SystemTime.getMonotonousTime());
+		}
+		
 		TableRowCore[] selected = tv.getSelectedRows();
 
 		if (selected.length > 0 && rowRemovedRunnable == null) {
