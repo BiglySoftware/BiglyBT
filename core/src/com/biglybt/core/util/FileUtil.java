@@ -2242,6 +2242,8 @@ public class FileUtil {
     				
     			}else{
     				
+    				log( "Failed to rename " + from_file + " to " + to_file + ", resorting to copy+delete");
+    				
     					// attempt to copy
     				
     				return( reallyCopyFile( from_file, to_file, pl ));

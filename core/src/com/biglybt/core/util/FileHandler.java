@@ -190,7 +190,7 @@ public class FileHandler
 		return child_s.startsWith(parent_s);
 	}
 
-	public static Object
+	public Object
 	getFileStore(
 		File		file )
 	{
