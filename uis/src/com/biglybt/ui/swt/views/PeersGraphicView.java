@@ -70,8 +70,6 @@ import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.AEThread2;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
@@ -749,24 +747,26 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 							
 							Rectangle bounds = img.getBounds();
 							
+							int	x		= e.x;
+							int y		= e.y;
 							int width 	= e.width;
 							int height	= e.height;
 							
-							if ( bounds.width >= ( width + e.x ) && bounds.height >= ( height + e.y )){
+							if ( bounds.width >= ( width + x ) && bounds.height >= ( height + y )){
 								
 								if ( FORCE_FULL_REPAINT ){
 									
-									Image full_image = new Image(canvas.getDisplay(), width, height);
+									Image full_image = new Image(canvas.getDisplay(), bounds.width, bounds.height);
 									
 									try{
 										GC full_gc = new GC( full_image );
 
 										try{
-											full_gc.drawImage(img, e.x, e.y, width, height, e.x, e.y, width, height);
+											full_gc.drawImage(img, x, y, width, height, x, y, width, height);
 									
-											refreshArrows( full_gc, e.x, e.y, width, height );
+											refreshArrows( full_gc, x, y, width, height );
 											
-											e.gc.drawImage(full_image, e.x, e.y, width, height, e.x, e.y, width, height);
+											e.gc.drawImage(full_image, x, y, width, height, x, y, width, height);
 											
 										}finally{
 											
