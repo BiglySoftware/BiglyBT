@@ -747,6 +747,8 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 							
 							Rectangle bounds = img.getBounds();
 							
+							GC gc = e.gc;
+							
 							int	x		= e.x;
 							int y		= e.y;
 							int width 	= e.width;
@@ -764,9 +766,11 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 										try{
 											full_gc.drawImage(img, x, y, width, height, x, y, width, height);
 									
-											refreshArrows( full_gc, x, y, width, height );
+											full_gc.setClipping( x, y, width, height);
 											
-											e.gc.drawImage(full_image, x, y, width, height, x, y, width, height);
+											refreshArrows( full_gc );
+											
+											gc.drawImage(full_image, x, y, width, height, x, y, width, height);
 											
 										}finally{
 											
@@ -791,8 +795,14 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 									
 									if ( arrow_redraw_pending ){
 		
-										refreshArrows( e.gc, e.x, e.y, width, height );
+										Rectangle old_clip = gc.getClipping();
+										
+										gc.setClipping( x, y, width, height);
+										
+										refreshArrows( gc  );
 		
+										gc.setClipping( old_clip );
+										
 										arrow_redraw_pending = false;
 									}
 								}
@@ -1608,11 +1618,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 
 	protected void 
 	refreshArrows(
-		GC		gc,
-		int		x,
-		int		y,
-		int		width,
-		int		height )
+		GC		gc )
 	{
 		//long start = SystemTime.getMonotonousTime();
 		synchronized( dm_data_lock ){
