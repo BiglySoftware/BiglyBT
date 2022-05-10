@@ -450,7 +450,7 @@ PeersViewBase
 		
 		swarm_view.setAlwaysShowDownloadName( true );
 		
-		swarm_view.initialize( parent );
+		swarm_view.initialize( parent, false );
 		
 		swarm_view.getComposite().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		

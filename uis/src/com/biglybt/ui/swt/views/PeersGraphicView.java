@@ -49,6 +49,8 @@ import org.eclipse.swt.graphics.LineAttributes;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.Transform;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -75,6 +77,7 @@ import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimerEventPeriodic;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.components.graphics.PieUtils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
@@ -104,12 +107,32 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 	public static String MSGID_PREFIX = "PeersGraphicView";
 
 		// on OSX/Linux optimising arrow repaint doesn't work as the underlying canvas image is trashed between paint events
+		// actually this end up being the best paint approach to avoid flicker and performance seems ok
 	
-	private static final boolean FORCE_FULL_REPAINT = !Constants.isWindows;
+	private static final boolean FORCE_FULL_REPAINT = true; // !Constants.isWindows;
 	
 	private final Object	DM_DATA_CACHE_KEY 		= new Object();	// not static as we want per-view data
 	private final Object	PEER_DATA_KEY 			= new Object();	// not static as we want per-view data
+	
+	private final static int BLOCKCOLOR_DOWN_SMALL 		= 0;
+	private final static int BLOCKCOLOR_DOWN_BIG		= 1;
+	private final static int BLOCKCOLOR_UP_SMALL 		= 2;
+	private final static int BLOCKCOLOR_UP_BIG 			= 3;
 
+	private final static Color[] blockColors = {
+			Colors.bluesFixed[Colors.BLUES_MIDDARK],
+			Colors.maroon,
+			Colors.fadedGreen,
+			Colors.orange,
+		};
+
+	private final static String[] legendKeys = {
+			"SwarmView.block.downsmall",
+			"SwarmView.block.downbig",
+			"SwarmView.block.upsmall",
+			"SwarmView.block.upbig",
+	};
+		
 	private static final int PEER_SIZE = 18;
 	//private static final int PACKET_SIZE = 10;
 	private static final int OWN_SIZE_DEFAULT = 75;
@@ -443,11 +466,30 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		return "PeersGraphicView.title.full";
 	}
 
-	protected void initialize(Composite composite) {
-		display = composite.getDisplay();
+	protected void 
+	initialize(
+		Composite 	parent,
+		boolean		showLegend )
+	{
+		display = parent.getDisplay();
 
-		canvas = new Canvas(composite,SWT.NO_BACKGROUND);
+		Composite comp = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 1;
+		layout.horizontalSpacing = 0;
+		layout.verticalSpacing = 0;
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		comp.setLayout(layout);
+		GridData gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
+		comp.setLayoutData(gridData);
+			
+		comp.setBackground( Colors.white );
+		
+		canvas = new Canvas(comp,SWT.NO_BACKGROUND);
 
+		canvas.setLayoutData( new GridData(GridData.FILL_BOTH ));
+				
 		canvas.addListener(SWT.MouseHover, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -707,22 +749,52 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 							
 							Rectangle bounds = img.getBounds();
 							
-							if ( bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )){
+							int width 	= e.width;
+							int height	= e.height;
+							
+							if ( bounds.width >= ( width + e.x ) && bounds.height >= ( height + e.y )){
 								
-								if ( full_redraw_pending || FORCE_FULL_REPAINT ){
+								if ( FORCE_FULL_REPAINT ){
 									
-									e.gc.drawImage(img, e.x, e.y, e.width, e.height, e.x, e.y, e.width,	e.height);
+									Image full_image = new Image(canvas.getDisplay(), width, height);
+									
+									try{
+										GC full_gc = new GC( full_image );
+
+										try{
+											full_gc.drawImage(img, e.x, e.y, width, height, e.x, e.y, width, height);
+									
+											refreshArrows( full_gc, e.x, e.y, width, height );
 											
-									full_redraw_pending = false;
+											e.gc.drawImage(full_image, e.x, e.y, width, height, e.x, e.y, width, height);
+											
+										}finally{
+											
+											full_gc.dispose();
+										}
+										
+									}finally{
+										
+										full_image.dispose();
+									}
 									
-									arrow_redraw_pending = FORCE_FULL_REPAINT;
-								}
-								
-								if ( arrow_redraw_pending ){
-	
-									refreshArrows( e.gc, e.x, e.y, e.width, e.height );
-	
-									arrow_redraw_pending = false;
+									full_redraw_pending 	= false;
+									arrow_redraw_pending	= false;
+									
+								}else{
+									if ( full_redraw_pending ){
+										
+										e.gc.drawImage(img, e.x, e.y, width, height, e.x, e.y, width, height);
+												
+										full_redraw_pending = false;
+									}
+									
+									if ( arrow_redraw_pending ){
+		
+										refreshArrows( e.gc, e.x, e.y, width, height );
+		
+										arrow_redraw_pending = false;
+									}
 								}
 								
 								return;
@@ -740,6 +812,11 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 				img = null;
 			}
 		});
+		
+		if ( showLegend ){
+			Legend.createLegendComposite(	
+					comp, blockColors, legendKeys, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 1, 1));
+		}
 	}
 
 	protected void refresh() 
@@ -1256,9 +1333,9 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 					boolean is_big = bd.capacity == BIG_BUCKET_CAPACITY;
 					
 					if ( is_down ){
-						bg=is_big?Colors.maroon:Colors.bluesFixed[Colors.BLUES_MIDDARK];
+						bg=blockColors[is_big?BLOCKCOLOR_DOWN_BIG:BLOCKCOLOR_DOWN_SMALL];
 					}else{
-						bg=is_big?Colors.fadedGreen:Colors.green;
+						bg=blockColors[is_big?BLOCKCOLOR_UP_BIG:BLOCKCOLOR_UP_SMALL];
 					}
 					
 					gc.setBackground( bg );
@@ -1629,7 +1706,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 			break;
 
 		case UISWTViewEvent.TYPE_INITIALIZE:
-			initialize((Composite)event.getData());
+			initialize((Composite)event.getData(), true);
 			break;
 
 		case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
