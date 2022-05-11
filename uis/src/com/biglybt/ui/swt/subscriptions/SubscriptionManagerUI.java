@@ -1203,8 +1203,6 @@ SubscriptionManagerUI
 
 								new SubscriptionWizard(PluginCoreUtils.unwrap(dl));
 
-								COConfigurationManager.setParameter( "subscriptions.wizard.shown", true );
-
 								refreshTitles( mdiEntryOverview );
 
 								//new SubscriptionListWindow(PluginCoreUtils.unwrap(dl),true);
@@ -1493,8 +1491,6 @@ SubscriptionManagerUI
 				public void mdiEntryVitalityImage_clicked(int x, int y) {
 					new SubscriptionWizard();
 
-					COConfigurationManager.setParameter( "subscriptions.wizard.shown", true );
-
 					refreshTitles( mdiEntryOverview );
 				}
 			});
@@ -1523,8 +1519,6 @@ SubscriptionManagerUI
 					int propertyID)
 				{
 					Object result = null;
-
-					// COConfigurationManager.setParameter( "subscriptions.wizard.shown", false );
 
 					if (propertyID == TITLE_INDICATOR_TEXT) {
 
@@ -2904,6 +2898,19 @@ SubscriptionManagerUI
 						mi.setData( true );
 						
 						mi.setEnabled( false );
+						
+						mi = menu_manager.addMenuItem( menu, "sep" );
+
+						mi.setStyle( MenuItem.STYLE_SEPARATOR );
+						
+						mi = menu_manager.addMenuItem( 
+								menu, 
+								"!" + MessageText.getString( "Wizard.Subscription.template.title" ) + "...!" );
+
+						mi.addListener((m,ev)->{
+														
+							new SubscriptionWizard( SubscriptionWizard.MODE_CREATE_TEMPLATE );
+						});
 						
 					}else{
 						

@@ -97,10 +97,10 @@ import com.biglybt.ui.swt.utils.FontUtils;
 public class SubscriptionWizard {
 
 	private static final int MODE_OPT_IN = 1;
-	private static final int MODE_SUBSCRIBE = 2;
-	private static final int MODE_CREATE_SEARCH = 3;
-	private static final int MODE_CREATE_RSS = 4;
-	private static final int MODE_CREATE_TEMPLATE = 5;
+	public static final int MODE_SUBSCRIBE = 2;
+	public static final int MODE_CREATE_SEARCH = 3;
+	public static final int MODE_CREATE_RSS = 4;
+	public static final int MODE_CREATE_TEMPLATE = 5;
 
 	private static final int RANK_COLUMN_WIDTH = 85;
 	private static final String TABLE_SUB_WIZ = "SubscriptionWizard";
@@ -110,6 +110,8 @@ public class SubscriptionWizard {
 	private final String TITLE_CREATE_RSS = MessageText.getString("Wizard.Subscription.create.title");
 	private final String TITLE_CREATE_TEMPLATE = MessageText.getString("Wizard.Subscription.template.title");
 
+	int defaultMode = MODE_SUBSCRIBE;
+	
 	Display display;
 	Shell shell;
 
@@ -169,6 +171,14 @@ public class SubscriptionWizard {
 		init();
 	}
 
+	public SubscriptionWizard( int mode) {
+		defaultMode = mode;
+		if ( defaultMode != MODE_OPT_IN ){
+			COConfigurationManager.setParameter( "subscriptions.opted_in", true );
+		}
+		init();
+	}
+
 	public
 	SubscriptionWizard(
 		URL					url,
@@ -203,6 +213,8 @@ public class SubscriptionWizard {
 	protected void
 	init()
 	{
+		COConfigurationManager.setParameter( "subscriptions.wizard.shown", true );
+
 		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
 			@Override
 			public void coreRunning(Core core) {
@@ -1427,7 +1439,7 @@ public class SubscriptionWizard {
 		if(!opted_in) {
 			setMode(MODE_OPT_IN);
 		} else {
-			setMode(MODE_SUBSCRIBE);
+			setMode(defaultMode);
 		}
 	}
 

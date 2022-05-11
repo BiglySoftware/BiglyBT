@@ -331,8 +331,6 @@ public class SubscriptionsView
 		
 		btnAdd.addListener( SWT.Selection, (ev)->{
 			new SubscriptionWizard();
-
-			COConfigurationManager.setParameter( "subscriptions.wizard.shown", true );
 		});
 		
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(topComposite, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
