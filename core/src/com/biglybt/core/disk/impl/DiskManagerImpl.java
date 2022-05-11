@@ -2677,8 +2677,10 @@ DiskManagerImpl
           if (!removing) {
         	  
               try{
-                  saveResumeData(false);
+            	  if ( !download_manager.isDestroyed()){
                   
+					saveResumeData(false);
+            	  }
               }catch( Throwable e ){
             	  
                   setFailed( DiskManager.ET_OTHER, "Resume data save fails", e );
