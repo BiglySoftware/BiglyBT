@@ -3327,6 +3327,15 @@ SubscriptionManagerUI
 						try{
 							VuzeFile vf = subs.getVuzeFile();
 
+							List<Subscription> deps = SubscriptionUtils.getDependsOnClosure(subs);
+							
+							if ( !deps.isEmpty()){
+								
+								for ( Subscription dep: deps ){
+									
+									vf.addComponents( dep.getVuzeFile());
+								}
+							}
 							vf.write( new File( path ));
 
 						}catch( Throwable e ){

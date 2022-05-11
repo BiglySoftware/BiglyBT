@@ -15,6 +15,7 @@ import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionException;
 import com.biglybt.core.subs.SubscriptionResultFilter;
+import com.biglybt.core.subs.SubscriptionUtils;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
@@ -247,35 +248,7 @@ SubscriptionResultFilterImpl
 	public List<Subscription>
 	getDependsOn()
 	{
-		List<Subscription> result = new ArrayList<Subscription>();
-		
-		getDependsOn( subs, result );
-		
-		return( result );
-	}
-	
-	private void
-	getDependsOn(
-		Subscription 		subs,
-		List<Subscription>	result )
-	{
-		if ( subs != null ){
-			
-			List<Subscription> deps = subs.getDependsOn();
-			
-			if ( deps != null ){
-				
-				for ( Subscription dep: deps ){
-					
-					if ( !result.contains( dep )){
-						
-						result.add( dep );
-						
-						getDependsOn( dep, result );
-					}
-				}
-			}
-		}
+		return( SubscriptionUtils.getDependsOnClosure( subs ));
 	}
 	
 	@Override

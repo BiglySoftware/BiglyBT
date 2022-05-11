@@ -112,6 +112,29 @@ VuzeFileImpl
 	}
 
 	@Override
+	public void 
+	addComponents(
+		VuzeFile vf )
+	{
+		VuzeFileComponent[] comps = vf.getComponents();
+		
+		int num = comps.length;
+		
+		if ( num > 0 ){
+			
+			int	old_len = components.length;
+
+			VuzeFileComponent[] res = new VuzeFileComponent[old_len+num];
+
+			System.arraycopy( components, 0, res, 0, old_len );
+
+			System.arraycopy( comps, 0, res, old_len, num );
+
+			components = res;
+		}
+	}
+	
+	@Override
 	public Map
 	exportToMap()
 

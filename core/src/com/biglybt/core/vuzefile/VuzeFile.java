@@ -38,6 +38,10 @@ VuzeFile
 		int		type,
 		Map		content );
 
+	public void
+	addComponents(
+		VuzeFile	vf );
+	
 	public byte[]
 	exportToBytes()
 

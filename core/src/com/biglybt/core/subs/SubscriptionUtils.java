@@ -287,6 +287,41 @@ SubscriptionUtils
 		return( hs_result );
 	}
 	
+	public static List<Subscription>
+	getDependsOnClosure(
+		Subscription	subs )
+	{
+		List<Subscription> result = new ArrayList<Subscription>();
+		
+		getDependsOn( subs, result );
+		
+		return( result );
+	}
+	
+	private static void
+	getDependsOn(
+		Subscription 		subs,
+		List<Subscription>	result )
+	{
+		if ( subs != null ){
+			
+			List<Subscription> deps = subs.getDependsOn();
+			
+			if ( deps != null ){
+				
+				for ( Subscription dep: deps ){
+					
+					if ( !result.contains( dep )){
+						
+						result.add( dep );
+						
+						getDependsOn( dep, result );
+					}
+				}
+			}
+		}
+	}
+	
 	public static class
 	SubscriptionDownloadDetails
 	{
