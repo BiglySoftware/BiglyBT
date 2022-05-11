@@ -274,7 +274,7 @@ SBC_SubscriptionResultsView
 
 			pFilterUpdater = null;
 
-			if ( ds != null && ds.isUpdateable()){
+			if ( ds != null ){
 
 				try{
 					Composite pFilters = new Composite(cFilters, SWT.NONE);
@@ -340,26 +340,32 @@ SBC_SubscriptionResultsView
 								}
 							}
 							
-							long kInB = DisplayFormatters.getKinB();
-							long mInB = kInB*kInB;
-
-							long	min_size = Math.max( 0,  ds_filter.getMinSize()/mInB );
-							long	max_size = Math.max( 0,  ds_filter.getMaxSize()/mInB );
-							long	min_seeds = Math.max( 0,  ds_filter.getMinSeeds());
-							long	max_age = Math.max( 0,  ds_filter.getMaxAgeSecs());
-							
-							pflabel.setText(
-								MessageText.getString(
-									"subs.persistent.filters",
-									new String[]{
-										getString( ds_filter.getWithWords()),
-										getString( ds_filter.getWithoutWords()),
-										String.valueOf( min_size ),
-										String.valueOf( max_size )
-									
-									}) +
-								", " + MessageText.getString( "label.min.seeds") + " = " + ( min_seeds ) + 
-								", " + MessageText.getString( "label.max.age") + " = " + (TimeFormatter.format3( max_age, null, true )));
+							if ( ds.isUpdateable()){
+								long kInB = DisplayFormatters.getKinB();
+								long mInB = kInB*kInB;
+	
+								long	min_size = Math.max( 0,  ds_filter.getMinSize()/mInB );
+								long	max_size = Math.max( 0,  ds_filter.getMaxSize()/mInB );
+								long	min_seeds = Math.max( 0,  ds_filter.getMinSeeds());
+								long	max_age = Math.max( 0,  ds_filter.getMaxAgeSecs());
+								
+								pflabel.setText(
+									MessageText.getString(
+										"subs.persistent.filters",
+										new String[]{
+											getString( ds_filter.getWithWords()),
+											getString( ds_filter.getWithoutWords()),
+											String.valueOf( min_size ),
+											String.valueOf( max_size )
+										
+										}) +
+									", " + MessageText.getString( "label.min.seeds") + " = " + ( min_seeds ) + 
+									", " + MessageText.getString( "label.max.age") + " = " + (TimeFormatter.format3( max_age, null, true )));
+							}else{
+								pflabel.setVisible( false );
+								GridData gd = (GridData)pflabel.getLayoutData();
+								gd.widthHint = gd.heightHint = 0;
+							}
 						}
 					};
 

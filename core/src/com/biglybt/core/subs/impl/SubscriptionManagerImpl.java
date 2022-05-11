@@ -174,6 +174,9 @@ SubscriptionManagerImpl
 
 						VuzeFileComponent[] comps = vf.getComponents();
 
+						List<Subscription> new_subscriptions = new ArrayList<>();
+						List<Subscription> new_templates = new ArrayList<>();
+						
 						for (int j=0;j<comps.length;j++){
 
 							VuzeFileComponent comp = comps[j];
@@ -190,6 +193,15 @@ SubscriptionManagerImpl
 											( expected_types &
 												( VuzeFileComponent.COMP_TYPE_SUBSCRIPTION | VuzeFileComponent.COMP_TYPE_SUBSCRIPTION_SINGLETON )) == 0 );
 
+									if ( subs.isSubscriptionTemplate()){
+										
+										new_templates.add( subs );
+										
+									}else{
+										
+										new_subscriptions.add( subs );
+									}
+									
 									comp.setProcessed();
 
 									comp.setData( Subscription.VUZE_FILE_COMPONENT_SUBSCRIPTION_KEY, subs );
@@ -198,6 +210,14 @@ SubscriptionManagerImpl
 
 									Debug.printStackTrace(e);
 								}
+							}
+						}
+						
+						if ( !new_templates.isEmpty()){
+							
+							for ( Subscription s: new_subscriptions ){
+								
+								s.setDependsOn( new_templates );
 							}
 						}
 					}
