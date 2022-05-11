@@ -576,30 +576,32 @@ SBC_SubscriptionResultsView
 			spinMaxAge.addListener(SWT.Selection, maxAgeListener );		
 			combMaxAge.addListener(SWT.Selection, maxAgeListener );
 			
-			if ( ds != null && ds.isUpdateable()){
+			if ( ds != null ){
 
-				label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
-				label.setLayoutData(new RowData(-1, sepHeight));
-
-				final Runnable					f_pFilterUpdater 	= pFilterUpdater;
-
-				Button save = new Button( vFilters,SWT.PUSH );
-				save.setText( MessageText.getString( "ConfigView.button.save" ));
-				save.addListener(SWT.Selection, new Listener() {
-					@Override
-					public void handleEvent(Event event) {
-
-						try{
-							ds_filter.save();
-
-							f_pFilterUpdater.run();
-
-						}catch( Throwable e ){
-
-							Debug.out( e );
+				if ( ds.isUpdateable() ){
+					label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
+					label.setLayoutData(new RowData(-1, sepHeight));
+	
+					final Runnable					f_pFilterUpdater 	= pFilterUpdater;
+	
+					Button save = new Button( vFilters,SWT.PUSH );
+					save.setText( MessageText.getString( "ConfigView.button.save" ));
+					save.addListener(SWT.Selection, new Listener() {
+						@Override
+						public void handleEvent(Event event) {
+	
+							try{
+								ds_filter.save();
+	
+								f_pFilterUpdater.run();
+	
+							}catch( Throwable e ){
+	
+								Debug.out( e );
+							}
 						}
-					}
-				});
+					});
+				}
 				
 				label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
 				label.setLayoutData(new RowData(-1, sepHeight));
