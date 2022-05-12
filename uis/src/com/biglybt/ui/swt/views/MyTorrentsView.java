@@ -1273,36 +1273,51 @@ public class MyTorrentsView
 						}
 					}
 
-					try{
-						tag.addTaggableBatch( true );
+					boolean do_it = true;
 					
-						for (Object obj : ds) {
-	
-							if (obj instanceof DownloadManager) {
-	
-								DownloadManager dm = (DownloadManager) obj;
-	
-								if (doAdd) {
-									tag.addTaggable(dm);
-								} else {
-									tag.removeTaggable(dm);
+					boolean[] auto = tag.isTagAuto();
+					
+					if ( auto.length >= 2 ){
+						if ( 	( doAdd && auto[0] ) ||
+								( !doAdd && auto[1] )){
+									
+							do_it = false;
+						}
+					}
+					
+					if ( do_it ){
+						
+						try{
+							tag.addTaggableBatch( true );
+						
+							for (Object obj : ds) {
+		
+								if (obj instanceof DownloadManager) {
+		
+									DownloadManager dm = (DownloadManager) obj;
+		
+									if (doAdd) {
+										tag.addTaggable(dm);
+									} else {
+										tag.removeTaggable(dm);
+									}
 								}
 							}
+						}finally{
+							
+							tag.addTaggableBatch( false );
 						}
-					}finally{
-						
-						tag.addTaggableBatch( false );
+	
+						// Quick Visual
+						boolean wasSelected = painter.isSelected();
+						painter.setGrayed(true);
+						painter.setSelected(true);
+	
+						Utils.execSWTThreadLater(200, () -> {
+							painter.setGrayed(false);
+							painter.setSelected(wasSelected);
+						});
 					}
-
-					// Quick Visual
-					boolean wasSelected = painter.isSelected();
-					painter.setGrayed(true);
-					painter.setSelected(true);
-
-					Utils.execSWTThreadLater(200, () -> {
-						painter.setGrayed(false);
-						painter.setSelected(wasSelected);
-					});
 				}
 
 				@Override

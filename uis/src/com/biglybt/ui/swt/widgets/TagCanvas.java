@@ -46,8 +46,7 @@ public class TagCanvas
 {
 	public interface TagButtonTrigger
 	{
-		void tagButtonTriggered(TagPainter painter, int stateMask,
-				boolean longPress);
+		void tagButtonTriggered(TagPainter painter, int stateMask, boolean longPress);
 
 		Boolean tagSelectedOverride(Tag tag);
 	}
@@ -55,11 +54,13 @@ public class TagCanvas
 	private boolean	initialised;
 	
 	private final DropTarget dropTarget;
-
+	private final DragSource dragSource;
+	
 	private final TagPainter painter; 
 
 	private boolean mouseDown = false;
-
+	private boolean dndListenersAdded;
+	
 	private TimerEvent timerEvent;
 
 	/** 
@@ -109,11 +110,12 @@ public class TagCanvas
 			dropTarget.setTransfer(types);
 			dropTarget.addDropListener(this);
 	
-			DragSource dragSource = DragDropUtils.createDragSource(this,
-					DND.DROP_COPY | DND.DROP_MOVE);
+			dragSource = DragDropUtils.createDragSource(this, DND.DROP_COPY | DND.DROP_MOVE);
 			dragSource.setTransfer(TextTransfer.getInstance());
 			dragSource.addDragListener(this);
 	
+			dndListenersAdded = true;
+			
 			painter.updateImage();
 			addPaintListener(this);
 		}finally{
@@ -143,9 +145,18 @@ public class TagCanvas
 				if (!isEnabled() || e.button != 1) {
 					return;
 				}
+				
+					// Prevent DND drop icon changes from cheesing up long presses
+					// Leave DND drag as is as gets a bit more complicated to disable and
+					// re-enable correctly 
+				
+				dropTarget.removeDropListener(this);
+			
+				dndListenersAdded = false;
+				
 				if (timerEvent == null) {
 					timerEvent = SimpleTimer.addEvent("MouseHold",
-							SystemTime.getOffsetTime(1000), te -> {
+							SystemTime.getOffsetTime(500), te -> {
 								timerEvent = null;
 								if (!mouseDown) {
 									return;
@@ -181,7 +192,7 @@ public class TagCanvas
 					return;
 				}
 				mouseDown = false;
-
+				
 				if (timerEvent != null) {
 					timerEvent.cancel();
 					timerEvent = null;
@@ -203,6 +214,11 @@ public class TagCanvas
 			}
 			case SWT.MouseExit: {
 				setToolTipText(null);
+				if ( !dndListenersAdded ){
+					dropTarget.addDropListener(this);
+					dndListenersAdded = true;
+
+				}
 			}
 			case SWT.FocusOut:
 			case SWT.FocusIn: {
