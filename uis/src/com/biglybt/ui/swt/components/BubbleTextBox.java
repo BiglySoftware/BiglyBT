@@ -387,11 +387,12 @@ public class BubbleTextBox
 		e.gc.setAntialias(SWT.ON);
 		e.gc.fillRoundRectangle(clientArea.x, clientArea.y, clientArea.width - 1,
 				clientArea.height - 1, clientArea.height, clientArea.height);
-		e.gc.setAlpha(127);
-		e.gc.drawRoundRectangle(clientArea.x, clientArea.y, clientArea.width - 1,
-				clientArea.height - 1, clientArea.height, clientArea.height);
-
-		e.gc.setAlpha(255);
+		if ( !Utils.isDarkAppearanceNative()){
+			e.gc.setAlpha(127);
+			e.gc.drawRoundRectangle(clientArea.x, clientArea.y, clientArea.width - 1,
+					clientArea.height - 1, clientArea.height, clientArea.height);
+			e.gc.setAlpha(255);
+		}
 		e.gc.setLineCap(SWT.CAP_FLAT);
 
 		int fontHeight = FontUtils.getFontHeightInPX(textWidget.getFont());
