@@ -98,6 +98,7 @@ public class TagPainter
 	protected boolean disableAuto;
 	private int minWidth = DEF_MIN_WIDTH;
 	private boolean grayed;
+	private int alpha = 255;
 
 	private boolean selected;
 
@@ -194,6 +195,16 @@ public class TagPainter
 	public boolean isSelected() {
 		return selected;
 	}
+	
+	public void
+	setAlpha(
+		int	_alpha )
+	{
+		if ( alpha != _alpha ){
+			alpha = _alpha;
+			redrawControl();
+		}
+	}
 
 	public boolean paint(Taggable taggable, GC gc, int x, int y) {
 		Point size = computeSize(gc.getDevice(), gc.getFont());
@@ -215,6 +226,8 @@ public class TagPainter
 		if (lastUsedName == null) {
 			return;
 		}
+		
+		gc.setAlpha( alpha );
 		//System.out.println("paint " + lastUsedName + "; " + clientArea + "; " + e);
 
 		Color colorOrigBG = gc.getBackground();
@@ -261,7 +274,7 @@ public class TagPainter
 			gc.drawRoundRectangle(xOfs + -curveWidth, yOfs, size.x + curveWidth - 1,
 					size.y - 1, curveWidth, curveWidth);
 			gc.drawLine(xOfs, yOfs, xOfs, yOfs + size.y - 1);
-			gc.setAlpha(0xFF);
+			gc.setAlpha(alpha);
 		}
 
 		int imageX;

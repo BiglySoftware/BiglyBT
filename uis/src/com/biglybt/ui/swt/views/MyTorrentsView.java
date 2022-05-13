@@ -1224,6 +1224,7 @@ public class MyTorrentsView
 							setSelection(painter.getControl().getParent());
 						}
 					}
+					updateTagAlphas();
 				}
 
 				private void setSelection(Composite parent) {
@@ -1246,6 +1247,7 @@ public class MyTorrentsView
 						boolean selected = selectedTags.remove(painter.getTag());
 						painter.setSelected(selected);
 					}
+					updateTagAlphas();
 				}
 
 				private void handleLongPress(TagPainter painter, Tag tag) {
@@ -1375,6 +1377,7 @@ public class MyTorrentsView
 
 			if (isCurrent(tag)) {
 				painter.setSelected(true);
+				updateTagAlphas();
 			}
 
 			Menu menu = new Menu( button );
@@ -1391,6 +1394,35 @@ public class MyTorrentsView
 		cTableParentPanel.layout(true, true);
 	}
 
+	private void
+	updateTagAlphas()
+	{
+		if (cTitleCategoriesAndTags == null || cTitleCategoriesAndTags.isDisposed()) {
+			return;
+		}
+		
+		List<TagPainter> painters = new ArrayList<>(128);
+		
+		Control[] children = cTitleCategoriesAndTags.getChildren();
+		
+		boolean any_selected = false;
+		
+		for (Control child : children) {
+			if (!(child instanceof TagCanvas)) {
+				continue;
+			}
+			TagPainter painter = ((TagCanvas) child).getTagPainter();
+			painters.add( painter );
+			if ( painter.isSelected()){
+				any_selected = true;
+			}
+		}
+		for ( TagPainter painter: painters ){
+			painter.setAlpha(painter.isSelected() || !any_selected?255:130);
+		}
+
+	}
+	
 	public boolean isOurDownloadManager(DownloadManager dm) {
 		if (!isInCurrentTags(dm )) {
 			return false;
@@ -3076,6 +3108,7 @@ public class MyTorrentsView
 							painter.setSelected(selected);
 						}
 					}
+					updateTagAlphas();
 				}
 			}
 		});
