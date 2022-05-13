@@ -1414,13 +1414,20 @@ public class MyTorrentsView
 			TagPainter painter = ((TagCanvas) child).getTagPainter();
 			painters.add( painter );
 			if ( painter.isSelected()){
+				Tag tag = painter.getTag();
+				if ( tag instanceof Category ){
+					Category cat = (Category)tag;
+					if ( cat.getType() == Category.TYPE_ALL ){
+						// ignore this one as equivalent to "no filter"
+						continue;
+					}
+				}
 				any_selected = true;
 			}
 		}
 		for ( TagPainter painter: painters ){
 			painter.setAlpha(painter.isSelected() || !any_selected?255:130);
 		}
-
 	}
 	
 	public boolean isOurDownloadManager(DownloadManager dm) {

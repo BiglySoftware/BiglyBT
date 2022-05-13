@@ -777,6 +777,8 @@ TagManagerImpl
 								}
 							}
 							
+							List<Tag> imported_tags = new ArrayList<>();
+							
 							for (int j=0;j<comps.length;j++){
 
 								VuzeFileComponent comp = comps[j];
@@ -791,18 +793,40 @@ TagManagerImpl
 									
 										comp.setProcessed();
 										
-										UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
+										imported_tags.add( tag );
+									}
+								}
+							}
+							
+							if ( !imported_tags.isEmpty()){
+								
+								UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
 
+								if ( imported_tags.size() < 5 ){
+									
+									for ( Tag tag: imported_tags ){
+										
 										String details = MessageText.getString(
 												"tag.import.ok.desc",
 												new String[]{ tag.getTagName( true )});
-
+		
 										ui_manager.showMessageBox(
 												"tag.import.ok.title",
 												"!" + details + "!",
 												UIManagerEvent.MT_OK );
 									}
+								}else{
+									
+									String details = MessageText.getString(
+											"tag.imports.ok.desc",
+											new String[]{ String.valueOf( imported_tags.size()) });
+	
+									ui_manager.showMessageBox(
+											"tag.import.ok.title",
+											"!" + details + "!",
+											UIManagerEvent.MT_OK );
 								}
+
 							}
 						}
 					}
