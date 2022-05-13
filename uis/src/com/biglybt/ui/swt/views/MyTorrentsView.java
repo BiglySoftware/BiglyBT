@@ -1318,6 +1318,7 @@ public class MyTorrentsView
 						Utils.execSWTThreadLater(200, () -> {
 							painter.setGrayed(false);
 							painter.setSelected(wasSelected);
+							updateTagAlphas();
 						});
 					}
 				}
