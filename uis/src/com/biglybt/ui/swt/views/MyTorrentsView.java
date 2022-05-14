@@ -1279,12 +1279,12 @@ public class MyTorrentsView
 					
 					boolean[] auto = tag.isTagAuto();
 					
-					if ( auto.length >= 2 ){
-						if ( 	( doAdd && auto[0] ) ||
-								( !doAdd && auto[1] )){
-									
-							do_it = false;
-						}
+					if ( auto.length >= 1 && auto[0] ){
+							
+							// can't add to / remove from an auto-add tag
+							// note - can remove from an auto-remove-only
+						
+						do_it = false;
 					}
 					
 					if ( do_it ){
