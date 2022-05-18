@@ -1625,6 +1625,27 @@ public class TabbedMDI
 						MainMDISetup.getSb_dashboard().addItemToSidebar( target );
 					}
 				});
+				
+				MenuItem menuItemRightbar = menuManager.addMenuItem( menuParentItem, "label.rightbar");
+				
+				menuItemRightbar.addListener(new MenuItemListener() {
+					@Override
+					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object data ) {
+							
+						TabbedEntry	target = entry;
+						
+						if ( data instanceof Object[]) {
+							Object[] odata = (Object[])data;
+							if ( odata.length == 1 && odata[0] instanceof TabbedEntry ) {
+								target = (TabbedEntry)odata[0];
+							}
+						}else if ( data instanceof TabbedEntry ){
+							target = (TabbedEntry)data;
+						}
+						
+						MainMDISetup.getSb_dashboard().addItemToRightbar( target );
+					}
+				});
 			}
 		}
 		

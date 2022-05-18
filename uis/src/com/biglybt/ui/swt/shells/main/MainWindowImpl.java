@@ -732,9 +732,13 @@ public class MainWindowImpl
 				configID)) {
 				COConfigurationManager.setBooleanDefault(configID, true);
 			}
+			
 			setVisible(WINDOW_ELEMENT_TOPBAR,
 					COConfigurationManager.getBooleanParameter(configID)
 							&& COConfigurationManager.getIntParameter("User Mode") > 1);
+
+			setVisible(WINDOW_ELEMENT_RIGHTBAR,
+					COConfigurationManager.getBooleanParameter( SkinConstants.VIEWID_RIGHTBAR + ".visible" ));
 
 			setVisible(WINDOW_ELEMENT_TOOLBAR,
 					COConfigurationManager.getBooleanParameter("IconBar.enabled"));
@@ -2110,6 +2114,13 @@ public class MainWindowImpl
 				}
 				break;
 			}
+			case WINDOW_ELEMENT_RIGHTBAR: {
+				SWTSkinObject skinObject = skin.getSkinObject(SkinConstants.VIEWID_RIGHTBAR);
+				if (skinObject != null) {
+					return skinObject.isVisible();
+				}
+				break;
+			}
 			case WINDOW_ELEMENT_QUICK_LINKS: {
 				SWTSkinObject skinObject = skin.getSkinObject(SkinConstants.VIEWID_QUICK_LINKS);
 				if (skinObject != null) {
@@ -2131,22 +2142,32 @@ public class MainWindowImpl
 	@Override
 	public void setVisible(int windowElement, boolean value) {
 		switch (windowElement) {
-			case WINDOW_ELEMENT_TOOLBAR:
+			case WINDOW_ELEMENT_TOOLBAR:{
 				SWTSkinUtils.setVisibility(skin, "IconBar.enabled",
 						SkinConstants.VIEWID_TOOLBAR, value, true);
 				break;
-			case WINDOW_ELEMENT_TOPBAR:
+			}
+			case WINDOW_ELEMENT_TOPBAR:{
 
 				SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_PLUGINBAR
 						+ ".visible", SkinConstants.VIEWID_PLUGINBAR, value, true);
 
 				break;
-			case WINDOW_ELEMENT_QUICK_LINKS:
+			}
+			case WINDOW_ELEMENT_RIGHTBAR:{
+
+				SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_RIGHTBAR
+						+ ".visible", SkinConstants.VIEWID_RIGHTBAR, value, true);
+
+				break;
+			}
+			case WINDOW_ELEMENT_QUICK_LINKS:{
 
 				SWTSkinUtils.setVisibilityRelaxed(skin, SkinConstants.VIEWID_QUICK_LINKS
 						+ ".visible", SkinConstants.VIEWID_QUICK_LINKS, value, true);
 
 				break;
+			}
 			case WINDOW_ELEMENT_STATUSBAR:
 				//TODO:
 				break;
@@ -2162,7 +2183,7 @@ public class MainWindowImpl
 		switch (windowElement) {
 			case WINDOW_ELEMENT_TOOLBAR:
 				break;
-			case WINDOW_ELEMENT_TOPBAR:
+			case WINDOW_ELEMENT_TOPBAR:{
 
 				SWTSkinObject skinObject = skin.getSkinObject(SkinConstants.VIEWID_PLUGINBAR);
 				if (skinObject != null) {
@@ -2170,6 +2191,16 @@ public class MainWindowImpl
 				}
 
 				break;
+			}
+			case WINDOW_ELEMENT_RIGHTBAR:{
+
+				SWTSkinObject skinObject = skin.getSkinObject(SkinConstants.VIEWID_RIGHTBAR);
+				if (skinObject != null) {
+					return skinObject.getControl().getBounds();
+				}
+
+				break;
+			}
 			case WINDOW_ELEMENT_QUICK_LINKS:
 				break;
 			case WINDOW_ELEMENT_STATUSBAR:
@@ -2186,6 +2217,7 @@ public class MainWindowImpl
 				r.height -= getMetrics(WINDOW_ELEMENT_TOPBAR).height;
 				r.height -= getMetrics(WINDOW_ELEMENT_TOOLBAR).height;
 				r.height -= getMetrics(WINDOW_ELEMENT_STATUSBAR).height;
+				r.width  -= getMetrics(WINDOW_ELEMENT_RIGHTBAR).width;
 				return r;
 
 		}

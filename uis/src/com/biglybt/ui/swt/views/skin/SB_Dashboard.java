@@ -43,6 +43,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.*;
+import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
@@ -58,7 +59,9 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.SWTSkin;
+import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
+import com.biglybt.ui.swt.skin.SWTSkinUtils;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
@@ -87,6 +90,8 @@ public class SB_Dashboard
 	
 	private DashboardInstance	sidebar_dashboard = new DashboardInstance( "sidebar" );
 	
+	private DashboardInstance	rightbar_dashboard = new DashboardInstance( "rightbar" );
+	
 	private final MultipleDocumentInterfaceSWT		mdi;
 	
 	private MdiEntry mdi_entry;
@@ -103,6 +108,10 @@ public class SB_Dashboard
 		
 		sidebar_dashboard.setUseTabs( true );
 		
+		rightbar_dashboard.readConfig();
+		
+		rightbar_dashboard.setUseTabs( true );
+
 		if ( !COConfigurationManager.getBooleanParameter( "dashboard.init.0", false )){
 			
 			COConfigurationManager.setParameter( "dashboard.init.0", true );
@@ -301,6 +310,16 @@ public class SB_Dashboard
 					sidebar_dashboard.clear();
 				}
 			});
+			
+			MenuItem resetRightbar= menuManager.addMenuItem( resetItem, "label.rightbar");
+			
+			resetRightbar.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					
+					rightbar_dashboard.clear();
+				}
+			});
 		}
 		
 		{		
@@ -344,6 +363,58 @@ public class SB_Dashboard
 					}
 				}
 			});
+		
+		rightbar_dashboard.addAndFireListener(
+				new DashboardListener()
+				{	
+					private final String	VIEW_ID = "RightBarDashboard";
+				
+					private boolean	first_time = true;
+					
+					private boolean registered;
+					
+					@Override
+					public void 
+					itemsChanged()
+					{
+						SWTSkin skin = SWTSkinFactory.getInstance();
+
+						ViewManagerSWT vi = ViewManagerSWT.getInstance();
+
+						if ( rightbar_dashboard.getItemCount() > 0 ){
+							
+							if ( !registered ){
+								
+								vi.registerView(
+									UISWTInstance.VIEW_RIGHTBAR_AREA,
+									new UISWTViewBuilderCore(VIEW_ID,
+											null, RightBarDashboard.class));
+								
+								registered = true;
+								
+							}
+								
+								// only force the right-bar visible when a new entry added, not at start of day
+							
+							if ( !first_time ){
+							
+								SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_RIGHTBAR + ".visible", SkinConstants.VIEWID_RIGHTBAR, true, true);
+							}
+						}else{
+							
+							if ( registered ){
+								
+								vi.unregisterView( UISWTInstance.VIEW_RIGHTBAR_AREA, VIEW_ID );
+								
+								registered = false;
+							}
+							
+							SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_RIGHTBAR + ".visible", SkinConstants.VIEWID_RIGHTBAR, false, true);
+						}
+						
+						first_time = false;
+					}
+				});
 	}
 
 	public void
@@ -381,6 +452,23 @@ public class SB_Dashboard
 		return( sidebar_dashboard );
 	}
 		
+	public void
+	addItemToRightbar(
+		BaseMdiEntry		entry )
+	{
+		Map<String,Object> map = entry.exportStandAlone();
+				
+		rightbar_dashboard.addItem( map );
+		
+		rightbar_dashboard.fireChanged();
+	}
+
+	public DashboardInstance
+	getRightbarDashboard()
+	{
+		return( rightbar_dashboard );
+	}
+	
 	public void
 	dispose()
 	{
@@ -2313,7 +2401,7 @@ public class SB_Dashboard
 	SideBarDashboard
 		implements 
 			UISWTViewCoreEventListener, 
-			IViewAlwaysInitialize,		// need this otherwise if Bigly starts 
+			IViewAlwaysInitialize,
 			DashboardListener
 	{
 		final SB_Dashboard db = MainMDISetup.getSb_dashboard();
@@ -2365,6 +2453,83 @@ public class SB_Dashboard
 					sb.build( comp );
 					
 					sb.addListener( this );
+
+					break;
+				}
+				case UISWTViewEvent.TYPE_LANGUAGEUPDATE:{
+					
+				
+					Messages.updateLanguageForControl( comp );
+	
+					break;
+				}
+				case UISWTViewEvent.TYPE_REFRESH:{
+	
+					break;
+				}
+			}
+
+			return( true );
+		}
+	}
+	
+	public static class
+	RightBarDashboard
+		implements 
+			UISWTViewCoreEventListener, 
+			IViewAlwaysInitialize,
+			DashboardListener
+	{
+		final SB_Dashboard db = MainMDISetup.getSb_dashboard();
+		
+		final DashboardInstance rb = db.getRightbarDashboard();
+	
+		UISWTView 		swtView;
+		Composite		comp;
+		
+		@Override
+		public void 
+		itemsChanged()
+		{
+			if ( rb.getItemCount() == 0 ){
+				
+				swtView.closeView();
+				
+			}else{
+								
+				Utils.disposeComposite( comp, false );
+				
+				rb.build( comp );
+				
+				comp.layout( true, true );
+			}
+		}
+		
+		public boolean 
+		eventOccurred(
+			UISWTViewEvent event)
+		{
+			switch (event.getType()) {
+				case UISWTViewEvent.TYPE_CREATE:{
+					swtView = event.getView();
+	
+					break;
+				}
+				case UISWTViewEvent.TYPE_DESTROY:{
+	
+					rb.removeListener( this );
+					
+					break;
+				}
+				case UISWTViewEvent.TYPE_INITIALIZE:{
+					
+					comp = (Composite)event.getData();
+	
+					comp.setLayout( new FormLayout());
+						
+					rb.build( comp );
+					
+					rb.addListener( this );
 
 					break;
 				}

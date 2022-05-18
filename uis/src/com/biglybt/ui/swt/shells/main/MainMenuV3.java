@@ -321,6 +321,17 @@ public class MainMenuV3
 				}
 			}
 			
+			SWTSkinObject right_bar = skin.getSkinObject(SkinConstants.VIEWID_RIGHTBAR);
+
+			if ( right_bar != null ){
+
+				MenuItem mi =
+					MainMenuV3.createPluginBarMenuItem(skin, viewMenu,
+						"v3.MainWindow.menu.view." + SkinConstants.VIEWID_RIGHTBAR,
+						SkinConstants.VIEWID_RIGHTBAR + ".visible",
+						SkinConstants.VIEWID_RIGHTBAR );
+			}
+			
 			MenuFactory.addViewToolbarMenuItem(viewMenu);
 
 			MenuItem mi =

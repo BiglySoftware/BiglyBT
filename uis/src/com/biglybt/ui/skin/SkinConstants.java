@@ -27,6 +27,8 @@ public class SkinConstants
 	public static final String VIEWID_BROWSER_BROWSE = "browse";
 
 	public static final String VIEWID_PLUGINBAR = "pluginbar";
+	
+	public static final String VIEWID_RIGHTBAR = "rightbar";
 
 	public static final String VIEWID_QUICK_LINKS = "quick-links";
 
