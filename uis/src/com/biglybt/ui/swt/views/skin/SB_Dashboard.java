@@ -90,7 +90,7 @@ public class SB_Dashboard
 	
 	private DashboardInstance	sidebar_dashboard = new DashboardInstance( "sidebar" );
 	
-	private DashboardInstance	rightbar_dashboard = new DashboardInstance( "rightbar" );
+	private DashboardInstance	rightbar_dashboard = new DashboardInstance( "rightbarzzzzz" );
 	
 	private final MultipleDocumentInterfaceSWT		mdi;
 	
@@ -1090,6 +1090,24 @@ public class SB_Dashboard
 			return( new_layout );
 		}
 		
+		private boolean
+		removeUIDFromLayout(
+			int[][]		layout,
+			int			uid )
+		{
+			boolean changed = false;
+			
+			for ( int[] row: layout ) {
+				for ( int i=0;i<row.length;i++){
+					if ( row[i] == uid ) {					
+						row[i] = -1;
+						changed = true;
+					}
+				}
+			}
+			return( changed );
+		}
+		
 		private int[][]
 		compactLayout(
 			int[][]		layout,
@@ -1301,6 +1319,19 @@ public class SB_Dashboard
 				
 				layout = compactLayout(layout, 0, 0 );
 				
+				boolean use_tabs = getUseTabs();
+
+				if ( use_tabs ){
+				
+						// hack to ensure that a tab folder is created even when there is only one
+						// item
+					
+					if ( layout.length == 1 && layout[0].length == 1 ){
+						
+						layout = new int[][]{{layout[0][0],-1},{layout[0][0],-1}};
+					}
+				}
+				
 				Map<Integer,DashboardItem>	item_map = new HashMap<>();
 		
 				for ( DashboardItem item: items ){
@@ -1316,8 +1347,6 @@ public class SB_Dashboard
 						}
 					}
 				}
-				
-				boolean use_tabs = getUseTabs();
 				
 				final List<SashForm>	sashes 		= new ArrayList<>();
 				List<Control>			controls	= new ArrayList<>();
@@ -2390,6 +2419,13 @@ public class SB_Dashboard
 				synchronized( items ) {
 					
 					items.remove( this );
+				
+					int[][] layout = getDashboardLayout();
+					
+					if ( removeUIDFromLayout( layout, getUID())){
+											
+						setDashboardLayout( layout, items.size(), true );
+					}			
 				}
 				
 				fireChanged();
