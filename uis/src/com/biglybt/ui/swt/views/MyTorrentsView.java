@@ -3608,12 +3608,19 @@ public class MyTorrentsView
 
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
 				PeersGraphicView.MSGID_PREFIX, null, PeersGraphicView.class));
-
+		
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
 				PiecesView.MSGID_PREFIX, null, PiecesView.class));
 
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
 				PieceMapView.MSGID_PREFIX, null, PieceMapView.class));
+
+		UISWTViewBuilderCore blockViewBuilder =  new UISWTViewBuilderCore(
+				PieceBlocksView.MSGID_PREFIX, null, PieceBlocksView.class);
+		
+		blockViewBuilder.setDefaultVisibility( false );
+		
+		vm.registerView(Download.class, blockViewBuilder );
 
 		vm.registerView(Download.class, new UISWTViewBuilderCore(
 				DownloadActivityView.MSGID_PREFIX, null, DownloadActivityView.class));

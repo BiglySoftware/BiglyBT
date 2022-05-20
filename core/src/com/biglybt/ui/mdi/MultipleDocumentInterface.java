@@ -86,6 +86,8 @@ public interface MultipleDocumentInterface
 	public static final String SIDEBAR_SECTION_ALLPEERS = "AllPeersView";
 	
 	public static final String SIDEBAR_SECTION_ALLPIECES = "AllPiecesView";
+	
+	public static final String SIDEBAR_SECTION_ALLBLOCKS = "AllBlocksView";
 
 	public static final String SIDEBAR_SECTION_TORRENT_OPTIONS = "TorrentOptionsView";
 
@@ -119,6 +121,7 @@ public interface MultipleDocumentInterface
 			SIDEBAR_SECTION_ALL_TRACKERS,
 			SIDEBAR_SECTION_ALLPEERS,
 			SIDEBAR_SECTION_ALLPIECES,
+			SIDEBAR_SECTION_ALLBLOCKS,
 			SIDEBAR_SECTION_MY_TRACKER,
 			SIDEBAR_SECTION_MY_SHARES,
 			SIDEBAR_SECTION_ARCHIVED_DOWNLOADS,

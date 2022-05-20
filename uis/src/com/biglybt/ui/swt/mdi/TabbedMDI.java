@@ -543,7 +543,19 @@ public class TabbedMDI
 						mi.addListener(SWT.Selection, new Listener() {
 							@Override
 							public void handleEvent(Event event) {
-								String key = props_prefix + ".closedtabs";
+								
+								String key = props_prefix + ".openedtabs";
+
+								Map openedTabs = COConfigurationManager.getMapParameter(key,new HashMap());
+								
+								if ( !openedTabs.containsKey( view_id )){
+									
+									openedTabs.put( view_id, 1 );
+									
+									COConfigurationManager.setParameter(key,openedTabs );
+								}
+								
+								key = props_prefix + ".closedtabs";
 
 								Map closedtabs = COConfigurationManager.getMapParameter(key,
 										new HashMap());
@@ -602,6 +614,10 @@ public class TabbedMDI
 						String key = props_prefix + ".closedtabs";
 						
 						COConfigurationManager.setParameter(key, mapUserClosedTabs );
+						
+						key = props_prefix + ".openedtabs";
+						
+						COConfigurationManager.setParameter(key, new HashMap<>() );
 						
 						setPreferredOrder( new String[0] );
 						
@@ -783,6 +799,31 @@ public class TabbedMDI
 		List<UISWTViewBuilderCore> builders = vm.getBuilders(getViewID(),getDataSourceType());
 		
 		for (UISWTViewBuilderCore builder : builders){
+			
+			boolean defaultVisibility = builder.getDefaultVisibility();
+			
+			if ( !defaultVisibility ){
+				
+				String key = props_prefix + ".openedtabs";
+
+				Map openedTabs = COConfigurationManager.getMapParameter(key,new HashMap());
+				
+				String view_id = builder.getViewID();
+
+				if ( !openedTabs.containsKey( view_id )){
+				
+					if ( !mapUserClosedTabs.containsKey( view_id )){
+					
+						key = props_prefix + ".closedtabs";
+						
+						Map closedTabs = COConfigurationManager.getMapParameter(key,new HashMap());
+
+						closedTabs.put( view_id, builder.getInitialTitle());
+						
+						COConfigurationManager.setParameter( key, closedTabs );
+					}
+				}
+			}
 			
 			try{
 				createEntry(builder, true);
@@ -1169,11 +1210,12 @@ public class TabbedMDI
 
 	private boolean isEntryClosedByUser(String id) {
 
-		if (mapUserClosedTabs.containsKey(id)) {
-			return true;
+		if ( mapUserClosedTabs.containsKey(id)){
+			
+			return( true );
 		}
-		// TODO Auto-generated method stub
-		return false;
+		
+		return( false );
 	}
 
 	private void setupNewEntry(TabbedEntry entry) {

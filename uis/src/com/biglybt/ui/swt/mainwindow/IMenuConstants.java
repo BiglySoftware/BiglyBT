@@ -143,6 +143,8 @@ public interface IMenuConstants
 	public static final String MENU_ID_ALL_PEERS = "MainWindow.menu.view.allpeers";
 	
 	public static final String MENU_ID_ALL_PIECES = "MainWindow.menu.view.allpieces";
+	
+	public static final String MENU_ID_ALL_BLOCKS = "MainWindow.menu.view.allblocks";
 
 	public static final String MENU_ID_CLIENT_STATS = "MainWindow.menu.view.clientstats";
 

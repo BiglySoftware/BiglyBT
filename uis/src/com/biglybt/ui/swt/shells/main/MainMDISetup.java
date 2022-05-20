@@ -62,6 +62,7 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.devices.DeviceManagerUI;
+import com.biglybt.ui.swt.mainwindow.IMenuConstants;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
@@ -354,6 +355,92 @@ public class MainMDISetup
 											
 												last_count1 = c1;
 												last_count2 = c2;
+														
+												entry.redraw();
+
+												ViewTitleInfoManager.refreshTitleInfo( title_info );
+												
+												entry.redraw();
+											}
+										}
+									});
+
+					entry.addListener(
+						new MdiCloseListener() {
+
+							@Override
+							public void
+							mdiEntryClosed(
+								MdiEntry entry, boolean userClosed)
+							{
+								timer.cancel();
+							}
+						});
+					return( entry );
+				});
+		
+		mdi.registerEntry(
+				SIDEBAR_SECTION_ALLBLOCKS,
+				id -> {
+					UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id, null, PieceBlocksView.class);
+					
+					builder.setParentEntryID(SIDEBAR_HEADER_TRANSFERS);
+					
+					builder.setPreferredAfterID( SB_Transfers.getSectionPosition(mdi, SIDEBAR_SECTION_ALLBLOCKS));
+					
+					builder.setInitialDatasource( "" );	// signifies all-blocks view rather than dm specific
+					
+					MdiEntrySWT entry = mdi.createEntry(builder, true);
+
+					PeerControlScheduler scheduler = PeerControlSchedulerFactory.getSingleton(0);
+
+					ViewTitleInfo title_info =
+							new ViewTitleInfo()
+							{
+								@Override
+								public Object
+								getTitleInfoProperty(
+									int propertyID)
+								{
+									if ( propertyID == TITLE_TEXT ){
+										
+										return( MessageText.getString( "MainWindow.menu.view.allblocks" ));
+										
+									}else if ( propertyID == TITLE_INDICATOR_TEXT ){
+										
+										int[] counts = scheduler.getPieceCount();
+										
+										return( "" + counts[0] );
+									}
+									
+									return( null );
+								}
+							};
+							
+					entry.setViewTitleInfo( title_info );
+
+					entry.setImageLeftID("image.sidebar.allblocks");
+
+					final TimerEventPeriodic	timer =
+							SimpleTimer.addPeriodicEvent(
+									"sb:allblocks",
+									1*1000,
+									new TimerEventPerformer()
+									{
+										private int last_count1 = -1;
+										
+										@Override
+										public void
+										perform(
+											TimerEvent event)
+										{
+											int[] counts = scheduler.getPieceCount();
+											
+											int c1 = counts[0];
+											
+											if ( c1 != last_count1 ){
+											
+												last_count1 = c1;
 														
 												entry.redraw();
 
@@ -1306,13 +1393,24 @@ public class MainMDISetup
 			});
 			
 			menuItem = uim.getMenuManager().addMenuItem(
-					MenuManager.MENU_MENUBAR, "MainWindow.menu.view.allpieces");
+					MenuManager.MENU_MENUBAR, IMenuConstants.MENU_ID_ALL_PIECES);
 			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 			menuItem.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
 					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID(
 							MultipleDocumentInterface.SIDEBAR_SECTION_ALLPIECES );
+				}
+			});
+			
+			menuItem = uim.getMenuManager().addMenuItem(
+					MenuManager.MENU_MENUBAR, IMenuConstants.MENU_ID_ALL_BLOCKS);
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_ALLBLOCKS );
 				}
 			});
 			

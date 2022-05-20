@@ -1,7 +1,5 @@
 /*
- * Created on Jun 27, 2008
- *
- * Copyright (C) Azureus Software, Inc, All Rights Reserved.
+ * Copyright (C) Bigly Software, Inc, All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,11 +41,7 @@ import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
 import com.biglybt.ui.swt.skin.SWTSkinUtils;
 import com.biglybt.ui.swt.views.skin.SkinView;
 
-/**
- * @author TuxPaper
- * @created Jun 27, 2008
- *
- */
+
 public class RightBarView
 	extends SkinView
 {

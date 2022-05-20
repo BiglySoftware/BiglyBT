@@ -71,6 +71,8 @@ public class UISWTViewBuilderCore
 	private String parentEntryID;
 
 	private Boolean canClone = null;
+	
+	private boolean defaultVisibility = true;
 
 	public UISWTViewBuilderCore(String viewID, PluginInterface pi) {
 		this.viewID = viewID;
@@ -349,6 +351,19 @@ public class UISWTViewBuilderCore
 		return this;
 	}
 
+	public boolean
+	getDefaultVisibility()
+	{
+		return( defaultVisibility );
+	}
+	
+	public void
+	setDefaultVisibility(
+		boolean	b )
+	{
+		defaultVisibility = b;
+	}
+	
 	/**
 	 * Can we create multiple views using this builder?
 	 */
