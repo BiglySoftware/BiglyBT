@@ -103,7 +103,6 @@ implements PEPeerTransport
 	protected PEPeerStats peer_stats;
 
 	private final ArrayList<DiskManagerReadRequest> requested = new ArrayList<>();
-	private final AEMonitor	requested_mon = new AEMonitor( "PEPeerTransportProtocol:Req" );
 
 	private Map data;
 
@@ -1569,8 +1568,7 @@ implements PEPeerTransport
 
 		boolean added =false;
 
-		try{
-			requested_mon.enter();
+		synchronized( requested ){
 
 			if (!requested.contains(request)){
 
@@ -1583,11 +1581,8 @@ implements PEPeerTransport
 
 				added = true;
 			}
-		}finally{
-
-			requested_mon.exit();
 		}
-
+		
 		if ( added ){
 
 			if ( is_metadata_download ){
@@ -1645,14 +1640,9 @@ implements PEPeerTransport
 	getRequestIndex(
 			DiskManagerReadRequest request )
 	{
-		try{
-			requested_mon.enter();
+		synchronized( requested ){
 
 			return( requested.indexOf( request ));
-
-		}finally{
-
-			requested_mon.exit();
 		}
 	}
 
@@ -2262,8 +2252,7 @@ implements PEPeerTransport
 			connection.getOutgoingMessageQueue().removeMessagesOfType(type, false);
 		}
 		if (requested !=null &&requested.size() >0) {
-			try{
-				requested_mon.enter();
+			synchronized( requested ){
 
 				if (!closing)
 				{   // may have unchoked us, gotten a request, then choked without filling it - snub them
@@ -2274,9 +2263,6 @@ implements PEPeerTransport
 					final DiskManagerReadRequest request =(DiskManagerReadRequest) requested.remove(i);
 					manager.requestCanceled(request);
 				}
-			}finally{
-
-				requested_mon.exit();
 			}
 		}
 	}
@@ -2338,9 +2324,8 @@ implements PEPeerTransport
 		int		piece_offset,
 		int		length )
 	{
-		try{
-			requested_mon.enter();
-
+		synchronized( requested ){
+			
 			for ( DiskManagerReadRequest r: requested ){
 
 				if ( r.getPieceNumber() == piece_number &&
@@ -2352,44 +2337,40 @@ implements PEPeerTransport
 			}
 
 			return( null );
-
-		}finally{
-
-			requested_mon.exit();
 		}
 	}
 
-	private boolean	hasBeenRequested( DiskManagerReadRequest request ) {
-		try{  requested_mon.enter();
+	private boolean	
+	hasBeenRequested( 
+		DiskManagerReadRequest request ) 
+	{
+		synchronized( requested ){
 
-		return requested.contains( request );
+			return requested.contains( request );
 		}
-		finally{  requested_mon.exit();  }
 	}
 
 	protected void
 	removeRequest(
-			DiskManagerReadRequest	request )
+		DiskManagerReadRequest	request )
 	{
-		try{
-			requested_mon.enter();
+		synchronized( requested ){
 
 			requested.remove(request);
-		}finally{
-
-			requested_mon.exit();
 		}
-	    	final BTRequest msg = new BTRequest( request.getPieceNumber(), request.getOffset(), request.getLength(), other_peer_request_version );
+	    
+		final BTRequest msg = new BTRequest( request.getPieceNumber(), request.getOffset(), request.getLength(), other_peer_request_version );
+		
 		connection.getOutgoingMessageQueue().removeMessage( msg, false );
+		
 		msg.destroy();
 	}
 
 	private void
 	resetRequestsTime(final long now)
 	{
-		try{
-			requested_mon.enter();
-
+		synchronized( requested ){
+			
 			final int requestedSize =requested.size();
 			for (int i =0; i <requestedSize; i++)
 			{
@@ -2397,9 +2378,6 @@ implements PEPeerTransport
 				if (request != null)
 					request.resetTime(now);
 			}
-		}finally{
-
-			requested_mon.exit();
 		}
 	}
 
@@ -5717,7 +5695,9 @@ implements PEPeerTransport
 	}
 	
 	@Override
-	public DiskManagerReadRequest[] getRecentPiecesSent(){
+	public DiskManagerReadRequest[] 
+	getRecentPiecesSent()
+	{
 		if ( outgoing_piece_message_handler == null ){
 
 			return( new DiskManagerReadRequest[0] );
@@ -5727,9 +5707,10 @@ implements PEPeerTransport
 	}
 	
 	@Override
-	public int[] getOutgoingRequestedPieceNumbers() {
-		try{
-			requested_mon.enter();
+	public int[] 
+	getOutgoingRequestedPieceNumbers() 
+	{
+		synchronized( requested ){
 
 			/** Cheap hack to reduce (but not remove all) the # of duplicate entries */
 			int iLastNumber = -1;
@@ -5756,9 +5737,6 @@ implements PEPeerTransport
 			System.arraycopy(pieceNumbers, 0, trimmed, 0, pos);
 
 			return trimmed;
-
-		}finally{
-			requested_mon.exit();
 		}
 	}
 

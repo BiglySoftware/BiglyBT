@@ -61,14 +61,19 @@ import com.biglybt.core.download.DownloadManagerPieceListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.PEPeerManagerListener;
+import com.biglybt.core.peer.PEPeerManagerListenerAdapter;
 import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peer.util.PeerUtils;
+import com.biglybt.core.peermanager.peerdb.PeerItem;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimerEventPeriodic;
+import com.biglybt.pif.disk.DiskManager;
+import com.biglybt.pif.peers.PeerReadRequest;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -202,7 +207,7 @@ PieceBlocksView
 	private Object				dm_data_lock = new Object();
 	private ManagerData[]		dm_data = {};
 
-	private boolean				all_blocks_view;
+	private volatile boolean	all_blocks_view;
 	
 	private boolean			always_show_dm_name;
 
@@ -270,7 +275,12 @@ PieceBlocksView
 			
 			synchronized( dm_data_lock ){
 			
-				all_blocks_view = true;
+				if ( !all_blocks_view ){
+				
+					all_blocks_view = true;
+			
+					swtView.setTitle(MessageText.getString(getData()));
+				}
 			}
 			
 			return;
@@ -412,7 +422,7 @@ PieceBlocksView
 	private String 
 	getData()
 	{
-		return( "PieceBlocksView.title.full" );
+		return( all_blocks_view?"MainWindow.menu.view.allblocks":"PieceBlocksView.title.full" );
 	}
 
 	protected void 
@@ -438,254 +448,6 @@ PieceBlocksView
 		canvas = new Canvas(comp,SWT.NO_BACKGROUND);
 
 		canvas.setLayoutData( new GridData(GridData.FILL_BOTH ));
-				
-		canvas.addListener(SWT.MouseHover, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-
-				int	x = event.x;
-				int y = event.y;
-
-				String tt = "";
-
-				synchronized( dm_data_lock ){
-
-					for ( ManagerData data: dm_data ){
-
-						DownloadManager manager 	= data.manager;
-
-						if ( 	x >= data.me_hit_x && x <= data.me_hit_x+OWN_SIZE &&
-								y >= data.me_hit_y && y <= data.me_hit_y+OWN_SIZE ){
-
-							if ( always_show_dm_name || dm_data.length > 1 ){
-
-								tt = manager.getDisplayName() + "\r\n";
-							}
-
-							tt += DisplayFormatters.formatDownloadStatus( manager ) + ", " +
-									DisplayFormatters.formatPercentFromThousands(manager.getStats().getCompleted());
-
-							break;
-
-						}else{
-
-							PEPeer target = null;
-
-							for ( Map.Entry<PEPeer,int[]> entry: data.peer_hit_map.entrySet()){
-
-								int[] loc = entry.getValue();
-
-								int	loc_x = loc[0];
-								int loc_y = loc[1];
-
-								if ( 	x >= loc_x && x <= loc_x+PEER_SIZE &&
-										y >= loc_y && y <= loc_y+PEER_SIZE ){
-
-									target = entry.getKey();
-
-									break;
-								}
-							}
-
-							if ( target != null ){
-
-								PEPeerStats stats = target.getStats();
-
-								String[] details = PeerUtils.getCountryDetails( target );
-
-								String dstr = (details==null||details.length<2)?"":(" - " + details[0] + "/" + details[1]);
-								/*
-							if ( dm_map.size() > 1 ){
-
-								tt = manager.getDisplayName() + "\r\n";
-							}
-								 */
-
-								tt = target.getIp() + dstr + ", " +
-										DisplayFormatters.formatPercentFromThousands(target.getPercentDoneInThousandNotation()) + "\r\n" +
-										"Up=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( stats.getDataSendRate() + stats.getProtocolSendRate()) + ", " +
-										"Down=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( stats.getDataReceiveRate() + stats.getProtocolReceiveRate());
-
-								break;
-							}
-						}
-					}
-				}
-
-				Utils.setTT(canvas, tt );
-			}
-		});
-
-		canvas.addMouseListener(
-			new MouseAdapter()
-			{
-				@Override
-				public void
-				mouseUp(
-						MouseEvent event)
-				{
-					if ( event.button == 3 ){
-
-						int	x = event.x;
-						int y = event.y;
-
-						PEPeer 			target 			= null;
-						DownloadManager	target_manager 	= null;
-
-						synchronized( dm_data_lock ){
-
-							for ( ManagerData data: dm_data ){
-
-								DownloadManager manager 	= data.manager;
-
-								for( Map.Entry<PEPeer,int[]> entry: data.peer_hit_map.entrySet()){
-
-									int[] loc = entry.getValue();
-
-									int	loc_x = loc[0];
-									int loc_y = loc[1];
-
-									if ( 	x >= loc_x && x <= loc_x+PEER_SIZE &&
-											y >= loc_y && y <= loc_y+PEER_SIZE ){
-
-										target = entry.getKey();
-
-										target_manager	= manager;
-
-										break;
-									}
-								}
-
-								if ( target != null ){
-
-									break;
-								}
-							}
-						}
-
-						if ( target == null ){
-
-							return;
-						}
-
-						Menu menu = canvas.getMenu();
-
-						if ( menu != null && !menu.isDisposed()){
-
-							menu.dispose();
-						}
-
-						menu = new Menu( canvas );
-
-						PeersViewBase.fillMenu( menu, target, target_manager );
-
-						final Point cursorLocation = Display.getCurrent().getCursorLocation();
-
-						menu.setLocation( cursorLocation.x, cursorLocation.y );
-
-						menu.setVisible( true );
-					}
-				}
-
-				@Override
-				public void
-				mouseDoubleClick(
-						MouseEvent event )
-				{
-					int	x = event.x;
-					int y = event.y;
-
-					synchronized( dm_data_lock ){
-
-						for ( ManagerData data: dm_data ){
-
-							DownloadManager manager 	= data.manager;
-
-							if ( 	x >= data.me_hit_x && x <= data.me_hit_x+OWN_SIZE &&
-									y >= data.me_hit_y && y <= data.me_hit_y+OWN_SIZE ){
-
-								UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
-
-								if (uiFunctions != null) {
-
-									uiFunctions.getMDI().showEntryByID(
-											MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS,
-											manager);
-								}
-							}else{
-
-								for( Map.Entry<PEPeer,int[]> entry: data.peer_hit_map.entrySet()){
-
-									int[] loc = entry.getValue();
-
-									int	loc_x = loc[0];
-									int loc_y = loc[1];
-
-									if ( 	x >= loc_x && x <= loc_x+PEER_SIZE &&
-											y >= loc_y && y <= loc_y+PEER_SIZE ){
-
-										PEPeer target = entry.getKey();
-
-										// ugly code to locate any associated 'PeersView' that we can locate the peer in
-
-										try{
-
-											MdiEntry mdi_entry = UIFunctionsManager.getUIFunctions().getMDI().getEntry( MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, manager );
-
-											if ( mdi_entry != null ){
-
-												mdi_entry.setDatasource(new Object[] { manager });
-											}
-
-											Composite comp = canvas.getParent();
-
-											while( comp != null ){
-
-												if ( comp instanceof CTabFolder ){
-
-													CTabFolder tf = (CTabFolder)comp;
-
-													CTabItem[] items = tf.getItems();
-
-													for ( CTabItem item: items ){
-
-														UISWTViewCore view = (UISWTViewCore)item.getData("TabbedEntry");
-
-														UISWTViewEventListener listener = view.getEventListener();
-
-														if ( listener instanceof PeersView ){
-
-															tf.setSelection( item );
-
-															Event ev = new Event();
-
-															ev.item = item;
-
-															// manual setSelection doesn't file selection event - derp
-
-															tf.notifyListeners( SWT.Selection, ev );
-
-															((PeersView)listener).selectPeer( target );
-
-															return;
-														}
-													}
-												}
-
-												comp = comp.getParent();
-											}
-										}catch( Throwable e ){
-
-										}
-
-										break;
-									}
-								}
-							}
-						}
-					}
-				}
-			});
 
 		canvas.addPaintListener(
 			new PaintListener(){
@@ -886,6 +648,11 @@ PieceBlocksView
 					synchronized( data.lock ){
 					
 						pieces.addAll( data.pieces );
+						
+						for ( PEPeer peer: data.peers ){
+							
+							
+						}
 					}
 				}
 
@@ -969,7 +736,7 @@ PieceBlocksView
 		case UISWTViewEvent.TYPE_SHOWN:
 			String id = "DMDetails_Swarm";
 
-			setFocused( true );	// do this before next code as it can pick up the corrent 'manager' ref
+			setFocused( true );	// do this before next code as it can pick up the correct 'manager' ref
 
 			synchronized( dm_data_lock ){
 
@@ -1039,7 +806,7 @@ PieceBlocksView
 	
 	private class
 	ManagerData
-		implements DownloadManagerPeerListener, DownloadManagerPieceListener
+		implements DownloadManagerPeerListener
 	{
 		final Object lock = this;
 		
@@ -1056,15 +823,11 @@ PieceBlocksView
 
 		private
 		ManagerData(
-				DownloadManager	_manager )
+			DownloadManager	_manager )
 		{
 			manager	= _manager;
 
-			peers = new ArrayList<>();
-
 			manager.addPeerListener(this);
-			
-			manager.addPieceListener(this);
 		}
 
 		protected long
@@ -1078,8 +841,6 @@ PieceBlocksView
 		{
 			manager.removePeerListener(this);
 			
-			manager.removePieceListener(this);
-
 			manager.setUserData( DM_DATA_CACHE_KEY, null);
 
 			peer_hit_map.clear();
@@ -1097,6 +858,57 @@ PieceBlocksView
 		peerManagerAdded(
 			PEPeerManager manager )
 		{	
+			manager.addListener(
+				new PEPeerManagerListenerAdapter(){
+					
+					
+					@Override
+					public void 
+					pieceAdded(
+						PEPeerManager 	manager, 
+						PEPiece 		piece, 
+						PEPeer 			for_peer )
+					{
+						synchronized( lock ){
+
+							if ( !pieces.contains( piece )){
+
+								pieces.add( piece );
+							}
+						}
+					}
+					
+					@Override
+					public void 
+					pieceRemoved(
+						PEPeerManager 	manager, 
+						PEPiece 		piece ) 
+					{
+						synchronized( lock ){
+
+							pieces.remove( piece );
+						}
+					}
+					
+					@Override
+					public void 
+					requestAdded(
+						PEPeerManager 		manager, 
+						PEPiece 			piece, 
+						PEPeer 				peer, 
+						PeerReadRequest 	request)
+					{
+						System.out.println( "req added: " + piece + "/" + peer + "/" + request );
+						
+						synchronized( lock ){
+							
+							if ( !pieces.contains( piece )){
+								
+								pieces.add( piece );
+							}
+						}
+					}
+				});
 		}
 		
 		@Override
@@ -1125,28 +937,6 @@ PieceBlocksView
 			synchronized( lock ){
 				
 				peers.remove( peer );
-			}
-		}
-		
-		@Override
-		public void 
-		pieceAdded(
-			PEPiece piece )
-		{
-			synchronized( lock ){
-				
-				pieces.add( piece );
-			}
-		}
-		
-		@Override
-		public void 
-		pieceRemoved(
-			PEPiece piece)
-		{
-			synchronized( lock ){
-				
-				pieces.remove( piece );
 			}
 		}
 	}

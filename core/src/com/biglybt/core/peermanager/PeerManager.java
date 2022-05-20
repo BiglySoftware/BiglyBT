@@ -1603,6 +1603,10 @@ public class PeerManager implements CoreStatsProvider {
 			public void
 			requestCanceled(
 					DiskManagerReadRequest	item ){log(); }
+			
+			public void
+			requestAdded(
+					PEPiece piece, PEPeerTransport peer, DiskManagerReadRequest request ){log(); }
 
 			public boolean
 			requestExists(

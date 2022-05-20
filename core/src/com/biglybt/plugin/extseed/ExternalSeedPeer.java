@@ -575,7 +575,7 @@ ExternalSeedPeer
 	}
 
 	@Override
-	public List
+	public List<PeerReadRequest>
 	getExpiredRequests()
 	{
 		return( reader.getExpiredRequests());

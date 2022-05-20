@@ -85,6 +85,7 @@ import com.biglybt.pif.network.Connection;
 import com.biglybt.pif.network.OutgoingMessageQueue;
 import com.biglybt.pif.peers.Peer;
 import com.biglybt.pif.peers.PeerDescriptor;
+import com.biglybt.pif.peers.PeerReadRequest;
 
 /**
  * manages all peer transports for a torrent
@@ -2700,6 +2701,27 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 	}
 
+	@Override
+	public void 
+	requestAdded(
+		PEPiece					piece,
+		PEPeerTransport			peer,
+		DiskManagerReadRequest	request )
+	{
+		final ArrayList<PEPeerManagerListener> peer_manager_listeners = peer_manager_listeners_cow;
+
+		for( PEPeerManagerListener listener: peer_manager_listeners ){
+			
+			try{
+				listener.requestAdded( this, piece, peer, request);
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
 	public PEPeerControl getControl(){
 		return(this);
 	}
@@ -6910,7 +6932,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		public int[] getCurrentOutgoingRequestProgress(){
 			return(null);
 		}
-
+		
 		public long getBytesRemaining(){
 			return(disk_mgr.getRemaining());
 		}

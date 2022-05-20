@@ -161,10 +161,10 @@ Peer
 
 	public void setOptimisticUnchoke( boolean is_optimistic );
 
-	public List
+	public List<PeerReadRequest>
 	getExpiredRequests();
 
-	public List
+	public List<PeerReadRequest>
 	getRequests();
 
 	public int

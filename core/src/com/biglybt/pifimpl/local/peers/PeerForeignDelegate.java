@@ -271,7 +271,7 @@ PeerForeignDelegate
 	{
 		return( foreign.getRequests().indexOf( request ));
 	}
-
+	
 	protected  void
 	dataReceived()
 	{
@@ -1332,16 +1332,13 @@ PeerForeignDelegate
 
 			if ( is_download_disabled ){
 
-				List<Object>	list = foreign.getRequests();
+				List<PeerReadRequest>	list = foreign.getRequests();
 
 				if ( list != null ){
 
-					for ( Object obj: list ){
+					for ( PeerReadRequest req: list ){
 
-						if ( obj instanceof PeerReadRequest ){
-
-							foreign.cancelRequest((PeerReadRequest)obj);
-						}
+						foreign.cancelRequest( req );
 					}
 				}
 			}

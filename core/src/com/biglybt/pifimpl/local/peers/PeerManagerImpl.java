@@ -34,6 +34,7 @@ import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.peer.*;
+import com.biglybt.core.peer.impl.PEPeerTransport;
 import com.biglybt.core.peermanager.peerdb.PeerItem;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
@@ -83,7 +84,7 @@ PeerManagerImpl
 		}
 	}
 
-	private Map		foreign_map		= new HashMap();
+	private Map<Peer,PeerForeignDelegate>		foreign_map		= new HashMap<>();
 
 	private Map<PeerManagerListener2,CoreListener>	listener_map2 	= new HashMap<>();
 
@@ -130,12 +131,12 @@ PeerManagerImpl
 
 						 destroyed	= true;
 
-						 Iterator it = foreign_map.values().iterator();
+						 Iterator<PeerForeignDelegate> it = foreign_map.values().iterator();
 
 						 while( it.hasNext()){
 
 							 try{
-								 ((PeerForeignDelegate)it.next()).stop();
+								 it.next().stop();
 
 							 }catch( Throwable e ){
 
@@ -481,7 +482,7 @@ PeerManagerImpl
 
 		synchronized( foreign_map ){
 
-			PEPeer	local = (PEPeer)foreign_map.get( _foreign );
+			PeerForeignDelegate	local = foreign_map.get( _foreign );
 
 			if ( local != null && local.isClosed()){
 
@@ -517,11 +518,11 @@ PeerManagerImpl
 		return((PeerForeignDelegate)_foreign.getUserData( PeerManagerImpl.class ));
 	}
 
-	public List
+	public List<PEPeer>
 	mapForeignPeers(
 		Peer[]	_foreigns )
 	{
-		List	res = new ArrayList();
+		List<PEPeer>	res = new ArrayList<>();
 
 		for (int i=0;i<_foreigns.length;i++){
 
@@ -866,6 +867,16 @@ PeerManagerImpl
 					new pieceFacade( piece.getPieceNumber()));
 		}
 
+		@Override
+		public void 
+		requestAdded(
+			PEPeerManager 		manager, 
+			PEPiece 			piece, 
+			PEPeer				peer,
+			PeerReadRequest 	request)
+		{
+		}
+		
 		@Override
 		public void
 		peerSentBadData(

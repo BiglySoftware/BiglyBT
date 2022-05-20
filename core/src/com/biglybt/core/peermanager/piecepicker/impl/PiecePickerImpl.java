@@ -1701,7 +1701,10 @@ implements PiecePicker
 
 				final int thisBlock = blockNumber + i;
 
-				if (pt.request(pieceNumber, thisBlock *DiskManager.BLOCK_SIZE, pePiece.getBlockSize(thisBlock),true) != null ){
+				DiskManagerReadRequest request = pt.request(pieceNumber, thisBlock *DiskManager.BLOCK_SIZE, pePiece.getBlockSize(thisBlock),true);
+				
+				if ( request != null ){
+					peerControl.requestAdded(pePiece,pt,request);
 					requested++;
 					pt.setLastPiece(pieceNumber);
 
@@ -1716,7 +1719,10 @@ implements PiecePicker
 
 				final int thisBlock =blockNumber +i;
 
-				if (pt.request(pieceNumber, thisBlock *DiskManager.BLOCK_SIZE, pePiece.getBlockSize(thisBlock),true) != null ){
+				DiskManagerReadRequest request = pt.request(pieceNumber, thisBlock *DiskManager.BLOCK_SIZE, pePiece.getBlockSize(thisBlock),true);
+				
+				if ( request != null ){
+					peerControl.requestAdded(pePiece,pt,request);
 					requested++;
 					pt.setLastPiece(pieceNumber);
 
@@ -1993,6 +1999,8 @@ implements PiecePicker
 
 					if ( request != null ){
 
+						peerControl.requestAdded(pePiece,pt,request);
+						
 						List	real_time_requests = rtd.getRequests()[piece_min_rta_block];
 
 						real_time_requests.add( new RealTimePeerRequest( pt, request ));
@@ -2850,22 +2858,28 @@ implements PiecePicker
 
 					if ( pt.isPieceAvailable(pieceNumber) && pePiece != null ){
 
-						if ( ( !pt.isSnubbed() || availability[pieceNumber] <=peerControl.getNbPeersSnubbed()) &&
-								pt.request(pieceNumber, chunk.getOffset(), chunk.getLength(),false) != null ){
-	
-							pePiece.setRequested(pt, chunk.getBlockNumber());
-	
-							pt.setLastPiece(pieceNumber);
-	
-							chunk.requested();
+						if ( !pt.isSnubbed() || availability[pieceNumber] <=peerControl.getNbPeersSnubbed()){
 							
-								// stick it at the end
+							DiskManagerReadRequest request = pt.request(pieceNumber, chunk.getOffset(), chunk.getLength(),false);
 							
-							it.remove();
-							
-							endGameModeChunks.add( chunk );
-														
-							return( 1 );
+							if ( request != null ){
+	
+								peerControl.requestAdded( pePiece, pt, request );
+								
+								pePiece.setRequested(pt, chunk.getBlockNumber());
+		
+								pt.setLastPiece(pieceNumber);
+		
+								chunk.requested();
+								
+									// stick it at the end
+								
+								it.remove();
+								
+								endGameModeChunks.add( chunk );
+															
+								return( 1 );
+							}
 						}
 					}
 				}

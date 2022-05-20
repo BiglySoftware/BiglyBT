@@ -35,6 +35,7 @@ import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.pif.network.Connection;
+import com.biglybt.pif.peers.PeerReadRequest;
 
 
 /**
@@ -355,10 +356,12 @@ PEPeer
    */
   public int[] getOutgoingRequestedPieceNumbers();
 
-  public default DiskManagerReadRequest[] getRecentPiecesSent(){
+  public default DiskManagerReadRequest[] 
+  getRecentPiecesSent()
+  {
 	  return( new DiskManagerReadRequest[0]) ;
   }
-  
+  	
   public default int
   getPercentDoneOfCurrentIncomingRequest()
   {

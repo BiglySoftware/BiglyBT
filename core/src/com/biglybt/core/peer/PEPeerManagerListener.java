@@ -21,6 +21,7 @@
 package com.biglybt.core.peer;
 
 import com.biglybt.core.peermanager.peerdb.PeerItem;
+import com.biglybt.pif.peers.PeerReadRequest;
 
 /**
  * @author parg
@@ -55,6 +56,7 @@ PEPeerManagerListener
 
   public void pieceRemoved( PEPeerManager manager, PEPiece piece );
 
+  public void requestAdded( PEPeerManager manager, PEPiece piece, PEPeer peer, PeerReadRequest request );
 
   public void peerDiscovered( PEPeerManager manager, PeerItem peer, PEPeer finder );
 
