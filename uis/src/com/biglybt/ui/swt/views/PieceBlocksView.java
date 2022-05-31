@@ -1069,7 +1069,7 @@ outer:
 		{
 			int	block_number = request.getOffset()/DiskManager.BLOCK_SIZE;
 						
-			BlockDetails block = new BlockDetails( piece, block_number );
+			BlockDetails block = new BlockDetails( piece, request, block_number );
 			
 			blocks.add( block );
 			
@@ -1293,18 +1293,21 @@ outer:
 	{
 		final long			created_time = SystemTime.getMonotonousTime();
 		
-		final PieceDetails	piece_details;
-		final PEPiece		piece;
-		final int			block_number;
-		final int			size;
+		final PieceDetails		piece_details;
+		final PeerReadRequest	request;
+		final PEPiece			piece;
+		final int				block_number;
+		final int				size;
 		
 		int					done;
 		
 		BlockDetails(
 			PieceDetails	_piece,
+			PeerReadRequest	_request,
 			int				_bn )
 		{
 			piece_details	= _piece;
+			request			= _request;
 			block_number	= _bn;
 			
 			piece 	= piece_details.piece;
@@ -1317,6 +1320,11 @@ outer:
 			if ( done == size ){
 				
 				piece_details.setDone( this );
+				
+				return( true );
+			}
+			
+			if ( request.isCancelled()){
 				
 				return( true );
 			}
