@@ -18,77 +18,49 @@
 
 package com.biglybt.ui.swt.views;
 
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
 
-import com.biglybt.ui.swt.ImageRepository;
+import java.util.*;
+
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.Legend;
+
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.LineAttributes;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Menu;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
-import com.biglybt.core.download.DownloadManagerPieceListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
-import com.biglybt.core.peer.PEPeerManagerListener;
 import com.biglybt.core.peer.PEPeerManagerListenerAdapter;
 import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.core.peer.PEPiece;
-import com.biglybt.core.peer.util.PeerUtils;
-import com.biglybt.core.peermanager.peerdb.PeerItem;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimerEventPeriodic;
 import com.biglybt.pif.disk.DiskManager;
 import com.biglybt.pif.peers.PeerReadRequest;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
-import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 
-import com.biglybt.core.networkmanager.admin.NetworkAdmin;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
+
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 
@@ -98,141 +70,34 @@ PieceBlocksView
 	implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 {
 	public static String MSGID_PREFIX = "PieceBlocksView";
-
-	
-	private static final boolean FORCE_FULL_REPAINT = true; // !Constants.isWindows;
-	
-	private final Object	DM_DATA_CACHE_KEY 		= new Object();	// not static as we want per-view data
-	private final Object	PEER_DATA_KEY 			= new Object();	// not static as we want per-view data
-	
-	private final static int BLOCKCOLOR_DOWN_SMALL 		= 0;
-	private final static int BLOCKCOLOR_DOWN_BIG		= 1;
-	private final static int BLOCKCOLOR_UP_SMALL 		= 2;
-	private final static int BLOCKCOLOR_UP_BIG 			= 3;
-
-	private final static Color[] blockColors = {
-			Colors.bluesFixed[Colors.BLUES_MIDDARK],
-			Colors.maroon,
+		
+	private final static Color[] block_colours = {
+			Colors.bluesFixed[Colors.BLUES_DARKEST],
+			Colors.bluesFixed[Colors.BLUES_MIDLIGHT],
+			Colors.green,
 			Colors.fadedGreen,
-			Colors.orange,
 		};
 
-	private final static String[] legendKeys = {
-			"SwarmView.block.downsmall",
-			"SwarmView.block.downbig",
-			"SwarmView.block.upsmall",
-			"SwarmView.block.upbig",
+	private final static String[] legend_keys = {
+			"PieceBlocksView.block.done1",
+			"PieceBlocksView.block.active1",
+			"PieceBlocksView.block.done2",
+			"PieceBlocksView.block.active2",
 	};
-		
-	private static final int PEER_SIZE = 18;
-	//private static final int PACKET_SIZE = 10;
-	private static final int OWN_SIZE_DEFAULT = 75;
-	private static final int OWN_SIZE_MIN		= 30;
-	private static final int OWN_SIZE_MAX 	= 75;
-	private static int OWN_SIZE = OWN_SIZE_DEFAULT;
-
-	private static final int NB_ANGLES = 1000;
-
-	private static final double[] angles;
-	private static final double[] deltaXXs;
-	private static final double[] deltaXYs;
-	private static final double[] deltaYXs;
-	private static final double[] deltaYYs;
-
-	static{
-		angles = new double[NB_ANGLES];
-
-		deltaXXs = new double[NB_ANGLES];
-		deltaXYs = new double[NB_ANGLES];
-		deltaYXs = new double[NB_ANGLES];
-		deltaYYs = new double[NB_ANGLES];
-
-		for(int i = 0 ; i < NB_ANGLES ; i++) {
-			angles[i] = 2 * i * Math.PI / NB_ANGLES - Math.PI;
-			deltaXXs[i] = Math.cos(angles[i]);
-			deltaXYs[i] = Math.sin(angles[i]);
-			deltaYXs[i] = Math.cos(angles[i]+Math.PI / 2);
-			deltaYYs[i] = Math.sin(angles[i]+Math.PI / 2);
-		}
-	}
-
-	private double perimeter;
-	private double[] rs = new double[NB_ANGLES];
-
-	//Comparator Class
-	//Note: this comparator imposes orderings that are inconsistent with equals.
-	private static class
-	PeerComparator
-		implements Comparator<PEPeer>
-	{
-		@Override
-		public int compare(PEPeer peer0, PEPeer peer1) {
-
-			int percent0 = peer0.getPercentDoneInThousandNotation();
-			int percent1 = peer1.getPercentDoneInThousandNotation();
-
-			int result = percent0 - percent1;
-
-			if ( result == 0 ){
-
-				long l = peer0.getTimeSinceConnectionEstablished() - peer1.getTimeSinceConnectionEstablished();
-
-				if ( l < 0 ){
-					result = -1;
-				}else if ( l > 0 ){
-					result = 1;
-				}
-			}
-
-			return( result );
-		}
-	}
-
-	private PeerComparator peerComparator;
-
-
-	private Image					my_flag;
-
-	//UI Stuff
-	private Display 	display;
+	
 	private Canvas 	canvas;
 	private Image 	img;
 
-	private Point		mySizeCache;
-
 	private TimerEventPeriodic	block_refresher;
-
-
-
+	
 	private Object				dm_data_lock = new Object();
 	private ManagerData[]		dm_data = {};
 
 	private volatile boolean	all_blocks_view;
 	
-	private boolean			always_show_dm_name;
-
-	private final PeerFilter	peer_filter;
-
 	public 
 	PieceBlocksView() 
 	{
-		this( new PeerFilter() { public boolean acceptPeer(PEPeer peer) { return( true );}});
-	}
-
-	public 
-	PieceBlocksView(
-		PeerFilter	_pf ) 
-	{
-		peer_filter = _pf;
-
-		this.peerComparator = new PeerComparator();
-	}
-
-	public void
-	setAlwaysShowDownloadName(
-			boolean	b )
-	{
-		always_show_dm_name = b;
 	}
 	
 	private boolean comp_focused;
@@ -291,18 +156,6 @@ PieceBlocksView
 			focus_pending_ds = newDataSource;
 			
 			return;
-		}
-
-			// defer this until here so that a blocking call to get the IP doesn't hang UI construction
-
-		if ( my_flag == null ){
-
-			InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress();
-
-			if ( ia != null ){
-
-				my_flag = ImageRepository.getCountryFlag( ia, false );
-			}
 		}
 
 		List<DownloadManager> existing = new ArrayList<>();
@@ -427,11 +280,8 @@ PieceBlocksView
 
 	protected void 
 	initialize(
-		Composite 	parent,
-		boolean		showLegend )
+		Composite 	parent )
 	{
-		display = parent.getDisplay();
-
 		Composite comp = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 1;
@@ -452,51 +302,23 @@ PieceBlocksView
 		canvas.addPaintListener(
 			new PaintListener(){
 				@Override
-				public void paintControl(PaintEvent e) {
-					
-					if ( img != null && !img.isDisposed()){
-						
-						Rectangle bounds = img.getBounds();
-						
-						GC gc = e.gc;
-						
-						int	x		= e.x;
-						int y		= e.y;
-						int width 	= e.width;
-						int height	= e.height;
-						
-						if ( bounds.width >= ( width + x ) && bounds.height >= ( height + y )){
-							
-							Image full_image = new Image(canvas.getDisplay(), bounds.width, bounds.height);
-							
-							try{
-								GC full_gc = new GC( full_image );
+				public void 
+				paintControl(
+					PaintEvent e ) 
+				{		
+					Rectangle client_bounds = canvas.getClientArea();
 
-								try{
-									full_gc.drawImage(img, x, y, width, height, x, y, width, height);
+					int	x		= e.x;
+					int y		= e.y;
+					int width 	= e.width;
+					int height	= e.height;
+						
+					if ( client_bounds.width > 0 && client_bounds.height > 0 ){
+												
+						updateImage();
 							
-									full_gc.setClipping( x, y, width, height);
-									
-									//refreshArrows( full_gc );
-									
-									gc.drawImage(full_image, x, y, width, height, x, y, width, height);
-									
-								}finally{
-									
-									full_gc.dispose();
-								}
-								
-							}finally{
-								
-								full_image.dispose();
-							}
-																
-							return;
-						}
+						e.gc.drawImage(img, x, y, width, height, x, y, width, height);			
 					}
-				
-					e.gc.setBackground(Colors.white);
-					e.gc.fillRectangle(e.x, e.y, e.width, e.height);
 				}
 			});
 
@@ -507,10 +329,16 @@ PieceBlocksView
 			}
 		});
 		
-		if ( showLegend ){
-			Legend.createLegendComposite(	
-					comp, blockColors, legendKeys, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 1, 1));
-		}
+		String[] legend_texts = {
+				MessageText.getString( "FileView.BlockView.Done" ) + " 1",
+				MessageText.getString( "FileView.BlockView.Active" ) + " 1",
+				MessageText.getString( "FileView.BlockView.Done" ) + " 2",
+				MessageText.getString( "FileView.BlockView.Active" ) + " 2",
+				
+		};
+		
+		Legend.createLegendComposite(	
+				comp, block_colours, legend_keys, legend_texts, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 1, 1), true );
 	}
 
 	private List<DownloadManager>	abv_last_active = Collections.emptyList();
@@ -565,6 +393,44 @@ PieceBlocksView
 			}
 		}
 
+		synchronized( dm_data_lock ){
+
+			if ( canvas == null || canvas.isDisposed()){
+				
+				return;
+			}
+
+			if ( block_refresher == null ){
+
+				block_refresher = 
+						SimpleTimer.addPeriodicEvent(
+								"PBV:AR",
+								100,
+								(ev)->{
+									Utils.execSWTThread(()->{
+										if ( canvas.isDisposed()){
+											synchronized( dm_data_lock ){
+												if ( block_refresher != null ){
+
+													block_refresher.cancel();
+
+													block_refresher = null;
+												}
+											}
+
+											return;
+										}
+										
+										canvas.redraw();
+									});
+								});
+			}
+		}
+	}
+
+	private void
+	updateImage()
+	{
 		synchronized( dm_data_lock ){
 
 			if ( canvas == null || canvas.isDisposed()){
@@ -634,77 +500,202 @@ PieceBlocksView
 				gc.setTextAntialias(SWT.ON);
 				gc.setAntialias(SWT.ON);
 					// fix for bug https://stackoverflow.com/questions/23495420/swt-transformation-bug
-				gc.setLineAttributes(new LineAttributes(1, SWT.CAP_FLAT, SWT.JOIN_MITER));
+				//gc.setLineAttributes(new LineAttributes(1, SWT.CAP_FLAT, SWT.JOIN_MITER));
 			} catch(Exception e) {
 			}
 
 			try{
-				List<PEPiece>	pieces = new ArrayList<>(1024);
+				int[] piece_counts = new int[dm_data.length];
 				
-				for ( ManagerData data: dm_data ){
+				int	total_pieces 	= 0;
+				int	dms_with_pieces	= 0;
+				
+				for ( int i=0;i<dm_data.length;i++ ){
 
-					DownloadManager manager 	= data.manager;
-
-					synchronized( data.lock ){
-					
-						pieces.addAll( data.pieces );
+					int pieces = dm_data[i].update();
 						
-						for ( PEPeer peer: data.peers ){
-							
-							
-						}
+					if ( pieces > 0 ){
+						
+						piece_counts[i] = pieces;
+						
+						total_pieces += pieces;
+						
+						dms_with_pieces++;
 					}
 				}
 
-				int num_pieces = pieces.size();
-
-				if ( num_pieces == 0 ){
+				if ( total_pieces == 0 ){
 					
 					return;
 				}
 				
-				float piece_space 	= height / 3;
+				int piece_space 	= height / 3;
+				int block_space		= height - piece_space;
 				
-				float piece_height 	= piece_space / num_pieces;
+				int piece_height 	= piece_space / total_pieces;
 				
 				if ( piece_height > 10 ){
 					
 					piece_height = 10;
+					
+				}else if ( piece_height < 1 ){
+					
+					piece_height = 1;
 				}
 				
-				float y_pos = height - piece_height;
+				int max_pieces = (int)( piece_space / piece_height );
 				
-				for ( PEPiece piece: pieces ){
+				if ( total_pieces > max_pieces ){
 					
-					gc.setBackground( Colors.blue );
+					int	pieces_per_dm = max_pieces / dms_with_pieces;
 					
-					boolean[] downloaded = piece.getDownloaded();
-					
-					float	block_width = (float)width/downloaded.length;
-					
-					float	x_pos = 0;
-					
-					for ( int i=0;i<downloaded.length;i++ ){
+					if ( pieces_per_dm == 0 ){
 						
-						if ( downloaded[i] ){
-							
-							gc.fillRectangle((int)x_pos,(int)y_pos, (int)block_width, (int)piece_height );
-						}
-						x_pos += block_width;
+						pieces_per_dm = 1;
 					}
 					
-					y_pos -= piece_height;
+					int	used_pieces 				= 0;
+					int dms_with_too_many_pieces 	= 0;
+					
+					for ( int i=0;i<dm_data.length;i++ ){
+						
+						int pieces = piece_counts[i];
+						
+						if ( pieces > 0 ){
+							
+							if ( pieces <= pieces_per_dm ){
+								
+								used_pieces += pieces;
+								
+							}else{
+								
+								dms_with_too_many_pieces++;
+							}
+						}
+					}
+					
+					if ( dms_with_too_many_pieces > 0 ){
+						
+						int rem_pieces = max_pieces - used_pieces;
+						
+						pieces_per_dm = rem_pieces / dms_with_too_many_pieces;
+						
+						if ( pieces_per_dm == 0 ){
+							
+							pieces_per_dm = 1;
+						}
+						
+						for ( int i=0;i<dm_data.length;i++ ){
+							
+							int pieces = piece_counts[i];
+							
+							if ( pieces > 0 ){
+								
+								if ( pieces > pieces_per_dm ){
+								
+									piece_counts[i] = pieces_per_dm;
+								}		
+							}
+						}
+					}
+				}
+				
+				
+				int y_pos = height - piece_height;
+				
+				int dm_num = 0;
+			
+outer:
+				for ( int i=0;i<dm_data.length;i++ ){
+					
+					int piece_count = piece_counts[i];
+					
+					if ( piece_count == 0 ){
+						
+						continue;
+					}
+				
+					dm_num++;
+					
+					synchronized( dm_data[i].lock ){
+						
+						for ( PieceDetails piece_details: dm_data[i].piece_map.values()){
+								
+							if ( y_pos < block_space ){
+								
+								break outer;
+							}
+							
+							if ( piece_count == 0 ){
+								
+								break;
+							}
+							
+							piece_count--;
+							
+							boolean odd = dm_num%2==1;
+							
+							boolean[] downloaded = piece_details.getDownloaded();
+							
+							float	overall_block_width = Math.max((float)width/downloaded.length, 1 );
+							
+							gc.setBackground( block_colours[odd?1:3] );
+							
+							for ( Iterator<BlockDetails> it=piece_details.blocks.iterator();it.hasNext();){
+								
+								BlockDetails block = it.next();
+								
+								int block_x = (int)( overall_block_width*block.block_number );
+								
+								int block_y;
+								
+								if ( odd ){
+									
+									block_y = y_pos * block.done / block.size;
+									
+								}else{
+									
+									block_y = ( y_pos - piece_height ) * block.done / block.size + piece_height;
+								}
+								
+								int block_width = (int)( overall_block_width*( block.block_number+1)) - block_x;
+								
+								gc.fillRectangle( block_x, block_y, block_width, piece_height );
+							}
+		
+							gc.setBackground( block_colours[odd?0:2] );
+				
+							for ( int j=0;j<downloaded.length;j++ ){
+								
+								if ( downloaded[j] ){
+									
+									int block_x = (int)( overall_block_width*j );
+									
+									int block_width = (int)( overall_block_width*( j+1)) - block_x;
+									
+									gc.fillRectangle( block_x, y_pos, block_width, piece_height );
+								}
+							}
+									
+							if ( piece_height >= 3 ){
+		
+								gc.setBackground( Colors.light_grey );
+
+								gc.drawRectangle( 0, y_pos-1, width-1, piece_height );
+							}
+							
+							
+							y_pos -= piece_height;
+						}
+					}
 				}
 			}finally{
 				
 				gc.dispose();
-
-				canvas.redraw();
 			}
 		}
 	}
-
-
+	
 	private UISWTView swtView;
 
 	@Override
@@ -721,7 +712,7 @@ PieceBlocksView
 			break;
 
 		case UISWTViewEvent.TYPE_INITIALIZE:
-			initialize((Composite)event.getData(), true);
+			initialize((Composite)event.getData());
 			break;
 
 		case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
@@ -795,17 +786,10 @@ PieceBlocksView
 		
 		list.putAll(states);
 	}
-
-	protected interface
-	PeerFilter
-	{
-		public boolean
-		acceptPeer(
-				PEPeer	peer );
-	}
 	
 	private class
 	ManagerData
+		extends PEPeerManagerListenerAdapter
 		implements DownloadManagerPeerListener
 	{
 		final Object lock = this;
@@ -813,14 +797,13 @@ PieceBlocksView
 		private final long			add_time = SystemTime.getMonotonousTime();
 
 		private DownloadManager		manager;
-
-		private Point 				oldSize;
-		private List<PEPeer> 		peers			= new ArrayList<>();
-		private List<PEPiece>		pieces			= new ArrayList<>();
-		private Map<PEPeer,int[]>	peer_hit_map = new HashMap<>();
-		private int					me_hit_x;
-		private int					me_hit_y;
-
+		private PEPeerManager		peer_manager;		
+			
+		private Map<PEPeer, PeerDetails>	peer_map 	= new HashMap<>();
+		private Map<Integer,PieceDetails>	piece_map	= new LinkedHashMap<>();
+		
+		private boolean	deleted;
+		
 		private
 		ManagerData(
 			DownloadManager	_manager )
@@ -839,11 +822,24 @@ PieceBlocksView
 		private void
 		delete()
 		{
-			manager.removePeerListener(this);
-			
-			manager.setUserData( DM_DATA_CACHE_KEY, null);
+			PEPeerManager pm;
+		
+			synchronized( lock ){
 
-			peer_hit_map.clear();
+				pm = peer_manager;
+					
+				peer_map.clear();
+				piece_map.clear();
+				
+				deleted = true;
+			}
+
+			if ( pm != null ){
+				
+				pm.removeListener( this );
+			}
+			
+			manager.removePeerListener(this);
 		}
 
 		@Override
@@ -858,57 +854,41 @@ PieceBlocksView
 		peerManagerAdded(
 			PEPeerManager manager )
 		{	
-			manager.addListener(
-				new PEPeerManagerListenerAdapter(){
-					
-					
-					@Override
-					public void 
-					pieceAdded(
-						PEPeerManager 	manager, 
-						PEPiece 		piece, 
-						PEPeer 			for_peer )
-					{
-						synchronized( lock ){
+			PEPeerManager old_pm;
+		
+			manager.addListener( this );
 
-							if ( !pieces.contains( piece )){
-
-								pieces.add( piece );
-							}
-						}
-					}
+			List<PEPiece>	initial_pieces = new ArrayList<>(manager.getNbPieces());
+			
+			synchronized( lock ){
+				
+				if ( deleted ){
 					
-					@Override
-					public void 
-					pieceRemoved(
-						PEPeerManager 	manager, 
-						PEPiece 		piece ) 
-					{
-						synchronized( lock ){
-
-							pieces.remove( piece );
-						}
-					}
+					return;
+				}
+				
+				old_pm	= peer_manager;
+			
+				peer_manager = manager;
+				
+				for ( PEPiece piece: manager.getPieces()){
 					
-					@Override
-					public void 
-					requestAdded(
-						PEPeerManager 		manager, 
-						PEPiece 			piece, 
-						PEPeer 				peer, 
-						PeerReadRequest 	request)
-					{
-						System.out.println( "req added: " + piece + "/" + peer + "/" + request );
+					if ( piece != null ){
 						
-						synchronized( lock ){
-							
-							if ( !pieces.contains( piece )){
-								
-								pieces.add( piece );
-							}
-						}
+						initial_pieces.add( piece );
 					}
-				});
+				}
+			}
+			
+			for ( PEPiece piece: initial_pieces ){
+				
+				pieceAdded( manager, piece, null );
+			}
+			
+			if ( old_pm != null ){
+				
+				old_pm.removeListener( this );
+			}
 		}
 		
 		@Override
@@ -916,6 +896,108 @@ PieceBlocksView
 		peerManagerRemoved(
 			PEPeerManager manager )
 		{
+			synchronized( lock ){
+				
+				if ( manager == peer_manager ){
+					
+					peer_manager = null;
+					
+					peer_map.clear();
+					piece_map.clear();
+				}
+			}
+		}
+		
+		@Override
+		public void 
+		pieceAdded(
+			PEPeerManager 	manager, 
+			PEPiece 		piece, 
+			PEPeer 			for_peer )
+		{
+			if ( for_peer == null ){
+				
+					// only add pieces at this point during initial piece recovery, others will be
+					// added when requests are created for peers
+				
+				int pn = piece.getPieceNumber();
+						
+				synchronized( lock ){
+	
+					if ( deleted ){
+						
+						return;
+					}
+	
+					if ( !piece_map.containsKey( pn )){
+						
+						piece_map.put( pn, new PieceDetails( piece ));
+					}
+				}
+			}
+		}
+		
+		@Override
+		public void 
+		pieceRemoved(
+			PEPeerManager 	manager, 
+			PEPiece 		piece ) 
+		{
+			int piece_number = piece.getPieceNumber();
+			
+			synchronized( lock ){
+				
+				PieceDetails details = piece_map.get( piece_number );
+				
+				if ( details != null ){
+					
+					if ( details.remove()){
+						
+						piece_map.remove( piece_number );
+					}
+				}
+			}
+		}
+		
+		@Override
+		public void 
+		requestAdded(
+			PEPeerManager 		manager, 
+			PEPiece 			piece, 
+			PEPeer 				peer, 
+			PeerReadRequest 	request)
+		{
+			synchronized( lock ){
+		
+				if ( deleted ){
+					
+					return;
+				}
+
+				PeerDetails peer_details = peer_map.get( peer );
+				
+				if ( peer_details == null ){
+					
+					peer_details = new PeerDetails( peer );
+					
+					peer_map.put( peer, peer_details) ;
+				}
+				
+				int pn = piece.getPieceNumber();
+				
+				PieceDetails piece_details = piece_map.get( pn);
+				
+				if ( piece_details == null ){
+										
+					piece_details = new PieceDetails( piece );
+					
+					piece_map.put( pn, piece_details );
+				}
+								
+				BlockDetails block = peer_details.addRequest( piece_details, request );
+				
+				piece_details.addRequest( block );
+			}
 		}
 
 		@Override
@@ -923,10 +1005,6 @@ PieceBlocksView
 		peerAdded(
 			PEPeer peer) 
 		{
-			synchronized( lock ){
-				
-				peers.add( peer );
-			}
 		}
 
 		@Override
@@ -935,9 +1013,321 @@ PieceBlocksView
 			PEPeer peer ) 
 		{
 			synchronized( lock ){
-				
-				peers.remove( peer );
+								
+				peer_map.remove( peer );
 			}
+		}
+		
+		int
+		update()
+		{
+			synchronized( lock ){
+				
+				for ( PeerDetails peer: peer_map.values()){
+					
+					peer.update();
+				}
+				
+				for ( Iterator<PieceDetails> it = piece_map.values().iterator(); it.hasNext();){
+				
+					PieceDetails piece = it.next();
+					
+					piece.update();
+					
+					if ( piece.isDone()){
+						
+						it.remove();
+					}
+				}
+				
+				return( piece_map.size());
+			}
+		}
+	}
+	
+	private class
+	PeerDetails
+	{
+		final PEPeer		peer;
+		final PEPeerStats	stats;
+		
+		final List<BlockDetails>	blocks = new ArrayList<>();
+		
+		long last_update		= -1;
+		
+		PeerDetails(
+			PEPeer		_peer )
+		{
+			peer	= _peer;
+			stats	= peer.getStats();
+		}
+		
+		BlockDetails
+		addRequest(
+			PieceDetails		piece,
+			PeerReadRequest		request )
+		{
+			int	block_number = request.getOffset()/DiskManager.BLOCK_SIZE;
+						
+			BlockDetails block = new BlockDetails( piece, block_number );
+			
+			blocks.add( block );
+			
+			return( block );
+		}
+		
+		void
+		update()
+		{
+			long receive_rate = stats.getDataReceiveRate();
+			
+			int active_blocks = (int)receive_rate/DiskManager.BLOCK_SIZE;
+					
+			if ( active_blocks == 0 && receive_rate > 0 ){
+				
+				active_blocks = 1;
+			}
+			
+			long now = SystemTime.getMonotonousTime();
+			
+			if ( last_update == -1 ){
+				
+				last_update = now;
+				
+				return;
+			}
+			
+			long time_diff = now - last_update;
+			
+			if ( time_diff == 0 ){
+				
+				return;
+			}
+			
+			last_update = now;
+
+			long bytes_diff = ( receive_rate * time_diff )/1000;
+			
+			if ( bytes_diff == 0 && receive_rate > 0 ){
+				
+				bytes_diff = 1;
+			}
+						
+			//bytes += bytes_diff;
+			
+			//System.out.println( bytes_diff );
+						
+			int num_blocks = blocks.size();
+			
+			if ( num_blocks == 0 ){
+				
+				return;
+			}
+			
+			if ( num_blocks < active_blocks ){
+				
+				active_blocks = num_blocks;
+			}
+			
+			int	remaining_blocks = active_blocks;
+			
+			for ( Iterator<BlockDetails> it=blocks.iterator();it.hasNext();){
+				
+				BlockDetails block = it.next();
+				
+				if ( block.isDone()){
+										
+					block.remove();
+					
+					it.remove();
+					
+				}else{
+					
+					if ( bytes_diff <= 0 ){
+						
+						continue;
+					}
+					
+					long bytes_per_block = ( bytes_diff + remaining_blocks - 1 ) / remaining_blocks;
+
+					int rem = block.size - block.done;
+					
+					if ( rem > bytes_per_block ){
+						
+						block.done += bytes_per_block;
+						
+						bytes_diff -= bytes_per_block;
+						
+					}else{
+					
+						block.done = block.size;
+						
+						bytes_diff -= rem;
+					}
+				}
+			}
+		}
+	}
+	
+	private class
+	PieceDetails
+	{
+		final PEPiece		piece;
+		final int			block_num;
+		
+		final int[]			block_states;
+		final boolean[]		blocks_done;
+		
+		final List<BlockDetails>	blocks = new LinkedList<>();
+		
+		int		blocks_done_num;
+		
+		long 	complete_time	= -1;
+		
+		PieceDetails(
+			PEPiece		_piece )
+		{
+			piece 		= _piece;
+			block_num	= piece.getNbBlocks();
+			
+			block_states	= new int[ block_num ];
+			blocks_done		= new boolean[ block_num ];               
+		}
+		
+		void
+		update()
+		{
+			boolean[]	downloaded = piece.getDownloaded();
+			
+			for ( int i=0;i<block_num;i++){
+				
+				if ( !blocks_done[i]){
+					
+					if ( downloaded[i]){
+						
+						int bs = block_states[i];
+						
+						if ( bs == 0 || bs == 2 ){
+							
+							blocks_done[i] = true;
+							
+							blocks_done_num++;
+						}
+					}
+				}
+			}
+		}
+		
+		void
+		addRequest(
+			BlockDetails		block )
+		{
+			int block_number = block.block_number;
+			
+			blocks.add( block );
+			
+			if ( block_states[block_number] == 0 ){
+				
+				block_states[block_number] = 1;	// has had at least one request added
+			}
+		}
+		
+		void
+		removeRequest(
+			BlockDetails		block )
+		{
+			int block_number = block.block_number;
+			
+			blocks.remove( block );
+			
+			if ( block.done == block.size ){
+				
+				block_states[block_number] = 2; // has had a least one request complete
+			}
+		}
+		
+		boolean[]
+		getDownloaded()
+		{
+			return( blocks_done );
+		}
+		
+		void
+		setDone(
+			BlockDetails	block )
+		{
+			block_states[ block.block_number] = 2;
+		}
+		
+		boolean
+		isDone()
+		{
+			if ( blocks_done_num == block_num ){
+				
+				return( true );
+			}
+			
+			return( complete_time >= 0 && SystemTime.getMonotonousTime() - complete_time > 5000 );
+		}
+		
+		boolean
+		remove()
+		{
+			if ( piece.isDownloaded()){
+				
+				complete_time = SystemTime.getMonotonousTime();
+				
+					// give chance for blocks to complete their movement
+				
+				return( false );
+				
+			}else{
+				
+				return( true );
+			}
+		}
+	}
+	
+	private class
+	BlockDetails
+	{
+		final long			created_time = SystemTime.getMonotonousTime();
+		
+		final PieceDetails	piece_details;
+		final PEPiece		piece;
+		final int			block_number;
+		final int			size;
+		
+		int					done;
+		
+		BlockDetails(
+			PieceDetails	_piece,
+			int				_bn )
+		{
+			piece_details	= _piece;
+			block_number	= _bn;
+			
+			piece 	= piece_details.piece;
+			size	= piece.getBlockSize( block_number );
+		}
+		
+		boolean
+		isDone()
+		{
+			if ( done == size ){
+				
+				piece_details.setDone( this );
+				
+				return( true );
+			}
+			
+			return( piece_details.isDone());
+		}
+		
+		void
+		remove()
+		{
+			piece_details.removeRequest( this );
 		}
 	}
 }
