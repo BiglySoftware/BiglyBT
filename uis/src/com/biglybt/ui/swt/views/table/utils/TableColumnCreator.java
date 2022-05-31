@@ -223,6 +223,7 @@ public class TableColumnCreator
 		c.put(SizeItem.COLUMN_ID, new cInfo(SizeItem.class, SizeItem.DATASOURCE_TYPE));
 		c.put(ColumnSizeWithDND.COLUMN_ID, new cInfo(ColumnSizeWithDND.class, ColumnSizeWithDND.DATASOURCE_TYPE));
 		c.put(DoneItem.COLUMN_ID, new cInfo(DoneItem.class, DoneItem.DATASOURCE_TYPE));
+		c.put(DoneBytesItem.COLUMN_ID, new cInfo(DoneBytesItem.class, DoneItem.DATASOURCE_TYPE));
 		c.put(ColumnDoneWithDND.COLUMN_ID, new cInfo(ColumnDoneWithDND.class, ColumnDoneWithDND.DATASOURCE_TYPE));
 		c.put(StatusItem.COLUMN_ID, new cInfo(StatusItem.class, StatusItem.DATASOURCE_TYPE));
 		c.put(ETAItem.COLUMN_ID, new cInfo(ETAItem.class, ETAItem.DATASOURCE_TYPE));
