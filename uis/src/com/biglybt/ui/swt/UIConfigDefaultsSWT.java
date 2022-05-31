@@ -241,6 +241,7 @@ public class UIConfigDefaultsSWT
 
 		def.addParameter( "Library.ShowTitle", true );
 		def.addParameter( "Library.ShowCatButtons", false );
+		def.addParameter( "Library.ShowCatButtons.CompOnly", false );
 		def.addParameter( "Library.ShowTagButtons", true );
 		def.addParameter( "Library.ShowTagButtons.FiltersOnly", false );
 		def.addParameter( "Library.ShowTagButtons.ImageOverride", false );

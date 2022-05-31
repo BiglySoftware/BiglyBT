@@ -53,6 +53,12 @@ ConfigSectionInterfaceTagsSWT
 		add(new BooleanParameterImpl("Library.ShowCatButtons",
 				"ConfigView.section.style.ShowCatButtons"), listLibrary);
 
+		BooleanParameterImpl show_cat_comp_only = new BooleanParameterImpl(
+				"Library.ShowCatButtons.CompOnly",
+				"ConfigView.section.style.ShowTagButtons.CompOnly");
+		add(show_cat_comp_only,listLibrary);
+		show_cat_comp_only.setIndent(1, true);
+		
 		if (isAZ3) {
 			
 			BooleanParameterImpl show_tags = new BooleanParameterImpl(

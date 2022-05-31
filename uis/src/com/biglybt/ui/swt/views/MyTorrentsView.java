@@ -582,6 +582,7 @@ public class MyTorrentsView
 						"User Mode",
 						"Library.ShowTitle", 
 						"Library.ShowCatButtons", 
+						"Library.ShowCatButtons.CompOnly",
 						"Library.ShowTagButtons", 
 						"Library.ShowTagButtons.CompOnly",
 						"Library.ShowTagButtons.FiltersOnly",
@@ -858,6 +859,7 @@ public class MyTorrentsView
 						"Library.ShowCatButtons",
 						"Library.ShowTagButtons",
 						"Library.ShowTagButtons.CompOnly",
+						"Library.ShowCatButtons.CompOnly",
 						"Library.ShowTagButtons.FiltersOnly",
 						"Library.ShowTagButtons.ImageOverride",
 						"Library.ShowTagButtons.Align",
@@ -943,6 +945,11 @@ public class MyTorrentsView
     boolean catButtonsDisabled = neverShowCatButtons;
     if ( !catButtonsDisabled){
     	catButtonsDisabled = !COConfigurationManager.getBooleanParameter( "Library.ShowCatButtons" );
+    	if ( !catButtonsDisabled ){
+    		if ( !isCompletedOnly ){
+    			catButtonsDisabled = COConfigurationManager.getBooleanParameter( "Library.ShowCatButtons.CompOnly" );
+    		}
+    	}
     }
 
     List<Tag> tags_to_show = new ArrayList<>();
