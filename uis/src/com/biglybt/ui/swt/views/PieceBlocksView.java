@@ -1291,8 +1291,6 @@ outer:
 	private class
 	BlockDetails
 	{
-		final long			created_time = SystemTime.getMonotonousTime();
-		
 		final PieceDetails		piece_details;
 		final PeerReadRequest	request;
 		final PEPiece			piece;
