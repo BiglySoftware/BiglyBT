@@ -482,7 +482,10 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		GridData gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
 		comp.setLayoutData(gridData);
 			
-		comp.setBackground( Colors.white );
+		if ( !Utils.isDarkAppearanceNative()){
+			
+			comp.setBackground( Colors.white );
+		}
 		
 		canvas = new Canvas(comp,SWT.NO_BACKGROUND);
 
@@ -811,7 +814,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 							}
 						}
 					
-						e.gc.setBackground(Colors.white);
+						e.gc.setBackground(Utils.isDarkAppearanceNative()?canvas.getBackground():Colors.white);
 						e.gc.fillRectangle(e.x, e.y, e.width, e.height);
 					}
 				});
@@ -884,6 +887,8 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 
 			GC gc = new GC(img);
 
+			Color canvasBG = Utils.isDarkAppearanceNative()?canvas.getBackground():Colors.white;
+					
 			try{
 				int	pw = panelSize.x;
 				int	ph = panelSize.y;
@@ -892,7 +897,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 
 				if ( num_dms == 0  || pw == 0 || ph == 0 ){
 
-					gc.setBackground(Colors.white);
+					gc.setBackground(canvasBG);
 					gc.fillRectangle(bounds);
 
 					return;
@@ -996,7 +1001,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 
 				if ( rem_x > 0 ){
 
-					gc.setBackground(Colors.white);
+					gc.setBackground(canvasBG);
 					gc.fillRectangle(lastOffset.x + mySize.x,lastOffset.y,rem_x,mySize.y);
 
 				}
@@ -1005,7 +1010,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 
 				if ( rem_y > 0 ){
 
-					gc.setBackground(Colors.white);
+					gc.setBackground(canvasBG);
 					gc.fillRectangle(0, lastOffset.y + mySize.y, panelSize.x, rem_y);
 
 				}
@@ -1027,6 +1032,8 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		Point				panelSize,
 		Point				panelOffset )
 	{
+		Color canvasBG = Utils.isDarkAppearanceNative()?canvas.getBackground():Colors.white;
+				
 		data.peer_hit_map.clear();
 
 		int	min_dim = Math.min( panelSize.x, panelSize.y );
@@ -1049,7 +1056,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		int b = y0 - 20;
 		if(a < 10 || b < 10){
 
-			gc.setBackground(Colors.white);
+			gc.setBackground(canvasBG);
 			gc.fillRectangle(panelOffset.x,panelOffset.y,panelSize.x,panelSize.y);
 
 			return;
@@ -1065,7 +1072,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		}
 		Image buffer = new Image(display,panelSize.x,panelSize.y);
 		GC gcBuffer = new GC(buffer);
-		gcBuffer.setBackground(Colors.white);
+		gcBuffer.setBackground(canvasBG);
 		gcBuffer.setForeground(Colors.blue);
 		gcBuffer.fillRectangle(0,0,panelSize.x,panelSize.y);
 
@@ -1145,7 +1152,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 				peer.setUserData( PEER_DATA_KEY, peer_data );
 			}
 			
-			peer_data.line_colour = drawLine?gcBuffer.getForeground():Colors.white;
+			peer_data.line_colour = drawLine?gcBuffer.getForeground():canvasBG;
 
 			drawArrows( peer, gcBuffer, drawLine, x0, y0, x1, y1, r, iAngle, FORCE_FULL_REPAINT );
 			
@@ -1164,7 +1171,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 				PieUtils.drawPie(gcBuffer, flag, peer_x, peer_y,PEER_SIZE,PEER_SIZE,peer.getPercentDoneInThousandNotation() / 10, true );
 			}else{
 
-				PieUtils.drawPie(gcBuffer, peer_x, peer_y,PEER_SIZE,PEER_SIZE,peer.getPercentDoneInThousandNotation() / 10);
+				PieUtils.drawPie(gcBuffer, canvasBG, peer_x, peer_y,PEER_SIZE,PEER_SIZE,peer.getPercentDoneInThousandNotation() / 10);
 			}
 		}
 
@@ -1173,7 +1180,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		data.me_hit_x = x0 - OWN_SIZE / 2;
 		data.me_hit_y = y0 - OWN_SIZE / 2;
 
-		PieUtils.drawPie(gcBuffer, data.me_hit_x, data.me_hit_y,OWN_SIZE,OWN_SIZE,manager.getStats().getCompleted() / 10);
+		PieUtils.drawPie(gcBuffer, canvasBG, data.me_hit_x, data.me_hit_y,OWN_SIZE,OWN_SIZE,manager.getStats().getCompleted() / 10);
 
 		if ( my_flag != null ){
 			Image img = my_flag;
@@ -1243,6 +1250,8 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		
 		Transform trans = new Transform( gc.getDevice());
 
+		Color canvasBG = Utils.isDarkAppearanceNative()?canvas.getBackground():Colors.white;
+		
 		try{
 			float degrees = (float)( 180*(angles[iAngle])/Math.PI)+90;
 	
@@ -1279,7 +1288,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 
 			if ( !FORCE_FULL_REPAINT ){
 				
-				gc.setBackground( Colors.white );
+				gc.setBackground( canvasBG );
 	
 				List[] all_buckets = { down_buckets, down_dead_buckets, up_buckets, up_dead_buckets };
 				
@@ -1644,7 +1653,9 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 			} catch(Exception e) {
 			}
 
-			gc.setBackground( Colors.white );
+			Color canvasBG = Utils.isDarkAppearanceNative()?canvas.getBackground():Colors.white;
+
+			gc.setBackground( canvasBG );
 
 			for ( ManagerData data: dm_data ){
 

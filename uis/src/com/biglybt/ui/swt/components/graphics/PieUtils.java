@@ -35,13 +35,13 @@ import com.biglybt.ui.swt.mainwindow.Colors;
  */
 public class PieUtils {
 
-	public static void drawPie(GC gc,int x, int y,int width,int height,int percent) {
+	public static void drawPie(GC gc, Color bg,int x, int y,int width,int height,int percent) {
 	    Color background = gc.getBackground();
 	    gc.setForeground(Colors.blue);
 	    int angle = (percent * 360) / 100;
 	    if(angle<4)
 	    	angle = 0; // workaround fillArc rendering bug
-	    gc.setBackground(Colors.white);
+	    gc.setBackground( bg );
 	    gc.fillArc(x,y,width,height,0,360);
 	    gc.setBackground(background);
 	    gc.fillArc(x,y,width,height,90,angle*-1);
