@@ -430,7 +430,7 @@ public abstract class TableRowSWTBase
 	 * @see TableRowCore#getView()
 	 */
 	@Override
-	public TableView getView() {
+	public TableViewSWT<?> getView() {
 		return tv;
 	}
 

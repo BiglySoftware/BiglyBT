@@ -293,7 +293,10 @@ PieceBlocksView
 		GridData gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
 		comp.setLayoutData(gridData);
 			
-		comp.setBackground( Colors.white );
+		if ( !Utils.isDarkAppearanceNative()){
+			
+			comp.setBackground( Colors.white );
+		}
 		
 		canvas = new Canvas(comp,SWT.NO_BACKGROUND);
 
@@ -492,7 +495,7 @@ PieceBlocksView
 
 			GC gc = new GC(img);
 			
-			gc.setBackground(Colors.white);
+			gc.setBackground( Utils.isDarkAppearanceNative()?canvas.getBackground():Colors.white);
 		
 			gc.fillRectangle(0,0,width,height);
 

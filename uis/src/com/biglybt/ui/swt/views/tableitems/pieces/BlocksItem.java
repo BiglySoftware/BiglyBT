@@ -36,7 +36,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.views.PiecesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
-
+import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerFactory;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerStats;
 
@@ -66,8 +66,8 @@ public class BlocksItem
 	private static final int COLOR_UPLOADING = 5;
 
 	public static final Color[] colors = new Color[] {
-		Colors.blues[Colors.BLUES_MIDLIGHT],
-		Colors.blues[Colors.BLUES_DARKEST],
+		Colors.bluesFixed[Colors.BLUES_MIDLIGHT],
+		Colors.bluesFixed[Colors.BLUES_DARKEST],
 		Colors.red,
 		Colors.grey,
 		Colors.fadedGreen,
@@ -156,7 +156,28 @@ public class BlocksItem
 				Image image = new Image(Utils.getDisplay(), newWidth, newHeight);
 				Color color;
 				GC gcImage = new GC(image);
-				gcImage.setForeground(Colors.grey);
+								
+				Color bgColor = Colors.white;
+
+				if ( Utils.isDarkAppearanceNative() && cell instanceof TableCellSWT ){
+					
+					TableRowSWT row = ((TableCellSWT)cell).getTableRowSWT();
+					
+					if ( row != null ){
+					
+						Color bg = row.getView().getComposite().getBackground();
+						
+						if ( bg != null ){
+							
+							bgColor = bg;
+							
+							gcImage.setBackground( bgColor );
+							gcImage.fillRectangle(0,0,newWidth,newHeight);
+						}
+					}
+				};
+				
+				gcImage.setForeground(Utils.isDarkAppearanceNative()?Colors.dark_grey:Colors.grey);
 				gcImage.drawRectangle(0, 0, x1 + 1, y1 + 1);
 				int blocksPerPixel = 0;
 				int iPixelsPerBlock = 0;
@@ -215,8 +236,8 @@ public class BlocksItem
 					if (i >= lNumBlocks - blocksPerPixel) { 
 						nextWidth = x1 - drawnWidth;
 					}
-					color = Colors.white;
-
+					color = bgColor;
+					
 					int num = -1;
 					
 					if ( (written == null && piece_written)	|| (written != null && written[i])) {
