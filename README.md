@@ -7,6 +7,7 @@ Source for BiglyBT, a feature filled, open source, ad-free, bittorrent client.  
 * [Translation Information](TRANSLATE.md)
 * [Feature Voting Page](https://vote.biglybt.com)
 * [Coding Guidelines](CODING_GUIDELINES.md)
+* [Beta Program Changelog](https://biglybt.tumblr.com/)
 
 ## Donations
 
