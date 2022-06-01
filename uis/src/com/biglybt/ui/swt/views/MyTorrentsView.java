@@ -857,9 +857,9 @@ public class MyTorrentsView
 						"User Mode",
 						"Library.ShowTitle",
 						"Library.ShowCatButtons",
+						"Library.ShowCatButtons.CompOnly",
 						"Library.ShowTagButtons",
 						"Library.ShowTagButtons.CompOnly",
-						"Library.ShowCatButtons.CompOnly",
 						"Library.ShowTagButtons.FiltersOnly",
 						"Library.ShowTagButtons.ImageOverride",
 						"Library.ShowTagButtons.Align",
@@ -2766,6 +2766,7 @@ public class MyTorrentsView
 			
 			if ( 	parameterName.equals("Library.ShowTitle") ||
 					parameterName.equals("Library.ShowCatButtons" ) ||
+					parameterName.equals("Library.ShowCatButtons.CompOnly" ) ||
 					parameterName.equals("Library.ShowTagButtons" ) ||
 					parameterName.equals("Library.ShowTagButtons.FiltersOnly" ) ||
 					parameterName.equals("Library.ShowTagButtons.ImageOverride" ) ||
