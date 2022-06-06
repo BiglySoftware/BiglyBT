@@ -644,6 +644,8 @@ outer:
 							
 							gc.setBackground( block_colours[odd?1:3] );
 							
+							gc.setAlpha( piece_details.alpha );
+							
 							for ( Iterator<BlockDetails> it=piece_details.blocks.iterator();it.hasNext();){
 								
 								BlockDetails block = it.next();
@@ -680,6 +682,8 @@ outer:
 								}
 							}
 									
+							gc.setAlpha( 255 );
+							
 							if ( piece_height >= 3 ){
 		
 								gc.setBackground( Colors.light_grey );
@@ -1172,6 +1176,8 @@ outer:
 		}
 	}
 	
+	private int last_alpha = 255;
+	
 	private class
 	PieceDetails
 	{
@@ -1182,6 +1188,8 @@ outer:
 		final boolean[]		blocks_done;
 		
 		final List<BlockDetails>	blocks = new LinkedList<>();
+		
+		final int		alpha;
 		
 		int		blocks_done_num;
 		
@@ -1194,7 +1202,11 @@ outer:
 			block_num	= piece.getNbBlocks();
 			
 			block_states	= new int[ block_num ];
-			blocks_done		= new boolean[ block_num ];               
+			blocks_done		= new boolean[ block_num ];   
+			
+			alpha = last_alpha==255?180:255;
+			
+			last_alpha = alpha;
 		}
 		
 		void
