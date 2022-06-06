@@ -381,10 +381,12 @@ public class UISWTViewImpl
 		if (eventType == UISWTViewEvent.TYPE_DATASOURCE_CHANGED) {
 			Object newDataSource = PluginCoreUtils.convert(data, true);
 			if (DataSourceUtils.areSame(datasource, newDataSource)) {
-				if (DEBUG_TRIGGERS) {
-					System.out.println("  -> same DS, skip");
+				if ( eventListener == null || !eventListener.informOfDuplicates(UISWTViewEvent.TYPE_DATASOURCE_CHANGED )){
+					if (DEBUG_TRIGGERS) {
+						System.out.println("  -> same DS, skip");
+					}
+					return true;
 				}
-				return true;
 			}
 			datasource = newDataSource;
 			data = PluginCoreUtils.convert(datasource, useCoreDataSource);

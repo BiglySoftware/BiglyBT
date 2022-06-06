@@ -1476,6 +1476,12 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
 		}
   }
 
+  @Override
+  public boolean informOfDuplicates(int type){
+	  	// need this so we are informed of multiple config section selection events for same section
+	 return( type == UISWTViewEvent.TYPE_DATASOURCE_CHANGED );
+  }
+  
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
     switch (event.getType()) {
