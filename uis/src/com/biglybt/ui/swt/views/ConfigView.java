@@ -1028,11 +1028,16 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
 		}
 	}
 
-	private void ensureSectionBuilt(TreeItem treeSection, boolean recreateIfAlreadyThere) {
+	private void 
+	ensureSectionBuilt(
+		TreeItem treeSection, 
+		boolean recreateIfAlreadyThere) 
+	{
 		if (treeSection == null) {
 			return;
 		}
-    ScrolledComposite item = (ScrolledComposite)treeSection.getData(TREEITEMDATA_PANEL);
+    
+		ScrolledComposite item = (ScrolledComposite)treeSection.getData(TREEITEMDATA_PANEL);
 
 		if (item == null) {
 			return;
@@ -1386,32 +1391,35 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
   }
 
   private void delete( boolean forRebuild ) {
-  	save();
-		for (BaseConfigSection section : sectionsCreated) {
-    	try {
-    		section.deleteConfigSection();
-    	} catch (Exception e) {
-    		Debug.out("Error while deleting config section", e);
-    	}
-    }
-  	sectionsCreated.clear();
-  	if ( pluginSections != null ){
-  		pluginSections.clear();
-  	}
-	  if (tree != null && !tree.isDisposed()) {
-		  TreeItem[] items = tree.getItems();
-			for (TreeItem item : items) {
-				Composite c = (Composite) item.getData(TREEITEMDATA_PANEL);
-				Utils.disposeComposite(c);
-				item.setData(TREEITEMDATA_PANEL, null);
-				item.setData(TREEITEMDATA_CONFIGSECTION, null);
+	  save();
+	  for (BaseConfigSection section : sectionsCreated) {
+		  try {
+			  section.deleteConfigSection();
+		  } catch (Exception e) {
+			  Debug.out("Error while deleting config section", e);
 		  }
 	  }
-    Utils.disposeComposite(cConfig, !forRebuild);
+	  sectionsCreated.clear();
+	  if ( pluginSections != null ){
+		  pluginSections.clear();
+	  }
 
-  	Utils.disposeSWTObjects(headerFont, filterFoundFont);
-		headerFont = null;
-		filterFoundFont = null;
+	  ConfigSectionRepository.getInstance().removeListener( this );
+
+	  if (tree != null && !tree.isDisposed()) {
+		  TreeItem[] items = tree.getItems();
+		  for (TreeItem item : items) {
+			  Composite c = (Composite) item.getData(TREEITEMDATA_PANEL);
+			  Utils.disposeComposite(c);
+			  item.setData(TREEITEMDATA_PANEL, null);
+			  item.setData(TREEITEMDATA_CONFIGSECTION, null);
+		  }
+	  }
+	  Utils.disposeComposite(cConfig, !forRebuild);
+
+	  Utils.disposeSWTObjects(headerFont, filterFoundFont);
+	  headerFont = null;
+	  filterFoundFont = null;
   }
 
 	private static String getFullTitle() {
