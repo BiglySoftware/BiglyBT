@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.ui.config.BaseConfigSection;
 
 import com.biglybt.pif.PluginInterface;
@@ -34,8 +35,10 @@ public class ConfigSectionRepository {
   private static ConfigSectionRepository 	instance;
   private static AEMonitor					class_mon	= new AEMonitor( "ConfigSectionRepository:class");
 
-	private Map<BaseConfigSection, ConfigSectionHolder> items;
+  private Map<BaseConfigSection, ConfigSectionHolder> items;
 
+  private CopyOnWriteList<ConfigSectionRepositoryListener>	listeners = new CopyOnWriteList<>();
+  
   private ConfigSectionRepository() {
    items = new LinkedHashMap<>();
   }
@@ -63,6 +66,9 @@ public class ConfigSectionRepository {
 
     	class_mon.exit();
     }
+  	for ( ConfigSectionRepositoryListener l: listeners ){
+  		l.sectionAdded( item );
+  	}
   }
 
 	public void removeConfigSection(BaseConfigSection item) {
@@ -75,6 +81,9 @@ public class ConfigSectionRepository {
 
 	    	class_mon.exit();
 	    }
+	 	for ( ConfigSectionRepositoryListener l: listeners ){
+	  		l.sectionRemoved( item );
+	  	}
 	  }
 
 	public ArrayList<BaseConfigSection> getList() {
@@ -100,5 +109,29 @@ public class ConfigSectionRepository {
     	class_mon.exit();
     }
   }
-
+  
+  public void
+  addListener(
+	  ConfigSectionRepositoryListener	l )
+  {
+	listeners.add( l );  
+  }
+  
+  public void
+  removeListener(
+	  ConfigSectionRepositoryListener	l )
+  {
+	  listeners.remove(l);
+  }
+  public interface
+  ConfigSectionRepositoryListener
+  {
+	  public void
+	  sectionAdded(
+			 BaseConfigSection section);
+	  
+	  public void
+	  sectionRemoved(
+			 BaseConfigSection section);
+  }
 }
