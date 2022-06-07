@@ -650,7 +650,14 @@ outer:
 								
 								BlockDetails block = it.next();
 								
-								int block_x = (int)( overall_block_width*block.block_number );
+								int block_number = block.block_number;
+								
+								if ( downloaded[block_number]){
+									
+									continue;
+								}
+								
+								int block_x = (int)( overall_block_width*block_number );
 								
 								int block_y;
 								
@@ -663,7 +670,7 @@ outer:
 									block_y = ( y_pos - piece_height ) * block.done / block.size + piece_height;
 								}
 								
-								int block_width = (int)( overall_block_width*( block.block_number+1)) - block_x;
+								int block_width = (int)( overall_block_width*( block_number+1)) - block_x;
 								
 								gc.fillRectangle( block_x, block_y, block_width, piece_height );
 							}
@@ -1088,7 +1095,7 @@ outer:
 		{
 			long receive_rate = stats.getDataReceiveRate();
 			
-			int active_blocks = (int)receive_rate/DiskManager.BLOCK_SIZE;
+			int active_blocks = (int)( receive_rate + DiskManager.BLOCK_SIZE -1 )/DiskManager.BLOCK_SIZE;
 					
 			if ( active_blocks == 0 && receive_rate > 0 ){
 				
@@ -1135,9 +1142,7 @@ outer:
 				
 				active_blocks = num_blocks;
 			}
-			
-			int	remaining_blocks = active_blocks;
-			
+						
 			for ( Iterator<BlockDetails> it=blocks.iterator();it.hasNext();){
 				
 				BlockDetails block = it.next();
@@ -1155,7 +1160,7 @@ outer:
 						continue;
 					}
 					
-					long bytes_per_block = ( bytes_diff + remaining_blocks - 1 ) / remaining_blocks;
+					long bytes_per_block = ( bytes_diff + active_blocks - 1 ) / active_blocks;
 
 					int rem = block.size - block.done;
 					
