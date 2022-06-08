@@ -32,6 +32,11 @@ import java.util.Arrays;
 import java.util.Set;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFactory;
@@ -358,29 +363,11 @@ ResourceDownloaderTorrentImpl
 				try{
 					Torrent t = new TorrentImpl(torrent);
 	
+					String[] networks_to_set;
+					
 					if ( anon ){
 	
-						dwbal =
-							new DownloadWillBeAddedListener()
-							{
-									@Override
-									public void
-									initialised(
-										Download download )
-									{
-										try{
-											if ( Arrays.equals( download.getTorrentHash(), torrent.getHash())){
-	
-												PluginCoreUtils.unwrap( download ).getDownloadState().setNetworks( AENetworkClassifier.AT_NON_PUBLIC );
-											}
-										}catch( Throwable e ){
-	
-											Debug.out( e );
-										}
-									}
-								};
-	
-						download_manager.addDownloadWillBeAddedListener( dwbal );
+						networks_to_set = AENetworkClassifier.AT_NON_PUBLIC;
 						
 					}else{
 						
@@ -400,31 +387,66 @@ ResourceDownloaderTorrentImpl
 						
 						if ( has_i2p && I2PHelpers.isI2PInstalled()){
 							
-							dwbal =
-								new DownloadWillBeAddedListener()
+							networks_to_set = new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P };
+
+						}else{
+						
+							networks_to_set = null;
+						}
+					}
+										
+					dwbal =
+						new DownloadWillBeAddedListener()
+						{
+								@Override
+								public void
+								initialised(
+									Download download )
 								{
-										@Override
-										public void
-										initialised(
-											Download download )
-										{
+									try{
+										if ( Arrays.equals( download.getTorrentHash(), torrent.getHash())){
+
+											com.biglybt.core.download.DownloadManager dm = PluginCoreUtils.unwrap( download );
+											
+											if ( networks_to_set != null ){
+											
+												dm.getDownloadState().setNetworks( networks_to_set );
+											}
+											
 											try{
-												if ( Arrays.equals( download.getTorrentHash(), torrent.getHash())){
-	
-													PluginCoreUtils.unwrap( download ).getDownloadState().setNetworks(
-															new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P });
+												TagManager tm = TagManagerFactory.getTagManager();
+												
+												TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+												
+												String tag_name = "tag.name.product.updates";
+												
+												Tag tag = tt.getTag( tag_name, false );
+												
+												if ( tag == null ){
+													
+													tag = tt.createTag( tag_name, false );
+													
+													tag.setImageID( "logo16" );
+													
+													tt.addTag( tag );
 												}
+												
+												tag.addTaggable( dm );
+												
 											}catch( Throwable e ){
-	
+												
 												Debug.out( e );
 											}
 										}
-									};
+									}catch( Throwable e ){
+
+										Debug.out( e );
+									}
+								}
+							};
 	
-							download_manager.addDownloadWillBeAddedListener( dwbal );
-						}
-					}
-	
+					download_manager.addDownloadWillBeAddedListener( dwbal );
+						
 					if ( persistent ){
 	
 						download = download_manager.addDownload( t, torrent_file, data_dir );
