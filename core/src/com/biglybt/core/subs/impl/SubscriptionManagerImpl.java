@@ -55,6 +55,7 @@ import com.biglybt.core.metasearch.impl.web.rss.RSSEngine;
 import com.biglybt.core.security.CryptoECCUtils;
 import com.biglybt.core.subs.*;
 import com.biglybt.core.subs.SubscriptionUtils.SubscriptionDownloadDetails;
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
@@ -2869,7 +2870,7 @@ SubscriptionManagerImpl
 	}
 
 	@Override
-	public Subscription[]
+	public SubscriptionImpl[]
 	getSubscriptions()
 	{
 		synchronized( this ){
@@ -2879,7 +2880,7 @@ SubscriptionManagerImpl
 	}
 
 	@Override
-	public Subscription[]
+	public SubscriptionImpl[]
 	getSubscriptions(
 		boolean	subscribed_only )
 	{
@@ -8419,5 +8420,40 @@ SubscriptionManagerImpl
 		subs.requestAttention();
 		
 		return( subs );
+	}
+	
+	@Override
+	public void 
+	markAllRead(
+		SearchSubsResultBase[] results )
+	{		
+		Set<String> hashes = new HashSet<>();
+		
+		Set<String>	name_sizes = new HashSet<>();
+		
+		for ( SearchSubsResultBase result: results ){
+		
+			byte[] hash = result.getHash();
+			
+			if ( hash != null ){
+				
+				hashes.add( Base32.encode( hash ));
+			}
+			
+			String  name 	= result.getName();
+			long	size	= result.getSize();
+			
+			name_sizes.add( name + ":" + size );
+		}
+		
+		for ( SubscriptionImpl subs: getSubscriptions( true )){
+				
+			if ( subs.isSearchTemplate() || subs.isSubscriptionTemplate()){
+					
+				continue;
+			}
+				
+			subs.getHistory().markResults( hashes, name_sizes );
+		}
 	}
 }

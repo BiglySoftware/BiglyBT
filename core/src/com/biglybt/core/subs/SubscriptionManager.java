@@ -23,6 +23,7 @@ package com.biglybt.core.subs;
 import java.net.URL;
 import java.util.Map;
 
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl;
 
 public interface
@@ -274,4 +275,8 @@ SubscriptionManager
 			String		creator_ref )
 
 			throws Exception;
+	
+	public void
+	markAllRead(
+		SearchSubsResultBase[]		results );
 }

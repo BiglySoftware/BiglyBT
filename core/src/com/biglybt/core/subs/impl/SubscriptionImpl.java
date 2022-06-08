@@ -2351,7 +2351,7 @@ SubscriptionImpl
 	}
 
 	@Override
-	public SubscriptionHistory
+	public SubscriptionHistoryImpl
 	getHistory()
 	{
 		return( history );

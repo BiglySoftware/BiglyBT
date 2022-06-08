@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.Subscription;
+import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
@@ -199,6 +200,38 @@ SearchSubsUtils
 		});
 		
 		item.setEnabled( !all_read );
+		
+		item = new MenuItem(menu, SWT.PUSH);
+		item.setText(MessageText.getString("menu.mark.read.in.all"));
+		item.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+
+				if ( subs_maybe_null == null || results.length == 1 ){
+					for ( SearchSubsResultBase result: results ){
+	
+						result.setRead( true );
+					}
+				}else{
+					String[]	ids 	= new String[results.length];
+					boolean[]	read	= new boolean[ids.length];
+					
+					Arrays.fill( read, true );
+					
+					for ( int i=0;i<ids.length;i++){
+						ids[i] = results[i].getID();
+					}
+					
+					subs_maybe_null.getHistory().markResults( ids, read );
+				}
+				
+				SubscriptionManagerFactory.getSingleton().markAllRead( results );
+			}
+		});
+		
+		item.setEnabled( !all_read );
+		
+		
 		
 		item = new MenuItem(menu, SWT.PUSH);
 		item.setText(MessageText.getString("menu.mark.unread"));

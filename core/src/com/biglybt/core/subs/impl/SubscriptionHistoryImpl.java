@@ -30,7 +30,9 @@ import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.subs.*;
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.utils.search.SearchResult;
 import com.biglybt.util.MapUtils;
 
 public class
@@ -968,6 +970,76 @@ SubscriptionHistoryImpl
 		}
 	}
 
+	protected void
+	markResults(
+		Set<String>		hashes,
+		Set<String>		name_sizes )
+	{
+		ByteArrayHashMap<Boolean> rid_map = new ByteArrayHashMap<>();
+
+		boolean	changed = false;
+
+		synchronized( this ){
+
+			LinkedHashMap<String,SubscriptionResultImpl> results_map = manager.loadResults( subs );
+
+			SubscriptionResultImpl[] results = results_map.values().toArray( new SubscriptionResultImpl[results_map.size()] );
+
+			for (int i=0;i<results.length;i++){
+
+				SubscriptionResultImpl result = results[i];
+
+				if ( result.isDeleted()){
+
+					continue;
+				}
+
+				if ( !result.getRead()){
+
+					String	hash = result.getAssetHash();
+					
+					if ( hash != null && hashes.contains( hash )){
+
+						changed = true;
+
+						result.setReadInternal( true );
+						
+					}else{
+						
+						Map<Integer,Object>	properties = result.toPropertyMap();
+
+						String 	name = (String)properties.get( SearchResult.PR_NAME );
+						Long	size = (Long)properties.get( SearchResult.PR_SIZE );
+
+						if ( name != null && size != null ){
+							
+							String ns = name + ":" + size;
+							
+							if ( name_sizes.contains( ns )){
+								
+								changed = true;
+
+								result.setReadInternal( true );
+							}
+						}
+					}
+				}
+			}
+
+			if ( changed ){
+
+				updateReadUnread( results );
+
+				manager.saveResults( subs, results, null );
+			}
+		}
+
+		if ( changed ){
+
+			saveConfig(SubscriptionListener.CR_RESULTS);
+		}
+	}
+	
 	@Override
 	public void
 	reset()
