@@ -1028,7 +1028,12 @@ outer:
 		{
 			synchronized( lock ){
 								
-				peer_map.remove( peer );
+				PeerDetails details = peer_map.remove( peer );
+				
+				if ( details != null ){
+					
+					details.removePeer();
+				}
 			}
 		}
 		
@@ -1068,6 +1073,7 @@ outer:
 		final List<BlockDetails>	blocks = new ArrayList<>();
 		
 		long last_update		= -1;
+		long stall_time			= -1;
 		
 		PeerDetails(
 			PEPeer		_peer )
@@ -1091,9 +1097,31 @@ outer:
 		}
 		
 		void
+		removePeer()
+		{
+			for ( BlockDetails block: blocks ){
+				
+				block.peerRemoved();
+			}
+		}
+		
+		void
 		update()
 		{
+			long now = SystemTime.getMonotonousTime();
+
 			long receive_rate = stats.getDataReceiveRate();
+
+			if ( receive_rate == 0 ){
+				
+				if ( stall_time == -1 ){
+					
+					stall_time = now;
+				}
+			}else{
+				
+				stall_time = -1;
+			}
 			
 			int active_blocks = (int)( receive_rate + DiskManager.BLOCK_SIZE -1 )/DiskManager.BLOCK_SIZE;
 					
@@ -1101,9 +1129,7 @@ outer:
 				
 				active_blocks = 1;
 			}
-			
-			long now = SystemTime.getMonotonousTime();
-			
+						
 			if ( last_update == -1 ){
 				
 				last_update = now;
@@ -1149,6 +1175,14 @@ outer:
 				
 				if ( block.isDone()){
 										
+					block.remove();
+					
+					it.remove();
+					
+				}else if ( stall_time >= 0 && now - stall_time > 10*1000 && block.isActuallyDone()){
+					
+					block.done = block.size;
+					
 					block.remove();
 					
 					it.remove();
@@ -1333,6 +1367,12 @@ outer:
 		}
 		
 		boolean
+		isActuallyDone()
+		{
+			return( piece.isDownloaded( block_number ));
+		}
+		
+		boolean
 		isDone()
 		{
 			if ( done == size ){
@@ -1348,6 +1388,17 @@ outer:
 			}
 			
 			return( piece_details.isDone());
+		}
+		
+		void
+		peerRemoved()
+		{
+			if ( isActuallyDone()){
+				
+				done = size;
+			}
+			
+			remove();
 		}
 		
 		void
