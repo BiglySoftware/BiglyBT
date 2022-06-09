@@ -1287,7 +1287,7 @@ outer:
 				return( true );
 			}
 			
-			return( complete_time >= 0 && SystemTime.getMonotonousTime() - complete_time > 5000 );
+			return( complete_time >= 0 && SystemTime.getMonotonousTime() - complete_time > 10*1000 );
 		}
 		
 		boolean
