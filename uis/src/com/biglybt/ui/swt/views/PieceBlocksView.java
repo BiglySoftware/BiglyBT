@@ -1181,7 +1181,7 @@ outer:
 					
 				}else if ( stall_time >= 0 && now - stall_time > 10*1000 && block.isActuallyDone()){
 					
-					block.done = block.size;
+					block.setDone();
 					
 					block.remove();
 					
@@ -1388,6 +1388,14 @@ outer:
 			}
 			
 			return( piece_details.isDone());
+		}
+		
+		void
+		setDone()
+		{
+			done	= size;
+			
+			piece_details.setDone( this );
 		}
 		
 		void
