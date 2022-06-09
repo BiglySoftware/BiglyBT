@@ -3012,11 +3012,13 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			
 			boolean controllable = dlData.isControllable();
 			
+			boolean forceStart = dlData.isForceStart();
+			
 			boolean okToQueue = 
 					controllable &&
 					stateReadyOrSeeding &&
 					(!isFP || (isFP && atLimit )) && 
-					(!dlData.isForceStart());
+					!forceStart;
 
 				// XXX do we want changes to take effect immediately  ?
 			
@@ -3034,7 +3036,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 			boolean	up_limit_prohibits = false;
 
-			if ( !okToQueue ){
+			if ( controllable && !okToQueue && !forceStart ){
 
 				if ( totals.upLimitProhibitsNewSeeds ){
 
