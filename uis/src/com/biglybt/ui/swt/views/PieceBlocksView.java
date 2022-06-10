@@ -640,7 +640,7 @@ outer:
 							
 							boolean[] downloaded = piece_details.getDownloaded();
 							
-							float	overall_block_width = Math.max((float)width/downloaded.length, 1 );
+							float	overall_block_width = (float)width/downloaded.length;
 							
 							gc.setBackground( block_colours[odd?1:3] );
 							
@@ -1299,7 +1299,7 @@ outer:
 		boolean
 		isDone()
 		{
-			if ( blocks_done_num == block_num ){
+			if ( blocks_done_num == block_num && piece.isDownloaded()){
 				
 				return( true );
 			}
