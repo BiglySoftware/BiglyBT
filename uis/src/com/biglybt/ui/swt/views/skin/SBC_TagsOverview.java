@@ -34,6 +34,8 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
@@ -82,7 +84,7 @@ import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 public class SBC_TagsOverview
 	extends SkinView
 	implements UIUpdatable, UIPluginViewToolBarListener, TableViewFilterCheck<Tag>, TagManagerListener, TagTypeListener,
-	TableViewSWTMenuFillListener, TableSelectionListener, KeyListener {
+	TableViewSWTMenuFillListener, TableSelectionListener, KeyListener, ParameterListener {
 
 	private static final String TABLE_TAGS = "TagsView";
 	// TODO: This should be com.biglybt.pif.tag.Tag but we'd have to
@@ -99,6 +101,27 @@ public class SBC_TagsOverview
 
 	private Object datasource;
 
+	private boolean show_swarm_tags;
+	
+	public
+	SBC_TagsOverview()
+	{
+		COConfigurationManager.addAndFireParameterListener( ConfigKeys.Tag.BCFG_TAG_SHOW_SWARM_TAGS_IN_OVERVIEW, this );
+	}
+	
+	@Override
+	public void 
+	parameterChanged(
+		String parameterName)
+	{
+		show_swarm_tags = COConfigurationManager.getBooleanParameter(parameterName);
+		
+		if ( tv != null ){
+			
+			tv.refilter();
+		}
+	}
+	
 	// @see com.biglybt.pif.ui.toolbar.UIToolBarActivationListener#toolBarItemActivated(ToolBarItem, long, java.lang.Object)
 	@Override
 	public boolean toolBarItemActivated(ToolBarItem item, long activationType,
@@ -641,6 +664,8 @@ public class SBC_TagsOverview
 			}
 		}
 
+		COConfigurationManager.removeParameterListener( ConfigKeys.Tag.BCFG_TAG_SHOW_SWARM_TAGS_IN_OVERVIEW, this );
+		
 		return super.skinObjectDestroyed(skinObject, params);
 	}
 
@@ -1173,6 +1198,13 @@ public class SBC_TagsOverview
 		String 		filter, 
 		boolean 	regex ) 
 	{
+		int tt = tag.getTagType().getTagType();
+		
+		if ( tt == TagType.TT_SWARM_TAG && !show_swarm_tags){
+			
+			return( false );
+		}
+		
 		String name;
 		
 		if ( filter.startsWith( "g:" )){

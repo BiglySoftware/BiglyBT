@@ -450,5 +450,6 @@ public final class ConfigKeys {
 	public static class Tag {
 		public static final String BCFG_TRACKER_AUTO_TAG_INTERESTING_TRACKERS = "Auto Tag Interesting Trackers";
 		public static final String ICFG_TAG_AUTO_FULL_REAPPLY_PERIOD_SECS = "Tag Auto Full Reapply Period Secs";
+		public static final String BCFG_TAG_SHOW_SWARM_TAGS_IN_OVERVIEW = "Show Swarm Tags In Overview";
 	}
 }

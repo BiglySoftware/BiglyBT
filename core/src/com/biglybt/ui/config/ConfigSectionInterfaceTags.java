@@ -70,11 +70,22 @@ public class ConfigSectionInterfaceTags
 	protected void
 	buildGeneral()
 	{
+		List<Parameter> listGeneral = new ArrayList<>();
+		
+		BooleanParameterImpl persistSwarmTags = new BooleanParameterImpl(
+				BCFG_TAG_SHOW_SWARM_TAGS_IN_OVERVIEW, "label.show.swarm.tags.in.overview");
+		add( persistSwarmTags,  Parameter.MODE_INTERMEDIATE, listGeneral);
+		
 		IntParameterImpl autoReapply = new IntParameterImpl(
 				ICFG_TAG_AUTO_FULL_REAPPLY_PERIOD_SECS,
 				"tag.auto.reapply.period", 0, Integer.MAX_VALUE );
 		
-		add( autoReapply, Parameter.MODE_INTERMEDIATE );
+		add( autoReapply, Parameter.MODE_INTERMEDIATE, listGeneral );
+		
+		ParameterGroupImpl pgGeneral = new ParameterGroupImpl(
+				"ConfigView.section.global", listGeneral);
+		
+		add("pgGeneral", pgGeneral);
 	}
 	
 	private void

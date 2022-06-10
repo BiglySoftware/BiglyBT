@@ -21,6 +21,8 @@
 
 package com.biglybt.core.config.impl;
 
+import static com.biglybt.core.config.ConfigKeys.Tag.BCFG_TAG_SHOW_SWARM_TAGS_IN_OVERVIEW;
+
 import java.io.File;
 import java.util.*;
 
@@ -460,6 +462,7 @@ public class ConfigurationDefaults {
 
     def.put( Tag.BCFG_TRACKER_AUTO_TAG_INTERESTING_TRACKERS, TRUE );
     def.put( Tag.ICFG_TAG_AUTO_FULL_REAPPLY_PERIOD_SECS, 30 );
+    def.put( Tag.BCFG_TAG_SHOW_SWARM_TAGS_IN_OVERVIEW, TRUE );
     
     //default torrent directory option
     def.put( "Save Torrent Files", TRUE );
