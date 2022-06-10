@@ -177,7 +177,7 @@ public class VivaldiPanel extends BasePanel {
 
     		}else{
 
-    			Utils.setTT(canvas, "Use mouse wheel to scale, left+drag to move, right+drag to rotate" );
+    			Utils.setTT(canvas, MessageText.getString( "vivaldi.tt" ));
     		}
     	}
     });
@@ -339,7 +339,7 @@ public class VivaldiPanel extends BasePanel {
 	    HeightCoordinatesImpl ownCoords =
 	    	(HeightCoordinatesImpl) ownPosition.getCoordinates();
 
-	    gc.drawText("Our error: " + ownErrorEstimate,10,10);
+	    gc.drawText( MessageText.getString( "vivaldi.our.error", new String[]{ String.valueOf( ownErrorEstimate )}),10,10);
 
 	    Color black = ColorCache.getColor(display, 0, 0, 0);
 	    gc.setBackground(black); // Color of the squares
