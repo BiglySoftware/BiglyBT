@@ -652,7 +652,7 @@ outer:
 								
 								int block_number = block.block_number;
 								
-								if ( downloaded[block_number]){
+								if ( downloaded[block_number] || block.request.isCancelled()){
 									
 									continue;
 								}
@@ -672,7 +672,7 @@ outer:
 								
 								int block_width = (int)( overall_block_width*( block_number+1)) - block_x;
 								
-								gc.fillRectangle( block_x, block_y, block_width, piece_height );
+								gc.fillRectangle( block_x, block_y, block_width, piece_height );	
 							}
 		
 							gc.setBackground( block_colours[odd?0:2] );
@@ -1072,7 +1072,7 @@ outer:
 		
 		final List<BlockDetails>	blocks = new ArrayList<>();
 		
-		long last_update		= -1;
+		long last_update		= SystemTime.getMonotonousTime();
 		long stall_time			= -1;
 		
 		PeerDetails(
@@ -1109,6 +1109,15 @@ outer:
 		update()
 		{
 			long now = SystemTime.getMonotonousTime();
+									
+			long time_diff = now - last_update;
+			
+			if ( time_diff == 0 ){
+				
+				return;
+			}
+			
+			last_update = now;
 
 			long receive_rate = stats.getDataReceiveRate();
 
@@ -1122,41 +1131,7 @@ outer:
 				
 				stall_time = -1;
 			}
-			
-			int active_blocks = (int)( receive_rate + DiskManager.BLOCK_SIZE -1 )/DiskManager.BLOCK_SIZE;
-					
-			if ( active_blocks == 0 && receive_rate > 0 ){
-				
-				active_blocks = 1;
-			}
-						
-			if ( last_update == -1 ){
-				
-				last_update = now;
-				
-				return;
-			}
-			
-			long time_diff = now - last_update;
-			
-			if ( time_diff == 0 ){
-				
-				return;
-			}
-			
-			last_update = now;
-
-			long bytes_diff = ( receive_rate * time_diff )/1000;
-			
-			if ( bytes_diff == 0 && receive_rate > 0 ){
-				
-				bytes_diff = 1;
-			}
-						
-			//bytes += bytes_diff;
-			
-			//System.out.println( bytes_diff );
-						
+								
 			int num_blocks = blocks.size();
 			
 			if ( num_blocks == 0 ){
@@ -1164,16 +1139,20 @@ outer:
 				return;
 			}
 			
+			int active_blocks = (int)( receive_rate + DiskManager.BLOCK_SIZE -1 )/DiskManager.BLOCK_SIZE;
+			
 			if ( num_blocks < active_blocks ){
 				
 				active_blocks = num_blocks;
 			}
-						
+				
+			long bytes_diff = (( receive_rate + 999 ) * time_diff )/1000;
+
 			for ( Iterator<BlockDetails> it=blocks.iterator();it.hasNext();){
 				
 				BlockDetails block = it.next();
 				
-				if ( block.isDone()){
+				if ( block.checkDone()){
 										
 					block.remove();
 					
@@ -1189,7 +1168,7 @@ outer:
 					
 				}else{
 					
-					if ( bytes_diff <= 0 ){
+					if ( bytes_diff <= 0 || active_blocks == 0 ){
 						
 						continue;
 					}
@@ -1246,27 +1225,31 @@ outer:
 			alpha = last_alpha==255?180:255;
 			
 			last_alpha = alpha;
+			
+			boolean[] downloaded = piece.getDownloaded();
+			
+			for ( int i=0;i<block_num;i++){
+				
+				if ( downloaded[i]){
+					
+					blocks_done[i] = true;
+					blocks_done_num++;
+				}
+			}
 		}
 		
 		void
 		update()
 		{
-			boolean[]	downloaded = piece.getDownloaded();
-			
 			for ( int i=0;i<block_num;i++){
 				
 				if ( !blocks_done[i]){
-					
-					if ( downloaded[i]){
+										
+					if ( block_states[i] == 2 ){
 						
-						int bs = block_states[i];
+						blocks_done[i] = true;
 						
-						if ( bs == 0 || bs == 2 ){
-							
-							blocks_done[i] = true;
-							
-							blocks_done_num++;
-						}
+						blocks_done_num++;
 					}
 				}
 			}
@@ -1373,7 +1356,7 @@ outer:
 		}
 		
 		boolean
-		isDone()
+		checkDone()
 		{
 			if ( done == size ){
 				
