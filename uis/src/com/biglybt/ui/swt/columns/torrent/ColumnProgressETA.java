@@ -66,15 +66,17 @@ public class ColumnProgressETA
 
 	public static final String COLUMN_ID = "ProgressETA";
 	public static final long SHOW_ETA_AFTER_MS = 30000;
-	protected static final String CFG_SHOWETA = "ColumnProgressETA.showETA";
-	protected static final String CFG_SHOWSPEED = "ColumnProgressETA.showSpeed";
+	private static final String CFG_SHOWETA = "ColumnProgressETA.showETA";
+	private static final String CFG_SHOWSPEED = "ColumnProgressETA.showSpeed";
+	private static final String CFG_SHOW3D = "ColumnProgressETA.show3D";
 	private static final int borderWidth = 1;
 	private static final int COLUMN_WIDTH = 200;
 	private final static Object CLICK_KEY = new Object();
 	private static Font fontText = null;
 	private final MyParameterListener myParameterListener;
-	protected boolean showETA;
-	protected boolean showSpeed;
+	private boolean showETA;
+	private boolean showSpeed;
+	private boolean show3D;
 	Display display;
 	Color textColor;
 	private Color cBGdl;
@@ -143,6 +145,7 @@ public class ColumnProgressETA
 			public void selected(MenuItem menu, Object target) {
 				showETA = ((Boolean) menu.getData()).booleanValue();
 				setUserData(CFG_SHOWETA, showETA ? 1 : 0);
+				invalidateCells();
 			}
 		});
 
@@ -160,9 +163,27 @@ public class ColumnProgressETA
 			public void selected(MenuItem menu, Object target) {
 				showSpeed = ((Boolean) menu.getData()).booleanValue();
 				setUserData(CFG_SHOWSPEED, showSpeed ? 1 : 0);
+				invalidateCells();
 			}
 		});
 
+		TableContextMenuItem menuShow3D = addContextMenuItem(
+				"ColumnProgressETA.show3D", MENU_STYLE_HEADER);
+		menuShow3D.setStyle(TableContextMenuItem.STYLE_CHECK);
+		menuShow3D.addFillListener(new MenuItemFillListener() {
+			@Override
+			public void menuWillBeShown(MenuItem menu, Object data) {
+				menu.setData(Boolean.valueOf(show3D));
+			}
+		});
+		menuShow3D.addMultiListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				show3D = ((Boolean) menu.getData()).booleanValue();
+				setUserData(CFG_SHOW3D, show3D ? 1 : 0);
+				invalidateCells();
+			}
+		});
 	}
 
 	@Override
@@ -410,7 +431,7 @@ public class ColumnProgressETA
 					boundsImgBG.height);
 		}
 
-		if (boundsImgBG.width > 0) {
+		if (boundsImgBG.width > 0 && show3D) {
 			gc.drawImage(imgBGTorrent, 0, 0, boundsImgBG.width, boundsImgBG.height,
 					xStart + xRelProgressFillStart, yStart + yRelProgressFillStart,
 					progressWidth, boundsImgBG.height);
@@ -562,14 +583,6 @@ public class ColumnProgressETA
 		return dm.getState();
 	}
 
-	private boolean isStopped(TableCell cell) {
-		int state = getState(cell);
-		return state == DownloadManager.STATE_QUEUED
-				|| state == DownloadManager.STATE_STOPPED
-				|| state == DownloadManager.STATE_STOPPING
-				|| state == DownloadManager.STATE_ERROR;
-	}
-
 	private long getSpeed(Object ds) {
 		if (!(ds instanceof DownloadManager)) {
 			return 0;
@@ -609,6 +622,13 @@ public class ColumnProgressETA
 			showSpeed = ((Number) oShowSpeed).intValue() == 1;
 		}
 
+		Object oShow3D = getUserData(CFG_SHOW3D);
+		if (oShow3D == null) {
+			show3D = true; // we could read a global default from somewhere
+		} else if (oShow3D instanceof Number) {
+			show3D = ((Number) oShow3D).intValue() == 1;
+		}
+		
 		cdf.update();
 	}
 
