@@ -45,6 +45,8 @@ import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.table.impl.TableViewImpl;
 import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.config.ConfigSectionInterfaceTags;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
@@ -65,7 +67,6 @@ import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
-
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
@@ -198,6 +199,30 @@ public class SBC_TagsOverview
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
 		initColumns();
 
+		SWTSkinObjectContainer	soTopArea 	= (SWTSkinObjectContainer)getSkinObject("tag-top-area");
+		SWTSkinObjectText	 	soTitle 	= (SWTSkinObjectText)getSkinObject("title");
+		
+		for (Control comp: new Control[]{ soTopArea.getComposite(), soTitle.getControl()}){
+			
+			Menu menu = new Menu(comp);
+			comp.setMenu( menu );
+			
+			MenuItem mi = new MenuItem( menu, SWT.PUSH );
+	
+			mi.setText( MessageText.getString( "menu.tag.options"));
+	
+			mi.addListener( SWT.Selection, (ev)->{
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+	
+				if ( uif != null ){
+	
+					uif.getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+							ConfigSectionInterfaceTags.SECTION_ID );
+				}
+			});
+		}
+		
 		SWTSkinObjectButton soAddTagButton = (SWTSkinObjectButton) getSkinObject("add-tag");
 		if (soAddTagButton != null) {
 			soAddTagButton.addSelectionListener(new ButtonListenerAdapter() {
