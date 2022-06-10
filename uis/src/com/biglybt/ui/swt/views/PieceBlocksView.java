@@ -677,11 +677,33 @@ outer:
 		
 							gc.setBackground( block_colours[odd?0:2] );
 				
+							boolean[] missing = null;
+							
+							if ( overall_block_width < 1.0 ){
+								
+								missing = new boolean[(int)( overall_block_width*downloaded.length )];
+								
+								for ( int j=0;j<downloaded.length;j++ ){
+									
+									if ( !downloaded[j] ){
+										
+										int block_x = (int)( overall_block_width*j );
+										
+										missing[block_x] = true;
+									}
+								}
+							}
+							
 							for ( int j=0;j<downloaded.length;j++ ){
 								
 								if ( downloaded[j] ){
 									
 									int block_x = (int)( overall_block_width*j );
+
+									if ( missing != null && missing[block_x]){
+										
+										continue;
+									}
 									
 									int block_width = (int)( overall_block_width*( j+1)) - block_x;
 									
