@@ -130,16 +130,16 @@ BlockedIpsWindow
 
     Label	lblUnban	= new Label(window,SWT.NULL );
     Messages.setLanguageText(lblUnban,"ConfigView.section.ipfilter.unban");
-    
+
     Text	textUnban	= new Text(window,SWT.BORDER );
-    
+
     Button btnUnban = new Button(window,SWT.PUSH);
     Messages.setLanguageText(btnUnban,"Button.unban");
-    
+
     btnUnban.addListener(SWT.Selection, (ev)->{
     	IpFilter filter = core.getIpFilterManager().getIPFilter();
     	BadIps badIPs = core.getIpFilterManager().getBadIps();
-    	
+
     	String[] ips = textUnban.getText().replace(';',',' ).split( "," );
     	for ( String ip: ips ){
     		ip = ip.trim();
@@ -154,7 +154,7 @@ BlockedIpsWindow
     	}
     	textBanned.setSelection(textBanned.getText().length());
     });
-    
+
     Button btnReset = new Button(window,SWT.PUSH);
     Messages.setLanguageText(btnReset,"Button.unban.all");
 
@@ -170,9 +170,9 @@ BlockedIpsWindow
     Messages.setLanguageText(btnOk,"Button.ok");
 
 	btnOk.addListener(SWT.Selection, (e)->{ window.dispose(); });
-	
+
 		// layout
-	
+
     formData = new FormData();
     formData.left = new FormAttachment(0,0);
     formData.right = new FormAttachment(100,0);
@@ -191,7 +191,7 @@ BlockedIpsWindow
     formData.top = new FormAttachment(btnClear,0,SWT.CENTER);
     formData.right = new FormAttachment(btnClear);
     formData.left = new FormAttachment(0,0);
-	
+
     blockedInfo.setLayoutData(formData);
 
     	// clear button
@@ -199,32 +199,32 @@ BlockedIpsWindow
     formData = new FormData();
     formData.top = new FormAttachment(textBlocked);
     formData.right = new FormAttachment(100,0);
-	
+
     btnClear.setLayoutData(formData);
 
     	// text banned area
-    
+
     formData = new FormData();
     formData.left = new FormAttachment(0,0);
     formData.right = new FormAttachment(100,0);
     formData.top = new FormAttachment(btnClear);
     formData.bottom = new FormAttachment(btnUnban);
-	
+
     textBanned.setLayoutData(formData);
 
     	// unban line
-    
+
     formData = new FormData();
     formData.left = new FormAttachment(0,0);
     formData.top = new FormAttachment(btnUnban,0,SWT.CENTER);
      lblUnban.setLayoutData(formData);
-    
+
     formData = new FormData();
     formData.left = new FormAttachment(lblUnban);
     formData.right = new FormAttachment(btnUnban);
     formData.top = new FormAttachment(btnUnban,0,SWT.CENTER);
     textUnban.setLayoutData(formData);
-    
+
     formData = new FormData();
     formData.right = new FormAttachment(btnOk);
     formData.bottom = new FormAttachment(btnOk);
@@ -239,29 +239,29 @@ BlockedIpsWindow
     //formData.bottom = new FormAttachment(100,0);
 
     bannedInfo.setLayoutData(formData);
-    
+
     	// reset button
 
     formData = new FormData();
     formData.right = new FormAttachment(btnOk);
     formData.bottom = new FormAttachment(100,0);
-	
+
     btnReset.setLayoutData(formData);
-	
+
     	// ok button
 
     formData = new FormData();
     formData.right = new FormAttachment(100,0);
     formData.bottom = new FormAttachment(100,0);
-	
+
     btnOk.setLayoutData(formData);
 
 
     Utils.makeButtonsEqualWidth( btnUnban, btnClear, btnReset, btnOk );
-    
+
     window.setDefaultButton( btnOk );
 
-    window.addListener(SWT.Traverse,(e)->{		
+    window.addListener(SWT.Traverse,(e)->{
 		if ( e.character == SWT.ESC){
 		     window.dispose();
 		 }
@@ -321,7 +321,7 @@ BlockedIpsWindow
     		public int compare(BannedIp o1, BannedIp o2) {
        			long l1 = o1.getBanningTime();
        			long l2 = o2.getBanningTime();
-    			
+
        			if ( l1 == l2 ){
        				return( 0 );
        			}else if ( l1 < l2 ){
@@ -331,7 +331,7 @@ BlockedIpsWindow
        			}
     		};
 		});
-    
+
     for(int i=0;i<banned_ips.length;i++){
     	BannedIp bIp = banned_ips[i];
       sbBanned.append(DisplayFormatters.formatTimeStamp(bIp.getBanningTime()));
