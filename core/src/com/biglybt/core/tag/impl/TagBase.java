@@ -435,7 +435,19 @@ TagBase
 	public boolean
 	canBePublic()
 	{
-		return( readBooleanAttribute( AT_CAN_BE_PUBLIC, getCanBePublicDefault()));
+		boolean result = readBooleanAttribute( AT_CAN_BE_PUBLIC, getCanBePublicDefault());
+		
+		if ( result ){
+			
+			boolean[] autos = isTagAuto();
+
+			if ( autos[0] || autos[1] ){
+
+				result = false;
+			}
+		}
+		
+		return( result );
 	}
 
 	protected boolean
