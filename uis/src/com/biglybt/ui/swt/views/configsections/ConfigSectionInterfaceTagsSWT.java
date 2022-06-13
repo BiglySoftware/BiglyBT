@@ -18,21 +18,50 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
+import static com.biglybt.core.config.ConfigKeys.File.SCFG_FILE_AUTO_TAG_NAME_DEFAULT;
+import static com.biglybt.core.config.ConfigKeys.File.SCFG_PREFIX_FILE_AUTO_TAG_NAME;
+import static com.biglybt.core.config.ConfigKeys.File.SCFG_PREFIX_WATCH_TORRENT_FOLDER_TAG;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Menu;
+
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.pif.ui.config.Parameter;
+import com.biglybt.pifimpl.local.ui.config.ActionParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.IntListParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
+import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 import com.biglybt.ui.config.ConfigSectionInterfaceTags;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.config.BaseSwtParameter;
+import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 public class 
 ConfigSectionInterfaceTagsSWT
 	extends ConfigSectionInterfaceTags
+	implements BaseConfigSectionSWT
 {
+	private Map<ParameterImpl, BaseSwtParameter>		paramMap;
+	
+	@Override
+	public void 
+	configSectionCreate(
+		Composite 								parent,
+		Map<ParameterImpl, BaseSwtParameter> 	mapParamToSwtParam )
+	{
+		paramMap = mapParamToSwtParam;
+	}
+	
 	@Override
 	protected void 
 	buildUISpecific() 
@@ -136,5 +165,55 @@ ConfigSectionInterfaceTagsSWT
 		
 		add(new ParameterGroupImpl("ConfigView.section.style.library",
 				listLibrary));
+	}
+	
+	@Override
+	protected boolean
+	isSWT()
+	{
+		return( true );
+	}
+	
+	@Override
+	protected void
+	addAutoTagLine(
+		List<Parameter> listAutoTag,
+		int				index )
+	{
+		super.addAutoTagLine(listAutoTag, index);
+		
+		String paramName;
+		
+		if ( index == -1 ){
+			paramName = SCFG_FILE_AUTO_TAG_NAME_DEFAULT;
+		}else{
+			paramName = SCFG_PREFIX_FILE_AUTO_TAG_NAME + (index == 0 ? "" : (" " + index));
+		}
+		
+		ActionParameterImpl selectTag = new ActionParameterImpl(
+				"", "GeneralView.menu.selectTracker");
+		add( selectTag, listAutoTag);
+		
+		selectTag.addListener(param -> {
+			
+			Utils.execSWTThread(()->{
+				BaseSwtParameter swtParam = paramMap.get(  selectTag );
+				
+				Control c = swtParam.getMainControl();
+				
+				Menu menu = new Menu( c );
+				
+				c.setMenu(menu);
+				
+				List<Tag> all_tags = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
+				
+				TagUIUtils.createTagSelectionMenu(menu, null, all_tags, (tag)->{
+					
+					COConfigurationManager.setParameter( paramName, tag.getTagName( true ));
+				});
+				
+				menu.setVisible( true );
+			});
+		});
 	}
 }
