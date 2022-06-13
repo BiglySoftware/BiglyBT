@@ -135,26 +135,15 @@ public class ConfigSectionFileTorrents
 			}
 		}
 		
-		for (int i = 0; i < num_folders; i++) {
-			DirectoryParameterImpl watchFolderPathParameter = new DirectoryParameterImpl(
-					SCFG_PREFIX_WATCH_TORRENT_FOLDER_PATH + (i == 0 ? "" : (" " + i)),
-					"ConfigView.label.importdirectory");
-			add(watchFolderPathParameter, listWatchDirs);
-
-			watchFolderPathParameter.setDialogTitleKey(
-					"ConfigView.dialog.choosewatchtorrentfolderpath");
-
-			StringParameterImpl tagParam = new StringParameterImpl(
-					SCFG_PREFIX_WATCH_TORRENT_FOLDER_TAG + (i == 0 ? "" : (" " + i)),
-					"label.assign.to.tag");
-			add(tagParam, listWatchDirs);
-			tagParam.setWidthInCharacters(12);
+		for (int i = 0; i < num_folders; i++){
+			
+			addImportLine( listWatchDirs, i );
 		}
 
 		ParameterGroupImpl pgWatchDirs = new ParameterGroupImpl(null,
 				listWatchDirs);
 		add("pgWatchDirs", pgWatchDirs);
-		pgWatchDirs.setNumberOfColumns(2);
+		pgWatchDirs.setNumberOfColumns(isSWT()?3:2);
 		pgWatchDirs.setIndent(1, false);
 
 		// add another folder
@@ -268,5 +257,32 @@ public class ConfigSectionFileTorrents
 		add(paramMonClip);
 
 		
+	}
+	
+	protected boolean
+	isSWT()
+	{
+		return( false );
+	}
+	
+	protected void
+	addImportLine(
+		List<Parameter>		listWatchDirs,
+		int					index )
+	{
+		DirectoryParameterImpl watchFolderPathParameter = new DirectoryParameterImpl(
+				SCFG_PREFIX_WATCH_TORRENT_FOLDER_PATH + (index == 0 ? "" : (" " + index)),
+				"ConfigView.label.importdirectory");
+		add(watchFolderPathParameter, listWatchDirs);
+
+		watchFolderPathParameter.setDialogTitleKey(
+				"ConfigView.dialog.choosewatchtorrentfolderpath");
+
+		StringParameterImpl tagParam = new StringParameterImpl(
+				SCFG_PREFIX_WATCH_TORRENT_FOLDER_TAG + (index == 0 ? "" : (" " + index)),
+				"label.assign.to.tag");
+		add(tagParam, listWatchDirs);
+		tagParam.setWidthInCharacters(12);
+
 	}
 }
