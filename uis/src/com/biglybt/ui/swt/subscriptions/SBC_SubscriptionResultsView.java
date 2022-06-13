@@ -1558,16 +1558,17 @@ SBC_SubscriptionResultsView
 	@Override
 	public boolean
 	filterCheck(
-		SubscriptionResultFilterable 		ds,
-		String 						filter,
-		boolean 					regex )
+		SubscriptionResultFilterable 	ds,
+		String 							filter,
+		boolean 						regex,
+		boolean							confusable )
 	{
 		if (!isOurContent(ds)){
 
 			return false;
 		}
 
-		return( SearchSubsUtils.filterCheck( ds, filter, regex ));
+		return( SearchSubsUtils.filterCheck( ds, filter, regex, confusable ));
 	}
 
 	@Override

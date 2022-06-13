@@ -27,8 +27,21 @@ package com.biglybt.ui.common.table;
  */
 public interface TableViewFilterCheck<DATASOURCETYPE>
 {
-	public boolean filterCheck(DATASOURCETYPE ds, String filter, boolean regex);
+		/**
+		 * @deprecated remove when rcm plugin updates to use confusable version
+		 **/
+	
+	public default boolean filterCheck(DATASOURCETYPE ds, String filter, boolean regex ){
+		return( true );
+	}
 
+	public default boolean filterCheck(DATASOURCETYPE ds, String filter, boolean regex, boolean confusable ){
+		if ( confusable ){
+			return( false );
+		}else{
+			return( filterCheck( ds, filter, regex ));
+		}
+	}
 	public void filterSet(String filter);
 
 	public interface TableViewFilterCheckEx<DATASOURCETYPE>

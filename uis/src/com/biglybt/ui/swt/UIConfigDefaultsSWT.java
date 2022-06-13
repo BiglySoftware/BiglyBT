@@ -215,6 +215,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Table.useTree", false);
 		def.addParameter("Table.tooltip.disable", false);
 		def.addParameter("Table.sort.intuitive", false);
+		def.addParameter("Table.filter.confusable", true );
 		def.addParameter("Dark Table Colors", false );
 		def.addParameter("Dark Misc Colors", false );
 		

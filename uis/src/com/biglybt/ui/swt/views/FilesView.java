@@ -720,7 +720,7 @@ public class FilesView
 	@Override
 	public boolean
 	filterCheck(
-		DiskManagerFileInfo ds, String filter, boolean regex )
+		DiskManagerFileInfo ds, String filter, boolean regex, boolean confusable )
 	{
 		if ( hide_dnd_files ){
 			
@@ -767,7 +767,9 @@ public class FilesView
 			return( true );
 		}
 		
-		filter = GeneralUtils.getConfusableEquivalent(filter);
+		if ( confusable ){
+			filter = GeneralUtils.getConfusableEquivalent(filter);
+		}
 		
 		boolean filterOnPath = filter.startsWith("p:");
 		if (filterOnPath) {
@@ -799,7 +801,9 @@ public class FilesView
 				}
 			}
 
-			name = GeneralUtils.getConfusableEquivalent(name);
+			if ( confusable ){
+				name = GeneralUtils.getConfusableEquivalent(name);
+			}
 			
 			String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
 

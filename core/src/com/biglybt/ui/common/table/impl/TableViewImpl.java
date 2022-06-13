@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -59,6 +61,20 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	// Shorter name for ConfigManager, easier to read code
 	protected static final ConfigurationManager configMan = ConfigurationManager.getInstance();
 
+	private static boolean	confusableFiltering;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Table.filter.confusable",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String parameterName){
+					confusableFiltering = COConfigurationManager.getBooleanParameter( "Table.filter.confusable" );
+				}
+			});	
+	}
+	
 	private class
 	rowSorterRunnable
 		extends AERunnable
@@ -693,7 +709,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				boolean isOurs;
 				
 				try{
-					isOurs = filter.checker.filterCheck(dst, filter.text,filter.regex);
+					isOurs = filterCheck(dst);
 					
 				}catch( PatternSyntaxException e ){
 					// get this with malformed filter regex, ignore
@@ -741,7 +757,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 
 		try{
-			return( filter.checker.filterCheck( ds, filter.text, filter.regex ));
+			return( filterCheck( ds ));
 			
 		}catch( PatternSyntaxException e ){
 			// get this with malformed filter regex, ignore		
@@ -846,8 +862,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 
 		try{
-			if (!skipFilterCheck && filter != null
-					&& !filter.checker.filterCheck(dataSource, filter.text, filter.regex)) {
+			if (!skipFilterCheck && filter != null && !filterCheck(dataSource)) {
 				return;
 			}
 		}catch( PatternSyntaxException e ){
@@ -921,8 +936,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			if (!skipFilterCheck && filter != null) {
 				try{
 					for (int i = 0; i < dataSources.length; i++) {
-						if (!filter.checker.filterCheck(dataSources[i], filter.text,
-								filter.regex)) {
+						if (!filterCheck(dataSources[i])) {
 							dataSources[i] = null;
 						}
 					}
@@ -950,8 +964,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				try{
 					if (!skipFilterCheck
 							&& filter != null
-							&& !filter.checker.filterCheck(dataSource, filter.text,
-									filter.regex)) {
+							&& !filterCheck(dataSource )) {
 						continue;
 					}
 				}catch( PatternSyntaxException e ){
@@ -978,6 +991,32 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 
 		refreshenProcessDataSourcesTimer();
+	}
+	
+	boolean
+	filterCheck(
+		DATASOURCETYPE	ds )
+	{
+		if ( confusableFiltering ){
+			
+			boolean regex = filter.regex;
+			
+			if ( regex ){
+				
+				return( filter.checker.filterCheck( ds, filter.text, regex, false ));
+			}
+			
+			if ( filter.checker.filterCheck( ds, filter.text, false, false )){
+				
+				return( true );
+			}
+			
+			return( filter.checker.filterCheck( ds, filter.text, false, true ));
+			
+		}else{
+			
+			return( filter.checker.filterCheck( ds, filter.text, filter.regex, false ));
+		}
 	}
 	
 	protected boolean

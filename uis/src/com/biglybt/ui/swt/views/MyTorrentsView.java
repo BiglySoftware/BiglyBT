@@ -1464,7 +1464,8 @@ public class MyTorrentsView
 	filterCheck(
 		DownloadManager 	dm, 
 		String 				sLastSearch, 
-		boolean 			bRegexSearch) 
+		boolean 			bRegexSearch,
+		boolean				confusable )
 	{
 		if ( dm == null ){
 			return( false );
@@ -1530,7 +1531,10 @@ public class MyTorrentsView
 
 				String tmpSearch = sLastSearch;
 
-				tmpSearch = GeneralUtils.getConfusableEquivalent( tmpSearch );
+				if ( confusable ){
+				
+					tmpSearch = GeneralUtils.getConfusableEquivalent( tmpSearch );
+				}
 
 				for ( int i = 1; i < name_mapping.length; i++ ){
 
@@ -1643,7 +1647,10 @@ public class MyTorrentsView
 
 					String name = (String)o_name;
 					
-					name = GeneralUtils.getConfusableEquivalent( name );
+					if ( confusable ){
+						
+						name = GeneralUtils.getConfusableEquivalent( name );
+					}
 					
 					bOurs = pattern.matcher( name ).find() == match_result;
 
@@ -1655,7 +1662,11 @@ public class MyTorrentsView
 					bOurs = !match_result;
 
 					for ( String name: names ){
-						name = GeneralUtils.getConfusableEquivalent(name);
+						
+						if ( confusable ){
+						
+							name = GeneralUtils.getConfusableEquivalent(name);
+						}
 
 						if ( pattern.matcher( name ).find()){
 							bOurs = match_result;

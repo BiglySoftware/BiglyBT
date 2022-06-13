@@ -742,10 +742,14 @@ public class SBC_ArchivedDownloadsView
 	filterCheck(
 		DownloadStub 	ds,
 		String 			filter,
-		boolean 		regex)
+		boolean 		regex,
+		boolean			confusable )
 	{
-		filter = GeneralUtils.getConfusableEquivalent(filter);
-
+		if ( confusable ){
+		
+			filter = GeneralUtils.getConfusableEquivalent(filter);
+		}
+		
 		boolean do_files = filter.toLowerCase( Locale.US ).startsWith( "f:" );
 		
 		if ( do_files ){
@@ -786,8 +790,11 @@ public class SBC_ArchivedDownloadsView
 
 				String name = file.getFile().getName();
 
-				name = GeneralUtils.getConfusableEquivalent( name );
-
+				if ( confusable ){
+				
+					name = GeneralUtils.getConfusableEquivalent( name );
+				}
+				
 				if ( pattern.matcher( name ).find()){
 
 					result = match_result;
@@ -812,8 +819,11 @@ public class SBC_ArchivedDownloadsView
 
 			String name = ds.getName();
 
-			name = GeneralUtils.getConfusableEquivalent(name);
-
+			if ( confusable ){
+			
+				name = GeneralUtils.getConfusableEquivalent(name);
+			}
+			
 			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 			return( pattern.matcher(name).find() == match_result );

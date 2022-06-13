@@ -6059,21 +6059,28 @@ public class OpenTorrentOptionsWindow
 		filterCheck(
 			TorrentOpenFileOptions 	ds,
 			String 					filter,
-			boolean 				regex )
+			boolean 				regex,
+			boolean					confusable )
 		{
 			if ( filter == null || filter.length() == 0 ){
 
 				return( true );
 			}
 
-			filter = GeneralUtils.getConfusableEquivalent(filter);
+			if ( confusable ){
+			
+				filter = GeneralUtils.getConfusableEquivalent(filter);
+			}
 			
 			try {
 				File file = ds.getDestFileFullName();
 
 				String name = filter.contains( File.separator )?file.getAbsolutePath():file.getName();
 
-				name = GeneralUtils.getConfusableEquivalent(name);
+				if ( confusable ){
+				
+					name = GeneralUtils.getConfusableEquivalent(name);
+				}
 				
 				String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
 

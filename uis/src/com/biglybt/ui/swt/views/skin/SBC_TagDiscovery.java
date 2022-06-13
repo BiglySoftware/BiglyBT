@@ -632,7 +632,7 @@ public class SBC_TagDiscovery
 
 	// @see TableViewFilterCheck#filterCheck(java.lang.Object, java.lang.String, boolean)
 	@Override
-	public boolean filterCheck(TagDiscovery ds, String filter, boolean regex) {
+	public boolean filterCheck(TagDiscovery ds, String filter, boolean regex, boolean confusable) {
 		return true;
 	}
 

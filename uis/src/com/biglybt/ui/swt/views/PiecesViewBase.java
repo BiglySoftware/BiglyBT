@@ -624,8 +624,14 @@ public abstract class PiecesViewBase
 	filterCheck(
 		PEPiece 	piece, 
 		String 		filter, 
-		boolean 	regex )
+		boolean 	regex,
+		boolean		confusable )
 	{
+		if ( confusable ){
+			
+			return( false );
+		}
+		
 		if ( filter.isEmpty()){
 			
 			return( true );

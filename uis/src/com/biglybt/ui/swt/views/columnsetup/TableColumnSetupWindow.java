@@ -318,8 +318,14 @@ public class TableColumnSetupWindow
 				filterCheck(
 					TableColumn 	ds,
 					String 			filter,
-					boolean 		regex )
+					boolean 		regex,
+					boolean			confusable )
 				{
+					if ( confusable ){
+						
+						return( false );
+					}
+					
 					TableColumnCore core = (TableColumnCore)ds;
 
 					String raw_key 		= core.getTitleLanguageKey( false );

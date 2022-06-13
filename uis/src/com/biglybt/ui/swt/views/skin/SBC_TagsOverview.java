@@ -1196,8 +1196,14 @@ public class SBC_TagsOverview
 	filterCheck(
 		Tag 		tag, 
 		String 		filter, 
-		boolean 	regex ) 
+		boolean 	regex,
+		boolean		confusable )
 	{
+		if ( confusable ){
+			
+			return( false );
+		}
+		
 		int tt = tag.getTagType().getTagType();
 		
 		if ( tt == TagType.TT_SWARM_TAG && !show_swarm_tags){

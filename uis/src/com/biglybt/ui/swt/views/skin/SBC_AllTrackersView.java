@@ -1632,9 +1632,15 @@ public class SBC_AllTrackersView
 	public boolean
 	filterCheck(
 		AllTrackersViewEntry 	ds,
-		String 				filter,
-		boolean 			regex)
+		String 					filter,
+		boolean 				regex,
+		boolean					confusable )
 	{
+		if ( confusable ){
+			
+			return( false );
+		}
+		
 		AllTrackersTracker tracker = ds.getTracker();
 		
 		String name = tracker.getTrackerName();

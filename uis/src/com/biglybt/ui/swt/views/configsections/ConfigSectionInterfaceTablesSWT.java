@@ -94,9 +94,10 @@ public class ConfigSectionInterfaceTablesSWT
 				"ConfigView.section.style.defaultSortOrder", sortOrderValues,
 				sortOrderLabels), listGeneral);
 
-		add(new BooleanParameterImpl("Table.sort.intuitive",
-				"ConfigView.section.table.sort.intuitive"), listGeneral);
+		add(new BooleanParameterImpl("Table.sort.intuitive", "ConfigView.section.table.sort.intuitive"), listGeneral);
 
+		add(new BooleanParameterImpl("Table.filter.confusable", "ConfigView.section.table.filter.confusable"), listGeneral);
+		
 		int[] values = {
 			10,
 			25,

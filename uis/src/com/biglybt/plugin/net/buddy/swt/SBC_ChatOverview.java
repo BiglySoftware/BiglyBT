@@ -868,7 +868,7 @@ public class SBC_ChatOverview
 	}
 
 	@Override
-	public boolean filterCheck(ChatInstance ds, String filter, boolean regex) {
+	public boolean filterCheck(ChatInstance ds, String filter, boolean regex, boolean confusable ) {
 		return true;
 	}
 }

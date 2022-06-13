@@ -570,9 +570,13 @@ public class ClientStatsView
 	@Override
 	public boolean
 	filterCheck(
-		ClientStatsDataSource ds, String filter, boolean regex )
+		ClientStatsDataSource ds, String filter, boolean regex, boolean confusable )
 	{
-
+		if ( confusable ){
+			
+			return( false );
+		}
+		
 		try {			
 			String name = ds.client;
 

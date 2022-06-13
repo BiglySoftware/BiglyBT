@@ -286,15 +286,19 @@ SearchSubsUtils
 	filterCheck(
 		SearchSubsResultBase 	ds,
 		String 					filter,
-		boolean 				regex)
+		boolean 				regex,
+		boolean					confusable )
 	{
 		if ( filter == null || filter.length() == 0 ){
 
 			return( true );
 		}
 
-		filter = GeneralUtils.getConfusableEquivalent(filter);
-
+		if ( confusable ){
+		
+			filter = GeneralUtils.getConfusableEquivalent(filter);
+		}
+		
 		try{
 			boolean	hash_filter = filter.startsWith( "t:" );
 
@@ -341,8 +345,11 @@ SearchSubsUtils
 
 				String name = ds.getName();
 
-				name = GeneralUtils.getConfusableEquivalent(name);
-
+				if ( confusable ){
+				
+					name = GeneralUtils.getConfusableEquivalent(name);
+				}
+				
 				return( pattern.matcher(name).find() == match_result );
 			}
 

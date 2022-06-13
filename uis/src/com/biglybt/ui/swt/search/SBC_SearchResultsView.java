@@ -1386,14 +1386,15 @@ SBC_SearchResultsView
 	filterCheck(
 		SBC_SearchResult 	ds,
 		String 				filter,
-		boolean 			regex)
+		boolean 			regex,
+		boolean				confusable )
 	{
 		if (!isOurContent(ds)){
 
 			return false;
 		}
 
-		return( SearchSubsUtils.filterCheck( ds, filter, regex ));
+		return( SearchSubsUtils.filterCheck( ds, filter, regex, confusable ));
 	}
 
 	@Override

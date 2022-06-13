@@ -798,10 +798,14 @@ public class SBC_DownloadHistoryView
 	filterCheck(
 		DownloadHistory 	ds,
 		String 				filter,
-		boolean 			regex)
+		boolean 			regex,
+		boolean				confusable )
 	{
-		filter = GeneralUtils.getConfusableEquivalent(filter);
-
+		if ( confusable ){
+		
+			filter = GeneralUtils.getConfusableEquivalent(filter);
+		}
+		
 		Object o_name;
 
 		if ( filter.startsWith( "t:" )){
@@ -857,7 +861,10 @@ public class SBC_DownloadHistoryView
 
 			String name = (String)o_name;
 			
-			name = GeneralUtils.getConfusableEquivalent(name);
+			if ( confusable ){
+			
+				name = GeneralUtils.getConfusableEquivalent(name);
+			}
 			
 			bOurs = pattern.matcher( name ).find() == match_result;
 
@@ -871,8 +878,11 @@ public class SBC_DownloadHistoryView
 
 			for ( String name: names ){
 
-				name = GeneralUtils.getConfusableEquivalent( name );
-
+				if ( confusable ){
+				
+					name = GeneralUtils.getConfusableEquivalent( name );
+				}
+				
 				if ( pattern.matcher( name ).find()){
 
 					bOurs = match_result;
