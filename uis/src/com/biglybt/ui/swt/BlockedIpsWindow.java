@@ -182,6 +182,9 @@ BlockedIpsWindow
     textBlocked.setLayoutData(formData);
 	textBlocked.setText(ipsBlocked);
 
+    // Scroll blocked log to end on initial display
+    textBlocked.setSelection(textBlocked.getTextLimit());
+
     	// label blocked area
 
     formData = new FormData();
