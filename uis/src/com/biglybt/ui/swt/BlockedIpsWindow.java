@@ -182,9 +182,6 @@ BlockedIpsWindow
     textBlocked.setLayoutData(formData);
 	textBlocked.setText(ipsBlocked);
 
-    // Scroll blocked log to end on initial display
-    textBlocked.setSelection(textBlocked.getTextLimit());
-
     	// label blocked area
 
     formData = new FormData();
@@ -217,7 +214,7 @@ BlockedIpsWindow
     formData = new FormData();
     formData.left = new FormAttachment(0,0);
     formData.top = new FormAttachment(btnUnban,0,SWT.CENTER);
-     lblUnban.setLayoutData(formData);
+    lblUnban.setLayoutData(formData);
 
     formData = new FormData();
     formData.left = new FormAttachment(lblUnban);
@@ -256,6 +253,10 @@ BlockedIpsWindow
 
     btnOk.setLayoutData(formData);
 
+    	// Scroll logs to end on initial display
+    
+    textBlocked.setSelection(textBlocked.getText().length());
+    textBanned.setSelection(textBanned.getText().length());
 
     Utils.makeButtonsEqualWidth( btnUnban, btnClear, btnReset, btnOk );
 
