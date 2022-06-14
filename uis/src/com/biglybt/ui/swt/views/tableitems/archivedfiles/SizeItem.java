@@ -22,6 +22,7 @@ package com.biglybt.ui.swt.views.tableitems.archivedfiles;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
+import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.download.DownloadStub.DownloadStubFile;
 import com.biglybt.pif.ui.tables.*;
@@ -87,15 +88,7 @@ SizeItem
 			cell.setText(DisplayFormatters.formatByteCountToKiBEtc(size));
 		}
 		
-		if (Utils.getUserMode() > 0 && (cell instanceof TableCellSWT)) {
-			if (size >= 0x40000000l) {
-				((TableCellSWT) cell).setTextAlpha(200 | 0x100);
-			} else if (size < 0x100000) {
-				((TableCellSWT) cell).setTextAlpha(180);
-			} else {
-				((TableCellSWT) cell).setTextAlpha(255);
-			}
-		}
+		TableColumnSWTUtils.setSizeAlpha( cell, size );
 	}
 
 	@Override

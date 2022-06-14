@@ -22,6 +22,7 @@ import com.biglybt.pif.download.DownloadStub;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
+import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 
 public class ColumnArchiveDLSize
 	implements TableCellRefreshListener, TableColumnExtraInfoListener
@@ -77,14 +78,6 @@ public class ColumnArchiveDLSize
 
 		cell.setText(DisplayFormatters.formatByteCountToKiBEtc( size ));
 
-		if (Utils.getUserMode() > 0 && (cell instanceof TableCellSWT)) {
-			if (size >= 0x40000000l) {
-				((TableCellSWT) cell).setTextAlpha(200 | 0x100);
-			} else if (size < 0x100000) {
-				((TableCellSWT) cell).setTextAlpha(180);
-			} else {
-				((TableCellSWT) cell).setTextAlpha(255);
-			}
-		}
+		TableColumnSWTUtils.setSizeAlpha( cell, size );
 	}
 }

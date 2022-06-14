@@ -19,10 +19,13 @@ package com.biglybt.ui.swt.views.table.utils;
 
 import org.eclipse.swt.SWT;
 
+import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.ui.common.table.TableStructureEventDispatcher;
 import com.biglybt.ui.common.table.TableStructureModificationListener;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 
 /**
@@ -81,5 +84,22 @@ public class TableColumnSWTUtils
 					true, null);
 		}
 		TableStructureEventDispatcher.getInstance(tableID).tableStructureChanged(true, null);
+    }
+    
+    public static void
+    setSizeAlpha(
+    	TableCell		cell,
+    	long			size )
+    {
+		
+		if (Utils.getUserMode() > 0 && (cell instanceof TableCellSWT)) {
+			if (size >= 0x40000000l) {
+				((TableCellSWT) cell).setTextAlpha(200 | 0x100);
+			} else if (size < 0x100000 && size >= 0 ) {
+				((TableCellSWT) cell).setTextAlpha(180);
+			} else {
+				((TableCellSWT) cell).setTextAlpha(255);
+			}
+		}
     }
 }

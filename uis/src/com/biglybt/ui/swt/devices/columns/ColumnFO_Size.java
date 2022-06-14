@@ -25,6 +25,7 @@ import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 
 public class ColumnFO_Size
 	implements TableCellRefreshListener, TableColumnExtraInfoListener
@@ -69,6 +70,8 @@ public class ColumnFO_Size
 		if ( cell.setSortValue( size )){
 		
 			cell.setText( size<=0?"":DisplayFormatters.formatByteCountToKiBEtc( size ));
+			
+			TableColumnSWTUtils.setSizeAlpha( cell, size );
 		}
 	}
 }

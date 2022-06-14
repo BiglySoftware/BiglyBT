@@ -20,6 +20,7 @@ package com.biglybt.ui.swt.columns.dlhistory;
 import com.biglybt.core.history.DownloadHistory;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 
 public class ColumnDLHistorySize
 	implements TableCellRefreshListener, TableColumnExtraInfoListener
@@ -73,5 +74,7 @@ public class ColumnDLHistorySize
 		}
 
 		cell.setText(size<=0?"":DisplayFormatters.formatByteCountToKiBEtc( size ));
+		
+		TableColumnSWTUtils.setSizeAlpha( cell, size );
 	}
 }

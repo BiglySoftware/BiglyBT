@@ -26,6 +26,7 @@ import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
+import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 
 
 public class ColumnSizeWithDND
@@ -69,5 +70,7 @@ public class ColumnSizeWithDND
       return;
 
     cell.setText(DisplayFormatters.formatByteCountToKiBEtc(value));
+    
+    TableColumnSWTUtils.setSizeAlpha( cell, value );
   }
 }
