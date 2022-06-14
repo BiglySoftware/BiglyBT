@@ -200,12 +200,12 @@ public class SideBar
 		Display.getDefault().addFilter(SWT.KeyDown, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				// F9 is standard Seamonkey, but doesn't work on OSX
+				
 				// Command Option T is standard on OSX
 				// F7 works on both
-				if (event.keyCode == SWT.F9
-						|| event.keyCode == SWT.F7
-						|| (event.keyCode == 116 && event.stateMask == (SWT.COMMAND | SWT.ALT))) {
+				if (	event.keyCode == SWT.F7	|| 
+						(event.keyCode == 116 && event.stateMask == (SWT.COMMAND | SWT.ALT))){
+					
 					event.doit = false;
 					event.keyCode = 0;
 					event.character = '\0';

@@ -637,6 +637,16 @@ public class MainWindowImpl
 			Utils.getDisplay().addFilter(SWT.KeyDown, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
+					if ( event.keyCode == SWT.F9 ){
+						
+						event.doit = false;
+						event.keyCode = 0;
+						event.character = '\0';
+						flipVisibility( WINDOW_ELEMENT_RIGHTBAR );
+						
+						return;
+					}
+					
 					// Another window has control, skip filter
 					Control focus_control = event.display.getFocusControl();
 					if (focus_control != null && focus_control.getShell() != shell)
@@ -2178,6 +2188,13 @@ public class MainWindowImpl
 
 	}
 
+	private void
+	flipVisibility(
+		int windowElement )
+	{
+		setVisible(windowElement, !isVisible(windowElement));
+	}
+	
 	@Override
 	public Rectangle getMetrics(int windowElement) {
 		switch (windowElement) {
