@@ -2252,6 +2252,8 @@ GeneralUtils
 				
 				if ( high_surrogate > 0 ){
 					
+						// assume we have a pair
+					
 					int cp = Character.toCodePoint(high_surrogate, c );
 					
 					Integer k = confusable_map.get( cp );
@@ -2267,11 +2269,10 @@ GeneralUtils
 					
 					high_surrogate = 0;
 					
-				}else if ( Character.isSurrogate(c)){
+				}else if ( Character.isHighSurrogate(c)){
 					
 					high_surrogate = c;
-					
-					continue;
+
 				}else{
 					
 					Integer k = confusable_map.get((int)c);
@@ -2279,6 +2280,7 @@ GeneralUtils
 					if ( k == null ){
 						
 						result.append( c );
+						
 					}else{
 						
 						result.append((char)k.intValue());
