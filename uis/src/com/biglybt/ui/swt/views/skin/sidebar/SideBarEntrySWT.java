@@ -1138,37 +1138,44 @@ public class SideBarEntrySWT
   			//gc.fillRectangle(drawBounds.x, drawBounds.y, drawBounds.width, drawBounds.height);
   			fgText = gc.getForeground();
 			} else {
-  			//System.out.println("gmmm" + drawBounds + ": " + Debug.getCompressedStackTrace());
+				//System.out.println("gmmm" + drawBounds + ": " + Debug.getCompressedStackTrace());
 				Utils.setClipping(gc, (Rectangle) null);
-  			if (fgSel != null) {
-  				fgText = fgSel;
-  			}
-  			if (bgSel != null) {
-  				gc.setBackground(bgSel);
-  			}
-  			Color color1;
-  			Color color2;
-  			if (sidebar.getTree().isFocusControl()) {
-  				color1 = ColorCache.getSchemedColor(gc.getDevice(), "#166688");
-  				color2 = ColorCache.getSchemedColor(gc.getDevice(), "#1c2458");
-  			} else {
-  				color1 = ColorCache.getSchemedColor(gc.getDevice(), "#447281");
-  				color2 = ColorCache.getSchemedColor(gc.getDevice(), "#393e58");
-  			}
+				if (fgSel != null) {
+					fgText = fgSel;
+				}
+				if (bgSel != null) {
+					gc.setBackground(bgSel);
+				}
+				Color color1;
+				Color color2;
+				if (sidebar.getTree().isFocusControl()) {
+					color1 = ColorCache.getSchemedColor(gc.getDevice(), "#166688");
+					color2 = ColorCache.getSchemedColor(gc.getDevice(), "#1c2458");
+				} else {
+					color1 = ColorCache.getSchemedColor(gc.getDevice(), "#447281");
+					color2 = ColorCache.getSchemedColor(gc.getDevice(), "#393e58");
+				}
 
-  			gc.setBackground(color1);
-  			gc.fillRectangle(drawBounds.x, drawBounds.y, drawBounds.width, 4);
+				gc.setBackground(color1);
+				gc.fillRectangle(drawBounds.x, drawBounds.y, drawBounds.width, 4);
 
-  			gc.setForeground(color1);
-  			gc.setBackground(color2);
-  			Rectangle itemBounds = swt_getBounds();
-  			if (itemBounds == null) {
-  				return fgText;
-  			}
-  			// always need to start gradient at the same Y position
-  			// +3 is to start gradient off 3 pixels lower
-  			gc.fillGradientRectangle(drawBounds.x, itemBounds.y + 3,
-  					drawBounds.width, itemBounds.height - 3, true);
+				Rectangle itemBounds = swt_getBounds();
+				if (itemBounds == null) {
+					return fgText;
+				}
+				
+				if ( Utils.gradientFillSelection()){
+					gc.setForeground(color1);
+					gc.setBackground(color2);
+					
+					// always need to start gradient at the same Y position
+					// +3 is to start gradient off 3 pixels lower
+					gc.fillGradientRectangle(drawBounds.x, itemBounds.y + 3,
+							drawBounds.width, itemBounds.height - 3, true);
+				}else{
+					gc.fillRectangle(drawBounds.x, itemBounds.y + 3,
+		  					drawBounds.width, itemBounds.height - 3);
+				}
 			}
 		} else {
 

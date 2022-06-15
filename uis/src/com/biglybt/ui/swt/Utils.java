@@ -202,14 +202,19 @@ public class Utils
 	}
 	
 	private static volatile boolean	dark_misc_things = false;
+	private static volatile boolean	gradient_fill	 = true;
 	
 	private static String SHELL_METRICS_DISABLED_KEY = "utils:shmd";
 	
 	static{
-		COConfigurationManager.addAndFireParameterListener(
-			"Dark Misc Colors",
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				"Dark Misc Colors",
+				"Gradient Fill Selection",
+			},
 			(n)->{
-				dark_misc_things = COConfigurationManager.getBooleanParameter( "Dark Misc Colors" );
+				dark_misc_things	= COConfigurationManager.getBooleanParameter( "Dark Misc Colors" );
+				gradient_fill		= COConfigurationManager.getBooleanParameter( "Gradient Fill Selection" );
 			});
 	}
 	
@@ -6247,5 +6252,11 @@ public class Utils
 			return data;
 		}
 		return null;
+	}
+	
+	public static boolean
+	gradientFillSelection()
+	{
+		return( gradient_fill );
 	}
 }

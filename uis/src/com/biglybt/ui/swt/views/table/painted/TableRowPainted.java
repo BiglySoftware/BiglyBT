@@ -414,10 +414,12 @@ public class TableRowPainted
 							gc.setBackground(bg);
 							gc.fillRectangle(r);
 							if (isSelected) {
-  							gc.setAlpha(80);
-  							gc.setForeground(altColor);
-  							gc.fillGradientRectangle(r.x, r.y, r.width, r.height, true);
-  							gc.setForeground(fg);
+								if ( Utils.gradientFillSelection()){
+									gc.setAlpha(80);
+									gc.setForeground(altColor);
+									gc.fillGradientRectangle(r.x, r.y, r.width, r.height, true);
+									gc.setForeground(fg);
+								}
 							}
 						}
 						gc.setAlpha(rowAlpha);
@@ -475,10 +477,12 @@ public class TableRowPainted
   				} else {
   					gc.fillRectangle(r);
   					if (isSelected) {
-  						gc.setAlpha(80);
-  						gc.setForeground(altColor);
-  						gc.fillGradientRectangle(r.x, r.y, r.width, r.height, true);
-  						gc.setForeground(fg);
+  						if ( Utils.gradientFillSelection()){
+	  						gc.setAlpha(80);
+	  						gc.setForeground(altColor);
+	  						gc.fillGradientRectangle(r.x, r.y, r.width, r.height, true);
+	  						gc.setForeground(fg);
+  						}
   					}
   				}
   				gc.setAlpha(rowAlpha);

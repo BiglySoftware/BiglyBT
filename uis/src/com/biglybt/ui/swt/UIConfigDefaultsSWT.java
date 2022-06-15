@@ -218,6 +218,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Table.filter.confusable", true );
 		def.addParameter("Dark Table Colors", false );
 		def.addParameter("Dark Misc Colors", false );
+		def.addParameter("Gradient Fill Selection", true );
 		
 		if ("az2".equalsIgnoreCase(COConfigurationManager.getStringParameter("ui", "az3"))) {
 			def.addParameter("v3.Show Welcome", false);

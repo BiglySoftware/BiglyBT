@@ -83,6 +83,12 @@ public class ConfigSectionInterfaceColorSWT
 		add(colorScheme);
 		colorScheme.setSuffixLabelKey("restart.required.for.some");
 		
+		BooleanParameterImpl gradient_sel = new BooleanParameterImpl(
+				"Gradient Fill Selection", "ConfigView.section.style.gradient.selection");
+		add(gradient_sel);
+		
+		
+		
 		List<Parameter> listOverride = new ArrayList<>();
 
 		add(new BooleanParameterImpl(ConfigKeysSWT.BCFG_FORCE_GRAYSCALE,
