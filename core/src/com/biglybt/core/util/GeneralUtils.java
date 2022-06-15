@@ -2246,16 +2246,43 @@ GeneralUtils
 			
 			char[] chars = str.toCharArray();
 			
+			char high_surrogate = 0;
+			
 			for ( char c: chars ){
 				
-				Integer k = confusable_map.get((int)c);
-				
-				if ( k == null ){
+				if ( high_surrogate > 0 ){
 					
-					result.append( c );
+					int cp = Character.toCodePoint(high_surrogate, c );
+					
+					Integer k = confusable_map.get( cp );
+					
+					if ( k == null ){
+						
+						result.append( c );
+						
+					}else{
+						
+						result.append((char)k.intValue());
+					}
+					
+					high_surrogate = 0;
+					
+				}else if ( Character.isSurrogate(c)){
+					
+					high_surrogate = c;
+					
+					continue;
 				}else{
 					
-					result.append((char)k.intValue());
+					Integer k = confusable_map.get((int)c);
+					
+					if ( k == null ){
+						
+						result.append( c );
+					}else{
+						
+						result.append((char)k.intValue());
+					}
 				}
 			}
 		
