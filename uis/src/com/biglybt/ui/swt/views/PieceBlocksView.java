@@ -638,6 +638,8 @@ outer:
 							
 							boolean odd = dm_num%2==1;
 							
+							boolean left_to_right = piece_details.left_to_right;
+							
 							boolean[] downloaded = piece_details.getDownloaded();
 							
 							float	overall_block_width = (float)width/downloaded.length;
@@ -671,6 +673,12 @@ outer:
 								}
 								
 								int block_width = (int)( overall_block_width*( block_number+1)) - block_x;
+								
+								if ( !left_to_right ){
+									
+									// think I prefer all blocks to be going the same way...
+									// block_x = width - block_x - block_width;
+								}
 								
 								gc.fillRectangle( block_x, block_y, block_width, piece_height );	
 							}
@@ -706,6 +714,11 @@ outer:
 									}
 									
 									int block_width = (int)( overall_block_width*( j+1)) - block_x;
+									
+									if ( !left_to_right ){
+										
+										//block_x = width - block_x - block_width;
+									}
 									
 									gc.fillRectangle( block_x, y_pos, block_width, piece_height );
 								}
@@ -967,7 +980,7 @@ outer:
 	
 					if ( !piece_map.containsKey( pn )){
 						
-						piece_map.put( pn, new PieceDetails( piece ));
+						piece_map.put( pn, new PieceDetails( piece, piece_map.size()%2==0 ));
 					}
 				}
 			}
@@ -1025,7 +1038,7 @@ outer:
 				
 				if ( piece_details == null ){
 										
-					piece_details = new PieceDetails( piece );
+					piece_details = new PieceDetails( piece, peer_details.left_to_right );
 					
 					piece_map.put( pn, piece_details );
 				}
@@ -1086,11 +1099,15 @@ outer:
 		}
 	}
 	
+	private boolean last_left_to_right = true;
+	
 	private class
 	PeerDetails
 	{
 		final PEPeer		peer;
 		final PEPeerStats	stats;
+		
+		final boolean		left_to_right;
 		
 		final List<BlockDetails>	blocks = new ArrayList<>();
 		
@@ -1102,6 +1119,10 @@ outer:
 		{
 			peer	= _peer;
 			stats	= peer.getStats();
+			
+			left_to_right = last_left_to_right;
+			
+			last_left_to_right = !last_left_to_right;
 		}
 		
 		BlockDetails
@@ -1229,6 +1250,7 @@ outer:
 		
 		final List<BlockDetails>	blocks = new LinkedList<>();
 		
+		final boolean	left_to_right;
 		final int		alpha;
 		
 		int		blocks_done_num;
@@ -1236,9 +1258,12 @@ outer:
 		long 	complete_time	= -1;
 		
 		PieceDetails(
-			PEPiece		_piece )
+			PEPiece		_piece,
+			boolean		_left_to_right )
 		{
-			piece 		= _piece;
+			piece 			= _piece;
+			left_to_right	= _left_to_right;
+			
 			block_num	= piece.getNbBlocks();
 			
 			block_states	= new int[ block_num ];
