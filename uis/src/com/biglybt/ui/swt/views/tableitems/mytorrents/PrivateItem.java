@@ -24,6 +24,7 @@ package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.ui.swt.columns.ColumnCheckBox;
 
 public class PrivateItem
@@ -42,6 +43,18 @@ public class PrivateItem
 		column.setRefreshInterval( TableColumn.INTERVAL_INVALID_ONLY );
 	}
 
+	@Override
+	public void
+	fillTableColumnInfo(
+		TableColumnInfo info)
+	{
+		info.addCategories(new String[] {
+			TableColumn.CAT_CONTENT,
+		});
+
+		info.setProficiency(TableColumnInfo.PROFICIENCY_INTERMEDIATE );
+	}
+	
 	@Override
 	protected Boolean
 	getCheckBoxState(
