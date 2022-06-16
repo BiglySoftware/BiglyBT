@@ -175,7 +175,7 @@ public class Initializer
 		};
 		core.addLifecycleListener(coreLifecycleAdapter);
 
-		Utils.initStatic();
+		Utils.initStatic( core );
 
 		try {
       SWTThread.createInstance(this);
@@ -267,11 +267,8 @@ public class Initializer
 			return;
 		}
 
-		UIConfigDefaultsSWT.initialize();
-
-		UIConfigDefaultsSWTv3.initialize(core);
-
-		// Ensure colors initialized
+			// Ensure colors initialized
+		
 		Colors.getInstance();
 
 		checkInstallID();
@@ -374,10 +371,9 @@ public class Initializer
 		new UIMagnetHandler(core);
 
 		if (!STARTUP_UIFIRST) {
-			UIConfigDefaultsSWT.initialize();
-			UIConfigDefaultsSWTv3.initialize(core);
 
-			// Ensure colors initialized
+				// Ensure colors initialized
+			
 			Colors.getInstance();
 		} else {
 			COConfigurationManager.setBooleanDefault("Show Splash", false);

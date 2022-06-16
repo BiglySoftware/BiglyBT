@@ -43,8 +43,6 @@ public class UIConfigDefaultsSWTv3
 		int userMode = COConfigurationManager.getIntParameter("User Mode");
 		boolean startAdvanced = userMode > 1;
 
-		boolean configNeedsSave = false;
-
 		final ConfigurationDefaults defaults = ConfigurationDefaults.getInstance();
 
 		defaults.addParameter("ui", "az3");
@@ -115,9 +113,5 @@ public class UIConfigDefaultsSWTv3
 				defaults.addParameter("Plugin.UPnP.upnp.alertdeviceproblems", false);
 			}
 		});
-
-		if (configNeedsSave) {
-			config.save();
-		}
 	}
 }

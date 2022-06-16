@@ -56,6 +56,7 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -206,19 +207,9 @@ public class Utils
 	
 	private static String SHELL_METRICS_DISABLED_KEY = "utils:shmd";
 	
-	static{
-		COConfigurationManager.addAndFireParameterListeners(
-			new String[]{
-				"Dark Misc Colors",
-				"Gradient Fill Selection",
-			},
-			(n)->{
-				dark_misc_things	= COConfigurationManager.getBooleanParameter( "Dark Misc Colors" );
-				gradient_fill		= COConfigurationManager.getBooleanParameter( "Gradient Fill Selection" );
-			});
-	}
-	
-	static void initStatic() {
+	static void initStatic( Core core ) {
+		
+			// don't do anything that requires SWT specific config parameter defaults to be set up before they are initialised below!
 		
 		if (DEBUG_SWTEXEC) {
 			System.out.println("==== debug.swtexec=1, performance may be affected ====");
@@ -246,7 +237,7 @@ public class Utils
 			queue = null;
 			diag_logger = null;
 		}
-
+		
 		configUserModeListener = new ParameterListener() {
 			@Override
 			public void parameterChanged(String parameterName) {
@@ -263,9 +254,25 @@ public class Utils
 		};
 		COConfigurationManager.addAndFireParameterListener("User Mode", configUserModeListener);
 		COConfigurationManager.addAndFireParameterListener("ui", configUIListener);
+		
+		UIConfigDefaultsSWT.initialize();
+
+		UIConfigDefaultsSWTv3.initialize(core);
+
 		// no need to listen, changing param requires restart
 		boolean smallOSXControl = COConfigurationManager.getBooleanParameter("enable_small_osx_fonts");
 		BUTTON_MARGIN = Constants.isOSX ? (smallOSXControl ? 10 : 12) : 6;
+		
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[]{
+					"Dark Misc Colors",
+					"Gradient Fill Selection",
+				},
+				(n)->{
+					dark_misc_things	= COConfigurationManager.getBooleanParameter( "Dark Misc Colors" );
+					gradient_fill		= COConfigurationManager.getBooleanParameter( "Gradient Fill Selection" );
+				});
+
 	}
 
 	private static Display		display;
