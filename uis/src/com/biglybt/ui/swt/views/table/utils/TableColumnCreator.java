@@ -27,6 +27,8 @@ import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
 import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
+import com.biglybt.plugin.net.buddy.swt.columns.ColumnChatStatus;
 import com.biglybt.ui.swt.views.columnsetup.ColumnTC_ChosenColumn;
 import com.biglybt.ui.swt.views.columnsetup.ColumnTC_NameInfo;
 import com.biglybt.ui.swt.views.columnsetup.ColumnTC_Sample;
@@ -316,6 +318,18 @@ public class TableColumnCreator
 		c.put(MaskedItem.COLUMN_ID, new cInfo(MaskedItem.class, MaskedItem.DATASOURCE_TYPE));
 		c.put(UploadPriorityItem.COLUMN_ID, new cInfo(UploadPriorityItem.class, UploadPriorityItem.DATASOURCE_TYPE));
 
+		c.put(	PrivateItem.COLUMN_ID, 
+				new cInfo(
+					PrivateItem.class, 
+					PrivateItem.DATASOURCE_TYPE,
+					new TableColumnCreationListener() {
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new PrivateItem(column);
+						}
+					}));
+
+		
 		// Core columns are implementors of TableColumn to save one class creation
 		// Otherwise, we'd have to create a generic TableColumnImpl class, pass it
 		// to another class so that it could manipulate it and act upon changes.
@@ -329,23 +343,28 @@ public class TableColumnCreator
 			                                             String tableID, String columnID) {
 				cInfo info = (cInfo) c.get(columnID);
 
-				try {
-					Constructor constructor = info.cla.getDeclaredConstructor(new Class[] {
-						String.class
-					});
-					TableColumnCore column = (TableColumnCore) constructor.newInstance(new Object[] {
-						tableID
-					});
-					return column;
-				} catch (Exception e) {
-					Debug.out(e);
+				if ( info.listener == null ){
+					try {
+						Constructor constructor = info.cla.getDeclaredConstructor(new Class[] {
+							String.class
+						});
+						TableColumnCore column = (TableColumnCore) constructor.newInstance(new Object[] {
+							tableID
+						});
+						return column;
+					} catch (Exception e) {
+						Debug.out(e);
+					}
 				}
-
 				return null;
 			}
 
 			@Override
 			public void tableColumnCreated(TableColumn column) {
+				cInfo info = (cInfo) c.get(column.getName());
+				if ( info.listener != null ){
+					info.listener.tableColumnCreated(column);
+				}
 			}
 		};
 
@@ -361,10 +380,18 @@ public class TableColumnCreator
 	private static class cInfo {
 		public Class cla;
 		public Class forDataSourceType;
+		public TableColumnCreationListener	listener;
 
 		public cInfo(Class cla, Class forDataSourceType) {
 			this.cla = cla;
 			this.forDataSourceType = forDataSourceType;
 		}
+		
+		public cInfo(Class cla, Class forDataSourceType, TableColumnCreationListener l) {
+			this.cla = cla;
+			this.forDataSourceType = forDataSourceType;
+			this.listener = l;
+		}
+		
 	}
 }
