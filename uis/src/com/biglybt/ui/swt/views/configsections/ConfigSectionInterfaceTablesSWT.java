@@ -141,14 +141,20 @@ public class ConfigSectionInterfaceTablesSWT
 				"ConfigView.section.style.reOrderDelay"), Parameter.MODE_INTERMEDIATE,
 				listGeneral);
 
+		/* replace with per-table specific config and column header right-click options
 		add(new BooleanParameterImpl("NameColumn.showProgramIcon",
 				"ConfigView.section.style.showProgramIcon"),
 				Parameter.MODE_INTERMEDIATE, listGeneral);
-
+		*/
+		
 		////
 
 		add(new BooleanParameterImpl("Table.extendedErase",
 				"ConfigView.section.style.extendedErase"), Parameter.MODE_INTERMEDIATE,
+				listGeneral);
+
+		add(new BooleanParameterImpl("Table Header Gradient Fill",
+				"ConfigView.section.style.header.gradient"), Parameter.MODE_INTERMEDIATE,
 				listGeneral);
 
 		////

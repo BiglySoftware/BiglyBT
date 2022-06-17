@@ -28,15 +28,14 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
-import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableStructureEventDispatcher;
 import com.biglybt.ui.swt.ConfigKeysSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.FontUtils;
@@ -49,9 +48,16 @@ public class TableHeaderPainted
 {
 	private static final int DEFAULT_HEADER_HEIGHT = 27;
 
-	// Shorter name for ConfigManager, easier to read code
-	protected static final ConfigurationManager configMan = ConfigurationManager.getInstance();
-
+	private static boolean gradientHeader;
+	
+	static{
+		COConfigurationManager.addAndFireWeakParameterListener(
+				"Table Header Gradient Fill",
+			(n)->{
+				gradientHeader = COConfigurationManager.getBooleanParameter("Table Header Gradient Fill");
+			});
+	}
+	
 	private final TableViewPainted tv;
 
 	private final Canvas cHeaderArea;
@@ -80,10 +86,8 @@ public class TableHeaderPainted
 		fontHeaderSmall = FontUtils.cache( FontUtils.getFontPercentOf(fontHeader, 0.8f));
 		cHeaderArea.setFont(fontHeader);
 
-		configMan.addParameterListener(ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT,
-				this);
-		headerHeight = configMan.getIntParameter(
-				ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT);
+		COConfigurationManager.addParameterListener(ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT,	this);
+		headerHeight = COConfigurationManager.getIntParameter( ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT);
 		if (headerHeight <= 0) {
 			headerHeight = DEFAULT_HEADER_HEIGHT;
 		}
@@ -141,14 +145,30 @@ public class TableHeaderPainted
 			fg = TablePaintedUtils.getColour(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 		}
 
-		Color line = c2;
+		Color hline;
+		Color vline;
 
-		Pattern patternUp = new Pattern(e.display, 0, 0, 0, ca.height, c1, c2);
-		Pattern patternDown = new Pattern(e.display, 0, -ca.height, 0, 0, c2, c1);
+		Pattern patternUp;
+		Pattern patternDown;
+		
+		if ( gradientHeader ){
+			hline = c2;
+			vline = c2;
+
+			patternUp 	= new Pattern(e.display, 0, 0, 0, ca.height, c1, c2);
+			patternDown = new Pattern(e.display, 0, -ca.height, 0, 0, c2, c1);
+		}else{
+			hline = c2;
+			vline = c1;
+
+			patternUp 	= new Pattern(e.display, 0, 0, 0, ca.height, c2, c2);
+			patternDown = new Pattern(e.display, 0, -ca.height, 0, 0, c1, c1);
+		}
+		
 		//e.gc.setBackgroundPattern(patternUp);
 		//e.gc.fillRectangle(ca);
 
-		e.gc.setForeground(line);
+		e.gc.setForeground(hline);
 		//e.gc.drawLine(0, 0, clientArea.width, 0);
 		e.gc.drawLine(0, headerHeight - 1, clientArea.width, headerHeight - 1);
 
@@ -177,13 +197,13 @@ public class TableHeaderPainted
 
 			e.gc.setBackgroundPattern(sortColumnPos >= 0 ? patternDown : patternUp);
 			e.gc.fillRectangle(x, 1, w, headerHeight - 2);
-			e.gc.setForeground(line);
+			e.gc.setForeground(vline);
 			boolean doingDrop = column.equals(droppingOnHeader);
 			if (doingDrop && droppingAfterHeader) {
 				e.gc.setForeground(fg);
 				e.gc.setLineWidth(2);
 			} else {
-				e.gc.setForeground(line);
+				e.gc.setForeground(vline);
 			}
 			e.gc.drawLine(x + w - 1, 1, x + w - 1, headerHeight - 1);
 			if (doingDrop && !droppingAfterHeader) {
@@ -327,10 +347,16 @@ public class TableHeaderPainted
 				return;
 			}
 			cHeaderArea.setVisible(visible);
-			FormData fd = Utils.getFilledFormData();
-			fd.height = visible ? headerHeight : 1;
-			fd.bottom = null;
-			cHeaderArea.setLayoutData(fd);
+			Object ld = cHeaderArea.getLayoutData();
+			if ( ld instanceof FormData ){
+				FormData fd = Utils.getFilledFormData();
+				fd.height = visible ? headerHeight : 1;
+				fd.bottom = null;
+				cHeaderArea.setLayoutData(fd);
+			}else{
+				GridData gd = (GridData)ld;
+				gd.heightHint=visible?headerHeight : 1;
+			}
 			Composite parent = cHeaderArea.getParent();
 			if (parent != null) {
 				parent.layout(true);
@@ -339,8 +365,7 @@ public class TableHeaderPainted
 	}
 
 	public void delete() {
-		configMan.removeParameterListener(ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT,
-				this);
+		COConfigurationManager.removeParameterListener(ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT, this);
 	}
 
 	public TableColumnCore getTableColumnByOffset(int mouseX,
@@ -363,10 +388,8 @@ public class TableHeaderPainted
 
 	@Override
 	public void parameterChanged(String parameterName) {
-		if (parameterName == null
-				|| parameterName.equals(ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT)) {
-			headerHeight = configMan.getIntParameter(
-					ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT);
+		if (parameterName == null || parameterName.equals(ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT)) {
+			headerHeight = COConfigurationManager.getIntParameter(ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT);
 			if (headerHeight == 0) {
 				headerHeight = DEFAULT_HEADER_HEIGHT;
 			}

@@ -169,8 +169,8 @@ public class Utils
 	private static AEDiagnosticsEvidenceGenerator evidenceGenerator;
 
 	private static ParameterListener configUserModeListener;
-
 	private static ParameterListener configUIListener;
+	private static ParameterListener configOtherListener;
 
 	private static boolean	terminated;
 
@@ -263,16 +263,20 @@ public class Utils
 		boolean smallOSXControl = COConfigurationManager.getBooleanParameter("enable_small_osx_fonts");
 		BUTTON_MARGIN = Constants.isOSX ? (smallOSXControl ? 10 : 12) : 6;
 		
+		configOtherListener = new ParameterListener() {
+			@Override
+			public void parameterChanged(String parameterName) {
+				dark_misc_things	= COConfigurationManager.getBooleanParameter( "Dark Misc Colors" );
+				gradient_fill		= COConfigurationManager.getBooleanParameter( "Gradient Fill Selection" );
+			}
+		};
+		
 		COConfigurationManager.addAndFireParameterListeners(
 				new String[]{
 					"Dark Misc Colors",
 					"Gradient Fill Selection",
 				},
-				(n)->{
-					dark_misc_things	= COConfigurationManager.getBooleanParameter( "Dark Misc Colors" );
-					gradient_fill		= COConfigurationManager.getBooleanParameter( "Gradient Fill Selection" );
-				});
-
+				configOtherListener );
 	}
 
 	private static Display		display;
@@ -5577,10 +5581,14 @@ public class Utils
 		evidenceGenerator = null;
 		COConfigurationManager.removeParameterListener("User Mode", configUserModeListener);
 		COConfigurationManager.removeParameterListener("ui", configUIListener);
-		COConfigurationManager.removeParameterListener("quick.view.exts",
-				pconfigQuickViewListeners);
-		COConfigurationManager.removeParameterListener("quick.view.maxkb",
-				pconfigQuickViewListeners);
+		COConfigurationManager.removeParameterListener("quick.view.exts", pconfigQuickViewListeners);
+		COConfigurationManager.removeParameterListener("quick.view.maxkb", pconfigQuickViewListeners);
+		
+		COConfigurationManager.removeParameterListeners(
+				new String[]{
+					"Dark Misc Colors",
+					"Gradient Fill Selection" },
+				configOtherListener);
 	}
 	
 	public static String
