@@ -45,6 +45,8 @@ import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
+import com.biglybt.pif.download.DownloadTypeComplete;
+import com.biglybt.pif.download.DownloadTypeIncomplete;
 import com.biglybt.pif.torrent.Torrent;
 
 /**
@@ -389,4 +391,20 @@ public class DataSourceUtils
 			: "" + data;
 	}
 
+	public static boolean
+	isPluginTypeCompatible(
+		Class	pluginDSClass,
+		Class	DSClass )
+	{
+		if ( pluginDSClass.equals( DSClass )){
+			
+			return( true );
+		}
+		if ( pluginDSClass == Download.class ){
+			if ( DSClass == DownloadTypeComplete.class || DSClass == DownloadTypeIncomplete.class ){
+				return( true );
+			}
+		}
+		return( false );
+	}
 }

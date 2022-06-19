@@ -1232,7 +1232,7 @@ BuddyPluginView
 				
 				TableManager	table_manager = plugin.getPluginInterface().getUIManager().getTableManager();
 				
-				table_manager.unregisterColumn(Download.class, "azbuddy.ui.column.msgpending",	columnMessagePending);
+				table_manager.unregisterColumn(Download.class, "azbuddy.ui.column.msgpending");
 				
 				columnMessagePending = null;
 				

@@ -74,12 +74,11 @@ public class TableManagerImpl implements TableManager
 	}
 
 	@Override
-	public void unregisterColumn(final Class forDataSourceType,
-			final String cellID, final TableColumnCreationListener listener) {
+	public void unregisterColumn( Class forDataSourceType, String cellID) {
 
 		TableColumnManager tcManager = TableColumnManager.getInstance();
 
-		tcManager.unregisterColumn(forDataSourceType, cellID, listener);
+		tcManager.unregisterColumn(forDataSourceType, cellID );
 
 		String[] tables = tcManager.getTableIDs();
 

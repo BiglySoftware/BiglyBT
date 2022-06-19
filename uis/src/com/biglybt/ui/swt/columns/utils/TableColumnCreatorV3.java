@@ -539,8 +539,7 @@ public class TableColumnCreatorV3
 			}
 		};
 
-		tcManager.unregisterColumn(NameItem.DATASOURCE_TYPE, NameItem.COLUMN_ID,
-				null);
+		tcManager.unregisterColumn(NameItem.DATASOURCE_TYPE, NameItem.COLUMN_ID );
 
 		for (String id : c.keySet()) {
 			cInfo info = c.get(id);

@@ -523,13 +523,13 @@ SubscriptionManagerUI
 		try {
 			TableManager tableManager = PluginInitializer.getDefaultInterface().getUIManager().getTableManager();
 			if (columnCreationSubs != null) {
-				tableManager.unregisterColumn(Download.class, "azsubs.ui.column.subs",
-						columnCreationSubs);
+				tableManager.unregisterColumn(Download.class, "azsubs.ui.column.subs" );
+						
 				columnCreationSubs = null;
 			}
 			if (columnCreationSubsLink != null) {
-				tableManager.unregisterColumn(Download.class, "azsubs.ui.column.subs_link",
-						columnCreationSubsLink);
+				tableManager.unregisterColumn(Download.class, "azsubs.ui.column.subs_link" );
+						
 				columnCreationSubsLink = null;
 			}
 		} catch (Throwable ignore) {

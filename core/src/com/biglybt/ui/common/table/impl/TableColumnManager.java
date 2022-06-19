@@ -857,8 +857,7 @@ public class TableColumnManager {
 		}
 	}
 
-	public void unregisterColumn(Class forDataSourceType, String columnID,
-			TableColumnCreationListener listener) {
+	public void unregisterColumn(Class forDataSourceType, String columnID ){
 		try {
 			items_mon.enter();
 

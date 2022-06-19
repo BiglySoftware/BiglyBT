@@ -3259,10 +3259,7 @@ public class TagUIUtils
 									if ( input.length() > 0 ){
 
 										Utils.getOffOfSWTThread(()->{
-											for ( Tag t: group.getTags()){
-												
-												t.setGroup( input );
-											}
+											group.setName( input );
 										});
 									}
 								}

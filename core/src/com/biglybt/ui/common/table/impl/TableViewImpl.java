@@ -35,6 +35,7 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.util.DataSourceUtils;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableRow;
 import com.biglybt.pif.ui.tables.TableRowRefreshListener;
@@ -2053,12 +2054,16 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	}
 
 	@Override
-	public void tableStructureChanged(boolean columnAddedOrRemoved,
-	                                  Class forPluginDataSourceType) {
-		if (forPluginDataSourceType != null
-				&& !forPluginDataSourceType.equals(getDataSourceType())) {
+	public void 
+	tableStructureChanged(
+		boolean		columnAddedOrRemoved,
+	    Class		forPluginDataSourceType ) 
+	{
+		if ( forPluginDataSourceType != null && !DataSourceUtils.isPluginTypeCompatible( forPluginDataSourceType, getDataSourceType() )){
+			
 			return;
 		}
+		
 		triggerLifeCycleListener(TableLifeCycleListener.EVENT_TABLELIFECYCLE_DESTROYED);
 
 		DATASOURCETYPE[] unfilteredDS;

@@ -147,8 +147,7 @@ public interface TableManager
    * @param listener
    * @since 4005
    */
-  public void unregisterColumn(Class forDataSourceType, String cellID,
-			TableColumnCreationListener listener);
+  public void unregisterColumn(Class forDataSourceType, String cellID );
 
   /** Adds a column to an Azureus UI table.
    *

@@ -712,11 +712,25 @@ TagTypeBase
  		
  		private CopyOnWriteList<TagGroupListener>	listeners = new CopyOnWriteList<>();
  		
+ 		private Map<Object,Object>		user_data = new HashMap<>();
+ 		
  		private
  		TagGroupImpl(
  			String		_name )
  		{
  			name	= _name;
+ 		}
+ 		
+ 		private
+ 		TagGroupImpl(
+ 			String			_name,
+ 			TagGroupImpl	_basis )
+ 		{
+ 			name	= _name;
+ 			
+			exclusive		= _basis.exclusive;
+			ass_root		= _basis.ass_root;
+			group_colour	= _basis.group_colour;
  		}
  		
  		protected String
@@ -783,6 +797,14 @@ TagTypeBase
  		getName()
  		{
  			return( name );
+ 		}
+ 		
+ 		@Override
+ 		public void 
+ 		setName(
+ 			String name)
+ 		{
+ 			setTagGroupName( this, name );
  		}
  		
  		public boolean
@@ -982,6 +1004,83 @@ TagTypeBase
  		{
  			listeners.remove( l );
  		}
+ 		
+ 		public void
+ 		setUserData(
+ 			Object		key,
+ 			Object		data )
+ 		{
+ 			synchronized( user_data ){
+				
+ 				user_data.put( key, data );
+			}
+ 		}
+ 		
+		public Object
+ 		getUserData(
+ 			Object		key )
+ 		{
+ 			synchronized( user_data ){
+				
+ 				return( user_data.get( key ));
+			}
+ 		}
+ 	}
+ 	
+ 	private void
+ 	setTagGroupName(
+ 		TagGroupImpl	old_group,
+ 		String			new_name )
+ 	{
+ 		String	old_name = old_group.getName();
+ 		
+ 		if ( old_name == new_name || ( old_name != null && old_name.equals( new_name ))){
+ 			
+ 			return;
+ 		}
+ 		
+		List<Tag> tags;
+
+		synchronized( this ){
+ 			
+			tags = old_group.getTags();
+			
+ 			if ( old_name != null ){
+ 				
+ 				tag_groups.remove( old_name );
+ 			}
+ 			
+ 			for ( Tag t: tags ){
+ 					
+ 				old_group.removeTag(t);
+ 			}
+ 			
+ 			if ( new_name != null ){
+ 				
+ 				TagGroupImpl new_group = tag_groups.get( new_name );
+ 				
+ 				if ( new_group == null ){
+ 					
+ 					new_group = new TagGroupImpl( new_name, old_group );
+ 										
+ 					tag_groups.put( new_name, new_group );
+
+ 					manager.tagGroupRenamed( this, old_group, new_group );
+  				}
+ 			}
+		}
+		
+			// need to do this outside the sync block as we don't want to be invoking listeners with lock held...
+		
+		if ( new_name != null ){
+			
+ 			for ( Tag t: tags ){
+ 				 			
+ 					// this will add the tag to the group
+ 					
+ 				t.setGroup( new_name );
+ 			}
+ 		}
  	}
  	
  	protected void
@@ -1017,13 +1116,12 @@ TagTypeBase
  										
  					tag_groups.put( new_name, tg );
 
- 					manager.tagGroupCreated( this, tg );
+ 					manager.tagGroupCreated( this, tg, null );
   				}
  				
  				tg.addTag( tag );
  			}
  		}
- 		
  	}
  	
  	protected TagGroup
@@ -1046,7 +1144,7 @@ TagTypeBase
  					
  					tag_groups.put( name, result );
 
- 					manager.tagGroupCreated( this, result );
+ 					manager.tagGroupCreated( this, result, null );
  				}
  				
  				return( result );
