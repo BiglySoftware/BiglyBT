@@ -6069,7 +6069,7 @@ public class OpenTorrentOptionsWindow
 
 			if ( confusable ){
 			
-				filter = GeneralUtils.getConfusableEquivalent(filter);
+				filter = GeneralUtils.getConfusableEquivalent(filter,true);
 			}
 			
 			try {
@@ -6079,7 +6079,7 @@ public class OpenTorrentOptionsWindow
 
 				if ( confusable ){
 				
-					name = GeneralUtils.getConfusableEquivalent(name);
+					name = GeneralUtils.getConfusableEquivalent(name,false);
 				}
 				
 				String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );

@@ -1533,7 +1533,7 @@ public class MyTorrentsView
 
 				if ( confusable ){
 				
-					tmpSearch = GeneralUtils.getConfusableEquivalent( tmpSearch );
+					tmpSearch = GeneralUtils.getConfusableEquivalent( tmpSearch, true );
 				}
 
 				for ( int i = 1; i < name_mapping.length; i++ ){
@@ -1649,7 +1649,7 @@ public class MyTorrentsView
 					
 					if ( confusable ){
 						
-						name = GeneralUtils.getConfusableEquivalent( name );
+						name = GeneralUtils.getConfusableEquivalent( name, false );
 					}
 					
 					bOurs = pattern.matcher( name ).find() == match_result;
@@ -1665,7 +1665,7 @@ public class MyTorrentsView
 						
 						if ( confusable ){
 						
-							name = GeneralUtils.getConfusableEquivalent(name);
+							name = GeneralUtils.getConfusableEquivalent( name, false );
 						}
 
 						if ( pattern.matcher( name ).find()){

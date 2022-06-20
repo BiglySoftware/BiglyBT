@@ -803,7 +803,7 @@ public class SBC_DownloadHistoryView
 	{
 		if ( confusable ){
 		
-			filter = GeneralUtils.getConfusableEquivalent(filter);
+			filter = GeneralUtils.getConfusableEquivalent(filter,true);
 		}
 		
 		Object o_name;
@@ -863,7 +863,7 @@ public class SBC_DownloadHistoryView
 			
 			if ( confusable ){
 			
-				name = GeneralUtils.getConfusableEquivalent(name);
+				name = GeneralUtils.getConfusableEquivalent( name, false );
 			}
 			
 			bOurs = pattern.matcher( name ).find() == match_result;
@@ -880,7 +880,7 @@ public class SBC_DownloadHistoryView
 
 				if ( confusable ){
 				
-					name = GeneralUtils.getConfusableEquivalent( name );
+					name = GeneralUtils.getConfusableEquivalent( name, false );
 				}
 				
 				if ( pattern.matcher( name ).find()){

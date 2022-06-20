@@ -768,7 +768,7 @@ public class FilesView
 		}
 		
 		if ( confusable ){
-			filter = GeneralUtils.getConfusableEquivalent(filter);
+			filter = GeneralUtils.getConfusableEquivalent(filter,true);
 		}
 		
 		boolean filterOnPath = filter.startsWith("p:");
@@ -802,7 +802,7 @@ public class FilesView
 			}
 
 			if ( confusable ){
-				name = GeneralUtils.getConfusableEquivalent(name);
+				name = GeneralUtils.getConfusableEquivalent(name,false);
 			}
 			
 			String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );

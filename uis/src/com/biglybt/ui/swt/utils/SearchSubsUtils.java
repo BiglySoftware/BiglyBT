@@ -296,7 +296,7 @@ SearchSubsUtils
 
 		if ( confusable ){
 		
-			filter = GeneralUtils.getConfusableEquivalent(filter);
+			filter = GeneralUtils.getConfusableEquivalent( filter, true );
 		}
 		
 		try{
@@ -347,7 +347,7 @@ SearchSubsUtils
 
 				if ( confusable ){
 				
-					name = GeneralUtils.getConfusableEquivalent(name);
+					name = GeneralUtils.getConfusableEquivalent (name, false );
 				}
 				
 				return( pattern.matcher(name).find() == match_result );

@@ -747,7 +747,7 @@ public class SBC_ArchivedDownloadsView
 	{
 		if ( confusable ){
 		
-			filter = GeneralUtils.getConfusableEquivalent(filter);
+			filter = GeneralUtils.getConfusableEquivalent(filter,true);
 		}
 		
 		boolean do_files = filter.toLowerCase( Locale.US ).startsWith( "f:" );
@@ -792,7 +792,7 @@ public class SBC_ArchivedDownloadsView
 
 				if ( confusable ){
 				
-					name = GeneralUtils.getConfusableEquivalent( name );
+					name = GeneralUtils.getConfusableEquivalent( name, false );
 				}
 				
 				if ( pattern.matcher( name ).find()){
@@ -821,7 +821,7 @@ public class SBC_ArchivedDownloadsView
 
 			if ( confusable ){
 			
-				name = GeneralUtils.getConfusableEquivalent(name);
+				name = GeneralUtils.getConfusableEquivalent( name, false );
 			}
 			
 			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );

@@ -653,14 +653,14 @@ public class SubscriptionsView
 	{
 		if ( confusable ){
 		
-			filter = GeneralUtils.getConfusableEquivalent(filter);
+			filter = GeneralUtils.getConfusableEquivalent( filter, true );
 		}
 		
 		String name = ds.getName();
 
 		if ( confusable ){
 		
-			name = GeneralUtils.getConfusableEquivalent( name );
+			name = GeneralUtils.getConfusableEquivalent( name, false );
 		}
 		
 		String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
