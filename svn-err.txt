@@ -1,0 +1,3 @@
+svn: E170013: Unable to connect to a repository at URL 'https://github.com/TuxPaper/BiglyBT-web/trunk/web/default/Locale'
+svn: E215004: No more credentials or we tried too many times.
+Authentication failed
