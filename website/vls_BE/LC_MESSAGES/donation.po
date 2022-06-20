@@ -14,47 +14,47 @@ msgstr ""
 "X-Crowdin-Project-ID: 291241\n"
 "X-Crowdin-Language: vls-BE\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
-"X-Crowdin-File-ID: 438\n"
-"PO-Revision-Date: 2020-07-10 10:36\n"
+"X-Crowdin-File-ID: 508\n"
+"PO-Revision-Date: 2022-06-20 06:49\n"
 
 msgid "test"
-msgstr "Test in het Engels"
+msgstr ""
 
 msgid "onlyEng"
-msgstr "Alleen in het Engels"
+msgstr ""
 
 msgid "donation_line1"
-msgstr "Hoewel BiglyBT een gratis softwareproduct is, kost het veel om te ontwikkelen en te onderhouden. Als je denkt dat je er baat bij hebt om het te gebruiken, kan je overwegen ons op één van de volgende manieren te ondersteunen:"
+msgstr ""
 
 msgid "donation_title"
-msgstr "Steun BiglyBT"
+msgstr ""
 
 msgid "donation_monthly_title"
-msgstr "Maandelijks bedankje"
+msgstr ""
 
 msgid "donation_onetime_title"
-msgstr "Eénmalige gift"
+msgstr ""
 
 msgid "donation_bitcoin_title"
 msgstr ""
 
 msgid "donation_monthly_description"
-msgstr "Geef de ontwikkelaars elke maand een kopje koffie"
+msgstr ""
 
 msgid "donation_monthly_per_month"
-msgstr "/maand"
+msgstr ""
 
 msgid "donation_onetime_amount"
-msgstr "Bedrag (%1):"
+msgstr ""
 
 msgid "donation_onetime_description"
-msgstr "Elk bedrag wordt gewaardeerd :)"
+msgstr ""
 
 msgid "donation_bitcoin_description"
-msgstr "We stellen een donatie voor van %1 of %2 :)"
+msgstr ""
 
 msgid "donation_bitcoin_addresses"
-msgstr "BCH/BTC-adres:"
+msgstr ""
 
 msgid "donation_crypto_title"
 msgstr ""
