@@ -1,0 +1,70 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: biglybt\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: \n"
+"Language-Team: Portuguese, Brazilian\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Crowdin-SourceKey: msgstr\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Crowdin-Project: biglybt\n"
+"X-Crowdin-Project-ID: 291241\n"
+"X-Crowdin-Language: pt-BR\n"
+"X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
+"X-Crowdin-File-ID: 438\n"
+"PO-Revision-Date: 2020-07-10 10:29\n"
+
+msgid "test"
+msgstr "Teste em Inglês"
+
+msgid "onlyEng"
+msgstr "Apenas em Inglês"
+
+msgid "donation_line1"
+msgstr "Mesmo que o BiglyBT seja um software livre, custa muito para desenvolver e manter. Se você acha que se beneficiou ao usá-lo, considere apoiar-nos de uma das seguintes maneiras:"
+
+msgid "donation_title"
+msgstr "Suporte BiglyBT"
+
+msgid "donation_monthly_title"
+msgstr "Obrigado mensal"
+
+msgid "donation_onetime_title"
+msgstr "Oferta única"
+
+msgid "donation_bitcoin_title"
+msgstr "Bitcoin"
+
+msgid "donation_monthly_description"
+msgstr "Dê aos desenvolvedores um café todo mês"
+
+msgid "donation_monthly_per_month"
+msgstr "/mo"
+
+msgid "donation_onetime_amount"
+msgstr "Montante (%1):"
+
+msgid "donation_onetime_description"
+msgstr "Qualquer quantia é apreciada :)"
+
+msgid "donation_bitcoin_description"
+msgstr "Sugerimos uma doação de %1, ou %2. :)"
+
+msgid "donation_bitcoin_addresses"
+msgstr "Endereço BCH/BTC:"
+
+msgid "donation_crypto_title"
+msgstr "Criptomoedas"
+
+msgid "donation_crypto_description"
+msgstr "Deixe-nos saber se sua moeda ou token favoritos não está listado e adicionaremos um endereço :)"
+
+msgid "no_thanks"
+msgstr "Não, obrigado."
+
+msgid "close"
+msgstr "Fechar"
+
