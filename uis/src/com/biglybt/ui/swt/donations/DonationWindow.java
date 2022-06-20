@@ -33,12 +33,14 @@ import com.biglybt.ui.swt.BrowserWrapper;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.FontUtils;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.*;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -66,6 +68,7 @@ public class DonationWindow
 	static BrowserWrapper.BrowserFunction browserFunction;
 
 	private static int extraHeight;
+	private static GridLayout shellLayout;
 
 	public static void 
 	checkForDonationPopup() 
@@ -174,10 +177,15 @@ public class DonationWindow
 		if (shell != null && !shell.isDisposed()) {
 			return;
 		}
+		extraHeight = 0;
 		final Shell parentShell = Utils.findAnyShell();
 		shell = ShellFactory.createShell(parentShell,
-				SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE);
-		shell.setLayout(new GridLayout(1, true));
+			SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE);
+		shellLayout = Utils.getSimpleGridLayout(1);
+		shellLayout.marginWidth = 10;
+		shellLayout.marginHeight = 10;
+		shell.setLayout(shellLayout);
+
 		if (parentShell != null) {
 			parentShell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
 		}
@@ -246,15 +254,12 @@ public class DonationWindow
 			return;
 		}
 		browser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		
-		browser.addTitleListener(new TitleListener() {
-			@Override
-			public void changed(TitleEvent event) {
-				if (shell == null || shell.isDisposed()) {
-					return;
-				}
-				shell.setText(event.title);
+
+		browser.addTitleListener(event -> {
+			if (shell == null || shell.isDisposed()) {
+				return;
 			}
+			shell.setText(event.title);
 		});
 
 		browserFunction = browser.addBrowserFunction(
@@ -321,10 +326,15 @@ public class DonationWindow
 						String[] strings = text.split(" ");
 						if (strings.length > 2) {
 							try {
-								int w = Integer.parseInt(strings[1]);
-								int h = Integer.parseInt(strings[2]) + extraHeight;
+								// no idea if dpi adjustment needed for non-windows
+								Point dpi = Constants.isWindows ? Utils.getDisplay().getDPI() : new Point(96, 96);
+								int nw = Integer.parseInt(strings[1]);
+								int nh = Integer.parseInt(strings[2]);
+								int w = (int) (nw * (dpi.x / 96.0)) + (shellLayout.verticalSpacing * 2) + (shellLayout.marginWidth * 2);
+								int h = (int) (nh * (dpi.y / 96.0)) + extraHeight + (shellLayout.verticalSpacing * 2)  + (shellLayout.marginWidth * 2);
 
 								Rectangle computeTrim = shell.computeTrim(0, 0, w, h);
+								//System.out.println("trim " + shell.computeTrim(0,0,0,0) + " filled: " + computeTrim + "; dpi=" + dpi + "; s=" + w + ", " + h);
 								shell.setSize(computeTrim.width, computeTrim.height);
 							} catch (Exception ignore) {
 							}
