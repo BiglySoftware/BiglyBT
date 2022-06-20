@@ -50,8 +50,7 @@ public class TagsItem
 			return( Collections.emptyList());
 		}
 
-		List<Tag> tags = tag_manager.getTagsForTaggable(
-				TagType.TT_DOWNLOAD_MANUAL, taggable);
+		List<Tag> tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, taggable);
 
 		return( tags );
 	}

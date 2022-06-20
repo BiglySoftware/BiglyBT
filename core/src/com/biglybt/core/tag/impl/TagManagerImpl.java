@@ -2146,13 +2146,13 @@ TagManagerImpl
 		String col_id_icons = "tag.group.col.icons." + group.getGroupID();
 
 		props.put( "TableColumn.header." + col_id_text, group.getName());
-		props.put( "TableColumn.header." + col_id_text + ".info", MessageText.getString( "label.tag.names" ));
+		props.put( "TableColumn.header." + col_id_text + ".info", MessageText.getString( "label.tags" ));
 		props.put( "TableColumn.header." + col_id_icons, group.getName());
 		props.put( "TableColumn.header." + col_id_icons + ".info", MessageText.getString( "TableColumn.header.tag_icons" ));
 		
 		pi.getUtilities().getLocaleUtilities().integrateLocalisedMessageBundle( props );
 		
-		int[]	interesting_tts = { TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_CATEGORY };
+		// int[]	interesting_tts = { TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_CATEGORY };
 		
 		tm.registerColumn(
 			Download.class,
@@ -2178,6 +2178,7 @@ TagManagerImpl
 						cols.add( column );
 					}
 					
+					/*
 					column.setAlignment(TableColumn.ALIGN_CENTER);
 					column.setPosition(TableColumn.POSITION_INVISIBLE);
 					column.setWidth(70);
@@ -2222,6 +2223,17 @@ TagManagerImpl
 
 							cell.setText((sTags == null) ? "" : sTags );
 						});
+						*/
+					
+					try{
+						Class cla = Class.forName( "com.biglybt.ui.swt.columns.tag.ColumnTagGroupTags");
+						
+						cla.getConstructor( TableColumn.class, TagGroup.class ).newInstance( column, group );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
 				}
 			});
 		

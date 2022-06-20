@@ -60,8 +60,6 @@ public class ColumnTagGroupIcons
 	private static TagManager tag_manager = TagManagerFactory.getTagManager();
 
 	public static final Class DATASOURCE_TYPE = Download.class;
-
-	public static final String COLUMN_ID = "tag_icons";
 	
 	private static int[]	interesting_tts = { TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_CATEGORY };
 
@@ -106,7 +104,7 @@ public class ColumnTagGroupIcons
 		
 							if ( sTags == null ){
 								
-								sTags = str;
+								sTags = tag_group.getName() + ": " + str;
 								
 							}else{
 								
