@@ -15,7 +15,7 @@ msgstr ""
 "X-Crowdin-Language: ru\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 508\n"
-"PO-Revision-Date: 2022-06-21 21:16\n"
+"PO-Revision-Date: 2022-06-21 22:16\n"
 
 msgid "test"
 msgstr "Тест на английском"
@@ -27,7 +27,7 @@ msgid "donation_line1"
 msgstr "Несмотря на то, что BiglyBT — это свободный программный продукт, на разработку и обслуживания уходит много ресурсов. Если вы считаете его полезным, пожалуйста, поддержите нас одним из следующих способов:"
 
 msgid "donation_title"
-msgstr "Поддержать BiglyBT"
+msgstr "Поддержите BiglyBT"
 
 msgid "donation_monthly_title"
 msgstr "Ежемесячная благодарность"
