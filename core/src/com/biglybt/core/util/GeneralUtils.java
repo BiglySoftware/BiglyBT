@@ -21,11 +21,7 @@
 package com.biglybt.core.util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -1359,7 +1355,7 @@ GeneralUtils
 					{0x1D7B2,0x0069},	//	( 𝞲 → i ) MATHEMATICAL SANS-SERIF BOLD ITALIC SMALL IOTA → LATIN SMALL LETTER I	# →ι→
 					{0x0456,0x0069},	//	( і → i ) CYRILLIC SMALL LETTER BYELORUSSIAN-UKRAINIAN I → LATIN SMALL LETTER I	#
 					{0xA647,0x0069},	//	( ꙇ → i ) CYRILLIC SMALL LETTER IOTA → LATIN SMALL LETTER I	# →ι→
-					{0x04CF,0x0069},	//	( ӏ → i ) CYRILLIC SMALL LETTER PALOCHKA → LATIN SMALL LETTER I	# →ı→
+					{0x04CF,0x006C},	//	( ӏ → l ) CYRILLIC SMALL LETTER PALOCHKA → LATIN SMALL LETTER L	#	// changed from 0x0069 because it appears to resemble 0x006C more
 					{0xAB75,0x0069},	//	( ꭵ → i ) CHEROKEE SMALL LETTER V → LATIN SMALL LETTER I	#
 					{0x13A5,0x0069},	//	( Ꭵ → i ) CHEROKEE LETTER V → LATIN SMALL LETTER I	#
 					{0x118C3,0x0069},	//	( 𑣃 → i ) WARANG CITI SMALL LETTER YU → LATIN SMALL LETTER I	# →ι→
