@@ -20,16 +20,19 @@
 package com.biglybt.pifimpl.local.ui.tables;
 
 import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
+import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 
 public class TableContextMenuItemImpl extends MenuItemImpl implements TableContextMenuItem {
 
-  private String sTableID;
+public static final String MENUKEY_TABLE_VIEW = "table-view";
 
+  private String sTableID;
+  private TableView<?>	table;
+  
   public TableContextMenuItemImpl(PluginInterface pi, String tableID, String key) {
 	  super(pi, MenuManager.MENU_TABLE, key);
 	  sTableID = tableID;
@@ -48,5 +51,18 @@ public class TableContextMenuItemImpl extends MenuItemImpl implements TableConte
 	@Override
 	protected void removeSelf() {
 		TableContextMenuManager.getInstance().removeContextMenuItem(this);
+	}
+	
+	public void
+	setTable(
+		TableView<?>	_table )
+	{
+		table = _table;
+	}
+	@Override
+	public TableView<?> 
+	getTable()
+	{
+		return( table );
 	}
 }

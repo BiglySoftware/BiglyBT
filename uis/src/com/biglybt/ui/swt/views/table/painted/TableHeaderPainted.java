@@ -42,6 +42,7 @@ import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.table.impl.TableTooltips;
 
 import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pifimpl.local.ui.tables.TableContextMenuItemImpl;
 
 public class TableHeaderPainted
 	implements ParameterListener
@@ -421,8 +422,8 @@ public class TableHeaderPainted
 			menu.setData(TableViewPainted.MENUKEY_IN_BLANK_AREA, false);
 			menu.setData(TableViewPainted.MENUKEY_IS_HEADER, true);
 			Point pt = cHeaderArea.toControl(event.x, event.y);
-			menu.setData(TableViewPainted.MENUKEY_COLUMN,
-					tv.getTableColumnByOffset(pt.x));
+			menu.setData(TableContextMenuItemImpl.MENUKEY_TABLE_VIEW, tv );
+			menu.setData(TableViewPainted.MENUKEY_COLUMN, tv.getTableColumnByOffset(pt.x));
 		});
 		cHeaderArea.setMenu(menu);
 	}

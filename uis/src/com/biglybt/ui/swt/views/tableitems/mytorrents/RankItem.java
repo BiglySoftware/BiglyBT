@@ -34,6 +34,8 @@ import com.biglybt.core.util.Debug;
 
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.CoreFactory;
+import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 import com.biglybt.pif.download.Download;
@@ -122,16 +124,33 @@ public class RankItem
     ImageLoader imageLoader = ImageLoader.getInstance();
     imgUp = imageLoader.getImage("image.torrentspeed.up");
     imgDown = imageLoader.getImage("image.torrentspeed.down");
+    
+	TableContextMenuItem menuSetFromSort = addContextMenuItem(
+			"menu.set.order.from.sort", MENU_STYLE_HEADER);
+	menuSetFromSort.setStyle(TableContextMenuItem.STYLE_PUSH);
+	menuSetFromSort.addListener((menu, target)->{
+		TableView<?> tv = menuSetFromSort.getTable();
+		if ( tv != null ){
+			TableRowCore[] rows = tv.getRows();
+			int pos = 1;
+			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+			for ( TableRowCore row: rows ){
+				DownloadManager o = (DownloadManager)row.getDataSource(true);
+				
+				gm.moveTo(o, pos++);
+			}
+		}
+	});
   }
 
-	@Override
-	public void reset() {
-		super.reset();
+  @Override
+  public void reset() {
+	  super.reset();
 
-		COConfigurationManager.removeParameter( showIconKey );
-	}
+	  COConfigurationManager.removeParameter( showIconKey );
+  }
 
-	@Override
+  @Override
   public void
   remove()
   {

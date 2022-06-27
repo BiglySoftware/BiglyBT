@@ -21,6 +21,7 @@ package com.biglybt.pif.ui.tables;
 
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
+import com.biglybt.ui.common.table.TableView;
 
 /** Represents on context menu item for a table.
  */
@@ -60,4 +61,7 @@ public interface TableContextMenuItem
    * @return {@link TableManager}.TABLE_ constant
    */
   public String getTableID();
+  
+  public TableView<?>
+  getTable();
 }

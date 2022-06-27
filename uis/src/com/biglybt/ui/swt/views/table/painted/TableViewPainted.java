@@ -68,6 +68,7 @@ import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.tables.TableRowMouseEvent;
 import com.biglybt.pif.ui.tables.TableRowMouseListener;
+import com.biglybt.pifimpl.local.ui.tables.TableContextMenuItemImpl;
 
 /**
  * A TableView implemented by painting on a canvas
@@ -3134,6 +3135,7 @@ public class TableViewPainted
 					menu.setData(MENUKEY_IS_HEADER, false);
 				}
 				Point pt = cHeaderArea.toControl(event.x, event.y);
+				menu.setData(TableContextMenuItemImpl.MENUKEY_TABLE_VIEW, this );
 				menu.setData(MENUKEY_COLUMN, getTableColumnByOffset(pt.x));
 			}
 		});

@@ -45,13 +45,13 @@ import com.biglybt.pif.ui.menus.MenuItemFillListener;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
+import com.biglybt.pifimpl.local.ui.tables.TableContextMenuItemImpl;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
-import com.biglybt.ui.swt.mainwindow.MenuFactory;
+import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.shells.main.MainMenuV3;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.tag.Tag;
 import com.biglybt.core.util.*;
 
 import com.biglybt.plugin.I2PHelpers;
@@ -196,6 +196,8 @@ public class MenuBuildUtils {
 	public static class MenuItemPluginMenuControllerImpl implements
 			PluginMenuController {
 
+		private Menu	parentMenu;
+		
 		private Object[] objects;
 
 		public MenuItemPluginMenuControllerImpl(Object[] o) {
@@ -208,6 +210,10 @@ public class MenuBuildUtils {
 			return new Listener() {
 				@Override
 				public void handleEvent(Event e) {
+					if ( mii instanceof TableContextMenuItemImpl ){
+						TableView<?> tv = (TableView<?>)parentMenu.getData( TableContextMenuItemImpl.MENUKEY_TABLE_VIEW );
+						((TableContextMenuItemImpl)mii).setTable(tv);
+					}
 					mii.invokeListenersMulti(objects);
 				}
 			};
@@ -234,6 +240,7 @@ public class MenuBuildUtils {
 		
 		@Override
 		public void buildComplete(Menu menu){
+			parentMenu = menu;
 		}
 	}
 
