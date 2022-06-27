@@ -112,8 +112,8 @@ public class RankItem
 	  paramShowIconKeyListener = new ParameterListener() {
 		  @Override
 		  public void parameterChanged(String parameterName) {
-			  RankItem.this.invalidateCells();
 			  showIcon = (COConfigurationManager.getBooleanParameter(showIconKey));
+			  RankItem.this.invalidateCells();
 		  }
 	  };
 	  COConfigurationManager.addWeakParameterListener(paramShowIconKeyListener,
