@@ -139,6 +139,7 @@ public class RankItem
 				
 				gm.moveTo(o, pos++);
 			}
+			RankItem.this.invalidateCells();
 		}
 	});
   }
