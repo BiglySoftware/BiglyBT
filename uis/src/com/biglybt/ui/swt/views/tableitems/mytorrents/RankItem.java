@@ -129,16 +129,35 @@ public class RankItem
 			"menu.set.order.from.sort", MENU_STYLE_HEADER);
 	menuSetFromSort.setStyle(TableContextMenuItem.STYLE_PUSH);
 	menuSetFromSort.addListener((menu, target)->{
+		
 		TableView<?> tv = menuSetFromSort.getTable();
+		
 		if ( tv != null ){
-			TableRowCore[] rows = tv.getRows();
+			
+			TableRowCore[] rows;
+			
+			TableRowCore[] selRows = tv.getSelectedRows();
+			
+			if ( selRows.length > 1 ){
+				
+				rows = selRows;
+				
+			}else{
+				
+				rows = tv.getRows();
+			}
+			
 			int pos = 1;
+			
 			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+			
 			for ( TableRowCore row: rows ){
+				
 				DownloadManager o = (DownloadManager)row.getDataSource(true);
 				
 				gm.moveTo(o, pos++);
 			}
+			
 			RankItem.this.invalidateCells();
 		}
 	});
