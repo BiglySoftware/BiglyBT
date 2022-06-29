@@ -1768,31 +1768,36 @@ public class MyTorrentsView
 		});
 	}
 
-	private void swt_viewChanged(final TableView<DownloadManager> view) {
+	private void 
+	swt_viewChanged(
+		TableView<DownloadManager> view )
+	{
+		if ( filterBox == null || filterBox.isDisposed() || vtxi == null ){
+			
+			return;
+		}		
 
-		Composite filterParent = filterBox == null ? null : filterBox.getMainWidget().getParent();
-		if ( filterParent != null && !filterParent.isDisposed()){
+		Composite filterParent = filterBox.getMainWidget().getParent();
+		
+		if ( !filterParent.isDisposed()){
 
-			if ( vtxi != null){
+			TableRowCore[] rows = view.getRows();
 
-				TableRowCore[] rows = view.getRows();
+			int	active = 0;
 
-				int	active = 0;
+			for ( TableRowCore row: rows ){
 
-				for ( TableRowCore row: rows ){
+				DownloadManager dm = (DownloadManager)row.getDataSource( true );
 
-					DownloadManager dm = (DownloadManager)row.getDataSource( true );
+				int	state = dm.getState();
 
-					int	state = dm.getState();
+				if ( state == DownloadManager.STATE_DOWNLOADING || state == DownloadManager.STATE_SEEDING ){
 
-					if ( state == DownloadManager.STATE_DOWNLOADING || state == DownloadManager.STATE_SEEDING ){
-
-						active++;
-					}
+					active++;
 				}
-
-				vtxi.searchUpdate( tv.getComposite(), rows.length, active );
 			}
+
+			vtxi.searchUpdate( tv.getComposite(), rows.length, active );
 		}
 	}
 
