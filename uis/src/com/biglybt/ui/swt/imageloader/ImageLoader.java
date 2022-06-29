@@ -1391,7 +1391,7 @@ public class ImageLoader
 
 		Rectangle bounds = image.getBounds();
 		if (maxSize.y > 0 && bounds.height > maxSize.y) {
-			int newX = bounds.width * maxSize.y / bounds.height;
+			int newX = Math.max( 1, bounds.width * maxSize.y / bounds.height );
 			if (maxSize.x <= 0 || newX <= maxSize.x) {
 				ImageData scaledTo = image.getImageData().scaledTo(newX, maxSize.y);
 				Device device = image.getDevice();
@@ -1399,7 +1399,7 @@ public class ImageLoader
 			}
 		}
 		if (maxSize.x > 0 && bounds.width > maxSize.x) {
-			int newY = bounds.height * maxSize.x / bounds.width;
+			int newY = Math.max( 1, bounds.height * maxSize.x / bounds.width );
 			ImageData scaledTo = image.getImageData().scaledTo(maxSize.x, newY);
 			Device device = image.getDevice();
 			return new Image(device, scaledTo);
