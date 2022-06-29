@@ -168,6 +168,8 @@ public class MenuBuildUtils {
 	 */
 	public static interface PluginMenuController {
 
+		public void buildStarts( Menu menu );
+		
 		/**
 		 * This method should create a listener object which should be invoked
 		 * when the given menu item is selected.
@@ -221,7 +223,12 @@ public class MenuBuildUtils {
 
 		@Override
 		public void notifyFillListeners(MenuItem menu_item) {
-			((MenuItemImpl) menu_item).invokeMenuWillBeShownListeners(objects);
+			MenuItemImpl mii = (MenuItemImpl) menu_item;
+			if ( mii instanceof TableContextMenuItemImpl ){
+				TableView<?> tv = (TableView<?>)parentMenu.getData( TableContextMenuItemImpl.MENUKEY_TABLE_VIEW );
+				((TableContextMenuItemImpl)mii).setTable(tv);
+			}
+			mii.invokeMenuWillBeShownListeners(objects);
 		}
 
 		// @see com.biglybt.ui.swt.MenuBuildUtils.PluginMenuController#buildSubmenu(com.biglybt.pif.ui.menus.MenuItem)
@@ -236,6 +243,11 @@ public class MenuBuildUtils {
 					Debug.out(t);
 				}
 			}
+		}
+		
+		@Override
+		public void buildStarts(Menu menu){
+			parentMenu = menu;
 		}
 		
 		@Override
@@ -276,6 +288,8 @@ public class MenuBuildUtils {
 			boolean prev_was_separator,
 			final boolean enable_items, final PluginMenuController controller) {
 
+		controller.buildStarts( parent );
+		
 		for (int i = 0; i < items.length; i++) {
 			final MenuItemImpl az_menuitem = (MenuItemImpl) items[i];
 

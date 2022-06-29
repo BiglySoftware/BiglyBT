@@ -998,6 +998,10 @@ public abstract class TableViewSWT_Common
 							}
 							
 							@Override
+							public void buildStarts(Menu menu){
+							}
+							
+							@Override
 							public void buildComplete(Menu menu){
 							}
 						});

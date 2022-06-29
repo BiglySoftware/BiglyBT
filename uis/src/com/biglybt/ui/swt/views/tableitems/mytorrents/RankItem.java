@@ -30,6 +30,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 
 import com.biglybt.core.CoreRunningListener;
@@ -128,6 +129,28 @@ public class RankItem
 	TableContextMenuItem menuSetFromSort = addContextMenuItem(
 			"menu.set.order.from.sort", MENU_STYLE_HEADER);
 	menuSetFromSort.setStyle(TableContextMenuItem.STYLE_PUSH);
+	
+	menuSetFromSort.addFillListener(new MenuItemFillListener() {
+		@Override
+		public void menuWillBeShown(MenuItem menu, Object data) {
+			TableView<?> tv = menuSetFromSort.getTable();
+			
+			if ( tv != null ){
+				
+				TableRowCore[] selRows = tv.getSelectedRows();
+				
+				if ( selRows.length > 1 ){
+			
+					menuSetFromSort.setText( MessageText.getString( "menu.set.order.for.selection"));
+					
+					return;
+				}
+			}
+			
+			menuSetFromSort.setText( MessageText.getString( "menu.set.order.from.sort"));
+		}
+	});
+	
 	menuSetFromSort.addListener((menu, target)->{
 		
 		TableView<?> tv = menuSetFromSort.getTable();

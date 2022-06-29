@@ -2268,6 +2268,10 @@ public class TorrentMenuFancy
 											}
 											
 											@Override
+											public void buildStarts(Menu menu){
+											}
+											
+											@Override
 											public void buildComplete(Menu menu){
 												addMenuItemListener(menu, listenerForTrigger);
 											}
