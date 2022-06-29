@@ -158,4 +158,15 @@ public class ColumnTC_Sample
 		}
 
 	}
+	
+	@Override
+	public int 
+	compare(
+		TableRowCore arg0, 
+		TableRowCore arg1)
+	{
+			// can't sensibly compare the random cell sample values
+		
+		return( arg0.getIndex() - arg1.getIndex());
+	}
 }
