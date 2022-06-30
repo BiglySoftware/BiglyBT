@@ -34,8 +34,9 @@
 		</resources>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
+				<groupId>io.takari.maven.plugins</groupId>
+				<artifactId>takari-lifecycle-plugin</artifactId>
+				<extensions>true</extensions>
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
@@ -43,5 +44,28 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>java-9</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<jdk>[9,)</jdk>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>io.takari.maven.plugins</groupId>
+						<artifactId>takari-lifecycle-plugin</artifactId>
+						<configuration>
+							<excludes>
+								<exclude>**/core/util/spi/AENameServiceDescriptor.java</exclude>
+							</excludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
