@@ -31,8 +31,6 @@ import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.protocol.AzURLStreamHandlerFactory;
-import com.biglybt.core.util.spi.AENameServiceJava9;
-import com.biglybt.core.util.spi.AENameServiceJava12;
 
 public class
 COConfigurationManager
@@ -234,13 +232,21 @@ COConfigurationManager
 
 				if ( Constants.isJava9OrHigher ){
 					
-					if ( Constants.isJava12OrHigher ){
-						
-						AENameServiceJava12.init();
-						
-					}else{
-						
-						AENameServiceJava9.init();
+					try{
+						if ( Constants.isJava12OrHigher ){
+							
+								// AENameServiceJava12.init();
+							
+							Class.forName( "com.biglybt.core.util.spi.AENameServiceJava12").getMethod( "init" ).invoke( null );
+							
+						}else{
+							
+								// AENameServiceJava9.init();
+							
+							Class.forName( "com.biglybt.core.util.spi.AENameServiceJava9").getMethod( "init" ).invoke( null );
+						}
+					}catch( Throwable e ){
+						e.printStackTrace();
 					}
 				}else{
 					
