@@ -3135,7 +3135,7 @@ public class TableViewPainted
 					menu.setData(MENUKEY_IS_HEADER, false);
 				}
 				Point pt = cHeaderArea.toControl(event.x, event.y);
-				menu.setData(TableContextMenuItemImpl.MENUKEY_TABLE_VIEW, this );
+				menu.setData(TableContextMenuItemImpl.MENUKEY_TABLE_VIEW, TableViewPainted.this );
 				menu.setData(MENUKEY_COLUMN, getTableColumnByOffset(pt.x));
 			}
 		});
