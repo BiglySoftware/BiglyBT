@@ -1648,6 +1648,8 @@ DownloadManagerStatsImpl
 		
 		if ( result == 1000 && rem > 0 ){
 			result = 999;
+		}else if ( result < 0 ){
+			result = 0;	// can occur with a borked download that has files missing and inconsistent cached stats
 		}
 		return( result );
 	}
