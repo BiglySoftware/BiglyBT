@@ -144,6 +144,7 @@ DiskManagerImpl
 
 	static volatile boolean	missing_file_dl_restart_enabled;
 	
+	static boolean	skip_incomp_dl_file_checks;
 	static boolean	skip_comp_dl_file_checks;
 
 	static{
@@ -151,6 +152,7 @@ DiskManagerImpl
 			new String[]{
 				ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART,
 				ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS,
+				ConfigKeys.File.BCFG_SKIP_INCOMP_DL_FILE_CHECKS,
 			},
 			new ParameterListener(){
 				@Override
@@ -158,7 +160,7 @@ DiskManagerImpl
 										
 					missing_file_dl_restart_enabled = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_MISSING_FILE_DOWNLOAD_RESTART );
 	    	    	skip_comp_dl_file_checks		= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS );
-
+	    	    	skip_incomp_dl_file_checks		= COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_SKIP_INCOMP_DL_FILE_CHECKS );
 				}
 			});
 	}
@@ -1019,10 +1021,15 @@ DiskManagerImpl
         
         DownloadManagerState	state = download_manager.getDownloadState();
 
+        boolean alreadyAllocated = download_manager.isDataAlreadyAllocated();
+        
+        boolean isComplete = download_manager.isDownloadComplete(false);
+        
         long alloc_strategy = state.getLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY );
 
-		boolean skip_file_checks = skip_comp_dl_file_checks && download_manager.isDownloadComplete(false);
-
+		boolean skip_complete_file_checks 	= skip_comp_dl_file_checks && isComplete;
+		boolean skip_incomplete_file_checks	= skip_incomp_dl_file_checks && alreadyAllocated && !isComplete;
+		
         boolean	alloc_ok = false;
         
         DiskManagerFileInfoImpl[] allocated_files = new DiskManagerFileInfoImpl[pm_files.length];
@@ -1124,7 +1131,6 @@ DiskManagerImpl
                 	continue;
                 }
                 
-                CacheFile   cache_file      = fileInfo.getCacheFile();
                 File        data_file       = fileInfo.getFile(true);
                 
                 String  file_key = data_file.getAbsolutePath();
@@ -1178,13 +1184,15 @@ DiskManagerImpl
 
                 fileInfo.setDownloaded(0);
 
+                CacheFile   cache_file      = fileInfo.getCacheFile();
+
                 int st = cache_file.getStorageType();
 
                 boolean compact = st == CacheFile.CT_COMPACT || st == CacheFile.CT_PIECE_REORDER_COMPACT;
 
                 boolean mustExistOrAllocate = ( !compact ) || RDResumeHandler.fileMustExist(download_manager, allocated_fileset, fileInfo);
 
-                if ( skip_file_checks ){
+                if ( skip_complete_file_checks ){
                 	
                 	if ( mustExistOrAllocate ){
                 		
@@ -1200,12 +1208,12 @@ DiskManagerImpl
                 	
                 		// delete compact files that do not contain pieces we need
                 	
-	                if (!mustExistOrAllocate && cache_file.exists()){
+	                if (!mustExistOrAllocate && !skip_incomplete_file_checks && cache_file.exists()){
 	
 						data_file.delete();
 	                }
 	
-	                if ( cache_file.exists() ){
+	                if ( skip_incomplete_file_checks || cache_file.exists() ){
 	
 	                	boolean did_allocate = false;
 	                	
@@ -1213,7 +1221,7 @@ DiskManagerImpl
 	
 	                        //make sure the existing file length isn't too large
 	
-	                        long    existing_length = fileInfo.getCacheFile().getLength();
+	                        long    existing_length = skip_incomplete_file_checks?target_length:cache_file.getLength();
 	
 	                        if(  existing_length > target_length ){
 	
@@ -1274,7 +1282,7 @@ DiskManagerImpl
 	                		//we need to allocate it
 	                        //make sure it hasn't previously been allocated
 	
-	                    if ( download_manager.isDataAlreadyAllocated() ){
+	                    if ( alreadyAllocated ){
 	
 	                        setErrorState( 
 	                        	DiskManager.ET_FILE_MISSING, 

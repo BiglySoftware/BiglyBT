@@ -353,12 +353,18 @@ public class ConfigSectionFile
 
 		save_peers.addEnabledOnSelection(savePeersMax);
 
-		// disable interim state save 
+			// disable interim state save 
 		BooleanParameterImpl bDisableSveInterim = new BooleanParameterImpl(BCFG_DISABLE_SAVE_INTERIM_DOWNLOAD_STATE,
 				"ConfigView.label.disableinterimstatesave");
 		add(bDisableSveInterim, Parameter.MODE_ADVANCED );
 		
-			// skip complete download file existance checks 
+			// skip incomplete download file existence checks 
+		
+		BooleanParameterImpl bSkipIncompDLFileChecks = new BooleanParameterImpl(BCFG_SKIP_INCOMP_DL_FILE_CHECKS,
+			"ConfigView.label.skipIncompDLFileChecks");
+		add(bSkipIncompDLFileChecks, Parameter.MODE_ADVANCED );
+
+			// skip complete download file existence checks 
 		
 		BooleanParameterImpl bSkipCompDLFileChecks = new BooleanParameterImpl(BCFG_SKIP_COMP_DL_FILE_CHECKS,
 				"ConfigView.label.skipCompDLFileChecks");

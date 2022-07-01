@@ -17,6 +17,7 @@ FEATURE: Core  | Added option to add download specific sub-directory to move-on-
 FEATURE: Core  | Added a "launch content" library option to launch largest playable file [Parg]
 FEATURE: Core  | New "Subscription Templates" to allow common filters to be inherited [Parg]
 FEATURE: Core  | Option to mark a subscription result as read in all subscriptions [Parg]
+FEATURE: Core  | Option to delay file checks for incomplete downloads to improve startup times [Parg]
 FEATURE: Plug  | Support for creating subscriptions for file-size based RCM lookups [Parg]
 FEATURE: UI    | Shift+C on sidebar entry to mark all read in subscription [Parg]
 FEATURE: UI    | Added menu item to show details of file links for selected downloads [Parg]

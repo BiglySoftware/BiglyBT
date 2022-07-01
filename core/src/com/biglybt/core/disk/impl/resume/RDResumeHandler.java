@@ -71,13 +71,16 @@ RDResumeHandler
 	// static boolean	use_fast_resume = true;	// made this permanent, setting it false really borks things
 	static boolean	use_fast_resume_recheck_all;
 	static boolean	skip_comp_dl_file_checks;
+	static boolean	skip_incomp_dl_file_checks;
 
 	static{
 
 		COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
-					"On Resume Recheck All",
-					ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS },
+				"On Resume Recheck All",
+				ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS,
+				ConfigKeys.File.BCFG_SKIP_INCOMP_DL_FILE_CHECKS
+			},
 			new ParameterListener() {
 	    	    @Override
 		        public void
@@ -86,6 +89,7 @@ RDResumeHandler
 	    	    {
 	    	    	use_fast_resume_recheck_all	= COConfigurationManager.getBooleanParameter("On Resume Recheck All");
 	    	    	skip_comp_dl_file_checks	= COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_SKIP_COMP_DL_FILE_CHECKS);
+	    	    	skip_incomp_dl_file_checks	= COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_SKIP_INCOMP_DL_FILE_CHECKS);
 	    	    }
 	    	 });
 	}
@@ -189,7 +193,10 @@ RDResumeHandler
 				
 				final Map<DiskManagerFileInfo,Long>	file_sizes;
 								
-				if ( skip_comp_dl_file_checks && disk_manager.getDownloadManager().isDownloadComplete(false)){
+				boolean is_complete = disk_manager.getDownloadManager().isDownloadComplete(false);
+				
+				if ( 	( skip_comp_dl_file_checks && is_complete ) ||
+						( skip_incomp_dl_file_checks && !is_complete )){
 					
 					file_sizes = null;
 					
