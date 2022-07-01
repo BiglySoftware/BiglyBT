@@ -246,7 +246,8 @@ COConfigurationManager
 							Class.forName( "com.biglybt.core.util.spi.AENameServiceJava9").getMethod( "init" ).invoke( null );
 						}
 					}catch( Throwable e ){
-						e.printStackTrace();
+						
+						// issues will be reported later
 					}
 				}else{
 					
