@@ -38,6 +38,7 @@ FEATURE: UI    | Added option to disable gradient fill for table/sidebar selecti
 FEATURE: UI    | Added private-torrent column to Library [Parg]
 FEATURE: UI    | Option to disable table header gradient fill [Parg]
 FEATURE: UI    | Order column header menu option to set from current sort [Parg]
+FEATURE: UI    | New Peers view column to show percentage we have that peer wants [Parg]
 
 CHANGE: Tag    | Change cat/tag library button alignment to right when no title [Parg]
 CHANGE: Tag    | Auto-tag BiglyBT update torrents [Parg]

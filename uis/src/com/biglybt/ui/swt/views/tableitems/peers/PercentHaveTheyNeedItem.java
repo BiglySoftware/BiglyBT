@@ -26,12 +26,14 @@ import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
-public class PercentHaveWeNeedItem
+
+public class PercentHaveTheyNeedItem
        extends CoreTableColumnSWT
        implements TableCellRefreshListener
 {
-  public PercentHaveWeNeedItem(String table_id) {
-    super("haveweneed", ALIGN_TRAIL, POSITION_INVISIBLE, 55, table_id);
+  /** Default Constructor */
+  public PercentHaveTheyNeedItem(String table_id) {
+    super("havetheyneed", ALIGN_TRAIL, POSITION_INVISIBLE, 55, table_id);
     setRefreshInterval(INTERVAL_LIVE);
   }
 
@@ -49,64 +51,53 @@ public class PercentHaveWeNeedItem
     
     int value = -1;
     
-    if ( peer != null && !peer.isMyPeer()){
+    if ( peer != null && !peer.isSeed() && !peer.isMyPeer()){
     	
     	PEPeerManager pm = peer.getManager();
     	
     	if ( pm != null ){
-    		
-    		if ( !pm.isSeeding()){
-    			
-    			if ( peer.isSeed()){
-    				
-    				value = 1000 - pm.getDiskManager().getPercentDoneExcludingDND();
-     				
-    			}else{
-    				
-    				BitFlags bf = peer.getAvailable();
-    				
-    				if ( bf != null ){
-    					
-    					boolean[] peer_has = bf.flags;
-    					
-    					if ( peer_has != null ){
-    				
-    						int we_have				= 0;
-    						int we_need 			= 0;
-    						int they_have_we_need 	= 0;
-    						
-    						DiskManagerPiece[] dm_pieces = pm.getDiskManager().getPieces();
-    						
-    						for ( int i=0; i<dm_pieces.length;i++){
-    							
-   								DiskManagerPiece piece = dm_pieces[i];
+    		    			
+			BitFlags bf = peer.getAvailable();
+			
+			if ( bf != null ){
+				
+				boolean[] peer_has = bf.flags;
+				
+				if ( peer_has != null ){
+			
+						// we have to assume the peer wants everything as there is no way to
+						// figure out if they have skipped some files
+					
+					int we_have				= 0;
+					int we_have_they_want	= 0;
+					
+					DiskManagerPiece[] dm_pieces = pm.getDiskManager().getPieces();
+					
+					for ( int i=0; i<dm_pieces.length;i++){
+						
+						DiskManagerPiece piece = dm_pieces[i];
+													
+						if ( piece.isDone()){
 								
-   								if ( piece.isNeeded()){
-   									
-									if ( piece.isDone()){
-										
-										we_have++;
-										
-									}else{
-	
-										we_need++;
-										
-										if ( peer_has[i] ){
-											
-											they_have_we_need++;
-	    								}
-	    							}
-   								}
-    						}
-    						
-    						if ( we_need > 0 ){
-    							    								
-    							value = (1000*they_have_we_need)/(we_have+we_need);
-    						}
-    					}
-    				}
-    			}
-    		}
+							we_have++;
+						
+							if ( !peer_has[i] ){
+									
+								we_have_they_want++;
+							}
+						}
+					}
+					
+					if ( we_have_they_want > 0 ){
+						   					
+						value = (1000*we_have_they_want)/we_have;
+						
+					}else{
+						
+						value = 0;
+					}
+				}
+			}
     	}
     }
     
