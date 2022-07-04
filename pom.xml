@@ -188,10 +188,6 @@
 		</plugins>
 	</build>
 
-	<prerequisites>
-		<maven>3.0.9</maven>
-	</prerequisites>
-
 	<scm>
 		<connection>scm:git:git@github.com:BiglySoftware/BiglyBT.git</connection>
 		<developerConnection>scm:git:git@github.com:BiglySoftware/BiglyBT.git</developerConnection>
