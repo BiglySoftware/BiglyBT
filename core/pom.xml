@@ -25,10 +25,12 @@
 		<resources>
 			<resource>
 				<directory>src</directory>
+				<filtering>false</filtering>
 				<excludes>
 					<exclude>**/*.java</exclude>
 					<exclude>**/*.class</exclude>
 					<exclude>**/.editorconfig</exclude>
+					<exclude>**/*.NameServiceDescriptor</exclude>
 				</excludes>
 			</resource>
 		</resources>
@@ -47,6 +49,26 @@
 
 	<profiles>
 		<profile>
+			<id>java-8</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<jdk>(,9)</jdk>
+			</activation>
+			<build>
+				<resources>
+					<resource>
+						<targetPath>META-INF/services</targetPath>
+						<filtering>false</filtering>
+						<directory>src/services</directory>
+						<includes>
+							<include>*.NameServiceDescriptor</include>
+						</includes>
+					</resource>
+				</resources>
+			</build>
+		</profile>
+
+		<profile>
 			<id>java-9</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
@@ -59,7 +81,7 @@
 						<artifactId>takari-lifecycle-plugin</artifactId>
 						<configuration>
 							<excludes>
-								<exclude>**/core/util/spi/AENameServiceDescriptor.java</exclude>
+								<exclude>**/core/util/spi/*</exclude>
 							</excludes>
 						</configuration>
 					</plugin>
