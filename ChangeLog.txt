@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2022.07.yy | BiglyBT 3.1.0.0
+2022.07.05 | BiglyBT 3.1.0.0
 
 FEATURE: Tag   | Added "countTrackers()" Tag constraint function [Parg]
 FEATURE: Tag   | Tag button alignment options [Parg]
