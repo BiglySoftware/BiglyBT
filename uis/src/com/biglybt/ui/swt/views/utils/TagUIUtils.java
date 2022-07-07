@@ -919,8 +919,8 @@ public class TagUIUtils
 
 							String script = tf_eoa.getActionScript();
 
-							if ( script.length() > 23 ){
-								script = script.substring( 0, 20) + "...";
+							if ( script.length() > 30 ){
+								script = script.substring( 0, 30);
 							}
 
 							String msg = MessageText.getString( action_keys[i] );

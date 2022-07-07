@@ -31,6 +31,12 @@ import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.subs.Subscription;
+import com.biglybt.core.subs.SubscriptionManager;
+import com.biglybt.core.subs.SubscriptionManagerFactory;
+import com.biglybt.core.subs.SubscriptionResult;
+import com.biglybt.core.subs.util.SearchSubsResultBase;
+import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
@@ -614,6 +620,88 @@ SimpleAPIPlugin
 				alert.isNative = true;
 				
 				Logger.log( alert );
+				
+			}else if ( method.equals( "markresultsread" ) ||  method.equals( "markallresultsread" )){
+				
+				SubscriptionManager subs_man = SubscriptionManagerFactory.getSingleton();
+				
+				String subs_id	= args.get( "subscription_id" );
+				
+				if ( subs_id == null ){
+					
+					throw( new Exception( "missing 'subscription_id' parameter" ));
+				}
+				
+				Subscription subs = subs_man.getSubscriptionByID( subs_id );
+				
+				if ( subs == null ){
+					
+					throw( new Exception( "subscripton '" + subs_id + "' not found" ));
+				}
+				
+				List<String> result_ids = new ArrayList<>();
+
+				{
+					String result_id	= args.get( "subscription_result_id" );
+									
+					if ( result_id == null ){
+						
+						String result_ids_str	= args.get( "subscription_result_ids" );
+						
+						if ( result_ids_str == null ){
+						
+							throw( new Exception( "missing 'subscription_result_id(s)' parameter" ));
+						}
+						
+						String[] bits = result_ids_str.split( "," );
+						
+						for ( String bit: bits ){
+							
+							bit = bit.trim();
+							
+							if ( !bit.isEmpty()){
+								
+								result_ids.add( bit );
+							}
+						}
+					}else{
+						
+						result_ids.add( result_id );
+					}
+				}
+				
+				if ( method.equals( "markresultsread" )){
+					
+					boolean[] read = new boolean[result_ids.size()];
+					
+					Arrays.fill( read, true );
+					
+					subs.getHistory().markResults( result_ids.toArray( new String[ read.length]), read );
+					
+				}else{
+					
+					List<SubscriptionResultFilterable> srfs = new ArrayList<>( result_ids.size());
+					
+					for ( String result_id: result_ids ){
+					
+						SubscriptionResult result = subs.getHistory().getResult( result_id );
+					
+						if ( result == null ){
+						
+							throw( new Exception( "subscripton result '" + result_id + "' not found" ));
+							
+						}else{
+							
+							srfs.add( new SubscriptionResultFilterable( subs, result ));
+						}
+					}
+					
+					SubscriptionResultFilterable[] results = srfs.toArray( new SubscriptionResultFilterable[srfs.size()]);
+						
+					subs_man.markAllRead( results );
+				}
+			}else{
+				throw( new Exception( "unsupported method '" + method + "'" ));
 			}
 		}else{
 			
@@ -630,9 +718,7 @@ SimpleAPIPlugin
 		throws IPCException
 	{
 		String		intent		= (String)eval_args.get( "intent" );
-		
-		Download	download 	= (Download)eval_args.get( "download" );
-		
+				
 		String		scripts		= (String)eval_args.get( "script" );
 		
 		scripts = scripts.trim();
@@ -651,6 +737,13 @@ SimpleAPIPlugin
 		String[] script_strs = scripts.split( ";" );
 		
 		List<String>	results = new ArrayList<>();
+		
+		Download	download 	= (Download)eval_args.get( "download" );
+
+		Subscription subscription = (Subscription)eval_args.get( "subscription" );
+		
+		SubscriptionResult			subscription_result = (SubscriptionResult)eval_args.get( "subscription_result" );
+		List<SubscriptionResult>	subscription_results = (List<SubscriptionResult>)eval_args.get( "subscription_results" );
 		
 		for ( String script: script_strs ){
 			
@@ -698,8 +791,37 @@ SimpleAPIPlugin
 	
 			args.put( "apikey,", api_key.getValue());
 			
-			args.put( "hash", ByteFormatter.encodeString( download.getTorrentHash()));
-		
+			if ( download != null ){
+			
+				args.put( "hash", ByteFormatter.encodeString( download.getTorrentHash()));
+			}
+			
+			if ( subscription != null ){
+				
+				args.put( "subscription_id", subscription.getID());
+			}
+			
+			if ( subscription_result != null ){
+				
+				args.put( "subscription_result_id", subscription_result.getID());
+				
+			}else if ( subscription_results != null ){
+			
+				StringBuffer sr_ids = new StringBuffer();
+				
+				for ( SubscriptionResult sr: subscription_results ){
+					
+					if ( sr_ids.length() > 0 ){
+						
+						sr_ids.append(",");
+					}
+					 
+					sr_ids.append( sr.getID());
+				}
+				
+				args.put( "subscription_result_ids", sr_ids.toString());
+			}
+			
 			try{
 				String result = process( args, multi_args );
 				

@@ -30,7 +30,6 @@ import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.subs.*;
-import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.utils.search.SearchResult;
 import com.biglybt.util.MapUtils;

@@ -79,9 +79,11 @@ import com.biglybt.pif.torrent.TorrentManager;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.utils.DelayedTask;
+import com.biglybt.pif.utils.ScriptProvider;
 import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pif.utils.Utilities;
 import com.biglybt.pif.utils.search.*;
+import com.biglybt.pifimpl.PluginUtils;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.torrent.TorrentImpl;
@@ -7494,7 +7496,7 @@ SubscriptionManagerImpl
 			
 			LinkedHashMap<String,SubscriptionResultImpl>	temp = (LinkedHashMap<String,SubscriptionResultImpl>)entry.getValue()[0];
 			
-			checkIfInLibrary( entry.getKey(), temp.values());
+			checkIfInLibrary( entry.getKey(), temp.values(), false );
 		}
 	}
 	
@@ -7581,7 +7583,7 @@ SubscriptionManagerImpl
 		
 		if ( check_results ){
 		
-			checkIfInLibrary( subs, results.values());
+			checkIfInLibrary( subs, results.values(), false );
 		}
 		
 		return( results );
@@ -7862,17 +7864,47 @@ SubscriptionManagerImpl
 		
 		if ( new_unread_results != null && !new_unread_results.isEmpty()){
 		
-			checkIfInLibrary( subs, new_unread_results );
+			checkIfInLibrary( subs, new_unread_results, true );
 		}
  	}
 
-	private static AsyncDispatcher library_checker = new AsyncDispatcher( "Subs:libcheck" );
+	private static AsyncDispatcher library_checker	= new AsyncDispatcher( "Subs::libcheck" );
+	private static AsyncDispatcher result_exec		= new AsyncDispatcher( "Subs::resexec" );
 	
 	private void
 	checkIfInLibrary(
 		SubscriptionImpl					subs,
-		Collection<SubscriptionResultImpl>	results )
+		Collection<SubscriptionResultImpl>	results,
+		boolean								has_new_results )
 	{
+		if ( has_new_results ){
+			
+			String script = subs.getExecuteOnNewResult();
+			
+			if ( script != null && !script.isEmpty()){
+				
+					// e.g. plugin( simpleapi, "method=markresultsread" ) or markallresultsread
+				
+				List<SubscriptionResultImpl> new_results = new ArrayList<>( results.size());
+				
+				for ( SubscriptionResultImpl result: results ){
+					
+					if ( !result.isDeleted() && !result.getRead()){
+						
+						new_results.add( result );
+					}
+				}
+				
+				if ( !new_results.isEmpty()){
+					
+					result_exec.dispatch(()->{
+							
+						evalScript( subs, script, new_results, "subs:newResult" );
+					});
+				}
+			}
+		}
+		
 		if ( getMarkResultsInLibraryRead()){
 			
 			for ( SubscriptionResultImpl test_result: results ){
@@ -7919,6 +7951,103 @@ SubscriptionManagerImpl
 			}
 		}
 	}
+	
+	private boolean		js_plugin_install_tried;
+
+	protected void
+	evalScript(
+		SubscriptionImpl				subs,
+		String							script,
+		List<SubscriptionResultImpl>	subs_results,
+		String							intent_key )
+	{
+		if ( subs_results.isEmpty()){
+			
+			return;
+		}
+		
+		String script_type = "";
+
+		script = script.trim();
+		
+		if ( script.length() >=10 ){
+			
+			String start = script.substring(0,10).toLowerCase( Locale.US );
+		
+			if ( start.startsWith( "javascript" ) || start.startsWith( "plugin" )){
+				
+				int	p1 = script.indexOf( '(' );
+	
+				int	p2 = script.lastIndexOf( ')' );
+	
+				if ( p1 != -1 && p2 != -1 ){
+	
+					script = script.substring( p1+1, p2 ).trim();
+	
+					if ( script.startsWith( "\"" ) && script.endsWith( "\"" )){
+	
+						script = script.substring( 1, script.length()-1 );
+					}
+	
+						// allow people to escape " if it makes them feel better
+	
+					script = script.replaceAll( "\\\\\"", "\"" );
+	
+					script_type = start.startsWith( "javascript" )?ScriptProvider.ST_JAVASCRIPT:ScriptProvider.ST_PLUGIN;
+				}
+			}
+		}
+
+		if ( script_type == "" ){
+
+			String error = "Unrecognised script type: " + script;
+					
+			Debug.out( error  );
+
+			return;
+		}
+
+		boolean	provider_found = false;
+
+		List<ScriptProvider> providers = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getUtilities().getScriptProviders();
+
+		for ( ScriptProvider p: providers ){
+
+			if ( p.getScriptType() == script_type ){
+
+				provider_found = true;
+									
+				Map<String,Object>	bindings = new HashMap<>();
+	
+				String intent = intent_key + "(\"" + subs.getName() + "\",\"" + subs_results.get(0).getID() + (subs_results.size()==1?"":"...") + "\")";
+
+				bindings.put( "intent", intent );
+
+				bindings.put( "subscription", subs );
+
+				bindings.put( "subscription_results", subs_results );
+
+				try{
+					Object result = p.eval( script, bindings );
+	
+				}catch( Throwable e ){
+
+					Debug.out( e );
+				}
+			}
+		}
+
+		if ( script_type == ScriptProvider.ST_JAVASCRIPT && !provider_found ){
+
+			if ( !js_plugin_install_tried ){
+
+				js_plugin_install_tried = true;
+
+				PluginUtils.installJavaScriptPlugin();
+			}
+		}
+	}
+	
 	
 	private void
 	loadConfig()

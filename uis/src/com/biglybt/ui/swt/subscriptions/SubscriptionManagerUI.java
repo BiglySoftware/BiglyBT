@@ -2091,6 +2091,8 @@ SubscriptionManagerUI
 				});
 			}
 			
+			addExecOnNewResultSubMenu( menu_manager, menu_creator, all_subs );
+			
 			addDependsOnSubMenu( menu_manager, menu_creator, all_subs );
 			
 			return;
@@ -2334,6 +2336,8 @@ SubscriptionManagerUI
 					});
 				}
 			});
+
+			addExecOnNewResultSubMenu( menu_manager, menu_creator, all_subs );
 
 			addDependsOnSubMenu( menu_manager, menu_creator, all_subs );
 			
@@ -2854,6 +2858,85 @@ SubscriptionManagerUI
 		});
 	}
 
+	private static void
+	addExecOnNewResultSubMenu(
+		MenuManager		menu_manager,
+		MenuCreator		menu_creator,
+		Subscription[]	menu_subs )	
+	{
+		if ( menu_subs.length != 1 ){
+			
+			return;
+		}
+		
+		Subscription subs = menu_subs[0];
+		
+		MenuItem menuItem = menu_creator.createMenu( "menu.exec.on.new.result");
+
+		menuItem.setStyle( MenuItem.STYLE_MENU );	
+		
+		menuItem.addFillListener(
+			new MenuItemFillListener()
+			{
+				@Override
+				public void
+				menuWillBeShown(
+					MenuItem 	menu,
+					Object 		data )
+				{
+					menu.removeAllChildItems();
+		
+					MenuItem mi = menu_manager.addMenuItem( menu, "label.script" );
+
+					String script = subs.getExecuteOnNewResult();
+
+					if ( script == null ){
+						
+						script = "";
+					}
+					
+					String f_script = script;
+					
+					if ( script.length() > 30 ){
+						script = script.substring( 0, 30);
+					}
+
+					String msg = MessageText.getString( "label.script" );
+
+					if ( script.length() > 0 ){
+
+						msg += ": " + script;
+					}
+
+					msg += "...";
+
+					mi.setText( msg );
+
+					mi.addListener((m,ev)->{
+						String msg2 = MessageText.getString( "UpdateScript.message" );
+		
+						SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow( "UpdateScript.title", "!" + msg2 + "!" );
+		
+						entryWindow.setPreenteredText( f_script, false );
+						
+						entryWindow.selectPreenteredText( true );
+		
+						entryWindow.prompt(new UIInputReceiverListener() {
+							@Override
+							public void UIInputReceiverClosed(UIInputReceiver entryWindow) {
+								if ( entryWindow.hasSubmittedInput()){
+		
+									String text = entryWindow.getSubmittedInput().trim();
+		
+									subs.setExecuteOnNewResult( text );
+								}
+							}
+						});
+					});
+				}});
+
+	}
+	
 	private static void
 	addDependsOnSubMenu(
 		MenuManager		menu_manager,

@@ -126,6 +126,13 @@ Subscription
 	setDependsOn(
 		List<Subscription>	subs );
 	
+	public String
+	getExecuteOnNewResult();
+	
+	public void
+	setExecuteOnNewResult(
+		String	str );
+	
 	@Override
 	public boolean
 	isSearchTemplate();

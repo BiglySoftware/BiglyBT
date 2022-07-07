@@ -161,6 +161,7 @@ SubscriptionImpl
 	private int				view_options;
 	private String			parent;
 	private List<String>	depends_on;
+	private String			exec_on_new_result;
 	
 	private AtomicLong		md_mutator = new AtomicLong( RandomUtils.nextAbsoluteLong());
 	
@@ -499,6 +500,11 @@ SubscriptionImpl
 				}
 			}
 
+			if ( exec_on_new_result != null ){
+				
+				map.put( "eonr", exec_on_new_result.getBytes( Constants.UTF_8 ));
+			}
+			
 			return( map );
 		}
 	}
@@ -617,6 +623,13 @@ SubscriptionImpl
 				
 				depends_on.add( new String( b, Constants.UTF_8 ));
 			}
+		}
+		
+		byte[] b_eonr = (byte[])map.get( "eonr" );
+
+		if ( b_eonr != null ){
+
+			exec_on_new_result = new String( b_eonr, Constants.UTF_8 );
 		}
 	}
 
@@ -823,6 +836,31 @@ SubscriptionImpl
 		fireChanged( SubscriptionListener.CR_METADATA );
 	}
 
+	@Override
+	public String
+	getExecuteOnNewResult()
+	{
+		return( exec_on_new_result );	
+	}
+	
+	@Override
+	public void
+	setExecuteOnNewResult(
+		String		eonr )
+	{
+		if ( eonr == null || eonr.isEmpty()){
+			
+			exec_on_new_result = null;
+			
+		}else{
+			
+			exec_on_new_result = eonr;
+		}
+		
+		manager.configDirty( this, SubscriptionListener.CR_METADATA );
+		
+		fireChanged( SubscriptionListener.CR_METADATA );
+	}
 	
 	@Override
 	public boolean
