@@ -8,7 +8,7 @@
     <parent>
         <groupId>com.biglybt</groupId>
         <artifactId>biglybt-parent</artifactId>
-        <version>2.5.0.1-SNAPSHOT</version>
+        <version>3.1.0.1-SNAPSHOT</version>
     </parent>
 
     <dependencies>
