@@ -59,7 +59,7 @@
 					<resource>
 						<targetPath>META-INF/services</targetPath>
 						<filtering>false</filtering>
-						<directory>src/services</directory>
+						<directory>src/META-INF/services</directory>
 						<includes>
 							<include>*.NameServiceDescriptor</include>
 						</includes>
@@ -75,6 +75,16 @@
 				<jdk>[9,)</jdk>
 			</activation>
 			<build>
+				<resources>
+					<resource>
+						<targetPath>META-INF/services</targetPath>
+						<filtering>false</filtering>
+						<directory>src/META-INF/services</directory>
+						<excludes>
+							<exclude>*.NameServiceDescriptor</exclude>
+						</excludes>
+					</resource>
+				</resources>
 				<plugins>
 					<plugin>
 						<groupId>io.takari.maven.plugins</groupId>
