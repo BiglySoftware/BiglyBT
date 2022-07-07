@@ -38,12 +38,13 @@ jobs:
     - name: Package with Maven
       id: maven_package
       run: mvn package --file pom.xml
-    - run: mkdir staging && cp uis/target/BiglyBT.jar staging/
+    - name: Stage JAR file artifact
+      run: mkdir staging && cp uis/target/BiglyBT.jar staging/
       if: steps.maven_package.outcome == 'success'
     - name: Publish artifact
       if: steps.maven_package.outcome == 'success'
       uses: actions/upload-artifact@v3
       with:
-        name: BiglyBT_JDK_${{ matrix.java-version }}
+        name: BiglyBT_${{ runner.os }}_JDK_${{ matrix.java-version }}
         path: staging
 
