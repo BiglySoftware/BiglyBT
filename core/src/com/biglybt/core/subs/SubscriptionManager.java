@@ -277,6 +277,6 @@ SubscriptionManager
 			throws Exception;
 	
 	public void
-	markAllRead(
+	markReadInAllSubscriptions(
 		SearchSubsResultBase[]		results );
 }

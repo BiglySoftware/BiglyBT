@@ -621,7 +621,9 @@ SimpleAPIPlugin
 				
 				Logger.log( alert );
 				
-			}else if ( method.equals( "markresultsread" ) ||  method.equals( "markallresultsread" )){
+			}else if ( 	method.equals( "markresultsread" ) ||  
+						method.equals( "markallresultsread" ) ||	// remove this post 3101_B02
+						method.equals( "markresultsreadinall")){
 				
 				SubscriptionManager subs_man = SubscriptionManagerFactory.getSingleton();
 				
@@ -698,7 +700,7 @@ SimpleAPIPlugin
 					
 					SubscriptionResultFilterable[] results = srfs.toArray( new SubscriptionResultFilterable[srfs.size()]);
 						
-					subs_man.markAllRead( results );
+					subs_man.markReadInAllSubscriptions( results );
 				}
 			}else{
 				throw( new Exception( "unsupported method '" + method + "'" ));

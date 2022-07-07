@@ -225,7 +225,7 @@ SearchSubsUtils
 					subs_maybe_null.getHistory().markResults( ids, read );
 				}
 				Utils.getOffOfSWTThread(()->{
-					SubscriptionManagerFactory.getSingleton().markAllRead( results );
+					SubscriptionManagerFactory.getSingleton().markReadInAllSubscriptions( results );
 				});
 			}
 		});

@@ -7883,7 +7883,7 @@ SubscriptionManagerImpl
 			
 			if ( script != null && !script.isEmpty()){
 				
-					// e.g. plugin( simpleapi, "method=markresultsread" ) or markallresultsread
+					// e.g. plugin( simpleapi, "method=markresultsread" ) or markresultsreadinall
 				
 				List<SubscriptionResultImpl> new_results = new ArrayList<>( results.size());
 				
@@ -8553,7 +8553,7 @@ SubscriptionManagerImpl
 	
 	@Override
 	public void 
-	markAllRead(
+	markReadInAllSubscriptions(
 		SearchSubsResultBase[] results )
 	{		
 		Set<String> hashes = new HashSet<>();
