@@ -3098,20 +3098,75 @@ TorrentUtils
 						
 					}else{
 						
+						String sep = File.separator;
+						
 						for ( Object o: skip_files ){
 							
 							if ( o instanceof Pattern ){
 							
+								Pattern pattern = (Pattern)o;
+								
 								try{
-									if ( ((Pattern)o).matcher( orgFileName ).matches()){
+																	
+									boolean full_path = pattern.toString().contains( sep.equals( "\\" )?"\\\\":sep );
+									
+									if ( full_path ){
+										
+										String target = orgFullName;
+											
+										if ( !target.startsWith( sep )){
+											
+											target = sep + target;
+										}
+										
+										if ( pattern.matcher( target ).find()){
+											
+											wanted = false;
+											
+											break;
+										}
+									}else{
+										
+										if ( pattern.matcher( orgFileName ).matches()){
+											
+											wanted = false;
+											
+											break;
+										}
+									}
+								}catch( Throwable e ){
+									
+									Debug.out( e );
+								}
+							}else{
+								
+								String match = (String)o;
+								
+								boolean full_path =  match.contains( sep );
+								
+								if ( full_path ){
+									
+									String target = orgFullName;
+									
+									if ( !target.startsWith( sep )){
+										
+										target = sep + target;
+									}
+									
+									if ( target.toLowerCase().contains( match )){
 										
 										wanted = false;
 										
 										break;
 									}
-								}catch( Throwable e ){
+								}else{
 									
-									Debug.out( e );
+									if ( orgFileName.toLowerCase().equals( match )){
+										
+										wanted = false;
+										
+										break;
+									}
 								}
 							}
 						}
