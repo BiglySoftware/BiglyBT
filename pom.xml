@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.biglybt</groupId>
 	<artifactId>biglybt-parent</artifactId>
-	<version>2.5.0.1-SNAPSHOT</version>
+	<version>3.1.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>BiglyBT - Parent</name>
 
@@ -187,10 +187,6 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<prerequisites>
-		<maven>3.0.9</maven>
-	</prerequisites>
 
 	<scm>
 		<connection>scm:git:git@github.com:BiglySoftware/BiglyBT.git</connection>
