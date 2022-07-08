@@ -216,7 +216,7 @@ public class SideBarEntrySWT
 
 			ImageLoader imageLoader = ImageLoader.getInstance();
 			imgClose = imageLoader.getImage("image.sidebar.closeitem");
-			imgCloseSelected = imageLoader.getImage("image.sidebar.closeitem-selected");
+			imgCloseSelected = imageLoader.getImage("image.sidebar.closeitem.selected");
 
 			treeItem.addDisposeListener(e -> closeView());
 
