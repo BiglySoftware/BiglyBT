@@ -162,7 +162,6 @@ public class TagSettingsView
 	public TagSettingsView() {
 	}
 
-	// @see com.biglybt.ui.swt.pif.UISWTViewEventListener#eventOccurred(com.biglybt.ui.swt.pif.UISWTViewEvent)
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
 		switch (event.getType()) {
@@ -190,7 +189,7 @@ public class TagSettingsView
 				dataSourceChanged(ds);
 				break;
 
-			case UISWTViewEvent.TYPE_FOCUSGAINED:
+			case UISWTViewEvent.TYPE_SHOWN:
 				break;
 
 			case UISWTViewEvent.TYPE_REFRESH:
@@ -243,6 +242,19 @@ public class TagSettingsView
 		buildUI();
 	}
 
+	private void
+	addPadding(
+		Composite	comp )
+	{
+		Composite cPad = new Composite(cMainComposite, SWT.NONE);
+		GridLayout gridLayout;
+		gridLayout = new GridLayout(2, false);
+		gridLayout.horizontalSpacing = gridLayout.verticalSpacing = 0;
+		gridLayout.marginHeight = gridLayout.marginWidth = 0;
+		cPad.setLayout(gridLayout);
+		cPad.setLayoutData(new GridData( GridData.FILL_HORIZONTAL));
+	}
+	
 	private void buildUI() {
 		if (Utils.runIfNotSWTThread(this::buildUI)) {
 			return;
@@ -302,7 +314,7 @@ public class TagSettingsView
 
 			GridData gd;
 			GridLayout gridLayout;
-			gridLayout = new GridLayout(1, false);
+			gridLayout = new GridLayout(2, false);
 			gridLayout.horizontalSpacing = gridLayout.verticalSpacing = 0;
 			gridLayout.marginHeight = gridLayout.marginWidth = 0;
 			cMainComposite.setLayout(gridLayout);
@@ -311,15 +323,19 @@ public class TagSettingsView
 			gridLayout = new GridLayout(6, false);
 			gridLayout.marginHeight = 0;
 			cSection1.setLayout(gridLayout);
-			gd = new GridData(SWT.FILL, SWT.FILL, true, false);
+			gd = new GridData(SWT.FILL, SWT.FILL, false, false);
 			cSection1.setLayoutData(gd);
 
+			addPadding(cMainComposite);
+			
 			Composite cSection2 = new Composite(cMainComposite, SWT.NONE);
 			gridLayout = new GridLayout(4, false);
 			cSection2.setLayout(gridLayout);
-			gd = new GridData(SWT.FILL, SWT.FILL, true, false);
+			gd = new GridData(SWT.FILL, SWT.FILL, false, false);
 			cSection2.setLayoutData(gd);
 
+			addPadding(cMainComposite);
+			
 			Label label;
 
 			// Field: Tag Type
@@ -340,6 +356,7 @@ public class TagSettingsView
 				Text txtName = new Text(cSection1, SWT.BORDER);
 				params.cName = txtName;
 				gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+				gd.widthHint=200;
 				txtName.setLayoutData(gd);
 
 				txtName.addModifyListener(new ModifyListener() {
@@ -358,6 +375,7 @@ public class TagSettingsView
 			} else {
 				label = new Label(cSection1, SWT.WRAP);
 				gd = Utils.getWrappableLabelGridData(1, GridData.GRAB_HORIZONTAL);
+				gd.widthHint=200;
 				label.setLayoutData(gd);
 				params.cName = label;
 			}
@@ -601,9 +619,11 @@ public class TagSettingsView
 				final int gTransferCols = 8;
 				gridLayout = new GridLayout(gTransferCols, false);
 				gTransfer.setLayout(gridLayout);
-
-				gd = new GridData(SWT.FILL, SWT.NONE, false, false, 4, 1);
+				
+				gd = new GridData(SWT.FILL, SWT.NONE, false, false, 1, 1);
 				gTransfer.setLayoutData(gd);
+
+				addPadding(cMainComposite);
 
 				final TagFeatureRateLimit rls[] = new TagFeatureRateLimit[tags.length];
 				System.arraycopy(tags, 0, rls, 0, tags.length);
@@ -1125,8 +1145,10 @@ public class TagSettingsView
 					gridLayout = new GridLayout(8, false);
 					gFiles.setLayout(gridLayout);
 
-					gd = new GridData(SWT.FILL, SWT.NONE, true, false, 4, 1);
+					gd = new GridData(SWT.FILL, SWT.NONE, false, false, 1, 1);
 					gFiles.setLayoutData(gd);
+
+					addPadding(cMainComposite);
 
 					params.preventDeletion = new BooleanSwtParameter(gFiles,
 							"tag.prevent_delete", "label.prevent.dl.delete",
@@ -1534,8 +1556,10 @@ public class TagSettingsView
 					gridLayout = new GridLayout();
 					gConstraint.setLayout(gridLayout);
 
-					gd = new GridData(SWT.FILL, SWT.NONE, true, false, 4, 1);
+					gd = new GridData(SWT.FILL, SWT.NONE, false, false, 1, 1);
 					gConstraint.setLayoutData(gd);
+
+					addPadding(cMainComposite);
 
 					params.constraints = new Text(gConstraint,
 							SWT.WRAP | SWT.BORDER | SWT.MULTI);
@@ -1730,9 +1754,10 @@ public class TagSettingsView
 					gridLayout = new GridLayout(6, false);
 					gLimits.setLayout(gridLayout);
 
-					gd = new GridData(SWT.FILL, SWT.NONE, false, false, 4, 1);
+					gd = new GridData(SWT.FILL, SWT.NONE, false, false, 1, 1);
 					gLimits.setLayoutData(gd);
 
+					addPadding(cMainComposite);
 
 					params.tfl_max_taggables = new IntSwtParameter(gLimits,
 							"tag.tfl_max_taggables", "TableColumn.header.max_taggables", null,
@@ -1825,9 +1850,10 @@ public class TagSettingsView
 				gridLayout = new GridLayout(6, false);
 				gNotifications.setLayout(gridLayout);
 
-				gd = new GridData(SWT.FILL, SWT.NONE, false, false, 4, 1);
+				gd = new GridData(SWT.FILL, SWT.NONE, false, false, 1, 1);
 				gNotifications.setLayoutData(gd);
-
+				
+				addPadding(cMainComposite);
 				label = new Label(gNotifications, SWT.NONE);
 				label.setText( MessageText.getString( "tag.notification.post" ) + ":" );
 
