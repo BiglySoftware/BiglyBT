@@ -79,10 +79,10 @@ SubscriptionHistoryImpl
 
 	protected SubscriptionResultImpl[]
 	reconcileResults(
-		Engine							engine,
+		Engine							engine_maybe_null,
 		SubscriptionResultImpl[]		latest_results )
 	{
-		auto_dl_supported	= engine.getAutoDownloadSupported() == Engine.AUTO_DL_SUPPORTED_YES;
+		auto_dl_supported	= engine_maybe_null==null?false:engine_maybe_null.getAutoDownloadSupported() == Engine.AUTO_DL_SUPPORTED_YES;
 
 		int	new_unread 	= 0;
 		int new_read	= 0;
@@ -974,8 +974,6 @@ SubscriptionHistoryImpl
 		Set<String>		hashes,
 		Set<String>		name_sizes )
 	{
-		ByteArrayHashMap<Boolean> rid_map = new ByteArrayHashMap<>();
-
 		boolean	changed = false;
 
 		synchronized( this ){

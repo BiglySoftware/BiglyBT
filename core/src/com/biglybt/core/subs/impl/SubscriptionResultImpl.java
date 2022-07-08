@@ -30,6 +30,7 @@ import java.util.Map;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.subs.SubscriptionResult;
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.utils.search.SearchResult;
 import com.biglybt.util.JSONUtils;
@@ -111,6 +112,57 @@ SubscriptionResultImpl
 		}
 	}
 
+	protected
+	SubscriptionResultImpl(
+		SubscriptionHistoryImpl		_history,
+		SearchSubsResultBase		_base )
+	{
+		history = _history;
+		
+		byte[] 	hash 	= _base.getHash();
+		String	name	= _base.getName();
+		long	size	= _base.getSize();
+		
+		String	key1_str;
+		
+		if ( hash != null ){
+			
+			key1_str = Base32.encode(hash);
+			
+		}else{
+			
+			key1_str = name + ":" + size;
+		}
+
+		try{
+			byte[] sha1 = new SHA1Simple().calculateHash( key1_str.getBytes( "UTF-8" ));
+
+			key1 = new byte[10];
+
+			System.arraycopy( sha1, 0, key1, 0, 10 );
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+		
+		Map map = new HashMap<>();
+		
+		map.put( "lb", String.valueOf( size ));
+		map.put( "n", name );
+		
+		if ( hash != null ){
+			
+			map.put( "h", Base32.encode(hash));
+		}
+		
+		map.put( "tf", String.valueOf( SystemTime.getCurrentTime()/1000));
+		
+		result_json = JSONUtils.encodeToJSON( map );
+		
+		read = true;
+	}
+	
 	protected
 	SubscriptionResultImpl(
 		SubscriptionHistoryImpl		_history,

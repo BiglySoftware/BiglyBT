@@ -1543,7 +1543,7 @@ SubscriptionManagerImpl
 	}
 
 	@Override
-	public Subscription
+	public SubscriptionImpl
 	createSingletonRSS(
 		String		name,
 		URL			url,
@@ -1697,7 +1697,7 @@ SubscriptionManagerImpl
 	}
 
 
-	protected Subscription
+	protected SubscriptionImpl
 	createSingletonRSSSupport(
 		String		name,
 		URL			url,
@@ -1712,7 +1712,7 @@ SubscriptionManagerImpl
 		checkURL( url );
 
 		try{
-			Subscription existing = lookupSingletonRSS( name, url, is_public, check_interval_mins, is_anon );
+			SubscriptionImpl existing = lookupSingletonRSS( name, url, is_public, check_interval_mins, is_anon );
 
 			if ( existing != null ){
 
@@ -8560,19 +8560,52 @@ SubscriptionManagerImpl
 		
 		Set<String>	name_sizes = new HashSet<>();
 		
-		for ( SearchSubsResultBase result: results ){
+		String gmar_name = MessageText.getString( "subs.globally.marked.as.read" );
 		
-			byte[] hash = result.getHash();
+		synchronized( this ){
 			
-			if ( hash != null ){
+			SubscriptionImpl gmar = getSubscriptionFromName( gmar_name );
+			
+			if ( gmar == null ){
 				
-				hashes.add( Base32.encode( hash ));
+				try{
+					gmar = createSingletonRSS( gmar_name, new URL( "subscription://" ), -1, false );
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
 			}
 			
-			String  name 	= result.getName();
-			long	size	= result.getSize();
 			
-			name_sizes.add( name + ":" + size );
+			List<SubscriptionResultImpl> gmar_results = new ArrayList<>( results.length );
+			
+			for ( SearchSubsResultBase result: results ){
+			
+				byte[] hash = result.getHash();
+				
+				if ( hash != null ){
+					
+					hashes.add( Base32.encode( hash ));
+				}
+				
+				String  name 	= result.getName();
+				long	size	= result.getSize();
+				
+				name_sizes.add( name + ":" + size );
+				
+				if ( gmar != null ){
+					
+					SubscriptionResultImpl sr =	new SubscriptionResultImpl(	gmar.getHistory(),result );
+						
+					gmar_results.add( sr );
+				}
+			}
+			
+			if ( gmar_results.size() > 0 ){
+				
+				gmar.getHistory().reconcileResults( null, gmar_results.toArray( new SubscriptionResultImpl[0] ));
+			}
 		}
 		
 		for ( SubscriptionImpl subs: getSubscriptions( true )){
