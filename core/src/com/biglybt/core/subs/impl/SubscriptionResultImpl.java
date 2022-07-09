@@ -204,13 +204,32 @@ SubscriptionResultImpl
 
 	protected boolean
 	updateFrom(
-		SubscriptionResultImpl	other )
+		SubscriptionResultImpl	other,
+		boolean					allow_reincarnation )
 	{
 		if ( deleted ){
 
-			deleted_last_seen_day = (int)( SystemTime.getCurrentTime() / (1000*60*60*24 ));
+			if ( allow_reincarnation ){
+				
+				deleted 				= false;
+				deleted_last_seen_day	= 0;
+				
+				key2		= other.getKey2();
+				result_json = other.getJSON();
+
+				synchronized( this ){
+
+					props_ref = null;
+				}
+
+				return( true );
+				
+			}else{
 			
-			return( false );
+				deleted_last_seen_day = (int)( SystemTime.getCurrentTime() / (1000*60*60*24 ));
+			
+				return( false );
+			}
 		}
 
 		String	my_json_str 	= getJSON();

@@ -80,7 +80,8 @@ SubscriptionHistoryImpl
 	protected SubscriptionResultImpl[]
 	reconcileResults(
 		Engine							engine_maybe_null,
-		SubscriptionResultImpl[]		latest_results )
+		SubscriptionResultImpl[]		latest_results,
+		boolean							allow_reincarnation )
 	{
 		auto_dl_supported	= engine_maybe_null==null?false:engine_maybe_null.getAutoDownloadSupported() == Engine.AUTO_DL_SUPPORTED_YES;
 
@@ -233,7 +234,7 @@ SubscriptionHistoryImpl
 					}
 				}else{
 
-					if ( existing.updateFrom( r )){
+					if ( existing.updateFrom( r, allow_reincarnation )){
 
 						got_changed = true;
 					}

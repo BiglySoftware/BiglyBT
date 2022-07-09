@@ -7496,7 +7496,7 @@ SubscriptionManagerImpl
 			
 			LinkedHashMap<String,SubscriptionResultImpl>	temp = (LinkedHashMap<String,SubscriptionResultImpl>)entry.getValue()[0];
 			
-			checkIfInLibrary( entry.getKey(), temp.values(), false );
+			processResults( entry.getKey(), temp.values(), false );
 		}
 	}
 	
@@ -7583,7 +7583,7 @@ SubscriptionManagerImpl
 		
 		if ( check_results ){
 		
-			checkIfInLibrary( subs, results.values(), false );
+			processResults( subs, results.values(), false );
 		}
 		
 		return( results );
@@ -7864,7 +7864,7 @@ SubscriptionManagerImpl
 		
 		if ( new_unread_results != null && !new_unread_results.isEmpty()){
 		
-			checkIfInLibrary( subs, new_unread_results, true );
+			processResults( subs, new_unread_results, true );
 		}
  	}
 
@@ -7872,12 +7872,14 @@ SubscriptionManagerImpl
 	private static AsyncDispatcher result_exec		= new AsyncDispatcher( "Subs::resexec" );
 	
 	private void
-	checkIfInLibrary(
+	processResults(
 		SubscriptionImpl					subs,
 		Collection<SubscriptionResultImpl>	results,
 		boolean								has_new_results )
 	{
 		if ( has_new_results ){
+			
+			checkGloballyMarkedRead( results );
 			
 			String script = subs.getExecuteOnNewResult();
 			
@@ -7947,6 +7949,55 @@ SubscriptionManagerImpl
 					});
 					
 					break;
+				}
+			}
+		}
+	}
+	
+	private void
+	checkGloballyMarkedRead(
+		Collection<SubscriptionResultImpl>	results )
+	{
+		synchronized( this ){
+			
+			getGMAR( false );
+			
+			if ( last_gmar != null && !gmar_cache.isEmpty()){
+				
+				for ( SubscriptionResultImpl result: results ){
+					
+					String rid = null;
+					
+					String hash = result.getAssetHash();
+					
+					if ( hash != null ){
+						
+						rid = gmar_cache.get( hash );
+				
+					}else{
+						
+						Map<Integer,Object>	properties = result.toPropertyMap();
+
+						String 	name = (String)properties.get( SearchResult.PR_NAME );
+						Long	size = (Long)properties.get( SearchResult.PR_SIZE );
+						
+						if ( name != null && size != null ){
+							
+							String ns = name + ":" + size;
+							
+							rid = gmar_cache.get( ns );
+						}
+					}
+					
+					if ( rid != null ){
+						
+						SubscriptionResult sr = last_gmar.getHistory().getResult( rid );
+						
+						if ( sr != null && !sr.isDeleted()){
+					
+							result.setRead( true );
+						}
+					}
 				}
 			}
 		}
@@ -8551,6 +8602,70 @@ SubscriptionManagerImpl
 		return( subs );
 	}
 	
+	private SubscriptionImpl		last_gmar;
+	private Map<String,String>		gmar_cache	= new HashMap<>();
+	
+	private SubscriptionImpl
+	getGMAR(
+		boolean	create_if_missing )
+	{
+			// lock held by callers
+		
+		if ( last_gmar != null && last_gmar.isRemoved()){
+			
+			last_gmar 	= null;
+			
+			gmar_cache.clear();
+		}
+		
+		String gmar_id 	= COConfigurationManager.getStringParameter( "subscriptions.gmar.id", null );
+
+		SubscriptionImpl gmar = gmar_id==null?null:getSubscriptionByID( gmar_id );
+					
+		if ( gmar == null && create_if_missing ){
+			
+			try{
+				gmar = createSingletonRSS( MessageText.getString( "subs.globally.marked.as.read" ), new URL( "subscription://" ), -1, false );
+				
+				COConfigurationManager.setParameter( "subscriptions.gmar.id", gmar.getID());
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+				
+		if ( gmar != null && gmar != last_gmar ){
+			
+			last_gmar = gmar;
+			
+			for ( SubscriptionResult result: gmar.getResults( false )){
+				
+				String hash = result.getAssetHash();
+				
+				if ( hash != null ){
+					
+					gmar_cache.put( hash, result.getID());
+					
+				}
+					
+				Map<Integer,Object>	properties = result.toPropertyMap();
+
+				String 	name = (String)properties.get( SearchResult.PR_NAME );
+				Long	size = (Long)properties.get( SearchResult.PR_SIZE );
+				
+				if ( name != null && size != null ){
+					
+					String ns = name + ":" + size;
+					
+					gmar_cache.put( ns, result.getID());
+				}
+			}
+		}
+		
+		return( gmar );
+	}
+	
 	@Override
 	public void 
 	markReadInAllSubscriptions(
@@ -8562,34 +8677,7 @@ SubscriptionManagerImpl
 				
 		synchronized( this ){
 			
-			String gmar_id 	= COConfigurationManager.getStringParameter( "subscriptions.gmar.id", null );
-
-			SubscriptionImpl gmar = gmar_id==null?null:getSubscriptionByID( gmar_id );
-			
-			if ( gmar == null ){
-				
-				String gmar_name = MessageText.getString( "subs.globally.marked.as.read" );
-
-				gmar = getSubscriptionFromName( gmar_name );
-				
-				if ( gmar == null ){
-					
-					try{
-						gmar = createSingletonRSS( gmar_name, new URL( "subscription://" ), -1, false );
-						
-						gmar.getID();
-						
-					}catch( Throwable e ){
-						
-						Debug.out( e );
-					}
-				}
-				
-				if ( gmar != null ){
-					
-					 COConfigurationManager.setParameter( "subscriptions.gmar.id", gmar.getID());
-				}
-			}
+			SubscriptionImpl gmar = getGMAR( true );
 			
 			List<SubscriptionResultImpl> gmar_results = new ArrayList<>( results.length );
 			
@@ -8597,27 +8685,39 @@ SubscriptionManagerImpl
 			
 				byte[] hash = result.getHash();
 				
-				if ( hash != null ){
-					
-					hashes.add( Base32.encode( hash ));
+				String hash_str = hash==null?null:Base32.encode( hash );
+				
+				if ( hash_str != null ){
+										
+					hashes.add( hash_str );
 				}
+				
 				
 				String  name 	= result.getName();
 				long	size	= result.getSize();
 				
-				name_sizes.add( name + ":" + size );
+				String ns = name + ":" + size;
 				
+				name_sizes.add( ns );
+								
 				if ( gmar != null ){
 					
 					SubscriptionResultImpl sr =	new SubscriptionResultImpl(	gmar.getHistory(),result );
 						
 					gmar_results.add( sr );
+					
+					if ( hash_str != null ){
+
+						gmar_cache.put( hash_str, sr.getID());
+					}
+					
+					gmar_cache.put( ns, sr.getID());
 				}
 			}
 			
 			if ( gmar_results.size() > 0 ){
 				
-				gmar.getHistory().reconcileResults( null, gmar_results.toArray( new SubscriptionResultImpl[0] ));
+				gmar.getHistory().reconcileResults( null, gmar_results.toArray( new SubscriptionResultImpl[0] ), true );
 			}
 		}
 		

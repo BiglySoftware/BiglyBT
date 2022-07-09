@@ -130,7 +130,7 @@ SubscriptionDownloader
 				s_results[i] = s_result;
 			}
 
-			SubscriptionResultImpl[] all_results = history.reconcileResults( engine, s_results );
+			SubscriptionResultImpl[] all_results = history.reconcileResults( engine, s_results, false );
 
 			checkAutoDownload( all_results );
 

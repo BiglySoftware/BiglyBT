@@ -1845,6 +1845,11 @@ SBC_SearchResultsView
 	{
 		String link = entry.getTorrentLink();
 
+		if ( link == null ){
+			
+			return;
+		}
+		
 		if ( link.startsWith( "chat:" )){
 
 			Utils.launch( link );
