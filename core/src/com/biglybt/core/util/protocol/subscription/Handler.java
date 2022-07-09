@@ -85,7 +85,7 @@ Handler
 		{
 			String result = 
 				"<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
-				"<rss version=\"2.0\" xmlns:vuze=\"http://www.vuze.com\">" +
+				"<rss version=\"2.0\" " + Constants.XMLNS_VUZE + ">" +
 				"<channel>" +
 				"<title>Template</title>" +
 				"</channel>" +

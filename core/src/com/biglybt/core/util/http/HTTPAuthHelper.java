@@ -1452,25 +1452,4 @@ HTTPAuthHelper
 			System.out.println( str );
 		}
 	}
-
-	public static void
-	main(
-		String[]		args )
-	{
-		try{
-			HTTPAuthHelper proxy = new HTTPAuthHelper( new URL( "https://client.vuze.com/" ));
-
-			proxy.start();
-
-			System.out.println( "port=" + proxy.getPort());
-
-			while( true ){
-
-				Thread.sleep(1000);
-			}
-		}catch( Throwable e ){
-
-			e.printStackTrace();
-		}
-	}
 }

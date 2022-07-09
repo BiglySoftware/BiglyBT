@@ -590,7 +590,7 @@ CategoryManagerImpl
 
 			pw.println( "<?xml version=\"1.0\" encoding=\"utf-8\"?>" );
 
-			pw.println( "<rss version=\"2.0\" xmlns:vuze=\"http://www.vuze.com\">" );
+			pw.println( "<rss version=\"2.0\" " + Constants.XMLNS_VUZE + ">" );
 
 			pw.println( "<channel>" );
 

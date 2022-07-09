@@ -175,7 +175,7 @@ SubscriptionRSSFeed
 
 				pw.println(
 						"<rss version=\"2.0\" " +
-						"xmlns:vuze=\"http://www.vuze.com\" " +
+						Constants.XMLNS_VUZE + " " +
 						"xmlns:media=\"http://search.yahoo.com/mrss/\" " +
 						"xmlns:atom=\"http://www.w3.org/2005/Atom\" " +
 						"xmlns:itunes=\"http://www.itunes.com/dtds/podcast-1.0.dtd\">" );

@@ -67,6 +67,7 @@ Constants
 	public static final String PAIRING_SERVER			= "pair.biglybt.com";
 	public static final String WEB_REMOTE_SERVER		= "remote.biglybt.com";
 
+	public static final String XMLNS_VUZE			= "xmlns:vuze=\"http://www.vuze.com\"";
 	public static final String SPEED_TEST_SERVER	= "speedtest.vuze.com";
 
 	public static final String[] APP_DOMAINS = { "azureusplatform.com", "azureus.com", "aelitis.com", "vuze.com", "biglybt.com" };
@@ -143,7 +144,7 @@ Constants
 	public static final String BIGLY_PEER_ID						= "BI";
 
 	
-	public static final String BIGLYBT_VERSION  = "3.1.0.1_B01";
+	public static final String BIGLYBT_VERSION  = "3.1.0.1_B02";
 	
 	//public static final String BUILD_VERSION  = "@build.version@";   //Ant replace - believed dead
 	public static final String SUBVERSION		= "";

@@ -49,6 +49,7 @@ import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Base32;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
@@ -1713,7 +1714,7 @@ BuddyPlugin
 
 			pw.println( "<?xml version=\"1.0\" encoding=\"utf-8\"?>" );
 
-			pw.println( "<rss version=\"2.0\" xmlns:vuze=\"http://www.vuze.com\">" );
+			pw.println( "<rss version=\"2.0\" " + Constants.XMLNS_VUZE + ">" );
 
 			pw.println( "<channel>" );
 
