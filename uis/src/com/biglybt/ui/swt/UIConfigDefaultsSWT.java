@@ -214,6 +214,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Table.extendedErase", false);
 		def.addParameter("Table.useTree", false);
 		def.addParameter("Table.tooltip.disable", false);
+		def.addParameter("Table.tooltip.truncate", true);
 		def.addParameter("Table.sort.intuitive", false);
 		def.addParameter("Table.filter.confusable", true );
 		def.addParameter("Table Header Gradient Fill", true);

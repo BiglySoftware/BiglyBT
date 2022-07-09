@@ -229,10 +229,18 @@ public class ConfigSectionInterfaceTablesSWT
 						paramCustomDate).setNumberOfColumns2(2),
 				Parameter.MODE_INTERMEDIATE, listGeneral);
 
-		add(new BooleanParameterImpl("Table.tooltip.disable",
+		BooleanParameterImpl disableTT = 
+			add(new BooleanParameterImpl("Table.tooltip.disable",
 				"ConfigView.section.table.disable.tooltips"),
 				Parameter.MODE_INTERMEDIATE, listGeneral);
 
+		BooleanParameterImpl truncTT = 
+				add(new BooleanParameterImpl("Table.tooltip.truncate",
+					"ConfigView.section.table.truncate.tooltips"),
+					Parameter.MODE_INTERMEDIATE, listGeneral);
+
+		disableTT.addDisabledOnSelection(truncTT);
+		
 		add(new ParameterGroupImpl("ConfigView.section.global", listGeneral));
 
 			// Library section

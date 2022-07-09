@@ -42,15 +42,20 @@ public class TableTooltips
 	implements Listener
 {
 	public static boolean tooltips_disabled = true;
+	public static boolean tooltips_truncate = true;
 
 	static{
-		COConfigurationManager.addAndFireParameterListener(
-			"Table.tooltip.disable",
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				"Table.tooltip.disable",
+				"Table.tooltip.truncate",
+			},
 			new ParameterListener(){
 				
 				@Override
 				public void parameterChanged(String parameterName){
 					tooltips_disabled = COConfigurationManager.getBooleanParameter( "Table.tooltip.disable" );
+					tooltips_truncate = COConfigurationManager.getBooleanParameter( "Table.tooltip.truncate" );
 				}
 			});
 	}
@@ -135,7 +140,7 @@ public class TableTooltips
   				// compute size on label instead of shell because label
   				// calculates wrap, while shell doesn't
   				size = toolTipLabel.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-  				if (size.x > 600) {
+  				if (tooltips_truncate && size.x > 600) {
   					size = toolTipLabel.computeSize(600, SWT.DEFAULT, true);
   				}
 				} else if (oToolTip instanceof Image) {

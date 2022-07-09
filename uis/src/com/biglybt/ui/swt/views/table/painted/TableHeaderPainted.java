@@ -52,8 +52,8 @@ public class TableHeaderPainted
 	private static boolean gradientHeader;
 	
 	static{
-		COConfigurationManager.addAndFireWeakParameterListener(
-				"Table Header Gradient Fill",
+		COConfigurationManager.addAndFireParameterListener(
+			"Table Header Gradient Fill",
 			(n)->{
 				gradientHeader = COConfigurationManager.getBooleanParameter("Table Header Gradient Fill");
 			});
