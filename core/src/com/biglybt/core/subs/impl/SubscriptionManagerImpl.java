@@ -2961,7 +2961,7 @@ SubscriptionManagerImpl
 	}
 
 	@Override
-	public Subscription
+	public SubscriptionImpl
 	getSubscriptionByID(
 		String		id )
 	{
@@ -8559,24 +8559,37 @@ SubscriptionManagerImpl
 		Set<String> hashes = new HashSet<>();
 		
 		Set<String>	name_sizes = new HashSet<>();
-		
-		String gmar_name = MessageText.getString( "subs.globally.marked.as.read" );
-		
+				
 		synchronized( this ){
 			
-			SubscriptionImpl gmar = getSubscriptionFromName( gmar_name );
+			String gmar_id 	= COConfigurationManager.getStringParameter( "subscriptions.gmar.id", null );
+
+			SubscriptionImpl gmar = gmar_id==null?null:getSubscriptionByID( gmar_id );
 			
 			if ( gmar == null ){
 				
-				try{
-					gmar = createSingletonRSS( gmar_name, new URL( "subscription://" ), -1, false );
+				String gmar_name = MessageText.getString( "subs.globally.marked.as.read" );
+
+				gmar = getSubscriptionFromName( gmar_name );
+				
+				if ( gmar == null ){
 					
-				}catch( Throwable e ){
+					try{
+						gmar = createSingletonRSS( gmar_name, new URL( "subscription://" ), -1, false );
+						
+						gmar.getID();
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+				
+				if ( gmar != null ){
 					
-					Debug.out( e );
+					 COConfigurationManager.setParameter( "subscriptions.gmar.id", gmar.getID());
 				}
 			}
-			
 			
 			List<SubscriptionResultImpl> gmar_results = new ArrayList<>( results.length );
 			

@@ -38,9 +38,6 @@ public class PlatformTorrentUtils
 {
 	private static final long MIN_SPEED_DEFAULT = 100 * 1024;
 
-	public static final String AELITIS_HOST_CORE	= ".aelitis.com";			// needs to be lowercase
-	public static final String VUZE_HOST_CORE		= ".vuze.com";				// needs to be lowercase
-
 	public static final boolean DEBUG_CACHING = System.getProperty(
 			"az3.debug.caching", "0").equals("1");
 
@@ -468,6 +465,9 @@ public class PlatformTorrentUtils
 
 		if ( !dm.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE )){
 
+			advanced_view = false;
+			
+			/*
 			TOTorrent torrent = dm.getTorrent();
 			if (torrent == null) {
 				advanced_view = false;
@@ -501,6 +501,7 @@ public class PlatformTorrentUtils
 					}
 				}
 			}
+			*/
 		}
 
 		dm.setUserData("isAdvancedViewOnly", Boolean.valueOf(advanced_view));
