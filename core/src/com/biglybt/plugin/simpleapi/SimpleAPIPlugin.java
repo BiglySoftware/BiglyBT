@@ -23,6 +23,9 @@ package com.biglybt.plugin.simpleapi;
 import java.io.*;
 import java.util.*;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
@@ -35,12 +38,12 @@ import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManager;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.subs.SubscriptionResult;
-import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
@@ -53,7 +56,9 @@ import com.biglybt.pif.ui.config.ActionParameter;
 import com.biglybt.pif.ui.config.HyperlinkParameter;
 import com.biglybt.pif.ui.config.StringParameter;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.webplugin.WebPlugin;
+import com.biglybt.util.JSONUtils;
 
 
 
@@ -274,7 +279,7 @@ SimpleAPIPlugin
 		}
 		
 		try{
-			String result = process( args, multi_args );
+			String result = process( response, args, multi_args );
 			
 			if ( result != null ){
 				
@@ -331,6 +336,7 @@ SimpleAPIPlugin
 	
 	private String
 	process(
+		TrackerWebPageResponse		response,
 		Map<String,String>			args,
 		Map<String,List<String>>	multi_args )
 	
@@ -348,6 +354,58 @@ SimpleAPIPlugin
 				
 				return( "OK" );
 
+			}else if ( method.equals( "listdownloads" )){
+				
+				JSONArray json = new JSONArray();
+				
+				List<DownloadManager> dms = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
+				
+				for ( DownloadManager dm: dms ){
+					
+					try{
+						Download download = PluginCoreUtils.wrap( dm );
+						
+						TOTorrent torrent = dm.getTorrent();
+						
+						JSONObject	obj = new JSONObject();
+						
+						obj.put( "DisplayName", dm.getDisplayName());
+						
+						obj.put( "InfoHash", torrent==null?"":ByteFormatter.encodeString( torrent.getHash()));
+						
+						obj.put( "SavePath", download.getSavePath());
+						
+						try{
+							List<Tag> tags = TagManagerFactory.getTagManager().getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
+							
+							JSONArray tags_a = new JSONArray();
+							
+							for ( Tag t: tags ){
+								
+								tags_a.add( t.getTagName( true ));
+							}
+							
+							obj.put( "Tags", tags_a );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+						json.add( obj );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+				
+				if ( response != null ){
+					
+					response.setContentType( "application/json; charset=UTF-8" );
+				}
+				
+				return( JSONUtils.encodeToJSON( json ));
+				
 			}else if ( method.equals( "addtag" ) || method.equals( "addcategory" ) || method.equals( "setcategory" )){
 				
 				DownloadManager dm = getDownloadFromHash( args );
@@ -690,7 +748,7 @@ SimpleAPIPlugin
 					
 						if ( result == null ){
 						
-							throw( new Exception( "subscripton result '" + result_id + "' not found" ));
+							throw( new Exception( "subscription result '" + result_id + "' not found" ));
 							
 						}else{
 							
@@ -825,7 +883,7 @@ SimpleAPIPlugin
 			}
 			
 			try{
-				String result = process( args, multi_args );
+				String result = process( null, args, multi_args );
 				
 				if ( result != null ){
 					
