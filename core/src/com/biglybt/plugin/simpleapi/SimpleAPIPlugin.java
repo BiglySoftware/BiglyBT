@@ -29,6 +29,7 @@ import org.json.simple.JSONObject;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
@@ -373,7 +374,44 @@ SimpleAPIPlugin
 						
 						obj.put( "InfoHash", torrent==null?"":ByteFormatter.encodeString( torrent.getHash()));
 						
-						obj.put( "SavePath", download.getSavePath());
+						String save_path = download.getSavePath();
+						
+						obj.put( "SavePath", save_path );
+						
+						boolean	sp_is_file;
+						
+						if ( torrent.isSimpleTorrent()){
+							
+							sp_is_file = true;
+							
+						}else{
+						
+							File sp_file = new File( save_path );
+						
+							if ( sp_file.exists()){
+							
+								sp_is_file = sp_file.isFile();
+								
+							}else{
+									// possible to have a non-simple torrent with a single file
+									// with containing-folder removed...
+								
+								DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+								
+								if ( files.length > 1 ){
+									
+									sp_is_file = false;
+									
+								}else{
+									
+									File f = files[0].getFile( true );
+									
+									sp_is_file = FileUtil.areFilePathsIdentical( sp_file, f );
+								}
+							}
+						}
+						
+						obj.put( "SavePathType", sp_is_file?"File":"Directory" );
 						
 						try{
 							List<Tag> tags = TagManagerFactory.getTagManager().getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
@@ -402,6 +440,8 @@ SimpleAPIPlugin
 				if ( response != null ){
 					
 					response.setContentType( "application/json; charset=UTF-8" );
+					
+					response.setHeader( "Access-Control-Allow-Origin", "*" );
 				}
 				
 				return( JSONUtils.encodeToJSON( json ));
