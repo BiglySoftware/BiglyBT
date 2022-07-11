@@ -250,6 +250,61 @@ AZPluginConnection
 		return( url.toExternalForm());
 	}
 	
+	public String 
+	getPluginName()
+	{
+		try{
+	
+			String url = getURL().toString();
+	
+			int	pos = url.indexOf( "?" );
+	
+			if ( pos == -1 ){
+	
+				throw( new IOException( "Malformed URL - ? missing" ));
+			}
+	
+			url = url.substring( pos+1 );
+	
+			String[]	bits = url.split( "&" );
+	
+			Map args = new HashMap();
+	
+			for (int i=0;i<bits.length;i++ ){
+	
+				String	bit = bits[i];
+	
+				String[] x = bit.split( "=" );
+	
+				if ( x.length == 2 ){
+	
+					String	lhs = x[0];
+					String	rhs = UrlUtils.decode(x[1] );
+	
+					args.put( lhs.toLowerCase(), rhs );
+				}
+			}
+	
+			String	plugin_id = (String)args.get( "id" );
+	
+			if ( plugin_id == null ){
+	
+				return( null );
+			}
+	
+			PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( plugin_id );
+			
+			if ( pi != null ){
+				
+				return( pi.getPluginName());
+			}
+
+		}catch( Throwable e ){
+		}
+		
+		return( null );
+	}
+	
     @Override
     public Map<String,List<String>>
     getHeaderFields()
