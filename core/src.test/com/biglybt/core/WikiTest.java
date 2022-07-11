@@ -3,6 +3,7 @@ package com.biglybt.core;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
@@ -14,6 +15,13 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.platform.commons.support.ModifierSupport;
 
 import com.biglybt.core.util.UrlUtils;
@@ -25,73 +33,69 @@ public class WikiTest
 {
 
 	/**
-	 * Asserts all URLs exists.
-	 * If they have a #ref, then the page is scanned to see if bookmark exists.
+	 * Asserts a given Wiki page exists.
+	 * If the URL has a #ref, then the page is scanned to see if bookmark exists.
 	 *
-	 * Prints WARNING* when no topic found.
-	 * Prints WARNING* when no anchor found.
+	 * Prints WARNING when no topic found.
+	 * Prints WARNING when no anchor found.
+	 * Passes if URL loads, regardless of WARNINGs (missing pages/anchors).
 	 */
-	@Test
-	public void allWikiUrlsHasAnExistingPage()
+	@ParameterizedTest
+	@ArgumentsSource(WikiArgumentsProvider.class)
+	@Execution(ExecutionMode.CONCURRENT)
+	public void wikiUrlHasAnExistingPage(Map.Entry<String, String> entry)
 			throws Exception {
 
-		Map<String, String> wikiUrlStrings = getWikiUrlStrings();
+		String wikiName = entry.getKey();
+		String wikiUrlString = entry.getValue();
+		URL wikiUrl = UrlUtils.getRawURL(wikiUrlString);
 
-		for (Map.Entry<String, String> entry : wikiUrlStrings.entrySet()) {
-			String wikiName = entry.getKey();
-			String wikiUrlString = entry.getValue();
-			URL wikiUrl = UrlUtils.getRawURL(wikiUrlString);
+		assertThat(wikiUrl)
+				.describedAs("%s url=%s", wikiName, wikiUrl)
+				.isNotNull();
 
-			assertThat(wikiUrl)
-					.describedAs("%s url=%s", wikiName, wikiUrl)
-					.isNotNull();
+		HttpURLConnection urlConnection = (HttpURLConnection) wikiUrl.openConnection();
+		urlConnection.connect();
 
+		assertThat(urlConnection.getResponseCode())
+				.describedAs("Checking if url=%s exists for HTTP_OK", wikiUrl)
+				.isEqualTo(HttpURLConnection.HTTP_OK);
 
-			System.out.print("asserting url exits " + wikiUrlString + " ... ");
+		InputStream stream_in = urlConnection.getInputStream();
+		String response = new BufferedReader(
+			new InputStreamReader(stream_in)).lines().collect(
+				Collectors.joining(" ")).toLowerCase(Locale.US);
 
-			HttpURLConnection urlConnection = (HttpURLConnection) wikiUrl.openConnection();
-			urlConnection.connect();
+		if (response.contains("not have a wiki page for this topic")) {
+			System.err.println("WARNING: no wiki on topic " + wikiName);
+		} else if (wikiUrl.getRef() != null) {
+			boolean anchorFound = response.contains("id=\"" + wikiUrl.getRef() + "\"")
+					|| response.contains("href=\"#" + wikiUrl.getRef() + '"');
 
-			assertThat(urlConnection.getResponseCode())
-					.describedAs("Checking if url=%s exists for HTTP_OK", wikiUrl, wikiName)
-					.isEqualTo(HttpURLConnection.HTTP_OK);
-
-			String response = new BufferedReader(new InputStreamReader(urlConnection.getInputStream())).lines().collect(
-					Collectors.joining(" ")).toLowerCase(Locale.US);
-
-			System.out.print(urlConnection.getResponseMessage());
-
-			if (response.contains("not have a wiki page for this topic")) {
-				System.out.print('*');
-				System.err.println("WARNING: no wiki on topic " + wikiName);
+			if (!anchorFound) {
+				System.err.println("WARNING: no anchor found #" + wikiUrl.getRef());
 			}
-
-			if (wikiUrl.getRef() != null) {
-				boolean anchorFound = response.contains("id=\"" + wikiUrl.getRef() + "\"")
-						|| response.contains("href=\"#" + wikiUrl.getRef() + '"');
-
-				if (!anchorFound) {
-					System.out.print('*');
-					System.err.println("WARNING: no anchor found #" + wikiUrl.getRef());
-				}
-			}
-
-			System.out.println();
-
-			urlConnection.disconnect();
 		}
-
+		stream_in.close();
 	}
 
-	static Map<String, String> getWikiUrlStrings() {
-		return Stream.of(Wiki.class.getDeclaredFields())
-				.filter(ModifierSupport::isStatic)
-				.collect(Collectors.toMap(Field::getName, field -> {
-					try {
-						return (String) field.get(null);
-					} catch (IllegalAccessException e) {
-						return null;
-					}
-				}));
+	static class WikiArgumentsProvider implements ArgumentsProvider {
+		static Map<String, String> getWikiUrlStrings() {
+			return Stream.of(Wiki.class.getDeclaredFields())
+					.filter(ModifierSupport::isStatic)
+					.collect(Collectors.toMap(Field::getName, field -> {
+						try {
+							return (String) field.get(null);
+						} catch (IllegalAccessException e) {
+							return null;
+						}
+					}));
+		}
+
+		@Override
+		public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+			return getWikiUrlStrings().entrySet().stream()
+				.map(Arguments::of);
+		}
 	}
 }
