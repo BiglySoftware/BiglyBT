@@ -11,18 +11,11 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.continue-on-error }}
 
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-10.15, windows-latest]
-        java-version: [ '8', '11' ]
-        continue-on-error: [false]
-        include:
-          - os: ubuntu-latest
-            java-version: '17'
-            continue-on-error: true
+        java-version: [ '8', '11', '17' ]
 
     steps:
     - uses: actions/checkout@v3
