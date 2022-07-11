@@ -1624,7 +1624,16 @@ BuddyPluginViewBetaChat
 								
 								for ( int i=start;i<messages.size();i++){
 									
-									String str = messages.get(i).getMessage();
+									ChatMessage msg = messages.get(i);
+									
+									String str = "";
+									
+									if ( msg.isIPFiltered()){
+										
+										str = "<" + MessageText.getString( "label.ip.filter" ) + ">: ";	
+									}										
+										 
+									str += msg.getMessage();
 											
 									if ( str.length() > 50 ){
 										
