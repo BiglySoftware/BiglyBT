@@ -98,6 +98,48 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>java-17</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<jdk>[17,)</jdk>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+					 <groupId>com.coderplus.maven.plugins</groupId>
+				   <artifactId>copy-rename-maven-plugin</artifactId>
+						<executions>
+						  <execution>
+							 <id>rename-file</id>
+						   <phase>generate-sources</phase>
+						   <goals>
+							  <goal>copy</goal>
+							 </goals>
+							 <configuration>
+								 <fileSets>
+									 <fileSet>
+										 <sourceFile>src/com/biglybt/internat/MessagesBundle_iw_IL.properties</sourceFile>
+										 <destinationFile>${project.build.directory}/classes/com/biglybt/internat/MessagesBundle_he_IL.properties</destinationFile>
+									 </fileSet>
+									 <fileSet>
+										 <sourceFile>src/com/biglybt/internat/MessagesBundle_in_ID.properties</sourceFile>
+										 <destinationFile>${project.build.directory}/classes/com/biglybt/internat/MessagesBundle_id_ID.properties</destinationFile>
+									 </fileSet>
+									 <!-- No current translations exist for this code
+									 <fileSet>
+										 <sourceFile>src/com/biglybt/internat/MessagesBundle_ji_??.properties</sourceFile>
+										 <destinationFile>${project.build.directory}/classes/com/biglybt/internat/MessagesBundle_yi_??.properties</destinationFile>
+										 </fileSet>
+									 -->
+								 </fileSets>
+							 </configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 
 </project>
