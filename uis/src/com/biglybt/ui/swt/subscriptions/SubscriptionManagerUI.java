@@ -2095,6 +2095,53 @@ SubscriptionManagerUI
 			
 			addDependsOnSubMenu( menu_manager, menu_creator, all_subs );
 			
+			menu_creator.createMenu( "s2").setStyle( MenuItem.STYLE_SEPARATOR );
+			
+				// refresh period
+	
+			MenuItem menuItem = menu_creator.createMenu(  "subs.prop.update_period" );
+		
+			menuItem.setText( menuItem.getText() + "..." );
+			
+			menuItem.addMultiListener(new SubsMenuItemListener() {
+				@Override
+				public void selected(final Subscription[] subs) {
+					UISWTInputReceiver entry = new SimpleTextEntryWindow();
+					entry.maintainWhitespace(false);
+					entry.allowEmptyInput( false );
+		
+					entry.setLocalisedTitle(MessageText.getString("subscriptions.enter.freq"));
+	
+					entry.prompt(new UIInputReceiverListener() {
+						@Override
+						public void UIInputReceiverClosed(UIInputReceiver entry) {
+							if (!entry.hasSubmittedInput()) {
+								return;
+							}
+							String input = entry.getSubmittedInput().trim();
+	
+							if ( input.length() > 0 ){
+	
+								try{
+									int num = Integer.parseInt( input );
+										
+									for ( Subscription sub: subs ){
+									
+										sub.getHistory().setCheckFrequencyMins( num);
+
+									}
+								}catch( Throwable e ){
+	
+									Debug.out( e );
+								}
+							}
+						}
+					});
+				}
+			});
+			
+			menu_creator.createMenu( "s3").setStyle( MenuItem.STYLE_SEPARATOR );
+			
 			return;
 		}
 
