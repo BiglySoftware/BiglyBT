@@ -2246,6 +2246,13 @@ CoreImpl
             }
         });
 	}
+	
+	@Override
+	public boolean 
+	isStopping()
+	{
+		return( stopped );
+	}
 
 	@Override
 	public boolean

@@ -956,6 +956,12 @@ SubscriptionManagerImpl
 			});
 	}
 
+	protected boolean
+	isClosing()
+	{
+		return( CoreFactory.getSingleton().isStopping());
+	}
+	
 	protected Object[]
 	getSearchTemplateVuzeFile(
 		SubscriptionImpl	sub )

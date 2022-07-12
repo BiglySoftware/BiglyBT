@@ -121,15 +121,12 @@ Core
 
 		throws CoreException;
 
-	/**
-	 *
-	 * @return
-	 * @since 3053
-	 */
-
 	public boolean
 	isRestarting();
 
+	public boolean
+	isStopping();
+	
 	public void
 	executeCloseAction(
 		String		action,			// see CA_ constants above

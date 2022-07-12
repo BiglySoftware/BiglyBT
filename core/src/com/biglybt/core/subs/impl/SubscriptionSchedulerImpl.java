@@ -172,6 +172,11 @@ SubscriptionSchedulerImpl
 
 		throws SubscriptionException
 	{
+		if ( manager.isClosing()){
+			
+			throw( new SubscriptionException( "Not downloading, application is closing" ));
+		}
+		
 		SubscriptionDownloader 	downloader;
 		AESemaphore				sem;
 
@@ -831,6 +836,11 @@ SubscriptionSchedulerImpl
 
 		for (int i=0;i<subs.length;i++){
 
+			if ( manager.isClosing()){
+				
+				return;
+			}
+			
 			Subscription sub = subs[i];
 
 			SubscriptionHistory history = sub.getHistory();
