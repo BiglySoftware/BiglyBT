@@ -174,6 +174,12 @@ SimpleAPIPlugin
 			updateTestParam();
 		}
 	}
+
+	protected boolean
+	verifyReferrer()
+	{
+		return( false );	// we have an apikey, that is sufficient
+	}
 	
 	@Override
 	protected void

@@ -1287,6 +1287,12 @@ WebPlugin
 						(ip_range_all?"all":"local"):
 						(ip_ranges_str)));
 	}
+	
+	protected boolean
+	verifyReferrer()
+	{
+		return( true );
+	}
 
 	protected void
 	setupServer()
@@ -1803,7 +1809,7 @@ WebPlugin
 										
 									}else{
 										
-										if ( referrer != null ){
+										if ( referrer != null && verifyReferrer()){
 											
 											result = false;
 											
