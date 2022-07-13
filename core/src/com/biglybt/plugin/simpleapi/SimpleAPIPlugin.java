@@ -286,6 +286,10 @@ SimpleAPIPlugin
 				
 				response.getOutputStream().write( result.getBytes( Constants.UTF_8 ));
 			}
+						
+			response.setHeader( "Access-Control-Allow-Origin", "*" );
+
+			response.setReplyStatus( 200 );
 			
 			return( true );
 			
@@ -440,8 +444,6 @@ SimpleAPIPlugin
 				if ( response != null ){
 					
 					response.setContentType( "application/json; charset=UTF-8" );
-					
-					response.setHeader( "Access-Control-Allow-Origin", "*" );
 				}
 				
 				return( JSONUtils.encodeToJSON( json ));
