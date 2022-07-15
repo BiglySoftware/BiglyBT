@@ -30,7 +30,9 @@ import java.util.*;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.impl.PEPeerTransport;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
@@ -141,6 +143,12 @@ MagnetPluginMDDownloader
 		return( activity.cancel( false ));
 	}
 
+	protected void
+	update()
+	{
+		activity.update();
+	}
+	
 	protected com.biglybt.core.download.DownloadManager
 	getDownloadManager()
 	{
@@ -180,6 +188,8 @@ MagnetPluginMDDownloader
 
 		DownloadListener	activity_listener;
 		boolean				activity_listener_informed = false;
+		
+		long last_update = -1;
 		
 		DownloadActivity()
 		{
@@ -882,6 +892,44 @@ MagnetPluginMDDownloader
 				if ( setup_started && !setup_complete ){
 				
 					tidyUp();
+				}
+			}
+		}
+		
+		void
+		update()
+		{
+			long now = SystemTime.getMonotonousTime();
+			
+			if ( last_update == -1 || now - last_update > 30*1000 ){
+				
+				last_update = now;
+			
+				try{
+					Peer[] peers = download.getPeerManager().getPeers();
+					
+					for ( Peer peer: peers ){
+						
+						PEPeer pe_peer = PluginCoreUtils.unwrap( peer );
+						
+						if ( pe_peer instanceof PEPeerTransport ){
+						
+							PEPeerTransport pt = (PEPeerTransport)pe_peer;
+											
+							long connected_for = pt.getTimeSinceConnectionEstablished();
+						
+							long last_good_data = pt.getTimeSinceGoodDataReceived();
+							
+							if ( connected_for > 3*60*1000 ){
+								
+								if ( last_good_data == -1 || last_good_data > 3*60*1000 ){
+							
+									pt.getManager().removePeer( pt, "Metadata dead peer removal" );
+								}
+							}		
+						}
+					}
+				}catch( Throwable e ){		
 				}
 			}
 		}
