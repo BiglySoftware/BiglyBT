@@ -122,6 +122,7 @@ PeersViewBase
 				new IndexItem(table_id),
 				new ColumnPeerNetwork(table_id),
 				new LocalInterfaceItem(table_id),
+				new BytesQueuedForUpload(table_id),
 		};
 	}
 
