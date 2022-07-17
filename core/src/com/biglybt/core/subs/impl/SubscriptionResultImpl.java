@@ -39,19 +39,19 @@ public class
 SubscriptionResultImpl
 	implements SubscriptionResult
 {
-	private static final long TIME_FOUND_DEFAULT;
+	private static final int TIME_FOUND_DEFAULT_SECS;
 
 	static{
-		long tfd = COConfigurationManager.getLongParameter( "subscription.result.time.found.default", 0 );
+		int tfd = COConfigurationManager.getIntParameter( "subscription.result.time.found.default", 0 );
 
 		if ( tfd == 0 ){
 
-			tfd = SystemTime.getCurrentTime()/1000;
+			tfd = (int)( SystemTime.getCurrentTime()/1000 );
 
 			COConfigurationManager.setParameter( "subscription.result.time.found.default", tfd );
 		}
 
-		TIME_FOUND_DEFAULT = tfd*1000;
+		TIME_FOUND_DEFAULT_SECS = tfd;
 	}
 
 	final private SubscriptionHistoryImpl	history;
@@ -61,6 +61,8 @@ SubscriptionResultImpl
 	private boolean		read;
 	private boolean		deleted;
 	private int			deleted_last_seen_day;
+	
+	private int			time_found_secs;
 	
 	private String		result_json;
 
@@ -110,6 +112,22 @@ SubscriptionResultImpl
 				Debug.printStackTrace(e);
 			}
 		}
+		
+		try{
+			String tf = (String)map.get( "tf" );
+			
+			if ( tf != null ){
+				
+				time_found_secs = Integer.parseInt( tf );	// already in secs
+				
+			}else{
+				
+				time_found_secs = TIME_FOUND_DEFAULT_SECS;
+			}
+		}catch( Throwable e ){
+			
+			time_found_secs = TIME_FOUND_DEFAULT_SECS;
+		}
 	}
 
 	protected
@@ -156,7 +174,9 @@ SubscriptionResultImpl
 			map.put( "h", Base32.encode(hash));
 		}
 		
-		map.put( "tf", String.valueOf( SystemTime.getCurrentTime()/1000));
+		time_found_secs = (int)( SystemTime.getCurrentTime()/1000 );
+		
+		map.put( "tf", String.valueOf( time_found_secs ));
 		
 		result_json = JSONUtils.encodeToJSON( map );
 		
@@ -199,6 +219,16 @@ SubscriptionResultImpl
 
 				Debug.printStackTrace(e);
 			}
+			
+			try{
+				Number tfs = (Number)map.get( "tz" );
+			
+				if ( tfs != null ){
+					
+					time_found_secs = tfs.intValue();
+				}
+			}catch( Throwable e ){
+			}
 		}
 	}
 
@@ -217,6 +247,8 @@ SubscriptionResultImpl
 				key2		= other.getKey2();
 				result_json = other.getJSON();
 
+				time_found_secs = other.time_found_secs;
+				
 				synchronized( this ){
 
 					props_ref = null;
@@ -450,7 +482,7 @@ SubscriptionResultImpl
 	protected Map
 	toBEncodedMap()
 	{
-		Map		map	= new HashMap();
+		Map<String,Object>		map	= new HashMap<>();
 
 		map.put( "key", key1 );
 
@@ -479,6 +511,18 @@ SubscriptionResultImpl
 			}catch( Throwable e ){
 
 				Debug.printStackTrace(e);
+			}
+			
+				// one off to back-populate old results with time-found
+			
+			if ( time_found_secs == 0 ){
+				
+				getTimeFound();
+			}
+			
+			if ( time_found_secs > 0 ){
+				
+				map.put( "tz", new Long( time_found_secs ));
 			}
 		}
 
@@ -567,14 +611,21 @@ SubscriptionResultImpl
 	public long
 	getTimeFound()
 	{
-		String tf_secs_str = (String)toJSONMap().get( "tf" );
+		if ( time_found_secs == 0 ){
 
-		if ( tf_secs_str == null ){
+			String tfs = (String)toJSONMap().get( "tf" );
 
-			return( TIME_FOUND_DEFAULT );
+			if ( tfs == null ){
+
+				time_found_secs = TIME_FOUND_DEFAULT_SECS;
+				
+			}else{
+				
+				time_found_secs = Integer.parseInt( tfs );
+			}
 		}
-
-		return( Long.parseLong( tf_secs_str )*1000 );
+		
+		return( time_found_secs*1000L );
 	}
 
 	@Override

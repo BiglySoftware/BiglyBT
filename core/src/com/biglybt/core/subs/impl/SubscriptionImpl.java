@@ -104,6 +104,8 @@ SubscriptionImpl
 	private boolean			is_public;		// whether or not we publish associations
 	private boolean			is_anonymous;	// whether or not the subscription is anon
 
+	private volatile int	subscription_type = -1;
+	
 	private Map				singleton_details;
 
 	private byte[]			hash;
@@ -162,6 +164,10 @@ SubscriptionImpl
 	private String			parent;
 	private List<String>	depends_on;
 	private String			exec_on_new_result;
+	
+	private AtomicLong		newest_result_time_next = new AtomicLong(1);
+	private volatile long	newest_result_time_seq;
+	private volatile long	newest_result_time;
 	
 	private AtomicLong		md_mutator = new AtomicLong( RandomUtils.nextAbsoluteLong());
 	
@@ -866,26 +872,47 @@ SubscriptionImpl
 	public boolean
 	isSubscriptionTemplate()
 	{
-		try{
-			Engine engine = getEngine();
-			
-			if ( engine instanceof RSSEngine ){
-				
-				return( ((RSSEngine)engine).getSearchUrl().startsWith( "subscription:" ));
-			}
-		}catch( Throwable e ){
+		return( getSubscriptionType() == 2 );
+	}
+	
+	private int
+	getSubscriptionType()
+	{
+		if ( subscription_type == -1 ){
 
-			Debug.printStackTrace(e);
-		}
+			if ( getName(false).startsWith( "Search Template:" )){
+				
+				subscription_type = 1;
+				
+			}else{
+				
+				subscription_type = 0;
+			
+				try{
+					Engine engine = getEngine();
+			
+					if ( engine instanceof RSSEngine ){
+				
+						if (((RSSEngine)engine).getSearchUrl().startsWith( "subscription:?type=template" )){
+							
+							subscription_type = 2;
+						}
+					}
+				}catch( Throwable e ){
 		
-		return( false );	
+					Debug.printStackTrace(e);
+				}
+			}
+		}
+			
+		return( subscription_type );
 	}
 	
 	@Override
 	public boolean
 	isSearchTemplate()
 	{
-		return( getName(false).startsWith( "Search Template:" ));
+		return( getSubscriptionType() == 1 );
 	}
 
 	protected Map
@@ -2502,6 +2529,50 @@ SubscriptionImpl
 		return( getHistory().getResults( include_deleted ));
 	}
 
+	protected void
+	invalidateNewestResultTime()
+	{
+		newest_result_time_next.incrementAndGet();
+	}
+	
+	public long
+	getNewestResultTime()
+	{
+		long latest = newest_result_time;
+		long seq	= newest_result_time_seq;
+		
+		long next = newest_result_time_next.get();
+		
+		if ( newest_result_time_seq == next ){
+			
+			return( latest );
+		}
+				
+		latest = 0;
+		
+		SubscriptionResult[] results = getResults(false);
+			
+		for ( SubscriptionResult result : results ){
+			
+			if ( result.isDeleted() || result.getRead()){
+				
+				continue;
+			}
+			
+			long timeFound = result.getTimeFound();
+			
+			if ( timeFound > latest ){
+				
+				latest = timeFound;
+			}
+		}
+	
+		newest_result_time		= latest;
+		newest_result_time_seq	= next;
+		
+		return( latest );
+	}
+	
 	@Override
 	public SubscriptionResultFilterImpl
 	getFilters()

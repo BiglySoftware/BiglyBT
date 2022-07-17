@@ -20,7 +20,6 @@ package com.biglybt.ui.swt.columns.subscriptions;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.Subscription;
-import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
@@ -78,17 +77,7 @@ public class ColumnSubscriptionNewestDate
 			}
 		}
 
-		long latest = 0;
-		SubscriptionResult[] results = sub.getResults(true);
-		for (SubscriptionResult result : results) {
-			if (result.isDeleted() || result.getRead()) {
-				continue;
-			}
-			long timeFound = result.getTimeFound();
-			if (timeFound > latest) {
-				latest = timeFound;
-			}
-		}
+		long latest = sub.getNewestResultTime();
 		
 		long sortVal = (((latest / 1000) & 0x7FFFFFFFL) << 32) + scanTime;
 

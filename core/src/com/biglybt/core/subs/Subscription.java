@@ -126,6 +126,9 @@ Subscription
 	setDependsOn(
 		List<Subscription>	subs );
 	
+	public long
+	getNewestResultTime();
+	
 	public String
 	getExecuteOnNewResult();
 	

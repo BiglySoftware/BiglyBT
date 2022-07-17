@@ -7868,6 +7868,8 @@ SubscriptionManagerImpl
 			}
 		}
 		
+		subs.invalidateNewestResultTime();
+		
 		if ( new_unread_results != null && !new_unread_results.isEmpty()){
 		
 			processResults( subs, new_unread_results, true );
@@ -8631,7 +8633,7 @@ SubscriptionManagerImpl
 		if ( gmar == null && create_if_missing ){
 			
 			try{
-				gmar = createSingletonRSS( MessageText.getString( "subs.globally.marked.as.read" ), new URL( "subscription://" ), -1, false );
+				gmar = createSingletonRSS( MessageText.getString( "subs.globally.marked.as.read" ), new URL( "subscription:?type=gmar" ), -1, false );
 				
 				COConfigurationManager.setParameter( "subscriptions.gmar.id", gmar.getID());
 				
