@@ -4156,32 +4156,50 @@ implements PEPeerTransport
 	{
 		try{
 
-			manager.getHashHandler().receivedHashRequest( 
-				this,
-				( hashes )->{
-									
-					if ( hashes != null ){
-					
-						BTHashes	bt_hashes = new BTHashes( request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers(), hashes, other_peer_hashes_version );
+			OutgoingMessageQueue omq = connection.getOutgoingMessageQueue();
+			
+				// although hash rates are limited in the PEPeerControlImpl::PeerStats code we have cases
+				// where a peer's queued protocol data grows at 1 MB every 2 seconds... Given that hash requests
+				// are the only significantly sized messages classified as "protocol" I'm going to cap this and
+				// see how that helps
+			
+			if ( omq.getProtocolQueuedBytes() > 4*1024*1024 ){
+							
+				BTHashReject	reject = new BTHashReject( request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers(), other_peer_hash_reject_version );
 
-						//System.out.println( "Sending BT_HASHES: index=" + request.getIndex() + ", length=" + request.getLength());
+				//System.out.println( "Sending BT_HASH_REJECT: index=" + request.getIndex() + ", length=" + request.getLength());
+
+				omq.addMessage( reject, false );		
+
+			}else{
+				
+				manager.getHashHandler().receivedHashRequest( 
+					this,
+					( hashes )->{
+										
+						if ( hashes != null ){
 						
-						connection.getOutgoingMessageQueue().addMessage( bt_hashes, false );		
-
-					}else{
-						
-						BTHashReject	reject = new BTHashReject( request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers(), other_peer_hash_reject_version );
-
-						//System.out.println( "Sending BT_HASH_REJECT: index=" + request.getIndex() + ", length=" + request.getLength());
-
-						connection.getOutgoingMessageQueue().addMessage( reject, false );		
-					}
-				},
-				request.getPiecesRoot(), 
-				request.getBaseLayer(), 
-				request.getIndex(), 
-				request.getLength(), 
-				request.getProofLayers());
+							BTHashes	bt_hashes = new BTHashes( request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers(), hashes, other_peer_hashes_version );
+	
+							//System.out.println( "Sending BT_HASHES: index=" + request.getIndex() + ", length=" + request.getLength());
+							
+							omq.addMessage( bt_hashes, false );		
+	
+						}else{
+							
+							BTHashReject	reject = new BTHashReject( request.getPiecesRoot(), request.getBaseLayer(), request.getIndex(), request.getLength(), request.getProofLayers(), other_peer_hash_reject_version );
+	
+							//System.out.println( "Sending BT_HASH_REJECT: index=" + request.getIndex() + ", length=" + request.getLength());
+	
+							omq.addMessage( reject, false );		
+						}
+					},
+					request.getPiecesRoot(), 
+					request.getBaseLayer(), 
+					request.getIndex(), 
+					request.getLength(), 
+					request.getProofLayers());
+			}
 
 		}finally{
 			
