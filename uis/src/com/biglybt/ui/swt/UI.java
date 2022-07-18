@@ -177,6 +177,13 @@ public class UI
 
 		if ( commands.hasOption("closedown") || commands.hasOption("shutdown")){
 
+				// Called by the installer to shutdown current instance. As installer window
+				// is probably on top of BiglyBT then we disable all the confirmation close
+				// dialogs that they probably won't see. They've asked to update BiglyBT anyway,
+				// they shouldn't be surprised if it closes on them
+			
+			UIExitUtilsSWT.setSkipCloseCheck( true );
+			
 			// discard any pending updates as we need to shutdown immediately (this
 			// is called from installer to close running instance)
 
