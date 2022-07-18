@@ -66,6 +66,7 @@ public abstract class ColumnDateSizer
 
 	private boolean sortInvalidToBottom	= false;
 		
+	private int		sortChanging;
 	private boolean recalculatingWidths;
 	
 	public
@@ -227,23 +228,29 @@ public abstract class ColumnDateSizer
 				Date date = new Date(timestamp);
 
 				if (curFormat >= 0) {
+					
 					if (multiline && cell.getHeight() < 20) {
 						multiline = false;
 					}
 					String suffix = showTime && !multiline ? " hh:mm a" : "";
 
-					int newWidth = calcWidth(date, TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix, prefix );
-
-					//SimpleDateFormat temp2 = new SimpleDateFormat(TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix + (showTime && multiline ? "\nh:mm a" : ""));
-					//System.out.println(curFormat + ":newWidth=" +  newWidth + ":max=" + maxWidthUsed[curFormat] + ":cell=" + cell.getWidth() + "::" + temp2.format(date));
-					if (newWidth > cell.getWidth() - PADDING) {
-						if (newWidth > maxWidthUsed[curFormat]) {
-							maxWidthUsed[curFormat] = newWidth;
-							maxWidthDate[curFormat] = date;
+					if ( sortChanging == 0 ){
+							// quite expensive to recalculate the width - if we are changing sort order this will affect all
+							// cells so as changing sort doesn't affect column width avoid a pointless cost
+						
+						int newWidth = calcWidth(date, TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix, prefix );
+	
+						//SimpleDateFormat temp2 = new SimpleDateFormat(TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix + (showTime && multiline ? "\nh:mm a" : ""));
+						//System.out.println(curFormat + ":newWidth=" +  newWidth + ":max=" + maxWidthUsed[curFormat] + ":cell=" + cell.getWidth() + "::" + temp2.format(date));
+						if (newWidth > cell.getWidth() - PADDING) {
+							if (newWidth > maxWidthUsed[curFormat]) {
+								maxWidthUsed[curFormat] = newWidth;
+								maxWidthDate[curFormat] = date;
+							}
+							recalcWidth(date, prefix);
 						}
-						recalcWidth(date, prefix);
 					}
-
+					
 					String s = TimeFormatter.DATEFORMATS_DESC[curFormat] + suffix;
 					SimpleDateFormat temp = new SimpleDateFormat(s
 							+ (showTime && multiline ? "\nh:mm a" : ""));
@@ -426,7 +433,14 @@ public abstract class ColumnDateSizer
 	{		
 		super.setSortAscending( bAscending );
 		
-		invalidateCells();
+		Utils.execSWTThread(()->{
+			sortChanging++;
+			try{
+				invalidateCells();
+			}finally{
+				sortChanging--;
+			}
+		});
 	}
 	
 }
