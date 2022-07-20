@@ -35,6 +35,7 @@ import com.biglybt.ui.swt.shells.MessageBoxShell;
 public class UIExitUtilsSWT
 {
 	private static boolean skipCloseCheck = false;
+	private static boolean skipCloseChecksForUpdate = false;
 
 	private static CopyOnWriteList<canCloseListener>	listeners	= new CopyOnWriteList<>();
 
@@ -56,6 +57,11 @@ public class UIExitUtilsSWT
 		skipCloseCheck = b;
 	}
 
+	public static void setSkipCloseChecksForUpdate(boolean b) {
+		skipCloseChecksForUpdate = b;
+	}
+
+	
 	/**
 	 * @return
 	 */
@@ -65,23 +71,25 @@ public class UIExitUtilsSWT
 			return true;
 		}
 
-		Shell mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
-		if (mainShell != null
-				&& (!mainShell.isVisible() || mainShell.getMinimized())
-				&& COConfigurationManager.getBooleanParameter("Password enabled")) {
-
-			if (!PasswordWindow.showPasswordWindow(Display.getCurrent())) {
-				return false;
+		if ( skipCloseChecksForUpdate ){
+			Shell mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
+			if (mainShell != null
+					&& (!mainShell.isVisible() || mainShell.getMinimized())
+					&& COConfigurationManager.getBooleanParameter("Password enabled")) {
+	
+				if (!PasswordWindow.showPasswordWindow(Display.getCurrent())) {
+					return false;
+				}
+			}
+	
+	
+			if (COConfigurationManager.getBooleanParameter("confirmationOnExit")) {
+				if (!getExitConfirmation(bForRestart)) {
+					return false;
+				}
 			}
 		}
-
-
-		if (COConfigurationManager.getBooleanParameter("confirmationOnExit")) {
-			if (!getExitConfirmation(bForRestart)) {
-				return false;
-			}
-		}
-
+		
 		for ( canCloseListener listener: listeners ){
 
 			if ( !listener.canClose()){

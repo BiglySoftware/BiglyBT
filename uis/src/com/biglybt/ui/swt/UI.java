@@ -182,7 +182,7 @@ public class UI
 				// dialogs that they probably won't see. They've asked to update BiglyBT anyway,
 				// they shouldn't be surprised if it closes on them
 			
-			UIExitUtilsSWT.setSkipCloseCheck( true );
+			UIExitUtilsSWT.setSkipCloseChecksForUpdate( true );
 			
 			// discard any pending updates as we need to shutdown immediately (this
 			// is called from installer to close running instance)
