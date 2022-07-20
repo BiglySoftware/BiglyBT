@@ -2520,6 +2520,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_FILE_PATHS_SELECTED	= 39;
 		private static final int	KW_TARGET_RATIO			= 40;
 		private static final int	KW_TAG_NAMES			= 41;
+		private static final int	KW_TRACKER_STATUS		= 42;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2615,6 +2616,8 @@ TagPropertyConstraintHandler
 			keyword_map.put( "target_ratio", 			new int[]{KW_TARGET_RATIO,			DEP_TIME });
 			keyword_map.put( "tagnames",				new int[]{KW_TAG_NAMES,				DEP_STATIC });
 			keyword_map.put( "tag_names",				new int[]{KW_TAG_NAMES,				DEP_STATIC });
+			keyword_map.put( "tracker_status",			new int[]{KW_TRACKER_STATUS,		DEP_STATIC });
+			keyword_map.put( "trackerstatus",			new int[]{KW_TRACKER_STATUS,		DEP_STATIC });
 
 		}
 
@@ -4109,7 +4112,15 @@ TagPropertyConstraintHandler
 					}
 					
 					return( result );
+				
+				}else if ( str.equals( "tracker_status" ) || str.equals( "trackerstatus" )){
 					
+					kw = KW_TRACKER_STATUS;
+					
+					String result = dm.getTrackerStatus();
+					
+					return( new String[]{ result });
+
 				}else if ( str.equals( "file_paths_selected" ) || str.equals( "filepathsselected" )){
 				
 					kw = KW_FILE_PATHS_SELECTED;
