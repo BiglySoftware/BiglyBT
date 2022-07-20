@@ -25,6 +25,7 @@ package com.biglybt.ui.swt.views.tableitems.peers;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -170,19 +171,23 @@ public class PiecesItem
 		 * We store our image and imageBufer in PEPeer using
 		 * setData & getData.
 		 */
-
-		// Named infoObj so code can be copied easily to the other PiecesItem
-		final PEPeer infoObj = (PEPeer) cell.getDataSource();
-		long lCompleted = (infoObj == null) ? 0
-				: infoObj.getPercentDoneInThousandNotation();
+		final PEPeer peer = (PEPeer) cell.getDataSource();
+		long lCompleted = (peer == null) ? 0
+				: peer.getPercentDoneInThousandNotation();
 
 		if (!cell.setSortValue(lCompleted) && cell.isValid()) {
-			return;
+				// ensure that a pieces map has been rendered before
+				// we bail on percentage being unchanged
+			
+			if ( peer.getData("PiecesActive") != null ){
+				return;
+			}
 		}
 
-		if (infoObj == null)
+		if ( peer == null ){
+			
 			return;
-
+		}
 		Utils.execSWTThread(new AERunnable() {
 
 			@Override
@@ -206,11 +211,11 @@ public class PiecesItem
 				int drawWidth = x1 - x0 + 1;
 				if (drawWidth < 10 || y1 < 3)
 					return;
-				int[] imageBuffer = (int[]) infoObj.getData("PiecesImageBuffer");
+				int[] imageBuffer = (int[]) peer.getData("PiecesImageBuffer");
 				boolean bImageBufferValid = imageBuffer != null
 						&& imageBuffer.length == drawWidth;
 
-				Image image = (Image) infoObj.getData("PiecesImage");
+				Image image = (Image) peer.getData("PiecesImage");
 				GC gcImage;
 				boolean bImageChanged;
 				Rectangle imageBounds;
@@ -253,13 +258,13 @@ public class PiecesItem
 					gcImage = new GC(image);
 				}
 
-				final BitFlags peerHave = infoObj.getAvailable();
+				final BitFlags peerHave = peer.getAvailable();
 				
 				boolean established;
 				
-				if ( infoObj instanceof PEPeerTransport ){
+				if ( peer instanceof PEPeerTransport ){
 				
-					established = ((PEPeerTransport) infoObj).getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED;
+					established = ((PEPeerTransport) peer).getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED;
 					
 				}else{
 					established = true;	// hack for 'my-peer'
@@ -269,13 +274,14 @@ public class PiecesItem
 					if (imageBuffer == null || imageBuffer.length != drawWidth) {
 						imageBuffer = new int[drawWidth];
 					}
+					peer.setData("PiecesActive", true);
 					final boolean available[] = peerHave.flags;
 					try {
 
 						int nbComplete = 0;
 						int nbPieces = available.length;
 
-						DiskManager disk_manager = infoObj.getManager().getDiskManager();
+						DiskManager disk_manager = peer.getManager().getDiskManager();
 						DiskManagerPiece[] pieces = disk_manager == null ? null
 								: disk_manager.getPieces();
 
@@ -371,8 +377,9 @@ public class PiecesItem
 						Debug.printStackTrace(e);
 					}
 				} else {
-					gcImage.setForeground(Colors.grey);
-					gcImage.setBackground(Colors.grey);
+					Color fill = established?Colors.fadedGreen:Colors.grey;
+					gcImage.setForeground(fill);
+					gcImage.setBackground(fill);
 					gcImage.fillRectangle(x0, y0, newWidth, y1);
 				}
 				gcImage.dispose();
@@ -397,8 +404,8 @@ public class PiecesItem
 					if (bImageChanged || image != oldImage) {
 						cell.invalidate();
 					}
-					infoObj.setData("PiecesImage", image);
-					infoObj.setData("PiecesImageBuffer", imageBuffer);
+					peer.setData("PiecesImage", image);
+					peer.setData("PiecesImageBuffer", imageBuffer);
 				}
 			}
 		});
