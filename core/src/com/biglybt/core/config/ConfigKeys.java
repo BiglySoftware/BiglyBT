@@ -297,6 +297,7 @@ public final class ConfigKeys {
 		public static final String BCFG_PROMPT_TO_ABORT_SHUTDOWN = "Prompt To Abort Shutdown";
 		public static final String ICFG_STOP_FORCE_TERMINATE_AFTER = "Force Terminate After Mins";
 		public static final String ICFG_AUTO_RESTART_WHEN_IDLE = "Auto Restart When Idle";
+		public static final String BCFG_AUTO_RESTART_WHEN_IDLE_PROMPT = "Auto Restart When Idle Prompt";
 		public static final String SCFG_ON_DOWNLOADING_COMPLETE_DO = "On Downloading Complete Do";
 		public static final String SCFG_ON_DOWNLOADING_COMPLETE_SCRIPT = "On Downloading Complete Script";
 		public static final String SCFG_ON_SEEDING_COMPLETE_DO = "On Seeding Complete Do";

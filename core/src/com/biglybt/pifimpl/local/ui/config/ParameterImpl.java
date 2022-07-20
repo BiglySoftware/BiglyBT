@@ -278,6 +278,16 @@ ParameterImpl
 			COConfigurationManager.addWeakParameterListener(this,  false, configKey);
 		}
 	}
+	
+	@Override
+	public void
+	addAndFireListener(
+		ParameterListener	l )
+	{
+		addListener( l );
+		
+		l.parameterChanged( this );
+	}
 
 	@Override
 	public void

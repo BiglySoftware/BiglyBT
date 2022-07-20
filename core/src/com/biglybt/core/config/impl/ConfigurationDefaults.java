@@ -293,7 +293,8 @@ public class ConfigurationDefaults {
     def.put("Prevent Sleep FP Seeding", FALSE );
     def.put("Prevent Sleep Tag", "" );
 
-    def.put("Auto Restart When Idle", ZERO );
+    def.put(ConfigKeys.StartupShutdown.ICFG_AUTO_RESTART_WHEN_IDLE, ZERO );
+    def.put(ConfigKeys.StartupShutdown.BCFG_AUTO_RESTART_WHEN_IDLE_PROMPT, TRUE );
 
     def.put( "Download History Enabled", TRUE );
 

@@ -219,10 +219,22 @@ public class ConfigSectionStartShutdown
 		paramRestartWhenIdle.setMinimumRequiredUserMode(
 				Parameter.MODE_INTERMEDIATE);
 
+		BooleanParameterImpl paramRestartWhenIdlePrompt = new BooleanParameterImpl(
+				BCFG_AUTO_RESTART_WHEN_IDLE_PROMPT, "label.prompt.when.restart" );
+		paramRestartWhenIdlePrompt.setMinimumRequiredUserMode(Parameter.MODE_INTERMEDIATE);
+		paramRestartWhenIdlePrompt.setIndent(1, true);
+		add(paramRestartWhenIdlePrompt);
+
+		paramRestartWhenIdle.addAndFireListener((n)->{
+			paramRestartWhenIdlePrompt.setEnabled(paramRestartWhenIdle.getValue() > 0 );
+		});
+		
 		add("pgRestart",
-				new ParameterGroupImpl("label.restart", paramRestartWhenIdle));
+				new ParameterGroupImpl("label.restart", paramRestartWhenIdle, paramRestartWhenIdlePrompt ));
 
 
+			// JVM
+		
 		List<Parameter> listJVM = new ArrayList<>();
 
 		if (platform.hasCapability(

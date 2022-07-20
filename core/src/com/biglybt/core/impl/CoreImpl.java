@@ -2781,13 +2781,16 @@ CoreImpl
 										String.valueOf( restart_after ),
 									});
 
-						UIFunctions ui_functions = UIFunctionsManager.getUIFunctions();
-
-						if ( ui_functions != null ){
-
-							ui_functions.forceNotify( UIFunctions.STATUSICON_NONE, null, message, null, new Object[0], -1 );
+						if ( COConfigurationManager.getBooleanParameter( ConfigKeys.StartupShutdown.BCFG_AUTO_RESTART_WHEN_IDLE_PROMPT )){
+							
+							UIFunctions ui_functions = UIFunctionsManager.getUIFunctions();
+	
+							if ( ui_functions != null ){
+	
+								ui_functions.forceNotify( UIFunctions.STATUSICON_NONE, null, message, null, new Object[0], -1 );
+							}
 						}
-
+						
 						Logger.log(
 							new LogAlert(
 								LogAlert.UNREPEATABLE,

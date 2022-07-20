@@ -133,6 +133,10 @@ Parameter
 	addListener(
 		ParameterListener	l );
 
+	public void
+	addAndFireListener(
+		ParameterListener	l );
+	
 	/**
 	 * Removes a previously added listener
 	 *
