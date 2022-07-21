@@ -81,7 +81,6 @@ public class ColumnProgressETA
 	private boolean showSpeed;
 	private boolean show3D;
 	Display display;
-	Color textColor;
 	private Color cBase;
 	private Color cBGoff;
 	private Color cBGdl;
@@ -373,19 +372,13 @@ public class ColumnProgressETA
 		long eta = showETA ? getETA(cell) : 0;
 
 		Color fgFirst = gc.getForeground();
-		final Color fgOriginal = fgFirst;
-		Color bgFirst = gc.getBackground();
-		final Color bgOriginal = bgFirst;
-		log(cell, "Initial fg, bg colors: "
-		          + fgFirst.toString() + ", " + bgFirst.toString());
 
 		// Size constraints
 		final int minCellWidth = 14;
 		final int minProgressHeight = 20;
-		final int minSecondLineHeight = 16;
-		final int minTwoLineHeight = minProgressHeight + minSecondLineHeight;
-		final double maxTextAspect = 8.0 / 100;
-		final int minTextHeightPX = 16;
+		final int secondLineHeight = 18;
+		final int minTwoLineHeight = minProgressHeight + secondLineHeight;
+		final int maxTextHeightPX = 24;
 
 		final Rectangle cellBounds = cell.getBounds();
 
@@ -402,13 +395,11 @@ public class ColumnProgressETA
 
 		if (cellBounds.height > minTwoLineHeight) {
 			showSecondLine = true;
-			final int secondLineHeight = minSecondLineHeight
-			                             + (int) (cellBounds.height / 6);
 			boundsProgressBar.height -= secondLineHeight;
 			boundsSecondLine = new Rectangle(
 					boundsProgressBar.x,
 					boundsProgressBar.y + boundsProgressBar.height + 1,
-					boundsProgressBar.width, secondLineHeight);
+					boundsProgressBar.width, secondLineHeight - 2);
 
 			alignSecondLine = SWT.CENTER;
 			fgSecondLine = fgFirst;
@@ -447,9 +438,9 @@ public class ColumnProgressETA
 
 		// Draw "3D" gradients at top/bottom edges of filled progress bar area
 		if (show3D) {
-			final int edgeHeight = 5;
+			final int edgeHeight = boundsProgressBar.height > 40 ? 5 : 3;
 			final Color highlight = Colors.getInstance().getLighterColor(cBG, 50);
-			final Color lowlight = Colors.getInstance().getLighterColor(cBG, -50);
+			final Color lowlight = Colors.getInstance().getLighterColor(cBG, -40);
 			gc.setForeground(highlight);
 			gc.fillGradientRectangle(
 				pctFillRect.x, pctFillRect.y,
@@ -519,19 +510,12 @@ public class ColumnProgressETA
 		String sPercent = DisplayFormatters.formatPercentFromThousands(percentDone);
 
 		final int xOffset = 3;
-		int yOffset = 1;
-		int newTextHeightPX = Math.max(minTextHeightPX,
-		                               boundsProgressBar.height - (2 * yOffset));
+		int yOffset = boundsProgressBar.height > 30 ? 2 : 1;
 		int textWidthPX = boundsProgressBar.width - (2 * xOffset);
-		double textAspect = (double)newTextHeightPX / textWidthPX;
-		if (textAspect > maxTextAspect) {
-			int adjusted = Math.max(minTextHeightPX,
-			                        (int) ((double)textWidthPX * maxTextAspect));
-			log(cell, "Constrained font height from " + newTextHeightPX + " to "
-			          + adjusted);
-			yOffset += (int) ((newTextHeightPX - adjusted) / 2.0);
-			newTextHeightPX = adjusted;
-		}
+		int newTextHeightPX = Math.min(
+				showSecondLine ? maxTextHeightPX : 16,
+				boundsProgressBar.height - (2 * yOffset));
+		yOffset = (boundsProgressBar.height - newTextHeightPX) / 2;
 
 		if (fontText == null || newTextHeightPX != textHeightPX) {
 			if (fontText != null) {
@@ -567,17 +551,13 @@ public class ColumnProgressETA
 			if (showSecondLine) {
 				int newHeight = boundsSecondLine.height;
 				if (fontSecondLine == null || newHeight != secondLineHeightPX) {
-					if (fontSecondLine != null && fontSecondLine != fontText) {
+					if (fontSecondLine != null) {
 						fontSecondLine.dispose();
 					}
 					secondLineHeightPX = newHeight;
 					fontSecondLine = FontUtils.getFontWithHeight(
 						gc.getFont(), secondLineHeightPX, SWT.DEFAULT);
 				}
-				// gc.setBackground(bgOriginal);
-				// gc.fillRectangle(boundsSecondLine);
-				// log(cell, "Filled second line area " + boundsSecondLine.toString()
-				//           + " with " + gc.getBackground().toString());
 			} else {
 				Point pctExtent = sp.getCalculatedSize();
 				boundsSecondLine = area;
@@ -587,16 +567,16 @@ public class ColumnProgressETA
 					boundsSecondLine.x++;
 					boundsSecondLine.y++;
 				}
-				if (fontSecondLine != null && fontSecondLine != fontText) {
+				if (fontSecondLine != null) {
 					fontSecondLine.dispose();
+					fontSecondLine = null;
 				}
-				fontSecondLine = fontText;
 				// Force a call to getFont...() when the second line reappears
 				secondLineHeightPX = -1;
 
 			}
 
-			gc.setFont(fontSecondLine);
+			gc.setFont(showSecondLine ? fontSecondLine : fontText);
 			GCStringPrinter sp2 = new GCStringPrinter(
 				gc, sStatusLine, boundsSecondLine,
 				true, false, alignSecondLine);
