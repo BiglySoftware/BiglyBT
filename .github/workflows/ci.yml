@@ -25,9 +25,6 @@ jobs:
         java-version: ${{ matrix.java-version }}
         distribution: 'temurin'
         cache: maven
-    - name: Build with Maven
-      id: maven_compile
-      run: mvn compile --file pom.xml
     - name: Package with Maven
       id: maven_package
       run: mvn package --file pom.xml
