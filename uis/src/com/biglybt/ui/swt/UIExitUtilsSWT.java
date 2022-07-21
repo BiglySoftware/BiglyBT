@@ -71,7 +71,7 @@ public class UIExitUtilsSWT
 			return true;
 		}
 
-		if ( skipCloseChecksForUpdate ){
+		if ( !skipCloseChecksForUpdate ){
 			Shell mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
 			if (mainShell != null
 					&& (!mainShell.isVisible() || mainShell.getMinimized())
