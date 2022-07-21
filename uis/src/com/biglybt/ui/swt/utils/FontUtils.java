@@ -166,9 +166,20 @@ public class FontUtils
 		if (destroyBaseFont) {
 			baseFont.dispose();
 		}
-		// new font might still be bigger than requested height due to Fonts being fonts
-		return runAgain ? getFontWithHeight(font, heightInPixels, style, false)
-				: font;
+			// new font might still be bigger than requested height due to Fonts being fonts
+		
+		if ( runAgain ){
+	
+			Font font2 = getFontWithHeight(font, heightInPixels, style, false);
+			
+			font.dispose();
+			
+			return( font2 );
+			
+		}else{
+			
+			return( font );
+		}
 	}
 
 		// Used by azemp plugin
