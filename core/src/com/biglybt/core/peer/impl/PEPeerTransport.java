@@ -260,6 +260,9 @@ PEPeerTransport
 	public PEPeerTransport
 	reconnect(boolean tryUDP, boolean tryIPv6);
 
+	public boolean
+	isReconnect();
+	
 	public int
 	getIncomingRequestedPieceNumberCount();
 	

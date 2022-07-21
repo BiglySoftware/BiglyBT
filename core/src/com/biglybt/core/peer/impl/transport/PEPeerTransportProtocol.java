@@ -400,7 +400,7 @@ implements PEPeerTransport
 
 	// allow reconnect if we've sent or recieved at least 1 piece over the current connection
 	private boolean allowReconnect;
-
+	private boolean isReconnect;
 
 	private Set<Object>		upload_disabled_set;
 	private Set<Object>		download_disabled_set;
@@ -1182,6 +1182,10 @@ implements PEPeerTransport
 		return allowReconnect;
 	}
 
+	@Override
+	public boolean isReconnect(){
+		return( isReconnect );
+	}
 
 	private void checkForReconnect(HashWrapper oldID)
 	{
@@ -1190,6 +1194,7 @@ implements PEPeerTransport
 		if(oldTransport != null)
 		{
 			Logger.log(new LogEvent(this,LOGID,LogAlert.AT_INFORMATION,"reassociating stats from "+oldTransport+" with this connection"));
+			isReconnect = true;
 			peerSessionID = oldTransport.peerSessionID;
 			peer_stats = oldTransport.peer_stats;
 			peer_stats.setPeer(this);

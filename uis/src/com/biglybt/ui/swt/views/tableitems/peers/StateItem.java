@@ -52,11 +52,15 @@ public class StateItem
 	
 	int state = -1;
 	
+	boolean	reconnect;
+	
 	if ( ds instanceof PEPeerTransport ){
     
 		PEPeerTransport peer = (PEPeerTransport)ds;
 		
 		state = peer.getConnectionState();
+	
+		reconnect = peer.isReconnect();
 		
 	}else{
 		
@@ -64,6 +68,8 @@ public class StateItem
 			
 			state = PEPeerTransport.CONNECTION_FULLY_ESTABLISHED;	// assume other peer types (e.g. MyPeer) are connected
 		}
+		
+		reconnect = false;
 	}
 	    
     if( !cell.setSortValue( state ) && cell.isValid() ) {
@@ -87,6 +93,14 @@ public class StateItem
 	    	break;
     }
 
+    if ( state != PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ){
+    
+    	if ( reconnect ){
+    	
+    		state_text += " *";
+    	}
+    }
+    
     cell.setText( state_text );
   }
 }

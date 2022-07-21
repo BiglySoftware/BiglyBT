@@ -261,13 +261,17 @@ public class PiecesItem
 				final BitFlags peerHave = peer.getAvailable();
 				
 				boolean established;
+				boolean reconnect;
 				
 				if ( peer instanceof PEPeerTransport ){
 				
-					established = ((PEPeerTransport) peer).getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED;
+					PEPeerTransport pt = (PEPeerTransport)peer;
 					
+					established = pt.getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED;
+					reconnect	= pt.isReconnect();
 				}else{
 					established = true;	// hack for 'my-peer'
+					reconnect	= false;
 				}
 
 				if (established && peerHave != null && peerHave.flags.length > 0) {
@@ -377,7 +381,7 @@ public class PiecesItem
 						Debug.printStackTrace(e);
 					}
 				} else {
-					Color fill = established?Colors.fadedGreen:Colors.grey;
+					Color fill = established?Colors.fadedGreen:(reconnect?Colors.fadedBlue:Colors.grey);
 					gcImage.setForeground(fill);
 					gcImage.setBackground(fill);
 					gcImage.fillRectangle(x0, y0, newWidth, y1);

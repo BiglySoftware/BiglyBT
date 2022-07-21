@@ -1230,6 +1230,9 @@ PeerForeignDelegate
 
 	@Override
 	public PEPeerTransport reconnect(boolean tryUDP, boolean tryIPv6){ return null; }
+	
+	@Override
+	public boolean isReconnect(){ return false; }
 	@Override
 	public boolean isSafeForReconnect() { return false; }
 
