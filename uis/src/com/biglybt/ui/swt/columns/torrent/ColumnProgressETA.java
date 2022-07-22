@@ -73,18 +73,22 @@ public class ColumnProgressETA
 	private static final int COLUMN_WIDTH = 200;
 	private final static Object CLICK_KEY = new Object();
 	private static Font fontText = null;
+	private static int textHeightPX = 0;
+	private static Font fontSecondLine = null;
+	private static int secondLineHeightPX = 0;
 	private final MyParameterListener myParameterListener;
 	private boolean showETA;
 	private boolean showSpeed;
 	private boolean show3D;
 	Display display;
-	Color textColor;
+	private Color cBase;
+	private Color cBGoff;
 	private Color cBGdl;
 	private Color cBGcd;
 	private Color cBorder;
 	private Color cText;
-	private Image imgBGTorrent;
 	private Color cTextDrop;
+	private Color cLinks;
 	private ViewUtils.CustomDateFormat cdf;
 	private ColumnTorrentFileProgress fileProgress;
 	private boolean progress_eta_absolute;
@@ -106,13 +110,9 @@ public class ColumnProgressETA
 		display = Utils.getDisplay();
 
 		SWTSkinProperties skinProperties = SWTSkinFactory.getInstance().getSkinProperties();
-		cBGdl = skinProperties.getColor("color.progress.bg.dl");
-		if (cBGdl == null) {
-			cBGdl = Colors.blues[Colors.BLUES_DARKEST];
-		}
-		cBGcd = skinProperties.getColor("color.progress.bg.cd");
-		if (cBGcd == null) {
-			cBGcd = Colors.green;
+		cBase = skinProperties.getColor("color.progress.bar");
+		if (cBase == null) {
+			cBase = Colors.white;
 		}
 		cBorder = skinProperties.getColor("color.progress.border");
 		if (cBorder == null) {
@@ -123,11 +123,27 @@ public class ColumnProgressETA
 			cText = Colors.black;
 		}
 		cTextDrop = skinProperties.getColor("color.progress.text.drop");
+		cLinks = skinProperties.getColor("color.links");
+		if (cLinks == null) {
+			cLinks = Colors.blue;
+		}
+		// Inactive progress bar
+		cBGoff = skinProperties.getColor("color.progress.bg.inactive");
+		if (cBGoff == null) {
+			cBGoff = Colors.light_grey;
+		}
+		// Progress bar for downloading torrent
+		cBGdl = skinProperties.getColor("color.progress.bg.dl");
+		if (cBGdl == null) {
+			cBGdl = Colors.blues[Colors.BLUES_DARKEST];
+		}
+		// Progress bar for seeding torrent
+		cBGcd = skinProperties.getColor("color.progress.bg.cd");
+		if (cBGcd == null) {
+			cBGcd = Colors.green;
+		}
 
 		cdf = ViewUtils.addCustomDateFormat(this);
-
-		ImageLoader imageLoader = ImageLoader.getInstance();
-		imgBGTorrent = imageLoader.getImage("image.progress.bg.torrent");
 
 		fileProgress = new ColumnTorrentFileProgress(display);
 
@@ -344,157 +360,142 @@ public class ColumnProgressETA
 			return;
 		}
 
-		DownloadManager dm = (DownloadManager)ds;
-
 		String tooltip = null;
 		
+		DownloadManager dm = (DownloadManager)ds;
 		int dm_state = dm.getState();
-		
 		if ( dm_state == DownloadManager.STATE_QUEUED ){
-			
 			tooltip = MessageText.getString( "ManagerItem.queued.tooltip" );
 		}
 		
 		int percentDone = getPercentDone(ds);
 		long eta = showETA ? getETA(cell) : 0;
 
-		//Compute bounds ...
-		int newWidth = cell.getWidth();
-		if (newWidth <= 0) {
-			return;
-		}
-		int newHeight = cell.getHeight();
-
 		Color fgFirst = gc.getForeground();
 
-		final Color fgOriginal = fgFirst;
+		// Size constraints
+		final int minCellWidth = 14;
+		final int minProgressHeight = 20;
+		final int secondLineHeight = 18;
+		final int minTwoLineHeight = minProgressHeight + secondLineHeight;
+		final int maxTextHeightPX = 24;
 
-		Rectangle cellBounds = cell.getBounds();
+		final Rectangle cellBounds = cell.getBounds();
 
-		int xStart = cellBounds.x;
-		int yStart = cellBounds.y;
-
-		int xRelProgressFillStart = borderWidth;
-		int yRelProgressFillStart = borderWidth;
-		int xRelProgressFillEnd = newWidth - xRelProgressFillStart - borderWidth;
-		int yRelProgressFillEnd = yRelProgressFillStart + 13;
-		boolean showSecondLine = yRelProgressFillEnd + 10 < newHeight;
-
-		if (xRelProgressFillEnd < 10) {
+		if (cellBounds.width < minCellWidth) {
 			return;
 		}
-		String sStatusLine = null;
+
+		boolean showSecondLine;
+		int alignSecondLine;
+		Color fgSecondLine;
+		Rectangle boundsSecondLine;
+
+		Rectangle boundsProgressBar = cell.getBounds();
+
+		if (cellBounds.height > minTwoLineHeight) {
+			showSecondLine = true;
+			boundsProgressBar.height -= secondLineHeight;
+			boundsSecondLine = new Rectangle(
+					boundsProgressBar.x,
+					boundsProgressBar.y + boundsProgressBar.height + 1,
+					boundsProgressBar.width, secondLineHeight - 2);
+
+			alignSecondLine = SWT.CENTER;
+			fgSecondLine = fgFirst;
+
+		} else {
+			showSecondLine = false;
+			boundsSecondLine = boundsProgressBar;
+			alignSecondLine = SWT.RIGHT;
+			fgSecondLine = cText;
+		}
 
 		// Draw Progress bar
-		// ImageLoader imageLoader = ImageLoader.getInstance();
+		int fillWidth = (int) (percentDone * cellBounds.width / 1000);
+		Rectangle pctFillRect = new Rectangle(
+				cellBounds.x, cellBounds.y, fillWidth, cellBounds.height);
+		pctFillRect.intersect(boundsProgressBar);
 
-		Rectangle boundsImgBG;
+		gc.setBackground(cBase);
+		gc.fillRectangle(boundsProgressBar);
 
-		if (!ImageLoader.isRealImage(imgBGTorrent)) {
-			boundsImgBG = new Rectangle(0, 0, 0, 13);
+		Color cBG;
+		if ( dm_state == DownloadManager.STATE_DOWNLOADING
+		     || dm_state == DownloadManager.STATE_SEEDING )
+		{
+			if (percentDone == 1000 || dm.isDownloadComplete(false)) {
+				cBG = cBGcd;
+			} else {
+				cBG = cBGdl;
+			}
 		} else {
-			boundsImgBG = imgBGTorrent.getBounds();
+			cBG = cBGoff;
 		}
 
-		if (fontText == null) {
-			int wantHeightPX = boundsImgBG.height - 3;
-			fontText = FontUtils.getFontWithHeight(gc.getFont(), wantHeightPX, SWT.DEFAULT);
+		gc.setBackground(cBG);
+		gc.fillRectangle(pctFillRect);
+
+		// Draw "3D" gradients at top/bottom edges of filled progress bar area
+		if (show3D) {
+			final int edgeHeight = boundsProgressBar.height > 40 ? 5 : 3;
+			final Color highlight = Colors.getInstance().getLighterColor(cBG, 50);
+			final Color lowlight = Colors.getInstance().getLighterColor(cBG, -40);
+			gc.setForeground(highlight);
+			gc.fillGradientRectangle(
+				pctFillRect.x, pctFillRect.y,
+				pctFillRect.width, edgeHeight, true);
+			gc.setForeground(cBG);
+			gc.setBackground(lowlight);
+			gc.fillGradientRectangle(
+				pctFillRect.x,
+				pctFillRect.y + pctFillRect.height - edgeHeight,
+				pctFillRect.width, edgeHeight, true);
 		}
+		gc.setBackground(cBase);
 
-		if (!showSecondLine) {
-			yRelProgressFillStart = (cellBounds.height / 2)
-					- ((boundsImgBG.height) / 2);
-		}
-
-		yRelProgressFillEnd = yRelProgressFillStart + boundsImgBG.height;
-
-		int progressWidth = newWidth - 1;
+		// Outline the bar
+		final int originalWidth = gc.getLineWidth();
 		gc.setForeground(cBorder);
-		gc.drawRectangle(xStart + xRelProgressFillStart - 1,
-				yStart + yRelProgressFillStart - 1, progressWidth + 1,
-				boundsImgBG.height + 1);
+		gc.setLineWidth(borderWidth);
+		gc.drawRectangle(boundsProgressBar);
+		gc.setLineWidth(originalWidth);
 
-		int pctWidth = (int) (percentDone * (progressWidth) / 1000);
-		if ( dm_state == DownloadManager.STATE_DOWNLOADING || dm_state == DownloadManager.STATE_SEEDING ){
-		
-			gc.setBackground(
-				percentDone == 1000 || dm.isDownloadComplete(false) ? cBGcd : cBGdl);
-		}else{
-			gc.setBackground( Colors.light_grey );
-		}
-		gc.fillRectangle(xStart + xRelProgressFillStart,
-				yStart + yRelProgressFillStart, pctWidth, boundsImgBG.height);
-		if (progressWidth > pctWidth) {
-			gc.setBackground(Colors.white);
-			gc.fillRectangle(xStart + xRelProgressFillStart + pctWidth,
-					yStart + yRelProgressFillStart, progressWidth - pctWidth,
-					boundsImgBG.height);
-		}
+		String sStatusLine = null;
 
-		if (boundsImgBG.width > 0 && show3D) {
-			gc.drawImage(imgBGTorrent, 0, 0, boundsImgBG.width, boundsImgBG.height,
-					xStart + xRelProgressFillStart, yStart + yRelProgressFillStart,
-					progressWidth, boundsImgBG.height);
-		}
+		if (dm.isUnauthorisedOnTracker()) {
+			sStatusLine = dm.getTrackerStatus();
+			// fgFirst = Colors.colorError;	pftt, no colours allowed apparently
+		} else {
+			if (showETA && eta > 0) {
+				String sETA = cdf.formatETA( eta, progress_eta_absolute );
 
-		if (sStatusLine == null) {
-			if (dm.isUnauthorisedOnTracker()) {
-				sStatusLine = dm.getTrackerStatus();
-				// fgFirst = Colors.colorError;	pftt, no colours allowed apparently
+				sStatusLine = MessageText.getString(
+						"MyTorrents.column.ColumnProgressETA.2ndLine", new String[] {
+							sETA
+						});
 			} else {
-				if (showETA && eta > 0) {
-					String sETA = cdf.formatETA( eta, progress_eta_absolute );
-					
-					sStatusLine = MessageText.getString(
-							"MyTorrents.column.ColumnProgressETA.2ndLine", new String[] {
-								sETA
-							});
-				} else {
-					sStatusLine = DisplayFormatters.formatDownloadStatus(
-							dm).toUpperCase();
-				}
+				sStatusLine = DisplayFormatters.formatDownloadStatus(
+						dm).toUpperCase();
 			}
-
-			int cursor_id;
-
-			if (sStatusLine != null && !sStatusLine.contains("http://")) {
-
-				dm.setUserData(CLICK_KEY, null);
-
-				cursor_id = SWT.CURSOR_ARROW;
-
-			} else {
-
-				dm.setUserData(CLICK_KEY, sStatusLine);
-
-				cursor_id = SWT.CURSOR_HAND;
-
-				if (!cell.getTableRow().isSelected()) {
-
-					fgFirst = Colors.blue;
-				}
-			}
-
-			((TableCellSWT) cell).setCursorID(cursor_id);
 		}
 
-		gc.setTextAntialias(SWT.ON);
-		gc.setFont(fontText);
-		if (showSecondLine && sStatusLine != null) {
-			gc.setForeground(fgFirst);
-			boolean fit = GCStringPrinter.printString(gc, sStatusLine,
-					new Rectangle(cellBounds.x, yStart + yRelProgressFillEnd,
-							cellBounds.width, newHeight - yRelProgressFillEnd),
-					true, false, SWT.CENTER);
-			if ( !fit ){
-				if ( tooltip == null ){
-					tooltip = sStatusLine;
-				}else{
-					tooltip = sStatusLine + ": " + tooltip;
-				}
+		boolean haveLink = false;
+
+		if (sStatusLine != null &&
+				sStatusLine.contains("http://") || sStatusLine.contains("https://"))
+		{
+			dm.setUserData(CLICK_KEY, sStatusLine);
+			haveLink = true;
+			if(showSecondLine) {
+				fgSecondLine = cLinks;
 			}
-			gc.setForeground(fgOriginal);
+		} else {
+			dm.setUserData(CLICK_KEY, null);
 		}
+
+		((TableCellSWT) cell).setCursorID(
+			haveLink ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW);
 
 		String sSpeed = "";
 		if (showSpeed) {
@@ -508,15 +509,36 @@ public class ColumnProgressETA
 
 		String sPercent = DisplayFormatters.formatPercentFromThousands(percentDone);
 
-		Rectangle area = new Rectangle(xStart + xRelProgressFillStart + 3,
-				yStart + yRelProgressFillStart,
-				xRelProgressFillEnd - xRelProgressFillStart - 6,
-				yRelProgressFillEnd - yRelProgressFillStart);
-		GCStringPrinter sp = new GCStringPrinter(gc, sPercent + sSpeed, area, true,
-				false, SWT.LEFT);
-		if (cTextDrop != null) {
-			area.x++;
-			area.y++;
+		final int xOffset = 3;
+		int yOffset = boundsProgressBar.height > 30 ? 2 : 1;
+		int textWidthPX = boundsProgressBar.width - (2 * xOffset);
+		int newTextHeightPX = Math.min(
+				showSecondLine ? maxTextHeightPX : 16,
+				boundsProgressBar.height - (2 * yOffset));
+		yOffset = (boundsProgressBar.height - newTextHeightPX) / 2;
+
+		if (fontText == null || newTextHeightPX != textHeightPX) {
+			if (fontText != null) {
+				fontText.dispose();
+			}
+			textHeightPX = newTextHeightPX;
+			fontText = FontUtils.getFontWithHeight(
+				gc.getFont(), textHeightPX, SWT.DEFAULT);
+		}
+
+		final boolean wantShadow = cTextDrop != null;
+		Rectangle area = new Rectangle(
+			boundsProgressBar.x + xOffset + (wantShadow ? 1 : 0),
+			boundsProgressBar.y + yOffset + (wantShadow ? 1 : 0),
+			textWidthPX,
+			textHeightPX);
+
+		gc.setTextAntialias(SWT.ON);
+		gc.setFont(fontText);
+
+		GCStringPrinter sp = new GCStringPrinter(
+			gc, sPercent + sSpeed, area, true, false, SWT.LEFT);
+		if (wantShadow) {
 			gc.setForeground(cTextDrop);
 			sp.printString();
 			area.x--;
@@ -524,15 +546,50 @@ public class ColumnProgressETA
 		}
 		gc.setForeground(cText);
 		sp.printString();
-		Point pctExtent = sp.getCalculatedSize();
 
-		area.width -= (pctExtent.x + 3);
-		area.x += (pctExtent.x + 3);
+		if (sStatusLine != null) {
+			if (showSecondLine) {
+				int newHeight = boundsSecondLine.height;
+				if (fontSecondLine == null || newHeight != secondLineHeightPX) {
+					if (fontSecondLine != null) {
+						fontSecondLine.dispose();
+					}
+					secondLineHeightPX = newHeight;
+					fontSecondLine = FontUtils.getFontWithHeight(
+						gc.getFont(), secondLineHeightPX, SWT.DEFAULT);
+				}
+			} else {
+				Point pctExtent = sp.getCalculatedSize();
+				boundsSecondLine = area;
+				boundsSecondLine.x += (pctExtent.x + xOffset);
+				boundsSecondLine.width -= (pctExtent.x + xOffset);
+				if (wantShadow) {
+					boundsSecondLine.x++;
+					boundsSecondLine.y++;
+				}
+				if (fontSecondLine != null) {
+					fontSecondLine.dispose();
+					fontSecondLine = null;
+				}
+				// Force a call to getFont...() when the second line reappears
+				secondLineHeightPX = -1;
 
-		if (!showSecondLine && sStatusLine != null) {
-			boolean fit = GCStringPrinter.printString(gc, sStatusLine,
-					area.intersection(cellBounds), true, false, SWT.RIGHT);
-						
+			}
+
+			gc.setFont(showSecondLine ? fontSecondLine : fontText);
+			GCStringPrinter sp2 = new GCStringPrinter(
+				gc, sStatusLine, boundsSecondLine,
+				true, false, alignSecondLine);
+
+			if (!showSecondLine && wantShadow) {
+				gc.setForeground(cTextDrop);
+				sp2.printString();
+				boundsSecondLine.x--;
+				boundsSecondLine.y--;
+			}
+
+			gc.setForeground(fgSecondLine);
+			boolean fit = sp2.printString();
 			if ( !fit ){
 				if ( tooltip == null ){
 					tooltip = sStatusLine;
@@ -543,7 +600,6 @@ public class ColumnProgressETA
 		}
 
 		cell.setToolTip( tooltip );
-		
 		gc.setFont(null);
 	}
 
