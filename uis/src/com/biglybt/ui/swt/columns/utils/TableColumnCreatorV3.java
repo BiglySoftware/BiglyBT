@@ -465,6 +465,8 @@ public class TableColumnCreatorV3
 				DateCompletedItem.DATASOURCE_TYPE));
 		c.put(ColumnProgressETA.COLUMN_ID, new cInfo(ColumnProgressETA.class,
 				ColumnProgressETA.DATASOURCE_TYPE));
+		c.put(ColumnProgressETAOld.COLUMN_ID, new cInfo(ColumnProgressETAOld.class,
+				ColumnProgressETAOld.DATASOURCE_TYPE));
 		c.put(ColumnChatMessageCount.COLUMN_ID, new cInfo(
 				ColumnChatMessageCount.class, Download.class));
 
