@@ -378,7 +378,7 @@ public class ColumnProgressETA
 		final int minProgressHeight = 18;
 		final int secondLineHeight = 16;
 		final int minTwoLineHeight = minProgressHeight + secondLineHeight;
-		final int maxTextHeightPX = 24;
+		final int maxTextHeightPX = 20;
 
 		final Rectangle cellBounds = cell.getBounds();
 
