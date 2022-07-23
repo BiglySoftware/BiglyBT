@@ -375,8 +375,8 @@ public class ColumnProgressETA
 
 		// Size constraints
 		final int minCellWidth = 14;
-		final int minProgressHeight = 20;
-		final int secondLineHeight = 18;
+		final int minProgressHeight = 18;
+		final int secondLineHeight = 16;
 		final int minTwoLineHeight = minProgressHeight + secondLineHeight;
 		final int maxTextHeightPX = 24;
 
@@ -399,7 +399,7 @@ public class ColumnProgressETA
 			boundsSecondLine = new Rectangle(
 					boundsProgressBar.x,
 					boundsProgressBar.y + boundsProgressBar.height + 1,
-					boundsProgressBar.width, secondLineHeight - 2);
+					boundsProgressBar.width, secondLineHeight);
 
 			alignSecondLine = SWT.CENTER;
 			fgSecondLine = fgFirst;
