@@ -222,7 +222,7 @@ public class ColumnProgressETA
 
 	@Override
 	public void cellAdded(TableCell cell) {
-		cell.setMarginHeight(3);
+		cell.setMarginHeight(1);
 		cell.setMarginWidth(2);
 	}
 
