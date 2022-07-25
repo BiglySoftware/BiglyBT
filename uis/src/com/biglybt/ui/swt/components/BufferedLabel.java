@@ -250,6 +250,10 @@ BufferedLabel
     label.setForeground(color);
   }
 
+  public void setBackground(Color color) {
+	   label.setBackground(color);
+  }
+  
   public void setCursor(Cursor cursor) {
     label.setCursor(cursor);
   }

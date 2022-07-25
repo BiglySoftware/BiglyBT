@@ -658,14 +658,17 @@ public class TransferStatsView
 		  Label h1 = new Label( route_comp, SWT.NULL );
 		  h1.setLayoutData(new GridData(GridData.FILL_HORIZONTAL ));
 		  h1.setText( MessageText.getString( "label.route" ));
+		  h1.setForeground( Colors.black );
 		  h1.setBackground( Colors.white );
 		  Label h2 = new Label( route_comp, SWT.NULL );
 		  h2.setLayoutData(new GridData(GridData.FILL_HORIZONTAL ));
 		  h2.setText( MessageText.getString( "tps.type.incoming" ));
+		  h2.setForeground( Colors.black );
 		  h2.setBackground( Colors.white );
 		  Label h3 = new Label( route_comp, SWT.NULL );
 		  h3.setLayoutData(new GridData(GridData.FILL_HORIZONTAL ));
 		  h3.setText( MessageText.getString( "label.outgoing" ));
+		  h3.setForeground( Colors.black );
 		  h3.setBackground( Colors.white );
 
 		  new Label( route_comp, SWT.NULL );
@@ -681,6 +684,7 @@ public class TransferStatsView
 				  GridData gridData = new GridData(GridData.FILL_HORIZONTAL );
 				  l.setLayoutData(gridData);
 				  l.getControl().setBackground( Colors.white );
+				  l.getControl().setForeground( Colors.black );
 				  route_labels[i][j] = l;
 			  }
 		  }
@@ -689,13 +693,13 @@ public class TransferStatsView
 	  }
 
 	  Point size = route_comp.computeSize(route_comp.getParent().getSize().x, SWT.DEFAULT);
-
+	  
 	  changed = changed || !route_comp.getSize().equals( size );
 
 	  route_comp.setSize(size);
-
+	  
 	  if ( !changed ){
-
+		  
 		  	// sometimes things get layouted when not visibel and things don't work proper when visibilized ;(
 		  	// look for something zero height that shouldn't be
 
@@ -745,7 +749,7 @@ public class TransferStatsView
     gridData = new GridData(GridData.FILL_BOTH);
     gridData.horizontalSpan = 4;
     folder.setLayoutData(gridData);
-    folder.setBackground(Colors.background);
+    //folder.setBackground(Colors.background);
 
     ValueFormater speed_formatter =
     	new ValueFormater()
