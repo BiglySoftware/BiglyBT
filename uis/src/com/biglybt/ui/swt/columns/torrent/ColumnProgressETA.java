@@ -222,7 +222,7 @@ public class ColumnProgressETA
 
 	@Override
 	public void cellAdded(TableCell cell) {
-		cell.setMarginHeight(3);
+		cell.setMarginHeight(1);
 		cell.setMarginWidth(2);
 	}
 
@@ -375,10 +375,10 @@ public class ColumnProgressETA
 
 		// Size constraints
 		final int minCellWidth = 14;
-		final int minProgressHeight = 20;
-		final int secondLineHeight = 18;
+		final int minProgressHeight = 18;
+		final int secondLineHeight = 16;
 		final int minTwoLineHeight = minProgressHeight + secondLineHeight;
-		final int maxTextHeightPX = 24;
+		final int maxTextHeightPX = 20;
 
 		final Rectangle cellBounds = cell.getBounds();
 
@@ -399,7 +399,7 @@ public class ColumnProgressETA
 			boundsSecondLine = new Rectangle(
 					boundsProgressBar.x,
 					boundsProgressBar.y + boundsProgressBar.height + 1,
-					boundsProgressBar.width, secondLineHeight - 2);
+					boundsProgressBar.width, secondLineHeight);
 
 			alignSecondLine = SWT.CENTER;
 			fgSecondLine = fgFirst;
