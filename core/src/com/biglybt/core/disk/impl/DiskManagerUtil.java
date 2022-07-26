@@ -1841,7 +1841,7 @@ DiskManagerUtil
 					
 					@Override
 					public int getState(){
-						return 0;
+						return( SNAPSHOT );
 					}
 					
 					@Override

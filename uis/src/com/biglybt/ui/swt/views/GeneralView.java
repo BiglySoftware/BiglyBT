@@ -1536,6 +1536,11 @@ public class GeneralView
 
 	    DiskManager	dm = manager.getDiskManager();
 
+	    if ( dm == null ){
+	    	
+	    	dm = manager.getDiskManagerPiecesSnapshot()[0].getManager();
+	    }
+	    
 	    int	nbPieces = manager.getNbPieces();
 
 	    boolean valid;
@@ -1560,95 +1565,83 @@ public class GeneralView
         final int PS_FILE_BOUNDARY	= 0x00000004;
         final int PS_XFERING		= 0x00000008;
 
-	    if ( dm != null ){
+      	DiskManagerPiece[]	dm_pieces = dm.getPieces();
 
-	      	DiskManagerPiece[]	dm_pieces = dm.getPieces();
+      	PEPeerManager pm = showTransferring?manager.getPeerManager():null;
+      	
+      	PEPiece[] pm_pieces = pm==null?null:pm.getPieces();
+      	
+      	boolean	update_skipped;
+      	boolean	update_boundaries;
 
-	      	PEPeerManager pm = showTransferring?manager.getPeerManager():null;
-	      	
-	      	PEPiece[] pm_pieces = pm==null?null:pm.getPieces();
-	      	
-	      	boolean	update_skipped;
-	      	boolean	update_boundaries;
+      		// ensure disk manager is in a decent state before we start poking about as during
+      		// allocation the checking of skipped status is not reliable
 
-	      		// ensure disk manager is in a decent state before we start poking about as during
-	      		// allocation the checking of skipped status is not reliable
+    	int dm_state = dm.getState();
 
-	    	int dm_state = dm.getState();
+    	if ( dm_state == DiskManager.SNAPSHOT || dm_state == DiskManager.CHECKING || dm_state == DiskManager.READY ){
 
-	    	if ( dm_state == DiskManager.CHECKING || dm_state == DiskManager.READY ){
+	      	if ( !valid ){
+	      		update_skipped 		= true;
+	      		update_boundaries	= true;
+	      	}else{
+	      		if ( piecesStateFileBoundariesDone ){
+	      			update_boundaries = false;
+	      		}else{
+	      			piecesStateFileBoundariesDone = true;
+	      			update_boundaries = true;
+	      		}
+	      		long marker = dm.getPriorityChangeMarker();
+	      		if ( marker == piecesStateSkippedMarker ){
+	      			update_skipped = false;
+	      		}else{
+	      			piecesStateSkippedMarker = marker;
+	      			update_skipped = true;
+	      		}
+	      	}
+    	}else{
+    		update_skipped 		= false;
+      		update_boundaries	= false;
+    	}
 
-		      	if ( !valid ){
-		      		update_skipped 		= true;
-		      		update_boundaries	= true;
-		      	}else{
-		      		if ( piecesStateFileBoundariesDone ){
-		      			update_boundaries = false;
-		      		}else{
-		      			piecesStateFileBoundariesDone = true;
-		      			update_boundaries = true;
-		      		}
-		      		long marker = dm.getPriorityChangeMarker();
-		      		if ( marker == piecesStateSkippedMarker ){
-		      			update_skipped = false;
-		      		}else{
-		      			piecesStateSkippedMarker = marker;
-		      			update_skipped = true;
-		      		}
-		      	}
-	    	}else{
-	    		update_skipped 		= false;
-	      		update_boundaries	= false;
-	    	}
+ 		for (int i=0;i<nbPieces;i++){
 
-	 		for (int i=0;i<nbPieces;i++){
+ 			DiskManagerPiece	piece = dm_pieces[i];
 
-	 			DiskManagerPiece	piece = dm_pieces[i];
+ 			int state = piece.isDone()?PS_DONE:PS_NONE;
 
-	 			int state = piece.isDone()?PS_DONE:PS_NONE;
-
-	 			if ( pm_pieces != null && state == PS_NONE && pm_pieces[i] != null ){
-	 				
-	 				state = PS_XFERING;
+ 			if ( pm_pieces != null && state == PS_NONE && pm_pieces[i] != null ){
+ 				
+ 				state = PS_XFERING;
+ 			}
+ 			
+ 			if ( update_skipped ){
+	 			if (piece.isSkipped()){
+	 				state |= PS_SKIPPED;
 	 			}
-	 			
-	 			if ( update_skipped ){
-		 			if (piece.isSkipped()){
-		 				state |= PS_SKIPPED;
-		 			}
-	 			}else{
-	 				state |= oldPiecesState[i]&PS_SKIPPED;
+ 			}else{
+ 				state |= oldPiecesState[i]&PS_SKIPPED;
+ 			}
+
+ 			if ( update_boundaries ){
+
+ 				if ( piece.spansFiles()){
+	 				state |= PS_FILE_BOUNDARY;
 	 			}
+ 			}else{
+ 				state |= oldPiecesState[i]&PS_FILE_BOUNDARY;
+ 			}
 
-	 			if ( update_boundaries ){
+ 			newPiecesState[i] = state;
 
-	 				if ( piece.spansFiles()){
-		 				state |= PS_FILE_BOUNDARY;
-		 			}
-	 			}else{
-	 				state |= oldPiecesState[i]&PS_FILE_BOUNDARY;
-	 			}
+ 			if ( valid ){
 
-	 			newPiecesState[i] = state;
+ 				if ( oldPiecesState[i] != state ){
 
-	 			if ( valid ){
-
-	 				if ( oldPiecesState[i] != state ){
-
-	 					valid	= false;
-	 				}
-	 			}
-	 		}
-	    }else if ( valid ){
-	    
-	    	for (int i=0;i<nbPieces;i++){
-	    		if ( oldPiecesState[i] != 0 ){
-	    			valid = false;
-	    			break;
-	    		}
-	    	}
-	    	
-	    }
+ 					valid	= false;
+ 				}
+ 			}
+ 		}
 
 	    piecesStateCache	= newPiecesState;
 

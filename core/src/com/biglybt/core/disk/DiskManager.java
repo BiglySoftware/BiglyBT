@@ -39,6 +39,7 @@ import com.biglybt.core.util.IndentWriter;
 public interface
 DiskManager
 {
+	public static final int SNAPSHOT = 0;
 	public static final int INITIALIZING = 1;
 	public static final int ALLOCATING = 2;
 	public static final int CHECKING = 3;
