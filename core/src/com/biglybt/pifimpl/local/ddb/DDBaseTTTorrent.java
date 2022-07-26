@@ -218,7 +218,7 @@ DDBaseTTTorrent
 				}
 			}
 
-			String	originator = contact.getName();
+			String	originator = contact.getName() + " (" + contact.getAddress() + ")";
 
 			if ( download == null ){
 
