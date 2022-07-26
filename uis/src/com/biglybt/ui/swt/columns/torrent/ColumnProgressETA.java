@@ -680,7 +680,7 @@ public class ColumnProgressETA
 
 		Object oShow3D = getUserData(CFG_SHOW3D);
 		if (oShow3D == null) {
-			show3D = true; // we could read a global default from somewhere
+			show3D = false; // we could read a global default from somewhere
 		} else if (oShow3D instanceof Number) {
 			show3D = ((Number) oShow3D).intValue() == 1;
 		}
