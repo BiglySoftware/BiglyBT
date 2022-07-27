@@ -386,6 +386,7 @@ public class ColumnProgressETA
 			return;
 		}
 
+		int lineHeight = cell.getTableRow().getView().getLineHeight();
 		boolean showSecondLine;
 		int alignSecondLine;
 		Color fgSecondLine;
@@ -393,7 +394,7 @@ public class ColumnProgressETA
 
 		Rectangle boundsProgressBar = cell.getBounds();
 
-		if (cellBounds.height > minTwoLineHeight) {
+		if (cellBounds.height >= Math.min( minTwoLineHeight, lineHeight*2 )) {
 			showSecondLine = true;
 			boundsProgressBar.height -= secondLineHeight;
 			boundsSecondLine = new Rectangle(

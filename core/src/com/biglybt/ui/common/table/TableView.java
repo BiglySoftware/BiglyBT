@@ -367,6 +367,8 @@ public interface TableView<DATASOURCETYPE>
 	 */
 	int getRowDefaultHeight();
 
+	int getLineHeight();
+	
 	boolean isColumnVisible(TableColumn column);
 
 	/**
