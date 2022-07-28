@@ -41,7 +41,6 @@ import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
@@ -527,7 +526,7 @@ public class ColumnProgressETA
 				gc.getFont(), textHeightPX, SWT.DEFAULT);
 		}
 
-		final boolean wantShadow = cTextDrop != null;
+		final boolean wantShadow = cTextDrop != null && show3D;
 		Rectangle area = new Rectangle(
 			boundsProgressBar.x + xOffset + (wantShadow ? 1 : 0),
 			boundsProgressBar.y + yOffset + (wantShadow ? 1 : 0),
