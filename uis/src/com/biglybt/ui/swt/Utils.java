@@ -2483,6 +2483,8 @@ public class Utils
 				}
 			}
 			
+			String rectStr = currentBounds.x + "," + currentBounds.y + "," + currentBounds.width + "," + currentBounds.height;
+
 			boolean	changed = false;
 			
 			if ( currentState != savedState ){
@@ -2497,9 +2499,8 @@ public class Utils
 			if ( !currentBounds.equals( savedBounds)){
 
 				if (currentBounds.width > 0  && currentBounds.height > 0 ){
-				
-					COConfigurationManager.setParameter(sConfigPrefix + ".rectangle",
-							currentBounds.x + "," + currentBounds.y + "," + currentBounds.width + "," + currentBounds.height);
+														
+					COConfigurationManager.setParameter(sConfigPrefix + ".rectangle", rectStr );
 					
 					savedBounds = currentBounds;
 					
@@ -2967,20 +2968,28 @@ public class Utils
 
 			Monitor[] monitors = shell.getDisplay().getMonitors();
 			for (int j = 0; j < monitors.length && !bMetricsOk; j++) {
-				Rectangle bounds = monitors[j].getClientArea();
-				boolean hasTopLeft = bounds.contains(ptTopLeft);
-				boolean hasBottomRight = bounds.contains(ptBottomRight);
+				Rectangle monitorBounds = monitors[j].getClientArea();
+				Rectangle testBounds;
+					// seems that Windows 10 has some magical padding that means that a window manually resized to fill the entire monitor
+					// fails the test below - add some padding to deal with this :(
+				if ( Constants.isWindows ){
+					testBounds = new Rectangle(monitorBounds.x-10,monitorBounds.y-10,monitorBounds.width+20,monitorBounds.height+20);
+				}else{
+					testBounds = monitorBounds;
+				}
+				boolean hasTopLeft = testBounds.contains(ptTopLeft);
+				boolean hasBottomRight = testBounds.contains(ptBottomRight);
 				bMetricsOk = hasTopLeft && hasBottomRight;
 				if (hasTopLeft) {
-					boundsMonitorTopLeft = bounds;
+					boundsMonitorTopLeft = monitorBounds;
 				}
 				if (hasBottomRight){
-					boundsMonitorBottomRight = bounds;
+					boundsMonitorBottomRight = monitorBounds;
 				}
-				if (boundsMonitorContained == null && bounds.intersects(ptTopLeft.x,
+				if (boundsMonitorContained == null && testBounds.intersects(ptTopLeft.x,
 						ptTopLeft.y, ptBottomRight.x - ptTopLeft.x + 1,
 						ptBottomRight.y - ptTopLeft.y + 1)) {
-					boundsMonitorContained = bounds;
+					boundsMonitorContained = monitorBounds;
 				}
 			}
 			Rectangle bounds = boundsMonitorTopLeft != null ? boundsMonitorTopLeft
