@@ -821,31 +821,71 @@ PlatformManagerImpl
 							@Override
 							public void run()
 							{
-								while( true ){
-
-									synchronized( PlatformManagerImpl.this ){
-
-										if ( !prevent_computer_sleep ){
-
-											if ( prevent_sleep_thread == this ){
-
-												prevent_sleep_thread = null;
-											}
-
-											break;
-										}
-									}
-
+									// https://stackoverflow.com/questions/72436579/setthreadexecutionstatees-system-required-does-not-prevent-system-sleep-on-win
+								
+									// isWindows11OrHigher not available to use 10+
+								
+								boolean sr_broken = Constants.isWindows10OrHigher;
+								
+								if ( sr_broken ){
+									
 									try{
-										access.setThreadExecutionState( AEWin32AccessInterface.ES_SYSTEM_REQUIRED );
+										
+										access.setThreadExecutionState( AEWin32AccessInterface.ES_CONTINUOUS | AEWin32AccessInterface.ES_SYSTEM_REQUIRED );
 
-										Thread.sleep( 30*1000 );
-
+										while( true ){
+											
+											synchronized( PlatformManagerImpl.this ){
+		
+												if ( !prevent_computer_sleep ){
+		
+													if ( prevent_sleep_thread == this ){
+		
+														prevent_sleep_thread = null;
+													}
+		
+													break;
+												}
+											}
+											
+											Thread.sleep( 5*1000 );
+										}
 									}catch( Throwable e ){
-
+										
 										Debug.out( e );
 
-										break;
+									}finally{
+										
+										access.setThreadExecutionState( AEWin32AccessInterface.ES_CONTINUOUS );
+									}
+								}else{
+									
+									while( true ){
+	
+										synchronized( PlatformManagerImpl.this ){
+	
+											if ( !prevent_computer_sleep ){
+	
+												if ( prevent_sleep_thread == this ){
+	
+													prevent_sleep_thread = null;
+												}
+	
+												break;
+											}
+										}
+	
+										try{
+											access.setThreadExecutionState( AEWin32AccessInterface.ES_SYSTEM_REQUIRED );
+	
+											Thread.sleep( 30*1000 );
+	
+										}catch( Throwable e ){
+	
+											Debug.out( e );
+	
+											break;
+										}
 									}
 								}
 							}
