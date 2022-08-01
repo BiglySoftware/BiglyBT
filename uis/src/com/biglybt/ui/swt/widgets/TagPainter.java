@@ -90,6 +90,7 @@ public class TagPainter
 	public Font font = null;
 	public Color colorTagFaded;
 	public Color colorTag;
+	public boolean alwaysDrawBorder;
 	public boolean needsBorderOnSelection;
 	protected boolean compact;
 	protected boolean isEnabled = true;
@@ -265,7 +266,7 @@ public class TagPainter
 			}
 		}
 
-		if (selected && needsBorderOnSelection) {
+		if ( alwaysDrawBorder || (selected && needsBorderOnSelection)){
 			gc.setLineWidth(1);
 			gc.setForeground(colorText);
 			gc.setAlpha(0x70);

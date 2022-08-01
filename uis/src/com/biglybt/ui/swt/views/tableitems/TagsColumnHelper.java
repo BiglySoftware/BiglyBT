@@ -254,6 +254,7 @@ TagsColumnHelper
 		for (Tag tag : tags) {
 			TagPainter painter = new TagPainter(tag);
 			painter.setCompact(true, false);
+			painter.alwaysDrawBorder = true;
 			painter.paddingContentY = 1;
 			painter.paddingContentX0 = 2;
 			painter.paddingContentX1 = 4;
