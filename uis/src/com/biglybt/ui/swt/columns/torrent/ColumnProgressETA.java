@@ -458,7 +458,7 @@ public class ColumnProgressETA
 		final int originalWidth = gc.getLineWidth();
 		gc.setForeground(cBorder);
 		gc.setLineWidth(borderWidth);
-		gc.drawRectangle(boundsProgressBar);
+		gc.drawRectangle(boundsProgressBar.x,boundsProgressBar.y,boundsProgressBar.width,boundsProgressBar.height-1);
 		gc.setLineWidth(originalWidth);
 
 		String sStatusLine = null;
@@ -515,7 +515,7 @@ public class ColumnProgressETA
 		int newTextHeightPX = Math.min(
 				showSecondLine ? maxTextHeightPX : 16,
 				boundsProgressBar.height - (2 * yOffset));
-		yOffset = (boundsProgressBar.height - newTextHeightPX) / 2;
+		yOffset = (boundsProgressBar.height - newTextHeightPX+1) / 2;
 
 		if (fontText == null || newTextHeightPX != textHeightPX) {
 			if (fontText != null) {

@@ -337,7 +337,7 @@ public class TagColorsItem
 			bounds.x+=1;
 			bounds.y+=1;
 			bounds.width-=1;
-			bounds.height-=1;
+			bounds.height-=2;
 
 			if ( num_colors == 1 ){
 

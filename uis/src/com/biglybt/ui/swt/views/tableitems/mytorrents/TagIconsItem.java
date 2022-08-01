@@ -138,7 +138,7 @@ public class TagIconsItem
 			bounds.x+=1;
 			bounds.y+=1;
 			bounds.width-=1;
-			bounds.height-=1;
+			bounds.height-=2;
 
 			int w = bounds.width / num_files;			
 			

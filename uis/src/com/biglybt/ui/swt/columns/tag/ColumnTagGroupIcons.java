@@ -36,7 +36,6 @@ import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumn;
-import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.tables.TableColumnExtraInfoListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -155,7 +154,7 @@ public class ColumnTagGroupIcons
 			bounds.x+=1;
 			bounds.y+=1;
 			bounds.width-=1;
-			bounds.height-=1;
+			bounds.height-=2;
 
 			int w = bounds.width / num_files;			
 			
