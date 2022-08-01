@@ -72,7 +72,8 @@ TagsColumnHelper
 	
 	@Override
 	default public void refresh(TableCell cell) {
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sb1 = new StringBuilder();
+		StringBuilder sb2 = new StringBuilder();
 
 		try {
 			List<Tag> tags = getTags( cell );
@@ -84,14 +85,17 @@ TagsColumnHelper
 			tags = TagUtils.sortTags(tags);
 
 			for (Tag tag : tags) {
-				if (sb.length() != 0) {
-					sb.append(", ");
+				if ( sb1.length() > 0 ){
+					sb1.append( "," );
 				}
-				sb.append(tag.getTagName(true));
+				sb1.append( tag.getTagName( true ));
+				sb2.append( tag.getTagUID());
 			}
 
 		} finally {
-			cell.setSortValue(sb.toString());
+			sb1.append( "," );
+			sb1.append( sb2 );	// we need the sort value to change even when the string value doesn't
+			cell.setSortValue(sb1.toString());
 		}
 	}
 
