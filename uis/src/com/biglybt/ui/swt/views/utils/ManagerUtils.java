@@ -2771,6 +2771,8 @@ public class ManagerUtils {
 					
 					mode_combo.select( mode );
 					
+					boolean not_relocate = mode != LOCATE_MODE_RELOCATE;
+					
 					int link_mode = COConfigurationManager.getIntParameter( "find.files.search.mode.link", LOCATE_MODE_LINK_INTERNAL );
 					
 					boolean link_enabled = mode == LOCATE_MODE_LINK;
@@ -2778,6 +2780,10 @@ public class ManagerUtils {
 					link_combo.select( link_enabled?link_mode:LOCATE_MODE_LINK_BLANK );
 					
 					link_combo.setEnabled( link_enabled );
+					
+					spinner.setEnabled( not_relocate );
+					
+					so_include_skipped.setEnabled( not_relocate );
 				}
 			};
 			
@@ -3036,7 +3042,7 @@ public class ManagerUtils {
 		final DownloadManager[]			dms,
 		final DiskManagerFileInfo[][]	dm_files,
 		Shell							shell,
-		String[]						search_roots,
+		String[]						initial_search_roots,
 		int								mode,
 		int								link_type,
 		int								tolerance,
@@ -3121,6 +3127,46 @@ public class ManagerUtils {
 					if ( 	mode == LOCATE_MODE_RELOCATE || 
 							( mode == LOCATE_MODE_LINK && link_type != LOCATE_MODE_LINK_HARD )){
 						
+							// If a user is relocating a number of downloads they may have taken the 
+							// opportunity to organise things a bit (e.g. move into genre-based folders)
+							// Expand the search roots a pick this up
+						
+						Set<String>	expanded_search_roots = new LinkedHashSet<>( initial_search_roots.length*10 );
+						
+						expanded_search_roots.addAll( Arrays.asList( initial_search_roots ));
+						
+						Collection<String>	to_expand = expanded_search_roots;
+						
+						for ( int level=0;level<2;level++){
+							
+							List<String>	all_kids = new ArrayList<>();
+							
+							for ( String str: to_expand ){
+								
+								File[] kids = new File( str ).listFiles();
+								
+								if ( kids != null && kids.length > 0 ){
+									
+									for ( File f: kids ){
+										
+										if ( f.isDirectory()){
+										
+											all_kids.add( f.getAbsolutePath());
+										}
+									}
+								}
+							}
+							
+							expanded_search_roots.addAll( all_kids );
+							
+							to_expand = all_kids;
+						}						
+						
+						if ( expanded_search_roots.size() > initial_search_roots.length ){
+							
+							logLine( viewer, 0, ( expanded_search_roots.size() - initial_search_roots.length ) + " subfolders added to search roots" );
+						}
+						
 						for ( int i=0;i<dms.length;i++){
 	
 							DownloadManager			dm = dms[i];
@@ -3167,7 +3213,7 @@ public class ManagerUtils {
 							String save_name = save_loc.getName();
 							
 							outer:
-							for ( String root: search_roots ){
+							for ( String root: expanded_search_roots ){
 	
 								if ( handled[i] ){
 									break;
@@ -3315,7 +3361,7 @@ public class ManagerUtils {
 	
 						long[] log_details = { bfm_start, 0, bfm_start };
 		
-						for ( String root: search_roots ){
+						for ( String root: initial_search_roots ){
 	
 							synchronized( quit ){
 								if ( quit[0] ){
