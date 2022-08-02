@@ -280,14 +280,18 @@ public class SWTSkinObjectText2
 								url = Constants.URL_CLIENT_HOME;
 							}
 
-							if (url.contains("?")) {
-								url += "&";
-							} else {
-								url += "?";
+							boolean rawURL = skinProperties.getBooleanValue(sPrefix + ".urlraw", false);
+
+							if ( !rawURL ){
+								if (url.contains("?")) {
+									url += "&";
+								} else {
+									url += "?";
+								}
+								url += "fromWeb=false&os.version="
+										+ UrlUtils.encode(System.getProperty("os.version"))
+										+ "&java.version=" + UrlUtils.encode(Constants.JAVA_VERSION);
 							}
-							url += "fromWeb=false&os.version="
-									+ UrlUtils.encode(System.getProperty("os.version"))
-									+ "&java.version=" + UrlUtils.encode(Constants.JAVA_VERSION);
 						} catch (Throwable t) {
 							// ignore
 						}
