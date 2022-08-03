@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.*;
 
 import org.json.simple.JSONArray;
@@ -97,8 +96,6 @@ BEncoder
     		
     		current_os.write( current_buffer, 0, current_buffer_pos );
     	}
-    	
-    	System.out.println( "cb=" + current_buffer.length );
    	}
     
     private boolean
