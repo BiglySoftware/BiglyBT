@@ -263,7 +263,7 @@ public class SWTSkinObjectText2
 			@Override
 			public void mouseUp(MouseEvent e) {
 				mouseDown = false;
-				if (lastStringPrinter != null) {
+				if (lastStringPrinter != null && e.button == 1) {
 					URLInfo hitUrl = lastStringPrinter.getHitUrl(e.x, e.y);
 					if (hitUrl != null) {
 
@@ -275,26 +275,9 @@ public class SWTSkinObjectText2
 						}
 
 						String url = hitUrl.url;
-						try {
-							if (url.startsWith("/")) {
-								url = Constants.URL_CLIENT_HOME;
-							}
 
-							boolean rawURL = skinProperties.getBooleanValue(sPrefix + ".urlraw", false);
-
-							if ( !rawURL ){
-								if (url.contains("?")) {
-									url += "&";
-								} else {
-									url += "?";
-								}
-								url += "fromWeb=false&os.version="
-										+ UrlUtils.encode(System.getProperty("os.version"))
-										+ "&java.version=" + UrlUtils.encode(Constants.JAVA_VERSION);
-							}
-						} catch (Throwable t) {
-							// ignore
-						}
+						url = fixupURL( skinProperties, sPrefix, url );
+						
 						Utils.launch(url);
 					}
 				}
@@ -306,7 +289,7 @@ public class SWTSkinObjectText2
 				if (lastStringPrinter != null) {
 					URLInfo hitUrl = lastStringPrinter.getHitUrl(e.x, e.y);
 					String curURL = hitUrl == null ? "" : hitUrl.url;
-
+						// dunno what this is doing...
 					if (curURL.equals(lastDownURL)) {
 						lastDownURL = curURL;
 						canvas.redraw();
@@ -319,6 +302,7 @@ public class SWTSkinObjectText2
 			}
 		});
 
+		
 		canvas.addMouseMoveListener(new MouseMoveListener() {
 			Boolean doUrlToolTip = null;
 			@Override
@@ -360,6 +344,39 @@ public class SWTSkinObjectText2
 				}
 			});
 			canvas.setMenu(menu);
+		}else{
+			Menu menu = new Menu(canvas);
+			canvas.setMenu(menu);
+			
+			canvas.addMenuDetectListener(e -> {
+				canvas.setData("MenuDetectEvent", e);
+			});
+			
+			menu.addMenuListener( new MenuListener(){
+				@Override
+				public void menuShown(MenuEvent e){
+					MenuDetectEvent mde = (MenuDetectEvent)canvas.getData("MenuDetectEvent");
+					
+					for ( MenuItem mi: menu.getItems()){
+						
+						mi.dispose();
+					}
+					
+					if (lastStringPrinter != null&&mde!=null) {
+						Point mapped = canvas.getDisplay().map( null, canvas, new Point( mde.x, mde.y ));
+						URLInfo hitUrl = lastStringPrinter.getHitUrl(mapped.x, mapped.y);
+						if (hitUrl != null) {
+							
+							String url = fixupURL( skinProperties, sPrefix, hitUrl.url );
+							
+							ClipboardCopy.addCopyToClipMenu(menu, ()->url );
+						}
+					}
+				}
+				@Override
+				public void menuHidden(MenuEvent e){
+				}
+			});
 		}
 
 		setAlwaysHookPaintListener(true);
@@ -367,6 +384,36 @@ public class SWTSkinObjectText2
 		updateFont("");
 	}
 
+	private String
+	fixupURL(
+		SWTSkinProperties	skinProperties,
+		String				sPrefix,
+		String				url )
+	{
+		try {
+			if (url.startsWith("/")) {
+				url = Constants.URL_CLIENT_HOME;
+			}
+
+			boolean rawURL = skinProperties.getBooleanValue(sPrefix + ".urlraw", false);
+
+			if ( !rawURL ){
+				if (url.contains("?")) {
+					url += "&";
+				} else {
+					url += "?";
+				}
+				url += "fromWeb=false&os.version="
+						+ UrlUtils.encode(System.getProperty("os.version"))
+						+ "&java.version=" + UrlUtils.encode(Constants.JAVA_VERSION);
+			}
+		} catch (Throwable t) {
+			// ignore
+		}
+		
+		return( url );
+	}
+	
 	@Override
 	public String switchSuffix(String suffix, int level, boolean walkUp,
 	                           boolean walkDown) {
