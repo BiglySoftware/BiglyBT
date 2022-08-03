@@ -644,6 +644,15 @@ public class FileUtil {
 	  writeResilientFile( file.getParentFile(), file.getName(), data, false );
   }
 
+  public static void
+  writeResilientFileIncrementally(
+	File		file,
+	Map			data )
+  {
+	  writeResilientFileIncrementally( file.getParentFile(), file.getName(), data );
+  }
+  
+  
   public static boolean
   writeResilientFileWithResult(
     File		parent_dir,
@@ -816,6 +825,102 @@ public class FileUtil {
 		  class_mon.exit();
 	  }
   }
+
+	  // synchronise it to prevent concurrent attempts to write the same file
+	
+	  private static boolean
+	  writeResilientFileIncrementally(
+		  File			parent_dir,
+		  String		file_name,
+		  Map			data )
+	  {
+		  try{
+			  class_mon.enter();
+	
+			  try{
+				  getReservedFileHandles();
+				  
+				  File temp = newFile(  parent_dir, file_name + ".saving");
+				  	
+				  FileOutputStream fos = null;
+				  
+				  try{
+					  fos = newFileOutputStream( temp, false );
+					  					  
+					  BEncoder.encodeToStream( data, fos );
+					  
+					  fos.flush();
+	
+					  fos.getFD().sync();
+	
+					  fos.close();
+					  fos = null;
+	
+					  //only use newly saved file if it got this far, i.e. it saved successfully
+	
+					  if ( temp.length() > 1L ){
+	
+						  File file = newFile( parent_dir, file_name );
+	
+						  if ( file.exists()){
+	
+							  if ( !file.delete()){
+	
+								  Debug.out( "Save of '" + file_name + "' fails - couldn't delete " + file.getAbsolutePath());
+							  }
+						  }
+	
+						  if (file.exists()) {
+							  Debug.out(file + " still exists after delete attempt");
+						  }
+	
+						  if ( temp.renameTo( file )){
+	
+							  return( true );
+	
+						  }
+	
+						  // rename failed, sleep a little and try again
+						  Thread.sleep(50);
+						  if ( temp.renameTo( file )){
+							  //System.err.println("2nd attempt of rename succeeded for " + temp.getAbsolutePath() + " to " + file.getAbsolutePath());
+							  return true;
+						  }
+	
+						  Debug.out( "Save of '" + file_name + "' fails - couldn't rename " + temp.getAbsolutePath() + " to " + file.getAbsolutePath());
+					  }
+	
+					  return( false );
+	
+				  }catch( Throwable e ){
+	
+					  Debug.out( "Save of '" + file_name + "' fails", e );
+	
+					  return( false );
+	
+				  }finally{
+	
+					  try{
+						  if (fos != null){
+	
+							  fos.close();
+						  }
+					  }catch( Exception e){
+	
+						  Debug.out( "Save of '" + file_name + "' fails", e );
+	
+						  return( false );
+					  }
+				  }
+			  }finally{
+	
+				  releaseReservedFileHandles();
+			  }
+		  }finally{
+	
+			  class_mon.exit();
+		  }
+	  }
 
   	public static boolean
   	resilientConfigFileExists(

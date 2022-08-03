@@ -7860,7 +7860,7 @@ SubscriptionManagerImpl
 					list.add( result.toBEncodedMap());
 				}
 				
-				FileUtil.writeResilientFile( f, map );
+				FileUtil.writeResilientFileIncrementally( f, map );
 
 			}catch( Throwable e ){
 

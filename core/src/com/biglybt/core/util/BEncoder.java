@@ -20,6 +20,7 @@
 package com.biglybt.core.util;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -59,11 +60,44 @@ BEncoder
     	return( encoder.toByteArray());
     }
 
-    private byte[]		current_buffer		= new byte[256];
+    public static void
+    encodeToStream(
+    	Map					object,
+    	OutputStream		os )
+    
+    	throws IOException
+    {
+    	BEncoder encoder = new BEncoder();
+    	
+    	encoder.encodeObject( object, os, false );
+    }
+    
+    private byte[]		current_buffer		= new byte[16*1024];
     private int			current_buffer_pos	= 0;
     private byte[][]	old_buffers;
+    
+    private OutputStream	current_os;
+    
 
     private final byte[]		int_buffer			= new byte[12];
+    
+    private void
+   	encodeObject(
+   		Object 					object,
+   		OutputStream			os,
+   		boolean					utf_key_expected )
+
+       	throws IOException
+   	{
+    	current_os	= os;
+    	
+    	encodeObject( object, utf_key_expected );
+    	
+    	if ( current_buffer_pos > 0 ){
+    		
+    		current_os.write( current_buffer, 0, current_buffer_pos );
+    	}
+   	}
     
     private boolean
    	encodeObject(
@@ -300,6 +334,8 @@ BEncoder
     private void
     writeChar(
     	char		c )
+    
+    	throws IOException
    	{
     	int rem = current_buffer.length - current_buffer_pos;
 
@@ -315,19 +351,26 @@ BEncoder
 
     		new_buffer[ 0 ] = (byte)c;
 
-    		if ( old_buffers == null ){
-
-    			old_buffers = new byte[][]{ current_buffer };
-
+    		if ( current_os != null ){
+    			
+    			current_os.write( current_buffer );
+    			
     		}else{
-
-    			byte[][] new_old_buffers = new byte[old_buffers.length+1][];
-
-    			System.arraycopy( old_buffers, 0, new_old_buffers, 0, old_buffers.length );
-
-    			new_old_buffers[ old_buffers.length ] = current_buffer;
-
-    			old_buffers = new_old_buffers;
+    			
+	    		if ( old_buffers == null ){
+	
+	    			old_buffers = new byte[][]{ current_buffer };
+	
+	    		}else{
+	
+	    			byte[][] new_old_buffers = new byte[old_buffers.length+1][];
+	
+	    			System.arraycopy( old_buffers, 0, new_old_buffers, 0, old_buffers.length );
+	
+	    			new_old_buffers[ old_buffers.length ] = current_buffer;
+	
+	    			old_buffers = new_old_buffers;
+	    		}
     		}
 
     		current_buffer		= new_buffer;
@@ -338,6 +381,8 @@ BEncoder
     private void
     writeInt(
     	int		i )
+    
+    	throws IOException
     {
     		// we get a bunch of -1 values, optimise
 
@@ -356,6 +401,8 @@ BEncoder
     private void
     writeLong(
     	long	l )
+    
+    	throws IOException
     {
      	if ( l <= Integer.MAX_VALUE && l >= Integer.MIN_VALUE ){
 
@@ -370,6 +417,8 @@ BEncoder
     private void
     writeBytes(
     	byte[]			bytes )
+    
+    	throws IOException
     {
     	writeBytes( bytes, 0, bytes.length );
     }
@@ -379,6 +428,8 @@ BEncoder
     	byte[]			bytes,
     	int				offset,
     	int				length )
+    
+    	throws IOException
     {
     	int rem = current_buffer.length - current_buffer_pos;
 
@@ -403,21 +454,28 @@ BEncoder
 
     		System.arraycopy( bytes, offset + rem, new_buffer, 0, length );
 
-    		if ( old_buffers == null ){
-
-    			old_buffers = new byte[][]{ current_buffer };
-
+    		if ( current_os != null ){
+    			
+    			current_os.write( current_buffer );
+    			
     		}else{
-
-    			byte[][] new_old_buffers = new byte[old_buffers.length+1][];
-
-    			System.arraycopy( old_buffers, 0, new_old_buffers, 0, old_buffers.length );
-
-    			new_old_buffers[ old_buffers.length ] = current_buffer;
-
-    			old_buffers = new_old_buffers;
+    			
+	    		if ( old_buffers == null ){
+	
+	    			old_buffers = new byte[][]{ current_buffer };
+	
+	    		}else{
+	
+	    			byte[][] new_old_buffers = new byte[old_buffers.length+1][];
+	
+	    			System.arraycopy( old_buffers, 0, new_old_buffers, 0, old_buffers.length );
+	
+	    			new_old_buffers[ old_buffers.length ] = current_buffer;
+	
+	    			old_buffers = new_old_buffers;
+	    		}
     		}
-
+    		
     		current_buffer		= new_buffer;
     		current_buffer_pos 	= length;
      	}
@@ -426,6 +484,8 @@ BEncoder
     private void
 	writeByteBuffer(
 		ByteBuffer		bb )
+	
+		throws IOException
     {
     	writeBytes( bb.array(), bb.arrayOffset() + bb.position(), bb.remaining());
     }
