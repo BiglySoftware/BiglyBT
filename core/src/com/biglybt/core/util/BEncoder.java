@@ -97,6 +97,8 @@ BEncoder
     		
     		current_os.write( current_buffer, 0, current_buffer_pos );
     	}
+    	
+    	System.out.println( "cb=" + current_buffer.length );
    	}
     
     private boolean
@@ -345,7 +347,9 @@ BEncoder
 
     	}else{
 
-       		int	next_buffer_size = current_buffer.length < BUFFER_DOUBLE_LIMIT?(current_buffer.length << 1):(current_buffer.length + BUFFER_DOUBLE_LIMIT );
+    		int current_buffer_size = current_buffer.length;
+    		
+       		int	next_buffer_size = current_buffer_size < BUFFER_DOUBLE_LIMIT?(current_buffer_size << 1):current_buffer_size;
 
     		byte[]	new_buffer = new byte[ next_buffer_size ];
 
@@ -448,7 +452,9 @@ BEncoder
 	    		length -= rem;
     		}
 
-    		int	next_buffer_size = current_buffer.length < BUFFER_DOUBLE_LIMIT?(current_buffer.length << 1):(current_buffer.length + BUFFER_DOUBLE_LIMIT );
+    		int current_buffer_size = current_buffer.length;
+    		
+       		int	next_buffer_size = current_buffer_size < BUFFER_DOUBLE_LIMIT?(current_buffer_size << 1):current_buffer_size;
 
     		byte[]	new_buffer = new byte[ Math.max( next_buffer_size, length + 512 ) ];
 
