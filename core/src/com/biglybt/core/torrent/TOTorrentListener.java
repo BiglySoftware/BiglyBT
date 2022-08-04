@@ -23,10 +23,11 @@ package com.biglybt.core.torrent;
 public interface
 TOTorrentListener
 {
-	public static final int CT_ANNOUNCE_URLS	= 1;
+	public static final int CT_ANNOUNCE_URLS	= 1;	// data either old,new {URL, URL} or { TOTorrentAnnounceURLSet[], TOTorrentAnnounceURLSet[] }
 
 	public void
 	torrentChanged(
 		TOTorrent		torrent,
-		int				change_type );
+		int				change_type,
+		Object			data );
 }

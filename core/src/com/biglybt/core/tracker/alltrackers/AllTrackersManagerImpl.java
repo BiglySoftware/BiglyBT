@@ -48,12 +48,14 @@ import com.biglybt.core.tracker.AllTrackersManager.ScrapeStatsProvider;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerRequest;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
+import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Average;
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.DNSUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
@@ -94,7 +96,9 @@ AllTrackersManagerImpl
 
 	private final long start_time = SystemTime.getMonotonousTime();
 			
-	private final Core	core;
+	private final Core	core = CoreFactory.getSingleton();
+	
+	private volatile boolean started;
 	
 	private volatile boolean stopping;
 	
@@ -121,8 +125,6 @@ AllTrackersManagerImpl
 	private
 	AllTrackersManagerImpl()
 	{
-		core = CoreFactory.getSingleton();
-
 		loadConfig();
 		
 		updateLogging();
@@ -155,6 +157,15 @@ AllTrackersManagerImpl
 		core.addLifecycleListener(
 				new CoreLifecycleAdapter()
 				{
+					@Override
+					public void 
+					started(Core core)
+					{
+						started	= true;
+						
+						recalcTotals();
+					}
+					
 					@Override
 					public void 
 					stopping(
@@ -721,6 +732,144 @@ AllTrackersManagerImpl
 		return( host_map.size());
 	}
 	
+	private final FrequencyLimitedDispatcher totalDisp = 
+		new FrequencyLimitedDispatcher(AERunnable.create(()->{
+			
+			Map<String,int[]> counts = new HashMap<>();
+			
+			for ( DownloadManager dm: core.getGlobalManager().getDownloadManagers()){
+				
+				try{
+					TOTorrent torrent = dm.getTorrent();
+					
+					if ( torrent != null ){
+						
+						boolean priv = torrent.getPrivate();
+						
+						URL announce_url = torrent.getAnnounceURL();
+						
+						String announce_name;
+						
+						if ( announce_url != null ){
+						
+							announce_name = ingestURL( announce_url );
+							
+							if ( announce_name == null ){
+								
+								announce_name = "";
+								
+							}else{
+								
+								int[] c = counts.get( announce_name );
+								
+								if ( c == null ){
+									
+									c = new int[2];
+									
+									counts.put( announce_name, c );
+								}
+								
+								if ( priv ){
+									c[0]++;
+								}else{
+									c[1]++;
+								}
+							}
+						}else{
+							
+							announce_name = "";
+						}
+						
+						TOTorrentAnnounceURLSet[] sets = torrent.getAnnounceURLGroup().getAnnounceURLSets();
+									
+						for ( TOTorrentAnnounceURLSet set: sets ){
+								
+							URL[] urls = set.getAnnounceURLs();
+								
+							for ( URL url: urls ){
+									
+								String name = ingestURL( url );
+								
+								if ( name == null || name.equals( announce_name )){
+									
+									continue;
+								}
+								
+								int[] c = counts.get( name );
+								
+								if ( c == null ){
+									
+									c = new int[2];
+									
+									counts.put( name, c );
+								}
+								
+								if ( priv ){
+									c[0]++;
+								}else{
+									c[1]++;
+								}
+							}
+						}
+					}
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+			
+			List<AllTrackersTracker> updates = new ArrayList<>();
+
+			for ( AllTrackersTrackerImpl tracker: host_map.values()){
+				
+				int[] c = counts.get( tracker.getTrackerName());
+				
+				boolean changed;
+				
+				if ( c != null ){
+				
+					changed = tracker.updateCounts( c[1],  c[0] );
+					
+				}else{
+					
+					changed = tracker.updateCounts( 0,  0 );
+				}
+				
+				if ( changed ){
+					
+					updates.add( tracker );
+				}
+			}
+			
+			if ( !updates.isEmpty()){
+				
+				for ( AllTrackersListener listener: listeners ){
+					
+					try{
+						listener.trackerEventOccurred(	new AllTrackersEventImpl( AllTrackersEvent.ET_TRACKER_UPDATED, updates ));
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+			}
+		}),
+		5000 );
+	
+	{
+		totalDisp.setSingleThreaded();
+	}
+	
+	private void
+	recalcTotals()
+	{
+		if ( started ){
+			
+			totalDisp.dispatch();
+		}
+	}
+	
 	@Override
 	public void 
 	registerTorrent(
@@ -734,6 +883,16 @@ AllTrackersManagerImpl
 		registerTorrentSupport( torrent );
 		
 		update_queue.add( new Object[]{ torrent } );
+		
+		recalcTotals();
+	}
+	
+	@Override
+	public void 
+	unregisterTorrent(
+		TOTorrent torrent )
+	{
+		recalcTotals();
 	}
 	
 	private void 
@@ -755,12 +914,16 @@ AllTrackersManagerImpl
 		}
 	}
 	
+	@Override
 	public void
 	torrentChanged(
 		TOTorrent		torrent,
-		int				change_type )
+		int				change_type,
+		Object			data )
 	{
 		registerTorrentSupport( torrent );
+		
+		recalcTotals();
 	}
 	
 	@Override
@@ -874,19 +1037,19 @@ AllTrackersManagerImpl
 					}
 				}
 				
-				new_tracker.setRegistered( torrent_maybe_null );
+				new_tracker.setRegistered();
 				
 				return( new_tracker );
 			}
 		}
 		
-		existing_tracker.setRegistered( torrent_maybe_null );
+		existing_tracker.setRegistered();
 			
 		return( existing_tracker );
 	}
 	
 	private void
-	unregister(
+	unregisterTracker(
 		String		name )
 	{
 		AllTrackersTrackerImpl existing_tracker = host_map.remove( name );
@@ -1112,7 +1275,7 @@ AllTrackersManagerImpl
 		private long				total_down;
 		
 		private boolean		registered;
-		
+				
 		private int			num_private;
 		private int			num_public;
 		
@@ -1279,22 +1442,9 @@ AllTrackersManagerImpl
 		}
 		
 		private void
-		setRegistered(
-			TOTorrent	torrent_maybe_null )
+		setRegistered()
 		{
 			registered	= true;
-			
-			if ( torrent_maybe_null != null ){
-				
-				if ( torrent_maybe_null.getPrivate()){
-				
-					num_private++
-					;
-				}else{
-					
-					num_public++;
-				}
-			}
 		}
 		
 		private boolean
@@ -1303,18 +1453,43 @@ AllTrackersManagerImpl
 			return( registered );
 		}
 		
+		private boolean
+		updateCounts(
+			int		_pub,
+			int		_priv )
+		{
+			if ( num_private != _priv || num_public != _pub ){
+			
+				num_private	= _priv;
+				num_public	= _pub;
+				
+				return( true );
+				
+			}else{
+				
+				return( false );
+			}
+		}
+		
+		@Override
+		public int
+		getTorrentCount()
+		{
+			return( num_private + num_public );
+		}
+		
 		@Override
 		public boolean 
 		isRemovable()
 		{
-			return( num_private + num_public == 0 );
+			return( getTorrentCount() == 0 );
 		}
 		
 		@Override
 		public void 
 		remove()
 		{
-			unregister( name );
+			unregisterTracker( name );
 		}
 		
 		@Override

@@ -270,12 +270,21 @@ public class SBC_AllTrackersView
 						new ColumnAllTrackersRemovable(column);
 					}
 				});
+		
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersTorrentCount.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersTorrentCount(column);
+					}
+				});
 
 		
 		tableManager.setDefaultColumnNames(TABLE_NAME,
 				new String[] {
 					ColumnAllTrackersTracker.COLUMN_ID,
 					ColumnAllTrackersStatus.COLUMN_ID,
+					ColumnAllTrackersTorrentCount.COLUMN_ID,
 					ColumnAllTrackersLastGoodDate.COLUMN_ID,
 					ColumnAllTrackersLastBadDate.COLUMN_ID,
 					ColumnAllTrackersBadSinceDate.COLUMN_ID,
@@ -1829,6 +1838,11 @@ public class SBC_AllTrackersView
 		getPrivatePercentage()
 		{
 			return(tracker.getPrivatePercentage());
+		}
+		
+		@Override
+		public int getTorrentCount(){
+			return( tracker.getTorrentCount());
 		}
 		
 		public Tag

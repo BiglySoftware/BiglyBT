@@ -56,6 +56,8 @@ TOTorrentAnnounceURLGroupImpl
 	addSet(
 		TOTorrentAnnounceURLSet	set )
 	{
+		TOTorrentAnnounceURLSet[] old = sets;
+		
 		TOTorrentAnnounceURLSet[]	new_sets = new TOTorrentAnnounceURLSet[sets.length+1];
 
 		System.arraycopy( sets, 0, new_sets, 0, sets.length );
@@ -66,7 +68,7 @@ TOTorrentAnnounceURLGroupImpl
 
 		uid = TorrentUtils.getAnnounceGroupUID();
 		
-		torrent.fireChanged( TOTorrentListener.CT_ANNOUNCE_URLS );
+		torrent.fireChanged( TOTorrentListener.CT_ANNOUNCE_URLS, new Object[]{ old, sets } );
 	}
 
 	@Override
@@ -81,11 +83,13 @@ TOTorrentAnnounceURLGroupImpl
 	setAnnounceURLSets(
 		TOTorrentAnnounceURLSet[]	_sets )
 	{
+		TOTorrentAnnounceURLSet[] old = sets;
+		
 		sets = _sets;
 
 		uid = TorrentUtils.getAnnounceGroupUID();
 		
-		torrent.fireChanged( TOTorrentListener.CT_ANNOUNCE_URLS );
+		torrent.fireChanged( TOTorrentListener.CT_ANNOUNCE_URLS, new Object[]{ old, sets });
 	}
 
 

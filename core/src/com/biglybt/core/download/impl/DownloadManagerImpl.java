@@ -789,7 +789,7 @@ DownloadManagerImpl
 					new TOTorrentListener(){
 						
 						@Override
-						public void torrentChanged(TOTorrent torrent, int change_type){
+						public void torrentChanged(TOTorrent torrent, int change_type, Object data){
 							buildURLGroupMap( torrent );
 						}
 					});
@@ -6172,7 +6172,8 @@ DownloadManagerImpl
 						public void
 						torrentChanged(
 							TOTorrent	torrent,
-							int 		type )
+							int 		type,
+							Object		data )
 						{
 							if ( type == TOTorrentListener.CT_ANNOUNCE_URLS ){
 
@@ -7419,7 +7420,7 @@ DownloadManagerImpl
 		}else{
 
 			try{
-		   	// Data files don't exist, so we just don't do anything.
+					// Data files don't exist, so we just don't do anything.
 		    	if (!getSaveLocation().exists()) {return;}
 
 		    	DiskManager dm = this.getDiskManager();
@@ -7462,6 +7463,11 @@ DownloadManagerImpl
 				clearFileLinks();
 
 				controller.destroy();
+				
+				if ( torrent != null ){
+				
+					all_trackers.unregisterTorrent( torrent );
+				}
 			}
 		}
 	}

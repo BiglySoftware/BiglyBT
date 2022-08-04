@@ -763,9 +763,11 @@ TOTorrentImpl
 			newURL = TorrentUtils.getDecentralisedEmptyURL();
 		}
 
+		URL old = announce_url;
+		
 		announce_url	= StringInterner.internURL(newURL);
 
-		fireChanged( TOTorrentListener.CT_ANNOUNCE_URLS );
+		fireChanged( TOTorrentListener.CT_ANNOUNCE_URLS, new Object[]{ old, announce_url });
 
 		return true;
 	}
@@ -1587,7 +1589,8 @@ TOTorrentImpl
 
 	protected void
 	fireChanged(
-		int	type )
+		int			type,
+		Object		data )
 	{
 		if ( constructing ){
 			
@@ -1613,7 +1616,7 @@ TOTorrentImpl
 			for ( TOTorrentListener l: to_fire ){
 
 				try{
-					l.torrentChanged( this, type );
+					l.torrentChanged( this, type, data );
 
 				}catch( Throwable e ){
 
@@ -1625,7 +1628,7 @@ TOTorrentImpl
 		for ( TOTorrentListener l: global_listeners ){
 			
 			try{
-				l.torrentChanged( this, type );
+				l.torrentChanged( this, type, data );
 
 			}catch( Throwable e ){
 

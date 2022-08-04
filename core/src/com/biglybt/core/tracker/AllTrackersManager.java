@@ -53,6 +53,10 @@ AllTrackersManager
 			TOTorrent	torrent );
 		
 		public void
+		unregisterTorrent(
+			TOTorrent	torrent );
+		
+		public void
 		registerTracker(
 			TOTorrent	torrent,
 			URL			tracker );
@@ -231,6 +235,9 @@ AllTrackersManager
 		
 		public int
 		getPrivatePercentage();
+		
+		public int
+		getTorrentCount();
 		
 		public boolean
 		isRemovable();

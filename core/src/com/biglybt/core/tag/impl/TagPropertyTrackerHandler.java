@@ -352,10 +352,12 @@ TagPropertyTrackerHandler
 		}
 	}
 	
+	@Override
 	public void
 	torrentChanged(
 		TOTorrent		torrent,
-		int				change_type )
+		int				change_type,
+		Object			data )
 	{
 		if ( change_type == TOTorrentListener.CT_ANNOUNCE_URLS ){
 			
