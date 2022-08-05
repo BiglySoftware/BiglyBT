@@ -584,7 +584,20 @@ public class TableRowPainted
 		}
 
 		boolean gcChanged = false;
+		Rectangle oldClipping = null;
+		
 		try {
+			if ( Constants.IS_CVS_VERSION ){
+				// The cell bounds unfortunately includes the pixel on the right that is used to draw the column separators.
+				// It is a big job to amend things so that the width from cell.getBounds() returns an area excluding this so 
+				// at least clip things so that cells that try and use this "extra" pixel will see the problem...
+				
+				oldClipping = gc.getClipping();
+				int marginWidth		= cell.getMarginWidth();	// meh, some cells draw over their specified margin area (e.g. old progress-eta)
+				int marginHeight	= cell.getMarginHeight();
+				Utils.setClipping(gc, new Rectangle( cellBounds.x-marginWidth, cellBounds.y-marginHeight, cellBounds.width+marginWidth*2-1, cellBounds.height+marginHeight*2 ));
+			}
+			
 			if ( inPaintItem ){
 				Debug.out( "hmm");
 				return( false );
@@ -815,6 +828,9 @@ public class TableRowPainted
 		} catch (Exception e) {
 			Debug.out(cell.getTableID() + ":" + cell.getTableColumn().getName(), e );
 		}finally{
+			if ( Constants.IS_CVS_VERSION ){
+				Utils.setClipping(gc, oldClipping);
+			}
 			inPaintItem = false;
 		}
 

@@ -381,6 +381,8 @@ public class ColumnProgressETA
 
 		final Rectangle cellBounds = cell.getBounds();
 
+		cellBounds.width--; // adjust as includes pixel for column line :(
+		
 		if (cellBounds.width < minCellWidth) {
 			return;
 		}
@@ -393,6 +395,8 @@ public class ColumnProgressETA
 
 		Rectangle boundsProgressBar = cell.getBounds();
 
+		boundsProgressBar.width--;	// adjust as includes pixel for column line :(
+		
 		if (cellBounds.height >= Math.min( minTwoLineHeight, lineHeight*2 )) {
 			showSecondLine = true;
 			boundsProgressBar.height -= secondLineHeight;
@@ -458,7 +462,7 @@ public class ColumnProgressETA
 		final int originalWidth = gc.getLineWidth();
 		gc.setForeground(cBorder);
 		gc.setLineWidth(borderWidth);
-		gc.drawRectangle(boundsProgressBar.x,boundsProgressBar.y,boundsProgressBar.width,boundsProgressBar.height-1);
+		gc.drawRectangle(boundsProgressBar.x,boundsProgressBar.y,boundsProgressBar.width-1,boundsProgressBar.height-1);
 		gc.setLineWidth(originalWidth);
 
 		String sStatusLine = null;
