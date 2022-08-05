@@ -334,7 +334,7 @@ public class TagColorsItem
 
 			Rectangle bounds = cell.getBounds();
 
-			Utils.setClipping(gc, new Rectangle( bounds.x, bounds.y+1, bounds.width, bounds.height-2 ));
+			Utils.setClipping(gc, new Rectangle( bounds.x, bounds.y+1, bounds.width-1, bounds.height-2 ));
 
 			if ( num_colors == 1 ){
 
