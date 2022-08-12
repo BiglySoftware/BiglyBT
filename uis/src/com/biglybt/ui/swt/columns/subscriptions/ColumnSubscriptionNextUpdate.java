@@ -66,7 +66,7 @@ public class ColumnSubscriptionNextUpdate
 		
 		long next = sub.getNextUpdateTime();
 		
-		super.refresh(cell, next, null);
+		super.refresh(cell, next, next==0?Long.MAX_VALUE:next, null );
 	}
 
 	@Override

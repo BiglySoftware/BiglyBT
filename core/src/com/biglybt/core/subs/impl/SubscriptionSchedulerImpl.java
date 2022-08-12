@@ -949,7 +949,7 @@ SubscriptionSchedulerImpl
 	getNextUpdateTime(
 		Subscription subs)
 	{
-		if ( subs.isSubscriptionTemplate()){
+		if ( subs.isSubscriptionTemplate() || subs.isSearchTemplate()){
 			
 			return( 0 );
 		}
