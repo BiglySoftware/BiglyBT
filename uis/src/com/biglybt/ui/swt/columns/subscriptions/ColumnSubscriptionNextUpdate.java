@@ -28,10 +28,10 @@ import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 
-public class ColumnSubscriptionNewestDate
+public class ColumnSubscriptionNextUpdate
 	extends ColumnDateSizer
 {
-	public static String COLUMN_ID = "newest-date";
+	public static String COLUMN_ID = "next-update";
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
@@ -42,7 +42,7 @@ public class ColumnSubscriptionNewestDate
 	}
 
 	/** Default Constructor */
-	public ColumnSubscriptionNewestDate(String sTableID) {
+	public ColumnSubscriptionNextUpdate(String sTableID) {
 		super(Subscription.class, COLUMN_ID, TableColumnCreator.DATE_COLUMN_WIDTH,
 				sTableID);
 		setPosition(POSITION_INVISIBLE);
@@ -64,9 +64,9 @@ public class ColumnSubscriptionNewestDate
 			return;
 		}
 		
-		long latest = sub.getNewestResultTime();
+		long next = sub.getNextUpdateTime();
 		
-		super.refresh(cell, latest, null);
+		super.refresh(cell, next, null);
 	}
 
 	@Override
@@ -77,9 +77,11 @@ public class ColumnSubscriptionNewestDate
 
 			if ( timestamp_secs > 0 ){
 				long eta = (SystemTime.getCurrentTime() / 1000) - timestamp_secs;
-				if (eta > 0) {
+				if (eta >= 0) {
 					cell.setToolTip(DisplayFormatters.formatETA(eta, false) + " "
 						+ MessageText.getString("label.ago"));
+				}else{
+					cell.setToolTip(DisplayFormatters.formatETA(-eta, false));
 				}
 			}
 		}

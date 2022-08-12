@@ -375,6 +375,7 @@ public class SubscriptionsView
 				new ColumnSubscriptionPublic(TABLE_ID),
 				new ColumnSubscriptionUpdatePeriod(TABLE_ID),
 				new ColumnSubscriptionProtocol(TABLE_ID),
+				new ColumnSubscriptionNextUpdate(TABLE_ID),
 
 		};
 

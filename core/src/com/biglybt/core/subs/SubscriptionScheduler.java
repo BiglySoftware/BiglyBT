@@ -49,4 +49,8 @@ SubscriptionScheduler
 	download(
 		Subscription		subs,
 		SubscriptionResult	result );
+	
+	public long
+	getNextUpdateTime(
+		Subscription		subs );
 }

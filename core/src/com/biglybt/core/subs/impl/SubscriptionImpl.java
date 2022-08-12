@@ -2574,6 +2574,13 @@ SubscriptionImpl
 	}
 	
 	@Override
+	public long 
+	getNextUpdateTime()
+	{
+		return( manager.getScheduler().getNextUpdateTime( this ));
+	}
+	
+	@Override
 	public SubscriptionResultFilterImpl
 	getFilters()
 

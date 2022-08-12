@@ -644,6 +644,19 @@ SubscriptionSchedulerImpl
 	protected void
 	calculateSchedule()
 	{
+		synchronized( this ){
+
+			if ( !schedulng_permitted ){
+
+				return;
+			}
+
+			if ( schedule_in_progress ){
+
+				return;
+			}
+		}
+		
 		Subscription[]	subs = manager.getSubscriptions( true );
 
 		synchronized( this ){
@@ -716,7 +729,7 @@ SubscriptionSchedulerImpl
 
 				String sched_str =
 						"Calculate : " +
-						"old_time=" + new SimpleDateFormat().format(new Date(old_when)) +
+						"old_time=" + (old_when==0?"none":new SimpleDateFormat().format(new Date(old_when))) +
 						", new_time=" + new SimpleDateFormat().format(new Date(next_ready_time)) +
 						", next_sub=" + next_ready_subs.getName();
 
@@ -931,6 +944,26 @@ SubscriptionSchedulerImpl
 		return( history.getNextScanTime() );
 	}
 
+	@Override
+	public long 
+	getNextUpdateTime(
+		Subscription subs)
+	{
+		if ( subs.isSubscriptionTemplate()){
+			
+			return( 0 );
+		}
+		
+		Long next = (Long)subs.getUserData( SCHEDULER_NEXT_SCAN_KEY );
+		
+		if ( next != null ){
+			
+			return( next );
+		}
+	
+		return( getNextScan( subs ));
+	}
+	
 	protected void
 	scanSuccess(
 		Subscription		sub )

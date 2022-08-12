@@ -129,6 +129,9 @@ Subscription
 	public long
 	getNewestResultTime();
 	
+	public long
+	getNextUpdateTime();
+	
 	public String
 	getExecuteOnNewResult();
 	
