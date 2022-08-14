@@ -31,6 +31,10 @@ import com.biglybt.util.MapUtils;
 import org.gudy.bouncycastle.util.encoders.Base64;
 import org.json.simple.JSONObject;
 
+import com.biglybt.core.devices.Device;
+import com.biglybt.core.devices.DeviceManagerListener;
+import com.biglybt.core.devices.impl.DeviceImpl;
+import com.biglybt.core.devices.impl.DeviceManagerImpl;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.lws.LightWeightSeed;
 import com.biglybt.core.lws.LightWeightSeedAdapter;
@@ -152,8 +156,6 @@ SubscriptionImpl
 
 	private String			referer;
 
-	private CopyOnWriteList	listeners = new CopyOnWriteList();
-
 	private Map				verify_cache_details;
 	private boolean			verify_cache_result;
 
@@ -170,6 +172,41 @@ SubscriptionImpl
 	private volatile long	newest_result_time;
 	
 	private AtomicLong		md_mutator = new AtomicLong( RandomUtils.nextAbsoluteLong());
+
+	private static final int LT_SUBSCRIPTION_CHANGED		= 1;
+	private static final int LT_SUBSCRIPTION_DOWNLOADED		= 2;
+
+	private ListenerManager<SubscriptionListener>	listeners =
+		ListenerManager.createAsyncManager(
+			"Subscription:l",
+			new ListenerManagerDispatcher<SubscriptionListener>()
+			{
+				@Override
+				public void
+				dispatch(
+					SubscriptionListener 		listener,
+					int 						type,
+					Object 						value )
+				{
+					switch( type ){
+
+						case LT_SUBSCRIPTION_CHANGED:{
+
+							listener.subscriptionChanged( SubscriptionImpl.this, (Integer)value );
+
+							break;
+						}
+						case LT_SUBSCRIPTION_DOWNLOADED:{
+
+							listener.subscriptionDownloaded( SubscriptionImpl.this );
+							
+							break;
+						}
+					}
+				}
+			});
+
+	
 	
 	protected static String
 	getSkeletonJSON(
@@ -2367,36 +2404,14 @@ SubscriptionImpl
 		
 		manager.configDirty( this, reason );
 
-		Iterator it = listeners.iterator();
-
-		while( it.hasNext()){
-
-			try{
-				((SubscriptionListener)it.next()).subscriptionChanged( this, reason );
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
-			}
-		}
+		listeners.dispatch( LT_SUBSCRIPTION_CHANGED, reason );
 	}
 
 	protected void
 	fireDownloaded()
 	{
 
-		Iterator it = listeners.iterator();
-
-		while( it.hasNext()){
-
-			try{
-				((SubscriptionListener)it.next()).subscriptionDownloaded( this );
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
-			}
-		}
+		listeners.dispatch( LT_SUBSCRIPTION_DOWNLOADED, null );
 	}
 
 	@Override
@@ -2404,7 +2419,7 @@ SubscriptionImpl
 	addListener(
 		SubscriptionListener	l )
 	{
-		listeners.add( l );
+		listeners.addListener( l );
 	}
 
 	@Override
@@ -2412,7 +2427,7 @@ SubscriptionImpl
 	removeListener(
 		SubscriptionListener	l )
 	{
-		listeners.remove( l );
+		listeners.removeListener( l );
 	}
 
 	@Override

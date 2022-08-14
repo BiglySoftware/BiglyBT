@@ -1101,6 +1101,10 @@ SBC_SubscriptionResultsView
 
 			if ( ds != null ){
 
+					// remove in case already added
+				
+				ds.removeListener( this );
+				
 				ds.addListener( this );
 			}
 		}

@@ -46,6 +46,7 @@ SubscriptionResultFilterable
 	private final String			category;
 
 	private long				time;
+	private boolean				read;
 	private long				seeds_peers_sort;
 	private String				seeds_peers;
 	private int					seed_count;
@@ -64,7 +65,7 @@ SubscriptionResultFilterable
 	{
 		subs		= _subs;
 		result_id	= _result.getID();
-
+		
 		Map<Integer,Object>	properties = _result.toPropertyMap();
 
 		name = (String)properties.get( SearchResult.PR_NAME );
@@ -119,6 +120,8 @@ SubscriptionResultFilterable
 		SubscriptionResult		_result,
 		Map<Integer,Object>		properties	)
 	{
+		read = _result.getRead();
+
 		Date pub_date = (Date)properties.get( SearchResult.PR_PUB_DATE );
 
 		if ( pub_date == null ){
@@ -326,26 +329,19 @@ SubscriptionResultFilterable
 	public boolean
 	getRead()
 	{
-		SubscriptionResult result = subs.getHistory().getResult( result_id );
-
-		if ( result != null ){
-
-			return( result.getRead());
-		}
-
-		return( true );
+		return( read );
 	}
 
 	@Override
 	public void
 	setRead(
-		boolean		read )
+		boolean		_read )
 	{
 		SubscriptionResult result = subs.getHistory().getResult( result_id );
 
 		if ( result != null ){
 
-			result.setRead( read );
+			result.setRead( _read );
 		}
 	}
 
