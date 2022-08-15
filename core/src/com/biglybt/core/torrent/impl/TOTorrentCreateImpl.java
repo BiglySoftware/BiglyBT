@@ -917,15 +917,22 @@ TOTorrentCreateImpl
 
 	private boolean
 	ignoreFile(
-		String		file )
+		String		file_name )
 	{
-		if ( ignore_set.contains(file.toLowerCase())){
+		if ( ignore_set.contains(file_name.toLowerCase())){
 
-			report( "Torrent.create.progress.ignoringfile", " '" + file + "'" );
+			report( "Torrent.create.progress.ignoringfile", " '" + file_name + "'" );
 
 			return( true );
 		}
 
+		String converted = FileUtil.convertOSSpecificChars(file_name, false );
+		
+		if ( !converted.equals( file_name )){
+			
+			report( "Torrent.create.progress.fileconvwarn", " '" + file_name + "' -> '" + converted + "'" );
+		}
+		
 		return( false );
 	}
 
