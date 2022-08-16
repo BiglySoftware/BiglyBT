@@ -310,9 +310,9 @@ PeerForeignDelegate
 
 	@Override
 	public long
-	getLastMessageSentTime()
+	getLastMessageSentTimeMono()
 	{
-		return( 0 );
+		return( -1 );
 	}
 
 	@Override

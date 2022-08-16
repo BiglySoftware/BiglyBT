@@ -115,8 +115,7 @@ implements PEPeerTransport
 	protected boolean choking_other_peer = true;
 	private boolean interested_in_other_peer = false;
 	private boolean other_peer_interested_in_me = false;
-	private long snubbed =0;
-
+	
 	/** lazy allocation; null until needed */
 	private volatile BitFlags	peerHavePieces =null;
 	private volatile boolean	availabilityAdded =false;
@@ -166,13 +165,13 @@ implements PEPeerTransport
 	//Spread time (0 secs , fake default)
 	private int spreadTimeHint = 0 * 1000;
 
-	private long last_message_sent_time = 0;
-	private long last_message_received_time = 0;
-	private long last_data_message_received_time = -1;
-	private long last_good_data_time =-1;			// time data written to disk was recieved
-	private long last_data_message_sent_time = -1;
-
-	private long connection_established_time = 0;
+	private long snubbed_time_mono 						= -1;
+	private long last_message_sent_time_mono 			= -1;
+	private long last_message_received_time_mono 		= -1;
+	private long last_data_message_received_time_mono 	= -1;
+	private long last_good_data_time_mono				= -1;		// time data written to disk was recieved
+	private long last_data_message_sent_time_mono 		= -1;
+	private long connection_established_time_mono 		= -1;
 
 	private int consecutive_no_request_count;
 
@@ -975,7 +974,7 @@ implements PEPeerTransport
 		//link in outgoing have message aggregator
 		outgoing_have_message_aggregator = new OutgoingBTHaveMessageAggregator( connection.getOutgoingMessageQueue(), other_peer_bt_have_version, other_peer_az_have_version );
 
-		connection_established_time = SystemTime.getCurrentTime();
+		connection_established_time_mono = SystemTime.getMonotonousTime();
 
 		connection_state = PEPeerTransport.CONNECTION_WAITING_FOR_HANDSHAKE;
 		changePeerState( PEPeer.HANDSHAKING );
@@ -1006,7 +1005,7 @@ implements PEPeerTransport
 		
 		if ( cp == CP_CONNECT_OK ){
 			
-			if ( last_message_received_time > 0 ){
+			if ( last_message_received_time_mono >= 0 ){
 				
 				cp = CP_RECEIVED_DATA;
 			}
@@ -1121,7 +1120,9 @@ implements PEPeerTransport
 				peer_stats.getTotalDataBytesSent() > 0 || 
 				getUploadRateLimitBytesPerSecond() != 0 ||
 				getDownloadRateLimitBytesPerSecond() != 0 ||
-				SystemTime.getCurrentTime() - connection_established_time > 30 * 1000){
+				(	connection_established_time_mono >= 0 &&
+					SystemTime.getMonotonousTime() - connection_established_time_mono > 30*1000 )){
+			
 			recentlyDisconnected.put(mySessionID, this);
 		}
 	}
@@ -1199,8 +1200,8 @@ implements PEPeerTransport
 			peer_stats = oldTransport.peer_stats;
 			peer_stats.setPeer(this);
 			setSnubbed(oldTransport.isSnubbed());
-			snubbed = oldTransport.snubbed;
-			last_good_data_time = oldTransport.last_good_data_time;
+			snubbed_time_mono = oldTransport.snubbed_time_mono;
+			last_good_data_time_mono = oldTransport.last_good_data_time_mono;
 			int old_up = getUploadRateLimitBytesPerSecond();
 			if ( old_up != 0 ){
 				setUploadRateLimitBytesPerSecond( old_up );
@@ -2125,35 +2126,39 @@ implements PEPeerTransport
 	}
 
 	@Override
-	public boolean isSnubbed() {  return snubbed !=0;  }
+	public boolean isSnubbed() {  return snubbed_time_mono >= 0;  }
 
 	@Override
 	public long getSnubbedTime()
 	{
-		if (snubbed ==0)
+		if (snubbed_time_mono < 0 ){
 			return 0;
-		final long now =SystemTime.getCurrentTime();
-		if (now <snubbed)
-			snubbed =now -26; // odds are ...
-		return now -snubbed;
+		}
+		
+		final long now_mono = SystemTime.getMonotonousTime();
+		
+		return( now_mono - snubbed_time_mono );
 	}
 
 	@Override
 	public void setSnubbed(boolean b)
 	{
-		if (!closing)
-		{
-			final long now =SystemTime.getCurrentTime();
-			if (!b)
-			{
-				if (snubbed !=0)
-				{
-					snubbed =0;
+		if ( !closing ){
+			
+			long now_mono = SystemTime.getMonotonousTime();
+			
+			if (!b){
+				
+				if ( snubbed_time_mono >= 0 ){
+					
+					snubbed_time_mono = -1;
+					
 					manager.decNbPeersSnubbed();
 				}
-			} else if (snubbed ==0)
-			{
-				snubbed =now;
+			}else if ( snubbed_time_mono < 0 ){
+				
+				snubbed_time_mono = now_mono;
+				
 				manager.incNbPeersSnubbed();
 			}
 		}
@@ -2372,7 +2377,7 @@ implements PEPeerTransport
 	}
 
 	private void
-	resetRequestsTime(final long now)
+	resetRequestsTimeMono(final long mono_now)
 	{
 		synchronized( requested ){
 			
@@ -2381,7 +2386,7 @@ implements PEPeerTransport
 			{
 				final DiskManagerReadRequest request =(DiskManagerReadRequest) requested.get(i);
 				if (request != null)
-					request.resetTime(now);
+					request.resetTimeMono(mono_now);
 			}
 		}
 	}
@@ -2404,17 +2409,22 @@ implements PEPeerTransport
 
 	@Override
 	public void doKeepAliveCheck() {
-		final long now =SystemTime.getCurrentTime();
-		final long wait_time =now -last_message_sent_time;
+		long mono_now 	= SystemTime.getMonotonousTime();
 
-		if( last_message_sent_time == 0 || wait_time < 0 ) {
-			last_message_sent_time =now; //don't send if brand new connection
+		if( last_message_sent_time_mono == -1 ) {
+			
+			last_message_sent_time_mono = mono_now; //don't send if brand new connection
+			
 			return;
 		}
 
-		if( wait_time > 2*60*1000 ) {  //2min keep-alive timer
+		long wait_time 	= mono_now -last_message_sent_time_mono;
+
+		if ( wait_time > 2*60*1000 ){  //2min keep-alive timer
+			
 			sendKeepAlive();
-			last_message_sent_time =now;  //not quite true, but we don't want to queue multiple keep-alives before the first is actually sent
+			
+			last_message_sent_time_mono = mono_now;  //not quite true, but we don't want to queue multiple keep-alives before the first is actually sent
 		}
 	}
 
@@ -2468,27 +2478,29 @@ implements PEPeerTransport
 			checkAllowedFast();
 		}
 
-		final long now =SystemTime.getCurrentTime();
-		//make sure we time out stalled connections
+		final long mono_now = SystemTime.getMonotonousTime();
+		
+			//make sure we time out stalled connections
+		
 		if( connection_state == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ) {
-			if (last_message_received_time >now)
-				last_message_received_time =now;
-			if (last_data_message_received_time >now)
-				last_data_message_received_time =now;
-			if (now -last_message_received_time >5*60*1000
-					&&now -last_data_message_received_time >5*60*1000) { //5min timeout
-				// assume this is due to a network failure
-				// e.g. something that didn't close the TCP socket properly
-				// will attempt reconnect
+		
+				// we should always have received a message in order to be fully established so no need to check valid
+				
+			if ( 	mono_now - last_message_received_time_mono > 5*60*1000 &&
+					( 	last_data_message_received_time_mono < 0 ||
+						mono_now - last_data_message_received_time_mono > 5*60*1000 )){	// data could be dripping in I guess
+				
+					// assume this is due to a network failure
+					// e.g. something that didn't close the TCP socket properly
+					// will attempt reconnect
+				
 				closeConnectionInternally( "timed out while waiting for messages", false, true );
 				return true;
 			}
 		}
 		//ensure we dont get stuck in the handshaking phases
 		else if( connection_state == PEPeerTransport.CONNECTION_WAITING_FOR_HANDSHAKE ) {
-			if (connection_established_time >now)
-				connection_established_time =now;
-			else if (now - connection_established_time > 3*60*1000 ) { //3min timeout
+			if (mono_now - connection_established_time_mono > 3*60*1000 ) { //3min timeout
 				closeConnectionInternally( "timed out while waiting for handshake" );
 				return true;
 			}
@@ -2562,38 +2574,41 @@ implements PEPeerTransport
 
 	@Override
 	public long getTimeSinceLastDataMessageReceived() {
-		if( last_data_message_received_time == -1 ) {  //never received
+		if( last_data_message_received_time_mono < 0 ) {  //never received
 			return -1;
 		}
 
-		final long now =SystemTime.getCurrentTime();
+		long mono_now = SystemTime.getMonotonousTime();
 
-		if (last_data_message_received_time >now)
-			last_data_message_received_time =now;   //time went backwards
-		return now -last_data_message_received_time;
+		return mono_now -last_data_message_received_time_mono;
 	}
 
 	@Override
 	public long getTimeSinceGoodDataReceived()
 	{
-		if (last_good_data_time ==-1)
-			return -1;	// never received
-		final long now =SystemTime.getCurrentTime();
-		if (last_good_data_time >now)
-			last_good_data_time =now;   //time went backwards
-		return now -last_good_data_time;
-	}
-
-
-	@Override
-	public long getTimeSinceLastDataMessageSent() {
-		if( last_data_message_sent_time == -1 ) {  //never sent
-			return -1;
+		if ( last_good_data_time_mono < 0 ){
+		
+			return( -1 );	// never received
 		}
-		final long now =SystemTime.getCurrentTime();
-		if (last_data_message_sent_time >now)
-			last_data_message_sent_time =now;   //time went backwards
-		return now -last_data_message_sent_time;
+		
+		long mono_now =SystemTime.getMonotonousTime();
+		
+		return( mono_now -last_good_data_time_mono );
+	}
+
+
+	@Override
+	public long 
+	getTimeSinceLastDataMessageSent() 
+	{
+		if ( last_data_message_sent_time_mono < 0 ){  //never sent
+			
+			return( -1 );
+		}
+		
+		long mono_now = SystemTime.getMonotonousTime();
+		
+		return( mono_now - last_data_message_sent_time_mono );
 	}
 
 
@@ -2601,14 +2616,17 @@ implements PEPeerTransport
 
 
 	@Override
-	public long getTimeSinceConnectionEstablished() {
-		if( connection_established_time == 0 ) {  //fudge it while the transport is being connected
+	public long 
+	getTimeSinceConnectionEstablished() 
+	{
+		if ( connection_established_time_mono < 0 ){  //fudge it while the transport is being connected
+			
 			return 0;
 		}
-		final long now =SystemTime.getCurrentTime();
-		if (connection_established_time >now)
-			connection_established_time =now;
-		return now -connection_established_time;
+		
+		long mono_now = SystemTime.getMonotonousTime();
+		
+		return( mono_now - connection_established_time_mono );
 	}
 
 	@Override
@@ -3982,17 +4000,20 @@ implements PEPeerTransport
 				}
 			}
 			removeRequest( existing_request );
-			final long now =SystemTime.getCurrentTime();
-			resetRequestsTime(now);
+			
+			long mono_now = SystemTime.getMonotonousTime();
+			
+			resetRequestsTimeMono( mono_now );
 
 			if( manager.isWritten( pieceNumber, offset ) ) {  //oops, looks like this block has already been written
 				peer_stats.bytesDiscarded( length );
 				manager.discarded( this, length );
 
 				if( manager.isInEndGameMode() ) {  //we're probably in end-game mode then
-					if (last_good_data_time !=-1 &&now -last_good_data_time <= PEPeerControl.SNUB_MILLIS )
+					if (last_good_data_time_mono >=0 && mono_now -last_good_data_time_mono <= PEPeerControl.SNUB_MILLIS ){
 						setSnubbed(false);
-					last_good_data_time =now;
+					}
+					last_good_data_time_mono = mono_now;
 					requests_discarded_endgame++;
 					if (Logger.isEnabled())
 						Logger.log(new LogEvent(this, LogIDs.PIECES, LogEvent.LT_INFORMATION,
@@ -4003,8 +4024,10 @@ implements PEPeerTransport
 					// if they're not snubbed, then most likely this peer got a re-request after some other peer
 					// snubbed themselves, and the slow peer finially finished the piece, but before this peer did
 					// so give credit to this peer anyway for having delivered a block at this time
-					if (!isSnubbed())
-						last_good_data_time =now;
+					if (!isSnubbed()){
+						last_good_data_time_mono = mono_now;
+					}
+					
 					if (Logger.isEnabled())
 						Logger.log(new LogEvent(this, LogIDs.PIECES, LogEvent.LT_WARNING,
 								error_msg
@@ -4016,9 +4039,9 @@ implements PEPeerTransport
 			}
 			else {  //successfully received block!
 				manager.writeBlock( pieceNumber, offset, payload, this, false);
-				if (last_good_data_time !=-1 &&now -last_good_data_time <=60 *1000)
+				if (last_good_data_time_mono >= 0  && mono_now -last_good_data_time_mono <=60 *1000)
 					setSnubbed( false );
-				last_good_data_time =now;
+				last_good_data_time_mono = mono_now;
 				requests_completed++;
 				piece_error = false;  //dont destroy message, as we've passed the payload on to the disk manager for writing
 			}
@@ -4036,11 +4059,14 @@ implements PEPeerTransport
 
 				if( ever_requested ) { //security-measure: we dont want to be accepting any ol' random block
 					manager.writeBlock( pieceNumber, offset, payload, this, true);
-					final long now =SystemTime.getCurrentTime();
-					if (last_good_data_time !=-1 &&now -last_good_data_time <=60 *1000)
+					final long mono_now =SystemTime.getMonotonousTime();
+					if (last_good_data_time_mono >= 0 && mono_now -last_good_data_time_mono <= 60*1000 ){
 						setSnubbed(false);
-					resetRequestsTime(now);
-					last_good_data_time =now;
+					}
+					
+					resetRequestsTimeMono( mono_now );
+					
+					last_good_data_time_mono = mono_now;
 					requests_recovered++;
 					printRequestStats();
 					piece_error = false;  //dont destroy message, as we've passed the payload on to the disk manager for writing
@@ -4488,10 +4514,13 @@ implements PEPeerTransport
 								"Received [" + message.getDescription() + "] message"));
 					}
 					
-					final long now =SystemTime.getCurrentTime();
-					last_message_received_time =now;
-					if( message.getType() == Message.TYPE_DATA_PAYLOAD ) {
-						last_data_message_received_time =now;
+					final long mono_now =SystemTime.getMonotonousTime();
+					
+					last_message_received_time_mono = mono_now;
+					
+					if ( message.getType() == Message.TYPE_DATA_PAYLOAD ){
+						
+						last_data_message_received_time_mono = mono_now;
 					}
 
 					String 	featureID 	= message.getFeatureID();
@@ -4701,7 +4730,8 @@ implements PEPeerTransport
 				public final void dataBytesReceived(int byte_count ) {
 					// Observe that the peer is sending data so that if theyre so slow that the whole
 					// data block times out, we don't think theyre not sending anything at all
-					last_data_message_received_time =SystemTime.getCurrentTime();
+					
+					last_data_message_received_time_mono = SystemTime.getMonotonousTime();
 
 					//update stats
 					peer_stats.dataBytesReceived( byte_count );
@@ -4732,11 +4762,13 @@ implements PEPeerTransport
 			@Override
 			public final void messageSent(Message message ) {
 				//update keep-alive info
-				final long now =SystemTime.getCurrentTime();
-				last_message_sent_time =now;
+				long mono_now = SystemTime.getMonotonousTime();
+				
+				last_message_sent_time_mono = mono_now;
 
-				if( message.getType() == Message.TYPE_DATA_PAYLOAD ) {
-					last_data_message_sent_time =now;
+				if(  message.getType() == Message.TYPE_DATA_PAYLOAD  ){
+					
+					last_data_message_sent_time_mono = mono_now;
 				}
 
 				String message_id = message.getID();
@@ -5436,18 +5468,18 @@ implements PEPeerTransport
 
 							removeRequest( request );
 
-							long now = SystemTime.getCurrentTime();
+							long mono_now = SystemTime.getMonotonousTime();
 
-							resetRequestsTime( now );
+							resetRequestsTimeMono( mono_now );
 
 							manager.writeBlock( piece_number, 0, data, this, false);
 
-							if ( last_good_data_time !=-1 && now -last_good_data_time <= PEPeerControl.SNUB_MILLIS ){
+							if ( last_good_data_time_mono >= 0 && mono_now -last_good_data_time_mono <= PEPeerControl.SNUB_MILLIS ){
 
 								setSnubbed( false );
 							}
 
-							last_good_data_time = now;
+							last_good_data_time_mono = mono_now;
 
 							requests_completed++;
 						}
@@ -5779,9 +5811,9 @@ implements PEPeerTransport
 
 	@Override
 	public long
-	getLastMessageSentTime()
+	getLastMessageSentTimeMono()
 	{
-		return( last_message_sent_time );
+		return( last_message_sent_time_mono );
 	}
 
 	/* (non-Javadoc)
@@ -6072,12 +6104,12 @@ implements PEPeerTransport
 				"ip=" + getIp() + ",in=" + isIncoming() + ",port=" + getPort() + ",cli=" + client + ",tcp=" + getTCPListenPort() + ",udp=" + getUDPListenPort() +
 				",oudp=" + getUDPNonDataListenPort() + ",prot=" + getProtocol() + ",p_state=" + getPeerState() + ",c_state=" + getConnectionState() + ",seed=" + isSeed() + ",partialSeed=" + isRelativeSeed() + ",pex=" + peer_exchange_supported + ",closing=" + closing );
 		writer.println( "    choked=" + effectively_choked_by_other_peer + "/" + really_choked_by_other_peer + ",choking=" + choking_other_peer + ",is_opt=" + is_optimistic_unchoke );
-		writer.println( "    interested=" + interested_in_other_peer + ",interesting=" + other_peer_interested_in_me + ",snubbed=" + snubbed );
+		writer.println( "    interested=" + interested_in_other_peer + ",interesting=" + other_peer_interested_in_me + ",snubbed=" + snubbed_time_mono );
 		writer.println( "    lp=" + _lastPiece + ",up=" + uniquePiece + ",rp=" + reserved_pieces );
 		writer.println(
-				"    last_sent=" + last_message_sent_time + "/" + last_data_message_sent_time +
-				",last_recv=" + last_message_received_time + "/" + last_data_message_received_time + "/" + last_good_data_time );
-		writer.println( "    conn_at=" + connection_established_time + ",cons_no_reqs=" + consecutive_no_request_count +
+				"    last_sent=" + last_message_sent_time_mono + "/" + last_data_message_sent_time_mono +
+				",last_recv=" + last_message_received_time_mono + "/" + last_data_message_received_time_mono + "/" + last_good_data_time_mono );
+		writer.println( "    conn_at=" + connection_established_time_mono + ",cons_no_reqs=" + consecutive_no_request_count +
 				",discard=" + requests_discarded + "/" + requests_discarded_endgame + ",recov=" + requests_recovered + ",comp=" + requests_completed + ",curr=" + requested.size());
 
 	}

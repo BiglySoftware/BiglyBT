@@ -47,7 +47,7 @@ DiskManagerReadRequestImpl
   private final int length;
   private final int hashcode;
 
-  private long      timeCreated;
+  private long      timeCreatedMono;
   private long		timeSent;
   private boolean	flush;
   private boolean	cancelled;
@@ -67,7 +67,7 @@ DiskManagerReadRequestImpl
     offset = _offset;
     length = _length;
 
-    timeCreated = SystemTime.getCurrentTime();
+    timeCreatedMono = SystemTime.getMonotonousTime();
 
     hashcode = pieceNumber + offset + length;
   }
@@ -86,12 +86,9 @@ DiskManagerReadRequestImpl
   @Override
   public boolean isExpired()
   {
-      final long now =SystemTime.getCurrentTime();
-      if (now >=this.timeCreated)
-          return (now -this.timeCreated) >EXPIRATION_TIME;
-      //time error
-      this.timeCreated =now;
-      return false;
+      final long mono_now = SystemTime.getMonotonousTime();
+ 
+      return (mono_now -this.timeCreatedMono) >EXPIRATION_TIME;
   }
 
   /**
@@ -100,9 +97,9 @@ DiskManagerReadRequestImpl
    * other requests to give them extra time.
    */
   @Override
-  public void resetTime(final long now)
+  public void resetTimeMono(final long mono_now)
   {
-      timeCreated =now;
+	  timeCreatedMono = mono_now;
   }
 
   //Getters
@@ -194,10 +191,10 @@ DiskManagerReadRequestImpl
 
 
   @Override
-  public long getTimeCreated(final long now) {
-      if (this.timeCreated >now)
-          this.timeCreated =now;
-    return this.timeCreated;
+  public long 
+  getTimeCreatedMono()
+  {
+    return timeCreatedMono;
   }
 
 	@Override

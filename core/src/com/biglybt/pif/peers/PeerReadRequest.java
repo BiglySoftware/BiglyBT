@@ -43,7 +43,7 @@ PeerReadRequest
 	getLength();
 
 	public void
-	resetTime(final long now);
+	resetTimeMono( long mono_now);
 
 	public boolean
 	isExpired();

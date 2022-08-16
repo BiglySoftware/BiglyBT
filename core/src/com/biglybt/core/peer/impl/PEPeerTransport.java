@@ -138,7 +138,7 @@ PEPeerTransport
 	transferAvailable();
 
 	public long
-	getLastMessageSentTime();
+	getLastMessageSentTimeMono();
 
 	public List
 	getExpiredRequests();

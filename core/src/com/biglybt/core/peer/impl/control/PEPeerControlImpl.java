@@ -2163,7 +2163,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		hash_handler.update();
 
-		final long now = SystemTime.getCurrentTime();
+		long mono_now = SystemTime.getMonotonousTime();
 
 		// for every connection
 		final List<PEPeerTransport> peer_transports = peer_transports_cow;
@@ -2192,7 +2192,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 					boolean noData = timeSinceData < 0 || timeSinceData > dataTimeout;
 
-					long timeSinceOldestRequest = now - request.getTimeCreated(now);
+					long timeSinceOldestRequest = mono_now - request.getTimeCreatedMono();
 
 					// for every expired request
 					for(int j = (timeSinceOldestRequest > requestTimeout && noData) ? 0 : 1; j < expired.size(); j++){
@@ -5333,7 +5333,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 					if(peer.getPeerState() == PEPeer.CONNECTING
 							&& peer.getConnectionState() == PEPeerTransport.CONNECTION_CONNECTING
-							&& peer.getLastMessageSentTime() != 0){
+							&& peer.getLastMessageSentTimeMono() >= 0){
 
 						String key = peer.getIp() + ":" + peer.getPort();
 
@@ -5354,16 +5354,17 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 					if(list.size() >= 2){
 
-						long newest_time = Long.MIN_VALUE;
+						long newest_time_mono = Long.MIN_VALUE;
 						PEPeerTransport newest_peer = null;
 
 						for(PEPeerTransport peer : list){
 
-							long last_sent = peer.getLastMessageSentTime();
+							long last_sent_mono = peer.getLastMessageSentTimeMono();
 
-							if(last_sent > newest_time){
+							if (last_sent_mono > newest_time_mono){
 
-								newest_time = last_sent;
+								newest_time_mono = last_sent_mono;
+								
 								newest_peer = peer;
 							}
 						}
