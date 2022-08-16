@@ -2482,7 +2482,7 @@ implements PEPeerTransport
 		
 			//make sure we time out stalled connections
 		
-		if( connection_state == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ) {
+		if ( connection_state == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ){
 		
 				// we should always have received a message in order to be fully established so no need to check valid
 				
@@ -2494,14 +2494,37 @@ implements PEPeerTransport
 					// e.g. something that didn't close the TCP socket properly
 					// will attempt reconnect
 				
-				closeConnectionInternally( "timed out while waiting for messages", false, true );
+				closeConnectionInternally( "timeout: waiting for messages", false, true );
+				
 				return true;
 			}
-		}
-		//ensure we dont get stuck in the handshaking phases
-		else if( connection_state == PEPeerTransport.CONNECTION_WAITING_FOR_HANDSHAKE ) {
-			if (mono_now - connection_established_time_mono > 3*60*1000 ) { //3min timeout
-				closeConnectionInternally( "timed out while waiting for handshake" );
+			
+				// A peer connection is all about sending or receiving data - if we have one doing neither for a long time
+				// then it is useless. It will no doubt re-connect but in the meantime another peer may get the opportunity
+				// to take its place
+			
+			int NO_DATA_TIMEOUT = 30*60*1000;
+			
+			if ( connection_established_time_mono >= 0 && mono_now - connection_established_time_mono > NO_DATA_TIMEOUT ){
+			
+				long last_data_activity = Math.max( last_good_data_time_mono, last_data_message_sent_time_mono );
+				
+				if ( last_data_activity < 0 || mono_now - last_data_activity > NO_DATA_TIMEOUT ){
+					
+					closeConnectionInternally( "timeout: no recent data sent or received", false, true );
+					
+					return true;
+				}
+			}
+			
+		}else if ( connection_state == PEPeerTransport.CONNECTION_WAITING_FOR_HANDSHAKE ) {
+			
+				//ensure we dont get stuck in the handshaking phases
+			
+			if ( mono_now - connection_established_time_mono > 3*60*1000 ){
+				
+				closeConnectionInternally( "timeout: waiting for handshake" );
+				
 				return true;
 			}
 		}
