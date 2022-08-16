@@ -278,10 +278,10 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	private int _tcpPendingConnections, _tcpConnectingConnections;
 	private long last_remote_time;
 	private long _timeStarted;
-	private long _timeStarted_mono;
+	private long _timeStarted_mono;		// we want this to default to 0
 	private long _timeStartedSeeding = -1;
 	private long _timeStartedSeeding_mono = -1;
-	private long _timeFinished;
+	private long _timeFinished_mono;	// we want this to default to 0
 	private Average _averageReceptionSpeed;
 
 	private long mainloop_loop_count;
@@ -401,7 +401,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	};
 
 	private static final int UDP_RECONNECT_MIN_MILLIS = 10 * 1000;
-	private long last_udp_reconnect;
+	private long last_udp_reconnect_mono = SystemTime.getMonotonousTime();
 
 	private boolean prefer_udp;
 
@@ -2034,7 +2034,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				adapter.setStateFinishing();
 			}
 			
-			_timeFinished = SystemTime.getCurrentTime();
+			_timeFinished_mono = SystemTime.getMonotonousTime();
 			
 				// remove previous snubbing
 			
@@ -2120,7 +2120,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 				_timeStartedSeeding = -1;
 				_timeStartedSeeding_mono = -1;
-				_timeFinished = 0;
+				_timeFinished_mono = 0;
 
 				synchronized(seeding_seed_disconnects){
 
@@ -3124,7 +3124,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			long smooth_result;
 
 			if(dataRemaining == 0){
-				final long timeElapsed = (_timeFinished - _timeStarted) / 1000;
+				final long timeElapsed = (_timeFinished_mono - _timeStarted_mono) / 1000;
 				// if time was spent downloading....return the time as negative
 				if(timeElapsed > 1){
 					jagged_result = timeElapsed * -1;
@@ -5392,11 +5392,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		try{
 			peer_transports_mon.enter();
 
-			long now = SystemTime.getCurrentTime();
+			long mono_now = SystemTime.getMonotonousTime();
 
-			if(udp_reconnects.size() > 0 && now - last_udp_reconnect >= UDP_RECONNECT_MIN_MILLIS){
+			if (udp_reconnects.size() > 0 && mono_now - last_udp_reconnect_mono >= UDP_RECONNECT_MIN_MILLIS){
 
-				last_udp_reconnect = now;
+				last_udp_reconnect_mono = mono_now;
 
 				Iterator<PEPeerTransport> it = udp_reconnects.values().iterator();
 
