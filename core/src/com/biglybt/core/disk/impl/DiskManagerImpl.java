@@ -1014,7 +1014,7 @@ DiskManagerImpl
     {
     	int[] fail_result = { -1, -1, -1 };
 
-        Set<String> file_set    = new HashSet<>();
+        //Set<String> file_set    = new HashSet<>();
 
         DMPieceMapperFile[] pm_files = piece_mapper.getFiles();
 
@@ -1140,6 +1140,9 @@ DiskManagerImpl
                     file_key = file_key.toLowerCase();
                 }
 
+                /*
+                	Windows 10 supports case-sensitive file systems so ditch this
+                	
                 if ( file_set.contains( file_key )){
 
                     String msg = "File occurs more than once in download: " + data_file.toString() + ".\nRename one of the files in Files view via the right-click menu.";
@@ -1150,7 +1153,8 @@ DiskManagerImpl
                 }
 
                 file_set.add( file_key );
-
+				*/
+                
                 String      ext  = data_file.getName();
 
                 if ( incomplete_suffix != null && ext.endsWith( incomplete_suffix )){

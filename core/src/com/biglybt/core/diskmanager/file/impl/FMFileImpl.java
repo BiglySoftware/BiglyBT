@@ -45,7 +45,8 @@ FMFileImpl
 	protected static final String		READ_ACCESS_MODE	= "r";
 	protected static final String		WRITE_ACCESS_MODE	= "rw"; // "rwd"; - removing this to improve performance
 
-	private static final Map			file_map 		= new HashMap();
+	private static final Map<String,List<Object[]>>			file_map 		= new HashMap<>();
+	
 	private static final AEMonitor		file_map_mon	= new AEMonitor( "FMFile:map");
 
 	// If there is an exception that occurs, which causes us to try and perform
@@ -79,7 +80,7 @@ FMFileImpl
 	private FMFileAccessController		file_access;
 
 	private File				created_dirs_leaf;
-	private List				created_dirs;
+	private List<File>			created_dirs;
 
 	protected final AEMonitor			this_mon	= new AEMonitor( "FMFile" );
 
@@ -878,34 +879,54 @@ FMFileImpl
 
 			// System.out.println( "FMFile::reserveFile:" + canonical_path + "("+ owner.getName() + ")" + " - " + Debug.getCompressedStackTrace() );
 
-			List	owners = (List)file_map.get(canonical_path);
+			List<Object[]>	owners = file_map.get(canonical_path);
 
 			if ( owners == null ){
 
-				owners = new ArrayList();
+				owners = new ArrayList<>(2);
 
 				//System.out.println( "    creating new owners entr" );
 
 				file_map.put( canonical_path, owners );
-			}
+				
+			}else{
 
-			for (Iterator it=owners.iterator();it.hasNext();){
-
-				Object[]	entry = (Object[])it.next();
-
-				String	entry_name = ((FMFileOwner)entry[0]).getName();
-
-				//System.out.println( "    existing entry: " + entry_name );
-
-				if ( owner.getName().equals( entry_name )){
-
-						// already present, start off read-access
-
-					Debug.out( "reserve file - entry already present" );
-
-					entry[1] = Boolean.FALSE;
-
-					return;
+				TOTorrentFile	my_torrent_file = owner.getTorrentFile();
+				TOTorrent		my_torrent		= my_torrent_file==null?null:my_torrent_file.getTorrent();
+				
+				for ( Object[] entry: owners ){
+	
+					FMFileOwner	this_owner = (FMFileOwner)entry[0];
+	
+					if ( my_torrent != null ){
+						
+						TOTorrentFile	this_tf 		= this_owner.getTorrentFile();
+						
+						if ( this_tf != null ){
+						
+							TOTorrent		this_torrent	= this_tf.getTorrent();
+							
+							if ( this_torrent == my_torrent && this_tf != my_torrent_file ){
+								
+								throw( new FMFileManagerException(  "File '"+canonical_path + "' occurs more than once in download.\nRename one of the files in Files view via the right-click menu." ));
+							}
+						}
+					}
+										
+					String	entry_name = this_owner.getName();
+	
+					//System.out.println( "    existing entry: " + entry_name );
+	
+					if ( owner.getName().equals( entry_name )){
+	
+							// already present, start off read-access
+	
+						Debug.out( "reserve file - entry already present" );
+	
+						entry[1] = Boolean.FALSE;
+	
+						return;
+					}
 				}
 			}
 
@@ -933,7 +954,7 @@ FMFileImpl
 
 			//System.out.println( "FMFile::reserveAccess:" + canonical_path + "("+ owner.getName() + ")" + " [" + (access_mode==FM_WRITE?"write":"read") + "]" + " - " + Debug.getCompressedStackTrace());
 
-			List	owners = (List)file_map.get( canonical_path );
+			List<Object[]>	owners = file_map.get( canonical_path );
 
 			Object[]	my_entry = null;
 
@@ -944,9 +965,7 @@ FMFileImpl
 				throw( new FMFileManagerException( "File '"+canonical_path+"' has not been reserved (no entries), '" + owner.getName()+"'"));
 			}
 
-			for (Iterator it=owners.iterator();it.hasNext();){
-
-				Object[]	entry = (Object[])it.next();
+			for ( Object[] entry: owners ){
 
 				String	entry_name = ((FMFileOwner)entry[0]).getName();
 
@@ -991,9 +1010,7 @@ FMFileImpl
 			
 			StringBuilder	users_sb = owners.size()==1?null:new StringBuilder( 128 );
 
-			for (Iterator it=owners.iterator();it.hasNext();){
-
-				Object[]	entry = (Object[])it.next();
+			for ( Object[] entry: owners ){
 
 				FMFileOwner	this_owner = (FMFileOwner)entry[0];
 
@@ -1070,9 +1087,10 @@ FMFileImpl
 						return;
 					}
 				}
+				
 
 				Debug.out( "reserveAccess fail" );
-
+				
 				throw( new FMFileManagerException( "File '"+canonical_path+"' is in use by '" + (users_sb==null?"eh?":users_sb.toString()) +"'"));
 			}
 
@@ -1095,14 +1113,14 @@ FMFileImpl
 
 			// System.out.println( "FMFile::releaseFile:" + canonical_path + "("+ owner.getName() + ")" + " - " + Debug.getCompressedStackTrace());
 
-			List	owners = (List)file_map.get( canonical_path );
+			List<Object[]>	owners = file_map.get( canonical_path );
 
 			if ( owners != null ){
 
-				for (Iterator it=owners.iterator();it.hasNext();){
+				for ( Iterator<Object[]> it=owners.iterator();it.hasNext();){
 
-					Object[]	entry = (Object[])it.next();
-
+					Object[] entry = it.next();
+					
 					if ( owner.getName().equals(((FMFileOwner)entry[0]).getName())){
 
 						it.remove();
@@ -1139,7 +1157,7 @@ FMFileImpl
 
 		if ( !parent.exists()){
 
-			List	new_dirs = new ArrayList();
+			List<File>	new_dirs = new ArrayList<>();
 
 			File	current = parent;
 
@@ -1151,7 +1169,7 @@ FMFileImpl
 			}
 
 			created_dirs_leaf	= target;
-			created_dirs		= new ArrayList();
+			created_dirs		= new ArrayList<>();
 
 			if ( FileUtil.mkdirs(parent)){
 
@@ -1201,11 +1219,11 @@ FMFileImpl
 
 			if ( !created_dirs_leaf.exists()){
 
-				Iterator	it = created_dirs.iterator();
+				Iterator<File>	it = created_dirs.iterator();
 
 				while( it.hasNext()){
 
-					File	dir = (File)it.next();
+					File	dir = it.next();
 
 					if ( dir.exists() && dir.isDirectory()){
 
@@ -1259,21 +1277,21 @@ FMFileImpl
 			try{
 				file_map_mon.enter();
 
-				Iterator	it = file_map.keySet().iterator();
+				Iterator<String>	it = file_map.keySet().iterator();
 
 				while( it.hasNext()){
 
 					String	key = (String)it.next();
 
-					List	owners = (List)file_map.get(key);
+					List<Object[]>	owners = file_map.get(key);
 
-					Iterator	it2 = owners.iterator();
+					Iterator<Object[]>	it2 = owners.iterator();
 
 					String	str = "";
 
 					while( it2.hasNext()){
 
-						Object[]	entry = (Object[])it2.next();
+						Object[]	entry = it2.next();
 
 						FMFileOwner	owner 	= (FMFileOwner)entry[0];
 						Boolean		write	= (Boolean)entry[1];
