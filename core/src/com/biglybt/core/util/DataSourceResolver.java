@@ -68,6 +68,25 @@ DataSourceResolver
 				return( exportDataSource( core_ds ));
 			}
 			
+			Object 	literal 		= null;
+			int		literal_type	= 0;
+			
+			if ( data_source instanceof String ){
+					
+				literal 		= ((String)data_source).getBytes( Constants.UTF_8 );
+				literal_type	= 1;
+			}
+			
+			if ( literal != null ){
+				
+				Map<String,Object>	result = new HashMap<>();
+				
+				result.put( "literal_type", new Long( literal_type ));
+				result.put( "literal", literal );
+				
+				return( result );
+			}
+			
 			Debug.out( "Can't export a " + data_source );
 		}
 		
@@ -78,6 +97,28 @@ DataSourceResolver
 	importDataSource(
 		Map<String,Object>		map )
 	{
+		Object literal = map.get( "literal" );
+		
+		if ( literal != null ){
+			
+			try{
+				int literal_type = ((Number)map.get( "literal_type" )).intValue();
+			
+				if ( literal_type == 1 ){
+			
+					if ( literal instanceof String ){
+						
+						return( literal );
+					}
+					
+					return( new String((byte[])literal, Constants.UTF_8 ));
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
 		Runnable	callback = (Runnable)map.get( "callback" );
 		
 		List<Map<String,Object>> list = (List<Map<String,Object>>)map.get( "exports" );
