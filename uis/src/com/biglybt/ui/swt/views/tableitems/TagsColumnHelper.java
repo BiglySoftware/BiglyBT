@@ -18,6 +18,7 @@
 
 package com.biglybt.ui.swt.views.tableitems;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,9 +114,9 @@ TagsColumnHelper
 		
 		TableCellSWT	cell = (TableCellSWT)_cell;
 		
-		Map<TagPainter, Rectangle> tagMapping = (Map<TagPainter, Rectangle>)cell.getData( TagsColumnHelper.class );
+		List<TagLayout>	layouts = (List<TagLayout>)cell.getData( TagsColumnHelper.class );
 				
-		if ( tagMapping == null ){
+		if ( layouts == null ){
 			
 			return;
 		}
@@ -132,11 +133,11 @@ TagsColumnHelper
 										
 				Tag target = null;
 				
-				for ( Map.Entry<TagPainter, Rectangle> entry: tagMapping.entrySet()){
-					
-					if ( entry.getValue().contains( pt )){
+				for ( TagLayout entry: layouts){
+									
+					if ( entry.clip.contains( pt )){
 						
-						target = entry.getKey().getTag();
+						target = entry.painter.getTag();
 						
 						break;
 					}
@@ -230,9 +231,8 @@ TagsColumnHelper
 		
 		Font oldFont = gc.getFont();
 		
-
-		int maxLines = cell.getMaxLines();
-		if (maxLines <= 1) {
+		int maxCellLines = cell.getMaxLines();
+		if (maxCellLines <= 1) {
 			if (fontOneLine[0] == null) {
 				fontOneLine[0] = FontUtils.getFontWithHeight(oldFont,
 						(int) (FontUtils.getFontHeightInPX(oldFont) - 2), SWT.DEFAULT);
@@ -241,7 +241,7 @@ TagsColumnHelper
 		} else {
 			if (fontMultiLine[0] == null) {
 				fontMultiLine[0] = FontUtils.getFontWithHeight(gc.getFont(),
-						((cellSize.y - 2) / maxLines), SWT.DEFAULT);
+						((cellSize.y - 2) / maxCellLines), SWT.DEFAULT);
 			}
 			gc.setFont(fontMultiLine[0]);
 		}
@@ -253,63 +253,202 @@ TagsColumnHelper
 		int y = 0;
 		int lineHeight = 0;
 
-		Map<TagPainter, Rectangle> mapTagPainting = new LinkedHashMap<>();
+		List<TagLayout>	layouts		= new ArrayList<>( tags.size());
+		
+		cell.setData( TagsColumnHelper.class, layouts );
 
-		for (Tag tag : tags) {
-			TagPainter painter = new TagPainter(tag);
-			painter.setCompact(true, false);
-			painter.alwaysDrawBorder = true;
-			painter.paddingContentY = 1;
-			painter.paddingContentX0 = 2;
-			painter.paddingContentX1 = 4;
-			painter.setMinWidth(16);
-			Point size = painter.getSize(gc);
-			if (size == null) {
-				continue;
+		try{
+			int	maxLines = 1;
+							
+			for ( Tag tag : tags ){
+								
+				TagPainter painter = new TagPainter(tag);
+								
+				painter.setCompact(true, false);
+				painter.alwaysDrawBorder = true;
+				painter.paddingContentY = 1;
+				painter.paddingContentX0 = 2;
+				painter.paddingContentX1 = 4;
+				painter.setMinWidth(16);
+				
+				Point size = painter.getSize(gc);
+				
+				if ( size == null || size.x == 0 || size.y == 0 ){
+					
+					painter.dispose();
+					
+					continue;
+				}
+					
+				TagLayout	layout = new TagLayout();
+				
+				layouts.add( layout );
+				
+				layout.painter	= painter;
+				layout.clip 	=  new Rectangle( -1, -1, size.x, size.y );
+												
+				int endX = x + size.x;
+	
+				if ( endX >= cellSize.x ){
+					
+					// this tag doesn't completely fit on the current line. If it is the first one
+					// then retain it (and truncate it) otherwise we'll try and move it to the next line
+					
+					if ( x == 0 ){
+												
+						lineHeight = size.y;
+						
+					}else{
+						
+						y += lineHeight + 1;
+						
+						if ( y + size.y > cellSize.y ){
+							
+							layout.truncated = true;
+							
+							break;	// doesn't fit 
+						}
+						
+						maxLines++;
+												
+						lineHeight = size.y;
+					}
+					
+					x = size.x + 1;
+					
+				}else{
+					
+					lineHeight = Math.max(lineHeight, size.y);
+					
+					x = endX + 1;
+				}
 			}
-			int endX = x + size.x;
-
-			if (endX > cellSize.x
-					&& y + lineHeight + (lineHeight * 0.8) <= cellSize.y) {
-				x = 0;
-				endX = size.x;
-				y += lineHeight + 1;
-				lineHeight = size.y;
-			} else {
-				lineHeight = Math.max(lineHeight, size.y);
+			
+				// now we know the number of valid lines we can lay out the tags
+			
+			x = 0;
+			y = 0;
+			lineHeight = 0;
+			
+			int lineNumber = 1;
+					
+			boolean forceNextLine = false;
+			
+			TagLayout prevLayout = null;
+			
+			for ( TagLayout layout: layouts ){
+									
+				Rectangle clip = layout.clip;
+								
+				int endX = x + clip.width;
+	
+				if ( endX >= cellSize.x || forceNextLine ){
+					
+					if (( x == 0 || lineNumber == maxLines ) && !forceNextLine ){
+											
+						lineHeight = Math.max( lineHeight, clip.height );
+						
+						if ( lineNumber < maxLines ){
+							
+							forceNextLine = true;
+						}
+					}else{
+						
+						forceNextLine = false;
+						
+						lineNumber++;
+						
+						if ( lineNumber > maxLines ){
+													
+							break;
+						}
+						
+						y += lineHeight + 1;
+						
+						x = 0;
+						
+						endX = clip.width;
+						
+						lineHeight = clip.height;
+					}
+				}else{
+					
+					lineHeight = Math.max(lineHeight, clip.height);
+				}
+	
+				int clipW = endX > cellSize.x ? cellSize.x - x : clip.width;
+				int clipH = y + clip.height > cellSize.y ? cellSize.y - y : clip.height;
+						
+				if ( x > 0 && clipW < clip.width ){
+					
+					layout.truncated = true;
+					
+					if ( prevLayout != null && clipW < 5 ){
+						
+						prevLayout.truncated = true;
+					}
+				}
+				
+				clip.x = bounds.x + x;
+				clip.y = bounds.y + y;
+				clip.width	= clipW;
+				clip.height	= clipH;
+						
+				x = endX + 1;
+				
+				prevLayout = layout;
 			}
-			if (y > cellSize.y) {
-				break;
+			
+			Rectangle clipping = gc.getClipping();
+	
+			try{
+				int endY = y + lineHeight;
+				int yOfs = (cellSize.y - endY) / 2;
+				if (yOfs < 0) {
+					yOfs = 0;
+				}
+				
+				for ( TagLayout layout: layouts ){
+					
+					Rectangle clip = layout.clip;
+						
+					TagPainter painter = layout.painter;
+						
+					clip.y += yOfs;
+						
+					gc.setClipping(clip);	
+					
+					if ( layout.truncated ){
+					
+						painter.setAlpha(100);
+					}
+						
+					painter.paint(taggable, gc, clip.x, clip.y);
+				}
+								
+			}finally{
+			
+				gc.setClipping(clipping);
 			}
-
-			int clipW = endX > cellSize.x ? cellSize.x - x : size.x;
-			int clipH = y + size.y > cellSize.y ? cellSize.y - y : size.y;
-
-			mapTagPainting.put(painter,
-					new Rectangle(bounds.x + x, bounds.y + y, clipW, clipH));
-
-			x = endX + 1;
-			if (x > cellSize.x) {
-				break;
+		}finally{
+			
+			gc.setFont(oldFont);
+			
+			for ( TagLayout layout: layouts ){
+				
+				if ( layout.painter != null ){
+					
+					layout.painter.dispose();
+				}
 			}
 		}
-		Rectangle clipping = gc.getClipping();
-
-		int endY = y + lineHeight;
-		int yOfs = (cellSize.y - endY) / 2;
-		if (yOfs < 0) {
-			yOfs = 0;
-		}
-		for (TagPainter painter : mapTagPainting.keySet()) {
-			Rectangle clip = mapTagPainting.get(painter);
-			clip.y += yOfs;
-			gc.setClipping(clip);
-			painter.paint(taggable, gc, clip.x, clip.y);
-			painter.dispose();
-		}
-
-		cell.setData( TagsColumnHelper.class, mapTagPainting );
-		gc.setClipping(clipping);
-		gc.setFont(oldFont);
+	}
+	
+	static class
+	TagLayout
+	{
+		TagPainter		painter;
+		Rectangle		clip;
+		boolean			truncated;
 	}
 }
