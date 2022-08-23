@@ -142,7 +142,7 @@ public class TagCanvas
 	public void handleEvent(Event e) {
 		switch (e.type) {
 			case SWT.MouseDown: {
-				if (!isEnabled() || e.button != 1) {
+				if (!isEnabled() || ( e.button != 1 && e.button != 2 )) {
 					return;
 				}
 				
@@ -188,7 +188,7 @@ public class TagCanvas
 				break;
 			}
 			case SWT.MouseUp: {
-				if (!isEnabled() || e.button != 1 || !mouseDown) {
+				if (!isEnabled() || ( e.button != 1 && e.button != 2 ) || !mouseDown) {
 					return;
 				}
 				mouseDown = false;
@@ -203,7 +203,7 @@ public class TagCanvas
 				}
 
 				if (painter.trigger != null) {
-					painter.trigger.tagButtonTriggered(painter, e.stateMask, false);
+					painter.trigger.tagButtonTriggered(painter, e.stateMask, e.button == 2);
 				}
 
 				break;
