@@ -1263,70 +1263,83 @@ public class MyTorrentsView
 					}
 					Object[] ds = tv.getSelectedDataSources().toArray();
 
-					if (tag instanceof Category) {
-						TorrentUtil.assignToCategory(ds, (Category) tag);
-						return;
-					}
-
-					boolean doAdd = false;
-					for (Object obj : ds) {
-
-						if (obj instanceof DownloadManager) {
-
-							DownloadManager dm = (DownloadManager) obj;
-
-							if (!tag.hasTaggable(dm)) {
-								doAdd = true;
-								break;
-							}
-						}
-					}
-
-					boolean do_it = true;
+					boolean doVisual = false;
 					
-					boolean[] auto = tag.isTagAuto();
-					
-					if ( auto.length >= 1 && auto[0] ){
+					try{
+						if ( tag instanceof Category ){
 							
-							// can't add to / remove from an auto-add tag
-							// note - can remove from an auto-remove-only
-						
-						do_it = false;
-					}
-					
-					if ( do_it ){
-						
-						try{
-							tag.addTaggableBatch( true );
-						
-							for (Object obj : ds) {
-		
-								if (obj instanceof DownloadManager) {
-		
-									DownloadManager dm = (DownloadManager) obj;
-		
-									if (doAdd) {
-										tag.addTaggable(dm);
-									} else {
-										tag.removeTaggable(dm);
-									}
+							TorrentUtil.assignToCategory(ds, (Category) tag);
+							
+							doVisual = true;
+							
+							return;
+						}
+	
+						boolean doAdd = false;
+						for (Object obj : ds) {
+	
+							if (obj instanceof DownloadManager) {
+	
+								DownloadManager dm = (DownloadManager) obj;
+	
+								if (!tag.hasTaggable(dm)) {
+									doAdd = true;
+									break;
 								}
 							}
-						}finally{
-							
-							tag.addTaggableBatch( false );
 						}
 	
-						// Quick Visual
-						boolean wasSelected = painter.isSelected();
-						painter.setGrayed(true);
-						painter.setSelected(true);
-	
-						Utils.execSWTThreadLater(200, () -> {
-							painter.setGrayed(false);
-							painter.setSelected(wasSelected);
-							updateTagAlphas();
-						});
+						boolean do_it = true;
+						
+						boolean[] auto = tag.isTagAuto();
+						
+						if ( auto.length >= 1 && auto[0] ){
+								
+								// can't add to / remove from an auto-add tag
+								// note - can remove from an auto-remove-only
+							
+							do_it = false;
+						}
+						
+						if ( do_it ){
+							
+							try{
+								tag.addTaggableBatch( true );
+							
+								for (Object obj : ds) {
+			
+									if (obj instanceof DownloadManager) {
+			
+										DownloadManager dm = (DownloadManager) obj;
+			
+										if (doAdd) {
+											tag.addTaggable(dm);
+										} else {
+											tag.removeTaggable(dm);
+										}
+									}
+								}
+							}finally{
+								
+								tag.addTaggableBatch( false );
+							}
+							
+							doVisual = true;
+						}
+					}finally{
+						
+						if ( doVisual ){
+							// Quick Visual
+							boolean wasSelected = painter.isSelected();
+							painter.setGrayed(true);
+							painter.setSelected(true);
+		
+							Utils.execSWTThreadLater(200, () -> {
+								painter.setGrayed(false);
+								painter.setSelected(wasSelected);
+								updateTagAlphas();
+							});
+						}
 					}
 				}
 
