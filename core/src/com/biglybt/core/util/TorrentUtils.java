@@ -133,6 +133,8 @@ TorrentUtils
 	public static final String		TORRENT_AZ_PROP_ORIGINAL_HASH			= "original_hash";
 	public static final String		TORRENT_AZ_PROP_HASHTREE_STATE			= "hash_tree";
 	public static final String		TORRENT_AZ_PROP_HYBRID_HASH_V2			= "hybrid_hash_v2";
+	private static final String		TORRENT_AZ_PROP_V2_ROOT_HASH_CACHE		= "v2_root_hash_cache";	// used for non-v2 torrents only
+	
 	private static final String		MEM_ONLY_TORRENT_PATH		= "?/\\!:mem_only:!\\/?";
 
 	private static final long		PC_MARKER = RandomUtils.nextLong();
@@ -2455,6 +2457,45 @@ TorrentUtils
 
 		try{
 			return(Map)m.get( TORRENT_AZ_PROP_HASHTREE_STATE );
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+		
+		return( null );
+	}
+	
+	public static void
+	setV2RootHashCache(
+		TOTorrent		torrent,
+		Map				cache )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			if ( cache == null ){
+				
+				m.remove( TORRENT_AZ_PROP_V2_ROOT_HASH_CACHE );
+				
+			}else{
+			
+				m.put( TORRENT_AZ_PROP_V2_ROOT_HASH_CACHE, cache );
+			}
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+	}
+	
+	public static Map
+	getV2RootHashCache(
+		TOTorrent		torrent )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			return(Map)m.get( TORRENT_AZ_PROP_V2_ROOT_HASH_CACHE );
 
 		}catch( Throwable e ){
 

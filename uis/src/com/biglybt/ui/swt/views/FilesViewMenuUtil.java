@@ -661,7 +661,7 @@ public class FilesViewMenuUtil
 
 					for (DiskManagerFileInfo file: files_with_links ){
 
-						file.setLink( null );
+						file.setLink( null, true );
 					}
 
 					invalidateRows( tv, files_with_links );
@@ -1946,15 +1946,6 @@ public class FilesViewMenuUtil
 		File 						target,
 		Runnable					done )
 	{
-			// this behaviour should be put further down in the core but I'd rather not
-			// do so close to release :(
-
-		manager.setUserData("is_changing_links", true);
-
-			// I don't link this one bit, but there's a lot of things I don't like and this isn't the worst
-		
-		manager.setUserData("set_link_dont_delete_existing", true);
-		
 		String failure_msg = null;
 		
 		try{
@@ -1971,7 +1962,7 @@ public class FilesViewMenuUtil
 			
 			if ( failure_msg == null ){
 			
-				boolean ok = file_info.setLink(target);
+				boolean ok = file_info.setLink( target, true );
 	
 				if ( !ok ){
 	
@@ -2009,9 +2000,7 @@ public class FilesViewMenuUtil
 	
 			}
 		}finally{
-			manager.setUserData("is_changing_links", false);
-			manager.setUserData("set_link_dont_delete_existing", null);
-
+			
 			if ( failure_msg == null ){
 
 				if ( done != null ){
@@ -2052,17 +2041,6 @@ public class FilesViewMenuUtil
 		boolean						dont_delete_existing,
 		Runnable					done )
 	{
-
-		// this behaviour should be put further down in the core but I'd rather not
-		// do so close to release :(
-
-		manager.setUserData("is_changing_links", true);
-
-		if ( dont_delete_existing ){
-				// I don't link this one bit, but there's a lot of things I don't like and this isn't the worst
-			manager.setUserData("set_link_dont_delete_existing", true);
-		}
-
 		try{
 			
 			FileUtil.runAsTask(new CoreOperationTask() {
@@ -2100,7 +2078,7 @@ public class FilesViewMenuUtil
 					boolean went_async = false;
 
 					try{
-						boolean ok = fileInfo.setLink(target);
+						boolean ok = fileInfo.setLink(target,dont_delete_existing);
 
 						if (!ok){
 
@@ -2130,9 +2108,7 @@ public class FilesViewMenuUtil
 							went_async = true;
 						}
 					}finally{
-						manager.setUserData("is_changing_links", false);
-						manager.setUserData("set_link_dont_delete_existing", null);
-
+						
 						if ( !went_async ){
 
 							if ( done != null ){
@@ -2143,9 +2119,7 @@ public class FilesViewMenuUtil
 				}
 			});
 		}catch( Throwable e ){
-			manager.setUserData("is_changing_links", false);
-			manager.setUserData("set_link_dont_delete_existing", null);
-
+			
 			if ( done != null ){
 				done.run();
 			}
@@ -2161,17 +2135,6 @@ public class FilesViewMenuUtil
 		boolean						dont_delete_existing,
 		Runnable					done )
 	{
-
-		// this behaviour should be put further down in the core but I'd rather not
-		// do so close to release :(
-
-		manager.setUserData("is_changing_links", true);
-
-		if ( dont_delete_existing ){
-				// I don't link this one bit, but there's a lot of things I don't like and this isn't the worst
-			manager.setUserData("set_link_dont_delete_existing", true);
-		}
-
 		try{
 
 			FileUtil.runAsTask(
@@ -2218,7 +2181,7 @@ public class FilesViewMenuUtil
 								FileUtil.copyFile( source, target ); 
 							}
 							
-							boolean ok = fileInfo.setLink(target);
+							boolean ok = fileInfo.setLink(target,dont_delete_existing);
 	
 							if (!ok){
 	
@@ -2248,8 +2211,6 @@ public class FilesViewMenuUtil
 								went_async = true;
 							}
 						}finally{
-							manager.setUserData("is_changing_links", false);
-							manager.setUserData("set_link_dont_delete_existing", null);
 	
 							if ( !went_async ){
 	
@@ -2261,8 +2222,6 @@ public class FilesViewMenuUtil
 					}
 				});
 		}catch( Throwable e ){
-			manager.setUserData("is_changing_links", false);
-			manager.setUserData("set_link_dont_delete_existing", null);
 
 			if ( done != null ){
 				done.run();

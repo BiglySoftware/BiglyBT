@@ -270,6 +270,7 @@ DiskManagerUtil
 	    DiskManagerFileInfo    		file_info,
 	    File                   		from_file,
 	    File                   		to_link,
+	    boolean						dont_delete_existing,
 	    FileUtil.ProgressListener	pl )
 	{
 	    if ( to_link != null ){
@@ -331,13 +332,11 @@ DiskManagerUtil
 					                return( error );
 					            }
 				        	}else{
-				        	
-					        	Object	skip_delete = download_manager.getUserData( "set_link_dont_delete_existing" );
-			
+				        				
 					        		// user is manually re-targetting a file - this hack is to stop us from deleting the old file which
 					        		// we really have no right to go and delete
 			
-					        	if ( ( skip_delete instanceof Boolean ) && (Boolean)skip_delete ){
+					        	if ( dont_delete_existing ){
 			
 					        		 download_manager.recheckFile( file_info );
 			
@@ -1162,7 +1161,8 @@ DiskManagerUtil
 	                	@Override
 		                public boolean
 	                	setLink(
-	                		File    link_destination )
+	                		File    	link_destination,
+	                		boolean		no_delete )
 	                	{
 	                		last_error = null;
 	                		
@@ -1184,7 +1184,7 @@ DiskManagerUtil
 	                				return false;
 	                			}
 	                		}
-	                		return setLinkAtomic(link_destination);
+	                		return setLinkAtomic(link_destination, no_delete );
 	                	}
 
 	    				@Override
@@ -1195,9 +1195,10 @@ DiskManagerUtil
 	                	@Override
 		                public boolean
 	                	setLinkAtomic(
-	                		File    link_destination )
+	                		File    	link_destination,
+	                		boolean		no_delete)
 	                	{
-	                		last_error = setFileLink( download_manager, res, this, lazyGetFile(), link_destination, null );
+	                		last_error = setFileLink( download_manager, res, this, lazyGetFile(), link_destination, no_delete, null );
 	                		
 	                		return( last_error == null );
 	                	}
@@ -1206,9 +1207,10 @@ DiskManagerUtil
 		                public boolean
 	                	setLinkAtomic(
 	                		File    						link_destination,
+	                		boolean							no_delete,
 	                		FileUtil.ProgressListener		pl )
 	                	{
-	                		last_error = setFileLink( download_manager, res, this, lazyGetFile(), link_destination , pl);
+	                		last_error = setFileLink( download_manager, res, this, lazyGetFile(), link_destination, no_delete, pl);
 	                		
 	                		return( last_error == null );
 	                	}

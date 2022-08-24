@@ -58,11 +58,11 @@ DiskManagerFileInfo
 	
 	public boolean
 	setLink(
-		File	link_destination );
+		File	link_destination, boolean no_delete );
 
-	public boolean setLinkAtomic(File link_destination);
+	public boolean setLinkAtomic(File link_destination, boolean no_delete);
 
-	public boolean setLinkAtomic(File link_destination, FileUtil.ProgressListener pl );
+	public boolean setLinkAtomic(File link_destination, boolean no_delete, FileUtil.ProgressListener pl );
 
 		// gets the current link, null if none
 

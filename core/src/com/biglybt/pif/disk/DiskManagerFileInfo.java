@@ -77,9 +77,22 @@ DiskManagerFileInfo
 
 		// links the file to the named destination
 
+	/**
+	 * @deprecated remove when xmwebui plugin no longer uses it (post 3101)
+	 * @param link_destination
+	 */
+	
+	public default void
+	setLink(
+		File		link_destination )
+	{
+		setLink( link_destination, false );
+	}
+	
 	public void
 	setLink(
-		File	link_destination );
+		File		link_destination,
+		boolean		no_delete );
 
 		// gets the current link, null if none
 

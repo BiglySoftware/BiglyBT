@@ -27,6 +27,7 @@ import java.net.URL;
 import java.util.Map;
 
 import com.biglybt.core.torrent.impl.TOTorrentCreateImpl;
+import com.biglybt.core.torrent.impl.TOTorrentCreateV2Impl;
 import com.biglybt.core.torrent.impl.TOTorrentCreatorImpl;
 import com.biglybt.core.torrent.impl.TOTorrentDeserialiseImpl;
 import com.biglybt.core.torrent.impl.TOTorrentImpl;
@@ -243,6 +244,15 @@ TOTorrentFactory
 		long		piece_size )
 	{
 		return( TOTorrentCreateImpl.getPieceCount( total_size, piece_size ));
+	}
+	
+	public static byte[]
+	getV2RootHash(
+		File		file )
+	
+		throws TOTorrentException
+	{
+		return( TOTorrentCreateV2Impl.getV2RootHash( file ));
 	}
 	
 	public static void

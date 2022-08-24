@@ -293,7 +293,8 @@ DiskManagerFileInfoURL
 	@Override
 	public void
 	setLink(
-		File	link_destination )
+		File		link_destination,
+		boolean		no_delete )
 	{
 		throw( new RuntimeException( "Not supported" ));
 	}

@@ -1401,7 +1401,7 @@ public class TorrentMenuFancy
 
 												if ( !file_nolink.getAbsolutePath().equals( file_link.getAbsolutePath())){
 
-													file_info.setLink( null );
+													file_info.setLink( null, true );
 												}
 											}
 										}

@@ -54,6 +54,50 @@ TOTorrentCreateV2Impl
 	
 	private final boolean flatten_files = false;		// for testing only
 	
+	public static byte[]
+	getV2RootHash(
+		File		file )
+	
+		throws TOTorrentException
+	{
+		TOTorrentCreateV2Impl temp =
+			new TOTorrentCreateV2Impl( 
+				file, 
+				16*1024, 
+				new Adapter(){
+			
+					@Override
+					public File 
+					resolveFile(int index, File file, String relative_file){
+						return( file );
+					}
+					
+					@Override
+					public void 
+					reportHashedBytes(long bytes){
+					}
+					
+					@Override
+					public void 
+					report(String resource_key){
+					}
+					
+					@Override
+					public boolean 
+					ignore(String name){
+						return false;
+					}
+					
+					@Override
+					public boolean 
+					cancelled(){
+						return false;
+					}
+				});
+		
+		return( temp.handleFile( file, "" ).root_hash );
+	}
+	
 	protected
 	TOTorrentCreateV2Impl(
 		File		_root,

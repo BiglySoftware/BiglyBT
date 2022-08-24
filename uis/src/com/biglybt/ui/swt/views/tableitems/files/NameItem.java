@@ -789,7 +789,7 @@ public class NameItem extends CoreTableColumnSWT implements
 			
 			@Override
 			public void run(CoreOperation operation) {
-				result[0] = fileInfo.setLink(target);
+				result[0] = fileInfo.setLink( target, false );
 			}
 
 			@Override

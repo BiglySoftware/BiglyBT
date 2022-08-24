@@ -109,9 +109,10 @@ DiskManagerFileInfoDelegate
 	@Override
 	public void
 	setLink(
-		File	link_destination )
+		File		link_destination,
+		boolean		no_delete)
 	{
-		delegate.setLink( link_destination );
+		delegate.setLink( link_destination, no_delete );
 	}
 
 	@Override

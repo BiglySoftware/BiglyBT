@@ -5382,7 +5382,7 @@ DownloadManagerImpl
 
 			  if ( torrent.isSimpleTorrent()){
 				  
-				  if ( controller.getDiskManagerFileInfoSet().getFiles()[0].setLinkAtomic( new_save_location )){
+				  if ( controller.getDiskManagerFileInfoSet().getFiles()[0].setLinkAtomic( new_save_location, false )){
 				  
 				  	setTorrentSaveDir(new_save_location, true);
 					  	
@@ -5473,7 +5473,7 @@ DownloadManagerImpl
 				  files_accepted[0] = 1;
 				  files_done[0]		= 1;
 				  
-				  if ( file.setLinkAtomic( new_save_location, pl )){
+				  if ( file.setLinkAtomic( new_save_location, false, pl )){
 					  
 					  setTorrentSaveDir( new_save_location, true);
 					  

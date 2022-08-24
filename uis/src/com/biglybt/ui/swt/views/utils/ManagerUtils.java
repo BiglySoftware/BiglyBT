@@ -3244,7 +3244,7 @@ public class ManagerUtils {
 										
 										if ( dm_files[0].getLength() == test_loc.length()){
 											
-											dm_files[0].setLinkAtomic( test_loc );
+											dm_files[0].setLinkAtomic( test_loc, true );
 											
 											dm.setTorrentSaveDir( test_loc, true );
 											
@@ -4184,92 +4184,84 @@ public class ManagerUtils {
 			
 																	if ( mode == LOCATE_MODE_LINK ){
 			
-																		try{
-																			dm.setUserData( "set_link_dont_delete_existing", true );
-			
-																			logLine( viewer, action_indent, "Linking to " + from_file );
-			
-																			boolean do_internal_link = true;
-																			
-																			if ( link_type == LOCATE_MODE_LINK_HARD ){
-																																				
-																				File original = file.getFile( false );
-																			
-																				if ( original.exists()){
-				
-																					original.delete();
-																					
-																				}else{
-																					
-																					File o_parent = original.getParentFile();
-																					
-																					if ( !o_parent.exists()){
-																						
-																						o_parent.mkdirs();
-																					}
-																				}
-																				
-																				try{
-																					Files.createLink( original.toPath(), from_file.toPath());
-																					
-																					if ( file.setLink( original )){
-																						
-																						do_internal_link = false;
-																						
-																						logLine( viewer, action_indent+1, "Hard Link successful" );
-																						
-																						dm_files.add( from_file.getAbsolutePath());
-																						
-																						actions_established.put( file, from_file );
-					
-																						action_count++;
-					
-																						matched = true;
-																						
-																					}else{
-																						
-																						original.delete();
-																						
-																						logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link" );
+																		logLine( viewer, action_indent, "Linking to " + from_file );
 		
-																					}
-																				}catch( Throwable e ){
+																		boolean do_internal_link = true;
+																		
+																		if ( link_type == LOCATE_MODE_LINK_HARD ){
+																																			
+																			File original = file.getFile( false );
+																		
+																			if ( original.exists()){
+			
+																				original.delete();
+																				
+																			}else{
+																				
+																				File o_parent = original.getParentFile();
+																				
+																				if ( !o_parent.exists()){
 																					
-																					logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: Error=" + Debug.getNestedExceptionMessage( e ));
+																					o_parent.mkdirs();
 																				}
 																			}
 																			
-																			if ( do_internal_link ){
+																			try{
+																				Files.createLink( original.toPath(), from_file.toPath());
 																				
-																				if ( file.setLink( from_file )){
-				
-																					logLine( viewer, action_indent+1, "Link successful" );
-				
+																				if ( file.setLink( original, true )){
+																					
+																					do_internal_link = false;
+																					
+																					logLine( viewer, action_indent+1, "Hard Link successful" );
+																					
 																					dm_files.add( from_file.getAbsolutePath());
-				
+																					
 																					actions_established.put( file, from_file );
 				
 																					action_count++;
 				
-																					internal_link_count++;
-																					
 																					matched = true;
-				
-																					if ( internal_link_count > MAX_LINKS ){
-				
-																						logLine( viewer, action_indent+2, LINK_LIMIT_MSG );
-				
-																						break download_loop;
-																					}
+																					
 																				}else{
-				
-																					logLine( viewer, action_indent+1, "Link failed" );
+																					
+																					original.delete();
+																					
+																					logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link" );
+	
 																				}
+																			}catch( Throwable e ){
+																				
+																				logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: Error=" + Debug.getNestedExceptionMessage( e ));
 																			}
-																		}finally{
+																		}
+																		
+																		if ( do_internal_link ){
+																			
+																			if ( file.setLink( from_file, true )){
 			
-																			dm.setUserData( "set_link_dont_delete_existing", null );
+																				logLine( viewer, action_indent+1, "Link successful" );
 			
+																				dm_files.add( from_file.getAbsolutePath());
+			
+																				actions_established.put( file, from_file );
+			
+																				action_count++;
+			
+																				internal_link_count++;
+																				
+																				matched = true;
+			
+																				if ( internal_link_count > MAX_LINKS ){
+			
+																					logLine( viewer, action_indent+2, LINK_LIMIT_MSG );
+			
+																					break download_loop;
+																				}
+																			}else{
+			
+																				logLine( viewer, action_indent+1, "Link failed" );
+																			}
 																		}
 																	}else{
 			
@@ -4554,87 +4546,80 @@ public class ManagerUtils {
 	
 												if ( mode == LOCATE_MODE_LINK ){
 	
-													try{
-														dm.setUserData( "set_link_dont_delete_existing", true );
-	
-														logLine( viewer, action_indent, "Linking to " + source_file );
-	
-														boolean do_internal_link = true;
-														
-														if ( link_type == LOCATE_MODE_LINK_HARD ){
-																															
-															File original = file.getFile( false );
-														
-															if ( original.exists()){
+													logLine( viewer, action_indent, "Linking to " + source_file );
 
+													boolean do_internal_link = true;
+													
+													if ( link_type == LOCATE_MODE_LINK_HARD ){
+																														
+														File original = file.getFile( false );
+													
+														if ( original.exists()){
+
+															original.delete();
+															
+														}else{
+															
+															File o_parent = original.getParentFile();
+															
+															if ( !o_parent.exists()){
+																
+																o_parent.mkdirs();
+															}
+														}
+														
+														try{
+															Files.createLink( original.toPath(), source_file.toPath());
+															
+															if ( file.setLink( original, true )){
+																
+																do_internal_link = false;
+																
+																logLine( viewer, action_indent+1, "Hard Link successful" );
+																
+																fixed_files.add( file );
+																
+																actions_ok++;
+
+																action_count++;
+																
+															}else{
+																
 																original.delete();
 																
-															}else{
-																
-																File o_parent = original.getParentFile();
-																
-																if ( !o_parent.exists()){
-																	
-																	o_parent.mkdirs();
-																}
+																logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link" );
+
 															}
+														}catch( Throwable e ){
 															
-															try{
-																Files.createLink( original.toPath(), source_file.toPath());
-																
-																if ( file.setLink( original )){
-																	
-																	do_internal_link = false;
-																	
-																	logLine( viewer, action_indent+1, "Hard Link successful" );
-																	
-																	fixed_files.add( file );
-																	
-																	actions_ok++;
-
-																	action_count++;
-																	
-																}else{
-																	
-																	original.delete();
-																	
-																	logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link" );
-
-																}
-															}catch( Throwable e ){
-																
-																logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: Error=" + Debug.getNestedExceptionMessage( e ));
-															}
+															logLine( viewer, action_indent+1, "Hard Link failed, trying Internal Link: Error=" + Debug.getNestedExceptionMessage( e ));
 														}
+													}
+													
+													if ( do_internal_link ){
 														
-														if ( do_internal_link ){
-															
-															if ( file.setLink( source_file )){
-		
-																logLine( viewer, action_indent+1, "Link successful" );
-		
-																fixed_files.add( file );
-		
-																actions_ok++;
-		
-																action_count++;
-		
-																internal_link_count++;
-																
-																if ( internal_link_count > MAX_LINKS ){
-		
-																	logLine( viewer, action_indent+2, LINK_LIMIT_MSG );
-		
-																	break;
-																}
-															}else{
-		
-																logLine( viewer, action_indent+1, "Link failed" );
-															}
-														}
-													}finally{
+														if ( file.setLink( source_file, true )){
 	
-														dm.setUserData( "set_link_dont_delete_existing", null );
+															logLine( viewer, action_indent+1, "Link successful" );
+	
+															fixed_files.add( file );
+	
+															actions_ok++;
+	
+															action_count++;
+	
+															internal_link_count++;
+															
+															if ( internal_link_count > MAX_LINKS ){
+	
+																logLine( viewer, action_indent+2, LINK_LIMIT_MSG );
+	
+																break;
+															}
+														}else{
+	
+															logLine( viewer, action_indent+1, "Link failed" );
+														}
 													}
 												}else{
 	

@@ -255,7 +255,8 @@ DiskManagerFileInfoImpl
 	@Override
 	public boolean
 	setLink(
-		File	link_destination )
+		File	link_destination,
+		boolean	no_delete )
 	{
 		last_error = "download must be stopped";
 		
@@ -272,7 +273,8 @@ DiskManagerFileInfoImpl
 	@Override
 	public boolean
 	setLinkAtomic(
-		File	link_destination )
+		File		link_destination,
+		boolean		no_delete )
 	{
 		last_error = "download must be stopped";
 		
@@ -285,6 +287,7 @@ DiskManagerFileInfoImpl
 	public boolean
 	setLinkAtomic(
 		File						link_destination,
+		boolean						no_delete,
 		FileUtil.ProgressListener	pl )
 	{
 		last_error = "download must be stopped";

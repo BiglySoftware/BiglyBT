@@ -3246,9 +3246,10 @@ DownloadManagerController
 		@Override
 		public boolean
 		setLink(
-			File	link_destination )
+			File	link_destination,
+			boolean	no_delete )
 		{
-			return( delegate.setLink( link_destination ));
+			return( delegate.setLink( link_destination, no_delete ));
 		}
 		
 		@Override
@@ -3259,18 +3260,20 @@ DownloadManagerController
 		@Override
 		public boolean
 		setLinkAtomic(
-			File	link_destination )
+			File		link_destination,
+			boolean		no_delete )
 		{
-			return( delegate.setLinkAtomic( link_destination ));
+			return( delegate.setLinkAtomic( link_destination, no_delete ));
 		}
 		
 		@Override
 		public boolean
 		setLinkAtomic(
 			File						link_destination,
+			boolean						no_delete,
 			FileUtil.ProgressListener 	pl )
 		{
-			return( delegate.setLinkAtomic( link_destination, pl ));
+			return( delegate.setLinkAtomic( link_destination, no_delete, pl ));
 		}
 		
 
