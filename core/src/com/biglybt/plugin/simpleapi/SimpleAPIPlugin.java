@@ -30,6 +30,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
@@ -45,6 +46,9 @@ import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentFactory;
+import com.biglybt.core.torrent.TOTorrentFile;
+import com.biglybt.core.torrent.TOTorrentFileHashTree;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
@@ -454,6 +458,131 @@ SimpleAPIPlugin
 				
 				return( JSONUtils.encodeToJSON( json ));
 				
+			}else if ( method.equals( "listfiles" )){
+				
+				DownloadManager dm = getDownloadFromHash( args );
+				
+				TOTorrent torrent = dm.getTorrent();
+				
+				Map<String,byte[]> rh_cache = (Map<String,byte[]>)TorrentUtils.getV2RootHashCache( torrent );
+				
+				boolean rh_cache_updated = false;
+				
+				String crh_str	= args.get( "calc_root_hashes" );
+				
+				boolean calc_root_hashes = crh_str != null && crh_str.equals( "1" );
+				
+				DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+				
+				JSONArray json = new JSONArray();
+
+				for ( DiskManagerFileInfo file: files ){
+					
+					TOTorrentFile t_file = file.getTorrentFile();
+					
+					JSONObject	obj = new JSONObject();
+
+					int index		= t_file.getIndex();
+					
+					long size		= t_file.getLength();
+					long downloaded	= file.getDownloaded();
+					
+					obj.put( "Index", index );
+					
+					obj.put( "Size", size );
+					
+					obj.put( "Downloaded", downloaded );
+					
+					String relative_path = t_file.getRelativePath();
+					
+					int pos = relative_path.lastIndexOf( File.separator );
+					
+					obj.put( "Name", pos<0?relative_path:relative_path.substring( pos+1 ));
+					
+					obj.put( "RelativePath", relative_path);
+					
+					File data_file = file.getFile( true );
+					
+					obj.put( "DataPath", data_file.getAbsolutePath());
+					
+					boolean is_pad = t_file.isPadFile();
+					
+					obj.put( "IsPad", is_pad );
+										
+					byte[] root_hash = null;
+					
+					if ( !is_pad ){
+					
+						TOTorrentFileHashTree tree = t_file.getHashTree();
+
+						if ( tree != null ){
+							
+							root_hash = tree.getRootHash();
+							
+						}else{
+						
+							if ( calc_root_hashes && size > 0 && size == downloaded && data_file.length() == size && !t_file.isPadFile()){
+							
+								String key = String.valueOf( index );
+								
+								if ( rh_cache != null ){
+									
+									root_hash = rh_cache.get( key );
+								}
+								
+								if ( root_hash == null ){
+								
+									try{
+										root_hash = TOTorrentFactory.getV2RootHash( data_file );
+							
+										if ( root_hash != null ){
+										
+											if ( rh_cache == null ){
+												
+												rh_cache = new HashMap<String,byte[]>();
+											}
+										
+											rh_cache.put( key, root_hash );
+											
+											rh_cache_updated = true;
+										}
+									}catch( Throwable e ){
+										
+										Debug.out( e );
+									}
+								}
+							}
+						}
+					}
+					
+					if ( root_hash != null ){
+					
+						obj.put( "RootHash", Base32.encode( root_hash ));
+					}
+					
+					json.add( obj );
+				}
+				
+				if ( rh_cache_updated ){
+					
+					try{
+						TorrentUtils.setV2RootHashCache( torrent, rh_cache );
+						
+						TorrentUtils.writeToFile( torrent );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+				
+				if ( response != null ){
+					
+					response.setContentType( "application/json; charset=UTF-8" );
+				}
+				
+				return( JSONUtils.encodeToJSON( json ));
+				
 			}else if ( method.equals( "addtag" ) || method.equals( "addcategory" ) || method.equals( "setcategory" )){
 				
 				DownloadManager dm = getDownloadFromHash( args );
@@ -684,6 +813,93 @@ SimpleAPIPlugin
 						throw( new Exception( "invalid 'name' parameter (" + name + ")" ));
 					}
 				}
+			}else if ( method.equals( "setdownloadfileattribute" )){
+				
+				DownloadManager dm = getDownloadFromHash( args );
+
+				boolean paused = false;
+				
+				try{
+					List<String> names	= multi_args.get( "name" );
+					
+					if ( names == null ){
+				
+						throw( new Exception( "missing 'name' parameter" ));
+					}
+					
+					List<String> values	= multi_args.get( "value" );
+					
+					if ( values == null ){
+				
+						throw( new Exception( "missing 'value' parameter" ));
+					}
+					
+					List<String> indexes	= multi_args.get( "index" );
+					
+					if ( indexes == null ){
+				
+						throw( new Exception( "missing 'index' parameter" ));
+					}
+					
+					
+					if ( names.size() != values.size() || values.size() != indexes.size()){
+						
+						throw( new Exception( "'index', 'name' and 'value' parameter count mismatch" ));
+					}
+					
+					DiskManagerFileInfoSet info_set = dm.getDiskManagerFileInfoSet();
+					
+					DiskManagerFileInfo[] files = info_set.getFiles();
+	
+					for ( int i=0; i<names.size(); i++ ){
+						
+						String	name 	= names.get(i);
+						String	value	= values.get(i);
+					
+						name = name.toLowerCase( Locale.US );
+	
+						String i_str	= indexes.get( i );
+													
+						int	index;
+						
+						try{
+							index = Integer.parseInt(i_str);
+							
+						}catch( Throwable e ){
+							
+							throw( new Exception( "'index' parameter invalid (" + i_str + ")" ));
+						}
+											
+						if ( index < 0 || index >= files.length ){
+							
+							throw( new Exception( "'index' parameter out of range (files=" + files.length + ")" ));
+						}
+						
+						DiskManagerFileInfo file = files[index];
+						
+						if ( name.equals( "datapath" )){
+							
+							String data_path = value;
+							
+							if ( dm.pause( true )){
+								
+								paused = true;
+							}
+							
+							file.setLink( new File( data_path ), true );
+							
+						}else if ( name.equals( "skipped" )){
+							
+							file.setSkipped( value.equals( "1" ));
+						}
+					}
+				}finally{
+				
+					if ( paused ){
+					
+						dm.resume();
+					}
+				}
 			}else if ( method.equals( "alert" )){
 				
 				DownloadManager dm = getDownloadFromHash( args );
@@ -708,7 +924,7 @@ SimpleAPIPlugin
 						atype = LogAlert.AT_ERROR;
 						
 					}else{
-						throw( new Exception( "Invalid type (" + type + ")" ));
+						throw( new Exception( "invalid type (" + type + ")" ));
 					}
 				}
 				
