@@ -294,4 +294,5 @@ DownloadManagerStats
 
 	public int getPercentDoneExcludingDND();
 
+	public int[] getFilePriorityStats();
 }

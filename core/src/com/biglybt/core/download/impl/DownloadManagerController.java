@@ -3103,7 +3103,11 @@ DownloadManagerController
 
 							@Override
 							public void pieceDoneChanged(DiskManagerPiece piece) {}
-
+							
+							@Override
+							public void fileCompleted(DiskManagerFileInfo file){
+								// nothing to do here
+							}
 						});
 					} finally {
 						initialising[0] = false;
@@ -3123,6 +3127,7 @@ DownloadManagerController
 			}
 
 			fileFacadeSet.facadeFiles = info;
+			
 			download_manager.informPrioritiesChange(delayed_prio_changes);
 
 			delayed_prio_changes.clear();
@@ -3696,6 +3701,11 @@ DownloadManagerController
 		@Override
 		public void pieceDoneChanged(DiskManagerPiece piece) {
 		}
+		
+		@Override
+		public void fileCompleted(DiskManagerFileInfo file){
+			download_manager.informFileCompletionChange(file);
+		}
 	}
 
 	private class DiskManagerListener_Default implements DiskManagerListener {
@@ -3830,6 +3840,14 @@ DownloadManagerController
 		pieceDoneChanged(
 			DiskManagerPiece	piece )
 		{
+		}
+		
+		@Override
+		public void 
+		fileCompleted(
+			DiskManagerFileInfo file)
+		{
+			download_manager.informFileCompletionChange( file );
 		}
 	}
 }

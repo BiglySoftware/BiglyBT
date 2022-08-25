@@ -317,6 +317,7 @@ public class TableColumnCreator
 		c.put(SwarmTagsItem.COLUMN_ID, new cInfo(SwarmTagsItem.class, SwarmTagsItem.DATASOURCE_TYPE));
 		c.put(MaskedItem.COLUMN_ID, new cInfo(MaskedItem.class, MaskedItem.DATASOURCE_TYPE));
 		c.put(UploadPriorityItem.COLUMN_ID, new cInfo(UploadPriorityItem.class, UploadPriorityItem.DATASOURCE_TYPE));
+		c.put(FilePrioritiesItem.COLUMN_ID, new cInfo(FilePrioritiesItem.class, FilePrioritiesItem.DATASOURCE_TYPE));
 
 		c.put(	PrivateItem.COLUMN_ID, 
 				new cInfo(

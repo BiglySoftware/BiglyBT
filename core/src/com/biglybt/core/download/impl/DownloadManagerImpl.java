@@ -830,6 +830,8 @@ DownloadManagerImpl
 			post_init_tasks = null;
 		}
 		
+		// calcFilePriorityStats();
+		
 		for ( Runnable r: to_run ){
 			
 			try{
@@ -4082,6 +4084,8 @@ DownloadManagerImpl
 	informPrioritiesChange(
 		List	files )
 	{
+		calcFilePriorityStats();
+		
 		controller.filePrioritiesChanged(files);
 
 		try{
@@ -4135,6 +4139,13 @@ DownloadManagerImpl
 		informPrioritiesChange(Collections.singletonList(file));
 	}
 
+	protected void
+	informFileCompletionChange(
+		DiskManagerFileInfo	file )
+	{
+		calcFilePriorityStats();
+	}
+	
 	protected void
 	informPositionChanged(
 		int new_position )
@@ -4525,6 +4536,47 @@ DownloadManagerImpl
 		return( stats );
 	}
 
+	private void
+	calcFilePriorityStats()
+	{
+		DiskManagerFileInfo[] files = getDiskManagerFileInfoSet().getFiles();
+
+		int	max_priority 			= Integer.MIN_VALUE;
+		int	max_priority_incomplete = Integer.MIN_VALUE;
+		
+		int priority_cumulative 			= 0;
+		int priority_cumulative_incomplete	= 0;
+		
+		for ( DiskManagerFileInfo file: files ){
+
+			if ( file.isSkipped()){
+
+				continue;
+			}
+			
+			int priority = file.getPriority();
+			
+			priority_cumulative += priority;
+			
+			if ( priority > max_priority ){
+				
+				max_priority = priority;
+			}
+							
+			if ( file.getLength() != file.getDownloaded()){
+				
+				priority_cumulative_incomplete += priority;
+				
+				if ( priority > max_priority_incomplete ){
+
+					max_priority_incomplete = priority;
+				}
+			}
+		}
+		
+		stats.setFilePriorityStats( new int[]{ max_priority, max_priority_incomplete, priority_cumulative, priority_cumulative_incomplete  });
+	}
+	
 	@Override
 	public boolean
 	isForceStart()

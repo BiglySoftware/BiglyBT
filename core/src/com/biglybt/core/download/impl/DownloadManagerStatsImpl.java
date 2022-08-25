@@ -123,6 +123,8 @@ DownloadManagerStatsImpl
 
 	private int	last_sr_progress = -1;
 
+	private int[]		file_priority_stats = { 0,0,0,0 };
+	
 	protected
 	DownloadManagerStatsImpl(
 		DownloadManagerImpl	dm )
@@ -1585,6 +1587,20 @@ DownloadManagerStatsImpl
 		return saved_skipped_file_set_size;
 	}
 
+	protected void
+	setFilePriorityStats(
+		int[]	stats )
+	{
+		file_priority_stats = stats;
+	}
+	
+	@Override
+	public int[] 
+	getFilePriorityStats()
+	{
+		return( file_priority_stats );
+	}
+	
 	@Override
   public long
   getRemainingExcludingDND()
