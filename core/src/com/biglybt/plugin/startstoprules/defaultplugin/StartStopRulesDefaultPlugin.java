@@ -2152,6 +2152,41 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					drc.moveTo( i+1 );
 				}
 			}
+		}else if ( iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_FILE_PRIORITIES ){ 
+
+			Collections.sort(
+				downloads,
+				new Comparator<DefaultRankCalculator>()
+				{
+					@Override
+					public int
+					compare(
+						DefaultRankCalculator d1,
+						DefaultRankCalculator d2)
+					{
+						int[] p1 = d1.getFilePriorityStats();
+						int[] p2 = d2.getFilePriorityStats();
+	
+						int result = Integer.compare( p2[1],  p1[1] );
+						
+						if ( result == 0 ){
+							
+							result = Integer.compare( p2[3],  p1[3] );
+						}
+						
+						return( result );
+					}
+				});
+	
+			for ( int i=0;i<downloads.size();i++){
+	
+				DefaultRankCalculator drc = downloads.get(i);
+	
+				if ( drc.getPosition() != (i+1)){
+	
+					drc.moveTo( i+1 );
+				}
+			}
 		}else{
 
 				// speed ordering

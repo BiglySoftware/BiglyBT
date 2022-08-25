@@ -624,6 +624,13 @@ RankCalculatorReal
 		return( core_dm.getStats().getSizeExcludingDND());
 	}
 	
+	@Override
+	public int[] 
+	getFilePriorityStats()
+	{
+		return( core_dm.getStats().getFilePriorityStats());
+	}
+	
 	public DownloadScrapeResult
 	getAggregatedScrapeResult(
 		boolean 		b )

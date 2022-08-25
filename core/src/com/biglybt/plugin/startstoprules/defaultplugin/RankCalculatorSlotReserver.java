@@ -248,6 +248,13 @@ RankCalculatorSlotReserver
 		return( 0 );
 	}
 	
+	@Override
+	public int[] 
+	getFilePriorityStats()
+	{
+		return( null );
+	}
+	
 	public DownloadScrapeResult
 	getAggregatedScrapeResult(
 		boolean 		b )
