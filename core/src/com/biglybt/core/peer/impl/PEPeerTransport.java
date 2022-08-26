@@ -258,7 +258,10 @@ PEPeerTransport
 		 */
 
 	public PEPeerTransport
-	reconnect(boolean tryUDP, boolean tryIPv6);
+	reconnect(
+		boolean tryUDP, 
+		boolean tryIPv6,
+		Map		user_data );
 
 	public boolean
 	isReconnect();

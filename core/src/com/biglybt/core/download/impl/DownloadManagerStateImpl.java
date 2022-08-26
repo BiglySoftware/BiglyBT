@@ -58,7 +58,8 @@ DownloadManagerStateImpl
 	implements DownloadManagerState, ParameterListener
 {
 	private static final int	VER_INCOMING_PEER_SOURCE	= 1;
-	private static final int	VER_CURRENT					= VER_INCOMING_PEER_SOURCE;
+	private static final int	VER_HOLE_PUNCH_PEER_SOURCE	= 2;
+	private static final int	VER_CURRENT					= VER_HOLE_PUNCH_PEER_SOURCE;
 
 
 	private static final LogIDs LOGID = LogIDs.DISK;
@@ -813,16 +814,16 @@ DownloadManagerStateImpl
 
         int	version = getIntAttribute( AT_VERSION );
 
-        if ( version < VER_INCOMING_PEER_SOURCE ){
+        if ( version < VER_HOLE_PUNCH_PEER_SOURCE ){
 
-        		// migrate by adding incoming as enabled - only needed if we have any specified as other
+        		// migrate by adding as enabled - only needed if we have any specified as other
         		// code takes care of the case where we have none
 
         	if ( getPeerSources().length > 0 ){
 
-        		if ( PEPeerSource.isPeerSourceEnabledByDefault( PEPeerSource.PS_INCOMING )){
+        		if ( PEPeerSource.isPeerSourceEnabledByDefault( PEPeerSource.PS_HOLE_PUNCH )){
 
-        			setPeerSourceEnabled( PEPeerSource.PS_INCOMING, true );
+        			setPeerSourceEnabled( PEPeerSource.PS_HOLE_PUNCH, true );
         		}
         	}else{
 

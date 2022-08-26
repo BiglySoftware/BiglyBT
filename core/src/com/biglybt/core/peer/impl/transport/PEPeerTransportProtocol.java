@@ -210,6 +210,7 @@ implements PEPeerTransport
 	private static final boolean DEBUG_FAST = false;
 
 	private boolean ut_pex_enabled 			= false;
+	private boolean ut_holepunch_enabled	= false;
 	private boolean fast_extension_enabled 	= false;
 	private boolean ml_dht_enabled 			= false;
 
@@ -648,7 +649,7 @@ implements PEPeerTransport
 		InetSocketAddress	endpoint_address;
 		ProtocolEndpoint	pe1 = null;
 		ProtocolEndpoint	pe2 = null;
-
+		
 		if ( _use_tcp ){
 
 			boolean utp_available = ProtocolEndpointFactory.isHandlerRegistered( ProtocolEndpoint.PROTOCOL_UTP );
@@ -689,6 +690,24 @@ implements PEPeerTransport
 						if ( RandomUtils.nextInt(2) == 1 ){
 	
 							pe2 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UTP, endpoint_address );
+						}
+					}
+					
+					if ( _initial_user_data != null && !socks_active ){
+						
+						Boolean prefer_utp = (Boolean)_initial_user_data.get( Peer.PR_PREFER_UTP );
+	
+						if ( prefer_utp != null && prefer_utp ){
+							
+							if ( pe2 == null ){
+								
+								pe2 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UTP, endpoint_address );
+							}
+							
+							ProtocolEndpoint temp = pe1;
+							
+							pe1 = pe2;
+							pe2 = temp;
 						}
 					}
 				}else{
@@ -1135,7 +1154,12 @@ implements PEPeerTransport
 	}
 
 	@Override
-	public PEPeerTransport reconnect(boolean tryUDP, boolean tryIPv6) {
+	public PEPeerTransport 
+	reconnect(
+		boolean 	tryUDP, 
+		boolean 	tryIPv6,
+		Map			userData )
+	{
 
 		boolean use_tcp = isTCP() && !(tryUDP && getUDPListenPort() > 0);
 
@@ -1143,17 +1167,29 @@ implements PEPeerTransport
 		{
 			boolean use_crypto = getPeerItemIdentity().getHandshakeType() == PeerItemFactory.HANDSHAKE_TYPE_CRYPTO;
 
+			String peer_source = getPeerSource();
+			
+			if ( userData != null ){
+				
+				String ps = (String)userData.get( Peer.PR_PEER_SOURCE );
+				
+				if ( ps != null ){
+					
+					peer_source = ps;
+				}
+			}
+					
 			PEPeerTransport new_conn =
 				PEPeerTransportFactory.createTransport(
 						manager,
-						getPeerSource(),
+						peer_source,
 						tryIPv6 && alternativeAddress != null ? alternativeAddress.getHostAddress() : getIp(),
 						getTCPListenPort(),
 						getUDPListenPort(),
 						use_tcp,
 						use_crypto,
 						crypto_level,
-						null );
+						userData );
 
 			// log to both relations
 			Logger.log(new LogEvent(new Object[] {this, new_conn},LOGID,"attempting to reconnect, creating new connection"));
@@ -1340,9 +1376,15 @@ implements PEPeerTransport
 			}
 		}
 
+		boolean utp_avail = ProtocolEndpointFactory.isHandlerRegistered( ProtocolEndpoint.PROTOCOL_UTP );
+		
+		boolean ps_enabled 	= manager.isPeerSourceEnabled( PEPeerSource.PS_HOLE_PUNCH );
+		
+		boolean socks_active = NetworkAdmin.getSingleton().isSocksActive();
+		
 		LTHandshake lt_handshake = new LTHandshake(data_dict, other_peer_bt_lt_ext_version );
 
-		lt_handshake.addDefaultExtensionMappings( true, is_metadata_download || metainfo_size > 0, true );
+		lt_handshake.addDefaultExtensionMappings( true, is_metadata_download || metainfo_size > 0, true, utp_avail && ps_enabled && !socks_active );
 
 		connection.getOutgoingMessageQueue().addMessage(lt_handshake, false);
 	}
@@ -3094,8 +3136,11 @@ implements PEPeerTransport
 
 	  LTMessageEncoder encoder = (LTMessageEncoder)connection.getOutgoingMessageQueue().getEncoder();
 	  encoder.updateSupportedExtensions(handshake.getExtensionMapping());
-	  this.ut_pex_enabled = encoder.supportsUTPEX();
-
+	  
+	  ut_pex_enabled = encoder.supportsUTPEX();
+	  
+	  ut_holepunch_enabled = encoder.supportsUTHolePunch();
+	  
 	  if ( is_metadata_download ){
 
 		  if ( encoder.supportsUTMetaData()){
@@ -4684,6 +4729,11 @@ implements PEPeerTransport
 							case LTMessage.SUBID_UT_UPLOAD_ONLY:{
 								decodeUploadOnly((UTUploadOnly)message);
 								return true;
+							}	
+							
+							case LTMessage.SUBID_UT_HOLEPUNCH:{
+								decodeHolePunch((UTHolePunch)message);
+								return true;
 							}						
 						}
 					}else if ( featureID == AZMessage.AZ_FEATURE_ID ){
@@ -5564,6 +5614,65 @@ implements PEPeerTransport
 		}
 	}
 
+	protected void
+	decodeHolePunch(
+		UTHolePunch message )
+	{
+		try{
+	
+			Debug.out( "Got HP: " + message );
+	
+			if ( !ut_holepunch_enabled ){
+				
+				return;
+			}
+			
+			if ( network != AENetworkClassifier.AT_PUBLIC ){
+				
+				return;
+			}
+			
+			boolean ps_enabled 		= manager.isPeerSourceEnabled( PEPeerSource.PS_HOLE_PUNCH );
+			
+			boolean socks_active	= NetworkAdmin.getSingleton().isSocksActive();
+						
+			if ( socks_active || !ps_enabled || !ProtocolEndpointFactory.isHandlerRegistered( ProtocolEndpoint.PROTOCOL_UTP )){
+				
+				UTHolePunch error = new UTHolePunch( message, UTHolePunch.ERR_NO_SUPPORT, other_peer_bt_lt_ext_version );
+				
+				connection.getOutgoingMessageQueue().addMessage( error, false );
+				
+				return;
+			}
+			
+			int type = message.getMessageType();
+			
+			if ( type == UTHolePunch.MT_RENDEZVOUS ){
+				
+			}else if ( type == UTHolePunch.MT_CONNECT ){
+				
+				int port = message.getPort();
+					
+				InetAddress address = message.getAddress();
+				
+				Map	user_data = new LightHashMap();
+
+				user_data.put( Peer.PR_PEER_SOURCE, PEPeerSource.PS_HOLE_PUNCH );
+				user_data.put( Peer.PR_PREFER_UTP, Boolean.TRUE);
+				user_data.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
+
+				Debug.out( "Connect to " + address + "/" + port );
+				
+				manager.addPeer( address.getHostAddress(), port, port, true, user_data );
+				
+			}else{
+				
+			}
+		}finally{
+
+			message.destroy();
+		}
+	}
 	@Override
 	public boolean
 	sendRequestHint(

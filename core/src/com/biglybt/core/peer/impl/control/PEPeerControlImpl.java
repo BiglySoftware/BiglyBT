@@ -85,7 +85,6 @@ import com.biglybt.pif.network.Connection;
 import com.biglybt.pif.network.OutgoingMessageQueue;
 import com.biglybt.pif.peers.Peer;
 import com.biglybt.pif.peers.PeerDescriptor;
-import com.biglybt.pif.peers.PeerReadRequest;
 
 /**
  * manages all peer transports for a torrent
@@ -1223,16 +1222,36 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			for(int i = 0; i < peer_transports.size(); i++){
 				final PEPeerTransport peer = peer_transports.get(i);
 
-				PEPeerTransport reconnected_peer = peer.reconnect(false, false);
+				PEPeerTransport reconnected_peer = peer.reconnect(false, false,null);
 			}
 		}
 	}
 
 	@Override
-	public void addPeer(String ip_address, int tcp_port, int udp_port, boolean use_crypto, Map user_data){
+	public void 
+	addPeer(
+		String ip_address, 
+		int tcp_port, 
+		int udp_port, 
+		boolean use_crypto, 
+		Map user_data)
+	{
 		final byte type = use_crypto ? PeerItemFactory.HANDSHAKE_TYPE_CRYPTO : PeerItemFactory.HANDSHAKE_TYPE_PLAIN;
+	
+		String peer_source = PEPeerSource.PS_PLUGIN;
+		
+		if ( user_data != null ){
+			
+			String ps = (String)user_data.get( Peer.PR_PEER_SOURCE );
+			
+			if ( ps != null ){
+				
+				peer_source = ps;
+			}
+		}
+		
 		final PeerItem peer_item = PeerItemFactory.createPeerItem(ip_address, tcp_port,
-				PeerItem.convertSourceID(PEPeerSource.PS_PLUGIN), type, udp_port, PeerItemFactory.CRYPTO_LEVEL_1, 0);
+				PeerItem.convertSourceID( peer_source ), type, udp_port, PeerItemFactory.CRYPTO_LEVEL_1, 0);
 
 		byte crypto_level = PeerItemFactory.CRYPTO_LEVEL_1;
 
@@ -1257,12 +1276,12 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			if(tcp_ok && !((prefer_udp || prefer_udp_default) && udp_ok)){
 
-				fail_reason = makeNewOutgoingConnection(PEPeerSource.PS_PLUGIN, ip_address, tcp_port, udp_port, true,
+				fail_reason = makeNewOutgoingConnection( peer_source, ip_address, tcp_port, udp_port, true,
 						use_crypto, crypto_level, user_data); // directly inject the the imported peer
 
 			}else if(udp_ok){
 
-				fail_reason = makeNewOutgoingConnection(PEPeerSource.PS_PLUGIN, ip_address, tcp_port, udp_port, false,
+				fail_reason = makeNewOutgoingConnection( peer_source, ip_address, tcp_port, udp_port, false,
 						use_crypto, crypto_level, user_data); // directly inject the the imported peer
 
 			}else{
@@ -3458,7 +3477,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 
 		if(tcpReconnect)
-			peer.reconnect(false, ipv6reconnect);
+			peer.reconnect(false, ipv6reconnect,null);
 	}
 
 	@Override
@@ -5473,46 +5492,54 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 				to_do--;
 
-				PeerNATTraverser.getSingleton().create(this,
-						new InetSocketAddress(peer_ip, peer.getPeerItemIdentity().getUDPPort()),
-						new PeerNATTraversalAdapter(){
-							private boolean done;
-
-							@Override
-							public void success(InetSocketAddress target){
-								complete();
-
-								PEPeerTransport newTransport = peer.reconnect(true, false);
-
-								if(newTransport != null){
-
-									newTransport.setData(PEER_NAT_TRAVERSE_DONE_KEY, "");
-								}
-							}
-
-							@Override
-							public void failed(){
-								complete();
-							}
-
-							protected void complete(){
-								try{
-									peer_transports_mon.enter();
-
-									if(!done){
-
-										done = true;
-
-										udp_traversal_count--;
+				if ( isPeerSourceEnabled( PEPeerSource.PS_HOLE_PUNCH )){
+					
+					PeerNATTraverser.getSingleton().create(this,
+							new InetSocketAddress(peer_ip, peer.getPeerItemIdentity().getUDPPort()),
+							new PeerNATTraversalAdapter(){
+								private boolean done;
+	
+								@Override
+								public void success(InetSocketAddress target){
+									complete();
+	
+									Map userData = new HashMap();
+									
+									userData.put( Peer.PR_PEER_SOURCE, PEPeerSource.PS_HOLE_PUNCH );
+									userData.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
+									
+									PEPeerTransport newTransport = peer.reconnect( true, false, userData );
+	
+									if(newTransport != null){
+	
+										newTransport.setData(PEER_NAT_TRAVERSE_DONE_KEY, "");
 									}
-								}finally{
-
-									peer_transports_mon.exit();
 								}
-							}
-						});
-
-				udp_traversal_count++;
+	
+								@Override
+								public void failed(){
+									complete();
+								}
+	
+								protected void complete(){
+									try{
+										peer_transports_mon.enter();
+	
+										if(!done){
+	
+											done = true;
+	
+											udp_traversal_count--;
+										}
+									}finally{
+	
+										peer_transports_mon.exit();
+									}
+								}
+							});
+	
+					udp_traversal_count++;
+				}
 			}
 		}finally{
 
@@ -5525,7 +5552,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 					PEPeerTransport peer_item = new_connections.get(i);
 
 					// don't call when holding monitor - deadlock potential
-					peer_item.reconnect(true, false);
+					peer_item.reconnect(true, false, null);
 
 				}
 			}

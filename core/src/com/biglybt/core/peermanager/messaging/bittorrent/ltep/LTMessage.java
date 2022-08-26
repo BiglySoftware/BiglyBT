@@ -49,5 +49,9 @@ public interface LTMessage extends Message {
 	public static final byte[] ID_UT_UPLOAD_ONLY_BYTES  = ID_UT_UPLOAD_ONLY.getBytes();
 	public static final int SUBID_UT_UPLOAD_ONLY        = 4;
 
+	public static final String ID_UT_HOLEPUNCH			= "ut_holepunch";
+	public static final byte[] ID_UT_HOLEPUNCH_BYTES	= ID_UT_HOLEPUNCH.getBytes();
+	public static final int SUBID_UT_HOLEPUNCH			= 5;
+
 	// 10 -> 20 reserved for non-public nets
 }

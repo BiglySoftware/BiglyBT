@@ -244,9 +244,10 @@ public class LTHandshake implements LTMessage {
 	addDefaultExtensionMappings(
 		boolean		enable_pex,
 		boolean		enable_md,
-		boolean		enable_uo )
+		boolean		enable_uo,
+		boolean		enable_hp )
 	{
-		if ( enable_pex || enable_md || enable_uo ){
+		if ( enable_pex || enable_md || enable_uo || enable_hp ){
 			Map ext = (Map)data_dict.get("m");
 
 			if ( ext == null ){
@@ -267,6 +268,10 @@ public class LTHandshake implements LTMessage {
 			if ( enable_uo ){
 
 				ext.put( ID_UT_UPLOAD_ONLY, new Long( SUBID_UT_UPLOAD_ONLY ));
+			}
+			if ( enable_hp ){
+
+				ext.put( ID_UT_HOLEPUNCH, new Long( SUBID_UT_HOLEPUNCH ));
 			}
 		}
 	}

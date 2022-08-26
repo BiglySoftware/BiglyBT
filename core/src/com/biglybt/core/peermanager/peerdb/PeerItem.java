@@ -216,6 +216,7 @@ public class PeerItem implements PeerDescriptor {
       case PeerItemFactory.PEER_SOURCE_PEER_EXCHANGE:  return PEPeerSource.PS_OTHER_PEER;
       case PeerItemFactory.PEER_SOURCE_PLUGIN:         return PEPeerSource.PS_PLUGIN;
       case PeerItemFactory.PEER_SOURCE_INCOMING:       return PEPeerSource.PS_INCOMING;
+      case PeerItemFactory.PEER_SOURCE_HOLE_PUNCH:       return PEPeerSource.PS_HOLE_PUNCH;
       default:                                         return "<unknown>";
     }
   }
@@ -227,6 +228,7 @@ public class PeerItem implements PeerDescriptor {
     if( source.equals( PEPeerSource.PS_OTHER_PEER ) )  return PeerItemFactory.PEER_SOURCE_PEER_EXCHANGE;
     if( source.equals( PEPeerSource.PS_PLUGIN ) )      return PeerItemFactory.PEER_SOURCE_PLUGIN;
     if( source.equals( PEPeerSource.PS_INCOMING ) )    return PeerItemFactory.PEER_SOURCE_INCOMING;
+    if( source.equals( PEPeerSource.PS_HOLE_PUNCH ) )  return PeerItemFactory.PEER_SOURCE_HOLE_PUNCH;
     return -1;
   }
 

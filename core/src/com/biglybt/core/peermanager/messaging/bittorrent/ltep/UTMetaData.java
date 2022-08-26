@@ -216,8 +216,12 @@ UTMetaData
 
 			data.position( DirectByteBuffer.SS_MSG, pos + BEncoder.encode( root ).length );
 
-			return( new UTMetaData( root, data, version ));
-
+			UTMetaData result = new UTMetaData( root, data, version );
+			
+				// data is assigned to metadata and will be destroyed when "destroy" called
+			
+			return( result );
+			
 		}catch( Throwable e ){
 
 			e.printStackTrace();

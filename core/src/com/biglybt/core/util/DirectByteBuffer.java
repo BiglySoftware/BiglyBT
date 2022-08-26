@@ -77,6 +77,7 @@ DirectByteBuffer
     public static final byte        AL_MSG_BT_HASH_REQUEST      = 37;
     public static final byte        AL_MSG_BT_HASHES            = 38;
     public static final byte        AL_MSG_BT_HASH_REJECT       = 39;
+    public static final byte        AL_MSG_UT_HOLEPUNCH			= 40;
        
 
 	public static final String[] AL_DESCS =
@@ -109,7 +110,8 @@ DirectByteBuffer
     "UTUploadOnly",
     "BTHashRequest",
     "BTHashes",
-    "BTHashReject"};
+    "BTHashReject",
+    "UTHolePunch"};
 
 
 

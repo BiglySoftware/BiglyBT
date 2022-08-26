@@ -21,7 +21,9 @@ import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.peermanager.messaging.MessageException;
 import com.biglybt.core.peermanager.messaging.MessageManager;
 import com.biglybt.core.peermanager.messaging.bittorrent.BTMessageDecoder;
+import com.biglybt.core.peermanager.messaging.bittorrent.BTMessageFactory;
 import com.biglybt.core.util.CopyOnWriteMap;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
 
 /**
@@ -72,13 +74,15 @@ public class LTMessageDecoder extends BTMessageDecoder {
 		id = ref_buff.get(DirectByteBuffer.SS_MSG);
 		switch(id) {
 			case LTMessage.SUBID_LT_HANDSHAKE:
-				return MessageManager.getSingleton().createMessage(LTMessage.ID_LT_HANDSHAKE_BYTES, ref_buff, (byte)1);
+				return MessageManager.getSingleton().createMessage(LTMessage.ID_LT_HANDSHAKE_BYTES, ref_buff, BTMessageFactory.MESSAGE_VERSION_INITIAL);
 			case LTMessage.SUBID_UT_PEX:
-				return MessageManager.getSingleton().createMessage(LTMessage.ID_UT_PEX_BYTES, ref_buff, (byte)1);
+				return MessageManager.getSingleton().createMessage(LTMessage.ID_UT_PEX_BYTES, ref_buff, BTMessageFactory.MESSAGE_VERSION_INITIAL);
 			case LTMessage.SUBID_UT_METADATA:
-				return MessageManager.getSingleton().createMessage(LTMessage.ID_UT_METADATA_BYTES, ref_buff, (byte)1);
+				return MessageManager.getSingleton().createMessage(LTMessage.ID_UT_METADATA_BYTES, ref_buff, BTMessageFactory.MESSAGE_VERSION_INITIAL);
 			case LTMessage.SUBID_UT_UPLOAD_ONLY:
-				return MessageManager.getSingleton().createMessage(LTMessage.ID_UT_UPLOAD_ONLY_BYTES, ref_buff, (byte)1);
+				return MessageManager.getSingleton().createMessage(LTMessage.ID_UT_UPLOAD_ONLY_BYTES, ref_buff, BTMessageFactory.MESSAGE_VERSION_INITIAL);
+			case LTMessage.SUBID_UT_HOLEPUNCH:
+				return MessageManager.getSingleton().createMessage(LTMessage.ID_UT_HOLEPUNCH_BYTES, ref_buff, BTMessageFactory.MESSAGE_VERSION_INITIAL);
 			default: {
 			  byte[]	message_id;
 

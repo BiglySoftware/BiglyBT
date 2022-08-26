@@ -104,7 +104,7 @@ UTUploadOnly
 	{
 		if ( buffer == null) {
 
-			buffer = DirectByteBufferPool.getBuffer(DirectByteBuffer.AL_MSG_LT_HANDSHAKE, 1 );
+			buffer = DirectByteBufferPool.getBuffer(DirectByteBuffer.AL_MSG_UT_UPLOAD_ONLY, 1 );
 
 			buffer.put(DirectByteBuffer.SS_MSG, (byte)(upload_only?1:0));
 			buffer.flip(DirectByteBuffer.SS_MSG);
@@ -132,6 +132,8 @@ UTUploadOnly
 
 		boolean ulo = dict_bytes[0] != 0;
 
+		data.returnToPool();
+		
 		return( new UTUploadOnly( ulo, version ));
 	}
 

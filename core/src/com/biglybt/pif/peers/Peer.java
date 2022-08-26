@@ -48,7 +48,9 @@ Peer
 	public final static Object PR_PROTOCOL				= new Object();
 	public final static Object PR_PROTOCOL_QUALIFIER	= new Object();
 	public final static Object PR_FORCE_CONNECTION		= new Object();
-
+	public final static Object PR_PREFER_UTP			= new Object();
+	public final static Object PR_PEER_SOURCE			= new Object();
+	
 	public void
 	bindConnection(
 		ConnectionStub		stub );

@@ -32,6 +32,7 @@ public class PeerItemFactory {
   public static final byte PEER_SOURCE_PEER_EXCHANGE = 2;
   public static final byte PEER_SOURCE_PLUGIN        = 3;
   public static final byte PEER_SOURCE_INCOMING      = 4;
+  public static final byte PEER_SOURCE_HOLE_PUNCH    = 5;
 
   public static final byte HANDSHAKE_TYPE_PLAIN  = 0;
   public static final byte HANDSHAKE_TYPE_CRYPTO = 1;

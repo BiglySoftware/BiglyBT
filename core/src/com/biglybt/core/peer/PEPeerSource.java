@@ -53,6 +53,8 @@ PEPeerSource
 
 	public static final String	PS_INCOMING			= "Incoming";
 
+	public static final String	PS_HOLE_PUNCH		= "HolePunch";
+
 	public static final String[]
 		PS_SOURCES = {
 			PS_BT_TRACKER,
@@ -60,6 +62,7 @@ PEPeerSource
 			PS_OTHER_PEER,
 			PS_PLUGIN,
 			PS_INCOMING,
+			PS_HOLE_PUNCH,
 	};
 
 	public static boolean

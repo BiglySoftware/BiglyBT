@@ -1229,7 +1229,7 @@ PeerForeignDelegate
 	public void clearAvailabilityAdded() {}
 
 	@Override
-	public PEPeerTransport reconnect(boolean tryUDP, boolean tryIPv6){ return null; }
+	public PEPeerTransport reconnect(boolean tryUDP, boolean tryIPv6, Map userData ){ return null; }
 	
 	@Override
 	public boolean isReconnect(){ return false; }

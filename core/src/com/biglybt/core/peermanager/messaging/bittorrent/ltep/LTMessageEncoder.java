@@ -130,11 +130,15 @@ public class LTMessageEncoder implements MessageStreamEncoder {
 	}
 
 	public boolean supportsUTPEX() {
-		return( supportsExtension("ut_pex"));
+		return( supportsExtension( LTMessage.ID_UT_PEX ));
 	}
 
 	public boolean supportsUTMetaData() {
-		return( supportsExtension("ut_metadata"));
+		return( supportsExtension( LTMessage.ID_UT_METADATA ));
+	}
+	
+	public boolean supportsUTHolePunch() {
+		return( supportsExtension( LTMessage.ID_UT_HOLEPUNCH ));
 	}
 
 	public boolean
