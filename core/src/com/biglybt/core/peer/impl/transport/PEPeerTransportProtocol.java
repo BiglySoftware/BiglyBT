@@ -690,24 +690,20 @@ implements PEPeerTransport
 						if ( RandomUtils.nextInt(2) == 1 ){
 	
 							pe2 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UTP, endpoint_address );
-						}
-					}
+							
+						}else{
 					
-					if ( _initial_user_data != null && !socks_active ){
-						
-						Boolean prefer_utp = (Boolean)_initial_user_data.get( Peer.PR_PREFER_UTP );
-	
-						if ( prefer_utp != null && prefer_utp ){
+							if ( _initial_user_data != null ){
 							
-							if ( pe2 == null ){
-								
-								pe2 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UTP, endpoint_address );
+								Boolean prefer_utp = (Boolean)_initial_user_data.get( Peer.PR_PREFER_UTP );
+			
+								if ( prefer_utp != null && prefer_utp ){
+																	
+										// note that ConnectionEndpoint preferentially connects to uTP before TCP
+		
+									pe2 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UTP, endpoint_address );							
+								}
 							}
-							
-							ProtocolEndpoint temp = pe1;
-							
-							pe1 = pe2;
-							pe2 = temp;
 						}
 					}
 				}else{
@@ -5614,15 +5610,21 @@ implements PEPeerTransport
 		}
 	}
 
+	protected boolean
+	isHolePunchSupported()
+	{
+		return( ut_holepunch_enabled );
+	}
+	
 	protected void
 	decodeHolePunch(
 		UTHolePunch message )
 	{
 		try{
-	
-			Debug.out( "Got HP: " + message );
-	
+		
 			if ( !ut_holepunch_enabled ){
+				
+					// silently ignore 
 				
 				return;
 			}
@@ -5649,6 +5651,52 @@ implements PEPeerTransport
 			
 			if ( type == UTHolePunch.MT_RENDEZVOUS ){
 				
+				int port = message.getPort();
+				
+				InetAddress address = message.getAddress();
+				
+				List<PEPeer> targets = manager.getPeers( address.getHostAddress());
+				
+				PEPeerTransportProtocol selected = null;
+				
+				for ( PEPeer target: targets ){
+					
+					if ( target instanceof PEPeerTransportProtocol ){
+						
+						PEPeerTransportProtocol tp = (PEPeerTransportProtocol)target;
+						
+						if ( tp.isHolePunchSupported() && tp.getTCPListenPort() == port ){
+							
+							selected = tp;
+							
+							break;
+						}
+					}
+				}
+				
+				if ( selected == null ){
+					
+					//Debug.out( "HP: no rendezvous for " + address + "/" + port );
+					
+					UTHolePunch error = new UTHolePunch( message, UTHolePunch.ERR_NOT_CONNECTED, other_peer_bt_lt_ext_version );
+					
+					connection.getOutgoingMessageQueue().addMessage( error, false );
+					
+					return;
+				}
+				
+				//Debug.out( "HP: ok rendezvous for " + address + "/" + port );
+
+				UTHolePunch initiator_connect = 
+					new UTHolePunch( UTHolePunch.MT_CONNECT, address, port, 0, other_peer_bt_lt_ext_version );					
+				
+				UTHolePunch target_connect = 
+					new UTHolePunch( UTHolePunch.MT_CONNECT, InetAddress.getByName( ip ), tcp_listen_port, 0, selected.other_peer_bt_lt_ext_version );
+
+				connection.getOutgoingMessageQueue().addMessage( initiator_connect, false );
+				
+				selected.getNetworkConnection().getOutgoingMessageQueue().addMessage( target_connect, false );
+
 			}else if ( type == UTHolePunch.MT_CONNECT ){
 				
 				int port = message.getPort();
@@ -5661,13 +5709,20 @@ implements PEPeerTransport
 				user_data.put( Peer.PR_PREFER_UTP, Boolean.TRUE);
 				user_data.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
 
-				Debug.out( "Connect to " + address + "/" + port );
+				//Debug.out( "HP: Connect to " + address + "/" + port );
 				
 				manager.addPeer( address.getHostAddress(), port, port, true, user_data );
 				
 			}else{
 				
+					// error or some kind
+				
+				//Debug.out( "HP: error" );
 			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
 		}finally{
 
 			message.destroy();
