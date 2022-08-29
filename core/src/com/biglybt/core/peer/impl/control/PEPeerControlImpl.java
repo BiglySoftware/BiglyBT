@@ -274,6 +274,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	// private int _maxUploads;
 	private int stats_tick_count;
 	private int _seeds, _peers, _remotesTCPNoLan, _remotesUDPNoLan, _remotesUTPNoLan;
+	private int _tcp_peers_transfering;
 	private int _tcpPendingConnections, _tcpConnectingConnections;
 	private long last_remote_time;
 	private long _timeStarted;
@@ -378,6 +379,17 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	private int udp_traversal_count;
 
+	private static final int PENDING_HOLE_PUNCH_MAX = 32;
+
+	private final Map<String, Object[]> pending_hole_punches = new LinkedHashMap<String, Object[]>(
+			PENDING_HOLE_PUNCH_MAX, 0.75f, true){
+		@Override
+		protected boolean removeEldestEntry(Map.Entry<String, Object[]> eldest){
+			return size() > PENDING_HOLE_PUNCH_MAX;
+		}
+	};
+
+	
 	private static final int UDP_RECONNECT_MAX = 16;
 
 	private final Map<String, PEPeerTransport> udp_reconnects = new LinkedHashMap<String, PEPeerTransport>(
@@ -528,6 +540,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	private final MyPeer my_peer = new MyPeer();
 
+	private static final int HP_BLOOM_FILTER_SIZE = 512;
+	private volatile BloomFilter hp_bloom = null;
+	
 	public 
 	PEPeerControlImpl(
 		byte[] _peer_id, 
@@ -760,6 +775,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		pending_nat_traversals.clear();
 
+		pending_hole_punches.clear();
+		
 		udp_reconnects.clear();
 
 		hash_handler.stop();
@@ -781,6 +798,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			pending_nat_traversals.clear();
 
+			pending_hole_punches.clear();
+			
 		}finally{
 
 			peer_transports_mon.exit();
@@ -2592,6 +2611,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		int new_seeds = 0;
 		int new_peers = 0;
+		int new_tcp_peers_transfering = 0;
 		int new_tcp_incoming = 0;
 		int new_udp_incoming = 0;
 		int new_utp_incoming = 0;
@@ -2609,6 +2629,10 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			if ( pc.getPeerState() == PEPeer.TRANSFERING ){
 
+				if ( pc.isTCP()){
+					new_tcp_peers_transfering++;
+				}
+				
 				if(!pc.isChokedByMe()){
 
 					con_unchoked++;
@@ -2688,6 +2712,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		_seeds = new_seeds;
 		_peers = new_peers;
+		_tcp_peers_transfering = new_tcp_peers_transfering;
 		_remotesTCPNoLan = new_tcp_incoming;
 		_remotesUDPNoLan = new_udp_incoming;
 		_remotesUTPNoLan = new_utp_incoming;
@@ -3399,23 +3424,35 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 					// System.out.println("netfail="+network_failed+", connfail="+connect_failed+",
 					// can6="+canTryIpv6+", was6="+wasIPv6);
 
-					String key = ip + ":" + udpPort;
+					String keyUDP = ip + ":" + udpPort;
 
 					if(peer.isTCP()){
 
 						String net = AENetworkClassifier.categoriseAddress(ip);
 
-						if(connect_failed){
+						if ( connect_failed ){
 
 							// TCP connect failure, try UDP later if necessary
 
 							if(canTryUDP && udp_fallback_for_failed_connection){
 
-								pending_nat_traversals.put(key, peer);
+								pending_nat_traversals.put(keyUDP, peer);
+								
 							}else if(canTryIpv6 && !wasIPv6){
+								
 								tcpReconnect = true;
 								ipv6reconnect = true;
 							}
+							
+							if ( _tcp_peers_transfering > 0 && isPeerSourceEnabled( PEPeerSource.PS_HOLE_PUNCH  )){
+								
+								int tcpPort = peer.getTCPListenPort();
+								
+								String keyTCP = ip + ":" + tcpPort;
+
+								pending_hole_punches.put(keyTCP, new Object[]{ ip, tcpPort });
+							}
+							
 						}else if(canTryUDP && udp_fallback_for_dropped_connection && network_failed && seeding_mode
 								&& peer.isInterested() && !peer.isSeed() && !peer.isRelativeSeed()
 								&& peer.getStats().getEstimatedSecondsToCompletion() > 60
@@ -3429,7 +3466,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 							// System.out.println( "Premature close of stream: " + getDisplayName() + "/" +
 							// peer.getIp());
 
-							udp_reconnects.put(key, peer);
+							udp_reconnects.put(keyUDP, peer);
 
 						}else if(network_failed && peer.isSafeForReconnect()
 								&& !(seeding_mode && (peer.isSeed() || peer.isRelativeSeed()
@@ -3451,7 +3488,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 								// System.out.println( "Direct reconnect failed, attempting NAT traversal" );
 
-								pending_nat_traversals.put(key, peer);
+								pending_nat_traversals.put(keyUDP, peer);
 							}
 						}
 					}
@@ -4804,7 +4841,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		boolean has_ipv4 = false;
 		boolean can_ipv6 = network_admin.hasIPV6Potential(true);
 
-		if(mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL == 0){
+		if ( mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL == 0 ){
 
 			// need to sync the rates periodically as when upload is disabled (for example)
 			// the we can end up with
@@ -5023,12 +5060,20 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 						}
 					}
 
-					if(i == 0){
+					if ( i == 0 ){
 
-						if(UDPNetworkManager.UDP_OUTGOING_ENABLED && remaining > 0 && udp_remaining > 0
+						if( UDPNetworkManager.UDP_OUTGOING_ENABLED && remaining > 0 && udp_remaining > 0
 								&& udp_connections < MAX_UDP_CONNECTIONS){
 
 							doUDPConnectionChecks(remaining);
+						}
+						
+						if ( mainloop_loop_count % MAINLOOP_FIVE_SECOND_INTERVAL == 0 ){
+						
+							if( TCPNetworkManager.TCP_OUTGOING_ENABLED && remaining > 0 && tcp_remaining > 0 ){
+								
+								doTCPConnectionChecks(remaining);
+							}
 						}
 					}
 				}
@@ -5335,8 +5380,10 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		// with TCP+uTP dual connects) and not resulting in overall disconnect
 		// as the user has a bunch of 'bind' exceptions in their log
 
-		if(mainloop_loop_count % MAINLOOP_SIXTY_SECOND_INTERVAL == 0){
+		if ( mainloop_loop_count % MAINLOOP_SIXTY_SECOND_INTERVAL == 0 ){
 
+			hp_bloom = null;
+			
 			List<PEPeerTransport> peer_transports = peer_transports_cow;
 
 			if(peer_transports.size() > 1){
@@ -5405,6 +5452,93 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 	}
 
+	@Override
+	public boolean
+	isHolePunchOperationOK(
+		PEPeerTransport	peer,
+		boolean			is_connect )
+	{
+		BloomFilter bf = hp_bloom;
+		
+		if ( bf == null ){
+			
+			bf = hp_bloom = BloomFilterFactory.createAddRemove4Bit( HP_BLOOM_FILTER_SIZE);
+		}
+		
+		if ( bf.add( peer.getIp().getBytes()) > ( is_connect?3:5 )){
+			
+			return( false );
+		}
+		
+		return( true );
+	}
+	
+	private void 
+	doTCPConnectionChecks(
+		int number )
+	{
+		if ( number > 5 ){
+			
+			number = 5;
+		}
+		
+		try{
+			peer_transports_mon.enter();
+			
+			//System.out.println( "hp=" + pending_hole_punches.size());
+			
+			if ( pending_hole_punches.size() == 0 ){
+
+				return;
+			}
+			
+			List<PEPeerTransport> available = new ArrayList<>( peer_transports_cow.size());
+			
+			for ( PEPeerTransport peer: peer_transports_cow ){
+				
+				if ( peer.canSendHolePunch()){
+					
+					available.add( peer );
+				}
+			}
+			
+			if ( available.isEmpty()){
+				
+				return;
+			}
+			
+			Collections.shuffle( available );
+			
+			int a_pos = 0;
+			
+			int	to_do = number;
+			
+			for ( Iterator<Object[]> it=pending_hole_punches.values().iterator();it.hasNext()&&a_pos<available.size()&&to_do>0;){
+				
+				Object[] entry = it.next();
+				
+				it.remove();
+				
+				String	ip 		= (String)entry[0];
+				int		port	= (Integer)entry[1];
+				
+				PEPeerTransport peer = available.get( a_pos++ );
+				
+				try{
+					peer.sendHolePunch( InetAddress.getByName( ip ), port );
+					
+				}catch( Throwable e ){
+					
+				}
+				
+				to_do--;
+			}
+		}finally{
+
+			peer_transports_mon.exit();
+		}
+	}
+	
 	private void doUDPConnectionChecks(int number){
 		List<PEPeerTransport> new_connections = null;
 
@@ -6185,7 +6319,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	@Override
 	public boolean hasPotentialConnections(){
-		return(pending_nat_traversals.size() + peer_database.getDiscoveredPeerCount() > 0);
+		return(pending_nat_traversals.size() + pending_hole_punches.size() + peer_database.getDiscoveredPeerCount() > 0);
 	}
 
 	@Override
@@ -6421,6 +6555,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			writer.println("    active_udp=" + active_udp);
 		}
+
+		writer.println("    tcp_hp=" + pending_hole_punches.size());
 
 		if(!seeding_mode){
 

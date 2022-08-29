@@ -1829,6 +1829,10 @@ public class PeerManager implements CoreStatsProvider {
 			public PEPeerControlHashHandler
 			getHashHandler(){ log(); return( null ); }
 			
+			@Override
+			public boolean isHolePunchOperationOK(PEPeerTransport peer, boolean is_connect){
+				log(); return false;
+			}
 			private void 
 			log()
 			{

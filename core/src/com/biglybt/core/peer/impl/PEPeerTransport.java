@@ -24,6 +24,7 @@
  */
 package com.biglybt.core.peer.impl;
 
+import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 
@@ -283,6 +284,14 @@ PEPeerTransport
 	sendHashRequest(
 		TOTorrentFileHashTree.HashRequest		req );
 	
+	public boolean
+	canSendHolePunch();
+	
+	public void
+	sendHolePunch(
+		InetAddress		address,
+		int				port );
+
 	public void
 	generateEvidence(
 		IndentWriter	writer );

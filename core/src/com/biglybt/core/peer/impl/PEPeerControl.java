@@ -160,4 +160,9 @@ PEPeerControl
 	
 	public PEPeerControlHashHandler
 	getHashHandler();
+	
+	public boolean
+	isHolePunchOperationOK(
+		PEPeerTransport		peer,
+		boolean				is_connect );
 }

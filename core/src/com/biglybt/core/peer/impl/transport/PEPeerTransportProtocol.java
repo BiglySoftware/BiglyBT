@@ -429,6 +429,9 @@ implements PEPeerTransport
 
 	private long request_latency;
 
+	private volatile long 			hp_last_send;
+	private volatile InetAddress	hp_last_address;
+	
 	//INCOMING
 	public
 	PEPeerTransportProtocol(
@@ -5615,6 +5618,50 @@ implements PEPeerTransport
 	{
 		return( ut_holepunch_enabled );
 	}
+
+	@Override
+	public boolean
+	canSendHolePunch()
+	{
+		if ( ut_holepunch_enabled && connection_state == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ){
+			
+			long now = SystemTime.getMonotonousTime();
+			
+			if ( hp_last_send == -1 || now - hp_last_send > 20*1000 ){
+				
+				return( true );
+			}
+		}
+		
+		return( false );
+	}
+
+	@Override
+	public void
+	sendHolePunch(
+		InetAddress		address,
+		int				port )
+	{
+		if ( !ut_holepunch_enabled ){
+			
+		}
+		
+		if ( network != AENetworkClassifier.AT_PUBLIC ){
+			
+			return;
+		}
+		
+		hp_last_send 	= SystemTime.getMonotonousTime();
+		hp_last_address	= address;
+		
+		System.out.println( "Send Rendezvous for " + address + "/" + port + " to " + ip + "/" + tcp_listen_port );
+		
+		UTHolePunch rendezvous = 
+				new UTHolePunch( UTHolePunch.MT_RENDEZVOUS, address, port, 0, other_peer_bt_lt_ext_version );					
+			
+		connection.getOutgoingMessageQueue().addMessage( rendezvous, false );
+
+	}
 	
 	protected void
 	decodeHolePunch(
@@ -5639,6 +5686,8 @@ implements PEPeerTransport
 			boolean socks_active	= NetworkAdmin.getSingleton().isSocksActive();
 						
 			if ( socks_active || !ps_enabled || !ProtocolEndpointFactory.isHandlerRegistered( ProtocolEndpoint.PROTOCOL_UTP )){
+				
+				//System.out.println( "HP: no support" );
 				
 				UTHolePunch error = new UTHolePunch( message, UTHolePunch.ERR_NO_SUPPORT, other_peer_bt_lt_ext_version );
 				
@@ -5676,7 +5725,7 @@ implements PEPeerTransport
 				
 				if ( selected == null ){
 					
-					//Debug.out( "HP: no rendezvous for " + address + "/" + port );
+					// System.out.println( "HP: no rendezvous for " + address + "/" + port );
 					
 					UTHolePunch error = new UTHolePunch( message, UTHolePunch.ERR_NOT_CONNECTED, other_peer_bt_lt_ext_version );
 					
@@ -5685,7 +5734,16 @@ implements PEPeerTransport
 					return;
 				}
 				
-				//Debug.out( "HP: ok rendezvous for " + address + "/" + port );
+				if ( !manager.isHolePunchOperationOK( this, false )){
+					
+						// silently ignore
+				
+					//System.out.println( "HP: rendezvous denied for " + address + "/" + port );
+					
+					return;
+				}
+				
+				//System.out.println( "HP: ok rendezvous for " + address + "/" + port );
 
 				UTHolePunch initiator_connect = 
 					new UTHolePunch( UTHolePunch.MT_CONNECT, address, port, 0, other_peer_bt_lt_ext_version );					
@@ -5703,21 +5761,31 @@ implements PEPeerTransport
 					
 				InetAddress address = message.getAddress();
 				
+				if ( hp_last_address == null || !hp_last_address.equals( address )){
+					
+					if ( !manager.isHolePunchOperationOK( this, true )){
+				
+							// silently ignore
+						
+						//System.out.println( "HP: connect denied for " + address + "/" + port );
+						
+						return;
+					}
+				}
+				
 				Map	user_data = new LightHashMap();
 
 				user_data.put( Peer.PR_PEER_SOURCE, PEPeerSource.PS_HOLE_PUNCH );
 				user_data.put( Peer.PR_PREFER_UTP, Boolean.TRUE);
 				user_data.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
 
-				//Debug.out( "HP: Connect to " + address + "/" + port );
+				//System.out.println( "HP: Connect to " + address + "/" + port );
 				
 				manager.addPeer( address.getHostAddress(), port, port, true, user_data );
 				
 			}else{
 				
-					// error or some kind
-				
-				//Debug.out( "HP: error" );
+				//System.out.println( "HP: error - " + message.getErrorCode() + " from " + ip + "/" + tcp_listen_port );
 			}
 		}catch( Throwable e ){
 			
@@ -5728,6 +5796,7 @@ implements PEPeerTransport
 			message.destroy();
 		}
 	}
+	
 	@Override
 	public boolean
 	sendRequestHint(

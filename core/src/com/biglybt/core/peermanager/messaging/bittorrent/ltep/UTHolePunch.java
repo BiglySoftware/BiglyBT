@@ -147,6 +147,12 @@ UTHolePunch
 		return( address );
 	}
 	
+	public int
+	getErrorCode()
+	{
+		return( error_code );
+	}
+	
 	@Override
 	public DirectByteBuffer[]
 	getData()

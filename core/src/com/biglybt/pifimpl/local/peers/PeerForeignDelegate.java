@@ -1386,6 +1386,21 @@ PeerForeignDelegate
 	}
 
 	@Override
+	public boolean 
+	canSendHolePunch()
+	{
+		return( false );
+	}
+	
+	@Override
+	public void 
+	sendHolePunch(
+		InetAddress address,
+		int 		port)
+	{
+	}
+	
+	@Override
 	public void
 	generateEvidence(
 		IndentWriter	writer )
