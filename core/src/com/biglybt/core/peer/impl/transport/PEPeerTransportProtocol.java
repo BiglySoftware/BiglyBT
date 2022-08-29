@@ -843,6 +843,8 @@ implements PEPeerTransport
 				priority,
 				new NetworkConnection.ConnectionListener()
 				{
+					boolean first_time = true;
+					
 					@Override
 					public final int
 					connectStarted(
@@ -850,9 +852,17 @@ implements PEPeerTransport
 					{
 							// we can end up here twice when connecting to both TCP and uTP...
 						
-						connection_state = PEPeerTransport.CONNECTION_CONNECTING;
+						synchronized( this ){
+							
+							if ( first_time ){
+						
+								first_time = false;
+								
+								connection_state = PEPeerTransport.CONNECTION_CONNECTING;
 
-						outbound_connection_progress = CP_CONNECTING;
+								outbound_connection_progress = CP_CONNECTING;
+							}
+						}
 						
 						if ( default_connect_timeout <= 0 ){
 
