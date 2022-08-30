@@ -3384,41 +3384,71 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	// the peer calls this method itself in closeConnection() to notify this manager
 
 	@Override
-	public void peerConnectionClosed(PEPeerTransport peer, boolean connect_failed, boolean network_failed){
+	public void 
+	peerConnectionClosed(
+		PEPeerTransport peer, 
+		boolean connect_failed, 
+		boolean network_failed)
+	{
 		boolean connection_found = false;
 
-		boolean tcpReconnect = false;
-		boolean ipv6reconnect = false;
+		boolean tcpReconnect	= false;
+		boolean ipv6reconnect	= false;
 
 		try{
-			peer_transports_mon.enter();
-
+			String net	= peer.getNetwork();
+			String ip	= peer.getIp();
+			
+			int tcpPort = peer.getTCPListenPort();
 			int udpPort = peer.getUDPListenPort();
 
-			boolean canTryUDP = UDPNetworkManager.UDP_OUTGOING_ENABLED && peer.getUDPListenPort() > 0;
-			boolean canTryIpv6 = network_admin.hasIPV6Potential(true) && peer.getAlternativeIPv6() != null;
+			peer_transports_mon.enter();
 
-			if(is_running){
-
+			if ( is_running ){
+				
+				boolean canTryUDP;
+				boolean canTryIpv6;
+				boolean canTryHolePunch;
+				
+				boolean both_seeds = seeding_mode && (peer.isSeed() || peer.isRelativeSeed());
+				
+				if ( net == AENetworkClassifier.AT_PUBLIC ){
+				
+					canTryUDP = UDPNetworkManager.UDP_OUTGOING_ENABLED && udpPort > 0;
+					canTryIpv6 = network_admin.hasIPV6Potential(true) && peer.getAlternativeIPv6() != null;
+					canTryHolePunch = 	peer.isTCP() && !both_seeds;
+										
+				}else{
+					canTryUDP 		= false;
+					canTryIpv6		= false;
+					canTryHolePunch = false;
+				}
+				
 				PeerItem peer_item = peer.getPeerItemIdentity();
 				PeerItem self_item = peer_database.getSelfPeer();
 
-				if(self_item == null || !self_item.equals(peer_item)){
+				if ( self_item == null || !self_item.equals(peer_item )){
 
-					String ip = peer.getIp();
 					boolean wasIPv6;
-					if(peer.getNetwork() == AENetworkClassifier.AT_PUBLIC){
+					
+					if ( net == AENetworkClassifier.AT_PUBLIC ){
+						
 						try{
 
 							wasIPv6 = AddressUtils.getByName(ip) instanceof Inet6Address;
-						}catch(UnknownHostException e){
+							
+						}catch( UnknownHostException e ){
+							
 							wasIPv6 = false;
-							// something is fishy about the old address, don't try to reconnect with v6
+							
+								// something is fishy about the old address, don't try to reconnect with v6
+							
 							canTryIpv6 = false;
 						}
 					}else{
-						wasIPv6 = false;
-						canTryIpv6 = false;
+						
+						wasIPv6		= false;
+						canTryIpv6	= false;
 					}
 
 					// System.out.println("netfail="+network_failed+", connfail="+connect_failed+",
@@ -3426,37 +3456,43 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 					String keyUDP = ip + ":" + udpPort;
 
-					if(peer.isTCP()){
-
-						String net = AENetworkClassifier.categoriseAddress(ip);
+					if ( peer.isTCP()){
 
 						if ( connect_failed ){
 
-							// TCP connect failure, try UDP later if necessary
-
-							if(canTryUDP && udp_fallback_for_failed_connection){
-
-								pending_nat_traversals.put(keyUDP, peer);
+							if ( canTryHolePunch ){
 								
-							}else if(canTryIpv6 && !wasIPv6){
+									// TCP connect failure, try UDP later if necessary
+	
+								if ( canTryUDP && udp_fallback_for_failed_connection ){
+	
+									pending_nat_traversals.put(keyUDP, peer);
+									
+								}else if ( canTryIpv6 && !wasIPv6 ){
+									
+									tcpReconnect = true;
+									ipv6reconnect = true;
+								}
 								
-								tcpReconnect = true;
-								ipv6reconnect = true;
+								if ( _tcp_peers_transfering > 0 && isPeerSourceEnabled( PEPeerSource.PS_HOLE_PUNCH  )){
+																													
+									if ( tcpPort > 0 ){
+										
+										String keyTCP = ip + ":" + tcpPort;
+		
+										pending_hole_punches.put( keyTCP, new Object[]{ ip, tcpPort });
+									}
+								}
 							}
-							
-							if ( _tcp_peers_transfering > 0 && isPeerSourceEnabled( PEPeerSource.PS_HOLE_PUNCH  )){
-								
-								int tcpPort = peer.getTCPListenPort();
-								
-								String keyTCP = ip + ":" + tcpPort;
-
-								pending_hole_punches.put(keyTCP, new Object[]{ ip, tcpPort });
-							}
-							
-						}else if(canTryUDP && udp_fallback_for_dropped_connection && network_failed && seeding_mode
-								&& peer.isInterested() && !peer.isSeed() && !peer.isRelativeSeed()
-								&& peer.getStats().getEstimatedSecondsToCompletion() > 60
-								&& FeatureAvailability.isUDPPeerReconnectEnabled()){
+						}else if(	canTryUDP && 
+									udp_fallback_for_dropped_connection && 
+									network_failed && 
+									seeding_mode && 
+									peer.isInterested() && 
+									!peer.isSeed() && 
+									!peer.isRelativeSeed() &&
+									peer.getStats().getEstimatedSecondsToCompletion() > 60 &&
+									FeatureAvailability.isUDPPeerReconnectEnabled()){
 
 							if(Logger.isEnabled()){
 								Logger.log(new LogEvent(peer, LOGID, LogEvent.LT_WARNING,
@@ -3468,25 +3504,26 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 							udp_reconnects.put(keyUDP, peer);
 
-						}else if(network_failed && peer.isSafeForReconnect()
-								&& !(seeding_mode && (peer.isSeed() || peer.isRelativeSeed()
-										|| peer.getStats().getEstimatedSecondsToCompletion() < 60))
-								&& getMaxConnections(net) > 0
-								&& (getMaxNewConnectionsAllowed(net) < 0
-										|| getMaxNewConnectionsAllowed(net) > getMaxConnections(net) / 3)
-								&& FeatureAvailability.isGeneralPeerReconnectEnabled()){
+						}else if(	network_failed && 
+									peer.isSafeForReconnect() &&
+									!(	seeding_mode && 
+										(	peer.isSeed() || 
+											peer.isRelativeSeed() ||
+											peer.getStats().getEstimatedSecondsToCompletion() < 60)) &&
+									getMaxConnections(net) > 0 &&
+									(	getMaxNewConnectionsAllowed(net) < 0  || 
+										getMaxNewConnectionsAllowed(net) > getMaxConnections(net) / 3) &&
+									FeatureAvailability.isGeneralPeerReconnectEnabled()){
 
 							tcpReconnect = true;
 						}
-					}else if(connect_failed){
+					}else if ( connect_failed ){
 
-						// UDP connect failure
+							// UDP connect failure
 
-						if(udp_fallback_for_failed_connection){
+						if ( udp_fallback_for_failed_connection && canTryHolePunch ){
 
-							if(peer.getData(PEER_NAT_TRAVERSE_DONE_KEY) == null){
-
-								// System.out.println( "Direct reconnect failed, attempting NAT traversal" );
+							if ( peer.getData( PEER_NAT_TRAVERSE_DONE_KEY ) == null ){
 
 								pending_nat_traversals.put(keyUDP, peer);
 							}
@@ -3495,26 +3532,34 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				}
 			}
 
-			if(peer_transports_cow.contains(peer)){
-				final ArrayList new_peer_transports = new ArrayList(peer_transports_cow);
+			if ( peer_transports_cow.contains(peer)){
+				
+				final ArrayList<PEPeerTransport> new_peer_transports = new ArrayList<>(peer_transports_cow);
+				
 				new_peer_transports.remove(peer);
+				
 				peer_transports_cow = new_peer_transports;
+				
 				connection_found = true;
 			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
 		}finally{
+			
 			peer_transports_mon.exit();
 		}
 
-		if(connection_found){
-			if(peer.getPeerState() != PEPeer.DISCONNECTED){
-				System.out.println("peer.getPeerState() != PEPeer.DISCONNECTED: " + peer.getPeerState());
-			}
-
-			peerRemoved(peer); // notify listeners
+		if ( connection_found ){
+			
+			peerRemoved( peer ); // notify listeners
 		}
 
-		if(tcpReconnect)
-			peer.reconnect(false, ipv6reconnect,null);
+		if ( tcpReconnect ){
+			
+			peer.reconnect( false, ipv6reconnect, null);
+		}
 	}
 
 	@Override

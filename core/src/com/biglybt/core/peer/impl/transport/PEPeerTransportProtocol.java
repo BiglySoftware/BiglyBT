@@ -5623,17 +5623,18 @@ implements PEPeerTransport
 		}
 	}
 
-	protected boolean
+	private boolean
 	isHolePunchSupported()
 	{
-		return( ut_holepunch_enabled );
+		return( ut_holepunch_enabled && network == AENetworkClassifier.AT_PUBLIC );
 	}
 
 	@Override
 	public boolean
 	canSendHolePunch()
 	{
-		if ( ut_holepunch_enabled && connection_state == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ){
+		if ( 	isHolePunchSupported() &&
+				connection_state == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ){
 			
 			long now = SystemTime.getMonotonousTime();
 			
@@ -5652,11 +5653,14 @@ implements PEPeerTransport
 		InetAddress		address,
 		int				port )
 	{
-		if ( !ut_holepunch_enabled ){
+		if ( !canSendHolePunch()){
 			
+			return;
 		}
 		
-		if ( network != AENetworkClassifier.AT_PUBLIC ){
+		if ( NetworkAdmin.getSingleton().isSocksActive()){
+		
+				// test here, rather than in canSendHolePunch, as called much less frequently
 			
 			return;
 		}
@@ -5664,7 +5668,7 @@ implements PEPeerTransport
 		hp_last_send 	= SystemTime.getMonotonousTime();
 		hp_last_address	= address;
 		
-		System.out.println( "Send Rendezvous for " + address + "/" + port + " to " + ip + "/" + tcp_listen_port );
+		// System.out.println( "Send Rendezvous for " + address + "/" + port + " to " + ip + "/" + tcp_listen_port );
 		
 		UTHolePunch rendezvous = 
 				new UTHolePunch( UTHolePunch.MT_RENDEZVOUS, address, port, 0, other_peer_bt_lt_ext_version );					
@@ -5679,14 +5683,7 @@ implements PEPeerTransport
 	{
 		try{
 		
-			if ( !ut_holepunch_enabled ){
-				
-					// silently ignore 
-				
-				return;
-			}
-			
-			if ( network != AENetworkClassifier.AT_PUBLIC ){
+			if ( !isHolePunchSupported()){
 				
 				return;
 			}
