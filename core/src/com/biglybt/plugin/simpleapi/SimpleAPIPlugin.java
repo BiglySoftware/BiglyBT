@@ -789,24 +789,9 @@ SimpleAPIPlugin
 						
 					}else if ( name.equals( "ipfilterenable" )){
 						
-						value = value.toLowerCase( Locale.US );
+						boolean enable = getBoolean( value );
 						
-						boolean disable;
-						
-						if ( value.equals( "true" ) || value.equals( "1" ) || value.equals( "y" )){
-							
-							disable = false;
-							
-						}else if ( value.equals( "false" ) || value.equals( "0" ) || value.equals( "n" )){
-
-							disable = true;
-							
-						}else{
-							
-							throw( new Exception( "invalid boolean value (" + value + ")" ));
-						}
-						
-						dm.getDownloadState().setFlag( DownloadManagerState.FLAG_DISABLE_IP_FILTER, disable );
+						dm.getDownloadState().setFlag( DownloadManagerState.FLAG_DISABLE_IP_FILTER, !enable );
 						
 					}else{
 						
@@ -890,7 +875,7 @@ SimpleAPIPlugin
 							
 						}else if ( name.equals( "skipped" )){
 							
-							file.setSkipped( value.equals( "1" ));
+							file.setSkipped( getBoolean( value ));
 						}
 					}
 				}finally{
@@ -1033,6 +1018,28 @@ SimpleAPIPlugin
 		}
 		
 		return( null );
+	}
+	
+	private boolean
+	getBoolean(
+		String		value )
+	
+		throws Exception
+	{
+		value = value.toLowerCase( Locale.US );
+				
+		if ( value.equals( "true" ) || value.equals( "1" ) || value.equals( "y" )){
+			
+			return( true );
+			
+		}else if ( value.equals( "false" ) || value.equals( "0" ) || value.equals( "n" )){
+
+			return( false );
+			
+		}else{
+			
+			throw( new Exception( "invalid boolean value (" + value + ")" ));
+		}	
 	}
 	
 	public Object
