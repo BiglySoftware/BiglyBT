@@ -1198,12 +1198,16 @@ public class ImageLoader
 	 */
 	public Image getUrlImage(String url, final Point maxSize,
 			final ImageDownloaderListener l) {
-		if (!Utils.isThisThreadSWT()) {
-			Debug.out("Called on non-SWT thread");
+		
+		if ( l == null || url == null ){
+			Debug.out( "eh" );
 			return null;
 		}
-		if (l == null || url == null) {
-			return null;
+		
+		if (!Utils.isThisThreadSWT()) {
+			Utils.execSWTThread(()->{ getUrlImage( url, maxSize, l );});
+			
+			return(null);
 		}
 
 		String imageKey = url;
