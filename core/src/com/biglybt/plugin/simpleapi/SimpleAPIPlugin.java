@@ -470,7 +470,7 @@ SimpleAPIPlugin
 				
 				String crh_str	= args.get( "calc_root_hashes" );
 				
-				boolean calc_root_hashes = crh_str != null && crh_str.equals( "1" );
+				boolean calc_root_hashes = crh_str != null && getBoolean( crh_str );
 				
 				DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
 				
