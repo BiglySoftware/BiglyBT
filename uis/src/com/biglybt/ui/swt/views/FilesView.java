@@ -152,6 +152,8 @@ public class FilesView
   public boolean hide_dnd_files;
   public boolean tree_view;
 
+  private boolean viewActive;
+  
   private volatile long selection_size;
   private volatile long selection_size_with_dnd;
   private volatile long selection_done;
@@ -345,6 +347,15 @@ public class FilesView
 
 		parent.setTabList(new Control[] {tableParent, cTop});
 
+		parent.addListener(SWT.Activate, (ev)->{
+				viewActive = true;
+				updateSelectedContent();
+			});
+		
+		parent.addListener(SWT.Deactivate, (ev)->{
+				viewActive = false;
+			});
+		
 		return tableParent;
 	}
 
@@ -869,9 +880,12 @@ public class FilesView
 
 		updateHeader();
 
-		SelectedContent[] sc = listSelected.toArray(new SelectedContent[0]);
-		SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),
-				sc, tv);
+		if ( viewActive ){
+			
+			SelectedContent[] sc = listSelected.toArray(new SelectedContent[0]);
+			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),
+					sc, tv);
+		}
 	}
 
 
