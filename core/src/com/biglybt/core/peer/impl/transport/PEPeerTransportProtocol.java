@@ -5667,9 +5667,13 @@ implements PEPeerTransport
 		
 		hp_last_send 	= SystemTime.getMonotonousTime();
 		hp_last_address	= address;
-		
-		// System.out.println( "Send Rendezvous for " + address + "/" + port + " to " + ip + "/" + tcp_listen_port );
-		
+				
+		if (Logger.isEnabled()){
+			Logger.log(
+				new LogEvent(PEPeerTransportProtocol.this, LOGID,
+						"HP: Rendezvous send for " + address + "/" + port ));
+		}
+
 		UTHolePunch rendezvous = 
 				new UTHolePunch( UTHolePunch.MT_RENDEZVOUS, address, port, 0, other_peer_bt_lt_ext_version );					
 			
@@ -5693,9 +5697,7 @@ implements PEPeerTransport
 			boolean socks_active	= NetworkAdmin.getSingleton().isSocksActive();
 						
 			if ( socks_active || !ps_enabled || !ProtocolEndpointFactory.isHandlerRegistered( ProtocolEndpoint.PROTOCOL_UTP )){
-				
-				//System.out.println( "HP: no support" );
-				
+								
 				UTHolePunch error = new UTHolePunch( message, UTHolePunch.ERR_NO_SUPPORT, other_peer_bt_lt_ext_version );
 				
 				connection.getOutgoingMessageQueue().addMessage( error, false );
@@ -5731,8 +5733,12 @@ implements PEPeerTransport
 				}
 				
 				if ( selected == null ){
-					
-					// System.out.println( "HP: no rendezvous for " + address + "/" + port );
+										
+					if (Logger.isEnabled()){
+						Logger.log(
+							new LogEvent(PEPeerTransportProtocol.this, LOGID,
+									"HP: Rendezvous failed for " + address + ":" + port + ", not connected"));
+					}
 					
 					UTHolePunch error = new UTHolePunch( message, UTHolePunch.ERR_NOT_CONNECTED, other_peer_bt_lt_ext_version );
 					
@@ -5745,12 +5751,20 @@ implements PEPeerTransport
 					
 						// silently ignore
 				
-					//System.out.println( "HP: rendezvous denied for " + address + "/" + port );
+					if (Logger.isEnabled()){
+						Logger.log(
+							new LogEvent(PEPeerTransportProtocol.this, LOGID,
+									"HP: Rendezvous failed for " + address + ":" + port + " rejected"));
+					}	
 					
 					return;
 				}
 				
-				//System.out.println( "HP: ok rendezvous for " + address + "/" + port );
+				if (Logger.isEnabled()){
+					Logger.log(
+						new LogEvent(PEPeerTransportProtocol.this, LOGID,
+								"HP: Rendezvous accepted for " + address + ":" + port ));
+				}					
 
 				UTHolePunch initiator_connect = 
 					new UTHolePunch( UTHolePunch.MT_CONNECT, address, port, 0, other_peer_bt_lt_ext_version );					
@@ -5774,7 +5788,11 @@ implements PEPeerTransport
 				
 							// silently ignore
 						
-						//System.out.println( "HP: connect denied for " + address + "/" + port );
+						if (Logger.isEnabled()){
+							Logger.log(
+								new LogEvent(PEPeerTransportProtocol.this, LOGID,
+										"HP: Connect to " + address + ":" + port + " rejected"));
+						}	
 						
 						return;
 					}
@@ -5786,13 +5804,21 @@ implements PEPeerTransport
 				user_data.put( Peer.PR_PREFER_UTP, Boolean.TRUE);
 				user_data.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
 
-				//System.out.println( "HP: Connect to " + address + "/" + port );
+				if (Logger.isEnabled()){
+					Logger.log(
+						new LogEvent(PEPeerTransportProtocol.this, LOGID,
+								"HP: Connect to " + address + ":" + port + " accepted"));
+				}	
 				
 				manager.addPeer( address.getHostAddress(), port, port, true, user_data );
 				
 			}else{
-				
-				//System.out.println( "HP: error - " + message.getErrorCode() + " from " + ip + "/" + tcp_listen_port );
+			
+				if (Logger.isEnabled()){
+					Logger.log(
+						new LogEvent(PEPeerTransportProtocol.this, LOGID,
+								"HP: Error " + message.getErrorCode() + " for " + message.getAddress() + ":" + message.getPort()));
+				}	
 			}
 		}catch( Throwable e ){
 			

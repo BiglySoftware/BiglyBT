@@ -5522,11 +5522,6 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	doTCPConnectionChecks(
 		int number )
 	{
-		if ( number > 5 ){
-			
-			number = 5;
-		}
-		
 		try{
 			peer_transports_mon.enter();
 			
@@ -5556,7 +5551,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			
 			int a_pos = 0;
 			
-			int	to_do = number;
+			int	to_do = Math.min( number, seeding_mode?2:5 );
 			
 			for ( Iterator<Object[]> it=pending_hole_punches.values().iterator();it.hasNext()&&a_pos<available.size()&&to_do>0;){
 				
