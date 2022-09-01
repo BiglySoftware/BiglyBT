@@ -218,8 +218,6 @@ ProtocolDecoderPHE
 		String			name,
 		byte[][]		secrets )
 	{
-		System.out.println( name + " -> " + secrets );
-			
 		for (int i=0;i<secrets.length;i++){
 
 			SHA1Hasher hasher = new SHA1Hasher();
