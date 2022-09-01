@@ -107,6 +107,9 @@ public interface MenuManager {
 	 */
 	public static final String MENU_TAG_CONTEXT = "tag_content";
 
+	public static final String MENU_SUBSCRIPTION_RESULT_CONTEXT = "subscription_result_context";
+
+	
 	/**
 	 * Creates a menu item for the appropriate menu.
 	 * <P>

@@ -37,14 +37,19 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
+import com.biglybt.core.tag.Tag;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.core.util.UrlUtils;
+import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.ui.common.util.MenuItemManager;
+import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.mainwindow.MenuFactory;
 
 
 public class
@@ -106,7 +111,19 @@ SearchSubsUtils
 				launchURL(URL);
 			}
 		});
+	
+		com.biglybt.pif.ui.menus.MenuItem[] items = MenuItemManager.getInstance().getAllAsArray(
+				MenuManager.MENU_SUBSCRIPTION_RESULT_CONTEXT);
 
+		if (items.length > 0) {
+			MenuFactory.addSeparatorMenuItem(menu);
+
+			// TODO: Don't send Tag.. send a yet-to-be-created plugin interface version of Tag
+			MenuBuildUtils.addPluginMenuItems(items, menu, true, true,
+					new MenuBuildUtils.MenuItemPluginMenuControllerImpl(new SearchSubsResultBase[]{result}));
+		}
+		
+		
 		return( true );
 	}
 
