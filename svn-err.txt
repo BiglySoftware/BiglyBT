@@ -92,6 +92,9 @@ A    website/li_NL/LC_MESSAGES/donation.po
 A    website/lt_LT
 A    website/lt_LT/LC_MESSAGES
 A    website/lt_LT/LC_MESSAGES/donation.po
+A    website/lv_LV
+A    website/lv_LV/LC_MESSAGES
+A    website/lv_LV/LC_MESSAGES/donation.po
 A    website/mk_MK
 A    website/mk_MK/LC_MESSAGES
 A    website/mk_MK/LC_MESSAGES/donation.po
@@ -179,4 +182,4 @@ A    website/zh_CN/LC_MESSAGES/donation.po
 A    website/zh_TW
 A    website/zh_TW/LC_MESSAGES
 A    website/zh_TW/LC_MESSAGES/donation.po
-Exported revision 540.
+Exported revision 549.
