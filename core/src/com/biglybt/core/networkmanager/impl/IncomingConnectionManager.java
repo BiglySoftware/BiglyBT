@@ -178,7 +178,7 @@ IncomingConnectionManager
 
 	    	match_buffers_cow = new_match_buffers;
 
-	    	addSharedSecrets( matcher.getSharedSecrets());
+	    	addSharedSecrets( matcher.getDescription(), matcher.getSharedSecrets());
 
 	    }finally {
 	    	match_buffers_mon.exit();
@@ -219,11 +219,12 @@ IncomingConnectionManager
 
 	public void
 	addSharedSecrets(
+		String			name,
 		byte[][]		secrets )
 	{
 		if ( secrets != null ){
 
-			ProtocolDecoder.addSecrets( secrets );
+			ProtocolDecoder.addSecrets( name, secrets );
 		}
 	}
 

@@ -303,6 +303,13 @@ public class MessageManagerImpl implements MessageManager, NATTraversalHandler {
 				{
 					return( -1 );
 				}
+			   	
+		    	 @Override
+		    	 public String 
+		    	 getDescription()
+		    	 {
+		    		 return( type );
+		    	 }
 			};
 
 	NetworkManager.getSingleton().requestIncomingConnectionRouting(

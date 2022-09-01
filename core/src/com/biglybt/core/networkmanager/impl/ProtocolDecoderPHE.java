@@ -27,6 +27,7 @@ import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -120,8 +121,18 @@ ProtocolDecoderPHE
 
     private static final Random	random = RandomUtils.SECURE_RANDOM;
 
-	private static final Map	global_shared_secrets	= new LightHashMap();
+	private static final Map<HashWrapper,Object[]>	global_shared_secrets	= new LightHashMap<>();
 
+	private static final int MAX_OLD_SECRETS	= 1024;
+	
+	private static final Map<HashWrapper,Object[]> old_global_shared_secrets = new LinkedHashMap<HashWrapper,Object[]>(
+			MAX_OLD_SECRETS, 0.75f, true){
+		@Override
+		protected boolean removeEldestEntry(Map.Entry<HashWrapper,Object[]> eldest){
+			return size() > MAX_OLD_SECRETS;
+		}
+	};
+	
 	private static boolean
 	cryptoSetup()
 	{
@@ -204,8 +215,11 @@ ProtocolDecoderPHE
 
 	public static void
 	addSecretsSupport(
+		String			name,
 		byte[][]		secrets )
 	{
+		System.out.println( name + " -> " + secrets );
+			
 		for (int i=0;i<secrets.length;i++){
 
 			SHA1Hasher hasher = new SHA1Hasher();
@@ -217,7 +231,7 @@ ProtocolDecoderPHE
 
 			synchronized( global_shared_secrets ){
 
-				global_shared_secrets.put( new HashWrapper( encoded ), secrets[i] );
+				global_shared_secrets.put( new HashWrapper( encoded ), new Object[]{ secrets[i], name } );
 			}
 		}
 	}
@@ -235,9 +249,16 @@ ProtocolDecoderPHE
 
 	   		byte[]	encoded = hasher.getDigest();
 
+	   		HashWrapper hw = new HashWrapper( encoded );
+	   		
 			synchronized( global_shared_secrets ){
 
-				global_shared_secrets.remove( new HashWrapper( encoded ));
+				Object[] entry = global_shared_secrets.remove( hw );
+				
+				if ( entry != null ){
+					
+					old_global_shared_secrets.put( hw, entry );
+				}
 			}
 		}
 	}
@@ -1009,14 +1030,33 @@ ProtocolDecoderPHE
 								decode[i] ^= sha1[i];
 							}
 
+							HashWrapper hw = new HashWrapper( decode );
+							
+							String missing_secret_name = null;
+							
 							synchronized( global_shared_secrets ){
 
-								shared_secret	= (byte[])global_shared_secrets.get( new HashWrapper( decode ));
+								Object[] entry = global_shared_secrets.get( hw );
+								
+								if ( entry == null ){
+									
+									shared_secret = null;
+									
+									entry = old_global_shared_secrets.get( hw );
+									
+									if ( entry != null ){
+										
+										missing_secret_name = (String)entry[1];
+									}
+								}else{
+									
+									shared_secret = (byte[])entry[0];
+								}
 							}
 
 							if ( shared_secret == null ){
 
-								throw( new IOException( "No matching shared secret" ));
+								throw( new IOException( "No matching shared secret: " + transport.getAddress() + " (" + (missing_secret_name==null?"Unknown":missing_secret_name) + ")" ));
 							}
 
 							// System.out.println( "inbound - using crypto secret " + ByteFormatter.encodeString( shared_secret ));

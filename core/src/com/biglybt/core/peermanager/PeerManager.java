@@ -424,7 +424,7 @@ public class PeerManager implements CoreStatsProvider {
 
 			@Override
 			public byte[][]
-			              getSharedSecrets()
+			getSharedSecrets()
 			{
 				return( null );	// registered manually above
 			}
@@ -434,6 +434,15 @@ public class PeerManager implements CoreStatsProvider {
 			getSpecificPort()
 			{
 				return( -1 );
+			}
+			
+			@Override
+			public String 
+			getDescription()
+			{
+					// shared secrets registered earlier with suitable description
+				
+				return( "PeerManager" );
 			}
 		};
 
@@ -564,7 +573,7 @@ public class PeerManager implements CoreStatsProvider {
 
 				registered_legacy_managers.put( hash, registrations );
 
-				IncomingConnectionManager.getSingleton().addSharedSecrets( secrets );
+				IncomingConnectionManager.getSingleton().addSharedSecrets( adapter.getDescription(), secrets );
 			}
 
 			PeerManagerRegistrationImpl	registration = new PeerManagerRegistrationImpl( hash, adapter );

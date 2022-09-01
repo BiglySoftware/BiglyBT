@@ -141,9 +141,10 @@ ProtocolDecoder
 
 	public static void
 	addSecrets(
+		String			name,
 		byte[][]		secrets )
 	{
-		ProtocolDecoderPHE.addSecretsSupport( secrets );
+		ProtocolDecoderPHE.addSecretsSupport( name, secrets );
 	}
 
 	public static void

@@ -400,6 +400,13 @@ HTTPNetworkManager
 		    	 {
 		    		 return( http_incoming_manager.getTCPListeningPortNumber());
 		    	 }
+		    	 
+		    	 @Override
+		    	 public String 
+		    	 getDescription()
+		    	 {
+		    		 return( "HTTP" );
+		    	 }
 		    };
 
 	    // register for incoming connection routing

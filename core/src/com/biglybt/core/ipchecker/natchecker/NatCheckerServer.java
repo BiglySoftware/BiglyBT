@@ -154,7 +154,13 @@ public class NatCheckerServer extends AEThread {
 	          public byte[][] getSharedSecrets(){ return( null ); }
 	  	   	  @Override
 		        public int getSpecificPort(){return( -1 );
-			}
+	  	   	  }
+		    	 @Override
+		    	 public String 
+		    	 getDescription()
+		    	 {
+		    		 return( "NatChecker" );
+		    	 }
 	        };
 
 	        NetworkManager.getSingleton().requestIncomingConnectionRouting(

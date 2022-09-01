@@ -757,6 +757,8 @@ public class NetworkManager {
    */
   public interface ByteMatcher {
 
+	public String getDescription();
+	
 	/**
 	 * Number of bytes of buffer at or beyond which the "match" method will be called to test for a match
 	 * @return

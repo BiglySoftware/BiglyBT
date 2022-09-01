@@ -50,7 +50,7 @@ PHETester
 	public
 	PHETester()
 	{
-		ProtocolDecoder.addSecrets( new byte[][]{ shared_secret });
+		ProtocolDecoder.addSecrets( "PHETester", new byte[][]{ shared_secret });
 
 		VirtualServerChannelSelector
 			accept_server = VirtualServerChannelSelectorFactory.createNonBlocking(
