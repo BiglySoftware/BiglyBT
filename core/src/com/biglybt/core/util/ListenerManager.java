@@ -503,7 +503,7 @@ ListenerManager<T>
 
 		while(true){
 
-			dispatch_sem.reserve();
+			boolean got_sem = dispatch_sem.reserve(20*1000);
 
 			Object[] data = null;
 
@@ -520,14 +520,27 @@ ListenerManager<T>
 					break;
 				}
 
-				if ( !dispatch_queue.isEmpty()){
+				if ( dispatch_queue.isEmpty()){
 
+					if ( !got_sem ){
+						
+						if ( async_thread != null && async_thread.isCurrentThread()){
+							
+								// idle timeout
+						
+							async_thread = null;
+														
+							break;
+						}
+					}
+				}else{
+					
 					data = (Object[])dispatch_queue.remove(0);
 				}
 			}
 
 			if ( data != null ){
-
+				
 				try{
 					if ( data.length == 4 ){
 
