@@ -72,6 +72,9 @@ public interface TableRow {
    * @return TableCell object related to this row and the column specified
    */
   TableCell getTableCell(String sColumnName);
+  
+  TableCell getTableCell(TableColumn column);
+
 
   /**
    * Retrieve whether the row is selected by the user

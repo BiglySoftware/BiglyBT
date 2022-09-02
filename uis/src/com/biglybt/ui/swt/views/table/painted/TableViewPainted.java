@@ -2267,6 +2267,11 @@ public class TableViewPainted
 		return new TableRowPainted(null, this, object, true);
 	}
 
+	@Override
+	public TableRowSWT createFakeRow(Object object){
+		return new TableRowPainted(null, this, object );
+	}
+	
 	/* (non-Javadoc)
 	 * @see TableViewImpl#visibleRowsChanged()
 	 */
@@ -3369,7 +3374,7 @@ public class TableViewPainted
 			// optimize multiple row withdraws (e.g. on view construction) so invalidate the
 			// aggregate area
 
-		synchronized( pending_rows ){
+		synchronized( visibleRows_sync ){
 
 			pending_rows.add( row );
 		}
@@ -3381,7 +3386,7 @@ public class TableViewPainted
 
 				List<TableRowPainted>	rows;
 
-				synchronized( pending_rows ){
+				synchronized( visibleRows_sync ){
 
 					if ( pending_rows.size() == 0 ){
 

@@ -49,6 +49,8 @@ public class TableRowPainted
 {
 	private static final boolean DEBUG_SUBS = false;
 
+	private final boolean isFake;
+	
 	private Point drawOffset = new Point(0, 0);
 
 	private int numSubItems;
@@ -84,6 +86,9 @@ public class TableRowPainted
 		// calls the TableView and causes locks.  So, use the TableView's sync!
 
 		super(tv.getSyncObject(), parentRow, tv, dataSource);
+		
+		isFake = false;
+		
 		subRows_sync = tv.getSyncObject();
 
 		TableColumnCore[] sortColumns = tv.getSortColumns();
@@ -119,6 +124,45 @@ public class TableRowPainted
 		tv.rowCreated();
 	}
 
+		/**
+		 * FAKE row constructor
+		 * 
+		 * @param parentRow
+		 * @param tv
+		 * @param dataSource
+		 */
+	
+	public 
+	TableRowPainted(
+		TableRowCore 		parentRow, 
+		TableViewPainted 	tv,
+		Object 				dataSource )
+	{
+		super(tv.getSyncObject(), parentRow, tv, dataSource);
+		
+		isFake = true;
+				
+		subRows_sync = tv.getSyncObject();
+
+		isHidden = false;
+				
+		if ( dataSource instanceof TableRowSWTChildController ){
+			
+			TableRowSWTChildController c = (TableRowSWTChildController)dataSource;
+			
+			setExpanded( c.isExpanded(), false );
+			
+			Object[] kids = c.getChildDataSources();
+			
+			if ( kids != null && kids.length > 0 ){
+				
+				setSubItems( kids, false );
+			}
+		}
+		
+		initializing = false;
+	}
+	
 	public boolean
 	refilter()
 	{		
@@ -969,7 +1013,9 @@ public class TableRowPainted
 	 * @see com.biglybt.ui.swt.views.table.impl.TableRowSWTBase#heightChanged(int, int)
 	 */
 	public void heightChanged(int oldHeight, int newHeight) {
-		getViewPainted().rowHeightChanged(this, oldHeight, newHeight);
+		if ( !isFake ){
+			getViewPainted().rowHeightChanged(this, oldHeight, newHeight);
+		}
 		TableRowCore row = getParentRowCore();
 		if (row instanceof TableRowPainted) {
 			((TableRowPainted) row).subRowHeightChanged( oldHeight, newHeight);
@@ -1100,15 +1146,18 @@ public class TableRowPainted
 				((TableRowPainted) row).subRowHeightChanged( oldHeight, newHeight);
 			}
 			
-			TableViewPainted tvp = getViewPainted();
-
-			if ( triggerHeightListener ){
-					
-				tvp.rowHeightChanged(this, oldHeight, newHeight );
+			if ( !isFake ){
+				
+				TableViewPainted tvp = getViewPainted();
+	
+				if ( triggerHeightListener ){
+						
+					tvp.rowHeightChanged(this, oldHeight, newHeight );
+				}
+				
+				tvp.triggerListenerRowAdded(newSubRows);
 			}
 			
-			tvp.triggerListenerRowAdded(newSubRows);
-
 			subRows = newSubRows;
 		}
 	}
@@ -1254,15 +1303,16 @@ public class TableRowPainted
 					((TableRowPainted) row).subRowHeightChanged( oldHeight, newHeight);
 				}
 				
-				if ( triggerHeightChange ){
+				if ( !isFake ){
+					if ( triggerHeightChange ){
+						
+						getViewPainted().rowHeightChanged(this, oldHeight, newHeight);
+					}
 					
-					getViewPainted().rowHeightChanged(this, oldHeight, newHeight);
+					if (newSubRows != null) {
+						getViewPainted().triggerListenerRowAdded(newSubRows);
+					}
 				}
-				
-				if (newSubRows != null) {
-					getViewPainted().triggerListenerRowAdded(newSubRows);
-				}
-
 			}
 			
 			Object ds = getDataSource( true );
@@ -1272,17 +1322,20 @@ public class TableRowPainted
 				((TableRowSWTChildController)ds).setExpanded( b );
 			}
 			
-			TableViewPainted tvp = getViewPainted();
-
-			if ( triggerHeightChange ){
-			
-				tvp.tableMutated();
-			}
-			
-			if (isVisible()) {
-
-				tvp.visibleRowsChanged();
-				tvp.redrawTable();
+			if ( !isFake ){
+				
+				TableViewPainted tvp = getViewPainted();
+	
+				if ( triggerHeightChange ){
+				
+					tvp.tableMutated();
+				}
+				
+				if (isVisible()) {
+	
+					tvp.visibleRowsChanged();
+					tvp.redrawTable();
+				}
 			}
 		}
 	}
@@ -1527,6 +1580,14 @@ public class TableRowPainted
 		}
 	}
 
+	@Override
+	public TableCell 
+	getTableCell(
+		TableColumn column)
+	{
+		return( getTableCell( column.getName()));
+	}
+	
 	@Override
 	public TableCellSWT getTableCellSWT(String name) {
 		TableCellCore cell = getTableCellCore(name);

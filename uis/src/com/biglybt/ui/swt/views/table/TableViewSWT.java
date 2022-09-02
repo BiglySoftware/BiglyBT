@@ -282,6 +282,8 @@ public interface TableViewSWT<DATASOURCETYPE>
 
 	void setRowHeight(int value);
 	
+	TableRowSWT createFakeRow( Object ds );
+	
 	interface
 	ColorRequester
 	{

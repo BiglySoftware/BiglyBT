@@ -393,6 +393,8 @@ public interface TableView<DATASOURCETYPE>
 	 * @since 3.1.1.1
 	 */
 	TableColumn getTableColumn(String columnName);
+	
+	TableColumn getTableColumn(String columnName, boolean localized );
 
 	void setEnabled(boolean enable);
 

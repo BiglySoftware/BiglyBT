@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -2139,6 +2140,22 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		return null;
 	}
 
+	@Override
+	public com.biglybt.pif.ui.tables.TableColumn getTableColumn(
+			String sColumnName, boolean localized ) {
+		for (int i = 0; i < tableColumns.length; i++) {
+			TableColumnCore tc = tableColumns[i];
+			if ( localized ){
+				if ( MessageText.getString(tc.getTitleLanguageKey()).equalsIgnoreCase( sColumnName )){
+					return( tc );
+				}
+			}else if (tc.getName().equals(sColumnName)) {
+				return tc;
+			}
+		}
+		return null;
+	}
+	
 	// @see TableView#getVisibleColumns()
 	@Override
 	public TableColumnCore[] getVisibleColumns() {

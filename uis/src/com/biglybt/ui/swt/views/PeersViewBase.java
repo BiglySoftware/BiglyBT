@@ -10,6 +10,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -38,12 +40,14 @@ import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.TableViewFilterCheck;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
@@ -51,6 +55,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.peer.PeerFilesView;
 import com.biglybt.ui.swt.views.peer.PeerPieceMapView;
 import com.biglybt.ui.swt.views.peer.RemotePieceDistributionView;
+import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -65,7 +70,8 @@ import com.biglybt.pif.ui.tables.TableManager;
 public abstract class 
 PeersViewBase
 	extends TableViewTab<PEPeer>
-	implements UISWTViewCoreEventListener, TableLifeCycleListener, TableViewSWTMenuFillListener, TableSelectionListener
+	implements 	UISWTViewCoreEventListener, TableLifeCycleListener,
+				TableViewSWTMenuFillListener, TableSelectionListener, TableViewFilterCheck<PEPeer>
 {
 
 	public static final Class<Peer> PLUGIN_DS_TYPE = Peer.class;
@@ -134,6 +140,8 @@ PeersViewBase
 		tcManager.setDefaultColumnNames( TableManager.TABLE_TORRENT_PEERS, basicItems );
 	}
 	
+	private BubbleTextBox bubbleTextBox;
+	
 	protected TableViewSWT<PEPeer> tv;
 	
 	protected Shell shell;
@@ -190,8 +198,30 @@ PeersViewBase
 			gridLayout.marginHeight = gridLayout.marginWidth = 0;
 			tableParent.setLayout(gridLayout);
 	
-			tab1.setControl( tableParent );
+			Composite cTop = new Composite(tableParent, SWT.NONE);
+
+			cTop.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+			cTop.setLayout(new FormLayout());
+
+			bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
+
+			FormData fd = new FormData();
+			fd.right = new FormAttachment(100, 0);
+			fd.width = 140;
 			
+			bubbleTextBox.setMessageAndLayout( "", fd);
+	
+			String tooltip = MessageText.getString("filter.tt.start");
+			tooltip += MessageText.getString("peersview.filter.tt.line1");
+			
+			bubbleTextBox.setTooltip( tooltip );
+			
+			if ( tv != null ){
+			
+				tv.enableFilterCheck(bubbleTextBox, this, false );
+			}
+			
+			tab1.setControl( tableParent );			
 			
 			final CTabItem tab2 = new CTabItem(tab_folder, SWT.NONE);
 			
@@ -402,6 +432,163 @@ PeersViewBase
 				break;
 			}
 		}
+	}
+	
+	private TimerEventPeriodic 	filter_refilter;
+	private Object				refilter_lock = new Object();
+	
+	@Override
+	public void 
+	filterSet(
+		String filter) 
+	{
+		synchronized( refilter_lock ){
+			
+			if ( filter.isEmpty()){
+				
+				if ( filter_refilter != null ){
+					
+					filter_refilter.cancel();
+					
+					filter_refilter = null;
+				}
+			}else if ( filter_refilter == null ){
+				
+				filter_refilter = SimpleTimer.addPeriodicEvent(
+					"pv:refilter", 5000,
+					(ev)->{
+						if ( tv.isDisposed()){
+							
+							synchronized( refilter_lock ){
+								
+								if ( filter_refilter != null ){
+									
+									filter_refilter.cancel();
+									
+									filter_refilter = null;
+								}
+								
+								return;
+							}
+						}
+												
+						tv.refilter();
+					});
+			}
+		}
+	}
+	
+	private com.biglybt.pif.ui.tables.TableColumn	col_cache;
+	private String									col_cache_name;
+	
+	@Override
+	public boolean 
+	filterCheck(
+		PEPeer 		ds, 
+		String 		filter, 
+		boolean 	regex, 
+		boolean 	confusable )
+	{
+		if ( confusable ){
+			
+			return( false );
+		}
+		
+		if ( filter.isEmpty()){
+			
+			return( true );
+		}
+		
+		String	filter_text;
+		String	match_text;
+		
+		int pos = filter.indexOf( ':' );
+		
+		if ( pos == -1 ){
+			
+			filter_text = filter;
+			
+			match_text	= ds.getClient();
+			
+		}else{
+			
+			match_text = "";
+			
+			String col_name 	= filter.substring( 0, pos ).trim();
+			String col_value	= filter.substring( pos+1 ).trim();
+		
+			filter_text = col_value;
+			
+			com.biglybt.pif.ui.tables.TableColumn col;
+			
+			synchronized( refilter_lock ){
+				
+				if ( col_cache_name == null || !col_cache_name.equals( col_name )){
+					
+					col_cache = tv.getTableColumn( col_name, true );
+					
+					col_cache_name = col_name;
+				}
+				
+				col = col_cache;
+			}
+			
+			if ( col == null ){
+				
+				return( true );
+			}
+
+			TableRowSWT row = tv.getRowSWT( ds );
+			
+			boolean is_fake = false;
+			
+			if ( row == null ){
+				
+					// row may not be visible (either just adding or already filtered)
+				
+				row = tv.createFakeRow( ds );
+				
+				is_fake = true;
+			}
+			
+			try{
+					// ensure cells are constructed
+				
+				row.setShown( true, true );
+				
+				TableCellCore cell = (TableCellCore)row.getTableCell(  col );
+				
+				if ( cell != null ){
+				
+						// pick up latest value
+					
+					cell.refresh();
+										
+					match_text = cell.getText();
+				}
+			}finally{
+				
+				if ( is_fake ){
+					
+					row.delete();
+				}
+			}
+		}
+		
+		String s = regex ? filter_text : RegExUtil.splitAndQuote( filter_text, "\\s*[|;]\\s*" );
+
+		boolean	match_result = true;
+
+		if ( regex && s.startsWith( "!" )){
+
+			s = s.substring(1);
+
+			match_result = false;
+		}
+
+		Pattern pattern = RegExUtil.getCachedPattern( "pb:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+
+		return( pattern.matcher(match_text).find() == match_result );
 	}
 	
 	protected void

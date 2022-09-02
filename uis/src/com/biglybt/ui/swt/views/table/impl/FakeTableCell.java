@@ -745,7 +745,6 @@ public class FakeTableCell
 
 				@Override
 				public TableView<?> getView() {
-					// TODO Auto-generated method stub
 					return null;
 				}
 				@Override
@@ -753,6 +752,10 @@ public class FakeTableCell
 					return null;
 				}
 
+				@Override
+				public TableCell getTableCell(TableColumn column){
+					return null;
+				}
 				@Override
 				public Object getDataSource() {
 					return FakeTableCell.this.getDataSource();

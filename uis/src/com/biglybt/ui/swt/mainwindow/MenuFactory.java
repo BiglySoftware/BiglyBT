@@ -91,6 +91,7 @@ import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.update.Update;
 import com.biglybt.pif.update.UpdateCheckInstance;
 import com.biglybt.pif.update.UpdateCheckInstanceListener;
@@ -3098,6 +3099,8 @@ public class MenuFactory
 			  public boolean isValid() {notSupported(); return false;}
 			  @Override
 			  public TableCell getTableCell(String sColumnName) {notSupported(); return null;}
+			  @Override
+			  public TableCell getTableCell(TableColumn column){ notSupported();return null;}
 			  @Override
 			  public boolean isSelected()  {notSupported(); return false;}
 			  @Override
