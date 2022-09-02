@@ -31,10 +31,6 @@ import com.biglybt.util.MapUtils;
 import org.gudy.bouncycastle.util.encoders.Base64;
 import org.json.simple.JSONObject;
 
-import com.biglybt.core.devices.Device;
-import com.biglybt.core.devices.DeviceManagerListener;
-import com.biglybt.core.devices.impl.DeviceImpl;
-import com.biglybt.core.devices.impl.DeviceManagerImpl;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.lws.LightWeightSeed;
 import com.biglybt.core.lws.LightWeightSeedAdapter;
@@ -176,9 +172,9 @@ SubscriptionImpl
 	private static final int LT_SUBSCRIPTION_CHANGED		= 1;
 	private static final int LT_SUBSCRIPTION_DOWNLOADED		= 2;
 
-	private ListenerManager<SubscriptionListener>	listeners =
+	private static ListenerManager<SubscriptionListener>	listener_aggregator =
 		ListenerManager.createAsyncManager(
-			"Subscription:l",
+			"Subscription:a",
 			new ListenerManagerDispatcher<SubscriptionListener>()
 			{
 				@Override
@@ -186,19 +182,23 @@ SubscriptionImpl
 				dispatch(
 					SubscriptionListener 		listener,
 					int 						type,
-					Object 						value )
+					Object 						_value )
 				{
+					Object[]	value = (Object[])_value;
+					
+					Subscription subs = (Subscription)value[0];
+					
 					switch( type ){
 
 						case LT_SUBSCRIPTION_CHANGED:{
 
-							listener.subscriptionChanged( SubscriptionImpl.this, (Integer)value );
+							listener.subscriptionChanged( subs, (Integer)value[1] );
 
 							break;
 						}
 						case LT_SUBSCRIPTION_DOWNLOADED:{
 
-							listener.subscriptionDownloaded( SubscriptionImpl.this );
+							listener.subscriptionDownloaded( subs );
 							
 							break;
 						}
@@ -207,7 +207,21 @@ SubscriptionImpl
 			});
 
 	
-	
+	private final ListenerManager<SubscriptionListener>	listeners 	= ListenerManager.createManager(
+			"Subscription:l",
+			new ListenerManagerDispatcher<SubscriptionListener>()
+			{
+				@Override
+				public void
+				dispatch(
+					SubscriptionListener		listener,
+					int							type,
+					Object						value )
+				{
+					listener_aggregator.dispatch( listener, type, value );
+				}
+			});
+
 	protected static String
 	getSkeletonJSON(
 		Engine		engine,
@@ -2404,14 +2418,14 @@ SubscriptionImpl
 		
 		manager.configDirty( this, reason );
 
-		listeners.dispatch( LT_SUBSCRIPTION_CHANGED, reason );
+		listeners.dispatch( LT_SUBSCRIPTION_CHANGED, new Object[]{ this, reason });
 	}
 
 	protected void
 	fireDownloaded()
 	{
 
-		listeners.dispatch( LT_SUBSCRIPTION_DOWNLOADED, null );
+		listeners.dispatch( LT_SUBSCRIPTION_DOWNLOADED, new Object[]{ this });
 	}
 
 	@Override
