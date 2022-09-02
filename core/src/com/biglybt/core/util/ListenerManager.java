@@ -515,7 +515,10 @@ ListenerManager<T>
 						// "returned" to the pool in case it represents a valid  entry
 						// to be picked up by another thread
 
-					dispatch_sem.release();
+					if ( got_sem ){
+					
+						dispatch_sem.release();
+					}
 
 					break;
 				}
