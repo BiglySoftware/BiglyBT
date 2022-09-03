@@ -947,6 +947,9 @@ public class TableRowPainted
 		if (isRowDisposed()) {
 			return;
 		}
+		if ( isFake ){
+			return;
+		}
 		getViewPainted().redrawRow(this, immediateRedraw);
 
 		if (!doChildren) {
