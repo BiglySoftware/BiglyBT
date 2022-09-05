@@ -220,6 +220,9 @@ MagnetPlugin
 		
 		rename.addEnabledOnSelection( rename_ext );
 		
+		BooleanParameter position = config.addBooleanParameter2( "MagnetPlugin.dl.position.from.mag.time", "MagnetPlugin.dl.position.from.mag.time", true );
+
+		
 		Parameter[] nps = new Parameter[ AENetworkClassifier.AT_NETWORKS.length ];
 
 		for ( int i=0; i<nps.length; i++ ){
@@ -1327,6 +1330,16 @@ MagnetPlugin
 				if ( added_time != null ){
 					
 					map.put( "added", added_time );
+					
+					if ( other_metadata == null ){
+						
+						other_metadata = new HashMap<>();
+					}else{
+						
+						other_metadata = new HashMap<>( other_metadata );
+					}
+					
+					other_metadata.put( "added_time", added_time );
 				}
 				
 				List<Map> l_sources = new ArrayList<>();
@@ -1674,7 +1687,7 @@ MagnetPlugin
 			
 			tags = (List<String>)dm.getUserData( DM_TAG_CACHE );
 			
-			other_metadata = getInitialMetadata( dm );
+			other_metadata = getInitialMetadata( dm, other_metadata );
 			
 			String category = (String)dm.getUserData( DM_CATEGORY_CACHE );
 			
@@ -1951,7 +1964,7 @@ MagnetPlugin
 			}
 		}
 		
-		Map<String,Object>	other_metadata = getInitialMetadata( from_dm );
+		Map<String,Object>	other_metadata = getInitialMetadata( from_dm, (Map<String,Object>)map.get( "other_metadata" ));
 	
 		if ( !other_metadata.isEmpty()){
 		
@@ -1979,30 +1992,22 @@ MagnetPlugin
 	
 	protected Map<String,Object>
 	getInitialMetadata(
-		DownloadManager	dm )
+		DownloadManager		dm,
+		Map<String,Object>	existing_md )
 	{
-		return( TorrentUtils.getInitialMetadata( dm, dm.getUserData( DM_DN_CHANGED ) != null ));
-	}
-	
-	protected void
-	setInitialMetadata(
-		TOTorrent			torrent,
-		DownloadManager		from_dm )
-	{
-			// md download complete, save into torrent to be picked up when added
+		Map<String,Object> latest = TorrentUtils.getInitialMetadata( dm, dm.getUserData( DM_DN_CHANGED ) != null );
 		
-		List<String> tag_names = getInitialTags( from_dm );
-		
-		if ( !tag_names.isEmpty()){
-		
-			TorrentUtils.setInitialTags( torrent, tag_names );
-		}
-		
-		Map<String,Object>	other_metadata = getInitialMetadata( from_dm );
-		
-		if ( !other_metadata.isEmpty()){
+		if ( existing_md == null ){
 			
-			TorrentUtils.setInitialMetadata( torrent, other_metadata );
+			return( latest );
+			
+		}else{
+			
+			Map<String,Object> merged = new HashMap<>( existing_md );
+			
+			merged.putAll( latest );
+			
+			return( merged );
 		}
 	}
 	

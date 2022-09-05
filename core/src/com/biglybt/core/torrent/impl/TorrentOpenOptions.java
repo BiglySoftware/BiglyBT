@@ -59,9 +59,9 @@ public class TorrentOpenOptions
 	private final static String PARAM_QUEUEPOSITION 	= "Add Torrent Queue Position";
 
 	
-	public final static int QUEUELOCATION_BOTTOM = 1;
-
-	public final static int QUEUELOCATION_TOP = 0;
+	public final static int QUEUELOCATION_TOP		= 0;
+	public final static int QUEUELOCATION_BOTTOM 	= 1;
+	public final static int QUEUELOCATION_AUTO 		= 2;
 
 	public final static String[] STARTMODE_KEYS = {
 			"OpenTorrentWindow.startMode.queuedstarted",
@@ -194,7 +194,11 @@ public class TorrentOpenOptions
 		Map<String,Object>		options ) 
 	{
 		iStartID = getDefaultStartMode();
-		iQueueLocation = COConfigurationManager.getIntParameter( PARAM_QUEUEPOSITION, QUEUELOCATION_BOTTOM );
+		if ( getAutoQueuePositionTime() > 0 ){
+			iQueueLocation = QUEUELOCATION_AUTO;
+		}else{
+			iQueueLocation = getDefaultQueueLocation();
+		}
 		bSequentialDownload = false;
 		isValid = true;
 		
@@ -371,6 +375,12 @@ public class TorrentOpenOptions
 	}
 	
 	public int
+	getDefaultQueueLocation()
+	{
+		return( COConfigurationManager.getIntParameter( PARAM_QUEUEPOSITION, QUEUELOCATION_BOTTOM ));
+	}
+	
+	public int
 	getQueueLocation()
 	{
 		return( iQueueLocation );
@@ -384,7 +394,10 @@ public class TorrentOpenOptions
 			
 			iQueueLocation = l;
 			
-			COConfigurationManager.setParameter( PARAM_QUEUEPOSITION, l );
+			if ( iQueueLocation != QUEUELOCATION_AUTO ){
+			
+				COConfigurationManager.setParameter( PARAM_QUEUEPOSITION, l );
+			}
 			
 			startOptionsChanged();
 		}
@@ -572,6 +585,25 @@ public class TorrentOpenOptions
 		if ( !swarmTags.contains(tag)){
 			swarmTags.add( tag );
 		}
+	}
+	
+	public long
+	getAutoQueuePositionTime()
+	{
+		if ( COConfigurationManager.getBooleanParameter( "Plugin.Magnet URI Handler.MagnetPlugin.dl.position.from.mag.time" )){
+
+			if ( initialMetadata != null ){
+							
+				Long addedTime = (Long)initialMetadata.get( "added_time" );
+			
+				if ( addedTime != null ){
+				
+					return( addedTime );
+				}
+			}
+		}
+		
+		return( -1 );
 	}
 	
 	public Map<String,Object>
@@ -1459,6 +1491,11 @@ public class TorrentOpenOptions
 			
 			initialMetadata = TorrentUtils.getInitialMetadata( torrent );
 			
+			if ( getAutoQueuePositionTime() > 0 ){
+				
+				iQueueLocation = QUEUELOCATION_AUTO;
+			}
+			
 			renameDuplicates();
 
 			String display_name = TorrentUtils.getDisplayName( torrent );
@@ -2007,7 +2044,7 @@ public class TorrentOpenOptions
 
 							dms.setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, moc.getAbsolutePath());
 						}
-
+						
 						Map<String,Object>	md = getInitialMetadata();
 
 						if ( md != null ){
@@ -2050,11 +2087,120 @@ public class TorrentOpenOptions
 					return;
 				}
 
-				if ( getQueueLocation() == TorrentOpenOptions.QUEUELOCATION_TOP ){
+				boolean position_set = false;
+				
+				int queueLoc = getQueueLocation();
+				
+				if ( queueLoc ==  TorrentOpenOptions.QUEUELOCATION_AUTO ){
+				
+					long addedTime = getAutoQueuePositionTime();
+				
+					if ( addedTime > 0 ){
+											
+						dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_REAL_DM_MAGNET_TIME, addedTime );
+						
+						List<DownloadManager> dms = gm.getDownloadManagers();
+						
+						DownloadManager dmBefore 		= null;
+						long			dmBeforeTime	= -1;
+							
+						DownloadManager dmAfter 		= null;
+						long			dmAfterTime		= Long.MAX_VALUE;
+						
+						for ( DownloadManager d: dms ){
+							
+							if ( d == dm ){
+								
+								continue;
+							}
+							
+							if ( !d.isDownloadComplete( false )){
+								
+								DownloadManagerState ds = d.getDownloadState();
+								
+								if ( ds.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+									
+									continue;
+								}
+								
+								long t = ds.getLongAttribute( DownloadManagerState.AT_REAL_DM_MAGNET_TIME );
 
-					gm.moveTop(new DownloadManager[] {
-						dm
-					});
+								if ( t <= 0 ){
+								
+									t = ds.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
+								}
+								
+								if ( t < addedTime && t > dmBeforeTime ){
+									
+									dmBefore 		= d;
+									dmBeforeTime	= t;
+								}
+								
+								if ( t >= addedTime && t < dmAfterTime ){
+									
+									dmAfter 		= d;
+									dmAfterTime		= t;
+								}
+								
+							}
+						}
+						
+						position_set = true;
+						
+						int def_queue_loc = getDefaultQueueLocation();
+						
+						if ( dmBefore == null && dmAfter == null ){
+							
+							// stick it wherever
+							
+						}else if ( dmBefore == null ){
+							
+								// only remaining downloads were added after this one
+							
+							if ( def_queue_loc == QUEUELOCATION_BOTTOM ){
+															
+								gm.moveTop(new DownloadManager[]{ dm });
+								
+							}else{
+
+								gm.moveEnd(new DownloadManager[]{ dm });
+							}
+							
+						}else if ( dmAfter == null ){
+							
+								// only remaining downloads were added before this one
+							
+							if ( def_queue_loc == QUEUELOCATION_BOTTOM ){
+																
+								gm.moveEnd(new DownloadManager[]{ dm });
+								
+							}else{
+								
+								gm.moveTop(new DownloadManager[]{ dm });
+							}
+							
+						}else{
+						
+							if ( def_queue_loc == QUEUELOCATION_BOTTOM ){
+								
+								gm.moveTo( dm, dmAfter.getPosition());
+								
+							}else{
+								
+								gm.moveTo( dm, dmBefore.getPosition());
+							}
+						}
+					}
+				}
+			
+				if ( !position_set ){
+					
+					if ( getQueueLocation() == TorrentOpenOptions.QUEUELOCATION_TOP ){
+	
+						gm.moveTop(new DownloadManager[] {
+							dm
+						});
+					}
 				}
 
 				TorrentOpenOptions.addModePostCreate(startMode, dm );

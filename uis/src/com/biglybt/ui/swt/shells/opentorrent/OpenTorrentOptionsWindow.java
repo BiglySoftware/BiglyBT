@@ -152,7 +152,8 @@ public class OpenTorrentOptionsWindow
 
 	private final static String[] MSGKEY_QUEUELOCATIONS = {
 		"OpenTorrentWindow.addPosition.first",
-		"OpenTorrentWindow.addPosition.last"
+		"OpenTorrentWindow.addPosition.last",
+		"OpenTorrentWindow.addPosition.auto"		// only for metadata downloads
 	};
 
 	public static final String TABLEID_TORRENTS = "OpenTorrentTorrent";
@@ -6942,15 +6943,30 @@ public class OpenTorrentOptionsWindow
 		}
 
 		private void updateQueueLocationCombo() {
-			if (cmbQueueLocation == null)
+			if (cmbQueueLocation == null){
 				return;
-
-			String[] sItemsText = new String[MSGKEY_QUEUELOCATIONS.length];
-			for (int i = 0; i < MSGKEY_QUEUELOCATIONS.length; i++) {
-				String sText = MessageText.getString(MSGKEY_QUEUELOCATIONS[i]);
-				sItemsText[i] = sText;
 			}
-			cmbQueueLocation.setItems(sItemsText);
+			
+			boolean includeAuto = true;
+			if ( isSingleOptions ){
+				includeAuto = torrentOptions.getAutoQueuePositionTime() > 0;
+			}else{
+				for ( TorrentOpenOptions to: torrentOptionsMulti ){
+					if ( to.getAutoQueuePositionTime() <= 0 ){
+						includeAuto = false;
+						break;
+					}
+				}
+			}
+			List<String> sItemsText = new ArrayList<>();
+			for (int i = 0; i < MSGKEY_QUEUELOCATIONS.length; i++) {
+				if ( !includeAuto && i == TorrentOpenOptions.QUEUELOCATION_AUTO){
+					continue;
+				}
+				String sText = MessageText.getString(MSGKEY_QUEUELOCATIONS[i]);
+				sItemsText.add( sText );
+			}
+			cmbQueueLocation.setItems(sItemsText.toArray( new String[0]));
 			if ( isSingleOptions ){
 				cmbQueueLocation.select(torrentOptions.getQueueLocation());
 			}else{
