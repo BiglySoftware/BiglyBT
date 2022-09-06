@@ -690,7 +690,7 @@ implements PEPeerTransport
 	
 					if ( !socks_active ){
 	
-						if ( RandomUtils.nextInt(2) == 1 ){
+						if ( RandomUtils.nextInt(3) != 0 ){
 	
 							pe2 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UTP, endpoint_address );
 							
