@@ -33,11 +33,15 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.UrlUtils;
+import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
+import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemFillListener;
 import com.biglybt.pif.ui.menus.MenuItemListener;
+import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
@@ -45,6 +49,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import com.biglybt.ui.swt.skin.SWTSkinProperties;
+import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.ViewUtils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
@@ -81,9 +86,16 @@ public class ColumnProgressETA
 	private boolean show3D;
 	Display display;
 	private Color cBase;
-	private Color cBGoff;
-	private Color cBGdl;
-	private Color cBGcd;
+	
+	
+	private final int COLOR_DL	= 0;
+	private final int COLOR_CD	= 1;
+	private final int COLOR_QU	= 2;
+	private final int COLOR_OFF	= 3;
+	
+	private Color[] cDefaults	= new Color[4];
+	private Color[] cExplicits	= new Color[4];
+
 	private Color cBorder;
 	private Color cText;
 	private Color cTextDrop;
@@ -127,21 +139,30 @@ public class ColumnProgressETA
 			cLinks = Colors.blue;
 		}
 		// Inactive progress bar
-		cBGoff = skinProperties.getColor("color.progress.bg.inactive");
-		if (cBGoff == null) {
-			cBGoff = Colors.light_grey;
+		cDefaults[COLOR_OFF] = skinProperties.getColor("color.progress.bg.inactive");
+		if (cDefaults[COLOR_OFF] == null) {
+			cDefaults[COLOR_OFF] = Colors.light_grey;
 		}
+		cDefaults[COLOR_QU] = cDefaults[COLOR_OFF];
 		// Progress bar for downloading torrent
-		cBGdl = skinProperties.getColor("color.progress.bg.dl");
-		if (cBGdl == null) {
-			cBGdl = Colors.blues[Colors.BLUES_DARKEST];
+		cDefaults[COLOR_DL] = skinProperties.getColor("color.progress.bg.dl");
+		if (cDefaults[COLOR_DL] == null) {
+			cDefaults[COLOR_DL] = Colors.blues[Colors.BLUES_DARKEST];
 		}
 		// Progress bar for seeding torrent
-		cBGcd = skinProperties.getColor("color.progress.bg.cd");
-		if (cBGcd == null) {
-			cBGcd = Colors.green;
+		cDefaults[COLOR_CD] = skinProperties.getColor("color.progress.bg.cd");
+		if (cDefaults[COLOR_CD] == null) {
+			cDefaults[COLOR_CD] = Colors.green;
 		}
 
+		for ( int i=0; i<cExplicits.length; i++ ){
+			int[] rgb = COConfigurationManager.getRGBParameter(	"ColumnProgressETA.color." + i );
+			
+			if ( rgb != null && rgb.length == 3 ){
+				cExplicits[i] = ColorCache.getColor(display, rgb );
+			}
+		}
+		
 		cdf = ViewUtils.addCustomDateFormat(this);
 
 		fileProgress = new ColumnTorrentFileProgress(display);
@@ -197,6 +218,80 @@ public class ColumnProgressETA
 				show3D = ((Boolean) menu.getData()).booleanValue();
 				setUserData(CFG_SHOW3D, show3D ? 1 : 0);
 				invalidateCells();
+			}
+		});
+		
+		TableContextMenuItem menuSetColours = addContextMenuItem(
+				"ColumnProgressETA.setColours", MENU_STYLE_HEADER);
+		menuSetColours.setStyle(TableContextMenuItem.STYLE_MENU);
+		menuSetColours.addFillListener(new MenuItemFillListener() {
+			@Override
+			public void 
+			menuWillBeShown(
+				MenuItem menu, 
+				Object data) 
+			{
+				menu.removeAllChildItems();
+				
+				PluginInterface pi = PluginInitializer.getDefaultInterface();
+				
+				UIManager uim = pi.getUIManager();
+				
+				MenuManager menuManager = uim.getMenuManager();
+				
+				for ( int i=0;i<cExplicits.length;i++){
+
+					int f_i = i;
+					
+					Color c = cExplicits[i];
+					
+					MenuItem item =	menuManager.addMenuItem( menu, "!" + MessageText.getString( "ColumnProgressETA.color." + i ) + "...!" );
+
+					item.addMultiListener(
+						new MenuItemListener()
+						{
+							@Override
+							public void 
+							selected(
+								MenuItem menu, 
+								Object target )
+							{
+								RGB result = Utils.showColorDialog(display.getActiveShell(), c==null?null:c.getRGB());
+								
+								if ( result != null ){
+									
+									COConfigurationManager.setRGBParameter(
+										"ColumnProgressETA.color." + f_i, 
+										new int[]{ result.red, result.green, result.blue }, null );
+									
+									cExplicits[f_i] = ColorCache.getColor(display, result);
+									
+									ColumnProgressETA.this.invalidateCells();
+								}
+							}
+						});
+				}
+				
+				MenuItem itemSep =	menuManager.addMenuItem( menu, "sep" );
+				
+				itemSep.setStyle(MenuItem.STYLE_SEPARATOR);
+				
+				MenuItem itemReset =	menuManager.addMenuItem( menu, "Button.reset" );
+
+				itemReset.addMultiListener(
+					new MenuItemListener()
+					{
+						@Override
+						public void selected(MenuItem menu, Object target){
+							for ( int i=0;i<cExplicits.length;i++){
+								
+								COConfigurationManager.setRGBParameter(	"ColumnProgressETA.color." + i, null, null );
+								
+								cExplicits[i] = null;
+							}
+							ColumnProgressETA.this.invalidateCells();
+						}
+					});
 			}
 		});
 	}
@@ -388,7 +483,7 @@ public class ColumnProgressETA
 		}
 
 		int lineHeight = cell.getTableRow().getView().getLineHeight();
-		boolean showSecondLine;
+		final boolean showSecondLine;
 		int alignSecondLine;
 		Color fgSecondLine;
 		Rectangle boundsSecondLine;
@@ -424,17 +519,39 @@ public class ColumnProgressETA
 		gc.setBackground(cBase);
 		gc.fillRectangle(boundsProgressBar);
 
-		Color cBG;
-		if ( dm_state == DownloadManager.STATE_DOWNLOADING
-		     || dm_state == DownloadManager.STATE_SEEDING )
-		{
-			if (percentDone == 1000 || dm.isDownloadComplete(false)) {
-				cBG = cBGcd;
-			} else {
-				cBG = cBGdl;
+		int cBGIndex;
+		
+		if ( dm_state == DownloadManager.STATE_DOWNLOADING || dm_state == DownloadManager.STATE_SEEDING ){
+			
+			if (percentDone == 1000 || dm.isDownloadComplete(false)){
+				
+				cBGIndex = COLOR_CD;
+				
+			}else{
+				
+				cBGIndex = COLOR_DL;
 			}
-		} else {
-			cBG = cBGoff;
+		}else{
+			
+			if ( dm_state == DownloadManager.STATE_QUEUED ){
+				
+				cBGIndex = COLOR_QU;
+				
+			}else{
+			
+				cBGIndex = COLOR_OFF;
+			}
+		}
+
+		Color cBG = cExplicits[cBGIndex];
+		
+		boolean bgIsCustom = true;
+		
+		if ( cBG == null ){
+			
+			cBG = cDefaults[cBGIndex];
+			
+			bgIsCustom = false;
 		}
 
 		gc.setBackground(cBG);
@@ -548,7 +665,14 @@ public class ColumnProgressETA
 			area.x--;
 			area.y--;
 		}
-		gc.setForeground(cText);
+		
+		Color cFirstLine = cText;
+		
+		if ( bgIsCustom && !Colors.isColorContrastOk(cText,cBG)){
+			cFirstLine = Colors.white;
+		}
+		
+		gc.setForeground(cFirstLine);
 		sp.printString();
 
 		if (sStatusLine != null) {
@@ -592,7 +716,7 @@ public class ColumnProgressETA
 				boundsSecondLine.y--;
 			}
 
-			gc.setForeground(fgSecondLine);
+			gc.setForeground(showSecondLine?fgSecondLine:cFirstLine);
 			boolean fit = sp2.printString();
 			if ( !fit ){
 				if ( tooltip == null ){
