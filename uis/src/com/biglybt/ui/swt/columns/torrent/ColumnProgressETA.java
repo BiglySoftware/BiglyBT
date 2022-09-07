@@ -115,8 +115,8 @@ public class ColumnProgressETA
 		setMinWidth(100);
 
 		myParameterListener = new MyParameterListener();
-		COConfigurationManager.addWeakParameterListener(myParameterListener, true,
-				"mtv.progress_eta.show_absolute");
+		
+		COConfigurationManager.addWeakParameterListener(myParameterListener, false,	"mtv.progress_eta.show_absolute");
 
 		display = Utils.getDisplay();
 
@@ -154,13 +154,10 @@ public class ColumnProgressETA
 		if (cDefaults[COLOR_CD] == null) {
 			cDefaults[COLOR_CD] = Colors.green;
 		}
-
+		
 		for ( int i=0; i<cExplicits.length; i++ ){
-			int[] rgb = COConfigurationManager.getRGBParameter(	"ColumnProgressETA.color." + i );
 			
-			if ( rgb != null && rgb.length == 3 ){
-				cExplicits[i] = ColorCache.getColor(display, rgb );
-			}
+			COConfigurationManager.addWeakParameterListener(myParameterListener, false,	"ColumnProgressETA.color." + i );
 		}
 		
 		cdf = ViewUtils.addCustomDateFormat(this);
@@ -268,10 +265,6 @@ public class ColumnProgressETA
 									COConfigurationManager.setRGBParameter(
 										"ColumnProgressETA.color." + f_i, 
 										new int[]{ result.red, result.green, result.blue }, null );
-									
-									cExplicits[f_i] = ColorCache.getColor(display, result);
-									
-									ColumnProgressETA.this.invalidateCells();
 								}
 							}
 						});
@@ -291,22 +284,25 @@ public class ColumnProgressETA
 							for ( int i=0;i<cExplicits.length;i++){
 								
 								COConfigurationManager.setRGBParameter(	"ColumnProgressETA.color." + i, null, null );
-								
-								cExplicits[i] = null;
 							}
-							ColumnProgressETA.this.invalidateCells();
 						}
 					});
 			}
 		});
+		
+		myParameterListener.parameterChanged( null );
 	}
 
 	@Override
 	public void remove() {
 		super.remove();
 
-		COConfigurationManager.removeWeakParameterListener(myParameterListener,
-				"mtv.progress_eta.show_absolute");
+		COConfigurationManager.removeWeakParameterListener(myParameterListener,	"mtv.progress_eta.show_absolute");
+		
+		for ( int i=0; i<cExplicits.length; i++ ){
+			
+			COConfigurationManager.removeWeakParameterListener(myParameterListener, "ColumnProgressETA.color." + i );
+		}
 	}
 
 	@Override
@@ -825,9 +821,27 @@ public class ColumnProgressETA
 		implements ParameterListener
 	{
 		@Override
-		public void parameterChanged(String name) {
-			progress_eta_absolute = COConfigurationManager.getBooleanParameter(
-					"mtv.progress_eta.show_absolute", false);
+		public void 
+		parameterChanged(
+			String unused) 
+		{
+			progress_eta_absolute = COConfigurationManager.getBooleanParameter(	"mtv.progress_eta.show_absolute", false);
+			
+			for ( int i=0; i<cExplicits.length; i++ ){
+				
+				int[] rgb = COConfigurationManager.getRGBParameter(	"ColumnProgressETA.color." + i );
+				
+				if ( rgb != null && rgb.length == 3 ){
+					
+					cExplicits[i] = ColorCache.getColor(display, rgb );
+					
+				}else{
+					
+					cExplicits[i] = null;
+				}
+			}
+			
+			ColumnProgressETA.this.invalidateCells();
 		}
 	}
 }
