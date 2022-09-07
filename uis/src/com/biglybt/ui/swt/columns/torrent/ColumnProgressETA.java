@@ -670,7 +670,7 @@ public class ColumnProgressETA
 		Color cFirstLine = cText;
 		
 		if ( bgIsCustom && !Colors.isColorContrastOk(cText,cBG)){
-			cFirstLine = Colors.white;
+			cFirstLine = Colors.isColorContrastOk(Colors.white,cBG)?Colors.white:Colors.black;
 		}
 		
 		gc.setForeground(cFirstLine);
