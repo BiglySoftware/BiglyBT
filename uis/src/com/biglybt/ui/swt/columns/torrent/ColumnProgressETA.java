@@ -242,9 +242,7 @@ public class ColumnProgressETA
 				for ( int i=0;i<cExplicits.length;i++){
 
 					int f_i = i;
-					
-					Color c = cExplicits[i];
-					
+										
 					MenuItem item =	menuManager.addMenuItem( menu, "!" + MessageText.getString( "ColumnProgressETA.color." + i ) + "...!" );
 
 					item.addMultiListener(
@@ -256,6 +254,13 @@ public class ColumnProgressETA
 								MenuItem menu, 
 								Object target )
 							{
+								Color c = cExplicits[f_i];
+
+								if ( c == null ){
+									
+									c = cDefaults[f_i];
+								}
+								
 								RGB result = Utils.showColorDialog(display.getActiveShell(), c==null?null:c.getRGB());
 								
 								if ( result != null ){
