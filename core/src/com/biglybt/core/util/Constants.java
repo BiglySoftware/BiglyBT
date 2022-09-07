@@ -144,7 +144,7 @@ Constants
 	public static final String BIGLY_PEER_ID						= "BI";
 
 	
-	public static final String BIGLYBT_VERSION  = "3.1.0.1_B02";
+	public static final String BIGLYBT_VERSION  = "3.1.0.1_B29";
 	
 	//public static final String BUILD_VERSION  = "@build.version@";   //Ant replace - believed dead
 	public static final String SUBVERSION		= "";
@@ -179,6 +179,7 @@ Constants
 	public static final boolean isWindows7OrHigher;
 	public static final boolean isWindows8OrHigher;
 	public static final boolean isWindows10OrHigher;
+	// public static final boolean isWindows11OrHigher;   BORKED
 
 
 	public static final boolean is64Bit;
@@ -236,6 +237,7 @@ Constants
 				isWindows7OrHigher		= false;
 				isWindows8OrHigher		= false;
 				isWindows10OrHigher		= false;
+				// isWindows11OrHigher		= false;
 
 			}else{
 				float f_ver = ver.floatValue();
@@ -246,6 +248,23 @@ Constants
 				isWindows8OrHigher	 	= f_ver >= 6.2f;
 				isWindows10OrHigher		= f_ver >= 10.0f;
 
+
+				// would like to write
+				// isWindows11OrHigher		= f_ver >= 11.0f;
+				// but apparently it is broken
+				// https://stackoverflow.com/questions/72668838/system-getpropertyos-name-and-system-getpropertyos-version-returning-win
+				// this also doesn't seem to have been backported
+				/*
+				if ( isWindows10OrHigher ){
+										
+					isWindows11OrHigher = !OSName.equalsIgnoreCase( "Windows 10" );
+					
+				}else{
+					
+					isWindows11OrHigher = false;
+				}
+				*/
+				
 				if ( isWindowsVista ){
 
 					LineNumberReader lnr = null;
@@ -303,7 +322,7 @@ Constants
 			isWindows7OrHigher 		= false;
 			isWindows8OrHigher 		= false;
 			isWindows10OrHigher		= false;
-
+			// isWindows11OrHigher		= false;
 		}
 	}
 
@@ -372,6 +391,7 @@ Constants
 	public static final boolean isJava8OrHigher;
 	public static final boolean isJava9OrHigher;
 	public static final boolean isJava10OrHigher;
+	public static final boolean isJava11OrHigher;
 	public static final boolean isJava12OrHigher;
 
 	static{
@@ -385,6 +405,7 @@ Constants
 		boolean	_8plus;
 		boolean	_9plus;
 		boolean	_10plus;
+		boolean	_11plus;
 		boolean	_12plus;
 
 		try{
@@ -408,6 +429,7 @@ Constants
 			_9plus = first > 1 || second >= 9;
 
 			_10plus = first >= 10;
+			_11plus = first >= 11;
 			_12plus = first >= 12;
 
 		}catch( Throwable e ){
@@ -419,12 +441,14 @@ Constants
 			_8plus = false;		
 			_9plus = false;	
 			_10plus = false;
+			_11plus = false;
 			_12plus = false;
 		}
 
 		isJava8OrHigher		= _8plus;
 		isJava9OrHigher		= _9plus;
 		isJava10OrHigher	= _10plus;
+		isJava11OrHigher	= _11plus;
 		isJava12OrHigher	= _12plus;
 	}
 
