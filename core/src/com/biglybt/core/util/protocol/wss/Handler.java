@@ -28,6 +28,7 @@ import java.net.URLStreamHandler;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEThread2;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ipc.IPCException;
@@ -99,6 +100,11 @@ Handler
 			install_prompted = true;
 		}
 
+		if ( !Constants.isJava11OrHigher ){
+			
+			return;
+		}
+		
 		new AEThread2( "install::async" )
 		{
 			@Override
