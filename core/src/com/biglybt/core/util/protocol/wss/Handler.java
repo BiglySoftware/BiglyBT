@@ -137,6 +137,8 @@ Handler
 							remember_id,
 							false,
 							MessageText.getString("MessageBoxWindow.nomoreprompting"));
+						
+						prompter.setRememberOnlyIfButton( 1 );
 					}
 
 					prompter.setAutoCloseInMS(0);
