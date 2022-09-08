@@ -1477,7 +1477,7 @@ PRUDPPacketHandlerImpl
 														new LogEvent(
 															LOGID,
 															LogEvent.LT_WARNING,
-															"PRUDPPacketHandler: send failed: " + Debug.getNestedExceptionMessage(e)));
+															"PRUDPPacketHandler: send failed to " + destination_address + ": " + Debug.getNestedExceptionMessage(e)));
 												}
 											}
 										}
