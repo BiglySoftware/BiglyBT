@@ -2938,7 +2938,7 @@ DiskManagerImpl
 						  // if we are linked to a file outside of the torrent's save directory then we don't
 						  // move the file
 	
-						  if ( linked_file.getCanonicalPath().startsWith( save_location.getCanonicalPath())){
+						  if ( linked_file.getCanonicalFile().toPath().startsWith(save_location.getCanonicalFile().toPath())){
 	
 							  old_file  = linked_file;
 	
@@ -3733,7 +3733,7 @@ DiskManagerImpl
 
                 if ( linked_file != file ){
 
-                    if ( !linked_file.getCanonicalPath().startsWith(FileUtil.newFile( torrent_save_dir ).getCanonicalPath())){
+                    if ( !linked_file.getCanonicalFile().toPath().startsWith(FileUtil.newFile(torrent_save_dir).getCanonicalFile().toPath())){
 
                         skip = true;
                     }
@@ -3834,7 +3834,7 @@ DiskManagerImpl
             		// delete_if_not_in_dir does allow this behaviour to be overridden though.
 
             		try{
-            			if ( delete_if_not_in_dir || linked_file.getCanonicalPath().startsWith(root_full_path)){
+            			if ( delete_if_not_in_dir || linked_file.getCanonicalFile().toPath().startsWith(root_full_path)){
 
             				file    = linked_file;
 
