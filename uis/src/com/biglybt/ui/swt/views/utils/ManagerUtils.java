@@ -3023,6 +3023,8 @@ public class ManagerUtils {
 					}
 				});
 		
+		skin.setAutoSizeOnLayout( true, true );
+		
 		dialog.open();	
 	}
 	
