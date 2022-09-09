@@ -2937,8 +2937,8 @@ DiskManagerImpl
 					  }else{
 						  // if we are linked to a file outside of the torrent's save directory then we don't
 						  // move the file
-	
-						  if ( linked_file.getCanonicalPath().startsWith( save_location.getCanonicalPath())){
+							  
+						  if ( FileUtil.isAncestorOf( save_location, linked_file )){
 	
 							  old_file  = linked_file;
 	
@@ -3733,7 +3733,7 @@ DiskManagerImpl
 
                 if ( linked_file != file ){
 
-                    if ( !linked_file.getCanonicalPath().startsWith(FileUtil.newFile( torrent_save_dir ).getCanonicalPath())){
+                    if ( !FileUtil.isAncestorOf( FileUtil.newFile( torrent_save_dir ) , linked_file )){
 
                         skip = true;
                     }
@@ -3764,32 +3764,24 @@ DiskManagerImpl
 
             throws TOTorrentException, UnsupportedEncodingException, LocaleUtilEncodingException
     {
-			LocaleUtilDecoder locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );
+    	LocaleUtilDecoder locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );
 
-			TOTorrentFile[] files = torrent.getFiles();
+    	TOTorrentFile[] files = torrent.getFiles();
 
-			File root_path_file = FileUtil.newFile( torrent_save_dir, torrent_save_file );
-			String root_full_path;
-			try {
-				root_full_path = root_path_file.getCanonicalPath();
-			}catch( Throwable e ){
+    	File root_path_file = FileUtil.newFile( torrent_save_dir, torrent_save_file );
 
-				Debug.printStackTrace(e);
-				return;
-			}
+    	FMFileManager fm_factory = FMFileManagerFactory.getSingleton();
+    	boolean has_links = fm_factory.hasLinks(torrent);
 
-			FMFileManager fm_factory = FMFileManagerFactory.getSingleton();
-			boolean has_links = fm_factory.hasLinks(torrent);
-	
-			if (!has_links) {
-				if	(!root_path_file.isDirectory()) {
-					return;
-				}
-				if (root_path_file.list().length == 0) {
-					TorrentUtils.recursiveEmptyDirDelete(root_path_file);
-					return;
-				}
-			}
+    	if (!has_links) {
+    		if	(!root_path_file.isDirectory()) {
+    			return;
+    		}
+    		if (root_path_file.list().length == 0) {
+    			TorrentUtils.recursiveEmptyDirDelete(root_path_file);
+    			return;
+    		}
+    	}
 
 
         boolean delete_if_not_in_dir = COConfigurationManager.getBooleanParameter("File.delete.include_files_outside_save_dir");
@@ -3834,7 +3826,7 @@ DiskManagerImpl
             		// delete_if_not_in_dir does allow this behaviour to be overridden though.
 
             		try{
-            			if ( delete_if_not_in_dir || linked_file.getCanonicalPath().startsWith(root_full_path)){
+            			if ( delete_if_not_in_dir || FileUtil.isAncestorOf( root_path_file, linked_file )){
 
             				file    = linked_file;
 
