@@ -2572,7 +2572,8 @@ implements PEPeerTransport
 			
 				//ensure we dont get stuck in the handshaking phases
 			
-			if ( mono_now - connection_established_time_mono > 3*60*1000 ){
+			
+			if ( mono_now - connection_established_time_mono > ( network == AENetworkClassifier.AT_PUBLIC?60*1000:30*1000 )){
 				
 				closeConnectionInternally( "timeout: waiting for handshake" );
 				
