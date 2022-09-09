@@ -88,7 +88,7 @@ public abstract class TableRowSWTBase
 		invalidate(false);
 	}
 	@Override
-	public void invalidate(boolean mustRefersh) {
+	public void invalidate(boolean mustRefresh) {
 		synchronized (lock) {
   		if (bDisposed || mTableCells == null) {
   			return;
@@ -96,7 +96,7 @@ public abstract class TableRowSWTBase
 
   		for (TableCellCore cell : mTableCells.values()) {
   			if (cell != null) {
-  				cell.invalidate(mustRefersh);
+  				cell.invalidate(mustRefresh);
   			}
   		}
 		}
