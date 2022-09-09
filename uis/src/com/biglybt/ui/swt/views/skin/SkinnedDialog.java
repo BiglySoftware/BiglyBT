@@ -155,7 +155,7 @@ public class SkinnedDialog
 	}
 
 	public void openUnadjusted() {
-		skin.setAutoSizeOnLayout(false);
+		skin.setAutoSizeOnLayout(false,false);
 		open("none", true);
 	}
 

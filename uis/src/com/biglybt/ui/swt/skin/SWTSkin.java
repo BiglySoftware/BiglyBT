@@ -110,8 +110,9 @@ public class SWTSkin
 
 	private String startID;
 
-	private boolean autoSizeOnLayout = true;
-
+	private boolean autoSizeOnLayout 		= true;
+	private boolean autoSizeOnLayoutForce	= false;
+	
 	/**
 	 *
 	 */
@@ -723,16 +724,21 @@ public class SWTSkin
 		}
 
 		if (autoSizeOnLayout) {
-  		if (width > 0 && height == -1) {
-  			Point computeSize = skinComposite.computeSize(width, SWT.DEFAULT);
-  			skinComposite.setSize(computeSize);
-  		} else if (height > 0 && width == -1) {
-  			Point computeSize = skinComposite.computeSize(SWT.DEFAULT, height);
-  			skinComposite.setSize(computeSize);
-  		} else if (height > 0 && width > 0) {
-  			skinComposite.setSize(width, height);
+			if (width > 0 && height == -1) {
+				Point computeSize = skinComposite.computeSize(width, SWT.DEFAULT);
+				skinComposite.setSize(computeSize);
+			} else if (height > 0 && width == -1) {
+				Point computeSize = skinComposite.computeSize(SWT.DEFAULT, height);
+				skinComposite.setSize(computeSize);
+			} else if (height > 0 && width > 0) {
+				skinComposite.setSize(width, height);
 
-  		}
+			}else{
+				if ( autoSizeOnLayoutForce ){
+					Point computeSize = skinComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+					skinComposite.setSize(computeSize);
+				}
+			}
 		} else {
 			try {
 				skinComposite.requestLayout();
@@ -2056,8 +2062,9 @@ public class SWTSkin
 		}
 	}
 
-	public void setAutoSizeOnLayout(boolean autoSizeOnLayout) {
-		this.autoSizeOnLayout = autoSizeOnLayout;
+	public void setAutoSizeOnLayout(boolean autoSizeOnLayout, boolean force ) {
+		this.autoSizeOnLayout 		= autoSizeOnLayout;
+		this.autoSizeOnLayoutForce 	= force;
 	}
 
 	public boolean isAutoSizeOnLayout() {
