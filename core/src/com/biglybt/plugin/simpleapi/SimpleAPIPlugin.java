@@ -508,7 +508,11 @@ SimpleAPIPlugin
 					boolean is_pad = t_file.isPadFile();
 					
 					obj.put( "IsPad", is_pad );
-										
+					
+					obj.put( "IsSkipped", file.isSkipped());
+					
+					obj.put( "Priority", file.getPriority());
+					
 					byte[] root_hash = null;
 					
 					if ( !is_pad ){
@@ -876,6 +880,16 @@ SimpleAPIPlugin
 						}else if ( name.equals( "skipped" )){
 							
 							file.setSkipped( getBoolean( value ));
+
+						}else if ( name.equals( "priority" )){
+						
+							try{
+								file.setPriority( Integer.parseInt( value ));
+								
+							}catch( Throwable e ){
+								
+								throw( new Exception( "'value' parameter invalid for priority(" + value + ")" ));
+							}
 						}
 					}
 				}finally{
