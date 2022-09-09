@@ -517,6 +517,8 @@ public class ColumnProgressETA
 				cellBounds.x, cellBounds.y, fillWidth, cellBounds.height);
 		pctFillRect.intersect(boundsProgressBar);
 
+		Rectangle pctFillRectNot = new Rectangle(pctFillRect.x+pctFillRect.width,pctFillRect.y,boundsProgressBar.width-pctFillRect.width,pctFillRect.height);
+		
 		gc.setBackground(cBase);
 		gc.fillRectangle(boundsProgressBar);
 
@@ -674,8 +676,22 @@ public class ColumnProgressETA
 		}
 		
 		gc.setForeground(cFirstLine);
-		sp.printString();
-
+		
+		if ( cFirstLine == Colors.white ){
+			Rectangle old = gc.getClipping();
+			
+			Utils.setClipping( gc, pctFillRect );
+			
+			sp.printString();
+			Utils.setClipping( gc, pctFillRectNot );
+			gc.setForeground(Colors.black);
+			sp.printString();
+		
+			Utils.setClipping( gc, old );
+		}else{
+			sp.printString();
+		}
+		
 		if (sStatusLine != null) {
 			if (showSecondLine) {
 				int newHeight = boundsSecondLine.height;
@@ -706,9 +722,8 @@ public class ColumnProgressETA
 			}
 
 			gc.setFont(showSecondLine ? fontSecondLine : fontText);
-			GCStringPrinter sp2 = new GCStringPrinter(
-				gc, sStatusLine, boundsSecondLine,
-				true, false, alignSecondLine);
+			
+			GCStringPrinter sp2 = new GCStringPrinter( gc, sStatusLine, boundsSecondLine, true, false, alignSecondLine);
 
 			if (!showSecondLine && wantShadow) {
 				gc.setForeground(cTextDrop);
@@ -716,9 +731,33 @@ public class ColumnProgressETA
 				boundsSecondLine.x--;
 				boundsSecondLine.y--;
 			}
-
-			gc.setForeground(showSecondLine?fgSecondLine:cFirstLine);
-			boolean fit = sp2.printString();
+				
+			Color cSecondLine = showSecondLine?fgSecondLine:cFirstLine;
+			
+			gc.setForeground(cSecondLine);
+			
+			boolean fit;
+			
+			if ( cSecondLine == Colors.white ){
+				
+				Rectangle old = gc.getClipping();
+				
+				Utils.setClipping( gc, pctFillRect );
+			
+				sp2.printString();
+				
+				Utils.setClipping( gc, pctFillRectNot );
+				
+				gc.setForeground(Colors.black);
+				
+				fit = sp2.printString();
+			
+				Utils.setClipping( gc, old );
+			}else{
+				
+				fit = sp2.printString();
+			}
+			
 			if ( !fit ){
 				if ( tooltip == null ){
 					tooltip = sStatusLine;
