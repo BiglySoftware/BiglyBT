@@ -46,6 +46,7 @@ import com.biglybt.core.torrent.*;
 import com.biglybt.core.tracker.host.TRHostException;
 import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
@@ -94,7 +95,9 @@ public class ProgressPanel extends AbstractWizardPanel<NewTorrentWizard> impleme
     panel.setLayout(layout);
 
     tasks = new Text(panel, SWT.BORDER | SWT.MULTI | SWT.READ_ONLY);
-    tasks.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
+    if ( !Utils.isDarkAppearanceNative()){
+    	tasks.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
+    }
     gridData = new GridData(GridData.FILL_BOTH);
     gridData.heightHint = 120;
     gridData.horizontalSpan = 2;
