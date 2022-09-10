@@ -677,7 +677,7 @@ public class ColumnProgressETA
 		
 		gc.setForeground(cFirstLine);
 		
-		if ( cFirstLine == Colors.white ){
+		if ( bgIsCustom && cFirstLine == Colors.white && Colors.isColorContrastOk( Colors.black,cBase)){
 			Rectangle old = gc.getClipping();
 			
 			Utils.setClipping( gc, pctFillRect );
@@ -738,7 +738,7 @@ public class ColumnProgressETA
 			
 			boolean fit;
 			
-			if ( cSecondLine == Colors.white ){
+			if ( bgIsCustom && cSecondLine == Colors.white && Colors.isColorContrastOk( Colors.black,cBase)){
 				
 				Rectangle old = gc.getClipping();
 				
