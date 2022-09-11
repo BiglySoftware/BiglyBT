@@ -23,6 +23,7 @@
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.ui.swt.columns.ColumnCheckBox;
@@ -64,7 +65,9 @@ public class PrivateItem
 
 		if ( dl != null ){
 
-			return( dl.getTorrent().isPrivate());
+			Torrent torrent = dl.getTorrent();
+			 
+			return( torrent != null && torrent.isPrivate());
 		}
 
 		return( null );

@@ -2069,7 +2069,9 @@ public class TorrentMenuFancy
 						});
 				row.getText().setText(title);
 				
-				row.setEnabled( dms[0].getTorrent().isExportable());
+				TOTorrent torrent = dms[0].getTorrent();
+				
+				row.setEnabled( torrent != null && torrent.isExportable());
 			}
 
 			// Advanced > Export > Export Torrent
