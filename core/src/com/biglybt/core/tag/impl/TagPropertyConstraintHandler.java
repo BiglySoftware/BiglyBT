@@ -3758,23 +3758,26 @@ TagPropertyConstraintHandler
 						
 						TOTorrent torrent = dm.getTorrent();
 						
-						TOTorrentAnnounceURLSet[] sets = torrent.getAnnounceURLGroup().getAnnounceURLSets();
-						
 						int total = 0;
-						
-						if ( sets.length == 0 ){
-						
-							URL url = torrent.getAnnounceURL();
+
+						if ( torrent != null ){
 							
-							if ( !TorrentUtils.isDecentralised( url )){
-								
-								total++;
-							}
-						}else{
+							TOTorrentAnnounceURLSet[] sets = torrent.getAnnounceURLGroup().getAnnounceURLSets();
+														
+							if ( sets.length == 0 ){
 							
-							for ( TOTorrentAnnounceURLSet set: sets ){
+								URL url = torrent.getAnnounceURL();
 								
-								total += set.getAnnounceURLs().length;
+								if ( !TorrentUtils.isDecentralised( url )){
+									
+									total++;
+								}
+							}else{
+								
+								for ( TOTorrentAnnounceURLSet set: sets ){
+									
+									total += set.getAnnounceURLs().length;
+								}
 							}
 						}
 						
