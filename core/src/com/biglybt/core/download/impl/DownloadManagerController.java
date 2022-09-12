@@ -860,7 +860,8 @@ DownloadManagerController
 	
 	public void
 	forceRecheck(
-		final ForceRecheckListener l)
+		Map						resume_data,
+		ForceRecheckListener	l )
 	{
 		try{
 			control_mon.enter();
@@ -883,10 +884,16 @@ DownloadManagerController
 			
 			int start_state = DownloadManagerController.this.getState();
 
-				// remove resume data
-
-			download_manager_state.clearResumeData();
-
+			if ( resume_data == null ){
+					// remove resume data
+	
+				download_manager_state.clearResumeData();
+				
+			}else{
+				
+				download_manager_state.setResumeData( resume_data );
+			}
+			
 	  			// For extra protection from a plugin stopping a checking torrent,
 	  			// fake a forced start.
 

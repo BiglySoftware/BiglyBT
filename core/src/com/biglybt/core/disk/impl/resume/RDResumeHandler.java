@@ -1327,7 +1327,25 @@ RDResumeHandler
 
 		return( isTorrentResumeDataComplete( dms.getTorrent().getNumberOfPieces(), resume_data ));
 	}
-
+	
+	public static boolean
+	isTorrentResumeDataValid(
+		DownloadManagerState			dms )
+	{
+		Map	resume_data = getResumeData( dms );
+		
+		if ( resume_data != null ){
+			
+			boolean	valid	= ((Long)resume_data.get("valid")).intValue() == 1;
+			
+			return( valid );
+			
+		}else{
+			
+			return( false );
+		}
+	}
+	
 	private static boolean
 	isTorrentResumeDataComplete(
 		int			piece_count,

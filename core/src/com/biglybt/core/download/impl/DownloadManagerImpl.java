@@ -2787,18 +2787,26 @@ DownloadManagerImpl
   		return( controller.canForceRecheck());
   	}
 
+  	protected void
+  	restoreResumeData(
+  		Map		data )
+  	{
+  		controller.forceRecheck( data, null );
+  	}
+  	
   	@Override
 	public void
   	forceRecheck()
   	{
-  		controller.forceRecheck(null);
+  		forceRecheck( null );
   	}
 
   	@Override
 	public void
-  	forceRecheck(final ForceRecheckListener l)
+  	forceRecheck(
+  		ForceRecheckListener l )
   	{
-  		controller.forceRecheck(l);
+  		controller.forceRecheck(null,l);
   	}
 
   	@Override

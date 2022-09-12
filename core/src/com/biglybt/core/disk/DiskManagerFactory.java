@@ -20,6 +20,8 @@
 
 package com.biglybt.core.disk;
 
+import java.util.Map;
+
 import com.biglybt.core.Core;
 
 /**
@@ -120,6 +122,13 @@ DiskManagerFactory
 		DownloadManagerState	dms )
 	{
 		return RDResumeHandler.isTorrentResumeDataComplete( dms );
+	}
+	
+	public static boolean
+	isTorrentResumeDataValid(
+		DownloadManagerState	dms )
+	{
+		return RDResumeHandler.isTorrentResumeDataValid( dms );
 	}
 
 	public static void

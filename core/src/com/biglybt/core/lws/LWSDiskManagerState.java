@@ -20,6 +20,7 @@
 package com.biglybt.core.lws;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
+import com.biglybt.core.download.DownloadManagerState.ResumeHistory;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.LinkFileMap;
@@ -105,6 +107,20 @@ LWSDiskManagerState
 		return( true );
 	}
 
+	@Override
+	public List<ResumeHistory> 
+	getResumeDataHistory()
+	{
+		return( Collections.emptyList());
+	}
+	
+	@Override
+	public void 
+	restoreResumeData(
+		ResumeHistory history)
+	{
+	}
+	
 	@Override
 	public void
 	clearTrackerResponseCache()

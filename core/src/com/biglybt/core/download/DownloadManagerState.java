@@ -262,6 +262,13 @@ DownloadManagerState
 	public boolean
 	isResumeDataComplete();
 
+	public List<ResumeHistory>
+	getResumeDataHistory();
+	
+	public void
+	restoreResumeData(
+		ResumeHistory	history );
+	
 	public void
 	clearTrackerResponseCache();
 
@@ -443,4 +450,11 @@ DownloadManagerState
 
 	public void addListener(DownloadManagerStateAttributeListener l, String attribute, int event_type);
 	public void removeListener(DownloadManagerStateAttributeListener l, String attribute, int event_type);
+	
+	public interface
+	ResumeHistory
+	{
+		public long 
+		getDate();
+	}
 }

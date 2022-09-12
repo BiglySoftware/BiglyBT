@@ -21,6 +21,7 @@ package com.biglybt.ui.swt;
 import static com.biglybt.pif.ui.menus.MenuItem.*;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
@@ -1473,6 +1474,39 @@ public class TorrentMenuFancy
 							});
 							itemFileSetResumeComplete.setEnabled(allStopped&&allResumeIncomplete);
 
+							
+								// restore resume
+							
+							final Menu restore_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+							
+							MenuItem itemRestoreResume = new MenuItem(menu, SWT.CASCADE);
+							Messages.setLanguageText(itemRestoreResume,	"MyTorrentsView.menu.restore.resume.data");
+							
+							itemRestoreResume.setMenu( restore_menu );
+							
+							boolean restoreEnabled = false;
+							
+							if ( dms.length==1 && allStopped ){
+								DownloadManagerState dmState = dms[0].getDownloadState();
+								
+								List<DownloadManagerState.ResumeHistory> history = dmState.getResumeDataHistory();
+								
+								if ( !history.isEmpty()){
+									restoreEnabled = true;
+								
+									for ( DownloadManagerState.ResumeHistory h: history ){
+										MenuItem itemHistory = new MenuItem(restore_menu, SWT.PUSH);
+										itemHistory.setText( new SimpleDateFormat().format( new Date(h.getDate())));
+										
+										itemHistory.addListener(SWT.Selection,(ev)->{
+											dmState.restoreResumeData( h );;
+										});
+									}
+								}
+							}
+							
+							itemRestoreResume.setEnabled( restoreEnabled);
+			
 								// mask dl comp
 							
 							boolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );

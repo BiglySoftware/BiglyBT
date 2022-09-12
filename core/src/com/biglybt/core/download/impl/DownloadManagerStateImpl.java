@@ -64,6 +64,7 @@ DownloadManagerStateImpl
 
 	private static final LogIDs LOGID = LogIDs.DISK;
 	private static final String			RESUME_KEY						= "resume";
+	private static final String			RESUME_HISTORY_KEY				= "resume_history";
 	private static final String			TRACKER_CACHE_KEY				= "tracker_cache";
 	private static final String			ATTRIBUTE_KEY					= "attributes";
 	private static final String			AZUREUS_PROPERTIES_KEY			= "azureus_properties";
@@ -126,8 +127,9 @@ DownloadManagerStateImpl
 			default_attributes.put( ATTRIBUTE_DEFAULTS[i][0], ATTRIBUTE_DEFAULTS[i][1] );
 		}
 
-		// only add keys that will point to Map objects here!
-		TorrentUtils.registerMapFluff( new String[] {TRACKER_CACHE_KEY,RESUME_KEY} );
+			// only add keys that will point to Map objects here!
+		
+		TorrentUtils.registerMapFluff( new String[]{ TRACKER_CACHE_KEY, RESUME_KEY, RESUME_HISTORY_KEY });
 	}
 
 	private static Object
@@ -984,7 +986,7 @@ DownloadManagerStateImpl
 	@Override
 	public void
 	setResumeData(
-		Map	data )
+		Map	new_data )
 	{
 		boolean changed = false;
 
@@ -993,15 +995,17 @@ DownloadManagerStateImpl
 
 			// System.out.println( "setting download state/resume data for '" + new String(torrent.getName()));
 			
-			Map existing = torrent.getAdditionalMapProperty(RESUME_KEY  );
+			Map existing_data = torrent.getAdditionalMapProperty(RESUME_KEY  );
+			
+			boolean existing_was_valid = existing_data != null && DiskManagerFactory.isTorrentResumeDataValid( this );
 			
 			long new_resume_state;
 			
-			if ( data == null ){
+			if ( new_data == null ){
 
 				new_resume_state = 1;
 								
-				if ( existing != null ){
+				if ( existing_data != null ){
 				
 					torrent.removeAdditionalProperty( RESUME_KEY );
 
@@ -1009,9 +1013,9 @@ DownloadManagerStateImpl
 				}
 			}else{
 
-				changed = !BEncoder.mapsAreIdentical( existing, data );
+				changed = !BEncoder.mapsAreIdentical( existing_data, new_data );
 
-				torrent.setAdditionalMapProperty( RESUME_KEY, data );
+				torrent.setAdditionalMapProperty( RESUME_KEY, new_data );
 				
 				boolean complete = DiskManagerFactory.isTorrentResumeDataComplete( this );
 
@@ -1027,6 +1031,60 @@ DownloadManagerStateImpl
 
 			if ( changed ){
 			
+				if ( existing_was_valid ){
+										
+					Map history = torrent.getAdditionalMapProperty( RESUME_HISTORY_KEY  );
+					
+					List<Long>	h_dates;
+					List<Map>	h_resumes;
+					
+					if ( history == null ){
+						
+						history = new HashMap();
+						
+						h_dates 	= new ArrayList<>();
+						h_resumes	= new ArrayList<>();
+						
+						history.put( "dates", h_dates );
+						
+						history.put( "resumes", h_resumes );
+						
+					}else{
+						
+						h_dates		= (List<Long>)history.get( "dates" );
+						
+						h_resumes	 = (List<Map>)history.get( "resumes" );
+					}
+					
+					boolean found = false;
+					
+					for ( Map m: h_resumes ){
+						
+						if ( BEncoder.mapsAreIdentical( existing_data, m )){
+							
+							found = true;
+							
+							break;
+						}
+					}
+					
+					if ( !found ){
+						
+						h_dates.add( SystemTime.getCurrentTime());
+						
+						h_resumes.add( existing_data );
+						
+						if ( h_dates.size() > 3 ){
+							
+							h_dates.remove( 0 );
+							
+							h_resumes.remove( 0 );
+						}
+						
+						torrent.setAdditionalMapProperty( RESUME_HISTORY_KEY, history  );
+					}
+				}
+				
 				setDirty( false );
 			}
 
@@ -1070,6 +1128,78 @@ DownloadManagerStateImpl
 
 			return( state == 2 );
 		}
+	}
+	
+	@Override
+	public List<ResumeHistory> 
+	getResumeDataHistory()
+	{
+		List<ResumeHistory> result = new ArrayList<>();
+
+		try{
+			this_mon.enter();
+						
+			Map history = torrent.getAdditionalMapProperty( RESUME_HISTORY_KEY  );
+			
+			List<Long>	h_dates;
+			List<Map>	h_resumes;
+			
+			if ( history != null ){
+					
+				h_dates		= (List<Long>)history.get( "dates" );
+				
+				h_resumes	 = (List<Map>)history.get( "resumes" );
+				
+				int pos = 0;
+				
+				Map existing_data = getResumeData();
+				
+				for ( Long date: h_dates ){
+					
+					Map resume = h_resumes.get( pos++ );
+					
+					if ( existing_data == null || !BEncoder.mapsAreIdentical( existing_data, resume )){
+					
+						result.add( new ResumeHistoryImpl( date, resume));
+					}
+				}
+			}			
+		}finally{
+
+			this_mon.exit();
+		}
+		
+		return( result );
+	}
+	
+	static class
+	ResumeHistoryImpl
+		implements ResumeHistory
+	{
+		final long 		date;
+		final Map		resume_data;
+		
+		ResumeHistoryImpl(
+			long	_date,
+			Map		_resume_data )
+		{
+			date		= _date;
+			resume_data	= _resume_data;
+		}
+		
+		public long 
+		getDate()
+		{
+			return( date );
+		}
+	}
+	
+	@Override
+	public void 
+	restoreResumeData(
+		ResumeHistory history)
+	{
+		download_manager.restoreResumeData( ((ResumeHistoryImpl)history).resume_data );
 	}
 
 	@Override
@@ -3164,6 +3294,20 @@ DownloadManagerStateImpl
 			return( false );
 		}
 
+		@Override
+		public List<ResumeHistory> 
+		getResumeDataHistory()
+		{
+			return( Collections.emptyList());
+		}
+		
+		@Override
+		public void 
+		restoreResumeData(
+			ResumeHistory history)
+		{
+		}
+		
 		@Override
 		public void
 		clearTrackerResponseCache()

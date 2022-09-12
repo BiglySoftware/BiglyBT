@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -1146,6 +1147,38 @@ public class TorrentUtil
 		});
 		itemFileSetResumeComplete.setEnabled(allStopped&&allResumeIncomplete);
 
+		// restore resume
+		
+		final Menu restore_menu = new Menu( menuFiles.getShell(), SWT.DROP_DOWN);
+		
+		MenuItem itemRestoreResume = new MenuItem(menuFiles, SWT.CASCADE);
+		Messages.setLanguageText(itemRestoreResume,	"MyTorrentsView.menu.restore.resume.data");
+		
+		itemRestoreResume.setMenu( restore_menu );
+		
+		boolean restoreEnabled = false;
+		
+		if ( dms.length==1 && allStopped ){
+			DownloadManagerState dmState = dms[0].getDownloadState();
+			
+			List<DownloadManagerState.ResumeHistory> history = dmState.getResumeDataHistory();
+			
+			if ( !history.isEmpty()){
+				restoreEnabled = true;
+			
+				for ( DownloadManagerState.ResumeHistory h: history ){
+					MenuItem itemHistory = new MenuItem(restore_menu, SWT.PUSH);
+					itemHistory.setText( new SimpleDateFormat().format( new Date(h.getDate())));
+					
+					itemHistory.addListener(SWT.Selection,(ev)->{
+						dmState.restoreResumeData( h );;
+					});
+				}
+			}
+		}
+		
+		itemRestoreResume.setEnabled( restoreEnabled);
+		
 		// mask dl comp
 		
 		boolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );
