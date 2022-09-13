@@ -950,12 +950,23 @@ CacheFileManagerImpl
 	{
 		Throwable 	cause = e.getCause();
 
+		CacheFileManagerException result;
+		
 		if ( cause != null ){
 
-			throw( new CacheFileManagerException( file, e.getMessage(), cause ));
-		}
+			result = new CacheFileManagerException( file, e.getMessage(), cause );
+			
+		}else{
 
-		throw( new CacheFileManagerException( file, e.getMessage(), e ));
+			result = new CacheFileManagerException( file, e.getMessage(), e );
+		}
+		
+		if ( e.getType() == FMFileManagerException.ET_FILE_OR_DIR_MISSING ){
+			
+			result.setType( CacheFileManagerException.ET_FILE_OR_DIR_MISSING );
+		}
+		
+		throw( result );
 	}
 
 	@Override

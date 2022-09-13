@@ -29,8 +29,11 @@ public class
 FMFileManagerException
 	extends Exception
 {
+	public static final int ET_OTHER				= 0;
+	public static final int ET_FILE_OR_DIR_MISSING	= 1;
+	
+	private int		type		= ET_OTHER;
 	private boolean recoverable = true;
-
 
 	public
 	FMFileManagerException(
@@ -47,6 +50,19 @@ FMFileManagerException
 		super( str, cause );
 	}
 
+	public void
+	setType(
+		int		_type )
+	{
+		type = _type;
+	}
+	
+	public int
+	getType()
+	{
+		return( type );
+	}
+	
 	public void
 	setRecoverable(
 		boolean		_recoverable )

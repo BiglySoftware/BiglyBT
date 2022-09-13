@@ -907,7 +907,7 @@ DiskManagerImpl
     	String					relative_file,
     	int							storage_type )
 
-    	throws Exception
+    	throws CacheFileManagerException
     {
         try{
 
@@ -988,7 +988,7 @@ DiskManagerImpl
 
         				if ( comps.isEmpty()){
 
-        					String prefix = Base32.encode( new SHA1Simple().calculateHash( relative_file.getBytes( "UTF-8" ))).substring( 0, 4 );
+        					String prefix = Base32.encode( new SHA1Simple().calculateHash( relative_file.getBytes( Constants.UTF_8 ))).substring( 0, 4 );
 
         					comp = prefix + "_" + comp;
         				}
@@ -1094,9 +1094,11 @@ DiskManagerImpl
 
 					pm_info.setFileInfo( fileInfo );
 
-				}catch ( Exception e ){
+				}catch ( CacheFileManagerException e ){
 
-					setErrorState( Debug.getNestedExceptionMessage(e) + " (allocateFiles:" + relative_data_file.toString() + ")" );
+					int et = e.getType() == CacheFileManagerException.ET_FILE_OR_DIR_MISSING?ET_FILE_MISSING:ET_OTHER;
+							
+					setErrorState( et, Debug.getNestedExceptionMessage(e) + " (allocateFiles:" + relative_data_file.toString() + ")" );
 
 					return( fail_result );
 				}
@@ -2084,27 +2086,6 @@ DiskManagerImpl
     	setErrorMessage( msg );
     	
     	errorType		= type;
-    	
-    	setState( FAULTY );
-    }
-    
-    private void
-    setErrorState(
-    	String		msg,
-    	Throwable	cause )
-    {	
-		if ( DiskManagerUtil.isNoSpaceException( cause )){
-	
-			errorType	= ET_INSUFFICIENT_SPACE;
-		
-			errorMessage_set_via_method = MessageText.getString( "DiskManager.error.nospace" );
-			
-		}else{
-			
-	       	String exception_str  = Debug.getNestedExceptionMessage(cause);
-	    	
-		   	errorMessage_set_via_method = msg + ": " + exception_str;
-		}
     	
     	setState( FAULTY );
     }

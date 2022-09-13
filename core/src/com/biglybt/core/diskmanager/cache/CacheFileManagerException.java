@@ -27,8 +27,13 @@ public class
 CacheFileManagerException
 	extends Exception
 {
-	private final CacheFile	file;
-	private int			fail_index;
+	public static final int ET_OTHER				= 0;
+	public static final int ET_FILE_OR_DIR_MISSING	= 1;
+		
+	private final CacheFile		file;
+	private int					fail_index;
+
+	private int		type		= ET_OTHER;
 
 	public
 	CacheFileManagerException(
@@ -64,6 +69,19 @@ CacheFileManagerException
 		fail_index	= _fail_index;
 	}
 
+	public void
+	setType(
+		int		_type )
+	{
+		type = _type;
+	}
+	
+	public int
+	getType()
+	{
+		return( type );
+	}
+	
 	public CacheFile
 	getFile()
 	{

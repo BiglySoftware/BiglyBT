@@ -1199,7 +1199,11 @@ FMFileImpl
 
 				}else{
 
-					throw( new FMFileManagerException( "Failed to create parent directory '" + parent + "'"));
+					FMFileManagerException error = new FMFileManagerException( "Failed to create parent directory '" + parent + "'");
+					
+					error.setType(FMFileManagerException.ET_FILE_OR_DIR_MISSING );
+					
+					throw( error );
 				}
         	}
         }
