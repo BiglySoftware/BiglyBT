@@ -3347,13 +3347,13 @@ implements PiecePicker
 	implements DiskManagerListener
 	{
 		@Override
-		public final void stateChanged(int oldState, int newState)
+		public final void stateChanged(DiskManager dm, int oldState, int newState)
 		{
 			//starting torrent
 		}
 
 		@Override
-		public final void filePriorityChanged(DiskManagerFileInfo file)
+		public final void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file)
 		{
 			syncFilePriorities();
 			// record that user-based priorities changed
@@ -3390,7 +3390,7 @@ implements PiecePicker
 
 
 		@Override
-		public final void pieceDoneChanged(DiskManagerPiece dmPiece)
+		public final void pieceDoneChanged(DiskManager dm, DiskManagerPiece dmPiece)
 		{
 			final int pieceNumber =dmPiece.getPieceNumber();
 			if (dmPiece.isDone())

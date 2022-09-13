@@ -42,8 +42,6 @@ import com.biglybt.pif.PluginInterface;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 import com.biglybt.activities.ActivitiesEntry;
 import com.biglybt.core.CoreFactory;
@@ -55,8 +53,6 @@ import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.selectedcontent.DownloadUrlInfo;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.utils.TorrentUIUtilsV3;
 import com.biglybt.util.DLReferals;
 import com.biglybt.util.DataSourceUtils;
@@ -778,47 +774,6 @@ public class TorrentListViewsUtils
 
 			return( 1 );
 		}
-	}
-
-	/**
-	* @param dm
-	*
-	* @since 3.0.0.7
-	*/
-	private static void handleNoFileExists(final DownloadManager dm) {
-		final UIFunctionsSWT functionsSWT = UIFunctionsManagerSWT.getUIFunctionsSWT();
-		if (functionsSWT == null) {
-			return;
-		}
-		ManagerUtils.start(dm);
-
-		MessageBoxShell mb = new MessageBoxShell(
-				MessageText.getString("v3.mb.PlayFileNotFound.title"),
-				MessageText.getString("v3.mb.PlayFileNotFound.text", new String[] {
-					dm.getDisplayName(),
-				}), new String[] {
-					MessageText.getString("v3.mb.PlayFileNotFound.button.remove"),
-					MessageText.getString("v3.mb.PlayFileNotFound.button.redownload"),
-					MessageText.getString("Button.cancel"),
-				}, 2);
-		mb.setRelatedObject(dm);
-		mb.open(new UserPrompterResultListener() {
-			@Override
-			public void prompterClosed(int i) {
-				if (i == 0) {
-					ManagerUtils.asyncStopDelete(dm, DownloadManager.STATE_STOPPED,
-							true, false, null);
-				} else if (i == 1) {
-					dm.forceRecheck(new ForceRecheckListener() {
-						@Override
-						public void forceRecheckComplete(DownloadManager dm) {
-							ManagerUtils.start(dm);
-						}
-					});
-				}
-			}
-		});
-
 	}
 
 	/**

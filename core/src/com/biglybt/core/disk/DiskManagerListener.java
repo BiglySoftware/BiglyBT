@@ -29,19 +29,23 @@ DiskManagerListener
 {
 	public void
 	stateChanged(
-		int oldState,
-		int	newState );
+		DiskManager		dm,
+		int 			oldState,
+		int				newState );
 
 	public void
 	filePriorityChanged(
+		DiskManager				dm,
 		DiskManagerFileInfo		file );
 
 	public void
 	pieceDoneChanged(
+		DiskManager				dm,
 		DiskManagerPiece		piece );
 
 	public default void
 	fileCompleted(
+		DiskManager				dm,
 		DiskManagerFileInfo		file )
 	{
 	}

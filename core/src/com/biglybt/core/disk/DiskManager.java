@@ -289,6 +289,9 @@ DiskManager
 	public int
 	getCompleteRecheckStatus();
 
+	public boolean
+	getRecheckCancelled();
+	
 		/**
 		 * When a download's data is moving (for completion or removal events) this gives the [progress in 1000 notation,total_size]
 		 * null if nothing's going on

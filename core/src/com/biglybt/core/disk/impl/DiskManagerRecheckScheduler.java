@@ -30,6 +30,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.CoreOperationTask.ProgressCallback;
+import com.biglybt.core.CoreOperationTask.ProgressCallbackAdapter;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
@@ -251,6 +252,7 @@ DiskManagerRecheckScheduler
 	DiskManagerRecheckInstance
 	{
 		private final DiskManagerHelper				helper;
+		private final Callback						progress;
 		private final CoreOperation					op;
 		private final int							piece_length;
 		private final boolean						low_priority;
@@ -276,7 +278,7 @@ DiskManagerRecheckScheduler
 						
 			slot_sem		= new AESemaphore( "DiskManagerRecheckInstance::slotsem", getPieceConcurrency());
 						
-			Callback progress = new Callback();
+			progress = new Callback();
 				
 			CoreOperationTask task =
 				new CoreOperationTask()
@@ -436,6 +438,12 @@ DiskManagerRecheckScheduler
 			paused	= b;
 		}
 		
+		public boolean
+		isCancelled()
+		{
+			return( progress.getTaskState() == ProgressCallbackAdapter.ST_CANCEL );
+		}
+		
 		public void
 		unregister()
 		{
@@ -444,7 +452,7 @@ DiskManagerRecheckScheduler
 
 		class
 		Callback
-			extends CoreOperationTask.ProgressCallbackAdapter
+			extends ProgressCallbackAdapter
 		{
 			final DiskManagerRecheckInstance	inst = DiskManagerRecheckInstance.this;
 			

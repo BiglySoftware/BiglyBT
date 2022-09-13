@@ -135,7 +135,8 @@ DMCheckerImpl
 
 	volatile boolean	complete_recheck_in_progress;
 	volatile int		complete_recheck_progress;
-
+	volatile boolean	check_cancelled;
+	
 	private boolean				checking_enabled		= true;
 
 	protected final AEMonitor	this_mon	= new AEMonitor( "DMChecker" );
@@ -271,6 +272,13 @@ DMCheckerImpl
 	   }
 	}
 
+	@Override
+	public boolean
+	getRecheckCancelled()
+	{
+		return( check_cancelled );
+	}
+	
 	@Override
 	public void
 	setCheckingEnabled(
@@ -440,15 +448,17 @@ DMCheckerImpl
 		  				}
 		  	       }finally{
 
-		  	       		complete_recheck_in_progress	= false;
+		  	       		check_cancelled = recheck_inst.isCancelled();
 
+		  	       		complete_recheck_in_progress	= false;
+		  	       		
 		  	       		recheck_inst.unregister();
 		  	       		
 		  	       		if ( !stopped ){
 		  	       			
 		  	       			disk_manager.getDownload().fireGlobalManagerEvent(
 		  	       				GlobalManagerEvent.ET_RECHECK_COMPLETE,
-		  	       				request.isExplicit());
+		  	       				new Object[]{ request.isExplicit(), check_cancelled });
 		  	       		}
 		  	       }
 		        }

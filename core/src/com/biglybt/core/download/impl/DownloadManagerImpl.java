@@ -2791,22 +2791,14 @@ DownloadManagerImpl
   	restoreResumeData(
   		Map		data )
   	{
-  		controller.forceRecheck( data, null );
-  	}
-  	
-  	@Override
-	public void
-  	forceRecheck()
-  	{
-  		forceRecheck( null );
+  		controller.forceRecheck( data );
   	}
 
   	@Override
 	public void
-  	forceRecheck(
-  		ForceRecheckListener l )
+  	forceRecheck()
   	{
-  		controller.forceRecheck(null,l);
+  		controller.forceRecheck( null );
   	}
 
   	@Override

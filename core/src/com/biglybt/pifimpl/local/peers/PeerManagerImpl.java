@@ -907,22 +907,25 @@ PeerManagerImpl
 		@Override
 		public void
 		stateChanged(
-			int oldState,
-			int	newState )
+			com.biglybt.core.disk.DiskManager	dm, 
+			int 								oldState,
+			int									newState )
 		{
 		}
 
 		@Override
 		public void
 		filePriorityChanged(
-			DiskManagerFileInfo		file )
+			com.biglybt.core.disk.DiskManager 	dm, 
+			DiskManagerFileInfo					file )
 		{
 		}
 
 		@Override
 		public void
 		pieceDoneChanged(
-			DiskManagerPiece		piece )
+			com.biglybt.core.disk.DiskManager 	dm, 
+			DiskManagerPiece					piece )
 		{
 			fireEvent(
 					PeerManagerEvent.ET_PIECE_COMPLETION_CHANGED,

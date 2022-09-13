@@ -31,6 +31,7 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.impl.DiskManagerUtil;
 import com.biglybt.core.download.*;
+import com.biglybt.core.download.DownloadManagerState.ResumeHistory;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerEvent;
 import com.biglybt.core.global.GlobalManagerStats;
@@ -860,8 +861,7 @@ DownloadManagerController
 	
 	public void
 	forceRecheck(
-		Map						resume_data,
-		ForceRecheckListener	l )
+		Map						resume_data )
 	{
 		try{
 			control_mon.enter();
@@ -916,15 +916,29 @@ DownloadManagerController
 	  				{
 	  					public void 
 	  					forceRecheckComplete(
-	  						DownloadManager dm)
+	  						DownloadManager dm,
+	  						boolean			cancelled )
 	  					{
 	  						is_force_rechecking = false;
 	  						
-	  						download_manager.fireGlobalManagerEvent( GlobalManagerEvent.ET_RECHECK_COMPLETE,  true );
+	  							// only fire for actual rechecks rather than restoring of resume state
 	  						
-	  						if ( l != null ){
+	  						if ( resume_data == null ){
+	  						
+	  							download_manager.fireGlobalManagerEvent( GlobalManagerEvent.ET_RECHECK_COMPLETE,  new Object[]{ true, cancelled });
 	  							
-	  							l.forceRecheckComplete(dm);
+	  							if ( cancelled ){
+	  								
+	  								List<ResumeHistory> history = download_manager_state.getResumeDataHistory();
+	  								
+	  								if ( !history.isEmpty()){
+	  									
+	  									AEThread2.createAndStartDaemon( "resetResume", ()->{
+	  										
+	  										download_manager_state.restoreResumeData( history.get( history.size()-1));
+	  									});
+	  								}
+	  							}
 	  						}
 	  					}
 	  				}));
@@ -935,6 +949,15 @@ DownloadManagerController
 		}
 	}
 
+	interface
+	ForceRecheckListener
+	{
+		public void 
+		forceRecheckComplete(
+			DownloadManager dm,
+			boolean			cancelled );
+	}
+	
  	public void
   	setPieceCheckingEnabled(
   		boolean enabled )
@@ -3097,10 +3120,10 @@ DownloadManagerController
 						}
 						active = DiskManagerFactory.getFileInfoSkeleton(download_manager, new DiskManagerListener() {
 							@Override
-							public void stateChanged(int oldState, int newState) {}
+							public void stateChanged(DiskManager dm, int oldState, int newState) {}
 
 							@Override
-							public void filePriorityChanged(DiskManagerFileInfo file) {
+							public void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file) {
 								if (initialising[0]) {
 									delayed_prio_changes.add(file);
 								} else {
@@ -3109,10 +3132,10 @@ DownloadManagerController
 							}
 
 							@Override
-							public void pieceDoneChanged(DiskManagerPiece piece) {}
+							public void pieceDoneChanged(DiskManager dm, DiskManagerPiece piece) {}
 							
 							@Override
-							public void fileCompleted(DiskManagerFileInfo file){
+							public void fileCompleted(DiskManager dm, DiskManagerFileInfo file){
 								// nothing to do here
 							}
 						});
@@ -3579,19 +3602,25 @@ DownloadManagerController
 
 		private final ForceRecheckListener l;
 
-		public ForceRecheckDiskManagerListener(boolean wasForceStarted,
-				int start_state, ForceRecheckListener l) {
+		public 
+		ForceRecheckDiskManagerListener(
+			boolean 				wasForceStarted,
+			int 					start_state, 
+			ForceRecheckListener 	l ) 
+		{
 			this.wasForceStarted = wasForceStarted;
 			this.start_state = start_state;
 			this.l = l;
 		}
 
 		@Override
-		public void stateChanged(int oldDMState, int newDMState) {
+		public void stateChanged(DiskManager dm, int oldDMState, int newDMState) {
 			try {
 				control_mon.enter();
 
-				if (getDiskManager() == null) {
+				DiskManager latest_dm = getDiskManager();
+				
+				if ( latest_dm == null || latest_dm != dm ) {
 
 					// already closed down via stop
 
@@ -3599,7 +3628,7 @@ DownloadManagerController
 
 					if ( l != null ){
 						
-						l.forceRecheckComplete(download_manager);
+						l.forceRecheckComplete(download_manager, dm.getRecheckCancelled());
 					}
 
 					return;
@@ -3630,9 +3659,9 @@ DownloadManagerController
 						try {
 							control_mon.enter();
 
-							DiskManager dm = getDiskManager();
+							DiskManager latest_dm = getDiskManager();
 
-							if (dm != null) {
+							if (latest_dm != null && latest_dm == dm ){
 
 								dm.stop(false);
 
@@ -3675,9 +3704,9 @@ DownloadManagerController
 					try {
 						control_mon.enter();
 
-						DiskManager dm = getDiskManager();
+						DiskManager latest_dm = getDiskManager();
 
-						if (dm != null) {
+						if (latest_dm != null && latest_dm == dm ) {
 
 							dm.stop(false);
 
@@ -3695,22 +3724,22 @@ DownloadManagerController
 				
 				if ( l != null ){
 					
-					l.forceRecheckComplete(download_manager);
+					l.forceRecheckComplete(download_manager, dm.getRecheckCancelled());
 				}
 			}
 		}
 
 		@Override
-		public void filePriorityChanged(DiskManagerFileInfo file) {
+		public void filePriorityChanged(DiskManager	dm, DiskManagerFileInfo file) {
 			download_manager.informPriorityChange(file);
 		}
 
 		@Override
-		public void pieceDoneChanged(DiskManagerPiece piece) {
+		public void pieceDoneChanged(DiskManager dm, DiskManagerPiece piece) {
 		}
 		
 		@Override
-		public void fileCompleted(DiskManagerFileInfo file){
+		public void fileCompleted(DiskManager dm, DiskManagerFileInfo file){
 			download_manager.informFileCompletionChange(file);
 		}
 	}
@@ -3725,17 +3754,16 @@ DownloadManagerController
 		@Override
 		public void
 		stateChanged(
-			int 	oldDMState,
-			int		newDMState )
+			DiskManager		dm, 
+			int 			oldDMState,
+			int				newDMState )
 		{
-			DiskManager	dm;
-
 			try{
 				control_mon.enter();
 
-				dm = getDiskManager();
+				DiskManager latest_dm = getDiskManager();
 
-				if ( dm == null ){
+				if ( latest_dm == null || latest_dm != dm ){
 
 					// already been cleared down
 
@@ -3837,6 +3865,7 @@ DownloadManagerController
 		@Override
 		public void
 		filePriorityChanged(
+			DiskManager			dm, 
 			DiskManagerFileInfo	file )
 		{
 			download_manager.informPriorityChange( file );
@@ -3845,6 +3874,7 @@ DownloadManagerController
 		@Override
 		public void
 		pieceDoneChanged(
+			DiskManager			dm, 
 			DiskManagerPiece	piece )
 		{
 		}
@@ -3852,6 +3882,7 @@ DownloadManagerController
 		@Override
 		public void 
 		fileCompleted(
+			DiskManager			dm, 
 			DiskManagerFileInfo file)
 		{
 			download_manager.informFileCompletionChange( file );

@@ -247,8 +247,8 @@ DiskManagerImpl
     
         // DiskManager listeners
 
-    private static final int LDT_STATECHANGED           = 1;
-    private static final int LDT_PRIOCHANGED            = 2;
+    private static final int LDT_STATE_CHANGED          = 1;
+    private static final int LDT_PRIO_CHANGED           = 2;
     private static final int LDT_PIECE_DONE_CHANGED     = 3;
     private static final int LDT_FILE_COMPLETED		    = 4;
 
@@ -259,27 +259,29 @@ DiskManagerImpl
                 @Override
                 public void
                 dispatch(
-                	DiskManagerListener      listener,
+                	DiskManagerListener     listener,
                     int         			type,
                     Object      			value )
                 {
-                    if (type == LDT_STATECHANGED){
+                	Object[]	params = (Object[])value;
+                	
+                	DiskManager dm = (DiskManager)params[0];
+                	
+                    if (type == LDT_STATE_CHANGED){
 
-                        int params[] = (int[])value;
+                        listener.stateChanged( dm, (Integer)params[1], (Integer)params[2]);
 
-                        listener.stateChanged(params[0], params[1]);
+                    }else if (type == LDT_PRIO_CHANGED) {
 
-                    }else if (type == LDT_PRIOCHANGED) {
-
-                        listener.filePriorityChanged((DiskManagerFileInfo)value);
+                        listener.filePriorityChanged( dm, (DiskManagerFileInfo)params[1]);
 
                     }else if (type == LDT_PIECE_DONE_CHANGED) {
 
-                        listener.pieceDoneChanged((DiskManagerPiece)value);
+                        listener.pieceDoneChanged( dm, (DiskManagerPiece)params[1]);
 
                     }else if (type == LDT_FILE_COMPLETED) {
 
-                        listener.fileCompleted((DiskManagerFileInfo)value );
+                        listener.fileCompleted(dm, (DiskManagerFileInfo)params[1] );
                     }
                 }
             });
@@ -602,6 +604,11 @@ DiskManagerImpl
 
         if ( getState() == FAULTY  ){
 
+        	if ( resume_handler.isCancelled()){
+        		
+        		Debug.out( "toot" );
+        	}
+        	
             return;
         }
 
@@ -1919,7 +1926,7 @@ DiskManagerImpl
 	
 	                             		state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME, SystemTime.getCurrentTime());
 	                             		
-	    	                    		listeners.dispatch( LDT_FILE_COMPLETED, this_file );
+	    	                    		listeners.dispatch( LDT_FILE_COMPLETED, new Object[]{ DiskManagerImpl.this, this_file });
 	                             	}
 	                    		}
 	                        }catch ( Throwable e ){
@@ -1941,7 +1948,7 @@ DiskManagerImpl
 	                		// don't start firing these until we're ready otherwise we send notifications
 	                		// for complete pieces during initialisation
 	
-	                	listeners.dispatch(LDT_PIECE_DONE_CHANGED, dmPiece);
+	                	listeners.dispatch( LDT_PIECE_DONE_CHANGED, new Object[]{ DiskManagerImpl.this, dmPiece });
 	                }
 	            }
 	        }finally{
@@ -2145,7 +2152,7 @@ DiskManagerImpl
 
         if ( state_set_via_method != _state ){
 
-            int params[] = {state_set_via_method, _state};
+            Object[] params = {this, state_set_via_method, _state};
 
             state_set_via_method = _state;
 
@@ -2157,7 +2164,7 @@ DiskManagerImpl
             	}
             }
 
-            listeners.dispatch( LDT_STATECHANGED, params);
+            listeners.dispatch( LDT_STATE_CHANGED, params);
         }
     }
 
@@ -2408,9 +2415,16 @@ DiskManagerImpl
     @Override
     public int getCompleteRecheckStatus()
     {
-      return ( checker.getCompleteRecheckStatus());
+    	return ( checker.getCompleteRecheckStatus());
     }
 
+	@Override
+	public boolean
+	getRecheckCancelled()
+	{
+		return( checker.getRecheckCancelled() || resume_handler.isCancelled());
+	}
+	
     @Override
     public long[]
     getMoveProgress()
@@ -3572,9 +3586,9 @@ DiskManagerImpl
     {
         listeners.addListener( l );
 
-        int params[] = {getState(), getState()};
+        Object[] params = {this, getState(), getState()};
 
-        listeners.dispatch( l, LDT_STATECHANGED, params);
+        listeners.dispatch( l, LDT_STATE_CHANGED, params);
     }
 
     @Override
@@ -3871,7 +3885,7 @@ DiskManagerImpl
         if ( priority_change_marker.incrementAndGet() == 0 ){
         	priority_change_marker.incrementAndGet();
         }
-        listeners.dispatch(LDT_PRIOCHANGED, file);
+        listeners.dispatch(LDT_PRIO_CHANGED, new Object[]{ this, file });
     }
 
     @Override
@@ -3882,7 +3896,7 @@ DiskManagerImpl
         if ( priority_change_marker.incrementAndGet() == 0 ){
         	priority_change_marker.incrementAndGet();
         }
-        listeners.dispatch(LDT_PRIOCHANGED, file);
+        listeners.dispatch(LDT_PRIO_CHANGED, new Object[]{ this, file });
     }
 
     @Override
@@ -3891,7 +3905,7 @@ DiskManagerImpl
         DiskManagerFileInfo file )
     {
     		// hijacking priority change so we pick up switch between DND+Delete 'priorities'
-        listeners.dispatch(LDT_PRIOCHANGED, file);
+        listeners.dispatch(LDT_PRIO_CHANGED, new Object[]{ this, file });
     }
 
   protected void

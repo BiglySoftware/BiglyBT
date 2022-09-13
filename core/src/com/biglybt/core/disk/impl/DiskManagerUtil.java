@@ -466,6 +466,12 @@ DiskManagerUtil
 						return res;
 					}
 
+					private DiskManager
+					getDiskManager()
+					{
+						return( null );
+					}
+					
 					@Override
 					public int nbFiles() {
 						return res.length;
@@ -486,7 +492,7 @@ DiskManagerUtil
 
 						for(int i=0;i<res.length;i++)
 							if(newPriorities[i] != 0 )
-								listener.filePriorityChanged(res[i]);
+								listener.filePriorityChanged(getDiskManager(),res[i]);
 					}
 
 					@Override
@@ -572,7 +578,7 @@ DiskManagerUtil
 
 						for(int i=0;i<res.length;i++){
 							if(toChange[i]){
-								listener.filePriorityChanged(res[i]);
+								listener.filePriorityChanged(getDiskManager(),res[i]);
 							}
 						}
 
@@ -745,7 +751,7 @@ DiskManagerUtil
 						
 						for(int i=0;i<res.length;i++){
 							if(toChange[i]){
-								listener.filePriorityChanged(res[i]);
+								listener.filePriorityChanged(getDiskManager(),res[i]);
 							}
 						}
 						
@@ -775,7 +781,7 @@ DiskManagerUtil
 
 		            		DiskManagerImpl.storeFilePriorities( download_manager, res );
 
-		            		listener.filePriorityChanged( this );
+		            		listener.filePriorityChanged( getDiskManager(), this );
 		            	}
 
 		            	@Override
@@ -805,7 +811,7 @@ DiskManagerUtil
 			            			download_manager.getDownloadState().setFileLink( file_index, getFile( false ), to_link );
 			            		}
 	
-			            		listener.filePriorityChanged( this );
+			            		listener.filePriorityChanged( getDiskManager(), this );
 	
 		            			boolean[] toCheck = new boolean[fileSetSkeleton.nbFiles()];
 			            			
@@ -1720,15 +1726,15 @@ DiskManagerUtil
 					new DiskManagerListener(){
 						
 						@Override
-						public void stateChanged(int oldState, int newState){
+						public void stateChanged(DiskManager dm, int oldState, int newState){
 						}
 						
 						@Override
-						public void pieceDoneChanged(DiskManagerPiece piece){
+						public void pieceDoneChanged(DiskManager dm, DiskManagerPiece piece){
 						}
 						
 						@Override
-						public void filePriorityChanged(DiskManagerFileInfo file){
+						public void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file){
 						}
 					});
 				
@@ -1964,6 +1970,13 @@ DiskManagerUtil
 					@Override
 					public int getCompleteRecheckStatus(){
 						return 0;
+					}
+					
+					@Override
+					public boolean
+					getRecheckCancelled()
+					{
+						return( false );
 					}
 					
 					@Override

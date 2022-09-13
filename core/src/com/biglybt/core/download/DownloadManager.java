@@ -132,17 +132,7 @@ DownloadManager
     public void 
     forceRecheck();
 
-		/**
-		 * @param l
-		 *
-		 * @since 3.0.0.7
-		 */
-    
-	public void 
-	forceRecheck(
-		ForceRecheckListener l);
-
-        /**
+    	/**
          * Reset the file download state to totally undownloaded. Download must be stopped
          * @param file
          */

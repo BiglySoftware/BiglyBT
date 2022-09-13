@@ -622,25 +622,25 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		disk_mgr.addListener(new DiskManagerListener(){
 
 			@Override
-			public void stateChanged(int oldState, int newState){
+			public void stateChanged(DiskManager dm, int oldState, int newState){
 				// TODO Auto-generated method stub
 
 			}
 
 			@Override
-			public void pieceDoneChanged(DiskManagerPiece piece){
+			public void pieceDoneChanged(DiskManager dm, DiskManagerPiece piece){
 				// TODO Auto-generated method stub
 
 			}
 
 			@Override
-			public void filePriorityChanged(DiskManagerFileInfo file){
+			public void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file){
 				// TODO Auto-generated method stub
 
 			}
 
 			@Override
-			public void fileCompleted(DiskManagerFileInfo file){
+			public void fileCompleted(DiskManager dm, DiskManagerFileInfo file){
 				checkAutoSequentialFiles(file);
 			}
 		});

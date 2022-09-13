@@ -262,6 +262,11 @@ DownloadManagerState
 	public boolean
 	isResumeDataComplete();
 
+	/**
+	 * Ordered by time, most recent last
+	 * @return
+	 */
+	
 	public List<ResumeHistory>
 	getResumeDataHistory();
 	

@@ -195,6 +195,7 @@ UserAlerts
 		  @Override
 		  public void
 		  stateChanged(
+				  DiskManager	dm,
 			  int oldState,
 			  int	newState )
 		  {
@@ -203,6 +204,7 @@ UserAlerts
 		  @Override
 		  public void
 		  filePriorityChanged(
+				  DiskManager	dm,
 			  DiskManagerFileInfo file )
 		  {
 		  }
@@ -210,6 +212,7 @@ UserAlerts
 		  @Override
 		  public void
 		  pieceDoneChanged(
+				  DiskManager	dm,
 			  DiskManagerPiece piece )
 		  {
 		  }
@@ -217,6 +220,7 @@ UserAlerts
 		  @Override
 		  public void
 		  fileCompleted(
+			  DiskManager				diskManager,
 			  DiskManagerFileInfo		file )
 		  {
 			  DownloadManager dm = file.getDownloadManager();
@@ -307,7 +311,13 @@ UserAlerts
 			GlobalManagerEvent event)
 		{
 			if ( event.getEventType() == GlobalManagerEvent.ET_RECHECK_COMPLETE ){
-				checkComplete( event.getDownload(), (Boolean)event.getEventData());
+				
+				Object[] params = (Object[])event.getEventData();
+				
+				boolean explicit 	= (Boolean)params[0];
+				boolean cancelled 	= (Boolean)params[1];
+				
+				checkComplete( event.getDownload(), explicit, cancelled );
 			}
 		}
 	  };
@@ -434,11 +444,12 @@ UserAlerts
  	private void
   	checkComplete(
   		DownloadManager			manager,
-  		boolean					explicit )
+  		boolean					explicit,
+  		boolean					cancelled )
   	{
   		DownloadManagerState dm_state = manager.getDownloadState();
 
-		if ( dm_state.getFlag( DownloadManagerState.FLAG_LOW_NOISE) && !explicit ) {
+		if ( cancelled || dm_state.getFlag( DownloadManagerState.FLAG_LOW_NOISE) && !explicit ) {
 
 			return;
 		}

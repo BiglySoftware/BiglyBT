@@ -105,6 +105,7 @@ RDResumeHandler
 	private volatile boolean	check_resume_was_valid;
 	private volatile boolean	check_is_full_check;
 	private volatile boolean	check_interrupted;
+	private volatile boolean	check_cancelled;
 	private volatile int		check_position;
 
 
@@ -786,6 +787,8 @@ RDResumeHandler
 
 			if ( recheck_inst_maybe_null != null ){
 			
+				check_cancelled = recheck_inst_maybe_null.isCancelled();
+				
 				recheck_inst_maybe_null.unregister();
 			}
 
@@ -984,8 +987,11 @@ RDResumeHandler
 		saveResumeData( disk_manager.getDownloadManager().getDownloadState(), resume_data );
 	}
 	
-	
-	
+	public boolean
+	isCancelled()
+	{
+		return( check_cancelled );
+	}
 	
 		// STATIC METHODS
 	

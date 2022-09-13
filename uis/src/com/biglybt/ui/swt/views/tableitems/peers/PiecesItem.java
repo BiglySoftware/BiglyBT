@@ -417,13 +417,12 @@ public class PiecesItem
 
 	// @see com.biglybt.core.disk.DiskManagerListener#filePriorityChanged(com.biglybt.core.disk.DiskManagerFileInfo)
 	@Override
-	public void filePriorityChanged(DiskManagerFileInfo file) {
+	public void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file) {
 	}
 
 	// @see com.biglybt.core.disk.DiskManagerListener#pieceDoneChanged(com.biglybt.core.disk.DiskManagerPiece)
 	@Override
-	public void pieceDoneChanged(DiskManagerPiece piece) {
-		DiskManager diskmanager = piece.getManager();
+	public void pieceDoneChanged(DiskManager diskmanager, DiskManagerPiece piece) {
 
 		boolean remove_listener;
 		synchronized (this) {
@@ -444,7 +443,7 @@ public class PiecesItem
 
 	// @see com.biglybt.core.disk.DiskManagerListener#stateChanged(int, int)
 	@Override
-	public void stateChanged(int oldState, int newState) {
+	public void stateChanged(DiskManager dm, int oldState, int newState) {
 	}
 
 }

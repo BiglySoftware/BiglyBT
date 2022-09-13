@@ -607,6 +607,13 @@ LWSDiskManager
 		return( -1 );
 	}
 
+	@Override
+	public boolean
+	getRecheckCancelled()
+	{
+		return( false );
+	}
+	
     @Override
     public long[]
     getMoveProgress()
