@@ -319,6 +319,11 @@ public class FilesView
 		
 		bubbleTextBox.setMessageAndLayout(MessageText.getString("TorrentDetailsView.filter") , fd);
 
+		String tooltip = MessageText.getString("filter.tt.start");
+		tooltip += MessageText.getString("filesview.filter.tt.line1");
+		
+		bubbleTextBox.setTooltip( tooltip );
+		
 		fd = new FormData();
 		fd.top = new FormAttachment(mainBubbleWidget, 10, SWT.CENTER);
 		fd.left = new FormAttachment(0, 0);
@@ -779,40 +784,37 @@ public class FilesView
 		}
 		
 		if ( confusable ){
+			
 			filter = GeneralUtils.getConfusableEquivalent(filter,true);
 		}
-		
-		boolean filterOnPath = filter.startsWith("p:");
-		if (filterOnPath) {
-			filter = filter.substring(2);
-		}
-		
+				
 		try {			
 			File file = ds.getFile(true);
-
-			String name;
 			
-			if (filterOnPath) {
-				name = file.getAbsolutePath();
-			} else {
-				if ( filter.startsWith( File.separator )){
-					
-					filter = filter.substring( 1 );
-					
-					if ( filter.isEmpty()){
-						
-						return( true );
-					}
-					
-					name = file.getAbsolutePath();
-					
-				}else{
-					
-					name = file.getName();
-				}
+			boolean filter_on_path = false;
+			
+			if ( filter.startsWith( "p:" )){
+			
+				filter_on_path = true;
+				
+				filter = filter.substring(2);
+				
+			}else if ( filter.startsWith( File.separator )){
+				
+				filter_on_path = true;
+				
+				filter = filter.substring(1);
 			}
-
+			
+			if ( filter.isEmpty()){
+					
+				return( true );
+			}
+			
+			String name = filter_on_path?file.getAbsolutePath():file.getName();
+			
 			if ( confusable ){
+				
 				name = GeneralUtils.getConfusableEquivalent(name,false);
 			}
 			

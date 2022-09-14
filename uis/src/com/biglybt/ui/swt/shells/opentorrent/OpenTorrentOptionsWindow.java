@@ -73,6 +73,7 @@ import com.biglybt.ui.config.ConfigSectionFile;
 import com.biglybt.ui.config.ConfigSectionInterfaceTags;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.*;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.config.IntSwtParameter;
@@ -5547,7 +5548,16 @@ public class OpenTorrentOptionsWindow
 
 				soFilesFilter.setVisible( true );
 
-				tvFiles.enableFilterCheck(soFilesFilter.getBubbleTextBox(), this);
+				BubbleTextBox bubbleTextBox = soFilesFilter.getBubbleTextBox();
+				
+				bubbleTextBox.setMessage(MessageText.getString("TorrentDetailsView.filter"));
+
+				String tooltip = MessageText.getString("filter.tt.start");
+				tooltip += MessageText.getString("filesview.filter.tt.line1");
+				
+				bubbleTextBox.setTooltip( tooltip );
+				
+				tvFiles.enableFilterCheck(bubbleTextBox, this);
 
 			}else{
 				if ( soFilesFilter != null ){
@@ -6075,8 +6085,28 @@ public class OpenTorrentOptionsWindow
 			
 			try {
 				File file = ds.getDestFileFullName();
-
-				String name = filter.contains( File.separator )?file.getAbsolutePath():file.getName();
+				
+				boolean filter_on_path = false;
+				
+				if ( filter.startsWith( "p:" )){
+				
+					filter_on_path = true;
+					
+					filter = filter.substring(2);
+					
+				}else if ( filter.startsWith( File.separator )){
+					
+					filter_on_path = true;
+					
+					filter = filter.substring(1);
+				}
+				
+				if ( filter.isEmpty()){
+						
+					return( true );
+				}
+				
+				String name = filter_on_path?file.getAbsolutePath():file.getName();
 
 				if ( confusable ){
 				
