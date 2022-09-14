@@ -770,6 +770,8 @@ DMReaderImpl
 									requestCancelled(
 										DiskAccessRequest	request )
 									{
+										active_requests.remove( request );
+										
 										Debug.out( "shouldn't get here" );
 									}
 
@@ -779,6 +781,8 @@ DMReaderImpl
 										DiskAccessRequest	request,
 										Throwable			cause )
 									{
+										active_requests.remove( request );
+										
 										error_request[0]	= request;
 										
 										error[0]	= cause;
@@ -893,6 +897,8 @@ DMReaderImpl
 		requestCancelled(
 			DiskAccessRequest	request )
 		{
+			active_requests.remove( request );
+			
 				// we never cancel so nothing to do here
 
 			Debug.out( "shouldn't get here" );
@@ -904,6 +910,8 @@ DMReaderImpl
 			DiskAccessRequest	request,
 			Throwable			cause )
 		{
+			active_requests.remove( request );
+			
 			failed( request, cause );
 		}
 
