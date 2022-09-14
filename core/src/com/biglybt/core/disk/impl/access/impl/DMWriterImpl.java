@@ -287,6 +287,8 @@ DMWriterImpl
 									requestCancelled(
 										DiskAccessRequest	request )
 									{
+										active_requests.remove( request );
+										
 										op_failed[0] = new Throwable( "Request cancelled" );
 
 										sem.release();
@@ -298,6 +300,8 @@ DMWriterImpl
 										DiskAccessRequest	request,
 										Throwable			cause )
 									{
+										active_requests.remove( request );
+										
 										op_failed[0]	= cause;
 
 										sem.release();
@@ -862,6 +866,8 @@ DMWriterImpl
 					requestCancelled(
 						DiskAccessRequest	request )
 					{
+						active_requests.remove( request );
+						
 						l.requestCancelled( request );
 					}
 
@@ -871,6 +877,8 @@ DMWriterImpl
 						DiskAccessRequest	request,
 						Throwable			cause )
 					{
+						active_requests.remove( request );
+						
 						l.requestFailed( request, cause );
 					}
 
