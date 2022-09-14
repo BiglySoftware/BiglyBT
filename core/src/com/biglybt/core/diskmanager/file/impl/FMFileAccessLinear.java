@@ -191,7 +191,7 @@ FMFileAccessLinear
 	{
 		if ( fa == null){
 
-			throw new FMFileManagerException( "read: fa is null" );
+			throw new FMFileManagerException( "read failed: accessor is null" );
 		}
 
 		FileChannel fc = fa.getChannel();
@@ -200,7 +200,7 @@ FMFileAccessLinear
 
 			Debug.out("FileChannel is closed: " + owner.getName());
 
-			throw( new FMFileManagerException( "read - file is closed"));
+			throw( new FMFileManagerException( "read failed: file is closed"));
 		}
 
 		AEThread2.setDebug( owner );
@@ -224,7 +224,7 @@ FMFileAccessLinear
 
 			Debug.printStackTrace( e );
 
-			throw( new FMFileManagerException( "read fails", e ));
+			throw( new FMFileManagerException( "read failed", e ));
 		}
 	}
 
@@ -239,7 +239,7 @@ FMFileAccessLinear
 	{
 		if ( fa == null ){
 
-			throw new FMFileManagerException( "read: fa is null" );
+			throw new FMFileManagerException( "read failed: accessor is null" );
 		}
 
 		FileChannel fc = fa.getChannel();
@@ -248,7 +248,7 @@ FMFileAccessLinear
 
 			Debug.out("FileChannel is closed: " + owner.getName());
 
-			throw( new FMFileManagerException( "read - file is closed"));
+			throw( new FMFileManagerException( "read failed: file is closed"));
 		}
 
 		AEThread2.setDebug( owner );
@@ -393,7 +393,7 @@ FMFileAccessLinear
 				}
 			}
 
-			throw( new FMFileManagerException( "read fails", e ));
+			throw( new FMFileManagerException( "read failed", e ));
 
 		}finally{
 
@@ -416,7 +416,8 @@ FMFileAccessLinear
 		throws FMFileManagerException
 	{
 		if ( fa == null){
-			throw( new FMFileManagerException( "write fails: raf is null" ));
+			
+			throw( new FMFileManagerException( "write failed: accessor is null" ));
 		}
 
 		FileChannel fc = fa.getChannel();
@@ -425,7 +426,7 @@ FMFileAccessLinear
 
 			Debug.out("FileChannel is closed: " + owner.getName());
 
-			throw( new FMFileManagerException( "read - file is closed"));
+			throw( new FMFileManagerException( "write failed: file is closed"));
 		}
 
 		AEThread2.setDebug( owner );
@@ -542,7 +543,7 @@ FMFileAccessLinear
 				}
 			}
 
-			throw( new FMFileManagerException( "write fails", e ));
+			throw( new FMFileManagerException( "write failed", e ));
 		}
 	}
 
