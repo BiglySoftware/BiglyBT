@@ -34,6 +34,7 @@ import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.diskmanager.file.FMFileOwner;
 import com.biglybt.core.diskmanager.file.impl.FMFileAccess.FileAccessor;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
@@ -1186,7 +1187,7 @@ FMFileImpl
 					// double check in case there's some parallel creation being triggered somehow
 
 				try{
-					Thread.sleep( RandomUtils.nextInt( 1000 ));
+					Thread.sleep( 100 + RandomUtils.nextInt( 900 ));
 
 				}catch( Throwable e ){
 				}
@@ -1199,7 +1200,7 @@ FMFileImpl
 
 				}else{
 
-					FMFileManagerException error = new FMFileManagerException( "Failed to create parent directory '" + parent + "'");
+					FMFileManagerException error = new FMFileManagerException( MessageText.getString( "DownloadManager.error.datamissing" ) + ": " + target.getAbsolutePath());
 					
 					error.setType(FMFileManagerException.ET_FILE_OR_DIR_MISSING );
 					

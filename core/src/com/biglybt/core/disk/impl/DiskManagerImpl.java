@@ -1096,9 +1096,14 @@ DiskManagerImpl
 
 				}catch ( CacheFileManagerException e ){
 
-					int et = e.getType() == CacheFileManagerException.ET_FILE_OR_DIR_MISSING?ET_FILE_MISSING:ET_OTHER;
-							
-					setErrorState( et, Debug.getNestedExceptionMessage(e) + " (allocateFiles:" + relative_data_file.toString() + ")" );
+					if ( e.getType() == CacheFileManagerException.ET_FILE_OR_DIR_MISSING ){
+					
+						setErrorState( ET_FILE_MISSING, Debug.getNestedExceptionMessage(e));
+
+					}else{
+					
+						setErrorState( ET_OTHER, Debug.getNestedExceptionMessage(e) + " (allocateFiles:" + relative_data_file.toString() + ")" );
+					}							
 
 					return( fail_result );
 				}
