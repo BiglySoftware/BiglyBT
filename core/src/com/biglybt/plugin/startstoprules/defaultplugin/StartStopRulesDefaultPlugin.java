@@ -767,7 +767,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 			if ( dlData != null ){
 			
-				if ( dlData.activationRequest()){
+				if ( dlData.activationRequest(()->{requestProcessCycle( dlData );})){
 					
 					requestProcessCycle( dlData );
 

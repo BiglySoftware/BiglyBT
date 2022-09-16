@@ -330,7 +330,8 @@ RankCalculatorSlotReserver
 	
 	@Override
 	public boolean 
-	activationRequest()
+	activationRequest(
+		Runnable to_do )
 	{
 		return( false );
 	}

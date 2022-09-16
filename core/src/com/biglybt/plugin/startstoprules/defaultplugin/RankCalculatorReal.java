@@ -34,12 +34,14 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureRateLimit;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.LightHashMap;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.ThreadPool;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.PluginConfig;
@@ -1877,9 +1879,12 @@ RankCalculatorReal
 		}
 	}
 	
+    private static final ThreadPool	activate_pool = new ThreadPool( "StartStopRules:activate", 32, true );
+
 	@Override
 	public boolean 
-	activationRequest()
+	activationRequest(
+		Runnable		to_do )
 	{
 		if ( dl.isComplete()){
 						
@@ -1894,9 +1899,20 @@ RankCalculatorReal
 					
 				if ( lastActivationAnnounce == 0 || now - lastActivationAnnounce > 5*60*1000 ){
 						
-					lastActivationAnnounce = now;
+					if ( !activate_pool.isFull()){
+					
+						lastActivationAnnounce = now;
 						
-					dl.requestTrackerAnnounce( true );
+							// we're on a core network thread here, no blocking
+
+						activate_pool.run( AERunnable.create(()->{
+							
+							dl.requestTrackerAnnounce( true );
+							
+							to_do.run();
+							
+						}));
+					}
 				}
 				
 				return( true );

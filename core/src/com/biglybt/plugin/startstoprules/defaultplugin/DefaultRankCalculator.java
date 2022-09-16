@@ -229,7 +229,8 @@ DefaultRankCalculator
 		RankCalculatorSlotReserver	slot );
 	
 	public boolean
-	activationRequest();
+	activationRequest(
+		Runnable to_do );
 	
 	public TagFeatureRateLimit[]
 	getTagsWithDLLimits();
