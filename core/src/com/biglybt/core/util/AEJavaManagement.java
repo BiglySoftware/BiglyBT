@@ -116,6 +116,19 @@ AEJavaManagement
 		thread_stuff.dumpThreads();
 	}
 
+	public static void
+	dumpThreads(
+		IndentWriter writer )
+	{
+		if ( thread_stuff == null ){
+
+			return;
+		}
+
+		thread_stuff.dumpThreads( writer );
+	}
+
+	
 	public static long
 	getMaxHeapMB()
 	{
@@ -294,6 +307,10 @@ AEJavaManagement
 		
 		public void
 		dumpThreads();
+		
+		public void
+		dumpThreads(
+			IndentWriter	writer );
 	}
 
 	public interface

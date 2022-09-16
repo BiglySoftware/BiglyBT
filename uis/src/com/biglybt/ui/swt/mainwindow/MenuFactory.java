@@ -22,6 +22,7 @@ import java.io.*;
 import java.net.URL;
 import java.util.*;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -1298,6 +1299,33 @@ public class MenuFactory
 											});
 								}
 							});
+						
+						MenuItem showThreads = new MenuItem(menu, SWT.PUSH);
+
+						Messages.setLanguageText(showThreads, "show.threads" );
+
+						showThreads.addListener(
+							SWT.Selection,
+							new Listener()
+							{
+								@Override
+								public void
+								handleEvent(
+									Event arg )
+								{
+									Utils.execSWTThreadLater(
+											1,
+											new Runnable()
+											{
+												@Override
+												public void
+												run()
+												{
+													handleShowThreads();
+												}
+											});
+								}
+							});
 					}
 		});
 
@@ -1992,6 +2020,35 @@ public class MenuFactory
 
 	}
 
+	private static void
+	handleShowThreads()
+	{
+		Supplier<String> textGenerator = ()->{
+			
+			StringWriter content = new StringWriter();
+	
+			IndentWriter iw = new IndentWriter( new PrintWriter( content ));
+	
+			AEDiagnostics.dumpThreads( iw );
+			
+			iw.close();
+			
+			return( content.toString());
+		};
+		
+		
+		new TextViewerWindow(
+				null,
+				MessageText.getString( "label.threads" ),
+				null, 
+				textGenerator.get(), 
+				( window )->{
+					window.setText( textGenerator.get(), false );
+				},
+				false, false  );
+
+	}
+	
 	public static MenuItem addBlockedIPsMenuItem(Menu menu) {
 		return addMenuItem(menu, MENU_ID_IP_FILTER, new ListenerNeedingCoreRunning() {
 			@Override

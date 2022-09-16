@@ -283,6 +283,13 @@ AEDiagnostics
 		AEJavaManagement.dumpThreads();
 	}
 
+	public static void
+	dumpThreads(
+		IndentWriter writer )
+	{
+		AEJavaManagement.dumpThreads( writer );
+	}
+
 	/**
 	 *
 	 */

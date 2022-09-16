@@ -343,7 +343,7 @@ AEThreadMonitor
 		FileUtil.writeStringAsFile( FileUtil.newFile( logDir, "ThreadDump.log" ), dump );
 	}
 
-	private void
+	public void
 	dumpThreads(
 		IndentWriter		writer )
 	{
