@@ -121,34 +121,6 @@ public class OpenTorrentOptionsWindow
 
 	private static TimerEventPeriodic	active_window_checker;
 
-	private final static class FileStatsCacheItem
-	{
-		boolean exists;
-
-		long freeSpace;
-
-		public FileStatsCacheItem(final File f) {
-			exists = f.exists();
-			if (exists)
-				freeSpace = FileUtil.getUsableSpace(f);
-			else
-				freeSpace = -1;
-		}
-	}
-
-	private final static class Partition
-	{
-		long bytesToConsume = 0;
-
-		long freeSpace = 0;
-
-		final File root;
-
-		public Partition(File root) {
-			this.root = root;
-		}
-	}
-
 	private final static String PARAM_DEFSAVEPATH = "Default save path";
 
 	private final static String[] MSGKEY_QUEUELOCATIONS = {
@@ -304,6 +276,8 @@ public class OpenTorrentOptionsWindow
 	private OpenTorrentInstance			multi_selection_instance;
 
 	protected Map<String,DiscoveredTag> listDiscoveredTags = new TreeMap<>();
+
+	AsyncDispatcher spaceUpdateDispatcher = new AsyncDispatcher();
 
 	public static void
 	addTorrent(
@@ -885,7 +859,7 @@ public class OpenTorrentOptionsWindow
 			}
 		}
 	}
-
+	
 	private boolean
 	isDisposed()
 	{
@@ -1905,9 +1879,9 @@ public class OpenTorrentOptionsWindow
 
 		private long	currentSelectedDataSize;
 
-		private final Map fileStatCache = new WeakHashMap(20);
+		private Map<File,FileStatsCacheItem> fileStatCache = new HashMap<>();
 
-		private final Map parentToRootCache = new WeakHashMap(20);
+		private Map<File,File> parentToRootCache = new HashMap<>();
 
 		private SWTSkinObjectExpandItem soExpandItemFiles;
 
@@ -4074,20 +4048,6 @@ public class OpenTorrentOptionsWindow
 				soExpandItemSaveTo.setText(s);
 			}
 			diskFreeInfoRefreshPending = true;
-		}
-
-		private long getCachedDirFreeSpace(File directory) {
-			FileStatsCacheItem item = (FileStatsCacheItem) fileStatCache.get(directory);
-			if (item == null)
-				fileStatCache.put(directory, item = new FileStatsCacheItem(directory));
-			return item.freeSpace;
-		}
-
-		private boolean getCachedExistsStat(File directory) {
-			FileStatsCacheItem item = (FileStatsCacheItem) fileStatCache.get(directory);
-			if (item == null)
-				fileStatCache.put(directory, item = new FileStatsCacheItem(directory));
-			return item.exists;
 		}
 
 		protected void setSelectedQueueLocation(int iLocation) {
@@ -7149,6 +7109,11 @@ public class OpenTorrentOptionsWindow
 				tvFiles.refreshTable(false);
 			}
 
+			for ( FileStatsCacheItem item: fileStatCache.values()){
+				
+				item.update();
+			}
+			
 			if (diskFreeInfoRefreshPending && !diskFreeInfoRefreshRunning
 					&& FileUtil.getUsableSpaceSupported()) {
 				diskFreeInfoRefreshRunning = true;
@@ -7195,7 +7160,7 @@ public class OpenTorrentOptionsWindow
 
 							if (part == null) {
 								part = new Partition(root);
-								part.freeSpace = getCachedDirFreeSpace(root);
+								
 								partitions.put(root, part);
 							}
 						}
@@ -7215,12 +7180,12 @@ public class OpenTorrentOptionsWindow
 					while (it.hasNext()) {
 						Partition part = (Partition) it.next();
 
-						boolean filesTooBig = part.bytesToConsume > part.freeSpace;
+						boolean filesTooBig = part.bytesToConsume > part.freeSpace.freeSpace;
 
 						String s = MessageText.getString("v3.MainWindow.xofx",
 								new String[] {
 							DisplayFormatters.formatByteCountToKiBEtc(part.bytesToConsume),
-							DisplayFormatters.formatByteCountToKiBEtc(part.freeSpace)
+							DisplayFormatters.formatByteCountToKiBEtc(part.freeSpace.freeSpace)
 						});
 
 						Label l;
@@ -7545,6 +7510,120 @@ public class OpenTorrentOptionsWindow
 						"priorityExtensionsIgnoreCase",
 					},this );
 		}
+		
+		private FileStatsCacheItem 
+		getCachedDirFreeSpace(
+			File directory) 
+		{
+			FileStatsCacheItem item = (FileStatsCacheItem) fileStatCache.get(directory);
+			if (item == null){
+				fileStatCache.put(directory, item = new FileStatsCacheItem(directory));
+			}
+			return item;
+		}
+
+		private boolean 
+		getCachedExistsStat(
+			File directory) 
+		{
+			FileStatsCacheItem item = (FileStatsCacheItem) fileStatCache.get(directory);
+			if (item == null){
+				fileStatCache.put(directory, item = new FileStatsCacheItem(directory));
+			}
+			return item.exists;
+		}
+
+		private class 
+		FileStatsCacheItem
+		{
+			final File		file;
+			final boolean 	exists;
+
+			volatile long freeSpace;
+
+			long		last_update = SystemTime.getMonotonousTime();
+			boolean		updating;
+			
+			public 
+			FileStatsCacheItem(
+				File f) 
+			{
+				file = f;
+				
+				exists = file.exists();
+				
+				if ( exists ){
+					
+					freeSpace = FileUtil.getUsableSpace( file );
+					
+				}else{
+					
+					freeSpace = -1;
+				}
+			}
+			
+			void
+			update()
+			{
+				long now = SystemTime.getMonotonousTime();;
+				
+				synchronized( this ){
+					
+					if ( updating || now - last_update < 3000 ){
+						
+						return;
+					}
+					
+					updating = true;
+				}
+				
+				spaceUpdateDispatcher.dispatch(()->{
+					
+					try{
+						//long start = SystemTime.getMonotonousTime();
+						
+						long space = FileUtil.getUsableSpace(file);
+						
+						//System.out.println( "getFreeSpace(" + file + " ) - " + (SystemTime.getMonotonousTime() - start ));
+						
+						if ( space != freeSpace ){
+							
+							freeSpace = space;
+							
+							diskFreeInfoRefreshPending = true;
+						}
+					}finally{
+						
+						synchronized( FileStatsCacheItem.this ){
+						
+							updating = false;
+						
+							last_update = SystemTime.getMonotonousTime();
+						}
+					}
+				});
+			}
+		}
+
+		private final class 
+		Partition
+		{
+			final FileStatsCacheItem freeSpace;
+
+			final File root;
+
+			long bytesToConsume = 0;
+
+			public 
+			Partition(
+				File root) 
+			{
+				this.root = root;
+				
+				freeSpace = getCachedDirFreeSpace(root);
+			}
+		}
+
 	}
 
 	public interface
