@@ -224,6 +224,9 @@ public class StatsView
 		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
 				XferStatsView.MSGID_PREFIX, null, XferStatsView.class));
 
+		vm.registerView(VIEW_ID, new UISWTViewBuilderCore(
+				CountersView.MSGID_PREFIX, null, CountersView.class));
+
 		vm.setCoreViewsRegistered(VIEW_ID);
 	}
 
