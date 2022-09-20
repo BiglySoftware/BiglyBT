@@ -253,7 +253,7 @@ public class BTPeerIDByteDecoderDefinitions {
 		addAzStyle("bk", "BitKitten (libtorrent)");
 		addAzStyle("BR", "BitRocket", "1.2(34)");
 		addAzStyle("BS", "BTSlave");
-		addAzStyle("BW", "BitWombat");
+		// addAzStyle("BW", "BitWombat");	dead apparently and re-used by BitTorrent Web
 		addAzStyle("BX", "BittorrentX");
 		addAzStyle("CB", "Shareaza Plus");
 		addAzStyle("CD", "Enhanced CTorrent", VER_AZ_TWO_MAJ_TWO_MIN);
