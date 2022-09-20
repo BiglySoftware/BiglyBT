@@ -131,7 +131,7 @@ public class CountersView
 			
 			label.setText( key );
 			
-			BufferedLabel bl = new BufferedLabel(counters_panel, SWT.NULL );
+			BufferedLabel bl = new BufferedLabel(counters_panel, SWT.DOUBLE_BUFFERED );
 			
 			bl.setLayoutData( new GridData( GridData.FILL_HORIZONTAL));
 			
