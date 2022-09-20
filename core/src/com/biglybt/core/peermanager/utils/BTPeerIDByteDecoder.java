@@ -609,6 +609,8 @@ public class BTPeerIDByteDecoder {
 		
 		assertDecode( "Zona 2.0.2.8", "-ZO2028-yeQBDpxy1b5b" );
 		
+		assertDecode( "UW 1.2.9.3", "-UW1293-NJu6-J8YPRiE");
+		
 		System.out.println("Done.");
 	}
 }

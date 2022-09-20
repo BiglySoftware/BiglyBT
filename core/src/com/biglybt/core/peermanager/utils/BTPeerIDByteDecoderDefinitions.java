@@ -376,6 +376,7 @@ public class BTPeerIDByteDecoderDefinitions {
 		addSimpleClient("XanTorrent", "DansClient");
 		addSimpleClient("MediaGet",     "-MG1");
 		addSimpleClient("MediaGet2 2.1", "-MG21");
+		addSimpleClient("FDM", "FD");			// whatever, can't be bothered
 
 		/**
 		 * This is interesting - it uses Mainline style, except uses two characters instead of one.
@@ -475,6 +476,9 @@ public class BTPeerIDByteDecoderDefinitions {
 		addVersionedClient(client, VER_TWO_BYTE_MAINLINE, 6, 3);
 
 		addAzStyle( "PI", "PicoTorrent", VER_AZ_ONE_MAJ_TWO_MIN_ONE_TRAIL);
+
+		client = addSimpleClient("UW", "-UW");
+		addVersionedClient(client, VER_BYTE_BLOCK_DOTTED_NUM, 4);
 
 	}
 
