@@ -35,11 +35,15 @@ TagFeatureRunState
 	public static final int	RSC_REMOVE_FROM_LIBRARY		= 0x00000020;
 	public static final int	RSC_REMOVE_FROM_COMPUTER	= 0x00000040;
 
+		// fully supported
+	
+	public static final int	RSC_FORCE_START	= 0x00000080;
+
 	public static final int	RSC_NONE	= 0x00000000;
 	public static final int	RSC_ALL		= 0xffffffff;
 
 	public static final int	RSC_STOP_PAUSE			= RSC_STOP | RSC_PAUSE;
-	public static final int	RSC_START_STOP_PAUSE	= RSC_START | RSC_STOP | RSC_PAUSE;
+	public static final int	RSC_START_STOP_PAUSE	= RSC_START | RSC_FORCE_START | RSC_STOP | RSC_PAUSE;
 
 	public int
 	getRunStateCapabilities();

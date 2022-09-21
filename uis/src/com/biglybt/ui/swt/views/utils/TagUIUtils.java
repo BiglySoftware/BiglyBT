@@ -817,7 +817,7 @@ public class TagUIUtils
 		}
 
 		if ( tag_type.hasTagTypeFeature( TagFeature.TF_RUN_STATE )) {
-			createTF_RunState(menu, tag);
+			createTF_RunState(menu, tag, userMode);
 		}
 
 		if ( tag_type.hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )) {
@@ -1321,14 +1321,20 @@ public class TagUIUtils
 		}
 	}
 
-	private static void createTF_RunState(Menu menu, Tag tag) {
+	private static void 
+	createTF_RunState(
+		Menu 	menu, 
+		Tag 	tag,
+		int		userMode )
+	{
 
 		final TagFeatureRunState	tf_run_state = (TagFeatureRunState)tag;
 
 		int caps = tf_run_state.getRunStateCapabilities();
 
 		int[] op_set = {
-				TagFeatureRunState.RSC_START, TagFeatureRunState.RSC_STOP,
+				TagFeatureRunState.RSC_START, TagFeatureRunState.RSC_FORCE_START, 
+				TagFeatureRunState.RSC_STOP,
 				TagFeatureRunState.RSC_PAUSE, TagFeatureRunState.RSC_RESUME };
 
 		boolean[] can_ops_set = tf_run_state.getPerformableOperations( op_set );
@@ -1346,6 +1352,23 @@ public class TagUIUtils
 			});
 			itemOp.setEnabled(can_ops_set[0]);
 		}
+		
+		if ( userMode > 0 ){
+			
+			if ((caps & TagFeatureRunState.RSC_FORCE_START ) != 0 ){
+	
+				final MenuItem itemOp = new MenuItem(menu, SWT.PUSH);
+				Messages.setLanguageText(itemOp, "MyTorrentsView.menu.forceStart");
+				Utils.setMenuItemImage(itemOp, "forcestart" );
+				itemOp.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						tf_run_state.performOperation( TagFeatureRunState.RSC_FORCE_START );
+					}
+				});
+				itemOp.setEnabled(can_ops_set[1]);
+			}
+		}
 
 		if ((caps & TagFeatureRunState.RSC_STOP ) != 0 ){
 
@@ -1358,7 +1381,7 @@ public class TagUIUtils
 					tf_run_state.performOperation( TagFeatureRunState.RSC_STOP );
 				}
 			});
-			itemOp.setEnabled(can_ops_set[1]);
+			itemOp.setEnabled(can_ops_set[2]);
 		}
 
 		if ((caps & TagFeatureRunState.RSC_PAUSE ) != 0 ){
@@ -1372,7 +1395,7 @@ public class TagUIUtils
 					tf_run_state.performOperation( TagFeatureRunState.RSC_PAUSE );
 				}
 			});
-			itemOp.setEnabled(can_ops_set[2]);
+			itemOp.setEnabled(can_ops_set[3]);
 		}
 
 		if ((caps & TagFeatureRunState.RSC_RESUME ) != 0 ){
@@ -1386,16 +1409,16 @@ public class TagUIUtils
 					tf_run_state.performOperation( TagFeatureRunState.RSC_RESUME );
 				}
 			});
-			itemOp.setEnabled(can_ops_set[3]);
+			itemOp.setEnabled(can_ops_set[4]);
 		}
 	}
 
 	private static void
-		createTF_RateLimitMenuItems(
-				Menu menu,
-				Tag tag,
-				TagType tag_type,
-				int userMode)
+	createTF_RateLimitMenuItems(
+		Menu 		menu,
+		Tag 		tag,
+		TagType 	tag_type,
+		int 		userMode )
 	{
 
 		final TagFeatureRateLimit	tf_rate_limit = (TagFeatureRateLimit)tag;

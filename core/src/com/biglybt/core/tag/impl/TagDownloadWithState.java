@@ -2248,8 +2248,21 @@ TagDownloadWithState
 							dm_state == DownloadManager.STATE_ERROR ){
 
 						result[i] = true;
+						
+					}else if ( dm.isForceStart()){
+						
+						result[i] = true;	// transition force-start -> start (queue)
 					}
 				}
+				
+				if (( op & TagFeatureRunState.RSC_FORCE_START ) != 0 ){
+
+					if ( !dm.isForceStart()){
+						
+						result[i] = true;
+					}
+				}
+
 
 				if (( op & TagFeatureRunState.RSC_STOP ) != 0 ){
 
@@ -2319,6 +2332,24 @@ TagDownloadWithState
 							runSupport()
 							{
 								dm.setStateQueued();
+							}
+						});
+				}else if ( dm.isForceStart()){
+					
+					rs_async.dispatch(()->{ dm.setForceStart( false ); });
+				}
+			}else if ( op == TagFeatureRunState.RSC_FORCE_START ){
+
+				if ( !dm.isForceStart()){
+
+					rs_async.dispatch(
+						new AERunnable()
+						{
+							@Override
+							public void
+							runSupport()
+							{
+								dm.setForceStart( true );
 							}
 						});
 				}
