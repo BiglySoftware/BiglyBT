@@ -1406,9 +1406,19 @@ public class MyTorrentsView
 			button.setMenu( menu );
 
 			if (isCat) {
-				CategoryUIUtils.setupCategoryMenu(menu, (Category) tag);
+				CategoryUIUtils.setupCategoryMenu(
+					menu, 
+					(Category) tag,
+					(dm)->{
+						return( isOurDownloadManager((DownloadManager)dm ));
+					});
 			} else {
-				TagUIUtils.createSideBarMenuItemsDelayed(menu, tag);
+				TagUIUtils.createSideBarMenuItemsDelayed(
+					menu, 
+					tag,
+					(dm)->{
+						return( isOurDownloadManager((DownloadManager)dm ));
+					});
 			}
 		}
 

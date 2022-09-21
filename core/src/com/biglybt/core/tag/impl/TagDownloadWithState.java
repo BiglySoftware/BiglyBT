@@ -23,6 +23,8 @@ package com.biglybt.core.tag.impl;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.download.DownloadManager;
@@ -1711,7 +1713,7 @@ TagDownloadWithState
 				}
 			}
 			
-			performOperation( operation, to_action );
+			performOperation( operation, to_action.stream());
 		}
 	}
 
@@ -1800,7 +1802,7 @@ TagDownloadWithState
 				performOperation(
 					max_aggregate_share_ratio_action == TagFeatureRateLimit.SR_ACTION_PAUSE?
 						TagFeatureRunState.RSC_PAUSE:TagFeatureRunState.RSC_STOP,
-					dms );
+					dms.stream());
 
 			}else{
 
@@ -2223,7 +2225,16 @@ TagDownloadWithState
 	@Override
 	public boolean[]
    	getPerformableOperations(
-      	int[]	ops )
+      	int[]					ops )
+   	{
+		return( getPerformableOperations( ops, (t)->true ));
+   	}
+
+	@Override
+	public boolean[]
+   	getPerformableOperations(
+      	int[]					ops,
+      	Predicate<Taggable>		filter )
    	{
    		boolean[] result = new boolean[ ops.length];
 
@@ -2231,6 +2242,11 @@ TagDownloadWithState
 
 		for ( DownloadManager dm: dms ){
 
+			if ( !filter.test(dm)){
+				
+				continue;
+			}
+			
 			int	dm_state = dm.getState();
 
 			for ( int i=0;i<ops.length;i++){
@@ -2305,18 +2321,26 @@ TagDownloadWithState
 	performOperation(
 		int		op )
 	{
+		performOperation( op, (t)->true );
+	}
+	
+	@Override
+	public void
+	performOperation(
+		int						op,
+		Predicate<Taggable>		filter )
+	{
 		Set<DownloadManager> dms = getTaggedDownloads();
 
-		performOperation( op, dms );
+		performOperation( op, dms.stream().filter(filter) );
 	}
 
 	private void
 	performOperation(
 		int					op,
-		Set<DownloadManager> dms )
+		Stream<DownloadManager> dms )
 	{
-		for ( final DownloadManager dm: dms ){
-
+		dms.forEach((dm)->{
 			int	dm_state = dm.getState();
 
 			if ( op == TagFeatureRunState.RSC_START ){
@@ -2454,7 +2478,7 @@ TagDownloadWithState
 						}
 					});
 			}
-		}
+		});
 	}
 
 	@Override

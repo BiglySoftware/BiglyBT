@@ -21,6 +21,8 @@
 package com.biglybt.ui.swt.views.utils;
 
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.biglybt.core.download.DownloadManagerState;
 import org.eclipse.swt.SWT;
@@ -39,6 +41,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
@@ -65,7 +68,7 @@ import com.biglybt.ui.swt.views.ViewUtils.SpeedAdapter;
  */
 public class CategoryUIUtils
 {
-	public static void setupCategoryMenu(final Menu menu, final Category category) {
+	public static void setupCategoryMenu(final Menu menu, final Category category, Predicate<Taggable> filter ) {
 		menu.addMenuListener(new MenuListener() {
 			boolean bShown = false;
 
@@ -96,12 +99,37 @@ public class CategoryUIUtils
 
 				bShown = true;
 
-				createMenuItems(menu, category);
+				createMenuItems(menu, category, filter );
 			}
 		});
 	}
 
-	public static void createMenuItems(final Menu menu, final Category category) {
+	public static void 
+	createMenuItems(
+		Menu 							menu, 
+		Category 						category )
+	{
+		createMenuItems( menu, category, (dm)->true );
+	}
+	
+	private static List<DownloadManager>
+	getDownloads(
+		Category			category,
+		Predicate<Taggable>	filter )
+	{
+		GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+		
+		List<DownloadManager> managers = category.getDownloadManagers(gm.getDownloadManagers());
+		
+		return( managers.stream().filter(filter).collect( Collectors.toList()));
+	}
+	
+	public static void 
+	createMenuItems(
+		Menu 						menu, 
+		Category 					category, 
+		Predicate<Taggable> 		filter ) 
+	{
 		if (category.getType() == Category.TYPE_USER) {
 
 			final MenuItem itemDelete = new MenuItem(menu, SWT.PUSH);
@@ -112,11 +140,7 @@ public class CategoryUIUtils
 			itemDelete.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-					List<DownloadManager> managers = category.getDownloadManagers(gm.getDownloadManagers());
-					// move to array,since setCategory removed it from the category,
-					// which would mess up our loop
-					DownloadManager dms[] = managers.toArray(new DownloadManager[managers.size()]);
+					List<DownloadManager> dms = getDownloads( category, filter );
 					for (DownloadManager dm : dms) {
 						DownloadManagerState state = dm.getDownloadState();
 						if (state != null) {
@@ -157,10 +181,7 @@ public class CategoryUIUtils
 					});
 		}
 
-		GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-		List<DownloadManager> managers = category.getDownloadManagers(gm.getDownloadManagers());
-
-		final DownloadManager dms[] = managers.toArray(new DownloadManager[managers.size()]);
+		List<DownloadManager> dms = getDownloads( category, filter );
 
 		boolean start = false;
 		boolean stop = false;
@@ -181,11 +202,8 @@ public class CategoryUIUtils
 		itemQueue.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-				List<?> managers = category.getDownloadManagers(gm.getDownloadManagers());
-
-				Object[] dms = managers.toArray();
-				TorrentUtil.queueDataSources(dms, false);
+				List<DownloadManager> dms = getDownloads( category, filter );
+				TorrentUtil.queueDataSources(dms.toArray(), false);
 			}
 		});
 		itemQueue.setEnabled(start);
@@ -198,11 +216,8 @@ public class CategoryUIUtils
 		itemStop.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-				List<?> managers = category.getDownloadManagers(gm.getDownloadManagers());
-
-				Object[] dms = managers.toArray();
-				TorrentUtil.stopDataSources(dms);
+				List<DownloadManager> dms = getDownloads( category, filter );
+				TorrentUtil.stopDataSources(dms.toArray());
 			}
 		});
 		itemStop.setEnabled(stop);
@@ -435,7 +450,7 @@ public class CategoryUIUtils
 			}
 		});
 
-		if (dms.length == 0) {
+		if (dms.isEmpty()){
 
 			itemOptions.setEnabled(false);
 		}

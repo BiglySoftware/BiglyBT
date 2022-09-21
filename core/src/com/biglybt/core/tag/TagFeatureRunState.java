@@ -20,6 +20,8 @@
 
 package com.biglybt.core.tag;
 
+import java.util.function.Predicate;
+
 public interface
 TagFeatureRunState
 	extends TagFeatureRateLimit
@@ -56,7 +58,24 @@ TagFeatureRunState
 	getPerformableOperations(
 		int[]	ops );
 
+	public default boolean[]
+	getPerformableOperations(
+		int[]					ops,
+		Predicate<Taggable>		filter )
+	{
+		return( getPerformableOperations( ops ));
+	}
+
 	public void
 	performOperation(
 		int		op );
+	
+	public default void
+	performOperation(
+		int						op,
+		Predicate<Taggable>		filter )
+	{
+		performOperation( op );
+	}
+		
 }

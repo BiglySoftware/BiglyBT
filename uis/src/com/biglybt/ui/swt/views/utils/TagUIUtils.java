@@ -25,6 +25,8 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -707,13 +709,16 @@ public class TagUIUtils
 
 	public static void
 	createSideBarMenuItemsDelayed(
-		final Menu menu, final Tag tag )
+		final Menu menu, final Tag tag, Predicate<Taggable> filter )
 	{
 		menu.addMenuListener(new MenuListener() {
 			@Override
-			public void menuShown(MenuEvent e){
+			public void 
+			menuShown(
+				MenuEvent e)
+			{
 				Utils.disposeSWTObjects((Object[]) menu.getItems());
-				createSideBarMenuItems( menu, tag );
+				createSideBarMenuItems( menu, tag, filter );
 			}
 			@Override
 			public void menuHidden(MenuEvent e){
@@ -798,12 +803,25 @@ public class TagUIUtils
 	
 	public static void
 	createSideBarMenuItems(
-		final Menu menu, final Tag tag )
+		Menu 				menu, 
+		Tag					tag )
 	{
-		if (tag instanceof Category) {
-			CategoryUIUtils.createMenuItems(menu, (Category) tag);
+		createSideBarMenuItems( menu, tag, (t)->true );
+	}
+	
+	public static void
+	createSideBarMenuItems(
+		Menu 				menu, 
+		Tag					tag,
+		Predicate<Taggable> filter )
+	{
+		if ( tag instanceof Category ){
+			
+			CategoryUIUtils.createMenuItems( menu, (Category) tag, filter );
+			
 			return;
 		}
+		
 	    int userMode = COConfigurationManager.getIntParameter("User Mode");
 
 		final TagType	tag_type = tag.getTagType();
@@ -817,11 +835,11 @@ public class TagUIUtils
 		}
 
 		if ( tag_type.hasTagTypeFeature( TagFeature.TF_RUN_STATE )) {
-			createTF_RunState(menu, tag, userMode);
+			createTF_RunState(menu, tag, filter, userMode);
 		}
 
 		if ( tag_type.hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )) {
-			createTF_FileLocationMenuItems(menu, tag);
+			createTF_FileLocationMenuItems (menu, tag, filter );
 		}
 
 		if ( tag_type.hasTagTypeFeature( TagFeature.TF_EXEC_ON_ASSIGN )){
@@ -1092,8 +1110,10 @@ public class TagUIUtils
 
 			MenuItem itemOptions = new MenuItem(menu, SWT.PUSH);
 
-			final Set<DownloadManager> dms = ((TagDownload)tag).getTaggedDownloads();
+			Set<DownloadManager> all_dms = ((TagDownload)tag).getTaggedDownloads();
 
+			List<DownloadManager> dms = all_dms.stream().filter(filter).collect(Collectors.toList());
+			
 			Messages.setLanguageText(itemOptions, "cat.options");
 			itemOptions.addListener(SWT.Selection, new Listener() {
 				@Override
@@ -1323,9 +1343,10 @@ public class TagUIUtils
 
 	private static void 
 	createTF_RunState(
-		Menu 	menu, 
-		Tag 	tag,
-		int		userMode )
+		Menu 				menu, 
+		Tag 				tag,
+		Predicate<Taggable>	filter,
+		int					userMode )
 	{
 
 		final TagFeatureRunState	tf_run_state = (TagFeatureRunState)tag;
@@ -1337,7 +1358,7 @@ public class TagUIUtils
 				TagFeatureRunState.RSC_STOP,
 				TagFeatureRunState.RSC_PAUSE, TagFeatureRunState.RSC_RESUME };
 
-		boolean[] can_ops_set = tf_run_state.getPerformableOperations( op_set );
+		boolean[] can_ops_set = tf_run_state.getPerformableOperations( op_set, filter );
 
 		if ((caps & TagFeatureRunState.RSC_START ) != 0 ){
 
@@ -1347,7 +1368,7 @@ public class TagUIUtils
 			itemOp.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					tf_run_state.performOperation( TagFeatureRunState.RSC_START );
+					tf_run_state.performOperation( TagFeatureRunState.RSC_START, filter );
 				}
 			});
 			itemOp.setEnabled(can_ops_set[0]);
@@ -1363,7 +1384,7 @@ public class TagUIUtils
 				itemOp.addListener(SWT.Selection, new Listener() {
 					@Override
 					public void handleEvent(Event event) {
-						tf_run_state.performOperation( TagFeatureRunState.RSC_FORCE_START );
+						tf_run_state.performOperation( TagFeatureRunState.RSC_FORCE_START, filter );
 					}
 				});
 				itemOp.setEnabled(can_ops_set[1]);
@@ -1378,7 +1399,7 @@ public class TagUIUtils
 			itemOp.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					tf_run_state.performOperation( TagFeatureRunState.RSC_STOP );
+					tf_run_state.performOperation( TagFeatureRunState.RSC_STOP, filter );
 				}
 			});
 			itemOp.setEnabled(can_ops_set[2]);
@@ -1392,7 +1413,7 @@ public class TagUIUtils
 			itemOp.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					tf_run_state.performOperation( TagFeatureRunState.RSC_PAUSE );
+					tf_run_state.performOperation( TagFeatureRunState.RSC_PAUSE, filter );
 				}
 			});
 			itemOp.setEnabled(can_ops_set[3]);
@@ -1406,7 +1427,7 @@ public class TagUIUtils
 			itemOp.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					tf_run_state.performOperation( TagFeatureRunState.RSC_RESUME );
+					tf_run_state.performOperation( TagFeatureRunState.RSC_RESUME, filter );
 				}
 			});
 			itemOp.setEnabled(can_ops_set[4]);
@@ -1627,7 +1648,12 @@ public class TagUIUtils
 		}
 	}
 
-	private static void createTF_FileLocationMenuItems(Menu menu, final Tag tag) {
+	private static void 
+	createTF_FileLocationMenuItems(
+		Menu 				menu, 
+		Tag 				tag,
+		Predicate<Taggable>	filter )
+	{
 
 		final TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
 
@@ -1676,7 +1702,7 @@ public class TagUIUtils
 				apply_item.addListener(SWT.Selection, new Listener() {
 					@Override
 					public void handleEvent(Event event) {
-						applyLocationToCurrent( tag, existing, fl.getTagInitialSaveOptions(), 1 );
+						applyLocationToCurrent( tag, existing, fl.getTagInitialSaveOptions(), 1, filter );
 					}});
 
 				new MenuItem( moc_menu, SWT.SEPARATOR);
@@ -1752,7 +1778,7 @@ public class TagUIUtils
 				apply_item.addListener(SWT.Selection, new Listener() {
 					@Override
 					public void handleEvent(Event event) {
-						applyLocationToCurrent( tag, existing, fl.getTagMoveOnCompleteOptions(), 2 );
+						applyLocationToCurrent( tag, existing, fl.getTagMoveOnCompleteOptions(), 2, filter );
 					}});
 
 				new MenuItem( moc_menu, SWT.SEPARATOR);
@@ -1951,7 +1977,7 @@ public class TagUIUtils
 				apply_item.addListener(SWT.Selection, new Listener() {
 					@Override
 					public void handleEvent(Event event) {
-						applyLocationToCurrent( tag, existing, fl.getTagMoveOnAssignOptions(), 3 );
+						applyLocationToCurrent( tag, existing, fl.getTagMoveOnAssignOptions(), 3, filter );
 					}});
 
 				new MenuItem( mor_menu, SWT.SEPARATOR);
@@ -2002,7 +2028,7 @@ public class TagUIUtils
 				
 				Set<DownloadManager>	downloads = ((TagDownload)tag).getTaggedDownloads();
 				
-				DownloadManager[] dms = downloads.toArray( new DownloadManager[0] );
+				DownloadManager[] dms = downloads.stream().filter(filter).collect(Collectors.toList()).toArray( new DownloadManager[0] );
 				
 				Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
 				
@@ -3415,10 +3441,11 @@ public class TagUIUtils
 
 	private static void
 	applyLocationToCurrent(
-		Tag			tag,
-		File		location,
-		long		options,
-		int			type )
+		Tag					tag,
+		File				location,
+		long				options,
+		int					type,
+		Predicate<Taggable>	filter )
 	{
 		move_dispatcher.dispatch(
 			new AERunnable()
@@ -3430,7 +3457,9 @@ public class TagUIUtils
 					boolean set_data 	= (options&TagFeatureFileLocation.FL_DATA) != 0;
 					boolean set_torrent = (options&TagFeatureFileLocation.FL_TORRENT) != 0;
 
-					Set<DownloadManager>	downloads = ((TagDownload)tag).getTaggedDownloads();
+					Set<DownloadManager>	all_downloads = ((TagDownload)tag).getTaggedDownloads();
+
+					List<DownloadManager> downloads = all_downloads.stream().filter(filter).collect(Collectors.toList());
 
 					for ( DownloadManager download: downloads ){
 
