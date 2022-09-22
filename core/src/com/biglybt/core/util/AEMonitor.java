@@ -30,14 +30,24 @@ import java.util.concurrent.locks.ReentrantLock;
 public class
 AEMonitor
 {
-	final ReentrantLock	lock = new ReentrantLock();
+	final ReentrantLock	lock;
 
 	public
 	AEMonitor(
 		String			_name )
 	{
+		lock = new ReentrantLock();
 	}
 
+	public
+	AEMonitor(
+		String			_name,
+		boolean			_fair )
+	{
+		lock = new ReentrantLock( _fair );
+	}
+
+	
 	public void
 	enter()
 	{

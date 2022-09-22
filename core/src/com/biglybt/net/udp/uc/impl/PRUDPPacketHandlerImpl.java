@@ -104,19 +104,20 @@ PRUDPPacketHandlerImpl
 	private PRUDPPacketHandlerStatsImpl	stats = new PRUDPPacketHandlerStatsImpl( this );
 
 
-	private Map			requests = new LightHashMap();
+	private Map<Integer,PRUDPPacketHandlerRequestImpl>			requests = new LightHashMap<>();
+	
 	private AEMonitor	requests_mon	= new AEMonitor( "PRUDPPH:req" );
 
 
-	private AEMonitor		send_queue_mon	= new AEMonitor( "PRUDPPH:sd" );
+	private AEMonitor		send_queue_mon	= new AEMonitor( "PRUDPPH:sd", true );
 	private long			send_queue_data_size;
 	private final List[]	send_queues		= new List[]{ new LinkedList(),new LinkedList(),new LinkedList()};
 	private AESemaphore		send_queue_sem	= new AESemaphore( "PRUDPPH:sq" );
 	private AEThread2		send_thread;
 
-	private AEMonitor	recv_queue_mon	= new AEMonitor( "PRUDPPH:rq" );
-	private long		recv_queue_data_size;
-	private List<Object[]>	recv_queue		= new ArrayList();
+	private AEMonitor		recv_queue_mon	= new AEMonitor( "PRUDPPH:rq", true );
+	private long			recv_queue_data_size;
+	private List<Object[]>	recv_queue		= new ArrayList<>();
 	private AESemaphore		recv_queue_sem	= new AESemaphore( "PRUDPPH:rq" );
 	private AEThread2		recv_thread;
 
@@ -1326,7 +1327,10 @@ PRUDPPacketHandlerImpl
 					throw( new PRUDPPacketHandlerException( "Handler destroyed" ));
 				}
 				
-				requests.put( new Integer( request_packet.getTransactionId()), request );
+				if ( requests.put( new Integer( request_packet.getTransactionId()), request ) != null ){
+					
+					Debug.out( "Duplicate request transaction id!!!!" );
+				}
 
 			}finally{
 
