@@ -559,7 +559,7 @@ QuickLinksView
 			
 			long	now = SystemTime.getMonotonousTime();
 			
-			if ( last_pop >= 0 && now - last_pop < 1000 ){
+			if ( last_pop >= 0 && now - last_pop < 2500 ){
 				
 				return;
 			}
@@ -570,7 +570,7 @@ QuickLinksView
 				
 				long	nownow = SystemTime.getMonotonousTime();
 				
-				if ( last_pop > 0 && nownow - last_pop < 1000 ){
+				if ( last_pop > 0 && nownow - last_pop < 2500 ){
 					
 					return;
 				}
