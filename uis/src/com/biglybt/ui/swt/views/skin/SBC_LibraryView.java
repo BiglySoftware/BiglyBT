@@ -601,7 +601,7 @@ public class SBC_LibraryView
 							
 							SB_Transfers transfers = MainMDISetup.getSb_transfers();
 							
-							if ( selection_count > 1 ){
+							if ( selection_count > 0 ){	// used to be 1 but why not
 
 								s += ", " +
 										MessageText.getString(
@@ -625,7 +625,7 @@ public class SBC_LibraryView
 
 								DownloadManager[] dms = selection_dms;
 
-								if ( transfers.header_show_rates && dms.length > 1 ){
+								if ( transfers.header_show_rates && dms.length > 0 ){	// used to be 1 but why not
 
 									long	total_data_up 		= 0;
 									long	total_prot_up 		= 0;
