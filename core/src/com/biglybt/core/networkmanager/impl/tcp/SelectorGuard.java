@@ -70,7 +70,7 @@ public class SelectorGuard {
    * mark the start time.
    */
   public void markPreSelectTime() {
-    beforeSelectTime = SystemTime.getCurrentTime();
+    beforeSelectTime = SystemTime.getMonotonousTime();
     marked = true;
   }
 
@@ -91,9 +91,9 @@ public class SelectorGuard {
     if (marked) marked = false;
     else Debug.out("Error: You must run markPreSelectTime() before calling isSelectorOK");
 
-    select_op_time = SystemTime.getCurrentTime() - beforeSelectTime;
+    select_op_time = SystemTime.getMonotonousTime() - beforeSelectTime;
 
-    if( select_op_time > time_threshold || select_op_time < 0 ) {
+    if( select_op_time > time_threshold ) {
       //zero-select, but over the time threshold, so OK
       consecutiveZeroSelects = 0;
       return;

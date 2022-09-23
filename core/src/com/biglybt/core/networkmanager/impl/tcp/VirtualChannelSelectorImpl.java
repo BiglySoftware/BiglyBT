@@ -580,11 +580,14 @@ public class VirtualChannelSelectorImpl {
 
 
 
-    public int select( long timeout ) {
+    public int 
+    select( 
+    	final long timeout ) 
+    {  
+      if ( selector == null ){
+    	  
+        long mono_now = SystemTime.getMonotonousTime();
 
-      long mono_now = SystemTime.getMonotonousTime();
-      
-      if( selector == null ) {
      	if (( mono_now - last_reopen_attempt > 60*1000 ) && !destroyed){
     		last_reopen_attempt = mono_now;
     		selector = openNewSelector();
@@ -725,23 +728,25 @@ public class VirtualChannelSelectorImpl {
 
       selector_guard.markPreSelectTime();
 
+      long select_start_mono_now = SystemTime.getMonotonousTime();
+
+      long start_hpc = SystemTime.getHighPrecisionCounter();
+      
       try{
     	  count = selector.select( timeout );
 
     	  consec_select_fails = 0;
 
-      }catch (Throwable t) {
-
-       	  mono_now = SystemTime.getMonotonousTime();
+      }catch( Throwable t ){
 
     	  consec_select_fails++;
 
     	  if ( consec_select_fails == 1 ){
 
-    		  consec_select_fails_start = mono_now;
+    		  consec_select_fails_start = select_start_mono_now;
     	  }
 
-    	  if ( consec_select_fails > 20 && consec_select_fails_start - mono_now > 16*1000 ){
+    	  if ( consec_select_fails > 20 && consec_select_fails_start - select_start_mono_now > 16*1000 ){
 
     		  consec_select_fails = 0;
 
@@ -756,9 +761,9 @@ public class VirtualChannelSelectorImpl {
     		  return( 0 );
     	  }
 
-    	  if ( mono_now - last_select_debug > 5000 ){
+    	  if ( select_start_mono_now - last_select_debug > 5000 ){
 
-    		  last_select_debug = mono_now;
+    		  last_select_debug = select_start_mono_now;
 
     		  String msg = t.getMessage();
 
@@ -767,8 +772,17 @@ public class VirtualChannelSelectorImpl {
     			  Debug.out( "Caught exception on selector.select() op: " +msg, t );
     		  }
     	  }
-    	  try {  Thread.sleep( timeout );  }catch(Throwable e) { e.printStackTrace(); }
+    	  
+    	  try{  
+    		  Thread.sleep( timeout );
+    		  
+    	  }catch(Throwable e){ 
+    		  
+    		  e.printStackTrace(); 
+    	  }
       }
+
+      long select_hpc_elapsed_ms = ( SystemTime.getHighPrecisionCounter() - start_hpc ) / 1000000L;
 
       	// do this after the select so that any pending cancels (prior to destroy) are processed
       	// by the selector before we kill it
@@ -842,8 +856,6 @@ public class VirtualChannelSelectorImpl {
       int	progress_made_key_count	= 0;
       int	total_key_count			= 0;
 
-      mono_now = SystemTime.getMonotonousTime();
-
       	//notification of ready keys via listener callback
 
       	// debug handling for channels stuck pending write select for long periods
@@ -853,9 +865,9 @@ public class VirtualChannelSelectorImpl {
       if ( INTEREST_OP == VirtualChannelSelector.OP_WRITE ){
 
     	  if ( 	last_write_select_debug == -1 || 
-    			mono_now - last_write_select_debug > WRITE_SELECTOR_DEBUG_CHECK_PERIOD ){
+    			  select_start_mono_now - last_write_select_debug > WRITE_SELECTOR_DEBUG_CHECK_PERIOD ){
 
-    		  last_write_select_debug = mono_now;
+    		  last_write_select_debug = select_start_mono_now;
 
     		  non_selected_keys = new HashSet<>(selector.keys());
     	  }
@@ -916,7 +928,7 @@ public class VirtualChannelSelectorImpl {
         	non_selected_keys.remove( key );
         }
 
-        data.last_select_success_mono_time = mono_now;
+        data.last_select_success_mono_time = select_start_mono_now;
         // int	rm_type;
 
         if( key.isValid() ) {
@@ -1071,7 +1083,7 @@ public class VirtualChannelSelectorImpl {
     	    	  continue;
     	      }
 
-    	      long	stall_time = mono_now - data.last_select_success_mono_time;
+    	      long	stall_time = select_start_mono_now - data.last_select_success_mono_time;
 
     	      if ( stall_time > WRITE_SELECTOR_DEBUG_MAX_TIME ){
 
@@ -1106,15 +1118,13 @@ public class VirtualChannelSelectorImpl {
       	// spinning
 
       if ( total_key_count == 0 || progress_made_key_count != total_key_count ){
+	      
+	      if ( select_hpc_elapsed_ms < timeout/2 ){  
 
-	      long time_diff = SystemTime.getMonotonousTime() - mono_now;
-
-	      if ( time_diff < timeout ){  
-	    	  
 	    	  //ensure that it always takes at least 'timeout' time to complete the select op
 	    	  
 	      	try{  
-	      		Thread.sleep( timeout - time_diff );
+	      		Thread.sleep( timeout - select_hpc_elapsed_ms );
 	      		
 	      	}catch( Throwable e ){
 	      		
