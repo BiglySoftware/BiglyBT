@@ -40,6 +40,8 @@ import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.admin.NetworkAdminPropertyChangeListener;
+import com.biglybt.core.stats.CoreStats;
+import com.biglybt.core.stats.CoreStatsProvider;
 import com.biglybt.core.util.*;
 import com.biglybt.net.udp.uc.*;
 
@@ -68,6 +70,49 @@ PRUDPPacketHandlerImpl
 			});
 	}
 
+	private static volatile long	total_packets_sent;
+	private static volatile long	total_packets_received;
+	private static volatile long	total_bytes_sent;
+	private static volatile long	total_bytes_received;
+	
+	static{
+		Set<String>	types = new HashSet<>();
+		
+		types.add( CoreStats.ST_NET_UDP_SEND_PACKET_COUNT );
+		types.add( CoreStats.ST_NET_UDP_SEND_BYTE_COUNT);
+		types.add( CoreStats.ST_NET_UDP_RECEIVE_PACKET_COUNT );
+		types.add( CoreStats.ST_NET_UDP_RECEIVE_BYTE_COUNT );
+		
+		CoreStats.registerProvider( 
+			types,
+			new CoreStatsProvider(){
+				
+				@Override
+				public void 
+				updateStats(
+					Set<String>				types, 
+					Map<String, Object>		values)
+				{
+					if ( types.contains( CoreStats.ST_NET_UDP_SEND_PACKET_COUNT )){
+
+						values.put( CoreStats.ST_NET_UDP_SEND_PACKET_COUNT, new Long( total_packets_sent ));
+					}
+					if ( types.contains( CoreStats.ST_NET_UDP_SEND_BYTE_COUNT )){
+
+						values.put( CoreStats.ST_NET_UDP_SEND_BYTE_COUNT, new Long( total_bytes_sent ));
+					}
+					if ( types.contains( CoreStats.ST_NET_UDP_RECEIVE_PACKET_COUNT )){
+
+						values.put( CoreStats.ST_NET_UDP_RECEIVE_PACKET_COUNT, new Long( total_packets_received ));
+					}
+					if ( types.contains( CoreStats.ST_NET_UDP_RECEIVE_BYTE_COUNT )){
+
+						values.put( CoreStats.ST_NET_UDP_RECEIVE_BYTE_COUNT, new Long( total_bytes_received ));
+					}
+				}
+			});
+	}
+	
 	private static final long	MAX_SEND_QUEUE_DATA_SIZE	= 2*1024*1024;
 	private static final long	MAX_RECV_QUEUE_DATA_SIZE	= 1*1024*1024;
 
@@ -724,7 +769,7 @@ PRUDPPacketHandlerImpl
 						}
 
 						if ( buffer != null ){
-
+							
 							process( packet, receive_time );
 						}
 
@@ -1772,6 +1817,9 @@ PRUDPPacketHandlerImpl
 
 		throws IOException
 	{
+		total_packets_sent++;
+		total_bytes_sent += p.getLength();
+		
 		if ( packet_transformer != null ){
 
 			packet_transformer.transformSend( p );
@@ -1788,6 +1836,10 @@ PRUDPPacketHandlerImpl
 	{
 		socket.receive( p );
 
+		total_packets_received++;
+		total_bytes_received += p.getLength();
+
+		
 		if ( packet_transformer != null ){
 
 			packet_transformer.transformReceive( p );

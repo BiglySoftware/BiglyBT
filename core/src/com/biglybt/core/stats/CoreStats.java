@@ -89,6 +89,13 @@ CoreStats
 	public static final String ST_NET_TCP_SELECT_WRITE_COUNT			= "net.tcp.select.write.count";
 	public static final String ST_NET_TCP_SELECT_READ_COUNT				= "net.tcp.select.read.count";
 
+		// UDP
+	
+	public static final String ST_NET_UDP_SEND_PACKET_COUNT				= "net.udp.send.packet.count";
+	public static final String ST_NET_UDP_SEND_BYTE_COUNT				= "net.udp.send.byte.count";
+	public static final String ST_NET_UDP_RECEIVE_PACKET_COUNT			= "net.udp.receive.packet.count";
+	public static final String ST_NET_UDP_RECEIVE_BYTE_COUNT			= "net.udp.receive.byte.count";
+	
 		// HTTP
 
 	public static final String ST_NET_HTTP_IN_REQUEST_COUNT				= "net.http.inbound.request.count";
@@ -98,7 +105,6 @@ CoreStats
 	public static final String ST_NET_HTTP_IN_REQUEST_GETRIGHT_COUNT	= "net.http.inbound.request.getright.count";
 
 		// Peer Control
-
 
 	public static final String ST_PEER_CONTROL_SCHEDULE_COUNT	= "peer.control.schedule.count";
 	public static final String ST_PEER_CONTROL_LOOP_COUNT		= "peer.control.loop.count";
@@ -185,6 +191,12 @@ CoreStats
 		{ ST_NET_TCP_SELECT_WRITE_COUNT,			CUMULATIVE },
 		{ ST_NET_TCP_SELECT_READ_COUNT,				CUMULATIVE },
 
+		{ ST_NET_UDP_SEND_PACKET_COUNT,				CUMULATIVE },
+		{ ST_NET_UDP_SEND_BYTE_COUNT,				CUMULATIVE },
+		{ ST_NET_UDP_RECEIVE_PACKET_COUNT,			CUMULATIVE },
+		{ ST_NET_UDP_RECEIVE_BYTE_COUNT,			CUMULATIVE },
+	
+		
 		{ ST_NET_HTTP_IN_REQUEST_COUNT,				CUMULATIVE },
 		{ ST_NET_HTTP_IN_REQUEST_OK_COUNT,			CUMULATIVE },
 		{ ST_NET_HTTP_IN_REQUEST_INVALID_COUNT,		CUMULATIVE },
