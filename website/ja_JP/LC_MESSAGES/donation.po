@@ -15,7 +15,7 @@ msgstr ""
 "X-Crowdin-Language: ja\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 508\n"
-"PO-Revision-Date: 2022-08-02 13:46\n"
+"PO-Revision-Date: 2022-09-27 10:17\n"
 
 msgid "test"
 msgstr ""
@@ -36,7 +36,7 @@ msgid "donation_onetime_title"
 msgstr "一度きりの支払"
 
 msgid "donation_bitcoin_title"
-msgstr ""
+msgstr "Bitcoin"
 
 msgid "donation_monthly_description"
 msgstr "開発者に毎月コーヒーをプレゼントする"
@@ -54,7 +54,7 @@ msgid "donation_bitcoin_description"
 msgstr "%1、または %2の寄付をお勧めします。 :)"
 
 msgid "donation_bitcoin_addresses"
-msgstr ""
+msgstr "BCH/BTC/BSG/BSV Address:"
 
 msgid "donation_crypto_title"
 msgstr "仮想通貨"
