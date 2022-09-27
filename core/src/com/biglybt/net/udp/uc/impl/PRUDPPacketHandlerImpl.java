@@ -140,7 +140,8 @@ PRUDPPacketHandlerImpl
 	}
 
 
-	private int				port;
+	private final int		port;
+	
 	private DatagramSocket	socket;
 
 	private CopyOnWriteList<PRUDPPrimordialHandler>	primordial_handlers = new CopyOnWriteList<>();
@@ -951,9 +952,14 @@ PRUDPPacketHandlerImpl
 				// must have their MSB set. As requests always start with the action, which
 				// always has the MSB clear, we can use this to differentiate.
 
-			byte[]	packet_data = dg_packet.getData();
-			int		packet_len	= dg_packet.getLength();
+			final byte[]	packet_data = dg_packet.getData();
+			final int		packet_len	= dg_packet.getLength();
 
+			if ( packet_len == 0 ){
+				
+				Debug.out( "zero length packet received" );
+			}
+			
 			// System.out.println( "received:" + packet_len );
 
 			PRUDPPacket packet;
@@ -1040,9 +1046,9 @@ PRUDPPacketHandlerImpl
 
 						}else{
 
-							recv_queue.add( new Object[]{ packet, new Integer( dg_packet.getLength()) });
+							recv_queue.add( new Object[]{ packet, new Integer( packet_len )});
 
-							recv_queue_data_size	+= dg_packet.getLength();
+							recv_queue_data_size	+= packet_len;
 
 							recv_queue_sem.release();
 
@@ -1055,18 +1061,55 @@ PRUDPPacketHandlerImpl
 										public void
 										run()
 										{
+											InetAddress bind_ip = current_bind_ip;
+											
+											boolean 	set_name = true;
+											
 											Average		request_receive_average = Average.getInstance( 1000, 10 );
 
 											while( true ){
 
+												if ( !set_name ){
+													
+													InetAddress bp = current_bind_ip;
+													
+													if ( bp != bind_ip ){
+														
+														bind_ip = bp;
+														
+														set_name = true;
+													}
+												}
+												
+												if ( set_name ){
+													
+													set_name = false;
+													
+													setName( "PRUDPPacketHandler:receiver: " + bind_ip + ":" + port );
+												}
+												
 												try{
-													recv_queue_sem.reserve();
+													boolean got_it = recv_queue_sem.reserve( 30*1000 );
 
 													Object[]	data;
 
 													try{
 														recv_queue_mon.enter();
 
+														if ( !got_it ){
+															
+															if ( recv_queue_data_size == 0 ){
+																
+																recv_thread = null;
+																
+																break;
+																
+															}else{
+																
+																continue;
+															}
+														}
+														
 														data = (Object[])recv_queue.remove(0);
 														
 														total_requests_processed++;
@@ -1362,6 +1405,13 @@ PRUDPPacketHandlerImpl
 
 			DatagramPacket dg_packet = new DatagramPacket(_buffer, _length, destination_address );
 
+			int packet_len = dg_packet.getLength();
+			
+			if ( packet_len == 0 ){
+				
+				Debug.out( "zero length packet sent" );
+			}
+			
 			PRUDPPacketHandlerRequestImpl	request = new PRUDPPacketHandlerRequestImpl( receiver, timeout );
 
 			try{
@@ -1398,7 +1448,7 @@ PRUDPPacketHandlerImpl
 
 							sendToSocket( dg_packet );
 
-							stats.packetSent( _length );
+							stats.packetSent( packet_len );
 
 							if ( TRACE_REQUESTS ){
 								Logger.log(new LogEvent(LOGID,
@@ -1411,7 +1461,7 @@ PRUDPPacketHandlerImpl
 
 						}else{
 
-							send_queue_data_size	+= dg_packet.getLength();
+							send_queue_data_size	+= packet_len;
 
 							send_queues[priority].add( new Object[]{ dg_packet, request });
 
@@ -1438,10 +1488,33 @@ PRUDPPacketHandlerImpl
 										{
 											int[]		consecutive_sends = new int[send_queues.length];
 
+											InetAddress bind_ip = current_bind_ip;
+											
+											boolean set_name = true;
+											
 											while( true ){
 
+												if ( !set_name ){
+													
+													InetAddress bp = current_bind_ip;
+													
+													if ( bp != bind_ip ){
+														
+														bind_ip = bp;
+														
+														set_name = true;
+													}
+												}
+												
+												if ( set_name ){
+													
+													set_name = false;
+													
+													setName( "PRUDPPacketHandler:sender: " + bind_ip + ":" + port );
+												}
+												
 												try{
-													send_queue_sem.reserve();
+													boolean got_it = send_queue_sem.reserve(30*1000);
 
 													Object[]	data;
 													int			selected_priority	= 0;
@@ -1449,6 +1522,19 @@ PRUDPPacketHandlerImpl
 													try{
 														send_queue_mon.enter();
 
+														if ( !got_it ){
+															
+															if ( send_queue_data_size == 0 ){
+																
+																send_thread = null;
+																
+																break;
+																
+															}else{
+																
+																continue;
+															}
+														}
 															// invariant: at least one queue must have an entry
 
 														for (int i=0;i<send_queues.length;i++){
@@ -1547,7 +1633,7 @@ PRUDPPacketHandlerImpl
 
 					// System.out.println( "sent:" + buffer.length );
 
-					stats.packetSent( _length );
+					stats.packetSent( packet_len );
 
 					if ( TRACE_REQUESTS ){
 						Logger.log(new LogEvent(LOGID, "PRUDPPacketHandler: "
