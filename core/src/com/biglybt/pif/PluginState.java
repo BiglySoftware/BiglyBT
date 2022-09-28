@@ -81,6 +81,10 @@ public interface PluginState {
 
 	  public boolean isInitialisationComplete();
 
+	  public boolean isRestartPending();
+	  
+	  public void setRestartPending( boolean b );
+	  
 	  /**
 	   * Uninstall this plugin if it has been loaded from a plugin directory.
 	   * Deletes the plugin directory.

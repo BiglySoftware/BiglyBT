@@ -578,12 +578,18 @@ PluginUpdatePlugin
 
 				PluginInterface	pi = plugins[i];
 
-				if ( pi.getPluginState().isDisabled()){
+				String	id 		= pi.getPluginID();
+				String	version = pi.getPluginVersion();
+				String	name	= pi.getPluginName();
+
+				PluginState ps = pi.getPluginState();
+								
+				if ( ps.isDisabled()){
 
 						// if it is disabled because it failed to load, carry on and check for updates as the newer version
 						// may be there to fix the load failure!
 
-					if ( !pi.getPluginState().hasFailed()){
+					if ( !ps.hasFailed()){
 
 						continue;
 					}
@@ -597,10 +603,6 @@ PluginUpdatePlugin
 
 					continue;
 				}
-
-				String	id 		= pi.getPluginID();
-				String	version = pi.getPluginVersion();
-				String	name	= pi.getPluginName();
 
 				if ( ids_to_check != null ){
 
@@ -620,6 +622,13 @@ PluginUpdatePlugin
 
 						continue;
 					}
+				}
+
+				if ( ps.isRestartPending()){
+					
+					log.log( LoggerChannel.LT_INFORMATION, (mandatory?"*":"-") + pi.getPluginName() + ", id = " + id + (version==null?"":(", version = " + pi.getPluginVersion())) + ": Restart pending, skipping update check" );
+					
+					continue;
 				}
 
 				if ( version != null ){
@@ -1891,6 +1900,8 @@ PluginUpdatePlugin
 
 					if ( defer_restart && update.getRestartRequired() == Update.RESTART_REQUIRED_YES ){
 
+						plugin.getPluginState().setRestartPending( true );
+						
 						log.log( "Deferring restart for '" + plugin.getPluginID() + "'" );
 
 						update.setRestartRequired( Update.RESTART_REQUIRED_NO );
@@ -1929,6 +1940,8 @@ PluginUpdatePlugin
 
 						if ( defer_restart && update.getRestartRequired() == Update.RESTART_REQUIRED_YES ){
 
+							plugin.getPluginState().setRestartPending( true );
+							
 							log.log( "Deferring restart for '" + plugin.getPluginID() + "'" );
 
 							update.setRestartRequired( Update.RESTART_REQUIRED_NO );
@@ -1978,6 +1991,11 @@ PluginUpdatePlugin
 
 		}finally{
 
+			if ( update_successful && update.getRestartRequired() != Update.RESTART_REQUIRED_NO ){
+				
+				plugin.getPluginState().setRestartPending( true );
+			}
+			
 			update.complete( update_successful );
 
 			if ( data != null ){

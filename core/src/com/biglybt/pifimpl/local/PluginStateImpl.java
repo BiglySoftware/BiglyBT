@@ -39,7 +39,8 @@ public class PluginStateImpl implements PluginState {
 	private boolean	disabled;
 	boolean operational;
 	boolean failed;
-
+	boolean restart_pending;
+	
 	public PluginStateImpl(PluginInterfaceImpl pi, PluginInitializer initialiser) {
 		this.pi = pi;
 		this.initialiser = initialiser;
@@ -127,6 +128,18 @@ public class PluginStateImpl implements PluginState {
 		return( initialiser.isInitialisationComplete());
 	}
 
+	public boolean 
+	isRestartPending()
+	{
+		return( restart_pending );
+	}
+	
+	public void 
+	setRestartPending( boolean b )
+	{
+		restart_pending = b;
+	}
+	  
 	@Override
 	public void reload() throws PluginException {
 		// we use the "reload" method to load disabled plugins regardless of whether they are
