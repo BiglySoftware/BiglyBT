@@ -457,17 +457,15 @@ IncomingConnectionManager
 									+ "] does not match "
 									+ "any known byte pattern: "
 									+ ByteFormatter.nicePrint(ic.buffer.array(), 128)));
-						removeConnection( ic, true, "routing failed: unknown hash" );
+						
+						removeConnection( ic, true, "routing failed: unknown byte pattern" );
 					}
-				}
-				else {  //match found!
+				}else{
+					
+						//match found!
+					
 					ic.buffer.flip();
-					if (Logger.isEnabled())
-						Logger.log(new LogEvent(LOGID,
-								"Incoming stream from [" + transport_helper.getAddress()
-								+ "] recognized as "
-								+ "known byte pattern: "
-								+ ByteFormatter.nicePrint(ic.buffer.array(), 64)));
+					
 					removeConnection( ic, false, null );
 
 					transport.setAlreadyRead( ic.buffer );
@@ -475,6 +473,7 @@ IncomingConnectionManager
 					transport.connectedInbound();
 
 					IncomingConnectionManager.MatchListener listener = (IncomingConnectionManager.MatchListener)match_data[0];
+					
 					listener.connectionMatched( transport, match_data[1] );
 				}
 				return( true );

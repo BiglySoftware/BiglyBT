@@ -307,7 +307,10 @@ public class PeerManager implements CoreStatsProvider {
 
 				PeerManagerRegistrationImpl	routing_data = null;
 
-				if( to_compare.equals( legacy_handshake_header ) ) {  //compare header
+				PeerManagerRegistrationRoutingFailed routing_failed = null;
+				
+				if ( to_compare.equals( legacy_handshake_header )){  //compare header
+					
 					to_compare.limit( old_position + 48 );
 					to_compare.position( old_position + 28 );
 
@@ -315,11 +318,13 @@ public class PeerManager implements CoreStatsProvider {
 
 					to_compare.get( hash );
 
+					HashWrapper hash_wrapper = new HashWrapper( hash );
+					
 					CopyOnWriteList<PeerManagerRegistrationImpl>	registrations;
 					
 					synchronized( registered_legacy_managers ){
 						
-						registrations = registered_legacy_managers.get( new HashWrapper( hash ));
+						registrations = registered_legacy_managers.get( hash_wrapper );
 					}
 					
 					if ( registrations != null ){
@@ -347,12 +352,27 @@ public class PeerManager implements CoreStatsProvider {
 							}
 						}
 					}
+					
+					if ( routing_data == null ){
+						
+							// Header matched but no matching hash, use dummy routing data to
+							// ensure failure. If we don't then it appears as if we don't have
+							// sufficient information to decide if it is routable or not
+						
+						routing_failed = new PeerManagerRegistrationRoutingFailed( hash_wrapper );
+					}
 				}
 
-				//restore buffer structure
+					//restore buffer structure
+				
 				to_compare.limit( old_limit );
 				to_compare.position( old_position );
 
+				if ( routing_failed != null ){
+					
+					return( routing_failed );
+				}
+				
 				if ( routing_data != null ){
 
 					if ( !routing_data.isActive()){
@@ -454,10 +474,10 @@ public class PeerManager implements CoreStatsProvider {
 					@Override
 					public void
 					connectionRouted(
-							NetworkConnection 	connection,
-							Object 				routing_data )
+						NetworkConnection 	connection,
+						Object 				routing_data )
 					{
-						PeerManagerRegistrationImpl	registration = (PeerManagerRegistrationImpl)routing_data;
+						PeerManagerRegistration	registration = (PeerManagerRegistration)routing_data;
 
 						registration.route( connection, null );
 					}
@@ -479,8 +499,8 @@ public class PeerManager implements CoreStatsProvider {
 
 	public PeerManagerRegistration
 	manualMatchHash(
-			InetSocketAddress	address,
-			byte[]				hash )
+		InetSocketAddress	address,
+		byte[]				hash )
 	{
 		PeerManagerRegistrationImpl	routing_data = null;
 
@@ -551,9 +571,7 @@ public class PeerManager implements CoreStatsProvider {
 		NetworkConnection			_connection,
 		PeerManagerRoutingListener	_listener )
 	{
-		PeerManagerRegistrationImpl	registration = (PeerManagerRegistrationImpl)_registration;
-
-		registration.route( _connection, _listener );
+		_registration.route( _connection, _listener );
 	}
 
 	public PeerManagerRegistration
@@ -603,7 +621,94 @@ public class PeerManager implements CoreStatsProvider {
 	}
 
 
+	private class
+	PeerManagerRegistrationRoutingFailed
+		implements PeerManagerRegistration
+	{
+		private final HashWrapper	hash;
+		
+		PeerManagerRegistrationRoutingFailed(
+			HashWrapper		_hash )
+		{
+			hash	= _hash;
+		}
+		
+		public TOTorrentFile
+		getLink(
+			String			link )
+		{
+			return( null );
+		}
 
+	    public void
+		removeLink(
+			String			link )
+		{
+		}
+
+	    public void
+		addLink(
+			String			link,
+			TOTorrentFile	target )
+
+			throws Exception
+		{
+		}
+
+		public void
+		route(
+			NetworkConnection 			connection,
+			PeerManagerRoutingListener	listener )
+		{
+			String hash_str = ByteFormatter.nicePrint( hash.getHash(), true );
+			
+			if (Logger.isEnabled()){
+				
+				Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING,
+						"Incoming connection from [" + connection
+						+ "] refused, hash " + hash_str + " unknown/inactive" ));
+			}
+			
+			connection.close( "hash " + hash_str + " unknown/inactive" );
+		}
+		
+		public void
+		activate(
+			PEPeerControl	peer_control )
+		{
+			Debug.out( "eh" );
+		}
+
+		public void
+		deactivate()
+		{
+			Debug.out( "eh" );
+		}
+
+		public void
+		unregister()
+		{	
+			Debug.out( "eh" );
+		}
+	    
+	    public List<PeerManagerRegistration>
+	    getOtherRegistrationsForHash()
+	    {
+	    	Debug.out( "eh" );
+	    	
+	    	return( Collections.emptyList());
+	    }
+	    
+	    public int 
+	    getHashOverrideLocalPort(
+	    	boolean	only_if_allocated )
+	    {
+	    	Debug.out( "eh" );
+	    	
+	    	return( 0 );
+	    }
+	}
+	
 	private class
 	PeerManagerRegistrationImpl
 		implements PeerManagerRegistration
@@ -950,7 +1055,8 @@ public class PeerManager implements CoreStatsProvider {
 			return( active_control );
 		}
 
-		protected void
+		@Override
+		public void
 		route(
 			NetworkConnection 			connection,
 			PeerManagerRoutingListener	listener )

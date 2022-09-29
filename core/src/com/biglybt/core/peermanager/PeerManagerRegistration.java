@@ -21,6 +21,7 @@ package com.biglybt.core.peermanager;
 
 import java.util.List;
 
+import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.peer.impl.PEPeerControl;
 import com.biglybt.core.torrent.TOTorrentFile;
 
@@ -46,6 +47,11 @@ PeerManagerRegistration
 
 		throws Exception;
 
+	public void
+	route(
+		NetworkConnection 			connection,
+		PeerManagerRoutingListener	listener );
+	
 	public void
 	activate(
 		PEPeerControl	peer_control );
