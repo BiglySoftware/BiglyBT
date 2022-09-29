@@ -29,7 +29,8 @@ public interface
 Transport
 	extends TransportBase
 {
-
+  public static final Object	KEY_CLOSE_REASON	= new Object();
+  
   public static final int TRANSPORT_MODE_NORMAL = 0;
   public static final int TRANSPORT_MODE_FAST   = 1;
   public static final int TRANSPORT_MODE_TURBO  = 2;

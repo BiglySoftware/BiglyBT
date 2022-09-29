@@ -1112,7 +1112,19 @@ implements PEPeerTransport
 			outgoing_piece_message_handler.destroy();
 		}
 
-		if( connection != null ) {  //can be null if close is called within ::<init>::, like when the given port is invalid
+		if ( connection != null ) {  //can be null if close is called within ::<init>::, like when the given port is invalid
+			
+			Transport transport = connection.getTransport();
+			
+			if ( transport != null ){
+				
+				Integer close_reason = (Integer)transport.getUserData( Transport.KEY_CLOSE_REASON );
+				
+				if (  close_reason != null ){
+					
+					// System.out.println( "Peer: close reason = " + close_reason );
+				}
+			}
 			connection.close( reason );
 		}
 
