@@ -25,6 +25,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
@@ -420,7 +421,7 @@ ExternalSeedReaderImpl
 
 							if ( stats.getDownloadAverage() < STALLED_PEER_SPEED ){
 
-								existing_peer.close( "Replacing slow peer with web-seed", false, false );
+								existing_peer.close( "Replacing slow peer with web-seed", Transport.CR_PEER_CHURN, false, false );
 
 								existing_peer_count--;
 							}

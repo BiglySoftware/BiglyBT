@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.MenuItem;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
@@ -509,7 +510,7 @@ public class PeersView
 				if (dataSource instanceof PEPeer) {
 					PEPeer peer = (PEPeer) dataSource;
 					if ( !peer.isMyPeer()){
-						peer.getManager().removePeer(peer,"Peer kicked" );
+						peer.getManager().removePeer(peer,"Peer kicked", Transport.CR_PEER_CHURN );
 					}
 				}
 			}

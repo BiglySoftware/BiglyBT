@@ -43,6 +43,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.peer.*;
 import com.biglybt.core.peermanager.PeerManager;
 import com.biglybt.core.peermanager.PeerManagerRegistration;
@@ -647,7 +648,7 @@ DownloadManagerController
 
 								if ( !allowed.contains( peer.getPeerSource())){
 
-									pm.removePeer( peer, "Peer source not permitted" );
+									pm.removePeer( peer, "Peer source not permitted", Transport.CR_STOPPED_OR_REMOVED );
 								}
 							}
 						}
@@ -1544,7 +1545,7 @@ DownloadManagerController
 								// disconnect all peers - this is required as the new network assignment can
 								// require an alternative destination to be used for peer connections
 
-							pm.removeAllPeers( "Networks changed, reconnection required" );
+							pm.removeAllPeers( "Networks changed, reconnection required", Transport.CR_NONE );
 						}
 					}
 				},

@@ -33,6 +33,7 @@ import java.util.Map;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.peer.impl.PEPeerTransport;
 import com.biglybt.core.peer.util.PeerIdentityDataID;
 import com.biglybt.core.peermanager.peerdb.PeerExchangerItem;
@@ -273,14 +274,19 @@ PEPeerManager
 		int			udp_port,
 		boolean 	use_crypto );
 
-	public void
+	public default void
 	removePeer(
-		PEPeer	peer );
-
+		PEPeer	peer,
+		String	reason )
+	{
+		removePeer( peer, reason, Transport.CR_NONE );
+	}
+	
 	public void
 	removePeer(
 		PEPeer	peer,
-		String	reason );
+		String	reason,
+		int		reason_code );
 
 	public void
 	informFullyConnected(
@@ -440,7 +446,8 @@ PEPeerManager
 	
 	public void
 	removeAllPeers(
-		String		reason );
+		String		reason,
+		int			reason_code );
 	
 	public boolean
 	isDestroyed();

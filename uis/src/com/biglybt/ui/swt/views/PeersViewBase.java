@@ -26,6 +26,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
@@ -1086,7 +1087,7 @@ PeersViewBase
 			@Override
 			public void run(PEPeer peer) {
 				if ( !peer.isMyPeer()){
-					peer.getManager().removePeer(peer,"Peer kicked" );
+					peer.getManager().removePeer(peer,"Peer kicked", Transport.CR_PEER_CHURN );
 				}
 			}
 		});
@@ -1165,7 +1166,7 @@ PeersViewBase
 							}
 						}
 							
-						peer.getManager().removePeer(peer, "Peer kicked and banned");
+						peer.getManager().removePeer(peer, "Peer kicked and banned", Transport.CR_IP_BLOCKED );
 					}
 				}
 			};
@@ -1185,7 +1186,7 @@ PeersViewBase
 						String msg = MessageText.getString("PeersView.menu.kickandban.reason");
 						IpFilterManagerFactory.getSingleton().getIPFilter().ban(peer.getIp(),
 								msg, true );
-						peer.getManager().removePeer(peer, "Peer kicked and banned");
+						peer.getManager().removePeer(peer, "Peer kicked and banned", Transport.CR_IP_BLOCKED );
 					}
 				}
 			});
@@ -1260,7 +1261,7 @@ PeersViewBase
 	
 								filter.ban( peer.getIp(), msg, true, mins );
 	
-								peer.getManager().removePeer(peer, "Peer kicked and banned");
+								peer.getManager().removePeer(peer, "Peer kicked and banned", Transport.CR_IP_BLOCKED);
 							}
 						}
 					}

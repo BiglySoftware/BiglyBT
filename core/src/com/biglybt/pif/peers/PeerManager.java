@@ -22,6 +22,7 @@ package com.biglybt.pif.peers;
 
 import java.util.Map;
 
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.pif.disk.DiskManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
@@ -86,9 +87,18 @@ PeerManager
 		int					udp_port,
 		boolean 			use_crypto );
 
+	public default void
+	removePeer(
+		Peer		peer )
+	{
+		removePeer( peer, "Unknown", Transport.CR_NONE );
+	}
+	
 	public void
 	removePeer(
-		Peer		peer );
+		Peer		peer,
+		String		reason,
+		int			reason_code );
 
 	public Peer[]
 	getPeers();

@@ -30,6 +30,7 @@ import java.util.*;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.impl.PEPeerTransport;
@@ -924,7 +925,7 @@ MagnetPluginMDDownloader
 								
 								if ( last_good_data == -1 || last_good_data > 3*60*1000 ){
 							
-									pt.getManager().removePeer( pt, "Metadata dead peer removal" );
+									pt.getManager().removePeer( pt, "Metadata dead peer removal", Transport.CR_TIMEOUT_ACTIVITY );
 								}
 							}		
 						}

@@ -32,6 +32,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.OutgoingMessageQueue;
 import com.biglybt.core.networkmanager.RawMessage;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.networkmanager.impl.RawMessageImpl;
 import com.biglybt.core.peer.impl.PEPeerControl;
 import com.biglybt.core.peer.impl.PEPeerTransport;
@@ -742,7 +743,7 @@ HTTPNetworkConnection
 	{
 		closing	= true;
 
-		peer.getControl().removePeer( peer );
+		peer.getControl().removePeer( peer, reason, Transport.CR_NONE );
 	}
 
 	protected void

@@ -1700,8 +1700,9 @@ public class PeerManager implements CoreStatsProvider {
 
 			public void
 			removePeer(
-					PEPeer	peer,
-					String	reason ){log(); }
+				PEPeer	peer,
+				String	reason,
+				int	reason_code ){log(); }
 
 			public void
 			peerAdded(PEPeer pc){log(); }
@@ -1819,7 +1820,8 @@ public class PeerManager implements CoreStatsProvider {
 			
 			public void
 			removeAllPeers(
-					String		reason ){log(); }
+				String		reason,
+				int			reason_code ){log(); }
 
 			public boolean
 			isDestroyed(){ log(); return( false ); }

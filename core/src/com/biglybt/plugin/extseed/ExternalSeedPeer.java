@@ -271,7 +271,7 @@ ExternalSeedPeer
 			listeners_mon.exit();
 		}
 
-		manager.removePeer( this );
+		manager.removePeer( this, "Deactivating", com.biglybt.core.networkmanager.Transport.CR_STOPPED_OR_REMOVED );
 
 		setState( Peer.DISCONNECTED );
 	}
@@ -694,6 +694,7 @@ ExternalSeedPeer
 	public void
 	close(
 		String 		reason,
+		int			reason_code,
 		boolean 	closedOnError,
 		boolean 	attemptReconnect )
 	{
@@ -730,7 +731,7 @@ ExternalSeedPeer
 
 		if ( peer_was_added ){
 
-			manager.removePeer( this );
+			manager.removePeer( this, reason, reason_code );
 		}
 
 		setState( Peer.DISCONNECTED );

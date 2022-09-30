@@ -561,10 +561,11 @@ PeerImpl
 	public void
 	close(
 		String 		reason,
+		int			reason_code,
 		boolean 	closedOnError,
 		boolean 	attemptReconnect )
 	{
-		manager.removePeer( this, reason );
+		manager.removePeer( this, reason, reason_code );
 	}
 
 	@Override

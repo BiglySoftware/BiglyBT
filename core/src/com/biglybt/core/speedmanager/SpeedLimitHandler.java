@@ -35,6 +35,7 @@ import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.util.PeerUtils;
@@ -6298,7 +6299,7 @@ SpeedLimitHandler
 						
 						if ( pm != null ){
 						
-							pm.removePeer( peer );
+							pm.removePeer( peer, "PeerSet removal action", Transport.CR_IP_BLOCKED );
 						}
 					}
 				}
@@ -6626,7 +6627,7 @@ SpeedLimitHandler
 
 				if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY ) && !deferEOS()){
 
-					peer_manager.removePeer( _peer );
+					peer_manager.removePeer( _peer, "PeerSet removal action", Transport.CR_IP_BLOCKED );
 
 					return;
 				}
@@ -6654,7 +6655,7 @@ SpeedLimitHandler
 							
 								// immediate remove
 							
-							peer_manager.removePeer( _peer );
+							peer_manager.removePeer( _peer, "PeerSet removal action", Transport.CR_IP_BLOCKED );
 							
 							return;
 							

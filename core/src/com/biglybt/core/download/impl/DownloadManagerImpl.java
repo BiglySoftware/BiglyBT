@@ -45,6 +45,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.*;
 import com.biglybt.core.peermanager.PeerManagerRegistration;
@@ -638,7 +639,7 @@ DownloadManagerImpl
 
 										PEPeer	peer = (PEPeer)peers.get(i);
 
-										peer.getManager().removePeer( peer, "Private torrent: tracker changed" );
+										peer.getManager().removePeer( peer, "Private torrent: tracker changed", Transport.CR_STOPPED_OR_REMOVED );
 									}
 								}
 							}.start();

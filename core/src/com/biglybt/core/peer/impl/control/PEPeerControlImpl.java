@@ -37,6 +37,7 @@ import com.biglybt.core.ipfilter.*;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.NetworkConnectionBase;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.admin.NetworkAdminASN;
 import com.biglybt.core.networkmanager.admin.NetworkAdminASNListener;
@@ -751,7 +752,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			reg.deactivate();
 		}
 
-		closeAndRemoveAllPeers("download stopped", false);
+		closeAndRemoveAllPeers("download stopped", Transport.CR_STOPPED_OR_REMOVED, false);
 
 		// clear pieces
 		for(int i = 0; i < _nbPieces; i++){
@@ -786,10 +787,10 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	}
 
 	@Override
-	public void removeAllPeers(String reason){
+	public void removeAllPeers(String reason, int reason_code ){
 		for(PEPeer peer : peer_transports_cow){
 
-			removePeer(peer, reason);
+			removePeer(peer, reason, reason_code);
 		}
 
 		try{
@@ -1134,11 +1135,12 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			}else{
 				Debug.out("addPeer():: peer_transports.contains(transport): SHOULD NEVER HAPPEN !");
-				transport.closeConnection("already connected");
+				
+				transport.closeConnection("already connected", Transport.CR_DUPLICATE_PEER_ID);
 			}
 		}else{
 
-			transport.closeConnection("IP address blocked by filters");
+			transport.closeConnection("IP address blocked by filters", Transport.CR_IP_BLOCKED);
 		}
 	}
 
@@ -1153,12 +1155,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	}
 
 	@Override
-	public void removePeer(PEPeer _transport){
-		removePeer(_transport, "remove peer");
-	}
-
-	@Override
-	public void removePeer(PEPeer _transport, String reason){
+	public void removePeer(PEPeer _transport, String reason, int reason_code ){
 		if(!(_transport instanceof PEPeerTransport)){
 
 			throw(new RuntimeException("invalid class"));
@@ -1166,10 +1163,10 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		PEPeerTransport transport = (PEPeerTransport) _transport;
 
-		closeAndRemovePeer(transport, reason, true);
+		closeAndRemovePeer(transport, reason, reason_code, true);
 	}
 
-	private void closeAndRemovePeer(PEPeerTransport peer, String reason, boolean log_if_not_found){
+	private void closeAndRemovePeer(PEPeerTransport peer, String reason, int reason_code, boolean log_if_not_found){
 		boolean removed = false;
 
 		// copy-on-write semantics
@@ -1189,7 +1186,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 
 		if(removed){
-			peer.closeConnection(reason);
+			peer.closeConnection(reason, reason_code);
 			peerRemoved(peer); // notify listeners
 		}else{
 			if(log_if_not_found){
@@ -1199,7 +1196,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 	}
 
-	private void closeAndRemoveAllPeers(String reason, boolean reconnect){
+	private void closeAndRemoveAllPeers(String reason, int reason_code, boolean reconnect){
 		List<PEPeerTransport> peer_transports;
 
 		try{
@@ -1217,7 +1214,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			try{
 
-				peer.closeConnection(reason);
+				peer.closeConnection(reason,reason_code);
 
 			}catch(Throwable e){
 
@@ -1644,7 +1641,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 						if(needsMD5CheckOnCompletion(i))
 							badPeerDetected(reservingPeer, i, "Peer is too slow" );
 						else if(pt != null)
-							closeAndRemovePeer(pt, "Reserved piece data timeout; 120 seconds", true);
+							closeAndRemovePeer(pt, "Reserved piece data timeout; 120 seconds", Transport.CR_TIMEOUT_REQUEST, true);
 
 						pePiece.setReservedBy(null);
 					}
@@ -2440,10 +2437,10 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				addToPeerTransports(transport);
 			}else{
 				Debug.out("addPeerTransport():: peer_transports.contains(transport): SHOULD NEVER HAPPEN !");
-				transport.closeConnection("already connected");
+				transport.closeConnection("already connected", Transport.CR_DUPLICATE_PEER_ID);
 			}
 		}else{
-			transport.closeConnection("IP address blocked by filters");
+			transport.closeConnection("IP address blocked by filters",Transport.CR_IP_BLOCKED);
 		}
 	}
 
@@ -2591,7 +2588,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		if(to_close != null){
 			for(int i = 0; i < to_close.size(); i++){
-				closeAndRemovePeer(to_close.get(i), "disconnect other seed when seeding", false);
+				closeAndRemovePeer(to_close.get(i), "disconnect other seed when seeding", Transport.CR_UPLOAD_TO_UPLOAD, false);
 			}
 		}
 	}
@@ -3292,7 +3289,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			peerAdded(peer);
 		}else{
-			peer.closeConnection("PeerTransport added when manager not running");
+			peer.closeConnection("PeerTransport added when manager not running", Transport.CR_STOPPED_OR_REMOVED );
 		}
 	}
 
@@ -4333,7 +4330,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				if(!(ps == PEPeer.CLOSING || ps == PEPeer.DISCONNECTED)){
 					// Close connection
 					closeAndRemovePeer(peer, "has sent too many " + (hash_fail ? "bad pieces" : "discarded blocks")
-							+ ", " + WARNINGS_LIMIT + " max.", true);
+							+ ", " + WARNINGS_LIMIT + " max.", Transport.CR_BAD_PIECE_DATA, true);
 				}
 			}
 		}
@@ -4546,7 +4543,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			if(to_close != null){
 				for(int i = 0; i < to_close.size(); i++){
-					closeAndRemovePeer(to_close.get(i), "IPFilter banned IP address", true);
+					closeAndRemovePeer(to_close.get(i), "IPFilter banned IP address", Transport.CR_IP_BLOCKED, true);
 				}
 			}
 		}
@@ -4629,7 +4626,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 				PEPeerTransport conn = peer_transports.get(i);
 
-				closeAndRemovePeer(conn, "Turning on super-seeding", false);
+				closeAndRemovePeer(conn, "Turning on super-seeding", Transport.CR_NONE, false);
 			}
 		}
 	}
@@ -4702,7 +4699,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 					if(loopdone){ // if already been here, has been full loop through pieces, quit
 						// quit superseed mode
 						superSeedMode = false;
-						closeAndRemoveAllPeers("quiting SuperSeed mode", true);
+						closeAndRemoveAllPeers("quiting SuperSeed mode", Transport.CR_NONE, true);
 						return;
 					}else{
 						// loopdone==false --> first time here --> go through the pieces
@@ -4980,7 +4977,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 							if(!to_retain.contains(transport)){
 
-								closeAndRemovePeer(transport, "Too many seeds", false);
+								closeAndRemovePeer(transport, "Too many seeds", Transport.CR_TOO_MANY_CONNECTIONS, false);
 
 								to_disconnect--;
 							}
@@ -5374,7 +5371,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 					
 					ip_filter.ban( peer.getIp(), getDisplayName() + ": " + msg, false );
 					
-					closeAndRemovePeer( peer, msg, true);
+					closeAndRemovePeer( peer, msg, Transport.CR_DUPLICATE_PEER_ID, true);
 				}
 			}
 		}
@@ -5493,7 +5490,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 								if(peer.getPeerState() == PEPeer.CONNECTING
 										&& peer.getConnectionState() == PEPeerTransport.CONNECTION_CONNECTING){
 
-									closeAndRemovePeer(peer, "Removing old duplicate connection", false);
+									closeAndRemovePeer(peer, "Removing old duplicate connection", Transport.CR_DUPLICATE_PEER_ID, false);
 								}
 							}
 						}
@@ -5996,13 +5993,13 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			// if we have a seed limit, kick seeds in preference to non-seeds
 
 			if(getMaxSeedConnections(network) > 0 && max_seed_transport != null && max_time > 5 * 60 * 1000){
-				closeAndRemovePeer(max_seed_transport, "timed out by doOptimisticDisconnect()", true);
+				closeAndRemovePeer(max_seed_transport, "timed out by doOptimisticDisconnect()", Transport.CR_PEER_CHURN, true);
 				optimisticDisconnectCount++;
 				return true;
 			}
 
 			if(max_transport != null && max_time > 5 * 60 * 1000){ // ensure a 5 min minimum test time
-				closeAndRemovePeer(max_transport, "timed out by doOptimisticDisconnect()", true);
+				closeAndRemovePeer(max_transport, "timed out by doOptimisticDisconnect()", Transport.CR_PEER_CHURN, true);
 				optimisticDisconnectCount++;
 				return true;
 			}
@@ -6010,14 +6007,14 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			// kick worst peers to accomodate lan peer
 
 			if(pending_lan_local_peer && lan_peer_count < LAN_PEER_MAX){
-				closeAndRemovePeer(max_transport, "making space for LAN peer in doOptimisticDisconnect()", true);
+				closeAndRemovePeer(max_transport, "making space for LAN peer in doOptimisticDisconnect()", Transport.CR_PEER_CHURN, true);
 				optimisticDisconnectCount++;
 				return true;
 			}
 
 			if(force){
 
-				closeAndRemovePeer(max_transport, "force removal of worst peer in doOptimisticDisconnect()", true);
+				closeAndRemovePeer(max_transport, "force removal of worst peer in doOptimisticDisconnect()", Transport.CR_PEER_CHURN, true);
 
 				return true;
 			}
@@ -6027,7 +6024,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 				PEPeerTransport pt = peer_transports.get(new Random().nextInt(peer_transports.size()));
 
-				closeAndRemovePeer(pt, "force removal of random peer in doOptimisticDisconnect()", true);
+				closeAndRemovePeer(pt, "force removal of random peer in doOptimisticDisconnect()", Transport.CR_PEER_CHURN, true);
 
 				return true;
 			}
@@ -6104,7 +6101,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				PEPeerTransport peer = it.next();
 
 				if(filter.isInRange(peer.getIp(), name, hash)){
-					peer.closeConnection("IP address blocked by filters");
+					peer.closeConnection("IP address blocked by filters",Transport.CR_IP_BLOCKED);
 				}
 			}catch(Exception e){
 			}
@@ -6158,7 +6155,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			
 			hidden_piece = new_hp;
 			
-			removeAllPeers( "Hidden piece changed" );
+			removeAllPeers( "Hidden piece changed", Transport.CR_NONE );
 		}
 	}
 	

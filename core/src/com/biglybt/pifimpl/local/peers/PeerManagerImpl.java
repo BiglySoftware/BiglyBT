@@ -271,20 +271,13 @@ PeerManagerImpl
 		manager.addPeer(mapForeignPeer( peer ));
 	}
 
-	@Override
 	public void
 	removePeer(
-		Peer		peer )
-	{
-		manager.removePeer(mapForeignPeer( peer ));
-	}
-
-	protected void
-	removePeer(
 		Peer		peer,
-		String		reason )
+		String		reason,
+		int			reason_code )
 	{
-		manager.removePeer(mapForeignPeer( peer ), reason );
+		manager.removePeer(mapForeignPeer( peer ), reason, reason_code );
 	}
 
 	@Override

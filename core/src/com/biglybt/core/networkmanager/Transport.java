@@ -31,6 +31,28 @@ Transport
 {
   public static final Object	KEY_CLOSE_REASON	= new Object();
   
+  public static final int CR_NONE						= 0;	
+  public static final int CR_DUPLICATE_PEER_ID			= 1;	
+  public static final int CR_STOPPED_OR_REMOVED			= 2;
+  public static final int CR_NO_MEMORY					= 3;
+  public static final int CR_PORT_BLOCKED				= 4;
+  public static final int CR_IP_BLOCKED					= 5;
+  public static final int CR_UPLOAD_TO_UPLOAD			= 6;
+  public static final int CR_NOT_INTERESTED_UPLOAD_ONLY	= 7;
+  public static final int CR_TIMEOUT					= 8;
+  public static final int CR_TIMEOUT_INTEREST			= 9;
+  public static final int CR_TIMEOUT_ACTIVITY			= 10;
+  public static final int CR_TIMEOUT_HANDSHAKE			= 11;
+  public static final int CR_TIMEOUT_REQUEST			= 12;
+  public static final int CR_PROTOCOL_BLOCKED			= 13;
+  public static final int CR_PEER_CHURN					= 14;
+  public static final int CR_TOO_MANY_CONNECTIONS		= 15;
+  public static final int CR_TOO_MANY_FILES				= 16;
+	
+  public static final int CR_INVALID_INFO_HASH			= 257;
+  public static final int CR_SELF_CONNECTION			= 258;
+  public static final int CR_BAD_PIECE_DATA				= 286;
+  
   public static final int TRANSPORT_MODE_NORMAL = 0;
   public static final int TRANSPORT_MODE_FAST   = 1;
   public static final int TRANSPORT_MODE_TURBO  = 2;

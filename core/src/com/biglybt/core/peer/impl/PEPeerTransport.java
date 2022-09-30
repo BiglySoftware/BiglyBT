@@ -132,7 +132,7 @@ PEPeerTransport
    * Close the peer connection
    * @param reason for closure
    */
-	public void closeConnection( String reason );
+	public void closeConnection( String reason, int reason_code );
 	
 	@Override
 	public boolean

@@ -281,12 +281,13 @@ PeerForeignDelegate
 	@Override
 	public void
 	closeConnection(
-		String reason )
+		String 	reason,
+		int		reason_code )
 	{
 		closed = true;
 
 		try{
-			foreign.close( reason, false, false );
+			foreign.close( reason, reason_code, false, false );
 
 		}finally{
 

@@ -28,6 +28,7 @@ import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerCheckRequestListener.HashListener;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
+import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.impl.PEPeerControlHashHandler;
 import com.biglybt.core.peer.impl.PEPeerTransport;
@@ -1139,7 +1140,7 @@ PEPeerControlHashHandlerImpl
 				
 					if ( tasks.size() > 1024 ){
 						
-						peer_manager.removePeer( peer, "Too many hash requests" );
+						peer_manager.removePeer( peer, "Too many hash requests", Transport.CR_NONE );
 						
 						return;
 					}
