@@ -496,6 +496,8 @@ public class TorrentUtil
 		boolean	hasClearableLinks = false;
 		boolean	hasRevertableFiles = false;
 
+		boolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );
+
 		boolean allMaskDC 			= true;
 		
 		if (hasSelection) {
@@ -652,7 +654,11 @@ public class TorrentUtil
 					hasRevertableFiles = true;
 				}
 				
-				allMaskDC = allMaskDC && dm_state.getBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP );
+				Boolean dmmask = dm_state.getOptionalBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL );
+				
+				boolean mask = dmmask==null?globalMask:dmmask;
+				
+				allMaskDC = allMaskDC && mask;
 			}
 
 			fileRescan = allScanSelected || allScanNotSelected;
@@ -1180,13 +1186,11 @@ public class TorrentUtil
 		itemRestoreResume.setEnabled( restoreEnabled);
 		
 		// mask dl comp
-		
-		boolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );
-		
+				
 		MenuItem itemMaskDLComp = new MenuItem(menuFiles, SWT.CHECK);
 		
 		if ( dms.length> 0 ){
-			itemMaskDLComp.setSelection( globalMask || allMaskDC );
+			itemMaskDLComp.setSelection( allMaskDC );
 		}
 		
 		Messages.setLanguageText(itemMaskDLComp,
@@ -1194,11 +1198,11 @@ public class TorrentUtil
 		itemMaskDLComp.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager dm) {
-				dm.getDownloadState().setBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP, itemMaskDLComp.getSelection());
+				dm.getDownloadState().setOptionalBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL, itemMaskDLComp.getSelection());
 			}
 		});
 
-		itemMaskDLComp.setEnabled( dms.length > 0 && !globalMask );
+		itemMaskDLComp.setEnabled( dms.length > 0 );
 		
 			// Advanced -> archive
 

@@ -3015,7 +3015,6 @@ DownloadManagerStateImpl
 		String name )
 	{
 		try{
-
 			this_mon.enter();
 
 			if ( attributes == null) {return false;}
@@ -3028,6 +3027,35 @@ DownloadManagerStateImpl
 		}
 	}
 
+	@Override
+	public void
+	removeAttribute(
+		String attribute_name )
+	{
+		boolean changed = false;
+		
+		try{
+
+			this_mon.enter();
+
+			if ( attributes != null ){
+
+				if ( attributes.remove( attribute_name ) != null ){
+					
+					changed = true;
+				}
+			}
+		}finally{
+
+			this_mon.exit();
+		}
+		
+		if ( changed ){
+
+			informWritten( attribute_name );
+		}
+	}
+	
 	// These methods just use long attributes to store data into.
 
 	@Override
@@ -3505,6 +3533,8 @@ DownloadManagerStateImpl
 
 		@Override
 		public boolean hasAttribute(String name) {return false;}
+		@Override
+		public void removeAttribute(String name){}
 		@Override
 		public int getIntAttribute(String name) {return 0;}
 		@Override

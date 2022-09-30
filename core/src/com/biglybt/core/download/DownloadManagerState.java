@@ -91,7 +91,7 @@ DownloadManagerState
 	public static final String AT_TORRENT_SAVE_TIME			= "tst";			// long
 	public static final String AT_TORRENT_EXPORT_PROPAGATED	= "tep";			// bool
 	public static final String AT_SWARM_TAGS				= "stag";			// list
-	public static final String AT_MASK_DL_COMP				= "mdlc";			// bool
+	public static final String AT_MASK_DL_COMP_OPTIONAL		= "mdlc";			// Boolean (optional)
 	public static final String AT_REAL_DM_MAGNET_TIME		= "rdmmt";			// long
 	
 	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
@@ -396,6 +396,7 @@ DownloadManagerState
 
 	// General access - make sure you use an AT_ value defined above when calling
 	// these methods.
+	
 	public void setAttribute(String	name, String value);
 	public void setAttribute(String	name, String value, boolean setDirty);
 	public String getAttribute(String name);
@@ -411,7 +412,32 @@ DownloadManagerState
 	public void setBooleanAttribute(String name, boolean value);
 	public boolean getBooleanAttribute(String name);
 	public boolean hasAttribute(String name);
+	public void removeAttribute(String name);
 
+	public default Boolean
+	getOptionalBooleanAttribute(
+		String		name )
+	{
+		if ( hasAttribute(name)){
+			return( getBooleanAttribute(name));
+		}else{
+			return( null );
+		}
+	}
+	
+	public default void
+	setOptionalBooleanAttribute(
+		String		name,
+		Boolean		value )
+	{
+		if ( value == null ){
+			removeAttribute( name );
+		}else{
+			setBooleanAttribute(name, value );
+		}
+	}
+
+	
 	public void
 	setActive(
 		boolean	active );

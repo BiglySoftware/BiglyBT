@@ -1815,7 +1815,7 @@ public class PeerManager implements CoreStatsProvider {
 
 			public void
 			setMaskDownloadCompletion(
-				boolean	mask ){ log(); }
+				Boolean	mask ){ log(); }
 			
 			public void
 			removeAllPeers(

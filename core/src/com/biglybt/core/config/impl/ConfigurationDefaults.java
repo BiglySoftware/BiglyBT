@@ -658,7 +658,7 @@ public class ConfigurationDefaults {
     def.put( "peercontrol.udp.fallback.connect.fail", TRUE );
     def.put( "peercontrol.udp.fallback.connect.drop", TRUE );
     def.put( "peercontrol.udp.probe.enable", FALSE );
-    def.put( "peercontrol.hide.piece", FALSE );
+    def.put( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE, FALSE );
     def.put( "peercontrol.scheduler.use.priorities", TRUE );
     def.put( "peercontrol.prefer.udp", FALSE );
     def.put( ConfigKeys.Connection.BCFG_PEERCONTROL_PREFER_IPV6_CONNECTIONS, FALSE );

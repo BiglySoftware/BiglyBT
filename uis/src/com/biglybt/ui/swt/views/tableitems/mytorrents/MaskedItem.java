@@ -73,7 +73,9 @@ public class MaskedItem
 
 			DownloadManager dm =(DownloadManager)ds;
 
-			boolean masked = globalMask || dm.getDownloadState().getBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP );
+			Boolean dmMasked = dm.getDownloadState().getOptionalBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL );
+			
+			boolean masked = dmMasked==null?globalMask:dmMasked; 
 			
 			if ( masked ){
 				

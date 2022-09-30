@@ -291,7 +291,9 @@ LWSDiskManagerState
 	public boolean getBooleanAttribute(String name){ return( false ); }
 	@Override
 	public boolean hasAttribute(String name){ return( false );}
-
+	@Override
+	public void removeAttribute(String name){}
+	
 	@Override
 	public String
 	getTrackerClientExtensions()

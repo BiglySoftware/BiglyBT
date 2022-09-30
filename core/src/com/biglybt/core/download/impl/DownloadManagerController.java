@@ -381,7 +381,7 @@ DownloadManagerController
 				
 				download_manager_state.removeListener(
 						dm_attribute_listener,
-						DownloadManagerState.AT_MASK_DL_COMP,
+						DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL,
 						DownloadManagerStateAttributeListener.WRITTEN );
 
 				dm_attribute_listener = null;
@@ -679,7 +679,7 @@ DownloadManagerController
 				
 				download_manager_state.removeListener(
 						dm_attribute_listener,
-						DownloadManagerState.AT_MASK_DL_COMP,
+						DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL,
 						DownloadManagerStateAttributeListener.WRITTEN );
 			}
 			
@@ -719,7 +719,7 @@ DownloadManagerController
 						}
 					}
 					
-					boolean mask = download_manager_state.getBooleanAttribute(DownloadManagerState.AT_MASK_DL_COMP );
+					Boolean mask = download_manager_state.getOptionalBooleanAttribute(DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL );
 
 					temp.setMaskDownloadCompletion( mask );
 				}
@@ -732,7 +732,7 @@ DownloadManagerController
 			
 			download_manager_state.addListener(
 					dm_attribute_listener,
-					DownloadManagerState.AT_MASK_DL_COMP,
+					DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL,
 					DownloadManagerStateAttributeListener.WRITTEN );
 
 			dm_attribute_listener.attributeEventOccurred( null, null, -1 );	// set initial state
@@ -1075,7 +1075,7 @@ DownloadManagerController
 								
 								download_manager_state.removeListener(
 										dm_attribute_listener,
-										DownloadManagerState.AT_MASK_DL_COMP,
+										DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL,
 										DownloadManagerStateAttributeListener.WRITTEN );
 
 								dm_attribute_listener = null;

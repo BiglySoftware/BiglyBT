@@ -436,7 +436,7 @@ PEPeerManager
 
 	public void
 	setMaskDownloadCompletion(
-		boolean	mask );
+		Boolean	mask );
 	
 	public void
 	removeAllPeers(

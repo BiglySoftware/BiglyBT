@@ -156,7 +156,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				"peercontrol.udp.fallback.connect.fail", 
 				"peercontrol.udp.fallback.connect.drop",
 				"peercontrol.udp.probe.enable", 
-				"peercontrol.hide.piece", 
+				ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE, 
 				"peercontrol.hide.piece.ds",
 				"peercontrol.prefer.udp", 
 				ConfigKeys.Transfer.ICFG_IPv4_IPv6_CONN_ACTION}, 
@@ -172,7 +172,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 						udp_fallback_for_failed_connection = COConfigurationManager.getBooleanParameter("peercontrol.udp.fallback.connect.fail");
 						udp_fallback_for_dropped_connection = COConfigurationManager.getBooleanParameter("peercontrol.udp.fallback.connect.drop");
 						udp_probe_enabled = COConfigurationManager.getBooleanParameter("peercontrol.udp.probe.enable");
-						global_hide_a_piece = COConfigurationManager.getBooleanParameter("peercontrol.hide.piece");
+						global_hide_a_piece = COConfigurationManager.getBooleanParameter(ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE);
 						global_hide_a_piece_ds = COConfigurationManager.getBooleanParameter("peercontrol.hide.piece.ds");
 
 						prefer_udp_default = COConfigurationManager.getBooleanParameter("peercontrol.prefer.udp");
@@ -305,7 +305,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	private int superSeedModeNumberOfAnnounces;
 	private SuperSeedPiece[] superSeedPieces;
 
-	private boolean local_hide_a_piece;
+	private boolean global_hide_a_piece_cached;
+	private Boolean local_hide_a_piece_opt;
 	private int hidden_piece;
 
 	private static final int OB_PS_STATS_HISTORY_SIZE = 100;
@@ -2727,6 +2728,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		outbound_message_count = out_messages;
 
 		_stats.update(stats_tick_count);
+		
+		if ( global_hide_a_piece_cached != global_hide_a_piece ){
+			
+			initHiddenPiece();
+		}
 	}
 
 	/**
@@ -6129,11 +6135,28 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	private void
 	initHiddenPiece()
 	{
-		boolean was_hp = hidden_piece >= 0;
+		global_hide_a_piece_cached = global_hide_a_piece;
 		
-		hidden_piece = ( global_hide_a_piece || local_hide_a_piece )? ((int) (Math.abs(adapter.getRandomSeed()) % _nbPieces)) : -1;
+		int new_hp;
 		
-		if ( was_hp != ( hidden_piece >= 0 )){
+		if ( local_hide_a_piece_opt==null?global_hide_a_piece_cached:local_hide_a_piece_opt ){
+			
+			if ( hidden_piece == -1 ){
+				
+				new_hp = (int)(Math.abs(adapter.getRandomSeed()) % _nbPieces);
+				
+			}else{
+				
+				new_hp = hidden_piece;
+			}
+		}else{
+			
+			new_hp = -1;
+		}
+		
+		if ( new_hp != hidden_piece ){
+			
+			hidden_piece = new_hp;
 			
 			removeAllPeers( "Hidden piece changed" );
 		}
@@ -6142,20 +6165,21 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	@Override
 	public void
 	setMaskDownloadCompletion(
-		boolean	mask )
+		Boolean	mask )
 	{
-		if ( mask == local_hide_a_piece ){
+		if ( mask == null && local_hide_a_piece_opt == null ){
+			
+			return;
+			
+		}else if ( mask == null || local_hide_a_piece_opt == null ){
+			
+		}else if ( mask == local_hide_a_piece_opt ){
 			
 			return;
 		}
 		
-		local_hide_a_piece = mask;
-		
-		if ( global_hide_a_piece ){
-			
-			return;
-		}
-		
+		local_hide_a_piece_opt = mask;
+				
 		initHiddenPiece();
 	}
 	

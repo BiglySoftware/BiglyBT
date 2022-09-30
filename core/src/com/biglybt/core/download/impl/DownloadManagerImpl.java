@@ -29,6 +29,7 @@ import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.disk.*;
@@ -4628,7 +4629,13 @@ DownloadManagerImpl
 
 	    		// only report "complete" if we really are complete, not a dnd completion event
 
-	    	if ( dm != null && dm.getRemaining() == 0 && !COConfigurationManager.getBooleanParameter( "peercontrol.hide.piece" )){
+	    	boolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );
+	    	
+	    	Boolean dmMask = download_manager_state.getOptionalBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL );
+	    	
+	    	boolean mask = dmMask==null?globalMask:dmMask;
+	    	
+	    	if ( dm != null && dm.getRemaining() == 0 && !mask ){
 
 	    		tc.complete( never_downloaded );
 	    	}

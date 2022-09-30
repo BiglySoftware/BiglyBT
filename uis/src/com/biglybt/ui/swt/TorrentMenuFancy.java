@@ -1276,6 +1276,8 @@ public class TorrentMenuFancy
 							boolean allAllocatable		= true;
 							boolean allMaskDC 			= true;
 							
+							boolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );
+
 							for (DownloadManager dm : dms) {
 								boolean stopped = ManagerUtils.isStopped(dm);
 
@@ -1315,7 +1317,11 @@ public class TorrentMenuFancy
 																
 								allAllocatable &= stopped && !dm.isDataAlreadyAllocated() && !dm.isDownloadComplete( false );	
 								
-								allMaskDC = allMaskDC && dms.getBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP );
+								Boolean dmmask = dms.getOptionalBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL );
+								
+								boolean mask = dmmask==null?globalMask:dmmask;
+								
+								allMaskDC = allMaskDC && mask;
 							}
 
 							boolean fileRescan = allScanSelected || allScanNotSelected;
@@ -1508,24 +1514,22 @@ public class TorrentMenuFancy
 							itemRestoreResume.setEnabled( restoreEnabled);
 			
 								// mask dl comp
-							
-							boolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );
-							
+														
 							MenuItem itemMaskDLComp = new MenuItem(menu, SWT.CHECK);
 							
 							if ( dms.length > 0 ){
-								itemMaskDLComp.setSelection( globalMask || allMaskDC );
+								itemMaskDLComp.setSelection( allMaskDC );
 							}
 							
 							Messages.setLanguageText(itemMaskDLComp,"ConfigView.label.hap");
 							itemMaskDLComp.addListener(SWT.Selection, new ListenerDMTask(dms) {
 								@Override
 								public void run(DownloadManager dm) {
-									dm.getDownloadState().setBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP, itemMaskDLComp.getSelection());
+									dm.getDownloadState().setOptionalBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL, itemMaskDLComp.getSelection());
 								}
 							});
 							
-							itemMaskDLComp.setEnabled( dms.length > 0 && !globalMask );
+							itemMaskDLComp.setEnabled( dms.length > 0 );
 
 							if (userMode > 1 && isSeedingView) {
 
