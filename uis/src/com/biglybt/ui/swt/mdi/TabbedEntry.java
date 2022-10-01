@@ -358,7 +358,8 @@ public class TabbedEntry
 		swtItem.addDisposeListener(e -> closeView( userInitiatedClose ));
 		String title = getTitle();
 		if (title != null) {
-			swtItem.setText(Utils.escapeAccelerators(title));
+			//swtItem.setText(Utils.escapeAccelerators(title));	// seems we don't need this anymore...
+			swtItem.setText(title);
 		}
 
 		updateLeftImage();
@@ -381,7 +382,8 @@ public class TabbedEntry
 				if (swtItem == null || swtItem.isDisposed()) {
 					return;
 				}
-				swtItem.setText(Utils.escapeAccelerators(getTitle()));
+				//swtItem.setText(Utils.escapeAccelerators(getTitle()));	// seems we don't need this anymore...
+				swtItem.setText(getTitle());
 			});
 		}
 		return changed;
@@ -395,7 +397,8 @@ public class TabbedEntry
 				if (swtItem == null || swtItem.isDisposed()) {
 					return;
 				}
-				swtItem.setText(Utils.escapeAccelerators(getTitle()));
+				//swtItem.setText(Utils.escapeAccelerators(getTitle()));	// seems we don't need this anymore...
+				swtItem.setText(getTitle());
 			});
 		}
 		return changed;
