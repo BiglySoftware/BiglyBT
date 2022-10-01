@@ -1747,7 +1747,7 @@ BuddyPluginView
 
 				String	short_name = chat.getShortName();
 
-				mi = menu_manager.addMenuItem( mc, "!" + short_name + "!" );
+				mi = menu_manager.addMenuItem( mc, "!" + Utils.escapeAccelerators(short_name) + "!" );
 
 				mi.addListener(
 					new MenuItemListener() {
@@ -1797,7 +1797,7 @@ BuddyPluginView
 
 						String	short_name = chat.getShortName();
 
-						mi = menu_manager.addMenuItem( mc, "!" + short_name + "!" );
+						mi = menu_manager.addMenuItem( mc, "!" + Utils.escapeAccelerators(short_name) + "!" );
 
 						mi.addListener(
 							new MenuItemListener() {
