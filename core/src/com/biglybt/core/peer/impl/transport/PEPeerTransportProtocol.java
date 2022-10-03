@@ -1067,7 +1067,7 @@ implements PEPeerTransport
 	}
 
 
-	private void performClose( String reason, int reason_code, boolean connect_failed, boolean externally_closed, boolean network_failure )
+	private void performClose( String reason, int close_reason_out, boolean connect_failed, boolean externally_closed, boolean network_failure )
 	{
 		try{
 			closing_mon.enter();
@@ -1112,6 +1112,8 @@ implements PEPeerTransport
 			outgoing_piece_message_handler.destroy();
 		}
 
+		int	close_reason_in = 0;
+		
 		if ( connection != null ) {  //can be null if close is called within ::<init>::, like when the given port is invalid
 			
 			Transport transport = connection.getTransport();
@@ -1122,20 +1124,27 @@ implements PEPeerTransport
 				
 				if (  close_reason != null ){
 					
-					//System.out.println( ip + "/" + client + ": close reason received = " + close_reason );
+					close_reason_in = close_reason;
 				}
 				
-				if ( reason_code != Transport.CR_NONE ){
-				
-					//System.out.println( ip + "/" + client + ": close reason sent = " + reason_code );
-					
-					transport.setUserData( Transport.KEY_CLOSE_REASON, reason_code );
+				if ( close_reason_out != Transport.CR_NONE ){
+									
+					transport.setUserData( Transport.KEY_CLOSE_REASON, close_reason_out );
 				}
 			}
 			
 			connection.close( reason );
 		}
 
+		if ( close_reason_in != 0 ){
+			
+			manager.handleCloseReason( this, false, close_reason_in );
+			
+		}else if ( close_reason_out != 0 ){
+			
+			manager.handleCloseReason( this, true, close_reason_out );
+		}
+				
 		if ( ip_resolver_request != null ){
 			ip_resolver_request.cancel();
 		}
@@ -1144,9 +1153,18 @@ implements PEPeerTransport
 
 		changePeerState( PEPeer.DISCONNECTED );
 
-		if (Logger.isEnabled())
-			Logger.log(new LogEvent(this, LOGID, "Peer connection closed: " + reason));
-
+		if (Logger.isEnabled()){
+			String str;
+			if ( close_reason_in != 0 ){
+				str = " (code_in" + close_reason_in + ")";
+			}else if ( close_reason_out != 0 ){
+				str = " (code_out" + close_reason_out + ")";
+			}else{
+				str = "";
+			}
+			Logger.log(new LogEvent(this, LOGID, "Peer connection closed: " + reason + str ));
+		}
+		
 		if( !externally_closed ) {  //if closed internally, notify manager, otherwise we assume it already knows
 			manager.peerConnectionClosed( this, connect_failed, network_failure );
 		}

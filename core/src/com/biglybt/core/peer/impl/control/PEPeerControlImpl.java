@@ -391,7 +391,16 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 	};
 
+	private static final int OUTBOUND_IGNORE_ADDRESSES_MAX = 256;
 	
+	private final Map<String, Integer> outbound_ignore_addresses = new LinkedHashMap<String, Integer>(
+			OUTBOUND_IGNORE_ADDRESSES_MAX, 0.75f, true){
+		@Override
+		protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest){
+			return size() > OUTBOUND_IGNORE_ADDRESSES_MAX;
+		}
+	};
+
 	private static final int UDP_RECONNECT_MAX = 16;
 
 	private final Map<String, PEPeerTransport> udp_reconnects = new LinkedHashMap<String, PEPeerTransport>(
@@ -399,17 +408,6 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		@Override
 		protected boolean removeEldestEntry(Map.Entry<String, PEPeerTransport> eldest){
 			return size() > UDP_RECONNECT_MAX;
-		}
-	};
-
-	private static final int MAX_SEEDING_SEED_DISCONNECT_HISTORY = 256;
-	private static final int SEEDING_SEED_DISCONNECT_TIMEOUT = 10 * 60 * 1000;
-
-	private final Map<String, Long> seeding_seed_disconnects = new LinkedHashMap<String, Long>(
-			MAX_SEEDING_SEED_DISCONNECT_HISTORY, 0.75f, true){
-		@Override
-		protected boolean removeEldestEntry(Map.Entry<String, Long> eldest){
-			return size() > MAX_SEEDING_SEED_DISCONNECT_HISTORY;
 		}
 	};
 
@@ -637,8 +635,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			@Override
 			public void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file){
-				// TODO Auto-generated method stub
-
+				handleFilePriorityChanged();
 			}
 
 			@Override
@@ -919,27 +916,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			checkSeeds();
 
-			if(seeding_mode){
-
-				if(mainloop_loop_count % MAINLOOP_FIVE_MINUTE_INTERVAL == 0){
-
-					synchronized(seeding_seed_disconnects){
-
-						long now = SystemTime.getMonotonousTime();
-
-						Iterator<Map.Entry<String, Long>> it = seeding_seed_disconnects.entrySet().iterator();
-
-						while(it.hasNext()){
-
-							Map.Entry<String, Long> entry = it.next();
-
-							if(now - entry.getValue() > SEEDING_SEED_DISCONNECT_TIMEOUT){
-
-								it.remove();
-							}
-						}
-					}
-				}
+			if ( seeding_mode ){
 
 				if(mainloop_loop_count % MAINLOOP_FIVE_SECOND_INTERVAL == 0){
 
@@ -1437,27 +1414,20 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			return("Peer source '" + peer_source + "' is not enabled");
 		}
 
-		if(seeding_mode && disconnectSeedsWhenSeeding()){
+		String key = address + ":" + (net_cat==AENetworkClassifier.AT_PUBLIC?tcp_port:6881);
 
-			String key = address + ":" + tcp_port;
+		synchronized( outbound_ignore_addresses ){
 
-			synchronized(seeding_seed_disconnects){
+			Integer rc = outbound_ignore_addresses.get( key );
 
-				Long prev = seeding_seed_disconnects.get(key);
-
-				if(prev != null){
-
-					if(SystemTime.getMonotonousTime() - prev > SEEDING_SEED_DISCONNECT_TIMEOUT){
-
-						seeding_seed_disconnects.remove(key);
-
-					}else{
-
-						return("Ignore recent seeds when seeding");
-					}
-				}
+			if ( rc != null ){
+				
+				// System.out.println( "Ignoring " + key + " due to " + rc );
+				
+				return( "Ignoring outbound connection due to previous close_reason: " + rc );
 			}
 		}
+	
 		boolean is_priority_connection = false;
 		boolean force = false;
 
@@ -2158,9 +2128,19 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				_timeStartedSeeding_mono = -1;
 				_timeFinished_mono = 0;
 
-				synchronized(seeding_seed_disconnects){
+				synchronized( outbound_ignore_addresses ){
 
-					seeding_seed_disconnects.clear();
+					Iterator<Integer> it =  outbound_ignore_addresses.values().iterator();
+					
+					while( it.hasNext()){
+						
+						int rc = it.next();
+						
+						if ( rc == Transport.CR_NOT_INTERESTED_UPLOAD_ONLY || rc == Transport.CR_UPLOAD_TO_UPLOAD ){
+							
+							it.remove();
+						}
+					}
 				}
 
 				Logger.log(new LogEvent(disk_mgr.getTorrent(), LOGID, "Turning off seeding mode for PEPeerManager"));
@@ -3761,16 +3741,6 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		if(pc.isSeed()){
 
 			last_seed_disconnect_time = SystemTime.getCurrentTime();
-
-			if(seeding_mode && disconnectSeedsWhenSeeding()){
-
-				String key = pc.getIp() + ":" + pc.getTCPListenPort();
-
-				synchronized(seeding_seed_disconnects){
-
-					seeding_seed_disconnects.put(key, SystemTime.getMonotonousTime());
-				}
-			}
 		}
 
 		adapter.removePeer(pc); // async downloadmanager notification
@@ -6563,6 +6533,81 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 	}
 
+	private void
+	handleFilePriorityChanged()
+	{
+		synchronized( outbound_ignore_addresses ){
+
+			Iterator<Integer> it =  outbound_ignore_addresses.values().iterator();
+			
+			while( it.hasNext()){
+				
+				int rc = it.next();
+				
+				if ( rc == Transport.CR_NOT_INTERESTED_UPLOAD_ONLY || rc == Transport.CR_UPLOAD_TO_UPLOAD ){
+					
+					it.remove();
+				}
+			}
+		}
+	}
+	
+	@Override
+	public void
+	handleCloseReason(
+		PEPeerTransport		peer,
+		boolean				reason_outgoing,
+		int					reason )
+	{
+		if (	reason == Transport.CR_UPLOAD_TO_UPLOAD || 
+				reason == Transport.CR_NOT_INTERESTED_UPLOAD_ONLY ||
+				reason == Transport.CR_IP_BLOCKED ||
+				reason == Transport.CR_PORT_BLOCKED ||
+				( reason_outgoing && reason == Transport.CR_SELF_CONNECTION )){
+			
+			NetworkConnectionBase connection = peer.getNetworkConnection();
+			
+			if ( connection != null ){
+						
+				InetSocketAddress address = connection.getEndpoint().getNotionalAddress();
+								
+				int port;
+				
+				if ( address.isUnresolved()){
+					
+					port = 6881;
+					
+				}else{
+					
+					port = peer.getTCPListenPort();
+				}
+
+				if ( port > 0 ){
+				
+					String host = AddressUtils.getHostAddress( address );
+
+					String key = host + ":" + port;
+				
+					InetAddress ipv6 = peer.getAlternativeIPv6();
+
+					synchronized( outbound_ignore_addresses ){
+						
+						Integer i_rc = Integer.valueOf( reason );
+						
+						outbound_ignore_addresses.put( key, i_rc );
+							
+						if ( ipv6 != null ){
+							
+							outbound_ignore_addresses.put( ipv6.getHostAddress() + ":" + port, i_rc );
+						}
+					
+						//  System.out.println( "peer: " + host + ":" + port + ", " + ipv6 + ", " + reason + ", " + reason_outgoing );
+					}
+				}
+			}
+		}
+	}
+	
 	@Override
 	public PEPeerControlHashHandler getHashHandler(){
 		return(hash_handler);

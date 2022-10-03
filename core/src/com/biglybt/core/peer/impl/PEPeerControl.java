@@ -165,4 +165,10 @@ PEPeerControl
 	isHolePunchOperationOK(
 		PEPeerTransport		peer,
 		boolean				is_connect );
+	
+	public void
+	handleCloseReason(
+		PEPeerTransport		peer,
+		boolean				reason_outgoing,
+		int					reason );
 }

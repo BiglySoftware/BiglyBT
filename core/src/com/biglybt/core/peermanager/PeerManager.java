@@ -1950,6 +1950,16 @@ public class PeerManager implements CoreStatsProvider {
 			public boolean isHolePunchOperationOK(PEPeerTransport peer, boolean is_connect){
 				log(); return false;
 			}
+			
+			@Override
+			public void
+			handleCloseReason(
+				PEPeerTransport		peer,
+				boolean				reason_out,
+				int					reason )
+			{	
+			}
+			
 			private void 
 			log()
 			{
