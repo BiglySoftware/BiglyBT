@@ -731,7 +731,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	}
 
 	@Override
-	public void stopAll(){
+	public void 
+	stopAll()
+	{
 		is_running = false;
 
 		UploadSlotManager.getSingleton().deregisterHelper(upload_helper);
@@ -753,8 +755,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		// clear pieces
 		for(int i = 0; i < _nbPieces; i++){
-			if(pePieces[i] != null)
+			if(pePieces[i] != null){
 				removePiece(pePieces[i], i);
+			}
 		}
 
 		// 5. Remove listeners
@@ -763,11 +766,15 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		piecePicker.destroy();
 
-		final ArrayList<PEPeerManagerListener> peer_manager_listeners = peer_manager_listeners_cow;
+		for ( PEPeerManagerListener listener: peer_manager_listeners_cow ){
 
-		for(int i = 0; i < peer_manager_listeners.size(); i++){
-
-			((PEPeerManagerListener) peer_manager_listeners.get(i)).destroyed(this);
+			try{
+				listener.destroyed(this);
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
 		}
 
 		sweepList = Collections.emptyList();
@@ -777,6 +784,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		pending_hole_punches.clear();
 		
 		udp_reconnects.clear();
+
+		outbound_ignore_addresses.clear();
 
 		hash_handler.stop();
 
@@ -4847,13 +4856,17 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		return(res);
 	}
 
-	private void doConnectionChecks(){
+	private void 
+	doConnectionChecks()
+	{
 		// if mixed networks then we have potentially two connections limits
 		// 1) general peer one - e.g. 100
 		// 2) general+reserved slots for non-public net - e.g. 103
 		// so we get to schedule 3 'extra' non-public connections
 
 		// every 1 second
+
+		final List<PEPeerTransport> peer_transports = peer_transports_cow;
 
 		boolean has_ipv6 = false;
 		boolean has_ipv4 = false;
@@ -4868,14 +4881,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			upload_limited_rate_group.getRateLimitBytesPerSecond();
 			download_limited_rate_group.getRateLimitBytesPerSecond();
 
-			final List<PEPeerTransport> peer_transports = peer_transports_cow;
-
 			int num_waiting_establishments = 0;
 
 			int udp_connections = 0;
 
-			for(int i = 0; i < peer_transports.size(); i++){
-				final PEPeerTransport transport = peer_transports.get(i);
+			for( PEPeerTransport transport: peer_transports ){
 
 				// update waiting count
 				final int state = transport.getConnectionState();
@@ -5115,13 +5125,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			final int min_done = Math.max(1,
 					(int) ((piece_length * DUP_CHECK_MIN_PIECES * 1000) / disk_mgr.getTotalLength()));
 
-			final List<PEPeerTransport> peer_transports = peer_transports_cow;
-
 			List<PEPeerTransport> interesting_peers = new ArrayList<>(peer_transports.size());
 
-			for( int i = 0; i < peer_transports.size(); i++ ){
-
-				final PEPeerTransport transport = peer_transports.get(i);
+			for( PEPeerTransport transport: peer_transports ){
 
 				// check for timeouts
 
@@ -5368,26 +5374,50 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			}
 		}
 
-		// sweep over all peers in a 60 second timespan
-		float percentage = ((mainloop_loop_count % MAINLOOP_SIXTY_SECOND_INTERVAL) + 1F)
-				/ (1F * MAINLOOP_SIXTY_SECOND_INTERVAL);
-		int goal;
-		if(mainloop_loop_count % MAINLOOP_SIXTY_SECOND_INTERVAL == 0){
+		if ( mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL == 0 ){
 
-			goal = 0;
-			sweepList = peer_transports_cow;
-		}else{
-			goal = (int) Math.floor(percentage * sweepList.size());
+				// sweep over all peers in a 60 second timespan
+			
+			float percentage = ((mainloop_loop_count % MAINLOOP_SIXTY_SECOND_INTERVAL) + 1F) / (1F * MAINLOOP_SIXTY_SECOND_INTERVAL);
+			
+			int goal;
+			
+			if ( mainloop_loop_count % MAINLOOP_SIXTY_SECOND_INTERVAL == 0 ){
+
+					// update considered peers every minute - any that come along or get disconnected
+					// will be processed later or ignored
+				
+				goal = 0;
+				
+				ArrayList<PEPeerTransport> transferring = new ArrayList<>(peer_transports.size());
+				
+				for( PEPeerTransport transport: peer_transports ){
+					
+					if ( transport.getPeerState() == PEPeer.TRANSFERING ){
+						
+						transferring.add( transport );
+					}
+				}
+				
+				sweepList = transferring;
+				
+			}else{
+				
+				goal = (int) Math.floor(percentage * sweepList.size());
+			}
+
+			for (int i = nextPEXSweepIndex; i < goal && i < sweepList.size(); i++){
+				
+				// System.out.println(mainloop_loop_count+" %:"+percentage+"
+				// start:"+nextPEXSweepIndex+" current:"+i+" <"+goal+"/"+sweepList.size());
+				
+				PEPeerTransport peer = sweepList.get(i);
+				
+				peer.updatePeerExchange();
+			}
+	
+			nextPEXSweepIndex = goal;
 		}
-
-		for(int i = nextPEXSweepIndex; i < goal && i < sweepList.size(); i++){
-			// System.out.println(mainloop_loop_count+" %:"+percentage+"
-			// start:"+nextPEXSweepIndex+" current:"+i+" <"+goal+"/"+sweepList.size());
-			final PEPeerTransport peer = sweepList.get(i);
-			peer.updatePeerExchange();
-		}
-
-		nextPEXSweepIndex = goal;
 
 		// kick duplicate outbound connections - some users experience increasing
 		// numbers of connections to the same IP address sitting there in a 'connecting'
@@ -5402,8 +5432,6 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			hp_bloom = null;
 			
-			List<PEPeerTransport> peer_transports = peer_transports_cow;
-
 			if(peer_transports.size() > 1){
 
 				Map<String, List<PEPeerTransport>> peer_map = new HashMap<>();
@@ -6561,9 +6589,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	{
 		if (	reason == Transport.CR_UPLOAD_TO_UPLOAD || 
 				reason == Transport.CR_NOT_INTERESTED_UPLOAD_ONLY ||
-				reason == Transport.CR_IP_BLOCKED ||
-				reason == Transport.CR_PORT_BLOCKED ||
-				( reason_outgoing && reason == Transport.CR_SELF_CONNECTION )){
+				( !reason_outgoing && reason == Transport.CR_IP_BLOCKED ) ||	// we handle outgoing already
+				( !reason_outgoing && reason == Transport.CR_PORT_BLOCKED )||	// we handle outgoing already
+				( reason_outgoing && reason == Transport.CR_SELF_CONNECTION )){	// we're both ends, do the one we know to be true
 			
 			NetworkConnectionBase connection = peer.getNetworkConnection();
 			
@@ -6664,6 +6692,24 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		writer.println("    tcp_hp=" + pending_hole_punches.size());
 
+		synchronized( outbound_ignore_addresses ){
+
+			writer.println("  Outbound Ignores: " + outbound_ignore_addresses.size());
+
+			try{
+				writer.indent();
+	
+				for ( Map.Entry<String,Integer> entry: outbound_ignore_addresses.entrySet()){
+					
+					writer.println( entry.getKey() + " - " + entry.getValue());
+				}
+	
+			}finally{
+	
+				writer.exdent();
+			}
+		}
+		
 		if(!seeding_mode){
 
 			writer.println("  Active Pieces");
