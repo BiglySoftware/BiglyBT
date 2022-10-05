@@ -594,8 +594,10 @@ public class SideBarEntrySWT
 
 		Tree tree = swtItem.getParent();
 		
-		tree.select(swtItem);
+			// show before select required, on Linux at least, to work if item collapsed
+		
 		tree.showItem(swtItem);
+		tree.select(swtItem);
 
 		if ( Constants.isOSX ){
 			tree.redraw();	// issue up to at least 4934r6 whereby tree is not being repainted after being scrolled via 'showItem'
