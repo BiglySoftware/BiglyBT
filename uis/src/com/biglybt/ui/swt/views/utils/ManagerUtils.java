@@ -4362,11 +4362,11 @@ public class ManagerUtils {
 									}
 	
 							logLine( viewer, dm_indent, "Matched=" + actions_established.size() + ", complete=" + already_complete + ", ignored as not selected for download=" + skipped + ", no candidates=" + no_candidates + ", remaining=" + unmatched_files.size() + " (total=" + files.length + ")");
+		
+							if ( mode != LOCATE_MODE_PIECE && actions_established.size() > 0 && unmatched_files.size() > 0 ){
 	
-							List<DiskManagerFileInfo> fixed_files = new ArrayList<>( actions_established.keySet());
-	
-							if ( actions_established.size() > 0 && unmatched_files.size() > 0 ){
-	
+								List<DiskManagerFileInfo> fixed_files = new ArrayList<>( actions_established.keySet());
+
 								logLine( viewer, dm_indent, "Looking for other potential name-based matches" );
 	
 								File overall_root = null;
