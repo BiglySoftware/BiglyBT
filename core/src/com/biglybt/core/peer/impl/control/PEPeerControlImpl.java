@@ -401,6 +401,19 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 	};
 
+	private static final int RECONNECT_SEEDING_MIN		= 3*60*1000;
+	private static final int RECONNECT_DOWNLOADING_MIN	= 1*60*1000;
+	
+	private static final int CONNECT_FAIL_HISTORY_MAX = 256;
+	
+	private final Map<String, Long> connect_fail_history = new LinkedHashMap<String, Long>(
+			CONNECT_FAIL_HISTORY_MAX, 0.75f, true){
+		@Override
+		protected boolean removeEldestEntry(Map.Entry<String, Long> eldest){
+			return size() > CONNECT_FAIL_HISTORY_MAX;
+		}
+	};
+
 	private static final int UDP_RECONNECT_MAX = 16;
 
 	private final Map<String, PEPeerTransport> udp_reconnects = new LinkedHashMap<String, PEPeerTransport>(
@@ -787,6 +800,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		outbound_ignore_addresses.clear();
 
+		connect_fail_history.clear();
+		
 		hash_handler.stop();
 
 		is_destroyed = true;
@@ -1434,6 +1449,18 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				// System.out.println( "Ignoring " + key + " due to " + rc );
 				
 				return( "Ignoring outbound connection due to previous close_reason: " + rc );
+				
+			}else{
+				
+				Long ft = connect_fail_history.get( key );
+				
+				if ( ft != null ){
+				
+					if (( SystemTime.getMonotonousTime() - ft ) <= ( seeding_mode?RECONNECT_SEEDING_MIN:RECONNECT_DOWNLOADING_MIN )){
+						
+						return( "Ignoring outbound connection due to previous connect failure" );
+					}
+				}
 			}
 		}
 	
@@ -5419,20 +5446,37 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			nextPEXSweepIndex = goal;
 		}
 
-		// kick duplicate outbound connections - some users experience increasing
-		// numbers of connections to the same IP address sitting there in a 'connecting'
-		// state
-		// not sure of the exact cause unfortunately so adding this as a stop gap
-		// measure (parg, 2015/01/11)
-		// I have a suspicion this is caused by an outbound connection failing (possibly
-		// with TCP+uTP dual connects) and not resulting in overall disconnect
-		// as the user has a bunch of 'bind' exceptions in their log
-
 		if ( mainloop_loop_count % MAINLOOP_SIXTY_SECOND_INTERVAL == 0 ){
 
 			hp_bloom = null;
+
+			long now = SystemTime.getMonotonousTime();
 			
-			if(peer_transports.size() > 1){
+			synchronized( outbound_ignore_addresses ){
+
+				Iterator<Long> it =  connect_fail_history.values().iterator();
+				
+				while( it.hasNext()){
+					
+					long t = it.next();
+					
+					if ( now - t > RECONNECT_SEEDING_MIN ){
+						
+						it.remove();
+					}
+				}
+			}
+			
+				// kick duplicate outbound connections - some users experience increasing
+				// numbers of connections to the same IP address sitting there in a 'connecting'
+				// state
+				// not sure of the exact cause unfortunately so adding this as a stop gap
+				// measure (parg, 2015/01/11)
+				// I have a suspicion this is caused by an outbound connection failing (possibly
+				// with TCP+uTP dual connects) and not resulting in overall disconnect
+				// as the user has a bunch of 'bind' exceptions in their log
+
+			if ( peer_transports.size() > 1){
 
 				Map<String, List<PEPeerTransport>> peer_map = new HashMap<>();
 
@@ -6589,9 +6633,10 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	{
 		if (	reason == Transport.CR_UPLOAD_TO_UPLOAD || 
 				reason == Transport.CR_NOT_INTERESTED_UPLOAD_ONLY ||
-				( !reason_outgoing && reason == Transport.CR_IP_BLOCKED ) ||	// we handle outgoing already
-				( !reason_outgoing && reason == Transport.CR_PORT_BLOCKED )||	// we handle outgoing already
-				( reason_outgoing && reason == Transport.CR_SELF_CONNECTION )){	// we're both ends, do the one we know to be true
+				( !reason_outgoing && reason == Transport.CR_IP_BLOCKED ) ||		// we handle outgoing already
+				( !reason_outgoing && reason == Transport.CR_PORT_BLOCKED )	||		// we handle outgoing already
+				( reason_outgoing && reason == Transport.CR_SELF_CONNECTION ) ||	// we're both ends, do the one we know to be true
+				( reason == Transport.CR_INTERNAL_CONNECT_FAILED )){
 			
 			NetworkConnectionBase connection = peer.getNetworkConnection();
 			
@@ -6616,20 +6661,29 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 					String key = host + ":" + port;
 				
-					InetAddress ipv6 = peer.getAlternativeIPv6();
-
-					synchronized( outbound_ignore_addresses ){
+					if ( reason == Transport.CR_INTERNAL_CONNECT_FAILED ){
 						
-						Integer i_rc = Integer.valueOf( reason );
-						
-						outbound_ignore_addresses.put( key, i_rc );
+						synchronized( outbound_ignore_addresses ){
 							
-						if ( ipv6 != null ){
-							
-							outbound_ignore_addresses.put( ipv6.getHostAddress() + ":" + port, i_rc );
+							connect_fail_history.put( key, SystemTime.getMonotonousTime());
 						}
-					
-						//  System.out.println( "peer: " + host + ":" + port + ", " + ipv6 + ", " + reason + ", " + reason_outgoing );
+					}else{
+						
+						InetAddress ipv6 = peer.getAlternativeIPv6();
+	
+						synchronized( outbound_ignore_addresses ){
+							
+							Integer i_rc = Integer.valueOf( reason );
+							
+							outbound_ignore_addresses.put( key, i_rc );
+								
+							if ( ipv6 != null ){
+								
+								outbound_ignore_addresses.put( ipv6.getHostAddress() + ":" + port, i_rc );
+							}
+						
+							//  System.out.println( "peer: " + host + ":" + port + ", " + ipv6 + ", " + reason + ", " + reason_outgoing );
+						}
 					}
 				}
 			}
@@ -6710,6 +6764,26 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			}
 		}
 		
+		synchronized( outbound_ignore_addresses ){
+
+			writer.println("  Connect Fails: " + connect_fail_history.size());
+
+			long now = SystemTime.getMonotonousTime();
+			
+			try{
+				writer.indent();
+	
+				for ( Map.Entry<String,Long> entry: connect_fail_history.entrySet()){
+					
+					writer.println( entry.getKey() + " - " + ( now - entry.getValue()));
+				}
+	
+			}finally{
+	
+				writer.exdent();
+			}
+		}
+
 		if(!seeding_mode){
 
 			writer.println("  Active Pieces");

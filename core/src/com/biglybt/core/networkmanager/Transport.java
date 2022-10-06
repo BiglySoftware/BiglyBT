@@ -53,6 +53,10 @@ Transport
   public static final int CR_SELF_CONNECTION			= 258;
   public static final int CR_BAD_PIECE_DATA				= 286;
   
+  	// internal reasons
+  
+  public static final int CR_INTERNAL_CONNECT_FAILED	= 1000000;
+		  
   public static final int TRANSPORT_MODE_NORMAL = 0;
   public static final int TRANSPORT_MODE_FAST   = 1;
   public static final int TRANSPORT_MODE_TURBO  = 2;

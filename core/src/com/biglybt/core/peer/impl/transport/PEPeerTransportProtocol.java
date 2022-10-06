@@ -1143,6 +1143,13 @@ implements PEPeerTransport
 		}else if ( close_reason_out != 0 ){
 			
 			manager.handleCloseReason( this, true, close_reason_out );
+			
+		}else{
+			
+			if ( outbound_connection_progress == CP_CONNECT_FAILED ){
+				
+				manager.handleCloseReason( this, true, Transport.CR_INTERNAL_CONNECT_FAILED );
+			}
 		}
 				
 		if ( ip_resolver_request != null ){
