@@ -1452,13 +1452,16 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				
 			}else{
 				
-				Long ft = connect_fail_history.get( key );
-				
-				if ( ft != null ){
-				
-					if (( SystemTime.getMonotonousTime() - ft ) <= ( seeding_mode?RECONNECT_SEEDING_MIN:RECONNECT_DOWNLOADING_MIN )){
-						
-						return( "Ignoring outbound connection due to previous connect failure" );
+				if ( peer_source != PEPeerSource.PS_HOLE_PUNCH ){
+					
+					Long ft = connect_fail_history.get( key );
+					
+					if ( ft != null ){
+					
+						if (( SystemTime.getMonotonousTime() - ft ) <= ( seeding_mode?RECONNECT_SEEDING_MIN:RECONNECT_DOWNLOADING_MIN )){
+							
+							return( "Ignoring outbound connection due to previous connect failure" );
+						}
 					}
 				}
 			}
