@@ -391,12 +391,12 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 	};
 
-	private static final int OUTBOUND_IGNORE_ADDRESSES_MAX = 256;
+	private static final int OUTBOUND_IGNORE_ADDRESSES_MAX = 1024;
 	
-	private final Map<String, Integer> outbound_ignore_addresses = new LinkedHashMap<String, Integer>(
+	private final Map<PeerCacheKey, Integer> outbound_ignore_addresses = new LinkedHashMap<PeerCacheKey, Integer>(
 			OUTBOUND_IGNORE_ADDRESSES_MAX, 0.75f, true){
 		@Override
-		protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest){
+		protected boolean removeEldestEntry(Map.Entry<PeerCacheKey, Integer> eldest){
 			return size() > OUTBOUND_IGNORE_ADDRESSES_MAX;
 		}
 	};
@@ -404,12 +404,12 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	private static final int RECONNECT_SEEDING_MIN		= 3*60*1000;
 	private static final int RECONNECT_DOWNLOADING_MIN	= 1*60*1000;
 	
-	private static final int CONNECT_FAIL_HISTORY_MAX = 256;
+	private static final int CONNECT_FAIL_HISTORY_MAX = 512;
 	
-	private final Map<String, Long> connect_fail_history = new LinkedHashMap<String, Long>(
+	private final Map<PeerCacheKey, Long> connect_fail_history = new LinkedHashMap<PeerCacheKey, Long>(
 			CONNECT_FAIL_HISTORY_MAX, 0.75f, true){
 		@Override
-		protected boolean removeEldestEntry(Map.Entry<String, Long> eldest){
+		protected boolean removeEldestEntry(Map.Entry<PeerCacheKey, Long> eldest){
 			return size() > CONNECT_FAIL_HISTORY_MAX;
 		}
 	};
@@ -1438,8 +1438,25 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			return("Peer source '" + peer_source + "' is not enabled");
 		}
 
-		String key = address + ":" + (net_cat==AENetworkClassifier.AT_PUBLIC?tcp_port:6881);
-
+		PeerCacheKey key;
+		
+		if ( net_cat == AENetworkClassifier.AT_PUBLIC ){
+			
+			byte[] bytes = HostNameToIPResolver.hostAddressToBytes( address );
+			
+			if ( bytes == null ){
+				
+				key = new PeerUnresolvedCacheKey( address, tcp_port );
+				
+			}else{
+				
+				key = new PeerResolvedCacheKey( bytes, tcp_port );
+			}
+		}else{
+			
+			key = new PeerNonPublicCacheKey( address );
+		}
+		
 		synchronized( outbound_ignore_addresses ){
 
 			Integer rc = outbound_ignore_addresses.get( key );
@@ -3636,9 +3653,12 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 							
 							stats_history = ob_ps_stats_history[stats_index=3];
 							
-						}else{
+						}else if ( ps == PEPeerSource.PS_INCOMING ){
 							
 							stats_history = ob_ps_stats_history[stats_index=4];
+						}else{
+							
+							stats_history = ob_ps_stats_history[stats_index=5];
 						}
 						
 						int pos = ob_ps_stats_pos[stats_index]++;
@@ -3704,6 +3724,10 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			}
 		}
 		
+		if ( verbose ){
+			
+			str += (str.isEmpty()?"":": ") + "Fail history=" + connect_fail_history.size() + ", blocked=" + outbound_ignore_addresses.size();
+		}
 		return( str );
 	}
 	
@@ -6647,46 +6671,41 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 						
 				InetSocketAddress address = connection.getEndpoint().getNotionalAddress();
 								
-				int port;
+				PeerCacheKey key;
 				
 				if ( address.isUnresolved()){
-					
-					port = 6881;
+				
+					key = new PeerNonPublicCacheKey( address.getHostName());
 					
 				}else{
 					
-					port = peer.getTCPListenPort();
+					key = new PeerResolvedCacheKey( address.getAddress().getAddress(), peer.getTCPListenPort());
 				}
-
-				if ( port > 0 ){
 				
-					String host = AddressUtils.getHostAddress( address );
+				if ( reason == Transport.CR_INTERNAL_CONNECT_FAILED ){
+					
+					synchronized( outbound_ignore_addresses ){
+						
+						connect_fail_history.put( key, SystemTime.getMonotonousTime());
+					}
+				}else{
+					
+					InetAddress ipv6 = peer.getAlternativeIPv6();
 
-					String key = host + ":" + port;
-				
-					if ( reason == Transport.CR_INTERNAL_CONNECT_FAILED ){
+					synchronized( outbound_ignore_addresses ){
 						
-						synchronized( outbound_ignore_addresses ){
+						Integer i_rc = Integer.valueOf( reason );
+						
+						outbound_ignore_addresses.put( key, i_rc );
 							
-							connect_fail_history.put( key, SystemTime.getMonotonousTime());
+						if ( ipv6 != null ){
+							
+							PeerCacheKey keyv6 = key = new PeerResolvedCacheKey( ipv6.getAddress(), peer.getTCPListenPort());
+							
+							outbound_ignore_addresses.put( keyv6, i_rc );
 						}
-					}else{
-						
-						InetAddress ipv6 = peer.getAlternativeIPv6();
-	
-						synchronized( outbound_ignore_addresses ){
-							
-							Integer i_rc = Integer.valueOf( reason );
-							
-							outbound_ignore_addresses.put( key, i_rc );
-								
-							if ( ipv6 != null ){
-								
-								outbound_ignore_addresses.put( ipv6.getHostAddress() + ":" + port, i_rc );
-							}
-						
-							//  System.out.println( "peer: " + host + ":" + port + ", " + ipv6 + ", " + reason + ", " + reason_outgoing );
-						}
+					
+						//  System.out.println( "peer: " + host + ":" + port + ", " + ipv6 + ", " + reason + ", " + reason_outgoing );
 					}
 				}
 			}
@@ -6756,9 +6775,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			try{
 				writer.indent();
 	
-				for ( Map.Entry<String,Integer> entry: outbound_ignore_addresses.entrySet()){
+				for ( Map.Entry<PeerCacheKey,Integer> entry: outbound_ignore_addresses.entrySet()){
 					
-					writer.println( entry.getKey() + " - " + entry.getValue());
+					writer.println( entry.getKey().getString() + " - " + entry.getValue());
 				}
 	
 			}finally{
@@ -6776,9 +6795,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			try{
 				writer.indent();
 	
-				for ( Map.Entry<String,Long> entry: connect_fail_history.entrySet()){
+				for ( Map.Entry<PeerCacheKey,Long> entry: connect_fail_history.entrySet()){
 					
-					writer.println( entry.getKey() + " - " + ( now - entry.getValue()));
+					writer.println( entry.getKey().getString() + " - " + ( now - entry.getValue()));
 				}
 	
 			}finally{
@@ -7560,6 +7579,160 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 
 		public void permittedReceiveBytesUsed(int num){
+		}
+	}
+	
+	static interface
+	PeerCacheKey
+	{
+		String
+		getString();
+	}
+	
+	static class
+	PeerNonPublicCacheKey
+		implements PeerCacheKey
+	{
+		final String key;
+		
+		PeerNonPublicCacheKey(
+			String	address )
+		{
+			if ( address.length() > 16 ){
+				
+				key = new String( address.substring(0, 16 ));
+				
+			}else{
+				
+				key = address;
+			}
+		}
+		
+		@Override
+		public String 
+		getString()
+		{
+			return( key );
+		}
+		
+		@Override
+		public int 
+		hashCode()
+		{
+			return( key.hashCode());
+		}
+		
+		@Override
+		public boolean 
+		equals(
+			Object obj )
+		{
+			if ( obj instanceof PeerNonPublicCacheKey ){
+			
+				return( key.equals(((PeerNonPublicCacheKey)obj).key ));
+				
+			}else{
+				
+				return( false );
+			}
+		}
+	}
+	
+	static class
+	PeerUnresolvedCacheKey
+		implements PeerCacheKey
+	{
+		final String key;
+		
+		PeerUnresolvedCacheKey(
+			String	address,
+			int		port )
+		{
+			key = address + ":" + port;
+		}
+		
+		@Override
+		public String 
+		getString()
+		{
+			return( key );
+		}
+		
+		@Override
+		public int 
+		hashCode()
+		{
+			return( key.hashCode());
+		}
+		
+		@Override
+		public boolean 
+		equals(
+			Object obj )
+		{
+			if ( obj instanceof PeerUnresolvedCacheKey ){
+			
+				return( key.equals(((PeerUnresolvedCacheKey)obj).key ));
+				
+			}else{
+				
+				return( false );
+			}
+		}	
+	}
+	
+	static class
+	PeerResolvedCacheKey
+		extends HashWrapper
+		implements PeerCacheKey
+	{
+		PeerResolvedCacheKey(
+			byte[]		bytes,
+			int			port )
+		{
+			super( addPort( bytes, port ));
+		}
+		
+		@Override
+		public String 
+		getString()
+		{
+			byte[] bytes = getBytes();
+			
+			int len = bytes.length;
+			
+			byte[] address = new byte[len-2];
+			
+			System.arraycopy(bytes, 0, address, 0, address.length );
+			
+			try{			
+				InetAddress ia = InetAddress.getByAddress( address );
+				
+				int port = ( bytes[len-2]<<8 )&0xff00 | bytes[len-1]&0xff;
+				
+				return( ia.getHostAddress() + ":" + port );
+				
+			}catch( Throwable e ){
+				
+				return( ByteFormatter.encodeString(bytes));
+			}
+		}
+		
+		static byte[]
+		addPort(
+			byte[]		address,
+			int			port )
+		{
+			int	len = address.length;
+			
+			byte[] temp = new byte[len+2];
+			
+			System.arraycopy( address, 0, temp, 0, len );
+			
+			temp[len] 	= (byte)( port>>8 );
+			temp[len+1] = (byte)( port );
+			
+			return( temp );
 		}
 	}
 }
