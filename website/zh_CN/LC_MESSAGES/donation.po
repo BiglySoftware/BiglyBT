@@ -15,37 +15,37 @@ msgstr ""
 "X-Crowdin-Language: zh-CN\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 508\n"
-"PO-Revision-Date: 2022-08-02 13:53\n"
+"PO-Revision-Date: 2022-10-10 09:37\n"
 
 msgid "test"
 msgstr ""
 
 msgid "onlyEng"
-msgstr ""
+msgstr "仅英语"
 
 msgid "donation_line1"
-msgstr ""
+msgstr "尽管BiglyBT是一个自由软件，但开发和维护需要大量的费用。 如果你认为你已经通过使用它受益，请考虑通过以下方式支持我们："
 
 msgid "donation_title"
-msgstr ""
+msgstr "支持BiglyBT"
 
 msgid "donation_monthly_title"
-msgstr ""
+msgstr "月度感谢"
 
 msgid "donation_onetime_title"
 msgstr ""
 
 msgid "donation_bitcoin_title"
-msgstr ""
+msgstr "比特币"
 
 msgid "donation_monthly_description"
-msgstr ""
+msgstr "给开发者每月一杯咖啡"
 
 msgid "donation_monthly_per_month"
-msgstr ""
+msgstr "/月"
 
 msgid "donation_onetime_amount"
-msgstr ""
+msgstr "金额 (%1)："
 
 msgid "donation_onetime_description"
 msgstr ""
