@@ -15,7 +15,7 @@ msgstr ""
 "X-Crowdin-Language: zh-CN\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 508\n"
-"PO-Revision-Date: 2022-10-10 09:37\n"
+"PO-Revision-Date: 2022-10-10 10:40\n"
 
 msgid "test"
 msgstr ""
@@ -48,23 +48,23 @@ msgid "donation_onetime_amount"
 msgstr "金额 (%1)："
 
 msgid "donation_onetime_description"
-msgstr ""
+msgstr "无论多少都是很大的助力:)"
 
 msgid "donation_bitcoin_description"
-msgstr ""
+msgstr "我们建议捐赠 %1或 %2。:)"
 
 msgid "donation_bitcoin_addresses"
-msgstr ""
+msgstr "BCH/BTC/BSG/BSV 钱包地址："
 
 msgid "donation_crypto_title"
-msgstr ""
+msgstr "加密货币"
 
 msgid "donation_crypto_description"
-msgstr ""
+msgstr "如果您最喜欢的货币或Token未被列出，请让我们知道。我们会添加一个地址 :)"
 
 msgid "no_thanks"
-msgstr ""
+msgstr "不用了."
 
 msgid "close"
-msgstr ""
+msgstr "关闭"
 
