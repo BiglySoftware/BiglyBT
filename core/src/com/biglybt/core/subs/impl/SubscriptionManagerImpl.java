@@ -7974,6 +7974,11 @@ SubscriptionManagerImpl
 				
 				for ( SubscriptionResultImpl result: results ){
 					
+					if ( result.isDeleted()){
+						
+						continue;
+					}
+					
 					String rid = null;
 					
 					String hash = result.getAssetHash();
