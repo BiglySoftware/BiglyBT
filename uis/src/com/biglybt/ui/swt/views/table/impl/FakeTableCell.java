@@ -106,7 +106,8 @@ public class FakeTableCell
 	private Graphic graphic;
 
 	private String text;
-
+	private double numericValue = Double.NaN;
+	
 	private Object pluginDataSource;
 
 	private Object tooltip;
@@ -954,6 +955,22 @@ public class FakeTableCell
 		return true;
 	}
 
+	
+	@Override
+	public double 
+	getNumeric()
+	{
+		return( numericValue );
+	}
+	
+	@Override
+	public void 
+	setNumeric(
+		double d)
+	{
+		numericValue = d;
+	}
+	
 	// @see com.biglybt.pif.ui.tables.TableCell#setToolTip(java.lang.Object)
 	@Override
 	public void setToolTip(Object tooltip) {

@@ -70,6 +70,7 @@ import com.biglybt.ui.swt.views.file.FileInfoView;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
+import com.biglybt.ui.swt.views.table.utils.TableColumnFilterHelper;
 import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 import com.biglybt.ui.swt.views.tableitems.files.*;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.AlertsItem;
@@ -161,6 +162,8 @@ public class FilesView
   MenuItem path_item;
 
   TableViewSWT<DiskManagerFileInfo> tv;
+  TableColumnFilterHelper<DiskManagerFileInfo>	col_filter_helper;
+  
 	Button btnShowDND;
 	Button btnTreeView;
 	BufferedLabel lblHeader;
@@ -217,6 +220,8 @@ public class FilesView
 			});
 		
 		
+		col_filter_helper = new TableColumnFilterHelper<DiskManagerFileInfo>( tv, "fv:search" );
+
 		return tv;
 	}
 
@@ -321,7 +326,9 @@ public class FilesView
 
 		String tooltip = MessageText.getString("filter.tt.start");
 		tooltip += MessageText.getString("filesview.filter.tt.line1");
-		
+		tooltip += MessageText.getString("column.filter.tt.line1");
+		tooltip += MessageText.getString("column.filter.tt.line2");
+
 		bubbleTextBox.setTooltip( tooltip );
 		
 		fd = new FormData();
@@ -805,33 +812,15 @@ public class FilesView
 				
 				filter = filter.substring(1);
 			}
-			
-			if ( filter.isEmpty()){
-					
-				return( true );
-			}
-			
+						
 			String name = filter_on_path?file.getAbsolutePath():file.getName();
 			
 			if ( confusable ){
 				
-				name = GeneralUtils.getConfusableEquivalent(name,false);
+				name = GeneralUtils.getConfusableEquivalent( name, false );
 			}
 			
-			String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
-
-			boolean	match_result = true;
-
-			if ( regex && s.startsWith( "!" )){
-
-				s = s.substring(1);
-
-				match_result = false;
-			}
-
-			Pattern pattern = RegExUtil.getCachedPattern( "fv:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-
-			return( pattern.matcher(name).find() == match_result );
+			return( col_filter_helper.filterCheck( ds, filter, regex, name, filter_on_path ));
 
 		} catch (Exception e) {
 
@@ -840,10 +829,13 @@ public class FilesView
 	}
 
 	@Override
-	public void filterSet(String filter)
+	public void 
+	filterSet(
+		String filter )
 	{
-		// System.out.println( filter );
+		col_filter_helper.filterSet(filter);
 	}
+	
 
 	/* (non-Javadoc)
 	 * @see TableViewFilterCheck.TableViewFilterCheckEx#viewChanged(TableView)

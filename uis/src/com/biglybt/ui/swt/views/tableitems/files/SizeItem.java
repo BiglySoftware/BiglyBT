@@ -70,9 +70,13 @@ public class SizeItem
     	
     	text = "";
     	
+    	cell.setNumeric( Double.NaN );
+    	
     }else{
     	
     	text = DisplayFormatters.formatByteCountToKiBEtc(value);
+    	
+    	cell.setNumeric( value );
     	
     	if ( internal ){
     		

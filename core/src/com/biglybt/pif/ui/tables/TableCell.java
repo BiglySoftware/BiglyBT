@@ -101,6 +101,21 @@ public interface TableCell {
    */
   String getText();
 
+  /**
+   * Set the numeric value of the cell. This is not used for formating, sort order, display, it is
+   * purely to allow the numeric value of a cell be set and retrieved
+   * @param d
+   */
+  
+  void setNumeric( double d );
+  
+  /**
+   * 
+   * @return numeric value of the cell or Double.NaN if undefined 
+   */
+  
+  double getNumeric();
+  
   /** Change the cell's foreground color.
    * <p>
    * pass -1 to return color back to default

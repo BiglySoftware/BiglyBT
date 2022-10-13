@@ -134,6 +134,8 @@ public abstract class TableCellSWTBase
 
 	protected Comparable sortValue;
 
+	private double numericValue = Double.NaN;
+	
 	private byte restartRefresh = 0;
 
 	private boolean bInRefreshAsync = false;
@@ -1000,6 +1002,21 @@ public abstract class TableCellSWTBase
 		return sortValue;
 	}
 
+	@Override
+	public double 
+	getNumeric()
+	{
+		return( numericValue );
+	}
+	
+	@Override
+	public void 
+	setNumeric(
+		double d)
+	{
+		numericValue = d;
+	}
+	
 	@Override
 	public boolean isValid() {
 		// Called often.. inline faster

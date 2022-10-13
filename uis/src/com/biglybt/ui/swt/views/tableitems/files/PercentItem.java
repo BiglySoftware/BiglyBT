@@ -90,8 +90,12 @@ public class PercentItem
 		
 		if ( percent < 0 ){
 			text = "";
+			
+			cell.setNumeric(Double.NaN);
 		}else{
 			text = DisplayFormatters.formatPercentFromThousands((int) percent);
+			
+			cell.setNumeric( percent/10d );
 			
 			if ( internal ){
 				

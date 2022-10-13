@@ -65,6 +65,7 @@ public class UpSpeedItem
     if (!cell.setSortValue(sort_value) && cell.isValid())
       return;
 
+    cell.setNumeric( data_value );
     cell.setText(DisplayFormatters.formatDataProtByteCountToKiBEtcPerSec(data_value,prot_value));
   }
 }

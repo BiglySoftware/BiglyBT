@@ -68,9 +68,13 @@ public class SizeBytesItem
     	
     	text = "";
     	
+    	cell.setNumeric( Double.NaN );
+    	
     }else{
     	
     	text = NumberFormat.getNumberInstance().format( value );
+    	
+    	cell.setNumeric( value );
     	
     	if ( internal ){
     		

@@ -58,6 +58,7 @@ public class PercentItem
     if (!cell.setSortValue(value) && cell.isValid())
       return;
 
+    cell.setNumeric( value/10d );
     cell.setText(DisplayFormatters.formatPercentFromThousands(value));
   }
 }

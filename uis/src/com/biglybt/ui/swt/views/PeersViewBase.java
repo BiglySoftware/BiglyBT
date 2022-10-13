@@ -61,6 +61,7 @@ import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
+import com.biglybt.ui.swt.views.table.utils.TableColumnFilterHelper;
 import com.biglybt.ui.swt.views.tableitems.peers.*;
 
 import com.biglybt.pif.peers.Peer;
@@ -143,7 +144,8 @@ PeersViewBase
 	
 	private BubbleTextBox bubbleTextBox;
 	
-	protected TableViewSWT<PEPeer> tv;
+	protected TableViewSWT<PEPeer> 			tv;
+	private TableColumnFilterHelper<PEPeer>	col_filter_helper;
 	
 	protected Shell shell;
 
@@ -214,6 +216,7 @@ PeersViewBase
 	
 			String tooltip = MessageText.getString("filter.tt.start");
 			tooltip += MessageText.getString("peersview.filter.tt.line1");
+			tooltip += MessageText.getString("column.filter.tt.line2");
 			
 			bubbleTextBox.setTooltip( tooltip );
 			
@@ -374,6 +377,8 @@ PeersViewBase
 					"connected_time", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 		}
 		
+		col_filter_helper = new TableColumnFilterHelper<PEPeer>( tv, "pb:search" );
+		
 		tv.setRowDefaultHeightEM(1);
 		
 		registerPluginViews();
@@ -434,54 +439,15 @@ PeersViewBase
 			}
 		}
 	}
-	
-	private TimerEventPeriodic 	filter_refilter;
-	private Object				refilter_lock = new Object();
-	
+		
 	@Override
 	public void 
 	filterSet(
 		String filter) 
 	{
-		synchronized( refilter_lock ){
-			
-			if ( filter.isEmpty()){
-				
-				if ( filter_refilter != null ){
-					
-					filter_refilter.cancel();
-					
-					filter_refilter = null;
-				}
-			}else if ( filter_refilter == null ){
-				
-				filter_refilter = SimpleTimer.addPeriodicEvent(
-					"pv:refilter", 5000,
-					(ev)->{
-						if ( tv.isDisposed()){
-							
-							synchronized( refilter_lock ){
-								
-								if ( filter_refilter != null ){
-									
-									filter_refilter.cancel();
-									
-									filter_refilter = null;
-								}
-								
-								return;
-							}
-						}
-												
-						tv.refilter();
-					});
-			}
-		}
+		col_filter_helper.filterSet( filter );
 	}
-	
-	private com.biglybt.pif.ui.tables.TableColumn	col_cache;
-	private String									col_cache_name;
-	
+		
 	@Override
 	public boolean 
 	filterCheck(
@@ -494,102 +460,8 @@ PeersViewBase
 			
 			return( false );
 		}
-		
-		if ( filter.isEmpty()){
-			
-			return( true );
-		}
-		
-		String	filter_text;
-		String	match_text;
-		
-		int pos = filter.indexOf( ':' );
-		
-		if ( pos == -1 ){
-			
-			filter_text = filter;
-			
-			match_text	= ds.getClient();
-			
-		}else{
-			
-			match_text = "";
-			
-			String col_name 	= filter.substring( 0, pos ).trim();
-			String col_value	= filter.substring( pos+1 ).trim();
-		
-			filter_text = col_value;
-			
-			com.biglybt.pif.ui.tables.TableColumn col;
-			
-			synchronized( refilter_lock ){
 				
-				if ( col_cache_name == null || !col_cache_name.equals( col_name )){
-					
-					col_cache = tv.getTableColumn( col_name, true );
-					
-					col_cache_name = col_name;
-				}
-				
-				col = col_cache;
-			}
-			
-			if ( col == null ){
-				
-				return( true );
-			}
-
-			TableRowSWT row = tv.getRowSWT( ds );
-			
-			boolean is_fake = false;
-			
-			if ( row == null ){
-				
-					// row may not be visible (either just adding or already filtered)
-				
-				row = tv.createFakeRow( ds );
-				
-				is_fake = true;
-			}
-			
-			try{
-					// ensure cells are constructed
-				
-				row.setShown( true, true );
-				
-				TableCellCore cell = (TableCellCore)row.getTableCell(  col );
-				
-				if ( cell != null ){
-				
-						// pick up latest value
-					
-					cell.refresh();
-										
-					match_text = cell.getText();
-				}
-			}finally{
-				
-				if ( is_fake ){
-					
-					row.delete();
-				}
-			}
-		}
-		
-		String s = regex ? filter_text : RegExUtil.splitAndQuote( filter_text, "\\s*[|;]\\s*" );
-
-		boolean	match_result = true;
-
-		if ( regex && s.startsWith( "!" )){
-
-			s = s.substring(1);
-
-			match_result = false;
-		}
-
-		Pattern pattern = RegExUtil.getCachedPattern( "pb:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-
-		return( pattern.matcher(match_text).find() == match_result );
+		return( col_filter_helper.filterCheck( ds, filter, regex, ds.getClient(), false ));
 	}
 	
 	protected void
