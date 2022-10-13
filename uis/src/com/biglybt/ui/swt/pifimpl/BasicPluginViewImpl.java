@@ -457,6 +457,7 @@ BasicPluginViewImpl
     if(progress != null) {
       progress.setSelection(model.getProgress().getPercentageComplete());
     }
+    model.getLogArea().refresh();
   }
 
   @Override

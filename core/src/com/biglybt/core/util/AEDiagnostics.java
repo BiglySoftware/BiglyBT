@@ -22,11 +22,17 @@ package com.biglybt.core.util;
 import java.io.*;
 import java.util.*;
 
+import com.biglybt.core.Core;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.logging.LoggerChannel;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.model.BasicPluginViewModel;
+import com.biglybt.pif.ui.components.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
@@ -327,6 +333,61 @@ AEDiagnostics
 	isStartupComplete()
 	{
 		return( startup_complete );
+	}
+	
+	public static void
+	postStartup(
+		Core		core )
+	{
+		  PluginInterface plugin_interface = core.getPluginManager().getDefaultPluginInterface();
+
+		  LoggerChannel log = plugin_interface.getLogger().getChannel( "JVM Info" );
+
+		  UIManager	ui_manager = plugin_interface.getUIManager();
+
+		  BasicPluginViewModel model = ui_manager.createBasicPluginViewModel( "log.jvm.info" );
+
+		  model.getActivity().setVisible( false );
+		  model.getProgress().setVisible( false );
+
+		  model.attachLoggerChannel( log );
+		  
+		  model.getLogArea().addRefreshListener(
+			  new UIComponent.RefreshListener(){
+				  private String last_line = null;
+				  
+				  @Override
+				  public void 
+				  refresh()
+				  {
+					  List<String>	lines = AEJavaManagement.getMemoryHistory();
+
+					  int line_num = lines.size();
+							  
+					  if ( line_num == 0 ){
+						  
+						  return;
+					  }
+					  
+					  int pos = lines.indexOf( last_line );
+					  
+					  if ( pos == line_num-1 ){
+						  
+						  return;
+					  }
+					  
+					  String content = "";
+
+					  for ( String line: lines.subList(pos<0?0:pos+1,lines.size())){
+	
+						  content += line + "\n";
+					  }
+					
+					  last_line = lines.get(lines.size()-1);
+					  
+					  model.getLogArea().appendText( content );
+				  }
+		  });
 	}
 
 	public static File

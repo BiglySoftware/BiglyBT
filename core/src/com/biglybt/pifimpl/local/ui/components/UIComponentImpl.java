@@ -30,14 +30,16 @@ import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.pif.ui.components.UIComponent;
 import com.biglybt.pif.ui.components.UIPropertyChangeEvent;
 import com.biglybt.pif.ui.components.UIPropertyChangeListener;
+import com.biglybt.pif.ui.components.UIComponent.RefreshListener;
 
 public class
 UIComponentImpl
 	implements UIComponent
 {
-	protected Properties	properties 	= new Properties();
+	private Properties	properties 	= new Properties();
 
-	protected CopyOnWriteList<UIPropertyChangeListener>			listeners	= new CopyOnWriteList<>();
+	private CopyOnWriteList<UIPropertyChangeListener>	property_listeners	= new CopyOnWriteList<>();
+	private CopyOnWriteList<RefreshListener>			refresh_listeners	= new CopyOnWriteList<>();
 
 
 	protected
@@ -119,7 +121,7 @@ UIComponentImpl
 				}
 			};
 
-		for ( UIPropertyChangeListener listener: listeners ){
+		for ( UIPropertyChangeListener listener: property_listeners ){
 
 			listener.propertyChanged( ev );
 		}
@@ -138,7 +140,7 @@ UIComponentImpl
 	addPropertyChangeListener(
 		UIPropertyChangeListener	l )
 	{
-		listeners.add( l );
+		property_listeners.add( l );
 	}
 
 	@Override
@@ -146,6 +148,29 @@ UIComponentImpl
 	removePropertyChangeListener(
 		UIPropertyChangeListener	l )
 	{
-		listeners.remove(l);
+		property_listeners.remove(l);
+	}
+	
+	public void
+	refresh()
+	{
+		for ( RefreshListener l: refresh_listeners ){
+			
+			l.refresh();
+		}
+	}
+	
+	public void
+	addRefreshListener(
+		RefreshListener	l )
+	{
+		refresh_listeners.add( l );
+	}
+	
+	public void
+	removeRefreshListener(
+		RefreshListener	l )
+	{
+		refresh_listeners.remove( l );
 	}
 }

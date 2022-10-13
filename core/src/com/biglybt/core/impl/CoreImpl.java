@@ -782,6 +782,7 @@ CoreImpl
 	
 			BackupManagerFactory.getManager( this );
 	
+			AEDiagnostics.postStartup( this );
 	
 			if (DEBUG_STARTUPTIME) {
 				logTime("BackupManagerFactory,NATTraverser");

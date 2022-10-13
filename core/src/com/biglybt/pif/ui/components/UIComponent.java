@@ -64,4 +64,22 @@ UIComponent
 	public void
 	removePropertyChangeListener(
 		UIPropertyChangeListener	l );
+	
+	public void
+	refresh();
+	
+	public void
+	addRefreshListener(
+		RefreshListener	l );
+	
+	public void
+	removeRefreshListener(
+		RefreshListener	l );
+	
+	public interface
+	RefreshListener
+	{
+		public void
+		refresh();
+	}
 }

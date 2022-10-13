@@ -24,6 +24,7 @@ package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.pif.ui.components.UIPropertyChangeListener;
 import com.biglybt.pif.ui.components.UITextArea;
+import com.biglybt.pif.ui.components.UIComponent.RefreshListener;
 
 
 public class
@@ -144,5 +145,25 @@ UITextAreaImpl
 	@Override
 	public Object getValueObject() {
 		return getText();
+	}
+	
+	public void
+	refresh()
+	{
+		text_area.refresh();
+	}
+	
+	public void
+	addRefreshListener(
+		RefreshListener	l )
+	{
+		text_area.addRefreshListener(l);
+	}
+	
+	public void
+	removeRefreshListener(
+		RefreshListener	l )
+	{
+		text_area.removeRefreshListener(l);
 	}
 }
