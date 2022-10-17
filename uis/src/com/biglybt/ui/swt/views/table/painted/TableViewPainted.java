@@ -1738,12 +1738,18 @@ public class TableViewPainted
 		if ( mut != lastMC ){	
 			
 			boolean changed = numberAllVisibleRows();
+			/* rather than just not needing this it actually screws up cell refresh
+			 * Not sure why but if you enable it and then, for example, go to All Peers view and
+			 * enable the connected_time column and sort on it you will see stuttering
+			 * cell updates as the table mutates due to automatic re-sorting...
+			 * 
 			if ( changed ){
 					// not actually sure we need this any more
 				if ( canvasImage != null ){
 					drawBounds = canvasImage.getBounds();
 				}
 			}
+			*/
 			
 			synchronized( visibleRows_sync ){
 				
