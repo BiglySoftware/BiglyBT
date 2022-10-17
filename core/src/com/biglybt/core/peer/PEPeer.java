@@ -444,13 +444,14 @@ PEPeer
 		boolean	enable );
 
   /**
-   * Get the time since this connection was first established.
-   * NOTE: This method will always return 0 at any time before
+   * Get the time this connection was first established.
+   * NOTE: This method will always return -1 at any time before
    * the underlying transport is fully connected, i.e. before
    * handshaking begins.
-   * @return time count in ms
+   * @return mono time in ms
    */
-  public long getTimeSinceConnectionEstablished();
+  
+  public long getConnectionEstablishedMonoTime();
 
 	public void setLastPiece(int i);
 	public int getLastPiece();

@@ -38,6 +38,7 @@ import com.biglybt.core.peer.impl.PEPeerTransport;
 import com.biglybt.core.peermanager.peerdb.PeerItem;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.disk.DiskManager;
 import com.biglybt.pif.download.Download;
@@ -448,22 +449,35 @@ PeerManagerImpl
 	getTimeSinceConnectionEstablished(
 		Peer		peer )
 	{
+		long mono_time;
+		
 		if ( peer instanceof PeerImpl ){
 
-			return(((PeerImpl)peer).getDelegate().getTimeSinceConnectionEstablished());
+			mono_time = ((PeerImpl)peer).getDelegate().getConnectionEstablishedMonoTime();
+			
 		}else{
 			PeerForeignDelegate	delegate = lookupForeignPeer( peer );
 
 			if ( delegate != null ){
 
-				return( delegate.getTimeSinceConnectionEstablished());
+				mono_time = delegate.getConnectionEstablishedMonoTime();
 
 			}else{
 
-				return( 0 );
+				mono_time = -1;
 			}
 		}
+		
+		if ( mono_time < 0 ){
+			
+			return( 0 );
+			
+		}else{
+			
+			return( SystemTime.getMonotonousTime() - mono_time );
+		}
 	}
+	
 	public PEPeer
 	mapForeignPeer(
 		Peer	_foreign )

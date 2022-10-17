@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.views.tableitems.peers;
 
 import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
 
 import com.biglybt.pif.ui.tables.TableCell;
@@ -51,12 +52,14 @@ public class ConnectedTimeItem
   public void refresh(TableCell cell) {
     PEPeer peer = (PEPeer)cell.getDataSource();
 
-    long value = (peer == null) ? 0 : peer.getTimeSinceConnectionEstablished();
+    long connected_at = (peer == null) ? -1 : peer.getConnectionEstablishedMonoTime();
 
-    if( !cell.setSortValue( value ) && cell.isValid() ) {
+    long connected_for = connected_at<0?0:( SystemTime.getMonotonousTime()/1000 - connected_at/1000 );
+    
+    if( !cell.setSortValue( connected_for ) && cell.isValid() ) {
       return;
     }
 
-    cell.setText( TimeFormatter.format( value / 1000 ) );
+    cell.setText( connected_for==0?"":TimeFormatter.format( connected_for ));
   }
 }

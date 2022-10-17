@@ -68,7 +68,7 @@ PeerForeignDelegate
 
 	private NetworkConnectionBase	network_connection;
 
-	private long	create_time		= SystemTime.getCurrentTime();
+	private long	create_time_mono		= SystemTime.getMonotonousTime();
 	private long	last_data_received_time =-1;
 	private long	last_data_message_received_time =-1;
 	private int[]	reserved_pieces	= null;
@@ -433,16 +433,9 @@ PeerForeignDelegate
 
   	@Override
 	  public long
-  	getTimeSinceConnectionEstablished()
+	  getConnectionEstablishedMonoTime()
   	{
-  		long	now = SystemTime.getCurrentTime();
-
-  		if ( now > create_time ){
-
-  			return( now - create_time );
-  		}
-
-  		return( 0 );
+  		return( create_time_mono );
   	}
 
     @Override

@@ -5856,14 +5856,18 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 		int lan_peer_count = 0;
 
+		long mono_now = SystemTime.getMonotonousTime();
+		
 		for(int i = 0; i < peer_transports.size(); i++){
 
 			final PEPeerTransport peer = peer_transports.get(i);
 
 			if(peer.getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED){
 
-				final long timeSinceConnection = peer.getTimeSinceConnectionEstablished();
-				final long timeSinceSentData = peer.getTimeSinceLastDataMessageSent();
+				long timeConnected = peer.getConnectionEstablishedMonoTime();
+				
+				final long timeSinceConnection	= timeConnected<0?0:(mono_now-timeConnected);
+				final long timeSinceSentData	= peer.getTimeSinceLastDataMessageSent();
 
 				activeConnectionTimes.add(timeSinceConnection);
 
@@ -7352,8 +7356,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		public void setSuspendedLazyBitFieldEnabled(boolean enable){
 		}
 
-		public long getTimeSinceConnectionEstablished(){
-			return(SystemTime.getMonotonousTime() - _timeStarted_mono);
+		public long getConnectionEstablishedMonoTime(){
+			return(_timeStarted_mono);
 		}
 
 		public void setLastPiece(int i){

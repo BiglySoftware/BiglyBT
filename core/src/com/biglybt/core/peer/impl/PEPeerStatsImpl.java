@@ -120,7 +120,9 @@ PEPeerStatsImpl
       	// ignore first few seconds here to avoid lazy-bitfield from totally spamming initial
       	// stats
 
-      if ( owner.getTimeSinceConnectionEstablished() > 5000 ){
+      long connected_at = owner.getConnectionEstablishedMonoTime();
+      
+      if ( connected_at >= 0 && SystemTime.getMonotonousTime() - connected_at > 5000 ){
 
     	  estimated_download_speed.addValue( piece_size );
 

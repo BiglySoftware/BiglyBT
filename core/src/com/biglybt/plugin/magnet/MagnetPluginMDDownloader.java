@@ -917,17 +917,22 @@ MagnetPluginMDDownloader
 						
 							PEPeerTransport pt = (PEPeerTransport)pe_peer;
 											
-							long connected_for = pt.getTimeSinceConnectionEstablished();
+							long connected_at = pt.getConnectionEstablishedMonoTime();
 						
-							long last_good_data = pt.getTimeSinceGoodDataReceived();
-							
-							if ( connected_for > 3*60*1000 ){
+							if ( connected_at >= 0 ){
 								
-								if ( last_good_data == -1 || last_good_data > 3*60*1000 ){
-							
-									pt.getManager().removePeer( pt, "Metadata dead peer removal", Transport.CR_TIMEOUT_ACTIVITY );
-								}
-							}		
+								long connected_for = SystemTime.getMonotonousTime() - connected_at;
+								
+								if ( connected_for > 3*60*1000 ){
+								
+									long last_good_data = pt.getTimeSinceGoodDataReceived();
+
+									if ( last_good_data == -1 || last_good_data > 3*60*1000 ){
+								
+										pt.getManager().removePeer( pt, "Metadata dead peer removal", Transport.CR_TIMEOUT_ACTIVITY );
+									}
+								}	
+							}
 						}
 					}
 				}catch( Throwable e ){		

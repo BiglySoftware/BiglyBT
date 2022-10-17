@@ -2731,22 +2731,16 @@ implements PEPeerTransport
 		return( mono_now - last_data_message_sent_time_mono );
 	}
 
-
-
-
-
 	@Override
 	public long 
-	getTimeSinceConnectionEstablished() 
+	getConnectionEstablishedMonoTime() 
 	{
-		if ( connection_established_time_mono < 0 ){  //fudge it while the transport is being connected
+		if ( connection_established_time_mono < 0 ){
 			
-			return 0;
+			return( -1 );
 		}
 		
-		long mono_now = SystemTime.getMonotonousTime();
-		
-		return( mono_now - connection_established_time_mono );
+		return( connection_established_time_mono );
 	}
 
 	@Override

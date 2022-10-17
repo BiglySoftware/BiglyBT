@@ -182,7 +182,15 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 
 			if ( result == 0 ){
 
-				long l = peer0.getTimeSinceConnectionEstablished() - peer1.getTimeSinceConnectionEstablished();
+				long now = SystemTime.getMonotonousTime();
+				
+				long at0 = peer0.getConnectionEstablishedMonoTime();
+				long at1 = peer1.getConnectionEstablishedMonoTime();
+				
+				long time0 = at0<0?0:(now-at0);
+				long time1 = at1<0?0:(now-at1);
+				
+				long l = time0 - time1;
 
 				if ( l < 0 ){
 					result = -1;
