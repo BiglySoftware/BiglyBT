@@ -5652,20 +5652,23 @@ public class Utils
 				
 			}else{
 				
-				boolean is_system_dark_theme = false;
+				boolean is_system_dark_theme = COConfigurationManager.getBooleanParameter( "Force Dark Theme" );
 				
-				try{
-					Class<?> displayClass = Class.forName( "org.eclipse.swt.widgets.Display" );
+				if ( !is_system_dark_theme ){
 					
-					Method method = displayClass.getMethod( "isSystemDarkTheme" );
-							
-					is_system_dark_theme = (Boolean)method.invoke(null);
-				
-				}catch( NoSuchMethodException e ){
-				
-				}catch( Throwable e ) {
+					try{
+						Class<?> displayClass = Class.forName( "org.eclipse.swt.widgets.Display" );
+						
+						Method method = displayClass.getMethod( "isSystemDarkTheme" );
+								
+						is_system_dark_theme = (Boolean)method.invoke(null);
 					
-					Debug.out( e );
+					}catch( NoSuchMethodException e ){
+					
+					}catch( Throwable e ) {
+						
+						Debug.out( e );
+					}
 				}
 				
 				is_dark_appearance = is_system_dark_theme;
@@ -5693,20 +5696,23 @@ public class Utils
 			return( false );
 		}
 		
-		boolean is_system_dark_theme = false;
+		boolean is_system_dark_theme = COConfigurationManager.getBooleanParameter( "Force Dark Theme" );
 		
-		try{
-			Class<?> displayClass = Class.forName( "org.eclipse.swt.widgets.Display" );
+		if ( !is_system_dark_theme ){
 			
-			Method method = displayClass.getMethod( "isSystemDarkTheme" );
-					
-			is_system_dark_theme = (Boolean)method.invoke(null);
-		
-		}catch( NoSuchMethodException e ){
-		
-		}catch( Throwable e ) {
+			try{
+				Class<?> displayClass = Class.forName( "org.eclipse.swt.widgets.Display" );
+				
+				Method method = displayClass.getMethod( "isSystemDarkTheme" );
+						
+				is_system_dark_theme = (Boolean)method.invoke(null);
 			
-			Debug.out( e );
+			}catch( NoSuchMethodException e ){
+			
+			}catch( Throwable e ) {
+				
+				Debug.out( e );
+			}
 		}
 		
 		return( is_system_dark_theme );

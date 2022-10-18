@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.util.Constants;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ColorParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
@@ -76,6 +77,11 @@ public class ConfigSectionInterfaceColorSWT
 		if ( UI.canUseSystemTheme()){
 			
 			add( new BooleanParameterImpl( "Use System Theme", "ConfigView.section.style.usesystemtheme"));
+		}
+		
+		if ( Constants.isLinux ){
+			
+			add( new BooleanParameterImpl( "Force Dark Theme", "ConfigView.section.style.forcedarktheme"));
 		}
 
 		ColorParameterImpl colorScheme = new ColorParameterImpl("Color Scheme",
