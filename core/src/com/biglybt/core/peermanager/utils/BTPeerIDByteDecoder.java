@@ -39,11 +39,17 @@ public class BTPeerIDByteDecoder {
 	}
 
 	private static String logUnknownClient0(byte[] peer_id_bytes) throws IOException {
-		String text = new String(peer_id_bytes, 0, 20, Constants.BYTE_ENCODING_CHARSET);
-		text = text.replace((char)12, (char)32);
-		text = text.replace((char)10, (char)32);
-
-		return "[" + text + "] " + ByteFormatter.encodeString(peer_id_bytes) + " ";
+		String text 	= makePeerIDReadableAndUsable( peer_id_bytes );
+		String encoded 	= ByteFormatter.encodeString(peer_id_bytes);
+		
+		if ( text.equals( encoded )){
+			
+			return "[" + text + "] ";
+			
+		}else{
+			
+			return "[" + text + "] " + encoded + " ";
+		}
 	}
 
 	private static String asUTF8ByteString(String text) {
