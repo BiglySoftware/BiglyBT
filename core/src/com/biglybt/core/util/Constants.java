@@ -20,6 +20,7 @@ package com.biglybt.core.util;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
@@ -72,8 +73,8 @@ Constants
 
 	public static final String[] APP_DOMAINS = { "azureusplatform.com", "azureus.com", "aelitis.com", "vuze.com", "biglybt.com" };
 
-	public static final Charset UTF_8 = Charset.forName("UTF-8");
-	public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+	public static final Charset UTF_8		= StandardCharsets.UTF_8; 		// Charset.forName("UTF-8");
+	public static final Charset ISO_8859_1	= StandardCharsets.ISO_8859_1;	// Charset.forName("ISO-8859-1");
 
 	@Deprecated
 	public static final String DEFAULT_ENCODING 	= "UTF8";
@@ -185,7 +186,7 @@ Constants
 
 
 
-	public static final boolean _isArm = OSArch.startsWith("arm") || OSArch.startsWith("aarch");
+	public static final boolean isArm = OSArch.startsWith("arm") || OSArch.startsWith("aarch");
     
 	public static final boolean is64Bit;
 	public static final boolean isOS64Bit;

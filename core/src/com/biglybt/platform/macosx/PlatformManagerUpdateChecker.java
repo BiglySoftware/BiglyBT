@@ -317,11 +317,13 @@ PlatformManagerUpdateChecker
 
 				String name = entry.getName();
 
-				if (name.toLowerCase().startsWith("osx/")) {
+				String target_dir = Constants.isArm?"osx_arm/":"osx/";
+				
+				if ( name.toLowerCase().startsWith( target_dir )){
 
-					// OSX only files
+						// OSX only files
 
-					name = name.substring(4);
+					name = name.substring(target_dir.length());
 
 					// skip the directory entry
 
