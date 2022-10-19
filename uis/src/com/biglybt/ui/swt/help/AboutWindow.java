@@ -175,9 +175,9 @@ public class AboutWindow {
     				+ System.getProperty("java.vendor") + "\n"
     				+ System.getProperty("java.home") + "\n\n"
     				+ "SWT v" + Utils.getSWTVersionAndRevision() + ", " + SWT.getPlatform() + swt + "\n"
-    				+ System.getProperty("os.name") + " v"
-    				+ System.getProperty("os.version") + ", "
-    				+ System.getProperty("os.arch") + " (" + (Constants.isOS64Bit?64:32) + " bit)\n"
+    				+ Constants.OSName + " v"
+    				+ Constants.OSVersion + ", "
+    				+ Constants.OSArch + " (" + (Constants.isOS64Bit?64:32) + " bit)\n"
     				+ Constants.APP_NAME.charAt(0) + Constants.getCurrentVersion() + (Constants.SUBVERSION.length()==0?"":("-"+Constants.SUBVERSION)) + "/" + CorePatchLevel.getCurrentPatchLevel() + " "
     				+ COConfigurationManager.getStringParameter("ui");
 

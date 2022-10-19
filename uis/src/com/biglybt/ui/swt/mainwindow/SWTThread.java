@@ -121,7 +121,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
     		Debug.out("Loading SWT Libraries failed. "
     				+ "Typical causes:\n\n"
     				+ "(1) swt.jar is not for your os architecture ("
-    				+ System.getProperty("os.arch") + ").  "
+    				+ Constants.OSArch + ").  "
     				+ "You can get a new swt.jar (Min Version: " + sMin + ") "
     				+ "from http://eclipse.org/swt"
     				+ "\n\n"

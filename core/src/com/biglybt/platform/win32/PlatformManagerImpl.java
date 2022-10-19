@@ -75,7 +75,7 @@ PlatformManagerImpl
 	static {
 		if (System.getProperty("aereg", null) != null) {
 			DLL_NAME = System.getProperty("aereg");
-		} else if (System.getProperty("os.arch", "").contains("64")) {
+		} else if (Constants.OSArch.contains("64")) {
 			DLL_NAME += "64";
 		}
 	}

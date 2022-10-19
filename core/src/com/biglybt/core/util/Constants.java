@@ -144,7 +144,7 @@ Constants
 	public static final String BIGLY_PEER_ID						= "BI";
 
 	
-	public static final String BIGLYBT_VERSION  = "3.2.0.1_B01";
+	public static final String BIGLYBT_VERSION  = "3.2.0.1_B03";
 	
 	//public static final String BUILD_VERSION  = "@build.version@";   //Ant replace - believed dead
 	public static final String SUBVERSION		= "";
@@ -154,7 +154,9 @@ Constants
 
 	public static final boolean IS_CVS_VERSION = isCVSVersion( BIGLYBT_VERSION ) && !FORCE_NON_CVS;
 
-	public static final String  OSName = System.getProperty("os.name");
+	public static final String  OSName 		= System.getProperty("os.name","");
+	public static final String  OSArch 		= System.getProperty("os.arch","");
+	public static final String  OSVersion	= System.getProperty("os.version","");
 
 	public static final boolean isOSX				= OSName.toLowerCase().startsWith("mac os");
 	public static final boolean isLinux			= OSName.equalsIgnoreCase("Linux");
@@ -182,6 +184,9 @@ Constants
 	// public static final boolean isWindows11OrHigher;   BORKED
 
 
+
+	public static final boolean _isArm = OSArch.startsWith("arm") || OSArch.startsWith("aarch");
+    
 	public static final boolean is64Bit;
 	public static final boolean isOS64Bit;
 
@@ -189,7 +194,7 @@ Constants
 		boolean _is64Bit;
 
 		try{
-			_is64Bit = System.getProperty( "os.arch" ).contains( "64" );
+			_is64Bit = OSArch.contains( "64" );
 
 			if ( !_is64Bit ){
 
@@ -223,7 +228,7 @@ Constants
 			Float ver = null;
 
 			try{
-				ver = new Float( System.getProperty( "os.version" ));
+				ver = new Float(OSVersion);
 
 			}catch (Throwable e){
 			}
@@ -335,7 +340,7 @@ Constants
 			int	second_digit	= 0;
 
 			try{
-				String os_version = System.getProperty( "os.version" );
+				String os_version = OSVersion;
 
 				String[] bits = os_version.split( "\\." );
 

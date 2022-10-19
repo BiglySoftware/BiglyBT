@@ -404,7 +404,7 @@ public class SWTSkinObjectText2
 					url += "?";
 				}
 				url += "fromWeb=false&os.version="
-						+ UrlUtils.encode(System.getProperty("os.version"))
+						+ UrlUtils.encode(Constants.OSVersion)
 						+ "&java.version=" + UrlUtils.encode(Constants.JAVA_VERSION);
 			}
 		} catch (Throwable t) {

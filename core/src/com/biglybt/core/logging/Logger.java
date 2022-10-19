@@ -57,9 +57,9 @@ public class Logger {
 				log(new LogEvent(LOGID, "java.version="
 					+Constants.JAVA_VERSION));
 
-				log(new LogEvent(LOGID, "os=" + System.getProperty("os.arch") + "/"
-					+ System.getProperty("os.name") + "/"
-					+ System.getProperty("os.version")));
+				log(new LogEvent(LOGID, "os=" + Constants.OSArch + "/"
+					+ Constants.OSName + "/"
+					+ Constants.OSVersion));
 
 				log(new LogEvent(LOGID, "user.dir=" + System.getProperty("user.dir")));
 

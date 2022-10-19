@@ -192,7 +192,7 @@ SSDPCore
 	protected String
 	getServerName()
 	{
-		return( System.getProperty( "os.name" ) + "/" + System.getProperty("os.version") + " UPnP/1.0 " +
+		return( Constants.OSName + "/" + Constants.OSVersion + " UPnP/1.0 " +
 				Constants.BIGLYBT_NAME + "/" + Constants.BIGLYBT_VERSION );
 	}
 

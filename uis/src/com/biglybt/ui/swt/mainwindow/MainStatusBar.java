@@ -1034,7 +1034,7 @@ public class MainStatusBar
 							String url = "feedback.start?" + Utils.getWidgetBGColorURLParam()
 							+ "&fromWeb=false&os.name=" + UrlUtils.encode(Constants.OSName)
 							+ "&os.version="
-							+ UrlUtils.encode(System.getProperty("os.version"))
+							+ UrlUtils.encode(Constants.OSVersion)
 							+ "&java.version=" + UrlUtils.encode(Constants.JAVA_VERSION);
 
 							// Utils.launch( url );

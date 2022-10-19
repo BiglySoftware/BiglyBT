@@ -71,7 +71,7 @@ public class VirtualChannelSelectorImpl {
 
 				if ( os_type != null && os_type.equals( "FreeBSD" )){
 
-					String os_version = System.getProperty( "os.version", "" );
+					String os_version = Constants.OSVersion;
 
 					String	digits = "";
 
