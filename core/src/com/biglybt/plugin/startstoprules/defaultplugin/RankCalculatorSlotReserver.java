@@ -248,6 +248,12 @@ RankCalculatorSlotReserver
 		return( 0 );
 	}
 	
+	public long
+	getRemainingExcludingDND()
+	{
+		return( 0 );
+	}
+	
 	@Override
 	public int[] 
 	getFilePriorityStats()

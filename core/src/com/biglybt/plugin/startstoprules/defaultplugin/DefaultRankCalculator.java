@@ -40,6 +40,7 @@ DefaultRankCalculator
 	public static final int	DOWNLOAD_ORDER_REVERSE_SIZE			= 5;
 	public static final int	DOWNLOAD_ORDER_ETA					= 6;
 	public static final int	DOWNLOAD_ORDER_FILE_PRIORITIES		= 7;
+	public static final int	DOWNLOAD_ORDER_REMAINING			= 8;
 
 	//
 	// Seeding Rank (SR) Limits and Values
@@ -186,6 +187,9 @@ DefaultRankCalculator
 	
 	public long
 	getSizeExcludingDND();
+	
+	public long
+	getRemainingExcludingDND();
 	
 	public int[]
 	getFilePriorityStats();

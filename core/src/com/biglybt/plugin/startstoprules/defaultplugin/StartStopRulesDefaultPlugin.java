@@ -2115,7 +2115,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				}
 			}
 		}else if ( 	iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SIZE || 
-					iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SIZE){
+					iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SIZE ||
+					iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_REMAINING ){
 
 			Collections.sort(
 				downloads,
@@ -2127,18 +2128,28 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						DefaultRankCalculator d1,
 						DefaultRankCalculator d2)
 					{
-						long l1 = d1.getSizeExcludingDND();
-						long l2 = d2.getSizeExcludingDND();
-	
-						int result = Long.compare( l2, l1 );
-						
-						if ( iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SIZE ){
-	
+						if ( iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_REMAINING  ){
+							long l1 = d1.getRemainingExcludingDND();
+							long l2 = d2.getRemainingExcludingDND();
+		
+							int result = Long.compare( l1, l2 );
+
 							return( result );
 							
 						}else{
+							long l1 = d1.getSizeExcludingDND();
+							long l2 = d2.getSizeExcludingDND();
+		
+							int result = Long.compare( l2, l1 );
 							
-							return( -result );
+							if ( iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SIZE ){
+		
+								return( result );
+								
+							}else{
+								
+								return( -result );
+							}
 						}
 					}
 				});

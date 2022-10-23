@@ -677,6 +677,7 @@ public class StartStopConfigModel
 			MessageText.getString("label.speed"),
 			MessageText.getString("TableColumn.header.eta"),
 			MessageText.getString("TableColumn.header.file.priorities"),
+			MessageText.getString("TableColumn.header.remaining"),
 		};
 
 		int[] orderValues = {
@@ -688,6 +689,7 @@ public class StartStopConfigModel
 			DefaultRankCalculator.DOWNLOAD_ORDER_SPEED,
 			DefaultRankCalculator.DOWNLOAD_ORDER_ETA,
 			DefaultRankCalculator.DOWNLOAD_ORDER_FILE_PRIORITIES,
+			DefaultRankCalculator.DOWNLOAD_ORDER_REMAINING,
 		};
 
 		IntListParameter sort_type = model.addIntListParameter2(
