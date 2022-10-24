@@ -323,7 +323,7 @@ public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 	    try{
 	    	GC gc = new GC(lDrag);
 	    	gc.setFont(splash.getDisplay().getSystemFont());
-	    	Point textSize = gc.textExtent( "Vuze Rocks innit: 100 MB/sec");
+	    	Point textSize = gc.textExtent( "BiglyBT Rocks innit: 100 MB/sec");
 	    	int textWidth 	= textSize.x;
 	    	testTextHeight 	= textSize.y;
 
