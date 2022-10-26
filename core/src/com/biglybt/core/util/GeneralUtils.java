@@ -25,11 +25,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
+/* Android
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineListener;
+*/
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
@@ -537,6 +539,7 @@ GeneralUtils
 	playSound(
 		String			sound_file )
 	{
+/* >>> Android
 		File	file;
 		
 		if ( sound_file == null ){
@@ -630,7 +633,7 @@ GeneralUtils
 						}
 						
 						clip.play();
-					*/
+					* /
 					
 					Thread.sleep(2500);
 		
@@ -638,6 +641,7 @@ GeneralUtils
 				}
 			}
 		}.start();
+<<< Android */
 	}
 	
 	private static Map<Integer,Integer> confusable_map_1;
