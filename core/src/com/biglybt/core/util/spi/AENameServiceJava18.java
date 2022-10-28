@@ -3,6 +3,7 @@ package com.biglybt.core.util.spi;
 import java.lang.reflect.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -116,7 +117,7 @@ AENameServiceJava18
 						host_name = "www.google.com";
 	
 						try{
-							Object result = delegate_method.invoke( delegate, host_name );
+							Object result = delegate_method.invoke( delegate, host_name, args[1] );
 	
 						}catch( Throwable e ){
 	
@@ -132,18 +133,9 @@ AENameServiceJava18
 							}
 						}
 	
-						// byte[][] or InetAddress[]
-	
-						Class ret_type = method.getReturnType();
-	
-						if ( ret_type.equals( byte[][].class )){
-	
-							return( new byte[][]{ {127,0,0,1}});
-	
-						}else{
-	
-							return( new InetAddress[]{ InetAddress.getByAddress( new byte[]{ 127, 0, 0, 1 })});
-						}
+						InetAddress[] result = new InetAddress[]{ InetAddress.getByAddress( new byte[]{ 127, 0, 0, 1 })};
+						
+						return( Arrays.stream( result ));
 					}
 	
 					boolean tracker_request = TorrentUtils.getTLSTorrentHash() != null;
