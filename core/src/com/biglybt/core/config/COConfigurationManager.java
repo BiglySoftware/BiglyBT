@@ -233,16 +233,16 @@ COConfigurationManager
 				if ( Constants.isJava9OrHigher ){
 					
 					try{
-						if ( Constants.isJava12OrHigher ){
-							
-								// AENameServiceJava12.init();
-							
+						if ( Constants.isJava18OrHigher ){
+													
+							Class.forName( "com.biglybt.core.util.spi.AENameServiceJava18").getMethod( "init" ).invoke( null );
+
+						}else if ( Constants.isJava12OrHigher ){
+														
 							Class.forName( "com.biglybt.core.util.spi.AENameServiceJava12").getMethod( "init" ).invoke( null );
 							
 						}else{
-							
-								// AENameServiceJava9.init();
-							
+								
 							Class.forName( "com.biglybt.core.util.spi.AENameServiceJava9").getMethod( "init" ).invoke( null );
 						}
 					}catch( Throwable e ){
