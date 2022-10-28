@@ -41,6 +41,7 @@ import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.update.*;
 import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.platform.PlatformManager;
+import com.biglybt.platform.PlatformManagerBase;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerListener;
 import com.biglybt.platform.PlatformManagerPingCallback;
@@ -51,6 +52,7 @@ import com.biglybt.platform.win32.access.impl.AEWin32AccessInterface;
 
 public class
 PlatformManagerImpl
+	extends PlatformManagerBase
 	implements PlatformManager, AEWin32AccessListener, AEDiagnosticsEvidenceGenerator
 {
 	public static final int			RT_NONE		= 0;
@@ -534,19 +536,7 @@ PlatformManagerImpl
 
 		throws PlatformManagerException
 	{
-		String vendor = System.getProperty( "java.vendor", "<unknown>" );
-
-		String lc_vendor = vendor.toLowerCase( Locale.US );
-		
-		if ( 	!lc_vendor.startsWith( "sun " ) && 
-				!lc_vendor.startsWith( "oracle " ) &&
-				!lc_vendor.contains( "openjdk" )){
-
-			throw( new PlatformManagerException(
-						MessageText.getString(
-							"platform.jvmopt.sunonly",
-							new String[]{ vendor })));
-		}
+		checkCanUseJVMOptions();
 
 		File[] option_files = getJVMOptionFiles();
 

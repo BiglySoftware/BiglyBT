@@ -36,6 +36,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.platform.PlatformManagerException;
 import com.biglybt.platform.PlatformManager;
+import com.biglybt.platform.PlatformManagerBase;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerListener;
 import com.biglybt.platform.PlatformManagerPingCallback;
@@ -49,7 +50,10 @@ import com.biglybt.platform.macosx.access.jnilib.OSXAccess;
  * @version 1.0 Initial Version
  * @see PlatformManager
  */
-public class PlatformManagerImpl implements PlatformManager, AEDiagnosticsEvidenceGenerator
+public class 
+PlatformManagerImpl
+	extends PlatformManagerBase
+	implements PlatformManager, AEDiagnosticsEvidenceGenerator
 {
 	private static final LogIDs LOGID = LogIDs.CORE;
 
@@ -511,19 +515,7 @@ public class PlatformManagerImpl implements PlatformManager, AEDiagnosticsEviden
 
 		throws PlatformManagerException
 	{
-		String vendor = System.getProperty( "java.vendor", "<unknown>" );
-
-		String lc_vendor = vendor.toLowerCase( Locale.US );
-		
-		if ( 	!lc_vendor.startsWith( "sun " ) && 
-				!lc_vendor.startsWith( "oracle " ) &&
-				!lc_vendor.contains( "openjdk" )){
-
-			throw( new PlatformManagerException(
-						MessageText.getString(
-							"platform.jvmopt.sunonly",
-							new String[]{ vendor })));
-		}
+		checkCanUseJVMOptions();
 		
 		File[] option_files = getJVMOptionFiles();
 
