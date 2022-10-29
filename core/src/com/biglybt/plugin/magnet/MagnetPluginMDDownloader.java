@@ -391,6 +391,11 @@ MagnetPluginMDDownloader
 				
 				DownloadManagerState state = core_dm.getDownloadState();
 				
+				if ( !state.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+				
+					throw( new Exception( "Non-magnet download already added" ));
+				}
+				
 				TorrentUtils.setResumeDataTotallyIncomplete( state );	// avoid any initial rechecking
 				
 				state.setDisplayName( display_name );
