@@ -1102,7 +1102,8 @@ public class GlobalManagerImpl
 		HashWrapper hash = null;
 		boolean deleteDest = false;
 		DownloadManager deleteDestExistingDM = null;
-		boolean removeFromAddingDM = false;
+
+		boolean 	thisIsMagnet	= false;
 
 		try {
 			File f = FileUtil.newFile(torrent_file_name);
@@ -1121,69 +1122,58 @@ public class GlobalManagerImpl
 
 			String fName = fDest.getCanonicalPath();
 
-			try {
-				// Check if we already have the torrent loaded or loading
+			HashWrapper	torrentHash		= null;
+						
+			try{
+					// This does not trigger locale decoding
 
-				if ( optionalHash != null ){
-					
-					hash = new HashWrapper(optionalHash);
-					
-				} else {
-					
-						// This does not trigger locale decoding :)
-					
-					try{
-						TOTorrent torrent = TorrentUtils.readFromFile(fDest, false);
-					
-						hash = torrent.getHashWrapper();
-						
-					}catch( Throwable e ){
-						// will fail later
-					}
-				}
-
-				if ( hash != null ){
-					
-					removeFromAddingDM = true;
-
-						// early check if download already exists, saves creating a download and then
-						// having to delete it when dup found
-					
-					DownloadManager existingDM = getDownloadManager(hash);
-					
-					if ( existingDM != null ){
-						
-							// exception here is if the existing download is a magnet download and
-							// this one is a real one - in this case things will be resolved later
-						
-						boolean	carry_on = false;
-						
-						if ( existingDM.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
-						
-							try{
-								TOTorrent torrent = TorrentUtils.readFromFile( fDest, false );
-								
-								carry_on = !TorrentUtils.getFlag( torrent, TorrentUtils.TORRENT_FLAG_METADATA_TORRENT );
-								
-							}catch( Throwable e ){
-								
-							}
-						}
-						
-						if ( !carry_on ){
-							
-							deleteDest = true;
-							
-							deleteDestExistingDM = existingDM;
-							
-							return( existingDM );
-						}
-					}
-				}
-			} catch ( Exception e ){
+				TOTorrent torrent = TorrentUtils.readFromFile(fDest, false);
+			
+				thisIsMagnet = TorrentUtils.getFlag( torrent, TorrentUtils.TORRENT_FLAG_METADATA_TORRENT );
 				
-				// ignore any error.. let it bork later in case old code relies
-				// on it borking later
+				torrentHash = torrent.getHashWrapper();
+				
+			}catch( Throwable e ){
+				// will fail later
+			}
+		
+			if ( optionalHash != null ){
+				
+				hash = new HashWrapper( optionalHash );
+				
+			}else{
+				
+				hash = torrentHash;
+			}
+
+			if ( hash != null ){
+				
+					// early check if download already exists, saves creating a download and then
+					// having to delete it when dup found
+				
+				DownloadManager existingDM = getDownloadManager( hash );
+				
+				if ( existingDM != null ){
+					
+						// exception here is if the existing download is a magnet download and
+						// this one is a real one - in this case things will be resolved later
+					
+					boolean	carry_on = false;
+					
+					if ( existingDM.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+													
+						carry_on = !thisIsMagnet;
+					}
+					
+					if ( !carry_on ){
+						
+						deleteDest = true;
+						
+						deleteDestExistingDM = existingDM;
+						
+						return( existingDM );
+					}
+				}
 			}
 
 				// save path operations
@@ -1217,12 +1207,12 @@ public class GlobalManagerImpl
 			
 			// now do the creation!
 
-			DownloadManager new_manager = DownloadManagerFactory.create(this,
+			DownloadManager new_manager = createNewDownloadManager(
 					optionalHash, fName, savePath, saveFile, initialState, persistent, for_seeding,
-					file_priorities, adapter);
+					file_priorities, adapter, thisIsMagnet );
 
-			manager = addDownloadManager(new_manager, true);
-
+			manager = addDownloadManager( new_manager, true );
+			
 			// if a different manager is returned then an existing manager for
 			// this torrent exists and the new one isn't needed (yuck)
 
@@ -1272,18 +1262,18 @@ public class GlobalManagerImpl
 			
 			//Debug.printStackTrace(e);
 			
-			manager = DownloadManagerFactory.create(this, optionalHash,
+			manager = createNewDownloadManager( optionalHash,
 					torrent_file_name, savePath, saveFile, initialState, persistent, for_seeding,
-					file_priorities, adapter);
+					file_priorities, adapter, thisIsMagnet );
 			
 			manager = addDownloadManager(manager, true);
 			
 		}catch( Exception e ){
 			
 			// get here on duplicate files, no need to treat as error
-			manager = DownloadManagerFactory.create(this, optionalHash,
+			manager = createNewDownloadManager( optionalHash,
 					torrent_file_name, savePath, saveFile, initialState, persistent, for_seeding,
-					file_priorities, adapter);
+					file_priorities, adapter, thisIsMagnet );
 			
 			manager = addDownloadManager(manager, true);
 			
@@ -1319,6 +1309,54 @@ public class GlobalManagerImpl
 		return manager;
 	}
 
+  	private DownloadManager
+  	createNewDownloadManager(
+		byte[]									torrent_hash,
+		String 									torrentFileName,
+		String 									savePath,
+		String									saveFile,
+		int      								initialState,
+		boolean									persistent,
+		boolean									for_seeding,
+		List									file_priorities,
+		DownloadManagerInitialisationAdapter 	adapter,
+		boolean									thisIsMagnet )
+  	{
+		DownloadManager new_manager = 
+			DownloadManagerFactory.create(this,
+				torrent_hash, torrentFileName, savePath, saveFile, initialState, persistent, for_seeding,
+				file_priorities, adapter);
+		
+		if ( !thisIsMagnet ){
+		
+			try{
+					// due to the fact that magnet and real downloads share the same hash it is possible
+					// for the creation to return an existing magnet download. check for this and
+					// delete it if so
+				
+				DownloadManager existing = getDownloadManager( new_manager.getTorrent().getHashWrapper());
+				
+				if ( existing != null ){
+					
+					if ( existing.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+						
+						removeDownloadManager( existing, true, true );
+						
+						new_manager = 
+								DownloadManagerFactory.create(this,
+									torrent_hash, torrentFileName, savePath, saveFile, initialState, persistent, for_seeding,
+									file_priorities, adapter);
+					}
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		return( new_manager );
+  	}
+  	
 	@Override
 	public void
 	clearNonPersistentDownloadState(

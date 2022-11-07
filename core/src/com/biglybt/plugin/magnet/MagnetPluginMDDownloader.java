@@ -393,6 +393,10 @@ MagnetPluginMDDownloader
 				
 				if ( !state.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
 				
+					download = null;
+					
+					core_dm = null;
+					
 					throw( new Exception( "Non-magnet download already added" ));
 				}
 				
