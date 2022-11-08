@@ -106,6 +106,7 @@ public class PluginsMenuHelper
 
 	public static void buildPluginMenu(Menu pluginMenu, boolean showPluginViews) {
 
+		/*
 		if (showPluginViews) {
 			ViewManagerSWT vi = ViewManagerSWT.getInstance();
 			List<UISWTViewBuilderCore> mainViewBuilders = getMainViewBuilder(vi);
@@ -129,13 +130,15 @@ public class PluginsMenuHelper
 				MenuFactory.addSeparatorMenuItem(pluginMenu);
 			}
 		}
-
+		*/
+		
 		MenuFactory.addGetPluginsMenuItem(pluginMenu);
 		
 		MenuFactory.addPluginInstallFromFileItem( pluginMenu );		
 		
 		MenuFactory.addPluginUnInstallMenuItem(pluginMenu);
-		
+
+		/*
 		if ( !showPluginViews ){
 			
 			MenuFactory.addSeparatorMenuItem(pluginMenu);
@@ -146,6 +149,7 @@ public class PluginsMenuHelper
 				ViewManagerSWT.getInstance());
 			createViewInfoMenuItems(menu_plugin_logViews.getMenu(), logViewBuilders);
 		}
+		*/
 	}
 
 	private static List<UISWTViewBuilderCore> getMainViewBuilder(

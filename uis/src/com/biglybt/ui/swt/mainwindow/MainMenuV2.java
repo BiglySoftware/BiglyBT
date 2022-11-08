@@ -208,8 +208,23 @@ public class MainMenuV2
 
 	protected void buildSimpleViewMenu(final Menu viewMenu) {
 		try {
+			MenuFactory.addMyTorrentsMenuItem(viewMenu);
+			MenuFactory.addMyTrackerMenuItem(viewMenu);
+			MenuFactory.addMySharesMenuItem(viewMenu);
+			MenuFactory.addViewToolbarMenuItem(viewMenu);
+			MenuFactory.addTransferBarToMenu(viewMenu);
+			//MenuFactory.addAllPeersMenuItem(viewMenu);
+			MenuFactory.addClientStatsMenuItem(viewMenu);
+			MenuFactory.addPairingMenuItem(viewMenu);
+			//MenuFactory.addDetailedListMenuItem(viewMenu);
+			//MenuFactory.addDeviceManagerMenuItem(viewMenu);
+			MenuFactory.addSubscriptionMenuItem(viewMenu);
+
 			boolean enabled = COConfigurationManager.getBooleanParameter("Beta Programme Enabled");
 			if (enabled) {
+				
+				MenuFactory.addSeparatorMenuItem(viewMenu);
+				
 				MenuFactory.addMenuItem(viewMenu, SWT.CHECK, "MainWindow.menu.view.beta",
 						new Listener() {
 							@Override
@@ -226,18 +241,8 @@ public class MainMenuV2
 				});
 			}
 
-			MenuFactory.addMyTorrentsMenuItem(viewMenu);
-			MenuFactory.addMyTrackerMenuItem(viewMenu);
-			MenuFactory.addMySharesMenuItem(viewMenu);
-			MenuFactory.addViewToolbarMenuItem(viewMenu);
-			MenuFactory.addTransferBarToMenu(viewMenu);
-			//MenuFactory.addAllPeersMenuItem(viewMenu);
-			MenuFactory.addClientStatsMenuItem(viewMenu);
-			MenuFactory.addPairingMenuItem(viewMenu);
-			//MenuFactory.addDetailedListMenuItem(viewMenu);
-			//MenuFactory.addDeviceManagerMenuItem(viewMenu);
-			MenuFactory.addSubscriptionMenuItem(viewMenu);
-
+			MenuFactory.addSeparatorMenuItem(viewMenu);
+			
 			if (PluginsMenuHelper.buildViewMenu(viewMenu) && Constants.isOSX) {
 				MenuFactory.addSeparatorMenuItem(viewMenu);
 			}

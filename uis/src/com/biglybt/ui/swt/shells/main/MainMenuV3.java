@@ -124,11 +124,13 @@ public class MainMenuV3
 					Utils.disposeSWTObjects(items);
 
 					DebugMenuHelper.createDebugMenuItem(menuDebug);
+					/*
 					MenuFactory.addSeparatorMenuItem(menuDebug);
 					MenuItem menuItem = new MenuItem(menuDebug, SWT.PUSH);
 					menuItem.setText("Log Views");
 					menuItem.setEnabled(false);
 					PluginsMenuHelper.buildPluginLogsMenu(menuDebug);
+					*/
 				}
 
 				@Override
