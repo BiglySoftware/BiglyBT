@@ -410,9 +410,10 @@ public class SBC_DiskOpsView
 			return;
 		}
 
-		List<ProgressCallback>	can_start 	= new ArrayList<>();
-		List<ProgressCallback>	can_stop 	= new ArrayList<>();
-		List<ProgressCallback>	can_remove 	= new ArrayList<>();
+		List<ProgressCallback>	can_start 		= new ArrayList<>();
+		List<ProgressCallback>	can_schedule 	= new ArrayList<>();
+		List<ProgressCallback>	can_stop 		= new ArrayList<>();
+		List<ProgressCallback>	can_remove 		= new ArrayList<>();
 		
 		for ( Object ds: selectedDS ){
 		
@@ -438,8 +439,13 @@ public class SBC_DiskOpsView
 				if ((states & ProgressCallback.ST_RESUME ) != 0 ){
 					
 					if ( state == ProgressCallback.ST_PAUSE ){
-					
+						
 						can_start.add( prog );
+
+						if ( !prog.isAutoPause()){
+						
+							can_schedule.add( prog );
+						}
 					}
 				}
 				if ((states & ProgressCallback.ST_CANCEL ) != 0 ){
@@ -453,18 +459,6 @@ public class SBC_DiskOpsView
 		}
 		
 		MenuItem mi = new MenuItem( menu, SWT.PUSH );
-		Messages.setLanguageText( mi, "v3.MainWindow.button.resume" );
-		
-		mi.addListener(SWT.Selection,(ev)->{
-			for ( ProgressCallback cb: can_start ){
-				cb.setTaskState( ProgressCallback.ST_RESUME );
-			}
-			refreshToolbar();
-		});
-		
-		mi.setEnabled( !can_start.isEmpty());
-		
-		mi = new MenuItem( menu, SWT.PUSH );
 		Messages.setLanguageText( mi, "v3.MainWindow.button.pause" );
 		
 		mi.addListener(SWT.Selection,(ev)->{
@@ -480,6 +474,30 @@ public class SBC_DiskOpsView
 		});
 		
 		mi.setEnabled( !can_stop.isEmpty());
+		
+		mi = new MenuItem( menu, SWT.PUSH );
+		Messages.setLanguageText( mi, "v3.MainWindow.button.start" );
+		
+		mi.addListener(SWT.Selection,(ev)->{
+			for ( ProgressCallback cb: can_start ){
+				cb.setTaskState( ProgressCallback.ST_RESUME );
+			}
+			refreshToolbar();
+		});
+		
+		mi.setEnabled( !can_start.isEmpty());
+		
+		mi = new MenuItem( menu, SWT.PUSH );
+		Messages.setLanguageText( mi, "label.schedule" );
+		
+		mi.addListener(SWT.Selection,(ev)->{
+			for ( ProgressCallback cb: can_schedule ){
+				cb.setAutoPause( true );
+			}
+			refreshToolbar();
+		});
+		
+		mi.setEnabled( !can_schedule.isEmpty());
 
 		mi = new MenuItem( menu, SWT.PUSH );
 		Messages.setLanguageText( mi, "UpdateWindow.cancel" );
