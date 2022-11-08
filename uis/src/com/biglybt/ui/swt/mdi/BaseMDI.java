@@ -1239,7 +1239,7 @@ public abstract class BaseMDI
 
 					PluginInterface pi = ((UISWTView) entry).getPluginInterface();
 
-					if (pi != null) {
+					if (pi != null && pi != pi.getPluginManager().getDefaultPluginInterface()){
 
 						final List<String> relevant_sections = new ArrayList<>();
 
