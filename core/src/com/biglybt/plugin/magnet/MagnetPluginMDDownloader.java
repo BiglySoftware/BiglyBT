@@ -393,6 +393,8 @@ MagnetPluginMDDownloader
 				
 				if ( !state.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
 				
+					FileUtil.log( "magnetDownloder: " + ByteFormatter.encodeString( hash ) + ": non-magnet download returned" );
+
 					download = null;
 					
 					core_dm = null;

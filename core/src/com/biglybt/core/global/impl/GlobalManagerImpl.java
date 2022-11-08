@@ -1147,7 +1147,7 @@ public class GlobalManagerImpl
 			}
 
 			if ( hash != null ){
-				
+								
 					// early check if download already exists, saves creating a download and then
 					// having to delete it when dup found
 				
@@ -1158,14 +1158,11 @@ public class GlobalManagerImpl
 						// exception here is if the existing download is a magnet download and
 						// this one is a real one - in this case things will be resolved later
 					
-					boolean	carry_on = false;
-					
-					if ( existingDM.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
-													
-						carry_on = !thisIsMagnet;
-					}
-					
-					if ( !carry_on ){
+					boolean existingIsMagnet = existingDM.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+				
+					FileUtil.log( "addDownload: " + ByteFormatter.encodeString( hash.getBytes()) + ": isMagnet=" + thisIsMagnet + ", existingIsMagnet=" + existingIsMagnet );
+
+					if ( thisIsMagnet && !existingIsMagnet ){
 						
 						deleteDest = true;
 						
@@ -1173,6 +1170,9 @@ public class GlobalManagerImpl
 						
 						return( existingDM );
 					}
+				}else{
+					
+					FileUtil.log( "addDownload: " + ByteFormatter.encodeString( hash.getBytes()) + ": isMagnet=" + thisIsMagnet );
 				}
 			}
 
@@ -1338,7 +1338,11 @@ public class GlobalManagerImpl
 				
 				if ( existing != null ){
 					
-					if ( existing.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+					boolean existingIsMagnet = existing.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+					
+					FileUtil.log( "createNewDownloadManager: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=" + thisIsMagnet + ", existingIsMagnet=" + existingIsMagnet );
+
+					if ( existingIsMagnet ){
 						
 						removeDownloadManager( existing, true, true );
 						
@@ -1379,6 +1383,8 @@ public class GlobalManagerImpl
 			   if ( to_remove != null ){
 				   
 				   try{
+					   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( to_remove.getTorrent().getHash()) + ": removing existing magnet dl" );
+
 					   removeDownloadManager( to_remove, true, true );
 				   
 				   }catch( Throwable e ){
@@ -1732,6 +1738,13 @@ public class GlobalManagerImpl
 
   	throws GlobalManagerDownloadRemovalVetoException
   {
+	if ( manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+		
+			// can always remove these
+		
+		return;
+	}
+	  
   	try{
   		removal_listeners.dispatchWithException(LDT_MANAGER_WBR, new Object[] {
 				manager,

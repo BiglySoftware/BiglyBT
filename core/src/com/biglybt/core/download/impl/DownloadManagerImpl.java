@@ -2935,6 +2935,20 @@ DownloadManagerImpl
 		if ( for_removal ){
 
 			removing = true;
+			
+		}else{
+			
+			if ( download_manager_state.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+				
+				if ( state_after_stopping == DownloadManager.STATE_STOPPED ){
+					
+					try{
+						FileUtil.log( "stopDownloadManager: stopping magnet" + ByteFormatter.encodeString( torrent.getHash()), new Exception());
+						
+					}catch( Throwable e ){
+					}
+				}
+			}
 		}
 
 		try {

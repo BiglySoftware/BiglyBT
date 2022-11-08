@@ -361,8 +361,32 @@ TOTorrentImpl
 		Map	root = serialiseToMap();
 
 		try{
-			return( BEncoder.encode( root ));
-
+			int attempts = 0;
+			
+			while( true ){
+			
+				attempts++;
+				
+				try{
+					return( BEncoder.encode( root ));
+					
+				}catch( ConcurrentModificationException e ){
+					
+						// seen this a few times, hack around it a bit
+					
+					if ( attempts < 3 ){
+						
+						try{
+							Thread.sleep( 50 );
+							
+						}catch( Throwable f ){
+						}
+					}else{
+						
+						throw( e );
+					}
+				}
+			}
 		}catch( IOException e ){
 
 			throw( 	new TOTorrentException(
