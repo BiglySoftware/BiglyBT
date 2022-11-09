@@ -229,6 +229,7 @@ public class GlobalManagerImpl
 			});
 	}
 
+	private Object								create_dm_lock		= new Object();
 
 	private Object								managers_lock		= new Object();
 	private volatile DownloadManager[] 			managers_list_cow	= new DownloadManager[0];
@@ -987,39 +988,15 @@ public class GlobalManagerImpl
   @Override
   public DownloadManager
   addDownloadManager(
-  		String torrent_file_name,
-  		byte[] optionalHash,
-		String savePath,
-		String saveFile,
-		int initialState,
-		boolean persistent,
-		boolean for_seeding,
-		DownloadManagerInitialisationAdapter adapter )
-  {
-	  DownloadManager result = 
-			  addDownloadManagerSupport( 
-					  torrent_file_name, 
-					  optionalHash, 
-					  savePath, 
-					  saveFile, 
-					  initialState, 
-					  persistent, 
-					  for_seeding, 
-					  adapter );
-	  
-	  return( result );
-  }
-  
-  private DownloadManager
-  addDownloadManagerSupport(
-  		String torrent_file_name,
-  		byte[] optionalHash,
-		String savePath,
-		String saveFile,
-		int initialState,
-		boolean persistent,
-		boolean for_seeding,
+  		String		torrent_file_name,
+  		byte[]		optionalHash,
+		String		savePath,
+		String		saveFile,
+		int			initialState,
+		boolean		persistent,
+		boolean		for_seeding,
 		DownloadManagerInitialisationAdapter _adapter )
+ 
   {
 		boolean needsFixup = false;
 		DownloadManager manager;
@@ -1162,7 +1139,8 @@ public class GlobalManagerImpl
 				
 					FileUtil.log( "addDownload: " + ByteFormatter.encodeString( hash.getBytes()) + ": isMagnet=" + thisIsMagnet + ", existingIsMagnet=" + existingIsMagnet );
 
-					if ( thisIsMagnet && !existingIsMagnet ){
+					if (	( thisIsMagnet == existingIsMagnet ) ||
+							( thisIsMagnet && !existingIsMagnet )){
 						
 						deleteDest = true;
 						
@@ -1207,16 +1185,17 @@ public class GlobalManagerImpl
 			
 			// now do the creation!
 
-			DownloadManager new_manager = createNewDownloadManager(
+			boolean[] is_existing = {false};
+			
+			manager = createAndAddNewDownloadManager(
 					optionalHash, fName, savePath, saveFile, initialState, persistent, for_seeding,
-					file_priorities, adapter, thisIsMagnet );
+					file_priorities, adapter, thisIsMagnet, is_existing );
 
-			manager = addDownloadManager( new_manager, true );
 			
 			// if a different manager is returned then an existing manager for
 			// this torrent exists and the new one isn't needed (yuck)
 
-			if ( manager == null || manager != new_manager ){
+			if ( manager == null || is_existing[0] ){
 				
 				deleteDest = true;
 				
@@ -1262,21 +1241,17 @@ public class GlobalManagerImpl
 			
 			//Debug.printStackTrace(e);
 			
-			manager = createNewDownloadManager( optionalHash,
+			manager = createAndAddNewDownloadManager( optionalHash,
 					torrent_file_name, savePath, saveFile, initialState, persistent, for_seeding,
-					file_priorities, adapter, thisIsMagnet );
-			
-			manager = addDownloadManager(manager, true);
-			
+					file_priorities, adapter, thisIsMagnet, new boolean[1] );
+						
 		}catch( Exception e ){
 			
 			// get here on duplicate files, no need to treat as error
-			manager = createNewDownloadManager( optionalHash,
+			manager = createAndAddNewDownloadManager( optionalHash,
 					torrent_file_name, savePath, saveFile, initialState, persistent, for_seeding,
-					file_priorities, adapter, thisIsMagnet );
-			
-			manager = addDownloadManager(manager, true);
-			
+					file_priorities, adapter, thisIsMagnet, new boolean[1] );
+						
 		}finally{
 			
 			if ( deleteDest ){
@@ -1308,6 +1283,40 @@ public class GlobalManagerImpl
 
 		return manager;
 	}
+  
+	private DownloadManager
+  	createAndAddNewDownloadManager(
+		byte[]									torrent_hash,
+		String 									torrentFileName,
+		String 									savePath,
+		String									saveFile,
+		int      								initialState,
+		boolean									persistent,
+		boolean									for_seeding,
+		List									file_priorities,
+		DownloadManagerInitialisationAdapter 	adapter,
+		boolean									thisIsMagnet,
+		boolean[]								is_existing )
+  	{
+			// single thread this as simply creating a download manager causes state files to be copied
+			// and we don't want multiple things going on at once if someone is trying to add the same
+			// download multiple times
+		
+		synchronized( create_dm_lock ){
+		
+			DownloadManager manager = 
+				createNewDownloadManager( 
+					torrent_hash, torrentFileName, savePath, saveFile, initialState, 
+					persistent, for_seeding, file_priorities,	adapter,thisIsMagnet, is_existing );
+			
+			if ( !is_existing[0] ){
+			
+				manager = addDownloadManager( manager, true, is_existing );
+			}
+			
+			return( manager );
+		}
+  	}
 
   	private DownloadManager
   	createNewDownloadManager(
@@ -1320,7 +1329,8 @@ public class GlobalManagerImpl
 		boolean									for_seeding,
 		List									file_priorities,
 		DownloadManagerInitialisationAdapter 	adapter,
-		boolean									thisIsMagnet )
+		boolean									thisIsMagnet,
+		boolean[]								is_existing )
   	{
   		int loop = 0;
   		
@@ -1380,6 +1390,8 @@ public class GlobalManagerImpl
 					}
 				}else{
 				
+					is_existing[0] = true;
+					
 					return( existing );
 				}
 			}else{
@@ -1404,18 +1416,11 @@ public class GlobalManagerImpl
   		}
   	}
   	
-	@Override
-	public void
-	clearNonPersistentDownloadState(
-		byte[] hash )
-	{
-		saved_download_manager_state.remove( new HashWrapper( hash ));
-	}
-
    protected DownloadManager
    addDownloadManager(
    		DownloadManager 	download_manager,
-		boolean				notifyListeners)
+		boolean				notifyListeners,
+		boolean[]			is_existing )
    {
 	   if ( !isStopping ){
 
@@ -1458,9 +1463,27 @@ public class GlobalManagerImpl
 					   
 					   download_manager.destroy( true );
 	
+					   try{
+						   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( download_manager.getTorrent().getHash()) + ": returning  existing" );
+				   
+					   }catch( Throwable e ){
+						   
+					   }
+					   
+					   is_existing[0] = true;
+					   
 					   return( existing );
 				   }
 	
+				   try{
+					   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( download_manager.getTorrent().getHash()) + ": actually adding" );
+
+					   removeDownloadManager( to_remove, true, true );
+				   
+				   }catch( Throwable e ){
+					   
+				   }
+				   
 				   DownloadManagerStats dm_stats = download_manager.getStats();
 	
 				   HashWrapper hashwrapper = null;
@@ -1740,6 +1763,14 @@ public class GlobalManagerImpl
 		   return( null );
 	   }
   }
+
+   @Override
+   public void
+   clearNonPersistentDownloadState(
+		   byte[] hash )
+   {
+	   saved_download_manager_state.remove( new HashWrapper( hash ));
+   }
 
   @Override
   public List<DownloadManager> getDownloadManagers() {
@@ -3142,7 +3173,7 @@ public class GlobalManagerImpl
 						  this, torrent_hash, fileName, torrent_save_dir, torrent_save_file,
 						  state, true, true, has_ever_been_started, file_priorities );
 
-			  if ( addDownloadManager( dm, false ) == dm ){
+			  if ( addDownloadManager( dm, false, new boolean[1] ) == dm ){
 
 				  	// recover any error state
 				  

@@ -1540,7 +1540,7 @@ public class GeneralView
 	    	
 	    	DiskManagerPiece[] pieces = manager.getDiskManagerPiecesSnapshot();
 	    	
-	    	if ( pieces == null ){
+	    	if ( pieces == null || pieces.length == 0 ){
 	    		
 	    		return;
 	    	}

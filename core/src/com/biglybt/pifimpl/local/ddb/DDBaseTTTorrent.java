@@ -164,6 +164,11 @@ DDBaseTTTorrent
 					continue;
 				}
 
+				if ( dl.getFlag( Download.FLAG_METADATA_DOWNLOAD )){
+					
+					continue;
+				}
+				
 				String	sha1 = dl.getAttribute( ta_sha1 );
 
 				if ( sha1 == null ){
