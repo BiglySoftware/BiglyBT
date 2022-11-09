@@ -1322,43 +1322,86 @@ public class GlobalManagerImpl
 		DownloadManagerInitialisationAdapter 	adapter,
 		boolean									thisIsMagnet )
   	{
-		DownloadManager new_manager = 
-			DownloadManagerFactory.create(this,
-				torrent_hash, torrentFileName, savePath, saveFile, initialState, persistent, for_seeding,
-				file_priorities, adapter);
-		
-		if ( !thisIsMagnet ){
-		
-			try{
-					// due to the fact that magnet and real downloads share the same hash it is possible
-					// for the creation to return an existing magnet download. check for this and
-					// delete it if so
-				
-				DownloadManager existing = getDownloadManager( new_manager.getTorrent().getHashWrapper());
-				
-				if ( existing != null ){
-					
-					boolean existingIsMagnet = existing.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
-					
-					FileUtil.log( "createNewDownloadManager: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=" + thisIsMagnet + ", existingIsMagnet=" + existingIsMagnet );
+  		int loop = 0;
+  		
+  		while( true ){
+  			
+  			loop++;
+  			
+				// due to the fact that magnet and real downloads share the same hash it is possible
+				// for the creation to return an existing magnet download. check for this and
+				// delete it if so
 
-					if ( existingIsMagnet ){
+			DownloadManager new_manager = 
+				DownloadManagerFactory.create(this,
+					torrent_hash, torrentFileName, savePath, saveFile, initialState, persistent, for_seeding,
+					file_priorities, adapter);
+			
+			if ( thisIsMagnet || torrent_hash == null ){
+				
+				FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=true" );
+
+				return( new_manager );
+			}
+			
+			boolean newIsMagnet = new_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+
+			if ( !newIsMagnet ){
+				
+				FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=false, newIsMagnet=false" );
+
+				return( new_manager );
+			}
+			
+			if ( loop > 10 ){
+				
+				return( new_manager );
+			}
+			
+				// we've been asked to create a non-magnet but the new manager is a magnet as it has picked
+				// up existing state from a magnet download
+			
+			DownloadManager existing = getDownloadManager( new HashWrapper( torrent_hash ));
+					
+			if ( existing != null ){
 						
+				boolean existingIsMagnet = existing.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+						
+				FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=false, newIsMagnet=true, existingIsMagnet=" + existingIsMagnet );
+	
+				if ( existingIsMagnet ){
+					
+					try{
 						removeDownloadManager( existing, true, true );
-						
-						new_manager = 
-								DownloadManagerFactory.create(this,
-									torrent_hash, torrentFileName, savePath, saveFile, initialState, persistent, for_seeding,
-									file_priorities, adapter);
+							
+					}catch( Throwable e ){
+					
+						Debug.out( e );
 					}
+				}else{
+				
+					return( existing );
 				}
+			}else{
+			
+				try{
+					DownloadManagerStateFactory.deleteDownloadState( torrent_hash );
+					
+				}catch( Throwable e ){
+					
+					FileUtil.log( "createNewDownload: failed to delete existing state", e );
+				}
+				
+				FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=false, newIsMagnet=true, existing=null" );
+			}
+	
+			try{
+				Thread.sleep(500);
+				
 			}catch( Throwable e ){
 				
-				Debug.out( e );
 			}
-		}
-		
-		return( new_manager );
+  		}
   	}
   	
 	@Override
@@ -1400,6 +1443,8 @@ public class GlobalManagerImpl
 	
 					   	// if we have a real download and the existing one is a magnet then keep the real one
 	
+					   	// with recent changes to createNewDownloadManager this code is probably not required
+					   
 					   if ( 	existing.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD ) && 
 							   !download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
 	
@@ -1777,12 +1822,20 @@ public class GlobalManagerImpl
   @Override
   public void
   removeDownloadManager(
-  	DownloadManager manager,
+		DownloadManager manager,
 		boolean	remove_torrent,
 		boolean	remove_data )
 
   	throws GlobalManagerDownloadRemovalVetoException
   {
+	  try{
+		  boolean isMagnet = manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+		  
+		  FileUtil.log( "removeDownload: " + ByteFormatter.encodeString( manager.getTorrent().getHash()) + ": isMagnet=" + isMagnet );
+		  
+	  }catch( Throwable e ){
+	  }
+	  
 	  // simple protection against people calling this twice
 
 	  synchronized( managers_lock ){
