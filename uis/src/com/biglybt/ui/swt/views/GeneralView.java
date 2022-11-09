@@ -1538,7 +1538,14 @@ public class GeneralView
 
 	    if ( dm == null ){
 	    	
-	    	dm = manager.getDiskManagerPiecesSnapshot()[0].getManager();
+	    	DiskManagerPiece[] pieces = manager.getDiskManagerPiecesSnapshot();
+	    	
+	    	if ( pieces == null ){
+	    		
+	    		return;
+	    	}
+	    	
+	    	dm = pieces[0].getManager();
 	    }
 	    
 	    int	nbPieces = manager.getNbPieces();
