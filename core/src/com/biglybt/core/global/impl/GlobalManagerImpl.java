@@ -1477,8 +1477,6 @@ public class GlobalManagerImpl
 	
 				   try{
 					   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( download_manager.getTorrent().getHash()) + ": actually adding" );
-
-					   removeDownloadManager( to_remove, true, true );
 				   
 				   }catch( Throwable e ){
 					   
