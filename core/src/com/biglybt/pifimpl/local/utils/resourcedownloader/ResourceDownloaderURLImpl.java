@@ -509,7 +509,20 @@ ResourceDownloaderURLImpl
 									}
 								}
 
-								ssl_socket_factory = SESecurityManager.installServerCertificates( url );
+								URL cert_url = url;
+								
+								if ( plugin_proxy != null ){
+									
+									try{
+									
+										cert_url = new URL( plugin_proxy.getTarget());
+										
+									}catch( Throwable f ){
+										
+									}
+								}
+								
+								ssl_socket_factory = SESecurityManager.installServerCertificates( cert_url );
 
 								if ( ssl_socket_factory != null ){
 
@@ -1399,8 +1412,20 @@ redirect_label:
 											}
 										}
 
-
-										ssl_socket_factory = SESecurityManager.installServerCertificates( current_url );
+										URL cert_url = current_url;
+										
+										if ( current_plugin_proxy != null ){
+											
+											try{
+											
+												cert_url = new URL( current_plugin_proxy.getTarget());
+												
+											}catch( Throwable f ){
+												
+											}
+										}
+										
+										ssl_socket_factory = SESecurityManager.installServerCertificates( cert_url );
 
 										if ( ssl_socket_factory != null ){
 
