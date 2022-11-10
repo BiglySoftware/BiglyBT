@@ -6549,10 +6549,27 @@ public class OpenTorrentOptionsWindow
 
 				text.setText( torrentOptions.getTorrentName() +  (torrent==null?"":("\u00a0\u00a0\u00a0\u00a0[" + hash_str + "]")));
 
-				if ( torrent != null && text.getControl().getData("hasClipMenu") == null ){
+				if ( torrent != null ){
 
+					Control control = text.getControl();
+					
+					Menu menu = new Menu( control );
+					
+					control.setMenu(menu);
+					
+					MenuItem save_torrent = new MenuItem( menu, SWT.PUSH );
+					
+					Messages.setLanguageText(save_torrent, "menu.save.torrent" );
+					
+					save_torrent.addListener(SWT.Selection, (ev)->{
+						
+						TorrentUtil.exportTorrent(torrentOptions.getTorrentName() + ".torrent", torrent, control.getShell());
+					});
+					
+					new MenuItem( menu, SWT.SEPARATOR );
+					
 					ClipboardCopy.addCopyToClipMenu(
-						text.getControl(),
+						menu,
 						new ClipboardCopy.copyToClipProvider2() {
 
 							@Override
@@ -6569,7 +6586,6 @@ public class OpenTorrentOptionsWindow
 								return( TorrentUtils.nicePrintTorrentHash( torrent, true ));
 							}
 						});
-					text.getControl().setData("hasClipMenu", true);
 				}
 			}
 

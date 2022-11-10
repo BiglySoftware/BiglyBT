@@ -166,9 +166,25 @@ public class ClipboardCopy {
 
 				  final String	text = provider.getText();
 
-				  if ( control.getMenu() != null || text == null || text.length() == 0 ){
-
+				  if ( text == null || text.length() == 0 ){
+					  
 					  return;
+				  }
+				  
+				  Menu temp = control.getMenu();
+
+				  if ( temp != null ){
+					  
+					  MenuItem[] items = temp.getItems();
+					  
+					  if ( items.length == 0 ){
+						  
+						  temp.dispose();
+						  
+					  }else{
+						  
+						  return;
+					  }
 				  }
 
 				  if (!(e.button == 3 || (e.button == 1 && e.stateMask == SWT.CONTROL))){

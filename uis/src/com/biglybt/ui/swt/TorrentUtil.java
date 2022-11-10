@@ -2043,6 +2043,64 @@ public class TorrentUtil
 		}
 	}
 
+	public static void 
+	exportTorrent(
+		String		torrent_name,
+		TOTorrent 	torrent, 
+		Shell 		parentShell) 
+	{
+		FileDialog fd = new FileDialog(parentShell, SWT.SAVE);
+		
+		fd.setFileName( torrent_name );
+		
+		String path = fd.open();
+		
+		if ( path == null ){
+			
+			return;
+		}
+		
+		File target = new File(path);
+		
+		try{
+
+			if ( target.exists()){
+				
+				MessageBoxShell mb = 
+					new MessageBoxShell( 
+						SWT.YES | SWT.NO,
+						MessageText.getString("exportTorrentWizard.process.outputfileexists.title"),
+						torrent_name + "\n\n" + 
+						MessageText.getString("exportTorrentWizard.process.outputfileexists.message" ));
+	
+				mb.open( null );
+				
+				int result = mb.waitUntilClosed();
+	
+				if ( result == SWT.NO ){
+					
+					return;
+				}
+				
+				if (!target.delete()) {
+					
+					throw (new Exception("Failed to delete file"));
+				}
+			}
+
+			Map map = torrent.serialiseToMap();
+			
+			TOTorrent dest = TOTorrentFactory.deserialiseFromMap(map);
+			
+			dest.removeAdditionalProperties();
+			
+			dest.serialiseToBEncodedFile(target);
+			
+		}catch (Throwable e) {
+			Logger.log(new LogAlert(torrent_name, LogAlert.UNREPEATABLE,
+					"Torrent export failed", e));
+		}
+	}
 	protected static void pauseDownloadsFor(DownloadManager[] dms) {
 
 		final List<DownloadManager> dms_to_pause = new ArrayList<>();
