@@ -2024,6 +2024,7 @@ public class UrlUtils
 
 
 		try{
+			/*
 			Object sni_host_name = Class.forName( "javax.net.ssl.SNIHostName").getConstructor( String.class ).newInstance( host_name );
 
 			List<Object> sni_host_names = new ArrayList<>(1);
@@ -2036,17 +2037,20 @@ public class UrlUtils
 
 			ssl_parameters_class.getMethod( "setServerNames", List.class ).invoke( ssl_parameters, sni_host_names );
 
-			socket.getClass().getMethod( "setSSLParameters" , ssl_parameters_class ).invoke( socket, ssl_parameters );
-
-			/*
-			SNIHostName serverName = new SNIHostName("whatever.com");
+			SSLSocket.class.getMethod( "setSSLParameters" , ssl_parameters_class ).invoke( socket, ssl_parameters );
+			*/
+			
+			SNIHostName serverName = new SNIHostName( host_name );
+			
 			List<SNIServerName> serverNames = new ArrayList<>(1);
+			
 			serverNames.add(serverName);
 
 			SSLParameters params = socket.getSSLParameters();
+			
 			params.setServerNames(serverNames);
+			
 			socket.setSSLParameters(params);
-			*/
 
 			return( true );
 
