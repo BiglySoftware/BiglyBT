@@ -46,6 +46,8 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.proxy.AEProxyFactory;
+import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.security.SECertificateListener;
 import com.biglybt.core.security.SEKeyDetails;
 import com.biglybt.core.security.SEPasswordListener;
@@ -900,13 +902,6 @@ SESecurityManagerImpl
 		}
 	}
 
-	public SSLSocketFactory
-	installServerCertificates(
-		URL		https_url )
-	{
-		return( installServerCertificates( https_url, false, false ));
-	}
-
 	private boolean													hack_constructor_tried;
 	private Constructor	hack_constructor;
 
@@ -1023,12 +1018,159 @@ SESecurityManagerImpl
 		}
 	}
 
+	public SSLSocketFactory
+	installServerCertificates(
+		URL		https_url )
+	{
+		try{
+			return( installServerCertificates( https_url, false, false, false ));
+			
+		}catch( Throwable e ){
+			
+			try{
+				return( installServerCertificates( https_url, false, false, true ));
+				
+			}catch( Throwable f ){
+			
+				Debug.out( e );
+				
+				return( null );
+			}
+		}
+	}
 
+	public SSLSocketFactory
+	installServerCertificates(
+		String		alias,
+		String		host,
+		int			port )
+	{
+		try{
+			return( installServerCertificates( alias, host, port, false, false ));
+						
+		}catch( Throwable e ){
+			
+			try{
+				return( installServerCertificates( alias, host, port, false, true ));
+				
+			}catch( Throwable f ){
+			
+				Debug.out( e );
+				
+				return( null );
+			}
+		}
+	}
+
+	private SSLSocket
+	createInstallServerCertificatesSocket(
+		TrustManager[]		trustAllCerts,
+		String				host,
+		int					port,
+		boolean				sni_hack,
+		boolean				use_proxy )
+	
+		throws Exception
+	{
+		SSLContext sc = SSLContext.getInstance("SSL");
+
+		sc.init( null, trustAllCerts, RandomUtils.SECURE_RANDOM );
+
+		SSLSocketFactory factory = sc.getSocketFactory();
+
+	    SSLSocket socket;
+
+		if ( use_proxy ){
+		
+			Map<String,Object>	opts = new HashMap<>();
+
+			opts.put( AEProxyFactory.PO_PEER_NETWORKS, AENetworkClassifier.AT_TOR );
+			
+			PluginProxy plugin_proxy = AEProxyFactory.getPluginProxy( "installCerts", host, port, opts );
+
+			if ( plugin_proxy == null ){
+				
+				throw( new Exception( "Plugin Proxy unavailable" ));
+			}
+			
+			boolean proxy_ok = false;
+			
+			try{
+				Proxy proxy = plugin_proxy.getProxy();
+				
+				Socket base_socket = new Socket( proxy );
+				
+				InetSocketAddress targetSockAddress = InetSocketAddress.createUnresolved( host, port  );
+
+				base_socket.connect( targetSockAddress );
+	
+				if ( sni_hack ){
+			
+					socket = (SSLSocket)factory.createSocket( base_socket, "", base_socket.getPort(), true );
+		
+					socket.setEnabledProtocols(new String[] {"TLSv1"});
+		
+					socket.setUseClientMode(true);
+		
+				}else{
+						
+					
+					socket = (SSLSocket)factory.createSocket( base_socket, host, port, true );
+				}
+				
+				proxy_ok = true;
+				
+			}finally{
+				
+				plugin_proxy.setOK( proxy_ok );
+			}
+		}else{
+			
+			InetSocketAddress targetSockAddress = new InetSocketAddress(  InetAddress.getByName( host ) , port  );
+	
+		    InetAddress bindIP = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress(targetSockAddress.getAddress() instanceof Inet6Address ? NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6 : NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4);
+			    
+			if ( sni_hack ){
+	
+				Socket base_socket = new Socket();
+	
+		        if ( bindIP != null ){
+	
+		        	base_socket.bind( new InetSocketAddress( bindIP, 0 ) );
+		        }
+	
+				base_socket.connect( targetSockAddress );
+	
+				socket = (SSLSocket)factory.createSocket( base_socket, "", base_socket.getPort(), true );
+	
+				socket.setEnabledProtocols(new String[] {"TLSv1"});
+	
+				socket.setUseClientMode(true);
+	
+			}else{
+						
+				if ( bindIP != null ){
+	
+					socket = (SSLSocket)factory.createSocket( host, port, bindIP, 0) ;
+	
+				}else{
+	
+					socket = (SSLSocket)factory.createSocket( host, port );
+				}
+			}
+		}
+		
+		return( socket );
+	}
+	
 	private SSLSocketFactory
 	installServerCertificates(
 		final URL	https_url,
 		boolean		sni_hack,
-		boolean		dh_hack )
+		boolean		dh_hack,
+		boolean		use_proxy )
+	
+		throws Throwable
 	{
 		try{
 			this_mon.enter();
@@ -1106,45 +1248,9 @@ SESecurityManagerImpl
 							}
 						});
 
-				SSLContext sc = SSLContext.getInstance("SSL");
 
-				sc.init( null, trustAllCerts, RandomUtils.SECURE_RANDOM );
-
-				SSLSocketFactory factory = sc.getSocketFactory();
-
-				InetSocketAddress targetSockAddress = new InetSocketAddress(  InetAddress.getByName( host ) , port  );
-
-			    InetAddress bindIP = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress(targetSockAddress.getAddress() instanceof Inet6Address ? NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6 : NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4);
-
-				if ( sni_hack ){
-
-					Socket base_socket = new Socket();
-
-			        if ( bindIP != null ){
-
-			        	base_socket.bind( new InetSocketAddress( bindIP, 0 ) );
-			        }
-
-					base_socket.connect( targetSockAddress );
-
-					socket = (SSLSocket)factory.createSocket( base_socket, "", base_socket.getPort(), true );
-
-					socket.setEnabledProtocols(new String[] {"TLSv1"});
-
-					socket.setUseClientMode(true);
-
-				}else{
-
-					if ( bindIP != null ){
-
-						socket = (SSLSocket)factory.createSocket( host, port, bindIP, 0) ;
-
-					}else{
-
-						socket = (SSLSocket)factory.createSocket( host, port );
-					}
-				}
-
+			    socket = createInstallServerCertificatesSocket(trustAllCerts, host, port, sni_hack, use_proxy );
+			    
 				if ( dh_hack ){
 
 					String[] cs = socket.getEnabledCipherSuites();
@@ -1323,7 +1429,7 @@ SESecurityManagerImpl
 
 					if ( !sni_hack ){
 
-						return( installServerCertificates( https_url, true, dh_hack ));
+						return( installServerCertificates( https_url, true, dh_hack, use_proxy ));
 					}
 				}
 
@@ -1331,13 +1437,11 @@ SESecurityManagerImpl
 
 					if ( !dh_hack ){
 
-						return( installServerCertificates( https_url, sni_hack, true ));
+						return( installServerCertificates( https_url, sni_hack, true, use_proxy ));
 					}
 				}
 
-				Debug.out( e );
-
-				return( null );
+				throw( e );
 
 			}finally{
 
@@ -1358,21 +1462,15 @@ SESecurityManagerImpl
 		}
 	}
 
-	public SSLSocketFactory
-	installServerCertificates(
-		String		alias,
-		String		host,
-		int			port )
-	{
-		return( installServerCertificates( alias, host, port, false ));
-	}
-
-	public SSLSocketFactory
+	private SSLSocketFactory
 	installServerCertificates(
 		String		alias,
 		String		host,
 		int			port,
-		boolean		sni_hack )
+		boolean		sni_hack,
+		boolean		use_proxy )
+	
+		throws Throwable
 	{
 		try{
 			this_mon.enter();
@@ -1385,50 +1483,12 @@ SESecurityManagerImpl
 			SSLSocket	socket = null;
 
 			try{
-
 					// to get the server certs we have to use an "all trusting" trust manager
 
 				TrustManager[] trustAllCerts = SESecurityManager.getAllTrustingTrustManager();
 
-				SSLContext sc = SSLContext.getInstance("SSL");
-
-				sc.init( null, trustAllCerts, RandomUtils.SECURE_RANDOM );
-
-				SSLSocketFactory factory = sc.getSocketFactory();
-
-				InetSocketAddress targetSockAddress = new InetSocketAddress(  InetAddress.getByName( host ) , port  );
-
-			    InetAddress bindIP = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress(targetSockAddress.getAddress() instanceof Inet6Address ? NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6 : NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4);
-
-				if ( sni_hack ){
-
-					Socket base_socket = new Socket();
-
-			        if ( bindIP != null ){
-
-			        	base_socket.bind( new InetSocketAddress( bindIP, 0 ) );
-			        }
-
-					base_socket.connect( targetSockAddress );
-
-					socket = (SSLSocket)factory.createSocket( base_socket, "", base_socket.getPort(), true );
-
-					socket.setEnabledProtocols(new String[] {"TLSv1"});
-
-					socket.setUseClientMode(true);
-
-				}else{
-
-					if ( bindIP != null ){
-
-						socket = (SSLSocket)factory.createSocket( host, port, bindIP, 0) ;
-
-					}else{
-
-						socket = (SSLSocket)factory.createSocket( host, port );
-					}
-				}
-
+			    socket = createInstallServerCertificatesSocket(trustAllCerts, host, port, sni_hack, use_proxy );
+			
 				socket.startHandshake();
 
 				java.security.cert.Certificate[] serverCerts = socket.getSession().getPeerCertificates();
@@ -1461,13 +1521,11 @@ SESecurityManagerImpl
 
 					if ( !sni_hack ){
 
-						return( installServerCertificates( alias, host, port, true ));
+						return( installServerCertificates( alias, host, port, true, use_proxy ));
 					}
 				}
 
-				Debug.out( e );
-
-				return( null );
+				throw( e );
 
 			}finally{
 
