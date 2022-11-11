@@ -323,6 +323,23 @@ public class TorrentOpenOptions
 		return( sDestSubDir );
 	}
 
+	public String
+	getSubDirOrDefault()
+	{
+		if ( sDestSubDir != null ){
+			
+			return( sDestSubDir );
+		}
+		
+		if ( torrent.isSimpleTorrent()){
+			
+			return( null );
+		}else{
+			
+			return( FileUtil.convertOSSpecificChars(getTorrentName(), true));
+		}
+	}
+
 	public void
 	setExplicitDataDir(
 		String		parent_dir,

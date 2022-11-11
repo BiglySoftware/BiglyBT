@@ -70,6 +70,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.torrent.TOTorrentFile;
+import com.biglybt.core.torrent.impl.TorrentOpenFileOptions;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.tracker.host.TRHostException;
 import com.biglybt.core.util.*;
@@ -2544,12 +2545,12 @@ public class ManagerUtils {
 					
 					if ( result == 0 ){
 						
-						locateFilesSupport( dms, dm_files, shell );
+						locateFilesSupport( dms, dm_files, null, shell );
 					}
 				});
 		}else{
 			
-			locateFilesSupport( dms, dm_files, shell );
+			locateFilesSupport( dms, dm_files, null, shell );
 		}
 	}
 	
@@ -2565,8 +2566,9 @@ public class ManagerUtils {
 
 	private static void
 	locateFilesSupport(
-		final DownloadManager[]			dms,
-		final DiskManagerFileInfo[][]	dm_files,
+		DownloadManager[]				dms,
+		DiskManagerFileInfo[][]			dm_files,
+		List<TorrentOpenOptions>		torrents,
 		Shell							shell )
 	{
 		ClassLoader loader = null;
@@ -2592,6 +2594,8 @@ public class ManagerUtils {
 		
 		final SkinnedDialog dialog = new SkinnedDialog( loader, "skin3_dlg_findfiles", "shell", shell,  SWT.DIALOG_TRIM | SWT.RESIZE );
 		
+		dialog.setTitle( MessageText.getString(dms!=null?"dlg.finddatafiles.title":"dlg.findsavelocations.title" ));
+		
 		SWTSkin skin = dialog.getSkin();
 
 		SWTSkinObjectList so_def_locs = (SWTSkinObjectList) skin.getSkinObject( "roots-list" );
@@ -2613,6 +2617,8 @@ public class ManagerUtils {
 
 		SWTSkinObjectCheckbox	so_use_def	= (SWTSkinObjectCheckbox)skin.getSkinObject( "use-def" );
 		
+		SWTSkinObject			so_mode_label	= skin.getSkinObject( "mode-label" );
+
 		SWTSkinObjectContainer	so_mode		= (SWTSkinObjectContainer)skin.getSkinObject( "mode" );
 		
 		SWTSkinObjectCheckbox	so_include_skipped	= (SWTSkinObjectCheckbox)skin.getSkinObject( "skip-inc" );
@@ -2667,16 +2673,16 @@ public class ManagerUtils {
 		tolerance.setLayoutData( fd );
 		tolerance.setText( MessageText.getString( "label.tolerance.pct" ));
 		
-		Spinner spinner = new Spinner(c_mode, SWT.BORDER | SWT.RIGHT);
+		Spinner tolerance_spinner = new Spinner(c_mode, SWT.BORDER | SWT.RIGHT);
 		fd = new FormData();
 		fd.top=new FormAttachment(c_mode,0);
 		fd.bottom=new FormAttachment(100);
 		fd.left=new FormAttachment(tolerance,2);
 		fd.right=new FormAttachment(100);
 		
-		spinner.setLayoutData( fd );
-		spinner.setMinimum( 0 );
-		spinner.setMaximum( 10 );
+		tolerance_spinner.setLayoutData( fd );
+		tolerance_spinner.setMinimum( 0 );
+		tolerance_spinner.setMaximum( 10 );
 				
 		SWTSkinObjectContainer soButtonArea = (SWTSkinObjectContainer)skin.getSkinObject("bottom-area");
 		
@@ -2702,7 +2708,7 @@ public class ManagerUtils {
 					
 					int link_type = link_combo.getSelectionIndex();
 					
-					int tolerance = spinner.getSelection();
+					int tolerance = tolerance_spinner.getSelection();
 					
 					boolean include_skipped = so_include_skipped.isChecked();
 					
@@ -2715,7 +2721,14 @@ public class ManagerUtils {
 							public void
 							run()
 							{
-								locateFiles( dms, dm_files, shell, roots, mode, link_type, tolerance, include_skipped );
+								if ( dms != null ){
+								
+									locateFiles( dms, dm_files, shell, roots, mode, link_type, tolerance, include_skipped );
+									
+								}else{
+									
+									locateSavePaths( torrents, shell, roots );
+								}
 							}
 						});
 					
@@ -2781,7 +2794,7 @@ public class ManagerUtils {
 					
 					link_combo.setEnabled( link_enabled );
 					
-					spinner.setEnabled( not_relocate );
+					tolerance_spinner.setEnabled( not_relocate );
 					
 					so_include_skipped.setEnabled( not_relocate );
 				}
@@ -2901,10 +2914,10 @@ public class ManagerUtils {
 				}
 			});
 		
-		spinner.addListener(
+		tolerance_spinner.addListener(
 				SWT.Selection, 
 				(e)->{
-					int value = spinner.getSelection();
+					int value = tolerance_spinner.getSelection();
 					
 					if ( value != 0 ){
 						
@@ -3025,7 +3038,16 @@ public class ManagerUtils {
 		
 		skin.setAutoSizeOnLayout( true, true );
 		
-		dialog.open();	
+		if ( dms == null ){
+			
+			so_mode_label.setVisible( false );
+			
+			so_mode.setVisible( false );
+			
+			skin.getSkinObject( "opt2-line" ).setVisible( false );
+		}
+		
+		dialog.open( "skin3_dlg_findfiles." + (dms==null?"dms":"sps"), true );	
 	}
 	
 		// Bug in Windows 10 causing crash in SWT/OS when window closes:
@@ -3034,6 +3056,7 @@ public class ManagerUtils {
 		// in the absence of any help from SWT team currently hacked to re-use window :(
 	
 	private static List<TextViewerWindow>	lf_windows 	= new ArrayList<>();
+	private static List<TextViewerWindow>	sp_windows 	= new ArrayList<>();
 	private static final boolean			lf_reuse	= Constants.isWindows10OrHigher;
 	
 	private static final long	LOG_TICK_DOT_MIN = 250;
@@ -4736,6 +4759,303 @@ public class ManagerUtils {
 		// viewer.goModal(); - don't make it modal as it breaks the re-use window hack
 	}
 
+	
+	public static void
+	locateSavePaths(
+		List<TorrentOpenOptions>	torrents,
+		Shell						shell,
+		String[]					roots )
+	{
+		TextViewerWindow _viewer = null;
+		
+		synchronized( sp_windows ){
+			
+			if ( lf_reuse ){
+			
+				if ( !sp_windows.isEmpty()){
+					
+					_viewer = sp_windows.remove( 0 );
+				}				
+			}
+			
+			if ( _viewer == null ){
+		
+				_viewer = new TextViewerWindow( MessageText.getString( "locatesavepaths.view.title" ), null, "", false, false );
+				
+			}else{
+				
+				_viewer.reset();
+			}
+		}
+
+		final TextViewerWindow viewer = _viewer;
+		
+		if ( lf_reuse ){
+			
+			viewer.setReuseWindow();
+		}
+		
+		viewer.setEditable( false );
+
+		viewer.setCancelEnabled( true );
+		
+		viewer.setOKEnabled( false );
+		
+		viewer.setOKisApply( true );
+		
+		viewer.getShell().moveAbove( shell );
+;
+		new AEThread2( "FileLocator" )
+		{
+			@Override
+			public void
+			run()
+			{
+				try{
+					Map<Long,Set<File>>	file_map = new HashMap<>();
+
+					final boolean[]	quit = { false };
+
+					viewer.addListener(
+							new TextViewerWindow.TextViewerWindowListener() {
+
+								@Override
+								public void closed() {
+									synchronized( quit ){
+										quit[0] = true;
+									}
+
+									synchronized( sp_windows ){
+
+										if ( lf_reuse ){
+
+											sp_windows.add( viewer );
+										}
+									};
+								}
+							});
+
+					int indent = 0;
+					
+					logLine( viewer, indent, "Checking " + torrents.size() + " torrents against " + roots.length + " search locations" );
+					
+					Set<String>	tested_folders = new HashSet<>();
+					
+					LinkedList<File>	to_do = new LinkedList<>();
+					
+					for ( String root: roots ){
+						
+						to_do.add( new File( root ));
+					}
+					
+					Map<TorrentOpenOptions,Object[]>	candidates = new HashMap<>();
+					
+					long last_dir_log = -1;
+					
+					while( !to_do.isEmpty()){
+						
+						synchronized( quit ){
+							if ( quit[0] ){
+								break;
+							}
+						}
+						
+						File dir = to_do.removeFirst();
+						
+						if ( !dir.isDirectory()){
+							
+							continue;
+						}
+						
+						String abs_dir = dir.getAbsolutePath();
+						
+						if ( tested_folders.contains( abs_dir )){
+							
+							continue;
+						}
+						
+						tested_folders.add( abs_dir );
+						
+						long now = SystemTime.getMonotonousTime();
+						
+						if ( last_dir_log == -1 || now - last_dir_log > 100 ){
+						
+							last_dir_log = now;
+							
+							logLine( viewer, indent, "Searching " + abs_dir + ", remaining=" + to_do.size());
+						}
+		
+						
+						for( TorrentOpenOptions too: torrents ){
+							
+							TOTorrent torrent = too.getTorrent();
+							
+							TOTorrentFile[] tfiles = torrent.getFiles();
+							
+							TorrentOpenFileOptions[] files = too.getFiles();
+							
+							int hits = 0;
+							int	pads = 0;
+							
+							if ( torrent.isSimpleTorrent()){
+								
+								String file = files[0].getDestFileName();
+								
+								File test_file = new File( dir, file );
+								
+								if ( test_file.exists()){
+									
+									hits++;
+								}
+								
+							}else{
+								
+								//String parent_dir = too.getSubDirOrDefault();
+								
+								for ( TorrentOpenFileOptions tofile: files ){
+									
+									int index = tofile.getIndex();
+									
+									TOTorrentFile tfile = tfiles[index];
+									
+									if ( tfile.isPadFile()){
+										
+										pads++;
+										
+										continue;
+									}
+									
+									String file = tofile.getDestFileName();
+									
+									String path = tfile.getRelativePath() ;
+									
+									int pos = path.lastIndexOf( File.separator );
+									
+									if ( pos != -1 ){
+										
+										path = path.substring( 0, pos+1 ) + file;
+									}
+									
+									/*
+									if ( !too.isRemovedTopLevel()){
+									
+										path = parent_dir + File.separator + path;
+									}
+									*/
+									
+									File test_file = new File( dir, path );
+																		
+									if ( test_file.exists()){
+										
+										hits++;
+									}
+								}
+							}
+							
+							if ( hits > 0 ){
+							
+								logLine( viewer, indent+1, "Testing " + dir  + " against " + too.getDisplayName() + ": matches=" + hits );
+
+								Object[] entry = candidates.get( too );
+								
+								if ( entry == null ){
+									
+									entry = new Object[]{ new int[]{ 0, pads }, new ArrayList() };
+									
+									candidates.put( too,  entry );
+								}
+								
+								int[] counts = (int[])entry[0];
+								
+								List<File>	hit_files = (List<File>)entry[1];
+								
+								if ( hits > counts[0] ){
+									
+									counts[0] = hits;
+									
+									hit_files.clear();
+									
+									hit_files.add( dir );
+									
+								}else if ( hits == counts[0] ){
+									
+									hit_files.add( dir );
+								}
+							}
+						}
+									
+						
+						for ( File f: dir.listFiles()){
+							
+							if ( f.isDirectory()){
+								
+								to_do.add( f );
+							}
+						}
+					}
+					
+					logLine( viewer, indent, "Search complete, " + tested_folders.size() + " folders checked" );
+					
+					for( TorrentOpenOptions too: torrents ){
+						
+						Object[] entry = candidates.get( too );
+						
+						if ( entry == null ){
+							
+							logLine( viewer, indent, "No results for " + too.getDisplayName());
+							
+						}else{
+							
+							int fc = too.getTorrent().getFileCount();
+							
+							int[] counts = (int[])entry[0];
+
+							List<File>	hit_files = (List<File>)entry[1];
+
+							int matches =  counts[0];
+							int pad		= counts[1];
+							
+							logLine( viewer, indent, too.getDisplayName() + " has " + hit_files.size() + " locations with " + matches + " out of " + (fc-pad) + " matches:"  );
+							
+							for ( File f: hit_files ){
+								logLine( viewer, indent+1, f.getAbsolutePath());
+							}
+						}
+					}
+					
+					logLine( viewer, indent, "FEATURE INCOMPLETE, IT DOESN'T WORK YET!!!!" );
+
+					
+				}catch( Throwable e ){
+
+					log( viewer, 0, "\r\n" + new SimpleDateFormat().format( new Date()) + ": Failed: " + Debug.getNestedExceptionMessage( e ) + "\r\n" );
+					
+				}finally{
+
+					Utils.execSWTThread(
+							new Runnable()
+							{
+								public void
+								run()
+								{
+									if ( !viewer.isDisposed()){
+
+										viewer.setOKEnabled( true );
+									}
+								}
+							});
+				}			}
+		}.start();
+	}
+	
+	public static void
+	locateSaveLocations(
+		List<TorrentOpenOptions>	torrents,
+		Shell						shell )
+	{
+		locateFilesSupport( null, null, torrents, shell );
+	}
+	
 	private static void
 	logLine(
 		TextViewerWindow	viewer,

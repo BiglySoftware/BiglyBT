@@ -94,6 +94,7 @@ import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.TrackerNameItem;
+import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI;
 import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
 import com.biglybt.ui.swt.widgets.TagPainter;
@@ -1863,7 +1864,8 @@ public class OpenTorrentOptionsWindow
 
 		private boolean cmbDataDirEnabled = true;
 		private Combo cmbDataDir;
-		private Button btnDataDIr;
+		private Button btnDataDir;
+		private Button btnSearch;
 
 		private Combo cmbQueueLocation;
 
@@ -2191,13 +2193,20 @@ public class OpenTorrentOptionsWindow
 				}
 			}
 
-			SWTSkinObject so1 = skin.getSkinObject("saveto-textarea");
-			SWTSkinObject so2 = skin.getSkinObject("saveto-browse");
-			SWTSkinObject so3 = skin.getSkinObject("saveto-more");
-			if (	(so1 instanceof SWTSkinObjectContainer) &&
-					(so2 instanceof SWTSkinObjectButton) &&
-					(so3 instanceof SWTSkinObjectContainer)){
-				setupSaveLocation((SWTSkinObjectContainer) so1, (SWTSkinObjectButton) so2, (SWTSkinObjectContainer)so3);
+			SWTSkinObject so_ta = skin.getSkinObject("saveto-textarea");
+			SWTSkinObject so_b = skin.getSkinObject("saveto-browse");
+			SWTSkinObject so_s = skin.getSkinObject("saveto-search");
+			SWTSkinObject so_m = skin.getSkinObject("saveto-more");
+			
+			if (	(so_ta instanceof SWTSkinObjectContainer) &&
+					(so_b instanceof SWTSkinObjectButton) &&
+					(so_m instanceof SWTSkinObjectContainer)){
+				
+				setupSaveLocation(
+					(SWTSkinObjectContainer) so_ta, 
+					(SWTSkinObjectButton) so_b, 
+					(SWTSkinObjectButton) so_s, 
+					(SWTSkinObjectContainer)so_m );
 			}
 
 			so = skin.getSkinObject("expanditem-saveto");
@@ -2236,6 +2245,11 @@ public class OpenTorrentOptionsWindow
 			}
 
 			skin.layout();
+			
+			if ( btnDataDir != null && btnSearch != null ){
+			
+				Utils.makeButtonsEqualWidth( btnDataDir, btnSearch );
+			}
 		}
 
 		private void
@@ -4502,8 +4516,12 @@ public class OpenTorrentOptionsWindow
 			soFileAreaInfo = so;
 		}
 
-		private void setupSaveLocation(SWTSkinObjectContainer soInputArea,
-				SWTSkinObjectButton soBrowseButton, SWTSkinObjectContainer soMoreArea) 
+		private void 
+		setupSaveLocation(
+			SWTSkinObjectContainer	soInputArea,
+			SWTSkinObjectButton		soBrowseButton, 
+			SWTSkinObjectButton		soSearchButton, 
+			SWTSkinObjectContainer	soMoreArea) 
 		{	
 			cmbDataDir = new Combo(soInputArea.getComposite(), SWT.NONE);
 
@@ -4666,7 +4684,17 @@ public class OpenTorrentOptionsWindow
 				}
 			});
 			
-			btnDataDIr = soBrowseButton.getButton();
+			soSearchButton.addSelectionListener(new SWTSkinButtonUtility.ButtonListenerAdapter() {
+				@Override
+				public void pressed(SWTSkinButtonUtility buttonUtility,
+						SWTSkinObject skinObject, int stateMask) {
+
+					ManagerUtils.locateSaveLocations( torrentOptionsMulti, shell);
+				}
+			});
+			
+			btnDataDir	= soBrowseButton.getButton();
+			btnSearch	= soSearchButton.getButton();
 			
 			if ( !isSingleOptions ){
 			
@@ -4705,7 +4733,8 @@ public class OpenTorrentOptionsWindow
 			}
 			
 			cmbDataDir.setEnabled( cmbDataDirEnabled );
-			btnDataDIr.setEnabled( cmbDataDirEnabled );
+			btnDataDir.setEnabled( cmbDataDirEnabled );
+			btnSearch.setEnabled( cmbDataDirEnabled );
 			
 			Composite more_outer = soMoreArea.getComposite();
 			
@@ -6938,7 +6967,8 @@ public class OpenTorrentOptionsWindow
 			if ( cmbDataDir != null ){
 				
 				cmbDataDir.setEnabled(enabled);
-				btnDataDIr.setEnabled( cmbDataDirEnabled );
+				btnDataDir.setEnabled( cmbDataDirEnabled );
+				btnSearch.setEnabled( cmbDataDirEnabled );
 			}
 		}
 		

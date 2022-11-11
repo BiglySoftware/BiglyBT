@@ -53,6 +53,7 @@ public class TextViewerWindow {
   private Button ok;
   private Button cancel;
   
+  private boolean	ok_is_apply;
   private boolean	cancel_enabled;
   
   private Font	np_font;
@@ -235,6 +236,12 @@ public class TextViewerWindow {
     }
   }
 
+  public Shell
+  getShell()
+  {
+	  return( shell );
+  }
+  
   public void
   setReuseWindow()
   {
@@ -298,7 +305,8 @@ public class TextViewerWindow {
 		  cancel = null;
 		  ok = new Button(buttonArea, SWT.PUSH);
 	  }
-	  ok.setText(MessageText.getString("Button.ok"));
+	  
+	  ok.setText(MessageText.getString( ok_is_apply?"Button.apply":"Button.ok"));
 
 	  Utils.makeButtonsEqualWidth( Arrays.asList( refresh, ok, cancel ));
 
@@ -444,11 +452,24 @@ public class TextViewerWindow {
   setCancelEnabled(
 	boolean	enabled )
   {
+	  cancel_enabled = true;
+	  
 	  if ( cancel != null ){
 		  cancel.setEnabled( enabled );
+	  }else{
+		  buildButtons();
 	  }
   }
 
+  public void
+  setOKisApply(
+		boolean		b )
+  {
+	  ok_is_apply = b;
+	  
+	  buildButtons();
+  }
+  
   public void
   setNonProportionalFont()
   {
