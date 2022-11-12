@@ -165,8 +165,8 @@ public class StringListChooser {
         }
     	  try{
     		  shell.open();
-    	    while (!shell.isDisposed())
-    	      if (!display.readAndDispatch()) display.sleep();
+    	    
+    		  Utils.readAndDispatchLoop(shell);
 
     	  }catch( Throwable e ){
 

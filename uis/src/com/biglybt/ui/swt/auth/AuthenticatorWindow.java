@@ -341,15 +341,7 @@ AuthenticatorWindow
 
 				dialog[0] = new authDialog( sem, display, realm, is_tracker, location, details );
 
-				while ( !( display.isDisposed() || sem.isReleasedForever())){
-
-					if ( !display.readAndDispatch()){
-
-						display.sleep();
-					}
-				}
-
-				if ( display.isDisposed()){
+				if ( Utils.readAndDispatchLoop(()->sem.isReleasedForever())){
 
 					return( null );
 				}

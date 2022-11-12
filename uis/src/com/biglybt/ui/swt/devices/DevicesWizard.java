@@ -291,21 +291,4 @@ DevicesWizard
 			}
 		});
 	}
-
-
-
-	public static void
-	main(
-		String args[])
-	{
-		final DevicesWizard sw = new DevicesWizard( null );
-
-		while( ! sw.shell.isDisposed()) {
-			if(! sw.display.readAndDispatch()) {
-				sw.display.sleep();
-			}
-		}
-
-		sw.display.dispose();
-	}
 }

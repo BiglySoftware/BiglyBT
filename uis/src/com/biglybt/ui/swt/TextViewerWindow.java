@@ -34,6 +34,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.mainwindow.SWTThread;
 
 public class TextViewerWindow {
 	
@@ -197,7 +198,7 @@ public class TextViewerWindow {
 			widgetDisposed(
 				DisposeEvent arg0)
 			{
-				if ( reuseWindow ){
+				if ( reuseWindow && !SWTThread.getInstance().isTerminated()){
 					Debug.out( "What?" );
 				}
 				if ( np_font != null ){
@@ -364,11 +365,7 @@ public class TextViewerWindow {
   public void
   goModal()
   {
-	    Display display = Utils.getDisplay();
-
-	  	while ( (!shell.isDisposed()) && shell.isVisible()){
-    		if (!display.readAndDispatch()) display.sleep();
-	  	}
+	  Utils.readAndDispatchLoop( shell, true );
   }
 
   public void

@@ -1218,12 +1218,7 @@ public class MessageBoxShell
 					if (!opened) {
 						shell.open();
 					}
-					while (shell != null && !shell.isDisposed()) {
-						if (shell.getDisplay() != null
-								&& !shell.getDisplay().readAndDispatch()) {
-							shell.getDisplay().sleep();
-						}
-					}
+					Utils.readAndDispatchLoop(shell);
 					return;
 				} finally {
 					sem.releaseForever();

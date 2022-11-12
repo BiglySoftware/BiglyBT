@@ -415,12 +415,8 @@ ProgressWindow
 		}.start();
 
 		try{
-			final Display display = Utils.getDisplay();
-
-			while( !( task_complete || display.isDisposed())){
-
-				if (!display.readAndDispatch()) display.sleep();
-			}
+			Utils.readAndDispatchLoop(()->task_complete);
+			
 		}finally{
 
 				// bit of boiler plate in case something fails in the dispatch loop

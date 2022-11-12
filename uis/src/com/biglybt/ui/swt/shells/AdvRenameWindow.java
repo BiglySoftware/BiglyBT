@@ -481,11 +481,7 @@ public class AdvRenameWindow
 	}
 	
 	private void waitUntilDone() {
-		while (shell != null && !shell.isDisposed()) {
-			if (!shell.getDisplay().readAndDispatch()) {
-				shell.getDisplay().sleep();
-			}
-		}
+		Utils.readAndDispatchLoop(shell);
 	}
 
 	private void doRename() {

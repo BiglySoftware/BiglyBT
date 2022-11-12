@@ -354,12 +354,7 @@ public class VuzeMessageBox
 				if (dlg != null) {
 					Shell shell = dlg.getShell();
 					if (shell != null) {
-						Display d = shell.getDisplay();
-						while (!shell.isDisposed()) {
-							if (!d.readAndDispatch()) {
-								d.sleep();
-							}
-						}
+						Utils.readAndDispatchLoop( shell );
 					}
 					skinDialogClosed(dlg);
 					return buttonsArea.getButtonVal(result);

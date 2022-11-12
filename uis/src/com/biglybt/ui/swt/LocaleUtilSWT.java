@@ -263,11 +263,8 @@ LocaleUtilSWT
 
 
     s.open();
-    while (!s.isDisposed()) {
-      if (!s.getDisplay().readAndDispatch()) {
-      	s.getDisplay().sleep();
-      }
-    }
+    
+    Utils.readAndDispatchLoop(s);
   }
 
   private void

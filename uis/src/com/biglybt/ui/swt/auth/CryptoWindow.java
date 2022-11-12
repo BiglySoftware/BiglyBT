@@ -97,15 +97,7 @@ CryptoWindow
 
 				dialog[0] = new cryptoDialog( sem, display, handler_type, action_type, last_pw_incorrect, reason );
 
-				while ( !( display.isDisposed() || sem.isReleasedForever())){
-
-					if ( !display.readAndDispatch()){
-
-						display.sleep();
-					}
-				}
-
-				if ( display.isDisposed()){
+				if ( Utils.readAndDispatchLoop(()->sem.isReleasedForever())){
 
 					return( null );
 				}

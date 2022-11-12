@@ -948,14 +948,8 @@ public class MessageSlideShell
 	 * Waits until all slideys are closed before returning to caller.
 	 */
 	public static void waitUntilClosed() {
-		if (currentPopupIndex < 0)
-			return;
 
-		Display display = Display.getCurrent();
-		while (currentPopupIndex >= 0) {
-			if (!display.readAndDispatch())
-				display.sleep();
-		}
+		Utils.readAndDispatchLoop(()->currentPopupIndex < 0);
 	}
 
 	public static class PopupParams

@@ -255,11 +255,7 @@ CertificateTrustWindow
 
 			shell.open ();
 
-	    while (!shell.isDisposed()) {
-	      if (!shell.getDisplay().readAndDispatch()) {
-	      	shell.getDisplay().sleep();
-	      }
-	    }
+			Utils.readAndDispatchLoop( shell );
 		}
 
 		protected void

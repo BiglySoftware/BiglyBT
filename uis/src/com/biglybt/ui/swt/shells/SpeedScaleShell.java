@@ -645,11 +645,8 @@ public class SpeedScaleShell
 		composite.setFocus();
 
 		try {
-			while (!shell.isDisposed()) {
-				if (!display.readAndDispatch()) {
-					display.sleep();
-				}
-			}
+			Utils.readAndDispatchLoop( shell );
+
 		} catch (Throwable t) {
 			Debug.out(t);
 		}

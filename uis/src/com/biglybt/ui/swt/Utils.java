@@ -86,6 +86,7 @@ import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pif.UISWTStatusEntry;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
+import com.biglybt.ui.swt.progress.ProgressWindow;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.systray.TrayItemDelegate;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -3347,11 +3348,7 @@ public class Utils
 		}
 
 		if (modalShell != null) {
-			while (!modalShell.isDisposed()) {
-				if (!display.readAndDispatch()) {
-					display.sleep();
-				}
-			}
+			readAndDispatchLoop(modalShell);
 		}
 	}
 
@@ -4022,7 +4019,7 @@ public class Utils
 	  					new Runnable()
 	  					{
 	  						@Override
-							  public void
+							public void
 	  						run()
 	  						{
 	  							synchronized( done ){
@@ -4032,16 +4029,14 @@ public class Utils
 	  						}
 	  					});
 
-	  				while(!event.display.isDisposed() && event.display.readAndDispatch()){
-
+	  				Utils.readAndDispatchUntilIdleOr(()->{
+	  					
 	  					synchronized( done ){
 
-	  						if ( done[0] || SystemTime.getMonotonousTime() - start > 500 ){
-
-	  							break;
-	  						}
+	  						return( done[0] || SystemTime.getMonotonousTime() - start > 500 );
 	  					}
-	  				}
+	  				});
+	  				
   				}catch( Throwable e ){
 
   				}
@@ -5441,23 +5436,6 @@ public class Utils
 	}
 
 	public static void
-	ensureDisplayUpdated( Display display )
-	{
-		long start = SystemTime.getMonotonousTime();
-
-		// make sure display is up to date
-		while (display.readAndDispatch()) {
-
-			if ( SystemTime.getMonotonousTime() - start > 5000 ){
-
-				// hmmm, somert wrong
-
-				return;
-			}
-		}
-	}
-
-	public static void
 	setPeronalShare(
 		Map<String, String> properties )
 	{
@@ -6288,5 +6266,74 @@ public class Utils
 	gradientFillSelection()
 	{
 		return( gradient_fill );
+	}
+	
+	public static void
+	ensureDisplayUpdated()
+	{
+		readAndDispatchUntilIdleFor( 5000 );
+	}
+	
+	public static void
+	readAndDispatchUntilIdle()
+	{
+		readAndDispatchUntilIdleFor( -1 );
+	}
+	
+	public static void
+	readAndDispatchLoop(
+		Control owner )
+	{
+		readAndDispatchLoop( owner, false );
+	}
+		
+	public static void
+	readAndDispatchLoop(
+		Control owner,
+		boolean	check_visible )
+	{
+		if ( owner == null ){
+			
+			return;
+		}
+		
+		readAndDispatchLoop(()->{ return( owner.isDisposed() || (check_visible && !owner.isVisible()));});
+	}
+	
+	public static void
+	readAndDispatchUntilIdleFor(
+		long	millis )
+	{
+		long start = SystemTime.getMonotonousTime();
+	
+		readAndDispatchUntilIdleOr(()->( millis >= 0 && SystemTime.getMonotonousTime() - start > millis ));
+	}
+	
+	public static void
+	readAndDispatchUntilIdleOr(
+		Supplier<Boolean>	done )
+	{		
+		while (	!SWTThread.getInstance().isTerminated() && 
+				!done.get() && 
+				!display.isDisposed() && 
+				display.readAndDispatch()){
+			
+		}
+	}
+	
+	public static boolean
+	readAndDispatchLoop(
+		Supplier<Boolean>	done )
+	{
+		while ( !SWTThread.getInstance().isTerminated() && 
+				!( done.get() || display.isDisposed())){
+
+			if ( !display.readAndDispatch()){
+
+				display.sleep();
+			}
+		}
+
+		return( display.isDisposed());
 	}
 }

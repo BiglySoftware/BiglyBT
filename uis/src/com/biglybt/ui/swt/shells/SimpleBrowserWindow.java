@@ -126,27 +126,6 @@ public class SimpleBrowserWindow
 	}
 
 	public void waitUntilClosed() {
-		Display display = shell.getDisplay();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
-	}
-
-	public static void main(String[] args) {
-		Display display = new Display();
-		Shell shell = new Shell(display, SWT.DIALOG_TRIM);
-		shell.setSize(800, 600);
-
-		new SimpleBrowserWindow(shell, "http://google.com", 0.8, 0.5, true, false);
-
-		shell.open();
-
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
+		Utils.readAndDispatchLoop(shell);
 	}
 }

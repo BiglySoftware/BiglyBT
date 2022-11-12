@@ -248,11 +248,7 @@ SWTNetworkSelection
 
 			shell.open ();
 
-			while (!shell.isDisposed()) {
-				if (!display.isDisposed() && !display.readAndDispatch()) {
-					display.sleep();
-				}
-			}
+			Utils.readAndDispatchLoop( shell );
 		}
 
 		protected void

@@ -189,12 +189,7 @@ public class PasswordWindow {
   }
 
   protected void run() {
-    while (!shell.isDisposed()) {
-    	Display d = shell.getDisplay();
-    	if (!d.readAndDispatch() && !shell.isDisposed()) {
-    		d.sleep();
-    	}
-    }
+	  Utils.readAndDispatchLoop(shell);
   }
 
   private void close() {

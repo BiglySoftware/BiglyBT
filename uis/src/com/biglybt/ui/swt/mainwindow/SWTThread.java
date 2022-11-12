@@ -59,6 +59,9 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 
   }
 
+  	// disposal is causing 100% CPU + out of memory on close
+  
+  boolean skip_dispose = Constants.isLinux && Utils.getSWTVersion() >= 4956;
 
   Display display;
   private boolean sleak = false;
@@ -484,14 +487,17 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
       }
 
       // Could still be disposing.. wait to be sure
-      try {
-	      while (display != null && !display.isDisposed()) {
-	        if (!display.readAndDispatch() && !display.isDisposed()) {
-	          display.sleep();
+      
+      if ( !skip_dispose ){
+	      try {
+		      while (display != null && !display.isDisposed()) {
+		        if (!display.readAndDispatch() && !display.isDisposed()) {
+		          display.sleep();
+			      }
 		      }
+	      } catch (Exception e) {
+	      	e.printStackTrace();
 	      }
-      } catch (Exception e) {
-      	e.printStackTrace();
       }
     }
   }
@@ -506,6 +512,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 	// apparently fixed in 4.14
 
     boolean crash_on_dispose_bug = Constants.isWindows8OrHigher && SWT.getVersion() < 4930;
+    
     
     if (!display.isDisposed()) {
     	
@@ -531,7 +538,8 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				    
 				    	// while crash is occurring we can just avoid the dispose completely and let the VM death trash things
 				    
-				    if ( !crash_on_dispose_bug ){
+				    if ( !crash_on_dispose_bug && !skip_dispose ){
+				    	
 				    	if ( !display.isDisposed()){
 				    		try{
 				    			display.dispose();

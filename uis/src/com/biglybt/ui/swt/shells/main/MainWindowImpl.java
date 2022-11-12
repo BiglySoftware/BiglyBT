@@ -226,7 +226,7 @@ public class MainWindowImpl
 					Logger.log(new LogAlert(false, "Error Initialize MainWindow", e));
 				}
 
-				while (!display.isDisposed() && display.readAndDispatch());
+				Utils.readAndDispatchUntilIdle();
 			}
 		});
 	}
@@ -1217,10 +1217,8 @@ public class MainWindowImpl
 			if (display == null) {
 				return;
 			}
-			try {
-  			long endSWTDispatchOn = SystemTime.getOffsetTime(5000);
-				while (SystemTime.getCurrentTime() < endSWTDispatchOn
-  					&& !display.isDisposed() && display.readAndDispatch());
+			try{
+				Utils.readAndDispatchUntilIdleFor( 5000 );
 			} catch (Exception e) {
 				Debug.out(e);
 			}

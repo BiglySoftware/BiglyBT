@@ -103,8 +103,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 			public void run() {
 				promptForInput0();
 				if (receiver_listener == null) {
-					while (shell != null && !shell.isDisposed())
-						if (!display.readAndDispatch()) display.sleep();
+					Utils.readAndDispatchLoop( shell );
 				}
 			}
 		}, receiver_listener != null);

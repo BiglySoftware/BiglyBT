@@ -246,12 +246,7 @@ public class BrowserWindow
 	}
 
 	public void waitUntilClosed() {
-		Display display = shell.getDisplay();
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				display.sleep();
-			}
-		}
+		Utils.readAndDispatchLoop( shell );
 	}
 
 	public ClientMessageContext
