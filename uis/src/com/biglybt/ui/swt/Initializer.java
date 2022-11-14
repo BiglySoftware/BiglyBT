@@ -745,7 +745,7 @@ public class Initializer
 							public int 
 							getStyle()
 							{
-								return( STYLE_NO_CLOSE | STYLE_MODAL );
+								return( STYLE_NO_CLOSE | STYLE_MINIMIZE | STYLE_MODAL );
 							}
 							
 							@Override
@@ -758,7 +758,21 @@ public class Initializer
 							public int
 							getSupportedTaskStates()
 							{
-								return( ProgressCallback.ST_SUBTASKS );
+								return( ProgressCallback.ST_SUBTASKS | ProgressCallback.ST_MINIMIZE );
+							}
+							
+							@Override
+							public void 
+							setTaskState(
+								int state )
+							{
+								if ( state == ProgressCallback.ST_MINIMIZE ){
+									
+									UIFunctionsSWT functionsSWT = UIFunctionsManagerSWT.getUIFunctionsSWT();
+									if (functionsSWT != null) {
+										functionsSWT.getMainWindow().setVisible( IMainWindow.WINDOW_ELEMENT_ALL, false );
+									}
+								}
 							}
 						};
 						

@@ -31,6 +31,8 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -352,6 +354,10 @@ ProgressWindow
 															
 															style |= SWT.APPLICATION_MODAL;
 														}
+														if ((s & ProgressCallback.STYLE_MINIMIZE) != 0 ){
+															
+															style |= SWT.MIN;
+														}
 													}
 												}
 												
@@ -505,14 +511,36 @@ ProgressWindow
 			
 			return;
 		}
-		
-		boolean closeable = (shell.getStyle() & SWT.CLOSE ) != 0;
-		
+				
 		shell.setText( MessageText.getString( "progress.window.title" ));
 
 		CoreOperationTask task = _core_op==null?null:_core_op.getTask();
 		
 		ProgressCallback progress = task==null?null:task.getProgressCallback();
+		
+		boolean closeable = (shell.getStyle() & SWT.CLOSE ) != 0;
+
+		if ( progress != null ){
+			
+			int s = progress.getStyle();
+			
+			if ((s & ProgressCallback.STYLE_NO_CLOSE) != 0 ){
+				
+				closeable = false;
+			}
+			
+			if ((s & ProgressCallback.STYLE_MINIMIZE) != 0 ){
+
+				shell.addShellListener( 
+					new ShellAdapter(){
+						@Override
+						public void shellIconified(ShellEvent e){
+							progress.setTaskState(ProgressCallback.ST_MINIMIZE);
+							e.doit = false;
+						}
+					});
+			}
+		}
 		
 		boolean alreadyPositioned = Utils.linkShellMetricsToConfig( shell, "com.biglybt.ui.swt.progress.ProgressWindow" + "." + _core_op.getOperationType());
 		

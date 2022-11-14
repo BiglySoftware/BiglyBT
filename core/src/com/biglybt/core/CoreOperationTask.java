@@ -65,12 +65,14 @@ CoreOperationTask
 		public int ST_SUBTASKS	= 0x0008;
 		
 		public int ST_QUEUED	= 0x0010;	// differentiates between active (ST_NONE) and active but currently not scheduled
+		public int ST_MINIMIZE	= 0x0020;
 
 		public int ST_BUTTONS	= ST_PAUSE | ST_RESUME | ST_CANCEL;
 		
 		public int STYLE_NONE		= 0x0000;
 		public int STYLE_NO_CLOSE	= 0x0001;
 		public int STYLE_MODAL		= 0x0002;
+		public int STYLE_MINIMIZE	= 0x0004;
 		
 		public default int
 		getStyle()

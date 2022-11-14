@@ -1468,7 +1468,7 @@ public class MainWindowImpl
 					}
 				}
 
-				if (!isReady) {
+				if (!isReady && visible) {
 					return;
 				}
 
@@ -2142,6 +2142,10 @@ public class MainWindowImpl
 			case WINDOW_ELEMENT_MENU:
 				//TODO:
 				break;
+			case WINDOW_ELEMENT_ALL:{
+
+				return( !shell.getMinimized());
+			}
 		}
 
 		return false;
@@ -2182,6 +2186,15 @@ public class MainWindowImpl
 			case WINDOW_ELEMENT_MENU:
 				//TODO:
 				break;
+			case WINDOW_ELEMENT_ALL:{
+				
+				if ( !shell.isDisposed()){
+					
+					shell.setMinimized( true );
+				}
+				
+				break;
+			}
 		}
 
 	}
