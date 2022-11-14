@@ -245,616 +245,616 @@ MagnetPluginMDDownloader
 					active_set.add( hash_str );
 				}
 	
-				Download existing_download = download_manager.getDownload( hash );
-	
-				if ( existing_download != null ){
-	
-					throw( new Exception( "download already exists" ));
-				}
-	
-				setup_started = true;
+				synchronized( INSTANCE_LOCK ){
 
-				File torrents_dir = FileUtil.getUserFile( "torrents" );
-	
-				md_dir = FileUtil.newFile( torrents_dir, "md", hash_str );
-				
-				if ( !md_dir.exists()){
-					
-					md_dir.mkdirs();
-				}
-				
-				data_file 		= FileUtil.newFile( md_dir, hash_str + ".torrent" );
-				torrent_file 	= FileUtil.newFile( md_dir, hash_str + ".metatorrent" );
-	
-				int MD_TORRENT_SIZE = 64*1024*1024;
-				
-				if ( !data_file.exists() || data_file.length() != MD_TORRENT_SIZE ){
-				
-					RandomAccessFile raf = new RandomAccessFile( data_file, "rw" );
-	
-					try{
-						byte[] buffer = new byte[512*1024];
+					Download existing_download = download_manager.getDownload( hash );
 		
-						Arrays.fill( buffer, (byte)0xff );
+					if ( existing_download != null ){
 		
-						for (long i=0;i<MD_TORRENT_SIZE;i+=buffer.length){
-		
-							raf.write( buffer );
-						}
-					}finally{
-		
-						raf.close();
+						throw( new Exception( "download already exists" ));
 					}
-				}
-				
-				URL announce_url = TorrentUtils.getDecentralisedURL( hash );
-	
-				TOTorrent meta_torrent = null;
-				
-				if ( torrent_file.exists()){
-					
-					try{
-						meta_torrent = TOTorrentFactory.deserialiseFromBEncodedFile( torrent_file );
-						
-					}catch( Throwable e ){
-						
-						Debug.out( e );
-					}
-				}
-				
-				if ( meta_torrent == null ){
-					
-					TOTorrentCreator creator =
-						TOTorrentFactory.createFromFileOrDirWithFixedPieceLength(
-								data_file,
-								announce_url,
-								16*1024 );
 		
-					meta_torrent = creator.create( true );
-				}
+					setup_started = true;
 	
-
-				List<String>	extras = plugin.getExtraTrackers();
-							
-				for ( String extra: extras ){
+					File torrents_dir = FileUtil.getUserFile( "torrents" );
+		
+					md_dir = FileUtil.newFile( torrents_dir, "md", hash_str );
 					
-					try{
-						if ( trackers.contains( extra )){
-							
-							continue;
-						}
+					if ( !md_dir.exists()){
 						
-						URL url = new URL( extra );
-						
-						String net = AENetworkClassifier.categoriseAddress( url.getHost());
-						
-						if ( net == AENetworkClassifier.AT_PUBLIC ){
-							
-							if ( networks.isEmpty() || networks.contains( AENetworkClassifier.AT_PUBLIC )){
-								
-								trackers.add( extra );
-							}
-						}else if ( networks.contains( net )){
-							
-							trackers.add( extra );
-						}
-					}catch( Throwable e ){
-						
+						md_dir.mkdirs();
 					}
-				}
 					
-				if ( trackers.size() > 0 ){
-	
-						// stick the decentralised one we created above in position 0 - this will be
-						// removed later if the torrent is downloaded
-	
-					trackers.add( 0, announce_url.toExternalForm());
-	
-					TOTorrentAnnounceURLGroup ag = meta_torrent.getAnnounceURLGroup();
-	
-					List<TOTorrentAnnounceURLSet> sets = new ArrayList<>();
-	
-					for ( String tracker: trackers ){
-	
+					data_file 		= FileUtil.newFile( md_dir, hash_str + ".torrent" );
+					torrent_file 	= FileUtil.newFile( md_dir, hash_str + ".metatorrent" );
+		
+					int MD_TORRENT_SIZE = 64*1024*1024;
+					
+					if ( !data_file.exists() || data_file.length() != MD_TORRENT_SIZE ){
+					
+						RandomAccessFile raf = new RandomAccessFile( data_file, "rw" );
+		
 						try{
-							URL tracker_url =  new URL( tracker );
-	
-							sets.add( ag.createAnnounceURLSet(new URL[]{ tracker_url }));
-	
+							byte[] buffer = new byte[512*1024];
+			
+							Arrays.fill( buffer, (byte)0xff );
+			
+							for (long i=0;i<MD_TORRENT_SIZE;i+=buffer.length){
+			
+								raf.write( buffer );
+							}
+						}finally{
+			
+							raf.close();
+						}
+					}
+					
+					URL announce_url = TorrentUtils.getDecentralisedURL( hash );
+		
+					TOTorrent meta_torrent = null;
+					
+					if ( torrent_file.exists()){
+						
+						try{
+							meta_torrent = TOTorrentFactory.deserialiseFromBEncodedFile( torrent_file );
+							
 						}catch( Throwable e ){
-	
+							
 							Debug.out( e );
 						}
 					}
-	
-					if ( sets.size() > 0 ){
-	
-						url_sets = sets.toArray( new TOTorrentAnnounceURLSet[ sets.size()]);
-	
-						ag.setAnnounceURLSets( url_sets );
+					
+					if ( meta_torrent == null ){
+						
+						TOTorrentCreator creator =
+							TOTorrentFactory.createFromFileOrDirWithFixedPieceLength(
+									data_file,
+									announce_url,
+									16*1024 );
+			
+						meta_torrent = creator.create( true );
 					}
-				}
-	
-				meta_torrent.setHashOverride( hash );
-	
-				TorrentUtils.setFlag( meta_torrent, TorrentUtils.TORRENT_FLAG_METADATA_TORRENT, true );
-	
-				TorrentUtils.setFlag( meta_torrent, TorrentUtils.TORRENT_FLAG_LOW_NOISE, true );
-	
-				meta_torrent.serialiseToBEncodedFile( torrent_file );
-	
-				download_manager.clearNonPersistentDownloadState( hash );
-	
-				download = download_manager.addNonPersistentDownloadStopped( PluginCoreUtils.wrap( meta_torrent ), torrent_file, data_file);
 		
-				core_dm = PluginCoreUtils.unwrap( download );
-				
-				DownloadManagerState state = core_dm.getDownloadState();
-				
-				if ( !state.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
-				
-					FileUtil.log( "magnetDownloder: " + ByteFormatter.encodeString( hash ) + ": non-magnet download returned" );
-
-					download = null;
-					
-					core_dm = null;
-					
-					throw( new Exception( "Non-magnet download already added" ));
-				}
-				
-				TorrentUtils.setResumeDataTotallyIncomplete( state );	// avoid any initial rechecking
-				
-				state.setDisplayName( display_name );
 	
-				if (	 networks.size() == 0 ||
-						( networks.size() == 1 && networks.contains( AENetworkClassifier.AT_PUBLIC ))){
-	
-						// no clues in the magnet link, or just public
-						// start off by enabling all networks, public will be disabled later
-						// if off by default
-	
-					for ( String network: AENetworkClassifier.AT_NETWORKS ){
-	
-						state.setNetworkEnabled( network, true );
+					List<String>	extras = plugin.getExtraTrackers();
+								
+					for ( String extra: extras ){
+						
+						try{
+							if ( trackers.contains( extra )){
+								
+								continue;
+							}
+							
+							URL url = new URL( extra );
+							
+							String net = AENetworkClassifier.categoriseAddress( url.getHost());
+							
+							if ( net == AENetworkClassifier.AT_PUBLIC ){
+								
+								if ( networks.isEmpty() || networks.contains( AENetworkClassifier.AT_PUBLIC )){
+									
+									trackers.add( extra );
+								}
+							}else if ( networks.contains( net )){
+								
+								trackers.add( extra );
+							}
+						}catch( Throwable e ){
+							
+						}
 					}
-	
-				}else{
-	
-					for ( String network: networks ){
-	
-						state.setNetworkEnabled( network, true );
+						
+					if ( trackers.size() > 0 ){
+		
+							// stick the decentralised one we created above in position 0 - this will be
+							// removed later if the torrent is downloaded
+		
+						trackers.add( 0, announce_url.toExternalForm());
+		
+						TOTorrentAnnounceURLGroup ag = meta_torrent.getAnnounceURLGroup();
+		
+						List<TOTorrentAnnounceURLSet> sets = new ArrayList<>();
+		
+						for ( String tracker: trackers ){
+		
+							try{
+								URL tracker_url =  new URL( tracker );
+		
+								sets.add( ag.createAnnounceURLSet(new URL[]{ tracker_url }));
+		
+							}catch( Throwable e ){
+		
+								Debug.out( e );
+							}
+						}
+		
+						if ( sets.size() > 0 ){
+		
+							url_sets = sets.toArray( new TOTorrentAnnounceURLSet[ sets.size()]);
+		
+							ag.setAnnounceURLSets( url_sets );
+						}
 					}
+		
+					meta_torrent.setHashOverride( hash );
+		
+					TorrentUtils.setFlag( meta_torrent, TorrentUtils.TORRENT_FLAG_METADATA_TORRENT, true );
+		
+					TorrentUtils.setFlag( meta_torrent, TorrentUtils.TORRENT_FLAG_LOW_NOISE, true );
 	
-						// disable public network if no explicit trackers are public ones
+					meta_torrent.serialiseToBEncodedFile( torrent_file );
+		
+					download_manager.clearNonPersistentDownloadState( hash );
+		
+					download = download_manager.addNonPersistentDownloadStopped( PluginCoreUtils.wrap( meta_torrent ), torrent_file, data_file);
+			
+					core_dm = PluginCoreUtils.unwrap( download );
+					
+					DownloadManagerState state = core_dm.getDownloadState();
+					
+					if ( !state.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+					
+						FileUtil.log( "magnetDownloder: " + ByteFormatter.encodeString( hash ) + ": non-magnet download returned" );
 	
-					if ( !networks.contains( AENetworkClassifier.AT_PUBLIC )){
-	
+						download = null;
+						
+						core_dm = null;
+						
+						throw( new Exception( "Non-magnet download already added" ));
+					}
+					
+					TorrentUtils.setResumeDataTotallyIncomplete( state );	// avoid any initial rechecking
+					
+					state.setDisplayName( display_name );
+		
+					if (	 networks.size() == 0 ||
+							( networks.size() == 1 && networks.contains( AENetworkClassifier.AT_PUBLIC ))){
+		
+							// no clues in the magnet link, or just public
+							// start off by enabling all networks, public will be disabled later
+							// if off by default
+		
+						for ( String network: AENetworkClassifier.AT_NETWORKS ){
+		
+							state.setNetworkEnabled( network, true );
+						}
+		
+					}else{
+		
+						for ( String network: networks ){
+		
+							state.setNetworkEnabled( network, true );
+						}
+		
+							// disable public network if no explicit trackers are public ones
+		
+						if ( !networks.contains( AENetworkClassifier.AT_PUBLIC )){
+		
+							state.setNetworkEnabled( AENetworkClassifier.AT_PUBLIC, false );
+						}
+					}
+		
+						// if user has specifically disabled the public network then remove this too
+						// as this gives them a way to control metadata download network usage
+		
+					if ( !plugin.isNetworkEnabled( AENetworkClassifier.AT_PUBLIC )){
+		
 						state.setNetworkEnabled( AENetworkClassifier.AT_PUBLIC, false );
 					}
-				}
-	
-					// if user has specifically disabled the public network then remove this too
-					// as this gives them a way to control metadata download network usage
-	
-				if ( !plugin.isNetworkEnabled( AENetworkClassifier.AT_PUBLIC )){
-	
-					state.setNetworkEnabled( AENetworkClassifier.AT_PUBLIC, false );
-				}
-	
-				final List<InetSocketAddress>	peers_to_inject = new ArrayList<>();
-	
-				if ( addresses != null && addresses.length > 0 ){
-	
-					String[] enabled_nets = state.getNetworks();
-	
-					for ( InetSocketAddress address: addresses ){
-	
-						String host = AddressUtils.getHostAddress( address );
-	
-						String net = AENetworkClassifier.categoriseAddress( host );
-	
-						for ( String n: enabled_nets ){
-	
-							if ( n == net ){
-	
-								peers_to_inject.add( address );
-	
-								break;
+		
+					final List<InetSocketAddress>	peers_to_inject = new ArrayList<>();
+		
+					if ( addresses != null && addresses.length > 0 ){
+		
+						String[] enabled_nets = state.getNetworks();
+		
+						for ( InetSocketAddress address: addresses ){
+		
+							String host = AddressUtils.getHostAddress( address );
+		
+							String net = AENetworkClassifier.categoriseAddress( host );
+		
+							for ( String n: enabled_nets ){
+		
+								if ( n == net ){
+		
+									peers_to_inject.add( address );
+		
+									break;
+								}
 							}
 						}
 					}
-				}
-				
-				state.addListener(
-					(d,a,t)->{
-						plugin.setDNChanged( core_dm );
-					},
-					DownloadManagerState.AT_DISPLAY_NAME,
-					DownloadAttributeListener.WRITTEN );
-	
-				plugin.setInitialMetadata( core_dm, tags, initial_metadata );
+					
+					state.addListener(
+						(d,a,t)->{
+							plugin.setDNChanged( core_dm );
+						},
+						DownloadManagerState.AT_DISPLAY_NAME,
+						DownloadAttributeListener.WRITTEN );
 		
-				download.addPeerListener(
-					new DownloadPeerListener()
-					{
-						@Override
-						public void
-						peerManagerAdded(
-							final Download			download,
-							final PeerManager		peer_manager )
+					plugin.setInitialMetadata( core_dm, tags, initial_metadata );
+			
+					download.addPeerListener(
+						new DownloadPeerListener()
 						{
-							if ( cancelled || completed ){
-	
-								download.removePeerListener( this );
-	
-								return;
-							}
-	
-							final PEPeerManager pm = PluginCoreUtils.unwrap( peer_manager );
-	
-							peer_manager.addListener(
-								new PeerManagerListener2()
-								{
-									private PeerManagerListener2	pm_listener = this;
-	
-									private int	md_size;
-	
-									@Override
-									public void
-									eventOccurred(
-										PeerManagerEvent	event )
+							@Override
+							public void
+							peerManagerAdded(
+								final Download			download,
+								final PeerManager		peer_manager )
+							{
+								if ( cancelled || completed ){
+		
+									download.removePeerListener( this );
+		
+									return;
+								}
+		
+								final PEPeerManager pm = PluginCoreUtils.unwrap( peer_manager );
+		
+								peer_manager.addListener(
+									new PeerManagerListener2()
 									{
-										if ( cancelled || completed ){
-	
-											peer_manager.removeListener( this );
-	
-											return;
-										}
-	
-										if ( event.getType() != PeerManagerEvent.ET_PEER_ADDED ){
-	
-											return;
-										}
-	
-										final Peer peer = event.getPeer();
-	
-										try{
-											String	peer_ip = peer.getIp();
-	
-											String network = AENetworkClassifier.categoriseAddress( peer_ip );
-	
-											synchronized( INSTANCE_LOCK ){
-	
-												peer_networks.add( network );
-	
-												Map<String,Object> map = new HashMap<>();
-	
-												peers_for_cache.add( map );
-	
-												map.put( "ip", peer_ip.getBytes( "UTF-8" ));
-	
-												map.put( "port", new Long(peer.getPort()));
+										private PeerManagerListener2	pm_listener = this;
+		
+										private int	md_size;
+		
+										@Override
+										public void
+										eventOccurred(
+											PeerManagerEvent	event )
+										{
+											if ( cancelled || completed ){
+		
+												peer_manager.removeListener( this );
+		
+												return;
 											}
-										}catch( Throwable e ){
-	
-											Debug.out( e );
-										}
-	
-										peer.addListener(
-											new PeerListener2()
-											{
-												@Override
-												public void
-												eventOccurred(
-													PeerEvent	event )
+		
+											if ( event.getType() != PeerManagerEvent.ET_PEER_ADDED ){
+		
+												return;
+											}
+		
+											final Peer peer = event.getPeer();
+		
+											try{
+												String	peer_ip = peer.getIp();
+		
+												String network = AENetworkClassifier.categoriseAddress( peer_ip );
+		
+												synchronized( INSTANCE_LOCK ){
+		
+													peer_networks.add( network );
+		
+													Map<String,Object> map = new HashMap<>();
+		
+													peers_for_cache.add( map );
+		
+													map.put( "ip", peer_ip.getBytes( "UTF-8" ));
+		
+													map.put( "port", new Long(peer.getPort()));
+												}
+											}catch( Throwable e ){
+		
+												Debug.out( e );
+											}
+		
+											peer.addListener(
+												new PeerListener2()
 												{
-													if ( cancelled || completed || md_size > 0 ){
-	
-														peer.removeListener( this );
-	
-														return;
-													}
-	
-													if ( event.getType() != PeerEvent.ET_STATE_CHANGED ){
-	
-														return;
-													}
-	
-													if ( (Integer)event.getData() != Peer.TRANSFERING ){
-	
-														return;
-													}
-	
-													synchronized( INSTANCE_LOCK ){
-	
-														if ( md_size > 0 ){
-	
-															return;
-														}
-	
-														md_size = pm.getTorrentInfoDictSize();
-	
-														if ( md_size > 0 ){
-	
-															peer_manager.removeListener( pm_listener );
-	
-														}else{
-	
-															return;
-														}
-													}
-	
-													reportProgress( 0, md_size );
-	
-													new AEThread2( "" )
+													@Override
+													public void
+													eventOccurred(
+														PeerEvent	event )
 													{
-														@Override
-														public void
-														run()
+														if ( cancelled || completed || md_size > 0 ){
+		
+															peer.removeListener( this );
+		
+															return;
+														}
+		
+														if ( event.getType() != PeerEvent.ET_STATE_CHANGED ){
+		
+															return;
+														}
+		
+														if ( (Integer)event.getData() != Peer.TRANSFERING ){
+		
+															return;
+														}
+		
+														synchronized( INSTANCE_LOCK ){
+		
+															if ( md_size > 0 ){
+		
+																return;
+															}
+		
+															md_size = pm.getTorrentInfoDictSize();
+		
+															if ( md_size > 0 ){
+		
+																peer_manager.removeListener( pm_listener );
+		
+															}else{
+		
+																return;
+															}
+														}
+		
+														reportProgress( 0, md_size );
+		
+														new AEThread2( "" )
 														{
-															DiskManagerChannel channel = null;
-	
-															try{
-																channel = download.getDiskManagerFileInfo()[0].createChannel();
-	
-																final DiskManagerRequest request = channel.createRequest();
-	
-																request.setType( DiskManagerRequest.REQUEST_READ );
-																request.setOffset( 0 );
-																request.setLength( md_size );
-	
-																request.setMaximumReadChunkSize( 16*1024 );
-	
-																request.addListener(
-																	new DiskManagerListener()
-																	{
-																		@Override
-																		public void
-																		eventOccurred(
-																			DiskManagerEvent	event )
+															@Override
+															public void
+															run()
+															{
+																DiskManagerChannel channel = null;
+		
+																try{
+																	channel = download.getDiskManagerFileInfo()[0].createChannel();
+		
+																	final DiskManagerRequest request = channel.createRequest();
+		
+																	request.setType( DiskManagerRequest.REQUEST_READ );
+																	request.setOffset( 0 );
+																	request.setLength( md_size );
+		
+																	request.setMaximumReadChunkSize( 16*1024 );
+		
+																	request.addListener(
+																		new DiskManagerListener()
 																		{
-																			int	type = event.getType();
-	
-																			if ( type == DiskManagerEvent.EVENT_TYPE_FAILED ){
-	
-																				error[0]	= event.getFailure();
-	
-																				runComplete();
-	
-																			}else if ( type == DiskManagerEvent.EVENT_TYPE_SUCCESS ){
-	
-																				PooledByteBuffer	buffer = null;
-	
-																				try{
-																					buffer	= event.getBuffer();
-	
-																					byte[]	bytes = buffer.toByteArray();
-	
-																					int	dl_size;
-	
-																					synchronized( INSTANCE_LOCK ){
-	
-																						result.write( bytes );
-	
-																						dl_size = result.size();
-	
-																						if ( dl_size == md_size ){
-	
-																							completed	= true;
-	
-																							reportProgress( md_size, md_size );
-	
-																							runComplete();
+																			@Override
+																			public void
+																			eventOccurred(
+																				DiskManagerEvent	event )
+																			{
+																				int	type = event.getType();
+		
+																				if ( type == DiskManagerEvent.EVENT_TYPE_FAILED ){
+		
+																					error[0]	= event.getFailure();
+		
+																					runComplete();
+		
+																				}else if ( type == DiskManagerEvent.EVENT_TYPE_SUCCESS ){
+		
+																					PooledByteBuffer	buffer = null;
+		
+																					try{
+																						buffer	= event.getBuffer();
+		
+																						byte[]	bytes = buffer.toByteArray();
+		
+																						int	dl_size;
+		
+																						synchronized( INSTANCE_LOCK ){
+		
+																							result.write( bytes );
+		
+																							dl_size = result.size();
+		
+																							if ( dl_size == md_size ){
+		
+																								completed	= true;
+		
+																								reportProgress( md_size, md_size );
+		
+																								runComplete();
+																							}
+																						}
+		
+																						if ( !completed ){
+		
+																							reportProgress( dl_size, md_size );
+																						}
+		
+																					}catch( Throwable e ){
+		
+																						error[0] = e;
+		
+																						request.cancel();
+		
+																						runComplete();
+		
+																					}finally{
+		
+																						if ( buffer != null ){
+		
+																							buffer.returnToPool();
 																						}
 																					}
-	
-																					if ( !completed ){
-	
-																						reportProgress( dl_size, md_size );
-																					}
-	
-																				}catch( Throwable e ){
-	
-																					error[0] = e;
-	
-																					request.cancel();
-	
-																					runComplete();
-	
-																				}finally{
-	
-																					if ( buffer != null ){
-	
-																						buffer.returnToPool();
-																					}
+																				}else if ( type == DiskManagerEvent.EVENT_TYPE_BLOCKED ){
+		
+																					//System.out.println( "Waiting..." );
 																				}
-																			}else if ( type == DiskManagerEvent.EVENT_TYPE_BLOCKED ){
-	
-																				//System.out.println( "Waiting..." );
 																			}
+																		});
+		
+																	synchronized( INSTANCE_LOCK ){
+		
+																		if ( cancelled ){
+		
+																			return;
 																		}
-																	});
-	
-																synchronized( INSTANCE_LOCK ){
-	
-																	if ( cancelled ){
-	
-																		return;
+		
+																		requests.add( request );
 																	}
-	
-																	requests.add( request );
-																}
-	
-																request.run();
-	
-																synchronized( INSTANCE_LOCK ){
-	
-																	requests.remove( request );
-																}
-															}catch( Throwable e ){
-	
-																error[0] = e;
-	
-																runComplete();
-	
-															}finally{
-	
-																if ( channel != null ){
-	
-																	channel.destroy();
+		
+																	request.run();
+		
+																	synchronized( INSTANCE_LOCK ){
+		
+																		requests.remove( request );
+																	}
+																}catch( Throwable e ){
+		
+																	error[0] = e;
+		
+																	runComplete();
+		
+																}finally{
+		
+																	if ( channel != null ){
+		
+																		channel.destroy();
+																	}
 																}
 															}
-														}
-													}.start();
-												}
-											});
-									}
-								});
-						}
-	
-						@Override
-						public void
-						peerManagerRemoved(
-							Download		download,
-							PeerManager		peer_manager )
-						{
-						}
-					});
-	
-				final Download f_download = download;
-	
-				DownloadManagerListener dl_listener =
-					new DownloadManagerListener()
-					{	
-						private TimerEventPeriodic	timer_event;
-						private boolean				removed;
-	
-						@Override
-						public void
-						downloadAdded(
-							final Download	download )
-						{
-							if ( download == f_download ){
-	
-								synchronized( INSTANCE_LOCK ){
-	
-									if ( !removed ){
-	
-										if ( timer_event == null ){
-	
-											timer_event =
-												SimpleTimer.addPeriodicEvent(
-													"announcer",
-													30*1000,
-													new TimerEventPerformer()
-													{
-														@Override
-														public void
-														perform(
-															TimerEvent event)
-														{
-															synchronized( INSTANCE_LOCK ){
-	
-																if ( removed ){
-	
-																	return;
-																}
-	
-																	// it is possible for the running_sem to be released before
-																	// the downloadRemoved event is fired and the listener removed
-																	// so the removed event never fires...
-	
-																if (  run_complete ){
-	
-																	if ( timer_event != null ){
-	
-																		timer_event.cancel();
-	
-																		timer_event = null;
-																	}
-	
-																	return;
-																}
-															}
-	
-															download.requestTrackerAnnounce( true );
-	
-															injectPeers( download );
-														}
-													});
-										}
-	
-										if ( peers_to_inject.size() > 0 ){
-	
-											SimpleTimer.addEvent(
-												"injecter",
-												SystemTime.getOffsetTime( 5*1000 ),
-												new TimerEventPerformer(){
-													@Override
-													public void perform(TimerEvent event ){
-														injectPeers( download );
+														}.start();
 													}
 												});
 										}
+									});
+							}
+		
+							@Override
+							public void
+							peerManagerRemoved(
+								Download		download,
+								PeerManager		peer_manager )
+							{
+							}
+						});
+		
+					final Download f_download = download;
+		
+					DownloadManagerListener dl_listener =
+						new DownloadManagerListener()
+						{	
+							private TimerEventPeriodic	timer_event;
+							private boolean				removed;
+		
+							@Override
+							public void
+							downloadAdded(
+								final Download	download )
+							{
+								if ( download == f_download ){
+		
+									synchronized( INSTANCE_LOCK ){
+		
+										if ( !removed ){
+		
+											if ( timer_event == null ){
+		
+												timer_event =
+													SimpleTimer.addPeriodicEvent(
+														"announcer",
+														30*1000,
+														new TimerEventPerformer()
+														{
+															@Override
+															public void
+															perform(
+																TimerEvent event)
+															{
+																synchronized( INSTANCE_LOCK ){
+		
+																	if ( removed ){
+		
+																		return;
+																	}
+		
+																		// it is possible for the running_sem to be released before
+																		// the downloadRemoved event is fired and the listener removed
+																		// so the removed event never fires...
+		
+																	if (  run_complete ){
+		
+																		if ( timer_event != null ){
+		
+																			timer_event.cancel();
+		
+																			timer_event = null;
+																		}
+		
+																		return;
+																	}
+																}
+		
+																download.requestTrackerAnnounce( true );
+		
+																injectPeers( download );
+															}
+														});
+											}
+		
+											if ( peers_to_inject.size() > 0 ){
+		
+												SimpleTimer.addEvent(
+													"injecter",
+													SystemTime.getOffsetTime( 5*1000 ),
+													new TimerEventPerformer(){
+														@Override
+														public void perform(TimerEvent event ){
+															injectPeers( download );
+														}
+													});
+											}
+										}
 									}
 								}
 							}
-						}
-	
-						private void
-						injectPeers(
-							Download	download )
-						{
-							PeerManager pm = download.getPeerManager();
-	
-							if ( pm != null ){
-	
-								for ( InetSocketAddress address: peers_to_inject ){
-	
-									pm.addPeer(
-										AddressUtils.getHostAddress( address ),
-										address.getPort());
-								}
-							}
-						}
-	
-						@Override
-						public void
-						downloadRemoved(
-							Download	dl )
-						{
-							if ( dl == f_download ){
-	
-								synchronized( INSTANCE_LOCK ){
-	
-									removed = true;
-	
-									if ( timer_event != null ){
-	
-										timer_event.cancel();
-	
-										timer_event = null;
+		
+							private void
+							injectPeers(
+								Download	download )
+							{
+								PeerManager pm = download.getPeerManager();
+		
+								if ( pm != null ){
+		
+									for ( InetSocketAddress address: peers_to_inject ){
+		
+										pm.addPeer(
+											AddressUtils.getHostAddress( address ),
+											address.getPort());
 									}
 								}
-	
-								if ( !( cancelled || completed )){
-	
-									error[0] = new Exception( "Download manually removed" );
-	
-									manually_removed[0] = true;
-									
-									runComplete();
+							}
+		
+							@Override
+							public void
+							downloadRemoved(
+								Download	dl )
+							{
+								if ( dl == f_download ){
+		
+									synchronized( INSTANCE_LOCK ){
+		
+										removed = true;
+		
+										if ( timer_event != null ){
+		
+											timer_event.cancel();
+		
+											timer_event = null;
+										}
+									}
+		
+									if ( !( cancelled || completed )){
+		
+										error[0] = new Exception( "Download manually removed" );
+		
+										manually_removed[0] = true;
+										
+										runComplete();
+									}
 								}
 							}
-						}
-					};
-	
-				download_manager.addListener( dl_listener, true );
-				
-				download_manager_listener = dl_listener;
-				
-				synchronized( INSTANCE_LOCK ){
+						};
+		
+					download_manager.addListener( dl_listener, true );
 					
+					download_manager_listener = dl_listener;
+											
 					Download[] existing = download_manager.getDownloads();
 	
 					// add this one after the last existing metadata download
@@ -883,10 +883,9 @@ MagnetPluginMDDownloader
 					download.setForceStart( true );
 	
 					download.setFlag( Download.FLAG_DISABLE_AUTO_FILE_MOVE, true );
+					
+					setup_complete = true;
 				}
-				
-				setup_complete = true;
-				
 			}catch( Throwable e ){
 	
 				boolean	was_cancelled = cancelled;
@@ -1163,70 +1162,70 @@ MagnetPluginMDDownloader
 		tidyUp()
 		{
 			try{
-				if ( download_manager_listener != null ){
-					
-					download_manager.removeListener( download_manager_listener );
-				}
-				
-				if ( download != null ){
-
-						// unfortunately the tags and category get lost on download removal so cache them
-					
-					List<String> latest_tags =  plugin.getInitialTags( core_dm );
-					
-					if ( !latest_tags.isEmpty()){
-					
-						core_dm.setUserData( MagnetPlugin.DM_TAG_CACHE, latest_tags );
-					}
-					
-					Category cat = core_dm.getDownloadState().getCategory();
-					
-					if ( cat != null ){
-						
-						if ( cat.getType() == Category.TYPE_USER ){
-
-							core_dm.setUserData( MagnetPlugin.DM_CATEGORY_CACHE, cat.getName());
-						}
-					}
-					
-					try{
-						download.stopAndRemove(false, false);
-
-					}catch( Throwable e ){
-
-						Debug.out( e );
-					}
-					
-					download = null;
-				}
-
 				List<DiskManagerRequest>	to_cancel;
 
 				synchronized( INSTANCE_LOCK ){
 
+					if ( download_manager_listener != null ){
+						
+						download_manager.removeListener( download_manager_listener );
+					}
+					
+					if ( download != null ){
+	
+							// unfortunately the tags and category get lost on download removal so cache them
+						
+						List<String> latest_tags =  plugin.getInitialTags( core_dm );
+						
+						if ( !latest_tags.isEmpty()){
+						
+							core_dm.setUserData( MagnetPlugin.DM_TAG_CACHE, latest_tags );
+						}
+						
+						Category cat = core_dm.getDownloadState().getCategory();
+						
+						if ( cat != null ){
+							
+							if ( cat.getType() == Category.TYPE_USER ){
+	
+								core_dm.setUserData( MagnetPlugin.DM_CATEGORY_CACHE, cat.getName());
+							}
+						}
+						
+						try{
+							download.stopAndRemove(false, false);
+	
+						}catch( Throwable e ){
+	
+							Debug.out( e );
+						}
+						
+						download = null;
+					}
+	
 					to_cancel = new ArrayList<>(requests);
 
 					requests.clear();
+	
+					if ( torrent_file != null ){
+	
+						torrent_file.delete();
+					}
+	
+					if ( data_file != null ){
+	
+						data_file.delete();
+					}
+	
+					if ( md_dir != null ){
+	
+						FileUtil.recursiveDeleteNoCheck( md_dir );
+					}
 				}
-
+				
 				for ( DiskManagerRequest request: to_cancel ){
-
+					
 					request.cancel();
-				}
-
-				if ( torrent_file != null ){
-
-					torrent_file.delete();
-				}
-
-				if ( data_file != null ){
-
-					data_file.delete();
-				}
-
-				if ( md_dir != null ){
-
-					FileUtil.recursiveDeleteNoCheck( md_dir );
 				}
 			}catch( Throwable e ){
 
