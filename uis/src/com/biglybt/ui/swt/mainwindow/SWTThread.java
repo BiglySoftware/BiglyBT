@@ -61,7 +61,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 
   	// disposal is causing 100% CPU + out of memory on close
   
-  boolean skip_dispose = ( Constants.isLinux || Constants.isOSX ) && Utils.getSWTVersion() >= 4956;
+  boolean skip_dispose = Utils.getSWTVersion() >= 4956;
 
   Display display;
   private boolean sleak = false;
