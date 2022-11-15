@@ -3089,7 +3089,7 @@ public class ManagerUtils {
 			
 			if ( _viewer == null ){
 		
-				_viewer = new TextViewerWindow( MessageText.getString( "locatefiles.view.title" ), null, "", false, false );
+				_viewer = new TextViewerWindow( lf_reuse?null:shell,MessageText.getString( "locatefiles.view.title" ), null, "", false, false );
 				
 			}else{
 				
@@ -4783,7 +4783,7 @@ public class ManagerUtils {
 			
 			if ( _viewer == null ){
 		
-				_viewer = new TextViewerWindow( MessageText.getString( "locatesavepaths.view.title" ), null, "", false, false );
+				_viewer = new TextViewerWindow( lf_reuse?null:shell, MessageText.getString( "locatesavepaths.view.title" ), null, "", false, false );
 				
 			}else{
 				
