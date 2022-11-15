@@ -32,6 +32,7 @@ import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -2545,12 +2546,12 @@ public class ManagerUtils {
 					
 					if ( result == 0 ){
 						
-						locateFilesSupport( dms, dm_files, null, shell );
+						locateFilesSupport( dms, dm_files, null, null, shell );
 					}
 				});
 		}else{
 			
-			locateFilesSupport( dms, dm_files, null, shell );
+			locateFilesSupport( dms, dm_files, null, null, shell );
 		}
 	}
 	
@@ -2569,6 +2570,7 @@ public class ManagerUtils {
 		DownloadManager[]				dms,
 		DiskManagerFileInfo[][]			dm_files,
 		List<TorrentOpenOptions>		torrents,
+		Consumer<File[]>				listener,
 		Shell							shell )
 	{
 		ClassLoader loader = null;
@@ -2727,7 +2729,7 @@ public class ManagerUtils {
 									
 								}else{
 									
-									locateSavePaths( torrents, shell, roots );
+									locateSavePaths( torrents, shell, roots, listener );
 								}
 							}
 						});
@@ -4764,7 +4766,8 @@ public class ManagerUtils {
 	locateSavePaths(
 		List<TorrentOpenOptions>	torrents,
 		Shell						shell,
-		String[]					roots )
+		String[]					roots,
+		Consumer<File[]>			listener )
 	{
 		TextViewerWindow _viewer = null;
 		
@@ -4804,14 +4807,32 @@ public class ManagerUtils {
 		viewer.setOKisApply( true );
 		
 		viewer.getShell().moveAbove( shell );
-;
+
 		new AEThread2( "FileLocator" )
 		{
 			@Override
 			public void
 			run()
 			{
+				File[] results = new File[torrents.size()];
+
+				int[] result_count = {0};				
+
 				try{
+					String incomplete_file_suffix = null;
+					
+					if ( COConfigurationManager.getBooleanParameter( "Rename Incomplete Files")){
+
+						incomplete_file_suffix = COConfigurationManager.getStringParameter( "Rename Incomplete Files Extension" ).trim();
+						
+						incomplete_file_suffix = FileUtil.convertOSSpecificChars( incomplete_file_suffix, false );
+						
+						if ( incomplete_file_suffix.isEmpty()){
+							
+							incomplete_file_suffix = null;
+						}
+					}
+
 					Map<Long,Set<File>>	file_map = new HashMap<>();
 
 					final boolean[]	quit = { false };
@@ -4948,6 +4969,18 @@ public class ManagerUtils {
 									if ( test_file.exists()){
 										
 										hits++;
+										
+									}else{
+										
+										if ( incomplete_file_suffix != null ){
+											
+											test_file = new File( dir, path + incomplete_file_suffix );
+											
+											if ( test_file.exists()){
+											
+												hits++;
+											}
+										}
 									}
 								}
 							}
@@ -4995,7 +5028,9 @@ public class ManagerUtils {
 					}
 					
 					logLine( viewer, indent, "Search complete, " + tested_folders.size() + " folders checked" );
-					
+										
+					int pos = 0;
+										
 					for( TorrentOpenOptions too: torrents ){
 						
 						Object[] entry = candidates.get( too );
@@ -5020,12 +5055,24 @@ public class ManagerUtils {
 							for ( File f: hit_files ){
 								logLine( viewer, indent+1, f.getAbsolutePath());
 							}
+							
+							if ( hit_files.size() == 1 ){
+								
+								results[pos] = hit_files.get(0);
+								
+								result_count[0]++;
+								
+								logLine( viewer, indent+2, "Selected for application" );
+								
+							}else{
+								
+								logLine( viewer, indent+2, "Multiple locations require manual resolution" );
+							}
 						}
+						
+						pos++;
 					}
-					
-					logLine( viewer, indent, "FEATURE INCOMPLETE, IT DOESN'T WORK YET!!!!" );
-
-					
+										
 				}catch( Throwable e ){
 
 					log( viewer, 0, "\r\n" + new SimpleDateFormat().format( new Date()) + ": Failed: " + Debug.getNestedExceptionMessage( e ) + "\r\n" );
@@ -5040,7 +5087,20 @@ public class ManagerUtils {
 								{
 									if ( !viewer.isDisposed()){
 
-										viewer.setOKEnabled( true );
+										boolean has_results = result_count[0] > 0;
+										
+										viewer.setOKEnabled( has_results );
+										
+										if ( has_results ){
+											
+											viewer.addListener(()->{
+												
+												if ( viewer.getOKPressed()){
+												
+													listener.accept( results );
+												}
+											});
+										}
 									}
 								}
 							});
@@ -5051,9 +5111,10 @@ public class ManagerUtils {
 	public static void
 	locateSaveLocations(
 		List<TorrentOpenOptions>	torrents,
-		Shell						shell )
+		Shell						shell,
+		Consumer<File[]>			listener )
 	{
-		locateFilesSupport( null, null, torrents, shell );
+		locateFilesSupport( null, null, torrents, listener, shell );
 	}
 	
 	private static void

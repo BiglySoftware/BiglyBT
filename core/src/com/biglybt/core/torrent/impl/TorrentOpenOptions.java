@@ -109,6 +109,8 @@ public class TorrentOpenOptions
 	private boolean explicitDataDir;
 	private boolean removedTopLevel;
 
+	private boolean	disableAutoRename;
+	
 	private TOTorrent torrent;
 
 	private long	totalSize;
@@ -323,23 +325,20 @@ public class TorrentOpenOptions
 		return( sDestSubDir );
 	}
 
-	public String
-	getSubDirOrDefault()
+	public void
+	setSubDir(
+		String	str )
 	{
-		if ( sDestSubDir != null ){
+		sDestSubDir = str;
+		
+		if ( str == null ){
 			
-			return( sDestSubDir );
+			explicitDataDir = false;
 		}
 		
-		if ( torrent.isSimpleTorrent()){
-			
-			return( null );
-		}else{
-			
-			return( FileUtil.convertOSSpecificChars(getTorrentName(), true));
-		}
+		parentDirChanged();
 	}
-
+	
 	public void
 	setExplicitDataDir(
 		String		parent_dir,
@@ -367,6 +366,13 @@ public class TorrentOpenOptions
 		return( removedTopLevel );
 	}
 
+	public void
+	setDisableAutoRename(
+		boolean		b )
+	{
+		disableAutoRename = b;
+	}
+	
 	public boolean
 	isSimpleTorrent()
 	{
@@ -1196,6 +1202,10 @@ public class TorrentOpenOptions
 			return;
 		}
 
+		if ( disableAutoRename ){
+			return;
+		}
+		
 		if (!torrent.isSimpleTorrent()) {
 			if (FileUtil.newFile(getDataDir()).isDirectory()) {
 				File f;

@@ -4689,7 +4689,39 @@ public class OpenTorrentOptionsWindow
 				public void pressed(SWTSkinButtonUtility buttonUtility,
 						SWTSkinObject skinObject, int stateMask) {
 
-					ManagerUtils.locateSaveLocations( torrentOptionsMulti, shell);
+					ManagerUtils.locateSaveLocations( 
+						torrentOptionsMulti,
+						shell,
+						(files)->{
+							int pos = 0;
+							
+							for ( TorrentOpenOptions too: torrentOptionsMulti ){
+							
+								if ( files[pos] != null ){
+									
+									File dir = files[pos];
+									
+									if ( too.isSimpleTorrent()){
+										
+										too.setParentDir( dir.getAbsolutePath());
+										
+									}else{
+																					
+										too.setParentDir( dir.getParentFile().getAbsolutePath());
+										
+										too.setSubDir( null );
+									}
+										// we want to use this location whatever
+									
+									too.setDisableAutoRename( true );
+								}
+								
+								pos++;
+								
+							}
+							
+							cmbDataDirChanged();
+						});
 				}
 			});
 			
