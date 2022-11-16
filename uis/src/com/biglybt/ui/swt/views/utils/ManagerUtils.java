@@ -5018,11 +5018,16 @@ public class ManagerUtils {
 						}
 									
 						
-						for ( File f: dir.listFiles()){
+						File[] files = dir.listFiles();
+						
+						if ( files != null ){
 							
-							if ( f.isDirectory()){
+							for ( File f: files){
 								
-								to_do.add( f );
+								if ( f.isDirectory()){
+									
+									to_do.add( f );
+								}
 							}
 						}
 					}
