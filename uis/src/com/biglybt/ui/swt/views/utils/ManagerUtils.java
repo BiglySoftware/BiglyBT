@@ -4915,8 +4915,10 @@ public class ManagerUtils {
 							
 							TorrentOpenFileOptions[] files = too.getFiles();
 							
-							int hits = 0;
-							int	pads = 0;
+							int 	hits = 0;
+							long	hits_size = 0;
+							
+							int		pads = 0;
 							
 							if ( torrent.isSimpleTorrent()){
 								
@@ -4970,6 +4972,8 @@ public class ManagerUtils {
 										
 										hits++;
 										
+										hits_size += test_file.length();
+										
 									}else{
 										
 										if ( incomplete_file_suffix != null ){
@@ -4979,6 +4983,8 @@ public class ManagerUtils {
 											if ( test_file.exists()){
 											
 												hits++;
+												
+												hits_size += test_file.length();
 											}
 										}
 									}
@@ -4993,26 +4999,26 @@ public class ManagerUtils {
 								
 								if ( entry == null ){
 									
-									entry = new Object[]{ new int[]{ 0, pads }, new ArrayList() };
+									entry = new Object[]{ new int[]{ 0, pads }, new ArrayList<Object[]>() };
 									
 									candidates.put( too,  entry );
 								}
 								
 								int[] counts = (int[])entry[0];
 								
-								List<File>	hit_files = (List<File>)entry[1];
+								List<Object[]>	hit_entries = (List<Object[]>)entry[1];
 								
 								if ( hits > counts[0] ){
 									
 									counts[0] = hits;
 									
-									hit_files.clear();
+									hit_entries.clear();
 									
-									hit_files.add( dir );
+									hit_entries.add( new Object[]{ dir, hits_size } );
 									
 								}else if ( hits == counts[0] ){
 									
-									hit_files.add( dir );
+									hit_entries.add( new Object[]{ dir, hits_size } );
 								}
 							}
 						}
@@ -5046,30 +5052,63 @@ public class ManagerUtils {
 							
 						}else{
 							
-							int fc = too.getTorrent().getFileCount();
+							TOTorrent torrent = too.getTorrent();
+							
+							long torrent_size = torrent.getSize();
+							
+							long min_hit_size = torrent_size/10;
+							
+							int fc = torrent.getFileCount();
 							
 							int[] counts = (int[])entry[0];
 
-							List<File>	hit_files = (List<File>)entry[1];
+							List<Object[]>	hit_entries = (List<Object[]>)entry[1];
 
 							int matches =  counts[0];
 							int pad		= counts[1];
 							
-							logLine( viewer, indent, too.getDisplayName() + " has " + hit_files.size() + " locations with " + matches + " out of " + (fc-pad) + " matches:"  );
+							logLine( 
+								viewer, indent, 
+								too.getDisplayName() + 
+									" (" + DisplayFormatters.formatByteCountToKiBEtc( torrent_size ) + 
+									") has " + 
+									hit_entries.size() + " locations with " + matches + " out of " + (fc-pad) + " matches:"  );
 							
-							for ( File f: hit_files ){
-								logLine( viewer, indent+1, f.getAbsolutePath());
+							List<File>	valid = new ArrayList<>();
+							
+							for ( Object[] e: hit_entries ){
+								
+								File 	f = (File)e[0];
+								
+								long size = (Long)e[1];
+								
+								int permille = (int)((size*1000)/torrent_size);
+								
+								logLine( viewer, indent+1, 
+										f.getAbsolutePath() + 
+										", match size=" + DisplayFormatters.formatByteCountToKiBEtc(size) + 
+										" (" + DisplayFormatters.formatPercentFromThousands( permille ) + ")");
+										
+								
+								if ( size >= min_hit_size ){
+									
+									valid.add( f );
+									
+								}else{
+									
+									logLine( viewer, indent+2, "Match is too small, ignoring" );
+								}
 							}
 							
-							if ( hit_files.size() == 1 ){
+							if ( valid.size() == 1 ){
 								
-								results[pos] = hit_files.get(0);
+								results[pos] = valid.get(0);
 								
 								result_count[0]++;
 								
 								logLine( viewer, indent+2, "Selected for application" );
 								
-							}else{
+							}else if ( valid.size() > 1 ){
 								
 								logLine( viewer, indent+2, "Multiple locations require manual resolution" );
 							}

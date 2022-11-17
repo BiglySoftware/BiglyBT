@@ -2241,7 +2241,7 @@ public class OpenTorrentOptionsWindow
 				updateSize();
 			}else{
 
-				cmbDataDirChanged();
+				updateDataDirCombo();
 			}
 
 			skin.layout();
@@ -2255,15 +2255,18 @@ public class OpenTorrentOptionsWindow
 		private void
 		layout()
 		{
-			SWTSkinObjectExpandItem so = (SWTSkinObjectExpandItem)skin.getSkinObject("expanditem-files");
+			SWTSkinObjectExpandItem so = (SWTSkinObjectExpandItem)skin.getSkinObject("expanditem-saveto");
 
-			SWTSkinObjectExpandBar bar = (SWTSkinObjectExpandBar)so.getParent();
-
-			bar.relayout();
-
-			for ( SWTSkinObjectExpandItem item: bar.getChildren()){
-
-				item.relayout();
+			if ( so != null ){
+				
+				SWTSkinObjectExpandBar bar = (SWTSkinObjectExpandBar)so.getParent();
+	
+				bar.relayout();
+	
+				for ( SWTSkinObjectExpandItem item: bar.getChildren()){
+	
+					item.relayout();
+				}
 			}
 		}
 
@@ -4720,7 +4723,7 @@ public class OpenTorrentOptionsWindow
 								
 							}
 							
-							cmbDataDirChanged();
+							updateDataDirCombo();
 						});
 				}
 			});
