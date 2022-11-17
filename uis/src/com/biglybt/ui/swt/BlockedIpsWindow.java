@@ -155,6 +155,12 @@ BlockedIpsWindow
     	textBanned.setSelection(textBanned.getText().length());
     });
 
+    textUnban.addListener( SWT.Modify, (ev)->{
+    	btnUnban.setEnabled( !textUnban.getText().trim().isEmpty());
+    });
+    
+    btnUnban.setEnabled( false );
+    
     Button btnReset = new Button(window,SWT.PUSH);
     Messages.setLanguageText(btnReset,"Button.unban.all");
 
