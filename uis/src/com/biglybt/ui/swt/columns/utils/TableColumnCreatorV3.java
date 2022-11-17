@@ -18,9 +18,6 @@
 
 package com.biglybt.ui.swt.columns.utils;
 
-import java.lang.reflect.Constructor;
-import java.util.*;
-
 import com.biglybt.activities.ActivitiesEntry;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.LightHashMap;
@@ -38,6 +35,12 @@ import com.biglybt.ui.swt.columns.torrent.*;
 import com.biglybt.ui.swt.columns.vuzeactivity.*;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.*;
+
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A utility class for creating some common column sets; this is a virtual clone of <code>TableColumnCreator</code>
@@ -465,8 +468,6 @@ public class TableColumnCreatorV3
 				DateCompletedItem.DATASOURCE_TYPE));
 		c.put(ColumnProgressETA.COLUMN_ID, new cInfo(ColumnProgressETA.class,
 				ColumnProgressETA.DATASOURCE_TYPE));
-		c.put(ColumnProgressETAOld.COLUMN_ID, new cInfo(ColumnProgressETAOld.class,
-				ColumnProgressETAOld.DATASOURCE_TYPE));
 		c.put(ColumnChatMessageCount.COLUMN_ID, new cInfo(
 				ColumnChatMessageCount.class, Download.class));
 
