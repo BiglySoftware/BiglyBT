@@ -2136,7 +2136,7 @@ public class OpenTorrentOptionsWindow
 						"com/biglybt/ui/skin", "skin3_dlg_opentorrent_options_instance.properties" );
 
 			skin.initialize( parent, "expandview");
-
+			
 			if ( isSingleOptions ){
 				SWTSkinObject so = skin.getSkinObject("filearea-table");
 				if (so instanceof SWTSkinObjectContainer) {
@@ -2147,6 +2147,20 @@ public class OpenTorrentOptionsWindow
 				if (so instanceof SWTSkinObjectContainer) {
 					setupFileAreaButtons((SWTSkinObjectContainer) so);
 				}
+			}else{
+				SWTSkinObjectExpandItem expInfo		= (SWTSkinObjectExpandItem)skin.getSkinObject("expanditem-torrentinfo");
+								
+				SWTSkinObjectExpandItem expFiles	= (SWTSkinObjectExpandItem)skin.getSkinObject("expanditem-files");
+				
+				SWTSkinObjectExpandItem expPeer		= (SWTSkinObjectExpandItem)skin.getSkinObject("expanditem-peer");
+				
+				expInfo.setText( "" );
+				expFiles.setText( "" );
+				expPeer.setText( "" );
+				
+				expInfo.setExpanded( false );
+				expFiles.setExpanded( false );
+				expPeer.setExpanded( false );
 			}
 
 			SWTSkinObject so = skin.getSkinObject("disk-space");
