@@ -320,6 +320,18 @@ public class TorrentOpenOptions
 	}
 	
 	public String
+	getDefaultSubDir()
+	{
+		if ( isSimpleTorrent()){
+			
+			return( null );
+		}else{
+		
+			return( FileUtil.convertOSSpecificChars(getTorrentName(), true ));
+		}
+	}
+	
+	public String
 	getSubDir()
 	{
 		return( sDestSubDir );
@@ -471,11 +483,17 @@ public class TorrentOpenOptions
 		userComment	= str;
 	}
 	
-	public String getDataDir() {
-		if (torrent.isSimpleTorrent())
+	public String 
+	getDataDir() 
+	{
+		if ( torrent.isSimpleTorrent()){
+			
 			return sDestDir;
-		return FileUtil.newFile(sDestDir, sDestSubDir == null
-				? FileUtil.convertOSSpecificChars(getTorrentName(), true) : sDestSubDir).getPath();
+			
+		}else{
+			
+			return FileUtil.newFile(sDestDir, sDestSubDir==null?getDefaultSubDir():sDestSubDir).getPath();
+		}
 	}
 
 	private String getSmartDestDir() {

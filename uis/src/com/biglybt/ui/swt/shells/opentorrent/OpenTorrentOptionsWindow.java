@@ -4709,10 +4709,21 @@ public class OpenTorrentOptionsWindow
 										too.setParentDir( dir.getAbsolutePath());
 										
 									}else{
-																					
-										too.setParentDir( dir.getParentFile().getAbsolutePath());
+																	
+										String parent_dir = dir.getParentFile().getAbsolutePath();
 										
-										too.setSubDir( null );
+										too.setParentDir( parent_dir );
+										
+										String sub_dir = dir.getName();
+										
+										if ( sub_dir.equals( too.getDefaultSubDir())){
+										
+											too.setSubDir( null );
+											
+										}else{
+											
+											too.setSubDir( sub_dir );
+										}
 									}
 										// we want to use this location whatever
 									

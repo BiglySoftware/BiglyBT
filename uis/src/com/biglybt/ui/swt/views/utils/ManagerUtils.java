@@ -4929,6 +4929,8 @@ public class ManagerUtils {
 								if ( test_file.exists()){
 									
 									hits++;
+									
+									hits_size += test_file.length();
 								}
 								
 							}else{
