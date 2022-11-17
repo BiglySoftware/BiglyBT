@@ -772,10 +772,7 @@ DownloadManagerImpl
 	
 			torrentFileName = _torrentFileName;
 	
-			while( _torrent_save_dir.endsWith( File.separator )){
-	
-				_torrent_save_dir = _torrent_save_dir.substring(0, _torrent_save_dir.length()-1 );
-			}
+			_torrent_save_dir = FileUtil.removeTrailingSeparators( _torrent_save_dir );
 	
 				// readTorrent adjusts the save dir and file to be sensible values
 	

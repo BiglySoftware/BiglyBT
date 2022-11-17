@@ -3509,6 +3509,29 @@ public class FileUtil {
 		}
 	}
 	
+	public static String
+	removeTrailingSeparators(
+		String 	str )
+	{
+			// on Windows we don't want C:\ to be turned into C:
+			// not sure if there are implications for UNC \\server style paths
+			// or ones including ~ on linux...
+		
+		int min_length = 1;
+		
+		if ( Constants.isWindows && str.length() > 2 && str.charAt(1)== ':' ){
+			
+			min_length = 3;
+		}
+		
+		while( str.endsWith( File.separator ) && str.length() > min_length ){
+			
+			str = str.substring(0, str.length()-1 );
+		}
+		
+		return( str );
+	}
+	
 		/**
 		 * Gets the encoding that should be used when writing script files (currently only
 		 * tested for windows as this is where an issue can arise...)
