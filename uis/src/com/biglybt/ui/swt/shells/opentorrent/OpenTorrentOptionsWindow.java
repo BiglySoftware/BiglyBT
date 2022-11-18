@@ -17,6 +17,8 @@
 
 package com.biglybt.ui.swt.shells.opentorrent;
 
+import static com.biglybt.core.config.ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP;
+
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
@@ -503,7 +505,38 @@ public class OpenTorrentOptionsWindow
 					}
 				}
 
+				SWTSkinObject soOptionsArea = skin_outter.getSkinObject("options-area");
+
+				if ( soOptionsArea != null ){
+				
+					SWTSkinObjectCheckbox  opt = (SWTSkinObjectCheckbox)skin_outter.getSkinObject( "options-sep-dialog" );
+					
+					opt.setChecked( COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP ));
+					
+					opt.addSelectionListener((skinobj,checked)->{
+						
+						COConfigurationManager.setParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP, checked );
+					});
+					
+					COConfigurationManager.addParameterListener(
+						ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP,
+							new ParameterListener(){
+								public void 
+								parameterChanged(
+									String name)
+								{
+									if ( opt.isDisposed()){
+										COConfigurationManager.removeParameterListener( name, this );
+									}else{
+										opt.setChecked( COConfigurationManager.getBooleanParameter( name ));
+									}
+								}
+							});
+				}
+				
 				SWTSkinObject soButtonArea = skin_outter.getSkinObject("button-area");
+
+				//soButtonArea.getControl().setBackground( Colors.green );
 
 				if (soButtonArea instanceof SWTSkinObjectContainer) {
 					buttonsArea = new StandardButtonsArea() {
