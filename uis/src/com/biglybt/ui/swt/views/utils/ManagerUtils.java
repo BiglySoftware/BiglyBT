@@ -5043,7 +5043,9 @@ public class ManagerUtils {
 					logLine( viewer, indent, "Search complete, " + tested_folders.size() + " folders checked" );
 										
 					int pos = 0;
-										
+						
+					List<String[]>	result_lines = new ArrayList<>();
+					
 					for( TorrentOpenOptions too: torrents ){
 						
 						Object[] entry = candidates.get( too );
@@ -5110,6 +5112,8 @@ public class ManagerUtils {
 								
 								logLine( viewer, indent+2, "Selected for application" );
 								
+								result_lines.add( new String[]{ too.getDisplayName(), valid.get(0).getAbsolutePath()});
+								
 							}else if ( valid.size() > 1 ){
 								
 								logLine( viewer, indent+2, "Multiple locations require manual resolution" );
@@ -5118,7 +5122,19 @@ public class ManagerUtils {
 						
 						pos++;
 					}
-										
+						
+					if ( !result_lines.isEmpty()){
+						
+						logLine( viewer, indent, "" );
+						logLine( viewer, indent, "--- Summary ---" );
+						logLine( viewer, indent, "" );
+						
+						for ( String[] entry: result_lines ){
+							
+							logLine( viewer, indent, entry[0] );
+							logLine( viewer, indent+2, "-> " + entry[1] );
+						}
+					}
 				}catch( Throwable e ){
 
 					log( viewer, 0, "\r\n" + new SimpleDateFormat().format( new Date()) + ": Failed: " + Debug.getNestedExceptionMessage( e ) + "\r\n" );
