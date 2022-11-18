@@ -41,7 +41,7 @@ import static com.biglybt.core.config.ConfigKeys.File.*;
 public class ConfigSectionFile
 	extends ConfigSectionImpl
 {
-
+	public static final String REFID_DEFAULT_DIR_OPTIONS 		= "default-dir-options";
 	public static final String REFID_TORRENT_ADD_AUTO_SKIP 		= "torrent-add-auto-skip";
 	public static final String REFID_TORRENT_ADD_AUTO_PRIORITY	= "torrent-add-auto-priority";
 
@@ -130,8 +130,10 @@ public class ConfigSectionFile
 				SCFG_SAVE_TO_LIST);
 		btnClearHistory.setEnabled(dirList.size() > 0);
 
-		add(new ParameterGroupImpl("ConfigView.section.file.defaultdir.section",
-				listDefaultDir));
+		ParameterGroupImpl pgDefaultDir = 
+			new ParameterGroupImpl("ConfigView.section.file.defaultdir.section",listDefaultDir);
+		pgDefaultDir.setReferenceID( REFID_DEFAULT_DIR_OPTIONS );	
+		add(pgDefaultDir);
 
 		////////////////////
 

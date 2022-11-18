@@ -878,9 +878,11 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
 				if ( select != null ){
 					
 					Control hit = highlightText2( item, select );
-					
+										
 					if ( hit != null ){
-						
+					
+						item.layout( true, true );
+
 						Utils.execSWTThreadLater(
 							1,
 								() -> {

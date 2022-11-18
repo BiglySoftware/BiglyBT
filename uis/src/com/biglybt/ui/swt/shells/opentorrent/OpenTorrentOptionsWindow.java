@@ -509,11 +509,39 @@ public class OpenTorrentOptionsWindow
 
 				if ( soOptionsArea != null ){
 				
-					SWTSkinObjectCheckbox  opt = (SWTSkinObjectCheckbox)skin_outter.getSkinObject( "options-sep-dialog" );
+					SWTSkinObjectButton  opt_config = (SWTSkinObjectButton)skin_outter.getSkinObject( "options-config" );
+
+					opt_config.addSelectionListener(
+						new SWTSkinButtonUtility.ButtonListenerAdapter()
+						{
+							@Override
+							public void 
+							pressed(SWTSkinButtonUtility buttonUtility, SWTSkinObject skinObject,
+									int button, int stateMask)
+							{
+								UIFunctions uif = UIFunctionsManager.getUIFunctions();
+								
+								if ( uif != null ){
+		
+									JSONObject args = new JSONObject();
+		
+									args.put( "select", ConfigSectionFile.REFID_DEFAULT_DIR_OPTIONS);
+									
+									String args_str = JSONUtils.encodeToJSON( args );
+									
+									uif.getMDI().showEntryByID(
+											MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+											"files" + args_str );
+								}	
+							}
+						
+						});
 					
-					opt.setChecked( COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP ));
+					SWTSkinObjectCheckbox  opt_sep_dialog = (SWTSkinObjectCheckbox)skin_outter.getSkinObject( "options-sep-dialog" );
 					
-					opt.addSelectionListener((skinobj,checked)->{
+					opt_sep_dialog.setChecked( COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP ));
+					
+					opt_sep_dialog.addSelectionListener((skinobj,checked)->{
 						
 						COConfigurationManager.setParameter( ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP, checked );
 					});
@@ -525,10 +553,10 @@ public class OpenTorrentOptionsWindow
 								parameterChanged(
 									String name)
 								{
-									if ( opt.isDisposed()){
+									if ( opt_sep_dialog.isDisposed()){
 										COConfigurationManager.removeParameterListener( name, this );
 									}else{
-										opt.setChecked( COConfigurationManager.getBooleanParameter( name ));
+										opt_sep_dialog.setChecked( COConfigurationManager.getBooleanParameter( name ));
 									}
 								}
 							});
