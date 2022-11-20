@@ -5034,7 +5034,10 @@ public class ManagerUtils {
 								
 								if ( f.isDirectory()){
 									
-									to_do.add( f );
+									if ( !f.getName().startsWith( "." )){
+									
+										to_do.add( f );
+									}
 								}
 							}
 						}
