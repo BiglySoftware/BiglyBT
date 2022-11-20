@@ -1857,10 +1857,17 @@ public class GlobalManagerImpl
 
   	throws GlobalManagerDownloadRemovalVetoException
   {
+	  TOTorrent		torrent	= null;
+	  HashWrapper	hash	= null;
+	  
 	  try{
+		  torrent = manager.getTorrent();
+		  
+		  hash = torrent==null?null:torrent.getHashWrapper();
+		  
 		  boolean isMagnet = manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
 		  
-		  FileUtil.log( "removeDownload: " + ByteFormatter.encodeString( manager.getTorrent().getHash()) + ": isMagnet=" + isMagnet );
+		  FileUtil.log( "removeDownload: " + (hash==null?manager.getDisplayName():ByteFormatter.encodeString(hash.getBytes())) + ": isMagnet=" + isMagnet );
 		  
 	  }catch( Throwable e ){
 	  }
@@ -1918,24 +1925,31 @@ public class GlobalManagerImpl
 
 		  manager_id_set.remove( manager );
 
-		  TOTorrent	torrent = manager.getTorrent();
-
-		  if ( torrent != null ){
-
-			  try{
-				  manager_hash_map.remove(new HashWrapper(torrent.getHash()));
-
-			  }catch( TOTorrentException e ){
-
-				  Debug.printStackTrace( e );
+		  if ( hash == null || manager_hash_map.remove( hash ) == null ){
+			  			  
+			  Iterator<DownloadManager> it = manager_hash_map.values().iterator();
+			  
+			  boolean removed = false;
+			  
+			  while( it.hasNext()){
+				  
+				  if ( it.next() == manager ){
+					  
+					  it.remove();
+					  
+					  removed = true;
+				  }
+			  }
+			  
+			  if ( !removed ){
+				  
+				  Debug.out( "Failed to remove download " + manager.getDisplayName() + " from manager hash map" );
 			  }
 		  }
 	  }
 
 	  // when we remove a download manager from the client this is the time to remove it from the record of
 	  // created torrents if present
-
-	  TOTorrent	torrent = manager.getTorrent();
 
 	  if ( torrent != null ){
 
@@ -1961,14 +1975,14 @@ public class GlobalManagerImpl
 		  dms.setCategory(null);
 	  }
 
-	  if ( manager.getTorrent() != null ) {
+	  if ( torrent != null ) {
 
-		  trackerScraper.remove(manager.getTorrent());
+		  trackerScraper.remove( torrent );
 	  }
 
 	  if ( host_support != null ){
 
-		  host_support.torrentRemoved( manager.getTorrentFileName(), manager.getTorrent());
+		  host_support.torrentRemoved( manager.getTorrentFileName(), torrent);
 	  }
 
 	  // delete the state last as passivating a hosted torrent may require access to
