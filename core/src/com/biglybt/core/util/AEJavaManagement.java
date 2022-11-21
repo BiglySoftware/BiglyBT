@@ -128,6 +128,17 @@ AEJavaManagement
 		thread_stuff.dumpThreads( writer );
 	}
 
+	public static String
+	getThreadInfo(
+		Thread		thread )
+	{
+		if ( thread_stuff == null ){
+
+			return( null );
+		}
+
+		return( thread_stuff.getThreadInfo( thread ));
+	}
 	
 	public static long
 	getMaxHeapMB()
@@ -304,6 +315,10 @@ AEJavaManagement
 
 		public List<String>
 		getMemoryHistory();
+		
+		public String
+		getThreadInfo(
+			Thread		thread );
 		
 		public void
 		dumpThreads();

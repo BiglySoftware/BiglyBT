@@ -295,6 +295,13 @@ AEDiagnostics
 	{
 		AEJavaManagement.dumpThreads( writer );
 	}
+	
+	public static String
+	getThreadInfo(
+		Thread		thread )
+	{
+		return( AEJavaManagement.getThreadInfo( thread ));
+	}
 
 	/**
 	 *

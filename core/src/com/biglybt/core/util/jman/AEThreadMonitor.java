@@ -447,4 +447,66 @@ AEThreadMonitor
 	public void generate(IndentWriter writer) {
 		dumpThreads( writer );
 	}
+	
+	@Override
+	public String
+	getThreadInfo(
+		Thread	thread )
+	{
+		try{
+			ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
+	
+			ThreadInfo threadInfo = threadBean.getThreadInfo( thread.getId());
+			
+			long lCpuTime = getThreadCpuTime(threadBean,threadInfo.getThreadId());
+
+			String sState;
+			switch (threadInfo.getThreadState()) {
+				case BLOCKED:
+					sState = "Blocked";
+					break;
+				case RUNNABLE:
+					sState = "Runnable";
+					break;
+				case NEW:
+					sState = "New";
+					break;
+				case TERMINATED:
+					sState = "Terminated";
+					break;
+				case TIMED_WAITING:
+					sState = "Timed Waiting";
+					break;
+
+				case WAITING:
+					sState = "Waiting";
+					break;
+
+				default:
+					sState = "" + threadInfo.getThreadState();
+					break;
+
+			}
+
+			String sName = threadInfo.getThreadName();
+			String sLockName = threadInfo.getLockName();
+
+			return(sName
+					+ ": "
+					+ sState
+					+ ", "
+					+ (lCpuTime / 1000000)
+					+ "ms CPU, "
+					+ "B/W: "
+					+ threadInfo.getBlockedCount()
+					+ "/"
+					+ threadInfo.getWaitedCount()
+					+ (sLockName == null ? "" : "; Locked by " + sLockName + "/"
+							+ threadInfo.getLockOwnerName()));
+			
+		}catch( Throwable e ){
+			
+			return( null );
+		}
+	}
 }

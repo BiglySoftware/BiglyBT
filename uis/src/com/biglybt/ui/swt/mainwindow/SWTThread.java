@@ -140,7 +140,9 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
     	return;
     }
     
-    Thread.currentThread().setName("SWT Thread");
+    Thread swt_thread = Thread.currentThread();
+
+    swt_thread.setName("SWT Thread");
 
 	Utils.initialize( display );
 
@@ -435,56 +437,148 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 			}
 	});
 
-    if ( !sleak ){
-      while(display != null && !display.isDisposed() && !terminated) {
-        try {
-            if (display != null && !display.readAndDispatch())
-              display.sleep();
-        }
-        catch (Throwable e) {
-					if (terminated) {
-						Logger.log(new LogEvent(LogIDs.GUI,
-								"Weird non-critical error after terminated in readAndDispatch: "
-										+ e.toString()));
-					} else {
-						String stackTrace = Debug.getStackTrace(e);
-						if (Constants.isOSX
-								&& stackTrace.indexOf("Device.dispose") > 0
-								&& stackTrace.indexOf("DropTarget") > 0) {
-							Logger.log(new LogEvent(LogIDs.GUI,
-									"Weird non-critical display disposal in readAndDispatch"));
-						} else {
-  						// Must use printStackTrace() (no params) in order to get
-  						// "cause of"'s stack trace in SWT < 3119
-  						if (SWT.getVersion() < 3119)
-  							e.printStackTrace();
-  						if (Constants.isCVSVersion()) {
-  							Logger.log(new LogAlert(LogAlert.UNREPEATABLE,MessageText.getString("SWT.alert.erroringuithread"),e));
-  						} else {
-  							Debug.out(MessageText.getString("SWT.alert.erroringuithread"), e);
-  						}
+	if ( !sleak ){
+		
+		
+		SimpleTimer.addPeriodicEvent( 
+			"SWT:ui:check", 1000,
+			new TimerEventPerformer(){
+				
+				Object	lock		= new Object();
+				boolean	active		= false;
+				long	last_exec	= -1;
+				
+				AEDiagnosticsLogger logger;
+				
+				{
+					logger = AEDiagnostics.getLogger( "SlowUI" );
+								
+					logger.setForced( true );
+				}
+				
+				@Override
+				public void 
+				perform(
+					TimerEvent event )
+				{
+					if ( display != null && !display.isDisposed()){
+					
+						long busy_for = -1;
+						
+						synchronized( lock ){
+							
+							if ( active ){
+								
+								busy_for = SystemTime.getMonotonousTime() - last_exec;
+								
+							}else{
+								
+								active = true;
+								
+								last_exec = SystemTime.getMonotonousTime();
+							}
 						}
+						
+						if ( busy_for < 0 ){
+							
+							display.asyncExec(
+								()->{
+									synchronized( lock ){
+										
+										active = false;
+									}
+								});
+						}else{
+								
+							if ( busy_for >= 2000 ){
+								
+								String log = AEDiagnosticsLogger.getTimestamp() + "Busy for " + busy_for + ": " + AEDiagnostics.getThreadInfo( swt_thread );
 
+								StackTraceElement[] elts = swt_thread.getStackTrace();
+								
+								StringBuilder str = new StringBuilder(elts.length * 100);
+	
+								for (int i=0;i<elts.length;i++){
+																	
+									String elt_str = elts[i].toString();
+									
+									if ( elt_str.contains( "SWTThread.<init>" )){
+										
+										break;
+									}
+									
+									str.append("\n\t");
+
+									str.append(elt_str);
+								}
+								
+								logger.log( log + str.toString());
+							}
+						}
 					}
 				}
-      }
+			});
+		
+		while( display != null && !display.isDisposed() && !terminated ){
+			
+			try{
+				if (display != null && !display.readAndDispatch()){
+					
+					display.sleep();
+				}
+			}catch ( Throwable e ){
+				
+				if ( terminated ){
+					
+					Logger.log(new LogEvent(LogIDs.GUI,
+							"Weird non-critical error after terminated in readAndDispatch: "
+									+ e.toString()));
+				}else{
+					
+					String stackTrace = Debug.getStackTrace(e);
+					
+					if (	Constants.isOSX
+							&& stackTrace.indexOf("Device.dispose") > 0
+							&& stackTrace.indexOf("DropTarget") > 0){
+						
+						Logger.log(new LogEvent(LogIDs.GUI,
+								"Weird non-critical display disposal in readAndDispatch"));
+					}else{
+						
+							// Must use printStackTrace() (no params) in order to get
+							// "cause of"'s stack trace in SWT < 3119
+						
+						if (SWT.getVersion() < 3119)
+							e.printStackTrace();
+						if (Constants.isCVSVersion()) {
+							Logger.log(new LogAlert(LogAlert.UNREPEATABLE,MessageText.getString("SWT.alert.erroringuithread"),e));
+						} else {
+							Debug.out(MessageText.getString("SWT.alert.erroringuithread"), e);
+						}
+					}
 
-      if (instance != null) {
-	      if (!terminated) {
+				}
+			}
+		}
 
-		      // if we've falled out of the loop without being explicitly terminated then
-		      // this appears to have been caused by a non-specific exit/restart request (as the
-		      // specific ones should terminate us before disposing of the window...)
-		      if (app != null) {
-			      app.stopIt(false);
-		      }
+		if ( instance != null ){
+			
+			if ( !terminated ){
 
-		      terminate();
-	      }
+					// if we've fallen out of the loop without being explicitly terminated then
+					// this appears to have been caused by a non-specific exit/restart request (as the
+					// specific ones should terminate us before disposing of the window...)
+				
+				if (app != null) {
+					app.stopIt(false);
+				}
 
-	      // dispose platform manager here
-	      PlatformManagerFactory.getPlatformManager().dispose();
-      }
+				terminate();
+			}
+
+			// dispose platform manager here
+			PlatformManagerFactory.getPlatformManager().dispose();
+		}
 
       // Could still be disposing.. wait to be sure
       
