@@ -97,6 +97,9 @@ DownloadManager
 	
 	public static final Object UD_KEY_STOP_REASON = Download.UD_KEY_STOP_REASON;
 	
+	public void
+	setConstructed();
+	
 	public boolean
 	isConstructed();
 	

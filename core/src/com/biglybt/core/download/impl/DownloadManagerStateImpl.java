@@ -765,7 +765,15 @@ DownloadManagerStateImpl
 			}
 		}
 
-		FileUtil.newFile( source_dir, state_file + ".bak" ).delete();
+		File target_state_file_bak = FileUtil.newFile( source_dir, state_file + ".bak" );
+		
+		if ( target_state_file_bak.exists()){
+
+			if ( !target_state_file_bak.delete()){
+
+				throw( new DownloadManagerException( "Failed to delete state backup file: " + target_state_file_bak ));
+			}
+		}
 
 		File	target_state_dir = FileUtil.newFile( source_dir, hash_str );
 

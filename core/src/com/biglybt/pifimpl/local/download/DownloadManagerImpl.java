@@ -101,7 +101,6 @@ DownloadManagerImpl
 	private CopyOnWriteList<DownloadWillBeAddedListener>	dwba_listeners	= new CopyOnWriteList<>();
 	private AEMonitor		listeners_mon	= new AEMonitor( "DownloadManager:L");
 
-	private List<Download>						downloads		= new ArrayList<>();
 	private Map<DownloadManager,DownloadImpl>	pending_dls		= new IdentityHashMap<>();
 	private Map<DownloadManager,DownloadImpl>	download_map	= new IdentityHashMap<>();
 
@@ -142,24 +141,23 @@ DownloadManagerImpl
 					try{
 						listeners_mon.enter();
 
-						dl = download_map.get( dm );
+						dl = download_map.remove( dm );
 
 						if ( dl == null ){
 
-							System.out.println( "DownloadManager:unknown manager removed");
+							Debug.out( "DownloadManager:unknown manager removed");
 
 						}else{
 
-							downloads.remove( dl );
-
-							download_map.remove( dm );
-
-							pending_dls.remove( dm );
-
 							dl.destroy();
-
-							listeners_ref = listeners;
 						}
+						
+						if ( pending_dls.remove( dm ) != null ){
+							
+							Debug.out( "Download removed without being added" );
+						}
+						
+						listeners_ref = listeners;
 
 					}finally{
 
@@ -307,11 +305,11 @@ DownloadManagerImpl
 				dl = pending_dls.remove( dm );
 
 				if ( dl == null ){
-
+					
+						// this is normal case for downloads already in BiglyBT on startup
+					
 					dl = new DownloadImpl( this, dm);
 				}
-
-				downloads.add( dl );
 
 				download_map.put( dm, dl );
 
@@ -533,63 +531,64 @@ DownloadManagerImpl
 
 		throws DownloadException
 	{
-		DownloadImpl dl = download_map.get(dm);
+		DownloadImpl dl = null;
 
-		if ( dl == null ){
+		try{
+			listeners_mon.enter();
 
-				// timing issue?
-
-			try{
-				listeners_mon.enter();
-
-				dl = download_map.get(dm);
-
-				if ( dl != null ){
-
-					return( dl );
-				}
-
-				dl = pending_dls.get( dm );
-
-			}finally{
-
-				listeners_mon.exit();
-			}
+			dl = download_map.get(dm);
 
 			if ( dl != null ){
-
-				long	 now = SystemTime.getMonotonousTime();
-
-					// give the dl a chance to complete initialisation and appear in the right place...
-
-				while( true ){
-
-					DownloadImpl dl2 = download_map.get(dm);
-
-					if ( dl2 != null ){
-
-						return( dl2 );
-					}
-
-					if ( SystemTime.getMonotonousTime() - now > 5000 ){
-
-						break;
-					}
-
-					try{
-						Thread.sleep(100);
-
-					}catch( Throwable e ){
-					}
-				}
 
 				return( dl );
 			}
 
-			throw( new DownloadException("DownloadManager::getDownload: download not found"));
+			dl = pending_dls.get( dm );
+
+		}finally{
+
+			listeners_mon.exit();
 		}
 
-		return( dl );
+		if ( dl != null ){
+
+			long	 now = SystemTime.getMonotonousTime();
+
+				// give the dl a chance to complete initialisation and appear in the right place...
+
+			while( true ){
+
+				try{
+					listeners_mon.enter();
+					
+					DownloadImpl dl2 = download_map.get(dm);
+	
+					if ( dl2 != null ){
+	
+						return( dl2 );
+					}
+
+				}finally{
+
+					listeners_mon.exit();
+				}
+				
+				if ( SystemTime.getMonotonousTime() - now > 5000 ){
+
+					break;
+				}
+
+				try{
+					Thread.sleep(100);
+
+				}catch( Throwable e ){
+				}
+			}
+
+			return( dl );
+		}
+
+		throw( new DownloadException("DownloadManager::getDownload: download not found"));
 	}
 
 	public static DownloadImpl[] getDownloadStatic(DownloadManager[] dm) {
@@ -665,23 +664,28 @@ DownloadManagerImpl
 	{
 		if ( torrent != null ){
 
-			for (int i=0;i<downloads.size();i++){
-
-				Download	dl = (Download)downloads.get(i);
-
-				TorrentImpl	t = (TorrentImpl)dl.getTorrent();
-
-					// can be null if broken torrent
-
-				if ( t == null ){
-
-					continue;
+			try{
+				listeners_mon.enter();
+				
+				for ( Download dl: download_map.values()){
+	
+					TorrentImpl	t = (TorrentImpl)dl.getTorrent();
+	
+						// can be null if broken torrent
+	
+					if ( t == null ){
+	
+						continue;
+					}
+	
+					if ( t.getTorrent().hasSameHashAs( torrent )){
+	
+						return( dl );
+					}
 				}
-
-				if ( t.getTorrent().hasSameHashAs( torrent )){
-
-					return( dl );
-				}
+			}finally{
+				
+				listeners_mon.exit();
 			}
 		}
 
@@ -790,7 +794,7 @@ DownloadManagerImpl
 		try{
 			listeners_mon.enter();
 
-			res_l = new LinkedHashSet<>(downloads.size());
+			res_l = new LinkedHashSet<>();
 
 			for (int i=0;i<dms.size();i++){
 
@@ -799,21 +803,6 @@ DownloadManagerImpl
 				if ( dl != null ){
 
 					res_l.add( dl );
-				}
-			}
-
-			if ( res_l.size() < downloads.size()){
-
-					// now add in any external downloads
-
-				for (int i=0;i<downloads.size();i++){
-
-					Download	download = downloads.get(i);
-
-					if ( !res_l.contains( download )){
-
-						res_l.add( download );
-					}
 				}
 			}
 		}finally{
@@ -830,21 +819,18 @@ DownloadManagerImpl
 
 	@Override
 	public Download[]
-	getDownloads(boolean bSorted)
+	getDownloads(
+		boolean bSorted )
 	{
-		if (bSorted){
+		if ( bSorted ){
 
-			return getDownloads();
+			return( getDownloads());
 		}
 
 		try{
 			listeners_mon.enter();
 
-			Download[]	res = new Download[downloads.size()];
-
-			downloads.toArray( res );
-
-			return( res );
+			return( download_map.values().toArray( new Download[ download_map.size()]));
 
 		}finally{
 
@@ -921,7 +907,7 @@ DownloadManagerImpl
 			new_listeners.add(l);
 			listeners = new_listeners;
 			if (notify_of_current_downloads) {
-				downloads_copy = new ArrayList<>(downloads);
+				downloads_copy = new ArrayList<>( download_map.values());
 				// randomize list so that plugins triggering dlm-state fixups don't lock each other by doing everything in the same order
 				Collections.shuffle(downloads_copy);
 			}
@@ -951,7 +937,7 @@ DownloadManagerImpl
 			new_listeners.remove(l);
 			listeners = new_listeners;
 			if (notify_of_current_downloads) {
-				downloads_copy = new ArrayList<>(downloads);
+				downloads_copy = new ArrayList<>( download_map.values());
 			}
 		}
 		finally {
@@ -1053,76 +1039,6 @@ DownloadManagerImpl
 
 		}finally{
 			listeners_mon.exit();
-		}
-	}
-
-	public void
-	addExternalDownload(
-		Download	download )
-	{
-		List<DownloadManagerListener>			listeners_ref 	= null;
-
-		try{
-			listeners_mon.enter();
-
-			if ( downloads.contains( download )){
-
-				return;
-			}
-
-			downloads.add( download );
-
-			listeners_ref = listeners;
-
-		}finally{
-
-			listeners_mon.exit();
-		}
-
-		for (int i=0;i<listeners_ref.size();i++){
-
-			try{
-				listeners_ref.get(i).downloadAdded( download );
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace( e );
-			}
-		}
-	}
-
-	public void
-	removeExternalDownload(
-		Download	download )
-	{
-		List<DownloadManagerListener>			listeners_ref 	= null;
-
-		try{
-			listeners_mon.enter();
-
-			if ( !downloads.contains( download )){
-
-				return;
-			}
-
-			downloads.remove( download );
-
-			listeners_ref = listeners;
-
-		}finally{
-
-			listeners_mon.exit();
-		}
-
-		for (int i=0;i<listeners_ref.size();i++){
-
-			try{
-				listeners_ref.get(i).downloadRemoved( download );
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace( e );
-			}
 		}
 	}
 

@@ -741,8 +741,7 @@ DownloadManagerImpl
 		boolean									_recovered,
 		boolean									_open_for_seeding,
 		boolean									_has_ever_been_started,
-		List									_file_priorities,
-		DownloadManagerInitialisationAdapter	_initialisation_adapter )
+		List									_file_priorities )
 	{
 		List<Runnable>	to_run;
 		
@@ -841,19 +840,13 @@ DownloadManagerImpl
 				Debug.out( e );
 			}
 		}
-		
-		if ( torrent != null && _initialisation_adapter != null ){
+	}
 	
-			try{
-				_initialisation_adapter.initialised( this, open_for_seeding );
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
-			}
-		}
-		
-		constructed	= true;
+	@Override
+	public void 
+	setConstructed()
+	{
+		constructed = true;
 	}
 	
 	@Override
@@ -3417,7 +3410,7 @@ DownloadManagerImpl
 
 
   	@Override
-	  public TOTorrent
+	public TOTorrent
   	getTorrent()
   	{
   		return( torrent );
@@ -3427,7 +3420,7 @@ DownloadManagerImpl
 	private File	cached_save_location_result;
 
   	@Override
-	  public File
+	public File
 	getSaveLocation()
   	{
   			// this can be called quite often - cache results for perf reasons

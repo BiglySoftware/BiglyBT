@@ -1307,11 +1307,11 @@ public class GlobalManagerImpl
 			DownloadManager manager = 
 				createNewDownloadManager( 
 					torrent_hash, torrentFileName, savePath, saveFile, initialState, 
-					persistent, for_seeding, file_priorities,	adapter,thisIsMagnet, is_existing );
+					persistent, for_seeding, file_priorities, thisIsMagnet, is_existing );
 			
 			if ( !is_existing[0] ){
 			
-				manager = addDownloadManager( manager, true, is_existing );
+				manager = addDownloadManager( manager, true, adapter, for_seeding, is_existing );
 			}
 			
 			return( manager );
@@ -1328,10 +1328,11 @@ public class GlobalManagerImpl
 		boolean									persistent,
 		boolean									for_seeding,
 		List									file_priorities,
-		DownloadManagerInitialisationAdapter 	adapter,
 		boolean									thisIsMagnet,
 		boolean[]								is_existing )
   	{
+		FileUtil.log( "createNewDownload: starts for " + ByteFormatter.encodeString( torrent_hash) + ", " + torrentFileName + "," + savePath + ", " + saveFile );
+
   		int loop = 0;
   		
   		while( true ){
@@ -1343,9 +1344,9 @@ public class GlobalManagerImpl
 				// delete it if so
 
 			DownloadManager new_manager = 
-				DownloadManagerFactory.create(this,
-					torrent_hash, torrentFileName, savePath, saveFile, initialState, persistent, for_seeding,
-					file_priorities, adapter);
+				DownloadManagerFactory.create(
+					this, torrent_hash, torrentFileName, savePath, saveFile, initialState, persistent, 
+					false, for_seeding, false, file_priorities );
 			
 			if ( thisIsMagnet || torrent_hash == null ){
 				
@@ -1418,341 +1419,323 @@ public class GlobalManagerImpl
   	
    protected DownloadManager
    addDownloadManager(
-   		DownloadManager 	download_manager,
-		boolean				notifyListeners,
-		boolean[]			is_existing )
+   		DownloadManager 						download_manager,
+		boolean									notifyListeners,
+		DownloadManagerInitialisationAdapter	adapter,
+		boolean									for_seeding,
+		boolean[]								is_existing )
    {
 	   if ( !isStopping ){
-
-		   DownloadManager	to_remove = null;
-
-		   while( true ){
-
-			   if ( to_remove != null ){
-				   
-				   try{
-					   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( to_remove.getTorrent().getHash()) + ": removing existing magnet dl" );
-
-					   removeDownloadManager( to_remove, true, true );
-				   
-				   }catch( Throwable e ){
-					   
-				   }
-			   }
 			   
-			   synchronized( managers_lock ){
-	
-				   DownloadManager existing = manager_id_set.get(download_manager);
-	
-				   if ( existing != null ){
-	
-					   	// if we have a real download and the existing one is a magnet then keep the real one
-	
-					   	// with recent changes to createNewDownloadManager this code is probably not required
-					   
-					   if ( 	existing.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD ) && 
-							   !download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
-	
-						   if ( to_remove != existing ){
-							   
-							   to_remove = existing;
-						   
-							   continue;
-						   }
-					   }
-					   
-					   download_manager.destroy( true );
-	
-					   try{
-						   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( download_manager.getTorrent().getHash()) + ": returning  existing" );
+		   synchronized( managers_lock ){
+
+			   DownloadManager existing = manager_id_set.get(download_manager);
+
+			   if ( existing != null ){
 				   
-					   }catch( Throwable e ){
-						   
-					   }
-					   
-					   is_existing[0] = true;
-					   
-					   return( existing );
-				   }
-	
+				   download_manager.destroy( true );
+
 				   try{
-					   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( download_manager.getTorrent().getHash()) + ": actually adding" );
-				   
+					   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( download_manager.getTorrent().getHash()) + ": returning  existing" );
+			   
 				   }catch( Throwable e ){
 					   
 				   }
 				   
-				   DownloadManagerStats dm_stats = download_manager.getStats();
-	
-				   HashWrapper hashwrapper = null;
-	
-				   try{
-					   TOTorrent torrent = download_manager.getTorrent();
-	
-					   if ( torrent != null ){
-	
-						   hashwrapper = torrent.getHashWrapper();
-					   }
-				   } catch (Exception e1) { }
-	
-				   Map	save_download_state	= (Map)saved_download_manager_state.remove(hashwrapper);
-	
-				   long saved_data_bytes_downloaded	= 0;
-				   long saved_data_bytes_uploaded		= 0;
-				   long saved_discarded				= 0;
-				   long saved_hashfails				= 0;
-				   long saved_SecondsDownloading		= 0;
-				   long saved_SecondsOnlySeeding 		= 0;
-	
-				   if ( save_download_state != null ){
-	
-					   int maxDL = save_download_state.get("maxdl")==null?0:((Long) save_download_state.get("maxdl")).intValue();
-					   int maxUL = save_download_state.get("maxul")==null?0:((Long) save_download_state.get("maxul")).intValue();
-	
-					   Long lDownloaded = (Long) save_download_state.get("downloaded");
-					   Long lUploaded = (Long) save_download_state.get("uploaded");
-					   Long lCompletedBytes = (Long) save_download_state.get("completedbytes");
-					   Long lDiscarded = (Long) save_download_state.get("discarded");
-					   Long lHashFailsCount = (Long) save_download_state.get("hashfails");	// old method, number of fails
-					   Long lHashFailsBytes = (Long) save_download_state.get("hashfailbytes");	// new method, bytes failed
-	
-					   Long nbUploads = (Long)save_download_state.get("uploads");	// migrated to downloadstate in 2403
-	
-					   if ( nbUploads != null ){
-						   // migrate anything other than the default value of 4
-						   int	maxUploads = nbUploads.intValue();
-						   if ( maxUploads != 4 ){
-							   // hmm, can't currently remove maxuploads as it stops people regressing to earlier
-							   // version. So currently we store maxuploads still and only overwrite the dm state
-							   // value if the stored value is non-default and the state one is
-							   if ( download_manager.getMaxUploads() == 4 ){
-								   download_manager.setMaxUploads( maxUploads );
-							   }
-						   }
-					   }
-	
-					   dm_stats.setDownloadRateLimitBytesPerSecond( maxDL );
-					   dm_stats.setUploadRateLimitBytesPerSecond( maxUL );
-	
-					   if (lCompletedBytes != null) {
-						   dm_stats.setDownloadCompletedBytes(lCompletedBytes.longValue());
-					   }
-	
-					   if (lDiscarded != null) {
-						   saved_discarded = lDiscarded.longValue();
-					   }
-	
-					   if ( lHashFailsBytes != null ){
-	
-						   saved_hashfails = lHashFailsBytes.longValue();
-	
-					   }else if ( lHashFailsCount != null) {
-	
-						   TOTorrent torrent = download_manager.getTorrent();
-	
-						   if ( torrent != null ){
-	
-							   saved_hashfails = lHashFailsCount.longValue() * torrent.getPieceLength();
-						   }
-					   }
-	
-					   Long lPosition = (Long) save_download_state.get("position");
-	
-					   // 2.2.0.1 - category moved to downloadstate - this here for
-					   // migration purposes
-	
-					   String sCategory = null;
-					   if (save_download_state.containsKey("category")){
-						   sCategory = new String((byte[]) save_download_state.get("category"), Constants.DEFAULT_ENCODING_CHARSET);
-					   }
-	
-					   if (sCategory != null) {
-						   Category cat = CategoryManager.getCategory(sCategory);
-						   if (cat != null) download_manager.getDownloadState().setCategory(cat);
-					   }
-	
-					   download_manager.requestAssumedCompleteMode();
-	
-					   if (lDownloaded != null && lUploaded != null) {
-						   boolean bCompleted = download_manager.isDownloadComplete(false);
-	
-						   long lUploadedValue = lUploaded.longValue();
-	
-						   long lDownloadedValue = lDownloaded.longValue();
-	
-						   if ( bCompleted && (lDownloadedValue == 0)){
-	
-							   //Gudy : I say if the torrent is complete, let's simply set downloaded
-							   //to size in order to see a meaningfull share-ratio
-							   //Gudy : Bypass this horrible hack, and I don't care of first priority seeding...
-							   /*
-			            if (lDownloadedValue != 0 && ((lUploadedValue * 1000) / lDownloadedValue < minQueueingShareRatio) )
-			              lUploadedValue = ( download_manager.getSize()+999) * minQueueingShareRatio / 1000;
-							    */
-							   // Parg: quite a few users have complained that they want "open-for-seeding" torrents to
-							   // have an infinite share ratio for seeding rules (i.e. so they're not first priority)
-	
-							   int	dl_copies = COConfigurationManager.getIntParameter("StartStopManager_iAddForSeedingDLCopyCount");
-	
-							   lDownloadedValue = download_manager.getSize() * dl_copies;
-	
-							   download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_ONLY_EVER_SEEDED, true );
-						   }
-	
-						   saved_data_bytes_downloaded	= lDownloadedValue;
-						   saved_data_bytes_uploaded		= lUploadedValue;
-					   }
-	
-					   if (lPosition != null)
-						   download_manager.setPosition(lPosition.intValue());
-					   // no longer needed code
-					   //  else if (dm_stats.getDownloadCompleted(false) < 1000)
-					   //  dm.setPosition(bCompleted ? numCompleted : numDownloading);
-	
-					   Long lSecondsDLing = (Long)save_download_state.get("secondsDownloading");
-					   if (lSecondsDLing != null) {
-						   saved_SecondsDownloading = lSecondsDLing.longValue();
-					   }
-	
-					   Long lSecondsOnlySeeding = (Long)save_download_state.get("secondsOnlySeeding");
-					   if (lSecondsOnlySeeding != null) {
-						   saved_SecondsOnlySeeding = lSecondsOnlySeeding.longValue();
-					   }
-	
-					   Long already_allocated = (Long)save_download_state.get( "allocated" );
-					   if( already_allocated != null && already_allocated.intValue() == 1 ) {
-						   download_manager.setDataAlreadyAllocated( true );
-					   }
-	
-					   Long creation_time = (Long)save_download_state.get( "creationTime" );
-	
-					   if ( creation_time != null ){
-	
-						   long	ct = creation_time.longValue();
-	
-						   if ( ct < SystemTime.getCurrentTime()){
-	
-							   download_manager.setCreationTime( ct );
-						   }
-					   }
-	
-				   }else{
-	
-					   // no stats, bodge the uploaded for seeds
-	
-					   if ( dm_stats.getDownloadCompleted(false) == 1000 ){
-	
-						   int	dl_copies = COConfigurationManager.getIntParameter("StartStopManager_iAddForSeedingDLCopyCount");
-	
-						   saved_data_bytes_downloaded = download_manager.getSize()*dl_copies;
-					   }
-				   }
-	
-				   dm_stats.restoreSessionTotals(
-						   saved_data_bytes_downloaded,
-						   saved_data_bytes_uploaded,
-						   saved_discarded,
-						   saved_hashfails,
-						   saved_SecondsDownloading,
-						   saved_SecondsOnlySeeding );
-	
-				   boolean isCompleted = download_manager.isDownloadComplete(false);
-	
-				   if (download_manager.getPosition() == -1) {
-	
-					   int endPosition = 0;
-	
-					   for ( DownloadManager dm: managers_list_cow ){
-	
-						   boolean dmIsCompleted = dm.isDownloadComplete(false);
-	
-						   if (dmIsCompleted == isCompleted){
-	
-							   endPosition++;
-						   }
-					   }
-	
-					   download_manager.setPosition(endPosition + 1);
-				   }
-	
-				   // Even though when the DownloadManager was created, onlySeeding was
-				   // most likely set to true for completed torrents (via the Initializer +
-				   // readTorrent), there's a chance that the torrent file didn't have the
-				   // resume data.  If it didn't, but we marked it as complete in our
-				   // downloads config file, we should set to onlySeeding
-	
-				   download_manager.requestAssumedCompleteMode();
-	
-				   int len = managers_list_cow.length;
-	
-				   DownloadManager[]	new_download_managers = new DownloadManager[ len+1 ];
-	
-				   System.arraycopy( managers_list_cow, 0, new_download_managers, 0, len );
-	
-				   new_download_managers[len] = download_manager;
-	
-				   managers_list_cow	= new_download_managers;
-	
-				   manager_id_set.put( download_manager,  download_manager );
-	
-				   TOTorrent	torrent = download_manager.getTorrent();
-	
+				   is_existing[0] = true;
+				   
+				   return( existing );
+			   }
+
+			   try{
+				   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( download_manager.getTorrent().getHash()) + ": actually adding" );
+			   
+			   }catch( Throwable e ){
+				   
+			   }
+		   }
+		   
+		   if ( adapter != null ){
+			   
+				if ( download_manager.getTorrent() != null ){
+					
+					try{
+						adapter.initialised( download_manager, for_seeding );
+
+					}catch( Throwable e ){
+
+						Debug.printStackTrace(e);
+					}
+				}
+		   }
+		   
+		   download_manager.setConstructed();
+		   
+		   synchronized( managers_lock ){
+
+			   DownloadManagerStats dm_stats = download_manager.getStats();
+
+			   HashWrapper hashwrapper = null;
+
+			   try{
+				   TOTorrent torrent = download_manager.getTorrent();
+
 				   if ( torrent != null ){
-	
-					   try{
-						   manager_hash_map.put( new HashWrapper(torrent.getHash()), download_manager );
-	
-					   }catch( TOTorrentException e ){
-	
-						   Debug.printStackTrace( e );
-					   }
+
+					   hashwrapper = torrent.getHashWrapper();
 				   }
-	
-				   // Old completed downloads should have their "considered for move on completion"
-				   // flag set, to prevent them being moved.
-				   if (COConfigurationManager.getBooleanParameter("Set Completion Flag For Completed Downloads On Start")) {
-	
-					   // We only want to know about truly complete downloads, since we aren't able to move partially complete
-					   // ones yet.
-					   if (download_manager.isDownloadComplete(true)) {
-						   download_manager.getDownloadState().setFlag(DownloadManagerState.FLAG_MOVE_ON_COMPLETION_DONE, true);
-					   }
-				   }
-	
-				   if (notifyListeners) {
-	
-					   listeners_and_event_listeners.dispatch( LDT_MANAGER_ADDED, download_manager );
-	
-					   taggable_life_manager.taggableCreated( download_manager );
-	
-					   if ( host_support != null ){
-	
-						   host_support.torrentAdded( download_manager.getTorrentFileName(), download_manager.getTorrent());
-					   }
-				   }
-	
-				   download_manager.addListener(this);
-	
-				   if ( save_download_state != null ){
-	
-					   Long lForceStart = (Long) save_download_state.get("forceStart");
-					   if (lForceStart == null) {
-						   Long lStartStopLocked = (Long) save_download_state.get("startStopLocked");
-						   if(lStartStopLocked != null) {
-							   lForceStart = lStartStopLocked;
+			   } catch (Exception e1) { }
+
+			   Map	save_download_state	= (Map)saved_download_manager_state.remove(hashwrapper);
+
+			   long saved_data_bytes_downloaded	= 0;
+			   long saved_data_bytes_uploaded		= 0;
+			   long saved_discarded				= 0;
+			   long saved_hashfails				= 0;
+			   long saved_SecondsDownloading		= 0;
+			   long saved_SecondsOnlySeeding 		= 0;
+
+			   if ( save_download_state != null ){
+
+				   int maxDL = save_download_state.get("maxdl")==null?0:((Long) save_download_state.get("maxdl")).intValue();
+				   int maxUL = save_download_state.get("maxul")==null?0:((Long) save_download_state.get("maxul")).intValue();
+
+				   Long lDownloaded = (Long) save_download_state.get("downloaded");
+				   Long lUploaded = (Long) save_download_state.get("uploaded");
+				   Long lCompletedBytes = (Long) save_download_state.get("completedbytes");
+				   Long lDiscarded = (Long) save_download_state.get("discarded");
+				   Long lHashFailsCount = (Long) save_download_state.get("hashfails");	// old method, number of fails
+				   Long lHashFailsBytes = (Long) save_download_state.get("hashfailbytes");	// new method, bytes failed
+
+				   Long nbUploads = (Long)save_download_state.get("uploads");	// migrated to downloadstate in 2403
+
+				   if ( nbUploads != null ){
+					   // migrate anything other than the default value of 4
+					   int	maxUploads = nbUploads.intValue();
+					   if ( maxUploads != 4 ){
+						   // hmm, can't currently remove maxuploads as it stops people regressing to earlier
+						   // version. So currently we store maxuploads still and only overwrite the dm state
+						   // value if the stored value is non-default and the state one is
+						   if ( download_manager.getMaxUploads() == 4 ){
+							   download_manager.setMaxUploads( maxUploads );
 						   }
 					   }
+				   }
+
+				   dm_stats.setDownloadRateLimitBytesPerSecond( maxDL );
+				   dm_stats.setUploadRateLimitBytesPerSecond( maxUL );
+
+				   if (lCompletedBytes != null) {
+					   dm_stats.setDownloadCompletedBytes(lCompletedBytes.longValue());
+				   }
+
+				   if (lDiscarded != null) {
+					   saved_discarded = lDiscarded.longValue();
+				   }
+
+				   if ( lHashFailsBytes != null ){
+
+					   saved_hashfails = lHashFailsBytes.longValue();
+
+				   }else if ( lHashFailsCount != null) {
+
+					   TOTorrent torrent = download_manager.getTorrent();
+
+					   if ( torrent != null ){
+
+						   saved_hashfails = lHashFailsCount.longValue() * torrent.getPieceLength();
+					   }
+				   }
+
+				   Long lPosition = (Long) save_download_state.get("position");
+
+				   // 2.2.0.1 - category moved to downloadstate - this here for
+				   // migration purposes
+
+				   String sCategory = null;
+				   if (save_download_state.containsKey("category")){
+					   sCategory = new String((byte[]) save_download_state.get("category"), Constants.DEFAULT_ENCODING_CHARSET);
+				   }
+
+				   if (sCategory != null) {
+					   Category cat = CategoryManager.getCategory(sCategory);
+					   if (cat != null) download_manager.getDownloadState().setCategory(cat);
+				   }
+
+				   download_manager.requestAssumedCompleteMode();
+
+				   if (lDownloaded != null && lUploaded != null) {
+					   boolean bCompleted = download_manager.isDownloadComplete(false);
+
+					   long lUploadedValue = lUploaded.longValue();
+
+					   long lDownloadedValue = lDownloaded.longValue();
+
+					   if ( bCompleted && (lDownloadedValue == 0)){
+
+						   //Gudy : I say if the torrent is complete, let's simply set downloaded
+						   //to size in order to see a meaningfull share-ratio
+						   //Gudy : Bypass this horrible hack, and I don't care of first priority seeding...
+						   /*
+		            if (lDownloadedValue != 0 && ((lUploadedValue * 1000) / lDownloadedValue < minQueueingShareRatio) )
+		              lUploadedValue = ( download_manager.getSize()+999) * minQueueingShareRatio / 1000;
+						    */
+						   // Parg: quite a few users have complained that they want "open-for-seeding" torrents to
+						   // have an infinite share ratio for seeding rules (i.e. so they're not first priority)
+
+						   int	dl_copies = COConfigurationManager.getIntParameter("StartStopManager_iAddForSeedingDLCopyCount");
+
+						   lDownloadedValue = download_manager.getSize() * dl_copies;
+
+						   download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_ONLY_EVER_SEEDED, true );
+					   }
+
+					   saved_data_bytes_downloaded	= lDownloadedValue;
+					   saved_data_bytes_uploaded		= lUploadedValue;
+				   }
+
+				   if (lPosition != null)
+					   download_manager.setPosition(lPosition.intValue());
+				   // no longer needed code
+				   //  else if (dm_stats.getDownloadCompleted(false) < 1000)
+				   //  dm.setPosition(bCompleted ? numCompleted : numDownloading);
+
+				   Long lSecondsDLing = (Long)save_download_state.get("secondsDownloading");
+				   if (lSecondsDLing != null) {
+					   saved_SecondsDownloading = lSecondsDLing.longValue();
+				   }
+
+				   Long lSecondsOnlySeeding = (Long)save_download_state.get("secondsOnlySeeding");
+				   if (lSecondsOnlySeeding != null) {
+					   saved_SecondsOnlySeeding = lSecondsOnlySeeding.longValue();
+				   }
+
+				   Long already_allocated = (Long)save_download_state.get( "allocated" );
+				   if( already_allocated != null && already_allocated.intValue() == 1 ) {
+					   download_manager.setDataAlreadyAllocated( true );
+				   }
+
+				   Long creation_time = (Long)save_download_state.get( "creationTime" );
+
+				   if ( creation_time != null ){
+
+					   long	ct = creation_time.longValue();
+
+					   if ( ct < SystemTime.getCurrentTime()){
+
+						   download_manager.setCreationTime( ct );
+					   }
+				   }
+
+			   }else{
+
+				   // no stats, bodge the uploaded for seeds
+
+				   if ( dm_stats.getDownloadCompleted(false) == 1000 ){
+
+					   int	dl_copies = COConfigurationManager.getIntParameter("StartStopManager_iAddForSeedingDLCopyCount");
+
+					   saved_data_bytes_downloaded = download_manager.getSize()*dl_copies;
+				   }
+			   }
+
+			   dm_stats.restoreSessionTotals(
+					   saved_data_bytes_downloaded,
+					   saved_data_bytes_uploaded,
+					   saved_discarded,
+					   saved_hashfails,
+					   saved_SecondsDownloading,
+					   saved_SecondsOnlySeeding );
+
+			   boolean isCompleted = download_manager.isDownloadComplete(false);
+
+			   if (download_manager.getPosition() == -1) {
+
+				   int endPosition = 0;
+
+				   for ( DownloadManager dm: managers_list_cow ){
+
+					   boolean dmIsCompleted = dm.isDownloadComplete(false);
+
+					   if (dmIsCompleted == isCompleted){
+
+						   endPosition++;
+					   }
+				   }
+
+				   download_manager.setPosition(endPosition + 1);
+			   }
+
+			   // Even though when the DownloadManager was created, onlySeeding was
+			   // most likely set to true for completed torrents (via the Initializer +
+			   // readTorrent), there's a chance that the torrent file didn't have the
+			   // resume data.  If it didn't, but we marked it as complete in our
+			   // downloads config file, we should set to onlySeeding
+
+			   download_manager.requestAssumedCompleteMode();
+
+			   int len = managers_list_cow.length;
+
+			   DownloadManager[]	new_download_managers = new DownloadManager[ len+1 ];
+
+			   System.arraycopy( managers_list_cow, 0, new_download_managers, 0, len );
+
+			   new_download_managers[len] = download_manager;
+
+			   managers_list_cow	= new_download_managers;
+
+			   manager_id_set.put( download_manager,  download_manager );
 	
-					   if(lForceStart != null) {
-						   if(lForceStart.intValue() == 1) {
-							   download_manager.setForceStart(true);
-						   }
+			   if ( hashwrapper != null ){
+
+				   manager_hash_map.put( hashwrapper, download_manager );
+			   }
+
+			   // Old completed downloads should have their "considered for move on completion"
+			   // flag set, to prevent them being moved.
+			   if (COConfigurationManager.getBooleanParameter("Set Completion Flag For Completed Downloads On Start")) {
+
+				   // We only want to know about truly complete downloads, since we aren't able to move partially complete
+				   // ones yet.
+				   if (download_manager.isDownloadComplete(true)) {
+					   download_manager.getDownloadState().setFlag(DownloadManagerState.FLAG_MOVE_ON_COMPLETION_DONE, true);
+				   }
+			   }
+
+			   if (notifyListeners) {
+
+				   listeners_and_event_listeners.dispatch( LDT_MANAGER_ADDED, download_manager );
+
+				   taggable_life_manager.taggableCreated( download_manager );
+
+				   if ( host_support != null ){
+
+					   host_support.torrentAdded( download_manager.getTorrentFileName(), download_manager.getTorrent());
+				   }
+			   }
+
+			   download_manager.addListener(this);
+
+			   if ( save_download_state != null ){
+
+				   Long lForceStart = (Long) save_download_state.get("forceStart");
+				   if (lForceStart == null) {
+					   Long lStartStopLocked = (Long) save_download_state.get("startStopLocked");
+					   if(lStartStopLocked != null) {
+						   lForceStart = lStartStopLocked;
+					   }
+				   }
+
+				   if(lForceStart != null) {
+					   if(lForceStart.intValue() == 1) {
+						   download_manager.setForceStart(true);
 					   }
 				   }
 			   }
-	
-			   return( download_manager );
 		   }
+
+		   return( download_manager );
+	   
 	   }else{
 		   
 		   Logger.log(new LogEvent(LOGID, LogEvent.LT_ERROR,
@@ -3180,27 +3163,34 @@ public class GlobalManagerImpl
 			  	file_priorities = (List) mDownload.get("file_priorities");
 			  }
 
-			  final DownloadManager dm =
-				  DownloadManagerFactory.create(
-						  this, torrent_hash, fileName, torrent_save_dir, torrent_save_file,
-						  state, true, true, has_ever_been_started, file_priorities );
-
-			  if ( addDownloadManager( dm, false, new boolean[1] ) == dm ){
-
-				  	// recover any error state
+			  synchronized( create_dm_lock ){
 				  
-				  Long errorType = (Long)mDownload.get( "errorType" );
+				  DownloadManager new_dm =
+					  DownloadManagerFactory.create(
+							  this, torrent_hash, fileName, torrent_save_dir, torrent_save_file,
+							  state, true, true, false, has_ever_been_started, file_priorities );
+	
+				  boolean[] existing = { false };
 				  
-				  if ( errorType != null ){
+				  addDownloadManager( new_dm, false, null, false, existing );
+				  
+				  if ( !existing[0] ){
+	
+					  	// recover any error state
 					  
-					  String errorDetails = MapUtils.getMapString( mDownload, "errorDetails", null );
+					  Long errorType = (Long)mDownload.get( "errorType" );
 					  
-					  Long errorFlags = (Long)mDownload.get( "errorFlags" );
+					  if ( errorType != null ){
+						  
+						  String errorDetails = MapUtils.getMapString( mDownload, "errorDetails", null );
+						  
+						  Long errorFlags = (Long)mDownload.get( "errorFlags" );
+						  
+						  new_dm.setErrorState(((Long)errorType).intValue(), errorDetails, errorFlags==null?0:errorFlags.intValue());
+					  }
 					  
-					  dm.setErrorState(((Long)errorType).intValue(), errorDetails, errorFlags==null?0:errorFlags.intValue());
+					  return( new_dm );
 				  }
-				  
-				  return( dm );
 			  }
 		  }
 	  }

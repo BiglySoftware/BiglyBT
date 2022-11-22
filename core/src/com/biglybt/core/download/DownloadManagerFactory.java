@@ -35,26 +35,6 @@ import com.biglybt.core.torrent.TOTorrent;
 public class
 DownloadManagerFactory
 {
-		// new downloads
-
-	public static DownloadManager
-	create(
-		GlobalManager 							gm,
-		byte[]									torrent_hash,
-		String 									torrentFileName,
-		String 									savePath,
-		String									saveFile,
-		int      								initialState,
-		boolean									persistent,
-		boolean									for_seeding,
-		List									file_priorities,
-		DownloadManagerInitialisationAdapter 	adapter )
-	{
-		return( new DownloadManagerImpl( gm, torrent_hash, torrentFileName, savePath, saveFile, initialState, persistent, false, for_seeding, false, file_priorities, adapter ));
-	}
-
-		// recovery method
-
 	public static DownloadManager
 	create(
 		GlobalManager 	gm,
@@ -65,10 +45,11 @@ DownloadManagerFactory
 		int      		initialState,
 		boolean			persistent,
 		boolean			recovered,
+		boolean			for_seeding,
 		boolean			has_ever_been_started,
 		List			file_priorities )
 	{
-		return( new DownloadManagerImpl( gm, torrent_hash, torrentFileName, torrent_save_dir, torrent_save_file, initialState, persistent, recovered, false, has_ever_been_started, file_priorities, null ));
+		return( new DownloadManagerImpl( gm, torrent_hash, torrentFileName, torrent_save_dir, torrent_save_file, initialState, persistent, recovered, for_seeding, has_ever_been_started, file_priorities ));
 	}
 
 	public static DownloadManagerAvailability
