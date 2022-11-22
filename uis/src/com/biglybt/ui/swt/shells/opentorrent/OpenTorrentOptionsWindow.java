@@ -17,8 +17,6 @@
 
 package com.biglybt.ui.swt.shells.opentorrent;
 
-import static com.biglybt.core.config.ConfigKeys.File.BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP;
-
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
@@ -2218,10 +2216,6 @@ public class OpenTorrentOptionsWindow
 				expInfo.setText( "" );
 				expFiles.setText( "" );
 				expPeer.setText( "" );
-				
-				expInfo.setExpanded( false );
-				expFiles.setExpanded( false );
-				expPeer.setExpanded( false );
 			}
 
 			SWTSkinObject so = skin.getSkinObject("disk-space");
@@ -2239,6 +2233,9 @@ public class OpenTorrentOptionsWindow
 				if (so instanceof SWTSkinObjectText) {
 					setupFileAreaInfo((SWTSkinObjectText) so);
 				}
+			}else{
+				skin.getSkinProperties().addProperty( "toptions.filearea.fillheight", null );
+				skin.getSkinProperties().addProperty( "toptions.filearea.fillheightmin", null );
 			}
 			
 			so = skin.getSkinObject("start-options");
@@ -7753,7 +7750,14 @@ public class OpenTorrentOptionsWindow
 						
 						//System.out.println( "getFreeSpace(" + file + " ) - " + (SystemTime.getMonotonousTime() - start ));
 						
-						if ( space != freeSpace ){
+						long min = 1024*1024L;
+						
+						if ( space > 1024*1024*1024L ){
+							
+							min *= 10;
+						}
+						
+						if ( Math.abs( space - freeSpace ) > min ){
 							
 							freeSpace = space;
 							
