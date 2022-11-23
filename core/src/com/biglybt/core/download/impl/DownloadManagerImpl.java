@@ -904,6 +904,7 @@ DownloadManagerImpl
 		
 		light_seeding_status = overall_ls;
 		
+		/*
 		if ( Constants.isCVSVersion()){
 			
 			Map<String,Object[]>	old_map = url_group_map;
@@ -949,6 +950,7 @@ DownloadManagerImpl
 				Debug.outNoStack( "URL Group map changed for " + getDisplayName() + ": old=" + old_str + ", new=" + new_str );
 			}
 		}
+		*/
 		
 		url_group_map = new_map;
 	}
