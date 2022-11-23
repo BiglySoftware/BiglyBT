@@ -143,12 +143,6 @@ MagnetPluginMDDownloader
 	{
 		return( activity.cancel( false ));
 	}
-
-	protected void
-	update()
-	{
-		activity.update();
-	}
 	
 	protected com.biglybt.core.download.DownloadManager
 	getDownloadManager()
@@ -159,6 +153,14 @@ MagnetPluginMDDownloader
 	private class
 	DownloadActivity
 	{
+		final int TIMER_PERIOD		= 10*1000;
+		final int PEER_CHECK_PERIOD = 30*1000;
+		final int PEER_LOG_PERIOD 	= 10*1000;
+		
+		final int PEER_CHECK_TICKS	= PEER_CHECK_PERIOD / TIMER_PERIOD;
+		final int PEER_LOG_TICKS	= PEER_LOG_PERIOD / TIMER_PERIOD;
+
+			
 		final String	hash_str = ByteFormatter.encodeString( hash );
 
 		final Map<String,String>	magnet_args = new HashMap<>();
@@ -190,8 +192,8 @@ MagnetPluginMDDownloader
 		DownloadListener	activity_listener;
 		boolean				activity_listener_informed = false;
 		
-		long last_update = -1;
-		
+		TimerEventPeriodic	timer;
+
 		DownloadActivity()
 		{
 			String[] bits = args.split( "&" );
@@ -884,6 +886,20 @@ MagnetPluginMDDownloader
 	
 					download.setFlag( Download.FLAG_DISABLE_AUTO_FILE_MOVE, true );
 					
+					timer = SimpleTimer.addPeriodicEvent(
+						"mddownloader", TIMER_PERIOD, 
+						new TimerEventPerformer()
+						{
+							int ticks = 0;
+					
+							@Override
+							public void 
+							perform(TimerEvent event){
+							
+								update( ticks++);
+							}
+						});
+					
 					setup_complete = true;
 				}
 			}catch( Throwable e ){
@@ -908,17 +924,20 @@ MagnetPluginMDDownloader
 		}
 		
 		void
-		update()
-		{
-			long now = SystemTime.getMonotonousTime();
+		update(
+			int	tick_count )
+		{			
+			boolean do_log		= tick_count % PEER_LOG_TICKS == 0;
+			boolean check_dead 	= tick_count % PEER_CHECK_TICKS == 0;
 			
-			if ( last_update == -1 || now - last_update > 30*1000 ){
+			if ( do_log || check_dead ){
+		
+				Peer[] peers = download.getPeerManager().getPeers();
+
+				int	connecting 	= 0;
+				int connected	= 0;
 				
-				last_update = now;
-			
-				try{
-					Peer[] peers = download.getPeerManager().getPeers();
-					
+				try{				
 					for ( Peer peer: peers ){
 						
 						PEPeer pe_peer = PluginCoreUtils.unwrap( peer );
@@ -926,26 +945,39 @@ MagnetPluginMDDownloader
 						if ( pe_peer instanceof PEPeerTransport ){
 						
 							PEPeerTransport pt = (PEPeerTransport)pe_peer;
-											
+															
 							long connected_at = pt.getConnectionEstablishedMonoTime();
-						
+							
 							if ( connected_at >= 0 ){
+							
+								connected++;
 								
-								long connected_for = SystemTime.getMonotonousTime() - connected_at;
-								
-								if ( connected_for > 3*60*1000 ){
-								
-									long last_good_data = pt.getTimeSinceGoodDataReceived();
+								if ( check_dead ){
 
-									if ( last_good_data == -1 || last_good_data > 3*60*1000 ){
+									long connected_for = SystemTime.getMonotonousTime() - connected_at;
+									
+									if ( connected_for > 3*60*1000 ){
+									
+										long last_good_data = pt.getTimeSinceGoodDataReceived();
+	
+										if ( last_good_data == -1 || last_good_data > 3*60*1000 ){
+									
+											pt.getManager().removePeer( pt, "Metadata dead peer removal", Transport.CR_TIMEOUT_ACTIVITY );
+										}
+									}	
+								}
+							}else{
 								
-										pt.getManager().removePeer( pt, "Metadata dead peer removal", Transport.CR_TIMEOUT_ACTIVITY );
-									}
-								}	
+								connecting++;
 							}
 						}
 					}
 				}catch( Throwable e ){		
+				}
+				
+				if ( do_log ){
+											
+					activity_listener.reportProgress( "Peers: connected=" + connected + ", connecting=" + connecting );
 				}
 			}
 		}
@@ -1207,6 +1239,13 @@ MagnetPluginMDDownloader
 
 					requests.clear();
 	
+					if ( timer != null ){
+						
+						timer.cancel();
+						
+						timer = null;
+					}
+					
 					if ( torrent_file != null ){
 	
 						torrent_file.delete();
@@ -1299,6 +1338,10 @@ MagnetPluginMDDownloader
 	protected interface
 	DownloadListener
 	{
+		public void
+		reportProgress(
+			String		str );
+		
 		public void
 		reportProgress(
 			int		downloaded,

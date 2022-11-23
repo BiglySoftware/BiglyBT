@@ -2567,6 +2567,15 @@ MagnetPlugin
 								new MagnetPluginMDDownloader.DownloadListener()
 								{
 									@Override
+									public void 
+									reportProgress(String str)
+									{
+										if ( listener != null ){
+											listener.reportActivity( str );
+										}
+									}
+									
+									@Override
 									public void
 									reportProgress(
 										int		downloaded,
@@ -3210,16 +3219,6 @@ MagnetPlugin
 												}finally{
 													
 													final_timer[0].cancel();
-												}
-											}
-										}else{
-											synchronized( md_downloader ){
-												
-												MagnetPluginMDDownloader downloader = md_downloader[0];
-													
-												if ( downloader != null ){
-								
-													downloader.update();
 												}
 											}
 										}
