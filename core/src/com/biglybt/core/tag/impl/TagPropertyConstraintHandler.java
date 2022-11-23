@@ -1887,7 +1887,7 @@ TagPropertyConstraintHandler
 
 			if ( recent_dms == null ){
 
-				recent_dms = new HashMap<>();
+				recent_dms = new IdentityHashMap<>();
 
 				handler.apply_history.put( tag_maybe_null, recent_dms );
 			}
