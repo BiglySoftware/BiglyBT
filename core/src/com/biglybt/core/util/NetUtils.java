@@ -101,7 +101,7 @@ NetUtils
 
 							long	elapsed_millis = ( SystemTime.getHighPrecisionCounter() - start ) / 1000000;
 
-							long	old_period = current_check_millis;
+							// long	old_period = current_check_millis;
 
 							if ( elapsed_millis > (Constants.isAndroid?5000:1000) ){
 
@@ -116,11 +116,13 @@ NetUtils
 								current_check_millis = MIN_NI_CHECK_MILLIS;
 							}
 
+							/*
 							if ( old_period != current_check_millis ){
 
 								Debug.out( "Network interface enumeration took " + elapsed_millis + ": " + (old_period<current_check_millis?"increased":"decreased" ) + " refresh frequency to " + current_check_millis + "ms" );
 							}
-
+							*/
+							
 							if ( nis != null ){
 
 								while( nis.hasMoreElements()){
