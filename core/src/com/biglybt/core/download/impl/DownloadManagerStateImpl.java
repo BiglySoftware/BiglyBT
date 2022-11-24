@@ -131,6 +131,15 @@ DownloadManagerStateImpl
 		
 		TorrentUtils.registerMapFluff( new String[]{ TRACKER_CACHE_KEY, RESUME_KEY, RESUME_HISTORY_KEY });
 	}
+	
+	private static boolean debug_on;
+	
+	public static void
+	setDebugOn(
+		boolean		on )
+	{
+		debug_on = on;
+	}
 
 	private static Object
 	getDefaultOverride(
@@ -332,8 +341,18 @@ DownloadManagerStateImpl
 
 				state_map.put( hash_wrapper, res );
 
+				if ( debug_on ){
+
+					FileUtil.log("    dms created" );
+				}
+
 			}else{
 
+				if ( debug_on ){
+
+					FileUtil.log("    dms found in state_map" );
+				}
+				
 					// if original state was created without a download manager,
 					// bind it to this one
 
@@ -415,8 +434,11 @@ DownloadManagerStateImpl
 	{
 		boolean	discard_pieces = state_map.size() > 32;
 
-		// System.out.println( "getDownloadState: hash = " + (torrent_hash==null?"null":ByteFormatter.encodeString(torrent_hash) + ", file = " + torrent_file ));
+		if ( debug_on ){
 
+			FileUtil.log("getDownloadState: hash = " + (torrent_hash==null?"null":ByteFormatter.encodeString(torrent_hash) + ", file = " + torrent_file ));
+		}
+		
 		TOTorrent						original_torrent	= null;
 		TorrentUtils.ExtendedTorrent 	saved_state			= null;
 
@@ -427,12 +449,22 @@ DownloadManagerStateImpl
 			File	saved_file = getStateFile( torrent_hash );
 
 			if ( saved_file.exists()){
+				
+				if ( debug_on ){
+
+					FileUtil.log("    saved state 1 exists" );
+				}
 
 				try{
 					Map	cached_state = (Map)global_state_cache.remove( new HashWrapper( torrent_hash ));
 
 					if ( cached_state != null ){
 
+						if ( debug_on ){
+
+							FileUtil.log("    saved state 1: got cached state" );
+						}
+						
 						CachedStateWrapper wrapper = new CachedStateWrapper( download_manager, torrent_file, torrent_hash, cached_state, inactive );
 
 						global_state_cache_wrappers.add( wrapper );
@@ -442,11 +474,22 @@ DownloadManagerStateImpl
 					}else{
 
 						saved_state = TorrentUtils.readDelegateFromFile( saved_file, discard_pieces );
+						
+						if ( debug_on ){
+
+							FileUtil.log("    saved state 1: read from " + saved_file );
+						}
 					}
 
 				}catch( Throwable e ){
 
 					Debug.out( "Failed to load download state for " + saved_file, e );
+				}
+			}else{
+				
+				if ( debug_on ){
+
+					FileUtil.log("    saved state 1 doesn't exist" );
 				}
 			}
 		}
@@ -466,14 +509,29 @@ DownloadManagerStateImpl
 			
 			if ( saved_file.exists()){
 				
+				if ( debug_on ){
+
+					FileUtil.log("    saved state 2 exists" );
+				}
+				
 				try{
 					saved_state = TorrentUtils.readDelegateFromFile( saved_file, discard_pieces );
 
+					if ( debug_on ){
+
+						FileUtil.log("    saved state 2: read from " + saved_file );
+					}
 				}catch( Throwable e ){
 
 					was_corrupt = true;
 					
 					Debug.out( "Failed to load download state for " + saved_file );
+				}
+			}else{
+				
+				if ( debug_on ){
+
+					FileUtil.log("    saved state 2 doesn't exist" );
 				}
 			}
 
@@ -487,6 +545,11 @@ DownloadManagerStateImpl
 				copyTorrentToActive( original_torrent, saved_file, was_corrupt );
 
 				saved_state = TorrentUtils.readDelegateFromFile( saved_file, discard_pieces );
+				
+				if ( debug_on ){
+
+					FileUtil.log("    saved state 3: read from " + saved_file );
+				}
 			}
 		}
 
@@ -737,11 +800,27 @@ DownloadManagerStateImpl
 
 	public static void
 	deleteDownloadState(
-		byte[]		download_hash )
+		byte[]		download_hash,
+		boolean		delete_cache )
 
 		throws DownloadManagerException
 	{
 		deleteDownloadState( ACTIVE_DIR, download_hash );
+		
+		if ( delete_cache ){
+			
+			try{
+				class_mon.enter();
+
+				HashWrapper	wrapper = new HashWrapper( download_hash );
+
+				state_map.remove( wrapper );
+				
+			}finally{
+				
+				class_mon.exit();
+			}
+		}
 	}
 
 	public static void
@@ -1409,7 +1488,12 @@ DownloadManagerStateImpl
 
 			HashWrapper	wrapper = torrent.getHashWrapper();
 
-			state_map.remove( wrapper );
+			boolean removed = state_map.remove( wrapper ) != null;
+
+			if ( debug_on ){
+
+				FileUtil.log("deleteDownloadState: hash = " + (wrapper==null?"null":ByteFormatter.encodeString(wrapper.getBytes())) + ", removed=" + removed );
+			}
 
 	        TorrentUtils.delete( torrent );
 

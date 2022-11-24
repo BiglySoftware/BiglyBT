@@ -1366,7 +1366,7 @@ DownloadManagerImpl
 			if ( core_dm == null ){
 
 				try{
-					DownloadManagerStateFactory.deleteDownloadState( torrent_hash );
+					DownloadManagerStateFactory.deleteDownloadState( torrent_hash, false );
 
 				}catch( Throwable e ){
 

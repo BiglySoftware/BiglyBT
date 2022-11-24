@@ -95,11 +95,12 @@ DownloadManagerStateFactory
 
 	public static void
 	deleteDownloadState(
-		byte[]		download_hash )
+		byte[]		download_hash,
+		boolean		delete_cache )
 
 		throws DownloadManagerException
 	{
-		DownloadManagerStateImpl.deleteDownloadState( download_hash );
+		DownloadManagerStateImpl.deleteDownloadState( download_hash, delete_cache );
 	}
 
 	public static void
@@ -186,5 +187,12 @@ DownloadManagerStateFactory
 		}
 
 		return( result );
+	}
+	
+	public static void
+	setDebugOn(
+		boolean		on )
+	{
+		DownloadManagerStateImpl.setDebugOn( on );
 	}
 }

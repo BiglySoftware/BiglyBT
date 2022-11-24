@@ -1335,85 +1335,112 @@ public class GlobalManagerImpl
 
   		int loop = 0;
   		
-  		while( true ){
-  			
-  			loop++;
-  			
-				// due to the fact that magnet and real downloads share the same hash it is possible
-				// for the creation to return an existing magnet download. check for this and
-				// delete it if so
-
-			DownloadManager new_manager = 
-				DownloadManagerFactory.create(
-					this, torrent_hash, torrentFileName, savePath, saveFile, initialState, persistent, 
-					false, for_seeding, false, file_priorities );
-			
-			if ( thisIsMagnet || torrent_hash == null ){
-				
-				FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=true" );
-
-				return( new_manager );
-			}
-			
-			boolean newIsMagnet = new_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
-
-			if ( !newIsMagnet ){
-				
-				FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=false, newIsMagnet=false" );
-
-				return( new_manager );
-			}
-			
-			if ( loop > 10 ){
-				
-				return( new_manager );
-			}
-			
-				// we've been asked to create a non-magnet but the new manager is a magnet as it has picked
-				// up existing state from a magnet download
-			
-			DownloadManager existing = getDownloadManager( new HashWrapper( torrent_hash ));
-					
-			if ( existing != null ){
-						
-				boolean existingIsMagnet = existing.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
-						
-				FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=false, newIsMagnet=true, existingIsMagnet=" + existingIsMagnet );
+  		boolean debug_on = false;
+  		
+  		try{
+	  		while( true ){
+	  			
+	  			loop++;
+	  			
+					// due to the fact that magnet and real downloads share the same hash it is possible
+					// for the creation to return an existing magnet download. check for this and
+					// delete it if so
 	
-				if ( existingIsMagnet ){
+				DownloadManager new_manager = 
+					DownloadManagerFactory.create(
+						this, torrent_hash, torrentFileName, savePath, saveFile, initialState, persistent, 
+						false, for_seeding, false, file_priorities );
+			
+				if ( thisIsMagnet || torrent_hash == null ){
 					
-					try{
-						removeDownloadManager( existing, true, true );
+					FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=true" );
+	
+					return( new_manager );
+				}
+				
+				boolean newIsMagnet = new_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+	
+				if ( !newIsMagnet ){
+					
+					FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=false, newIsMagnet=false" );
+	
+					return( new_manager );
+				}
+
+				
+				if ( loop > 10 ){
+					
+					return( new_manager );
+				}
+				
+					// we've been asked to create a non-magnet but the new manager is a magnet as it has picked
+					// up existing state from a magnet download
+				
+				DownloadManager existing = getDownloadManager( new HashWrapper( torrent_hash ));
+						
+				if ( existing != null ){
 							
-					}catch( Throwable e ){
+					boolean existingIsMagnet = existing.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+							
+					FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=false, newIsMagnet=true, existingIsMagnet=" + existingIsMagnet );
+		
+					if ( existingIsMagnet ){
+						
+						try{
+							removeDownloadManager( existing, true, true );
+								
+						}catch( Throwable e ){
+						
+							Debug.out( e );
+						}
+					}else{
 					
-						Debug.out( e );
+						is_existing[0] = true;
+						
+						return( existing );
 					}
 				}else{
 				
-					is_existing[0] = true;
+					try{
+						DownloadManagerStateFactory.deleteDownloadState( torrent_hash, true );
+						
+					}catch( Throwable e ){
+						
+						FileUtil.log( "createNewDownload: failed to delete existing state", e );
+					}
 					
-					return( existing );
+					if ( !debug_on ){
+						
+						debug_on = true;
+						
+						DownloadManagerStateFactory.setDebugOn( true );
+						
+						try{
+							FileUtil.copyFile( 
+								new File( torrentFileName ),
+								FileUtil.getUserFile( ByteFormatter.encodeString( torrent_hash) + ".log" ));
+								
+						}catch( Throwable e ){
+							
+						}
+					}
+					
+					FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=false, newIsMagnet=true, existing=null" );
 				}
-			}else{
-			
+		
 				try{
-					DownloadManagerStateFactory.deleteDownloadState( torrent_hash );
+					Thread.sleep(500);
 					
 				}catch( Throwable e ){
 					
-					FileUtil.log( "createNewDownload: failed to delete existing state", e );
 				}
-				
-				FileUtil.log( "createNewDownload: " + ByteFormatter.encodeString( torrent_hash) + ": isMagnet=false, newIsMagnet=true, existing=null" );
-			}
-	
-			try{
-				Thread.sleep(500);
-				
-			}catch( Throwable e ){
-				
-			}
+	  		}
+  		}finally{
+  			
+  			if ( debug_on ){
+  				
+  				DownloadManagerStateFactory.setDebugOn( false );
+  			}
   		}
   	}
   	
