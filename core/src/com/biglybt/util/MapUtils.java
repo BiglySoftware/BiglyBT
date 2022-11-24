@@ -44,6 +44,10 @@ import org.json.simple.JSONArray;
  */
 public class MapUtils
 {
+	public static void setMapInt(Map map, String key, int val) {
+		map.put( key, new Long( val ));
+	}
+
 	public static int getMapInt(Map map, String key, int def) {
 		if (map == null) {
 			return def;
@@ -218,6 +222,10 @@ public class MapUtils
 		}
 	}
 
+	public static void setMapBoolean(Map map, String key, boolean val) {
+		map.put( key, new Long( val?1:0 ));
+	}
+		
 	public static boolean getMapBoolean(Map map, String key, boolean def) {
 		if (map == null) {
 			return def;
@@ -515,5 +523,24 @@ public class MapUtils
 		}
 
 		return( values );
+	}
+	
+	public static String
+	importString(
+		Object		o )
+	{
+		if ( o == null ){
+			
+			return( null );
+		}
+		
+		if (o instanceof String){
+			return (String) o;
+		}else  if (o instanceof byte[]){
+			return new String((byte[]) o, Constants.UTF_8);
+		}else{
+			Debug.out( "unsupported: " + o );
+			return( null );
+		}
 	}
 }

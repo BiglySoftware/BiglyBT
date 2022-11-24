@@ -248,6 +248,87 @@ public class OpenTorrentOptionsWindow
 		}
 	}
 
+	private static final String CONFIG_FILE = "oto.config";
+	
+	public static void
+	initialise()
+	{
+		try{
+			if ( FileUtil.resilientConfigFileExists( CONFIG_FILE )){
+	
+				Map<String,Object>	oto_map = FileUtil.readResilientConfigFile( CONFIG_FILE );
+				
+				if ( oto_map != null ){
+					
+					List<Map<String,Object>>	oto_list = (List<Map<String,Object>>)oto_map.get( "oto" );
+					
+					if ( oto_list != null ){
+						
+						for ( Map<String,Object> map: oto_list ){
+							
+							try{
+								addTorrent( TorrentOpenOptions.importFromMap( map ));
+								
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+					}
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
+	public static void
+	close()
+	{
+		try{
+			synchronized( active_windows ){
+				
+				List<Map<String,Object>>	oto_list = new ArrayList<>();
+				
+				for ( OpenTorrentOptionsWindow w: active_windows.values()){
+				
+					List<OpenTorrentInstance> instances = w.getInstances();
+					
+					for ( OpenTorrentInstance instance: instances ){
+						
+						TorrentOpenOptions opts = instance.getOptions();
+						
+						try{
+							Map<String,Object> map = opts.exportToMap();
+							
+							oto_list.add( map );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+				}
+				
+				if ( oto_list.isEmpty()){
+					
+					FileUtil.deleteResilientConfigFile( CONFIG_FILE );
+						
+				}else{
+					
+					Map<String,Object>	oto_map = new HashMap<>();
+					
+					oto_map.put( "oto", oto_list);
+	
+					FileUtil.writeResilientConfigFile( CONFIG_FILE, oto_map );
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
 
 	private final int window_id = window_id_next.incrementAndGet();
 	

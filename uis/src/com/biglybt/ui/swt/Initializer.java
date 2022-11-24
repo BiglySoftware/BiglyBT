@@ -71,6 +71,7 @@ import com.biglybt.ui.swt.search.SearchUI;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.shells.main.MainWindowFactory;
+import com.biglybt.ui.swt.shells.opentorrent.OpenTorrentOptionsWindow;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinPropertiesImpl;
 import com.biglybt.ui.swt.subscriptions.SubscriptionManagerUI;
@@ -316,6 +317,7 @@ public class Initializer
 		FontUtils.dispose();
 		SWTSkinPropertiesImpl.destroyStatics();
 		ProgressWindow.unregister();
+		OpenTorrentOptionsWindow.close();
 	}
 
 	/**
@@ -428,7 +430,7 @@ public class Initializer
 
 			@Override
 			public void stopping(Core core) {
-				Alerts.stopInitiated();
+				handleCoreStopping();
 			}
 
 			@Override
@@ -704,6 +706,8 @@ public class Initializer
 
 			//Tell listeners that all is initialized :
 			Alerts.initComplete();
+			
+			OpenTorrentOptionsWindow.initialise();
 		}
 		finally{
 
@@ -713,6 +717,14 @@ public class Initializer
 		}
 	}
 
+	void
+	handleCoreStopping()
+	{
+		Alerts.stopInitiated();
+		
+		OpenTorrentOptionsWindow.close();
+	}
+	
 	@Override
 	public void 
 	stopIt(

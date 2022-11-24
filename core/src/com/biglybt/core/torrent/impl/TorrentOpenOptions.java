@@ -44,6 +44,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.util.MapUtils;
 
 
 /**
@@ -224,6 +225,168 @@ public class TorrentOpenOptions
 		}
 	}
 
+	private 
+	TorrentOpenOptions(
+		Map<String,Object>		map,
+		boolean					fake )
+	{
+		isValid = true;
+		
+			// import things set during construction and selected other things:
+			// torrent, initial tags
+		
+		iStartID 			= MapUtils.getMapInt(map, "startid", STARTMODE_QUEUED );
+		iQueueLocation		= MapUtils.getMapInt(map, "qloc", QUEUELOCATION_BOTTOM );
+		bSequentialDownload	= MapUtils.getMapBoolean(map, "seqdl", false );
+		sDestDir			= MapUtils.getMapString(map, "destdir", COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH));
+		
+		for (int i = 0; i < AENetworkClassifier.AT_NETWORKS.length; i++) {
+
+			String nn = AENetworkClassifier.AT_NETWORKS[i];
+
+			String config_name = "Network Selection Default." + nn;
+
+			enabledNetworks.put( nn, COConfigurationManager.getBooleanParameter( config_name ));
+		}
+		
+		List<Map<String,Object>> l_networks = (List<Map<String,Object>>)map.get( "networks" );
+		
+		if ( l_networks != null ){
+			for ( Map<String,Object> o_net: l_networks ){
+				String net = MapUtils.getMapString(o_net, "n", null );
+				net = AENetworkClassifier.internalise(net);
+				if ( net != null ){
+					int val = MapUtils.getMapInt(o_net, "e", -1 );
+					if ( val >= 0 ){
+						enabledNetworks.put( net, val > 0 );
+					}
+				}
+			}
+		}
+		
+		bDeleteFileOnCancel		= MapUtils.getMapBoolean(map, "dfoc", false );
+		bDeleteFileOnCancelSet	= MapUtils.getMapBoolean(map, "dfocs", false );
+		sFileName				= MapUtils.getMapString(map,"filename", null );
+		sOriginatingLocation	= MapUtils.getMapString(map,"origloc", null );
+		
+		Map<String,Object> t_map = (Map<String,Object>)map.get( "torrent" );
+		
+		if ( t_map != null ){
+			
+			try{
+				torrent = TOTorrentFactory.deserialiseFromMap( t_map );
+				
+					// torrent might have been in temporary file location and been
+					// deleted in the meantime
+				
+				String file_str = TorrentUtils.getTorrentFileName( torrent );
+				
+				if ( file_str != null ){
+					
+					File file = FileUtil.newFile( file_str );
+					
+					if ( !file.exists()){
+						
+						TorrentUtils.writeToFile( torrent );
+					}
+				}
+				
+				setTorrent( torrent );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		List<Number> init_tags =  (List<Number>) map.get( "inittags" );
+		
+		if ( init_tags != null ){
+			
+			TagManager tm = TagManagerFactory.getTagManager();
+			
+			for ( Number n: init_tags ){
+				
+				Tag tag = tm.lookupTagByUID( n.longValue());
+				
+				if ( tag != null ){
+					
+					initialTags.add( tag );
+				}
+			}
+		}
+		
+	}
+	
+	public Map<String,Object>
+	exportToMap()
+	{
+		Map<String,Object>		map = new HashMap<>();
+		
+		MapUtils.setMapInt(map, "startid", iStartID);
+		MapUtils.setMapInt(map, "qloc", iQueueLocation);
+		MapUtils.setMapBoolean(map, "seqdl", bSequentialDownload );
+		MapUtils.setMapString(map, "destdir", sDestDir);
+
+		if ( !enabledNetworks.isEmpty()){
+			
+			List<Map<String,Object>> l_networks = new ArrayList<>(enabledNetworks.size());
+			
+			for ( Map.Entry<String,Boolean> entry: enabledNetworks.entrySet()){
+			
+				Map<String,Object> m = new HashMap<>();
+				
+				l_networks.add( m );
+				
+				MapUtils.setMapString( m, "n", entry.getKey());
+				MapUtils.setMapBoolean( m, "e", entry.getValue());
+			}
+			
+			map.put( "networks", l_networks );
+		}
+		
+		MapUtils.setMapBoolean(map, "dfoc", bDeleteFileOnCancel );
+		MapUtils.setMapBoolean(map, "dfocs", bDeleteFileOnCancelSet );
+		MapUtils.setMapString(map,"filename", sFileName );
+		MapUtils.setMapString(map,"origloc", sOriginatingLocation );
+		
+		if ( torrent == null ){
+			
+			Debug.out( "derp" );;
+			
+		}else{
+			
+			try{
+				map.put( "torrent", torrent.serialiseToMap());
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		if ( !initialTags.isEmpty()){
+			
+			List<Number>	l_tags = new ArrayList<>();
+			
+			for ( Tag tag: initialTags ){
+				
+				l_tags.add( tag.getTagUID());
+			}
+			
+			map.put( "inittags", l_tags );
+		}
+		
+		return( map );
+	}
+	
+	public static TorrentOpenOptions
+	importFromMap(
+		Map<String,Object>		map )
+	{
+		return( new TorrentOpenOptions( map, true ));
+	}
+	
 	/**
 	 * clones everything except files and torrent
 	 * @param toBeCloned
