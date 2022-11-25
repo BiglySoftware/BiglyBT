@@ -5173,6 +5173,30 @@ public class OpenTorrentOptionsWindow
 									((MenuItem)e.widget).getSelection());
 						}
 					});
+			
+			
+			MenuItem save_torrent = new MenuItem( more_menu, SWT.PUSH );
+
+			Messages.setLanguageText(save_torrent, "menu.save.torrent" );
+			
+			save_torrent.addListener(SWT.Selection, (ev)->{
+				
+				String[]	names		= new String[torrentOptionsMulti.size()];
+				TOTorrent[]	torrents	= new TOTorrent[names.length];
+
+				int pos = 0;
+				
+				for ( TorrentOpenOptions to: torrentOptionsMulti ){
+					
+					names[pos]		= to.getTorrentName() + ".torrent";
+					torrents[pos]	= to.getTorrent();
+					
+					pos++;
+				}
+				
+				TorrentUtil.exportTorrents( names, torrents, more_menu.getShell());
+			});
+
 		}
 
 		private void setupStartOptions(SWTSkinObjectExpandItem so) {
