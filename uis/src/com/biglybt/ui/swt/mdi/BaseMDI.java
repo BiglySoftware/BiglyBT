@@ -619,7 +619,7 @@ public abstract class BaseMDI
 							// we need to wait for the loadCloseables to complete as there is code in MainMDISetup that runs on the 'UIAttachedComplete'
 							// callback that needs the closables to be loaded (when setting 'start tab') otherwise the order gets broken
 	
-						if ( !wait_sem.reserve(10*1000)){
+						if ( !wait_sem.reserve(20*1000)){
 	
 							Debug.out( "eh?");
 						}
