@@ -126,7 +126,7 @@ public class ViewQuickNetInfo
 
 		}
 
-		InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+		InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress( true );
 
 		InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
 

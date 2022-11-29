@@ -1057,7 +1057,7 @@ public class TransferStatsView
 
 	  NetworkAdmin na = NetworkAdmin.getSingleton();
 	  
-	  InetAddress current_ip 	= na.getDefaultPublicAddress();
+	  InetAddress current_ip 	= na.getDefaultPublicAddress( true );
 	  InetAddress current_ip6 	= na.getDefaultPublicAddressV6();
 
 	  String str = "";
