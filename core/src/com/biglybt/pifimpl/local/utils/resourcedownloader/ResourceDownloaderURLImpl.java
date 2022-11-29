@@ -71,9 +71,10 @@ ResourceDownloaderURLImpl
 	private boolean			download_initiated;
 	private long			size		 	= -2;	// -1 -> unknown
 
-	private boolean       	force_no_proxy = false;
-	private Proxy			force_proxy;
-	private boolean			auto_plugin_proxy;
+	private boolean       		force_no_proxy = false;
+	private Proxy				force_proxy;
+	private boolean				auto_plugin_proxy;
+	private Map<String,Object>	auto_plugin_proxy_options;
 
 	private final byte[] 	post_data;
 
@@ -153,8 +154,12 @@ ResourceDownloaderURLImpl
 		force_proxy = proxy;
 	}
 
-	protected void setAutoPluginProxy(){
-		auto_plugin_proxy = true;
+	protected void 
+	setAutoPluginProxy(
+		Map<String,Object>		options )
+	{
+		auto_plugin_proxy			= true;
+		auto_plugin_proxy_options	= options;
 	}
 
 	protected URL
@@ -260,7 +265,7 @@ ResourceDownloaderURLImpl
 
 				if ( auto_plugin_proxy || isAnonymous()){
 
-					plugin_proxy = AEProxyFactory.getPluginProxy( "downloading resource", url );
+					plugin_proxy = AEProxyFactory.getPluginProxy( "downloading resource", url, auto_plugin_proxy_options );
 
 					if ( plugin_proxy == null ){
 
@@ -624,7 +629,7 @@ ResourceDownloaderURLImpl
 			c.setForceProxy( force_proxy );
 		}
 		if ( auto_plugin_proxy){
-			c.setAutoPluginProxy();
+			c.setAutoPluginProxy( auto_plugin_proxy_options );
 		}
 		return( c );
 	}
@@ -791,7 +796,7 @@ redirect_label:
 
 						if ( auto_plugin_proxy || isAnonymous()){
 
-							plugin_proxy_auto = AEProxyFactory.getPluginProxy( "downloading resource", current_url );
+							plugin_proxy_auto = AEProxyFactory.getPluginProxy( "downloading resource", current_url, auto_plugin_proxy_options );
 
 							if ( plugin_proxy_auto == null ){
 

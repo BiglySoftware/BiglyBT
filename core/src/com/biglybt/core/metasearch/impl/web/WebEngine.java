@@ -724,7 +724,11 @@ WebEngine
 			try{
 				URL 			original_url	= new URL( searchURL );
 
-				PluginProxy 	plugin_proxy	= AEProxyFactory.getPluginProxy( "getting search results ", original_url );
+				Map<String,Object>	options = new HashMap<>();
+				
+				options.put( AEProxyFactory.PO_PREFERRED_PROXY_TYPE, "HTTP" );
+				
+				PluginProxy 	plugin_proxy	= AEProxyFactory.getPluginProxy( "getting search results ", original_url, options );
 
 				if ( plugin_proxy == null ){
 

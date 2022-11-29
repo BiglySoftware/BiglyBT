@@ -28,6 +28,7 @@ package com.biglybt.pif.utils.resourcedownloader;
 import java.io.File;
 import java.net.Proxy;
 import java.net.URL;
+import java.util.Map;
 
 public interface
 ResourceDownloaderFactory
@@ -53,9 +54,17 @@ ResourceDownloaderFactory
 	create(
 		URL		url );
 
+	public default ResourceDownloader
+	createWithAutoPluginProxy(
+		URL			url )
+	{
+		return( createWithAutoPluginProxy( url, null ));
+	}
+	
 	public ResourceDownloader
 	createWithAutoPluginProxy(
-		URL			url );
+		URL					url,
+		Map<String,Object>	options );
 
 	/**
 	 * Creates a basic downloader, where you can force any configured proxy

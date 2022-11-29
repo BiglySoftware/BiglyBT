@@ -457,7 +457,11 @@ SubscriptionSchedulerImpl
 
 													if ( plugin_proxy == null ){
 
-														plugin_proxy = AEProxyFactory.getPluginProxy( "Subscription result download", original_url );
+														Map<String,Object>	options = new HashMap<>();
+														
+														options.put( AEProxyFactory.PO_PREFERRED_PROXY_TYPE, "HTTP" );
+
+														plugin_proxy = AEProxyFactory.getPluginProxy( "Subscription result download", original_url, options );
 
 														if ( plugin_proxy != null ){
 

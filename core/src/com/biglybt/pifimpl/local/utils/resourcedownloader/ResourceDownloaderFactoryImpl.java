@@ -29,6 +29,7 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.logging.LogEvent;
@@ -86,11 +87,12 @@ ResourceDownloaderFactoryImpl
 	@Override
 	public ResourceDownloader
 	createWithAutoPluginProxy(
-		URL			url )
+		URL					url,
+		Map<String,Object>	options )
 	{
 		ResourceDownloader rd = create(url);
 		if ( rd instanceof ResourceDownloaderURLImpl) {
-			((ResourceDownloaderURLImpl)rd).setAutoPluginProxy();
+			((ResourceDownloaderURLImpl)rd).setAutoPluginProxy( options );
 		}
 		return rd;
 	}

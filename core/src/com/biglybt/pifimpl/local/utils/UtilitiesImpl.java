@@ -530,10 +530,15 @@ UtilitiesImpl
 
 				if ( AENetworkClassifier.categoriseAddress( feed_location.getHost()) != AENetworkClassifier.AT_PUBLIC ){
 
+					Map<String,Object>	options = new HashMap<>();
+					
+					options.put( AEProxyFactory.PO_PREFERRED_PROXY_TYPE, "HTTP" );
+
 					plugin_proxy =
 							AEProxyFactory.getPluginProxy(
 								"RSS Feed download of '" + feed_location + "'",
 								feed_location,
+								options,
 								true );
 
 					if ( plugin_proxy == null ){
