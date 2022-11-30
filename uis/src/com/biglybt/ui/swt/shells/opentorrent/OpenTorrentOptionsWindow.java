@@ -250,6 +250,8 @@ public class OpenTorrentOptionsWindow
 
 	private static final String CONFIG_FILE = "oto.config";
 	
+	private static volatile boolean initialised;
+	
 	public static void
 	initialise()
 	{
@@ -280,11 +282,35 @@ public class OpenTorrentOptionsWindow
 		}catch( Throwable e ){
 			
 			Debug.out( e );
+			
+		}finally{
+			
+			Utils.execSWTThread(()->{ initialised = true; });
 		}
 	}
 	
 	public static void
 	close()
+	{
+		saveActiveWindows();
+	}
+	
+	private static AsyncDispatcher dispatcher = new AsyncDispatcher();
+	
+	private static FrequencyLimitedDispatcher freq_disp = 
+		new FrequencyLimitedDispatcher(	AERunnable.create(()->{saveActiveWindows();}), 10*1000 );
+	
+	private static void
+	activeWindowsChanged()
+	{
+		if ( initialised ){
+			
+			dispatcher.dispatch(()->{ freq_disp.dispatch();	});
+		}
+	}
+	
+	private static void
+	saveActiveWindows()
 	{
 		try{
 			synchronized( active_windows ){
@@ -524,6 +550,8 @@ public class OpenTorrentOptionsWindow
 
 					reuse_window.swt_addTorrent( hw, torrentOptions );
 
+					activeWindowsChanged();
+					
 					return;
 				}
 			}
@@ -535,6 +563,8 @@ public class OpenTorrentOptionsWindow
 			t_man.optionsAdded( torrentOptions );
 
 			new_window.swt_addTorrent( hw, torrentOptions );
+			
+			activeWindowsChanged();
 			
 			return;
 		}
@@ -930,6 +960,8 @@ public class OpenTorrentOptionsWindow
 									t_man.optionsRemoved( inst.getOptions());
 								}
 							}
+							
+							activeWindowsChanged();
 						}
 					}
 				});
@@ -998,6 +1030,8 @@ public class OpenTorrentOptionsWindow
 				
 				t_man.optionsRemoved( torrentOptions );
 			}
+			
+			activeWindowsChanged();
 		}
 	}
 	
@@ -1696,6 +1730,8 @@ public class OpenTorrentOptionsWindow
 
 			t_man.optionsRemoved( instance.getOptions());
 		}
+		
+		activeWindowsChanged();
 
 		int index = open_instances.indexOf( instance );
 
