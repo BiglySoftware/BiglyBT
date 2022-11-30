@@ -179,69 +179,96 @@ TRTrackerAnnouncerMuxer
 
 			TOTorrentAnnounceURLSet[]	sets = torrent.getAnnounceURLGroup().getAnnounceURLSets();
 
-				// sanitise dht entries
-
 			if ( sets.length == 0 ){
 
 				sets = new TOTorrentAnnounceURLSet[]{ torrent.getAnnounceURLGroup().createAnnounceURLSet( new URL[]{ torrent.getAnnounceURL()})};
 
 			}else{
 
-				boolean	found_decentralised = false;
-				boolean	modified			= false;
+				List<TOTorrentAnnounceURLSet> s_list = new ArrayList<>();
 
+					// tidy up decentralised into its own group, remove nulls
+				
+				boolean decentralised_done = false;
+				
 				for ( int i=0;i<sets.length;i++ ){
 
 					TOTorrentAnnounceURLSet set = sets[i];
 
-					URL[] urls = set.getAnnounceURLs().clone();
+					URL[] urls = set.getAnnounceURLs().clone();	// clone as we can modify array below
 
-					for (int j=0;j<urls.length;j++){
+					boolean has_nulls = false;
+					
+					for ( int j=0; j<urls.length; j++){
 
 						URL u = urls[j];
 
-						if ( u != null && TorrentUtils.isDecentralised( u )){
-
-							if ( found_decentralised ){
-
-								modified = true;
-
-								urls[j] = null;
-
-							}else{
-
-								found_decentralised = true;
+						if ( u == null ){
+							
+							has_nulls = true;
+							
+						}else{
+							
+							if ( TorrentUtils.isDecentralised( u )){
+					
+								if ( decentralised_done ){
+									
+									urls[j] = null;
+									
+									has_nulls = true;
+									
+								}else{
+									
+									decentralised_done = true;
+									
+									if ( urls.length == 1 ){
+										
+										s_list.add( set );	// fine as it is
+										
+										set = null;	// indicated processed
+										
+									}else{
+										
+										urls[j] = null;
+									
+										has_nulls = true;
+										
+										s_list.add( torrent.getAnnounceURLGroup().createAnnounceURLSet( new URL[]{ u } ));	
+									}
+								}
 							}
 						}
 					}
-				}
-
-				if ( modified ){
-
-					List<TOTorrentAnnounceURLSet> s_list = new ArrayList<>();
-
-					for ( TOTorrentAnnounceURLSet set: sets ){
-
-						URL[] urls = set.getAnnounceURLs();
-
-						List<URL> u_list = new ArrayList<>(urls.length);
-
-						for ( URL u: urls ){
-
-							if ( u != null ){
-
-								u_list.add( u );
+					
+					if ( set != null ){
+						
+						if ( has_nulls ){
+							
+							List<URL> l_u = new ArrayList<>( urls.length );
+							
+							for ( URL u: urls ){
+								
+								if ( u != null ){
+									
+									l_u.add( u );
+								}
 							}
-						}
+							
+							int num = l_u.size();
+							
+							if ( num > 0 ){
+								
+								s_list.add( torrent.getAnnounceURLGroup().createAnnounceURLSet( l_u.toArray( new URL[num] )));
 
-						if ( u_list.size() > 0 ){
-
-							s_list.add( torrent.getAnnounceURLGroup().createAnnounceURLSet( u_list.toArray( new URL[ u_list.size() ])));
+							}
+						}else{
+							
+							s_list.add( set );
 						}
 					}
-
-					sets = s_list.toArray( new TOTorrentAnnounceURLSet[ s_list.size() ]);
 				}
+				
+				sets = s_list.toArray( new TOTorrentAnnounceURLSet[ s_list.size() ]);
 			}
 
 			List<TOTorrentAnnounceURLSet[]>	new_sets = new ArrayList<>();
