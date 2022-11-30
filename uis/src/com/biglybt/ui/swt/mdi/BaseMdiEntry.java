@@ -36,6 +36,7 @@ import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.ui.UIManagerImpl;
 import com.biglybt.plugin.net.buddy.swt.FriendsView;
 import com.biglybt.ui.UIFunctions;
@@ -1582,11 +1583,15 @@ public abstract class BaseMdiEntry
 						
 					}
 					
-					if (plugin_id != null && pi == null) {
-						try_install_plugin_id = plugin_id;
-					} else {
+					if (	plugin_id != null && 
+							!plugin_id.equals( PluginInitializer.INTERNAL_PLUGIN_ID ) && 
+							pi == null ){
 						
-						if (cla == null ) {
+						try_install_plugin_id = plugin_id;
+						
+					}else{
+						
+						if ( cla == null ){
 							
 							throw(new Exception( "Failed to load class '" +class_name + "'"));
 						}

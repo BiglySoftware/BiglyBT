@@ -27,7 +27,10 @@ import java.util.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.CopyOnWriteList;
+import com.biglybt.core.util.DataSourceResolver;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
+import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository;
 import com.biglybt.pifimpl.local.ui.menus.MenuManagerImpl;
 import com.biglybt.pifimpl.local.ui.model.BasicPluginConfigModelImpl;
@@ -77,8 +80,66 @@ UIManagerImpl
 	private static Map<BasicPluginConfigModel, BasicPluginConfigImpl> 	config_view_map = new HashMap<>();
 	private static Map<String, BasicPluginViewModel> view_model_map = new HashMap<>();
 
+	public static ExportedDataSource
+	exportDataSource(
+		BasicPluginViewModel		model )
+	{
+		return(
+			new ExportedDataSource()
+			{
+				public Class<? extends DataSourceImporter>
+				getExporter()
+				{
+					return( UIMDSImporter.class );
+				}
+				
+				public Map<String,Object>
+				getExport()
+				{
+					Map	m = new HashMap<String,Object>();
+					
+					m.put( "model_key",getBasicPluginViewModelKey(model));
+					
+					return( m );
+				}
+			});
+	}
 
-
+	private static UIMDSImporter ds_importer = new UIMDSImporter();
+	
+	public static class
+	UIMDSImporter
+		implements DataSourceImporter
+	{
+		private
+		UIMDSImporter()
+		{
+			DataSourceResolver.registerExporter( this );
+		}
+		
+		@Override
+		public Object 
+		importDataSource(
+			Map<String, Object> map)
+		{
+			String key = (String)map.get( "model_key" );
+			
+			if ( key != null ){
+				
+				Object ds = view_model_map.get( key );
+				
+				if ( ds == null ){
+					
+					Debug.out( "No model for datasource key " + key );
+				}
+				
+				return( ds );
+			}
+			
+			return( null );
+		}
+	}
+	
 	protected PluginInterface		pi;
 
 	protected TableManager			table_manager;

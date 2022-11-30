@@ -29,6 +29,8 @@ import java.io.StringWriter;
 import java.util.*;
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.DataSourceResolver.ExportableDataSource;
+import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.logging.LoggerChannelListener;
@@ -45,7 +47,7 @@ import com.biglybt.pifimpl.local.ui.components.UITextFieldImpl;
 
 public class
 BasicPluginViewModelImpl
-	implements BasicPluginViewModel
+	implements BasicPluginViewModel, ExportableDataSource
 {
 	private UIManagerImpl		ui_manager;
 
@@ -73,6 +75,13 @@ BasicPluginViewModelImpl
 		activity	= new UITextFieldImpl();
 		log			= new UITextAreaImpl();
 		progress	= new UIProgressBarImpl();
+	}
+	
+	@Override
+	public ExportedDataSource 
+	exportDataSource()
+	{
+		return( UIManagerImpl.exportDataSource( this ));
 	}
 
 	@Override
