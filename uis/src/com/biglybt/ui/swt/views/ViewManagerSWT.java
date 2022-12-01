@@ -24,6 +24,7 @@ import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.pif.UISWTViewBuilder.UISWTViewEventListenerInstantiator;
 import com.biglybt.ui.swt.pifimpl.BasicPluginViewImpl;
 import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.SWTViewListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
@@ -366,6 +367,23 @@ public class ViewManagerSWT
 				for (UISWTViewBuilderCore builder : getBuilders(forDSTypeOrViewID)) {
 					if (builder.isListenerOfClass(ofClass)) {
 						list.add(builder);
+					}
+				}
+			}
+		}
+		return list;
+	}
+	
+	public List<UISWTViewBuilderCore> 
+	getBuildersForInstantiatorUID( String uid )
+	{
+		List<UISWTViewBuilderCore> list = new ArrayList<>();
+		synchronized (mapDataSourceTypeToBuilder) {
+			for (Map<String, UISWTViewBuilderCore> mapViewIDtoBuilder : mapDataSourceTypeToBuilder.values()) {
+				for (UISWTViewBuilderCore builder : mapViewIDtoBuilder.values()) {
+					UISWTViewEventListenerInstantiator instantiator = builder.getListenerInstantiator();
+					if ( instantiator != null && instantiator.getUID().equals( uid )){
+						list.add( builder );
 					}
 				}
 			}

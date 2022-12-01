@@ -168,8 +168,29 @@ BuddyPluginView
 		
 		ui_instance.registerView(UISWTInstance.VIEW_MAIN,
 				ui_instance.createViewBuilder(
-						FriendsView.VIEW_ID).setListenerInstantiator(true,
-					(Builder, swtView) -> new FriendsView(this, plugin, ui_instance)));
+						FriendsView.VIEW_ID).setListenerInstantiator(
+							new UISWTViewBuilder.UISWTViewEventListenerInstantiator()
+							{
+								@Override
+								public boolean
+								supportsMultipleViews()
+								{
+									return( true );
+								}
+								
+								public UISWTViewEventListener 
+								createNewInstance(UISWTViewBuilder Builder, UISWTView forView) throws Exception
+								{
+									return( new FriendsView(BuddyPluginView.this, plugin, ui_instance));
+								}
+								@Override
+								public String 
+								getUID()
+								{
+									return( FriendsView.VIEW_ID );
+								}
+							}));
+					
 
 		checkBetaInit();
 	}
@@ -966,8 +987,32 @@ BuddyPluginView
 
 			// Our one listener instance can handle multiple views, so we
 			// return same listener for every instantiation
-			UISWTViewBuilder viewBuilder = ui_instance.createViewBuilder(
-					VIEWID_CHAT).setListenerInstantiator(true, (Builder, view) -> listener);
+				
+			UISWTViewBuilder viewBuilder = 
+				ui_instance.createViewBuilder(
+					VIEWID_CHAT).setListenerInstantiator(
+						new UISWTViewBuilder.UISWTViewEventListenerInstantiator()
+						{
+							@Override
+							public boolean
+							supportsMultipleViews()
+							{
+								return( true );
+							}
+							
+							@Override
+							public UISWTViewEventListener createNewInstance(UISWTViewBuilder Builder, UISWTView forView)
+									throws Exception{
+								
+								return listener;
+							}
+							
+							@Override
+							public String getUID(){
+								return( VIEWID_CHAT );
+							}
+						});
+			
 			for (Class datasourceType : datasourceTypes) {
 				ui_instance.registerView(datasourceType, viewBuilder);
 			}

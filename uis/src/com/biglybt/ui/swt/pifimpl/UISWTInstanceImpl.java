@@ -947,8 +947,36 @@ UISWTInstanceImpl
 		{
 			PluginInterface pi = pi_ref.get();
 
-			UISWTViewBuilderCore builder = new UISWTViewBuilderCore(sViewID,
-					pi).setListenerInstantiator(true, (Builder, view) -> l);
+			UISWTViewBuilderCore builder = 
+					new UISWTViewBuilderCore(
+						sViewID,
+						pi).setListenerInstantiator(
+							new UISWTViewBuilder.UISWTViewEventListenerInstantiator()
+							{
+								@Override
+								public boolean
+								supportsMultipleViews()
+								{
+									return( true );
+								}
+								
+								@Override
+								public String 
+								getUID()
+								{
+									return( sParentViewID + "::" + sViewID );
+								}
+								
+								@Override
+								public UISWTViewEventListener
+								createNewInstance(
+									UISWTViewBuilder Builder, UISWTView forView) 
+										throws Exception
+								{
+									return( l );
+								}
+							});
+			
 			ViewManagerSWT.getInstance().registerView(sParentViewID, builder);
 		}
 

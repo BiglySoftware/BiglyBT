@@ -18,6 +18,7 @@
 
 package com.biglybt.ui.swt.pif;
 
+import com.biglybt.ui.swt.pif.UISWTViewBuilder.UISWTViewEventListenerInstantiator;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 
 /**
@@ -63,9 +64,11 @@ public interface UISWTViewBuilder
 	 *    
 	 * @since BiglyBT 2.1.0.1
 	 */
-	UISWTViewBuilder setListenerInstantiator(boolean canHandleMultipleViews,
-			UISWTViewEventListenerInstantiator listenerInstantiator);
+	UISWTViewBuilder setListenerInstantiator( UISWTViewEventListenerInstantiator listenerInstantiator);
 
+	public UISWTViewEventListenerInstantiator
+	getListenerInstantiator();
+	
 	/**
 	 * Place this entry under the parentEntryID, if UI supports it.<br/>
 	 * Sidebar can have multiple levels of views, but Tabbed MDI places all views at the same level.
@@ -81,6 +84,12 @@ public interface UISWTViewBuilder
 	 */
 	interface UISWTViewEventListenerInstantiator
 	{
+		public String
+		getUID();
+		
+		public boolean
+		supportsMultipleViews();
+		
 		/**
 		 * A view has been created and is requesting a {@link UISWTViewEventListener} 
 		 * to send {@link UISWTViewEvent}s to.
@@ -90,5 +99,6 @@ public interface UISWTViewBuilder
 		UISWTViewEventListener createNewInstance(UISWTViewBuilder Builder,
 			UISWTView forView)
 				throws Exception;
+		
 	}
 }

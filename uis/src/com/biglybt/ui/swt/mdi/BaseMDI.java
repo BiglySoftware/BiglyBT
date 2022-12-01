@@ -253,9 +253,37 @@ public abstract class BaseMDI
 	                                                   UISWTViewEventListener l, String id, boolean closeable, Object datasource, String preferedAfterID) {
 		// The only thing that uses the method is EMP, which uses a different id based on language
 		
-		UISWTViewBuilderCore builder = new UISWTViewBuilderCore(id,
-				null).setInitialDatasource(datasource).setListenerInstantiator(false,
-			(Builder, view) -> l).setParentEntryID(parentID);
+		UISWTViewBuilderCore builder = 
+			new UISWTViewBuilderCore(
+				id,
+				null).setInitialDatasource(datasource).setListenerInstantiator(
+					new UISWTViewBuilder.UISWTViewEventListenerInstantiator()
+					{
+						@Override
+						public boolean
+						supportsMultipleViews()
+						{
+							return( false );
+						}
+						
+						@Override
+						public UISWTViewEventListener 
+						createNewInstance(
+							UISWTViewBuilder Builder, 
+							UISWTView forView)
+								throws Exception
+						{
+							return( l );
+						}
+						
+						@Override
+						public String 
+						getUID()
+						{
+							return( parentID + "::" + id );
+						}
+					}).setParentEntryID(parentID);
+		
 		return createEntry(builder, closeable);
 	}
 

@@ -51,8 +51,10 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.pif.UISWTViewBuilder.UISWTViewEventListenerInstantiator;
 import com.biglybt.ui.swt.pifimpl.*;
 import com.biglybt.ui.swt.skin.*;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 import com.biglybt.util.MapUtils;
@@ -1279,13 +1281,23 @@ public abstract class BaseMdiEntry
 		result.put( "control_type", getControlType());
 
 		UISWTViewBuilderCore builder = getEventListenerBuilder();
-		if (builder != null) {
+		
+		if ( builder != null){
+			
 			Map map = new HashMap();
+			
 			Class<? extends UISWTViewEventListener> cla = builder.getListenerClass();
+			
 			if (cla != null) {
 				map.put("name", cla.getName());
 			}
+			
+			UISWTViewEventListenerInstantiator instantiator = builder.getListenerInstantiator();
 
+			if ( instantiator != null ){			
+				map.put( "instantiator", instantiator.getUID());
+			}
+			
 			PluginInterface pi = builder.getPluginInterface();
 			if (pi != null) {
 				map.put( "plugin_id",  pi.getPluginID() );
@@ -1298,61 +1310,6 @@ public abstract class BaseMdiEntry
 
 		UISWTViewEventListener listener = getEventListener();
 
-
-		if ( listener instanceof UISWTViewEventListenerEx ){
-			
-			com.biglybt.ui.swt.pif.UISWTViewEventListenerEx.CloneConstructor cc = ((UISWTViewEventListenerEx)listener).getCloneConstructor();
-		
-			PluginInterface pi = cc.getPluginInterface();
-						
-			Map<String,Object>	map = new HashMap<>();
-			
-			map.put( "plugin_id",  pi.getPluginID() );
-			
-			map.put( "plugin_name", pi.getPluginName());
-			
-			map.put( "ipc_method", cc.getIPCMethod());
-			
-			List<Object>	params = cc.getIPCParameters();
-			
-			if ( params != null ){
-				
-				List	p_types	= new ArrayList<>();
-				List	p_vals	= new ArrayList<>();
-				
-				map.put( "p_types", p_types );
-				map.put( "p_vals", p_vals );
-				
-				for ( Object p: params ) {
-					
-					if ( p instanceof Boolean ) {
-						
-						p_types.add( "bool" );
-						
-						p_vals.add( new Long(((Boolean)p)?1:0));
-						
-					}else if ( p instanceof Long ) {
-
-						p_types.add( "long" );
-
-						p_vals.add( p );
-						
-					}else if ( p instanceof String ) {
-
-						p_types.add( "string" );
-
-						p_vals.add( p );
-	
-					}else {
-						
-						Debug.out( "Unsupported param type: " + p );
-					}
-				}
-			}
-			
-			result.put( "event_listener", map );
-		}
-		
 		return( result );
 	}
 
@@ -1489,18 +1446,25 @@ public abstract class BaseMdiEntry
 				String class_name = (String)el_map.get( "name" );
 
 				String try_install_plugin_id = null;
+				
 				PluginManager pluginManager = CoreFactory.getSingleton().getPluginManager();
+				
+					// Legacy didn't have plugin_id
+
+				String plugin_id = (String)el_map.get( "plugin_id" );
+				
+				PluginInterface pi = plugin_id==null?null:pluginManager.getPluginInterfaceByID( plugin_id );
+
 				if ( class_name != null ){
 					
-					// Legacy didn't have plugin_id
-					String plugin_id = (String)el_map.get( "plugin_id" );
-					PluginInterface pi = pluginManager.getPluginInterfaceByID( plugin_id );
-
 					ClassLoader cl;
 					
 					if ( pi != null ){
+						
 						cl = pi.getPluginClassLoader();
+						
 					}else{
+						
 						cl = BaseMdiEntry.class.getClassLoader();
 					}
 					
@@ -1598,73 +1562,44 @@ public abstract class BaseMdiEntry
 						
 						builder = new UISWTViewBuilderCore( id, pi, cla ).setInitialDatasource(data_source);
 					}
-
 				}else{
-					
-					String plugin_id = (String)el_map.get( "plugin_id" );
-					
-					PluginInterface pi = pluginManager.getPluginInterfaceByID( plugin_id );
-					
-					if ( pi != null ){
-						
-						String ipc_method = (String)el_map.get( "ipc_method" );
-						
-						List	p_types = (List)el_map.get( "p_types" );
-						List	p_vals	= (List)el_map.get( "p_vals" );
-						
-						List<Object>	args = new ArrayList<>();
+					String instantiator_uid = (String)el_map.get( "instantiator" );
 
-						if ( p_types != null && !p_types.isEmpty()){
+					if ( instantiator_uid != null ){
+						
+						List<UISWTViewBuilderCore> builders = ViewManagerSWT.getInstance().getBuildersForInstantiatorUID( instantiator_uid );
+						
+						if ( !builders.isEmpty()){
 							
-							List<Class> 	types = new ArrayList<>();
+							builder = builders.get(0);
 							
-							for ( int i=0;i<p_types.size();i++) {
+						}else{
+							
+							if (	plugin_id != null && 
+									!plugin_id.equals( PluginInitializer.INTERNAL_PLUGIN_ID ) && 
+									pi == null ){
 								
-								String type = (String)p_types.get(i);
-								Object val	= p_vals.get(i);
+								try_install_plugin_id = plugin_id;
 								
-								if ( type.equals( "bool" )) {
-									
-									types.add( boolean.class );
-									
-									args.add(((Long)val)!=0);
-									
-								}else if ( type.equals( "long" )) {
-									
-									types.add( long.class );
-									
-									args.add((Long)val );
-									
-								}else if ( type.equals( "string" )) {
-									
-									types.add( String.class );
-									
-									args.add((String)val );
-									
-								}else {
-									
-									Debug.out( "Unsupported type: " + type );
-								}
+							}else{
+								
+								throw(new Exception( "No builders found for '" + instantiator_uid + "'" ));
 							}
 						}
-
-						builder = new UISWTViewBuilderCore(id, pi).setListenerInstantiator(
-								true,
-							(Builder, view) -> (UISWTViewEventListener) pi.getIPC().invoke(ipc_method,
-										args.toArray(new Object[0])));
-						
-					}else{
-						try_install_plugin_id = plugin_id;
 					}
 				}
 
-				if (try_install_plugin_id != null) {
-					tryInstallPlugin(try_install_plugin_id, MapUtils.getMapString(el_map,
-							"plugin_name", try_install_plugin_id), callback);
+				if ( try_install_plugin_id != null ){
+					
+					tryInstallPlugin(
+						try_install_plugin_id, 
+						MapUtils.getMapString(el_map, "plugin_name", try_install_plugin_id), 
+						callback );
 				}
 			}catch( Throwable e ) {
 				
 				Debug.out( e );
+				
 				return null;
 			}
 		}

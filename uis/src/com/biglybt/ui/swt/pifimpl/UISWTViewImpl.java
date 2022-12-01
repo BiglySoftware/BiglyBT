@@ -1052,12 +1052,14 @@ public class UISWTViewImpl
 	}
 
 	@Override
-	public boolean canBuildStandAlone() {
+	public boolean 
+	canBuildStandAlone() 
+	{
 		if (eventListenerBuilder != null
 				&& eventListenerBuilder.isListenerCloneable()) {
 			return true;
 		}
 
-		return getEventListener() instanceof UISWTViewEventListenerEx;
+		return( false );
 	}
 }

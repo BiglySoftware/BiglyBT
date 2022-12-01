@@ -2750,13 +2750,39 @@ DeviceManagerUI
 
 				// Hack so first view gets pre-initialized device object, and new
 				// views (pop-out) get a newly built instance.
+				
 				UISWTViewBuilderCore builder = new UISWTViewBuilderCore(key, null,
 						view).setParentEntryID(parent).setInitialDatasource(
 								new Object[] {
 									parent,
 									device
-								}).setListenerInstantiator(true,
-					(Builder, swtView) -> new deviceView(parent, device));
+								}).setListenerInstantiator(
+									new UISWTViewBuilder.UISWTViewEventListenerInstantiator()
+									{
+										@Override
+										public boolean
+										supportsMultipleViews()
+										{
+											return( true );
+										}
+										
+										@Override
+										public UISWTViewEventListener 
+										createNewInstance(
+											UISWTViewBuilder Builder,
+											UISWTView forView) 
+										
+													throws Exception
+										{
+											return( new deviceView(parent, device));
+										}
+										
+										@Override
+										public String getUID(){
+											return( "DeviceManager::DeviceView" );
+										}
+									});
+				
 				entry = mdi.createEntry(builder, false);
 
 				entry.setExpanded(true);
@@ -4198,10 +4224,31 @@ DeviceManagerUI
 
 		// Pass already created eventListener to builder, because this class needs
 		// a reference to fiddle with.  Might cause problems with cloning.
+		
 		UISWTViewBuilderCore builder = new UISWTViewBuilderCore(key,
-				null).setInitialDatasource(device_type).setListenerInstantiator(false,
-						(Builder, view) -> eventListener).setParentEntryID(
-								SideBar.SIDEBAR_HEADER_DEVICES);
+				null).setInitialDatasource(device_type).setListenerInstantiator(
+					new UISWTViewBuilder.UISWTViewEventListenerInstantiator()
+					{
+						@Override
+						public boolean
+						supportsMultipleViews()
+						{
+							return( false );
+						}
+						
+						@Override
+						public UISWTViewEventListener 
+						createNewInstance(UISWTViewBuilder Builder, UISWTView forView)
+								throws Exception
+						{
+							return( eventListener);
+						}
+						@Override
+						public String getUID(){
+							return( "DeviceManager::CategoryView" );
+						}
+					}).setParentEntryID( SideBar.SIDEBAR_HEADER_DEVICES);
+					
 		MdiEntry entry = mdi.createEntry(builder, false);
 
 		addDefaultDropListener( entry );
