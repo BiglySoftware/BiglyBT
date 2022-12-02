@@ -86,12 +86,12 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.pif.UISWTViewMultiInstance.ViewInstance;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.DragDropUtils;
-import com.biglybt.ui.swt.views.PeersGeneralView;
+import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.SkinView;
 import com.biglybt.ui.swt.views.skin.SkinViewManager;
 import com.biglybt.ui.swt.views.skin.SkinViewManager.SkinViewManagerListener;
@@ -219,6 +219,8 @@ DeviceManagerUI
 	private UIExitUtilsSWT.canCloseListener canCloseListener;
 	private BasicPluginConfigModel configModel;
 
+	private Map<String,String>	builder_map = new HashMap<>();
+	
 	public
 	DeviceManagerUI(
 		Core core )
@@ -2719,7 +2721,12 @@ DeviceManagerUI
 		}
 	}
 
-	private void setupEntry(deviceItem new_di, final Device device, String parent) {
+	private void 
+	setupEntry(
+		deviceItem new_di, 
+		final Device device, 
+		String parent) 
+	{
 		synchronized( DeviceManagerUI.this ){
 
 			if ( new_di.isDestroyed()){
@@ -2727,11 +2734,11 @@ DeviceManagerUI
 				return;
 			}
 
-			deviceView view = new deviceView( parent, device );
+			DeviceView view = new DeviceView( parent, device );
 
 			new_di.setView( view );
 
-			String key = parent + "/" + device.getID() + ":" + nextSidebarID();
+			String mdi_key = parent + "/" + device.getID() + ":" + nextSidebarID();
 
 			final MdiEntry	entry;
 
@@ -2742,7 +2749,7 @@ DeviceManagerUI
 				entry =
 						mdi.createEntryFromSkinRef(
 								parent,
-								key, "devicerendererview",
+								mdi_key, "devicerendererview",
 								device.getName(),
 								view, null, false, null);
 
@@ -2751,12 +2758,10 @@ DeviceManagerUI
 				// Hack so first view gets pre-initialized device object, and new
 				// views (pop-out) get a newly built instance.
 				
-				UISWTViewBuilderCore builder = new UISWTViewBuilderCore(key, null,
-						view).setParentEntryID(parent).setInitialDatasource(
-								new Object[] {
-									parent,
-									device
-								}).setListenerInstantiator(
+				String builder_key = "DeviceManager::DeviceView::" + device.getID();
+				
+				UISWTViewBuilderCore builder = 
+					new UISWTViewBuilderCore(mdi_key, null, view).setParentEntryID(parent).setListenerInstantiator(
 									new UISWTViewBuilder.UISWTViewEventListenerInstantiator()
 									{
 										@Override
@@ -2772,21 +2777,41 @@ DeviceManagerUI
 											UISWTViewBuilder Builder,
 											UISWTView forView) 
 										
-													throws Exception
+											throws Exception
 										{
-											return( new deviceView(parent, device));
+											return( view );
 										}
 										
 										@Override
-										public String getUID(){
-											return( "DeviceManager::DeviceView" );
+										public String 
+										getUID(){
+											return( builder_key );
 										}
 									});
 				
+				ViewManagerSWT vi = ViewManagerSWT.getInstance();
+				
+					// this needs to be reworked as we get a builder per item rather than using
+					// a generic one...
+					// the builder has to use the mdi_key as other code relies on this :(
+				
+				String old_mdi_key;
+				
+				synchronized( builder_map ){
+					
+					old_mdi_key = builder_map.put( builder_key, mdi_key );
+				}
+				
+				if ( old_mdi_key != null ){
+					
+					vi.unregisterView( null, old_mdi_key);
+				}
+
+				vi.registerView( null, builder);
+								
 				entry = mdi.createEntry(builder, false);
 
 				entry.setExpanded(true);
-
 			}
 
 			entry.setDatasource( device );
@@ -2829,7 +2854,7 @@ DeviceManagerUI
 
 				need_sep = true;
 
-				MenuItem explore_menu_item = menu_manager.addMenuItem("sidebar." + key, "v3.menu.device.exploreTranscodes");
+				MenuItem explore_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "v3.menu.device.exploreTranscodes");
 				explore_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 				explore_menu_item.addListener(new MenuItemListener() {
@@ -2848,7 +2873,7 @@ DeviceManagerUI
 				final DeviceMediaRenderer renderer = (DeviceMediaRenderer) device;
 
 				if ( renderer.canFilterFilesView()){
-					MenuItem filterfiles_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.xcode.only.show");
+					MenuItem filterfiles_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.xcode.only.show");
 					filterfiles_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					filterfiles_menu_item.setStyle(MenuItem.STYLE_CHECK);
 
@@ -2869,7 +2894,7 @@ DeviceManagerUI
 				// show cats
 
 				if ( renderer.canShowCategories()){
-					MenuItem showcat_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.xcode.show.cat");
+					MenuItem showcat_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.xcode.show.cat");
 					showcat_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					showcat_menu_item.setStyle(MenuItem.STYLE_CHECK);
 
@@ -2890,7 +2915,7 @@ DeviceManagerUI
 				// cache files
 
 				if (!DISABLED_TRANSCODING) {
-					MenuItem alwayscache_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.always.cache");
+					MenuItem alwayscache_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.always.cache");
 					alwayscache_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					alwayscache_menu_item.setStyle(MenuItem.STYLE_CHECK);
 
@@ -2912,7 +2937,7 @@ DeviceManagerUI
 
 			if ( need_sep ){
 
-				MenuItem menu_item = menu_manager.addMenuItem("sidebar." + key, "1");
+				MenuItem menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "1");
 				menu_item.setStyle( MenuItem.STYLE_SEPARATOR );
 				menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 			}
@@ -2927,7 +2952,7 @@ DeviceManagerUI
 
 					need_sep = true;
 
-					MenuItem autocopy_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.xcode.autoCopy");
+					MenuItem autocopy_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.xcode.autoCopy");
 					autocopy_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					autocopy_menu_item.setStyle(MenuItem.STYLE_CHECK);
 
@@ -2944,7 +2969,7 @@ DeviceManagerUI
 						}
 					});
 
-					final MenuItem mancopy_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.xcode.mancopy");
+					final MenuItem mancopy_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.xcode.mancopy");
 					mancopy_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					mancopy_menu_item.setStyle(MenuItem.STYLE_PUSH);
 
@@ -2987,7 +3012,7 @@ DeviceManagerUI
 								}
 							});
 
-					MenuItem setcopyto_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.xcode.setcopyto");
+					MenuItem setcopyto_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.xcode.setcopyto");
 					setcopyto_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					setcopyto_menu_item.setStyle(MenuItem.STYLE_PUSH);
 
@@ -3027,7 +3052,7 @@ DeviceManagerUI
 
 					need_sep = true;
 
-					MenuItem autocopy_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.xcode.autoCopy.device");
+					MenuItem autocopy_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.xcode.autoCopy.device");
 					autocopy_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					autocopy_menu_item.setStyle(MenuItem.STYLE_CHECK);
 
@@ -3044,7 +3069,7 @@ DeviceManagerUI
 						}
 					});
 
-					final MenuItem mancopy_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.xcode.mancopy");
+					final MenuItem mancopy_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.xcode.mancopy");
 					mancopy_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					mancopy_menu_item.setStyle(MenuItem.STYLE_PUSH);
 
@@ -3088,7 +3113,7 @@ DeviceManagerUI
 
 					need_sep = true;
 
-					MenuItem autostart_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.xcode.autoStart");
+					MenuItem autostart_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.xcode.autoStart");
 					autostart_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					autostart_menu_item.setStyle(MenuItem.STYLE_CHECK);
 
@@ -3111,7 +3136,7 @@ DeviceManagerUI
 					need_sep = true;
 
 					final MenuItem menu_associate = menu_manager.addMenuItem(
-							"sidebar." + key, "devices.associate");
+							"sidebar." + mdi_key, "devices.associate");
 					menu_associate.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 					menu_associate.setStyle(MenuItem.STYLE_MENU);
@@ -3182,7 +3207,7 @@ DeviceManagerUI
 					need_sep = true;
 	
 					final MenuItem menu_ra = menu_manager.addMenuItem(
-							"sidebar." + key, "menu.add.file");
+							"sidebar." + mdi_key, "menu.add.file");
 					menu_ra.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 	
 					menu_ra.addListener(
@@ -3242,7 +3267,7 @@ DeviceManagerUI
 					need_sep = true;
 
 					final MenuItem menu_ra = menu_manager.addMenuItem(
-							"sidebar." + key, "devices.restrict_access");
+							"sidebar." + mdi_key, "devices.restrict_access");
 					menu_ra.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 					menu_ra.addListener(
@@ -3311,7 +3336,7 @@ DeviceManagerUI
 					need_sep = true;
 
 					MenuItem menu_default_profile = menu_manager.addMenuItem(
-							"sidebar." + key, "v3.menu.device.defaultprofile");
+							"sidebar." + mdi_key, "v3.menu.device.defaultprofile");
 					menu_default_profile.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					menu_default_profile.setStyle(MenuItem.STYLE_MENU);
 
@@ -3404,7 +3429,7 @@ DeviceManagerUI
 
 					need_sep = true;
 
-					final MenuItem rss_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.xcode.rsspub");
+					final MenuItem rss_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.xcode.rsspub");
 					rss_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					rss_menu_item.setStyle(MenuItem.STYLE_CHECK);
 
@@ -3433,7 +3458,7 @@ DeviceManagerUI
 
 					need_sep = true;
 
-					final MenuItem aswt_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.xcode.tagshare");
+					final MenuItem aswt_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "devices.xcode.tagshare");
 					aswt_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 					aswt_menu_item.setStyle(MenuItem.STYLE_MENU);
 
@@ -3456,7 +3481,7 @@ DeviceManagerUI
 
 				need_sep = true;
 
-				MenuItem browse_menu_item = menu_manager.addMenuItem("sidebar." + key, "device.browse");
+				MenuItem browse_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "device.browse");
 				browse_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 				browse_menu_item.setStyle( MenuItem.STYLE_MENU );
@@ -3467,14 +3492,14 @@ DeviceManagerUI
 
 			if ( need_sep ){
 
-				MenuItem menu_item = menu_manager.addMenuItem("sidebar." + key, "s2");
+				MenuItem menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "s2");
 				menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 				menu_item.setStyle( MenuItem.STYLE_SEPARATOR );
 			}
 
 				// rename
 
-			MenuItem rename_menu_item = menu_manager.addMenuItem("sidebar." + key, "MyTorrentsView.menu.rename" );
+			MenuItem rename_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "MyTorrentsView.menu.rename" );
 			rename_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 			rename_menu_item.addListener( rename_listener );
@@ -3483,7 +3508,7 @@ DeviceManagerUI
 
 			if ( device.isExportable()){
 
-				MenuItem export_item = menu_manager.addMenuItem("sidebar." + key,"Subscription.menu.export");
+				MenuItem export_item = menu_manager.addMenuItem("sidebar." + mdi_key,"Subscription.menu.export");
 				export_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 				export_item.addListener( export_listener );
@@ -3491,14 +3516,14 @@ DeviceManagerUI
 
 				// hide
 
-			MenuItem hide_menu_item = menu_manager.addMenuItem("sidebar." + key, "device.hide");
+			MenuItem hide_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "device.hide");
 			hide_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 			hide_menu_item.addListener( hide_listener );
 
 				// tag
 
-			MenuItem tag_menu_item = menu_manager.addMenuItem("sidebar." + key, "device.tag");
+			MenuItem tag_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "device.tag");
 			tag_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 			tag_menu_item.setStyle( MenuItem.STYLE_CHECK );
@@ -3509,7 +3534,7 @@ DeviceManagerUI
 
 				// remove
 
-			MenuItem remove_menu_item = menu_manager.addMenuItem("sidebar." + key, "MySharesView.menu.remove");
+			MenuItem remove_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "MySharesView.menu.remove");
 			remove_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 			remove_menu_item.addFillListener( will_remove_listener );
@@ -3518,7 +3543,7 @@ DeviceManagerUI
 
 				// sep
 
-			MenuItem menu_item_sep = menu_manager.addMenuItem("sidebar." + key, "s3");
+			MenuItem menu_item_sep = menu_manager.addMenuItem("sidebar." + mdi_key, "s3");
 			menu_item_sep.setStyle( MenuItem.STYLE_SEPARATOR );
 			menu_item_sep.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
@@ -3526,7 +3551,7 @@ DeviceManagerUI
 
 			if ( wiki_url != null ){
 
-				MenuItem wiki_menu_item = menu_manager.addMenuItem("sidebar." + key, "device.wiki");
+				MenuItem wiki_menu_item = menu_manager.addMenuItem("sidebar." + mdi_key, "device.wiki");
 				wiki_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 				wiki_menu_item.addListener(
@@ -3545,7 +3570,7 @@ DeviceManagerUI
 
 			// props
 
-			MenuItem menu_item = menu_manager.addMenuItem("sidebar." + key,"Subscription.menu.properties");
+			MenuItem menu_item = menu_manager.addMenuItem("sidebar." + mdi_key,"Subscription.menu.properties");
 			menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
 			menu_item.addListener( properties_listener );
@@ -4209,7 +4234,7 @@ DeviceManagerUI
 		String		category_title,
 		String		category_image_id )
 	{
-		String key = "Device_" + category_title + ":" + nextSidebarID();
+		String mdi_key = "Device_" + category_title + ":" + nextSidebarID();
 
 		categoryView eventListener;
 
@@ -4225,7 +4250,9 @@ DeviceManagerUI
 		// Pass already created eventListener to builder, because this class needs
 		// a reference to fiddle with.  Might cause problems with cloning.
 		
-		UISWTViewBuilderCore builder = new UISWTViewBuilderCore(key,
+		String builder_key = "DeviceManager::CategoryView::" + device_type + "::"  + category_title;
+		
+		UISWTViewBuilderCore builder = new UISWTViewBuilderCore(mdi_key,
 				null).setInitialDatasource(device_type).setListenerInstantiator(
 					new UISWTViewBuilder.UISWTViewEventListenerInstantiator()
 					{
@@ -4233,7 +4260,7 @@ DeviceManagerUI
 						public boolean
 						supportsMultipleViews()
 						{
-							return( false );
+							return( true );
 						}
 						
 						@Override
@@ -4245,17 +4272,36 @@ DeviceManagerUI
 						}
 						@Override
 						public String getUID(){
-							return( "DeviceManager::CategoryView" );
+							return( builder_key );
 						}
 					}).setParentEntryID( SideBar.SIDEBAR_HEADER_DEVICES);
-					
+			
+		ViewManagerSWT vi = ViewManagerSWT.getInstance();
+		
+			// this needs to be reworked as we get a builder per item rather than using
+			// a generic one...
+	
+		String old_mdi_key;
+		
+		synchronized( builder_map ){
+			
+			old_mdi_key = builder_map.put( builder_key, mdi_key );
+		}
+		
+		if ( old_mdi_key != null ){
+				
+			vi.unregisterView( null, old_mdi_key);
+		}
+		
+		vi.registerView( null, builder);
+	
 		MdiEntry entry = mdi.createEntry(builder, false);
 
 		addDefaultDropListener( entry );
 
 		entry.setImageLeftID( category_image_id );
 
-		eventListener.setDetails( entry, key );
+		eventListener.setDetails( entry, mdi_key );
 
 		return( eventListener );
 	}
@@ -4336,7 +4382,8 @@ DeviceManagerUI
 
 	protected abstract static class
 	categoryView
-		implements 	ViewTitleInfo, UISWTViewEventListener
+		extends UISWTViewMultiInstance
+		implements 	ViewTitleInfo
 	{
 		private DeviceManagerUI	ui;
 		private int				device_type;
@@ -4349,8 +4396,7 @@ DeviceManagerUI
 		private MdiEntryVitalityImage info;
 
 		private int				last_indicator;
-		private MdiEntry mdiEntry;
-		private UISWTView swtView;
+		private MdiEntry 		mdiEntry;
 
 		protected
 		categoryView(
@@ -4401,7 +4447,21 @@ DeviceManagerUI
 		protected String
 		getTitle()
 		{
-			return( MessageText.getString( title ));
+			return( getTitle( false ));
+		}
+		
+		protected String
+		getTitle(
+			boolean raw )
+		{
+			if ( raw ){
+				
+				return( title );
+				
+			}else{
+				
+				return( MessageText.getString( title ));
+			}
 		}
 
 		@Override
@@ -4509,31 +4569,19 @@ DeviceManagerUI
 			return null;
 		}
 
-		protected void
+		public void
 		destroy()
 		{
+			super.destroy();
+			
 			mdiEntry.closeView();
 		}
-
-		@Override
-		public boolean eventOccurred(UISWTViewEvent event) {
-	    switch (event.getType()) {
-	      case UISWTViewEvent.TYPE_CREATE:
-	      	swtView = (UISWTView)event.getData();
-	      	swtView.setTitle(title);
-	        break;
-	    }
-
-	    return true;
-	  }
 	}
 
 	protected static class
 	categoryViewGeneric
 		extends 	categoryView
 	{
-		private Composite		composite;
-
 		protected
 		categoryViewGeneric(
 			DeviceManagerUI		_ui,
@@ -4542,7 +4590,37 @@ DeviceManagerUI
 		{
 			super( _ui, _device_type, _title );
 		}
+		
+		@Override
+		public ViewInstance 
+		createInstance(
+			UISWTView view )
+		{
+			return( new categoryViewGenericInstance( this, view ));
+		}
+	}
+	
+	protected static class
+	categoryViewGenericInstance
+		implements ViewInstance
+	{
+		private final categoryViewGeneric 	parent;
+		private final UISWTView				view;
+		
+		
+		private Composite		composite;
 
+		categoryViewGenericInstance(
+			categoryViewGeneric		_parent,
+			UISWTView				_view )
+		{
+			parent	= _parent;
+			view	= _view;
+			
+			view.setTitle(parent.getTitle( true ));
+		}
+		
+		@Override
 		public void
 		initialize(
 			Composite parent_composite )
@@ -4567,112 +4645,210 @@ DeviceManagerUI
 
 			Label label = new Label( composite, SWT.NULL );
 
-			label.setText( "Nothing to show for " + getTitle());
+			label.setText( "Nothing to show for " + parent.getTitle());
 
 			label.setLayoutData( data );
 		}
-
-		public Composite
-		getComposite()
-		{
-			return( composite );
-		}
-
+		
 		@Override
-		public boolean eventOccurred(UISWTViewEvent event) {
-	    switch (event.getType()) {
-	      case UISWTViewEvent.TYPE_CREATE:
-	      	//swtView = (UISWTView)event.getData();
-	        break;
-
-	      case UISWTViewEvent.TYPE_DESTROY:
-	        break;
-
-	      case UISWTViewEvent.TYPE_INITIALIZE:
-	        initialize((Composite)event.getData());
-	        break;
-
-	      case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
-	      	Messages.updateLanguageForControl(getComposite());
-	        break;
-
-	      case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
-	        break;
-
-	      case UISWTViewEvent.TYPE_FOCUSGAINED:
-	      	break;
-
-	      case UISWTViewEvent.TYPE_REFRESH:
-	        break;
-	    }
-
-	    return true;
-	  }
+		public void
+		updateLanguage()
+		{
+			Messages.updateLanguageForControl( composite );
+		}
 	}
 
 	public static class
-	deviceView
-		implements 	ViewTitleInfo, TranscodeTargetListener, UISWTViewCoreEventListener
+	DeviceView
+		extends UISWTViewMultiInstance
+		implements ViewTitleInfo
 	{
-		private String			parent_key;
-		private Device			device;
+		private final String			parent_key;
+		private final Device			device;
+
+		private int 		last_indicator;
+
+		public 
+		DeviceView(			
+			String			_parent_key,
+			Device			_device )
+		{
+			parent_key 	= _parent_key;
+			device		= _device;
+		}
+		
+		public String
+		getTitle()
+		{
+			return( device.getName());
+		}
+		
+		@Override
+		public Object
+		getTitleInfoProperty(
+			int propertyID )
+		{
+			if ( propertyID == TITLE_TEXT ){
+
+				return( getTitle());
+
+			} else if (propertyID == TITLE_IMAGEID) {
+				String imageID = null;
+				
+				String[] ids = getDeviceImageIDs( device );
+
+				if ( ids.length > 0 ){
+
+					imageID = "image.sidebar.device." + ids[0] + ".small";
+
+					if (ids[0].startsWith("http")) {
+						
+						boolean found = false;
+
+						for ( String id: ids ){
+													
+							Image[] existing = ImageLoader.getInstance().imageAdded_NoSWT(id);
+								
+							if ( existing != null ){
+								
+								found = true;
+								
+								imageID = id;
+							
+								if ( existing.length > 0 ){
+									
+									break;
+								}
+							}
+						}
+						
+						if ( !found ){
+							
+	  						Utils.execSWTThreadLater(0, new AERunnable() {
+	  							@Override
+								  public void runSupport() {
+	  								for ( String id: ids ){
+	  									ImageLoader.getInstance().getUrlImage(id, new ImageDownloaderListener() {
+	  										@Override
+	  										public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
+	  											ViewTitleInfoManager.refreshTitleInfo( DeviceView.this );
+	  										}	
+	  									});
+	  								}
+	  							}
+	  						});
+						}
+					}
+				}
+
+				return imageID;
+
+			}else if ( propertyID == TITLE_INDICATOR_TEXT ){
+
+				if ( device instanceof DeviceMediaRenderer ){
+
+					if ( SHOW_RENDERER_VITALITY ){
+
+						DeviceMediaRenderer	renderer = (DeviceMediaRenderer)device;
+
+
+						last_indicator = renderer.getCopyToDevicePending() + renderer.getCopyToFolderPending();
+					}
+				}
+
+				if ( last_indicator > 0 ){
+
+					return( String.valueOf( last_indicator ));
+				}
+			}else if ( propertyID == TITLE_INDICATOR_COLOR ){
+				/*
+				if ( last_indicator > 0 ){
+
+					if ( SHOW_VITALITY ){
+
+						return( to_copy_indicator_colors );
+					}
+				}
+				*/
+			}else if ( propertyID == TITLE_ACTIVE_STATE ){
+
+				if ( device.isLivenessDetectable()){
+
+					return( new Long( device.isAlive()?1:2 ));
+				}
+			}else if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP){
+
+				return( device.getStatus());
+			}
+
+			return null;
+		}
+
+		protected void
+		refreshTitles()
+		{
+			ViewTitleInfoManager.refreshTitleInfo( this );
+
+			String	key = parent_key;
+
+			while( key != null ){
+
+				MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+
+				if ( mdi == null ){
+
+					break;
+
+				}else{
+
+					MdiEntry parent = mdi.getEntry( key );
+
+					if ( parent != null ){
+
+						ViewTitleInfoManager.refreshTitleInfo(parent.getViewTitleInfo());
+
+						key = parent.getParentID();
+					} else {
+						key = null;
+					}
+				}
+			}
+		}
+		
+		@Override
+		public ViewInstance 
+		createInstance(
+			UISWTView view )
+		{
+			return( new DeviceViewInstance( this, view, device ));
+		}
+	}
+	
+	private static class
+	DeviceViewInstance
+		implements ViewInstance, TranscodeTargetListener
+	{
+		private final DeviceView	parent;
+		private final UISWTView		view;
+		private final Device		device;
 
 		private Composite		parent_composite;
 		private Composite		composite;
 
-		private int 		last_indicator;
-		private UISWTView 	swtView;
-
 		private Runnable	refresher;
 		
-		public deviceView() {
-			
-		}
-
 		protected
-		deviceView(
-			String			parent_key,
-			Device			device )
+		DeviceViewInstance(
+			DeviceView		_parent,
+			UISWTView		_view,
+			Device			_device )
 		{
-			init( parent_key, device );
-		}
+			parent	= _parent;
+			view	= _view;
+			device	= _device;
 
-		public void
-		setDataSource(
-			String	_parent_key,
-			String	_device_id )
-		{
-			Device[] devices = DeviceManagerFactory.getSingleton().getDevices();
+			view.setTitle( parent.getTitle());
 			
-			Device device = null;
-			
-			for ( Device d: devices ){
-				
-				if ( d.getID().equals( _device_id )){
-					
-					device = d;
-					
-					break;
-				}
-			}
-			
-			if ( device == null ){
-				
-				throw( new RuntimeException( "Device with ID '" + _device_id + "' not found" ));
-			}
-			
-			init( _parent_key, device );
-		}
-		
-		
-		private void
-		init(
-			String		_parent_key,
-			Device		_device )
-		{
-			parent_key	= _parent_key;
-			device		= _device;
-
 			if ( device instanceof DeviceMediaRenderer ){
 
 				DeviceMediaRenderer	renderer = (DeviceMediaRenderer)device;
@@ -4681,6 +4857,7 @@ DeviceManagerUI
 			}
 		}
 
+		@Override
 		public void
 		initialize(
 			Composite _parent_composite )
@@ -4742,20 +4919,23 @@ DeviceManagerUI
 																// this code is to allow a click+drag operation to work as StyledText needs a selection
 																// before it will initiate a drag
 
-															int offset = getOffsetAtLocation( new Point( event.x, event.y ));
+															int offset = getOffsetAtPoint( new Point( event.x, event.y ));
 
-															final StyleRange style = getStyleRangeAtOffset(offset);
-
-															if ( style != null ){
-
-																Object data = style.data;
-
-																if ( data instanceof UPNPMSItem ){
-
-																	int line 		= getLineAtOffset(offset);
-																	int lineOffset 	= getOffsetAtLine(line);
-
-																	setSelection( lineOffset, lineOffset + getLine( line ).length());
+															if ( offset != -1 ){
+																
+																final StyleRange style = getStyleRangeAtOffset(offset);
+	
+																if ( style != null ){
+	
+																	Object data = style.data;
+	
+																	if ( data instanceof UPNPMSItem ){
+	
+																		int line 		= getLineAtOffset(offset);
+																		int lineOffset 	= getOffsetAtLine(line);
+	
+																		setSelection( lineOffset, lineOffset + getLine( line ).length());
+																	}
 																}
 															}
 														}catch( Throwable e){
@@ -4823,23 +5003,26 @@ DeviceManagerUI
 										event.doit = false;
 
 										try{
-											int offset = info.getOffsetAtLocation(new Point(event.x, event.y));
-
-											StyleRange style = info.getStyleRangeAtOffset(offset);
-
-											if ( style != null ){
-
-												Object data = style.data;
-
-												if ( data instanceof UPNPMSItem ){
-
-													UPNPMSItem item = (UPNPMSItem)data;
-
-													if ( item.getURL() != null ){
-
-														dragging_item = item;
-
-														event.doit = true;
+											int offset = info.getOffsetAtPoint(new Point(event.x, event.y));
+											
+											if ( offset != 0 ){
+												
+												StyleRange style = info.getStyleRangeAtOffset(offset);
+	
+												if ( style != null ){
+	
+													Object data = style.data;
+	
+													if ( data instanceof UPNPMSItem ){
+	
+														UPNPMSItem item = (UPNPMSItem)data;
+	
+														if ( item.getURL() != null ){
+	
+															dragging_item = item;
+	
+															event.doit = true;
+														}
 													}
 												}
 											}
@@ -4931,82 +5114,84 @@ DeviceManagerUI
 										}
 
 										try{
-											int offset = info.getOffsetAtLocation(new Point (event.x, event.y));
+											int offset = info.getOffsetAtPoint(new Point (event.x, event.y));
 
-											StyleRange style = info.getStyleRangeAtOffset(offset);
-
-											if ( style != null ){
-
-												Object data = style.data;
-
-												if ( data instanceof UPNPMSItem ){
-
-													UPNPMSItem item = (UPNPMSItem)data;
-
-													if (	event.button == 3 ||
-															(event.button == 1 && event.stateMask == SWT.CONTROL)){
-
-														  final Menu menu = new Menu(info.getShell(),SWT.POP_UP);
-
-														  final URL url = item.getURL();
-
-														  if ( url != null ){
-
-															  org.eclipse.swt.widgets.MenuItem   menu_item = new org.eclipse.swt.widgets.MenuItem( menu,SWT.NONE );
-
-															  menu_item.setText( MessageText.getString( "devices.copy_url"));
-
-															  menu_item.addSelectionListener(
-																  new SelectionAdapter()
-																  {
-																	  @Override
-																	  public void
-																	  widgetSelected(
-																			  SelectionEvent arg0)
+											if ( offset != -1 ){
+												StyleRange style = info.getStyleRangeAtOffset(offset);
+	
+												if ( style != null ){
+	
+													Object data = style.data;
+	
+													if ( data instanceof UPNPMSItem ){
+	
+														UPNPMSItem item = (UPNPMSItem)data;
+	
+														if (	event.button == 3 ||
+																(event.button == 1 && event.stateMask == SWT.CONTROL)){
+	
+															  final Menu menu = new Menu(info.getShell(),SWT.POP_UP);
+	
+															  final URL url = item.getURL();
+	
+															  if ( url != null ){
+	
+																  org.eclipse.swt.widgets.MenuItem   menu_item = new org.eclipse.swt.widgets.MenuItem( menu,SWT.NONE );
+	
+																  menu_item.setText( MessageText.getString( "devices.copy_url"));
+	
+																  menu_item.addSelectionListener(
+																	  new SelectionAdapter()
 																	  {
-																		  ClipboardCopy.copyToClipBoard(url.toExternalForm());
-																	  }
-																  });
-
-
-															  menu_item = new org.eclipse.swt.widgets.MenuItem( menu,SWT.NONE );
-
-															  menu_item.setText( MessageText.getString( "iconBar.run"));
-
-															  menu_item.addSelectionListener(
-																  new SelectionAdapter()
-																  {
-																	  @Override
-																	  public void
-																	  widgetSelected(
-																		  SelectionEvent arg0)
-																	  {
-																		 Utils.launch( url );
-																	  }
-																  });
-
-
-															  menu_item.setEnabled( item.getItemClass() != UPNPMSItem.IC_OTHER );
-														  }
-
-														  info.setMenu( menu );
-
-														  menu.addMenuListener(
-																  new MenuAdapter()
-																  {
-																	  @Override
-																	  public void
-																	  menuHidden(
-																			  MenuEvent arg0 )
-																	  {
-																		  if ( info.getMenu() == menu ){
-
-																			  info.setMenu( null );
+																		  @Override
+																		  public void
+																		  widgetSelected(
+																				  SelectionEvent arg0)
+																		  {
+																			  ClipboardCopy.copyToClipBoard(url.toExternalForm());
 																		  }
-																	  }
-																  });
-
-														  menu.setVisible( true );
+																	  });
+	
+	
+																  menu_item = new org.eclipse.swt.widgets.MenuItem( menu,SWT.NONE );
+	
+																  menu_item.setText( MessageText.getString( "iconBar.run"));
+	
+																  menu_item.addSelectionListener(
+																	  new SelectionAdapter()
+																	  {
+																		  @Override
+																		  public void
+																		  widgetSelected(
+																			  SelectionEvent arg0)
+																		  {
+																			 Utils.launch( url );
+																		  }
+																	  });
+	
+	
+																  menu_item.setEnabled( item.getItemClass() != UPNPMSItem.IC_OTHER );
+															  }
+	
+															  info.setMenu( menu );
+	
+															  menu.addMenuListener(
+																	  new MenuAdapter()
+																	  {
+																		  @Override
+																		  public void
+																		  menuHidden(
+																				  MenuEvent arg0 )
+																		  {
+																			  if ( info.getMenu() == menu ){
+	
+																				  info.setMenu( null );
+																			  }
+																		  }
+																	  });
+	
+															  menu.setVisible( true );
+														}
 													}
 												}
 											}
@@ -5024,27 +5209,30 @@ DeviceManagerUI
 										}
 
 										try{
-											int offset = info.getOffsetAtLocation(new Point (event.x, event.y));
+											int offset = info.getOffsetAtPoint(new Point (event.x, event.y));
 
-											StyleRange style = info.getStyleRangeAtOffset(offset);
-
-											if ( style != null ){
-
-												Object data = style.data;
-
-												if ( data instanceof UPNPMSItem ){
-
-													UPNPMSItem item = (UPNPMSItem)data;
-
-													if ( event.button == 1 ){
-
-														if ( style.underline ){
-
-															URL url = item.getURL();
-
-															if ( url != null ){
-
-																PlayUtils.playURL( url, item.getTitle());
+											if ( offset != 0 ){
+												
+												StyleRange style = info.getStyleRangeAtOffset(offset);
+	
+												if ( style != null ){
+	
+													Object data = style.data;
+	
+													if ( data instanceof UPNPMSItem ){
+	
+														UPNPMSItem item = (UPNPMSItem)data;
+	
+														if ( event.button == 1 ){
+	
+															if ( style.underline ){
+	
+																URL url = item.getURL();
+	
+																if ( url != null ){
+	
+																	PlayUtils.playURL( url, item.getTitle());
+																}
 															}
 														}
 													}
@@ -5070,21 +5258,24 @@ DeviceManagerUI
 											String tooltip = "";
 
 											try{
-												int offset = info.getOffsetAtLocation(new Point (event.x, event.y));
+												int offset = info.getOffsetAtPoint(new Point (event.x, event.y));
 
-												StyleRange style = info.getStyleRangeAtOffset(offset);
-
-												if ( style != null ){
-
-													Object data = style.data;
-
-													if ( data instanceof UPNPMSItem ){
-
-														UPNPMSItem item = (UPNPMSItem)data;
-
-														if ( item != null ){
-
-															tooltip = DisplayFormatters.formatByteCountToKiBEtc( item.getSize());
+												if ( offset != 0 ){
+													
+													StyleRange style = info.getStyleRangeAtOffset(offset);
+	
+													if ( style != null ){
+	
+														Object data = style.data;
+	
+														if ( data instanceof UPNPMSItem ){
+	
+															UPNPMSItem item = (UPNPMSItem)data;
+	
+															if ( item != null ){
+	
+																tooltip = DisplayFormatters.formatByteCountToKiBEtc( item.getSize());
+															}
 														}
 													}
 												}
@@ -5107,15 +5298,18 @@ DeviceManagerUI
 										MouseEvent event)
 									{
 										try{
-											int offset = info.getOffsetAtLocation(new Point (event.x, event.y));
+											int offset = info.getOffsetAtPoint(new Point (event.x, event.y));
 
-											StyleRange style = info.getStyleRangeAtOffset(offset);
-
-											if ( style != last_style ){
-
-												last_style = style;
-
-												Utils.setTT(info, "" );
+											if ( offset != -1 ){
+												
+												StyleRange style = info.getStyleRangeAtOffset(offset);
+	
+												if ( style != last_style ){
+	
+													last_style = style;
+	
+													Utils.setTT(info, "" );
+												}
 											}
 										}catch( Throwable e ){
 										}
@@ -5853,119 +6047,6 @@ DeviceManagerUI
 			return( null );
 		}
 		
-		public Composite
-		getComposite()
-		{
-			return( composite );
-		}
-
-		@Override
-		public Object
-		getTitleInfoProperty(
-			int propertyID )
-		{
-			if ( propertyID == TITLE_TEXT ){
-
-				return( getTitle());
-
-			} else if (propertyID == TITLE_IMAGEID) {
-				String imageID = null;
-				
-				String[] ids = getDeviceImageIDs( device );
-
-				if ( ids.length > 0 ){
-
-					imageID = "image.sidebar.device." + ids[0] + ".small";
-
-					if (ids[0].startsWith("http")) {
-						
-						boolean found = false;
-
-						for ( String id: ids ){
-													
-							Image[] existing = ImageLoader.getInstance().imageAdded_NoSWT(id);
-								
-							if ( existing != null ){
-								
-								found = true;
-								
-								imageID = id;
-							
-								if ( existing.length > 0 ){
-									
-									break;
-								}
-							}
-						}
-						
-						if ( !found ){
-							
-	  						Utils.execSWTThreadLater(0, new AERunnable() {
-	  							@Override
-								  public void runSupport() {
-	  								for ( String id: ids ){
-	  									ImageLoader.getInstance().getUrlImage(id, new ImageDownloaderListener() {
-	  										@Override
-	  										public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
-	  											ViewTitleInfoManager.refreshTitleInfo( deviceView.this );
-	  										}	
-	  									});
-	  								}
-	  							}
-	  						});
-						}
-					}
-				}
-
-				return imageID;
-
-			}else if ( propertyID == TITLE_INDICATOR_TEXT ){
-
-				if ( device instanceof DeviceMediaRenderer ){
-
-					if ( SHOW_RENDERER_VITALITY ){
-
-						DeviceMediaRenderer	renderer = (DeviceMediaRenderer)device;
-
-
-						last_indicator = renderer.getCopyToDevicePending() + renderer.getCopyToFolderPending();
-					}
-				}
-
-				if ( last_indicator > 0 ){
-
-					return( String.valueOf( last_indicator ));
-				}
-			}else if ( propertyID == TITLE_INDICATOR_COLOR ){
-				/*
-				if ( last_indicator > 0 ){
-
-					if ( SHOW_VITALITY ){
-
-						return( to_copy_indicator_colors );
-					}
-				}
-				*/
-			}else if ( propertyID == TITLE_ACTIVE_STATE ){
-
-				if ( device.isLivenessDetectable()){
-
-					return( new Long( device.isAlive()?1:2 ));
-				}
-			}else if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP){
-
-				return( device.getStatus());
-			}
-
-			return null;
-		}
-
-		public String
-		getTitle()
-		{
-			return( device.getName());
-		}
-
 		@Override
 		public void
 		fileAdded(
@@ -5983,7 +6064,7 @@ DeviceManagerUI
 			if ( 	type == CT_PROPERTY &&
 					data == TranscodeFile.PT_COMPLETE ){
 
-				refreshTitles();
+				parent.refreshTitles();
 			}
 		}
 
@@ -5993,37 +6074,6 @@ DeviceManagerUI
 			if ( refresher != null ){
 				
 				refresher.run();
-			}
-		}
-		
-		protected void
-		refreshTitles()
-		{
-			ViewTitleInfoManager.refreshTitleInfo( this );
-
-			String	key = parent_key;
-
-			while( key != null ){
-
-				MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-
-				if ( mdi == null ){
-
-					break;
-
-				}else{
-
-					MdiEntry parent = mdi.getEntry( key );
-
-					if ( parent != null ){
-
-						ViewTitleInfoManager.refreshTitleInfo(parent.getViewTitleInfo());
-
-						key = parent.getParentID();
-					} else {
-						key = null;
-					}
-				}
 			}
 		}
 
@@ -6046,56 +6096,35 @@ DeviceManagerUI
 		}
 
 		@Override
-		public boolean eventOccurred(UISWTViewEvent event) {
-	    switch (event.getType()) {
-	      case UISWTViewEvent.TYPE_CREATE:
-	      	swtView = event.getView();
-	      	swtView.setTitle(getTitle());
-	      	if (device == null) {
-			      Object initialDataSource = swtView.getInitialDataSource();
-			      if (initialDataSource instanceof String[]) {
-			      	String[] params = (String[]) initialDataSource;
-			      	if (params.length == 2) {
-			      		setDataSource(params[0], params[1]);
-				      }
-			      }
-		      }
-	        break;
+		public void
+		refresh(
+			UISWTViewEvent		event )
+		{
+			refresh();
+		}
 
-	      case UISWTViewEvent.TYPE_DESTROY:
-	        delete();
-	        break;
+		@Override
+		public void
+		updateLanguage()
+		{
+			Messages.updateLanguageForControl( composite );
+			
+	      	view.setTitle(parent.getTitle());
+		}
 
-	      case UISWTViewEvent.TYPE_INITIALIZE:
-	        initialize((Composite)event.getData());
-	        break;
-
-	      case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
-	      	Messages.updateLanguageForControl(getComposite());
-	      	swtView.setTitle(getTitle());
-	        break;
-
-	      case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
-	        break;
-
-	      case UISWTViewEvent.TYPE_FOCUSGAINED:
-	      	break;
-
-	      case UISWTViewEvent.TYPE_REFRESH:
-	    	refresh();
-	        break;
-	    }
-
-	    return true;
-	  }
-
+		@Override
+		public void
+		destroy()
+		{
+			delete();
+		}
 	}
 
 	private static class
 	deviceItem
 	{
-		private deviceView			view;
-		private MdiEntry		sb_entry;
+		private DeviceView			view;
+		private MdiEntry			sb_entry;
 		private boolean				destroyed;
 
 		private MdiEntryVitalityImage	warning;
@@ -6134,12 +6163,12 @@ DeviceManagerUI
 
 		protected void
 		setView(
-			deviceView		_view )
+				DeviceView		_view )
 		{
 			view	= _view;
 		}
 
-		protected deviceView
+		protected DeviceView
 		getView()
 		{
 			return( view );
@@ -6211,6 +6240,7 @@ DeviceManagerUI
 			}
 		}
 
+		/*
 		public void
 		activate()
 		{
@@ -6221,6 +6251,7 @@ DeviceManagerUI
 				mdi.showEntryByID(sb_entry.getViewID());
 			}
 		}
+		*/
 	}
 	
 	private abstract static class
