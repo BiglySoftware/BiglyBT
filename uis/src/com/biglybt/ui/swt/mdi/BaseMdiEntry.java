@@ -1385,6 +1385,8 @@ public abstract class BaseMdiEntry
 		}
 	}
 	
+	private static Map<String,List<Runnable>>	builder_waiters = new HashMap<>();
+	
 	public static SWTSkinObjectContainer
 	importStandAlone(
 		SWTSkinObjectContainer		soParent,
@@ -1574,6 +1576,93 @@ public abstract class BaseMdiEntry
 							builder = builders.get(0);
 							
 						}else{
+							
+							if ( callback != null ){
+								
+								synchronized( builder_waiters ){
+									
+										// empty list denotes tried before and gave up
+									
+									List<Runnable> list = builder_waiters.get( instantiator_uid );
+									
+									if ( list == null ){
+									
+										list = new ArrayList<>();
+										
+										builder_waiters.put( instantiator_uid, list );
+										
+										list.add( callback );
+										
+										TimerEventPeriodic[] timer = { null };
+										
+										synchronized( timer ){
+											
+											timer[0] = 
+												SimpleTimer.addPeriodicEvent(
+													"BuilderWaiter",
+													500,
+													new TimerEventPerformer(){
+														
+														long start = SystemTime.getMonotonousTime();
+														
+														@Override
+														public void 
+														perform(
+															TimerEvent event)
+														{
+															boolean done = false;
+															
+															try{
+																List<UISWTViewBuilderCore> builders = ViewManagerSWT.getInstance().getBuildersForInstantiatorUID( instantiator_uid );
+																
+																done = !builders.isEmpty();
+																	
+															}finally{
+											
+																if ( done || SystemTime.getMonotonousTime() - start > 30*1000 ){
+																
+																	synchronized( timer ){
+																	
+																		timer[0].cancel();
+																	}
+																	
+																	List<Runnable> todo;
+																	
+																	synchronized( builder_waiters ){
+																		
+																		List<Runnable> list = builder_waiters.get( instantiator_uid );
+																		
+																		todo = new ArrayList<>( list );
+																		
+																		list.clear();
+																	}
+																	
+																	for ( Runnable r: todo ){
+																		
+																		try{
+																			r.run();
+																			
+																		}catch( Throwable e ){
+																			
+																			Debug.out( e );
+																		}
+																	}
+																}
+															}
+														}
+													});
+											}
+									
+										return( null );
+										
+									}else if ( !list.isEmpty()){
+										
+										list.add( callback );
+										
+										return( null );
+									}
+								}
+							}
 							
 							if (	plugin_id != null && 
 									!plugin_id.equals( PluginInitializer.INTERNAL_PLUGIN_ID ) && 
