@@ -168,6 +168,8 @@ NetworkAdminUDPTester
 
 		data_to_send.put( "id", new Long( random.nextLong()));
 
+		data_to_send.put( "port", bind_port );
+		
 		try{
 			packet_handler.setExplicitBindAddress( bind_ip, false );
 
