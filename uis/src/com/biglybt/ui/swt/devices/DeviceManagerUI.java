@@ -2804,10 +2804,10 @@ DeviceManagerUI
 				
 				if ( old_mdi_key != null ){
 					
-					vi.unregisterView( null, old_mdi_key);
+					vi.unregisterView( UISWTInstance.VIEW_INTERNAL, old_mdi_key);
 				}
 
-				vi.registerView( null, builder);
+				vi.registerView( UISWTInstance.VIEW_INTERNAL, builder);
 								
 				entry = mdi.createEntry(builder, false);
 
@@ -4290,10 +4290,10 @@ DeviceManagerUI
 		
 		if ( old_mdi_key != null ){
 				
-			vi.unregisterView( null, old_mdi_key);
+			vi.unregisterView( UISWTInstance.VIEW_INTERNAL, old_mdi_key);
 		}
 		
-		vi.registerView( null, builder);
+		vi.registerView( UISWTInstance.VIEW_INTERNAL, builder);
 	
 		MdiEntry entry = mdi.createEntry(builder, false);
 

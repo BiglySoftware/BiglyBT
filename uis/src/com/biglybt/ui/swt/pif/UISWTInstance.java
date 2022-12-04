@@ -100,6 +100,12 @@ public interface UISWTInstance extends UIInstance {
 	
 	public static final String VIEW_RIGHTBAR_AREA = "RightBarArea";
 
+	/**
+	 * Various other views not covered by the above categories
+	 */
+	
+	public static final String VIEW_INTERNAL = "Internal";
+
 	/** Retrieve the SWT Display object that Azureus uses (when in SWT mode).
 	 * If you have a thread that does some periodic/asynchronous stuff, Azureus
 	 * will crashes with and 'InvalidThreadAccess' exception unless you
