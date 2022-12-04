@@ -215,48 +215,58 @@ public class NatChecker {
 
       HttpURLConnection con = (HttpURLConnection)url.openConnection();
 
+      System.out.println( "connect to " +url );
+      
       con.connect();
 
       ByteArrayOutputStream message = new ByteArrayOutputStream();
-      InputStream is = con.getInputStream();
 
-      byte[] data = new byte[ 1024 ];
+      try{
+	      InputStream is = con.getInputStream();
+	
+	      byte[] data = new byte[ 1024 ];
+	
+	      int	expected_length = -1;
+	
+	      while( true ){
+	
+	        int	len = is.read( data );
+	
+	        if ( len <= 0 ){
+	
+	        	break;
+	        }
+	
+	        message.write( data, 0, len );
+	
+	        if ( expected_length == -1 && message.size() >= 4 ){
+	
+	        	byte[]	bytes = message.toByteArray();
+	
+	        	ByteBuffer	bb = ByteBuffer.wrap( bytes );
+	
+	        	expected_length = bb.getInt();
+	
+	        	message = new ByteArrayOutputStream();
+	
+	        	if ( bytes.length > 4 ){
+	
+	        		message.write( bytes, 4, bytes.length - 4 );
+	        	}
+	        }
+	
+	        if ( expected_length != -1 && message.size() == expected_length ){
+	
+	        	break;
+	        }
+	      }
+      }finally{
 
-      int	expected_length = -1;
-
-      while( true ){
-
-        int	len = is.read( data );
-
-        if ( len <= 0 ){
-
-        	break;
-        }
-
-        message.write( data, 0, len );
-
-        if ( expected_length == -1 && message.size() >= 4 ){
-
-        	byte[]	bytes = message.toByteArray();
-
-        	ByteBuffer	bb = ByteBuffer.wrap( bytes );
-
-        	expected_length = bb.getInt();
-
-        	message = new ByteArrayOutputStream();
-
-        	if ( bytes.length > 4 ){
-
-        		message.write( bytes, 4, bytes.length - 4 );
-        	}
-        }
-
-        if ( expected_length != -1 && message.size() == expected_length ){
-
-        	break;
-        }
+    	  	// need this otherwise things can stall, don't ask me why :(
+    	  
+    	  con.disconnect();
       }
-
+      
       Map map = BDecoder.decode( message.toByteArray() );
       int reply_result = ((Long)map.get( "result" )).intValue();
 
