@@ -214,8 +214,6 @@ public class NatChecker {
 
 
       HttpURLConnection con = (HttpURLConnection)url.openConnection();
-
-      System.out.println( "connect to " +url );
       
       con.connect();
 
