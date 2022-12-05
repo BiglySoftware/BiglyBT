@@ -39,6 +39,8 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.internat.MessageText;
@@ -67,7 +69,7 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
 
 public class 
 PieceBlocksView
-	implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
+	implements UIPluginViewToolBarListener, UISWTViewCoreEventListener, ParameterListener
 {
 	public static String MSGID_PREFIX = "PieceBlocksView";
 		
@@ -85,6 +87,8 @@ PieceBlocksView
 			"PieceBlocksView.block.active2",
 	};
 	
+	private int MAX_ACTIVE_BLOCKS;
+	
 	private Canvas 	canvas;
 	private Image 	img;
 
@@ -98,6 +102,15 @@ PieceBlocksView
 	public 
 	PieceBlocksView() 
 	{
+		COConfigurationManager.addAndFireParameterListener( "blocks.view.max.active", this );
+	}
+	
+	@Override
+	public void 
+	parameterChanged(
+		String parameterName)
+	{
+		MAX_ACTIVE_BLOCKS = COConfigurationManager.getIntParameter( "blocks.view.max.active" );
 	}
 	
 	private boolean comp_focused;
@@ -255,6 +268,8 @@ PieceBlocksView
 	protected void
 	delete()
 	{
+		COConfigurationManager.removeParameterListener( "blocks.view.max.active", this );
+		
 		synchronized( dm_data_lock ){
 
 			for ( ManagerData data: dm_data ) {
@@ -510,13 +525,36 @@ PieceBlocksView
 			try{
 				int[] piece_counts = new int[dm_data.length];
 				
+				int blocks_rem = MAX_ACTIVE_BLOCKS;
+				
 				int	total_pieces 	= 0;
 				int	dms_with_pieces	= 0;
-				
-				for ( int i=0;i<dm_data.length;i++ ){
+								
+				for ( int i=0;i<dm_data.length&&blocks_rem>0;i++ ){
 
-					int pieces = dm_data[i].update();
+					ManagerData md = dm_data[i];
+					
+					int[] piece_data = md.update();
 						
+					int pieces = 0;
+					
+					for ( int active: piece_data ){
+					
+						if ( active > 0 ){
+							
+							pieces++;
+							
+							if ( active >= blocks_rem ){
+								
+								blocks_rem = 0;
+								
+								break;
+							}
+						
+							blocks_rem -= active;
+						}
+					}
+										
 					if ( pieces > 0 ){
 						
 						piece_counts[i] = pieces;
@@ -845,7 +883,9 @@ outer:
 		
 		private final long			add_time = SystemTime.getMonotonousTime();
 
-		private DownloadManager		manager;
+		private final DownloadManager		manager;
+		private final int					blocks_per_piece;
+		
 		private PEPeerManager		peer_manager;		
 			
 		private Map<PEPeer, PeerDetails>	peer_map 	= new HashMap<>();
@@ -859,16 +899,32 @@ outer:
 		{
 			manager	= _manager;
 
+			int bpp = 1;
+			
+			try{
+				bpp = (int)( manager.getTorrent().getPieceLength() / DiskManager.BLOCK_SIZE );
+				
+			}catch( Throwable e ){
+			}
+			
+			blocks_per_piece = bpp;
+			
 			manager.addPeerListener(this);
 		}
 
-		protected long
+		int
+		getBlocksPerPiece()
+		{
+			return( blocks_per_piece );
+		}
+		
+		long
 		getAddTime()
 		{
 			return( add_time );
 		}
 
-		private void
+		void
 		delete()
 		{
 			PEPeerManager pm;
@@ -1072,7 +1128,7 @@ outer:
 			}
 		}
 		
-		int
+		int[]
 		update()
 		{
 			synchronized( lock ){
@@ -1082,19 +1138,31 @@ outer:
 					peer.update();
 				}
 				
+				int[] result = new int[piece_map.size()];
+				
+				int pos = 0;
+				
 				for ( Iterator<PieceDetails> it = piece_map.values().iterator(); it.hasNext();){
 				
 					PieceDetails piece = it.next();
 					
-					piece.update();
+					int active = piece.update();
 					
 					if ( piece.isDone()){
 						
 						it.remove();
+						
+						result[pos] = 0;
+						
+					}else{
+						
+						result[pos] = active;
 					}
+					
+					pos++;
 				}
 				
-				return( piece_map.size());
+				return( result );
 			}
 		}
 	}
@@ -1285,21 +1353,31 @@ outer:
 			}
 		}
 		
-		void
+		int
 		update()
 		{
+			int active = 0;
+			
 			for ( int i=0;i<block_num;i++){
 				
 				if ( !blocks_done[i]){
-										
-					if ( block_states[i] == 2 ){
+							
+					int state = block_states[i];
+					
+					if ( state == 2 ){
 						
 						blocks_done[i] = true;
 						
 						blocks_done_num++;
+						
+					}else if ( state == 1 ){
+						
+						active++;
 					}
 				}
 			}
+			
+			return( active );
 		}
 		
 		void

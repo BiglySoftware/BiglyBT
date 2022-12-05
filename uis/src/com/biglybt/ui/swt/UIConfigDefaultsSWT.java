@@ -334,5 +334,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter( ConfigKeys.File.ICFG_UI_ADDTORRENT_OPENOPTIONS_AUTO_CLOSE_SECS, 0 );
 		
 		def.addParameter( "DownloadActivity.show.eta", true );
+		
+		def.addParameter( "blocks.view.max.active", 500 );
 	}
 }

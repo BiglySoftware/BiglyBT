@@ -390,6 +390,21 @@ public class ConfigSectionInterfaceDisplaySWT
 		add(new ParameterGroupImpl("ConfigView.section.style.status",
 				listStatusBar));
 
+		// Group: Views
+		
+		
+		List<Parameter> listViews = new ArrayList<>();
+
+		List<Parameter> blocksView = new ArrayList<>();
+
+		add(new IntParameterImpl("blocks.view.max.active","blocks.view.max.active",100, Integer.MAX_VALUE ),
+				Parameter.MODE_INTERMEDIATE, blocksView);
+
+		ParameterGroupImpl blocksViewGroup = new ParameterGroupImpl("Pieces.column.blocks", blocksView);
+		add( blocksViewGroup, listViews );
+				 
+		add( new ParameterGroupImpl("label.views", listViews));
+		
 		// Group: display units
 		/////////
 
