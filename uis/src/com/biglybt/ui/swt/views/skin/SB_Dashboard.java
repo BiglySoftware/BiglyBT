@@ -1351,7 +1351,7 @@ public class SB_Dashboard
 				final List<SashForm>	sashes 		= new ArrayList<>();
 				List<Control>			controls	= new ArrayList<>();
 				
-				build( item_map, dashboard_composite, use_tabs, sashes, controls, layout, 0, 0, layout.length, layout.length );
+				build( item_map, null, dashboard_composite, use_tabs, sashes, controls, layout, 0, 0, layout.length, layout.length );
 				
 				int[][]	sash_weights = getSashWeights();
 				
@@ -1487,7 +1487,7 @@ public class SB_Dashboard
 			
 			int	before = item_map.size();
 			
-			build( item_map, null, false, null, null, layout, 0, 0, layout.length, layout.length );
+			build( item_map, null, null, false, null, null, layout, 0, 0, layout.length, layout.length );
 			
 				// at least one works...
 			
@@ -1497,6 +1497,7 @@ public class SB_Dashboard
 		private List<DashboardItem>
 		build(	
 			Map<Integer,DashboardItem>	item_map,
+			CTabItem					parent_tab_item,
 			Composite					comp,
 			boolean						use_tabs,
 			List<SashForm>				sashes,
@@ -1533,7 +1534,7 @@ public class SB_Dashboard
 				
 				if ( item != null && comp != null ) {
 					
-					controls.add( build( comp, item, use_tabs ));
+					controls.add( build( parent_tab_item, comp, item, use_tabs ));
 					
 					result.add( item );
 				}
@@ -1600,7 +1601,7 @@ public class SB_Dashboard
 								tab_composite.setLayoutData( Utils.getFilledFormData());
 							}
 							
-							List<DashboardItem> items = build( item_map, tab_composite, use_tabs, sashes, controls, cells, x, current, width, split - current );
+							List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, x, current, width, split - current );
 							
 							if ( items.isEmpty()){
 								tab_item.dispose();
@@ -1624,7 +1625,7 @@ public class SB_Dashboard
 							tab_composite.setLayoutData( Utils.getFilledFormData());
 						}
 						
-						List<DashboardItem> items = build( item_map, tab_composite, use_tabs, sashes, controls, cells, x, current, width, height-(current-y));
+						List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, x, current, width, height-(current-y));
 											
 						if ( items.isEmpty()){
 							tab_item.dispose();
@@ -1696,12 +1697,12 @@ public class SB_Dashboard
 						
 						for ( int split: splits ){
 							
-							result.addAll( build( item_map, sf, use_tabs, sashes, controls, cells, x, current, width, split - current ));
+							result.addAll( build( item_map, null, sf, use_tabs, sashes, controls, cells, x, current, width, split - current ));
 							
 							current = split;
 						}
 						
-						result.addAll(( build( item_map, sf, use_tabs, sashes, controls, cells, x, current, width, height-(current-y) )));
+						result.addAll(( build( item_map, null, sf, use_tabs, sashes, controls, cells, x, current, width, height-(current-y) )));
 					}
 					
 					done = true;
@@ -1771,7 +1772,7 @@ public class SB_Dashboard
 								tab_composite.setLayoutData( Utils.getFilledFormData());
 							}
 							
-							List<DashboardItem> items = build( item_map, tab_composite, use_tabs, sashes, controls, cells, current, y, split - current, height );
+							List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, current, y, split - current, height );
 							if ( items.isEmpty()){
 								tab_item.dispose();
 							}else{
@@ -1794,7 +1795,7 @@ public class SB_Dashboard
 							tab_composite.setLayoutData( Utils.getFilledFormData());
 						}
 						
-						List<DashboardItem> items = build( item_map, tab_composite, use_tabs, sashes, controls, cells, current, y, width-(current-x), height );
+						List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, current, y, width-(current-x), height );
 						
 						if ( items.isEmpty()){
 							tab_item.dispose();
@@ -1865,12 +1866,12 @@ public class SB_Dashboard
 						
 						for ( int split: splits ){
 		
-							result.addAll((build( item_map, sf, use_tabs, sashes, controls, cells, current, y, split - current, height )));
+							result.addAll((build( item_map, null, sf, use_tabs, sashes, controls, cells, current, y, split - current, height )));
 							
 							current = split;
 						}
 						
-						result.addAll((build( item_map, sf, use_tabs, sashes, controls, cells, current, y, width-(current-x), height )));
+						result.addAll((build( item_map, null, sf, use_tabs, sashes, controls, cells, current, y, width-(current-x), height )));
 					}
 				}
 			}
@@ -1888,6 +1889,7 @@ public class SB_Dashboard
 		
 		private Composite
 		build(
+			CTabItem				parent_tab_item,
 			Composite				sf,
 			final DashboardItem		item,
 			boolean					use_tabs )
@@ -1992,6 +1994,22 @@ public class SB_Dashboard
 					});
 				
 				menu_comp.setMenu( menu );
+				
+				if ( parent_tab_item == null ){
+					menu_comp.addListener( SWT.MouseDoubleClick, (ev)->{
+						BaseMdiEntry.popoutStandAlone( item.getTitle(), item.getState(), null );
+					});
+				}else{
+					
+					CTabFolder folder = parent_tab_item.getParent();
+					
+					folder.addListener( SWT.MouseDoubleClick, (ev)->{
+						if ( folder.getItem( new Point( ev.x, ev.y )) == parent_tab_item ){
+							
+							BaseMdiEntry.popoutStandAlone( item.getTitle(), item.getState(), null );
+						}
+					});
+				}
 				
 				SkinnedComposite skinned_comp =	new SkinnedComposite( g );
 				
