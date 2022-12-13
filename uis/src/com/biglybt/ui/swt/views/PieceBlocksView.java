@@ -642,12 +642,46 @@ PieceBlocksView
 				}
 				
 				
-				int y_pos = height - piece_height;
+				int y_pos_start = height - piece_height;
 				
 				int dm_num = 0;
 			
-outer:
-				for ( int i=0;i<dm_data.length;i++ ){
+outer1:
+				if ( piece_height >= 3 ){
+					
+					gc.setAlpha( 255 );
+
+					int y_pos = y_pos_start;
+					
+					for ( int i=0;i<piece_counts.length;i++ ){
+						
+						int piece_count = piece_counts[i];
+						
+						if ( piece_count == 0 ){
+							
+							continue;
+						}
+																		
+						while( piece_count > 0 ){
+							
+							if ( y_pos < block_space ){
+								
+								break outer1;
+							}
+															
+							piece_count--;
+							
+							gc.drawRectangle( 0, y_pos-1, width-1, piece_height );
+							
+							y_pos -= piece_height;
+						}
+					}
+				}
+
+				int y_pos = y_pos_start;
+
+outer2:
+				for ( int i=0;i<piece_counts.length;i++ ){
 					
 					int piece_count = piece_counts[i];
 					
@@ -659,12 +693,12 @@ outer:
 					dm_num++;
 					
 					synchronized( dm_data[i].lock ){
-						
+												
 						for ( PieceDetails piece_details: dm_data[i].piece_map.values()){
 								
 							if ( y_pos < block_space ){
 								
-								break outer;
+								break outer2;
 							}
 							
 							if ( piece_count == 0 ){
@@ -681,7 +715,7 @@ outer:
 							boolean[] downloaded = piece_details.getDownloaded();
 							
 							float	overall_block_width = (float)width/downloaded.length;
-							
+					
 							gc.setBackground( block_colours[odd?1:3] );
 							
 							gc.setAlpha( piece_details.alpha );
@@ -761,16 +795,6 @@ outer:
 									gc.fillRectangle( block_x, y_pos, block_width, piece_height );
 								}
 							}
-									
-							gc.setAlpha( 255 );
-							
-							if ( piece_height >= 3 ){
-		
-								gc.setBackground( Colors.light_grey );
-
-								gc.drawRectangle( 0, y_pos-1, width-1, piece_height );
-							}
-							
 							
 							y_pos -= piece_height;
 						}
