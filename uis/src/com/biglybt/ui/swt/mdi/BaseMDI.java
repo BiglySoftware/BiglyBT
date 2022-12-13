@@ -1032,32 +1032,47 @@ public abstract class BaseMDI
 	private boolean processAutoOpenMap(String id, Map<?, ?> autoOpenInfo,
 			UISWTViewBuilderCore builder) {
 		try {
+
 			MdiEntry entry = getEntry(id);
-			if (entry != null) {
-				return true;
+			
+			if ( entry != null){
+				
+				return( true );
 			}
 
-			String title = MapUtils.getMapString(autoOpenInfo, "title", id);
-
-			MdiEntry mdiEntry = createEntryByCreationListener(id, autoOpenInfo);
-			if (mdiEntry != null) {
-				if (mdiEntry.getTitle().equals("") && !title.isEmpty()) {
-					mdiEntry.setTitle(title);
-				}
-				return true;
-			}
+			String title = MapUtils.getMapString(autoOpenInfo, "title", "" );
 
 			Object datasource = autoOpenInfo.get(AUTOOPENINFO_DS);
 
-			if (builder != null) {
-				entry = createEntry(builder, true);
-				if (entry != null) {
-					if (entry.getTitle().equals("") && !title.isEmpty()) {
-						entry.setTitle(title);
+			entry = createEntryByCreationListener(id, autoOpenInfo);
+			
+			if ( entry != null ){
+				
+				if ( !title.isEmpty()){
+					
+					entry.setTitle(title);
+				}
+			}
+
+
+			if ( entry == null ){
+				
+				if ( builder != null ){
+					
+					entry = createEntry(builder, true);
+					
+					if ( entry != null ){
+						
+						if ( !title.isEmpty()){
+							
+							entry.setTitle( title );
+						}
+						
+							// Auto-Open stores last datasource used before close.
+							// Override builder's initialDataSource with stored one.
+						
+						entry.setDatasource(datasource);
 					}
-					// Auto-Open stores last datasource used before close.
-					// Override builder's initialDataSource with stored one.
-					entry.setDatasource(datasource);
 				}
 			}
 

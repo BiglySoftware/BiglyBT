@@ -179,6 +179,9 @@ public class DataSourceUtils
 	}
 	
 	public static DownloadManager[] getDMs(Object ds) {
+		if ( ds instanceof List ){
+			ds = ((List)ds).toArray( new Object[0]);
+		}		
 		Object[] dsArray = (ds instanceof Object[]) ? (Object[]) ds : new Object[] {
 			ds
 		};

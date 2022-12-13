@@ -16,6 +16,11 @@ DataSourceResolver
 	exportDataSource(
 		Object		data_source )
 	{
+		if ( data_source instanceof List ){
+			
+			data_source = ((List)data_source).toArray( new Object[0]);
+		}	
+		
 		if ( data_source instanceof ExportableDataSource ) {
 			
 			ExportedDataSource e = ((ExportableDataSource)data_source).exportDataSource();

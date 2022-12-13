@@ -57,6 +57,7 @@ import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
+import com.biglybt.util.DataSourceUtils;
 import com.biglybt.util.MapUtils;
 
 import com.biglybt.pif.PluginInterface;
@@ -830,6 +831,13 @@ public abstract class BaseMdiEntry
 
 		// There's also DataSourceResolver that might be useful
 
+		if ( datasource instanceof List || datasource instanceof Object[]){
+			DownloadManager[] dms = DataSourceUtils.getDMs(datasource);
+			
+			if ( dms.length > 0 ){
+				datasource = dms;
+			}
+		}
 		if (datasource instanceof DownloadManager) {
 			try {
 				autoOpenInfo.put(
