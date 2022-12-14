@@ -434,6 +434,10 @@ public class TCPConnectionManager {
 				  }
 			  }catch( SocketException e ){
 
+				  if (Logger.isEnabled()){
+					  Logger.log(new LogEvent(LOGID, LogEvent.LT_ERROR, "Binding [" + request.address + "] to local IP address " + bindIP + ":" + local_bind_port + " failed: " + Debug.getNestedExceptionMessage(e)));
+				  }
+
 				  bind_failed = true;
 
 				  String msg = e.getMessage().toLowerCase();
