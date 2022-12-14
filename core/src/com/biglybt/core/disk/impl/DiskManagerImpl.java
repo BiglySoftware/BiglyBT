@@ -2635,6 +2635,8 @@ DiskManagerImpl
             	
             	progress.setComplete();
             	
+            	FileUtil.log( "Move of \"" + download_manager.getDisplayName() + "\" ignored, already moved" );
+
             	return;
             }
             
@@ -2676,6 +2678,8 @@ DiskManagerImpl
 
         	if ( !delegated[0] ){
         	
+        		FileUtil.log( "Move of \"" + download_manager.getDisplayName() + "\" not required" );
+
         		progress.setComplete();
         	}
         }
@@ -2758,6 +2762,11 @@ DiskManagerImpl
     	if ( loc_change.hasDownloadChange()){
     		
     		move_files = !this.isFileDestinationIsItself( loc_change );
+    		
+    		if ( !move_files ){
+    			
+  			  FileUtil.log( "Move of \"" + download_manager.getDisplayName() + "\" to " + loc_change.getString() + " not required as already in correct place" );
+    		}
     	}
 
         try{
@@ -2873,9 +2882,19 @@ DiskManagerImpl
 		  //		/temp, "wibble.x"					->	/M/wibble.x[/other.avi]
 	
 	
-		  if ( files == null ){return false;}
+		  if ( files == null ){
+			  
+			  FileUtil.log( "Move of \"" + download_manager.getDisplayName() + "\" failed, files=null" );
+			  
+			  return false;
+		  }
 	
-		  if (isFileDestinationIsItself(loc_change)) {return false;}
+		  if ( isFileDestinationIsItself( loc_change )){
+			  
+			  FileUtil.log( "Move of \"" + download_manager.getDisplayName() + "\" to " + loc_change.getString() + " not required as already in correct place" );
+			  
+			  return false;
+		  }
 	
 		  String log_str = "Move active \"" + download_manager.getDisplayName() + "\" from  " + current_save_location + " to " + move_to_dir;
 		  

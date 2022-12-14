@@ -65,6 +65,10 @@ public class SaveLocationChange {
 		return res.toString();
 	}
 
+	public String getString()
+	{
+		return( toString());
+	}
 	/**
 	 * Given the location of the existing torrent, determine the new path
 	 * to store the torrent.

@@ -568,7 +568,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 			return null;
 		}
 
-        logInfo("Determined path for " + describe(dm, mi) + ".", dm);
+        logInfo("Determined path for " + describe(dm, mi) + " - " + target_paths[0] + ";" + target_paths[1] + ".", dm );
 		return mi.transfer.getTransferDetails(dm, mi, target_paths);
 	}
 

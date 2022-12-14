@@ -1311,7 +1311,7 @@ public class GlobalManagerImpl
 			
 			if ( !is_existing[0] ){
 			
-				manager = addDownloadManager( manager, true, adapter, for_seeding, is_existing );
+				manager = addDownloadManager( manager, true, adapter, for_seeding, is_existing, false );
 			}
 			
 			return( manager );
@@ -1450,7 +1450,8 @@ public class GlobalManagerImpl
 		boolean									notifyListeners,
 		DownloadManagerInitialisationAdapter	adapter,
 		boolean									for_seeding,
-		boolean[]								is_existing )
+		boolean[]								is_existing,
+		boolean									initial_load )
    {
 	   if ( !isStopping ){
 			   
@@ -1475,8 +1476,10 @@ public class GlobalManagerImpl
 			   }
 
 			   try{
-				   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( download_manager.getTorrent().getHash()) + ": actually adding" );
-			   
+				   if ( !initial_load ){
+				   
+					   FileUtil.log( "addDownloadManager: " + ByteFormatter.encodeString( download_manager.getTorrent().getHash()) + ": actually adding" );
+				   }
 			   }catch( Throwable e ){
 				   
 			   }
@@ -3199,7 +3202,7 @@ public class GlobalManagerImpl
 	
 				  boolean[] existing = { false };
 				  
-				  addDownloadManager( new_dm, false, null, false, existing );
+				  addDownloadManager( new_dm, false, null, false, existing, true );
 				  
 				  if ( !existing[0] ){
 	
