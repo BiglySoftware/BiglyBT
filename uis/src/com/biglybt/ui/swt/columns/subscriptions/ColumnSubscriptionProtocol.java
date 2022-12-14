@@ -20,7 +20,9 @@ package com.biglybt.ui.swt.columns.subscriptions;
 
 
 import java.net.URL;
+import java.util.Locale;
 
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.impl.plugin.PluginEngine;
 import com.biglybt.core.metasearch.impl.web.WebEngine;
@@ -59,7 +61,7 @@ public class ColumnSubscriptionProtocol
 		Subscription sub = (Subscription) cell.getDataSource();
 		if ( sub != null ){
 			if ( sub.isSearchTemplate() || sub.isSubscriptionTemplate()){
-				str = "";
+				str = MessageText.getString(sub.isSearchTemplate()?"Button.search":"subs.prop.template" ).toLowerCase( Locale.US );
 			}else{
 				try{
 					Engine engine = sub.getEngine();
