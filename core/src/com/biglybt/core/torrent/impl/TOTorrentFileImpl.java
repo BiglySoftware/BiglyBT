@@ -55,7 +55,7 @@ TOTorrentFileImpl
 
 	private byte			flags;
 
-	private final TOTorrentFileHashTreeImpl	hash_tree;
+	private TOTorrentFileHashTreeImpl	hash_tree;
 	private byte[]	root_hash;
 	
 	
@@ -295,10 +295,11 @@ TOTorrentFileImpl
 	}
 	
 	protected void
-	setRootHash(
-		byte[]		h )
+	setHashTree(
+		TOTorrentFileHashTreeImpl		_hash_tree )
 	{
-		root_hash	= h;
+		hash_tree	= _hash_tree;
+		root_hash	= hash_tree.getRootHash();
 	}
 	
 	@Override

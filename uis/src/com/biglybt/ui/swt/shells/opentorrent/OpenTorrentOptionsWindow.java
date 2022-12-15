@@ -6910,32 +6910,93 @@ public class OpenTorrentOptionsWindow
 							+ getEncodingName(torrent);
 					
 					int tt = torrent.getTorrentType();
+						
+					int ett = torrent.getEffectiveTorrentType();
+
+					String extra = "";
 					
-					enc_str += "; " + MessageText.getString( "label.torrent.type" ) + ": " + MessageText.getString( "label.torrent.type." + tt );
+					if ( tt == TOTorrent.TT_V1_V2 ){
+						
+						if ( ett != tt ){
+							
+							extra = ", " + MessageText.getString( "label.effective" ) + " V" + (ett==TOTorrent.TT_V1?1:2);
+						}
+					}
+					
+					enc_str += "; " + MessageText.getString( "label.torrent.type" ) + ": " + MessageText.getString( "label.torrent.type." + tt ) + extra;
 
 					soTorrentEncoding.setText( enc_str );
+					
+					Runnable chooseEncoding = ()->{
+						try {
+							LocaleTorrentUtil.getTorrentEncoding(torrent, true, true);
+							torrentOptions.rebuildOriginalNames();
+							setupInfoSection(skin);
+							if (txtSubFolder != null) {
+								String top = FileUtil.newFile(torrentOptions.getDataDir()).getName();
+
+								txtSubFolder.setText(top);
+							}
+
+						} catch (TOTorrentException ex) {
+							Debug.out(ex);
+						}
+					};
+					
 					Control control = so.getControl();
+					
 					if (control.getData("hasMouseL") == null) {
 						control.addMouseListener(new MouseAdapter() {
 							@Override
 							public void mouseUp(MouseEvent e) {
-								try {
-									LocaleTorrentUtil.getTorrentEncoding(torrent, true, true);
-									torrentOptions.rebuildOriginalNames();
-									setupInfoSection(skin);
-									if (txtSubFolder != null) {
-										String top = FileUtil.newFile(torrentOptions.getDataDir()).getName();
-
-										txtSubFolder.setText(top);
-									}
-
-								} catch (TOTorrentException ex) {
-									Debug.out(ex);
+								if ( e.button != 1 ){
+									return;
 								}
+
+								chooseEncoding.run();
 							}
 						});
+					
 						control.setData("hasMouseL", true);
 					}
+					
+					Menu menu = new Menu( control );
+					
+					control.setMenu( menu );
+					
+					MenuItem mi = new MenuItem( menu, SWT.PUSH );
+					
+					mi.setText( MessageText.getString( "LocaleUtil.title" ));
+					
+					mi.addListener( SWT.Selection, (ev)->chooseEncoding.run());
+					
+					mi = new MenuItem( menu, SWT.PUSH );
+					
+					mi.setText( MessageText.getString( "label.effective" ) + " -> V" + (tt==TOTorrent.TT_V1_V2?(ett==TOTorrent.TT_V1?2:1):(tt==TOTorrent.TT_V1?1:2)));
+					
+					mi.addListener( SWT.Selection, (ev)->{
+					
+						try{
+							String file = TorrentUtils.getTorrentFileName( torrent );
+							
+							TOTorrent new_torrent = torrent.selectHybridHashType( ett==TOTorrent.TT_V1?TOTorrent.TT_V2:TOTorrent.TT_V1 );
+							
+							if ( file != null ){
+						
+								TorrentUtils.writeToFile( new_torrent, new File( file ), false );
+							}
+							
+							torrentOptions.setTorrent( new_torrent );
+							
+							setupInfoSection(skin);
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					});
+
+					mi.setEnabled( tt == TOTorrent.TT_V1_V2 );
 				}
 
 			}

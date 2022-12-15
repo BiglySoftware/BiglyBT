@@ -2709,6 +2709,7 @@ public class TorrentUtil
 			// enable hybrid v2 swarm, create hybrid/v2
 		
 		List<DownloadManager>	can_v2_from_hybrid 	= new ArrayList<>();
+		List<DownloadManager>	can_v1_from_hybrid 	= new ArrayList<>();
 		List<DownloadManager>	can_create_from_v1 	= new ArrayList<>();
 		
 		for ( DownloadManager dm: dms ){
@@ -2746,10 +2747,12 @@ public class TorrentUtil
 					}
 				}else if ( tt == TOTorrent.TT_V1_V2 ){
 					
+					int ett = torrent.getEffectiveTorrentType();
+					
 					try{
-						byte[] truncated_v2_hash = torrent.getTruncatedHash( TOTorrent.TT_V2 );
+						byte[] truncated_v_other_hash = torrent.getTruncatedHash( ett==TOTorrent.TT_V1?TOTorrent.TT_V2:TOTorrent.TT_V1 );
 											
-						if ( dm.getGlobalManager().getDownloadManager( new HashWrapper( truncated_v2_hash )) == null ){
+						if ( dm.getGlobalManager().getDownloadManager( new HashWrapper( truncated_v_other_hash )) == null ){
 							
 							boolean compatible = true;
 							
@@ -2769,7 +2772,14 @@ public class TorrentUtil
 							
 							if ( compatible ){
 							
-								can_v2_from_hybrid.add( dm );
+								if ( ett==TOTorrent.TT_V1 ){
+								
+									can_v2_from_hybrid.add( dm );
+									
+								}else{
+									
+									can_v1_from_hybrid.add( dm );
+								}
 							}
 						}
 					}catch( Throwable e ){
@@ -2779,92 +2789,112 @@ public class TorrentUtil
 				}
 			}
 		}
-		
-		final MenuItem itemHybridV2 = new MenuItem(menuTracker, SWT.PUSH);
-		Messages.setLanguageText( itemHybridV2,	"GeneralView.label.run.hybrid.v2");
-		
-		itemHybridV2.addListener(SWT.Selection, new ListenerDMTask(can_v2_from_hybrid.toArray(new DownloadManager[0]), true, true) {
-			@Override
-			public void run(DownloadManager old_manager ) {
 				
-				TOTorrent torrent = old_manager.getTorrent();
-				
-				try{
-					TOTorrent other = torrent.selectHybridHashType( TOTorrent.TT_V2 );
-					
-					File temp_file = AETemporaryFileHandler.createTempFile();
-
-					TorrentUtils.writeToFile( other, temp_file, false );
-												
-					File save_loc = old_manager.getSaveLocation();
-						
-					String	save_parent = save_loc.getParentFile().getAbsolutePath();
-					String	save_file	= save_loc.getName();
-					
-					old_manager.getGlobalManager().addDownloadManager( 
-							temp_file.getAbsolutePath(),
-							other.getHash(),
-							save_parent,
-							save_file,
-							DownloadManager.STATE_WAITING,
-							true,
-							old_manager.getAssumedComplete(),
-							new DownloadManagerInitialisationAdapter(){
-								
-								@Override
-								public void 
-								initialised(
-									DownloadManager new_manager, 
-									boolean 		for_seeding)
-								{
-									DiskManagerFileInfoSet old_file_info_set = old_manager.getDiskManagerFileInfoSet();
-									DiskManagerFileInfoSet new_file_info_set = new_manager.getDiskManagerFileInfoSet();
-
-									DiskManagerFileInfo[] old_file_infos = old_file_info_set.getFiles();
-									
-									DownloadManagerState new_dms = new_manager.getDownloadState();
-
-									new_dms.setDisplayName( old_manager.getDisplayName() + " ("+ MessageText.getString( "label.hybrid" ).toLowerCase() + ") (v2)");
-									
-									try {
-										new_dms.suppressStateSave(true);
-									
-										boolean[] to_skip = new boolean[old_file_infos.length];
-										
-										for ( int i=0; i < old_file_infos.length; i++ ){
-											
-											if ( old_file_infos[i].isSkipped()){
-												
-												to_skip[i] = true;
-											}
-										}
-
-										new_file_info_set.setSkipped(to_skip, true);
-	
-									} finally {
-	
-										new_dms.suppressStateSave(false);
-									}
-								}
-								
-								@Override
-								public int 
-								getActions()
-								{
-									return 0;
-								}
-							});
-							
-					
-				}catch( Throwable e ){
-					
-					Debug.out( e );
-				}
+		for ( int i=0;i<2;i++){
+			
+			List<DownloadManager>	canHybrid;
+			int						canHybridTo;
+			
+			if ( i ==0 ){
+				canHybrid		= can_v1_from_hybrid;
+				canHybridTo		= TOTorrent.TT_V1;
+			}else{
+				canHybrid		= can_v2_from_hybrid;
+				canHybridTo		= TOTorrent.TT_V2;
 			}
-		});
+			
+			if ( canHybrid.isEmpty()){
+				
+				continue;
+			}
+			
+			MenuItem itemHybridVn = new MenuItem(menuTracker, SWT.PUSH);
+			Messages.setLanguageText( itemHybridVn,	i==0?"GeneralView.label.run.hybrid.v1":"GeneralView.label.run.hybrid.v2");
+
+			itemHybridVn.addListener(SWT.Selection, new ListenerDMTask(canHybrid.toArray(new DownloadManager[0]), true, true) {
+				@Override
+				public void run(DownloadManager old_manager ) {
+					
+					TOTorrent torrent = old_manager.getTorrent();
+					
+					try{
+						TOTorrent other = torrent.selectHybridHashType( canHybridTo );
+						
+						File temp_file = AETemporaryFileHandler.createTempFile();
+	
+						TorrentUtils.writeToFile( other, temp_file, false );
+													
+						File save_loc = old_manager.getSaveLocation();
+							
+						String	save_parent = save_loc.getParentFile().getAbsolutePath();
+						String	save_file	= save_loc.getName();
+						
+						old_manager.getGlobalManager().addDownloadManager( 
+								temp_file.getAbsolutePath(),
+								other.getHash(),
+								save_parent,
+								save_file,
+								DownloadManager.STATE_WAITING,
+								true,
+								old_manager.getAssumedComplete(),
+								new DownloadManagerInitialisationAdapter(){
+									
+									@Override
+									public void 
+									initialised(
+										DownloadManager new_manager, 
+										boolean 		for_seeding)
+									{
+										DiskManagerFileInfoSet old_file_info_set = old_manager.getDiskManagerFileInfoSet();
+										DiskManagerFileInfoSet new_file_info_set = new_manager.getDiskManagerFileInfoSet();
+	
+										DiskManagerFileInfo[] old_file_infos = old_file_info_set.getFiles();
+										
+										DownloadManagerState new_dms = new_manager.getDownloadState();
+	
+										new_dms.setDisplayName( 
+											old_manager.getDisplayName() + 
+											" ("+ MessageText.getString( "label.hybrid" ).toLowerCase() + 
+											") (v" + (canHybridTo==TOTorrent.TT_V1?1:2)+ ")");
+										
+										try {
+											new_dms.suppressStateSave(true);
+										
+											boolean[] to_skip = new boolean[old_file_infos.length];
+											
+											for ( int i=0; i < old_file_infos.length; i++ ){
+												
+												if ( old_file_infos[i].isSkipped()){
+													
+													to_skip[i] = true;
+												}
+											}
+	
+											new_file_info_set.setSkipped(to_skip, true);
 		
-		itemHybridV2.setEnabled( !can_v2_from_hybrid.isEmpty());
+										} finally {
 		
+											new_dms.suppressStateSave(false);
+										}
+									}
+									
+									@Override
+									public int 
+									getActions()
+									{
+										return 0;
+									}
+								});
+								
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+			});
+		}
+						
 		final MenuItem itemV1Hybrid = new MenuItem(menuTracker, SWT.PUSH);
 		Messages.setLanguageText( itemV1Hybrid,	"menu.create.hybrid.from.v1");
 		

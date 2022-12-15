@@ -517,14 +517,10 @@ SimpleAPIPlugin
 					
 					if ( !is_pad ){
 					
-						TOTorrentFileHashTree tree = t_file.getHashTree();
+						root_hash = t_file.getRootHash();
 
-						if ( tree != null ){
-							
-							root_hash = tree.getRootHash();
-							
-						}else{
-						
+						if ( root_hash == null ){
+													
 							if ( calc_root_hashes && size > 0 && size == downloaded && data_file.length() == size && !t_file.isPadFile()){
 							
 								String key = String.valueOf( index );

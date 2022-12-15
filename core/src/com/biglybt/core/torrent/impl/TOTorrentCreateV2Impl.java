@@ -499,7 +499,7 @@ TOTorrentCreateV2Impl
 							
 							if ( v1_file.getLength() == v2_file.getLength()){
 							
-								v1_files[i].setRootHash( v2_file.getHashTree().getRootHash());
+								v1_files[i].setHashTree( v2_file.getHashTree());
 								
 							}else{
 								

@@ -1721,7 +1721,7 @@ DownloadManagerController
 					
 					if ( file.getLength() > 0 ){
 				
-						secrets_map.put( "p1", file.getHashTree().getRootHash());
+						secrets_map.put( "p1", file.getRootHash());
 						
 						break;
 					}
