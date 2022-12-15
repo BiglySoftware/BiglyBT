@@ -295,11 +295,12 @@ TOTorrentFileImpl
 	}
 	
 	protected void
-	setHashTree(
-		TOTorrentFileHashTreeImpl		_hash_tree )
+	setRootHash(
+		byte[]		_root_hash )
 	{
-		hash_tree	= _hash_tree;
-		root_hash	= hash_tree.getRootHash();
+		root_hash	= _root_hash;
+		
+		hash_tree	= new TOTorrentFileHashTreeImpl( this, root_hash );
 	}
 	
 	@Override
