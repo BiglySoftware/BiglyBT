@@ -78,6 +78,24 @@ DiskManagerFileInfo
 		 * {@link DiskManagerFileInfo#ST_REORDER_COMPACT}
 		 */
 	
+	public default boolean
+	isLinked()
+	{
+		File link = getLink();
+		
+		if ( link != null ){
+			
+			File file = getFile( false );
+			
+			if ( !FileUtil.areFilePathsIdentical( link, file )){
+				
+				return( true );
+			}
+		}
+		
+		return( false );
+	}
+	
 	public default boolean setStorageType(int type ){ return( setStorageType( type, false )); }
 	
 		/**

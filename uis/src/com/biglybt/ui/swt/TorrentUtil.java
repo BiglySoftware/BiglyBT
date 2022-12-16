@@ -2758,11 +2758,11 @@ public class TorrentUtil
 							
 							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
 							
-							for ( DiskManagerFileInfo file: files ){
+							for ( DiskManagerFileInfo dm_file: files ){
 								
-								if ( file.getTorrentFile().isPadFile()){
+								if ( dm_file.getTorrentFile().isPadFile()){
 									
-								}else if ( file.getStorageType() != DiskManagerFileInfo.ST_LINEAR || file.getLink() != null ){
+								}else if ( dm_file.getStorageType() != DiskManagerFileInfo.ST_LINEAR || dm_file.isLinked()){
 									
 									compatible = false;
 									

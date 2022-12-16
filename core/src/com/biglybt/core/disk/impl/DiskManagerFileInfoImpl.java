@@ -319,12 +319,6 @@ DiskManagerFileInfoImpl
 		return( DiskManagerUtil.convertDMStorageTypeFromString( diskManager.getStorageType(file_index)));
 	}
 
-	protected boolean
-	isLinked()
-	{
-		return( getLink() != null );
-	}
-
   /**
    * @return
    */
