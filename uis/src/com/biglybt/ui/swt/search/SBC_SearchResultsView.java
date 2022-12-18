@@ -42,6 +42,7 @@ import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.columns.search.ColumnSearchResultSite;
 import com.biglybt.ui.swt.columns.searchsubs.*;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.search.SearchResultsTabArea.SearchQuery;
 import com.biglybt.ui.swt.utils.SearchSubsUtils;
 import com.biglybt.ui.swt.views.skin.VuzeMessageBox;
@@ -76,7 +77,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
-
+import com.biglybt.ui.swt.views.table.utils.TableColumnFilterHelper;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.MetaSearchListener;
 import com.biglybt.core.metasearch.MetaSearchManager;
@@ -117,7 +118,8 @@ SBC_SearchResultsView
 
 	private SearchResultsTabArea		parent;
 
-	private TableViewSWT<SBC_SearchResult> tv_subs_results;
+	private TableViewSWT<SBC_SearchResult> 				tv_subs_results;
+	private TableColumnFilterHelper<SBC_SearchResult>	col_filter_helper;
 
 	private Composite			table_parent;
 
@@ -1215,7 +1217,15 @@ SBC_SearchResultsView
 
 		SWTSkinObjectTextbox soFilterBox = (SWTSkinObjectTextbox) getSkinObject("filterbox");
 		if (soFilterBox != null) {
-			tv_subs_results.enableFilterCheck(soFilterBox.getBubbleTextBox(), this);
+			BubbleTextBox bubbleTextBox = soFilterBox.getBubbleTextBox();
+
+			tv_subs_results.enableFilterCheck(bubbleTextBox, this);
+						
+			String tooltip = MessageText.getString("filter.tt.start");
+			tooltip += MessageText.getString("column.filter.tt.line1");
+			tooltip += MessageText.getString("column.filter.tt.line2");
+
+			bubbleTextBox.setTooltip( tooltip );
 		}
 
 		tv_subs_results.setRowDefaultHeight(COConfigurationManager.getIntParameter( "Search Subs Row Height" ));
@@ -1364,6 +1374,8 @@ SBC_SearchResultsView
 				}
 			});
 
+		col_filter_helper = new TableColumnFilterHelper<>( tv_subs_results, "srv:search" );
+
 		tv_subs_results.initialize( table_parent );
 
 		control.layout(true);
@@ -1394,7 +1406,7 @@ SBC_SearchResultsView
 			return false;
 		}
 
-		return( SearchSubsUtils.filterCheck( ds, filter, regex, confusable ));
+		return( SearchSubsUtils.filterCheck( col_filter_helper, ds, filter, regex, confusable ));
 	}
 
 	@Override

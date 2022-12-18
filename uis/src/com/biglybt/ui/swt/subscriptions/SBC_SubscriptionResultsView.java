@@ -33,6 +33,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionDownloadListener;
@@ -62,6 +63,7 @@ import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.columns.searchsubs.*;
 import com.biglybt.ui.swt.columns.subscriptions.ColumnSubResultNew;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -77,6 +79,7 @@ import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
+import com.biglybt.ui.swt.views.table.utils.TableColumnFilterHelper;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 
 public class
@@ -94,7 +97,8 @@ SBC_SubscriptionResultsView
 	
 	private static LinkedList<MdiEntrySWT> activated_views	= new LinkedList<>();
 	
-	private TableViewSWT<SubscriptionResultFilterable> tv_subs_results;
+	private TableViewSWT<SubscriptionResultFilterable>				tv_subs_results;
+	private TableColumnFilterHelper<SubscriptionResultFilterable>	col_filter_helper;
 
 	private MdiEntrySWT			mdi_entry;
 	private Composite			table_parent;
@@ -1191,7 +1195,15 @@ SBC_SubscriptionResultsView
 
 		SWTSkinObjectTextbox soFilterBox = (SWTSkinObjectTextbox) getSkinObject("filterbox");
 		if (soFilterBox != null) {
-			tv_subs_results.enableFilterCheck(soFilterBox.getBubbleTextBox(), this);
+			BubbleTextBox bubbleTextBox = soFilterBox.getBubbleTextBox();
+			
+			tv_subs_results.enableFilterCheck(bubbleTextBox, this);
+			
+			String tooltip = MessageText.getString("filter.tt.start");
+			tooltip += MessageText.getString("column.filter.tt.line1");
+			tooltip += MessageText.getString("column.filter.tt.line2");
+
+			bubbleTextBox.setTooltip( tooltip );
 		}
 
 		tv_subs_results.setRowDefaultHeight(COConfigurationManager.getIntParameter( "Search Subs Row Height" ));
@@ -1461,6 +1473,8 @@ SBC_SubscriptionResultsView
 		}
 		*/
 
+		col_filter_helper = new TableColumnFilterHelper<>( tv_subs_results, "srv:search" );
+		
 		tv_subs_results.initialize( table_parent );
 
 		control.layout(true);
@@ -1572,7 +1586,7 @@ SBC_SubscriptionResultsView
 			return false;
 		}
 
-		return( SearchSubsUtils.filterCheck( ds, filter, regex, confusable ));
+		return( SearchSubsUtils.filterCheck( col_filter_helper, ds, filter, regex, confusable ));
 	}
 
 	@Override

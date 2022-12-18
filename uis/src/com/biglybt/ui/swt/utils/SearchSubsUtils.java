@@ -33,10 +33,13 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
+import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
@@ -50,6 +53,7 @@ import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
+import com.biglybt.ui.swt.views.table.utils.TableColumnFilterHelper;
 
 
 public class
@@ -299,12 +303,13 @@ SearchSubsUtils
 		}
 	}
 
-	public static boolean
+	public static <T extends SearchSubsResultBase>boolean
 	filterCheck(
-		SearchSubsResultBase 	ds,
-		String 					filter,
-		boolean 				regex,
-		boolean					confusable )
+		TableColumnFilterHelper<T>	filter_helper,
+		T 							ds,
+		String 						filter,
+		boolean 					regex,
+		boolean						confusable )
 	{
 		if ( filter == null || filter.length() == 0 ){
 
@@ -316,28 +321,14 @@ SearchSubsUtils
 			filter = GeneralUtils.getConfusableEquivalent( filter, true );
 		}
 		
-		try{
+		try{			
 			boolean	hash_filter = filter.startsWith( "t:" );
 
+			String[] names;
+			
 			if ( hash_filter ){
 
 				filter = filter.substring( 2 );
-			}
-
-			String s = regex ? filter : RegExUtil.splitAndQuote( filter, "\\s*[|;]\\s*" );
-
-			boolean	match_result = true;
-
-			if ( regex && s.startsWith( "!" )){
-
-				s = s.substring(1);
-
-				match_result = false;
-			}
-
-			Pattern pattern = Pattern.compile(s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-
-			if ( hash_filter ){
 
 				byte[] hash = ds.getHash();
 
@@ -346,17 +337,7 @@ SearchSubsUtils
 					return( false );
 				}
 
-				String[] names = { ByteFormatter.encodeString( hash ), Base32.encode( hash )};
-
-				for ( String name: names ){
-
-					if ( pattern.matcher(name).find() == match_result ){
-
-						return( true );
-					}
-				}
-
-				return( false );
+				names = new String[]{ ByteFormatter.encodeString( hash ), Base32.encode( hash )};
 
 			}else{
 
@@ -367,9 +348,19 @@ SearchSubsUtils
 					name = GeneralUtils.getConfusableEquivalent (name, false );
 				}
 				
-				return( pattern.matcher(name).find() == match_result );
+				names = new String[]{ name };
 			}
-
+			
+			for ( String name: names ){
+			
+				if ( filter_helper.filterCheck( ds, filter, regex, name, hash_filter )){
+					
+					return( true );
+				}
+			}
+			
+			return( false );
+			
 		}catch(Exception e ){
 
 			return true;

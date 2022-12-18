@@ -106,6 +106,7 @@ public class FakeTableCell
 	private Graphic graphic;
 
 	private String text;
+	private String textEquiv;
 	private double numericValue = Double.NaN;
 	
 	private Object pluginDataSource;
@@ -956,6 +957,21 @@ public class FakeTableCell
 	}
 
 	
+	@Override
+	public String 
+	getTextEquivalent()
+	{
+		return( textEquiv );
+	}
+
+	@Override
+	public void 
+	setTextEquivalent( 
+		String str )
+	{
+		textEquiv = str;
+	}
+	  
 	@Override
 	public double 
 	getNumeric()

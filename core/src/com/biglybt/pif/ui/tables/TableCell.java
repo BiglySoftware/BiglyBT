@@ -102,6 +102,14 @@ public interface TableCell {
   String getText();
 
   /**
+   * For image based cells should return a textual equivalent. This is useful for filtering, for example.
+   * @return the text value to be used or null if it should be ignored
+   */
+  String getTextEquivalent();
+
+  void setTextEquivalent( String str );
+  
+  /**
    * Set the numeric value of the cell. This is not used for formating, sort order, display, it is
    * purely to allow the numeric value of a cell be set and retrieved
    * @param d

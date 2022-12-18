@@ -134,6 +134,7 @@ public abstract class TableCellSWTBase
 
 	protected Comparable sortValue;
 
+	private String textEquiv;
 	private double numericValue = Double.NaN;
 	
 	private byte restartRefresh = 0;
@@ -1002,6 +1003,21 @@ public abstract class TableCellSWTBase
 		return sortValue;
 	}
 
+	@Override
+	public String 
+	getTextEquivalent()
+	{
+		return( textEquiv );
+	}
+
+	@Override
+	public void 
+	setTextEquivalent( 
+		String str )
+	{
+		textEquiv = str;
+	}
+	
 	@Override
 	public double 
 	getNumeric()

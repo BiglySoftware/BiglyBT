@@ -94,9 +94,11 @@ TagsColumnHelper
 			}
 
 		} finally {
+			cell.setTextEquivalent( sb1.toString());
 			sb1.append( "," );
 			sb1.append( sb2 );	// we need the sort value to change even when the string value doesn't
 			cell.setSortValue(sb1.toString());
+			
 		}
 	}
 

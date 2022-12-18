@@ -211,7 +211,12 @@ TableColumnFilterHelper<T>
 						
 						cell.refresh();
 											
-						match_text = cell.getText();
+						match_text = cell.getTextEquivalent();
+						
+						if ( match_text == null ){
+							
+							match_text = cell.getText();
+						}
 						
 						match_numeric = cell.getNumeric();
 					}
