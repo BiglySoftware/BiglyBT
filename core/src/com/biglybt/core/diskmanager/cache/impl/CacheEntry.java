@@ -34,12 +34,12 @@ CacheEntry
 	protected static final int	CT_DATA_WRITE		= 0;
 	protected static final int	CT_READ_AHEAD		= 1;
 
-	protected CacheFileWithCache		file;
-	protected DirectByteBuffer	buffer;
-	protected final long				offset;
-	protected int				size;
-	protected int				buffer_pos;
-	protected int				buffer_limit;
+	private final CacheFileWithCache	file;
+	private final DirectByteBuffer		buffer;
+	private final long					file_position;
+	private final int					size;
+	private final int					buffer_pos;
+	private final int					buffer_limit;
 
 	protected boolean			dirty;
 
@@ -52,24 +52,30 @@ CacheEntry
 	 * Constructs a dummy cache entry used to search in a Set
 	 * @param offset
 	 */
-	CacheEntry(long offset)
+	CacheEntry(
+		long _offset )
 	{
-		this.offset = offset;
+		file 			= null;
+		buffer			= null;
+		file_position	= _offset;
+		size			= 0;
+		buffer_pos		= 0;
+		buffer_limit	= 0;
 	}
 
 	protected
 	CacheEntry(
 		int					_entry_type,
-		CacheFileWithCache		_file,
+		CacheFileWithCache	_file,
 		DirectByteBuffer	_buffer,
-		long				_offset,
+		long				_file_position,
 		int					_size )
 	{
-		entry_type	= _entry_type;
-		file		= _file;
-		buffer		= _buffer;
-		offset		= _offset;
-		size		= _size;
+		entry_type		= _entry_type;
+		file			= _file;
+		buffer			= _buffer;
+		file_position	= _file_position;
+		size			= _size;
 
 		buffer_pos		= buffer.position(DirectByteBuffer.SS_CACHE);
 		buffer_limit	= buffer.limit(DirectByteBuffer.SS_CACHE);
@@ -92,7 +98,7 @@ CacheEntry
 	public long
 	getFilePosition()
 	{
-		return( offset );
+		return( file_position );
 	}
 
 	public int
@@ -123,6 +129,7 @@ CacheEntry
 	resetBufferPosition()
 	{
 		buffer.position( DirectByteBuffer.SS_CACHE, buffer_pos );
+		buffer.limit( DirectByteBuffer.SS_CACHE, buffer_limit );
 	}
 
 	protected void
@@ -154,6 +161,6 @@ CacheEntry
 	protected String
 	getString()
 	{
-		return( "[" + offset + " - " + (offset+size-1) + ":" + buffer.position(DirectByteBuffer.SS_CACHE)+"/"+buffer.limit(DirectByteBuffer.SS_CACHE)+"]" );
+		return( "[" + file_position + " - " + (file_position+size-1) + ":" + buffer.position(DirectByteBuffer.SS_CACHE)+"/"+buffer.limit(DirectByteBuffer.SS_CACHE)+"]" );
 	}
 }

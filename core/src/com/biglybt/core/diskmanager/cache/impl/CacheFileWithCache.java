@@ -862,19 +862,19 @@ CacheFileWithCache
 				return;
 			}
 
-			Iterator	it = cache.iterator();
+			Iterator<CacheEntry>	it = cache.iterator();
 
 			Throwable	last_failure = null;
 
 			long	entry_total_released = 0;
 
-			List	multi_block_entries		= new ArrayList();
-			long	multi_block_start		= -1;
-			long	multi_block_next		= -1;
+			List<CacheEntry>	multi_block_entries		= new ArrayList<>();
+			long				multi_block_start		= -1;
+			long				multi_block_next		= -1;
 
 			while( it.hasNext()){
 
-				CacheEntry	entry = (CacheEntry)it.next();
+				CacheEntry	entry = it.next();
 
 				long	entry_file_position 	= entry.getFilePosition();
 				int		entry_length			= entry.getLength();
@@ -943,19 +943,20 @@ CacheFileWithCache
 								}
 							}
 
-							List	f_multi_block_entries	= multi_block_entries;
-							long	f_multi_block_start		= multi_block_start;
-							long	f_multi_block_next		= multi_block_next;
+							List<CacheEntry>	f_multi_block_entries	= multi_block_entries;
+							long				f_multi_block_start		= multi_block_start;
+							long				f_multi_block_next		= multi_block_next;
 
 							multi_block_start	= entry_file_position;
 
 							multi_block_next	= entry_file_position + entry_length;
 
-							multi_block_entries	= new ArrayList();
+							multi_block_entries	= new ArrayList<>();
 
 							multi_block_entries.add( entry );
 
 							if ( skip_chunk ){
+								
 								if (TRACE)
 									Logger.log(new LogEvent(torrent, LOGID,
 											"flushCache: skipping " + multi_block_entries.size()
@@ -1051,10 +1052,10 @@ CacheFileWithCache
 
 	protected void
 	multiBlockFlush(
-		List		multi_block_entries,
-		long		multi_block_start,
-		long		multi_block_next,
-		boolean		release_entries )
+		List<CacheEntry>	multi_block_entries,
+		long				multi_block_start,
+		long				multi_block_next,
+		boolean				release_entries )
 
 		throws CacheFileManagerException
 	{
@@ -1072,7 +1073,7 @@ CacheFileWithCache
 
 			for (int i=0;i<buffers.length;i++){
 
-				CacheEntry	entry = (CacheEntry)multi_block_entries.get(i);
+				CacheEntry	entry = multi_block_entries.get(i);
 
 					// sanitity check - we should always be flushing entire entries
 
@@ -1112,7 +1113,7 @@ CacheFileWithCache
 
 			for (int i=0;i<multi_block_entries.size();i++){
 
-				CacheEntry	entry = (CacheEntry)multi_block_entries.get(i);
+				CacheEntry	entry = multi_block_entries.get(i);
 
 				if ( release_entries ){
 
