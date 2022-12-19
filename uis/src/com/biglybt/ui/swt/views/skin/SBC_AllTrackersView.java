@@ -1035,59 +1035,49 @@ public class SBC_AllTrackersView
 
 		options_item.setMenu( options_menu );
 		
-			// light seeding
-		
-		Menu ls_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
-				
-		MenuItem ls_item = new MenuItem( options_menu, SWT.CASCADE);
-
-		Messages.setLanguageText( ls_item, "ManagerItem.lightseeding" );
-
-		ls_item.setMenu( ls_menu );
-			
-		MenuItem ls_default = new MenuItem( ls_menu, SWT.RADIO );
-		Messages.setLanguageText( ls_default, "label.default" );
-		
-		MenuItem ls_enabled = new MenuItem( ls_menu, SWT.RADIO );
-		Messages.setLanguageText( ls_enabled, "label.enabled" );
-		
-		MenuItem ls_disabled = new MenuItem( ls_menu, SWT.RADIO );
-		Messages.setLanguageText( ls_disabled, "label.disabled" );
-		
-		MenuItem[] ls_items = { ls_default, ls_enabled, ls_disabled };
-		
-			// cryptoport
-		
-		Menu cp_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
-		
-		MenuItem cp_item = new MenuItem( options_menu, SWT.CASCADE);
-
-		cp_item.setText( "cryptoport" );
-
-		cp_item.setMenu( cp_menu );
-			
-		MenuItem cp_default = new MenuItem( cp_menu, SWT.RADIO );
-		Messages.setLanguageText( cp_default, "label.default" );
-		
-		MenuItem cp_enabled = new MenuItem( cp_menu, SWT.RADIO );
-		Messages.setLanguageText( cp_enabled, "label.enabled" );
-		
-		MenuItem cp_disabled = new MenuItem( cp_menu, SWT.RADIO );
-		Messages.setLanguageText( cp_disabled, "label.disabled" );
-
-		MenuItem[] cp_items = { cp_default, cp_enabled, cp_disabled };
-	
 		boolean opt_enabled = trackers.size() == 1;
 
-		ls_item.setEnabled( opt_enabled );
-		cp_item.setEnabled( opt_enabled );
+		MenuItem[][] opt_items = { null, null, null };
+		
+		String[] opt_msgs = { "ManagerItem.lightseeding", "cryptoport", "ConfigView.group.scrape" };
+		
+		for ( int i=0; i<opt_items.length;i++){
+		
+			Menu opt_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+					
+			MenuItem opt_item = new MenuItem( options_menu, SWT.CASCADE);
+	
+			if ( i == 1 ){
+				
+				opt_item.setText( opt_msgs[i] );
+
+			}else{
+				
+				Messages.setLanguageText( opt_item, opt_msgs[i] );
+			}
+	
+			opt_item.setMenu( opt_menu );
+				
+			MenuItem ls_default = new MenuItem( opt_menu, SWT.RADIO );
+			Messages.setLanguageText( ls_default, "label.default" );
+			
+			MenuItem ls_enabled = new MenuItem( opt_menu, SWT.RADIO );
+			Messages.setLanguageText( ls_enabled, "label.enabled" );
+			
+			MenuItem ls_disabled = new MenuItem( opt_menu, SWT.RADIO );
+			Messages.setLanguageText( ls_disabled, "label.disabled" );
+			
+			opt_items[i] = new MenuItem[]{ ls_default, ls_enabled, ls_disabled };
+			
+			opt_item.setEnabled( opt_enabled );
+		}
 		
 		if ( opt_enabled ){
 			
 			AllTrackersTracker tracker = trackers.get(0);
 			
 			/* allow configuration in the absence of torrents, doesn't harm anything as
-			 * if the tracker ends up being public it light seeding is ignored anyway
+			 * if the tracker ends up being public if light seeding is ignored anyway
 			if ( tracker.getPrivatePercentage() == 0 ){
 				
 				ls_item.setEnabled( false );
@@ -1096,29 +1086,32 @@ public class SBC_AllTrackersView
 			
 			Map<String,Object> init_options = tracker.getOptions();
 			
-			int	ls_state 	= 0;
-			int cp_state	= 0;
+			int[] opt_states = { 0, 0, 0 };
+			
+			String[] opt_names = { 
+					AllTrackersTracker.OPT_LIGHT_SEEDING, 
+					AllTrackersTracker.OPT_CRYPTO_PORT,
+					AllTrackersTracker.OPT_SCRAPE_LEVEL
+				};
 			
 			if ( init_options != null ){
 				
-				Number opt = (Number)init_options.get( AllTrackersTracker.OPT_LIGHT_SEEDING );
+				for ( int i=0;i<opt_states.length;i++){
 				
-				if ( opt != null ){
-					
-					ls_state = opt.intValue();
-				}
+					Number opt = (Number)init_options.get( opt_names[i] );
 				
-				opt = (Number)init_options.get( AllTrackersTracker.OPT_CRYPTO_PORT );
-				
-				if ( opt != null ){
-					
-					cp_state = opt.intValue();
+					if ( opt != null ){
+						
+						opt_states[i] = opt.intValue();
+					}
 				}
 			}
 			
-			ls_items[ls_state].setSelection( true );
-			cp_items[cp_state].setSelection( true );
-		
+			for ( int i=0;i<opt_states.length;i++){
+			
+				opt_items[i][opt_states[i]].setSelection( true );
+			}
+			
 			Listener l = (e)->{
 										
 				Map<String,Object> options = tracker.getOptions();
@@ -1128,36 +1121,30 @@ public class SBC_AllTrackersView
 					options = new HashMap<>();
 				}
 				
-				int new_ls_state = 0;
-				int new_cp_state = 0;
+				int[] new_opt_states = { 0, 0, 0 };
 				
-				for ( int i=0; i<ls_items.length;i++){
-					if ( ls_items[i].getSelection()){
-						new_ls_state = i;
-						break;
+				for ( int i=0;i<new_opt_states.length;i++){
+					MenuItem[] items = opt_items[i];
+					for ( int j=0;j<items.length;j++){
+						if ( items[j].getSelection()){
+							new_opt_states[i] = j;
+							break;
+						}
 					}
 				}
 				
-				for ( int i=0; i<cp_items.length;i++){
-					if ( cp_items[i].getSelection()){
-						new_cp_state = i;
-						break;
-					}
-				}
+				for ( int i=0;i<new_opt_states.length;i++){
 													
-				options.put( AllTrackersTracker.OPT_LIGHT_SEEDING, new_ls_state );
-					
-				options.put( AllTrackersTracker.OPT_CRYPTO_PORT, new_cp_state );
-				
+					options.put( opt_names[i], new_opt_states[i] );
+				}
+									
 				tracker.setOptions( options );
 			};
 			
-			for ( MenuItem mi: ls_items ){
-				mi.addListener( SWT.Selection, l );
-			}
-			
-			for ( MenuItem mi: cp_items ){
-				mi.addListener( SWT.Selection, l );
+			for ( MenuItem[] mis: opt_items ){
+				for ( MenuItem mi: mis ){
+					mi.addListener( SWT.Selection, l );
+				}
 			}
 		}
 		

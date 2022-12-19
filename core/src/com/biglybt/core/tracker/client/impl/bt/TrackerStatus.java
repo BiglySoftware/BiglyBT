@@ -41,6 +41,7 @@ import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.security.SESecurityManager;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
 import com.biglybt.core.tracker.AllTrackersManager.ScrapeStats;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.client.TRTrackerScraperClientResolver;
@@ -131,7 +132,9 @@ public class TrackerStatus {
 			});
 	}
 	
-	private final URL				tracker_url;
+	private final URL					tracker_url;
+	private final AllTrackersTracker	all_trackers_tracker;
+	
 	private boolean					az_tracker;
 	private boolean					enable_sni_hack;
 	private boolean 				internal_error_hack;
@@ -161,6 +164,8 @@ public class TrackerStatus {
 	scraper		= _scraper;
     tracker_url	= _tracker_url;
 
+    all_trackers_tracker = all_trackers.getTracker( tracker_url );
+    
     az_tracker = TRTrackerUtils.isAZTracker( tracker_url );
 
     bSingleHashScrapes	= COConfigurationManager.getBooleanParameter( "Tracker Client Scrape Single Only" );
@@ -400,8 +405,29 @@ public class TrackerStatus {
 
 			boolean original_bSingleHashScrapes = bSingleHashScrapes;
 
-			boolean disable_all_scrapes = !COConfigurationManager.getBooleanParameter("Tracker Client Scrape Enable");
-
+			boolean disable_scrapes = !COConfigurationManager.getBooleanParameter("Tracker Client Scrape Enable");
+				
+			Map<String,Object> options = all_trackers_tracker.getOptions();
+				
+			if ( options != null ){
+					
+				Number n = (Number)options.get( AllTrackersTracker.OPT_SCRAPE_LEVEL );
+				
+				if ( n != null ){
+					
+					int scrape_level = n.intValue();
+					
+					if ( scrape_level == 1 ){
+						
+						disable_scrapes = false;
+						
+					}else if ( scrape_level == 2 ){
+						
+						disable_scrapes = true;
+					}
+				}
+			}
+			
 			byte[]	scrape_reply = null;
 
 			List<HashWrapper> 					hashesInQuery 		= new ArrayList<>(allResponses.size());
@@ -444,9 +470,7 @@ public class TrackerStatus {
 
 						scraper.scrapeReceived(response);
 
-					} else if ( (!force) &&
-									( 	disable_all_scrapes ||
-										!scraper.isTorrentScrapable(hash))){
+					} else if ( (!force) &&	( disable_scrapes || !scraper.isTorrentScrapable(hash))){
 
 						response.setNextScrapeStartTime(SystemTime.getCurrentTime()
 								+ FAULTY_SCRAPE_RETRY_INTERVAL);

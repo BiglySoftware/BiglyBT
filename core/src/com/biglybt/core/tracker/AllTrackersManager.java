@@ -182,6 +182,7 @@ AllTrackersManager
 	{
 		public static final String	OPT_CRYPTO_PORT		= "cp";	// Number 0=default;1=enable;2=disable
 		public static final String	OPT_LIGHT_SEEDING	= "ls";	// Number 0=default;1=enable;2=disable
+		public static final String	OPT_SCRAPE_LEVEL	= "sl";	// Number 0=default;1=enable;2=disable
 		
 		public String
 		getTrackerName();
