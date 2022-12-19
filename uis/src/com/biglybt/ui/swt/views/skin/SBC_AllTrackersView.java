@@ -1039,6 +1039,7 @@ public class SBC_AllTrackersView
 
 		MenuItem[][] opt_items = { null, null, null };
 		
+		String[] opt_names = AllTrackersTracker.OPT_ALL; 
 		String[] opt_msgs = { "ManagerItem.lightseeding", "cryptoport", "ConfigView.group.scrape" };
 		
 		for ( int i=0; i<opt_items.length;i++){
@@ -1088,12 +1089,7 @@ public class SBC_AllTrackersView
 			
 			int[] opt_states = { 0, 0, 0 };
 			
-			String[] opt_names = { 
-					AllTrackersTracker.OPT_LIGHT_SEEDING, 
-					AllTrackersTracker.OPT_CRYPTO_PORT,
-					AllTrackersTracker.OPT_SCRAPE_LEVEL
-				};
-			
+	
 			if ( init_options != null ){
 				
 				for ( int i=0;i<opt_states.length;i++){

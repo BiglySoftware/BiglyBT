@@ -516,9 +516,9 @@ AllTrackersManagerImpl
 			boolean skip_unregistered = closing && got_running;
 			
 			try{
-				Map map = new HashMap();
+				Map<String,Object> map = new HashMap<>();
 				
-				List<Map>	trackers = new ArrayList<>( host_map.size() + 32 );
+				List<Map<String,Object>>	trackers = new ArrayList<>( host_map.size() + 32 );
 				
 				map.put( "trackers", trackers ); 
 				
@@ -526,7 +526,36 @@ AllTrackersManagerImpl
 				
 					if ( skip_unregistered && !tracker.isRegistered()){
 						
-						continue;
+							// retain if it has non-default options
+						
+						Map<String,Object> options = tracker.getOptions();
+						
+						boolean has_non_def = false;
+						
+						if ( options != null ){
+							
+							for ( String opt: AllTrackersTracker.OPT_ALL ){
+								
+								try{
+									Number num = (Number)options.get( opt );
+									
+									if ( num != null && num.intValue() != 0 ){
+										
+										has_non_def = true;
+										
+										break;
+									}
+								}catch( Throwable e ){
+									
+									Debug.out( e );
+								}
+							}
+						}
+						
+						if ( !has_non_def ){
+						
+							continue;
+						}
 					}
 					
 					try{
@@ -547,13 +576,13 @@ AllTrackersManagerImpl
 				
 				if ( !logging_keys.isEmpty()){
 					
-					List<Map>	logging = new ArrayList<>( logging_keys.size() + 32 );
+					List<Map<String,String>>	logging = new ArrayList<>( logging_keys.size() + 32 );
 					
 					map.put( "logging", logging ); 
 					
 					for ( String key: logging_keys.keySet()){
 						
-						Map m = new HashMap();
+						Map<String,String> m = new HashMap<>();
 						
 						logging.add( m );
 						
@@ -1381,7 +1410,7 @@ AllTrackersManagerImpl
 			logger = logging_keys.get( short_key );
 		}
 		
-		private Map
+		private Map<String,Object>
 		exportToMap()
 		{
 			Map<String,Object>	map = new HashMap<>();

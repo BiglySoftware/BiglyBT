@@ -180,9 +180,14 @@ AllTrackersManager
 	public interface
 	AllTrackersTracker
 	{
-		public static final String	OPT_CRYPTO_PORT		= "cp";	// Number 0=default;1=enable;2=disable
-		public static final String	OPT_LIGHT_SEEDING	= "ls";	// Number 0=default;1=enable;2=disable
-		public static final String	OPT_SCRAPE_LEVEL	= "sl";	// Number 0=default;1=enable;2=disable
+		public static final String OPT_CRYPTO_PORT		= "cp";	// Number 0=default;1=enable;2=disable
+		public static final String OPT_LIGHT_SEEDING	= "ls";	// Number 0=default;1=enable;2=disable
+		public static final String OPT_SCRAPE_LEVEL		= "sl";	// Number 0=default;1=enable;2=disable
+		
+			// when adding new options check that their semantics are compatible with use of OPT_ALL
+			// (esp if they aren't "Number 0=default;1=enable;2=disable"...)
+		
+		public static final String[] OPT_ALL = { OPT_CRYPTO_PORT, OPT_LIGHT_SEEDING, OPT_SCRAPE_LEVEL };
 		
 		public String
 		getTrackerName();
