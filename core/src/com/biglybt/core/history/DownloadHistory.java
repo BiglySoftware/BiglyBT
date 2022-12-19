@@ -22,6 +22,8 @@
 
 package com.biglybt.core.history;
 
+import java.util.Map;
+
 public interface
 DownloadHistory
 {
@@ -57,4 +59,12 @@ DownloadHistory
 
 	public void
 	setRedownloading();
+	
+	/**
+	 * See SearchResult properties for list
+	 * @return
+	 */
+	
+	public Map<Integer,Object>
+	toPropertyMap();
 }

@@ -23,7 +23,9 @@
 package com.biglybt.core.history.impl;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.net.URL;
 import java.util.*;
 
 import com.biglybt.core.Core;
@@ -40,6 +42,7 @@ import com.biglybt.core.history.DownloadHistory;
 import com.biglybt.core.history.DownloadHistoryEvent;
 import com.biglybt.core.history.DownloadHistoryListener;
 import com.biglybt.core.history.DownloadHistoryManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
@@ -47,6 +50,15 @@ import com.biglybt.core.tag.TagType;
 import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
+import com.biglybt.net.magneturi.MagnetURIHandler;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.utils.search.SearchException;
+import com.biglybt.pif.utils.search.SearchInstance;
+import com.biglybt.pif.utils.search.SearchObserver;
+import com.biglybt.pif.utils.search.SearchProvider;
+import com.biglybt.pif.utils.search.SearchResult;
+import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.utils.SearchMatcher;
 
 public class
 DownloadHistoryManagerImpl
@@ -351,6 +363,107 @@ DownloadHistoryManagerImpl
 				}
 			});
 
+		if ( enabled ){
+			try{
+				PluginInterface default_pi = PluginInitializer.getDefaultInterface();
+	
+				default_pi.getUtilities().registerSearchProvider(
+					new SearchProvider()
+					{
+						private Map<Integer,Object>	properties = new HashMap<>();
+	
+						{
+							properties.put( PR_NAME, MessageText.getString( "downloadhistoryview.view.heading" ));
+	
+							try{
+								URL url =
+									MagnetURIHandler.getSingleton().registerResource(
+										new MagnetURIHandler.ResourceProvider()
+										{
+											@Override
+											public String
+											getUID()
+											{
+												return( DownloadHistoryManager.class.getName() + ".1" );
+											}
+	
+											@Override
+											public String
+											getFileType()
+											{
+												return( "png" );
+											}
+	
+											@Override
+											public byte[]
+											getData()
+											{
+												try{
+	
+													InputStream is = getClass().getClassLoader().getResourceAsStream("com/biglybt/ui/images/sb/ic_logview.png");
+	
+													if ( is != null ){
+	
+														return( FileUtil.readInputStreamAsByteArray(is));
+													}
+												}catch( Throwable e ){
+													
+													Debug.out( e );
+												}
+												
+												return( null );
+											}
+										});
+	
+								properties.put( PR_ICON_URL, url.toExternalForm());
+	
+							}catch( Throwable e ){
+	
+								Debug.out( e );
+							}
+						}
+	
+						@Override
+						public SearchInstance
+						search(
+							Map<String,Object>	search_parameters,
+							SearchObserver		observer )
+	
+							throws SearchException
+						{
+							try{
+								return( searchHistory( search_parameters, observer ));
+	
+							}catch( Throwable e ){
+	
+								throw( new SearchException( "Search failed", e ));
+							}
+						}
+	
+						@Override
+						public Object
+						getProperty(
+							int			property )
+						{
+							return( properties.get( property ));
+						}
+	
+						@Override
+						public void
+						setProperty(
+							int			property,
+							Object		value )
+						{
+							properties.put( property, value );
+						}
+					});
+	
+			}catch( Throwable e ){
+	
+				Debug.out( "Failed to register search provider" );
+			}
+		}
+		
 		SimpleTimer.addPeriodicEvent(
 			"DHM:timer",
 			60*1000,
@@ -892,6 +1005,106 @@ DownloadHistoryManagerImpl
 		}
 	}
 
+	
+	public SearchInstance
+	searchHistory(
+		Map<String,Object>		search_parameters,
+		final SearchObserver	observer )
+
+		throws SearchException
+	{
+		final String	term = (String)search_parameters.get( SearchProvider.SP_SEARCH_TERM );
+
+		final SearchInstance si =
+			new SearchInstance()
+			{
+				@Override
+				public void
+				cancel()
+				{
+					Debug.out( "Cancelled" );
+				}
+			};
+
+		if ( term == null ){
+
+			try{
+				observer.complete();
+
+			}catch( Throwable e ){
+
+				Debug.out( e );
+			}
+		}else{
+
+			new AEThread2( "DownloadHistory:search", true )
+			{
+				@Override
+				public void
+				run()
+				{
+					try{
+						List<DownloadHistory>	history = getHistory();
+						
+						SearchMatcher	matcher = new SearchMatcher( term );
+	
+						ByteArrayHashMap<String>	hashes = new ByteArrayHashMap<>();
+
+						for ( DownloadHistory entry: history ){
+							
+							if ( matcher.matches( entry.getName())){
+								
+								byte[] hash = entry.getTorrentHash();
+								
+								if ( hash != null ){
+									
+									if ( hashes.containsKey(hash)){
+										
+										continue;
+									}
+									
+									hashes.put( hash, "" );
+								}
+								
+								Map result_properties = entry.toPropertyMap();
+	
+								SearchResult search_result =
+									new SearchResult()
+									{
+										@Override
+										public Object
+										getProperty(
+											int		property_name )
+										{
+											return( result_properties.get( property_name ));
+										}
+									};
+	
+								try{
+									observer.resultReceived( si, search_result );
+	
+								}catch( Throwable e ){
+	
+									Debug.out( e );
+								}
+							}
+						}
+
+					}catch( Throwable e ){
+
+						Debug.out( e );
+
+					}finally{
+
+						observer.complete();
+					}
+				}
+			}.start();
+		}
+
+		return( si );
+	}
+	
 	private static class
 	DownloadHistoryEventImpl
 		implements DownloadHistoryEvent
@@ -1073,6 +1286,28 @@ DownloadHistoryManagerImpl
 			return( map );
 		}
 
+		public Map<Integer,Object>
+		toPropertyMap()
+		{
+			Map<Integer,Object>	result = new HashMap<>();
+			
+			result.put( SearchResult.PR_NAME, name );
+			result.put( SearchResult.PR_SIZE, size );
+			result.put( SearchResult.PR_HASH, hash );
+			result.put( SearchResult.PR_PUB_DATE, new Date( add_time ));
+			
+			String magnet = UrlUtils.getMagnetURI( getTorrentHash(), getTorrentV2Hash(), getName(), null );
+
+			result.put( SearchResult.PR_TORRENT_LINK, magnet );
+			
+			if ( tags != null && tags.length > 0 ){
+			
+				result.put( SearchResult.PR_TAGS, tags );
+			}
+			
+			return( result );
+		}
+		
 		boolean
 		updateCompleteTime(
 			DownloadManagerState		dms )
