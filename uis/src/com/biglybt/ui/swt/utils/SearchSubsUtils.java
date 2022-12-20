@@ -167,23 +167,37 @@ SearchSubsUtils
 
 				for ( SearchSubsResultBase result: results ){
 
-					byte[] hash = result.getHash();
+					String torrent_link = result.getTorrentLink();
 
-					if ( hash != null ){
+					if ( torrent_link != null && torrent_link.toLowerCase().startsWith( "magnet:")){
+						
 						if ( buffer.length() > 0 ){
+							
 							buffer.append( "\r\n" );
 						}
-
-						String torrent_link = result.getTorrentLink();
-
-						String str = UrlUtils.getMagnetURI( hash, result.getName(), null );
-
-						if ( torrent_link != null ){
-
-							str += "&fl=" + UrlUtils.encode( torrent_link );
+						
+						buffer.append( torrent_link );
+						
+					}else{
+						
+						byte[] hash = result.getHash();
+	
+						if ( hash != null ){
+							
+							if ( buffer.length() > 0 ){
+								
+								buffer.append( "\r\n" );
+							}
+		
+							String str = UrlUtils.getMagnetURI( hash, result.getName(), null );
+	
+							if ( torrent_link != null ){
+	
+								str += "&fl=" + UrlUtils.encode( torrent_link );
+							}
+	
+							buffer.append( str );
 						}
-
-						buffer.append( str );
 					}
 				}
 				ClipboardCopy.copyToClipBoard( buffer.toString());

@@ -1297,14 +1297,20 @@ DownloadHistoryManagerImpl
 			result.put( SearchResult.PR_PUB_DATE, new Date( add_time ));
 			
 			String magnet = UrlUtils.getMagnetURI( getTorrentHash(), getTorrentV2Hash(), getName(), null );
-
-			result.put( SearchResult.PR_TORRENT_LINK, magnet );
 			
 			if ( tags != null && tags.length > 0 ){
 			
 				result.put( SearchResult.PR_TAGS, tags );
+				
+				for ( String tag: tags ){
+					
+					magnet += "&tag=" + UrlUtils.encode( tag );
+				}
 			}
-			
+
+			result.put( SearchResult.PR_TORRENT_LINK, magnet );
+			//result.put( SearchResult.PR_DOWNLOAD_LINK, magnet );
+
 			return( result );
 		}
 		

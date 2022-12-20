@@ -327,6 +327,11 @@ Result
 
 		if ( this.getDownloadLink().length() > 0 ){
 			object.put("dl", this.getDownloadLink());
+		}else{
+			String tl = getTorrentLink();
+			if ( tl.length() > 0 ){
+				object.put("dl", tl );
+			}
 		}
 
 		if ( this.getDownloadButtonLink().length() > 0 ){
