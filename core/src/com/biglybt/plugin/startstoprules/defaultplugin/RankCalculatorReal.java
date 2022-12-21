@@ -313,54 +313,39 @@ RankCalculatorReal
 	 * @param cfg
 	 */
 	public static void reloadConfigParams(PluginConfig cfg) {
-		final String PREFIX = "StartStopManager_";
+		iRankType = cfg.getUnsafeIntParameter("StartStopManager_iRankType");
 
-		iRankType = cfg.getUnsafeIntParameter(PREFIX + "iRankType");
+		minPeersToBoostNoSeeds = cfg.getUnsafeIntParameter("StartStopManager_iMinPeersToBoostNoSeeds");
+		minSpeedForActiveDL = cfg.getUnsafeIntParameter("StartStopManager_iMinSpeedForActiveDL");
+		minSpeedForActiveSeeding = cfg.getUnsafeIntParameter("StartStopManager_iMinSpeedForActiveSeeding");
 
-		minPeersToBoostNoSeeds = cfg.getUnsafeIntParameter(PREFIX
-				+ "iMinPeersToBoostNoSeeds");
-		minSpeedForActiveDL = cfg.getUnsafeIntParameter(PREFIX + "iMinSpeedForActiveDL");
-		minSpeedForActiveSeeding = cfg.getUnsafeIntParameter(PREFIX
-				+ "iMinSpeedForActiveSeeding");
-
-		iRankTypeSeedFallback = cfg.getUnsafeIntParameter(PREFIX
-				+ "iRankTypeSeedFallback");
-		bPreferLargerSwarms = cfg.getUnsafeBooleanParameter(PREFIX
-				+ "bPreferLargerSwarms");
-		minTimeAlive = cfg.getUnsafeIntParameter(PREFIX + "iMinSeedingTime") * 1000;
-		bAutoStart0Peers = cfg.getUnsafeBooleanParameter(PREFIX + "bAutoStart0Peers");
+		iRankTypeSeedFallback = cfg.getUnsafeIntParameter("StartStopManager_iRankTypeSeedFallback");
+		bPreferLargerSwarms = cfg.getUnsafeBooleanParameter("StartStopManager_bPreferLargerSwarms");
+		minTimeAlive = cfg.getUnsafeIntParameter("StartStopManager_iMinSeedingTime") * 1000;
+		bAutoStart0Peers = cfg.getUnsafeBooleanParameter("StartStopManager_bAutoStart0Peers");
 
 		// Ignore torrent if seed count is at least..
-		iIgnoreSeedCount = cfg.getUnsafeIntParameter(PREFIX + "iIgnoreSeedCount");
-		bIgnore0Peers = cfg.getUnsafeBooleanParameter(PREFIX + "bIgnore0Peers");
+		iIgnoreSeedCount = cfg.getUnsafeIntParameter("StartStopManager_iIgnoreSeedCount");
+		bIgnore0Peers = cfg.getUnsafeBooleanParameter("StartStopManager_bIgnore0Peers");
 		iIgnoreShareRatio = (int) (1000 * cfg.getUnsafeFloatParameter("Stop Ratio"));
-		iIgnoreShareRatio_SeedStart = cfg.getUnsafeIntParameter(PREFIX
-				+ "iIgnoreShareRatioSeedStart");
+		iIgnoreShareRatio_SeedStart = cfg.getUnsafeIntParameter("StartStopManager_iIgnoreShareRatioSeedStart");
 		iIgnoreRatioPeers = cfg.getUnsafeIntParameter("Stop Peers Ratio", 0);
-		iIgnoreRatioPeers_SeedStart = cfg.getUnsafeIntParameter(PREFIX
-				+ "iIgnoreRatioPeersSeedStart", 0);
+		iIgnoreRatioPeers_SeedStart = cfg.getUnsafeIntParameter("StartStopManager_iIgnoreRatioPeersSeedStart", 0);
 
 		numPeersAsFullCopy = cfg.getUnsafeIntParameter("StartStopManager_iNumPeersAsFullCopy");
 		iFakeFullCopySeedStart = cfg.getUnsafeIntParameter("StartStopManager_iFakeFullCopySeedStart");
 
-		minQueueingShareRatio = cfg.getUnsafeIntParameter(PREFIX
-				+ "iFirstPriority_ShareRatio");
-		iFirstPriorityType = cfg.getUnsafeIntParameter(PREFIX + "iFirstPriority_Type");
-		iFirstPrioritySeedingMinutes = cfg.getUnsafeIntParameter(PREFIX
-				+ "iFirstPriority_SeedingMinutes");
-		iFirstPriorityActiveMinutes = cfg.getUnsafeIntParameter(PREFIX
-				+ "iFirstPriority_DLMinutes");
+		minQueueingShareRatio = cfg.getUnsafeIntParameter("StartStopManager_iFirstPriority_ShareRatio");
+		iFirstPriorityType = cfg.getUnsafeIntParameter("StartStopManager_iFirstPriority_Type");
+		iFirstPrioritySeedingMinutes = cfg.getUnsafeIntParameter("StartStopManager_iFirstPriority_SeedingMinutes");
+		iFirstPriorityActiveMinutes = cfg.getUnsafeIntParameter("StartStopManager_iFirstPriority_DLMinutes");
 		// Ignore FP
-		iFirstPriorityIgnoreSPRatio = cfg.getUnsafeIntParameter(PREFIX
-				+ "iFirstPriority_ignoreSPRatio");
-		bFirstPriorityIgnore0Peer = cfg.getUnsafeBooleanParameter(PREFIX
-				+ "bFirstPriority_ignore0Peer");
+		iFirstPriorityIgnoreSPRatio = cfg.getUnsafeIntParameter("StartStopManager_iFirstPriority_ignoreSPRatio");
+		bFirstPriorityIgnore0Peer = cfg.getUnsafeBooleanParameter("StartStopManager_bFirstPriority_ignore0Peer");
 		
-		iFirstPriorityIgnoreIdleMinutes = cfg.getUnsafeIntParameter(PREFIX
-				+ "iFirstPriority_ignoreIdleMinutes");
+		iFirstPriorityIgnoreIdleMinutes = cfg.getUnsafeIntParameter("StartStopManager_iFirstPriority_ignoreIdleMinutes");
 		
-		iTimed_MinSeedingTimeWithPeers = cfg.getUnsafeIntParameter(PREFIX
-				+ "iTimed_MinSeedingTimeWithPeers") * 1000;
+		iTimed_MinSeedingTimeWithPeers = cfg.getUnsafeIntParameter("StartStopManager_iTimed_MinSeedingTimeWithPeers") * 1000;
 	}
 
 	/** Sort first by SeedingRank Descending, then by Position Ascending.
