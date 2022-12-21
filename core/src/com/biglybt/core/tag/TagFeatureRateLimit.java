@@ -181,4 +181,11 @@ TagFeatureRateLimit
 	public void
 	setMaxActiveSeeds(
 		int		max );
+	
+	public boolean
+	getStrictActivityLimits();
+	
+	public void
+	setStrictActivityLimits(
+		boolean		b );
 }

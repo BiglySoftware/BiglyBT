@@ -84,6 +84,7 @@ TagBase
 	protected static final String	AT_RATELIMIT_BOOST						= "rl.bst";
 	protected static final String	AT_RATELIMIT_MAX_ACTIVE_DL				= "rl.maxadl";
 	protected static final String	AT_RATELIMIT_MAX_ACTIVE_CD				= "rl.maxacd";
+	protected static final String	AT_RATELIMIT_ACTIVE_LIMITS_STRICT		= "rl.als";
 	
 	protected static final String	AT_PROPERTY_PREFIX				= "pp.";
 	//protected static final String	AT_EOA_PREFIX					= "eoa.";	// meh, should be used but copy/paste error resulted in AT_PROPERTY_PREFIX being used instead 
@@ -902,6 +903,32 @@ TagBase
 				tag_type.fireMetadataChanged( this );
 			}
 		}
+	}
+	
+	public boolean
+	getStrictActivityLimits()
+	{
+		if ( tag_rl != null ){
+			
+			return( readBooleanAttribute( AT_RATELIMIT_ACTIVE_LIMITS_STRICT, true ));
+		}
+		
+		return( false );		
+	}
+	
+	public void
+	setStrictActivityLimits(
+		boolean		b )
+	{
+		if ( tag_rl != null ){
+			
+			if ( getStrictActivityLimits() != b ){
+			
+				writeBooleanAttribute( AT_RATELIMIT_ACTIVE_LIMITS_STRICT, b );
+		
+				tag_type.fireMetadataChanged( this );
+			}
+		}		
 	}
 	
 		// initial save location

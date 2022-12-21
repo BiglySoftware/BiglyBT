@@ -1581,32 +1581,40 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	private static class 
 	ProcessTagVarsIncomplete
 	{
-		final int	maxDLs;
+		final int		maxDLs;
+		final boolean	isStrictLimit;	// if strict then stalled downloads aren't included in calcs
 		
 		int numWaitingOrDLing; // Running Count
 		
+		int stalledDownloaders; // Running Count
+
 		boolean	higherDLtoStart;
 		
 		ProcessTagVarsIncomplete(
-			int		max )
+			int			max,
+			boolean		strict )
 		{
-			maxDLs = max;
+			maxDLs 			= max;
+			isStrictLimit	= strict;
 		}
 	}
 	
 	private static class 
 	ProcessTagVarsComplete
 	{
-		final int	maxCDs;
-		
+		final int		maxCDs;
+		final boolean	isStrictLimit;	// if strict then stalled downloads aren't included in calcs
+
 		int numWaitingOrSeeding; // Running Count
 			
 		int stalledSeeders; // Running Count
 		
 		ProcessTagVarsComplete(
-			int		max )
+			int			max,
+			boolean		strict )
 		{
-			maxCDs = max;
+			maxCDs 			= max;
+			isStrictLimit	= strict;
 		}
 	}
 	
@@ -1875,7 +1883,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 								
 								if ( maxDLs > 0 ){
 									
-									t = new ProcessTagVarsIncomplete( maxDLs );
+									t = new ProcessTagVarsIncomplete( maxDLs, tag.getStrictActivityLimits());
 									
 									tvarsIncompleteMap.put( tag,  t );
 									
@@ -1917,7 +1925,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 								
 								if ( maxCDs > 0 ){
 									
-									t = new ProcessTagVarsComplete( maxCDs );
+									t = new ProcessTagVarsComplete( maxCDs, tag.getStrictActivityLimits());
 									
 									tvarsCompleteMap.put( tag,  t );
 									
@@ -2584,6 +2592,12 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			for (ProcessTagVarsIncomplete tvars: tagVars ){
 				tvars.numWaitingOrDLing++;
 			}
+		}else{
+			if ( state == Download.ST_DOWNLOADING ){
+				for (ProcessTagVarsIncomplete tvars: tagVars ){
+					tvars.stalledDownloaders++;
+				}
+			}
 		}
 
 		if ( state == Download.ST_READY || state == Download.ST_DOWNLOADING	|| state == Download.ST_WAITING ){
@@ -2593,8 +2607,10 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 									(ivars.numWaitingOrDLing >= maxDLs && ivars.higherDLtoStart);
 
 			for (ProcessTagVarsIncomplete tvars: tagVars ){
-				if ( 	tvars.numWaitingOrDLing > tvars.maxDLs || 
-						(tvars.numWaitingOrDLing >= tvars.maxDLs && tvars.higherDLtoStart)){
+				int active = tvars.numWaitingOrDLing + (tvars.isStrictLimit?tvars.stalledDownloaders:0);
+				
+				if ( 	active > tvars.maxDLs || 
+						(active == tvars.maxDLs && tvars.higherDLtoStart)){
 					
 					bOverLimit = true;
 					
@@ -2696,7 +2712,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				(ivars.numWaitingOrDLing < maxDLs)) {
 								
 				for (ProcessTagVarsIncomplete tvars: tagVars ){
-					if ( tvars.numWaitingOrDLing >= tvars.maxDLs){						
+					if ( tvars.numWaitingOrDLing + (tvars.isStrictLimit?tvars.stalledDownloaders:0)>= tvars.maxDLs){						
 						tvarsMaxDLsExceeded = true;
 						break;
 					}
@@ -2970,7 +2986,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	  				cvars.stalledSeeders++;
 	  				
 	  				for ( ProcessTagVarsComplete tv: tagVars ){
-						tv.stalledSeeders++;
+  						tv.stalledSeeders++;
 					}
 	  				
 	  				increasedStalledSeeders = true;
@@ -3043,7 +3059,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			
 			if ( tagVars.length > 0 ){
 				for ( ProcessTagVarsComplete tv: tagVars ){
-					if ( tv.numWaitingOrSeeding + tv.stalledSeeders < tv.maxCDs ){ //  + maxStalledSeeding ){
+					if ( tv.numWaitingOrSeeding + tv.stalledSeeders < tv.maxCDs + (tv.isStrictLimit?0:maxStalledSeeding )){
+						
 					}else{
 						underCurrentLimit = false;
 						tagLimitExceeded = tv;
@@ -3394,7 +3411,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						}else if ( increasedStalledSeeders ){
 							cvars.stalledSeeders--;
 			  				for ( ProcessTagVarsComplete tv: tagVars ){
-								tv.stalledSeeders--;
+		  						tv.stalledSeeders--;
 							}
 						}
 

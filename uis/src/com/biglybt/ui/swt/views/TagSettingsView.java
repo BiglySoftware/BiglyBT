@@ -98,6 +98,8 @@ public class TagSettingsView
 		public BooleanSwtParameter boost;
 
 		public IntSwtParameter maxActiveDownloads;
+		public IntSwtParameter maxActiveSeeders;
+		public BooleanSwtParameter activeLimitsStrict;
 
 		public BooleanSwtParameter firstPrioritySeeding;
 
@@ -1059,7 +1061,7 @@ public class TagSettingsView
 				}
 				
 				if (supportsMaxCDS){
-					params.maxActiveDownloads = new IntSwtParameter(gTransfer,
+					params.maxActiveSeeders = new IntSwtParameter(gTransfer,
 							"tag.maxActiveSeeds", "ConfigView.label.maxseeding", null, 0, Integer.MAX_VALUE,
 							new IntSwtParameter.ValueProcessor() {
 								@Override
@@ -1089,6 +1091,43 @@ public class TagSettingsView
 							});
 
 					cols_used += 2;
+				}
+				
+				if (supportsMaxDLS||supportsMaxCDS){
+					params.activeLimitsStrict = new BooleanSwtParameter(gTransfer,
+							"tag.activelimitsstrict", "label.strict.limits", null,
+							new BooleanSwtParameter.ValueProcessor() {
+								@Override
+								public Boolean getValue(BooleanSwtParameter p) {
+									int value = -1;
+									for (TagFeatureRateLimit rl : rls) {
+										value = updateIntBoolean(rl.getStrictActivityLimits(),
+												value);
+									}
+									return value == 2 ? null : value == 1;
+								}
+
+								@Override
+								public boolean setValue(BooleanSwtParameter p, Boolean value) {
+									boolean changed = rls.length == 0;
+									for (TagFeatureRateLimit rl : rls) {
+										if (rl.getStrictActivityLimits() != value) {
+											rl.setStrictActivityLimits(value);
+											changed = true;
+										}
+									}
+									return changed;
+								}
+							});
+					cols_used += 2;
+				}
+				
+				if ( cols_used > 0 && cols_used < gTransferCols){			
+					Label lab = new Label( gTransfer, SWT.NULL );
+					gd = new GridData();
+					gd.horizontalSpan = gTransferCols - cols_used;
+					lab.setLayoutData(gd);		
+					cols_used = 0;
 				}
 				
 				if (supportsFPSeeding) {
