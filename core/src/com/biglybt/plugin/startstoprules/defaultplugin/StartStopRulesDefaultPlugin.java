@@ -2712,7 +2712,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				(ivars.numWaitingOrDLing < maxDLs)) {
 								
 				for (ProcessTagVarsIncomplete tvars: tagVars ){
-					if ( tvars.numWaitingOrDLing + (tvars.isStrictLimit?tvars.stalledDownloaders:0)>= tvars.maxDLs){						
+					if ( tvars.numWaitingOrDLing + (tvars.isStrictLimit?tvars.stalledDownloaders:0) >= tvars.maxDLs){						
 						tvarsMaxDLsExceeded = true;
 						break;
 					}
@@ -2765,7 +2765,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			
 			if ( tvarsMaxDLsExceeded ){
 				for (ProcessTagVarsIncomplete tvars: tagVars ){
-					if ( tvars.numWaitingOrDLing >= tvars.maxDLs ){
+					if ( tvars.numWaitingOrDLing + ( tvars.isStrictLimit?tvars.stalledDownloaders:0) >= tvars.maxDLs ){
 						tvars.higherDLtoStart = true;
 					}
 				}
