@@ -70,6 +70,7 @@ import com.biglybt.ui.swt.progress.ProgressWindow;
 import com.biglybt.ui.swt.search.SearchUI;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.shells.main.MainWindowFactory;
 import com.biglybt.ui.swt.shells.opentorrent.OpenTorrentOptionsWindow;
 import com.biglybt.ui.swt.skin.SWTSkin;
@@ -708,6 +709,9 @@ public class Initializer
 			Alerts.initComplete();
 			
 			OpenTorrentOptionsWindow.initialise();
+			
+			PopOutManager.initialise();
+			
 		}
 		finally{
 

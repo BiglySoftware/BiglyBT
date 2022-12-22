@@ -42,6 +42,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventCancelledException;
+import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
@@ -307,41 +308,7 @@ public class TabbedEntry
 
 			viPopout.addListener((x, y) -> {
 				// From TabbedMDI.addMenus, but there's also Sidebar.addGeneralMenus which doesn't set datasource
-				SkinnedDialog skinnedDialog = new SkinnedDialog(
-						"skin3_dlg_sidebar_popout", "shell", null, // standalone
-						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-
-				SWTSkin skin = skinnedDialog.getSkin();
-
-				SWTSkinObjectContainer cont = buildStandAlone(
-						(SWTSkinObjectContainer) skin.getSkinObject("content-area"));
-
-				if (cont != null) {
-
-					String ds_str = "";
-					Object ds = getDataSource();
-					DownloadManager[] dms = DataSourceUtils.getDMs(ds);
-
-					for ( DownloadManager dm: dms ){
-						
-						ds_str += (ds_str.isEmpty()?"":", ") + dm.getDisplayName();
-						
-						if ( ds_str.length() > 200 ){
-							
-							ds_str = ds_str.substring( 0, 200 ) + "...";
-							
-							break;
-						}
-					}
-
-					skinnedDialog.setTitle(	getTitle() + (ds_str.length() == 0 ? "" : (" - " + ds_str)));
-
-					skinnedDialog.open(  "mdi.popout:" + getId(), true );
-
-				} else {
-
-					skinnedDialog.close();
-				}
+				PopOutManager.popOut( TabbedEntry.this );
 			});
 
 		} else if (viPopout != null) {

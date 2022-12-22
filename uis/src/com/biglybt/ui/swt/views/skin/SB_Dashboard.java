@@ -57,6 +57,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
+import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
@@ -1972,7 +1973,7 @@ public class SB_Dashboard
 						@Override
 						public void widgetSelected(SelectionEvent arg0){
 							
-							BaseMdiEntry.popoutStandAlone( item.getTitle(), item.getState(), null );
+							PopOutManager.popOutStandAlone( item.getTitle(), item.getState(), null );
 						}
 					});
 				
@@ -1997,7 +1998,7 @@ public class SB_Dashboard
 				
 				if ( parent_tab_item == null ){
 					menu_comp.addListener( SWT.MouseDoubleClick, (ev)->{
-						BaseMdiEntry.popoutStandAlone( item.getTitle(), item.getState(), null );
+						PopOutManager.popOutStandAlone( item.getTitle(), item.getState(), null );
 					});
 				}else{
 					
@@ -2006,7 +2007,7 @@ public class SB_Dashboard
 					folder.addListener( SWT.MouseDoubleClick, (ev)->{
 						if ( folder.getItem( new Point( ev.x, ev.y )) == parent_tab_item ){
 							
-							BaseMdiEntry.popoutStandAlone( item.getTitle(), item.getState(), null );
+							PopOutManager.popOutStandAlone( item.getTitle(), item.getState(), null );
 						}
 					});
 				}

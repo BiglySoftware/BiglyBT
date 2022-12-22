@@ -1338,60 +1338,6 @@ public abstract class BaseMdiEntry
 	}
 	
 	private static final Set<String>	installing_pids = new HashSet<>();
-
-	public static SkinnedDialog buildSkinnedDialog(String id, Object ds,
-		UISWTViewBuilderCore builder) {
-		SkinnedDialog skinnedDialog = new SkinnedDialog("skin3_dlg_sidebar_popout",
-			"shell", null, // standalone
-			SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-
-		SWTSkin skin = skinnedDialog.getSkin();
-
-		SWTSkinObjectContainer so = (SWTSkinObjectContainer) skin.getSkinObject(
-			"content-area");
-		SWTSkinObjectContainer cont = BaseMdiEntry.buildStandAlone(so, null,
-			SWTSkinFactory.getInstance(), id, ds, 0, builder);
-
-		if (cont == null) {
-			skinnedDialog.close();
-			return null;
-		}
-
-		return skinnedDialog;
-	}
-
-	public static void
-	popoutStandAlone(
-		String						title,
-		Map<String,Object>			state,
-		String						configPrefix )
-	{
-		SkinnedDialog skinnedDialog =
-				new SkinnedDialog(
-						"skin3_dlg_sidebar_popout",
-						"shell",
-						null,	// standalone
-						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-
-		SWTSkin skin = skinnedDialog.getSkin();
-
-		SWTSkinObjectContainer cont = 
-			BaseMdiEntry.importStandAlone(
-				(SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), 
-				state,
-				null );
-
-		if ( cont != null ){
-
-			skinnedDialog.setTitle( title );
-
-			skinnedDialog.open( configPrefix, true );
-
-		}else{
-
-			skinnedDialog.close();
-		}
-	}
 	
 	private static Map<String,List<Runnable>>	builder_waiters = new HashMap<>();
 	

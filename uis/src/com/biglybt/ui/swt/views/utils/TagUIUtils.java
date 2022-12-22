@@ -84,6 +84,7 @@ import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.pif.UISWTInputReceiver;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.FilesView;
@@ -3603,7 +3604,7 @@ public class TagUIUtils
 					title = dms.length + " " + MessageText.getString( "ConfigView.section.torrents" ) + " : " + str;
 				}
 				
-				BaseMdiEntry.popoutStandAlone( MessageText.getString( "label.tags" ) + " - " + title, map, "TagUIUtils:TaggingView" );
+				PopOutManager.popOutStandAlone( MessageText.getString( "label.tags" ) + " - " + title, map, "TagUIUtils:TaggingView" );
 			}
 		});
 		

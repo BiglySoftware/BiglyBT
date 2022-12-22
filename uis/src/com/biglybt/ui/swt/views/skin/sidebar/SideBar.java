@@ -55,6 +55,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.SWTViewListener;
 import com.biglybt.ui.swt.pifimpl.*;
+import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
@@ -434,46 +435,7 @@ public class SideBar
 		MdiEntry	entry,
 		boolean		onTop )
 	{
-		SideBarEntrySWT sbe = (SideBarEntrySWT)entry;
-		
-		SkinnedDialog skinnedDialog =
-				new SkinnedDialog(
-						"skin3_dlg_sidebar_popout",
-						"shell",
-						onTop?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
-						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-	
-		SWTSkin skin = skinnedDialog.getSkin();
-	
-		SWTSkinObjectContainer cont = sbe.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
-	
-		if ( cont != null ){
-	
-			skinnedDialog.setTitle( sbe.getTitle());
-	
-			String metrics_id;
-			
-				// hack - we don't want to remember shell metrics on a per-download basis
-			
-			if ( sbe.getDatasource() instanceof Download ){
-				
-				metrics_id = MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS;
-				
-			}else{
-				
-				metrics_id = sbe.getId();
-			}
-			
-			skinnedDialog.open( "mdi.popout:" + metrics_id, true );
-	
-			return( true );
-			
-		}else{
-	
-			skinnedDialog.close();
-			
-			return( false );
-		}
+		return( PopOutManager.popOut((SideBarEntrySWT)entry, onTop ));
 	}
 
 	/**

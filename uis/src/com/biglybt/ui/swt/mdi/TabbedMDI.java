@@ -64,6 +64,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventCancelledException;
+import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -1744,58 +1745,10 @@ public class TabbedMDI
 	
 	public boolean
 	popoutEntry(
-		MdiEntry	_entry,
+		MdiEntry	entry,
 		boolean		onTop )
 	{
-		TabbedEntry	target = (TabbedEntry)_entry;
-		
-		SkinnedDialog skinnedDialog =
-				new SkinnedDialog(
-						"skin3_dlg_sidebar_popout",
-						"shell",
-						onTop?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
-						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-
-		SWTSkin skin = skinnedDialog.getSkin();
-
-		SWTSkinObjectContainer cont = target.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
-
-		if ( cont != null ){
-
-			String ds_str = "";
-			Object ds = target.getDatasourceCore();
-			DownloadManager dm = DataSourceUtils.getDM(ds);
-
-			if (dm != null) {
-				ds_str = dm.getDisplayName();
-			}
-
-			skinnedDialog.setTitle( target.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
-
-			
-			String metrics_id;
-			
-				// hack - we don't want to remember shell metrics on a per-download basis
-			
-			if ( target.getDatasource() instanceof Download ){
-				
-				metrics_id = MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS;
-				
-			}else{
-				
-				metrics_id = target.getId();
-			}
-		
-			skinnedDialog.open( "mdi.popout:" + metrics_id, true );
-
-			return( true );
-			
-		}else{
-
-			skinnedDialog.close();
-			
-			return( false );
-		}
+		return( PopOutManager.popOut((TabbedEntry)entry,onTop));
 	}
 	
 	@Override
@@ -1892,34 +1845,7 @@ public class TabbedMDI
 
 			Utils.addSafeMouseUpListener(label, event -> {
 				// From TabbedMDI.addMenus, but there's also Sidebar.addGeneralMenus which doesn't set datasource
-				SkinnedDialog skinnedDialog = new SkinnedDialog(
-						"skin3_dlg_sidebar_popout", "shell", null, // standalone
-						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-
-				SWTSkin skin = skinnedDialog.getSkin();
-
-				SWTSkinObjectContainer cont = ((UISWTViewCore) parentView).buildStandAlone(
-						(SWTSkinObjectContainer) skin.getSkinObject("content-area"));
-
-				if (cont != null) {
-
-					String ds_str = "";
-					Object ds = parentView.getDataSource();
-					DownloadManager dm = DataSourceUtils.getDM(ds);
-
-					if (dm != null) {
-						ds_str = dm.getDisplayName();
-					}
-
-					skinnedDialog.setTitle(((UISWTViewCore) parentView).getFullTitle()
-							+ (ds_str.length() == 0 ? "" : (" - " + ds_str)));
-
-					skinnedDialog.open( "mdi.popout:" + currentEntry.getId(), true );
-
-				} else {
-
-					skinnedDialog.close();
-				}
+				PopOutManager.popOut(parentView,currentEntry);
 			});
 		}
 
