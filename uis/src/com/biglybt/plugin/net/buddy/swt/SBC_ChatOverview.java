@@ -198,6 +198,28 @@ public class SBC_ChatOverview
 	}
 	
 	public static void
+	popOutChat(
+		String		network,
+		String		key,
+		boolean		on_top )
+	{
+		BuddyPluginBeta beta = BuddyPluginUtils.getBetaPlugin();
+
+		if ( beta != null ){
+
+			try{
+				ChatInstance chat = beta.getChat(network, key);
+
+				popOutChat( chat, on_top );
+				
+			}catch( Throwable e ){
+
+				Debug.out( e );
+			}
+		}
+	}
+	
+	public static void
 	openChat(
 		ChatInstance		chat )
 	{
@@ -209,6 +231,26 @@ public class SBC_ChatOverview
 			if ( mdi != null ){
 
 				mdi.showEntryByID("Chat_", chat);
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+		}
+	}
+	
+	public static void
+	popOutChat(
+		ChatInstance		chat,
+		boolean				on_top )
+	{
+		try{
+			chat.setAutoNotify( true );
+
+			MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+
+			if ( mdi != null ){
+
+				mdi.popoutEntryByID("Chat_", chat, on_top );
 			}
 		}catch( Throwable e ){
 

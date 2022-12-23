@@ -173,7 +173,10 @@ BuddyPluginViewBetaChat
 			}
 		}
 
-		new BuddyPluginViewBetaChat( view, plugin, chat );
+			// using this approach to create the windows gives us the ability to persist the pop-outs over restart
+			
+		BuddyPluginUI.popOutChat( chat, true );
+		// new BuddyPluginViewBetaChat( view, plugin, chat );
 	}
 
 	private final BuddyPluginView		view;

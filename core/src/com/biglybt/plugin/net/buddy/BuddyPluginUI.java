@@ -78,6 +78,31 @@ BuddyPluginUI
 	}
 	
 	public static boolean
+	popOutChat(
+		String 		network,
+		String		key,
+		boolean		on_top )
+	{
+		if ( impl_class != null ){
+
+			try{
+				impl_class.getMethod( "popOutChat", String.class, String.class, boolean.class ).invoke( null, network, key, on_top );
+
+				return( true );
+
+			}catch( Throwable e ){
+
+				Debug.out( e );
+			}
+		}else{
+
+			Debug.out( "Not supported" );
+		}
+
+		return( false );
+	}
+	
+	public static boolean
 	openChat(
 		ChatInstance	chat )
 	{
@@ -85,6 +110,30 @@ BuddyPluginUI
 
 			try{
 				impl_class.getMethod( "openChat", ChatInstance.class ).invoke( null, chat );
+
+				return( true );
+
+			}catch( Throwable e ){
+
+				Debug.out( e );
+			}
+		}else{
+
+			Debug.out( "Not supported" );
+		}
+
+		return( false );
+	}
+	
+	public static boolean
+	popOutChat(
+		ChatInstance	chat,
+		boolean			on_top )
+	{
+		if ( impl_class != null ){
+
+			try{
+				impl_class.getMethod( "popOutChat", ChatInstance.class, boolean.class ).invoke( null, chat, on_top );
 
 				return( true );
 
