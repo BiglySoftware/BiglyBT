@@ -32,6 +32,7 @@ import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
+import com.biglybt.ui.swt.shells.PopOutManager;
 
 /**
  * A shell containing the <code>ConfigView</code>
@@ -119,7 +120,6 @@ public class ConfigShell
 				Utils.centerWindowRelativeTo(shell, Utils.findAnyShell(true));
 			}
 
-			//noinspection DuplicateStringLiteralInspection
 			Utils.linkShellMetricsToConfig(shell, "options");
 
 			shell.addTraverseListener(e -> {
@@ -130,6 +130,8 @@ public class ConfigShell
 
 			shell.addDisposeListener(arg0 -> close());
 
+			PopOutManager.registerSideBarSection( shell, MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG );
+			
 			shell.open();
 		}
 	}

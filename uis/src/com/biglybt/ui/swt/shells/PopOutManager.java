@@ -25,12 +25,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.download.Download;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
@@ -52,11 +55,15 @@ PopOutManager
 {
 	private static final String CONFIG_FILE = "popouts.config";
 
+	private static final int TYPE_DIALOG	= 0;
+	private static final int TYPE_MDI_ID	= 1;
+	
 	private static long	next_id	= 0;
 	
 	private static class
 	PopOutDetails
 	{
+		int					type;
 		long				id;
 		String				title;
 		boolean				on_top;
@@ -93,6 +100,9 @@ PopOutManager
 							PopOutDetails details = new PopOutDetails();
 							
 							try{
+								Number type = (Number)map.get( "type" );
+								
+								details.type			= type==null?TYPE_DIALOG:type.intValue();
 								details.id				= ((Number)map.get( "id" )).longValue();
 								details.title			= MapUtils.getMapString( map, "title", "?" );
 								details.on_top			= ((Number)map.get( "on_top" )).longValue()==1;
@@ -101,9 +111,10 @@ PopOutManager
 								
 								next_id = Math.max( details.id+1, next_id );
 								
-								recoverPopOut( details );
+								if ( recoverPopOut( details )){
 								
-								popout_details.add( details );
+									popout_details.add( details );
+								}
 								
 							}catch( Throwable e ){
 								
@@ -139,6 +150,7 @@ PopOutManager
 				try{
 					Map<String,Object> map = new HashMap<>();
 					
+					map.put( "type", details.type );
 					map.put( "id", details.id );
 					map.put( "title", details.title );
 					map.put( "on_top", details.on_top?1:0 );
@@ -182,6 +194,7 @@ PopOutManager
 		
 		PopOutDetails details = new PopOutDetails();
 		
+		details.type			= TYPE_DIALOG;
 		details.id				= id;
 		details.title			= title;
 		details.on_top			= on_top;
@@ -219,40 +232,99 @@ PopOutManager
 		saveConfig();
 	}
 	
-	private static void
+	/**
+	 * 
+	 * @param details
+	 * @return true if the details need to be retained
+	 */
+	private static boolean
 	recoverPopOut(
 		PopOutDetails	details )
 	{
-		SkinnedDialog skinnedDialog =
-				new SkinnedDialog(
-						"skin3_dlg_sidebar_popout",
-						"shell",
-						details.on_top?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
-						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-
-		SWTSkin skin = skinnedDialog.getSkin();
-
-		SWTSkinObjectContainer cont = 
-			BaseMdiEntry.importStandAlone(
-				(SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), 
-				details.state,
-				null );
-
-		if ( cont != null ){
-
-			skinnedDialog.setTitle( details.title );
-
-			skinnedDialog.addCloseListener((d)->{
-				
-				unregisterPopOut( details.id );
-			});
+		if ( details.type == TYPE_DIALOG ){
 			
-			skinnedDialog.open( details.config_prefix, true );
-
+			SkinnedDialog skinnedDialog =
+					new SkinnedDialog(
+							"skin3_dlg_sidebar_popout",
+							"shell",
+							details.on_top?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
+							SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+	
+			SWTSkin skin = skinnedDialog.getSkin();
+	
+			SWTSkinObjectContainer cont = 
+				BaseMdiEntry.importStandAlone(
+					(SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), 
+					details.state,
+					null );
+	
+			if ( cont != null ){
+	
+				skinnedDialog.setTitle( details.title );
+	
+				skinnedDialog.addCloseListener((d)->{
+					
+					unregisterPopOut( details.id );
+				});
+				
+				skinnedDialog.open( details.config_prefix, true );
+	
+				return( true );
+				
+			}else{
+	
+				skinnedDialog.close();
+			}
 		}else{
+			
+			String mdi_id = (String)details.state.get( "mdi_id" );
+			
+			if ( mdi_id != null ){
+				
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
 
-			skinnedDialog.close();
+				if ( uif != null ){
+
+					uif.getMDI().showEntryByID( mdi_id );
+				}
+			}
 		}
+		
+		return( false );
+	}
+	
+	public static void
+	registerSideBarSection(
+		Shell 		shell,
+		String		mdi_id )
+	{
+		long id = next_id++;
+		
+		PopOutDetails details = new PopOutDetails();
+		
+		Map<String,Object>	state = new HashMap<>();
+		
+		state.put( "mdi_id", mdi_id );
+		
+		details.type			= TYPE_MDI_ID;
+		details.id				= id;
+		details.title			= "";
+		details.on_top			= true;
+		details.config_prefix	= "";
+		details.state			= state;
+		
+		popout_details.add( details );
+		
+		shell.addDisposeListener((ev)->{
+			if ( !Utils.isTerminated()){
+			
+				unregisterPopOut( id );
+			}
+		});
+		
+		saveConfig();
+		
+		
 	}
 	
 	public static boolean

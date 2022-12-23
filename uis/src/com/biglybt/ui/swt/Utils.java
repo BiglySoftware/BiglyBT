@@ -376,6 +376,12 @@ public class Utils
 		terminated	= true;
 	}
 
+	public static boolean
+	isTerminated()
+	{
+		return( terminated );
+	}
+	
 	public static boolean isAZ2UI() {
 		if ( configUIListener == null ){
 			Debug.out( "hmm" );
