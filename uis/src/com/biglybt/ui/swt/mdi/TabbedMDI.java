@@ -1734,7 +1734,7 @@ public class TabbedMDI
 						target = (TabbedEntry)data;
 					}
 
-					popoutEntry( target, menu==menuItemOnTop );
+					popoutEntry( target, menu==menuItemOnTop?PopOutManager.OPT_MAP_ON_TOP:PopOutManager.OPT_MAP_NONE );
 				}
 			};
 			
@@ -1745,10 +1745,10 @@ public class TabbedMDI
 	
 	public boolean
 	popoutEntry(
-		MdiEntry	entry,
-		boolean		onTop )
+		MdiEntry			entry,
+		Map<String,Object>	options )
 	{
-		return( PopOutManager.popOut((TabbedEntry)entry,onTop));
+		return( PopOutManager.popOut((TabbedEntry)entry,options));
 	}
 	
 	@Override

@@ -574,13 +574,13 @@ public abstract class BaseMDI
 		return loadEntryByID(id, true, false, datasource);
 	}
 	
-	public boolean popoutEntryByID(String id, Object datasource, boolean onTop ) {
+	public boolean popoutEntryByID(String id, Object datasource, Map<String,Object> options ) {
 		
 		MdiEntry existing = getEntry( id, datasource );
 		
 		if ( existing != null ){
 			
-			return( popoutEntry( existing, onTop ));
+			return( popoutEntry( existing, options ));
 		}
 		
 		MdiEntry entry = loadAndGetEntryByID( id, false, false, datasource );
@@ -588,7 +588,7 @@ public abstract class BaseMDI
 		if ( entry != null ){
 				
 			try{
-				return( popoutEntry( entry, onTop ));
+				return( popoutEntry( entry, options ));
 				
 			}finally{
 				
@@ -601,8 +601,8 @@ public abstract class BaseMDI
 	
 	public abstract boolean
 	popoutEntry(
-		MdiEntry	entry,
-		boolean		onTop );
+		MdiEntry			entry,
+		Map<String,Object>	options );
 	
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {

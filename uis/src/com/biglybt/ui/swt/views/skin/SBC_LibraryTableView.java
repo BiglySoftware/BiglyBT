@@ -58,6 +58,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
+import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
@@ -388,7 +389,9 @@ public class SBC_LibraryTableView
 
 				// pop out detailed view
 	
-			if ( UIFunctionsManager.getUIFunctions().getMDI().popoutEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, ds, true)){
+			if ( UIFunctionsManager.getUIFunctions().getMDI().popoutEntryByID( 
+					MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, 
+					ds, PopOutManager.OPT_MAP_ON_TOP)){
 	
 				return;
 			}

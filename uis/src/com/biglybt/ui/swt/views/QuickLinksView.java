@@ -51,6 +51,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.IMainWindow;
 import com.biglybt.ui.swt.mdi.BaseMDI;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
+import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.shells.main.MainWindow;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.views.stats.StatsView;
@@ -137,7 +138,7 @@ QuickLinksView
 						
 						if ( qli != null ){
 						
-							qli.popOut( mdi, onTop );
+							qli.popOut( mdi, onTop?PopOutManager.OPT_MAP_ON_TOP:PopOutManager.OPT_MAP_NONE );
 						}
 					}
 				};
@@ -232,7 +233,7 @@ QuickLinksView
 					
 					if ( qli != null ){
 					
-						qli.popOut( mdi, true );
+						qli.popOut( mdi, PopOutManager.OPT_MAP_ON_TOP );
 					}
 				}
 			}
@@ -592,8 +593,8 @@ QuickLinksView
 		
 		void 
 		popOut(
-			BaseMDI		mdi,
-			boolean		onTop )
+			BaseMDI				mdi,
+			Map<String,Object>	options )
 		{
 			long	now = SystemTime.getMonotonousTime();
 			
@@ -606,13 +607,13 @@ QuickLinksView
 			
 			if ( ds_map == null ){
 				
-				mdi.popoutEntryByID( mdi_id, null, onTop );
+				mdi.popoutEntryByID( mdi_id, null, options );
 					
 			}else{
 					
 				Object ds = DataSourceResolver.importDataSource( ds_map );
 					
-				mdi.popoutEntryByID( mdi_id, ds, onTop );
+				mdi.popoutEntryByID( mdi_id, ds, options );
 			}
 		}
 	}

@@ -411,7 +411,7 @@ public class SideBar
 	
 					if ( sbe != null ){
 
-						popoutEntry( sbe, menu==menuItemOnTop );
+						popoutEntry( sbe, menu==menuItemOnTop?PopOutManager.OPT_MAP_ON_TOP:PopOutManager.OPT_MAP_NONE );
 					}
 				}
 			};
@@ -432,10 +432,10 @@ public class SideBar
 	
 	public boolean
 	popoutEntry(
-		MdiEntry	entry,
-		boolean		onTop )
+		MdiEntry			entry,
+		Map<String,Object>	options )
 	{
-		return( PopOutManager.popOut((SideBarEntrySWT)entry, onTop ));
+		return( PopOutManager.popOut((SideBarEntrySWT)entry, options ));
 	}
 
 	/**
@@ -1039,7 +1039,7 @@ public class SideBar
 										
 										if ( canPopoutEntry(entry)){
 										
-											done = popoutEntry( entry, true );
+											done = popoutEntry( entry, PopOutManager.OPT_MAP_ON_TOP );
 										}
 									}
 								}

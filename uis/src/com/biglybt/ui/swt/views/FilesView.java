@@ -65,6 +65,7 @@ import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.views.file.FileInfoView;
 import com.biglybt.ui.swt.views.table.*;
@@ -989,7 +990,7 @@ public class FilesView
 				
 				if ( dm != null ){
 				
-					UIFunctionsManager.getUIFunctions().getMDI().popoutEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, dm, true );
+					UIFunctionsManager.getUIFunctions().getMDI().popoutEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, dm, PopOutManager.OPT_MAP_ON_TOP );
 				}
 				
 				break;

@@ -54,6 +54,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import com.biglybt.ui.swt.views.skin.InfoBarUtil;
@@ -250,7 +251,12 @@ public class SBC_ChatOverview
 
 			if ( mdi != null ){
 
-				mdi.popoutEntryByID("Chat_", chat, on_top );
+				Map<String,Object> options = new HashMap<>();
+				
+				options.put( PopOutManager.OPT_ON_TOP, on_top );
+				options.put( PopOutManager.OPT_CAN_MINIMIZE, true );
+				
+				mdi.popoutEntryByID("Chat_", chat, options );
 			}
 		}catch( Throwable e ){
 

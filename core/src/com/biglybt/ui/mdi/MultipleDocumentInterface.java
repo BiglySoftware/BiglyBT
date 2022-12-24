@@ -135,7 +135,7 @@ public interface MultipleDocumentInterface
 
 	public boolean showEntryByID(String id, Object datasource);
 
-	public boolean popoutEntryByID(String id, Object datasource, boolean onTop );
+	public boolean popoutEntryByID(String id, Object datasource, Map<String,Object> options );
 
 	/**
 		 * If you prefix the 'preferedAfterID' string with '~' then the operation will actually

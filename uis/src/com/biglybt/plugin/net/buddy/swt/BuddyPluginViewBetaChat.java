@@ -83,6 +83,7 @@ import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.PropertiesWindow;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
+import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.swt.FixedURLTransfer;
 import com.biglybt.ui.swt.ImageRepository;
@@ -91,6 +92,7 @@ import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.components.shell.ShellFactory.AEShell;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
@@ -175,7 +177,7 @@ BuddyPluginViewBetaChat
 
 			// using this approach to create the windows gives us the ability to persist the pop-outs over restart
 			
-		BuddyPluginUI.popOutChat( chat, true );
+		BuddyPluginUI.popOutChat( chat, !plugin.getBeta().getStandAloneWindows());
 		// new BuddyPluginViewBetaChat( view, plugin, chat );
 	}
 
@@ -228,6 +230,7 @@ BuddyPluginViewBetaChat
 
 	private TimerEventPeriodic timer;
 	
+	/*
 	private
 	BuddyPluginViewBetaChat(
 		BuddyPluginView	_view,
@@ -429,6 +432,184 @@ BuddyPluginViewBetaChat
 
 	    shell.forceActive();
 	}
+	*/
+	
+	private void
+	setupShell(
+		Shell		_shell )
+	{
+		shell = _shell;
+		
+		shell.addListener(
+				SWT.Show,
+				new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						activate();
+					}
+				});
+
+		shell.addListener(
+			SWT.Traverse,
+			new Listener()
+			{
+				@Override
+				public void
+				handleEvent(
+					Event e )
+				{
+					if ( e.character == SWT.ESC){
+
+						close();
+				}
+			}
+			});
+
+		shell.addControlListener(
+			new ControlListener()
+			{
+				private volatile Rectangle last_position;
+
+				private FrequencyLimitedDispatcher disp =
+					new FrequencyLimitedDispatcher(
+						new AERunnable() {
+
+							@Override
+							public void
+							runSupport()
+							{
+								Rectangle	pos = last_position;
+
+								String str = pos.x+","+pos.y+","+pos.width+","+pos.height;
+
+								COConfigurationManager.setParameter( "azbuddy.dchat.ui.last.win.pos", str );
+							}
+						},
+					1000 );
+
+				@Override
+				public void
+				controlResized(
+					ControlEvent e)
+				{
+					handleChange();
+				}
+
+				@Override
+				public void
+				controlMoved(
+					ControlEvent e)
+				{
+					handleChange();
+				}
+
+				private void
+				handleChange()
+				{
+					last_position = shell.getBounds();
+
+					disp.dispatch();
+				}
+			});
+
+
+		int DEFAULT_WIDTH	= 500;
+		int DEFAULT_HEIGHT	= 500;
+		int MIN_WIDTH		= 300;
+		int MIN_HEIGHT		= 150;
+
+
+		String str_pos = COConfigurationManager.getStringParameter( "azbuddy.dchat.ui.last.win.pos", "" );
+
+		Rectangle last_bounds = null;
+
+		try{
+			if ( str_pos != null && str_pos.length() > 0 ){
+
+				String[] bits = str_pos.split( "," );
+
+				if ( bits.length == 4 ){
+
+					int[]	 i_bits = new int[4];
+
+					for ( int i=0;i<bits.length;i++){
+
+						i_bits[i] = Integer.parseInt( bits[i] );
+					}
+
+					last_bounds =
+						new Rectangle(
+							i_bits[0],
+							i_bits[1],
+							Math.max( MIN_WIDTH, i_bits[2] ),
+							Math.max( MIN_HEIGHT, i_bits[3] ));
+				}
+			}
+		}catch( Throwable e ){
+		}
+
+	    //Utils.createURLDropTarget(shell, input_area);
+
+		if ( active_windows.size() > 0 ){
+
+			int	max_x = 0;
+			int max_y = 0;
+
+			for ( BuddyPluginViewBetaChat window: active_windows ){
+
+				if ( !window.shell.isDisposed()){
+
+					Rectangle rect = window.shell.getBounds();
+
+					max_x = Math.max( max_x, rect.x );
+					max_y = Math.max( max_y, rect.y );
+				}
+			}
+
+			Rectangle rect = new Rectangle( 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT );
+
+			rect.x = max_x + 16;
+			rect.y = max_y + 16;
+
+			if ( last_bounds != null ){
+
+				rect.width 	= last_bounds.width;
+				rect.height	=  last_bounds.height;
+			}
+
+			shell.setBounds( rect );
+
+			Utils.verifyShellRect( shell, true );
+
+		}else{
+
+			if ( last_bounds != null ){
+
+				shell.setBounds( last_bounds );
+
+				Utils.verifyShellRect( shell, true );
+
+			}else{
+
+			    shell.setSize( DEFAULT_WIDTH, DEFAULT_HEIGHT );
+
+				Utils.centreWindow(shell);
+			}
+		}
+
+	    active_windows.add( this );
+
+	    shell.addDisposeListener(
+	    	new DisposeListener(){
+				@Override
+				public void
+				widgetDisposed(DisposeEvent e)
+				{
+					active_windows.remove( BuddyPluginViewBetaChat.this );
+				}
+			});
+
+	}
 
 	protected
 	BuddyPluginViewBetaChat(
@@ -444,6 +625,13 @@ BuddyPluginViewBetaChat
 
 		lu		= plugin.getPluginInterface().getUtilities().getLocaleUtilities();
 
+		Shell shell = _parent.getShell();
+		
+		if ( shell != UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell()){
+		
+			setupShell( shell );
+		}
+		
 		build( _parent );
 	}
 

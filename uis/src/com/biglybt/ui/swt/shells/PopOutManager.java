@@ -53,8 +53,21 @@ import com.biglybt.util.MapUtils;
 public class 
 PopOutManager
 {
+	public static final String	OPT_ON_TOP			= "on-top";
+	public static final String	OPT_CAN_MINIMIZE	= "can-min";
+	
+	
+	public static final Map<String,Object>	OPT_MAP_NONE	= new HashMap<>();
+	public static final Map<String,Object>	OPT_MAP_ON_TOP	= new HashMap<>();
+	
+	static{
+		OPT_MAP_ON_TOP.put( OPT_ON_TOP, true );
+	}
+	
 	private static final String CONFIG_FILE = "popouts.config";
 
+	private static final int STYLE_DEFAULT = SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM;
+	
 	private static final int TYPE_DIALOG	= 0;
 	private static final int TYPE_MDI_ID	= 1;
 	
@@ -66,6 +79,7 @@ PopOutManager
 		int					type;
 		long				id;
 		String				title;
+		int					style;
 		boolean				on_top;
 		String				config_prefix;
 		Map<String,Object>	state;
@@ -105,6 +119,10 @@ PopOutManager
 								details.type			= type==null?TYPE_DIALOG:type.intValue();
 								details.id				= ((Number)map.get( "id" )).longValue();
 								details.title			= MapUtils.getMapString( map, "title", "?" );
+								
+								Number style = (Number)map.get( "style" );
+								
+								details.style			= style==null?STYLE_DEFAULT:style.intValue();
 								details.on_top			= ((Number)map.get( "on_top" )).longValue()==1;
 								details.config_prefix	= MapUtils.getMapString( map, "config_prefix", "?" );
 								details.state			= (Map<String,Object>)map.get( "state" );
@@ -153,6 +171,7 @@ PopOutManager
 					map.put( "type", details.type );
 					map.put( "id", details.id );
 					map.put( "title", details.title );
+					map.put( "style", details.style );
 					map.put( "on_top", details.on_top?1:0 );
 					map.put( "config_prefix", details.config_prefix );
 					map.put( "state", details.state );
@@ -173,19 +192,21 @@ PopOutManager
 	registerPopOut(
 		SkinnedDialog			dialog,
 		String					title,
+		int						style,
 		boolean					on_top,
 		String					config_prefix,		
 		BaseMdiEntry			entry )
 	{
 		Map<String,Object>	state = entry.exportStandAlone();
 
-		registerPopOut( dialog, title, on_top, config_prefix, state );
+		registerPopOut( dialog, title, style, on_top, config_prefix, state );
 	}
 	
 	private static synchronized void
 	registerPopOut(
 		SkinnedDialog			dialog,
 		String					title,
+		int						style,
 		boolean					on_top,
 		String					config_prefix,
 		Map<String,Object>		state )
@@ -197,6 +218,7 @@ PopOutManager
 		details.type			= TYPE_DIALOG;
 		details.id				= id;
 		details.title			= title;
+		details.style			= style;
 		details.on_top			= on_top;
 		details.config_prefix	= config_prefix;
 		details.state			= state;
@@ -248,7 +270,7 @@ PopOutManager
 							"skin3_dlg_sidebar_popout",
 							"shell",
 							details.on_top?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
-							SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+							details.style );
 	
 			SWTSkin skin = skinnedDialog.getSkin();
 	
@@ -327,17 +349,45 @@ PopOutManager
 		
 	}
 	
+	private static boolean
+	getOption(
+		Map<String,Object>	map,
+		String				opt )
+	{
+		if ( map != null ){
+			
+			Object obj = map.get( opt );
+			
+			if ( obj instanceof Boolean ){
+				
+				return((Boolean)obj);
+			}
+		}
+		
+		return( false );
+	}
+	
 	public static boolean
 	popOut(
 		SideBarEntrySWT		entry,
-		boolean				onTop )
+		Map<String,Object>	options )
 	{
+		boolean onTop	= getOption( options, OPT_ON_TOP );
+		boolean canMin	= getOption( options, OPT_CAN_MINIMIZE );
+		
+		int style = STYLE_DEFAULT;
+		
+		if ( canMin ){
+			
+			style = style | SWT.MIN;
+		}
+		
 		SkinnedDialog skinnedDialog =
 				new SkinnedDialog(
 						"skin3_dlg_sidebar_popout",
 						"shell",
 						onTop?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
-						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+						style );
 	
 		SWTSkin skin = skinnedDialog.getSkin();
 	
@@ -364,7 +414,7 @@ PopOutManager
 	
 			String configPrefix = "mdi.popout:" + metrics_id;
 			
-			registerPopOut( skinnedDialog, title, onTop, configPrefix, entry );
+			registerPopOut( skinnedDialog, title, style, onTop, configPrefix, entry );
 
 			skinnedDialog.open( configPrefix, true );
 				
@@ -380,15 +430,25 @@ PopOutManager
 	
 	public static boolean
 	popOut(
-		TabbedEntry		entry,
-		boolean			onTop )
+		TabbedEntry				entry,
+		Map<String,Object>		options )
 	{
+		boolean onTop	= getOption( options, OPT_ON_TOP );
+		boolean canMin	= getOption( options, OPT_CAN_MINIMIZE );
+
+		int style = STYLE_DEFAULT;
+		
+		if ( canMin ){
+			
+			style = style | SWT.MIN;
+		}
+		
 		SkinnedDialog skinnedDialog =
 				new SkinnedDialog(
 						"skin3_dlg_sidebar_popout",
 						"shell",
 						onTop?UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell():null,
-						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+						style );
 
 		SWTSkin skin = skinnedDialog.getSkin();
 
@@ -426,7 +486,7 @@ PopOutManager
 		
 			String configPrefix = "mdi.popout:" + metrics_id;
 			
-			registerPopOut( skinnedDialog, title, onTop, configPrefix, entry );
+			registerPopOut( skinnedDialog, title, style, onTop, configPrefix, entry );
 
 			skinnedDialog.open( configPrefix, true );
 
@@ -445,9 +505,11 @@ PopOutManager
 		UISWTView		parentView,
 		TabbedEntry		entry )
 	{
+		int style = STYLE_DEFAULT;
+		
 		SkinnedDialog skinnedDialog = new SkinnedDialog(
 				"skin3_dlg_sidebar_popout", "shell", null, // standalone
-				SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+				style );
 
 		SWTSkin skin = skinnedDialog.getSkin();
 
@@ -485,9 +547,11 @@ PopOutManager
 	popOut(
 		TabbedEntry	entry )
 	{
+		int style = STYLE_DEFAULT;
+		
 		SkinnedDialog skinnedDialog = new SkinnedDialog(
 				"skin3_dlg_sidebar_popout", "shell", null, // standalone
-				SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+				style );
 
 		SWTSkin skin = skinnedDialog.getSkin();
 
@@ -518,7 +582,7 @@ PopOutManager
 
 			String configPrefix = "mdi.popout:" + entry.getId();
 			
-			registerPopOut( skinnedDialog, title, false, configPrefix, entry );
+			registerPopOut( skinnedDialog, title, style, false, configPrefix, entry );
 
 			skinnedDialog.open( configPrefix, true );
 
@@ -535,7 +599,7 @@ PopOutManager
 	{
 		SkinnedDialog skinnedDialog = new SkinnedDialog("skin3_dlg_sidebar_popout",
 			"shell", null, // standalone
-			SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+			STYLE_DEFAULT );
 
 		SWTSkin skin = skinnedDialog.getSkin();
 
@@ -558,12 +622,14 @@ PopOutManager
 		Map<String,Object>			state,
 		String						configPrefix )
 	{
+		int style = STYLE_DEFAULT;
+		
 		SkinnedDialog skinnedDialog =
 				new SkinnedDialog(
 						"skin3_dlg_sidebar_popout",
 						"shell",
 						null,	// standalone
-						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+						style  );
 
 		SWTSkin skin = skinnedDialog.getSkin();
 
@@ -577,7 +643,7 @@ PopOutManager
 
 			skinnedDialog.setTitle( title );
 
-			registerPopOut( skinnedDialog, title, false, configPrefix, state );
+			registerPopOut( skinnedDialog, title, style, false, configPrefix, state );
 
 			skinnedDialog.open( configPrefix, true );
 
