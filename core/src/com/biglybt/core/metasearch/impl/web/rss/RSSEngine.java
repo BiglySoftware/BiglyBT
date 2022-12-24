@@ -312,7 +312,9 @@ RSSEngine
 
 						String lc_url = link_url.toLowerCase( Locale.US );
 
-						if ( lc_url.startsWith( "http" ) || lc_url.startsWith( "tor:http" )){
+						if ( 	lc_url.startsWith( "http" ) || 
+								lc_url.startsWith( "tor:http" ) ||
+								lc_url.startsWith( "i2p:http" )){
 
 							result.setCDPLink( link_url );
 

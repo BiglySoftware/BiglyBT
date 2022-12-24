@@ -235,20 +235,27 @@ public class TorrentDownloaderFactory {
   								proxy_tried = true;
 
   								boolean	tor_hack = lc_url.startsWith( "tor:" );
+  								boolean	i2p_hack = lc_url.startsWith( "i2p:" );
 
-  	  							if ( lc_url.startsWith( "http" ) || tor_hack ){
+  	  							if ( lc_url.startsWith( "http" ) || tor_hack || i2p_hack ){
 
   	  								try{
   	  									URL original_url;
 
-  	  									if ( tor_hack ){
+  	  									if ( tor_hack || i2p_hack ){
 
   	  										original_url = new URL( url.substring( 4 ));
 
   	  										Map<String,Object>	options = new HashMap<>();
 
-  	  										options.put( AEProxyFactory.PO_PEER_NETWORKS, new String[]{ AENetworkClassifier.AT_TOR });
+  	  										options.put( AEProxyFactory.PO_PEER_NETWORKS, new String[]{ tor_hack?AENetworkClassifier.AT_TOR:AENetworkClassifier.AT_I2P });
 
+  	  										if ( i2p_hack ){
+  	  											
+  												options.put( AEProxyFactory.PO_PREFERRED_PROXY_TYPE, "HTTP" );
+  												options.put( AEProxyFactory.PO_FORCE_PROXY, true );
+  	  										}
+  	  										
 		  	  								plugin_proxy =
 		  	  									AEProxyFactory.getPluginProxy(
 		  	  										"torrent download",

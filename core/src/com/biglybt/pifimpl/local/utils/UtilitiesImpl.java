@@ -526,6 +526,39 @@ UtilitiesImpl
 
 				rd.setProperty( "URL_HOST", plugin_proxy.getURLHostRewrite() + (feed_location.getPort()==-1?"":(":" + feed_location.getPort())));
 
+			}else if ( lc_feed_str.startsWith( "i2p:" )){
+
+				String target_resource = feed_str.substring( 4 );
+
+				try{
+					feed_location = new URL( target_resource );
+
+				}catch( MalformedURLException e ){
+
+					throw( new ResourceDownloaderException( e ));
+				}
+
+				Map<String,Object>	options = new HashMap<>();
+				
+				options.put( AEProxyFactory.PO_PREFERRED_PROXY_TYPE, "HTTP" );
+				options.put( AEProxyFactory.PO_FORCE_PROXY, true );
+
+				plugin_proxy =
+						AEProxyFactory.getPluginProxy(
+							"RSS Feed download of '" + feed_location + "'",
+							feed_location,
+							options,
+							true );
+
+				if ( plugin_proxy == null ){
+
+					throw( new ResourceDownloaderException( "No Plugin proxy available for '" + feed_str + "'" ));
+				}
+
+				rd = getResourceDownloaderFactory().create( plugin_proxy.getURL(), plugin_proxy.getProxy());
+
+				rd.setProperty( "URL_HOST", plugin_proxy.getURLHostRewrite() + (feed_location.getPort()==-1?"":(":" + feed_location.getPort())));
+
 			}else{
 
 				if ( AENetworkClassifier.categoriseAddress( feed_location.getHost()) != AENetworkClassifier.AT_PUBLIC ){

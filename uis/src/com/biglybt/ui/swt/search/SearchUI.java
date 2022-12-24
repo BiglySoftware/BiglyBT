@@ -128,24 +128,60 @@ SearchUI
 		BasicPluginConfigModel configModel = ui_manager.createBasicPluginConfigModel(
 				ConfigSection.SECTION_ROOT, CONFIG_SECTION_ID);
 
-			// proxy enable
+			// Tor proxy enable
 
-		final BooleanParameter proxy_enable =
+		BooleanParameter proxy_tor_enable =
 			configModel.addBooleanParameter2(
 				"search.proxy.enable", "search.proxy.enable",
-				manager.getProxyRequestsEnabled());
+				manager.getProxyRequestsEnabled() == MetaSearchManager.PROXY_TOR );
+	
+			// I2P proxy enable
+			
+		BooleanParameter proxy_i2p_enable =
+				configModel.addBooleanParameter2(
+					"search.proxy.i2p.enable", "search.proxy.i2p.enable",
+					manager.getProxyRequestsEnabled() == MetaSearchManager.PROXY_I2P);
 
-		proxy_enable.addListener(
-			new ParameterListener()
-			{
-				@Override
-				public void
-				parameterChanged(
-					Parameter param)
-				{
-					manager.setProxyRequestsEnabled( proxy_enable.getValue());
-				}
-			});
+		ParameterListener listener = (n)->{
+			
+			boolean tor = proxy_tor_enable.getValue();
+			
+			boolean i2p = proxy_i2p_enable.getValue();
+			
+			int type;
+			
+			if ( tor ){
+				
+				type = MetaSearchManager.PROXY_TOR;
+				
+				proxy_i2p_enable.setValue( false );	// should be false anyway
+				
+				proxy_i2p_enable.setEnabled(false);
+				
+			}else if ( i2p ){
+				
+				type = MetaSearchManager.PROXY_I2P;
+				
+				proxy_tor_enable.setEnabled(false);
+				
+			}else{
+				
+				type = MetaSearchManager.PROXY_NONE;
+				
+				proxy_tor_enable.setEnabled(true);
+				proxy_i2p_enable.setEnabled(true);
+			}
+			
+			if ( n != null ){
+				
+				manager.setProxyRequestsEnabled( type );
+			}
+		};
+			
+		listener.parameterChanged( null );
+		
+		proxy_tor_enable.addListener(listener);
+		proxy_i2p_enable.addListener(listener);
 
 			// open rcm on search
 

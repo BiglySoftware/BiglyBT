@@ -874,7 +874,9 @@ public class UIFunctionsImpl
 
 			URL url;
 
-			if ( hit_url.getProtocol().equals( "tor" )){
+			String protocol = hit_url.getProtocol().toLowerCase( Locale.US );
+			
+			if ( protocol.equals( "tor" ) || protocol.equals( "i2p")){
 
 				url = new URL( hit.substring( 4 ));
 

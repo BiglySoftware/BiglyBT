@@ -935,7 +935,8 @@ public class UrlUtils
 			url.startsWith( "azplug:") ||
 			url.startsWith( "vuze:") ||
 			url.startsWith( "biglybt:") ||
-			url.startsWith( "tor:" ));
+			url.startsWith( "tor:" ) ||
+			url.startsWith( "i2p:" ));
 	}
 
 	public static String parseTextForURL(String text, boolean accept_magnets,
@@ -962,6 +963,14 @@ public class UrlUtils
 			String href = parseTextForURL(text.substring(4), false, false );
 			if (href != null) {
 				return( "tor:" + href );
+			}
+		}
+
+		if ( text.startsWith( "i2p:" )){
+
+			String href = parseTextForURL(text.substring(4), false, false );
+			if (href != null) {
+				return( "i2p:" + href );
 			}
 		}
 

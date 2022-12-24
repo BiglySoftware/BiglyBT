@@ -1748,7 +1748,7 @@ public class Utils
 
 		String lc_sFile = sFileModified.toLowerCase( Locale.US );
 
-		if ( lc_sFile.startsWith( "tor:" )){
+		if ( lc_sFile.startsWith( "tor:" ) || lc_sFile.startsWith( "i2p:" )){
 
 			force_anon	= true;
 

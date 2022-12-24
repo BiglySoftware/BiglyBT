@@ -26,12 +26,10 @@ package com.biglybt.core.util.protocol.i2p;
  */
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-
-import com.biglybt.core.util.Debug;
 
 public class
 Handler
@@ -39,29 +37,22 @@ Handler
 {
 	@Override
 	public URLConnection
-	openConnection(URL u)
+	openConnection(
+		URL 		u )
+
+		throws IOException
 	{
-		// 2014/9/24: parg - not sure what the usecase for this is...
-
-		String	str = u.toString();
-
-		str = "http" + str.substring( 3 );
-
-		try{
-			return( new URL(str).openConnection());
-
-		}catch( MalformedURLException e ){
-
-			Debug.printStackTrace(e);
-
-			return( null );
-
-		}catch( IOException  e ){
-
-			Debug.printStackTrace(e);
-
-			return( null );
-		}
+		throw( new IOException( "i2p: URIs can't be used directly" ));
 	}
 
+	@Override
+	public URLConnection
+	openConnection(
+		URL 		u,
+		Proxy		proxy )
+
+		throws IOException
+	{
+		throw( new IOException( "i2p: URIs can't be used directly" ));
+	}
 }

@@ -542,7 +542,11 @@ public class SubscriptionWizard {
 				try {
 					URL url = new URL(feedUrl.getText());
 					String protocol = url.getProtocol().toLowerCase();
-					valid_url = protocol.equals( "tor" ) || protocol.equals( "azplug" ) || protocol.equals( "file") || url.getHost().trim().length() > 0;
+					valid_url = protocol.equals( "tor" ) || 
+								protocol.equals( "i2p" ) ||
+								protocol.equals( "azplug" ) || 
+								protocol.equals( "file") || 
+								url.getHost().trim().length() > 0;
 				} catch (Exception e) {}
 
 				saveButton.setEnabled(valid_url);

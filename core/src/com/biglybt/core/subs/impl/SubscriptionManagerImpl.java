@@ -2063,6 +2063,7 @@ SubscriptionManagerImpl
 			String protocol = url.getProtocol().toLowerCase();
 
 			if ( ! ( 	protocol.equals( "tor" ) || 
+						protocol.equals( "i2p" ) || 
 						protocol.equals( "azplug" ) || 
 						protocol.equals( "file" ) || 
 						protocol.equals( "subscription" ) || 

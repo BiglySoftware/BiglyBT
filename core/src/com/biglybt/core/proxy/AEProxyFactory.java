@@ -77,7 +77,8 @@ AEProxyFactory
 	public static final String PO_LOCAL_PORT			= "local_port";				// Integer
 	public static final String PO_EXPLICIT_BIND			= "explicit_bind";			// InetAddress
 	public static final String PO_PREFERRED_PROXY_TYPE	= "preferred_proxy_type";	// String SOCKS(default) or HTTP
-
+	public static final String PO_FORCE_PROXY			= "force_proxy";			// Boolean
+	
 	public static PluginProxy
 	getPluginProxy(
 		String		reason,

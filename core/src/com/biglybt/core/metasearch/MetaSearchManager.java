@@ -28,6 +28,10 @@ import com.biglybt.pif.utils.search.SearchProvider;
 public interface
 MetaSearchManager
 {
+	public static final int PROXY_NONE	= 0;
+	public static final int PROXY_TOR	= 1;
+	public static final int PROXY_I2P	= 2;
+	
 	public MetaSearch
 	getMetaSearch();
 
@@ -65,12 +69,12 @@ MetaSearchManager
 	getEngine(
 		SearchProvider	sp );
 
-	public boolean
+	public int
 	getProxyRequestsEnabled();
 
 	public void
 	setProxyRequestsEnabled(
-		boolean		enabled );
+		int			type );
 
 	public void
 	addListener(

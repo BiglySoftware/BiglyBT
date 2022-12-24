@@ -516,6 +516,8 @@ public class WebResult extends Result {
 					lc_link.startsWith("https://") ||
 					lc_link.startsWith("tor:http://") ||
 					lc_link.startsWith("tor:https://") ||
+					lc_link.startsWith("i2p:http://") ||
+					lc_link.startsWith("i2p:https://") ||
 					lc_link.startsWith("azplug:") ||
 					lc_link.startsWith("magnet:") ||
 					lc_link.startsWith("bc:") ||

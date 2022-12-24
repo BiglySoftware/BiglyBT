@@ -404,8 +404,32 @@ SubscriptionSchedulerImpl
 
 												throw( new Exception( "No Tor plugin proxy available for '" + dl + "'" ));
 											}
-										}
+										}else if ( dl.startsWith( "i2p:" )){
 
+											String target_resource = dl.substring( 4 );
+
+											original_url = new URL( target_resource );
+
+											Map<String,Object>	options = new HashMap<>();
+
+											options.put( AEProxyFactory.PO_PEER_NETWORKS, new String[]{ AENetworkClassifier.AT_I2P });
+
+											options.put( AEProxyFactory.PO_PREFERRED_PROXY_TYPE, "HTTP" );
+											options.put( AEProxyFactory.PO_FORCE_PROXY, true );
+											
+											plugin_proxy =
+												AEProxyFactory.getPluginProxy(
+													"Subscription result download of '" + target_resource + "'",
+													original_url,
+													options,
+													true );
+
+											if ( plugin_proxy == null ){
+
+												throw( new Exception( "No I2P plugin proxy available for '" + dl + "'" ));
+											}
+										}
+									
 										URL			current_url 	= plugin_proxy==null?original_url:plugin_proxy.getURL();
 
 										Torrent torrent = null;

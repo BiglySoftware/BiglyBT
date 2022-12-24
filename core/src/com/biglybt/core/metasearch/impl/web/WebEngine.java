@@ -617,14 +617,27 @@ WebEngine
 				user_tor = true;
 			}
 		}
+		boolean explicit_i2p = lc_url.startsWith( "i2p:" );
 
-		if ( explicit_tor || user_tor ){
+		boolean user_i2p = false;
+
+		if ( !explicit_i2p ){
+
+			String test = Result.adjustLink( searchURL );
+
+			if ( test.startsWith( "i2p:" )){
+
+				user_i2p = true;
+			}
+		}
+
+		if ( explicit_tor || user_tor || explicit_i2p || user_i2p ){
 
 				// strip out any stuff we probably don't want to send
 
 			searchContext = new HashMap<>();
 
-			String target_resource = explicit_tor?searchURL.substring( 4 ):searchURL;
+			String target_resource = (explicit_tor||explicit_i2p)?searchURL.substring( 4 ):searchURL;
 
 			URL location;
 
@@ -639,8 +652,14 @@ WebEngine
 
 			Map<String,Object>	options = new HashMap<>();
 
-			options.put( AEProxyFactory.PO_PEER_NETWORKS, new String[]{ AENetworkClassifier.AT_TOR });
+			options.put( AEProxyFactory.PO_PEER_NETWORKS, new String[]{ (explicit_tor || user_tor)?AENetworkClassifier.AT_TOR:AENetworkClassifier.AT_I2P });
 
+			if ( explicit_i2p || user_i2p ){
+				
+				options.put( AEProxyFactory.PO_PREFERRED_PROXY_TYPE, "HTTP" );
+				options.put( AEProxyFactory.PO_FORCE_PROXY, true );
+			}
+			
 			PluginProxy plugin_proxy =
 				AEProxyFactory.getPluginProxy(
 					"Web engine download of '" + target_resource + "'",
@@ -662,23 +681,6 @@ WebEngine
 				String proxy_host = location.getHost() + (location.getPort()==-1?"":(":" + location.getPort()));
 
 				pageDetails	details = getWebPageContentSupport( proxy, proxy_host, url.toExternalForm(), searchParameters, searchContext, headers, only_if_modified );
-
-				/*
-				 * Don't need this anymore, modification is done at link use time if needed
-				String content = details.getContent();
-
-				content = content.replaceAll( "(?i)http://", "tor:http://" );
-				content = content.replaceAll( "(?i)https://", "tor:https://" );
-				content = content.replaceAll( "(?i)ftp://", "tor:ftp://" );
-
-					// handle JSON encoded stuff
-
-				content = content.replaceAll( "(?i)http:\\\\/\\\\/", "tor:http:\\/\\/" );
-				content = content.replaceAll( "(?i)https:\\\\/\\\\/", "tor:https:\\/\\/" );
-				content = content.replaceAll( "(?i)ftp:\\\\/\\\\/", "tor:ftp:\\/\\/" );
-
-				details.setContent( content );
-				*/
 
 				if ( verifier != null ){
 

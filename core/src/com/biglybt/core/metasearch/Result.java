@@ -430,7 +430,9 @@ Result
 
 		if ( c == 'h' || c == 'H' || c == 'f' || c == 'F' ){
 
-			if ( MetaSearchManagerFactory.getSingleton().getProxyRequestsEnabled()){
+			int pt = MetaSearchManagerFactory.getSingleton().getProxyRequestsEnabled();
+			
+			if ( pt != MetaSearchManager.PROXY_NONE ){
 
 				try{
 					String host =  new URL( link ).getHost();
@@ -455,7 +457,14 @@ Result
 
 				}
 
-				return( "tor:" + link );
+				if ( pt == MetaSearchManager.PROXY_TOR ){
+				
+					return( "tor:" + link );
+					
+				}else{
+					
+					return( "i2p:" + link );
+				}
 			}
 		}
 
