@@ -604,6 +604,8 @@ WebEngine
 
 		String lc_url = searchURL.toLowerCase( Locale.US );
 
+		boolean can_proxy = lc_url.startsWith( "http" ) || lc_url.startsWith( "ftp" );
+		
 		boolean explicit_tor = lc_url.startsWith( "tor:" );
 
 		boolean user_tor = false;
@@ -631,7 +633,7 @@ WebEngine
 			}
 		}
 
-		if ( explicit_tor || user_tor || explicit_i2p || user_i2p ){
+		if ( can_proxy && ( explicit_tor || user_tor || explicit_i2p || user_i2p )){
 
 				// strip out any stuff we probably don't want to send
 

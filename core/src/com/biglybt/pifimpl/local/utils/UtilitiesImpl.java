@@ -552,7 +552,7 @@ UtilitiesImpl
 
 				if ( plugin_proxy == null ){
 
-					throw( new ResourceDownloaderException( "No Plugin proxy available for '" + feed_str + "'" ));
+					throw( new ResourceDownloaderException( "No I2p plugin proxy available for '" + feed_str + "'" ));
 				}
 
 				rd = getResourceDownloaderFactory().create( plugin_proxy.getURL(), plugin_proxy.getProxy());
