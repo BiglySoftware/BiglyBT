@@ -63,9 +63,9 @@ VuzeFileHandler
 
 	public static boolean
 	isAcceptedVuzeFileName(
-		String		name )
+		String		original_name )
 	{
-		name = name.toLowerCase( Locale.US );
+		String name = original_name.toLowerCase( Locale.US );
 
 		int pos = name.lastIndexOf( "." );
 
@@ -74,7 +74,38 @@ VuzeFileHandler
 			name = name.substring(pos+1);
 		}
 
-		return( accepted_exts_set.contains( name ));
+		boolean ok = accepted_exts_set.contains( name );
+		
+		if ( ok ){
+			
+				// we do get URLs thrown in here, make sure they're loadable
+			
+			try{
+				File test_file = FileUtil.newFile( original_name );
+
+				test_file = migrateFile( test_file );
+
+				if ( test_file.isFile()){
+					
+					return( true );
+				}
+			}catch( Throwable e ){
+			}
+			
+			try{
+				URL	url = new URI( original_name ).toURL();
+	
+				String	protocol = url.getProtocol().toLowerCase();
+	
+				ok = protocol.equals( "file" ) || protocol.equals( "http" ) || protocol.equals( "https")  || protocol.equals("biglybt");
+				
+			}catch( Throwable e ){
+				
+					// not a URL, ok
+			}
+		}
+		
+		return( ok );
 	}
 
 	public static boolean
