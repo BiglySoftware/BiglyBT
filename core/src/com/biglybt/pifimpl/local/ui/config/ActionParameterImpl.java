@@ -34,6 +34,7 @@ ActionParameterImpl
 	private String	action_resource;
 	private String actionID;
 	private int		style	= STYLE_BUTTON;
+	private String	image_id;
 
 	public ActionParameterImpl(String labelKey, String actionTextKey) {
 		super(null, labelKey);
@@ -80,7 +81,23 @@ ActionParameterImpl
 		return actionID == null ? action_resource : actionID;
 	}
 
+	@Override
 	public void setActionID(String actionID) {
 		this.actionID = actionID;
+	}
+	
+	@Override
+	public void
+	setImageID(
+		String	id )
+	{
+		image_id = id;
+	}
+	
+	@Override
+	public String
+	getImageID()
+	{
+		return( image_id );
 	}
 }

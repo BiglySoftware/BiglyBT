@@ -27,6 +27,7 @@ import com.biglybt.pifimpl.local.ui.config.ActionParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.widgets.ButtonWithMinWidth;
 
 import com.biglybt.pif.ui.config.ActionParameter;
@@ -35,11 +36,6 @@ public class ButtonSwtParameter
 	extends BaseSwtParameter<ButtonSwtParameter, Object>
 {
 	final Button button;
-
-	public ButtonSwtParameter(Composite parent, ActionParameterImpl pluginParam) {
-		this(parent, pluginParam.getActionResource(), pluginParam.getLabelKey());
-		setPluginParameter(pluginParam);
-	}
 
 	/**
 	 * Make a button.
@@ -50,17 +46,36 @@ public class ButtonSwtParameter
 	 * @param buttonTextKey Messagebundle key text displayed in button
 	 * @param labelKey Messagebundle key for the checkbox
 	 */
-	public ButtonSwtParameter(Composite composite, String buttonTextKey,
-			String labelKey) {
+	public ButtonSwtParameter(Composite composite, ActionParameterImpl pluginParam ){
 		super(null);
 
-		createStandardLabel(composite, labelKey);
+		createStandardLabel(composite, pluginParam.getLabelKey());
 
-		button = new ButtonWithMinWidth(composite, SWT.PUSH, 40);
+		String button_key	= pluginParam.getActionResource();
+		String image_id		= ((ActionParameter)pluginParam).getImageID();
+
+		int width = 40;
+		
+		if ( image_id == null ){
+			image_id = "";
+		}
+		
+		if ( button_key.isEmpty() && !image_id.isEmpty()){
+		
+			width = SWT.DEFAULT;
+		}
+		
+		button = new ButtonWithMinWidth(composite, SWT.PUSH, width);
 		setMainControl(button);
 
-		Messages.setLanguageText(button, buttonTextKey);
+		Messages.setLanguageText(button, button_key );
 
+		
+		if ( !image_id.isEmpty()){
+			
+			button.setImage(ImageLoader.getInstance().getImage( image_id ));
+		}
+		
 		button.addListener(SWT.Selection, event -> {
 			// Force control to ensure we aren't on an un-processed parameter
 			// On OSX, button doesn't automatically get focused on click, so
@@ -69,6 +84,8 @@ public class ButtonSwtParameter
 			button.forceFocus();
 			triggerChangeListeners(true);
 		});
+		
+		setPluginParameter(pluginParam);
 	}
 
 	@Override

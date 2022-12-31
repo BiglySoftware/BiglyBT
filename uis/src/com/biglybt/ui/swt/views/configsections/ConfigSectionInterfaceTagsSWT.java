@@ -18,7 +18,9 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
+import static com.biglybt.core.config.ConfigKeys.File.ICFG_FILES_AUTO_TAG_COUNT;
 import static com.biglybt.core.config.ConfigKeys.File.SCFG_FILE_AUTO_TAG_NAME_DEFAULT;
+import static com.biglybt.core.config.ConfigKeys.File.SCFG_PREFIX_FILE_AUTO_TAG_EXTS;
 import static com.biglybt.core.config.ConfigKeys.File.SCFG_PREFIX_FILE_AUTO_TAG_NAME;
 import static com.biglybt.core.config.ConfigKeys.File.SCFG_PREFIX_WATCH_TORRENT_FOLDER_TAG;
 
@@ -39,6 +41,7 @@ import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pifimpl.local.ui.config.ActionParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.IntListParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.LabelParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 import com.biglybt.ui.config.ConfigSectionInterfaceTags;
@@ -215,5 +218,63 @@ ConfigSectionInterfaceTagsSWT
 				menu.setVisible( true );
 			});
 		});
+		
+		if ( index == -1 ){
+			
+			add("swt_f0.1", new LabelParameterImpl(""), listAutoTag);
+			
+		}else{
+			ActionParameterImpl deleteRow = new ActionParameterImpl( "", "" );
+			
+			deleteRow.setImageID( "delete" );
+			
+			add( deleteRow, listAutoTag);
+	
+			deleteRow.addListener(param -> {
+				
+				Utils.execSWTThread(()->{
+					skipTidy = true;
+
+					int num_tags = COConfigurationManager.getIntParameter( ICFG_FILES_AUTO_TAG_COUNT, 1);
+
+					if ( index == num_tags-1 ){
+						
+							// last one
+						
+						if ( index > 0 ){
+						
+								// remove last
+							
+							COConfigurationManager.setParameter( ICFG_FILES_AUTO_TAG_COUNT, num_tags-1);
+							
+						}else{
+							
+								// only one, just blank it
+							
+							setAutoTagExts( 0, "" );
+							
+							setAutoTagTag( 0, "" );
+						}
+					}else{
+						
+							// copy down 
+						
+						for ( int i=index+1; i<= num_tags;i++ ){
+							
+							String exts = getAutoTagExts( i );
+							String tag	= getAutoTagTag( i );
+						
+							setAutoTagExts( i-1, exts );
+							setAutoTagTag( i-1, tag );
+						}
+						
+							// remove last
+						
+						COConfigurationManager.setParameter( ICFG_FILES_AUTO_TAG_COUNT, num_tags-1);
+					}
+					requestRebuild();
+				});
+			});
+		}
 	}
 }

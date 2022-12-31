@@ -83,4 +83,11 @@ ActionParameter
 
 	public int
 	getStyle();
+	
+	public void
+	setImageID(
+		String	id );
+	
+	public String
+	getImageID();
 }

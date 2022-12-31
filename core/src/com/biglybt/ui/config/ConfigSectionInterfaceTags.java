@@ -40,7 +40,7 @@ public class ConfigSectionInterfaceTags
 
 	public static final String SECTION_ID = "style.tags";
 
-	private boolean skipTidy = false;
+	protected boolean skipTidy = false;
 
 	public 
 	ConfigSectionInterfaceTags() 
@@ -88,6 +88,36 @@ public class ConfigSectionInterfaceTags
 		add("pgGeneral", pgGeneral);
 	}
 	
+	protected String
+	getAutoTagExts(
+		int		i )
+	{
+		return( COConfigurationManager.getStringParameter(SCFG_PREFIX_FILE_AUTO_TAG_EXTS + (i==0?"":(" " + i ))));
+	}
+	
+	protected void
+	setAutoTagExts(
+		int			i,
+		String		str )
+	{
+		COConfigurationManager.setParameter(SCFG_PREFIX_FILE_AUTO_TAG_EXTS + (i==0?"":(" " + i )), str );
+	}
+	
+	protected String
+	getAutoTagTag(
+		int		i )
+	{
+		return( COConfigurationManager.getStringParameter(SCFG_PREFIX_FILE_AUTO_TAG_NAME + (i==0?"":(" " + i )), null ));
+	}
+
+	protected void
+	setAutoTagTag(
+		int			i,
+		String		str )
+	{
+		COConfigurationManager.setParameter(SCFG_PREFIX_FILE_AUTO_TAG_NAME + (i==0?"":(" " + i )), str );
+	}
+	
 	private void
 	buildFiles()
 	{
@@ -103,6 +133,7 @@ public class ConfigSectionInterfaceTags
 		add("f0", new LabelParameterImpl(""), listAutoTag);
 		if ( isSWT()){
 			add("f0.1", new LabelParameterImpl(""), listAutoTag);
+			add("f0.2", new LabelParameterImpl(""), listAutoTag);
 		}
 		int num_tags = COConfigurationManager.getIntParameter( ICFG_FILES_AUTO_TAG_COUNT, 1);
 		
@@ -115,10 +146,8 @@ public class ConfigSectionInterfaceTags
 		}else{
 			
 			for ( int i=num_tags-1; i>=1; i-- ){
-				String exts =
-						COConfigurationManager.getStringParameter(SCFG_PREFIX_FILE_AUTO_TAG_EXTS + (i==0?"":(" " + i )));
-				String tag =
-						COConfigurationManager.getStringParameter(SCFG_PREFIX_FILE_AUTO_TAG_NAME + (i==0?"":(" " + i )), null);
+				String exts	= getAutoTagExts( i );
+				String tag	= getAutoTagTag( i );
 				
 				if ( 	( exts == null || exts.isEmpty()) &&
 						( tag == null || tag.isEmpty())){
@@ -157,6 +186,7 @@ public class ConfigSectionInterfaceTags
 		add("f1", new LabelParameterImpl(""), listAutoTag);
 		if ( isSWT()){
 			add("f1.1", new LabelParameterImpl(""), listAutoTag);
+			add("f1.2", new LabelParameterImpl(""), listAutoTag);
 		}
 			// default
 
@@ -183,6 +213,7 @@ public class ConfigSectionInterfaceTags
 		add("f2", new LabelParameterImpl(""), listAutoTag);
 		if ( isSWT()){
 			add("f2.1", new LabelParameterImpl(""), listAutoTag);
+			add("f2.2", new LabelParameterImpl(""), listAutoTag);
 		}
 		
 		BooleanParameterImpl auto_tag_mod = new BooleanParameterImpl(
@@ -192,7 +223,7 @@ public class ConfigSectionInterfaceTags
 		ParameterGroupImpl pgExtensionTagging = new ParameterGroupImpl(
 				"ConfigView.label.lh.ext", listAutoTag);
 		add("pgAutoTagging", pgExtensionTagging);
-		pgExtensionTagging.setNumberOfColumns(isSWT()?3:2);
+		pgExtensionTagging.setNumberOfColumns(isSWT()?4:2);
 		pgExtensionTagging.setReferenceID(REFID_TORRENT_ADD_AUTO_TAG);
 
 		auto_tag_enable.addEnabledOnSelection(
