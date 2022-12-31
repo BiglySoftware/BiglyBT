@@ -237,6 +237,12 @@ ConfigSectionInterfaceTagsSWT
 
 					int num_tags = COConfigurationManager.getIntParameter( ICFG_FILES_AUTO_TAG_COUNT, 1);
 
+						// always blank the current row as we don't want the values re-appearing
+						// if rows re-added
+					
+					setAutoTagExts( index, "" );
+					setAutoTagTag( index, "" );
+					
 					if ( index == num_tags-1 ){
 						
 							// last one
@@ -246,14 +252,6 @@ ConfigSectionInterfaceTagsSWT
 								// remove last
 							
 							COConfigurationManager.setParameter( ICFG_FILES_AUTO_TAG_COUNT, num_tags-1);
-							
-						}else{
-							
-								// only one, just blank it
-							
-							setAutoTagExts( 0, "" );
-							
-							setAutoTagTag( 0, "" );
 						}
 					}else{
 						
