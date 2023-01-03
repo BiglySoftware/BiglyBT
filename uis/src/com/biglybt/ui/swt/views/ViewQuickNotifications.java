@@ -63,7 +63,7 @@ public class ViewQuickNotifications
 	initialize(
 		Composite parent)
 	{
-		parent.setLayout( new GridLayout());
+		parent.setLayout( Utils.getSimpleGridLayout(1));
 
 		composite = new Composite( parent, SWT.BORDER );
 
@@ -164,6 +164,11 @@ public class ViewQuickNotifications
 
 	private void refresh()
 	{
+		if ( notification_text == null || notification_text.isDisposed()){
+			
+			return;
+		}
+		
 		Object[] 	temp = ActivitiesManager.getMostRecentUnseen();
 
 		ActivitiesEntry entry = (ActivitiesEntry)temp[0];
@@ -260,10 +265,6 @@ public class ViewQuickNotifications
       case UISWTViewEvent.TYPE_REFRESH:
         refresh();
         break;
-      case UISWTViewEvent.TYPE_FOCUSGAINED:{
-    	  composite.traverse( SWT.TRAVERSE_TAB_NEXT);
-    	  break;
-      }
     }
 
     return true;

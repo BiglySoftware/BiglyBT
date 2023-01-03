@@ -69,7 +69,7 @@ public class ViewQuickNetInfo
 	initialize(
 		Composite parent)
 	{
-		parent.setLayout( new GridLayout());
+		parent.setLayout( Utils.getSimpleGridLayout(1));
 
 		composite = new Composite( parent, SWT.BORDER );
 
@@ -120,6 +120,10 @@ public class ViewQuickNetInfo
 
 	private void refresh()
 	{
+		if ( composite == null ){
+			return;
+		}
+		
 		if ( speed_manager != null ){
 
 			asn.setText(speed_manager.getASN());
@@ -164,10 +168,7 @@ public class ViewQuickNetInfo
       case UISWTViewEvent.TYPE_REFRESH:
         refresh();
         break;
-      case UISWTViewEvent.TYPE_FOCUSGAINED:{
-    	  composite.traverse( SWT.TRAVERSE_TAB_NEXT);
-    	  break;
-      }
+ 
     }
 
     return true;

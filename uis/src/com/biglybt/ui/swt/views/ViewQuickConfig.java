@@ -603,9 +603,6 @@ public class ViewQuickConfig
       case UISWTViewEvent.TYPE_REFRESH:
         refresh();
         break;
-      case UISWTViewEvent.TYPE_FOCUSGAINED:{
-    	  break;
-      }
     }
 
     return true;

@@ -78,7 +78,7 @@ public class ViewUpSpeedGraph
 	private void initialize(Composite composite) {
 		GridData gridData;
 
-		composite.setLayout( new GridLayout());
+		composite.setLayout(Utils.getSimpleGridLayout(1));
 		upSpeedCanvas = new Canvas(composite, SWT.DOUBLE_BUFFERED);
 		gridData = new GridData(GridData.FILL_BOTH);
 		upSpeedCanvas.setLayoutData(gridData);
@@ -116,6 +116,10 @@ public class ViewUpSpeedGraph
 	}
 
 	private void refresh() {
+		if ( upSpeedGraphic == null ){
+			return;
+		}
+		
 		if (!everRefreshed) {
 			everRefreshed = true;
 			timerEvent = SimpleTimer.addPeriodicEvent("TopBarSpeedGraphicView", 1000, new TimerEventPerformer() {

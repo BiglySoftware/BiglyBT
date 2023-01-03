@@ -341,6 +341,20 @@ public class SideBar
 				}
 			});
 			
+			MenuItem menuItemTopbar = menuManager.addMenuItem( menuParentItem, "label.topbar");
+
+			menuItemTopbar.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					SideBarEntrySWT sbe = getCurrentEntry();
+	
+					if ( sbe != null ){
+						
+						MainMDISetup.getSb_dashboard().addItemToTopbar( sbe );
+					}
+				}
+			});
+			
 			MenuItem menuItemSidebar = menuManager.addMenuItem( menuParentItem, "label.sidebar");
 
 			menuItemSidebar.addListener(new MenuItemListener() {

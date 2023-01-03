@@ -4629,10 +4629,10 @@ DeviceManagerUI
 
 			FormLayout layout = new FormLayout();
 
-			layout.marginTop	= 4;
-			layout.marginLeft	= 4;
-			layout.marginRight	= 4;
-			layout.marginBottom	= 4;
+			layout.marginTop	= 2;
+			layout.marginLeft	= 2;
+			layout.marginRight	= 2;
+			layout.marginBottom	= 2;
 
 			composite.setLayout( layout );
 
@@ -4870,10 +4870,10 @@ DeviceManagerUI
 
 				FormLayout layout = new FormLayout();
 
-				layout.marginTop	= 4;
-				layout.marginLeft	= 4;
-				layout.marginRight	= 4;
-				layout.marginBottom	= 4;
+				layout.marginTop	= 2;
+				layout.marginLeft	= 2;
+				layout.marginRight	= 2;
+				layout.marginBottom	= 2;
 
 				composite.setLayout( layout );
 
@@ -5640,10 +5640,10 @@ DeviceManagerUI
 				
 				GridLayout layout = new GridLayout();
 
-				layout.marginTop	= 4;
-				layout.marginLeft	= 4;
-				layout.marginRight	= 4;
-				layout.marginBottom	= 4;
+				layout.marginTop	= 2;
+				layout.marginLeft	= 2;
+				layout.marginRight	= 2;
+				layout.marginBottom	= 2;
 
 				composite.setLayout( layout );
 
@@ -5666,6 +5666,7 @@ DeviceManagerUI
 			}
 			
 			GridLayout	layout = new GridLayout( 5, false );
+			layout.marginWidth = 2;
 			
 			composite.setLayout( layout );
 			
@@ -5930,7 +5931,7 @@ DeviceManagerUI
 		    gd.horizontalSpan = 5;
 		    
 		    gSpeed.setLayoutData(gd);
-		    gSpeed.setLayout(new GridLayout());
+		    gSpeed.setLayout(Utils.getSimpleGridLayout(1));
 
 			gd = new GridData(GridData.FILL_HORIZONTAL);
 			gd.horizontalSpan = 5;

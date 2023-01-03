@@ -93,6 +93,8 @@ public class SB_Dashboard
 	
 	private DashboardInstance	rightbar_dashboard = new DashboardInstance( "rightbarzzzzz" );
 	
+	private DashboardInstance	topbar_dashboard = new DashboardInstance( "topbar" );
+	
 	private final MultipleDocumentInterfaceSWT		mdi;
 	
 	private MdiEntry mdi_entry;
@@ -112,6 +114,10 @@ public class SB_Dashboard
 		rightbar_dashboard.readConfig();
 		
 		rightbar_dashboard.setUseTabs( true );
+
+		topbar_dashboard.readConfig();
+		
+		topbar_dashboard.setUseTabs( true );
 
 		if ( !COConfigurationManager.getBooleanParameter( "dashboard.init.0", false )){
 			
@@ -302,6 +308,18 @@ public class SB_Dashboard
 				}
 			});
 			
+			MenuItem resetTopbar= menuManager.addMenuItem( resetItem, "label.topbar");
+			
+			resetTopbar.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					
+					topbar_dashboard.clear();
+					
+					addTopbarStartupItems();
+				}
+			});
+			
 			MenuItem resetSidebar= menuManager.addMenuItem( resetItem, "label.sidebar");
 			
 			resetSidebar.addListener(new MenuItemListener() {
@@ -416,6 +434,58 @@ public class SB_Dashboard
 						first_time = false;
 					}
 				});
+		
+		topbar_dashboard.addAndFireListener(
+				new DashboardListener()
+				{	
+					private final String	VIEW_ID = "TopBarDashboard";
+				
+					private boolean	first_time = true;
+					
+					private boolean registered;
+					
+					@Override
+					public void 
+					itemsChanged()
+					{
+						SWTSkin skin = SWTSkinFactory.getInstance();
+
+						ViewManagerSWT vi = ViewManagerSWT.getInstance();
+
+						if ( topbar_dashboard.getItemCount() > 0 ){
+							
+							if ( !registered ){
+								
+								vi.registerView(
+									UISWTInstance.VIEW_TOPBAR,
+									new UISWTViewBuilderCore(VIEW_ID,
+											null, TopBarDashboard.class));
+								
+								registered = true;
+								
+							}
+								
+								// only force the right-bar visible when a new entry added, not at start of day
+							
+							if ( !first_time ){
+							
+								SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_PLUGINBAR + ".visible", SkinConstants.VIEWID_PLUGINBAR, true, true);
+							}
+						}else{
+							
+							if ( registered ){
+								
+								vi.unregisterView( UISWTInstance.VIEW_TOPBAR, VIEW_ID );
+								
+								registered = false;
+							}
+							
+							SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_PLUGINBAR + ".visible", SkinConstants.VIEWID_PLUGINBAR, false, true);
+						}
+						
+						first_time = false;
+					}
+				});
 	}
 
 	public void
@@ -441,7 +511,7 @@ public class SB_Dashboard
 		BaseMdiEntry		entry )
 	{
 		Map<String,Object> map = entry.exportStandAlone();
-				
+		
 		sidebar_dashboard.addItem( map );
 		
 		sidebar_dashboard.fireChanged();
@@ -468,6 +538,58 @@ public class SB_Dashboard
 	getRightbarDashboard()
 	{
 		return( rightbar_dashboard );
+	}
+	
+	public void
+	addItemToTopbar(
+		BaseMdiEntry		entry )
+	{
+		Map<String,Object> map = entry.exportStandAlone();
+				
+		topbar_dashboard.addItem( map );
+		
+		topbar_dashboard.fireChanged();
+	}
+
+	public DashboardInstance
+	getTopbarDashboard()
+	{
+		return( topbar_dashboard );
+	}
+	
+	private void
+	addTopbarStartupItems()
+	{
+		String[][] data = {
+				{ "!TableColumn.header.downspeed!", "com.biglybt.ui.swt.views.ViewDownSpeedGraph" },
+				{ "!TableColumn.header.upspeed!", "com.biglybt.ui.swt.views.ViewUpSpeedGraph" },
+				{ "!label.quick.config!", "com.biglybt.ui.swt.views.ViewQuickConfig" },
+				{ "!label.quick.net.info!", "com.biglybt.ui.swt.views.ViewQuickNetInfo" },
+				{ "!label.quick.notifications!", "com.biglybt.ui.swt.views.ViewQuickNotifications" }
+		};
+		
+		List<Map>	items = new ArrayList<>();
+
+		for ( String[] entry: data ){
+		
+			Map<String,Object>	map = new HashMap<>();
+		
+			map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
+			map.put( "title", entry[0] );				
+			map.put( "control_type", 0L );
+			
+			Map<String,Object> listener = new HashMap<>();
+			
+			listener.put( "name", entry[1] );
+			
+			map.put( "event_listener", listener );
+			
+			items.add( map );
+		}
+				
+		topbar_dashboard.addItems( items );
+		
+		topbar_dashboard.fireChanged();
 	}
 	
 	public void
@@ -2423,7 +2545,19 @@ public class SB_Dashboard
 			public String
 			getTitle()
 			{
-				return((String)map.get( "title" ));
+				String title = (String)map.get( "title" );
+				
+				if ( title.startsWith( "!" ) && title.endsWith( "!" )){
+					
+					String t = MessageText.getString( title.substring( 1, title.length()-1 ));
+					
+					if ( t != null ){
+						
+						title = t;
+					}
+				}
+				
+				return( title );
 			}
 			
 			public Map<String,Object>
@@ -2538,6 +2672,83 @@ public class SB_Dashboard
 		final SB_Dashboard db = MainMDISetup.getSb_dashboard();
 		
 		final DashboardInstance rb = db.getRightbarDashboard();
+	
+		UISWTView 		swtView;
+		Composite		comp;
+		
+		@Override
+		public void 
+		itemsChanged()
+		{
+			if ( rb.getItemCount() == 0 ){
+				
+				swtView.closeView();
+				
+			}else{
+								
+				Utils.disposeComposite( comp, false );
+				
+				rb.build( comp );
+				
+				comp.layout( true, true );
+			}
+		}
+		
+		public boolean 
+		eventOccurred(
+			UISWTViewEvent event)
+		{
+			switch (event.getType()) {
+				case UISWTViewEvent.TYPE_CREATE:{
+					swtView = event.getView();
+	
+					break;
+				}
+				case UISWTViewEvent.TYPE_DESTROY:{
+	
+					rb.removeListener( this );
+					
+					break;
+				}
+				case UISWTViewEvent.TYPE_INITIALIZE:{
+					
+					comp = (Composite)event.getData();
+	
+					comp.setLayout( new FormLayout());
+						
+					rb.build( comp );
+					
+					rb.addListener( this );
+
+					break;
+				}
+				case UISWTViewEvent.TYPE_LANGUAGEUPDATE:{
+					
+				
+					Messages.updateLanguageForControl( comp );
+	
+					break;
+				}
+				case UISWTViewEvent.TYPE_REFRESH:{
+	
+					break;
+				}
+			}
+
+			return( true );
+		}
+	}
+	
+	public static class
+	TopBarDashboard
+		implements 
+			UISWTViewCoreEventListener, 
+			IViewAlwaysInitialize,
+			DashboardListener
+	{
+		final SB_Dashboard db = MainMDISetup.getSb_dashboard();
+		
+		final DashboardInstance rb = db.getTopbarDashboard();
 	
 		UISWTView 		swtView;
 		Composite		comp;
