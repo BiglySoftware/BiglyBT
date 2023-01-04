@@ -126,6 +126,13 @@ public class SB_Dashboard
 			main_dashboard.startOfDay();
 		}
 		
+		if ( !COConfigurationManager.getBooleanParameter( "dashboard.init.1", false )){
+			
+			COConfigurationManager.setParameter( "dashboard.init.1", true );
+			
+			addTopbarStartupItems();
+		}
+		
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
 		MenuManager menuManager = uim.getMenuManager();
@@ -313,9 +320,7 @@ public class SB_Dashboard
 			resetTopbar.addListener(new MenuItemListener() {
 				@Override
 				public void selected(MenuItem menu, Object target) {
-					
-					topbar_dashboard.clear();
-					
+										
 					addTopbarStartupItems();
 				}
 			});
@@ -560,6 +565,8 @@ public class SB_Dashboard
 	private void
 	addTopbarStartupItems()
 	{
+		topbar_dashboard.clear();
+
 		String[][] data = {
 				{ "!TableColumn.header.downspeed!", "com.biglybt.ui.swt.views.ViewDownSpeedGraph" },
 				{ "!TableColumn.header.upspeed!", "com.biglybt.ui.swt.views.ViewUpSpeedGraph" },
@@ -1115,6 +1122,21 @@ public class SB_Dashboard
 		}	
 
 		private void
+		tabSelected(
+			int	folder_id,
+			int	tab_index )
+		{
+			COConfigurationManager.setParameter( config_prefix + ".tab.selection." + folder_id, tab_index );
+		}
+		
+		private int
+		getTabSelection(
+			int	folder_id )
+		{
+			return( COConfigurationManager.getIntParameter( config_prefix + ".tab.selection." + folder_id, 0 ));
+		}
+		
+		private void
 		fireChanged()
 		{		
 			if ( mdi_entry != null ) {
@@ -1474,7 +1496,7 @@ public class SB_Dashboard
 				final List<SashForm>	sashes 		= new ArrayList<>();
 				List<Control>			controls	= new ArrayList<>();
 				
-				build( item_map, null, dashboard_composite, use_tabs, sashes, controls, layout, 0, 0, layout.length, layout.length );
+				build( item_map, null, dashboard_composite, use_tabs, sashes, controls, layout, 0, 0, layout.length, layout.length, new int[1] );
 				
 				int[][]	sash_weights = getSashWeights();
 				
@@ -1610,7 +1632,7 @@ public class SB_Dashboard
 			
 			int	before = item_map.size();
 			
-			build( item_map, null, null, false, null, null, layout, 0, 0, layout.length, layout.length );
+			build( item_map, null, null, false, null, null, layout, 0, 0, layout.length, layout.length, new int[1] );
 			
 				// at least one works...
 			
@@ -1629,7 +1651,8 @@ public class SB_Dashboard
 			int							x,
 			int							y,
 			int							width,
-			int							height )
+			int							height,
+			int[]						next_tf_id )
 		{		
 			List<DashboardItem> result = new ArrayList<>();
 			
@@ -1701,13 +1724,18 @@ public class SB_Dashboard
 					
 					if ( use_tabs ){
 						
-						CTabFolder tf;
+						CTabFolder 	tf;
+						int			tf_id;
 						
 						if ( comp != null ){
 							tf = new CTabFolder( comp, SWT.TOP );
 							tf.setLayoutData( Utils.getFilledFormData());
+							
+							tf_id = next_tf_id[0]++;
+							
 						}else {
-							tf = null;
+							tf 		= null;
+							tf_id	= -1;
 						}
 						
 						int	current = y;
@@ -1724,7 +1752,7 @@ public class SB_Dashboard
 								tab_composite.setLayoutData( Utils.getFilledFormData());
 							}
 							
-							List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, x, current, width, split - current );
+							List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, x, current, width, split - current, next_tf_id );
 							
 							if ( items.isEmpty()){
 								tab_item.dispose();
@@ -1748,7 +1776,7 @@ public class SB_Dashboard
 							tab_composite.setLayoutData( Utils.getFilledFormData());
 						}
 						
-						List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, x, current, width, height-(current-y));
+						List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, x, current, width, height-(current-y), next_tf_id );
 											
 						if ( items.isEmpty()){
 							tab_item.dispose();
@@ -1780,7 +1808,9 @@ public class SB_Dashboard
 									}
 								});
 							
-							tf.setSelection( 0 );
+							int sel = Math.min( tf.getItemCount()-1, getTabSelection( tf_id ));
+							
+							tf.setSelection( sel );		
 							
 							tf.addSelectionListener(
 								new SelectionAdapter(){
@@ -1796,6 +1826,8 @@ public class SB_Dashboard
 											((Runnable)o).run();
 											c.setData(null);
 										}
+										
+										tabSelected( tf_id, tf.getSelectionIndex());
 									}
 								});
 						}
@@ -1820,12 +1852,12 @@ public class SB_Dashboard
 						
 						for ( int split: splits ){
 							
-							result.addAll( build( item_map, null, sf, use_tabs, sashes, controls, cells, x, current, width, split - current ));
+							result.addAll( build( item_map, null, sf, use_tabs, sashes, controls, cells, x, current, width, split - current, next_tf_id ));
 							
 							current = split;
 						}
 						
-						result.addAll(( build( item_map, null, sf, use_tabs, sashes, controls, cells, x, current, width, height-(current-y) )));
+						result.addAll(( build( item_map, null, sf, use_tabs, sashes, controls, cells, x, current, width, height-(current-y), next_tf_id )));
 					}
 					
 					done = true;
@@ -1872,13 +1904,18 @@ public class SB_Dashboard
 					
 					if ( use_tabs ) {
 						
-						CTabFolder tf;
+						CTabFolder	tf;
+						int			tf_id;
 						
 						if ( comp != null ){
 							tf = new CTabFolder( comp, SWT.TOP | SWT.NO_BACKGROUND);
 							tf.setLayoutData( Utils.getFilledFormData());
+							
+							tf_id = next_tf_id[0]++;
+
 						}else {
-							tf = null;
+							tf 		= null;
+							tf_id	= -1;
 						}
 						
 						int	current = x;
@@ -1895,7 +1932,7 @@ public class SB_Dashboard
 								tab_composite.setLayoutData( Utils.getFilledFormData());
 							}
 							
-							List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, current, y, split - current, height );
+							List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, current, y, split - current, height, next_tf_id );
 							if ( items.isEmpty()){
 								tab_item.dispose();
 							}else{
@@ -1918,7 +1955,7 @@ public class SB_Dashboard
 							tab_composite.setLayoutData( Utils.getFilledFormData());
 						}
 						
-						List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, current, y, width-(current-x), height );
+						List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, current, y, width-(current-x), height, next_tf_id );
 						
 						if ( items.isEmpty()){
 							tab_item.dispose();
@@ -1950,7 +1987,9 @@ public class SB_Dashboard
 									}
 								});
 							
-							tf.setSelection( 0 );
+							int sel = Math.min( tf.getItemCount()-1, getTabSelection( tf_id ));
+							
+							tf.setSelection( sel );
 							
 							tf.addSelectionListener(
 								new SelectionAdapter(){
@@ -1966,10 +2005,13 @@ public class SB_Dashboard
 											((Runnable)o).run();
 											c.setData(null);
 										}
+										
+										tabSelected( tf_id, tf.getSelectionIndex());
 									}
 								});
 						}
-					}else {
+					}else{
+						
 						SashForm sf;
 						
 						if ( comp != null ){
@@ -1989,12 +2031,12 @@ public class SB_Dashboard
 						
 						for ( int split: splits ){
 		
-							result.addAll((build( item_map, null, sf, use_tabs, sashes, controls, cells, current, y, split - current, height )));
+							result.addAll((build( item_map, null, sf, use_tabs, sashes, controls, cells, current, y, split - current, height, next_tf_id )));
 							
 							current = split;
 						}
 						
-						result.addAll((build( item_map, null, sf, use_tabs, sashes, controls, cells, current, y, width-(current-x), height )));
+						result.addAll((build( item_map, null, sf, use_tabs, sashes, controls, cells, current, y, width-(current-x), height, next_tf_id )));
 					}
 				}
 			}
