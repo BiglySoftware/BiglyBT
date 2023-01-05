@@ -287,7 +287,7 @@ SubscriptionManagerImpl
 
 	private volatile DHTPluginInterface dht_plugin_public;
 
-	private List<SubscriptionImpl>		subscriptions	= new ArrayList<>();
+	private CopyOnWriteMap<String,SubscriptionImpl>		subscription_map	= new CopyOnWriteMap<>();
 
 	private boolean	config_dirty;
 
@@ -2082,21 +2082,15 @@ SubscriptionManagerImpl
 
 		synchronized( this ){
 
-			int index = Collections.binarySearch(subscriptions, subs, new Comparator<Subscription>() {
-				@Override
-				public int compare(Subscription arg0, Subscription arg1) {
-					return arg0.getID().compareTo(arg1.getID());
-				}
-			});
-			if (index < 0) {
-				existing = null;
-				index = -1 * index - 1; // best guess
+			String id = subs.getID();
+			
+			existing = subscription_map.get( id );
 
-				subscriptions.add( index, subs );
+			if ( existing == null ){
+
+				subscription_map.put( id, subs );
 
 				saveConfig();
-			} else {
-				existing = (SubscriptionImpl) subscriptions.get(index);
 			}
 		}
 
@@ -2203,16 +2197,11 @@ SubscriptionManagerImpl
 				engineUpdated(
 					Engine		engine )
 				{
-					synchronized( SubscriptionManagerImpl.this ){
+					for ( SubscriptionImpl subs: subscription_map.getReadOnlyMap().values()){
 
-						for (int i=0;i<subscriptions.size();i++){
+						if ( subs.isMine()){
 
-							SubscriptionImpl	subs = (SubscriptionImpl)subscriptions.get(i);
-
-							if ( subs.isMine()){
-
-								subs.engineUpdated( engine );
-							}
+							subs.engineUpdated( engine );
 						}
 					}
 				}
@@ -2282,7 +2271,7 @@ SubscriptionManagerImpl
 	{
 		synchronized( this ){
 
-			if ( subscriptions.remove( subs )){
+			if ( subscription_map.remove( subs.getID()) != null ){
 
 				saveConfig();
 
@@ -2502,18 +2491,11 @@ SubscriptionManagerImpl
 	{
 		long now = SystemTime.getCurrentTime();
 
-		List<SubscriptionImpl> subs;
-
-		synchronized( this ){
-
-			subs = new ArrayList<>(subscriptions);
-		}
+		List<SubscriptionImpl> subs = new ArrayList<>( subscription_map.getReadOnlyMap().values());
 
 		SubscriptionImpl	expired_subs = null;
 
-		for (int i=0;i<subs.size();i++){
-
-			SubscriptionImpl sub = subs.get( i );
+		for ( SubscriptionImpl sub: subs ){
 
 			if ( !( sub.isMine() || sub.isSubscribed())){
 
@@ -2883,10 +2865,9 @@ SubscriptionManagerImpl
 	public SubscriptionImpl[]
 	getSubscriptions()
 	{
-		synchronized( this ){
+		Collection<SubscriptionImpl> subs = subscription_map.getReadOnlyMap().values();
 
-			return((SubscriptionImpl[])subscriptions.toArray( new SubscriptionImpl[subscriptions.size()]));
-		}
+		return((SubscriptionImpl[])subs.toArray( new SubscriptionImpl[subs.size()]));
 	}
 
 	@Override
@@ -2899,18 +2880,15 @@ SubscriptionManagerImpl
 			return( getSubscriptions());
 		}
 
-		List	result = new ArrayList();
+		Collection<SubscriptionImpl> subs = subscription_map.getReadOnlyMap().values();
 
-		synchronized( this ){
+		List<SubscriptionImpl>	result = new ArrayList<>( subs.size());
 
-			for (int i=0;i<subscriptions.size();i++){
+		for ( SubscriptionImpl sub: subs ){
 
-				SubscriptionImpl subs = (SubscriptionImpl)subscriptions.get(i);
+			if ( sub.isSubscribed()){
 
-				if ( subs.isSubscribed()){
-
-					result.add( subs );
-				}
+				result.add( sub );
 			}
 		}
 
@@ -2926,14 +2904,13 @@ SubscriptionManagerImpl
 
 			int total = 0;
 
-			synchronized( this ){
+			Collection<SubscriptionImpl> subs = subscription_map.getReadOnlyMap().values();
+			
+			for ( SubscriptionImpl sub: subs ){
+				
+				if ( sub.isSubscribed()){
 
-				for ( Subscription subs: subscriptions ){
-
-					if ( subs.isSubscribed()){
-
-						total++;
-					}
+					total++;
 				}
 			}
 
@@ -2941,10 +2918,7 @@ SubscriptionManagerImpl
 
 		}else{
 
-			synchronized( this ){
-
-				return( subscriptions.size());
-			}
+			return( subscription_map.size());
 		}
 	}
 
@@ -2952,16 +2926,13 @@ SubscriptionManagerImpl
 	getSubscriptionFromName(
 		String		name )
 	{
-		synchronized( this ){
+		Collection<SubscriptionImpl> subs = subscription_map.getReadOnlyMap().values();
 
-			for (int i=0;i<subscriptions.size();i++){
+		for ( SubscriptionImpl sub: subs ){
 
-				SubscriptionImpl s = (SubscriptionImpl)subscriptions.get(i);
+			if ( sub.getName().equalsIgnoreCase( name )){
 
-				if ( s.getName().equalsIgnoreCase( name )){
-
-					return( s );
-				}
+				return( sub );
 			}
 		}
 
@@ -2973,23 +2944,7 @@ SubscriptionManagerImpl
 	getSubscriptionByID(
 		String		id )
 	{
-		synchronized( this ){
-
-  		int index = Collections.binarySearch(subscriptions, id, new Comparator() {
-  			@Override
-			  public int compare(Object o1, Object o2) {
-  				String id1 = (o1 instanceof Subscription) ? ((Subscription) o1).getID() : o1.toString();
-  				String id2 = (o2 instanceof Subscription) ? ((Subscription) o2).getID() : o2.toString();
-  				return id1.compareTo(id2);
-  			}
-  		});
-
-  		if (index >= 0) {
-  			return subscriptions.get(index);
-  		}
-		}
-
-		return null;
+		return( subscription_map.get( id ));
 	}
 
 	private Map<String,AtomicInteger>	imported_sids = new HashMap<>();
@@ -6006,7 +5961,9 @@ SubscriptionManagerImpl
 
 			log( "Publishing Associations Starts (conc=" + publish_associations_active + ")" );
 
-			List<SubscriptionImpl> shuffled_subs = new ArrayList<>(subscriptions);
+			List<SubscriptionImpl> subs = new ArrayList<>( subscription_map.getReadOnlyMap().values());
+
+			List<SubscriptionImpl> shuffled_subs = new ArrayList<>(subs);
 
 			Collections.shuffle( shuffled_subs );
 
@@ -6050,20 +6007,19 @@ SubscriptionManagerImpl
 	private int
 	getPublishRemainingCount()
 	{
-		synchronized( this ){
+		Collection<SubscriptionImpl> subs = subscription_map.getReadOnlyMap().values();
 
-			int	result = 0;
+		int	result = 0;
 
-			for ( SubscriptionImpl sub: subscriptions ){
+		for ( SubscriptionImpl sub: subs ){
 
-				if ( sub.isSubscribed() && sub.isPublic()){
+			if ( sub.isSubscribed() && sub.isPublic()){
 
-					result += sub.getAssociationsRemainingForPublish();
-				}
+				result += sub.getAssociationsRemainingForPublish();
 			}
-
-			return( result );
 		}
+
+		return( result );
 	}
 
 	private void
@@ -6333,7 +6289,7 @@ SubscriptionManagerImpl
 	protected void
 	publishSubscriptions()
 	{
-		List	 shuffled_subs;
+		List<SubscriptionImpl>	 shuffled_subs;
 
 		synchronized( this ){
 
@@ -6342,7 +6298,9 @@ SubscriptionManagerImpl
 				return;
 			}
 
-			shuffled_subs = new ArrayList( subscriptions );
+			Collection<SubscriptionImpl> subs = subscription_map.getReadOnlyMap().values();
+
+			shuffled_subs = new ArrayList<>( subs );
 
 			publish_subscription_active = true;
 		}
@@ -6354,7 +6312,7 @@ SubscriptionManagerImpl
 
 			for (int i=0;i<shuffled_subs.size();i++){
 
-				SubscriptionImpl sub = (SubscriptionImpl)shuffled_subs.get( i );
+				SubscriptionImpl sub = shuffled_subs.get( i );
 
 				if ( sub.isSubscribed() && sub.isPublic() && !sub.getPublished()){
 
@@ -8135,6 +8093,8 @@ SubscriptionManagerImpl
 
 			if ( l_subs != null ){
 
+				Map<String,SubscriptionImpl>	loaded = new HashMap<>();
+				
 				for (int i=0;i<l_subs.size();i++){
 
 					Map	m = (Map)l_subs.get(i);
@@ -8142,17 +8102,7 @@ SubscriptionManagerImpl
 					try{
 						SubscriptionImpl sub = new SubscriptionImpl( this, m );
 
-						int index = Collections.binarySearch(subscriptions, sub, new Comparator<Subscription>() {
-							@Override
-							public int compare(Subscription arg0, Subscription arg1) {
-								return arg0.getID().compareTo(arg1.getID());
-							}
-						});
-						if (index < 0) {
-							index = -1 * index - 1; // best guess
-
-							subscriptions.add( index, sub );
-						}
+						loaded.put( sub.getID(), sub );
 
 						if ( sub.isMine()){
 
@@ -8166,6 +8116,8 @@ SubscriptionManagerImpl
 						log( "Failed to import subscription from " + m, e );
 					}
 				}
+				
+				subscription_map.putAll( loaded );
 			}
 		}
 
@@ -8228,7 +8180,7 @@ SubscriptionManagerImpl
 
 			config_dirty = false;
 
-			if ( subscriptions.size() == 0 ){
+			if ( subscription_map.isEmpty()){
 
 				FileUtil.deleteResilientConfigFile( CONFIG_FILE );
 
@@ -8240,12 +8192,8 @@ SubscriptionManagerImpl
 
 				map.put( "subs", l_subs );
 
-				Iterator	it = subscriptions.iterator();
-
-				while( it.hasNext()){
-
-					SubscriptionImpl sub = (SubscriptionImpl)it.next();
-
+				for ( SubscriptionImpl sub: subscription_map.getReadOnlyMap().values()){
+					
 					try{
 						l_subs.add( sub.toMap());
 

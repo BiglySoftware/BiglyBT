@@ -138,12 +138,6 @@ UISWTViewSkinAdapter
 		return( true );
 	}
 
-	protected Set<UISWTView>
-	getViews()
-	{
-		return( subviews.keySet());
-	}
-
 	private class
 	ViewHolder
 	{
