@@ -18,6 +18,8 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
+import static com.biglybt.core.config.ConfigKeys.File.ICFG_FILES_AUTO_TAG_COUNT;
+import static com.biglybt.core.config.ConfigKeys.File.ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT;
 import static com.biglybt.core.config.ConfigKeys.File.SCFG_PREFIX_WATCH_TORRENT_FOLDER_TAG;
 
 import java.util.List;
@@ -95,6 +97,56 @@ ConfigSectionFileTorrentsSWT
 				});
 				
 				menu.setVisible( true );
+			});
+		});
+		
+		ActionParameterImpl deleteRow = new ActionParameterImpl( "", "" );
+		
+		deleteRow.setImageID( "smallx-c" );
+		
+		add( deleteRow, listWatchDirs);
+
+		deleteRow.addListener(param -> {
+			
+			Utils.execSWTThread(()->{
+				skipTidy = true;
+
+				int num_folders = COConfigurationManager.getIntParameter( ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT, 1);
+
+					// always blank the current row as we don't want the values re-appearing
+					// if rows re-added
+				
+				setImportFolder( index, "" );
+				setImportTag( index, "" );
+				
+				if ( index == num_folders-1 ){
+					
+						// last one
+					
+					if ( index > 0 ){
+					
+							// remove last
+						
+						COConfigurationManager.setParameter( ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT, num_folders-1);
+					}
+				}else{
+					
+						// copy down 
+					
+					for ( int i=index+1; i<= num_folders;i++ ){
+						
+						String exts = getImportFolder( i );
+						String tag	= getImportTag( i );
+					
+						setImportFolder( i-1, exts );
+						setImportTag( i-1, tag );
+					}
+					
+						// remove last
+					
+					COConfigurationManager.setParameter( ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT, num_folders-1);
+				}
+				requestRebuild();
 			});
 		});
 	}

@@ -36,11 +36,42 @@ public class ConfigSectionFileTorrents
 		extends ConfigSectionImpl {
 	public static final String SECTION_ID = "torrents";
 
-	private boolean skipTidy = false;
+	protected boolean skipTidy = false;
 	
 	public ConfigSectionFileTorrents() {
 		super(SECTION_ID, ConfigSection.SECTION_FILES);
 	}
+	
+	protected String
+	getImportFolder(
+		int		i )
+	{
+		return( COConfigurationManager.getStringParameter("Watch Torrent Folder Path" + (i==0?"":(" " + i ))));
+	}
+	
+	protected void
+	setImportFolder(
+		int			i,
+		String		str )
+	{
+		COConfigurationManager.setParameter("Watch Torrent Folder Path" + (i==0?"":(" " + i )), str );
+	}
+	
+	protected String
+	getImportTag(
+		int		i )
+	{
+		return( COConfigurationManager.getStringParameter("Watch Torrent Folder Tag" + (i==0?"":(" " + i )), null ));
+	}
+
+	protected void
+	setImportTag(
+		int			i,
+		String		str )
+	{
+		COConfigurationManager.setParameter("Watch Torrent Folder Tag" + (i==0?"":(" " + i )), str );
+	}
+	
 
 	@Override
 	public void build() {
@@ -109,10 +140,8 @@ public class ConfigSectionFileTorrents
 		}else{
 			
 			for ( int i=num_folders-1; i>=1; i-- ){
-				String folder_path =
-						COConfigurationManager.getStringParameter("Watch Torrent Folder Path" + (i==0?"":(" " + i )));
-				String tag =
-						COConfigurationManager.getStringParameter("Watch Torrent Folder Tag" + (i==0?"":(" " + i )), null);
+				String folder_path	= getImportFolder(i);
+				String tag 			= getImportTag(i);
 				
 				if ( 	( folder_path == null || folder_path.isEmpty()) &&
 						( tag == null || tag.isEmpty())){
@@ -143,7 +172,7 @@ public class ConfigSectionFileTorrents
 		ParameterGroupImpl pgWatchDirs = new ParameterGroupImpl(null,
 				listWatchDirs);
 		add("pgWatchDirs", pgWatchDirs);
-		pgWatchDirs.setNumberOfColumns(isSWT()?3:2);
+		pgWatchDirs.setNumberOfColumns(isSWT()?4:2);
 		pgWatchDirs.setIndent(1, false);
 
 		// add another folder

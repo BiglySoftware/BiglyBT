@@ -226,7 +226,7 @@ ConfigSectionInterfaceTagsSWT
 		}else{
 			ActionParameterImpl deleteRow = new ActionParameterImpl( "", "" );
 			
-			deleteRow.setImageID( "delete" );
+			deleteRow.setImageID( "smallx-c" );
 			
 			add( deleteRow, listAutoTag);
 	

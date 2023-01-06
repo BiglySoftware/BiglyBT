@@ -22,6 +22,8 @@ package com.biglybt.ui.swt.config;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
 
 import com.biglybt.pifimpl.local.ui.config.ActionParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
@@ -35,8 +37,8 @@ import com.biglybt.pif.ui.config.ActionParameter;
 public class ButtonSwtParameter
 	extends BaseSwtParameter<ButtonSwtParameter, Object>
 {
-	final Button button;
-
+	Button button;
+	
 	/**
 	 * Make a button.
 	 * <p/>
@@ -62,28 +64,40 @@ public class ButtonSwtParameter
 		
 		if ( button_key.isEmpty() && !image_id.isEmpty()){
 		
-			width = SWT.DEFAULT;
-		}
+			ToolBar toolBar = new ToolBar( composite, SWT.FLAT );
 		
-		button = new ButtonWithMinWidth(composite, SWT.PUSH, width);
-		setMainControl(button);
-
-		Messages.setLanguageText(button, button_key );
-
-		
-		if ( !image_id.isEmpty()){
+			ToolItem item = new ToolItem( toolBar, SWT.PUSH );
 			
-			button.setImage(ImageLoader.getInstance().getImage( image_id ));
-		}
+			item.setImage( ImageLoader.getInstance().getImage( image_id ));
+			
+			item.addListener( SWT.Selection, ev->{
+				
+				toolBar.forceFocus();
+				triggerChangeListeners(true);
+			});
+			
+		}else{
 		
-		button.addListener(SWT.Selection, event -> {
-			// Force control to ensure we aren't on an un-processed parameter
-			// On OSX, button doesn't automatically get focused on click, so
-			// if the user edits a StringParameter, and clicks a button, the
-			// StringParameter will not be saved yet..
-			button.forceFocus();
-			triggerChangeListeners(true);
-		});
+			Button button = new ButtonWithMinWidth(composite, SWT.PUSH, width);
+			setMainControl(button);
+	
+			Messages.setLanguageText(button, button_key );
+	
+			
+			if ( !image_id.isEmpty()){
+				
+				button.setImage(ImageLoader.getInstance().getImage( image_id ));
+			}
+			
+			button.addListener(SWT.Selection, event -> {
+				// Force control to ensure we aren't on an un-processed parameter
+				// On OSX, button doesn't automatically get focused on click, so
+				// if the user edits a StringParameter, and clicks a button, the
+				// StringParameter will not be saved yet..
+				button.forceFocus();
+				triggerChangeListeners(true);
+			});
+		}
 		
 		setPluginParameter(pluginParam);
 	}
@@ -101,7 +115,7 @@ public class ButtonSwtParameter
 		if (pluginParam instanceof ActionParameter) {
 
 			Utils.execSWTThread(() -> {
-				if (button.isDisposed()) {
+				if (button == null || button.isDisposed()) {
 					return;
 				}
 
