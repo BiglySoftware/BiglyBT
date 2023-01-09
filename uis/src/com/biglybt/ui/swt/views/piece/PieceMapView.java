@@ -293,7 +293,9 @@ public class PieceMapView
 		imageLabel.setLayoutData(gridData);
 
 		topLabel = new BufferedLabel(pieceInfoComposite, SWT.DOUBLE_BUFFERED);
-		topLabel.getControl().setBackground(Colors.white);
+		if ( !Utils.isDarkAppearanceNative()){
+			topLabel.getControl().setBackground(Colors.white);
+		}
 		gridData = new GridData(SWT.FILL, SWT.DEFAULT, true, false);
 		topLabel.setLayoutData(gridData);
 
