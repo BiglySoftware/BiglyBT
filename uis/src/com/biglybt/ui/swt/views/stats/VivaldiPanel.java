@@ -291,22 +291,20 @@ public class VivaldiPanel extends BasePanel {
 
 	    scale.setSize( size );
 
-	    Color white = ColorCache.getColor(display,255,255,255);
 	    Color blue = ColorCache.getColor(display,66,87,104);
 
-			boolean needNewImage = img == null || img.isDisposed();
-			if (!needNewImage) {
-				Rectangle bounds = img.getBounds();
-				needNewImage = bounds.width != size.width || bounds.height != size.height;
-			}
-			if (needNewImage) {
-				img = new Image(display,size);
-			}
+	    boolean needNewImage = img == null || img.isDisposed();
+	    if (!needNewImage) {
+	    	Rectangle bounds = img.getBounds();
+	    	needNewImage = bounds.width != size.width || bounds.height != size.height;
+	    }
+	    if (needNewImage) {
+	    	img = new Image(display,size);
+	    }
 
 	    GC gc = new GC(img);
 
-	    gc.setForeground(white);
-	    gc.setBackground(white);
+	    gc.setBackground(Utils.isDarkAppearanceNative()?canvas.getBackground():Colors.white );
 
 	    gc.fillRectangle(size);
 
@@ -321,7 +319,6 @@ public class VivaldiPanel extends BasePanel {
 
 
 	    gc.setForeground(blue);
-	    gc.setBackground(white);
 
 	    DHTNetworkPosition _ownPosition = lastSelf.getNetworkPosition(DHTNetworkPosition.POSITION_TYPE_VIVALDI_V1);
 
@@ -339,7 +336,7 @@ public class VivaldiPanel extends BasePanel {
 	    HeightCoordinatesImpl ownCoords =
 	    	(HeightCoordinatesImpl) ownPosition.getCoordinates();
 
-	    gc.drawText( MessageText.getString( "vivaldi.our.error", new String[]{ String.valueOf( ownErrorEstimate )}),10,10);
+	    gc.drawText( MessageText.getString( "vivaldi.our.error", new String[]{ String.valueOf( ownErrorEstimate )}),10,10, SWT.DRAW_TRANSPARENT );
 
 	    Color black = ColorCache.getColor(display, 0, 0, 0);
 	    gc.setBackground(black); // Color of the squares
@@ -434,58 +431,6 @@ public class VivaldiPanel extends BasePanel {
 
 	    	canvas.redraw();
 	    }
-  }
-
-  public void refresh(List<VivaldiPosition> vivaldiPositions) {
-    if(canvas.isDisposed()) return;
-    Rectangle size = canvas.getBounds();
-
-    scale.setSize( size );
-
-    if (img != null && !img.isDisposed()) {
-    	img.dispose();
-    }
-
-    img = new Image(display,size);
-    GC gc = new GC(img);
-
-    Color white = ColorCache.getColor(display,255,255,255);
-    gc.setForeground(white);
-    gc.setBackground(white);
-    gc.fillRectangle(size);
-
-    Color blue = ColorCache.getColor(display,66,87,104);
-    gc.setForeground(blue);
-    gc.setBackground(blue);
-
-
-
-    for (VivaldiPosition position : vivaldiPositions) {
-      HeightCoordinatesImpl coord = (HeightCoordinatesImpl) position.getCoordinates();
-
-      float error = position.getErrorEstimate() - VivaldiPosition.ERROR_MIN;
-      if(error < 0) error = 0;
-      if(error > 1) error = 1;
-      int blueComponent = (int) (255 - error * 255);
-      int redComponent = (int) (255*error);
-      // Don't use ColorCache, as our color creation is temporary and
-      // varying
-      Color drawColor = new Color(display,redComponent,50,blueComponent);
-      gc.setForeground(drawColor);
-      draw(gc,coord.getX(),coord.getY(),coord.getH());
-      drawColor.dispose();
-    }
-
-    gc.dispose();
-
-    canvas.redraw();
-  }
-
-  private void draw(GC gc,float x,float y,float h) {
-    int x0 = scale.getX(x,y);
-    int y0 = scale.getY(x,y);
-    gc.fillRectangle(x0-1,y0-1,3,3);
-    gc.drawLine(x0,y0,x0,(int)(y0-200*h/(scale.getMaxY()-scale.getMinY())));
   }
 
   private void draw(GC gc,float x,float y,float h,DHTControlContact contact,int distance,float error) {
