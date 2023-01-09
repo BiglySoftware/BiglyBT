@@ -623,6 +623,7 @@ public class TransferStatsView
 
 	  Canvas upload_canvas = new Canvas(connectionPanel,SWT.NO_BACKGROUND);
 	  gridData = new GridData(GridData.FILL_BOTH);
+	  gridData.horizontalIndent=4;
 	  gridData.heightHint = 200;
 	  upload_canvas.setLayoutData(gridData);
 
@@ -738,12 +739,13 @@ public class TransferStatsView
 
 
     autoSpeedPanelLayout = new StackLayout();
+    autoSpeedPanelLayout.marginHeight = autoSpeedPanelLayout.marginWidth = 0;
     autoSpeedPanel.setLayout(autoSpeedPanelLayout);
 
     autoSpeedInfoPanel = new Composite(autoSpeedPanel,SWT.NULL);
     autoSpeedInfoPanel.setLayoutData(new GridData(GridData.FILL_BOTH));
-    GridLayout layout = new GridLayout();
-    layout.numColumns = 8;
+    GridLayout layout = Utils.getSimpleGridLayout(8);
+
     layout.makeColumnsEqualWidth = true;
     autoSpeedInfoPanel.setLayout(layout);
 
@@ -756,6 +758,7 @@ public class TransferStatsView
 
     TabFolder folder = new TabFolder(autoSpeedInfoPanel, SWT.LEFT);
     gridData = new GridData(GridData.FILL_BOTH);
+    gridData.horizontalIndent = 4;
     gridData.horizontalSpan = 4;
     folder.setLayoutData(gridData);
     //folder.setBackground(Colors.background);

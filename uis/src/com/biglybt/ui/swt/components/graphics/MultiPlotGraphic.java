@@ -1,6 +1,5 @@
 /*
  * File    : SpeedGraphic.java
- * Created : 15 d�c. 2003}
  * By      : Olivier
  *
  * This program is free software; you can redistribute it and/or modify
@@ -903,7 +902,7 @@ MultiPlotGraphic
 
 								gcImage.setForeground( source.getLineColor());
 
-								gcImage.drawText(formater.format( average_val ), bounds.width - 65, height - 12, false);
+								gcImage.drawText(formater.format( average_val ), bounds.width - 65, height - 12, SWT.DRAW_TRANSPARENT);
 
 								Color bg = gcImage.getBackground();
 
