@@ -512,12 +512,13 @@ public class TransferStatsView
   private void
   createConnectionPanel()
   {
+	  boolean dark = Utils.isDarkAppearanceNative();
+	  
 	  Composite connectionHeader = new Composite(mainPanel,SWT.NONE);
 	  GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  connectionHeader.setLayoutData(gridData);
 	  
-	  GridLayout chLayout = new GridLayout();
-	  chLayout.numColumns = 4;
+	  GridLayout chLayout =  Utils.getSimpleGridLayout(4);
 	  chLayout.makeColumnsEqualWidth = true;
 	  connectionHeader.setLayout(chLayout);
 	  
@@ -525,8 +526,7 @@ public class TransferStatsView
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  connectionPanel.setLayoutData(gridData);
 
-	  GridLayout panelLayout = new GridLayout();
-	  panelLayout.numColumns = 2;
+	  GridLayout panelLayout = Utils.getSimpleGridLayout(2);
 	  panelLayout.makeColumnsEqualWidth = true;
 	  connectionPanel.setLayout(panelLayout);
 
@@ -535,7 +535,7 @@ public class TransferStatsView
 	  gridData.horizontalSpan = 3;
 	  conn_area.setLayoutData(gridData);
 
-	  panelLayout = new GridLayout();
+	  panelLayout = Utils.getSimpleGridLayout(2);
 	  panelLayout.numColumns = 2;
 	  conn_area.setLayout(panelLayout);
 
@@ -550,8 +550,7 @@ public class TransferStatsView
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  upload_area.setLayoutData(gridData);
 
-	  panelLayout = new GridLayout();
-	  panelLayout.numColumns = 2;
+	  panelLayout = Utils.getSimpleGridLayout(2);
 	  upload_area.setLayout(panelLayout);
 
 	  label = new Label( upload_area, SWT.NULL );
@@ -568,7 +567,7 @@ public class TransferStatsView
 	  gridData = new GridData(GridData.FILL_BOTH);
 	  gridData.horizontalSpan = 1;
 	  con_folder.setLayoutData(gridData);
-	  //con_folder.setBackground(Colors.background);
+	  //con_folder.setBackground(Colors.red);
 
 	  	// connection counts
 
@@ -593,7 +592,7 @@ public class TransferStatsView
 
 	  route_info_tab.setText( MessageText.getString( "label.routing" ));
 
-	  Composite route_tab_comp = new Composite( con_folder, SWT.BORDER );
+	  Composite route_tab_comp = new Composite( con_folder, dark?SWT.BORDER:SWT.NULL );
 	  route_tab_comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 	  GridLayout routeTabLayout = Utils.getSimpleGridLayout(1);
 	  route_tab_comp.setLayout(routeTabLayout);
@@ -604,7 +603,7 @@ public class TransferStatsView
 
 	  route_comp = new Composite( sc, SWT.NULL );
 
-	  if ( !Utils.isDarkAppearanceNative()) {
+	  if ( !dark ) {
 	  
 		  route_comp.setBackground( Colors.white );
 	  
