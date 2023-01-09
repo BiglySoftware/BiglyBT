@@ -38,11 +38,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
-import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.util.DisplayFormatters;
 
 
@@ -104,6 +102,8 @@ XferStatsPanel
 
 		display = composite.getDisplay();
 
+		boolean dark = Utils.isDarkAppearanceNative();
+		
 		Color white = ColorCache.getColor(display,255,255,255);
 		Color dark_grey = Colors.dark_grey;
 		
@@ -114,7 +114,9 @@ XferStatsPanel
 	    
 	    layout.numColumns = 2;
 	    panel.setLayout(layout);
-	    panel.setBackground( white );
+	    if ( !dark ){
+	    	panel.setBackground( white );
+	    }
 	    		    	
     		// header
 	    
@@ -122,8 +124,11 @@ XferStatsPanel
 	    GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 	    grid_data.horizontalIndent = 5;
 	    header_label.setLayoutData(grid_data);
-	    header_label.getControl().setBackground( white );
-	    header_label.getControl().setForeground( dark_grey );
+	    
+	    if ( !dark ){
+	    	header_label.getControl().setBackground( white );
+	    	header_label.getControl().setForeground( dark_grey );
+	    }
 	    
 	    if ( !is_global ){
 	    	
@@ -138,24 +143,34 @@ XferStatsPanel
 	    layout.numColumns = 3;
 	    
 	    controls.setLayout(layout);
-	    controls.setBackground( white );
+	    
+	    if ( !dark ){
+	    	controls.setBackground( white );
+	    }
 	    
 	    Label label = new Label( controls, SWT.NULL );
-	    label.setBackground( white );
-	    label.setForeground( dark_grey );
+	    
+	    if ( !dark ){
+	    	label.setBackground( white );
+	    	label.setForeground( dark_grey );
+	    }
 
 	    Messages.setLanguageText( label, "ConfigView.section.display" );
 	    
 	    Button button1	= new Button( controls, SWT.RADIO );
-	    button1.setBackground( white );
-	    button1.setForeground( dark_grey );
+	    if ( !dark ){
+	    	button1.setBackground( white );
+	    	button1.setForeground( dark_grey );
+	    }
 	    Messages.setLanguageText( button1, is_global?"label.samples":"Pieces.column.speed" );
 	    button1.setSelection( button1_selected );
 	    
 	    
 	    Button button2	= new Button( controls, SWT.RADIO );
-	    button2.setBackground( white );
-	    button2.setForeground( dark_grey );
+	    if ( !dark ){
+	    	button2.setBackground( white );
+	    	button2.setForeground( dark_grey );
+	    }
 	    Messages.setLanguageText( button2, is_global?"label.throughput":"SpeedView.stats.total" );
 	    button2.setSelection( !button1_selected );
 
@@ -474,6 +489,8 @@ XferStatsPanel
 
 		GC gc = new GC(img);
 
+		boolean dark = Utils.isDarkAppearanceNative();
+		
 		try{
 			gc.setAdvanced( true );
 	
@@ -481,8 +498,9 @@ XferStatsPanel
 			gc.setTextAntialias( SWT.ON );
 	
 			Color white = ColorCache.getColor(display,255,255,255);
+			
 			gc.setForeground(white);
-			gc.setBackground(white);
+			gc.setBackground(dark?canvas.getBackground(): white);
 			gc.fillRectangle(size);
 	
 			if ( my_stats == null ){
@@ -490,7 +508,7 @@ XferStatsPanel
 				return;
 			}
 			
-			gc.setForeground(Colors.black);
+			gc.setForeground(dark?Colors.light_grey:Colors.black);
 	
 			flag_width	= scale.getReverseWidth( 25 );
 			flag_height	= scale.getReverseHeight( 15 );
