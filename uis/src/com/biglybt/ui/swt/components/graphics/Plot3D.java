@@ -39,6 +39,7 @@ import com.biglybt.core.util.AEMonitor;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.HSLColor;
+import com.biglybt.ui.swt.utils.ColorCache;
 
 public class
 Plot3D
@@ -94,13 +95,22 @@ Plot3D
 
 		int	hue = colours.length * step;
 
+		boolean dark = Utils.isDarkAppearanceNative();
+		
 		for (int i=0;i<colours.length;i++){
 
 			hsl.setHue( hue );
 
 			hue -= step;
 
-			colours[i] = new Color( device, hsl.getRed(), hsl.getGreen(), hsl.getBlue());
+			Color colour = ColorCache.getColor( device, hsl.getRed(), hsl.getGreen(), hsl.getBlue());
+			
+			if ( dark ){
+				
+				colour = Colors.getInstance().getSlightlyFadedColor(colour);
+			}
+			
+			colours[i] = colour;
 		}
 		
 		canvas.addPaintListener(new PaintListener() {
@@ -210,6 +220,13 @@ Plot3D
 
 			GC image = new GC( bufferImage );
 
+			boolean dark = Utils.isDarkAppearanceNative();
+			
+			if ( dark ) {
+				image.setBackground( canvas.getBackground() );
+				image.fillRectangle(bounds);
+			}
+			
 			int	max_x = 0;
 			int	max_y = 0;
 			int	max_z = 0;
@@ -269,7 +286,7 @@ Plot3D
 
 			Utils.setClipping(image, new Rectangle( PAD_LEFT, PAD_RIGHT, usable_width, usable_height ));
 
-			image.setForeground( Colors.light_grey );
+			image.setForeground( dark?Colors.dark_grey:Colors.grey );
 
 			int	x_lines = 10;
 
@@ -331,7 +348,7 @@ Plot3D
 						PAD_TOP + usable_height - ( draw_y + draw_z ));
 			}
 
-			image.setForeground( Colors.black );
+			image.setForeground( dark?Colors.grey:Colors.black );
 
 			image.drawRectangle( bounds.x, bounds.y, bounds.width-1, bounds.height-1 );
 
@@ -408,14 +425,6 @@ Plot3D
 		if ( bufferImage != null && ! bufferImage.isDisposed()){
 
 			bufferImage.dispose();
-		}
-
-		if ( colours != null ){
-
-			for (int i=0;i<colours.length;i++){
-
-				colours[i].dispose();
-			}
 		}
 
 		COConfigurationManager.removeParameterListener("Graphics Update",this);

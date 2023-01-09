@@ -593,11 +593,9 @@ public class TransferStatsView
 
 	  route_info_tab.setText( MessageText.getString( "label.routing" ));
 
-	  Composite route_tab_comp = new Composite( con_folder, SWT.NULL );
+	  Composite route_tab_comp = new Composite( con_folder, SWT.BORDER );
 	  route_tab_comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-	  GridLayout routeTabLayout = new GridLayout();
-	  routeTabLayout.numColumns = 1;
-	  routeTabLayout.marginWidth = routeTabLayout.marginHeight = 0;
+	  GridLayout routeTabLayout = Utils.getSimpleGridLayout(1);
 	  route_tab_comp.setLayout(routeTabLayout);
 	  route_info_tab.setControl( route_tab_comp );
 
@@ -606,13 +604,15 @@ public class TransferStatsView
 
 	  route_comp = new Composite( sc, SWT.NULL );
 
-	  route_comp.setBackground( Colors.white );
+	  if ( !Utils.isDarkAppearanceNative()) {
 	  
-	  sc.setBackground( Colors.white );
+		  route_comp.setBackground( Colors.white );
+	  
+		  sc.setBackground( Colors.white );
+	  }
 	  
 	  route_comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-	  GridLayout routeLayout = new GridLayout();
-	  routeLayout.numColumns = 3;
+	  GridLayout routeLayout = Utils.getSimpleGridLayout(3);
 	  route_comp.setLayout(routeLayout);
 
 	  sc.setContent( route_comp );
@@ -655,21 +655,29 @@ public class TransferStatsView
 				labels[i].dispose();
 		  }
 
+		  boolean dark = Utils.isDarkAppearanceNative();
+			  
 		  Label h1 = new Label( route_comp, SWT.NULL );
 		  h1.setLayoutData(new GridData(GridData.FILL_HORIZONTAL ));
 		  h1.setText( MessageText.getString( "label.route" ));
-		  h1.setForeground( Colors.black );
-		  h1.setBackground( Colors.white );
+		  if ( !dark ){
+			  h1.setForeground( Colors.black );
+			  h1.setBackground( Colors.white );
+		  }
 		  Label h2 = new Label( route_comp, SWT.NULL );
 		  h2.setLayoutData(new GridData(GridData.FILL_HORIZONTAL ));
 		  h2.setText( MessageText.getString( "tps.type.incoming" ));
-		  h2.setForeground( Colors.black );
-		  h2.setBackground( Colors.white );
+		  if ( !dark ){
+			  h2.setForeground( Colors.black );
+			  h2.setBackground( Colors.white );
+		  }
 		  Label h3 = new Label( route_comp, SWT.NULL );
 		  h3.setLayoutData(new GridData(GridData.FILL_HORIZONTAL ));
 		  h3.setText( MessageText.getString( "label.outgoing" ));
-		  h3.setForeground( Colors.black );
-		  h3.setBackground( Colors.white );
+		  if ( !dark ){
+			  h3.setForeground( Colors.black );
+			  h3.setBackground( Colors.white );
+		  }
 
 		  new Label( route_comp, SWT.NULL );
 		  new Label( route_comp, SWT.NULL );
@@ -683,8 +691,10 @@ public class TransferStatsView
 				  BufferedLabel l = new BufferedLabel( route_comp, SWT.DOUBLE_BUFFERED );
 				  GridData gridData = new GridData(GridData.FILL_HORIZONTAL );
 				  l.setLayoutData(gridData);
-				  l.getControl().setBackground( Colors.white );
-				  l.getControl().setForeground( Colors.black );
+				  if ( !dark ){
+					  l.getControl().setBackground( Colors.white );
+					  l.getControl().setForeground( Colors.black );
+				  }
 				  route_labels[i][j] = l;
 			  }
 		  }
@@ -1785,6 +1795,18 @@ public class TransferStatsView
 
 		  GC gc = new GC( image );
 
+		  boolean dark = Utils.isDarkAppearanceNative();
+		  
+		  if ( dark ){
+				gc.setBackground( canvas.getBackground() );
+				gc.fillRectangle(bounds);
+		  }
+		  
+		  gc.setForeground( dark?Colors.grey:Colors.black );
+
+		  gc.drawRectangle( bounds.x, bounds.y, bounds.width-1, bounds.height-1 );
+
+			
 		  try {
 		  	gc.setAntialias( SWT.ON );
 		  } catch (Exception e) {
@@ -1896,6 +1918,8 @@ public class TransferStatsView
 
 				  int	text_num = texts.size();
 
+				  gc.setForeground( dark?Colors.white:Colors.black );
+				  
 				  for (int i=(text_num>100?(text_num-100):0);i<text_num;i++){
 
 					  Object[]	entry = texts.get(i);
@@ -1974,7 +1998,7 @@ public class TransferStatsView
 				  }
 			  }
 
-			  gc.setForeground( Colors.black );
+			  gc.setForeground( dark?Colors.grey:Colors.black );
 		  }
 
 		  SpeedManagerLimitEstimate[] bad_up = mapper.getBadUploadHistory();
@@ -1999,11 +2023,13 @@ public class TransferStatsView
 
 			  }
 
-			  gc.setForeground( Colors.black );
+			  gc.setForeground( dark?Colors.grey:Colors.black );
 
 			  gc.setLineWidth( 1 );
 		  }
 
+		  gc.setForeground( dark?Colors.white:Colors.black );
+		  
 		  String x_text = labels[0] + " - " + formatters[0].format( max_x+1 );
 
 		  gc.drawText( 	x_text,
@@ -2076,7 +2102,7 @@ public class TransferStatsView
 				  }
 			  }
 
-			  gc.setForeground( Colors.black );
+			  gc.setForeground( dark?Colors.grey:Colors.black );
 		  }
 
 		  SpeedManagerLimitEstimate[] bad_down = mapper.getBadDownloadHistory();
@@ -2100,13 +2126,15 @@ public class TransferStatsView
 							y_axis_bottom_y - y );
 			  }
 
-			  gc.setForeground( Colors.black );
+			  gc.setForeground( dark?Colors.grey:Colors.black );
 
 			  gc.setLineWidth( 1 );
 		  }
 
 		  String	y_text = labels[1] + " - " + formatters[1].format( max_y+1 );
 
+		  gc.setForeground( dark?Colors.white:Colors.black );
+		  
 		  gc.drawText( y_text, y_axis_top_x+4, y_axis_top_y + 2, SWT.DRAW_TRANSPARENT );
 
 		  gc.drawText( title, ( bounds.width - title.length()*char_width )/2, 1, SWT.DRAW_TRANSPARENT );

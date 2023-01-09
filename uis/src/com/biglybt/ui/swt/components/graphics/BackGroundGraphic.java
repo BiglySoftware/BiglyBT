@@ -77,7 +77,7 @@ public class BackGroundGraphic implements Graphic {
  	    lightGrey2 = ColorCache.getColor(canvas.getDisplay(), 12, 12, 12);
  	    colorWhite = ColorCache.getColor(canvas.getDisplay(), 110, 110, 110);
  	    colorBlack = ColorCache.getColor(canvas.getDisplay(), 160, 160, 160);
- 	    colorGrey  = Colors.dark_grey;
+ 	    colorGrey  = Colors.light_grey;
     }else{
 	    lightGrey = ColorCache.getColor(canvas.getDisplay(), 250, 250, 250);
 	    lightGrey2 = ColorCache.getColor(canvas.getDisplay(), 233, 233, 233);
