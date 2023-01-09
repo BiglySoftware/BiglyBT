@@ -475,6 +475,8 @@ GeneralOpsPanel
 			img = new Image(display,size);
 		}
 
+		boolean dark = Utils.isDarkAppearanceNative();
+		
 		GC gc = new GC(img);
 
 		gc.setAdvanced( true );
@@ -482,9 +484,9 @@ GeneralOpsPanel
 		gc.setAntialias( SWT.ON );
 		gc.setTextAntialias( SWT.ON );
 
-		Color white = ColorCache.getColor(display,255,255,255);
-		gc.setForeground(white);
-		gc.setBackground(white);
+		Color white = Colors.white;
+		
+		gc.setBackground(dark?canvas.getBackground():white);
 		gc.fillRectangle(size);
 
 		List<ActivityDetail>	activities;
@@ -553,7 +555,7 @@ GeneralOpsPanel
 			details.draw( gc, x_origin, y_origin, slice_angle );
 		}
 
-		gc.setForeground( ColorCache.getColor( gc.getDevice(), 0, 0, 0 ));
+		gc.setForeground( dark?Colors.light_grey:Colors.black );
 
 		if ( activities.size() == 0 ){
 
@@ -780,6 +782,8 @@ GeneralOpsPanel
 			int		y_origin,
 			double	slice_angle )
 		{
+			boolean dark = Utils.isDarkAppearanceNative();
+			
 			draw_count++;
 
 			setColour( gc );
@@ -885,7 +889,7 @@ GeneralOpsPanel
 								
 								if ( kid_type == Node.TYPE_2 ){
 									
-									fg = Colors.black;
+									fg = dark?Colors.grey:Colors.black;
 									
 								}else if ( kid_type == Node.TYPE_3 ){
 									
@@ -945,13 +949,15 @@ GeneralOpsPanel
 		setColour(
 			GC		gc )
 		{
+			boolean dark = Utils.isDarkAppearanceNative();
+			
 			if ( complete_time != -1 && draw_count > 1 ){
 
 				int age = (int)( SystemTime.getMonotonousTime() - complete_time );
 
 				gc.setAlpha( Math.max( 0, 200 - (255*age/FADE_OUT)));
 
-				gc.setForeground( ColorCache.getColor( gc.getDevice(), 0, 0, 0 ));
+				gc.setForeground( dark?Colors.grey:Colors.black );
 
 			}else{
 
@@ -969,7 +975,7 @@ GeneralOpsPanel
 
 				}else if ( type == Activity.TYPE_3 ){
 
-					gc.setForeground( ColorCache.getColor( gc.getDevice(), 20, 20, 220 ));
+					gc.setForeground( dark?ColorCache.getColor( gc.getDevice(), 100, 150, 220 ):ColorCache.getColor( gc.getDevice(), 20, 20, 220 ));
 
 				}else{
 
