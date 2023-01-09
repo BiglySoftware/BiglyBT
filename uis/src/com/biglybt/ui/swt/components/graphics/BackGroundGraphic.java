@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -46,9 +47,12 @@ public class BackGroundGraphic implements Graphic {
 
   protected Image bufferBackground;
 
-  protected Color lightGrey;
-  protected Color lightGrey2;
+  private Color lightGrey;
+  private Color lightGrey2;
+  
   protected Color colorWhite;
+  protected Color colorBlack;
+  protected Color colorGrey;
 
   protected AEMonitor	this_mon	= new AEMonitor( "BackGroundGraphic" );
 
@@ -67,10 +71,21 @@ public class BackGroundGraphic implements Graphic {
   @Override
   public void initialize(Canvas canvas) {
     this.drawCanvas = canvas;
-    lightGrey = ColorCache.getColor(canvas.getDisplay(), 250, 250, 250);
-		lightGrey2 = ColorCache.getColor(canvas.getDisplay(), 233, 233, 233);
-		colorWhite = ColorCache.getColor(canvas.getDisplay(), 255, 255, 255);
-
+    
+    if ( Utils.isDarkAppearanceNative()){
+    	lightGrey = ColorCache.getColor(canvas.getDisplay(), 5, 5, 5);
+ 	    lightGrey2 = ColorCache.getColor(canvas.getDisplay(), 12, 12, 12);
+ 	    colorWhite = ColorCache.getColor(canvas.getDisplay(), 110, 110, 110);
+ 	    colorBlack = ColorCache.getColor(canvas.getDisplay(), 160, 160, 160);
+ 	    colorGrey  = Colors.dark_grey;
+    }else{
+	    lightGrey = ColorCache.getColor(canvas.getDisplay(), 250, 250, 250);
+	    lightGrey2 = ColorCache.getColor(canvas.getDisplay(), 233, 233, 233);
+	    colorWhite = Colors.white;
+	    colorBlack = Colors.black;
+	    colorGrey  = Colors.grey;
+    }
+    
 	Menu menu = new Menu( canvas );
 
 	final MenuItem mi_binary = new MenuItem( menu, SWT.CHECK );
@@ -143,7 +158,7 @@ public class BackGroundGraphic implements Graphic {
         gcBuffer.setForeground(colors[i%4]);
         gcBuffer.drawLine(1,i+1,bounds.width-1,i+1);
       }
-      gcBuffer.setForeground(Colors.black);
+      gcBuffer.setForeground(colorBlack);
       gcBuffer.drawLine(bounds.width-70,0,bounds.width-70,bounds.height-1);
 
       gcBuffer.drawRectangle(0,0,bounds.width-1,bounds.height-1);
@@ -154,12 +169,5 @@ public class BackGroundGraphic implements Graphic {
   public void dispose() {
     if(bufferBackground != null && ! bufferBackground.isDisposed())
       bufferBackground.dispose();
-  }
-
-  public void setColors(Color color1, Color color2, Color color3) {
-  	colorWhite = color1;
-  	lightGrey = color2;
-  	lightGrey2 = color3;
-  	drawCanvas.redraw();
   }
 }

@@ -78,7 +78,7 @@ public class ScaledGraphic extends BackGroundGraphic {
       GC gcBuffer = new GC(bufferScale);
       try {
       gcBuffer.drawImage(bufferBackground,0,0);
-      gcBuffer.setForeground(Colors.black);
+      gcBuffer.setForeground(colorBlack);
       //gcImage.setBackground(null);
       scale.setNbPixels(bounds.height - 16);
       int[] levels = scale.getScaleValues();
@@ -89,7 +89,7 @@ public class ScaledGraphic extends BackGroundGraphic {
       }
       if (this.update_divider_width > 0) {
     	  for (int i=bounds.width - 70; i > 0; i-=this.update_divider_width) {
-    		  gcBuffer.setForeground(Colors.grey);
+    		  gcBuffer.setForeground(colorGrey);
     		  gcBuffer.drawLine(i, 0, i, bounds.height);
     	  }
       }

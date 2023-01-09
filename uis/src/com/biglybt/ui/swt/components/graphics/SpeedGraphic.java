@@ -408,7 +408,7 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 						
 							if ( last_xpos < 0 ||  xPos + p.x < last_xpos ){
 							
-								gcImage.setForeground(Colors.grey );
+								gcImage.setForeground( colorGrey );
 
 								gcImage.drawText( str, xPos, 0, true );
 								
