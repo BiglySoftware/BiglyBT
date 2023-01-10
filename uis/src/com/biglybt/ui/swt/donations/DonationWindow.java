@@ -156,6 +156,13 @@ public class DonationWindow
 				return;
 			}
 	
+			if ( alreadyDonated ){
+				
+					// we don't want to re-ask users that have already donated very frequently
+				
+				updateMinDate( false );
+			}
+			
 			COConfigurationManager.setParameter("donations.nextAskHours", hours	+ reAskEveryHours);
 			
 			COConfigurationManager.save();
@@ -173,7 +180,7 @@ public class DonationWindow
 		});
 	}
 
-	public static void _open(final boolean showNoLoad, final String sourceRef) {
+	private static void _open(final boolean showNoLoad, final String sourceRef) {
 		if (shell != null && !shell.isDisposed()) {
 			return;
 		}
@@ -405,42 +412,38 @@ public class DonationWindow
 	 *
 	 * @since 4.0.0.5
 	 */
-	protected static void  neverAskAgain() {
+	private static void  neverAskAgain() {
 		COConfigurationManager.setParameter("donations.donated", true);
-		updateMinDate();
+		updateMinDate( true );
 		COConfigurationManager.save();
 	}
 
-	/**
-	 *
-	 *
-	 * @since 4.0.0.5
-	 */
-	public static void resetAskTime() {
-		resetAskTime(reAskEveryHours);
-	}
-
-	public static void resetAskTime(int askEveryHours) {
+	private static void resetAskTime(int askEveryHours) {
 		long upTime = StatsFactory.getStats().getTotalUpTime();
 		int hours = (int) (upTime / (60 * 60)); //secs * mins
 		int nextAsk = hours + askEveryHours;
 		COConfigurationManager.setParameter("donations.nextAskHours", nextAsk);
 		COConfigurationManager.setParameter("donations.lastVersion", Constants.BIGLYBT_VERSION);
-		updateMinDate();
+		updateMinDate( false );
 		COConfigurationManager.save();
 	}
 
-	public static void updateMinDate() {
-		COConfigurationManager.setParameter("donations.minDate", SystemTime.getOffsetTime(1000L * 3600 * 24 * 30));  //30d ahead
-		COConfigurationManager.setParameter("donations.maxDate", SystemTime.getOffsetTime(1000L * 3600 * 24 * 120));  //4mo ahead
+	private static void updateMinDate( boolean isNever ) {
+		long min_days;
+		long max_days;
+		
+		if ( isNever ){
+			min_days = 90;
+			max_days = 365;
+		}else{
+			min_days = 30;
+			max_days = 120;
+		}
+		
+		COConfigurationManager.setParameter("donations.minDate", SystemTime.getOffsetTime( 1000*3600*24*min_days ));
+		COConfigurationManager.setParameter("donations.maxDate", SystemTime.getOffsetTime( 1000*3600*24*max_days ));
 		//COConfigurationManager.save();
 	}
-
-   //unused
-	//public static void setMinDate(long timestamp) {
-	//	COConfigurationManager.setParameter("donations.minDate", timestamp);
-	//	COConfigurationManager.save();
-	//}
 
 	public static int getInitialAskHours() {
 		return initialAskHours;
