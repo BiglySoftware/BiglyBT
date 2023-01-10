@@ -545,9 +545,7 @@ UserAlerts
   		boolean			do_sound,
   		String			sound_file )
   	{
-  		final String default_sound 	= "com/biglybt/ui/icons/downloadFinished.wav";
-
-  		try{
+   		try{
   			this_mon.enter();
 
   			if (  do_popup ) {
