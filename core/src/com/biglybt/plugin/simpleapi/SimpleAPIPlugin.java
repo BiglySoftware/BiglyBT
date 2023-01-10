@@ -48,7 +48,6 @@ import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.torrent.TOTorrentFile;
-import com.biglybt.core.torrent.TOTorrentFileHashTree;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
@@ -937,6 +936,12 @@ SimpleAPIPlugin
 				alert.isNative = true;
 				
 				Logger.log( alert );
+				
+			}else if ( method.equals( "playsound" )){
+				
+				String optional_file	= args.get( "file" );
+				
+				GeneralUtils.playSound( optional_file );
 				
 			}else if ( 	method.equals( "markresultsread" ) ||  
 						method.equals( "markallresultsread" ) ||	// remove this post 3101_B02
