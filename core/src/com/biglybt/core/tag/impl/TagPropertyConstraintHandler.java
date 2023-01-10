@@ -2471,6 +2471,7 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_QUEUED			= 37;
 		private static final int FT_IS_IP_FILTERED		= 38;
 		private static final int FT_COUNT_TRACKERS		= 39;
+		private static final int FT_IS_MOVING			= 40;
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2760,6 +2761,14 @@ TagPropertyConstraintHandler
 				}else if ( func_name.equals( "isChecking" )){
 
 					fn_type = FT_IS_CHECKING;
+
+					depends_on_download_state = true;
+
+					params_ok = num_params == 0;
+
+				}else if ( func_name.equals( "isMoving" )){
+
+					fn_type = FT_IS_MOVING;
 
 					depends_on_download_state = true;
 
@@ -3378,6 +3387,10 @@ TagPropertyConstraintHandler
 						}
 
 						return( false );
+					}
+					case FT_IS_MOVING:{
+
+						return( dm.getMoveProgress() != null || FileUtil.hasTask( dm ));
 					}
 					case FT_IS_SUPER_SEEDING:{
 						
