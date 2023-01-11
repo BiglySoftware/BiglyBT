@@ -114,8 +114,9 @@ public class ColumnTagGroupIcons
 				}
 			}
 		}
-		cell.setSortValue( sTags );
-		cell.setToolTip((sTags == null) ? "" : sTags );
+
+		cell.setSortValue( sTags==null?" ":sTags );	// need to use a space to sort sensibly
+		cell.setToolTip( sTags == null?"":sTags );
 	}
 
 	@Override
