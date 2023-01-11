@@ -52,7 +52,6 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
-import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -332,17 +331,19 @@ public class TableColumnSetupWindow
 					String current_key 	= core.getTitleLanguageKey( true );
 
 					String name1 = MessageText.getString(raw_key, core.getName());
-					String name2 = null;
+					String name2 = core.getNameOverride();
+					String name3 = null;
 
 					if ( !raw_key.equals( current_key )){
 						String rename = MessageText.getString(current_key, "");
 						if ( rename.length() > 0 ){
-							name2 = rename;
+							name3 = rename;
 						}
 					}
 					String[] names = {
 						name1,
 						name2,
+						name3,
 						MessageText.getString( core.getTitleLanguageKey() + ".info" )
 					};
 
