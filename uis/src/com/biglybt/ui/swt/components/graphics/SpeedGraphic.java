@@ -21,7 +21,9 @@ package com.biglybt.ui.swt.components.graphics;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
@@ -47,45 +49,56 @@ import com.biglybt.ui.swt.mainwindow.Colors;
  */
 public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 
-  private static final int	DEFAULT_ENTRIES	= 2000;
+	private static final int	DEFAULT_ENTRIES	= 2000;
 
-  public static final int COLOR_AVERAGE = 0;
-  public static final int COLOR_MAINSPEED = 1;
-  public static final int COLOR_OVERHEAD = 2;
-  public static final int COLOR_LIMIT = 3;
-  public static final int COLOR_OTHERS = 4;
-  public static final int COLOR_TRIMMED = 5;
+	public static final int COLOR_AVERAGE = 0;
+	public static final int COLOR_MAINSPEED = 1;
+	public static final int COLOR_OVERHEAD = 2;
+	public static final int COLOR_LIMIT = 3;
+	public static final int COLOR_OTHERS = 4;
+	public static final int COLOR_TRIMMED = 5;
 
-  public Color[] colors = new Color[] {
-  	Colors.red, Colors.blues[Colors.BLUES_MIDDARK], Colors.colorInverse, Colors.blue, Colors.grey,
-  	Colors.light_grey
-  };
+	public Color[] colors = new Color[] {
+			Colors.red, Colors.blues[Colors.BLUES_MIDDARK], Colors.colorInverse, Colors.blue, Colors.grey,
+			Colors.light_grey
+	};
 
-  private int internalLoop;
-  private int graphicsUpdate;
-  private Point oldSize;
+	private int internalLoop;
+	private int graphicsUpdate;
+	private Point oldSize;
 
-  protected Image bufferImage;
+	protected Image bufferImage;
 
 	private int					nbValues		= 0;
 	private int					maxEntries		= DEFAULT_ENTRIES;
 	private int[][]				all_values		= new int[1][maxEntries];
-	
+
 	private long				startTime		= -1;
 	private int[]				ages			= new int[maxEntries];
-	
+
 	private int					currentPosition;
 
-
 	private SimpleDateFormat	timeFormatter = new SimpleDateFormat("HH:mm", Locale.US );
-	
-  private SpeedGraphic(Scale scale,ValueFormater formater) {
-    super(scale,formater);
 
-    currentPosition = 0;
+	private Map<Integer,Integer>	timePositions = 
+		new LinkedHashMap<Integer,Integer>(256,0.75f,true)
+		{
+			@Override
+			protected boolean
+			removeEldestEntry(
+					Map.Entry<Integer,Integer> eldest)
+			{
+				return size() > 256;
+			}
+		};
+		
+	private SpeedGraphic(Scale scale,ValueFormater formater) {
+		super(scale,formater);
 
-    COConfigurationManager.addAndFireParameterListener("Graphics Update",this);
-  }
+		currentPosition = 0;
+
+		COConfigurationManager.addAndFireParameterListener("Graphics Update",this);
+	}
 
   @Override
   public void initialize(Canvas canvas) {
@@ -366,6 +379,7 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 									
 			int mono_secs = (int)((SystemTime.getMonotonousTime()-startTime)/1000);
 			int next_secs = 60;
+			int	timestamp_num = 0;
 			
 			int last_xpos = -1;
 			
@@ -408,11 +422,25 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 						
 							if ( last_xpos < 0 ||  xPos + p.x < last_xpos ){
 							
+									// there's an issue with time sync that can cause jittering in the
+									// location of the timestamps
+																		
+								Integer old_pos = timePositions.get( timestamp_num );
+								
+								if ( old_pos != null && Math.abs( old_pos - xPos ) <= 2){
+								
+									xPos = old_pos;
+								}
+								
 								gcImage.setForeground( colorGrey );
 
 								gcImage.drawText( str, xPos, 0, true );
 								
 								last_xpos = xPos;
+								
+								timePositions.put( timestamp_num, xPos );
+								
+								timestamp_num++;
 							}
 						}
 					}
