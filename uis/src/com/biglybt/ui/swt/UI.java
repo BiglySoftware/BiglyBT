@@ -65,7 +65,7 @@ public class UI
 	canUseSystemTheme()
 	{
 		return(	Constants.isOSX && SWT.getVersion() >= 4924 || // 4.12RC2
-				Constants.isWindows10OrHigher && SWT.getVersion() >= 4948 );
+				Constants.isWindows10OrHigher ); // actually mostly works with latest hacks && SWT.getVersion() >= 4948 );
 	}
 	
 	static{

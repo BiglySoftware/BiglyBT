@@ -402,9 +402,19 @@ public class Utils
 		CTabItem		control,
 		Color			color )
 	{
-		control.setForeground(color);
-		
-		control.setData( "utils:skinned-fg", color );
+		try{
+				// support old SWT on linux :(
+			
+			Method m = CTabItem.class.getMethod( "setForeground", Color.class );
+			
+			m.invoke( control, color );
+			
+			control.setData( "utils:skinned-fg", color );
+			
+		}catch( Throwable e ){
+			
+			e.printStackTrace();
+		}
 	}
 	
 	public static boolean
@@ -414,8 +424,6 @@ public class Utils
 		Color color = control.getForeground();
 		
 		boolean result = color != null && color.equals( control.getData( "utils:skinned-fg" ));
-
-		System.out.println( "isSkinnedFG: " + color + ", " +  control.getData( "utils:skinned-fg" ) + " -> " + result );
 
 		return( result );
 	}
