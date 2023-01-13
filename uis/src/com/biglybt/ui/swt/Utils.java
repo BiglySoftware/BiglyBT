@@ -338,7 +338,9 @@ public class Utils
 						
 						CTabFolder control = (CTabFolder)widget;
 						
-						control.setBackground( list_bg );
+						control.setSelectionForeground( widget_fg );
+						control.setHighlightEnabled( false );
+						//control.setBackground( list_bg );
 					}
 					
 					if ( widget instanceof Canvas ){

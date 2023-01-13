@@ -65,7 +65,7 @@ public class ViewQuickNotifications
 	{
 		parent.setLayout( Utils.getSimpleGridLayout(1));
 
-		composite = new Composite( parent, SWT.BORDER );
+		composite = new Composite( parent, SWT.NULL );
 
 		GridData gridData = new GridData(GridData.FILL_BOTH);
 

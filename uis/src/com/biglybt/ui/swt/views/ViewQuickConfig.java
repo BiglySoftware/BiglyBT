@@ -70,29 +70,14 @@ public class ViewQuickConfig
 
 	private void
 	initialize(
-		Composite ooparent)
+		Composite oparent)
 	{
-		GridLayout layout = new GridLayout(1, false);
-		layout.marginWidth 	= 0;
-		layout.marginHeight = 0;
-
-		ooparent.setLayout( layout);
-
-		// if you put the border on the scrolled composite parent then on every resize the computedSize
-		// grows by 4 pixels :( So stick in extra composite for the border
-
-		final Composite oparent = new Composite( ooparent, SWT.BORDER );
-		GridData gridData = new GridData(GridData.FILL_BOTH);
-		oparent.setLayoutData(gridData);
-
-		layout = new GridLayout(1, false);
-		layout.marginWidth 	= 0;
-		layout.marginHeight = 0;
+		GridLayout layout = Utils.getSimpleGridLayout(1);
 
 		oparent.setLayout( layout);
-
+		
 		final Composite parent = new Composite( oparent, SWT.NULL );
-		gridData = new GridData(GridData.FILL_BOTH);
+		GridData gridData = new GridData(GridData.FILL_BOTH);
 		parent.setLayoutData(gridData);
 
 		composite = Utils.createScrolledComposite(parent);

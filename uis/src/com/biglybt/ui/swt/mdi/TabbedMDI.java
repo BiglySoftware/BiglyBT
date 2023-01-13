@@ -252,18 +252,22 @@ public class TabbedMDI
 
 		hsb = tabFolder.getForeground().getRGB().getHSB();
 		hsb[2] *= (Constants.isOSX) ? 1.1 : 0.03;
-		tabFolder.setForeground(ColorCache.getColor(display, hsb));
+		
+		if ( !Utils.isDarkAppearanceNativeWindows()){
 
-		tabFolder.setSelectionBackground(new Color[] {
-			Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND),
-			Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND),
-			Colors.getSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND)
-		}, new int[] {
-			10,
-			90
-		}, true);
-		tabFolder.setSelectionForeground(Colors.getSystemColor(display, SWT.COLOR_LIST_FOREGROUND));
-
+			tabFolder.setForeground(ColorCache.getColor(display, hsb));
+	
+			tabFolder.setSelectionBackground(new Color[] {
+				Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND),
+				Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND),
+				Colors.getSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND)
+			}, new int[] {
+				10,
+				90
+			}, true);
+			tabFolder.setSelectionForeground(Colors.getSystemColor(display, SWT.COLOR_LIST_FOREGROUND));
+		}
+		
 		if (minimumCharacters > 0) {
 			tabFolder.setMinimumCharacters(minimumCharacters);
 		}
