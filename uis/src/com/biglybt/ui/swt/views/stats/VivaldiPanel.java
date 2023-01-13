@@ -94,7 +94,7 @@ public class VivaldiPanel extends BasePanel {
 								e.width, e.height);
 					}
 				} else {
-					e.gc.setBackground(Colors.getSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND));
+					e.gc.setBackground(Utils.isDarkAppearanceNative()?canvas.getBackground():Colors.white);
 					e.gc.fillRectangle(e.x, e.y, e.width, e.height);
 					e.gc.drawText(MessageText.getString("VivaldiView.notAvailable"), 10,
 							10, true);

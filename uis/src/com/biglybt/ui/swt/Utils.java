@@ -86,7 +86,6 @@ import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pif.UISWTStatusEntry;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
-import com.biglybt.ui.swt.progress.ProgressWindow;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.systray.TrayItemDelegate;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -203,6 +202,9 @@ public class Utils
 		SWT_REVISION = rev;
 	}
 	
+	private static Boolean	is_dark_appearance;
+	private static boolean	force_dark_appearance;
+	
 	private static volatile boolean	dark_misc_things = false;
 	private static volatile boolean	gradient_fill	 = true;
 	
@@ -295,25 +297,81 @@ public class Utils
 
 		if ( UI.useSystemTheme() && Constants.isWindows ){
 			
-			// OS.setTheme( true );
-			// requires recent SWT which requires Java 11+....
-			// support still flakey...
-			
-			display.setData("org.eclipse.swt.internal.win32.useDarkModeExplorerTheme", true );
-			display.setData("org.eclipse.swt.internal.win32.useShellTitleColoring",    true);
-			display.setData("org.eclipse.swt.internal.win32.menuBarForegroundColor",   true ? new Color(display, 0xD0, 0xD0, 0xD0) : null);
-			display.setData("org.eclipse.swt.internal.win32.menuBarBackgroundColor",   true ? new Color(display, 0x30, 0x30, 0x30) : null);
-			display.setData("org.eclipse.swt.internal.win32.menuBarBorderColor",       true ? new Color(display, 0x50, 0x50, 0x50) : null);
-			//display.setData("org.eclipse.swt.internal.win32.Canvas.use_WS_BORDER",     true);
-			//display.setData("org.eclipse.swt.internal.win32.List.use_WS_BORDER",       true);
-			//display.setData("org.eclipse.swt.internal.win32.Table.use_WS_BORDER",      true);
-			//display.setData("org.eclipse.swt.internal.win32.Text.use_WS_BORDER",       true);
-			//display.setData("org.eclipse.swt.internal.win32.Tree.use_WS_BORDER",       true);
-			//display.setData("org.eclipse.swt.internal.win32.Table.headerLineColor",    true ? new Color(display, 0x50, 0x50, 0x50) : null);
-			//display.setData("org.eclipse.swt.internal.win32.Label.disabledForegroundColor", true ? new Color(display, 0x80, 0x80, 0x80) : null);
-			//display.setData("org.eclipse.swt.internal.win32.Combo.useDarkTheme",       true);
-			display.setData("org.eclipse.swt.internal.win32.ProgressBar.useColors",    true);
+			try{
+				// OS.setTheme( true );
+				// requires recent SWT which requires Java 11+....
+				// support still flakey...
 
+				Class<?> OS = Class.forName( "org.eclipse.swt.internal.win32.OS" );
+				
+				Method setTheme = OS.getMethod( "setTheme", boolean.class );
+				
+				setTheme.invoke( null, true );
+				
+				force_dark_appearance = true;
+	
+					// have to theme things ourselves :(
+					// https://www.eclipse.org/lists/eclipse-dev/msg12104.html
+				
+				Color widget_fg = Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_WIDGET_FOREGROUND );
+				Color widget_bg = Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_WIDGET_BACKGROUND );
+				Color list_bg	= Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_LIST_BACKGROUND );
+				
+				display.addFilter(SWT.Skin, e -> {
+					
+					Widget widget = e.widget;
+					
+					System.out.println( "skin: " + widget );
+					
+					if ( widget.toString().startsWith( "SWT" )){
+						System.out.println( "" );
+					}
+					if ( widget instanceof Control ){
+						
+						Control control = (Control)widget;
+						
+						setSkinnedForeground( control, widget_fg );
+						control.setBackground( widget_bg );
+					}
+					
+					if ( widget instanceof CTabFolder ){
+						
+						CTabFolder control = (CTabFolder)widget;
+						
+						control.setBackground( list_bg );
+					}
+					
+					if ( widget instanceof Canvas ){
+						
+						Canvas control = (Canvas)widget;				
+					}
+					
+					if ( widget instanceof CTabItem ){
+						
+						CTabItem item = (CTabItem)widget;
+						
+						setSkinnedForeground( item, widget_fg );
+					}
+					
+					if ( widget instanceof Tree ){
+					
+						Tree tree = (Tree)widget;
+						
+						tree.setLinesVisible( false );
+					}
+					
+					if ( widget instanceof Table ){
+						
+						Table table = (Table)widget;
+						
+						table.setLinesVisible( false );
+					}
+				});
+
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
 		}
 				
 		isGTK3 = isGTK && System.getProperty("org.eclipse.swt.internal.gtk.version",
@@ -327,6 +385,39 @@ public class Utils
 				dragDetectMask = ev.stateMask;
 			});
 		});
+	}
+	
+	private static void
+	setSkinnedForeground(
+		Control		control,
+		Color		color )
+	{
+		control.setForeground(color);
+		
+		control.setData( "utils:skinned-fg", color );
+	}
+	
+	private static void
+	setSkinnedForeground(
+		CTabItem		control,
+		Color			color )
+	{
+		control.setForeground(color);
+		
+		control.setData( "utils:skinned-fg", color );
+	}
+	
+	public static boolean
+	isSkinnedForeground(
+		Control		control )
+	{
+		Color color = control.getForeground();
+		
+		boolean result = color != null && color.equals( control.getData( "utils:skinned-fg" ));
+
+		System.out.println( "isSkinnedFG: " + color + ", " +  control.getData( "utils:skinned-fg" ) + " -> " + result );
+
+		return( result );
 	}
 	
 	public static int
@@ -4661,7 +4752,7 @@ public class Utils
 	{
 	    final Sash sash = new Sash(form, style );
 	    
-	    if ( Utils.isDarkAppearanceNative()) {
+	    if ( isDarkAppearanceNative()) {
 	    	
 	    	sash.setBackground( ColorCache.getColor( sash.getDisplay(), 81, 86, 88 ));
 	    	
@@ -5607,12 +5698,21 @@ public class Utils
 			return( id.substring( 0, pos ));
 		}
 	}
-	
-	static Boolean is_dark_appearance;
+		
+	public static boolean
+	isDarkAppearanceNativeWindows()
+	{
+		return( Constants.isWindows && isDarkAppearanceNative());
+	}
 	
 	public static boolean
 	isDarkAppearanceNative()
 	{
+		if ( force_dark_appearance ){
+			
+			return( true );
+		}
+		
 		if ( is_dark_appearance == null ) {
 			
 			if ( Constants.isOSX ){

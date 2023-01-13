@@ -26,6 +26,7 @@ import org.eclipse.swt.graphics.GC;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.Debug;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 public class 
@@ -42,7 +43,8 @@ TablePaintedUtils
 				@Override
 				public void parameterChanged(String parameterName){
 
-					is_dark = COConfigurationManager.getBooleanParameter("Dark Table Colors" );
+					is_dark = 	Utils.isDarkAppearanceNativeWindows() ||
+								COConfigurationManager.getBooleanParameter("Dark Table Colors" );
 					
 					if ( first ){
 						first = false;

@@ -727,7 +727,15 @@ public class SWTSkinObjectBasic
 				}
 
 				Color fg = getColor_SuffixWalkback(sConfigID + ".fgcolor");
-				control.setForeground(fg);
+				
+				if ( fg == null && Utils.isSkinnedForeground( control )){
+					
+					// hack to prevent us from clearing a skinned fg colour
+					
+				}else{
+					
+					control.setForeground(fg);
+				}
 
 				// Color,[width]
 				String sBorderStyle = properties.getStringValue(sConfigID + ".border"

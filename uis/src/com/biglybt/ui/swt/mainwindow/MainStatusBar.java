@@ -1738,7 +1738,9 @@ public class MainStatusBar
 		// IP Filter Status Section
 		IpFilter ip_filter = core.getIpFilterManager().getIPFilter();
 
-		ipBlocked.setForeground( display.getSystemColor(ip_filter.isEnabled()? SWT.COLOR_WIDGET_FOREGROUND : SWT.COLOR_WIDGET_NORMAL_SHADOW));
+		Color fg = Colors.getSystemColor( ipBlocked.getDisplay(), ip_filter.isEnabled()? SWT.COLOR_WIDGET_FOREGROUND : SWT.COLOR_WIDGET_NORMAL_SHADOW);
+		
+		ipBlocked.setForeground( fg );
 
 		ipBlocked.setText("IPs: "
 				+ numberFormat.format(ip_filter.getNbRanges())

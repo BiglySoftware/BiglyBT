@@ -48,6 +48,7 @@ import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.*;
 import com.biglybt.ui.swt.pif.UISWTInstance;
@@ -59,6 +60,7 @@ import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
+import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
 import com.biglybt.ui.swt.views.QuickLinksView;
@@ -609,6 +611,26 @@ public class SideBar
 		return super.skinObjectDestroyed(skinObject, params);
 	}
 
+	protected void
+	setBackground(
+		SWTSkinProperties	sp )
+	{
+		if ( Utils.isDarkAppearanceNativeWindows()){
+			
+			bg = Colors.getWindowsDarkSystemColor( tree.getDisplay(), SWT.COLOR_WIDGET_BACKGROUND ); 
+			
+		}else{
+		
+			bg = sp.getColor("color.sidebar.bg");
+		}
+	}
+	
+	protected Color
+	getBackground()
+	{
+		return( bg );
+	}
+	
 	private void createSideBar() {
 		
 		SWTSkinObject soSideBarList = skin.getSkinObject("sidebar-list");
@@ -642,7 +664,8 @@ public class SideBar
 		tree.setLayoutData(Utils.getFilledFormData());
 
 		SWTSkinProperties skinProperties = skin.getSkinProperties();
-		bg = skinProperties.getColor("color.sidebar.bg");
+		
+		setBackground( skinProperties );
 		fg = skinProperties.getColor("color.sidebar.fg");
 
 		configBGColorListener = new ParameterListener() {
@@ -1680,7 +1703,7 @@ public class SideBar
 
 		skinProperties.clearCache();
 
-		bg = skinProperties.getColor("color.sidebar.bg");
+		setBackground( skinProperties );
 
 		tree.setBackground(bg);
 

@@ -191,7 +191,7 @@ public class SideBarEntrySWT
 			@Override
 			public void runSupport() {
 				SWTSkinProperties skinProperties = skin.getSkinProperties();
-				bg = skinProperties.getColor("color.sidebar.bg");
+				bg = sidebar.getBackground();
 				fg = skinProperties.getColor("color.sidebar."
 						+ (isSelectable() ? "text" : "header"));
 				bgSel = skinProperties.getColor("color.sidebar.selected.bg");

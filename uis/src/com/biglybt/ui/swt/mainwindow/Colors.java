@@ -554,9 +554,45 @@ public class Colors implements ParameterListener {
       allocateColorAltRow();
     }
   }
+  	public static Color
+  	getWindowsDarkSystemColor(
+  		Device	d,
+  		int		id )
+  	{
+		switch( id ){
+		
+			case SWT.COLOR_WIDGET_FOREGROUND:
+			case SWT.COLOR_WIDGET_NORMAL_SHADOW:
+			
+				return( ColorCache.getColor( d, 204, 204, 204 ));
+			
+			case SWT.COLOR_WIDGET_BACKGROUND:{
+				
+				return( ColorCache.getColor( d,  47, 47, 47 ));
+			}
+			case SWT.COLOR_LIST_BACKGROUND:{
+				
+				return( ColorCache.getColor( d,  38, 38, 38 ));
+			}
+		}
+		
+		return( null );
+  	}
 
-	public static Color getSystemColor (Device d, int id) {
-		if ( !Utils.isDarkAppearanceNative()){
+	public static Color 
+	getSystemColor(
+		Device	d, 
+		int		id ) 
+	{
+		if ( Utils.isDarkAppearanceNativeWindows()){
+			
+			Color c = getWindowsDarkSystemColor( d, id );
+			
+			if ( c != null ){
+				
+				return( c );
+			}
+		}else if ( !Utils.isDarkAppearanceNative()){
 			if (Utils.isGTK3) {
 				if (id == SWT.COLOR_INFO_BACKGROUND) {
 					return ColorCache.getColor(d, 0, 0,0 );
