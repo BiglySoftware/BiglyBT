@@ -562,10 +562,9 @@ public class Colors implements ParameterListener {
 		switch( id ){
 		
 			case SWT.COLOR_WIDGET_FOREGROUND:
-			case SWT.COLOR_WIDGET_NORMAL_SHADOW:
-			
+			case SWT.COLOR_LIST_FOREGROUND:{
 				return( ColorCache.getColor( d, 204, 204, 204 ));
-			
+			}
 			case SWT.COLOR_WIDGET_BACKGROUND:{
 				
 				return( ColorCache.getColor( d,  47, 47, 47 ));
@@ -573,6 +572,18 @@ public class Colors implements ParameterListener {
 			case SWT.COLOR_LIST_BACKGROUND:{
 				
 				return( ColorCache.getColor( d,  38, 38, 38 ));
+			}
+			case SWT.COLOR_WIDGET_NORMAL_SHADOW:{
+				
+				return( ColorCache.getColor( d,  51, 51, 51 ));
+			}
+			case SWT.COLOR_WIDGET_LIGHT_SHADOW:{
+				
+				return( ColorCache.getColor( d,  77, 77, 77 ));
+			}
+			case SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW:{
+				
+				return( ColorCache.getColor( d,  119, 119, 119 ));
 			}
 		}
 		

@@ -1148,35 +1148,50 @@ public class SideBarEntrySWT
 				if (bgSel != null) {
 					gc.setBackground(bgSel);
 				}
-				Color color1;
-				Color color2;
-				if (sidebar.getTree().isFocusControl()) {
-					color1 = ColorCache.getSchemedColor(gc.getDevice(), "#166688");
-					color2 = ColorCache.getSchemedColor(gc.getDevice(), "#1c2458");
-				} else {
-					color1 = ColorCache.getSchemedColor(gc.getDevice(), "#447281");
-					color2 = ColorCache.getSchemedColor(gc.getDevice(), "#393e58");
-				}
-
-				gc.setBackground(color1);
-				gc.fillRectangle(drawBounds.x, drawBounds.y, drawBounds.width, 4);
-
-				Rectangle itemBounds = swt_getBounds();
-				if (itemBounds == null) {
-					return fgText;
-				}
-				
-				if ( Utils.gradientFillSelection()){
-					gc.setForeground(color1);
-					gc.setBackground(color2);
+				if ( Utils.isDarkAppearanceNativeWindows()){
 					
-					// always need to start gradient at the same Y position
-					// +3 is to start gradient off 3 pixels lower
-					gc.fillGradientRectangle(drawBounds.x, itemBounds.y + 3,
-							drawBounds.width, itemBounds.height - 3, true);
+					if (sidebar.getTree().isFocusControl()) {
+						
+						gc.setBackground( Colors.getSystemColor( gc.getDevice(), SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW ));
+						
+					}else{
+						
+						gc.setBackground( Colors.getSystemColor( gc.getDevice(), SWT.COLOR_WIDGET_LIGHT_SHADOW ));
+					}
+					
+					gc.fillRectangle(drawBounds.x, drawBounds.y, drawBounds.width, drawBounds.height);
+					
 				}else{
-					gc.fillRectangle(drawBounds.x, itemBounds.y + 3,
-		  					drawBounds.width, itemBounds.height - 3);
+					Color color1;
+					Color color2;
+					if (sidebar.getTree().isFocusControl()) {
+						color1 = ColorCache.getSchemedColor(gc.getDevice(), "#166688");
+						color2 = ColorCache.getSchemedColor(gc.getDevice(), "#1c2458");
+					} else {
+						color1 = ColorCache.getSchemedColor(gc.getDevice(), "#447281");
+						color2 = ColorCache.getSchemedColor(gc.getDevice(), "#393e58");
+					}
+	
+					gc.setBackground(color1);
+					gc.fillRectangle(drawBounds.x, drawBounds.y, drawBounds.width, 4);
+	
+					Rectangle itemBounds = swt_getBounds();
+					if (itemBounds == null) {
+						return fgText;
+					}
+					
+					if ( Utils.gradientFillSelection()){
+						gc.setForeground(color1);
+						gc.setBackground(color2);
+						
+						// always need to start gradient at the same Y position
+						// +3 is to start gradient off 3 pixels lower
+						gc.fillGradientRectangle(drawBounds.x, itemBounds.y + 3,
+								drawBounds.width, itemBounds.height - 3, true);
+					}else{
+						gc.fillRectangle(drawBounds.x, itemBounds.y + 3,
+			  					drawBounds.width, itemBounds.height - 3);
+					}
 				}
 			}
 		} else {
@@ -1189,8 +1204,13 @@ public class SideBarEntrySWT
 			}
 
 			if (this == sidebar.draggingOver || hot) {
-				Color c = skin.getSkinProperties().getColor("color.sidebar.drag.bg");
-				gc.setBackground(c);
+				if ( Utils.isDarkAppearanceNativeWindows()){
+					gc.setBackground( Colors.getSystemColor( gc.getDevice(), SWT.COLOR_WIDGET_NORMAL_SHADOW ));
+
+				}else{
+					Color c = skin.getSkinProperties().getColor("color.sidebar.drag.bg");
+					gc.setBackground(c);
+				}
 			}
 
 			if (PAINT_BG) {

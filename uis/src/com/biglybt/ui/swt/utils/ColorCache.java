@@ -278,7 +278,11 @@ public class ColorCache
 					for (int i = 0; i < systemColorNames.length; i++) {
 						String name = systemColorNames[i];
 						if (name.equals(u_value) && device != null && !device.isDisposed()) {
-							return device.getSystemColor(i + SYSTEMCOLOR_INDEXSTART);
+							if ( Utils.isDarkAppearanceNativeWindows()){
+								return Colors.getSystemColor(device,i + SYSTEMCOLOR_INDEXSTART);
+							}else{
+								return device.getSystemColor(i + SYSTEMCOLOR_INDEXSTART);
+							}
 						}
 					}
 				} else if (u_value.startsWith("BLUE.FADED.")) {
