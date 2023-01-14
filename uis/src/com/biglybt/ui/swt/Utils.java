@@ -208,6 +208,8 @@ public class Utils
 	private static Boolean	is_dark_appearance;
 	private static boolean	force_dark_appearance;
 	
+	private static Skinner	skinner;
+	
 	private static volatile boolean	dark_misc_things = false;
 	private static volatile boolean	gradient_fill	 = true;
 	
@@ -313,80 +315,7 @@ public class Utils
 				
 				force_dark_appearance = true;
 	
-					// have to theme things ourselves :(
-					// https://www.eclipse.org/lists/eclipse-dev/msg12104.html
-				
-				Color widget_fg = Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_WIDGET_FOREGROUND );
-				Color widget_bg = Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_WIDGET_BACKGROUND );
-				Color list_bg	= Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_LIST_BACKGROUND );
-				
-				display.addFilter(SWT.Skin, e -> {
-					
-					Widget widget = e.widget;
-					
-					if ( widget instanceof Control ){
-						
-						Control control = (Control)widget;
-						
-						setSkinnedForegroundDefault( control, widget_fg );
-						setSkinnedBackgroundDefault( control, widget_bg );
-					}
-					
-					if ( widget instanceof CTabFolder ){
-						
-						CTabFolder control = (CTabFolder)widget;
-						
-						control.setSelectionForeground( widget_fg );
-						control.setHighlightEnabled( false );
-					}
-					
-					if ( widget instanceof Text ){
-						
-						Text control = (Text)widget;	
-						
-						Integer sct = (Integer)control.getData("utils:skinned-ct" );
-						
-						if ( sct != null && sct == SCT_BUBBLE_TEXT_BOX ){
-						
-							setSkinnedBackgroundDefault( control, Colors.black );
-						}
-					}
-					
-					if ( widget instanceof Label ){
-						
-						Label control = (Label)widget;	
-						
-						Integer sct = (Integer)control.getData("utils:skinned-ct" );
-						
-						if ( sct != null && sct == SCT_MENU_ITEM ){
-						
-							setSkinnedForegroundDefault( control, Colors.white );
-						}
-					}
-					
-					if ( widget instanceof CTabItem ){
-						
-						CTabItem item = (CTabItem)widget;
-						
-						setSkinnedForegroundDefault( item, widget_fg );
-					}
-					
-					if ( widget instanceof Tree ){
-					
-						Tree tree = (Tree)widget;
-						
-						tree.setLinesVisible( false );
-					}
-					
-					if ( widget instanceof Table ){
-						
-						Table table = (Table)widget;
-						
-						table.setLinesVisible( false );
-						table.setHeaderForeground( widget_fg );
-						table.setHeaderBackground( list_bg );
-					}
-				});
+				skinner = new Skinner( display );
 
 			}catch( Throwable e ){
 				
@@ -405,6 +334,103 @@ public class Utils
 				dragDetectMask = ev.stateMask;
 			});
 		});
+	}
+	
+	private static class
+	Skinner
+	{
+		
+		final Color widget_fg;
+		final Color widget_bg;
+		final Color list_bg;
+		
+		Skinner(
+			Display	display )
+		{
+			widget_fg	= Colors.getWindowsDarkSystemColor(display, SWT.COLOR_WIDGET_FOREGROUND );
+			widget_bg	= Colors.getWindowsDarkSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND );
+			list_bg		= Colors.getWindowsDarkSystemColor(display, SWT.COLOR_LIST_BACKGROUND );
+		
+				// have to theme things ourselves :(
+				// https://www.eclipse.org/lists/eclipse-dev/msg12104.html
+			
+			display.addFilter(SWT.Skin, e -> {
+				
+				Widget widget = e.widget;
+				
+				skinner.handleSkinning( widget );
+			});
+		}
+		
+		void
+		handleSkinning(
+				Widget		widget )
+		{
+			System.out.println( widget );
+			
+			if ( widget instanceof Control ){
+				
+				Control control = (Control)widget;
+				
+				setSkinnedForegroundDefault( control, widget_fg );
+				setSkinnedBackgroundDefault( control, widget_bg );
+			}
+			
+			if ( widget instanceof CTabFolder ){
+				
+				CTabFolder control = (CTabFolder)widget;
+				
+				control.setSelectionForeground( widget_fg );
+				control.setHighlightEnabled( false );
+			}
+			
+			if ( widget instanceof Text ){
+				
+				Text control = (Text)widget;	
+				
+				Integer sct = (Integer)control.getData("utils:skinned-ct" );
+				
+				if ( sct != null && sct == SCT_BUBBLE_TEXT_BOX ){
+				
+					setSkinnedBackgroundDefault( control, Colors.black );
+				}
+			}
+			
+			if ( widget instanceof Label ){
+				
+				Label control = (Label)widget;	
+				
+				Integer sct = (Integer)control.getData("utils:skinned-ct" );
+				
+				if ( sct != null && sct == SCT_MENU_ITEM ){
+				
+					setSkinnedForegroundDefault( control, Colors.white );
+				}
+			}
+			
+			if ( widget instanceof CTabItem ){
+				
+				CTabItem item = (CTabItem)widget;
+				
+				setSkinnedForegroundDefault( item, widget_fg );
+			}
+			
+			if ( widget instanceof Tree ){
+			
+				Tree tree = (Tree)widget;
+				
+				tree.setLinesVisible( false );
+			}
+			
+			if ( widget instanceof Table ){
+				
+				Table table = (Table)widget;
+				
+				table.setLinesVisible( false );
+				table.setHeaderForeground( widget_fg );
+				table.setHeaderBackground( list_bg );
+			}
+		}
 	}
 	
 	public static void
@@ -486,6 +512,28 @@ public class Utils
 		return( control.getData( "utils:skinned-bg" ) != null );
 	}
 
+	public static Color
+	getSkinnedBackground(
+		Control		c )
+	{
+		if ( skinner != null ){
+			
+			Color bg = c.getBackground();
+			
+			c.setBackground( null );
+			
+			skinner.handleSkinning(c);
+			
+			Color skinned = c.getBackground();
+			
+			c.setBackground( bg );
+			
+			return ( skinned );
+		}else{
+			
+			return( c.getBackground());
+		}
+	}
 	
 	public static void
 	setSkinnedBackground(

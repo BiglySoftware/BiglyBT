@@ -99,7 +99,7 @@ public class AboutWindow {
 
       Image image2 = new Image(display, w, h);
       GC gc = new GC(image2);
-      gc.setBackground(window.getBackground());
+      gc.setBackground(Utils.getSkinnedBackground( window ));
       gc.fillRectangle(image2.getBounds());
       gc.dispose();
       imageToDispose = image = Utils.renderTransparency(display, image2, imgGray, new Point(0, 0), 180);
