@@ -211,6 +211,7 @@ public class Utils
 	private static boolean	force_dark_appearance;
 	
 	private static Skinner	skinner;
+	private static int		skinning_enabled = 1;
 	
 	private static volatile boolean	dark_misc_things = false;
 	private static volatile boolean	gradient_fill	 = true;
@@ -367,7 +368,12 @@ public class Utils
 		void
 		handleSkinning(
 			Widget		widget )
-		{			
+		{		
+			if ( skinning_enabled <= 0 ){
+				
+				return;
+			}
+			
 			Integer _sct = (Integer)widget.getData("utils:skinned-ct" );
 
 			int sct = _sct==null?SCT_NONE:_sct.intValue();
@@ -377,6 +383,7 @@ public class Utils
 				return;
 			}
 		
+			/*
 			if ( widget instanceof Control ){
 				
 				Control c = (Control)widget;
@@ -395,6 +402,7 @@ public class Utils
 					parent = parent.getParent();
 				}
 			}
+			*/
 			
 			if ( widget instanceof ExpandBar ){
 				
@@ -460,6 +468,22 @@ public class Utils
 				table.setHeaderForeground( widget_fg );
 				table.setHeaderBackground( list_bg );
 			}
+		}
+	}
+	
+	public static void
+	setSkinningEnabled(
+		boolean	enabled )
+	{
+		if ( !isSWTThread()){
+			
+			Debug.out( "This probably won't work..." );
+		}
+		
+		if ( enabled ){
+			skinning_enabled++;
+		}else{
+			skinning_enabled--;
 		}
 	}
 	

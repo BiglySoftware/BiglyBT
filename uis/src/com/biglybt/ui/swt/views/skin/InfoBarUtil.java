@@ -115,13 +115,22 @@ public abstract class InfoBarUtil
 
 			// this isn't skinned in dark mode at the moment
 		
-		if ( Utils.isDarkAppearanceNative()){
+		boolean disable_skinning = Utils.isDarkAppearanceNative();
 		
-			Utils.setSkinnedControlType( parent.getControl(), Utils.SCT_SKINNING_DISABLED );
+		try{
+			if ( disable_skinning ){
+				
+				Utils.setSkinningEnabled( false );
+			}
+			
+			soInfoBar = skin.createSkinObject(skintemplateid + (uniqueNo++), skintemplateid, parent);
+		}finally{
+			
+			if ( disable_skinning ){
+				
+				Utils.setSkinningEnabled( true );
+			}
 		}
-
-		soInfoBar = skin.createSkinObject(skintemplateid + (uniqueNo++), skintemplateid, parent);
-
 		FormData fdInfoBar = (FormData) soInfoBar.getControl().getLayoutData();
 		if (fdInfoBar == null) {
 			fdInfoBar = Utils.getFilledFormData();
