@@ -247,7 +247,7 @@ BufferedLabel
   }
 
   public void setForeground(Color color) {
-    label.setForeground(color);
+	  Utils.setSkinnedForeground( label, color);
   }
 
   public void setBackground(Color color) {

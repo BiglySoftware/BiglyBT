@@ -374,14 +374,16 @@ public class TorrentMenuFancy
 				if (!isSelected) {
 					for (Control control : ((Composite) e.widget).getChildren()) {
 						control.setBackground(null);
-						control.setForeground(null);
+						if ( !Utils.hasSkinnedForeground(control)){
+							control.setForeground(null);
+						}
 					}
 					//System.out.println("bounds=" + bounds + "/" + cursorLocation + "/" + cursorLocationRel + "; clip=" + e.gc.getClipping());
 					return;
 				}
 				Rectangle bounds = ((Control) e.widget).getBounds();
 
-				Color bg = Colors.getSystemColor(e.display, SWT.COLOR_LIST_BACKGROUND);
+				Color bg = Colors.getSystemColor(e.display, Utils.isDarkAppearanceNativeWindows()?SWT.COLOR_WIDGET_LIGHT_SHADOW:SWT.COLOR_LIST_BACKGROUND);
 				int arc = bounds.height / 3;
 				e.gc.setBackground(bg);
 				e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_DARK_SHADOW));
@@ -396,9 +398,10 @@ public class TorrentMenuFancy
 				Color fg = Colors.getSystemColor(e.display, SWT.COLOR_LIST_FOREGROUND);
 				for (Control control : ((Composite) e.widget).getChildren()) {
 					control.setBackground(bg);
-					control.setForeground(fg);
+					if ( !Utils.hasSkinnedForeground(control)){
+						control.setForeground(fg);
+					}
 				}
-
 			}
 		};
 
@@ -1807,6 +1810,8 @@ public class TorrentMenuFancy
 		item.setLayoutData(gridData);
 		Messages.setLanguageText(item, keyTitle);
 
+		Utils.setSkinnedControlType(item, Utils.SCT_MENU_ITEM );
+		
 		Label lblCheck = new Label(cRow, SWT.CENTER);
 		gridData = new GridData();
 		gridData.widthHint = 13;

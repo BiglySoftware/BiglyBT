@@ -129,6 +129,11 @@ public class BubbleTextBox
 			textStyle = style & ~(SWT.BORDER | SWT.SEARCH);
 		}
 		textWidget = new Text(cBubble, textStyle ) {
+			
+			{
+				Utils.setSkinnedControlType( this, Utils.SCT_BUBBLE_TEXT_BOX );
+			}
+			
 			@Override
 			protected void checkSubclass() {
 			}
@@ -406,6 +411,8 @@ public class BubbleTextBox
 		
 		if ( Utils.isGTK3 && Utils.isDarkAppearanceNative()){
 			colorFadedText = Colors.light_grey;		// COLOR_WIDGET_NORMAL_SHADOW is black :(
+		}else if ( Utils.isDarkAppearanceNativeWindows()){
+			colorFadedText = Colors.grey;
 		}else{
 			colorFadedText = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 		}

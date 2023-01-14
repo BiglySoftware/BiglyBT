@@ -143,6 +143,9 @@ public class Utils
 
 	public static int BUTTON_MINWIDTH = Constants.isOSX ? 90 : 70;
 
+	public static final int SCT_BUBBLE_TEXT_BOX	= 1;
+	public static final int SCT_MENU_ITEM		= 2;
+	
 	/**
 	 * Debug/Diagnose SWT exec calls.  Provides usefull information like how
 	 * many we are queuing up, and how long each call takes.  Good to turn on
@@ -315,7 +318,7 @@ public class Utils
 				
 				Color widget_fg = Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_WIDGET_FOREGROUND );
 				Color widget_bg = Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_WIDGET_BACKGROUND );
-				Color list_bg	= Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_LIST_BACKGROUND );
+				Color widget_ls	= Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_WIDGET_LIGHT_SHADOW );
 				
 				display.addFilter(SWT.Skin, e -> {
 					
@@ -323,14 +326,14 @@ public class Utils
 					
 					System.out.println( "skin: " + widget );
 					
-					if ( widget.toString().startsWith( "SWT" )){
+					if ( widget.toString().startsWith( "Bubble" )){
 						System.out.println( "" );
 					}
 					if ( widget instanceof Control ){
 						
 						Control control = (Control)widget;
 						
-						setSkinnedForeground( control, widget_fg );
+						setSkinnedForegroundDefault( control, widget_fg );
 						control.setBackground( widget_bg );
 					}
 					
@@ -343,6 +346,31 @@ public class Utils
 						//control.setBackground( list_bg );
 					}
 					
+					if ( widget instanceof Text ){
+						
+						Text control = (Text)widget;	
+						
+						Integer sct = (Integer)control.getData("utils:skinned-ct" );
+						
+						if ( sct != null && sct == SCT_BUBBLE_TEXT_BOX ){
+						
+							control.setBackground( Colors.black );
+						}
+					}
+					
+					if ( widget instanceof Label ){
+						
+						Label control = (Label)widget;	
+						
+						Integer sct = (Integer)control.getData("utils:skinned-ct" );
+						
+						if ( sct != null && sct == SCT_MENU_ITEM ){
+						
+							setSkinnedForegroundDefault( control, Colors.white );
+						}
+					}
+					
+					
 					if ( widget instanceof Canvas ){
 						
 						Canvas control = (Canvas)widget;				
@@ -352,7 +380,7 @@ public class Utils
 						
 						CTabItem item = (CTabItem)widget;
 						
-						setSkinnedForeground( item, widget_fg );
+						setSkinnedForegroundDefault( item, widget_fg );
 					}
 					
 					if ( widget instanceof Tree ){
@@ -389,8 +417,16 @@ public class Utils
 		});
 	}
 	
+	public static void
+	setSkinnedControlType(
+		Control		control,
+		int			type )
+	{
+		control.setData( "utils:skinned-ct", type );
+	}
+	
 	private static void
-	setSkinnedForeground(
+	setSkinnedForegroundDefault(
 		Control		control,
 		Color		color )
 	{
@@ -400,7 +436,7 @@ public class Utils
 	}
 	
 	private static void
-	setSkinnedForeground(
+	setSkinnedForegroundDefault(
 		CTabItem		control,
 		Color			color )
 	{
@@ -418,16 +454,29 @@ public class Utils
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static boolean
-	isSkinnedForeground(
+	hasSkinnedForeground(
 		Control		control )
 	{
-		Color color = control.getForeground();
+		return( control.getData( "utils:skinned-fg" ) != null );
+	}
+	
+	public static void
+	setSkinnedForeground(
+		Control		control,
+		Color		color )
+	{
+		Color def = (Color)control.getData( "utils:skinned-fg" );
 		
-		boolean result = color != null && color.equals( control.getData( "utils:skinned-fg" ));
-
-		return( result );
+		if ( def != null ){
+			
+			control.setForeground( color==null?def:color );
+			
+		}else{
+			
+			control.setForeground( color );
+		}
 	}
 	
 	public static int
