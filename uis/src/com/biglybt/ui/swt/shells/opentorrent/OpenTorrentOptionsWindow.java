@@ -4277,6 +4277,8 @@ public class OpenTorrentOptionsWindow
 				return;
 			}
 
+			System.out.println(soStartOptionsExpandItem.getExpandItem().getParent().getBackground());
+			
 			if ( isSingleOptions ){
 								
 				String optionText = MessageText.getString(TorrentOpenOptions.STARTMODE_KEYS[torrentOptions.getStartMode()])

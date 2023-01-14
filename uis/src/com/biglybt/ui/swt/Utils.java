@@ -143,8 +143,10 @@ public class Utils
 
 	public static int BUTTON_MINWIDTH = Constants.isOSX ? 90 : 70;
 
-	public static final int SCT_BUBBLE_TEXT_BOX	= 1;
-	public static final int SCT_MENU_ITEM		= 2;
+	public static final int SCT_SKINNING_DISABLED	= -1;
+	public static final int SCT_NONE				= 0;
+	public static final int SCT_BUBBLE_TEXT_BOX		= 1;
+	public static final int SCT_MENU_ITEM			= 2;
 	
 	/**
 	 * Debug/Diagnose SWT exec calls.  Provides usefull information like how
@@ -364,11 +366,42 @@ public class Utils
 		
 		void
 		handleSkinning(
-				Widget		widget )
-		{
-			System.out.println( widget );
+			Widget		widget )
+		{			
+			Integer _sct = (Integer)widget.getData("utils:skinned-ct" );
+
+			int sct = _sct==null?SCT_NONE:_sct.intValue();
+		
+			if ( sct == SCT_SKINNING_DISABLED ){
 			
+				return;
+			}
+		
 			if ( widget instanceof Control ){
+				
+				Control c = (Control)widget;
+			
+				Composite parent = c.getParent();
+				
+				while( parent != null ){
+					
+					Integer psct = (Integer)parent.getData("utils:skinned-ct" );
+
+					if ( psct != null && psct == SCT_SKINNING_DISABLED ){
+						
+						return;
+					}
+					
+					parent = parent.getParent();
+				}
+			}
+			
+			if ( widget instanceof ExpandBar ){
+				
+				// background settings have no affect so don't change foreground
+				// as unreadable :(
+				
+			}else if ( widget instanceof Control ){
 				
 				Control control = (Control)widget;
 				
@@ -388,9 +421,8 @@ public class Utils
 				
 				Text control = (Text)widget;	
 				
-				Integer sct = (Integer)control.getData("utils:skinned-ct" );
 				
-				if ( sct != null && sct == SCT_BUBBLE_TEXT_BOX ){
+				if ( sct == SCT_BUBBLE_TEXT_BOX ){
 				
 					setSkinnedBackgroundDefault( control, Colors.black );
 				}
@@ -400,9 +432,7 @@ public class Utils
 				
 				Label control = (Label)widget;	
 				
-				Integer sct = (Integer)control.getData("utils:skinned-ct" );
-				
-				if ( sct != null && sct == SCT_MENU_ITEM ){
+				if ( sct == SCT_MENU_ITEM ){
 				
 					setSkinnedForegroundDefault( control, Colors.white );
 				}

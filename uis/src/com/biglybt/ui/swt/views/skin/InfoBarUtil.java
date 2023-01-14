@@ -112,6 +112,14 @@ public abstract class InfoBarUtil
 		}
 		FormData fdForSO = (FormData) ldForSO;
 		SWTSkinObjectContainer parent = (SWTSkinObjectContainer)forSO.getParent();
+
+			// this isn't skinned in dark mode at the moment
+		
+		if ( Utils.isDarkAppearanceNative()){
+		
+			Utils.setSkinnedControlType( parent.getControl(), Utils.SCT_SKINNING_DISABLED );
+		}
+
 		soInfoBar = skin.createSkinObject(skintemplateid + (uniqueNo++), skintemplateid, parent);
 
 		FormData fdInfoBar = (FormData) soInfoBar.getControl().getLayoutData();
