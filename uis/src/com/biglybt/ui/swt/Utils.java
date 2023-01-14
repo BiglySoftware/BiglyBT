@@ -318,23 +318,18 @@ public class Utils
 				
 				Color widget_fg = Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_WIDGET_FOREGROUND );
 				Color widget_bg = Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_WIDGET_BACKGROUND );
-				Color widget_ls	= Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_WIDGET_LIGHT_SHADOW );
+				Color list_bg	= Colors.getWindowsDarkSystemColor(_display, SWT.COLOR_LIST_BACKGROUND );
 				
 				display.addFilter(SWT.Skin, e -> {
 					
 					Widget widget = e.widget;
 					
-					System.out.println( "skin: " + widget );
-					
-					if ( widget.toString().startsWith( "Bubble" )){
-						System.out.println( "" );
-					}
 					if ( widget instanceof Control ){
 						
 						Control control = (Control)widget;
 						
 						setSkinnedForegroundDefault( control, widget_fg );
-						control.setBackground( widget_bg );
+						setSkinnedBackgroundDefault( control, widget_bg );
 					}
 					
 					if ( widget instanceof CTabFolder ){
@@ -343,7 +338,6 @@ public class Utils
 						
 						control.setSelectionForeground( widget_fg );
 						control.setHighlightEnabled( false );
-						//control.setBackground( list_bg );
 					}
 					
 					if ( widget instanceof Text ){
@@ -354,7 +348,7 @@ public class Utils
 						
 						if ( sct != null && sct == SCT_BUBBLE_TEXT_BOX ){
 						
-							control.setBackground( Colors.black );
+							setSkinnedBackgroundDefault( control, Colors.black );
 						}
 					}
 					
@@ -368,12 +362,6 @@ public class Utils
 						
 							setSkinnedForegroundDefault( control, Colors.white );
 						}
-					}
-					
-					
-					if ( widget instanceof Canvas ){
-						
-						Canvas control = (Canvas)widget;				
 					}
 					
 					if ( widget instanceof CTabItem ){
@@ -395,6 +383,8 @@ public class Utils
 						Table table = (Table)widget;
 						
 						table.setLinesVisible( false );
+						table.setHeaderForeground( widget_fg );
+						table.setHeaderBackground( list_bg );
 					}
 				});
 
@@ -433,6 +423,16 @@ public class Utils
 		control.setForeground(color);
 		
 		control.setData( "utils:skinned-fg", color );
+	}
+	
+	private static void
+	setSkinnedBackgroundDefault(
+		Control		control,
+		Color		color )
+	{
+		control.setBackground(color);
+		
+		control.setData( "utils:skinned-bg", color );
 	}
 	
 	private static void
@@ -479,6 +479,31 @@ public class Utils
 		}
 	}
 	
+	public static boolean
+	hasSkinnedBackground(
+		Control		control )
+	{
+		return( control.getData( "utils:skinned-bg" ) != null );
+	}
+
+	
+	public static void
+	setSkinnedBackground(
+			Control		control,
+			Color		color )
+	{
+		Color def = (Color)control.getData( "utils:skinned-bg" );
+		
+		if ( def != null ){
+			
+			control.setBackground( color==null?def:color );
+			
+		}else{
+			
+			control.setBackground( color );
+		}
+	}
+
 	public static int
 	getDragDetectModifiers()
 	{
@@ -1134,6 +1159,9 @@ public class Utils
 	}
 	
 	public static void alternateRowBackground(TableItem item) {
+		if ( isDarkAppearanceNativeWindows()){
+			return;
+		}
 		if (Utils.TABLE_GRIDLINE_IS_ALTERNATING_COLOR) {
 			if (!item.getParent().getLinesVisible())
 				item.getParent().setLinesVisible(true);

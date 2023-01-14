@@ -212,10 +212,9 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 				return;
 			}
 			// Note: for Spinner in Windows, getBackground always seems to return white
-			mainControl.setBackground(
-					validationInfo.valid ? null : Colors.colorErrorBG);
-			mainControl.setForeground(
-					validationInfo.valid ? null : Colors.colorError);
+			
+			Utils.setSkinnedForeground(mainControl, validationInfo.valid ? null : Colors.colorError);
+			Utils.setSkinnedBackground(mainControl, validationInfo.valid ? null : Colors.colorErrorBG);
 		});
 	}
 
