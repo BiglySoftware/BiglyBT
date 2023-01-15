@@ -586,7 +586,10 @@ BuddyPluginUtils
 	getChatKey(
 		Torrent		torrent )
 	{
-		if ( torrent == null ){
+			// no harm in having chats for private torrents but eks is moaning about them so
+			// given that they're prolly never used in reality I'm getting rid of them
+		
+		if ( torrent == null || torrent.isPrivate()){
 
 			return( null );
 		}
