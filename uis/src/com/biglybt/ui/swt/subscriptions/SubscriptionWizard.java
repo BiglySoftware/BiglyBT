@@ -28,6 +28,8 @@ import com.biglybt.core.Core;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -136,10 +138,10 @@ public class SubscriptionWizard {
 	StackLayout mainLayout;
 	Composite optinComposite;
 	Composite createComposite;
-	TabFolder createTabFolder;
-	TabItem   createRSSTabItem;
-	TabItem   createSearchTabItem;
-	TabItem   createTemplateTabItem;
+	CTabFolder createTabFolder;
+	CTabItem   createRSSTabItem;
+	CTabItem   createSearchTabItem;
+	CTabItem   createTemplateTabItem;
 	Composite availableSubscriptionComposite;
 
 	Table libraryTable;
@@ -466,37 +468,38 @@ public class SubscriptionWizard {
 		Composite composite = new Composite(parent,SWT.NONE);
 
 		FillLayout layout = new FillLayout();
-		layout.marginHeight = 8;
-		layout.marginWidth  = 8;
+		layout.marginHeight = 4;
+		layout.marginWidth  = 4;
 
 		composite.setLayout(layout);
 
-		createTabFolder = new TabFolder(composite,SWT.NONE);
+		createTabFolder = new CTabFolder(composite,SWT.BORDER);
 		createTabFolder.setFont(subTitleFont);
 
-		createSearchTabItem = new TabItem(createTabFolder,SWT.NONE);
+		createSearchTabItem = new CTabItem(createTabFolder,SWT.NONE);
 		createSearchTabItem.setText(MessageText.getString("Wizard.Subscription.create.search"));
 		createSearchTabItem.setControl(createCreateSearchComposite(createTabFolder));
 
-		createRSSTabItem = new TabItem(createTabFolder,SWT.NONE);
+		createRSSTabItem = new CTabItem(createTabFolder,SWT.NONE);
 		createRSSTabItem.setText("  " + MessageText.getString("Wizard.Subscription.create.rss"));
 		createRSSTabItem.setControl(createCreateRSSComposite(createTabFolder));
 
-		createTemplateTabItem = new TabItem(createTabFolder,SWT.NONE);
+		createTemplateTabItem = new CTabItem(createTabFolder,SWT.NONE);
 		createTemplateTabItem.setText("  " + MessageText.getString("Wizard.Subscription.create.template"));
 		createTemplateTabItem.setControl(createCreateTemplateComposite(createTabFolder));
 
+		createTabFolder.setSelection( 0 );
+		
 		createTabFolder.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				TabItem[] selectedItems = createTabFolder.getSelection();
-				if(selectedItems.length != 1) {
+				CTabItem selected = createTabFolder.getSelection();
+				if ( selected == null ){
 					return;
 				}
-				TabItem selectedItem = selectedItems[0];
-				if(selectedItem == createRSSTabItem) {
+				if(selected == createRSSTabItem) {
 					setMode(MODE_CREATE_RSS);
-				} else if ( selectedItem == createSearchTabItem ){
+				} else if ( selected == createSearchTabItem ){
 					setMode(MODE_CREATE_SEARCH);
 				}else{
 					setMode(MODE_CREATE_TEMPLATE);

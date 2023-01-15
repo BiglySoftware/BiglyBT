@@ -35,6 +35,8 @@ import java.util.Map;
 
 import com.biglybt.core.Core;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.MouseAdapter;
@@ -140,7 +142,7 @@ public class TransferStatsView
 	private SpeedGraphic	upload_graphic;
 	private SpeedGraphic	connection_graphic;
 
-	private TabFolder 			con_folder;
+	private CTabFolder 			con_folder;
 	private long				last_route_update;
 	private Composite 			route_comp;
 	private BufferedLabel[][]	route_labels 	= new BufferedLabel[0][0];
@@ -563,7 +565,7 @@ public class TransferStatsView
 
 	  	// connections
 
-	  con_folder = new TabFolder(connectionPanel, SWT.LEFT);
+	  con_folder = new CTabFolder(connectionPanel, SWT.LEFT);
 	  gridData = new GridData(GridData.FILL_BOTH);
 	  gridData.horizontalSpan = 1;
 	  con_folder.setLayoutData(gridData);
@@ -571,7 +573,7 @@ public class TransferStatsView
 
 	  	// connection counts
 
-	  TabItem conn_item = new TabItem(con_folder, SWT.NULL);
+	  CTabItem conn_item = new CTabItem(con_folder, SWT.NULL);
 
 	  conn_item.setText( MessageText.getString( "label.connections" ));
 
@@ -588,7 +590,7 @@ public class TransferStatsView
 
 	  	// route info
 
-	  TabItem route_info_tab = new TabItem(con_folder, SWT.NULL);
+	  CTabItem route_info_tab = new CTabItem(con_folder, SWT.NULL);
 
 	  route_info_tab.setText( MessageText.getString( "label.routing" ));
 
@@ -601,6 +603,8 @@ public class TransferStatsView
 	  ScrolledComposite sc = new ScrolledComposite( route_tab_comp, SWT.V_SCROLL );
 	  sc.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
+	  con_folder.setSelection( 0 );
+	  
 	  route_comp = new Composite( sc, SWT.NULL );
 
 	  if ( !dark ) {
@@ -756,7 +760,7 @@ public class TransferStatsView
 
     pingGraph.initialize(pingCanvas);
 
-    TabFolder folder = new TabFolder(autoSpeedInfoPanel, SWT.LEFT);
+    CTabFolder folder = new CTabFolder(autoSpeedInfoPanel, SWT.LEFT);
     gridData = new GridData(GridData.FILL_BOTH);
     gridData.horizontalIndent = 4;
     gridData.horizontalSpan = 4;
@@ -800,7 +804,7 @@ public class TransferStatsView
 
     	SpeedManagerPingMapper mapper = mappers[i];
 
-	    TabItem plot_item = new TabItem(folder, SWT.NULL);
+    	CTabItem plot_item = new CTabItem(folder, SWT.NULL);
 
 	    plot_item.setText( "Plot " + mapper.getName());
 
@@ -812,7 +816,7 @@ public class TransferStatsView
 
 	    plot_item.setControl( plotCanvas );
 
-	    TabItem zones_item = new TabItem(folder, SWT.NULL);
+	    CTabItem zones_item = new CTabItem(folder, SWT.NULL);
 	    zones_item.setText( "Zones " + mapper.getName() );
 
 	    Canvas zoneCanvas = new Canvas(folder,SWT.NO_BACKGROUND);
@@ -824,6 +828,8 @@ public class TransferStatsView
 	    zones_item.setControl( zoneCanvas );
     }
 
+    folder.setSelection( 0 );
+    
     autoSpeedDisabledPanel = new Composite(autoSpeedPanel,SWT.NULL);
     autoSpeedDisabledPanel.setLayout(new GridLayout());
     Label disabled = new Label(autoSpeedDisabledPanel,SWT.NULL);
