@@ -76,7 +76,21 @@ public class ConfigSectionInterfaceColorSWT
 
 		if ( UI.canUseSystemTheme()){
 			
-			add( new BooleanParameterImpl( "Use System Theme", "ConfigView.section.style.usesystemtheme"));
+			String res;
+			
+			if ( Constants.isWindows ){
+				
+					// on Windows enabling this parameter actually forces it to dark mode regardless of what
+					// Windows is set to show
+				
+				res = "ConfigView.section.style.usedarktheme";
+				
+			}else{
+				
+				res = "ConfigView.section.style.usesystemtheme";
+			}
+			
+			add( new BooleanParameterImpl( "Use System Theme", res ));
 		}
 		
 		if ( Constants.isLinux ){

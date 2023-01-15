@@ -1046,7 +1046,7 @@ public class MainStatusBar
 
 					Utils.setTT(feedback,MessageText.getString("statusbar.feedback.tooltip"));
 					feedback.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
-					feedback.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+					Utils.setLinkForeground(feedback);
 					feedback.addListener(SWT.MouseUp, feedback_listener);
 					feedback.addListener(SWT.MouseDoubleClick, feedback_listener);
 

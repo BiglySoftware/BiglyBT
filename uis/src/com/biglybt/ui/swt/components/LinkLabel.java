@@ -107,7 +107,7 @@ LinkLabel
 		
 	    label.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
 	    
-	    label.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+	    Utils.setLinkForeground( label );
 	    
 	    MouseAdapter ml = (MouseAdapter)label.getData( MOUSE_LISTENER_KEY );
 	    
@@ -166,7 +166,7 @@ LinkLabel
 	public static void makeLinkedLabel(Label label, Runnable runnable) {
 		
 	    label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-	    label.setForeground(label.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+	    Utils.setLinkForeground(label);
 	    label.addMouseListener(new MouseAdapter() {
 	      @Override
 	      public void mouseDoubleClick(MouseEvent e) {

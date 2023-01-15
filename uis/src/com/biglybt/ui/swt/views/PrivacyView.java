@@ -701,7 +701,7 @@ public class PrivacyView
 		socks_more.setText( MessageText.getString( "label.more") + "..." );
 		socks_more.setLayoutData(gd);
 		socks_more.setCursor(socks_more.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-		socks_more.setForeground(socks_more.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+		Utils.setLinkForeground(socks_more);
 		socks_more.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDoubleClick(MouseEvent arg0) {
@@ -1859,7 +1859,7 @@ public class PrivacyView
 			i2p_options_link.setText( MessageText.getString( "privacy.view.check.bw" ));
 
 			i2p_options_link.setCursor(i2p_options_link.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-			i2p_options_link.setForeground(i2p_options_link.getDisplay().getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+			Utils.setLinkForeground(i2p_options_link);
 			i2p_options_link.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseDoubleClick(MouseEvent arg0) {

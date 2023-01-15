@@ -32,7 +32,7 @@ import com.biglybt.pifimpl.local.ui.config.HyperlinkParameterImpl;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.pif.ui.config.ActionParameter;
 import com.biglybt.pif.ui.config.HyperlinkParameter;
 
@@ -82,7 +82,7 @@ public class LinkSwtParameter
 		Messages.setLanguageText(link_label, name_resource);
 		Display display = link_label.getDisplay();
 		link_label.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
-		link_label.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+		Utils.setLinkForeground( link_label );
 		link_label.addListener(SWT.MouseUp, e -> {
 			if (e.button == 1) {
 				triggerChangeListeners(false);

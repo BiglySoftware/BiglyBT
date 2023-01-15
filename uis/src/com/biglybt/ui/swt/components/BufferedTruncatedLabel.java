@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Utils;
@@ -60,6 +61,12 @@ BufferedTruncatedLabel
 		return( label.isDisposed());
 	}
 
+	public Control
+	getControl()
+	{
+		return( label );
+	}
+	
 	public void
 	setLayoutData(
 		GridData	gd )

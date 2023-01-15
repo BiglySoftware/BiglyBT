@@ -350,7 +350,7 @@ CryptoWindow
 				linkLabel.setText(MessageText.getString("ConfigView.label.please.visit.here"));
 				linkLabel.setData(Wiki.PUBLIC_PRIVATE_KEYS);
 				linkLabel.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
-				linkLabel.setForeground(display.getSystemColor(SWT.COLOR_LINK_FOREGROUND));
+				Utils.setLinkForeground(linkLabel);
 				gridData = new GridData();
 				gridData.horizontalSpan = 3;
 				linkLabel.setLayoutData(gridData);

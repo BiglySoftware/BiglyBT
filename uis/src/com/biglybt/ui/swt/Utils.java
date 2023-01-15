@@ -500,7 +500,12 @@ public class Utils
 		Control		control,
 		Color		color )
 	{
-		control.setForeground(color);
+		Boolean forced = (Boolean)control.getData( "utils:skinned-fg-forced" );
+		
+		if ( forced == null || !forced ){
+		
+			control.setForeground(color);
+		}
 		
 		control.setData( "utils:skinned-fg", color );
 	}
@@ -547,15 +552,32 @@ public class Utils
 		Control		control,
 		Color		color )
 	{
-		Color def = (Color)control.getData( "utils:skinned-fg" );
-		
-		if ( def != null ){
+		setSkinnedForeground( control, color, false );
+	}
+	
+	public static void
+	setSkinnedForeground(
+		Control		control,
+		Color		color,
+		boolean		force )
+	{
+		if ( force ){
 			
-			control.setForeground( color==null?def:color );
-			
-		}else{
+			control.setData( "utils:skinned-fg-forced", true );
 			
 			control.setForeground( color );
+		}else{
+			
+			Color def = (Color)control.getData( "utils:skinned-fg" );
+			
+			if ( def != null ){
+				
+				control.setForeground( color==null?def:color );
+				
+			}else{
+				
+				control.setForeground( color );
+			}
 		}
 	}
 	
@@ -591,8 +613,8 @@ public class Utils
 	
 	public static void
 	setSkinnedBackground(
-			Control		control,
-			Color		color )
+		Control		control,
+		Color		color )
 	{
 		Color def = (Color)control.getData( "utils:skinned-bg" );
 		
@@ -606,6 +628,12 @@ public class Utils
 		}
 	}
 
+	public static void
+	setLinkForeground(
+		Control		label )
+	{
+		Utils.setSkinnedForeground( label, Colors.getSystemColor( label.getDisplay(), SWT.COLOR_LINK_FOREGROUND), true );
+	}
 	public static int
 	getDragDetectModifiers()
 	{
