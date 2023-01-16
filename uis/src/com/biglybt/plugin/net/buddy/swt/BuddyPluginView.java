@@ -2530,9 +2530,9 @@ BuddyPluginView
 
 						Set<String> trackers = new HashSet<>();
 
-						if ( current_download != null ){
+						if ( download != null ){
 
-							DownloadManager core_dm = current_download.getCoreDownload();
+							DownloadManager core_dm = download.getCoreDownload();
 
 							if ( core_dm != null ){
 
@@ -2629,13 +2629,13 @@ BuddyPluginView
 
 						List<Tag> tags;
 
-						if ( current_download == null ){
+						if ( download == null ){
 
 							tags = new ArrayList<>();
 
 						}else{
 
-							DownloadManager core_dm = current_download.getCoreDownload();
+							DownloadManager core_dm = download.getCoreDownload();
 
 							if ( core_dm == null ){
 
@@ -3185,6 +3185,20 @@ BuddyPluginView
 
 					chat_composite.setData( comp_key );
 
+					GridLayout layout = new GridLayout();
+					layout.numColumns = 1;
+					chat_composite.setLayout(layout);
+
+					Label label = new Label( chat_composite, SWT.NULL );
+
+					label.setText( MessageText.getString( "azbuddy.os_not_avail" ));
+					
+					GridData grid_data = new GridData(GridData.FILL_BOTH );
+					
+					label.setLayoutData(grid_data);
+					
+					chat_composite.layout( true, true );
+					
 					return;
 				}
 
