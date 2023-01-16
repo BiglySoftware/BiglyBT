@@ -242,16 +242,15 @@ public class TransferStatsView
 
   private void createGeneralPanel() {
 	generalPanel = new Composite(mainPanel, SWT.NULL);
-	GridLayout outerLayout = new GridLayout();
-	outerLayout.numColumns = 2;
+	GridLayout outerLayout = Utils.getSimpleGridLayout(2);
 	generalPanel.setLayout(outerLayout);
 	GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 	generalPanel.setLayoutData(gridData);
 
-	Composite generalStatsPanel = new Composite(generalPanel,SWT.BORDER);
 	GridData generalStatsPanelGridData = new GridData(GridData.FILL_HORIZONTAL);
 	generalStatsPanelGridData.grabExcessHorizontalSpace = true;
-	generalStatsPanel.setLayoutData(generalStatsPanelGridData);
+
+	Composite generalStatsPanel = Utils.createSkinnedComposite(generalPanel,SWT.BORDER, generalStatsPanelGridData );
 
     GridLayout panelLayout = new GridLayout();
     panelLayout.numColumns = 5;
@@ -379,9 +378,9 @@ public class TransferStatsView
 
     	// SOCKS area
 
-	Composite generalSocksPanel = new Composite(generalPanel,SWT.BORDER);
-    GridData generalSocksData = new GridData();
-   generalSocksPanel.setLayoutData(generalSocksData);
+    GridData generalSocksPanelGridData = new GridData();
+    generalSocksPanelGridData.horizontalIndent=2;
+	Composite generalSocksPanel = Utils.createSkinnedComposite(generalPanel, SWT.BORDER, generalSocksPanelGridData);
 
     GridLayout socksLayout = new GridLayout();
     socksLayout.numColumns = 2;

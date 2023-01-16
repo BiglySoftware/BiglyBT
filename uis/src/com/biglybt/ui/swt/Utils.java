@@ -628,6 +628,100 @@ public class Utils
 		}
 	}
 
+	public static Composite
+	createSkinnedComposite(
+		Composite	parent,
+		int			style,
+		Object		parentLayoutData )
+	{
+		if ((style | SWT.BORDER ) != 0 && isDarkAppearanceNativeWindows()){
+			
+			Composite bc = new Composite( parent, SWT.NULL );
+			
+			if ( parentLayoutData != null ){
+			
+				bc.setLayoutData( parentLayoutData );
+			}
+			
+			Layout parentLayout = parent.getLayout();
+			
+			if ( parentLayout instanceof FormLayout ){
+								
+				FormLayout layout = new FormLayout();
+				
+				layout.marginBottom=layout.marginTop=layout.marginLeft=layout.marginRight=2;
+				
+				bc.setLayout(layout);
+				
+			}else{
+								
+				GridLayout layout = getSimpleGridLayout(1);
+				
+				layout.marginBottom=layout.marginTop=layout.marginLeft=layout.marginRight=2;
+				
+				bc.setLayout(layout);
+			}
+			
+			
+			bc.addListener(SWT.Paint, (ev)->{
+			
+				Rectangle bounds = bc.getBounds();
+				ev.gc.setForeground( Colors.getSystemColor(display, SWT.COLOR_WIDGET_BORDER ));
+				ev.gc.drawRectangle( 0, 0, bounds.width-1, bounds.height-1 );
+			});
+			
+			Composite comp = 
+				new Composite( bc, style & ~SWT.BORDER ){
+				
+				@Override
+				public Rectangle 
+				computeTrim(
+					int x, int y, int width, int height)
+				{
+					Rectangle trim = super.computeTrim(x, y, width, height);
+					
+						// have to account for the extra border component, particularly
+						// as this is used in TransferStatsView to work around a layout bug...
+					
+					trim.x		+=2;
+					trim.y		+=2;
+					trim.width	-=4;
+					trim.height -=4;
+					
+					return( trim );
+				}
+			};
+				
+			comp.addListener( SWT.Dispose, (ev)->{
+				if ( !bc.isDisposed()){
+					bc.dispose();
+				}
+			});
+			
+			if ( parentLayout instanceof FormLayout ){
+				
+				comp.setLayoutData( getFilledFormData());
+				
+			}else{
+				
+				comp.setLayoutData( new GridData( GridData.FILL_BOTH ));
+			}
+			
+			return( comp );
+			
+		}else{
+			
+			Composite comp = new Composite( parent, style );
+			
+			if ( parentLayoutData != null ){
+				
+				comp.setLayoutData(parentLayoutData);
+			}
+			
+			return( comp );
+		}
+	}
+	
 	public static void
 	setLinkForeground(
 		Control		label )
@@ -1285,6 +1379,7 @@ public class Utils
 		gridLayout.marginTop = 0;
 		gridLayout.marginLeft = 0;
 		gridLayout.marginRight = 0;
+		gridLayout.marginWidth = 0;
 		return( gridLayout );
 	}
 	

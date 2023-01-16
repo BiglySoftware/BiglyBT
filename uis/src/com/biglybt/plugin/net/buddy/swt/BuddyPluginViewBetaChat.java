@@ -2532,9 +2532,9 @@ BuddyPluginViewBetaChat
         final StackLayout stack_layout = new StackLayout();
         ftux_stack.setLayout(stack_layout);
 
-		final Composite log_holder = new Composite(ftux_stack, style );
+		final Composite log_holder = Utils.createSkinnedComposite( ftux_stack, style, null );
 
-		final Composite ftux_holder = new Composite(ftux_stack, style );
+		final Composite ftux_holder = Utils.createSkinnedComposite( ftux_stack, style, null );
 
 			// FTUX panel
 
