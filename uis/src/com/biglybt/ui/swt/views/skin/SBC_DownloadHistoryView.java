@@ -327,9 +327,7 @@ public class SBC_DownloadHistoryView
 
 			tv.setRowDefaultHeightEM(1);
 
-			table_parent = new Composite(control, SWT.BORDER);
-
-			table_parent.setLayoutData(Utils.getFilledFormData());
+			table_parent = Utils.createSkinnedComposite(control, SWT.BORDER, Utils.getFilledFormData());
 
 			GridLayout layout = new GridLayout();
 

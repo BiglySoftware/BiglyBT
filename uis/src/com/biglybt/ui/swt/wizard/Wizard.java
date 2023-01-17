@@ -151,14 +151,14 @@ public class Wizard {
     errorMessage.setForeground(red);
 
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    new Label(wizardWindow, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(gridData);
+    Utils.createSkinnedLabelSeparator(wizardWindow, SWT.HORIZONTAL).setLayoutData(gridData);
 
     panel = new Composite(wizardWindow, SWT.NULL);
     gridData = new GridData(GridData.FILL_BOTH);
     panel.setLayoutData(gridData);
 
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    new Label(wizardWindow, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(gridData);
+    Utils.createSkinnedLabelSeparator(wizardWindow, SWT.HORIZONTAL).setLayoutData(gridData);
 
     Composite cButtons = new Composite(wizardWindow, SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);

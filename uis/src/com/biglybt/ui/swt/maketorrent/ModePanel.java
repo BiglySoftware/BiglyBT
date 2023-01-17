@@ -32,6 +32,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.TrackersUtil;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
 
@@ -262,7 +263,7 @@ public class ModePanel extends AbstractWizardPanel<NewTorrentWizard> {
     //Line:
     // ------------------------------
 
-    Label label = new Label(panel, SWT.SEPARATOR | SWT.HORIZONTAL);
+    Control label = Utils.createSkinnedLabelSeparator(panel, SWT.HORIZONTAL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 4;
     label.setLayoutData(gridData);
@@ -329,7 +330,7 @@ public class ModePanel extends AbstractWizardPanel<NewTorrentWizard> {
     //Line:
     // ------------------------------
 
-    Label label1 = new Label(panel, SWT.SEPARATOR | SWT.HORIZONTAL);
+    Control label1 = Utils.createSkinnedLabelSeparator(panel, SWT.HORIZONTAL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 6;
     label1.setLayoutData(gridData);

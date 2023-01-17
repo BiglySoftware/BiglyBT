@@ -413,8 +413,8 @@ SBC_SubscriptionResultsView
 
 				if ( !with ){
 
-					label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
-					label.setLayoutData(new RowData(-1, sepHeight));
+					Control sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+					sep.setLayoutData(new RowData(-1, sepHeight));
 				}
 
 				Composite cWithKW = new Composite(vFilters, SWT.NONE);
@@ -469,8 +469,8 @@ SBC_SubscriptionResultsView
 			
 				// min size
 
-			label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
-			label.setLayoutData(new RowData(-1, sepHeight));
+			Control sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+			sep.setLayoutData(new RowData(-1, sepHeight));
 
 			Composite cMinSize = new Composite(vFilters, SWT.NONE);
 			layout = new GridLayout(2, false);
@@ -493,8 +493,8 @@ SBC_SubscriptionResultsView
 
 			// max size
 
-			label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
-			label.setLayoutData(new RowData(-1, sepHeight));
+			sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+			sep.setLayoutData(new RowData(-1, sepHeight));
 
 			Composite cMaxSize = new Composite(vFilters, SWT.NONE);
 			layout = new GridLayout(2, false);
@@ -517,8 +517,8 @@ SBC_SubscriptionResultsView
 
 				// min seeds
 			
-			label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
-			label.setLayoutData(new RowData(-1, sepHeight));
+			sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+			sep.setLayoutData(new RowData(-1, sepHeight));
 
 			Composite cMinSeeds = new Composite(vFilters, SWT.NONE);
 			layout = new GridLayout(2, false);
@@ -542,8 +542,8 @@ SBC_SubscriptionResultsView
 			
 				// max age
 			
-			label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
-			label.setLayoutData(new RowData(-1, sepHeight));
+			sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+			sep.setLayoutData(new RowData(-1, sepHeight));
 
 			Composite cMaxAge = new Composite(vFilters, SWT.NONE);
 			layout = new GridLayout(3, false);
@@ -589,8 +589,8 @@ SBC_SubscriptionResultsView
 			if ( ds != null ){
 
 				if ( ds.isUpdateable() ){
-					label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
-					label.setLayoutData(new RowData(-1, sepHeight));
+					sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+					sep.setLayoutData(new RowData(-1, sepHeight));
 	
 					final Runnable					f_pFilterUpdater 	= pFilterUpdater;
 	
@@ -613,8 +613,8 @@ SBC_SubscriptionResultsView
 					});
 				}
 				
-				label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
-				label.setLayoutData(new RowData(-1, sepHeight));
+				sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+				sep.setLayoutData(new RowData(-1, sepHeight));
 				
 				Button more = new Button( vFilters,SWT.PUSH );
 				more.setText( MessageText.getString( "Subscription.menu.forcecheck" ));

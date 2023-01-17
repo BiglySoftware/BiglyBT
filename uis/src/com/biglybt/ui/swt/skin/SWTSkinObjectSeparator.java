@@ -20,13 +20,15 @@ package com.biglybt.ui.swt.skin;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Control;
+
+import com.biglybt.ui.swt.Utils;
 
 public class SWTSkinObjectSeparator
 	extends SWTSkinObjectBasic
 {
 
-	private Label separator;
+	private Control separator;
 
 	public SWTSkinObjectSeparator(SWTSkin skin, SWTSkinProperties properties,
 			String sid, String configID, SWTSkinObject parent) {
@@ -39,7 +41,7 @@ public class SWTSkinObjectSeparator
 			createOn = (Composite) parent.getControl();
 		}
 
-		separator = new Label(createOn, SWT.SEPARATOR | SWT.HORIZONTAL);
+		separator = Utils.createSkinnedLabelSeparator(createOn, SWT.HORIZONTAL );
 
 		setControl(separator);
 

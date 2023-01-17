@@ -373,6 +373,7 @@ public class Utils
 				
 				return;
 			}
+			// System.out.println( widget );
 			
 			Integer _sct = (Integer)widget.getData("utils:skinned-ct" );
 
@@ -382,27 +383,6 @@ public class Utils
 			
 				return;
 			}
-		
-			/*
-			if ( widget instanceof Control ){
-				
-				Control c = (Control)widget;
-			
-				Composite parent = c.getParent();
-				
-				while( parent != null ){
-					
-					Integer psct = (Integer)parent.getData("utils:skinned-ct" );
-
-					if ( psct != null && psct == SCT_SKINNING_DISABLED ){
-						
-						return;
-					}
-					
-					parent = parent.getParent();
-				}
-			}
-			*/
 			
 			if ( widget instanceof ExpandBar ){
 				
@@ -458,6 +438,8 @@ public class Utils
 				Tree tree = (Tree)widget;
 				
 				tree.setLinesVisible( false );
+				tree.setHeaderForeground( widget_fg );
+				tree.setHeaderBackground( list_bg );
 			}
 			
 			if ( widget instanceof Table ){
@@ -628,6 +610,49 @@ public class Utils
 		}
 	}
 
+	public static Control
+	createSkinnedLabelSeparator(
+		Composite	parent,
+		int			style )
+	{
+		if ( isDarkAppearanceNativeWindows()){
+			
+			Composite comp = 
+				new Composite(parent, SWT.NULL )
+				{
+					public Point 
+					computeSize(
+						int wHint, int hHint, boolean changed )
+					{
+						Point size = super.computeSize(wHint, hHint, changed);
+						
+						if (( style & SWT.HORIZONTAL ) != 0 ){
+							
+							size.y = 2;
+							
+						}else{
+							
+							size.x = 2;
+						}
+						
+						return( size );
+					}
+				};
+			
+				comp.addListener( SWT.Paint, (ev)->{
+				
+					Rectangle bounds = comp.getBounds();
+					ev.gc.setBackground( Colors.getSystemColor(display, SWT.COLOR_WIDGET_FOREGROUND ));
+					ev.gc.fillRectangle( 0, 0, bounds.width, bounds.height );
+					
+				});
+			
+			return( comp );
+		}
+		
+		return( new Label( parent, SWT.SEPARATOR | style ));
+	}
+	
 	public static Composite
 	createSkinnedComposite(
 		Composite	parent,

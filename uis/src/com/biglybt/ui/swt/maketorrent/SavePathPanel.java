@@ -36,6 +36,7 @@ import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
 
@@ -197,10 +198,10 @@ public class SavePathPanel extends AbstractWizardPanel<NewTorrentWizard> {
 
     	// ----------------------
 
-    label = new Label(panel, SWT.SEPARATOR | SWT.HORIZONTAL);
+    Control sep = Utils.createSkinnedLabelSeparator(panel, SWT.HORIZONTAL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 3;
-    label.setLayoutData(gridData);
+    sep.setLayoutData(gridData);
 
     Composite gFileStuff = new Composite(panel, SWT.NULL);
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
@@ -285,10 +286,10 @@ public class SavePathPanel extends AbstractWizardPanel<NewTorrentWizard> {
     label = new Label(gFileStuff, SWT.NULL);
 
     // ------------------------
-    label = new Label(panel, SWT.SEPARATOR | SWT.HORIZONTAL);
+    sep = Utils.createSkinnedLabelSeparator(panel, SWT.HORIZONTAL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 3;
-    label.setLayoutData(gridData);
+    sep.setLayoutData(gridData);
 
     final Button bAutoOpen = new Button(panel,SWT.CHECK);
     Messages.setLanguageText(bAutoOpen,"wizard.maketorrents.autoopen");

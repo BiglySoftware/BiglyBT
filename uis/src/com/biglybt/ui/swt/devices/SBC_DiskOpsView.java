@@ -261,8 +261,8 @@ public class SBC_DiskOpsView
 		// tvDiskOps.setRowDefaultHeightEM(1.5f);
 		tvDiskOps.setHeaderVisible( true );
 
-		tableParent = new Composite(control, SWT.BORDER);
-		tableParent.setLayoutData(Utils.getFilledFormData());
+		tableParent = Utils.createSkinnedComposite(control, SWT.BORDER, Utils.getFilledFormData());
+		
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = layout.verticalSpacing = layout.horizontalSpacing = 0;
 		tableParent.setLayout(layout);
