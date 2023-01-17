@@ -60,8 +60,9 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
   }
 
   	// disposal is causing 100% CPU + out of memory on close
+  	// more recently getting crash on exit on Linux ALL THE FEKING TIME
   
-  boolean skip_dispose = Utils.getSWTVersion() >= 4956;
+  boolean skip_dispose = Constants.isLinux ||  Utils.getSWTVersion() >= 4956;
 
   Display display;
   private boolean sleak = false;
@@ -599,14 +600,13 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
   public void terminate() {
     terminated = true;
     Utils.setTerminated();
-    // must dispose here in case another window has take over the
+    // must dispose here in case another window has taken over the
     // readAndDispatch/sleep loop
     
 	// for 1.2 there is a bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=526758 causing crash on exit
 	// apparently fixed in 4.14
 
-    boolean crash_on_dispose_bug = Constants.isWindows8OrHigher && SWT.getVersion() < 4930;
-    
+    boolean crash_on_dispose_bug = Constants.isWindows8OrHigher && SWT.getVersion() < 4930;  
     
     if (!display.isDisposed()) {
     	
@@ -614,6 +614,14 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
     		new Runnable() {
 			    @Override
 			    public void run() {
+			    	
+			    	// while crash is occurring we can just avoid the dispose completely and let the VM death trash things
+
+			    	if ( crash_on_dispose_bug || skip_dispose ){
+			    		
+			    		return;
+			    	}
+			    	
 				    try {
 				    	if ( !display.isDisposed()){
 						    Shell[] shells = display.getShells();
@@ -629,16 +637,11 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				    } catch (Throwable t) {
 					    Debug.out(t);
 				    }
-				    
-				    	// while crash is occurring we can just avoid the dispose completely and let the VM death trash things
-				    
-				    if ( !crash_on_dispose_bug && !skip_dispose ){
-				    	
-				    	if ( !display.isDisposed()){
-				    		try{
-				    			display.dispose();
-				    		}catch( Throwable e ){
-				    		}
+				    				    				    	
+				    if ( !display.isDisposed()){
+				    	try{
+				    		display.dispose();
+				    	}catch( Throwable e ){
 				    	}
 				    }
 			    }
