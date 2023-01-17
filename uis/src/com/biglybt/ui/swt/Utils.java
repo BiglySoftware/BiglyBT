@@ -310,11 +310,17 @@ public class Utils
 				// requires recent SWT which requires Java 11+....
 				// support still flakey...
 
-				Class<?> OS = Class.forName( "org.eclipse.swt.internal.win32.OS" );
-				
-				Method setTheme = OS.getMethod( "setTheme", boolean.class );
-				
-				setTheme.invoke( null, true );
+				try{
+					Class<?> OS = Class.forName( "org.eclipse.swt.internal.win32.OS" );
+					
+					Method setTheme = OS.getMethod( "setTheme", boolean.class );
+					
+					setTheme.invoke( null, true );
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
 				
 				force_dark_appearance = true;
 	
