@@ -665,6 +665,15 @@ public class Utils
 		int			style,
 		Object		parentLayoutData )
 	{
+		return(createSkinnedCompositeEx(parent,style,parentLayoutData)[1]);
+	}
+	
+	public static Composite[]
+	createSkinnedCompositeEx(
+		Composite	parent,
+		int			style,
+		Object		parentLayoutData )
+	{
 		if ((style | SWT.BORDER ) != 0 && isDarkAppearanceNativeWindows()){
 			
 			Composite bc = new Composite( parent, SWT.NULL );
@@ -712,27 +721,7 @@ public class Utils
 				ev.gc.drawRectangle( 0, 0, bounds.width-1, bounds.height-1 );
 			});
 			
-			Composite comp = 
-				new Composite( bc, style & ~SWT.BORDER ){
-				
-				@Override
-				public Rectangle 
-				computeTrim(
-					int x, int y, int width, int height)
-				{
-					Rectangle trim = super.computeTrim(x, y, width, height);
-					
-						// have to account for the extra border component, particularly
-						// as this is used in TransferStatsView to work around a layout bug...
-					
-					trim.x		+=2;
-					trim.y		+=2;
-					trim.width	-=4;
-					trim.height -=4;
-					
-					return( trim );
-				}
-			};
+			Composite comp = new Composite( bc, style & ~SWT.BORDER );
 				
 			comp.addListener( SWT.Dispose, (ev)->{
 				if ( !bc.isDisposed()){
@@ -749,7 +738,7 @@ public class Utils
 				comp.setLayoutData( new GridData( GridData.FILL_BOTH ));
 			}
 			
-			return( comp );
+			return(new Composite[]{ bc, comp });
 			
 		}else{
 			
@@ -760,7 +749,7 @@ public class Utils
 				comp.setLayoutData(parentLayoutData);
 			}
 			
-			return( comp );
+			return(new Composite[]{ comp, comp });
 		}
 	}
 	

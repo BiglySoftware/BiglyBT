@@ -194,9 +194,7 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
       gridData = new GridData(GridData.FILL_BOTH);
 	    form.setLayoutData(gridData);
 
-      Composite cLeftSide = new Composite(form, SWT.BORDER);
-      gridData = new GridData(GridData.FILL_BOTH);
-	    cLeftSide.setLayoutData(gridData);
+      Composite cLeftSide = Utils.createSkinnedComposite( form, SWT.BORDER, new GridData(GridData.FILL_BOTH));
 
       FormLayout layout = new FormLayout();
       cLeftSide.setLayout(layout);
@@ -238,7 +236,7 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
 
       	// Header
 
-      Composite cHeader = new Composite(cRightSide, SWT.BORDER);
+      Composite cHeader = Utils.createSkinnedComposite(cRightSide, SWT.BORDER, new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER));
 
       configLayout = new GridLayout();
       configLayout.marginHeight = 3;
@@ -246,8 +244,6 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
       configLayout.numColumns = 2;
       configLayout.marginRight = 5;
       cHeader.setLayout(configLayout);
-      gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
-	    cHeader.setLayoutData(gridData);
 
       cHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
       cHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));

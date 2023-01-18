@@ -380,8 +380,9 @@ public class TransferStatsView
 
     GridData generalSocksPanelGridData = new GridData();
     generalSocksPanelGridData.horizontalIndent=2;
-	Composite generalSocksPanel = Utils.createSkinnedComposite(generalPanel, SWT.BORDER, generalSocksPanelGridData);
+	Composite[] generalSocksPanels = Utils.createSkinnedCompositeEx(generalPanel, SWT.BORDER, generalSocksPanelGridData);
 
+	Composite generalSocksPanel = generalSocksPanels[1];	// inner when hacked by theme
     GridLayout socksLayout = new GridLayout();
     socksLayout.numColumns = 2;
 	generalSocksPanel.setLayout(socksLayout);
@@ -444,8 +445,10 @@ public class TransferStatsView
     	// got a rare layout bug that results in the generalStatsPanel not showing the bottom row correctly until the panel
     	// is resized - attempt to fix by sizing based on the socks panel which seems to consistently layout OK
 
-    Point socks_size = generalSocksPanel.computeSize( SWT.DEFAULT, SWT.DEFAULT );
-    Rectangle trim = generalSocksPanel.computeTrim(0, 0, socks_size.x, socks_size.y );
+    Point socks_size = generalSocksPanels[0].computeSize( SWT.DEFAULT, SWT.DEFAULT );
+    
+    Rectangle trim = generalSocksPanels[0].computeTrim(0, 0, socks_size.x, socks_size.y );
+    
     generalStatsPanelGridData.heightHint = socks_size.y - ( trim.height - socks_size.y );
   }
 
