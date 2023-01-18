@@ -125,7 +125,7 @@ public class ProgressReporterPanel
 	 */
 	public ProgressReporterPanel(ProgressReporterWindow _window, Composite parent, IProgressReporter reporter,
 			int style) {
-		super(parent, ((style & BORDER) != 0 ? SWT.BORDER : SWT.NONE));
+		super(parent, ((style & BORDER) != 0 ? Utils.isDarkAppearanceNativeWindows()?SWT.NONE:SWT.BORDER : SWT.NONE));
 
 		if (null == reporter) {
 			throw new NullPointerException("IProgressReporter can not be null");//KN: should use resource?
@@ -135,7 +135,7 @@ public class ProgressReporterPanel
 		this.pReporter = reporter;
 		this.style = style;
 
-		normalColor = Colors.blue;
+		normalColor = Utils.isDarkAppearanceNative()?Colors.blues[Colors.BLUES_DARKEST]:Colors.blue;
 		errorColor = Colors.colorError;
 
 		/*
@@ -347,7 +347,7 @@ public class ProgressReporterPanel
 	 * Below the panel, taking up the entire width of the window, is the detail section
 	 */
 	private void createDetailSection(IProgressReport pReport) {
-		Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
+		Control separator = Utils.createSkinnedLabelSeparator(this, SWT.HORIZONTAL);
 		separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
 		detailSection = new TwistieSection(this, TwistieLabel.NONE);
@@ -371,11 +371,12 @@ public class ProgressReporterPanel
 			}
 		}
 		
-		detailListWidget = new StyledText(sectionContent, SWT.BORDER | SWT.V_SCROLL
-				| SWT.WRAP);
+		detailListWidget = new StyledText(sectionContent, SWT.BORDER | SWT.V_SCROLL | SWT.WRAP);
 		detailListWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		detailListWidget.setEditable( false );
+		
+		detailListWidget.setIndent(4);
 		
 		/*
 		 * Add a default message instead of an empty box if there is no history;
@@ -409,7 +410,7 @@ public class ProgressReporterPanel
 				}
 				
 				resizeDetailSection();
-				layout(true, true);
+				getParent().layout(true, true);
 			}
 
 		});

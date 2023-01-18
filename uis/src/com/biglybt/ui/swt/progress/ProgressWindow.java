@@ -685,11 +685,12 @@ ProgressWindow
 		
 		if ( progress != null ){
 		
-			Composite compProg = new Composite(shell,SWT.BORDER);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.grabExcessHorizontalSpace = true;
 			gridData.horizontalSpan = 2;
-			compProg.setLayoutData(gridData);
+			
+			Composite compProg = Utils.createSkinnedComposite(shell,SWT.BORDER,gridData);
+			
 			GridLayout layoutProgress = new GridLayout();
 			layoutProgress.numColumns = 1;
 			layoutProgress.marginWidth = layoutProgress.marginHeight = 0;
@@ -708,7 +709,7 @@ ProgressWindow
 			
 			if ((states & ProgressCallback.ST_BUTTONS) != 0 ){
 				
-				Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
+				Control labelSeparator = Utils.createSkinnedLabelSeparator( shell, SWT.HORIZONTAL);
 				gridData = new GridData(GridData.FILL_HORIZONTAL);
 				gridData.horizontalSpan = 2;
 				labelSeparator.setLayoutData(gridData);

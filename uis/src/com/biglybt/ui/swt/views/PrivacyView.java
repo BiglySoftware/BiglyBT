@@ -534,7 +534,7 @@ public class PrivacyView
 
 			// I2P install state
 
-		i2p_stack_group = new Group( cMainComposite, SWT.NULL );
+		i2p_stack_group = Utils.createSkinnedGroup( cMainComposite, SWT.NULL );
 		i2p_stack_group.setText( "I2P" );
 
 		
@@ -547,7 +547,7 @@ public class PrivacyView
         
 		stack_layout.topControl = current_i2p_entry.getComposite();
 		
-		Group bottom_comp = new Group( cMainComposite, SWT.NULL );
+		Group bottom_comp = Utils.createSkinnedGroup( cMainComposite, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
 		bottom_comp.setLayoutData(gd);

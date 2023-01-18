@@ -3688,7 +3688,7 @@ public class OpenTorrentOptionsWindow
 
 				// azrating plugin
 
-			Group ratingComp = new Group( topComp, SWT.NULL );
+			Group ratingComp = Utils.createSkinnedGroup( topComp, SWT.NULL );
 			layout = new GridLayout();
 			layout.numColumns = 1;
 
@@ -3872,7 +3872,7 @@ public class OpenTorrentOptionsWindow
 
 				// chat
 
-			Group chatComp = new Group( topComp, SWT.NULL );
+			Group chatComp = Utils.createSkinnedGroup( topComp, SWT.NULL );
 			layout = new GridLayout();
 			layout.numColumns = 1;
 			chatComp.setLayout(layout);
@@ -7119,7 +7119,7 @@ public class OpenTorrentOptionsWindow
 
 			{
 				peer_sources_composite.setLayout(new RowLayout(SWT.HORIZONTAL));
-				Group peer_sources_group = new Group(peer_sources_composite, SWT.NULL);
+				Group peer_sources_group = Utils.createSkinnedGroup(peer_sources_composite, SWT.NULL);
 				Messages.setLanguageText(peer_sources_group,
 						"ConfigView.section.connection.group.peersources");
 				RowLayout peer_sources_layout = new RowLayout();
@@ -7167,7 +7167,7 @@ public class OpenTorrentOptionsWindow
 				Composite network_group_parent = new Composite(parent, SWT.NULL);
 				network_group_parent.setLayout(new RowLayout(SWT.HORIZONTAL));
 
-				Group network_group = new Group(network_group_parent, SWT.NULL);
+				Group network_group = Utils.createSkinnedGroup(network_group_parent, SWT.NULL);
 				Messages.setLanguageText(network_group,
 						"ConfigView.section.connection.group.networks");
 				RowLayout network_layout = new RowLayout();

@@ -2229,7 +2229,7 @@ BuddyPluginView
 
 				// left
 
-				lhs = new Group( composite, SWT.NULL );
+				lhs = Utils.createSkinnedGroup( composite, SWT.NULL );
 				lhs.setText( MessageText.getString( "label.chat.type" ));
 				layout = new GridLayout();
 				layout.numColumns = 1;

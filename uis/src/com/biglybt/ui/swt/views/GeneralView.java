@@ -403,7 +403,7 @@ public class GeneralView
     availabilityPercent.setLayoutData(gridData);
     Messages.setLanguageText(availabilityPercent.getWidget(), "GeneralView.label.status.pieces_available.tooltip");
 
-    gTransfer = new Group(genComposite, SWT.SHADOW_OUT);
+    gTransfer = Utils.createSkinnedGroup(genComposite, SWT.SHADOW_OUT);
     Messages.setLanguageText(gTransfer, "GeneralView.section.transfer"); //$NON-NLS-1$
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gTransfer.setLayoutData(gridData);
@@ -499,7 +499,7 @@ public class GeneralView
 
     ////////////////////////
 
-    gInfo = new Group(genComposite, SWT.SHADOW_OUT);
+    gInfo = Utils.createSkinnedGroup(genComposite, SWT.SHADOW_OUT);
     Messages.setLanguageText(gInfo, "GeneralView.section.info");
     gridData = new GridData(GridData.FILL_BOTH);
     gInfo.setLayoutData(gridData);
@@ -707,7 +707,7 @@ public class GeneralView
     layout.marginHeight=layout.marginLeft=layout.marginRight=layout.marginWidth=0;
     cThumb.setLayout(layout);
 
-    Group gThumb = new Group( cThumb, SWT.NULL );
+    Group gThumb = Utils.createSkinnedGroup( cThumb, SWT.NULL );
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gThumb.setLayoutData(gridData);
     layout =  new GridLayout( 1, false );

@@ -203,7 +203,7 @@ TorrentOptionsView
 			lHeader.setLayoutData(gridData);
 		}
 
-		Group gTorrentOptions = new Group(panel, SWT.NULL);
+		Group gTorrentOptions = Utils.createSkinnedGroup(panel, SWT.NULL);
 		Messages.setLanguageText(gTorrentOptions, "ConfigView.section.transfer");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
 		gTorrentOptions.setLayoutData(gridData);
@@ -389,7 +389,7 @@ TorrentOptionsView
 	    }
 
 
-		Group gTorrentInfo = new Group(panel, SWT.NULL);
+		Group gTorrentInfo = Utils.createSkinnedGroup(panel, SWT.NULL);
 		Messages.setLanguageText(gTorrentInfo, "label.aggregate.info");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
 		gTorrentInfo.setLayoutData(gridData);

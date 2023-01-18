@@ -95,7 +95,7 @@ public class TagButtonsUI
 				group = newGroup;
 
 				g = group == null ? new Composite(cMainComposite, SWT.DOUBLE_BUFFERED)
-						: new Group(cMainComposite, SWT.DOUBLE_BUFFERED);
+						: Utils.createSkinnedGroup(cMainComposite, SWT.DOUBLE_BUFFERED);
 				if (group != null) {
 					Group groupControl = (Group) g;
 					groupControl.setText(group);

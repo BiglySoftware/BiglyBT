@@ -282,7 +282,7 @@ public class LoggerView
 		 * and a checkbox Table of component IDs.
 		 */
 		final String sFilterPrefix = "ConfigView.section.logging.filter";
-		Group gLogIDs = new Group(panel, SWT.NULL);
+		Group gLogIDs = Utils.createSkinnedGroup(panel, SWT.NULL);
 		Messages.setLanguageText(gLogIDs, "LoggerView.filter");
 		layout = new GridLayout();
 		layout.marginHeight = 0;

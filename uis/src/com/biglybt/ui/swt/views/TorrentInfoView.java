@@ -270,7 +270,7 @@ public class TorrentInfoView
 
 			// columns
 
-		Group gColumns = new Group(panel, SWT.NULL);
+		Group gColumns = Utils.createSkinnedGroup(panel, SWT.NULL);
 		Messages.setLanguageText(gColumns, "TorrentInfoView.columns" );
 		gridData = new GridData(GridData.FILL_BOTH);
 		gColumns.setLayoutData(gridData);
