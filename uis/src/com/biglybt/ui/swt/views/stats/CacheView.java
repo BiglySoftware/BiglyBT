@@ -136,7 +136,7 @@ public class CacheView
   private void generateGeneralGroup() {
     GridData gridData;
 
-    Group gCacheGeneral = new Group(panel,SWT.NULL);
+    Group gCacheGeneral = Utils.createSkinnedGroup(panel,SWT.NULL);
     Messages.setLanguageText(gCacheGeneral,"CacheView.general.title");
     gCacheGeneral.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
@@ -188,7 +188,7 @@ public class CacheView
   private void generateReadsGroup() {
     GridData gridData;
 
-    Group gCacheReads = new Group(panel,SWT.NULL);
+    Group gCacheReads = Utils.createSkinnedGroup(panel,SWT.NULL);
     Messages.setLanguageText(gCacheReads,"CacheView.reads.title");
     gCacheReads.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
@@ -286,7 +286,7 @@ public class CacheView
   private void generateSpeedGroup() {
     GridData gridData;
 
-    Group gCacheSpeeds = new Group(panel,SWT.NULL);
+    Group gCacheSpeeds = Utils.createSkinnedGroup(panel,SWT.NULL);
     Messages.setLanguageText(gCacheSpeeds,"CacheView.speeds.title");
     gCacheSpeeds.setLayoutData(new GridData(GridData.FILL_BOTH));
 
@@ -370,7 +370,7 @@ public class CacheView
   private void generateWritesGroup() {
     GridData gridData;
 
-    Group gCacheWrites = new Group(panel,SWT.NULL);
+    Group gCacheWrites = Utils.createSkinnedGroup(panel,SWT.NULL);
     Messages.setLanguageText(gCacheWrites,"CacheView.writes.title");
     gCacheWrites.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 

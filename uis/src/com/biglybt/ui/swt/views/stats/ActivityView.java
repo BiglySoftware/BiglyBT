@@ -114,7 +114,7 @@ public class ActivityView
     panel.setLayout(new GridLayout());
     GridData gridData;
 
-    Group gDownSpeed = new Group(panel,SWT.NULL);
+    Group gDownSpeed = Utils.createSkinnedGroup(panel,SWT.NULL);
     Messages.setLanguageText(gDownSpeed,"SpeedView.downloadSpeed.title");
     gridData = new GridData(GridData.FILL_BOTH);
     gDownSpeed.setLayoutData(gridData);
@@ -126,7 +126,7 @@ public class ActivityView
     downSpeedGraphic.initialize(downSpeedCanvas);
     Color[] colors = downSpeedGraphic.colors;
 
-    Group gUpSpeed = new Group(panel,SWT.NULL);
+    Group gUpSpeed = Utils.createSkinnedGroup(panel,SWT.NULL);
     Messages.setLanguageText(gUpSpeed,"SpeedView.uploadSpeed.title");
     gridData = new GridData(GridData.FILL_BOTH);
     gUpSpeed.setLayoutData(gridData);

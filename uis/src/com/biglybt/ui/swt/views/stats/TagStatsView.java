@@ -102,7 +102,7 @@ public class TagStatsView
 		GridData gridData = new GridData(GridData.FILL_VERTICAL );
 		legend_panel_sc.setLayoutData(gridData);
 
-		legend_panel = new Group( legend_panel_sc, SWT.NULL );
+		legend_panel = Utils.createSkinnedGroup( legend_panel_sc, SWT.NULL );
 		legend_panel.setText( MessageText.getString( "label.tags" ));
 
 		legend_panel.setLayout(new GridLayout());

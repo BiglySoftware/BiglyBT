@@ -91,7 +91,7 @@ public class TrackerActivityView
 		GridData gridData;
 
 		{
-			Group gRates = new Group(panel,SWT.NULL);
+			Group gRates = Utils.createSkinnedGroup(panel,SWT.NULL);
 			Messages.setLanguageText(gRates,"TrackerActivityView.rates");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 2;
@@ -199,7 +199,7 @@ public class TrackerActivityView
 		}
 		
 		{
-			Group gLag = new Group(panel,SWT.NULL);
+			Group gLag = Utils.createSkinnedGroup(panel,SWT.NULL);
 			Messages.setLanguageText(gLag,"TrackerActivityView.lags");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gLag.setLayoutData(gridData);
@@ -350,7 +350,7 @@ public class TrackerActivityView
 		}
 		
 		{
-			Group gSched = new Group(panel,SWT.NULL);
+			Group gSched = Utils.createSkinnedGroup(panel,SWT.NULL);
 			Messages.setLanguageText(gSched,"TrackerActivityView.scheduled");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gSched.setLayoutData(gridData);

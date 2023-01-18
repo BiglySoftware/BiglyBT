@@ -224,7 +224,7 @@ public class DHTView
   }
 
   private void initialiseGeneralGroup() {
-    Group gGeneral = new Group(panel,SWT.NONE);
+    Group gGeneral = Utils.createSkinnedGroup(panel,SWT.NONE);
     Messages.setLanguageText(gGeneral, "DHTView.general.title" );
 
     GridData data = new GridData();
@@ -319,7 +319,7 @@ public class DHTView
   }
 
   private void initialiseDBGroup() {
-    Group gDB = new Group(panel,SWT.NONE);
+    Group gDB = Utils.createSkinnedGroup(panel,SWT.NONE);
     Messages.setLanguageText(gDB,"DHTView.db.title");
 
     GridData data = new GridData(GridData.FILL_HORIZONTAL);
@@ -382,7 +382,7 @@ public class DHTView
   }
 
   private void initialiseTransportDetailsGroup() {
-    Group gTransport = new Group(panel,SWT.NONE);
+    Group gTransport = Utils.createSkinnedGroup(panel,SWT.NONE);
     Messages.setLanguageText(gTransport,"DHTView.transport.title");
 
     GridData data = new GridData(GridData.FILL_VERTICAL);
@@ -480,7 +480,7 @@ public class DHTView
   }
 
   private void initialiseOperationDetailsGroup() {
-    Group gOperations = new Group(panel,SWT.NONE);
+    Group gOperations = Utils.createSkinnedGroup(panel,SWT.NONE);
     Messages.setLanguageText(gOperations,"DHTView.operations.title");
     gOperations.setLayoutData(new GridData(SWT.FILL,SWT.BEGINNING,true,false));
 
@@ -554,7 +554,7 @@ public class DHTView
   }
 
   private void initialiseActivityGroup() {
-    Group gActivity = new Group(panel,SWT.NONE);
+    Group gActivity = Utils.createSkinnedGroup(panel,SWT.NONE);
     Messages.setLanguageText(gActivity,"DHTView.activity.title");
     gActivity.setLayoutData(new GridData(SWT.FILL,SWT.FILL,true,true));
     gActivity.setLayout(new GridLayout());

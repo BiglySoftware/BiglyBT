@@ -587,7 +587,7 @@ public class Colors implements ParameterListener {
 			}
 			case SWT.COLOR_WIDGET_BORDER:{
 				
-				return( ColorCache.getColor( d,  160, 160, 160 ));
+				return( ColorCache.getColor( d,  100, 100, 100 ));
 			}
 		}
 		

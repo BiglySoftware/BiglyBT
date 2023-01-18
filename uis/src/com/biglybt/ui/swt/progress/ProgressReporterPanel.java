@@ -378,6 +378,21 @@ public class ProgressReporterPanel
 		
 		detailListWidget.setIndent(4);
 		
+		if ( Utils.isDarkAppearanceNativeWindows()){
+			
+			// removed SWT.BORDER for this as pain in the arse to fix up the code, grr
+			
+			Control sep = 
+				Utils.createSkinnedLabelSeparator( 
+					this, 
+					SWT.HORIZONTAL,
+					Colors.getSystemColor(detailListWidget.getDisplay(), SWT.COLOR_WIDGET_LIGHT_SHADOW ));
+			
+			GridData setGD = new GridData( GridData.FILL_HORIZONTAL);
+			setGD.horizontalSpan = 2;
+			sep.setLayoutData(setGD);
+		}
+		
 		/*
 		 * Add a default message instead of an empty box if there is no history;
 		 * remove this later when a real detail message arrive

@@ -738,7 +738,7 @@ public class TransferStatsView
   }
 
   private void createAutoSpeedPanel() {
-    autoSpeedPanel = new Group(mainPanel,SWT.NONE);
+    autoSpeedPanel = Utils.createSkinnedGroup(mainPanel,SWT.NONE);
     GridData generalPanelData = new GridData(GridData.FILL_BOTH);
     autoSpeedPanel.setLayoutData(generalPanelData);
     Messages.setLanguageText(autoSpeedPanel,"SpeedView.stats.autospeed", new String[]{ String.valueOf( MAX_DISPLAYED_PING_MILLIS_DISP )});

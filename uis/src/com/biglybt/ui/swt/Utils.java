@@ -621,6 +621,19 @@ public class Utils
 		Composite	parent,
 		int			style )
 	{
+		return( 
+			createSkinnedLabelSeparator(
+				parent, 
+				style, 
+				Colors.getSystemColor(display, SWT.COLOR_WIDGET_BORDER )));
+	}
+	
+	public static Control
+	createSkinnedLabelSeparator(
+		Composite	parent,
+		int			style,
+		Color		color )
+	{
 		if ( isDarkAppearanceNativeWindows()){
 			
 			Composite comp = 
@@ -648,7 +661,7 @@ public class Utils
 				comp.addListener( SWT.Paint, (ev)->{
 				
 					Rectangle bounds = comp.getBounds();
-					ev.gc.setBackground( Colors.getSystemColor(display, SWT.COLOR_WIDGET_FOREGROUND ));
+					ev.gc.setBackground( color );
 					ev.gc.fillRectangle( 0, 0, bounds.width, bounds.height );
 					
 				});
