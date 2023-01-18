@@ -81,6 +81,7 @@ public abstract class PieceDistributionView
 			@Override
 			public void handleEvent(Event event) {
 				if ( pem==null || pem.isDestroyed()){
+					event.gc.setBackground(Utils.isDarkAppearanceNative()?pieceDistCanvas.getBackground():null);
 					event.gc.fillRectangle(event.x, event.y, event.width, event.height);
 				}else{
 					if (imgToPaint != null && !imgToPaint.isDisposed()) {
@@ -142,6 +143,11 @@ public abstract class PieceDistributionView
 
 		GC gc = new GC(img);
 
+		if ( Utils.isDarkAppearanceNative()){
+			gc.setBackground(pieceDistCanvas.getBackground());
+			gc.fillRectangle(img.getBounds());
+		}
+		
 		try
 		{
 			int stepWidthX = rect.width / upperBound;
@@ -151,6 +157,8 @@ public abstract class PieceDistributionView
 			double stepWidthY = 1.0 * (rect.height - 1) / avlPeak;
 			int offsetY = rect.height;
 
+			Color rarestColor = Utils.isDarkAppearanceNative()?Colors.yellow:Colors.blue;
+			
 			gc.setForeground(Colors.green);
 			for (int i = 0; i <= connected; i++)
 			{
@@ -181,7 +189,7 @@ public abstract class PieceDistributionView
 
 				if(i==minAvail)
 				{
-					gc.setForeground(Colors.blue);
+					gc.setForeground(rarestColor);
 					gc.drawRectangle(stepWidthX*i+1, offsetY-1, barWidth-2, (int)(Math.ceil(stepWidthY*globalPiecesPerAvailability[i]-1))*-1);
 				}
 
@@ -200,16 +208,16 @@ public abstract class PieceDistributionView
 				MessageText.getString("PiecesView.DistributionView.weDownload")
 				};
 
-			int charWidth = gc.getFontMetrics().getAverageCharWidth();
 			int charHeight = gc.getFontMetrics().getHeight();
 			int maxBoxOffsetY = charHeight + 2;
 			int maxBoxWidth = 0;
 			int maxBoxOffsetX = 0;
-			for (int i = 0; i < boxContent.length; i++)
-				maxBoxWidth = Math.max(maxBoxWidth, boxContent[i].length());
-
-			maxBoxOffsetX = (maxBoxWidth+5) * charWidth;
-			maxBoxWidth = ++maxBoxWidth * charWidth;
+			for (int i = 0; i < boxContent.length; i++){
+				maxBoxWidth = Math.max( maxBoxWidth, gc.stringExtent( boxContent[i] ).x );
+			}
+			
+			maxBoxOffsetX = maxBoxWidth + 20;
+			maxBoxWidth = maxBoxWidth + 10;
 
 
 			int boxNum = 1;
@@ -230,7 +238,7 @@ public abstract class PieceDistributionView
 			gc.drawString(boxContent[boxNum-1],rect.width+(maxBoxOffsetX-5)*-1,maxBoxOffsetY*boxNum,true);
 
 			boxNum++;
-			gc.setForeground(Colors.blue);
+			gc.setForeground(rarestColor);
 			gc.drawRectangle(rect.width+(maxBoxOffsetX)*-1,maxBoxOffsetY*boxNum,maxBoxWidth,charHeight);
 			gc.drawString(boxContent[boxNum-1],rect.width+(maxBoxOffsetX-5)*-1,maxBoxOffsetY*boxNum,true);
 
@@ -246,7 +254,7 @@ public abstract class PieceDistributionView
 			if(isMe)
 			{
 				boxNum++;
-				gc.setForeground(Colors.black);
+				gc.setForeground(Utils.isDarkAppearanceNative()?Colors.grey:Colors.black);
 				gc.setLineStyle(SWT.LINE_DASH);
 				gc.drawRectangle(rect.width+(maxBoxOffsetX)*-1,maxBoxOffsetY*boxNum,maxBoxWidth,charHeight);
 				gc.drawString(boxContent[boxNum-1],rect.width+(maxBoxOffsetX-5)*-1,maxBoxOffsetY*boxNum,true);
