@@ -671,6 +671,17 @@ public class Utils
 			
 			if ( parentLayoutData != null ){
 			
+				if ( parentLayoutData instanceof GridData ){
+					GridData gd = (GridData)parentLayoutData;
+					
+					if ( gd.widthHint != SWT.DEFAULT ){
+						gd.widthHint += 4;
+					}
+					if ( gd.heightHint != SWT.DEFAULT ){
+						gd.heightHint += 4;
+					}
+				}
+				
 				bc.setLayoutData( parentLayoutData );
 			}
 			

@@ -1585,14 +1585,13 @@ public class PrivacyView
 
 				// I2P peer lookup
 
-			i2p_lookup_comp = new Composite( i2p_group, SWT.BORDER );
-
 			gd = new GridData();
 			gd.widthHint = 300;
 			gd.heightHint = 150;
-			i2p_lookup_comp.setLayoutData(gd);
 
-			i2p_lookup_comp.setBackground( Colors.white );
+			i2p_lookup_comp = Utils.createSkinnedComposite( i2p_group, SWT.BORDER, gd );
+
+			i2p_lookup_comp.setBackground( Utils.isDarkAppearanceNative()?null:Colors.white );
 
 				// i2p results
 
