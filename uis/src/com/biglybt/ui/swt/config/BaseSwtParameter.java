@@ -76,6 +76,8 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 
 	private Control mainControl;
 
+	private boolean disposed;
+	
 	public BaseSwtParameter(String paramID) {
 		this.paramID = paramID;
 	}
@@ -659,7 +661,13 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 		return enabled;
 	}
 
-	public void dispose() {
+	protected void dispose() {
+			// been seeing some crashes in this area, not sure of cause but possible that
+			// we are recursively entering here so prevent that
+		if ( disposed ){
+			return;
+		}
+		disposed = true;
 		validators.clear();
 		change_listeners = null;
 		if (valueProcessor != null) {
