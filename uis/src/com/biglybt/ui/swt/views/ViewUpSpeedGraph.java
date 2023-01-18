@@ -104,7 +104,9 @@ public class ViewUpSpeedGraph
 
 	private void delete() {
 		Utils.disposeComposite(upSpeedCanvas);
-		upSpeedGraphic.dispose();
+		if ( upSpeedGraphic != null ){
+			upSpeedGraphic.dispose();
+		}
 	}
 
 	private String getFullTitle() {

@@ -1523,7 +1523,7 @@ public class SB_Dashboard
 							}
 						}
 						
-						sf.setData( sf_weights.length );
+						sf.setData( "sb:weights", sf_weights.length );
 					}
 				}else{
 						// something's changed
@@ -1534,7 +1534,7 @@ public class SB_Dashboard
 						
 						int[]	weights = sf.getWeights();
 						
-						sf.setData( weights.length );
+						sf.setData( "sb:weights", weights.length );
 					}
 				}
 				
@@ -1564,7 +1564,7 @@ public class SB_Dashboard
 									
 									weights[i] = sf.getWeights();
 									
-									Object	d = sf.getData();
+									Object	d = sf.getData( "sb:weights" );
 									
 									if ( d == null || ((Integer)d) != weights[i].length ){
 										
@@ -1819,12 +1819,15 @@ public class SB_Dashboard
 									public void widgetSelected(SelectionEvent ev){
 										Composite c = (Composite)tf.getSelection().getControl();
 										
-										Object o = c.getData();
+										Object o = c.getData( "sb:reload" );
 										
 										if ( o instanceof Runnable ){
 											
+												// not yet built yet, trigger a reload
+											
 											((Runnable)o).run();
-											c.setData(null);
+											
+											c.setData( "sb:reload", null);
 										}
 										
 										tabSelected( tf_id, tf.getSelectionIndex());
@@ -1998,12 +2001,15 @@ public class SB_Dashboard
 									public void widgetSelected(SelectionEvent ev){
 										Composite c = (Composite)tf.getSelection().getControl();
 										
-										Object o = c.getData();
+										Object o = c.getData( "sb:reload" );
 										
 										if ( o instanceof Runnable ){
 											
+												// not built yet, trigger a reload
+											
 											((Runnable)o).run();
-											c.setData(null);
+											
+											c.setData( "sb:reload", null );
 										}
 										
 										tabSelected( tf_id, tf.getSelectionIndex());
@@ -2115,7 +2121,7 @@ public class SB_Dashboard
 						}
 					};
 					
-				sf.setData( reload_action );
+				sf.setData( "sb:reload", reload_action );
 				
 				itemReload.addSelectionListener(
 					new SelectionAdapter(){
@@ -2180,8 +2186,15 @@ public class SB_Dashboard
 				
 				SWTSkin skin = skinned_comp.getSkin();
 				
-				BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState(), reload_action );
+				SWTSkinObjectContainer imported = BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState(), reload_action );
 					
+				if ( imported != null ){
+					
+						// built OK, remove 
+					
+					sf.setData( "sb:reload", null );
+				}
+				
 				Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
 				
 				c.setLayoutData( Utils.getFilledFormData());

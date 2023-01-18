@@ -116,7 +116,9 @@ public class ViewDownSpeedGraph
 
 	private void delete() {
 		Utils.disposeComposite(downSpeedCanvas);
-		downSpeedGraphic.dispose();
+		if ( downSpeedGraphic != null ){
+			downSpeedGraphic.dispose();
+		}
 	}
 
 	private String getFullTitle() {
