@@ -753,6 +753,47 @@ public class Utils
 		}
 	}
 	
+	public static Group
+	createSkinnedGroup(
+		Composite	parent,
+		int			style )
+	{
+		if (isDarkAppearanceNativeWindows()){
+			
+			Group comp = new Group( parent, style );
+			
+			comp.addListener(SWT.Paint, (ev)->{
+			
+				Rectangle bounds = comp.getBounds();
+				
+				GC gc = ev.gc;
+				
+				int height = gc.getFontMetrics().getHeight();
+				
+				int y_offset = height/2;
+				
+					// seems we can just trash over the existing border drawing and replace with
+					// our own, lol
+				
+				gc.setBackground( parent.getBackground());
+				
+				gc.setForeground( Colors.getSystemColor(display, SWT.COLOR_WIDGET_BORDER ));
+				
+				gc.fillRectangle( 0, 0, bounds.width, bounds.height );
+				
+				gc.drawRectangle( 0, y_offset, bounds.width-1, bounds.height-1 - y_offset );
+			});
+		
+			return( comp );
+			
+		}else{
+			
+			Group comp = new Group( parent, style );
+			
+			return( comp );
+		}
+	}
+	
 	public static void
 	setLinkForeground(
 		Control		label )

@@ -1590,7 +1590,7 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
 					boolean use_composite = resource_name == null || tab_folder != null;
 
 					curComposite = use_composite ? new Composite(group_parent, SWT.NONE)
-							: new Group(group_parent, SWT.NULL);
+							: Utils.createSkinnedGroup(group_parent, SWT.NULL);
 
 					Control relatedControl = null;
 					if (!use_composite) {
