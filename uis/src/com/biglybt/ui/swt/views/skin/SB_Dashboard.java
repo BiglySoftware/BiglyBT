@@ -2065,7 +2065,7 @@ public class SB_Dashboard
 			final DashboardItem		item,
 			boolean					use_tabs )
 		{
-			Composite g = use_tabs?new Composite( sf, SWT.NULL ):new Group( sf, SWT.NULL );
+			Composite g = use_tabs?new Composite( sf, SWT.NULL ):Utils.createSkinnedGroup( sf, SWT.NULL );
 			
 			g.setLayoutData( Utils.getFilledFormData());
 			

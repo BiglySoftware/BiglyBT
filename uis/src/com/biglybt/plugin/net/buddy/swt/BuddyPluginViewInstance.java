@@ -409,7 +409,7 @@ BuddyPluginViewInstance
 
 			// UI
 
-		final Group ui_area = new Group( main, SWT.NULL );
+		final Group ui_area = Utils.createSkinnedGroup( main, SWT.NULL );
 		layout = new GridLayout();
 		layout.numColumns = 3;
 		ui_area.setLayout(layout);
@@ -665,7 +665,7 @@ BuddyPluginViewInstance
 	
 			// notifications
 
-		final Group noti_area = new Group( main, SWT.NULL );
+		final Group noti_area = Utils.createSkinnedGroup( main, SWT.NULL );
 		layout = new GridLayout();
 		layout.numColumns = 4;
 		noti_area.setLayout(layout);
@@ -814,7 +814,7 @@ BuddyPluginViewInstance
 	
 			// private chats
 
-		Group private_chat_area = new Group( main, SWT.NULL );
+		Group private_chat_area = Utils.createSkinnedGroup( main, SWT.NULL );
 		layout = new GridLayout();
 		layout.numColumns = 1;
 		//layout.marginHeight = 0;
@@ -865,7 +865,7 @@ BuddyPluginViewInstance
 
 			// integration
 
-		Group integ_area = new Group( main, SWT.NULL );
+		Group integ_area = Utils.createSkinnedGroup( main, SWT.NULL );
 		layout = new GridLayout();
 		layout.numColumns = 1;
 		integ_area.setLayout(layout);
@@ -902,7 +902,7 @@ BuddyPluginViewInstance
 
 			// import
 
-		Group import_area = new Group( main, SWT.NULL );
+		Group import_area = Utils.createSkinnedGroup( main, SWT.NULL );
 		layout = new GridLayout();
 		layout.numColumns = 3;
 		import_area.setLayout(layout);
@@ -994,7 +994,7 @@ BuddyPluginViewInstance
 
 			// Advanced
 
-		Group adv_area = new Group( main, SWT.NULL );
+		Group adv_area = Utils.createSkinnedGroup( main, SWT.NULL );
 		adv_area.setText( lu.getLocalisedMessageText( "MyTorrentsView.menu.advancedmenu" ));
 		layout = new GridLayout();
 		layout.numColumns = 1;
@@ -1033,7 +1033,7 @@ BuddyPluginViewInstance
 
 			// testing
 
-		Group test_area = new Group( main, SWT.NULL );
+		Group test_area = Utils.createSkinnedGroup( main, SWT.NULL );
 		test_area.setText( lu.getLocalisedMessageText( "br.test" ));
 		layout = new GridLayout();
 		layout.numColumns = 4;

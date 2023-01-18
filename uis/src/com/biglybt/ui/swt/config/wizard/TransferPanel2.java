@@ -113,7 +113,7 @@ TransferPanel2
     label.setLayoutData(gridData);
     Messages.setLanguageText(label, "configureWizard.transfer2.message");
 
-    final Group gRadio = new Group(panel, SWT.NULL);
+    final Group gRadio = Utils.createSkinnedGroup(panel, SWT.NULL);
     Messages.setLanguageText(gRadio, "configureWizard.transfer2.group");
     gRadio.setLayoutData(gridData);
     layout = new GridLayout();

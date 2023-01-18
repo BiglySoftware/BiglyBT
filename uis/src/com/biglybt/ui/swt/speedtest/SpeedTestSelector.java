@@ -37,6 +37,7 @@ import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ipc.IPCException;
 import com.biglybt.pif.ipc.IPCInterface;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
@@ -71,7 +72,7 @@ SpeedTestSelector
 		layout.numColumns = 1;
 		panel.setLayout(layout);
 
-		final Group gRadio = new Group(panel, SWT.NULL);
+		final Group gRadio = Utils.createSkinnedGroup(panel, SWT.NULL);
 		Messages.setLanguageText(gRadio, "speedtest.wizard.select.group");
 		gRadio.setLayoutData(gridData);
 		layout = new GridLayout();

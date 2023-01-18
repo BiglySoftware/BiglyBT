@@ -1944,7 +1944,7 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
 
 					if ( tab_parent == null ){
 
-						tab_parent = new Group( current_composite, SWT.NULL);
+						tab_parent = Utils.createSkinnedGroup( current_composite, SWT.NULL);
 
 						Messages.setLanguageText(tab_parent, tg_resource );
 

@@ -139,7 +139,7 @@ public class AboutWindow {
 			}
 		});
 
-    Group gInternet = new Group(window, SWT.NULL);
+    Group gInternet = Utils.createSkinnedGroup(window, SWT.NULL);
     GridLayout gridLayout = new GridLayout();
     gridLayout.numColumns = 2;
     gridLayout.makeColumnsEqualWidth = true;
@@ -148,7 +148,7 @@ public class AboutWindow {
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
 		gInternet.setLayoutData(gridData);
 
-    Group gSys = new Group(window, SWT.NULL);
+    Group gSys = Utils.createSkinnedGroup(window, SWT.NULL);
     gSys.setLayout(new GridLayout());
     Messages.setLanguageText(gSys, "MainWindow.about.section.system"); //$NON-NLS-1$
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);

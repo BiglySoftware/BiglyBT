@@ -274,7 +274,7 @@ public class TableColumnSetupWindow
 			}
 		});
 
-		cPickArea = new Group(shell, SWT.NONE);
+		cPickArea = Utils.createSkinnedGroup(shell, SWT.NONE);
 		cPickArea.setLayout(new FormLayout());
 
 
@@ -284,7 +284,7 @@ public class TableColumnSetupWindow
 		final Composite cFilterArea = new Composite(expandFilters, SWT.NONE);
 		cFilterArea.setLayout(new FormLayout());
 
-		Group cResultArea = new Group(shell, SWT.NONE);
+		Group cResultArea = Utils.createSkinnedGroup(shell, SWT.NONE);
 		Messages.setLanguageText(cResultArea, "ColumnSetup.chosencolumns");
 		cResultArea.setLayout(new FormLayout());
 

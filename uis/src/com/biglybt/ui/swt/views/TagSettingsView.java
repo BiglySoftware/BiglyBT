@@ -616,7 +616,7 @@ public class TagSettingsView
 
 			if (tagsAreTagFeatureRateLimit) {
 				
-				Group gTransfer = new Group(cMainComposite, SWT.NONE);
+				Group gTransfer = Utils.createSkinnedGroup(cMainComposite, SWT.NONE);
 				gTransfer.setText( MessageText.getString("label.transfer.settings"));
 				final int gTransferCols = 8;
 				gridLayout = new GridLayout(gTransferCols, false);
@@ -1178,7 +1178,7 @@ public class TagSettingsView
 						fl.supportsTagMoveOnRemove() ||
 						fl.supportsTagMoveOnAssign()) {
 
-					Group gFiles = new Group(cMainComposite, SWT.NONE);
+					Group gFiles = Utils.createSkinnedGroup(cMainComposite, SWT.NONE);
 					gFiles.setText(MessageText.getString( "label.file.settings"));
 					// label, button, value, cb*2, cb*2 = 8
 					gridLayout = new GridLayout(8, false);
@@ -1590,7 +1590,7 @@ public class TagSettingsView
 				final TagProperty propConstraint = tfp.getProperty(
 						TagFeatureProperties.PR_CONSTRAINT);
 				if (propConstraint != null) {
-					Group gConstraint = new Group(cMainComposite, SWT.NONE);
+					Group gConstraint = Utils.createSkinnedGroup(cMainComposite, SWT.NONE);
 					Messages.setLanguageText(gConstraint, "tag.property.constraint");
 					gridLayout = new GridLayout();
 					gConstraint.setLayout(gridLayout);
@@ -1788,7 +1788,7 @@ public class TagSettingsView
 
 					/////////////////////////////// limits
 
-					Group gLimits = new Group(cMainComposite, SWT.NONE);
+					Group gLimits = Utils.createSkinnedGroup(cMainComposite, SWT.NONE);
 					gLimits.setText(MessageText.getString("label.limit.settings"));
 					gridLayout = new GridLayout(6, false);
 					gLimits.setLayout(gridLayout);
@@ -1884,7 +1884,7 @@ public class TagSettingsView
 
 					// notifications
 
-				Group gNotifications = new Group(cMainComposite, SWT.NONE);
+				Group gNotifications = Utils.createSkinnedGroup(cMainComposite, SWT.NONE);
 				gNotifications.setText(MessageText.getString("v3.MainWindow.tab.events"));
 				gridLayout = new GridLayout(6, false);
 				gNotifications.setLayout(gridLayout);

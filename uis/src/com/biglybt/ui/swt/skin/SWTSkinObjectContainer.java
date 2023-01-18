@@ -107,7 +107,7 @@ public class SWTSkinObjectContainer
 		if (skin.DEBUGLAYOUT) {
 			System.out.println("linkIDtoParent: Create Composite " + sID + " on "
 					+ createOn);
-			parentComposite = new Group(createOn, style);
+			parentComposite = Utils.createSkinnedGroup(createOn, style);
 			((Group) parentComposite).setText(sConfigID == null ? sID : sConfigID);
 			parentComposite.setData("DEBUG", "1");
 		} else {
@@ -118,7 +118,7 @@ public class SWTSkinObjectContainer
   			parentComposite = new CompositeMinSize(createOn, style);
   			((CompositeMinSize) parentComposite).setMinSize(new Point(minWidth, minHeight));
 			} else {
-  			parentComposite = new Group(createOn, style);
+  			parentComposite = Utils.createSkinnedGroup(createOn, style);
 			}
 		}
 

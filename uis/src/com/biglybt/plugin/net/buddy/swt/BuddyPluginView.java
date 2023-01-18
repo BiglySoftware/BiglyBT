@@ -2267,7 +2267,7 @@ BuddyPluginView
 
 					// middle
 
-				middle = new Group( composite, SWT.NULL );
+				middle = Utils.createSkinnedGroup( composite, SWT.NULL );
 				layout = new GridLayout();
 				layout.numColumns = 1;
 				middle.setLayout(layout);

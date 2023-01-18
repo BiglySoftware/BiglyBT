@@ -115,7 +115,7 @@ public class ViewQuickConfig
 	addTemporaryRates(
 		Composite	composite )
 	{
-		Group temp_rates = new Group( composite, SWT.NULL );
+		Group temp_rates = Utils.createSkinnedGroup( composite, SWT.NULL );
 		Messages.setLanguageText( temp_rates, "label.temporary.rates" );
 
 		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -302,7 +302,7 @@ public class ViewQuickConfig
 	addTemporaryData(
 		Composite	composite )
 	{
-		Group temp_rates = new Group( composite, SWT.NULL );
+		Group temp_rates = Utils.createSkinnedGroup( composite, SWT.NULL );
 		Messages.setLanguageText( temp_rates, "label.temporary.data" );
 
 		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);

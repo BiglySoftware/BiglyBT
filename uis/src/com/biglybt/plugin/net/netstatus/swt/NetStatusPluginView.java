@@ -214,7 +214,7 @@ NetStatusPluginView
 
 		 	Utils.makeButtonsEqualWidth( buttons );
 
-			Group options = new Group(control, SWT.NONE);
+			Group options = Utils.createSkinnedGroup(control, SWT.NONE);
 			layout = new GridLayout();
 			layout.numColumns 	 	= 4;
 			layout.marginHeight 	= 4;

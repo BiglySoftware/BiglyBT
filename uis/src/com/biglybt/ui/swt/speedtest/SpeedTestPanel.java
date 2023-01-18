@@ -106,7 +106,7 @@ SpeedTestPanel
         /////////////////////////////////////////
         //Add group to link to Azureus Wiki page.
         /////////////////////////////////////////
-        Group azWiki = new Group(panel, SWT.WRAP);
+        Group azWiki = Utils.createSkinnedGroup(panel, SWT.WRAP);
         GridData azwGridData = new GridData();
         azwGridData.widthHint = 350;
         azwGridData.horizontalSpan = 4;
