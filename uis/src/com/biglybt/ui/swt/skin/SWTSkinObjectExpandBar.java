@@ -70,7 +70,12 @@ public class SWTSkinObjectExpandBar
 		expandBar.setSpacing(1);
 		// This fixes the bandHeight which is only auto calculated if Font on ExpandBar is set
 		if (!Utils.isGTK3) {
-			expandBar.setFont(createOn.getFont());
+			// note, setting this on Windows results in a completely different look and feel to the bars as
+			// it marks the control as "not themed" (compare to expand bar in column-setup window)
+			// not sure the bandHeight bug still exists
+			if ( !Utils.isDarkAppearanceNativeWindows()){
+				expandBar.setFont(createOn.getFont());
+			}
 		} else {
 			FontData[] fontData = createOn.getFont().getFontData();
 			for (FontData fd : fontData) {
