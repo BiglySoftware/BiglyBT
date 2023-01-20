@@ -206,7 +206,7 @@ public class BarViewParent
 			
 			if ( is_vertical ){
 				
-				gc.drawLine( 0, 0, 0, lineControl.getSize().y ); 
+				gc.drawLine( 2, 0, 2, lineControl.getSize().y ); 
 				
 				if ( dark ){
 					gc.drawLine( 1, 0, 1, lineControl.getSize().y );
