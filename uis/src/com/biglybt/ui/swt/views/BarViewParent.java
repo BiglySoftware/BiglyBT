@@ -18,13 +18,21 @@
 
 package com.biglybt.ui.swt.views;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -32,6 +40,7 @@ import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pifimpl.*;
 import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.SWTViewListener;
 import com.biglybt.ui.swt.skin.SWTSkin;
@@ -150,6 +159,8 @@ public class BarViewParent
 
 		return super.skinObjectDestroyed(skinObject, params);
 	}
+		
+	Point dragPosition;
 	
 	protected void
 	buildViews()
@@ -159,54 +170,88 @@ public class BarViewParent
 		SWTSkinObject pluginObject = skin.getSkinObject( so_area_plugins );
 				
 		cPluginsArea = (Composite)pluginObject.getControl();
-					
+			
+		Control rbControl = rbObject.getControl();
+
 		Listener l = new Listener() {
 			private int mouseDownAt = -1;
 
+			boolean hooked;
+			
 			@Override
 			public void handleEvent(Event event) {
 				Control c = rbObject.getControl();
-				if (event.type == SWT.MouseDown){
-					Rectangle bounds = c.getBounds();
-					if ( is_vertical ){
-						if (event.x <= 10) {
-							mouseDownAt = event.x;
+
+				try{
+					if (event.type == SWT.MouseDown){
+						Rectangle bounds = c.getBounds();
+						if ( is_vertical ){
+							if (event.x <= 10) {
+								mouseDownAt = event.x;
+							}
+						}else{
+							if (event.y >= ( bounds.height - 10 )) {
+								mouseDownAt = event.y;
+							}
 						}
-					}else{
-						if (event.y >= ( bounds.height - 10 )) {
-							mouseDownAt = event.y;
+					} else if (event.type == SWT.MouseUp && mouseDownAt >= 0) {
+						if ( is_vertical ){
+							int diff = mouseDownAt - event.x ;
+							mouseDownAt = -1;
+							FormData formData = (FormData) c.getLayoutData();
+							formData.width += diff;
+							if (formData.width < 50) {
+								formData.width = 50;
+							}
+							COConfigurationManager.setParameter(line_config_id, formData.width);
+						}else{
+							int diff = mouseDownAt - event.y ;
+							mouseDownAt = -1;
+							FormData formData = (FormData) c.getLayoutData();
+							formData.height -= diff;
+							if (formData.height < 50) {
+								formData.height = 50;
+							}
+							COConfigurationManager.setParameter(line_config_id, formData.height);
 						}
-					}
-				} else if (event.type == SWT.MouseUp && mouseDownAt >= 0) {
-					if ( is_vertical ){
-						int diff = mouseDownAt - event.x ;
+						Utils.relayout(c);
+					} else if (event.type == SWT.MouseMove) {
+						c.setCursor(c.getDisplay().getSystemCursor(is_vertical?SWT.CURSOR_SIZEWE:SWT.CURSOR_SIZENS));
+					} else if (event.type == SWT.MouseExit) {
+						c.setCursor(null);
 						mouseDownAt = -1;
-						FormData formData = (FormData) c.getLayoutData();
-						formData.width += diff;
-						if (formData.width < 50) {
-							formData.width = 50;
-						}
-						COConfigurationManager.setParameter(line_config_id, formData.width);
-					}else{
-						int diff = mouseDownAt - event.y ;
-						mouseDownAt = -1;
-						FormData formData = (FormData) c.getLayoutData();
-						formData.height -= diff;
-						if (formData.height < 50) {
-							formData.height = 50;
-						}
-						COConfigurationManager.setParameter(line_config_id, formData.height);
 					}
-					Utils.relayout(c);
-				} else if (event.type == SWT.MouseMove) {
-					c.setCursor(c.getDisplay().getSystemCursor(is_vertical?SWT.CURSOR_SIZEWE:SWT.CURSOR_SIZENS));
-				} else if (event.type == SWT.MouseExit) {
-					c.setCursor(null);
+				}finally{
+					
+					if ( mouseDownAt != -1 ){
+															
+						dragPosition = c.toDisplay(new Point( event.x, event.y ));
+
+					}else{
+						
+						dragPosition = null;
+					}
+					
+					if ( mouseDownAt == -1 && hooked ){
+						
+						hookControls( rbControl, false );
+						
+						hooked = false;
+						
+					}else if ( mouseDownAt != -1 && !hooked ){
+						
+						hookControls( rbControl, true );
+						
+						hooked = true;
+					}
+					
+					if ( hooked ){
+						
+						updateHookedControls();
+					}
 				}
 			}
 		};
-
-		Control rbControl = rbObject.getControl();
 		
 		rbControl.addListener(SWT.MouseDown, l);
 		rbControl.addListener(SWT.MouseUp, l);
@@ -236,6 +281,199 @@ public class BarViewParent
 		createBarPluginViews();
 
 		rbControl.getParent().layout(true);
+	}
+	
+	List<Control>				hookedControls 		= new ArrayList<>();
+	Map<Control,List<Integer>>	modifiedControls	= new HashMap<>();
+	
+	Point paintDragPosition = null;
+	
+	PaintListener dragPainter = 
+		new PaintListener()
+		{
+		
+			@Override
+			public void 
+			paintControl(
+				PaintEvent e )
+			{
+				Control c = (Control)e.widget;
+				
+				Point controlPosition = c.toControl( paintDragPosition==null?dragPosition:paintDragPosition );
+					
+				paintDragPosition = null;
+				
+				int relPosition = Integer.MIN_VALUE;
+
+				if ( is_vertical ){
+					
+					if ( controlPosition.x >= 0 && controlPosition.x <=  c.getSize().x ){
+						
+						relPosition = controlPosition.x;
+					}
+				}else{
+					if ( controlPosition.y >= 0 && controlPosition.y <=  c.getSize().y ){
+						
+						relPosition = controlPosition.y;
+					}
+				}
+				
+				if ( relPosition != Integer.MIN_VALUE ){
+					
+					GC gc = e.gc;
+					
+					Color old = gc.getForeground();
+					
+					gc.setForeground( Colors.grey );
+										
+					if ( is_vertical ){
+						
+						gc.drawLine( relPosition, 0, relPosition, c.getBounds().height );
+						
+					}else{
+						
+						gc.drawLine( 0, relPosition, c.getBounds().width, relPosition );
+					}
+					
+					gc.setForeground( old );
+
+					List<Integer> list = modifiedControls.get(c);
+					
+					if ( list == null ){
+						
+						list = new ArrayList<>();
+						
+						modifiedControls.put( c, list );
+					}
+					
+					list.add( relPosition );
+				}
+			}
+		};
+		
+	boolean update_outstanding = false;
+		
+	private void
+	updateHookedControls()
+	{
+		if ( dragPosition == null || update_outstanding ){
+			
+			return;
+		}
+		
+		update_outstanding = true;
+		
+		Utils.execSWTThreadLater(0, ()->{
+		
+			update_outstanding = false;
+			
+			paintDragPosition = dragPosition;
+					
+			for ( Control c: hookedControls ){
+				
+				if ( c.isDisposed()){
+					
+					continue;
+				}
+				
+				List<Integer> list = modifiedControls.remove(c);
+				
+				Point controlPosition = c.toControl( dragPosition );
+				
+				int relPosition = Integer.MIN_VALUE;
+				
+				if ( is_vertical ){
+					
+					if ( controlPosition.x >= 0 && controlPosition.x <=  c.getSize().x ){
+												
+						relPosition = controlPosition.x;	
+					}
+				}else{
+				
+					if ( controlPosition.y >= 0 && controlPosition.y <=  c.getSize().y ){
+												
+						relPosition = controlPosition.y;
+					}
+				}
+				
+				if ( relPosition != Integer.MIN_VALUE ){
+					
+					if ( list == null ){
+						
+						list = new ArrayList<>();
+					}
+					
+					list.add( 0, relPosition );
+				}
+				
+				if ( list != null ){
+					
+					for ( int pos: list ){
+
+						if ( is_vertical ){
+						
+							c.redraw( pos, 0, pos, c.getBounds().height, false );
+							
+						}else{
+							
+							c.redraw(0, pos, c.getBounds().width, pos, false );
+						}
+					}
+				}
+			}
+			
+			modifiedControls.clear();
+		});
+	}
+	
+	private void
+	hookControls(
+		Control	control,
+		boolean do_it )
+	{
+		if ( do_it ){
+			
+			LinkedList<Control[]> controls = new LinkedList<>();
+			
+			controls.add( new Control[]{ control.getShell() }); 
+	
+			while ( !controls.isEmpty()){
+	
+				Control[] kids = controls.removeFirst();
+	
+				for ( Control c: kids ){
+					
+					if ( c instanceof Composite){
+					
+						controls.add(((Composite)c).getChildren());
+					}
+	
+					if ( c.isVisible() && !( c instanceof Shell )){
+						
+						c.addPaintListener( dragPainter );
+						
+						hookedControls.add( c );
+						
+						c.redraw();
+					}
+				}
+			}
+		}else{
+			
+			for ( Control c: hookedControls ){
+				
+				if ( !c.isDisposed()){
+				
+					c.removePaintListener(dragPainter);
+				
+					c.redraw();
+				}
+			}
+			
+			hookedControls.clear();
+			
+			modifiedControls.clear();
+		}
 	}
 	
 	private void 
