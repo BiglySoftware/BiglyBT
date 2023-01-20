@@ -31,6 +31,7 @@ public class TopBarView
 				UISWTInstance.VIEW_TOPBAR,
 				"topbar-area-plugins",
 				"topbar-area-plugin",
+				"topbar-line",
 				"v3.topbar.height", 
 				false );
 	}

@@ -39,6 +39,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pifimpl.*;
@@ -47,6 +48,7 @@ import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
 import com.biglybt.ui.swt.skin.SWTSkinUtils;
+import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.views.skin.SkinView;
 
 
@@ -57,6 +59,7 @@ public class BarViewParent
 	private final String view_area;
 	private final String so_area_plugins;
 	private final String so_area_plugin;
+	private final String so_line;
 	private final String line_config_id;
 	private final boolean	is_vertical;
 	
@@ -74,6 +77,7 @@ public class BarViewParent
 		String		_view_area,
 		String		_so_area_plugins,
 		String		_so_area_plugin,
+		String		_so_line,
 		String		_line_config_id,
 		boolean		_is_vertical )
 	{
@@ -81,6 +85,7 @@ public class BarViewParent
 		view_area		= _view_area;
 		so_area_plugins = _so_area_plugins;
 		so_area_plugin	= _so_area_plugin;
+		so_line			= _so_line;
 		line_config_id	= _line_config_id;
 		is_vertical		= _is_vertical;
 	}
@@ -173,6 +178,50 @@ public class BarViewParent
 			
 		Control rbControl = rbObject.getControl();
 
+		SWTSkinObject lineObject = skin.getSkinObject( so_line );
+		
+		Control lineControl = lineObject.getControl();
+		
+		lineControl.addPaintListener((ev)->{
+					
+			GC gc = ev.gc;
+			
+			Color fg = Colors.getSystemColor( lineControl.getDisplay(), SWT.COLOR_WIDGET_NORMAL_SHADOW );
+			
+			boolean dark = Utils.isDarkAppearanceNative();
+			
+			if ( dark ){
+				
+				if ( Constants.isWindows ){
+					
+					fg = Colors.getSystemColor( lineControl.getDisplay(), SWT.COLOR_WIDGET_LIGHT_SHADOW );
+					
+				}else if ( Constants.isLinux ){
+					
+					fg = ColorCache.getColor( lineControl.getDisplay(), 96, 96, 96 );
+				}
+			}
+			
+			gc.setForeground( fg );
+			
+			if ( is_vertical ){
+				
+				gc.drawLine( 0, 0, 0, lineControl.getSize().y ); 
+				
+				if ( dark ){
+					gc.drawLine( 1, 0, 1, lineControl.getSize().y );
+				}
+				
+			}else{
+
+				if ( dark ){
+					gc.drawLine( 0, 1, lineControl.getSize().x, 1 );
+				}
+				
+				gc.drawLine( 0, 2, lineControl.getSize().x, 2 ); 
+			}
+		});
+		
 		Listener l = new Listener() {
 			private int mouseDownAt = -1;
 
@@ -180,25 +229,19 @@ public class BarViewParent
 			
 			@Override
 			public void handleEvent(Event event) {
-				Control c = rbObject.getControl();
 
 				try{
 					if (event.type == SWT.MouseDown){
-						Rectangle bounds = c.getBounds();
-						if ( is_vertical ){
-							if (event.x <= 10) {
-								mouseDownAt = event.x;
-							}
+						if ( is_vertical ){					
+							mouseDownAt = event.x;						
 						}else{
-							if (event.y >= ( bounds.height - 10 )) {
-								mouseDownAt = event.y;
-							}
+							mouseDownAt = event.y;
 						}
 					} else if (event.type == SWT.MouseUp && mouseDownAt >= 0) {
 						if ( is_vertical ){
 							int diff = mouseDownAt - event.x ;
 							mouseDownAt = -1;
-							FormData formData = (FormData) c.getLayoutData();
+							FormData formData = (FormData) rbControl.getLayoutData();
 							formData.width += diff;
 							if (formData.width < 50) {
 								formData.width = 50;
@@ -207,25 +250,25 @@ public class BarViewParent
 						}else{
 							int diff = mouseDownAt - event.y ;
 							mouseDownAt = -1;
-							FormData formData = (FormData) c.getLayoutData();
+							FormData formData = (FormData) rbControl.getLayoutData();
 							formData.height -= diff;
 							if (formData.height < 50) {
 								formData.height = 50;
 							}
 							COConfigurationManager.setParameter(line_config_id, formData.height);
 						}
-						Utils.relayout(c);
+						Utils.relayout(rbControl);
 					} else if (event.type == SWT.MouseMove) {
-						c.setCursor(c.getDisplay().getSystemCursor(is_vertical?SWT.CURSOR_SIZEWE:SWT.CURSOR_SIZENS));
+						lineControl.setCursor(lineControl.getDisplay().getSystemCursor(is_vertical?SWT.CURSOR_SIZEWE:SWT.CURSOR_SIZENS));
 					} else if (event.type == SWT.MouseExit) {
-						c.setCursor(null);
+						lineControl.setCursor(null);
 						mouseDownAt = -1;
 					}
 				}finally{
 					
 					if ( mouseDownAt != -1 ){
 															
-						dragPosition = c.toDisplay(new Point( event.x, event.y ));
+						dragPosition = lineControl.toDisplay(new Point( event.x, event.y ));
 
 					}else{
 						
@@ -253,10 +296,10 @@ public class BarViewParent
 			}
 		};
 		
-		rbControl.addListener(SWT.MouseDown, l);
-		rbControl.addListener(SWT.MouseUp, l);
-		rbControl.addListener(SWT.MouseMove, l);
-		rbControl.addListener(SWT.MouseExit, l);
+		lineControl.addListener(SWT.MouseDown, l);
+		lineControl.addListener(SWT.MouseUp, l);
+		lineControl.addListener(SWT.MouseMove, l);
+		lineControl.addListener(SWT.MouseExit, l);
 
 		rbObject.addListener(new SWTSkinObjectListener() {
 			@Override

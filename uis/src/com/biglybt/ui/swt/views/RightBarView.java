@@ -31,6 +31,7 @@ public class RightBarView
 				UISWTInstance.VIEW_RIGHTBAR_AREA,
 				"rightbar-area-plugins",
 				"rightbar-area-plugin",
+				"rightbar-line",
 				"v3.rightbar.width",
 				true );
 	}
