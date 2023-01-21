@@ -930,9 +930,11 @@ MagnetPluginMDDownloader
 			boolean do_log		= tick_count % PEER_LOG_TICKS == 0;
 			boolean check_dead 	= tick_count % PEER_CHECK_TICKS == 0;
 			
-			if ( do_log || check_dead ){
+			PeerManager pm = download.getPeerManager();
+			
+			if ( pm != null && ( do_log || check_dead )){
 		
-				Peer[] peers = download.getPeerManager().getPeers();
+				Peer[] peers = pm.getPeers();
 
 				int	connecting 	= 0;
 				int connected	= 0;
