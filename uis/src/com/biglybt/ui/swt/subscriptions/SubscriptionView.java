@@ -18,6 +18,14 @@
 
 package com.biglybt.ui.swt.subscriptions;
 
+import com.biglybt.core.subs.Subscription;
+import com.biglybt.core.subs.SubscriptionListener;
+import com.biglybt.core.util.Debug;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
+import com.biglybt.ui.swt.pif.UISWTView;
+import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.skin.UISWTViewSkinAdapter;
 
@@ -27,6 +35,8 @@ SubscriptionView
 	extends UISWTViewSkinAdapter
 	implements SubscriptionsViewBase, UISWTViewCoreEventListener
 {
+	private static final Object	SUBS_KEY = new Object();
+	
 	public
 	SubscriptionView()
 	{
@@ -36,6 +46,96 @@ SubscriptionView
 				"subscriptionresultsview" );
 	}
 
+	@Override
+	public boolean
+	eventOccurred(
+		UISWTViewEvent event )
+	{
+		try{
+			UISWTView 	view = event.getView();
+	
+			if ( view instanceof UISWTViewCore ){
+				
+				UISWTViewCore viewCore = (UISWTViewCore)view;
+				
+				switch (event.getType()) {
+					case UISWTViewEvent.TYPE_PRE_CREATE:{
+		
+						Subscription subs = (Subscription)view.getDataSource();
+						
+						int[] last_unread = { -1 };
+						
+						ViewTitleInfo titleInfo = 
+							new ViewTitleInfo(){
+								
+								@Override
+								public Object 
+								getTitleInfoProperty(
+									int propertyID )
+								{
+									if ( propertyID == ViewTitleInfo.TITLE_INDICATOR_TEXT ){
+										
+										int unread = last_unread[0] = subs.getHistory().getNumUnread();
+										
+										return( String.valueOf( unread ));
+									}
+									
+									return( null );
+								}
+							};
+						
+						SubscriptionListener listener = 
+							new SubscriptionListener(){
+								
+								@Override
+								public void 
+								subscriptionDownloaded(
+									Subscription subs)
+								{
+								}
+								
+								@Override
+								public void 
+								subscriptionChanged(
+									Subscription	subs, 
+									int				reason)
+								{
+									if ( subs.getHistory().getNumUnread() != last_unread[0] ){
+										
+										ViewTitleInfoManager.refreshTitleInfo(titleInfo);
+									}
+								}
+							};
+							
+						subs.addListener( listener );
+						
+						viewCore.setViewTitleInfo( titleInfo );
+
+						viewCore.setUserData( SUBS_KEY, new Object[]{ subs, listener });
+						
+						break;
+					}
+					case UISWTViewEvent.TYPE_DESTROY:{
+						
+						Object[] entry = (Object[])viewCore.getUserData( SUBS_KEY );
+						
+						if ( entry != null ){
+							
+							((Subscription)entry[0]).removeListener((SubscriptionListener)entry[1] );
+						}
+						
+						break;
+					}
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+		return( super.eventOccurred(event));
+	}
+	
 	@Override
 	public void
 	refreshView()

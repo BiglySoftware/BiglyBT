@@ -46,6 +46,7 @@ import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.common.updater.UIUpdater;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
@@ -128,6 +129,8 @@ public class UISWTViewImpl
 	private final Set<UIPluginViewToolBarListener> setToolBarEnablers = new HashSet<>();
 	private UISWTViewBuilderCore eventListenerBuilder;
 
+	private ViewTitleInfo	viewTitleInfo;
+	
 	public UISWTViewImpl(String id) {
 		this.id = id;
 	}
@@ -143,6 +146,9 @@ public class UISWTViewImpl
 		}
 		this.initialDatasource = builder.getInitialDataSource();
 		this.datasource = initialDatasource;
+		
+		eventListener.eventOccurred(new UISWTViewEventImpl(this, UISWTViewEvent.TYPE_PRE_CREATE, null));
+		
 		setEventListener(eventListener, builder, doCreate);
 	}
 
@@ -211,6 +217,31 @@ public class UISWTViewImpl
 		return eventListenerBuilder;
 	}
 
+	@Override
+	public void 
+	setViewTitleInfo(
+		ViewTitleInfo info)
+	{
+		viewTitleInfo = info;
+	}
+	
+	@Override
+	public ViewTitleInfo 
+	getViewTitleInfo()
+	{
+		if ( viewTitleInfo != null ){
+			
+			return( viewTitleInfo );
+		}
+		
+		if ( eventListener instanceof ViewTitleInfo ){
+			
+			return((ViewTitleInfo)eventListener);
+		}
+		
+		return( null );
+	}
+	
 	/* (non-Javadoc)
 	 * @see com.biglybt.ui.swt.pif.UISWTView#getInitialDataSource()
 	 */

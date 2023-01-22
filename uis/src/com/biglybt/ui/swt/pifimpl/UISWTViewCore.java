@@ -20,6 +20,7 @@ package com.biglybt.ui.swt.pifimpl;
 
 import org.eclipse.swt.widgets.Composite;
 
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
@@ -91,6 +92,13 @@ public interface UISWTViewCore
 
 	UISWTViewBuilderCore getEventListenerBuilder();
 
+	public ViewTitleInfo
+	getViewTitleInfo();
+	
+	public void
+	setViewTitleInfo(
+		ViewTitleInfo		info );
+	
 	public void
 	setUserData(
 		Object		key,

@@ -172,6 +172,14 @@ public interface UISWTViewEvent {
 	public static final int TYPE_OBFUSCATE = 9;
 
 	/**
+	 * Triggered when the view is initially instantiated. Required for the
+	 * rare occurrence when early initialisation is absolutely required.
+	 * Before you ask note that the TYPE_CREATE event can be delayed...
+	 */
+	
+	public static final int TYPE_PRE_CREATE = 10;
+
+	/**
 	 * Get the type.
 	 *
 	 * @return The TYPE_* constant for this event

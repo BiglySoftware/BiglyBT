@@ -60,6 +60,7 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.PopOutManager;
@@ -1235,9 +1236,12 @@ public class SB_Dashboard
 		refreshTabFolder(
 			DashboardItem	di )
 		{
-			TabFolderRenderer renderer = (TabFolderRenderer)di.getTabbedEntryItem().getParent().getRenderer();
-			
-			renderer.redraw( di );
+			Utils.execSWTThread(()->{
+				
+				TabFolderRenderer renderer = (TabFolderRenderer)di.getTabbedEntryItem().getParent().getRenderer();
+				
+				renderer.redraw( di );
+			});
 		}
 		
 		private void
@@ -2795,13 +2799,11 @@ public class SB_Dashboard
 						
 						UISWTView view = (UISWTView)c.getData( "UISWTView" );
 						
-						if ( view != null ){
-						
-							UISWTViewEventListener listener = view.getEventListener();
-							
-							if ( listener instanceof ViewTitleInfo ){
+						if ( view instanceof UISWTViewCore ){
 								
-								title_info = (ViewTitleInfo)listener;
+							title_info = ((UISWTViewCore)view).getViewTitleInfo();
+							
+							if ( title_info != null ){
 								
 								break;
 							}
