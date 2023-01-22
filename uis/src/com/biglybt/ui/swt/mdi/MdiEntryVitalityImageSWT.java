@@ -34,6 +34,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.Utils;
 
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.widgets.TabFolderRenderer;
 
 /**
  * @author TuxPaper
@@ -41,7 +42,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
  *
  */
 public class MdiEntryVitalityImageSWT
-	implements MdiEntryVitalityImage
+	implements MdiEntryVitalityImage, TabFolderRenderer.TabbedEntryVitalityImage
 {
 	private String imageID;
 

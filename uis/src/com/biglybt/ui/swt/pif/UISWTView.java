@@ -115,6 +115,8 @@ public interface UISWTView extends UIPluginView {
 	 */
 	public void triggerEvent(int eventType, Object data);
 
+	public UISWTViewEventListener getEventListener();
+	
 	/**
 	 * Override the default title with a new one.
 	 *

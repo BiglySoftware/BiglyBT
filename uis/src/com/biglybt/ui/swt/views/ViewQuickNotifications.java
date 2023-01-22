@@ -18,6 +18,8 @@
 package com.biglybt.ui.swt.views;
 
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
@@ -44,7 +46,7 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 
 public class ViewQuickNotifications
-	implements UISWTViewCoreEventListener
+	implements UISWTViewCoreEventListener, ViewTitleInfo
 {
 	private UISWTView swtView;
 
@@ -53,6 +55,8 @@ public class ViewQuickNotifications
 	private Label				notification_text;
 	private BufferedLabel		more_text;
 
+	private volatile ActivitiesEntry	current_entry;
+	
 	public
 	ViewQuickNotifications()
 	{
@@ -156,6 +160,24 @@ public class ViewQuickNotifications
 		return( MessageText.getString( "label.quick.notifications" ));
 	}
 
+	public Object 
+	getTitleInfoProperty(
+		int property )
+	{
+		if ( property == ViewTitleInfo.TITLE_INDICATOR_TEXT ){
+			
+			if ( current_entry != null ){
+				
+				return( "1" );
+			}
+		}else if ( property == TITLE_INDICATOR_COLOR ){
+			
+			return( new int[]{ 132, 16, 58 });
+		}
+		
+		return( null );
+	}
+	
 	private Composite
 	getComposite()
 	{
@@ -173,6 +195,10 @@ public class ViewQuickNotifications
 
 		ActivitiesEntry entry = (ActivitiesEntry)temp[0];
 
+		current_entry = entry;
+		
+		boolean changed = false;
+		
 		String old_text = (String)notification_text.getData();
 
 		if ( entry == null ){
@@ -184,6 +210,8 @@ public class ViewQuickNotifications
 				notification_text.setData( "" );
 
 				notification_text.redraw();
+				
+				changed = true;
 			}
 
 			more_text.setText( "" );
@@ -197,6 +225,8 @@ public class ViewQuickNotifications
 				notification_text.setData(cur_text );
 
 				notification_text.redraw();
+				
+				changed = true;
 			}
 
 			String icon_id = entry.getIconID();
@@ -219,10 +249,17 @@ public class ViewQuickNotifications
 					notification_icon.setImage( image );
 
 					notification_icon.setData( icon_id );
+					
+					changed = true;
 				}
 			}else{
 
-				notification_icon.setImage( null );
+				if ( notification_icon.getImage() != null ){
+				
+					notification_icon.setImage( null );
+					
+					changed = true;
+				}
 			}
 
 			int	num = (Integer)temp[1];
@@ -238,6 +275,11 @@ public class ViewQuickNotifications
 						"popup.more.waiting",
 						new String[]{ String.valueOf( num-1 )} ));
 			}
+		}
+		
+		if ( changed ){
+		
+			ViewTitleInfoManager.refreshTitleInfo( this );
 		}
 	}
 

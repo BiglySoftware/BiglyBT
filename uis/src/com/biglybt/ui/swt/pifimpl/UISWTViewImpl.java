@@ -956,6 +956,7 @@ public class UISWTViewImpl
 				// without this some views get messed up layouts (chat view for example)
 
 				viewComposite.setData( Utils.RELAYOUT_UP_STOP_HERE, true );
+				viewComposite.setData( "UISWTView", view  );
 
 				soContents.addListener((skinObject, eventType, params) -> {
 					if ( eventType == SWTSkinObjectListener.EVENT_OBFUSCATE ){

@@ -23,6 +23,8 @@ import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabFolder2Adapter;
+import org.eclipse.swt.custom.CTabFolderEvent;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.dnd.Clipboard;
@@ -42,6 +44,8 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoListener;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.swt.Messages;
@@ -54,6 +58,7 @@ import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
@@ -61,11 +66,15 @@ import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
+import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.skin.SWTSkinUtils;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
+import com.biglybt.ui.swt.widgets.TabFolderRenderer;
+import com.biglybt.ui.swt.widgets.TabFolderRenderer.Adapter;
+import com.biglybt.ui.swt.widgets.TabFolderRenderer.TabbedEntry;
 import com.biglybt.util.MapUtils;
 
 import com.biglybt.pif.PluginInterface;
@@ -491,6 +500,21 @@ public class SB_Dashboard
 						first_time = false;
 					}
 				});
+		
+		ViewTitleInfoManager.addListener(
+			new ViewTitleInfoListener(){
+				
+				@Override
+				public void 
+				viewTitleInfoRefresh(
+					ViewTitleInfo titleInfo)
+				{
+					main_dashboard.refresh( titleInfo );
+					sidebar_dashboard.refresh( titleInfo );
+					rightbar_dashboard.refresh( titleInfo );
+					topbar_dashboard.refresh( titleInfo );
+				}
+			});
 	}
 
 	public void
@@ -714,7 +738,7 @@ public class SB_Dashboard
 	{
 		private final String	config_prefix;
 		
-		private List<DashboardItem>		items = new ArrayList<>();
+		private CopyOnWriteList<DashboardItem>		items = new CopyOnWriteList<>();
 		
 		private boolean	config_dirty;
 		
@@ -1002,18 +1026,28 @@ public class SB_Dashboard
 		}
 		
 		private void
+		refresh(
+			ViewTitleInfo		info )
+		{
+			for ( DashboardItem item: items ){
+				
+				item.refresh( info );
+			}
+		}
+		
+		private void
 		clear()
 		{
 			List<DashboardItem> copy;
 			
 			synchronized( items ){
 			
-				copy = new ArrayList<>( items );
+				copy = new ArrayList<>( items.getList());
 			}
 			
 			for ( DashboardItem item: copy ){
 					
-				item.remove();
+				item.remove( false );
 			}
 		}
 		
@@ -1134,6 +1168,86 @@ public class SB_Dashboard
 			int	folder_id )
 		{
 			return( COConfigurationManager.getIntParameter( config_prefix + ".tab.selection." + folder_id, 0 ));
+		}
+		
+		private void
+		setupTabFolder(
+			CTabFolder	tf )
+		{
+			tf.setUnselectedCloseVisible( false );
+			
+			tf.addCTabFolder2Listener(new CTabFolder2Adapter() {
+				
+				@Override
+				public void 
+				close(
+					CTabFolderEvent event)
+				{
+					DashboardItem di = (DashboardItem)event.item.getData( "sb:dashboarditem" );
+					
+					if ( di != null ){
+						
+						di.remove( true );
+					}
+				}
+			});
+			
+			TabFolderRenderer renderer = 
+				new TabFolderRenderer(
+					tf, 
+					new Adapter()
+					{
+						@Override
+						public TabbedEntry 
+						getTabbedEntryFromTabItem(
+							CTabItem item )
+						{
+							DashboardItem entry = (DashboardItem)item.getData("sb:tabbedentry" );
+							
+							if ( entry != null ){
+								
+								return( entry );
+							}
+							
+							for ( DashboardItem di: items ){
+								
+								if ( di.item == item ){
+									
+									item.setData( "sb:tabbedentry", di );
+									
+									return( di );
+								}
+							}
+							
+							return( null );
+						}
+					});
+		}
+		
+		private void
+		setupTabItem(
+			CTabItem	item )
+		{
+			item.setShowClose( true );
+		}
+		
+		private void
+		refreshTabFolder(
+			DashboardItem	di )
+		{
+			TabFolderRenderer renderer = (TabFolderRenderer)di.getTabbedEntryItem().getParent().getRenderer();
+			
+			renderer.redraw( di );
+		}
+		
+		private void
+		refreshTabFolder(
+			CTabFolder	tf,
+			int			index )
+		{
+			TabFolderRenderer renderer = (TabFolderRenderer)tf.getRenderer();
+			
+			renderer.redraw( index );
 		}
 		
 		private void
@@ -1729,6 +1843,9 @@ public class SB_Dashboard
 						
 						if ( comp != null ){
 							tf = new CTabFolder( comp, SWT.TOP );
+							
+							setupTabFolder( tf );
+							
 							tf.setLayoutData( Utils.getFilledFormData());
 							
 							tf_id = next_tf_id[0]++;
@@ -1746,6 +1863,7 @@ public class SB_Dashboard
 							Composite 	tab_composite = null;
 							if ( tf != null ){
 								tab_item = new CTabItem(tf, SWT.NULL);
+								setupTabItem( tab_item );
 								tab_composite = new Composite( tf, SWT.NULL );
 								tab_composite.setLayout( new FormLayout());
 								tab_item.setControl( tab_composite );
@@ -1770,6 +1888,7 @@ public class SB_Dashboard
 						Composite 	tab_composite = null;
 						if ( tf != null ){
 							tab_item = new CTabItem(tf, SWT.NULL);
+							setupTabItem( tab_item );
 							tab_composite = new Composite( tf, SWT.NULL );
 							tab_composite.setLayout( new FormLayout());
 							tab_item.setControl( tab_composite );
@@ -1812,6 +1931,8 @@ public class SB_Dashboard
 							
 							tf.setSelection( sel );		
 							
+							refreshTabFolder( tf, sel );
+							
 							tf.addSelectionListener(
 								new SelectionAdapter(){
 									
@@ -1829,6 +1950,8 @@ public class SB_Dashboard
 											
 											c.setData( "sb:reload", null);
 										}
+										
+										refreshTabFolder( tf, sel );
 										
 										tabSelected( tf_id, tf.getSelectionIndex());
 									}
@@ -1912,6 +2035,9 @@ public class SB_Dashboard
 						
 						if ( comp != null ){
 							tf = new CTabFolder( comp, SWT.TOP | SWT.NO_BACKGROUND);
+							
+							setupTabFolder( tf );
+							
 							tf.setLayoutData( Utils.getFilledFormData());
 							
 							tf_id = next_tf_id[0]++;
@@ -1929,6 +2055,7 @@ public class SB_Dashboard
 							Composite 	tab_composite = null;
 							if ( tf != null ){
 								tab_item = new CTabItem(tf, SWT.NULL);
+								setupTabItem( tab_item );
 								tab_composite = new Composite( tf, SWT.NULL );
 								tab_composite.setLayout( new FormLayout());
 								tab_item.setControl( tab_composite );
@@ -1952,6 +2079,7 @@ public class SB_Dashboard
 						Composite 	tab_composite = null;
 						if ( tf != null ){
 							tab_item = new CTabItem(tf, SWT.NULL);
+							setupTabItem( tab_item );
 							tab_composite = new Composite( tf, SWT.NULL );
 							tab_composite.setLayout( new FormLayout());
 							tab_item.setControl( tab_composite );
@@ -1994,6 +2122,8 @@ public class SB_Dashboard
 							
 							tf.setSelection( sel );
 							
+							refreshTabFolder( tf, sel );
+							
 							tf.addSelectionListener(
 								new SelectionAdapter(){
 									
@@ -2011,6 +2141,8 @@ public class SB_Dashboard
 											
 											c.setData( "sb:reload", null );
 										}
+										
+										refreshTabFolder( tf, sel );
 										
 										tabSelected( tf_id, tf.getSelectionIndex());
 									}
@@ -2060,11 +2192,11 @@ public class SB_Dashboard
 		
 		private Composite
 		build(
-			CTabItem				parent_tab_item,
-			Composite				sf,
-			final DashboardItem		item,
-			boolean					use_tabs )
-		{
+			CTabItem			parent_tab_item,
+			Composite			sf,
+			DashboardItem		item,
+			boolean				use_tabs )
+		{			
 			Composite g = use_tabs?new Composite( sf, SWT.NULL ):Utils.createSkinnedGroup( sf, SWT.NULL );
 			
 			g.setLayoutData( Utils.getFilledFormData());
@@ -2072,6 +2204,11 @@ public class SB_Dashboard
 			g.setLayout( new GridLayout());
 
 			g.setData( Utils.RELAYOUT_UP_STOP_HERE, true );
+			
+			if ( parent_tab_item != null ){
+				
+				parent_tab_item.setData( "sb:dashboarditem", item );
+			}
 			
 			try {
 				if ( g instanceof Group ){
@@ -2113,6 +2250,8 @@ public class SB_Dashboard
 									c.setLayoutData( Utils.getFilledFormData());
 									
 									g.layout( true, true );
+									
+									item.setCurrentTab( parent_tab_item );
 								}
 							}else{
 								
@@ -2160,7 +2299,7 @@ public class SB_Dashboard
 					
 						@Override
 						public void widgetSelected(SelectionEvent arg0){
-							item.remove();
+							item.remove( false );
 						}
 					});
 				
@@ -2199,6 +2338,8 @@ public class SB_Dashboard
 				
 				c.setLayoutData( Utils.getFilledFormData());
 					
+				item.setCurrentTab( parent_tab_item );
+
 				c.addListener(
 					SWT.Show,
 					new Listener(){
@@ -2206,6 +2347,8 @@ public class SB_Dashboard
 						@Override
 						public void handleEvent(Event arg0){
 							g.layout( true, true );
+							
+							item.setCurrentTab( parent_tab_item );
 						}
 					});
 			}catch( Throwable e ) {
@@ -2219,7 +2362,7 @@ public class SB_Dashboard
 		private void
 		showConfig()
 		{
-			new DBConfigWindow( new ArrayList<DashboardItem>( items ));
+			new DBConfigWindow( new ArrayList<DashboardItem>( items.getList()));
 		}
 		
 		private class
@@ -2568,8 +2711,12 @@ public class SB_Dashboard
 		
 		public class
 		DashboardItem
+			implements TabFolderRenderer.TabbedEntry
 		{
 			private Map<String,Object>		map;
+			
+			private CTabItem		item;
+			private ViewTitleInfo	title_info;
 			
 			private
 			DashboardItem(
@@ -2622,7 +2769,99 @@ public class SB_Dashboard
 			}
 			
 			public void
-			remove()
+			setCurrentTab(
+				CTabItem		_item )
+			{
+				item	= _item;
+				
+				title_info = null;
+				
+				if ( item == null ){
+					
+					return;
+				}
+				
+				Control[] parent = new Control[]{ item.getControl()};
+				
+				LinkedList<Control[]> controls = new LinkedList<>();
+				
+				controls.add( parent );
+				
+				while( !controls.isEmpty()){
+				
+					Control[] cs = controls.removeFirst();
+					
+					for ( Control c: cs ){
+						
+						UISWTView view = (UISWTView)c.getData( "UISWTView" );
+						
+						if ( view != null ){
+						
+							UISWTViewEventListener listener = view.getEventListener();
+							
+							if ( listener instanceof ViewTitleInfo ){
+								
+								title_info = (ViewTitleInfo)listener;
+								
+								break;
+							}
+						}
+						
+						if ( c instanceof ViewTitleInfo ){
+							
+							title_info = (ViewTitleInfo)c;
+							
+							break;
+						}
+						
+						if ( c instanceof Composite ){
+							
+							controls.add(((Composite)c).getChildren());
+						}
+					}
+				}
+			}
+			
+			
+			private void
+			refresh(
+				ViewTitleInfo		info )
+			{
+				if ( info == title_info ){
+					
+					refreshTabFolder( this );
+				}
+			}
+			
+			@Override
+			public CTabItem 
+			getTabbedEntryItem()
+			{
+				return( item );
+			}
+			
+			public ViewTitleInfo 
+			getTabbedEntryViewTitleInfo()
+			{
+				return( title_info );
+			}
+			
+			public List<TabFolderRenderer.TabbedEntryVitalityImage> 
+			getTabbedEntryVitalityImages()
+			{
+				return( new ArrayList<>());
+			};
+			
+			@Override
+			public boolean 
+			isTabbedEntryActive()
+			{
+				return( true );
+			}
+			
+			public void
+			remove(
+				boolean already_disposed )
 			{
 				synchronized( items ) {
 					
@@ -2636,7 +2875,10 @@ public class SB_Dashboard
 					}			
 				}
 				
-				fireChanged();
+				if ( items.size() == 0 || !already_disposed ){
+				
+					fireChanged();
+				}
 			}
 		}		
 	}

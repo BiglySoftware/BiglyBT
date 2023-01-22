@@ -851,6 +851,10 @@ public class FilesView
 		long	total_dnd 			= 0;
 		long	total_done			= 0;
 
+		if ( tv == null ){
+			return;
+		}
+		
 		Object[] dataSources = tv.getSelectedDataSources(true);
 		List<SelectedContent> listSelected = new ArrayList<>(dataSources.length);
 		for (Object ds : dataSources) {

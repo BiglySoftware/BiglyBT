@@ -50,9 +50,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
@@ -70,7 +68,7 @@ import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
-import com.biglybt.ui.swt.views.skin.SkinnedDialog;
+import com.biglybt.ui.swt.widgets.TabFolderRenderer;
 import com.biglybt.util.DataSourceUtils;
 
 import com.biglybt.pif.PluginInterface;
@@ -90,8 +88,9 @@ public class TabbedMDI
 {
 	private static final String KEY_AUTO_CLOSE = "TabbedMDI:autoclose";
 	
-	private CTabFolder tabFolder;
-
+	private CTabFolder			tabFolder;
+	private TabFolderRenderer	tabFolderRenderer;
+	
 	private LinkedList<TabbedEntry>	select_history = new LinkedList<>();
 
 	protected boolean minimized;
@@ -219,6 +218,20 @@ public class TabbedMDI
 					| SWT.BORDER | SWT.CLOSE);
 		}
 
+		tabFolderRenderer = 
+			new TabFolderRenderer(
+				tabFolder, 
+				new TabFolderRenderer.Adapter(){
+					
+					@Override
+					public TabbedEntry 
+					getTabbedEntryFromTabItem(
+						CTabItem item)
+					{
+						return( getEntryFromTabItem(item));
+					}
+				});
+		
 		iFolderHeightAdj = tabFolder.computeSize(SWT.DEFAULT, 0).y;
 
 		if (isMainMDI) {
@@ -236,7 +249,7 @@ public class TabbedMDI
 			};
 			COConfigurationManager.addAndFireParameterListener("GUI_SWT_bFancyTab",
 					paramFancyTabListener);
-  		tabFolder.setSimple(!COConfigurationManager.getBooleanParameter("GUI_SWT_bFancyTab"));
+			tabFolder.setSimple(!COConfigurationManager.getBooleanParameter("GUI_SWT_bFancyTab"));
 		} else {
 			tabFolder.setSimple(true);
 			tabFolder.setMaximizeVisible(maximizeVisible);
@@ -648,10 +661,6 @@ public class TabbedMDI
 
 			}
 		});
-
-		if (SWT.getVersion() > 3600) {
-			TabbedMDI_Ren.setupTabFolderRenderer(this, tabFolder);
-		}
 
 		if (minimizeVisible) {
 			boolean toMinimize = ConfigurationManager.getInstance().getBooleanParameter(props_prefix + ".subViews.minimized");
@@ -1492,6 +1501,12 @@ public class TabbedMDI
 		});
 	}
 
+	public TabFolderRenderer
+	getRenderer()
+	{
+		return( tabFolderRenderer );
+	}
+	
 	@Override
 	public int getFolderHeight() {
 		return iFolderHeightAdj;
