@@ -195,10 +195,7 @@ public class TabFolderRenderer
 				return;
 			}
 
-			TabbedEntry entry = provider.getTabbedEntryFromTabItem(item);
-			if (entry == null) {
-				return;
-			}
+			TabbedEntry entry_maybe_null = provider.getTabbedEntryFromTabItem(item);
 
 			int x2 = bounds.x + bounds.width;
 			boolean showUnselectedClose = tabFolder.getUnselectedCloseVisible();
@@ -236,113 +233,115 @@ public class TabFolderRenderer
 				gc.setAdvanced(true);
 				gc.setAntialias(SWT.ON);
 
-				List<TabbedEntryVitalityImage> vitalityImages = entry.getTabbedEntryVitalityImages();
-				Collections.reverse(vitalityImages);
-				boolean first = true;
-				for (TabbedEntryVitalityImage vitalityImage :  vitalityImages) {
-					if (vitalityImage == null || !vitalityImage.isVisible()
-							|| vitalityImage.getAlignment() != SWT.RIGHT
-							|| vitalityImage.getShowOutsideOfEntry()) {
-						continue;
-					}
-
-
-					if (!selected  && vitalityImage.getShowOnlyOnSelection()) {
-						vitalityImage.setHitArea(null);
-						continue;
-					}
-
-					vitalityImage.switchSuffix(entry.isTabbedEntryActive() ? "-selected" : "");
-					Image image = vitalityImage.getImage();
-					if (image == null || image.isDisposed()) {
-						continue;
-					}
-
-					Rectangle imageBounds = image.getBounds();
-					int startX = x2 - imageBounds.width;
-					int startY = bounds.y + ((bounds.height - imageBounds.height) / 2)
-							+ 1;
-					if (first && !vitalityImage.getAlwaysLast()) {
-						//startX -= PADDING_INDICATOR_AND_CLOSE;
-						first = false;
-					}
-					gc.drawImage(image, startX, startY);
-					vitalityImage.setHitArea(new Rectangle(startX, startY,
-							imageBounds.width, imageBounds.height));
-
-					x2 = startX;
-					x2 -= PADDING_INDICATOR_X1;
-				}
-				
-				ViewTitleInfo viewTitleInfo = entry.getTabbedEntryViewTitleInfo();
-
-				if (viewTitleInfo != null) {
-
-					String textIndicator = (String) item.getData("textIndicator");
-					if (textIndicator != null) {
-
-						Point textSize = gc.textExtent("" + textIndicator, 0);
-						//Point minTextSize = gc.textExtent("99");
-						//if (textSize.x < minTextSize.x + 2) {
-						//	textSize.x = minTextSize.x + 2;
-						//}
-
-						int width = textSize.x + (PADDING_BUBBLE_X * 2)
-								+ PADDING_INDICATOR_X1;
-						int startX = x2 - width;
-						if (first) {
-							startX -= PADDING_INDICATOR_AND_CLOSE;
+				if ( entry_maybe_null != null ){
+					List<TabbedEntryVitalityImage> vitalityImages = entry_maybe_null.getTabbedEntryVitalityImages();
+					Collections.reverse(vitalityImages);
+					boolean first = true;
+					for (TabbedEntryVitalityImage vitalityImage :  vitalityImages) {
+						if (vitalityImage == null || !vitalityImage.isVisible()
+								|| vitalityImage.getAlignment() != SWT.RIGHT
+								|| vitalityImage.getShowOutsideOfEntry()) {
+							continue;
+						}
+	
+	
+						if (!selected  && vitalityImage.getShowOnlyOnSelection()) {
+							vitalityImage.setHitArea(null);
+							continue;
+						}
+	
+						vitalityImage.switchSuffix(entry_maybe_null.isTabbedEntryActive() ? "-selected" : "");
+						Image image = vitalityImage.getImage();
+						if (image == null || image.isDisposed()) {
+							continue;
+						}
+	
+						Rectangle imageBounds = image.getBounds();
+						int startX = x2 - imageBounds.width;
+						int startY = bounds.y + ((bounds.height - imageBounds.height) / 2)
+								+ 1;
+						if (first && !vitalityImage.getAlwaysLast()) {
+							//startX -= PADDING_INDICATOR_AND_CLOSE;
 							first = false;
 						}
-
-						int textOffsetY = 0;
-
-						int height = textSize.y + 1;
-						int startY = bounds.y + ((bounds.height - height) / 2) + 1;
-
-						Color default_color = ColorCache.getSchemedColor(gc.getDevice(),
-								"#5b6e87");
-
-						Object color = viewTitleInfo.getTitleInfoProperty(
-								ViewTitleInfo.TITLE_INDICATOR_COLOR);
-
-						if (color instanceof int[]) {
-
-							gc.setBackground(
-									ColorCache.getColor(gc.getDevice(), (int[]) color));
-
-						} else {
-
-							gc.setBackground(default_color);
-						}
-
-						Color text_color = Colors.white;
-
-						int bubbleStartX = startX + PADDING_INDICATOR_X1;
-						int bubbleStartY = startY;
-						int bubbleWidth = width - PADDING_INDICATOR_X1;
-
-						gc.fillRoundRectangle(bubbleStartX, bubbleStartY, bubbleWidth,
-								height, textSize.y * 2 / 3, height * 2 / 3);
-
-						if (color != null) {
-
-							text_color = Colors.getInstance().getReadableColor(
-									gc.getBackground());
-
-							gc.setBackground(default_color);
-
-							gc.drawRoundRectangle(bubbleStartX, bubbleStartY, bubbleWidth,
-									height, textSize.y * 2 / 3, height * 2 / 3);
-						}
-						gc.setForeground(text_color);
-
-						GCStringPrinter.printString(
-								gc, textIndicator, new Rectangle(bubbleStartX,
-										bubbleStartY + textOffsetY, bubbleWidth, height),
-								true, false, SWT.CENTER);
-
+						gc.drawImage(image, startX, startY);
+						vitalityImage.setHitArea(new Rectangle(startX, startY,
+								imageBounds.width, imageBounds.height));
+	
 						x2 = startX;
+						x2 -= PADDING_INDICATOR_X1;
+					}					
+				
+					ViewTitleInfo viewTitleInfo = entry_maybe_null.getTabbedEntryViewTitleInfo();
+	
+					if (viewTitleInfo != null) {
+	
+						String textIndicator = (String) item.getData("textIndicator");
+						if (textIndicator != null) {
+	
+							Point textSize = gc.textExtent("" + textIndicator, 0);
+							//Point minTextSize = gc.textExtent("99");
+							//if (textSize.x < minTextSize.x + 2) {
+							//	textSize.x = minTextSize.x + 2;
+							//}
+	
+							int width = textSize.x + (PADDING_BUBBLE_X * 2)
+									+ PADDING_INDICATOR_X1;
+							int startX = x2 - width;
+							if (first) {
+								startX -= PADDING_INDICATOR_AND_CLOSE;
+								first = false;
+							}
+	
+							int textOffsetY = 0;
+	
+							int height = textSize.y + 1;
+							int startY = bounds.y + ((bounds.height - height) / 2) + 1;
+	
+							Color default_color = ColorCache.getSchemedColor(gc.getDevice(),
+									"#5b6e87");
+	
+							Object color = viewTitleInfo.getTitleInfoProperty(
+									ViewTitleInfo.TITLE_INDICATOR_COLOR);
+	
+							if (color instanceof int[]) {
+	
+								gc.setBackground(
+										ColorCache.getColor(gc.getDevice(), (int[]) color));
+	
+							} else {
+	
+								gc.setBackground(default_color);
+							}
+	
+							Color text_color = Colors.white;
+	
+							int bubbleStartX = startX + PADDING_INDICATOR_X1;
+							int bubbleStartY = startY;
+							int bubbleWidth = width - PADDING_INDICATOR_X1;
+	
+							gc.fillRoundRectangle(bubbleStartX, bubbleStartY, bubbleWidth,
+									height, textSize.y * 2 / 3, height * 2 / 3);
+	
+							if (color != null) {
+	
+								text_color = Colors.getInstance().getReadableColor(
+										gc.getBackground());
+	
+								gc.setBackground(default_color);
+	
+								gc.drawRoundRectangle(bubbleStartX, bubbleStartY, bubbleWidth,
+										height, textSize.y * 2 / 3, height * 2 / 3);
+							}
+							gc.setForeground(text_color);
+	
+							GCStringPrinter.printString(
+									gc, textIndicator, new Rectangle(bubbleStartX,
+											bubbleStartY + textOffsetY, bubbleWidth, height),
+									true, false, SWT.CENTER);
+	
+							x2 = startX;
+						}
 					}
 				}
 

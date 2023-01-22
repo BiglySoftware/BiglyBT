@@ -1229,7 +1229,7 @@ public class SB_Dashboard
 		setupTabItem(
 			CTabItem	item )
 		{
-			item.setShowClose( true );
+			item.setShowClose( item.getData("sb:dashboarditem") != null );
 		}
 		
 		private void
@@ -1867,7 +1867,6 @@ public class SB_Dashboard
 							Composite 	tab_composite = null;
 							if ( tf != null ){
 								tab_item = new CTabItem(tf, SWT.NULL);
-								setupTabItem( tab_item );
 								tab_composite = new Composite( tf, SWT.NULL );
 								tab_composite.setLayout( new FormLayout());
 								tab_item.setControl( tab_composite );
@@ -1877,9 +1876,12 @@ public class SB_Dashboard
 							List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, x, current, width, split - current, next_tf_id );
 							
 							if ( items.isEmpty()){
-								tab_item.dispose();
+								if ( tab_item != null ){
+									tab_item.dispose();
+								}
 							}else{
 								if ( tab_item != null ){
+									setupTabItem( tab_item );
 									tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
 								}
 								result.addAll( items );
@@ -1892,7 +1894,6 @@ public class SB_Dashboard
 						Composite 	tab_composite = null;
 						if ( tf != null ){
 							tab_item = new CTabItem(tf, SWT.NULL);
-							setupTabItem( tab_item );
 							tab_composite = new Composite( tf, SWT.NULL );
 							tab_composite.setLayout( new FormLayout());
 							tab_item.setControl( tab_composite );
@@ -1902,9 +1903,12 @@ public class SB_Dashboard
 						List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, x, current, width, height-(current-y), next_tf_id );
 											
 						if ( items.isEmpty()){
-							tab_item.dispose();
+							if ( tab_item != null ){
+								tab_item.dispose();
+							}
 						}else{
 							if ( tab_item != null ){
+								setupTabItem( tab_item );
 								tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
 							}
 							result.addAll( items );
@@ -2059,7 +2063,6 @@ public class SB_Dashboard
 							Composite 	tab_composite = null;
 							if ( tf != null ){
 								tab_item = new CTabItem(tf, SWT.NULL);
-								setupTabItem( tab_item );
 								tab_composite = new Composite( tf, SWT.NULL );
 								tab_composite.setLayout( new FormLayout());
 								tab_item.setControl( tab_composite );
@@ -2068,9 +2071,12 @@ public class SB_Dashboard
 							
 							List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, current, y, split - current, height, next_tf_id );
 							if ( items.isEmpty()){
-								tab_item.dispose();
+								if ( tab_item != null ){
+									tab_item.dispose();
+								}
 							}else{
 								if ( tab_item != null ){
+									setupTabItem( tab_item );
 									tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
 								}
 								result.addAll( items );
@@ -2083,7 +2089,6 @@ public class SB_Dashboard
 						Composite 	tab_composite = null;
 						if ( tf != null ){
 							tab_item = new CTabItem(tf, SWT.NULL);
-							setupTabItem( tab_item );
 							tab_composite = new Composite( tf, SWT.NULL );
 							tab_composite.setLayout( new FormLayout());
 							tab_item.setControl( tab_composite );
@@ -2093,9 +2098,12 @@ public class SB_Dashboard
 						List<DashboardItem> items = build( item_map, tab_item, tab_composite, use_tabs, sashes, controls, cells, current, y, width-(current-x), height, next_tf_id );
 						
 						if ( items.isEmpty()){
-							tab_item.dispose();
+							if ( tab_item != null ){
+								tab_item.dispose();
+							}
 						}else{
 							if ( tab_item != null ){
+								setupTabItem( tab_item );
 								tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
 							}
 							result.addAll( items );
