@@ -20,8 +20,6 @@
 
 package com.biglybt.ui.swt.devices;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import com.biglybt.ui.swt.mdi.BaseMDI;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
@@ -34,17 +32,13 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
-import com.biglybt.pif.PluginException;
 import com.biglybt.pif.installer.*;
-import com.biglybt.pif.update.UpdateCheckInstance;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.devices.*;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.views.skin.SkinView;
 

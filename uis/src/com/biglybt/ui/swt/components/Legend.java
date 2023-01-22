@@ -183,6 +183,7 @@ public class Legend {
 		layout.marginTop = 0;
 		layout.marginLeft = 0;
 		layout.marginRight = 0;
+		layout.marginHeight = 0;
 		layout.spacing = 0;
 		legend.setLayout(layout);
 

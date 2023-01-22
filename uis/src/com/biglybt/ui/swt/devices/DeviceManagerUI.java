@@ -5665,9 +5665,8 @@ DeviceManagerUI
 				Utils.disposeComposite( composite, false );
 			}
 			
-			GridLayout	layout = new GridLayout( 5, false );
-			layout.marginWidth = 2;
-			
+			GridLayout	layout = Utils.getSimpleGridLayout( 5 );
+		
 			composite.setLayout( layout );
 			
 			/*
@@ -5925,7 +5924,6 @@ DeviceManagerUI
 					}
 				};
 
-
 		    Composite gSpeed = new Composite(composite,SWT.NULL);
 		    gd = new GridData(GridData.FILL_BOTH);
 		    gd.horizontalSpan = 5;
@@ -5936,8 +5934,10 @@ DeviceManagerUI
 			gd = new GridData(GridData.FILL_HORIZONTAL);
 			gd.horizontalSpan = 5;
 			
+			gSpeed.setBackground( Colors.red );
+			
 			Legend.createLegendComposite(composite, colors, color_configs, null, gd, true, legend_listener );
-
+			
 		    Canvas speedCanvas = new Canvas(gSpeed,SWT.NO_BACKGROUND);
 		    gd = new GridData(GridData.FILL_BOTH);
 		    speedCanvas.setLayoutData(gd);
