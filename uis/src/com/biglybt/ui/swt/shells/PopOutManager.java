@@ -96,6 +96,8 @@ PopOutManager
 	private static synchronized void
 	loadConfig()
 	{
+		boolean save_config = false;
+		
 		try{
 			if ( FileUtil.resilientConfigFileExists( CONFIG_FILE )){
 	
@@ -132,9 +134,15 @@ PopOutManager
 								if ( recoverPopOut( details )){
 								
 									popout_details.add( details );
+									
+								}else{
+									
+									save_config = true;
 								}
 								
 							}catch( Throwable e ){
+								
+								save_config = true;
 								
 								Debug.out( e );
 							}
@@ -144,8 +152,15 @@ PopOutManager
 			}
 		}catch( Throwable e ){				
 		
+			save_config = true;
+			
 			Debug.out( e );
-		}		
+		}
+		
+		if ( save_config ){
+			
+			saveConfig();
+		}
 	}
 	
 	private static void
