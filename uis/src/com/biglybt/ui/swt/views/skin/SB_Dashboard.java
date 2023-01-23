@@ -58,7 +58,6 @@ import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
@@ -67,7 +66,6 @@ import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.skin.SWTSkinUtils;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
@@ -99,11 +97,11 @@ public class SB_Dashboard
 	
 	private DashboardInstance	main_dashboard = new DashboardInstance();
 	
-	private DashboardInstance	sidebar_dashboard = new DashboardInstance( "sidebar" );
+	private DashboardInstance	sidebar_dashboard = new DashboardInstance( "sidebar", true );
 	
-	private DashboardInstance	rightbar_dashboard = new DashboardInstance( "rightbarzzzzz" );
+	private DashboardInstance	rightbar_dashboard = new DashboardInstance( "rightbarzzzzz", true );
 	
-	private DashboardInstance	topbar_dashboard = new DashboardInstance( "topbar" );
+	private DashboardInstance	topbar_dashboard = new DashboardInstance( "topbar", true );
 	
 	private final MultipleDocumentInterfaceSWT		mdi;
 	
@@ -118,17 +116,11 @@ public class SB_Dashboard
 		main_dashboard.readConfig();
 		
 		sidebar_dashboard.readConfig();
-		
-		sidebar_dashboard.setUseTabs( true );
-		
+				
 		rightbar_dashboard.readConfig();
 		
-		rightbar_dashboard.setUseTabs( true );
-
 		topbar_dashboard.readConfig();
 		
-		topbar_dashboard.setUseTabs( true );
-
 		if ( !COConfigurationManager.getBooleanParameter( "dashboard.init.0", false )){
 			
 			COConfigurationManager.setParameter( "dashboard.init.0", true );
@@ -738,6 +730,7 @@ public class SB_Dashboard
 	DashboardInstance
 	{
 		private final String	config_prefix;
+		private final boolean	use_tabs_default;
 		
 		private CopyOnWriteList<DashboardItem>		items = new CopyOnWriteList<>();
 		
@@ -745,17 +738,24 @@ public class SB_Dashboard
 		
 		private CopyOnWriteList<DashboardListener>	listeners = new CopyOnWriteList<>();
 		
+		private volatile boolean config_active;
+		
 		private
 		DashboardInstance()
 		{
 			config_prefix = "dashboard";
+			
+			use_tabs_default = false;
 		}
 		
 		private
 		DashboardInstance(
-			String		id )
+			String		_id,
+			boolean		_use_tabs_default )
 		{
-			config_prefix = "dashboard." + id;
+			config_prefix = "dashboard." + _id;
+			
+			use_tabs_default = _use_tabs_default;
 		}
 		
 		private void
@@ -1146,7 +1146,7 @@ public class SB_Dashboard
 		private boolean
 		getUseTabs()
 		{
-			return( COConfigurationManager.getBooleanParameter( config_prefix + ".config.usetabs", false ));
+			return( COConfigurationManager.getBooleanParameter( config_prefix + ".config.usetabs", use_tabs_default ));
 		}
 		
 		private void
@@ -2315,6 +2315,24 @@ public class SB_Dashboard
 						}
 					});
 				
+				new org.eclipse.swt.widgets.MenuItem( menu, SWT.SEPARATOR );
+				
+				org.eclipse.swt.widgets.MenuItem itemConfig = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+				
+				Messages.setLanguageText(itemConfig, "device.configure");
+
+				Utils.setMenuItemImage(itemConfig, "image.sidebar.cog" );
+				
+				itemConfig.addSelectionListener(
+					new SelectionAdapter(){
+					
+						@Override
+						public void widgetSelected(SelectionEvent arg0){
+							
+							showConfig();
+						}
+					});
+				
 				menu_comp.setMenu( menu );
 				
 				if ( parent_tab_item == null ){
@@ -2374,7 +2392,19 @@ public class SB_Dashboard
 		private void
 		showConfig()
 		{
-			new DBConfigWindow( new ArrayList<DashboardItem>( items.getList()));
+			if ( config_active ){
+				
+				return;
+			}
+			
+			config_active = true;
+			
+			DBConfigWindow config = new DBConfigWindow( new ArrayList<DashboardItem>( items.getList()));
+			
+			config.addCloseListener(()->{
+			
+				config_active = false;
+			});
 		}
 		
 		private class
@@ -2397,6 +2427,8 @@ public class SB_Dashboard
 			int[][] 			mapping;
 			Composite[][] 		cells;
 	
+			List<Runnable> listeners = new ArrayList<>();
+			
 			private
 			DBConfigWindow(
 				List<DashboardItem>		_items )
@@ -2581,10 +2613,27 @@ public class SB_Dashboard
 			    
 			    Utils.centreWindow( shell );
 	
+			    shell.addListener( SWT.Dispose, (ev)->{
+			    	
+			    	for ( Runnable r: listeners ){
+			    		try{
+			    			r.run();
+			    		}catch( Throwable e ){
+			    			Debug.out( e );
+			    		}
+			    	}
+			    });
+			    
 			    shell.open();
 			}
 			
-		
+			private void
+			addCloseListener(
+				Runnable	r )
+			{
+				listeners.add( r );
+			}
+			
 			private int
 			buildGrid()
 			{
