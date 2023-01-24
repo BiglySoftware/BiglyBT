@@ -2440,6 +2440,11 @@ public class TransferStatsView
 
 		int current_width = history_mpg.getVisibleEntryCount();
 
+		if ( current_width <= 0 ){
+			
+			return;
+		}
+		
 		if ( 	history_last_span == span &&
 				history_last_period == period &&
 				history_last_width == current_width ){
