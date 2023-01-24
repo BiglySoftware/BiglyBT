@@ -24,7 +24,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 
 import com.biglybt.core.util.Debug;
-import com.biglybt.ui.swt.mainwindow.Colors;
 
 /**
  * @author Olivier

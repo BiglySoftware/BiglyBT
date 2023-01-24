@@ -96,6 +96,7 @@ MultiPlotGraphic
 
 	private SimpleDateFormat	timeFormatter = new SimpleDateFormat("HH:mm", Locale.US );
 
+	private long[]				explicitTimes;
 
 	private
 	MultiPlotGraphic(
@@ -110,7 +111,7 @@ MultiPlotGraphic
 
 		maxEntries		= num_entries;
 		
-		init( null );
+		init( null, null );
 
 	    COConfigurationManager.addAndFireParameterListeners(
 	    	new String[]{ "Graphics Update", "Stats Graph Dividers" }, this );
@@ -118,7 +119,8 @@ MultiPlotGraphic
 	
 	private void
 	init(
-		int[][]	history )
+		int[][]	history,
+		long[]	times )
 	{
 		nbValues		= 0;
 		all_values		= new int[value_sources.length][maxEntries];
@@ -152,6 +154,8 @@ MultiPlotGraphic
 			}
 		}
 
+		explicitTimes = times;
+		
 		update_outstanding = true;
 	}
 
@@ -198,6 +202,9 @@ MultiPlotGraphic
 	  	drawCanvas.addPaintListener(new PaintListener() {
 				@Override
 				public void paintControl(PaintEvent e) {
+					if ( bufferImage == null || bufferImage.isDisposed()){
+						drawChart( true );
+					}
 					if (bufferImage != null && !bufferImage.isDisposed()) {
 						Rectangle bounds = bufferImage.getBounds();
 						if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
@@ -317,7 +324,15 @@ MultiPlotGraphic
 	reset(
 		int[][]		history )
 	{
-		init( history );
+		reset( history, null );
+	}
+	
+	public void
+	reset(
+		int[][]		history,
+		long[]		times )
+	{
+		init( history, times );
 
 		Utils.execSWTThread(
 			new Runnable()
@@ -537,6 +552,17 @@ MultiPlotGraphic
 		drawCanvas.update();
 	}
 
+	public int
+	getVisibleEntryCount()
+	{
+		if ( drawCanvas == null || drawCanvas.isDisposed()){
+			
+			return( 0 );
+		}
+		
+		return( Math.max( 0, drawCanvas.getClientArea().width - 71 ));
+	}
+	
 	protected void
 	drawChart(
 		boolean sizeChanged)
@@ -620,31 +646,58 @@ MultiPlotGraphic
 
 				if ( has_value ){
 
-					int	this_age = (x*update_period_millis)/1000;;
-					
-					if ( this_age >= next_secs ){
+					if ( explicitTimes == null ){
 						
-						next_secs += 60;
+						int	this_age = (x*update_period_millis)/1000;;
 						
-						long time = now - (this_age*1000);
-						
-						String str = timeFormatter.format( new Date( time ));
-												
-						Point p = gcImage.stringExtent( str );
-						
-						int xDraw = bounds.width - 71 - x;
-
-						int xPos = xDraw-p.x/2;
-						
-						if ( xPos >= 0 ){
-						
-							if ( last_xpos < 0 ||  xPos + p.x < last_xpos ){
+						if ( this_age >= next_secs ){
 							
-								gcImage.setForeground( colorGrey );
-
-								gcImage.drawText( str, xPos, 0, true );
+							next_secs += 60;
+							
+							long time = now - (this_age*1000);
+							
+							String str = timeFormatter.format( new Date( time ));
+													
+							Point p = gcImage.stringExtent( str );
+							
+							int xDraw = bounds.width - 71 - x;
+	
+							int xPos = xDraw-p.x/2;
+							
+							if ( xPos >= 0 ){
+							
+								if ( last_xpos < 0 ||  xPos + p.x < last_xpos ){
 								
-								last_xpos = xPos;
+									gcImage.setForeground( colorGrey );
+	
+									gcImage.drawText( str, xPos, 0, true );
+									
+									last_xpos = xPos;
+								}
+							}
+						}
+					}else{
+						
+						long time = explicitTimes[x];
+						
+						if ( time > 0 ){
+							
+							String str = formater.formatTime( time );
+							
+							if ( str != null && !str.isEmpty()){
+								
+								Point p = gcImage.stringExtent( str );
+								
+								int xDraw = bounds.width - 71 - x;
+								
+								int xPos = xDraw-p.x/2;
+								
+								if ( xPos >= 0 ){
+								
+									gcImage.setForeground( colorGrey );
+								
+									gcImage.drawText( str, xPos, 0, true );
+								}
 							}
 						}
 					}

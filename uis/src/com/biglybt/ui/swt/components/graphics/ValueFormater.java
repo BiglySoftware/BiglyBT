@@ -25,4 +25,6 @@ package com.biglybt.ui.swt.components.graphics;
  */
 public interface ValueFormater {
   public String format(int value);
+  
+  public default String formatTime( long time ){ return( null ); }
 }

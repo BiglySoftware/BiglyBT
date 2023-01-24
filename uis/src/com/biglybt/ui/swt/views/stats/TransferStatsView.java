@@ -53,6 +53,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
@@ -61,8 +62,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.TabFolder;
-import org.eclipse.swt.widgets.TabItem;
+import org.eclipse.swt.widgets.Monitor;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
@@ -74,12 +75,14 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.core.speedmanager.*;
+import com.biglybt.core.stats.transfer.LongTermStats;
 import com.biglybt.core.stats.transfer.OverallStats;
 import com.biglybt.core.stats.transfer.StatsFactory;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
@@ -89,11 +92,13 @@ import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.Legend;
+import com.biglybt.ui.swt.components.graphics.MultiPlotGraphic;
 import com.biglybt.ui.swt.components.graphics.PingGraphic;
 import com.biglybt.ui.swt.components.graphics.Plot3D;
 import com.biglybt.ui.swt.components.graphics.Scale;
 import com.biglybt.ui.swt.components.graphics.SpeedGraphic;
 import com.biglybt.ui.swt.components.graphics.ValueFormater;
+import com.biglybt.ui.swt.components.graphics.ValueSource;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -130,8 +135,12 @@ public class TransferStatsView
 
 	private OverallStats totalStats;
 
-	private Composite mainPanel;
+	private CTabFolder mainPanel;
+	private Composite currentPanel;
+	private Composite historyPanel;
 
+	private MultiPlotGraphic	history_mpg;
+	
 	private Composite blahPanel;
 	private BufferedLabel asn,estUpCap,estDownCap;
 	private BufferedLabel uploadBiaser;
@@ -215,10 +224,33 @@ public class TransferStatsView
   
   private void initialize(Composite composite) {
 
-    mainPanel = new Composite(composite,SWT.NULL);
-    GridLayout mainLayout = new GridLayout();
-    mainPanel.setLayout(mainLayout);
+	mainPanel = new CTabFolder(composite,SWT.FLAT);
+	GridLayout folderLayout = Utils.getSimpleGridLayout(1);
+	mainPanel.setLayout(folderLayout);  
+	
+	CTabItem currentItem = new CTabItem( mainPanel, SWT.NULL );
+	
+	Messages.setLanguageText(currentItem, "label.current");
+	
+    currentPanel = new Composite(mainPanel,SWT.NULL);
+    GridLayout currentLayout = Utils.getSimpleGridLayout(1);
+    currentPanel.setLayout(currentLayout);
+    
+    currentItem.setControl( currentPanel);
 
+    
+	CTabItem historyItem = new CTabItem( mainPanel, SWT.NULL );
+	
+	Messages.setLanguageText(historyItem, "label.history");
+	
+    historyPanel = new Composite(mainPanel,SWT.NULL);
+    GridLayout historyLayout = Utils.getSimpleGridLayout(1);
+    historyPanel.setLayout(historyLayout);
+    
+    historyItem.setControl( historyPanel);
+   
+    mainPanel.setSelection( currentItem );
+    
     CoreFactory.addCoreRunningListener(new CoreRunningListener() {
 			@Override
 			public void coreRunning(Core core) {
@@ -233,6 +265,8 @@ public class TransferStatsView
 						createCapacityPanel();
 						createAutoSpeedPanel();
 
+						createHistoryPanel();
+						
 						initialised	= true;
 					}
 				});
@@ -241,7 +275,7 @@ public class TransferStatsView
   }
 
   private void createGeneralPanel() {
-	generalPanel = new Composite(mainPanel, SWT.NULL);
+	generalPanel = new Composite(currentPanel, SWT.NULL);
 	GridLayout outerLayout = Utils.getSimpleGridLayout(2);
 	generalPanel.setLayout(outerLayout);
 	GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -469,7 +503,7 @@ public class TransferStatsView
   private void
   createCapacityPanel()
   {
-	  blahPanel = new Composite(mainPanel,SWT.NONE);
+	  blahPanel = new Composite(currentPanel,SWT.NONE);
 	  GridData blahPanelData = new GridData(GridData.FILL_HORIZONTAL);
 	  blahPanel.setLayoutData(blahPanelData);
 
@@ -518,7 +552,7 @@ public class TransferStatsView
   {
 	  boolean dark = Utils.isDarkAppearanceNative();
 	  
-	  Composite connectionHeader = new Composite(mainPanel,SWT.NONE);
+	  Composite connectionHeader = new Composite(currentPanel,SWT.NONE);
 	  GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  connectionHeader.setLayoutData(gridData);
 	  
@@ -526,7 +560,7 @@ public class TransferStatsView
 	  chLayout.makeColumnsEqualWidth = true;
 	  connectionHeader.setLayout(chLayout);
 	  
-	  connectionPanel = new Composite(mainPanel,SWT.NONE);
+	  connectionPanel = new Composite(currentPanel,SWT.NONE);
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  connectionPanel.setLayoutData(gridData);
 
@@ -567,11 +601,10 @@ public class TransferStatsView
 
 	  	// connections
 
-	  con_folder = new CTabFolder(connectionPanel, SWT.LEFT);
+	  con_folder = new CTabFolder(connectionPanel, SWT.FLAT);
 	  gridData = new GridData(GridData.FILL_BOTH);
 	  gridData.horizontalSpan = 1;
 	  con_folder.setLayoutData(gridData);
-	  //con_folder.setBackground(Colors.red);
 
 	  	// connection counts
 
@@ -738,7 +771,7 @@ public class TransferStatsView
   }
 
   private void createAutoSpeedPanel() {
-    autoSpeedPanel = Utils.createSkinnedGroup(mainPanel,SWT.NONE);
+    autoSpeedPanel = Utils.createSkinnedGroup(currentPanel,SWT.NONE);
     GridData generalPanelData = new GridData(GridData.FILL_BOTH);
     autoSpeedPanel.setLayoutData(generalPanelData);
     Messages.setLanguageText(autoSpeedPanel,"SpeedView.stats.autospeed", new String[]{ String.valueOf( MAX_DISPLAYED_PING_MILLIS_DISP )});
@@ -762,7 +795,7 @@ public class TransferStatsView
 
     pingGraph.initialize(pingCanvas);
 
-    CTabFolder folder = new CTabFolder(autoSpeedInfoPanel, SWT.LEFT);
+    CTabFolder folder = new CTabFolder(autoSpeedInfoPanel, SWT.FLAT);
     gridData = new GridData(GridData.FILL_BOTH);
     gridData.horizontalIndent = 4;
     gridData.horizontalSpan = 4;
@@ -904,6 +937,8 @@ public class TransferStatsView
 	  refreshConnectionPanel();
 
 	  refreshPingPanel();
+	  
+	  refreshHistory();
   }
 
   private void refreshGeneral() {
@@ -2165,47 +2200,506 @@ public class TransferStatsView
 			COConfigurationManager.removeParameterListener("Graphics Update",this);
 	  }
   }
+  
+  	private volatile long	history_scale_div				= 1;
+  	private volatile int	history_selected_span_suffix	= TimeFormatter.TS_WEEK;
+  	
+  	private int				history_period_suffix;
+  	
+  	private Label			history_resolution;
+  	private Label			history_total_down;
+  	private Label			history_total_up;
+  	
+	private void 
+	createHistoryPanel() 
+	{
+		Composite controlPanel = new Composite(historyPanel,SWT.NULL);
+		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 
+		controlPanel.setLayoutData(gd);
+		controlPanel.setLayout( new GridLayout( 8, false ));
+		
+		Combo combo = new Combo( controlPanel, SWT.SINGLE | SWT.READ_ONLY );
+		
+		for ( int i=TimeFormatter.TS_HOUR; i<= TimeFormatter.TS_YEAR; i++ ){
+			
+			String str = TimeFormatter.TIME_SUFFIXES_2_LONG[i];
+			
+			if ( str.length() > 1 ){
+				
+				str = Character.toUpperCase(str.charAt(0)) + str.substring(1);
+			}
+			
+			combo.add( str );
+		}
+				
+		combo.select( history_selected_span_suffix - TimeFormatter.TS_HOUR );
+		
+		combo.addListener( SWT.Selection, (ev)->{
+			
+			int index = combo.getSelectionIndex();
+			
+			history_selected_span_suffix = TimeFormatter.TS_HOUR + index;
+		});
+		
+		
+		
+		Label lbl_res = new Label(controlPanel,SWT.NULL);
+		lbl_res.setText( MessageText.getString("label.time.resolution") + ":" );
+		
+		history_resolution = new Label(controlPanel,SWT.NULL);
+		
+		Label lbl_spacer = new Label(controlPanel,SWT.NULL);
+		lbl_spacer.setLayoutData(new GridData( GridData.FILL_HORIZONTAL));
+		
+		Label lbl_down = new Label(controlPanel,SWT.NULL);
+		lbl_down.setText( MessageText.getString("TableColumn.header.tag.downtotal") + ":" );
+
+		history_total_down = new Label(controlPanel,SWT.NULL);
+
+		Label lbl_up = new Label(controlPanel,SWT.NULL);
+		lbl_up.setText( MessageText.getString("TableColumn.header.tag.uptotal") + ":" );
+
+		history_total_up = new Label(controlPanel,SWT.NULL);
+						
+		
+		Color[]	colors = {
+			Colors.blues[Colors.BLUES_DARKEST],
+			Colors.fadedGreen,
+		};
+		
+		ValueFormater formatter =
+				new ValueFormater()
+		{
+			@Override
+			public String
+			format(
+				int value )
+			{
+				return( DisplayFormatters.formatByteCountToKiBEtc( value  * history_scale_div ));
+			}
+			
+			@Override
+			public String 
+			formatTime( 
+				long time )
+			{
+				if ( history_selected_span_suffix < TimeFormatter.TS_WEEK ){
+					
+					return( new SimpleDateFormat( "HH:mm").format(new Date( time )));
+					
+				}else if ( history_selected_span_suffix == TimeFormatter.TS_WEEK ){
+					
+					return( new SimpleDateFormat( "dd HH:mm").format(new Date( time )));
+					
+				}else{
+					
+					return( new SimpleDateFormat( "MM/dd").format(new Date( time )));
+				}
+			}
+		};
+
+
+		ValueSourceImpl[] sources = {
+			new ValueSourceImpl( "Down", 0, colors, false, false, false )
+			{
+				@Override
+				public int
+				getValue()
+				{
+					Debug.out( "eh?" );
+
+					return(0);
+				}
+			},
+			new ValueSourceImpl( "Up", 1, colors, true, false, false )
+			{
+				@Override
+				public int
+				getValue()
+				{
+					Debug.out( "eh?" );
+
+					return(0);
+				}
+			}
+		};
+
+		Monitor[] monitors = historyPanel.getDisplay().getMonitors();
+		
+		int total_width = 0;
+		
+		for ( Monitor m: monitors ){
+			
+			total_width += m.getClientArea().width;
+		}
+		
+		history_mpg = MultiPlotGraphic.getInstance( total_width, sources, formatter );
+
+
+		String[] color_configs = new String[] {
+			"TransferStats.history.legend.down",
+			"TransferStats.history.legend.up",
+		};
+
+		Legend.LegendListener legend_listener =
+				new Legend.LegendListener()
+		{
+			private int	hover_index = -1;
+
+			@Override
+			public void
+			hoverChange(
+					boolean 	entry,
+					int 		index )
+			{
+				if ( hover_index != -1 ){
+
+					sources[hover_index].setHover( false );
+				}
+
+				if ( entry ){
+
+					hover_index = index;
+
+					sources[index].setHover( true );
+				}
+
+				history_mpg.refresh( true );
+			}
+
+			@Override
+			public void
+			visibilityChange(
+					boolean	visible,
+					int		index )
+			{
+				sources[index].setVisible( visible );
+
+				history_mpg.refresh( true );
+			}
+		};
+
+		Composite graphPanel = new Composite(historyPanel,SWT.NULL);
+		gd = new GridData(GridData.FILL_BOTH);
+
+		graphPanel.setLayoutData(gd);
+		graphPanel.setLayout(Utils.getSimpleGridLayout(1));
+
+		gd = new GridData(GridData.FILL_HORIZONTAL);
+
+		Legend.createLegendComposite(historyPanel, colors, color_configs, null, gd, true, legend_listener );
+
+		Canvas speedCanvas = new Canvas(graphPanel,SWT.NO_BACKGROUND);
+		gd = new GridData(GridData.FILL_BOTH);
+		speedCanvas.setLayoutData(gd);
+
+		history_mpg.initialize( speedCanvas, false );
+	}
+	
+	private long history_last_span;
+	private long history_last_period;
+	private long history_last_width;
+	
+	private void
+	refreshHistory()
+	{
+		if ( !historyPanel.isVisible()){
+			
+			return;
+		}
+		
+		int span_suffix = history_selected_span_suffix;;
+				
+		long 	span	= TimeFormatter.TIME_SUFFIXES_2_MULT[span_suffix] * 1000;
+		
+		int period_suffix;
+				
+		if ( span_suffix == TimeFormatter.TS_HOUR ){
+			
+			period_suffix	= TimeFormatter.TS_MINUTE;
+			
+		}else if ( span_suffix == TimeFormatter.TS_DAY ){
+			
+			period_suffix	= TimeFormatter.TS_MINUTE;
+			
+		}else if ( span_suffix == TimeFormatter.TS_WEEK ){
+			
+			period_suffix	= TimeFormatter.TS_HOUR;
+			
+		}else if ( span_suffix == TimeFormatter.TS_MONTH ){
+			
+			period_suffix	= TimeFormatter.TS_HOUR;
+			
+		}else{
+			
+			period_suffix = TimeFormatter.TS_DAY;
+		}
+
+		long	period = TimeFormatter.TIME_SUFFIXES_2_MULT[ period_suffix ] * 1000;
+
+		int current_width = history_mpg.getVisibleEntryCount();
+
+		if ( 	history_last_span == span &&
+				history_last_period == period &&
+				history_last_width == current_width ){
+			
+			return;
+		}
+		
+		int	entries = (int)( span / period );
+		
+		LongTermStats lt_stats = StatsFactory.getLongTermStats();
+
+		long end_time 	= SystemTime.getCurrentTime();
+		long start_time = end_time - span;
+					
+		long[] overall_stats = lt_stats.getTotalUsageInPeriod(new Date( start_time ), new Date( end_time ));
+
+		double chunk = current_width/(double)entries;
+		
+		long[][]	data	= new long[2][current_width];
+		long[]		times	= new long[current_width];
+
+		int pos = 0;
+		
+		int last_time = -1;
+				
+		long	max_data = 0;
+		
+		for ( int i=0;i<entries;i++){
+			
+			int this_chunk;
+			
+			if ( i==entries-1){
+				this_chunk = current_width - pos;
+			}else{
+				this_chunk = (int)(i*chunk) - pos;
+			}
+			
+			if ( last_time == -1 || pos - last_time > 50 ){
+				times[pos+this_chunk/2] = start_time;
+				
+				last_time = pos;
+			}
+			
+			long[] stats = lt_stats.getTotalUsageInPeriod(new Date( start_time ), new Date( start_time+period ));
+
+			long downloaded = stats[LongTermStats.ST_DATA_DOWNLOAD];
+			long uploaded	= stats[LongTermStats.ST_DATA_UPLOAD];
+			
+			max_data = Math.max( max_data, downloaded );
+			max_data = Math.max( max_data, uploaded );
+			
+			for ( int j=0;j<this_chunk;j++){
+				
+				data[0][pos] = downloaded;
+				data[1][pos] = uploaded;
+				
+				pos++;
+			}
+						
+			start_time += period;
+		}
+		
+		long total_down = overall_stats[LongTermStats.ST_DATA_DOWNLOAD];
+		long total_up = overall_stats[LongTermStats.ST_DATA_UPLOAD];
+		
+		String str = TimeFormatter.TIME_SUFFIXES_2_LONG[ period_suffix ];
+		
+		if ( str.length() > 1 ){
+			
+			str = Character.toUpperCase(str.charAt(0)) + str.substring(1);
+		}
+		
+		history_resolution.setText( str );
+		
+		history_total_down.setText( DisplayFormatters.formatByteCountToKiBEtc( total_down ));
+		history_total_up.setText( DisplayFormatters.formatByteCountToKiBEtc( total_up ));
+		
+		history_resolution.getParent().layout( true );
+		
+		int div = 1;
+	
+		while ( max_data > Integer.MAX_VALUE ){
+				
+			div			*= 2;
+			max_data	/= 2;
+		}
+		
+		history_scale_div		= div;
+		history_period_suffix	= period_suffix;
+		
+		int[][]	idata	= new int[2][current_width];
+		
+		for ( int i=0;i<2;i++){
+			long[] d = data[i];
+			int[] id = idata[i];
+			
+			for (int j=0;j<current_width;j++){
+				int t = (int)(d[j]/div);
+				id[j] = (int)(d[current_width-j-1]/div);
+				id[current_width-j-1]=t;
+			}
+		}
+		
+		reverse( times );
+		
+		history_mpg.reset( idata, times );
+		
+		history_last_span		= span;
+		history_last_period		= period;
+		history_last_width		= current_width;
+	}
+
+	private void
+	reverse(
+		long[]	a )
+	{
+		int len = a.length;
+		
+		for ( int i=0;i<len/2;i++){
+			long t = a[i];
+			a[i] = a[len-i-1];
+			a[len-i-1] = t;
+		}
+	}
+	
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
-    switch (event.getType()) {
-      case UISWTViewEvent.TYPE_CREATE:
-      	swtView = (UISWTView)event.getData();
-      	swtView.setTitle(MessageText.getString(MSGID_PREFIX + ".title.full"));
-        break;
+		switch (event.getType()) {
+		case UISWTViewEvent.TYPE_CREATE:
+			swtView = (UISWTView)event.getData();
+			swtView.setTitle(MessageText.getString(MSGID_PREFIX + ".title.full"));
+			break;
 
-      case UISWTViewEvent.TYPE_DESTROY:
-        delete();
-        break;
+		case UISWTViewEvent.TYPE_DESTROY:
+			delete();
+			break;
 
-      case UISWTViewEvent.TYPE_INITIALIZE:
-        initialize((Composite)event.getData());
-        break;
+		case UISWTViewEvent.TYPE_INITIALIZE:
+			initialize((Composite)event.getData());
+			break;
 
-      case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
-      	Messages.updateLanguageForControl(getComposite());
-        break;
+		case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
+			Messages.updateLanguageForControl(getComposite());
+			break;
 
-      case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
-        break;
+		case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
+			break;
 
-      case UISWTViewEvent.TYPE_SHOWN:
-    	  // weird layout issue with general panel - switch away from view and then back leaves bottom line not rendering - this fixes it
-    	if ( generalPanel != null ){
-    	  generalPanel.layout( true, true );
-    	}
-      	break;
+		case UISWTViewEvent.TYPE_SHOWN:
+			// weird layout issue with general panel - switch away from view and then back leaves bottom line not rendering - this fixes it
+			if ( generalPanel != null ){
+				generalPanel.layout( true, true );
+			}
+			break;
 
-      case UISWTViewEvent.TYPE_REFRESH:
-        refresh();
-        break;
+		case UISWTViewEvent.TYPE_REFRESH:
+			refresh();
+			break;
 
-      case StatsView.EVENT_PERIODIC_UPDATE:
-      	periodicUpdate();
-      	break;
-    }
+		case StatsView.EVENT_PERIODIC_UPDATE:
+			periodicUpdate();
+			break;
+		}
 
-    return true;
-  }
+		return true;
+	}
+	
+	private abstract static class
+	ValueSourceImpl
+		implements ValueSource
+	{
+		private String			name;
+		private int				index;
+		private Color[]			colours;
+		private boolean			is_up;
+		private boolean			trimmable;
+
+		private boolean			is_hover;
+		private boolean			is_invisible;
+		private boolean			is_dotted;
+
+		private
+		ValueSourceImpl(
+			String					_name,
+			int						_index,
+			Color[]					_colours,
+			boolean					_is_up,
+			boolean					_trimmable,
+			boolean					_is_dotted )
+		{
+			name			= _name;
+			index			= _index;
+			colours			= _colours;
+			is_up			= _is_up;
+			trimmable		= _trimmable;
+			is_dotted		= _is_dotted;
+		}
+
+		@Override
+		public String
+		getName()
+		{
+			return( name );
+		}
+
+		@Override
+		public Color
+		getLineColor()
+		{
+			return( colours[index] );
+		}
+
+		@Override
+		public boolean
+		isTrimmable()
+		{
+			return( trimmable );
+		}
+
+		private void
+		setHover(
+			boolean	h )
+		{
+			is_hover = h;
+		}
+
+		private void
+		setVisible(
+			boolean	visible )
+		{
+			is_invisible = !visible;
+		}
+
+		@Override
+		public int
+		getStyle()
+		{
+			if ( is_invisible ){
+
+				return( STYLE_INVISIBLE );
+			}
+
+			int	style = STYLE_NONE;
+
+			if ( is_hover ){
+
+				style |= STYLE_BOLD;
+			}
+
+			style |= STYLE_HIDE_LABEL;
+
+			return( style );
+		}
+
+		@Override
+		public int
+		getAlpha()
+		{
+			return( is_dotted?128:255 );
+		}
+	}
 }
 
