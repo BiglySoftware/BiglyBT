@@ -52,6 +52,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -99,6 +100,7 @@ import com.biglybt.ui.swt.components.graphics.Scale;
 import com.biglybt.ui.swt.components.graphics.SpeedGraphic;
 import com.biglybt.ui.swt.components.graphics.ValueFormater;
 import com.biglybt.ui.swt.components.graphics.ValueSource;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -249,7 +251,14 @@ public class TransferStatsView
     
     historyItem.setControl( historyPanel);
    
-    mainPanel.setSelection( currentItem );
+    int selected = COConfigurationManager.getIntParameter("tsv:tabfolder.sel", 0 );
+    
+    mainPanel.setSelection( selected );
+    
+    mainPanel.addListener( SWT.Selection,(ev)->{
+    	
+    	COConfigurationManager.setParameter( "tsv:tabfolder.sel", mainPanel.getSelectionIndex());
+    });
     
     CoreFactory.addCoreRunningListener(new CoreRunningListener() {
 			@Override
@@ -2205,8 +2214,10 @@ public class TransferStatsView
   	private volatile int	history_selected_span_suffix	= TimeFormatter.TS_WEEK;
   	
   	private int				history_period_suffix;
+  	private int				history_period_offset;
   	
   	private Label			history_resolution;
+  	private Label			history_span;
   	private Label			history_total_down;
   	private Label			history_total_up;
   	
@@ -2217,7 +2228,7 @@ public class TransferStatsView
 		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
 
 		controlPanel.setLayoutData(gd);
-		controlPanel.setLayout( new GridLayout( 8, false ));
+		controlPanel.setLayout( new GridLayout( 12, false ));
 		
 		Combo combo = new Combo( controlPanel, SWT.SINGLE | SWT.READ_ONLY );
 		
@@ -2235,23 +2246,68 @@ public class TransferStatsView
 				
 		combo.select( history_selected_span_suffix - TimeFormatter.TS_HOUR );
 		
+		ImageLoader loader = ImageLoader.getInstance();
+		
+		Button prev = new Button( controlPanel, SWT.PUSH );
+
+		prev.setImage( loader.getImage( "back" ));
+				
+		Button next = new Button( controlPanel, SWT.PUSH );
+
+		next.setImage( loader.getImage( "forward" ));
+		
+		next.setEnabled( false );
+		
+		prev.addListener( SWT.Selection, (ev)->{
+			
+			history_period_offset--;
+			
+			next.setEnabled( true );
+			
+			refreshHistory();
+		});
+
+		next.addListener( SWT.Selection, (ev)->{
+			
+			history_period_offset++;
+			
+			if ( history_period_offset == 0 ){
+				
+				next.setEnabled( false );
+			}
+			
+			refreshHistory();
+		});
+		
 		combo.addListener( SWT.Selection, (ev)->{
 			
 			int index = combo.getSelectionIndex();
 			
 			history_selected_span_suffix = TimeFormatter.TS_HOUR + index;
+			
+			history_period_offset = 0;
+			
+			next.setEnabled( false );
+			
+			refreshHistory();
 		});
-		
-		
-		
+				
 		Label lbl_res = new Label(controlPanel,SWT.NULL);
 		lbl_res.setText( MessageText.getString("label.time.resolution") + ":" );
 		
 		history_resolution = new Label(controlPanel,SWT.NULL);
+				
+		history_span = new Label(controlPanel,SWT.NULL);
+		gd = new GridData();
+		gd.horizontalIndent = 20;
+		history_span.setLayoutData(gd);
 		
-		Label lbl_spacer = new Label(controlPanel,SWT.NULL);
-		lbl_spacer.setLayoutData(new GridData( GridData.FILL_HORIZONTAL));
-		
+		Label lbl_spacer1 = new Label(controlPanel,SWT.NULL);
+		lbl_spacer1.setLayoutData(new GridData( GridData.FILL_HORIZONTAL));
+
+		Label lbl_spacer2 = new Label(controlPanel,SWT.NULL);
+		lbl_spacer2.setLayoutData(new GridData( GridData.FILL_HORIZONTAL));
+
 		Label lbl_down = new Label(controlPanel,SWT.NULL);
 		lbl_down.setText( MessageText.getString("TableColumn.header.tag.downtotal") + ":" );
 
@@ -2400,6 +2456,7 @@ public class TransferStatsView
 	private long history_last_span;
 	private long history_last_period;
 	private long history_last_width;
+	private int	history_last_offset;
 	
 	private void
 	refreshHistory()
@@ -2447,7 +2504,8 @@ public class TransferStatsView
 		
 		if ( 	history_last_span == span &&
 				history_last_period == period &&
-				history_last_width == current_width ){
+				history_last_width == current_width && 
+				history_last_offset == history_period_offset ){
 			
 			return;
 		}
@@ -2458,10 +2516,16 @@ public class TransferStatsView
 
 		long end_time 	= SystemTime.getCurrentTime();
 		
+		end_time += history_period_offset*span;
+		
 		end_time = ((end_time+(period-1))/period)*period;
 		
 		long start_time = end_time - span;
-					
+			
+		SimpleDateFormat sdf = new SimpleDateFormat();
+		
+		history_span.setText( sdf.format( new Date( start_time )) + " - " + sdf.format( new Date( end_time-1 )));
+		
 		long[] overall_stats = getTotalUsageInPeriod( lt_stats, start_time, end_time );
 
 		double chunk = current_width/(double)entries;
@@ -2501,7 +2565,7 @@ public class TransferStatsView
 
 			long downloaded = stats[LongTermStats.ST_DATA_DOWNLOAD];
 			long uploaded	= stats[LongTermStats.ST_DATA_UPLOAD];
-						
+				
 			if ( this_chunk == 0 ){
 			
 				pending_down 	+= downloaded;
@@ -2549,7 +2613,7 @@ public class TransferStatsView
 		
 		int div = 1;
 	
-		while ( max_data > Integer.MAX_VALUE ){
+		while ( max_data > Integer.MAX_VALUE / 2 ){
 				
 			div			*= 2;
 			max_data	/= 2;
@@ -2579,6 +2643,7 @@ public class TransferStatsView
 		history_last_span		= span;
 		history_last_period		= period;
 		history_last_width		= current_width;
+		history_last_offset		= history_period_offset;
 	}
 
 	private long[]
