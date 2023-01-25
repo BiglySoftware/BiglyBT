@@ -2718,6 +2718,7 @@ GeneralUtils
 			if ( Character.isWhitespace(c)){
 
 				c = ' ';
+				
 			}else if ( isDoubleQuote(c)){
 				
 				c = '"';
@@ -2729,9 +2730,9 @@ GeneralUtils
 
 			if ( escape ){
 
-					// only allow escape to escape quotes as often used in command lines in Windows...
+					// only allow escape to escape quotes or escape as often used in command lines in Windows...
 				
-				if ( c == '"' || c == '\'' ){
+				if ( c == '"' || c == '\'' || c == '\\' ){
 			
 					bit += c;
 					
@@ -2751,7 +2752,7 @@ GeneralUtils
 				continue;
 			}
 
-			if (( c == '"' || c == '\'' ) && ( i == 0 || chars[ i-1 ] != '\\' )){
+			if ( c == '"' || c == '\'' ){
 
 				if ( quote == ' ' ){
 
@@ -2794,6 +2795,8 @@ GeneralUtils
 
 		if ( quote != ' ' ){
 
+				// unmatched, add a closing one
+			
 			bit += quote;
 		}
 
@@ -2804,20 +2807,7 @@ GeneralUtils
 
 		return( bits.toArray( new String[bits.size()]));
 	}
-	
-	public static void
-	main(
-		String[]	args )
-	{
-		String[] result = decomposeArgs( "\"\\\"fre d\" bill jim" );
-		
-		for ( int i=0;i<result.length;i++){
-			
-			System.out.println("!" + result[i] + "!" );
-			
-		}
-	}
-	
+
 	/*
 	public static void
 	main(
