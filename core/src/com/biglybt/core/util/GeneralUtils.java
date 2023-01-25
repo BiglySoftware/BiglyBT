@@ -2697,6 +2697,127 @@ GeneralUtils
 		}
 	}
 	
+	public static String[]
+	decomposeArgs(
+		String	str )
+	{
+		List<String>	bits = new ArrayList<>();
+
+		char	quote 				= ' ';
+		boolean	escape 				= false;
+		boolean	bit_contains_quotes = false;
+
+		String	bit = "";
+
+		char[] chars = str.toCharArray();
+
+		for (int i=0;i<chars.length;i++){
+
+			char c = chars[i];
+
+			if ( Character.isWhitespace(c)){
+
+				c = ' ';
+			}else if ( isDoubleQuote(c)){
+				
+				c = '"';
+				
+			}else if ( isSingleQuote(c)){
+				
+				c = '\'';
+			}
+
+			if ( escape ){
+
+					// only allow escape to escape quotes as often used in command lines in Windows...
+				
+				if ( c == '"' || c == '\'' ){
+			
+					bit += c;
+					
+				}else{
+					
+					bit += "\\" + c;
+				}
+
+				escape = false;
+
+				continue;
+
+			}else if ( c == '\\' ){
+
+				escape = true;
+
+				continue;
+			}
+
+			if (( c == '"' || c == '\'' ) && ( i == 0 || chars[ i-1 ] != '\\' )){
+
+				if ( quote == ' ' ){
+
+					bit_contains_quotes = true;
+
+					quote = c;
+
+				}else if ( quote == c ){
+
+					quote = ' ';
+
+				}else{
+
+					bit += c;
+				}
+			}else{
+
+				if ( quote == ' ' ){
+
+					if ( c == ' ' ){
+
+						if ( bit.length() > 0 || bit_contains_quotes ){
+
+							bit_contains_quotes = false;
+
+							bits.add( bit );
+
+							bit = "";
+						}
+					}else{
+
+						bit += c;
+					}
+				}else{
+
+					bit += c;
+				}
+			}
+		}
+
+		if ( quote != ' ' ){
+
+			bit += quote;
+		}
+
+		if ( bit.length() > 0 || bit_contains_quotes ){
+
+			bits.add( bit );
+		}
+
+		return( bits.toArray( new String[bits.size()]));
+	}
+	
+	public static void
+	main(
+		String[]	args )
+	{
+		String[] result = decomposeArgs( "\"\\\"fre d\" bill jim" );
+		
+		for ( int i=0;i<result.length;i++){
+			
+			System.out.println("!" + result[i] + "!" );
+			
+		}
+	}
+	
 	/*
 	public static void
 	main(

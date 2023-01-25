@@ -2282,30 +2282,74 @@ public class Utils
 
 			}else if ( eb_choice.equals( "manual" )){
 
-				String browser_exe = COConfigurationManager.getStringParameter( "browser.external.prog", "" );
+				String browser_cmd_str = COConfigurationManager.getStringParameter( "browser.external.prog", "" );
 
-				File bf = new File( browser_exe );
+				browser_cmd_str = browser_cmd_str.trim();
+				
+				String[] browser_cmd;
+				
+				File bf = new File( browser_cmd_str );
+
+				if ( bf.exists()){
+					
+						// seems like a winner, take it regardless of whether it 
+						// includes spaces or whatever
+					
+					browser_cmd = new String[]{ browser_cmd_str };
+					
+				}else if ( browser_cmd_str.contains( " " )){
+					
+					browser_cmd = GeneralUtils.decomposeArgs( browser_cmd_str );
+					
+				}else{
+					
+						// gonna fail
+					
+					browser_cmd = new String[]{ browser_cmd_str };
+				}
+				
+				String browser_exe = browser_cmd[0];
+				
+				bf = new File( browser_exe );
 
 				if ( bf.exists()){
 
 					try{
 						if ( Constants.isOSX && browser_exe.endsWith( ".app" )){
 
+							String[] args = new String[ 3 + browser_cmd.length ];
+							
+							args[0] = "open";
+							args[1] = "-a";
+							
+							for ( int i=0;i<browser_cmd.length;i++){
+								
+								args[2+i] = browser_cmd[i];
+							}
+							
+							args[args.length-1] = sFileModified;
+							
 							ProcessBuilder pb = GeneralUtils.createProcessBuilder(
 									bf.getParentFile(),
-									new String[]{
-										"open",
-										"-a",
-										browser_exe,
-										sFileModified
-									},
+									args,
 									null );
 
 							pb.start();
 
 						}else{
+							
+							String[] args = new String[ 1 + browser_cmd.length ];
+							
+							args[0] = bf.getAbsolutePath();
+							
+							for ( int i=1;i<browser_cmd.length;i++){
+								
+								args[i] = browser_cmd[i];
+							}
 
-							Process proc = Runtime.getRuntime().exec( new String[]{ bf.getAbsolutePath(), sFileModified });
+							args[args.length-1] = sFileModified;
+														
+							Process proc = Runtime.getRuntime().exec( args );
 						}
 					}catch( Throwable e ){
 
