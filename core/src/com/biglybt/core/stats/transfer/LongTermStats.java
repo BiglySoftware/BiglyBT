@@ -59,6 +59,12 @@ LongTermStats
 
 	public long[]
 	getTotalUsageInPeriod(
+		Date			start_date,
+		Date			end_date,
+		RecordAccepter	accepter );
+
+	public long[]
+	getTotalUsageInPeriod(
 		int			period_type,
 		double		multiplier );
 

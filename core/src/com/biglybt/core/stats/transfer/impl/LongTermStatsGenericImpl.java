@@ -626,6 +626,7 @@ LongTermStatsGenericImpl
 		return( getTotalUsageInPeriod( start_date, end_date, null ));
 	}
 
+	@Override
 	public long[]
 	getTotalUsageInPeriod(
 		Date				start_date,

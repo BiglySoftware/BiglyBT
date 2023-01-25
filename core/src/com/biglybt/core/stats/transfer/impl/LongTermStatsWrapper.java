@@ -93,6 +93,16 @@ LongTermStatsWrapper
 	@Override
 	public synchronized long[]
 	getTotalUsageInPeriod(
+		Date			start_date,
+		Date			end_date,
+		RecordAccepter	accepter )
+	{
+		return( delegate.getTotalUsageInPeriod(start_date, end_date, accepter ));
+	}
+	
+	@Override
+	public synchronized long[]
+	getTotalUsageInPeriod(
 		int		period_type,
 		double	multiplier )
 	{

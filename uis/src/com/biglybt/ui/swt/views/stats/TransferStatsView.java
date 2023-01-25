@@ -2457,9 +2457,12 @@ public class TransferStatsView
 		LongTermStats lt_stats = StatsFactory.getLongTermStats();
 
 		long end_time 	= SystemTime.getCurrentTime();
+		
+		end_time = ((end_time+(period-1))/period)*period;
+		
 		long start_time = end_time - span;
 					
-		long[] overall_stats = lt_stats.getTotalUsageInPeriod(new Date( start_time ), new Date( end_time ));
+		long[] overall_stats = getTotalUsageInPeriod( lt_stats, start_time, end_time );
 
 		double chunk = current_width/(double)entries;
 		
@@ -2471,6 +2474,9 @@ public class TransferStatsView
 		int last_time = -1;
 				
 		long	max_data = 0;
+		
+		long pending_down	= 0;
+		long pending_up		= 0;
 		
 		for ( int i=0;i<entries;i++){
 			
@@ -2488,20 +2494,37 @@ public class TransferStatsView
 				last_time = pos;
 			}
 			
-			long[] stats = lt_stats.getTotalUsageInPeriod(new Date( start_time ), new Date( start_time+period ));
+			Date start_date	= new Date( start_time );
+			Date end_date	= new Date( start_time+period );
+						
+			long[] stats = lt_stats.getTotalUsageInPeriod(start_date, end_date );
 
 			long downloaded = stats[LongTermStats.ST_DATA_DOWNLOAD];
 			long uploaded	= stats[LongTermStats.ST_DATA_UPLOAD];
+						
+			if ( this_chunk == 0 ){
 			
-			max_data = Math.max( max_data, downloaded );
-			max_data = Math.max( max_data, uploaded );
-			
-			for ( int j=0;j<this_chunk;j++){
+				pending_down 	+= downloaded;
+				pending_up		+= uploaded;
 				
-				data[0][pos] = downloaded;
-				data[1][pos] = uploaded;
+			}else{
 				
-				pos++;
+				downloaded	+= pending_down;
+				uploaded	+= pending_up;
+				
+				pending_down	= 0;
+				pending_up		= 0;
+				
+				max_data = Math.max( max_data, downloaded );
+				max_data = Math.max( max_data, uploaded );
+
+				for ( int j=0;j<this_chunk;j++){
+					
+					data[0][pos] = downloaded;
+					data[1][pos] = uploaded;
+					
+					pos++;
+				}
 			}
 						
 			start_time += period;
@@ -2531,20 +2554,21 @@ public class TransferStatsView
 			div			*= 2;
 			max_data	/= 2;
 		}
-		
+				
 		history_scale_div		= div;
 		history_period_suffix	= period_suffix;
 		
 		int[][]	idata	= new int[2][current_width];
 		
 		for ( int i=0;i<2;i++){
+			
 			long[] d = data[i];
+			
 			int[] id = idata[i];
 			
 			for (int j=0;j<current_width;j++){
-				int t = (int)(d[j]/div);
-				id[j] = (int)(d[current_width-j-1]/div);
-				id[current_width-j-1]=t;
+				
+				id[j] = (int)(d[j]/div);
 			}
 		}
 		
@@ -2557,6 +2581,28 @@ public class TransferStatsView
 		history_last_width		= current_width;
 	}
 
+	private long[]
+	getTotalUsageInPeriod(
+		LongTermStats	lt_stats,
+		long			start,
+		long			end )
+	{		
+		long[] r1 = lt_stats.getTotalUsageInPeriod(new Date( start ), new Date( end ));
+		
+		/*
+		LongTermStats.RecordAccepter accepter = (t)->true; 
+		long[] r2 = lt_stats.getTotalUsageInPeriod(new Date( start ), new Date( end ),accepter);
+
+		for ( int i=0; i<r1.length; i++ ){
+			if ( r1[i] != r2[i] ){
+				System.out.println( "diff" );
+			}
+		}
+		*/
+		
+		return( r1 );
+	}
+	
 	private void
 	reverse(
 		long[]	a )
