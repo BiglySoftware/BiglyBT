@@ -5667,6 +5667,8 @@ DeviceManagerUI
 			
 			GridLayout	layout = Utils.getSimpleGridLayout( 5 );
 		
+			layout.horizontalSpacing=4;
+			
 			composite.setLayout( layout );
 			
 			/*
@@ -5692,9 +5694,10 @@ DeviceManagerUI
 			Label total_up_down_info = new Label( composite, SWT.NULL );
 			Messages.setLanguageText( total_up_down_info, "label.total.up.down" );
 	
-			BufferedLabel total_up_down = new BufferedLabel( composite, SWT.DOUBLE_BUFFERED );
+			BufferedLabel total_up_down = new BufferedLabel( composite, SWT.DOUBLE_BUFFERED | SWT.RIGHT );
+			total_up_down.setExpandWidth();
 			gd = new GridData();
-			gd.widthHint = 120;
+			gd.widthHint = 60;
 			total_up_down.setLayoutData( gd );
 						
 			final int update_secs = 5;

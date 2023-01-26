@@ -271,7 +271,7 @@ public class Legend {
 				boolean vis = config.getBooleanParameter(keys[f_i] + ".vis", true );
 				if ( !vis ){
 					listener.visibilityChange( vis, i );
-					lblDesc.setForeground( Utils.isDarkAppearanceNative()?Colors.dark_grey:Colors.grey );
+					Utils.setSkinnedForeground( lblDesc, Utils.isDarkAppearanceNative()?Colors.dark_grey:Colors.grey, true );
 				}
 			}
 

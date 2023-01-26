@@ -39,13 +39,12 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.GridData;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-import com.biglybt.ui.swt.mainwindow.Colors;
 
 public class
 BufferedLabel
 	extends BufferedWidget
 {
-	private Control	label;
+	private final Control	label;
 
 	private String	value = "";
 
@@ -82,6 +81,41 @@ BufferedLabel
 		label = (Control)getWidget();
 
 		ClipboardCopy.addCopyToClipMenu( label, clip_provider );
+	}
+	
+	public void
+	setExpandWidth()
+	{
+		label.addListener( SWT.Paint, (ev)->{
+			
+			String text = getText();
+			
+			if ( text != null ){
+			
+				int border = label.getBorderWidth();
+			
+				int width = border*2 + ev.gc.stringExtent( text ).x;
+				
+				int current_width = label.getBounds().width;
+				
+				if ( current_width < width ){
+					
+					Object ld = label.getLayoutData();
+					
+					if ( ld instanceof GridData ){
+						
+						GridData gd = (GridData)ld;
+						
+						if ( gd.widthHint < width ){
+							
+							gd.widthHint = width;
+							
+							label.getParent().layout( true );
+						}
+					}
+				}
+			}
+		});
 	}
 	
 	public boolean
