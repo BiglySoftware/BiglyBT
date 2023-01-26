@@ -2,7 +2,7 @@ BIGLYBT CHANGELOG
 -----------------
 2023.02.yy | BiglyBT 3.3.0.0
 
-Up to B43
+Up to B44
 
 FEATURE: Tag   | Add ability to remove auto-tag config rows [Parg]
 FEATURE: Tag   | Added "isMoving()" Tag Constraint [Parg]
@@ -57,7 +57,13 @@ CHANGE: UI     | Remember selected tab [Parg]
 CHANGE: UI     | Switch expand bar theme on Win dark, not as terrible [Parg]
 CHANGE: UI     | Reduce wasted space around devices view [Parg]
 CHANGE: UI     | Rework tab renderer and use for dashboard views [Parg]
-CHANGE: UI     | Allow secondary dashboard views to be configured [Parg]
+CHANGE: UI     | Allow secondary dashboard views to be configured [Parg]]
+CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
+CHANGE: UI     | ru_RU: Russian translation update [adem4ik]
+CHANGE: UI     | sl_SI: Slovenian translation update [upwinxp]
+CHANGE: UI     | tr_TR: Turkish translation update [BouRock]
+CHANGE: UI     | zh_CN: Simplified Chinese translation update [Keith.T.Maxwell]
+CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
 
 BUGFIX: Tag    | Fix sort for tag-group icon columns when row has no value [Parg]
 BUGFIX: Core   | Fix NPE when there's a deleted subscription result [Parg]
@@ -95,6 +101,7 @@ BUGFIX: UI     | Stop speed graphic timestamp jitter [Parg]
 BUGFIX: UI     | Fixup chat UI when key not available [Parg]
 BUGFIX: UI     | Prevent recursive disposal in case causing crash [Parg]
 BUGFIX: UI     | Fix dark mode info bars [Parg]
+BUGFIX: UI     | Fixed Console UI Add/Find files batch operation [Parg]
 
 2022.10.11 | BiglyBT 3.2.0.0
 
