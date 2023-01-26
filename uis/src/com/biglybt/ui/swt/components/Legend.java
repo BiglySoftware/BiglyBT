@@ -264,14 +264,14 @@ public class Legend {
 						boolean vis = !config.getBooleanParameter(keys[f_i] + ".vis", true );
 						config.setParameter(keys[f_i] + ".vis", vis );
 						listener.visibilityChange( vis, f_i );
-						lblDesc.setForeground(vis?null:Colors.grey );
+						Utils.setSkinnedForeground(lblDesc,(vis?null:(Utils.isDarkAppearanceNative()?Colors.dark_grey:Colors.grey )));
 					}
 				});
 
 				boolean vis = config.getBooleanParameter(keys[f_i] + ".vis", true );
 				if ( !vis ){
 					listener.visibilityChange( vis, i );
-					lblDesc.setForeground( Colors.grey );
+					lblDesc.setForeground( Utils.isDarkAppearanceNative()?Colors.dark_grey:Colors.grey );
 				}
 			}
 
