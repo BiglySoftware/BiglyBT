@@ -2559,9 +2559,9 @@ public class TransferStatsView
 			}
 			
 			Date start_date	= new Date( start_time );
-			Date end_date	= new Date( start_time+period );
+			Date end_date	= new Date( start_time + period - 1 );	// inclusive
 						
-			long[] stats = lt_stats.getTotalUsageInPeriod(start_date, end_date );
+			long[] stats = lt_stats.getTotalUsageInPeriod( start_date, end_date );
 
 			long downloaded = stats[LongTermStats.ST_DATA_DOWNLOAD];
 			long uploaded	= stats[LongTermStats.ST_DATA_UPLOAD];

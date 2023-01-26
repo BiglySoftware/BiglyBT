@@ -23,7 +23,6 @@ package com.biglybt.core.stats.transfer.impl;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Pattern;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreComponent;
@@ -601,7 +600,7 @@ outer:
 
 							writer 			= null;
 
-							throw( new IOException( "Write faled" ));
+							throw( new IOException( "Write failed" ));
 						}
 
 						writer 			= null;
@@ -797,7 +796,12 @@ outer:
 
 			long	now_day	= (now/DAY_IN_MILLIS)*DAY_IN_MILLIS;
 
-			if ( end_millis > now ){
+				// day cache keeps totals for the current day handy but requires the period
+				// to run to "now"
+			
+			boolean	can_use_day_cache = end_millis >= now;
+			
+			if ( can_use_day_cache ){
 
 				end_millis = now;
 			}
@@ -828,12 +832,13 @@ outer:
 				String month_str	= bits[1];
 				String day_str		= bits[2];
 
-				int	year 	= Integer.parseInt( year_str );
-				int	month	= Integer.parseInt( month_str );
+				//int	year 	= Integer.parseInt( year_str );
+				//int	month	= Integer.parseInt( month_str );
 				int	day		= Integer.parseInt( day_str );
 
 				long	cache_offset = this_day == start_day?start_offset:0;
-				boolean	can_cache;
+				
+				boolean	can_use_month_cache;
 
 				if ( enable_caching ){
 
@@ -847,12 +852,12 @@ outer:
 						month_cache = getMonthCache( year_str, month_str );
 					}
 
-					can_cache =
+					can_use_month_cache =
 						this_day != now_day &&
 						( this_day > start_day || ( this_day == start_day && offset_cachable )) &&
 						this_day < end_day;
 
-					if ( can_cache ){
+					if ( can_use_month_cache ){
 
 						long[] cached_totals = month_cache.getTotals( day, cache_offset );
 
@@ -869,7 +874,7 @@ outer:
 
 						if ( this_day == now_day ){
 
-							if ( day_cache != null ){
+							if ( day_cache != null && can_use_day_cache ){
 
 								if ( day_cache.isForDay( year_str, month_str, day_str )){
 
@@ -894,14 +899,14 @@ outer:
 					}
 				}else{
 
-					can_cache = false;
+					can_use_month_cache = false;
 				}
 
 				File stats_file = FileUtil.newFile( stats_dir, bits[0], bits[1], bits[2] + ".dat" );
 
 				if ( !stats_file.exists()){
 
-					if ( can_cache ){
+					if ( can_use_month_cache ){
 
 						month_cache.setTotals( day, cache_offset, new long[0] );
 					}
@@ -1013,7 +1018,7 @@ outer:
 
 						//System.out.println( "File total: start=" + debug_utc_format.format(file_start_time) + ", end=" + debug_utc_format.format(session_time) + " - " + getString( file_totals ));
 
-						if ( can_cache ){
+						if ( can_use_month_cache ){
 
 							month_cache.setTotals( day, cache_offset, file_result_totals );
 
@@ -1025,7 +1030,7 @@ outer:
 
 							if ( enable_caching ){
 
-								if ( this_day == now_day ){
+								if ( this_day == now_day && can_use_day_cache ){
 
 									if ( day_cache == null ){
 
@@ -1306,6 +1311,8 @@ outer:
 			long	offset,
 			long[]	value )
 		{
+			//System.out.println( "Updating day cache for " + offset );
+			
 			contents.put( offset, value );
 		}
 	}
@@ -1426,6 +1433,8 @@ outer:
 			int		day,
 			long[]	totals )
 		{
+			//System.out.println( "Updating month cache for " + day );
+			
 			List<Long>	records = new ArrayList<>();
 
 			for ( Long l: totals ){
@@ -1444,6 +1453,8 @@ outer:
 			long	start_offset,
 			long[]	totals )
 		{
+			//System.out.println( "Updating month cache for " + day + " / " + start_offset );
+			
 			if ( start_offset == 0 ){
 
 				setTotals( day, totals );
