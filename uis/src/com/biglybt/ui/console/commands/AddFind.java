@@ -20,6 +20,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.biglybt.ui.common.util.StringPattern;
 import org.apache.commons.cli.CommandLine;
@@ -141,39 +143,18 @@ public class AddFind extends OptionsConsoleCommand {
 		File test = new File(arg);
 		if (test.exists()) {
 			if (test.isDirectory()) {
-				final List<File> toAdd = new ArrayList<>();
+				List<File> toAdd = new ArrayList<>();
 				try {
-					if (scansubdir) {
-						Files.walk(test.toPath()).filter(
-								new Predicate<Path>() {
-									@Override
-									public boolean test(Path p) {
-										return p.toString().endsWith(".torrent")
-												|| p.toString().endsWith(".tor");
-									}
-								}).filter(
-								new Predicate<Path>() {
-									@Override
-									public boolean test(Path p) {
-										return toAdd.add(p.toFile());
-									}
-								});
-					} else {
-						Files.list(test.toPath()).filter(
-								new Predicate<Path>() {
-									@Override
-									public boolean test(Path p) {
-										return p.toString().endsWith(".torrent")
-												|| p.toString().endsWith(".tor");
-									}
-								}).filter(
-								new Predicate<Path>() {
-									@Override
-									public boolean test(Path p) {
-										return toAdd.add(p.toFile());
-									}
-								});
-					}
+					Stream<Path> stream = scansubdir?Files.walk(test.toPath()):Files.list(test.toPath());
+					
+					toAdd = stream.filter( p->
+								{
+									String str = p.toString();
+						
+									return( str.endsWith(".torrent") || str.endsWith(".tor"));
+						
+								}).map(Path::toFile).collect( Collectors.toList());	
+				
 				} catch (IOException e) {
 				}
 				if (toAdd.size() > 0) {
@@ -213,21 +194,11 @@ public class AddFind extends OptionsConsoleCommand {
 		if( dirName == null )
 			dirName = ".";
 		final String filePattern = test.getName();
-		final List<File> files = new ArrayList<>();
+		List<File> files = new ArrayList<>();
 		try {
-			Files.list(Paths.get(dirName)).filter(
-					new Predicate<Path>() {
-						@Override
-						public boolean test(Path p) {
-							return new StringPattern(p.toString()).matches(filePattern);
-						}
-					}).filter(
-					new Predicate<Path>() {
-						@Override
-						public boolean test(Path p) {
-							return files.add(p.toFile());
-						}
-					});
+			files = Files.list(Paths.get(dirName)).filter(
+							p->new StringPattern(p.toString()).matches(filePattern)
+						).map(Path::toFile).collect( Collectors.toList());	
 		} catch (IOException e) {
 		}
 
