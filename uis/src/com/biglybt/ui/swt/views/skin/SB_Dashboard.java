@@ -2252,11 +2252,17 @@ public class SB_Dashboard
 									
 									SWTSkin skin = skinned_comp.getSkin();
 									
-									BaseMdiEntry.importStandAlone(
-										(SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), 
-										item.getState(),
-										this );
+									SWTSkinObjectContainer obj = 
+										BaseMdiEntry.importStandAlone(
+												(SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), 
+												item.getState(),
+												this );
 										
+									if ( obj != null ){
+										
+										sf.setData( "sb:reload", null );
+									}
+									
 									Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
 									
 									c.setLayoutData( Utils.getFilledFormData());
