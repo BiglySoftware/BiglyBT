@@ -4276,8 +4276,6 @@ public class OpenTorrentOptionsWindow
 			if (soStartOptionsExpandItem == null) {
 				return;
 			}
-
-			System.out.println(soStartOptionsExpandItem.getExpandItem().getParent().getBackground());
 			
 			if ( isSingleOptions ){
 								
