@@ -77,6 +77,8 @@ LongTermStatsBase
 	protected boolean				closing;
 	protected volatile boolean		destroyed;
 
+	private volatile long overall_start_time;
+	
 	private TimerEventPeriodic	event;
 	private PrintWriter			writer;
 	private String				writer_rel_file;
@@ -483,6 +485,8 @@ LongTermStatsBase
 	{
 		synchronized( this ){
 
+			overall_start_time = 0;
+			
 			destroyed = true;
 
 			if ( writer != null ){
@@ -525,6 +529,11 @@ outer:
 	public long 
 	getOverallStartTime()
 	{
+		if ( overall_start_time > 0 ){
+			
+			return( overall_start_time );
+		}
+		
 		try{
 			File[] years = stats_dir.listFiles();
 			
@@ -609,14 +618,19 @@ outer:
 				
 				Date date = utc_date_format.parse( earliest_year + "," + earliest_month + "," + earliest_day );
 				
-				return( date.getTime());
+				overall_start_time = date.getTime();
 			}
 		}catch( Throwable e ){
 			
 			Debug.out( e );
 		}
 		
-		return( SystemTime.getCurrentTime());
+		if ( overall_start_time <= 0 ){
+			
+			overall_start_time = SystemTime.getCurrentTime();
+		}
+		
+		return( overall_start_time);
 	}
 	
 	@Override
