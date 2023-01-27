@@ -2212,8 +2212,8 @@ public class TransferStatsView
   
   	private volatile long	history_scale_div				= 1;
   	private volatile int	history_selected_span_suffix	= TimeFormatter.TS_WEEK;
+  	private int				SPAN_ALL_TIME;
   	
-  	private int				history_period_suffix;
   	private int				history_period_offset;
   	
   	private Label			history_resolution;
@@ -2243,7 +2243,11 @@ public class TransferStatsView
 			
 			combo.add( str );
 		}
-				
+			
+		combo.add( MessageText.getString( "Categories.all" ));
+		
+		SPAN_ALL_TIME = TimeFormatter.TS_YEAR+1;
+		
 		combo.select( history_selected_span_suffix - TimeFormatter.TS_HOUR );
 		
 		ImageLoader loader = ImageLoader.getInstance();
@@ -2286,6 +2290,8 @@ public class TransferStatsView
 			history_selected_span_suffix = TimeFormatter.TS_HOUR + index;
 			
 			history_period_offset = 0;
+			
+			prev.setEnabled( history_selected_span_suffix != SPAN_ALL_TIME );
 			
 			next.setEnabled( false );
 			
@@ -2340,7 +2346,11 @@ public class TransferStatsView
 			formatTime( 
 				long time )
 			{
-				if ( history_selected_span_suffix < TimeFormatter.TS_WEEK ){
+				if ( history_selected_span_suffix == SPAN_ALL_TIME ){
+					
+					return( new SimpleDateFormat( "yyyy/MM").format(new Date( time )));
+					
+				}else if ( history_selected_span_suffix < TimeFormatter.TS_WEEK ){
 					
 					return( new SimpleDateFormat( "HH:mm").format(new Date( time )));
 					
@@ -2466,12 +2476,21 @@ public class TransferStatsView
 			return;
 		}
 		
-		int span_suffix = history_selected_span_suffix;;
-				
-		long 	span	= TimeFormatter.TIME_SUFFIXES_2_MULT[span_suffix] * 1000;
+		int current_width = history_mpg.getVisibleEntryCount();
+
+		if ( current_width <= 0 ){
+			
+			return;
+		}
 		
+		LongTermStats lt_stats = StatsFactory.getLongTermStats();
+
+		int span_suffix = history_selected_span_suffix;;
+						
 		int period_suffix;
-				
+		
+		boolean all_time = false;
+
 		if ( span_suffix == TimeFormatter.TS_HOUR ){
 			
 			period_suffix	= TimeFormatter.TS_MINUTE;
@@ -2488,20 +2507,46 @@ public class TransferStatsView
 			
 			period_suffix	= TimeFormatter.TS_HOUR;
 			
-		}else{
+		}else if ( span_suffix == TimeFormatter.TS_YEAR ){
 			
 			period_suffix = TimeFormatter.TS_DAY;
-		}
-
-		long	period = TimeFormatter.TIME_SUFFIXES_2_MULT[ period_suffix ] * 1000;
-
-		int current_width = history_mpg.getVisibleEntryCount();
-
-		if ( current_width <= 0 ){
 			
-			return;
+		}else{
+			
+			period_suffix = TimeFormatter.TS_WEEK;
+			
+			all_time = true;
 		}
 		
+		long	period = TimeFormatter.TIME_SUFFIXES_2_MULT[ period_suffix ] * 1000;
+
+		long 	span;
+		
+		long end_time 	= SystemTime.getCurrentTime();
+		long start_time;
+		
+		if ( all_time ){
+			
+			start_time = lt_stats.getOverallStartTime();
+
+			start_time = (start_time/period)*period;
+			
+			end_time = ((end_time+(period-1))/period)*period;
+			
+			span = end_time - start_time;
+			
+		}else{
+			
+			span = TimeFormatter.TIME_SUFFIXES_2_MULT[span_suffix] * 1000;
+						
+			end_time += history_period_offset*span;
+			
+			end_time = ((end_time+(period-1))/period)*period;
+			
+			start_time = end_time - span;
+
+		}
+
 		if ( 	history_last_span == span &&
 				history_last_period == period &&
 				history_last_width == current_width && 
@@ -2511,17 +2556,7 @@ public class TransferStatsView
 		}
 		
 		int	entries = (int)( span / period );
-		
-		LongTermStats lt_stats = StatsFactory.getLongTermStats();
-
-		long end_time 	= SystemTime.getCurrentTime();
-		
-		end_time += history_period_offset*span;
-		
-		end_time = ((end_time+(period-1))/period)*period;
-		
-		long start_time = end_time - span;
-			
+					
 		SimpleDateFormat sdf = new SimpleDateFormat();
 		
 		history_span.setText( sdf.format( new Date( start_time )) + " - " + sdf.format( new Date( end_time-1 )));
@@ -2620,7 +2655,6 @@ public class TransferStatsView
 		}
 				
 		history_scale_div		= div;
-		history_period_suffix	= period_suffix;
 		
 		int[][]	idata	= new int[2][current_width];
 		

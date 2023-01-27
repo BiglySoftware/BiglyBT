@@ -230,29 +230,7 @@ LongTermStatsImpl
 						st_dht_sent,
 						st_dht_received });
 
-			if ( event == null ){	// should always be null but hey ho
-
-			    event =
-			    	SimpleTimer.addPeriodicEvent(
-				    	"LongTermStats",
-				    	MIN_IN_MILLIS,
-				    	new TimerEventPerformer()
-				    	{
-				    		@Override
-						    public void
-				    		perform(TimerEvent event)
-				    		{
-				    			if ( destroyed ){
-
-				    				event.cancel();
-
-				    				return;
-				    			}
-
-				    			updateStats();
-				    		}
-				    	});
-			}
+			sessionStartComplete( "LongTermStats" );
 		}
 	}
 

@@ -120,29 +120,7 @@ LongTermStatsGenericImpl
 
 			write( RT_SESSION_START, st );
 
-			if ( event == null ){	// should always be null but hey ho
-
-			    event =
-			    	SimpleTimer.addPeriodicEvent(
-				    	"LongTermStats:" + generic_id,
-				    	MIN_IN_MILLIS,
-				    	new TimerEventPerformer()
-				    	{
-				    		@Override
-						    public void
-				    		perform(TimerEvent event)
-				    		{
-				    			if ( destroyed ){
-
-				    				event.cancel();
-
-				    				return;
-				    			}
-
-				    			updateStats();
-				    		}
-				    	});
-			}
+			sessionStartComplete( "LongTermStats:" + generic_id );
 		}
 	}
 

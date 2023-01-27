@@ -44,7 +44,10 @@ import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimerEvent;
+import com.biglybt.core.util.TimerEventPerformer;
 import com.biglybt.core.util.TimerEventPeriodic;
 import com.biglybt.core.util.average.Average;
 import com.biglybt.core.util.average.AverageFactory;
@@ -68,17 +71,18 @@ LongTermStatsBase
 	
 	protected final long[] line_stats_prev;
 
-	protected final Average[] stat_averages;
+	private final Average[] stat_averages;
 
 	protected boolean				active;
 	protected boolean				closing;
+	protected volatile boolean		destroyed;
 
-	protected TimerEventPeriodic	event;
-	protected PrintWriter			writer;
-	protected String				writer_rel_file;
+	private TimerEventPeriodic	event;
+	private PrintWriter			writer;
+	private String				writer_rel_file;
 
 	private static final SimpleDateFormat	debug_utc_format 	= new SimpleDateFormat( "yyyy,MM,dd:HH:mm" );
-	protected static final SimpleDateFormat	utc_date_format 	= new SimpleDateFormat( "yyyy,MM,dd" );
+	private static final SimpleDateFormat	utc_date_format 	= new SimpleDateFormat( "yyyy,MM,dd" );
 
 	static{
 		debug_utc_format.setTimeZone( TimeZone.getTimeZone( "UTC" ));
@@ -87,18 +91,16 @@ LongTermStatsBase
 
 	protected File stats_dir;
 
-	protected long	session_total;
+	private long	session_total;
 
-	protected final CopyOnWriteList<Object[]>	listeners = new CopyOnWriteList<>();
+	private final CopyOnWriteList<Object[]>	listeners = new CopyOnWriteList<>();
 
-	protected final AsyncDispatcher	dispatcher = new AsyncDispatcher( "lts", 5000 );
+	private final AsyncDispatcher	dispatcher = new AsyncDispatcher( "lts", 5000 );
 
 	private int	start_of_week 	= -1;
 	private int start_of_month	= -1;
-
-	protected volatile boolean	destroyed;
 	
-	protected DayCache			day_cache;
+	private DayCache			day_cache;
 
 	private static final int MONTH_CACHE_MAX = 3;
 
@@ -169,6 +171,35 @@ LongTermStatsBase
 	
 	protected abstract void
 	sessionStart();
+	
+	protected void
+	sessionStartComplete(
+		String		name )
+	{
+		if ( event == null ){	// should always be null but hey ho
+
+		    event =
+		    	SimpleTimer.addPeriodicEvent(
+			    	name,
+			    	MIN_IN_MILLIS,
+			    	new TimerEventPerformer()
+			    	{
+			    		@Override
+					    public void
+			    		perform(TimerEvent event)
+			    		{
+			    			if ( destroyed ){
+
+			    				event.cancel();
+
+			    				return;
+			    			}
+
+			    			updateStats();
+			    		}
+			    	});
+		}
+	}
 	
 	protected void
 	sessionEnd()
@@ -494,8 +525,98 @@ outer:
 	public long 
 	getOverallStartTime()
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		try{
+			File[] years = stats_dir.listFiles();
+			
+			int earliest_year 	= Integer.MAX_VALUE;
+			int earliest_month	= Integer.MAX_VALUE;
+			int earliest_day	= Integer.MAX_VALUE;
+						
+			for ( File year: years ){
+				
+				String y_str = year.getName();
+				
+				try{
+					int y = Integer.parseInt( y_str );
+				
+					if ( y > 1999 && y < 2199 && y <= earliest_year ){
+					
+						File[] months = year.listFiles();
+					
+						for ( File month: months ){
+							
+							String m_str = month.getName();
+							
+							if ( m_str.equals( "cache.dat" )){
+								
+								continue;
+							}
+							
+							try{
+								int m = Integer.parseInt( m_str );
+							
+								if ( m >= 1 && m <= 12 ){
+									
+									if ( y < earliest_year || ( y == earliest_year && m <= earliest_month )){
+										
+										File[] days = month.listFiles();
+										
+										for ( File day: days ){
+											
+											String d_str = day.getName();
+											
+											if ( m_str.equals( "d_str.dat" )){
+												
+												continue;
+											}
+											
+											try{
+												if ( d_str.endsWith( ".dat" )){
+													
+													int d = Integer.parseInt( d_str.substring( 0, d_str.length() - 4 ));
+													
+													if ( d >= 1 && d <= 31 ){
+														
+														if (	y < earliest_year || 
+																( y == earliest_year && 
+																	( m < earliest_month || ( m == earliest_month && d < earliest_day )))){
+															
+															earliest_year 	= y;
+															earliest_month	= m;
+															earliest_day	= d;
+															
+															if ( earliest_day == 1 ){
+																
+																break;
+															}
+														}
+													}
+												}
+											}catch( Throwable e ){
+											}
+										}
+									}
+								}
+							}catch( Throwable e ){
+							}
+						}
+					}
+				}catch( Throwable e ){
+				}
+			}
+			
+			if ( earliest_year != Integer.MAX_VALUE ){
+				
+				Date date = utc_date_format.parse( earliest_year + "," + earliest_month + "," + earliest_day );
+				
+				return( date.getTime());
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+		return( SystemTime.getCurrentTime());
 	}
 	
 	@Override
