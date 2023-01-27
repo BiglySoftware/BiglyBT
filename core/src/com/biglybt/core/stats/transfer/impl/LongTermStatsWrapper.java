@@ -82,6 +82,13 @@ LongTermStatsWrapper
 	}
 
 	@Override
+	public long 
+	getOverallStartTime()
+	{
+		return( delegate.getOverallStartTime());
+	}
+	
+	@Override
 	public synchronized long[]
 	getTotalUsageInPeriod(
 		Date		start_date,

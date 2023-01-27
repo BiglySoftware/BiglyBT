@@ -52,6 +52,9 @@ LongTermStats
 	public long[]
 	getCurrentRateBytesPerSecond();
 
+	public long
+	getOverallStartTime();
+	
 	public long[]
 	getTotalUsageInPeriod(
 		Date		start_date,
