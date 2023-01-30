@@ -5094,55 +5094,56 @@ BuddyPluginViewBetaChat
 							networks_str += (networks_str.length()==0?"":",") + net;
 						}
 						
-						Utils.setPeronalShare( properties );
+						if ( Utils.setPeronalShare( properties )){
 						
-						properties.put( ShareManager.PR_NETWORKS, networks_str );
-
-						Tag tag = plugin.getBeta().getDownloadTag();
-
-						if ( tag != null ){
+							properties.put( ShareManager.PR_NETWORKS, networks_str );
+	
+							Tag tag = plugin.getBeta().getDownloadTag();
+	
+							if ( tag != null ){
+								
+								properties.put( ShareManager.PR_TAGS, String.valueOf( tag.getTagUID()));
+							}
 							
-							properties.put( ShareManager.PR_TAGS, String.valueOf( tag.getTagUID()));
-						}
-						
-						Torrent 	torrent;
-
-						try{
-							if ( file.isFile()){
-
-								ShareResourceFile srf = pi.getShareManager().addFile( file, properties );
-
-								torrent = srf.getItem().getTorrent();
-
-							}else{
-
-								ShareResourceDir srd = pi.getShareManager().addDir( file, properties );
-
-								torrent = srd.getItem().getTorrent();
+							Torrent 	torrent;
+	
+							try{
+								if ( file.isFile()){
+	
+									ShareResourceFile srf = pi.getShareManager().addFile( file, properties );
+	
+									torrent = srf.getItem().getTorrent();
+	
+								}else{
+	
+									ShareResourceDir srd = pi.getShareManager().addDir( file, properties );
+	
+									torrent = srd.getItem().getTorrent();
+								}
+	
+								final Download download = pi.getPluginManager().getDefaultPluginInterface().getShortCuts().getDownload( torrent.getHash());
+	
+								if ( download == null ){
+	
+									throw( new Exception( "Download no longer exists" ));
+	
+								}
+								Utils.execSWTThread(
+									new Runnable() {
+	
+										@Override
+										public void
+										run()
+										{
+											dropDownload( download, accepter );
+	
+										}
+									});
+								
+							}catch( Throwable e ){
+	
+								dropFailed( file.getName(), e );
 							}
-
-							final Download download = pi.getPluginManager().getDefaultPluginInterface().getShortCuts().getDownload( torrent.getHash());
-
-							if ( download == null ){
-
-								throw( new Exception( "Download no longer exists" ));
-
-							}
-							Utils.execSWTThread(
-								new Runnable() {
-
-									@Override
-									public void
-									run()
-									{
-										dropDownload( download, accepter );
-
-									}
-								});
-
-						}catch( Throwable e ){
-
-							dropFailed( file.getName(), e );
 						}
 					}
 				}.start();

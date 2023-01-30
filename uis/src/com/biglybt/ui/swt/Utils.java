@@ -5973,7 +5973,7 @@ public class Utils
 		mapListeners.clear();
 	}
 
-	public static void
+	public static boolean
 	setPeronalShare(
 		Map<String, String> properties )
 	{
@@ -5987,6 +5987,7 @@ public class Utils
 					MessageText.getString( "personal.share.prompt.text"),
 					new String[] {
 							MessageText.getString("Button.ok"),
+							MessageText.getString("Button.cancel"),
 					},
 					0);
 
@@ -6000,10 +6001,17 @@ public class Utils
 
 			prompter.open(null);
 
-			prompter.waitUntilClosed();
+			int result = prompter.waitUntilClosed();
+			
+			if ( result != 0 ){
+				
+				return( false );
+			}
 		}
 
 		properties.put(ShareManager.PR_PERSONAL, "true");
+		
+		return( true );
 	}
 
 

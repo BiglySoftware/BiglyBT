@@ -674,21 +674,22 @@ public class FilesViewMenuUtil
 			public void handleEvent(Event event) {
 				Map<String,String>	properties = new HashMap<>();
 
-				Utils.setPeronalShare( properties );
+				if ( Utils.setPeronalShare( properties )){
 				
-				for (int i = 0; i < all_files.size(); i++) {
-
-					DiskManagerFileInfo file_info = all_files.get(i);
-
-					File file = file_info.getFile( true );
-
-					if ( file.isFile()){
-
-						ShareUtils.shareFile( file.getAbsolutePath(), properties );
-
-					}else if ( file.isDirectory()){
-
-						ShareUtils.shareDir( file.getAbsolutePath(), properties );
+					for (int i = 0; i < all_files.size(); i++) {
+	
+						DiskManagerFileInfo file_info = all_files.get(i);
+	
+						File file = file_info.getFile( true );
+	
+						if ( file.isFile()){
+	
+							ShareUtils.shareFile( file.getAbsolutePath(), properties );
+	
+						}else if ( file.isDirectory()){
+	
+							ShareUtils.shareDir( file.getAbsolutePath(), properties );
+						}
 					}
 				}
 			}

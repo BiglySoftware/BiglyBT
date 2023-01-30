@@ -1645,15 +1645,16 @@ public class TorrentUtil
 
 					Map<String, String> properties = new HashMap<>();
 
-					Utils.setPeronalShare( properties );;
+					if ( Utils.setPeronalShare( properties )){
 
-					if (file.isFile()) {
-
-						ShareUtils.shareFile(file.getAbsolutePath(), properties);
-
-					} else if (file.isDirectory()) {
-
-						ShareUtils.shareDir(file.getAbsolutePath(), properties);
+						if (file.isFile()) {
+	
+							ShareUtils.shareFile(file.getAbsolutePath(), properties);
+	
+						} else if (file.isDirectory()) {
+	
+							ShareUtils.shareDir(file.getAbsolutePath(), properties);
+						}
 					}
 				}
 			});
