@@ -2,8 +2,6 @@ BIGLYBT CHANGELOG
 -----------------
 2023.02.yy | BiglyBT 3.3.0.0
 
-Up to B44
-
 FEATURE: Tag   | Add ability to remove auto-tag config rows [Parg]
 FEATURE: Tag   | Added "isMoving()" Tag Constraint [Parg]
 FEATURE: Core  | Added option to prioritize downloads by amount remaining [Parg]
@@ -33,6 +31,7 @@ FEATURE: UI    | Recover pop-out windows on restart [Parg]
 FEATURE: UI    | Allow searching by renamed columns in setup window [Parg]
 FEATURE: UI    | Dark Theme option for Windows, Java 11+ recommended [Parg]
 FEATURE: UI    | Show drag position of top/right bar "sash" [Parg]
+FEATURE: UI    | Give the option to abandon the creation of a personal share [Parg]
 FEATURE: UI    | Added upload/download history view [Parg]
 
 CHANGE: Tag    | Enforce strict tag download limits with option to be lax [Parg]
@@ -44,6 +43,7 @@ CHANGE: Core   | Don't descend into folders starting with "." when searching sav
 CHANGE: Core   | Log bind failures when logging enabled [Parg]
 CHANGE: Core   | Don't discard unused "All Tracker" entries if they have options set [Parg]
 CHANGE: Core   | Tinker with donation logic to back off more when donated [Parg]
+CHANGE: Core   | Merge the two very similar long-term stats implementations [Parg]
 CHANGE: UI     | Rework things so that peer connected time column times are synchronized [Parg]
 CHANGE: UI     | Users running Java 11+ will receive an updated SWT library [Parg]
 CHANGE: UI     | Allow main window to be minimized during closedown [Parg]
@@ -78,6 +78,7 @@ BUGFIX: Core   | Fix some magnet links being incorrectly accepted as .biglybt fi
 BUGFIX: Core   | Don't attempt to proxy file:// urls [Parg]
 BUGFIX: Core   | Reduce blocking sync in subscription manager [Parg]
 BUGFIX: Core   | Don't re-create dashboard view on selection [Parg]
+BUGFIX: Core   | Net limit should pause download if either up or down limit exceeded [Parg]
 BUGFIX: UI     | Fix cell refresh skipping when sorted as table mutates [Parg]
 BUGFIX: UI     | Fix pieces view Files column translation [Parg]
 BUGFIX: UI     | Fix transparency of archive icon in menu [Parg]
