@@ -3853,7 +3853,7 @@ SpeedLimitHandler
 
 						if ( rs.hasRunStateCapability( TagFeatureRunState.RSC_PAUSE )){
 
-							boolean pause = exceeded_up&&exceeded_down;
+							boolean pause = exceeded_up || exceeded_down;
 
 							int op = pause?TagFeatureRunState.RSC_PAUSE:TagFeatureRunState.RSC_RESUME;
 
