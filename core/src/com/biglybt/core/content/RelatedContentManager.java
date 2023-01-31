@@ -456,7 +456,6 @@ RelatedContentManager
 										if ( enabled ){
 
 											if ( tick_count >= INITIAL_PUBLISH_TICKS ){
-
 												if ( tick_count % ( public_dht_plugin.isSleeping()?PUBLISH_SLEEPING_CHECK_TICKS:PUBLISH_CHECK_TICKS) == 0 ){
 
 													publish();
@@ -848,7 +847,6 @@ RelatedContentManager
 			if ( initialising ){
 
 				int padd = MAX_HISTORY - download_info_map.size();
-
 				for ( int i=0;i<history.size() && padd > 0;i++ ){
 
 					try{
@@ -978,9 +976,9 @@ RelatedContentManager
 				pub_download_infos1.clear();
 				pub_download_infos2.clear();
 
-				List<DownloadInfo> list = download_info_map.values();
+				List<DownloadInfo> pub_download_infos1 = download_info_map.values();
 
-				for ( DownloadInfo info: list ){
+				for ( DownloadInfo info: pub_download_infos1 ){
 
 					if (( info.getNetworksInternal() & NET_PUBLIC ) != 0 ){
 
@@ -999,9 +997,9 @@ RelatedContentManager
 				non_pub_download_infos1.clear();
 				non_pub_download_infos2.clear();
 
-				List<DownloadInfo> list = download_info_map.values();
+				List<DownloadInfo> non_pub_download_infos1 = download_info_map.values();
 
-				for ( DownloadInfo info: list ){
+				for ( DownloadInfo info: non_pub_download_infos1 ){
 
 					byte nets = info.getNetworksInternal();
 
@@ -2369,7 +2367,7 @@ RelatedContentManager
 
 			String op_str = "Content rel read: size=" + file_size;
 
-			lookupContentSupport0( from_hash, key_bytes, op_str, 0, networks, true, listener );
+			lookupContentSupport0( key_bytes, from_hash, op_str, 0, networks, true, listener ); // bug
 
 		}catch( ContentException e ){
 
@@ -2565,7 +2563,7 @@ RelatedContentManager
 							try{
 								Map<String,Object> map = (Map<String,Object>)BDecoder.decode( value.getValue());
 
-								DownloadInfo info = decodeInfo( map, from_hash, level+1, explicit, entries );
+								DownloadInfo info = decodeInfo( map, key_bytes, level+1, explicit, entries );
 
 								if ( info != null ){
 
