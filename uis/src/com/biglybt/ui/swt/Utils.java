@@ -503,7 +503,12 @@ public class Utils
 		Control		control,
 		Color		color )
 	{
-		control.setBackground(color);
+		Boolean forced = (Boolean)control.getData( "utils:skinned-bg-forced" );
+
+		if ( forced == null || !forced ){
+		
+			control.setBackground(color);
+		}
 		
 		control.setData( "utils:skinned-bg", color );
 	}
@@ -604,18 +609,46 @@ public class Utils
 		Control		control,
 		Color		color )
 	{
-		Color def = (Color)control.getData( "utils:skinned-bg" );
-		
-		if ( def != null ){
+		setSkinnedBackground( control, color, false );
+	}
+	
+	public static void
+	setSkinnedBackground(
+		Control		control,
+		Color		color,
+		boolean		force )
+	{
+		if ( force ){
 			
-			control.setBackground( color==null?def:color );
+			control.setData( "utils:skinned-bg-forced", true );
+			
+			control.setBackground( color );
 			
 		}else{
 			
-			control.setBackground( color );
+			Color def = (Color)control.getData( "utils:skinned-bg" );
+			
+			if ( def != null ){
+				
+				control.setBackground( color==null?def:color );
+				
+			}else{
+				
+				control.setBackground( color );
+			}
 		}
 	}
 
+	public static void
+	setSkinnedBackground(
+		Control		control,
+		Control		from )
+	{
+		control.setBackground( from.getBackground());
+		
+		control.setData( "utils:skinned-bg-forced", from.getData( "utils:skinned-bg-forced" ));
+	}
+	
 	public static Control
 	createSkinnedLabelSeparator(
 		Composite	parent,

@@ -31,6 +31,7 @@ import com.biglybt.ui.swt.components.BubbleTextBox;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.FormAttachment;
@@ -76,6 +77,7 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.utils.ColorCache;
 
 public class SubscriptionsView
@@ -310,13 +312,15 @@ public class SubscriptionsView
 
 		textFont2 = new Font(viewComposite.getDisplay(),fDatas);
 
+		boolean dark = Utils.isDarkAppearanceNative();
+		
 		Composite topComposite = new Composite(viewComposite,SWT.NONE);
 		topComposite.setLayout(new FormLayout());
 		
 		Composite tableComposite = new Composite(viewComposite,SWT.NONE);
 		tableComposite.setLayout(new FormLayout());
 		
-		Composite bottomComposite = new Composite(viewComposite,SWT.BORDER);
+		Composite bottomComposite = new Composite(viewComposite,dark?SWT.NONE:SWT.BORDER);
 		bottomComposite.setLayout(new FormLayout());
 
 			// top section
@@ -552,10 +556,16 @@ public class SubscriptionsView
 
 			// bottom composite setup
 		
-		bottomComposite.setBackground(ColorCache.getColor(bottomComposite.getDisplay(), "#F1F9F8"));
+		Display display = bottomComposite.getDisplay();
+		
+		if ( dark ){
+			Utils.setSkinnedBackground( bottomComposite, Colors.getSystemColor(display,Utils.isDarkAppearanceNativeWindows()?SWT.COLOR_WIDGET_LIGHT_SHADOW:SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW ), true );
+		}else{
+			bottomComposite.setBackground(ColorCache.getColor(display, "#F1F9F8"));
+		}
 
 		Label preText = new Label(bottomComposite,SWT.NONE);
-		preText.setForeground(ColorCache.getColor(bottomComposite.getDisplay(), "#6D6F6E"));
+		
 		preText.setFont(textFont1);
 		preText.setText(MessageText.getString("subscriptions.view.help.1"));
 
@@ -563,10 +573,22 @@ public class SubscriptionsView
 		ImageLoader.getInstance().setLabelImage(image, "btn_rss_add");
 
 		Link postText = new Link(bottomComposite,SWT.NONE);
-		postText.setForeground(ColorCache.getColor(bottomComposite.getDisplay(), "#6D6F6E"));
+		
 		postText.setFont(textFont2);
 		postText.setText(MessageText.getString("subscriptions.view.help.2"));
 
+		if ( dark ){
+			Utils.setSkinnedBackground( preText, bottomComposite );
+			Utils.setSkinnedBackground( postText, bottomComposite );
+			Color fg = Colors.getSystemColor(display, SWT.COLOR_WIDGET_FOREGROUND );
+			preText.setForeground( fg );
+			postText.setForeground( fg );
+		}else{
+			Color fg =  ColorCache.getColor(display, "#6D6F6E");
+			preText.setForeground( fg );
+			postText.setForeground( fg );
+		}
+		
 		postText.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -578,7 +600,7 @@ public class SubscriptionsView
 
 		Label close = new Label(bottomComposite,SWT.NONE);
 		ImageLoader.getInstance().setLabelImage(close, "image.dismissX");
-		close.setCursor(bottomComposite.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+		close.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
 
 		FormData data;
 
