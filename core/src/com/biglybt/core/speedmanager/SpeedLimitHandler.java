@@ -3853,7 +3853,10 @@ SpeedLimitHandler
 
 						if ( rs.hasRunStateCapability( TagFeatureRunState.RSC_PAUSE )){
 
-							boolean pause = exceeded_up || exceeded_down;
+								// if both are exceeded then we pause the downloads
+								// otherwise we set the up/down limit to disabled in the code below
+							
+							boolean pause = exceeded_up && exceeded_down;
 
 							int op = pause?TagFeatureRunState.RSC_PAUSE:TagFeatureRunState.RSC_RESUME;
 
