@@ -1458,6 +1458,8 @@ public class MainMDISetup
 		
 		sb_transfers = new SB_Transfers(mdi, false);
 		
+		sb_dashboard = new SB_Dashboard(mdi, false);
+		
 		SBC_ActivityTableView.setupSidebarEntry(mdi);
 
 		mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY);
@@ -1469,7 +1471,7 @@ public class MainMDISetup
 
 		setupCatsTags( mdi );
 		
-		sb_dashboard = new SB_Dashboard(mdi);
+		sb_dashboard = new SB_Dashboard(mdi, true);
 		
 		for (int i = 0; i < preferredOrder.length; i++) {
 			String id = preferredOrder[i];

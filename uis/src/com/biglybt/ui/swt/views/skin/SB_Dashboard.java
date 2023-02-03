@@ -104,343 +104,362 @@ public class SB_Dashboard
 	private DashboardInstance	topbar_dashboard = new DashboardInstance( "topbar", true );
 	
 	private final MultipleDocumentInterfaceSWT		mdi;
+	private final boolean							bigly_ui;
 	
 	private MdiEntry mdi_entry;
 		
 	public 
 	SB_Dashboard(
-		final MultipleDocumentInterfaceSWT _mdi ) 
+		MultipleDocumentInterfaceSWT 	_mdi,
+		boolean							_bigly_ui )
 	{
-		mdi		= _mdi;
+		mdi			= _mdi;
+		bigly_ui	= _bigly_ui;
 		
-		main_dashboard.readConfig();
-		
-		sidebar_dashboard.readConfig();
+		if ( bigly_ui ){
+			
+			main_dashboard.readConfig();
+			
+			if ( !COConfigurationManager.getBooleanParameter( "dashboard.init.0", false )){
 				
-		rightbar_dashboard.readConfig();
-		
-		topbar_dashboard.readConfig();
-		
-		if ( !COConfigurationManager.getBooleanParameter( "dashboard.init.0", false )){
-			
-			COConfigurationManager.setParameter( "dashboard.init.0", true );
-			
-			main_dashboard.startOfDay();
+				COConfigurationManager.setParameter( "dashboard.init.0", true );
+				
+				main_dashboard.startOfDay();
+			}
+
+			sidebar_dashboard.readConfig();
+					
+			rightbar_dashboard.readConfig();
 		}
 		
+		topbar_dashboard.readConfig();
+				
 		if ( !COConfigurationManager.getBooleanParameter( "dashboard.init.1", false )){
 			
 			COConfigurationManager.setParameter( "dashboard.init.1", true );
 			
-			addTopbarStartupItems();
+			addTopbarStartupItems( false );
+			
+		}else{
+			
+			if ( !bigly_ui ){
+				
+				addTopbarStartupItems( true );
+			}
 		}
 		
-		PluginInterface pi = PluginInitializer.getDefaultInterface();
-		UIManager uim = pi.getUIManager();
-		MenuManager menuManager = uim.getMenuManager();
-		MenuItem menuItem;
-
-		{
-			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-					"menu.add.website");
+		if ( bigly_ui ){
+			
+			PluginInterface pi = PluginInitializer.getDefaultInterface();
+			
+			UIManager uim = pi.getUIManager();
+			
+			MenuManager menuManager = uim.getMenuManager();
+			
+			MenuItem menuItem;
 	
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-	
-			menuItem.addListener(new MenuItemListener() {
-				@Override
-				public void selected(MenuItem menu, Object target) {
-					
-					SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
-							"enter.url", "enter.website");
-	
-					entryWindow.prompt(new UIInputReceiverListener() {
-						@Override
-						public void UIInputReceiverClosed(UIInputReceiver receiver) {
-							if (!receiver.hasSubmittedInput()) {
-								return;
-							}
-	
-							String key = receiver.getSubmittedInput().trim();
-							
-							if ( !key.isEmpty()) {
-								
-								Map<String,Object>	map = new HashMap<>();
-								
-								map.put( "mdi", "sidebar" );
-								map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
-								map.put( "parent_id", "header.dashboard" );
-								map.put( "skin_ref", "main.generic.browse" );
-								map.put( "id", "Browser: " + key );
-								map.put( "title", key );		
-								map.put( "data_source", key );
-								map.put( "control_type", 0L );
-								
-								main_dashboard.addItem( map );
-								
-								main_dashboard.fireChanged();
-							}
-						}});
-				}
-			});
-		}
+			{
+				menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+						"menu.add.website");
 		
-		{
-			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"sep0");
-			
-			
-			menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
-			
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-		}
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 		
-		{
-			final MenuItem menuExamples = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"label.examples");
-	
-			menuExamples.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-	
-			menuExamples.setStyle( MenuItem.STYLE_MENU );
-			
-			menuExamples.addFillListener( 
-				new MenuItemFillListener()
-				{
+				menuItem.addListener(new MenuItemListener() {
 					@Override
-					public void
-					menuWillBeShown(
-						MenuItem	menu,
-						Object		_target )
-					{
-						menu.removeAllChildItems();
+					public void selected(MenuItem menu, Object target) {
 						
-						for ( final String[] entry: examples ){
-							
-							MenuItem menuItem = menuManager.addMenuItem(menuExamples, entry[0]);
-					
-							menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-					
-							menuItem.addListener(new MenuItemListener() {
-								@Override
-								public void selected(MenuItem menu, Object target) {
-									
-									main_dashboard.importDashboard( entry[1], false );
-									
-									SideBar sidebar = (SideBar) SkinViewManager.getByClass(SideBar.class);
-
-									if ( sidebar != null && sidebar.isVisible()) {
-										
-										sidebar.flipSideBarVisibility();
-									}
+						SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+								"enter.url", "enter.website");
+		
+						entryWindow.prompt(new UIInputReceiverListener() {
+							@Override
+							public void UIInputReceiverClosed(UIInputReceiver receiver) {
+								if (!receiver.hasSubmittedInput()) {
+									return;
 								}
-							});
+		
+								String key = receiver.getSubmittedInput().trim();
+								
+								if ( !key.isEmpty()) {
+									
+									Map<String,Object>	map = new HashMap<>();
+									
+									map.put( "mdi", "sidebar" );
+									map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
+									map.put( "parent_id", "header.dashboard" );
+									map.put( "skin_ref", "main.generic.browse" );
+									map.put( "id", "Browser: " + key );
+									map.put( "title", key );		
+									map.put( "data_source", key );
+									map.put( "control_type", 0L );
+									
+									main_dashboard.addItem( map );
+									
+									main_dashboard.fireChanged();
+								}
+							}});
+					}
+				});
+			}
+			
+			{
+				menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"sep0");
+				
+				
+				menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
+				
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			}
+			
+			{
+				final MenuItem menuExamples = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"label.examples");
+		
+				menuExamples.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		
+				menuExamples.setStyle( MenuItem.STYLE_MENU );
+				
+				menuExamples.addFillListener( 
+					new MenuItemFillListener()
+					{
+						@Override
+						public void
+						menuWillBeShown(
+							MenuItem	menu,
+							Object		_target )
+						{
+							menu.removeAllChildItems();
+							
+							for ( final String[] entry: examples ){
+								
+								MenuItem menuItem = menuManager.addMenuItem(menuExamples, entry[0]);
+						
+								menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+						
+								menuItem.addListener(new MenuItemListener() {
+									@Override
+									public void selected(MenuItem menu, Object target) {
+										
+										main_dashboard.importDashboard( entry[1], false );
+										
+										SideBar sidebar = (SideBar) SkinViewManager.getByClass(SideBar.class);
+	
+										if ( sidebar != null && sidebar.isVisible()) {
+											
+											sidebar.flipSideBarVisibility();
+										}
+									}
+								});
+							}
+						}
+					});
+			}
+			
+			{
+				menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"menu.export.to.clip");
+		
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		
+				menuItem.addListener(new MenuItemListener() {
+					@Override
+					public void selected(MenuItem menu, Object target) {
+						
+						String data = main_dashboard.exportDashboard();
+						
+						Clipboard cb = new Clipboard(Utils.getDisplay());
+						
+						try {
+						
+							cb.setContents(
+								  new Object[] {data },
+								  new Transfer[] {TextTransfer.getInstance()});
+							
+						}finally {
+							cb.dispose();
 						}
 					}
 				});
-		}
+			}
+			
+			{
+				menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"menu.import.from.clip");
 		
-		{
-			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"menu.export.to.clip");
-	
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-	
-			menuItem.addListener(new MenuItemListener() {
-				@Override
-				public void selected(MenuItem menu, Object target) {
-					
-					String data = main_dashboard.exportDashboard();
-					
-					Clipboard cb = new Clipboard(Utils.getDisplay());
-					
-					try {
-					
-						cb.setContents(
-							  new Object[] {data },
-							  new Transfer[] {TextTransfer.getInstance()});
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		
+				menuItem.addListener(new MenuItemListener() {
+					@Override
+					public void selected(MenuItem menu, Object target) {
 						
-					}finally {
-						cb.dispose();
-					}
-				}
-			});
-		}
-		
-		{
-			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"menu.import.from.clip");
-	
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-	
-			menuItem.addListener(new MenuItemListener() {
-				@Override
-				public void selected(MenuItem menu, Object target) {
-					
-					Clipboard 		cb = new Clipboard( Utils.getDisplay());
-					
-					try {
-						TextTransfer 	transfer = TextTransfer.getInstance();
-	
-						String data = (String) cb.getContents(transfer);
+						Clipboard 		cb = new Clipboard( Utils.getDisplay());
 						
-						if ( data != null && !data.isEmpty()) {
+						try {
+							TextTransfer 	transfer = TextTransfer.getInstance();
+		
+							String data = (String) cb.getContents(transfer);
 							
-							main_dashboard.importDashboard( data, true );
-						}
-					}finally {
-					
-						cb.dispose();
-					}
-				}
-			});
-		}
-		
-		{
-			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"sep1");
-			
-			
-			menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
-			
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-		}
-		
-		{
-			MenuItem resetItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-					"Button.reset");
-	
-			resetItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-	
-			resetItem.setStyle( MenuItem.STYLE_MENU );
-
-			MenuItem resetDashsboard = menuManager.addMenuItem( resetItem, "sidebar.header.dashboard");
-			
-			resetDashsboard.addListener(new MenuItemListener() {
-				@Override
-				public void selected(MenuItem menu, Object target) {
-					
-					main_dashboard.reset();
-				}
-			});
-			
-			MenuItem resetTopbar= menuManager.addMenuItem( resetItem, "label.topbar");
-			
-			resetTopbar.addListener(new MenuItemListener() {
-				@Override
-				public void selected(MenuItem menu, Object target) {
-										
-					addTopbarStartupItems();
-				}
-			});
-			
-			MenuItem resetSidebar= menuManager.addMenuItem( resetItem, "label.sidebar");
-			
-			resetSidebar.addListener(new MenuItemListener() {
-				@Override
-				public void selected(MenuItem menu, Object target) {
-					
-					sidebar_dashboard.clear();
-				}
-			});
-			
-			MenuItem resetRightbar= menuManager.addMenuItem( resetItem, "label.rightbar");
-			
-			resetRightbar.addListener(new MenuItemListener() {
-				@Override
-				public void selected(MenuItem menu, Object target) {
-					
-					rightbar_dashboard.clear();
-				}
-			});
-		}
-		
-		{		
-			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"sep2");
-		
-			menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
-		
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-		}		
-		
-		sidebar_dashboard.addAndFireListener(
-			new DashboardListener(){
-				
-				private final String	VIEW_ID = "SideBarDashboard";
+							if ( data != null && !data.isEmpty()) {
+								
+								main_dashboard.importDashboard( data, true );
+							}
+						}finally {
 						
-				private boolean registered;
-				
-				@Override
-				public void itemsChanged(){
-					ViewManagerSWT vi = ViewManagerSWT.getInstance();
-
-					if ( sidebar_dashboard.getItemCount() > 0 ){
-						
-						if ( !registered ){
-							
-							vi.registerView(
-								UISWTInstance.VIEW_SIDEBAR_AREA,
-								new UISWTViewBuilderCore(VIEW_ID,
-										null, SideBarDashboard.class));
-							
-							registered = true;
-						}
-					}else{
-						
-						if ( registered ){
-							
-							vi.unregisterView( UISWTInstance.VIEW_SIDEBAR_AREA, VIEW_ID );
-							
-							registered = false;
+							cb.dispose();
 						}
 					}
-				}
-			});
-		
-		rightbar_dashboard.addAndFireListener(
-				new DashboardListener()
-				{	
-					private final String	VIEW_ID = "RightBarDashboard";
+				});
+			}
+			
+			{
+				menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"sep1");
 				
-					private boolean	first_time = true;
+				
+				menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
+				
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			}
+			
+			{
+				MenuItem resetItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+						"Button.reset");
+		
+				resetItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		
+				resetItem.setStyle( MenuItem.STYLE_MENU );
+	
+				MenuItem resetDashsboard = menuManager.addMenuItem( resetItem, "sidebar.header.dashboard");
+				
+				resetDashsboard.addListener(new MenuItemListener() {
+					@Override
+					public void selected(MenuItem menu, Object target) {
+						
+						main_dashboard.reset();
+					}
+				});
+				
+				MenuItem resetTopbar= menuManager.addMenuItem( resetItem, "label.topbar");
+				
+				resetTopbar.addListener(new MenuItemListener() {
+					@Override
+					public void selected(MenuItem menu, Object target) {
+											
+						addTopbarStartupItems( false );
+					}
+				});
+				
+				MenuItem resetSidebar= menuManager.addMenuItem( resetItem, "label.sidebar");
+				
+				resetSidebar.addListener(new MenuItemListener() {
+					@Override
+					public void selected(MenuItem menu, Object target) {
+						
+						sidebar_dashboard.clear();
+					}
+				});
+				
+				MenuItem resetRightbar= menuManager.addMenuItem( resetItem, "label.rightbar");
+				
+				resetRightbar.addListener(new MenuItemListener() {
+					@Override
+					public void selected(MenuItem menu, Object target) {
+						
+						rightbar_dashboard.clear();
+					}
+				});
+			}
+			
+			{		
+				menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"sep2");
+			
+				menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
+			
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			}		
+			
+			sidebar_dashboard.addAndFireListener(
+				new DashboardListener(){
 					
+					private final String	VIEW_ID = "SideBarDashboard";
+							
 					private boolean registered;
 					
 					@Override
-					public void 
-					itemsChanged()
-					{
-						SWTSkin skin = SWTSkinFactory.getInstance();
-
+					public void itemsChanged(){
 						ViewManagerSWT vi = ViewManagerSWT.getInstance();
-
-						if ( rightbar_dashboard.getItemCount() > 0 ){
+	
+						if ( sidebar_dashboard.getItemCount() > 0 ){
 							
 							if ( !registered ){
 								
 								vi.registerView(
-									UISWTInstance.VIEW_RIGHTBAR_AREA,
+									UISWTInstance.VIEW_SIDEBAR_AREA,
 									new UISWTViewBuilderCore(VIEW_ID,
-											null, RightBarDashboard.class));
+											null, SideBarDashboard.class));
 								
 								registered = true;
-								
-							}
-								
-								// only force the right-bar visible when a new entry added, not at start of day
-							
-							if ( !first_time ){
-							
-								SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_RIGHTBAR + ".visible", SkinConstants.VIEWID_RIGHTBAR, true, true);
 							}
 						}else{
 							
 							if ( registered ){
 								
-								vi.unregisterView( UISWTInstance.VIEW_RIGHTBAR_AREA, VIEW_ID );
+								vi.unregisterView( UISWTInstance.VIEW_SIDEBAR_AREA, VIEW_ID );
 								
 								registered = false;
 							}
-							
-							SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_RIGHTBAR + ".visible", SkinConstants.VIEWID_RIGHTBAR, false, true);
 						}
-						
-						first_time = false;
 					}
 				});
+			
+			rightbar_dashboard.addAndFireListener(
+					new DashboardListener()
+					{	
+						private final String	VIEW_ID = "RightBarDashboard";
+					
+						private boolean	first_time = true;
+						
+						private boolean registered;
+						
+						@Override
+						public void 
+						itemsChanged()
+						{
+							SWTSkin skin = SWTSkinFactory.getInstance();
+	
+							ViewManagerSWT vi = ViewManagerSWT.getInstance();
+	
+							if ( rightbar_dashboard.getItemCount() > 0 ){
+								
+								if ( !registered ){
+									
+									vi.registerView(
+										UISWTInstance.VIEW_RIGHTBAR_AREA,
+										new UISWTViewBuilderCore(VIEW_ID,
+												null, RightBarDashboard.class));
+									
+									registered = true;
+									
+								}
+									
+									// only force the right-bar visible when a new entry added, not at start of day
+								
+								if ( !first_time ){
+								
+									SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_RIGHTBAR + ".visible", SkinConstants.VIEWID_RIGHTBAR, true, true);
+								}
+							}else{
+								
+								if ( registered ){
+									
+									vi.unregisterView( UISWTInstance.VIEW_RIGHTBAR_AREA, VIEW_ID );
+									
+									registered = false;
+								}
+								
+								SWTSkinUtils.setVisibility(skin, SkinConstants.VIEWID_RIGHTBAR + ".visible", SkinConstants.VIEWID_RIGHTBAR, false, true);
+							}
+							
+							first_time = false;
+						}
+					});
+		}
 		
 		topbar_dashboard.addAndFireListener(
 				new DashboardListener()
@@ -502,9 +521,15 @@ public class SB_Dashboard
 				viewTitleInfoRefresh(
 					ViewTitleInfo titleInfo)
 				{
-					main_dashboard.refresh( titleInfo );
-					sidebar_dashboard.refresh( titleInfo );
-					rightbar_dashboard.refresh( titleInfo );
+					if ( bigly_ui ){
+					
+						main_dashboard.refresh( titleInfo );
+					
+						sidebar_dashboard.refresh( titleInfo );
+					
+						rightbar_dashboard.refresh( titleInfo );
+					}
+					
 					topbar_dashboard.refresh( titleInfo );
 				}
 			});
@@ -580,8 +605,22 @@ public class SB_Dashboard
 	}
 	
 	private void
-	addTopbarStartupItems()
+	addTopbarStartupItems(
+		boolean only_if_all_invisible )
 	{
+		if ( only_if_all_invisible ){
+			
+			int[][] layout = topbar_dashboard.getDashboardLayout();
+			
+			for ( DashboardInstance.DashboardItem item: topbar_dashboard.getItems()){
+				
+				if ( topbar_dashboard.isUIDInLayout( layout, item.getUID())){
+					
+					return;
+				}
+			}
+		}
+		
 		topbar_dashboard.clear();
 
 		String[][] data = {
@@ -989,6 +1028,12 @@ public class SB_Dashboard
 			return( items.size());
 		}
 
+		private List<DashboardItem>
+		getItems()
+		{
+			return( items.getList());
+		}
+		
 		private void
 		addItem(
 			Map		map )
@@ -1229,7 +1274,7 @@ public class SB_Dashboard
 		setupTabItem(
 			CTabItem	item )
 		{
-			item.setShowClose( item.getData("sb:dashboarditem") != null );
+			item.setShowClose( item.getData("sb:dashboarditem") != null && bigly_ui );
 		}
 		
 		private void
@@ -1369,6 +1414,21 @@ public class SB_Dashboard
 				}
 			}
 			return( changed );
+		}
+		
+		private boolean
+		isUIDInLayout(
+			int[][]		layout,
+			int			uid )
+		{
+			for ( int[] row: layout ) {
+				for ( int i=0;i<row.length;i++){
+					if ( row[i] == uid ) {					
+						return( true );
+					}
+				}
+			}
+			return( false );
 		}
 		
 		private int[][]
@@ -2306,22 +2366,25 @@ public class SB_Dashboard
 				
 				new org.eclipse.swt.widgets.MenuItem( menu, SWT.SEPARATOR );
 				
-				org.eclipse.swt.widgets.MenuItem itemRemove = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
-				
-				Messages.setLanguageText(itemRemove, "MySharesView.menu.remove");
-
-				Utils.setMenuItemImage(itemRemove, "delete");
-				
-				itemRemove.addSelectionListener(
-					new SelectionAdapter(){
+				if ( bigly_ui ){
 					
-						@Override
-						public void widgetSelected(SelectionEvent arg0){
-							item.remove( false );
-						}
-					});
-				
-				new org.eclipse.swt.widgets.MenuItem( menu, SWT.SEPARATOR );
+					org.eclipse.swt.widgets.MenuItem itemRemove = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+					
+					Messages.setLanguageText(itemRemove, "MySharesView.menu.remove");
+	
+					Utils.setMenuItemImage(itemRemove, "delete");
+					
+					itemRemove.addSelectionListener(
+						new SelectionAdapter(){
+						
+							@Override
+							public void widgetSelected(SelectionEvent arg0){
+								item.remove( false );
+							}
+						});
+					
+					new org.eclipse.swt.widgets.MenuItem( menu, SWT.SEPARATOR );
+				}
 				
 				org.eclipse.swt.widgets.MenuItem itemConfig = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
 				
@@ -2529,7 +2592,7 @@ public class SB_Dashboard
 			    gridData.horizontalSpan = 2;
 			    cButtons.setLayoutData(gridData);
 			    GridLayout layoutButtons = new GridLayout();
-			    layoutButtons.numColumns = 5;
+			    layoutButtons.numColumns = 6;
 			    cButtons.setLayout(layoutButtons);
 	
 			    List<Button> buttons = new ArrayList<>();
@@ -2552,6 +2615,26 @@ public class SB_Dashboard
 			    	  }
 			    	  
 			    	  buildGrid();
+			    	  
+			    	  shell.layout( true, true );
+			      }
+			    });
+			    
+			    Button btnClear = new Button(cButtons,SWT.PUSH);
+			    buttons.add( btnClear );
+			    gridData = new GridData();
+			    gridData.horizontalAlignment = GridData.END;
+			    btnClear.setLayoutData(gridData);
+			    Messages.setLanguageText(btnClear,"Button.clear");
+			    btnClear.addListener(SWT.Selection, new Listener() {
+			      @Override
+			      public void handleEvent(Event e) {
+			      
+			    	  existing_mapping = new int[0][0];
+			    	 			    	  
+			    	  buildGrid();
+			    	  
+			    	  btnSave.setEnabled( false );
 			    	  
 			    	  shell.layout( true, true );
 			      }
