@@ -2132,7 +2132,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			
 			if ( !checkBeforeMove ){
 				
-				finish_in_progress = disk_mgr.downloadEnded();
+				finish_in_progress = disk_mgr.downloadEnded( start_of_day );
 			}
 		
 				// re-check all pieces to make sure they are not corrupt, but only if we weren't
@@ -2157,7 +2157,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			
 			if ( checkBeforeMove ){
 				
-				finish_in_progress = disk_mgr.downloadEnded();
+				finish_in_progress = disk_mgr.downloadEnded( start_of_day );
 			}
 
 		}else{

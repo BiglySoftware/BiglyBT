@@ -2592,13 +2592,14 @@ DiskManagerImpl
 
     @Override
     public DownloadEndedProgress 
-    downloadEnded() 
+    downloadEnded(
+    	boolean start_of_day ) 
     {
         DownloadEndedProgressImpl progress = new DownloadEndedProgressImpl();
 
         AEThread2.createAndStartDaemon( "DownloadEnded", ()->{
         	
-        		moveDownloadFilesWhenEndedOrRemoved( false, true, progress );
+        		moveDownloadFilesWhenEndedOrRemoved( false, true, progress, start_of_day );
         	});
         
         return( progress );
@@ -2608,14 +2609,15 @@ DiskManagerImpl
     public void 
     downloadRemoved() 
     {
-        moveDownloadFilesWhenEndedOrRemoved( true, true, new DownloadEndedProgressImpl());
+        moveDownloadFilesWhenEndedOrRemoved( true, true, new DownloadEndedProgressImpl(), false );
     }
 
     private void
     moveDownloadFilesWhenEndedOrRemoved(
     	boolean 					removing,
     	boolean 					torrent_file_exists,
-    	DownloadEndedProgressImpl	progress )
+    	DownloadEndedProgressImpl	progress,
+    	boolean						start_of_day )
     {
       try {
         start_stop_mon.enter();
@@ -2674,11 +2676,15 @@ DiskManagerImpl
         				
         				moveDownloadFilesWhenEndedOrRemoved0( move_details, progress );
         			}
-        		});
+        		},
+        		start_of_day );
 
         	if ( !delegated[0] ){
         	
-        		FileUtil.log( "Move of \"" + download_manager.getDisplayName() + "\" not required" );
+        		if ( !start_of_day ){
+        		
+        			FileUtil.log( "Move of \"" + download_manager.getDisplayName() + "\" not required" );
+        		}
 
         		progress.setComplete();
         	}

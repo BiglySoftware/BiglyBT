@@ -69,11 +69,13 @@ public class DownloadManagerMoveHandler extends DownloadManagerMoveHandlerUtils 
 		}
 	}
 
-	public static SaveLocationChange onCompletion(DownloadManager dm, MoveCallback callback ) {
+	public static SaveLocationChange onCompletion(DownloadManager dm, MoveCallback callback, boolean startOfDay ) {
 		if (!isApplicableDownload(dm)) {return null;}
 
 		if (dm.getDownloadState().getFlag(DownloadManagerState.FLAG_MOVE_ON_COMPLETION_DONE)) {
-			logInfo("Completion flag already set on " + describe(dm) + ", skip move-on-completion behaviour.", dm);
+			if ( !startOfDay ){
+				logInfo("Completion flag already set on " + describe(dm) + ", skip move-on-completion behaviour.", dm);
+			}
 			return null;
 		}
 

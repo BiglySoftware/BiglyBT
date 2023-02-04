@@ -244,11 +244,16 @@ DiskManagerUtil
 								// these are compact files and can't be recovered as they just contain
 								// start/end piece data
 							
-							boolean no_recycle = true;
-							
-							FileUtil.deleteWithRecycle( 
-									currentFile, 
-									dm.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ) || no_recycle );
+							if ( currentFile.exists()){
+								
+								FileUtil.log( "Deleting \"" + currentFile.getAbsolutePath() + "\" as no longer required", true );
+
+								boolean no_recycle = true;
+								
+								FileUtil.deleteWithRecycle( 
+										currentFile, 
+										dm.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ) || no_recycle );
+							}
 						}
 					}
 				}
@@ -347,6 +352,8 @@ DiskManagerUtil
 										// don't bother recycling if compact as just contain start/end piece data
 									
 									boolean no_recycle = st == DiskManagerFileInfo.ST_COMPACT || st == DiskManagerFileInfo.ST_REORDER_COMPACT;
+									
+									FileUtil.log( "Deleting \"" + existing_file.getAbsolutePath() + "\" as no longer required", true );
 									
 					                if ( FileUtil.deleteWithRecycle(
 					                		existing_file,
@@ -2016,7 +2023,7 @@ DiskManagerUtil
 					
 					@Override
 					public DownloadEndedProgress
-					downloadEnded()
+					downloadEnded( boolean start_of_day )
 					{
 						return( new DownloadEndedProgress(){
 							@Override

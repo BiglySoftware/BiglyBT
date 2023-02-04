@@ -271,7 +271,8 @@ DiskManager
 	getErrorType();
 
 	public DownloadEndedProgress
-	downloadEnded();
+	downloadEnded(
+		boolean	start_of_day );
 
     public void
     downloadRemoved();

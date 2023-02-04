@@ -3486,6 +3486,19 @@ public class FileUtil {
 	
 	public static void
 	log(
+		String		str,
+		boolean		addLocation )
+	{
+		if ( addLocation ){
+			
+			str += ": " + Debug.getStackTrace( true, false );
+		}
+		
+		log( str, null );
+	}
+	
+	public static void
+	log(
 		String		str, 
 		Throwable	error )
 	{
