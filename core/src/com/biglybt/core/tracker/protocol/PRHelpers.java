@@ -57,6 +57,17 @@ PRHelpers
 		return( resp );
 	}
 
+	public static byte[]
+	addressToBytes(
+		String		address )
+
+		throws UnknownHostException
+	{
+		InetAddress i_address = HostNameToIPResolver.syncResolve(address);
+
+		return( i_address.getAddress());
+	}
+	
 	public static int
 	addressToInt(
 		InetAddress		i_address )
@@ -105,6 +116,27 @@ PRHelpers
 		}
 	}
 
+	public static String
+	bytesToAddress(
+		byte[]		bytes )
+	{
+		try{
+			String	res = InetAddress.getByAddress(bytes).getHostAddress();
+
+			// System.out.println( "intToAddress: " + Integer.toHexString(value) + " -> " + res );
+
+			return( res );
+
+		}catch( UnknownHostException e ){
+
+				// should never get here as always valid byte array (4 long)
+
+			Debug.printStackTrace(e);
+
+			return( null );
+		}
+	}
+	
 	public static String
 	DNSToIPAddress(
 		String		dns_name )

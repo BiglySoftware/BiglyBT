@@ -35,44 +35,67 @@ public class
 PRUDPPacketReplyAnnounce2
 	extends PRUDPPacketReply
 {
+	private final boolean	is_ipv6;
+	
 	protected int		interval;
 	protected int		leechers;
 	protected int		seeders;
 
-	protected static final int BYTES_PER_ENTRY = 6;
-	protected int[]		addresses;
-	protected short[]	ports;
+	protected static final int BYTES_PER_ENTRY_IPV4 = 6;
+	protected static final int BYTES_PER_ENTRY_IPV6 = 18;
+	
+	protected byte[][]		addresses;
+	protected short[]		ports;
 
 	public
 	PRUDPPacketReplyAnnounce2(
-		int			trans_id )
+		int			trans_id,
+		boolean		ipv6 )
 	{
 		super( PRUDPPacketTracker.ACT_REPLY_ANNOUNCE, trans_id );
+		
+		is_ipv6 = ipv6;
 	}
 
 	protected
 	PRUDPPacketReplyAnnounce2(
 		DataInputStream		is,
-		int					trans_id )
+		int					trans_id,
+		boolean				ipv6 )
 
 		throws IOException
 	{
 		super( PRUDPPacketTracker.ACT_REPLY_ANNOUNCE, trans_id );
 
+		is_ipv6 = ipv6;
+		
 		interval = is.readInt();
 		leechers = is.readInt();
 		seeders  = is.readInt();
 
-		addresses 	= new int[is.available()/BYTES_PER_ENTRY];
-		ports		= new short[addresses.length];
+		int bpe = is_ipv6?BYTES_PER_ENTRY_IPV6:BYTES_PER_ENTRY_IPV4;
+		
+		int num = is.available()/bpe;
+		
+		addresses 	= new byte[num][];
+		ports		= new short[num];
 
-		for (int i=0;i<addresses.length;i++){
+		for (int i=0;i<num;i++){
 
-			addresses[i] 	= is.readInt();
+			addresses[i] = new byte[bpe-2];
+			
+			is.read( addresses[i] );
+			
 			ports[i]		= is.readShort();
 		}
 	}
 
+	public boolean
+	isIPV6()
+	{
+		return( is_ipv6 );
+	}
+	
 	public void
 	setInterval(
 		int		value )
@@ -97,14 +120,14 @@ PRUDPPacketReplyAnnounce2
 
 	public void
 	setPeers(
-		int[]		_addresses,
-		short[]		_ports )
+		byte[][]		_addresses,
+		short[]			_ports )
 	{
 		addresses 	= _addresses;
 		ports		= _ports;
 	}
 
-	public int[]
+	public byte[][]
 	getAddresses()
 	{
 		return( addresses );
@@ -145,7 +168,7 @@ PRUDPPacketReplyAnnounce2
 
 			for (int i=0;i<addresses.length;i++){
 
-				os.writeInt( addresses[i] );
+				os.write( addresses[i] );
 				os.writeShort( ports[i] );
 			}
 		}

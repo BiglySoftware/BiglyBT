@@ -2262,37 +2262,59 @@ TRTrackerBTAnnouncerImpl
 
 			 					}
 
-				 					PRUDPPacketReplyAnnounce2	announce_reply = (PRUDPPacketReplyAnnounce2)reply;
+			 					PRUDPPacketReplyAnnounce2	announce_reply = (PRUDPPacketReplyAnnounce2)reply;
 
-				 					Map	map = new HashMap();
+			 					Map	map = new HashMap();
 
-				 					map.put( "interval", new Long( announce_reply.getInterval()));
+			 					map.put( "interval", new Long( announce_reply.getInterval()));
 
-				 					int[]	addresses 	= announce_reply.getAddresses();
-				 					short[]	ports		= announce_reply.getPorts();
+			 					byte[][]	addresses 	= announce_reply.getAddresses();
+			 					short[]		ports		= announce_reply.getPorts();
 
-				 					map.put( "complete", new Long(announce_reply.getSeeders()));
-				 					map.put( "incomplete", new Long(announce_reply.getLeechers()));
+			 					map.put( "complete", new Long(announce_reply.getSeeders()));
+			 					map.put( "incomplete", new Long(announce_reply.getLeechers()));
 
+			 					if ( announce_reply.isIPV6()){
+			 						
+			 						byte[] v6peers = new byte[addresses.length*18];
+			 						
+			 						map.put( "peers6", v6peers );
+			 						
+			 						int pos = 0;
+			 						
+				 					for (int i=0;i<v6peers.length;i+=18){
+	
+				 						System.arraycopy( addresses[pos], 0, v6peers, i, 16 );
+	
+				 						short port = ports[pos];
+				 						
+				 						v6peers[i+16] = (byte)(port>>8);
+				 						v6peers[i+17] = (byte)(port&0xff);
+				 						
+				 						pos++;
+				 					}
+			 					}else{
+			 						
 				 					List	peers = new ArrayList();
 
 				 					map.put( "peers", peers );
-
+	
 				 					for (int i=0;i<addresses.length;i++){
-
+	
 				 						Map	peer = new HashMap();
-
+	
 				 						peers.add( peer );
-
-				 						peer.put( "ip", PRHelpers.intToAddress(addresses[i]).getBytes());
+	
+				 						peer.put( "ip", PRHelpers.bytesToAddress(addresses[i]).getBytes());
 				 						peer.put( "port", new Long( ports[i]));
 				 					}
+			 					}
 
-				 					byte[] data = BEncoder.encode( map );
+			 					byte[] data = BEncoder.encode( map );
 
-				 					message.write( data );
+			 					message.write( data );
 
-				 					return( null );
+			 					return( null );
 
 			 				}
 

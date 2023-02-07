@@ -134,7 +134,9 @@ TRTrackerServerProcessorUDP
 		DataInputStream is = new DataInputStream(new ByteArrayInputStream(input_buffer, 0, packet_data_length ));
 
 		try{
-			String	client_ip_address = request_dg.getAddress().getHostAddress();
+			InetAddress client_address = request_dg.getAddress();
+			
+			String	client_ip_address = client_address.getHostAddress();
 
 			PRUDPPacketRequest	request = PRUDPPacketRequest.deserialiseRequest( null, is );
 
@@ -225,7 +227,7 @@ TRTrackerServerProcessorUDP
 
 						}else if (type == PRUDPPacketTracker.ACT_REQUEST_ANNOUNCE ){
 
-							Object[] x = handleAnnounceAndScrape( client_ip_address, request, TRTrackerServerRequest.RT_ANNOUNCE );
+							Object[] x = handleAnnounceAndScrape( client_address, client_ip_address, request, TRTrackerServerRequest.RT_ANNOUNCE );
 
 							if ( x == null ){
 
@@ -239,7 +241,7 @@ TRTrackerServerProcessorUDP
 
 						}else if ( type == PRUDPPacketTracker.ACT_REQUEST_SCRAPE ){
 
-							Object[] x = handleAnnounceAndScrape( client_ip_address, request, TRTrackerServerRequest.RT_SCRAPE );
+							Object[] x = handleAnnounceAndScrape( client_address, client_ip_address, request, TRTrackerServerRequest.RT_SCRAPE );
 
 							if ( x == null ){
 
@@ -463,6 +465,7 @@ TRTrackerServerProcessorUDP
 
 	protected Object[]
 	handleAnnounceAndScrape(
+		InetAddress			client_address,
 		String				client_ip_address,
 		PRUDPPacketRequest	request,
 		int					request_type )
@@ -634,7 +637,9 @@ TRTrackerServerProcessorUDP
 
 			}else{
 
-				PRUDPPacketReplyAnnounce2 reply = new PRUDPPacketReplyAnnounce2(request.getTransactionId());
+				boolean ipv6 = client_address instanceof Inet6Address;
+				
+				PRUDPPacketReplyAnnounce2 reply = new PRUDPPacketReplyAnnounce2(request.getTransactionId(), ipv6 );
 
 				reply.setInterval(((Long)root.get("interval")).intValue());
 
@@ -647,22 +652,59 @@ TRTrackerServerProcessorUDP
 
 				reply.setLeechersSeeders(leechers,seeders);
 
-				List	peers = (List)root.get("peers");
+				if ( ipv6 ){
+					
+					byte[]	v6peers = (byte[])root.get("peers6");
+					
+					if ( v6peers == null ){
+						
+						reply.setPeers( new byte[0][], new short[0]);
+						
+					}else{
+						int num_peers = v6peers.length/18;
+						
+						byte[][]	addresses 	= new byte[num_peers][];
+						short[]		ports		= new short[num_peers];
+		
+						int pos = 0;
+						
+						for (int i=0;i<v6peers.length;i+=18){
+		
+							final byte[] peer_bytes = new byte[16];
+							
+							System.arraycopy( v6peers, i, peer_bytes, 0, 16 );
+							
+				    		int	po1 = 0xFF & v6peers[i+16];
+				    		int	po2 = 0xFF & v6peers[i+17];
 
-				int[]	addresses 	= new int[peers.size()];
-				short[]	ports		= new short[addresses.length];
-
-				for (int i=0;i<addresses.length;i++){
-
-					Map	peer = (Map)peers.get(i);
-
-					addresses[i] 	= PRHelpers.addressToInt(new String((byte[])peer.get("ip")));
-
-					ports[i]		= (short)((Long)peer.get("port")).shortValue();
+							int peer_port = po1*256 + po2;
+									
+							addresses[pos]	= peer_bytes;
+							ports[pos]		= (short)peer_port;
+							
+							pos++;
+						}
+		
+						reply.setPeers( addresses, ports );
+					}
+				}else{
+					List	peers = (List)root.get("peers");
+	
+					byte[][]	addresses 	= new byte[peers.size()][];
+					short[]		ports		= new short[addresses.length];
+	
+					for (int i=0;i<addresses.length;i++){
+	
+						Map	peer = (Map)peers.get(i);
+	
+						addresses[i] 	= PRHelpers.addressToBytes(new String((byte[])peer.get("ip")));
+	
+						ports[i]		= (short)((Long)peer.get("port")).shortValue();
+					}
+	
+					reply.setPeers( addresses, ports );
 				}
-
-				reply.setPeers( addresses, ports );
-
+				
 				return( new Object[]{ reply, torrent });
 			}
 

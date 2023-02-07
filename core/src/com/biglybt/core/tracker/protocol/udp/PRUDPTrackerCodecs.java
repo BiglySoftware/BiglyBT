@@ -21,6 +21,7 @@ package com.biglybt.core.tracker.protocol.udp;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,7 +74,7 @@ PRUDPTrackerCodecs
 							if ( PRUDPPacketTracker.VERSION == 1 ){
 								return( new PRUDPPacketReplyAnnounce(is, transaction_id));
 							}else{
-								return( new PRUDPPacketReplyAnnounce2(is, transaction_id));
+								return( new PRUDPPacketReplyAnnounce2(is, transaction_id, originator.getAddress() instanceof Inet6Address ));
 							}
 						}
 						case PRUDPPacketTracker.ACT_REPLY_SCRAPE:
