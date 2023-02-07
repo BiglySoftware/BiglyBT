@@ -245,6 +245,14 @@ AllTrackersManager
 		public int
 		getTorrentCount();
 		
+		/**
+		 * Not persisted - i.e. session total
+		 * @return
+		 */
+		
+		public long
+		getPeersReceived();
+		
 		public boolean
 		isRemovable();
 		

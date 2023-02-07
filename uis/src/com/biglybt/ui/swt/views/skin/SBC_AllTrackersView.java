@@ -278,6 +278,14 @@ public class SBC_AllTrackersView
 						new ColumnAllTrackersTorrentCount(column);
 					}
 				});
+		
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersPeersReceived.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersPeersReceived(column);
+					}
+				});
 
 		
 		tableManager.setDefaultColumnNames(TABLE_NAME,
@@ -1830,6 +1838,13 @@ public class SBC_AllTrackersView
 		getTag()
 		{
 			return( getSelectionTag());
+		}
+		
+		@Override
+		public long 
+		getPeersReceived()
+		{
+			return( tracker.getPeersReceived());
 		}
 		
 		@Override

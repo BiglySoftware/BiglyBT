@@ -359,6 +359,8 @@ AllTrackersManagerImpl
 								updated = true;
 							}
 		
+							tracker.peersReceived( a_resp.getPeers().length);
+							
 							if ( updated ){
 								
 								tracker.log( a_resp );
@@ -1310,6 +1312,8 @@ AllTrackersManagerImpl
 		
 		private LoggerChannel	logger;
 		
+		private long			peers_received;		// not persisted
+		
 		private MovingImmediateAverage	request_average = AverageFactory.MovingImmediateAverage( 5 );
 		
 		private
@@ -1512,6 +1516,20 @@ AllTrackersManagerImpl
 		isRemovable()
 		{
 			return( getTorrentCount() == 0 );
+		}
+		
+		private void
+		peersReceived(
+			int		num )
+		{
+			peers_received += num;
+		}
+		
+		@Override
+		public long 
+		getPeersReceived()
+		{
+			return( peers_received );
 		}
 		
 		@Override
