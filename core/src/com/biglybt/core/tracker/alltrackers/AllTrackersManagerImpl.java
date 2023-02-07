@@ -47,6 +47,7 @@ import com.biglybt.core.tracker.AllTrackersManager.ScrapeStats;
 import com.biglybt.core.tracker.AllTrackersManager.ScrapeStatsProvider;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerRequest;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
+import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponsePeer;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Average;
@@ -359,7 +360,12 @@ AllTrackersManagerImpl
 								updated = true;
 							}
 		
-							tracker.peersReceived( a_resp.getPeers().length);
+							TRTrackerAnnouncerResponsePeer[] peers = a_resp.getPeers();
+							
+							if ( peers != null ){
+
+								tracker.peersReceived( peers.length );
+							}
 							
 							if ( updated ){
 								
