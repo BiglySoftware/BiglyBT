@@ -209,8 +209,26 @@ public class TorrentFolderWatcher {
 				param_listener);
 	}
 
-	void importAddedFiles() {
-
+	private File
+	renameToImported(
+		File 	parent,
+		File	file )
+	{
+		File imported = FileUtil.newFile (parent, file.getName() + ".imported");
+		
+		if ( imported.exists()){
+			
+			imported.delete();
+		}
+		
+		TorrentUtils.move(file, imported);
+		
+		return( imported );
+	}
+	
+	void 
+	importAddedFiles() 
+	{
 		Core core = CoreFactory.getSingleton();
 
 		try {
@@ -237,7 +255,6 @@ public class TorrentFolderWatcher {
 			int start_mode = COConfigurationManager.getIntParameter( "Watch Torrents Add Mode" );
 
 			boolean always_rename = COConfigurationManager.getBooleanParameter("Watch Torrent Always Rename");
-
 			
 	    	int num_folders = COConfigurationManager.getIntParameter( "Watch Torrent Folder Path Count", 1);
 
@@ -358,6 +375,8 @@ public class TorrentFolderWatcher {
 					save_torrents = false;
 				}
 
+				boolean rename_to_imported = always_rename || !save_torrents;
+						
 				String[] currentFileList = folder.list(filename_filter);
 
 				if (currentFileList == null) {
@@ -398,18 +417,11 @@ public class TorrentFolderWatcher {
 										
 										// check to see if we can rename the torrent file
 
-									if ( always_rename ){
+									if ( rename_to_imported ){
 									
 										if ( !file.equals( FileUtil.newFile( dm.getTorrentFileName()).getAbsoluteFile())){
 											
-											File imported = FileUtil.newFile(folder, file.getName() + ".imported");
-											
-											if ( imported.exists()){
-											
-												imported.delete();
-											}
-											
-											TorrentUtils.move(file, imported);
+											renameToImported( folder, file );
 										}
 									}
 									
@@ -423,23 +435,16 @@ public class TorrentFolderWatcher {
 										Logger.log(new LogEvent(LOGID, file.getAbsolutePath()
 												+ " is an archived download"));
 	
-									if ( always_rename || !save_torrents ){
+									if ( rename_to_imported ){
 	
-										File imported = FileUtil.newFile(folder, file.getName() + ".imported");
-	
-										if ( imported.exists()){
-											
-											imported.delete();
-										}
-										
-										TorrentUtils.move(file, imported);
+										renameToImported( folder, file );
 	
 									}else{
 	
 										to_delete.add(torrent);
 									}
 	
-								} else {
+								}else{
 
 									boolean[] to_skip = TorrentUtils.getSkipFiles( torrent );
 
@@ -613,16 +618,9 @@ public class TorrentFolderWatcher {
 									
 									int start_state = TorrentOpenOptions.addModePreCreate(start_mode);
 									
-									if ( always_rename || !save_torrents) {
+									if ( rename_to_imported ){
 	
-										File imported = FileUtil.newFile(folder, file.getName() + ".imported");
-	
-										if ( imported.exists()){
-											
-											imported.delete();
-										}
-										
-										TorrentUtils.move(file, imported);
+										File imported = renameToImported( folder, file );
 	
 										dm = global_manager.addDownloadManager(imported.getAbsolutePath(), hash,
 												data_save_path, start_state, true, for_seeding, dmia);
