@@ -7485,7 +7485,7 @@ public class OpenTorrentOptionsWindow
 				diskFreeInfoRefreshRunning = true;
 				diskFreeInfoRefreshPending = false;
 
-				final HashSet FSroots = new HashSet(Arrays.asList(File.listRoots()));
+				final HashSet FSroots = new HashSet(Arrays.asList(FileUtil.listRootsWithTimeout()));
 				final HashMap partitions = new HashMap();
 
 				for ( TorrentOpenOptions too: torrentOptionsMulti ){

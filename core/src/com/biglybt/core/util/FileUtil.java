@@ -141,6 +141,13 @@ public class FileUtil {
 			}
 		}
 		fileHandling = fileHandlingImpl == null ? new FileHandler() : fileHandlingImpl;
+		
+		AEThread2.createAndStartDaemon( "FileUtil:init", ()->{
+			
+				// grab initial file roots
+			
+			listRootsWithTimeout();
+		});
 	}
 
   public static boolean
@@ -3805,6 +3812,64 @@ public class FileUtil {
 		return(runFileOpWithTimeoutEx(file,()->{
 			return( file.getCanonicalPath());
 		}, new IOException( "File system not responding/slow" )));	
+	}
+	
+	private static volatile File[]	last_roots = {};
+	private static long				last_roots_time = -1;
+	
+    private static AsyncDispatcher	root_updater = new AsyncDispatcher( "RootUpdater" );
+    private static AESemaphore		root_update_sem;
+    
+	public static File[]
+	listRootsWithTimeout()
+	{	
+		long now = SystemTime.getMonotonousTime();
+		
+		AESemaphore sem;
+		
+		synchronized( root_updater ){
+		
+			if ( last_roots_time != -1 && now - last_roots_time < 10*1000 ){
+								
+				return( last_roots );
+			}
+			
+			sem = root_update_sem;
+			
+			if ( sem == null ){
+				
+				last_roots_time = now;
+				
+				sem = root_update_sem = new AESemaphore( "RootUpdate" );
+				
+				root_updater.dispatch(()->{
+					
+					try{
+							// this can take a while if network shares are disconnected (for example)
+						
+						File[] roots = File.listRoots();
+						
+						if ( roots != null ){
+							
+							last_roots = roots;
+						}
+					}finally{
+					
+						synchronized( root_updater ){
+						
+						
+							root_update_sem.releaseForever();
+							
+							root_update_sem = null;
+						}
+					}
+				});
+			}
+		}
+		
+		sem.reserve( 250 );
+		
+		return( last_roots );
 	}
 	
 	public interface
