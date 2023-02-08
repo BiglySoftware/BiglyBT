@@ -265,9 +265,19 @@ SESecurityManager
 		return( SESecurityManagerImpl.getSingleton().getClassContext());
 	}
 	
+	public static boolean
+	filterNetworkInterfaces( 
+		List<NetworkInterface>		interfaces )
+	{
+		return( SESecurityManagerImpl.getSingleton().filterNetworkInterfaces( interfaces ));
+	}
+	
 	public interface 
 	MySecurityManager
 	{
+		public Class[]
+		getClassContext();
+		
 		public boolean
 		filterNetworkInterfaces( 
 			List<NetworkInterface>		interfaces );

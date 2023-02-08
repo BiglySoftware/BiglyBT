@@ -159,15 +159,8 @@ NetUtils
 									last_ni_check	= SystemTime.getMonotonousTime();
 									
 									try{
-										SecurityManager sec = System.getSecurityManager();
+										changed = SESecurityManager.filterNetworkInterfaces( result );
 										
-										if ( sec instanceof SESecurityManager.MySecurityManager ){
-											
-											if (((SESecurityManager.MySecurityManager)sec).filterNetworkInterfaces( result )){
-												
-												changed = true;
-											}
-										}
 									}catch( Throwable e ){
 																															
 										Debug.out( e );
