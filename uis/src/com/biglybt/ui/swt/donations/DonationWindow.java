@@ -186,8 +186,7 @@ public class DonationWindow
 		}
 		extraHeight = 0;
 		final Shell parentShell = Utils.findAnyShell();
-		shell = ShellFactory.createShell(parentShell,
-			SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE);
+		shell = ShellFactory.createShell(parentShell,SWT.DIALOG_TRIM | SWT.RESIZE);
 		shellLayout = Utils.getSimpleGridLayout(1);
 		shellLayout.marginWidth = 10;
 		shellLayout.marginHeight = 10;
