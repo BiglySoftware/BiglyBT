@@ -2507,4 +2507,47 @@ public class UrlUtils
 
 		throw( last_error );
 	}
+	
+	public static List<InetSocketAddress>
+	getURLAddresses(
+		URL		url )
+	{
+		String	host	= url.getHost();
+		int		port	= url.getPort()==-1?url.getDefaultPort():url.getPort();
+			
+		if ( port == -1 ){
+			
+			port = 80;
+		}
+		
+		List<InetAddress> addresses = null;
+			
+		try{
+			addresses = DNSUtils.getSingleton().getAllByName( host );
+				
+		}catch( Throwable e ){
+				
+			try{
+				addresses = Arrays.asList( InetAddress.getAllByName( host ));
+					
+			}catch( Throwable f ){
+			}
+		}
+		
+		List<InetSocketAddress> result = new ArrayList<>();
+		
+		if ( addresses == null ){
+			
+			result.add( new InetSocketAddress( host, port ));
+			
+		}else{
+			
+			for ( InetAddress ia: addresses ){
+				
+				result.add( new InetSocketAddress( ia, port ));
+			}
+		}
+		
+		return( result );
+	}
 }

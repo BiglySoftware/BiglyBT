@@ -2065,8 +2065,6 @@ TRTrackerBTAnnouncerImpl
  		URL						original_reqUrl,
 		ByteArrayOutputStream	message,
 		boolean                 is_probe )
-
- 		throws IOException
  	{
  		long timeout = is_probe?10000: PRUDPPacket.DEFAULT_UDP_TIMEOUT;
 
@@ -2088,256 +2086,272 @@ TRTrackerBTAnnouncerImpl
  				 auth = SESecurityManager.getPasswordAuthentication( UDP_REALM, reqUrl );
  			}
 
- 			PRUDPPacketHandler handler = PRUDPPacketHandlerFactory.getHandler( UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber());
-
- 			InetSocketAddress destination = new InetSocketAddress(reqUrl.getHost(),reqUrl.getPort()==-1?80:reqUrl.getPort());
-
- 			handler = handler.openSession( destination );
-
- 			try{
-
-	 			for (int retry_loop=0;retry_loop<PRUDPPacketTracker.DEFAULT_RETRY_COUNT;retry_loop++){
-
-	 				try{
-
-			 			PRUDPPacket connect_request = new PRUDPPacketRequestConnect();
-
-			 			PRUDPPacket reply = handler.sendAndReceive( auth, connect_request, destination, timeout );
-
-			 			if ( reply.getAction() == PRUDPPacketTracker.ACT_REPLY_CONNECT ){
-
-			 				PRUDPPacketReplyConnect connect_reply = (PRUDPPacketReplyConnect)reply;
-
-			 				long	my_connection = connect_reply.getConnectionId();
-
-			 				PRUDPPacketRequest request;
-
-			 				if ( PRUDPPacketTracker.VERSION == 1 ){
-
-			 					PRUDPPacketRequestAnnounce announce_request = new PRUDPPacketRequestAnnounce( my_connection );
-
-			 					request = announce_request;
-
-				 					// bit of a hack this...
-
-				 				String	url_str = reqUrl.toString();
-
-				 				int		p_pos = url_str.indexOf("?");
-
-				 				url_str	= url_str.substring(p_pos+1);
-
-				 				String event_str = getURLParam( url_str, "event" );
-
-				 				int	event = PRUDPPacketRequestAnnounce.EV_UPDATE;
-
-				 				if ( event_str != null ){
-
-				 					if ( event_str.equals( "started" )){
-
-				 						event = PRUDPPacketRequestAnnounce.EV_STARTED;
-
-				 					}else if ( event_str.equals( "stopped" )){
-
-				 						event = PRUDPPacketRequestAnnounce.EV_STOPPED;
-
-				 					}else if ( event_str.equals( "completed" )){
-
-				 						event = PRUDPPacketRequestAnnounce.EV_COMPLETED;
-				 					}
-				 				}
-
-				 				String	ip_str = getURLParam( url_str, "ip" );
-
-				 				int	ip = 0;
-
-				 				if ( ip_str != null ){
-
-				 					ip = PRHelpers.addressToInt( ip_str);
-				 				}
-
-				 				announce_request.setDetails(
-				 					torrent_hash_target.getBytes(),
-				 					tracker_peer_id,
-									getLongURLParam( url_str, "downloaded" ),
-									event,
-									ip,
-									(int)getLongURLParam( url_str, "numwant" ),
-									getLongURLParam( url_str, "left" ),
-									(short)getLongURLParam( url_str, "port" ),
-									getLongURLParam( url_str, "uploaded" ));
-
-			 				}else{
-			 					PRUDPPacketRequestAnnounce2 announce_request = new PRUDPPacketRequestAnnounce2( my_connection );
-
-			 					request = announce_request;
-
-			 					// bit of a hack this...
-
-				 				String	url_str = reqUrl.toString();
-
-				 				int		p_pos = url_str.indexOf("?");
-
-				 				url_str	= url_str.substring(p_pos+1);
-
-				 				String event_str = getURLParam( url_str, "event" );
-
-				 				int	event = PRUDPPacketRequestAnnounce.EV_UPDATE;
-
-				 				if ( event_str != null ){
-
-				 					if ( event_str.equals( "started" )){
-
-				 						event = PRUDPPacketRequestAnnounce.EV_STARTED;
-
-				 					}else if ( event_str.equals( "stopped" )){
-
-				 						event = PRUDPPacketRequestAnnounce.EV_STOPPED;
-
-				 					}else if ( event_str.equals( "completed" )){
-
-				 						event = PRUDPPacketRequestAnnounce.EV_COMPLETED;
-				 					}
-				 				}
-
-				 				String	ip_str = getURLParam( url_str, "ip" );
-
-				 				int	ip = 0;
-
-				 				if ( ip_str != null ){
-
-				 					ip = PRHelpers.addressToInt( ip_str);
-				 				}
-
-				 				announce_request.setDetails(
-				 					torrent_hash_target.getBytes(),
-				 					tracker_peer_id,
-									getLongURLParam( url_str, "downloaded" ),
-									event,
-									ip,
-									helper.getUDPKey(),
-									(int)getLongURLParam( url_str, "numwant" ),
-									getLongURLParam( url_str, "left" ),
-									(short)getLongURLParam( url_str, "port" ),
-									getLongURLParam( url_str, "uploaded" ));
-			 				}
-
-			 				reply = handler.sendAndReceive( auth, request, destination );
-
-			 				if ( reply.getAction() == PRUDPPacketTracker.ACT_REPLY_ANNOUNCE ){
-
-			 					if ( auth != null ){
-
-			 						SESecurityManager.setPasswordAuthenticationOutcome( UDP_REALM, reqUrl, true );
-			 					}
-
-			 					if ( PRUDPPacketTracker.VERSION == 1 ){
-				 					PRUDPPacketReplyAnnounce	announce_reply = (PRUDPPacketReplyAnnounce)reply;
-
-				 					Map	map = new HashMap();
-
-				 					map.put( "interval", new Long( announce_reply.getInterval()));
-
-				 					int[]	addresses 	= announce_reply.getAddresses();
-				 					short[]	ports		= announce_reply.getPorts();
-
-				 					List	peers = new ArrayList();
-
-				 					map.put( "peers", peers );
-
-				 					for (int i=0;i<addresses.length;i++){
-
-				 						Map	peer = new HashMap();
-
-				 						peers.add( peer );
-
-				 						peer.put( "ip", PRHelpers.intToAddress(addresses[i]).getBytes());
-				 						peer.put( "port", new Long( ports[i]));
-				 					}
-
-				 					byte[] data = BEncoder.encode( map );
-
-				 					message.write( data );
-
-				 					return( null );
-
-			 					}
-
-			 					PRUDPPacketReplyAnnounce2	announce_reply = (PRUDPPacketReplyAnnounce2)reply;
-
-			 					Map	map = new HashMap();
-
-			 					map.put( "interval", new Long( announce_reply.getInterval()));
-
-			 					byte[][]	addresses 	= announce_reply.getAddresses();
-			 					short[]		ports		= announce_reply.getPorts();
-
-			 					map.put( "complete", new Long(announce_reply.getSeeders()));
-			 					map.put( "incomplete", new Long(announce_reply.getLeechers()));
-
-			 					if ( announce_reply.isIPV6()){
-			 						
-			 						byte[] v6peers = new byte[addresses.length*18];
-			 						
-			 						map.put( "peers6", v6peers );
-			 						
-			 						int pos = 0;
-			 						
-				 					for (int i=0;i<v6peers.length;i+=18){
+ 			int handler_port = UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber();
+ 			
+ 			List<InetSocketAddress>	url_addresses = UrlUtils.getURLAddresses( reqUrl );
+ 			
+ 			Throwable last_error = null;
+ 			
+ 			for ( InetSocketAddress destination: url_addresses ){
+ 			
+ 				try{
+	 	 			PRUDPPacketHandler handler = PRUDPPacketHandlerFactory.getHandler( handler_port );
 	
-				 						System.arraycopy( addresses[pos], 0, v6peers, i, 16 );
+	 	 			handler = handler.openSession( destination );
 	
-				 						short port = ports[pos];
-				 						
-				 						v6peers[i+16] = (byte)(port>>8);
-				 						v6peers[i+17] = (byte)(port&0xff);
-				 						
-				 						pos++;
-				 					}
-			 					}else{
-			 						
-				 					List	peers = new ArrayList();
-
-				 					map.put( "peers", peers );
-	
-				 					for (int i=0;i<addresses.length;i++){
-	
-				 						Map	peer = new HashMap();
-	
-				 						peers.add( peer );
-	
-				 						peer.put( "ip", PRHelpers.bytesToAddress(addresses[i]).getBytes());
-				 						peer.put( "port", new Long( ports[i]));
-				 					}
-			 					}
-
-			 					byte[] data = BEncoder.encode( map );
-
-			 					message.write( data );
-
-			 					return( null );
-
-			 				}
-
-			 				failure_reason = ((PRUDPPacketReplyError)reply).getMessage();
-
-			 			}else{
-
-			 				failure_reason = ((PRUDPPacketReplyError)reply).getMessage();
+		 			try{
+		
+			 			for (int retry_loop=0;retry_loop<PRUDPPacketTracker.DEFAULT_RETRY_COUNT;retry_loop++){
+		
+			 				try{
+		
+					 			PRUDPPacket connect_request = new PRUDPPacketRequestConnect();
+		
+					 			PRUDPPacket reply = handler.sendAndReceive( auth, connect_request, destination, timeout );
+		
+					 			if ( reply.getAction() == PRUDPPacketTracker.ACT_REPLY_CONNECT ){
+		
+					 				PRUDPPacketReplyConnect connect_reply = (PRUDPPacketReplyConnect)reply;
+		
+					 				long	my_connection = connect_reply.getConnectionId();
+		
+					 				PRUDPPacketRequest request;
+		
+					 				if ( PRUDPPacketTracker.VERSION == 1 ){
+		
+					 					PRUDPPacketRequestAnnounce announce_request = new PRUDPPacketRequestAnnounce( my_connection );
+		
+					 					request = announce_request;
+		
+						 					// bit of a hack this...
+		
+						 				String	url_str = reqUrl.toString();
+		
+						 				int		p_pos = url_str.indexOf("?");
+		
+						 				url_str	= url_str.substring(p_pos+1);
+		
+						 				String event_str = getURLParam( url_str, "event" );
+		
+						 				int	event = PRUDPPacketRequestAnnounce.EV_UPDATE;
+		
+						 				if ( event_str != null ){
+		
+						 					if ( event_str.equals( "started" )){
+		
+						 						event = PRUDPPacketRequestAnnounce.EV_STARTED;
+		
+						 					}else if ( event_str.equals( "stopped" )){
+		
+						 						event = PRUDPPacketRequestAnnounce.EV_STOPPED;
+		
+						 					}else if ( event_str.equals( "completed" )){
+		
+						 						event = PRUDPPacketRequestAnnounce.EV_COMPLETED;
+						 					}
+						 				}
+		
+						 				String	ip_str = getURLParam( url_str, "ip" );
+		
+						 				int	ip = 0;
+		
+						 				if ( ip_str != null ){
+		
+						 					ip = PRHelpers.addressToInt( ip_str);
+						 				}
+		
+						 				announce_request.setDetails(
+						 					torrent_hash_target.getBytes(),
+						 					tracker_peer_id,
+											getLongURLParam( url_str, "downloaded" ),
+											event,
+											ip,
+											(int)getLongURLParam( url_str, "numwant" ),
+											getLongURLParam( url_str, "left" ),
+											(short)getLongURLParam( url_str, "port" ),
+											getLongURLParam( url_str, "uploaded" ));
+		
+					 				}else{
+					 					PRUDPPacketRequestAnnounce2 announce_request = new PRUDPPacketRequestAnnounce2( my_connection );
+		
+					 					request = announce_request;
+		
+					 					// bit of a hack this...
+		
+						 				String	url_str = reqUrl.toString();
+		
+						 				int		p_pos = url_str.indexOf("?");
+		
+						 				url_str	= url_str.substring(p_pos+1);
+		
+						 				String event_str = getURLParam( url_str, "event" );
+		
+						 				int	event = PRUDPPacketRequestAnnounce.EV_UPDATE;
+		
+						 				if ( event_str != null ){
+		
+						 					if ( event_str.equals( "started" )){
+		
+						 						event = PRUDPPacketRequestAnnounce.EV_STARTED;
+		
+						 					}else if ( event_str.equals( "stopped" )){
+		
+						 						event = PRUDPPacketRequestAnnounce.EV_STOPPED;
+		
+						 					}else if ( event_str.equals( "completed" )){
+		
+						 						event = PRUDPPacketRequestAnnounce.EV_COMPLETED;
+						 					}
+						 				}
+		
+						 				String	ip_str = getURLParam( url_str, "ip" );
+		
+						 				int	ip = 0;
+		
+						 				if ( ip_str != null ){
+		
+						 					ip = PRHelpers.addressToInt( ip_str);
+						 				}
+		
+						 				announce_request.setDetails(
+						 					torrent_hash_target.getBytes(),
+						 					tracker_peer_id,
+											getLongURLParam( url_str, "downloaded" ),
+											event,
+											ip,
+											helper.getUDPKey(),
+											(int)getLongURLParam( url_str, "numwant" ),
+											getLongURLParam( url_str, "left" ),
+											(short)getLongURLParam( url_str, "port" ),
+											getLongURLParam( url_str, "uploaded" ));
+					 				}
+		
+					 				reply = handler.sendAndReceive( auth, request, destination );
+		
+					 				if ( reply.getAction() == PRUDPPacketTracker.ACT_REPLY_ANNOUNCE ){
+		
+					 					if ( auth != null ){
+		
+					 						SESecurityManager.setPasswordAuthenticationOutcome( UDP_REALM, reqUrl, true );
+					 					}
+		
+					 					if ( PRUDPPacketTracker.VERSION == 1 ){
+						 					PRUDPPacketReplyAnnounce	announce_reply = (PRUDPPacketReplyAnnounce)reply;
+		
+						 					Map	map = new HashMap();
+		
+						 					map.put( "interval", new Long( announce_reply.getInterval()));
+		
+						 					int[]	addresses 	= announce_reply.getAddresses();
+						 					short[]	ports		= announce_reply.getPorts();
+		
+						 					List	peers = new ArrayList();
+		
+						 					map.put( "peers", peers );
+		
+						 					for (int i=0;i<addresses.length;i++){
+		
+						 						Map	peer = new HashMap();
+		
+						 						peers.add( peer );
+		
+						 						peer.put( "ip", PRHelpers.intToAddress(addresses[i]).getBytes());
+						 						peer.put( "port", new Long( ports[i]));
+						 					}
+		
+						 					byte[] data = BEncoder.encode( map );
+		
+						 					message.write( data );
+		
+						 					return( null );
+		
+					 					}
+		
+					 					PRUDPPacketReplyAnnounce2	announce_reply = (PRUDPPacketReplyAnnounce2)reply;
+		
+					 					Map	map = new HashMap();
+		
+					 					map.put( "interval", new Long( announce_reply.getInterval()));
+		
+					 					byte[][]	addresses 	= announce_reply.getAddresses();
+					 					short[]		ports		= announce_reply.getPorts();
+		
+					 					map.put( "complete", new Long(announce_reply.getSeeders()));
+					 					map.put( "incomplete", new Long(announce_reply.getLeechers()));
+		
+					 					if ( announce_reply.isIPV6()){
+					 						
+					 						byte[] v6peers = new byte[addresses.length*18];
+					 						
+					 						map.put( "peers6", v6peers );
+					 						
+					 						int pos = 0;
+					 						
+						 					for (int i=0;i<v6peers.length;i+=18){
+			
+						 						System.arraycopy( addresses[pos], 0, v6peers, i, 16 );
+			
+						 						short port = ports[pos];
+						 						
+						 						v6peers[i+16] = (byte)(port>>8);
+						 						v6peers[i+17] = (byte)(port&0xff);
+						 						
+						 						pos++;
+						 					}
+					 					}else{
+					 						
+						 					List	peers = new ArrayList();
+		
+						 					map.put( "peers", peers );
+			
+						 					for (int i=0;i<addresses.length;i++){
+			
+						 						Map	peer = new HashMap();
+			
+						 						peers.add( peer );
+			
+						 						peer.put( "ip", PRHelpers.bytesToAddress(addresses[i]).getBytes());
+						 						peer.put( "port", new Long( ports[i]));
+						 					}
+					 					}
+		
+					 					byte[] data = BEncoder.encode( map );
+		
+					 					message.write( data );
+		
+					 					return( null );
+		
+					 				}
+		
+					 				failure_reason = ((PRUDPPacketReplyError)reply).getMessage();
+		
+					 			}else{
+		
+					 				failure_reason = ((PRUDPPacketReplyError)reply).getMessage();
+					 			}
+					 		}catch( PRUDPPacketHandlerException e ){
+		
+					 			if ( e.getMessage() == null ||
+									!e.getMessage().contains("timed out")){
+		
+					 				throw( e );
+					 			}
+					 		}
 			 			}
-			 		}catch( PRUDPPacketHandlerException e ){
-
-			 			if ( e.getMessage() == null ||
-							!e.getMessage().contains("timed out")){
-
-			 				throw( e );
-			 			}
+			 		}finally{
+		
+			 			handler.closeSession();
 			 		}
-	 			}
-	 		}finally{
-
-	 			handler.closeSession();
-	 		}
-
+ 				}catch( Throwable e){
+ 					
+ 					last_error = e;
+ 				}
+ 			}
+ 			
+ 			if ( last_error != null ){
+ 				
+ 				throw( last_error );
+ 			}
  		}catch( Throwable e ){
 
  			failure_reason = exceptionToString(e);
