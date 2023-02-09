@@ -218,33 +218,55 @@ DNSUtilsImpl
 		try{
 			Attributes attrs = ((DNSDirContextImpl)context).ctx.getAttributes( host, attributes );
 
+				// need to ensure that the we process the attributes in returned order as this can be important
+				// there is a tracker that has IPv4 and IPv6 addresses but only one of them (IPv6) works correctly
+			
 			if ( attrs != null ){
 
-				for( String a: attributes ){
+				NamingEnumeration<String> ids =  attrs.getIDs();
+				
+				while( ids.hasMore()){
+					
+					String id = ids.next();
 
-					Attribute attr = attrs.get( a );
-
-					if ( attr != null ){
-
-						NamingEnumeration<?> values = attr.getAll();
-
-						while( values.hasMore()){
-
-							Object _value = values.next();
-
-							if ( _value instanceof String ){
-
-								String value = (String)_value;
-								
-								if ( a.equalsIgnoreCase( "cname" )){
-									
-									getAllByNameSupport( context, value, attributes, depth+1, result );
-									
-								}else{
-									try{
-										result.add( InetAddress.getByName( value ));
+					boolean wanted = false;
+					
+					for ( String a: attributes ){
+						
+						if ( id.equalsIgnoreCase(a)){
+							
+							wanted = true;
+							
+							break;
+						}
+					}
+					
+					if ( wanted ){
+						
+						Attribute attr = attrs.get( id );
 	
-									}catch( Throwable e ){
+						if ( attr != null ){
+	
+							NamingEnumeration<?> values = attr.getAll();
+	
+							while( values.hasMore()){
+	
+								Object _value = values.next();
+	
+								if ( _value instanceof String ){
+	
+									String value = (String)_value;
+									
+									if ( id.equalsIgnoreCase( "cname" )){
+										
+										getAllByNameSupport( context, value, attributes, depth+1, result );
+										
+									}else{
+										try{
+											result.add( InetAddress.getByName( value ));
+		
+										}catch( Throwable e ){
+										}
 									}
 								}
 							}

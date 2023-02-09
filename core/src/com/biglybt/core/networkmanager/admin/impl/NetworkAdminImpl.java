@@ -904,7 +904,16 @@ NetworkAdminImpl
 						
 					}else{
 						
-						bind_v6 = null;
+							// need to respect the order, ipv6.torrent.ubuntu.com doesn't work correctly if you don't (get a response but it has invalid crypto_flags and no peers...)
+						
+						if ( addresses.get(0) instanceof Inet4Address ){
+							
+							bind_v6 = null;
+							
+						}else{
+							
+							bind_v4 = null;
+						}
 					}
 				}
 				
