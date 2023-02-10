@@ -933,6 +933,82 @@ NetworkAdminImpl
 	}
 	
 	@Override
+	public List<InetAddress[]>
+	getSingleHomedServiceBindings( 
+		String host )
+	
+		throws UnknownHostException, UnsupportedAddressTypeException
+	{
+		List<InetAddress> addresses;
+		
+		try{
+			addresses = DNSUtils.getSingleton().getAllByName( host );
+			
+		}catch( Throwable e ){
+			
+			addresses = Arrays.asList( InetAddress.getAllByName( host ));
+		}
+		
+		InetAddress bind_v4 = null;
+		InetAddress bind_v6 = null;
+		
+		boolean has_b4 = false;
+		boolean has_b6 = false;
+		
+		try{
+			bind_v4 = getSingleHomedServiceBindAddress( IP_PROTOCOL_VERSION_REQUIRE_V4 );
+			
+			has_b4 = true;
+			
+		}catch( Throwable e ){		
+		}
+		
+		try{
+			bind_v6 = getSingleHomedServiceBindAddress( IP_PROTOCOL_VERSION_REQUIRE_V6 );
+			
+			has_b6 = true;
+			
+		}catch( Throwable e ){
+		}
+		
+		List<InetAddress[]> bindings = new ArrayList<>( addresses.size());
+		
+		for ( InetAddress ia: addresses ){
+			if ( ia instanceof Inet4Address ){
+				if ( has_b4 ){
+					bindings.add( new InetAddress[]{ ia, bind_v4 });
+				}
+			}else{
+				if ( has_b6 ){
+					bindings.add( new InetAddress[]{ ia, bind_v6 });
+				}
+			}
+		}
+		
+		if ( bindings.isEmpty()){
+			
+			throw(
+				new UnsupportedAddressTypeException(){
+					public String
+					getMessage()
+					{
+						return(	"No compatible bind address for '" + host + "'" );
+					}
+				});
+		}
+	
+		if ( preferIPv6 ){
+			
+			Collections.sort( bindings, (b1,b2)->{
+				
+				return(Boolean.compare( b1[0] instanceof Inet4Address, b2[0] instanceof Inet4Address));
+			});
+		}	
+		
+		return( bindings );
+	}
+	
+	@Override
 	public InetAddress[]
 	getAllBindAddresses(
 		boolean	include_wildcard )

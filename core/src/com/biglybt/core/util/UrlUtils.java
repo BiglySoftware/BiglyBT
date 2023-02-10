@@ -2334,7 +2334,7 @@ public class UrlUtils
 		int			connect_timeout,
 		int			read_timeout )
 
-		throws Exception
+		throws Throwable
 	{
 
 		return( connectSocketAndWrite( is_ssl, target_host, target_port, bytes, connect_timeout, read_timeout, false ));
@@ -2350,7 +2350,54 @@ public class UrlUtils
 		int			read_timeout,
 		boolean		unconnected_socket_hack )
 
-		throws Exception
+		throws Throwable
+	{
+		List<InetAddress[]> binds =  NetworkAdmin.getSingleton().getSingleHomedServiceBindings( target_host );
+
+		Throwable last_error = null;
+		
+		for( InetAddress[] bind: binds ){
+			
+			try{
+				return(
+					connectSocketAndWrite(
+						is_ssl,
+						target_host,
+						bind[1],
+						bind[0],
+						target_port,
+						bytes,
+						connect_timeout,
+						read_timeout,
+						unconnected_socket_hack ));
+				
+			}catch( Throwable e ){
+				
+				last_error = e;
+			}
+		}
+		
+		if ( last_error != null ){
+			
+			throw( last_error );
+		}
+		
+		throw( new Exception( "hmm"));
+	}
+	
+	public static Socket
+	connectSocketAndWrite(
+		boolean			is_ssl,
+		String			target_host_name,
+		InetAddress		bind_ip,
+		InetAddress		target_host,
+		int				target_port,
+		byte[]			bytes,
+		int				connect_timeout,
+		int				read_timeout,
+		boolean			unconnected_socket_hack )
+
+		throws Throwable
 	{
 		boolean	cert_hack			= false;
 		boolean	dh_hack 			= false;
@@ -2368,17 +2415,8 @@ public class UrlUtils
 			boolean	ok = false;
 
 			try{
-
-				// InetSocketAddress targetSockAddress = new InetSocketAddress(  InetAddress.getByName(target_host) , target_port  );
-
-			    // InetAddress bindIP = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress(targetSockAddress.getAddress() instanceof Inet6Address ? NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6 : NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4);
-				
-			    InetAddress[] bindDetails = NetworkAdmin.getSingleton().getSingleHomedServiceBinding( target_host );
-
-			    InetSocketAddress targetSockAddress = new InetSocketAddress( bindDetails[0], target_port );
-			    
-			    InetAddress bindIP	= bindDetails[1];
-			    
+			    InetSocketAddress targetSockAddress = new InetSocketAddress( target_host, target_port );
+			    			    
 				if ( is_ssl ){
 
 					TrustManager[] tms_delegate = SESecurityManager.getAllTrustingTrustManager();
@@ -2400,13 +2438,13 @@ public class UrlUtils
 
 					if ( unconnected_socket_hack ){
 
-						if ( bindIP == null ){
+						if ( bind_ip == null ){
 
 							target = factory.createSocket(targetSockAddress.getAddress(), targetSockAddress.getPort());
 
 						}else{
 
-							target = factory.createSocket(targetSockAddress.getAddress(), targetSockAddress.getPort(), bindIP, 0 );
+							target = factory.createSocket(targetSockAddress.getAddress(), targetSockAddress.getPort(), bind_ip, 0 );
 						}
 					}else{
 
@@ -2416,13 +2454,13 @@ public class UrlUtils
 
 					if ( unconnected_socket_hack ){
 
-						if ( bindIP == null ){
+						if ( bind_ip == null ){
 
 							target = new Socket(targetSockAddress.getAddress(), targetSockAddress.getPort());
 
 						}else{
 
-							target = new Socket(targetSockAddress.getAddress(), targetSockAddress.getPort(), bindIP, 0 );
+							target = new Socket(targetSockAddress.getAddress(), targetSockAddress.getPort(), bind_ip, 0 );
 						}
 					}else{
 
@@ -2432,16 +2470,16 @@ public class UrlUtils
 
 				if ( internal_error_hack ){
 
-					SSLSocketSNIHack( target_host, (SSLSocket)target );
+					SSLSocketSNIHack( target_host_name, (SSLSocket)target );
 				}
 
 				target.setSoTimeout( read_timeout );
 
 				if ( !unconnected_socket_hack ){
 
-			        if ( bindIP != null ){
+			        if ( bind_ip != null ){
 
-			        	target.bind( new InetSocketAddress( bindIP, 0 ) );
+			        	target.bind( new InetSocketAddress( bind_ip, 0 ) );
 			        }
 
 			        target.connect( targetSockAddress, connect_timeout );
