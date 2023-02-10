@@ -107,7 +107,8 @@ TRTrackerAnnouncerImpl
 				}
 			});
 
-	final Map	tracker_peer_cache		= new LinkedHashMap();	// insertion order - most recent at end
+	final Map<String,TRTrackerAnnouncerResponsePeer>	tracker_peer_cache		= new LinkedHashMap<>();	// insertion order - most recent at end
+	
 	private final AEMonitor tracker_peer_cache_mon 	= new AEMonitor( "TRTrackerClientClassic:PC" );
 	private int	cache_peers_used;
 
@@ -423,6 +424,10 @@ TRTrackerAnnouncerImpl
 
 				TRTrackerAnnouncerResponsePeerImpl	peer = peers[i];
 
+				peer = peer.getClone();
+				
+				peer.setCached( true );
+					
 					// remove and reinsert to maintain most recent last
 
 				tracker_peer_cache.remove( peer.getKey());

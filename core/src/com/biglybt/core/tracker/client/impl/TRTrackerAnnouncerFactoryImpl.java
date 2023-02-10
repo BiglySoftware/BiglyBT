@@ -242,6 +242,8 @@ TRTrackerAnnouncerFactoryImpl
 						az_ver,
 						(short)0 );
 				
+				entry.setCached( true );
+				
 				result.add( entry );
 			}
 		}

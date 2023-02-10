@@ -38,6 +38,9 @@ TRTrackerAnnouncerResponsePeer
 	public String
 	getKey();
 	
+	public boolean
+	isCached();
+	
 	public int
 	compareTo(
 		TRTrackerAnnouncerResponsePeer	other );

@@ -361,8 +361,10 @@ AllTrackersManagerImpl
 							}
 		
 							TRTrackerAnnouncerResponsePeer[] peers = a_resp.getPeers();
+
+								// assume if one cached they are all cached in this response
 							
-							if ( peers != null ){
+							if ( peers != null && peers.length > 0 && !peers[0].isCached()){
 
 								tracker.peersReceived( peers.length );
 							}

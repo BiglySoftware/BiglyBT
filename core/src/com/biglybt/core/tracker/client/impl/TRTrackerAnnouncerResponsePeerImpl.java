@@ -22,11 +22,12 @@ package com.biglybt.core.tracker.client.impl;
 
 
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponsePeer;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.StringInterner;
 
 public class
 TRTrackerAnnouncerResponsePeerImpl
-	implements TRTrackerAnnouncerResponsePeer
+	implements TRTrackerAnnouncerResponsePeer, Cloneable
 {
 	private final String		source;
 	private final byte[]		peer_id;
@@ -38,6 +39,8 @@ TRTrackerAnnouncerResponsePeerImpl
 	private final byte		az_version;
 	private final short		up_speed;
 
+	private boolean cached;
+	
 	public
 	TRTrackerAnnouncerResponsePeerImpl(
 		String		_source,
@@ -61,6 +64,20 @@ TRTrackerAnnouncerResponsePeerImpl
 		up_speed	= (short)_up_speed;
 	}
 
+	public TRTrackerAnnouncerResponsePeerImpl
+	getClone()
+	{
+		try{
+			return((TRTrackerAnnouncerResponsePeerImpl)clone());
+			
+		}catch( Throwable e ){
+			
+			Debug.out( "eh?" );
+			
+			return( null );
+		}
+	}
+	
 	@Override
 	public String
 	getSource()
@@ -130,6 +147,20 @@ TRTrackerAnnouncerResponsePeerImpl
 		return( address + ":" + tcp_port );
 	}
 
+	public void 
+	setCached(
+		boolean	_cached)
+	{
+		cached = _cached;
+	}
+	
+	@Override
+	public boolean 
+	isCached()
+	{
+		return( cached );
+	}
+	
 	@Override
 	public int
 	compareTo(
