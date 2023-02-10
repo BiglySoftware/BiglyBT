@@ -143,6 +143,7 @@ public class TagSettingsView
 		public Label		constraintError;
 		public BooleanSwtParameter 		constraintEnabled;
 		public StringListSwtParameter 	constraintMode;
+		public IntSwtParameter constraintTagSortAuto;
 
 		public IntSwtParameter tfl_max_taggables;
 
@@ -1645,14 +1646,16 @@ public class TagSettingsView
 					
 					params.constraintError = new Label(gConstraint, SWT.NULL );
 					params.constraintError.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
-					params.constraintError.setForeground( Colors.colorError);
+					
+					Utils.setSkinnedForeground( params.constraintError, Colors.colorError, true );
 
 					Composite cConstraintOptions = new Composite(gConstraint, SWT.NULL);
-					RowLayout layout = new RowLayout(SWT.HORIZONTAL);
-					layout.spacing = 5;
-					layout.center = true;
-					cConstraintOptions.setLayout(layout);
-
+					cConstraintOptions.setLayoutData(new GridData( GridData.FILL_HORIZONTAL));
+					gridLayout = new GridLayout(10,false);
+					gridLayout.marginLeft = gridLayout.marginRight = gridLayout.marginWidth = 0;
+					gridLayout.marginTop = gridLayout.marginBottom = gridLayout.marginHeight = 0;
+					cConstraintOptions.setLayout(gridLayout);
+					
 					btnSaveConstraint = new Button(cConstraintOptions, SWT.PUSH);
 					btnSaveConstraint.setEnabled(false);
 					btnSaveConstraint.addListener(SWT.Selection, new Listener() {
@@ -1776,6 +1779,47 @@ public class TagSettingsView
 						}
 					});
 
+					Composite cApplySort = new Composite(gConstraint, SWT.NULL);
+					cApplySort.setLayoutData(new GridData( GridData.FILL_HORIZONTAL));
+					
+					gridLayout = new GridLayout(10,false);
+					gridLayout.marginLeft = gridLayout.marginRight = gridLayout.marginWidth = 0;
+					gridLayout.marginTop = gridLayout.marginBottom = gridLayout.marginHeight = 0;
+					cApplySort.setLayout( gridLayout );
+					
+					TagDownload tag_dl = tags[0] instanceof TagDownload?(TagDownload)tags[0]:null;
+					
+					Label lApplySort = new Label( cApplySort, SWT.NULL );
+					
+					lApplySort.setText(	MessageText.getString( "tag.constraints.sort.apply.manual" ));
+					
+					Button btnApply = new Button(cApplySort, SWT.PUSH);
+		
+					btnApply.addListener(SWT.Selection, new Listener() {
+						@Override
+						public void handleEvent(Event event) {
+							tag_dl.applySort();
+						}
+					});
+					Messages.setLanguageText(btnApply, "Button.apply");
+					btnApply.setEnabled( tag_dl != null );
+					
+					params.constraintTagSortAuto = new IntSwtParameter(cApplySort,
+							"tag_constraint_tag_sort_auto", "tag.constraints.sort.apply.auto", null,
+							0, Integer.MAX_VALUE, new IntSwtParameter.ValueProcessor() {
+								@Override
+								public Integer getValue(IntSwtParameter p) {
+									return(((TagDownload)tags[0]).getAutoApplySortInterval());
+								}
+
+								@Override
+								public boolean setValue(IntSwtParameter p, Integer value) {
+									((TagDownload)tags[0]).setAutoApplySortInterval( value );
+									return true;
+								}
+							} );
+					
+					params.constraintTagSortAuto.setEnabled( tag_dl != null );
 				}
 			}
 

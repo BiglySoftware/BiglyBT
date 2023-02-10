@@ -101,6 +101,8 @@ TagBase
 	protected static final String	AT_LIMIT_ORDERING				= "max.t.o";
 	protected static final String	AT_EOS_ASSIGN_TAGS				= "eos.at";
 	protected static final String	AT_EOS_REMOVE_TAGS				= "eos.rt";
+	
+	protected static final String	AT_AUTO_APPLY_SORT_INTERVAL		= "dl.auto.sort";
 
 	private static final String[] EMPTY_STRING_LIST = {};
 
@@ -1917,6 +1919,24 @@ TagBase
 			});
 	}
 	
+	public int
+	getAutoApplySortInterval()
+	{
+		return( readLongAttribute( AT_AUTO_APPLY_SORT_INTERVAL, 0L ).intValue());
+	}
+	
+	public void
+	setAutoApplySortInterval(
+		int		secs )
+	{
+		writeLongAttribute( AT_AUTO_APPLY_SORT_INTERVAL, secs );
+	}
+	
+	public void 
+	applySort()
+	{
+	}
+	
 		// notifications
 
 	public int
@@ -2964,7 +2984,7 @@ TagBase
 
 
  	@Override
-  public void
+ 	public void
  	tick(
  		long	mono_now,
  		int 	count )

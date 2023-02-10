@@ -32,4 +32,14 @@ TagDownload
 
 	public Set<DownloadManager>
 	getTaggedDownloads();
+	
+	public void
+	applySort();
+	
+	public int
+	getAutoApplySortInterval();
+	
+	public void
+	setAutoApplySortInterval(
+		int		secs );
 }

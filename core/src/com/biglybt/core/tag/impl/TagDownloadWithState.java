@@ -31,6 +31,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStats;
+import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
@@ -75,6 +76,9 @@ TagDownloadWithState
 	private boolean	max_aggregate_share_ratio_priority;
 	private boolean	fp_seeding;
 	private boolean fp_seeding_ever;
+	
+	private int		auto_sort_period;
+	private long	last_auto_sort	= -1;
 	
 	private boolean	supports_xcode;
 	private boolean	supports_file_location;
@@ -262,6 +266,8 @@ TagDownloadWithState
 		max_aggregate_share_ratio_priority	= readBooleanAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY, TagFeatureRateLimit.AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY_DEFAULT );
 		fp_seeding							= readBooleanAttribute( AT_RATELIMIT_FP_SEEDING, false );
 
+		auto_sort_period					= getAutoApplySortInterval();
+		
 		notification_pub					= getNotifyMessageChannel();
 		
 		prevent_delete = getPreventDelete();
@@ -2204,6 +2210,8 @@ TagDownloadWithState
 		
 		checkNotifyPublish();
 		
+		checkSort();
+		
 		super.sync();
 	}
 
@@ -2906,5 +2914,140 @@ TagDownloadWithState
 		}
 		
 		return( result );
+	}
+	
+	@Override
+	public void 
+	setAutoApplySortInterval(
+		int secs)
+	{
+		super.setAutoApplySortInterval( secs );
+		
+		auto_sort_period = secs;
+	}
+	
+	private void
+	checkSort()
+	{
+		if ( auto_sort_period == 0 ){
+			
+			return;
+		}
+		
+		long now = SystemTime.getMonotonousTime();
+		
+		if ( last_auto_sort == -1 || now - last_auto_sort >= auto_sort_period*1000 ){
+			
+			if ( applySortSupport()){
+				
+				last_auto_sort = now;
+			}
+		}
+	}
+	
+	private boolean
+	applySortSupport()
+	{
+		try{
+			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+			
+			List<DownloadManager> downloads = new ArrayList<>( getTaggedDownloads());
+			
+			Collections.sort( downloads, (d1,d2)->{
+				return( Integer.compare( d1.getPosition(), d2.getPosition()));
+			});
+				
+			Long uid = getTagUID();
+			
+			List<Integer>	download_positions_comp 	= new ArrayList<>(downloads.size());
+			List<Integer>	download_positions_incomp 	= new ArrayList<>(downloads.size());
+			
+			List<Object[]>	tag_sort_comp 	= new ArrayList<>(downloads.size());
+			List<Object[]>	tag_sort_incomp = new ArrayList<>(downloads.size());
+			
+			for ( DownloadManager download: downloads ){
+				
+				Map<Long,Object[]> map = (Map<Long,Object[]>)download.getDownloadState().getTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT );
+				
+				Object[] entry = (Object[])map.get( uid );
+				
+				if ( entry == null ){
+					
+					System.out.println( "tag sort missing for " + download.getDisplayName());
+					
+					return( false );
+				}
+				
+				int pos = download.getPosition();
+								
+				if ( download.isDownloadComplete(false)){
+				
+					download_positions_comp.add( pos );
+				
+					tag_sort_comp.add( new Object[]{ download, entry[1], pos });
+
+				}else{
+					
+					download_positions_incomp.add( pos );
+					
+					tag_sort_incomp.add( new Object[]{ download, entry[1], pos });
+				}
+			}
+			
+			Collections.sort( download_positions_comp );
+			
+			Collections.sort( download_positions_incomp );
+			
+			Collections.sort( tag_sort_comp, (e1,e2)->{
+				return(Long.compare((Long)e1[1],(Long)e2[1]));
+			});
+			
+			Collections.sort( tag_sort_incomp, (e1,e2)->{
+				return(Long.compare((Long)e1[1],(Long)e2[1]));
+			});
+			
+			for ( int i=0;i<download_positions_comp.size();i++){
+				
+				int dl_pos = download_positions_comp.get(i);
+				
+				Object[] entry = tag_sort_comp.get(i);
+				
+				int current_pos = (Integer)entry[2];
+				
+				if ( current_pos != dl_pos ){
+					
+					gm.moveTo((DownloadManager)entry[0], dl_pos );
+				}
+			}
+			
+			for ( int i=0;i<download_positions_incomp.size();i++){
+				
+				int dl_pos = download_positions_incomp.get(i);
+				
+				Object[] entry = tag_sort_incomp.get(i);
+				
+				int current_pos = (Integer)entry[2];
+				
+				if ( current_pos != dl_pos ){
+					
+					gm.moveTo((DownloadManager)entry[0], dl_pos );
+				}
+			}
+			
+			return( true );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+			return( false );
+		}
+	}
+	
+	@Override
+	public void 
+	applySort()
+	{
+		applySortSupport();
 	}
 }
