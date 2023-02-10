@@ -95,6 +95,7 @@ DownloadManagerState
 	public static final String AT_REAL_DM_MAGNET_TIME		= "rdmmt";			// long
 	
 	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
+	public static final String AT_TRANSIENT_TAG_SORT		= "t_tagsort";
 
 	
 	public static Object[][] ATTRIBUTE_DEFAULTS = {
@@ -212,6 +213,15 @@ DownloadManagerState
 
 	public long
 	getTransientFlags();
+	
+	public Object
+	getTransientAttribute(
+		String		name );		// use AT_TRANSIENT_X names
+	
+	public void
+	setTransientAttribute(
+		String		name,
+		Object		value );
 	
 		/**
 		 * Reset to default value

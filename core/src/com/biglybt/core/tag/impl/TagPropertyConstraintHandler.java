@@ -78,7 +78,8 @@ TagPropertyConstraintHandler
 
 	private static final Object DM_PEER_SETS					= new Object();
 	
-	private static final String		EVAL_CTX_COLOURS = "colours";
+	private static final String		EVAL_CTX_COLOURS 	= "colours";
+	private static final String		EVAL_CTX_TAG_SORT 	= "tag_sort";
 	
 	private final Core core;
 	private final TagManagerImpl	tag_manager;
@@ -1933,6 +1934,50 @@ TagPropertyConstraintHandler
 					long[] colours = (long[])context.get( EVAL_CTX_COLOURS );
 					
 					tag_maybe_null.setColors( colours );
+					
+					long[] tag_sort = (long[])context.get( EVAL_CTX_TAG_SORT );
+					
+					if ( tag_sort != null ){
+						
+						long current = tag_sort[0];
+								
+						long uid = tag_maybe_null.getTagUID();
+						
+						Map<Long,Object[]>	map = (Map<Long,Object[]>)dm.getDownloadState().getTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT );
+						
+						boolean changed = false;
+						
+						if ( map == null ){
+							
+							map = new HashMap<>();
+							
+							map.put( uid, new Object[]{ tag_maybe_null, current });
+							
+							changed = true;
+							
+						}else{
+							
+							Object[] existing = (Object[])map.get( uid );
+							
+							if ( existing != null ){
+								
+								existing[1] = current;	// no change to map
+								
+							}else{
+								
+								map = new HashMap<>( map );	// copy on write
+								
+								map.put( uid, new Object[]{ tag_maybe_null, current });
+								
+								changed = true;
+							}
+						}
+						
+						if ( changed ){
+							
+							dm.getDownloadState().setTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT, map );
+						}
+					}
 				}
 								
 				return( result );
@@ -2472,7 +2517,8 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_IP_FILTERED		= 38;
 		private static final int FT_COUNT_TRACKERS		= 39;
 		private static final int FT_IS_MOVING			= 40;
-		
+		private static final int FT_SET_TAG_SORT		= 41;
+
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
 		private static final int	DEP_TIME		= 2;
@@ -3002,6 +3048,12 @@ TagPropertyConstraintHandler
 							}
 						}
 					}
+				}else if ( func_name.equals( "setTagSort" )){
+
+					fn_type = FT_SET_TAG_SORT;
+
+					params_ok = num_params == 1;
+
 				}else if ( func_name.equals( "isSequential" )){
 
 					fn_type = FT_IS_SEQUENTIAL;
@@ -3755,6 +3807,19 @@ TagPropertyConstraintHandler
 							p[i] = getNumeric( context, dm, tags, params, i, debug  ).longValue();
 						}
 						context.put( EVAL_CTX_COLOURS, p);
+						
+						return( true );
+					}
+					case FT_SET_TAG_SORT:{
+						
+						long[] p = new long[ num_params ];
+						
+						for ( int i=0;i<num_params;i++){
+							
+							p[i] = getNumeric( context, dm, tags, params, i, debug  ).longValue();
+						}
+						
+						context.put( EVAL_CTX_TAG_SORT, p);
 						
 						return( true );
 					}

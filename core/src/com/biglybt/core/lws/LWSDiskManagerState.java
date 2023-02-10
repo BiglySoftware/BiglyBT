@@ -189,6 +189,21 @@ LWSDiskManagerState
 		return( 0 );
 	}
 	
+	public Object 
+	getTransientAttribute(
+		String name )
+	{
+		return( null );
+	}
+	
+	@Override
+	public void 
+	setTransientAttribute(
+		String 		name, 
+		Object		value)
+	{
+	}
+	
 	@Override
 	public boolean
 	isOurContent()

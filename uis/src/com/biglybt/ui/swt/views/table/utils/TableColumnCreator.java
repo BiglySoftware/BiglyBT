@@ -259,6 +259,7 @@ public class TableColumnCreator
 		c.put(TagIconsItem.COLUMN_ID, new cInfo(TagIconsItem.class, TagIconsItem.DATASOURCE_TYPE));
 		c.put(CategoryIconsItem.COLUMN_ID, new cInfo(CategoryIconsItem.class, CategoryIconsItem.DATASOURCE_TYPE));
 		c.put(TagAddedToDateItem.COLUMN_ID, new cInfo(TagAddedToDateItem.class, TagAddedToDateItem.DATASOURCE_TYPE));
+		c.put(TagSortItem.COLUMN_ID, new cInfo(TagSortItem.class, TagSortItem.DATASOURCE_TYPE));
 		c.put(NetworksItem.COLUMN_ID, new cInfo(NetworksItem.class, NetworksItem.DATASOURCE_TYPE));
 		c.put(PeerSourcesItem.COLUMN_ID, new cInfo(PeerSourcesItem.class, PeerSourcesItem.DATASOURCE_TYPE));
 		c.put(AvailabilityItem.COLUMN_ID, new cInfo(AvailabilityItem.class, AvailabilityItem.DATASOURCE_TYPE));

@@ -316,6 +316,8 @@ DownloadManagerStateImpl
 
 	private int transient_flags;
 		
+	private Map<String,Object>	transient_attributes = new HashMap<>();
+			
 	private static DownloadManagerStateImpl
 	getDownloadState(
 		DownloadManagerImpl				download_manager,
@@ -1657,6 +1659,31 @@ DownloadManagerStateImpl
 	getTransientFlags()
 	{
 		return( transient_flags );
+	}
+	
+	@Override
+	public Object 
+	getTransientAttribute(
+		String name )
+	{
+		synchronized( transient_attributes ){
+			
+			return( transient_attributes.get( name ));
+		}
+	}
+	
+	@Override
+	public void 
+	setTransientAttribute(
+		String 	name, 
+		Object 	value)
+	{
+		synchronized( transient_attributes ){
+			
+			transient_attributes.put( name, value );
+		}
+		
+		// informWritten( name ); // not needed yet...
 	}
 	
 	@Override
@@ -3489,6 +3516,21 @@ DownloadManagerStateImpl
 		getTransientFlags()
 		{
 			return( 0 );
+		}
+		
+		public Object 
+		getTransientAttribute(
+			String name )
+		{
+			return( null );
+		}
+		
+		@Override
+		public void 
+		setTransientAttribute(
+			String 	name, 
+			Object 	value)
+		{
 		}
 		
 		@Override
