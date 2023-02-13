@@ -2018,11 +2018,6 @@ TRTrackerBTAnnouncerImpl
  					}
  				}
 
- 				if (Logger.isEnabled())
-					Logger.log(new LogEvent(torrent, LOGID, "Tracker Announcer ["
-							+ lastUsedUrl + "] has received : " + message));
-
-
  			}catch( SSLException e ){
 
  					// gotta let this through as an exception as it drives the auto-cert install process
