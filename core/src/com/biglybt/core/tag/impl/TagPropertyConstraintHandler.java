@@ -2583,6 +2583,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_TARGET_RATIO			= 40;
 		private static final int	KW_TAG_NAMES			= 41;
 		private static final int	KW_TRACKER_STATUS		= 42;
+		private static final int	KW_FULL_COPY_SEEN		= 43;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2680,7 +2681,11 @@ TagPropertyConstraintHandler
 			keyword_map.put( "tag_names",				new int[]{KW_TAG_NAMES,				DEP_STATIC });
 			keyword_map.put( "tracker_status",			new int[]{KW_TRACKER_STATUS,		DEP_STATIC });
 			keyword_map.put( "trackerstatus",			new int[]{KW_TRACKER_STATUS,		DEP_STATIC });
+			keyword_map.put( "fullcopyseen",			new int[]{KW_FULL_COPY_SEEN,		DEP_RUNNING });
+			keyword_map.put( "full_copy_seen",			new int[]{KW_FULL_COPY_SEEN,		DEP_RUNNING });
 
+			
+			
 		}
 
 		private class
@@ -4783,6 +4788,21 @@ TagPropertyConstraintHandler
 								TOTorrent t = dm.getTorrent();
 
 								return( t==null?0:t.getTorrentType());
+							}
+							case KW_FULL_COPY_SEEN:{
+								
+								long value = dm.getStats().getAvailWentBadTime();
+								
+								if ( value <= 0 ){
+									
+										// We don't know when it went from good to bad. As this variable is most likely being used to sort
+										// the "worst" (i.e. those downloads that have been bad for the longest) to the top the pile we pretend
+										// things are great. Not 100% sure though... feedback required!
+									
+									value = SystemTime.getCurrentTime();
+								}
+								
+								return( value );
 							}
 							default:{
 
