@@ -58,7 +58,8 @@ public class TagSortItem
 	refresh(
 		TableCell cell )
 	{
-		long sort = -1;
+		Long	value	= null; 
+		boolean reverse = false;
 		
 		DownloadManager dm = (DownloadManager) cell.getDataSource();
 		TableView<?> tv =  cell.getTableRow().getView();
@@ -71,19 +72,62 @@ public class TagSortItem
 				if ( tags != null && tags.length == 1 ){
 					Object[] entry = tag_sort.get(tags[0].getTagUID());
 					if ( entry != null ){
-						sort = (Long)entry[1];
+						value = (Long)entry[1];
+						if ( entry.length > 2 ){
+							String options = (String)entry[2];
+							reverse = options != null && options.equals( "r" );
+						}
 					}
 				}
 			}
 		}
 		
-		if ( !cell.setSortValue( sort) && cell.isValid()){
+		Long sort;
+		
+		if ( reverse ){
+			
+			if ( value == Long.MAX_VALUE ){
+				
+				sort = Long.MIN_VALUE;
+				
+			}else if ( value == Long.MIN_VALUE ){
+				
+				sort = Long.MAX_VALUE;
+				
+			}else{
+				
+				sort = -value;
+			}
+		}else{
+			
+			sort = value;
+		}
+		
+		if ( !cell.setSortValue( sort==null?Long.MIN_VALUE:sort) && cell.isValid()){
 			
 			return;
 		}
 		
-		cell.setSortValue( sort );
+		cell.setSortValue( sort==null?Long.MIN_VALUE:sort );
 		
-		cell.setText( sort==-1?"":(sort==Long.MAX_VALUE?Constants.INFINITY_STRING:String.valueOf( sort )));
+		String text = "";
+		
+		if ( value != null ){
+			
+			if ( sort == Long.MAX_VALUE ){
+				
+				text = Constants.INFINITY_STRING;
+				
+			}else if ( sort == Long.MIN_VALUE ){
+				
+				text = "-" + Constants.INFINITY_STRING;
+				
+			}else{
+				
+				text = String.valueOf( sort );
+			}
+		}
+		
+		cell.setText( text );
 	}
 }

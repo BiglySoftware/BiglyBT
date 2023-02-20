@@ -1935,15 +1935,27 @@ TagPropertyConstraintHandler
 					
 					tag_maybe_null.setColors( colours );
 					
-					long[] tag_sort = (long[])context.get( EVAL_CTX_TAG_SORT );
+					Object[] tag_sort = (Object[])context.get( EVAL_CTX_TAG_SORT );
 					
 					if ( tag_sort != null ){
 						
-						long current = tag_sort[0];
+						long current = ((Number)tag_sort[0]).longValue();
 								
 						long uid = tag_maybe_null.getTagUID();
 						
+						String options;
+						
+						if ( tag_sort.length > 1 ){
+							
+							options = (String)tag_sort[1];
+							
+						}else{
+							
+							options = null;
+						}
+
 						Map<Long,Object[]>	map = (Map<Long,Object[]>)dm.getDownloadState().getTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT );
+						
 						
 						boolean changed = false;
 						
@@ -1951,7 +1963,7 @@ TagPropertyConstraintHandler
 							
 							map = new HashMap<>();
 							
-							map.put( uid, new Object[]{ tag_maybe_null, current });
+							map.put( uid, new Object[]{ tag_maybe_null, current, options });
 							
 							changed = true;
 							
@@ -1961,13 +1973,16 @@ TagPropertyConstraintHandler
 							
 							if ( existing != null ){
 								
-								existing[1] = current;	// no change to map
+									// no change to map
+								
+								existing[1] = current;
+								existing[2]	= options;
 								
 							}else{
 								
 								map = new HashMap<>( map );	// copy on write
 								
-								map.put( uid, new Object[]{ tag_maybe_null, current });
+								map.put( uid, new Object[]{ tag_maybe_null, current, options });
 								
 								changed = true;
 							}
@@ -3052,8 +3067,15 @@ TagPropertyConstraintHandler
 
 					fn_type = FT_SET_TAG_SORT;
 
-					params_ok = num_params == 1;
-
+					params_ok = num_params >= 1 && num_params <= 2;
+					
+					if ( params_ok ){
+						
+						if ( num_params == 2 ){
+							
+							params_ok = getStringLiteral( params, 1 );
+						}
+					}
 				}else if ( func_name.equals( "isSequential" )){
 
 					fn_type = FT_IS_SEQUENTIAL;
@@ -3812,11 +3834,13 @@ TagPropertyConstraintHandler
 					}
 					case FT_SET_TAG_SORT:{
 						
-						long[] p = new long[ num_params ];
+						Object[] p = new Object[ num_params ];
 						
-						for ( int i=0;i<num_params;i++){
+						p[0] = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
+						
+						if ( p.length > 1 ){
 							
-							p[i] = getNumeric( context, dm, tags, params, i, debug  ).longValue();
+							p[1] = (String)params[1];
 						}
 						
 						context.put( EVAL_CTX_TAG_SORT, p);

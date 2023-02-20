@@ -2965,6 +2965,8 @@ TagDownloadWithState
 			List<Object[]>	tag_sort_comp 	= new ArrayList<>(downloads.size());
 			List<Object[]>	tag_sort_incomp = new ArrayList<>(downloads.size());
 			
+			String overall_options = null;
+			
 			for ( DownloadManager download: downloads ){
 				
 				Map<Long,Object[]> map = (Map<Long,Object[]>)download.getDownloadState().getTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT );
@@ -2973,9 +2975,41 @@ TagDownloadWithState
 				
 				if ( entry == null ){
 					
-					System.out.println( "tag sort missing for " + download.getDisplayName());
+					// System.out.println( "tag sort missing for " + download.getDisplayName());
 					
 					return( false );
+				}
+				
+				if ( entry.length > 2 ){
+					
+					String options = (String)entry[2];
+					
+					if ( overall_options == null ){
+						
+						overall_options = options;
+						
+					}else{
+						
+						if ( options == null ){
+							
+							return( false );	// inconsistent
+							
+						}else{
+							
+							if ( !options.equals( overall_options )){
+								
+								return( false );	// inconsistent
+							}
+						}
+					}
+				}else{
+					
+					if ( overall_options != null ){
+						
+							// inconsistent
+						
+						return( false );
+					}
 				}
 				
 				int pos = download.getPosition();
@@ -2998,12 +3032,22 @@ TagDownloadWithState
 			
 			Collections.sort( download_positions_incomp );
 			
+			boolean reverse = overall_options != null && overall_options.equals( "r" );
+			
 			Collections.sort( tag_sort_comp, (e1,e2)->{
-				return(Long.compare((Long)e1[1],(Long)e2[1]));
+				if ( reverse ){
+					return(Long.compare((Long)e2[1],(Long)e1[1]));
+				}else{
+					return(Long.compare((Long)e1[1],(Long)e2[1]));
+				}
 			});
 			
 			Collections.sort( tag_sort_incomp, (e1,e2)->{
-				return(Long.compare((Long)e1[1],(Long)e2[1]));
+				if ( reverse ){
+					return(Long.compare((Long)e2[1],(Long)e1[1]));
+				}else{
+					return(Long.compare((Long)e1[1],(Long)e2[1]));
+				}
 			});
 			
 			for ( int i=0;i<download_positions_comp.size();i++){
