@@ -30,6 +30,7 @@ import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
+import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerStats;
@@ -3771,10 +3772,62 @@ SpeedLimitHandler
 
 		if ( net_limit_pause_all_active != exceeded ){
 
-			setNetLimitPauseAllActive( exceeded );
+			if ( exceeded ){
+				
+					// defer the pause until in a good state to do so
+				
+				if ( canPauseAll()){
+			
+					setNetLimitPauseAllActive( true );
+				}
+			}else{
+				
+				setNetLimitPauseAllActive( false );
+			}
 		}
 	}
 
+	private boolean 
+	canPauseAll()
+	{
+		GlobalManager gm = core.getGlobalManager();
+		
+		for ( DownloadManager dm: gm.getDownloadManagers()){
+			
+			int state = dm.getState();
+
+			if ( state == DownloadManager.STATE_STOPPED ){
+				
+				continue;
+			}
+			
+			if ( dm.getMoveProgress() != null || FileUtil.hasTask( dm )){
+				
+				return( false );
+			}
+			
+
+			if ( state == DownloadManager.STATE_CHECKING ){
+
+				return( false );
+
+			}else if ( state == DownloadManager.STATE_SEEDING ){
+
+				DiskManager disk_manager = dm.getDiskManager();
+
+				if ( disk_manager != null ){
+
+					if ( disk_manager.getCompleteRecheckStatus() != -1 ){
+						
+						return( false );
+					}
+				}
+			}
+		}
+		
+		return( true );
+	}
+	
 	private void
 	checkTagNetLimits(
 		int	tick_count )
