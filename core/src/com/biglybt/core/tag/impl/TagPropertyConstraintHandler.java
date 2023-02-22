@@ -2533,7 +2533,8 @@ TagPropertyConstraintHandler
 		private static final int FT_COUNT_TRACKERS		= 39;
 		private static final int FT_IS_MOVING			= 40;
 		private static final int FT_SET_TAG_SORT		= 41;
-
+		private static final int FT_TIME_TO_ELAPSED		= 42;
+		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
 		private static final int	DEP_TIME		= 2;
@@ -3030,6 +3031,12 @@ TagPropertyConstraintHandler
 					fn_type = FT_WEEKS_TO_SECS;
 
 					params_ok = num_params == 1 && getNumericLiteral( params, 0 );
+
+				}else if ( func_name.equals( "timeToElapsed" )){
+					
+					fn_type = FT_TIME_TO_ELAPSED;
+
+					params_ok = num_params == 1;
 
 				}else if ( func_name.equals( "getConfig" )){
 
@@ -3793,6 +3800,26 @@ TagPropertyConstraintHandler
 						Number n1 = getNumeric( context, dm, tags, params, 0, debug  );
 						
 						return((long)( n1.doubleValue() * 7*24*60*60 ));
+					}
+					case FT_TIME_TO_ELAPSED:{
+					
+						long time = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
+						
+						if ( time > 0 ){
+							
+							long secs = (SystemTime.getCurrentTime() - time )/1000;
+							
+							if ( Math.abs( secs ) < 5 ){
+								
+								secs = 0;	// keep things sensible when there's a slight drift during evaluation
+							}
+							
+							return( secs );
+							
+						}else{
+							
+							return( time );
+						}
 					}
 					case FT_GET_CONFIG:{
 						
@@ -4793,11 +4820,15 @@ TagPropertyConstraintHandler
 								
 								long value = dm.getStats().getAvailWentBadTime();
 								
-								if ( value <= 0 ){
+								if ( value < 0 ){
 									
-										// We don't know when it went from good to bad. As this variable is most likely being used to sort
-										// the "worst" (i.e. those downloads that have been bad for the longest) to the top the pile we pretend
-										// things are great. Not 100% sure though... feedback required!
+										// never seen a full copy
+									
+									value = Long.MIN_VALUE;
+									
+								}else if ( value == 0 ){
+									
+										// currently good
 									
 									value = SystemTime.getCurrentTime();
 								}

@@ -84,6 +84,10 @@ PEPeerManager
 
 	public float getMinAvailability( int file_index );
 
+	/**
+	 * @return 0: hasn't transitioned from good to bad this session OR known to be good; >0: time availability went from good to bad
+	 */
+	
 	public long getAvailWentBadTime();
 
 	public long getBytesUnavailable();

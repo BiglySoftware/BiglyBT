@@ -271,6 +271,10 @@ DownloadManagerStats
 	public int getTimeSinceLastDataReceivedInSeconds( boolean this_session );
 	public int getTimeSinceLastDataSentInSeconds( boolean this_session );
 
+	/**
+	 * @return -1: never seen a whole copy; 0: currently good; >0: time availability went from good to bad
+	 */
+	
 	public long getAvailWentBadTime();
 	public long getBytesUnavailable();
 
