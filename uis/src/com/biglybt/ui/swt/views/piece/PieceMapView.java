@@ -200,6 +200,8 @@ public class PieceMapView
 			oldBlockInfo = null;
 		}
 
+		topLabelRHS = "";
+		
 		synchronized( this ){
 			if (dlm != null) {
 				dlm.removePieceListener(this);
@@ -223,6 +225,8 @@ public class PieceMapView
 		if ( dlm != null ){
 			fillPieceInfoSection();
 		}
+		
+		Utils.execSWTThread(()->updateTopLabel());
 	}
 
 	private static String getFullTitle() {
