@@ -23,6 +23,7 @@ package com.biglybt.core.speedmanager;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import com.biglybt.core.Core;
@@ -147,7 +148,8 @@ SpeedLimitHandler
 
 	private boolean					net_limit_listener_added;
 
-	private Map<Integer,List<NetLimit>>		net_limits	= new HashMap<>();
+	private Map<Integer,List<NetLimit>>		net_limits_by_type	= new HashMap<>();
+	private List<NetLimit>					net_limits_all		= new ArrayList<>();
 
 	private final static String INACTIVE_PROFILE_NAME	= "preserved_limits (auto)";
 	
@@ -443,7 +445,7 @@ SpeedLimitHandler
 
 		List<Object[]> tag_nls = new ArrayList<>();
 
-		for ( Map.Entry<Integer, List<NetLimit>> entry: net_limits.entrySet()){
+		for ( Map.Entry<Integer, List<NetLimit>> entry: net_limits_by_type.entrySet()){
 
 			for ( NetLimit nl: entry.getValue()){
 
@@ -539,9 +541,9 @@ SpeedLimitHandler
 
 		}else{
 
-			lines.add( "    Today:\t\t" + getString( lt_stats, LongTermStats.PT_CURRENT_DAY, net_limits.get( LongTermStats.PT_CURRENT_DAY )));
-			lines.add( "    This week:\t" + getString( lt_stats, LongTermStats.PT_CURRENT_WEEK, net_limits.get( LongTermStats.PT_CURRENT_WEEK )));
-			lines.add( "    This month:\t" + getString( lt_stats, LongTermStats.PT_CURRENT_MONTH, net_limits.get( LongTermStats.PT_CURRENT_MONTH )));
+			lines.add( "    Today:\t\t" + getString( lt_stats, LongTermStats.PT_CURRENT_DAY, net_limits_by_type.get( LongTermStats.PT_CURRENT_DAY )));
+			lines.add( "    This week:\t" + getString( lt_stats, LongTermStats.PT_CURRENT_WEEK, net_limits_by_type.get( LongTermStats.PT_CURRENT_WEEK )));
+			lines.add( "    This month:\t" + getString( lt_stats, LongTermStats.PT_CURRENT_MONTH, net_limits_by_type.get( LongTermStats.PT_CURRENT_MONTH )));
 			lines.add( "" );
 			lines.add( "    Rate (3 minute average):\t\t" + getString( lt_stats.getCurrentRateBytesPerSecond(), null, true));
 		}
@@ -558,12 +560,18 @@ SpeedLimitHandler
 		if ( net_limits == null ){
 
 			net_limits = new ArrayList<>();
-
-			net_limits.add( null );
+			
+		}else{
+			
+			net_limits = new ArrayList<>( net_limits );
 		}
+		
+		net_limits.add( 0, null );		// for overall
 
 		String result = "";
 
+		int lines = 0;
+		
 		for ( NetLimit net_limit: net_limits ){
 
 			long[]	stats = getLongTermUsage( lts, type, net_limit );
@@ -608,8 +616,14 @@ SpeedLimitHandler
 				}
 			}
 
-			if ( net_limits.size() > 1 ){
+			lines++;
 
+			if ( lines > 1 ){
+
+				if ( lines == 2 ){
+					result = "\r\n        " + result;
+				}
+				
 				result += "\r\n        ";
 			}
 
@@ -625,16 +639,16 @@ SpeedLimitHandler
 	getLongTermUsage(
 		LongTermStats	lts,
 		int				type,
-		NetLimit		net_limit )
+		NetLimit		net_limit_maybe_null )
 	{
-		double multiplier=net_limit==null?1:net_limit.getMultiplier();
+		double multiplier=net_limit_maybe_null==null?1:net_limit_maybe_null.getMultiplier();
 
-		if ( net_limit == null || net_limit.getProfile() == null ){
+		if ( net_limit_maybe_null == null || net_limit_maybe_null.getProfile() == null ){
 
 			return( lts.getTotalUsageInPeriod( type, multiplier ));
 		}
 
-		final String profile = net_limit.getProfile();
+		final String profile = net_limit_maybe_null.getProfile();
 
 		return(
 			lts.getTotalUsageInPeriod(
@@ -1009,8 +1023,8 @@ SpeedLimitHandler
 		List<ScheduleRule>	rules 	= new ArrayList<>();
 		Map<String,PeerSet>	ip_sets	= new HashMap<>();
 
-		Map<Integer,List<NetLimit>> new_net_limits	= new HashMap<>();
-		List<NetLimit>				net_limits_list = new ArrayList<>();
+		Map<Integer,List<NetLimit>> new_net_limits_by_type	= new HashMap<>();
+		List<NetLimit>				new_net_limits_all		= new ArrayList<>();
 
 		List<Prioritiser>	new_prioritisers = new ArrayList<>();
 
@@ -1490,20 +1504,20 @@ SpeedLimitHandler
 
 				if ( type != -1 ){
 
-					List<NetLimit>	limits = new_net_limits.get( type );
+					List<NetLimit>	limits = new_net_limits_by_type.get( type );
 
 					if ( limits == null ){
 
 						limits = new ArrayList<>();
 
-						new_net_limits.put( type, limits );
+						new_net_limits_by_type.put( type, limits );
 					}
 
-					NetLimit limit = new NetLimit( name, mult, profile, tag_type, tag_name, total_lim, up_lim, down_lim );
+					NetLimit limit = new NetLimit( type, name, mult, profile, tag_type, tag_name, total_lim, up_lim, down_lim );
 
 					limits.add( limit );
 
-					net_limits_list.add( limit );
+					new_net_limits_all.add( limit );
 				}
 			}else if ( lc_line.startsWith( "priority_down " ) || lc_line.startsWith( "priority_up " )){
 
@@ -1830,7 +1844,7 @@ SpeedLimitHandler
 
 									boolean found = false;
 
-									for ( NetLimit x: net_limits_list ){
+									for ( NetLimit x: net_limits_all ){
 
 										if ( x.getName().equals( nl )){
 
@@ -1921,7 +1935,7 @@ SpeedLimitHandler
 				setActiveState( AS_INACTIVE );
 			}
 			
-			if ( new_net_limits.size() > 0 ){
+			if ( new_net_limits_all.size() > 0 ){
 
 				schedule_has_net_limits = true;
 			}
@@ -1979,19 +1993,19 @@ SpeedLimitHandler
 
 			if ( !lts_enabled ){
 
-				new_net_limits.clear();
+				new_net_limits_by_type.clear();
+				
+				new_net_limits_all.clear();
 			}
 
-			net_limits = new_net_limits;
+			net_limits_by_type	= new_net_limits_by_type;
+			net_limits_all		= new_net_limits_all;
 
-			if ( net_limits.size() > 0 ){
+			if ( net_limits_all.size() > 0 ){
 
-				for ( List<NetLimit> l: new_net_limits.values()){
+				for ( NetLimit n: net_limits_all ){
 
-					for ( NetLimit n: l ){
-
-						n.initialise();
-					}
+					n.initialise();
 				}
 
 				if ( !net_limit_listener_added ){
@@ -2053,7 +2067,7 @@ SpeedLimitHandler
 
 				// setup scheduler if needed
 
-			if ( schedule_event == null && ( rules.size() > 0 || net_limits.size() > 0 )){
+			if ( schedule_event == null && ( rules.size() > 0 || net_limits_all.size() > 0 )){
 
 				schedule_event =
 					SimpleTimer.addPeriodicEvent(
@@ -2075,7 +2089,7 @@ SpeedLimitHandler
 						});
 			}
 
-			if ( active_rule != null || rules.size() > 0 || net_limits.size() > 0 ){
+			if ( active_rule != null || rules.size() > 0 || net_limits_all.size() > 0 ){
 
 				checkSchedule( start_of_day, 0 );
 			}
@@ -2112,7 +2126,9 @@ SpeedLimitHandler
 				setNetLimitPauseAllActive( false );
 			}
 
-			net_limits.clear();
+			net_limits_by_type.clear();
+			
+			net_limits_all.clear();
 
 			if ( net_limit_listener_added ){
 
@@ -3564,12 +3580,9 @@ SpeedLimitHandler
 
 			prioritiser_enabled = true;
 
-			for ( List<NetLimit> l: net_limits.values()){
+			for ( NetLimit n: net_limits_all ){
 
-				for ( NetLimit n: l ){
-
-					n.setEnabled( true );
-				}
+				n.setEnabled( true );
 			}
 
 			if ( active_rule != null ){
@@ -3577,13 +3590,15 @@ SpeedLimitHandler
 				active_rule.checkExtensions();
 			}
 		}
+		
+			// net_limit_pause_all_active overrides any tag based limits
 
-		if ( net_limits.size() > 0 ){
+		if ( !net_limit_pause_all_active && net_limits_all.size() > 0 ){
 
 			checkTagNetLimits( tick_count );
 		}
 
-		if ( 	( current_rule != active_rule && net_limits.size() > 0 ) ||
+		if ( 	( current_rule != active_rule && net_limits_all.size() > 0 ) ||
 				net_limit_pause_all_active ){
 
 				// net_limits can depend on the active rule, recalc
@@ -3746,53 +3761,43 @@ SpeedLimitHandler
 	{
 		boolean exceeded = false;
 
-		for (Map.Entry<Integer,List<NetLimit>> entry: net_limits.entrySet()){
+		for ( NetLimit limit: net_limits_all ){
 
-			int	type = entry.getKey();
+			LongTermStats net_lts = limit.getLongTermStats();
 
-			for ( NetLimit limit: entry.getValue()){
+			if ( net_lts != null ){
 
-				LongTermStats net_lts = limit.getLongTermStats();
+				continue;
+			}
 
-				if ( net_lts != null ){
+			String profile = limit.getProfile();
 
-					continue;
-				}
+			if ( 	profile != null &&
+					( active_rule == null || !active_rule.profile_name.equals( profile ))){
 
-				String profile = limit.getProfile();
+				continue;
+			}
 
-				if ( 	profile != null &&
-						( active_rule == null || !active_rule.profile_name.equals( profile ))){
+			long[] usage = getLongTermUsage( stats, limit.getType(), limit );
 
-					continue;
-				}
+			long total_up = usage[LongTermStats.ST_PROTOCOL_UPLOAD] + usage[LongTermStats.ST_DATA_UPLOAD] + usage[LongTermStats.ST_DHT_UPLOAD];
+			long total_do = usage[LongTermStats.ST_PROTOCOL_DOWNLOAD] + usage[LongTermStats.ST_DATA_DOWNLOAD] + usage[LongTermStats.ST_DHT_DOWNLOAD];
 
-				long[] usage = getLongTermUsage( stats, type, limit );
+			long[]	limits = limit.getLimits();
 
-				long total_up = usage[LongTermStats.ST_PROTOCOL_UPLOAD] + usage[LongTermStats.ST_DATA_UPLOAD] + usage[LongTermStats.ST_DHT_UPLOAD];
-				long total_do = usage[LongTermStats.ST_PROTOCOL_DOWNLOAD] + usage[LongTermStats.ST_DATA_DOWNLOAD] + usage[LongTermStats.ST_DHT_DOWNLOAD];
+			if ( limits[0] > 0 ){
 
-				long[]	limits = limit.getLimits();
+				exceeded = total_up + total_do >= limits[0];
+			}
 
-				if ( limits[0] > 0 ){
+			if ( limits[1] > 0 && !exceeded){
 
-					exceeded = total_up + total_do >= limits[0];
-				}
+				exceeded = total_up >= limits[1];
+			}
 
-				if ( limits[1] > 0 && !exceeded){
+			if ( limits[2] > 0 && !exceeded){
 
-					exceeded = total_up >= limits[1];
-				}
-
-				if ( limits[2] > 0 && !exceeded){
-
-					exceeded = total_do >= limits[2];
-				}
-
-				if ( exceeded ){
-
-					break;
-				}
+				exceeded = total_do >= limits[2];
 			}
 
 			if ( exceeded ){
@@ -3867,159 +3872,195 @@ SpeedLimitHandler
 
 		String log_str = "";
 
-		Map <TagFeatureRunState,List<Object[]>>		rs_ops = new HashMap<>();
-		Map <TagFeatureRateLimit,List<Object[]>>	rl_ops = new HashMap<>();
+		Map<TagFeatureRunState,List<Object[]>>	rs_ops = new LinkedHashMap<>();
+		Map<TagFeatureRateLimit,List<Object[]>>	rl_ops = new LinkedHashMap<>();
 
-		for (Map.Entry<Integer,List<NetLimit>> entry: net_limits.entrySet()){
+		Set<Taggable>	handled_dms = new IdentityHashSet<>();
+		
+		if ( !pause_forced_downloads ){
+			
+			for ( DownloadManager dm: core.getGlobalManager().getDownloadManagers()){
+				
+				if ( dm.isForceStart()){
+					
+					handled_dms.add( dm );
+				}
+			}
+		}
+		
+		for ( NetLimit limit: net_limits_all ){
 
-			int	type = entry.getKey();
+			String name_str = "net_limit";
 
-			for ( NetLimit limit: entry.getValue()){
+			String name = limit.getName();
 
-				String name_str = "net_limit";
+			if ( name.length() > 0 ){
 
-				String name = limit.getName();
+				name_str += " " + name;
+			}
 
-				if ( name.length() > 0 ){
+			LongTermStats stats = limit.getLongTermStats();
 
-					name_str += " " + name;
+			if ( stats == null ){
+
+				continue;
+			}
+
+			TagFeatureRateLimit tag_rl = limit.getTag();
+
+			Tag tag = tag_rl.getTag();
+
+			long[] usage = getLongTermUsage( stats, limit.getType(), limit );
+
+			long total_up = usage[LongTermStats.ST_PROTOCOL_UPLOAD] + usage[LongTermStats.ST_DATA_UPLOAD];
+			long total_do = usage[LongTermStats.ST_PROTOCOL_DOWNLOAD] + usage[LongTermStats.ST_DATA_DOWNLOAD];
+
+			boolean	enabled = limit.isEnabled();
+
+			log_str += (log_str.length()==0?"":"; ") + (name.length()==0?"":(name + " " )) +
+					tag.getTagName( true ) + ": up=" + DisplayFormatters.formatByteCountToKiBEtc( total_up ) +
+					", down=" + DisplayFormatters.formatByteCountToKiBEtc( total_do ) + ", enabled=" + enabled;
+
+			long[]	limits = limit.getLimits();
+
+			boolean exceeded_up 	= false;
+			boolean exceeded_down 	= false;
+
+			boolean	handled = false;
+
+			if ( enabled ){
+
+				if ( limits[0] > 0 ){
+
+					exceeded_up = exceeded_down = total_up + total_do >= limits[0];
 				}
 
-				LongTermStats stats = limit.getLongTermStats();
+				if ( limits[1] > 0 && !exceeded_up){
 
-				if ( stats == null ){
-
-					continue;
+					exceeded_up = total_up >= limits[1];
 				}
 
-				TagFeatureRateLimit tag_rl = limit.getTag();
+				if ( limits[2] > 0 && !exceeded_down){
 
-				Tag tag = tag_rl.getTag();
+					exceeded_down = total_do >= limits[2];
+				}
 
-				long[] usage = getLongTermUsage( stats, type, limit );
+				if ( tag instanceof TagFeatureRunState ){
 
-				long total_up = usage[LongTermStats.ST_PROTOCOL_UPLOAD] + usage[LongTermStats.ST_DATA_UPLOAD];
-				long total_do = usage[LongTermStats.ST_PROTOCOL_DOWNLOAD] + usage[LongTermStats.ST_DATA_DOWNLOAD];
+					TagFeatureRunState rs = (TagFeatureRunState)tag;
 
-				boolean	enabled = limit.isEnabled();
+					if ( rs.hasRunStateCapability( TagFeatureRunState.RSC_PAUSE )){
 
-				log_str += (log_str.length()==0?"":"; ") + (name.length()==0?"":(name + " " )) +
-						tag.getTagName( true ) + ": up=" + DisplayFormatters.formatByteCountToKiBEtc( total_up ) +
-						", down=" + DisplayFormatters.formatByteCountToKiBEtc( total_do ) + ", enabled=" + enabled;
+							// if both are exceeded then we pause the downloads
+							// otherwise we set the up/down limit to disabled in the code below
+						
+						boolean pause = exceeded_up && exceeded_down;
 
-				long[]	limits = limit.getLimits();
+						int op = pause?TagFeatureRunState.RSC_PAUSE:TagFeatureRunState.RSC_RESUME;
 
-				boolean exceeded_up 	= false;
-				boolean exceeded_down 	= false;
+						List<Object[]> list = rs_ops.get( rs );
 
-				boolean	handled = false;
+						if ( list == null ){
 
-				if ( enabled ){
+							list = new ArrayList<>();
 
-					if ( limits[0] > 0 ){
+							rs_ops.put( rs, list );
+						}
 
-						exceeded_up = exceeded_down = total_up + total_do >= limits[0];
+						list.add(
+							new Object[]{
+									name_str + " : " + (pause?"pausing":"resuming") + " tag " + tag.getTagName( true ),
+									op });
+
+						handled = pause;
 					}
+				}
+			}
 
-					if ( limits[1] > 0 && !exceeded_up){
+			if ( !handled ){
 
-						exceeded_up = total_up >= limits[1];
+				int target_up 	= exceeded_up?-1:0;
+				int target_down = exceeded_down?-1:0;
+
+				List<Object[]> list = rl_ops.get( tag_rl );
+
+				if ( list == null ){
+
+					list = new ArrayList<>();
+
+					rl_ops.put( tag_rl, list );
+				}
+
+				list.add(
+					new Object[]{
+							name_str + ": setting rates to " + format( target_up ) + "/" + format( target_down ) + " on tag " + tag.getTagName( true ),
+							target_up, target_down });
+			}
+		}
+
+		Predicate<Taggable> filter = taggable->!handled_dms.contains( taggable );
+		
+			// we want to process all pause ops before resume as pause overrides resume
+		
+		for ( int op_to_do: new int[]{ TagFeatureRunState.RSC_PAUSE, TagFeatureRunState.RSC_RESUME }){
+			
+			for ( Map.Entry<TagFeatureRunState,List<Object[]>> entry: rs_ops.entrySet()){
+	
+				TagFeatureRunState 	tag_rs 	= entry.getKey();
+				List<Object[]>		details	= entry.getValue();
+	
+				int	selected_op = TagFeatureRunState.RSC_RESUME;
+	
+				String all_str = "";
+	
+				for ( Object[] detail: details ){
+	
+					String	str = (String)detail[0];
+	
+					all_str += (all_str.length()==0?"":";") + str;
+	
+					int		op	= (Integer)detail[1];
+	
+					if  ( op == TagFeatureRunState.RSC_PAUSE ){
+	
+						selected_op = TagFeatureRunState.RSC_PAUSE;
 					}
-
-					if ( limits[2] > 0 && !exceeded_down){
-
-						exceeded_down = total_do >= limits[2];
-					}
-
-					if ( tag instanceof TagFeatureRunState ){
-
-						TagFeatureRunState rs = (TagFeatureRunState)tag;
-
-						if ( rs.hasRunStateCapability( TagFeatureRunState.RSC_PAUSE )){
-
-								// if both are exceeded then we pause the downloads
-								// otherwise we set the up/down limit to disabled in the code below
+				}
+	
+				if ( op_to_do == selected_op ){
+					
+					if ( selected_op == TagFeatureRunState.RSC_PAUSE ){
+						
+						Set<Taggable> dms = tag_rs.getTag().getTagged();
+						
+						for ( Taggable t: dms ){
 							
-							boolean pause = exceeded_up && exceeded_down;
-
-							int op = pause?TagFeatureRunState.RSC_PAUSE:TagFeatureRunState.RSC_RESUME;
-
-							List<Object[]> list = rs_ops.get( rs );
-
-							if ( list == null ){
-
-								list = new ArrayList<>();
-
-								rs_ops.put( rs, list );
+							if (((DownloadManager)t).isPaused()){
+								
+								handled_dms.add( t );
 							}
-
-							list.add(
-								new Object[]{
-										name_str + " : " + (pause?"pausing":"resuming") + " tag " + tag.getTagName( true ),
-										op });
-
-							handled = pause;
+						}
+					}
+					
+					boolean[] result = tag_rs.getPerformableOperations( new int[]{ selected_op }, filter );
+		
+					if ( result[0] ){
+		
+						logger.log( all_str );
+		
+						do_log = true;
+		
+						List<Taggable>	affected = tag_rs.performOperation( selected_op, filter );
+						
+						if ( selected_op == TagFeatureRunState.RSC_PAUSE ){
+							
+							handled_dms.addAll( affected );
 						}
 					}
 				}
-
-				if ( !handled ){
-
-					int target_up 	= exceeded_up?-1:0;
-					int target_down = exceeded_down?-1:0;
-
-					List<Object[]> list = rl_ops.get( tag_rl );
-
-					if ( list == null ){
-
-						list = new ArrayList<>();
-
-						rl_ops.put( tag_rl, list );
-					}
-
-					list.add(
-						new Object[]{
-								name_str + ": setting rates to " + format( target_up ) + "/" + format( target_down ) + " on tag " + tag.getTagName( true ),
-								target_up, target_down });
-				}
 			}
 		}
-
-		for ( Map.Entry<TagFeatureRunState,List<Object[]>> entry: rs_ops.entrySet()){
-
-			TagFeatureRunState 	tag_rs 	= entry.getKey();
-			List<Object[]>		details	= entry.getValue();
-
-			int	selected_op = TagFeatureRunState.RSC_RESUME;
-
-			String all_str = "";
-
-			for ( Object[] detail: details ){
-
-				String	str = (String)detail[0];
-
-				all_str += (all_str.length()==0?"":";") + str;
-
-				int		op	= (Integer)detail[1];
-
-				if  ( op == TagFeatureRunState.RSC_PAUSE ){
-
-					selected_op =TagFeatureRunState.RSC_PAUSE;
-				}
-			}
-
-			boolean[] result = tag_rs.getPerformableOperations( new int[]{ selected_op });
-
-			if ( result[0] ){
-
-				logger.log( all_str );
-
-				do_log = true;
-
-				tag_rs.performOperation( selected_op );
-			}
-		}
-
+		
 		for ( Map.Entry<TagFeatureRateLimit,List<Object[]>> entry: rl_ops.entrySet()){
 
 			TagFeatureRateLimit 	tag_rl 	= entry.getKey();
@@ -5508,6 +5549,7 @@ SpeedLimitHandler
 	class
 	NetLimit
 	{
+		final private int				type;
 		final private String			name;
 		final private double			multiplier;
 		final private String			profile;
@@ -5522,6 +5564,7 @@ SpeedLimitHandler
 
 		private
 		NetLimit(
+			int						_type,
 			String					_name,
 			double					_mult,
 			String					_profile,
@@ -5531,6 +5574,7 @@ SpeedLimitHandler
 			long					_up_lim,
 			long					_down_lim )
 		{
+			type		= _type;
 			name		= _name;
 			multiplier	= _mult;
 			profile		= _profile;
@@ -5565,6 +5609,12 @@ SpeedLimitHandler
 			}
 		}
 
+		private int
+		getType()
+		{
+			return( type );
+		}
+		
 		private String
 		getName()
 		{

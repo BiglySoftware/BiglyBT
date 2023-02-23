@@ -733,11 +733,13 @@ CategoryImpl
 	}
 
 	@Override
-	public void
+	public List<Taggable>
 	performOperation(
 		int		op )
 	{
 		Debug.out( "derp" );
+		
+		return( new ArrayList<>());
 	}
 
   @Override

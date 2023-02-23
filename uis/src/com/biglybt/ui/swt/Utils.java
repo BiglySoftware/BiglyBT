@@ -6340,7 +6340,10 @@ public class Utils
 											showText(
 													"MainWindow.menu.speed_limits.schedule.title",
 													"MainWindow.menu.speed_limits.schedule.err",
-													result );
+													result,
+													()->editSpeedLimitHandlerConfig( slh ));
+											
+											
 										}
 									}
 								}
@@ -6351,9 +6354,19 @@ public class Utils
 	
 	public static void
 	showText(
-		final String					title,
-		final String					message,
-		final java.util.List<String>	lines )
+		String					title,
+		String					message,
+		java.util.List<String>	lines )
+	{
+		showText( title, message, lines, null );
+	}
+	
+	public static void
+	showText(
+		String					title,
+		String					message,
+		java.util.List<String>	lines,
+		Runnable				callback )
 	{
 		Utils.execSWTThreadLater(
 			1,
@@ -6376,6 +6389,12 @@ public class Utils
 					TextViewerWindow viewer = new TextViewerWindow(title, message, text.toString(), false );
 
 					viewer.setEditable( false );
+					
+					viewer.addListener(()->{
+						if ( callback != null ){
+							callback.run();
+						}
+					});
 				}
 			});
 	}

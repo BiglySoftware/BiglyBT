@@ -2325,29 +2325,31 @@ TagDownloadWithState
    	}
 
 	@Override
-	public void
+	public List<Taggable>
 	performOperation(
 		int		op )
 	{
-		performOperation( op, (t)->true );
+		return( performOperation( op, (t)->true ));
 	}
 	
 	@Override
-	public void
+	public List<Taggable>
 	performOperation(
 		int						op,
 		Predicate<Taggable>		filter )
 	{
 		Set<DownloadManager> dms = getTaggedDownloads();
 
-		performOperation( op, dms.stream().filter(filter) );
+		return( performOperation( op, dms.stream().filter(filter) ));
 	}
 
-	private void
+	private List<Taggable>
 	performOperation(
 		int					op,
 		Stream<DownloadManager> dms )
 	{
+		List<Taggable>	affected = new ArrayList<>();
+		
 		dms.forEach((dm)->{
 			int	dm_state = dm.getState();
 
@@ -2356,6 +2358,8 @@ TagDownloadWithState
 				if ( 	dm_state == DownloadManager.STATE_STOPPED ||
 						dm_state == DownloadManager.STATE_ERROR ){
 
+					affected.add( dm );
+					
 					rs_async.dispatch(
 						new AERunnable()
 						{
@@ -2368,12 +2372,16 @@ TagDownloadWithState
 						});
 				}else if ( dm.isForceStart()){
 					
+					affected.add( dm );
+					
 					rs_async.dispatch(()->{ dm.setForceStart( false ); });
 				}
 			}else if ( op == TagFeatureRunState.RSC_FORCE_START ){
 
 				if ( !dm.isForceStart()){
 
+					affected.add( dm );
+					
 					rs_async.dispatch(
 						new AERunnable()
 						{
@@ -2391,6 +2399,8 @@ TagDownloadWithState
 						dm_state != DownloadManager.STATE_STOPPING &&
 						dm_state != DownloadManager.STATE_ERROR ){
 
+					affected.add( dm );
+					
 					rs_async.dispatch(
 						new AERunnable()
 						{
@@ -2413,6 +2423,8 @@ TagDownloadWithState
 						dm_state != DownloadManager.STATE_STOPPING &&
 						dm_state != DownloadManager.STATE_ERROR ){
 
+					affected.add( dm );
+					
 					rs_async.dispatch(
 						new AERunnable()
 						{
@@ -2428,6 +2440,8 @@ TagDownloadWithState
 
 				if ( dm.isPaused()){
 
+					affected.add( dm );
+					
 					rs_async.dispatch(
 						new AERunnable()
 						{
@@ -2440,6 +2454,8 @@ TagDownloadWithState
 						});
 				}
 			}else{
+				
+				affected.add( dm );
 				
 				rs_async.dispatch(
 					new AERunnable()
@@ -2487,6 +2503,8 @@ TagDownloadWithState
 					});
 			}
 		});
+		
+		return( affected );
 	}
 
 	@Override

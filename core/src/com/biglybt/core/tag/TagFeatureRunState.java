@@ -20,6 +20,7 @@
 
 package com.biglybt.core.tag;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 public interface
@@ -66,16 +67,16 @@ TagFeatureRunState
 		return( getPerformableOperations( ops ));
 	}
 
-	public void
+	public List<Taggable>
 	performOperation(
 		int		op );
 	
-	public default void
+	public default List<Taggable>
 	performOperation(
 		int						op,
 		Predicate<Taggable>		filter )
 	{
-		performOperation( op );
+		return( performOperation( op ));
 	}
 		
 }
