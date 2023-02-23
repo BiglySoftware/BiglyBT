@@ -189,7 +189,15 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	/**
 	 * Pauses (stops) all running downloads/seedings.
 	 */
-	public void pauseDownloads();
+	public default void 
+	pauseDownloads()
+	{
+		pauseDownloads( true );
+	}
+	
+	public void 
+	pauseDownloads(
+		boolean pause_force_start );
 
 	/**
 	 * pause any non-paused downloads and auto-resume all downloads after n seconds
@@ -208,7 +216,15 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 * Indicates whether or not there are any downloads that can be paused.
 	 * @return true if there is at least one download to pause, false if none
 	 */
-	public boolean canPauseDownloads();
+	public default boolean 
+	canPauseDownloads()
+	{
+		return( canPauseDownloads(true));
+	}
+	
+	public boolean 
+	canPauseDownloads(
+		boolean pause_force_start );
 
 	/**
 	 * Resumes (starts) all downloads paused by the previous pauseDownloads call.

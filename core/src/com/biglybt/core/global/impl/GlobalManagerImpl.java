@@ -2066,7 +2066,7 @@ public class GlobalManagerImpl
 
 	  if ( COConfigurationManager.getBooleanParameter("Pause Downloads On Exit" )){
 
-		  pauseDownloads( true );
+		  pauseDownloadsInternal( true, true );
 
 		  // do this before save-downloads so paused state gets saved
 
@@ -2391,7 +2391,8 @@ public class GlobalManagerImpl
 
   @Override
   public void
-  pauseDownloads()
+  pauseDownloads(
+		boolean	pause_force_start )
   {
 	  try{
 		  NonDaemonTaskRunner.run(
@@ -2399,8 +2400,8 @@ public class GlobalManagerImpl
 				
 				@Override
 				public Object run() throws Throwable{
-					  pauseDownloads( false );
-					  return( null );
+					pauseDownloadsInternal( false, pause_force_start );
+					return( null );
 				}
 				
 				@Override
@@ -2413,9 +2414,10 @@ public class GlobalManagerImpl
 	  }
   }
 
-  protected void
-  pauseDownloads(
-	boolean	tag_only )
+  private void
+  pauseDownloadsInternal(
+	boolean	tag_only,
+	boolean	pause_force_start )
   {
 	List<DownloadManager> managers = sortForStop();
 
@@ -2434,6 +2436,11 @@ public class GlobalManagerImpl
         try {
         	boolean	forced = manager.isForceStart();
 
+        	if ( forced && !pause_force_start ){
+        		
+        		continue;
+        	}
+        	
         		// add before stopping so anyone picking up the ->stopped transition sees that it is
         		// paused
 
@@ -2522,12 +2529,18 @@ public class GlobalManagerImpl
 
 	@Override
 	public boolean
-	canPauseDownloads()
+	canPauseDownloads(
+		boolean	pause_force_start )
 	{
 		DownloadManager[] managers = managers_list_cow;
 		
 		for ( DownloadManager manager: managers ){
 
+			if ( manager.isForceStart() && !pause_force_start ){
+				
+				continue;
+			}
+			
 			if ( canPauseDownload( manager )){
 
 				return( true );

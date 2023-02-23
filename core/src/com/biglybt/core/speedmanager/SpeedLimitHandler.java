@@ -134,6 +134,7 @@ SpeedLimitHandler
 	private ScheduleRule			active_rule;
 
 	private boolean					preserve_inactive_limits;
+	private boolean					pause_forced_downloads	= true;
 	
 	private boolean					prioritiser_enabled = true;
 	private TimerEventPeriodic		prioritiser_event;
@@ -324,7 +325,7 @@ SpeedLimitHandler
 						"Pausing all downloads due to pause_all rule" );
 			}
 
-			gm.pauseDownloads();
+			gm.pauseDownloads( pause_forced_downloads );
 
 			rule_pause_all_active = true;
 
@@ -366,7 +367,7 @@ SpeedLimitHandler
 					"Pausing all downloads as network limit exceeded" );
 			}
 
-			gm.pauseDownloads();
+			gm.pauseDownloads( pause_forced_downloads );
 
 			net_limit_pause_all_active = true;
 
@@ -1013,9 +1014,10 @@ SpeedLimitHandler
 
 		List<Prioritiser>	new_prioritisers = new ArrayList<>();
 
-		boolean checked_lts_enabled = false;
-		boolean	lts_enabled	= false;
-		boolean preserve_limits = false;
+		boolean checked_lts_enabled	= false;
+		boolean	lts_enabled			= false;
+		boolean preserve_limits		= false;
+		boolean pause_forced		= true;
 		
 		for ( String line: schedule_lines ){
 
@@ -1080,6 +1082,33 @@ SpeedLimitHandler
 
 					result.add( "'" +line + "' is invalid: use preserve_inactive_limits=(yes|no)" );
 				}
+			}else if ( lc_line.startsWith( "pause_force_downloads" )){
+
+				String[]	bits = lc_line.split( "=" );
+
+				boolean	ok = false;
+
+				if ( bits.length == 2 ){
+
+					String arg = bits[1].trim();
+
+					if ( arg.equals( "yes" )){
+
+						pause_forced = true;
+						ok		= true;
+
+					}else if ( arg.equals( "no" )){
+
+						pause_forced = false;
+						ok		= true;
+					}
+				}
+
+				if ( !ok ){
+
+					result.add( "'" +line + "' is invalid: use pause_force_downloads=(yes|no)" );
+				}
+
 			}else if ( lc_line.startsWith( "ip_set" ) || lc_line.startsWith( "peer_set" ) ){
 
 				try{
@@ -1884,7 +1913,8 @@ SpeedLimitHandler
 
 		if ( enabled ){
 
-			preserve_inactive_limits = preserve_limits;
+			preserve_inactive_limits	= preserve_limits;
+			pause_forced_downloads		= pause_forced;
 			
 			if ( start_of_day && rules.isEmpty()){
 				
@@ -3519,9 +3549,9 @@ SpeedLimitHandler
 
 					}else{
 
-						if ( gm.canPauseDownloads()){
+						if ( gm.canPauseDownloads( pause_forced_downloads )){
 
-							gm.pauseDownloads();
+							gm.pauseDownloads( pause_forced_downloads );
 						}
 					}
 				}
@@ -3566,9 +3596,9 @@ SpeedLimitHandler
 
 		if ( net_limit_pause_all_active ){
 
-			if ( gm.canPauseDownloads()){
+			if ( gm.canPauseDownloads( pause_forced_downloads )){
 
-				gm.pauseDownloads();
+				gm.pauseDownloads( pause_forced_downloads );
 			}
 		}
 	}
@@ -3581,7 +3611,8 @@ SpeedLimitHandler
 		result.add( "# Enter rules on separate lines below this section - see " + Wiki.SPEED_LIMIT_SCHEDULER + " for more details" );
 		result.add( "# Rules are of the following types:" );
 		result.add( "#    enable=(yes|no)   - controls whether the entire schedule is enabled or not (default=yes)" );
-		result.add( "#    preserve_inactive_limts=(yes|no) - save existing limits when activating and reinstate on deactivation (default=no)" );
+		result.add( "#    preserve_inactive_limits=(yes|no) - save existing limits when activating and reinstate on deactivation (default=no)" );
+		result.add( "#    pause_force_downloads=(yes|no) - when pausing downloads also pause force-start ones (default=yes)" );
 		result.add( "#    <frequency> <profile_name> from <time> to <time> [extension]*" );
 		result.add( "#        frequency: daily|weekdays|weekends|<day_of_week>" );
 		result.add( "#            day_of_week: mon|tue|wed|thu|fri|sat|sun" );
