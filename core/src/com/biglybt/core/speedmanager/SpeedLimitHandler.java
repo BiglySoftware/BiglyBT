@@ -5461,13 +5461,15 @@ SpeedLimitHandler
 
 						if ( extension_type == ET_PAUSE_TAG ){
 
-							if ( !download.isPaused()){
-
-								download.pause( true );
+							if ( pause_forced_downloads || !download.isForceStart()){
+								
+								if ( !download.isPaused()){
+	
+									download.pause( true );
+								}
+								
+								download.setStopReason( "Speed Limit Handler: Tag " + tag.getTagName( true ));
 							}
-							
-							download.setStopReason( "Speed Limit Handler: Tag " + tag.getTagName( true ));
-							
 						}else if ( extension_type == ET_STOP_TAG ){
 
 							if ( 	state != Download.ST_ERROR &&
