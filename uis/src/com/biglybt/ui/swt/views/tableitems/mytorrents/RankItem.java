@@ -220,12 +220,20 @@ public class RankItem
 
   	boolean complete = dm == null ? false : dm.getAssumedComplete();
   	if (complete) {
-  		value += 0x10000;
+  		value += 0x1000000;
   	}
 
     cell.setSortValue(value);
     cell.setText(text);
 
+	TableView<?> table = cell.getTableRow().getView();
+	if ( table != null ){
+		Object dst = table.getDataSourceType();
+		if ( dst == Download.class ){
+			cell.setToolTip( text + ", " + (MessageText.getString( complete?"label.complete":"label.incomplete")));
+		}
+	}
+	
     if (cell instanceof TableCellSWT) {
     	if ( showIcon && dm != null ){
     		Image img = dm.getAssumedComplete() ? imgUp : imgDown;

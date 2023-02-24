@@ -766,6 +766,10 @@ public class PieceMapView
 	private void
 	updateTopLabel()
 	{
+		if ( topLabel == null || topLabel.isDisposed()){
+			return;
+		}
+		
 		String text = topLabelLHS;
 		
 		if (selectedPieceExplicit != null) {
