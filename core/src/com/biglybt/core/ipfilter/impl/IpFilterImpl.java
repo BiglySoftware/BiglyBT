@@ -48,6 +48,7 @@ IpFilterImpl
 	implements IpFilter
 {
 	protected static final LogIDs LOGID = LogIDs.CORE;
+	protected static final LogIDs LOGID_NWMAN = LogIDs.NWMAN;
 
 	private final static int MAX_BLOCKS_TO_REMEMBER = 500;
 
@@ -490,7 +491,7 @@ IpFilterImpl
 	      if ( addBlockedIP( new BlockedIpImpl( ipAddress, match, torrent_name, loggable), torrent_hash, loggable )){
 
 		      if (Logger.isEnabled())
-						Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING, "Ip Blocked : "
+						Logger.log(new LogEvent(LOGID_NWMAN, LogEvent.LT_WARNING, "Ip Blocked : "
 								+ ipAddress + ", in range : " + match));
 
 		      return true;
@@ -498,7 +499,7 @@ IpFilterImpl
 	      }else{
 
 		      if (Logger.isEnabled())
-					Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING, "Ip Blocking Denied : "
+					Logger.log(new LogEvent(LOGID_NWMAN, LogEvent.LT_WARNING, "Ip Blocking Denied : "
 							+ ipAddress + ", in range : " + match));
 
 		      return false;
@@ -519,7 +520,7 @@ IpFilterImpl
 	    if ( addBlockedIP( new BlockedIpImpl(ipAddress,null, torrent_name, loggable), torrent_hash, loggable )){
 
 		    if (Logger.isEnabled())
-					Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING, "Ip Blocked : "
+					Logger.log(new LogEvent(LOGID_NWMAN, LogEvent.LT_WARNING, "Ip Blocked : "
 							+ ipAddress + ", not in any range"));
 
 		    return true;
@@ -527,7 +528,7 @@ IpFilterImpl
 	    }else{
 
 		    if (Logger.isEnabled())
-				Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING, "Ip Blocking Denied : "
+				Logger.log(new LogEvent(LOGID_NWMAN, LogEvent.LT_WARNING, "Ip Blocking Denied : "
 						+ ipAddress + ", not in any range"));
 
 		    return false;
@@ -619,7 +620,7 @@ IpFilterImpl
 	      if ( addBlockedIP( new BlockedIpImpl(ipAddress.getHostAddress(),match, torrent_name, loggable), torrent_hash, loggable )){
 
 		      if (Logger.isEnabled())
-						Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING, "Ip Blocked : "
+						Logger.log(new LogEvent(LOGID_NWMAN, LogEvent.LT_WARNING, "Ip Blocked : "
 								+ ipAddress + ", in range : " + match));
 
 		      return true;
@@ -627,7 +628,7 @@ IpFilterImpl
 	      }else{
 
 		      if (Logger.isEnabled())
-						Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING, "Ip Blocking Denied: "
+						Logger.log(new LogEvent(LOGID_NWMAN, LogEvent.LT_WARNING, "Ip Blocking Denied: "
 								+ ipAddress + ", in range : " + match));
 
 		      return false;
@@ -644,14 +645,14 @@ IpFilterImpl
 	    if ( addBlockedIP( new BlockedIpImpl(ipAddress.getHostAddress(),null, torrent_name, loggable), torrent_hash, loggable )){
 
 		    if (Logger.isEnabled())
-					Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING, "Ip Blocked : "
+					Logger.log(new LogEvent(LOGID_NWMAN, LogEvent.LT_WARNING, "Ip Blocked : "
 							+ ipAddress + ", not in any range"));
 
 		    return true;
 	    }else{
 
 		    if (Logger.isEnabled())
-				Logger.log(new LogEvent(LOGID, LogEvent.LT_WARNING, "Ip Blocking Denied : "
+				Logger.log(new LogEvent(LOGID_NWMAN, LogEvent.LT_WARNING, "Ip Blocking Denied : "
 						+ ipAddress + ", not in any range"));
 
 		    return false;
