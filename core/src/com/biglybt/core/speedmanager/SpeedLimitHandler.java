@@ -1678,55 +1678,53 @@ SpeedLimitHandler
 						
 						String this_name = root.getAbsolutePath();
 						
-						if ( this_name.equals( root_name )){
+						valid_roots += (valid_roots.isEmpty()?"":", ") + this_name;
+
+						if ( root_name.equals("*") ||  this_name.equals( root_name )){
 							
 							root_hit 		= root;
-						}
-						
-						valid_roots += (valid_roots.isEmpty()?"":", ") + this_name;
+							
+							String[] args = bits[2].split(",");
+							
+							for ( String arg: args ){
+								
+								try{
+									String[] x = arg.split( "=" );
+									
+									if ( x.length != 2 ){
+										
+										throw( new Exception( "expected <name=value> argument, got '" + arg + "'" ));
+									}
+									
+									String lhs = x[0].toLowerCase();
+									
+									if ( lhs.equals( "min_space" )){
+										
+										try{
+											long amount = parseRate( x[1]);
+											
+											new_storage_details.add( new StorageDetails( root_hit, FileUtil.getFileStoreNames( root_hit)[0], amount ));
+											
+										}catch( Throwable e ){
+											
+											throw( new Exception( "invalid amount in '" + arg + "'" ));
+										}
+									}else{
+										
+										throw( new Exception( "invalid argument: '" + arg + "'" ));
+									}
+								}catch( Throwable e ){
+									
+									result.add( "'" + line + "': invalid storage specification, " + e.getMessage());
+
+								}
+							}
+						}						
 					}
 					
 					if ( root_hit == null ){
 						
-						result.add( "'" + line + "': invalid storage specification, root '" + root_name + "' not found. Valid roots are " + valid_roots );
-						
-					}else{
-						
-						String[] args = bits[2].split(",");
-						
-						for ( String arg: args ){
-							
-							try{
-								String[] x = arg.split( "=" );
-								
-								if ( x.length != 2 ){
-									
-									throw( new Exception( "expected <name=value> argument, got '" + arg + "'" ));
-								}
-								
-								String lhs = x[0].toLowerCase();
-								
-								if ( lhs.equals( "min_space" )){
-									
-									try{
-										long amount = parseRate( x[1]);
-										
-										new_storage_details.add( new StorageDetails( root_hit, FileUtil.getFileStoreNames( root_hit)[0], amount ));
-										
-									}catch( Throwable e ){
-										
-										throw( new Exception( "invalid amount in '" + arg + "'" ));
-									}
-								}else{
-									
-									throw( new Exception( "invalid argument: '" + arg + "'" ));
-								}
-							}catch( Throwable e ){
-								
-								result.add( "'" + line + "': invalid storage specification, " + e.getMessage());
-
-							}
-						}
+						result.add( "'" + line + "': invalid storage specification, root '" + root_name + "' not found. Valid roots are " + valid_roots );	
 					}
 				}
 			}else{
@@ -3787,7 +3785,7 @@ SpeedLimitHandler
 		result.add( "#    peer_set <set_name>=[<CIDR_specs...>|CC list|Network List|<prior_set_name>] [,inverse=[yes|no]] [,up=<limit>] [,down=<limit>] [peer_up=<limit>] [peer_down=<limit>] [,cat=<cat names>] [,tag=<tag names>] [,client=<regular expression>|auto] [,intf=<regular expression>|auto] [,asn=<regular expression>]" );
 		result.add( "#    net_limit (hourly|daily|weekly|monthly)[(:<profile>|$<tag>)] [total=<limit>] [up=<limit>] [down=<limit>]");
 		result.add( "#    priority_(up|down) <id>=<tag_name> [,<id>=<tag_name>]+ [,freq=<secs>] [,max=<limit>] [,probe=<cycles>]" );
-		result.add( "#    storage <root> min_space=<space>" );
+		result.add( "#    storage (<root>|*) min_space=<space>" );
 		result.add( "#" );
 		result.add( "# For example - assuming there are profiles called 'no_limits' and 'limited_upload' defined:" );
 		result.add( "#" );
