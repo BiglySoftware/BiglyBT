@@ -2410,6 +2410,8 @@ TagDownloadWithState
 							{
 								dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
 
+								dm.setStopReason( "Tag '" + getTagName() + "' stopped" );
+								
 									// recheck here in case it is an 'archive' action that requires
 									// download to be stopped
 
@@ -2433,6 +2435,8 @@ TagDownloadWithState
 							runSupport()
 							{
 								dm.pause( true );
+								
+								dm.setStopReason( "Tag '" + getTagName() + "' paused" );
 							}
 						});
 				}

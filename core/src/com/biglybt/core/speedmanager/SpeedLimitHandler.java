@@ -20,8 +20,10 @@
 
 package com.biglybt.core.speedmanager;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.nio.file.FileSystem;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -112,6 +114,7 @@ SpeedLimitHandler
 	private static final int NETLIMIT_TAG_LOG_TICKS		= NETLIMIT_TAG_LOG_PERIOD/SCHEDULER_PERIOD;
 
 	private static final int PRIORITISER_CHECK_PERIOD_BASE	= 5*1000;
+	private static final int STORAGE_CHECK_PERIOD			= 15*1000;
 
 	private static final String	NET_IPV4		= "IPv4";
 	private static final String	NET_IPV6		= "IPv6";
@@ -140,6 +143,9 @@ SpeedLimitHandler
 	private boolean					prioritiser_enabled = true;
 	private TimerEventPeriodic		prioritiser_event;
 	private List<Prioritiser>		current_prioritisers = new ArrayList<>();
+
+	private TimerEventPeriodic		storage_event;
+	private List<StorageDetails>	current_storage_details = new ArrayList<>();
 
 	private Map<String,PeerSet>		current_ip_sets 			= new HashMap<>();
 	private final Map<String,RateLimiter>	ip_set_rate_limiters_up 	= new HashMap<>();
@@ -173,6 +179,9 @@ SpeedLimitHandler
 	
 	private volatile	BuddyPlugin buddy_plugin;
 	
+	private final AsyncDispatcher gm_dispatcher = new AsyncDispatcher();
+
+	
 	private
 	SpeedLimitHandler(
 		Core _core )
@@ -183,7 +192,7 @@ SpeedLimitHandler
 
 		category_attribute	= plugin_interface.getTorrentManager().getAttribute( TorrentAttribute.TA_CATEGORY );
 
-		logger = plugin_interface.getLogger().getTimeStampedChannel( "Speed Limit Handler" );
+		logger = plugin_interface.getLogger().getTimeStampedChannel( "Speed Limit Scheduler" );
 
 		if ( Constants.isCVSVersion()){
 
@@ -193,7 +202,7 @@ SpeedLimitHandler
 		UIManager	ui_manager = plugin_interface.getUIManager();
 
 		final BasicPluginViewModel model =
-			ui_manager.createBasicPluginViewModel( "Speed Limit Handler" );
+			ui_manager.createBasicPluginViewModel( "Speed Limit Scheduler" );
 
 		model.getActivity().setVisible( false );
 		model.getProgress().setVisible( false );
@@ -327,7 +336,7 @@ SpeedLimitHandler
 						"Pausing all downloads due to pause_all rule" );
 			}
 
-			gm.pauseDownloads( pause_forced_downloads );
+			gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads ));
 
 			rule_pause_all_active = true;
 
@@ -344,7 +353,7 @@ SpeedLimitHandler
 								"Resuming all downloads as pause_all rule no longer applies" );
 					}
 
-					gm.resumeDownloads( true );
+					gm_dispatcher.dispatch(()->gm.resumeDownloads( true ));
 				}
 			}
 
@@ -369,7 +378,7 @@ SpeedLimitHandler
 					"Pausing all downloads as network limit exceeded" );
 			}
 
-			gm.pauseDownloads( pause_forced_downloads );
+			gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads ));
 
 			net_limit_pause_all_active = true;
 
@@ -547,6 +556,15 @@ SpeedLimitHandler
 			lines.add( "" );
 			lines.add( "    Rate (3 minute average):\t\t" + getString( lt_stats.getCurrentRateBytesPerSecond(), null, true));
 		}
+
+		lines.add( "" );
+		lines.add( "Storage" );
+
+		for ( StorageDetails s: current_storage_details ){
+			
+			lines.add( "    " + s.getString());
+		}
+		
 
 		return( lines );
 	}
@@ -1026,8 +1044,9 @@ SpeedLimitHandler
 		Map<Integer,List<NetLimit>> new_net_limits_by_type	= new HashMap<>();
 		List<NetLimit>				new_net_limits_all		= new ArrayList<>();
 
-		List<Prioritiser>	new_prioritisers = new ArrayList<>();
-
+		List<Prioritiser>		new_prioritisers	= new ArrayList<>();
+		List<StorageDetails>	new_storage_details	= new ArrayList<>();
+		
 		boolean checked_lts_enabled	= false;
 		boolean	lts_enabled			= false;
 		boolean preserve_limits		= false;
@@ -1635,6 +1654,81 @@ SpeedLimitHandler
 						new_prioritisers.add( pri );
 					}
 				}
+			}else if ( lc_line.startsWith( "storage " )){
+
+				line = line.replaceAll("\\\\", "\\\\\\\\" );
+				
+				String[]	bits = GeneralUtils.decomposeArgs( line );
+
+				if ( bits.length != 3 ){
+					
+					result.add( "'" + line + "': invalid storage specification" );
+					
+				}else{
+					
+					String root_name = bits[1];
+					
+					File[] roots = FileUtil.listRootsWithTimeout();
+					
+					File root_hit		= null;
+					
+					String valid_roots = "";
+					
+					for ( File root: roots ){
+						
+						String this_name = root.getAbsolutePath();
+						
+						if ( this_name.equals( root_name )){
+							
+							root_hit 		= root;
+						}
+						
+						valid_roots += (valid_roots.isEmpty()?"":", ") + this_name;
+					}
+					
+					if ( root_hit == null ){
+						
+						result.add( "'" + line + "': invalid storage specification, root '" + root_name + "' not found. Valid roots are " + valid_roots );
+						
+					}else{
+						
+						String[] args = bits[2].split(",");
+						
+						for ( String arg: args ){
+							
+							try{
+								String[] x = arg.split( "=" );
+								
+								if ( x.length != 2 ){
+									
+									throw( new Exception( "expected <name=value> argument, got '" + arg + "'" ));
+								}
+								
+								String lhs = x[0].toLowerCase();
+								
+								if ( lhs.equals( "min_space" )){
+									
+									try{
+										long amount = parseRate( x[1]);
+										
+										new_storage_details.add( new StorageDetails( root_hit, FileUtil.getFileStoreNames( root_hit)[0], amount ));
+										
+									}catch( Throwable e ){
+										
+										throw( new Exception( "invalid amount in '" + arg + "'" ));
+									}
+								}else{
+									
+									throw( new Exception( "invalid argument: '" + arg + "'" ));
+								}
+							}catch( Throwable e ){
+								
+								result.add( "'" + line + "': invalid storage specification, " + e.getMessage());
+
+							}
+						}
+					}
+				}
 			}else{
 
 				String[]	_bits = line.split( " " );
@@ -2065,6 +2159,39 @@ SpeedLimitHandler
 				}
 			}
 
+				// storage details
+	
+			current_storage_details = new_storage_details;
+	
+			if ( current_storage_details.size() == 0 ){
+	
+				if ( storage_event != null ){
+	
+					storage_event.cancel();
+	
+					storage_event = null;
+				}
+			}else{
+	
+				if ( storage_event == null ){
+	
+					storage_event =
+						SimpleTimer.addPeriodicEvent(
+								"speed handler storage checker",
+								STORAGE_CHECK_PERIOD,
+								new TimerEventPerformer()
+								{
+									@Override
+									public void
+									perform(
+										TimerEvent event)
+									{
+										checkStorage();
+									}
+								});
+				}
+			}
+		
 				// setup scheduler if needed
 
 			if ( schedule_event == null && ( rules.size() > 0 || net_limits_all.size() > 0 )){
@@ -2186,7 +2313,15 @@ SpeedLimitHandler
 
 				}else if ( c == 'g' ){
 
-					mult = 1024*1024*1024L;
+					mult = 1024L*1024*1024;
+					
+				}else if ( c == 't' ){
+
+					mult = 1024L*1024*1024*1024;
+					
+				}else if ( c == 'e' ){
+
+					mult = 1024L*1024*1024*1024*1024;
 				}
 
 				break;
@@ -3371,6 +3506,22 @@ SpeedLimitHandler
 			}
 		}
 	}
+	
+	private void
+	checkStorage()
+	{
+		List<StorageDetails>	storage;
+
+		synchronized( this ){
+
+			storage = new ArrayList<>(current_storage_details);
+		}
+
+		for ( StorageDetails details: storage ){
+			
+			details.check();
+		}
+	}
 
 	private ScheduleRule
 	getActiveRule(
@@ -3567,7 +3718,7 @@ SpeedLimitHandler
 
 						if ( gm.canPauseDownloads( pause_forced_downloads )){
 
-							gm.pauseDownloads( pause_forced_downloads );
+							gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads ));
 						}
 					}
 				}
@@ -3613,7 +3764,7 @@ SpeedLimitHandler
 
 			if ( gm.canPauseDownloads( pause_forced_downloads )){
 
-				gm.pauseDownloads( pause_forced_downloads );
+				gm_dispatcher.dispatch(()->gm.pauseDownloads( pause_forced_downloads ));
 			}
 		}
 	}
@@ -3636,6 +3787,7 @@ SpeedLimitHandler
 		result.add( "#    peer_set <set_name>=[<CIDR_specs...>|CC list|Network List|<prior_set_name>] [,inverse=[yes|no]] [,up=<limit>] [,down=<limit>] [peer_up=<limit>] [peer_down=<limit>] [,cat=<cat names>] [,tag=<tag names>] [,client=<regular expression>|auto] [,intf=<regular expression>|auto] [,asn=<regular expression>]" );
 		result.add( "#    net_limit (hourly|daily|weekly|monthly)[(:<profile>|$<tag>)] [total=<limit>] [up=<limit>] [down=<limit>]");
 		result.add( "#    priority_(up|down) <id>=<tag_name> [,<id>=<tag_name>]+ [,freq=<secs>] [,max=<limit>] [,probe=<cycles>]" );
+		result.add( "#    storage <root> min_space=<space>" );
 		result.add( "#" );
 		result.add( "# For example - assuming there are profiles called 'no_limits' and 'limited_upload' defined:" );
 		result.add( "#" );
@@ -5468,7 +5620,7 @@ SpeedLimitHandler
 									download.pause( true );
 								}
 								
-								download.setStopReason( "Speed Limit Handler: Tag " + tag.getTagName( true ));
+								download.setStopReason( "Speed Limit Scheduler: Tag " + tag.getTagName( true ));
 							}
 						}else if ( extension_type == ET_STOP_TAG ){
 
@@ -5478,7 +5630,7 @@ SpeedLimitHandler
 
 								download.stopIt( DownloadManager.STATE_STOPPED, false, false );
 								
-								download.setStopReason( "Speed Limit Handler: Tag " + tag.getTagName( true ));
+								download.setStopReason( "Speed Limit Scheduler: Tag " + tag.getTagName( true ));
 							}
 						}
 					}
@@ -9029,6 +9181,68 @@ SpeedLimitHandler
 
 				return( str );
 			}
+		}
+	}
+	
+	private class
+	StorageDetails
+	{
+		private final File		root;
+		private final String	name;
+		private final long		min_space;
+		
+		private
+		StorageDetails(
+			File		_root,
+			String		_name,
+			long		_min_space )
+		{
+			root		= _root;
+			name		= _name;
+			min_space	= _min_space;
+		}
+		
+		private void
+		check()
+		{
+			try{
+				long space = root.getFreeSpace();
+				
+				if ( space < min_space ){
+					
+					List<DownloadManager> dms = core.getGlobalManager().getDownloadManagers();
+					
+					for ( DownloadManager dm: dms ){
+						
+						if ( dm.getState() == DownloadManager.STATE_DOWNLOADING ){
+							
+							String fs = FileUtil.getFileStoreNames(dm.getAbsoluteSaveLocation())[0];
+							
+							if ( fs.equals( name )){
+								
+								if ( pause_forced_downloads || !dm.isForceStart()){
+											
+									logger.log( "Pausing '" + dm.getDisplayName() + "', insufficient space on '" + root.getAbsolutePath() + "'" );
+										
+									dm.pause( true );
+									
+									dm.setStopReason( "Speed Limit Scheduler: Insufficient space on '" + root.getAbsolutePath() + "'" );
+								}
+							}
+						}
+					}
+					
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		private String
+		getString()
+		{
+			return( name + ", root=" + root.getAbsolutePath() + ", min_space=" + DisplayFormatters.formatByteCountToKiBEtc( min_space) + ", free=" + DisplayFormatters.formatByteCountToKiBEtc( root.getFreeSpace()));
 		}
 	}
 }
