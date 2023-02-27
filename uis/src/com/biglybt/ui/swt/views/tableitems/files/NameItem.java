@@ -46,6 +46,7 @@ import com.biglybt.core.util.FileUtil;
 import com.biglybt.ui.common.table.TableCellCore;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.ImageRepository;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateCellText;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
@@ -608,7 +609,7 @@ public class NameItem extends CoreTableColumnSWT implements
 				Rectangle hitArea = (Rectangle) data;
 				boolean inCheck = hitArea.contains(event.x, event.y);
 
-				String our_tt = MessageText.getString( "filesview.name.check.tt" );
+				String our_tt = Messages.getLanguageText( "filesview.name.check.tt" );
 				
 				Object set_tt = null;
 				

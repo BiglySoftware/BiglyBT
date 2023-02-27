@@ -37,6 +37,10 @@ import com.biglybt.util.StringCompareUtils;
  */
 public class Messages {
 
+	private static final boolean DARK_MODE = Utils.isDarkAppearanceNative();
+	
+	private static final String THEME_SUFFIX = DARK_MODE?"._dark":null;
+	
 	private static final String MESSAGE_KEY 		= "com.biglybt.ui.swt.Messages:msg";
 	private static final String RESOURCE_KEY 		= "com.biglybt.ui.swt.Messages:res";
 	private static final String RESOURCE_TT_KEY 	= "com.biglybt.ui.swt.Messages:ttres";
@@ -324,6 +328,24 @@ public class Messages {
 	}
 
 
+	public static String 
+	getLanguageText( String key )
+	{
+		if ( THEME_SUFFIX != null ){
+			
+				// doesn't work with platform-specific strings yet...
+			
+			String result = MessageText.getString( key + THEME_SUFFIX );
+			
+			if ( result != null ){
+				
+				return( result );
+			}
+		}
+		
+		return( MessageText.getString( key ));
+	}
+	
 	public static void setLanguageTooltip(Widget widget, String key) {
 		if (widget == null || widget.isDisposed()) {
 			return;
