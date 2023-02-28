@@ -34,6 +34,7 @@ import java.util.Map;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tracker.server.TRTrackerServerListener2;
+import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.AsyncController;
 import com.biglybt.pif.tracker.Tracker;
 import com.biglybt.pif.tracker.web.TrackerWebContext;
@@ -92,7 +93,7 @@ TrackerWebPageRequestImpl
 	public String
 	getClientAddress()
 	{
-		return( request.getClientAddress().getAddress().getHostAddress());
+		return( AddressUtils.getHostAddress(request.getClientAddress()));
 	}
 
 	@Override
