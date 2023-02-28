@@ -2253,49 +2253,6 @@ MagnetPlugin
 		Map<String,Object>						initial_metadata,
 		long									_timeout,
 		int										flags,
-		DownloadResultListener					_result_listener )
-	{
-		DownloadManager[] download = { null };
-		
-		DownloadResultListener result_listener =
-			new DownloadResultListener(){
-				
-				@Override
-				public void 
-				failed(
-					MagnetURIHandlerException error)
-				{
-					_result_listener.failed( error );;
-				}
-				
-				@Override
-				public void 
-				complete(
-					DownloadResult result)
-				{
-					if ( result != null ){
-						
-						result.setDownload( download[0] );
-					}
-					
-					_result_listener.complete( result );
-				}
-			};
-			
-		_downloadSupport( listener, hash, args, sources, tags, initial_metadata, _timeout, flags, download, result_listener );
-	}
-	
-	private void
-	_downloadSupport(
-		final MagnetPluginProgressListener		listener,
-		final byte[]							hash,
-		final String							args,
-		final InetSocketAddress[]				sources,
-		List<String>							tags,
-		Map<String,Object>						initial_metadata,
-		long									_timeout,
-		int										flags,
-		DownloadManager[]						cancelled_download,
 		DownloadResultListener					result_listener )
 	{
 		final long	timeout;
@@ -2455,7 +2412,7 @@ MagnetPlugin
 
 										if ( dummy_hash || Arrays.equals( torrent.getHash(), hash )){
 
-											synchronized( result_holder ){
+											synchronized( md_downloader ){
 
 												result_holder[0] = BEncoder.encode( torrent.serialiseToMap());
 											}
@@ -2491,11 +2448,11 @@ MagnetPlugin
 
 						remaining -= (SystemTime.getMonotonousTime() - start );
 
-						synchronized( result_holder ){
+						synchronized( md_downloader ){
 
 							if ( result_holder[0] != null ){
-
-								result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+								
+								result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks,  md_downloader[0] ));
 								
 								return;
 							}
@@ -2598,7 +2555,7 @@ MagnetPlugin
 											listener.reportActivity( getMessageText( "report.md.done" ));
 										}
 
-										synchronized( result_holder ){
+										synchronized( md_downloader ){
 
 											additional_networks.addAll( peer_networks );
 
@@ -2622,7 +2579,7 @@ MagnetPlugin
 											listener.reportActivity( getMessageText( "report.error", Debug.getNestedExceptionMessage(e)));
 										}
 
-										synchronized( result_holder ){
+										synchronized( md_downloader ){
 
 											manually_cancelled[0] = mc;
 											
@@ -2670,11 +2627,11 @@ MagnetPlugin
 							return;
 						}
 
-						synchronized( result_holder ){
+						synchronized( md_downloader ){
 
 							if ( result_holder[0] != null ){
 
-								result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+								result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks, md_downloader[0] ));
 								
 								return;
 							}
@@ -2921,11 +2878,11 @@ MagnetPlugin
 									return;
 								}
 
-								synchronized( result_holder ){
+								synchronized( md_downloader ){
 
 									if ( result_holder[0] != null ){
-
-										result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+										
+										result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks, md_downloader[0] ));
 										
 										return;
 									}
@@ -3057,7 +3014,7 @@ MagnetPlugin
 																listener.reportContributor( contact.getAddress());
 															}
 
-															synchronized( result_holder ){
+															synchronized( md_downloader ){
 
 																result_holder[0] = data;
 															}
@@ -3100,11 +3057,11 @@ MagnetPlugin
 
 								boolean got_sem = contact_sem.reserve( 500 );
 
-								synchronized( result_holder ){
+								synchronized( md_downloader ){
 
 									if ( result_holder[0] != null ){
 
-										result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+										result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks, md_downloader[0] ));
 										
 										return;
 									}
@@ -3142,7 +3099,7 @@ MagnetPlugin
 
 						// we can move to a timer based completion now
 					
-					synchronized( result_holder ){
+					synchronized( md_downloader ){
 						
 						final_timer[0] = 
 							SimpleTimer.addPeriodicEvent(
@@ -3161,7 +3118,7 @@ MagnetPlugin
 										tick++;
 										
 										try{
-											synchronized( result_holder ){
+											synchronized( md_downloader ){
 	
 												if ( listener != null && listener.cancelled()){
 													
@@ -3175,7 +3132,7 @@ MagnetPlugin
 						
 														done = true;
 														
-														result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+														result_listener.complete( new DownloadResult( result_holder[0], networks_enabled, additional_networks, md_downloader[0] ));
 																												
 													}else if ( result_error[0] != null ){
 						
@@ -3212,8 +3169,6 @@ MagnetPlugin
 														if ( downloader != null ){
 									
 															downloader.cancel();
-																
-															cancelled_download[0] = downloader.getDownloadManager();
 														}
 													}
 												}finally{
@@ -3259,8 +3214,6 @@ MagnetPlugin
 						if ( downloader != null ){
 	
 							downloader.cancel();
-								
-							cancelled_download[0] = downloader.getDownloadManager();
 						}
 					}
 				}
@@ -3294,16 +3247,17 @@ MagnetPlugin
 	private static class
 	DownloadResult
 	{
-		private byte[]		data;
-		private Set<String>	networks;
+		private final byte[]		data;
+		private final Set<String>	networks;
 
-		private DownloadManager		dm;
+		private final DownloadManager		dm;
 		
 		private
 		DownloadResult(
-			byte[]			torrent_data,
-			Set<String>		networks_enabled,
-			Set<String>		additional_networks )
+			byte[]						torrent_data,
+			Set<String>					networks_enabled,
+			Set<String>					additional_networks,
+			MagnetPluginMDDownloader	mdd )
 		{
 			data		= torrent_data;
 
@@ -3311,13 +3265,8 @@ MagnetPlugin
 
 			networks.addAll( networks_enabled );
 			networks.addAll( additional_networks );
-		}
-
-		private void
-		setDownload(
-			DownloadManager		_dm )
-		{
-			dm		= _dm;
+			
+			dm = mdd.getDownloadManager();
 		}
 		
 		private DownloadManager
