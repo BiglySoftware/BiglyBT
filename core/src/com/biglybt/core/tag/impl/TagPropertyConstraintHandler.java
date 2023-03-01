@@ -2534,6 +2534,9 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_MOVING			= 40;
 		private static final int FT_SET_TAG_SORT		= 41;
 		private static final int FT_TIME_TO_ELAPSED		= 42;
+		private static final int FT_TO_MB				= 43;
+		private static final int FT_TO_GB				= 44;
+
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2585,6 +2588,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_TAG_NAMES			= 41;
 		private static final int	KW_TRACKER_STATUS		= 42;
 		private static final int	KW_FULL_COPY_SEEN		= 43;
+		private static final int	KW_REMAINING			= 44;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2685,7 +2689,8 @@ TagPropertyConstraintHandler
 			keyword_map.put( "fullcopyseen",			new int[]{KW_FULL_COPY_SEEN,		DEP_RUNNING });
 			keyword_map.put( "full_copy_seen",			new int[]{KW_FULL_COPY_SEEN,		DEP_RUNNING });
 
-			
+			keyword_map.put( "remaining", 				new int[]{KW_REMAINING,				DEP_RUNNING });
+
 			
 		}
 
@@ -3035,6 +3040,18 @@ TagPropertyConstraintHandler
 				}else if ( func_name.equals( "timeToElapsed" )){
 					
 					fn_type = FT_TIME_TO_ELAPSED;
+
+					params_ok = num_params == 1;
+
+				}else if ( func_name.equals( "toMB" )){
+					
+					fn_type = FT_TO_MB;
+
+					params_ok = num_params == 1;
+
+				}else if ( func_name.equals( "toGB" )){
+					
+					fn_type = FT_TO_GB;
 
 					params_ok = num_params == 1;
 
@@ -3802,7 +3819,7 @@ TagPropertyConstraintHandler
 						return((long)( n1.doubleValue() * 7*24*60*60 ));
 					}
 					case FT_TIME_TO_ELAPSED:{
-					
+						
 						long time = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
 						
 						if ( time > 0 ){
@@ -3820,6 +3837,18 @@ TagPropertyConstraintHandler
 							
 							return( time );
 						}
+					}
+					case FT_TO_MB:{
+						
+						long bytes = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
+						
+						return( bytes/(1024L*1024L));
+					}
+					case FT_TO_GB:{
+						
+						long bytes = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
+						
+						return( bytes/(1024L*1024L*1024L));
 					}
 					case FT_GET_CONFIG:{
 						
@@ -4797,6 +4826,10 @@ TagPropertyConstraintHandler
 							case KW_DOWNLOADED:{
 								
 								return( dm.getStats().getTotalGoodDataBytesReceived());
+							}
+							case KW_REMAINING:{
+								
+								return( dm.getStats().getRemainingExcludingDND());
 							}
 							case KW_UPLOADED:{
 								
