@@ -102,7 +102,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Open Bar Incomplete", false);
 		def.addParameter("Open Bar Complete", false);
 
-		def.addParameter("Close To Tray", true);
+		def.addParameter("Close To Tray", Constants.isLinux?false:true);
 		def.addParameter("Minimize To Tray", false);
 
 		def.addParameter("Status Area Show SR", true);
