@@ -3266,7 +3266,7 @@ MagnetPlugin
 			networks.addAll( networks_enabled );
 			networks.addAll( additional_networks );
 			
-			dm = mdd.getDownloadManager();
+			dm = mdd==null?null:mdd.getDownloadManager();
 		}
 		
 		private DownloadManager
