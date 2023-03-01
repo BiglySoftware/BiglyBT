@@ -472,6 +472,7 @@ public class SBC_LibraryView
 									MessageText.getString(
 											"filter.header.matches2",
 											new String[]{ String.valueOf( filter_total ), String.valueOf( filter_active )});
+								extra_search = extra_search.toLowerCase(Locale.US);
 							}
 							
 								// seeding and downloading Tag views were changed to filter appropriately
@@ -538,6 +539,7 @@ public class SBC_LibraryView
 											String.valueOf(stats.numComplete + stats.numIncomplete),
 											String.valueOf(stats.numSeeding + stats.numDownloading),
 									});
+									s = s.toLowerCase(Locale.US);
 
 									if ( stats.numQueued > 0 ){
 
@@ -558,7 +560,8 @@ public class SBC_LibraryView
 											String.valueOf(extra_total),
 											String.valueOf(extra_active),
 									});
-
+									s = s.toLowerCase(Locale.US);
+									
 									if ( extra_queued > 0 ){
 
 										s += ", " +
