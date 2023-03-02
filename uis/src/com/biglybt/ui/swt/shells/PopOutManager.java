@@ -28,6 +28,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.tag.Tag;
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
@@ -577,17 +578,38 @@ PopOutManager
 
 			String ds_str = "";
 			Object ds = entry.getDataSource();
-			DownloadManager[] dms = DataSourceUtils.getDMs(ds);
-
-			for ( DownloadManager dm: dms ){
+			
+				// first try Tags (e.g for TagSettingsView)
+			
+			Tag[] tags = DataSourceUtils.getTags(ds);
+			
+			if ( tags.length > 0 ){
 				
-				ds_str += (ds_str.isEmpty()?"":", ") + dm.getDisplayName();
+				for ( Tag tag: tags ){
+					
+					ds_str += (ds_str.isEmpty()?"":", ") + tag.getTagName();
+					
+					if ( ds_str.length() > 200 ){
+						
+						ds_str = ds_str.substring( 0, 200 ) + "...";
+						
+						break;
+					}
+				}
+			}else{
 				
-				if ( ds_str.length() > 200 ){
+				DownloadManager[] dms = DataSourceUtils.getDMs(ds);
+	
+				for ( DownloadManager dm: dms ){
 					
-					ds_str = ds_str.substring( 0, 200 ) + "...";
+					ds_str += (ds_str.isEmpty()?"":", ") + dm.getDisplayName();
 					
-					break;
+					if ( ds_str.length() > 200 ){
+						
+						ds_str = ds_str.substring( 0, 200 ) + "...";
+						
+						break;
+					}
 				}
 			}
 
