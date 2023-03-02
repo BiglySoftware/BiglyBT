@@ -660,14 +660,20 @@ public class TaggingView
 	{
 		List<Tag> tags = getTags();
 		
-		TagUtils.sortTags( tags );
+		tags = TagUtils.sortTags( tags );
 		
 		StringBuilder content = new StringBuilder(1024);
+				
+		int num_taggables = taggables.size();
 		
 		for ( Taggable t: taggables ){
 			
 			content.append( t.getTaggableName() + "\n\n" );
+		
+			String	indent = "";
 			
+			String	current_group = null;
+
 			for ( Tag tag: tags ){
 				
 				TagFeatureProperties	tfp = (TagFeatureProperties)tag;
@@ -679,14 +685,34 @@ public class TaggingView
 					String[] constraint = tfp_constraint.getStringList();
 					
 					if ( constraint != null && constraint.length > 0 ){
-						
+
 						String s = constraint[0];
 						
 						if ( s.length() > 0 ){
-	
-							String details = tfp_constraint.explainTaggable( t );
+
+							String group = tag.getGroup();
 							
-							content.append( tag.getTagName(true) + " -> " + details + "\n" );
+							if ( group != null ){
+								
+								indent = "        ";
+								
+								if ( current_group == null || !group.equals( current_group )){
+									
+									content.append( "    Group: " + group + "\n");
+									
+									current_group = group;
+								}
+							}else{
+								
+								indent = "    ";
+							}
+
+							String[] details = tfp_constraint.explainTaggable( t );
+							
+							content.append( indent + tag.getTagName(true) + " -> " + details[0] + "\n" );
+							content.append( indent + "    " + details[1] + "\n" );
+							content.append( indent + "    " + details[2] + "\n" );
+							
 						}
 					}
 				}

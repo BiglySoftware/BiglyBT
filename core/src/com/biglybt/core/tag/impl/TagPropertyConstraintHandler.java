@@ -883,7 +883,7 @@ TagPropertyConstraintHandler
 		return( null );
 	}
 	
-	protected String
+	protected String[]
 	explain(
 		Tag				tag,
 		Taggable		taggable )
@@ -892,11 +892,11 @@ TagPropertyConstraintHandler
 		
 		if ( tc == null ){
 			
-			return( "no constraint" );
+			return( new String[]{ "no constraint" });
 			
 		}else if ( ! ( taggable instanceof DownloadManager )){
 			
-			return( "invalid taggable" );
+			return( new String[]{ "invalid taggable" });
 			
 		}else{
 			
@@ -904,7 +904,7 @@ TagPropertyConstraintHandler
 			
 			boolean result = tc.testConstraint((DownloadManager)taggable, debug);
 			
-			return( result + "\n\tconstraint=" + tc.getString() + "\n\teval=" +  debug.toString());
+			return( new String[]{ String.valueOf( result ), tc.getString(), debug.toString()});
 		}
 	}
 	
@@ -1201,7 +1201,7 @@ TagPropertyConstraintHandler
 		return( new TagConstraint( this, null, expr, null, true ));
 	}
 
-	private static Pattern comp_op_pattern = Pattern.compile( "(.+?)(==|!=|>=|>|<=|<)(.+)");
+	private static Pattern comp_op_pattern = Pattern.compile( "(.+?)(==|!=|>=|>|<=|<|\\+|-|\\*|/)(.+)");
 	
 	private static Map<String,String>	comp_op_map = new HashMap<>();
 	
@@ -1212,6 +1212,10 @@ TagPropertyConstraintHandler
 		comp_op_map.put( "<=", "isLE" );
 		comp_op_map.put( ">",  "isGT" );
 		comp_op_map.put( "<",  "isLT" );
+		comp_op_map.put( "+",  "plus" );
+		comp_op_map.put( "-",  "minus" );
+		comp_op_map.put( "*",  "mult" );
+		comp_op_map.put( "/",  "div" );
 	}
 	
 	private static Map<String,Object[]>	config_value_cache = new ConcurrentHashMap<String, Object[]>();
@@ -1344,7 +1348,7 @@ TagPropertyConstraintHandler
 		private String
 		getString()
 		{
-			return( expr==null?"Failed to compile":expr.getString());
+			return( expr==null?"Failed to compile constraint \"" + constraint + "\"":expr.getString());
 		}
 		
 		private int
@@ -1927,76 +1931,92 @@ TagPropertyConstraintHandler
 				
 				Map<String,Object>	context = new HashMap<>();
 				
-				boolean result = (Boolean)expr.eval( context, dm, dm_tags, debug );
+				Object o_result = expr.eval( context, dm, dm_tags, debug );
 				
-				if ( result && tag_maybe_null != null ){
+				if ( o_result instanceof Boolean ){
+				
+					boolean result = (Boolean)o_result;
 					
-					long[] colours = (long[])context.get( EVAL_CTX_COLOURS );
-					
-					tag_maybe_null.setColors( colours );
-					
-					Object[] tag_sort = (Object[])context.get( EVAL_CTX_TAG_SORT );
-					
-					if ( tag_sort != null ){
+					if ( result && tag_maybe_null != null ){
 						
-						long current = ((Number)tag_sort[0]).longValue();
+						long[] colours = (long[])context.get( EVAL_CTX_COLOURS );
+						
+						tag_maybe_null.setColors( colours );
+						
+						Object[] tag_sort = (Object[])context.get( EVAL_CTX_TAG_SORT );
+						
+						if ( tag_sort != null ){
+							
+							long current = ((Number)tag_sort[0]).longValue();
+									
+							long uid = tag_maybe_null.getTagUID();
+							
+							String options;
+							
+							if ( tag_sort.length > 1 ){
 								
-						long uid = tag_maybe_null.getTagUID();
-						
-						String options;
-						
-						if ( tag_sort.length > 1 ){
-							
-							options = (String)tag_sort[1];
-							
-						}else{
-							
-							options = null;
-						}
-
-						Map<Long,Object[]>	map = (Map<Long,Object[]>)dm.getDownloadState().getTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT );
-						
-						
-						boolean changed = false;
-						
-						if ( map == null ){
-							
-							map = new HashMap<>();
-							
-							map.put( uid, new Object[]{ tag_maybe_null, current, options });
-							
-							changed = true;
-							
-						}else{
-							
-							Object[] existing = (Object[])map.get( uid );
-							
-							if ( existing != null ){
-								
-									// no change to map
-								
-								existing[1] = current;
-								existing[2]	= options;
+								options = (String)tag_sort[1];
 								
 							}else{
 								
-								map = new HashMap<>( map );	// copy on write
+								options = null;
+							}
+	
+							Map<Long,Object[]>	map = (Map<Long,Object[]>)dm.getDownloadState().getTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT );
+							
+							
+							boolean changed = false;
+							
+							if ( map == null ){
+								
+								map = new HashMap<>();
 								
 								map.put( uid, new Object[]{ tag_maybe_null, current, options });
 								
 								changed = true;
+								
+							}else{
+								
+								Object[] existing = (Object[])map.get( uid );
+								
+								if ( existing != null ){
+									
+										// no change to map
+									
+									existing[1] = current;
+									existing[2]	= options;
+									
+								}else{
+									
+									map = new HashMap<>( map );	// copy on write
+									
+									map.put( uid, new Object[]{ tag_maybe_null, current, options });
+									
+									changed = true;
+								}
+							}
+							
+							if ( changed ){
+								
+								dm.getDownloadState().setTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT, map );
 							}
 						}
-						
-						if ( changed ){
-							
-							dm.getDownloadState().setTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT, map );
-						}
 					}
+									
+					return( result );
+					
+				}else{
+					
+					setError( "Constraint must evaluate to a boolean" );
+					
+					return( false );
 				}
-								
-				return( result );
 			}else{
+				
+				if ( debug != null ){
+					
+					debug.append( "Constraint is not enabled" );
+				}
 				
 				return( false );
 			}
@@ -2535,7 +2555,13 @@ TagPropertyConstraintHandler
 		private static final int FT_SET_TAG_SORT		= 41;
 		private static final int FT_TIME_TO_ELAPSED		= 42;
 		private static final int FT_TO_MB				= 43;
-		private static final int FT_TO_GB				= 44;
+		private static final int FT_TO_MiB				= 44;
+		private static final int FT_TO_GB				= 45;
+		private static final int FT_TO_GiB				= 46;
+		private static final int FT_PLUS				= 47;
+		private static final int FT_MINUS				= 48;
+		private static final int FT_MULT				= 49;
+		private static final int FT_DIV					= 50;
 
 		
 		private static final int	DEP_STATIC		= 0;
@@ -2954,6 +2980,30 @@ TagPropertyConstraintHandler
 
 					params_ok = num_params == 2;
 
+				}else if ( func_name.equals( "plus" )){
+
+					fn_type = FT_PLUS;
+
+					params_ok = num_params == 2;
+
+				}else if ( func_name.equals( "minus" )){
+
+					fn_type = FT_MINUS;
+
+					params_ok = num_params == 2;
+
+				}else if ( func_name.equals( "mult" )){
+
+					fn_type = FT_MULT;
+
+					params_ok = num_params == 2;
+
+				}else if ( func_name.equals( "div" )){
+
+					fn_type = FT_DIV;
+
+					params_ok = num_params == 2;
+
 				}else if ( func_name.equals( "contains" )){
 
 					fn_type = FT_CONTAINS;
@@ -3049,9 +3099,21 @@ TagPropertyConstraintHandler
 
 					params_ok = num_params == 1;
 
+				}else if ( func_name.equals( "toMiB" )){
+					
+					fn_type = FT_TO_MiB;
+
+					params_ok = num_params == 1;
+
 				}else if ( func_name.equals( "toGB" )){
 					
 					fn_type = FT_TO_GB;
+
+					params_ok = num_params == 1;
+
+				}else if ( func_name.equals( "toGiB" )){
+					
+					fn_type = FT_TO_GiB;
 
 					params_ok = num_params == 1;
 
@@ -3842,13 +3904,48 @@ TagPropertyConstraintHandler
 						
 						long bytes = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
 						
-						return( bytes/(1024L*1024L));
+						long multiplier = 1000;
+						
+						return( bytes/(multiplier*multiplier));
+					}
+					case FT_TO_MiB:{
+						
+						long bytes = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
+						
+						long multiplier = 1024;
+						
+						return( bytes/(multiplier*multiplier));
 					}
 					case FT_TO_GB:{
 						
 						long bytes = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
 						
-						return( bytes/(1024L*1024L*1024L));
+						long multiplier = 1000;
+						
+						return( bytes/(multiplier*multiplier*multiplier));
+					}
+					case FT_TO_GiB:{
+						
+						long bytes = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
+
+						long multiplier = 1024;
+						
+						return( bytes/(multiplier*multiplier*multiplier));
+					}
+					case FT_PLUS:
+					case FT_MINUS:
+					case FT_MULT:
+					case FT_DIV:{
+						
+						long p1 = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
+						long p2 = getNumeric( context, dm, tags, params, 1, debug  ).longValue();
+						
+						switch( fn_type ){
+							case FT_PLUS:	return( p1+p2 );
+							case FT_MINUS:	return( p1-p2 );
+							case FT_MULT:	return( p1*p2 );
+							case FT_DIV:	return( p1/p2 );
+						}
 					}
 					case FT_GET_CONFIG:{
 						
@@ -4384,13 +4481,28 @@ TagPropertyConstraintHandler
 						debug.append( "[" );
 					}
 					
-					Number res = (Number)((ConstraintExpr)arg).eval( context, dm, tags, debug );
+					Object res = ((ConstraintExpr)arg).eval( context, dm, tags, debug );
 					
 					if ( debug!=null){
 						debug.append( "->" + res + "]" );
 					}
 					
-					return( res );
+					if ( res instanceof Number ){
+						
+						return((Number)res);
+						
+					}else if ( res instanceof Boolean ){
+						
+						return(((Boolean)res).booleanValue()?1:0);
+						
+					}else if ( res instanceof String ){
+						
+						return( Long.parseLong((String)res));
+						
+					}else{
+
+						throw( new RuntimeException( "Unsupported numeric type: " + res ));
+					}
 					
 				}else{
 
@@ -4773,6 +4885,8 @@ TagPropertyConstraintHandler
 								return( dm.getSize());
 							}
 							case KW_SIZE_MB:{
+								
+									// hmm, should be 1000 for MB and 1024 for MiB but legacy
 								
 								return( dm.getSize()/(1024*1024L));
 							}

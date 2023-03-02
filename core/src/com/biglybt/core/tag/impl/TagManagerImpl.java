@@ -3729,7 +3729,7 @@ TagManagerImpl
 		}
 	}
 	
-	protected String
+	protected String[]
 	explain(
 		Tag				tag,
 		TagProperty		property,
@@ -3741,7 +3741,7 @@ TagManagerImpl
 			
 		}else{
 			
-			return( "" );
+			return( new String[0] );
 		}
 	}
 	@Override

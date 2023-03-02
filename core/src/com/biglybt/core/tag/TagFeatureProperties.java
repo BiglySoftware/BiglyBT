@@ -97,7 +97,7 @@ TagFeatureProperties
 		public void
 		syncListeners();
 		
-		public String
+		public String[]
 		explainTaggable(
 			Taggable	taggable );
 	}

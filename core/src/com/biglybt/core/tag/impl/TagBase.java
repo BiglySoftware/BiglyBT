@@ -3378,7 +3378,7 @@ TagBase
 		}
 		
 		@Override
-		public String 
+		public String[]
 		explainTaggable(
 			Taggable taggable)
 		{
