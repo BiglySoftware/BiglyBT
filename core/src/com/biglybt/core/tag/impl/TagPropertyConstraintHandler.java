@@ -2137,19 +2137,20 @@ TagPropertyConstraintHandler
 							return( new Object[]{ temp });
 						}
 						
-					}else if ( value.contains( "(" )){
+					}else if ( value.contains( "(" ) || comp_op_pattern.matcher( value ).find()){
 						
 						return( new Object[]{  compileStart(value, context )});
 					}
-					
+
 					return( new Object[]{ value });
 
 				}else{
 
 					char[]	chars = value.toCharArray();
 
-					boolean in_quote = false;
-
+					boolean in_quote		= false;
+					int		bracket_level	= 0;
+					
 					List<Object>	params = new ArrayList<>(16);
 
 					StringBuilder current_param = new StringBuilder( value.length());
@@ -2168,12 +2169,30 @@ TagPropertyConstraintHandler
 
 						if ( c == ',' && !in_quote ){
 
-							params.add( current_param.toString());
-
-							current_param.setLength( 0 );
-
+							if ( bracket_level == 0 ){
+								
+								params.add( current_param.toString());
+	
+								current_param.setLength( 0 );
+								
+							}else{
+								
+								current_param.append( c );
+							}
 						}else{
 
+							if ( !in_quote ){
+								
+								if ( c == '(' ){
+									
+									bracket_level++;
+									
+								}else if ( c == ')' ){
+									
+									bracket_level--;
+								}
+							}
+							
 							if ( in_quote || !Character.isWhitespace( c )){
 
 								current_param.append( c );
@@ -2195,7 +2214,7 @@ TagPropertyConstraintHandler
 							
 							params.set(i, dereference( p ));
 							
-						}else if ( p.contains( "(" )){
+						}else if ( p.contains( "(" ) || comp_op_pattern.matcher( p ).find()){
 							
 							params.set(i,compileStart(p, context ));
 						}
@@ -3937,14 +3956,31 @@ TagPropertyConstraintHandler
 					case FT_MULT:
 					case FT_DIV:{
 						
-						long p1 = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
-						long p2 = getNumeric( context, dm, tags, params, 1, debug  ).longValue();
+						Number n1 = getNumeric( context, dm, tags, params, 0, debug  );
+						Number n2 = getNumeric( context, dm, tags, params, 1, debug  );
 						
-						switch( fn_type ){
-							case FT_PLUS:	return( p1+p2 );
-							case FT_MINUS:	return( p1-p2 );
-							case FT_MULT:	return( p1*p2 );
-							case FT_DIV:	return( p1/p2 );
+						if ( n1.doubleValue() - n1.longValue() != 0 || n2.doubleValue() - n2.longValue() != 0 ){
+							
+							double p1 = n1.doubleValue();
+							double p2 = n2.doubleValue();
+							
+							switch( fn_type ){
+								case FT_PLUS:	return( p1+p2 );
+								case FT_MINUS:	return( p1-p2 );
+								case FT_MULT:	return( p1*p2 );
+								case FT_DIV:	return( p1/p2 );
+							}
+						}else{
+							
+							long p1 = n1.longValue();
+							long p2 = n2.longValue();
+							
+							switch( fn_type ){
+								case FT_PLUS:	return( p1+p2 );
+								case FT_MINUS:	return( p1-p2 );
+								case FT_MULT:	return( p1*p2 );
+								case FT_DIV:	return( p1/p2 );
+							}
 						}
 					}
 					case FT_GET_CONFIG:{
