@@ -288,6 +288,43 @@ TagPropertyConstraintHandler
 					apply( dm, null, false, is_new );
 				}
 			});
+		
+		tag_manager.addTagManagerListener(
+			new TagManagerListener(){
+				
+				@Override
+				public void tagTypeRemoved(TagManager manager, TagType tag_type){
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void tagTypeAdded(TagManager manager, TagType tag_type){
+					if ( tag_type.getTagType() == TagType.TT_PEER_IPSET ){
+						tag_type.addTagTypeListener(
+							new TagTypeListener()
+							{
+								@Override
+								public void 
+								tagEventOccurred(
+									TagEvent event)
+								{
+									if ( event.getEventType() == TagEvent.ET_TAG_ADDED ){
+										
+										checkRecompiles();
+									}
+								}
+								
+								@Override
+								public void 
+								tagTypeChanged(
+									TagType tag_type)
+								{
+								}
+							}, false );
+					}
+				}}, true );
+				
 	}
 
 	private void
@@ -301,7 +338,7 @@ TagPropertyConstraintHandler
 
 				TagProperty prop = tfp.getProperty( TagFeatureProperties.PR_CONSTRAINT );
 
-				handleProperty(prop);
+				handleProperty( prop, true );
 			}
 		}
 	}
@@ -482,7 +519,7 @@ TagPropertyConstraintHandler
 					propertyChanged(
 						TagProperty		property )
 					{
-						handleProperty( property );
+						handleProperty( property, false );
 					}
 
 					@Override
@@ -493,7 +530,7 @@ TagPropertyConstraintHandler
 					}
 				});
 
-			handleProperty( prop );
+			handleProperty( prop, false );
 		}
 
 		tag.addTagListener(
@@ -945,7 +982,8 @@ TagPropertyConstraintHandler
 
 	private void
 	handleProperty(
-		TagProperty		property )
+		TagProperty		property,
+		boolean			force )
 	{
 		Tag	tag = property.getTag();
 
@@ -982,12 +1020,15 @@ TagPropertyConstraintHandler
 				TagConstraint con = constrained_tags.get( tag );
 
 				
-				if (	con != null && 
-						con.getConstraint().equals( constraint ) && 
-						con.getOptions().equals( options ) &&
-						con.isEnabled() == enabled ){
-
-					return;
+				if ( !force ){
+					
+					if (	con != null && 
+							con.getConstraint().equals( constraint ) && 
+							con.getOptions().equals( options ) &&
+							con.isEnabled() == enabled ){
+	
+						return;
+					}
 				}
 
 				con = new TagConstraint( this, tag, constraint, options, enabled );
