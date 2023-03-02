@@ -77,6 +77,7 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.utils.ColorCache;
 
@@ -588,6 +589,8 @@ public class SubscriptionsView
 			preText.setForeground( fg );
 			postText.setForeground( fg );
 		}
+		
+		ClipboardCopy.addCopyToClipMenu(postText);
 		
 		postText.addListener(SWT.Selection, new Listener() {
 			@Override

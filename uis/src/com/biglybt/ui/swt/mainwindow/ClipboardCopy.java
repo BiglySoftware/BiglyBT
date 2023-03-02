@@ -30,11 +30,13 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnableObject;
+import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.ui.swt.Utils;
 
@@ -370,7 +372,17 @@ public class ClipboardCopy {
 
 				  }else if (control instanceof Label) {
 					  return ((Label) control).getText();
-
+				  }else if (control instanceof Link) {
+					  String text =  ((Link) control).getText();
+					  
+					  String url = UrlUtils.parseTextForURL( text,  false );
+					  
+					  if ( url != null && !url.isEmpty()){
+						  
+						  return( url );
+					  }
+					  
+					  return( text );
 				  }else{
 					  
 					  return( String.valueOf( o ));

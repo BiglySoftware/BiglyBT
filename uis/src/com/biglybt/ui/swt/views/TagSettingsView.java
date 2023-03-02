@@ -44,6 +44,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -1779,6 +1780,8 @@ public class TagSettingsView
 						}
 					});
 
+					ClipboardCopy.addCopyToClipMenu(lblAboutConstraint);
+					
 					Composite cApplySort = new Composite(gConstraint, SWT.NULL);
 					cApplySort.setLayoutData(new GridData( GridData.FILL_HORIZONTAL));
 					
