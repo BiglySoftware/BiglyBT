@@ -687,6 +687,7 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 			Link link = new Link(parent, SWT.NONE);
 			label = link;
 			link.addListener(SWT.Selection, event -> Utils.launch(event.text));
+			ClipboardCopy.addCopyToClipMenu(link);
 		} else {
 			label = new Label(parent, SWT.NONE);
 		}
