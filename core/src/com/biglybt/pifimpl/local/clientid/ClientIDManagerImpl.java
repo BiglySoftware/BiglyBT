@@ -421,10 +421,16 @@ ClientIDManagerImpl
 					new_url += rem.substring(0,q_pos+1) + details + "&" + rem.substring(q_pos+1);
 				}
 
-				URL redirect_url = new URL( prefix + new_url );
+				try{
+				
+					URL redirect_url = new URL( prefix + new_url );
 										
-				properties.put( ClientIDGenerator.PR_URL, redirect_url );
+					properties.put( ClientIDGenerator.PR_URL, redirect_url );
 
+				}catch( MalformedURLException e ){
+					
+					// get this for borked tracker URLs, don't need to log as it'll fail later during announce
+				}
 			}catch( Throwable e ){
 
 				Debug.printStackTrace(e);
