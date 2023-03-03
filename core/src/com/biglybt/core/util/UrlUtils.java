@@ -2521,7 +2521,7 @@ public class UrlUtils
 
 						cert_hack = true;
 
-						SESecurityManager.installServerCertificates( new URL( "https://" + target_host +  ":" + target_port + "/" ));
+						SESecurityManager.installServerCertificates( new URL( "https://" + target_host.getHostAddress() +  ":" + target_port + "/" ));
 
 						hacks_to_do = true;
 					}
