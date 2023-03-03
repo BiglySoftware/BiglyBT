@@ -1044,7 +1044,7 @@ SESecurityManagerImpl
 				
 			}catch( Throwable f ){
 			
-				Debug.out( e );
+				Debug.out( "Certificate install failed for '" + https_url + "'", e );
 				
 				return( null );
 			}
@@ -1082,7 +1082,7 @@ SESecurityManagerImpl
 		boolean				sni_hack,
 		boolean				use_proxy )
 	
-		throws Exception
+		throws Throwable
 	{
 		SSLContext sc = SSLContext.getInstance("SSL");
 
@@ -1141,35 +1141,40 @@ SESecurityManagerImpl
 			InetSocketAddress targetSockAddress = new InetSocketAddress(  InetAddress.getByName( host ) , port  );
 	
 		    InetAddress bindIP = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress(targetSockAddress.getAddress() instanceof Inet6Address ? NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V6 : NetworkAdmin.IP_PROTOCOL_VERSION_REQUIRE_V4);
-			    
-			if ( sni_hack ){
-	
-				Socket base_socket = new Socket();
-	
-		        if ( bindIP != null ){
-	
-		        	base_socket.bind( new InetSocketAddress( bindIP, 0 ) );
-		        }
-	
-				base_socket.connect( targetSockAddress );
-	
-				socket = (SSLSocket)factory.createSocket( base_socket, "", base_socket.getPort(), true );
-	
-				socket.setEnabledProtocols(new String[] {"TLSv1"});
-	
-				socket.setUseClientMode(true);
-	
-			}else{
-						
-				if ( bindIP != null ){
-	
-					socket = (SSLSocket)factory.createSocket( host, port, bindIP, 0) ;
-	
+			   
+		    try{
+				if ( sni_hack ){
+		
+					Socket base_socket = new Socket();
+		
+			        if ( bindIP != null ){
+		
+			        	base_socket.bind( new InetSocketAddress( bindIP, 0 ) );
+			        }
+		
+					base_socket.connect( targetSockAddress );
+		
+					socket = (SSLSocket)factory.createSocket( base_socket, "", base_socket.getPort(), true );
+		
+					socket.setEnabledProtocols(new String[] {"TLSv1"});
+		
+					socket.setUseClientMode(true);
+		
 				}else{
-	
-					socket = (SSLSocket)factory.createSocket( host, port );
+							
+					if ( bindIP != null ){
+		
+						socket = (SSLSocket)factory.createSocket( host, port, bindIP, 0) ;
+		
+					}else{
+		
+						socket = (SSLSocket)factory.createSocket( host, port );
+					}
 				}
-			}
+		    }catch( Throwable e ){
+		    	
+		    	throw( new Exception( "Failed to create socket: " + host + ":" + port + ", bind=" + bindIP, e ));
+		    }
 		}
 		
 		return( socket );
@@ -1188,6 +1193,14 @@ SESecurityManagerImpl
 			this_mon.enter();
 
 			String	host	= https_url.getHost();
+			
+			if ( host.isEmpty()){
+			
+					// seen dodgey URLs get here (e.g. https:/a.b.c:123/ - missing a /) which cause confusing errors
+				
+				throw( new Exception( "Host missing from URL: " + https_url ));
+			}
+			
 			int		port	= https_url.getPort();
 
 			if ( port == -1 ){
