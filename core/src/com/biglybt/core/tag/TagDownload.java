@@ -42,4 +42,11 @@ TagDownload
 	public void
 	setAutoApplySortInterval(
 		int		secs );
+	
+	public int
+	getWeight();
+	
+	public void
+	setWeight(
+		int		weight );
 }

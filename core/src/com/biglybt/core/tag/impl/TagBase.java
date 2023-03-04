@@ -103,6 +103,7 @@ TagBase
 	protected static final String	AT_EOS_REMOVE_TAGS				= "eos.rt";
 	
 	protected static final String	AT_AUTO_APPLY_SORT_INTERVAL		= "dl.auto.sort";
+	protected static final String	AT_WEIGHT						= "dl.weight";
 
 	private static final String[] EMPTY_STRING_LIST = {};
 
@@ -1935,6 +1936,20 @@ TagBase
 	public void 
 	applySort()
 	{
+	}
+	
+	public int
+	getWeight()
+	{
+		return( readLongAttribute( AT_WEIGHT, 0L ).intValue());
+
+	}
+	
+	public void
+	setWeight(
+		int		weight )
+	{
+		writeLongAttribute( AT_WEIGHT, weight );
 	}
 	
 		// notifications

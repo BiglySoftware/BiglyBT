@@ -140,11 +140,12 @@ public class TagSettingsView
 
 
 		
-		public Text		 	constraints;
-		public Label		constraintError;
+		public Text		 				constraints;
+		public Label					constraintError;
 		public BooleanSwtParameter 		constraintEnabled;
 		public StringListSwtParameter 	constraintMode;
-		public IntSwtParameter constraintTagSortAuto;
+		public IntSwtParameter			constraintWeight;
+		public IntSwtParameter 			constraintTagSortAuto;
 
 		public IntSwtParameter tfl_max_taggables;
 
@@ -1591,6 +1592,9 @@ public class TagSettingsView
 
 				final TagProperty propConstraint = tfp.getProperty(
 						TagFeatureProperties.PR_CONSTRAINT);
+				
+				TagDownload tag_dl = tags[0] instanceof TagDownload?(TagDownload)tags[0]:null;
+
 				if (propConstraint != null) {
 					Group gConstraint = Utils.createSkinnedGroup(cMainComposite, SWT.NONE);
 					Messages.setLanguageText(gConstraint, "tag.property.constraint");
@@ -1652,7 +1656,7 @@ public class TagSettingsView
 
 					Composite cConstraintOptions = new Composite(gConstraint, SWT.NULL);
 					cConstraintOptions.setLayoutData(new GridData( GridData.FILL_HORIZONTAL));
-					gridLayout = new GridLayout(10,false);
+					gridLayout = new GridLayout(11,false);
 					gridLayout.marginLeft = gridLayout.marginRight = gridLayout.marginWidth = 0;
 					gridLayout.marginTop = gridLayout.marginBottom = gridLayout.marginHeight = 0;
 					cConstraintOptions.setLayout(gridLayout);
@@ -1767,6 +1771,23 @@ public class TagSettingsView
 								}
 							});
 
+					params.constraintWeight = new IntSwtParameter(cConstraintOptions,
+							"tag_constraint_weight", "tag.constraints.weight", null,
+							Integer.MIN_VALUE, Integer.MAX_VALUE, new IntSwtParameter.ValueProcessor() {
+								@Override
+								public Integer getValue(IntSwtParameter p) {
+									return(((TagDownload)tags[0]).getWeight());
+								}
+
+								@Override
+								public boolean setValue(IntSwtParameter p, Integer value) {
+									((TagDownload)tags[0]).setWeight( value );
+									return true;
+								}
+							} );
+					
+					params.constraintWeight.setEnabled( tag_dl != null );
+					
 					Link lblAboutConstraint = new Link(cConstraintOptions, SWT.WRAP);
 					lblAboutConstraint.setText(
 							MessageText.getString("tag.constraints.info"));
@@ -1789,9 +1810,7 @@ public class TagSettingsView
 					gridLayout.marginLeft = gridLayout.marginRight = gridLayout.marginWidth = 0;
 					gridLayout.marginTop = gridLayout.marginBottom = gridLayout.marginHeight = 0;
 					cApplySort.setLayout( gridLayout );
-					
-					TagDownload tag_dl = tags[0] instanceof TagDownload?(TagDownload)tags[0]:null;
-					
+										
 					Label lApplySort = new Label( cApplySort, SWT.NULL );
 					
 					lApplySort.setText(	MessageText.getString( "tag.constraints.sort.apply.manual" ));
