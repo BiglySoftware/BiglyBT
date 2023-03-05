@@ -92,9 +92,12 @@ public class ColumnProgressETA
 	private final int COLOR_CD	= 1;
 	private final int COLOR_QU	= 2;
 	private final int COLOR_OFF	= 3;
+	private final int COLOR_LS	= 4;
 	
-	private Color[] cDefaults	= new Color[4];
-	private Color[] cExplicits	= new Color[4];
+	private final int[] COLOR_MENU_ORDER = { COLOR_DL, COLOR_CD, COLOR_QU, COLOR_LS, COLOR_OFF };
+	
+	private Color[] cDefaults	= new Color[5];
+	private Color[] cExplicits	= new Color[5];
 
 	private Color cBorder;
 	private Color cText;
@@ -154,7 +157,12 @@ public class ColumnProgressETA
 		if (cDefaults[COLOR_CD] == null) {
 			cDefaults[COLOR_CD] = Colors.green;
 		}
-		
+		// light seeding
+		cDefaults[COLOR_LS] = skinProperties.getColor("color.progress.bg.lightseeding");
+		if (cDefaults[COLOR_LS] == null) {
+			cDefaults[COLOR_LS] = Colors.light_grey;
+		}
+
 		for ( int i=0; i<cExplicits.length; i++ ){
 			
 			COConfigurationManager.addWeakParameterListener(myParameterListener, false,	"ColumnProgressETA.color." + i );
@@ -236,7 +244,7 @@ public class ColumnProgressETA
 				
 				MenuManager menuManager = uim.getMenuManager();
 				
-				for ( int i=0;i<cExplicits.length;i++){
+				for( int i: COLOR_MENU_ORDER ){
 
 					int f_i = i;
 										
@@ -539,8 +547,16 @@ public class ColumnProgressETA
 			
 			if ( dm_state == DownloadManager.STATE_QUEUED ){
 				
-				cBGIndex = COLOR_QU;
+				int substate = dm.getSubState();
 				
+				if ( substate == DownloadManager.STATE_SEEDING ){
+					
+					cBGIndex = COLOR_LS;
+					
+				}else{
+				
+					cBGIndex = COLOR_QU;
+				}
 			}else{
 			
 				cBGIndex = COLOR_OFF;
