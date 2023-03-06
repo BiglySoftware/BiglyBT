@@ -32,11 +32,15 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.global.GlobalManagerEvent;
+import com.biglybt.core.global.GlobalManagerEventListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.util.*;
@@ -57,6 +61,8 @@ import com.biglybt.ui.swt.columns.tag.*;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
+import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
+import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.skin.*;
@@ -84,7 +90,7 @@ import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 public class SBC_TagsOverview
 	extends SkinView
 	implements UIUpdatable, UIPluginViewToolBarListener, TableViewFilterCheck<Tag>, TagManagerListener, TagTypeListener,
-	TableViewSWTMenuFillListener, TableSelectionListener, KeyListener, ParameterListener {
+	TableViewSWTMenuFillListener, TableSelectionListener, KeyListener, ParameterListener, GlobalManagerEventListener {
 
 	private static final String TABLE_TAGS = "TagsView";
 	// TODO: This should be com.biglybt.pif.tag.Tag but we'd have to
@@ -98,10 +104,23 @@ public class SBC_TagsOverview
 	private boolean columnsAdded = false;
 
 	private boolean tm_listener_added;
-
+	private boolean gm_listener_added;
+	
 	private Object datasource;
 
 	private boolean show_swarm_tags;
+	
+	private GlobalManager global_manager;
+	
+	{
+		try{
+			global_manager = CoreFactory.getSingleton().getGlobalManager();
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
 	
 	public
 	SBC_TagsOverview()
@@ -602,7 +621,13 @@ public class SBC_TagsOverview
 			tm_listener_added = false;
 		}
 
-
+		if ( global_manager != null ){
+			
+			global_manager.removeEventListener( this );
+		
+			gm_listener_added = false;
+		}
+		
 		return super.skinObjectHidden(skinObject, params);
 	}
 
@@ -638,6 +663,13 @@ public class SBC_TagsOverview
 
 				tagManager.addTagManagerListener(this, true);
 			}
+		}
+
+		if ( global_manager != null && !gm_listener_added ){
+			
+			global_manager.addEventListener( this );
+		
+			gm_listener_added = true;
 		}
 
 		return null;
@@ -742,7 +774,7 @@ public class SBC_TagsOverview
 					}
 				}
 			});
-
+			
 			DragSource dragSource = tv.createDragSource(DND.DROP_COPY | DND.DROP_MOVE);
 			if (dragSource != null) {
 				dragSource.setTransfer(TextTransfer.getInstance());
@@ -1044,6 +1076,49 @@ public class SBC_TagsOverview
 		}
 	}
 
+	public void
+	eventOccurred(
+		GlobalManagerEvent		event )
+	{
+		if ( tv != null && event.getEventType() == GlobalManagerEvent.ET_REQUEST_ATTENTION ){
+
+			DownloadManager dm = event.getDownload();
+			
+			List<Object>	ds = tv.getSelectedDataSources();
+
+			boolean hit = false;
+			
+			for ( Object obj: ds ){
+
+				if ( obj instanceof Tag ){
+
+					Tag tag = (Tag)obj;
+					
+					if ( tag.getTagged().contains( dm )){
+						
+						hit = true;
+						
+						break;
+					}
+				}
+			}
+
+			if ( hit ){
+					
+				MultipleDocumentInterfaceSWT tabbed_mdi = tv.getTabsCommon().getMDI();
+	
+				tabbed_mdi.showEntryByID( MyTorrentsSubView.MSGID_PREFIX );
+				
+				MdiEntrySWT view = tabbed_mdi.getEntry( MyTorrentsSubView.MSGID_PREFIX );
+				
+				if ( view != null ){
+				
+					((MyTorrentsView)view.getEventListener()).requestAttention( dm );
+				}
+			}
+		}
+	}
+	
 	@Override
 	public void
 	addThisColumnSubMenu(

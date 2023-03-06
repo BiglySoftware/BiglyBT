@@ -157,36 +157,7 @@ public class MyTorrentsView
 
 				DownloadManager dm = event.getDownload();
 
-				if ( isOurDownloadManager( dm )){
-
-					TableRowCore row = tv.getRow( dm );
-
-					if ( row != null ){
-
-						TableRowCore[] existing = tv.getSelectedRows();
-
-						if ( existing != null ){
-
-							for ( TableRowCore e: existing ){
-
-								if ( e != row ){
-
-									e.setSelected( false );
-								}
-							}
-						}
-
-						if ( !row.isSelected()){
-
-							row.setSelected( true );
-						}
-						
-						if ( !row.isVisible()){
-								
-							tv.showRow( row );
-						}
-					}
-				}
+				requestAttention( dm );
 			}
 		}
   	};
@@ -254,8 +225,12 @@ public class MyTorrentsView
 	private AtomicInteger	dmCountMutations	= new AtomicInteger(0);
 	private volatile int	dmCountLast			= -1;
 
-	final Set<TableRowCore> listRowsToRefresh = new HashSet<>();
+	private final Set<TableRowCore> listRowsToRefresh = new HashSet<>();
 
+	private final Object 	createdLock = new Object();
+	private boolean			created;
+	private DownloadManager	pendingAttention;
+	
 	public MyTorrentsView( boolean supportsTabs ) {
 		super("MyTorrentsView");
 		this.supportsTabs = supportsTabs;
@@ -618,6 +593,22 @@ public class MyTorrentsView
 					}
 			    tv.addDataSources(dms);
 			    tv.processDataSourceQueue();
+			    
+			    DownloadManager pa = null;
+			    
+			    synchronized( createdLock ){
+					
+			    	created = true;
+			    	
+			    	pa = pendingAttention;
+			    	
+			    	pendingAttention = null;
+				}
+			    
+			    if ( pa != null ){
+			    	
+			    	requestAttention( pa );
+			    }
 			}));
 	
     cTablePanel.layout();
@@ -830,6 +821,9 @@ public class MyTorrentsView
     dispatcher.dispatch(
        	AERunnable.create(
        		()->{
+       			synchronized( createdLock ){	
+			    	created = false;
+       			}
 			    Object[] dms = globalManager.getDownloadManagers().toArray();
 			    for (int i = 0; i < dms.length; i++) {
 						DownloadManager dm = (DownloadManager) dms[i];
@@ -2782,6 +2776,57 @@ public class MyTorrentsView
     }
   }
 
+  public void
+  requestAttention(
+	 DownloadManager		dm )
+  {
+	  boolean found = false;
+	  
+	  if ( isOurDownloadManager( dm )){
+
+		  TableRowCore row = tv.getRow( dm );
+
+		  if ( row != null ){
+
+			  found = true;
+			  
+			  TableRowCore[] existing = tv.getSelectedRows();
+
+			  if ( existing != null ){
+
+				  for ( TableRowCore e: existing ){
+
+					  if ( e != row ){
+
+						  e.setSelected( false );
+					  }
+				  }
+			  }
+
+			  if ( !row.isSelected()){
+
+				  row.setSelected( true );
+			  }
+
+			  if ( !row.isVisible()){
+
+				  tv.showRow( row );
+			  }
+		  }
+	  }
+	  
+	  if ( !found ){
+		  
+		  synchronized( createdLock ){
+			  
+			  if ( !created ){
+				  
+				  pendingAttention = dm;
+			  }
+		  }
+	  }
+  }
+  
   /**
    * @param parameterName the name of the parameter that has changed
    * @see com.biglybt.core.config.ParameterListener#parameterChanged(java.lang.String)
