@@ -34,7 +34,7 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.download.DownloadTypeIncomplete;
+import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemFillListener;
@@ -66,7 +66,7 @@ public class ColumnProgressETA
 	implements TableCellAddedListener, TableCellMouseListener,
 	TableCellRefreshListener, TableCellSWTPaintListener
 {
-	public static final Class DATASOURCE_TYPE = DownloadTypeIncomplete.class;
+	public static final Class DATASOURCE_TYPE = Download.class;
 
 	public static final String COLUMN_ID = "ProgressETA";
 	public static final long SHOW_ETA_AFTER_MS = 30000;
