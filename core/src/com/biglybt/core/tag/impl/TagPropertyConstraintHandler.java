@@ -75,6 +75,7 @@ TagPropertyConstraintHandler
 	
 	private static final Object DM_NAME							= new Object();
 	private static final Object DM_SAVE_PATH					= new Object();
+	private static final Object DM_SAVE_PATH_IS_DIR				= new Object();
 
 	private static final Object DM_PEER_SETS					= new Object();
 	
@@ -814,6 +815,8 @@ TagPropertyConstraintHandler
 	{
 		Set<TagConstraint>	interesting = new HashSet<>();
 
+		dm.setUserData( DM_SAVE_PATH_IS_DIR, null );
+		
 		synchronized( constrained_tags ){
 
 			if ( !initialised ){
@@ -1226,7 +1229,7 @@ TagPropertyConstraintHandler
 					}
 
 					for ( TagConstraint con: cons ){
-
+						
 						con.apply( dms );
 					}
 				}
@@ -1311,6 +1314,9 @@ TagPropertyConstraintHandler
 
 		private Set<Tag>		dependent_on_tags;
 		private boolean			dependent_on_peer_sets;
+		
+		private Set<Tag>		tag_weights;
+		private int				tag_weights_opt = 0;
 		
 		private boolean			must_check_dependencies;
 		
@@ -2622,7 +2628,7 @@ TagPropertyConstraintHandler
 		private static final int FT_MINUS				= 48;
 		private static final int FT_MULT				= 49;
 		private static final int FT_DIV					= 50;
-
+		private static final int FT_GET_TAG_WEIGHT		= 51;
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2872,6 +2878,91 @@ TagPropertyConstraintHandler
 									}
 									
 									dependent_on_tags.add( t );
+								}
+							}
+						}
+					}
+				}else if ( func_name.equals( "getTagWeight" )){
+						
+					fn_type = FT_GET_TAG_WEIGHT;
+										
+					params_ok = num_params <= 2;
+						
+					for( int i=0;i<num_params&&params_ok;i++){
+					
+						params_ok = getStringLiteral( params, i );
+					}
+						
+					if ( params_ok ){
+						
+							// no params -> all tag weights, 1 param - all weights + options, s param - first comma sep tag list, second opts
+						
+						if ( num_params > 0 ){
+							
+							String 	options;
+							String	tags_str;
+							
+							if ( num_params == 1 ){
+							
+								tags_str	= "";
+								options 	= (String)params[0];
+								
+							}else{
+								
+								tags_str	= (String)params[0];
+								options 	= (String)params[1];
+							}
+						
+							if ( handler.tag_manager != null && !tags_str.isEmpty()){
+							
+								String[] tag_names = tags_str.split(",");
+								
+								for ( String tag_name: tag_names ){
+									
+									tag_name = tag_name.trim();
+									
+									if ( tag_name.isEmpty()){
+										
+										continue;
+									}
+							
+									List<Tag> tags = handler.tag_manager.getTagsByName( tag_name, true );
+							
+									if ( tags.isEmpty()){
+								
+										throw( new RuntimeException( "Tag '" + tag_name + "' not found" ));
+									}
+																									
+									if ( tag_weights == null ){
+											
+										tag_weights = new HashSet<Tag>();
+									}
+										
+									tag_weights.addAll( tags );
+								}
+							}
+							
+							options = options.trim();
+							
+							if ( !options.isEmpty()){
+								
+								String[] bits = options.split( "=" );
+								
+								if ( bits.length != 2 || !bits[0].toLowerCase(Locale.US).equals("type")){
+									
+									throw( new RuntimeException( "options '" + options + "' invalid" ));
+								}
+								
+								String rhs = bits[1].toLowerCase(Locale.US);
+								
+								if ( rhs.equals( "max" )){
+									tag_weights_opt = 0;
+								}else if ( rhs.equals( "min" )){
+									tag_weights_opt = 1;
+								}else if ( rhs.equals( "cumulative" )){
+									tag_weights_opt = 2;
+								}else{
+									throw( new RuntimeException( "options '" + options + "' invalid" ));
 								}
 							}
 						}
@@ -3543,6 +3634,38 @@ TagPropertyConstraintHandler
 								}
 							}
 						}
+					}
+					case FT_GET_TAG_WEIGHT:{
+						
+						int result = 0;
+						
+						for ( Tag tag: tags ){
+							
+							if ( tag_weights != null ){
+								
+								if ( !tag_weights.contains( tag )){
+									
+									continue;
+								}
+							}
+							
+							TagDownload tag_dl = (TagDownload)tag;
+							
+							int w = tag_dl.getWeight();
+							
+							if ( w > 0 ){
+								
+								if ( tag_weights_opt == 0 ){
+									result = Math.max( result, w );
+								}else if ( tag_weights_opt == 1 ){
+									result = Math.min( result, w );
+								}else{
+									result += w;
+								}
+							}
+						}
+						
+						return( result );
 					}
 					case FT_HAS_NET:{
 
@@ -4516,7 +4639,24 @@ TagPropertyConstraintHandler
 					
 					File save_folder = save_loc.getParentFile();
 					
-					if ( save_folder.isDirectory()){
+					Boolean is_dir = (Boolean)dm.getUserData( DM_SAVE_PATH_IS_DIR );
+					
+					if ( is_dir == null ){
+						
+						try{
+								// if folder is offline this can stall things for quite a while
+							
+							is_dir = save_folder.isDirectory();
+							
+						}catch( Throwable e ){
+							
+							is_dir = false;
+						}
+						
+						dm.setUserData( DM_SAVE_PATH_IS_DIR, is_dir );
+					}
+					
+					if ( is_dir ){
 						
 						return( new String[]{ save_folder.getAbsolutePath()});
 						
