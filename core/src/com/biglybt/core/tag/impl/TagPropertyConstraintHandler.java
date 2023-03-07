@@ -2010,8 +2010,7 @@ TagPropertyConstraintHandler
 							}
 	
 							Map<Long,Object[]>	map = (Map<Long,Object[]>)dm.getDownloadState().getTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT );
-							
-							
+													
 							boolean changed = false;
 							
 							if ( map == null ){
@@ -3311,11 +3310,38 @@ TagPropertyConstraintHandler
 
 					params_ok = num_params >= 1 && num_params <= 2;
 					
+					String option = null;
+					
 					if ( params_ok ){
+						
+							// we allow first param to be a string in the case of "random"
+						
+						if ( num_params == 1 ){
+							
+							if ( getStringLiteral( params, 0 )){
+								
+								option = (String)params[0];
+							}
+						}
 						
 						if ( num_params == 2 ){
 							
 							params_ok = getStringLiteral( params, 1 );
+							
+							if ( params_ok ){
+								
+								option = (String)params[1];
+							}
+						}
+					}
+					
+					if ( params_ok && option != null ){
+					
+						if ( option.equals( "r" ) || option.equals( "reverse") || option.equals( "random" )){
+							
+						}else{
+							
+							throw( new RuntimeException( "option '" + option + "' invalid" ));
 						}
 					}
 				}else if ( func_name.equals( "isSequential" )){
@@ -4192,13 +4218,26 @@ TagPropertyConstraintHandler
 					}
 					case FT_SET_TAG_SORT:{
 						
-						Object[] p = new Object[ num_params ];
+						Object[] p;
 						
-						p[0] = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
-						
-						if ( p.length > 1 ){
+						if ( num_params == 1 && params[0] instanceof String && ((String)params[0]).equals( "random" )){
 							
-							p[1] = (String)params[1];
+							p = new Object[ 2 ];
+							 
+							p[0] = 0L;
+							
+							p[1] = (String)params[0];
+							
+						}else{
+							
+							p  = new Object[ num_params ];
+							
+							p[0] = getNumeric( context, dm, tags, params, 0, debug  ).longValue();
+							
+							if ( p.length > 1 ){
+								
+								p[1] = (String)params[1];
+							}
 						}
 						
 						context.put( EVAL_CTX_TAG_SORT, p);

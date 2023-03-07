@@ -2993,7 +2993,7 @@ TagDownloadWithState
 				
 				Map<Long,Object[]> map = (Map<Long,Object[]>)download.getDownloadState().getTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT );
 				
-				Object[] entry = (Object[])map.get( uid );
+				Object[] entry = map==null?null:(Object[])map.get( uid );
 				
 				if ( entry == null ){
 					
@@ -3053,25 +3053,37 @@ TagDownloadWithState
 			Collections.sort( download_positions_comp );
 			
 			Collections.sort( download_positions_incomp );
+
+			if (  overall_options != null && overall_options.equals( "random" )){
+				
+				Collections.shuffle( tag_sort_comp );
+				
+				Collections.shuffle( tag_sort_incomp );
+				
+			}else{
+				
+				boolean reverse = overall_options != null && ( overall_options.equals( "r" ) || overall_options.equals( "reverse" ));
+				
+				Collections.sort( tag_sort_comp, (e1,e2)->{
+					if ( reverse ){
+						return(Long.compare((Long)e2[1],(Long)e1[1]));
+					}else{
+						return(Long.compare((Long)e1[1],(Long)e2[1]));
+					}
+				});
+				
+				Collections.sort( tag_sort_incomp, (e1,e2)->{
+					if ( reverse ){
+						return(Long.compare((Long)e2[1],(Long)e1[1]));
+					}else{
+						return(Long.compare((Long)e1[1],(Long)e2[1]));
+					}
+				});
+			}
 			
-			boolean reverse = overall_options != null && overall_options.equals( "r" );
-			
-			Collections.sort( tag_sort_comp, (e1,e2)->{
-				if ( reverse ){
-					return(Long.compare((Long)e2[1],(Long)e1[1]));
-				}else{
-					return(Long.compare((Long)e1[1],(Long)e2[1]));
-				}
-			});
-			
-			Collections.sort( tag_sort_incomp, (e1,e2)->{
-				if ( reverse ){
-					return(Long.compare((Long)e2[1],(Long)e1[1]));
-				}else{
-					return(Long.compare((Long)e1[1],(Long)e2[1]));
-				}
-			});
-			
+			List<DownloadManager>	dms			= new ArrayList<>( download_positions_comp.size());
+			List<Integer>			positions	= new ArrayList<>( download_positions_comp.size());
+					
 			for ( int i=0;i<download_positions_comp.size();i++){
 				
 				int dl_pos = download_positions_comp.get(i);
@@ -3082,10 +3094,17 @@ TagDownloadWithState
 				
 				if ( current_pos != dl_pos ){
 					
-					gm.moveTo((DownloadManager)entry[0], dl_pos );
+					dms.add( (DownloadManager)entry[0] );
+					
+					positions.add( dl_pos );
 				}
 			}
 			
+			gm.moveTo( dms, positions );
+			
+			dms			= new ArrayList<>( download_positions_incomp.size());
+			positions	= new ArrayList<>( download_positions_incomp.size());
+
 			for ( int i=0;i<download_positions_incomp.size();i++){
 				
 				int dl_pos = download_positions_incomp.get(i);
@@ -3096,9 +3115,13 @@ TagDownloadWithState
 				
 				if ( current_pos != dl_pos ){
 					
-					gm.moveTo((DownloadManager)entry[0], dl_pos );
+					dms.add( (DownloadManager)entry[0] );
+					
+					positions.add( dl_pos );
 				}
 			}
+			
+			gm.moveTo( dms, positions );
 			
 			return( true );
 			

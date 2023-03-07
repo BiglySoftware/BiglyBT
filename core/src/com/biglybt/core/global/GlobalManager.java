@@ -362,6 +362,8 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 * @param newPosition position to place
 	 */
 	public void moveTo(DownloadManager manager, int newPosition);
+	
+	public void moveTo(List<DownloadManager> managers, List<Integer> newPositions);
 
 	/**
 	 * Verifies the positions of the DownloadManagers,

@@ -30,7 +30,17 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.biglybt.core.Core;
@@ -45,9 +55,23 @@ import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.disk.DiskManagerFileInfo;
-import com.biglybt.core.download.*;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerFactory;
+import com.biglybt.core.download.DownloadManagerInitialisationAdapter;
+import com.biglybt.core.download.DownloadManagerListener;
+import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.DownloadManagerStateFactory;
+import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.download.impl.DownloadManagerAdapter;
-import com.biglybt.core.global.*;
+import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.global.GlobalManagerAdapter;
+import com.biglybt.core.global.GlobalManagerDownloadRemovalVetoException;
+import com.biglybt.core.global.GlobalManagerDownloadWillBeRemovedListener;
+import com.biglybt.core.global.GlobalManagerEvent;
+import com.biglybt.core.global.GlobalManagerEventListener;
+import com.biglybt.core.global.GlobalManagerListener;
+import com.biglybt.core.global.GlobalManagerStats;
+import com.biglybt.core.global.GlobalMangerProgressListener;
 import com.biglybt.core.helpers.TorrentFolderWatcher;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
@@ -59,17 +83,57 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
 import com.biglybt.core.speedmanager.SpeedManager;
 import com.biglybt.core.speedmanager.impl.SpeedManagerImpl;
-import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagDownload;
+import com.biglybt.core.tag.TagFeature;
+import com.biglybt.core.tag.TagFeatureRunState;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.Taggable;
+import com.biglybt.core.tag.TaggableLifecycleHandler;
 import com.biglybt.core.tag.impl.TagDownloadWithState;
 import com.biglybt.core.tag.impl.TagTypeWithState;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
-import com.biglybt.core.tracker.client.*;
+import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
+import com.biglybt.core.tracker.client.TRTrackerScraper;
+import com.biglybt.core.tracker.client.TRTrackerScraperClientResolver;
+import com.biglybt.core.tracker.client.TRTrackerScraperFactory;
+import com.biglybt.core.tracker.client.TRTrackerScraperListener;
+import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.tracker.util.TRTrackerUtils;
 import com.biglybt.core.tracker.util.TRTrackerUtilsListener;
-import com.biglybt.core.util.*;
+import com.biglybt.core.util.AEDiagnostics;
+import com.biglybt.core.util.AEDiagnosticsEvidenceGenerator;
+import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AESemaphore;
+import com.biglybt.core.util.AEThread;
+import com.biglybt.core.util.Base32;
+import com.biglybt.core.util.ByteFormatter;
+import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.CopyOnWriteList;
+import com.biglybt.core.util.DataSourceResolver;
+import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.DelayedEvent;
+import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.FrequencyLimitedDispatcher;
+import com.biglybt.core.util.HashWrapper;
+import com.biglybt.core.util.IndentWriter;
+import com.biglybt.core.util.ListenerManager;
+import com.biglybt.core.util.ListenerManagerDispatcher;
+import com.biglybt.core.util.ListenerManagerDispatcherWithException;
+import com.biglybt.core.util.NonDaemonTask;
+import com.biglybt.core.util.NonDaemonTaskRunner;
+import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemProperties;
+import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimerEvent;
+import com.biglybt.core.util.TimerEventPerformer;
+import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.dht.mainline.MainlineDHTProvider;
 import com.biglybt.pif.network.ConnectionManager;
 import com.biglybt.util.MapUtils;
@@ -3524,55 +3588,103 @@ public class GlobalManagerImpl
   @Override
   public void
   moveTo(
-		  DownloadManager manager, 
-		  int newPosition) 
+	DownloadManager manager, 
+	int newPosition) 
   {
-	  boolean curCompleted = manager.isDownloadComplete(false);
+	  List<DownloadManager>	managers = new ArrayList<>(1);
+	  List<Integer>			positions = new ArrayList<>(1);
+	  
+	  managers.add( manager );
+	  positions.add( newPosition );
+	  
+	  moveTo( managers, positions );
+  }
+  
+  private static final Object MOVE_POS_KEY = new Object();
 
-	  if (newPosition < 1 || newPosition > downloadManagerCount(curCompleted))
-		  return;
-
+  @Override
+  public void
+  moveTo(
+	  List<DownloadManager>	managers, 
+	  List<Integer>			newPositions ) 
+  {
 	  synchronized( managers_lock ){
 
-		  int curPosition = manager.getPosition();
-		  if (newPosition > curPosition) {
-			  // move [manager] down
-			  // move everything between [curPosition+1] and [newPosition] up(-) 1
-			  int numToMove = newPosition - curPosition;
-			  for ( DownloadManager dm: managers_list_cow ){
-				  boolean dmCompleted = (dm.isDownloadComplete(false));
-				  if (dmCompleted == curCompleted) {
-					  int dmPosition = dm.getPosition();
-					  if ((dmPosition > curPosition) && (dmPosition <= newPosition)) {
-						  dm.setPosition(dmPosition - 1);
+		  DownloadManager[] dms_cow = managers_list_cow;
+		  
+		  for ( DownloadManager dm: dms_cow ){
+			
+			  dm.setUserData( MOVE_POS_KEY, dm.getPosition());
+		  }
+		  
+		  for ( int i=0;i<managers.size();i++){
+	
+			  DownloadManager	manager		= managers.get( i );
+			  int				newPosition = newPositions.get( i );
+			  
+			  boolean curCompleted = manager.isDownloadComplete(false);
+
+			  if (newPosition < 1 || newPosition > downloadManagerCount(curCompleted)){
+				  
+				  continue;
+			  }
+			  
+			  int curPosition = (Integer)manager.getUserData( MOVE_POS_KEY );
+			  
+			  if (newPosition > curPosition) {
+				  // move [manager] down
+				  // move everything between [curPosition+1] and [newPosition] up(-) 1
+				  int numToMove = newPosition - curPosition;
+				  for ( DownloadManager dm: dms_cow ){
+					  boolean dmCompleted = (dm.isDownloadComplete(false));
+					  if (dmCompleted == curCompleted) {
+						  int dmPosition = (Integer)dm.getUserData( MOVE_POS_KEY );
+						  if ((dmPosition > curPosition) && (dmPosition <= newPosition)) {
+							  //dm.setPosition(dmPosition - 1);
+							  dm.setUserData(MOVE_POS_KEY, dmPosition - 1);
+							  numToMove--;
+							  if (numToMove <= 0)
+								  break;
+						  }
+					  }
+				  }
+	
+				  //manager.setPosition(newPosition);
+				  manager.setUserData(MOVE_POS_KEY,newPosition);
+			  }else if (newPosition < curPosition && curPosition > 1) {
+				  // move [manager] up
+				  // move everything between [newPosition] and [curPosition-1] down(+) 1
+				  int numToMove = curPosition - newPosition;
+	
+				  for ( DownloadManager dm: dms_cow ){
+					  boolean dmCompleted = (dm.isDownloadComplete(false));
+					  int dmPosition = (Integer)dm.getUserData( MOVE_POS_KEY );
+					  if ((dmCompleted == curCompleted) &&
+							  (dmPosition >= newPosition) &&
+							  (dmPosition < curPosition)
+							  ) {
+						  //dm.setPosition(dmPosition + 1);
+						  dm.setUserData(MOVE_POS_KEY, dmPosition + 1);
 						  numToMove--;
 						  if (numToMove <= 0)
 							  break;
 					  }
 				  }
+				  //manager.setPosition(newPosition);
+				  manager.setUserData(MOVE_POS_KEY,newPosition);
 			  }
-
-			  manager.setPosition(newPosition);
 		  }
-		  else if (newPosition < curPosition && curPosition > 1) {
-			  // move [manager] up
-			  // move everything between [newPosition] and [curPosition-1] down(+) 1
-			  int numToMove = curPosition - newPosition;
-
-			  for ( DownloadManager dm: managers_list_cow ){
-				  boolean dmCompleted = (dm.isDownloadComplete(false));
-				  int dmPosition = dm.getPosition();
-				  if ((dmCompleted == curCompleted) &&
-						  (dmPosition >= newPosition) &&
-						  (dmPosition < curPosition)
-						  ) {
-					  dm.setPosition(dmPosition + 1);
-					  numToMove--;
-					  if (numToMove <= 0)
-						  break;
-				  }
+		  
+		  for ( DownloadManager dm: dms_cow ){
+			  
+			  int pos = (Integer)dm.getUserData( MOVE_POS_KEY );
+			  
+			  dm.setUserData( MOVE_POS_KEY,  null );
+			  
+			  if ( pos != dm.getPosition()){
+				  
+				  dm.setPosition( pos );
 			  }
-			  manager.setPosition(newPosition);
 		  }
 	  }
   }
