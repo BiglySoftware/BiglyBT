@@ -4224,7 +4224,7 @@ TagPropertyConstraintHandler
 							
 							p = new Object[ 2 ];
 							 
-							p[0] = 0L;
+							p[0] = tag_maybe_null==null?0:RandomUtils.nextInt( tag_maybe_null.getTaggedCount());
 							
 							p[1] = (String)params[0];
 							
