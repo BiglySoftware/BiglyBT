@@ -347,23 +347,29 @@ SBC_SubscriptionResultsView
 								long kInB = DisplayFormatters.getKinB();
 								long mInB = kInB*kInB;
 	
+								String with_words = getString( ds_filter.getWithWords());
+								String without_words = getString( ds_filter.getWithoutWords());
+								
 								long	min_size = Math.max( 0,  ds_filter.getMinSize()/mInB );
 								long	max_size = Math.max( 0,  ds_filter.getMaxSize()/mInB );
 								long	min_seeds = Math.max( 0,  ds_filter.getMinSeeds());
+								long	max_seeds = Math.max( 0,  ds_filter.getMaxSeeds());
+								long	min_peers = Math.max( 0,  ds_filter.getMinPeers());
 								long	max_age = Math.max( 0,  ds_filter.getMaxAgeSecs());
 								
-								pflabel.setText(
-									MessageText.getString(
-										"subs.persistent.filters",
-										new String[]{
-											getString( ds_filter.getWithWords()),
-											getString( ds_filter.getWithoutWords()),
-											String.valueOf( min_size ),
-											String.valueOf( max_size )
-										
-										}) +
-									", " + MessageText.getString( "label.min.seeds") + " = " + ( min_seeds ) + 
-									", " + MessageText.getString( "label.max.age") + " = " + (TimeFormatter.format3( max_age, null, true )));
+								String[] line = {""};
+								
+								addLine( line, !with_words.isEmpty(), MessageText.getString( "SubscriptionResults.filter.with.words" ), "[" + with_words + "]" );	
+								addLine( line, !without_words.isEmpty(), MessageText.getString( "SubscriptionResults.filter.without.words" ), "[" + without_words + "]" );	
+								addLine( line, min_size>0, MessageText.getString( "label.min.size"),  min_size + " MB" ); 
+								addLine( line, max_size>0, MessageText.getString( "label.max.size"),  max_size + " MB" ); 
+								addLine( line, min_seeds>0, MessageText.getString( "label.min.seeds"), String.valueOf( min_seeds ));
+								addLine( line, max_seeds>0, MessageText.getString( "label.max.seeds"), String.valueOf(max_seeds )); 
+								addLine( line, min_peers>0, MessageText.getString( "label.min.peers"), String.valueOf(min_peers )); 
+								addLine( line, max_age>0, MessageText.getString( "label.max.age"), TimeFormatter.format3( max_age, null, true ));
+								
+								pflabel.setText( MessageText.getString("subs.persistent.filters2" ) + ": " + line[0] );
+								
 							}else{
 								pflabel.setVisible( false );
 								GridData gd = (GridData)pflabel.getLayoutData();
@@ -515,29 +521,81 @@ SBC_SubscriptionResultsView
 			});
 
 				// min seeds
+			{
+				sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+				sep.setLayoutData(new RowData(-1, sepHeight));
+	
+				Composite cMinSeeds = new Composite(vFilters, SWT.NONE);
+				layout = new GridLayout(2, false);
+				layout.marginWidth = 0;
+				layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
+				cMinSeeds.setLayout(layout);
+				Label lblMinSeeds = new Label(cMinSeeds, SWT.NONE);
+				lblMinSeeds.setText(MessageText.getString("label.min.seeds"));
+				Spinner spinMinSeeds = new Spinner(cMinSeeds, SWT.BORDER);
+				spinMinSeeds.setMinimum(0);
+				spinMinSeeds.setMaximum(Integer.MAX_VALUE);
+				spinMinSeeds.setSelection((int)ds_filter.getMinSeeds());
+				spinMinSeeds.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						ds_filter.setMinSeeds(((Spinner) event.widget).getSelection());
+						refilter_dispatcher.dispatch();
+					}
+				});
+			}
 			
-			sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
-			sep.setLayoutData(new RowData(-1, sepHeight));
-
-			Composite cMinSeeds = new Composite(vFilters, SWT.NONE);
-			layout = new GridLayout(2, false);
-			layout.marginWidth = 0;
-			layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
-			cMinSeeds.setLayout(layout);
-			Label lblMinSeeds = new Label(cMinSeeds, SWT.NONE);
-			lblMinSeeds.setText(MessageText.getString("label.min.seeds"));
-			Spinner spinMinSeeds = new Spinner(cMinSeeds, SWT.BORDER);
-			spinMinSeeds.setMinimum(0);
-			spinMinSeeds.setMaximum(Integer.MAX_VALUE);
-			spinMinSeeds.setSelection((int)ds_filter.getMinSeeds());
-			spinMinSeeds.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					ds_filter.setMinSeeds(((Spinner) event.widget).getSelection());
-					refilter_dispatcher.dispatch();
-				}
-			});
-
+				// max seeds
+				
+			{
+				sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+				sep.setLayoutData(new RowData(-1, sepHeight));
+		
+				Composite cMaxSeeds = new Composite(vFilters, SWT.NONE);
+				layout = new GridLayout(2, false);
+				layout.marginWidth = 0;
+				layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
+				cMaxSeeds.setLayout(layout);
+				Label lblMaxSeeds = new Label(cMaxSeeds, SWT.NONE);
+				lblMaxSeeds.setText(MessageText.getString("label.max.seeds"));
+				Spinner spinMaxSeeds = new Spinner(cMaxSeeds, SWT.BORDER);
+				spinMaxSeeds.setMinimum(0);
+				spinMaxSeeds.setMaximum(Integer.MAX_VALUE);
+				spinMaxSeeds.setSelection((int)ds_filter.getMaxSeeds());
+				spinMaxSeeds.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						ds_filter.setMaxSeeds(((Spinner) event.widget).getSelection());
+						refilter_dispatcher.dispatch();
+					}
+				});
+			}
+			
+				// min peers
+			{
+				sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+				sep.setLayoutData(new RowData(-1, sepHeight));
+	
+				Composite cMinPeers = new Composite(vFilters, SWT.NONE);
+				layout = new GridLayout(2, false);
+				layout.marginWidth = 0;
+				layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
+				cMinPeers.setLayout(layout);
+				Label lblMinPeers = new Label(cMinPeers, SWT.NONE);
+				lblMinPeers.setText(MessageText.getString("label.min.peers"));
+				Spinner spinMinPeers = new Spinner(cMinPeers, SWT.BORDER);
+				spinMinPeers.setMinimum(0);
+				spinMinPeers.setMaximum(Integer.MAX_VALUE);
+				spinMinPeers.setSelection((int)ds_filter.getMinPeers());
+				spinMinPeers.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						ds_filter.setMinPeers(((Spinner) event.widget).getSelection());
+						refilter_dispatcher.dispatch();
+					}
+				});
+			}
+			
 			
 				// max age
 			
@@ -676,6 +734,27 @@ SBC_SubscriptionResultsView
 		return null;
 	}
 
+	private void
+	addLine(
+		String[]	line,
+		boolean		add,
+		String		name,
+		String		value )
+	{
+		if ( add ){
+			
+			String text = name + " = " + value;
+			
+			if ( line[0].isEmpty()){
+				
+				line[0] = text;
+				
+			}else{
+				
+				line[0] += ", " + text;
+			}
+		}
+	}
 	private String
 	getString(
 		String[]	strs )

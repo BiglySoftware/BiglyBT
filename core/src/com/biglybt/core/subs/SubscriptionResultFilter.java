@@ -58,6 +58,20 @@ SubscriptionResultFilter
 		long	min );
 	
 	public long
+	getMaxSeeds();
+	
+	public void
+	setMaxSeeds(
+		long	max );
+	
+	public long
+	getMinPeers();
+	
+	public void
+	setMinPeers(
+		long	min );
+	
+	public long
 	getMaxAgeSecs();
 	
 	public void

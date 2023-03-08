@@ -36,6 +36,9 @@ FilterableResult
 	public int
 	getNbSeeds();
 	
+	public int
+	getNbPeers();
+
 	public long
 	getTime();
 }

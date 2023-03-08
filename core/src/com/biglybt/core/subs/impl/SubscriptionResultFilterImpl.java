@@ -51,6 +51,8 @@ SubscriptionResultFilterImpl
 	private Pattern[]	excludeTextFilterPatterns;
 
 	private long minSeeds = -1;
+	private long maxSeeds = -1;
+	private long minPeers = -1;
 	private long minSize = -1;
 	private long maxSize = -1;
 	private long maxAgeSecs	= -1;
@@ -92,6 +94,8 @@ SubscriptionResultFilterImpl
 			maxSize = MapUtils.importLong(filters,"max_size",-1l);
 
 			minSeeds = MapUtils.importLong(filters, "min_seeds",-1l);
+			maxSeeds = MapUtils.importLong(filters, "max_seeds",-1l);
+			minPeers = MapUtils.importLong(filters, "min_peers",-1l);
 			
 			maxAgeSecs = MapUtils.importLong(filters, "max_age",-1l);
 
@@ -114,6 +118,8 @@ SubscriptionResultFilterImpl
 				minSize >= 0 ||
 				maxSize >= 0 ||
 				minSeeds >= 0 ||
+				maxSeeds >= 0 ||
+				minPeers >= 0 ||
 				maxAgeSecs >= 0 ||
 				categoryFilter != null );	
 	}
@@ -173,6 +179,44 @@ SubscriptionResultFilterImpl
 		}
 		
 		minSeeds = min_seeds;
+	}
+	
+	@Override
+	public long 
+	getMaxSeeds()
+	{
+		return( maxSeeds );
+	}
+	
+	@Override
+	public void 
+	setMaxSeeds(
+		long max_seeds)
+	{
+		if ( max_seeds <= 0 ){
+			max_seeds = -1;
+		}
+		
+		maxSeeds = max_seeds;
+	}
+	
+	@Override
+	public long 
+	getMinPeers()
+	{
+		return( minPeers );
+	}
+	
+	@Override
+	public void 
+	setMinPeers(
+		long min_peers)
+	{
+		if ( min_peers <= 0 ){
+			min_peers = -1;
+		}
+		
+		minPeers = min_peers;
 	}
 	
 	@Override
@@ -269,6 +313,8 @@ SubscriptionResultFilterImpl
 		filters.put( "min_size", minSize );
 		filters.put( "max_size", maxSize );
 		filters.put( "min_seeds", minSeeds );
+		filters.put( "max_seeds", maxSeeds );
+		filters.put( "min_peers", minPeers );
 		filters.put( "max_age", maxAgeSecs );
 
 		subs.setDetails( subs.getName( false ), subs.isPublic(), map.toString());
@@ -289,6 +335,8 @@ SubscriptionResultFilterImpl
 		res = addString( res, ">=", minSize<=0?null:(minSize/mInB)+" MB");
 		res = addString( res, "<=", maxSize<=0?null:(maxSize/mInB)+" MB");
 		res = addString( res, "s>=", minSeeds<=0?null:String.valueOf(minSeeds));
+		res = addString( res, "s<=", maxSeeds<=0?null:String.valueOf(maxSeeds));
+		res = addString( res, "p>=", minPeers<=0?null:String.valueOf(minPeers));
 		res = addString( res, "a<=", maxAgeSecs<=0?null:TimeFormatter.format3( maxAgeSecs, null, true ) );
 
 		return( res );
@@ -510,8 +558,24 @@ SubscriptionResultFilterImpl
 		}
 
 		if (minSeeds > -1){
+				
+				if ( result.getNbSeeds() < minSeeds ){
+					
+					return( true );
+				}
+			}
+	
+		if (maxSeeds > -1){
 			
-			if ( result.getNbSeeds() < minSeeds ){
+			if ( result.getNbSeeds() > maxSeeds ){
+				
+				return( true );
+			}
+		}
+	
+		if (minPeers > -1){
+			
+			if ( result.getNbPeers() < minPeers ){
 				
 				return( true );
 			}
