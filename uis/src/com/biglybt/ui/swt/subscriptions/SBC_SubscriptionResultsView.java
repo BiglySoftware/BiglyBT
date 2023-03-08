@@ -347,6 +347,8 @@ SBC_SubscriptionResultsView
 								long kInB = DisplayFormatters.getKinB();
 								long mInB = kInB*kInB;
 	
+								String mb = DisplayFormatters.getUnit( DisplayFormatters.UNIT_MB );
+								
 								String with_words = getString( ds_filter.getWithWords());
 								String without_words = getString( ds_filter.getWithoutWords());
 								
@@ -361,8 +363,8 @@ SBC_SubscriptionResultsView
 								
 								addLine( line, !with_words.isEmpty(), MessageText.getString( "SubscriptionResults.filter.with.words" ), "[" + with_words + "]" );	
 								addLine( line, !without_words.isEmpty(), MessageText.getString( "SubscriptionResults.filter.without.words" ), "[" + without_words + "]" );	
-								addLine( line, min_size>0, MessageText.getString( "label.min.size"),  min_size + " MB" ); 
-								addLine( line, max_size>0, MessageText.getString( "label.max.size"),  max_size + " MB" ); 
+								addLine( line, min_size>0, MessageText.getString( "label.min.size"),  min_size + " " + mb ); 
+								addLine( line, max_size>0, MessageText.getString( "label.max.size"),  max_size + " " + mb); 
 								addLine( line, min_seeds>0, MessageText.getString( "label.min.seeds"), String.valueOf( min_seeds ));
 								addLine( line, max_seeds>0, MessageText.getString( "label.max.seeds"), String.valueOf(max_seeds )); 
 								addLine( line, min_peers>0, MessageText.getString( "label.min.peers"), String.valueOf(min_peers )); 
@@ -483,7 +485,7 @@ SBC_SubscriptionResultsView
 			layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
 			cMinSize.setLayout(layout);
 			Label lblMinSize = new Label(cMinSize, SWT.NONE);
-			lblMinSize.setText(MessageText.getString("SubscriptionResults.filter.min_size"));
+			lblMinSize.setText(MessageText.getString("label.min.size") + " (" + DisplayFormatters.getUnit(DisplayFormatters.UNIT_MB) + ")");
 			Spinner spinMinSize = new Spinner(cMinSize, SWT.BORDER);
 			spinMinSize.setMinimum(0);
 			spinMinSize.setMaximum(100*kInB*kInB);	// 100 TB should do...
@@ -507,7 +509,7 @@ SBC_SubscriptionResultsView
 			layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
 			cMaxSize.setLayout(layout);
 			Label lblMaxSize = new Label(cMaxSize, SWT.NONE);
-			lblMaxSize.setText(MessageText.getString("SubscriptionResults.filter.max_size"));
+			lblMaxSize.setText(MessageText.getString("label.max.size") + " (" + DisplayFormatters.getUnit(DisplayFormatters.UNIT_MB) + ")");
 			Spinner spinMaxSize = new Spinner(cMaxSize, SWT.BORDER);
 			spinMaxSize.setMinimum(0);
 			spinMaxSize.setMaximum(100*kInB*kInB);	// 100 TB should do...
