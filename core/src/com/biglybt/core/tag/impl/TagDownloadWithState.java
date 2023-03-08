@@ -2975,6 +2975,11 @@ TagDownloadWithState
 			
 			List<DownloadManager> downloads = new ArrayList<>( getTaggedDownloads());
 			
+			if ( downloads.isEmpty()){
+				
+				return( true );
+			}
+			
 			Collections.sort( downloads, (d1,d2)->{
 				return( Integer.compare( d1.getPosition(), d2.getPosition()));
 			});
@@ -3040,13 +3045,13 @@ TagDownloadWithState
 				
 					download_positions_comp.add( pos );
 				
-					tag_sort_comp.add( new Object[]{ download, entry[1], pos });
+					tag_sort_comp.add( new Object[]{ download, entry[1], pos, entry });
 
 				}else{
 					
 					download_positions_incomp.add( pos );
 					
-					tag_sort_incomp.add( new Object[]{ download, entry[1], pos });
+					tag_sort_incomp.add( new Object[]{ download, entry[1], pos, entry });
 				}
 			}
 			
@@ -3054,7 +3059,9 @@ TagDownloadWithState
 			
 			Collections.sort( download_positions_incomp );
 
-			if (  overall_options != null && overall_options.equals( "random" )){
+			boolean random = overall_options != null && overall_options.equals( "random" );
+			
+			if ( random  ){
 				
 				Collections.shuffle( tag_sort_comp );
 				
@@ -3092,9 +3099,16 @@ TagDownloadWithState
 				
 				int current_pos = (Integer)entry[2];
 				
+				DownloadManager dm = (DownloadManager)entry[0];
+
+				if ( random ){
+					
+					((Object[])entry[3])[1] = (long)RandomUtils.nextInt( downloads.size());
+				}
+				
 				if ( current_pos != dl_pos ){
 					
-					dms.add( (DownloadManager)entry[0] );
+					dms.add( dm );
 					
 					positions.add( dl_pos );
 				}
@@ -3113,9 +3127,16 @@ TagDownloadWithState
 				
 				int current_pos = (Integer)entry[2];
 				
+				DownloadManager dm = (DownloadManager)entry[0];
+				
+				if ( random ){
+					
+					((Object[])entry[3])[1] = (long)RandomUtils.nextInt( downloads.size());
+				}
+				
 				if ( current_pos != dl_pos ){
 					
-					dms.add( (DownloadManager)entry[0] );
+					dms.add( dm );
 					
 					positions.add( dl_pos );
 				}

@@ -75,7 +75,6 @@ TagPropertyConstraintHandler
 	
 	private static final Object DM_NAME							= new Object();
 	private static final Object DM_SAVE_PATH					= new Object();
-	private static final Object DM_SAVE_PATH_IS_DIR				= new Object();
 
 	private static final Object DM_PEER_SETS					= new Object();
 	
@@ -814,8 +813,6 @@ TagPropertyConstraintHandler
 		DownloadManager		dm )
 	{
 		Set<TagConstraint>	interesting = new HashSet<>();
-
-		dm.setUserData( DM_SAVE_PATH_IS_DIR, null );
 		
 		synchronized( constrained_tags ){
 
@@ -4224,7 +4221,7 @@ TagPropertyConstraintHandler
 							
 							p = new Object[ 2 ];
 							 
-							p[0] = tag_maybe_null==null?0:RandomUtils.nextInt( tag_maybe_null.getTaggedCount());
+							p[0] = tag_maybe_null==null?0:RandomUtils.nextInt( Math.max( 1, tag_maybe_null.getTaggedCount()));
 							
 							p[1] = (String)params[0];
 							
@@ -4678,24 +4675,7 @@ TagPropertyConstraintHandler
 					
 					File save_folder = save_loc.getParentFile();
 					
-					Boolean is_dir = (Boolean)dm.getUserData( DM_SAVE_PATH_IS_DIR );
-					
-					if ( is_dir == null ){
-						
-						try{
-								// if folder is offline this can stall things for quite a while
-							
-							is_dir = save_folder.isDirectory();
-							
-						}catch( Throwable e ){
-							
-							is_dir = false;
-						}
-						
-						dm.setUserData( DM_SAVE_PATH_IS_DIR, is_dir );
-					}
-					
-					if ( is_dir ){
+					if ( FileUtil.isDirectoryWithTimeout(save_folder)){
 						
 						return( new String[]{ save_folder.getAbsolutePath()});
 						

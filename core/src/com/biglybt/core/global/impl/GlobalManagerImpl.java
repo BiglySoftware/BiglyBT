@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.biglybt.core.Core;
@@ -3608,82 +3609,165 @@ public class GlobalManagerImpl
 	  List<DownloadManager>	managers, 
 	  List<Integer>			newPositions ) 
   {
+	  	// algorithm below requires positions to be sorted ascending
+	  
+	  if ( newPositions.size() > 1 ){
+		  
+		  int prev = -1;
+		  
+		  boolean sort = false;
+		  
+		  for ( int pos: newPositions ){
+			  
+			  if ( pos < prev ){
+				  
+				  sort = true;
+				  
+				  break;
+			  }
+		  }
+		  
+		  if ( sort ){
+			  
+			  Map<Integer,DownloadManager> map = new TreeMap<>();
+			  
+			  for ( int i=0;i<managers.size();i++){
+				  
+				  DownloadManager	manager	= managers.get(i);
+				  int				pos		= newPositions.get(i);
+				  
+				  if ( manager.isDownloadComplete(false)){
+					  
+					  pos += 10000000;
+				  }
+				  
+				  map.put( pos, manager );
+			  }
+			  
+			  managers		= new ArrayList<>( managers.size());
+			  newPositions	= new ArrayList<>( managers.size());
+			  
+			  for ( Map.Entry<Integer,DownloadManager> entry: map.entrySet()){
+				  
+				  managers.add( entry.getValue());
+				  
+				  int pos = entry.getKey();
+				  
+				  if ( pos >= 10000000 ){
+					  
+					  pos -= 10000000;
+				  }
+				  
+				  newPositions.add( pos );
+			  }
+		  }
+	  }
+	  
 	  synchronized( managers_lock ){
 
 		  DownloadManager[] dms_cow = managers_list_cow;
 		  
+		  int num_comp 		= 0;
+		  int num_incomp	= 0;
+		  
 		  for ( DownloadManager dm: dms_cow ){
 			
-			  dm.setUserData( MOVE_POS_KEY, dm.getPosition());
+			  boolean comp = dm.isDownloadComplete(false);
+			  
+			  if ( comp ){
+				  
+				  num_comp++;
+				  
+			  }else{
+				  
+				  num_incomp++; 
+			  }
+			  
+			  int pos = dm.getPosition();
+			  
+			  dm.setUserData( MOVE_POS_KEY, new int[]{ pos, comp?1:0 } );
 		  }
 		  
+		  	// remove all the old positions
+		  
+		  for ( int i=0;i<managers.size();i++){
+				
+			  DownloadManager	manager		= managers.get( i );
+			  int				newPosition = newPositions.get( i );
+
+			  int[] manager_entry = (int[])manager.getUserData( MOVE_POS_KEY );
+			  
+			  int oldPosition = manager_entry[0];
+			  
+			  boolean curCompleted = manager_entry[1]==1;
+
+			  int limit = curCompleted?num_comp:num_incomp;
+			  
+			  if ( newPosition < 1 || newPosition > limit ){
+				  
+				  Debug.out( "newPosition is invalid: pos=" + newPosition + ", limit=" + limit );
+				  
+				  return;
+			  }
+			  			  
+			  for ( DownloadManager dm: dms_cow ){
+				  
+				  int[] dm_entry = (int[])dm.getUserData( MOVE_POS_KEY );
+				  
+				  boolean dmCompleted = dm_entry[1]==1;
+				  
+				  if ( dmCompleted == curCompleted ){
+					  
+					  int dmPosition = dm_entry[0];
+					  
+					  if ( dmPosition > oldPosition ){
+						 
+						  dm_entry[0] = dmPosition - 1;
+					  }
+				  }
+			  }
+		  }
+		  
+		  	// insert the new positions
+		  		  
 		  for ( int i=0;i<managers.size();i++){
 	
 			  DownloadManager	manager		= managers.get( i );
 			  int				newPosition = newPositions.get( i );
-			  
-			  boolean curCompleted = manager.isDownloadComplete(false);
+			  		
+			  int[] manager_entry = (int[])manager.getUserData( MOVE_POS_KEY );
 
-			  if (newPosition < 1 || newPosition > downloadManagerCount(curCompleted)){
+			  boolean curCompleted = manager_entry[1]==1;
+			  
+			  for ( DownloadManager dm: dms_cow ){
+
+				  int[] dm_entry = (int[])dm.getUserData( MOVE_POS_KEY );
 				  
-				  continue;
-			  }
-			  
-			  int curPosition = (Integer)manager.getUserData( MOVE_POS_KEY );
-			  
-			  if (newPosition > curPosition) {
-				  // move [manager] down
-				  // move everything between [curPosition+1] and [newPosition] up(-) 1
-				  int numToMove = newPosition - curPosition;
-				  for ( DownloadManager dm: dms_cow ){
-					  boolean dmCompleted = (dm.isDownloadComplete(false));
-					  if (dmCompleted == curCompleted) {
-						  int dmPosition = (Integer)dm.getUserData( MOVE_POS_KEY );
-						  if ((dmPosition > curPosition) && (dmPosition <= newPosition)) {
-							  //dm.setPosition(dmPosition - 1);
-							  dm.setUserData(MOVE_POS_KEY, dmPosition - 1);
-							  numToMove--;
-							  if (numToMove <= 0)
-								  break;
-						  }
+				  boolean dmCompleted = dm_entry[1]==1;
+					
+				  if ( dmCompleted == curCompleted ){
+					
+					  int dmPosition = dm_entry[0];
+						
+					  if ( dmPosition >= newPosition ){
+					
+						  dm_entry[0] = dmPosition + 1;
 					  }
 				  }
-	
-				  //manager.setPosition(newPosition);
-				  manager.setUserData(MOVE_POS_KEY,newPosition);
-			  }else if (newPosition < curPosition && curPosition > 1) {
-				  // move [manager] up
-				  // move everything between [newPosition] and [curPosition-1] down(+) 1
-				  int numToMove = curPosition - newPosition;
-	
-				  for ( DownloadManager dm: dms_cow ){
-					  boolean dmCompleted = (dm.isDownloadComplete(false));
-					  int dmPosition = (Integer)dm.getUserData( MOVE_POS_KEY );
-					  if ((dmCompleted == curCompleted) &&
-							  (dmPosition >= newPosition) &&
-							  (dmPosition < curPosition)
-							  ) {
-						  //dm.setPosition(dmPosition + 1);
-						  dm.setUserData(MOVE_POS_KEY, dmPosition + 1);
-						  numToMove--;
-						  if (numToMove <= 0)
-							  break;
-					  }
-				  }
-				  //manager.setPosition(newPosition);
-				  manager.setUserData(MOVE_POS_KEY,newPosition);
 			  }
+			  
+			  manager_entry[0] = newPosition;
 		  }
 		  
 		  for ( DownloadManager dm: dms_cow ){
 			  
-			  int pos = (Integer)dm.getUserData( MOVE_POS_KEY );
+			  int[] dm_entry = (int[])dm.getUserData( MOVE_POS_KEY );
+			  		
+			  int dmPosition = dm_entry[0];
 			  
-			  dm.setUserData( MOVE_POS_KEY,  null );
-			  
-			  if ( pos != dm.getPosition()){
+			  if ( dmPosition != dm.getPosition()){
 				  
-				  dm.setPosition( pos );
+				  dm.setPosition( dmPosition );
 			  }
 		  }
 	  }
