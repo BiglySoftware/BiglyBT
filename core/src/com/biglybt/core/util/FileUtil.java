@@ -3605,7 +3605,7 @@ public class FileUtil {
 
 		// when a file is on an unavailable network share (for example) then this can trash the UI by hanging the SWT thread.
 	
-	private static Set<Path>		bad_roots = new HashSet<>();
+	private static Map<Path,int[]>		bad_roots = new HashMap<>();
 	
 	interface
 	FileOpWithTimeout<T>
@@ -3666,7 +3666,7 @@ public class FileUtil {
 				
 				Path root_path = file.toPath().getRoot();
 
-				if ( bad_roots.contains( root_path )){
+				if ( bad_roots.containsKey( root_path )){
 				
 					if ( def_error == null ){
 						
@@ -3695,7 +3695,7 @@ public class FileUtil {
 				
 				synchronized( bad_roots ){
 					
-					if ( !bad_roots.contains(root_path)){
+					if ( !bad_roots.containsKey(root_path)){
 				
 						if ( bad_roots.size() > 1024 ){
 							
@@ -3703,7 +3703,7 @@ public class FileUtil {
 							
 						}else{
 							
-							bad_roots.add(root_path);
+							bad_roots.put(root_path, new int[]{0});
 							
 							if ( bad_roots.size() == 1 ){
 								
@@ -3711,45 +3711,96 @@ public class FileUtil {
 									
 									while( true ){								
 										try{
-											Thread.sleep( 5000 );
+											Thread.sleep( 30*1000 );
 											
 										}catch( Throwable e ){
 											
 										}
 										
-										List<Path> to_check;
+										Map<Path, int[]> to_check;
 										
 										synchronized( bad_roots ){
 											
-											to_check = new ArrayList<Path>( bad_roots );										
+											to_check = new HashMap<>( bad_roots );										
 										}
 										
-										for ( Path path: to_check ){
+										for ( Map.Entry<Path,int[]> entry: to_check.entrySet()){
 											
 											try{
-												long check_start = SystemTime.getCurrentTime();
+												long check_start = SystemTime.getMonotonousTime();
 												
-												File check_file = path.toFile();
+												int limit = 250;
 												
-												check_file.getCanonicalPath();
-												
-												check_file.exists();
-												
-												check_file.length();
-												
-												if ( SystemTime.getCurrentTime() - check_start < 250 ){
-													
-													Debug.out( "Root path " + root_path + " appears to be responding in a timely manner, enabling" );
-													
-													synchronized( bad_roots ){
+												Path	path	= entry.getKey();
+												int[]	oks		= entry.getValue();
 														
-														bad_roots.remove( path );
-														
-														if ( bad_roots.isEmpty()){
+												File 	check_file	= path.toFile();
+outer:
+												for ( int i=0;; i++){
+													
+													switch(i){
+														case 0:{
+															check_file.getCanonicalPath();
+															break;
+														}
+														case 1:{
+															check_file.exists();
+															break;
+														}
+														case 2:{
+															check_file.length();
+															break;
+														}
+														case 3:{
+															check_file.isDirectory();
+															break;
+														}
+														case 4:{
+															File random_file = new File( check_file, "Test" + RandomUtils.nextAbsoluteLong() + ".dat" );
+
+															if ( random_file.isFile()){
 															
-															return;
+																Thread.sleep(limit);
+															}
+															
+															break;
+														}
+														case 5:{
+															check_file.listFiles();
+															break;
+														}
+														default:{
+															break outer;
 														}
 													}
+													
+													if ( SystemTime.getMonotonousTime() - check_start >= limit ){
+														
+														break;
+													}
+												}												
+												
+												if ( SystemTime.getMonotonousTime() - check_start < limit ){
+													
+													oks[0]++;
+													
+													if ( oks[0] > 2 ){
+														
+														Debug.out( "Root path " + path + " appears to be responding in a timely manner, enabling" );
+														
+														synchronized( bad_roots ){
+															
+															bad_roots.remove( path );
+															
+															if ( bad_roots.isEmpty()){
+																
+																return;
+															}
+														}
+													}
+												}else{
+													
+													oks[0] = 0;
 												}
 											}catch( Throwable e ){
 												
