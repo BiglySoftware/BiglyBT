@@ -260,7 +260,6 @@ SBC_SubscriptionResultsView
 
 			Composite parent = (Composite) soFilterArea.getControl();
 
-			Label label;
 			FormData fd;
 			GridLayout layout;
 			int sepHeight = 20;
@@ -391,9 +390,8 @@ SBC_SubscriptionResultsView
 			Composite vFilters = new Composite(cFilters, SWT.NONE);
 			vFilters.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 
-
 			RowLayout rowLayout = new RowLayout(SWT.HORIZONTAL);
-			rowLayout.spacing = 5;
+			rowLayout.spacing = 3;
 			rowLayout.marginBottom = rowLayout.marginTop = rowLayout.marginLeft = rowLayout.marginRight = 0;
 			rowLayout.center = true;
 			vFilters.setLayout(rowLayout);
@@ -479,54 +477,65 @@ SBC_SubscriptionResultsView
 			Control sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
 			sep.setLayoutData(new RowData(-1, sepHeight));
 
-			Composite cMinSize = new Composite(vFilters, SWT.NONE);
-			layout = new GridLayout(2, false);
-			layout.marginWidth = 0;
-			layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
-			cMinSize.setLayout(layout);
-			Label lblMinSize = new Label(cMinSize, SWT.NONE);
-			lblMinSize.setText(MessageText.getString("label.min.size") + " (" + DisplayFormatters.getUnit(DisplayFormatters.UNIT_MB) + ")");
-			Spinner spinMinSize = new Spinner(cMinSize, SWT.BORDER);
-			spinMinSize.setMinimum(0);
-			spinMinSize.setMaximum(100*kInB*kInB);	// 100 TB should do...
-			spinMinSize.setSelection(Math.max( 0,  (int)( ds_filter.getMinSize()/mInB )));
-			spinMinSize.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					ds_filter.setMinSize(((Spinner) event.widget).getSelection() * mInB);
-					refilter_dispatcher.dispatch();
-				}
-			});
-
+			{
+				Composite cMinSize = new Composite(vFilters, SWT.NONE);
+				layout = new GridLayout(2, false);
+				layout.marginWidth = 0;
+				layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
+				cMinSize.setLayout(layout);
+				Label lblMinSize = new Label(cMinSize, SWT.NONE);
+				lblMinSize.setText(MessageText.getString("label.min.size") + " (" + DisplayFormatters.getUnit(DisplayFormatters.UNIT_MB) + ")");
+				Spinner spinMinSize = new Spinner(cMinSize, SWT.BORDER);
+				GridData gd = new GridData();
+				gd.widthHint = 20;
+				spinMinSize.setLayoutData(gd);
+				spinMinSize.setMinimum(0);
+				spinMinSize.setMaximum(100*kInB*kInB);	// 100 TB should do...
+				spinMinSize.setSelection(Math.max( 0,  (int)( ds_filter.getMinSize()/mInB )));
+				spinMinSize.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						ds_filter.setMinSize(((Spinner) event.widget).getSelection() * mInB);
+						refilter_dispatcher.dispatch();
+					}
+				});
+			}
+			
 			// max size
 
 			sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
 			sep.setLayoutData(new RowData(-1, sepHeight));
 
-			Composite cMaxSize = new Composite(vFilters, SWT.NONE);
-			layout = new GridLayout(2, false);
-			layout.marginWidth = 0;
-			layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
-			cMaxSize.setLayout(layout);
-			Label lblMaxSize = new Label(cMaxSize, SWT.NONE);
-			lblMaxSize.setText(MessageText.getString("label.max.size") + " (" + DisplayFormatters.getUnit(DisplayFormatters.UNIT_MB) + ")");
-			Spinner spinMaxSize = new Spinner(cMaxSize, SWT.BORDER);
-			spinMaxSize.setMinimum(0);
-			spinMaxSize.setMaximum(100*kInB*kInB);	// 100 TB should do...
-			spinMaxSize.setSelection(Math.max( 0,  (int)( ds_filter.getMaxSize()/mInB )));
-			spinMaxSize.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					ds_filter.setMaxSize(((Spinner) event.widget).getSelection() * mInB);
-					refilter_dispatcher.dispatch();
-				}
-			});
-
-				// min seeds
 			{
-				sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
-				sep.setLayoutData(new RowData(-1, sepHeight));
-	
+				Composite cMaxSize = new Composite(vFilters, SWT.NONE);
+				layout = new GridLayout(2, false);
+				layout.marginWidth = 0;
+				layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
+				cMaxSize.setLayout(layout);
+				Label lblMaxSize = new Label(cMaxSize, SWT.NONE);
+				lblMaxSize.setText(MessageText.getString("label.max.size") + " (" + DisplayFormatters.getUnit(DisplayFormatters.UNIT_MB) + ")");
+				Spinner spinMaxSize = new Spinner(cMaxSize, SWT.BORDER);
+				GridData gd = new GridData();
+				gd.widthHint = 20;
+				spinMaxSize.setLayoutData(gd);
+				spinMaxSize.setMinimum(0);
+				spinMaxSize.setMaximum(100*kInB*kInB);	// 100 TB should do...
+				spinMaxSize.setSelection(Math.max( 0,  (int)( ds_filter.getMaxSize()/mInB )));
+				spinMaxSize.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						ds_filter.setMaxSize(((Spinner) event.widget).getSelection() * mInB);
+						refilter_dispatcher.dispatch();
+					}
+				});
+			}
+			
+				// min seeds
+			
+			sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+			sep.setLayoutData(new RowData(-1, sepHeight));
+
+			{	
 				Composite cMinSeeds = new Composite(vFilters, SWT.NONE);
 				layout = new GridLayout(2, false);
 				layout.marginWidth = 0;
@@ -535,6 +544,9 @@ SBC_SubscriptionResultsView
 				Label lblMinSeeds = new Label(cMinSeeds, SWT.NONE);
 				lblMinSeeds.setText(MessageText.getString("label.min.seeds"));
 				Spinner spinMinSeeds = new Spinner(cMinSeeds, SWT.BORDER);
+				GridData gd = new GridData();
+				gd.widthHint = 20;
+				spinMinSeeds.setLayoutData(gd);
 				spinMinSeeds.setMinimum(0);
 				spinMinSeeds.setMaximum(Integer.MAX_VALUE);
 				spinMinSeeds.setSelection((int)ds_filter.getMinSeeds());
@@ -548,11 +560,11 @@ SBC_SubscriptionResultsView
 			}
 			
 				// max seeds
-				
-			{
-				sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
-				sep.setLayoutData(new RowData(-1, sepHeight));
-		
+			
+			sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+			sep.setLayoutData(new RowData(-1, sepHeight));
+
+			{		
 				Composite cMaxSeeds = new Composite(vFilters, SWT.NONE);
 				layout = new GridLayout(2, false);
 				layout.marginWidth = 0;
@@ -561,6 +573,9 @@ SBC_SubscriptionResultsView
 				Label lblMaxSeeds = new Label(cMaxSeeds, SWT.NONE);
 				lblMaxSeeds.setText(MessageText.getString("label.max.seeds"));
 				Spinner spinMaxSeeds = new Spinner(cMaxSeeds, SWT.BORDER);
+				GridData gd = new GridData();
+				gd.widthHint = 20;
+				spinMaxSeeds.setLayoutData(gd);
 				spinMaxSeeds.setMinimum(0);
 				spinMaxSeeds.setMaximum(Integer.MAX_VALUE);
 				spinMaxSeeds.setSelection((int)ds_filter.getMaxSeeds());
@@ -574,9 +589,11 @@ SBC_SubscriptionResultsView
 			}
 			
 				// min peers
+			
+			sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
+			sep.setLayoutData(new RowData(-1, sepHeight));
+
 			{
-				sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
-				sep.setLayoutData(new RowData(-1, sepHeight));
 	
 				Composite cMinPeers = new Composite(vFilters, SWT.NONE);
 				layout = new GridLayout(2, false);
@@ -586,6 +603,9 @@ SBC_SubscriptionResultsView
 				Label lblMinPeers = new Label(cMinPeers, SWT.NONE);
 				lblMinPeers.setText(MessageText.getString("label.min.peers"));
 				Spinner spinMinPeers = new Spinner(cMinPeers, SWT.BORDER);
+				GridData gd = new GridData();
+				gd.widthHint = 20;
+				spinMinPeers.setLayoutData(gd);
 				spinMinPeers.setMinimum(0);
 				spinMinPeers.setMaximum(Integer.MAX_VALUE);
 				spinMinPeers.setSelection((int)ds_filter.getMinPeers());
@@ -597,53 +617,57 @@ SBC_SubscriptionResultsView
 					}
 				});
 			}
-			
-			
+					
 				// max age
 			
 			sep = Utils.createSkinnedLabelSeparator(vFilters, SWT.VERTICAL );
 			sep.setLayoutData(new RowData(-1, sepHeight));
 
-			Composite cMaxAge = new Composite(vFilters, SWT.NONE);
-			layout = new GridLayout(3, false);
-			layout.marginWidth = 0;
-			layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
-			cMaxAge.setLayout(layout);
-			
-			Label lblMaxAge = new Label(cMaxAge, SWT.NONE);
-			lblMaxAge.setText(MessageText.getString("label.max.age"));
-			
-			Spinner spinMaxAge = new Spinner(cMaxAge, SWT.BORDER);
-			spinMaxAge.setMinimum(0);
-			spinMaxAge.setMaximum(Integer.MAX_VALUE);
-			
-			Combo combMaxAge = new Combo( cMaxAge, SWT.SINGLE | SWT.READ_ONLY );
-			
-			for ( String unit: TimeFormatter.TIME_SUFFIXES_2 ){
-			
-				combMaxAge.add( unit );
+			{
+				Composite cMaxAge = new Composite(vFilters, SWT.NONE);
+				layout = new GridLayout(3, false);
+				layout.marginWidth = 0;
+				layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
+				cMaxAge.setLayout(layout);
+				
+				Label lblMaxAge = new Label(cMaxAge, SWT.NONE);
+				lblMaxAge.setText(MessageText.getString("label.max.age"));
+				
+				Spinner spinMaxAge = new Spinner(cMaxAge, SWT.BORDER);
+				GridData gd = new GridData();
+				gd.widthHint = 20;
+				spinMaxAge.setLayoutData(gd);
+				spinMaxAge.setMinimum(0);
+				spinMaxAge.setMaximum(Integer.MAX_VALUE);
+				
+				Combo combMaxAge = new Combo( cMaxAge, SWT.SINGLE | SWT.READ_ONLY );
+				
+				for ( String unit: TimeFormatter.TIME_SUFFIXES_2 ){
+				
+					combMaxAge.add( unit );
+				}
+				
+				Listener maxAgeListener = (e)->{
+					int	val 	= spinMaxAge.getSelection();
+					int unit	= combMaxAge.getSelectionIndex();
+					
+					long secs = TimeFormatter.TIME_SUFFIXES_2_MULT[unit] * (long)( val + 1 ) - 1;
+					
+					ds_filter.setMaxAgeSecs( secs );
+					
+					refilter_dispatcher.dispatch();
+				};
+				
+				int[] temp = TimeFormatter.format3Support( ds_filter.getMaxAgeSecs(), null, true );
+				
+				int val = temp[0];
+				
+				spinMaxAge.setSelection( val<0?0:val );
+				combMaxAge.select( temp[1] );			
+				
+				spinMaxAge.addListener(SWT.Selection, maxAgeListener );		
+				combMaxAge.addListener(SWT.Selection, maxAgeListener );
 			}
-			
-			Listener maxAgeListener = (e)->{
-				int	val 	= spinMaxAge.getSelection();
-				int unit	= combMaxAge.getSelectionIndex();
-				
-				long secs = TimeFormatter.TIME_SUFFIXES_2_MULT[unit] * (long)( val + 1 ) - 1;
-				
-				ds_filter.setMaxAgeSecs( secs );
-				
-				refilter_dispatcher.dispatch();
-			};
-			
-			int[] temp = TimeFormatter.format3Support( ds_filter.getMaxAgeSecs(), null, true );
-			
-			int val = temp[0];
-			
-			spinMaxAge.setSelection( val<0?0:val );
-			combMaxAge.select( temp[1] );			
-			
-			spinMaxAge.addListener(SWT.Selection, maxAgeListener );		
-			combMaxAge.addListener(SWT.Selection, maxAgeListener );
 			
 			if ( ds != null ){
 
