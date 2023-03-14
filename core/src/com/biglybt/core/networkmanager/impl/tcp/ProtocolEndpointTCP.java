@@ -141,13 +141,6 @@ ProtocolEndpointTCP
 		return( t );
 	}
 
-	public Transport
-	connectLightWeight(
-		SocketChannel		sc )
-	{
-		return new LightweightTCPTransport( this, TCPTransportHelperFilterFactory.createTransparentFilter( sc ) );
-	}
-
 	@Override
 	public String
 	getDescription()

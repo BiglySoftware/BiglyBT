@@ -555,6 +555,46 @@ AEPluginProxyHandler
 
 		return( null );
 	}
+	
+	private static InetSocketAddress
+	getLocalAddress(
+		PluginProxyImpl	pp )
+	{
+		String					host		= pp.getHost();
+		int						port		= pp.getPort();
+		
+		return( getLocalAddress( host, port ));
+	}
+	
+	public static InetSocketAddress
+	getLocalAddress(
+		String		host,
+		int			port )
+	{
+		Map<String,Object>		options		= new HashMap<>();
+
+		Object[] args = new Object[]{ host, port, options };
+		
+		for ( PluginInterface pi: plugins ){
+
+			try{
+				IPCInterface ipc = pi.getIPC();
+
+				if ( ipc.canInvoke( "getLocalProxyEndpoint", args )){
+
+					Map<String,Object> reply = (Map<String,Object>)ipc.invoke( "getLocalProxyEndpoint", args );
+
+					String	l_host	= (String)reply.get( "host" );
+					int		l_port	= (Integer)reply.get( "port" );
+					
+					return( InetSocketAddress.createUnresolved( l_host, l_port ));
+				}
+			}catch( Throwable e ){
+			}
+		}
+		
+		return( null );
+	}
 
 	private static void
 	checkPluginInstallation(
@@ -842,6 +882,13 @@ AEPluginProxyHandler
 			return( target );
 		}
 
+		@Override
+		public InetSocketAddress 
+		getLocalAddress()
+		{
+			return( AEPluginProxyHandler.getLocalAddress( this ));
+		}
+		
 		@Override
 		public PluginProxy
 		getChildProxy(

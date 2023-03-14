@@ -109,6 +109,12 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
     description = ( is_inbound_connection ? "R" : "L" ) + ": " + AddressUtils.getHostNameNoResolve( address ) + ": " + address.getPort();
 
   }
+  
+  public boolean
+  isIncoming()
+  {
+	  return( is_inbound_connection );
+  }
 
   /**
    * Get the socket channel used by the transport.
@@ -139,7 +145,7 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
   public TransportStartpoint
   getTransportStartpoint()
   {
-	  return( new TransportStartpointTCP( getTransportEndpoint()));
+	  return( new TransportStartpointTCP( this, getTransportEndpoint()));
   }
 
   @Override

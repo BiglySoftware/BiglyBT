@@ -35,13 +35,16 @@ TransportStartpointTCP
 {
 	private static final AEProxyAddressMapper proxy_address_mapper = AEProxyFactory.getAddressMapper();
 
+	private final TCPTransportImpl			transport;
 	private final TransportEndpointTCP		ep;
 
 	public
 	TransportStartpointTCP(
+		TCPTransportImpl		_transport,
 		TransportEndpointTCP	_ep )
 	{
-		ep		= _ep;
+		transport	= _transport;
+		ep			= _ep;
 	}
 
 	@Override
@@ -88,16 +91,28 @@ TransportStartpointTCP
 			Socket socket = channel.socket();
 
 			if ( socket != null ){
-
+				
 			    AEProxyAddressMapper.AppliedPortMapping applied_mapping = proxy_address_mapper.applyPortMapping( socket.getInetAddress(), socket.getPort());
 
-			    InetSocketAddress	tcp_address = applied_mapping.getLocalAddress();
+			    InetSocketAddress	local = applied_mapping.getLocalAddress();
 			    
-			    if ( tcp_address != null ){
+			    if ( local != null ){
 			    
-			    	return( tcp_address );
+			    	return( local );
 			    }
-			    
+
+				if ( !transport.isIncoming()){
+					
+					InetSocketAddress target = ep.getProtocolEndpoint().getAddress();
+					
+					local = proxy_address_mapper.getLocalAddress( target );
+					
+					if ( local != null ){
+						
+						return( local );
+					}
+				}
+				
 			    return((InetSocketAddress)socket.getLocalSocketAddress());
 			}
 		}

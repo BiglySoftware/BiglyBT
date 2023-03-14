@@ -1253,6 +1253,8 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		int udp_port, 
 		boolean use_crypto, 
 		Map user_data)
+	
+		throws Exception
 	{
 		final byte type = use_crypto ? PeerItemFactory.HANDSHAKE_TYPE_CRYPTO : PeerItemFactory.HANDSHAKE_TYPE_PLAIN;
 	
@@ -1285,9 +1287,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			}
 		}
 
-		if(force || !isAlreadyConnected(peer_item)){
+		String fail_reason = null;
 
-			String fail_reason;
+		if(force || !isAlreadyConnected(peer_item)){
 
 			boolean tcp_ok = TCPNetworkManager.TCP_OUTGOING_ENABLED && tcp_port > 0;
 			boolean udp_ok = UDPNetworkManager.UDP_OUTGOING_ENABLED && udp_port > 0;
@@ -1309,6 +1311,15 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 			//if(fail_reason != null)
 			//	Debug.out("Injected peer " + ip_address + ":" + tcp_port + " was not added - " + fail_reason);
+			
+		}else{
+			
+			fail_reason = "Already connected";
+		}
+		
+		if ( fail_reason != null ){
+		
+			throw( new Exception( "Failed to add peer: " + fail_reason ));
 		}
 	}
 

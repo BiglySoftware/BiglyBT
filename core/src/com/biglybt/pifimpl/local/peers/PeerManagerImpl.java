@@ -328,7 +328,11 @@ PeerManagerImpl
 
 		if ( pluginPeerSourceEnabled()){
 
-			manager.addPeer( ip_address, tcp_port, udp_port, use_crypto, user_data );
+			try{
+				manager.addPeer( ip_address, tcp_port, udp_port, use_crypto, user_data );
+				
+			}catch( Throwable e ){
+			}
 		}
 	}
 

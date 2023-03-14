@@ -24,6 +24,8 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.Map;
 
+import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
+
 /**
  * @author parg
  *
@@ -87,6 +89,10 @@ AEProxyAddressMapper
 		InetAddress		address,
 		int				port );
 
+	public InetSocketAddress
+	getLocalAddress(
+		InetSocketAddress		remote );
+	
 	public interface
 	PortMapping
 	{

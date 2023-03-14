@@ -1360,23 +1360,25 @@ PeersViewBase
 															}
 															
 															int	pos = bit.lastIndexOf( ':' );
+
+															try{
+
+																if ( pos != -1 ){
 				
-															if ( pos != -1 ){
+																	String host = bit.substring( 0, pos ).trim();
+																	String port = bit.substring( pos+1 ).trim();
 				
-																String host = bit.substring( 0, pos ).trim();
-																String port = bit.substring( pos+1 ).trim();
-				
-																try{
 																	int	i_port = Integer.parseInt( port );
 				
 																	pm.addPeer( host, i_port, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
 				
-																}catch( Throwable e ){
+																}else{
 				
+																	pm.addPeer( bit, 6881, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
 																}
-															}else{
-				
-																pm.addPeer( bit, 6881, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
+															}catch( Throwable e ){
+															
+																Debug.out( e );
 															}
 														}
 													}

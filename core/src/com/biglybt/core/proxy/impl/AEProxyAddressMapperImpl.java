@@ -373,6 +373,14 @@ AEProxyAddressMapperImpl
 		return( new AppliedPortMappingImpl( local_address, remote_address, mapping==null?null:mapping.getProperties()));
 	}
 
+	@Override
+	public InetSocketAddress
+	getLocalAddress(
+		InetSocketAddress		remote )
+	{
+		return( AEPluginProxyHandler.getLocalAddress( remote.getHostName(), remote.getPort()));
+	}
+	
 	private class
 	PortMappingImpl
 		implements PortMapping

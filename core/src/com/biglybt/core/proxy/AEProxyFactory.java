@@ -19,6 +19,7 @@
 
 package com.biglybt.core.proxy;
 
+import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.SocketAddress;
 import java.net.URL;
@@ -239,6 +240,9 @@ AEProxyFactory
 		public int
 		getPort();
 
+		public InetSocketAddress
+		getLocalAddress();
+		
 		public void
 		setOK(
 			boolean	good );

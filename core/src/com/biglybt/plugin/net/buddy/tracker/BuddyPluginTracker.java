@@ -465,7 +465,11 @@ BuddyPluginTracker
 
 				user_data.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
 
-				c_pm.addPeer( host, tcp_port, udp_port, true, user_data );
+				try{
+					c_pm.addPeer( host, tcp_port, udp_port, true, user_data );
+					
+				}catch( Throwable e ){
+				}
 			}
 		}
 	}

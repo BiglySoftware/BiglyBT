@@ -31,6 +31,8 @@ import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.impl.CoreImpl;
+import com.biglybt.core.ipfilter.IpFilter;
+import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.networkmanager.*;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
@@ -74,6 +76,8 @@ implements PEPeerTransport
 {
 	protected final static LogIDs LOGID = LogIDs.PEER;
 
+	private static final IpFilter ip_filter = IpFilterManagerFactory.getSingleton().getIPFilter();
+
 	private volatile int	_lastPiece =-1;		//last piece that was requested from this peer (mostly to try to request from same one)
 
 	protected final PEPeerControl 	manager;
@@ -84,7 +88,7 @@ implements PEPeerTransport
 
 	private final String			peer_source;
 	private byte[] peer_id;
-	private final String ip;
+	private String ip;
 	private final String network;
 	protected String ip_resolved;
 	private IPToHostNameResolverRequest	ip_resolver_request;
@@ -1421,7 +1425,9 @@ implements PEPeerTransport
 
 		NetworkAdmin na = NetworkAdmin.getSingleton();
 
-		if ( peer_item_identity.getNetwork() == AENetworkClassifier.AT_PUBLIC && !na.isSocksActive()){
+		String network = peer_item_identity.getNetwork();
+		
+		if ( network == AENetworkClassifier.AT_PUBLIC && !na.isSocksActive()){
 				// don't send public address in handshake
 			InetAddress defaultV6 = na.hasIPV6Potential(true) ? na.getDefaultPublicAddressV6() : null;
 
@@ -1435,6 +1441,12 @@ implements PEPeerTransport
 		boolean ps_enabled 	= manager.isPeerSourceEnabled( PEPeerSource.PS_HOLE_PUNCH );
 		
 		boolean socks_active = NetworkAdmin.getSingleton().isSocksActive();
+		
+		if ( network != AENetworkClassifier.AT_PUBLIC ){
+			
+			data_dict.put("p", 6881 );
+			data_dict.remove( "ipv6" );
+		}
 		
 		LTHandshake lt_handshake = new LTHandshake(data_dict, other_peer_bt_lt_ext_version );
 
@@ -1479,7 +1491,9 @@ implements PEPeerTransport
 
 		NetworkAdmin na = NetworkAdmin.getSingleton();
 
-		if ( peer_item_identity.getNetwork() == AENetworkClassifier.AT_PUBLIC && !na.isSocksActive()){
+		String network = peer_item_identity.getNetwork();
+		
+		if (  network == AENetworkClassifier.AT_PUBLIC && !na.isSocksActive()){
 				// don't send public address in handshake
 			defaultV6 = na.hasIPV6Potential(true) ? na.getDefaultPublicAddressV6() : null;
 		}
@@ -1510,6 +1524,35 @@ implements PEPeerTransport
 			peer_version = client_name.substring( pos+1 );
 		}
 		
+		if (  network != AENetworkClassifier.AT_PUBLIC ){
+			
+			local_tcp_port	= 6881;
+			local_udp_port	= 6881;
+			local_udp2_port	= 6881;
+			defaultV6		= null;
+		}
+		
+		String local_host = null;
+		
+		if ( network == AENetworkClassifier.AT_TOR ){
+		
+			try{
+				TransportStartpoint sp = connection.getTransport().getTransportStartpoint();
+				
+				InetSocketAddress address = sp.getProtocolStartpoint().getNotionalAddress();
+				
+				String host = AddressUtils.getHostAddress( address );
+				
+				if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_TOR ){
+					
+					local_host		= host;
+					local_tcp_port	= address.getPort();
+				}
+			}catch( Throwable e ){
+		
+			}
+		}
+		
 		AZHandshake az_handshake = new AZHandshake(
 				AZPeerIdentityManager.getAZPeerIdentity(),
 				mySessionID,
@@ -1520,6 +1563,7 @@ implements PEPeerTransport
 				local_udp_port,
 				local_udp2_port,
 				defaultV6,
+				local_host,
 				manager.isPrivateTorrent()?0:( is_metadata_download?0:manager.getTorrentInfoDictSize()),
 				avail_ids,
 				avail_vers,
@@ -3238,11 +3282,34 @@ implements PEPeerTransport
 		this.client_handshake_version = StringInterner.intern(handshake.getClientVersion());
 		this.client = StringInterner.intern(ClientIdentifier.identifyAZMP(this.client_peer_id, client_handshake, client_handshake_version, this.peer_id));
 
-		if (handshake.getTCPListenPort() > 0)
-		{ // use the ports given in handshake
+		String localHost = handshake.getLocalHost();
+		
+		boolean remakeID = false;
+		
+		if ( localHost != null ){
+			
+			if( ip_filter.isInRange(localHost, manager.getDisplayName(), manager.getHash())){
+			
+				handshake.destroy();
+				  
+				closeConnectionInternally("Host address blocked by filters", Transport.CR_IP_BLOCKED);
+			}
+			
+			ip = localHost;
+			ip_resolved = localHost;
+			remakeID = true;
+		}
+		
+		if (handshake.getTCPListenPort() > 0){ 
+			
+			// use the ports given in handshake
 			tcp_listen_port = handshake.getTCPListenPort();
 			udp_listen_port = handshake.getUDPListenPort();
 			udp_non_data_port = handshake.getUDPNonDataListenPort();
+			remakeID = true;
+		}
+		
+		if ( remakeID){
 			final byte type = handshake.getHandshakeType() == AZHandshake.HANDSHAKE_TYPE_CRYPTO ? PeerItemFactory.HANDSHAKE_TYPE_CRYPTO : PeerItemFactory.HANDSHAKE_TYPE_PLAIN;
 
 			// remake the id using the peer's remote listen port instead of
@@ -5850,8 +5917,11 @@ implements PEPeerTransport
 								"HP: Connect to " + address + ":" + port + " accepted"));
 				}	
 				
-				manager.addPeer( address.getHostAddress(), port, port, true, user_data );
+				try{
+					manager.addPeer( address.getHostAddress(), port, port, true, user_data );
 				
+				}catch( Throwable e ){
+				}
 			}else{
 			
 				if (Logger.isEnabled()){

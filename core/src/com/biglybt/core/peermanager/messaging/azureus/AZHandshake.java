@@ -20,6 +20,7 @@
 package com.biglybt.core.peermanager.messaging.azureus;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.*;
 
 import com.biglybt.core.peermanager.messaging.Message;
@@ -57,6 +58,7 @@ public class AZHandshake implements AZMessage {
   private final int handshake_type;
   private final boolean uploadOnly;
   private final InetAddress ipv6;
+  private final String localHost;
   private final int	md_size;
 
 
@@ -69,6 +71,7 @@ public class AZHandshake implements AZMessage {
                       int udp_listen_port,
                       int udp_non_data_listen_port,
                       InetAddress ipv6addr,
+                      String localHost,
                       int md_size,
                       String[] avail_msg_ids,
                       byte[] avail_msg_versions,
@@ -90,6 +93,7 @@ public class AZHandshake implements AZMessage {
     this.version = _version;
     this.uploadOnly = uploadOnly;
     this.ipv6 = ipv6addr;
+    this.localHost = localHost;
     this.md_size = md_size;
 
     //verify given port info is ok
@@ -129,6 +133,7 @@ public class AZHandshake implements AZMessage {
   public int getUDPListenPort() {  return udp_port;  }
   public int getUDPNonDataListenPort() {  return udp_non_data_port;  }
   public InetAddress getIPv6() { return ipv6; }
+  public String getLocalHost() { return localHost; }
   public int getMetadataSize(){ return md_size; }
   public int getHandshakeType() {  return handshake_type;  }
 
@@ -193,8 +198,12 @@ public class AZHandshake implements AZMessage {
 			payload_map.put("udp2_port", new Long(udp_non_data_port));
 			payload_map.put("handshake_type", new Long(handshake_type));
 			payload_map.put("upload_only", new Long(uploadOnly ? 1L : 0L));
-			if(ipv6 != null)
+			if(ipv6 != null){
 				payload_map.put("ipv6", ipv6.getAddress());
+			}
+			if (localHost != null ){
+				payload_map.put( "lh", localHost.getBytes( Constants.UTF_8 ));
+			}
 			if ( md_size > 0 ){
 				payload_map.put("mds", new Long(md_size));
 			}
@@ -219,7 +228,7 @@ public class AZHandshake implements AZMessage {
 				payload_map.put("pad", new byte[RandomUtils.nextInt( AZMessageFactory.AZ_HANDSHAKE_PAD_MAX)]);
 
 			buffer = MessagingUtil.convertPayloadToBencodedByteStream(payload_map, DirectByteBuffer.AL_MSG_AZ_HAND);
-			if (buffer.remaining(bss) > 1300 && Constants.IS_CVS_VERSION ){
+			if (buffer.remaining(bss) > 1350 && Constants.IS_CVS_VERSION ){
 				System.out.println("Generated AZHandshake size = " + buffer.remaining(bss) + " bytes");
 			}
 		}
@@ -313,7 +322,17 @@ public class AZHandshake implements AZMessage {
     if ( name.equals( Constants.AZUREUS_PROTOCOL_NAME_PRE_4813 )){
     	name = Constants.AZUREUS_PROTOCOL_NAME;
     }
-    return new AZHandshake( id, session == null ? null : new HashWrapper(session),reconnect == null ? null : new HashWrapper(reconnect), name, client_version, tcp_lport.intValue(), udp_lport.intValue(), udp2_lport.intValue(), ipv6, md_size, ids, vers, h_type.intValue(), version , uploadOnly);
+    
+    byte[] b_lh = (byte[])root.get( "lh" );
+    
+    String localHost;
+    
+    if ( b_lh == null ){
+    	localHost = null;
+    }else{
+    	localHost = new String( b_lh, Constants.UTF_8 );
+    }
+    return new AZHandshake( id, session == null ? null : new HashWrapper(session),reconnect == null ? null : new HashWrapper(reconnect), name, client_version, tcp_lport.intValue(), udp_lport.intValue(), udp2_lport.intValue(), ipv6, localHost, md_size, ids, vers, h_type.intValue(), version , uploadOnly);
   }
 
 

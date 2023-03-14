@@ -56,6 +56,7 @@ public class IpItem
   /** Default Constructor */
   public IpItem(String table_id) {
     super(COLUMN_ID, POSITION_LAST, 100, table_id);
+    setRefreshInterval(INTERVAL_LIVE);	// can change for peers as can be updated due to AZ handshake
     setObfuscation(true);
    }
 

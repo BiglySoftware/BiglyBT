@@ -268,7 +268,9 @@ PEPeerManager
 		int 		tcp_port,
 		int			udp_port,
 		boolean 	use_crypto,
-		Map			user_data );
+		Map			user_data )
+	
+		throws Exception;
 
 	public void
 	peerDiscovered(
