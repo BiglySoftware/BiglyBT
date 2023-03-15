@@ -25,14 +25,12 @@ package com.biglybt.pifimpl.local.utils.resourcedownloader;
  */
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Set;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
@@ -387,7 +385,7 @@ ResourceDownloaderTorrentImpl
 						
 						if ( has_i2p && I2PHelpers.isI2PInstalled()){
 							
-							networks_to_set = new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P };
+							networks_to_set = new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P, AENetworkClassifier.AT_TOR };
 
 						}else{
 						
