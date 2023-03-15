@@ -244,6 +244,64 @@ TRTrackerServerProcessorTCP
 
 					// OK, here its an announce, scrape or full scrape
 
+				if ( str.contains( ".onion" )){
+					
+					int		tor_port	= -1;
+					String	tor_host	= null;
+				
+					int pos = 0;
+					
+					while(pos < str.length()){
+	
+						int	p1 = str.indexOf( '&', pos );
+	
+						String	token;
+	
+						if ( p1 == -1 ){
+	
+							token = str.substring( pos );
+	
+						}else{
+	
+							token = str.substring( pos, p1 );
+	
+							pos = p1+1;
+						}
+	
+						int	p2 = token.indexOf('=');
+	
+						if ( p2 == -1 ){
+	
+							throw( new Exception( "format invalid" ));
+						}
+	
+						String lhs = token.substring( 0, p2 ).toLowerCase();
+						String rhs = URLDecoder.decode(token.substring(p2 + 1), Constants.BYTE_ENCODING_CHARSET.name());
+						
+						if ( lhs.equals( "port" )){
+
+							tor_port = Integer.parseInt( rhs );
+							
+						}else if ( lhs.equals( "ip" )){
+							
+							if ( AENetworkClassifier.categoriseAddress( rhs ) == AENetworkClassifier.AT_TOR ){
+								
+								tor_host = rhs;
+							}
+						}
+						
+						if ( p1 == -1 ){
+							
+							break;
+						}
+					}
+					
+					if ( tor_port > 0 && tor_host != null ){
+						
+						remote_address = InetSocketAddress.createUnresolved( tor_host, tor_port );
+					}
+				}			
+				
 					// check tracker authentication
 
 				if ( doAuthentication( remote_address, url_path, input_header, os, true ) == null ){
@@ -283,8 +341,6 @@ TRTrackerServerProcessorTCP
 
 				setTaskState( "decoding announce/scrape" );
 
-				int	pos = 0;
-
 				byte[]		hash		= null;
 				List		hash_list	= null;
 				String		link		= null;
@@ -311,12 +367,14 @@ TRTrackerServerProcessorTCP
 				boolean		hide			= false;
 
 				DHTNetworkPosition	network_position = null;
-
+				
 				String		real_ip_address		= AddressUtils.getHostAddress( remote_address );
 				String		client_ip_address	= real_ip_address;
 
 				boolean client_is_anon = AENetworkClassifier.categoriseAddress( client_ip_address  ) != AENetworkClassifier.AT_PUBLIC;
-				
+
+				int pos = 0;
+
 				while(pos < str.length()){
 
 					int	p1 = str.indexOf( '&', pos );

@@ -48,6 +48,7 @@ import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.peermanager.utils.PeerClassifier;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
+import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
 import com.biglybt.core.security.SESecurityManager;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
@@ -2581,7 +2582,9 @@ TRTrackerBTAnnouncerImpl
 
     request.append("&no_peer_id=1");
 
-    String	tracker_network	= AENetworkClassifier.categoriseAddress( _url.getHost());
+    String	tracker_network_host	= _url.getHost();
+    
+    String	tracker_network			= AENetworkClassifier.categoriseAddress( tracker_network_host );
 
     	// latest space saving measure, a compact return type where peers are returned
     	// as 6 byte entries in a single byte[] (4 bytes ip, 2 byte port)
@@ -2701,6 +2704,18 @@ TRTrackerBTAnnouncerImpl
 
 	   			ip = ip_override;
 	   		}
+   		}
+   	}
+   	
+   	if ( ip == null && tracker_network == AENetworkClassifier.AT_TOR ){
+   		
+   		InetSocketAddress tor_local = AEPluginProxyHandler.getLocalAddress( tracker_network_host, 27658 );
+   		
+   		if ( tor_local != null ){
+   			
+   			ip = tor_local.getHostString();
+   			
+   			request = new StringBuffer( request.toString().replaceAll( "&port=[0-9]+", "&port=" + tor_local.getPort()));
    		}
    	}
 
