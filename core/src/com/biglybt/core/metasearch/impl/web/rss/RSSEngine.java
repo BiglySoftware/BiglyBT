@@ -410,6 +410,10 @@ RSSEngine
 
 							result.setCategoryFromHTML( value );
 
+						}else if(lc_child_name.equals( "tag" )) {
+
+							result.addTagFromHTML( value );
+
 						}else if(lc_child_name.equals( "comments" )){
 
 							if ( value.startsWith( "http" )){

@@ -634,6 +634,35 @@ TagManagerImpl
 								}
 							}
 
+							String dl_cat = download.getCategoryName();
+							
+							if ( dl_cat != null && dl_cat.length() > 0 ){
+
+								if ( !dl_cat.equalsIgnoreCase("Categories.uncategorized")){
+									
+									pw.println( "<category>" + escape( dl_cat ) + "</category>" );
+								}
+							}
+							
+							List<Tag> dl_tags = TagManagerFactory.getTagManager().getTagsForTaggable( core_download );
+
+							for ( Tag dl_tag : dl_tags) {
+
+								TagType tt = dl_tag.getTagType();
+								
+								if ( tt.isTagTypeAuto() || tt.getTagType() != TagType.TT_DOWNLOAD_MANUAL ){
+									
+									continue;
+								}
+								
+								boolean[] autos = dl_tag.isTagAuto();
+								
+								if (!( autos[0] || autos[1] )){
+									
+									pw.println( "<tag>" + escape( dl_tag.getTagName(true )) + "</tag>" );
+								}
+							}
+							
 							pw.println( "</item>" );
 						}
 

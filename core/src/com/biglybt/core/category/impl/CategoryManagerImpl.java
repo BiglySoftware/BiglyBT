@@ -38,6 +38,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagDownload;
 import com.biglybt.core.tag.TagException;
+import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.tag.impl.TagTypeBase;
 import com.biglybt.core.torrent.TOTorrent;
@@ -655,6 +656,35 @@ CategoryManagerImpl
 					pw.println(	"<vuze:peers>" + scrape.getNonSeedCount() + "</vuze:peers>" );
 				}
 
+				String dl_cat = download.getCategoryName();
+				
+				if ( dl_cat != null && dl_cat.length() > 0 ){
+
+					if ( !dl_cat.equalsIgnoreCase("Categories.uncategorized")){
+						
+						pw.println( "<category>" + escape( dl_cat ) + "</category>" );
+					}
+				}
+				
+				List<Tag> dl_tags = TagManagerFactory.getTagManager().getTagsForTaggable( core_download );
+
+				for ( Tag dl_tag : dl_tags) {
+
+					TagType tt = dl_tag.getTagType();
+					
+					if ( tt.isTagTypeAuto() || tt.getTagType() != TagType.TT_DOWNLOAD_MANUAL ){
+						
+						continue;
+					}
+					
+					boolean[] autos = dl_tag.isTagAuto();
+					
+					if (!( autos[0] || autos[1] )){
+						
+						pw.println( "<tag>" + escape( dl_tag.getTagName(true )) + "</tag>" );
+					}
+				}
+				
 				pw.println( "</item>" );
 			}
 

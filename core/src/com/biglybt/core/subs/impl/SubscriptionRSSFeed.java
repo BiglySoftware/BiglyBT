@@ -287,8 +287,24 @@ SubscriptionRSSFeed
 
 							pw.println( "<vuze:rank>" + rank + "</vuze:rank>" );
 						}
-
-
+						
+						String	cat = (String)result.getProperty( SearchResult.PR_CATEGORY );
+						
+						if ( cat != null && !cat.isEmpty()){
+															
+							pw.println( "<category>" + escape( cat ) + "</category>" );
+						}
+						
+						String[]	tags = (String[])result.getProperty( SearchResult.PR_TAGS );
+						
+						if ( tags != null ){
+							
+							for ( String tag: tags ){
+								
+								pw.println( "<tag>" + escape( tag ) + "</tag>" );
+							}
+						}
+						
 		  				pw.println( "</item>" );
 
 					}catch( Throwable e ){
