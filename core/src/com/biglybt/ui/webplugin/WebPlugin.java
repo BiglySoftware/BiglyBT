@@ -1729,90 +1729,130 @@ WebPlugin
 								
 								String msg	= "";
 								
-								if ( this_server_port != server_port ){
+								boolean port_ok = false;
+								
+								String[] allowed = whitelist.split( "," );
+
+								for ( String a: allowed ){
+								
+									a = a.trim();
+									
+									int explicit_port = -1;
+									
+									int port_pos = a.lastIndexOf( ":" );
+									
+									if ( port_pos > 0 ){
+										
+										int b_pos = a.lastIndexOf( "]" );
+										
+										if ( b_pos == -1 || port_pos > b_pos ){
+											
+											try{
+												explicit_port = Integer.parseInt( a.substring( port_pos + 1 ));
+												
+												a = a.substring( 0, port_pos );
+												
+											}catch( Throwable e ){
+											}
+										}
+									}
+									
+									port_ok = false;
+									
+									if ( explicit_port > 0 ){
+										
+										if ( this_server_port == explicit_port ){
+											
+											port_ok = true;
+											
+										}else{
+											
+											continue;
+										}
+									}else if ( this_server_port != server_port ){
+										
+										continue;
+									}
+									
+									if ( a.equals( "*" )){
+										
+										result = true;
+										
+										break;
+										
+									}else if ( a.equals( "$" )){
+									
+										InetAddress bind = getServerBindIP();
+										
+										if ( bind != null ){
+											
+											if ( bind instanceof Inet6Address ){
+												
+												a = "[" + bind.getHostAddress() + "]";
+												
+											}else{
+												
+												a = bind.getHostAddress();
+											}
+										}
+									}
+									
+									if ( client_address.equals( a.trim())){
+										
+										result = true;
+										
+										break;
+									}
+
+									String aTrimmed = a.trim();
+
+										// Support ranges (copied from code in setupAccess)
+									
+									IPRange ip_range	= plugin_interface.getIPFilter().createRange(aTrimmed.contains( ":" )?2:1, true);
+									
+									int	sep = aTrimmed.indexOf("-");
+
+									if ( sep == -1 ){
+
+										ip_range.setStartIP( aTrimmed );
+
+										ip_range.setEndIP( aTrimmed );
+
+									}else{
+
+										ip_range.setStartIP( aTrimmed.substring(0,sep).trim());
+
+										ip_range.setEndIP( aTrimmed.substring( sep+1 ).trim());
+									}
+
+									ip_range.checkValid();
+
+									if (ip_range.isValid() && ip_range.isInRange(client_address)){
+
+										result = true;
+
+										break;
+									}
+								}
+								
+								if ( result && !port_ok && this_server_port != server_port ){
+									
+									result = false;
 									
 									msg = "port mismatch: " + server_port + "/" + this_server_port;
 									
+								}else if ( !result ){
+									
+									msg = "host '" + client_address + "' not in whitelist";
+									
 								}else{
-								
-									String[] allowed = whitelist.split( "," );
-
-									for ( String a: allowed ){
 									
-										a = a.trim();
-										
-										if ( a.equals( "*" )){
-											
-											result = true;
-											
-											break;
-											
-										}else if ( a.equals( "$" )){
-										
-											InetAddress bind = getServerBindIP();
-											
-											if ( bind != null ){
-												
-												if ( bind instanceof Inet6Address ){
-													
-													a = "[" + bind.getHostAddress() + "]";
-													
-												}else{
-													
-													a = bind.getHostAddress();
-												}
-											}
-										}
-										
-										if ( client_address.equals( a.trim())){
-											
-											result = true;
-											
-											break;
-										}
-
-										String aTrimmed = a.trim();
-
-											// Support ranges (copied from code in setupAccess)
-										
-										IPRange ip_range	= plugin_interface.getIPFilter().createRange(aTrimmed.contains( ":" )?2:1, true);
-										
-										int	sep = aTrimmed.indexOf("-");
-
-										if ( sep == -1 ){
-
-											ip_range.setStartIP( aTrimmed );
-
-											ip_range.setEndIP( aTrimmed );
-
-										}else{
-
-											ip_range.setStartIP( aTrimmed.substring(0,sep).trim());
-
-											ip_range.setEndIP( aTrimmed.substring( sep+1 ).trim());
-										}
-
-										ip_range.checkValid();
-
-										if (ip_range.isValid() && ip_range.isInRange(client_address)){
-
-											result = true;
-
-											break;
-										}
-
-									}
-									
-									if ( !result ){
-										
-										msg = "host '" + client_address + "' not in whitelist";
-										
-									}else{
-										
-										if ( referrer != null && verifyReferrer()){
+									if ( referrer != null && verifyReferrer()){
+																				
+										if ( !port_ok ){
 											
 											result = false;
-											
+
 											try{
 												
 												URL url = new URL( referrer );
@@ -1830,7 +1870,7 @@ WebPlugin
 												}
 											}catch( Throwable e ){
 											}
-											
+										
 											if ( !result ){
 												
 												msg = "referrer mismatch: " + referrer;
