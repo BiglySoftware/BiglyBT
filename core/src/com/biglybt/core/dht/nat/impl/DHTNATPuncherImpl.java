@@ -1178,7 +1178,7 @@ DHTNATPuncherImpl
 
 		}catch( Throwable e ){
 
-			log(e);
+			Debug.out( "Originator: " + originator.getAddress() + ": " + Debug.getNestedExceptionMessageAndStack( e ));
 
 			return( null );
 		}

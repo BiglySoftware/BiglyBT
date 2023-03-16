@@ -2602,19 +2602,19 @@ TRTrackerBTAnnouncerImpl
     	// make sure this tracker network is enabled
 
     boolean	network_ok			= false;
-    boolean	normal_network_ok	= false;
+    boolean	has_public_net		= false;
 
     if ( peer_networks == null ){
 
     	network_ok			= true;
-    	normal_network_ok	= true;
+    	has_public_net		= true;
 
     }else{
 	    for (int i=0;i<peer_networks.length;i++){
 
 	    	if ( peer_networks[i] == AENetworkClassifier.AT_PUBLIC ){
 
-	    		normal_network_ok = true;
+	    		has_public_net = true;
 	    	}
 
 	    	if ( peer_networks[i] == tracker_network ){
@@ -2629,7 +2629,7 @@ TRTrackerBTAnnouncerImpl
     	throw( new Exception( "Network not enabled for url '" + _url + "'" ));
     }
 
-    String	normal_explicit = null;
+    String	public_ip_override = null;
 
    	if ( explicit_ips.length() > 0 ){
 
@@ -2669,7 +2669,7 @@ TRTrackerBTAnnouncerImpl
 						}
 					}
 					
-					normal_explicit	= this_address;
+					public_ip_override	= this_address;
 				}
 
 				if ( tracker_network == cat ){
@@ -2694,9 +2694,9 @@ TRTrackerBTAnnouncerImpl
 
    			// if we have a normal explicit override and this is enabled then use it
 
-   		if ( normal_network_ok && normal_explicit != null ){
+   		if ( has_public_net && public_ip_override != null ){
 
-   			ip = normal_explicit;
+   			ip = public_ip_override;
 
    		}else{
 
@@ -2708,14 +2708,22 @@ TRTrackerBTAnnouncerImpl
    	}
    	
    	if ( ip == null && tracker_network == AENetworkClassifier.AT_TOR ){
-   		
-   		InetSocketAddress tor_local = AEPluginProxyHandler.getLocalAddress( tracker_network_host, 27658 );
+   		   				
+   		InetSocketAddress tor_local = AEPluginProxyHandler.getLocalAddress( tracker_network_host, has_public_net?27657:27658 );
    		
    		if ( tor_local != null ){
    			
    			ip = tor_local.getHostString();
    			
    			request = new StringBuffer( request.toString().replaceAll( "&port=[0-9]+", "&port=" + tor_local.getPort()));
+   			
+   		}else{
+   			
+   			request = new StringBuffer( request.toString().replaceAll( "&port=[0-9]+", "&port=0"));
+   			
+   			if (Logger.isEnabled())
+				Logger.log(new LogEvent(torrent, LOGID, LogEvent.LT_ERROR,
+						"IP Override missing for Tor tracker, incoming connections disabled"));
    		}
    	}
 

@@ -496,7 +496,7 @@ DHTTransferHandler
 								}
 							}else{
 
-								final transferQueue new_queue = new transferQueue( read_transfers, req.getConnectionId());
+								final transferQueue new_queue = new transferQueue( originator, read_transfers, req.getConnectionId());
 
 									// add the initial data for this write request
 
@@ -636,7 +636,7 @@ DHTTransferHandler
 	{
 		long	connection_id 	= adapter.getConnectionID();
 
-		transferQueue	transfer_queue = new transferQueue( read_transfers, connection_id );
+		transferQueue	transfer_queue = new transferQueue( target, read_transfers, connection_id );
 
 		return( runTransferQueue( transfer_queue, listener, target, handler_key, key, timeout, true ));
 	}
@@ -935,7 +935,7 @@ DHTTransferHandler
 		transferQueue	transfer_queue = null;
 
 		try{
-			transfer_queue = new transferQueue( write_transfers, connection_id );
+			transfer_queue = new transferQueue( target, write_transfers, connection_id );
 
 			boolean	ok 				= false;
 			boolean	reply_received	= false;
@@ -1249,10 +1249,11 @@ DHTTransferHandler
 	protected class
 	transferQueue
 	{
+		private final DHTTransportContact				target;
 		private final Map<Long,transferQueue>			transfers;
 
 		private final long		connection_id;
-		private boolean		destroyed;
+		private boolean			destroyed;
 
 		private final List<Packet>		packets	= new ArrayList<>();
 
@@ -1260,11 +1261,13 @@ DHTTransferHandler
 
 		protected
 		transferQueue(
+			DHTTransportContact			_target,
 			Map<Long,transferQueue>		_transfers,
 			long						_connection_id )
 
 			throws DHTTransportException
 		{
+			target			= _target;
 			transfers		= _transfers;
 			connection_id	= _connection_id;
 
@@ -1275,7 +1278,7 @@ DHTTransferHandler
 
 					// Debug.out( "Transfer queue count limit exceeded" );
 
-					throw( new DHTTransportException( "Transfer queue limit exceeded" ));
+					throw( new DHTTransportException( "Transfer queue limit exceeded for " + target.getAddress()));
 				}
 
 				Long l_id = new Long( connection_id );
@@ -1315,7 +1318,7 @@ DHTTransferHandler
 
 				if ( total_bytes_on_transfer_queues > MAX_TRANSFER_QUEUE_BYTES ){
 
-					Debug.out( "Transfer queue byte limit exceeded" );
+					Debug.out( "Transfer queue byte limit exceeded by " + target.getAddress());
 
 						// just drop the packet
 
