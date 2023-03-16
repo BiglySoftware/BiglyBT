@@ -56,7 +56,7 @@ public class JSONUtils
 			map.put("value", object);
 			return map;
 		} catch (Throwable t) {
-			Debug.out("Warning: Bad JSON String: " + json, t);
+			Debug.out("Warning: Bad JSON String: " + json + ": " + Debug.getNestedExceptionMessage(t));
 			return null;
 		}
 	}
