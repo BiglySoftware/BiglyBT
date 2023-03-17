@@ -572,8 +572,8 @@ public class ConfigurationDefaults {
 
     def.put( "Network Selection Prompt", FALSE );
     def.put( "Network Selection Default.Public", TRUE );
-    def.put( "Network Selection Default.I2P", FALSE );
-    def.put( "Network Selection Default.Tor", FALSE );
+    def.put( "Network Selection Default.I2P", TRUE );
+    def.put( "Network Selection Default.Tor", TRUE );
     def.put( "Tracker Network Selection Default.Public", TRUE);
     def.put( "Tracker Network Selection Default.I2P", TRUE);
     def.put( "Tracker Network Selection Default.Tor", TRUE);
