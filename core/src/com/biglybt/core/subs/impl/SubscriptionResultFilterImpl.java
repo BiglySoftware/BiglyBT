@@ -331,9 +331,11 @@ SubscriptionResultFilterImpl
 		long kInB = DisplayFormatters.getKinB();
 		long mInB = kInB*kInB;
 		
+		String mb = DisplayFormatters.getUnit( DisplayFormatters.UNIT_MB );
+		
 		res = addString( res, "cat=", categoryFilter );
-		res = addString( res, ">=", minSize<=0?null:(minSize/mInB)+" MB");
-		res = addString( res, "<=", maxSize<=0?null:(maxSize/mInB)+" MB");
+		res = addString( res, ">=", minSize<=0?null:(minSize/mInB)+" " + mb);
+		res = addString( res, "<=", maxSize<=0?null:(maxSize/mInB)+" " + mb);
 		res = addString( res, "s>=", minSeeds<=0?null:String.valueOf(minSeeds));
 		res = addString( res, "s<=", maxSeeds<=0?null:String.valueOf(maxSeeds));
 		res = addString( res, "p>=", minPeers<=0?null:String.valueOf(minPeers));
