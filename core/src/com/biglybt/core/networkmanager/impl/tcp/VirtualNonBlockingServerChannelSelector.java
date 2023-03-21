@@ -56,6 +56,8 @@ VirtualNonBlockingServerChannelSelector
 
 	protected final AEMonitor	this_mon	= new AEMonitor( "VirtualNonBlockingServerChannelSelector" );
 
+	private boolean alert_on_fail = true;
+	
 	long last_accept_time;
 
 
@@ -88,6 +90,13 @@ VirtualNonBlockingServerChannelSelector
 		num_ports			= _num_ports;
 		receive_buffer_size	= _so_rcvbuf_size;
 		listener			= _listener;
+	}
+	
+	public void
+	setAlertOnFail(
+		boolean b )
+	{
+		alert_on_fail = b;
 	}
 
   /**
@@ -132,8 +141,11 @@ VirtualNonBlockingServerChannelSelector
 			        			}
 			        		});
 	    		}catch( Throwable t ) {
-	    			Debug.out( t );
-	    			Logger.log(new LogAlert(LogAlert.UNREPEATABLE,	"ERROR, unable to bind TCP incoming server socket to " +i, t));
+	    			
+	    			if ( alert_on_fail ){
+		    			Debug.out( t );
+		    			Logger.log(new LogAlert(LogAlert.UNREPEATABLE,	"ERROR, unable to bind TCP incoming server socket to " +i, t));
+	    			}
 	    		}
 	    	}
 

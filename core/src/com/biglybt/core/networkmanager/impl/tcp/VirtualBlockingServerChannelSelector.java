@@ -53,6 +53,8 @@ public class VirtualBlockingServerChannelSelector
 
   private long last_accept_time;
 
+  private boolean alert_on_fail = true;
+
 
   /**
    * Create a new server listening on the given address and reporting to the given listener.
@@ -66,6 +68,13 @@ public class VirtualBlockingServerChannelSelector
     this.listener = listener;
   }
 
+	public void
+	setAlertOnFail(
+		boolean b )
+	{
+		alert_on_fail = b;
+	}
+	
 
   /**
    * Start the server and begin accepting incoming connections.
@@ -97,8 +106,10 @@ public class VirtualBlockingServerChannelSelector
 	        accept_thread.start();
 	      }
 	      catch( Throwable t ) {
-	      	Debug.out( t );
-	      	Logger.log(new LogAlert(LogAlert.UNREPEATABLE,	"ERROR, unable to bind TCP incoming server socket to " +bind_address.getPort(), t));
+	    	  if ( alert_on_fail ){
+		      	Debug.out( t );
+		      	Logger.log(new LogAlert(LogAlert.UNREPEATABLE,	"ERROR, unable to bind TCP incoming server socket to " +bind_address.getPort(), t));
+	    	  }
 	      }
 
 	      last_accept_time = SystemTime.getCurrentTime();  //init to now

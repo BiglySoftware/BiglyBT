@@ -44,6 +44,8 @@ public interface VirtualServerChannelSelector {
 
   public long getTimeOfLastAccept();
 
+  public void setAlertOnFail( boolean b );
+  
   /**
    * Listener notified when a new incoming connection is accepted.
    */
