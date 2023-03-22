@@ -52,7 +52,7 @@ public abstract class TableViewTab<DATASOURCETYPE>
 	private UISWTView swtView;
 	private BubbleTextBox filterTextControl;
 	private TableViewFilterCheckEx<DATASOURCETYPE> filterCheck;
-
+	private boolean enableTabs = true;
 
 	public TableViewTab(String propertiesPrefix) {
 		this.propertiesPrefix = propertiesPrefix;
@@ -68,6 +68,11 @@ public abstract class TableViewTab<DATASOURCETYPE>
 			// composite though....
 		
 		tv = initYourTableView();
+		
+		if ( !enableTabs ){
+			tv.setEnableTabViews( false, false );
+		}
+		
 		Composite parent = initComposite(composite);
 		
 		if ( swtView == null ){
@@ -96,6 +101,13 @@ public abstract class TableViewTab<DATASOURCETYPE>
 		tableViewTabInitComplete();
 	}
 
+	public void
+	setEnableTabViews(
+		boolean	b )
+	{
+		enableTabs = b;
+	}
+	
 	public void tableViewTabInitComplete() {
 	}
 

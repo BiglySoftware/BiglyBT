@@ -3424,6 +3424,8 @@ public class OpenTorrentOptionsWindow
 			layout.marginHeight = 0;
 			comp.setLayout(layout);
 
+			view.setEnableTabViews( false );
+			
 			view.initialize(comp);
 			
 			view.dataSourceChanged( availability );
