@@ -369,7 +369,14 @@ SBC_SubscriptionResultsView
 								addLine( line, min_peers>0, MessageText.getString( "label.min.peers"), String.valueOf(min_peers )); 
 								addLine( line, max_age>0, MessageText.getString( "label.max.age"), TimeFormatter.format3( max_age, null, true ));
 								
-								pflabel.setText( MessageText.getString("subs.persistent.filters2" ) + ": " + line[0] );
+								String pf = line[0].trim();
+								
+								if ( pf.isEmpty()){
+									
+									pf = MessageText.getString( "label.none" );
+								}
+								
+								pflabel.setText( MessageText.getString("subs.persistent.filters2" ) + ": " + pf );
 								
 							}else{
 								pflabel.setVisible( false );
