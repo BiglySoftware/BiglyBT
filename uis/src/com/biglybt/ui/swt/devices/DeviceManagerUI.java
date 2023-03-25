@@ -1709,6 +1709,7 @@ DeviceManagerUI
 					}.start();
 				}
 			});
+			
 			// media servers
 	
 			categoryView media_servers_category = addDeviceCategory(
@@ -1821,6 +1822,55 @@ DeviceManagerUI
 					}
 				}
 			});
+			
+			rt_menu_item = menu_manager.addMenuItem( "sidebar." + routers_category.getKey(), "sep_rou");
+			rt_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			rt_menu_item.setStyle( MenuItem.STYLE_SEPARATOR );
+	
+			rt_menu_item = menu_manager.addMenuItem(
+					"sidebar." + routers_category.getKey(),
+					"device.router.remove_all");
+			rt_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			rt_menu_item.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+	
+					new AEThread2( "doit" )
+					{
+						@Override
+						public void
+						run()
+						{
+							UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
+	
+							long res = ui_manager.showMessageBox(
+									"device.mediaserver.remove_all.title",
+									"device.router.remove_all.desc",
+									UIManagerEvent.MT_YES | UIManagerEvent.MT_NO );
+	
+							if ( res == UIManagerEvent.MT_YES ){
+	
+								Device[] devices = device_manager.getDevices();
+	
+								for ( Device d: devices ){
+	
+									if ( d.getType() == Device.DT_INTERNET_GATEWAY ){
+	
+										if ( d.canRemove()){
+	
+											d.remove();
+										}
+									}
+								}
+							}
+						}
+					}.start();
+				}
+			});
+			
+			
 		}
 		
 		// internet
