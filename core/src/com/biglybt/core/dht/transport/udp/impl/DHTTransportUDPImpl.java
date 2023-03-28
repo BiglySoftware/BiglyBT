@@ -3610,7 +3610,7 @@ outer:
 
 						// need to limit response for large serialisations
 
-					if ( net == DHTTransportAlternativeNetwork.AT_I2P ){
+					if ( net == DHTTransportAlternativeNetwork.AT_I2P || net == DHTTransportAlternativeNetwork.AT_TOR ){
 
 						count = Math.min( 2, count );
 					}
@@ -3644,7 +3644,7 @@ outer:
 
 					int net_type = net.getNetworkType();
 
-					if ( net_type == DHTTransportAlternativeNetwork.AT_I2P ){
+					if ( net_type == DHTTransportAlternativeNetwork.AT_I2P || net_type == DHTTransportAlternativeNetwork.AT_TOR ){
 
 						req = Math.min( 2, req );
 					}

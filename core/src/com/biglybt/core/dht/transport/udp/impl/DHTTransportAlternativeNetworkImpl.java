@@ -32,7 +32,7 @@ DHTTransportAlternativeNetworkImpl
 	private static final int	LIVE_AGE_SECS 		= 20*60;
 	private static final int	LIVEISH_AGE_SECS 	= 40*60;
 	private static final int	MAX_CONTACTS_PUB	= 64;
-	private static final int	MAX_CONTACTS_I2P	= 16;
+	private static final int	MAX_CONTACTS_ANON	= 16;
 
 	private static final boolean	TRACE = false;
 
@@ -65,7 +65,7 @@ DHTTransportAlternativeNetworkImpl
 	{
 		network	= _net;
 
-		max_contacts = network == AT_I2P?MAX_CONTACTS_I2P:MAX_CONTACTS_PUB;
+		max_contacts = ( network == AT_I2P || network == AT_TOR )?MAX_CONTACTS_ANON:MAX_CONTACTS_PUB;
 	}
 
 	@Override
