@@ -20,6 +20,7 @@
 
 package com.biglybt.core.dht.transport;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 
 public interface
@@ -41,4 +42,16 @@ DHTTransportAlternativeNetwork
 	public List<DHTTransportAlternativeContact>
 	getContacts(
 		int		max );
+	
+	/** 
+	 * @param contact
+	 * @return maybe null as not all networks currently support this
+	 */
+	
+	public default InetSocketAddress
+	getNotionalAddress(
+		DHTTransportAlternativeContact		contact )
+	{
+		return( null );
+	}
 }

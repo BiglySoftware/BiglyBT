@@ -162,7 +162,9 @@ DHTRouterImpl
 
 						if ( seed_in_ticks == 0 ){
 
-							seedSupport();
+							AEThread2.createAndStartDaemon( "router:seed", ()->{
+								seedSupport();
+							});
 						}
 					}
 				}

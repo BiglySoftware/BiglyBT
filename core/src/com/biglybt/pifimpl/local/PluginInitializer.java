@@ -211,6 +211,13 @@ PluginInitializer
 					"azintsimpleapi",
 					"true",
 					"false"},
+			{	 PluginManagerDefaults.PID_NET_TEST,
+						/** {@link com.biglybt.plugin.net.test.NetTestPlugin} */
+						"com.biglybt.plugin.net.test.NetTestPlugin",
+						"azintnettest",
+						"azintnettest",
+						"true",
+						"false"},
         };
 
   /*
