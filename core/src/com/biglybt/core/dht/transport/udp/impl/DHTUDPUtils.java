@@ -1448,7 +1448,7 @@ DHTUDPUtils
 									DHTTransportAlternativeContact o1,
 									DHTTransportAlternativeContact o2)
 								{
-									int res = o1.getAge() - o2.getAge();
+									int res = o2.getLastAlive() - o1.getLastAlive();
 
 									if (res == 0) {
 

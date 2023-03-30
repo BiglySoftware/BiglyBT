@@ -34,12 +34,10 @@ DHTTransportAlternativeContactImpl
 {
 	private final byte		network_type;
 	private final byte		version;
-	private final short		initial_age;
+	private final int		seen_secs;
 	private final byte[]	encoded;
 
 	private final int		id;
-
-	private final int			start_time		= (int)( SystemTime.getMonotonousTime()/1000 );
 
 	protected
 	DHTTransportAlternativeContactImpl(
@@ -50,9 +48,10 @@ DHTTransportAlternativeContactImpl
 	{
 		network_type	= _network_type;
 		version			= _version;
-		initial_age		= _age<0?Short.MAX_VALUE:_age;
 		encoded			= _encoded;
-
+		
+		seen_secs = (int)(SystemTime.getMonotonousTime()/1000) - (_age<0?Short.MAX_VALUE:_age);
+		
 		id = Arrays.hashCode( encoded );
 	}
 
@@ -81,30 +80,7 @@ DHTTransportAlternativeContactImpl
 	public int
 	getLastAlive()
 	{
-		return( start_time - initial_age );
-	}
-
-	@Override
-	public int
-	getAge()
-	{
-		if ( initial_age < 0 ){
-
-			return( Short.MAX_VALUE );
-		}
-
-		int elapsed = ((int)( SystemTime.getMonotonousTime()/1000 )) - start_time;
-
-		int rem = Short.MAX_VALUE - initial_age;
-
-		if ( rem < elapsed ){
-
-			return( Short.MAX_VALUE );
-
-		}else{
-
-			return((short)( initial_age + elapsed ));
-		}
+		return( seen_secs );
 	}
 
 	@Override

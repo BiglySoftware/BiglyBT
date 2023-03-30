@@ -22,6 +22,8 @@ package com.biglybt.core.dht.transport;
 
 import java.util.Map;
 
+import com.biglybt.core.util.SystemTime;
+
 public interface
 DHTTransportAlternativeContact
 {
@@ -40,8 +42,7 @@ DHTTransportAlternativeContact
 	getID();
 
 		/**
-		 * @deprecated
-		 * @return
+		 * @return alive time in seconds since "mono time" start - can be negative
 		 */
 
 	public int
@@ -49,11 +50,15 @@ DHTTransportAlternativeContact
 
 		/**
 		 * Gets the contact's age since last known to be alive in seconds
+		 * Obviously this varies so don't use it for sorting!
 		 * @return
 		 */
 
-	public int
-	getAge();
+	public default int
+	getAge()
+	{
+		return((int)(SystemTime.getMonotonousTime()/1000) - getLastAlive());
+	}
 
 	public Map<String,Object>
 	getProperties();

@@ -400,7 +400,7 @@ DHTTransportUDPImpl
 							try{
 								this_mon.enter();
 								
-								long start = SystemTime.getMonotonousTime();
+								int seen_secs = (int)(SystemTime.getMonotonousTime()/1000);	// use "now" as don't know otherwise
 								
 								int net = getNetworkType();
 								
@@ -449,15 +449,9 @@ DHTTransportUDPImpl
 											public int
 											getLastAlive()
 											{
-												return( 0 );	// deprecated
+												return( seen_secs );
 											}
-											
-											public int
-											getAge()
-											{
-												return((int)((SystemTime.getMonotonousTime() - start )/1000 ));
-											}
-	
+												
 											public Map<String,Object>
 											getProperties()
 											{
