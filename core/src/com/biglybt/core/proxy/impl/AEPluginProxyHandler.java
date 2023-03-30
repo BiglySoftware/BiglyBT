@@ -566,13 +566,28 @@ AEPluginProxyHandler
 		return( getLocalAddress( host, port ));
 	}
 	
+	public static final int LA_EXPLICIT_NET_NONE	= 0;
+	public static final int LA_EXPLICIT_NET_MIX		= 1;
+	public static final int LA_EXPLICIT_NET_PURE	= 2;
+	
 	public static InetSocketAddress
 	getLocalAddress(
 		String		host,
 		int			port )
 	{
+		return( getLocalAddress( host, port, LA_EXPLICIT_NET_NONE ));
+	}
+	
+	public static InetSocketAddress
+	getLocalAddress(
+		String		host,
+		int			port,
+		int			network )
+	{
 		Map<String,Object>		options		= new HashMap<>();
 
+		options.put( "net", network );
+		
 		Object[] args = new Object[]{ host, port, options };
 		
 		for ( PluginInterface pi: plugins ){

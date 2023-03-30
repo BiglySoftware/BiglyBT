@@ -30,6 +30,7 @@ import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.BEncoder;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SimpleTimer;
@@ -51,14 +52,10 @@ public class
 NetTestPlugin
 	implements Plugin
 {
-	private static final int MT_HANDSHAKE		= 1;
-	private static final int MT_KEEP_ALIVE		= 2;
-	
 	private PluginInterface	pi;
 	
-	private GenericMessageRegistration msg_registration;
-	
-	private CopyOnWriteList<Connection>		connections = new CopyOnWriteList<>();
+	private Tester		tor_tester;
+	private Tester		i2p_tester;
 	
 	@Override
 	public void 
@@ -117,49 +114,12 @@ NetTestPlugin
 	initialised()
 	{
 		try{
-			msg_registration =
-				pi.getMessageManager().registerGenericMessageType(
-					"NetOverlayTest",
-					"Net Overlay Test Registration",
-					MessageManager.STREAM_ENCRYPTION_NONE,
-					new GenericMessageHandler()
-					{
-						@Override
-						public boolean
-						accept(
-							GenericMessageConnection	gmc )
-
-							throws MessageException
-						{
-							InetSocketAddress originator = gmc.getEndpoint().getNotionalAddress();
-							
-							if ( AENetworkClassifier.categoriseAddress( AddressUtils.getHostAddress( originator)) == AENetworkClassifier.AT_PUBLIC ){
-								
-								gmc.close();
-								
-								return( false );	
-							}							
-							
-							Connection con = new Connection( gmc );
-							
-							connections.add( con );
-							
-							return( true );
-						}
-					});
+			if ( Constants.IS_CVS_VERSION ){
 			
-			SimpleTimer.addPeriodicEvent(
-				"NetTest",
-				30*1000,
-				(ev)->{		
-					long now = SystemTime.getMonotonousTime();
-					
-					for ( Connection con: connections ){
-							
-						con.timerTick( now );
-					}
-				});
+				tor_tester = new Tester( DHTTransportAlternativeNetwork.AT_TOR  );
 			
+				i2p_tester = new Tester( DHTTransportAlternativeNetwork.AT_I2P  );
+			}
 		}catch( Throwable e ){
 	
 			Debug.out( e );
@@ -171,39 +131,18 @@ NetTestPlugin
 		String	cmd )
 	{
 		try{
-			DHTTransportAlternativeNetwork net = DHTUDPUtils.getAlternativeNetwork( DHTTransportAlternativeNetwork.AT_TOR );
+			cmd = cmd.trim().toLowerCase( Locale.US );
 			
-			if ( net == null ){
+			if ( Constants.IS_CVS_VERSION ){
 				
-				return;
-			}
-			
-			List<DHTTransportAlternativeContact> contacts = DHTUDPUtils.getAlternativeContacts( DHTTransportAlternativeNetwork.AT_TOR, 16 );
-
-			for ( DHTTransportAlternativeContact contact: contacts ){
-			
-				InetSocketAddress target = net.getNotionalAddress( contact );
-				
-				if ( target == null ){
+				if ( cmd.equals( "tor" )){
 					
-					continue;
+					tor_tester.runTest();
+					
+				}else if ( cmd.equals( "i2p" )){
+					
+					i2p_tester.runTest();
 				}
-
-				InetSocketAddress local = AEPluginProxyHandler.getLocalAddress( AddressUtils.getHostAddress(target), target.getPort());
-				
-				if ( local == null ){
-					
-					continue;
-				}
-				
-				if ( !local.equals( target )){
-					
-					log( "Skipping " + target );
-					
-					continue;
-				}
-				
-				new Connection( target );
 			}
 		}catch( Throwable e ){
 			
@@ -219,191 +158,299 @@ NetTestPlugin
 	}
 	
 	private class
-	Connection
-		implements GenericMessageConnectionListener, GenericMessageConnectionPropertyHandler
+	Tester
 	{
-		private final GenericMessageConnection	gmc;
+		private static final int MT_HANDSHAKE		= 1;
+		private static final int MT_KEEP_ALIVE		= 2;
 		
-		private long	last_received_time	= SystemTime.getMonotonousTime();
-		private long	last_sent_time		= 0;
+		private final int network;
 		
-		private boolean	connected;
-		private boolean failed;
+
+		private GenericMessageRegistration msg_registration;
 		
-		private
-		Connection(
-			InetSocketAddress		target )
+		private CopyOnWriteList<Connection>		connections = new CopyOnWriteList<>();
+		
+		Tester(
+			int		_network )
 		
 			throws Exception
 		{
-			GenericMessageEndpoint ep = msg_registration.createEndpoint( target );
+			network = _network;
 			
-			ep.addTCP( target );
+			String net_str = (network == DHTTransportAlternativeNetwork.AT_TOR )?AENetworkClassifier.AT_TOR:AENetworkClassifier.AT_I2P;
 			
-			gmc = msg_registration.createConnection( ep );
-							
-			connections.add( this );
-
-			gmc.addListener( this );
-			
-			try{
-				gmc.connect( this );
+			msg_registration =
+					pi.getMessageManager().registerGenericMessageType(
+						"NetOverlayTest:" + net_str,
+						"Net Overlay Test " + net_str + " Registration",
+						MessageManager.STREAM_ENCRYPTION_NONE,
+						new GenericMessageHandler()
+						{
+							@Override
+							public boolean
+							accept(
+								GenericMessageConnection	gmc )
+	
+								throws MessageException
+							{
+								InetSocketAddress originator = gmc.getEndpoint().getNotionalAddress();
+								
+								if ( AENetworkClassifier.categoriseAddress( AddressUtils.getHostAddress( originator)) == AENetworkClassifier.AT_PUBLIC ){
+									
+									gmc.close();
+									
+									return( false );	
+								}							
+								
+								Connection con = new Connection( gmc );
+								
+								connections.add( con );
+								
+								return( true );
+							}
+						});
 				
-			}catch( Throwable e ){
-				
-				failed( e );
-			}
+				SimpleTimer.addPeriodicEvent(
+					"NetTest:" + net_str,
+					30*1000,
+					(ev)->{		
+						long now = SystemTime.getMonotonousTime();
+						
+						for ( Connection con: connections ){
+								
+							con.timerTick( now );
+						}
+					});
 		}
 		
-		private
-		Connection(
-			GenericMessageConnection		_gmc )
-		{
-			log( "inbound: connected" );
-			
-			gmc = _gmc;
-							
-			connections.add( this );
-			
-			connected = true;
-			
-			gmc.addListener( this );
-		}
-				
-		@Override
-		public void 
-		connected(
-			GenericMessageConnection connection )
-		{
-			log( "outbound: connected" );
-			
-			connected = true;
-			
-			Map map = new HashMap<>();
-			
-			map.put( "t", MT_HANDSHAKE );
-			
-			send( map );
-		}
+		void
+		runTest()
 		
-		private void
-		timerTick(
-			long	now )
+			throws Exception
 		{
-			if ( !connected ){
+			DHTTransportAlternativeNetwork net = DHTUDPUtils.getAlternativeNetwork( network );
+			
+			if ( net == null ){
 				
 				return;
 			}
 			
-			if ( now - last_received_time > 60*1000 ){
+			List<DHTTransportAlternativeContact> contacts = DHTUDPUtils.getAlternativeContacts( network, 16 );
+
+			for ( DHTTransportAlternativeContact contact: contacts ){
+			
+				InetSocketAddress target = net.getNotionalAddress( contact );
 				
-				failed( new Exception( "timeout" ));
+				if ( target == null ){
+					
+					continue;
+				}
+
+				InetSocketAddress local = AEPluginProxyHandler.getLocalAddress( AddressUtils.getHostAddress(target), target.getPort(), AEPluginProxyHandler.LA_EXPLICIT_NET_MIX );
 				
-			}else if ( now - last_sent_time >= 30*1000 ){
+				if ( local == null ){
+					
+					continue;
+				}
+				
+				if ( local.equals( target )){
+					
+					log( "Skipping " + target );
+					
+					continue;
+				}
+				
+				new Connection( target );
+			}
+		}
+	
+		private class
+		Connection
+			implements GenericMessageConnectionListener, GenericMessageConnectionPropertyHandler
+		{
+			private final GenericMessageConnection	gmc;
+			
+			private long	last_received_time	= SystemTime.getMonotonousTime();
+			private long	last_sent_time		= 0;
+			
+			private boolean	connected;
+			private boolean failed;
+			
+			private
+			Connection(
+				InetSocketAddress		target )
+			
+				throws Exception
+			{
+				GenericMessageEndpoint ep = msg_registration.createEndpoint( target );
+				
+				ep.addTCP( target );
+				
+				gmc = msg_registration.createConnection( ep );
+								
+				connections.add( this );
+	
+				gmc.addListener( this );
+				
+				try{
+					gmc.connect( this );
+					
+				}catch( Throwable e ){
+					
+					failed( e );
+				}
+			}
+			
+			private
+			Connection(
+				GenericMessageConnection		_gmc )
+			{
+				log( "inbound: connected" );
+				
+				gmc = _gmc;
+								
+				connections.add( this );
+				
+				connected = true;
+				
+				gmc.addListener( this );
+			}
+					
+			@Override
+			public void 
+			connected(
+				GenericMessageConnection connection )
+			{
+				log( "outbound: connected" );
+				
+				connected = true;
 				
 				Map map = new HashMap<>();
 				
-				map.put( "t", MT_KEEP_ALIVE );
+				map.put( "t", MT_HANDSHAKE );
 				
 				send( map );
 			}
-		}
-		
-		private void
-		send(
-			Map		map )
-		{
-			last_sent_time	= SystemTime.getMonotonousTime();
 			
-			log( "send " + map );
-			
-			PooledByteBuffer buffer = null;
-			
-			try{
-				buffer = pi.getUtilities().allocatePooledByteBuffer( BEncoder.encode(map));
-				
-				gmc.send( buffer );
-				
-				buffer = null;
-				
-			}catch( Throwable e ){
-								
-				if ( buffer != null ){
-					
-					buffer.returnToPool();
-				}
-				
-				failed( e );
-			}
-		}
-		
-		@Override
-		public void 
-		receive(
-			GenericMessageConnection	connection, 
-			PooledByteBuffer 			message )
-					
-			throws MessageException
-		{
-			last_received_time = SystemTime.getMonotonousTime();
-					
-			try{
-				Map map = BDecoder.decode( message.toByteArray());
-					
-				log( "received " + map );
-				
-			}catch( Throwable e ){
-										
-				failed( e );
-
-			}finally{
-				
-				message.returnToPool();
-			}
-		}
-		
-		@Override
-		public void 
-		failed(
-			GenericMessageConnection	connection, 
-			Throwable					error ) 
-					
-			throws MessageException
-		{
-			failed( error );
-		}
-		
-		private void
-		failed(
-			Throwable 	error )
-		{
-			synchronized( this ){
-				
-				if ( failed ){
+			private void
+			timerTick(
+				long	now )
+			{
+				if ( !connected ){
 					
 					return;
 				}
 				
-				failed = true;
+				if ( now - last_received_time > 60*1000 ){
+					
+					failed( new Exception( "timeout" ));
+					
+				}else if ( now - last_sent_time >= 30*1000 ){
+					
+					Map map = new HashMap<>();
+					
+					map.put( "t", MT_KEEP_ALIVE );
+					
+					send( map );
+				}
 			}
 			
-			log( "failed: " + Debug.getNestedExceptionMessage(error));
-					
-			try{
-				gmc.close();
+			private void
+			send(
+				Map		map )
+			{
+				last_sent_time	= SystemTime.getMonotonousTime();
 				
-			}catch( Throwable e ){
+				log( "send " + map );
+				
+				PooledByteBuffer buffer = null;
+				
+				try{
+					buffer = pi.getUtilities().allocatePooledByteBuffer( BEncoder.encode(map));
+					
+					gmc.send( buffer );
+					
+					buffer = null;
+					
+				}catch( Throwable e ){
+									
+					if ( buffer != null ){
+						
+						buffer.returnToPool();
+					}
+					
+					failed( e );
+				}
 			}
-							
-			connections.remove( this );
-		}
-		
-		@Override
-		public Object 
-		getConnectionProperty(
-			String property_name )
-		{
-			return( null );
+			
+			@Override
+			public void 
+			receive(
+				GenericMessageConnection	connection, 
+				PooledByteBuffer 			message )
+						
+				throws MessageException
+			{
+				last_received_time = SystemTime.getMonotonousTime();
+						
+				try{
+					Map map = BDecoder.decode( message.toByteArray());
+						
+					log( gmc.getEndpoint().getNotionalAddress() + ": received " + map );
+					
+				}catch( Throwable e ){
+											
+					failed( e );
+	
+				}finally{
+					
+					message.returnToPool();
+				}
+			}
+			
+			@Override
+			public void 
+			failed(
+				GenericMessageConnection	connection, 
+				Throwable					error ) 
+						
+				throws MessageException
+			{
+				failed( error );
+			}
+			
+			private void
+			failed(
+				Throwable 	error )
+			{
+				synchronized( this ){
+					
+					if ( failed ){
+						
+						return;
+					}
+					
+					failed = true;
+				}
+				
+				log( "failed: " + Debug.getNestedExceptionMessage(error));
+						
+				try{
+					gmc.close();
+					
+				}catch( Throwable e ){
+				}
+								
+				connections.remove( this );
+			}
+			
+			@Override
+			public Object 
+			getConnectionProperty(
+				String property_name )
+			{
+				return( null );
+			}
 		}
 	}
 }
