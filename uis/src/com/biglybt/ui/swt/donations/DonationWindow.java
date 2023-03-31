@@ -432,8 +432,8 @@ public class DonationWindow
 		long max_days;
 		
 		if ( isNever ){
-			min_days = 90;
-			max_days = 365;
+			min_days = 60;
+			max_days = 180;
 		}else{
 			min_days = 30;
 			max_days = 120;
