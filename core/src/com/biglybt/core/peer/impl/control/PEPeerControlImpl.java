@@ -7060,30 +7060,38 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		public String getIp(){
 			String[] nets = adapter.getEnabledNetworks();
 
-			String pub_str = "";
-			String i2p_str = null;
+			String result = "";
+			
+			for ( String net : nets ){
 
-			for(String net : nets){
-
-				if(net == AENetworkClassifier.AT_PUBLIC){
+				String str = "";
+				
+				if ( net == AENetworkClassifier.AT_PUBLIC ){
 
 					InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress();
 
-					pub_str = ia == null ? "127.0.0.1" : ia.getHostAddress();
+					str = ia == null ? "127.0.0.1" : ia.getHostAddress();
 
-				}else if(net == AENetworkClassifier.AT_I2P){
+				}else if( net == AENetworkClassifier.AT_I2P ){
 
-					i2p_str = "local.i2p";
+					str = "i2p";
+					
+				}else{
+					
+					str = "tor";
+				}
+				
+				if ( result.isEmpty()){
+					
+					result = str;
+					
+				}else{
+					
+					result += "; " + str;
 				}
 			}
 
-			String str = pub_str;
-
-			if(i2p_str != null){
-				str += (str.isEmpty() ? "" : "; ") + i2p_str;
-			}
-
-			return(str);
+			return(result );
 		}
 
 		public InetAddress getAlternativeIPv6(){
