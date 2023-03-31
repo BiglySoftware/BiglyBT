@@ -21,8 +21,6 @@
 
 package com.biglybt.core.config.impl;
 
-import static com.biglybt.core.config.ConfigKeys.Tag.BCFG_TAG_SHOW_SWARM_TAGS_IN_OVERVIEW;
-
 import java.io.File;
 import java.util.*;
 
@@ -572,8 +570,8 @@ public class ConfigurationDefaults {
 
     def.put( "Network Selection Prompt", FALSE );
     def.put( "Network Selection Default.Public", TRUE );
-    def.put( "Network Selection Default.I2P", TRUE );
-    def.put( "Network Selection Default.Tor", TRUE );
+    def.put( "Network Selection Default.I2P", FALSE );	// we want this to be false initially so network mixing is enabled for public torrents
+    def.put( "Network Selection Default.Tor", FALSE );	// otherwise it is assumed that the user is manually managing their nets
     def.put( "Tracker Network Selection Default.Public", TRUE);
     def.put( "Tracker Network Selection Default.I2P", TRUE);
     def.put( "Tracker Network Selection Default.Tor", TRUE);

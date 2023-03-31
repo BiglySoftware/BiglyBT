@@ -1647,23 +1647,23 @@ public class TorrentOpenOptions
 
 			boolean	enable_tor = networks.contains( AENetworkClassifier.AT_TOR );
 
+			String[]	providers = { "aznettor" };
+
+			boolean	tor_found = false;
+
+			for ( String provider: providers ){
+
+				if ( CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( provider ) != null ){
+
+					tor_found = true;
+
+					break;
+				}
+			}
+			
 			if ( enable_tor ){
 
-				String[]	providers = { "aznettor" };
-
-				boolean	found = false;
-
-				for ( String provider: providers ){
-
-					if ( CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( provider ) != null ){
-
-						found = true;
-
-						break;
-					}
-				}
-
-				if ( found ){
+				if ( tor_found ){
 
 					enabledNetworks.put( AENetworkClassifier.AT_TOR, true );
 
@@ -1674,6 +1674,11 @@ public class TorrentOpenOptions
 						enabledNetworks.put( AENetworkClassifier.AT_PUBLIC, false );
 					}
 				}
+			}else if ( enable_i2p && tor_found ){
+				
+					// include Tor as I2P supports Tor endpoints
+				
+				enabledNetworks.put( AENetworkClassifier.AT_TOR, true );
 			}
 
 			List<String> it = TorrentUtils.getInitialTags( torrent );
