@@ -5569,7 +5569,7 @@ implements PEPeerTransport
 				for( int i=0; i < dropped.length; i++ ) {
 					PeerItem pi = dropped[i];
 					if ( network == pi.getNetwork()){
-						pex_item.dropConnectedPeer( dropped[i] );
+						pex_item.dropConnectedPeer( pi );
 					}
 				}
 			}
