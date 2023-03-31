@@ -1527,8 +1527,8 @@ implements PEPeerTransport
 		if (  network != AENetworkClassifier.AT_PUBLIC ){
 			
 			local_tcp_port	= 6881;
-			local_udp_port	= 6881;
-			local_udp2_port	= 6881;
+			local_udp_port	= 0;
+			local_udp2_port	= 0;
 			defaultV6		= null;
 		}
 		
@@ -5487,10 +5487,12 @@ implements PEPeerTransport
 
 		if( pex_item != null && manager.isPeerExchangeEnabled()) {
 
-			if ( peer_item_identity.getNetwork() == AENetworkClassifier.AT_PUBLIC ){
+			String net = peer_item_identity.getNetwork();
+			
+			if ( net == AENetworkClassifier.AT_PUBLIC ){
 
-				final PeerItem[] adds = pex_item.getNewlyAddedPeerConnections( AENetworkClassifier.AT_PUBLIC );
-				final PeerItem[] drops = pex_item.getNewlyDroppedPeerConnections( AENetworkClassifier.AT_PUBLIC );
+				PeerItem[] adds = pex_item.getNewlyAddedPeerConnections( AENetworkClassifier.AT_PUBLIC );
+				PeerItem[] drops = pex_item.getNewlyDroppedPeerConnections( AENetworkClassifier.AT_PUBLIC );
 
 				if( (adds != null && adds.length > 0) || (drops != null && drops.length > 0) ) {
 					if (ut_pex_enabled) {
@@ -5507,6 +5509,16 @@ implements PEPeerTransport
 				if ( encoder instanceof LTMessageEncoder ){
 
 					((LTMessageEncoder)encoder).handleCustomExtension( LTMessageEncoder.CET_PEX, new Object[]{ pex_item });
+					
+				}else if ( !ut_pex_enabled ){
+					
+					PeerItem[] adds = pex_item.getNewlyAddedPeerConnections( net );
+					PeerItem[] drops = pex_item.getNewlyDroppedPeerConnections( net );
+
+					if ((adds != null && adds.length > 0) || (drops != null && drops.length > 0)){
+						
+						connection.getOutgoingMessageQueue().addMessage( new AZPeerExchange( manager.getTargetHash(), adds, drops, other_peer_pex_version ), false );
+					}
 				}
 			}
 		}
