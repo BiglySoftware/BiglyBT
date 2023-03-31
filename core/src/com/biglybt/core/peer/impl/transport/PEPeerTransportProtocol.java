@@ -5558,14 +5558,19 @@ implements PEPeerTransport
 			if( added != null ) {
 				for( int i=0; i < added.length; i++ ) {
 					PeerItem pi = added[i];
-					manager.peerDiscovered( this, pi );
-					pex_item.addConnectedPeer( pi );
+					if ( network == pi.getNetwork()){
+						manager.peerDiscovered( this, pi );
+						pex_item.addConnectedPeer( pi );
+					}
 				}
 			}
 
 			if( dropped != null ) {
 				for( int i=0; i < dropped.length; i++ ) {
-					pex_item.dropConnectedPeer( dropped[i] );
+					PeerItem pi = dropped[i];
+					if ( network == pi.getNetwork()){
+						pex_item.dropConnectedPeer( dropped[i] );
+					}
 				}
 			}
 		}else{
