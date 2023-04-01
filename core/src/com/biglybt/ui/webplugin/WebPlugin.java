@@ -367,7 +367,7 @@ WebPlugin
 					Throwable	error )
 				{
 					log( str + "\n" );
-					log( error.toString() + "\n" );
+					log( Debug.getNestedExceptionMessage( error ) + "\n" );
 				}
 				
 				private void
