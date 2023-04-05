@@ -81,14 +81,30 @@ public class ConfigSectionConnectionAdvanced
 				"ConfigView.label.bindip");
 		add(paramBindIP, listSocket);
 
-		InfoParameterImpl paramInterfaceList = new InfoParameterImpl(null, null,
-				MessageText.getString("ConfigView.label.bindip.details", new String[] {
-					"\t" + NetworkAdmin.getSingleton().getNetworkInterfacesAsString().replaceAll(
-							"\n", "\n\t")
-				}));
+		InfoParameterImpl paramInterfaceList = new InfoParameterImpl(null, null, ""	);
 		add("ifList", paramInterfaceList, listSocket);
 		paramInterfaceList.setTextSelectable(true);
 
+		BooleanParameterImpl paramInterfaceWithAddresses = new BooleanParameterImpl(
+				"ConfigView.section.connection.show.intf.with.addresses", "ConfigView.label.show.intf.with.addresses");
+		paramInterfaceWithAddresses.setDefaultValue( true );
+		
+		Runnable set_intf = ()->{
+			paramInterfaceList.setValue(
+					MessageText.getString("ConfigView.label.bindip.details", new String[] {
+					"\n\t" + NetworkAdmin.getSingleton().getNetworkInterfacesAsString(
+							paramInterfaceWithAddresses.getValue()).replaceAll(
+							"\n", "\n\t")
+				}));
+		};
+				
+		paramInterfaceWithAddresses.addAndFireListener((n)->{
+		
+			set_intf.run();
+		});
+		
+		add(paramInterfaceWithAddresses, listSocket);
+	
 		StringParameterImpl paramAdditionServiceBind = new StringParameterImpl(SCFG_NETWORK_ADDITIONAL_SERVICE_BINDS,
 				"ConfigView.label.additional.service.bind");
 		add(paramAdditionServiceBind, listSocket);

@@ -1360,7 +1360,7 @@ addressLoop:
 	}
 
 	@Override
-	public String getNetworkInterfacesAsString()
+	public String getNetworkInterfacesAsString(boolean only_with_addresses)
 	{
 		Set interfaces = old_network_interfaces;
 
@@ -1375,8 +1375,11 @@ addressLoop:
 		{
 			NetworkInterface ni = (NetworkInterface) it.next();
 			Enumeration addresses = ni.getInetAddresses();
+			if ( only_with_addresses && !addresses.hasMoreElements()){
+				continue;
+			}
 			sb.append( ni.getName());
-			sb.append( "\t(" );
+			sb.append( "\t\t(" );
 			sb.append( ni.getDisplayName());
 			sb.append( ")\n" );
 			int i = 0;

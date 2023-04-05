@@ -5668,6 +5668,9 @@ public class Utils
 
 	public static void relayoutUp(Composite c) {
 		while (c != null && !c.isDisposed()) {
+			if ( c instanceof ScrolledComposite ){
+				updateScrolledComposite((ScrolledComposite)c, c.getStyle());
+			}
 			Composite newParent = c.getParent();
 			if (newParent == null) {
 				break;

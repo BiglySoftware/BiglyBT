@@ -31,7 +31,6 @@ import com.biglybt.pifimpl.local.ui.config.InfoParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.LabelParameterImpl;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.pif.ui.config.InfoParameter;
 import com.biglybt.pif.ui.config.LabelParameter;
 
@@ -61,6 +60,9 @@ public class InfoSwtParameter
 		this(parent, infoParameter.getConfigKeyName(), infoParameter.getLabelKey(),
 				infoParameter.getValue(), infoParameter.isTextSelectable());
 		setPluginParameter(infoParameter);
+		infoParameter.addListener((n)->{
+			setInfoVal(infoParameter.getValue());
+		});
 	}
 
 	/**
@@ -178,7 +180,7 @@ public class InfoSwtParameter
 				: super.getValue();
 	}
 
-	public void setInfoVal(String infoVal) {
+	private void setInfoVal(String infoVal) {
 		this.infoVal = infoVal;
 		refreshControl();
 	}
