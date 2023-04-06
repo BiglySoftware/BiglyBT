@@ -152,6 +152,13 @@ TRHostTorrentPublishImpl
 	}
 
 	@Override
+	public boolean 
+	isExternal()
+	{
+		return( false );
+	}
+	
+	@Override
 	public long
 	getDateAdded()
 	{

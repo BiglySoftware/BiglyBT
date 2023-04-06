@@ -276,6 +276,13 @@ TRHostTorrentHostImpl
 	}
 
 	@Override
+	public boolean
+	isExternal()
+	{
+		return( torrent instanceof TRHostExternalTorrent );
+	}
+	
+	@Override
 	public void
 	setPassive(
 		boolean		b )

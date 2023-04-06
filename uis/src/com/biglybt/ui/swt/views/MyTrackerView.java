@@ -106,6 +106,7 @@ public class MyTrackerView
 		new StatusItem(),
 		new CategoryItem(),
 		new PassiveItem(),
+		new ExternalItem(),
 		new PersistentItem(),
 		new SeedCountItem(),
 		new PeerCountItem(),
