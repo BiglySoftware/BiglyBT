@@ -33,7 +33,6 @@ import com.biglybt.ui.swt.BrowserWrapper;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.FontUtils;
 
@@ -54,13 +53,16 @@ import org.eclipse.swt.widgets.Shell;
  */
 public class DonationWindow
 {
-	public static boolean DEBUG = System.getProperty("donations.debug", "0").equals(
-			"1");
+	public static boolean DEBUG = System.getProperty("donations.debug", "0").equals("1");
 
-	static int reAskEveryHours = 96;
-
-	private static int initialAskHours = 48;
-
+	private static final long DAY_IN_MILLIS			= 24*60*60*1000;
+	
+	private static final int RE_ASK_EVERY_HOURS 	= 96;
+	private static 		 int INIT_ASK_HOURS 		= 48;
+	private static final int MAX_MIN_DAYS			= 60;
+	private static final int MAX_MAX_DAYS			= 180;
+	
+	
 	static boolean pageLoadedOk = false;
 
 	static Shell shell = null;
@@ -82,16 +84,25 @@ public class DonationWindow
 				return;
 			}
 	
+			long now = SystemTime.getCurrentTime();
+			
 			long maxDate = COConfigurationManager.getLongParameter("donations.maxDate", 0);
 			
-			boolean force = maxDate > 0 && SystemTime.getCurrentTime() > maxDate;
+			if ( maxDate - now > MAX_MAX_DAYS*DAY_IN_MILLIS ){
+				
+				maxDate = now + MAX_MAX_DAYS*DAY_IN_MILLIS;
+				
+				COConfigurationManager.setParameter("donations.maxDate", maxDate);
+			}
+			
+			boolean force = maxDate > 0 && now > maxDate;
 	
 			if ( force ){
 			
 					// bump up max-date to avoid multiple 'concurrent' additions from triggering
 					// multiple windows
 				
-				COConfigurationManager.setParameter("donations.maxDate", maxDate + 24*60*60*1000 );
+				COConfigurationManager.setParameter("donations.maxDate", maxDate + DAY_IN_MILLIS );
 			}
 			
 				//Check if user has already donated first
@@ -125,7 +136,7 @@ public class DonationWindow
 				
 					// First Time
 				
-				COConfigurationManager.setParameter( "donations.nextAskHours", hours	+ initialAskHours );
+				COConfigurationManager.setParameter( "donations.nextAskHours", hours	+ INIT_ASK_HOURS );
 				
 				COConfigurationManager.save();
 				
@@ -147,10 +158,17 @@ public class DonationWindow
 	
 			long minDate = COConfigurationManager.getLongParameter("donations.minDate",	0);
 			
-			if (minDate > 0 && minDate > SystemTime.getCurrentTime()) {
+			if ( minDate - now > MAX_MIN_DAYS*DAY_IN_MILLIS ){
+				
+				minDate = now + MAX_MIN_DAYS*DAY_IN_MILLIS;
+				
+				COConfigurationManager.setParameter("donations.minDate", minDate);
+			}
+			
+			if (minDate > 0 && minDate > now ) {
 				if (DEBUG) {
 					new MessageBoxShell(SWT.OK, "Donation Test", "Wait "
-							+ ((SystemTime.getCurrentTime() - minDate) / 1000 / 3600 / 24)
+							+ ((SystemTime.getCurrentTime() - minDate) / DAY_IN_MILLIS )
 							+ " days").open(null);
 				}
 				return;
@@ -163,7 +181,7 @@ public class DonationWindow
 				updateMinDate( false );
 			}
 			
-			COConfigurationManager.setParameter("donations.nextAskHours", hours	+ reAskEveryHours);
+			COConfigurationManager.setParameter("donations.nextAskHours", hours	+ RE_ASK_EVERY_HOURS);
 			
 			COConfigurationManager.save();
 		}
@@ -305,7 +323,7 @@ public class DonationWindow
 						}
 						shell.open();
 					} else if (text.contains("reset-ask-time")) {
-						int time = reAskEveryHours;
+						int time = RE_ASK_EVERY_HOURS;
 						String[] strings = text.split(" ");
 						if (strings.length > 1) {
 							try {
@@ -439,16 +457,16 @@ public class DonationWindow
 			max_days = 120;
 		}
 		
-		COConfigurationManager.setParameter("donations.minDate", SystemTime.getOffsetTime( 1000*3600*24*min_days ));
-		COConfigurationManager.setParameter("donations.maxDate", SystemTime.getOffsetTime( 1000*3600*24*max_days ));
+		COConfigurationManager.setParameter("donations.minDate", SystemTime.getOffsetTime( DAY_IN_MILLIS*min_days ));
+		COConfigurationManager.setParameter("donations.maxDate", SystemTime.getOffsetTime( DAY_IN_MILLIS*max_days ));
 		//COConfigurationManager.save();
 	}
 
 	public static int getInitialAskHours() {
-		return initialAskHours;
+		return INIT_ASK_HOURS;
 	}
 
 	public static void setInitialAskHours(int i) {
-		initialAskHours = i;
+		INIT_ASK_HOURS = i;
 	}
 }
