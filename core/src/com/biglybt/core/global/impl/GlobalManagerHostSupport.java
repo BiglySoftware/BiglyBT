@@ -22,6 +22,7 @@ package com.biglybt.core.global.impl;
 import java.io.File;
 
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.host.TRHost;
@@ -74,9 +75,18 @@ GlobalManagerHostSupport
 
 	protected void
 	torrentRemoved(
-		String			torrent_file_str,
-		TOTorrent		torrent )
+		DownloadManager		download_manager,
+		TOTorrent			torrent )
 	{
+		boolean is_magnet = download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+
+		if ( is_magnet ){
+			
+			return;
+		}
+		
+		String torrent_file_str = download_manager.getTorrentFileName();
+		
 		TRHostTorrent	host_torrent = host.getHostTorrent( torrent );
 
 		if ( host_torrent != null ){
@@ -109,9 +119,17 @@ GlobalManagerHostSupport
 
 	protected void
 	torrentAdded(
-		String			torrent_file_str,
-		TOTorrent		torrent )
+		DownloadManager		download_manager )
 	{
+		boolean is_magnet = download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD );
+
+		if ( is_magnet ){
+			
+			return;
+		}
+		
+		TOTorrent torrent = download_manager.getTorrent();
+		
 		TRHostTorrent	host_torrent = host.getHostTorrent( torrent );
 
 		if ( host_torrent != null ){

@@ -1805,7 +1805,7 @@ public class GlobalManagerImpl
 
 				   if ( host_support != null ){
 
-					   host_support.torrentAdded( download_manager.getTorrentFileName(), download_manager.getTorrent());
+					   host_support.torrentAdded( download_manager );
 				   }
 			   }
 
@@ -2060,7 +2060,7 @@ public class GlobalManagerImpl
 
 	  if ( host_support != null ){
 
-		  host_support.torrentRemoved( manager.getTorrentFileName(), torrent);
+		  host_support.torrentRemoved( manager, torrent);
 	  }
 
 	  // delete the state last as passivating a hosted torrent may require access to
@@ -3351,7 +3351,7 @@ public class GlobalManagerImpl
 
           if ( host_support != null ){
 
-          	host_support.torrentAdded( dm.getTorrentFileName(), dm.getTorrent());
+          	host_support.torrentAdded( dm );
           }
 	  }
 
