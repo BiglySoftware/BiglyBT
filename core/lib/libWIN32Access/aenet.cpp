@@ -18,7 +18,7 @@
  */
 
 
-#include "stdafx.h"
+#include "framework.h"
 
 #include "stdio.h"
 #include "stdlib.h"
@@ -346,9 +346,10 @@ traceRouteReportTimeout(
 	jobject		callback,
 	int			ttl )
 {
-	char	buffer[1024];
+	const size_t buffer_size = 1024;
+	char	buffer[buffer_size];
 
-	sprintf( buffer, "%ld", ttl );
+	sprintf_s( buffer, buffer_size, "%ld", ttl );
 
 	return( traceRouteReport( env, callback, buffer ));
 }
@@ -362,9 +363,10 @@ traceRouteReportResult(
 	int				time,
 	bool			udp )
 {
-	char	buffer[1024];
+	const size_t buffer_size = 1024;
+	char	buffer[buffer_size];
 
-	sprintf( buffer, "%d, %ld, %d, %d", ttl, address, time, udp?1:0 );
+	sprintf_s( buffer, buffer_size, "%d, %ld, %d, %d", ttl, address, time, udp?1:0 );
 
 	return( traceRouteReport( env, callback, buffer ));
 }

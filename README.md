@@ -55,7 +55,7 @@ External Annotations definitions are a WIP and not complete list of definitions.
 Running is only few more steps:
 
 * Main class is `com.biglybt.ui.Main` in module `uis`
-* Working Directory should be a new folder, since the app will write things to it. Put the `aereg.dll` or `libOSXAccess.jnilib` in there.
+* Working Directory should be a new folder, since the app will write things to it. Put the [`aereg.dll`](core/lib/libWIN32Access/README.md) or `libOSXAccess.jnilib` in there.
   
   When a normal user is running the app, the working directory is where the jar, executable, and libraries (dll, so, jnilib) are.
 * If you want a separate config dir from the default one, use VM Option `-Dazureus.config.path=<some config path>`

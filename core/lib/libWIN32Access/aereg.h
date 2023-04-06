@@ -23,14 +23,14 @@ public:
 extern void
 throwException(
 	JNIEnv*			env,
-	char*			operation,
-	char*			message );
+	const char*		operation,
+	const char*		message );
 
 extern void
 throwException(
 	JNIEnv*			env,
-	char*			operation,
-	char*			message,
+	const char*		operation,
+	const char*		message,
 	int				error_code );
 
 extern bool
