@@ -20,48 +20,29 @@ package com.biglybt.ui.swt.views.tableitems.mytracker;
 
 
 import com.biglybt.core.tracker.host.*;
-import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.ui.tables.*;
-import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
+import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 
-/**
- *
- * @author TuxPaper
- * @since 2.0.8.5
- */
-public class DateAddedItem
-       extends CoreTableColumnSWT
-       implements TableCellRefreshListener
+
+public class 
+DateAddedItem
+	extends ColumnDateSizer
 {
-  /** Default Constructor */
-  public DateAddedItem() {
-    super("date_added", ALIGN_TRAIL, POSITION_LAST, 60, TableManager.TABLE_MYTRACKER);
-  }
+	public 
+	DateAddedItem()
+	{
+		super("date_added", ALIGN_TRAIL, POSITION_LAST, 60, TableManager.TABLE_MYTRACKER);
+	}
 
-  @Override
-  public void refresh(TableCell cell) {
-
-    TRHostTorrent item = (TRHostTorrent)cell.getDataSource();
-
-    String date_text = "";
-
-    long sort_order = -1;
-    
-    if( item != null ) {
-
-    	long	date = item.getDateAdded();
-
-    	date_text = DisplayFormatters.formatDate( date );
-    	
-    	sort_order = date;
-    }
-
-    if (!cell.setSortValue(sort_order) && cell.isValid()){
-    	
-        return;
-    }
-    
-    cell.setText( date_text );
-  }
-
+	@Override
+	public void 
+	refresh(
+		TableCell cell, long timestamp) 
+	{
+		TRHostTorrent item = (TRHostTorrent)cell.getDataSource();
+		
+		timestamp = (item == null) ? 0 : item.getDateAdded();
+		
+		super.refresh(cell, timestamp);
+	}
 }
