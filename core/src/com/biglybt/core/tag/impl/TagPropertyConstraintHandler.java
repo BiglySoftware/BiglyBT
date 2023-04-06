@@ -4146,7 +4146,10 @@ TagPropertyConstraintHandler
 						Number n1 = getNumeric( context, dm, tags, params, 0, debug  );
 						Number n2 = getNumeric( context, dm, tags, params, 1, debug  );
 						
-						if ( n1.doubleValue() - n1.longValue() != 0 || n2.doubleValue() - n2.longValue() != 0 ){
+						if ( 	n1 instanceof Double ||
+								n1 instanceof Float ||
+								n2 instanceof Double ||
+								n2 instanceof Float ){
 							
 							double p1 = n1.doubleValue();
 							double p2 = n2.doubleValue();
