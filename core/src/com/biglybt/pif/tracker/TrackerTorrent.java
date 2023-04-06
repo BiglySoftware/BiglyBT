@@ -150,6 +150,9 @@ TrackerTorrent
 	public boolean
 	isPassive();
 
+	public boolean
+	isExternal();
+	
 		/**
 		 * @since 2.3.0.5
 		 * @return

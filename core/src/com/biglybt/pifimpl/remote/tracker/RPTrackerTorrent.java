@@ -360,6 +360,15 @@ RPTrackerTorrent
 	}
 
 	@Override
+	public boolean
+	isExternal()
+	{
+		notSupported();
+
+		return( false );
+	}
+	
+	@Override
 	public long
 	getDateAdded()
 	{

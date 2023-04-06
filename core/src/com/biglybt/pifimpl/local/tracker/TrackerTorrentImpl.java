@@ -296,6 +296,13 @@ TrackerTorrentImpl
 	}
 
 	@Override
+	public boolean 
+	isExternal()
+	{
+		return( host_torrent.isExternal());
+	}
+	
+	@Override
 	public long
 	getDateAdded()
 	{
