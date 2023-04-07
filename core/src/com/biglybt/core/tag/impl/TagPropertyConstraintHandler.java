@@ -40,6 +40,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
+import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.ipfilter.IpFilter;
@@ -77,6 +78,7 @@ TagPropertyConstraintHandler
 	private static final Object DM_SAVE_PATH					= new Object();
 
 	private static final Object DM_PEER_SETS					= new Object();
+	private static final Object DM_RATES						= new Object();
 	
 	private static final String		EVAL_CTX_COLOURS 	= "colours";
 	private static final String		EVAL_CTX_TAG_SORT 	= "tag_sort";
@@ -572,8 +574,10 @@ TagPropertyConstraintHandler
 
 			if ( timer == null ){
 
-				int TICK_SECS = 5;
+				final int	TICK_SECS = 5;	// must divide into 60!
 				
+				final int	MIN_TICKS = 60 / TICK_SECS;
+					
 				timer =
 					SimpleTimer.addPeriodicEvent(
 						"tag:constraint:timer",
@@ -590,6 +594,43 @@ TagPropertyConstraintHandler
 								TimerEvent event)
 							{
 								tick_count++;
+								
+								if ( tick_count % MIN_TICKS == 0 ){
+									
+									GlobalManager gm = core.getGlobalManager();
+
+									List<DownloadManager> all_dms = gm.getDownloadManagers();
+																		
+									for ( DownloadManager dm: all_dms ){
+										
+										int state = dm.getState();
+										
+										if ( state == DownloadManager.STATE_DOWNLOADING || state == DownloadManager.STATE_SEEDING ){
+											
+											long[] rates = (long[])dm.getUserData( DM_RATES );
+											
+											if ( rates != null ){
+												
+												DownloadManagerStats stats = dm.getStats();
+												
+												long down	= stats.getTotalDataBytesReceived() + stats.getTotalProtocolBytesReceived();
+												long up		= stats.getTotalDataBytesSent() + stats.getTotalProtocolBytesSent();
+												
+												if ( rates[0] != -1 ){
+																										
+													long down_diff	= down - rates[0];
+													long up_diff	= up - rates[1];
+													
+													rates[2] = down_diff/60;
+													rates[3] = up_diff/60;
+												}
+												
+												rates[0] = down;
+												rates[1] = up;
+											}
+										}
+									}
+								}
 								
 								Set<Tag>				peer_sets 	= new HashSet<>();
 								List<TagConstraint>		ps_constraints;
@@ -2677,6 +2718,8 @@ TagPropertyConstraintHandler
 		private static final int	KW_TRACKER_STATUS		= 42;
 		private static final int	KW_FULL_COPY_SEEN		= 43;
 		private static final int	KW_REMAINING			= 44;
+		private static final int	KW_DOWN_SPEED			= 45;
+		private static final int	KW_UP_SPEED				= 46;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2778,6 +2821,11 @@ TagPropertyConstraintHandler
 			keyword_map.put( "full_copy_seen",			new int[]{KW_FULL_COPY_SEEN,		DEP_RUNNING });
 
 			keyword_map.put( "remaining", 				new int[]{KW_REMAINING,				DEP_RUNNING });
+			
+			keyword_map.put( "down_speed", 				new int[]{KW_DOWN_SPEED,			DEP_RUNNING });
+			keyword_map.put( "downspeed", 				new int[]{KW_DOWN_SPEED,			DEP_RUNNING });
+			keyword_map.put( "up_speed", 				new int[]{KW_UP_SPEED,				DEP_RUNNING });
+			keyword_map.put( "upspeed", 				new int[]{KW_UP_SPEED,				DEP_RUNNING });
 
 			
 		}
@@ -5220,6 +5268,28 @@ TagPropertyConstraintHandler
 								}
 								
 								return( value );
+							}
+							case KW_DOWN_SPEED:
+							case KW_UP_SPEED:{
+
+								long[] rates = (long[])dm.getUserData( DM_RATES );
+								
+								if ( rates == null ){
+									
+									rates = new long[]{ -1, -1, 0, 0 };
+									
+									dm.setUserData( DM_RATES, rates );
+									
+									return( 0 );
+									
+								}else if ( rates[0] == -1 ){
+									
+									return( 0 );
+									
+								}else{
+									
+									return( rates[kw==KW_DOWN_SPEED?2:3]);
+								}
 							}
 							default:{
 
