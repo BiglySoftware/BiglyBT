@@ -198,7 +198,8 @@ BuddyPluginViewBetaChat
 	private Table					buddy_table;
 	private int						bt_col_offset;
 	private BufferedLabel		 	status;
-
+	private BubbleTextBox 			bubbleTextBox;
+	
 	private Button 					shared_nick_button;
 	private Text 					nickname;
 
@@ -1446,6 +1447,15 @@ BuddyPluginViewBetaChat
 							event.doit = false;
 	
 							log.selectAll();
+							
+						}else if ( key == 'f' && event.stateMask == SWT.MOD1 ){
+							
+							if ( bubbleTextBox != null ){
+							
+								bubbleTextBox.setFocus();
+								
+								event.doit = false;
+							}
 						}
 					}
 				});
@@ -2066,6 +2076,16 @@ BuddyPluginViewBetaChat
 	
 									input_area.selectAll();
 									
+									e.doit = false;
+									
+								}else if ( key == 'f' ){
+									
+									if ( bubbleTextBox != null ){
+									
+										bubbleTextBox.setFocus();
+										
+										e.doit = false;
+									}
 								}else if ( key == 'b' || key == 'i' ){
 									
 									String emp = key == 'b'?"**":"*";
@@ -3078,7 +3098,7 @@ BuddyPluginViewBetaChat
 		status.setLayoutData(grid_data);
 		status.setText( MessageText.getString( "PeersView.state.pending" ));
 
-		BubbleTextBox bubbleTextBox = new BubbleTextBox(component, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
+		bubbleTextBox = new BubbleTextBox(component, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
 
 		Text bubbleTextWidget = bubbleTextBox.getTextWidget();
 		

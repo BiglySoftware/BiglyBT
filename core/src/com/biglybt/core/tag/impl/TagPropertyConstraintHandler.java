@@ -2720,7 +2720,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_REMAINING			= 44;
 		private static final int	KW_DOWN_SPEED			= 45;
 		private static final int	KW_UP_SPEED				= 46;
-		private static final int	KW_SESSION_AGE		= 47;
+		private static final int	KW_SESSION_AGE			= 47;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2828,7 +2828,7 @@ TagPropertyConstraintHandler
 			keyword_map.put( "up_speed", 				new int[]{KW_UP_SPEED,				DEP_RUNNING });
 			keyword_map.put( "upspeed", 				new int[]{KW_UP_SPEED,				DEP_RUNNING });
 			keyword_map.put( "session_age", 			new int[]{KW_SESSION_AGE,			DEP_RUNNING });
-			keyword_map.put( "sessionage", 			new int[]{KW_SESSION_AGE,			DEP_RUNNING });
+			keyword_map.put( "sessionage", 				new int[]{KW_SESSION_AGE,			DEP_RUNNING });
 
 			
 		}
