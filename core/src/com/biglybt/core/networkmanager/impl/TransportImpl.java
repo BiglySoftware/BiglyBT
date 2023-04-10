@@ -26,6 +26,7 @@ import com.biglybt.core.networkmanager.EventWaiter;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.networkmanager.TransportStartpoint;
+import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.util.AEDiagnostics;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
@@ -150,6 +151,13 @@ TransportImpl
 		return( false );
 	}
 
+	@Override
+	public PluginProxy 
+	getPluginProxy()
+	{
+		return( null );
+	}
+	
 	  /**
 	   * Is the transport ready to write,
 	   * i.e. will a write request result in >0 bytes written.

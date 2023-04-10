@@ -137,12 +137,12 @@ UDPConnectionManager
 		try{
 			if ( address.isUnresolved()){
 
-				listener.connectFailure( new UnknownHostException( address.getHostName()));
+				listener.connectFailure( udp_transport, new UnknownHostException( address.getHostName()));
 
 				return;
 			}
 
-			int time = listener.connectAttemptStarted( -1 );
+			int time = listener.connectAttemptStarted( udp_transport, -1 );
 
 			if ( time != -1 ){
 
@@ -199,7 +199,7 @@ UDPConnectionManager
 
 		    						udp_transport.close( "Already closed" );
 
-		    						listener.connectFailure( new Exception( "Connection already closed" ));
+		    						listener.connectFailure( udp_transport, new Exception( "Connection already closed" ));
 
 		    					}else{
 
@@ -218,7 +218,7 @@ UDPConnectionManager
 
 	    						udp_transport.close( Debug.getNestedExceptionMessageAndStack(e));
 
-	    						listener.connectFailure( e );
+	    						listener.connectFailure( udp_transport, e );
 	    					}
 	    				}
 
@@ -237,7 +237,7 @@ UDPConnectionManager
 
 	    					f_helper.close( Debug.getNestedExceptionMessageAndStack(failure_msg));
 
-	    					listener.connectFailure( failure_msg );
+	    					listener.connectFailure( udp_transport, failure_msg );
 	    				}
 
 	    				@Override
@@ -286,7 +286,7 @@ UDPConnectionManager
 				helper.close( Debug.getNestedExceptionMessage( e ));
 			}
 
-			listener.connectFailure( e );
+			listener.connectFailure( udp_transport, e );
 		}
 	}
 

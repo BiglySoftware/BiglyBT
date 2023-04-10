@@ -22,6 +22,8 @@ package com.biglybt.core.networkmanager;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
+
 /**
  * Represents a peer Transport connection (eg. a network socket).
  */
@@ -90,6 +92,8 @@ Transport
 
   public boolean isSOCKS();
 
+  public PluginProxy getPluginProxy();
+  
   /**
    * fake a wakeup so that a read cycle is attempted
    */
@@ -181,12 +185,32 @@ Transport
    * Listener for notification of connection establishment.
    */
   public interface ConnectListener {
+	  
+	  /**
+	   * @deprecated
+	   * @param default_connect_timeout
+	   * @return
+	   */
+	public default int connectAttemptStarted( int default_connect_timeout )
+	{
+		return( connectAttemptStarted( null, default_connect_timeout ));
+	}
+
+	/**
+	 * @deprecated
+	 * @param failure_msg
+	 */
+    public default void connectFailure( Throwable failure_msg )
+    {
+    	connectFailure( null, failure_msg );
+    }
+    
     /**
      * The connection establishment process has started,
      * i.e. the connection is actively being attempted.
      * @return modified timeout
      */
-    public int connectAttemptStarted( int default_connect_timeout );
+    public int connectAttemptStarted( Transport	transport, int default_connect_timeout );
 
     /**
      * The connection attempt succeeded.
@@ -198,7 +222,7 @@ Transport
      * The connection attempt failed.
      * @param failure_msg failure reason
      */
-    public void connectFailure( Throwable failure_msg );
+    public void connectFailure( Transport	transport, Throwable failure_msg );
 
     public Object
     getConnectionProperty(

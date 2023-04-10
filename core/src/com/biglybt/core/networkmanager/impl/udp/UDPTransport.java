@@ -133,28 +133,28 @@ UDPTransport
 	{
 		if ( !UDPNetworkManager.UDP_OUTGOING_ENABLED ){
 
-			listener.connectFailure( new Throwable( "Outbound UDP connections disabled" ));
+			listener.connectFailure( this, new Throwable( "Outbound UDP connections disabled" ));
 
 			return;
 		}
 
 		if ( closed ){
 
-			listener.connectFailure( new Throwable( "Connection already closed" ));
+			listener.connectFailure( this, new Throwable( "Connection already closed" ));
 
 			return;
 		}
 
 		if( getFilter() != null ){
 
-			listener.connectFailure( new Throwable( "Already connected" ));
+			listener.connectFailure( this, new Throwable( "Already connected" ));
 
 			return;
 		}
 
 		if ( COConfigurationManager.getBooleanParameter( "Proxy.Data.Enable" )){
 
-			listener.connectFailure( new Throwable( "UDP proxy connection not supported" ));
+			listener.connectFailure( this, new Throwable( "UDP proxy connection not supported" ));
 
 			return;
 		}

@@ -27,6 +27,7 @@ import java.util.Map;
 import com.biglybt.core.networkmanager.*;
 import com.biglybt.core.peermanager.messaging.MessageStreamDecoder;
 import com.biglybt.core.peermanager.messaging.MessageStreamEncoder;
+import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.LightHashMap;
@@ -162,7 +163,8 @@ NetworkConnectionImpl
     			priority,
     			new Transport.ConnectListener() {
 			      @Override
-			      public int connectAttemptStarted(int default_connect_timeout ){
+			      public int connectAttemptStarted(Transport _transport, int default_connect_timeout ){
+			    	transport	= _transport;
 			        return( connection_listener.connectStarted( default_connect_timeout ));
 			      }
 
@@ -177,7 +179,7 @@ NetworkConnectionImpl
 			      }
 
 			      @Override
-			      public void connectFailure(Throwable failure_msg ) {
+			      public void connectFailure(Transport transport, Throwable failure_msg ) {
 			        is_connected = false;
 			        connection_listener.connectFailure( failure_msg );
 			      }
@@ -443,6 +445,13 @@ NetworkConnectionImpl
 		}
 
 		@Override
+		public PluginProxy 
+		getPluginProxy()
+		{
+			return( transport.getPluginProxy());
+		}
+		
+		@Override
 		public String
 		getDescription()
 		{
@@ -552,7 +561,7 @@ NetworkConnectionImpl
 		{
 			Debug.out( "Bogus Transport Operation" );
 
-			listener.connectFailure( new Throwable( "Bogus Transport" ));
+			listener.connectFailure( transport, new Throwable( "Bogus Transport" ));
 		}
 
 		@Override

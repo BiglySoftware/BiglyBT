@@ -22,9 +22,18 @@
 
 package com.biglybt.ui.swt.views.tableitems.peers;
 
+import java.net.URL;
+
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.networkmanager.NetworkConnection;
+import com.biglybt.core.networkmanager.Transport;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.peer.impl.PEPeerTransport;
+import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 
@@ -54,6 +63,8 @@ public class StateItem
 	
 	boolean	reconnect;
 	
+	String extra = null;
+	
 	if ( ds instanceof PEPeerTransport ){
     
 		PEPeerTransport peer = (PEPeerTransport)ds;
@@ -61,7 +72,33 @@ public class StateItem
 		state = peer.getConnectionState();
 	
 		reconnect = peer.isReconnect();
-		
+		 
+		if ( state == PEPeerTransport.CONNECTION_CONNECTING && !peer.isIncoming()){
+			
+			NetworkConnection nc = PluginCoreUtils.unwrap( peer.getPluginConnection());
+			
+			if ( nc != null ){
+				
+				Transport transport = nc.getTransport();
+				
+				if ( transport != null ){
+					
+					if ( transport.isSOCKS()){
+						
+						extra = " (SOCKS)";
+						
+					}else{
+					
+						PluginProxy pp = transport.getPluginProxy();
+						
+						if ( pp != null ){
+							
+							extra = " (" + AENetworkClassifier.categoriseAddress( pp.getHost()) + ")";
+						}
+					}
+				}
+			}
+		}
 	}else{
 		
 		if ( ds != null ){
@@ -69,7 +106,7 @@ public class StateItem
 			state = PEPeerTransport.CONNECTION_FULLY_ESTABLISHED;	// assume other peer types (e.g. MyPeer) are connected
 		}
 		
-		reconnect = false;
+		reconnect	= false;
 	}
 	    
     if( !cell.setSortValue( state ) && cell.isValid() ) {
@@ -84,6 +121,9 @@ public class StateItem
 	    	break;
 	    case PEPeerTransport.CONNECTION_CONNECTING :
 	    	state_text = MessageText.getString( "PeersView.state.connecting" );
+	    	if ( extra != null ){
+	    		state_text += extra;
+	    	}
 	    	break;
 	    case PEPeerTransport.CONNECTION_WAITING_FOR_HANDSHAKE :
 	    	state_text = MessageText.getString( "PeersView.state.handshake" );
