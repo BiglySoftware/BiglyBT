@@ -18,7 +18,7 @@
  */
 
 
-#include "stdafx.h"
+#include "framework.h"
 #include "aereg.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -65,15 +65,7 @@ DllMain(
 		{
 			hInstance	= hModule;
 
-			OSVERSIONINFOA	osvi;
-
 			application_module = (HMODULE)hModule;
-
-			osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-
-			GetVersionExA(&osvi);
-
-			non_unicode = ( osvi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS );
 
 			if ( non_unicode ){
 				RegisterWindowClassA();
@@ -103,8 +95,8 @@ CAereg::CAereg()
 void
 throwException(
 	JNIEnv*			env,
-	char*			operation,
-	char*			message )
+	const char*		operation,
+	const char*		message )
 {
 	bool	ok = false;
 
@@ -142,13 +134,14 @@ throwException(
 void
 throwException(
 	JNIEnv*			env,
-	char*			operation,
-	char*			message,
+	const char*		operation,
+	const char*		message,
 	int				error_code )
 {
-	char	buffer[4096];
+	const size_t buffer_size = 4096;
+	char	buffer[buffer_size];
 
-	sprintf( buffer, "%s (error_code=%d)", message, error_code );
+	sprintf_s( buffer, buffer_size, "%s (error_code=%d)", message, error_code );
 
 	throwException( env, operation, buffer );
 }

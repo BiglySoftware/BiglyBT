@@ -170,11 +170,6 @@ buildNumber.properties
 
 ## Our entries
 core/core.iml
-core/lib/libWIN32Access/Release/
-core/lib/libWIN32Access/aereg.sdf
-core/lib/libWIN32Access/aereg.suo
-core/lib/libWIN32Access/aereg.vcxproj.user
-core/lib/libWIN32Access/ipch/
 *.iml
 .idea/
 /uis/src/tux/

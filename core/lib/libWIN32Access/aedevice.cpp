@@ -15,13 +15,11 @@
  * 
  */
 
-#include "stdafx.h"
-#include "ntddstor.h"
+#include "framework.h"
 #include <windows.h>
 #include <winioctl.h>
 #include <stdio.h>
 #include <	Cfgmgr32.h >
-#include < Setupapi.h >
 #include "aereg.h"
 
 #include "com_biglybt_platform_win32_access_impl_AEWin32AccessInterface.h"
@@ -152,17 +150,17 @@ JNIEXPORT jobject JNICALL Java_com_biglybt_platform_win32_access_impl_AEWin32Acc
 	return arrayList;
 }
 
-void addToMap(JNIEnv *env, jobject hashMap, jmethodID methPut, jclass clsLong, jmethodID longInit, char *key, jlong val) {
+void addToMap(JNIEnv *env, jobject hashMap, jmethodID methPut, jclass clsLong, jmethodID longInit, const char *key, jlong val) {
 	jobject longObj = env->NewObject(clsLong, longInit, val);
 	env->CallObjectMethod(hashMap, methPut, env->NewStringUTF(key), longObj);
 }
 
-void addToMap(JNIEnv *env, jobject hashMap, jmethodID methPut, char *key, char *val) {
+void addToMap(JNIEnv *env, jobject hashMap, jmethodID methPut, const char *key, char *val) {
 	env->CallObjectMethod(hashMap, methPut, env->NewStringUTF(key), env->NewStringUTF(val));
 }
 
 
-void addToMap(JNIEnv *env, jobject hashMap, jmethodID methPut, char *key, WCHAR *val, int val_len) {
+void addToMap(JNIEnv *env, jobject hashMap, jmethodID methPut, const char *key, WCHAR *val, int val_len) {
 	//int len = WideCharToMultiByte(CP_UTF8, 0, val, -1, NULL, 0, NULL, NULL);
 	//char *utf8 = new char[len];
 	//WideCharToMultiByte(CP_UTF8, 0, val, -1, utf8, len, NULL, NULL);
