@@ -25,67 +25,74 @@ import com.biglybt.core.networkmanager.RateHandler;
 /**
  * Interface designation for rate-limited entities controlled by a handler.
  */
-public interface RateControlledEntity {
-  /**
-   * Uses fair round-robin scheduling of processing ops.
-   */
-  public static final int PRIORITY_NORMAL = 0;
+public interface 
+RateControlledEntity {
+	/**
+	 * Uses fair round-robin scheduling of processing ops.
+	 */
+	public static final int PRIORITY_NORMAL = 0;
 
-  /**
-   * Guaranteed scheduling of processing ops, with preference over normal-priority entities.
-   */
-  public static final int PRIORITY_HIGH   = 1;
+	/**
+	 * Guaranteed scheduling of processing ops, with preference over normal-priority entities.
+	 */
+	public static final int PRIORITY_HIGH   = 1;
 
-  /**
-   * Is ready for a processing op.
-   * @return true if it can process >0 bytes, false if not ready
-   */
-  public boolean canProcess(  EventWaiter waiter );
+	/**
+	 * Is ready for a processing op.
+	 * @return true if it can process >0 bytes, false if not ready
+	 */
+	
+	public boolean 
+	canProcess(  
+		EventWaiter waiter );
+	/**
+	 * Attempt to do a processing operation.
+	 * @return true if >0 bytes were processed (success), false if 0 bytes were processed (failure)
+	 */
+	
+	public int 
+	doProcessing( 
+		EventWaiter waiter, 
+		int max_bytes_permitted );
 
-  /**
-   * Attempt to do a processing operation.
-   * @return true if >0 bytes were processed (success), false if 0 bytes were processed (failure)
-   */
-  public int doProcessing( EventWaiter waiter, int max_bytes_permitted );
+	/**
+	 * Get this entity's priority level.
+	 * @return priority
+	 */
+	public int getPriority();
 
-  /**
-   * Get this entity's priority level.
-   * @return priority
-   */
-  public int getPriority();
+	/**
+	 * stats functions
+	 * @return
+	 */
 
-  	/**
-  	 * stats functions
-  	 * @return
-  	 */
+	public boolean
+	getPriorityBoost();
 
-  public boolean
-  getPriorityBoost();
+	public long
+	getBytesReadyToWrite();
 
-  public long
-  getBytesReadyToWrite();
+	/**
+	 * If there are no connections then the waiter will be kicked when a connection arrives
+	 * @param waiter
+	 * @return
+	 */
 
-  /**
-   * If there are no connections then the waiter will be kicked when a connection arrives
-   * @param waiter
-   * @return
-   */
+	public int
+	getConnectionCount( EventWaiter waiter );
 
-  public int
-  getConnectionCount( EventWaiter waiter );
+	/**
+	 * The waiter is kicked if the ready condition changes
+	 * @param waiter
+	 * @return
+	 */
 
-  /**
-   * The waiter is kicked if the ready condition changes
-   * @param waiter
-   * @return
-   */
+	public int
+	getReadyConnectionCount( EventWaiter waiter );
 
-  public int
-  getReadyConnectionCount( EventWaiter waiter );
+	public RateHandler
+	getRateHandler();
 
-  public RateHandler
-  getRateHandler();
-
-  public String
-  getString();
+	public String
+	getString();
 }

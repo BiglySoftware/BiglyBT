@@ -66,7 +66,7 @@ PeerForeignDelegate
 	private final PeerManagerImpl		manager;
 	private final Peer					foreign;
 
-	private NetworkConnectionBase	network_connection;
+	private final NetworkConnectionBase	network_connection;
 
 	private long	create_time_mono		= SystemTime.getMonotonousTime();
 	private long	last_data_received_time =-1;

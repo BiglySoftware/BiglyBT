@@ -49,98 +49,120 @@ public class SinglePeerDownloader implements RateControlledEntity {
 		return( rate_handler );
 	}
 
-  @Override
-  public boolean canProcess(EventWaiter waiter ) {
+	@Override
+	public boolean 
+	canProcess(
+		EventWaiter waiter ) 
+	{
+		try{
+			if( connection.getTransportBase().isReadyForRead( waiter ) != 0 )  {
+				return false;  //underlying transport not ready
+			}
 
-    if( connection.getTransportBase().isReadyForRead( waiter ) != 0 )  {
-      return false;  //underlying transport not ready
-    }
+			int[] allowed = rate_handler.getCurrentNumBytesAllowed();
 
-    int[] allowed = rate_handler.getCurrentNumBytesAllowed();
+			if ( allowed[0] < 1 ){ // Not yet fully supporting free-protocol for downloading  && allowed[1] == 0 ) {
 
-    if ( allowed[0] < 1 ){ // Not yet fully supporting free-protocol for downloading  && allowed[1] == 0 ) {
+				return false;  //not allowed to receive any bytes
+			}
 
-      return false;  //not allowed to receive any bytes
-    }
+			return true;
 
-    return true;
-  }
+		}catch( RuntimeException e ){
 
-  @Override
-  public int doProcessing(EventWaiter waiter, int max_bytes ) {
-    if( connection.getTransportBase().isReadyForRead(waiter) != 0 )  {
-      return 0;
-    }
+			Debug.out( getString(), e );
 
-    int[] allowed = rate_handler.getCurrentNumBytesAllowed();
-
-    int num_bytes_allowed = allowed[0];
-
-    boolean protocol_is_free = allowed[1] > 0;
-
-    if ( num_bytes_allowed < 1 ){
-
-    	// Not yet fully supporting free-protocol for downloading
-
-      return 0;
-    }
-
-	if ( max_bytes > 0 && max_bytes < num_bytes_allowed ){
-		num_bytes_allowed = max_bytes;
+			throw( e );
+		}
 	}
 
-    //int mss = NetworkManager.getTcpMssSize();
-    //if( num_bytes_allowed > mss )  num_bytes_allowed = mss;
-
-    int bytes_read = 0;
-
-    int data_bytes_read		= 0;
-    int protocol_bytes_read	= 0;
-
-    try {
-      int[] read = connection.getIncomingMessageQueue().receiveFromTransport( num_bytes_allowed, protocol_is_free );
-
-      data_bytes_read 		= read[0];
-      protocol_bytes_read	= read[1];
-
-      bytes_read = data_bytes_read + protocol_bytes_read;
-    }
-    catch( Throwable e ) {
-
-      if( AEDiagnostics.TRACE_CONNECTION_DROPS ) {
-        if( e.getMessage() == null ) {
-          Debug.out( "null read exception message: ", e );
-        }
-        else {
-          if(!e.getMessage().contains("end of stream on socket read") &&
-            !e.getMessage().contains(
-              "An existing connection was forcibly closed by the remote host") &&
-            !e.getMessage().contains("Connection reset by peer") &&
-            !e.getMessage().contains(
-              "An established connection was aborted by the software in your host machine")) {
-
-            System.out.println( "SP: read exception [" +connection.getTransportBase().getDescription()+ "]: " +e.getMessage() );
-          }
-        }
-      }
-
-      if (! (e instanceof IOException )){
-
-    	  Debug.printStackTrace(e);
-      }
-
-      connection.notifyOfException( e );
-      return 0;
-    }
-
-    if( bytes_read < 1 )  {
-      return 0;
-    }
-
-    rate_handler.bytesProcessed( data_bytes_read, protocol_bytes_read );
-
-    return bytes_read;
-  }
+	@Override
+	public int 
+	doProcessing(
+		EventWaiter waiter, 
+		int max_bytes ) 
+	{
+		try{
+			if( connection.getTransportBase().isReadyForRead(waiter) != 0 )  {
+				return 0;
+			}
+	
+			int[] allowed = rate_handler.getCurrentNumBytesAllowed();
+	
+			int num_bytes_allowed = allowed[0];
+	
+			boolean protocol_is_free = allowed[1] > 0;
+	
+			if ( num_bytes_allowed < 1 ){
+	
+				// Not yet fully supporting free-protocol for downloading
+	
+				return 0;
+			}
+	
+			if ( max_bytes > 0 && max_bytes < num_bytes_allowed ){
+				num_bytes_allowed = max_bytes;
+			}
+	
+			//int mss = NetworkManager.getTcpMssSize();
+			//if( num_bytes_allowed > mss )  num_bytes_allowed = mss;
+	
+			int bytes_read = 0;
+	
+			int data_bytes_read		= 0;
+			int protocol_bytes_read	= 0;
+	
+			try {
+				int[] read = connection.getIncomingMessageQueue().receiveFromTransport( num_bytes_allowed, protocol_is_free );
+	
+				data_bytes_read 		= read[0];
+				protocol_bytes_read	= read[1];
+	
+				bytes_read = data_bytes_read + protocol_bytes_read;
+			}
+			catch( Throwable e ) {
+	
+				if( AEDiagnostics.TRACE_CONNECTION_DROPS ) {
+					if( e.getMessage() == null ) {
+						Debug.out( "null read exception message: ", e );
+					}
+					else {
+						if(!e.getMessage().contains("end of stream on socket read") &&
+								!e.getMessage().contains(
+										"An existing connection was forcibly closed by the remote host") &&
+								!e.getMessage().contains("Connection reset by peer") &&
+								!e.getMessage().contains(
+										"An established connection was aborted by the software in your host machine")) {
+	
+							System.out.println( "SP: read exception [" +connection.getTransportBase().getDescription()+ "]: " +e.getMessage() );
+						}
+					}
+				}
+	
+				if (! (e instanceof IOException )){
+	
+					Debug.printStackTrace(e);
+				}
+	
+				connection.notifyOfException( e );
+				return 0;
+			}
+	
+			if( bytes_read < 1 )  {
+				return 0;
+			}
+	
+			rate_handler.bytesProcessed( data_bytes_read, protocol_bytes_read );
+	
+			return bytes_read;
+			
+		}catch( RuntimeException e ){
+			
+			Debug.out( getString(), e );
+			
+			throw( e );
+		}
+	}
 
 
   @Override

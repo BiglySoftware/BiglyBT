@@ -116,10 +116,18 @@ public class EntityHandler {
    * @param connection to cancel
    */
   public boolean 
-  cancelPeerConnection( NetworkConnectionBase connection ) 
+  cancelPeerConnection( 
+	NetworkConnectionBase connection ) 
   {
 	  try{  
 		  lock.enter();
+		  
+		  if ( connection == null ){
+			  
+			  Debug.out( "connection is null" );
+			  
+			  return( false );
+		  }
 		  
 		  if ( handler_type == TransferProcessor.TYPE_UPLOAD ){
 			  
@@ -166,10 +174,20 @@ public class EntityHandler {
    * @param handler individual connection rate handler
    */
   public void 
-  upgradePeerConnection( NetworkConnectionBase connection, RateHandler handler, int partition_id ) 
+  upgradePeerConnection( 
+	NetworkConnectionBase	connection, 
+	RateHandler				handler, 
+	int						partition_id ) 
   {
 	  try{  
 		  lock.enter();
+		  
+		  if ( connection == null ){
+			  
+			  Debug.out( "connection is null" );
+			  
+			  return;
+		  }
 		  
 		  if( handler_type == TransferProcessor.TYPE_UPLOAD ) {
 			  SinglePeerUploader upload_entity = new SinglePeerUploader( connection, handler );
@@ -203,6 +221,13 @@ public class EntityHandler {
   {
 	  try {  
 		  lock.enter();
+		  
+		  if ( connection == null ){
+			  
+			  Debug.out( "connection is null" );
+			  
+			  return;
+		  }
 		  
 		  if ( handler_type == TransferProcessor.TYPE_UPLOAD ){
 			  
@@ -247,6 +272,13 @@ public class EntityHandler {
 	  try{
 		  lock.enter();
 
+		  if ( connection == null ){
+			  
+			  Debug.out( "connection is null" );
+			  
+			  return( null );
+		  }
+		  
 		  if( handler_type == TransferProcessor.TYPE_UPLOAD ){
 
 			  SinglePeerUploader upload_entity = (SinglePeerUploader)upgraded_connections.get( connection );

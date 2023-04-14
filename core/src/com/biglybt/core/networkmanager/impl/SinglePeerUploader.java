@@ -51,137 +51,160 @@ public class SinglePeerUploader implements RateControlledEntity {
 
 ////////////////RateControlledWriteEntity implementation ////////////////////
 
-  @Override
-  public boolean canProcess(EventWaiter waiter) {
-    if( !connection.getTransportBase().isReadyForWrite(waiter) )  {
-      return false;  //underlying transport not ready
-    }
-    if( connection.getOutgoingMessageQueue().getTotalSize() < 1 ) {
-      return false;  //no data to send
-    }
-    int[] allowed = rate_handler.getCurrentNumBytesAllowed();
+	@Override
+	public boolean 
+	canProcess(
+		EventWaiter waiter) 
+	{
+		try{
+			if( !connection.getTransportBase().isReadyForWrite(waiter) )  {
+				return false;  //underlying transport not ready
+			}
+			if( connection.getOutgoingMessageQueue().getTotalSize() < 1 ) {
+				return false;  //no data to send
+			}
+			int[] allowed = rate_handler.getCurrentNumBytesAllowed();
 
-    if( allowed[0] < 1 ){
+			if( allowed[0] < 1 ){
 
-    	boolean protocol_is_free = allowed[1] > 0;
+				boolean protocol_is_free = allowed[1] > 0;
 
-    	if ( protocol_is_free ){
+				if ( protocol_is_free ){
 
-    		Message first = connection.getOutgoingMessageQueue().peekFirstMessage();
+					Message first = connection.getOutgoingMessageQueue().peekFirstMessage();
 
-    		if ( first != null && first.getType() == Message.TYPE_PROTOCOL_PAYLOAD ){
+					if ( first != null && first.getType() == Message.TYPE_PROTOCOL_PAYLOAD ){
 
-    			return( true );
+						return( true );
 
-    		}else{
+					}else{
 
-    			return( false );
-    		}
-    	}else{
+						return( false );
+					}
+				}else{
 
-    		return( false );
-    	}
-    }
-    return true;
-  }
+					return( false );
+				}
+			}
+			return true;
+			
+		}catch( RuntimeException e ){
 
-  @Override
-  public int doProcessing(EventWaiter waiter, int max_bytes ) {
-    if( !connection.getTransportBase().isReadyForWrite(waiter) )  {
-      //Debug.out("dW:not ready"); happens sometimes, just live with it as non-fatal
-      return 0;
-    }
+			Debug.out( getString(), e );
 
-    int[] allowed = rate_handler.getCurrentNumBytesAllowed();
-
-    int num_bytes_allowed = allowed[0];
-
-    boolean	protocol_is_free = allowed[1] > 0;
-
-    if ( num_bytes_allowed < 1 ){
-
-    	if ( protocol_is_free ){
-
-    		num_bytes_allowed = 0;	// in case negative
-
-    	}else{
-
-    		return( 0 );
-    	}
-    }
-
-	if ( max_bytes > 0 && max_bytes < num_bytes_allowed ){
-
-		num_bytes_allowed = max_bytes;
+			throw( e );
+		}
 	}
 
-    int num_bytes_available = connection.getOutgoingMessageQueue().getTotalSize();
-
-    if ( num_bytes_available < 1 ){
-
-    	if ( !connection.getOutgoingMessageQueue().isDestroyed()){
-
-    		//Debug.out("dW:not avail"); happens sometimes, just live with it as non-fatal
-    	}
-
-    	return 0;
-    }
-
-    int num_bytes_to_write = num_bytes_allowed > num_bytes_available ? num_bytes_available : num_bytes_allowed;
-
-    //int mss = NetworkManager.getTcpMssSize();
-    //if( num_bytes_to_write > mss )  num_bytes_to_write = mss;
-
-    int[] written;
-
-    try {
-
-      written = connection.getOutgoingMessageQueue().deliverToTransport( num_bytes_to_write, protocol_is_free, false );
-
-    }catch( Throwable e ) {
-
-    	written = new int[2];
-
-    	if( AEDiagnostics.TRACE_CONNECTION_DROPS ) {
-    		if( e.getMessage() == null ) {
-    			Debug.out( "null write exception message: ", e );
-    		}
-    		else {
-    			if(!e.getMessage().contains(
-						"An existing connection was forcibly closed by the remote host") &&
-						!e.getMessage().contains("Connection reset by peer") &&
-						!e.getMessage().contains("Broken pipe") &&
-						!e.getMessage().contains(
-							"An established connection was aborted by the software in your host machine")) {
-
-    				System.out.println( "SP: write exception [" +connection.getTransportBase().getDescription()+ "]: " +e.getMessage() );
-    			}
-    		}
-    	}
-
-    	if (! (e instanceof IOException )){
-
-    		Debug.printStackTrace(e);
-    	}
-
-    	connection.notifyOfException( e );
-    	return 0;
-    }
-
-    int data_bytes_written		= written[0];
-    int protocol_bytes_written	= written[1];
-
-    int total_written =data_bytes_written + protocol_bytes_written;
-
-    if ( total_written < 1 ){
-
-    	return 0;
-    }
-
-    rate_handler.bytesProcessed( data_bytes_written, protocol_bytes_written );
-
-    return( total_written );
-  }
+	@Override
+	public int 
+	doProcessing(
+		EventWaiter waiter, 
+		int max_bytes ) 
+	{
+		try{
+			if( !connection.getTransportBase().isReadyForWrite(waiter) )  {
+				//Debug.out("dW:not ready"); happens sometimes, just live with it as non-fatal
+				return 0;
+			}
+	
+			int[] allowed = rate_handler.getCurrentNumBytesAllowed();
+	
+			int num_bytes_allowed = allowed[0];
+	
+			boolean	protocol_is_free = allowed[1] > 0;
+	
+			if ( num_bytes_allowed < 1 ){
+	
+				if ( protocol_is_free ){
+	
+					num_bytes_allowed = 0;	// in case negative
+	
+				}else{
+	
+					return( 0 );
+				}
+			}
+	
+			if ( max_bytes > 0 && max_bytes < num_bytes_allowed ){
+	
+				num_bytes_allowed = max_bytes;
+			}
+	
+			int num_bytes_available = connection.getOutgoingMessageQueue().getTotalSize();
+	
+			if ( num_bytes_available < 1 ){
+	
+				if ( !connection.getOutgoingMessageQueue().isDestroyed()){
+	
+					//Debug.out("dW:not avail"); happens sometimes, just live with it as non-fatal
+				}
+	
+				return 0;
+			}
+	
+			int num_bytes_to_write = num_bytes_allowed > num_bytes_available ? num_bytes_available : num_bytes_allowed;
+	
+			//int mss = NetworkManager.getTcpMssSize();
+			//if( num_bytes_to_write > mss )  num_bytes_to_write = mss;
+	
+			int[] written;
+	
+			try {
+	
+				written = connection.getOutgoingMessageQueue().deliverToTransport( num_bytes_to_write, protocol_is_free, false );
+	
+			}catch( Throwable e ) {
+	
+				written = new int[2];
+	
+				if( AEDiagnostics.TRACE_CONNECTION_DROPS ) {
+					if( e.getMessage() == null ) {
+						Debug.out( "null write exception message: ", e );
+					}
+					else {
+						if(!e.getMessage().contains(
+								"An existing connection was forcibly closed by the remote host") &&
+								!e.getMessage().contains("Connection reset by peer") &&
+								!e.getMessage().contains("Broken pipe") &&
+								!e.getMessage().contains(
+										"An established connection was aborted by the software in your host machine")) {
+	
+							System.out.println( "SP: write exception [" +connection.getTransportBase().getDescription()+ "]: " +e.getMessage() );
+						}
+					}
+				}
+	
+				if (! (e instanceof IOException )){
+	
+					Debug.printStackTrace(e);
+				}
+	
+				connection.notifyOfException( e );
+				return 0;
+			}
+	
+			int data_bytes_written		= written[0];
+			int protocol_bytes_written	= written[1];
+	
+			int total_written =data_bytes_written + protocol_bytes_written;
+	
+			if ( total_written < 1 ){
+	
+				return 0;
+			}
+	
+			rate_handler.bytesProcessed( data_bytes_written, protocol_bytes_written );
+	
+			return( total_written );
+			
+		}catch( RuntimeException e ){
+			
+			Debug.out( getString(), e );
+			
+			throw( e );
+		}
+	}
 
   @Override
   public int getPriority() {

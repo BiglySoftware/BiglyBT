@@ -105,13 +105,13 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
   public WriteController() {
 
     //start write handler processing
-    Thread write_processor_thread = new AEThread( "WriteController:WriteProcessor" ) {
+    AEThread2 write_processor_thread = new AEThread2( "WriteController:WriteProcessor" ) {
       @Override
-      public void runSupport() {
+      public void run() {
         writeProcessorLoop();
       }
     };
-    write_processor_thread.setDaemon( true );
+ 
     write_processor_thread.setPriority( Thread.MAX_PRIORITY - 1 );
     write_processor_thread.start();
 
@@ -296,8 +296,8 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
             }
           }
         }
-      }
-      catch( Throwable t ) {
+      }catch( Throwable t ){
+    	  
         Debug.out( "writeProcessorLoop() EXCEPTION: ", t );
       }
 

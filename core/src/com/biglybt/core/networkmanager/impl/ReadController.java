@@ -78,13 +78,13 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
   public ReadController() {
 
     //start read handler processing
-    Thread read_processor_thread = new AEThread( "ReadController:ReadProcessor" ) {
+    AEThread2 read_processor_thread = new AEThread2( "ReadController:ReadProcessor" ) {
       @Override
-      public void runSupport() {
+      public void run() {
         readProcessorLoop();
       }
     };
-    read_processor_thread.setDaemon( true );
+    
     read_processor_thread.setPriority( Thread.MAX_PRIORITY - 1 );
     read_processor_thread.start();
 
@@ -229,8 +229,7 @@ public class ReadController implements CoreStatsProvider, AEDiagnosticsEvidenceG
             }
           }
         }
-      }
-      catch( Throwable t ) {
+      }catch( Throwable t ) {
         Debug.out( "readProcessorLoop() EXCEPTION: ", t );
       }
     }
