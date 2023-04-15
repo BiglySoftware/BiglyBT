@@ -24,6 +24,7 @@ import java.io.IOException;
 import com.biglybt.core.networkmanager.EventWaiter;
 import com.biglybt.core.networkmanager.NetworkConnectionBase;
 import com.biglybt.core.networkmanager.RateHandler;
+import com.biglybt.core.networkmanager.TransportBase;
 import com.biglybt.core.util.AEDiagnostics;
 import com.biglybt.core.util.Debug;
 
@@ -55,7 +56,10 @@ public class SinglePeerDownloader implements RateControlledEntity {
 		EventWaiter waiter ) 
 	{
 		try{
-			if( connection.getTransportBase().isReadyForRead( waiter ) != 0 )  {
+			TransportBase tb = connection.getTransportBase();
+			
+			if ( tb == null || tb.isReadyForRead( waiter ) != 0 ){
+				
 				return false;  //underlying transport not ready
 			}
 
@@ -83,7 +87,10 @@ public class SinglePeerDownloader implements RateControlledEntity {
 		int max_bytes ) 
 	{
 		try{
-			if( connection.getTransportBase().isReadyForRead(waiter) != 0 )  {
+			TransportBase tb = connection.getTransportBase();
+			
+			if ( tb == null || tb.isReadyForRead(waiter) != 0 ){
+				
 				return 0;
 			}
 	
@@ -134,7 +141,7 @@ public class SinglePeerDownloader implements RateControlledEntity {
 								!e.getMessage().contains(
 										"An established connection was aborted by the software in your host machine")) {
 	
-							System.out.println( "SP: read exception [" +connection.getTransportBase().getDescription()+ "]: " +e.getMessage() );
+							System.out.println( "SP: read exception [" +tb.getDescription()+ "]: " +e.getMessage() );
 						}
 					}
 				}
@@ -192,7 +199,9 @@ public class SinglePeerDownloader implements RateControlledEntity {
   getReadyConnectionCount(
 	EventWaiter	waiter )
   {
-	  if ( connection.getTransportBase().isReadyForRead( waiter) == 0 ){
+	  TransportBase tb = connection.getTransportBase();
+	  
+	  if ( tb != null && tb.isReadyForRead( waiter) == 0 ){
 
 		  return( 1 );
 	  }

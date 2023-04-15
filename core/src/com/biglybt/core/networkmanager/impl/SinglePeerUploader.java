@@ -24,6 +24,7 @@ import java.io.IOException;
 import com.biglybt.core.networkmanager.EventWaiter;
 import com.biglybt.core.networkmanager.NetworkConnectionBase;
 import com.biglybt.core.networkmanager.RateHandler;
+import com.biglybt.core.networkmanager.TransportBase;
 import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.util.AEDiagnostics;
 import com.biglybt.core.util.Debug;
@@ -57,9 +58,13 @@ public class SinglePeerUploader implements RateControlledEntity {
 		EventWaiter waiter) 
 	{
 		try{
-			if( !connection.getTransportBase().isReadyForWrite(waiter) )  {
+			TransportBase tb = connection.getTransportBase();
+			
+			if ( tb == null || !tb.isReadyForWrite(waiter)){
+				
 				return false;  //underlying transport not ready
 			}
+			
 			if( connection.getOutgoingMessageQueue().getTotalSize() < 1 ) {
 				return false;  //no data to send
 			}
@@ -103,7 +108,9 @@ public class SinglePeerUploader implements RateControlledEntity {
 		int max_bytes ) 
 	{
 		try{
-			if( !connection.getTransportBase().isReadyForWrite(waiter) )  {
+			TransportBase tb = connection.getTransportBase();
+			
+			if( tb == null || !tb.isReadyForWrite(waiter) )  {
 				//Debug.out("dW:not ready"); happens sometimes, just live with it as non-fatal
 				return 0;
 			}
@@ -170,7 +177,7 @@ public class SinglePeerUploader implements RateControlledEntity {
 								!e.getMessage().contains(
 										"An established connection was aborted by the software in your host machine")) {
 	
-							System.out.println( "SP: write exception [" +connection.getTransportBase().getDescription()+ "]: " +e.getMessage() );
+							System.out.println( "SP: write exception [" +tb.getDescription()+ "]: " +e.getMessage() );
 						}
 					}
 				}
@@ -237,7 +244,9 @@ public class SinglePeerUploader implements RateControlledEntity {
   getReadyConnectionCount(
 	EventWaiter	waiter )
   {
-	  if ( connection.getTransportBase().isReadyForWrite(waiter)){
+	  TransportBase tb = connection.getTransportBase();
+	  
+	  if ( tb != null && tb.isReadyForWrite(waiter)){
 
 		  return( 1 );
 	  }

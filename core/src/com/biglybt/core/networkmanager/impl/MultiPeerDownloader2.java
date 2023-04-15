@@ -27,6 +27,7 @@ import java.util.List;
 import com.biglybt.core.networkmanager.EventWaiter;
 import com.biglybt.core.networkmanager.NetworkConnectionBase;
 import com.biglybt.core.networkmanager.RateHandler;
+import com.biglybt.core.networkmanager.TransportBase;
 import com.biglybt.core.util.AEDiagnostics;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
@@ -143,7 +144,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 		try{
 			connections_mon.enter();
 			//copy-on-write
-			ArrayList<NetworkConnectionBase> conn_new = new ArrayList( connections_cow );
+			ArrayList<NetworkConnectionBase> conn_new = new ArrayList<>( connections_cow );
 			boolean removed = conn_new.remove( connection );
 			if( !removed ) return false;
 			connections_cow = conn_new;
@@ -214,11 +215,11 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 	{
 		int	res = 0;
 
-		for (Iterator it=connections_cow.iterator();it.hasNext();){
+		for( NetworkConnectionBase connection: connections_cow ){
 
-			NetworkConnectionBase connection = (NetworkConnectionBase)it.next();
-
-			if ( connection.getTransportBase().isReadyForRead( waiter ) == 0 ){
+			TransportBase tb = connection.getTransportBase();
+			
+			if ( tb != null && tb.isReadyForRead( waiter ) == 0 ){
 
 				res++;
 			}
@@ -301,7 +302,9 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 					ConnectionEntry next = entry.next;
 
-					if ( connection.getTransportBase().isReadyForRead( waiter ) == 0 ){
+					TransportBase tb = connection.getTransportBase();
+					
+					if ( tb != null && tb.isReadyForRead( waiter ) == 0 ){
 
 						// System.out.println( "   moving to active " + connection.getString());
 
@@ -331,7 +334,14 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 				ConnectionEntry next = entry.next;
 
-				long	ready = connection.getTransportBase().isReadyForRead( waiter );
+				TransportBase tb = connection.getTransportBase();
+				
+				if ( tb == null ){
+					
+					continue;
+				}
+				
+				long	ready = tb.isReadyForRead( waiter );
 
 				// System.out.println( "   " + connection.getString() + " - " + ready );
 
@@ -365,7 +375,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 										!e.getMessage().contains(
 												"An established connection was aborted by the software in your host machine")) {
 
-									System.out.println( "MP: read exception [" +connection.getTransportBase().getDescription()+ "]: " +e.getMessage() );
+									System.out.println( "MP: read exception [" +tb.getDescription()+ "]: " +e.getMessage() );
 								}
 							}
 						}
@@ -438,9 +448,7 @@ public class MultiPeerDownloader2 implements RateControlledEntity {
 
 		int	num = 0;
 
-		for (Iterator it=connections_cow.iterator();it.hasNext();){
-
-			NetworkConnectionBase connection = (NetworkConnectionBase)it.next();
+		for( NetworkConnectionBase connection: connections_cow ){
 
 			if ( num++ > 0 ){
 

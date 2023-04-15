@@ -50,18 +50,18 @@ NetworkConnectionImpl
   private boolean allow_fallback;
   private byte[][] shared_secrets;
 
-  ConnectionListener connection_listener;
-  boolean 	is_connected;
+  private ConnectionListener connection_listener;
+  private boolean 	is_connected;
   private byte		is_lan_local	= AddressUtils.LAN_LOCAL_MAYBE;
 
   private int		enhanced_partition_id = -1;
   
-  final OutgoingMessageQueueImpl outgoing_message_queue;
+  private final OutgoingMessageQueueImpl outgoing_message_queue;
   private final IncomingMessageQueueImpl incoming_message_queue;
 
-  Transport	transport;
+  private Transport	transport;
 
-  volatile ConnectionAttempt			connection_attempt;
+  private volatile ConnectionAttempt	connection_attempt;
   private boolean						started;
   private volatile boolean				closed;
 
@@ -164,7 +164,9 @@ NetworkConnectionImpl
     			new Transport.ConnectListener() {
 			      @Override
 			      public int connectAttemptStarted(Transport _transport, int default_connect_timeout ){
-			    	transport	= _transport;
+			    	if ( _transport != null ){
+			    		transport	= _transport;
+			    	}
 			        return( connection_listener.connectStarted( default_connect_timeout ));
 			      }
 

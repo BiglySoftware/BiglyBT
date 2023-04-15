@@ -26,6 +26,7 @@ import com.biglybt.core.networkmanager.EventWaiter;
 import com.biglybt.core.networkmanager.NetworkConnectionBase;
 import com.biglybt.core.networkmanager.OutgoingMessageQueue;
 import com.biglybt.core.networkmanager.RateHandler;
+import com.biglybt.core.networkmanager.TransportBase;
 import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.util.AEDiagnostics;
 import com.biglybt.core.util.AEMonitor;
@@ -50,8 +51,8 @@ public class MultiPeerUploader implements RateControlledEntity {
 	private final RateHandler rate_handler;
 	private boolean destroyed = false;
 
-	final HashMap waiting_connections = new HashMap();
-	private final LinkedList ready_connections = new LinkedList();
+	final HashMap<NetworkConnectionBase,PeerData> waiting_connections = new HashMap<>();
+	private final LinkedList<NetworkConnectionBase> ready_connections = new LinkedList<>();
 	final AEMonitor lists_lock = new AEMonitor( "PacketFillingMultiPeerUploader:lists_lock" );
 
 	private volatile EventWaiter	waiter;
@@ -352,7 +353,9 @@ public class MultiPeerUploader implements RateControlledEntity {
 			while( num_bytes_remaining > 0 && num_unusable_connections < ready_connections.size() ) {
 				NetworkConnectionBase conn = (NetworkConnectionBase)ready_connections.removeFirst();
 
-				if( !conn.getTransportBase().isReadyForWrite( waiter ) ) {  //not yet ready for writing
+				TransportBase tb = conn.getTransportBase();
+				
+				if( tb == null || !tb.isReadyForWrite( waiter ) ) {  //not yet ready for writing
 					ready_connections.addLast( conn );  //re-add to end as currently unusable
 					num_unusable_connections++;
 					continue;  //move on to the next connection
@@ -409,7 +412,7 @@ public class MultiPeerUploader implements RateControlledEntity {
 										!e.getMessage().contains(
 												"An established connection was aborted by the software in your host machine")) {
 
-									System.out.println( "MP: write exception [" +conn.getTransportBase().getDescription()+ "]: " +e.getMessage() );
+									System.out.println( "MP: write exception [" +tb.getDescription()+ "]: " +e.getMessage() );
 								}
 							}
 						}
@@ -534,21 +537,21 @@ public class MultiPeerUploader implements RateControlledEntity {
 		try {
 			lists_lock.enter();
 
-			for( Iterator i = waiting_connections.keySet().iterator(); i.hasNext(); ) {
+			for( NetworkConnectionBase conn: waiting_connections.keySet()){
 
-				NetworkConnectionBase conn = (NetworkConnectionBase)i.next();
-
-				if ( conn.getTransportBase().isReadyForWrite(waiter)){
+				TransportBase tb = conn.getTransportBase();
+				
+				if ( tb != null && tb.isReadyForWrite(waiter)){
 
 					total++;
 				}
 			}
 
-			for( Iterator i = ready_connections.iterator(); i.hasNext(); ) {
+			for( NetworkConnectionBase conn: ready_connections ){
 
-				NetworkConnectionBase conn = (NetworkConnectionBase)i.next();
-
-				if ( conn.getTransportBase().isReadyForWrite(waiter)){
+				TransportBase tb = conn.getTransportBase();
+				
+				if ( tb != null && tb.isReadyForWrite(waiter)){
 
 					total++;
 				}
