@@ -656,7 +656,7 @@ public class NameItem extends CoreTableColumnSWT implements
 											}else if ( old_skipped == 1 ){
 												new_skipped = true;
 											}else{
-												new_skipped = true;
+												new_skipped = false;	// intermediate -> checked
 											}
 											
 											// disconcerting if we don't force the checkbox state
