@@ -1840,6 +1840,11 @@ public class MyTorrentsView
 		updateSelectedContent();
 		refreshTorrentMenu();
 	}
+	
+	@Override
+	public void focusRequested(){
+		viewActive = true;
+	}
 
 	// @see TableSelectionListener#mouseEnter(TableRowCore)
 	@Override

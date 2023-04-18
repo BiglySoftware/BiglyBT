@@ -410,6 +410,12 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 	}
 
+	protected void triggerFocusRequested()
+	{
+		for ( TableSelectionListener l: listenersSelection) {
+			l.focusRequested();
+		}
+	}
 	/**
 	 *
 	 */
@@ -2867,6 +2873,12 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		apply(
 			TableRowCore[]	sel )
 		{
+				// bit of a hack to ensure that the selection change is taken note of as when
+				// we apply forward/back the table view doesn't have focus and therefore
+				// doesn't update the selected content (toolbar state, subtab focus)
+			
+			triggerFocusRequested();
+			
 			setSelectedRows( sel, true, false ) ;
 			
 			if ( sel.length > 0 ){

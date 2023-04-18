@@ -58,4 +58,6 @@ public interface TableSelectionListener
 	public void mouseEnter(TableRowCore row);
 
 	public void mouseExit(TableRowCore row);
+	
+	public default void focusRequested(){};
 }
