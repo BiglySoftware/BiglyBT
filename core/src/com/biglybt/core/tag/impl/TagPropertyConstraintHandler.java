@@ -2018,6 +2018,11 @@ TagPropertyConstraintHandler
 				
 				Object o_result = expr.eval( context, dm, dm_tags, debug );
 				
+				if ( o_result instanceof Number ){
+					
+					o_result = ((Number)o_result).intValue() != 0;
+				}
+				
 				if ( o_result instanceof Boolean ){
 				
 					boolean result = (Boolean)o_result;
@@ -2666,6 +2671,7 @@ TagPropertyConstraintHandler
 		private static final int FT_MULT				= 49;
 		private static final int FT_DIV					= 50;
 		private static final int FT_GET_TAG_WEIGHT		= 51;
+		private static final int FT_IF_THEN_ELSE		= 52;
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -3409,6 +3415,12 @@ TagPropertyConstraintHandler
 					fn_type = FT_COUNT_TRACKERS;
 
 					params_ok = num_params == 0;
+					
+				}else if ( func_name.equals( "ifThenElse" )){
+					
+					fn_type = FT_IF_THEN_ELSE;
+										
+					params_ok = num_params == 3;
 
 				}else{
 
@@ -4333,11 +4345,108 @@ TagPropertyConstraintHandler
 						
 						return( total );
 					}
+					case FT_IF_THEN_ELSE:{
+						
+						Number cond = getNumeric( context, dm, tags, params, 0, debug );
+						
+						if ( cond.intValue() != 0 ){
+							
+							return( getWhatever( context, dm, tags, params, 1, debug ));
+							
+						}else{
+							
+							return( getWhatever( context, dm, tags, params, 2, debug ));
+						}
+					}
 				}
 
 				return( false );
 			}
 
+			private Object
+			getWhatever(
+				Map<String,Object>	context,
+				DownloadManager		dm,
+				List<Tag>			tags,
+				Object[]			args,
+				int					index,
+				StringBuilder		debug )
+			{
+				try{
+					Object arg = args[index];
+					
+					if ( arg instanceof Number ){
+						
+						return( arg );
+						
+					}else if ( arg instanceof String ){
+	
+						String s_arg = (String)arg;
+	
+						if ( GeneralUtils.startsWithDoubleQuote( s_arg ) && GeneralUtils.endsWithDoubleQuote( s_arg )){
+	
+							return( s_arg.substring( 1, s_arg.length() - 1 ).replace("\\\"", "\""));
+						}
+						
+						try{
+							if ( s_arg.startsWith( "0x" )){
+								
+								args[index] = Long.parseLong( s_arg.substring( 2 ), 16 );
+															
+							}else if ( s_arg.startsWith( "#" )){
+									
+								args[index] = Long.parseLong( s_arg.substring( 1 ), 16 );
+																	
+							}else{
+												
+								args[index] =  Double.parseDouble( s_arg );
+							}
+								
+							return( args[index] );
+							
+						}catch( Throwable e ){
+							
+						}
+						
+						Object result = getStringKeyword( dm, tags, s_arg );
+						
+						if ( result != null ){
+							
+							return( result );
+						}
+						
+						throw( new Exception( "Invalid constraint string: " + s_arg ));
+						
+					}else if ( arg instanceof ConstraintExpr ){		
+						
+						if ( debug!=null){
+							debug.append( "[" );
+						}
+						
+						Object res = ((ConstraintExpr)arg).eval( context, dm, tags, debug );
+						
+						if ( debug!=null){
+							debug.append( "->" + res + "]" );
+						}
+						
+						return( res );
+						
+					}else{
+						
+						throw( new Exception( "Invalid constraint string: " + arg ));
+					}
+				}catch( Throwable e ){
+					
+					setError( Debug.getNestedExceptionMessage( e ));
+					
+					String result = "\"\"";
+	
+					args[index] = result;
+	
+					return( result );
+				}
+			}
+			
 			private boolean
 			getStringLiteral(
 				Object[]	args,
@@ -4433,15 +4542,24 @@ TagPropertyConstraintHandler
 						
 						String str = (String)arg;
 						
-						String[] result = getStringKeyword( dm, tags, str );
+						if ( GeneralUtils.startsWithDoubleQuote( str ) && GeneralUtils.endsWithDoubleQuote( str )){
+
+							return( new String[]{ str.substring( 1, str.length() - 1 ).replace("\\\"", "\"")});
+						}
+						
+						Object o_result = getStringKeyword( dm, tags, str );
 							
-						if ( result == null ){
+						if ( o_result == null ){
 		
 							throw( new Exception( "Invalid constraint string: " + str ));
 							
+						}else if ( o_result instanceof String  ){
+							
+							return( new String[]{ (String)o_result });
+							
 						}else{
 							
-							return( result );
+							return((String[])o_result );
 						}
 						
 					}else if ( arg instanceof ConstraintExpr ){		
@@ -4474,56 +4592,54 @@ TagPropertyConstraintHandler
 				}
 			}
 			
-			private String[]
+			private Object
 			getStringKeyword(
 				DownloadManager		dm,
 				List<Tag>			tags,
 				String				str )
 			{
-				int		kw;
+				int[] kw_details = keyword_map.get( str.toLowerCase( Locale.US ));
+
+				if ( kw_details == null ){
+					
+					return( null );
+				}
 				
-				if ( GeneralUtils.startsWithDoubleQuote( str ) && GeneralUtils.endsWithDoubleQuote( str )){
-
-					return( new String[]{ str.substring( 1, str.length() - 1 ).replace("\\\"", "\"")});
-
-				}else if ( str.equals( "name" )){
-
-					kw = KW_NAME;
+				int kw = kw_details[0];
+				
+				switch( kw ){
+					case KW_NAME:{
 					
-					dm.setUserData( DM_NAME, "" );	// just a marker
-					
-					depends_on_names_etc = true;
-					
-					return( new String[]{ dm.getDisplayName()});
-
-				}else if ( str.equals( "file_names" ) || str.equals( "filenames" )){
-					
-					kw = KW_FILE_NAMES;
-					
-					String[] result = (String[])dm.getUserData( DM_FILE_NAMES );
-					
-					if ( result == null ){
-						
-						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-						
-						result = new String[files.length];
-						
-						for ( int i=0;i<files.length;i++){
-							
-							result[i] = files[i].getFile( false ).getName();
-						}
-						
-						dm.setUserData( DM_FILE_NAMES, result );
+						dm.setUserData( DM_NAME, "" );	// just a marker
 						
 						depends_on_names_etc = true;
+						
+						return( dm.getDisplayName());
 					}
-					
-					return( result );
-					
-				}else if ( str.equals( "file_exts" ) || str.equals( "fileexts" )){
+					case KW_FILE_NAMES:{
+										
+						String[] result = (String[])dm.getUserData( DM_FILE_NAMES );
 						
-						kw = KW_FILE_EXTS;
+						if ( result == null ){
+							
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							result = new String[files.length];
+							
+							for ( int i=0;i<files.length;i++){
+								
+								result[i] = files[i].getFile( false ).getName();
+							}
+							
+							dm.setUserData( DM_FILE_NAMES, result );
+							
+							depends_on_names_etc = true;
+						}
 						
+						return( result );
+					}
+					case KW_FILE_EXTS:{
+												
 						String[] result = (String[])dm.getUserData( DM_FILE_EXTS);
 						
 						if ( result == null ){
@@ -4550,197 +4666,182 @@ TagPropertyConstraintHandler
 						}
 						
 						return( result );
-						
-				}else if ( str.equals( "file_paths" ) || str.equals( "filepaths" )){
-					
-					kw = KW_FILE_PATHS;
-					
-					String[] result = (String[])dm.getUserData( DM_FILE_PATHS);
-					
-					if ( result == null ){
-						
-						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-						
-						result = new String[files.length];
-						
-						for ( int i=0;i<files.length;i++){
-							
-							result[i] = files[i].getFile( true ).getAbsolutePath();
-						}					
-						
-						dm.setUserData( DM_FILE_PATHS, result );
-						
-						depends_on_names_etc = true;
-						
-						handler.checkDMListeners( dm );
 					}
+					case KW_FILE_PATHS:{
 					
-					return( result );
+						String[] result = (String[])dm.getUserData( DM_FILE_PATHS );
 						
-				}else if ( str.equals( "file_exts_selected" ) || str.equals( "fileextsselected" )){
-					
-					kw = KW_FILE_EXTS_SELECTED;
-					
-					String[] result = (String[])dm.getUserData( DM_FILE_EXTS_SELECTED);
-					
-					if ( result == null ){
-						
-						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-						
-						Set<String>	exts = new HashSet<>();
-						
-						for ( int i=0;i<files.length;i++){
+						if ( result == null ){
 							
-							if ( files[i].isSkipped()){
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							result = new String[files.length];
+							
+							for ( int i=0;i<files.length;i++){
 								
-								continue;
+								result[i] = files[i].getFile( true ).getAbsolutePath();
+							}					
+							
+							dm.setUserData( DM_FILE_PATHS, result );
+							
+							depends_on_names_etc = true;
+							
+							handler.checkDMListeners( dm );
+						}
+						
+						return( result );
+					}
+					case KW_FILE_EXTS_SELECTED:{
+						
+						String[] result = (String[])dm.getUserData( DM_FILE_EXTS_SELECTED );
+						
+						if ( result == null ){
+							
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							Set<String>	exts = new HashSet<>();
+							
+							for ( int i=0;i<files.length;i++){
+								
+								if ( files[i].isSkipped()){
+									
+									continue;
+								}
+								
+								String ext = files[i].getExtension();
+								
+								if ( ext != null && !ext.isEmpty() && !exts.contains( ext )){
+									
+									exts.add( ext.toLowerCase( Locale.US ));
+								}
 							}
 							
-							String ext = files[i].getExtension();
+							result = exts.toArray( new String[0] );
 							
-							if ( ext != null && !ext.isEmpty() && !exts.contains( ext )){
+							dm.setUserData( DM_FILE_EXTS_SELECTED, result );
+							
+							depends_on_names_etc = true;
+							
+							handler.checkDMListeners( dm );
+						}
+						
+						return( result );
+					}
+					case KW_FILE_NAMES_SELECTED:{
+					
+						String[] result = (String[])dm.getUserData( DM_FILE_NAMES_SELECTED );
+						
+						if ( result == null ){
+							
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							List<String>	names = new ArrayList<>( files.length );
+							
+							for ( int i=0;i<files.length;i++){
 								
-								exts.add( ext.toLowerCase( Locale.US ));
+								if ( files[i].isSkipped()){
+									
+									continue;
+								}
+								
+								names.add( files[i].getFile( false ).getName());
+							}
+							
+							result = names.toArray( new String[0] );
+							
+							dm.setUserData( DM_FILE_NAMES_SELECTED, result );
+							
+							depends_on_names_etc = true;
+							
+							handler.checkDMListeners( dm );
+						}
+					
+						return( result );
+					}
+					case KW_TAG_NAMES:{
+					
+						String[] result = new String[tags.size()];
+						
+						for ( int i=0;i<tags.size();i++){
+							Tag tag = tags.get(i);
+							
+							if ( tag == tag_maybe_null ){
+								result[i] = "";
+							}else{
+								result[i] = tag.getTagName( true );
 							}
 						}
 						
-						result = exts.toArray( new String[0] );
-						
-						dm.setUserData( DM_FILE_EXTS_SELECTED, result );
-						
-						depends_on_names_etc = true;
-						
-						handler.checkDMListeners( dm );
+						return( result );
 					}
+					case KW_TRACKER_STATUS:{
 					
-					return( result );
-				
-				}else if ( str.equals( "file_names_selected" ) || str.equals( "filenamesselected" )){
+						String result = dm.getTrackerStatus();
 						
-					kw = KW_FILE_NAMES_SELECTED;
+						return( result );
+					}
+					case KW_FILE_PATHS_SELECTED:{
 					
-					String[] result = (String[])dm.getUserData( DM_FILE_NAMES_SELECTED );
-					
-					if ( result == null ){
+						String[] result = (String[])dm.getUserData( DM_FILE_PATHS_SELECTED );
 						
-						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-						
-						List<String>	names = new ArrayList<>( files.length );
-						
-						for ( int i=0;i<files.length;i++){
+						if ( result == null ){
 							
-							if ( files[i].isSkipped()){
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							List<String>	names = new ArrayList<>( files.length );
+							
+							for ( int i=0;i<files.length;i++){
 								
-								continue;
+								if ( files[i].isSkipped()){
+									
+									continue;
+								}
+								
+								names.add( files[i].getFile( true ).getAbsolutePath());
 							}
 							
-							names.add( files[i].getFile( false ).getName());
+							result = names.toArray( new String[0] );
+							
+							dm.setUserData( DM_FILE_PATHS_SELECTED, result );
+							
+							depends_on_names_etc = true;
+							
+							handler.checkDMListeners( dm );
 						}
 						
-						result = names.toArray( new String[0] );
-						
-						dm.setUserData( DM_FILE_NAMES_SELECTED, result );
-						
+						return( result );
+					}
+					case KW_SAVE_PATH:{
+
 						depends_on_names_etc = true;
 						
-						handler.checkDMListeners( dm );
-					}
-					
-					return( result );
-					
-				}else if ( str.equals( "tag_names" ) || str.equals( "tagnames" )){
-					
-					kw = KW_TAG_NAMES;
-					
-					String[] result = new String[tags.size()];
-					
-					for ( int i=0;i<tags.size();i++){
-						Tag tag = tags.get(i);
+						dm.setUserData( DM_SAVE_PATH, "" );	// just a marker
 						
-						if ( tag == tag_maybe_null ){
-							result[i] = "";
+						return( dm.getAbsoluteSaveLocation().getAbsolutePath());
+					}
+					case KW_SAVE_FOLDER:{
+										
+						depends_on_names_etc = true;
+						
+						dm.setUserData( DM_SAVE_PATH, "" );	// just a marker
+	
+						File save_loc = dm.getAbsoluteSaveLocation().getAbsoluteFile();
+						
+						File save_folder = save_loc.getParentFile();
+						
+						if ( FileUtil.isDirectoryWithTimeout(save_folder)){
+							
+							return( save_folder.getAbsolutePath());
+							
 						}else{
-							result[i] = tag.getTagName( true );
+							
+							return( save_loc.getAbsolutePath());
 						}
 					}
-					
-					return( result );
-				
-				}else if ( str.equals( "tracker_status" ) || str.equals( "trackerstatus" )){
-					
-					kw = KW_TRACKER_STATUS;
-					
-					String result = dm.getTrackerStatus();
-					
-					return( new String[]{ result });
-
-				}else if ( str.equals( "file_paths_selected" ) || str.equals( "filepathsselected" )){
-				
-					kw = KW_FILE_PATHS_SELECTED;
-					
-					String[] result = (String[])dm.getUserData( DM_FILE_PATHS_SELECTED );
-					
-					if ( result == null ){
+					default:{
 						
-						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
-						
-						List<String>	names = new ArrayList<>( files.length );
-						
-						for ( int i=0;i<files.length;i++){
-							
-							if ( files[i].isSkipped()){
-								
-								continue;
-							}
-							
-							names.add( files[i].getFile( true ).getAbsolutePath());
-						}
-						
-						result = names.toArray( new String[0] );
-						
-						dm.setUserData( DM_FILE_PATHS_SELECTED, result );
-						
-						depends_on_names_etc = true;
-						
-						handler.checkDMListeners( dm );
+						return( null );
 					}
-					
-					return( result );
-
-				}else if ( str.equals( "save_path" ) || str.equals( "savepath" )){
-					
-					kw = KW_SAVE_PATH;
-					
-					depends_on_names_etc = true;
-					
-					dm.setUserData( DM_SAVE_PATH, "" );	// just a marker
-					
-					return( new String[]{ dm.getAbsoluteSaveLocation().getAbsolutePath()});
-					
-				}else if ( str.equals( "save_folder" ) || str.equals( "savefolder" )){
-					
-					kw = KW_SAVE_FOLDER;
-					
-					depends_on_names_etc = true;
-					
-					dm.setUserData( DM_SAVE_PATH, "" );	// just a marker
-
-					File save_loc = dm.getAbsoluteSaveLocation().getAbsoluteFile();
-					
-					File save_folder = save_loc.getParentFile();
-					
-					if ( FileUtil.isDirectoryWithTimeout(save_folder)){
-						
-						return( new String[]{ save_folder.getAbsolutePath()});
-						
-					}else{
-						
-						return( new String[]{ save_loc.getAbsolutePath()});
-					}
-					
-				}else{
-
-					return( null );
 				}
 			}
 			
