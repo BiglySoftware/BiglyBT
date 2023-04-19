@@ -2617,6 +2617,8 @@ TagPropertyConstraintHandler
 			}
 		}
 		
+		static final Map<String,Integer>	fn_map = new HashMap<>();
+
 		private static final int FT_HAS_TAG		= 1;
 		private static final int FT_IS_PRIVATE	= 2;
 
@@ -2672,6 +2674,80 @@ TagPropertyConstraintHandler
 		private static final int FT_DIV					= 50;
 		private static final int FT_GET_TAG_WEIGHT		= 51;
 		private static final int FT_IF_THEN_ELSE		= 52;
+		private static final int FT_IS_SEEDING			= 53;
+		private static final int FT_IS_DOWNLOADING		= 54;
+		private static final int FT_IS_RUNNING			= 55;
+		
+		static{
+			fn_map.put( "hastag", FT_HAS_TAG );
+			fn_map.put( "isprivate", FT_IS_PRIVATE );
+			fn_map.put( "isge", FT_GE );
+			fn_map.put( "isgt", FT_GT );
+			fn_map.put( "isle", FT_LE );
+			fn_map.put( "islt", FT_LT );
+			fn_map.put( "iseq", FT_EQ );
+			fn_map.put( "isneq", FT_NEQ );
+			fn_map.put( "contains", FT_CONTAINS );
+			fn_map.put( "matches", FT_MATCHES );
+			fn_map.put( "hasnet", FT_HAS_NET );
+			fn_map.put( "iscomplete", FT_IS_COMPLETE );
+			fn_map.put( "canarchive", FT_CAN_ARCHIVE );
+			fn_map.put( "isforcestart", FT_IS_FORCE_START );
+			fn_map.put( "javascript", FT_JAVASCRIPT );
+			fn_map.put( "ischecking", FT_IS_CHECKING );
+			fn_map.put( "isstopped", FT_IS_STOPPED );
+			fn_map.put( "ispaused", FT_IS_PAUSED );
+			fn_map.put( "isseeding", FT_IS_SEEDING );
+			fn_map.put( "isdownloading", FT_IS_DOWNLOADING );
+			fn_map.put( "isrunning", FT_IS_RUNNING );
+			fn_map.put( "iserror", FT_IS_ERROR );
+			fn_map.put( "ismagnet", FT_IS_MAGNET );
+			fn_map.put( "islownoise", FT_IS_LOW_NOISE );
+			fn_map.put( "counttag", FT_COUNT_TAG );
+			fn_map.put( "hastaggroup", FT_HAS_TAG_GROUP );
+			
+			fn_map.put( "hourstoseconds", FT_HOURS_TO_SECS );
+			fn_map.put( "htos", FT_HOURS_TO_SECS );
+			fn_map.put( "h2s", FT_HOURS_TO_SECS );
+			
+			fn_map.put( "daystoseconds", FT_DAYS_TO_SECS );
+			fn_map.put( "dtos", FT_DAYS_TO_SECS );
+			fn_map.put( "d2s", FT_DAYS_TO_SECS );
+			
+			fn_map.put( "weekstoseconds", FT_WEEKS_TO_SECS );
+			fn_map.put( "wtos", FT_WEEKS_TO_SECS );
+			fn_map.put( "w2s", FT_WEEKS_TO_SECS );
+			
+			fn_map.put( "getconfig", FT_GET_CONFIG );
+			fn_map.put( "hastagage", FT_HAS_TAG_AGE );
+			fn_map.put( "lowercase", FT_LOWERCASE );
+			
+			fn_map.put( "setcolours", FT_SET_COLOURS );
+			fn_map.put( "setcolors", FT_SET_COLOURS );
+			
+			fn_map.put( "isnew", FT_IS_NEW );
+			fn_map.put( "issuperseeding", FT_IS_SUPER_SEEDING );
+			fn_map.put( "issequential", FT_IS_SEQUENTIAL );
+			fn_map.put( "tagposition", FT_TAG_POSITION );
+			fn_map.put( "isshare", FT_IS_SHARE );
+			fn_map.put( "isunallocated", FT_IS_UNALLOCATED );
+			fn_map.put( "isqueued", FT_IS_QUEUED );
+			fn_map.put( "isipfiltered", FT_IS_IP_FILTERED );
+			fn_map.put( "counttrackers", FT_COUNT_TRACKERS );
+			fn_map.put( "ismoving", FT_IS_MOVING );
+			fn_map.put( "settagsort", FT_SET_TAG_SORT );
+			fn_map.put( "timetoelapsed", FT_TIME_TO_ELAPSED );
+			fn_map.put( "tomb", FT_TO_MB );
+			fn_map.put( "tomib", FT_TO_MiB );
+			fn_map.put( "togb", FT_TO_GB );
+			fn_map.put( "togib", FT_TO_GiB );
+			fn_map.put( "plus", FT_PLUS );
+			fn_map.put( "minus", FT_MINUS );
+			fn_map.put( "mult", FT_MULT );
+			fn_map.put( "div", FT_DIV );
+			fn_map.put( "gettagweight", FT_GET_TAG_WEIGHT );
+			fn_map.put( "ifthenelse", FT_IF_THEN_ELSE );
+		}
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2861,572 +2937,411 @@ TagPropertyConstraintHandler
 
 				params		= _params.getValues();
 
+				Integer _fn_type = fn_map.get( func_name.toLowerCase( Locale.US ));
+				
+				if ( _fn_type == null ){
+					
+					throw( new RuntimeException( "Unsupported function '" + func_name + "'" ));
+				}
+				
+				fn_type = _fn_type;
+				
 				int num_params = params.length;
 				
 				boolean	params_ok = false;
 
-				if ( func_name.equals( "hasTag" ) || func_name.equals( "hasTagAge" ) || func_name.equals( "countTag" ) || func_name.equals( "tagPosition" )){
-
-					if ( func_name.equals( "hasTag" )){
-						
-						fn_type = FT_HAS_TAG;
-						
-					}else if ( func_name.equals( "hasTagAge" )){
-						
-						fn_type = FT_HAS_TAG_AGE;
-						
-					}else if ( func_name.equals( "countTag" )){
-						
-						fn_type = FT_COUNT_TAG;
-						
-					}else{
-						
-						fn_type = FT_TAG_POSITION;
-					}
+				switch( fn_type ){
+				
+					case FT_HAS_TAG:
+					case FT_HAS_TAG_AGE:
+					case FT_COUNT_TAG:
+					case FT_TAG_POSITION:{
 					
-					params_ok = num_params >= 1 && getStringLiteral( params, 0 );
-
-					if ( params_ok ){
-						
-						if ( fn_type == FT_TAG_POSITION ){
+						params_ok = num_params >= 1 && getStringLiteral( params, 0 );
+	
+						if ( params_ok ){
 							
-							if ( num_params > 1 ){
+							if ( fn_type == FT_TAG_POSITION ){
 								
-								params_ok = num_params == 2 && getNumericLiteral( params, 1 );
-							}
-						}else{
-							
-							params_ok = num_params == 1;
-						}
-					}
-						
-					if ( params_ok ){
-						
-						String tag_name = (String)params[0];
-						
-						if ( handler.tag_manager != null ){
-							
-							List<Tag> tags = handler.tag_manager.getTagsByName( tag_name, true );
-							
-							if ( tags.isEmpty()){
-								
-								throw( new RuntimeException( "Tag '" + tag_name + "' not found" ));
-							}
-							
-							for ( Tag t: tags ){
-								
-								TagType tt = t.getTagType();
-								
-								if ( 	tt.hasTagTypeFeature( TagFeature.TF_PROPERTIES ) ||
-										tt.getTagType() == TagType.TT_PEER_IPSET ){
+								if ( num_params > 1 ){
 									
-									if ( dependent_on_tags == null ){
-								
-										dependent_on_tags = new HashSet<Tag>();
-									}
-								
-									if ( tt.getTagType() == TagType.TT_PEER_IPSET ){
-									
-										dependent_on_peer_sets = true;
-									}
-									
-									dependent_on_tags.add( t );
+									params_ok = num_params == 2 && getNumericLiteral( params, 1 );
 								}
-							}
-						}
-					}
-				}else if ( func_name.equals( "getTagWeight" )){
-						
-					fn_type = FT_GET_TAG_WEIGHT;
-										
-					params_ok = num_params <= 2;
-						
-					for( int i=0;i<num_params&&params_ok;i++){
-					
-						params_ok = getStringLiteral( params, i );
-					}
-						
-					if ( params_ok ){
-						
-							// no params -> all tag weights, 1 param - all weights + options, s param - first comma sep tag list, second opts
-						
-						if ( num_params > 0 ){
-							
-							String 	options;
-							String	tags_str;
-							
-							if ( num_params == 1 ){
-							
-								tags_str	= "";
-								options 	= (String)params[0];
-								
 							}else{
 								
-								tags_str	= (String)params[0];
-								options 	= (String)params[1];
+								params_ok = num_params == 1;
 							}
-						
-							if ( handler.tag_manager != null && !tags_str.isEmpty()){
+						}
 							
-								String[] tag_names = tags_str.split(",");
+						if ( params_ok ){
+							
+							String tag_name = (String)params[0];
+							
+							if ( handler.tag_manager != null ){
 								
-								for ( String tag_name: tag_names ){
+								List<Tag> tags = handler.tag_manager.getTagsByName( tag_name, true );
+								
+								if ( tags.isEmpty()){
 									
-									tag_name = tag_name.trim();
-									
-									if ( tag_name.isEmpty()){
-										
-										continue;
-									}
-							
-									List<Tag> tags = handler.tag_manager.getTagsByName( tag_name, true );
-							
-									if ( tags.isEmpty()){
-								
-										throw( new RuntimeException( "Tag '" + tag_name + "' not found" ));
-									}
-																									
-									if ( tag_weights == null ){
-											
-										tag_weights = new HashSet<Tag>();
-									}
-										
-									tag_weights.addAll( tags );
-								}
-							}
-							
-							options = options.trim();
-							
-							if ( !options.isEmpty()){
-								
-								String[] bits = options.split( "=" );
-								
-								if ( bits.length != 2 || !bits[0].toLowerCase(Locale.US).equals("type")){
-									
-									throw( new RuntimeException( "options '" + options + "' invalid" ));
+									throw( new RuntimeException( "Tag '" + tag_name + "' not found" ));
 								}
 								
-								String rhs = bits[1].toLowerCase(Locale.US);
-								
-								if ( rhs.equals( "max" )){
-									tag_weights_opt = 0;
-								}else if ( rhs.equals( "min" )){
-									tag_weights_opt = 1;
-								}else if ( rhs.equals( "cumulative" )){
-									tag_weights_opt = 2;
-								}else{
-									throw( new RuntimeException( "options '" + options + "' invalid" ));
+								for ( Tag t: tags ){
+									
+									TagType tt = t.getTagType();
+									
+									if ( 	tt.hasTagTypeFeature( TagFeature.TF_PROPERTIES ) ||
+											tt.getTagType() == TagType.TT_PEER_IPSET ){
+										
+										if ( dependent_on_tags == null ){
+									
+											dependent_on_tags = new HashSet<Tag>();
+										}
+									
+										if ( tt.getTagType() == TagType.TT_PEER_IPSET ){
+										
+											dependent_on_peer_sets = true;
+										}
+										
+										dependent_on_tags.add( t );
+									}
 								}
 							}
 						}
+						
+						break;
 					}
-				}else if ( func_name.equals( "hasNet" )){
-
-					fn_type = FT_HAS_NET;
-
-					params_ok = num_params == 1 && getStringLiteral( params, 0 );
-
-					if ( params_ok ){
-
-						params[0] = AENetworkClassifier.internalise((String)params[0]);
-
-						params_ok = params[0] != null;
+					case FT_GET_TAG_WEIGHT:{
+																
+						params_ok = num_params <= 2;
+							
+						for( int i=0;i<num_params&&params_ok;i++){
+						
+							params_ok = getStringLiteral( params, i );
+						}
+							
+						if ( params_ok ){
+							
+								// no params -> all tag weights, 1 param - all weights + options, s param - first comma sep tag list, second opts
+							
+							if ( num_params > 0 ){
+								
+								String 	options;
+								String	tags_str;
+								
+								if ( num_params == 1 ){
+								
+									tags_str	= "";
+									options 	= (String)params[0];
+									
+								}else{
+									
+									tags_str	= (String)params[0];
+									options 	= (String)params[1];
+								}
+							
+								if ( handler.tag_manager != null && !tags_str.isEmpty()){
+								
+									String[] tag_names = tags_str.split(",");
+									
+									for ( String tag_name: tag_names ){
+										
+										tag_name = tag_name.trim();
+										
+										if ( tag_name.isEmpty()){
+											
+											continue;
+										}
+								
+										List<Tag> tags = handler.tag_manager.getTagsByName( tag_name, true );
+								
+										if ( tags.isEmpty()){
+									
+											throw( new RuntimeException( "Tag '" + tag_name + "' not found" ));
+										}
+																										
+										if ( tag_weights == null ){
+												
+											tag_weights = new HashSet<Tag>();
+										}
+											
+										tag_weights.addAll( tags );
+									}
+								}
+								
+								options = options.trim();
+								
+								if ( !options.isEmpty()){
+									
+									String[] bits = options.split( "=" );
+									
+									if ( bits.length != 2 || !bits[0].toLowerCase(Locale.US).equals("type")){
+										
+										throw( new RuntimeException( "options '" + options + "' invalid" ));
+									}
+									
+									String rhs = bits[1].toLowerCase(Locale.US);
+									
+									if ( rhs.equals( "max" )){
+										tag_weights_opt = 0;
+									}else if ( rhs.equals( "min" )){
+										tag_weights_opt = 1;
+									}else if ( rhs.equals( "cumulative" )){
+										tag_weights_opt = 2;
+									}else{
+										throw( new RuntimeException( "options '" + options + "' invalid" ));
+									}
+								}
+							}
+						}
+						
+						break;
 					}
-				}else if ( func_name.equals( "isPrivate" )){
+					case FT_HAS_NET:{
 
-					fn_type = FT_IS_PRIVATE;
+						params_ok = num_params == 1 && getStringLiteral( params, 0 );
+	
+						if ( params_ok ){
+	
+							params[0] = AENetworkClassifier.internalise((String)params[0]);
+	
+							params_ok = params[0] != null;
+						}
+						
+						break;
+					}
+					case FT_IS_PRIVATE:
+					case FT_IS_SHARE:
+					case FT_IS_MAGNET:
+					case FT_IS_LOW_NOISE:
+					case FT_IS_NEW:
+					case FT_CAN_ARCHIVE:
+					case FT_IS_SEQUENTIAL:
+					case FT_IS_IP_FILTERED:{
 
-					params_ok = num_params == 0;
+						params_ok = num_params == 0;
+						
+						break;
+					}
+
+					case FT_IS_FORCE_START:
+					case FT_IS_SUPER_SEEDING:
+					case FT_IS_CHECKING:
+					case FT_IS_MOVING:
+					case FT_IS_COMPLETE:
+					case FT_IS_STOPPED:
+					case FT_IS_SEEDING:
+					case FT_IS_DOWNLOADING:
+					case FT_IS_RUNNING:
+					case FT_IS_ERROR:
+					case FT_IS_PAUSED:
+					case FT_IS_UNALLOCATED:
+					case FT_IS_QUEUED:{
 					
-				}else if ( func_name.equals( "isShare" )){
-
-					fn_type = FT_IS_SHARE;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isForceStart" )){
-
-					fn_type = FT_IS_FORCE_START;
-
-					depends_on_download_state = true;
-
-					params_ok = num_params == 0;
-					
-				}else if ( func_name.equals( "isSuperSeeding" )){
-
-					fn_type = FT_IS_SUPER_SEEDING;
-
-					depends_on_download_state = true;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isChecking" )){
-
-					fn_type = FT_IS_CHECKING;
-
-					depends_on_download_state = true;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isMoving" )){
-
-					fn_type = FT_IS_MOVING;
-
-					depends_on_download_state = true;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isComplete" )){
-
-					fn_type = FT_IS_COMPLETE;
-
-					depends_on_download_state = true;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isStopped" )){
-
-						fn_type = FT_IS_STOPPED;
-
 						depends_on_download_state = true;
 
 						params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isError" )){
-
-					fn_type = FT_IS_ERROR;
-
-					depends_on_download_state = true;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isPaused" )){
-
-					fn_type = FT_IS_PAUSED;
-
-					depends_on_download_state = true;
-
-					params_ok = num_params == 0;
-					
-				}else if ( func_name.equals( "isMagnet" )){
-
-					fn_type = FT_IS_MAGNET;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isLowNoise" )){
-
-					fn_type = FT_IS_LOW_NOISE;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isNew" )){
-
-					fn_type = FT_IS_NEW;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isUnallocated" )){
-
-					fn_type = FT_IS_UNALLOCATED;
-
-					depends_on_download_state = true;
-					
-					params_ok = num_params == 0;
-					
-				}else if ( func_name.equals( "isQueued" )){
-
-					fn_type = FT_IS_QUEUED;
-
-					depends_on_download_state = true;
-					
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "canArchive" )){
-
-					fn_type = FT_CAN_ARCHIVE;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isGE" )){
-
-					fn_type = FT_GE;
-
-					params_ok = num_params == 2;
-
-				}else if ( func_name.equals( "isGT" )){
-
-					fn_type = FT_GT;
-
-					params_ok = num_params == 2;
-
-				}else if ( func_name.equals( "isLE" )){
-
-					fn_type = FT_LE;
-
-					params_ok = num_params == 2;
-
-				}else if ( func_name.equals( "isLT" )){
-
-					fn_type = FT_LT;
-
-					params_ok = num_params == 2;
-
-				}else if ( func_name.equals( "isEQ" )){
-
-					fn_type = FT_EQ;
-
-					params_ok = num_params == 2;
-
-				}else if ( func_name.equals( "isNEQ" )){
-
-					fn_type = FT_NEQ;
-
-					params_ok = num_params == 2;
-
-				}else if ( func_name.equals( "plus" )){
-
-					fn_type = FT_PLUS;
-
-					params_ok = num_params == 2;
-
-				}else if ( func_name.equals( "minus" )){
-
-					fn_type = FT_MINUS;
-
-					params_ok = num_params == 2;
-
-				}else if ( func_name.equals( "mult" )){
-
-					fn_type = FT_MULT;
-
-					params_ok = num_params == 2;
-
-				}else if ( func_name.equals( "div" )){
-
-					fn_type = FT_DIV;
-
-					params_ok = num_params == 2;
-
-				}else if ( func_name.equals( "contains" )){
-
-					fn_type = FT_CONTAINS;
-
-					params_ok = num_params == 2 || (  num_params == 3 && getNumericLiteral( params, 2 ));
-
-				}else if ( func_name.equals( "lowercase" )){
-
-					fn_type = FT_LOWERCASE;
-
-					params_ok = num_params == 1;
-
-				}else if ( func_name.equals( "matches" )){
-
-					fn_type = FT_MATCHES;
-
-					params_ok = ( num_params == 2 || num_params == 3) && getStringLiteral( params, 1 );
-
-					if ( params_ok && num_params == 3 ){
 						
-						params_ok = getNumericLiteral( params, 2 );
+						break;
 					}
-					
-					if ( params_ok ){
+					case FT_GE:
+					case FT_GT:
+					case FT_LE:
+					case FT_LT:
+					case FT_EQ:
+					case FT_NEQ:
+					case FT_PLUS:
+					case FT_MINUS:
+					case FT_MULT:
+					case FT_DIV:{
+
+						params_ok = num_params == 2;
+
+						break;
+					}
+					case FT_CONTAINS:{
+
+						params_ok = num_params == 2 || (  num_params == 3 && getNumericLiteral( params, 2 ));
 						
-						try{
-							boolean	case_insensitive = true;
+						break;
+					}
+					case FT_LOWERCASE:{
+				
+						params_ok = num_params == 1;
+						
+						break;
+					}
+					case FT_MATCHES:{
+
+						params_ok = ( num_params == 2 || num_params == 3) && getStringLiteral( params, 1 );
+	
+						if ( params_ok && num_params == 3 ){
 							
-							if ( num_params == 3 ){
-																	
-								Number flags = (Number)params[2];
-									
-								if ( flags.intValue() == 0 ){
+							params_ok = getNumericLiteral( params, 2 );
+						}
+						
+						if ( params_ok ){
+							
+							try{
+								boolean	case_insensitive = true;
+								
+								if ( num_params == 3 ){
+																		
+									Number flags = (Number)params[2];
 										
-									case_insensitive = false;
+									if ( flags.intValue() == 0 ){
+											
+										case_insensitive = false;
+									}
+								}
+								
+								if ( case_insensitive ){
+									
+									Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+									
+								}else{
+									
+									Pattern.compile((String)params[1] );
+								}
+							}catch( Throwable e ) {
+								
+								setError( "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
+							}
+						}
+					
+						break;
+					}
+					case FT_JAVASCRIPT:{
+				
+						params_ok = num_params == 1 && getStringLiteral( params, 0 );
+
+						depends_on_download_state = true;	// dunno so let's assume so
+						
+						break;
+					}
+					case FT_HAS_TAG_GROUP:{
+				
+						params_ok = num_params == 1 && getStringLiteral( params, 0 );
+						
+						break;
+					}
+					case FT_HOURS_TO_SECS:
+					case FT_DAYS_TO_SECS:
+					case FT_WEEKS_TO_SECS:{
+				
+
+						params_ok = num_params == 1 && getNumericLiteral( params, 0 );
+						
+						break;
+					}
+					case FT_TIME_TO_ELAPSED:
+					case FT_TO_MB:
+					case FT_TO_MiB:
+					case FT_TO_GB:
+					case FT_TO_GiB:{
+
+						params_ok = num_params == 1;
+						
+						break;
+					}
+					case FT_GET_CONFIG:{
+
+						params_ok = num_params == 1 && getStringLiteral( params, 0 );
+						
+						if ( params_ok ){
+							
+							String key = (String)params[0];
+							
+							key = key.toLowerCase( Locale.US );
+							
+							params[0] = key;
+									
+							if ( !config_key_map.containsKey( key )){
+								
+								throw( new RuntimeException( "Unsupported configuration parameter: " + key ));
+							}
+						}
+						
+						break;
+					}
+					case FT_SET_COLOURS:{
+
+						params_ok = num_params >= 1&&  num_params <= 3;
+	
+						if ( params_ok ){
+							
+							for ( int i=0;i<num_params;i++){
+							
+								params_ok = getNumericLiteral( params, i );
+								
+								if ( !params_ok ){
+									
+									break;
+								}
+							}
+						}
+						
+						break;
+					}
+					case FT_SET_TAG_SORT:{
+
+						params_ok = num_params >= 1 && num_params <= 2;
+						
+						String option = null;
+						
+						if ( params_ok ){
+							
+								// we allow first param to be a string in the case of "random"
+							
+							if ( num_params == 1 ){
+								
+								if ( getStringLiteral( params, 0 )){
+									
+									option = (String)params[0];
 								}
 							}
 							
-							if ( case_insensitive ){
+							if ( num_params == 2 ){
 								
-								Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+								params_ok = getStringLiteral( params, 1 );
+								
+								if ( params_ok ){
+									
+									option = (String)params[1];
+								}
+							}
+						}
+						
+						if ( params_ok && option != null ){
+						
+							if ( option.equals( "r" ) || option.equals( "reverse") || option.equals( "random" )){
 								
 							}else{
 								
-								Pattern.compile((String)params[1] );
-							}
-						}catch( Throwable e ) {
-							
-							setError( "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
-						}
-					}
-				}else if ( func_name.equals( "javascript" )){
-
-					fn_type = FT_JAVASCRIPT;
-
-					params_ok = num_params == 1 && getStringLiteral( params, 0 );
-
-					depends_on_download_state = true;	// dunno so let's assume so
-					
-				}else if ( func_name.equals( "hasTagGroup" )){
-
-					fn_type = FT_HAS_TAG_GROUP;
-
-					params_ok = num_params == 1 && getStringLiteral( params, 0 );
-
-				}else if ( func_name.equals( "hoursToSeconds" ) || func_name.equals( "htos" ) || func_name.equals( "h2s" )){
-
-					fn_type = FT_HOURS_TO_SECS;
-
-					params_ok = num_params == 1 && getNumericLiteral( params, 0 );
-					
-				}else if ( func_name.equals( "daysToSeconds" ) || func_name.equals( "dtos" ) || func_name.equals( "d2s" )){
-
-					fn_type = FT_DAYS_TO_SECS;
-
-					params_ok = num_params == 1 && getNumericLiteral( params, 0 );
-					
-				}else if ( func_name.equals( "weeksToSeconds" ) || func_name.equals( "wtos" ) || func_name.equals( "w2s" )){
-
-					fn_type = FT_WEEKS_TO_SECS;
-
-					params_ok = num_params == 1 && getNumericLiteral( params, 0 );
-
-				}else if ( func_name.equals( "timeToElapsed" )){
-					
-					fn_type = FT_TIME_TO_ELAPSED;
-
-					params_ok = num_params == 1;
-
-				}else if ( func_name.equals( "toMB" )){
-					
-					fn_type = FT_TO_MB;
-
-					params_ok = num_params == 1;
-
-				}else if ( func_name.equals( "toMiB" )){
-					
-					fn_type = FT_TO_MiB;
-
-					params_ok = num_params == 1;
-
-				}else if ( func_name.equals( "toGB" )){
-					
-					fn_type = FT_TO_GB;
-
-					params_ok = num_params == 1;
-
-				}else if ( func_name.equals( "toGiB" )){
-					
-					fn_type = FT_TO_GiB;
-
-					params_ok = num_params == 1;
-
-				}else if ( func_name.equals( "getConfig" )){
-
-					fn_type = FT_GET_CONFIG;
-
-					params_ok = num_params == 1 && getStringLiteral( params, 0 );
-					
-					if ( params_ok ){
-						
-						String key = (String)params[0];
-						
-						key = key.toLowerCase( Locale.US );
-						
-						params[0] = key;
-								
-						if ( !config_key_map.containsKey( key )){
-							
-							throw( new RuntimeException( "Unsupported configuration parameter: " + key ));
-						}
-					}
-				}else if ( func_name.equals( "setColors" ) || func_name.equals( "setColours" )){
-
-					fn_type = FT_SET_COLOURS;
-
-					params_ok = num_params >= 1&&  num_params <= 3;
-
-					if ( params_ok ){
-						
-						for ( int i=0;i<num_params;i++){
-						
-							params_ok = getNumericLiteral( params, i );
-							
-							if ( !params_ok ){
-								
-								break;
-							}
-						}
-					}
-				}else if ( func_name.equals( "setTagSort" )){
-
-					fn_type = FT_SET_TAG_SORT;
-
-					params_ok = num_params >= 1 && num_params <= 2;
-					
-					String option = null;
-					
-					if ( params_ok ){
-						
-							// we allow first param to be a string in the case of "random"
-						
-						if ( num_params == 1 ){
-							
-							if ( getStringLiteral( params, 0 )){
-								
-								option = (String)params[0];
+								throw( new RuntimeException( "option '" + option + "' invalid" ));
 							}
 						}
 						
-						if ( num_params == 2 ){
-							
-							params_ok = getStringLiteral( params, 1 );
-							
-							if ( params_ok ){
-								
-								option = (String)params[1];
-							}
-						}
+						break;
 					}
-					
-					if ( params_ok && option != null ){
-					
-						if ( option.equals( "r" ) || option.equals( "reverse") || option.equals( "random" )){
-							
-						}else{
-							
-							throw( new RuntimeException( "option '" + option + "' invalid" ));
-						}
+					case FT_COUNT_TRACKERS:{
+
+						params_ok = num_params == 0;
+						
+						break;
 					}
-				}else if ( func_name.equals( "isSequential" )){
-
-					fn_type = FT_IS_SEQUENTIAL;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "isIpFiltered" )){
-
-					fn_type = FT_IS_IP_FILTERED;
-
-					params_ok = num_params == 0;
-
-				}else if ( func_name.equals( "countTrackers" )){
-
-					fn_type = FT_COUNT_TRACKERS;
-
-					params_ok = num_params == 0;
-					
-				}else if ( func_name.equals( "ifThenElse" )){
-					
-					fn_type = FT_IF_THEN_ELSE;
+					case FT_IF_THEN_ELSE:{
 										
-					params_ok = num_params == 3;
+						params_ok = num_params == 3;
+						
+						break;
+					}
+					default:{
 
-				}else{
-
-					throw( new RuntimeException( "Unsupported function '" + func_name + "'" ));
+						throw( new RuntimeException( "Unsupported function '" + fn_type + "'" ));
+					}
 				}
-
+				
 				if ( !params_ok ){
 
 					throw( new RuntimeException( "Invalid parameters for function '" + func_name + "': " + params_expr.getString()));
@@ -3846,6 +3761,27 @@ TagPropertyConstraintHandler
 						int state = dm.getState();
 
 						return( state == DownloadManager.STATE_STOPPED && !dm.isPaused());
+					}
+					case FT_IS_SEEDING:{
+
+						int state = dm.getState();
+
+						return( state == DownloadManager.STATE_SEEDING );
+					}
+					case FT_IS_DOWNLOADING:{
+
+						int state = dm.getState();
+
+						return( state == DownloadManager.STATE_DOWNLOADING );
+					}
+					case FT_IS_RUNNING:{
+
+						int state = dm.getState();
+
+						return( state != DownloadManager.STATE_STOPPED &&
+								state != DownloadManager.STATE_ERROR &&
+								state != DownloadManager.STATE_QUEUED );
+								
 					}
 					case FT_IS_ERROR:{
 
