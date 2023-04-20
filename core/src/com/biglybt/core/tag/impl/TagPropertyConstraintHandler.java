@@ -1494,11 +1494,26 @@ TagPropertyConstraintHandler
 			
 			if ( tag_maybe_null != null ){
 				
-				tag_maybe_null.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, str );
+				boolean already_error = false;
 				
-				if ( str != null && handler.initialised ){
+				if ( str != null && !str.isEmpty()){
+					
+					String existing = (String)tag_maybe_null.getTransientProperty( Tag.TP_CONSTRAINT_ERROR );
+					
+					if ( existing != null && !existing.isEmpty()){
+						
+						already_error = true;
+					}
+				}
 				
-					Debug.out( str );
+				if ( !already_error ){
+					
+					tag_maybe_null.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, str );
+				
+					if ( str != null && handler.initialised ){
+				
+						Debug.out( str );
+					}
 				}
 			}
 		}
@@ -4344,7 +4359,14 @@ TagPropertyConstraintHandler
 							
 						}
 						
-						Object result = getStringKeyword( dm, tags, s_arg );
+						Object result = getKeywordValue( dm, tags, s_arg );
+						
+						if ( result != null ){
+							
+							return( result );
+						}
+						
+						result = getNumericSupport(dm, tags, args, index);
 						
 						if ( result != null ){
 							
@@ -4376,9 +4398,7 @@ TagPropertyConstraintHandler
 					setError( Debug.getNestedExceptionMessage( e ));
 					
 					String result = "\"\"";
-	
-					args[index] = result;
-	
+		
 					return( result );
 				}
 			}
@@ -4483,7 +4503,7 @@ TagPropertyConstraintHandler
 							return( new String[]{ str.substring( 1, str.length() - 1 ).replace("\\\"", "\"")});
 						}
 						
-						Object o_result = getStringKeyword( dm, tags, str );
+						Object o_result = getKeywordValue( dm, tags, str );
 							
 						if ( o_result == null ){
 		
@@ -4493,9 +4513,13 @@ TagPropertyConstraintHandler
 							
 							return( new String[]{ (String)o_result });
 							
-						}else{
+						}else if ( o_result instanceof String[] ){
 							
 							return((String[])o_result );
+							
+						}else{
+							
+							throw( new Exception( "Invalid constraint keyword, string(s) expected: " + str ));
 						}
 						
 					}else if ( arg instanceof ConstraintExpr ){		
@@ -4529,7 +4553,7 @@ TagPropertyConstraintHandler
 			}
 			
 			private Object
-			getStringKeyword(
+			getKeywordValue(
 				DownloadManager		dm,
 				List<Tag>			tags,
 				String				str )
@@ -4544,6 +4568,408 @@ TagPropertyConstraintHandler
 				int kw = kw_details[0];
 				
 				switch( kw ){
+					case KW_SHARE_RATIO:{
+	
+						int sr = dm.getStats().getShareRatio();
+	
+						if ( sr == -1 ){
+	
+							return( Integer.MAX_VALUE );
+	
+						}else{
+	
+							return( new Float( sr/1000.0f ));
+						}
+					}
+					case KW_TARGET_RATIO:{
+	
+						int tr = dm.getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_SHARE_RATIO );
+	
+						if ( tr <= 0 ){
+	
+							tr = target_share_ratio;
+						}
+	
+						return( new Float( tr/1000.0f ));
+					}
+	
+					case KW_PERCENT:{
+	
+							// 0->1000
+	
+						int percent = dm.getStats().getPercentDoneExcludingDND();
+	
+						return( new Float( percent/10.0f ));
+					}
+					case KW_AGE:{
+	
+						long added = dm.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
+	
+						if ( added <= 0 ){
+	
+							return( 0 );
+						}
+	
+						return(( SystemTime.getCurrentTime() - added )/1000 );		// secs
+					}
+					case KW_COMPLETED_AGE:{
+	
+						long comp = dm.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME );
+	
+						if ( comp <= 0 ){
+	
+							return( 0 );
+						}
+	
+						return(( SystemTime.getCurrentTime() - comp )/1000 );		// secs
+					}
+					case KW_PEER_MAX_COMP:{
+	
+						PEPeerManager pm = dm.getPeerManager();
+						
+						if ( pm == null ){
+							
+							return( 0 );
+						}
+						
+						return(	new Float( pm.getMaxCompletionInThousandNotation( false )/10.0f ));
+					}
+					case KW_LEECHER_MAX_COMP:{
+	
+						PEPeerManager pm = dm.getPeerManager();
+						
+						if ( pm == null ){
+							
+							return( 0 );
+						}
+						
+						return(	new Float( pm.getMaxCompletionInThousandNotation( true )/10.0f ));
+					}
+	
+					case KW_PEER_AVERAGE_COMP:{
+	
+						PEPeerManager pm = dm.getPeerManager();
+						
+						if ( pm == null ){
+							
+							return( 0 );
+						}
+						
+						return(	new Float( pm.getAverageCompletionInThousandNotation()/10.0f ));
+					}
+					case KW_DOWNLOADING_FOR:{
+	
+						return( dm.getStats().getSecondsDownloading());
+					}
+					case KW_SEEDING_FOR:{
+	
+						return( dm.getStats().getSecondsOnlySeeding());
+					}
+					case KW_LAST_ACTIVE:{
+	
+						DownloadManagerState dms = dm.getDownloadState();
+	
+						long	timestamp = dms.getLongAttribute( DownloadManagerState.AT_LAST_ADDED_TO_ACTIVE_TAG );
+	
+						if ( timestamp <= 0 ){
+	
+							return( Long.MAX_VALUE );
+						}
+	
+						return(( SystemTime.getCurrentTime() - timestamp )/1000 );
+					}
+					case KW_RESUME_IN:{
+	
+						long resume_millis = dm.getAutoResumeTime();
+	
+						long	now = SystemTime.getCurrentTime();
+	
+						if ( resume_millis <= 0 || resume_millis <= now ){
+	
+							return( 0 );
+						}
+	
+						return(( resume_millis - now )/1000 );
+					}
+					case KW_MIN_OF_HOUR:{
+	
+						long	now = SystemTime.getCurrentTime();
+	
+						GregorianCalendar cal = new GregorianCalendar();
+	
+						cal.setTime( new Date( now ));
+	
+						return( cal.get( Calendar.MINUTE ));
+					}
+					case KW_HOUR_OF_DAY:{
+	
+						long	now = SystemTime.getCurrentTime();
+	
+						GregorianCalendar cal = new GregorianCalendar();
+	
+						cal.setTime( new Date( now ));
+	
+						return( cal.get( Calendar.HOUR_OF_DAY ));
+					}
+					case KW_DAY_OF_WEEK:{
+	
+						long	now = SystemTime.getCurrentTime();
+	
+						GregorianCalendar cal = new GregorianCalendar();
+	
+						cal.setTime( new Date( now ));
+	
+						return( cal.get( Calendar.DAY_OF_WEEK ));
+					}
+					case KW_SWARM_MERGE:{
+	
+						return( dm.getDownloadState().getLongAttribute( DownloadManagerState.AT_MERGED_DATA ));
+					}
+					case KW_SEED_COUNT:{
+	
+						TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
+	
+						int	seeds = dm.getNbSeeds();
+	
+						if ( response != null && response.isValid()){
+	
+							seeds = Math.max( seeds, response.getSeeds());
+						}
+	
+						Download dl = PluginCoreUtils.wrap( dm );
+	
+						if ( dl != null ){
+							
+							seeds = Math.max( seeds, dl.getAggregatedScrapeResult().getSeedCount());
+						}
+						
+						return( Math.max( 0, seeds ));
+					}
+					case KW_PEER_COUNT:{
+	
+						TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
+	
+						int	peers = dm.getNbPeers();
+	
+						if ( response != null && response.isValid()){
+	
+							peers = Math.max( peers, response.getPeers());
+						}
+	
+						Download dl = PluginCoreUtils.wrap( dm );
+	
+						if ( dl != null ){
+							
+							peers = Math.max( peers, dl.getAggregatedScrapeResult().getNonSeedCount());
+						}
+						
+						return( Math.max( 0, peers ));
+					}
+					case KW_SEED_PEER_RATIO:{
+	
+						TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
+	
+						int	seeds = dm.getNbSeeds();
+						int	peers = dm.getNbPeers();
+	
+						if ( response != null && response.isValid()){
+	
+							seeds = Math.max( seeds, response.getSeeds());
+							peers = Math.max( peers, response.getPeers());
+						}
+	
+						Download dl = PluginCoreUtils.wrap( dm );
+	
+						if ( dl != null ){
+							
+							DownloadScrapeResult sr = dl.getAggregatedScrapeResult();
+							
+							seeds = Math.max( seeds, sr.getSeedCount());
+							peers = Math.max( peers, sr.getNonSeedCount());
+						}
+						
+						float ratio;
+	
+						if ( peers < 0 || seeds < 0 ){
+	
+							ratio = 0;
+	
+						}else{
+	
+							if ( peers == 0 ){
+	
+								if ( seeds == 0 ){
+	
+									ratio = 0;
+	
+								}else{
+	
+									return( Integer.MAX_VALUE );
+								}
+							}else{
+	
+								ratio = (float)seeds/peers;
+							}
+						}
+	
+						return( ratio );
+					}
+					case KW_TAG_AGE:{
+	
+						long tag_added = tag_maybe_null.getTaggableAddedTime( dm );
+	
+						if ( tag_added <= 0 ){
+	
+							return( 0 );
+						}
+	
+						long age = (( SystemTime.getCurrentTime() - tag_added )/1000 );		// secs
+	
+						if ( age < 0 ){
+	
+							age = 0;
+						}
+	
+						return( age );
+					}
+	
+					case KW_SIZE:{
+						
+						return( dm.getSize());
+					}
+					case KW_SIZE_MB:{
+						
+							// hmm, should be 1000 for MB and 1024 for MiB but legacy
+						
+						return( dm.getSize()/(1024*1024L));
+					}
+					case KW_SIZE_GB:{
+						
+						return( dm.getSize()/(1024*1024*1024L));
+					}
+					case KW_FILE_COUNT:{
+						
+						return( dm.getNumFileInfos());
+					}
+					case KW_AVAILABILITY:{
+	
+						PEPeerManager pm = dm.getPeerManager();
+						
+						if ( pm == null ){
+							
+							return( -1f );
+						}
+						
+						float avail = pm.getMinAvailability();
+						
+						return(	new Float( avail ));
+					}
+					case KW_UP_IDLE:{
+						
+						long secs = dm.getStats().getTimeSinceLastDataSentInSeconds();
+						
+						if ( secs < 0 ){
+							
+							return( Long.MAX_VALUE );
+							
+						}else{
+							
+							return( secs );
+						}
+					}
+					case KW_DOWN_IDLE:{
+						
+						long secs = dm.getStats().getTimeSinceLastDataReceivedInSeconds();
+						
+						if ( secs < 0 ){
+							
+							return( Long.MAX_VALUE );
+							
+						}else{
+							
+							return( secs );
+						}
+					}
+					case KW_DOWNLOADED:{
+						
+						return( dm.getStats().getTotalGoodDataBytesReceived());
+					}
+					case KW_REMAINING:{
+						
+						return( dm.getStats().getRemainingExcludingDND());
+					}
+					case KW_UPLOADED:{
+						
+						return( dm.getStats().getTotalDataBytesSent());
+					}
+					case KW_MAX_UP:{
+						
+						return( dm.getStats().getUploadRateLimitBytesPerSecond());
+					}
+					case KW_MAX_DOWN:{
+						
+						return( dm.getStats().getDownloadRateLimitBytesPerSecond());
+					}
+					case KW_TORRENT_TYPE:{
+						
+						TOTorrent t = dm.getTorrent();
+	
+						return( t==null?0:t.getTorrentType());
+					}
+					case KW_FULL_COPY_SEEN:{
+						
+						long value = dm.getStats().getAvailWentBadTime();
+						
+						if ( value < 0 ){
+							
+								// never seen a full copy
+							
+							value = Long.MIN_VALUE;
+							
+						}else if ( value == 0 ){
+							
+								// currently good
+							
+							value = SystemTime.getCurrentTime();
+						}
+						
+						return( value );
+					}
+					case KW_DOWN_SPEED:
+					case KW_UP_SPEED:{
+	
+						long[] rates = (long[])dm.getUserData( DM_RATES );
+						
+						if ( rates == null ){
+							
+							rates = new long[]{ -1, -1, 0, 0 };
+							
+							dm.setUserData( DM_RATES, rates );
+							
+							return( 0 );
+							
+						}else if ( rates[0] == -1 ){
+							
+							return( 0 );
+							
+						}else{
+							
+							return( rates[kw==KW_DOWN_SPEED?2:3]);
+						}
+					}
+					case KW_SESSION_AGE:{
+						
+						long value = dm.getStats().getTimeStarted();
+						
+						if ( value <= 0 ){
+							
+							return( 0 );
+							
+						}else{
+							
+							return((SystemTime.getCurrentTime() - value )/1000 );
+						}
+					}
 					case KW_NAME:{
 					
 						dm.setUserData( DM_NAME, "" );	// just a marker
@@ -4928,429 +5354,25 @@ TagPropertyConstraintHandler
 						
 					}else{
 
-						int[] kw_details = keyword_map.get( str.toLowerCase( Locale.US ));
-
-						if ( kw_details == null ){
-
-							setError(  "Invalid constraint keyword: " + str );
-
-							return( result );
-						}
-						
-						int kw = kw_details[0];
-
 						result = null;	// don't cache any results below as they are variable
-						
-						switch( kw ){
-							case KW_SHARE_RATIO:{
 
-								int sr = dm.getStats().getShareRatio();
-
-								if ( sr == -1 ){
-
-									return( Integer.MAX_VALUE );
-
-								}else{
-
-									return( new Float( sr/1000.0f ));
-								}
-							}
-							case KW_TARGET_RATIO:{
-
-								int tr = dm.getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_SHARE_RATIO );
-
-								if ( tr <= 0 ){
-
-									tr = target_share_ratio;
-								}
-
-								return( new Float( tr/1000.0f ));
-							}
-
-							case KW_PERCENT:{
-
-									// 0->1000
-
-								int percent = dm.getStats().getPercentDoneExcludingDND();
-
-								return( new Float( percent/10.0f ));
-							}
-							case KW_AGE:{
-
-								long added = dm.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
-
-								if ( added <= 0 ){
-
-									return( 0 );
-								}
-
-								return(( SystemTime.getCurrentTime() - added )/1000 );		// secs
-							}
-							case KW_COMPLETED_AGE:{
-
-								long comp = dm.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME );
-
-								if ( comp <= 0 ){
-
-									return( 0 );
-								}
-
-								return(( SystemTime.getCurrentTime() - comp )/1000 );		// secs
-							}
-							case KW_PEER_MAX_COMP:{
-
-								PEPeerManager pm = dm.getPeerManager();
-								
-								if ( pm == null ){
-									
-									return( 0 );
-								}
-								
-								return(	new Float( pm.getMaxCompletionInThousandNotation( false )/10.0f ));
-							}
-							case KW_LEECHER_MAX_COMP:{
-
-								PEPeerManager pm = dm.getPeerManager();
-								
-								if ( pm == null ){
-									
-									return( 0 );
-								}
-								
-								return(	new Float( pm.getMaxCompletionInThousandNotation( true )/10.0f ));
-							}
-
-							case KW_PEER_AVERAGE_COMP:{
-
-								PEPeerManager pm = dm.getPeerManager();
-								
-								if ( pm == null ){
-									
-									return( 0 );
-								}
-								
-								return(	new Float( pm.getAverageCompletionInThousandNotation()/10.0f ));
-							}
-							case KW_DOWNLOADING_FOR:{
-
-								return( dm.getStats().getSecondsDownloading());
-							}
-							case KW_SEEDING_FOR:{
-
-								return( dm.getStats().getSecondsOnlySeeding());
-							}
-							case KW_LAST_ACTIVE:{
-
-								DownloadManagerState dms = dm.getDownloadState();
-
-								long	timestamp = dms.getLongAttribute( DownloadManagerState.AT_LAST_ADDED_TO_ACTIVE_TAG );
-
-								if ( timestamp <= 0 ){
-
-									return( Long.MAX_VALUE );
-								}
-
-								return(( SystemTime.getCurrentTime() - timestamp )/1000 );
-							}
-							case KW_RESUME_IN:{
-
-								long resume_millis = dm.getAutoResumeTime();
-
-								long	now = SystemTime.getCurrentTime();
-
-								if ( resume_millis <= 0 || resume_millis <= now ){
-
-									return( 0 );
-								}
-
-								return(( resume_millis - now )/1000 );
-							}
-							case KW_MIN_OF_HOUR:{
-
-								long	now = SystemTime.getCurrentTime();
-
-								GregorianCalendar cal = new GregorianCalendar();
-
-								cal.setTime( new Date( now ));
-
-								return( cal.get( Calendar.MINUTE ));
-							}
-							case KW_HOUR_OF_DAY:{
-
-								long	now = SystemTime.getCurrentTime();
-
-								GregorianCalendar cal = new GregorianCalendar();
-
-								cal.setTime( new Date( now ));
-
-								return( cal.get( Calendar.HOUR_OF_DAY ));
-							}
-							case KW_DAY_OF_WEEK:{
-
-								long	now = SystemTime.getCurrentTime();
-
-								GregorianCalendar cal = new GregorianCalendar();
-
-								cal.setTime( new Date( now ));
-
-								return( cal.get( Calendar.DAY_OF_WEEK ));
-							}
-							case KW_SWARM_MERGE:{
-
-								return( dm.getDownloadState().getLongAttribute( DownloadManagerState.AT_MERGED_DATA ));
-							}
-							case KW_SEED_COUNT:{
-
-								TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
-
-								int	seeds = dm.getNbSeeds();
-
-								if ( response != null && response.isValid()){
-
-									seeds = Math.max( seeds, response.getSeeds());
-								}
-
-								Download dl = PluginCoreUtils.wrap( dm );
-
-								if ( dl != null ){
-									
-									seeds = Math.max( seeds, dl.getAggregatedScrapeResult().getSeedCount());
-								}
-								
-								return( Math.max( 0, seeds ));
-							}
-							case KW_PEER_COUNT:{
-
-								TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
-
-								int	peers = dm.getNbPeers();
-
-								if ( response != null && response.isValid()){
-
-									peers = Math.max( peers, response.getPeers());
-								}
-
-								Download dl = PluginCoreUtils.wrap( dm );
-
-								if ( dl != null ){
-									
-									peers = Math.max( peers, dl.getAggregatedScrapeResult().getNonSeedCount());
-								}
-								
-								return( Math.max( 0, peers ));
-							}
-							case KW_SEED_PEER_RATIO:{
-
-								TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
-
-								int	seeds = dm.getNbSeeds();
-								int	peers = dm.getNbPeers();
-
-								if ( response != null && response.isValid()){
-
-									seeds = Math.max( seeds, response.getSeeds());
-									peers = Math.max( peers, response.getPeers());
-								}
-
-								Download dl = PluginCoreUtils.wrap( dm );
-
-								if ( dl != null ){
-									
-									DownloadScrapeResult sr = dl.getAggregatedScrapeResult();
-									
-									seeds = Math.max( seeds, sr.getSeedCount());
-									peers = Math.max( peers, sr.getNonSeedCount());
-								}
-								
-								float ratio;
-
-								if ( peers < 0 || seeds < 0 ){
-
-									ratio = 0;
-
-								}else{
-
-									if ( peers == 0 ){
-
-										if ( seeds == 0 ){
-
-											ratio = 0;
-
-										}else{
-
-											return( Integer.MAX_VALUE );
-										}
-									}else{
-
-										ratio = (float)seeds/peers;
-									}
-								}
-
-								return( ratio );
-							}
-							case KW_TAG_AGE:{
-
-								long tag_added = tag_maybe_null.getTaggableAddedTime( dm );
-
-								if ( tag_added <= 0 ){
-
-									return( 0 );
-								}
-
-								long age = (( SystemTime.getCurrentTime() - tag_added )/1000 );		// secs
-
-								if ( age < 0 ){
-
-									age = 0;
-								}
-
-								return( age );
-							}
-
-							case KW_SIZE:{
-								
-								return( dm.getSize());
-							}
-							case KW_SIZE_MB:{
-								
-									// hmm, should be 1000 for MB and 1024 for MiB but legacy
-								
-								return( dm.getSize()/(1024*1024L));
-							}
-							case KW_SIZE_GB:{
-								
-								return( dm.getSize()/(1024*1024*1024L));
-							}
-							case KW_FILE_COUNT:{
-								
-								return( dm.getNumFileInfos());
-							}
-							case KW_AVAILABILITY:{
-
-								PEPeerManager pm = dm.getPeerManager();
-								
-								if ( pm == null ){
-									
-									return( -1f );
-								}
-								
-								float avail = pm.getMinAvailability();
-								
-								return(	new Float( avail ));
-							}
-							case KW_UP_IDLE:{
-								
-								long secs = dm.getStats().getTimeSinceLastDataSentInSeconds();
-								
-								if ( secs < 0 ){
-									
-									return( Long.MAX_VALUE );
-									
-								}else{
-									
-									return( secs );
-								}
-							}
-							case KW_DOWN_IDLE:{
-								
-								long secs = dm.getStats().getTimeSinceLastDataReceivedInSeconds();
-								
-								if ( secs < 0 ){
-									
-									return( Long.MAX_VALUE );
-									
-								}else{
-									
-									return( secs );
-								}
-							}
-							case KW_DOWNLOADED:{
-								
-								return( dm.getStats().getTotalGoodDataBytesReceived());
-							}
-							case KW_REMAINING:{
-								
-								return( dm.getStats().getRemainingExcludingDND());
-							}
-							case KW_UPLOADED:{
-								
-								return( dm.getStats().getTotalDataBytesSent());
-							}
-							case KW_MAX_UP:{
-								
-								return( dm.getStats().getUploadRateLimitBytesPerSecond());
-							}
-							case KW_MAX_DOWN:{
-								
-								return( dm.getStats().getDownloadRateLimitBytesPerSecond());
-							}
-							case KW_TORRENT_TYPE:{
-								
-								TOTorrent t = dm.getTorrent();
-
-								return( t==null?0:t.getTorrentType());
-							}
-							case KW_FULL_COPY_SEEN:{
-								
-								long value = dm.getStats().getAvailWentBadTime();
-								
-								if ( value < 0 ){
-									
-										// never seen a full copy
-									
-									value = Long.MIN_VALUE;
-									
-								}else if ( value == 0 ){
-									
-										// currently good
-									
-									value = SystemTime.getCurrentTime();
-								}
-								
-								return( value );
-							}
-							case KW_DOWN_SPEED:
-							case KW_UP_SPEED:{
-
-								long[] rates = (long[])dm.getUserData( DM_RATES );
-								
-								if ( rates == null ){
-									
-									rates = new long[]{ -1, -1, 0, 0 };
-									
-									dm.setUserData( DM_RATES, rates );
-									
-									return( 0 );
-									
-								}else if ( rates[0] == -1 ){
-									
-									return( 0 );
-									
-								}else{
-									
-									return( rates[kw==KW_DOWN_SPEED?2:3]);
-								}
-							}
-							case KW_SESSION_AGE:{
-								
-								long value = dm.getStats().getTimeStarted();
-								
-								if ( value <= 0 ){
-									
-									return( 0 );
-									
-								}else{
-									
-									return((SystemTime.getCurrentTime() - value )/1000 );
-								}
-							}
-							default:{
-
-								setError( "Invalid constraint keyword: " + str );
-
-								return( result );
-							}
+						Object o_result = getKeywordValue( dm, tags, str );
+							
+						if ( o_result instanceof Number ){
+							
+							return((Number)o_result);
 						}
+						
+						if ( o_result == null ){
+						
+							setError( "Invalid constraint keyword: " + str );
+							
+						}else{
+							
+							setError( "Invalid constraint keyword, numeric expected: " + str );
+						}
+
+						return( result );
 					}
 				}catch( Throwable e){
 
