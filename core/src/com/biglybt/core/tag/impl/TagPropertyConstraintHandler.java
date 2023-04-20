@@ -2412,6 +2412,8 @@ TagPropertyConstraintHandler
 				
 				if ( debug != null ){
 					debug.append( ")" );
+					debug.append( "->" );
+					debug.append( result );
 				}
 				
 				return( result );
@@ -2450,6 +2452,8 @@ TagPropertyConstraintHandler
 					debug.append( "(" );
 				}
 				
+				boolean res = false;
+				
 				try{
 					int	num = 1;
 					
@@ -2463,23 +2467,30 @@ TagPropertyConstraintHandler
 						
 						Boolean b = (Boolean)expr.eval( context, dm, tags, debug );
 						
-						if ( debug != null ){
-							debug.append( b );
-						}
+						//if ( debug != null ){
+						//	debug.append( "->" );
+						//	debug.append( b );
+						//}
 						
 						if ( b ){
 	
+							res = true;
+							
 							return( true );
 						}
 						
 						num++;
 					}
-						
+					
+					res = false;
+					
 					return( false );
 					
 				}finally{
 					if ( debug != null ){
 						debug.append( ")" );
+						debug.append( "->" );
+						debug.append( res );
 					}
 				}
 			}
@@ -2524,6 +2535,8 @@ TagPropertyConstraintHandler
 					debug.append( "(" );
 				}
 				
+				boolean res = false;
+				
 				try{
 					int	num = 1;
 
@@ -2537,22 +2550,29 @@ TagPropertyConstraintHandler
 						
 						boolean b = (Boolean)expr.eval( context, dm, tags, debug );
 						
-						if ( debug != null ){
-							debug.append( b );
-						}
+						//if ( debug != null ){
+						//	debug.append( "->" );
+						//	debug.append( b );
+						//}
 
 						if ( !b ){
 	
+							res = false;
+							
 							return( false );
 						}
 						
 						num++;
 					}
 	
+					res = true;
+					
 					return( true );
 				}finally{
 					if ( debug != null ){
 						debug.append( ")" );
+						debug.append( "->" );
+						debug.append( res );
 					}
 				}
 			}
@@ -2602,8 +2622,10 @@ TagPropertyConstraintHandler
 					debug.append( "(" );
 				}
 
+				boolean res = false;
+				
 				try{
-					boolean res = (Boolean)exprs[0].eval( context, dm, tags, debug );
+					res = (Boolean)exprs[0].eval( context, dm, tags, debug );
 	
 					if ( debug != null ){
 						debug.append( res );
@@ -2612,14 +2634,15 @@ TagPropertyConstraintHandler
 					for ( int i=1;i<exprs.length;i++){
 	
 						if ( debug != null ){
-							debug.append( "^" );;
+							debug.append( "^" );
 						}
 
 						boolean b = (Boolean)exprs[i].eval( context, dm, tags, debug );
 						
-						if ( debug != null ){
-							debug.append( b );
-						}
+						//if ( debug != null ){
+						//	debug.append( "->" );
+						//	debug.append( b );
+						//}
 						
 						res = res ^ b;
 					}
@@ -2629,6 +2652,8 @@ TagPropertyConstraintHandler
 				}finally{
 					if ( debug != null ){
 						debug.append( ")" );
+						debug.append( "->" );
+						debug.append( res );
 					}
 				}
 			}
@@ -3398,13 +3423,13 @@ TagPropertyConstraintHandler
 				StringBuilder		debug )
 			{
 				if ( debug!=null){
-					debug.append( "[" + func_name );
+					debug.append( "[" + func_name + "(" );
 				}
 				
 				Object res = evalSupport( context, dm, tags, debug );
 				
 				if ( debug!=null){
-					debug.append( "->" + res + "]" );
+					debug.append( ")->" + res + "]" );
 				}
 				
 				return( res );
@@ -3422,7 +3447,7 @@ TagPropertyConstraintHandler
 				switch( fn_type ){
 					case FT_HAS_TAG:{
 
-						String tag_name = (String)params[0];
+						String tag_name = getStringParam( params, 0, debug );
 
 						for ( Tag t: tags ){
 
@@ -3452,7 +3477,7 @@ TagPropertyConstraintHandler
 					}
 					case FT_HAS_TAG_AGE:{
 
-						String tag_name = (String)params[0];
+						String tag_name = getStringParam( params, 0, debug );
 
 						Tag target = null;
 						
@@ -3499,7 +3524,7 @@ TagPropertyConstraintHandler
 					}
 					case FT_HAS_TAG_GROUP:{
 
-						String group_name = (String)params[0];
+						String group_name = getStringParam( params, 0, debug );
 
 						for ( Tag t: tags ){
 
@@ -3515,7 +3540,7 @@ TagPropertyConstraintHandler
 					}
 					case FT_COUNT_TAG:{
 						
-						String tag_name = (String)params[0];
+						String tag_name = getStringParam( params, 0, debug );
 						
 						Tag target = null;
 						
@@ -3545,7 +3570,7 @@ TagPropertyConstraintHandler
 					}
 					case FT_TAG_POSITION:{
 						
-						String tag_name = (String)params[0];
+						String tag_name = getStringParam( params, 0, debug );
 						
 						Tag target = null;
 						
@@ -3578,7 +3603,7 @@ TagPropertyConstraintHandler
 								
 							}else{
 								
-								sort = ((Number)params[1]).intValue();
+								sort = getNumericParam( params, 1, debug ).intValue();
 							}
 							
 							Set<Taggable> dms = target.getTagged();
@@ -3710,7 +3735,7 @@ TagPropertyConstraintHandler
 					}
 					case FT_HAS_NET:{
 
-						String net_name = (String)params[0];
+						String net_name = getStringParam( params, 0, debug );
 
 						if ( net_name != null ){
 
@@ -3899,7 +3924,7 @@ TagPropertyConstraintHandler
 						
 						if ( num_params == 3 && getNumericLiteral( params, 2 )){
 							
-							Number flags = (Number)params[2];
+							Number flags = getNumericParam( params, 2, debug );
 							
 							if ( flags.intValue() == 1 ){
 								
@@ -4048,6 +4073,10 @@ TagPropertyConstraintHandler
 									
 									return( false );
 								}
+							}
+							
+							if ( debug != null ){
+								debug.append( ",\"" + pattern + "\"");
 							}
 							
 							String key = dm.getInternalName();
@@ -4223,7 +4252,7 @@ TagPropertyConstraintHandler
 					}
 					case FT_GET_CONFIG:{
 						
-						String key = (String)params[0];
+						String key = getStringParam( params, 0, debug );
 						
 						long now = SystemTime.getMonotonousTime();
 						
@@ -4348,6 +4377,42 @@ TagPropertyConstraintHandler
 				return( false );
 			}
 
+			private String
+			getStringParam(
+				Object[] 		params,
+				int				index,
+				StringBuilder	debug )
+			{
+				String result = (String)params[index];
+				
+				if ( debug != null ){
+					if ( index > 0 ){
+						debug.append(",");
+					}
+					debug.append( "\"" + result + "\"");
+				}
+				
+				return( result );
+			}
+			
+			private Number
+			getNumericParam(
+				Object[] 		params,
+				int				index,
+				StringBuilder	debug )
+			{
+				Number result = (Number)params[index];
+				
+				if ( debug != null ){
+					if ( index > 0 ){
+						debug.append(",");
+					}
+					debug.append( result );
+				}
+				
+				return( result );
+			}
+			
 			private Object
 			getWhatever(
 				Map<String,Object>	context,
@@ -4357,6 +4422,10 @@ TagPropertyConstraintHandler
 				int					index,
 				StringBuilder		debug )
 			{
+				if ( debug!=null&&index>0){
+					debug.append( "," );
+				}
+				
 				try{
 					Object arg = args[index];
 					
@@ -4525,35 +4594,65 @@ TagPropertyConstraintHandler
 				int					index,
 				StringBuilder		debug )
 			{
+				if ( debug!=null&&index>0){
+					debug.append( "," );
+				}
+				
 				try{
 					Object arg = args[index];
 	
 					if ( arg instanceof String ){
 						
+						String[] result;
+						
 						String str = (String)arg;
 						
 						if ( GeneralUtils.startsWithDoubleQuote( str ) && GeneralUtils.endsWithDoubleQuote( str )){
 
-							return( new String[]{ str.substring( 1, str.length() - 1 ).replace("\\\"", "\"")});
-						}
-						
-						Object o_result = getKeywordValue( dm, tags, str );
+							result = new String[]{ str.substring( 1, str.length() - 1 ).replace("\\\"", "\"")};
 							
-						if ( o_result == null ){
-		
-							throw( new Exception( "Invalid constraint string: " + str ));
+							if ( debug!=null){
+								debug.append( "\""+result[0]+"\"" );
+							}
 							
-						}else if ( o_result instanceof String  ){
-							
-							return( new String[]{ (String)o_result });
-							
-						}else if ( o_result instanceof String[] ){
-							
-							return((String[])o_result );
+							return( result );
 							
 						}else{
+						
+							Object o_result = getKeywordValue( dm, tags, str );
+								
+							if ( o_result == null ){
+			
+								throw( new Exception( "Invalid constraint string: " + str ));
+								
+							}else if ( o_result instanceof String  ){
+								
+								result = new String[]{ (String)o_result };
+								
+							}else if ( o_result instanceof String[] ){
+								
+								result = (String[])o_result;
+								
+							}else{
+								
+								throw( new Exception( "Invalid constraint keyword, string(s) expected: " + str ));
+							}
 							
-							throw( new Exception( "Invalid constraint keyword, string(s) expected: " + str ));
+							if ( debug!=null){
+								debug.append( "[" );
+								debug.append( str );
+								debug.append( "->\"" );
+								
+								debug.append( result[0] );
+								
+								if ( result.length > 1 ){
+									debug.append( ",..." );
+								}
+								
+								debug.append( "\"]" );
+							}
+						
+							return( result );
 						}
 						
 					}else if ( arg instanceof ConstraintExpr ){		
@@ -5250,6 +5349,10 @@ TagPropertyConstraintHandler
 				int					index,
 				StringBuilder		debug )
 			{
+				if ( debug!=null&&index>0){
+					debug.append( "," );
+				}
+				
 				Object arg = args[index];
 				
 				if ( arg instanceof Number ){
