@@ -1283,7 +1283,8 @@ TagPropertyConstraintHandler
 		return( new TagConstraint( this, null, expr, null, true ));
 	}
 
-	private static Pattern comp_op_pattern = Pattern.compile( "(.+?)(==|!=|>=|>|<=|<|\\+|-|\\*|/)(.+)");
+	private static Pattern comp_op_pattern	= Pattern.compile( "(.+?)(==|!=|>=|>|<=|<|\\+|-|\\*|/|%)(.+)");
+	private static Pattern comp_ift_pattern	= Pattern.compile( "(.+?)\\?(.+):(.+)");
 	
 	private static Map<String,String>	comp_op_map = new HashMap<>();
 	
@@ -1298,6 +1299,7 @@ TagPropertyConstraintHandler
 		comp_op_map.put( "-",  "minus" );
 		comp_op_map.put( "*",  "mult" );
 		comp_op_map.put( "/",  "div" );
+		comp_op_map.put( "%",  "rem" );
 	}
 	
 	private static Map<String,Object[]>	config_value_cache = new ConcurrentHashMap<String, Object[]>();
@@ -1692,40 +1694,54 @@ TagPropertyConstraintHandler
 					
 					return( new ConstraintExprFunction( comp_op_map.get( op ), params ));
 					
-				}else if ( str.startsWith( "!" )){
-	
-					return( new ConstraintExprNot( compileBasic( str.substring(1).trim(), context )));
-	
-				}else if ( str.startsWith( "{" )){
-	
-					ConstraintExpr val = context.get( str );
-						
-					if ( val == null ){
-						
-						throw( new RuntimeException( "Failed to compile '" + str + "'" ));
-					}
-						
-					return( val );
-	 
 				}else{
-	
-					int	pos = str.indexOf( '(' );
-	
-					if ( pos > 0 && str.endsWith( ")" )){
-	
-						String func = str.substring( 0, pos );
-	
-						String key = str.substring( pos+1, str.length() - 1 ).trim();
-	
-						ConstraintExprParams params = (ConstraintExprParams)context.get( key );
-	
-						return( new ConstraintExprFunction( func, params ));
-	
+					m = comp_ift_pattern.matcher( str );
+
+					if ( m.find()){
+								
+						String op1 	= m.group(1).trim();
+						String op2 	= m.group(2).trim();
+						String op3	= m.group(3).trim();
+						
+						ConstraintExprParams params = new ConstraintExprParams( op1 + "," + op2 + "," + op3, context );
+						
+						return( new ConstraintExprFunction( "ifThenElse", params ));
+						
+					}else if ( str.startsWith( "!" )){
+		
+						return( new ConstraintExprNot( compileBasic( str.substring(1).trim(), context )));
+		
+					}else if ( str.startsWith( "{" )){
+		
+						ConstraintExpr val = context.get( str );
+							
+						if ( val == null ){
+							
+							throw( new RuntimeException( "Failed to compile '" + str + "'" ));
+						}
+							
+						return( val );
+		 
 					}else{
-	
-						throw( new RuntimeException( "Unsupported construct: " + str ));
+		
+						int	pos = str.indexOf( '(' );
+		
+						if ( pos > 0 && str.endsWith( ")" )){
+		
+							String func = str.substring( 0, pos );
+		
+							String key = str.substring( pos+1, str.length() - 1 ).trim();
+		
+							ConstraintExprParams params = (ConstraintExprParams)context.get( key );
+		
+							return( new ConstraintExprFunction( func, params ));
+		
+						}else{
+		
+							throw( new RuntimeException( "Unsupported construct: " + str ));
+						}
 					}
-				}
+			}
 			}
 		}
 
@@ -2692,7 +2708,10 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_SEEDING			= 53;
 		private static final int FT_IS_DOWNLOADING		= 54;
 		private static final int FT_IS_RUNNING			= 55;
-		
+		private static final int FT_REM					= 56;
+		private static final int FT_MIN					= 57;
+		private static final int FT_MAX					= 58;
+
 		static{
 			fn_map.put( "hastag", FT_HAS_TAG );
 			fn_map.put( "isprivate", FT_IS_PRIVATE );
@@ -2760,6 +2779,9 @@ TagPropertyConstraintHandler
 			fn_map.put( "minus", FT_MINUS );
 			fn_map.put( "mult", FT_MULT );
 			fn_map.put( "div", FT_DIV );
+			fn_map.put( "rem", FT_REM );
+			fn_map.put( "min", FT_MIN );
+			fn_map.put( "max", FT_MAX );
 			fn_map.put( "gettagweight", FT_GET_TAG_WEIGHT );
 			fn_map.put( "ifthenelse", FT_IF_THEN_ELSE );
 		}
@@ -3168,7 +3190,10 @@ TagPropertyConstraintHandler
 					case FT_PLUS:
 					case FT_MINUS:
 					case FT_MULT:
-					case FT_DIV:{
+					case FT_DIV:
+					case FT_REM:
+					case FT_MIN:
+					case FT_MAX:{
 
 						params_ok = num_params == 2;
 
@@ -4155,7 +4180,10 @@ TagPropertyConstraintHandler
 					case FT_PLUS:
 					case FT_MINUS:
 					case FT_MULT:
-					case FT_DIV:{
+					case FT_DIV:
+					case FT_REM:
+					case FT_MIN:
+					case FT_MAX:{
 						
 						Number n1 = getNumeric( context, dm, tags, params, 0, debug  );
 						Number n2 = getNumeric( context, dm, tags, params, 1, debug  );
@@ -4173,6 +4201,9 @@ TagPropertyConstraintHandler
 								case FT_MINUS:	return( p1-p2 );
 								case FT_MULT:	return( p1*p2 );
 								case FT_DIV:	return( p1/p2 );
+								case FT_REM:	return( p1%p2 );
+								case FT_MIN:	return( Math.min(p1,p2 ));
+								case FT_MAX:	return( Math.max(p1,p2 ));
 							}
 						}else{
 							
@@ -4184,6 +4215,9 @@ TagPropertyConstraintHandler
 								case FT_MINUS:	return( p1-p2 );
 								case FT_MULT:	return( p1*p2 );
 								case FT_DIV:	return( p1/p2 );
+								case FT_REM:	return( p1%p2 );
+								case FT_MIN:	return( Math.min(p1,p2 ));
+								case FT_MAX:	return( Math.max(p1,p2 ));
 							}
 						}
 					}
