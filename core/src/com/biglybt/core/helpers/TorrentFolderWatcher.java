@@ -54,6 +54,10 @@ import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.protocol.magnet.MagnetConnection2;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.logging.LoggerChannel;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.model.BasicPluginViewModel;
 
 /**
  * Watches a folder for new torrents and imports them.
@@ -68,6 +72,8 @@ public class TorrentFolderWatcher {
 
 	private volatile GlobalManager _global_manager;
 
+	private final LoggerChannel log;
+	
 	volatile boolean running = false;
 
 	private final ArrayList<TOTorrent> to_delete = new ArrayList<>();
@@ -184,6 +190,20 @@ public class TorrentFolderWatcher {
 	 */
 	public TorrentFolderWatcher(GlobalManager global_manager) {
 		_global_manager = global_manager;
+		
+		Core core = CoreFactory.getSingleton();
+		PluginInterface plugin_interface = core.getPluginManager().getDefaultPluginInterface();
+
+		log = plugin_interface.getLogger().getTimeStampedChannel( "Torrent Importer" );
+
+		UIManager	ui_manager = plugin_interface.getUIManager();
+
+		BasicPluginViewModel model = ui_manager.createBasicPluginViewModel( "log.torrent.importer" );
+
+		model.getActivity().setVisible( false );
+		model.getProgress().setVisible( false );
+
+		model.attachLoggerChannel( log );
 	}
 
 	public void
@@ -346,6 +366,14 @@ public class TorrentFolderWatcher {
 
 				TOTorrent torrent = (TOTorrent) to_delete.get(i);
 
+				try{
+					log( "Deleting processed torrent: " + TorrentUtils.getTorrentFileName(torrent));
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+				
 				try {
 					TorrentUtils.delete(torrent);
 
@@ -361,6 +389,8 @@ public class TorrentFolderWatcher {
 
 				File	folder = folders.get(folder_index);
 
+				log( "Processing " + folder );
+				
 				final String tag_name = tags.get(folder_index);
 
 					// if we are saving torrents to the same location as we import them from
@@ -403,6 +433,8 @@ public class TorrentFolderWatcher {
 	
 							DownloadManager dm;
 							
+							log( "Importing " + file.getName());
+							
 							try {
 	
 								TOTorrent torrent = TorrentUtils.readFromFile(file, false);
@@ -427,6 +459,8 @@ public class TorrentFolderWatcher {
 									
 									applyTag( dm, tag_name );
 
+									log( "Import ignored, download already present: " + file.getName());
+									
 								}else if ( plugin_dm.lookupDownloadStub( torrent.getHash()) != null ){
 	
 									// archived download
@@ -444,6 +478,8 @@ public class TorrentFolderWatcher {
 										to_delete.add(torrent);
 									}
 	
+									log( "Import ignored, download already archived: " + file.getName());
+									
 								}else{
 
 									boolean[] to_skip = TorrentUtils.getSkipFiles( torrent );
@@ -635,7 +671,9 @@ public class TorrentFolderWatcher {
 										// saved copy elsewhere
 										to_delete.add(torrent);
 									}
-												
+										
+									log( "Imported " + file.getName());
+									
 										// might have already existed, check tagging
 										
 									applyTag( dm, tag_name );
@@ -649,6 +687,8 @@ public class TorrentFolderWatcher {
 	
 							} catch (Throwable e) {
 	
+								log( "Failed to import " + file.getName() + ": " + Debug.getNestedExceptionMessage(e));
+								
 								Debug.out("Failed to auto-import torrent file '"
 										+ file.getAbsolutePath() + "' - "
 										+ Debug.getNestedExceptionMessage(e));
@@ -881,6 +921,8 @@ public class TorrentFolderWatcher {
 			return;
 		}
 		
+		log( "Adding magnet to queue: " + file.getName());
+		
 		pending_magnets.add( file );
 		
 		if ( active_magnets.size() >= 5 ){
@@ -905,6 +947,8 @@ public class TorrentFolderWatcher {
 					boolean		bad_magnet 	= true;
 					
 					try{
+						log( "Processing magnet: " + active.getName());
+						
 						String magnet_uri = FileUtil.readFileAsString( active, 32000, "UTF-8" );
 						
 						URL magnet_url = new URL( magnet_uri );
@@ -958,13 +1002,21 @@ public class TorrentFolderWatcher {
 							
 							if ( ok ){
 							
+								log( "Completed magnet: " + active.getName());
+								
 								active.delete();
 								
 							}else{
 								
 								if ( bad_magnet ){
 								
+									log( "Bad magnet, failing: " + active.getName());
+									
 									active.renameTo( FileUtil.newFile( active.getAbsolutePath() + ".failed" ));
+									
+								}else{
+									
+									log( "Magnet download failed, will retry later: " + active.getName());
 								}
 								
 								failed_magnets.add( active );
@@ -993,5 +1045,12 @@ public class TorrentFolderWatcher {
 				}
 			}
 		}.start();
+	}
+	
+	private void
+	log(
+		String		str )
+	{
+		log.log( str );
 	}
 }
