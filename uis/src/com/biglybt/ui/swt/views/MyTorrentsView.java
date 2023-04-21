@@ -2989,27 +2989,35 @@ public class MyTorrentsView
 		// Usually get stateChanged trigger for every torrent on first display
 		// Queue them up, otherwise ThreadPool warns of too many
 		synchronized (listRowsToRefresh) {
-			if (!listRowsToRefresh.contains(row)) {
-				listRowsToRefresh.add(row);
-				if (listRowsToRefresh.size() > 1) {
-					return;
-				}
+			if (listRowsToRefresh.contains(row)) {
+				return;
+			}
+			listRowsToRefresh.add(row);
+			if (listRowsToRefresh.size() > 1) {
+				return;
 			}
 		}
 
 		Utils.getOffOfSWTThread(() -> {
 			// wait between 10ms and 50ms for new state changes
-			int count = listRowsToRefresh.size();
+			int count;
+			
+			synchronized (listRowsToRefresh) {
+				count = listRowsToRefresh.size();
+			}
+			
 			for (int i = 0; i < 5; i++) {
 				try {
 					Thread.sleep(10);
 				} catch (InterruptedException e) {
 				}
-				int newCount = listRowsToRefresh.size();
-				if (newCount == count) {
-					break;
+				synchronized (listRowsToRefresh) {
+					int newCount = listRowsToRefresh.size();
+					if (newCount == count) {
+						break;
+					}
+					count = newCount;
 				}
-				count = newCount;
 			}
 
 			TableRowCore[] rows;
