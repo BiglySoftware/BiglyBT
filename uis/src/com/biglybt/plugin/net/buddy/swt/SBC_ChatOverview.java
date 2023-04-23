@@ -537,6 +537,22 @@ public class SBC_ChatOverview
 					}
 				});
 
+		tableManager.registerColumn(ChatInstance.class, ColumnChatSaveMessages.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnChatSaveMessages(column);
+					}
+				});
+
+		tableManager.registerColumn(ChatInstance.class, ColumnChatLogMessages.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnChatLogMessages(column);
+					}
+				});
+
 		tableManager.setDefaultColumnNames(TABLE_CHAT,
 			new String[] {
 
