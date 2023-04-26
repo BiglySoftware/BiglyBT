@@ -20,6 +20,7 @@
 package com.biglybt.pifimpl.local.messaging;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.List;
 import com.biglybt.core.networkmanager.Transport;
 import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.peermanager.messaging.MessageStreamDecoder;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
 
@@ -110,8 +112,13 @@ GenericMessageDecoder
 
 					if ( size > MAX_MESSAGE_LENGTH || size < 0 ){
 
-						Debug.out( "Message size invalid for generic payload (" + size + ", " + transport.getTransportEndpoint().getProtocolEndpoint().getAddress() + ")" );
-
+						InetSocketAddress address = transport.getTransportEndpoint().getProtocolEndpoint().getAddress();
+						
+						if ( AENetworkClassifier.categoriseAddress(address) == AENetworkClassifier.AT_PUBLIC ){
+						
+							Debug.out( "Message size invalid for generic payload (" + size + ", " + address + ")" );
+						}
+						
 						throw( new IOException( "message too large" ));
 					}
 
