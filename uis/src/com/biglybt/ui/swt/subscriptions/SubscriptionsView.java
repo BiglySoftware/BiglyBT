@@ -155,10 +155,19 @@ public class SubscriptionsView
 	public void subscriptionChanged(Subscription subscription, int reason) {
 		if ( !subscription.isSubscribed()){
 			subscriptionRemoved(subscription);
-		}else if ( view.getRow(subscription) == null ){
-			subscriptionAdded( subscription );
 		}else{
-			view.refreshTable(true);
+			
+			TableRowCore row = view.getRow(subscription);
+		
+			if ( row == null ){
+			
+				subscriptionAdded( subscription );
+				
+			}else{
+				row.invalidate( true );
+				
+				view.refreshTable(true);
+			}
 		}
 	}
 

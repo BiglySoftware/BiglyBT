@@ -18,17 +18,15 @@
 
 package com.biglybt.ui.swt.columns.subscriptions;
 
-import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.pif.ui.tables.TableCell;
-import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
-import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
+import com.biglybt.ui.swt.columns.ColumnCheckBox2;
 
 import com.biglybt.core.subs.Subscription;
 
-public class ColumnSubscriptionPublic
-	extends CoreTableColumnSWT
-	implements TableCellRefreshListener
+public class 
+ColumnSubscriptionPublic
+	extends ColumnCheckBox2
 {
 	public static String COLUMN_ID = "public";
 
@@ -44,32 +42,40 @@ public class ColumnSubscriptionPublic
 	ColumnSubscriptionPublic(
 		String sTableID) 
 	{
-		super(COLUMN_ID, ALIGN_CENTER, POSITION_INVISIBLE, 100, sTableID);
-		setRefreshInterval(INTERVAL_LIVE);
+		super( sTableID, COLUMN_ID );
 	}
 
 	@Override
-	public void refresh(TableCell cell) {
-		Boolean pub = false;
-		Subscription sub = (Subscription) cell.getDataSource();
+	protected Boolean 
+	getCheckBoxState(
+		Object datasource)
+	{
+		Subscription sub = (Subscription)datasource;
+		
 		if (sub != null) {
 		
 			if ( !( sub.isSearchTemplate() || sub.isSubscriptionTemplate())){
 				
-				pub = sub.isPublic();
+				return( sub.isPublic());
 			}
 		}
-		
-		int sort = pub==null?0:(pub?1:2);
-		
-		if (!cell.setSortValue(sort) && cell.isValid()) {
-			return;
+		return( null );
+	}
+	
+	@Override
+	protected void 
+	setCheckBoxState(
+		Object	datasource, 
+		boolean	set)
+	{
+		Subscription sub = (Subscription)datasource;
+	
+		try{
+			sub.setPublic( set );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
 		}
-
-		if (!cell.isShown()) {
-			return;
-		}
-
-		cell.setText( pub==null?"":DisplayFormatters.getYesNo( pub ));
 	}
 }

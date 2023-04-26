@@ -17,11 +17,9 @@
 
 package com.biglybt.ui.swt.columns.subscriptions;
 
-import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.pif.ui.tables.TableCell;
-import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
-import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
+import com.biglybt.ui.swt.columns.ColumnCheckBox2;
 
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionHistory;
@@ -31,9 +29,9 @@ import com.biglybt.core.subs.SubscriptionHistory;
  * @created Mar 15, 2009
  *
  */
-public class ColumnSubscriptionAutoDownload
-	extends CoreTableColumnSWT
-	implements TableCellRefreshListener
+public class 
+ColumnSubscriptionAutoDownload
+	extends ColumnCheckBox2
 {
 	public static String COLUMN_ID = "auto-download";
 
@@ -47,38 +45,51 @@ public class ColumnSubscriptionAutoDownload
 
 	/** Default Constructor */
 	public ColumnSubscriptionAutoDownload(String sTableID) {
-		super(COLUMN_ID, ALIGN_CENTER, POSITION_LAST, 100, sTableID);
-		setRefreshInterval(INTERVAL_LIVE);
+		super( sTableID, COLUMN_ID );
 	}
-
+	
 	@Override
-	public void refresh(TableCell cell) {
-		boolean autoDownload = false;
-		Subscription sub = (Subscription) cell.getDataSource();
+	protected Boolean 
+	getCheckBoxState(
+		Object datasource)
+	{
+		Subscription sub = (Subscription)datasource;
+		
 		if (sub != null) {
+		
+			if ( !( sub.isSearchTemplate() || sub.isSubscriptionTemplate())){
+				
+				if ( sub.isAutoDownloadSupported()){
+					
+					SubscriptionHistory history = sub.getHistory();
+					
+					if ( history != null ){
+						
+						return( history.isAutoDownload());
+					}
+				}
+			}
+		}
+		
+		return( null );
+	}
+	
+	@Override
+	protected void 
+	setCheckBoxState(
+		Object	datasource, 
+		boolean	set)
+	{
+		Subscription sub = (Subscription)datasource;
+	
+		try{
 			SubscriptionHistory history = sub.getHistory();
-			if(history != null) {
-				autoDownload = history.isAutoDownload();
-			}
+					
+			history.setAutoDownload( set );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
 		}
-
-		if (!cell.setSortValue(autoDownload?1:0) && cell.isValid()) {
-			return;
-		}
-
-		if (!cell.isShown()) {
-			return;
-		}
-
-		if ( sub.isAutoDownloadSupported()){
-			cell.setText( DisplayFormatters.getYesNo( autoDownload ));
-		}else{
-			if (!cell.setSortValue(-1) && cell.isValid()) {
-				return;
-			}
-			cell.setText( "" );
-		}
-		return;
-
 	}
 }

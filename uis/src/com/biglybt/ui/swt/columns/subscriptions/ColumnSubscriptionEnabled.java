@@ -17,11 +17,9 @@
 
 package com.biglybt.ui.swt.columns.subscriptions;
 
-import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.pif.ui.tables.TableCell;
-import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
-import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
+import com.biglybt.ui.swt.columns.ColumnCheckBox2;
 
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionHistory;
@@ -31,9 +29,9 @@ import com.biglybt.core.subs.SubscriptionHistory;
  * @created Mar 15, 2009
  *
  */
-public class ColumnSubscriptionEnabled
-	extends CoreTableColumnSWT
-	implements TableCellRefreshListener
+public class 
+ColumnSubscriptionEnabled
+	extends ColumnCheckBox2
 {
 	public static String COLUMN_ID = "enabled";
 
@@ -47,38 +45,47 @@ public class ColumnSubscriptionEnabled
 
 	/** Default Constructor */
 	public ColumnSubscriptionEnabled(String sTableID) {
-		super(COLUMN_ID, ALIGN_CENTER, POSITION_INVISIBLE, 100, sTableID);
-		setRefreshInterval(INTERVAL_LIVE);
+		super( sTableID, COLUMN_ID );
 	}
 
 	@Override
-	public void refresh(TableCell cell) {
-		boolean enabled = false;
-		Subscription sub = (Subscription) cell.getDataSource();
+	protected Boolean 
+	getCheckBoxState(
+		Object datasource)
+	{
+		Subscription sub = (Subscription)datasource;
+		
 		if (sub != null) {
-			SubscriptionHistory history = sub.getHistory();
-			if(history != null) {
-				enabled = history.isEnabled();
-			}
-
-			if (!cell.setSortValue(enabled?1:0) && cell.isValid()) {
-				return;
-			}
-
-			if (!cell.isShown()) {
-				return;
-			}
-
-			if ( !sub.isSearchTemplate()){
-				cell.setText( DisplayFormatters.getYesNo( enabled ));
-			}else{
-				if (!cell.setSortValue(-1) && cell.isValid()) {
-					return;
+		
+			if ( !( sub.isSearchTemplate() || sub.isSubscriptionTemplate())){
+				
+				SubscriptionHistory history = sub.getHistory();
+				
+				if ( history != null ){
+					
+					return( history.isEnabled());
 				}
-				cell.setText( "" );
 			}
-		}else{
-			cell.setText( "" );
+		}
+		return( null );
+	}
+	
+	@Override
+	protected void 
+	setCheckBoxState(
+		Object	datasource, 
+		boolean	set)
+	{
+		Subscription sub = (Subscription)datasource;
+	
+		try{
+			SubscriptionHistory history = sub.getHistory();
+					
+			history.setEnabled( set );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
 		}
 	}
 }
