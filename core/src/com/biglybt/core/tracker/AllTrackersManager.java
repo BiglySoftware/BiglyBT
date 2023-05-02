@@ -245,6 +245,9 @@ AllTrackersManager
 		public int
 		getTorrentCount();
 		
+		public int
+		getActiveRequestCount();
+		
 		/**
 		 * Not persisted - i.e. session total
 		 * @return

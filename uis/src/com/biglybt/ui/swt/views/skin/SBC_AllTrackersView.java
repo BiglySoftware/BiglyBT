@@ -286,6 +286,14 @@ public class SBC_AllTrackersView
 						new ColumnAllTrackersPeersReceived(column);
 					}
 				});
+		
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersActiveRequestCount.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersActiveRequestCount(column);
+					}
+				});
 
 		
 		tableManager.setDefaultColumnNames(TABLE_NAME,
@@ -1820,6 +1828,13 @@ public class SBC_AllTrackersView
 		getAverageRequestDuration()
 		{
 			return( tracker.getAverageRequestDuration());
+		}
+		
+		@Override
+		public int 
+		getActiveRequestCount()
+		{
+			return( tracker.getActiveRequestCount());
 		}
 		
 		@Override

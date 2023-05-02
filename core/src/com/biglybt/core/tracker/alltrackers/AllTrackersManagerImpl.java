@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.Core;
@@ -694,6 +695,15 @@ AllTrackersManagerImpl
 		TRTrackerAnnouncerRequest	request )
 	{
 		active_requests.put( request, "" );
+		
+		String key = ingestURL( request.getURL());
+		
+		AllTrackersTrackerImpl tracker = host_map.get( key );
+		
+		if ( tracker != null ){
+			
+			tracker.addActiveRequest();
+		}
 	}
 		
 	@Override
@@ -704,6 +714,15 @@ AllTrackersManagerImpl
 		active_requests.remove( request );
 		
 		announce_rate.addValue( 100 );
+		
+	String key = ingestURL( request.getURL());
+		
+		AllTrackersTrackerImpl tracker = host_map.get( key );
+		
+		if ( tracker != null ){
+			
+			tracker.removeActiveRequest();
+		}
 	}
 	
 	@Override
@@ -1322,6 +1341,8 @@ AllTrackersManagerImpl
 		
 		private long			peers_received;		// not persisted
 		
+		private AtomicInteger	active_request_count = new AtomicInteger();
+		
 		private MovingImmediateAverage	request_average = AverageFactory.MovingImmediateAverage( 5 );
 		
 		private
@@ -1517,6 +1538,25 @@ AllTrackersManagerImpl
 		getTorrentCount()
 		{
 			return( num_private + num_public );
+		}
+		
+		@Override
+		public int
+		getActiveRequestCount()
+		{
+			return( active_request_count.get());
+		}
+		
+		protected void
+		addActiveRequest()
+		{
+			active_request_count.incrementAndGet();
+		}
+		
+		protected void
+		removeActiveRequest()
+		{
+			active_request_count.decrementAndGet();
 		}
 		
 		@Override

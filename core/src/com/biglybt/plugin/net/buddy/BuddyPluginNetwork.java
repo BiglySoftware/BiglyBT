@@ -2856,8 +2856,6 @@ BuddyPluginNetwork
 				byte[] public_key = ecc_handler.getPublicKey( reason );
 
 				DistributedDatabaseKey	key = getYGMKey( public_key, reason );
-
-				active = true;
 				
 				ddb.read(
 					new DistributedDatabaseListener()
@@ -2961,6 +2959,8 @@ BuddyPluginNetwork
 					key,
 					120*1000,
 					DistributedDatabase.OP_EXHAUSTIVE_READ );
+
+				active = true;
 
 				boolean	write_bogus_ygm = false;
 
