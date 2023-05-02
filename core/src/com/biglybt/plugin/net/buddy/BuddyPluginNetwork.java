@@ -2634,6 +2634,7 @@ BuddyPluginNetwork
 
 		private AsyncDispatcher	publish_dispatcher = new AsyncDispatcher();
 
+		private boolean 	ygm_active;
 		private boolean		bogus_ygm_written;
 
 		private int		status_seq;
@@ -2837,6 +2838,18 @@ BuddyPluginNetwork
 		private void
 		checkMessagePending()
 		{
+			synchronized( this ){
+				
+				if ( ygm_active ){
+					
+					return;
+				}
+				
+				ygm_active = true;
+			}
+			
+			boolean active = false;
+			
 			try{
 				String	reason = "Friend YGM check";
 
@@ -2844,6 +2857,8 @@ BuddyPluginNetwork
 
 				DistributedDatabaseKey	key = getYGMKey( public_key, reason );
 
+				active = true;
+				
 				ddb.read(
 					new DistributedDatabaseListener()
 					{
@@ -2927,6 +2942,11 @@ BuddyPluginNetwork
 							}else if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
 										type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
 
+								synchronized( DDBDetails.this ){
+									
+									ygm_active = false;
+								}
+								
 								if ( new_ygm_buddies.size() > 0 || unauth_permitted ){
 
 									BuddyPluginBuddy[] b = new BuddyPluginBuddy[new_ygm_buddies.size()];
@@ -2985,6 +3005,16 @@ BuddyPluginNetwork
 			}catch( Throwable e ){
 
 				logMessage( null, "YGM check failed", e );
+				
+			}finally{
+				
+				if ( !active ){
+					
+					synchronized( this ){
+							
+						ygm_active = false;
+					}
+				}
 			}
 		}
 		
