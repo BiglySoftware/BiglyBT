@@ -17,4 +17,4 @@ Create a file named `Directory.Build.props` in the current directory with the fo
 </Project>
 ```
 
-Building the project for the same platform as your JVM creates a `aereg.dll` file which must be placed in the working directory when BiglyBT is started.
+Building the project for the same platform as your JVM creates a `aereg.dll` file for Win32 or a `aereg64.dll` file for x64 which must be placed in the working directory when BiglyBT is started.
