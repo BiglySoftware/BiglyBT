@@ -1371,7 +1371,7 @@ public class UIFunctionsImpl
 					try{
 						DownloadHistoryManager dlm = (DownloadHistoryManager)core.getGlobalManager().getDownloadHistoryManager();
 
-						final long[] existing = dlm.getDates( torrentOptions.getTorrent().getHash());
+						final long[] existing = dlm.getDates( torrentOptions.getTorrent().getHash(), true);
 
 						if ( existing != null ){
 

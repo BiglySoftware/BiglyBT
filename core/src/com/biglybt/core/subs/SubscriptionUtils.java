@@ -146,6 +146,7 @@ SubscriptionUtils
 	}
 
 	private static final Object	HS_KEY = new Object();
+	private static final Object	DH_DATES_KEY = new Object();
 
 	public static final int HS_NONE			= 0;
 	public static final int HS_LIBRARY		= 1;
@@ -207,7 +208,7 @@ SubscriptionUtils
 
 			hs_result = HS_ARCHIVE;
 
-		}else if ( hm.getDates(hash) != null ){
+		}else if ( hm.getDates(hash,false) != null ){
 
 			hs_result = HS_HISTORY;
 
@@ -217,6 +218,55 @@ SubscriptionUtils
 		}
 
 		return( hs_result );
+	}
+	
+	public static long[]
+	getDownloadHistoryDates(
+		SearchSubsResultBase	result )
+	{
+		if ( result == null ){
+
+			return( null );
+		}
+		
+		byte[] hash = result.getHash();
+
+		if ( hash == null ){
+			
+			return( null );
+		}
+		
+		long	now = SystemTime.getMonotonousTime();
+
+		Object[] entry = (Object[])result.getUserData( DH_DATES_KEY );
+
+		if ( entry != null ){
+
+			long time = (Long)entry[0];
+
+			if ( now - time < 10*1000 ){
+
+				return((long[])entry[1] );
+			}
+		}
+		
+		synchronized( HS_KEY ){
+
+			if ( gm == null ){
+
+				Core core = CoreFactory.getSingleton();
+
+				gm = core.getGlobalManager();
+				dm = core.getPluginManager().getDefaultPluginInterface().getDownloadManager();
+				hm = (DownloadHistoryManager)gm.getDownloadHistoryManager();
+			}
+		}
+		
+		long[] dates = hm.getDates( hash, false );
+		
+		result.setUserData( DH_DATES_KEY, new Object[]{ now + RandomUtils.nextInt( 2500 ), dates });
+
+		return( dates );
 	}
 	
 	public static int
@@ -273,7 +323,7 @@ SubscriptionUtils
 
 			hs_result = HS_ARCHIVE;
 
-		}else if ( hm.getDates(hash) != null ){
+		}else if ( hm.getDates(hash,false) != null ){
 
 			hs_result = HS_HISTORY;
 

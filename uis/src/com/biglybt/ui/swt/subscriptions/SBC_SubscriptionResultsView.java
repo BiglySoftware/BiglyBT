@@ -1010,6 +1010,66 @@ SBC_SubscriptionResultsView
 						new ColumnSearchSubResultExisting(column);
 					}
 				});
+		
+		tableManager.registerColumn(
+				SubscriptionResultFilterable.class,
+				ColumnSearchSubResultDLHistoryAdded.COLUMN_ID,
+				new TableColumnCoreCreationListener() {
+					@Override
+					public TableColumnCore 
+					createTableColumnCore(
+							Class<?> forDataSourceType, String tableID, String columnID) 
+					{
+						return new ColumnDateSizer(
+								SubscriptionResultFilterable.class, columnID,
+								TableColumnCreator.DATE_COLUMN_WIDTH, tableID){};
+					}
+
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnSearchSubResultDLHistoryAdded(column);
+					}
+				});
+		
+		tableManager.registerColumn(
+			SubscriptionResultFilterable.class,
+			ColumnSearchSubResultDLHistoryCompleted.COLUMN_ID,
+			new TableColumnCoreCreationListener() {
+				@Override
+				public TableColumnCore 
+				createTableColumnCore(
+						Class<?> forDataSourceType, String tableID, String columnID) 
+				{
+					return new ColumnDateSizer(
+							SubscriptionResultFilterable.class, columnID,
+							TableColumnCreator.DATE_COLUMN_WIDTH, tableID){};
+				}
+
+				@Override
+				public void tableColumnCreated(TableColumn column) {
+					new ColumnSearchSubResultDLHistoryCompleted(column);
+				}
+			});
+		
+		tableManager.registerColumn(
+				SubscriptionResultFilterable.class,
+				ColumnSearchSubResultDLHistoryRemoved.COLUMN_ID,
+				new TableColumnCoreCreationListener() {
+					@Override
+					public TableColumnCore 
+					createTableColumnCore(
+							Class<?> forDataSourceType, String tableID, String columnID) 
+					{
+						return new ColumnDateSizer(
+								SubscriptionResultFilterable.class, columnID,
+								TableColumnCreator.DATE_COLUMN_WIDTH, tableID){};
+					}
+
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnSearchSubResultDLHistoryRemoved(column);
+					}
+				});
 	}
 
 	@Override

@@ -51,7 +51,8 @@ DownloadHistoryManager
 
 	public long[]
 	getDates(
-		byte[]		hash );
+		byte[]		hash,
+		boolean		with_redownload );	// setting this true has side-effects...
 
 	public void
 	addListener(
