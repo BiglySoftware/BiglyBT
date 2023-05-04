@@ -27,6 +27,7 @@ import java.net.InetSocketAddress;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.gudy.bouncycastle.crypto.CipherParameters;
 import org.gudy.bouncycastle.crypto.engines.RC4Engine;
@@ -1859,6 +1860,8 @@ DHTControlImpl
 			new DHTOperationListenerDemuxer(
 				new DHTOperationListener()
 				{
+					private AtomicBoolean done = new AtomicBoolean();
+					
 					@Override
 					public void
 					searching(
@@ -1909,6 +1912,11 @@ DHTControlImpl
 					complete(
 						boolean				timeout )
 					{
+						if ( !done.compareAndSet( false, true )){
+							
+							return;
+						}
+						
 						try{
 							get_listener.complete(timeout);
 

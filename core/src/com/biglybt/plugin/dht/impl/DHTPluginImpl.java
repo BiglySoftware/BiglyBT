@@ -784,6 +784,18 @@ outer:
 		final boolean						high_priority,
 		final DHTPluginOperationListener	listener)
 	{
+		putEx( key, description, value, (short)(flags&0x00ff), high_priority, listener );
+	}
+	
+	public void
+	putEx(
+		final byte[]						key,
+		final String						description,
+		final byte[]						value,
+		final short							flags,
+		final boolean						high_priority,
+		final DHTPluginOperationListener	listener)
+	{
 		dht.put( 	key,
 					description,
 					value,

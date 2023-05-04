@@ -1479,6 +1479,142 @@ DHTPlugin
 			}
 		}
 	}
+	
+	public void
+	put(
+		final byte[]						key,
+		final String						description,
+		final byte[]						value,
+		final short							flags,
+		final boolean						high_priority,
+		final DHTPluginOperationListener	listener)
+	{
+		if ( !isEnabled()){
+
+			throw( new RuntimeException( "DHT isn't enabled" ));
+		}
+		
+		if( dhts.length == 1 ){
+
+			dhts[0].putEx( key, description, value, flags, high_priority, listener );
+
+		}else{
+
+			final int[]	completes_to_go = { dhts.length };
+
+			DHTPluginOperationListener main_listener =
+				new DHTPluginOperationListener()
+				{
+					@Override
+					public boolean
+					diversified()
+					{
+						return( listener.diversified());
+					}
+
+					@Override
+					public void
+					starts(
+						byte[] 				key )
+					{
+						listener.starts(key);
+					}
+
+					@Override
+					public void
+					valueRead(
+						DHTPluginContact	originator,
+						DHTPluginValue		value )
+					{
+						listener.valueRead(originator, value);
+					}
+
+					@Override
+					public void
+					valueWritten(
+						DHTPluginContact	target,
+						DHTPluginValue		value )
+					{
+						listener.valueWritten(target, value);
+					}
+
+					@Override
+					public void
+					complete(
+						byte[]	key,
+						boolean	timeout_occurred )
+					{
+						synchronized( completes_to_go ){
+
+							completes_to_go[0]--;
+
+							if ( completes_to_go[0] == 0 ){
+
+								listener.complete(key, timeout_occurred);
+							}
+						}
+					}
+				};
+
+			dhts[0].putEx( key, description, value, flags, high_priority, main_listener );
+
+			for (int i=1;i<dhts.length;i++){
+
+				dhts[i].putEx(
+						key, description, value, flags, high_priority,
+						new DHTPluginOperationListener()
+						{
+							@Override
+							public boolean
+							diversified()
+							{
+								return( true );
+							}
+
+							@Override
+							public void
+							starts(
+								byte[] 				key )
+							{
+							}
+
+							@Override
+							public void
+							valueRead(
+								DHTPluginContact	originator,
+								DHTPluginValue		value )
+							{
+							}
+
+							@Override
+							public void
+							valueWritten(
+								DHTPluginContact	target,
+								DHTPluginValue		value )
+							{
+							}
+
+							@Override
+							public void
+							complete(
+								byte[]	key,
+								boolean	timeout_occurred )
+							{
+								synchronized( completes_to_go ){
+
+									completes_to_go[0]--;
+
+									if ( completes_to_go[0] == 0 ){
+
+										listener.complete(key, timeout_occurred);
+									}
+								}
+							}
+						});
+			}
+		}
+	}
+
 
 	public DHTPluginValue
 	getLocalValue(

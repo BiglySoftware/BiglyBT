@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.biglybt.core.dht.DHT;
+import com.biglybt.core.util.Debug;
 
 public interface
 DHTPluginInterface
@@ -39,6 +40,8 @@ DHTPluginInterface
 	public static final byte		FLAG_ANON			= DHT.FLAG_ANON;
 	public static final byte		FLAG_PRECIOUS		= DHT.FLAG_PRECIOUS;
 	public static final byte		FLAG_BRIDGED		= DHT.FLAG_BRIDGED;
+
+	public static final short		FLAG_PUT_AND_FORGET	= DHT.FLAG_PUT_AND_FORGET;
 
 	public static final int			MAX_VALUE_SIZE		= DHT.MAX_VALUE_SIZE;
 
@@ -129,6 +132,23 @@ DHTPluginInterface
 		byte[]						value,
 		byte						flags,
 		DHTPluginOperationListener	listener);
+
+	public default void
+	put(
+		byte[]						key,
+		String						description,
+		byte[]						value,
+		short						flags,
+		boolean						high_priority,
+		DHTPluginOperationListener	listener)
+	{
+		if (( flags & 0xff00 ) != 0 ){
+			
+			Debug.out( "Flag loss!" );
+		}
+		
+		put( key, description, value, (byte)flags, true, listener );
+	}
 
 	public DHTInterface[]
 	getDHTInterfaces();
