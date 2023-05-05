@@ -855,7 +855,7 @@ DHTNATPuncherImpl
 
   							dht.remove(
 								getPublishKey( current_local ),
-								"DHTNatPuncher: removal of publish",
+								"DHTNatPuncher: removal of publish", (short)0,
 								new DHTOperationListener()
 								{
 									@Override

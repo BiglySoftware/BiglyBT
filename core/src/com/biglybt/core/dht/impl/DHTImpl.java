@@ -527,7 +527,18 @@ DHTImpl
 		String					description,
 		DHTOperationListener	listener )
 	{
-		return( control.remove( key, description, listener ));
+		return( control.remove( key, description, (short)0, listener ));
+	}
+	
+	@Override
+	public byte[]
+	remove(
+		byte[]					key,
+		String					description,
+		short					flags,
+		DHTOperationListener	listener )
+	{
+		return( control.remove( key, description, flags, listener ));
 	}
 
 	@Override

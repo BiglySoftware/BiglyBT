@@ -126,6 +126,12 @@ DHTDB
 		DHTTransportContact 	sender,
 		HashWrapper				key );
 
+	public DHTDBValue
+	remove(
+		DHTTransportContact 	sender,
+		HashWrapper				key,
+		short					flags );
+
 	public DHTStorageBlock
 	keyBlockRequest(
 		DHTTransportContact		direct_sender,

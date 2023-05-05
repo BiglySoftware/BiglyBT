@@ -110,6 +110,13 @@ DHTControl
 
 	public byte[]
 	remove(
+		byte[]					key,
+		String					description,
+		short					flags,
+		DHTOperationListener	listener );
+
+	public byte[]
+	remove(
 		DHTTransportContact[]	contacts,
 		byte[]					key,
 		String					description,

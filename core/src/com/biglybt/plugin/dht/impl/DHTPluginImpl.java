@@ -1047,12 +1047,14 @@ outer:
 
 	public void
 	remove(
-		final byte[]						key,
-		final String						description,
-		final DHTPluginOperationListener	listener )
+		byte[]						key,
+		String						description,
+		short						flags,
+		DHTPluginOperationListener	listener )
 	{
 		dht.remove( 	key,
 						description,
+						flags,
 						new DHTOperationListener()
 						{
 							private boolean started;

@@ -147,9 +147,9 @@ DHTPluginInterface
 			Debug.out( "Flag loss!" );
 		}
 		
-		put( key, description, value, (byte)flags, true, listener );
+		put( key, description, value, (byte)flags, listener );
 	}
-
+	
 	public DHTInterface[]
 	getDHTInterfaces();
 
@@ -165,6 +165,21 @@ DHTPluginInterface
 		byte[]						key,
 		String						description,
 		DHTPluginOperationListener	listener );
+
+	public default void
+	remove(
+		byte[]						key,
+		String						description,
+		short						flags,
+		DHTPluginOperationListener	listener )
+	{
+		if ( flags != 0 ){
+			
+			Debug.out( "Flag loss!" );
+		}
+		
+		remove( key, description, listener );
+	}
 
 	public void
 	remove(

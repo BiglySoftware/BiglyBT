@@ -2251,18 +2251,40 @@ DHTControlImpl
 		String					description,
 		DHTOperationListener	listener )
 	{
+		return( remove( unencoded_key, description, (short)0, listener ));
+	}
+	
+	@Override
+	public byte[]
+	remove(
+		byte[]					unencoded_key,
+		String					description,
+		short					flags,
+		DHTOperationListener	listener )
+	{
 		final byte[]	encoded_key = encodeKey( unencoded_key );
 
 		if ( DHTLog.isOn()){
 			DHTLog.log( "remove for " + DHTLog.getString( encoded_key ));
 		}
-
-		DHTDBValue	res = database.remove( local_contact, new HashWrapper( encoded_key ));
+		
+		DHTDBValue	res = database.remove( local_contact, new HashWrapper( encoded_key ), flags );
 
 		if ( res == null ){
 
 				// not found locally, nothing to do
 
+			try{
+				if ( listener != null ){
+					
+					listener.complete( false );
+				}
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+			
 			return( null );
 
 		}else{
@@ -2305,6 +2327,17 @@ DHTControlImpl
 
 				// not found locally, nothing to do
 
+			try{
+				if ( listener != null ){
+					
+					listener.complete( false );
+				}
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+			
 			return( null );
 
 		}else{

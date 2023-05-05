@@ -2054,12 +2054,23 @@ DHTPlugin
 		final String						description,
 		final DHTPluginOperationListener	listener )
 	{
+		remove( key, description, (short)0, listener );
+	}
+	
+	@Override
+	public void
+	remove(
+		byte[]						key,
+		String						description,
+		short						flags,
+		DHTPluginOperationListener	listener )
+	{
 		if ( !isEnabled()){
 
 			throw( new RuntimeException( "DHT isn't enabled" ));
 		}
 
-		dhts[0].remove( key, description, listener );
+		dhts[0].remove( key, description, flags, listener );
 
 		for (int i=1;i<dhts.length;i++){
 
@@ -2072,7 +2083,7 @@ DHTPlugin
 				run()
 				{
 					dhts[f_i].remove(
-							key, description,
+							key, description, flags,
 							new DHTPluginOperationListener()
 							{
 								@Override

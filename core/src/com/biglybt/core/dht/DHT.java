@@ -31,6 +31,7 @@ import com.biglybt.core.dht.router.DHTRouter;
 import com.biglybt.core.dht.transport.DHTTransport;
 import com.biglybt.core.dht.transport.DHTTransportContact;
 import com.biglybt.core.dht.transport.DHTTransportValue;
+import com.biglybt.core.util.Debug;
 
 /**
  * @author parg
@@ -174,12 +175,26 @@ DHT
 		boolean					high_priority,
 		DHTOperationListener	listener );
 
-
 	public byte[]
 	remove(
 		byte[]					key,
 		String					description,
 		DHTOperationListener	listener );
+	
+	public default byte[]
+	remove(
+		byte[]					key,
+		String					description,
+		short					flags,
+		DHTOperationListener	listener )
+	{
+		if ( flags != 0 ){
+			
+			Debug.out( "Flag loss!" );
+		}
+		
+		return( remove( key, description, listener ));
+	}
 
 	public byte[]
 	remove(

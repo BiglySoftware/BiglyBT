@@ -645,9 +645,22 @@ DHTDBImpl
 		DHTTransportContact 	originator,
 		HashWrapper				key )
 	{
+		return( remove( originator, key, (short)0));
+	}
+	
+	@Override
+	public DHTDBValue
+	remove(
+		DHTTransportContact 	originator,
+		HashWrapper				key,
+		short					flags )
+	{
 			// local remove
 
 		try{
+			
+			DHTDBValue	result;
+			
 			this_mon.enter();
 
 			DHTDBMapping mapping = stored_values.get( key );
@@ -669,13 +682,39 @@ DHTDBImpl
 						mapping.destroy();
 					}
 
-					return( res.getValueForDeletion( getNextValueVersion()));
+					result = res.getValueForDeletion( getNextValueVersion());
+				}else{
+					
+					result = null;
 				}
-
-				return( null );
+			}else{
+				
+				result = null;
 			}
 
-			return( null );
+			if ( result == null ){
+				
+				if ((flags & DHT.FLAG_PUT_AND_FORGET) != 0 ){
+					
+						// wouldn't expect to find a local value for this, make one up
+			
+					DHTDBValueImpl temp =
+							new DHTDBValueImpl(
+									SystemTime.getCurrentTime(),
+									new byte[1],
+									getNextValueVersion(),
+									local_contact,
+									local_contact,
+									true,
+									flags,
+									(byte)0, 
+									DHT.REP_FACT_DEFAULT );
+					
+					result = temp.getValueForDeletion( getNextValueVersion());
+				}
+			}
+			
+			return( result );
 
 		}finally{
 
