@@ -22,13 +22,10 @@
 
 package com.biglybt.ui.swt.views.tableitems.peers;
 
-import java.net.URL;
 
-import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.Transport;
-import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.peer.impl.PEPeerTransport;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.util.AENetworkClassifier;
@@ -93,7 +90,12 @@ public class StateItem
 						
 						if ( pp != null ){
 							
-							extra = " (" + AENetworkClassifier.categoriseAddress( pp.getHost()) + ")";
+							String net = AENetworkClassifier.categoriseAddress( pp.getHost());
+							
+							if ( net != AENetworkClassifier.AT_PUBLIC ){
+
+								extra = " (" + net + ")";
+							}
 						}
 					}
 				}

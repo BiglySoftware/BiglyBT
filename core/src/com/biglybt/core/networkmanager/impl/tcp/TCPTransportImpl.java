@@ -660,4 +660,11 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
 
     setReadyForRead();
   }
+  
+  @Override
+  public boolean 
+  isClosed()
+  {
+	  return( has_been_closed );
+  }
 }

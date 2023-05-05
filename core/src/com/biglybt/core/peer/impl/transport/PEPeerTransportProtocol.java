@@ -153,7 +153,8 @@ implements PEPeerTransport
 
 	private int connection_state = PEPeerTransport.CONNECTION_PENDING;
 	
-	private int outbound_connection_progress	= CP_UNKNOWN;
+	private long 	outbound_connection_start;
+	private int 	outbound_connection_progress	= CP_UNKNOWN;
 	
 	private String client = ""; // Client name to show to user.
 	private String client_peer_id = ""; // Client name derived from the peer ID.
@@ -864,7 +865,8 @@ implements PEPeerTransport
 								
 								connection_state = PEPeerTransport.CONNECTION_CONNECTING;
 
-								outbound_connection_progress = CP_CONNECTING;
+								outbound_connection_start		= SystemTime.getMonotonousTime();
+								outbound_connection_progress	= CP_CONNECTING;
 							}
 						}
 						
@@ -2620,9 +2622,29 @@ implements PEPeerTransport
 
 		final long mono_now = SystemTime.getMonotonousTime();
 		
-			//make sure we time out stalled connections
+		if ( connection_state == PEPeerTransport.CONNECTION_CONNECTING ){
+
+			// had reports of connections stuck in this state forever, even though we're supposed to 
+			// run a timeout on them
+			
+			if ( outbound_connection_start > 0 && mono_now - outbound_connection_start > 2*60*1000 ){
+				
+				closeConnectionInternally( "timeout: waiting for connection", Transport.CR_TIMEOUT, false, true );
+				
+				return true;
+			}
+			
+			if ( connection != null ){
+				
+				Transport transport = connection.getTransport();
+				
+				if ( transport != null && transport.isClosed()){
+					
+					closeConnectionInternally( "connection seems to be closed", Transport.CR_TIMEOUT, false, true );
+				}
+			}
 		
-		if ( connection_state == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ){
+		}else if ( connection_state == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED ){
 		
 				// we should always have received a message in order to be fully established so no need to check valid
 				

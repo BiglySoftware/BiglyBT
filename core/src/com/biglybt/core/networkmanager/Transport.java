@@ -160,6 +160,9 @@ Transport
    */
   public void close( String reason );
 
+  public boolean
+  isClosed();
+  
   public void
   bindConnection(
 		NetworkConnection	connection );

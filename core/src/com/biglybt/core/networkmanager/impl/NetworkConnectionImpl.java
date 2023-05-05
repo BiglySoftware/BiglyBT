@@ -582,6 +582,15 @@ NetworkConnectionImpl
 		}
 
 		@Override
+		public boolean 
+		isClosed()
+		{
+			Debug.out( "Bogus Transport Operation" );
+			
+			return( false );
+		}
+		
+		@Override
 		public void
 		bindConnection(
 			NetworkConnection	connection )
