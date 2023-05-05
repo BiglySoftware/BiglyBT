@@ -55,10 +55,14 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.PluginAdapter;
+import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadListener;
 import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.sharing.ShareManager;
+import com.biglybt.pif.torrent.TorrentAttribute;
+import com.biglybt.pif.torrent.TorrentManager;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 public class
@@ -92,6 +96,8 @@ TagPropertyConstraintHandler
 	
 	private boolean 	initial_assignment_complete;
 	private boolean		stopping;
+
+	private String	ta_rating_name;
 
 	final Map<Tag,TagConstraint>	constrained_tags 	= new ConcurrentHashMap<>();
 
@@ -213,8 +219,10 @@ TagPropertyConstraintHandler
 
 		ShareManager sm;
 		
+		PluginInterface default_pi = core.getPluginManager().getDefaultPluginInterface();
+		
 		try{
-			sm	= core.getPluginManager().getDefaultPluginInterface().getShareManager();
+			sm	= default_pi.getShareManager();
 			
 		}catch(  Throwable e ){
 			
@@ -225,6 +233,37 @@ TagPropertyConstraintHandler
 		
 		share_manager = sm;
 		
+		try{
+			default_pi.addListener(
+				new PluginAdapter()
+				{
+					@Override
+					public void 
+					initializationComplete()
+					{
+						default_pi.removeListener( this );
+						
+						PluginInterface rating_pi = core.getPluginManager().getPluginInterfaceByID( "azrating" );
+						
+						if ( rating_pi != null ){
+							
+							TorrentManager tm = rating_pi.getTorrentManager();
+							
+						    TorrentAttribute ta_rating = tm.getPluginAttribute("rating");
+						    
+						    if ( ta_rating != null ){
+						    	
+						    	ta_rating_name = ta_rating.getName();
+						    }
+						}
+					}
+				});
+			
+
+			
+		}catch(  Throwable e ){
+		}
+				
 		core.addLifecycleListener(
 			new CoreLifecycleAdapter()
 			{
@@ -2865,6 +2904,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_DOWN_SPEED			= 45;
 		private static final int	KW_UP_SPEED				= 46;
 		private static final int	KW_SESSION_AGE			= 47;
+		private static final int	KW_PLUGIN_MY_RATING		= 48;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2973,8 +3013,9 @@ TagPropertyConstraintHandler
 			keyword_map.put( "upspeed", 				new int[]{KW_UP_SPEED,				DEP_RUNNING });
 			keyword_map.put( "session_age", 			new int[]{KW_SESSION_AGE,			DEP_RUNNING });
 			keyword_map.put( "sessionage", 				new int[]{KW_SESSION_AGE,			DEP_RUNNING });
-
 			
+			keyword_map.put( "my_rating",	 			new int[]{KW_PLUGIN_MY_RATING,		DEP_TIME });
+			keyword_map.put( "myrating",	 			new int[]{KW_PLUGIN_MY_RATING,		DEP_TIME });
 		}
 
 		private class
@@ -5331,6 +5372,24 @@ TagPropertyConstraintHandler
 						}else{
 							
 							return( save_loc.getAbsolutePath());
+						}
+					}
+					case KW_PLUGIN_MY_RATING:{
+						
+						if ( handler.ta_rating_name == null ){
+							
+							return( 0 );
+						}
+						
+						String rating_str = dm.getDownloadState().getAttribute( handler.ta_rating_name );
+						
+						if ( rating_str != null ){
+							
+							return( Integer.parseInt(rating_str));
+							
+						}else{
+							
+							return( 0 );
 						}
 					}
 					default:{
