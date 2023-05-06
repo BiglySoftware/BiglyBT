@@ -60,7 +60,7 @@ HostNameToIPResolver
 
 		throws UnknownHostException
 	{
-		if ( isNonDNSName( host )){
+		if ( isNonDNSName( host ) || host.equalsIgnoreCase( "tor" ) || host.equalsIgnoreCase( "i2p" )){
 
 			throw( new HostNameToIPResolverException( "non-DNS name '" + host + "'", true ));
 		}

@@ -184,6 +184,7 @@ AEProxyFactory
 	public static final String	SP_HOST				= "host";
 	public static final String	SP_PORT				= "port";
 	public static final String	SP_REMOTE_PORT		= "remote-port";
+	public static final String	SP_NEW_IDENTITY		= "new-identity";
 	public static final String	SP_BIND				= "bind";
 
 	public static Map<String,Object>

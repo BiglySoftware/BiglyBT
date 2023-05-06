@@ -1169,9 +1169,9 @@ implements PEPeerTransport
 		if (Logger.isEnabled()){
 			String str;
 			if ( close_reason_in != 0 ){
-				str = " (code_in" + close_reason_in + ")";
+				str = " (code_in " + close_reason_in + ")";
 			}else if ( close_reason_out != 0 ){
-				str = " (code_out" + close_reason_out + ")";
+				str = " (code_out " + close_reason_out + ")";
 			}else{
 				str = "";
 			}
