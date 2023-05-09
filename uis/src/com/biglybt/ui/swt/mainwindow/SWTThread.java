@@ -70,9 +70,9 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
   private Thread runner;
   private final IUIIntializer initializer;
 
-	private Monitor primaryMonitor;
-	protected boolean displayDisposed;
-
+  private Monitor primaryMonitor;
+  protected boolean displayDisposed;	
+	
   private
   SWTThread(
   	final IUIIntializer app )
@@ -597,9 +597,21 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
     }
   }
 
-  public void terminate() {
-    terminated = true;
-    Utils.setTerminated();
+  public void 
+  terminate() 
+  {
+	synchronized( this ){
+		
+		if ( terminated ){
+			
+			return;
+		}
+		
+		terminated = true;
+	}	
+	
+	Utils.setTerminated();
+				
     // must dispose here in case another window has taken over the
     // readAndDispatch/sleep loop
     

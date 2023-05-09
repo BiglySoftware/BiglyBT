@@ -45,10 +45,10 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.FixedHTMLTransfer;
 import com.biglybt.ui.swt.FixedURLTransfer;
 import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.*;
 import com.biglybt.ui.swt.pif.UISWTInstance;
@@ -60,17 +60,14 @@ import com.biglybt.ui.swt.shells.PopOutManager;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
-import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
 import com.biglybt.ui.swt.views.QuickLinksView;
 import com.biglybt.ui.swt.views.ViewManagerSWT;
 import com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceDisplaySWT;
-import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.util.JSONUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
-import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.menus.MenuItem;
@@ -1442,6 +1439,10 @@ public class SideBar
 				});
 			}
 		}
+		
+		Utils.addTerminateListener(()->{
+			saveCloseables();
+		});
 	}
 
 	private void createSideBarPluginViews() {

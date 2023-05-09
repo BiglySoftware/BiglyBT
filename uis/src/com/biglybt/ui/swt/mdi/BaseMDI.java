@@ -925,13 +925,26 @@ public abstract class BaseMDI
 				//if (currentEntry != null && !currentEntry.getViewID().equals(initialID)) {
 				//	System.out.println("currentEntry set to " + currentEntry.getViewID() + " before initial " + initialID);
 				//}
-				if (currentEntry == null && initialDef != null) {
-					SimpleTimer.addEvent("ShowDefEntry", SystemTime.getOffsetTime(3000),
-							event -> {
-								if (currentEntry == null) {
-									showEntryByID(initialDef);
+				
+				if ( currentEntry == null ){
+					
+					if ( getEntry( initialID ) != null || initialDef != null ){
+					
+						SimpleTimer.addEvent(
+							"ShowDefEntry", 
+							SystemTime.getOffsetTime(3000),
+							event->{
+								if (currentEntry == null ){
+									
+									if ( getEntry( initialID ) != null ){
+										showEntryByID(initialID);
+									}else if ( initialDef != null ){
+										showEntryByID(initialDef);
+									}
 								}
 							});
+		
+					}
 				}
 			}
 		}catch( Throwable e ){
@@ -967,14 +980,14 @@ public abstract class BaseMDI
 				return;
 			}
 			
-			try{
-								
+			try{					
+				if ( closed ){
+					
+					return;
+				}
+
 				if ( interim ){
 					
-					if ( closed ){
-						
-						return;
-					}
 				}else{
 					
 					closed = true;
@@ -1137,7 +1150,8 @@ public abstract class BaseMDI
 
 		setEntryAutoOpen(id, entry.getAutoOpenInfo());
 
-		if (currentEntry == null && id.equals(initialID)) {
+		if ( currentEntry == null && id.equals(initialID)){
+			
 			showEntryByID(initialID);
 		}
 	}

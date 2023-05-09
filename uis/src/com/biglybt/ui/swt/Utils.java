@@ -297,6 +297,8 @@ public class Utils
 
 	private static volatile int dragDetectMask	= 0;
 	
+	private static CopyOnWriteList<TerminateListener>	listeners = new CopyOnWriteList<>();
+
 	public static void
 	initialize(
 		Display		_display )
@@ -888,9 +890,27 @@ public class Utils
 	}
 	
 	public static void
+	addTerminateListener(
+		TerminateListener		l )
+	{
+		listeners.add( l );
+	}
+	
+	public static void
 	setTerminated()
 	{
 		terminated	= true;
+		
+		for ( TerminateListener l: listeners ){
+			
+			try{
+				l.terminated();
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
 	}
 
 	public static boolean
@@ -6945,5 +6965,13 @@ public class Utils
 		}
 
 		return( display.isDisposed());
+	}
+	
+
+	public interface
+	TerminateListener
+	{
+		public void
+		terminated();
 	}
 }
