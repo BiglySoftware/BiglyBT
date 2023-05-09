@@ -290,6 +290,42 @@ public class SideBar
 		}
 		
 		{
+			MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "menu.show.at.start");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			menuItem.setStyle( MenuItem.STYLE_CHECK );	
+			menuItem.setData( false );
+			menuItem.addFillListener(
+				new MenuItemFillListener() {
+	
+					@Override
+					public void menuWillBeShown(MenuItem menu, Object data) {
+						SideBarEntrySWT sbe = getCurrentEntry();
+	
+						if ( sbe != null ){
+							String id = sbe.getId();
+							
+							String sas = COConfigurationManager.getStringParameter( "Show Side Entry At Start", "" );
+							
+							menu.setData( sas.equals( id ));
+							
+						}else{
+							
+							menu.setVisible( false );
+						}
+					}
+				});
+	
+			menuItem.addListener((menu, target) -> {
+				SideBarEntrySWT sbe = getCurrentEntry();
+				
+				if ( sbe != null ){
+					
+					COConfigurationManager.setParameter( "Show Side Entry At Start", menu.isSelected()?sbe.getId():"");
+				}
+			});
+		}
+		
+		{
 			MenuItem menuParentItem = menuManager.addMenuItem("sidebar._end_", "menu.add.to");
 			menuParentItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 	
@@ -434,6 +470,13 @@ public class SideBar
 		}
 	}
 
+	@Override
+	protected String
+	getShowIDAtStartup()
+	{
+		return(COConfigurationManager.getStringParameter( "Show Side Entry At Start", "" ));
+	}
+	
 	public boolean
 	canPopoutEntry(
 		MdiEntry	entry )

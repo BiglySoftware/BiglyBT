@@ -896,7 +896,17 @@ public abstract class BaseMDI
 					}
 				}
 			}else{
-				initialID = MapUtils.getMapString(loadedMap, CLOSEABLECONFIG_INITIALID, null);
+				String sas = getShowIDAtStartup();
+				
+				if ( sas != null && !sas.isEmpty()){
+					
+					initialID = sas;
+					
+				}else{
+					
+					initialID = MapUtils.getMapString(loadedMap, CLOSEABLECONFIG_INITIALID, null);
+				}
+				
 				if (initialID == null) {
 					String legacyStartTab = COConfigurationManager.getStringParameter("v3.StartTab", null);
 					if (legacyStartTab != null) {
@@ -957,6 +967,12 @@ public abstract class BaseMDI
 		}
 	}
 
+	protected String
+	getShowIDAtStartup()
+	{
+		return( null );
+	}
+	
 	protected void saveCloseables(){
 		saveCloseables( false );
 	}
