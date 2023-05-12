@@ -229,10 +229,14 @@ DHTTransportAlternativeNetworkImpl
 	
 					int	pos = 0;
 	
+					DHTTransportAlternativeContact last = null;
+					
 					while( it.hasNext()){
 	
 						DHTTransportAlternativeContact contact = it.next();
 	
+						last = contact;
+						
 						if ( contact.getAge() > LIVE_AGE_SECS ){
 	
 							result = max_contacts - pos;
@@ -250,6 +254,8 @@ DHTTransportAlternativeNetworkImpl
 						if ( last_churn == -1 || now - last_churn > 30*1000 + RandomUtils.nextInt( 10*1000 )){
 							
 							last_churn = now;
+							
+							contacts.remove( last );
 							
 							result = 1;
 						}
