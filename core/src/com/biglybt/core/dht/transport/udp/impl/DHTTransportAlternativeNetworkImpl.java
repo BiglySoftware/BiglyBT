@@ -24,6 +24,8 @@ import java.util.*;
 
 import com.biglybt.core.dht.transport.DHTTransportAlternativeContact;
 import com.biglybt.core.dht.transport.DHTTransportAlternativeNetwork;
+import com.biglybt.core.util.RandomUtils;
+import com.biglybt.core.util.SystemTime;
 
 public class
 DHTTransportAlternativeNetworkImpl
@@ -59,7 +61,8 @@ DHTTransportAlternativeNetworkImpl
 						}
 					});
 
-
+	private long	last_expiry_check	= -1;
+	private long	last_churn			= -1;
 	protected
 	DHTTransportAlternativeNetworkImpl(
 		int		_net )
@@ -199,8 +202,11 @@ DHTTransportAlternativeNetworkImpl
 	}
 
 	protected int
-	getRequiredContactCount()
+	getRequiredContactCount(
+		boolean		force )
 	{
+		long now = SystemTime.getMonotonousTime();
+		
 		synchronized( contacts ){
 
 			int	num_contacts = contacts.size();
@@ -213,23 +219,40 @@ DHTTransportAlternativeNetworkImpl
 
 			}else{
 
-				Iterator<DHTTransportAlternativeContact> it = contacts.iterator();
-
-				int	pos = 0;
-
-				while( it.hasNext()){
-
-					DHTTransportAlternativeContact contact = it.next();
-
-					if ( contact.getAge() > LIVE_AGE_SECS ){
-
-						result = max_contacts - pos;
-
-						break;
-
-					}else{
-
-						pos++;
+				if (	force || 
+						last_expiry_check == -1 ||
+						now - last_expiry_check > 5000 ){
+					
+					last_expiry_check = now;
+					
+					Iterator<DHTTransportAlternativeContact> it = contacts.iterator();
+	
+					int	pos = 0;
+	
+					while( it.hasNext()){
+	
+						DHTTransportAlternativeContact contact = it.next();
+	
+						if ( contact.getAge() > LIVE_AGE_SECS ){
+	
+							result = max_contacts - pos;
+	
+							break;
+	
+						}else{
+	
+							pos++;
+						}
+					}
+				
+					if ( result == 0 ){
+						
+						if ( last_churn == -1 || now - last_churn > 30*1000 + RandomUtils.nextInt( 10*1000 )){
+							
+							last_churn = now;
+							
+							result = 1;
+						}
 					}
 				}
 			}

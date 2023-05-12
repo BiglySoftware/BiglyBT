@@ -3507,7 +3507,7 @@ outer:
 
 		for ( DHTTransportAlternativeNetworkImpl net: alt_net_states.values()){
 
-			total_required += net.getRequiredContactCount();
+			total_required += net.getRequiredContactCount( true );
 		}
 
 		if ( total_required > 0 ){
@@ -3590,7 +3590,7 @@ outer:
 						continue;
 					}
 
-					int wanted = local.getRequiredContactCount();
+					int wanted = local.getRequiredContactCount( false );
 
 					if ( wanted > 0 ){
 
@@ -3632,7 +3632,7 @@ outer:
 
 			for ( DHTTransportAlternativeNetworkImpl net: alt_net_states.values()){
 
-				int req = net.getRequiredContactCount();
+				int req = net.getRequiredContactCount( false );
 
 				if ( req > 0 ){
 
