@@ -1,9 +1,117 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2023.xx.yy | BiglyBT 3.3.0.1
+2023.05.17 | BiglyBT 3.4.0.0
 
+FEATURE: Tag   | Added option to apply tag sort to library positions manually + auto
+FEATURE: Tag   | Added setTagSort Tag Constraint function and Library column
+FEATURE: Tag   | Add "full_copy_seen" Tag constraint keyword
+FEATURE: Tag   | Added support for reverse setTagSort
+FEATURE: Tag   | Added "timeToElapsed" Tag constraint function
+FEATURE: Tag   | Added +,-,/,* Tag constraint operations; Added toMiB and toGiB
+FEATURE: Tag   | Added "remaining" and toMB/toGB Tag Constraint variables/functions
+FEATURE: Tag   | Added getTagWeight constraint function to get download's weight
+FEATURE: Tag   | Added Tag weight parameter
+FEATURE: Tag   | Add "random" option to setTagSort
+FEATURE: Tag   | Added session_age constraint variable
+FEATURE: Tag   | Added Tag constraint keywords up_speed and down_speed
+FEATURE: Tag   | Added ifThenElse Tag constraint function
+FEATURE: Tag   | Added Tag a?b:c operator, rem, min and max functions
+FEATURE: Tag   | Add Tag constraint variable "my_rating" to get personal rating value
+FEATURE: Core  | Added speed limit handler option to not pause force-start downloads
+FEATURE: Core  | Added minimum storage controls to speed limit scheduler
+FEATURE: Core  | Added remote-port option to proxy factory
+FEATURE: Core  | Support explicit ports in web plugin white-lists
+FEATURE: Core  | Extended alternative-contacts to include Tor
+FEATURE: Core  | Extend PEX support
+FEATURE: Core  | Added a logger view for the torrent importer
+FEATURE: Plug  | Added isExternal to plugin interface tracker torrent
+FEATURE: Plug  | Tor Proxy DHT prototype
+FEATURE: UI    | Added peers count to all-trackers view (session only)
+FEATURE: UI    | Add incomplete/complete text to rank item tool tip where relevant
+FEATURE: UI    | Separate progress bar colour for light seeding
+FEATURE: UI    | Added max-seeds and min-peers to subscription filters
+FEATURE: UI    | Menu option to remove all routers
+FEATURE: UI    | Added is-external column to my tracker
+FEATURE: UI    | Ctrl+f selects filter box in chat view
+FEATURE: UI    | Added log messages and save messages chat overview columns
+FEATURE: UI    | Added "active requests" to All Trackers view
+FEATURE: UI    | Added dl history add/complete/remove columns to Subscriptions
+FEATURE: UI    | Added option to specify which side-bar tab is shown on startup
 
+CHANGE: Core   | Reduce start up logging; Log file removal during consistency checks
+CHANGE: Core   | Try harder to rename/remove already imported torrent files
+CHANGE: Core   | Obey order of IPv4/6 addresses returned
+CHANGE: Core   | Cache file system roots as can block UI when shares offline
+CHANGE: Core   | Decouple SecurityManager more as terminally deprecated
+CHANGE: Core   | Ignore cached peers when maintaining all-trackers peer count
+CHANGE: Core   | Remove tracker announce message logging [ferdnyc]
+CHANGE: Core   | IpFilter: Tweak logging [ferdnyc]
+CHANGE: Core   | Added debug for broken URLs
+CHANGE: Core   | Fix up some missing tag/category RSS item entries
+CHANGE: Core   | Change network selection defaults to be more permissive
+CHANGE: Core   | Check network of incoming peer exchanges
+CHANGE: Core   | Added .wmv to playable extensions
+CHANGE: Core   | Recreate aereg with minimal changes in Visual Studio 2022 [soroosh-chabi]
+CHANGE: Core   | Slight tidy up of stateChange aggregation
+CHANGE: Plug   | Linux users: Dorkbox system tray plugin has been deprecated
+CHANGE: UI     | Bring back plugin bar support in classic UI if enabled in bigly UI
+CHANGE: UI     | Switch "close-to-tray" default to FALSE for Linux
+CHANGE: UI     | Change "active" to "running" in library header text
+CHANGE: UI     | Add right-click copy-to-clipboard for some Link widgets
+CHANGE: UI     | Make "show download" in Tag Overview Files tab switch to Torrents tab
+CHANGE: UI     | Allow the progress column in the seeding section
+CHANGE: UI     | Pack the subscription filters a little better
+CHANGE: UI     | Added small space above tool bar in windows dark mode
+CHANGE: UI     | Update local peer IP display
+CHANGE: UI     | Disable unwanted sub-tabs in open-torrent-options availability view
+CHANGE: UI     | Tidy up advanced configuration network interface list
+CHANGE: UI     | Use general date column for my-tracker date added
+CHANGE: UI     | Qualify peer connection state with SOCKS/plugin proxy info
+CHANGE: UI     | Click on intermediate check-box in FilesView -> check kids
+CHANGE: UI     | Fixed up Tag explains string a bit
+CHANGE: UI     | Changed subscription overview columns public/enabled/auto-download to check-boxes
+CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
+CHANGE: UI     | ja_JP: Japanese translation update [tetoria;ayano.midori]
+CHANGE: UI     | ko_KR: Korean translation update [VenusGirl]
+CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
+CHANGE: UI     | ru_RU: Russian translation update [adem4ik]
+CHANGE: UI     | tr_TR: Turkish translation update [BouRock]
+CHANGE: UI     | zh_CN: Simplified Chinese translation update [Keith.T.Maxwell]
+
+BUGFIX: Tag    | Revert change to tag network limits, it was working OK before
+BUGFIX: Tag    | Fix title of Tags Overview pop-outs
+BUGFIX: Tag    | Fix tag constraint handling of non-integer math
+BUGFIX: Core   | Fix IPv6 UDP announce
+BUGFIX: Core   | Use all resolved addresses for UDP announce/scrape
+BUGFIX: Core   | Handle multiple DNS records with binding better for URLs
+BUGFIX: Core   | Defer net-limit pause until downloads in state to be paused
+BUGFIX: Core   | Handle multiple net limits better to avoid pause/resume cycles
+BUGFIX: Core   | Fix metadata download tag propagation to actual download
+BUGFIX: Core   | Fix NPE when using web-remote over I2P/Tor
+BUGFIX: Core   | Fix NPE in magnet download
+BUGFIX: Core   | Fix URL construction
+BUGFIX: Core   | Fix download positions move respecting non-affected downloads
+BUGFIX: Core   | Improve support for non-public peer connections
+BUGFIX: Core   | Fix tracker to work with Tor
+BUGFIX: Core   | Set the correct networks for update torrents
+BUGFIX: Core   | Option to reduce debug on listen fails
+BUGFIX: Core   | Include more exception details in web-plugin logs
+BUGFIX: Core   | Skip possible tracker host actions for magnets
+BUGFIX: Core   | Prevent multiple active "you got message" checks
+BUGFIX: Core   | Added some extra timeout checks for peers stuck "connecting"
+BUGFIX: Core   | Fix up behaviour of DDB delete with put-and-forget
+BUGFIX: UI     | Fix units
+BUGFIX: UI     | Fix dark mode for Subscriptions info bar
+BUGFIX: UI     | Fix generic message box with windows dark mode
+BUGFIX: UI     | Modal donation pop-up can mess up torrent-options dialog layout
+BUGFIX: UI     | Reset piece-map header RHS on data source change
+BUGFIX: UI     | Fix open-torrents button height on Linux/win-dark
+BUGFIX: UI     | Fix up some dark-mode check-boxes
+BUGFIX: UI     | Make it obvious when persistent subs filters are empty
+BUGFIX: UI     | Fix selection back/forward not updating selected content correctly
+BUGFIX: UI     | Fix UI glitch when resolving My Peer fake "IP" for anon nets
+BUGFIX: UI     | Fix remembering last side-bar entry
 
 2023.01.31 | BiglyBT 3.3.0.0
 
