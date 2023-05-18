@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2023.xx.yy | BiglyBT 3.4.0.1
+
 2023.05.17 | BiglyBT 3.4.0.0
 
 FEATURE: Tag   | Added option to apply tag sort to library positions manually + auto [Parg]
