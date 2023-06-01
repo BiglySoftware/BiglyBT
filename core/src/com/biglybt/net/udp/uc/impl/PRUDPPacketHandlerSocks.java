@@ -98,7 +98,7 @@ PRUDPPacketHandlerSocks
 		Throwable	error			= null;
 
 		try{
-		    delegate = new PRUDPPacketHandlerImpl( 0, null, this );
+		    delegate = PRUDPPacketHandlerImpl.createPacketHandler( 0, null, this );
 
 			control_socket = new Socket( Proxy.NO_PROXY );
 

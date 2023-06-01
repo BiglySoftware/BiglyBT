@@ -31,7 +31,7 @@ public class
 PRUDPPacketHandlerStatsImpl
 	implements PRUDPPacketHandlerStats, Cloneable
 {
-	private PRUDPPacketHandlerImpl	packet_handler;
+	private PRUDPPacketHandlerSupport	packet_handler;
 
 	private long packets_sent;
 	private long packets_received;
@@ -41,7 +41,7 @@ PRUDPPacketHandlerStatsImpl
 
 	protected
 	PRUDPPacketHandlerStatsImpl(
-		PRUDPPacketHandlerImpl	_packet_handler )
+			PRUDPPacketHandlerSupport	_packet_handler )
 	{
 		packet_handler	= _packet_handler;
 	}
