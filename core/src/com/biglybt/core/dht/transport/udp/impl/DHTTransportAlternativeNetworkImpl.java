@@ -89,15 +89,17 @@ DHTTransportAlternativeNetworkImpl
 
 	protected List<DHTTransportAlternativeContact>
 	getContacts(
-		int			max,
+		int			real_max,
 		boolean		live_only )
 	{
-		if ( max == 0 ){
+		if ( real_max == 0 ){
 
-			max = max_contacts;
+			real_max = max_contacts;
 		}
 
-		List<DHTTransportAlternativeContact> result = new ArrayList<>(max);
+		int temp_max = real_max<3?3:real_max;
+		
+		List<DHTTransportAlternativeContact> temp_result = new ArrayList<>(temp_max);
 
 		Set<Integer>	used_ids = new HashSet<>();
 
@@ -123,9 +125,9 @@ DHTTransportAlternativeNetworkImpl
 
 				used_ids.add( id );
 
-				result.add( contact );
+				temp_result.add( contact );
 
-				if ( result.size() == max ){
+				if ( temp_result.size() == temp_max ){
 
 					break;
 				}
@@ -133,6 +135,19 @@ DHTTransportAlternativeNetworkImpl
 			}
 		}
 
+		List<DHTTransportAlternativeContact> result;
+		
+		if ( temp_result.size() > real_max ){
+		
+			Collections.shuffle( temp_result );
+			
+			result = temp_result.subList( 0,  real_max );
+			
+		}else{
+			
+			result = temp_result;
+		}
+		
 		if ( TRACE ){
 			System.out.println( network + ": sending " + result.size() + " contacts" );
 		}
