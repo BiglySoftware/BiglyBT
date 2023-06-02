@@ -111,7 +111,8 @@ public class FilesViewMenuUtil
 
 		boolean hasSelection = (all_files.size() > 0);
 
-		MenuItem itemOpen = null;
+		MenuItem itemOpen		= null;
+		MenuItem itemOpenWith	= null;
 		
 		if ( !disable_multi_dialog_crud ){
 			
@@ -120,7 +121,9 @@ public class FilesViewMenuUtil
 			Utils.setMenuItemImage(itemOpen, "run");
 			// Invoke open on enter, double click
 			menu.setDefaultItem(itemOpen);
-	
+				
+			itemOpenWith = MenuBuildUtils.addOpenWithMenu( menu, false, all_files );
+			
 			// Explore  (Copied from MyTorrentsView)
 			final boolean use_open_containing_folder = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");
 			final MenuItem itemExplore = new MenuItem(menu, SWT.PUSH);
@@ -420,6 +423,7 @@ public class FilesViewMenuUtil
 
 		if (!hasSelection) {
 			itemOpen.setEnabled(false);
+			itemOpenWith.setEnabled(false);
 			itemPriority.setEnabled(false);
 			itemRenameOrRetarget.setEnabled(false);
 			itemRenameOrRetargetBatch.setEnabled(false);
@@ -570,6 +574,8 @@ public class FilesViewMenuUtil
 			});
 			
 			itemOpen.setEnabled(open);
+			
+			itemOpenWith.setEnabled(MenuBuildUtils.hasOpenWithMenu( all_files ) && open);
 		}
 
 		// can't rename files for non-persistent downloads (e.g. shares) as these

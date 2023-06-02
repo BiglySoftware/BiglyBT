@@ -747,6 +747,9 @@ public class TorrentUtil
 		});
 		itemOpen.setEnabled(hasSelection);
 
+		MenuItem itemOpenWith = MenuBuildUtils.addOpenWithMenu( menu, false, dms );
+		itemOpenWith.setEnabled(hasSelection&& MenuBuildUtils.hasOpenWithMenu( dms ));
+
 		// Explore (or open containing folder)
 		final boolean use_open_containing_folder = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");
 		final MenuItem itemExplore = new MenuItem(menu, SWT.PUSH);

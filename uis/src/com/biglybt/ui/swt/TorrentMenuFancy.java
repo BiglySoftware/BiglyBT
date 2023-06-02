@@ -2381,6 +2381,22 @@ public class TorrentMenuFancy
 					});
 		}
 
+		if (hasSelection && MenuBuildUtils.hasOpenWithMenu( dms )) {
+			createMenuRow(
+				detailArea,
+				"menu.open.with", null,
+				new FancyMenuRowInfoListener()
+				{
+					@Override
+					public void
+					buildMenu(
+						Menu menuOpenWith )
+					{
+						MenuBuildUtils.addOpenWithMenu( menuOpenWith, true, dms );
+					}
+				});
+		}
+		
 		// Explore (or open containing folder)
 		if (hasSelection) {
 			final boolean use_open_containing_folder = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");

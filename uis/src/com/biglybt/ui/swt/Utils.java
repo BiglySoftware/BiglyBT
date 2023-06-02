@@ -2246,44 +2246,9 @@ public class Utils
 
 			if ( exe != null ){
 
-				File	file = new File( sFileModified );
-
-				try{
-					System.out.println( "Launching " + sFileModified + " with " + exe );
-
-					if ( Constants.isWindows ){
-
-							// need to use createProcess as we want to force the process to decouple correctly (otherwise Vuze won't close until the child closes)
-
-						try{
-							PlatformManagerFactory.getPlatformManager().createProcess( exe + " \"" + sFileModified + "\"", false );
-
-							return;
-
-						}catch( Throwable e ){
-						}
-					} else if (Constants.isOSX && exe.endsWith(".app")) {
-						ProcessBuilder pb = GeneralUtils.createProcessBuilder(
-								file.getParentFile(), new String[] {
-										"open",
-										"-a",
-									exe,
-									file.getName()
-								}, null);
-						pb.start();
-						return;
-					}
-
-					ProcessBuilder pb = GeneralUtils.createProcessBuilder( file.getParentFile(), new String[]{ exe, file.getName()}, null );
-
-					pb.start();
-
-					return;
-
-				}catch( Throwable e ){
-
-					Debug.out( "Launch failed", e );
-				}
+				launchFileExplicit( sFileModified, exe );
+				
+				return;
 			}
 		}
 
@@ -2471,6 +2436,59 @@ public class Utils
 		}
 	}
 
+	public static void
+	launchFileExplicit(
+		DiskManagerFileInfo		file,
+		String					exe )
+	{
+		launchFileExplicit( file.getFile(true).toString(), exe );
+	}
+	
+	public static void
+	launchFileExplicit(
+		String		sfile,
+		String		exe )
+	{
+		File	file = new File( sfile );
+
+		try{
+			System.out.println( "Launching " + sfile + " with " + exe );
+
+			if ( Constants.isWindows ){
+
+					// need to use createProcess as we want to force the process to decouple correctly (otherwise Vuze won't close until the child closes)
+
+				try{
+					PlatformManagerFactory.getPlatformManager().createProcess( exe + " \"" + sfile + "\"", false );
+
+					return;
+
+				}catch( Throwable e ){
+				}
+			} else if (Constants.isOSX && exe.endsWith(".app")) {
+				ProcessBuilder pb = GeneralUtils.createProcessBuilder(
+						file.getParentFile(), new String[] {
+								"open",
+								"-a",
+							exe,
+							file.getName()
+						}, null);
+				pb.start();
+				return;
+			}
+
+			ProcessBuilder pb = GeneralUtils.createProcessBuilder( file.getParentFile(), new String[]{ exe, file.getName()}, null );
+
+			pb.start();
+
+			return;
+
+		}catch( Throwable e ){
+
+			Debug.out( "Launch failed", e );
+		}
+	}
+	
 	private static boolean fallbackLaunch(String command, String... args) {
 		try {
 			List<String> cmdList = new ArrayList<>();

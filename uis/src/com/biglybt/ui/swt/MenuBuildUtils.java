@@ -18,6 +18,7 @@
  */
 package com.biglybt.ui.swt;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,6 +39,8 @@ import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
+
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.ui.GraphicURI;
 import com.biglybt.pif.ui.menus.MenuItem;
@@ -51,6 +54,9 @@ import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.shells.main.MainMenuV3;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 
@@ -1558,5 +1564,130 @@ public class MenuBuildUtils {
 			receiver.accept(null);
 		});
 		clear_item.setEnabled( can_clear );
+	}
+	
+	public static boolean
+	hasOpenWithMenu(
+		Object		target )
+	{
+		boolean ok = false;
+		
+		for ( int i=0;i<4;i++){
+			
+			String exe 	= COConfigurationManager.getStringParameter( "Table.lh" + i + ".prog", "" ).trim();
+
+			if ( exe.length() > 0 && new File( exe ).exists()){
+				
+				ok = true;
+				
+				break;
+			}
+		}
+		
+		if ( !ok ){
+			
+			return( false );
+		}
+		
+		if ( target instanceof DownloadManager[] ){
+			
+			for ( DownloadManager dm: (DownloadManager[])target ){
+			
+				DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+				
+				if ( files.length == 1 ){
+					
+					if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
+					
+						return( true );
+					}
+				}
+			}
+			
+		}else if ( target instanceof List ){
+			
+			List<DiskManagerFileInfo> files = (List<DiskManagerFileInfo>)target;
+			
+			for ( DiskManagerFileInfo file: files ){
+				
+				if ( file.getAccessMode() == DiskManagerFileInfo.READ ){
+				
+					return( true );
+				}
+			}
+		}
+		
+		return( false );
+	}
+	
+	public static org.eclipse.swt.widgets.MenuItem
+	addOpenWithMenu(
+		org.eclipse.swt.widgets.Menu	menu,
+		boolean							has_menu,
+		Object							target )
+	{
+		org.eclipse.swt.widgets.Menu 		openWithMenu;
+		org.eclipse.swt.widgets.MenuItem 	openWithItem;
+		
+		if ( has_menu ){
+			
+			openWithMenu = menu;
+			
+			openWithItem = null;
+			
+		}else{
+			openWithMenu = new org.eclipse.swt.widgets.Menu( menu.getShell(), SWT.DROP_DOWN );
+		
+			openWithItem = new org.eclipse.swt.widgets.MenuItem( menu, SWT.CASCADE );
+		
+			Messages.setLanguageText(openWithItem, "menu.open.with" );
+		
+			openWithItem.setMenu(openWithMenu);
+		}
+		
+		for ( int i=0;i<4;i++){
+			
+			String exe 	= COConfigurationManager.getStringParameter( "Table.lh" + i + ".prog", "" ).trim();
+
+			if ( exe.length() > 0 && new File( exe ).exists()){
+				
+				org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem( openWithMenu, SWT.PUSH );
+		
+				mi.setText( exe );
+		
+				mi.addListener( SWT.Selection, (ev)->{
+					
+					if ( target instanceof DownloadManager[] ){
+						
+						for ( DownloadManager dm: (DownloadManager[])target ){
+						
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							if ( files.length == 1 ){
+								
+								if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
+									
+									Utils.launchFileExplicit( files[0], exe );
+								}
+							}
+						}
+						
+					}else if ( target instanceof List ){
+						
+						List<DiskManagerFileInfo> files = (List<DiskManagerFileInfo>)target;
+						
+						for ( DiskManagerFileInfo file: files ){
+							
+							if ( file.getAccessMode() == DiskManagerFileInfo.READ ){
+							
+								Utils.launchFileExplicit( file, exe );
+							}
+						}
+					}
+				});
+			}
+		}
+		
+		return( openWithItem );
 	}
 }
