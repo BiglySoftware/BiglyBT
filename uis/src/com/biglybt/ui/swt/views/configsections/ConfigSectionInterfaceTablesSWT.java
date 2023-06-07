@@ -22,16 +22,13 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.ui.config.ConfigSectionImpl;
@@ -42,7 +39,8 @@ import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterValidator.ValidationInfo;
 
-import static com.biglybt.ui.swt.ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT;
+import static com.biglybt.core.config.ConfigKeys.File.ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT;
+import static com.biglybt.ui.swt.ConfigKeysSWT.*;
 
 public class ConfigSectionInterfaceTablesSWT
 	extends ConfigSectionImpl
@@ -51,7 +49,9 @@ public class ConfigSectionInterfaceTablesSWT
 
 	public static final String SECTION_ID = "tables";
 
-	private ParameterListener configOSX;
+
+	
+	// private ParameterListener configOSX;
 
 	public ConfigSectionInterfaceTablesSWT() {
 		super(SECTION_ID, ConfigSection.SECTION_INTERFACE);
@@ -60,16 +60,20 @@ public class ConfigSectionInterfaceTablesSWT
 	@Override
 	public void deleteConfigSection() {
 		super.deleteConfigSection();
+		/*
 		if (configOSX != null) {
 			for (int i = 0; i < 4; i++) {
 				COConfigurationManager.removeParameterListener("Table.lh" + i + ".prog",
 						configOSX);
 			}
 		}
+		*/
 	}
 
 	@Override
-	public void build() {
+	public void 
+	build() 
+	{	
 		setDefaultUITypesForAdd(UIInstance.UIT_SWT);
 		boolean isAZ3 = Utils.isAZ3UI();
 
@@ -358,85 +362,30 @@ public class ConfigSectionInterfaceTablesSWT
 		List<Parameter> listLaunchGroup = new ArrayList<>();
 
 		add(new LabelParameterImpl("ConfigView.label.lh.info"), listLaunchGroup);
+		add(new LabelParameterImpl("ConfigView.label.lh.info2"), listLaunchGroup);
 
 		List<Parameter> listLaunchHelpers = new ArrayList<>();
 
-		for (int i = 0; i < 4; i++) {
+		for ( int i = 0; i < getLaunchHelperEntryCount(); i++ ){
 
-			StringParameterImpl exts = new StringParameterImpl(
-					"Table.lh" + i + ".exts", "ConfigView.label.lh.ext");
-			add(exts, listLaunchHelpers);
-			exts.setWidthInCharacters(15);
-
-			FileParameterImpl prog = new FileParameterImpl("Table.lh" + i + ".prog",
-					"ConfigView.label.lh.prog");
-			add(prog, listLaunchHelpers);
-
-			if (Constants.isOSX) {
-				if (configOSX != null) {
-					// Probably could be changed to prog.addListener(..), but I'm not touching it [tux]
-					configOSX = new ParameterListener() {
-						private boolean changing = false;
-
-						private String last_changed = "";
-
-						@Override
-						public void parameterChanged(String parameter_name) {
-							if (changing) {
-
-								return;
-
-							}
-
-							final String value = COConfigurationManager.getStringParameter(
-									parameter_name);
-
-							if (value.equals(last_changed)) {
-
-								return;
-							}
-
-							if (value.endsWith(".app")) {
-
-								Utils.execSWTThreadLater(1, new Runnable() {
-									@Override
-									public void run() {
-										last_changed = value;
-
-										try {
-											changing = true;
-
-											File file = new File(value);
-
-											String app_name = file.getName();
-
-											int pos = app_name.lastIndexOf(".");
-
-											app_name = app_name.substring(0, pos);
-
-											String new_value = value + "/Contents/MacOS/" + app_name;
-
-											if (new File(new_value).exists()) {
-
-												prog.setFileName(new_value);
-											}
-										} finally {
-
-											changing = false;
-										}
-									}
-								});
-							}
-						}
-					};
-				}
-				COConfigurationManager.addParameterListener("Table.lh" + i + ".prog",
-						configOSX);
-			}
+			addLaunchHelperLine( listLaunchHelpers, i );
 		}
 
+		// add another folder
+		ActionParameterImpl addButton = new ActionParameterImpl( "label.add.another", "Button.add" );
+		add("addAnother", addButton, listLaunchHelpers);
+
+		addButton.addListener(param -> {
+
+			int num = getLaunchHelperEntryCount();
+
+			setLaunchHelperEntryCount( num+1 );
+			
+			requestRebuild();
+		});
+		
 		add("pgLaunchHelpersInt",
-				new ParameterGroupImpl(null, listLaunchHelpers).setNumberOfColumns2(2),
+				new ParameterGroupImpl(null, listLaunchHelpers).setNumberOfColumns2(3),
 				listLaunchGroup);
 
 		add(new ParameterGroupImpl("ConfigView.section.style.launch",
@@ -462,5 +411,133 @@ public class ConfigSectionInterfaceTablesSWT
 		add(new ParameterGroupImpl("ConfigView.section.style.searchsubs",
 				listSearchSubs));
 
+	}
+	
+	protected void
+	addLaunchHelperLine(
+		List<Parameter>		listLaunchHelpers,
+		int					index )
+	{
+		StringParameterImpl extsParam = new StringParameterImpl(	getLaunchHelperExtConfig( index ), "ConfigView.label.lh.ext");
+		add(extsParam, listLaunchHelpers);
+		extsParam.setWidthInCharacters(15);
+
+		FileParameterImpl progParam = new FileParameterImpl( getLaunchHelperProgConfig( index ), "ConfigView.label.lh.prog");
+		add(progParam, listLaunchHelpers);
+
+		/* This never worked due to the test "if (configOSX != null) {" being wrong... As I'm reworking this
+		 * I am removing it. Also note that the listener refers to "prog" so, if it was fixed to say "if (configOSX == null) {"
+		 * then the listener would also only refer to the first launch helper "prog" var...
+		if (Constants.isOSX) {
+			if (configOSX != null) {
+				// Probably could be changed to prog.addListener(..), but I'm not touching it [tux]
+				configOSX = new ParameterListener() {
+					private boolean changing = false;
+
+					private String last_changed = "";
+
+					@Override
+					public void parameterChanged(String parameter_name) {
+						if (changing) {
+
+							return;
+
+						}
+
+						final String value = COConfigurationManager.getStringParameter(
+								parameter_name);
+
+						if (value.equals(last_changed)) {
+
+							return;
+						}
+
+						if (value.endsWith(".app")) {
+
+							Utils.execSWTThreadLater(1, new Runnable() {
+								@Override
+								public void run() {
+									last_changed = value;
+
+									try {
+										changing = true;
+
+										File file = new File(value);
+
+										String app_name = file.getName();
+
+										int pos = app_name.lastIndexOf(".");
+
+										app_name = app_name.substring(0, pos);
+
+										String new_value = value + "/Contents/MacOS/" + app_name;
+
+										if (new File(new_value).exists()) {
+
+											prog.setFileName(new_value);
+										}
+									} finally {
+
+										changing = false;
+									}
+								}
+							});
+						}
+					}
+				};
+			}
+			COConfigurationManager.addParameterListener("Table.lh" + index + ".prog",
+					configOSX);
+		}
+		*/
+		
+		ActionParameterImpl deleteRow = new ActionParameterImpl( "", "" );
+		
+		deleteRow.setImageID( "smallx-c" );
+		
+		add( deleteRow, listLaunchHelpers);
+
+		deleteRow.addListener(param -> {
+			
+			Utils.execSWTThread(()->{
+
+				int num_lines = getLaunchHelperEntryCount();
+
+					// always blank the current row as we don't want the values re-appearing
+					// if rows re-added
+				
+				setLaunchHelpersExts( index, "" );
+				setLaunchHelpersProg( index, "" );
+				
+				if ( index == num_lines-1 ){
+					
+						// last one
+					
+					if ( index > 0 ){
+					
+							// remove last
+						
+						COConfigurationManager.setParameter( ICFG_LAUNCH_HELPERS_ENTRY_COUNT, num_lines-1);
+					}
+				}else{
+					
+						// copy down 
+					
+					for ( int i=index+1; i<= num_lines;i++ ){
+						
+						String exts = getLaunchHelpersExts( i );
+						String prog	= getLaunchHelpersProg( i );
+					
+						setLaunchHelpersExts( i-1, exts );
+						setLaunchHelpersProg( i-1, prog );
+					}
+					
+						// remove last
+					
+					COConfigurationManager.setParameter( ICFG_LAUNCH_HELPERS_ENTRY_COUNT, num_lines-1);
+				}
+				requestRebuild();
+			});
+		});
 	}
 }

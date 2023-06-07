@@ -2898,10 +2898,10 @@ public class Utils
 				ext = ext.substring( 0, q_pos );
 			}
 
-			for ( int i=0;i<10;i++){
+			for ( int i=0;i<ConfigKeysSWT.getLaunchHelperEntryCount();i++){
 
-				String exts = COConfigurationManager.getStringParameter( "Table.lh" + i + ".exts", "" ).trim();
-				String exe 	= COConfigurationManager.getStringParameter( "Table.lh" + i + ".prog", "" ).trim();
+				String exts = ConfigKeysSWT.getLaunchHelpersExts(i).trim();
+				String exe 	= ConfigKeysSWT.getLaunchHelpersProg(i).trim();
 
 				if ( exts.length() > 0 && exe.length() > 0 && new File( exe ).exists()){
 

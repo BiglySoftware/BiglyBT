@@ -1572,9 +1572,9 @@ public class MenuBuildUtils {
 	{
 		boolean ok = false;
 		
-		for ( int i=0;i<4;i++){
+		for ( int i=0;i<ConfigKeysSWT.getLaunchHelperEntryCount();i++){
 			
-			String exe 	= COConfigurationManager.getStringParameter( "Table.lh" + i + ".prog", "" ).trim();
+			String exe 	= ConfigKeysSWT.getLaunchHelpersProg(i).trim();
 
 			if ( exe.length() > 0 && new File( exe ).exists()){
 				
@@ -1645,9 +1645,9 @@ public class MenuBuildUtils {
 			openWithItem.setMenu(openWithMenu);
 		}
 		
-		for ( int i=0;i<4;i++){
+		for ( int i=0;i<ConfigKeysSWT.getLaunchHelperEntryCount();i++){
 			
-			String exe 	= COConfigurationManager.getStringParameter( "Table.lh" + i + ".prog", "" ).trim();
+			String exe 	= ConfigKeysSWT.getLaunchHelpersProg(i).trim();
 
 			if ( exe.length() > 0 && new File( exe ).exists()){
 				
