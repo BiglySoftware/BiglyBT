@@ -31,6 +31,7 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.VirtualServerChannelSelector;
+import com.biglybt.core.util.AEDiagnostics;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.AEThread;
 import com.biglybt.core.util.Debug;
@@ -96,6 +97,8 @@ public class VirtualBlockingServerChannelSelector
 
 	        if (Logger.isEnabled()) 	Logger.log(new LogEvent(LOGID, "TCP incoming server socket "	+ bind_address));
 
+	        AEDiagnostics.logWithStack( "seltrace", "TCP blocking server channel bound: " + bind_address );
+	        		
 	        AEThread accept_thread = new AEThread( "VServerSelector:port" + bind_address.getPort() ) {
 	          @Override
 	          public void runSupport() {
@@ -108,8 +111,9 @@ public class VirtualBlockingServerChannelSelector
 	      catch( Throwable t ) {
 	    	  if ( alert_on_fail ){
 		      	Debug.out( t );
-		      	Logger.log(new LogAlert(LogAlert.UNREPEATABLE,	"ERROR, unable to bind TCP incoming server socket to " +bind_address.getPort(), t));
+		      	Logger.log(new LogAlert(LogAlert.UNREPEATABLE,	"ERROR, unable to bind TCP incoming server socket to " + bind_address.getAddress() + ":" + bind_address.getPort(), t));
 	    	  }
+		      AEDiagnostics.logWithStack( "seltrace", "TCP blocking server channel failed: " + bind_address + " - " + Debug.getNestedExceptionMessage(t));
 	      }
 
 	      last_accept_time = SystemTime.getCurrentTime();  //init to now
@@ -143,28 +147,46 @@ public class VirtualBlockingServerChannelSelector
   }
 
 
-  protected void accept_loop() {
-    while( isRunning() ) {
-      try {
-        SocketChannel client_channel = server_channel.accept();
-        last_accept_time = SystemTime.getCurrentTime();
-        try{
-        	client_channel.configureBlocking( false );
-        }catch( IOException e ){
-        	client_channel.close();
-        	throw( e );
-        }
-        listener.newConnectionAccepted( server_channel, client_channel );
-      }
-      catch( AsynchronousCloseException e ) {
-        /* is thrown when stop() is called */
-      }
-      catch( Throwable t ) {
-        Debug.out( t );
-        try {  Thread.sleep( 500 );  }catch( Exception e ) {  e.printStackTrace();  }
-      }
+  protected void 
+  accept_loop() 
+  {
+	  try{
+		  while( isRunning()){
+			  try {
+				  SocketChannel client_channel = server_channel.accept();
+				  last_accept_time = SystemTime.getCurrentTime();
+				  try{
+					  client_channel.configureBlocking( false );
+				  }catch( IOException e ){
+					  client_channel.close();
+					  throw( e );
+				  }
+				  listener.newConnectionAccepted( server_channel, client_channel );
+			  }
+			  catch( AsynchronousCloseException e ) {
+				  /* is thrown when stop() is called */
+			  }
+			  catch( Throwable t ) {
+				  Debug.out( t );
+				  try {  Thread.sleep( 500 );  }catch( Exception e ) {  e.printStackTrace();  }
+			  }
 
-    }
+		  }
+	  }finally{
+		  
+	        AEDiagnostics.logWithStack( "seltrace", "TCP blocking server channel unbound: " + bind_address );
+
+	        ServerSocketChannel sc = server_channel;
+	        
+	        try{
+	        	if ( sc != null ){
+	        		
+	        		sc.close();
+	        	}
+	        }catch( Throwable e ){
+	        		
+	        }
+	  }
   }
 
 

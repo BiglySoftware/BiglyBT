@@ -439,7 +439,7 @@ AEDiagnostics
 		String	logger_name,
 		String	str )
 	{
-		log( logger_name, str + ": " + Debug.getCompressedStackTrace());
+		log( logger_name, str + ": " + Debug.getCompressedStackTrace(1));
 	}
 
 	public static void
