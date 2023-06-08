@@ -15,55 +15,55 @@ msgstr ""
 "X-Crowdin-Language: hu\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 508\n"
-"PO-Revision-Date: 2023-05-24 07:41\n"
+"PO-Revision-Date: 2023-06-08 16:30\n"
 
 msgid "test"
-msgstr ""
+msgstr "Tesztelés angolul"
 
 msgid "onlyEng"
-msgstr ""
+msgstr "Csak angolul"
 
 msgid "donation_line1"
-msgstr ""
+msgstr "Bár a BiglyBT egy ingyenes program, a fejlesztése és a karbantartása sokba kerül. Ha úgy gondolod, hogy hasznodra vált a használata, kérjük, fontold meg, hogy támogatsz minket az alábbi módok valamelyikén:"
 
 msgid "donation_title"
-msgstr ""
+msgstr "A BiglyBT támogatása"
 
 msgid "donation_monthly_title"
-msgstr ""
+msgstr "Havi köszönetnyilvánítás"
 
 msgid "donation_onetime_title"
-msgstr ""
+msgstr "Egyszeri felajánlás"
 
 msgid "donation_bitcoin_title"
 msgstr "Bitcoin"
 
 msgid "donation_monthly_description"
-msgstr ""
+msgstr "Adjon a fejlesztőknek havonta egy kávét"
 
 msgid "donation_monthly_per_month"
-msgstr ""
+msgstr "/hó"
 
 msgid "donation_onetime_amount"
-msgstr ""
+msgstr "Összeg (%1):"
 
 msgid "donation_onetime_description"
-msgstr ""
+msgstr "Bármilyen összeget szívesen fogadunk :)"
 
 msgid "donation_bitcoin_description"
-msgstr ""
+msgstr "Javasoljuk %1 vagy %2 adományozását. :)"
 
 msgid "donation_bitcoin_addresses"
-msgstr ""
+msgstr "BCH/BTC/BSG/BSV cím:"
 
 msgid "donation_crypto_title"
-msgstr ""
+msgstr "Kriptovaluta"
 
 msgid "donation_crypto_description"
-msgstr ""
+msgstr "Szóljon nekünk, ha a kedvenc érméje, vagy a tokenje nem szerepel a listán, és mi felvesszük a címét :)"
 
 msgid "no_thanks"
-msgstr ""
+msgstr "Köszönöm, nem."
 
 msgid "close"
 msgstr "Bezárás"
