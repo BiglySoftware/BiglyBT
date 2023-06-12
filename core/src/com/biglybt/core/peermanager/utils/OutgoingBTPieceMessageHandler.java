@@ -476,11 +476,34 @@ public class OutgoingBTPieceMessageHandler {
 
 
   private void doReadAheadLoads() {
-  	List	to_submit = null;
+  	List<DiskManagerReadRequest>	to_submit = null;
   	try{
   		lock_mon.enter();
 
   		while( loading_messages.size() + queued_messages.size() < request_read_ahead && !requests.isEmpty() && !destroyed ){
+  			
+  			int queued_data = outgoing_message_queue.getDataQueuedBytes();
+  			
+  			if ( queued_data > 1024*1024 ){
+  				
+  				if ( queued_data > 32*1024*1024 ){
+  					
+  						// hard limit
+  					
+  					break;
+  					
+  				}else{
+  					
+  					long send_rate = peer.getStats().getDataSendRate();
+  				
+  						// give them 30 seconds of upload, pretty generous
+  					
+  					if ( send_rate*30 < queued_data ){
+  						
+  						break;
+  					}
+  				}
+  			}
   			
   			DiskManagerReadRequest dmr = (DiskManagerReadRequest)requests.removeFirst();
   			
@@ -490,7 +513,7 @@ public class OutgoingBTPieceMessageHandler {
   			
   			if ( to_submit == null ){
   				
-  				to_submit = new ArrayList();
+  				to_submit = new ArrayList<>();
   			}
   			
   			to_submit.add( dmr );
@@ -499,17 +522,11 @@ public class OutgoingBTPieceMessageHandler {
     	lock_mon.exit();
     }
 
-    /*
-	if ( peer.getIp().equals( "64.71.5.2")){
-
-		TimeFormatter.milliTrace( "obt read_ahead: -> " + (to_submit==null?0:to_submit.size()) +
-				" [lo=" + loading_messages.size() + ",qm=" + queued_messages.size() + ",re=" + requests.size() + ",rl=" + request_read_ahead + "]");
-	}
-	*/
-
     if ( to_submit != null ){
-    	for (int i=0;i<to_submit.size();i++){
-    		peer.getManager().getAdapter().enqueueReadRequest( peer, (DiskManagerReadRequest)to_submit.get(i), read_req_listener );
+    	
+    	for (DiskManagerReadRequest req: to_submit ){
+    		
+    		peer.getManager().getAdapter().enqueueReadRequest( peer, req, read_req_listener );
     	}
     }
   }
