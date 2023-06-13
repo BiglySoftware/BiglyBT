@@ -1240,6 +1240,8 @@ public class GlobalManagerImpl
 						
 						if ( temp.isDirectory()){
 							
+							FileUtil.log( "addDownload: temporary save path '" + path + "' substituted for '" + savePath  + "'" );
+									
 							moc	= FileUtil.newFile( savePath );
 							
 							savePath = temp.getAbsolutePath();
