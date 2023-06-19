@@ -22,14 +22,11 @@
 package com.biglybt.ui.swt.views.peer;
 
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -49,20 +46,22 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
-import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.ImageRepository;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.Legend;
+import com.biglybt.ui.swt.components.Legend.LegendListener;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.mainwindow.HSLColor;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.FontUtils;
+import com.biglybt.ui.swt.views.piece.PieceMapView;
 import com.biglybt.util.MapUtils;
 
 import com.biglybt.pif.Plugin;
@@ -100,10 +99,11 @@ public class PeerPieceMapView
 
 	private final static int BLOCKCOLOR_NEXT = 5;
 
-	private final static int BLOCKCOLOR_AVAILCOUNT = 6;
+	private static final byte SHOW_BIG = 2;
 
-	private static final int MAX_PIECES_TO_SHOW = 1024 * 32;
-	
+	private static final byte SHOW_SMALL = 1;
+	private static final boolean DEBUG = false;
+
 	private Composite peerInfoComposite;
 
 	private ScrolledComposite sc;
@@ -132,9 +132,16 @@ public class PeerPieceMapView
 
 	Image img = null;
 
-	protected boolean refreshInfoCanvasQueued;
+	protected boolean alreadyFilling;
 
 	private UISWTView swtView;
+
+	private int		currentNumColumns;
+	private int		currentNumPieces;
+	
+	BlockInfo[] oldBlockInfo;
+
+	private final List<Integer> distinctPieceCache = new ArrayList<>();
 
 	/**
 	 * Initialize
@@ -143,7 +150,7 @@ public class PeerPieceMapView
 	public PeerPieceMapView() {
 		blockColors = new Color[] { Colors.blues[Colors.BLUES_DARKEST],
 				Colors.blues[Colors.BLUES_MIDLIGHT], Colors.fadedGreen, Colors.white,
-				Colors.red, Colors.fadedRed, Colors.black };
+				Colors.red, Colors.fadedRed };
 
 		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
 			@Override
@@ -195,12 +202,9 @@ public class PeerPieceMapView
 			peer = null;
 		}
 
-		Utils.execSWTThreadLater(0, new AERunnable() {
-			@Override
-			public void runSupport() {
-				swt_fillPeerInfoSection();
-			}
-		});
+		oldBlockInfo = null;
+
+		Utils.execSWTThreadLater(0, () -> swt_fillPeerInfoSection());
 	}
 
 	private String getFullTitle() {
@@ -261,30 +265,35 @@ public class PeerPieceMapView
 		peerInfoCanvas = new Canvas(sc, SWT.NO_REDRAW_RESIZE | SWT.NO_BACKGROUND);
 		gridData = new GridData(GridData.FILL, SWT.DEFAULT, true, false);
 		peerInfoCanvas.setLayoutData(gridData);
-		peerInfoCanvas.addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e) {
-				if (e.width <= 0 || e.height <= 0)
-					return;
-				try {
-					Rectangle bounds = (img == null) ? null : img.getBounds();
-					if (bounds == null) {
-						e.gc.fillRectangle(e.x, e.y, e.width, e.height);
-					} else {
-						if (e.x + e.width > bounds.width)
-							e.gc.fillRectangle(bounds.width, e.y, e.x + e.width
-									- bounds.width + 1, e.height);
-						if (e.y + e.height > bounds.height)
-							e.gc.fillRectangle(e.x, bounds.height, e.width, e.y + e.height
-									- bounds.height + 1);
-
-						int width = Math.min(e.width, bounds.width - e.x);
-						int height = Math.min(e.height, bounds.height - e.y);
-						e.gc.drawImage(img, e.x, e.y, width, height, e.x, e.y, width,
-								height);
+		peerInfoCanvas.addPaintListener(e -> {
+			if (e.width <= 0 || e.height <= 0) {
+				return;
+			}
+			try {
+				Rectangle bounds = (img == null) ? null : img.getBounds();
+				if (bounds == null) {
+					e.gc.fillRectangle(e.x, e.y, e.width, e.height);
+				} else {
+					int visibleImageWidth = bounds.width - e.x;
+					int visibleImageHeight = bounds.height - e.y;
+					if (e.width > visibleImageWidth) {
+						e.gc.fillRectangle(bounds.width, e.y,
+							e.width - visibleImageWidth + 1, e.height);
 					}
-				} catch (Exception ex) {
+					if (e.height > visibleImageHeight) {
+						e.gc.fillRectangle(e.x, bounds.height, e.width,
+							e.height - visibleImageHeight + 1);
+					}
+
+					int width = Math.min(e.width, visibleImageWidth);
+					int height = Math.min(e.height, visibleImageHeight);
+					e.gc.drawImage(img, e.x, e.y, width, height, e.x, e.y, width,
+							height);
+					if (DEBUG) {
+						log("draw " + e.x + "x" + e.y + ", w=" + width + ", h=" + height + "; af=" + alreadyFilling);
+					}
 				}
+			} catch (Exception ex) {
 			}
 		});
 		Listener doNothingListener = new Listener() {
@@ -293,45 +302,72 @@ public class PeerPieceMapView
 			}
 		};
 		peerInfoCanvas.addListener(SWT.KeyDown, doNothingListener);
+		
+		peerInfoCanvas.addListener(SWT.Resize, e -> {
+			if (!peerInfoCanvas.isVisible()) {
+				return;
+			}
 
-		peerInfoCanvas.addListener(SWT.Resize, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				if (refreshInfoCanvasQueued || !peerInfoCanvas.isVisible()) {
+			synchronized (PeerPieceMapView.this) {
+				if (DEBUG) {
+					log("resize.  af=" + alreadyFilling);
+				}
+				if (alreadyFilling) {
 					return;
 				}
 
-				// wrap in asyncexec because sc.setMinWidth (called later) doesn't work
-				// too well inside a resize (the canvas won't size isn't always updated)
-				Utils.execSWTThreadLater(100, new AERunnable() {
-					@Override
-					public void runSupport() {
-						if (refreshInfoCanvasQueued) {
-							return;
-						}
-						refreshInfoCanvasQueued = true;
-
-						if (img != null) {
-							int iOldColCount = img.getBounds().width / BLOCK_SIZE;
-							int iNewColCount = peerInfoCanvas.getClientArea().width / BLOCK_SIZE;
-							if (iOldColCount != iNewColCount)
-								refreshInfoCanvas();
-						}
-					}
-				});
+				alreadyFilling = true;
 			}
+
+			// wrap in asyncexec because sc.setMinWidth (called later) doesn't work
+			// too well inside a resize (the canvas won't size isn't always updated)
+			Utils.execSWTThreadLater(0, () -> {
+
+				if (img != null) {
+					int iOldColCount = img.getBounds().width / BLOCK_SIZE;
+					int iNewColCount = peerInfoCanvas.getClientArea().width / BLOCK_SIZE;
+					if (DEBUG) {
+						log("resize. col " + iOldColCount + "->" + iNewColCount);
+					}
+					if (iOldColCount != iNewColCount)
+						refreshInfoCanvas();
+				}
+
+				synchronized (PeerPieceMapView.this) {
+					alreadyFilling = false;
+				}
+			});
 		});
 
 		sc.setContent(peerInfoCanvas);
 
-		Legend.createLegendComposite(peerInfoComposite,
-				blockColors, new String[] { "PeersView.BlockView.Avail.Have",
-						"PeersView.BlockView.Avail.NoHave",
-						"PeersView.BlockView.NoAvail.Have",
-						"PeersView.BlockView.NoAvail.NoHave",
-						"PeersView.BlockView.Transfer", "PeersView.BlockView.NextRequest",
-						"PeersView.BlockView.AvailCount" }, new GridData(SWT.FILL,
-						SWT.DEFAULT, true, false, 2, 1));
+		peerInfoCanvas.addListener(SWT.Move, event -> swt_fillPeerInfoSection());
+		sc.addListener(SWT.Resize, event -> swt_fillPeerInfoSection());
+
+		Legend.createLegendComposite(peerInfoComposite, blockColors, new String[] {
+			"PeersView.BlockView.Avail.Have",
+			"PeersView.BlockView.Avail.NoHave",
+			"PeersView.BlockView.NoAvail.Have",
+			"PeersView.BlockView.NoAvail.NoHave",
+			"PeersView.BlockView.Transfer",
+			"PeersView.BlockView.NextRequest"
+		}, null, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 2, 1), true,
+				new LegendListener() {
+					@Override
+					public void hoverChange(boolean entry, int index) {
+					}
+
+					@Override
+					public void visibilityChange(boolean visible, int index) {
+					}
+
+					@Override
+					public void colorChange(int index) {
+						oldBlockInfo = null;
+						distinctPieceCache.clear();
+						refreshInfoCanvas();
+					}
+				});
 
 		font = FontUtils.getFontPercentOf(peerInfoCanvas.getFont(), 0.7f);
 
@@ -362,18 +398,6 @@ public class PeerPieceMapView
 					+ "; "
 					+ DisplayFormatters.formatPercentFromThousands(peer
 							.getPercentDoneInThousandNotation());
-			
-			PEPeerManager pm = peer.getManager();
-
-			DiskManager dm = pm==null?null:pm.getDiskManager();
-
-			if ( dm != null ){
-				int numPieces =  dm.getNbPieces();
-				
-				if ( numPieces > MAX_PIECES_TO_SHOW ){
-					 s += " (" + MessageText.getString( "label.truncated" ).toLowerCase() + ")";
-				}
-			}
 			
 			topLabel.setText(s);
 
@@ -446,7 +470,7 @@ public class PeerPieceMapView
 	 * TODO: Construct image for visible area only or something
 	 */
 	private void refreshInfoCanvas() {
-		refreshInfoCanvasQueued = false;
+		alreadyFilling = false;
 
 		if (peerInfoComposite == null || peerInfoComposite.isDisposed()
 				|| !peerInfoComposite.isVisible()) {
@@ -457,11 +481,6 @@ public class PeerPieceMapView
 		Rectangle bounds = peerInfoCanvas.getClientArea();
 		if (bounds.width <= 0 || bounds.height <= 0)
 			return;
-
-		if (img != null && !img.isDisposed()) {
-			img.dispose();
-			img = null;
-		}
 
 		if (peer == null || peer.getPeerState() != PEPeer.TRANSFERING) {
 			GC gc = new GC(peerInfoCanvas);
@@ -485,34 +504,104 @@ public class PeerPieceMapView
 			return;
 		}
 
-		int numPieces =  dm.getNbPieces();
-		
-		if ( numPieces > MAX_PIECES_TO_SHOW ){
-			numPieces = MAX_PIECES_TO_SHOW;
+		int iNumCols = bounds.width / BLOCK_SIZE;
+
+		if ( currentNumColumns != iNumCols ){
+
+			currentNumColumns = iNumCols;
+
+			oldBlockInfo = null;
+
+			if ( img != null ){
+
+				img.dispose();
+
+				img = null;
+			}
+			distinctPieceCache.clear();
 		}
 
-		DiskManagerPiece[] dm_pieces = dm.getPieces();
+		int numPieces =  dm.getNbPieces();
+		int iNeededHeight = (((numPieces - 1) / iNumCols) + 1) * BLOCK_SIZE;
 
-		int iNumCols = bounds.width / BLOCK_SIZE;
-		int iNeededHeight = (((numPieces - 1) / iNumCols) + 1)
-				* BLOCK_SIZE;
+		if (img != null && !img.isDisposed()) {
+			Rectangle imgBounds = img.getBounds();
+			if ( 	numPieces != currentNumPieces ||
+				imgBounds.width != bounds.width ||
+				imgBounds.height != iNeededHeight) {
+				oldBlockInfo = null;
+				img.dispose();
+				img = null;
+				distinctPieceCache.clear();
+			}
+		}
+
 		if (sc.getMinHeight() != iNeededHeight) {
+			boolean scrollVisible = sc.getVerticalBar() != null && sc.getVerticalBar().getVisible();
+			if (DEBUG) {
+				log("minHeight sc=" + sc.getMinHeight() +
+					", needed=" + iNeededHeight + "; sc.ca=" + sc.getClientArea()
+					+ "; sc.vbv=" + scrollVisible + "; " + Debug.getCompressedStackTrace(3));
+			}
 			sc.setMinHeight(iNeededHeight);
 			sc.layout(true, true);
+			if (!scrollVisible && iNeededHeight > sc.getClientArea().height) {
+				if (DEBUG) {
+					log("skip canvas fill, scrollbar incoming. " + (sc.getVerticalBar() != null && sc.getVerticalBar().getVisible()));
+				}
+				return;
+			}
 			bounds = peerInfoCanvas.getClientArea();
 		}
 
-		img = new Image(peerInfoCanvas.getDisplay(), bounds.width, iNeededHeight);
-		GC gcImg = new GC(img);
+		currentNumPieces = numPieces;
 
+		DiskManagerPiece[] dm_pieces = dm.getPieces();
+
+		Rectangle dirtyBounds = null;
+
+		if (img == null) {
+			img = new Image(peerInfoCanvas.getDisplay(), bounds.width, iNeededHeight);
+			oldBlockInfo = null;
+			dirtyBounds = peerInfoCanvas.getBounds();
+		}
+
+		GC gcImg = new GC(img);
+		gcImg.setFont(font);
+
+		int numChanged = 0;
+		int numCopyArea = 0;
+		boolean needsMore = false;
+		long startTime = SystemTime.getMonotonousTime();
 		try {
 			// use advanced capabilities for faster drawText
 			gcImg.setAdvanced(true);
+			Color canvasBG = peerInfoCanvas.getBackground();
 
-			gcImg.setBackground(peerInfoCanvas.getBackground());
-			gcImg.fillRectangle(0, 0, bounds.width, iNeededHeight);
+			if (oldBlockInfo == null) {
+				gcImg.setBackground(canvasBG);
+				gcImg.fillRectangle(0, 0, bounds.width, iNeededHeight);
+			}
 
 			int[] availability = pm.getAvailability();
+
+			int minAvailability = Integer.MAX_VALUE;
+			int minAvailability2 = Integer.MAX_VALUE;
+			int maxAvailability = 0;
+			if (availability != null && availability.length > 0) {
+				for (int anAvailability : availability) {
+					if (anAvailability > maxAvailability) {
+						maxAvailability = anAvailability;
+					}
+					if (anAvailability != 0 && anAvailability < minAvailability) {
+						minAvailability2 = minAvailability;
+						minAvailability = anAvailability;
+						if (minAvailability == 1) {
+							break;
+						}
+					}
+				}
+			}
 
 			int iNextDLPieceID = -1;
 			int iDLPieceID = -1;
@@ -547,102 +636,219 @@ public class PeerPieceMapView
 			
 			int iRow = 0;
 			int iCol = 0;
-			for (int i = 0; i < numPieces; i++) {
+
+			Rectangle canvasBounds = peerInfoCanvas.getBounds();
+			if (canvasBounds.y < 0) {
+				iRow = (-canvasBounds.y) / BLOCK_SIZE;
+			}
+			int startPieceNo = iRow * iNumCols;
+			int drawHeight = sc.getClientArea().height;
+			// +1 in case first visible row is partial
+			int endPieceNo = Math.min(numPieces - 1, (int) (startPieceNo
+				+ (Math.ceil(drawHeight / (float) BLOCK_SIZE) + 1) * iNumCols) - 1);
+
+			if (DEBUG) {
+				log("start filling " + (endPieceNo - startPieceNo + 1) + ". " + startPieceNo + " to " + endPieceNo + " (of " + numPieces + "), canvasBounds.y=" + canvasBounds.y + ", row=" + iRow);
+			}
+
+			if (oldBlockInfo == null) {
+				oldBlockInfo = new BlockInfo[numPieces];
+				distinctPieceCache.clear();
+			}
+
+			pieceLoop:
+			for (int i = startPieceNo; i <= endPieceNo; i++) {
 				int colorIndex;
-				boolean done = (dm_pieces == null) ? false : dm_pieces[i].isDone();
+				DiskManagerPiece dm_piece = dm_pieces == null ? null : dm_pieces[i];
+
+				if (iCol >= iNumCols) {
+					iCol = 0;
+					iRow++;
+				}
+
+				boolean done = dm_piece != null && dm_piece.isDone();
 				int iXPos = iCol * BLOCK_SIZE;
 				int iYPos = iRow * BLOCK_SIZE;
 
+				BlockInfo newInfo = new BlockInfo();
+
+				newInfo.peerHas = peerHavePieces.flags[i];
+				newInfo.showDown = i == iDLPieceID ? SHOW_BIG : i == iNextDLPieceID ? SHOW_SMALL : 0;
+				newInfo.showUp = i == peerNextRequestedPiece ? SHOW_BIG : Arrays.binarySearch(peerRequestedPieces, i) >= 0 ? SHOW_SMALL : 0;
+				newInfo.availNum = availability == null ? -1 : availability[i];
+
+
 				if (done) {
-					if (peerHavePieces.flags[i])
-						colorIndex = BLOCKCOLOR_AVAIL_HAVE;
-					else
-						colorIndex = BLOCKCOLOR_NOAVAIL_HAVE;
 
-					gcImg.setBackground(blockColors[colorIndex]);
-					gcImg.fillRectangle(iXPos, iYPos, BLOCK_FILLSIZE, BLOCK_FILLSIZE);
-				} else {
+					newInfo.haveWidth = BLOCK_FILLSIZE;
+				} else if (dm_piece != null) {
 					// !done
-					boolean partiallyDone = (dm_pieces == null) ? false : dm_pieces[i]
-							.getNbWritten() > 0;
+					boolean partiallyDone = dm_piece.getNbWritten() > 0;
 
-					int x = iXPos;
 					int width = BLOCK_FILLSIZE;
 					if (partiallyDone) {
-						if (peerHavePieces.flags[i])
-							colorIndex = BLOCKCOLOR_AVAIL_HAVE;
-						else
-							colorIndex = BLOCKCOLOR_NOAVAIL_HAVE;
-
-						gcImg.setBackground(blockColors[colorIndex]);
-
-						@SuppressWarnings("null") // partiallyDone false when dm_pieces null
-						int iNewWidth = (int) (((float) dm_pieces[i].getNbWritten() / dm_pieces[i]
-								.getNbBlocks()) * width);
+						int iNewWidth = (int) (((float) dm_piece.getNbWritten()
+							/ dm_piece.getNbBlocks()) * width);
 						if (iNewWidth >= width)
 							iNewWidth = width - 1;
 						else if (iNewWidth <= 0)
 							iNewWidth = 1;
 
-						gcImg.fillRectangle(x, iYPos, iNewWidth, BLOCK_FILLSIZE);
-						width -= iNewWidth;
-						x += iNewWidth;
+						newInfo.haveWidth = iNewWidth;
+					}
+				}
+
+				newInfo.bounds = new Rectangle(iXPos - 1, iYPos - 1, BLOCK_SIZE, BLOCK_SIZE);
+
+				BlockInfo oldInfo = oldBlockInfo != null ? oldBlockInfo[i] : null;
+
+				if (newInfo.sameAs(oldInfo)) {
+
+					// skip this one as unchanged
+					iCol++;
+					continue;
+				}
+
+				// Use copyArea if in cache. Saves the most time
+				if (oldBlockInfo != null) {
+					for (Iterator<Integer> iter = distinctPieceCache.iterator(); iter.hasNext();) {
+						Integer cachePieceNo = iter.next();
+
+						BlockInfo cacheInfo = oldBlockInfo[cachePieceNo];
+						if (cacheInfo == null || !cacheInfo.sameAs(newInfo)) {
+							continue;
+						}
+
+						Rectangle cacheBounds = cacheInfo.bounds;
+						gcImg.copyArea(cacheBounds.x, cacheBounds.y, cacheBounds.width,
+							cacheBounds.height, iXPos - 1, iYPos - 1, false);
+						//log("copyArea(" + cacheBounds.x + ", " + cacheBounds.y + ", " + cacheBounds.width + ", " + cacheBounds.height + ", "	+ (iXPos - 1) + ", " + (iYPos - 1) + ")\n" + cacheInfo);
+						Rectangle rect = new Rectangle(iXPos - 1, iYPos - 1,
+							cacheBounds.width, cacheBounds.height);
+						if (dirtyBounds == null) {
+							dirtyBounds = rect;
+						} else {
+							dirtyBounds.add(rect);
+						}
+
+						iCol++;
+						numCopyArea++;
+						oldBlockInfo[i] = newInfo;
+						if (iter.hasNext()) {
+							// move to end
+							iter.remove();
+							distinctPieceCache.add(cachePieceNo);
+						}
+
+						if (SystemTime.getMonotonousTime() - startTime > 200) {
+							needsMore = true;
+							break pieceLoop;
+						}
+						continue pieceLoop;
+					}
+				}
+
+				Colors colorsInstance = Colors.getInstance();
+				Color bg;
+
+				if (newInfo.haveWidth > 0) {
+					bg = blockColors[newInfo.peerHas ? BLOCKCOLOR_AVAIL_HAVE : BLOCKCOLOR_NOAVAIL_HAVE];
+
+					if (newInfo.availNum >= 0 && newInfo.availNum < maxAvailability) {
+						HSLColor hslColor = new HSLColor();
+						hslColor.initHSLbyRGB(bg.getRed(), bg.getGreen(), bg.getBlue());
+						float pct = (1 - ((float) newInfo.availNum / maxAvailability)) / 2;
+						hslColor.blend(canvasBG.getRed(), canvasBG.getGreen(), canvasBG.getBlue(), pct);
+						bg = ColorCache.getColor(gcImg.getDevice(), hslColor.getRed(), hslColor.getGreen(), hslColor.getBlue());
 					}
 
-					if (peerHavePieces.flags[i])
-						colorIndex = BLOCKCOLOR_AVAIL_NOHAVE;
-					else
-						colorIndex = BLOCKCOLOR_NOAVAIL_NOHAVE;
+					gcImg.setBackground(bg);
 
-					gcImg.setBackground(blockColors[colorIndex]);
-					gcImg.fillRectangle(x, iYPos, width, BLOCK_FILLSIZE);
+					gcImg.fillRectangle(iXPos, iYPos, newInfo.haveWidth, BLOCK_FILLSIZE);
 				}
+
+				colorIndex = done
+						? newInfo.peerHas ? BLOCKCOLOR_AVAIL_HAVE : BLOCKCOLOR_NOAVAIL_HAVE
+						: newInfo.peerHas ? BLOCKCOLOR_AVAIL_NOHAVE
+								: BLOCKCOLOR_NOAVAIL_NOHAVE;
+				bg = blockColors[colorIndex];
+
+				if (newInfo.availNum >= 0 && newInfo.availNum < maxAvailability) {
+					HSLColor hslColor = new HSLColor();
+					hslColor.initHSLbyRGB(bg.getRed(), bg.getGreen(), bg.getBlue());
+					float pct = (1 - ((float) newInfo.availNum / maxAvailability)) / 2;
+					hslColor.blend(canvasBG.getRed(), canvasBG.getGreen(), canvasBG.getBlue(), pct);
+					bg = ColorCache.getColor(gcImg.getDevice(), hslColor.getRed(), hslColor.getGreen(), hslColor.getBlue());
+				}
+
+				gcImg.setBackground(bg);
+				gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos,
+					BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
+
 
 				// Down Arrow inside box for "dowloading" piece
-				if (i == iDLPieceID) {
-					gcImg.setBackground(blockColors[BLOCKCOLOR_TRANSFER]);
-					gcImg.fillPolygon(new int[] { iXPos, iYPos, iXPos + BLOCK_FILLSIZE,
-							iYPos, iXPos + (BLOCK_FILLSIZE / 2), iYPos + BLOCK_FILLSIZE });
-				}
-
 				// Small Down Arrow inside box for next download piece
-				if (i == iNextDLPieceID) {
-					gcImg.setBackground(blockColors[BLOCKCOLOR_NEXT]);
-					gcImg.fillPolygon(new int[] { iXPos + 2, iYPos + 2,
-							iXPos + BLOCK_FILLSIZE - 1, iYPos + 2,
-							iXPos + (BLOCK_FILLSIZE / 2), iYPos + BLOCK_FILLSIZE - 1 });
+				if (newInfo.showDown > 0) {
+					boolean isSmall = newInfo.showDown == SHOW_SMALL;
+					bg = blockColors[isSmall ? BLOCKCOLOR_NEXT : BLOCKCOLOR_TRANSFER];
+					gcImg.setBackground(bg);
+					PieceMapView.drawDownloadIndicator(gcImg, iXPos, iYPos, isSmall, BLOCK_FILLSIZE);
 				}
 
 				// Up Arrow in uploading piece
-				if (i == peerNextRequestedPiece) {
-					gcImg.setBackground(blockColors[BLOCKCOLOR_TRANSFER]);
-					gcImg.fillPolygon(new int[] { iXPos, iYPos + BLOCK_FILLSIZE,
-							iXPos + BLOCK_FILLSIZE, iYPos + BLOCK_FILLSIZE,
-							iXPos + (BLOCK_FILLSIZE / 2), iYPos });
-				} else if (Arrays.binarySearch(peerRequestedPieces, i) >= 0) {
-					// Small Up Arrow each upload request
-					gcImg.setBackground(blockColors[BLOCKCOLOR_NEXT]);
-					gcImg.fillPolygon(new int[] { iXPos + 1, iYPos + BLOCK_FILLSIZE - 2,
-							iXPos + BLOCK_FILLSIZE - 2, iYPos + BLOCK_FILLSIZE - 2,
-							iXPos + (BLOCK_FILLSIZE / 2), iYPos + 2 });
+				// Small Up Arrow each upload request
+				if (newInfo.showUp > 0) {
+					boolean isSmall = newInfo.showUp == SHOW_SMALL;
+					bg = blockColors[isSmall ? BLOCKCOLOR_NEXT : BLOCKCOLOR_TRANSFER];
+					gcImg.setBackground(bg);
+					PieceMapView.drawUploadIndicator(gcImg, iXPos, iYPos, isSmall, BLOCK_FILLSIZE);
 				}
 
-				if (availability != null && availability[i] < 10) {
-					gcImg.setFont(font);
-					String sNumber = String.valueOf(availability[i]);
-					Point size = gcImg.stringExtent(sNumber);
+				if (newInfo.availNum != -1) {
+					String availText = newInfo.availNum < 100
+							? String.valueOf(newInfo.availNum) : "+";
+					Point size = gcImg.stringExtent(availText);
 
 					int x = iXPos + (BLOCK_FILLSIZE / 2) - (size.x / 2);
 					int y = iYPos + (BLOCK_FILLSIZE / 2) - (size.y / 2);
-					gcImg.setForeground(blockColors[BLOCKCOLOR_AVAILCOUNT]);
-					gcImg.drawText(sNumber, x, y, true);
+
+					Color availCol = colorsInstance.getReadableColor(bg);
+					gcImg.setForeground(availCol);
+					gcImg.drawText(availText, x, y, SWT.DRAW_TRANSPARENT);
+				}
+
+				Rectangle dirtyBlockBounds = new Rectangle(iXPos - 1, iYPos - 1, BLOCK_SIZE, BLOCK_SIZE);
+				if (dirtyBounds == null) {
+					// copy because cache needs a const
+					dirtyBounds = new Rectangle(iXPos - 1, iYPos - 1, BLOCK_SIZE, BLOCK_SIZE);
+				} else {
+					dirtyBounds.add(dirtyBlockBounds);
 				}
 
 				iCol++;
-				if (iCol >= iNumCols) {
-					iCol = 0;
-					iRow++;
+				numChanged++;
+				oldBlockInfo[i] = newInfo;
+
+				if (newInfo.showDown == 0 && newInfo.showUp == 0
+						&& (newInfo.haveWidth == 0
+								|| newInfo.haveWidth == BLOCK_FILLSIZE)) {
+					distinctPieceCache.remove((Integer) i);
+					distinctPieceCache.add(i);
+					if (distinctPieceCache.size() > 15) {
+						distinctPieceCache.remove(0);
+					}
 				}
+
+				long diff = SystemTime.getMonotonousTime() - startTime;
+				if (diff > 200) {
+					needsMore = true;
+					break;
+				}
+			}
+
+			if (DEBUG) {
+				long diff = SystemTime.getMonotonousTime() - startTime;
+				log("end fill. numChanged=" + numChanged + "; numCopyArea=" + numCopyArea + (needsMore ? " (Needs More)" : "") + " in " + diff + "ms" + (numChanged > 0 ? "; redraw " + dirtyBounds : "") + "; cache=" + distinctPieceCache.size());
 			}
 		} catch (Exception e) {
 			Logger.log(new LogEvent(LogIDs.GUI, "drawing piece map", e));
@@ -650,7 +856,13 @@ public class PeerPieceMapView
 			gcImg.dispose();
 		}
 
-		peerInfoCanvas.redraw();
+		if (numChanged > 0) {
+			peerInfoCanvas.redraw(dirtyBounds.x, dirtyBounds.y, dirtyBounds.width, dirtyBounds.height, false);
+		}
+
+		if (needsMore) {
+			Utils.execSWTThreadLater(0, this::refreshInfoCanvas);
+		}
 	}
 
 	private Composite getComposite() {
@@ -669,6 +881,9 @@ public class PeerPieceMapView
 			img.dispose();
 			img = null;
 		}
+
+		oldBlockInfo = null;
+		distinctPieceCache.clear();
 
 		if (font != null && !font.isDisposed()) {
 			font.dispose();
@@ -706,7 +921,7 @@ public class PeerPieceMapView
       	dataSourceChanged(event.getData());
         break;
 
-      case UISWTViewEvent.TYPE_FOCUSGAINED:
+	    case UISWTViewEvent.TYPE_SHOWN:
     		refreshInfoCanvas();
       	break;
 
@@ -725,4 +940,39 @@ public class PeerPieceMapView
 
     return true;
   }
+
+	private static class BlockInfo {
+		public int haveWidth;
+		public boolean peerHas;
+		int availNum;
+		/** 0 : no; 1 : Yes; 2: small */
+		byte showUp;
+		byte showDown;
+		Rectangle bounds;
+
+		public boolean sameAs(BlockInfo otherBlockInfo) {
+			if (otherBlockInfo == null) {
+				return false;
+			}
+			return haveWidth == otherBlockInfo.haveWidth
+				&& peerHas == otherBlockInfo.peerHas
+				&& availNum == otherBlockInfo.availNum
+				&& showDown == otherBlockInfo.showDown
+				&& showUp == otherBlockInfo.showUp;
+		}
+
+		@Override
+		public String toString() {
+			return "BlockInfo@" + Integer.toHexString(hashCode()) + "{" +
+				"haveWidth=" + haveWidth +
+				", availNum=" + availNum +
+				", showUp=" + showUp +
+				", showDown=" + showDown +
+				'}';
+		}
+	}
+
+	private static void log(String s) {
+		System.out.println(SystemTime.getCurrentTime() + " PIV] " + s);
+	}
 }
