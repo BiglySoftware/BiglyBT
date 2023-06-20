@@ -198,8 +198,15 @@ public class PieceMapView
 		}
 
 		if ( newManager.length != 1){
-
 			oldBlockInfo = null;
+			distinctPieceCache.clear();
+			if (img != null) {
+				img.dispose();
+				img = null;
+			}
+			if (pieceInfoCanvas != null) {
+				pieceInfoCanvas.redraw();
+			}
 		}
 
 		topLabelRHS = "";
@@ -227,7 +234,7 @@ public class PieceMapView
 		if ( dlm != null ){
 			fillPieceInfoSection();
 		}
-		
+
 		Utils.execSWTThread(()->updateTopLabel());
 	}
 
@@ -346,11 +353,11 @@ public class PieceMapView
 
 					int width = Math.min(e.width, visibleImageWidth);
 					int height = Math.min(e.height, visibleImageHeight);
-					e.gc.drawImage(img, e.x, e.y, width, height, e.x, e.y, width,
-							height);
 					if (DEBUG) {
 						log("draw " + e.x + "x" + e.y + ", w=" + width + ", h=" + height + "; af=" + alreadyFilling);
 					}
+					e.gc.drawImage(img, e.x, e.y, width, height, e.x, e.y, width,
+							height);
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -1028,6 +1035,7 @@ public class PieceMapView
 			}
 			img = new Image(pieceInfoCanvas.getDisplay(), bounds.width, iNeededHeight);
 			oldBlockInfo = null;
+			distinctPieceCache.clear();
 			dirtyBounds = pieceInfoCanvas.getBounds();
 		}
 
@@ -1046,6 +1054,9 @@ public class PieceMapView
 			if (oldBlockInfo == null) {
 				gcImg.setBackground(canvasBG);
 				gcImg.fillRectangle(0, 0, bounds.width, iNeededHeight);
+
+				oldBlockInfo = new BlockInfo[numPieces];
+				distinctPieceCache.clear();
 			}
 
 			int iCol = 0;
@@ -1065,9 +1076,7 @@ public class PieceMapView
 					+ (selectionStart < Integer.MAX_VALUE ? ";sel(" + selectionStart + " - " + selectionEnd + ")" : ""));
 			}
 
-			if (oldBlockInfo == null) {
-				oldBlockInfo = new BlockInfo[numPieces];
-			}
+			boolean needGCrecycle = false;
 
 			pieceLoop:
 			for (int i = startPieceNo; i <= endPieceNo; i++) {
@@ -1154,14 +1163,24 @@ public class PieceMapView
 					iCol++;
 					continue;
 				}
-				
-				//log( (iXPos - 1) + ", " + (iYPos - 1) + "\n" + oldInfo + "\n" + newInfo);
+
+				if (needGCrecycle) {
+					//log(i + "; recycle");
+					gcImg.dispose();
+					gcImg = new GC(img);
+					gcImg.setFont(font);
+					gcImg.setAdvanced(true);
+					needGCrecycle = false;
+				}
+
+				//log( i + ": " + (iXPos - 1) + ", " + (iYPos - 1) + "\n" + oldInfo + "\n" + newInfo);
 				
 				// Use copyArea if in cache. Saves the most time
 				if (oldBlockInfo != null) {
-					for (Iterator<Integer> iter = distinctPieceCache.iterator(); iter.hasNext();) {
-						Integer cachePieceNo = iter.next();
-
+					for (Integer cachePieceNo : distinctPieceCache) {
+						if (cachePieceNo == i) {
+							continue;
+						}
 						BlockInfo cacheInfo = oldBlockInfo[cachePieceNo];
 						if (cacheInfo == null || !cacheInfo.sameAs(newInfo)) {
 							continue;
@@ -1169,10 +1188,14 @@ public class PieceMapView
 
 						Rectangle cacheBounds = cacheInfo.bounds;
 						gcImg.copyArea(cacheBounds.x, cacheBounds.y, cacheBounds.width,
-								cacheBounds.height, iXPos - 1, iYPos - 1, false);
-						//log("copyArea(" + cacheBounds.x + ", " + cacheBounds.y + ", " + cacheBounds.width + ", " + cacheBounds.height + ", "	+ (iXPos - 1) + ", " + (iYPos - 1) + ")\n" + cacheInfo);
-						Rectangle rect = new Rectangle(iXPos - 1, iYPos - 1,
-								cacheBounds.width, cacheBounds.height);
+							cacheBounds.height, iXPos - 1, iYPos - 1, false);
+						/* Alternate drawing (doesn't help on mac)
+						gcImg.drawImage(img, cacheBounds.x, cacheBounds.y, cacheBounds.width,
+							cacheBounds.height, iXPos - 1, iYPos - 1, cacheBounds.width,
+							cacheBounds.height);
+						 /* */
+						//log("copyArea(" + cacheBounds.x + ", " + cacheBounds.y + ", " + cacheBounds.width + ", " + cacheBounds.height + ", "	+ (iXPos - 1) + ", " + (iYPos - 1) + ")\n" + cachePieceNo + ": " + cacheInfo);
+						Rectangle rect = new Rectangle(iXPos - 1, iYPos - 1, BLOCK_SIZE, BLOCK_SIZE);
 						if (dirtyBounds == null) {
 							dirtyBounds = rect;
 						} else {
@@ -1182,11 +1205,7 @@ public class PieceMapView
 						iCol++;
 						numCopyArea++;
 						oldBlockInfo[i] = newInfo;
-						if (iter.hasNext()) {
-							// move to end
-							iter.remove();
-							distinctPieceCache.add(cachePieceNo);
-						}
+						distinctPieceCache.remove((Integer) i);
 
 						if (SystemTime.getMonotonousTime() - startTime > 200) {
 							needsMore = true;
@@ -1325,7 +1344,7 @@ public class PieceMapView
 
 				} else {
 
-					gcImg.setForeground(bg);
+					gcImg.setForeground(canvasBG);
 					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
 
 					gcImg.setForeground(availCol);
@@ -1354,14 +1373,24 @@ public class PieceMapView
 				iCol++;
 				numChanged++;
 				oldBlockInfo[i] = newInfo;
+				distinctPieceCache.remove((Integer) i);
 
 				if (newInfo.showDown == 0 && newInfo.showUp == 0
 						&& (newInfo.haveWidth == 0
 								|| newInfo.haveWidth == BLOCK_FILLSIZE)) {
-					distinctPieceCache.remove((Integer) i);
-					distinctPieceCache.add(i);
-					if (distinctPieceCache.size() > 15) {
-						distinctPieceCache.remove(0);
+					boolean haveSimilar = false;
+					for (Integer cachePieceNo : distinctPieceCache) {
+						if (newInfo.sameAs(oldBlockInfo[cachePieceNo])) {
+							haveSimilar = true;
+							break;
+						}
+					}
+					if (!haveSimilar) {
+						distinctPieceCache.add(i);
+						needGCrecycle = Constants.isOSX;
+						if (distinctPieceCache.size() > 15) {
+							distinctPieceCache.remove(0);
+						}
 					}
 				}
 					

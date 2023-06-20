@@ -581,6 +581,9 @@ public class PeerPieceMapView
 			if (oldBlockInfo == null) {
 				gcImg.setBackground(canvasBG);
 				gcImg.fillRectangle(0, 0, bounds.width, iNeededHeight);
+
+				oldBlockInfo = new BlockInfo[numPieces];
+				distinctPieceCache.clear();
 			}
 
 			int[] availability = pm.getAvailability();
@@ -651,10 +654,7 @@ public class PeerPieceMapView
 				log("start filling " + (endPieceNo - startPieceNo + 1) + ". " + startPieceNo + " to " + endPieceNo + " (of " + numPieces + "), canvasBounds.y=" + canvasBounds.y + ", row=" + iRow);
 			}
 
-			if (oldBlockInfo == null) {
-				oldBlockInfo = new BlockInfo[numPieces];
-				distinctPieceCache.clear();
-			}
+			boolean needGCrecycle = false;
 
 			pieceLoop:
 			for (int i = startPieceNo; i <= endPieceNo; i++) {
@@ -703,16 +703,28 @@ public class PeerPieceMapView
 				BlockInfo oldInfo = oldBlockInfo != null ? oldBlockInfo[i] : null;
 
 				if (newInfo.sameAs(oldInfo)) {
-
 					// skip this one as unchanged
 					iCol++;
 					continue;
 				}
 
+				if (needGCrecycle) {
+					//log(i + "; recycle");
+					gcImg.dispose();
+					gcImg = new GC(img);
+					gcImg.setFont(font);
+					gcImg.setAdvanced(true);
+					needGCrecycle = false;
+				}
+
+				//log( i + ": " + (iXPos - 1) + ", " + (iYPos - 1) + "\n" + oldInfo + "\n" + newInfo);
+
 				// Use copyArea if in cache. Saves the most time
 				if (oldBlockInfo != null) {
-					for (Iterator<Integer> iter = distinctPieceCache.iterator(); iter.hasNext();) {
-						Integer cachePieceNo = iter.next();
+					for (Integer cachePieceNo : distinctPieceCache) {
+						if (cachePieceNo == i) {
+							continue;
+						}
 
 						BlockInfo cacheInfo = oldBlockInfo[cachePieceNo];
 						if (cacheInfo == null || !cacheInfo.sameAs(newInfo)) {
@@ -722,9 +734,13 @@ public class PeerPieceMapView
 						Rectangle cacheBounds = cacheInfo.bounds;
 						gcImg.copyArea(cacheBounds.x, cacheBounds.y, cacheBounds.width,
 							cacheBounds.height, iXPos - 1, iYPos - 1, false);
-						//log("copyArea(" + cacheBounds.x + ", " + cacheBounds.y + ", " + cacheBounds.width + ", " + cacheBounds.height + ", "	+ (iXPos - 1) + ", " + (iYPos - 1) + ")\n" + cacheInfo);
-						Rectangle rect = new Rectangle(iXPos - 1, iYPos - 1,
-							cacheBounds.width, cacheBounds.height);
+						/* Alternate drawing (doesn't help on mac)
+						gcImg.drawImage(img, cacheBounds.x, cacheBounds.y, cacheBounds.width,
+							cacheBounds.height, iXPos - 1, iYPos - 1, cacheBounds.width,
+							cacheBounds.height);
+						 /* */
+						//log("copyArea(" + cacheBounds.x + ", " + cacheBounds.y + ", " + cacheBounds.width + ", " + cacheBounds.height + ", "	+ (iXPos - 1) + ", " + (iYPos - 1) + ")\n" + cachePieceNo + ": " + cacheInfo);
+						Rectangle rect = new Rectangle(iXPos - 1, iYPos - 1, BLOCK_SIZE, BLOCK_SIZE);
 						if (dirtyBounds == null) {
 							dirtyBounds = rect;
 						} else {
@@ -734,11 +750,7 @@ public class PeerPieceMapView
 						iCol++;
 						numCopyArea++;
 						oldBlockInfo[i] = newInfo;
-						if (iter.hasNext()) {
-							// move to end
-							iter.remove();
-							distinctPieceCache.add(cachePieceNo);
-						}
+						distinctPieceCache.remove((Integer) i);
 
 						if (SystemTime.getMonotonousTime() - startTime > 200) {
 							needsMore = true;
@@ -828,14 +840,24 @@ public class PeerPieceMapView
 				iCol++;
 				numChanged++;
 				oldBlockInfo[i] = newInfo;
+				distinctPieceCache.remove((Integer) i);
 
 				if (newInfo.showDown == 0 && newInfo.showUp == 0
 						&& (newInfo.haveWidth == 0
 								|| newInfo.haveWidth == BLOCK_FILLSIZE)) {
-					distinctPieceCache.remove((Integer) i);
-					distinctPieceCache.add(i);
-					if (distinctPieceCache.size() > 15) {
-						distinctPieceCache.remove(0);
+					boolean haveSimilar = false;
+					for (Integer cachePieceNo : distinctPieceCache) {
+						if (newInfo.sameAs(oldBlockInfo[cachePieceNo])) {
+							haveSimilar = true;
+							break;
+						}
+					}
+					if (!haveSimilar) {
+						distinctPieceCache.add(i);
+						needGCrecycle = Constants.isOSX;
+						if (distinctPieceCache.size() > 15) {
+							distinctPieceCache.remove(0);
+						}
 					}
 				}
 
