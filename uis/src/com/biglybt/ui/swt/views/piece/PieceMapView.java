@@ -204,7 +204,7 @@ public class PieceMapView
 				img.dispose();
 				img = null;
 			}
-			if (pieceInfoCanvas != null) {
+			if (pieceInfoCanvas != null && !pieceInfoCanvas.isDisposed()) {
 				pieceInfoCanvas.redraw();
 			}
 		}
