@@ -1284,6 +1284,7 @@ public class PieceMapView
 					}
 				}
 
+				Color bgMain = bg;
 				gcImg.setBackground(bg);
 				gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos,
 						BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
@@ -1326,7 +1327,10 @@ public class PieceMapView
 					
 					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
 					
-				}else if (minAvailability2 == availNum){
+				}else if (newInfo.availDotted){
+					
+					gcImg.setForeground(bgMain);
+					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
 					
 					gcImg.setLineStyle(SWT.LINE_DOT);
 					
