@@ -1539,7 +1539,10 @@ public class PieceMapView
 		}
 
 		distinctPieceCache.clear();
-		textExtents.clear();
+		if ( textExtents != null ){
+			textExtents.clear();
+			textExtents = null;
+		}
 
 		if (font != null && !font.isDisposed()) {
 			font.dispose();
