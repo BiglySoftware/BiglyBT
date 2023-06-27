@@ -1597,8 +1597,12 @@ public class MenuBuildUtils {
 				
 				if ( files.length == 1 ){
 					
-					if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
+						// allow incomplete files to be opened
 					
+					//if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
+					
+					if ( files[0].getFile(true).exists()){
+						
 						return( true );
 					}
 				}
@@ -1610,8 +1614,10 @@ public class MenuBuildUtils {
 			
 			for ( DiskManagerFileInfo file: files ){
 				
-				if ( file.getAccessMode() == DiskManagerFileInfo.READ ){
+				//if ( file.getAccessMode() == DiskManagerFileInfo.READ ){
 				
+				if ( file.getFile(true).exists()){
+					
 					return( true );
 				}
 			}
@@ -1665,7 +1671,9 @@ public class MenuBuildUtils {
 							
 							if ( files.length == 1 ){
 								
-								if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
+								//if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
+								
+								if ( files[0].getFile(true).exists()){
 									
 									Utils.launchFileExplicit( files[0], exe );
 								}
@@ -1678,8 +1686,10 @@ public class MenuBuildUtils {
 						
 						for ( DiskManagerFileInfo file: files ){
 							
-							if ( file.getAccessMode() == DiskManagerFileInfo.READ ){
+							//if ( file.getAccessMode() == DiskManagerFileInfo.READ ){
 							
+							if ( file.getFile(true).exists()){
+								
 								Utils.launchFileExplicit( file, exe );
 							}
 						}
