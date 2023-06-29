@@ -34,6 +34,7 @@ import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.instancemanager.ClientInstance;
 import com.biglybt.core.instancemanager.ClientInstanceManager;
 import com.biglybt.core.instancemanager.ClientInstanceManagerListener;
@@ -48,6 +49,10 @@ import com.biglybt.core.networkmanager.admin.*;
 import com.biglybt.core.networkmanager.impl.http.HTTPNetworkManager;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
+import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.PEPeerManagerListener;
+import com.biglybt.core.peer.PEPeerManagerListenerAdapter;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.proxy.AEProxySelectorFactory;
 import com.biglybt.core.proxy.socks.AESocksProxy;
@@ -349,14 +354,48 @@ NetworkAdminImpl
 											if ( !dm.isPaused()){
 											
 												int state = dm.getState();
-												
+																								
 												if (	state != DownloadManager.STATE_ERROR && 
 														state != DownloadManager.STATE_STOPPED && 
 														state != DownloadManager.STATE_STOPPING ){
+												
+													boolean can_pause = true;
 													
-													if ( dm.pause( true )){
+													if ( dm.getMoveProgress() != null || FileUtil.hasTask( dm )){
 														
-														dm.setStopReason( "{label.binding.missing}" );
+														can_pause = false;
+														
+													}if ( state == DownloadManager.STATE_CHECKING ){
+
+														can_pause = false;
+
+													}else if ( state == DownloadManager.STATE_SEEDING ){
+
+														DiskManager disk_manager = dm.getDiskManager();
+
+														if ( disk_manager != null ){
+
+															if ( disk_manager.getCompleteRecheckStatus() != -1 ){
+																
+																can_pause = false;
+															}
+														}
+													}
+
+													if ( can_pause ){
+														
+														if ( dm.pause( true )){
+															
+															dm.setStopReason( "{label.binding.missing}" );
+														}
+													}else{
+														
+														PEPeerManager pm = dm.getPeerManager();
+														
+														if ( pm != null ){
+															
+															addKickAllPeerListener( pm );
+														}
 													}
 												}
 											}
@@ -369,6 +408,14 @@ NetworkAdminImpl
 												if ( reason != null && reason.equals( "{label.binding.missing}" )){
 													
 													dm.resume();
+												}
+											}else{
+												
+												PEPeerManager pm = dm.getPeerManager();
+												
+												if ( pm != null ){
+													
+													removeKickAllPeerListener( pm );
 												}
 											}
 										}
@@ -413,6 +460,52 @@ NetworkAdminImpl
 				});
 		
 		new NetworkAdminDistributedNATTester( this, core );
+	}
+	
+	private static final String DM_PAUSE_PENDING_KEY = "NetworkAdminImpl::pausePending";
+	
+	private void
+	addKickAllPeerListener(
+		PEPeerManager		pm )
+	{
+		if ( pm.getData( DM_PAUSE_PENDING_KEY ) != null ){
+			
+			return;
+		}
+		
+		PEPeerManagerListenerAdapter listener = 
+			new PEPeerManagerListenerAdapter()
+			{
+				  public void 
+				  peerAdded(
+					 PEPeerManager manager, PEPeer peer )
+				  {
+					  manager.removePeer(peer, "Pause pending", Transport.CR_STOPPED_OR_REMOVED );
+				  }
+			};
+		
+		pm.setData( DM_PAUSE_PENDING_KEY, new Object[]{ pm, listener });
+		
+		pm.addListener( listener );
+
+		pm.removeAllPeers( "Pause pending", Transport.CR_STOPPED_OR_REMOVED );
+	}
+	
+	private void
+	removeKickAllPeerListener(
+		PEPeerManager		pm )
+	{
+		Object[] data = (Object[])pm.getData( DM_PAUSE_PENDING_KEY );
+		
+		if ( data != null ){
+			
+			if ( data[0] == pm ){
+				
+				pm.removeListener((PEPeerManagerListener)data[1] );
+			}
+			
+			pm.setData( DM_PAUSE_PENDING_KEY, null );
+		}
 	}
 	
 	private void
