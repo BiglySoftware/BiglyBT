@@ -365,7 +365,7 @@ NetworkAdminImpl
 														
 														can_pause = false;
 														
-													}if ( state == DownloadManager.STATE_CHECKING ){
+													}else if ( state == DownloadManager.STATE_CHECKING ){
 
 														can_pause = false;
 
