@@ -1,0 +1,26 @@
+name: Crowdin upload
+on:
+  push:
+    branches: [ master ]
+    paths: core/src/com/biglybt/internat/*
+
+jobs:
+  crowdin-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: crowdin upload
+        uses: crowdin/github-action@v1
+        with:
+          upload_sources: false
+          upload_translations: true
+          download_translations: false
+          auto_approve_imported: true
+          # XXX: Next line should be removed after testing
+          dryrun_action: true
+          translation: 'core/src/com/biglybt/internat/*.properties'
+          project_id: ${{ secrets.CROWDIN_PROJECT_ID }}
+          token: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+
