@@ -3,6 +3,7 @@ on:
   push:
     branches: [ master ]
     paths: core/src/com/biglybt/internat/*
+  workflow_dispatch:
 
 jobs:
   crowdin-upload:
