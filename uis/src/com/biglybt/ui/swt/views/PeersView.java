@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -68,7 +69,8 @@ public class PeersView
 
 	private DownloadManager manager;
 
-	private Reference<PEPeer> select_peer_pending;
+	private List<Reference<PEPeer>> select_peers_pending = new ArrayList<>();
+	
 	private TimerEventPeriodic timerPeerCountUI;
 	private String textIndicator;
 	private long countWentToZeroTime = -1;
@@ -223,9 +225,21 @@ public class PeersView
 					buildTitleInfoTimer();
 				}
 
-				Object firstDS = tv.getFirstSelectedDataSource();
-				select_peer_pending = firstDS instanceof PEPeer
-						? new WeakReference<>((PEPeer) firstDS) : null;
+				Object[] selected = tv.getSelectedDataSources( true );
+					
+				synchronized( select_peers_pending ){
+					
+					select_peers_pending.clear();
+					
+					for ( Object ds: selected ){
+					
+						if ( ds instanceof PEPeer ){
+						
+							select_peers_pending.add( new WeakReference<>((PEPeer)ds ));
+						}
+					}
+				}
+				
 				break;
 			}
 		}
@@ -267,16 +281,20 @@ public class PeersView
 	selectPeer(
 		PEPeer		peer )
 	{
-		showPeer( peer, 0 );
+		List<PEPeer> peers = new ArrayList<>();
+		
+		peers.add( peer );
+		
+		showPeers( peers, 0 );
 	}
 
 	private void
-	showPeer(
-		final PEPeer		peer,
-		final int			attempt )
+	showPeers(
+		List<PEPeer>	peers,
+		int				attempt )
 	{
 		
-		if ( attempt > 10 || peer == null ){
+		if ( attempt > 10 || peers.isEmpty()){
 
 			return;
 		}
@@ -285,7 +303,15 @@ public class PeersView
 			
 				// view not yet constructed
 	
-			select_peer_pending = new WeakReference<>(peer);
+			synchronized( select_peers_pending ){
+				
+				select_peers_pending.clear();
+				
+				for ( PEPeer peer: peers ){
+				
+					select_peers_pending.add( new WeakReference<>(peer));
+				}
+			}
 			
 			return;
 		}
@@ -298,35 +324,57 @@ public class PeersView
 
 		Utils.execSWTThreadLater(
 				attempt==0?1:10,
-						new Runnable()
+				new Runnable()
 				{
 					@Override
 					public void
 					run()
 					{
-						TableRowCore row = tv.getRow( peer );
+						TableRowCore row1 = tv.getRow( peers.get(0));
 
-						if ( row == null ){
+						if ( row1 == null ){
 
 							if ( attempt == 0 ){
 								
-								select_peer_pending = new WeakReference<>(peer);
-
+								synchronized( select_peers_pending ){
+									
+									select_peers_pending.clear();
+	
+									for ( PEPeer peer: peers ){
+									
+										select_peers_pending.add( new WeakReference<>(peer));
+									}
+								}
+								
 								return;
 							}
 						}else{
 							
-							tv.setSelectedRows( new TableRowCore[]{ row } );
+							List<TableRowCore> rows = new ArrayList<>();
+							
+							rows.add( row1 );
+							
+							for ( PEPeer peer: peers.subList( 1, peers.size())){
+								
+								TableRowCore row = tv.getRow( peer );
+								
+								if ( row != null ){
+									
+									rows.add( row );
+								}
+							}
+							
+							tv.setSelectedRows( rows.toArray( new TableRowCore[ rows.size() ]));
 
-							tv.showRow( row );
+							tv.showRow( row1 );
 
-							if ( row.isVisible()){
+							if ( row1.isVisible()){
 								
 								return;
 							}
 						}
 
-						showPeer( peer, attempt+1 );
+						showPeers( peers, attempt+1 );
 					}
 				});
 	}
@@ -402,11 +450,26 @@ public class PeersView
 			}
 		}
 		
-		if ( select_peer_pending != null ){
+		List<PEPeer> to_show = new ArrayList<>();
+		
+		synchronized( select_peers_pending ){
+			
+			for( Reference<PEPeer> ref: select_peers_pending ){
+				
+				PEPeer peer = ref.get();
 
-			showPeer( select_peer_pending.get(), 1 );
+				if ( peer != null ){
+					
+					to_show.add( peer );
+				}
+			}
 
-			select_peer_pending = null;
+			select_peers_pending.clear();
+		}
+		
+		if ( !to_show.isEmpty()){
+			
+			showPeers( to_show, 1 );
 		}
 	}
 
