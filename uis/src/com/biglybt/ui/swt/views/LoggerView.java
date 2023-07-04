@@ -709,7 +709,10 @@ public class LoggerView
 	}
 
 	// TODO: Support multiple selection
-	private void dataSourceChanged(Object newDataSource) {
+	private void 
+	dataSourceChanged(
+		Object newDataSource) 
+	{
 		if (newDataSource == null) {
 			if (stopOnNull) {
 				setEnabled(false);
@@ -720,6 +723,9 @@ public class LoggerView
 			setFilter((Object[]) newDataSource);
 		} else if (newDataSource instanceof Boolean) {
 			stopOnNull = ((Boolean) newDataSource);
+			if ( stopOnNull && filter == null ){
+				setEnabled( false );
+			}
 			return;
 		} else {
 			setFilter(new Object[] { newDataSource });
