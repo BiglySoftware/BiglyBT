@@ -641,7 +641,11 @@ public class TorrentUtil
 				}
 
 				if ( stopped && !hasClearableLinks ){
-					if ( dm.getDiskManagerFileInfoSet().nbFiles() > 1 ){
+					
+					TOTorrent torrent = dm.getTorrent();
+					
+					if ( torrent != null && !torrent.isSimpleTorrent()){
+						
 						if ( dm_state.getFileLinks().hasLinks()){
 
 							hasClearableLinks = true;
@@ -1075,7 +1079,9 @@ public class TorrentUtil
 
 					DiskManagerFileInfoSet fis = dm.getDiskManagerFileInfoSet();
 
-					if ( fis.nbFiles() > 1 ){
+					TOTorrent torrent = dm.getTorrent();
+					
+					if ( torrent != null && !torrent.isSimpleTorrent()){
 
 						DiskManagerFileInfo[] files = fis.getFiles();
 

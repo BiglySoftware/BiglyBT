@@ -460,11 +460,13 @@ public class FilesViewMenuUtil
 
 			DownloadManager	manager = manager_list[j];
 
-			int dm_file_count = manager.getNumFileInfos();
-
+			TOTorrent torrent = manager.getTorrent();
+			
 			if ( !manager.isPersistent()){
+				
 				all_persistent = false;
 			}
+			
 			DiskManagerFileInfo[] files = files_list[j];
 
 			DownloadManagerState dm_state = manager.getDownloadState();
@@ -528,8 +530,7 @@ public class FilesViewMenuUtil
 
 					// only support clearing links for multi-file torrents
 
-				if ( dm_file_count > 1 ){
-
+				if ( torrent != null && !torrent.isSimpleTorrent()){
 
 					if ( !file_nolink.getAbsolutePath().equals( file_link.getAbsolutePath())){
 

@@ -1304,7 +1304,8 @@ public class TorrentMenuFancy
 									allResumeIncomplete = false;
 								}
 								if ( stopped && !hasClearableLinks ){
-									if ( dm.getDiskManagerFileInfoSet().nbFiles() > 1 ){
+									TOTorrent torrent = dm.getTorrent();
+									if ( torrent != null && !torrent.isSimpleTorrent()){
 										if ( dms.getFileLinks().hasLinks()){
 											hasClearableLinks = true;
 										}
@@ -1400,7 +1401,9 @@ public class TorrentMenuFancy
 
 										DiskManagerFileInfoSet fis = dm.getDiskManagerFileInfoSet();
 
-										if ( fis.nbFiles() > 1 ){
+										TOTorrent torrent = dm.getTorrent();
+										
+										if ( torrent != null && !torrent.isSimpleTorrent()){
 
 											DiskManagerFileInfo[] files = fis.getFiles();
 
