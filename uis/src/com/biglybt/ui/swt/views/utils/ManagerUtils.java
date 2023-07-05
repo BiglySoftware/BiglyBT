@@ -1702,12 +1702,16 @@ public class ManagerUtils {
 		}
 	}
 
-  public static boolean isStartable(DownloadManager dm) {
+	public static boolean isStartable(DownloadManager dm) {
+		return( isStartable( dm, false ));
+	}
+	
+  public static boolean isStartable(DownloadManager dm, boolean allow_error) {
     if(dm == null)
       return false;
     int state = dm.getState();
     if (state != DownloadManager.STATE_STOPPED) {
-      return false;
+    	return( allow_error && state == DownloadManager.STATE_ERROR );
     }
     return true;
   }
@@ -1754,6 +1758,14 @@ public class ManagerUtils {
   isForceStartable(
   	DownloadManager	dm )
   {
+	  return( isForceStartable( dm, false ));
+  }
+  
+  public static boolean
+  isForceStartable(
+  	DownloadManager	dm,
+  	boolean			allow_error )
+  {
     if(dm == null){
         return false;
   	}
@@ -1763,7 +1775,7 @@ public class ManagerUtils {
     if (	state != DownloadManager.STATE_STOPPED && state != DownloadManager.STATE_QUEUED &&
             state != DownloadManager.STATE_SEEDING && state != DownloadManager.STATE_DOWNLOADING){
 
-    	return( false );
+    	return( allow_error && state == DownloadManager.STATE_ERROR );
     }
 
     return( true );
@@ -1848,7 +1860,9 @@ public class ManagerUtils {
 		Composite panelNotUsed)
   {
     if (dm != null) {
-    	if (dm.getState() == DownloadManager.STATE_STOPPED){
+    	int state = dm.getState();
+    	
+    	if ( state == DownloadManager.STATE_STOPPED || state == DownloadManager.STATE_ERROR ){
 
     		dm.setStateQueued();
 

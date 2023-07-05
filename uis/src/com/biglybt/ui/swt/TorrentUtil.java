@@ -544,7 +544,7 @@ public class TorrentUtil
 				}
 				stop = stop || ManagerUtils.isStopable(dm);
 
-				start = start || ManagerUtils.isStartable(dm);
+				start = start || ManagerUtils.isStartable(dm, true );
 
 				pause = pause || ManagerUtils.isPauseable(dm);
 						
@@ -553,7 +553,7 @@ public class TorrentUtil
 				lrrecheck = lrrecheck || ManagerUtils.canLowResourceRecheck( dm );
 						
 				forceStartEnabled = forceStartEnabled
-						|| ManagerUtils.isForceStartable(dm);
+						|| ManagerUtils.isForceStartable(dm, true);
 
 				forceStart = forceStart || dm.isForceStart();
 
@@ -1715,7 +1715,7 @@ public class TorrentUtil
 			itemForceStart.addListener(SWT.Selection, new ListenerDMTask(dms) {
 				@Override
 				public void run(DownloadManager dm) {
-					if (ManagerUtils.isForceStartable(dm)) {
+					if (ManagerUtils.isForceStartable(dm, true)) {
 						dm.setForceStart(itemForceStart.getSelection());
 					}
 				}

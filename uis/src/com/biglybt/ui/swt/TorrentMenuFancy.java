@@ -824,13 +824,11 @@ public class TorrentMenuFancy
 			}
 			stop = stop || ManagerUtils.isStopable(dm);
 
-			start = start || ManagerUtils.isStartable(dm);
+			start = start || ManagerUtils.isStartable(dm,true);
 
 			pause = pause || ManagerUtils.isPauseable( dm );
 			
 			recheck = recheck || dm.canForceRecheck();
-
-			boolean stopped = ManagerUtils.isStopped(dm);
 
 			int state = dm.getState();
 			bChangeDir &= (state == DownloadManager.STATE_ERROR
@@ -887,7 +885,7 @@ public class TorrentMenuFancy
 				DownloadManager dm = dms[i];
 
 				forceStartEnabled = forceStartEnabled
-						|| ManagerUtils.isForceStartable(dm);
+						|| ManagerUtils.isForceStartable(dm, true );
 
 				forceStart = forceStart || dm.isForceStart();
 			}
@@ -899,7 +897,7 @@ public class TorrentMenuFancy
 					new ListenerDMTask(dms) {
 						@Override
 						public void run(DownloadManager dm) {
-							if (ManagerUtils.isForceStartable(dm)) {
+							if (ManagerUtils.isForceStartable(dm, true )) {
 								dm.setForceStart(newForceStart);
 							}
 						}
