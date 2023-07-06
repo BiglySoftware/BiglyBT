@@ -5565,7 +5565,18 @@ public class ManagerUtils {
 		StringBuilder details = new StringBuilder( 32*1024 );
 		
 		for ( DownloadManager dm: dms ){
-								
+						
+			TOTorrent torrent = dm.getTorrent();
+			
+			if ( torrent != null && torrent.isSimpleTorrent()){
+			
+					// even though internally links can be used to deal with 
+					// incomplete file extension don't show them as they
+					// can't be removed and it confuses things
+				
+				continue;
+			}
+			
 			DiskManagerFileInfoSet fis = dm.getDiskManagerFileInfoSet();
 
 			DiskManagerFileInfo[] files = fis.getFiles();

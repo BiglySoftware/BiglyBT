@@ -2042,7 +2042,17 @@ public class TorrentOpenOptions
 				GlobalManager gm = core.getGlobalManager();
 
 				String parentDir	= getParentDir();
-				String subDir		= getSubDir();
+				String subDirORFile	= getSubDir();
+				
+				if ( torrent.isSimpleTorrent()){
+					
+					TorrentOpenFileOptions[] files = getFiles();
+					
+					if ( files[0].isLinked()){
+												
+						subDirORFile = FileUtil.convertOSSpecificChars( files[0].getDestFileName(), false );
+					}
+				}
 				
 				DownloadManagerInitialisationAdapter dmia = new DownloadManagerInitialisationAdapter() {
 
@@ -2313,11 +2323,11 @@ public class TorrentOpenOptions
 						}
 					}
 				};	
-				
+			
 				DownloadManager dm = 
 					gm.addDownloadManager(
 						getTorrentFile(), hash, 
-						parentDir, subDir,
+						parentDir, subDirORFile,
 						iStartState, true,
 						startMode == TorrentOpenOptions.STARTMODE_SEEDING, dmia );
 
