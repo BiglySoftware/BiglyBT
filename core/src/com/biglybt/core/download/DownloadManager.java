@@ -828,10 +828,11 @@ DownloadManager
     public void
     removeTPSListener(
     	DownloadManagerTPSListener		listener );
-
+    
     public void
     generateEvidence(
-        IndentWriter        writer );
+        IndentWriter        writer,
+        boolean				full );
 
     public int[] getStorageType(DiskManagerFileInfo[] infos);
 

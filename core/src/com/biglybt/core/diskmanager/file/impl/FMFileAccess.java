@@ -123,6 +123,9 @@ FMFileAccess
 		close()
 		
 			throws IOException;
+		
+		public String
+		getString();
 	}
 
 }

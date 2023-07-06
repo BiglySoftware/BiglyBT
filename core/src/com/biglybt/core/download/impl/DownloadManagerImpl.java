@@ -7388,7 +7388,8 @@ DownloadManagerImpl
 	@Override
 	public void
 	generateEvidence(
-		IndentWriter		writer )
+		IndentWriter		writer,
+		boolean				full )
 	{
 		writer.println(toString());
 
@@ -7397,8 +7398,11 @@ DownloadManagerImpl
 		try {
 			writer.indent();
 
-			writer.println("Save Dir: "
-					+ Debug.secretFileName(getSaveLocation().toString()));
+			if ( full ){
+				writer.println("Save Dir: "	+ getSaveLocation().toString());
+			}else{
+				writer.println("Save Dir: "	+ Debug.secretFileName(getSaveLocation().toString()));
+			}
 
 			if (current_peers.size() > 0) {
 				writer.println("# Peers: " + current_peers.size());
@@ -7440,13 +7444,14 @@ DownloadManagerImpl
 
 			download_manager_state.generateEvidence( writer );
 
-			if (pm != null) {
-				pm.generateEvidence(writer);
+			if ( pm != null ){
+				
+				pm.generateEvidence( writer );
 			}
 
 				// note, PeerManager generates DiskManager evidence
 
-			controller.generateEvidence(writer);
+			controller.generateEvidence( writer, full );
 
 			TRTrackerAnnouncer announcer = getTrackerClient();
 

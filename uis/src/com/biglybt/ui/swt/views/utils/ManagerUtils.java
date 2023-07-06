@@ -5626,4 +5626,47 @@ public class ManagerUtils {
 		
 		viewer.goModal();
 	}
+	
+	public static void
+	viewDebug(
+		DownloadManager[]	dms )
+	{
+		StringWriter debug = new StringWriter( 32*1024 );
+		
+		IndentWriter	writer = new IndentWriter( new PrintWriter( debug ));
+
+		for ( DownloadManager dm: dms ){
+		
+			if ( dms.length > 1 ){
+				
+				writer.println( "Download " + dm.getDisplayName());
+				
+				writer.indent();
+			}
+			
+			dm.generateEvidence( writer, true );
+			
+			if ( dms.length > 1 ){
+				
+				writer.exdent();
+			}
+		}
+		
+		writer.close();
+		
+		TextViewerWindow viewer =
+				new TextViewerWindow(
+        			  Utils.findAnyShell(),
+        			  "GeneralView.section.info",
+        			  null,
+        			  debug.toString(), true, true );
+
+		viewer.setEditable( false );
+		
+		viewer.setCancelEnabled( false );
+		
+		viewer.setNonProportionalFont();
+		
+		viewer.goModal();
+	}
 }

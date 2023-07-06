@@ -1261,13 +1261,23 @@ FMFileImpl
 	{
 		File cPath = FileUtil.newFile(canonical_path);
 		String sPaths;
-		if (cPath.equals(linked_file))
+		
+		FileAccessor current_fa = fa;
+		
+		String fa_str = current_fa==null?"null":current_fa.getString();
+		
+		if (cPath.equals(linked_file)){
+			
 			sPaths = "can/link=" + Debug.secretFileName(canonical_path);
-		else
+			
+		}else{
+			
 			sPaths = "can=" + Debug.secretFileName(canonical_path) + ",link="
 					+ Debug.secretFileName(linked_file.toString());
-		return sPaths + ",fa=" + fa + ",acc=" + access_mode + ",ctrl = "
-				+ file_access.getString();
+		}
+		
+		return sPaths + ",fa=" + fa_str + ",acc=" + access_mode + ",ctrl={"
+				+ file_access.getString()+ "}";
 	}
 
 	protected static void

@@ -30,6 +30,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.impl.DiskManagerUtil;
+import com.biglybt.core.diskmanager.file.FMFileManagerFactory;
 import com.biglybt.core.download.*;
 import com.biglybt.core.download.DownloadManagerState.ResumeHistory;
 import com.biglybt.core.global.GlobalManager;
@@ -3570,7 +3571,11 @@ DownloadManagerController
 		}
 	}
 
-	public void generateEvidence(IndentWriter writer) {
+	public void 
+	generateEvidence(
+		IndentWriter writer,
+		boolean		full )
+	{
 		writer.println("DownloadManager Controller:");
 
 		writer.indent();
@@ -3588,6 +3593,34 @@ DownloadManagerController
 			}
 
 			writer.println("FilesExist? " + filesExist(download_manager.isDataAlreadyAllocated()));
+			
+			if ( full ){
+				
+				DiskManagerFileInfo[] files = fileFacadeSet.getFiles();
+				
+				writer.println( "Files" );
+				
+				try{
+					writer.indent();
+					
+					for ( DiskManagerFileInfo file: files ){
+						
+						File f = file.getFile( true );
+								
+						writer.println( file.getIndex() + ": " + f + ", exists=" + f.exists());
+					}
+				}finally{
+					
+					writer.exdent();
+				}
+				
+				TOTorrent torrent = download_manager.getTorrent();
+				
+				if ( torrent != null ){
+				
+					FMFileManagerFactory.getSingleton().generateEvidence( writer, torrent );
+				}
+			}
 
 		} finally {
 			writer.exdent();

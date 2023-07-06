@@ -4882,7 +4882,7 @@ public class GlobalManagerImpl
 					try{
 						writer.indent();
 	
-						manager.generateEvidence( writer );
+						manager.generateEvidence( writer, false );
 	
 					}finally{
 	

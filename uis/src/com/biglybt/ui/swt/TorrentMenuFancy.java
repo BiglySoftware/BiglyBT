@@ -1599,6 +1599,22 @@ public class TorrentMenuFancy
 								}
 							}
 
+							if ( userMode > 1 ){
+									
+									// view debug
+									
+								MenuItem itemViewDebug = new MenuItem(menu, SWT.PUSH);
+								itemViewDebug.setText( MessageText.getString("StartStopRules.menu.viewDebug") + "..." );
+								itemViewDebug.addListener(SWT.Selection, new ListenerDMTask(dms) {
+									@Override
+									public void 
+									run(
+										DownloadManager[] dms)
+									{
+										ManagerUtils.viewDebug( dms );
+									}
+								});
+							}
 						}
 					});
 		}

@@ -634,6 +634,13 @@ FMFileAccessController
 		{
 			raf.close();
 		}
+		
+		@Override
+		public String 
+		getString()
+		{
+			return( "raf" );
+		}
 	}
 	
 	public static class
@@ -714,6 +721,13 @@ FMFileAccessController
 			throws IOException
 		{
 			fc.close();
+		}
+		
+		@Override
+		public String 
+		getString()
+		{
+			return( "fc" );
 		}
 	}
 }

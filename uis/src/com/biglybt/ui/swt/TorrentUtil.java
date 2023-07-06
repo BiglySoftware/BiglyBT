@@ -1584,6 +1584,21 @@ public class TorrentUtil
 			}
 		});
 
+		
+		// view debug
+		
+		MenuItem itemViewDebug = new MenuItem(menuAdvanced, SWT.PUSH);
+		itemViewDebug.setText( MessageText.getString("StartStopRules.menu.viewDebug") + "..." );
+		itemViewDebug.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void 
+			run(
+				DownloadManager[] dms)
+			{
+				ManagerUtils.viewDebug( dms );
+			}
+		});
+		
 		// back to main menu
 		if (userMode > 0 && isTrackerOn) {
 			// Host

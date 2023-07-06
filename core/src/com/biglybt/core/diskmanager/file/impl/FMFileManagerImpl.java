@@ -504,6 +504,91 @@ FMFileManagerImpl
 			writer.exdent();
 		}
 	}
+	
+	protected void
+	generate(
+		IndentWriter	writer,
+		TOTorrent		torrent )
+	{
+		writer.println( "FMFileManager slots" );
+
+		try{
+			HashWrapper hw = torrent.getHashWrapper();
+			
+			try{
+				writer.indent();
+	
+				try{
+					map_mon.enter();
+	
+					Iterator it = map.keySet().iterator();
+	
+					while( it.hasNext()){
+	
+						FMFileLimited	file = (FMFileLimited)it.next();
+	
+						if ( file.getOwner().getTorrentFile().getTorrent().getHashWrapper() == hw ){
+						
+							writer.println( file.getString());
+						}
+					}
+	
+				}finally{
+	
+					map_mon.exit();
+				}
+			}finally{
+	
+				writer.exdent();
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+		writer.println( "FMFileManager links" );
+
+		try{			
+			try{
+				writer.indent();
+	
+				try{
+					links_mon.enter();
+	
+					LinkFileMap	links_entry = getLinksEntry( torrent );
+
+					Iterator<LinkFileMap.Entry>	it = links_entry.entryIterator();
+
+					while( it.hasNext()){
+
+						LinkFileMap.Entry	entry = it.next();
+
+						int		index	= entry.getIndex();
+
+						File	source 	= entry.getFromFile();
+						File	target	= entry.getToFile();
+						
+						if ( target != null && !FileUtil.areFilePathsIdentical( source, target )){
+						
+							writer.println( index + ": " + source + " -> " + target );
+						}
+					}
+	
+				}finally{
+	
+					links_mon.exit();
+				}
+			}finally{
+	
+				writer.exdent();
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+	}
+	
 	protected static void
 	generateEvidence(
 		IndentWriter	writer )
@@ -511,5 +596,15 @@ FMFileManagerImpl
 		getSingleton();
 
 		singleton.generate( writer );
+	}
+	
+	public void
+	generateEvidence(
+		IndentWriter	writer,
+		TOTorrent		torrent )
+	{
+		getSingleton();
+
+		singleton.generate( writer, torrent );
 	}
 }

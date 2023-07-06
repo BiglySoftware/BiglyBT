@@ -28,6 +28,7 @@ package com.biglybt.core.diskmanager.file;
 import java.io.File;
 
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.LinkFileMap;
 
 public interface
@@ -56,4 +57,9 @@ FMFileManager
 	public boolean
 	hasLinks(
 		TOTorrent			torrent	);
+	
+	public void
+	generateEvidence(
+		IndentWriter		writer,
+		TOTorrent			torrent );
 }
