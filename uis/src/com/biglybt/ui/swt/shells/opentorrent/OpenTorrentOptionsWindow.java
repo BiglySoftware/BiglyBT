@@ -6292,7 +6292,22 @@ public class OpenTorrentOptionsWindow
 				}
 
 				@Override
-				public void defaultSelected(TableRowCore[] rows, int stateMask) {
+				public void 
+				defaultSelected(
+					TableRowCore[]		rows, 
+					int stateMask		) 
+				{
+					TorrentOpenFileOptions[] infos = new TorrentOpenFileOptions[rows.length];
+					
+					int pos = 0;
+					
+					for ( TableRowCore row: rows ){
+						
+						infos[pos++] = (TorrentOpenFileOptions)row.getDataSource();
+					}
+					
+					
+					renameFilenames( infos );
 				}
 			}, false);
 
