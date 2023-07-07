@@ -51,6 +51,11 @@ import com.biglybt.core.logging.*;
 import com.biglybt.core.logging.impl.FileLogging;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.config.ConfigSectionConnectionAdvanced;
+import com.biglybt.ui.config.ConfigSectionLogging;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -334,7 +339,7 @@ public class LoggerView
 				consoleText.setText("");
 			}
 		});
-
+		
 		/** FileLogging filter, consisting of a List of types (info, warning, error)
 		 * and a checkbox Table of component IDs.
 		 */
@@ -442,12 +447,11 @@ public class LoggerView
 
 		listLogTypes.notifyListeners(SWT.Selection, null);
 
-		Button btn;
-		btn = new Button(cChecksAndButtons, SWT.PUSH);
+		Button btnCheckAll = new Button(cChecksAndButtons, SWT.PUSH);
 		gd = new GridData();
-		btn.setLayoutData(gd);
-		Messages.setLanguageText(btn, "LoggerView.filter.checkAll");
-		btn.addSelectionListener(new SelectionAdapter() {
+		btnCheckAll.setLayoutData(gd);
+		Messages.setLanguageText(btnCheckAll, "LoggerView.filter.checkAll");
+		btnCheckAll.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				int index = listLogTypes.getSelectionIndex();
@@ -465,11 +469,11 @@ public class LoggerView
 			}
 		});
 
-		btn = new Button(cChecksAndButtons, SWT.PUSH);
+		Button btnUncheckAll = new Button(cChecksAndButtons, SWT.PUSH);
 		gd = new GridData();
-		btn.setLayoutData(gd);
-		Messages.setLanguageText(btn, "LoggerView.filter.uncheckAll");
-		btn.addSelectionListener(new SelectionAdapter() {
+		btnUncheckAll.setLayoutData(gd);
+		Messages.setLanguageText(btnUncheckAll, "LoggerView.filter.uncheckAll");
+		btnUncheckAll.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				int index = listLogTypes.getSelectionIndex();
@@ -487,11 +491,13 @@ public class LoggerView
 			}
 		});
 
+		Utils.makeButtonsEqualWidth( btnCheckAll, btnUncheckAll );
+		
 		Composite cBottom = new Composite(settings_panel, SWT.NONE);
 		gd = new GridData(SWT.FILL, SWT.FILL, true, false);
 		gd.horizontalSpan = 2;
 		cBottom.setLayoutData(gd);
-		cBottom.setLayout(new GridLayout(2, false));
+		cBottom.setLayout(new GridLayout(4, false));
 
 
 		label = new Label(cBottom, SWT.NONE);
@@ -524,6 +530,9 @@ public class LoggerView
 		});
 
 		label = new Label(cBottom, SWT.NONE);
+		label = new Label(cBottom, SWT.NONE);
+		
+		label = new Label(cBottom, SWT.NONE);
 		label.setLayoutData(new GridData());
 		Messages.setLanguageText(label, "LoggerView.excludeAll");
 
@@ -551,6 +560,30 @@ public class LoggerView
 				}
 			}
 		});
+
+		label = new Label(cBottom, SWT.NONE);
+		gd = new GridData( GridData.FILL_HORIZONTAL );
+		label.setLayoutData(gd);
+		
+		Button buttonOptions = new Button(cBottom, SWT.PUSH);
+		buttonOptions.setText( MessageText.getString("plugins.basicview.config")+"...");
+		gd = new GridData();
+		buttonOptions.setLayoutData(gd);
+		buttonOptions.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+				if ( uif != null ){
+
+					uif.getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+							ConfigSectionLogging.SECTION_ID);
+				}
+			}
+		});
+		
+		Utils.makeButtonsEqualWidth( buttonClear, buttonOptions );
 
 
 		if (!Logger.isEnabled()) {
