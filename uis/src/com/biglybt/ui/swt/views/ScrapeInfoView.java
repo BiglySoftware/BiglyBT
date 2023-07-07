@@ -40,7 +40,6 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.BufferedTruncatedLabel;
-import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
 import com.biglybt.ui.swt.pif.UISWTView;
@@ -390,7 +389,7 @@ public class ScrapeInfoView
 				Messages.setLanguageText(trackerUrlValue.getWidget(),
 						"GeneralView.label.trackerurlopen.tooltip", true);
 			} else {
-				trackerUrlValue.setForeground(null);
+				Utils.setSkinnedForeground(trackerUrlValue.getControl(), null);
 				trackerUrlValue.setCursor(null);
 				Messages.setLanguageText(trackerUrlValue.getWidget(), null);
 				Utils.setTT(trackerUrlValue,null);
