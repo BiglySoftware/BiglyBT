@@ -22,10 +22,15 @@ import java.text.FieldPosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabFolder2Adapter;
+import org.eclipse.swt.custom.CTabFolderEvent;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyEvent;
@@ -38,14 +43,18 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.logging.impl.FileLogging;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.mdi.TabbedMDI;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.BasicPluginViewImpl;
@@ -85,7 +94,7 @@ public class LoggerView
 
 	private Display display;
 
-	private Composite panel;
+	private Composite main_panel;
 
 	private StyledText consoleText = null;
 
@@ -160,20 +169,14 @@ public class LoggerView
 		Colors.getInstance().addColorsChangedListener(this);
 		parameterChanged("Color");
 
-		panel = new Composite(composite, SWT.NULL);
-		GridLayout layout = new GridLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.verticalSpacing = 2;
-		layout.numColumns = 2;
-		panel.setLayout(layout);
+		main_panel = new Composite(composite, SWT.NULL);
+		main_panel.setLayout( Utils.getSimpleGridLayout(1));
 
 		GridData gd;
 
-		consoleText = new StyledText(panel, SWT.READ_ONLY | SWT.V_SCROLL
-				| SWT.H_SCROLL);
+		consoleText = new StyledText(main_panel, SWT.READ_ONLY | SWT.V_SCROLL | SWT.H_SCROLL);
 		gd = new GridData(GridData.FILL_BOTH);
-		gd.horizontalSpan = 2;
+
 		consoleText.setLayoutData(gd);
 
 		// XXX This doesn't work well, but it's better than nothing
@@ -211,8 +214,62 @@ public class LoggerView
 					buttonAutoScroll.setSelection(false);
 			}
 		});
+	
+		CTabFolder tab_folder = new CTabFolder(main_panel, SWT.LEFT);
+		
+		tab_folder.setMinimizeVisible( true );
 
-		Composite cLeft = new Composite(panel, SWT.NULL);
+		Consumer<Boolean> set_minimized = ( min )->{
+			COConfigurationManager.setParameter( "loggerview.filter.minimized", min );
+			tab_folder.setMinimized( min );	
+			tab_folder.getParent().layout(true);
+		};
+		
+		set_minimized.accept( COConfigurationManager.getBooleanParameter( "loggerview.filter.minimized"));
+		
+		tab_folder.addCTabFolder2Listener(new CTabFolder2Adapter() {
+			@Override
+			public void minimize(CTabFolderEvent event) {
+				set_minimized.accept( true );
+			}
+			@Override
+			public void restore(CTabFolderEvent event){
+				maximize( event );
+			}
+			@Override
+			public void maximize(CTabFolderEvent event) {
+				set_minimized.accept( false );
+			}});
+			
+		tab_folder.addListener(SWT.MouseDoubleClick, e -> {
+			set_minimized.accept( !tab_folder.getMinimized());
+		});
+		
+		GridData grid_data = new GridData(GridData.FILL_HORIZONTAL);
+		tab_folder.setLayoutData(grid_data);
+
+		CTabItem settings_tab = new CTabItem(tab_folder, SWT.NULL);
+
+		tab_folder.setSelection( settings_tab );
+		
+		settings_tab.setText( MessageText.getString( "LoggerView.filter" ));
+
+		Composite settings_panel = new Composite( tab_folder, SWT.NULL );
+
+		settings_tab.setControl( settings_panel );
+
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.verticalSpacing = 2;
+		layout.numColumns = 2;
+		settings_panel.setLayout(layout);
+		
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		settings_panel.setLayoutData(grid_data);
+
+		
+		Composite cLeft = new Composite(settings_panel, SWT.NULL);
 		layout = new GridLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
@@ -282,7 +339,7 @@ public class LoggerView
 		 * and a checkbox Table of component IDs.
 		 */
 		final String sFilterPrefix = "ConfigView.section.logging.filter";
-		Group gLogIDs = Utils.createSkinnedGroup(panel, SWT.NULL);
+		Group gLogIDs = Utils.createSkinnedGroup(settings_panel, SWT.NULL);
 		Messages.setLanguageText(gLogIDs, "LoggerView.filter");
 		layout = new GridLayout();
 		layout.marginHeight = 0;
@@ -430,7 +487,7 @@ public class LoggerView
 			}
 		});
 
-		Composite cBottom = new Composite(panel, SWT.NONE);
+		Composite cBottom = new Composite(settings_panel, SWT.NONE);
 		gd = new GridData(SWT.FILL, SWT.FILL, true, false);
 		gd.horizontalSpan = 2;
 		cBottom.setLayoutData(gd);
@@ -503,7 +560,7 @@ public class LoggerView
 	}
 
 	private Composite getComposite() {
-		return panel;
+		return main_panel;
 	}
 
 	private void refresh() {
@@ -602,8 +659,8 @@ public class LoggerView
 
 	private void delete() {
 		Logger.removeListener(this);
-		if (panel != null && !panel.isDisposed())
-			panel.dispose();
+		if (main_panel != null && !main_panel.isDisposed())
+			main_panel.dispose();
 		Colors instance = Colors.getInstance();
 		if (instance != null) {
 			instance.removeColorsChangedListener(this);
