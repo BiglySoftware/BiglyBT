@@ -186,6 +186,7 @@ public abstract class ColumnDateSizer
 	}
 
 	public void refresh(final TableCell cell, final long timestamp, long sort_order, final String prefix ) {
+		cell.setNumeric( timestamp );
 		if (!setSortValue(cell,sort_order) && cell.isValid()) {
 			return;
 		}

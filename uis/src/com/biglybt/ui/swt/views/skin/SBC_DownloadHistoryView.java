@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManagerEvent;
 import com.biglybt.core.history.DownloadHistory;
@@ -69,6 +70,7 @@ import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
+import com.biglybt.ui.swt.views.table.utils.TableColumnFilterHelper;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
@@ -89,6 +91,8 @@ public class SBC_DownloadHistoryView
 
 	private TableViewSWT<DownloadHistory> tv;
 
+	private TableColumnFilterHelper<DownloadHistory>	col_filter_helper;
+	 
 	private Composite table_parent;
 
 	private boolean columnsAdded = false;
@@ -324,6 +328,8 @@ public class SBC_DownloadHistoryView
 			
 			if ( soFilter != null ){
 				
+				col_filter_helper = new TableColumnFilterHelper<DownloadHistory>( tv, "downloadhistoryview:search" );
+
 				BubbleTextBox bubbleTextBox = soFilter.getBubbleTextBox();
 				
 				tv.enableFilterCheck( bubbleTextBox, this);
@@ -333,7 +339,7 @@ public class SBC_DownloadHistoryView
 				tooltip += MessageText.getString("dlh.filter.tt.line2");
 				tooltip += MessageText.getString("dlh.filter.tt.line3");
 				
-				bubbleTextBox.setTooltip( tooltip );
+				bubbleTextBox.setTooltip( tooltip );				
 			}
 
 			tv.setRowDefaultHeightEM(1);
@@ -800,6 +806,7 @@ public class SBC_DownloadHistoryView
 	filterSet(
 		String filter)
 	{
+		col_filter_helper.filterSet( filter );
 	}
 
 	@Override
@@ -861,10 +868,18 @@ public class SBC_DownloadHistoryView
 
 		}else{
 
-			o_name = ds.getName();
+			String default_text = ds.getName();
 
+			if ( confusable ){
+				
+				default_text = GeneralUtils.getConfusableEquivalent( default_text, false );
+			}
+			
+			return( col_filter_helper.filterCheck( ds, filter, regex, default_text, false ));
 		}
 
+			// could replace below with col_filter_helper and some hacks sometime...
+		
 		boolean	match_result = true;
 
 		String expr;

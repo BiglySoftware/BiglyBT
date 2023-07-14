@@ -270,18 +270,26 @@ TableColumnFilterHelper<T>
 			}
 		}else{
 			
-			String s = regex ? filter_text : RegExUtil.splitAndQuote( filter_text, "\\s*[|;]\\s*" );
-	
 			boolean	match_result = true;
-	
-			if ( regex && s.startsWith( "!" )){
-	
-				s = s.substring(1);
-	
-				match_result = false;
+
+			String expr;
+			
+			if ( regex ){
+				
+				expr = filter_text;
+				
+				if ( expr.startsWith( "!" )){
+					
+					expr = expr.substring(1);
+
+					match_result = false;
+				}
+			}else{
+				
+				expr = RegExUtil.convertAndOrToExpr( filter_text );
 			}
 	
-			Pattern pattern = RegExUtil.getCachedPattern( regex_key, s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+			Pattern pattern = RegExUtil.getCachedPattern( regex_key, expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 	
 			return( pattern.matcher(match_text).find() == match_result );
 		}
