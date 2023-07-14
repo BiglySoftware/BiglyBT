@@ -173,7 +173,11 @@ public abstract class ColumnDateSizer
 	// @see com.biglybt.pif.ui.tables.TableCellRefreshListener#refresh(com.biglybt.pif.ui.tables.TableCell)
 	@Override
 	public final void refresh(TableCell cell) {
-		refresh(cell, 0);
+		double last = cell.getNumeric();
+		
+		long ts = Double.isNaN(last)?0:(long)last;
+		
+		refresh(cell, ts);
 	}
 
 	// @see com.biglybt.pif.ui.tables.TableCellRefreshListener#refresh(com.biglybt.pif.ui.tables.TableCell)
@@ -186,7 +190,7 @@ public abstract class ColumnDateSizer
 	}
 
 	public void refresh(final TableCell cell, final long timestamp, long sort_order, final String prefix ) {
-		cell.setNumeric( timestamp );
+		cell.setNumeric( timestamp <= 0 || timestamp == Long.MAX_VALUE?Double.NaN:timestamp );
 		if (!setSortValue(cell,sort_order) && cell.isValid()) {
 			return;
 		}

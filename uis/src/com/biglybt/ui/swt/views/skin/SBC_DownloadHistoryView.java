@@ -877,7 +877,9 @@ public class SBC_DownloadHistoryView
 				default_text = GeneralUtils.getConfusableEquivalent( default_text, false );
 			}
 			
-			return( col_filter_helper.filterCheck( ds, filter, regex, default_text, false ));
+			boolean res = col_filter_helper.filterCheck( ds, filter, regex, default_text, false );
+			
+			return( res );
 		}
 
 			// could replace below with col_filter_helper and some hacks sometime...

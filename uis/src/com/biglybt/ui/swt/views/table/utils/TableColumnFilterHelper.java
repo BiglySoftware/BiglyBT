@@ -18,6 +18,7 @@
 
 package com.biglybt.ui.swt.views.table.utils;
 
+import java.text.SimpleDateFormat;
 import java.util.regex.Pattern;
 
 import com.biglybt.core.util.DisplayFormatters;
@@ -50,6 +51,9 @@ TableColumnFilterHelper<T>
 	private TableColumn		col_cache;
 	private String			col_cache_name;
 
+	private String			date_cache_str;
+	private double			date_cache_time;
+	
 	private int match_mode;
 	
 	public
@@ -94,7 +98,7 @@ TableColumnFilterHelper<T>
 								return;
 							}
 						}else if ( filter_active ){
-												
+															
 							table_view.refilter();
 						}
 					});
@@ -251,10 +255,36 @@ TableColumnFilterHelper<T>
 		
 		if ( active && match_mode != MM_EQ ){
 			
-			double filter_num 	= getNumber( filter_text );
+			double filter_num;
+			
+			if ( filter_text.split( "/" ).length == 3 ){
+			
+				filter_num = Double.NaN;
+
+				if ( date_cache_str != null && date_cache_str.equals( filter_text )){
+					
+					filter_num = date_cache_time;
+					
+				}else{
+					
+					date_cache_str = filter_text;
+					
+					try{
+						filter_num = date_cache_time = new SimpleDateFormat( "yyyy/MM/dd" ).parse( filter_text ).getTime();
+											 
+					}catch( Throwable e ){
+						
+						date_cache_time = Double.NaN;
+					}
+				}
+			}else{
+						
+				filter_num 	= getNumber( filter_text );
+			}
+			
 			double match_num	= Double.isNaN(match_numeric)?getNumber( match_text ):match_numeric;
 			
-			if ( filter_num == Double.MIN_VALUE || match_num == Double.MIN_VALUE ){
+			if (  Double.isNaN( filter_num ) ||  Double.isNaN( match_num )){
 				
 				return( false );
 				
@@ -330,7 +360,7 @@ TableColumnFilterHelper<T>
 			
 		}catch( Throwable e ){
 			
-			return( Double.MIN_VALUE );
+			return( Double.NaN );
 		}
 	}
 }
