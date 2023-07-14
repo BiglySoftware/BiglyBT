@@ -338,6 +338,8 @@ public class SBC_DownloadHistoryView
 				tooltip += MessageText.getString("dlh.filter.tt.line1");
 				tooltip += MessageText.getString("dlh.filter.tt.line2");
 				tooltip += MessageText.getString("dlh.filter.tt.line3");
+				tooltip += MessageText.getString("column.filter.tt.line1");
+				tooltip += MessageText.getString("column.filter.tt.line2");
 				
 				bubbleTextBox.setTooltip( tooltip );				
 			}
