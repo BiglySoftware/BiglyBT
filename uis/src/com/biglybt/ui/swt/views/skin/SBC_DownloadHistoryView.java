@@ -34,6 +34,7 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.columns.dlhistory.*;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
@@ -319,10 +320,20 @@ public class SBC_DownloadHistoryView
 					ColumnDLHistoryName.COLUMN_ID,
 					SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
-			SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) getSkinObject(
-				"filterbox");
-			if (soFilter != null) {
-				tv.enableFilterCheck(soFilter.getBubbleTextBox(), this);
+			SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) getSkinObject("filterbox");
+			
+			if ( soFilter != null ){
+				
+				BubbleTextBox bubbleTextBox = soFilter.getBubbleTextBox();
+				
+				tv.enableFilterCheck( bubbleTextBox, this);
+				
+				String tooltip = MessageText.getString("filter.tt.start");
+				tooltip += MessageText.getString("dlh.filter.tt.line1");
+				tooltip += MessageText.getString("dlh.filter.tt.line2");
+				tooltip += MessageText.getString("dlh.filter.tt.line3");
+				
+				bubbleTextBox.setTooltip( tooltip );
 			}
 
 			tv.setRowDefaultHeightEM(1);
@@ -806,21 +817,43 @@ public class SBC_DownloadHistoryView
 		
 		Object o_name;
 
-		if ( filter.startsWith( "t:" )){
+		if ( filter.startsWith( "h:" )){
 
 			filter = filter.substring( 2 );
 
-			byte[] hash = ds.getTorrentHash();
-
 			List<String> names = new ArrayList<>();
 
-			names.add( ByteFormatter.encodeString( hash ));
+			byte[] hash = ds.getTorrentHash();
 
-			names.add( Base32.encode( hash ));
+			if ( hash != null ){
+				
+				names.add( ByteFormatter.encodeString( hash ));
+	
+				names.add( Base32.encode( hash ));
+			}
+			
+			byte[] v2_hash = ds.getTorrentV2Hash();
 
+			if ( v2_hash != null ){
+				
+				names.add( ByteFormatter.encodeString( v2_hash ));
+	
+				names.add( Base32.encode( v2_hash ));
+			}
+			
 			o_name = names;
 
-		}else if ( filter.startsWith( "f:" )){
+		}else if ( filter.startsWith( "t:" ) || filter.startsWith( "tag:" )){
+
+			filter = filter.substring( filter.startsWith( "t:" )?2:4 );
+
+			String[] tags = ds.getTags();
+				
+			List<String> names = new ArrayList<>( Arrays.asList( tags ));
+				
+			o_name = names;
+			
+		}else if ( filter.startsWith( "f:" ) || filter.startsWith( "p:" )){
 
 			filter = filter.substring( 2 );
 
