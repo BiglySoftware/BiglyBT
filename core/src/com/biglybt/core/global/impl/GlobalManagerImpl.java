@@ -3699,6 +3699,13 @@ public class GlobalManagerImpl
 
 			  int[] manager_entry = (int[])manager.getUserData( MOVE_POS_KEY );
 			  
+			  if ( manager_entry == null ){
+				  
+				  Debug.out( "DM not found in global list" );
+				  
+				  return;
+			  }
+			  
 			  int oldPosition = manager_entry[0];
 			  
 			  boolean curCompleted = manager_entry[1]==1;

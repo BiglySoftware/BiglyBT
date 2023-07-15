@@ -3200,12 +3200,14 @@ DownloadManagerImpl
 		// NOTE: We don't set "stats.setDownloadCompleted(1000)" anymore because
 		//       we can be in seeding mode with an unfinished torrent
 
-		if (position != -1) {
+		if ( position != -1 && globalManager.contains( this )){
+			
 			// we are in a new list, move to the top of the list so that we continue
 			// seeding.
 			// -1 position means it hasn't been added to the global list.  We
 			// shouldn't touch it, since it'll get a position once it's adding is
-			// complete
+			// complete. Also check explicitly that it is known to the global manager
+			// as it is possible to come through here twice during init
 
 			DownloadManager[] dms = { DownloadManagerImpl.this };
 
