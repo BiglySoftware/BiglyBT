@@ -75,7 +75,7 @@ import com.biglybt.core.CoreOperationTask;
 public class NameItem extends CoreTableColumnSWT implements
 	TableCellLightRefreshListener, ObfuscateCellText,
 	TableCellSWTPaintListener, TableCellMouseMoveListener,
-	TableCellInplaceEditorListener
+	TableCellInplaceEditorListener, TableCellToolTipListener
 {
 	private static final String ID_CHECKHITAREA		= "checkHitArea";
 
@@ -93,7 +93,7 @@ public class NameItem extends CoreTableColumnSWT implements
 				public void parameterChanged(String parameterName){
 					NEVER_SHOW_TWISTY =	!COConfigurationManager.getBooleanParameter("FilesView.use.tree");
 				}
-			});;	
+			});	
 	}
 
 	
@@ -555,7 +555,27 @@ public class NameItem extends CoreTableColumnSWT implements
 
 		cell.setToolTip(tooltip.length()==0?null:tooltip);
 	}
-	
+
+	@Override
+	public void cellHover(TableCell cell) {
+		DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
+		String tooltip;
+		if (fileInfo == null) {
+			tooltip = null;
+		} else {
+			String name = fileInfo.getFile(true).getName();
+			String origName = fileInfo.getFile( false ).getName();
+			tooltip = name.equals(origName) ? name : name + "\n" + origName;
+		}
+
+		cell.setToolTip(tooltip);
+	}
+
+	@Override
+	public void cellHoverComplete(TableCell cell) {
+		cell.setToolTip(null);
+	}
+
 	@Override
 	public String getClipboardText(TableCell cell) {
 		final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
