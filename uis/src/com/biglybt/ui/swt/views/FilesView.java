@@ -136,7 +136,8 @@ public class FilesView
     new FileWriteSpeedItem(),
     new FileETAItem(),
     new RelocatedItem(),
-    new FileModifiedItem(),
+	  new FileModifiedItem(),
+	  new FileCreationItem(),
     new DownloadNameItem(),
   };
 
