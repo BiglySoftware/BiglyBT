@@ -27,7 +27,8 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationTask;
-import com.biglybt.core.CoreOperationTask.ProgressCallback;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.util.AERunnable;
@@ -44,7 +45,15 @@ DiskManagerAllocationScheduler
 	
 	private final List<AllocationInstance>	instances		= new ArrayList<>();
 
-
+	private static boolean alloc_smallest_first;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			ConfigKeys.File.BCFG_DISKMANAGER_ALLOC_SMALLESTFIRST, (n)->{
+				alloc_smallest_first = COConfigurationManager.getBooleanParameter(n);
+			});
+	}
+	
 	public AllocationInstance
 	register(
 		DiskManagerHelper	helper )
@@ -252,6 +261,11 @@ DiskManagerAllocationScheduler
 			final DownloadManager dm = helper.getDownload();
 
 			boolean	cancelled;
+			
+			Callback()
+			{
+				super( alloc_smallest_first );
+			}
 			
 			@Override
 			public int 

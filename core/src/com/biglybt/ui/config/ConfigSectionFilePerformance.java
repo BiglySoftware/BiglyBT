@@ -20,7 +20,6 @@ package com.biglybt.ui.config;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
@@ -75,6 +74,14 @@ public class ConfigSectionFilePerformance
 				BCFG_DISKMANAGER_HASHCHECKING_MAX_ACTIVE, "ConfigView.section.file.hashchecking.maxactive");
 		add(recheck_max_active, Parameter.MODE_INTERMEDIATE);
 		recheck_max_active.setMinValue(0);
+		
+		add(new BooleanParameterImpl(
+				BCFG_DISKMANAGER_ALLOC_SMALLESTFIRST,
+				"ConfigView.section.file.alloc.smallestfirst"));
+		
+		add(new BooleanParameterImpl(
+				BCFG_DISKMANAGER_MOVE_SMALLESTFIRST,
+				"ConfigView.section.file.move.smallestfirst"));
 		
 		BooleanParameterImpl one_per_fs = 
 			add(new BooleanParameterImpl(

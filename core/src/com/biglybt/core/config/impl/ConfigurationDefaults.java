@@ -21,6 +21,8 @@
 
 package com.biglybt.core.config.impl;
 
+import static com.biglybt.core.config.ConfigKeys.File.BCFG_DISKMANAGER_HASHCHECKING_SMALLESTFIRST;
+
 import java.io.File;
 import java.util.*;
 
@@ -620,7 +622,9 @@ public class ConfigurationDefaults {
     def.put( "Auto Update", TRUE );
     def.put( "Alert on close", FALSE );
     def.put( "diskmanager.hashchecking.strategy", ONE );
-    def.put( "diskmanager.hashchecking.smallestfirst", TRUE );
+    def.put( ConfigKeys.File.BCFG_DISKMANAGER_HASHCHECKING_SMALLESTFIRST, TRUE );
+    def.put( ConfigKeys.File.BCFG_DISKMANAGER_ALLOC_SMALLESTFIRST, TRUE );
+    def.put( ConfigKeys.File.BCFG_DISKMANAGER_MOVE_SMALLESTFIRST, TRUE );
     def.put( ConfigKeys.File.BCFG_DISKMANAGER_ONE_OP_PER_FS, FALSE );
     def.put( ConfigKeys.File.BCFG_DISKMANAGER_ONE_OP_PER_FS_CONC_READ, FALSE );
     def.put( "diskmanager.hashchecking.maxactive", ONE );

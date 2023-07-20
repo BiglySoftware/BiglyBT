@@ -3421,6 +3421,10 @@ public class TorrentUtil
 		}
 	}
 
+		// used to submit multiple moves so they are done in order
+	
+	private static final AsyncDispatcher move_disp = new AsyncDispatcher();
+
 	public static void 
 	moveDataFiles(
 		Shell 				shell, 
@@ -3559,9 +3563,7 @@ public class TorrentUtil
 									
 									result.append( "    " + dm.getSaveLocation().getParentFile().getAbsolutePath() +  " -> " + path + "\n\n" );
 									
-									AEThread2.createAndStartDaemon( 
-										"File Mover" , 
-										()->{
+									move_disp.dispatch(()->{
 										
 												// get back onto SWT thread to cause progress dialog window to be shown
 											
@@ -3640,7 +3642,7 @@ public class TorrentUtil
 	
 						DownloadManager dm = dms[i];
 						
-						AEThread2.createAndStartDaemon( "File Mover" , ()->{
+						move_disp.dispatch(()->{
 									
 								// get back onto SWT thread to cause progress dialog window to be shown
 							

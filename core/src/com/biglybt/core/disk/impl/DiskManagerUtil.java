@@ -2164,6 +2164,16 @@ DiskManagerUtil
 	
 	private static List<CoreOperationTask>	move_tasks = new ArrayList<>();
 	  
+	
+	private static boolean move_smallest_first;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			ConfigKeys.File.BCFG_DISKMANAGER_MOVE_SMALLESTFIRST, (n)->{
+				move_smallest_first = COConfigurationManager.getBooleanParameter(n);
+			});
+	}
+	
 	public static void
 	runMoveTask(
 		DownloadManager		download_manager,
@@ -2205,6 +2215,8 @@ DiskManagerUtil
 				}
 			}
 
+			System.out.println( "1: " + download_manager.getDisplayName());
+			
 			FileUtil.runAsTask(
 				new CoreOperationTask()
 				{
@@ -2232,7 +2244,7 @@ DiskManagerUtil
 					}
 
 					private ProgressCallback callback = 
-					new ProgressCallbackAdapter()
+					new ProgressCallbackAdapter( move_smallest_first )
 					{
 						private volatile int	current_state = ProgressCallback.ST_NONE;
 
@@ -2325,6 +2337,9 @@ DiskManagerUtil
 							// the 'recheck before move' ourselves (with a scheduler the move operation
 							// is guaranteed to be added after the recheck operation if so configured)
 						
+						System.out.println( "2: " + download_manager.getDisplayName());
+
+						
 						if ( !has_scheduler ){
 							
 							while( true ){
@@ -2358,6 +2373,9 @@ DiskManagerUtil
 								}
 							}
 						}
+						
+						System.out.println( "3: " + download_manager.getDisplayName());
+
 						boolean ready;
 
 						synchronized( move_tasks ){
@@ -2423,6 +2441,8 @@ DiskManagerUtil
 									}
 								}
 							}
+
+							System.out.println( "4: " + download_manager.getDisplayName());
 
 							queued = false;
 

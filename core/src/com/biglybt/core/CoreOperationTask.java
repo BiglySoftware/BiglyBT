@@ -19,6 +19,8 @@
 
 package com.biglybt.core;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.FileUtil;
 
@@ -73,6 +75,12 @@ CoreOperationTask
 		public int STYLE_NO_CLOSE	= 0x0001;
 		public int STYLE_MODAL		= 0x0002;
 		public int STYLE_MINIMIZE	= 0x0004;
+		
+		public default long
+		getAllocID()
+		{
+			return( 0 );
+		}
 		
 		public default int
 		getStyle()
@@ -140,12 +148,38 @@ CoreOperationTask
 	ProgressCallbackAdapter
 		implements ProgressCallback
 	{
+		private static final AtomicLong	alloc_id_next = new AtomicLong();
+		
+		private final long	alloc_id = alloc_id_next.incrementAndGet();
+		
+		private final boolean	size_sort;
+		
 		private volatile int 		thousandths;
 		private volatile long		size;
 		private volatile int		state	= ST_NONE;
 		private volatile String		subtask;
 		private volatile boolean	auto_pause;
 		private volatile int	 	order;
+		
+		public
+		ProgressCallbackAdapter()
+		{
+			this( false );
+		}
+		
+		public
+		ProgressCallbackAdapter(
+			boolean		_size_sort )
+		{
+			size_sort = _size_sort;
+		}
+		
+		@Override
+		public long 
+		getAllocID()
+		{
+			return( alloc_id );
+		}
 		
 		public int
 		getProgress()
@@ -242,11 +276,20 @@ CoreOperationTask
 		compareTo(
 			ProgressCallback o)
 		{
-			long l = getSize() - o.getSize();
+			long metric;
 			
-			if ( l < 0 ){
+			if ( size_sort ){
+				
+				metric = getSize() - o.getSize();
+				
+			}else{
+				
+				metric = getAllocID() - o.getAllocID();
+			}
+			
+			if ( metric < 0 ){
 				return( -1 );
-			}else if ( l > 0 ){
+			}else if ( metric > 0 ){
 				return( 1 );
 			}else{
 				return( 0 );
