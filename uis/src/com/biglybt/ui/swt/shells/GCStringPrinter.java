@@ -402,7 +402,7 @@ public class GCStringPrinter
 				do {
 					LineInfo lineInfo = new LineInfo(sLine, currentCharPos);
 					lineInfo = processLine(gc, lineInfo, printArea,  fullLinesOnly,
-							false);
+							false, !wrap);
 					String sProcessedLine = lineInfo.lineOutputed;
 
 					if (sProcessedLine != null && sProcessedLine.length() > 0) {
@@ -415,14 +415,28 @@ public class GCStringPrinter
 						if (DEBUG) {
 							System.out.println("Adding Line: [" + sProcessedLine + "]"
 									+ sProcessedLine.length() + "; h=" + iCurrentHeight + "("
-									+ printArea.height + "). fullOnly?" + fullLinesOnly
-									+ ". Excess: " + lineInfo.excessPos);
+									+ printArea.height + "). fullOnly? " + fullLinesOnly
+									+ ". Excess: " + lineInfo.excessPos + ". isOverY? " + isOverY);
 						}
 
 						if (isOverY && !fullLinesOnly) {
 							//fullLinesOnly = true; // <-- don't know why we needed this
 							lines.add(lineInfo);
 						} else if (isOverY && fullLinesOnly && lines.size() > 0) {
+							LineInfo prev = lines.get( lines.size()-1);
+
+							if (wrap) {
+								if (DEBUG) {
+									System.out.println("reprocess");
+								}
+								prev = processLine(gc, prev, printArea, fullLinesOnly,
+									false, true);
+								prev.outputLineExtent = stringExtent(gc,prev.lineOutputed);
+								if (prev.excessPos == -1) {
+									return true;
+								}
+							}
+
 							/*
 							String excess = lineInfo.excessPos >= 0
 									? sLine.substring(lineInfo.excessPos) : null;
@@ -475,15 +489,15 @@ public class GCStringPrinter
 								}
 							}
 							*/
-							LineInfo prev = lines.get( lines.size()-1);
 							String str = prev.lineOutputed;
-							if ( str.length() > 2 ){
-								str = str.substring( 0, str.length()-2);
+							if (str.length() > 2 && prev.outputLineExtent.x
+									+ gc.stringExtent("" + ELLIPSIS).x >= printArea.width) {
+								str = str.substring(0, str.length() - 2);
 							}
 							prev.lineOutputed = truncate( str );
 							truncated = cutoff = true;
 							if (DEBUG) {
-								System.out.println("set cutoff");
+								System.out.println("set cutoff (0)");
 							}
 							return false;
 						} else {
@@ -603,7 +617,7 @@ public class GCStringPrinter
 	 */
 	private LineInfo processLine(final GC gc, final LineInfo lineInfo,
 			final Rectangle printArea, final boolean fullLinesOnly,
-			boolean hasMoreElements) {
+			boolean hasMoreElements, boolean isLastLine) {
 
 		if (lineInfo.originalLine.length() == 0) {
 			lineInfo.lineOutputed = "";
@@ -645,7 +659,7 @@ public class GCStringPrinter
 				// outputLine.append(sProcessedLine);
 
 				excessPos = processWord(gc, lineInfo.originalLine, sProcessedLine,
-						printArea, lineInfo, outputLine, space);
+						printArea, lineInfo, outputLine, space, isLastLine);
 			} else {
 				int posLastWordStart = 0;
 				int posWordStart = lineInfo.originalLine.indexOf(' ');
@@ -674,7 +688,7 @@ public class GCStringPrinter
 						}
 
 						excessPos = processWord(gc, lineInfo.originalLine, subWord,
-								printArea, lineInfo, outputLine, space);
+								printArea, lineInfo, outputLine, space, isLastLine);
 						if (DEBUG) {
 							System.out.println("  with word [" + subWord + "] len is "
 									+ lineInfo.outputLineExtent.x + "(" + printArea.width + ") w/excess "
@@ -713,7 +727,7 @@ public class GCStringPrinter
 			truncate( outputLine, len );
 			cutoff = true;
 			if (DEBUG) {
-				System.out.println("set cutoff");
+				System.out.println("set cutoff (1)");
 			}
 		}
 		//drawLine(gc, outputLine, swtFlags, rectDraw);
@@ -757,7 +771,7 @@ public class GCStringPrinter
 	 */
 	private int processWord(final GC gc, final String sLine, String word,
 			final Rectangle printArea, final LineInfo lineInfo,
-			StringBuffer outputLine, final StringBuffer space) {
+			StringBuffer outputLine, final StringBuffer space, boolean isLastLine) {
 
 		if (word.length() == 0) {
 			space.append(' ');
@@ -783,7 +797,9 @@ public class GCStringPrinter
 					if (bounds.width + spaceExtent.x < printArea.width || lineInfo.outputLineExtent.x > 0) {
 						//outputLine.append(space);
 						//outputLine.append(word, 0, 2);
-						//System.out.println("w1 = " + lineInfo.outputLineExtent.x + ";h=" + lineInfo.outputLineExtent.y);
+						if (DEBUG) {
+							System.out.println("excess. w=" + lineInfo.outputLineExtent.x + ";h=" + lineInfo.outputLineExtent.y);
+						}
 						return 0;
 					}
 				}
@@ -839,8 +855,11 @@ public class GCStringPrinter
 
 			// This will split put a word that is longer than a full line onto a new
 			// line (when the existing line has text).
-			if (bWordLargerThanWidth && lineInfo.outputLineExtent.x > 0) {
-				//System.out.println("w3 = " + lineInfo.outputLineExtent.x + ";h=" + lineInfo.outputLineExtent.y);
+			if (bWordLargerThanWidth && lineInfo.outputLineExtent.x > 0 && !isLastLine) {
+				if (DEBUG) {
+					System.out.println("excess/bWordLargerThanWidth. w=" + lineInfo.outputLineExtent.x + ";h=" + lineInfo.outputLineExtent.y);
+				}
+				// if we don't have room for another line, we lose the whole "large word". Would be nice to show as much of it as we can
 				return 0;
 			}
 
@@ -887,6 +906,7 @@ public class GCStringPrinter
 						+ word.length() + ". "
 						+ "wrap?" + wrap);
 			}
+			/* doesn't appear to be needed anymore */
 			if (wrap && (printFlags & FLAG_FULLLINESONLY) != 0) {
 				int nextLineHeight = stringExtent(gc,GOOD_STRING).y;
 				if (iCurrentHeight + ptLineAndWordSize.y + nextLineHeight > printArea.height) {
@@ -896,14 +916,18 @@ public class GCStringPrinter
 					wrap = false;
 				}
 			}
+			/**/
 
 			if (endIndex > 0 && outputLine.length() > 0 && !nothingFit) {
 				outputLine.append(space);
 			}
 
 			//int w = ptLineAndWordSize.x - lineInfo.outputLineExtent.x;
-			if (wrap && !nothingFit && !bWordLargerThanWidth) {
+			if (wrap && !nothingFit && !bWordLargerThanWidth && !isLastLine) {
 				// whole word is excess
+				if (DEBUG) {
+					System.out.println("whole word is excess");
+				}
 				return 0;
 			}
 
@@ -923,7 +947,7 @@ public class GCStringPrinter
 					truncate( outputLine, len );
 					cutoff = true;
 					if (DEBUG) {
-						System.out.println("set cutoff");
+						System.out.println("set cutoff (3)");
 					}
 				}
 			}
@@ -956,7 +980,7 @@ public class GCStringPrinter
 					truncate( outputLine, len );
 					cutoff = true;
 					if (DEBUG) {
-						System.out.println("set cutoff");
+						System.out.println("set cutoff (4)");
 					}
 				}
 				//System.out.println("w5 = " + lineInfo.outputLineExtent.x + ";h=" + lineInfo.outputLineExtent.y);
@@ -1315,6 +1339,8 @@ public class GCStringPrinter
 	
 	public static void main(String[] args) {
 
+		System.out.println("main start");
+
 		//String s = "this is $1.00";
 		//String s2 = "$1";
 		//String s3 = s2.replaceAll("\\$", "\\\\\\$");
@@ -1347,7 +1373,7 @@ public class GCStringPrinter
 		final String text = "Apple <A HREF=\"aa\">Banana</a>, Cow <A HREF=\"ss\">Dug Ergo</a>, Flip Only. test of the string printer averlongwordthisisyesindeed " + Constants.INFINITY_STRING;
 		//final String text = "Apple, Cow sfjkhsd %1 f, Flip Only. test of %0 the string printer averlongwordthisisyesindeed";
 
-		shell.setSize(500, 500);
+		shell.setSize(500, 600);
 
 		GridLayout gridLayout = new GridLayout(2, false);
 		shell.setLayout(gridLayout);
@@ -1424,14 +1450,11 @@ public class GCStringPrinter
 
 		final Spinner spinnerHeight = new Spinner(cButtons, SWT.BORDER);
 		spinnerHeight.setSelection(initHeight);
-		spinnerHeight.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				GridData gridData = (GridData) cPaint.getLayoutData();
-				gridData.heightHint = spinnerHeight.getSelection();
-				cPaint.setLayoutData(gridData);
-				shell.layout();
-			}
+		spinnerHeight.addListener(SWT.Selection, event -> {
+			GridData gridData1 = (GridData) cPaint.getLayoutData();
+			gridData1.heightHint = spinnerHeight.getSelection();
+			cPaint.setLayoutData(gridData1);
+			shell.layout();
 		});
 
 		final Label lblInfo = new Label(shell, SWT.WRAP);
@@ -1557,6 +1580,7 @@ public class GCStringPrinter
 		cPaint.addListener(SWT.MouseMove, l2);
 
 		shell.open();
+		System.out.println("shell is open " + shell.getClientArea());
 
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {
