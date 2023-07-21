@@ -150,7 +150,7 @@ public class PingSpaceMapper
     }//addMetricToMap
 
     /**
-     * Start accumlating data from scratch.
+     * Start accumulating data from scratch.
      */
     public void reset(){
         totalPointsInMap=0;
@@ -199,7 +199,7 @@ public class PingSpaceMapper
     static final int ANY_PING_INDEX = 1;
 
     /**
-     * Look at the Map and find the highest index for each catagory.
+     * Look at the Map and find the highest index for each category.
      * @return Result[2], where index 0 is goodPing, index 1 is anyPing
      */
     private Result[] calculate(){

@@ -88,7 +88,7 @@ public class PingSourceManager
     /**
      * If one ping source is twice the fastest then replace it. Otherwise reset the timer.
      * @param sources -
-     * @return - true is a souce has been changed.
+     * @return - true is a source has been changed.
      */
     private boolean forcePingSourceChange(SpeedManagerPingSource[] sources){
 

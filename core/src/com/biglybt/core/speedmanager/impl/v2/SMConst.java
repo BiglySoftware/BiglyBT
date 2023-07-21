@@ -56,7 +56,7 @@ public class SMConst
     }
 
     /**
-     * Rule: Min value is alway 10% of max, but not below 5k.
+     * Rule: Min value is always 10% of max, but not below 5k.
      * @param maxBytesPerSec -
      * @return - minRate.
      */

@@ -25,7 +25,7 @@ import com.biglybt.core.util.SystemTime;
  * used to determine up we cut back on upload bandwidth limit.
  *
  * Here is how to determine the mode. If the download rate is LOW compared to the capacity
- * for five minutes continously then it will be considered in a SEEDING mode.
+ * for five minutes continuously then it will be considered in a SEEDING mode.
  *
  * If the download bandwidth ever goes into the MED range then it switches to DOWNLOADING
  * mode immediately.

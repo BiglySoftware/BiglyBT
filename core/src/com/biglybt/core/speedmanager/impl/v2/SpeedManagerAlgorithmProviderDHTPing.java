@@ -154,7 +154,7 @@ public class SpeedManagerAlgorithmProviderDHTPing
     public void reset() {
         log("reset");
 
-        log("curr-data: curr-down-rate : curr-down-limit : down-capacity : down-bandwith-mode : down-limit-mode : curr-up-rate : curr-up-limit : up-capacity : upload-bandwidth-mode : upload-limit-mode : transfer-mode");
+        log("curr-data: curr-down-rate : curr-down-limit : down-capacity : down-bandwidth-mode : down-limit-mode : curr-up-rate : curr-up-limit : up-capacity : upload-bandwidth-mode : upload-limit-mode : transfer-mode");
 
         log("new-limit:newLimit:currStep:signalStrength:multiple:currUpLimit:maxStep:uploadLimitMax:uploadLimitMin:transferMode" );
 
@@ -194,7 +194,7 @@ public class SpeedManagerAlgorithmProviderDHTPing
         limitMonitor.setDownloadBandwidthMode(downRateBitsPerSec,currDownLimit);
         limitMonitor.setUploadBandwidthMode(upRateBitsPerSec,currUploadLimit);
 
-        //update the limts status.  (is it near a forced max or min?)
+        //update the limits status.  (is it near a forced max or min?)
         limitMonitor.setDownloadLimitSettingMode(currDownLimit);
         limitMonitor.setUploadLimitSettingMode(currUploadLimit);
 
@@ -408,7 +408,7 @@ public class SpeedManagerAlgorithmProviderDHTPing
 
     /**
      * DHT Ping data is one of the metrics used. Calculate it here.
-     * @return - true if should exit early from the caluculate method.
+     * @return - true if should exit early from the calculate method.
      */
     private boolean calculateMediaDHTPingTime() {
         //Don't count this data point, if we skip the next ping times after an adjustment.
@@ -546,7 +546,7 @@ public class SpeedManagerAlgorithmProviderDHTPing
 
     /**
      * Want to rise much slower then drop.
-     * @param c - number of upsignals recieved in a row
+     * @param c - number of upsignals received in a row
      * @return - multiple factor.
      */
     private float calculateUpTickMultiple(int c) {
@@ -590,7 +590,7 @@ public class SpeedManagerAlgorithmProviderDHTPing
                 multiple=3.0f;
         }//switch
 
-        //decrease the signal strength if bandwith usage is only in MED use.
+        //decrease the signal strength if bandwidth usage is only in MED use.
         if( limitMonitor.bandwidthUsageMedium() ){
             multiple /= 2.0f;
         }
