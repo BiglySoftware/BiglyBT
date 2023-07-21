@@ -412,7 +412,7 @@ DHTRouterImpl
 				if ( contact != null ){
 
 					// some protection against network drop outs - start ignoring dead
-					// notifications if we're getting significant continous fails
+					// notifications if we're getting significant continuous fails
 
 					if ( consecutive_dead < 100 || force ){
 

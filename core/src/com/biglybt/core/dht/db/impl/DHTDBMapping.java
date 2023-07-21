@@ -758,7 +758,7 @@ DHTDBMapping
 				return;
 			}
 
-			// vague backwards compatability - if the creation date of the "new" value is significantly
+			// vague backwards compatibility - if the creation date of the "new" value is significantly
 			// less than the old then we ignore it (given that creation date is adjusted for time-skew you can
 			// see the problem with this approach...)
 

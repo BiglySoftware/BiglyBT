@@ -899,7 +899,7 @@ DHTUDPUtils
 
 				if ( reply.getProtocolVersion() < DHTTransportUDP.PROTOCOL_VERSION_VIVALDI_OPTIONAL ){
 
-						// need to add one in for backward compatability
+						// need to add one in for backward compatibility
 
 					DHTNetworkPosition np = VivaldiPositionFactory.createPosition( Float.NaN );
 
