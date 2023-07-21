@@ -144,7 +144,7 @@ implements PiecePicker
 
 	protected volatile int	nbPiecesDone;
 
-	/** asyncronously updated availability */
+	/** asynchronously updated availability */
 	protected volatile int[]	availabilityAsynch;
 	/** indicates availability needs to be recomputed due to detected drift */
 	protected volatile long		availabilityDrift;
@@ -370,7 +370,7 @@ implements PiecePicker
 	}
 
 	/**
-	 * This methd will compute the pieces' overall availability (including ourself)
+	 * This method will compute the pieces' overall availability (including ourself)
 	 * and the _globalMinOthers & _globalAvail
 	 */
 	@Override
@@ -511,7 +511,7 @@ implements PiecePicker
 			final PEPeer peer =(PEPeerTransport)peers.get(i);
 			if (peer !=null &&peer.getPeerState() ==PEPeer.TRANSFERING)
 			{
-				//cycle trhough the pieces they actually have
+				//cycle through the pieces they actually have
 				final BitFlags peerHavePieces =peer.getAvailable();
 				if (peerHavePieces !=null &&peerHavePieces.nbSet >0)
 				{
@@ -1216,7 +1216,7 @@ implements PiecePicker
 	}
 	/** This computes the base priority for all pieces that need requesting if there's
 	 * been any availability change or user priority setting changes since the last
-	 * call, which will be most of the time since availability changes so dynamicaly
+	 * call, which will be most of the time since availability changes so dynamically
 	 * It will change startPriorities[] (unless there was nothing to do)
 	 */
 	private void
@@ -1613,7 +1613,7 @@ implements PiecePicker
 		final int pieceNumber = getRequestCandidate(pt);
 		if (pieceNumber <0)
 		{
-			// probaly should have found something since chose to try; probably not interested anymore
+			// probably should have found something since chose to try; probably not interested anymore
 			// (or maybe Needed but not Done pieces are otherwise not requestable)
 			// pt.checkInterested();
 			return 0;
@@ -2288,7 +2288,7 @@ implements PiecePicker
 
         					// find a fallback piece in case the peer could theoretically contribute
         					// to an existing piece but is prevented by the snubbing rules etc.
-        					// this will prevent unecessary piece starting
+        					// this will prevent unnecessary piece starting
         					if(secondChoiceResume == -1 || avail > availability[secondChoiceResume])
         						secondChoiceResume = i;
 
@@ -2395,7 +2395,7 @@ implements PiecePicker
 
 
 //			this would allow more non-rarest pieces to be resumed so they get completed so they can be re-shared,
-//			which can make us intersting to more peers, and generally improve the speed of the swarm,
+//			which can make us interesting to more peers, and generally improve the speed of the swarm,
 //			however, it can sometimes be hard to get the rarest pieces, such as when a holder unchokes very infrequently
 //			20060312[MjrTom] this can lead to TOO many active pieces, so do the extra check with arbitrary # of active pieces
 			final boolean resumeIsBetter;
@@ -3359,7 +3359,7 @@ implements PiecePicker
 			// record that user-based priorities changed
 			filePriorityChange++;	// this is a user's priority change event
 
-			// only need to re-calc Needed on file's pieces; priority is calculated seperatly
+			// only need to re-calc Needed on file's pieces; priority is calculated separately
 			boolean foundPieceToDownload =false;
 			// if didn't have anything to do before, now only need to check if we need
 			// to DL from this file, but if had something to do before,

@@ -52,7 +52,7 @@ public interface PiecePicker
 
     /** This is called periodically by the peer control scheduler.
      * It should not normally be called by other methods.
-     * It will update the global availability if neccesary
+     * It will update the global availability if necessary
      * and then update the derived information
      */
     public void     updateAvailability();
