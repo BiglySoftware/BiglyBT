@@ -3816,7 +3816,7 @@ addressLoop:
 	{
 		if ( getAllBindAddresses( false ).length > 0 ){
 
-				// User knows what they're doing shurely
+				// User knows what they're doing surely
 
 			return;
 		}

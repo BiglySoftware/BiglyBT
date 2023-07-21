@@ -367,7 +367,7 @@ NetworkAdminSpeedTestScheduledTestImpl
                 return( true );
             }else{
 
-                throw new IllegalStateException( "Unrecognized response from speed test scheduling servcie." );
+                throw new IllegalStateException( "Unrecognized response from speed test scheduling service." );
             }
 
         }catch( Throwable t ){

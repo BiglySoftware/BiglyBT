@@ -170,7 +170,7 @@ public class NetworkAdminSpeedTesterBTImpl
 
     /**
      * The downloads have been stopped just need to do the testing.
-     * @param tot - Torrent recieved from testing service.
+     * @param tot - Torrent received from testing service.
      */
     public synchronized void
     start(
@@ -607,7 +607,7 @@ public class NetworkAdminSpeedTesterBTImpl
          */
         public void updateTestProgress(long currTime, DownloadStats stats){
 
-            //do two calculations. Frist based on the total time allowed for the test
+            //do two calculations. First based on the total time allowed for the test
             long totalDownloadTimeUsed = currTime-startTime;
             float percentTotal = ((float)totalDownloadTimeUsed/(float)MAX_TEST_TIME);
 
@@ -699,7 +699,7 @@ public class NetworkAdminSpeedTesterBTImpl
          * @return - List<Long> with the download rate for each second.
          */
         private List convertSumToDeltas(List sumHistory){
-            //find the first element to inlcude in the stat.
+            //find the first element to include in the stat.
             int numStats = sumHistory.size();
             int i = findIndexPeak(numStats);
 
