@@ -1524,7 +1524,7 @@ SubscriptionManagerUI
 
 						//boolean expanded = headerEntry.isExpanded();
 
-							// always treat as collasped - due to various sidebar restructuring this had effectively been
+							// always treat as collapsed - due to various sidebar restructuring this had effectively been
 							// the case for quite a while and people complained when it reverted to the original way of working
 
 						boolean expanded = false;

@@ -102,7 +102,7 @@ public class UIExitUtilsSWT
 	}
 
 	/**
-	 * @return true, if the user choosed OK in the exit dialog
+	 * @return true, if the user chose OK in the exit dialog
 	 *
 	 * @author Rene Leonhardt
 	 */

@@ -71,7 +71,7 @@ import com.biglybt.pif.ui.config.Parameter;
 public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepository.ConfigSectionRepositoryListener {
 	private static final LogIDs LOGID = LogIDs.GUI;
 
-	// For highligting via showSeection.  option map contains "select" key with "value".
+	// For highlighting via showSeection.  option map contains "select" key with "value".
 	// (multiple) config widgets can setData(SELECT_KEY, "value"), which means they will be
 	// highlighted
 	public static final String SELECT_KEY	= "ConfigView.select_key";
@@ -139,7 +139,7 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
   }
 
   private void initialize(final Composite composite) {
-  	// need to initalize composite now, since getComposite can
+  	// need to initialize composite now, since getComposite can
   	// be called at any time
     cConfig = new Composite(composite, SWT.NONE);
 

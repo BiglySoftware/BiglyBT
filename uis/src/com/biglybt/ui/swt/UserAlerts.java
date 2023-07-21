@@ -766,7 +766,7 @@ UserAlerts
 		The Java audio system keeps some threads running even after playback is finished.
 		One of them, named "Java Sound event dispatcher", is *not* a daemon
 		thread and keeps the VM alive.
-		We have to locate and interrupt it explicitely.
+		We have to locate and interrupt it explicitly.
 		*/
 
 		try{

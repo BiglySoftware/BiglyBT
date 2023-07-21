@@ -610,7 +610,7 @@ public class SideBarEntrySWT
 	public void hide() {
 		// if we defer the show above then we should defer the hide similarly to ensure that a caller trying
 		// to show a new view before hiding the old (to avoid an intermediate blank view) ends up executing things
-		// in teh desired order
+		// in the desired order
 		Utils.execSWTThreadLater(0, new AERunnable() {
 			@Override
 			public void runSupport() {

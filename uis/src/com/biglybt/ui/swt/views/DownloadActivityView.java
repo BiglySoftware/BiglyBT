@@ -836,7 +836,7 @@ DownloadActivityView
 
 	    		String id = "DMDetails_DownloadGraph";
 
-	    		setVisible( true );	// do this here to pick up corrent manager before rest of code
+	    		setVisible( true );	// do this here to pick up current manager before rest of code
 
 	    		if ( managers != null ){
 

@@ -1746,7 +1746,7 @@ implements UIPluginViewToolBarListener, UISWTViewCoreEventListener
 		case UISWTViewEvent.TYPE_FOCUSGAINED:
 			String id = "DMDetails_Swarm";
 
-			setFocused( true );	// do this before next code as it can pick up the corrent 'manager' ref
+			setFocused( true );	// do this before next code as it can pick up the current 'manager' ref
 
 			synchronized( dm_data_lock ){
 

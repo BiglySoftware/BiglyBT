@@ -40,7 +40,7 @@ public class Scale {
   //The displayed number of levels
   private int nbLevels;
 
-  //The computed (dislayed max)
+  //The computed (displayed max)
   private int displayedMax;
 
 

@@ -402,7 +402,7 @@ public abstract class BaseMDI
 	private boolean createIfAutoOpen(String id) {
 		
 		
-			// carefull with scope of locking on autoOpenLock - make it larger and you'll
+			// careful with scope of locking on autoOpenLock - make it larger and you'll
 			// get deadlocks...
 
 		Map<?, ?> autoOpenInfo;

@@ -79,7 +79,7 @@ public class ViewManagerSWT
 		} else if (forDSTypeOrViewID instanceof String) {
 			// Legacy convert. Older plugins registered for a parent viewid when
 			// they really want to be in all views with a certain datasource type.
-			// Example, registering to VIEW_MYTORRENTS when they are usefull in all
+			// Example, registering to VIEW_MYTORRENTS when they are useful in all
 			// Download.class type views
 			Class<?> cla = mapViewIDToClass((String) forDSTypeOrViewID);
 			if (cla != null) {
@@ -94,7 +94,7 @@ public class ViewManagerSWT
 			UISWTViewBuilderCore existingBuilder = builderMap.put(builder.getViewID(),
 					builder);
 			if (existingBuilder != null && existingBuilder != builder && !skipWarning) {
-				Debug.out("Overiding already registered view '" + builder.getViewID()
+				Debug.out("Overriding already registered view '" + builder.getViewID()
 						+ "' for " + forDSTypeOrViewID);
 			}
 		}
