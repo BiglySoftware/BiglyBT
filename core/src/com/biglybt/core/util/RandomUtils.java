@@ -58,7 +58,7 @@ RandomUtils
 
 
 	/**
-	 * Generate a random string of charactors.
+	 * Generate a random string of characters.
 	 * @param num_to_generate number of chars to generate
 	 * @return random char string
 	 */

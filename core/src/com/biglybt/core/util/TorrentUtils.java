@@ -3936,7 +3936,7 @@ TorrentUtils
 
 			throws TOTorrentException
 		{
-				// don't support this as it changes teh torrent hash
+				// don't support this as it changes the torrent hash
 
 			throw( new TOTorrentException( "Can't amend private attribute", TOTorrentException.RT_WRITE_FAILS ));
 		}
@@ -4522,7 +4522,7 @@ TorrentUtils
 	/**
 	 * A nice string of a Torrent's hash
 	 *
-	 * @param torrent Torrent to fromat hash of
+	 * @param torrent Torrent to format hash of
 	 * @return Hash string in a nice format
 	 */
 	public static String nicePrintTorrentHash(TOTorrent torrent) {
@@ -4532,7 +4532,7 @@ TorrentUtils
 	/**
 	 * A nice string of a Torrent's hash
 	 *
-	 * @param torrent Torrent to fromat hash of
+	 * @param torrent Torrent to format hash of
 	 * @param tight No spaces between groups of numbers
 	 *
 	 * @return Hash string in a nice format

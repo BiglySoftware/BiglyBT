@@ -39,7 +39,7 @@ public class SystemProperties {
 	private static final LogIDs LOGID = LogIDs.CORE;
 
 		/**
-		 * Path separator charactor.
+		 * Path separator character.
 		 */
 	
 	public static final String SEP = System.getProperty("file.separator");

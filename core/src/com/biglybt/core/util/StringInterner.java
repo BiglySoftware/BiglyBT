@@ -131,7 +131,7 @@ StringInterner
 	}
 
 	/**
-	 * A generic interning facilty for heavyweight or frequently duplicated
+	 * A generic interning facility for heavyweight or frequently duplicated
 	 * Objects that have a reasonable <code>equals()</code> implementation.<br>
 	 * <br>
 	 * Important: The objects should have a limited lifespan, the interning set

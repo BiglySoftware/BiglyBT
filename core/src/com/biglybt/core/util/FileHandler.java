@@ -46,7 +46,7 @@ public class FileHandler
 	/**
 	 * @implNote 
 	 *  parent and subDirs may contain File.separator<br/>
-	 *  parent might be empty string (default is File.separater)
+	 *  parent might be empty string (default is File.separator)
 	 */
 	public File newFile(String parent, String... subDirs) {
 		if (subDirs == null || subDirs.length == 0) {

@@ -433,7 +433,7 @@ public class Timer
 
 				// there's a chance that between the change being notified and completed an event was scheduled
 				// using an un-modified current time. Nothing can be done for non-periodic events but for periodic
-				// ones we can santitize them to at least be within the periodic time period of the current time
+				// ones we can sanitize them to at least be within the periodic time period of the current time
 				// important for when clock goes back but not forward obviously
 
 			synchronized( this ){

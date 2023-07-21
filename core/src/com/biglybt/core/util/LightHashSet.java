@@ -32,7 +32,7 @@ import java.util.*;
  * Disadvantages:
  * <ul>
  * <li>removal is implemented with thombstone-keys, this can significantly increase the lookup time if many values are removed. Use compactify() for scrubbing
- * <li>entry set iterators and thus transfers to other maps are slower than compareable implementations
+ * <li>entry set iterators and thus transfers to other maps are slower than comparable implementations
  * <li>the map does not store hashcodes and relies on either the key-objects themselves caching them (such as strings) or a fast computation of hashcodes
  * </ul>
  *
@@ -124,7 +124,7 @@ public class LightHashSet extends AbstractSet implements Cloneable {
 			if (currentIdx == -1)
 				throw new IllegalStateException("No entry to delete, use next() first");
 			if (itData != data)
-				throw new ConcurrentModificationException("removal opperation not supported as concurrent structural modification occured");
+				throw new ConcurrentModificationException("removal operation not supported as concurrent structural modification occured");
 			LightHashSet.this.removeForIndex(currentIdx);
 			currentIdx = -1;
 		}

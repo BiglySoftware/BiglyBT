@@ -601,7 +601,7 @@ public class FileUtil {
 			// mac file names can end in space - fix this up by getting
 			// the canonical form which removes this on Windows
 
-			// however, for soem reason getCanonicalFile can generate high CPU usage on some user's systems
+			// however, for some reason getCanonicalFile can generate high CPU usage on some user's systems
 			// in  java.io.Win32FileSystem.canonicalize
 			// so changing this to only be used on non-windows
 
@@ -3556,7 +3556,7 @@ public class FileUtil {
 		 * Gets the encoding that should be used when writing script files (currently only
 		 * tested for windows as this is where an issue can arise...)
 		 * We also only test based on the user-data directory name to see if an explicit
-		 * encoding switch is requried...
+		 * encoding switch is required...
 		 * @return null - use default
 		 */
 
