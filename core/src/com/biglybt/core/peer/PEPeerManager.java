@@ -351,7 +351,7 @@ PEPeerManager
   /**
    * Register a peer connection for peer exchange handling.
    * NOTE: Creation could fail if the peer is not eligible for peer exchange (like if it's remote port is unknown).
-   * @param base_peer exchaning with
+   * @param base_peer exchanging with
    * @return peer database connection item, or null if creation failed
    */
   public PeerExchangerItem createPeerExchangeConnection( PEPeerTransport base_peer );

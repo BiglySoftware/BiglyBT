@@ -186,7 +186,7 @@ PEPeer
 
 	/**
 	 * checks several factors within the object so the caller wouldn't need to
-	 * for convienience and speed.
+	 * for convenience and speed.
 	 * @return true if none of several criteria indicate a request can't be made of the peer
 	 */
 	public boolean isDownloadPossible();

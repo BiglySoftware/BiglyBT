@@ -1576,7 +1576,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		// for every piece
 		for(int i = 0; i < _nbPieces; i++){
 			final DiskManagerPiece dmPiece = dm_pieces[i];
-			// if piece is completly written, not already checking, and not Done
+			// if piece is completely written, not already checking, and not Done
 			if(dmPiece.isNeedsCheck()){
 
 				// check the piece from the disk
@@ -1723,7 +1723,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 								// user
 								// with a SAN that has .5 second write latencies when checking a file at the
 								// same time
-								// this means that when dowloading > 32K/sec things start backing up).
+								// this means that when downloading > 32K/sec things start backing up).
 								// Eventually the
 								// write controller will start blocking the network thread to prevent unlimited
 								// queueing but until that time we need to handle this situation slightly
@@ -2230,7 +2230,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	/**
 	 * This method will locate expired requests on peers, will cancel them, and mark
-	 * the peer as snubbed if we haven't received usefull data from them within the
+	 * the peer as snubbed if we haven't received useful data from them within the
 	 * last 60 seconds
 	 */
 	private void checkRequests(){
@@ -2980,15 +2980,15 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 	 * peer either if in end-game mode, or per cancel param
 	 * 
 	 * @param pieceNumber
-	 *            to potentialy write to
+	 *            to potentially write to
 	 * @param offset
 	 *            within piece to queue write for
 	 * @param data
-	 *            to be writen
+	 *            to be written
 	 * @param sender
 	 *            peer that sent this data
 	 * @param cancel
-	 *            if cancels definatly need to be sent to all peers for this request
+	 *            if cancels definitely need to be sent to all peers for this request
 	 */
 	@Override
 	public void writeBlock(int pieceNumber, int offset, DirectByteBuffer data, Object sender, boolean cancel){
@@ -4743,7 +4743,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 					if(loopdone){ // if already been here, has been full loop through pieces, quit
 						// quit superseed mode
 						superSeedMode = false;
-						closeAndRemoveAllPeers("quiting SuperSeed mode", Transport.CR_NONE, true);
+						closeAndRemoveAllPeers("quitting SuperSeed mode", Transport.CR_NONE, true);
 						return;
 					}else{
 						// loopdone==false --> first time here --> go through the pieces
@@ -6088,7 +6088,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				return true;
 			}
 
-			// kick worst peers to accomodate lan peer
+			// kick worst peers to accommodate lan peer
 
 			if(pending_lan_local_peer && lan_peer_count < LAN_PEER_MAX){
 				closeAndRemovePeer(max_transport, "making space for LAN peer in doOptimisticDisconnect()", Transport.CR_PEER_CHURN, true);

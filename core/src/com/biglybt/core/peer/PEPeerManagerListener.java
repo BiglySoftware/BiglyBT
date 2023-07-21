@@ -48,7 +48,7 @@ PEPeerManagerListener
 
   /**
    * piece activated
-   * @param peice
+   * @param piece
    * @param for_peer maybe null if not for a particular peer
    */
 
