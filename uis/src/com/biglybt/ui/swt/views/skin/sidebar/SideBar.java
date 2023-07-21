@@ -48,7 +48,6 @@ import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.*;
 import com.biglybt.ui.swt.pif.UISWTInstance;
@@ -1299,8 +1298,25 @@ public class SideBar
 		final Menu menuTree = new Menu(tree);
 		tree.setMenu(menuTree);
 		
+		// Set MdiEntry on MenuDetect because it might be long while before
+		// menuShown is triggered. The user may have moved the cursor since then,
+		// and menuShown has no e.x or e.y. 
 		tree.addMenuDetectListener(e -> {
-			menuTree.setData("MenuSource", e.detail);
+			SideBarEntrySWT entry = null;
+			if (e.detail == SWT.MENU_MOUSE) {
+				Point ptMouse = ((Control)e.widget).toControl(e.x, e.y);
+
+				int indent = END_INDENT ? tree.getClientArea().width - 1 : 0;
+				TreeItem treeItem = tree.getItem(new Point(indent, ptMouse.y));
+				if (treeItem != null) {
+
+					entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
+				}else{
+					entry = null;
+				}
+			} 
+			
+			menuTree.setData("MdiEntry", entry);
 		});
 
 		menuTree.addMenuListener(new MenuListener() {
@@ -1333,23 +1349,9 @@ public class SideBar
 
 				bShown = true;
 
-				Object oMenuSource = menuTree.getData("MenuSource");
-				int menuSource = (oMenuSource instanceof Number)
-						? ((Number) oMenuSource).intValue() : SWT.MENU_MOUSE;
-
-				SideBarEntrySWT entry;
-				if (menuSource != SWT.MENU_KEYBOARD) {
-					Point ptMouse = tree.toControl(e.display.getCursorLocation());
-	
-					int indent = END_INDENT ? tree.getClientArea().width - 1 : 0;
-					TreeItem treeItem = tree.getItem(new Point(indent, ptMouse.y));
-					if (treeItem != null) {
-					
-						entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
-					}else{
-						entry = null;
-					}
-				} else {
+				SideBarEntrySWT entry = (SideBarEntrySWT) tree.getData("MdiEntry");
+				
+				if (entry == null) {
 					entry = getCurrentEntry(); 
 				}
 
@@ -1385,12 +1387,7 @@ public class SideBar
 				}
 				
 				if (menuTree.getItemCount() == 0) {
-					Utils.execSWTThreadLater(0, new AERunnable() {
-						@Override
-						public void runSupport() {
-							menuTree.setVisible(false);
-						}
-					});
+					Utils.execSWTThreadLater(0, () -> menuTree.setVisible(false));
 				}
 			}
 		});
