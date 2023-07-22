@@ -405,7 +405,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	public void
 	resume();
 
-	/** Returns the name of the torrent.  Similar to Torrent.getName() and is usefull
+	/** Returns the name of the torrent.  Similar to Torrent.getName() and is useful
    * if getTorrent() returns null and you still need the name.
    * @return name of the torrent
    *

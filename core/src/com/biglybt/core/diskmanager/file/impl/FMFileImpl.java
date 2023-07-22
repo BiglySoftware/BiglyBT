@@ -857,7 +857,7 @@ FMFileImpl
 	
 
 		// file reservation is used to manage the possibility of multiple torrents
-		// refering to the same file. Initially introduced to stop a common problem
+		// referring to the same file. Initially introduced to stop a common problem
 		// whereby different torrents contain the same files - without
 		// this code the torrents could interfere resulting in all sorts of problems
 		// The original behavior was to completely prevent the sharing of files.

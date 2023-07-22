@@ -48,7 +48,7 @@ DefaultRankCalculator
 	/** Rank that complete starts at (and incomplete ends at + 1) */
 	public static final int SR_COMPLETE_STARTS_AT = 1000000000; // billion
 
-	/** Maximimum ranking for time queue mode. 1 unit is a second */
+	/** Maximum ranking for time queue mode. 1 unit is a second */
 	public static final int SR_TIMED_QUEUED_ENDS_AT =199999999;
 
 	/** Ranks below this value are for torrents to be ignored (moved to bottom & queued) */

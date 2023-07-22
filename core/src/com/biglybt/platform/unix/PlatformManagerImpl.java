@@ -74,7 +74,7 @@ public class PlatformManagerImpl implements PlatformManager
 			singleton = new PlatformManagerImpl();
 		} catch (Throwable e) {
 			Logger.log(new LogEvent(LOGID, "Failed to initialize platform manager"
-					+ " for Unix Compatable OS", e));
+					+ " for Unix Compatible OS", e));
 		} finally {
 			class_mon.exit();
 		}

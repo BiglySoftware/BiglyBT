@@ -557,7 +557,7 @@ UDPConnectionManager
 
 				incoming_bloom_create_time	= now;
 
-	     		Logger.log(	new LogEvent(LOGID, "UDP connnection bloom: size increased to " + incoming_bloom.getSize()));
+	     		Logger.log(	new LogEvent(LOGID, "UDP connection bloom: size increased to " + incoming_bloom.getSize()));
 
 			}else if ( now < incoming_bloom_create_time || now - incoming_bloom_create_time > BLOOM_RECREATE ){
 

@@ -3793,7 +3793,7 @@ SpeedLimitHandler
 		result.add( "#     daily limited_upload from 06:00 to 22:00 stop_tag:bigstuff" );
 		result.add( "#     daily pause_all from 08:00 to 17:00" );
 		result.add( "#" );
-		result.add( "#     net_limit monthly total=250G          // flat montly limit" );
+		result.add( "#     net_limit monthly total=250G          // flat monthly limit" );
 		result.add( "#" );
 		result.add( "#     net_limit monthly:no_limits                  // no monthly limit when no_limits active" );
 		result.add( "#     net_limit monthly:limited_upload total=100G  // 100G a month limit when limited_upload active" );
@@ -8091,7 +8091,7 @@ SpeedLimitHandler
 												if ( probe_rate <= 0 || rate < 110*probe_rate/100 ){
 
 														// weak one went down but previous probe rate doesn't
-														// let it off teh hook
+														// let it off the hook
 
 													stick_with_decision = true;
 
@@ -8166,7 +8166,7 @@ SpeedLimitHandler
 
 										tag_state.setLimit( my_target, PrioritiserTagState.CT_MAJOR, "1: adjusting after limit hit (diffs=" + formatRate( hp_diff, false ) + "/" + formatRate( my_diff, false ) + ", consec=" + consec_limits_hit + ")" );
 
-											// decrease lower priority limits agressively as any bandwidth they are consuming
+											// decrease lower priority limits aggressively as any bandwidth they are consuming
 											// needs to be pushed our way
 
 										int	low_pri_rates = 0;

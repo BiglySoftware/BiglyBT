@@ -33,7 +33,7 @@ import com.biglybt.pif.ui.tables.TableManager;
  */
 
 /*
- * OK, this really shouldn't be here, we shoudl create a CoreTableColumnSWT that implements this
+ * OK, this really shouldn't be here, we should create a CoreTableColumnSWT that implements this
  * listener logic, but I'm not sure exactly
  */
 

@@ -171,7 +171,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	private int minSpeedForActiveSeeding;
 
-	/** Maximimum # of stalled torrents that are in seeding mode */
+	/** Maximum # of stalled torrents that are in seeding mode */
 	private int maxStalledSeeding;
 	private int maxOverLimitSeeding;
 	private boolean stalledSeedingIgnoreZP;

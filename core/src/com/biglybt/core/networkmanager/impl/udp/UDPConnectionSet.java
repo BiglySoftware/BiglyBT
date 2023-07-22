@@ -1046,7 +1046,7 @@ UDPConnectionSet
 				// first packet - connection setup and crypto handshake
 
 				// derive the sequence number in the normal way so that if a retranmission occurs
-				// after crypto has been setup then it'll get handled correctly as a dupliate packet
+				// after crypto has been setup then it'll get handled correctly as a duplicate packet
 				// below
 
 			initial_buffer.position( 4 );

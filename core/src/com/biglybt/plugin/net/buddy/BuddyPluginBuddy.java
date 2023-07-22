@@ -1804,7 +1804,7 @@ BuddyPluginBuddy
 
 					try{
 							// can't perform connect op while synchronized as may deadlock on password
-							// aquisition
+							// acquisition
 
 						GenericMessageConnection generic_connection = outgoingConnection();
 						

@@ -962,7 +962,7 @@ SpeedManagerPingMapperImpl
 			return;
 		}
 
-			// remeber, 0 means UNLIMITED!!!
+			// remember, 0 means UNLIMITED!!!
 
 		int	cap = capacity.getBytesPerSec();
 

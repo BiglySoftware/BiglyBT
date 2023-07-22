@@ -30,7 +30,7 @@ public class FileLoggingAdapter {
 	 * Called when we are about to log an event to file.
 	 *
 	 * @param event Event being logged to file
-	 * @param lineOut line to be written to file (modifyable)
+	 * @param lineOut line to be written to file (modifiable)
 	 * @return true-ok to log to file; false-skip logging to file
 	 */
 	public boolean logToFile(LogEvent event, StringBuffer lineOut) {

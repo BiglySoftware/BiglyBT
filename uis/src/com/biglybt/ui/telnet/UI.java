@@ -46,7 +46,7 @@ import com.biglybt.ui.console.multiuser.commands.UserCommand;
 
 /**
  * this is a telnet UI that starts up a server socket that listens for new connections
- * on a (configurable) port. when an incoming connection is recieved, we check the host
+ * on a (configurable) port. when an incoming connection is received, we check the host
  * against our list of allowed hosts and if this host is permitted, we start a new
  * command line interface for that connection.
  * @author fatal

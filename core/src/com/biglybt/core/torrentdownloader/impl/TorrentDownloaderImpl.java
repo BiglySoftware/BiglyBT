@@ -176,7 +176,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 
     	String	protocol = url.getProtocol().toLowerCase( Locale.US );
 
-    	// hack here - the magnet download process requires an additional paramter to cause it to
+    	// hack here - the magnet download process requires an additional parameter to cause it to
     	// stall on error so the error can be reported
 
     	if ( protocol.equals( "magnet" ) || protocol.equals( "maggot" ) || protocol.equals( "dht" )){

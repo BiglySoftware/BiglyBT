@@ -1754,7 +1754,7 @@ RelatedContentManager
 	protected DownloadInfo
 	decodeInfo(
 		Map				map,
-		byte[]			from_hash,	// will be null for those trawled from teh local DHT
+		byte[]			from_hash,	// will be null for those trawled from the local DHT
 		int				level,
 		boolean			explicit,
 		Set<String>		unique_keys )
@@ -3046,7 +3046,7 @@ RelatedContentManager
 
 					if ( download_info_map.containsKey( target )){
 
-							// target refers to downoad we already have
+							// target refers to download we already have
 
 						return;
 					}
@@ -3059,7 +3059,7 @@ RelatedContentManager
 
 					if ( download_priv_set.contains( key )){
 
-							// target refers to downoad we already have
+							// target refers to download we already have
 
 						return;
 					}

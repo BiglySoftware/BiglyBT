@@ -320,7 +320,7 @@ BloomFilterImpl
 			{
 				 	// x^2 mod p
 
-				res	= value * value;	// don't try and *fix* this to avoid integer overflow as bloom filters are serialised and this woudl screw up the hash...
+				res	= value * value;	// don't try and *fix* this to avoid integer overflow as bloom filters are serialised and this would screw up the hash...
 
 				break;
 			}

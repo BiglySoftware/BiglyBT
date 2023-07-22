@@ -92,7 +92,7 @@ public class BrowserMessage
 	 * Sets the message complete and fires of the listeners who are waiting
 	 * for a response.
 	 *
-	 * @param bOnlyNonDelayed Only mark complete if this message does not have a delayed reponse
+	 * @param bOnlyNonDelayed Only mark complete if this message does not have a delayed response
 	 * @param success Success level of the message
 	 * @param data Any data the message results wants to send
 	 */

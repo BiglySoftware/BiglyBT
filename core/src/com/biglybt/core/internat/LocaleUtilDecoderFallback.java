@@ -120,7 +120,7 @@ LocaleUtilDecoderFallback
 
 		if ( len > max_ok_name_length ){
 
-				// could be a file system out there that supports arbitarily long names, so
+				// could be a file system out there that supports arbitrarily long names, so
 				// we can't pre-calculate the max
 
 			if ( 	( !max_ok_name_length_determined )&&
