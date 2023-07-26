@@ -100,7 +100,7 @@ public class SWTSkinObjectTab
 	/**
 	 * Sets the parent skin object to which the active widgets belong to.
 	 * <P>
-	 * This is usefull when there are multiple widgets with the same ID
+	 * This is useful when there are multiple widgets with the same ID
 	 *
 	 * @param activeWidgetsParent
 	 */

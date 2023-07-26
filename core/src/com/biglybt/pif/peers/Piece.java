@@ -55,7 +55,7 @@ Piece
 	getAllocatableRequestCount();
 
 		/**
-		 * Reserve this peice for a given peer - no other peer will be asked for the piece
+		 * Reserve this piece for a given peer - no other peer will be asked for the piece
 		 * @return
 		 */
 

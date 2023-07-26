@@ -1265,13 +1265,13 @@ DownloadManagerImpl
 				 torrent_save_location = FileUtil.newFile( torrent_save_dir, torrent_save_file );
 
 				 	// final validity test must be based of potentially linked target location as file
-				 	// may have been re-targetted
+				 	// may have been re-targeted
 
 
 					// if this isn't a new torrent then we treat the absence of the enclosing folder
 					// as a fatal error. This is in particular to solve a problem with the use of
 				 	// externally mounted torrent data on OSX, whereby a re-start with the drive unmounted
-				 	// results in the creation of a local diretory in /Volumes that subsequently stuffs
+				 	// results in the creation of a local directory in /Volumes that subsequently stuffs
 				 	// up recovery when the volume is mounted
 
 				 	// changed this to only report the error on non-windows platforms
@@ -3570,7 +3570,7 @@ DownloadManagerImpl
 				}
 			} else if (!response.isValid() && response.getStatus() == TRTrackerScraperResponse.ST_INITIALIZING) {
 				long minNextScrape;
-				// Spread the scrapes out a bit.  This is extremely helpfull on large
+				// Spread the scrapes out a bit.  This is extremely helpful on large
 				// torrent lists, and trackers that do not support multi-scrapes.
 				// For trackers that do support multi-scrapes, it will really delay
 				// the scrape for all torrent in the tracker to the one that has
@@ -7286,7 +7286,7 @@ DownloadManagerImpl
  	  return( dl_identity );
   }
 
-   /** @retun true, if the other DownloadManager has the same hash
+   /** @return true, if the other DownloadManager has the same hash
     * @see java.lang.Object#equals(java.lang.Object)
     */
    public boolean equals(Object obj)

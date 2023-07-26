@@ -201,7 +201,7 @@ PEPeerTransport
 
   /**
    * Get the time since the most-recent data that was actually written to disk was received.
-   * @return time count in ms, or -1 if we've never received usefull data from them
+   * @return time count in ms, or -1 if we've never received useful data from them
    */
   public long getTimeSinceGoodDataReceived();
 
@@ -253,7 +253,7 @@ PEPeerTransport
 
 		/**
 		 * Attempts to reconnect to the same peer
-		 * @param tryUDP try to initate a UDP connection if true, just reestablish the previous state otherwise
+		 * @param tryUDP try to initiate a UDP connection if true, just reestablish the previous state otherwise
 		 * @param tryIPv6 TODO
 		 * @return null if reconnect not possible, reconnected peer otherwise
 		 */

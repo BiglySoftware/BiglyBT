@@ -82,7 +82,7 @@ public class AuthorityKeyIdentifier
 
     /**
      *
-     * Calulates the keyidentifier using a SHA1 hash over the BIT STRING
+     * Calculates the keyidentifier using a SHA1 hash over the BIT STRING
      * from SubjectPublicKeyInfo as defined in RFC2459.
      *
      * Example of making a AuthorityKeyIdentifier:

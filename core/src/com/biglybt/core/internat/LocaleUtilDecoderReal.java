@@ -96,7 +96,7 @@ LocaleUtilDecoderReal
 
 				byte[]	b2 = str.getBytes( getName() );
 
-					// make sure the conversion is symetric (there are cases where it appears
+					// make sure the conversion is symmetric (there are cases where it appears
 					// to work but in fact converting back to bytes leads to a different
 					// result
 
@@ -152,7 +152,7 @@ LocaleUtilDecoderReal
 
 				byte[]	b2 = str.getBytes(decoder.charset().name());
 
-					// make sure the conversion is symetric (there are cases where it appears
+					// make sure the conversion is symmetric (there are cases where it appears
 					// to work but in fact converting back to bytes leads to a different
 					// result
 

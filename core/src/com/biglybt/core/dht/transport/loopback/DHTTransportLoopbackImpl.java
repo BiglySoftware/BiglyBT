@@ -337,7 +337,7 @@ DHTTransportLoopbackImpl
 
 		if ( version != VERSION ){
 
-			throw( new IOException( "Unsuported version" ));
+			throw( new IOException( "Unsupported version" ));
 
 		}
 		int	id_len	= is.readInt();

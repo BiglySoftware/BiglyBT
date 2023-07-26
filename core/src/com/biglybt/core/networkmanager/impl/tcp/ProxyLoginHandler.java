@@ -207,7 +207,7 @@ public class ProxyLoginHandler {
    * Do proxy login.
    * @param proxy_connection transport connected to proxy server
    * @param remote_address address to proxy to
-   * @param listener for proxy login success or faulure
+   * @param listener for proxy login success or failure
    */
 
   public
@@ -647,7 +647,7 @@ public class ProxyLoginHandler {
       handshake.put( (byte)1 ); // connect
       handshake.put( (byte)0 ); // reserved
 
-      // use the maped ip for dns resolution so we don't leak the
+      // use the mapped ip for dns resolution so we don't leak the
       // actual address if this is a secure one (e.g. I2P one)
       try {
         byte[] ip_bytes = HostNameToIPResolver.syncResolve( mapped_ip ).getAddress();

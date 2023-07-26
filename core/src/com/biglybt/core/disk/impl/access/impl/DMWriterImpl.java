@@ -450,7 +450,7 @@ DMWriterImpl
 
 				buffer.returnToPool();
 
-				listener.writeCompleted( request ); //XXX: no writing was done; is this neccesary for complete()?
+				listener.writeCompleted( request ); //XXX: no writing was done; is this necessary for complete()?
 
 			}else{
 

@@ -122,7 +122,7 @@ Constants
 	public static final long   CRAPPY_INFINITE_AS_LONG = 10000*365*24*3600; // seconds (10k years)
 
 	/**
-	 *  Can't be final as accesed from client speed measurer plugin
+	 *  Can't be final as accessed from client speed measurer plugin
 	 *  27/04/2022 dead plugin, remove this sometime
 	 */
 

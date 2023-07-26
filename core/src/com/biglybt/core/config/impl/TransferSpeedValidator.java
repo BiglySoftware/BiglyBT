@@ -152,7 +152,7 @@ public final class TransferSpeedValidator
         		// so we don't really care
         }else
         {
-            throw new IllegalArgumentException("Invalid Configuation Key; use key for max upload and max download");
+            throw new IllegalArgumentException("Invalid Configuration Key; use key for max upload and max download");
         }
 
         return new Integer(newValue);

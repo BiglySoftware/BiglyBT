@@ -7690,7 +7690,7 @@ public class OpenTorrentOptionsWindow
 			// 5) click ok.  "hi.exe" will be written as moo in c:\test
 
 			if ( !torrentOptions.isSimpleTorrent()){
-				torrentOptionsDataDir = torrentOptionsDataDir.getParentFile();	// for non-simple this points to the top folder in downoad
+				torrentOptionsDataDir = torrentOptionsDataDir.getParentFile();	// for non-simple this points to the top folder in download
 			}
 
 			if (!torrentOptionsDataDir.isDirectory() && !FileUtil.mkdirs(torrentOptionsDataDir)) {

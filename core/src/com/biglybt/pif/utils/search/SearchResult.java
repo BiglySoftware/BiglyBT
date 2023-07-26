@@ -47,7 +47,7 @@ SearchResult
 	public static final int	PR_VERSION				= 22;	// Long (-1 n/a)
 	public static final int	PR_TORRENT_LINK			= 23;	// URL as String - for whatever reason, PR_DOWNLOAD_LINK will be populated with the 'download button link'
 															// from a result in preference to the 'download link' - sometimes these are different... so added this one to
-															// always return teh 'download link'
+															// always return the 'download link'
 
 	public static final int	PR_ASSET_DATE			= 24;
 	public static final int	PR_TAGS					= 25;	// String[]

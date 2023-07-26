@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * This is a hack based on Sun's implemenetation below to just support byte[] efficiently
+ * This is a hack based on Sun's implementation below to just support byte[] efficiently
  *  * @(#)HashMap.java	1.57 03/01/23
  *
  * Copyright 2003 Sun Microsystems, Inc. All rights reserved.

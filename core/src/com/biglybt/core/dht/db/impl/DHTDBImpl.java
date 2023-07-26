@@ -3573,14 +3573,14 @@ DHTDBImpl
 				 * per neighbour (factors of 100), so an approach based on number of registrations
 				 * is non-trivial (assuming future scaling of the DHT, what do we consider crap?)
 				 * A further approach would be to query the claimed originators of values (obviously
-				 * a low bandwith approach, e.g. query 3 values from the contact with highest number
+				 * a low bandwidth approach, e.g. query 3 values from the contact with highest number
 				 * of forwarded values). This requires originators to support long term knowledge of
 				 * what they've published (we don't want to blacklist a neighbour because an originator
 				 * has deleted a value/been restarted). We also then have to consider how to deal with
 				 * non-responses to queries (assuming an affirmative Yes -> value has been forwarded
 				 * correnctly, No -> probably crap). We can't treat non-replies as No. Thus a bad
 				 * neighbour only has to forward crap with originators that aren't AZ nodes (very
-				 * easy to do!) to break this aproach.
+				 * easy to do!) to break this approach.
 				 *
 				 *
 				it2 = mapping.getIndirectValues();

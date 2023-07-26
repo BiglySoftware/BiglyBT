@@ -169,7 +169,7 @@ AEDiagnosticsLogger
 
 			System.err.println( str );
 
-			// Logger dumps the stderr, but if it's not setup, do it outselves
+			// Logger dumps the stderr, but if it's not setup, do it ourselves
 			if (Logger.getOldStdErr() == null) {
 				log( str );
 			}

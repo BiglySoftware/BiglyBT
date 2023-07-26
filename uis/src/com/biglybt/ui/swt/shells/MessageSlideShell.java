@@ -74,7 +74,7 @@ public class MessageSlideShell
 	/** Standard height of the shell.  Shell may grow depending on text */
 	private final static int SHELL_MIN_HEIGHT = 150;
 
-	/** Maximimum height of popup.  If text is too long, the full text will be
+	/** Maximum height of popup.  If text is too long, the full text will be
 	 * put into details.
 	 */
 	private final static int SHELL_MAX_HEIGHT = 330;
@@ -575,7 +575,7 @@ public class MessageSlideShell
 			endBounds = shell.computeTrim(boundsX2 - bestSize.x, boundsY2
 					- bestSize.y, bestSize.x, bestSize.y);
 
-			// bottom and right trim will be off the edge, calulate this trim
+			// bottom and right trim will be off the edge, calculate this trim
 			// and adjust it up and left (trim may not be the same size on all sides)
 			int diff = (endBounds.x + endBounds.width) - boundsX2;
 			if (diff >= 0)

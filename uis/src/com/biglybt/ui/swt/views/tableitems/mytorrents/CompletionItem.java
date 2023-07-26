@@ -161,7 +161,7 @@ public class CompletionItem
 		Image img0 = imageLoader.getImage("dl_bar_0");
 		Image img1 = imageLoader.getImage(percentDone<1000?"dl_bar_1":"dl_bar_1g");
 
-		//draw begining and end
+		//draw beginning and end
 		if (!imgEnd.isDisposed()) {
 			gcImage.drawImage(imgEnd, bounds.x , bounds.y + yOfs);
 			gcImage.drawImage(imgEnd, bounds.x + x1 + 1, bounds.y + yOfs);

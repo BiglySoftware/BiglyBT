@@ -56,7 +56,7 @@ FMFileAccessPieceReorderer
  * trim later
  *
  * Whenever a piece is marked as complete we look up its location. If the required piece
- * of the file has already been allocated (and its not alread in the right place) then
+ * of the file has already been allocated (and its not already in the right place) then
  * we swap the piece data at that location with the current piece's. If the file chunk hasn't
  * been allocated yet then we leave the piece where it is - it'll be moved later.
  *
@@ -490,7 +490,7 @@ FMFileAccessPieceReorderer
 							bb.put( new byte[rem] );
 
 								// not great this... to obey the normal file access semantics reads are
-								// never partial (normally we'd extend the file to accomodate the read but
+								// never partial (normally we'd extend the file to accommodate the read but
 								// in the case of re-order access we don't want to do this when hash checking
 								// a file. The issue is in the unlikely case where our padding happens to
 								// match the real file contents and results in a piece hash check succeeding

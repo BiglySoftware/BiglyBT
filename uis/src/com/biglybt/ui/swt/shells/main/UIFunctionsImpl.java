@@ -214,7 +214,7 @@ public class UIFunctionsImpl
 
 			if (success) {
 
-				sem.reserve( 30*1000 );	// shouldn't block as if this is SWT thread code will run immediately, otherwise SWT thread shoudl be quick
+				sem.reserve( 30*1000 );	// shouldn't block as if this is SWT thread code will run immediately, otherwise SWT thread should be quick
 			}
 
 			return( result[0] );

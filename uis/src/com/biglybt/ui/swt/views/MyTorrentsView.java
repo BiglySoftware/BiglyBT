@@ -1895,7 +1895,7 @@ public class MyTorrentsView
 		}
 			// if we're not active then ignore this update as we don't want invisible components
 			// updating the toolbar with their invisible selection. Note that unfortunately the
-			// call we get here when activating a view does't yet have focus
+			// call we get here when activating a view doesn't yet have focus
 
 		if ( !isTableFocus()){
 			if ( !force ){

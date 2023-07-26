@@ -116,7 +116,7 @@ JNIEXPORT jobject JNICALL Java_com_biglybt_platform_win32_access_impl_AEWin32Acc
 			continue;
 		}
 
-		// Do an aditional check by using GetDriveGeometry.  If it fails, then there's
+		// Do an additional check by using GetDriveGeometry.  If it fails, then there's
 		// no "disk" in the drive
 
 		WCHAR drive[100];

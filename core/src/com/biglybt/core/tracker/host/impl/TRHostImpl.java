@@ -1402,7 +1402,7 @@ TRHostImpl
 	}
 
 		// see comment in TRHostTorrentHost impl for reason for this delegation + monitor
-		// aquisition
+		// acquisition
 
 	protected void
 	startTorrent(

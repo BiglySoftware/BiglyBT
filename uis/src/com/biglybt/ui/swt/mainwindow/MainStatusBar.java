@@ -198,7 +198,7 @@ public class MainStatusBar
 	 */
 	public MainStatusBar() {
 		numberFormat = NumberFormat.getInstance();
-		// Proably need to wait for core to be running to make sure dht plugin is fully avail
+		// Probably need to wait for core to be running to make sure dht plugin is fully avail
 		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
 			@Override
 			public void coreRunning(Core core) {
@@ -2278,7 +2278,7 @@ public class MainStatusBar
 		{
 			if ( eventType == MANAGER_EVENT_UPDATED ){
 
-					// reduce pointless refreshes due to multple update events
+					// reduce pointless refreshes due to multiple update events
 
 				synchronized( pending_updates ){
 

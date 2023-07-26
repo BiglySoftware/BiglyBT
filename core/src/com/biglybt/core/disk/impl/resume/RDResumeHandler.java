@@ -215,7 +215,7 @@ RDResumeHandler
 				Map	resume_data;
 				
 					// if we have new files then we must ignore resume data is it may be for a file that
-					// has been created and is therefore innacurate
+					// has been created and is therefore inaccurate
 				
 				if ( newfiles ){
 					
@@ -805,7 +805,7 @@ RDResumeHandler
 		if ( check_in_progress && interim_save ){
 
 				// while we are rechecking it is important that an interim save doesn't come
-				// along and overwite the persisted resume data. This is because should we crash
+				// along and overwrite the persisted resume data. This is because should we crash
 				// while rechecking we need the persisted state to be unchanged so that on
 				// restart the rechecking occurs again
 
@@ -1291,7 +1291,7 @@ RDResumeHandler
 	setTorrentResumeDataNearlyComplete(
 		DownloadManagerState	download_manager_state )
 	{
-			// backwards compatability, resume data key is the dir
+			// backwards compatibility, resume data key is the dir
 
 		TOTorrent	torrent = download_manager_state.getTorrent();
 
@@ -1327,7 +1327,7 @@ RDResumeHandler
 	isTorrentResumeDataComplete(
 		DownloadManagerState			dms )
 	{
-			// backwards compatability, resume data key is the dir
+			// backwards compatibility, resume data key is the dir
 
 		Map	resume_data = getResumeData( dms );
 

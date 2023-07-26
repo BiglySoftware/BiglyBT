@@ -337,7 +337,7 @@ public class AZMessageDecoder implements MessageStreamDecoder {
         catch( Throwable e ) {
           ref_buff.returnToPoolIfNotFree();
 
-          	// maintain unexpected erorrs as such so they get logged later
+          	// maintain unexpected errors as such so they get logged later
 
           if ( e instanceof RuntimeException ){
 

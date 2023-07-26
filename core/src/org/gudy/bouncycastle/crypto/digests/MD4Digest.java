@@ -4,7 +4,7 @@ package org.gudy.bouncycastle.crypto.digests;
  * implementation of MD4 as RFC 1320 by R. Rivest, MIT Laboratory for
  * Computer Science and RSA Data Security, Inc.
  * <p>
- * <b>NOTE</b>: This algorithm is only included for backwards compatability
+ * <b>NOTE</b>: This algorithm is only included for backwards compatibility
  * with legacy applications, it's not secure, don't use it for anything new!
  */
 public class MD4Digest

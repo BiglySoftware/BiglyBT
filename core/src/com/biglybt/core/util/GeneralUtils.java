@@ -1514,7 +1514,7 @@ GeneralUtils
 					{0x10518,0x004B},	//	( 𐔘 → K ) ELBASAN LETTER QE → LATIN CAPITAL LETTER K	#
 					{0x0130,0x0049},	//	( İ → I ) LATIN CAPITAL LETTER I WITH DOT ABOVE → LATIN CAPITAL LETTER I // added for symmetry with LATIN SMALL LETTER DOTLESS I → LATIN SMALL LETTER I
 					// A lot of mappings that originally were to lowercase-l had to be changed to avoid surprising users.
-					// It would be best if we could fuzzy-match all of these agains either "I", "l", "|" or "1", but currently that’s not possible
+					// It would be best if we could fuzzy-match all of these against either "I", "l", "|" or "1", but currently that’s not possible
 					// without introducing undesirable matches.
 					{0x05C0,0x006C},	//	( ‎׀‎ → l ) HEBREW PUNCTUATION PASEQ → LATIN SMALL LETTER L	# →|→
 					{0x2223,0x007C},	//	( ∣ → | ) DIVIDES → VERTICAL LINE	#

@@ -79,7 +79,7 @@ public class HTTPUtils {
 
 	/**
 	 * @param file_type file extension
-	 * @return apropriate content type string if found
+	 * @return appropriate content type string if found
 	 */
 	public static String guessContentTypeFromFileType(String file_type) {
 		if (file_type != null) {

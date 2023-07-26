@@ -1671,7 +1671,7 @@ public class GlobalManagerImpl
 					   if ( bCompleted && (lDownloadedValue == 0)){
 
 						   //Gudy : I say if the torrent is complete, let's simply set downloaded
-						   //to size in order to see a meaningfull share-ratio
+						   //to size in order to see a meaningful share-ratio
 						   //Gudy : Bypass this horrible hack, and I don't care of first priority seeding...
 						   /*
 		            if (lDownloadedValue != 0 && ((lUploadedValue * 1000) / lDownloadedValue < minQueueingShareRatio) )
@@ -3410,7 +3410,7 @@ public class GlobalManagerImpl
 			  }
 		  }
 		  
-		  state = DownloadManager.STATE_STOPPED;	// keep stopped rather than error state for the moment for backwards compatability
+		  state = DownloadManager.STATE_STOPPED;	// keep stopped rather than error state for the moment for backwards compatibility
 
 	  }else if (	dm.getAssumedComplete() && !dm.isForceStart() &&
 			  state != DownloadManager.STATE_STOPPED) {

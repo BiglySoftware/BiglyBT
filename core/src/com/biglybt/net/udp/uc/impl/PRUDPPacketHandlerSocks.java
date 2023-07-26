@@ -241,7 +241,7 @@ PRUDPPacketHandlerSocks
 
 		    relay = new InetSocketAddress( relay_address, relay_port );
 
-		    	// use the maped ip for dns resolution so we don't leak the
+		    	// use the mapped ip for dns resolution so we don't leak the
 		    	// actual address if this is a secure one (e.g. I2P one)
 
 		    ByteArrayOutputStream	baos_temp 		= new ByteArrayOutputStream();

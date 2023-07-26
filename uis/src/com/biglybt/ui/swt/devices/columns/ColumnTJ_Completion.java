@@ -123,7 +123,7 @@ public class ColumnTJ_Completion
 		Image img0 = imageLoader.getImage("tc_bar_0");
 		Image img1 = imageLoader.getImage("tc_bar_1");
 
-		//draw begining and end
+		//draw beginning and end
 		if (!imgEnd.isDisposed()) {
 			gcImage.drawImage(imgEnd, bounds.x , bounds.y + yOfs);
 			gcImage.drawImage(imgEnd, bounds.x + x1 + 1, bounds.y + yOfs);

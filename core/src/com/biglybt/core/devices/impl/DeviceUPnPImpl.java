@@ -1309,7 +1309,7 @@ DeviceUPnPImpl
 					
 					urls.add( url );
 					
-					// bug in BT smart hub that returns absolute URL that shoudl be relative to add that in
+					// bug in BT smart hub that returns absolute URL that should be relative to add that in
 					
 					String loc_str = location.toExternalForm();
 					

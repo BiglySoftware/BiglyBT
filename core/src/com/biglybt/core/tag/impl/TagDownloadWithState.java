@@ -566,7 +566,7 @@ TagDownloadWithState
 
 				// There's a race condition when stopping and removing a torrent that isn't easy to avoid in terms
 				// of a download being added to the 'stopped' tag and concurrently removed.
-				// There will be a subseqent 'downloadRemoved' action triggered that should tidy up any
+				// There will be a subsequent 'downloadRemoved' action triggered that should tidy up any
 				// inconsistency left due to this
 
 				//Debug.out( "Invalid Taggable added - download is destroyed: " + dm.getDisplayName());

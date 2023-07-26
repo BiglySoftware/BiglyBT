@@ -102,7 +102,7 @@ public class Average {
   }
 
   /**
-   * This method is used to update the buffer tha stores the values,
+   * This method is used to update the buffer that stores the values,
    * in fact it mostly does clean-up over this buffer,
    * erasing all values that have not been updated.
    * @param timeFactor which is the currentTime divided by the refresh Rate

@@ -100,7 +100,7 @@ public class ModePanel extends AbstractWizardPanel<NewTorrentWizard> {
 
     final String[] localTrackerUrl = new String[1];
 
-    // there's a potential oversize issue with the howToLocal string, and attemtping to force wrap has no effect -
+    // there's a potential oversize issue with the howToLocal string, and attempting to force wrap has no effect -
     // therefore, provide more room and remove extraneous labeling
 
     final boolean showLocal = TRTrackerUtils.isTrackerEnabled();

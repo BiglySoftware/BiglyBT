@@ -39,7 +39,7 @@ public interface NetworkAdminSpeedTestScheduler
 
     /**
      * Request a test using the testing service.
-     * @param type - ID for the type of test - use abouve constants
+     * @param type - ID for the type of test - use above constants
      * @return boolean - true if a success, otherwise false.
      * @throws NetworkAdminException -
      */
@@ -47,7 +47,7 @@ public interface NetworkAdminSpeedTestScheduler
 
     /**
      * Get the most recent result for a given test type, null if none
-     * @param type - ID for the type of test - use abouve constants
+     * @param type - ID for the type of test - use above constants
      * @return - Result
      */
     public NetworkAdminSpeedTesterResult getLastResult( int type );

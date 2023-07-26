@@ -74,7 +74,7 @@ public class TableCellPainted
 	 */
 	@Override
 	public Object getDataSource() {
-		// remove this because if a disposal-listener needs to get its hands on teh datasource to clean up
+		// remove this because if a disposal-listener needs to get its hands on the datasource to clean up
 		// properly we need to return it to them! (happens with the peers view PiecesItem for example)
 		//if (isDisposed()) {
 		//	return null;

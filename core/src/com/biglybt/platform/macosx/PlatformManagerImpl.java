@@ -1543,7 +1543,7 @@ PlatformManagerImpl
 
 			try {
 				// We can only use FileManager after CocoaUIEnhancer has been initialized
-				// because refering to FileManager earlier will prevent our main menu from
+				// because referring to FileManager earlier will prevent our main menu from
 				// working
 				Class<?> claCocoaUIEnhancer = Class.forName("com.biglybt.ui.swt.osx.CocoaUIEnhancer");
 				if (((Boolean) claCocoaUIEnhancer.getMethod("isInitialized").invoke(null)).booleanValue()) {

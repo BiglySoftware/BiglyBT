@@ -56,7 +56,7 @@ public class PingSourceStats
     /**
      * Speculative method to see if it can determine a trend. The larger the number
      * the stronger the trend.
-     * @return current - interger. A positive number is an increasing trend. A negative number is a decreasing trend.
+     * @return current - integer. A positive number is an increasing trend. A negative number is a decreasing trend.
      */
     public int getTrend(){
 

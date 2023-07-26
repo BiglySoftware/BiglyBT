@@ -149,9 +149,9 @@ public class Utils
 	public static final int SCT_MENU_ITEM			= 2;
 	
 	/**
-	 * Debug/Diagnose SWT exec calls.  Provides usefull information like how
+	 * Debug/Diagnose SWT exec calls.  Provides useful information like how
 	 * many we are queuing up, and how long each call takes.  Good to turn on
-	 * occassionally to see if we coded something stupid.
+	 * occasionally to see if we coded something stupid.
 	 */
 	private static final boolean DEBUG_SWTEXEC = System.getProperty(
 			"debug.swtexec", "0").equals("1");
@@ -1779,7 +1779,7 @@ public class Utils
 	 * @param msLater time to wait before running code on SWT thread.  0 does not
 	 *                mean immediate, but as soon as possible.
 	 * @param code Code to run
-	 * @return sucess
+	 * @return success
 	 *
 	 * @since 3.0.4.3
 	 */
@@ -1798,7 +1798,7 @@ public class Utils
 		return( display.getThread() == Thread.currentThread());
 	}
 
-	/** For Debugging only: uncomment and chec
+	/** For Debugging only: uncomment and check
 	 * {@link #execSWTThread(Runnable, int)} for callers
 	 *
 	 public static boolean execSWTThreadLater(int msLater, final SWTRunnable code) {
@@ -3269,7 +3269,7 @@ public class Utils
 				
 				try{
 					// weirdly any of these options cause transparency issues on Windows, the same as those
-					// encounted by the AWT resize method!
+					// encountered by the AWT resize method!
 					
 					//tempGC.setAdvanced( true );		
 					//tempGC.setAntialias(SWT.ON);
@@ -4607,7 +4607,7 @@ public class Utils
   					 * Intent here seems to be to run all pending events through the queue to ensure
   					 * that the 'setUrl' and 'setVisible' actions are complete before disposal in an
   					 * attempt to ensure memory released. This is old code and the new 4508 SWT introduced
-  					 * in Dec 2014 causes the 'readAndDispatch' loop to bever exit.
+  					 * in Dec 2014 causes the 'readAndDispatch' loop to never exit.
   					 * So added code to queue an async event and hope that by the time this runs
   					 * any housekeeping is complete
   					 * Meh, tested and the injected code doesn't run until, say, you move the window containing

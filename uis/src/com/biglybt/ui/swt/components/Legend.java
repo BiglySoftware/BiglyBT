@@ -56,7 +56,7 @@ import com.biglybt.ui.swt.views.tableitems.pieces.BlocksItem;
  */
 public class Legend {
 	/**
-	 * Create a legend containing a modifyable color box and description
+	 * Create a legend containing a modifiable color box and description
 	 *
 	 * @param panel Where to add legend to
 	 * @param blockColors array of colors for each legend entry.  This
@@ -99,7 +99,7 @@ public class Legend {
 		return( createLegendComposite( panel, blockColors, keys, null, layoutData, true ));
 	}
 	/**
-	 * Create a legend containing a modifyable color box and description
+	 * Create a legend containing a modifiable color box and description
 	 *
 	 * @param panel Where to add legend to
 	 * @param blockColors array of colors for each legend entry.  This

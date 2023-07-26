@@ -474,7 +474,7 @@ AEMonSem
 				StringBuilder sb = new StringBuilder();
 
 					// not very interesting for semaphores as these tend to get left on stack traces when
-					// asymetric usage (which is often)
+					// asymmetric usage (which is often)
 
 				boolean	check_recursion = is_monitor && !debug_recursions.contains( name );
 

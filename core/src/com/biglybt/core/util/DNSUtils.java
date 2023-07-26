@@ -150,7 +150,7 @@ DNSUtils
 			}
 			
 			// We want to find the most sensible name for the host, <prefix>+"."+ TLD
-			// Unfortuantely the TLD list is large and ever growing (see http://data.iana.org/TLD/tlds-alpha-by-domain.txt)
+			// Unfortunately the TLD list is large and ever growing (see http://data.iana.org/TLD/tlds-alpha-by-domain.txt)
 			// and the rules for identifying valid ones even worse (see https://www.publicsuffix.org/list/public_suffix_list.dat)
 
 			// so we assume that the host has its own dns prefix, e.g. tracker01.a.s.d.f, and want to drop the prefix

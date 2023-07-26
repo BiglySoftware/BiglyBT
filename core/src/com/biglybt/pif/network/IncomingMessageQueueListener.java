@@ -30,7 +30,7 @@ public interface IncomingMessageQueueListener {
 
   /**
    * A message has been read from the connection.
-   * @param message recevied
+   * @param message received
    * @return true if this message was accepted, false if not handled
    */
   public boolean messageReceived( Message message );

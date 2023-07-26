@@ -402,7 +402,7 @@ CryptoSTSEngineImpl
 	InternalDH
 		extends JCEECDHKeyAgreement.DH
 	{
-			// we use this class to obtain compatability with BC
+			// we use this class to obtain compatibility with BC
 
 		@Override
 		public void

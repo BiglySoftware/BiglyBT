@@ -31,7 +31,7 @@ import com.biglybt.ui.swt.Utils;
 
 /**
  * Simple encapsulation of SWTSkinObjectContainer that provides typical button
- * funtionality
+ * functionality
  *
  */
 public class SWTSkinButtonUtility

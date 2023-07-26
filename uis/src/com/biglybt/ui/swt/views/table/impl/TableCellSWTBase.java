@@ -1185,7 +1185,7 @@ public abstract class TableCellSWTBase
 				// It's possible that a row was created, but not refreshed yet.
 				// In that case, one sortValue will be String, and the other will be
 				// a comparable object that the plugin defined.  Those two sortValues
-				// may not be compatable (for good reason!), so just skip it.
+				// may not be compatible (for good reason!), so just skip it.
 			}
 		} catch (Exception e) {
 			System.out.println("Could not compare cells");

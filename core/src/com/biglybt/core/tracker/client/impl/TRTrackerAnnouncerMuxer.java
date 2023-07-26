@@ -1373,7 +1373,7 @@ TRTrackerAnnouncerMuxer
 			}
 		}
 
-			// TODO: we should always create a DHT entry and have it denote DHT tracking for all circustances
+			// TODO: we should always create a DHT entry and have it denote DHT tracking for all circumstances
 			// have the DHT plugin set it to offline if disabled
 
 		List<TRTrackerAnnouncerHelper> x = announcers.getList();

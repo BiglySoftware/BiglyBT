@@ -46,7 +46,7 @@ import com.biglybt.core.util.SystemTime;
  *
  * #4) Once that limit is reached it will drop both the upload and download limits together.
  *
- * #5) Seeding mode is triggered when - download bandwidth at LOW - compared to CAPACITY for 5 minutes continously.
+ * #5) Seeding mode is triggered when - download bandwidth at LOW - compared to CAPACITY for 5 minutes continuously.
  *
  * #6) Download mode is triggered when - download bandwidth reaches MEDIUM - compared to CURRENT_LIMIT for the first time.
  *
@@ -621,7 +621,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
         //verify the download is not unlimited.
         slider.setDownloadUnlimitedMode( isSettingDownloadUnlimited() );
 
-        //upload useage must be at limits for a set period of time before unpinning.
+        //upload usage must be at limits for a set period of time before unpinning.
         if( !uploadBandwidthStatus.equals(SaturatedMode.AT_LIMIT) ||
                 !uploadLimitSettingStatus.equals(SaturatedMode.AT_LIMIT) )
         {
@@ -633,7 +633,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
 
                 if( isUploadConfidenceLow() ){
                     if( !transferMode.isDownloadMode() ){
-                        //alway slow search the upload limit.
+                        //always slow search the upload limit.
                         isUploadMaxPinned = false;
                     }
                 }else{
@@ -868,7 +868,7 @@ public class SpeedLimitMonitor implements PSMonitorListener
     }//rampTestingLimit
 
     public void triggerLimitTestingFlag(){
-        SpeedManagerLogger.trace("triggerd fast limit test.");
+        SpeedManagerLogger.trace("triggered fast limit test.");
         beginLimitTest=true;
 
         //if we are using a persistent PingSource then get that here.

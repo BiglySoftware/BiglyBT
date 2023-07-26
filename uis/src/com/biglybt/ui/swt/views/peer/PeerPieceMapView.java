@@ -463,7 +463,7 @@ public class PeerPieceMapView
 
 	/**
 	 * Constructs and image representing the download state of _all_
-	 * the pieces in the torrent.  Particularily slow when there's lots of pieces,
+	 * the pieces in the torrent.  Particularly slow when there's lots of pieces,
 	 * and also wasteful since only a fraction of them ever get painted at
 	 * any given time.
 	 *
@@ -798,7 +798,7 @@ public class PeerPieceMapView
 					BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
 
 
-				// Down Arrow inside box for "dowloading" piece
+				// Down Arrow inside box for "downloading" piece
 				// Small Down Arrow inside box for next download piece
 				if (newInfo.showDown > 0) {
 					boolean isSmall = newInfo.showDown == SHOW_SMALL;

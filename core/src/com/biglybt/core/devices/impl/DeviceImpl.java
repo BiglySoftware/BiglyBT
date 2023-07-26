@@ -449,7 +449,7 @@ DeviceImpl
 			setDirty();
 		}
 
-		/* don't overwite the name as user may have altered it!
+		/* don't overwrite the name as user may have altered it!
 		if ( !name.equals( other.name )){
 
 			name	= other.name;

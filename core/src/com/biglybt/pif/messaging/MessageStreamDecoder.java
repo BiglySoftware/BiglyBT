@@ -46,7 +46,7 @@ public interface MessageStreamDecoder {
 
   /**
    * Get the number of protocol (overhead) bytes decoded from the transport, from the last decode op.
-   * @return number of protocol bytes recevied
+   * @return number of protocol bytes received
    */
   public int getProtocolBytesDecoded();
 

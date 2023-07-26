@@ -63,7 +63,7 @@ public class SubjectKeyIdentifier
 
     /**
      *
-     * Calulates the keyidentifier using a SHA1 hash over the BIT STRING
+     * Calculates the keyidentifier using a SHA1 hash over the BIT STRING
      * from SubjectPublicKeyInfo as defined in RFC2459.
      *
      **/

@@ -688,7 +688,7 @@ public abstract class TableViewSWT_Common
 	}
 
 	public void runDefaultAction(int stateMask, int origin ) {
-		// Don't allow mutliple run defaults in quick succession
+		// Don't allow multiple run defaults in quick succession
 		if (lastSelectionTriggeredOn > 0
 				&& System.currentTimeMillis() - lastSelectionTriggeredOn < 200) {
 			return;

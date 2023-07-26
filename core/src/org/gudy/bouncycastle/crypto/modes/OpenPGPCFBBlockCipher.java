@@ -7,7 +7,7 @@ import org.gudy.bouncycastle.crypto.DataLengthException;
 /**
  * Implements OpenPGP's rather strange version of Cipher-FeedBack (CFB) mode
  * on top of a simple cipher. This class assumes the IV has been prepended
- * to the data stream already, and just accomodates the reset after
+ * to the data stream already, and just accommodates the reset after
  * (blockSize + 2) bytes have been read.
  * <p>
  * For further info see <a href="http://www.ietf.org/rfc/rfc2440.html">RFC 2440</a>.

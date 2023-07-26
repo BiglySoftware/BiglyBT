@@ -1002,7 +1002,7 @@ public abstract class BaseMdiEntry
 		String imageID = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_IMAGEID);
 		
 			// don't overwrite any any existing (probably statically assigned) image id with a
-			// ViewTitleInfo that doesn't bother returning anythign better
+			// ViewTitleInfo that doesn't bother returning anything better
 		
 		if ( imageID != null ){
 			if ( imageID.length() == 0 ){

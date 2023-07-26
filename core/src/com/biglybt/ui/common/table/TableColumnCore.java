@@ -152,7 +152,7 @@ public interface TableColumnCore
 
 	/**
 	 * Sets the position of the column without adjusting the other columns.
-	 * This will cause duplicate columns, and is only usefull if you are
+	 * This will cause duplicate columns, and is only useful if you are
 	 * adjusting the positions of multiple columns at once.
 	 *
 	 * @param position new position (0 based)

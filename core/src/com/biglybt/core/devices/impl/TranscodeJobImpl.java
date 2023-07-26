@@ -900,7 +900,7 @@ TranscodeJobImpl
 
 			}catch( Throwable e ){
 
-				queue.log( "Faile to destroy job", e );
+				queue.log( "Failed to destroy job", e );
 			}
 		}
 	}

@@ -392,7 +392,7 @@ DHTRouterNodeImpl
 				}
 			}
 
-			// MGP: simply reinserting, so do not notify observers that added to replacments
+			// MGP: simply reinserting, so do not notify observers that added to replacements
 			replacements.add( contact );
 		}
 	}

@@ -13,7 +13,7 @@ The Language files are "Java Properties" files, located in [core/src/com/biglybt
 
 Visit our [BiglyBT Project Page on Crowdin](https://crowdin.com/project/BiglyBT).  Crowdin is one of the best collaborative online localization tools, and has handy features such as suggesting translations from other projects with similar strings.
 
-Please note that BiglyBT for Android has its own tranlation project at [BiglyBT-Android Project Page on Crowdin](https://crowdin.com/project/biglybt-android)
+Please note that BiglyBT for Android has its own translation project at [BiglyBT-Android Project Page on Crowdin](https://crowdin.com/project/biglybt-android)
 
 
 ### BiglyBT Internationization Plugin (Deprecated)

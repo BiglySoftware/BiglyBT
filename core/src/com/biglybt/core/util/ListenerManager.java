@@ -29,7 +29,7 @@ package com.biglybt.core.util;
  * This class exists to support the invocation of listeners while *not* synchronized.
  * This is important as in general it is a bad idea to invoke an "external" component
  * whilst holding a lock on something as unexpected deadlocks can result.
- * It has been introduced to reduce the likelyhood of such deadlocks
+ * It has been introduced to reduce the likelihood of such deadlocks
  */
 
 import java.lang.reflect.Method;

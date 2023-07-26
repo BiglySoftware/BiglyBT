@@ -160,7 +160,7 @@ public final class BrokenMd5Hasher {
     }
 
     /**
-    * Finishs a MD5 message digest calculation.
+    * Finishes an MD5 message digest calculation.
     * The result is stored in digest and the MD5-object is <b>reset</b> and so
     * ready for a new message digest calculation.
     *

@@ -645,7 +645,7 @@ public class FilesView
 			
 			if ( tree_view ){
 				
-					// have to get all rows, not just visible ones, as changed file might be collasped
+					// have to get all rows, not just visible ones, as changed file might be collapsed
 					// but we still want to update parent state
 				
 				rows = tv.getRowsAndSubRows( true );	

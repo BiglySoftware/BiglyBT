@@ -2989,7 +2989,7 @@ TRTrackerBTAnnouncerImpl
 
 				URL url = torrent.getAnnounceURL();
 
-					//We then contruct a list of one element, containing this url, and put this list
+					//We then construct a list of one element, containing this url, and put this list
 					//into the list of lists of urls.
 
 				List<URL> list = new ArrayList();

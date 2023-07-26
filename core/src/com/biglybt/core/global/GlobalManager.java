@@ -140,7 +140,7 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 * Retrieve the DownloadManager associated with a TOTorrent object
 	 *
 	 * @param torrent Torrent to search for
-	 * @return The DownloadManager associted with the TOTOrrent, or null if
+	 * @return The DownloadManager associated with the TOTOrrent, or null if
 	 *          none found
 	 */
 	public DownloadManager getDownloadManager(TOTorrent torrent);
@@ -149,7 +149,7 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 * Retrieve the DownloadManager associated with a hash
 	 *
 	 * @param hash Hash to search for
-	 * @return The DownloadManager associted with the hash, or null if
+	 * @return The DownloadManager associated with the hash, or null if
 	 *          none found
 	 */
 	public DownloadManager getDownloadManager(HashWrapper hash);

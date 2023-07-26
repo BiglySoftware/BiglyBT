@@ -369,7 +369,7 @@ public class MainWindowImpl
 
 	private void processStartupDMS() {
 		// must be in a new thread because we don't want to block
-		// initilization or any other add listeners
+		// initialization or any other add listeners
 		AEThread2 thread = new AEThread2("v3.mw.dmAdded", true) {
 			@Override
 			public void run() {
