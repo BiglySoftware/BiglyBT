@@ -354,7 +354,11 @@ public class SpeedScaleShell
 
 			@Override
 			public void mouseDown(MouseEvent e) {
-				Point ptOnDisplay = ((Control) e.widget).toDisplay(e.x, e.y);
+				Control control = (Control)e.widget;
+				if ( composite.isDisposed() || control.isDisposed()){
+					return;
+				}
+				Point ptOnDisplay = control.toDisplay(e.x, e.y);
 				Point ptOnComposite = composite.toControl(ptOnDisplay);
 				if (e.count > 1) {
 					lastMoveHadMouseDown = true;
