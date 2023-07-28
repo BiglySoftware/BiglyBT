@@ -227,8 +227,18 @@ DataSourceResolver
 	public interface
 	ExportableDataSource
 	{
+		public static final int OPT_ON_TOP			= 0;
+		public static final int OPT_CAN_MINIMIZE	= 1;
+		
 		public ExportedDataSource
 		exportDataSource();
+		
+		public default Boolean
+		getBooleanOption(
+			int		opt )
+		{
+			return( null );
+		}
 	}
 	
 	public interface

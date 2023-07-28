@@ -3294,6 +3294,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 		
+		@Override
 		public ExportedDataSource
 		exportDataSource()
 		{
@@ -3301,13 +3302,17 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				new ExportedDataSource(){
 					
 					@Override
-					public Class<? extends DataSourceImporter> getExporter(){
+					public Class<? extends DataSourceImporter>
+					getExporter()
+					{
 						
 						return( BuddyPluginBeta.class );
 					}
 					
 					@Override
-					public Map<String, Object> getExport(){
+					public Map<String, Object> 
+					getExport()
+					{
 						Map<String,Object>	map = new HashMap<>();
 						
 						map.put( "network", network );
@@ -3327,6 +3332,23 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				});
 		}
 
+		@Override
+		public Boolean
+		getBooleanOption(
+			int		opt )
+		{
+			if ( opt == DataSourceResolver.ExportableDataSource.OPT_CAN_MINIMIZE ){
+			
+				return( true );
+				
+			}else if ( opt == DataSourceResolver.ExportableDataSource.OPT_ON_TOP ){
+				
+				return( !plugin.getBeta().getStandAloneWindows());
+			}
+			
+			return( null );
+		}
+		
 		protected void
 		addVirtualReference()
 		{
