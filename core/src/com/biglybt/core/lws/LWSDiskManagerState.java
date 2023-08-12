@@ -610,7 +610,7 @@ LWSDiskManagerState
 	@Override
 	public void
 	generateEvidence(
-		IndentWriter writer)
+		IndentWriter writer, boolean full )
 	{
 	}
 

@@ -3344,7 +3344,8 @@ DownloadManagerStateImpl
 	@Override
 	public void
 	generateEvidence(
-		IndentWriter writer)
+		IndentWriter	writer,
+		boolean			full )
 	{
 		writer.println( "DownloadManagerState" );
 
@@ -3355,7 +3356,11 @@ DownloadManagerStateImpl
 			writer.println( "flags=" + getFlags());
 			DiskManagerFileInfo primaryFile = getPrimaryFile();
 			if (primaryFile != null) {
-				writer.println("primary file=" + Debug.secretFileName(primaryFile.getFile(true).getAbsolutePath()));
+				String prim = primaryFile.getFile(true).getAbsolutePath();
+				if ( !full ){
+					prim = Debug.secretFileName( prim );
+				}
+				writer.println("primary file=" + prim );
 			}
 
 		}finally{
@@ -3873,7 +3878,8 @@ DownloadManagerStateImpl
 		@Override
 		public void
 		generateEvidence(
-			IndentWriter writer)
+			IndentWriter 	writer,
+			boolean			full )
 		{
 			writer.println( "DownloadManagerState: broken torrent" );
 		}

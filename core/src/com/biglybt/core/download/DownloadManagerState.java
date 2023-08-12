@@ -474,7 +474,7 @@ DownloadManagerState
 	 */
 	boolean parameterExists(String name);
 
-	public void generateEvidence(IndentWriter writer);
+	public void generateEvidence(IndentWriter writer, boolean full );
 
 	public void dump( IndentWriter writer );
 

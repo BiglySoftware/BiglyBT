@@ -7444,7 +7444,7 @@ DownloadManagerImpl
 
 			stats.generateEvidence( writer );
 
-			download_manager_state.generateEvidence( writer );
+			download_manager_state.generateEvidence( writer, full );
 
 			if ( pm != null ){
 				
