@@ -213,7 +213,14 @@ SubscriptionResultImpl
 		}else{
 
 			try{
-				result_json	= new String((byte[])map.get( "result_json" ), "UTF-8" );
+				byte[] bytes = (byte[])map.get( "result_json" );
+				
+				if ( bytes == null ){
+					
+					bytes = new byte[0];
+				}
+				
+				result_json	= new String( bytes, "UTF-8" );
 
 			}catch( Throwable e ){
 
@@ -506,7 +513,18 @@ SubscriptionResultImpl
 		}else{
 
 			try{
-				map.put( "result_json", result_json.getBytes( "UTF-8" ));
+				byte[] bytes;
+				
+				if ( result_json == null ){
+					
+					bytes = new byte[0];
+					
+				}else{
+					
+					bytes = result_json.getBytes( "UTF-8" );
+				}
+				
+				map.put( "result_json", bytes );
 
 			}catch( Throwable e ){
 
