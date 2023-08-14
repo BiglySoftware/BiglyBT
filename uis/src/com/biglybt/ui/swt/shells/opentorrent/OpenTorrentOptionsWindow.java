@@ -369,7 +369,8 @@ public class OpenTorrentOptionsWindow
 	private Button	buttonTorrentUp;
 	private Button	buttonTorrentDown;
 	private Button	buttonTorrentRemove;
-
+	private Button	buttonTorrentAccept;
+	
 	private List<String>	images_to_dispose = new ArrayList<>();
 
 
@@ -1195,7 +1196,7 @@ public class OpenTorrentOptionsWindow
 			// toolbar area
 
 		Composite button_area = new Composite( parent, SWT.NULL );
-		layout = new GridLayout(5,false);
+		layout = new GridLayout(6,false);
 		layout.marginWidth = layout.marginHeight = 0;
 		layout.horizontalSpacing = layout.verticalSpacing = 0;
 		layout.marginTop = 5;
@@ -1304,9 +1305,22 @@ public class OpenTorrentOptionsWindow
 				}
 			}});
 
+		buttonTorrentAccept = new Button(button_area, SWT.PUSH);
+		Utils.setTT(buttonTorrentAccept,MessageText.getString("label.accept"));
+		buttonTorrentAccept.setImage( loadImage( "image.button.play" ));
+		buttonTorrentAccept.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				List<OpenTorrentInstance> selected = (List<OpenTorrentInstance>)(Object)tvTorrents.getSelectedDataSources();
+				
+				acceptInstances( selected);
+			}});
+
+		
 		buttonTorrentUp.setEnabled( false );
 		buttonTorrentDown.setEnabled( false );
 		buttonTorrentRemove.setEnabled( false );
+		buttonTorrentAccept.setEnabled( false );
 
 		label = new Label( button_area, SWT.NULL );
 		gd = new GridData( GridData.FILL_HORIZONTAL );
@@ -1792,6 +1806,58 @@ public class OpenTorrentOptionsWindow
 	}
 
 	private void
+	acceptInstances(
+		List<OpenTorrentInstance>		instances )
+	{
+		TorrentManagerImpl t_man = TorrentManagerImpl.getSingleton();
+
+		boolean all_ok = true;
+		
+		for ( final OpenTorrentInstance instance: new ArrayList<>( instances )){
+
+			String dataDir = instance.cmbDataDir.getText();
+
+			if ( !instance.okPressed( dataDir, false )){
+
+				all_ok = false;
+
+			}else{
+
+					// serialise additions in correct order
+
+				t_man.optionsAccepted( instance.getOptions());
+
+				dispatcher.dispatch(
+					new AERunnable()
+					{
+						@Override
+						public void
+						runSupport()
+						{
+							instance.getOptions().addToDownloadManager();
+
+						}
+					});
+
+				removeInstance( instance, false );
+			}
+		}
+		
+		if ( open_instances.isEmpty()){
+			
+			if ( dlg != null ){
+				
+				dlg.close();
+			}
+		}else{
+			
+			swt_updateTVTorrentButtons();
+	
+			refreshTVTorrentIndexes();
+		}
+	}
+	
+	private void
 	updateDialogTitle()
 	{
 		String text;
@@ -1826,6 +1892,7 @@ public class OpenTorrentOptionsWindow
 		List<Object> selected = tvTorrents.getSelectedDataSources();
 
 		buttonTorrentRemove.setEnabled( selected.size() > 0 );
+		buttonTorrentAccept.setEnabled( selected.size() > 0 );
 
 		if ( selected.size() > 0 ){
 
