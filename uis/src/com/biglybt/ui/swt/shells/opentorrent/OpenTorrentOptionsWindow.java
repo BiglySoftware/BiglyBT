@@ -1054,6 +1054,21 @@ public class OpenTorrentOptionsWindow
 		return( new ArrayList<>( open_instances));
 	}
 
+	private OpenTorrentInstance
+	getInstance(
+		TorrentOpenOptions	options )
+	{
+		for ( OpenTorrentInstance instance: open_instances ){
+			
+			if ( instance.getOptions() == options ){
+				
+				return( instance );
+			}
+		}
+		
+		return( null );
+	}
+	
 	private void
 	cancelPressed()
 	{
@@ -1803,6 +1818,14 @@ public class OpenTorrentOptionsWindow
 		}
 		
 		instance.dispose();
+		
+		if ( open_instances.isEmpty()){
+			
+			if ( dlg != null ){
+				
+				dlg.close();
+			}
+		}
 	}
 
 	private void
@@ -1810,18 +1833,12 @@ public class OpenTorrentOptionsWindow
 		List<OpenTorrentInstance>		instances )
 	{
 		TorrentManagerImpl t_man = TorrentManagerImpl.getSingleton();
-
-		boolean all_ok = true;
 		
 		for ( final OpenTorrentInstance instance: new ArrayList<>( instances )){
 
 			String dataDir = instance.cmbDataDir.getText();
 
-			if ( !instance.okPressed( dataDir, false )){
-
-				all_ok = false;
-
-			}else{
+			if ( instance.okPressed( dataDir, false )){
 
 					// serialise additions in correct order
 
@@ -5012,34 +5029,13 @@ public class OpenTorrentOptionsWindow
 			
 				for ( TorrentOpenOptions to: torrentOptionsMulti ){
 					
-					if (!cmbDataDirEnabled ){
+					OpenTorrentInstance instance = getInstance( to );
+					
+					if ( instance.tag_save_location != null ){
+					
+						cmbDataDirEnabled = false;
 						
 						break;
-					}
-					
-					List<Tag>	tags = to.getInitialTags();
-					
-					for ( Tag tag: tags ){
-					
-						if ( tag instanceof TagFeatureFileLocation ){
-							
-							TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
-			
-							if ( fl.supportsTagInitialSaveFolder()){
-			
-								File save_loc = fl.getTagInitialSaveFolder();
-			
-								if ( save_loc != null ){
-									
-									if (( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0){
-										
-										cmbDataDirEnabled = false;
-										
-										break;
-									}
-								}
-							}
-						}
 					}
 				}
 			}
@@ -5602,6 +5598,7 @@ public class OpenTorrentOptionsWindow
 				
 				if ( !isSingleOptions ){
 					
+					/*
 					if ( next instanceof TagFeatureFileLocation ){
 					
 						TagFeatureFileLocation fl = (TagFeatureFileLocation)next;
@@ -5618,6 +5615,7 @@ public class OpenTorrentOptionsWindow
 							}
 						}
 					}
+					*/
 					
 					for ( TorrentOpenOptions to: torrentOptionsMulti ){
 						
@@ -5678,9 +5676,11 @@ public class OpenTorrentOptionsWindow
 							boolean tagSelected = !painter.isSelected();
 
 							if ( isSingleOptions ){
+								
 								List<Tag> tags = torrentOptions.getInitialTags();
 																
 								if ( !tagSelected ){
+									
 									if ( !torrentOptions.canDeselectTag( tag )){
 										
 										painter.setSelected( true );
@@ -5727,13 +5727,18 @@ public class OpenTorrentOptionsWindow
 								}
 							}else{
 								
+								boolean disable_sp = false;
+								
 								for ( TorrentOpenOptions to: torrentOptionsMulti ){
+									
 									List<Tag> tags = to.getInitialTags();
 									
+									OpenTorrentInstance instance = getInstance( to );
+																		
 									if (tagSelected) {
-										addInitialTag(tags, tag);
+										instance.addInitialTag(tags, tag);
 									} else {
-										removeInitialTag(tags, tag);
+										instance.removeInitialTag(tags, tag);
 									}
 									
 									if ( tagSelected ){
@@ -5749,7 +5754,7 @@ public class OpenTorrentOptionsWindow
 														
 														if ( t != tag ){
 															
-															removeInitialTag( tags, t );
+															instance.removeInitialTag( tags, t );
 														}
 													}
 												}
@@ -5758,7 +5763,14 @@ public class OpenTorrentOptionsWindow
 									}
 									
 									to.setInitialTags(tags);
+									
+									if ( instance.tag_save_location != null ){
+										
+										disable_sp = true;
+									}
 								}
+								
+								setSavePathEnabled( !disable_sp );
 							}
 							tagButtonsUI.updateFields(null);
 							updateStartOptionsHeader();
@@ -5860,51 +5872,54 @@ public class OpenTorrentOptionsWindow
 			List<Tag>					tags,
 			TagFeatureFileLocation		removed )
 		{
-			TagFeatureFileLocation init = TagUtils.selectInitialDownloadLocation( tags );
-			
-			if ( init != null ){
+			if ( isSingleOptions ){
 				
-				if (( init.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) == 0){
+				TagFeatureFileLocation init = TagUtils.selectInitialDownloadLocation( tags );
+				
+				if ( init != null ){
 					
-					init = null;
-				}
-			}
-			
-			if ( init == null ){
-				
-				tag_save_location = null;
-				
-				setSavePathEnabled( true );
-				
-				if ( removed != null ){
-					
-						// revert save location
-					
-					File save_loc = removed.getTagInitialSaveFolder();
-
-					if ( 	save_loc != null &&
-							( removed.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0 &&
-							getSavePath().equals( save_loc.getAbsolutePath())){
-
-						String old = (String)tagButtonsArea.getData( SP_KEY );
-
-						if ( old != null ){
-
-							setSavePath( old );
-						}
+					if (( init.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) == 0){
+						
+						init = null;
 					}
 				}
-			}else{
 				
-				setSavePathEnabled( false );
-
-					// must have a save folder as selected
-				
-				tag_save_location = init;
-				
-				File save_loc = init.getTagInitialSaveFolder();
-
-				setSavePath( save_loc.getAbsolutePath());
+				if ( init == null ){
+					
+					tag_save_location = null;
+					
+					setSavePathEnabled( true );
+					
+					if ( removed != null ){
+						
+							// revert save location
+						
+						File save_loc = removed.getTagInitialSaveFolder();
+	
+						if ( 	save_loc != null &&
+								( removed.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0 &&
+								getSavePath().equals( save_loc.getAbsolutePath())){
+	
+							String old = (String)tagButtonsArea.getData( SP_KEY );
+	
+							if ( old != null ){
+	
+								setSavePath( old );
+							}
+						}
+					}
+				}else{
+					
+					setSavePathEnabled( false );
+	
+						// must have a save folder as selected
+					
+					tag_save_location = init;
+					
+					File save_loc = init.getTagInitialSaveFolder();
+	
+					setSavePath( save_loc.getAbsolutePath());
+				}
 			}
 		}
 
@@ -7506,9 +7521,9 @@ public class OpenTorrentOptionsWindow
 			
 			if ( cmbDataDir != null ){
 				
-				cmbDataDir.setEnabled(enabled);
-				btnDataDir.setEnabled( cmbDataDirEnabled );
-				btnSearch.setEnabled( cmbDataDirEnabled );
+				cmbDataDir.setEnabled( enabled );
+				btnDataDir.setEnabled( enabled );
+				btnSearch.setEnabled( enabled );
 			}
 		}
 		
