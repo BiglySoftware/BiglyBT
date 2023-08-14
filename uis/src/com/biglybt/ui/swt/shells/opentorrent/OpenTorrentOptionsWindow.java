@@ -1675,9 +1675,17 @@ public class OpenTorrentOptionsWindow
 
 						expand_stack_area.layout(true);
 
+						if ( first_instance.tagButtonsUI != null ){
+						
+								// pick up visible changes from any multi-tagging changes
+							
+							first_instance.tagButtonsUI.updateFields( null );
+						}
+						
 						first_instance.layout();
 
 					}else{
+						
 						Composite expand_area = new Composite( expand_stack_area, SWT.NULL );
 
 						expand_area.setLayout( new FormLayout());
@@ -5300,7 +5308,8 @@ public class OpenTorrentOptionsWindow
 			});
 
 			
-			if ( TagManagerFactory.getTagManager().isEnabled() && isSingleOptions ){
+			if ( TagManagerFactory.getTagManager().isEnabled()){
+				
 
 					// tag area
 
@@ -5355,29 +5364,31 @@ public class OpenTorrentOptionsWindow
 				addTag.addListener(SWT.Selection,
 						event -> TagUIUtilsV3.showCreateTagDialog(tags -> {
 
-							List<Tag> initialTags = torrentOptions.getInitialTags();
-
-							boolean changed = false;
-
-							for (Tag tag : tags) {
-								changed |= addInitialTag(initialTags, tag);
-								Tag otherTag = findOtherTag(tag);
-								if (otherTag != null) {
-									if ((otherTag instanceof DiscoveredTag)
-											&& ((DiscoveredTag) otherTag).existingTag == null) {
-										((DiscoveredTag) otherTag).existingTag = tag;
+							if ( isSingleOptions ){
+								List<Tag> initialTags = torrentOptions.getInitialTags();
+	
+								boolean changed = false;
+	
+								for (Tag tag : tags) {
+									changed |= addInitialTag(initialTags, tag);
+									Tag otherTag = findOtherTag(tag);
+									if (otherTag != null) {
+										if ((otherTag instanceof DiscoveredTag)
+												&& ((DiscoveredTag) otherTag).existingTag == null) {
+											((DiscoveredTag) otherTag).existingTag = tag;
+										}
+										changed |= addInitialTag(initialTags, otherTag);
 									}
-									changed |= addInitialTag(initialTags, otherTag);
 								}
-							}
-
-							if (changed) {
-
-								torrentOptions.setInitialTags(initialTags);
-
-								updateStartOptionsHeader();
-
-								tagButtonsUI.updateFields(null);
+	
+								if (changed) {
+	
+									torrentOptions.setInitialTags(initialTags);
+	
+									updateStartOptionsHeader();
+	
+									tagButtonsUI.updateFields(null);
+								}
 							}
 						}));
 			}
@@ -5473,19 +5484,21 @@ public class OpenTorrentOptionsWindow
 					}
 
 					public void tagRemoved(Tag tag) {
-						List<Tag> initialTags = torrentOptions.getInitialTags();
-						if (removeInitialTag(initialTags, tag)) {
-
-							Tag otherTag = findOtherTag(tag);
-							if (otherTag != null) {
-								removeInitialTag(initialTags, otherTag);
+						if ( isSingleOptions ){
+							List<Tag> initialTags = torrentOptions.getInitialTags();
+							if (removeInitialTag(initialTags, tag)) {
+	
+								Tag otherTag = findOtherTag(tag);
+								if (otherTag != null) {
+									removeInitialTag(initialTags, otherTag);
+								}
+	
+								torrentOptions.setInitialTags(initialTags);
+	
+								updateStartOptionsHeader();
 							}
-
-							torrentOptions.setInitialTags(initialTags);
-
-							updateStartOptionsHeader();
 						}
-
+						
 						buildTagButtonPanel();
 					}
 
@@ -5516,17 +5529,74 @@ public class OpenTorrentOptionsWindow
 				
 				if ( auto_add || auto_new ) {
 					iter.remove();
+					
+					continue;
+				}
+				
+				if ( !isSingleOptions ){
+					
+					if ( next instanceof TagFeatureFileLocation ){
+					
+						TagFeatureFileLocation fl = (TagFeatureFileLocation)next;
+						
+						if (( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0 ){
+							
+							File dir = fl.getTagInitialSaveFolder();
+							
+							if ( dir != null ){
+							
+								iter.remove();
+								
+								continue;
+							}
+						}
+					}
+					
+					for ( TorrentOpenOptions to: torrentOptionsMulti ){
+						
+						if ( !to.canDeselectTag( next )){
+							
+							iter.remove();
+							
+							break;
+						}
+					}
 				}
 			}
 
-			for (DiscoveredTag discoveredTag : listDiscoveredTags.values()) {
-				tags.add(discoveredTag);
+			List<Tag> initialTagsCache;
+			
+			if ( isSingleOptions ){
+				
+				for (DiscoveredTag discoveredTag : listDiscoveredTags.values()) {
+					tags.add(discoveredTag);
+				}
+					
+				initialTagsCache = torrentOptions.getInitialTags();
+				
+			}else{
+				
+				initialTagsCache = new ArrayList<>();
+				
+				boolean first = true;
+				
+				for ( TorrentOpenOptions to: torrentOptionsMulti ){
+					List<Tag> initTags = to.getInitialTags();
+					if ( first ){
+						initialTagsCache.addAll( initTags);
+						first = false;
+					}else{
+						for ( Iterator<Tag> it = initialTagsCache.iterator();it.hasNext();){
+							if ( !initTags.contains( it.next())){
+								it.remove();
+							}
+						}
+					}
+				}
 			}
-
+			
 			boolean[] building = { true };
-			
-			List<Tag> initialTagsCache = torrentOptions.getInitialTags();
-			
+
 			tagButtonsUI.buildTagGroup(tags, tagButtonsArea, false,
 					new TagButtonTrigger() {
 						@Override
@@ -5535,66 +5605,132 @@ public class OpenTorrentOptionsWindow
 							if (longPress) {
 								return;
 							}
+							
 							Tag tag = painter.getTag();
-							List<Tag> tags = torrentOptions.getInitialTags();
 							
 							boolean tagSelected = !painter.isSelected();
-							
-							if ( !tagSelected ){
-								if ( !torrentOptions.canDeselectTag( tag )){
-									
-									painter.setSelected( true );
-									
-									return;
-								}
-							}
-							
-							boolean initialTagsChanged = tagSelected ? addInitialTag(tags, tag)	: removeInitialTag(tags, tag);
-							
-							if ( initialTagsChanged && tagSelected ){
-								
-								TagGroup tg = tag.getGroupContainer();
-								
-								if ( tg != null ){
-									
-									if ( tg.isExclusive() || tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_CATEGORY ){
+
+							if ( isSingleOptions ){
+								List<Tag> tags = torrentOptions.getInitialTags();
+																
+								if ( !tagSelected ){
+									if ( !torrentOptions.canDeselectTag( tag )){
 										
-										for ( Tag t: tags.toArray( new Tag[0] )){
+										painter.setSelected( true );
+										
+										return;
+									}
+								}
+								
+								boolean initialTagsChanged = tagSelected ? addInitialTag(tags, tag)	: removeInitialTag(tags, tag);
+								
+								if ( initialTagsChanged && tagSelected ){
+									
+									TagGroup tg = tag.getGroupContainer();
+									
+									if ( tg != null ){
+										
+										if ( tg.isExclusive() || tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_CATEGORY ){
 											
-											if ( t.getGroupContainer() == tg ){
+											for ( Tag t: tags.toArray( new Tag[0] )){
 												
-												if ( t != tag ){
+												if ( t.getGroupContainer() == tg ){
 													
-													removeInitialTag( tags, t );
+													if ( t != tag ){
+														
+														removeInitialTag( tags, t );
+													}
 												}
 											}
 										}
 									}
 								}
-							}
-							if (initialTagsChanged) {
-
-								Tag otherTag = findOtherTag(tag);
-								if (otherTag != null) {
-									if (tagSelected) {
-										addInitialTag(tags, otherTag);
-									} else {
-										removeInitialTag(tags, otherTag);
+								if (initialTagsChanged) {
+	
+									Tag otherTag = findOtherTag(tag);
+									if (otherTag != null) {
+										if (tagSelected) {
+											addInitialTag(tags, otherTag);
+										} else {
+											removeInitialTag(tags, otherTag);
+										}
 									}
+	
+									torrentOptions.setInitialTags(tags);
 								}
-
-								torrentOptions.setInitialTags(tags);
+							}else{
+								
+								for ( TorrentOpenOptions to: torrentOptionsMulti ){
+									List<Tag> tags = to.getInitialTags();
+									
+									if (tagSelected) {
+										addInitialTag(tags, tag);
+									} else {
+										removeInitialTag(tags, tag);
+									}
+									
+									if ( tagSelected ){
+										TagGroup tg = tag.getGroupContainer();
+										
+										if ( tg != null ){
+											
+											if ( tg.isExclusive() || tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_CATEGORY ){
+												
+												for ( Tag t: tags.toArray( new Tag[0] )){
+													
+													if ( t.getGroupContainer() == tg ){
+														
+														if ( t != tag ){
+															
+															removeInitialTag( tags, t );
+														}
+													}
+												}
+											}
+										}
+									}
+									
+									to.setInitialTags(tags);
+								}
 							}
-
 							tagButtonsUI.updateFields(null);
 							updateStartOptionsHeader();
 						}
 
 						@Override
 						public Boolean tagSelectedOverride(Tag tag) {
-							List<Tag> initialTags = building[0]?initialTagsCache:torrentOptions.getInitialTags();
-							if (initialTags.contains(tag)) {
-								return true;
+							if ( isSingleOptions ){
+								List<Tag> initialTags = building[0]?initialTagsCache:torrentOptions.getInitialTags();
+								if (initialTags.contains(tag)) {
+									return true;
+								}
+							}else{
+								List<Tag> initialTags;
+								
+								if ( building[0] ){
+									initialTags = initialTagsCache;
+								}else{
+									initialTags = new ArrayList<>();
+									
+									boolean first = true;
+									
+									for ( TorrentOpenOptions to: torrentOptionsMulti ){
+										List<Tag> initTags = to.getInitialTags();
+										if ( first ){
+											initialTags.addAll( initTags);
+											first = false;
+										}else{
+											for ( Iterator<Tag> it = initialTags.iterator();it.hasNext();){
+												if ( !initTags.contains( it.next())){
+													it.remove();
+												}
+											}
+										}
+									}
+								}
+								if (initialTags.contains(tag)) {
+									return true;
+								}
 							}
 							return null;
 						}
@@ -7312,7 +7448,11 @@ public class OpenTorrentOptionsWindow
 		private String
 		getSavePath()
 		{
-			return( torrentOptions.getParentDir());
+			if ( isSingleOptions ){
+				return( torrentOptions.getParentDir());
+			}else{
+				return( "" );
+			}
 		}
 
 		private void updateQueueLocationCombo() {
