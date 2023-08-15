@@ -5848,7 +5848,7 @@ public class Utils
 			}
 		});
 
-		Utils.execSWTThreadLater(1000, () -> new Runnable() {
+		Utils.execSWTThreadLater(1000, new Runnable() {
 			public void run() {
 				hack.run();
 
