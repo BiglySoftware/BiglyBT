@@ -212,7 +212,7 @@ public class BTPeerIDByteDecoderDefinitions {
 	 *
 	 * Good place for information about BT peer ID conventions:
 	 *  http://wiki.theory.org/BitTorrentSpecification
-	 *  http://transmission.m0k.org/trac/browser/trunk/libtransmission/clients.c (hello Transmission authors!) :)
+	 *  https://github.com/transmission/transmission/blob/master/libtransmission/clients.cc (hello Transmission authors!) :)
 	 *  http://rufus.cvs.sourceforge.net/rufus/Rufus/g3peerid.py?view=log (for older clients)
 	 *  http://shareaza.svn.sourceforge.net/viewvc/shareaza/trunk/shareaza/BTClient.cpp?view=markup
 	 *  http://libtorrent.rakshasa.no/browser/trunk/libtorrent/src/torrent/peer/client_list.cc
@@ -474,6 +474,9 @@ public class BTPeerIDByteDecoderDefinitions {
 		// A2-a-bb.d-
 		client = addSimpleClient("Aria2", "A2-");
 		addVersionedClient(client, VER_TWO_BYTE_MAINLINE, 6, 3);
+
+		client = addSimpleClient("FDM", "FD");
+		addVersionedClient(client, "a", 1);
 
 		addAzStyle( "PI", "PicoTorrent", VER_AZ_ONE_MAJ_TWO_MIN_ONE_TRAIL);
 
