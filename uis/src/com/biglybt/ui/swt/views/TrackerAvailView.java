@@ -77,7 +77,7 @@ public class TrackerAvailView
 		tv = TableViewFactory.createTableViewSWT(
 				TrackerPeerSource.class,
 				TABLE_ID,
-				getPropertiesPrefix(),
+				getTextPrefixID(),
 				basicItems,
 				basicItems[0].getName(),
 				SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL );

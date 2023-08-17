@@ -236,8 +236,8 @@ public class MyTorrentsView
 		this.supportsTabs = supportsTabs;
 	}
 
-	public MyTorrentsView(String propertiesPrefix, boolean supportsTabs) {
-		super(propertiesPrefix);
+	public MyTorrentsView(String textPrefixID, boolean supportsTabs) {
+		super(textPrefixID);
 		this.supportsTabs = supportsTabs;
 	}
 
@@ -3671,7 +3671,7 @@ public class MyTorrentsView
 		int tableExtraStyle = COConfigurationManager.getIntParameter("MyTorrentsView.table.style");
 		TableViewSWT<DownloadManager> table =
 			TableViewFactory.createTableViewSWT(forDataSourceType, tableID,
-				getPropertiesPrefix(), basicItems, "#", tableExtraStyle | SWT.MULTI
+				getTextPrefixID(), basicItems, "#", tableExtraStyle | SWT.MULTI
 						| SWT.FULL_SELECTION | SWT.VIRTUAL | SWT.CASCADE);
 
 			// config??

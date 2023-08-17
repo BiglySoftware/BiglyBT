@@ -358,7 +358,7 @@ PeersViewBase
 		if ( table_id == TableManager.TABLE_TORRENT_PEERS ){
 			
 			tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE,
-					TableManager.TABLE_TORRENT_PEERS, getPropertiesPrefix(), basicItems,
+					TableManager.TABLE_TORRENT_PEERS, getTextPrefixID(), basicItems,
 					"pieces", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 			
 		}else{
@@ -373,7 +373,7 @@ PeersViewBase
 			tcManager.setDefaultColumnNames( TableManager.TABLE_ALL_PEERS, basicItems );
 
 			tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE,
-					TableManager.TABLE_ALL_PEERS, getPropertiesPrefix(), basicItems,
+					TableManager.TABLE_ALL_PEERS, getTextPrefixID(), basicItems,
 					"connected_time", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 		}
 		

@@ -27,10 +27,10 @@ public class TableViewFactory
 {
 	public static <V> TableViewSWT<V> createTableViewSWT(
 			Class<?> pluginDataSourceType, String _sTableID,
-			String _sPropertiesPrefix, TableColumnCore[] _basicItems,
+			String _sTextPrefixID, TableColumnCore[] _basicItems,
 			String _sDefaultSortOn, int _iTableStyle) {
 		return (TableViewSWT<V>) new TableViewPainted(pluginDataSourceType,
-				_sTableID, _sPropertiesPrefix, _basicItems, _sDefaultSortOn,
+				_sTableID, _sTextPrefixID, _basicItems, _sDefaultSortOn,
 				_iTableStyle);
 	}
 }

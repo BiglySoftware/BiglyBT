@@ -269,7 +269,7 @@ public abstract class PiecesViewBase
 		if ( table_id == TableManager.TABLE_TORRENT_PIECES ){
 
 			tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE,
-					TableManager.TABLE_TORRENT_PIECES, getPropertiesPrefix(), basicItems,
+					TableManager.TABLE_TORRENT_PIECES, getTextPrefixID(), basicItems,
 					basicItems[0].getName(), SWT.SINGLE | SWT.FULL_SELECTION | SWT.VIRTUAL);
 		}else{
 		
@@ -284,7 +284,7 @@ public abstract class PiecesViewBase
 			tcManager.setDefaultColumnNames( TableManager.TABLE_ALL_PIECES, basicItems );
 
 			tv = TableViewFactory.createTableViewSWT(PEPiece[].class,	// PEPiece subviews assume single download
-					TableManager.TABLE_ALL_PIECES, getPropertiesPrefix(), basicItems,
+					TableManager.TABLE_ALL_PIECES, getTextPrefixID(), basicItems,
 					basicItems[0].getName(), SWT.SINGLE | SWT.FULL_SELECTION | SWT.VIRTUAL);
 		}
 

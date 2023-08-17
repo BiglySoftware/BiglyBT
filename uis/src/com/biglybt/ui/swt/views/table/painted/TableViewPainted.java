@@ -276,7 +276,7 @@ public class TableViewPainted
 	 *                   {@link com.biglybt.pif.ui.tables.TableManager}).
 	 *                   Config settings are stored with the prefix of
 	 *                   "Table.<i>TableID</i>"
-	 * @param _sPropertiesPrefix Prefix for retrieving text from the properties
+	 * @param _sTextPrefixID Prefix for retrieving text from the properties
 	 *                            file (MessageText).  Typically
 	 *                            <i>TableID</i> + "View"
 	 * @param _basicItems Column Definitions
@@ -284,9 +284,9 @@ public class TableViewPainted
 	 * @param _iTableStyle SWT style constants used when creating the table
 	 */
 	public TableViewPainted(Class<?> pluginDataSourceType, String _sTableID,
-			String _sPropertiesPrefix, TableColumnCore[] _basicItems,
+			String _sTextPrefixID, TableColumnCore[] _basicItems,
 			String _sDefaultSortOn, int _iTableStyle) {
-		super(pluginDataSourceType, _sTableID, _sPropertiesPrefix, new Object(),
+		super(pluginDataSourceType, _sTableID, _sTextPrefixID, new Object(),
 				_basicItems);
 		visibleRows_sync = getRowsSync();
 		//		boolean wantTree = (_iTableStyle & SWT.CASCADE) != 0;
@@ -2983,25 +2983,26 @@ public class TableViewPainted
 			return;
 		}
 		SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow();
+		String tableTitle = MessageText.getString(getTextPrefixID() + ".header", (String) null);
+		// fallback to legacy
+		if (tableTitle == null) {
+			tableTitle = MessageText.getString(getTableID() + "View.header");
+			if (Constants.isCVSVersion()) {
+				tableTitle += " (Fallback Text)";
+			}
+		}
 		entryWindow.initTexts("MyTorrentsView.dialog.setFilter.title", null,
 				"MyTorrentsView.dialog.setFilter.text", new String[] {
-					MessageText.getString(getTableID() + "View" + ".header")
+					tableTitle
 				});
 		entryWindow.setPreenteredText(filter.text, false);
-		entryWindow.prompt(new UIInputReceiverListener() {
-			@Override
-			public void UIInputReceiverClosed(UIInputReceiver entryWindow) {
-				if (!entryWindow.hasSubmittedInput()) {
-					return;
-				}
-				String message = entryWindow.getSubmittedInput();
-
-				if (message == null) {
-					message = "";
-				}
-
-				setFilterText(message, false);
+		entryWindow.prompt(results -> {
+			if (!results.hasSubmittedInput()) {
+				return;
 			}
+
+			String message = results.getSubmittedInput();
+			setFilterText(message == null ? "" : message, false);
 		});
 	}
 

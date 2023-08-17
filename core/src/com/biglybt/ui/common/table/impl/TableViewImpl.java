@@ -117,7 +117,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	/** Prefix for retrieving text from the properties file (MessageText)
 	 * Typically <i>TableID</i> + "View"
 	 */
-	protected String propertiesPrefix;
+	private String textPrefixID;
 
 	// What type of data is stored in this table
 	private final Class<?> classPluginDataSourceType;
@@ -245,10 +245,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	private LinkedList<HistoryEntry>	historyAfter	= new LinkedList<>();	
 
 	public TableViewImpl(Class<?> pluginDataSourceType, String _sTableID,
-			String _sPropertiesPrefix, Object rows_sync,
+			String _sTextPrefixID, Object rows_sync,
 			TableColumnCore[] _basicItems) {
 		classPluginDataSourceType = pluginDataSourceType;
-		propertiesPrefix = _sPropertiesPrefix;
+		textPrefixID = _sTextPrefixID;
 		tableID = _sTableID;
 		basicItems = _basicItems;
 		mapDataSourceToRow = new IdentityHashMap<>();
@@ -2040,10 +2040,9 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		columnInvalidate(tableColumn, true);
 	}
 
-	// @see TableView#getPropertiesPrefix()
 	@Override
-	public String getPropertiesPrefix() {
-		return propertiesPrefix;
+	public String getTextPrefixID() {
+		return textPrefixID;
 	}
 
 

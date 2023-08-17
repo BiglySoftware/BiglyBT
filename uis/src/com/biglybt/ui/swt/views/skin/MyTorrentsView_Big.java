@@ -40,7 +40,7 @@ public class MyTorrentsView_Big
 
 	public MyTorrentsView_Big(Core _core, int torrentFilterMode,
 			Object dataSource, TableColumnCore[] basicItems, BubbleTextBox txtFilter ){
-		super( true );
+		super(SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true, dataSource) + "View", true );
 		this.torrentFilterMode = torrentFilterMode;
 		this.filterBox = txtFilter;
 		Class<?> forDataSourceType;

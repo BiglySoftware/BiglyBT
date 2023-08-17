@@ -398,7 +398,7 @@ public class SubscriptionsView
 		tcm.setDefaultColumnNames(TABLE_ID, columns);
 		tcm.setDefaultSortColumnName(TABLE_ID, "name");
 				
-		view = TableViewFactory.createTableViewSWT(Subscription.class, TABLE_ID, TABLE_ID,
+		view = TableViewFactory.createTableViewSWT(Subscription.class, TABLE_ID, TABLE_ID + ".view",
 				columns, "name", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
 		view.enableFilterCheck(bubbleTextBox, this );

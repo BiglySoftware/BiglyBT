@@ -187,7 +187,7 @@ public class FilesView
 		registerPluginViews();
 
 		tv = TableViewFactory.createTableViewSWT(PLUGIN_DS_TYPE,
-				TableManager.TABLE_TORRENT_FILES, getPropertiesPrefix(), basicItems,
+				TableManager.TABLE_TORRENT_FILES, getTextPrefixID(), basicItems,
 				"firstpiece", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 		
 		tv.setExpandEnabled( true );

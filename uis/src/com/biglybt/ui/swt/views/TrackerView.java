@@ -124,7 +124,7 @@ public class TrackerView
 		tv = TableViewFactory.createTableViewSWT(
 				PLUGIN_DS_TYPE,
 				TableManager.TABLE_TORRENT_TRACKERS,
-				getPropertiesPrefix(),
+				getTextPrefixID(),
 				basicItems,
 				basicItems[0].getName(),
 				SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL );

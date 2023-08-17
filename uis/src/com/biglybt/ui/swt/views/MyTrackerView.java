@@ -28,7 +28,6 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
@@ -140,7 +139,7 @@ public class MyTrackerView
 		super("MyTrackerView");
 	
 		tv = TableViewFactory.createTableViewSWT(TrackerTorrent.class,
-				TableManager.TABLE_MYTRACKER, getPropertiesPrefix(), basicItems, "name",
+				TableManager.TABLE_MYTRACKER, getTextPrefixID(), basicItems, "name",
 				SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER | SWT.VIRTUAL);
 		tv.addLifeCycleListener(this);
 		tv.addSelectionListener(this, false);

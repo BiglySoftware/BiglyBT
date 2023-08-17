@@ -130,9 +130,9 @@ public interface TableView<DATASOURCETYPE>
 	Object getFirstSelectedDataSource();
 
 	/**
-	 * @return
+	 * @return Prefix for i18n strings. Typically {@link #getTableID()} + "View"
 	 */
-	String getPropertiesPrefix();
+	String getTextPrefixID();
 
 	/**
 	 * Get the row associated with a datasource

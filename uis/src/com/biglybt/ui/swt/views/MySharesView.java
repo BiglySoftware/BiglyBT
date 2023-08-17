@@ -36,7 +36,6 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
-import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
@@ -119,7 +118,7 @@ implements ShareManagerListener,
 	{
 		super("MySharesView");
 		tv = TableViewFactory.createTableViewSWT(ShareResource.class, TableManager.TABLE_MYSHARES,
-				getPropertiesPrefix(), basicItems, "name", SWT.MULTI | SWT.FULL_SELECTION
+				getTextPrefixID(), basicItems, "name", SWT.MULTI | SWT.FULL_SELECTION
 						| SWT.BORDER | SWT.VIRTUAL);
 
 		tv.addSelectionListener(new TableSelectionAdapter() {
