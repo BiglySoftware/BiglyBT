@@ -347,6 +347,9 @@ public class PieceMapView
 						e.gc.fillRectangle(e.x, bounds.height, e.width,
 								e.height - visibleImageHeight + 1);
 					}
+					if (visibleImageWidth < 0 || visibleImageHeight < 0) {
+						return;
+					}
 
 					// This might trigger another paint, but will trigger after other SWT events
 					refreshInfoCanvas();
