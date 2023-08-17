@@ -240,57 +240,7 @@ public final class ShellFactory
 				super.setImages(images);
 		}
 
-		@Override
-		public Point computeSize(int wHint, int hHint) {
-			if (!inSetSize && wHint > 0 && hHint == SWT.DEFAULT) {
-				inSetSize = true;
-				return super.computeSize(wHint, hHint);
-			}
-			return super.computeSize(wHint, hHint);
-		}
-
-		private boolean inSetSize = false;
-
 		public void setAdjustPXforDPI(boolean adjust) {
-			inSetSize = !adjust;
-		}
-
-		@Override
-		public void setSize(int width, int height) {
-			if (inSetSize) {
-				super.setSize(width, height);
-				return;
-			}
-			inSetSize = true;
-			try {
-				super.setSize(width, height);
-			} finally {
-				inSetSize = false;
-			}
-		}
-
-		@Override
-		public void pack() {
-			inSetSize = true;
-			try {
-				super.pack();
-  		} finally {
-  			inSetSize = false;
-  		}
-		}
-
-		@Override
-		public void setSize(Point size) {
-			if (inSetSize) {
-				super.setSize(size);
-				return;
-			}
-			inSetSize = true;
-			try {
-				super.setSize(size);
-			} finally {
-				inSetSize = false;
-			}
 		}
 
 		@Override

@@ -279,7 +279,6 @@ public abstract class MiniBar implements MenuBuildUtils.MenuBuilder {
 		this.stucked = null;
 		this.splash = com.biglybt.ui.swt.components.shell.ShellFactory
 				.createShell(SWT.ON_TOP);
-		((AEShell) splash).setAdjustPXforDPI(false);
 
 		int	trans = COConfigurationManager.getIntParameter( "Bar Transparency" );
 

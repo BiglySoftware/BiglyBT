@@ -719,9 +719,6 @@ public class SWTSkin
 
 		int width = skinProperties.getPxValue(startID + ".width", -1);
 		int height = skinProperties.getPxValue(startID + ".height", -1);
-		if (skinComposite instanceof AEShell) {
-			((AEShell) skinComposite).setAdjustPXforDPI(false);
-		}
 
 		if (autoSizeOnLayout) {
 			if (width > 0 && height == -1) {
