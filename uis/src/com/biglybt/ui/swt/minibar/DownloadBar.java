@@ -118,7 +118,7 @@ public class DownloadBar extends MiniBar {
 		itemQueue.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				ManagerUtils.queue(download, splash);
+				ManagerUtils.queue(download);
 			}
 		});
 		itemQueue.setEnabled(ManagerUtils.isStartable(download));

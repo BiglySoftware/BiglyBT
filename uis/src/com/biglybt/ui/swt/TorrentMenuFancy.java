@@ -1430,13 +1430,9 @@ public class TorrentMenuFancy
 							itemFileAlloc.addListener(SWT.Selection, new ListenerDMTask(
 									dms) {
 								@Override
-								public void run(DownloadManager dm) {
+								public void run(DownloadManager[] dms) {
 									
-									dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY, DownloadManagerState.FAS_ZERO_NEW_STOP );
-									
-									dm.getDownloadState().setFlag( DownloadManagerState.FLAG_DISABLE_STOP_AFTER_ALLOC, false );
-									
-									ManagerUtils.queue( dm, null );
+									ManagerUtils.allocate( dms );
 								}
 							});
 	

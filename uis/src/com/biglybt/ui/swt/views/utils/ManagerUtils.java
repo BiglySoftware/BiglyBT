@@ -32,6 +32,7 @@ import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import com.biglybt.core.Core;
@@ -55,6 +56,7 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerCheckRequest;
 import com.biglybt.core.disk.DiskManagerCheckRequestListener;
@@ -1854,10 +1856,109 @@ public class ManagerUtils {
     }
   }
 
+  private static AsyncDispatcher alloc_dispatcher = new AsyncDispatcher(2000);
+
+  public static void
+  allocate(
+	  DownloadManager[]		dms )
+  {		
+	  	// although the scheduler will try and enforce the "smallest first" it currently doesn't pause an 
+	  	// active allocation once started. So if the first download in the array isn't the smallest one
+	  	// it'll get to grab an allocation slot regardless and only subsequent ones will be processed in 
+	  	// the correct order. So.... pre-sort. Should fix the scheduler probably to do the same as the
+	  	// recheck scheduler
+	  
+	  boolean smallest_first = COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_DISKMANAGER_ALLOC_SMALLESTFIRST );
+	  
+	  if ( smallest_first ){
+		  
+		  dms = dms.clone();
+		  
+		  Arrays.sort( dms, (o1,o2)->{
+			  long comp = o1.getSize()-o2.getSize();
+			  
+			  return(comp<0?-1:(comp>0?1:0));
+		  });
+	  }
+	  
+	  for ( DownloadManager dm: dms ){
+		  
+		  dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY, DownloadManagerState.FAS_ZERO_NEW_STOP );
+		  
+		  	// order may be ignored if "allocate smallest first" is enabled
+		  
+		  long order = COConfigurationManager.getLongParameter( "file.alloc.order.next", 0 );
+		  
+		  COConfigurationManager.setParameter( "file.alloc.order.next", order+1 );
+		  
+		  dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_ORDER, order );
+	
+		  dm.getDownloadState().setFlag( DownloadManagerState.FLAG_DISABLE_STOP_AFTER_ALLOC, false );
+			  
+		  alloc_dispatcher.dispatch(()->{
+			  
+			  	// Download will stop post-allocation so we use force-start to get things going. Otherwise
+			  	// the download will sit there queued until such time as the download scheduler decides to
+			  	// start it. If we don't start straight away any explicit allocation ordering by the caller will
+			  	// get lost...
+			  
+			  dm.setForceStart( true );
+			  
+			  try{
+				  long start = SystemTime.getMonotonousTime();
+				  
+				  AtomicInteger latest_state = new AtomicInteger( -1 );
+				  
+				  DownloadManagerListener listener = 
+					new DownloadManagerAdapter()
+				  	{
+					  public void 
+					  stateChanged(
+							 DownloadManager 	manager, 
+							 int 				state )
+					  {
+						  latest_state.set( state );
+					  }
+				  	};
+				  
+				  dm.addListener (listener );
+				  
+				  try{
+					  while( true ){
+					  
+						  int state = latest_state.get();
+						  
+						  if (	state == DownloadManager.STATE_ERROR || 
+							  	state == DownloadManager.STATE_STOPPED ||
+							  	state == DownloadManager.STATE_ALLOCATING ||
+						  		state == DownloadManager.STATE_DOWNLOADING ){
+							  
+							  break;
+						  }
+						  
+						  if ( SystemTime.getMonotonousTime() - start > 5000 ){
+							  
+							  break;
+						  }
+						  
+						  Thread.sleep(50);
+					  }
+				  }finally{
+					  
+					  dm.removeListener( listener );
+				  }
+			  }catch( Throwable e ){
+				  
+			  }
+			  
+			  dm.setForceStart( false );
+		  });
+	  }
+  }
+  
   public static void
   queue(
-  		DownloadManager dm,
-		Composite panelNotUsed)
+  		DownloadManager dm )
   {
     if (dm != null) {
     	int state = dm.getState();

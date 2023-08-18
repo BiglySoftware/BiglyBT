@@ -2244,7 +2244,7 @@ DiskManagerUtil
 					}
 
 					private ProgressCallback callback = 
-					new ProgressCallbackAdapter( move_smallest_first )
+					new ProgressCallbackAdapter( move_smallest_first?ProgressCallbackAdapter.SORT_SIZE:ProgressCallbackAdapter.SORT_ALLOC_ORDER )
 					{
 						private volatile int	current_state = ProgressCallback.ST_NONE;
 

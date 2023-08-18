@@ -227,7 +227,7 @@ DiskManagerOperationScheduler
 						
 						if ( active_downloads.contains( dm )){
 							
-							cb.setOrder( 0 );
+							cb.setIndicativeOrder( 0 );
 							
 							continue;
 						}
@@ -262,7 +262,7 @@ DiskManagerOperationScheduler
 						
 					}else{
 												
-						cb.setOrder( pos );
+						cb.setIndicativeOrder( pos );
 					}
 				}
 			}else{

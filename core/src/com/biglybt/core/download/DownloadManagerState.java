@@ -87,6 +87,7 @@ DownloadManagerState
 	public static final String AT_MOVE_ON_COMPLETE_DIR		= "moc.dir";		// String - explicit move-on-complete folder
 	public static final String AT_FILE_FLAGS				= "ff";
 	public static final String AT_FILE_ALLOC_STRATEGY		= "fas";			// long
+	public static final String AT_FILE_ALLOC_ORDER			= "fao";			// long
 	public static final String AT_TRACKER_SESSION_STATS		= "tss";			// Map
 	public static final String AT_TORRENT_SAVE_TIME			= "tst";			// long
 	public static final String AT_TORRENT_EXPORT_PROPAGATED	= "tep";			// bool
@@ -108,6 +109,7 @@ DownloadManagerState
 		{ AT_REORDER_MIN_MB,						new Integer( -1 )},
 		{ AT_SHARE_RATIO_PROGRESS,					new Long( 0 )},
 		{ AT_FILE_ALLOC_STRATEGY,					new Long( FAS_DEFAULT )},
+		{ AT_FILE_ALLOC_ORDER,						new Long( -1 )},
 	};
 
 	public static final long FLAG_ONLY_EVER_SEEDED						= Download.FLAG_ONLY_EVER_SEEDED;

@@ -1110,13 +1110,8 @@ public class TorrentUtil
 		itemFileAlloc.addListener(SWT.Selection, new ListenerDMTask(
 				dms) {
 			@Override
-			public void run(DownloadManager dm) {
-				
-				dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY, DownloadManagerState.FAS_ZERO_NEW_STOP );
-				
-				dm.getDownloadState().setFlag( DownloadManagerState.FLAG_DISABLE_STOP_AFTER_ALLOC, false );
-				
-				ManagerUtils.queue( dm, null );
+			public void run(DownloadManager[] dms) {
+				ManagerUtils.allocate( dms );
 			}
 		});
 
@@ -4105,7 +4100,7 @@ public class TorrentUtil
 					if (found) {
 						dm.stopIt(DownloadManager.STATE_STOPPED, false, false);
 
-						ManagerUtils.queue(dm, shell);
+						ManagerUtils.queue(dm);
 					}
 				}
 			}
@@ -4256,7 +4251,7 @@ public class TorrentUtil
 			if ( extendedAction ){
 				dm.setForceStart( true );
 			}else{
-				ManagerUtils.queue(dm, null);
+				ManagerUtils.queue(dm);
 			}
 		}
 		DiskManagerFileInfo[] fileInfos = toDMFI(datasources);
@@ -4267,7 +4262,7 @@ public class TorrentUtil
 			if (extendedAction) {
 				for (DiskManagerFileInfo fileInfo : fileInfos) {
 					if (fileInfo.getDownloadManager().getState() == DownloadManager.STATE_STOPPED) {
-						ManagerUtils.queue(fileInfo.getDownloadManager(), null);
+						ManagerUtils.queue(fileInfo.getDownloadManager());
 					}
 				}
 			}

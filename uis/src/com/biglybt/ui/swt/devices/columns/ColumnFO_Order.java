@@ -64,7 +64,7 @@ public class ColumnFO_Order
 				
 				if ( cb.isAutoPause()){
 				
-					order = cb.getOrder();
+					order = cb.getIndicativeOrder();
 				}
 			}
 		}
