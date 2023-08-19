@@ -263,7 +263,7 @@ GeneralUtils
 		return s;
 	}
 
-	private static int SMOOTHING_UPDATE_WINDOW	 	= 60;
+	private static int SMOOTHING_UPDATE_WINDOW	 	= 20;
 	private static int SMOOTHING_UPDATE_INTERVAL 	= 1;
 
 
@@ -279,9 +279,9 @@ GeneralUtils
 				{
 					SMOOTHING_UPDATE_WINDOW	= COConfigurationManager.getIntParameter( "Stats Smoothing Secs" );
 
-					if ( SMOOTHING_UPDATE_WINDOW < 30 ){
+					if ( SMOOTHING_UPDATE_WINDOW < 10 ){
 
-						SMOOTHING_UPDATE_WINDOW = 30;
+						SMOOTHING_UPDATE_WINDOW = 10;
 
 					}else if ( SMOOTHING_UPDATE_WINDOW > 30*60 ){
 
