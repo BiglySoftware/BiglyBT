@@ -485,9 +485,58 @@ JSONEngine
 									case FIELD_SEEDS :
 										result.setNbSeedsFromHTML(fieldContent);
 										break;
-									case FIELD_CATEGORY :
-										result.setCategoryFromHTML(fieldContent);
+									case FIELD_CATEGORY :{
+											// see if we've been given an array of cats
+										
+										List<String>	cats = new ArrayList<>();
+									
+										if ( fieldContent.startsWith( "[" )){
+											
+											Object fieldContentObj = jsonEntry.get(fieldFrom);
+											
+											if ( fieldContentObj instanceof List ){
+												
+												List<Object> ocats = (List<Object>)fieldContentObj;
+												
+												for ( Object ocat: ocats ){
+																										
+													if ( ocat instanceof String ){
+													
+														cats.add((String)ocat);
+														
+													}else if ( ocat instanceof Map ){
+														
+														Map<String,Object> mcat = (Map<String,Object>)ocat;
+														
+														Object oname = mcat.get( "name" );
+														
+														if ( oname instanceof String ){
+															
+															cats.add((String)oname);
+														}
+													}
+												}
+											}
+										}
+										
+										if ( cats.isEmpty()){
+							
+											result.setCategoryFromHTML(fieldContent);
+											
+										}else{
+											
+											result.setCategoryFromHTML(cats.get(0));
+											
+											if ( cats.size() > 1 ){
+												
+												for ( String cat: cats ){
+													
+													result.addTagFromHTML( cat );
+												}
+											}
+										}
 										break;
+									}
 									case FIELD_DATE :
 										result.setPublishedDateFromHTML(fieldContent);
 										break;
