@@ -24,7 +24,6 @@ import java.net.InetAddress;
 import java.util.*;
 
 import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.util.CopyOnWriteList;
 
 /**
  * @author parg
