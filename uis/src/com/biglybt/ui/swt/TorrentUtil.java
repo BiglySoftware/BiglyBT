@@ -2505,52 +2505,7 @@ public class TorrentUtil
 			@Override
 			public void run(final DownloadManager[] dms) {
 
-				final List<List<String>>	merged_trackers = new ArrayList<>();
-
-				Set<String>	added = new HashSet<>();
-
-				for (DownloadManager dm : dms) {
-
-					TOTorrent torrent = dm.getTorrent();
-
-					if (torrent == null) {
-
-						continue;
-					}
-
-					List<List<String>> group = TorrentUtils.announceGroupsToList(torrent);
-
-					for ( List<String> set: group ){
-
-						List<String>	rem = new ArrayList<>();
-
-						for ( String url_str: set ){
-
-							try{
-								URL url = new URL( url_str );
-
-								if ( TorrentUtils.isDecentralised( url )){
-
-									continue;
-								}
-
-								if ( !added.contains( url_str )){
-
-									added.add( url_str );
-
-									rem.add( url_str );
-								}
-							}catch( Throwable e ){
-
-							}
-						}
-
-						if ( rem.size() > 0 ){
-
-							merged_trackers.add( rem );
-						}
-					}
-				}
+				final List<List<String>>	merged_trackers = TorrentUtils.getMergedTrackers( dms );
 
 				new MultiTrackerEditor(null, null, merged_trackers,
 					new TrackerEditorListener() {

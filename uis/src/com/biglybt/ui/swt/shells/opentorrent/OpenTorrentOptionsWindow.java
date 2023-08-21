@@ -1,5 +1,4 @@
-/*
- * Copyright (C) Azureus Software, Inc, All Rights Reserved.
+/* Copyright (C) Azureus Software, Inc, All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -2424,7 +2423,7 @@ public class OpenTorrentOptionsWindow
 				
 				expInfo.setText( "" );
 				expFiles.setText( "" );
-				expPeer.setText( "" );
+				//expPeer.setText( "" );
 			}
 
 			SWTSkinObject so = skin.getSkinObject("disk-space");
@@ -2471,6 +2470,11 @@ public class OpenTorrentOptionsWindow
 				so = skin.getSkinObject("ipfilter");
 				if (so instanceof SWTSkinObjectContainer) {
 					setupIPFilterOption((SWTSkinObjectContainer) so);
+				}
+			}else{
+				so = skin.getSkinObject("trackers");
+				if (so instanceof SWTSkinObjectContainer) {
+					setupTrackers((SWTSkinObjectContainer) so);
 				}
 			}
 
@@ -7256,21 +7260,68 @@ public class OpenTorrentOptionsWindow
 			Button button = new Button( parent, SWT.PUSH );
 			Messages.setLanguageText( button, "label.edit.trackers" );
 
-			TOTorrent torrent = torrentOptions.getTorrent();
-
-			button.setEnabled( torrent != null && !TorrentUtils.isReallyPrivate( torrent ));
-
-			button.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					List<List<String>> trackers = torrentOptions.getTrackers( false );
-					new MultiTrackerEditor( shell, null, trackers, new TrackerEditorListener() {
+			if ( isSingleOptions ){
+				
+				TOTorrent torrent = torrentOptions.getTorrent();
+	
+				button.setEnabled( torrent != null && !TorrentUtils.isReallyPrivate( torrent ));
+	
+				button.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						List<List<String>> trackers = torrentOptions.getTrackers( false );
+						new MultiTrackerEditor( shell, null, trackers, new TrackerEditorListener() {
+							@Override
+							public void trackersChanged(String str, String str2, List<List<String>> updatedTrackers) {
+								torrentOptions.setTrackers(updatedTrackers);
+							}
+						}, true, true );
+					}});
+			}else{
+				
+				List<TOTorrent>				torrents = new ArrayList<>();
+				
+				boolean bad = false;
+				
+				for ( TorrentOpenOptions to: torrentOptionsMulti ){
+					
+					TOTorrent torrent = to.getTorrent();
+					
+					if ( torrent == null || TorrentUtils.isReallyPrivate( torrent )){
+						
+						bad = true;
+						
+						break;
+					}
+					
+					torrents.add( torrent );
+				}
+				
+				button.setEnabled( !bad && !torrents.isEmpty());
+				
+				if ( !bad ){
+					
+					button.addSelectionListener(new SelectionAdapter() {
 						@Override
-						public void trackersChanged(String str, String str2, List<List<String>> updatedTrackers) {
-							torrentOptions.setTrackers(updatedTrackers);
-						}
-					}, true, true );
-				}});
+						public void widgetSelected(SelectionEvent e) {
+							List<List<List<String>>> groups = new ArrayList<>();
+							
+							for ( TorrentOpenOptions to: torrentOptionsMulti ){
+								List<List<String>> trackers = to.getTrackers( false );
+								groups.add( trackers );
+							}
+							final List<List<String>>	merged_trackers = TorrentUtils.getMergedTrackersFromGroups( groups );
+							new MultiTrackerEditor( shell, null, merged_trackers, new TrackerEditorListener() {
+								@Override
+								public void trackersChanged(String str, String str2, List<List<String>> updatedTrackers) {
+									for ( TorrentOpenOptions to: torrentOptionsMulti ){
+										to.setTrackers(updatedTrackers);
+									}
+								}
+							}, true, true );
+						}});
+				}
+			}
 		}
 
 		private void setupUpDownLimitOption(SWTSkinObjectContainer so) {

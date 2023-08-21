@@ -1071,6 +1071,88 @@ TorrentUtils
 		return( result );
 	}
 	
+	public static List<List<String>>
+	getMergedTrackers(
+		DownloadManager[]		dms )
+	{
+		List<TOTorrent>		torrents = new ArrayList<>();
+		
+		for ( DownloadManager dm : dms ){
+
+			TOTorrent torrent = dm.getTorrent();
+
+			if ( torrent == null ){
+
+				continue;
+			}
+			
+			torrents.add( torrent );
+		}
+		
+		return( getMergedTrackers( torrents ));
+	}
+	
+	public static List<List<String>>
+	getMergedTrackers(
+		List<TOTorrent>		torrents )
+	{
+		List<List<List<String>>>	all_trackers = new ArrayList<>();
+
+		for ( TOTorrent torrent: torrents ){
+
+			List<List<String>> group = TorrentUtils.announceGroupsToList(torrent);
+			
+			all_trackers.add( group );
+		}
+		
+		return( getMergedTrackersFromGroups( all_trackers ));
+	}
+	
+	public static List<List<String>>
+	getMergedTrackersFromGroups(
+		List<List<List<String>>>	all_trackers )
+	{
+		List<List<String>>	merged_trackers = new ArrayList<>();
+
+		Set<String>	added = new HashSet<>();
+
+		for ( List<List<String>> group: all_trackers ){
+
+			for ( List<String> set: group ){
+
+				List<String>	rem = new ArrayList<>();
+
+				for ( String url_str: set ){
+
+					try{
+						URL url = new URL( url_str );
+
+						if ( TorrentUtils.isDecentralised( url )){
+
+							continue;
+						}
+
+						if ( !added.contains( url_str )){
+
+							added.add( url_str );
+
+							rem.add( url_str );
+						}
+					}catch( Throwable e ){
+
+					}
+				}
+
+				if ( rem.size() > 0 ){
+
+					merged_trackers.add( rem );
+				}
+			}
+		}
+		
+		return( merged_trackers );
+	}
+	
 		/**
 		 * This method DOES NOT MODIFY THE TORRENT
 		 * @param groups
