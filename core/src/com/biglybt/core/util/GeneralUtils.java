@@ -32,6 +32,7 @@ import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineListener;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingImmediateAverage;
@@ -263,13 +264,17 @@ GeneralUtils
 		return s;
 	}
 
-	private static int SMOOTHING_UPDATE_WINDOW	 	= 20;
+	public static final int SMOOTHING_UPDATE_WINDOW_DEFAULT	 	= 20;
+	public static final int SMOOTHING_UPDATE_WINDOW_MIN		 	= 10;
+	public static final int SMOOTHING_UPDATE_WINDOW_MAX		 	= 30*60;
+
+	private static int SMOOTHING_UPDATE_WINDOW	 	= SMOOTHING_UPDATE_WINDOW_DEFAULT;
 	private static int SMOOTHING_UPDATE_INTERVAL 	= 1;
 
 
 	static{
 		COConfigurationManager.addAndFireParameterListener(
-			"Stats Smoothing Secs",
+			ConfigKeys.Stats.ICFG_STATS_SMOOTHING_SECS,
 			new ParameterListener()
 			{
 				@Override
@@ -277,15 +282,15 @@ GeneralUtils
 				parameterChanged(
 					String xxx )
 				{
-					SMOOTHING_UPDATE_WINDOW	= COConfigurationManager.getIntParameter( "Stats Smoothing Secs" );
+					SMOOTHING_UPDATE_WINDOW	= COConfigurationManager.getIntParameter( ConfigKeys.Stats.ICFG_STATS_SMOOTHING_SECS );
 
-					if ( SMOOTHING_UPDATE_WINDOW < 10 ){
+					if ( SMOOTHING_UPDATE_WINDOW < SMOOTHING_UPDATE_WINDOW_MIN ){
 
-						SMOOTHING_UPDATE_WINDOW = 10;
+						SMOOTHING_UPDATE_WINDOW = SMOOTHING_UPDATE_WINDOW_MIN;
 
-					}else if ( SMOOTHING_UPDATE_WINDOW > 30*60 ){
+					}else if ( SMOOTHING_UPDATE_WINDOW > SMOOTHING_UPDATE_WINDOW_MAX ){
 
-						SMOOTHING_UPDATE_WINDOW = 30*60;
+						SMOOTHING_UPDATE_WINDOW = SMOOTHING_UPDATE_WINDOW_MAX;
 					}
 
 					SMOOTHING_UPDATE_INTERVAL = SMOOTHING_UPDATE_WINDOW/60;

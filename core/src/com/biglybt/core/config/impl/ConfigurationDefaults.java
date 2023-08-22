@@ -491,7 +491,7 @@ public class ConfigurationDefaults {
     def.put( "Stats File", StatsWriterPeriodic.DEFAULT_STATS_FILE_NAME );
     def.put( "long.term.stats.enable", TRUE );
     def.put( "long.term.stats.weekstart", Calendar.SUNDAY );
-    def.put( "Stats Smoothing Secs", new Long( 2*60 ));
+    def.put( ConfigKeys.Stats.ICFG_STATS_SMOOTHING_SECS, new Long( GeneralUtils.SMOOTHING_UPDATE_WINDOW_DEFAULT ));
     def.put( "File.Torrent.AutoSkipExtensions", "" );
     def.put( "File.Torrent.AutoSkipFiles", "" );
     def.put( "File.Torrent.AutoSkipFiles.RegExp", FALSE );

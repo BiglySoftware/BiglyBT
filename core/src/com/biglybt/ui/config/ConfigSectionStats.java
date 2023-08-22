@@ -28,6 +28,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.stats.StatsWriterPeriodic;
 import com.biglybt.core.stats.transfer.OverallStats;
 import com.biglybt.core.stats.transfer.StatsFactory;
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -91,7 +92,11 @@ public class ConfigSectionStats
 		// general
 
 		IntParameterImpl paramStatsSmoothingSecs = new IntParameterImpl(
-				ICFG_STATS_SMOOTHING_SECS, "stats.general.smooth_secs", 10, 30 * 60);
+				ICFG_STATS_SMOOTHING_SECS, 
+				"stats.general.smooth_secs", 
+				GeneralUtils.SMOOTHING_UPDATE_WINDOW_MIN, 
+				GeneralUtils.SMOOTHING_UPDATE_WINDOW_MAX );
+		
 		add(paramStatsSmoothingSecs);
 
 		add("pgGeneralStats", new ParameterGroupImpl("ConfigView.section.general",
