@@ -264,7 +264,7 @@ GeneralUtils
 		return s;
 	}
 
-	public static final int SMOOTHING_UPDATE_WINDOW_DEFAULT	 	= 20;
+	public static final int SMOOTHING_UPDATE_WINDOW_DEFAULT	 	= 30;
 	public static final int SMOOTHING_UPDATE_WINDOW_MIN		 	= 10;
 	public static final int SMOOTHING_UPDATE_WINDOW_MAX		 	= 30*60;
 
