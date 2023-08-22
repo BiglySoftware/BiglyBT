@@ -91,7 +91,7 @@ public class ConfigSectionStats
 		// general
 
 		IntParameterImpl paramStatsSmoothingSecs = new IntParameterImpl(
-				ICFG_STATS_SMOOTHING_SECS, "stats.general.smooth_secs", 30, 30 * 60);
+				ICFG_STATS_SMOOTHING_SECS, "stats.general.smooth_secs", 10, 30 * 60);
 		add(paramStatsSmoothingSecs);
 
 		add("pgGeneralStats", new ParameterGroupImpl("ConfigView.section.general",
