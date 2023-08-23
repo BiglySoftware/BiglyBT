@@ -625,6 +625,13 @@ public class TorrentOpenOptions
 		return(new HashMap<>(enabledNetworks));
 	}
 
+	public boolean
+	getNetworkEnabled(
+		String		net )
+	{
+		return( enabledNetworks.get( net ));
+	}
+	
 	public void
 	setNetworkEnabled(
 		String		net,

@@ -30,6 +30,7 @@ import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.TagFeatureRateLimit;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
@@ -52,6 +53,21 @@ public class BooleanSwtParameter
 	public interface ValueProcessor
 		extends SwtParameterValueProcessor<BooleanSwtParameter, Boolean>
 	{
+		public default Boolean
+		getValue(
+			List<Boolean>	values )
+		{
+			int intB = -1;
+			for ( boolean v: values ){
+				if (intB == -1) {
+					intB = v ? 1 : 0;
+				} else if ((intB == 1) != v) {
+					intB = 2;
+					break;
+				}
+			}
+			return( intB==2?null:intB == 1 );
+		}
 	}
 
 	private final Label lblSuffix;

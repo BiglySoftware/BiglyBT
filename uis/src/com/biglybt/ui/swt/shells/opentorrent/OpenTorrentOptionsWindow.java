@@ -75,6 +75,7 @@ import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.config.BooleanSwtParameter;
 import com.biglybt.ui.swt.config.IntSwtParameter;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.*;
@@ -2127,7 +2128,8 @@ public class OpenTorrentOptionsWindow
 		private Button btnCheckAvailability;
 		private Button btnSwarmIt;
 
-		private List<Button>	network_buttons = new ArrayList<>();
+		private List<BooleanSwtParameter>	network_buttons = new ArrayList<>();
+		private List<BooleanSwtParameter>	peer_source_buttons = new ArrayList<>();
 
 		private boolean cmbDataDirEnabled = true;
 		private Combo cmbDataDir;
@@ -2472,6 +2474,11 @@ public class OpenTorrentOptionsWindow
 					setupIPFilterOption((SWTSkinObjectContainer) so);
 				}
 			}else{
+				so = skin.getSkinObject("peer-sources");
+				if (so instanceof SWTSkinObjectContainer) {
+					setupPeerSourcesAndNetworkOptions((SWTSkinObjectContainer) so);
+				}
+
 				so = skin.getSkinObject("trackers");
 				if (so instanceof SWTSkinObjectContainer) {
 					setupTrackers((SWTSkinObjectContainer) so);
@@ -7428,20 +7435,54 @@ public class OpenTorrentOptionsWindow
 					String config_name = "Peer Source Selection Default." + p;
 					String msg_text = "ConfigView.section.connection.peersource." + p;
 
-					Button button = new Button(peer_sources_group, SWT.CHECK);
-					if ( Constants.isWindows ){
-						button.setBackground( Colors.white );
-					}
-					Messages.setLanguageText(button, msg_text);
+					BooleanSwtParameter button = 
+						new BooleanSwtParameter( 
+							peer_sources_group, null, msg_text, null,
+							new BooleanSwtParameter.ValueProcessor(){
+								@Override
+								public Boolean 
+								getValue(
+									BooleanSwtParameter parameter) 
+								{
+									if ( isSingleOptions ){
+										Boolean value = torrentOptions.peerSource.get( p );
+										if ( value == null ){
+											value = COConfigurationManager.getBooleanParameter(config_name);
+										}
+										return( value );
+									}else{
+										List<Boolean> values = new ArrayList<>();
+										for ( TorrentOpenOptions to: torrentOptionsMulti ){
+											Boolean value = to.peerSource.get( p );
+											if ( value == null ){
+												value = COConfigurationManager.getBooleanParameter(config_name);
+											}
+											values.add( value );
+										}
+										return( getValue( values ));
+									}
+								}
 
-					button.setSelection(COConfigurationManager.getBooleanParameter(config_name));
-
-					button.addSelectionListener(new SelectionAdapter() {
-						@Override
-						public void widgetSelected(SelectionEvent e) {
-							torrentOptions.peerSource.put(p, ((Button)e.widget).getSelection());
-						}
-					});
+								@Override
+								public boolean 
+								setValue(
+									BooleanSwtParameter parameter, 
+									Boolean 			value ) 
+								{
+									if ( isSingleOptions ){
+										torrentOptions.peerSource.put( p, value );
+										return( true );
+									}else{
+										for ( TorrentOpenOptions to: torrentOptionsMulti ){
+											to.peerSource.put( p, value );
+											getInstance( to ).updatePeerSourceOptions();
+										}
+										return( true );
+									}
+								}
+							});
+				
+					peer_source_buttons.add( button );
 				}
 			}
 
@@ -7469,30 +7510,79 @@ public class OpenTorrentOptionsWindow
 
 					String msg_text = "ConfigView.section.connection.networks." + nn;
 
-					Button button = new Button(network_group, SWT.CHECK);
-					if ( Constants.isWindows ){
-						button.setBackground( Colors.white );
-					}
-					Messages.setLanguageText(button, msg_text);
+					BooleanSwtParameter button = 
+						new BooleanSwtParameter( 
+							network_group, null, msg_text, null,
+							new BooleanSwtParameter.ValueProcessor(){
+								@Override
+								public Boolean 
+								getValue(
+									BooleanSwtParameter parameter) 
+								{
+									if ( isSingleOptions ){
+										Boolean value = torrentOptions.getNetworkEnabled( nn );
+									
+										return( value );
+									}else{
+										List<Boolean> values = new ArrayList<>();
+										for ( TorrentOpenOptions to: torrentOptionsMulti ){
+											boolean value = to.getNetworkEnabled( nn );
+											values.add( value );
+										}
+										return( getValue( values ));
+									}
+								}
 
+								@Override
+								public boolean 
+								setValue(
+									BooleanSwtParameter parameter, 
+									Boolean 			value ) 
+								{
+									if ( isSingleOptions ){
+										torrentOptions.setNetworkEnabled(nn, value );
+										return( true );
+									}else{
+										for ( TorrentOpenOptions to: torrentOptionsMulti ){
+											to.setNetworkEnabled(nn, value );
+											getInstance( to ).updateNetworkOptions();
+										}
+										return( true );
+									}
+								}
+							});
+					
 					network_buttons.add( button );
-
-					Map<String,Boolean> enabledNetworks = torrentOptions.getEnabledNetworks();
-
-					button.setSelection(enabledNetworks.get( nn ));
-
-					button.addSelectionListener(new SelectionAdapter() {
-						@Override
-						public void widgetSelected(SelectionEvent e) {
-							torrentOptions.setNetworkEnabled(nn, ((Button)e.widget).getSelection());
-						}
-					});
 				}
 			}
 		}
 
-		private void updateNetworkOptions() {
+		private void 
+		updatePeerSourceOptions() 
+		{
+			if ( peer_source_buttons.size() != PEPeerSource.PS_SOURCES.length ){
+				
+				return;
+			}
+
+			Map<String,Boolean> ps = torrentOptions.peerSource;
+
+			for (int i = 0; i < PEPeerSource.PS_SOURCES.length; i++) {
+
+				Boolean value = ps.get( PEPeerSource.PS_SOURCES[i] );
+				
+				if ( value != null ){
+					
+					peer_source_buttons.get(i).setValue( value );
+				}
+			}
+		}
+		
+		private void 
+		updateNetworkOptions() 
+		{
 			if ( network_buttons.size() != AENetworkClassifier.AT_NETWORKS.length ){
+				
 				return;
 			}
 
@@ -7500,7 +7590,7 @@ public class OpenTorrentOptionsWindow
 
 			for (int i = 0; i < AENetworkClassifier.AT_NETWORKS.length; i++) {
 
-				network_buttons.get(i).setSelection(enabledNetworks.get( AENetworkClassifier.AT_NETWORKS[i]));
+				network_buttons.get(i).setValue(enabledNetworks.get( AENetworkClassifier.AT_NETWORKS[i]));
 			}
 		}
 
