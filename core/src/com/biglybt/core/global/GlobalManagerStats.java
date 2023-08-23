@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.util.*;
 
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.util.GeneralUtils;
 
 /**
  * @author parg
@@ -60,12 +61,12 @@ GlobalManagerStats
 
 	/**
 	 * Smoothed Send Rate, including data and protocol, based on
-	 * "Stats Smoothing Secs" (default to 20s, min 10s)
+	 * "Stats Smoothing Secs", see @link {@link GeneralUtils} for defaults and limits
 	 */
 	public long	getSmoothedSendRate();
 	/**
 	 * Smoothed Receive Rate, including data and protocol, based on
-	 * "Stats Smoothing Secs" (default to 20s, min 10s)
+	 * "Stats Smoothing Secs" see @link {@link GeneralUtils} for defaults and limits
 	 */
 	public long	getSmoothedReceiveRate();
 
