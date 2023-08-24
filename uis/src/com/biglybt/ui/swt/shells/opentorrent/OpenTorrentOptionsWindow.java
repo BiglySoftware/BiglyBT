@@ -2669,17 +2669,17 @@ public class OpenTorrentOptionsWindow
 
 			tree.setHeaderVisible(true);
 			tree.setLinesVisible( true );
-
+			
 			int[]	COL_WIDTHS = { 600, 80, 80 };
 
 			TreeColumn column1 = new TreeColumn(tree, SWT.LEFT);
-			column1.setText( MessageText.getString("TableColumn.header.name"));
+			column1.setText( MessageText.getString("TableColumn.header.name") + " " );
 
 			TreeColumn column2 = new TreeColumn(tree, SWT.RIGHT);
-			column2.setText( MessageText.getString("TableColumn.header.size"));
+			column2.setText( MessageText.getString("TableColumn.header.size")+ " ");
 
 			TreeColumn column3 = new TreeColumn(tree, SWT.RIGHT);
-			column3.setText( MessageText.getString("SpeedView.stats.total"));
+			column3.setText( MessageText.getString("SpeedView.stats.total")+ " ");
 
 			TreeColumn[] columns = { column1, column2, column3 };
 
@@ -2911,7 +2911,8 @@ public class OpenTorrentOptionsWindow
 
 				// line
 
-			Label labelSeparator = new Label( comp, SWT.SEPARATOR | SWT.HORIZONTAL);
+			Control labelSeparator = Utils.createSkinnedLabelSeparator( comp, SWT.HORIZONTAL );
+			
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			labelSeparator.setLayoutData(gridData);
 
@@ -3638,7 +3639,7 @@ public class OpenTorrentOptionsWindow
 
 				// line
 
-			Label labelSeparator = new Label( comp, SWT.SEPARATOR | SWT.HORIZONTAL);
+			Control labelSeparator = Utils.createSkinnedLabelSeparator( comp, SWT.HORIZONTAL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			labelSeparator.setLayoutData(gridData);
 
@@ -3797,13 +3798,13 @@ public class OpenTorrentOptionsWindow
 			layout = new GridLayout();
 			layout.numColumns = 1;
 
+			ratingComp.setText( "Rating Plugin" );
+
 			ratingComp.setLayout(layout);
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
 			ratingComp.setLayoutData(gridData);
 
-			ratingComp.setText( "Rating Plugin" );
-
-			Composite ratingComp2 = new Composite( ratingComp, SWT.BORDER );
+			Composite ratingComp2 = Utils.createSkinnedComposite( ratingComp, SWT.BORDER, new GridData( GridData.FILL_HORIZONTAL ) );
 			layout = new GridLayout();
 			layout.numColumns = 1;
 			layout.marginWidth = 4;
@@ -4175,7 +4176,7 @@ public class OpenTorrentOptionsWindow
 
 				// line
 
-			Label labelSeparator = new Label( comp, SWT.SEPARATOR | SWT.HORIZONTAL);
+			Control labelSeparator = Utils.createSkinnedLabelSeparator( comp, SWT.HORIZONTAL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			labelSeparator.setLayoutData(gridData);
 
@@ -4698,7 +4699,8 @@ public class OpenTorrentOptionsWindow
 						});
 				} );
 				
-			Label sep = new Label( cButtonsBottom, SWT.SEPARATOR );
+			Control sep = Utils.createSkinnedLabelSeparator( cButtonsBottom, SWT.VERTICAL );
+			
 			gridData = new GridData();
 			gridData.heightHint = 15;
 			sep.setLayoutData(gridData);
