@@ -2730,7 +2730,7 @@ BuddyPluginViewBetaChat
 					}
 				});
 
-		Label ftux_line = new Label( ftux_holder, SWT.SEPARATOR | SWT.HORIZONTAL );
+		Control ftux_line = Utils.createSkinnedLabelSeparator( ftux_holder, SWT.HORIZONTAL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 2;
 		grid_data.verticalIndent = 4;

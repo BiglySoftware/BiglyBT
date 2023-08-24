@@ -118,7 +118,7 @@ public class SubscriptionListWindow implements SubscriptionLookupListener {
 		shell.setLayout(new FormLayout());
 
 		mainComposite = new Composite(shell,SWT.NONE);
-		Label separator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
+		Control separator = Utils.createSkinnedLabelSeparator(shell,SWT.HORIZONTAL);
 		Button cancel = new Button(shell,SWT.PUSH);
 		action = new Button(shell,SWT.PUSH);
 		cancel.setText(MessageText.getString("Button.cancel"));

@@ -109,9 +109,9 @@ DevicesWizard
 
 		Composite header = new Composite(shell, SWT.NONE);
 		header.setBackgroundImage(imageLoader.getImage("wizard_header_bg"));
-		Label topSeparator = new Label(shell,SWT.SEPARATOR |SWT.HORIZONTAL);
+		Control topSeparator = Utils.createSkinnedLabelSeparator(shell,SWT.HORIZONTAL);
 		Composite main = new Composite(shell, SWT.NONE);
-		Label bottomSeparator = new Label(shell,SWT.SEPARATOR |SWT.HORIZONTAL);
+		Control bottomSeparator = Utils.createSkinnedLabelSeparator(shell,SWT.HORIZONTAL);
 		Composite footer = new Composite(shell, SWT.NONE);
 
 		FormLayout layout = new FormLayout();

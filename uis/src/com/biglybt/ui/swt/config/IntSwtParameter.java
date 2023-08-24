@@ -49,6 +49,22 @@ public class IntSwtParameter
 	public interface ValueProcessor
 		extends SwtParameterValueProcessor<IntSwtParameter, Integer>
 	{
+		public default Integer
+		getValue(
+			List<Integer>	values )
+		{
+			if ( values.isEmpty()){
+				return( null );
+			}else{
+				int result = values.get(0);
+				for ( int v: values.subList( 1, values.size())){
+					if ( v != result ){
+						return( null );
+					}
+				}
+				return( result );
+			}
+		}
 	}
 
 	private int valueWhenBlank;
@@ -208,8 +224,9 @@ public class IntSwtParameter
 		if (suffixLabelKey != null) {
 			lblSuffix = new Label(parent, SWT.WRAP);
 			Messages.setLanguageText(lblSuffix, suffixLabelKey);
-			lblSuffix.setLayoutData(
-					Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL));
+			GridData gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
+			gridData.widthHint = SWT.DEFAULT;	// without this the suffix is invisible :(
+			lblSuffix.setLayoutData( gridData );
 			ClipboardCopy.addCopyToClipMenu(lblSuffix);
 		}
 
@@ -335,7 +352,7 @@ public class IntSwtParameter
 
 			Integer value = getValue();
 			if (value == null) {
-				return;
+				return;	// indeterminate, should do something with this???
 			}
 
 			if (spinner.getSelection() != value) {
@@ -347,7 +364,8 @@ public class IntSwtParameter
 			}
 
 			if (isZeroHidden) {
-				spinner.setForeground(value == 0 ? colorHidden : null);
+				Utils.setSkinnedForeground( spinner, value == 0 ? colorHidden : null );
+				//spinner.setForeground( value == 0 ? colorHidden : null );
 			}
 		});
 	}

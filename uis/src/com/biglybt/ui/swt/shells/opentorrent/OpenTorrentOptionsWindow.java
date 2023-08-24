@@ -2130,7 +2130,10 @@ public class OpenTorrentOptionsWindow
 
 		private List<BooleanSwtParameter>	network_buttons = new ArrayList<>();
 		private List<BooleanSwtParameter>	peer_source_buttons = new ArrayList<>();
-
+		private BooleanSwtParameter			ip_filter_button;
+		private IntSwtParameter				max_up_speed_button;
+		private IntSwtParameter				max_down_speed_button;
+		
 		private boolean cmbDataDirEnabled = true;
 		private Combo cmbDataDir;
 		private Button btnDataDir;
@@ -2453,36 +2456,24 @@ public class OpenTorrentOptionsWindow
 				setupStartOptions((SWTSkinObjectExpandItem) so);
 			}
 
-			if ( isSingleOptions ){
-				so = skin.getSkinObject("peer-sources");
-				if (so instanceof SWTSkinObjectContainer) {
-					setupPeerSourcesAndNetworkOptions((SWTSkinObjectContainer) so);
-				}
+			so = skin.getSkinObject("peer-sources");
+			if (so instanceof SWTSkinObjectContainer) {
+				setupPeerSourcesAndNetworkOptions((SWTSkinObjectContainer) so);
+			}
 
-				so = skin.getSkinObject("trackers");
-				if (so instanceof SWTSkinObjectContainer) {
-					setupTrackers((SWTSkinObjectContainer) so);
-				}
+			so = skin.getSkinObject("trackers");
+			if (so instanceof SWTSkinObjectContainer) {
+				setupTrackers((SWTSkinObjectContainer) so);
+			}
 
-				so = skin.getSkinObject("updownlimit");
-				if (so instanceof SWTSkinObjectContainer) {
-					setupUpDownLimitOption((SWTSkinObjectContainer) so);
-				}
+			so = skin.getSkinObject("updownlimit");
+			if (so instanceof SWTSkinObjectContainer) {
+				setupUpDownLimitOption((SWTSkinObjectContainer) so);
+			}
 
-				so = skin.getSkinObject("ipfilter");
-				if (so instanceof SWTSkinObjectContainer) {
-					setupIPFilterOption((SWTSkinObjectContainer) so);
-				}
-			}else{
-				so = skin.getSkinObject("peer-sources");
-				if (so instanceof SWTSkinObjectContainer) {
-					setupPeerSourcesAndNetworkOptions((SWTSkinObjectContainer) so);
-				}
-
-				so = skin.getSkinObject("trackers");
-				if (so instanceof SWTSkinObjectContainer) {
-					setupTrackers((SWTSkinObjectContainer) so);
-				}
+			so = skin.getSkinObject("ipfilter");
+			if (so instanceof SWTSkinObjectContainer) {
+				setupIPFilterOption((SWTSkinObjectContainer) so);
 			}
 
 			SWTSkinObject so_ta = skin.getSkinObject("saveto-textarea");
@@ -7333,76 +7324,142 @@ public class OpenTorrentOptionsWindow
 			}
 		}
 
-		private void setupUpDownLimitOption(SWTSkinObjectContainer so) {
+		private void 
+		setupUpDownLimitOption(
+			SWTSkinObjectContainer so) 
+		{
 			Composite parent = so.getComposite();
 
-			parent.setLayout( new GridLayout(4, false));
+			parent.setLayout( new GridLayout(6, false));
 
-			IntSwtParameter paramMaxUploadSpeed = new IntSwtParameter(parent,
-					"torrentoptions.config.uploadspeed", "TableColumn.header.maxupspeed",
-					"", 0, Integer.MAX_VALUE, new IntSwtParameter.ValueProcessor() {
-						@Override
-						public Integer getValue(IntSwtParameter p) {
-							return torrentOptions.getMaxUploadSpeed();
-						}
-
-						@Override
-						public boolean setValue(IntSwtParameter p, Integer value) {
-							if (torrentOptions.getMaxUploadSpeed() != value) {
-								torrentOptions.setMaxUploadSpeed(value);
-								return true;
-							}
-							return false;
-						}
-					});
-			paramMaxUploadSpeed.setSuffixLabelText(
-					DisplayFormatters.getRateUnit(DisplayFormatters.UNIT_KB));
-
-			IntSwtParameter paramMaxDownloadSpeed = new IntSwtParameter(parent,
-					"torrentoptions.config.downloadspeed",
-					"TableColumn.header.maxdownspeed", "", 0, Integer.MAX_VALUE,
+			max_up_speed_button = 
+				new IntSwtParameter(parent,	null, "TableColumn.header.maxupspeed", "", 0, Integer.MAX_VALUE, 
 					new IntSwtParameter.ValueProcessor() {
 						@Override
 						public Integer getValue(IntSwtParameter p) {
-							return torrentOptions.getMaxDownloadSpeed();
+							if ( isSingleOptions ){
+								return torrentOptions.getMaxUploadSpeed();
+							}else{
+								List<Integer> values = new ArrayList<>();
+								for ( TorrentOpenOptions to: torrentOptionsMulti ){
+									values.add( to.getMaxUploadSpeed());
+								}
+								return( getValue( values ));
+							}
 						}
 
 						@Override
 						public boolean setValue(IntSwtParameter p, Integer value) {
-							if (torrentOptions.getMaxDownloadSpeed() != value) {
-								torrentOptions.setMaxDownloadSpeed(value);
-								return true;
+							if ( isSingleOptions ){
+								if (torrentOptions.getMaxUploadSpeed() != value) {
+									torrentOptions.setMaxUploadSpeed(value);
+								}
+							}else{
+								for ( TorrentOpenOptions to: torrentOptionsMulti ){
+									to.setMaxUploadSpeed(value);
+									getInstance( to ).updateMaxUploadSpeed();
+								}
 							}
-							return false;
+							return( true );	// always return true as UI needs updating
 						}
 					});
-			paramMaxDownloadSpeed.setSuffixLabelText(
+			
+			Control sep1 = Utils.createSkinnedLabelSeparator( parent, SWT.VERTICAL );
+			
+			GridData gridData = new GridData();
+			gridData.heightHint = 15;
+			sep1.setLayoutData(gridData);
+			
+			max_up_speed_button.setSuffixLabelText(
 					DisplayFormatters.getRateUnit(DisplayFormatters.UNIT_KB));
 
+			max_down_speed_button = 
+				new IntSwtParameter(parent,	null, "TableColumn.header.maxdownspeed", "adsadsad", 0, Integer.MAX_VALUE,
+					new IntSwtParameter.ValueProcessor(){
+						@Override
+						public Integer getValue(IntSwtParameter p) {
+							if ( isSingleOptions ){
+								return( torrentOptions.getMaxDownloadSpeed());
+							}else{
+								List<Integer> values = new ArrayList<>();
+								for ( TorrentOpenOptions to: torrentOptionsMulti ){
+									values.add( to.getMaxDownloadSpeed());
+								}
+								return( getValue( values ));
+							}
+						}
+
+						@Override
+						public boolean setValue(IntSwtParameter p, Integer value) {
+							if ( isSingleOptions ){
+								if (torrentOptions.getMaxDownloadSpeed() != value) {
+									torrentOptions.setMaxDownloadSpeed(value);
+								}
+							}else{
+								for ( TorrentOpenOptions to: torrentOptionsMulti ){
+									to.setMaxDownloadSpeed(value);
+									getInstance( to ).updateMaxDownloadSpeed();
+								}
+							}
+							return( true );	// always return true as UI needs updating
+						}
+					});
+			max_down_speed_button.setSuffixLabelText(
+					DisplayFormatters.getRateUnit(DisplayFormatters.UNIT_KB));
+
+			Control sep2 = Utils.createSkinnedLabelSeparator( parent, SWT.VERTICAL );
+			
+			gridData = new GridData();
+			gridData.heightHint = 15;
+			sep2.setLayoutData(gridData);
 		}
 
 		private void setupIPFilterOption(SWTSkinObjectContainer so) {
 			Composite parent = so.getComposite();
 
-			parent.setLayout( new GridLayout());
+			parent.setLayout( new GridLayout( 2, false ));	// need two cols otherwise BooleanSwtParameter breaks and can't be arsed to figure out why
+		
+			ip_filter_button = 
+				new BooleanSwtParameter( 
+					parent, null, "MyTorrentsView.menu.ipf_enable", null,
+					new BooleanSwtParameter.ValueProcessor(){
+						@Override
+						public Boolean 
+						getValue(
+							BooleanSwtParameter parameter) 
+						{
+							if ( isSingleOptions ){
+								Boolean value = !torrentOptions.disableIPFilter;
+							
+								return( value );
+							}else{
+								List<Boolean> values = new ArrayList<>();
+								for ( TorrentOpenOptions to: torrentOptionsMulti ){
+									boolean value = !to.disableIPFilter;
+									values.add( value );
+								}
+								return( getValue( values ));
+							}
+						}
 
-			Button button = new Button(parent, SWT.CHECK | SWT.WRAP );
-			if ( Constants.isWindows ){
-				button.setBackground( Colors.white );
-			}
-			Messages.setLanguageText(button, "MyTorrentsView.menu.ipf_enable");
-			GridData gd = new GridData();
-			gd.verticalAlignment = SWT.CENTER;
-			button.setLayoutData(gd);
-			button.setSelection(!torrentOptions.disableIPFilter);
-
-			button.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					torrentOptions.disableIPFilter = !((Button) e.widget).getSelection();
-				}
-			});
-
+						@Override
+						public boolean 
+						setValue(
+							BooleanSwtParameter parameter, 
+							Boolean 			value ) 
+						{
+							if ( isSingleOptions ){
+								torrentOptions.disableIPFilter = !value;
+								return( true );
+							}else{
+								for ( TorrentOpenOptions to: torrentOptionsMulti ){
+									to.disableIPFilter = !value;
+									getInstance( to ).updateIPFilter();
+								}
+								return( true );
+							}
+						}
+					});
 		}
 
 		private void setupPeerSourcesAndNetworkOptions(SWTSkinObjectContainer so) {
@@ -7557,6 +7614,39 @@ public class OpenTorrentOptionsWindow
 					network_buttons.add( button );
 				}
 			}
+		}
+
+		private void
+		updateIPFilter()
+		{
+			if ( ip_filter_button == null ){
+				
+				return;
+			}
+			
+			ip_filter_button.setValue( !torrentOptions.disableIPFilter );
+		}
+		
+		private void
+		updateMaxUploadSpeed()
+		{
+			if ( max_up_speed_button == null ){
+				
+				return;
+			}
+			
+			max_up_speed_button.setValue( torrentOptions.getMaxUploadSpeed());
+		}
+		
+		private void
+		updateMaxDownloadSpeed()
+		{
+			if ( max_down_speed_button == null ){
+				
+				return;
+			}
+			
+			max_down_speed_button.setValue( torrentOptions.getMaxDownloadSpeed());
 		}
 
 		private void 

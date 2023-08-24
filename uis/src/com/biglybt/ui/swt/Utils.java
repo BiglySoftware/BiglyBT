@@ -576,6 +576,29 @@ public class Utils
 		}
 	}
 	
+	public static Color
+	getSkinnedForeground(
+		Control		c )
+	{
+		if ( skinner != null ){
+			
+			Color bg = c.getForeground();
+			
+			c.setForeground( null );
+			
+			skinner.handleSkinning(c);
+			
+			Color skinned = c.getForeground();
+			
+			c.setForeground( bg );
+			
+			return ( skinned );
+		}else{
+			
+			return( c.getForeground());
+		}
+	}
+	
 	public static boolean
 	hasSkinnedBackground(
 		Control		control )
@@ -3964,7 +3987,7 @@ public class Utils
 	public static GridData getWrappableLabelGridData(int hspan, int styles) {
 		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | styles);
 		gridData.horizontalSpan = hspan;
-		gridData.widthHint = 0;
+		gridData.widthHint = 0;	// not sure about this, causes some controls to be invisible...
 		return gridData;
 	}
 

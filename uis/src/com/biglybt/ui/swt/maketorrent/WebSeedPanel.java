@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.TrackersUtil;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
 
@@ -141,7 +142,7 @@ public class WebSeedPanel extends AbstractWizardPanel<NewTorrentWizard> implemen
         setEditDeleteEnable();
       }
     });
-    final Label labelSeparator = new Label(panel,SWT.SEPARATOR | SWT.HORIZONTAL);
+    Control labelSeparator = Utils.createSkinnedLabelSeparator(panel, SWT.HORIZONTAL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 3;
     labelSeparator.setLayoutData(gridData);

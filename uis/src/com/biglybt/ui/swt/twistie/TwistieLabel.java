@@ -34,6 +34,7 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.ui.swt.Utils;
@@ -127,7 +128,7 @@ public class TwistieLabel
 		titleLabel = new Label(this, SWT.NONE);
 
 		if ((this.style & SHOW_SEPARATOR) != 0) {
-			Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
+			Control separator = Utils.createSkinnedLabelSeparator(this, SWT.HORIZONTAL);
 			GridData labelData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 			labelData.horizontalIndent = 10;
 			separator.setLayoutData(labelData);

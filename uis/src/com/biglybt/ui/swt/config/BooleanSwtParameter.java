@@ -30,7 +30,6 @@ import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.tag.TagFeatureRateLimit;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
