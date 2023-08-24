@@ -43,6 +43,7 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -296,9 +297,9 @@ public class SubscriptionWizard {
 
 		Composite header = new Composite(shell, SWT.NONE);
 		header.setBackgroundImage(imageLoader.getImage("wizard_header_bg"));
-		Label topSeparator = new Label(shell,SWT.SEPARATOR |SWT.HORIZONTAL);
+		Control topSeparator =Utils.createSkinnedLabelSeparator(shell,SWT.HORIZONTAL);
 		main = new Composite(shell, SWT.NONE);
-		Label bottomSeparator = new Label(shell,SWT.SEPARATOR |SWT.HORIZONTAL);
+		Control bottomSeparator = Utils.createSkinnedLabelSeparator(shell,SWT.HORIZONTAL);
 		Composite footer = new Composite(shell, SWT.NONE);
 
 		FormLayout layout = new FormLayout();
@@ -816,10 +817,10 @@ public class SubscriptionWizard {
 	private Composite createAvailableSubscriptionComposite(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 
-		Label hsep1 = new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL);
-		Label hsep2 = new Label(composite, SWT.SEPARATOR | SWT.HORIZONTAL);
+		Control hsep1 = Utils.createSkinnedLabelSeparator(composite, SWT.HORIZONTAL);
+		Control hsep2 = Utils.createSkinnedLabelSeparator(composite, SWT.HORIZONTAL);
 
-		Label vsep = new Label(composite, SWT.SEPARATOR | SWT.VERTICAL);
+		Control vsep = Utils.createSkinnedLabelSeparator(composite, SWT.VERTICAL);
 
 		Label subtitle1 = new Label(composite, SWT.NONE);
 		Label subtitle2 = new Label(composite, SWT.NONE);
