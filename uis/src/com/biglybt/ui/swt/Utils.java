@@ -5860,6 +5860,11 @@ public class Utils
 
 			if (req_h >= 0) {
 
+				if ( Utils.isDarkAppearanceNativeWindows()){
+										
+					req_h -= 2;	// getting truncation in Windows Dark theme for some reason
+				}
+				
 				sc_size.y = req_h;
 			}
 
