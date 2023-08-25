@@ -43,8 +43,6 @@ PRUDPPacketHandlerImpl
 		synchronized( handlers ){
 			
 			handlers.add( handler );
-			
-			System.out.println( "Handler created: " + port + "/" + bind_ip + "/" + packet_transformer );
 		}
 		
 		return( handler );
