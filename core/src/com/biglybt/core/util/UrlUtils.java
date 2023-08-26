@@ -2049,6 +2049,10 @@ public class UrlUtils
 			SSLSocket.class.getMethod( "setSSLParameters" , ssl_parameters_class ).invoke( socket, ssl_parameters );
 			*/
 			
+			if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N) {
+				return false;
+			}
+			
 			SNIHostName serverName = new SNIHostName( host_name );
 			
 			List<SNIServerName> serverNames = new ArrayList<>(1);
