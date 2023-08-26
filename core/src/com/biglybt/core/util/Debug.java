@@ -462,7 +462,10 @@ public class Debug {
 
 				this_message = "Unknown host " + e.getMessage();
 
+/* Android: NoSuchFileException is desugared, but instanceof is minSDK 26
 			}else if ( e instanceof FileNotFoundException || e instanceof NoSuchFileException ){
+ */
+			}else if ( e instanceof FileNotFoundException ){
 
 				this_message = "File not found: " + e.getMessage();
 
