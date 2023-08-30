@@ -727,6 +727,8 @@ public class SBC_TagsOverview
 				tooltip += MessageText.getString("tagsoverview.filter.tt.line2");
 				
 				filter.setTooltip( tooltip );
+				
+				filter.setMessage( MessageText.getString( "Button.search2" ) );
 			}
 
 			tv.setRowDefaultHeightEM(1);

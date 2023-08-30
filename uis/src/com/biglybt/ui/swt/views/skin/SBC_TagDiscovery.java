@@ -37,6 +37,7 @@ import com.biglybt.ui.swt.columns.tagdiscovery.ColumnTagDiscoveryAddedOn;
 import com.biglybt.ui.swt.columns.tagdiscovery.ColumnTagDiscoveryName;
 import com.biglybt.ui.swt.columns.tagdiscovery.ColumnTagDiscoveryNetwork;
 import com.biglybt.ui.swt.columns.tagdiscovery.ColumnTagDiscoveryTorrent;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.skin.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
@@ -531,7 +532,11 @@ public class SBC_TagDiscovery
 			SWTSkinObjectTextbox soFilter = (SWTSkinObjectTextbox) getSkinObject(
 				"filterbox");
 			if (soFilter != null) {
-				tv.enableFilterCheck(soFilter.getBubbleTextBox(), this);
+				BubbleTextBox filter = soFilter.getBubbleTextBox();
+				
+				tv.enableFilterCheck(filter, this);
+				
+				filter.setMessage( MessageText.getString( "Button.search2" ) );
 			}
 
 			tv.setRowDefaultHeightEM(1);

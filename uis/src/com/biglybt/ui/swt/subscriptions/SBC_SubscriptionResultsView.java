@@ -1375,6 +1375,8 @@ SBC_SubscriptionResultsView
 			tooltip += MessageText.getString("column.filter.tt.line2");
 
 			bubbleTextBox.setTooltip( tooltip );
+			
+			bubbleTextBox.setMessage( MessageText.getString( "Button.search2" ) );
 		}
 
 		tv_subs_results.setRowDefaultHeight(COConfigurationManager.getIntParameter( "Search Subs Row Height" ));

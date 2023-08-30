@@ -44,7 +44,6 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManagerEvent;
 import com.biglybt.core.history.DownloadHistory;
@@ -341,7 +340,9 @@ public class SBC_DownloadHistoryView
 				tooltip += MessageText.getString("column.filter.tt.line1");
 				tooltip += MessageText.getString("column.filter.tt.line2");
 				
-				bubbleTextBox.setTooltip( tooltip );				
+				bubbleTextBox.setTooltip( tooltip );	
+				
+				bubbleTextBox.setMessage( MessageText.getString( "Button.search2" ) );
 			}
 
 			tv.setRowDefaultHeightEM(1);
