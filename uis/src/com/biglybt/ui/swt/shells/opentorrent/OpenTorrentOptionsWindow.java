@@ -415,6 +415,8 @@ public class OpenTorrentOptionsWindow
 			
 			return;
 		}
+	
+		FileUtil.log( "OTO:addTorrent: " + ByteFormatter.encodeString( hw.getBytes()) + " - \"" + new String(torrent.getName(), Constants.UTF_8 ) + "\"" );
 		
 		synchronized( active_windows ){
 
