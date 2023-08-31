@@ -365,7 +365,7 @@ public class SubscriptionsView
 		fd.bottom = new FormAttachment(btnAdd, 0, SWT.CENTER );
 		fd.width = 140;
 		
-		bubbleTextBox.setMessageAndLayout( "", fd);
+		bubbleTextBox.setMessageAndLayout( MessageText.getString( "Button.search2" ), fd);
 		
 			// table section
 		
