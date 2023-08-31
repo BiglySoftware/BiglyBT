@@ -558,9 +558,23 @@ public class Utils
 	{
 		if ( force ){
 			
-			control.setData( "utils:skinned-fg-forced", true );
+			if ( color == null ){
+				
+					// remove force
+				
+				control.setData( "utils:skinned-fg-forced", null );
+				
+				Color def = (Color)control.getData( "utils:skinned-fg" );
+								
+				control.setForeground( def );
+
+			}else{
 			
-			control.setForeground( color );
+				control.setData( "utils:skinned-fg-forced", true );
+				
+				control.setForeground( color );
+			}
+						
 		}else{
 			
 			Color def = (Color)control.getData( "utils:skinned-fg" );
@@ -644,11 +658,23 @@ public class Utils
 		boolean		force )
 	{
 		if ( force ){
+						
+			if ( color == null ){
+				
+					// remove force
+				
+				control.setData( "utils:skinned-bg-forced", null );
+				
+				Color def = (Color)control.getData( "utils:skinned-bg" );
+								
+				control.setBackground( def );
+	
+			}else{
 			
-			control.setData( "utils:skinned-bg-forced", true );
-			
-			control.setBackground( color );
-			
+				control.setData( "utils:skinned-bg-forced", true );
+				
+				control.setBackground( color );
+			}			
 		}else{
 			
 			Color def = (Color)control.getData( "utils:skinned-bg" );

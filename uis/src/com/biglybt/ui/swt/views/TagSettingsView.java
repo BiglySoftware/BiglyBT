@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.views;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -672,17 +673,15 @@ public class TagSettingsView
 							new IntSwtParameter.ValueProcessor() {
 								@Override
 								public Integer getValue(IntSwtParameter p) {
-									int limit = rls[0].getTagDownloadLimit();
-									if (numTags > 1) {
-										for (int i = 1; i < rls.length; i++) {
-											int nextLimit = rls[i].getTagDownloadLimit();
-											if (nextLimit != limit) {
-												return 0;
-											}
-										}
+									java.util.List<Integer> values = new ArrayList<>();
+									
+									for (int i = 0; i < rls.length; i++) {
+										int limit = rls[i].getTagDownloadLimit();
+										
+										values.add( limit< 0?limit:limit/ DisplayFormatters.getKinB());
 									}
-									return limit < 0 ? limit
-											: limit / DisplayFormatters.getKinB();
+									
+									return( getValue( values ));
 								}
 
 								@Override
@@ -708,7 +707,6 @@ public class TagSettingsView
 							});
 					params.maxDownloadSpeed.setLabelText(k_unit + " " + MessageText.getString(
 							"GeneralView.label.maxdownloadspeed.tooltip"));
-					params.maxDownloadSpeed.setZeroHidden(numTags > 1);
 
 					cols_used += 2;
 				}
@@ -721,17 +719,15 @@ public class TagSettingsView
 							new IntSwtParameter.ValueProcessor() {
 								@Override
 								public Integer getValue(IntSwtParameter p) {
-									int limit = rls[0].getTagUploadLimit();
-									if (numTags > 1) {
-										for (int i = 1; i < rls.length; i++) {
-											int nextLimit = rls[i].getTagUploadLimit();
-											if (nextLimit != limit) {
-												return 0;
-											}
-										}
+									java.util.List<Integer> values = new ArrayList<>();
+									
+									for (int i = 0; i < rls.length; i++) {
+										int limit = rls[i].getTagUploadLimit();
+										
+										values.add( limit< 0?limit:limit/ DisplayFormatters.getKinB());
 									}
-									return limit < 0 ? limit
-											: limit / DisplayFormatters.getKinB();
+									
+									return( getValue( values ));
 								}
 
 								@Override
@@ -751,7 +747,7 @@ public class TagSettingsView
 									return false;
 								}
 							});
-					params.maxUploadSpeed.setZeroHidden(numTags > 1);
+
 					params.maxUploadSpeed.setLabelText(k_unit + " " + MessageText.getString(
 							"GeneralView.label.maxuploadspeed.tooltip"));
 
@@ -1030,107 +1026,109 @@ public class TagSettingsView
 				
 				cols_used = 0;
 				
-				if (supportsMaxDLS){
-					params.maxActiveDownloads = new IntSwtParameter(gTransfer,
-							"tag.maxActiveDownloads", "ConfigView.label.maxdownloads.short", null, 0, Integer.MAX_VALUE,
-							new IntSwtParameter.ValueProcessor() {
-								@Override
-								public Integer getValue(IntSwtParameter p) {
-									int limit = rls[0].getMaxActiveDownloads();
-									if (numTags > 1) {
-										for (int i = 1; i < rls.length; i++) {
-											int nextLimit = rls[i].getMaxActiveDownloads();
-											if (nextLimit != limit) {
-												return 0;
+				if ( numTags == 1 ){
+					if (supportsMaxDLS){
+						params.maxActiveDownloads = new IntSwtParameter(gTransfer,
+								"tag.maxActiveDownloads", "ConfigView.label.maxdownloads.short", null, 0, Integer.MAX_VALUE,
+								new IntSwtParameter.ValueProcessor() {
+									@Override
+									public Integer getValue(IntSwtParameter p) {
+										int limit = rls[0].getMaxActiveDownloads();
+										if (numTags > 1) {
+											for (int i = 1; i < rls.length; i++) {
+												int nextLimit = rls[i].getMaxActiveDownloads();
+												if (nextLimit != limit) {
+													return 0;
+												}
 											}
 										}
+										return limit;
 									}
-									return limit;
-								}
-
-								@Override
-								public boolean setValue(IntSwtParameter p, Integer value) {
-									if (value == null) {
-										return false;
+	
+									@Override
+									public boolean setValue(IntSwtParameter p, Integer value) {
+										if (value == null) {
+											return false;
+										}
+										for (TagFeatureRateLimit rl : rls) {
+											rl.setMaxActiveDownloads(value);
+										}
+										return true;
 									}
-									for (TagFeatureRateLimit rl : rls) {
-										rl.setMaxActiveDownloads(value);
-									}
-									return true;
-								}
-							});
-
-					cols_used += 2;
-				}
-				
-				if (supportsMaxCDS){
-					params.maxActiveSeeders = new IntSwtParameter(gTransfer,
-							"tag.maxActiveSeeds", "ConfigView.label.maxseeding", null, 0, Integer.MAX_VALUE,
-							new IntSwtParameter.ValueProcessor() {
-								@Override
-								public Integer getValue(IntSwtParameter p) {
-									int limit = rls[0].getMaxActiveSeeds();
-									if (numTags > 1) {
-										for (int i = 1; i < rls.length; i++) {
-											int nextLimit = rls[i].getMaxActiveSeeds();
-											if (nextLimit != limit) {
-												return 0;
+								});
+	
+						cols_used += 2;
+					}
+					
+					if (supportsMaxCDS){
+						params.maxActiveSeeders = new IntSwtParameter(gTransfer,
+								"tag.maxActiveSeeds", "ConfigView.label.maxseeding", null, 0, Integer.MAX_VALUE,
+								new IntSwtParameter.ValueProcessor() {
+									@Override
+									public Integer getValue(IntSwtParameter p) {
+										int limit = rls[0].getMaxActiveSeeds();
+										if (numTags > 1) {
+											for (int i = 1; i < rls.length; i++) {
+												int nextLimit = rls[i].getMaxActiveSeeds();
+												if (nextLimit != limit) {
+													return 0;
+												}
 											}
 										}
+										return limit;
 									}
-									return limit;
-								}
-
-								@Override
-								public boolean setValue(IntSwtParameter p, Integer value) {
-									if (value == null) {
-										return false;
-									}
-									for (TagFeatureRateLimit rl : rls) {
-										rl.setMaxActiveSeeds(value);
-									}
-									return true;
-								}
-							});
-
-					cols_used += 2;
-				}
-				
-				if (supportsMaxDLS||supportsMaxCDS){
-					params.activeLimitsStrict = new BooleanSwtParameter(gTransfer,
-							"tag.activelimitsstrict", "label.strict.limits", null,
-							new BooleanSwtParameter.ValueProcessor() {
-								@Override
-								public Boolean getValue(BooleanSwtParameter p) {
-									int value = -1;
-									for (TagFeatureRateLimit rl : rls) {
-										value = updateIntBoolean(rl.getStrictActivityLimits(),
-												value);
-									}
-									return value == 2 ? null : value == 1;
-								}
-
-								@Override
-								public boolean setValue(BooleanSwtParameter p, Boolean value) {
-									boolean changed = rls.length == 0;
-									for (TagFeatureRateLimit rl : rls) {
-										if (rl.getStrictActivityLimits() != value) {
-											rl.setStrictActivityLimits(value);
-											changed = true;
+	
+									@Override
+									public boolean setValue(IntSwtParameter p, Integer value) {
+										if (value == null) {
+											return false;
 										}
+										for (TagFeatureRateLimit rl : rls) {
+											rl.setMaxActiveSeeds(value);
+										}
+										return true;
 									}
-									return changed;
-								}
-							});
-					cols_used += 2;
-				}
-				
-				if ( cols_used > 0 && cols_used < gTransferCols){			
-					Label lab = new Label( gTransfer, SWT.NULL );
-					gd = new GridData();
-					gd.horizontalSpan = gTransferCols - cols_used;
-					lab.setLayoutData(gd);		
-					cols_used = 0;
+								});
+	
+						cols_used += 2;
+					}
+					
+					if (supportsMaxDLS||supportsMaxCDS){
+						params.activeLimitsStrict = new BooleanSwtParameter(gTransfer,
+								"tag.activelimitsstrict", "label.strict.limits", null,
+								new BooleanSwtParameter.ValueProcessor() {
+									@Override
+									public Boolean getValue(BooleanSwtParameter p) {
+										int value = -1;
+										for (TagFeatureRateLimit rl : rls) {
+											value = updateIntBoolean(rl.getStrictActivityLimits(),
+													value);
+										}
+										return value == 2 ? null : value == 1;
+									}
+	
+									@Override
+									public boolean setValue(BooleanSwtParameter p, Boolean value) {
+										boolean changed = rls.length == 0;
+										for (TagFeatureRateLimit rl : rls) {
+											if (rl.getStrictActivityLimits() != value) {
+												rl.setStrictActivityLimits(value);
+												changed = true;
+											}
+										}
+										return changed;
+									}
+								});
+						cols_used += 2;
+					}
+					
+					if ( cols_used > 0 && cols_used < gTransferCols){			
+						Label lab = new Label( gTransfer, SWT.NULL );
+						gd = new GridData();
+						gd.horizontalSpan = gTransferCols - cols_used;
+						lab.setLayoutData(gd);		
+						cols_used = 0;
+					}
 				}
 				
 				if (supportsFPSeeding) {

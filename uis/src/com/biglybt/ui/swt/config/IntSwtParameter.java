@@ -36,7 +36,6 @@ import com.biglybt.pifimpl.local.ui.config.IntParameterImpl;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-
 import com.biglybt.pif.ui.config.IntParameter;
 import com.biglybt.pif.ui.config.ParameterValidator.ValidationInfo;
 
@@ -351,8 +350,18 @@ public class IntSwtParameter
 			}
 
 			Integer value = getValue();
-			if (value == null) {
-				return;	// indeterminate, should do something with this???
+			
+			if ( value == null ){
+				
+					// indeterminate
+				
+				Utils.setSkinnedForeground( spinner, Utils.getSkinnedBackground(spinner), true );
+			
+				return;
+				
+			}else{
+				
+				Utils.setSkinnedForeground( spinner, null, true );
 			}
 
 			if (spinner.getSelection() != value) {
@@ -363,9 +372,9 @@ public class IntSwtParameter
 				spinner.setSelection(value);
 			}
 
-			if (isZeroHidden) {
-				Utils.setSkinnedForeground( spinner, value == 0 ? colorHidden : null );
-				//spinner.setForeground( value == 0 ? colorHidden : null );
+			if (isZeroHidden){
+				
+				Utils.setSkinnedForeground( spinner, value == 0 ? colorHidden : null, true );
 			}
 		});
 	}
