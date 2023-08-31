@@ -57,6 +57,22 @@ public class FloatSwtParameter
 	public interface ValueProcessor
 		extends SwtParameterValueProcessor<FloatSwtParameter, Float>
 	{
+		public default Float
+		getValue(
+			List<Float>	values )
+		{
+			if ( values.isEmpty()){
+				return( null );
+			}else{
+				float result = values.get(0);
+				for ( float v: values.subList( 1, values.size())){
+					if ( v != result ){
+						return( null );
+					}
+				}
+				return( result );
+			}
+		}
 	}
 
 	private final DecimalFormat df;
@@ -232,6 +248,7 @@ public class FloatSwtParameter
 
 			Float value = getValue();
 			if (value == null) {
+				inputField.setText("");
 				return;
 			}
 			String correctText = df.format(value);

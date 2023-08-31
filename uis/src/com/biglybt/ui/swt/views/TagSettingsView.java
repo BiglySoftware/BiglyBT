@@ -826,25 +826,45 @@ public class TagSettingsView
 				}
 				
 				cols_used = 0;
+								
+				java.util.List<TagFeatureRateLimit> rlMinSR = new ArrayList<>();
+				java.util.List<TagFeatureRateLimit> rlMaxSR = new ArrayList<>();
+				
+				for (TagFeatureRateLimit rl : rls) {
+					if ( rl.getTagMinShareRatio() >= 0 ){
+						rlMinSR.add( rl );
+					}
+					if ( rl.getTagMaxShareRatio() >= 0 ){
+						rlMaxSR.add( rl );
+					}
+				}
 				
 				// Field: Min Share
-				if (numTags == 1 && rls[0].getTagMinShareRatio() >= 0) {
+
+				if ( !rlMinSR.isEmpty()) {
 					params.min_sr = new FloatSwtParameter(gTransfer, "tag.min_sr", "TableColumn.header.min_sr",
 							null, 0, Float.MAX_VALUE, true, 3,
 							new FloatSwtParameter.ValueProcessor() {
 								@Override
 								public Float getValue(FloatSwtParameter p) {
-									return rls[0].getTagMinShareRatio() / 1000f;
+									java.util.List<Float> values = new ArrayList<>();
+									for (TagFeatureRateLimit rl : rlMinSR) {
+										values.add( rl.getTagMinShareRatio() / 1000f );
+									}
+									return( getValue( values ));
 								}
 
 								@Override
 								public boolean setValue(FloatSwtParameter p, Float value) {
 									int newValue = (int) (value * 1000);
-									if (rls[0].getTagMinShareRatio() == newValue) {
-										return false;
+									boolean changed = false;
+									for (TagFeatureRateLimit rl : rlMinSR) {	
+										if ( rl.getTagMinShareRatio() != newValue) {
+											rl.setTagMinShareRatio(newValue);
+											changed = true;
+										}
 									}
-									rls[0].setTagMinShareRatio(newValue);
-									return true;
+									return( changed );
 								}
 							});
 					
@@ -852,26 +872,33 @@ public class TagSettingsView
 				}
 
 				// Field: Max Share
-				if (numTags == 1 && rls[0].getTagMaxShareRatio() >= 0) {
+				if ( !rlMaxSR.isEmpty()){
 
 					params.max_sr = new FloatSwtParameter(gTransfer, "tag.max_sr",
 							"TableColumn.header.max_sr", null, 0, Float.MAX_VALUE, true, 3,
 							new FloatSwtParameter.ValueProcessor() {
 								@Override
 								public Float getValue(FloatSwtParameter p) {
-									return rls[0].getTagMaxShareRatio() / 1000f;
-								}
+									java.util.List<Float> values = new ArrayList<>();
+									for (TagFeatureRateLimit rl : rlMaxSR) {
+										values.add( rl.getTagMaxShareRatio() / 1000f );
+									}
+									return( getValue( values ));								}
 
 								@Override
 								public boolean setValue(FloatSwtParameter p, Float value) {
 									int newValue = (int) (value * 1000);
-									if (rls[0].getTagMaxShareRatio() == newValue) {
-										return false;
+									boolean changed = false;
+									for (TagFeatureRateLimit rl : rlMaxSR) {	
+										if ( rl.getTagMaxShareRatio() != newValue) {
+											rl.setTagMaxShareRatio(newValue);
+											changed = true;
+										}
 									}
-									rls[0].setTagMaxShareRatio(newValue);
-
-									updateTagSRParams(params);
-									return true;
+									if ( changed ){
+										updateTagSRParams(params);
+									}
+									return ( changed );
 								}
 							});
 
@@ -903,18 +930,25 @@ public class TagSettingsView
 							new StringListSwtParameter.ValueProcessor() {
 								@Override
 								public String getValue(StringListSwtParameter p) {
-									return ("" + rls[0].getTagMaxShareRatioAction());
+									java.util.List<String> values = new ArrayList<>();
+									for (TagFeatureRateLimit rl : rlMaxSR) {
+										values.add("" + rl.getTagMaxShareRatioAction());
+									}
+									return( getValue( values ));
 								}
 
 								@Override
-								public boolean setValue(StringListSwtParameter p,
-										String value) {
+								public boolean 
+								setValue(StringListSwtParameter p, String value){
 									int val = Integer.parseInt(value);
-									if (rls[0].getTagMaxShareRatioAction() != val) {
-										rls[0].setTagMaxShareRatioAction(val);
-										return true;
+									boolean changed = false;
+									for (TagFeatureRateLimit rl : rlMaxSR) {
+										if ( rl.getTagMaxShareRatioAction() != val){
+											rl.setTagMaxShareRatioAction(val);
+											changed = true;
+										}
 									}
-									return false;
+									return( changed );
 								}
 							});
 					

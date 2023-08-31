@@ -48,6 +48,22 @@ public class StringListSwtParameter
 	public interface ValueProcessor
 			extends SwtParameterValueProcessor<StringListSwtParameter, String>
 	{
+		public default String
+		getValue(
+			java.util.List<String>	values )
+		{
+			if ( values.isEmpty()){
+				return( null );
+			}else{
+				String result = values.get(0);
+				for ( String v: values.subList( 1, values.size())){
+					if (!v.equals(result)){
+						return( null );
+					}
+				}
+				return( result );
+			}
+		}
 	}
 
 	private Label lblSuffix;
