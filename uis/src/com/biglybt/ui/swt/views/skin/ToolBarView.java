@@ -111,7 +111,8 @@ public class ToolBarView
 
 	private boolean firstTimeEver = true;
 
-	private Set<String>	visible_items = new HashSet<>();
+	private Set<String>		visible_items	= new HashSet<>();
+	private List<String>	item_listeners	= new ArrayList<>();
 	
 	public ToolBarView() {
 		tbm = (UIToolBarManagerCore) UIToolBarManagerImpl.getInstance();
@@ -192,8 +193,8 @@ public class ToolBarView
 		
 		visible_items.clear();
 		
-		COConfigurationManager.addParameterListener( "IconBar.start.stop.separate", this );
-		
+		addItemListener( "IconBar.start.stop.separate" );
+				
 		boolean start_top_sep = COConfigurationManager.getBooleanParameter( "IconBar.start.stop.separate", false );
 		
 		for ( UIToolBarItem item: items ){
@@ -201,9 +202,9 @@ public class ToolBarView
 			String id = item.getID();
 		
 			String key = "IconBar.visible." + id;
-			
-			COConfigurationManager.addParameterListener( key , this );
-			
+						
+			addItemListener( key );
+
 			if ( COConfigurationManager.getBooleanParameter( key, true )){
 			
 				if ( start_top_sep && ( id.equals( "startstop" ))){
@@ -757,13 +758,23 @@ public class ToolBarView
 	}
 	
 	private void
+	addItemListener(
+		String		key )
+	{
+		item_listeners.add( key );
+		
+		COConfigurationManager.addParameterListener( key, this );
+
+	}
+	private void
 	removeItemListeners()
 	{
-		for ( String id: visible_items ){
-			COConfigurationManager.removeParameterListener( "IconBar.visible." + id , this );
+		for ( String key: item_listeners ){
+			
+			COConfigurationManager.removeParameterListener( key, this );
 		}
 		
-		COConfigurationManager.removeParameterListener( "IconBar.start.stop.separate", this );
+		item_listeners.clear();
 	}
 	
 	@Override
