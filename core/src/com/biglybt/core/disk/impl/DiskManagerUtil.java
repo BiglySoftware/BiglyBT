@@ -2214,8 +2214,6 @@ DiskManagerUtil
 					return;
 				}
 			}
-
-			System.out.println( "1: " + download_manager.getDisplayName());
 			
 			FileUtil.runAsTask(
 				new CoreOperationTask()
@@ -2337,9 +2335,6 @@ DiskManagerUtil
 							// the 'recheck before move' ourselves (with a scheduler the move operation
 							// is guaranteed to be added after the recheck operation if so configured)
 						
-						System.out.println( "2: " + download_manager.getDisplayName());
-
-						
 						if ( !has_scheduler ){
 							
 							while( true ){
@@ -2374,8 +2369,6 @@ DiskManagerUtil
 							}
 						}
 						
-						System.out.println( "3: " + download_manager.getDisplayName());
-
 						boolean ready;
 
 						synchronized( move_tasks ){
@@ -2441,8 +2434,6 @@ DiskManagerUtil
 									}
 								}
 							}
-
-							System.out.println( "4: " + download_manager.getDisplayName());
 
 							queued = false;
 
