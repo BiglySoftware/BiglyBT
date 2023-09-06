@@ -1858,6 +1858,15 @@ public class ManagerUtils {
 
   private static AsyncDispatcher alloc_dispatcher = new AsyncDispatcher(2000);
 
+  public static boolean
+  canAllocate(
+	DownloadManager		dm )
+  {
+	  boolean stopped = ManagerUtils.isStopped(dm);
+	  
+	  return( stopped && !dm.isDataAlreadyAllocated() && !dm.isDownloadComplete( false ));	
+  }
+  
   public static void
   allocate(
 	  DownloadManager[]		dms )
@@ -1882,6 +1891,11 @@ public class ManagerUtils {
 	  }
 	  
 	  for ( DownloadManager dm: dms ){
+		  
+		  if ( !canAllocate( dm )){
+			  
+			  continue;
+		  }
 		  
 		  dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY, DownloadManagerState.FAS_ZERO_NEW_STOP );
 		  

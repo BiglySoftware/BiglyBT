@@ -250,6 +250,10 @@ public class ConfigSectionInterfaceDisplaySWT
 				"IconBar.visible." + TorrentUtil.TU_ITEM_CHECK_FILES,
 				"MyTorrentsView.menu.checkfilesexist"), listToolbarItems);
 
+		add(new BooleanParameterImpl(
+				"IconBar.visible." + TorrentUtil.TU_ITEM_ALLOCATE,
+				"label.allocate"), listToolbarItems);
+
 		if (isAZ3) {
 			add(new BooleanParameterImpl(
 					"IconBar.visible." + TorrentUtil.TU_ITEM_SHOW_SIDEBAR,

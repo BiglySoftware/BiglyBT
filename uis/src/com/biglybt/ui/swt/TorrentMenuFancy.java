@@ -1317,7 +1317,7 @@ public class TorrentMenuFancy
 								
 								lrrecheck = lrrecheck || ManagerUtils.canLowResourceRecheck(dm);
 																
-								allAllocatable &= stopped && !dm.isDataAlreadyAllocated() && !dm.isDownloadComplete( false );	
+								allAllocatable &= ManagerUtils.canAllocate( dm );
 								
 								Boolean dmmask = dms.getOptionalBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL );
 								

@@ -128,6 +128,7 @@ public class TorrentUtil
 	
 	public static final String	TU_ITEM_RECHECK			= "tui.recheck";
 	public static final String	TU_ITEM_CHECK_FILES		= "tui.checkfiles";
+	public static final String	TU_ITEM_ALLOCATE		= "tui.allocate";
 	public static final String	TU_ITEM_SHOW_SIDEBAR	= "tui.showsidebar";
 	
 	public static final String	BF_ITEM_BACK	= "bfi.back";
@@ -136,6 +137,7 @@ public class TorrentUtil
 	private static final String[] TB_ITEMS = {
 			TU_ITEM_RECHECK,
 			TU_ITEM_CHECK_FILES,
+			TU_ITEM_ALLOCATE,
 			TU_ITEM_SHOW_SIDEBAR,
 			
 			BF_ITEM_BACK,
@@ -308,7 +310,34 @@ public class TorrentUtil
 										return( true );
 									}});
 								
-								addItem( tbm, cfe_item );
+								addItem( tbm, cfe_item );							
+								
+									// allocate
+							
+								UIToolBarItem alloc_item = tbm.createToolBarItem( TU_ITEM_ALLOCATE );
+								
+								alloc_item.setGroupID( TU_GROUP );
+								
+								alloc_item.setImageID( "allocate" );
+								
+								alloc_item.setToolTipID( "label.allocate" );
+								
+								alloc_item.setDefaultActivationListener(new UIToolBarActivationListener() {
+									@Override
+									public boolean 
+									toolBarItemActivated(
+										ToolBarItem 	item, 
+										long 			activationType,
+									    Object 			datasource) 
+									{	
+										List<DownloadManager>	dms = getDMs( datasource );
+										
+										ManagerUtils.allocate( dms.toArray( new DownloadManager[dms.size()]));
+										
+										return( true );
+									}});
+								
+								addItem( tbm, alloc_item );															
 								
 									// show sidebar 
 								
@@ -561,7 +590,7 @@ public class TorrentUtil
 
 				allStopped &= stopped;
 
-				allAllocatable &= stopped && !dm.isDataAlreadyAllocated() && !dm.isDownloadComplete( false );		
+				allAllocatable &= ManagerUtils.canAllocate( dm );		
 
 				fileMove = fileMove && dm.canMoveDataFiles();
 				
@@ -4627,6 +4656,7 @@ public class TorrentUtil
 		boolean hasDM = false;
 
 		boolean canRecheck = false;
+		boolean canAllocate = false;
 		
 		if (currentContent.length > 0 && hasRealDM) {
 
@@ -4705,6 +4735,7 @@ public class TorrentUtil
 				}
 				
 				canRecheck = canRecheck || dm.canForceRecheck();
+				canAllocate = canAllocate || ManagerUtils.canAllocate( dm );
 			}
 
 			boolean canRemove = hasDM || canRemoveFileInfo;
@@ -4800,6 +4831,7 @@ public class TorrentUtil
 
 		mapNewToolbarStates.put( TU_ITEM_RECHECK, canRecheck ? UIToolBarItem.STATE_ENABLED : 0);
 		mapNewToolbarStates.put( TU_ITEM_CHECK_FILES, canCheckExist ? UIToolBarItem.STATE_ENABLED : 0);
+		mapNewToolbarStates.put( TU_ITEM_ALLOCATE, canAllocate ? UIToolBarItem.STATE_ENABLED : 0);
 		
 		boolean ss = COConfigurationManager.getBooleanParameter( "Show Side Bar" );
 		
