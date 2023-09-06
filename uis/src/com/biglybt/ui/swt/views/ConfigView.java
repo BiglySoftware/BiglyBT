@@ -86,13 +86,24 @@ public class ConfigView implements UISWTViewCoreEventListener, ConfigSectionRepo
 	getSectionContext(
 			Control	c )
 	{
+		String groups = "";
+		
 		while( c != null ){
 
+			if ( c instanceof Group ){
+				
+				String text = ((Group)c).getText().trim();
+				
+				if ( !text.isEmpty()){
+					
+					groups = " [" + text + groups +  "]";
+				}
+			}
 			TreeItem item = (TreeItem)c.getData( TREEITEMDATA_ITEM );
 
 			if ( item != null ){
 
-				String	str = "";
+				String	str = groups;
 				
 				while( item != null ){
 					
