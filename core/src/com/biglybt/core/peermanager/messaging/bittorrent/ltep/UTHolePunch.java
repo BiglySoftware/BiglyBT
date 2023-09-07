@@ -126,7 +126,7 @@ UTHolePunch
 	public String
 	getDescription()
 	{
-		return( ID_UT_HOLEPUNCH );
+		return( ID_UT_HOLEPUNCH + "type=" + message_type + ", address=" + address + ", port=" + port + (error_code==ERR_NONE?"":( ", error=" + error_code )));
 	}
 
 	public int

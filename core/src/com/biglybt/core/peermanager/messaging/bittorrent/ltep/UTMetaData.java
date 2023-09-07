@@ -134,7 +134,7 @@ UTMetaData
 	public String
 	getDescription()
 	{
-		return( ID_UT_METADATA );
+		return( ID_UT_METADATA + " type=" + msg_type + ", piece=" + piece );
 	}
 
 	@Override
