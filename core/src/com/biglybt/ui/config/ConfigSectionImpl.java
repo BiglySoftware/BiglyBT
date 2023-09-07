@@ -176,6 +176,10 @@ public abstract class ConfigSectionImpl
 		if (defaultUITypes != null) {
 			param.setAllowedUiTypes(defaultUITypes);
 		}
+		
+		if (param instanceof ParameterGroupImpl) {
+			((ParameterGroupImpl) param).setId(key);
+		}
 
 		mapPluginParams.put(key, param);
 		

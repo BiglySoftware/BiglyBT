@@ -43,6 +43,9 @@ ParameterGroupImpl
 
 	private ParameterTabFolderImpl		tab_folder;
 
+
+	private String id;
+
 	public
 	ParameterGroupImpl(
 			String			_resource,
@@ -180,6 +183,14 @@ ParameterGroupImpl
 	@Override
 	public Object getValueObject() {
 		return null;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 }
 
