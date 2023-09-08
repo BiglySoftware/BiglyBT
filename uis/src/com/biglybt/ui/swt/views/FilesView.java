@@ -1517,7 +1517,7 @@ public class FilesView
 	{
 		if ( e.keyCode == SWT.F2 && (e.stateMask & SWT.MODIFIER_MASK) == 0 ){
 			
-			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), null, true, false,false);
+			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), null, true, false, false, false);
 			
 			e.doit = false;
 			

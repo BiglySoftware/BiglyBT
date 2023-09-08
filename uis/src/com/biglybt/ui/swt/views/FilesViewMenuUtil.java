@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import com.biglybt.core.util.*;
@@ -206,21 +207,11 @@ public class FilesViewMenuUtil
 
 			// rename/retarget
 
-		MenuItem itemRenameOrRetarget = null, itemRenameOrRetargetBatch = null, itemRename = null, itemRetarget = null;
-
-		// "Rename or Retarget" -- Opens up file chooser (can choose new dir and new name)
-		itemRenameOrRetarget = new MenuItem(menu, SWT.PUSH);
-		Messages.setLanguageText(itemRenameOrRetarget, "FilesView.menu.rename");
-		itemRenameOrRetarget.setData("rename", Boolean.valueOf(true));
-		itemRenameOrRetarget.setData("retarget", Boolean.valueOf(true));
-		itemRenameOrRetarget.setData("batch", Boolean.valueOf(false));
-		
-		// "Rename or Retarget (Batch)"
-		itemRenameOrRetargetBatch = new MenuItem(menu, SWT.PUSH);
-		Messages.setLanguageText(itemRenameOrRetargetBatch, "FilesView.menu.rename.batch");
-		itemRenameOrRetargetBatch.setData("rename", Boolean.valueOf(true));
-		itemRenameOrRetargetBatch.setData("retarget", Boolean.valueOf(true));
-		itemRenameOrRetargetBatch.setData("batch", Boolean.valueOf(true));
+		MenuItem itemRenameOrRetarget = null;
+		MenuItem itemRenameOrRetargetBatch = null;
+		MenuItem itemRenameDuplicates = null;
+		MenuItem itemRename = null;
+		MenuItem itemRetarget = null;
 
 		// "Quick Rename" -- opens up input box with name
 		itemRename = new MenuItem(menu, SWT.PUSH);
@@ -229,6 +220,38 @@ public class FilesViewMenuUtil
 		itemRename.setData("retarget", Boolean.valueOf(false));
 		itemRename.setData("batch", Boolean.valueOf(false));
 
+		// Rename menu
+		
+		final Menu menuRename = new Menu(menu.getShell(),SWT.DROP_DOWN);
+		final MenuItem itemMmenuRename = new MenuItem(menu, SWT.CASCADE);
+		Messages.setLanguageText(itemMmenuRename, "FilesView.menu.rename");
+		itemMmenuRename.setMenu(menuRename);
+
+			// "Rename or Retarget" -- Opens up file chooser (can choose new dir and new name)
+			itemRenameOrRetarget = new MenuItem(menuRename, SWT.PUSH);
+			Messages.setLanguageText(itemRenameOrRetarget, "FilesView.menu.rename");
+			itemRenameOrRetarget.setData("rename", Boolean.valueOf(true));
+			itemRenameOrRetarget.setData("retarget", Boolean.valueOf(true));
+			itemRenameOrRetarget.setData("batch", Boolean.valueOf(false));
+			
+			// "Rename or Retarget (Batch)"
+			itemRenameOrRetargetBatch = new MenuItem(menuRename, SWT.PUSH);
+			Messages.setLanguageText(itemRenameOrRetargetBatch, "FilesView.menu.rename.batch");
+			itemRenameOrRetargetBatch.setData("rename", Boolean.valueOf(true));
+			itemRenameOrRetargetBatch.setData("retarget", Boolean.valueOf(true));
+			itemRenameOrRetargetBatch.setData("batch", Boolean.valueOf(true));
+			itemRenameOrRetargetBatch.setData("dups", Boolean.valueOf(false));
+	
+				// rename duplicates
+			
+			itemRenameDuplicates = new MenuItem(menuRename, SWT.PUSH);
+			Messages.setLanguageText(itemRenameDuplicates, "menu.rename.duplicates");
+			itemRenameDuplicates.setData("rename", Boolean.valueOf(true));
+			itemRenameDuplicates.setData("retarget", Boolean.valueOf(true));
+			itemRenameDuplicates.setData("batch", Boolean.valueOf(true));
+			itemRenameDuplicates.setData("dups", Boolean.valueOf(true));
+			
+		
 		// "Move Files" -- opens up directory chooser
 		itemRetarget = new MenuItem(menu, SWT.PUSH);
 		Messages.setLanguageText(itemRetarget, "FilesView.menu.retarget");
@@ -427,6 +450,7 @@ public class FilesViewMenuUtil
 			itemPriority.setEnabled(false);
 			itemRenameOrRetarget.setEnabled(false);
 			itemRenameOrRetargetBatch.setEnabled(false);
+			itemRenameDuplicates.setEnabled(false);
 			itemRename.setEnabled(false);
 			itemRetarget.setEnabled(false);
 			itemRevertFiles.setEnabled(false);
@@ -584,6 +608,7 @@ public class FilesViewMenuUtil
 
 		itemRenameOrRetarget.setEnabled(all_persistent);
 		itemRenameOrRetargetBatch.setEnabled(all_persistent);
+		itemRenameDuplicates.setEnabled(all_persistent);
 		itemRename.setEnabled(all_persistent);
 		itemRetarget.setEnabled(all_persistent);
 
@@ -606,14 +631,25 @@ public class FilesViewMenuUtil
 		Listener rename_listener = new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				final boolean rename_it = ((Boolean) event.widget.getData("rename")).booleanValue();
-				final boolean retarget_it = ((Boolean) event.widget.getData("retarget")).booleanValue();
-				final boolean batch = ((Boolean) event.widget.getData("batch")).booleanValue();
-				rename(tv, all_files.toArray( new Object[all_files.size()]), structure_map, rename_it, retarget_it, batch);
+				boolean rename_it = ((Boolean) event.widget.getData("rename")).booleanValue();
+				boolean retarget_it = ((Boolean) event.widget.getData("retarget")).booleanValue();
+				boolean batch = ((Boolean) event.widget.getData("batch")).booleanValue();
+				
+				Boolean dups = (Boolean)event.widget.getData("dups");
+				
+				rename(
+					tv, 
+					all_files.toArray( new Object[all_files.size()]), 
+					structure_map, 
+					rename_it, 
+					retarget_it, 
+					batch,
+					dups != null && dups );
 			}
 		};
 
 		itemRenameOrRetargetBatch.addListener(SWT.Selection, rename_listener);
+		itemRenameDuplicates.addListener(SWT.Selection, rename_listener);
 		itemRenameOrRetarget.addListener(SWT.Selection, rename_listener);
 		itemRename.addListener(SWT.Selection, rename_listener);
 		itemRetarget.addListener(SWT.Selection, rename_listener);
@@ -798,7 +834,8 @@ public class FilesViewMenuUtil
 		Map<DiskManagerFileInfo,String>	structure_map,
 		boolean 						rename_it,
 		boolean 						retarget_it,
-		boolean							batch )
+		boolean							batch,
+		boolean							duplicates )
 	{
 		if (datasources.length == 0) {
 			return;
@@ -813,9 +850,7 @@ public class FilesViewMenuUtil
 		try {
 
 			if ( batch ){
-				
-				StringBuilder details = new StringBuilder( 32*1024 );
-				
+								
 				Map<DownloadManager,Integer> 	dm_map 		= new IdentityHashMap<>();
 				Map<String,DownloadManager>		dm_name_map = new HashMap<>();
 				
@@ -837,7 +872,7 @@ public class FilesViewMenuUtil
 					}
 				}
 				
-				int pad = 1;
+				int pad = 0;
 				
 				while( max_files > 0 ){
 					pad++;
@@ -867,47 +902,119 @@ public class FilesViewMenuUtil
 						}
 					});
 				
+				StringBuilder details = new StringBuilder( 32*1024 );
+
 				DownloadManager current_dm = null;
 				
-				for (int i = 0; i < datasources.length; i++) {
+				if ( duplicates ){
 					
-					DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) datasources[i];
-					
-					DownloadManager dm = fileInfo.getDownloadManager();
-					
-					if ( dm != current_dm ){
+					Set<String>		names = new HashSet<>();
+										
+					for (int i = 0; i < datasources.length; i++) {
 						
-						if ( dm_map.size() > 1 ){
+						DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) datasources[i];
+						
+						String current_name = fileInfo.getFile( true ).getAbsolutePath();
+						
+						int suffix = 1;
+						
+						String final_name		= current_name;
+						String lc_final_name	= final_name.toLowerCase( Locale.US );
+						
+						while( names.contains( lc_final_name )){
+						
+							int pos = current_name.lastIndexOf( "." );
 							
-							if ( current_dm != null ){
-								details.append( "\n" );
+							if ( pos == -1 ){
+								
+								final_name = current_name + "_" + suffix;
+								
+							}else{
+								
+								final_name = current_name.substring( 0, pos ) + "_" + suffix + current_name.substring( pos );
 							}
 							
-							details.append( "# " + dm.getInternalName() + " - " );
-							details.append( dm.getDisplayName());
-							details.append( "\n\n" );
+							lc_final_name	= final_name.toLowerCase( Locale.US );
+							
+							suffix++;
 						}
 						
-						current_dm = dm;
-					}
-					
-					String index_str = String.valueOf( fileInfo.getIndex() + 1 );
-					
-					while( index_str.length() <= pad ){
+						names.add( lc_final_name );
 						
-						index_str += " ";
+						if ( suffix > 1 ){
+							
+							DownloadManager dm = fileInfo.getDownloadManager();
+							
+							if ( dm != current_dm ){
+								
+								if ( dm_map.size() > 1 ){
+									
+									if ( current_dm != null ){
+										details.append( "\n" );
+									}
+									
+									details.append( "# " + dm.getInternalName() + " - " );
+									details.append( dm.getDisplayName());
+									details.append( "\n\n" );
+								}
+								
+								current_dm = dm;
+							}
+							
+							String index_str = String.valueOf( fileInfo.getIndex() + 1 );
+							
+							while( index_str.length() <= pad ){
+								
+								index_str += " ";
+							}
+							
+							details.append( index_str );
+							details.append( final_name );
+							details.append( "\n" );
+						}
 					}
 					
-					details.append( index_str );
-					details.append( fileInfo.getFile( true ).getAbsolutePath());
-					details.append( "\n" );
+				}else{
+					for (int i = 0; i < datasources.length; i++) {
+						
+						DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) datasources[i];
+						
+						DownloadManager dm = fileInfo.getDownloadManager();
+						
+						if ( dm != current_dm ){
+							
+							if ( dm_map.size() > 1 ){
+								
+								if ( current_dm != null ){
+									details.append( "\n" );
+								}
+								
+								details.append( "# " + dm.getInternalName() + " - " );
+								details.append( dm.getDisplayName());
+								details.append( "\n\n" );
+							}
+							
+							current_dm = dm;
+						}
+						
+						String index_str = String.valueOf( fileInfo.getIndex() + 1 );
+						
+						while( index_str.length() <= pad ){
+							
+							index_str += " ";
+						}
+						
+						details.append( index_str );
+						details.append( fileInfo.getFile( true ).getAbsolutePath());
+						details.append( "\n" );
+					}
 				}
 				
 				TextViewerWindow viewer =
 						new TextViewerWindow(
 		        			  Utils.findAnyShell(),
 		        			  "batch.retarget.title",
-		        			  "batch.retarget.text",
+		        			  duplicates?"batch.rename.dups.text":"batch.retarget.text",
 		        			  details.toString(), true, true );
 
 				viewer.setEditable( true );
