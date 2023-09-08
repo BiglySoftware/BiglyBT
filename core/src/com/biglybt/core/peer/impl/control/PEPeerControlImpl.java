@@ -647,7 +647,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			}
 
 			@Override
-			public void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file){
+			public void filePriorityChanged(DiskManager dm, List<DiskManagerFileInfo> files){
 				handleFilePriorityChanged();
 			}
 

@@ -3343,8 +3343,9 @@ implements PiecePicker
 	 * An instance of this listener is registered with peerControl
 	 * @author MjrTom
 	 */
-	private class DiskManagerListenerImpl
-	implements DiskManagerListener
+	private class 
+	DiskManagerListenerImpl
+		implements DiskManagerListener
 	{
 		@Override
 		public final void stateChanged(DiskManager dm, int oldState, int newState)
@@ -3353,7 +3354,9 @@ implements PiecePicker
 		}
 
 		@Override
-		public final void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file)
+		public final void 
+		filePriorityChanged(
+			DiskManager dm, List<DiskManagerFileInfo> files)
 		{
 			syncFilePriorities();
 			// record that user-based priorities changed
@@ -3364,26 +3367,41 @@ implements PiecePicker
 			// if didn't have anything to do before, now only need to check if we need
 			// to DL from this file, but if had something to do before,
 			// must rescan all pieces to see if now nothing to do
-			final int startI;
-			final int endI;
-			if (hasNeededUndonePiece)
-			{
-				startI =0;
-				endI =nbPieces;
-			} else
-			{
-				startI =file.getFirstPieceNumber();
-				endI =file.getLastPieceNumber() +1;
+			
+			int startI;
+			int endI;
+			
+			if ( hasNeededUndonePiece ){
+				
+				startI	= 0;
+				endI	= nbPieces;
+				
+			}else{
+				startI 	= nbPieces;
+				endI	= 0;
+				
+				for ( DiskManagerFileInfo file: files ){
+					
+					startI	= Math.min( startI, file.getFirstPieceNumber());
+					
+					endI	= Math.max( endI, file.getLastPieceNumber() +1 );
+				}
 			}
-			for (int i =startI; i <endI; i++)
-			{
+			
+			for (int i =startI; i <endI; i++){
+			
 				final DiskManagerPiece dmPiece =dmPieces[i];
-				if (!dmPiece.isDone())
+				
+				if (!dmPiece.isDone()){
+					
 					foundPieceToDownload |=dmPiece.calcNeeded();
+				}
 			}
-			if (foundPieceToDownload ^hasNeededUndonePiece)
-			{
+			
+			if (foundPieceToDownload ^hasNeededUndonePiece){
+				
 				hasNeededUndonePiece =foundPieceToDownload;
+				
 				neededUndonePieceChange++;
 			}
 		}

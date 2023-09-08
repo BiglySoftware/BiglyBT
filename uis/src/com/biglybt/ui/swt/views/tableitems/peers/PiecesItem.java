@@ -415,12 +415,11 @@ public class PiecesItem
 		});
 	}
 
-	// @see com.biglybt.core.disk.DiskManagerListener#filePriorityChanged(com.biglybt.core.disk.DiskManagerFileInfo)
+
 	@Override
-	public void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file) {
+	public void filePriorityChanged(DiskManager dm, List<DiskManagerFileInfo> files) {
 	}
 
-	// @see com.biglybt.core.disk.DiskManagerListener#pieceDoneChanged(com.biglybt.core.disk.DiskManagerPiece)
 	@Override
 	public void pieceDoneChanged(DiskManager diskmanager, DiskManagerPiece piece) {
 

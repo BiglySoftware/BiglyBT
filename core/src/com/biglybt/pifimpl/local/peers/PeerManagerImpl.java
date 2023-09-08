@@ -928,10 +928,11 @@ PeerManagerImpl
 		public void
 		filePriorityChanged(
 			com.biglybt.core.disk.DiskManager 	dm, 
-			DiskManagerFileInfo					file )
+			List<DiskManagerFileInfo>			files )
 		{
 		}
 
+		
 		@Override
 		public void
 		pieceDoneChanged(

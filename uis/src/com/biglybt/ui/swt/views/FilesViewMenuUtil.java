@@ -819,6 +819,8 @@ public class FilesViewMenuUtil
 				Map<DownloadManager,Integer> 	dm_map 		= new IdentityHashMap<>();
 				Map<String,DownloadManager>		dm_name_map = new HashMap<>();
 				
+				int max_files = 1;
+				
 				for (int i = 0; i < datasources.length; i++) {
 					
 					DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) datasources[i];
@@ -827,10 +829,19 @@ public class FilesViewMenuUtil
 					
 					if ( !dm_map.containsKey( dm )){
 						
+						max_files = Math.max( max_files,  dm.getNumFileInfos());
+						
 						dm_map.put( dm, i );
 						
 						dm_name_map.put( dm.getInternalName(), dm );
 					}
+				}
+				
+				int pad = 1;
+				
+				while( max_files > 0 ){
+					pad++;
+					max_files /= 10;
 				}
 				
 				Arrays.sort(
@@ -882,7 +893,7 @@ public class FilesViewMenuUtil
 					
 					String index_str = String.valueOf( fileInfo.getIndex() + 1 );
 					
-					while( index_str.length() < 5 ){
+					while( index_str.length() <= pad ){
 						
 						index_str += " ";
 					}

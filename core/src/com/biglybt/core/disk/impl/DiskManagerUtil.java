@@ -486,20 +486,30 @@ DiskManagerUtil
 
 					@Override
 					public void setPriority(int[] newPriorities) {
-						if(newPriorities.length != res.length)
+						if(newPriorities.length != res.length){
 							throw new IllegalArgumentException("array length mismatches the number of files");
-
-						for(int i=0;i<res.length;i++)
-							res[i].priority = newPriorities[i];
-
+						}
+						
+						List<DiskManagerFileInfo> priorityChanged = new ArrayList<>( res.length );
+						
+						for(int i=0;i<res.length;i++){
+							
+							int np = newPriorities[i];
+							
+							res[i].priority = np;
+							
+							if ( np != 0 ){
+								priorityChanged.add( res[i] );
+							}
+						}
 						if ( !loading[0] ){
 
 							DiskManagerImpl.storeFilePriorities( download_manager, res);
 						}
 
-						for(int i=0;i<res.length;i++)
-							if(newPriorities[i] != 0 )
-								listener.filePriorityChanged(getDiskManager(),res[i]);
+						if ( !priorityChanged.isEmpty()){
+							listener.filePriorityChanged(getDiskManager(),priorityChanged);
+						}
 					}
 
 					@Override
@@ -583,12 +593,21 @@ DiskManagerUtil
 							download_manager.getDownloadState().setFileLinks( from_indexes, from_links, to_links );
 						}
 
-						for(int i=0;i<res.length;i++){
-							if(toChange[i]){
-								listener.filePriorityChanged(getDiskManager(),res[i]);
+						List<DiskManagerFileInfo> priority_change = new ArrayList<>( res.length );
+						
+						for( int i=0;i<res.length;i++){
+							
+							if ( toChange[i] ){
+								
+								priority_change.add( res[i] );
 							}
 						}
 
+						if ( !priority_change.isEmpty()){
+						
+							listener.filePriorityChanged(getDiskManager(), priority_change);
+						}
+						
 						doFileExistenceChecksAfterSkipChange(this, toChange, setSkipped, download_manager );
 					}
 
@@ -756,10 +775,16 @@ DiskManagerUtil
 
 							// hijack the priority change event to report storage change to detect DND->delete 'priority' change
 						
+						List<DiskManagerFileInfo> priorityChanged = new ArrayList<>( res.length );
+
 						for(int i=0;i<res.length;i++){
 							if(toChange[i]){
-								listener.filePriorityChanged(getDiskManager(),res[i]);
+								priorityChanged.add( res[i] );
 							}
+						}
+						
+						if ( !priorityChanged.isEmpty()){
+							listener.filePriorityChanged(getDiskManager(),priorityChanged);
 						}
 						
 						return modified;
@@ -1741,7 +1766,7 @@ DiskManagerUtil
 						}
 						
 						@Override
-						public void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file){
+						public void filePriorityChanged(DiskManager dm, List<DiskManagerFileInfo> files){
 						}
 					});
 				

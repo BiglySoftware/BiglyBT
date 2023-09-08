@@ -4144,11 +4144,11 @@ DownloadManagerImpl
 
 	protected void
 	informPriorityChange(
-		DiskManagerFileInfo	file )
+		List<DiskManagerFileInfo>	files )
 	{
-		informPrioritiesChange(Collections.singletonList(file));
+		informPrioritiesChange( files );
 	}
-
+	
 	protected void
 	informFileCompletionChange(
 		DiskManagerFileInfo	file )

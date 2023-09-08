@@ -3125,14 +3125,13 @@ DownloadManagerController
 							public void stateChanged(DiskManager dm, int oldState, int newState) {}
 
 							@Override
-							public void filePriorityChanged(DiskManager dm, DiskManagerFileInfo file) {
+							public void filePriorityChanged(DiskManager dm, List<DiskManagerFileInfo> files) {
 								if (initialising[0]) {
-									delayed_prio_changes.add(file);
+									delayed_prio_changes.addAll(files);
 								} else {
-									download_manager.informPriorityChange(file);
+									download_manager.informPriorityChange(files);
 								}
 							}
-
 							@Override
 							public void pieceDoneChanged(DiskManager dm, DiskManagerPiece piece) {}
 							
@@ -3762,10 +3761,10 @@ DownloadManagerController
 				}
 			}
 		}
-
+		
 		@Override
-		public void filePriorityChanged(DiskManager	dm, DiskManagerFileInfo file) {
-			download_manager.informPriorityChange(file);
+		public void filePriorityChanged(DiskManager	dm, List<DiskManagerFileInfo> files) {
+			download_manager.informPriorityChange(files);
 		}
 
 		@Override
@@ -3897,14 +3896,14 @@ DownloadManagerController
 		}
 
 		@Override
-		public void
+		public void 
 		filePriorityChanged(
-			DiskManager			dm, 
-			DiskManagerFileInfo	file )
+			DiskManager dm, 
+			List<DiskManagerFileInfo> files )
 		{
-			download_manager.informPriorityChange( file );
+			download_manager.informPriorityChange( files );
 		}
-
+		
 		@Override
 		public void
 		pieceDoneChanged(

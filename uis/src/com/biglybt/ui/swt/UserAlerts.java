@@ -202,13 +202,12 @@ UserAlerts
 		  }
 
 		  @Override
-		  public void
+		  public void 
 		  filePriorityChanged(
-				  DiskManager	dm,
-			  DiskManagerFileInfo file )
+				 DiskManager dm, 
+				 List<DiskManagerFileInfo> files)
 		  {
 		  }
-
 		  @Override
 		  public void
 		  pieceDoneChanged(
