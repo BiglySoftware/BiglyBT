@@ -2324,6 +2324,11 @@ public class TableViewPainted
 			visibleRows = rows;
 		}
 
+			// seems we need this otherwise when the last row of a table is removed we end
+			// up with a blank row
+		
+		swt_fixupSize();
+		
 		if (DEBUG_ROWCHANGE) {
 			int topIndex = visibleRows.size() > 0
 					? indexOf(visibleRows.iterator().next()) : -1;
