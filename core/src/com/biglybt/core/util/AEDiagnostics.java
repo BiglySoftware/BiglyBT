@@ -675,7 +675,8 @@ AEDiagnostics
 
 					}else{
 
-						if ( line.startsWith( "# C" ) && line.contains( "[SWT-WIN32" )){
+						if ( 	line.startsWith( "# C" ) && line.contains( "[SWT-WIN32" ) ||
+								line.startsWith( "# C" ) && line.contains( "[LIBSWT" )){
 
 							swt_crash = true;
 
@@ -740,7 +741,7 @@ AEDiagnostics
 
 				if ( swt_crash && browser_crash ){
 
-					if ( Constants.isWindows ){
+					if ( Constants.isWindows || Constants.isLinux ){
 
 						if ( !COConfigurationManager.getBooleanParameter( "browser.internal.disable", false )){
 
@@ -848,4 +849,13 @@ AEDiagnostics
 			writer.exdent();
 		}
 	}
+	
+	/*
+	public static void
+	main(
+		String[]	args )
+	{
+		analyseDump( new File( "c:\\temp\\hs_err_pid1376539.log" ));
+	}
+	*/
 }
