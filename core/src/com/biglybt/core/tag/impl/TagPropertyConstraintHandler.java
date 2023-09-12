@@ -1395,7 +1395,10 @@ TagPropertyConstraintHandler
 		private boolean			dependent_on_peer_sets;
 		
 		private Set<Tag>		tag_weights;
-		private int				tag_weights_opt = 0;
+		private int				tag_weights_opt	= 0;
+		
+		private Set<Tag>		tag_sorts;
+		private int				tag_sorts_opt	= 2;	// def is cumulative
 		
 		private boolean			must_check_dependencies;
 		
@@ -2775,6 +2778,7 @@ TagPropertyConstraintHandler
 		private static final int FT_REM					= 56;
 		private static final int FT_MIN					= 57;
 		private static final int FT_MAX					= 58;
+		private static final int FT_GET_TAG_SORT		= 59;
 
 		static{
 			fn_map.put( "hastag", FT_HAS_TAG );
@@ -2848,6 +2852,7 @@ TagPropertyConstraintHandler
 			fn_map.put( "max", FT_MAX );
 			fn_map.put( "gettagweight", FT_GET_TAG_WEIGHT );
 			fn_map.put( "ifthenelse", FT_IF_THEN_ELSE );
+			fn_map.put( "gettagsort", FT_GET_TAG_SORT );
 		}
 		
 		private static final int	DEP_STATIC		= 0;
@@ -3434,6 +3439,92 @@ TagPropertyConstraintHandler
 							}else{
 								
 								throw( new RuntimeException( "option '" + option + "' invalid" ));
+							}
+						}
+						
+						break;
+					}
+					case FT_GET_TAG_SORT:{
+						
+						params_ok = num_params <= 2;
+						
+						for( int i=0;i<num_params&&params_ok;i++){
+						
+							params_ok = getStringLiteral( params, i );
+						}
+							
+						if ( params_ok ){
+							
+								// no params -> current tag sort, 1 param - tag list comma sep, 2 param - tag list comma sep + options
+							
+							if ( num_params > 0 ){
+								
+								String	tags_str;
+								String 	options;
+
+								if ( num_params == 1 ){
+								
+									tags_str 	= (String)params[0];
+									options	= "";
+
+								}else{
+									
+									tags_str	= (String)params[0];
+									options 	= (String)params[1];
+								}
+							
+								if ( handler.tag_manager != null && !tags_str.isEmpty()){
+								
+									String[] tag_names = tags_str.split(",");
+									
+									for ( String tag_name: tag_names ){
+										
+										tag_name = tag_name.trim();
+										
+										if ( tag_name.isEmpty()){
+											
+											continue;
+										}
+								
+										List<Tag> tags = handler.tag_manager.getTagsByName( tag_name, true );
+								
+										if ( tags.isEmpty()){
+									
+											throw( new RuntimeException( "Tag '" + tag_name + "' not found" ));
+										}
+																										
+										if ( tag_sorts == null ){
+												
+											tag_sorts = new HashSet<Tag>();
+										}
+											
+										tag_sorts.addAll( tags );
+									}
+								}
+								
+								options = options.trim();
+								
+								if ( !options.isEmpty()){
+									
+									String[] bits = options.split( "=" );
+									
+									if ( bits.length != 2 || !bits[0].toLowerCase(Locale.US).equals("type")){
+										
+										throw( new RuntimeException( "options '" + options + "' invalid" ));
+									}
+									
+									String rhs = bits[1].toLowerCase(Locale.US);
+									
+									if ( rhs.equals( "max" )){
+										tag_sorts_opt = 0;
+									}else if ( rhs.equals( "min" )){
+										tag_sorts_opt = 1;
+									}else if ( rhs.equals( "cumulative" )){
+										tag_sorts_opt = 2;
+									}else{
+										throw( new RuntimeException( "options '" + options + "' invalid" ));
+									}
+								}
 							}
 						}
 						
@@ -4370,6 +4461,46 @@ TagPropertyConstraintHandler
 						context.put( EVAL_CTX_TAG_SORT, p);
 						
 						return( true );
+					}
+				case FT_GET_TAG_SORT:{
+						
+						long result = 0;
+						
+						Map<Long,Object[]> tag_sort = (Map<Long,Object[]>)dm.getDownloadState().getTransientAttribute( DownloadManagerState.AT_TRANSIENT_TAG_SORT );
+						
+						if ( tag_sort != null ){
+							
+							for ( Tag tag: tags ){
+								
+								if ( tag_sorts != null ){
+									
+									if ( !tag_sorts.contains( tag )){
+										
+										continue;
+									}
+								}
+								
+								Object[] entry = tag_sort.get( tag.getTagUID());
+								
+								if ( entry != null ){
+								
+									Long value = (Long)entry[1];
+
+									if ( value != null ){
+										
+										if ( tag_sorts_opt == 0 ){
+											result = Math.max( result, value );
+										}else if ( tag_sorts_opt == 1 ){
+											result = Math.min( result, value );
+										}else{
+											result += value;
+										}
+									}
+								}
+							}
+						}
+						
+						return( result );
 					}
 					case FT_IS_SEQUENTIAL:{
 
