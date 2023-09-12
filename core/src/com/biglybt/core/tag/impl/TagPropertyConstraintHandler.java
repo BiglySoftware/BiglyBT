@@ -2905,6 +2905,10 @@ TagPropertyConstraintHandler
 		private static final int	KW_UP_SPEED				= 46;
 		private static final int	KW_SESSION_AGE			= 47;
 		private static final int	KW_PLUGIN_MY_RATING		= 48;
+		private static final int	KW_MAX32				= 49;
+		private static final int	KW_MIN32				= 50;
+		private static final int	KW_MAX64				= 51;
+		private static final int	KW_MIN64				= 52;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -3016,6 +3020,11 @@ TagPropertyConstraintHandler
 			
 			keyword_map.put( "my_rating",	 			new int[]{KW_PLUGIN_MY_RATING,		DEP_TIME });
 			keyword_map.put( "myrating",	 			new int[]{KW_PLUGIN_MY_RATING,		DEP_TIME });
+			
+			keyword_map.put( "max32",	 				new int[]{KW_MAX32,					DEP_STATIC });
+			keyword_map.put( "min32",	 				new int[]{KW_MIN32,					DEP_STATIC });
+			keyword_map.put( "max64",	 				new int[]{KW_MAX64,					DEP_STATIC });
+			keyword_map.put( "min64",	 				new int[]{KW_MIN64,					DEP_STATIC });
 		}
 
 		private class
@@ -5391,6 +5400,18 @@ TagPropertyConstraintHandler
 							
 							return( 0 );
 						}
+					}
+					case KW_MAX32:{
+						return( Integer.MAX_VALUE );
+					}
+					case KW_MIN32:{
+						return( Integer.MIN_VALUE );
+					}
+					case KW_MAX64:{
+						return( Long.MAX_VALUE );
+					}
+					case KW_MIN64:{
+						return( Long.MIN_VALUE );
 					}
 					default:{
 						
