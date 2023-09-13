@@ -103,6 +103,7 @@ DHTPlugin
 	public static final int			NW_MAIN				= DHT.NW_AZ_MAIN;
 	
 	public static final int			NW_AZ_MAIN			= DHT.NW_AZ_MAIN;
+	public static final int			NW_AZ_MAIN_V6		= DHT.NW_AZ_MAIN_V6;
 	public static final int			NW_AZ_CVS			= DHT.NW_AZ_CVS;
 	public static final int			NW_BIGLYBT_MAIN		= DHT.NW_BIGLYBT_MAIN;
 
@@ -1026,7 +1027,7 @@ DHTPlugin
 										run()
 										{
 											try{
-												List	plugins = new ArrayList();
+												List<DHTPluginImpl>	plugins = new ArrayList<>();
 
 													// adapter only added to first DHTPluginImpl we create
 
@@ -1051,6 +1052,7 @@ DHTPlugin
 
 													main_dht =
 														new DHTPluginImpl(
+																	DHTPlugin.this,
 																	plugin_interface,
 																	CoreFactory.getSingleton().getNATTraverser(),
 																	adapter,
@@ -1073,6 +1075,7 @@ DHTPlugin
 
 													main_v6_dht =
 														new DHTPluginImpl(
+															DHTPlugin.this,
 															plugin_interface,
 															CoreFactory.getSingleton().getNATTraverser(),
 															adapter,
@@ -1095,6 +1098,7 @@ DHTPlugin
 
 													cvs_dht =
 														new DHTPluginImpl(
+															DHTPlugin.this,
 															plugin_interface,
 															CoreFactory.getSingleton().getNATTraverser(),
 															adapter,
@@ -1117,6 +1121,7 @@ DHTPlugin
 
 													biglybt_dht =
 														new DHTPluginImpl(
+															DHTPlugin.this,
 															plugin_interface,
 															CoreFactory.getSingleton().getNATTraverser(),
 															adapter,
@@ -2503,6 +2508,26 @@ DHTPlugin
 		return( null );
 	}
 
+	public DHTPluginBasicInterface
+	getDHTPlugin(
+		int		network )
+	{
+		if ( dhts == null ){
+
+			return( null );
+		}
+
+		for (int i=0;i<dhts.length;i++){
+
+			if ( dhts[i].getDHT().getTransport().getNetwork() == network ){
+
+				return( dhts[i] );
+			}
+		}
+
+		return( null );
+	}
+	
 	@Override
 	public DHTInterface[]
 	getDHTInterfaces()

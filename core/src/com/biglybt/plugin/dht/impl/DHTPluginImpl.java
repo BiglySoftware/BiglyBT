@@ -64,7 +64,7 @@ import com.biglybt.util.MapUtils;
 
 public class
 DHTPluginImpl
-	implements DHTInterface
+	implements DHTInterface, DHTPluginBasicInterface
 {
 	private static final String	SEED_ADDRESS_V4	= Constants.DHT_SEED_ADDRESS_V4;
 	private static final String	SEED_ADDRESS_V6	= Constants.DHT_SEED_ADDRESS_V6;
@@ -73,7 +73,8 @@ DHTPluginImpl
 	private static final long	MIN_ROOT_SEED_IMPORT_PERIOD	= 8*60*60*1000;
 
 
-	private PluginInterface plugin_interface;
+	private final DHTPlugin			dht_plugin;
+	private final PluginInterface	plugin_interface;
 
 	private int					status;
 	private String				status_text;
@@ -99,6 +100,7 @@ DHTPluginImpl
 
 	public
 	DHTPluginImpl(
+		DHTPlugin				_dht_plugin,
 		PluginInterface			_plugin_interface,
 		DHTNATPuncherAdapter	_nat_adapter,
 		DHTPluginImplAdapter	_adapter,
@@ -113,6 +115,7 @@ DHTPluginImpl
 		LoggerChannel			_log,
 		DHTLogger				_dht_log )
 	{
+		dht_plugin			= _dht_plugin;
 		plugin_interface	= _plugin_interface;
 		protocol_version	= _protocol_version;
 		network				= _network;
@@ -282,6 +285,41 @@ DHTPluginImpl
 		}
 	}
 
+	@Override
+	public String 
+	getAENetwork()
+	{
+		return( dht_plugin.getNetwork());
+	}
+	
+	@Override
+	public DHTInterface[] 
+	getDHTInterfaces()
+	{
+		return( new DHTInterface[]{ this });
+	}
+	
+	@Override
+	public boolean 
+	isEnabled()
+	{
+		return( dht_plugin.isEnabled());
+	}
+	
+	@Override
+	public boolean 
+	isInitialising()
+	{
+		return( dht_plugin.isInitialising());
+	}
+	
+	@Override
+	public boolean 
+	isSleeping()
+	{
+		return( dht_plugin.isSleeping());
+	}
+	
 	public void
 	updateStats(
 		int		sample_stats_ticks )

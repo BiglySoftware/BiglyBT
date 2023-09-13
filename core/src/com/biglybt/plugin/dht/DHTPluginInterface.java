@@ -31,6 +31,7 @@ import com.biglybt.core.util.Debug;
 
 public interface
 DHTPluginInterface
+	extends DHTPluginBasicInterface
 {
 	public static final byte		FLAG_SINGLE_VALUE	= DHT.FLAG_SINGLE_VALUE;
 	public static final byte		FLAG_DOWNLOADING	= DHT.FLAG_DOWNLOADING;
@@ -45,19 +46,17 @@ DHTPluginInterface
 
 	public static final int			MAX_VALUE_SIZE		= DHT.MAX_VALUE_SIZE;
 
+	public String
+	getNetwork();
 
-
-	public boolean
-	isEnabled();
-
+	public default String
+	getAENetwork()
+	{
+		return( getNetwork());
+	}
+	
 	public boolean
 	isExtendedUseAllowed();
-
-	public boolean
-	isInitialising();
-
-	public boolean
-	isSleeping();
 
 	public DHTPluginContact
 	getLocalAddress();
@@ -77,9 +76,6 @@ DHTPluginInterface
 		return( new InetSocketAddress[]{ getConnectionOrientedEndpoint()});
 	}
 	
-	public String
-	getNetwork();
-
 	public DHTPluginKeyStats
 	decodeStats(
 		DHTPluginValue		value );
@@ -113,49 +109,7 @@ DHTPluginInterface
 	public DHTPluginContact
 	importContact(
 		Map<String,Object>				map );
-
-	public void
-	get(
-		byte[]								original_key,
-		String								description,
-		byte								flags,
-		int									max_values,
-		long								timeout,
-		boolean								exhaustive,
-		boolean								high_priority,
-		DHTPluginOperationListener			original_listener );
-
-	public void
-	put(
-		byte[]						key,
-		String						description,
-		byte[]						value,
-		byte						flags,
-		DHTPluginOperationListener	listener);
-
-	public default void
-	put(
-		byte[]						key,
-		String						description,
-		byte[]						value,
-		short						flags,
-		boolean						high_priority,
-		DHTPluginOperationListener	listener)
-	{
-		if (( flags & 0xff00 ) != 0 ){
-			
-			Debug.out( "Flag loss!" );
-		}
-		
-		put( key, description, value, (byte)flags, listener );
-	}
 	
-	public DHTInterface[]
-	getDHTInterfaces();
-
-	public List<DHTPluginValue>
-	getValues();
-
 	public List<DHTPluginValue>
 	getValues(
 		byte[]		key );

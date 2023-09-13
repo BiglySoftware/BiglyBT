@@ -43,8 +43,8 @@ import com.biglybt.pif.ddb.*;
 import com.biglybt.pif.utils.search.*;
 import com.biglybt.pifimpl.local.ddb.DDBaseImpl;
 import com.biglybt.plugin.dht.DHTPlugin;
+import com.biglybt.plugin.dht.DHTPluginBasicInterface;
 import com.biglybt.plugin.dht.DHTPluginContact;
-import com.biglybt.plugin.dht.DHTPluginInterface;
 import com.biglybt.plugin.dht.DHTPluginInterface.DHTInterface;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
@@ -120,9 +120,9 @@ RelatedContentSearcher
 
 	final AsyncDispatcher	harvest_dispatcher			= new AsyncDispatcher();
 
-	final RelatedContentManager					manager;
+	final RelatedContentManager							manager;
 	private final DistributedDatabaseTransferType		transfer_type;
-	final DHTPluginInterface					dht_plugin;
+	final DHTPluginBasicInterface						dht_plugin;
 
 	DistributedDatabase				ddb;
 
@@ -130,7 +130,7 @@ RelatedContentSearcher
 	RelatedContentSearcher(
 		RelatedContentManager				_manager,
 		DistributedDatabaseTransferType		_transfer_type,
-		DHTPluginInterface					_dht_plugin,
+		DHTPluginBasicInterface				_dht_plugin,
 		boolean								_defer_ddb_check )
 	{
 		manager			= _manager;
@@ -143,7 +143,7 @@ RelatedContentSearcher
 		}
 	}
 
-	protected DHTPluginInterface
+	protected DHTPluginBasicInterface
 	getDHTPlugin()
 	{
 		return( dht_plugin );
@@ -182,7 +182,7 @@ RelatedContentSearcher
 		if ( ddb == null ){
 
 			try{
-				List<DistributedDatabase> ddbs = DDBaseImpl.getDDBs( new String[]{ dht_plugin.getNetwork() });
+				List<DistributedDatabase> ddbs = DDBaseImpl.getDDBs( new String[]{ dht_plugin.getAENetwork() });
 
 				if ( ddbs.size() > 0 ){
 
@@ -365,7 +365,7 @@ RelatedContentSearcher
 
 								DHTInterface[]	dhts = dht_plugin.getDHTInterfaces();
 
-								boolean public_dht = dht_plugin.getNetwork() == AENetworkClassifier.AT_PUBLIC;
+								boolean public_dht = dht_plugin.getAENetwork() == AENetworkClassifier.AT_PUBLIC;
 
 								for ( DHTInterface dht: dhts ){
 

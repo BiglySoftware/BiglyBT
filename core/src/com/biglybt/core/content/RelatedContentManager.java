@@ -189,9 +189,9 @@ RelatedContentManager
 	private PluginInterface 				plugin_interface;
 	private TorrentAttribute 				ta_networks;
 	private TorrentAttribute 				ta_category;
-	private DHTPluginInterface				public_dht_plugin;
+	private DHTPluginBasicInterface			public_dht_plugin;
 
-	private volatile Map<Byte,DHTPluginInterface>		i2p_dht_plugin_map = new HashMap<>();
+	private volatile Map<Byte,DHTPluginBasicInterface>		i2p_dht_plugin_map = new HashMap<>();
 
 	private TagManager						tag_manager;
 
@@ -403,8 +403,17 @@ RelatedContentManager
 							DHTPlugin dp = (DHTPlugin)dht_pi.getPlugin();
 
 							public_dht_plugin = dp;
-
-							RelatedContentSearcher public_searcher = new RelatedContentSearcher( RelatedContentManager.this, transfer_type, dp, true );
+							
+							DHTPluginBasicInterface		public_dht_searcher = public_dht_plugin;
+							
+							/*
+							if ( dp.isEnabled()){
+								
+								public_dht_searcher = dp.getDHTPlugin( DHTPlugin.NW_BIGLYBT_MAIN );
+			
+							*/
+							
+							RelatedContentSearcher public_searcher = new RelatedContentSearcher( RelatedContentManager.this, transfer_type, public_dht_searcher, true );
 
 							searchers.add( public_searcher );
 
@@ -552,7 +561,7 @@ RelatedContentManager
 
 				if ( ddb.getNetwork() == AENetworkClassifier.AT_I2P ){
 
-					DHTPluginInterface i2p_dht = ddb.getDHTPlugin();
+					DHTPluginBasicInterface i2p_dht = ddb.getDHTPlugin();
 
 					RelatedContentSearcher i2p_searcher = new RelatedContentSearcher( RelatedContentManager.this, transfer_type, i2p_dht, false );
 
@@ -578,7 +587,7 @@ RelatedContentManager
 	
 					if ( ddb.getNetwork() == AENetworkClassifier.AT_I2P ){
 	
-						DHTPluginInterface i2p_mix_dht = ddb.getDHTPlugin();
+						DHTPluginBasicInterface i2p_mix_dht = ddb.getDHTPlugin();
 	
 						mix_searcher = new RelatedContentSearcher( RelatedContentManager.this, transfer_type, i2p_mix_dht, false );
 					}
@@ -641,11 +650,11 @@ RelatedContentManager
 		
 
 
-	private DHTPluginInterface
+	private DHTPluginBasicInterface
 	selectDHT(
 		byte		networks )
 	{
-		DHTPluginInterface	result = null;
+		DHTPluginBasicInterface	result = null;
 		
 		if (	(networks & NET_PUBLIC ) != 0 &&
 				(	( !prefer_i2p ) ||
@@ -1184,7 +1193,7 @@ RelatedContentManager
 
 		throws Exception
 	{
-		final DHTPluginInterface dht_plugin = selectDHT( from_info.getNetworksInternal());
+		final DHTPluginBasicInterface dht_plugin = selectDHT( from_info.getNetworksInternal());
 
 		// System.out.println( "publish: " + from_info.getString() + " -> " + to_info.getString() + ": " + dht_plugin );
 
@@ -1603,7 +1612,7 @@ RelatedContentManager
 				}
 			}
 
-			final DHTPluginInterface dht_plugin = selectDHT( to_info.getNetworksInternal());
+			final DHTPluginBasicInterface dht_plugin = selectDHT( to_info.getNetworksInternal());
 
 			if ( dht_plugin != null && sizes.size() > 0 ){
 
@@ -1933,7 +1942,7 @@ RelatedContentManager
 				existing_tags = Collections.emptySet();
 			}
 			
-			final DHTPluginInterface dht_plugin = selectDHT( networks );
+			final DHTPluginBasicInterface dht_plugin = selectDHT( networks );
 
 			if ( dht_plugin == null ){
 
@@ -2445,7 +2454,7 @@ RelatedContentManager
 		try{
 			final int max_hits = 30;
 
-			DHTPluginInterface dht_plugin = selectDHT( networks );
+			DHTPluginBasicInterface dht_plugin = selectDHT( networks );
 
 			if ( dht_plugin == null ){
 
@@ -3576,7 +3585,7 @@ RelatedContentManager
 		
 		for ( RelatedContentSearcher searcher: searchers ){
 
-			String net = searcher.getDHTPlugin().getNetwork();
+			String net = searcher.getDHTPlugin().getAENetwork();
 
 			if ( net == target_net ){
 
