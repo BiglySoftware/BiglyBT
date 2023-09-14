@@ -359,8 +359,6 @@ RelatedContentSearcher
 
 								DHTInterface[]	dhts = dht_plugin.getDHTInterfaces();
 
-								boolean public_dht = dht_plugin.getAENetwork() == AENetworkClassifier.AT_PUBLIC;
-
 								for ( DHTInterface dht: dhts ){
 
 									if ( dht.isIPV6() && hasIPV4 ){
@@ -2393,19 +2391,8 @@ outer:
 			return( ddb.importContact( contact.exportToMap()));
 
 		}else{
-
-			int ddb_net = DistributedDatabase.DHT_AZ_MAIN;
 			
-			if ( network == DHTPlugin.NW_AZ_CVS ){
-				
-				ddb_net = DistributedDatabase.DHT_AZ_CVS;
-				
-			}else if ( network == DHTPlugin.NW_BIGLYBT_MAIN ){
-				
-				ddb_net = DistributedDatabase.DHT_AZ_BIGLYBT;
-			}
-			
-			return( ddb.importContact( address,	DHTTransportUDP.PROTOCOL_VERSION_MIN_AZ, ddb_net ));
+			return( ddb.importContact( address,	DHTTransportUDP.PROTOCOL_VERSION_MIN_AZ, network ));
 		}
 	}
 
@@ -2610,16 +2597,26 @@ outer:
 		return( result );
 	}
 
-	static void
+	void
 	logSearch(
 		String		str )
 	{
 		if ( TRACE_SEARCH ){
-			System.out.println( str );
+			
+			DHTInterface[] intfs =  dht_plugin.getDHTInterfaces();
+			
+			String prefix = "";
+			
+			for ( DHTInterface intf: intfs ){
+				
+				prefix += (prefix.isEmpty()?"":",") + intf.getNetwork();
+			}
+			
+			System.out.println( dht_plugin.getAENetwork() + ":" + prefix + " " + str );
 		}
 	}
 
-	private static class
+	private class
 	MySearchObserver
 		implements SearchObserver
 	{
