@@ -30,9 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.biglybt.core.content.RelatedContentManager.ContentCache;
 import com.biglybt.core.content.RelatedContentManager.DownloadInfo;
-import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.tag.TagUtils;
@@ -56,8 +54,6 @@ public class
 RelatedContentSearcher
 	implements DistributedDatabaseTransferHandler
 {
-	static final boolean	SEARCH_CVS_ONLY_DEFAULT		= System.getProperty(SystemProperties.SYSPROP_RCM_SEARCH_CVS_ONLY, "0" ).equals( "1" );
-	
 	private static final boolean	TRACE_SEARCH				= false;
 
 	private static final int	SEARCH_MIN_SEEDS_DEFAULT		= -1;
@@ -136,7 +132,7 @@ RelatedContentSearcher
 		manager			= _manager;
 		transfer_type	= _transfer_type;
 		dht_plugin 		= _dht_plugin;
-
+		
 		if ( !_defer_ddb_check ){
 
 			checkDDB();
@@ -173,7 +169,7 @@ RelatedContentSearcher
 
 		checkKeyBloom();
 
-		testKeyBloom();
+		// testKeyBloom();
 	}
 
 	private void
@@ -314,13 +310,11 @@ RelatedContentSearcher
 					
 					boolean hasIPV4 = NetworkAdmin.getSingleton().hasIPV4Potential();
 
-					boolean search_cvs_only = SEARCH_CVS_ONLY_DEFAULT;
-
 					final Set<String>	hashes_sync_me = new HashSet<>();
 
 					try{
 
-						List<RelatedContent>	matches = matchContent( term, min_seeds, min_leechers, max_age_secs, true, search_cvs_only );
+						List<RelatedContent>	matches = matchContent( term, min_seeds, min_leechers, max_age_secs, true );
 
 						for ( final RelatedContent c: matches ){
 
@@ -376,13 +370,6 @@ RelatedContentSearcher
 
 									int	network = dht.getNetwork();
 
-									if ( public_dht && search_cvs_only && network != DHT.NW_AZ_CVS ){
-
-										logSearch( "Search: ignoring main DHT" );
-
-										continue;
-									}
-
 									DHTPluginContact[] contacts = dht.getReachableContacts();
 
 									Collections.shuffle( Arrays.asList( contacts ));
@@ -419,13 +406,6 @@ RelatedContentSearcher
 										}
 
 										int	network = dht.getNetwork();
-
-										if ( public_dht && search_cvs_only && network != DHT.NW_AZ_CVS ){
-
-											logSearch( "Search: ignoring main DHT" );
-
-											continue;
-										}
 
 										DHTPluginContact[] contacts = dht.getRecentContacts();
 
@@ -919,8 +899,7 @@ RelatedContentSearcher
 		int					min_seeds,
 		int					min_leechers,
 		int					max_age_secs,
-		boolean				is_local,
-		boolean				search_cvs_only )
+		boolean				is_local )
 	{
 		if ( !is_local ){
 			
@@ -1028,7 +1007,7 @@ RelatedContentSearcher
 
 		Map<String,RelatedContent>	result = new HashMap<>();
 
-		Iterator<DownloadInfo>	it1 = getDHTInfos( search_cvs_only ).iterator();
+		Iterator<DownloadInfo>	it1 = getDHTInfos().iterator();
 
 		Iterator<DownloadInfo>	it2;
 
@@ -1292,11 +1271,6 @@ RelatedContentSearcher
 			Map<String,Object>	request = new HashMap<>();
 
 			request.put( "t", term );
-
-			if ( SEARCH_CVS_ONLY_DEFAULT ){
-
-				request.put( "n", "c" );
-			}
 
 			if ( min_seeds > 0 ){
 				request.put( "s", (long)min_seeds );
@@ -1720,8 +1694,24 @@ RelatedContentSearcher
 
 				String	network = MapUtils.getMapString( request, "n", "" );
 
-				boolean search_cvs_only = network.equals( "c" );
-
+				int search_net_only = -1;
+				
+				if ( !network.isEmpty()){
+					
+					if ( network.equals( "c" )){
+						
+						search_net_only = DHTPlugin.NW_AZ_CVS; 
+					}else{
+						
+						try{
+							search_net_only = Integer.parseInt( network );
+							
+						}catch( Throwable e ){
+							
+						}
+					}
+				}
+				
 				int	min_seeds 		= MapUtils.importInt( request, "s", SEARCH_MIN_SEEDS_DEFAULT );
 				int	min_leechers 	= MapUtils.importInt( request, "l", SEARCH_MIN_LEECHERS_DEFAULT );
 				int	max_age_secs 	= MapUtils.importInt( request, "a", SEARCH_MAX_AGE_SECS_DEFAULT );
@@ -1736,7 +1726,7 @@ RelatedContentSearcher
 
 					if ( term != null ){
 
-						List<RelatedContent>	matches = matchContent( term, min_seeds, min_leechers, max_age_secs, false, search_cvs_only );
+						List<RelatedContent>	matches = matchContent( term, min_seeds, min_leechers, max_age_secs, false );
 
 						List<Map<String,Object>> l_list = new ArrayList<>();
 
@@ -1976,7 +1966,7 @@ RelatedContentSearcher
 			Set<String>	dht_only_words 		= new HashSet<>();
 			Set<String>	non_dht_words 		= new HashSet<>();
 
-			List<DownloadInfo>		dht_infos		= getDHTInfos( SEARCH_CVS_ONLY_DEFAULT );
+			List<DownloadInfo>		dht_infos		= getDHTInfos();
 
 			Iterator<DownloadInfo>	it_dht 			= dht_infos.iterator();
 
@@ -2081,25 +2071,9 @@ RelatedContentSearcher
 	}
 
 	private List<DownloadInfo>
-	getDHTInfos(
-		boolean		search_cvs_only )
+	getDHTInfos()
 	{
-		List<DHTPluginValue> vals;
-
-		if ( search_cvs_only ){
-
-			if ( dht_plugin instanceof DHTPlugin ){
-
-				vals = ((DHTPlugin)dht_plugin).getValues( DHTPlugin.NW_AZ_CVS,  false );
-
-			}else{
-
-				vals = dht_plugin.getValues();
-			}
-		}else{
-
-			vals = dht_plugin.getValues();
-		}
+		List<DHTPluginValue> vals = dht_plugin.getValues();
 
 		Set<String>	unique_keys = new HashSet<>();
 
@@ -2134,6 +2108,7 @@ RelatedContentSearcher
 		return( dht_infos );
 	}
 
+	/*
 	private void
 	testKeyBloom()
 	{
@@ -2150,7 +2125,7 @@ RelatedContentSearcher
 
 				ContentCache cache = manager.loadRelatedContent();
 
-				List<DownloadInfo>		dht_infos		= getDHTInfos( false );
+				List<DownloadInfo>		dht_infos		= getDHTInfos( -1 );
 
 				Iterator<DownloadInfo>	it_dht 			= dht_infos.iterator();
 
@@ -2220,11 +2195,11 @@ RelatedContentSearcher
 					misses++;
 				}
 
-				List<RelatedContent> hits = matchContent( word, SEARCH_MIN_SEEDS_DEFAULT, SEARCH_MIN_LEECHERS_DEFAULT, SEARCH_MAX_AGE_SECS_DEFAULT, true, false );
+				List<RelatedContent> hits = matchContent( word, SEARCH_MIN_SEEDS_DEFAULT, SEARCH_MIN_LEECHERS_DEFAULT, SEARCH_MAX_AGE_SECS_DEFAULT, true, -1 );
 
 				if ( hits.size() == 0 ){
 
-					hits = matchContent( word, SEARCH_MIN_SEEDS_DEFAULT, SEARCH_MIN_LEECHERS_DEFAULT, SEARCH_MAX_AGE_SECS_DEFAULT, true, false );
+					hits = matchContent( word, SEARCH_MIN_SEEDS_DEFAULT, SEARCH_MIN_LEECHERS_DEFAULT, SEARCH_MAX_AGE_SECS_DEFAULT, true, -1 );
 
 					match_fails++;
 				}
@@ -2237,7 +2212,8 @@ RelatedContentSearcher
 			e.printStackTrace();
 		}
 	}
-
+	*/
+	
 	private void
 	harvestBlooms()
 	{
@@ -2326,13 +2302,6 @@ outer:
 								}
 
 								int	network = dht.getNetwork();
-
-								if ( SEARCH_CVS_ONLY_DEFAULT && network != DHT.NW_AZ_CVS ){
-
-									logSearch( "Harvest: ignoring main DHT" );
-
-									continue;
-								}
 
 								DHTPluginContact[] contacts = dht.getReachableContacts();
 
@@ -2425,11 +2394,18 @@ outer:
 
 		}else{
 
-			return( 
-				ddb.importContact( 
-					address, 
-					DHTTransportUDP.PROTOCOL_VERSION_MIN_AZ, 
-					network==DHT.NW_AZ_CVS?DistributedDatabase.DHT_AZ_CVS:DistributedDatabase.DHT_AZ_MAIN ));
+			int ddb_net = DistributedDatabase.DHT_AZ_MAIN;
+			
+			if ( network == DHTPlugin.NW_AZ_CVS ){
+				
+				ddb_net = DistributedDatabase.DHT_AZ_CVS;
+				
+			}else if ( network == DHTPlugin.NW_BIGLYBT_MAIN ){
+				
+				ddb_net = DistributedDatabase.DHT_AZ_BIGLYBT;
+			}
+			
+			return( ddb.importContact( address,	DHTTransportUDP.PROTOCOL_VERSION_MIN_AZ, ddb_net ));
 		}
 	}
 

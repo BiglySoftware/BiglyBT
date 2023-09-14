@@ -149,7 +149,9 @@ DDBaseHelpers
 				{ "com.biglybt.pifimpl.local.ddb.DDBaseTTTorrent", "org.gudy.azureus2.pluginsimpl.local.ddb.DDBaseTTTorrent" },
 				{ "com.biglybt.plugin.net.netstatus.NetStatusProtocolTester$testXferType", "com.aelitis.azureus.plugins.net.netstatus.NetStatusProtocolTester$testXferType" },
 				{ "com.biglybt.core.content.RelatedContentManager$RCMSearchXFer", "com.aelitis.azureus.core.content.RelatedContentManager$RCMSearchXFer" },
-				{ "org.parg.azureus.plugins.networks.i2p.vuzedht.I2PHelperDHTBridge", "org.parg.azureus.plugins.networks.i2p.vuzedht.I2PHelperDHTBridge" }
+				{ "org.parg.azureus.plugins.networks.i2p.vuzedht.I2PHelperDHTBridge", "org.parg.azureus.plugins.networks.i2p.vuzedht.I2PHelperDHTBridge" },
+				
+				{ "com.biglybt.core.content.RelatedContentManager$RCMSearchXFerBiglyBT", "com.biglybt.core.content.RelatedContentManager$RCMSearchXFerBiglyBT" },
 			}){
 
 			xfer_migration.put( entry[0],  entry[1] );

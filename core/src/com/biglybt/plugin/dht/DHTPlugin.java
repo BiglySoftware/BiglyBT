@@ -1688,37 +1688,23 @@ DHTPlugin
 
 	public List<DHTPluginValue>
 	getValues(
-		int			network,
-		boolean		ipv6 )
-	{
+		int			network )
+	{	
 		DHTPluginImpl	dht = null;
 
-		if ( network == NW_AZ_MAIN ){
-
-			if ( ipv6 ){
-
-				dht = main_v6_dht;
-
-			}else{
-
+		switch( network ){
+			case NW_AZ_MAIN:
 				dht = main_dht;
-			}
-		}else if ( network == NW_BIGLYBT_MAIN ){
-			
-			if ( ipv6 ){
-
-				dht = null;
-
-			}else{
-
-				dht = biglybt_dht;
-			}
-		}else{
-
-			if ( !ipv6 ){
-
+				break;
+			case NW_AZ_MAIN_V6:
+				dht = main_v6_dht;
+				break;
+			case NW_AZ_CVS:
 				dht = cvs_dht;
-			}
+				break;
+			case NW_BIGLYBT_MAIN:
+				dht = biglybt_dht;
+				break;
 		}
 
 		if ( dht == null ){
@@ -2343,6 +2329,18 @@ DHTPlugin
 		byte							version,
 		boolean							is_cvs )
 	{
+		int	preferred_net = is_cvs?DHT.NW_AZ_CVS:DHT.NW_AZ_MAIN;
+
+		return( importContact( address, version, preferred_net ));
+	}
+
+	@Override
+	public DHTPluginContact
+	importContact(
+		InetSocketAddress				address,
+		byte							version,
+		int								preferred_net )
+	{
 		if ( !isEnabled()){
 
 			throw( new RuntimeException( "DHT isn't enabled" ));
@@ -2350,11 +2348,9 @@ DHTPlugin
 
 		InetAddress contact_address = address.getAddress();
 
-		int	target_network = is_cvs?DHT.NW_AZ_CVS:DHT.NW_AZ_MAIN;
-
 		for ( DHTPluginImpl dht: dhts ){
 
-			if ( dht.getDHT().getTransport().getNetwork() != target_network ){
+			if ( dht.getDHT().getTransport().getNetwork() != preferred_net ){
 
 				continue;
 			}
@@ -2373,6 +2369,7 @@ DHTPlugin
 		return( importContact( address, version ));
 	}
 
+	
 	@Override
 	public DHTPluginContact
 	getLocalAddress()

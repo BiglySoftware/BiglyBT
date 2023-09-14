@@ -240,9 +240,11 @@ RelatedContentManager
 	boolean	secondary_lookup_in_progress;
 	long	secondary_lookup_complete_time;
 
-	RCMSearchXFer			transfer_type = new RCMSearchXFer();
+	RCMSearchXFer			main_transfer_type	= new RCMSearchXFer();
+	RCMSearchXFerBiglyBT	bigly_transfer_type = new RCMSearchXFerBiglyBT();
 
 	final 	CopyOnWriteList<RelatedContentSearcher>	searchers = new CopyOnWriteList<>();
+
 	private boolean	added_i2p_searcher;
 	private RelatedContentSearcher	mix_searcher;
 
@@ -403,19 +405,19 @@ RelatedContentManager
 							DHTPlugin dp = (DHTPlugin)dht_pi.getPlugin();
 
 							public_dht_plugin = dp;
-							
-							DHTPluginBasicInterface		public_dht_searcher = public_dht_plugin;
-							
-							/*
+																												
+							RelatedContentSearcher public_searcher = new RelatedContentSearcher( RelatedContentManager.this, main_transfer_type, public_dht_plugin, true );
+													
+							searchers.add( public_searcher );
+
 							if ( dp.isEnabled()){
 								
-								public_dht_searcher = dp.getDHTPlugin( DHTPlugin.NW_BIGLYBT_MAIN );
-			
-							*/
-							
-							RelatedContentSearcher public_searcher = new RelatedContentSearcher( RelatedContentManager.this, transfer_type, public_dht_searcher, true );
-
-							searchers.add( public_searcher );
+								DHTPluginBasicInterface bigly_dht = dp.getDHTPlugin( DHTPlugin.NW_BIGLYBT_MAIN );
+									
+								RelatedContentSearcher bigly_searcher = new RelatedContentSearcher( RelatedContentManager.this, bigly_transfer_type, bigly_dht, true );
+								
+								searchers.add( bigly_searcher );
+							}
 
 							DownloadManager dm = plugin_interface.getDownloadManager();
 
@@ -563,7 +565,7 @@ RelatedContentManager
 
 					DHTPluginBasicInterface i2p_dht = ddb.getDHTPlugin();
 
-					RelatedContentSearcher i2p_searcher = new RelatedContentSearcher( RelatedContentManager.this, transfer_type, i2p_dht, false );
+					RelatedContentSearcher i2p_searcher = new RelatedContentSearcher( RelatedContentManager.this, main_transfer_type, i2p_dht, false );
 
 					searchers.add( i2p_searcher );
 
@@ -589,7 +591,7 @@ RelatedContentManager
 	
 						DHTPluginBasicInterface i2p_mix_dht = ddb.getDHTPlugin();
 	
-						mix_searcher = new RelatedContentSearcher( RelatedContentManager.this, transfer_type, i2p_mix_dht, false );
+						mix_searcher = new RelatedContentSearcher( RelatedContentManager.this, main_transfer_type, i2p_mix_dht, false );
 					}
 				}
 			}
@@ -3585,11 +3587,22 @@ RelatedContentManager
 		
 		for ( RelatedContentSearcher searcher: searchers ){
 
-			String net = searcher.getDHTPlugin().getAENetwork();
+			DHTPluginBasicInterface dht_plugin = searcher.getDHTPlugin();
+			
+			String net = dht_plugin.getAENetwork();
 
 			if ( net == target_net ){
 
 				return( searcher.searchRCM( search_parameters, observer ));
+				
+				/*
+				int n = dht_plugin.getDHTInterfaces()[0].getNetwork();
+				
+				if ( net == AENetworkClassifier.AT_PUBLIC && n == DHTPlugin.NW_BIGLYBT_MAIN ){
+				
+					return( searcher.searchRCM( search_parameters, observer ));
+				}
+				*/
 			}
 		}
 
@@ -5518,13 +5531,20 @@ RelatedContentManager
 
 	// can't move this class out of here as the key for the transfer type is based on its
 	// class name...
-
+	// note there is migration for this in DDBaseHelpers::xfer_migration
+	
 	protected static class
 	RCMSearchXFer
 		implements DistributedDatabaseTransferType
 	{
 	}
 
+	protected static class
+	RCMSearchXFerBiglyBT
+		implements DistributedDatabaseTransferType
+	{
+	}
+	
 	protected static class
 	ContentCache
 	{

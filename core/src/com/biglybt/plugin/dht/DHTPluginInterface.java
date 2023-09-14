@@ -100,12 +100,27 @@ DHTPluginInterface
 		InetSocketAddress				address,
 		byte							version );
 
+	/**
+	 **@deprecated use {@link #importContact(InetSocketAddress, byte, int)}
+	 */
+	
 	public DHTPluginContact
 	importContact(
 		InetSocketAddress				address,
 		byte							version,
 		boolean							is_cvs );
 
+	public default DHTPluginContact
+	importContact(
+		InetSocketAddress				address,
+		byte							version,
+		int								preferred_net )
+	{
+			// migration until deprecated version above is removed
+		
+		return( importContact( address, version, preferred_net==DHT.NW_AZ_CVS ));
+	}
+	
 	public DHTPluginContact
 	importContact(
 		Map<String,Object>				map );
