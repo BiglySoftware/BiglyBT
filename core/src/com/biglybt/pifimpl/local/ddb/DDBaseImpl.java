@@ -555,8 +555,7 @@ DDBaseImpl
 		}
 		*/
 
-		DHTPluginContact	contact = 
-				getDHT().importContact( address, version, preferred_dht==DistributedDatabase.DHT_CVS );
+		DHTPluginContact	contact = getDHT().importContact( address, version, preferred_dht );
 
 		if ( contact == null ){
 

@@ -83,9 +83,7 @@ DDBaseContactImpl
 	public int
 	getNetwork()
 	{
-		int cn = contact.getNetwork();
-		
-		return( cn == DHTPlugin.NW_AZ_CVS?DistributedDatabase.DHT_AZ_CVS:(cn == DHTPlugin.NW_BIGLYBT_MAIN?DistributedDatabase.DHT_AZ_BIGLYBT:DistributedDatabase.DHT_AZ_MAIN ));
+		return( contact.getNetwork());
 	}
 
 	@Override
