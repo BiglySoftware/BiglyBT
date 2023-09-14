@@ -584,6 +584,8 @@ AEPluginProxyHandler
 		int			port,
 		int			network )
 	{
+		waitForPlugins( plugin_init_max_wait );
+		
 		Map<String,Object>		options		= new HashMap<>();
 
 		options.put( "net", network );
