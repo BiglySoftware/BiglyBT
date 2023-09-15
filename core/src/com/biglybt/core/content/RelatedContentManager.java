@@ -79,6 +79,8 @@ RelatedContentManager
 
 	private static final boolean 	TRACE 			= false;
 
+	private static final boolean	USE_BIGLY_DHT_FOR_PUBLIC_LOOKUPS	= false;
+	
 	private static final int		MAX_HISTORY					= 16;
 	private static final int		MAX_TITLE_LENGTH			= 80;
 	private static final int		MAX_CONCURRENT_PUBLISH;
@@ -189,7 +191,9 @@ RelatedContentManager
 	private PluginInterface 				plugin_interface;
 	private TorrentAttribute 				ta_networks;
 	private TorrentAttribute 				ta_category;
+	
 	private DHTPluginBasicInterface			public_dht_plugin;
+	private DHTPluginBasicInterface			public_dht_plugin_bigly;
 
 	private volatile Map<Byte,DHTPluginBasicInterface>		i2p_dht_plugin_map = new HashMap<>();
 
@@ -412,9 +416,9 @@ RelatedContentManager
 
 							if ( dp.isEnabled()){
 								
-								DHTPluginBasicInterface bigly_dht = dp.getDHTPlugin( DHTPlugin.NW_BIGLYBT_MAIN );
+								public_dht_plugin_bigly = dp.getDHTPlugin( DHTPlugin.NW_BIGLYBT_MAIN );
 									
-								RelatedContentSearcher bigly_searcher = new RelatedContentSearcher( RelatedContentManager.this, bigly_transfer_type, bigly_dht, true );
+								RelatedContentSearcher bigly_searcher = new RelatedContentSearcher( RelatedContentManager.this, bigly_transfer_type, public_dht_plugin_bigly, true );
 								
 								searchers.add( bigly_searcher );
 							}
@@ -654,7 +658,8 @@ RelatedContentManager
 
 	private DHTPluginBasicInterface
 	selectDHT(
-		byte		networks )
+		byte		networks,
+		boolean		for_lookup )
 	{
 		DHTPluginBasicInterface	result = null;
 		
@@ -662,8 +667,14 @@ RelatedContentManager
 				(	( !prefer_i2p ) ||
 					( networks & NET_I2P ) == 0 )){
 
-			result = public_dht_plugin;
-
+			if ( for_lookup && USE_BIGLY_DHT_FOR_PUBLIC_LOOKUPS ){
+				
+				result = public_dht_plugin_bigly;
+				
+			}else{
+			
+				result = public_dht_plugin;
+			}
 		}else if ((networks & NET_I2P ) != 0 ){
 
 			synchronized( i2p_dht_plugin_map ){
@@ -1195,7 +1206,7 @@ RelatedContentManager
 
 		throws Exception
 	{
-		final DHTPluginBasicInterface dht_plugin = selectDHT( from_info.getNetworksInternal());
+		final DHTPluginBasicInterface dht_plugin = selectDHT( from_info.getNetworksInternal(), false );
 
 		// System.out.println( "publish: " + from_info.getString() + " -> " + to_info.getString() + ": " + dht_plugin );
 
@@ -1614,7 +1625,7 @@ RelatedContentManager
 				}
 			}
 
-			final DHTPluginBasicInterface dht_plugin = selectDHT( to_info.getNetworksInternal());
+			final DHTPluginBasicInterface dht_plugin = selectDHT( to_info.getNetworksInternal(), false );
 
 			if ( dht_plugin != null && sizes.size() > 0 ){
 
@@ -1944,7 +1955,7 @@ RelatedContentManager
 				existing_tags = Collections.emptySet();
 			}
 			
-			final DHTPluginBasicInterface dht_plugin = selectDHT( networks );
+			final DHTPluginBasicInterface dht_plugin = selectDHT( networks, true );
 
 			if ( dht_plugin == null ){
 
@@ -2456,7 +2467,7 @@ RelatedContentManager
 		try{
 			final int max_hits = 30;
 
-			DHTPluginBasicInterface dht_plugin = selectDHT( networks );
+			DHTPluginBasicInterface dht_plugin = selectDHT( networks, true );
 
 			if ( dht_plugin == null ){
 
@@ -3585,6 +3596,8 @@ RelatedContentManager
 			}
 		}
 		
+		DHTPluginBasicInterface target_dht_plugin = USE_BIGLY_DHT_FOR_PUBLIC_LOOKUPS?public_dht_plugin_bigly:null;
+		
 		for ( RelatedContentSearcher searcher: searchers ){
 
 			DHTPluginBasicInterface dht_plugin = searcher.getDHTPlugin();
@@ -3592,17 +3605,13 @@ RelatedContentManager
 			String net = dht_plugin.getAENetwork();
 
 			if ( net == target_net ){
-
-				return( searcher.searchRCM( search_parameters, observer ));
 				
-				/*
-				int n = dht_plugin.getDHTInterfaces()[0].getNetwork();
-				
-				if ( net == AENetworkClassifier.AT_PUBLIC && n == DHTPlugin.NW_BIGLYBT_MAIN ){
-				
-					return( searcher.searchRCM( search_parameters, observer ));
+				if ( 	target_net !=  AENetworkClassifier.AT_PUBLIC ||
+						target_dht_plugin == null || 
+						target_dht_plugin == dht_plugin ){
+					
+					return( searcher.searchRCM( search_parameters, observer ));		
 				}
-				*/
 			}
 		}
 
