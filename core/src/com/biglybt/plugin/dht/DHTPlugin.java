@@ -115,7 +115,7 @@ DHTPlugin
 	private static final String PLUGIN_RESOURCE_ID		= "ConfigView.section.plugins.dht";
 
 	private static final boolean	AZ_MAIN_DHT_ENABLE			= COConfigurationManager.getBooleanParameter( "dht.net.main_v4.enable", true );
-	private static final boolean	AZ_CVS_DHT_ENABLE			= COConfigurationManager.getBooleanParameter( "dht.net.cvs_v4.enable", true );
+	private static final boolean	AZ_CVS_DHT_ENABLE			= COConfigurationManager.getBooleanParameter( "dht.net.cvs_v4.enable", false );	// disabled, no longer of any use
 	private static final boolean	AZ_MAIN_DHT_V6_ENABLE		= COConfigurationManager.getBooleanParameter( "dht.net.main_v6.enable", true );
 	private static final boolean	BIGLYBT_MAIN_DHT_ENABLE		= COConfigurationManager.getBooleanParameter( "dht.net.biglybt_main_v4.enable", true );
 

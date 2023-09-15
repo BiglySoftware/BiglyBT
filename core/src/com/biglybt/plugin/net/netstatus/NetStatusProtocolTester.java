@@ -146,7 +146,7 @@ NetStatusProtocolTester
 					
 				}else{
 					
-					target_network = Constants.isCVSVersion()?DHT.NW_AZ_CVS:DHT.NW_AZ_MAIN;
+					target_network = DHT.NW_AZ_MAIN;
 				}
 
 				for (int i=0;i<dhts.length;i++){
