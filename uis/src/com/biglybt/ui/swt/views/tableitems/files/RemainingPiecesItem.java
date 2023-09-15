@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views.tableitems.files;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
@@ -52,23 +53,51 @@ public class RemainingPiecesItem
   public void refresh(TableCell cell) {
     DiskManagerFileInfo fileInfo 	= (DiskManagerFileInfo)cell.getDataSource();
 
-		//	 dm may be null if this is a skeleton file view
-
-    DiskManager			dm			= fileInfo==null?null:fileInfo.getDiskManager();
-
     int remaining = 0;
 
-    if( fileInfo != null && dm != null ) {
+    if( fileInfo != null ){
+    	
     	if ( fileInfo instanceof FilesView.FilesViewTreeNode && !((FilesView.FilesViewTreeNode)fileInfo).isLeaf()){
 	
     		remaining	= -1;
+    		
     	}else{
-    		int start = fileInfo.getFirstPieceNumber();
-    		int end = start + fileInfo.getNbPieces();
-    		DiskManagerPiece[] pieces = dm.getPieces();
-    		for( int i = start; i < end; i++ ) {
-    			if( !pieces[ i ].isDone() )  remaining++;
-    		}
+    		
+    		DiskManagerPiece[] pieces = null;
+    		
+    	    DiskManager	dm	= fileInfo.getDiskManager();
+
+    	    if ( dm != null ){
+    	    	
+    	    	pieces = dm.getPieces();
+    	    	
+    	    }else{
+    	    	
+    	    	DownloadManager manager = fileInfo.getDownloadManager();
+    	    
+    	    	if ( manager != null ){
+    	    		
+    	    		pieces = manager.getDiskManagerPiecesSnapshot();
+    	    	}
+    	    }
+    	    
+    	    if ( pieces == null ){
+    	    	
+    	    	remaining = -1;
+    	    	
+    	    }else{
+	    		int start = fileInfo.getFirstPieceNumber();
+	    		
+	    		int end = start + fileInfo.getNbPieces();
+	    		
+	    		for ( int i = start; i < end; i++ ){
+	    			
+	    			if ( !pieces[ i ].isDone() ){
+	    				
+	    				remaining++;
+	    			}
+	    		}
+    	    }
     	}
     }else{
 
