@@ -28,6 +28,7 @@ ExternalIPCheckerImpl
 	implements ExternalIPChecker
 {
 	private static final ExternalIPCheckerService[] services = {
+		new ExternalIPCheckerServiceIpify(),
 		new ExternalIPCheckerServiceDynDNS(),
 		// new ExternalIPCheckerServiceDiscoveryVIP(), dead? noticed 2019/06/02
 		new ExternalIPCheckerServiceNoLookup(),
