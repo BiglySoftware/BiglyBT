@@ -78,8 +78,6 @@ RelatedContentManager
 	public static final int RCM_SEARCH_PROPERTY_NETWORKS		= 50004;
 
 	private static final boolean 	TRACE 			= false;
-
-	private static final boolean	USE_BIGLY_DHT_FOR_PUBLIC_LOOKUPS	= false;
 	
 	private static final int		MAX_HISTORY					= 16;
 	private static final int		MAX_TITLE_LENGTH			= 80;
@@ -213,6 +211,8 @@ RelatedContentManager
 
 	private final boolean	enabled;
 
+	private boolean	use_bigly_dht_for_public_lookups;
+	
 	private int		max_search_level;
 	private int		max_results;
 
@@ -299,6 +299,7 @@ RelatedContentManager
 					"rcm.max_search_level",
 					"rcm.max_results",
 					"rcm.global.filter.active_only",
+					"rcm.use.bigly.dht",
 				},
 				new ParameterListener()
 				{
@@ -307,6 +308,8 @@ RelatedContentManager
 					parameterChanged(
 						String name )
 					{
+						use_bigly_dht_for_public_lookups = COConfigurationManager.getBooleanParameter( "rcm.use.bigly.dht", false );
+						
 						max_search_level 	= COConfigurationManager.getIntParameter( "rcm.max_search_level", 3 );
 						max_results		 	= COConfigurationManager.getIntParameter( "rcm.max_results", 500 );
 						
@@ -610,6 +613,19 @@ RelatedContentManager
 	{
 		return( enabled );
 	}
+	
+	public boolean
+	getUseBiglyDHTForPublicLookups()
+	{
+		return( use_bigly_dht_for_public_lookups );
+	}
+
+	public void
+	setUseBiglyDHTForPublicLookups(
+		boolean		b )
+	{
+		COConfigurationManager.setParameter( "rcm.use.bigly.dht", b );
+	}
 
 	public int
 	getMaxSearchLevel()
@@ -667,7 +683,7 @@ RelatedContentManager
 				(	( !prefer_i2p ) ||
 					( networks & NET_I2P ) == 0 )){
 
-			if ( for_lookup && USE_BIGLY_DHT_FOR_PUBLIC_LOOKUPS ){
+			if ( for_lookup && use_bigly_dht_for_public_lookups ){
 				
 				result = public_dht_plugin_bigly;
 				
@@ -3596,7 +3612,7 @@ RelatedContentManager
 			}
 		}
 		
-		DHTPluginBasicInterface target_dht_plugin = USE_BIGLY_DHT_FOR_PUBLIC_LOOKUPS?public_dht_plugin_bigly:null;
+		DHTPluginBasicInterface target_dht_plugin = use_bigly_dht_for_public_lookups?public_dht_plugin_bigly:null;
 		
 		for ( RelatedContentSearcher searcher: searchers ){
 
