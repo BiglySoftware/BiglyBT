@@ -40,7 +40,6 @@ import com.biglybt.core.util.bloom.BloomFilterFactory;
 import com.biglybt.pif.ddb.*;
 import com.biglybt.pif.utils.search.*;
 import com.biglybt.pifimpl.local.ddb.DDBaseImpl;
-import com.biglybt.plugin.dht.DHTPlugin;
 import com.biglybt.plugin.dht.DHTPluginBasicInterface;
 import com.biglybt.plugin.dht.DHTPluginContact;
 import com.biglybt.plugin.dht.DHTPluginInterface.DHTInterface;
@@ -1689,26 +1688,6 @@ RelatedContentSearcher
 				String	term = MapUtils.getMapString( request, "t", null );
 
 				term = fixupTerm( term );
-
-				String	network = MapUtils.getMapString( request, "n", "" );
-
-				int search_net_only = -1;
-				
-				if ( !network.isEmpty()){
-					
-					if ( network.equals( "c" )){
-						
-						search_net_only = DHTPlugin.NW_AZ_CVS; 
-					}else{
-						
-						try{
-							search_net_only = Integer.parseInt( network );
-							
-						}catch( Throwable e ){
-							
-						}
-					}
-				}
 				
 				int	min_seeds 		= MapUtils.importInt( request, "s", SEARCH_MIN_SEEDS_DEFAULT );
 				int	min_leechers 	= MapUtils.importInt( request, "l", SEARCH_MIN_LEECHERS_DEFAULT );
