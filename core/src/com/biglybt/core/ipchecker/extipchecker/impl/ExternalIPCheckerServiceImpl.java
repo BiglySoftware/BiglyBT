@@ -20,10 +20,12 @@
 
 package com.biglybt.core.ipchecker.extipchecker.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Properties;
 import java.util.Vector;
 
 import com.biglybt.core.internat.MessageText;
@@ -34,6 +36,9 @@ import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.AEThread;
 import com.biglybt.core.util.Debug;
+import com.biglybt.pif.clientid.ClientIDException;
+import com.biglybt.pif.clientid.ClientIDGenerator;
+import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
 
 public abstract class
 ExternalIPCheckerServiceImpl
@@ -162,6 +167,21 @@ ExternalIPCheckerServiceImpl
 			InputStream			is			= null;
 
 			try{
+				Properties	http_properties = new Properties();
+
+				http_properties.put( ClientIDGenerator.PR_URL, url );
+
+				try{
+					ClientIDManagerImpl.getSingleton().generateHTTPProperties( null, http_properties );
+
+				}catch( ClientIDException e ){
+
+					throw( new IOException( e.getMessage()));
+				}
+
+				url = (URL)http_properties.get( ClientIDGenerator.PR_URL );
+
+				
 				connection = (HttpURLConnection)url.openConnection();
 
 				int	response = connection.getResponseCode();

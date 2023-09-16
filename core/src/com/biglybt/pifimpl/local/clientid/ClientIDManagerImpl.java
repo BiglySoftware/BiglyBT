@@ -532,8 +532,12 @@ ClientIDManagerImpl
 				int	p1 = get.indexOf( "?cid=" );
 				int	p2 = get.indexOf( "&", p1 );
 
-				if( p2 == -1 ){
+				boolean url_has_no_args = false;
+				
+				if ( p2 == -1 ){
 
+					url_has_no_args = true;
+					
 					p2 = get.indexOf( ' ', p1 );
 				}
 
@@ -584,19 +588,16 @@ ClientIDManagerImpl
 					}
 				}
 
-					// code above makes a bit of a mess of things when the original URL
-					// had no parameters (e.g. http://a.b.c/) - tidy it up
-					// note we currently turn http://a.b.c/? into http://a.b.c/ 
-				
-				String get_lhs = get.substring( 0, p1+1 ).trim();
-				String get_rhs = get.substring( p2+1 ).trim();
-				
-				if ( get_lhs.endsWith( "?" )){
+				if ( url_has_no_args ){
 					
-					get_lhs = get_lhs.substring( 0, get_lhs.length()-1 );
-				}
+					get = get.substring( 0, p1 ) + get.substring( p2 );
+					
+				}else{
 				
-				get = get_lhs + " " + get_rhs;
+						// include the "?" from cid and drop the "&" from the remainder
+					
+					get = get.substring( 0, p1+1 ) + get.substring( p2+1 );
+				}
 
 				lines_in[0] = get;
 
