@@ -584,7 +584,19 @@ ClientIDManagerImpl
 					}
 				}
 
-				get = get.substring( 0, p1+1 ) + get.substring( p2+1 );
+					// code above makes a bit of a mess of things when the original URL
+					// had no parameters (e.g. http://a.b.c/) - tidy it up
+					// note we currently turn http://a.b.c/? into http://a.b.c/ 
+				
+				String get_lhs = get.substring( 0, p1+1 ).trim();
+				String get_rhs = get.substring( p2+1 ).trim();
+				
+				if ( get_lhs.endsWith( "?" )){
+					
+					get_lhs = get_lhs.substring( 0, get_lhs.length()-1 );
+				}
+				
+				get = get_lhs + " " + get_rhs;
 
 				lines_in[0] = get;
 
