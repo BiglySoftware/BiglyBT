@@ -615,7 +615,9 @@ PluginInitializer
     	}
     }
 
+		/* Android: Disable bootstrapping azupdater and azupnpav
     UpdaterUtils.checkBootstrapPlugins();
+		 */
   }
 
   protected void
