@@ -32,13 +32,13 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.internat.StringSupplier;
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPCheckerService;
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPCheckerServiceListener;
-import com.biglybt.core.util.AEMonitor;
-import com.biglybt.core.util.AESemaphore;
-import com.biglybt.core.util.AEThread;
-import com.biglybt.core.util.Debug;
+import com.biglybt.core.security.SESecurityManager;
+import com.biglybt.core.util.*;
 import com.biglybt.pif.clientid.ClientIDException;
 import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
+
+import javax.net.ssl.*;
 
 public abstract class
 ExternalIPCheckerServiceImpl
@@ -183,6 +183,22 @@ ExternalIPCheckerServiceImpl
 
 				
 				connection = (HttpURLConnection)url.openConnection();
+
+				// Android: Old Android doesn't trust newly popular site certs, so let's allow
+				if (connection instanceof HttpsURLConnection){
+
+					HttpsURLConnection ssl_con = (HttpsURLConnection)connection;
+
+					TrustManager[] tms_delegate = SESecurityManager.getAllTrustingTrustManager();
+
+					SSLContext sc = SSLContext.getInstance("SSL");
+
+					sc.init( null, tms_delegate, RandomUtils.SECURE_RANDOM );
+
+					SSLSocketFactory factory = sc.getSocketFactory();
+
+					ssl_con.setSSLSocketFactory(factory);
+				}
 
 				int	response = connection.getResponseCode();
 
