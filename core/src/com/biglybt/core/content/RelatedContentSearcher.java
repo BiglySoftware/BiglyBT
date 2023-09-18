@@ -1879,21 +1879,28 @@ RelatedContentSearcher
 	getDHTWords(
 		DownloadInfo	info )
 	{
-		String title = info.getTitle();
-
-		title = title.toLowerCase( Locale.US );
-
-		char[]	chars = title.toCharArray();
-
-		for ( int i=0;i<chars.length;i++){
-
-			if ( !Character.isLetterOrDigit( chars[i])){
-
-				chars[i] = ' ';
+		String[] words = info.getTitleWordCache();
+		
+		if ( words == null ){
+			
+			String title = info.getTitle();
+				
+			title = title.toLowerCase( Locale.US );
+	
+			char[]	chars = title.toCharArray();
+	
+			for ( int i=0;i<chars.length;i++){
+	
+				if ( !Character.isLetterOrDigit( chars[i])){
+	
+					chars[i] = ' ';
+				}
 			}
+	
+			words = new String( chars ).split( " " );
+			
+			info.setTitleWordCache( words );
 		}
-
-		String[] words = new String( chars ).split( " " );
 
 		List<String>	result = new ArrayList<>(words.length);
 

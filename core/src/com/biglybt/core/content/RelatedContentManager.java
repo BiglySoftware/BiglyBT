@@ -23,6 +23,7 @@ package com.biglybt.core.content;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.*;
@@ -492,7 +493,7 @@ RelatedContentManager
 
 												if ( tick_count % CONFIG_SAVE_CHECK_TICKS == 0 ){
 
-													saveRelatedContent( tick_count );
+													saveRelatedContent( tick_count, false );
 												}
 											}
 										}
@@ -514,7 +515,7 @@ RelatedContentManager
 				public void
 				closedownInitiated()
 				{
-					saveRelatedContent( 0 );
+					saveRelatedContent( 0, true );
 				}
 
 				@Override
@@ -3882,7 +3883,8 @@ RelatedContentManager
 
 	protected void
 	saveRelatedContent(
-		int	tick_count )
+		int			tick_count,
+		boolean		closing )
 	{
 		synchronized( rcm_lock ){
 
@@ -4042,9 +4044,12 @@ RelatedContentManager
 					deleteRelatedContent();
 				}
 
-				for ( RelatedContentSearcher searcher: searchers ){
-
-					searcher.updateKeyBloom( cc );
+				if ( !closing ){
+					
+					for ( RelatedContentSearcher searcher: searchers ){
+	
+						searcher.updateKeyBloom( cc );
+					}
 				}
 			}
 		}
@@ -5152,6 +5157,8 @@ RelatedContentManager
 
 		private ContentCache	cc;
 
+		private Reference<String[]> title_word_cache = null;
+		
 		protected
 		DownloadInfo(
 			int			_version,
@@ -5225,6 +5232,26 @@ RelatedContentManager
 			}
 		}
 
+		protected String[]
+		getTitleWordCache()
+		{
+			Reference<String[]> ref = title_word_cache;
+			
+			if ( ref != null ){
+				
+				return( ref.get());
+			}
+			
+			return( null );
+		}
+		
+		protected void
+		setTitleWordCache(
+			String[]		words )
+		{
+			title_word_cache = new WeakReference<>( words );
+		}
+		
 		protected boolean
 		addInfo(
 			DownloadInfo		info )
