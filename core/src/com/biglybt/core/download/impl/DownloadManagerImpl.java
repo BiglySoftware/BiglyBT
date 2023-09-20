@@ -1339,7 +1339,7 @@ DownloadManagerImpl
 							throw (new NoStackException(
 									DownloadManager.ET_FILE_MISSING,
 									MessageText.getString("DownloadManager.error.datamissing")
-											+ ": " + Debug.secretFileName(linked_target.toString())));
+											+ ": " + linked_target));
 						}
 				 	}
 				 }
