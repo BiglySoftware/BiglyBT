@@ -290,7 +290,7 @@ public class ImageRepository
 			// Mac OS X - Do not mix AWT with SWT (possible workaround: use IPC/Cocoa)
 
 			String key;
-			if (FileUtil.isDirectoryWithTimeout( file )) {
+			if (FileUtil.isDirectoryWithTimeout( file, 250 )) {
 				if (noAWT) {
 					if (Constants.isWindows || Constants.isOSX) {
 						return getIconFromExtension(file, "-folder", bBig, false);

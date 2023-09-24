@@ -75,6 +75,11 @@ TOTorrentImpl
 	protected static final String TK_V2_PIECE_LAYERS	= "piece layers";
 	protected static final String TK_V2_PIECES_ROOT		= "pieces root";
 	
+	//public static final String	TK_INFO_BIGLY_FLAGS		= "bigly_flags";
+	//public static final long	TK_INFO_BIGLY_FLAGS_BIGLY_PRIVATE		= 0x0001L;
+	
+	//private static final String TK_INFO_BIGLY_PRIVATE	= "bigly_private";
+
 	private static CopyOnWriteList<TOTorrentListener>		global_listeners = new CopyOnWriteList<>();
 	
 	public static void
@@ -925,7 +930,7 @@ TOTorrentImpl
 
 	protected void
 	setHashFromInfo(
-		Map		info )
+		Map<String,Object>		info )
 
 		throws TOTorrentException
 	{
@@ -937,9 +942,19 @@ TOTorrentImpl
 					Debug.out( "Torrent type unknown" );
 				}
 				
-				byte[] encoded = BEncoder.encode(info);
-							
+				/*
+				Long flags = (Long)additional_info_properties.get( TK_INFO_BIGLY_FLAGS );
 				
+				if ( flags != null && (( flags & TK_INFO_BIGLY_FLAGS_BIGLY_PRIVATE ) != 0 )){
+					
+					info = new HashMap<>( info );
+					
+					info.put( TK_INFO_BIGLY_PRIVATE, 1L );
+				}
+				*/
+				
+				byte[] encoded = BEncoder.encode(info);
+											
 				if ( torrent_type == TT_V1_V2 ){
 					
 					Map private_props = getAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES );

@@ -3619,10 +3619,11 @@ public class FileUtil {
 	runFileOpWithTimeout(
 		File					file,
 		FileOpWithTimeout<T>	fo,
-		T						def )
+		T						def,
+		long					strict_timeout )
 	{
 		try{
-			return( runFileOpWithTimeoutEx( file, fo, def, null ));
+			return( runFileOpWithTimeoutEx( file, fo, def, null, strict_timeout ));
 						
 		}catch( Throwable e ){
 			
@@ -3639,7 +3640,7 @@ public class FileUtil {
 		throws IOException
 	{
 		try{
-			return( runFileOpWithTimeoutEx( file, fo, null, def_error ));
+			return( runFileOpWithTimeoutEx( file, fo, null, def_error, -1 ));
 						
 		}catch( IOException e ){
 			
@@ -3651,12 +3652,15 @@ public class FileUtil {
 		}
 	}
 	
+	private static AsyncDispatcher fot_dispatcher = new AsyncDispatcher( "FOT" );
+	
 	private static <T> T
 	runFileOpWithTimeoutEx(
 		File					file,
 		FileOpWithTimeout<T>	fo,
 		T						def_result,
-		IOException				def_error )
+		IOException				def_error,
+		long					strict_timeout )
 	
 		throws IOException
 	{		
@@ -3680,140 +3684,196 @@ public class FileUtil {
 			}
 		}
 		
-		long	start = SystemTime.getMonotonousTime();
-
-		try{			
-			return( fo.run());
-			
-		}finally{
-			
-			long	elapsed = SystemTime.getMonotonousTime() - start;
-			
-			if ( elapsed > 2500 ){
+		FileOpWithTimeout<T> delegate = ()->{	
+		
+			long	start = SystemTime.getMonotonousTime();
+	
+			try{			
+				return( fo.run());
 				
-				Path root_path = file.toPath().getRoot();
+			}finally{
 				
-				synchronized( bad_roots ){
+				long	elapsed = SystemTime.getMonotonousTime() - start;
+				
+				if ( elapsed > 2500 ){
 					
-					if ( !bad_roots.containsKey(root_path)){
-				
-						if ( bad_roots.size() > 1024 ){
-							
-							Debug.out( "Bad roots size limit exceeded for " + root_path );
-							
-						}else{
-							
-							bad_roots.put(root_path, new int[]{0});
-							
-							if ( bad_roots.size() == 1 ){
+					Path root_path = file.toPath().getRoot();
+					
+					synchronized( bad_roots ){
+						
+						if ( !bad_roots.containsKey(root_path)){
+					
+							if ( bad_roots.size() > 1024 ){
 								
-								AEThread2.createAndStartDaemon( "BadRootChecker", ()->{
+								Debug.out( "Bad roots size limit exceeded for " + root_path );
+								
+							}else{
+								
+								bad_roots.put(root_path, new int[]{0});
+								
+								if ( bad_roots.size() == 1 ){
 									
-									while( true ){								
-										try{
-											Thread.sleep( 30*1000 );
-											
-										}catch( Throwable e ){
-											
-										}
+									AEThread2.createAndStartDaemon( "BadRootChecker", ()->{
 										
-										Map<Path, int[]> to_check;
-										
-										synchronized( bad_roots ){
-											
-											to_check = new HashMap<>( bad_roots );										
-										}
-										
-										for ( Map.Entry<Path,int[]> entry: to_check.entrySet()){
-											
+										while( true ){								
 											try{
-												long check_start = SystemTime.getMonotonousTime();
+												Thread.sleep( 30*1000 );
 												
-												int limit = 250;
-												
-												Path	path	= entry.getKey();
-												int[]	oks		= entry.getValue();
-														
-												File 	check_file	= path.toFile();
-outer:
-												for ( int i=0;; i++){
-													
-													switch(i){
-														case 0:{
-															check_file.getCanonicalPath();
-															break;
-														}
-														case 1:{
-															check_file.exists();
-															break;
-														}
-														case 2:{
-															check_file.length();
-															break;
-														}
-														case 3:{
-															check_file.isDirectory();
-															break;
-														}
-														case 4:{
-															File random_file = new File( check_file, "Test" + RandomUtils.nextAbsoluteLong() + ".dat" );
-
-															if ( random_file.isFile()){
-															
-																Thread.sleep(limit);
-															}
-															
-															break;
-														}
-														case 5:{
-															check_file.listFiles();
-															break;
-														}
-														default:{
-															break outer;
-														}
-													}
-													
-													if ( SystemTime.getMonotonousTime() - check_start >= limit ){
-														
-														break;
-													}
-												}												
-												
-												if ( SystemTime.getMonotonousTime() - check_start < limit ){
-													
-													oks[0]++;
-													
-													if ( oks[0] > 2 ){
-														
-														Debug.out( "Root path " + path + " appears to be responding in a timely manner, enabling" );
-														
-														synchronized( bad_roots ){
-															
-															bad_roots.remove( path );
-															
-															if ( bad_roots.isEmpty()){
-																
-																return;
-															}
-														}
-													}
-												}else{
-													
-													oks[0] = 0;
-												}
 											}catch( Throwable e ){
 												
 											}
+											
+											Map<Path, int[]> to_check;
+											
+											synchronized( bad_roots ){
+												
+												to_check = new HashMap<>( bad_roots );										
+											}
+											
+											for ( Map.Entry<Path,int[]> entry: to_check.entrySet()){
+												
+												try{
+													long check_start = SystemTime.getMonotonousTime();
+													
+													int limit = 250;
+													
+													Path	path	= entry.getKey();
+													int[]	oks		= entry.getValue();
+															
+													File 	check_file	= path.toFile();
+	outer:
+													for ( int i=0;; i++){
+														
+														switch(i){
+															case 0:{
+																check_file.getCanonicalPath();
+																break;
+															}
+															case 1:{
+																check_file.exists();
+																break;
+															}
+															case 2:{
+																check_file.length();
+																break;
+															}
+															case 3:{
+																check_file.isDirectory();
+																break;
+															}
+															case 4:{
+																File random_file = new File( check_file, "Test" + RandomUtils.nextAbsoluteLong() + ".dat" );
+	
+																if ( random_file.isFile()){
+																
+																	Thread.sleep(limit);
+																}
+																
+																break;
+															}
+															case 5:{
+																check_file.listFiles();
+																break;
+															}
+															default:{
+																break outer;
+															}
+														}
+														
+														if ( SystemTime.getMonotonousTime() - check_start >= limit ){
+															
+															break;
+														}
+													}												
+													
+													if ( SystemTime.getMonotonousTime() - check_start < limit ){
+														
+														oks[0]++;
+														
+														if ( oks[0] > 2 ){
+															
+															Debug.out( "Root path " + path + " appears to be responding in a timely manner, enabling" );
+															
+															synchronized( bad_roots ){
+																
+																bad_roots.remove( path );
+																
+																if ( bad_roots.isEmpty()){
+																	
+																	return;
+																}
+															}
+														}
+													}else{
+														
+														oks[0] = 0;
+													}
+												}catch( Throwable e ){
+													
+												}
+											}
 										}
-									}
-								});
+									});
+								}
+							
+								Debug.out( "Root path " + root_path + " isn't responding in a timely manner, disabling" );
 							}
-						
-							Debug.out( "Root path " + root_path + " isn't responding in a timely manner, disabling" );
 						}
 					}
 				}
+			}
+		};
+		
+		if ( strict_timeout == -1 ){
+		
+			return( delegate.run());
+			
+		}else{
+			
+			AESemaphore sem = new AESemaphore( "FOT" );
+			
+			Object[] result = { null };
+			
+			fot_dispatcher.dispatch(()->{
+				
+				try{
+					
+					T r = delegate.run();
+					
+					synchronized( result ){
+						
+						result[0] = r;
+					}
+				}catch( IOException e ){
+					
+					synchronized( result ){
+					
+						result[0] = e;
+					}
+					
+				}finally{
+				
+					sem.release();
+				}
+			});
+			
+			if ( sem.reserve( strict_timeout )){
+				
+				synchronized( result ){
+					
+					Object r = result[0];
+					
+					if ( r instanceof IOException ){
+						
+						throw((IOException)r);
+					}else{
+						
+						return((T)r);
+					}
+				}
+			}else{
+				
+				return( def_result );
 			}
 		}
 	}
@@ -3824,7 +3884,7 @@ outer:
 	{
 		return(runFileOpWithTimeout(file,()->{
 			return( file.length());
-		},0L));
+		},0L, -1 ));
 	}
 	
 	public static boolean
@@ -3833,16 +3893,24 @@ outer:
 	{
 		return(runFileOpWithTimeout(file,()->{
 			return( file.canRead());
-		},false));
+		},false, -1 ));
 	}
 
 	public static boolean
 	isDirectoryWithTimeout(
 		File		file )
 	{
+		return( isDirectoryWithTimeout( file, -1 ));
+	}
+	
+	public static boolean
+	isDirectoryWithTimeout(
+		File		file,
+		long		strict_timeout )
+	{
 		return(runFileOpWithTimeout(file,()->{
 			return( file.isDirectory());
-		},false));	
+		},false, strict_timeout ));	
 	}
 	
 	public static boolean
@@ -3851,7 +3919,7 @@ outer:
 	{
 		return(runFileOpWithTimeout(file,()->{
 			return( file.exists());
-		},false));	
+		},false, -1 ));	
 	}
 	
 	public static String
