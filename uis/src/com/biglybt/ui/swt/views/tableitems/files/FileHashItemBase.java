@@ -202,7 +202,7 @@ FileHashItemBase
 
 		File f = file.getFile( true );
 
-		if ( FileUtil.lengthWithTimeout(f) != file.getLength() || !FileUtil.canReadWithTimeout( f )){
+		if ( FileUtil.lengthWithTimeout( f, 250 ) != file.getLength() || !FileUtil.canReadWithTimeout( f, 250 )){
 
 			return( false );
 		}

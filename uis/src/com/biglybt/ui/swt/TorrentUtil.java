@@ -1714,7 +1714,7 @@ public class TorrentUtil
 
 				File file = dm.getSaveLocation();
 
-				if ( !file.exists()){
+				if ( !FileUtil.existsWithTimeout( file, 250 )){
 					
 					can_share_pers = false;
 					
@@ -2023,7 +2023,7 @@ public class TorrentUtil
 			
 			for (; i < dms.length; i++) {
 				File target = destinations[i];
-				if (target.exists()) {
+				if ( target.exists()){
 					/*
 					MessageBox mb = new MessageBox(parentShell, SWT.ICON_QUESTION
 							| SWT.YES | SWT.NO);
@@ -4728,7 +4728,7 @@ public class TorrentUtil
 						if (!canRunFileInfo
 								&& fileInfo.getAccessMode() == DiskManagerFileInfo.READ
 								&& fileInfo.getDownloaded() == fileInfo.getLength()
-								&& FileUtil.existsWithTimeout( fileInfo.getFile(true))) {
+								&& FileUtil.existsWithTimeout( fileInfo.getFile(true), 250 )) {
 							canRunFileInfo = true;
 						}
 					}

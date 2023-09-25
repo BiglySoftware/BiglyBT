@@ -3882,18 +3882,34 @@ public class FileUtil {
 	lengthWithTimeout(
 		File		file )
 	{
+		return( lengthWithTimeout(file, -1 ));
+	}
+	
+	public static long
+	lengthWithTimeout(
+		File		file,
+		long		strict_timeout )
+	{
 		return(runFileOpWithTimeout(file,()->{
 			return( file.length());
-		},0L, -1 ));
+		},0L, strict_timeout ));
 	}
 	
 	public static boolean
 	canReadWithTimeout(
 		File		file )
 	{
+		return( canReadWithTimeout(file, -1 ));
+	}
+	
+	public static boolean
+	canReadWithTimeout(
+		File		file,
+		long		strict_timeout )
+	{
 		return(runFileOpWithTimeout(file,()->{
 			return( file.canRead());
-		},false, -1 ));
+		},false, strict_timeout ));
 	}
 
 	public static boolean
@@ -3917,9 +3933,17 @@ public class FileUtil {
 	existsWithTimeout(
 		File		file )
 	{
+		return( existsWithTimeout( file, -1 ));
+	}
+	
+	public static boolean
+	existsWithTimeout(
+		File		file,
+		long		strict_timeout )
+	{
 		return(runFileOpWithTimeout(file,()->{
 			return( file.exists());
-		},false, -1 ));	
+		},false, strict_timeout ));	
 	}
 	
 	public static String
