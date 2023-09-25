@@ -195,130 +195,180 @@ AEThreadMonitor
 		MovingAverage 	high_usage_history 	= AverageFactory.MovingAverage(2*60*1000/time_available);
 		boolean			huh_mon_active		= false;
 
-		while( true ){
-
-			long	start = System.currentTimeMillis();
-
-			try{
-
-				Thread.sleep(time_available);
-
-			}catch( Throwable e ){
-
-				log.log(e);
-			}
-
-			long	end = System.currentTimeMillis();
-
-			long	elapsed = end - start;
-
-			long[]	ids 	= bean.getAllThreadIds();
-
-			long[]	diffs 	= new long[ids.length];
-
-			long	total_diffs 	= 0;
-			long	biggest_diff 	= 0;
-			int		biggest_index	= 0;
-
-			Map<Long,Long>	new_times = new HashMap<>();
-
-			for (int i=0;i<ids.length;i++){
-
-				long	id = ids[i];
-
-				long	time = getThreadCpuTime( bean, id )/1000000;	// nanos -> millis
-
-				Long	old_time = last_times.get( id );
-
-				if ( old_time != null ){
-
-					long	diff = time - old_time.longValue();
-
-					if ( diff > biggest_diff ){
-
-						biggest_diff	= diff;
-
-						biggest_index	= i;
-					}
-
-					diffs[i] = diff;
-
-					total_diffs += diff;
-				}
-
-				new_times.put( id, time );
-			}
-
-			ThreadInfo	info = bean.getThreadInfo( ids[biggest_index ]);
-
-			String	thread_name = info==null?"<dead>":info.getThreadName();
-
-			int	percent = (int)( 100*biggest_diff / time_available );
-
-			Runtime rt = Runtime.getRuntime();
-
-			String line = "cpu: " + thread_name + "=" + percent + "%, mem: max=" + DisplayFormatters.formatByteCountToKiBEtc( rt.maxMemory())+", alloc=" + DisplayFormatters.formatByteCountToKiBEtc(rt.totalMemory()) +", free=" + DisplayFormatters.formatByteCountToKiBEtc(rt.freeMemory());
+		if ( false ){
 			
-			synchronized( memory_history ){
+			while( true ){
 				
-				memory_history.addLast( AEDiagnosticsLogger.getTimestamp() + ": " + line );
-				
-				if ( memory_history.size() > 75 ){
+				try{
+	
+					Thread.sleep(2);
+	
+				}catch( Throwable e ){
+	
+					log.log(e);
+				}
+	
+				long[]	ids 	= bean.getAllThreadIds();
+	
+				for (int i=0;i<ids.length;i++){
+	
+					long	id = ids[i];
+	
+					ThreadInfo	info = bean.getThreadInfo( id, 255 );
 					
-					memory_history.removeFirst();
-				}
-			}
-
-			log.log( "Thread state: elapsed=" + elapsed + ",cpu=" + total_diffs + ",max=" + thread_name + "(" + biggest_diff + "/" + percent + "%),mem:max=" + (rt.maxMemory()/1024)+",tot=" + (rt.totalMemory()/1024) +",free=" + (rt.freeMemory()/1024));
-
-			if ( huh_mon_active ){
-
-					// ESET version 8 seems to be triggering high CPU in this thread
-
-				boolean interesting = percent > 5 && thread_name.equals( "PRUDPPacketHandler:sender" );
-
-				double temp = high_usage_history.update( interesting?1:0 );
-
-				if ( temp >= 0.5 ){
-
-					Logger.log(
-						new LogAlert(
-							false,
-							LogAlert.AT_WARNING,
-							"High CPU usage detected in networking code - see <a href=\"" + Wiki.HIGH_CPU_USAGE + "\">The Wiki</a> for possible solutions" ));
-
-				}
-
-			}else{
-
-				huh_mon_active = SystemTime.getMonotonousTime() - start_mono > 2*60*1000;
-			}
-
-			if ( biggest_diff > time_available/4 ){
-
-				info = bean.getThreadInfo( ids[biggest_index ], 255 );
-
-				if ( info == null ){
-
-					log.log( "    no info for max thread" );
-
-				}else{
-
-					StackTraceElement[] elts = info.getStackTrace();
-					StringBuilder str = new StringBuilder(elts.length * 20);
-
-					str.append("    ");
-					for (int i=0;i<elts.length;i++){
-						if(i != 0)
-							str.append(", ");
-						str.append(elts[i]);
+					String	thread_name = info==null?"<dead>":info.getThreadName();
+					
+					if ( thread_name.equals( "mldht plugin" )){
+						
+						StackTraceElement[] elts = info.getStackTrace();
+						
+						StringBuilder str = new StringBuilder(elts.length * 20);
+	
+						str.append("    ");
+						for (int j=0;j<elts.length;j++){
+							if(j != 0)
+								str.append(", ");
+							str.append(elts[j]);
+						}
+	
+						String s = str.toString();
+						
+						if ( !s.contains( "Unsafe.park" ) && !s.contains( ".awaitMatch" )){
+						
+							log.log( s );
+						}
+						
+						break;
 					}
-
-					log.log( str.toString() );
 				}
 			}
-
-			last_times	= new_times;
+		}else{
+		
+			while( true ){
+	
+				long	start = System.currentTimeMillis();
+	
+				try{
+	
+					Thread.sleep(time_available);
+	
+				}catch( Throwable e ){
+	
+					log.log(e);
+				}
+	
+				long	end = System.currentTimeMillis();
+	
+				long	elapsed = end - start;
+	
+				long[]	ids 	= bean.getAllThreadIds();
+	
+				long[]	diffs 	= new long[ids.length];
+	
+				long	total_diffs 	= 0;
+				long	biggest_diff 	= 0;
+				int		biggest_index	= 0;
+	
+				Map<Long,Long>	new_times = new HashMap<>();
+	
+				for (int i=0;i<ids.length;i++){
+	
+					long	id = ids[i];
+	
+					long	time = getThreadCpuTime( bean, id )/1000000;	// nanos -> millis
+	
+					Long	old_time = last_times.get( id );
+	
+					if ( old_time != null ){
+	
+						long	diff = time - old_time.longValue();
+	
+						if ( diff > biggest_diff ){
+	
+							biggest_diff	= diff;
+	
+							biggest_index	= i;
+						}
+	
+						diffs[i] = diff;
+	
+						total_diffs += diff;
+					}
+	
+					new_times.put( id, time );
+				}
+	
+				ThreadInfo	info = bean.getThreadInfo( ids[biggest_index ]);
+	
+				String	thread_name = info==null?"<dead>":info.getThreadName();
+	
+				int	percent = (int)( 100*biggest_diff / time_available );
+	
+				Runtime rt = Runtime.getRuntime();
+	
+				String line = "cpu: " + thread_name + "=" + percent + "%, mem: max=" + DisplayFormatters.formatByteCountToKiBEtc( rt.maxMemory())+", alloc=" + DisplayFormatters.formatByteCountToKiBEtc(rt.totalMemory()) +", free=" + DisplayFormatters.formatByteCountToKiBEtc(rt.freeMemory());
+				
+				synchronized( memory_history ){
+					
+					memory_history.addLast( AEDiagnosticsLogger.getTimestamp() + ": " + line );
+					
+					if ( memory_history.size() > 75 ){
+						
+						memory_history.removeFirst();
+					}
+				}
+	
+				log.log( "Thread state: elapsed=" + elapsed + ",cpu=" + total_diffs + ",max=" + thread_name + "(" + biggest_diff + "/" + percent + "%),mem:max=" + (rt.maxMemory()/1024)+",tot=" + (rt.totalMemory()/1024) +",free=" + (rt.freeMemory()/1024));
+	
+				if ( huh_mon_active ){
+	
+						// ESET version 8 seems to be triggering high CPU in this thread
+	
+					boolean interesting = percent > 5 && thread_name.equals( "PRUDPPacketHandler:sender" );
+	
+					double temp = high_usage_history.update( interesting?1:0 );
+	
+					if ( temp >= 0.5 ){
+	
+						Logger.log(
+							new LogAlert(
+								false,
+								LogAlert.AT_WARNING,
+								"High CPU usage detected in networking code - see <a href=\"" + Wiki.HIGH_CPU_USAGE + "\">The Wiki</a> for possible solutions" ));
+	
+					}
+	
+				}else{
+	
+					huh_mon_active = SystemTime.getMonotonousTime() - start_mono > 2*60*1000;
+				}
+	
+				if ( biggest_diff > time_available/4 ){
+	
+					info = bean.getThreadInfo( ids[biggest_index ], 255 );
+	
+					if ( info == null ){
+	
+						log.log( "    no info for max thread" );
+	
+					}else{
+	
+						StackTraceElement[] elts = info.getStackTrace();
+						StringBuilder str = new StringBuilder(elts.length * 20);
+	
+						str.append("    ");
+						for (int i=0;i<elts.length;i++){
+							if(i != 0)
+								str.append(", ");
+							str.append(elts[i]);
+						}
+	
+						log.log( str.toString() );
+					}
+				}
+	
+				last_times	= new_times;
+			}
 		}
 	}
 
