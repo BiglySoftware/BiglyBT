@@ -40,7 +40,8 @@ NetUtils
 
 	private static long	last_ni_check	= -1;
 
-	private static volatile List<NetworkInterface>		current_interfaces = new ArrayList<>();
+	private static volatile List<NetworkInterface>		current_all_interfaces 	= new ArrayList<>();
+	private static volatile List<NetworkInterface>		current_up_interfaces 	= new ArrayList<>();
 
 	private static boolean						first_check	= true;
 	private static boolean						check_in_progress;
@@ -53,6 +54,15 @@ NetUtils
 
 	public static List<NetworkInterface>
 	getNetworkInterfaces()
+
+		throws SocketException
+	{
+		return( getNetworkInterfaces( false ));
+	}
+	
+	public static List<NetworkInterface>
+	getNetworkInterfaces(
+		boolean	up_only )
 
 		throws SocketException
 	{
@@ -90,7 +100,8 @@ NetUtils
 
 						throws SocketException
 					{
-						List<NetworkInterface> result = new ArrayList<>();
+						List<NetworkInterface> result_all	= new ArrayList<>();
+						List<NetworkInterface> result_up	= new ArrayList<>();
 
 						try{
 								// got some major CPU issues on some machines with crap loads of NIs
@@ -127,7 +138,18 @@ NetUtils
 
 								while( nis.hasMoreElements()){
 
-									result.add( nis.nextElement());
+									NetworkInterface ni = nis.nextElement();
+									
+									result_all.add( ni );
+									
+									try{
+										if ( ni.isUp()){
+											
+											result_up.add( ni );
+										}
+									}catch( Throwable e ){
+										
+									}
 								}
 							}
 
@@ -138,13 +160,13 @@ NetUtils
 							try{
 								synchronized( NetUtils.class ){
 	
-									boolean changed = result.size() != current_interfaces.size();
+									boolean changed = result_all.size() != current_all_interfaces.size();
 									
 									if ( !changed ){
 									
-										for ( int i=0;i<result.size();i++){
+										for ( int i=0;i<result_all.size();i++){
 											
-											if ( !result.get(i).equals( current_interfaces.get(i))){
+											if ( !result_all.get(i).equals( current_all_interfaces.get(i))){
 											
 												changed = true;
 												
@@ -153,13 +175,14 @@ NetUtils
 										}
 									}
 									
-									check_in_progress	= false;
-									current_interfaces 	= result;
-	
+									check_in_progress		= false;
+									current_all_interfaces 	= result_all;
+									current_up_interfaces	= result_up;
+									
 									last_ni_check	= SystemTime.getMonotonousTime();
 									
 									try{
-										changed = SESecurityManager.filterNetworkInterfaces( result );
+										changed = SESecurityManager.filterNetworkInterfaces( result_all );
 										
 									}catch( Throwable e ){
 																															
@@ -230,7 +253,7 @@ NetUtils
 
 		ni_sem.reserve();
 
-		return( current_interfaces );
+		return( up_only?current_up_interfaces:current_all_interfaces );
 	}
 
 	public static InetAddress
@@ -384,7 +407,7 @@ NetUtils
 						try{
 							Pattern p = RegExUtil.getCachedPattern( "NetUtils:display", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 						
-							List<NetworkInterface> ifs = current_interfaces;
+							List<NetworkInterface> ifs = current_all_interfaces;
 
 							if ( ifs != null ){
 								
