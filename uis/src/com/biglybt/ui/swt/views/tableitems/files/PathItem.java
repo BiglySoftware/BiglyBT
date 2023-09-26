@@ -32,6 +32,7 @@ import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
@@ -136,7 +137,7 @@ public class PathItem
     	
     	if ( parent != null ){
 		      try {
-		          path = FileUtil.getCanonicalPathWithTimeout( parent );
+		          path = Utils.getCanonicalPathWithTimeout( parent );
 		      }
 		      catch( IOException e ) {
 		          path = file.getParentFile().getAbsolutePath();

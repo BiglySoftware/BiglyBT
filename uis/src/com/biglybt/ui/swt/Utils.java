@@ -7082,6 +7082,15 @@ public class Utils
 		return( FileUtil.lengthWithTimeout( file, 250 ));
 	}
 	
+	public static String
+	getCanonicalPathWithTimeout(
+		File		file )
+	
+		throws IOException
+	{
+		return( FileUtil.getCanonicalPathWithTimeout( file, 250 ));
+	}
+	
 	public static File[]
 	listFileRootsWithTimeout()
 	{

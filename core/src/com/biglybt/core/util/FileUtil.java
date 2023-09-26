@@ -3639,8 +3639,20 @@ public class FileUtil {
 	
 		throws IOException
 	{
+		return( runFileOpWithTimeoutEx( file, fo, def_error, -1 ));
+	}
+	
+	private static <T> T
+	runFileOpWithTimeoutEx(
+		File					file,
+		FileOpWithTimeout<T>	fo,
+		IOException				def_error,
+		long					strict_timeout )
+	
+		throws IOException
+	{
 		try{
-			return( runFileOpWithTimeoutEx( file, fo, null, def_error, -1 ));
+			return( runFileOpWithTimeoutEx( file, fo, null, def_error, strict_timeout ));
 						
 		}catch( IOException e ){
 			
@@ -3952,9 +3964,19 @@ public class FileUtil {
 	
 		throws IOException
 	{
+		return( getCanonicalPathWithTimeout( file, -1 ));
+	}
+	
+	public static String
+	getCanonicalPathWithTimeout(
+		File		file,
+		long		strict_timeout )
+	
+		throws IOException
+	{
 		return(runFileOpWithTimeoutEx(file,()->{
 			return( file.getCanonicalPath());
-		}, new IOException( "File system not responding/slow" )));	
+		}, new IOException( "File system not responding/slow" ), strict_timeout ));	
 	}
 	
 	private static volatile File[]	last_roots = {};
