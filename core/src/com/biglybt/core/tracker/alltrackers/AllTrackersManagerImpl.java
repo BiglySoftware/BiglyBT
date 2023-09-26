@@ -51,6 +51,7 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponsePeer;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Average;
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.CopyOnWriteList;
@@ -919,12 +920,16 @@ AllTrackersManagerImpl
 		totalDisp.setSingleThreaded();
 	}
 	
+	AsyncDispatcher asyncDisp = new AsyncDispatcher( "recalctots" );
+	
 	private void
 	recalcTotals()
 	{
 		if ( started ){
 			
-			totalDisp.dispatch();
+				// can take a while to actually run so don't block caller
+			
+			asyncDisp.dispatch(()->totalDisp.dispatch());
 		}
 	}
 	
