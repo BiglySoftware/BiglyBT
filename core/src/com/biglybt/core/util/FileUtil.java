@@ -3965,6 +3965,13 @@ public class FileUtil {
     
 	public static File[]
 	listRootsWithTimeout()
+	{
+		return( listRootsWithTimeout( 250 ));
+	}
+	
+	public static File[]
+	listRootsWithTimeout(
+		long		timeout )
 	{	
 		long now = SystemTime.getMonotonousTime();
 		
@@ -4010,7 +4017,7 @@ public class FileUtil {
 			}
 		}
 		
-		sem.reserve( 250 );
+		sem.reserve( timeout );
 		
 		return( last_roots );
 	}

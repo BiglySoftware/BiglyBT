@@ -7081,4 +7081,10 @@ public class Utils
 	{
 		return( FileUtil.lengthWithTimeout( file, 250 ));
 	}
+	
+	public static File[]
+	listFileRootsWithTimeout()
+	{
+		return( FileUtil.listRootsWithTimeout( 250 ));
+	}
 }
