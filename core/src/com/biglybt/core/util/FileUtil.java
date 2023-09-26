@@ -3635,17 +3635,6 @@ public class FileUtil {
 	runFileOpWithTimeoutEx(
 		File					file,
 		FileOpWithTimeout<T>	fo,
-		IOException				def_error )
-	
-		throws IOException
-	{
-		return( runFileOpWithTimeoutEx( file, fo, def_error, -1 ));
-	}
-	
-	private static <T> T
-	runFileOpWithTimeoutEx(
-		File					file,
-		FileOpWithTimeout<T>	fo,
 		IOException				def_error,
 		long					strict_timeout )
 	
