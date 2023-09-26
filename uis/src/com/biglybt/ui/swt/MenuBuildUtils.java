@@ -81,7 +81,7 @@ import com.biglybt.plugin.net.buddy.swt.BuddyUIUtils;
  * @author Allan Crooks
  */
 public class MenuBuildUtils {
-
+ 
 	/**
 	 * An interface to be used for addMaintenanceListenerForMenu.
 	 */
@@ -1576,7 +1576,7 @@ public class MenuBuildUtils {
 			
 			String exe 	= ConfigKeysSWT.getLaunchHelpersProg(i).trim();
 
-			if ( exe.length() > 0 && new File( exe ).exists()){
+			if ( exe.length() > 0 && Utils.fileExistsWithTimeout( exe )){
 				
 				ok = true;
 				
@@ -1601,7 +1601,7 @@ public class MenuBuildUtils {
 					
 					//if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
 					
-					if ( files[0].getFile(true).exists()){
+					if ( Utils.fileExistsWithTimeout( files[0].getFile(true))){
 						
 						return( true );
 					}
@@ -1616,7 +1616,7 @@ public class MenuBuildUtils {
 				
 				//if ( file.getAccessMode() == DiskManagerFileInfo.READ ){
 				
-				if ( file.getFile(true).exists()){
+				if ( Utils.fileExistsWithTimeout( file.getFile(true))){
 					
 					return( true );
 				}
@@ -1655,7 +1655,7 @@ public class MenuBuildUtils {
 			
 			String exe 	= ConfigKeysSWT.getLaunchHelpersProg(i).trim();
 
-			if ( exe.length() > 0 && new File( exe ).exists()){
+			if ( exe.length() > 0 && Utils.fileExistsWithTimeout( exe )){
 				
 				org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem( openWithMenu, SWT.PUSH );
 		
@@ -1673,7 +1673,7 @@ public class MenuBuildUtils {
 								
 								//if ( files[0].getAccessMode() == DiskManagerFileInfo.READ ){
 								
-								if ( files[0].getFile(true).exists()){
+								if ( Utils.fileExistsWithTimeout( files[0].getFile(true))){
 									
 									Utils.launchFileExplicit( files[0], exe );
 								}
@@ -1688,7 +1688,7 @@ public class MenuBuildUtils {
 							
 							//if ( file.getAccessMode() == DiskManagerFileInfo.READ ){
 							
-							if ( file.getFile(true).exists()){
+							if ( Utils.fileExistsWithTimeout( file.getFile(true))){
 								
 								Utils.launchFileExplicit( file, exe );
 							}

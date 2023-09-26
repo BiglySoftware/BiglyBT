@@ -851,7 +851,7 @@ public class TorrentMenuFancy
 						if (info.isSkipped()) {
 							continue;
 						}
-						bChangeDir = !info.getFile(true).exists();
+						bChangeDir = !Utils.fileExistsWithTimeout( info.getFile(true));
 						break;
 					}
 				}
@@ -2169,7 +2169,7 @@ public class TorrentMenuFancy
 
 				File file = dm.getSaveLocation();
 
-				if ( !file.exists()){
+				if ( !Utils.fileExistsWithTimeout( file )){
 					
 					can_share_pers = false;
 					

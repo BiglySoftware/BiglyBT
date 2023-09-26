@@ -290,7 +290,7 @@ public class ImageRepository
 			// Mac OS X - Do not mix AWT with SWT (possible workaround: use IPC/Cocoa)
 
 			String key;
-			if (FileUtil.isDirectoryWithTimeout( file, 250 )) {
+			if ( Utils.isDirectoryWithTimeout( file )) {
 				if (noAWT) {
 					if (Constants.isWindows || Constants.isOSX) {
 						return getIconFromExtension(file, "-folder", bBig, false);
@@ -343,7 +343,7 @@ public class ImageRepository
 			ImageLoader.getInstance().releaseImage(key);
 			image = null;
 
-			bDeleteFile = !file.exists();
+			bDeleteFile = !Utils.fileExistsWithTimeout(file);
 			if (bDeleteFile) {
 				file = File.createTempFile("AZ_", FileUtil.getExtension(path));
 			}
@@ -393,7 +393,7 @@ public class ImageRepository
 
 				ImageLoader.getInstance().addImageNoDipose(key, image);
 
-				if (bDeleteFile && file != null && file.exists()) {
+				if (bDeleteFile && file != null && Utils.fileExistsWithTimeout( file )) {
 					file.delete();
 				}
 				return image;
@@ -402,7 +402,7 @@ public class ImageRepository
 			//Debug.printStackTrace(e);
 		}
 
-		if (bDeleteFile && file != null && file.exists()) {
+		if (bDeleteFile && file != null && Utils.fileExistsWithTimeout( file )) {
 			file.delete();
 		}
 

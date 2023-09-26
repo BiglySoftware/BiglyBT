@@ -1714,7 +1714,7 @@ public class TorrentUtil
 
 				File file = dm.getSaveLocation();
 
-				if ( !FileUtil.existsWithTimeout( file, 250 )){
+				if ( !Utils.fileExistsWithTimeout( file )){
 					
 					can_share_pers = false;
 					
@@ -4728,7 +4728,7 @@ public class TorrentUtil
 						if (!canRunFileInfo
 								&& fileInfo.getAccessMode() == DiskManagerFileInfo.READ
 								&& fileInfo.getDownloaded() == fileInfo.getLength()
-								&& FileUtil.existsWithTimeout( fileInfo.getFile(true), 250 )) {
+								&& Utils.fileExistsWithTimeout( fileInfo.getFile(true))) {
 							canRunFileInfo = true;
 						}
 					}

@@ -47,6 +47,7 @@ import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 import com.biglybt.ui.common.table.TableCellCore;
@@ -202,7 +203,7 @@ FileHashItemBase
 
 		File f = file.getFile( true );
 
-		if ( FileUtil.lengthWithTimeout( f, 250 ) != file.getLength() || !FileUtil.canReadWithTimeout( f, 250 )){
+		if ( Utils.fileLengthWithTimeout( f ) != file.getLength() || !Utils.canReadFileWithTimeout( f )){
 
 			return( false );
 		}

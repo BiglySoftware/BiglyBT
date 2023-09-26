@@ -7046,4 +7046,39 @@ public class Utils
 		public void
 		terminated();
 	}
+	
+	public static boolean
+	fileExistsWithTimeout(
+		String		path )
+	{
+		return( fileExistsWithTimeout( new File( path )));
+	}
+	
+	public static boolean
+	fileExistsWithTimeout(
+		File		file )
+	{
+		return( FileUtil.existsWithTimeout( file, 250 ));
+	}
+	
+	public static boolean
+	isDirectoryWithTimeout(
+		File		dir )
+	{
+		return( FileUtil.isDirectoryWithTimeout( dir, 250 ));
+	}
+	
+	public static boolean
+	canReadFileWithTimeout(
+		File		dir )
+	{
+		return( FileUtil.canReadWithTimeout( dir, 250 ));
+	}
+	
+	public static long
+	fileLengthWithTimeout(
+		File		file )
+	{
+		return( FileUtil.lengthWithTimeout( file, 250 ));
+	}
 }
