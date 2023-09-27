@@ -7068,7 +7068,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 				
 				if ( net == AENetworkClassifier.AT_PUBLIC ){
 
-					InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+					InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress( true );
 
 					str = ia == null ? "127.0.0.1" : ia.getHostAddress();
 
