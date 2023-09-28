@@ -1142,18 +1142,18 @@ TOTorrentFileHashTreeImpl
 				}
 			}
 			
-			while( proof_layers > 0 && layer_index > 1 ){
+			while( layer_index > 1 && hash_pos < hashes.length ){
 								
 				layer_index--;
-				
-				int	layer_offset = layer_offsets[layer_index];
-				
+								
 				if ( missing_proofs > 0 ){
 					
 					missing_proofs--;
 					
 				}else{
 				
+					int	layer_offset = layer_offsets[layer_index];
+
 					tree_layer = local_tree[layer_index];
 	
 					int uncle_offset;
