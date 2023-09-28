@@ -50,7 +50,7 @@ SeedingRankColumnListener
 		}
 		
 		if (dlData == null){
-			cell.setSortValue( -1 );
+			cell.setSortValue( null );
 			return;
 		}
 			
