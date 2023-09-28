@@ -19,6 +19,8 @@
 
 package com.biglybt.core;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public interface
 CoreOperation
 {
@@ -36,4 +38,29 @@ CoreOperation
 
 	public CoreOperationTask
 	getTask();
+	
+	public boolean
+	isRemoved();
+	
+	public void
+	setRemoved();
+	
+	public static abstract class
+	CoreOperationAdapter
+		implements CoreOperation
+	{
+		private AtomicBoolean	removed = new AtomicBoolean();
+		
+		public boolean
+		isRemoved()
+		{
+			return( removed.get());
+		}
+		
+		public void
+		setRemoved()
+		{
+			removed.set( true );
+		}
+	}
 }

@@ -77,6 +77,11 @@ ProgressWindow
 						
 						for ( CoreOperation op: ops ){
 							
+							if ( op.isRemoved()){
+								
+								continue;
+							}
+							
 							int type = op.getOperationType();
 							
 							if (	type == CoreOperation.OP_DOWNLOAD_CHECKING ||
@@ -85,9 +90,21 @@ ProgressWindow
 									type == CoreOperation.OP_FILE_MOVE ){
 								
 								CoreOperationTask task = op.getTask();
-								
+															
 								if ( task != null ){
 						
+									ProgressCallback cb = task.getProgressCallback();
+
+									if ( cb != null ){
+										
+										int state = cb.getTaskState();
+										
+										if ( state == ProgressCallback.ST_CANCEL ){
+											
+											continue;
+										}
+									}
+									
 									if ( active.length() > 128 ){
 										
 										active += ", ...";

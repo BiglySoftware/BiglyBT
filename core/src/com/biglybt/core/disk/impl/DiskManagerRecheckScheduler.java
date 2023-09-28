@@ -304,7 +304,7 @@ DiskManagerRecheckScheduler
 				};
 				
 			op = 
-				new CoreOperation()
+				new CoreOperation.CoreOperationAdapter()
 				{
 					public int
 					getOperationType()

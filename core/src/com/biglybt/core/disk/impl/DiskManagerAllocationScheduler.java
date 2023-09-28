@@ -189,7 +189,7 @@ DiskManagerAllocationScheduler
 				};
 				
 			operation = 
-				new CoreOperation()
+				new CoreOperation.CoreOperationAdapter()
 				{
 					public int
 					getOperationType()
