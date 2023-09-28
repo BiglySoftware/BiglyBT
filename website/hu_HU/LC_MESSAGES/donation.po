@@ -15,7 +15,7 @@ msgstr ""
 "X-Crowdin-Language: hu\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 508\n"
-"PO-Revision-Date: 2023-06-08 16:30\n"
+"PO-Revision-Date: 2023-09-26 20:35\n"
 
 msgid "test"
 msgstr "Tesztelés angolul"
@@ -24,7 +24,7 @@ msgid "onlyEng"
 msgstr "Csak angolul"
 
 msgid "donation_line1"
-msgstr "Bár a BiglyBT egy ingyenes program, a fejlesztése és a karbantartása sokba kerül. Ha úgy gondolod, hogy hasznodra vált a használata, kérjük, fontold meg, hogy támogatsz minket az alábbi módok valamelyikén:"
+msgstr "Bár a BiglyBT egy ingyenes program, a fejlesztése és a karbantartása pénzbe kerül. Ha úgy gondolod, hogy hasznodra vált a használata, kérjük, fontold meg, hogy támogatsz minket az alábbi módok valamelyikén:"
 
 msgid "donation_title"
 msgstr "A BiglyBT támogatása"
