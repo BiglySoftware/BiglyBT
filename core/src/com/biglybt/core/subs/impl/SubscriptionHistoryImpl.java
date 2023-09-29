@@ -365,6 +365,34 @@ SubscriptionHistoryImpl
 			enabled	= _enabled;
 
 			saveConfig(SubscriptionListener.CR_METADATA);
+			
+			if ( _enabled && isAutoDownload()){
+				
+				List<SubscriptionResult>	unread_results = new ArrayList<>();
+
+				synchronized( this ){
+
+					LinkedHashMap<String,SubscriptionResultImpl> results_map = manager.loadResults( subs );
+
+					for ( SubscriptionResult result: results_map.values()){
+
+						if ( result.isDeleted()){
+
+							continue;
+						}
+
+						if ( !result.getRead()){
+
+							unread_results.add( result );
+						}
+					}
+				}
+				
+				for ( SubscriptionResult result: unread_results ){
+					
+					manager.getScheduler().download( subs, result);
+				}
+			}
 		}
 	}
 
@@ -727,7 +755,7 @@ SubscriptionHistoryImpl
 			saveConfig(SubscriptionListener.CR_RESULTS);
 		}
 
-		if ( isAutoDownload() && !result.getRead() && !result.isDeleted()){
+		if ( isEnabled() && isAutoDownload() && !result.getRead() && !result.isDeleted()){
 
 			manager.getScheduler().download( subs, result );
 		}
@@ -961,7 +989,7 @@ SubscriptionHistoryImpl
 			saveConfig(SubscriptionListener.CR_RESULTS);
 		}
 
-		if ( isAutoDownload()){
+		if ( isEnabled() && isAutoDownload()){
 
 			for (int i=0;i<new_unread_results.size();i++){
 

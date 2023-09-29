@@ -30,6 +30,7 @@ import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.metasearch.SearchLoginException;
 import com.biglybt.core.metasearch.SearchParameter;
 import com.biglybt.core.subs.SubscriptionException;
+import com.biglybt.core.subs.SubscriptionHistory;
 import com.biglybt.core.subs.SubscriptionResultFilter;
 import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.util.Debug;
@@ -150,7 +151,14 @@ SubscriptionDownloader
 	checkAutoDownload(
 		SubscriptionResultImpl[]	results )
 	{
-		if ( !subs.getHistory().isAutoDownload()){
+		SubscriptionHistory history = subs.getHistory();
+		
+		if ( !history.isEnabled()){
+			
+			return;
+		}
+		
+		if ( !history.isAutoDownload()){
 
 			return;
 		}
