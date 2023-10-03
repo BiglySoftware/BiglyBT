@@ -62,7 +62,8 @@ LinkFileMap
 			}
 		}else{
 
-			Debug.out( "unexpected index" );
+			// just an old link pre-migration
+			// Debug.out( "unexpected index: " + index );
 		}
 
 		Entry entry = name_map.get( new wrapper( from_file ));
