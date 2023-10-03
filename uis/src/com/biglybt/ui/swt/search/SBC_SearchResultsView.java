@@ -1343,11 +1343,16 @@ SBC_SearchResultsView
 
 							for ( SBC_SearchResult result: results ){
 
-								if ( buffer.length() > 0 ){
-									buffer.append( "\r\n" );
-								}
+								byte[] hash = result.getHash();
 
-								buffer.append( getDownloadURI( result ));
+								if ( hash != null && hash.length > 0 ){
+								
+									if ( buffer.length() > 0 ){
+										buffer.append( "\r\n" );
+									}
+	
+									buffer.append( getDownloadURI( result ));
+								}
 							}
 							ClipboardCopy.copyToClipBoard( buffer.toString());
 						}
