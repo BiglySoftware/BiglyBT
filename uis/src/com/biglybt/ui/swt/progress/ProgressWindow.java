@@ -43,6 +43,7 @@ import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DelayedEvent;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.ThreadPool;
 import com.biglybt.ui.swt.UIExitUtilsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.UIExitUtilsSWT.canCloseListener;
@@ -235,10 +236,14 @@ ProgressWindow
 						
 						if ( task != null ){
 
-							if ( 	type ==  CoreOperation.OP_FILE_MOVE && 
-									COConfigurationManager.getBooleanParameter("Suppress File Move Dialog" )){
+								// if someone kicks off a batch move with loads of affected downloads (for example) we can end up 
+								// stack-overflowing in the ProgressWindow as it runs a dispatch loop.
+							
+							if ( 	( Utils.getDispatchLoopDepth() > 20 ) ||
+									(	type ==  CoreOperation.OP_FILE_MOVE && 
+										COConfigurationManager.getBooleanParameter("Suppress File Move Dialog" ))){
 
-								AEThread2.createAndStartDaemon( "Core Operation", ()->{
+								core_op_pool.run( AERunnable.create(()->{
 									
 									try{
 										task.run( operation );
@@ -247,7 +252,7 @@ ProgressWindow
 										
 										core.removeOperation( operation );
 									}
-								});
+								}));
 								
 							}else{
 								
@@ -282,6 +287,8 @@ ProgressWindow
 	{
 		UIExitUtilsSWT.removeListener(canCloseListener);
 	}
+	
+    private static final ThreadPool	core_op_pool = new ThreadPool( "ProgressWindow:coreops", 32, true );
 	
 	private volatile Shell 			shell;
 	private volatile boolean 		task_complete;

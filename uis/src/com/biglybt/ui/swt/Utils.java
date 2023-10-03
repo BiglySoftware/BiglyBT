@@ -7023,20 +7023,36 @@ public class Utils
 		}
 	}
 	
+	private static AtomicInteger dl_depth = new AtomicInteger();
+	
+	public static int
+	getDispatchLoopDepth()
+	{
+		return( dl_depth.get());
+	}
+	
 	public static boolean
 	readAndDispatchLoop(
 		Supplier<Boolean>	done )
 	{
-		while ( !SWTThread.getInstance().isTerminated() && 
-				!( done.get() || display.isDisposed())){
-
-			if ( !display.readAndDispatch()){
-
-				display.sleep();
+		try{
+			dl_depth.incrementAndGet();
+			
+			while ( !SWTThread.getInstance().isTerminated() && 
+					!( done.get() || display.isDisposed())){
+	
+				if ( !display.readAndDispatch()){
+	
+					display.sleep();
+				}
 			}
+	
+			return( display.isDisposed());
+			
+		}finally{
+			
+			dl_depth.decrementAndGet();
 		}
-
-		return( display.isDisposed());
 	}
 	
 
