@@ -71,6 +71,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.sharing.ShareUtils;
+import com.biglybt.ui.swt.utils.TuxTorrentUtils;
 import com.biglybt.ui.swt.views.FilesViewMenuUtil;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.TableSelectedRowsListener;
@@ -1992,6 +1993,7 @@ public class TorrentMenuFancy
 				new FancyMenuRowInfoListener() {
 					@Override
 					public void buildMenu(Menu menu) {
+						Utils.disposeSWTObjects(menu.getItems());
 						TagUIUtils.addLibraryViewTagsSubMenu(dms, menu);
 					}
 				});

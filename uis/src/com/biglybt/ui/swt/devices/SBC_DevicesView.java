@@ -65,7 +65,6 @@ import com.biglybt.ui.swt.skin.SWTSkinButtonUtility;
 import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectText;
-import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.skin.InfoBarUtil;
 import com.biglybt.ui.swt.views.skin.SkinView;
 import com.biglybt.ui.swt.views.skin.TorrentListViewsUtils;
@@ -75,6 +74,7 @@ import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
+import com.biglybt.ui.swt.views.utils.TagUIUtils.TagMenuOptions;
 import com.biglybt.util.PlayUtils;
 
 import com.biglybt.pif.ui.UIManager;
@@ -1062,252 +1062,81 @@ public class SBC_DevicesView
 		Menu						menu_tags,
 		final TranscodeFile[]		files )
 	{
-		MenuItem[] items = menu_tags.getItems();
-
-		for (int i = 0; i < items.length; i++) {
-			items[i].dispose();
-		}
-
 		TagManager tm = TagManagerFactory.getTagManager();
 
-		List<Tag> all_tags = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
+		Map<Tag, Integer> mapTaggableCount = new HashMap<>();
 
-		all_tags = TagUtils.sortTags( all_tags );
-
-		if ( all_tags.size() > 0 ){
-
-			Set<String> shared_tags = null;
-
-			boolean	some_tags_assigned = false;
-
-			for ( TranscodeFile file: files ){
-
-				Set<String> file_tags = new HashSet<>();
-
-				file_tags.addAll( Arrays.asList( file.getTags( true )));
-
-				if ( file_tags.size() > 0 ){
-
-					some_tags_assigned = true;
-				}
-
-				if ( shared_tags == null ){
-
-					shared_tags = file_tags;
-
-				}else{
-
-					if ( shared_tags.size() != file_tags.size() ){
-
-						shared_tags.clear();
-
-						break;
-
-					}else{
-
-						if ( !shared_tags.equals( file_tags )){
-
-							shared_tags.clear();
-
-							break;
-						}
+		for ( TranscodeFile file: files ){
+			String[] tags = file.getTags(false);
+			for (String sTagUID : tags) {
+				try {
+					Tag tag = tm.lookupTagByUID(Long.parseLong(sTagUID));
+					if (tag != null) {
+						mapTaggableCount.compute(tag, (t, i) -> i == null ? 1 : i + 1);
 					}
-				}
-			}
-
-			if ( some_tags_assigned ){
-
-				final MenuItem mi_no_tag = new MenuItem( menu_tags, SWT.PUSH );
-
-				mi_no_tag.setText( MessageText.getString( "label.no.tag" ));
-
-				mi_no_tag.addListener(SWT.Selection, new Listener() {
-					@Override
-					public void handleEvent(Event event) {
-
-						for ( TranscodeFile file: files ){
-
-							file.setTags( new String[0] );
-						}
-					}
-				});
-
-				new MenuItem( menu_tags, SWT.SEPARATOR );
-			}
-
-			List<String>	menu_names 		= new ArrayList<>();
-			Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
-
-			for ( Tag t: all_tags ){
-
-				if ( !t.isTagAuto()[0]){
-
-					String name = t.getTagName( true );
-
-					menu_names.add( name );
-					menu_name_map.put( name, t );
-				}
-			}
-
-			List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, TagUIUtils.MAX_TOP_LEVEL_TAGS_IN_MENU );
-
-			for ( Object obj: menu_structure ){
-
-				List<Tag>	bucket_tags = new ArrayList<>();
-
-				Menu parent_menu;
-
-				if ( obj instanceof String ){
-
-					parent_menu = menu_tags;
-
-					bucket_tags.add( menu_name_map.get((String)obj));
-
-				}else{
-
-					Object[]	entry = (Object[])obj;
-
-					List<String>	tag_names = (List<String>)entry[1];
-
-					boolean	sub_all_selected 	= true;
-					boolean sub_some_selected	= false;
-
-					for ( String name: tag_names ){
-
-						Tag sub_tag = menu_name_map.get( name );
-
-						if ( shared_tags != null && shared_tags.contains( name )){
-
-							sub_some_selected = true;
-
-						}else{
-
-							sub_all_selected = false;
-						}
-
-						bucket_tags.add( sub_tag );
-					}
-
-					String mod;
-
-					if ( sub_all_selected ){
-
-						mod = " (*)";
-
-					}else if ( sub_some_selected ){
-
-						mod = " (+)";
-
-					}else{
-
-						mod = "";
-					}
-
-					Menu menu_bucket = new Menu( menu_tags.getShell(), SWT.DROP_DOWN );
-
-					MenuItem bucket_item = new MenuItem( menu_tags, SWT.CASCADE );
-
-					bucket_item.setText((String)entry[0] + mod);
-
-					bucket_item.setMenu( menu_bucket );
-
-					parent_menu = menu_bucket;
-				}
-
-				for ( final Tag t: bucket_tags ){
-
-					final MenuItem t_i = new MenuItem( parent_menu, SWT.CHECK );
-
-					String tag_name = t.getTagName( true );
-
-					t_i.setText( tag_name );
-
-					boolean selected = shared_tags != null && shared_tags.contains( tag_name );
-
-					t_i.setSelection( selected );
-
-					TagUIUtils.setMenuIcon( t_i, t );
-					
-					t_i.addListener(SWT.Selection, new Listener() {
-						@Override
-						public void handleEvent(Event event) {
-
-							boolean	selected = t_i.getSelection();
-
-							String 	tag_uid = String.valueOf( t.getTagUID());
-
-							for ( TranscodeFile file: files ){
-
-								Set<String>	uids = new TreeSet<>();
-
-								uids.addAll( Arrays.asList( file.getTags( false )));
-
-								boolean	update = false;
-
-								if ( selected ){
-
-									if ( !uids.contains(tag_uid)){
-
-										uids.add( tag_uid );
-
-										update = true;
-									}
-								}else{
-
-									if ( uids.contains( tag_uid )){
-
-										uids.remove( tag_uid );
-
-										update = true;
-									}
-								}
-
-								if ( update ){
-
-									file.setTags( uids.toArray( new String[ uids.size()]));
-								}
-							}
-						}
-					});
+				} catch (Throwable ignore) {
 				}
 			}
 		}
 
-		new MenuItem( menu_tags, SWT.SEPARATOR );
+		if ( !mapTaggableCount.isEmpty() ){
 
-		MenuItem item_create = new MenuItem( menu_tags, SWT.PUSH);
+			final MenuItem mi_no_tag = new MenuItem( menu_tags, SWT.PUSH );
 
-		Messages.setLanguageText(item_create, "label.add.tag");
+			mi_no_tag.setText( MessageText.getString( "label.no.tag" ));
 
-		item_create.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
+			mi_no_tag.addListener(SWT.Selection, event -> {
 
-				TagUIUtilsV3.showCreateTagDialog(new UIFunctions.TagReturner() {
-					@Override
-					public void returnedTags(Tag[] tags) {
-						if ( tags != null ){
-							for (Tag new_tag : tags) {
-								if ( new_tag != null ){
+				for ( TranscodeFile file: files ){
 
-									String[] tagUIDs = new String[]{ String.valueOf( new_tag.getTagUID()) };
+					file.setTags( new String[0] );
+				}
+			});
 
-									for ( TranscodeFile file: files ){
+			new MenuItem( menu_tags, SWT.SEPARATOR );
+		}
 
-										file.setTags( tagUIDs );
-									}
+		TagMenuOptions.Builder builder = TagMenuOptions.Builder()
+			.setShowAddMenu(true)
+			.setMenuForAutoTags(false)
+			.setTagMenuFilter(TagMenuOptions.FILTER_NO_AUTOADD)
+			.setMapTaggableCount(mapTaggableCount, files.length)
+			.setTagSelectionListener((t, checked) -> {
 
-									COConfigurationManager.setParameter( "Library.TagInSideBar", true );
-								}
-							}
+				String 	tag_uid = String.valueOf( t.getTagUID());
+
+				for ( TranscodeFile file: files ){
+
+					Set<String> uids = new TreeSet<>(Arrays.asList(file.getTags(false)));
+
+					boolean	update = false;
+
+					if ( checked ){
+
+						if ( !uids.contains(tag_uid)){
+
+							uids.add( tag_uid );
+
+							update = true;
+						}
+					}else{
+
+						if ( uids.contains( tag_uid )){
+
+							uids.remove( tag_uid );
+
+							update = true;
 						}
 					}
-				});
 
-			}
-		});
+					if ( update ){
+
+						file.setTags( uids.toArray(new String[0]));
+					}
+				}
+			});
+		TagUIUtils.createTagSelectionMenu(builder, menu_tags);
 	}
-
 
 	@Override
 	public void

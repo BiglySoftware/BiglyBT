@@ -61,10 +61,10 @@ import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
+import com.biglybt.ui.swt.views.utils.TagUIUtils.TagMenuOptions;
 
 import com.biglybt.pif.PluginConfigListener;
 import com.biglybt.pif.PluginInterface;
@@ -2334,18 +2334,9 @@ SubscriptionManagerUI
 
 			menuItem.setStyle( MenuItem.STYLE_MENU );
 
-			menuItem.addFillListener(
-				new MenuItemFillListener()
-				{
-					@Override
-					public void
-					menuWillBeShown(
-						MenuItem 	menu,
-						Object 		data )
-					{
-						addTagSubMenu( menu_manager, menu, subs );
-					}
-				});
+			menuItem.addFillListener((menu, data) -> {
+				addTagSubMenu(menu_manager, menu, Collections.singletonList(subs));
+			});
 
 				// parent
 
@@ -3269,159 +3260,48 @@ SubscriptionManagerUI
 	addTagSubMenu(
 		MenuManager				menu_manager,
 		MenuItem				menu,
-		final Subscription		subs )
+		List<Subscription> subs )
 	{
 		menu.removeAllChildItems();
 
 		TagManager tm = TagManagerFactory.getTagManager();
 
-		List<Tag> tags = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
+		Map<Tag, Integer> mapTaggableCount = new HashMap<>();
 
-		tags = TagUtils.sortTags( tags );
-
-		long	tag_id = subs.getTagID();
-
-		Tag assigned_tag = tm.lookupTagByUID( tag_id );
-
-		MenuItem m = menu_manager.addMenuItem( menu, "label.no.tag" );
-
-		m.setStyle( MenuItem.STYLE_RADIO );
-
-		m.setData(Boolean.valueOf(assigned_tag == null));
-
-		m.addListener(
-			new MenuItemListener()
-			{
-				@Override
-				public void
-				selected(
-					MenuItem			menu,
-					Object 				target )
-				{
-					subs.setTagID( -1 );
-				}
-			});
-
-
-		m = menu_manager.addMenuItem( menu, "sep1" );
-
-		m.setStyle( MenuItem.STYLE_SEPARATOR );
-
-
-		List<String>	menu_names 		= new ArrayList<>();
-		Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
-
-		for ( Tag t: tags ){
-
-			if ( !t.isTagAuto()[0]){
-
-				String name = t.getTagName( true );
-
-				menu_names.add( name );
-				menu_name_map.put( name, t );
+		for (Subscription sub : subs) {
+			Tag tag = tm.lookupTagByUID(sub.getTagID());
+			if (tag != null) {
+				mapTaggableCount.compute(tag, (t, num) -> num == null ? 1 : num + 1);
 			}
 		}
 
-		List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, TagUIUtils.MAX_TOP_LEVEL_TAGS_IN_MENU );
-
-		for ( Object obj: menu_structure ){
-
-			List<Tag>	bucket_tags = new ArrayList<>();
-
-			MenuItem parent_menu;
-
-			if ( obj instanceof String ){
-
-				parent_menu = menu;
-
-				bucket_tags.add( menu_name_map.get((String)obj));
-
-			}else{
-
-				Object[]	entry = (Object[])obj;
-
-				List<String>	tag_names = (List<String>)entry[1];
-
-				boolean	has_selected = false;
-
-				for ( String name: tag_names ){
-
-					Tag tag = menu_name_map.get( name );
-
-					bucket_tags.add( tag );
-
-					if ( assigned_tag == tag ){
-
-						has_selected = true;
-					}
-				}
-
-				parent_menu = menu_manager.addMenuItem (menu, "!" + (String)entry[0] + (has_selected?" (*)":"") + "!" );
-
-				parent_menu.setStyle( MenuItem.STYLE_MENU );
-			}
-
-			for ( final Tag tag: bucket_tags ){
-
-				m = menu_manager.addMenuItem( parent_menu, tag.getTagName( false ));
-
-				m.setStyle( MenuItem.STYLE_RADIO );
-
-				m.setData(Boolean.valueOf(assigned_tag == tag));
-
-				TagUIUtils.setMenuIcon( m, tag );
-				
-				m.addListener(
-					new MenuItemListener()
-					{
-						@Override
-						public void
-						selected(
-							MenuItem			menu,
-							Object 				target )
-						{
-							subs.setTagID( tag.getTagUID());
-						}
-					});
-			}
-		}
-
-		m = menu_manager.addMenuItem( menu, "sep2" );
-
-		m.setStyle( MenuItem.STYLE_SEPARATOR );
-
-		m = menu_manager.addMenuItem( menu, "label.add.tag" );
-
-		m.addListener(
-			new MenuItemListener()
-			{
-				@Override
-				public void
-				selected(
-					MenuItem			menu,
-					Object 				target )
-				{
-					addTag( subs );
-				}
-			});
-	}
-
-	private static void
-	addTag(
-		final Subscription			subs )
-	{
-		TagUIUtilsV3.showCreateTagDialog(new UIFunctions.TagReturner() {
-			@Override
-			public void returnedTags(Tag[] tags) {
-				if ( tags != null ){
-					for (Tag new_tag : tags) {
-						subs.setTagID( new_tag.getTagUID());
-					}
-				}
+		MenuItem menuNoTag = menu_manager.addMenuItem(menu, "label.no.tag");
+		menuNoTag.setStyle(MenuItem.STYLE_RADIO);
+		menuNoTag.setData(mapTaggableCount.isEmpty());
+		menuNoTag.addListener((menu1, target) -> {
+			for (Subscription sub : subs) {
+				sub.setTagID(-1);
 			}
 		});
-	}
 
+		TagMenuOptions tagMenuOptions = TagMenuOptions.Builder()
+			.setParentPluginMenuItem(menu)
+			.setMenuManager(menu_manager)
+			.setTagMenuFilter(TagMenuOptions.FILTER_NO_AUTOADDREMOVE)
+			.setMapTaggableCount(mapTaggableCount, subs.size())
+			.setTagSelectionListener((tag, checked) -> {
+				long tagUID = tag.getTagUID();
+				for (Subscription sub : subs) {
+					if (checked) {
+						sub.setTagID(tagUID);
+					} else if (sub.getTagID() == tagUID) {
+						sub.setTagID(-1);
+					}
+				}
+			})
+			.build();
+		TagUIUtils.createTagMenu(tagMenuOptions);
+	}
 
 	protected static void
 	export(

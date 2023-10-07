@@ -214,6 +214,11 @@ public class MenuItemImpl implements MenuItem {
 	}
 
 	@Override
+	public int getItemCount() {
+		return children.size();
+	}
+
+	@Override
 	public MenuItem getItem(String key) {
 		if (this.style != MenuItem.STYLE_MENU) {
 			return null;

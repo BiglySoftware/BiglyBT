@@ -98,6 +98,7 @@ import com.biglybt.ui.swt.views.skin.SkinViewManager.SkinViewManagerListener;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
+import com.biglybt.ui.swt.views.utils.TagUIUtils.TagMenuOptions;
 import com.biglybt.util.PlayUtils;
 
 import com.biglybt.pif.PluginInterface;
@@ -3513,17 +3514,7 @@ DeviceManagerUI
 					aswt_menu_item.setStyle(MenuItem.STYLE_MENU);
 
 					aswt_menu_item.addFillListener(
-						new MenuItemFillListener()
-						{
-							@Override
-							public void
-							menuWillBeShown(
-								MenuItem menu,
-								Object 		data )
-							{
-								addTagSubMenu( menu_manager, menu, renderer );
-							}
-						});
+						(menu, data) -> addTagSubMenu( menu_manager, menu, renderer ));
 				}
 			}
 
@@ -3722,145 +3713,34 @@ DeviceManagerUI
 
 		TagManager tm = TagManagerFactory.getTagManager();
 
-		List<Tag> tags = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
+		Tag assigned_tag = tm.lookupTagByUID(device.getAutoShareToTagID());
 
-		tags = TagUtils.sortTags( tags );
-
-		long	tag_id = device.getAutoShareToTagID();
-
-		Tag assigned_tag = tm.lookupTagByUID( tag_id );
-
+		// No Tag
 		MenuItem m = menu_manager.addMenuItem( menu, "label.no.tag" );
-
 		m.setStyle( MenuItem.STYLE_RADIO );
+		m.setData(assigned_tag == null);
+		m.addListener((menu1, target) -> device.setAutoShareToTagID( -1 ));
 
-		m.setData(Boolean.valueOf(assigned_tag == null));
+		// ////
+		menu_manager.addMenuItem( menu, "sep1" ).setStyle( MenuItem.STYLE_SEPARATOR );
 
-		m.addListener(
-			new MenuItemListener()
-			{
-				@Override
-				public void
-				selected(
-					MenuItem menu,
-					Object 				target )
-				{
-					device.setAutoShareToTagID( -1 );
-				}
-			});
-
-
-		m = menu_manager.addMenuItem( menu, "sep1" );
-
-		m.setStyle( MenuItem.STYLE_SEPARATOR );
-
-
-		List<String>	menu_names 		= new ArrayList<>();
-		Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
-
-		for ( Tag t: tags ){
-
-			if ( !t.isTagAuto()[0]){
-
-				String name = t.getTagName( true );
-
-				menu_names.add( name );
-				menu_name_map.put( name, t );
-			}
+		// Tags
+		final Map<Tag, Integer> mapTaggableCount = new HashMap<>();
+		if (assigned_tag != null) {
+			mapTaggableCount.put(assigned_tag, 1);
 		}
 
-		List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, TagUIUtils.MAX_TOP_LEVEL_TAGS_IN_MENU );
-
-		for ( Object obj: menu_structure ){
-
-			List<Tag>	bucket_tags = new ArrayList<>();
-
-			MenuItem parent_menu;
-
-			if ( obj instanceof String ){
-
-				parent_menu = menu;
-
-				bucket_tags.add( menu_name_map.get((String)obj));
-
-			}else{
-
-				Object[]	entry = (Object[])obj;
-
-				List<String>	tag_names = (List<String>)entry[1];
-
-				boolean	has_selected = false;
-
-				for ( String name: tag_names ){
-
-					Tag tag = menu_name_map.get( name );
-
-					bucket_tags.add( tag );
-
-					if ( assigned_tag == tag ){
-
-						has_selected = true;
-					}
-				}
-
-				parent_menu = menu_manager.addMenuItem (menu, "!" + (String)entry[0] + (has_selected?" (*)":"") + "!" );
-
-				parent_menu.setStyle( MenuItem.STYLE_MENU );
-			}
-
-			for ( final Tag tag: bucket_tags ){
-
-				m = menu_manager.addMenuItem( parent_menu, tag.getTagName( false ));
-
-				m.setStyle( MenuItem.STYLE_RADIO );
-
-				m.setData(Boolean.valueOf(assigned_tag == tag));
-
-				TagUIUtils.setMenuIcon( m, tag );
-				
-				m.addListener(
-					new MenuItemListener()
-					{
-						@Override
-						public void
-						selected(
-							MenuItem menu,
-							Object 				target )
-						{
-							device.setAutoShareToTagID( tag.getTagUID());
-						}
-					});
-			}
-		}
-
-		m = menu_manager.addMenuItem( menu, "sep2" );
-
-		m.setStyle( MenuItem.STYLE_SEPARATOR );
-
-		m = menu_manager.addMenuItem( menu, "label.add.tag" );
-
-		m.addListener(
-			new MenuItemListener()
-			{
-				@Override
-				public void
-				selected(
-					MenuItem menu,
-					Object 				target )
-				{
-					TagUIUtils.createManualTag(new UIFunctions.TagReturner() {
-						@Override
-						public void returnedTags(Tag[] tags) {
-							if ( tags != null ){
-								for (Tag new_tag : tags) {
-									device.setAutoShareToTagID( new_tag.getTagUID());
-								}
-							}
-						}
-					});
-
-				}
-			});
+		TagMenuOptions tagMenuOptions = TagMenuOptions.Builder()
+			.setParentPluginMenuItem(menu)
+			.setMenuManager(menu_manager)
+			.setTagMenuFilter(TagMenuOptions.FILTER_NO_AUTOADD)
+			.setMapTaggableCount(mapTaggableCount, 1)
+			.setTagSelectionListener((tag, checked) -> 
+				device.setAutoShareToTagID(tag.getTagUID()))
+			.setShowAddMenu(true)
+			.setMenuForAutoTags(false)
+			.build();
+		TagUIUtils.createTagMenu(tagMenuOptions);
 	}
 
 	protected void

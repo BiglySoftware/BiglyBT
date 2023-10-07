@@ -22,6 +22,7 @@ import static com.biglybt.core.config.ConfigKeys.File.ICFG_FILES_AUTO_TAG_COUNT;
 import static com.biglybt.core.config.ConfigKeys.File.ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT;
 import static com.biglybt.core.config.ConfigKeys.File.SCFG_PREFIX_WATCH_TORRENT_FOLDER_TAG;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,16 +31,16 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagManagerFactory;
-import com.biglybt.core.tag.TagType;
 import com.biglybt.pif.ui.config.Parameter;
+
+import com.biglybt.core.tag.*;
 import com.biglybt.pifimpl.local.ui.config.ActionParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 import com.biglybt.ui.config.ConfigSectionFileTorrents;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.BaseSwtParameter;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
+import com.biglybt.ui.swt.views.utils.TagUIUtils.TagMenuOptions;
 
 public class
 ConfigSectionFileTorrentsSWT
@@ -88,13 +89,24 @@ ConfigSectionFileTorrentsSWT
 				Menu menu = new Menu( c );
 				
 				c.setMenu(menu);
-				
-				List<Tag> all_tags = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
-				
-				TagUIUtils.createTagSelectionMenu(menu, null, all_tags, (tag)->{
-					
-					COConfigurationManager.setParameter( paramName, tag.getTagName( true ));
-				});
+
+				Map<Tag, Integer> mapTaggableCount = new HashMap<>();
+				String tagName = COConfigurationManager.getStringParameter(paramName);
+				if (tagName != null && !tagName.isEmpty()) {
+					TagManager tm = TagManagerFactory.getTagManager();
+					TagType tt = tm.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+					Tag tag = tt.getTag(tagName, true);
+					if (tag != null) {
+						mapTaggableCount.put(tag, 1);
+					}
+				}
+				TagMenuOptions.Builder builder = TagMenuOptions.Builder()
+					.setTagMenuFilter(TagMenuOptions.FILTER_NO_AUTOADDREMOVE)
+					.setMapTaggableCount(mapTaggableCount, 1)
+					.setTagSelectionListener(
+						(tag, checked) -> COConfigurationManager.setParameter(paramName,
+							tag.getTagName(true)));
+				TagUIUtils.createTagSelectionMenu(builder, menu);
 				
 				menu.setVisible( true );
 			});

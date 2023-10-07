@@ -578,6 +578,10 @@ TranscodeFileImpl
 		setString( KEY_CATEGORIES, str );
 	}
 
+	/**
+	 * @return if localize, returns localized name<br>
+	 *         if !localize, returns tag UIDs (long) as a String
+	 */
 	@Override
 	public String[]
 	getTags(

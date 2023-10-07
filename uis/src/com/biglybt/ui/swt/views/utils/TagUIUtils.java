@@ -41,9 +41,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.*;
 
-import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
-import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
@@ -59,7 +57,6 @@ import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.Parameter;
-import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
@@ -80,7 +77,6 @@ import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
-import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.pif.UISWTInputReceiver;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
@@ -91,6 +87,8 @@ import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.ViewUtils;
 import com.biglybt.ui.swt.views.ViewUtils.SpeedAdapter;
 import com.biglybt.ui.swt.views.stats.StatsView;
+
+import static com.biglybt.pif.ui.menus.MenuItem.STYLE_SEPARATOR;
 
 /**
  * @author TuxPaper
@@ -168,396 +166,237 @@ public class TagUIUtils
 		
 			// tag options
 
-		com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem("sidebar."
+		com.biglybt.pif.ui.menus.MenuItem menuTags = menuManager.addMenuItem("sidebar."
 				+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
 				"label.tags");
-		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		menuTags.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 
-		menuItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU);
+		menuTags.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU);
 
-		menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
-			@Override
-			public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+		menuTags.addFillListener((menuItemTags, data) -> {
+
+			menuItemTags.removeAllChildItems();
+
+			// manual
+
+			final TagType manual_tt = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL );
+
+			com.biglybt.pif.ui.menus.MenuItem menuManualTags = menuManager.addMenuItem( menuItemTags, manual_tt.getTagTypeName( false ));
+
+			menuManualTags.setStyle( com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU );
+			menuManualTags.addFillListener((menu, data1) -> {
 				menu.removeAllChildItems();
 
+				final List<Tag> all_tags = manual_tt.getTags();
+				final Map<Tag, Integer> mapTaggableCount = new HashMap<>();
 
-					// manual
+				boolean	has_ut	= false;
 
-				final TagType manual_tt = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL );
+				for ( Tag t: all_tags ){
 
-				com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem( menu, manual_tt.getTagTypeName( false ));
+					if ( t.isVisible()){
+						mapTaggableCount.put(t, 1);
+					}
 
-				menuItem.setStyle( com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU );
+					if (has_ut || !(t instanceof TagFeatureProperties)) {
+						continue;
+					}
 
-				menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
-					@Override
-					public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
-						menu.removeAllChildItems();
+					TagFeatureProperties props = (TagFeatureProperties)t;
+					TagProperty prop = props.getProperty( TagFeatureProperties.PR_UNTAGGED );
+					if (prop == null) {
+						continue;
+					}
 
-						final List<Tag> all_tags = manual_tt.getTags();
+					Boolean b = prop.getBoolean();
+					has_ut = b != null && b;
+				}
 
-						List<String>	menu_names 		= new ArrayList<>();
-						Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
+				com.biglybt.pif.ui.menus.MenuItem showAllItem = menuManager.addMenuItem( menu, "label.show.all" );
+				showAllItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_PUSH );
+				showAllItem.addListener((menu12, target) -> {
+					for ( Tag t: all_tags ){
+						t.setVisible( true );
+					}
+				});
+				showAllItem.setEnabled(mapTaggableCount.size() != all_tags.size());
+
+				com.biglybt.pif.ui.menus.MenuItem hideAllItem = menuManager.addMenuItem( menu, "popup.error.hideall" );
+				hideAllItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_PUSH );
+				hideAllItem.addListener((menu13, target) -> {
+					for ( Tag t: all_tags ){
+						t.setVisible( false );
+					}
+				});
+				hideAllItem.setEnabled(!mapTaggableCount.isEmpty());
+
+				menuManager.addMenuItem(menu, "sepm").setStyle(STYLE_SEPARATOR);
+
+				TagMenuOptions tagMenuOptions = TagMenuOptions.Builder()
+					.setParentPluginMenuItem(menu)
+					.setMenuManager(menuManager)
+					.setMapTaggableCount(mapTaggableCount, 1)
+					.setTagSelectionListener(Tag::setVisible)
+					.setMenuForAutoTags(false)
+					.setShowAddMenu(false)
+					.setTagMenuFilter(TagMenuOptions.FILTER_SHOW_ALL)
+					.build();
+				createTagMenu(tagMenuOptions);
+
+
+				if ( !has_ut ){
+
+					menuManager.addMenuItem(menu, "sepu").setStyle(STYLE_SEPARATOR);
+
+					com.biglybt.pif.ui.menus.MenuItem m = menuManager.addMenuItem( menu, "label.untagged" );
+
+					m.setStyle( com.biglybt.pif.ui.menus.MenuItem.STYLE_PUSH );
+
+					m.addListener((menu1, target) -> {
+						try{
+							String tag_name = MessageText.getString( "label.untagged" );
+
+							Tag ut_tag = manual_tt.getTag( tag_name, true );
+
+							if ( ut_tag == null ){
+
+
+								ut_tag = manual_tt.createTag( tag_name, true );
+							}
+
+							TagFeatureProperties tp = (TagFeatureProperties)ut_tag;
+
+							tp.getProperty( TagFeatureProperties.PR_UNTAGGED ).setBoolean( true );
+
+						}catch( TagException e ){
+
+							Debug.out( e );
+						}
+					});
+				}
+			});
+
+			com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem( menuItemTags, "label.add.tag");
+
+			menuItem.addListener((menu, target) -> createManualTag(null));
+
+			menuManager.addMenuItem( menuItemTags, "sep1" ).setStyle(STYLE_SEPARATOR );
+
+
+				// auto
+
+			menuItem = menuManager.addMenuItem( menuItemTags, "wizard.maketorrent.auto" );
+
+			menuItem.setStyle( com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU );
+
+			menuItem.addFillListener((menu, data12) -> {
+				menu.removeAllChildItems();
+
+					// autos
+
+
+				List<TagType> tag_types = TagManagerFactory.getTagManager().getTagTypes();
+
+				for ( final TagType tag_type: tag_types ){
+
+					if ( tag_type.getTagType() == TagType.TT_DOWNLOAD_CATEGORY ){
+
+						continue;
+					}
+
+					if ( !tag_type.isTagTypeAuto()){
+
+						continue;
+					}
+
+					if ( tag_type.getTags().size() == 0 ){
+
+						continue;
+					}
+
+					com.biglybt.pif.ui.menus.MenuItem menuItemTT = menuManager.addMenuItem( menu, tag_type.getTagTypeName( false ));
+
+					menuItemTT.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU);
+
+					menuItemTT.addFillListener((menuTT, data1) -> {
+						menuTT.removeAllChildItems();
+
+						final List<Tag> tags = tag_type.getTags();
+
+						com.biglybt.pif.ui.menus.MenuItem showAllItem = menuManager.addMenuItem(menuTT, "label.show.all" );
+						showAllItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_PUSH );
+
+						showAllItem.addListener((menu141, target) -> {
+							for ( Tag t: tags ){
+								t.setVisible( true );
+							}
+						});
+
+						com.biglybt.pif.ui.menus.MenuItem hideAllItem = menuManager.addMenuItem(menuTT, "popup.error.hideall" );
+						hideAllItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_PUSH );
+
+						hideAllItem.addListener((menu1412, target) -> {
+							for ( Tag t: tags ){
+								t.setVisible( false );
+							}
+						});
 
 						boolean	all_visible 	= true;
 						boolean all_invisible 	= true;
 
-						boolean	has_ut	= false;
-
-						for ( Tag t: all_tags ){
-
-							String name = t.getTagName( true );
-
-							menu_names.add( name );
-							menu_name_map.put( name, t );
-
+						for ( Tag t: tags ){
 							if ( t.isVisible()){
 								all_invisible = false;
+								if (!all_visible) {
+									break;
+								}
 							}else{
 								all_visible = false;
-							}
-
-							TagFeatureProperties props = (TagFeatureProperties)t;
-
-							TagProperty prop = props.getProperty( TagFeatureProperties.PR_UNTAGGED );
-
-							if ( prop != null ){
-
-								Boolean b = prop.getBoolean();
-
-								if ( b != null && b ){
-
-									has_ut = true;
+								if (!all_invisible) {
+									break;
 								}
 							}
 						}
-
-						com.biglybt.pif.ui.menus.MenuItem showAllItem = menuManager.addMenuItem( menu, "label.show.all" );
-						showAllItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_PUSH );
-
-						showAllItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-							@Override
-							public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-								for ( Tag t: all_tags ){
-									t.setVisible( true );
-								}
-							}
-						});
-
-						com.biglybt.pif.ui.menus.MenuItem hideAllItem = menuManager.addMenuItem( menu, "popup.error.hideall" );
-						hideAllItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_PUSH );
-
-						hideAllItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-							@Override
-							public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-								for ( Tag t: all_tags ){
-									t.setVisible( false );
-								}
-							}
-						});
-
-						com.biglybt.pif.ui.menus.MenuItem sepItem = menuManager.addMenuItem( menu, "sepm" );
-
-						sepItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_SEPARATOR );
 
 						showAllItem.setEnabled( !all_visible );
 						hideAllItem.setEnabled( !all_invisible );
 
-						List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, TagUIUtils.MAX_TOP_LEVEL_TAGS_IN_MENU );
+						menuManager.addMenuItem(menuTT, "sep2").setStyle(STYLE_SEPARATOR);
 
-						for ( Object obj: menu_structure ){
+						for ( final Tag t: tags ){
 
-							List<Tag>	bucket_tags = new ArrayList<>();
+							com.biglybt.pif.ui.menus.MenuItem menu_tag = menuManager.addMenuItem(
+									menuTT, t.getTagName(false));
 
-							com.biglybt.pif.ui.menus.MenuItem parent_menu;
+							menu_tag.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK);
 
-							if ( obj instanceof String ){
-
-								parent_menu = menu;
-
-								bucket_tags.add( menu_name_map.get((String)obj));
-
-							}else{
-
-								Object[]	entry = (Object[])obj;
-
-								List<String>	tag_names = (List<String>)entry[1];
-
-								boolean	sub_all_visible 	= true;
-								boolean sub_some_visible	= false;
-
-								for ( String name: tag_names ){
-
-									Tag tag = menu_name_map.get( name );
-
-									if ( tag.isVisible()){
-
-										sub_some_visible = true;
-
-									}else{
-
-										sub_all_visible = false;
-									}
-
-									bucket_tags.add( tag );
-								}
-
-								String mod;
-
-								if ( sub_all_visible ){
-
-									mod = " (*)";
-
-								}else if ( sub_some_visible ){
-
-									mod = " (+)";
-
-								}else{
-
-									mod = "";
-								}
-
-								parent_menu = menuManager.addMenuItem (menu, "!" + (String)entry[0] + mod + "!" );
-
-								parent_menu.setStyle( com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU );
-
-
-							}
-
-							for ( final Tag tag: bucket_tags ){
-
-								com.biglybt.pif.ui.menus.MenuItem m = menuManager.addMenuItem( parent_menu, tag.getTagName( false ));
-
-								m.setStyle( com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK );
-
-								m.setData(Boolean.valueOf(tag.isVisible()));
-
-								setMenuIcon( m, tag );
-								
-								m.addListener(
-									new MenuItemListener()
-									{
-										@Override
-										public void
-										selected(
-											com.biglybt.pif.ui.menus.MenuItem			menu,
-											Object 												target )
-										{
-											tag.setVisible( !tag.isVisible());
-										}
-									});
-							}
+							menu_tag.addListener((menuTag, target) -> t.setVisible(menuTag.isSelected()));
+							menu_tag.addFillListener((menuTag, data2) -> menuTag.setData(t.isVisible()));
 						}
-
-						if ( !has_ut ){
-
-							sepItem = menuManager.addMenuItem( menu, "sepu" );
-
-							sepItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_SEPARATOR );
-
-
-							com.biglybt.pif.ui.menus.MenuItem m = menuManager.addMenuItem( menu, "label.untagged" );
-
-							m.setStyle( com.biglybt.pif.ui.menus.MenuItem.STYLE_PUSH );
-
-							m.addListener(
-								new MenuItemListener()
-								{
-									@Override
-									public void
-									selected(
-										com.biglybt.pif.ui.menus.MenuItem			menu,
-										Object 												target )
-									{
-										try{
-											String tag_name = MessageText.getString( "label.untagged" );
-
-											Tag ut_tag = manual_tt.getTag( tag_name, true );
-
-											if ( ut_tag == null ){
-
-
-												ut_tag = manual_tt.createTag( tag_name, true );
-											}
-
-											TagFeatureProperties tp = (TagFeatureProperties)ut_tag;
-
-											tp.getProperty( TagFeatureProperties.PR_UNTAGGED ).setBoolean( true );
-
-										}catch( TagException e ){
-
-											Debug.out( e );
-										}
-									}
-								});
-						}
-					}
-				});
-
-				menuItem = menuManager.addMenuItem( menu, "label.add.tag");
-
-				menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-					@Override
-					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-						createManualTag(null);
-					}
-				});
-
-				com.biglybt.pif.ui.menus.MenuItem sepItem = menuManager.addMenuItem( menu, "sep1" );
-
-				sepItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_SEPARATOR );
-
-
-					// auto
-
-				menuItem = menuManager.addMenuItem( menu, "wizard.maketorrent.auto" );
-
-				menuItem.setStyle( com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU );
-
-				menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
-					@Override
-					public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
-						menu.removeAllChildItems();
-
-							// autos
-
-
-						List<TagType> tag_types = TagManagerFactory.getTagManager().getTagTypes();
-
-						for ( final TagType tag_type: tag_types ){
-
-							if ( tag_type.getTagType() == TagType.TT_DOWNLOAD_CATEGORY ){
-
-								continue;
-							}
-
-							if ( !tag_type.isTagTypeAuto()){
-
-								continue;
-							}
-
-							if ( tag_type.getTags().size() == 0 ){
-
-								continue;
-							}
-
-							com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem( menu, tag_type.getTagTypeName( false ));
-
-							menuItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU);
-
-							menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
-								@Override
-								public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
-									menu.removeAllChildItems();
-
-									final List<Tag> tags = tag_type.getTags();
-
-									com.biglybt.pif.ui.menus.MenuItem showAllItem = menuManager.addMenuItem( menu, "label.show.all" );
-									showAllItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_PUSH );
-
-									showAllItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-										@Override
-										public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-											for ( Tag t: tags ){
-												t.setVisible( true );
-											}
-										}
-									});
-
-									com.biglybt.pif.ui.menus.MenuItem hideAllItem = menuManager.addMenuItem( menu, "popup.error.hideall" );
-									hideAllItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_PUSH );
-
-									hideAllItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-										@Override
-										public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-											for ( Tag t: tags ){
-												t.setVisible( false );
-											}
-										}
-									});
-
-									boolean	all_visible 	= true;
-									boolean all_invisible 	= true;
-
-									for ( Tag t: tags ){
-										if ( t.isVisible()){
-											all_invisible = false;
-										}else{
-											all_visible = false;
-										}
-									}
-
-									showAllItem.setEnabled( !all_visible );
-									hideAllItem.setEnabled( !all_invisible );
-
-									com.biglybt.pif.ui.menus.MenuItem sepItem = menuManager.addMenuItem( menu, "sep2" );
-
-									sepItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_SEPARATOR );
-
-									for ( final Tag t: tags ){
-
-										com.biglybt.pif.ui.menus.MenuItem  menuItem = menuManager.addMenuItem( menu, t.getTagName( false ));
-
-										menuItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK );
-
-										menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-											@Override
-											public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-												t.setVisible( menu.isSelected());
-											}
-										});
-										menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
-											@Override
-											public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
-												menu.setData( t.isVisible());
-											}
-										});
-									}
-								}
-							});
-						}
-					}
-				});
-
-				sepItem = menuManager.addMenuItem( menu, "sep3" );
-
-				sepItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_SEPARATOR );
-
-
-				menuItem = menuManager.addMenuItem( menu, "tag.show.stats");
-
-				menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-					@Override
-					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-						UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
-						uiFunctions.getMDI().showEntryByID(StatsView.VIEW_ID, "TagStatsView");
-
-					}
-				});
-
-				menuItem = menuManager.addMenuItem( menu, "tag.show.overview");
-
-				menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-					@Override
-					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-						UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
-						uiFunctions.getMDI().showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_TAGS);
-					}
-				});
-			}
-		});
-
-		CoreFactory.addCoreRunningListener(
-			new CoreRunningListener()
-			{
-				@Override
-				public void
-				coreRunning(
-					Core core)
-				{
-					checkTagSharing( true );
+					});
 				}
 			});
+
+			menuManager.addMenuItem( menuItemTags, "sep3" ).setStyle(STYLE_SEPARATOR );
+
+
+			menuItem = menuManager.addMenuItem( menuItemTags, "tag.show.stats");
+
+			menuItem.addListener((menu, target) -> {
+				UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+				uiFunctions.getMDI().showEntryByID(StatsView.VIEW_ID, "TagStatsView");
+
+			});
+
+			menuItem = menuManager.addMenuItem( menuItemTags, "tag.show.overview");
+
+			menuItem.addListener((menu, target) -> {
+				UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+				uiFunctions.getMDI().showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_TAGS);
+			});
+		});
+
+		CoreFactory.addCoreRunningListener(core -> checkTagSharing( true ));
 
 	}
 
@@ -1289,7 +1128,7 @@ public class TagUIUtils
 		Menu[] menuShowHide = { null };
 
 		if ( closable ){
-			createCloseableMenuItems(menu, tag, tag_type, menuShowHide, needs_separator_next);
+			createCloseableMenuItems(menu, tag_type, menuShowHide, needs_separator_next);
 		}
 
 		if ( !auto ){
@@ -2762,7 +2601,6 @@ public class TagUIUtils
 	private static void
 		createCloseableMenuItems(
 				Menu menu,
-				Tag tag,
 				TagType tag_type,
 				Menu[] menuShowHide,
 				boolean needs_separator_next)
@@ -2770,15 +2608,11 @@ public class TagUIUtils
 
 		final List<Tag>	tags = tag_type.getTags();
 
-		int	visible_count 	= 0;
-		int	invisible_count = 0;
+		final Map<Tag, Integer> mapTaggableCount = new HashMap<>();
 
 		for ( Tag t: tags ){
-
 			if ( t.isVisible()){
-				visible_count++;
-			}else{
-				invisible_count++;
+				mapTaggableCount.put(t, 1);
 			}
 		}
 
@@ -2793,7 +2627,7 @@ public class TagUIUtils
 		title.setEnabled( false );
 		new MenuItem( menuShowHide[0], SWT.SEPARATOR);
 
-		if ( invisible_count > 0 ){
+		if (mapTaggableCount.size() != tags.size()){
 			MenuItem showAll = new MenuItem(menuShowHide[0], SWT.PUSH);
 			Messages.setLanguageText(showAll, "label.show.all");
 			showAll.addListener(SWT.Selection, (ListenerGetOffSWT) event -> {
@@ -2808,7 +2642,7 @@ public class TagUIUtils
 			needs_separator_next = true;
 		}
 
-		if ( visible_count > 0 ){
+		if (!mapTaggableCount.isEmpty()){
 			MenuItem hideAll = new MenuItem(menuShowHide[0], SWT.PUSH);
 			Messages.setLanguageText(hideAll, "popup.error.hideall");
 			hideAll.addListener(SWT.Selection, (ListenerGetOffSWT) event -> {
@@ -2823,111 +2657,25 @@ public class TagUIUtils
 			needs_separator_next = true;
 		}
 
-		if ( tags.size() > 0 ){
+		showhideitem.setEnabled( true );
 
-			if ( needs_separator_next ){
-
-				new MenuItem( menuShowHide[0], SWT.SEPARATOR);
-
-				needs_separator_next = false;
-			}
-
-			List<String>	menu_names 		= new ArrayList<>();
-			Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
-
-			for ( Tag t: tags ){
-
-				String name = t.getTagName( true );
-
-				menu_names.add( name );
-				menu_name_map.put( name, t );
-			}
-
-			List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, MAX_TOP_LEVEL_TAGS_IN_MENU );
-
-			for ( Object obj: menu_structure ){
-
-				List<Tag>	bucket_tags = new ArrayList<>();
-
-				Menu parent_menu;
-
-				if ( obj instanceof String ){
-
-					parent_menu = menuShowHide[0];
-
-					bucket_tags.add( menu_name_map.get((String)obj));
-
-				}else{
-
-					Object[]	entry = (Object[])obj;
-
-					List<String>	tag_names = (List<String>)entry[1];
-
-					boolean	sub_all_visible 	= true;
-					boolean sub_some_visible	= false;
-
-					for ( String name: tag_names ){
-
-						Tag sub_tag = menu_name_map.get( name );
-
-						if ( sub_tag.isVisible()){
-
-							sub_some_visible = true;
-
-						}else{
-
-							sub_all_visible = false;
-						}
-
-						bucket_tags.add( sub_tag );
-					}
-
-					String mod;
-
-					if ( sub_all_visible ){
-
-						mod = " (*)";
-
-					}else if ( sub_some_visible ){
-
-						mod = " (+)";
-
-					}else{
-
-						mod = "";
-					}
-
-					Menu menu_bucket = new Menu( menuShowHide[0].getShell(), SWT.DROP_DOWN );
-
-					MenuItem bucket_item = new MenuItem( menuShowHide[0], SWT.CASCADE );
-
-					bucket_item.setText((String)entry[0] + mod);
-
-					bucket_item.setMenu( menu_bucket );
-
-					parent_menu = menu_bucket;
-				}
-
-				for ( final Tag t: bucket_tags ){
-
-					MenuItem showTag = new MenuItem( parent_menu, SWT.CHECK );
-
-					showTag.setSelection( t.isVisible());
-
-					Messages.setLanguageText(showTag, t.getTagName( false ));
-
-					setMenuIcon( showTag, t );
-					
-					showTag.addListener(SWT.Selection, new Listener() {
-						@Override
-						public void handleEvent(Event event){
-							t.setVisible( !t.isVisible());
-						}});
-				}
-			}
+		if (tags.isEmpty()) {
+			return;
 		}
 
-		showhideitem.setEnabled( true );
+		if ( needs_separator_next ){
+
+			new MenuItem( menuShowHide[0], SWT.SEPARATOR);
+		}
+
+		TagMenuOptions.Builder builder = TagMenuOptions.Builder()
+			.setMapTaggableCount(mapTaggableCount, 1)
+			.setTagMenuFilter(TagMenuOptions.FILTER_NO_AUTOADDREMOVE)
+			.setTagSelectionListener(Tag::setVisible)
+			.setMenuForAutoTags(false)
+			.setShowAddMenu(false)
+			.setTagType(tag_type.getTagType());
+		createTagSelectionMenu(builder, menuShowHide[0]);
 	}
 
 	private static void
@@ -3529,50 +3277,237 @@ public class TagUIUtils
 		DownloadManager[] 		dms,
 		Menu 					menu_tags)
 	{
-		MenuItem[] items = menu_tags.getItems();
+		TagMenuOptions.Builder builder = TagMenuOptions.Builder()
+			.setTaggables(dms)
+			.setTagMenuFilter(TagMenuOptions.FILTER_NO_AUTOADDREMOVE)
+			.setTagSelectionListener((tag, checked) -> {
+				try {
+					tag.addTaggableBatch(true);
 
-		for ( MenuItem item: items ){
+					for (DownloadManager dm : dms) {
+						if (checked) {
+							tag.addTaggable(dm);
+						} else {
+							tag.removeTaggable(dm);
+						}
+					}
 
-			item.dispose();
+				} finally {
+					tag.addTaggableBatch(false);
+				}
+			});
+		createTagSelectionMenu(builder, menu_tags);
+	}
+
+	public interface TagMenuFilter {
+		List<Tag> filterTags(Tag[] tagsToFilter);
+	}
+
+	public static class TagMenuOptions
+	{
+		public static final TagMenuFilter FILTER_NO_AUTOADDREMOVE = tagsToFilter -> {
+			List<Tag> list = new ArrayList<>();
+			for (Tag tag : tagsToFilter) {
+				if (tag.isTagAuto()[0] && tag.isTagAuto()[1]) {
+					continue;
+				}
+				list.add(tag);
+			}
+			return list;
+		};
+
+		public static final TagMenuFilter FILTER_NO_AUTOADD = tagsToFilter -> {
+			List<Tag> list = new ArrayList<>();
+			for (Tag tag : tagsToFilter) {
+				if (tag.isTagAuto()[0]) {
+					continue;
+				}
+				list.add(tag);
+			}
+			return list;
+		};
+
+		public static final TagMenuFilter FILTER_SHOW_ALL = null;
+
+		private final Taggable[] taggables;
+
+		private final TagMenuFilter tagMenuFilter;
+
+		private final MenuManager menuManager;
+
+		private final com.biglybt.pif.ui.menus.MenuItem parent;
+
+		private final TagSelectionListener tagSelectionListener;
+
+		private final boolean showAddMenu;
+
+		private final boolean menuForAutoTags;
+
+		private final int tagType;
+
+		private final Map<Tag, Integer> mapTaggableCount;
+
+		private final int numTaggables;
+
+		private TagMenuOptions(Builder builder) {
+			taggables = builder.taggables;
+			tagMenuFilter = builder.tagMenuFilter;
+			menuManager = builder.menuManager == null
+					? PluginInitializer.getDefaultInterface().getUIManager().getMenuManager()
+					: builder.menuManager;
+			parent = builder.parent;
+			tagSelectionListener = builder.tagSelectionListener;
+			showAddMenu = builder.showAddMenu;
+			menuForAutoTags = builder.menuForAutoTags;
+			tagType = builder.tagType;
+			mapTaggableCount = builder.mapTaggableCount;
+			numTaggables = builder.numTaggables;
 		}
+
+		public static Builder Builder() {
+			return new Builder();
+		}
+
+		public static final class Builder
+		{
+			private Taggable[] taggables;
+
+			private TagMenuFilter tagMenuFilter;
+
+			private MenuManager menuManager;
+
+			private com.biglybt.pif.ui.menus.MenuItem parent;
+
+			private TagSelectionListener tagSelectionListener;
+
+			private boolean showAddMenu = true;
+
+			private boolean menuForAutoTags = true;
+
+			private int tagType = TagType.TT_DOWNLOAD_MANUAL;
+
+			private Map<Tag, Integer> mapTaggableCount;
+
+			private int numTaggables;
+
+			public Builder() {
+			}
+
+			public TagMenuOptions build() {
+				return new TagMenuOptions(this);
+			}
+
+			/**
+			 * @param parent Append MenuItems to this parent
+			 */
+			public Builder setParentPluginMenuItem(
+					com.biglybt.pif.ui.menus.MenuItem parent) {
+				this.parent = parent;
+				return this;
+			}
+
+			public Builder setTagSelectionListener(
+					TagSelectionListener tagSelectionListener) {
+				this.tagSelectionListener = tagSelectionListener;
+				return this;
+			}
+
+			/**
+			 * {@link Taggable}s will be scanned for tag selection.
+			 * <br>
+			 * {@link #setMapTaggableCount(Map, int)} is not needed when taggables is set
+			 */
+			public Builder setTaggables(Taggable[] taggables) {
+				this.taggables = taggables;
+				return this;
+			}
+
+			/**
+			 * Filters the tags before being added as menu items
+			 * <p>
+			 * See {@link #FILTER_NO_AUTOADDREMOVE}, {@link #FILTER_NO_AUTOADD}, {@link #FILTER_SHOW_ALL}
+			 */
+			public Builder setTagMenuFilter(TagMenuFilter tagMenuFilter) {
+				this.tagMenuFilter = tagMenuFilter;
+				return this;
+			}
+
+			public Builder setMenuManager(MenuManager menuManager) {
+				this.menuManager = menuManager;
+				return this;
+			}
+
+			public Builder setShowAddMenu(boolean showAddMenu) {
+				this.showAddMenu = showAddMenu;
+				return this;
+			}
+
+			/**
+			 * Whether to place Auto tags in their own menu (unselectable),
+			 * or to include them with the rest of the tags.
+			 * <p></p>
+			 * Default is true
+			 */
+			public Builder setMenuForAutoTags(boolean menuForAutoTags) {
+				this.menuForAutoTags = menuForAutoTags;
+				return this;
+			}
+
+			/**
+			 * See {@link TagType}'s TT_* constants
+			 * <p></p>
+			 * Default is {@link TagType#TT_DOWNLOAD_MANUAL}
+			 */
+			public Builder setTagType(int tagType) {
+				this.tagType = tagType;
+				return this;
+			}
+
+			/**
+			 * @param mapTaggableCount selected tags -> the # of taggables that have the tag selected
+			 */
+			public Builder setMapTaggableCount(Map<Tag, Integer> mapTaggableCount,
+					int numTaggables) {
+				this.mapTaggableCount = mapTaggableCount;
+				this.numTaggables = numTaggables;
+				return this;
+			}
+		}
+	}
+
+	/**
+	 * @param options See {@link TagMenuOptions#Builder()}
+	 */
+	public static void
+	createTagMenu(TagMenuOptions options)
+	{
 
 		final TagManager tm = TagManagerFactory.getTagManager();
 
-			// add tag
-		
-		MenuItem item_create = new MenuItem( menu_tags, SWT.PUSH);
+		boolean hasTaggables = options.taggables != null && options.taggables.length > 0;
 
-		Messages.setLanguageText(item_create, "label.add.tag");
-		item_create.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
+		final MenuManager mm = options.menuManager;
 
-				createManualTag(new UIFunctions.TagReturner() {
-					@Override
-					public void returnedTags(Tag[] tags) {
-						if ( tags != null ){
-							for (Tag new_tag : tags) {
-								for ( DownloadManager dm: dms ){
+		boolean needsSeparator = false;
 
-									new_tag.addTaggable( dm );
-								}
-
-								COConfigurationManager.setParameter( "Library.TagInSideBar", true );
-							}
+		if (options.showAddMenu) {
+			mm.addMenuItem(options.parent, "label.add.tag").addMultiListener(
+					(menu, target) -> createManualTag(tags -> {
+						for (Tag new_tag : tags) {
+							options.tagSelectionListener.selected(new_tag, true);
 						}
-					}
-				});
-			}
-		});
-		
-			// tagging view 
-		
-		MenuItem item_pop = new MenuItem( menu_tags, SWT.PUSH);
+					}));
+			needsSeparator = true;
+		}
 
-		Messages.setLanguageText(item_pop, "menu.tagging.view");
-		item_pop.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event){
+			// tagging view 
+
+		if (hasTaggables && options.taggables[0] instanceof DownloadManager) {
+			DownloadManager[] dms = (DownloadManager[]) options.taggables;
+
+			com.biglybt.pif.ui.menus.MenuItem itemPop = mm.addMenuItem(options.parent, "menu.tagging.view");
+
+			itemPop.addMultiListener((menu, target) -> { 
 								
 				String data = "{\"mdi\":\"tabbed\",\"event_listener\":{\"name\":\"com.biglybt.ui.swt.views.TaggingView\"},\"id\":\"TaggingView\",\"control_type\":0,\"skin_id\":\"com.biglybt.ui.skin.skin3\"}";
 				
@@ -3605,65 +3540,63 @@ public class TagUIUtils
 				}
 				
 				PopOutManager.popOutStandAlone( MessageText.getString( "label.tags" ) + " - " + title, map, "TagUIUtils:TaggingView" );
-			}
-		});
-		
-		new MenuItem( menu_tags, SWT.SEPARATOR );
+			});
+
+			needsSeparator = true;
+		}
+
+		if (needsSeparator) {
+			mm.addMenuItem(options.parent, "s1").setStyle(STYLE_SEPARATOR);
+			needsSeparator = false;
+		}
 
 			// auto tags
 		
 		Map<TagType,List<Tag>>	auto_map = new HashMap<>();
 
-		TagType manual_tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+		TagType tt = tm.getTagType(options.tagType);
 
-		Map<Tag,Integer>	manual_map = new HashMap<>();
+		boolean buildTaggableCount = options.mapTaggableCount == null;
+		Map<Tag,Integer>	mapTaggableCount = buildTaggableCount ? new HashMap<>() : options.mapTaggableCount;
+		
+		if (hasTaggables && (buildTaggableCount || options.menuForAutoTags)) {
 
-		for ( DownloadManager dm: dms ){
+			for ( Taggable taggable : options.taggables ){
 
-			List<Tag> tags = tm.getTagsForTaggable( dm );
+				List<Tag> tags = tm.getTagsForTaggable( taggable );
 
-			for ( Tag t: tags ){
+				for ( Tag t: tags ){
 
-				TagType tt = t.getTagType();
+					TagType ttTag = t.getTagType();
 
-				if ( tt.isTagTypeAuto() || ( t.isTagAuto()[0] &&  t.isTagAuto()[1])){
+					if (options.menuForAutoTags && (ttTag.isTagTypeAuto()
+							|| (t.isTagAuto()[0] && t.isTagAuto()[1]))) {
 
-					List<Tag> x = auto_map.get( tt );
+						auto_map.computeIfAbsent(ttTag, k -> new ArrayList<>()).add(t);
 
-					if ( x == null ){
+					}else if ( buildTaggableCount && ttTag == tt ){
 
-						x = new ArrayList<>();
-
-						auto_map.put( tt, x );
+						mapTaggableCount.compute(t, (t2, num) -> num == null ? 1 : num + 1);
 					}
-
-					x.add( t );
-
-				}else if ( tt == manual_tt ){
-
-					Integer i = manual_map.get( t );
-
-					manual_map.put( t, i==null?1:i+1 );
 				}
 			}
 		}
 
-		if ( auto_map.size() > 0 ){
+		if (!auto_map.isEmpty()){
+			// Make a menu called "Auto", with an item for each tag type
+			// each item displays the tag type name, the tags selected 
+			// and the # of times the tag has been added (ie multiple taggables have it selected)
 
-			final Menu menuAuto = new Menu(menu_tags.getShell(), SWT.DROP_DOWN);
-			final MenuItem autoItem = new MenuItem(menu_tags, SWT.CASCADE);
-			Messages.setLanguageText(autoItem, "wizard.maketorrent.auto" );
-			autoItem.setMenu(menuAuto);
+			com.biglybt.pif.ui.menus.MenuItem autoItem = mm.addMenuItem(options.parent, "wizard.maketorrent.auto");
+			autoItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU);
 
 			List<TagType>	auto_tags = TagUtils.sortTagTypes( auto_map.keySet());
 
-			for ( TagType tt: auto_tags ){
+			for ( TagType ttAutoTags : auto_tags ){
 
-				MenuItem tt_i = new MenuItem(menuAuto, Constants.isOSX?SWT.CHECK:SWT.PUSH);
+				String tt_str = ttAutoTags.getTagTypeName( true ) + ": ";
 
-				String tt_str = tt.getTagTypeName( true ) + ": ";
-
-				List<Tag> tags = auto_map.get( tt );
+				List<Tag> tags = auto_map.get( ttAutoTags );
 
 				Map<Tag,Integer>	tag_counts = new HashMap<>();
 
@@ -3684,100 +3617,144 @@ public class TagUIUtils
 
 					num++;
 
-					if ( dms.length > 1 ){
+					if ( hasTaggables && options.taggables.length > 1 ){
 
 						tt_str += " (" + tag_counts.get( t ) + ")";
 					}
 				}
 
+				com.biglybt.pif.ui.menus.MenuItem tt_i = mm.addMenuItem(autoItem, tt_str);
 				tt_i.setText( tt_str );
 				if ( Constants.isOSX ){
-					tt_i.setSelection(true);
+					tt_i.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK);
+					tt_i.setData(true);
 				}else{
 					Utils.setMenuItemImage( tt_i, "graytick" );
 				}
+			}
 
-				//tt_i.setEnabled(false);
+			needsSeparator = true;
+		}
+
+		List<Tag>	all_tags = tt.getTags();
+		if (options.tagMenuFilter != null) {
+			all_tags = options.tagMenuFilter.filterTags(all_tags.toArray(new Tag[0]));
+		}
+
+		if (all_tags.isEmpty()) {
+			return;
+		}
+
+		if (needsSeparator){
+			needsSeparator = false;
+			mm.addMenuItem(options.parent, "s2").setStyle(STYLE_SEPARATOR);
+		}
+
+		Collection<TagGroup>	tag_groups 		= new HashSet<>();
+		List<Tag>		tag_no_group	= new ArrayList<>();
+
+		for ( Tag t: all_tags ){
+
+			TagGroup tg = t.getGroupContainer();
+
+			if ( tg == null || tg.getName() == null ){
+
+				tag_no_group.add( t );
+
+			}else{
+
+				tag_groups.add( tg );
 			}
 		}
 
-		List<Tag>	all_manual_t = manual_tt.getTags();
+		int numTaggables = hasTaggables ? options.taggables.length : options.numTaggables;
 
-		if ( all_manual_t.size() > 0 ){
+		if ( !tag_groups.isEmpty()){
+			List<TagGroup> l_tg = TagUtils.sortTagGroups( tag_groups );
 
-			if ( auto_map.size() > 0 ){
+			for ( TagGroup tg: l_tg ){
 
-				new MenuItem( menu_tags, SWT.SEPARATOR );
+				com.biglybt.pif.ui.menus.MenuItem groupItem = mm.addMenuItem(options.parent, tg.getName());
+				groupItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU);
+
+				// Note: If tg.isExclusive() and only one numTaggables, we could
+				//       use a radio button
+				int numChecked = build(mm, groupItem, tg.getTags(), numTaggables,
+						mapTaggableCount, options.tagSelectionListener);
+
+				groupItem.setText(addCountToTagMenuLabel(tg.getName(), numChecked,
+						groupItem.getItemCount()));
 			}
 
-			Set<TagGroup>	tag_groups 		= new HashSet<>();
-			List<Tag>		tag_no_group	= new ArrayList<>();
-			
-			for ( Tag t: all_manual_t ){
-				
-				TagGroup tg = t.getGroupContainer();
-				
-				if ( tg == null || tg.getName() == null ){
-					
-					tag_no_group.add( t );
-					
-				}else{
-					
-					tag_groups.add( tg );
-				}
-			}
-			
-			if ( !tag_groups.isEmpty()){
-				
-				List<TagGroup> l_tg = TagUtils.sortTagGroups( tag_groups );
-				
-				for ( TagGroup tg: l_tg ){
-					
-					Menu menuGroup = new Menu(menu_tags.getShell(), SWT.DROP_DOWN);
-					MenuItem groupItem = new MenuItem(menu_tags, SWT.CASCADE);
-					groupItem.setText( tg.getName());
-					groupItem.setMenu(menuGroup);
-					
-					build( dms, menuGroup, manual_map, tg.getTags());
-				}
-				
-				if ( !tag_no_group.isEmpty()){
-					
-					Menu menuGroup = new Menu(menu_tags.getShell(), SWT.DROP_DOWN);
-					MenuItem groupItem = new MenuItem(menu_tags, SWT.CASCADE);
-					Messages.setLanguageText(groupItem, "menu.no.group" );
-					groupItem.setMenu(menuGroup);
-					
-					build( dms, menuGroup, manual_map, tag_no_group );
-				}
-				
-				new MenuItem( menu_tags, SWT.SEPARATOR );
-			}
-			
-			build( dms, menu_tags, manual_map, all_manual_t );
+			if ( !tag_no_group.isEmpty()){
 
+				com.biglybt.pif.ui.menus.MenuItem groupItem = mm.addMenuItem(options.parent, "menu.no.group");
+				groupItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU);
+
+				int numChecked = build(mm, groupItem, tag_no_group, numTaggables,
+						mapTaggableCount, options.tagSelectionListener);
+				if (numChecked > 0) {
+					groupItem.setText(addCountToTagMenuLabel(groupItem.getText(),
+							numChecked, groupItem.getItemCount()));
+				}
+			}
+
+			mm.addMenuItem(options.parent, "s3").setStyle(STYLE_SEPARATOR);
 		}
+
+		// Put all the tags in a "By Alphabet" menu if we have enough tags groups and tags 
+		com.biglybt.pif.ui.menus.MenuItem menuForAll = options.parent;
+		if (tag_groups.size() > 2 && all_tags.size() > 5) {
+			menuForAll = mm.addMenuItem(options.parent, "menu.by.alphabet");
+			menuForAll.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU);
+		}
+
+		build(mm, menuForAll, all_tags, numTaggables, mapTaggableCount,
+				options.tagSelectionListener);
+
 	}
 
-	private static void
+	private static String addCountToTagMenuLabel(String name, int numChecked,
+			int numItems) {
+		String label = name;
+		if (numChecked > 0) {
+			if (numChecked != numItems) {
+				label += "\t" + numChecked + "/" + numItems;
+			} else {
+				label += "\t\u25C9";
+			}
+		}
+		return label;
+	}
+
+	/**
+	 * @param menuManager
+	 * @param menu_tags Menu to put MenuItems in
+	 * @param all_tags All tags to display
+	 * @param numTaggables # of items (Taggables) we are setting this menu up for
+	 * @param mapTaggableCount
+	 * @param tagSelectionListener
+	 * @return # of items checked
+	 */
+	private static int
 	build(
-		DownloadManager[] 		dms,
-		Menu 					menu_tags,
-		Map<Tag,Integer>		manual_map,
-		List<Tag>				manual_t )
+		MenuManager menuManager,
+		com.biglybt.pif.ui.menus.MenuItem menu_tags,
+		List<Tag> all_tags, 
+		int numTaggables,
+		Map<Tag, Integer> mapTaggableCount,
+		TagSelectionListener tagSelectionListener)
 	{
+		int numChecked = 0;
 		List<String>	menu_names 		= new ArrayList<>();
 		Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
 
-		for ( Tag t: manual_t ){
+		for ( Tag t: all_tags ){
 
-			if ( !( t.isTagAuto()[0] && t.isTagAuto()[1] )){ 
+			String name = t.getTagName( true );
 
-				String name = t.getTagName( true );
-
-				menu_names.add( name );
-				menu_name_map.put( name, t );
-			}
+			menu_names.add( name );
+			menu_name_map.put( name, t );
 		}
 
 		List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, MAX_TOP_LEVEL_TAGS_IN_MENU );
@@ -3786,7 +3763,7 @@ public class TagUIUtils
 
 			List<Tag>	bucket_tags = new ArrayList<>();
 
-			Menu	 parent_menu;
+			com.biglybt.pif.ui.menus.MenuItem	 parent_menu;
 
 			if ( obj instanceof String ){
 
@@ -3807,9 +3784,8 @@ public class TagUIUtils
 
 					Tag sub_tag = menu_name_map.get( name );
 
-					Integer c = manual_map.get( sub_tag );
-
-					if ( c != null && c == dms.length ){
+					Integer count = mapTaggableCount.get(sub_tag);
+					if (count != null && count > 0) {
 
 						sub_some_selected = true;
 
@@ -3825,206 +3801,84 @@ public class TagUIUtils
 
 				if ( sub_all_selected ){
 
-					mod = " (*)";
+					mod = "\t\u25C9";
 
 				}else if ( sub_some_selected ){
 
-					mod = " (+)";
+					mod = "\t\u25D4";
 
 				}else{
 
 					mod = "";
 				}
 
-				Menu menu_bucket = new Menu( menu_tags.getShell(), SWT.DROP_DOWN );
+				String title = entry[0] + mod;
 
-				MenuItem bucket_item = new MenuItem( menu_tags, SWT.CASCADE );
-
-				bucket_item.setText((String)entry[0] + mod);
-
-				bucket_item.setMenu( menu_bucket );
-
-				parent_menu = menu_bucket;
+				parent_menu = menuManager.addMenuItem(menu_tags, title);
+				parent_menu.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU);
+				parent_menu.setText(title);
 			}
 
 			for ( final Tag t: bucket_tags ){
+				String title = t.getTagName(true);
 
-				final MenuItem t_i = new MenuItem( parent_menu, SWT.CHECK );
+				Integer count = mapTaggableCount.get(t);
+				int c = count == null ? 0 : count;
 
-				String tag_name = t.getTagName( true );
+				boolean checked = c > 0;
+				boolean partial = checked && c != numTaggables;
 
-				Integer c = manual_map.get( t );
-
-				if ( c != null ){
-
-					if ( c == dms.length ){
-
-						t_i.setSelection( true );
-
-						t_i.setText( tag_name );
-
-					}else{
-
-						t_i.setText( tag_name + " (" + c + ")" );
+				if (checked){
+					numChecked++;
+					if (partial) {
+						title += "\t" + c + "/" + numTaggables;
 					}
-				}else{
-
-					t_i.setText( tag_name );
 				}
+
+				com.biglybt.pif.ui.menus.MenuItem t_i = menuManager.addMenuItem(parent_menu, title);
+				t_i.setText(title);
+				t_i.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK);
+				t_i.setData(checked);
 
 				TagUIUtils.setMenuIcon( t_i, t );
 				
-				t_i.addListener(SWT.Selection, new Listener() {
-					@Override
-					public void handleEvent(Event event) {
-
-						boolean	selected = t_i.getSelection();
-
-						try{
-							t.addTaggableBatch( true );
-						
-							for ( DownloadManager dm: dms ){
-	
-								if ( selected ){
-	
-									t.addTaggable( dm );
-	
-								}else{
-	
-									t.removeTaggable( dm );
-								}
-							}
-						}finally{
-							
-							t.addTaggableBatch( false );
-						}
-					}
-				});
+				// When some, but not all, taggables are selected (partial), default
+				// to selected
+				t_i.addListener((menu, target) -> tagSelectionListener.selected(t,
+						partial || menu.isSelected()));
 			}
 		}
+		return numChecked;
 	}
-	
-	public static MenuItem
-	createTagSelectionMenu(
-		Menu					top_menu,
-		String					resource,
-		List<Tag>				tags,
-		TagSelectionListener	listener )
-	{
-		Menu 		menu;
-		MenuItem 	top_item;
-		
-		if ( resource != null ){
-			
-			menu = new Menu( top_menu.getShell(), SWT.DROP_DOWN);
 
-			top_item = new MenuItem( top_menu, SWT.CASCADE);
-	
-			Messages.setLanguageText( top_item, resource );
-	
-			top_item.setMenu( menu );
-			
-		}else{
-			
-			menu = top_menu;
-			
-			top_item = null;
-		}
-	
-		List<String>	menu_names 		= new ArrayList<>();
-		Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
+	/**
+	 * Creates a single-select tag menu
+	 * 
+	 * @param swtTopMenu SWT menu to add tag menu items to.
+	 */
+	public static void createTagSelectionMenu(TagMenuOptions.Builder builder,
+			Menu swtTopMenu) {
 
-		for ( Tag t: tags ){
-			
-			String name = t.getTagName( true );
+		MenuManager mm = builder.menuManager == null
+				? PluginInitializer.getDefaultInterface().getUIManager().getMenuManager()
+				: builder.menuManager;
 
-			menu_names.add( name );
-			menu_name_map.put( name, t );
-		}
+		String menuId = "TagsMenu." + SystemTime.getCurrentTime();
+		com.biglybt.pif.ui.menus.MenuItem parent = mm.addMenuItem(menuId, "Tags");
+		parent.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU);
 
-		List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, MAX_TOP_LEVEL_TAGS_IN_MENU );
+		TagMenuOptions tagMenuOptions = builder
+			.setParentPluginMenuItem(parent)
+			.setMenuManager(mm)
+			.build();
+		createTagMenu(tagMenuOptions);
 
-		for ( Object obj: menu_structure ){
+		MenuBuildUtils.addPluginMenuItems(parent.getItems(), swtTopMenu, true, true,
+				new MenuBuildUtils.MenuItemPluginMenuControllerImpl(
+						tagMenuOptions.taggables));
 
-			List<Tag>	bucket_tags = new ArrayList<>();
-
-			Menu parent_menu;
-
-			if ( obj instanceof String ){
-
-				parent_menu = menu;
-
-				bucket_tags.add( menu_name_map.get((String)obj));
-
-			}else{
-
-				Object[]	entry = (Object[])obj;
-
-				List<String>	tag_names = (List<String>)entry[1];
-
-				for ( String name: tag_names ){
-
-					Tag sub_tag = menu_name_map.get( name );
-
-					bucket_tags.add( sub_tag );
-				}
-
-				Menu menu_bucket = new Menu(menu.getShell(), SWT.DROP_DOWN );
-
-				MenuItem bucket_item = new MenuItem( menu, SWT.CASCADE );
-
-				bucket_item.setText((String)entry[0]);
-
-				bucket_item.setMenu( menu_bucket );
-
-				parent_menu = menu_bucket;
-			}
-
-			for ( final Tag t: bucket_tags ){
-
-				MenuItem mi = new MenuItem( parent_menu, SWT.PUSH );
-
-				Messages.setLanguageText(mi, t.getTagName( false ));
-
-				setMenuIcon( mi, t );
-				
-				mi.addListener(SWT.Selection, new Listener() {
-					@Override
-					public void handleEvent(Event event){
-						
-						listener.selected( t );
-					}});
-			}
-		}
-		
-		new MenuItem( menu , SWT.SEPARATOR );
-
-		MenuItem item_create = new MenuItem( menu, SWT.PUSH);
-
-		Messages.setLanguageText(item_create, "label.add.tag");
-		
-		item_create.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-
-				createManualTag(new UIFunctions.TagReturner() {
-					@Override
-					public void returnedTags(Tag[] tags) {
-						if ( tags != null ){
-							
-							for ( Tag tag: tags ){
-								
-								listener.selected( tag );
-							}
-						}
-					}
-				});
-			}
-		});
-		
-		return( top_item );
+		swtTopMenu.addDisposeListener(e -> parent.remove());
 	}
-	
 
 	private static void
 	showFilesView(
@@ -4247,8 +4101,6 @@ public class TagUIUtils
 	public interface
 	TagSelectionListener
 	{
-		public void
-		selected(
-			Tag		tag );
+		void selected(Tag tag, boolean checked);
 	}
 }

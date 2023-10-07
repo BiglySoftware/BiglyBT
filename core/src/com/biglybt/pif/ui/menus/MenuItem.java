@@ -217,6 +217,11 @@ public interface MenuItem
 	public MenuItem[] getItems();
 
 	/**
+	 * Returns the number of menu items
+	 */
+	int getItemCount();
+
+	/**
 	 * Get the child item with the given resource key.
 	 *
 	 * @return The child MenuItem object which has the resource key
