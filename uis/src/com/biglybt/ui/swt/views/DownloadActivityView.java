@@ -40,7 +40,9 @@ import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingImmediateAverage;
 import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.mdi.MdiEntry;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
@@ -65,7 +67,8 @@ import com.biglybt.pif.ui.UIPluginViewToolBarListener;
  */
 public class
 DownloadActivityView
-	implements UISWTViewCoreEventListener, UIPluginViewToolBarListener, MdiSWTMenuHackListener, ParameterListener
+	implements UISWTViewCoreEventListener, UIPluginViewToolBarListener,
+	MdiSWTMenuHackListener, ParameterListener, ViewTitleInfo2
 {
 	public static final String MSGID_PREFIX = "DownloadActivityView";
 
@@ -101,6 +104,11 @@ DownloadActivityView
 	getFullTitle()
 	{
 		return( MessageText.getString(MSGID_PREFIX + ".title.full" ));
+	}
+
+	@Override
+	public Object getTitleInfoProperty(int propertyID) {
+		return null;
 	}
 
 	public void
@@ -741,22 +749,30 @@ DownloadActivityView
 	private void
 	create()
 	{
-    	swtView.setTitle(getFullTitle());
-
-    	swtView.setToolBarListener(this);
-
     	COConfigurationManager.addParameterListener( "DownloadActivity.show.eta", this );
     	
     	show_time = COConfigurationManager.getBooleanParameter( "DownloadActivity.show.eta" );
-    	
+	}
+	
+	private void setSwtView(UISWTView swtView) {
+		if (this.swtView == swtView) {
+			return;
+		}
+		this.swtView = swtView;
+
+		swtView.setTitle(getFullTitle());
+
+		swtView.setToolBarListener(this);
+
 		if (swtView instanceof TabbedEntry) {
-			
+
 			TabbedEntry tabView = (TabbedEntry)swtView;
-			
+
 			tabView.addListener( this );
-			
+
 			legend_at_bottom = tabView.getMDI().getAllowSubViews();
 		}
+
 	}
 	
 	private void
@@ -779,13 +795,6 @@ DownloadActivityView
 			 
 			 eta = null;
 		 }
-		 
-		 if ( swtView instanceof TabbedEntry ){
-				
-			TabbedEntry tabView = (TabbedEntry)swtView;
-			
-			tabView.removeListener( this );
-		 }
 	}
 
 	@Override
@@ -795,7 +804,8 @@ DownloadActivityView
 	{
 	    switch( event.getType()){
 		    case UISWTViewEvent.TYPE_CREATE:{
-		    	swtView = event.getView();
+
+	    		setSwtView(event.getView());
 
 		    	create();
 
@@ -878,6 +888,14 @@ DownloadActivityView
 	    }
 
 	    return( true );
+	}
+
+	@Override
+	public void titleInfoLinked(MultipleDocumentInterface mdi,
+		MdiEntry mdiEntry) {
+		if (mdiEntry instanceof UISWTView) {
+			setSwtView((UISWTView) mdiEntry);
+		}
 	}
 
 	/* (non-Javadoc)
