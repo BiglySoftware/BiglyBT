@@ -209,8 +209,6 @@ SBC_SubscriptionResultsView
 
 				control.setMenu( menu );
 
-				final String menu_key = SubscriptionMDIEntry.setupMenus( ds, null );
-
 				menu.addMenuListener(
 					new MenuListener() {
 
@@ -219,6 +217,8 @@ SBC_SubscriptionResultsView
 							for ( MenuItem mi: menu.getItems()){
 								mi.dispose();
 							}
+
+							String menu_key = SubscriptionMDIEntry.setupMenus( ds, null );
 
 							com.biglybt.pif.ui.menus.MenuItem[] menu_items = MenuItemManager.getInstance().getAllAsArray( menu_key );
 

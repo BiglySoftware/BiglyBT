@@ -18,11 +18,9 @@
 package com.biglybt.util;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.biglybt.core.util.UrlUtils;
 import org.gudy.bouncycastle.util.encoders.Base64;
@@ -542,5 +540,23 @@ public class MapUtils
 			Debug.out( "unsupported: " + o );
 			return( null );
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	/**
+	 * Sort based on Map's value (typically a count), descending
+	 * 
+	 * @param limit Limit returned array to max number of items
+	 * 
+	 * @return Array of keys
+	 */
+	public static <K> K[] sortCount(Map<K, Integer> map, int limit) {
+		if (map.isEmpty()) {
+			return null;
+		}
+		List<K> names = new ArrayList<>(map.keySet());
+		names.sort(Comparator.comparing(map::get, Comparator.reverseOrder()));
+		K[] o = (K[]) Array.newInstance(names.get(0).getClass(), Math.min(limit, names.size()));
+		return names.toArray(o);
 	}
 }

@@ -33,7 +33,6 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -59,7 +58,10 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.subscriptions.SubscriptionManagerUI.SubsLists;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
+import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 
 import com.biglybt.core.metasearch.Engine;
@@ -298,29 +300,9 @@ public class SubscriptionsView
 
 		Font font = viewComposite.getFont();
 		
-		FontData fDatas[] = font.getFontData();
-		for(int i = 0 ; i < fDatas.length ; i++) {
-			fDatas[i].setStyle(SWT.BOLD);
-		}
-
-		textFont0 = new Font(viewComposite.getDisplay(),fDatas);
-		
-		fDatas = font.getFontData();
-		for(int i = 0 ; i < fDatas.length ; i++) {
-			fDatas[i].setHeight(150 * fDatas[i].getHeight() / 100);
-			if(Constants.isWindows) {
-				fDatas[i].setStyle(SWT.BOLD);
-			}
-		}
-
-		textFont1 = new Font(viewComposite.getDisplay(),fDatas);
-
-		fDatas = font.getFontData();
-		for(int i = 0 ; i < fDatas.length ; i++) {
-			fDatas[i].setHeight(120 * fDatas[i].getHeight() / 100);
-		}
-
-		textFont2 = new Font(viewComposite.getDisplay(),fDatas);
+		textFont0 = FontUtils.getFontWithStyle(font, SWT.BOLD, 1.0f);
+		textFont1 = FontUtils.getFontWithStyle(font, Constants.isWindows ? SWT.BOLD : SWT.NONE, 1.5f);
+		textFont2 = FontUtils.getFontWithStyle(font, SWT.NONE, 1.2f);
 
 		boolean dark = Utils.isDarkAppearanceNative();
 		
@@ -422,40 +404,44 @@ public class SubscriptionsView
 
 		});
 
+		PluginInterface pi = PluginInitializer.getDefaultInterface();
+		UIManager uim = pi.getUIManager();
+
+		MenuManager  menu_manager 	= uim.getMenuManager();
+		TableManager table_manager 	= uim.getTableManager();
+
+		ArrayList<TableContextMenuItem>	menu_items = new ArrayList<>();
+
+		SubscriptionManagerUI.MenuCreator menu_creator =
+			new SubscriptionManagerUI.MenuCreator()
+			{
+				@Override
+				public com.biglybt.pif.ui.menus.MenuItem
+				newItem(
+					String 	resource_id, 
+					MenuItemListener multiListener )
+				{
+					TableContextMenuItem menu =
+						table_manager.addContextMenuItem( TABLE_ID, resource_id );
+					menu.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+
+					menu_items.add( menu );
+					
+					if (multiListener != null) {
+						menu.addMultiListener(multiListener);
+					}
+
+					return( menu );
+				}
+
+				@Override
+				public void refreshView()
+				{
+
+				}
+			};
 
 		view.addSelectionListener(new TableSelectionAdapter() {
-
-			PluginInterface pi = PluginInitializer.getDefaultInterface();
-			UIManager uim = pi.getUIManager();
-
-			MenuManager  menu_manager 	= uim.getMenuManager();
-			TableManager table_manager 	= uim.getTableManager();
-
-			ArrayList<TableContextMenuItem>	menu_items = new ArrayList<>();
-
-			SubscriptionManagerUI.MenuCreator menu_creator =
-					new SubscriptionManagerUI.MenuCreator()
-					{
-						@Override
-						public com.biglybt.pif.ui.menus.MenuItem
-						createMenu(
-							String 	resource_id )
-						{
-							TableContextMenuItem menu =
-								table_manager.addContextMenuItem( TABLE_ID, resource_id );
-							menu.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-							menu_items.add( menu );
-
-							return( menu );
-						}
-
-						@Override
-						public void refreshView()
-						{
-
-						}
-					};
 
 			@Override
 			public void defaultSelected(TableRowCore[] rows, int stateMask) {
@@ -517,34 +503,36 @@ public class SubscriptionsView
 				
 				ISelectedContent[] sels = new ISelectedContent[rows.length];
 
-				java.util.List<Subscription> subs = new ArrayList<>();
-
 				for (int i=0;i<rows.length;i++){
-
-					Subscription sub = (Subscription)rows[i].getDataSource();
-
-					sels[i] = new SubscriptionSelectedContent( sub );
-
-					if ( sub != null ){
-
-						subs.add( sub );
-					}
+					sels[i] = new SubscriptionSelectedContent( (Subscription)rows[i].getDataSource() );
 				}
 
 				SelectedContentManager.changeCurrentlySelectedContent(view.getTableID(), sels, view);
 
-				for ( TableContextMenuItem mi: menu_items ){
-
-					mi.remove();
-				}
-
-				if ( subs.size() > 0 ){
-
-					SubscriptionManagerUI.createMenus( menu_manager, menu_creator, subs.toArray( new Subscription[0] ));
-				}
 			}
 
-		}, false) ;
+		}, false);
+
+		view.addMenuFillListener(new TableViewSWTMenuFillListener() {
+			@Override
+			public void fillMenu(String sColumnName, Menu menu) {
+				// Don't directly access {menu}, we add our menus via table_manager.addContextMenuItem
+				SubsLists subsLists = SubscriptionManagerUI.getSubsFromTarget(view.getSelectedRows());
+
+				for ( TableContextMenuItem mi: menu_items ){
+					mi.remove();
+				}
+				menu_items.clear();
+
+				SubscriptionManagerUI.createMenus(menu_manager, menu_creator,
+					subsLists);
+			}
+
+			@Override
+			public void addThisColumnSubMenu(String sColumnName, Menu menuThisColumn) {
+
+			}
+		});
 
 		view.addKeyListener(new KeyListener() {
 			@Override

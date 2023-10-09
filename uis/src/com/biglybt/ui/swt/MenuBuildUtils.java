@@ -428,20 +428,7 @@ public class MenuBuildUtils {
 			return( result );
 		}
 
-		Collections.sort(
-			flat_entries,
-			new Comparator<String>()
-			{
-				final Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
-
-				@Override
-				public int
-				compare(
-					String o1, String o2)
-				{
-					return( comp.compare( o1, o2 ));
-				}
-			});
+		flat_entries.sort(new FormattersImpl().getAlphanumericComparator(true));
 
 		int[] buckets = new int[split_after];
 

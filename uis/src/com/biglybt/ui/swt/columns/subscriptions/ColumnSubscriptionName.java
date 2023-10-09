@@ -142,5 +142,10 @@ public class ColumnSubscriptionName
 
 	}
 
-
+	@Override
+	public String getClipboardText(TableCell cell) {
+		Comparable sortValue = cell.getSortValue();
+		return sortValue == null ? super.getClipboardText(cell)
+			: sortValue.toString();
+	}
 }

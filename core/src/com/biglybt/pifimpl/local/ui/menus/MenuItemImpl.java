@@ -50,7 +50,7 @@ public class MenuItemImpl implements MenuItem {
 
 	private Graphic graphic;
 
-	private CopyOnWriteList listeners = new CopyOnWriteList(1);
+	private CopyOnWriteList<MenuItemListener> listeners = new CopyOnWriteList<>(1);
 	private CopyOnWriteList m_listeners = new CopyOnWriteList(1);
 
 	private CopyOnWriteList fill_listeners = new CopyOnWriteList(1);
@@ -254,11 +254,11 @@ public class MenuItemImpl implements MenuItem {
 		this.display_text = text;
 	}
 
-	protected void invokeListenersOnList(CopyOnWriteList listeners_to_notify,
+	protected void invokeListenersOnList(CopyOnWriteList<MenuItemListener> listeners_to_notify,
 			Object target) {
-		for (Iterator iter = listeners_to_notify.iterator(); iter.hasNext();) {
+		for (Iterator<MenuItemListener> iter = listeners_to_notify.iterator(); iter.hasNext();) {
 			try {
-				MenuItemListener l = (MenuItemListener) iter.next();
+				MenuItemListener l = iter.next();
 				l.selected(this, target);
 			} catch (Throwable e) {
 				Debug.printStackTrace(e);

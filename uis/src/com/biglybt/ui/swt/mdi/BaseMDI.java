@@ -1292,6 +1292,27 @@ public abstract class BaseMDI
 
 
 	public void fillMenu(Menu menu, final MdiEntry entry, String menuID) {
+		if (entry != null) {
+			MdiSWTMenuHackListener[] menuHackListeners = getMenuHackListeners();
+			for (MdiSWTMenuHackListener l : menuHackListeners) {
+				try {
+					l.menuWillBeShown(entry, menu);
+				} catch (Exception e) {
+					Debug.out(e);
+				}
+			}
+			if (entry instanceof BaseMdiEntry) {
+				menuHackListeners = ((BaseMdiEntry) entry).getMenuHackListeners();
+				for (MdiSWTMenuHackListener l : menuHackListeners) {
+					try {
+						l.menuWillBeShown(entry, menu);
+					} catch (Exception e) {
+						Debug.out(e);
+					}
+				}
+			}
+		}
+
 		com.biglybt.pif.ui.menus.MenuItem[] menu_items;
 
 		menu_items = MenuItemManager.getInstance().getAllAsArray(menuID);
@@ -1360,25 +1381,6 @@ public abstract class BaseMDI
 					new MenuBuildUtils.MenuItemPluginMenuControllerImpl(new Object[] {
 						entry
 					}));
-
-			MdiSWTMenuHackListener[] menuHackListeners = getMenuHackListeners();
-			for (MdiSWTMenuHackListener l : menuHackListeners) {
-				try {
-					l.menuWillBeShown(entry, menu);
-				} catch (Exception e) {
-					Debug.out(e);
-				}
-			}
-			if (currentEntry instanceof BaseMdiEntry) {
-				menuHackListeners = ((BaseMdiEntry) entry).getMenuHackListeners();
-				for (MdiSWTMenuHackListener l : menuHackListeners) {
-					try {
-						l.menuWillBeShown(entry, menu);
-					} catch (Exception e) {
-						Debug.out(e);
-					}
-				}
-			}
 		}
 
 		menu_items = MenuItemManager.getInstance().getAllAsArray(menuID + "._end_");

@@ -937,27 +937,27 @@ public abstract class TableViewSWT_Common
 
 		// Add Plugin Context menus..
 		boolean enable_items = selectedRows.length > 0;
+		boolean needsSeparator = false;
 
 		TableContextMenuItem[] items = TableContextMenuManager.getInstance().getAllAsArray(
 				Utils.getBaseViewID(sMenuID));
 
 		if (items.length > 0 || menu_items.length > 0) {
 			new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
+			needsSeparator = true;
 
 			// Add download context menu items.
-			if (menu_items != null) {
+			Object[] target;
+			if (isDownloadContext) {
 				// getSelectedDataSources(false) returns us plugin items.
-				Object[] target;
-				if (isDownloadContext) {
-					Object[] dataSources = tv.getSelectedDataSources(false);
-					target = new Download[dataSources.length];
-					System.arraycopy(dataSources, 0, target, 0, target.length);
-				} else {
-					target = selectedRows;
-				}
-				MenuBuildUtils.addPluginMenuItems(menu_items, menu, true, true,
-						new MenuBuildUtils.MenuItemPluginMenuControllerImpl(target));
+				Object[] dataSources = tv.getSelectedDataSources(false);
+				target = new Download[dataSources.length];
+				System.arraycopy(dataSources, 0, target, 0, target.length);
+			} else {
+				target = selectedRows;
 			}
+			MenuBuildUtils.addPluginMenuItems(menu_items, menu, true, true,
+					new MenuBuildUtils.MenuItemPluginMenuControllerImpl(target));
 
 			if (items.length > 0) {
 				MenuBuildUtils.addPluginMenuItems(items, menu, true, enable_items,
@@ -1014,6 +1014,7 @@ public abstract class TableViewSWT_Common
 				TableContextMenuItem[] columnItems = column.getContextMenuItems(TableColumnCore.MENU_STYLE_COLUMN_DATA);
 				if (columnItems.length > 0) {
 					new MenuItem(menu, SWT.SEPARATOR);
+					needsSeparator = true;
 
 					MenuBuildUtils.addPluginMenuItems(
 							columnItems,
@@ -1024,6 +1025,10 @@ public abstract class TableViewSWT_Common
 									tv.getSelectedDataSources(true)));
 
 				}
+			}
+			
+			if (needsSeparator) {
+				new MenuItem(menu, SWT.SEPARATOR);
 			}
 
 			final MenuItem itemSelectAll = new MenuItem(menu, SWT.PUSH);
