@@ -274,8 +274,10 @@ public class ConfigSectionInterfaceSWT
 		add(clear_save_path_button);
 
 		clear_save_path_button.addListener(
-				param -> COConfigurationManager.setParameter("saveTo_list",
-						new ArrayList()));
+				param -> {
+					COConfigurationManager.setParameter("saveTo_list", new ArrayList());
+					COConfigurationManager.setParameter("open.torrent.window.moc.history", new ArrayList());
+				});
 
 		//
 

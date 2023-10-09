@@ -21,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
@@ -5169,35 +5170,134 @@ public class OpenTorrentOptionsWindow
 			Messages.setLanguageText( moc_item, "label.move.on.comp" );
 
 			moc_item.setMenu( moc_menu );
-
-			MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH);
-
-			Messages.setLanguageText( clear_item, "Button.clear" );
-			
-			clear_item.addListener(SWT.Selection, new Listener(){
-				@Override
-				public void handleEvent(Event arg0){
-					for ( TorrentOpenOptions to: torrentOptionsMulti ){
-						
-						to.setMoveOnComplete( null );
-					}
-					
-					cmbDataDirChanged();
-				}});
 	
 			moc_menu.addMenuListener(
 				new MenuListener(){
 					
 					@Override
-					public void menuShown(MenuEvent arg0){
-						boolean has_moc = false;
+					public void 
+					menuShown(MenuEvent arg0)
+					{
+						Utils.clearMenu(moc_menu);
+						
+						boolean has_moc		= false;
+						String	existing_moc = null;
 						
 						for ( TorrentOpenOptions to: torrentOptionsMulti ){
 							
-							has_moc |= to.getMoveOnComplete() != null;
+							File moc = to.getMoveOnComplete();
+							
+							if ( moc != null ){
+								
+								has_moc = true;
+								
+								String moc_str = moc.getAbsolutePath();
+								
+								if ( existing_moc == null || existing_moc.equals( moc_str )){
+									
+									existing_moc = moc_str;
+									
+								}else{
+									
+									existing_moc = null;
+									
+									break;
+								}
+							}
 						}
-						clear_item.setEnabled( has_moc );
 
+						if ( existing_moc != null ){
+							
+							MenuItem existing_item = new MenuItem( moc_menu, SWT.PUSH );
+							
+							existing_item.setText( "[" + existing_moc + "]" );
+							
+							existing_item.setEnabled( false );
+							
+							new MenuItem( moc_menu, SWT.SEPARATOR );
+						}
+						
+						MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH);
+
+						Messages.setLanguageText( clear_item, "Button.clear" );
+						
+						clear_item.addListener(SWT.Selection, new Listener(){
+							@Override
+							public void handleEvent(Event arg0){
+								for ( TorrentOpenOptions to: torrentOptionsMulti ){
+									
+									to.setMoveOnComplete( null );
+								}
+								
+								cmbDataDirChanged();
+							}});
+												
+						clear_item.setEnabled( has_moc );
+						
+						MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
+
+						Messages.setLanguageText( set_item, "label.set" );
+						
+						Consumer<String> moc_setter = (path)->{
+							List<String> moc_hist = COConfigurationManager.getStringListParameter( "open.torrent.window.moc.history" );
+
+							moc_hist.remove( path );
+							
+							moc_hist.add( 0, path );
+							
+							if ( moc_hist.size() > 3 ){
+								
+								moc_hist.remove( moc_hist.size()-1 );
+							}
+							
+							COConfigurationManager.setParameter( "open.torrent.window.moc.history", moc_hist );
+							
+							TorrentOpener.setFilterPathData(path);
+
+							File target = FileUtil.newFile(path);
+							
+							for ( TorrentOpenOptions to: torrentOptionsMulti ){
+								
+								to.setMoveOnComplete( target );
+							}
+							
+							cmbDataDirChanged();
+						};
+						
+						set_item.addListener(SWT.Selection, new Listener(){
+							@Override
+							public void handleEvent(Event arg0){
+								DirectoryDialog dd = new DirectoryDialog(shell);
+
+								String filter_path = TorrentOpener.getFilterPathData();
+
+								dd.setFilterPath(filter_path);
+
+								dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+
+								String path = dd.open();
+
+								if ( path != null ){
+									 
+									moc_setter.accept(path);
+								}
+							}});
+						
+						List<String> moc_hist = COConfigurationManager.getStringListParameter( "open.torrent.window.moc.history" );
+						
+						if ( !moc_hist.isEmpty()){
+						
+							new MenuItem( moc_menu, SWT.SEPARATOR );
+							
+							for ( String hist: moc_hist ){
+								
+								MenuItem hist_item = new MenuItem( moc_menu, SWT.PUSH );
+
+								hist_item.setText( hist );
+
+								hist_item.addListener( SWT.Selection, (ev)->moc_setter.accept( hist ));
+							}
+						}
 					}
 					
 					@Override
@@ -5207,37 +5307,7 @@ public class OpenTorrentOptionsWindow
 					}
 				});
 			
-			MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
 
-			Messages.setLanguageText( set_item, "label.set" );
-			
-			set_item.addListener(SWT.Selection, new Listener(){
-				@Override
-				public void handleEvent(Event arg0){
-					DirectoryDialog dd = new DirectoryDialog(shell);
-
-					String filter_path = TorrentOpener.getFilterPathData();
-
-					dd.setFilterPath(filter_path);
-
-					dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
-
-					String path = dd.open();
-
-					if ( path != null ){
-
-						TorrentOpener.setFilterPathData(path);
-
-						File target = FileUtil.newFile(path);
-						
-						for ( TorrentOpenOptions to: torrentOptionsMulti ){
-							
-							to.setMoveOnComplete( target );
-						}
-						
-						cmbDataDirChanged();
-					}
-				}});
 			
 			MenuItem rename_dn_item = new MenuItem( more_menu, SWT.PUSH);
 
