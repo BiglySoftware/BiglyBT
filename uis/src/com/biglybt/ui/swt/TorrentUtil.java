@@ -978,6 +978,23 @@ public class TorrentUtil
 
 		moc_item.setMenu( moc_menu );
 
+			// existing
+		
+		String existing_moc = TorrentUtil.getMOC( dms );
+		
+		if ( existing_moc != null ){
+			
+			MenuItem existing_item = new MenuItem( moc_menu, SWT.PUSH );
+			
+			existing_item.setText( "[" + existing_moc + "]" );
+			
+			existing_item.setEnabled( false );
+			
+			new MenuItem( moc_menu, SWT.SEPARATOR );
+		}
+		
+			// clear
+		
 		MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH);
 
 		Messages.setLanguageText( clear_item, "Button.clear" );
@@ -991,6 +1008,15 @@ public class TorrentUtil
 
 		clear_item.setEnabled( canClearMOC );
 		
+			// set 
+		
+		Consumer<String> moc_setter = (path)->{
+			
+			MenuBuildUtils.addToMOCHistory( path );
+			
+			TorrentUtil.setMOC( dms, path );
+		};
+		
 		MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
 
 		Messages.setLanguageText( set_item, "label.set" );
@@ -998,11 +1024,16 @@ public class TorrentUtil
 		set_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager[] dms) {
-				setMOC(shell, dms);
+				selectMOC( shell, dms, moc_setter );
 			}
 		});
 		
 		set_item.setEnabled( canSetMOC );
+		
+		if ( canSetMOC ){
+			
+			MenuBuildUtils.addMOCHistory( moc_menu, moc_setter );
+		}
 		
 		moc_item.setEnabled( canClearMOC || canSetMOC );
 		
@@ -3653,7 +3684,44 @@ public class TorrentUtil
 		}
 	}
 	
-	protected static void setMOC(Shell shell, DownloadManager[] dms) {
+	protected static String getMOC(DownloadManager[] dms) {
+		String existing_moc = null;
+		
+		if (dms != null && dms.length > 0) {
+
+			for (int i = 0; i < dms.length; i++) {
+	
+				String moc_str = dms[i].getDownloadState().getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
+				
+				if ( existing_moc == null || existing_moc.equals( moc_str )){
+					
+					existing_moc = moc_str;
+					
+				}else{
+					
+					existing_moc = null;
+					
+					break;
+				}
+			}
+		}
+		
+		return( existing_moc );
+	}
+	
+	protected static void setMOC( DownloadManager[] dms, String path ) {
+		if (dms != null && dms.length > 0) {
+			
+			path = new File( path ).getAbsolutePath();
+			
+			for (int i = 0; i < dms.length; i++) {
+
+				dms[i].getDownloadState().setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, path );
+			}
+		}
+	}
+		
+	protected static void selectMOC(Shell shell, DownloadManager[] dms, Consumer<String> moc_setter ) {
 		if (dms != null && dms.length > 0) {
 
 			DirectoryDialog dd = new DirectoryDialog(shell);
@@ -3673,15 +3741,10 @@ public class TorrentUtil
 			String path = dd.open();
 
 			if ( path != null ){
-
-				TorrentOpener.setFilterPathData(path);
-
-				File target = new File(path);
-
-				for (int i = 0; i < dms.length; i++) {
-
-					dms[i].getDownloadState().setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, target.getAbsolutePath());
-				}
+				
+				TorrentOpener.setFilterPathData( path );
+				
+				moc_setter.accept( path );
 			}
 		}
 	}

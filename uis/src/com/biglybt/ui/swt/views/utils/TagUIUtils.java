@@ -1596,7 +1596,22 @@ public class TagUIUtils
 
 				moc_item.setMenu( moc_menu );
 
-				MenuItem clear_item = new MenuItem( moc_menu, SWT.CASCADE);
+				final File existing = fl.getTagMoveOnCompleteFolder();
+
+				if ( existing != null ){
+					
+					MenuItem current_item = new MenuItem( moc_menu, SWT.PUSH );
+					
+					current_item.setSelection( true );
+
+					current_item.setText( "[" + existing.getAbsolutePath() + "]" );
+					
+					current_item.setEnabled(false);
+					
+					new MenuItem( moc_menu, SWT.SEPARATOR);
+				}
+				
+				MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH );
 
 				Messages.setLanguageText( clear_item, "Button.clear" );
 
@@ -1609,9 +1624,7 @@ public class TagUIUtils
 
 					// apply
 
-				final File existing = fl.getTagMoveOnCompleteFolder();
-
-				MenuItem apply_item = new MenuItem( moc_menu, SWT.CASCADE);
+				MenuItem apply_item = new MenuItem( moc_menu, SWT.PUSH);
 
 				Messages.setLanguageText( apply_item, "apply.to.current" );
 
@@ -1623,22 +1636,24 @@ public class TagUIUtils
 
 				new MenuItem( moc_menu, SWT.SEPARATOR);
 
-				if ( existing != null ){
-
-					MenuItem current_item = new MenuItem( moc_menu, SWT.RADIO );
-					current_item.setSelection( true );
-
-					current_item.setText( existing.getAbsolutePath());
-
-					new MenuItem( moc_menu, SWT.SEPARATOR);
-
-				}else{
+				if ( existing == null ){
 
 					apply_item.setEnabled( false );
 					clear_item.setEnabled( false );
 				}
 
-				MenuItem set_item = new MenuItem( moc_menu, SWT.CASCADE);
+					// set
+				
+				Consumer<String> moc_setter = (path)->{
+					
+					MenuBuildUtils.addToMOCHistory( path );
+
+					TorrentOpener.setFilterPathData( path );
+
+					fl.setTagMoveOnCompleteFolder( new File( path ));
+				};
+				
+				MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
 
 				Messages.setLanguageText( set_item, "label.set" );
 
@@ -1655,11 +1670,11 @@ public class TagUIUtils
 
 						if ( path != null ){
 
-							TorrentOpener.setFilterPathData( path );
-
-							fl.setTagMoveOnCompleteFolder( new File( path ));
+							moc_setter.accept( path );
 						}
 					}});
+				
+				MenuBuildUtils.addMOCHistory( moc_menu, moc_setter );
 			}
 
 			if ( fl.supportsTagCopyOnComplete()){

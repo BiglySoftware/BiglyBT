@@ -24,6 +24,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.biglybt.ui.swt.mainwindow.*;
 import org.eclipse.swt.SWT;
@@ -2620,6 +2621,23 @@ public class TorrentMenuFancy
 						buildMenu(
 							Menu moc_menu )
 						{
+								// existing
+							
+							String existing_moc = TorrentUtil.getMOC( dms );
+							
+							if ( existing_moc != null ){
+								
+								MenuItem existing_item = new MenuItem( moc_menu, SWT.PUSH );
+								
+								existing_item.setText( "[" + existing_moc + "]" );
+								
+								existing_item.setEnabled( false );
+								
+								new MenuItem( moc_menu, SWT.SEPARATOR );
+							}
+							
+								// clear
+							
 							MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH);
 
 							Messages.setLanguageText( clear_item, "Button.clear" );
@@ -2633,6 +2651,15 @@ public class TorrentMenuFancy
 
 							clear_item.setEnabled( f_canClearMOC );
 							
+								// set
+							
+							Consumer<String> moc_setter = (path)->{
+								
+								MenuBuildUtils.addToMOCHistory( path );
+								
+								TorrentUtil.setMOC( dms, path );
+							};
+							
 							MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
 
 							Messages.setLanguageText( set_item, "label.set" );
@@ -2640,11 +2667,16 @@ public class TorrentMenuFancy
 							set_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
 								@Override
 								public void run(DownloadManager[] dms) {
-									TorrentUtil.setMOC(parentShell, dms);
+									TorrentUtil.selectMOC(parentShell, dms, moc_setter );
 								}
 							});
 							
 							set_item.setEnabled( f_canSetMOC );
+							
+							if ( f_canSetMOC ){
+								
+								MenuBuildUtils.addMOCHistory( moc_menu, moc_setter );
+							}
 						}
 					});
 		}

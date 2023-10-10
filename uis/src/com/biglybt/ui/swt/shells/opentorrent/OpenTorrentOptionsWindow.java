@@ -5206,6 +5206,8 @@ public class OpenTorrentOptionsWindow
 							}
 						}
 
+							// existing
+						
 						if ( existing_moc != null ){
 							
 							MenuItem existing_item = new MenuItem( moc_menu, SWT.PUSH );
@@ -5216,6 +5218,8 @@ public class OpenTorrentOptionsWindow
 							
 							new MenuItem( moc_menu, SWT.SEPARATOR );
 						}
+						
+							// clear
 						
 						MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH);
 
@@ -5232,25 +5236,13 @@ public class OpenTorrentOptionsWindow
 								cmbDataDirChanged();
 							}});
 												
-						clear_item.setEnabled( has_moc );
+						clear_item.setEnabled( has_moc );						
 						
-						MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
-
-						Messages.setLanguageText( set_item, "label.set" );
+							// set
 						
 						Consumer<String> moc_setter = (path)->{
-							List<String> moc_hist = COConfigurationManager.getStringListParameter( "open.torrent.window.moc.history" );
-
-							moc_hist.remove( path );
 							
-							moc_hist.add( 0, path );
-							
-							if ( moc_hist.size() > 3 ){
-								
-								moc_hist.remove( moc_hist.size()-1 );
-							}
-							
-							COConfigurationManager.setParameter( "open.torrent.window.moc.history", moc_hist );
+							MenuBuildUtils.addToMOCHistory( path );
 							
 							TorrentOpener.setFilterPathData(path);
 
@@ -5263,6 +5255,10 @@ public class OpenTorrentOptionsWindow
 							
 							cmbDataDirChanged();
 						};
+						
+						MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
+
+						Messages.setLanguageText( set_item, "label.set" );
 						
 						set_item.addListener(SWT.Selection, new Listener(){
 							@Override
@@ -5283,21 +5279,7 @@ public class OpenTorrentOptionsWindow
 								}
 							}});
 						
-						List<String> moc_hist = COConfigurationManager.getStringListParameter( "open.torrent.window.moc.history" );
-						
-						if ( !moc_hist.isEmpty()){
-						
-							new MenuItem( moc_menu, SWT.SEPARATOR );
-							
-							for ( String hist: moc_hist ){
-								
-								MenuItem hist_item = new MenuItem( moc_menu, SWT.PUSH );
-
-								hist_item.setText( hist );
-
-								hist_item.addListener( SWT.Selection, (ev)->moc_setter.accept( hist ));
-							}
-						}
+						MenuBuildUtils.addMOCHistory( moc_menu, moc_setter );
 					}
 					
 					@Override

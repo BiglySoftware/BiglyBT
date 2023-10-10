@@ -1687,4 +1687,44 @@ public class MenuBuildUtils {
 		
 		return( openWithItem );
 	}
+	
+	public static void
+	addMOCHistory(
+		Menu 				moc_menu,
+		Consumer<String>	moc_setter )
+	{
+		List<String> moc_hist = COConfigurationManager.getStringListParameter( "open.torrent.window.moc.history" );
+		
+		if ( !moc_hist.isEmpty()){
+		
+			new org.eclipse.swt.widgets.MenuItem( moc_menu, SWT.SEPARATOR );
+			
+			for ( String hist: moc_hist ){
+				
+				org.eclipse.swt.widgets.MenuItem hist_item = new org.eclipse.swt.widgets.MenuItem( moc_menu, SWT.PUSH );
+
+				hist_item.setText( hist );
+
+				hist_item.addListener( SWT.Selection, (ev)->moc_setter.accept( hist ));
+			}
+		}
+	}
+	
+	public static void
+	addToMOCHistory(
+		String		path )
+	{
+		List<String> moc_hist = COConfigurationManager.getStringListParameter( "open.torrent.window.moc.history" );
+
+		moc_hist.remove( path );
+		
+		moc_hist.add( 0, path );
+		
+		if ( moc_hist.size() > 10 ){
+			
+			moc_hist.remove( moc_hist.size()-1 );
+		}
+		
+		COConfigurationManager.setParameter( "open.torrent.window.moc.history", moc_hist );
+	}
 }
