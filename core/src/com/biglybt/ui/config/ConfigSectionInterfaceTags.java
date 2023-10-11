@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.biglybt.core.config.COConfigurationManager;
 
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pifimpl.local.ui.config.*;
 
 
@@ -74,6 +75,7 @@ public class ConfigSectionInterfaceTags
 		
 		BooleanParameterImpl persistSwarmTags = new BooleanParameterImpl(
 				BCFG_TAG_SHOW_SWARM_TAGS_IN_OVERVIEW, "label.show.swarm.tags.in.overview");
+		persistSwarmTags.setAllowedUiTypes(UIInstance.UIT_SWT);
 		add( persistSwarmTags,  Parameter.MODE_INTERMEDIATE, listGeneral);
 		
 		IntParameterImpl autoReapply = new IntParameterImpl(
