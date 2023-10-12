@@ -23,6 +23,7 @@ import com.biglybt.core.diskmanager.file.impl.FMFileAccessController.FileAccesso
 
 import java.io.*;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.Locale;
 
 @SuppressWarnings("MethodMayBeStatic")
@@ -194,29 +195,20 @@ public class FileHandler
 	getFileStore(
 		File		file )
 	{
-		if ( FileUtil.mToPath != null && FileUtil.mPath_getFileStore != null ){
+		// file has to exist to have a filestore so walk up the tree if necessary
 
-			// file has to exist to have a filestore so walk up the tree if necessary
+		File temp = file;
 
-			File temp = file;
+		while( temp != null ){
 
-			while( temp != null ){
+			try{
 
-				try{
-					/* FileStore is minSDK 26 on Android
-					 */
+				return Files.getFileStore(temp.toPath());
 
-					/* Path */ Object path = FileUtil.mToPath.invoke( temp );
-
-					/* FileStore */ Object fs = FileUtil.mPath_getFileStore.invoke(null, path);
-
-					return( fs );
-
-				}catch( Throwable e ){
-				}
-
-				temp = temp.getParentFile();
+			}catch( Throwable e ){
 			}
+
+			temp = temp.getParentFile();
 		}
 
 		return( null );

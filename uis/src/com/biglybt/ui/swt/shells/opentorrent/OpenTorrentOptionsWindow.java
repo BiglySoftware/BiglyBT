@@ -8006,8 +8006,7 @@ public class OpenTorrentOptionsWindow
 				item.update();
 			}
 			
-			if (diskFreeInfoRefreshPending && !diskFreeInfoRefreshRunning
-					&& FileUtil.getUsableSpaceSupported()) {
+			if (diskFreeInfoRefreshPending && !diskFreeInfoRefreshRunning) {
 				diskFreeInfoRefreshRunning = true;
 				diskFreeInfoRefreshPending = false;
 

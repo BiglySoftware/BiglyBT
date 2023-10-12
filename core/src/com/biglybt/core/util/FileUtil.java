@@ -27,6 +27,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributeView;
@@ -67,14 +68,6 @@ public class FileUtil {
   private static final List		reserved_file_handles 	= new ArrayList();
   private static final AEMonitor	class_mon				= new AEMonitor( "FileUtil:class" );
 
-  private static final Method reflectOnUsableSpace;
-
-  	// FileStore is minSDK 26 on Android
-
-	protected static final Method 	mPath_getFileStore;
-	protected static final Method 	mToPath;
-
-	
   private static char[]	char_conversion_mapping = null;
 
   private static final FileHandler fileHandling;
@@ -93,40 +86,6 @@ public class FileUtil {
 	};
 
   static {
-
-	  Method _reflectOnUsableSpace;
-	
-	  try{
-		  _reflectOnUsableSpace = File.class.getMethod("getUsableSpace", (Class[])null);
-		  
-	  }catch (Throwable e){
-		  
-		  _reflectOnUsableSpace = null;
-	  }
-
-	  reflectOnUsableSpace = _reflectOnUsableSpace;
-	  
-	  
-	  Method 	_mPath_getFileStore;
-	  Method 	_mToPath;
-
-	  try{
-		  Class  _claPath = Class.forName("java.nio.file.Path");
-		  Class  _claFiles = Class.forName("java.nio.file.Files");
-		  _mPath_getFileStore = _claFiles.getMethod("getFileStore", _claPath);
-		  _mToPath = File.class.getMethod("toPath");
-		  
-	  }catch( Throwable e ){
-		  
-		  _mPath_getFileStore	= null;
-		  _mToPath				= null;
-	  }
-	 
-	  mPath_getFileStore	= _mPath_getFileStore;
-	  mToPath				= _mToPath;
-
-	  
-	  
 	  String fileHandlingCN = System.getProperty("az.FileHandling.impl",
 			"");
 	  // To test:
@@ -2277,26 +2236,16 @@ public class FileUtil {
 
     		boolean	same_drive = false;
     		
-	    	if ( mToPath != null && mPath_getFileStore != null ){
 				try{
-					/* FileStore is minSDK 26 on Android
 					FileStore fs1 = Files.getFileStore( from_file.toPath());
 					FileStore fs2 = Files.getFileStore( to_file_parent.toPath());
-					*/
-	
-					/* Path */ Object from_file_toPath = mToPath.invoke(from_file);
-					/* Path */ Object to_file_parent_toPath = mToPath.invoke(to_file_parent);
-	
-					/* FileStore */ Object fs1 = mPath_getFileStore.invoke(null, from_file_toPath);
-					/* FileStore */ Object fs2 = mPath_getFileStore.invoke(null, to_file_parent_toPath);
-	
+
 	   				if ( fs1.equals( fs2 )){
 	
 	   					same_drive = true;
 	   				}
 				}catch( Throwable e ){
 				}
-	    	}
 			
 	    	boolean	use_copy = COConfigurationManager.getBooleanParameter("Copy And Delete Data Rather Than Move");
 
@@ -3349,15 +3298,10 @@ public class FileUtil {
    		}
    	}
 
-	public static boolean getUsableSpaceSupported()
-	{
-		return reflectOnUsableSpace != null;
-	}
-
 	public static long getUsableSpace(File f)
 	{
 		try{
-			return ((Long)reflectOnUsableSpace.invoke(f)).longValue();
+			return f.getUsableSpace();
 
 		}catch ( Throwable e){
 

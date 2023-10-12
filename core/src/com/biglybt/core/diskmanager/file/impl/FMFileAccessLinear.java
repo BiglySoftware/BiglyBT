@@ -110,18 +110,15 @@ FMFileAccessLinear
 
 					if ( required > 0 ){
 
-						if ( FileUtil.getUsableSpaceSupported()){
+						long	usable		= FileUtil.getUsableSpace( owner.getLinkedFile().getParentFile());
 
-							long	usable		= FileUtil.getUsableSpace( owner.getLinkedFile().getParentFile());
+							// usable is -1 if something went wrong
 
-								// usable is -1 if something went wrong
+						if (  usable >= 0 && usable < required ){
 
-							if (  usable >= 0 && usable < required ){
+							// 	looks like a valid error
 
-								// 	looks like a valid error
-
-								throw( e );
-							}
+							throw( e );
 						}
 					}
 
