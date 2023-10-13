@@ -108,6 +108,7 @@ public final class ConfigKeys {
 		public static final String BCFG_PROXY_CHECK_ON_START = "Proxy.Check.On.Start";
 		public static final String BCFG_PROXY_SOCKS_SHOW_ICON = "Proxy.SOCKS.ShowIcon";
 		public static final String BCFG_PROXY_SOCKS_SHOW_ICON_FLAG_INCOMING = "Proxy.SOCKS.ShowIcon.FlagIncoming";
+		public static final String SCFG_CONNECTION_TEST_DOMAIN = "Connection.Test.Domain";
 	}
 
 	public static class File {

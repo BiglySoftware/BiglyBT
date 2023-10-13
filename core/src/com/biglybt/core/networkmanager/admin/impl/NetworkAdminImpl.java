@@ -81,8 +81,6 @@ NetworkAdminImpl
 
 	private static final boolean	FULL_INTF_PROBE	= false;
 
-	private static final String TEST_ADDRESS = "www.google.com";
-	
 	private static InetAddress anyLocalAddress;
 	private static InetAddress anyLocalAddressIPv4;
 	private static InetAddress anyLocalAddressIPv6;
@@ -1889,7 +1887,9 @@ addressLoop:
 
 			socket.setSoTimeout( timeout );
 
-			InetAddress[] addresses = AddressUtils.getAllByName( TEST_ADDRESS );
+			String domain = COConfigurationManager.getStringParameter(
+				ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
+			InetAddress[] addresses = AddressUtils.getAllByName( domain );
 			
 			InetAddress target = null;
 			
@@ -1920,7 +1920,7 @@ addressLoop:
 			
 			if ( target == null ){
 				
-				isa = new InetSocketAddress( TEST_ADDRESS, 80 );
+				isa = new InetSocketAddress( domain, 80 );
 				
 			}else{
 				
@@ -4634,6 +4634,9 @@ addressLoop:
 	generateDiagnostics(
 		final IndentWriter iw )
 	{
+		String domain = COConfigurationManager.getStringParameter(
+			ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
+
 		Set	public_addresses = new HashSet();
 
 		NetworkAdminHTTPProxy	proxy = getHTTPProxy();
@@ -4742,7 +4745,7 @@ addressLoop:
 						networkInterface.networkAddress address = (networkInterface.networkAddress)interfaces[0].getAddresses()[0];
 
 						try{
-							NetworkAdminNode[] nodes = address.getRoute( InetAddress.getByName( TEST_ADDRESS ), 30000, trace_route_listener  );
+							NetworkAdminNode[] nodes = address.getRoute( InetAddress.getByName( domain ), 30000, trace_route_listener  );
 
 							for (int i=0;i<nodes.length;i++){
 
@@ -4761,7 +4764,7 @@ addressLoop:
 
 			try{
 				pingTargets(
-					InetAddress.getByName( TEST_ADDRESS ),
+					InetAddress.getByName( domain ),
 					30000,
 					new NetworkAdminRoutesListener()
 					{
@@ -5060,7 +5063,9 @@ addressLoop:
 					}else{
 
 						try{
-							NetworkAdminNode[] nodes = getRoute( InetAddress.getByName( TEST_ADDRESS ), 30000, trace_route_listener );
+							String domain = COConfigurationManager.getStringParameter(
+								ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
+							NetworkAdminNode[] nodes = getRoute( InetAddress.getByName( domain ), 30000, trace_route_listener );
 
 							for (int i=0;i<nodes.length;i++){
 

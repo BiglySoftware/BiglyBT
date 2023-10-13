@@ -362,6 +362,8 @@ public class ConfigSectionConnectionAdvanced
 		add(new ParameterGroupImpl(
 				"connection.advanced.ni.ignore.group", listNIIgnore ));
 
+		add(new StringParameterImpl(SCFG_CONNECTION_TEST_DOMAIN,
+			"connection.test.domain"));
 	}
 
 	private static void enableTOSRegistrySetting(boolean enable) {

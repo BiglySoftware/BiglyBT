@@ -25,6 +25,8 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import com.biglybt.core.Core;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.ipchecker.natchecker.NatChecker;
 import com.biglybt.core.networkmanager.admin.NetworkAdminException;
 import com.biglybt.core.networkmanager.admin.NetworkAdminProgressListener;
@@ -72,7 +74,9 @@ NetworkAdminHTTPTester
 			try{
 					// TODO: V6
 				
-				URL	url = new URL( "http://www.google.com/" );
+				String domain = COConfigurationManager.getStringParameter(
+					ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
+				URL	url = new URL( "http://" + domain + "/" );
 
 				URLConnection connection = url.openConnection();
 

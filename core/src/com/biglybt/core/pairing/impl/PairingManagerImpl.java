@@ -29,6 +29,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
@@ -1266,7 +1267,9 @@ PairingManagerImpl
 										try{
 											socket.bind( new InetSocketAddress( ia, 0 ));
 
-											socket.connect(  new InetSocketAddress( "www.google.com", 80 ), 10*1000 );
+											String domain = COConfigurationManager.getStringParameter(
+												ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
+											socket.connect(  new InetSocketAddress( domain, 80 ), 10*1000 );
 
 											result += "*";
 

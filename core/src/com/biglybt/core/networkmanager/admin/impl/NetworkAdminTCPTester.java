@@ -25,6 +25,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import com.biglybt.core.Core;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.ipchecker.natchecker.NatChecker;
 import com.biglybt.core.networkmanager.admin.NetworkAdminException;
 import com.biglybt.core.networkmanager.admin.NetworkAdminProgressListener;
@@ -80,7 +82,9 @@ NetworkAdminTCPTester
 
 				  	// TODO: v6 
 				  
-				  socket.connect( new InetSocketAddress( "www.google.com", 80 ), 10000 );
+					String domain = COConfigurationManager.getStringParameter(
+						ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
+				  socket.connect( new InetSocketAddress( domain, 80 ), 10000 );
 
 				  socket.close();
 

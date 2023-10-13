@@ -8,6 +8,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.AENetworkClassifier;
@@ -110,7 +111,8 @@ AENameServiceJava12
 							throw( new RuntimeException( "Delegate Name Service unavailable" ));
 						}
 	
-						host_name = "www.google.com";
+						host_name = COConfigurationManager.getStringParameter(
+							ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
 	
 						try{
 							Object result = delegate_method.invoke( delegate, host_name );
