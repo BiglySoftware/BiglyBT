@@ -783,7 +783,7 @@ public class TorrentOpenOptions
 	setInitialTags(
 		List<Tag>		tags )
 	{
-		initialTags = tags;
+		initialTags = new ArrayList<>( tags );
 	}
 
 	public void

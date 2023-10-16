@@ -267,11 +267,22 @@ public class ConfigSectionFileTorrents
 				listWatch );
 
 		
-		// always rename to .imported
+			// always rename to .imported
 
 		add(new BooleanParameterImpl(BCFG_WATCH_TORRENT_ALWAYS_RENAME,
 				"ConfigView.label.watchtorrentrename"), listWatch);
 
+			// use torrent options dialog
+		
+		BooleanParameterImpl useTOD = new BooleanParameterImpl(BCFG_WATCH_TORRENT_USE_TOD,
+				"ConfigView.label.watchtorrent.usetod");
+
+		useTOD.setAllowedUiTypes(UIInstance.UIT_SWT);
+
+		add(useTOD, listWatch);
+		
+			// auto group
+		
 		ParameterGroupImpl pgWatch = new ParameterGroupImpl(null, listWatch);
 		add("pgWatch", pgWatch);
 		pgWatch.setIndent(1, false);

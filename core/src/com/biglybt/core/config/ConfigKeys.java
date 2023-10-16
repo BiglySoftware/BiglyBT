@@ -216,6 +216,7 @@ public final class ConfigKeys {
 		//public static final String BCFG_START_WATCHED_TORRENTS_STOPPED = "Start Watched Torrents Stopped";
 		public static final String ICFG_WATCH_TORRENT_FOLDER_ADD_MODE = "Watch Torrents Add Mode";
 		public static final String BCFG_WATCH_TORRENT_ALWAYS_RENAME = "Watch Torrent Always Rename";
+		public static final String BCFG_WATCH_TORRENT_USE_TOD = "Watch Torrent Use TOD";
 		public static final String BCFG_TORRENT_MONITOR_CLIPBOARD = "Monitor Clipboard For Torrents";
 		public static final String BCFG_SAVE_TORRENT_FILES = "Save Torrent Files";
 		public static final String SCFG_GENERAL_DEFAULT_TORRENT_DIRECTORY = "General_sDefaultTorrent_Directory";

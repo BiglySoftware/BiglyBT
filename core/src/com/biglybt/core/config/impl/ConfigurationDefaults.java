@@ -21,8 +21,6 @@
 
 package com.biglybt.core.config.impl;
 
-import static com.biglybt.core.config.ConfigKeys.File.BCFG_DISKMANAGER_HASHCHECKING_SMALLESTFIRST;
-
 import java.io.File;
 import java.util.*;
 
@@ -415,6 +413,7 @@ public class ConfigurationDefaults {
     def.put( "Start Watched Torrents Stopped", FALSE );	// removed, use mode below, migrated in checker
     def.put( "Watch Torrents Add Mode", ZERO );
     def.put( "Watch Torrent Always Rename", FALSE );
+    def.put( ConfigKeys.File.BCFG_WATCH_TORRENT_USE_TOD, FALSE );
     def.put( "Watch Torrent Folder Path", "" );
     def.put( "Watch Torrent Folder Path Count", ONE );
     def.put( ConfigKeys.Transfer.BCFG_PRIORITIZE_FIRST_PIECE, FALSE );
