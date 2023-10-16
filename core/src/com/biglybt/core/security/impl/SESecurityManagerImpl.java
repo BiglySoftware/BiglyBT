@@ -379,7 +379,10 @@ SESecurityManagerImpl
 
 			try{
 
-				my_sec_man = new ClientSecurityManager( this );
+				if ( !Constants.isJava18OrHigher ){
+				
+					my_sec_man = new ClientSecurityManager( this );
+				}
 
 			}catch( Throwable e ){
 
