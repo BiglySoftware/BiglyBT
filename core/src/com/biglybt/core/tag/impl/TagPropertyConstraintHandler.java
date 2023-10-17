@@ -33,6 +33,7 @@ import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
+import com.biglybt.core.config.ConfigUtils;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -2779,6 +2780,7 @@ TagPropertyConstraintHandler
 		private static final int FT_MIN					= 57;
 		private static final int FT_MAX					= 58;
 		private static final int FT_GET_TAG_SORT		= 59;
+		private static final int FT_LENGTH				= 60;
 
 		static{
 			fn_map.put( "hastag", FT_HAS_TAG );
@@ -2853,6 +2855,7 @@ TagPropertyConstraintHandler
 			fn_map.put( "gettagweight", FT_GET_TAG_WEIGHT );
 			fn_map.put( "ifthenelse", FT_IF_THEN_ELSE );
 			fn_map.put( "gettagsort", FT_GET_TAG_SORT );
+			fn_map.put( "length", FT_LENGTH );
 		}
 		
 		private static final int	DEP_STATIC		= 0;
@@ -2914,6 +2917,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_MIN32				= 50;
 		private static final int	KW_MAX64				= 51;
 		private static final int	KW_MIN64				= 52;
+		private static final int	KW_MOC_PATH				= 53;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -3030,6 +3034,10 @@ TagPropertyConstraintHandler
 			keyword_map.put( "min32",	 				new int[]{KW_MIN32,					DEP_STATIC });
 			keyword_map.put( "max64",	 				new int[]{KW_MAX64,					DEP_STATIC });
 			keyword_map.put( "min64",	 				new int[]{KW_MIN64,					DEP_STATIC });
+			
+			keyword_map.put( "mocpath",	 				new int[]{KW_MOC_PATH,				DEP_STATIC });
+			keyword_map.put( "moc_path",	 			new int[]{KW_MOC_PATH,				DEP_STATIC });
+			keyword_map.put( "move_on_complete_path",	new int[]{KW_MOC_PATH,				DEP_STATIC });
 		}
 
 		private class
@@ -3277,6 +3285,11 @@ TagPropertyConstraintHandler
 
 						params_ok = num_params == 2;
 
+						break;
+					}
+					case FT_LENGTH:{
+						params_ok = num_params == 1;
+						
 						break;
 					}
 					case FT_CONTAINS:{
@@ -4054,6 +4067,18 @@ TagPropertyConstraintHandler
 						}
 
 						return( false );
+					}
+					case FT_LENGTH:{
+						String		str = getString( context, dm, tags, params, 0, debug );
+						
+						if ( str == null ){
+							
+							return( -1 );
+							
+						}else{
+							
+							return( str.length());
+						}
 					}
 					case FT_CONTAINS:{
 
@@ -5513,6 +5538,43 @@ TagPropertyConstraintHandler
 							
 							return( save_loc.getAbsolutePath());
 						}
+					}
+					case KW_MOC_PATH:{
+						
+						String result = dm.getDownloadState().getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
+						
+						if ( result == null || result.isEmpty()){
+								
+							result = null;
+							
+							List<Tag> moc_tags = TagUtils.getActiveMoveOnCompleteTags( dm, true, (s)->{});
+							
+							for ( Tag tag: moc_tags ){
+																
+								TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+														
+								long	options = fl.getTagMoveOnCompleteOptions();
+					
+								if ( ( options&TagFeatureFileLocation.FL_DATA ) != 0 ){
+									
+									File move_to_target = fl.getTagMoveOnCompleteFolder();
+									
+									if ( move_to_target != null ){
+										
+										result = move_to_target.getAbsolutePath();
+										
+										break;
+									}
+								}
+							}
+						}
+						
+						if ( result == null ){
+							
+							result = ConfigUtils.getDefaultMoveOnCompleteFolder();
+						}
+
+						return( result==null?"":result );
 					}
 					case KW_PLUGIN_MY_RATING:{
 						

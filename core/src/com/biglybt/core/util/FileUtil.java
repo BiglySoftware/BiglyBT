@@ -45,6 +45,7 @@ import com.biglybt.core.CoreOperationTask;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
+import com.biglybt.core.config.ConfigUtils;
 import com.biglybt.core.diskmanager.file.impl.FMFileAccess.FileAccessor;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.logging.LogEvent;
@@ -239,7 +240,7 @@ public class FileUtil {
    */
   public static boolean recursiveDelete(File f) {
     String defSaveDir = COConfigurationManager.getStringParameter("Default save path");
-    String moveToDir = COConfigurationManager.getStringParameter("Completed Files Directory", "");
+    String moveToDir = ConfigUtils.getDefaultMoveOnCompleteFolder( true );
 
     try{
   	  moveToDir = newFile(moveToDir).getCanonicalPath();
@@ -345,7 +346,7 @@ public class FileUtil {
   {
      try {
       String defSaveDir 	= COConfigurationManager.getStringParameter("Default save path");
-      String moveToDir 		= COConfigurationManager.getStringParameter("Completed Files Directory", "");
+      String moveToDir 		= ConfigUtils.getDefaultMoveOnCompleteFolder( true );
 
       if ( defSaveDir.trim().length() > 0 ){
 
