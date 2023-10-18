@@ -259,7 +259,14 @@ public class MyTorrentsView
   {
 		super("MyTorrentsView");
 		this.filterBox = filterBox;
-		filterBox.setTooltip(MessageText.getString("MyTorrentsView.filter.tooltip"));
+		
+		String tooltip = MessageText.getString("MyTorrentsView.filter.tooltip");
+		
+		if ( Utils.getUserMode() > 0 ){
+			tooltip += "\n" + MessageText.getString( "search.tt.tag.constraint" );
+		}
+		
+		filterBox.setTooltip(tooltip);
 		this.supportsTabs = supportsTabs;
 		init(core, tableID, isSeedingView
 				? DownloadTypeComplete.class : DownloadTypeIncomplete.class, basicItems);
