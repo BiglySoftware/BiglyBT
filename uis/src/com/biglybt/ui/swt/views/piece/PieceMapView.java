@@ -1166,6 +1166,8 @@ public class PieceMapView
 					iCol++;
 					continue;
 				}
+				
+				Rectangle rectWithBorder = new Rectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
 
 				if (needGCrecycle) {
 					//log(i + "; recycle");
@@ -1325,29 +1327,38 @@ public class PieceMapView
 					gcImg.setForeground(availCol);
 
 				}else if (minAvailability == availNum){
-					
+
+					gcImg.setAlpha((int) (alpha * 0.8));
+
 					gcImg.setForeground(availCol);
 					
-					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
-					
+					gcImg.drawRectangle(rectWithBorder);
+
+					gcImg.setAlpha(alpha);
+
 				}else if (newInfo.availDotted){
-					
+
+					gcImg.setAlpha((int) (alpha * 0.8));
 					gcImg.setForeground(bgMain);
-					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
+
+					gcImg.drawRectangle(rectWithBorder);
 					
-					gcImg.setLineStyle(SWT.LINE_DOT);
-					
+					gcImg.setLineDash(new int[] {
+						1,
+						2
+					});
 					gcImg.setForeground(availCol);
 					
-					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
+					gcImg.drawRectangle(rectWithBorder);
 					
 					gcImg.setLineStyle(SWT.LINE_SOLID);
+					gcImg.setAlpha(alpha);
 					
 				}else if ( isSel ){
 
 					gcImg.setForeground(availCol);
 					
-					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
+					gcImg.drawRectangle(rectWithBorder);
 
 				} else {
 
