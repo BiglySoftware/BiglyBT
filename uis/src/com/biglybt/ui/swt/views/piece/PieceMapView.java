@@ -1043,6 +1043,10 @@ public class PieceMapView
 		}
 
 		GC gcImg = new GC(img);
+		try {
+			gcImg.setTextAntialias(SWT.ON);
+		} catch (Throwable ignore) {
+		}
 		gcImg.setFont(font);
 
 		int numChanged = 0;
@@ -1091,6 +1095,8 @@ public class PieceMapView
 				}
 
 				BlockInfo newInfo = new BlockInfo();
+
+				newInfo.needed = dm_piece.isNeeded();
 
 				if ( i >= selectionStart && i <= selectionEnd ){
 					newInfo.selectedRange = true;
@@ -1278,7 +1284,7 @@ public class PieceMapView
 						gcImg.fillRectangle(iXPos, iYPos, newInfo.haveWidth, BLOCK_FILLSIZE);
 					}
 	
-					bg = blockColors[BLOCKCOLOR_NOHAVE];
+					bg = newInfo.needed ? blockColors[BLOCKCOLOR_NOHAVE] : canvasBG;
 
 					if (newInfo.availNum >= 0 && newInfo.availNum < maxAvailability) {
 						HSLColor hslColor = new HSLColor();
@@ -1313,6 +1319,12 @@ public class PieceMapView
 					: colorsInstance.getReadableColor(bg);
 				
 				int availNum = newInfo.availNum;
+				int alpha = 255;
+
+				if (!newInfo.needed) {
+					alpha = 100;
+					gcImg.setAlpha(alpha);
+				}
 				
 				if ( newInfo.forced ){
 					
@@ -1362,8 +1374,8 @@ public class PieceMapView
 
 				} else {
 
-					gcImg.setForeground(canvasBG);
-					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
+					gcImg.setForeground(availNum >= 0 ? canvasBG :availCol);
+					gcImg.drawRectangle(rectWithBorder);
 
 					gcImg.setForeground(availCol);
 				}
@@ -1379,6 +1391,9 @@ public class PieceMapView
 					int x = iXPos + (BLOCK_FILLSIZE / 2) - (size.x / 2);
 					int y = iYPos + (BLOCK_FILLSIZE / 2) - (size.y / 2);
 					gcImg.drawText(availText, x, y, SWT.DRAW_TRANSPARENT);
+				}
+				if (alpha != 255) {
+					gcImg.setAlpha(255);
 				}
 
 				if (dirtyBounds == null) {
@@ -1665,6 +1680,7 @@ public class PieceMapView
 		boolean selectedRange;
 		boolean selected;
 		boolean forced;
+		boolean needed;
 		
 		Rectangle bounds;
 		/**
@@ -1680,6 +1696,7 @@ public class PieceMapView
 			}
 			return haveWidth == otherBlockInfo.haveWidth
 					&& availNum == otherBlockInfo.availNum
+					&& needed == otherBlockInfo.needed
 					&& availDotted == otherBlockInfo.availDotted
 					&& showDown == otherBlockInfo.showDown
 					&& showUp == otherBlockInfo.showUp 
@@ -1693,6 +1710,7 @@ public class PieceMapView
 			return "BlockInfo@" + Integer.toHexString(hashCode()) + "{" +
 				"haveWidth=" + haveWidth +
 				", availNum=" + availNum +
+				", needed=" + needed +
 				", availDotted=" + availDotted +
 				", showUp=" + showUp +
 				", showDown=" + showDown +
