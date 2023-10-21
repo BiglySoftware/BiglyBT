@@ -34,8 +34,8 @@ public class FileCreationItem
 {
 	public FileCreationItem(){
 		super( "filecreated", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableManager.TABLE_TORRENT_FILES);
-		
-		setRefreshInterval(INTERVAL_LIVE);
+
+		setRefreshInterval(2);
 	}
 
 	@Override
