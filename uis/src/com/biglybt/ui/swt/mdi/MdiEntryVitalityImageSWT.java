@@ -211,6 +211,11 @@ public class MdiEntryVitalityImageSWT
 
 					@Override
 					public void perform(TimerEvent event) {
+						if (images == null || images.length == 0 || !visible
+							|| hitArea == null) {
+							return;
+						}
+
 						synchronized (lock) {
 
 							if (exec_pending) {
