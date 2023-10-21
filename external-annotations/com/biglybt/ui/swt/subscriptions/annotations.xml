@@ -2,4 +2,16 @@
     <item name='com.biglybt.ui.swt.subscriptions.SubscriptionManagerUI void checkSubscriptionForStuff(com.biglybt.core.subs.Subscription) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+    <item name='com.biglybt.ui.swt.subscriptions.SubscriptionManagerUI.MenuCreator com.biglybt.pif.ui.menus.MenuItem createMenu(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.subscriptions.SubscriptionManagerUI.MenuCreator com.biglybt.pif.ui.menus.MenuItem createMenu(java.lang.String, com.biglybt.pif.ui.menus.MenuItemListener) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
 </root>

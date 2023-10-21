@@ -12,6 +12,11 @@
     <item name='com.vuze.plugin.azVPN_Helper.CheckerCommon pi'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+    <item name='com.vuze.plugin.azVPN_Helper.Checker_Mullvad java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt; setupConfigModel(com.biglybt.pif.PluginInterface, com.biglybt.pif.ui.model.BasicPluginConfigModel) 0'>
+        <annotation name='java.lang.SuppressWarnings'>
+            <val val="&quot;unused&quot;"/>
+        </annotation>
+    </item>
     <item name='com.vuze.plugin.azVPN_Helper.Checker_PIA java.lang.String decode(java.lang.String) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>

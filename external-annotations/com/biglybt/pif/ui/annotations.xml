@@ -1,14 +1,30 @@
 <root>
+    <item name='com.biglybt.pif.ui.UIInputReceiver void setLocalisedMessages(java.lang.String[]) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.UIInputReceiver void setMessage(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.UIInputReceiver void setTitle(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
     <item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.menus.MenuManager getMenuManager()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-	<item
+    <item
 		name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.model.BasicPluginConfigModel createBasicPluginConfigModel(java.lang.String) 0'>
 		<annotation name='org.jetbrains.annotations.PropertyKey'>
 			<val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
 		</annotation>
 	</item>
-	<item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.model.BasicPluginConfigModel createBasicPluginConfigModel(java.lang.String, java.lang.String)'>
+    <item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.model.BasicPluginConfigModel createBasicPluginConfigModel(java.lang.String, java.lang.String)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.model.BasicPluginConfigModel createBasicPluginConfigModel(java.lang.String, java.lang.String) 0'>
@@ -23,7 +39,7 @@
     <item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.tables.TableManager getTableManager()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-	<item name='com.biglybt.pif.ui.UIPluginView java.lang.String getViewID()'>
+    <item name='com.biglybt.pif.ui.UIPluginView java.lang.String getViewID()'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 </root>

@@ -5,6 +5,9 @@
     <item name='com.biglybt.ui.UIFunctions void installPlugin(java.lang.String, java.lang.String, com.biglybt.ui.UIFunctions.actionListener) 2'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+    <item name='com.biglybt.ui.UIFunctions.TagReturner void returnedTags(com.biglybt.core.tag.Tag[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
     <item name='com.biglybt.ui.UIFunctionsManager com.biglybt.ui.UIFunctions getUIFunctions()'>
         <annotation name='org.jetbrains.annotations.Nullable'/>
     </item>

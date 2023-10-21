@@ -1,5 +1,5 @@
 <root>
-    <item name='com.biglybt.ui.swt.components.BubbleTextBox org.eclipse.swt.widgets.Composite getParent()'>
+    <item name="com.biglybt.ui.swt.components.BubbleTextBox org.eclipse.swt.widgets.Composite getMainWidget()">
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='com.biglybt.ui.swt.components.BubbleTextBox org.eclipse.swt.widgets.Text getTextWidget()'>

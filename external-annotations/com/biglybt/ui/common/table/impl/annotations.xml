@@ -49,7 +49,10 @@
 		name='com.biglybt.ui.common.table.impl.TableViewImpl boolean hasSortColumn(com.biglybt.pif.ui.tables.TableColumn) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
-	<item name='com.biglybt.ui.common.table.impl.TableViewImpl rows_sync'>
+    <item name='com.biglybt.ui.common.table.impl.TableViewImpl boolean isTableSelected()'>
+			<annotation name='java.lang.Override'/>
+		</item>
+    <item name='com.biglybt.ui.common.table.impl.TableViewImpl rows_sync'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item name='com.biglybt.ui.common.table.impl.TableViewImpl sortColumns'>

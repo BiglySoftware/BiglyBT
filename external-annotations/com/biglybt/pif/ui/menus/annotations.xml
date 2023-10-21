@@ -5,10 +5,25 @@
     <item name='com.biglybt.pif.ui.menus.MenuManager com.biglybt.pif.ui.menus.MenuItem addMenuItem(com.biglybt.pif.ui.menus.MenuContext, java.lang.String)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+	<item name='com.biglybt.pif.ui.menus.MenuManager com.biglybt.pif.ui.menus.MenuItem addMenuItem(com.biglybt.pif.ui.menus.MenuContext, java.lang.String) 1'>
+		<annotation name="org.jetbrains.annotations.PropertyKey">
+			<val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+		</annotation>
+	</item>
     <item name='com.biglybt.pif.ui.menus.MenuManager com.biglybt.pif.ui.menus.MenuItem addMenuItem(com.biglybt.pif.ui.menus.MenuItem, java.lang.String)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+	<item name='com.biglybt.pif.ui.menus.MenuManager com.biglybt.pif.ui.menus.MenuItem addMenuItem(com.biglybt.pif.ui.menus.MenuItem, java.lang.String) 1'>
+		<annotation name="org.jetbrains.annotations.PropertyKey">
+			<val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+		</annotation>
+	</item>
     <item name='com.biglybt.pif.ui.menus.MenuManager com.biglybt.pif.ui.menus.MenuItem addMenuItem(java.lang.String, java.lang.String)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+	  <item name='com.biglybt.pif.ui.menus.MenuManager com.biglybt.pif.ui.menus.MenuItem addMenuItem(java.lang.String, java.lang.String) 1'>
+		    <annotation name="org.jetbrains.annotations.PropertyKey">
+			      <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+		    </annotation>
     </item>
 </root>
