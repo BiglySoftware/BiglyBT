@@ -66,3 +66,5 @@ Running is only few more steps:
 We build our installers using [Install4j, multi-platform installer builder](https://www.ej-technologies.com/products/install4j/overview.html)
 
 ![Install4j Logo](https://www.ej-technologies.com/images/product_banners/install4j_large.png)
+
+Our binaries and installers up to and including v3.4 are signed with a digital signature of "Bigly Software". Releases after v3.4 will use an individual signing certificate and will bear the name "Arron Mogge (Open Source Developer)" denoting the identity of our team member responsible for signing.
