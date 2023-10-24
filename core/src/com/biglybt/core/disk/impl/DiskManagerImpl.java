@@ -546,6 +546,7 @@ DiskManagerImpl
         			if (transfer.download_location != null || transfer.download_name != null) {
         				File dl_location = transfer.download_location;
         				if (dl_location == null) {dl_location = download_manager.getAbsoluteSaveLocation().getParentFile();}
+        				FileUtil.log( "Missing files for '" + download_manager.getDisplayName() +"' found in '" + dl_location + "'" );
         				if (transfer.download_name == null) {
         					download_manager.setTorrentSaveDir(dl_location, false);
         				}
@@ -554,6 +555,7 @@ DiskManagerImpl
         				}
         			}
         			if (transfer.torrent_location != null || transfer.torrent_name != null) {
+        				FileUtil.log( "Missing torrent for '" + download_manager.getDisplayName() +"' found in '" + transfer.torrent_location + "'");
         				try {download_manager.setTorrentFile(transfer.torrent_location, transfer.torrent_name);}
         				catch (DownloadManagerException e) {Debug.printStackTrace(e);}
         			}

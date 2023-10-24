@@ -23,6 +23,5 @@ import com.biglybt.pif.download.Download;
  * <p><b>Note:</b> Only for implementation by Core, not plugins.</p>
  */
 public interface DefaultSaveLocationManager extends SaveLocationManager {
-	public SaveLocationChange testOnCompletion(Download download, boolean for_move, boolean on_event);
 	public boolean isInDefaultSaveDir(Download d);
 }

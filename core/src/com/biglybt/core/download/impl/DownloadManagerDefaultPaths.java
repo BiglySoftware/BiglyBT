@@ -29,6 +29,7 @@ import com.biglybt.core.tag.TagFeature;
 import com.biglybt.core.tag.TagFeatureFileLocation;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagUtils;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.savelocation.DefaultSaveLocationManager;
@@ -56,28 +57,23 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 			if (on_event) {return null;}
 
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
-			return determinePaths(dm, UPDATE_FOR_MOVE_DETAILS[1], for_move, false, REASON_INIT); // 1 - incomplete downloads
+			return determinePaths(dm, UPDATE_FOR_MOVE_DETAILS[1], for_move, REASON_INIT); // 1 - incomplete downloads
 		}
 		@Override
 		public SaveLocationChange onCompletion(Download d, boolean for_move, boolean on_event) {
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
 			MovementInformation mi = getDownloadOrTagCompletionMovementInformation( dm, COMPLETION_DETAILS );
-			return determinePaths(dm, mi, for_move, false, REASON_COMPLETE);
-		}
-		@Override
-		public SaveLocationChange testOnCompletion(Download d, boolean for_move, boolean on_event) {
-			DownloadManager dm = ((DownloadImpl)d).getDownload();
-			MovementInformation mi = getDownloadOrTagCompletionMovementInformation( dm, COMPLETION_DETAILS );
-			return determinePaths(dm, mi, for_move, true, REASON_COMPLETE );
+			return determinePaths(dm, mi, for_move, REASON_COMPLETE);
 		}
 		@Override
 		public SaveLocationChange onRemoval(Download d, boolean for_move, boolean on_event) {
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
 			MovementInformation mi = getDownloadOrTagRemovalMovementInformation( dm, REMOVAL_DETAILS );
-			return determinePaths(dm, mi, for_move, false, REASON_REMOVE );
+			return determinePaths(dm, mi, for_move, REASON_REMOVE );
 		}
 		@Override
 		public boolean isInDefaultSaveDir(Download d) {
+			Debug.out( "Thought this wasn't used..." );
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
 			return DownloadManagerDefaultPaths.isInDefaultDownloadDir(dm);
 		}
@@ -553,8 +549,8 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
     /**
      * This does the guts of determining appropriate file paths.
      */
-    static SaveLocationChange determinePaths(DownloadManager dm, MovementInformation mi, boolean check_source, boolean is_test, int reason ) {
-		boolean proceed = !check_source || mi.source.matchesDownload(dm, mi, is_test );
+    static SaveLocationChange determinePaths(DownloadManager dm, MovementInformation mi, boolean check_source, int reason ) {
+		boolean proceed = !check_source || mi.source.matchesDownload(dm, mi);
 		if (!proceed) {
 			logInfo("Cannot consider " + describe(dm, mi) +
 			    " - does not match source criteria.", dm);
@@ -568,7 +564,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 			return null;
 		}
 
-        logInfo("Determined path for " + describe(dm, mi) + " - " + target_paths[0] + ";" + target_paths[1] + ".", dm );
+        logInfo("Determined path for " + describe(dm, mi) + " - " + target_paths[0] + ";" + target_paths[1] + ", reason=" + reason + ".", dm );
 		return mi.transfer.getTransferDetails(dm, mi, target_paths);
 	}
 
@@ -642,7 +638,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 
     private static class SourceSpecification extends ParameterHelper {
 
-		public boolean matchesDownload(DownloadManager dm, ContextDescriptor context, boolean ignore_completeness ) {
+		public boolean matchesDownload(DownloadManager dm, ContextDescriptor context ) {
 			if (this.getBoolean("default dir", false)) {
 				logInfo("Checking if " + describe(dm, context) + " is inside default dirs.", dm);
 				File[] default_dirs = getDefaultDirs();
@@ -669,7 +665,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 
 			// Does it work for incomplete downloads?
   			if (!dm.isDownloadComplete(false)) {
-  				boolean can_move = ignore_completeness || this.getBoolean("incomplete dl", false);
+  				boolean can_move = this.getBoolean("incomplete dl", false);
   				String log_message = describe(dm, context) + " is incomplete which is " +
   			    	((can_move) ? "" : "not ") + "an appropriate state.";
   				if (!can_move) {
@@ -789,7 +785,8 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 
 			if ( !torrent_enabled ){
 
-				logInfo("Torrent target for " + describe(dm, cd) + " is not enabled.", dm);
+				// not interesting
+				// logInfo("Torrent target for " + describe(dm, cd) + " is not enabled.", dm);
 
 				torrent_target = null;
 
