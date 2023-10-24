@@ -57,6 +57,8 @@ CHANGE: UI     | Support some more multi-select Tag settings [Parg]
 CHANGE: UI     | Show remaining pieces for non-active downloads [Parg]
 CHANGE: UI     | Added strict file-op timeout for image repository is-dir and other places [Parg]
 CHANGE: UI     | Null better for sorting than -1 when no download [TuxPaper]
+CHANGE: UI     | When piece isn't needed, reduce transparency [TuxPaper]
+CHANGE: UI     | LINE_DOT sucks. Long live setLineDash [TuxPaper]
 CHANGE: UI     | bg_BG: Bulgarian translation update [andreshko]
 CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
 CHANGE: UI     | fi_FI: Finnish translation update [olavinto]
@@ -93,6 +95,9 @@ BUGFIX: UI     | Fix toolbar config listeners [Parg]
 BUGFIX: UI     | Fix blank row when last row removed/hidden [Parg]
 BUGFIX: UI     | Limit recursion in ProgressWindow when lots active [Parg]
 BUGFIX: UI     | Fix missing menu item on right click of tab that has yet to be visible [TuxPaper]
+BUGFIX: UI     | Fix Library view wait splash in dark mode [Parg]
+BUGFIX: UI     | Don't start SWT thread task for MDIEntry Icon update if not visible [TuxPaper]
+BUGFIX: UI     | File access causes IO. Reduce update interval. [TuxPaper]
 
 2023.05.17 | BiglyBT 3.4.0.0
 
