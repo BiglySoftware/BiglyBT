@@ -516,13 +516,32 @@ DiskManagerImpl
         	 */
         	File[] move_to_dirs = DownloadManagerMoveHandler.getRelatedDirs(download_manager);
 
-        	for (int i=0; i<move_to_dirs.length; i++) {
-        		File move_to_dir = move_to_dirs[i].getAbsoluteFile();
-        		if (filesExist (move_to_dir,true)) {
-                    alreadyMoved = files_exist = true;
-                    download_manager.setTorrentSaveDir(move_to_dir, false);
-                    break;
-                }
+        	if ( move_to_dirs.length > 0 ){
+        		
+        		files_exist = this.filesExist();
+        		
+        		if ( files_exist ){
+        			
+        			alreadyMoved = download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_MOVE_ON_COMPLETION_DONE );
+        			
+        		}else{
+        			
+		        	for (int i=0; i<move_to_dirs.length; i++) {
+		        		
+		        		File move_to_dir = move_to_dirs[i].getAbsoluteFile();
+		        		
+		        		if ( filesExist( move_to_dir, true )){
+		        			
+		       				FileUtil.log( "Missing files for '" + download_manager.getDisplayName() +"' found in related '" + move_to_dir + "'" );
+
+		                    alreadyMoved = files_exist = true;
+		                    
+		                    download_manager.setTorrentSaveDir(move_to_dir, false);
+		                    
+		                    break;
+		                }
+		        	}
+        		}
         	}
         }
 
@@ -535,13 +554,18 @@ DiskManagerImpl
         // If we haven't yet allocated the files, take this chance to determine
         // whether any relative paths should be taken into account for default
         // save path calculations.
+        
         if (!alreadyMoved && !download_manager.isDataAlreadyAllocated()) {
 
-        	// Check the files don't already exist in their current location.
-        	if (!files_exist) {files_exist = this.filesExist();}
+        		// Check the files don't already exist in their current location.
+        	
+        	if (!files_exist){
+        		
+        		files_exist = this.filesExist();
+        	}
+        	
         	if (!files_exist) {
-        		SaveLocationChange transfer =
-        			DownloadManagerMoveHandler.onInitialisation(download_manager);
+        		SaveLocationChange transfer = DownloadManagerMoveHandler.onInitialisation(download_manager);
         		if (transfer != null) {
         			if (transfer.download_location != null || transfer.download_name != null) {
         				File dl_location = transfer.download_location;
