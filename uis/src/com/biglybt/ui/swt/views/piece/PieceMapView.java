@@ -1227,6 +1227,7 @@ public class PieceMapView
 				}
 
 				Color bg;
+				Color bgMain = null;
 				Colors colorsInstance = Colors.getInstance();
 				if ( newInfo.selectedRange ){
 					Color fc = blockColors[BLOCKCOLOR_SHOWFILE ];
@@ -1241,8 +1242,8 @@ public class PieceMapView
 						file_color 			= fc;
 						file_color_faded 	= colorsInstance.getLighterColor( fc, 75 );
 					}
-					
-					bg = file_color_faded;
+
+					bgMain = bg = file_color_faded;
 
 				}	else {
 					bg = canvasBG;
@@ -1282,8 +1283,12 @@ public class PieceMapView
 						gcImg.setBackground(bg);
 						
 						gcImg.fillRectangle(iXPos, iYPos, newInfo.haveWidth, BLOCK_FILLSIZE);
+
+						if (newInfo.haveWidth * 2 > BLOCK_FILLSIZE) {
+							bgMain = bg;
+						}
 					}
-	
+
 					bg = newInfo.needed ? blockColors[BLOCKCOLOR_NOHAVE] : canvasBG;
 
 					if (newInfo.availNum >= 0 && newInfo.availNum < maxAvailability) {
@@ -1295,10 +1300,13 @@ public class PieceMapView
 					}
 				}
 
-				Color bgMain = bg;
 				gcImg.setBackground(bg);
 				gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos,
 						BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
+
+				if (bgMain == null) {
+					bgMain = bg;
+				}
 
 				if (newInfo.showDown > 0) {
 					boolean isSmall = newInfo.showDown == SHOW_SMALL;
