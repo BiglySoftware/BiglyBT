@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2023.10.yy | BiglyBT 3.5.0.0
+2023.11.yy | BiglyBT 3.5.0.0
 
 
 FEATURE: Core  | Added options to allocate/move downloads in order as well as by reverse size [Parg]
@@ -98,6 +98,7 @@ BUGFIX: UI     | Fix missing menu item on right click of tab that has yet to be 
 BUGFIX: UI     | Fix Library view wait splash in dark mode [Parg]
 BUGFIX: UI     | Don't start SWT thread task for MDIEntry Icon update if not visible [TuxPaper]
 BUGFIX: UI     | File access causes IO. Reduce update interval. [TuxPaper]
+BUGFIX: UI     | Main background color was incorrect when block is mostly complete [TuxPaper]
 
 2023.05.17 | BiglyBT 3.4.0.0
 
