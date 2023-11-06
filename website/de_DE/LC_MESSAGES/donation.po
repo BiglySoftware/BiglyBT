@@ -15,56 +15,56 @@ msgstr ""
 "X-Crowdin-Language: de\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 508\n"
-"PO-Revision-Date: 2022-08-02 13:42\n"
+"PO-Revision-Date: 2023-11-06 08:23\n"
 
 msgid "test"
-msgstr ""
+msgstr "Test auf Englisch"
 
 msgid "onlyEng"
-msgstr ""
+msgstr "Nur in Englisch"
 
 msgid "donation_line1"
-msgstr ""
+msgstr "Obwohl BiglyBT ein freies Softwareprodukt ist, kostet es viel zu entwickeln und zu pflegen. Wenn Sie der Meinung sind, dass Sie davon profitiert haben, unterstützen Sie uns bitte auf folgende Weise:"
 
 msgid "donation_title"
-msgstr ""
+msgstr "Unterstütze BiglyBT"
 
 msgid "donation_monthly_title"
-msgstr ""
+msgstr "Monatliches Dankeschön"
 
 msgid "donation_onetime_title"
-msgstr ""
+msgstr "Einmalige Spende"
 
 msgid "donation_bitcoin_title"
-msgstr ""
+msgstr "Bitcoin"
 
 msgid "donation_monthly_description"
-msgstr ""
+msgstr "Gib den Entwicklern jeden Monat einen Kaffee"
 
 msgid "donation_monthly_per_month"
-msgstr ""
+msgstr "/mo"
 
 msgid "donation_onetime_amount"
-msgstr ""
+msgstr "Betrag (%1):"
 
 msgid "donation_onetime_description"
-msgstr ""
+msgstr "Jeder Betrag wird dankend angenommen :)"
 
 msgid "donation_bitcoin_description"
-msgstr ""
+msgstr "Wir schlagen eine Spende von %1 oder %2 vor. :)"
 
 msgid "donation_bitcoin_addresses"
-msgstr ""
+msgstr "BCH/BTC/BSG/BSV-Adresse:"
 
 msgid "donation_crypto_title"
-msgstr ""
+msgstr "Kryptowährung"
 
 msgid "donation_crypto_description"
-msgstr ""
+msgstr "Lassen Sie uns wissen, ob Ihr Lieblings-Coin oder -Token nicht aufgeführt sind und wir werden eine Adresse hinzufügen :)"
 
 msgid "no_thanks"
-msgstr ""
+msgstr "Nein, danke."
 
 msgid "close"
-msgstr ""
+msgstr "Schließen"
 
