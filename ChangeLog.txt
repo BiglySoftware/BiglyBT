@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2023.11.yy | BiglyBT 3.5.0.0
+2023.11.10 | BiglyBT 3.5.0.0
 
 
 FEATURE: Core  | Added options to allocate/move downloads in order as well as by reverse size [Parg]
