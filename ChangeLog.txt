@@ -1,8 +1,9 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2023.11.10 | BiglyBT 3.5.0.0
+2024.xx.yy | BiglyBT 3.5.0.1
 
+2023.11.10 | BiglyBT 3.5.0.0
 
 FEATURE: Core  | Added options to allocate/move downloads in order as well as by reverse size [Parg]
 FEATURE: Core  | Added Tag Constraint constants for min/max integer/long values [Parg]
