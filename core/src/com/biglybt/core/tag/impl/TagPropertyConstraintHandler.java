@@ -2781,6 +2781,7 @@ TagPropertyConstraintHandler
 		private static final int FT_MAX					= 58;
 		private static final int FT_GET_TAG_SORT		= 59;
 		private static final int FT_LENGTH				= 60;
+		private static final int FT_COUNT				= 61;
 
 		static{
 			fn_map.put( "hastag", FT_HAS_TAG );
@@ -2856,6 +2857,7 @@ TagPropertyConstraintHandler
 			fn_map.put( "ifthenelse", FT_IF_THEN_ELSE );
 			fn_map.put( "gettagsort", FT_GET_TAG_SORT );
 			fn_map.put( "length", FT_LENGTH );
+			fn_map.put( "count", FT_COUNT );
 		}
 		
 		private static final int	DEP_STATIC		= 0;
@@ -2918,6 +2920,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_MAX64				= 51;
 		private static final int	KW_MIN64				= 52;
 		private static final int	KW_MOC_PATH				= 53;
+		private static final int	KW_FILE_COUNT_SELECTED	= 54;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -3038,6 +3041,10 @@ TagPropertyConstraintHandler
 			keyword_map.put( "mocpath",	 				new int[]{KW_MOC_PATH,				DEP_STATIC });
 			keyword_map.put( "moc_path",	 			new int[]{KW_MOC_PATH,				DEP_STATIC });
 			keyword_map.put( "move_on_complete_path",	new int[]{KW_MOC_PATH,				DEP_STATIC });
+			
+			keyword_map.put( "filecountselected", 		new int[]{KW_FILE_COUNT_SELECTED,	DEP_STATIC });
+			keyword_map.put( "file_count_selected",		new int[]{KW_FILE_COUNT_SELECTED,	DEP_STATIC });
+
 		}
 
 		private class
@@ -3287,7 +3294,8 @@ TagPropertyConstraintHandler
 
 						break;
 					}
-					case FT_LENGTH:{
+					case FT_LENGTH:
+					case FT_COUNT:{
 						params_ok = num_params == 1;
 						
 						break;
@@ -4069,6 +4077,7 @@ TagPropertyConstraintHandler
 						return( false );
 					}
 					case FT_LENGTH:{
+						
 						String		str = getString( context, dm, tags, params, 0, debug );
 						
 						if ( str == null ){
@@ -4079,6 +4088,12 @@ TagPropertyConstraintHandler
 							
 							return( str.length());
 						}
+					}
+					case FT_COUNT:{
+						
+						String[]		strs = getStrings( context, dm, tags, params, 0, debug );
+						
+						return( strs.length );
 					}
 					case FT_CONTAINS:{
 
@@ -5459,6 +5474,38 @@ TagPropertyConstraintHandler
 					
 						return( result );
 					}
+					case KW_FILE_COUNT_SELECTED:{
+						
+						String[] result = (String[])dm.getUserData( DM_FILE_NAMES_SELECTED );
+						
+						if ( result == null ){
+							
+							DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+							
+							List<String>	names = new ArrayList<>( files.length );
+							
+							for ( int i=0;i<files.length;i++){
+								
+								if ( files[i].isSkipped()){
+									
+									continue;
+								}
+								
+								names.add( files[i].getFile( false ).getName());
+							}
+							
+							result = names.toArray( new String[0] );
+							
+							dm.setUserData( DM_FILE_NAMES_SELECTED, result );
+							
+							depends_on_names_etc = true;
+							
+							handler.checkDMListeners( dm );
+						}
+					
+						return( result.length );
+					}
+
 					case KW_TAG_NAMES:{
 					
 						String[] result = new String[tags.size()];
