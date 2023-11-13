@@ -253,6 +253,10 @@ public class ConfigSectionInterfaceDisplaySWT
 		add(new BooleanParameterImpl(
 				"IconBar.visible." + TorrentUtil.TU_ITEM_ALLOCATE,
 				"label.allocate"), listToolbarItems);
+		
+		add(new BooleanParameterImpl(
+				"IconBar.visible." + TorrentUtil.TU_ITEM_ARCHIVE,
+				"MyTorrentsView.menu.archive"), listToolbarItems);
 
 		if (isAZ3) {
 			add(new BooleanParameterImpl(
