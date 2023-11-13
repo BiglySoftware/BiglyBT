@@ -4764,7 +4764,7 @@ public class TorrentUtil
 
 		boolean canRecheck = false;
 		boolean canAllocate = false;
-		boolean canArchive = currentContent.length > 0;
+		Boolean canArchive = null;	// all must be archiveable for this to be true
 		
 		if (currentContent.length > 0 && hasRealDM) {
 
@@ -4847,8 +4847,14 @@ public class TorrentUtil
 				
 				Download stub = PluginCoreUtils.wrap(dm);
 
-				if ( !stub.canStubbify()){
+				if ( stub.canStubbify()){
 
+					if ( canArchive == null ){
+						
+						canArchive = true;
+					}
+				}else{
+					
 					canArchive = false;
 				}
 			}
@@ -4947,7 +4953,7 @@ public class TorrentUtil
 		mapNewToolbarStates.put( TU_ITEM_RECHECK, canRecheck ? UIToolBarItem.STATE_ENABLED : 0);
 		mapNewToolbarStates.put( TU_ITEM_CHECK_FILES, canCheckExist ? UIToolBarItem.STATE_ENABLED : 0);
 		mapNewToolbarStates.put( TU_ITEM_ALLOCATE, canAllocate ? UIToolBarItem.STATE_ENABLED : 0);
-		mapNewToolbarStates.put( TU_ITEM_ARCHIVE, canArchive ? UIToolBarItem.STATE_ENABLED : 0);
+		mapNewToolbarStates.put( TU_ITEM_ARCHIVE, canArchive!=null&&canArchive ? UIToolBarItem.STATE_ENABLED : 0);
 		
 		boolean ss = COConfigurationManager.getBooleanParameter( "Show Side Bar" );
 		
