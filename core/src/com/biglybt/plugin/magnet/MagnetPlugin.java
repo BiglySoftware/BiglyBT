@@ -3157,6 +3157,8 @@ MagnetPlugin
 										
 										if ( done ){
 											
+											MagnetPluginMDDownloader downloader = null;
+											
 											synchronized( md_downloader ){
 												
 												try{
@@ -3164,17 +3166,17 @@ MagnetPlugin
 									
 														md_delay_event[0].cancel();
 									
-														MagnetPluginMDDownloader downloader = md_downloader[0];
-														
-														if ( downloader != null ){
-									
-															downloader.cancel();
-														}
+														downloader = md_downloader[0];
 													}
 												}finally{
 													
 													final_timer[0].cancel();
 												}
+											}
+											
+											if ( downloader != null ){
+												
+												downloader.cancel();
 											}
 										}
 									}
@@ -3201,22 +3203,24 @@ MagnetPlugin
 			}
 		}finally{
 
-			if ( final_timer[0] == null ){
-				
-				synchronized( md_downloader ){
-	
+			MagnetPluginMDDownloader downloader = null;
+			
+			synchronized( md_downloader ){
+
+				if ( final_timer[0] == null ){
+					
 					if ( md_delay_event[0] != null ){
 	
 						md_delay_event[0].cancel();
 	
-						MagnetPluginMDDownloader downloader = md_downloader[0];
-						
-						if ( downloader != null ){
-	
-							downloader.cancel();
-						}
+						downloader = md_downloader[0];
 					}
 				}
+			}
+			
+			if ( downloader != null ){
+					
+				downloader.cancel();
 			}
 		}
 	}
