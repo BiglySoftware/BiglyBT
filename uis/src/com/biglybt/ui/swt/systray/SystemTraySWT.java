@@ -123,9 +123,6 @@ public class SystemTraySWT
 			public void coreRunning(Core core) {
 				SystemTraySWT.core = core;
 				gm = core.getGlobalManager();
-				if (Constants.isUnix) {
-					ensureDorkBoxPlugin(core);
-				}
 			}
 		});
 
@@ -222,24 +219,6 @@ public class SystemTraySWT
 		});
 
 		uiFunctions.getUIUpdater().addUpdater(this);
-	}
-
-	private void ensureDorkBoxPlugin(Core core) {
-		String pid = "dorkboxupdater";
-
-		PluginManager pm = core.getPluginManager();
-		if (pm.getPluginInterfaceByID(pid) != null) {
-			return;
-		}
-
-		UIFunctions uif = UIFunctionsManager.getUIFunctions();
-		if (uif == null) {
-			Debug.out("UIFunctions unavailable - can't install plugin");
-			return;
-		}
-
-		uif.installPlugin(pid, pid + ".install", result -> {
-		});
 	}
 
 	public void fillMenu(final Menu menu) {

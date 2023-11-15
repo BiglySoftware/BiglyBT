@@ -138,16 +138,6 @@ public class ConfigSectionInterfaceSWT
 			}
 		}));
 
-		if (Constants.isUnix) {
-			BooleanParameterImpl paramForceDorkTray = new BooleanParameterImpl(
-					"ui.forceDorkTray", "ConfigView.ui.forcedorktray");
-			add(paramForceDorkTray, Parameter.MODE_ADVANCED, listSysTray);
-			paramForceDorkTray.addListener(p -> Utils.execSWTThread(() -> {
-				SystemTraySWT.getTray().dispose();
-				SystemTraySWT.getTray();
-			}));
-		}
-
 		BooleanParameterImpl stdo = new BooleanParameterImpl(
 				"System Tray Disabled Override",
 				"ConfigView.label.closetotrayoverride");
