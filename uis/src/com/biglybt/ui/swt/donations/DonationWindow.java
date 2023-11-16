@@ -408,11 +408,13 @@ public class DonationWindow
 
 		if ( browser.isFake()){
 
-			browser.setUrl( Constants.URL_DONATION );
+			browser.setFakeUrl( Constants.URL_DONATION, (s)->{
+				neverAskAgain();
+			});
 
 			browser.setText( "Please follow the link to donate via an external browser" );
 
-			shell.setSize( 400, 500 );
+			shell.setSize( 800, 500 );
 
 			Utils.centreWindow(shell);
 

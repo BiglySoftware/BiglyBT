@@ -20,6 +20,8 @@
 
 package com.biglybt.ui.swt;
 
+import java.util.function.Consumer;
+
 import org.eclipse.swt.browser.CloseWindowListener;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.browser.ProgressListener;
@@ -96,6 +98,11 @@ BrowserWrapper
 	setUrl(
 		String		url );
 
+	public abstract void
+	setFakeUrl(
+		String				url,
+		Consumer<String>	click_listener );
+	
 	public abstract void
 	setText(
 		String		text );

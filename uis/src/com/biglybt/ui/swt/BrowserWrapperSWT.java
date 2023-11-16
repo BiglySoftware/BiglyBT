@@ -22,6 +22,8 @@
 
 package com.biglybt.ui.swt;
 
+import java.util.function.Consumer;
+
 import org.eclipse.swt.browser.Browser;
 //import org.eclipse.swt.chromium.Browser;
 
@@ -37,6 +39,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+
+import com.biglybt.core.util.Debug;
 
 public class
 BrowserWrapperSWT
@@ -128,6 +132,17 @@ BrowserWrapperSWT
 		return( browser.getUrl());
 	}
 
+	@Override
+	public void
+	setFakeUrl(
+		String				url,
+		Consumer<String>	listener )
+	{
+		Debug.out( "Should be called on fake browser..." );
+		
+		setUrl(url);
+	}
+	
 	@Override
 	public void
 	setUrl(

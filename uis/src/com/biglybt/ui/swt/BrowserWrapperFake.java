@@ -24,6 +24,7 @@ package com.biglybt.ui.swt;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTError;
@@ -56,7 +57,9 @@ BrowserWrapperFake
 	private Label			link_label;
 	private Label			description_label;
 
-	private String 			url;
+	private String 				url;
+	private Consumer<String>	url_listener;
+	
 	private String			description;
 
 	private List<LocationListener>		location_listeners 	= new ArrayList<>();
@@ -147,14 +150,25 @@ BrowserWrapperFake
 		link_label.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDoubleClick(MouseEvent e) {
-				Utils.launch( url );
+				launch();
 			}
 			@Override
 			public void mouseUp(MouseEvent e) {
 
 				if ( e.button == 1 && e.stateMask != SWT.CONTROL){
 
-					Utils.launch( url );
+					launch();
+				}
+			}
+			
+			private void
+			launch()
+			{
+				Utils.launch( url );
+				
+				if ( url_listener != null ){
+					
+					url_listener.accept( url );
 				}
 			}
 		});
@@ -262,11 +276,29 @@ BrowserWrapperFake
 
 	@Override
 	public void
-	setUrl(
-		final String		_url )
+	setFakeUrl(
+		String				url,
+		Consumer<String>	listener )
 	{
-		url		= _url;
-
+		setUrl( url, listener );
+	}
+	
+	@Override
+	public void
+	setUrl(
+		String		url )
+	{
+		setUrl( url, null );
+	}
+	
+	private void
+	setUrl(
+		final String		_url,
+		Consumer<String>	_listener )
+	{
+		url				= _url;
+		url_listener	= _listener;
+		
 		Utils.execSWTThread(
 			new Runnable()
 			{
