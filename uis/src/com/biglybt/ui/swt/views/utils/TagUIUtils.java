@@ -3589,7 +3589,8 @@ public class TagUIUtils
 
 						auto_map.computeIfAbsent(ttTag, k -> new ArrayList<>()).add(t);
 
-					}else if ( buildTaggableCount && ttTag == tt ){
+					}
+					if ( buildTaggableCount && ttTag == tt ){
 
 						mapTaggableCount.compute(t, (t2, num) -> num == null ? 1 : num + 1);
 					}
