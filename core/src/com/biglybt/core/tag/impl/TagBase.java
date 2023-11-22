@@ -2297,6 +2297,8 @@ TagBase
 
 		tag_type.removeTag( this );
 
+		setGroup( null );
+		
 		if ( was_rss ){
 
 			tag_type.getTagManager().checkRSSFeeds( this, false );
