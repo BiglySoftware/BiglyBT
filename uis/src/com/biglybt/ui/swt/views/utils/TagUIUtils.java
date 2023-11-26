@@ -3695,7 +3695,14 @@ public class TagUIUtils
 
 				// Note: If tg.isExclusive() and only one numTaggables, we could
 				//       use a radio button
-				int numChecked = build(mm, groupItem, tg.getTags(), numTaggables,
+				
+				List<Tag> groupTags = tg.getTags();
+				
+				if (options.tagMenuFilter != null) {
+					groupTags = options.tagMenuFilter.filterTags(groupTags.toArray(new Tag[0]));
+				}
+				
+				int numChecked = build(mm, groupItem, groupTags, numTaggables,
 						mapTaggableCount, options.tagSelectionListener);
 
 				groupItem.setText(addCountToTagMenuLabel(tg.getName(), numChecked,
