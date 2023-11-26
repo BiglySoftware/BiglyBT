@@ -571,13 +571,15 @@ GlobalManagerStatsImpl
 					public void runSupport()
 					{
 						try{
-							InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress();
-							
-							String[] dets = PeerUtils.getCountryDetails( ia );
-							
-							if ( dets != null && dets.length > 0 ){
-								
-								country_my_cc = dets[0];
+							if (PeerUtils.hasCountryProvider()) {
+								InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+
+								String[] dets = PeerUtils.getCountryDetails( ia );
+
+								if ( dets != null && dets.length > 0 ){
+
+									country_my_cc = dets[0];
+								}
 							}
 						}catch( Throwable e ){
 							

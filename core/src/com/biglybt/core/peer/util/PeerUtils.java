@@ -546,6 +546,10 @@ public class PeerUtils {
 
 		return( country_provider );
 	}
+	
+	public static boolean hasCountryProvider() {
+		return getCountryProvider() != null;
+	}
 
 	public static String[]
  	getCountryDetails(
