@@ -150,7 +150,8 @@ public class BuildMessageBundleNone
 							String expandedValue = expandValue(defaultFullVal,
 								fullCurrentProperties, MessageText.CONSTANTS);
 							if (expandedValue == null) {
-								bw.write("# No expansion for " + defaultFullVal);
+								bw.write("# No expansion for "
+										+ defaultFullVal.replace("\n", "\\n"));
 								bw.newLine();
 								if (isCurrentFileDefaultLang) {
 									bw.write(line);
@@ -168,7 +169,8 @@ public class BuildMessageBundleNone
 							fullCurrentProperties, MessageText.CONSTANTS);
 						if (expandedValue == null) {
 							if (isCurrentFileDefaultLang || !COMPACT) {
-								bw.write("# No expansion for " + fullCurrentVal);
+								bw.write("# No expansion for "
+										+ fullCurrentVal.replace("\n", "\\n"));
 								bw.newLine();
 								if (isCurrentFileDefaultLang) {
 									bw.write(line);
