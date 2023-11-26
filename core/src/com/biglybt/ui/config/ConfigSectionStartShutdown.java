@@ -222,6 +222,7 @@ public class ConfigSectionStartShutdown
 		BooleanParameterImpl paramRestartWhenIdlePrompt = new BooleanParameterImpl(
 				BCFG_AUTO_RESTART_WHEN_IDLE_PROMPT, "label.prompt.when.restart" );
 		paramRestartWhenIdlePrompt.setMinimumRequiredUserMode(Parameter.MODE_INTERMEDIATE);
+		paramRestartWhenIdlePrompt.setAllowedUiTypes(UIInstance.UIT_SWT);
 		paramRestartWhenIdlePrompt.setIndent(1, true);
 		add(paramRestartWhenIdlePrompt);
 
