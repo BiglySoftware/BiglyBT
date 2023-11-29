@@ -3647,7 +3647,10 @@ public class MyTorrentsView
 	@Override
 	public void updateLanguage() {
 		super.updateLanguage();
-		getComposite().layout(true, true);
+		Composite comp = getComposite();
+		if ( comp != null ){
+			comp.layout(true, true);
+		}
 	}
 
 	public boolean isTableFocus() {

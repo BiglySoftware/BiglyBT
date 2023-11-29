@@ -106,7 +106,7 @@ CategoryManagerImpl
   private
   CategoryManagerImpl()
   {
-	super( TagType.TT_DOWNLOAD_CATEGORY, TagDownload.FEATURES, "Category" );
+	super( TagType.TT_DOWNLOAD_CATEGORY, TagDownload.FEATURES, "tag.type.category" );
 
 	addTagType();
 
