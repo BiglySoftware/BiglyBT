@@ -125,12 +125,49 @@ CategoryManagerImpl
 			categories_mon.exit();
 		}
 
-		for ( CategoryImpl c: cats ){
-			c.localeChanged();
+		try{
+			// buffer the changes to avoid costly multiple rebuilds of tagging UI components... 
+			setMDEventsEnabled( false );
+			
+			for ( CategoryImpl c: cats ){
+				c.localeChanged();
+			}
+			
+		}finally{
+			setMDEventsEnabled( true );
 		}
   	});
   }
 
+  boolean	md_events_enabled = true;
+  List<Tag>	pending_md_events	= new ArrayList<>();
+  
+  private void
+  setMDEventsEnabled(
+	 boolean 	enabled )
+  {
+	  md_events_enabled = enabled;
+	  
+	  if ( enabled ){
+		  for ( Tag t: pending_md_events ){
+			  fireMetadataChanged(t);
+		  }
+		  pending_md_events.clear();
+	  }
+  }
+  
+  @Override
+  protected void 
+  fireMetadataChanged(
+	Tag  t)
+  {
+	  if ( md_events_enabled ){
+		  super.fireMetadataChanged(t);
+	  }else{
+		  pending_md_events.add( t );
+	  }
+	}
+  
   public void addCategoryManagerListener(CategoryManagerListener l) {
     category_listeners.addListener( l );
   }
