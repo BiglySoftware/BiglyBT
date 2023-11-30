@@ -111,6 +111,24 @@ CategoryManagerImpl
 	addTagType();
 
   	loadCategories();
+  	
+  	MessageText.addListener((l1,l2)->{
+  		List<CategoryImpl>	cats;
+
+		try{
+			categories_mon.enter();
+
+			cats = new ArrayList<>(categories.values());
+
+		}finally{
+
+			categories_mon.exit();
+		}
+
+		for ( CategoryImpl c: cats ){
+			c.localeChanged();
+		}
+  	});
   }
 
   public void addCategoryManagerListener(CategoryManagerListener l) {

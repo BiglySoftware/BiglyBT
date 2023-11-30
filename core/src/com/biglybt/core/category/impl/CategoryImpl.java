@@ -168,6 +168,12 @@ CategoryImpl
     attributes = _attributes;
   }
 
+  protected void
+  localeChanged()
+  {
+	   setGroup( MessageText.getString( "TableColumn.header.category" )); 
+  }
+  
   @Override
   public void addCategoryListener(CategoryListener l) {
   	if (!category_listeners.hasListener(l)) {
