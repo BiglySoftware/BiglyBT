@@ -1250,6 +1250,23 @@ public abstract class BaseMdiEntry
 		
 		result.put( "title", title );
 		
+		String title_id = getTitleID();
+		
+		if ( title_id != null && !title_id.isEmpty()){
+			
+			if ( title_id.startsWith( "!" ) && title_id.endsWith( "!" )){
+				
+				String test = getId() + ".title.full";
+
+				if ( MessageText.keyExists( test )){
+					
+					title_id = test;
+				}
+			}
+			
+			result.put( "title_id", title_id );
+		}
+		
 		result.put( "skin_ref", getSkinRef());
 		
 		result.put( "skin_id", skin.getSkinID());

@@ -533,6 +533,19 @@ public class SB_Dashboard
 					topbar_dashboard.refresh( titleInfo );
 				}
 			});
+		
+		MessageText.addListener((l1,l2)->{
+			if ( bigly_ui ){
+				
+				main_dashboard.updateLocale();
+			
+				sidebar_dashboard.updateLocale();
+			
+				rightbar_dashboard.updateLocale();
+			}
+			
+			topbar_dashboard.updateLocale();
+		});
 	}
 
 	public void
@@ -770,6 +783,8 @@ public class SB_Dashboard
 	{
 		private final String	config_prefix;
 		private final boolean	use_tabs_default;
+		
+		Composite main_composite;
 		
 		private CopyOnWriteList<DashboardItem>		items = new CopyOnWriteList<>();
 		
@@ -1082,6 +1097,67 @@ public class SB_Dashboard
 		}
 		
 		private void
+		updateLocale()
+		{
+			Utils.execSWTThread(()->{
+				
+				if ( main_composite == null || main_composite.isDisposed()){
+					
+					return;
+				}
+				
+				updateLocale( main_composite );
+			});
+		}
+		
+		private void
+		updateLocale(
+			Composite	comp )
+		{
+			if ( comp instanceof CTabFolder ){
+				
+				CTabItem[] items = ((CTabFolder)comp).getItems();
+				
+				for ( CTabItem item: items ){
+					
+					String title_id = (String)item.getData( "sb:itemtitleid" );
+					
+					if ( title_id != null ){
+						
+						String new_text = MessageText.getString( title_id );
+						
+						if ( new_text != null ){
+							
+							item.setText( new_text + (item.getText().endsWith( "..." )?"...":"" ));
+						}
+					}
+				}
+			}else if ( comp instanceof Group ){
+				
+				String title_id = (String)comp.getData( "sb:itemtitleid" );
+				
+				if ( title_id != null ){
+					
+					String new_text = MessageText.getString( title_id );
+					
+					if ( new_text != null ){
+						
+						((Group)comp).setText(new_text);
+					}
+				}
+			}
+			
+			Control[] kids = comp.getChildren();
+			
+			for ( Control k: kids ){
+				
+				if ( k instanceof Composite ){
+					
+					updateLocale((Composite)k);
+				}
+			}
+		}
+		private void
 		clear()
 		{
 			List<DashboardItem> copy;
@@ -1272,9 +1348,21 @@ public class SB_Dashboard
 		
 		private void
 		setupTabItem(
-			CTabItem	item )
+			CTabItem			tab_item,
+			List<DashboardItem>	visible_items )
 		{
-			item.setShowClose( item.getData("sb:dashboarditem") != null && bigly_ui );
+			tab_item.setShowClose( tab_item.getData("sb:dashboarditem") != null && bigly_ui );
+			
+			DashboardItem main_item = visible_items.get(0);
+			
+			tab_item.setText( main_item.getTitle() + (visible_items.size()>1?"...":""));
+
+			String title_id = main_item.getTitleID();
+			
+			if ( title_id != null ){
+				
+				tab_item.setData( "sb:itemtitleid", title_id );
+			}
 		}
 		
 		private void
@@ -1628,6 +1716,8 @@ public class SB_Dashboard
 		build(
 			Composite		dashboard_composite )
 		{
+			main_composite = dashboard_composite;
+			
 			try{
 				building++;
 				
@@ -1941,8 +2031,7 @@ public class SB_Dashboard
 								}
 							}else{
 								if ( tab_item != null ){
-									setupTabItem( tab_item );
-									tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
+									setupTabItem( tab_item, items );
 								}
 								result.addAll( items );
 							}
@@ -1968,8 +2057,7 @@ public class SB_Dashboard
 							}
 						}else{
 							if ( tab_item != null ){
-								setupTabItem( tab_item );
-								tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
+								setupTabItem( tab_item, items );
 							}
 							result.addAll( items );
 						}
@@ -2136,8 +2224,7 @@ public class SB_Dashboard
 								}
 							}else{
 								if ( tab_item != null ){
-									setupTabItem( tab_item );
-									tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
+									setupTabItem( tab_item, items );
 								}
 								result.addAll( items );
 							}
@@ -2163,8 +2250,7 @@ public class SB_Dashboard
 							}
 						}else{
 							if ( tab_item != null ){
-								setupTabItem( tab_item );
-								tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
+								setupTabItem( tab_item, items );
 							}
 							result.addAll( items );
 						}
@@ -2286,6 +2372,13 @@ public class SB_Dashboard
 				if ( g instanceof Group ){
 					
 					((Group)g).setText( item.getTitle());
+					
+					String title_id = item.getTitleID();
+					
+					if ( title_id != null ){
+						
+						g.setData( "sb:itemtitleid", title_id );
+					}
 				}
 				
 				Composite menu_comp = use_tabs?sf:g;
@@ -2895,8 +2988,46 @@ public class SB_Dashboard
 			}
 			
 			public String
+			getTitleID()
+			{
+				String title_id = (String)map.get( "title_id" );
+				
+				if ( title_id == null ){
+					
+					String title = (String)map.get( "title" );
+					
+					if ( title.startsWith( "!" ) && title.endsWith( "!" )){
+						
+						title_id = title.substring( 1, title.length()-1 );
+					}
+				}
+				
+				if ( title_id != null ){
+					
+					if ( MessageText.getString( title_id ) != null ){
+						
+						return( title_id );
+					}
+				}
+				
+				return( null );
+			}
+			
+			public String
 			getTitle()
 			{
+				String title_id = (String)map.get( "title_id" );
+				
+				if ( title_id != null ){
+					
+					String t = MessageText.getString( title_id );
+					
+					if ( t != null ){
+						
+						return( t );
+					}
+				}
+				
 				String title = (String)map.get( "title" );
 				
 				if ( title.startsWith( "!" ) && title.endsWith( "!" )){
