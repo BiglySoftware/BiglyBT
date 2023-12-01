@@ -1253,18 +1253,36 @@ public abstract class BaseMdiEntry
 		String title_id = getTitleID();
 		
 		if ( title_id != null && !title_id.isEmpty()){
+
+			boolean ok = false;
 			
 			if ( title_id.startsWith( "!" ) && title_id.endsWith( "!" )){
-				
-				String test = getId() + ".title.full";
+			
+				String id = getId();
 
-				if ( MessageText.keyExists( test )){
+				if ( MessageText.keyExists( id )){
 					
-					title_id = test;
+					title_id = id;
+					
+					ok = true;
+					
+				}else{
+				
+					String test = id + ".title.full";
+	
+					if ( MessageText.keyExists( test )){
+						
+						title_id = test;
+						
+						ok = true;
+					}
 				}
 			}
 			
-			result.put( "title_id", title_id );
+			if ( ok || MessageText.keyExists( title_id )){
+				
+				result.put( "title_id", title_id );
+			}
 		}
 		
 		result.put( "skin_ref", getSkinRef());
