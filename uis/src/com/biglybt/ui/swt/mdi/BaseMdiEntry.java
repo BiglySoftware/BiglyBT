@@ -1285,6 +1285,19 @@ public abstract class BaseMdiEntry
 			}
 		}
 		
+		if ( !result.containsKey( "title_id" )){
+			
+			if ( vti != null ){
+				
+				title_id = (String)vti.getTitleInfoProperty( ViewTitleInfo.TITLE_TEXT_ID );
+				
+				if ( title_id != null && MessageText.keyExists( title_id )){
+				
+					result.put( "title_id", title_id );
+				}
+			}
+		}
+		
 		result.put( "skin_ref", getSkinRef());
 		
 		result.put( "skin_id", skin.getSkinID());

@@ -1483,7 +1483,8 @@ DeviceManagerUI
 			if (mdiEntryOverview == null) {
 				mdiEntryOverview = mdi.createEntryFromSkinRef(
 						SideBar.SIDEBAR_HEADER_DEVICES, SideBar.SIDEBAR_SECTION_DEVICES,
-						"devicesview", MessageText.getString("mdi.entry.about.devices"),
+						"devicesview", 
+						MessageText.getString("mdi.entry.about.devices"),
 						new ViewTitleInfo()
 						{
 							@Override
@@ -1491,11 +1492,19 @@ DeviceManagerUI
 							getTitleInfoProperty(
 								int propertyID )
 							{
-								if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
+								if ( propertyID == TITLE_TEXT ){
+									
+									return( MessageText.getString("mdi.entry.about.devices" ));
+									
+								}else if ( propertyID == TITLE_TEXT_ID ){
+									
+									return( "mdi.entry.about.devices" );
+									
+								}else if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
 
 									return( getHeaderToolTip());
-								}
-								if ( propertyID == TITLE_INDICATOR_TEXT ){
+									
+								}else if ( propertyID == TITLE_INDICATOR_TEXT ){
 
 									if ( last_job_count > 0 ){
 
@@ -1553,45 +1562,26 @@ DeviceManagerUI
 					new MdiEntryCreationListener() {
 						@Override
 						public MdiEntry createMDiEntry(String id) {
-							MdiEntry mdiEntryDiskOps = mdi.createEntryFromSkinRef(
-									parent, 
-									SideBar.SIDEBAR_SECTION_DISK_OPS,
-									"diskopsview", 
-									MessageText.getString("mdi.entry.about.diskops"),
-									new ViewTitleInfo()
-									{
-										@Override
-										public Object
-										getTitleInfoProperty(
-											int propertyID )
-										{
-											if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
-	
-												
-											}
-											if ( propertyID == TITLE_INDICATOR_TEXT ){
-	
-												
-											}
-	
-											return( null );
-										}
-									},
-									null, closeable, SideBar.SIDEBAR_SECTION_DEVICES );
-							
-							mdiEntryDiskOps.setImageLeftID("image.sidebar.aboutdiskops");
 							
 							Core core = CoreFactory.getSingleton();
-	
+							
 							ViewTitleInfo viewTitleInfo =
 								new ViewTitleInfo()
 								{					
 									@Override
 									public Object
 									getTitleInfoProperty(
-										int pid )
+										int propertyID )
 									{
-										if ( pid == TITLE_INDICATOR_TEXT ){
+										if ( propertyID == TITLE_TEXT ){
+											
+											return( MessageText.getString("mdi.entry.about.diskops" ));
+											
+										}else if ( propertyID == TITLE_TEXT_ID ){
+											
+											return( "mdi.entry.about.diskops" );
+											
+										}else if ( propertyID == TITLE_INDICATOR_TEXT ){
 											
 											int ops = core.getOperations().size();
 											
@@ -1604,9 +1594,17 @@ DeviceManagerUI
 										return( null );
 									}
 								};
-												
-							mdiEntryDiskOps.setViewTitleInfo(viewTitleInfo);
+
+							MdiEntry mdiEntryDiskOps = mdi.createEntryFromSkinRef(
+									parent, 
+									SideBar.SIDEBAR_SECTION_DISK_OPS,
+									"diskopsview", 
+									MessageText.getString("mdi.entry.about.diskops"),
+									viewTitleInfo,
+									null, closeable, SideBar.SIDEBAR_SECTION_DEVICES );
 							
+							mdiEntryDiskOps.setImageLeftID("image.sidebar.aboutdiskops");
+														
 							CoreOperationListener opListener =
 								new CoreOperationListener(){
 									FrequencyLimitedDispatcher disp = 
@@ -1905,6 +1903,9 @@ DeviceManagerUI
 		*/
 
 		// Rollup spinner/warning/info
+		
+		ViewTitleInfo old_vti = entryHeader.getViewTitleInfo();
+		
 		entryHeader.setViewTitleInfo(new ViewTitleInfo() {
 			private int last_indicator = 0;
 
@@ -2009,6 +2010,10 @@ DeviceManagerUI
 				} else if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ) {
 
 					return( getHeaderToolTip());
+					
+				}else if ( old_vti != null ){
+					
+					return( old_vti.getTitleInfoProperty(propertyID));
 				}
 
 				return null;
@@ -4405,6 +4410,10 @@ DeviceManagerUI
 
 				return( getTitle());
 
+			}else if ( propertyID == TITLE_TEXT_ID ){
+				
+				return( title );
+				
 			}else if ( propertyID == TITLE_INDICATOR_TEXT ){
 
 				if ( device_type == Device.DT_MEDIA_RENDERER ){
@@ -4622,7 +4631,8 @@ DeviceManagerUI
 
 				return( getTitle());
 
-			} else if (propertyID == TITLE_IMAGEID) {
+			} else if ( propertyID == TITLE_IMAGEID ){
+				
 				String imageID = null;
 				
 				String[] ids = getDeviceImageIDs( device );

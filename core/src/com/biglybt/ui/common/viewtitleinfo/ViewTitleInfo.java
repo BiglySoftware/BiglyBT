@@ -55,6 +55,8 @@ public interface ViewTitleInfo
 	 */
 	public static int TITLE_EXPORTABLE_DATASOURCE	= 10;
 
+	public static int TITLE_TEXT_ID = 11;	// String, resource id for title if relevant
+
 	/**
 	 *
 	 * @param propertyID TITLE_*

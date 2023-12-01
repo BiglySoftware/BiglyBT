@@ -184,6 +184,25 @@ public class MainMDISetup
 						MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS),
 					true);
 				
+				ViewTitleInfo title_info =
+						new ViewTitleInfo()
+						{
+							@Override
+							public Object
+							getTitleInfoProperty(
+								int propertyID)
+							{
+								if ( propertyID == TITLE_TEXT_ID ){
+									
+									return( "Stats.title.full" );
+								}
+								
+								return( null );
+							}
+						};
+						
+				entry.setViewTitleInfo( title_info );
+				
 				entry.setImageLeftID("image.sidebar.stats2");
 				
 				return( entry );
@@ -616,7 +635,15 @@ public class MainMDISetup
 											return( null );
 										}
 
-										if ( propertyID == TITLE_INDICATOR_TEXT ){
+										if ( propertyID == TITLE_TEXT ){
+											
+											return( MessageText.getString( "mdi.entry.chatsoverview" ));
+											
+										}else if ( propertyID == TITLE_TEXT_ID ){
+											
+											return( "mdi.entry.chatsoverview" );
+											
+										}else if ( propertyID == TITLE_INDICATOR_TEXT ){
 
 											int	num = 0;
 
@@ -1494,6 +1521,32 @@ public class MainMDISetup
 							return( null );
 						}
 	
+						ViewTitleInfo title_info =
+							new ViewTitleInfo()
+							{
+								@Override
+								public Object
+								getTitleInfoProperty(
+									int propertyID)
+								{
+										// without this we get crap where the title is overwritten
+										// from the auto-open map title in wrong locale
+									
+									if ( propertyID == TITLE_TEXT_ID ){
+										
+										return( "sidebar." + id );
+										
+									}else  if ( propertyID == TITLE_TEXT ){
+										
+										return( MessageText.getString( "sidebar." + id ));
+									}
+									
+									return( null );
+								}
+							};
+								
+						entry.setViewTitleInfo(title_info);
+						
 						entry.setDefaultExpanded(true);
 	
 						if (id.equals(SIDEBAR_HEADER_PLUGINS)) {

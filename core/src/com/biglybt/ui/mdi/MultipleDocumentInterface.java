@@ -21,7 +21,6 @@ package com.biglybt.ui.mdi;
 import java.util.List;
 import java.util.Map;
 
-import com.biglybt.core.download.DownloadManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 
 public interface MultipleDocumentInterface

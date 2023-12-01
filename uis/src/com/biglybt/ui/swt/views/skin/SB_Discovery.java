@@ -20,6 +20,7 @@
 
 package com.biglybt.ui.swt.views.skin;
 
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
@@ -50,7 +51,11 @@ public class SB_Discovery
 		ViewTitleInfo titleInfo = new ViewTitleInfo() {
 			@Override
 			public Object getTitleInfoProperty(int propertyID) {
-				if (propertyID == TITLE_INDICATOR_TEXT) {
+				
+				if (propertyID == TITLE_TEXT ){
+					return( MessageText.getString( "sidebar." + entry.getViewID()));
+					
+				}else if (propertyID == TITLE_INDICATOR_TEXT) {
 					if (entry.isExpanded()) {
 						return null;
 					}
