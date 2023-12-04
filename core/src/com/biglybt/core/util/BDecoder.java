@@ -37,7 +37,7 @@ import com.biglybt.util.JSONUtils;
  */
 public class BDecoder
 {
-	public static final int MAX_BYTE_ARRAY_SIZE		= 128*1024*1024;
+	public static final int MAX_BYTE_ARRAY_SIZE		= 192*1024*1024;
 
 	private static final int MAX_MAP_KEY_SIZE		= 64*1024;
 
