@@ -202,7 +202,7 @@ public class AboutWindow {
 				Constants.URL_FORUMS,
 				Constants.URL_WIKI,
 				Constants.PLUGINS_WEB_SITE,
-				"http://ezhdqq3jjpsqg65l.onion"
+				"https://xp5qetgwtj6w62sutz2xnjpx2l7j4z56mbt7xr7wmejerbg67g7nwfyd.onion"
 			}
 		};
 
