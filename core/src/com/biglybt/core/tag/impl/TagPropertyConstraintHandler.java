@@ -53,6 +53,7 @@ import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentAnnounceURLGroup;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
@@ -84,6 +85,8 @@ TagPropertyConstraintHandler
 
 	private static final Object DM_PEER_SETS					= new Object();
 	private static final Object DM_RATES						= new Object();
+	
+	private static final Object DM_TRACKERS						= new Object();
 	
 	private static final String		EVAL_CTX_COLOURS 	= "colours";
 	private static final String		EVAL_CTX_TAG_SORT 	= "tag_sort";
@@ -2921,6 +2924,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_MIN64				= 52;
 		private static final int	KW_MOC_PATH				= 53;
 		private static final int	KW_FILE_COUNT_SELECTED	= 54;
+		private static final int	KW_TRACKERS				= 55;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -3044,6 +3048,8 @@ TagPropertyConstraintHandler
 			
 			keyword_map.put( "filecountselected", 		new int[]{KW_FILE_COUNT_SELECTED,	DEP_STATIC });
 			keyword_map.put( "file_count_selected",		new int[]{KW_FILE_COUNT_SELECTED,	DEP_STATIC });
+
+			keyword_map.put( "trackers", 				new int[]{KW_TRACKERS,				DEP_STATIC });
 
 		}
 
@@ -5652,6 +5658,75 @@ TagPropertyConstraintHandler
 					}
 					case KW_MIN64:{
 						return( Long.MIN_VALUE );
+					}
+					case KW_TRACKERS:{
+						
+						TOTorrent torrent = dm.getTorrent();
+
+						if ( torrent == null ){
+							
+							return( new String[0] );
+						}
+						
+						URL	announce = torrent.getAnnounceURL();
+						
+						TOTorrentAnnounceURLGroup group = torrent.getAnnounceURLGroup();
+
+						TOTorrentAnnounceURLSet[] sets = group.getAnnounceURLSets();
+
+						Object[] cache = (Object[])dm.getUserData( DM_TRACKERS );
+						
+						if ( cache != null ){
+															
+							if ( sets.length == 0 ){
+								
+								if ( cache[0] == announce ){
+									
+									return((String[])cache[1]);
+								}
+							}else{
+								
+								Object o = cache[0];
+								
+								if ( o instanceof Long && ((Long)o) == group.getUID()){
+									
+									return((String[])cache[1]);
+								}
+							}
+						}
+													
+						cache = new Object[2];
+						
+						if ( sets.length == 0 ){
+							
+							String result = announce.getHost();
+							
+							int port = announce.getPort();
+							
+							if ( port == -1 ){
+								
+								port = announce.getDefaultPort();
+							}
+							
+							if ( port >= 0 ){
+								
+								result += ":" + port;
+							}
+							
+							cache[0] = announce;
+							cache[1] = new String[]{ result };
+							
+						}else{
+							
+							Set<String> results = TorrentUtils.getUniqueTrackerHosts( torrent, true );
+							
+							cache[0] = group.getUID();
+							cache[1] = results.toArray( new String[results.size()] );
+						}
+						
+						dm.setUserData( DM_TRACKERS, cache );
+						
+						return((String[])cache[1] );
 					}
 					default:{
 						
