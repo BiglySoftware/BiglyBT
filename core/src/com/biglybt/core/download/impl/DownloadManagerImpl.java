@@ -4934,10 +4934,14 @@ DownloadManagerImpl
 
 				continue;
 			}
+			
+			int	storage_type = file.getStorageType() ;
+
+			boolean compact = storage_type == DiskManagerFileInfo.ST_COMPACT || storage_type == DiskManagerFileInfo.ST_REORDER_COMPACT;
 
 				// just to be safe...
 
-			if ( file.getDownloaded() == file.getLength()){
+			if ( file.getDownloaded() == file.getLength() && !compact ){
 
 				continue;
 			}
@@ -4945,9 +4949,7 @@ DownloadManagerImpl
 				// user may have switched a partially completed file to DND for some reason - be safe
 				// and only delete compact files
 
-			int	storage_type = file.getStorageType() ;
-
-			if ( storage_type == DiskManagerFileInfo.ST_COMPACT || storage_type == DiskManagerFileInfo.ST_REORDER_COMPACT ){
+			if ( compact ){
 
 				File f = file.getFile( true );
 
