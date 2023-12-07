@@ -54,6 +54,7 @@ import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
+import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.protocol.magnet.MagnetConnection2;
 import com.biglybt.pif.PluginInterface;
@@ -440,9 +441,9 @@ public class TorrentFolderWatcher {
 							
 							try {
 	
-								TOTorrent torrent = TorrentUtils.readFromFile(file, false);
+								TOTorrent new_torrent = TorrentUtils.readFromFile(file, false);
 	
-								DownloadManager existing_dm = global_manager.getDownloadManager( torrent );
+								DownloadManager existing_dm = global_manager.getDownloadManager( new_torrent );
 								
 								if ( existing_dm != null) {
 	
@@ -462,9 +463,34 @@ public class TorrentFolderWatcher {
 									
 									applyTag( existing_dm, tag_name );
 
+									TOTorrent existing_torrent	= existing_dm.getTorrent();
+											
+									if ( 	existing_torrent != null && 
+											!existing_torrent.getPrivate() && 
+											!new_torrent.getPrivate()){
+									
+										boolean can_merge = TorrentUtils.canMergeAnnounceURLs( new_torrent, existing_torrent);
+									
+										if ( can_merge ){
+											
+											TorrentUtils.mergeAnnounceURLs(	new_torrent, existing_torrent );
+											
+											TorrentUtils.writeToFile( existing_torrent );
+											
+											TRTrackerAnnouncer tc = existing_dm.getTrackerClient();
+											
+											if ( tc != null ){
+
+												tc.resetTrackerUrl( false );
+											}
+											
+											log( "Merged trackers from " + file.getName() + " into existing download" );
+										}
+									}
+									
 									log( "Import ignored, download already present: " + file.getName());
 									
-								}else if ( plugin_dm.lookupDownloadStub( torrent.getHash()) != null ){
+								}else if ( plugin_dm.lookupDownloadStub( new_torrent.getHash()) != null ){
 	
 									// archived download
 	
@@ -478,14 +504,14 @@ public class TorrentFolderWatcher {
 	
 									}else{
 	
-										to_delete.add(torrent);
+										to_delete.add( new_torrent );
 									}
 	
 									log( "Import ignored, download already archived: " + file.getName());
 									
 								}else{
 
-									boolean[] to_skip = TorrentUtils.getSkipFiles( torrent );
+									boolean[] to_skip = TorrentUtils.getSkipFiles( new_torrent );
 
 									final DownloadManagerInitialisationAdapter dmia = new DownloadManagerInitialisationAdapter() {
 	
@@ -580,9 +606,12 @@ public class TorrentFolderWatcher {
 									};
 	
 									byte[] hash = null;
-									try {
-										hash = torrent.getHash();
-									} catch (Exception e) { }
+									
+									try{
+										hash = new_torrent.getHash();
+										
+									}catch( Exception e ){
+									}
 	
 									String data_save_path = default_data_save_path;
 									
@@ -611,18 +640,18 @@ public class TorrentFolderWatcher {
 												
 													File root;
 													
-													if ( torrent.isSimpleTorrent()){
+													if ( new_torrent.isSimpleTorrent()){
 													
 														root = move_loc;
 														
 													}else{
 														
-														root = FileUtil.newFile( move_loc, FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName(torrent), true ));
+														root = FileUtil.newFile( move_loc, FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName( new_torrent ), true ));
 													}
 													
 													if (( tag_save_location.getTagMoveOnCompleteOptions() & TagFeatureFileLocation.FL_DATA ) != 0 ){
 																																										
-														TOTorrentFile[] files = torrent.getFiles();
+														TOTorrentFile[] files = new_torrent.getFiles();
 														
 														boolean all_exist = true;
 														
@@ -676,7 +705,8 @@ public class TorrentFolderWatcher {
 		
 											// add torrent for deletion, since there will be a
 											// saved copy elsewhere
-											to_delete.add(torrent);
+											
+											to_delete.add( new_torrent );
 										}
 											
 										log( "Imported " + file.getName());
@@ -704,13 +734,13 @@ public class TorrentFolderWatcher {
 											
 										}else{
 
-											TOTorrent copy = TorrentUtils.cloneTorrent( torrent );
+											TOTorrent copy = TorrentUtils.cloneTorrent( new_torrent );
 
 												// delete immediately
 												// to_delete.add( torrent );
 
 											try{
-												log( "Deleting processed torrent: " + TorrentUtils.getTorrentFileName(torrent));
+												log( "Deleting processed torrent: " + TorrentUtils.getTorrentFileName( new_torrent ));
 												
 											}catch( Throwable e ){
 												
@@ -718,18 +748,18 @@ public class TorrentFolderWatcher {
 											}
 											
 											try{
-												TorrentUtils.delete(torrent);
+												TorrentUtils.delete( new_torrent );
 
 											}catch( Throwable e ){
 
 												Debug.printStackTrace(e);
 											}
 											
-											torrent = copy;
+											new_torrent = copy;
 											
 											to_file = AETemporaryFileHandler.createTempFile();
 											
-											TorrentUtils.writeToFile( torrent, to_file, false );											
+											TorrentUtils.writeToFile( new_torrent, to_file, false );											
 										}
 										
 										TOTorrent to_torrent = TorrentUtils.readFromFile( to_file, false );
