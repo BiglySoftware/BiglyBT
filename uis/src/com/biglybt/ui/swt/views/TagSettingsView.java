@@ -1639,9 +1639,9 @@ public class TagSettingsView
 					addPadding(cMainComposite);
 
 					params.constraints = new Text(gConstraint,
-							SWT.WRAP | SWT.BORDER | SWT.MULTI);
+							SWT.WRAP | SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
 					gd = new GridData(SWT.FILL, SWT.NONE, true, false, 1, 1);
-					gd.heightHint = 40;
+					gd.heightHint = (int) (FontUtils.getFontHeightInPX(params.constraints.getFont()) * 2.5);
 					params.constraints.setLayoutData(gd);
 					params.constraints.addKeyListener(new KeyListener() {
 						@Override
