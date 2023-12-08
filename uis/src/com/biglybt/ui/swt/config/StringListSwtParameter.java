@@ -134,6 +134,8 @@ public class StringListSwtParameter
 
 		if (bUseCombo) {
 			list = new Combo(parent, SWT.SINGLE | SWT.READ_ONLY);
+			// Prevent changing value via scrolling over a Combo
+			list.addListener(SWT.MouseVerticalWheel, event -> event.doit = false);
 		} else {
 			list = new List(parent,
 					SWT.SINGLE | SWT.BORDER | SWT.HORIZONTAL | SWT.VERTICAL) {

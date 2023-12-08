@@ -74,6 +74,8 @@ public class SWTSkinObjectCombo
 		}
 
 		widget = new Combo(createOn, style);
+		// Prevent changing value via scrolling over a Combo
+		widget.addListener(SWT.MouseVerticalWheel, event -> event.doit = false);
 
 		widget.addModifyListener(new ModifyListener() {
 			@Override
