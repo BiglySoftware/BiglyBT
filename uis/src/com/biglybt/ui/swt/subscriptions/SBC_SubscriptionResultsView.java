@@ -440,6 +440,7 @@ SBC_SubscriptionResultsView
 				lblWithKWImg.setImage( imageLoader.getImage( with?"icon_filter_plus":"icon_filter_minus"));
 
 				final Text textWithKW = new Text(cWithKW, SWT.BORDER);
+				Utils.setTT(textWithKW,MessageText.getString("SubscriptionResults.filter.words.tt" ));
 				textWithKW.setMessage(MessageText.getString(with?"SubscriptionResults.filter.with.words":"SubscriptionResults.filter.without.words"));
 				GridData gd = new GridData();
 				gd.widthHint = 100;

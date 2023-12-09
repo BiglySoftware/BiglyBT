@@ -42,13 +42,27 @@ public class
 SubscriptionResultFilterImpl
 	implements SubscriptionResultFilter
 {
+	private static Pattern[] 	NO_PATTERNS = {};
+	private static String[] 	NO_STRINGS = {};
+	private static int[] 		NO_TYPES = {};
+
+	private static final int FILTER_NAME	= 0;
+	private static final int FILTER_TAG		= 1;
+	private static final int FILTER_CAT		= 2;
+	
 	private final SubscriptionImpl		subs;
 
-	private String[] 	textFilters;
-	private Pattern[]	textFilterPatterns;
+	private String[] 	includeFiltersRaw;
+	
+	private int[]		includeFilterTypes;
+	private String[] 	includeFilters;
+	private Pattern[]	includeFilterPatterns;
 
-	private String[] 	excludeTextFilters;
-	private Pattern[]	excludeTextFilterPatterns;
+	private String[] 	excludeFiltersRaw;
+	
+	private int[]		excludeFilterTypes;
+	private String[] 	excludeFilters;
+	private Pattern[]	excludeFilterPatterns;
 
 	private long minSeeds = -1;
 	private long maxSeeds = -1;
@@ -67,10 +81,13 @@ SubscriptionResultFilterImpl
 	{
 		subs	= null;
 		
-		textFilters					= new String[0];
-		textFilterPatterns 			= NO_PATTERNS;
-		excludeTextFilters			= new String[0];
-		excludeTextFilterPatterns	= NO_PATTERNS;
+		includeFiltersRaw		= NO_STRINGS;
+		
+		parseFilters( true );
+		
+		excludeFiltersRaw		= NO_STRINGS;
+		
+		parseFilters( false );
 	}
 	
 	public 
@@ -81,13 +98,13 @@ SubscriptionResultFilterImpl
 		subs	= _subs;
 
 		try {
-			textFilters = importStrings(filters,"text_filter"," ");
+			includeFiltersRaw = importStrings(filters,"text_filter"," ");
 
-			textFilterPatterns = getPatterns( textFilters );
+			parseFilters( true );
 
-			excludeTextFilters = importStrings(filters,"text_filter_out"," ");
+			excludeFiltersRaw = importStrings(filters,"text_filter_out"," ");
 
-			excludeTextFilterPatterns = getPatterns( excludeTextFilters );
+			parseFilters( false );
 			
 			minSize = MapUtils.importLong(filters,"min_size",-1l);
 
@@ -113,8 +130,8 @@ SubscriptionResultFilterImpl
 	public boolean 
 	isActive()
 	{
-		return( textFilters.length > 0 ||
-				excludeTextFilters.length > 0 ||
+		return( includeFiltersRaw.length > 0 ||
+				excludeFiltersRaw.length > 0 ||
 				minSize >= 0 ||
 				maxSize >= 0 ||
 				minSeeds >= 0 ||
@@ -242,7 +259,7 @@ SubscriptionResultFilterImpl
 	public String[]
 	getWithWords()
 	{
-		return( textFilters );
+		return( includeFiltersRaw );
 	}
 
 	@Override
@@ -250,16 +267,17 @@ SubscriptionResultFilterImpl
 	setWithWords(
 		String[] with_words)
 	{
-		textFilters	= with_words;
+		includeFiltersRaw	= with_words;
 
-		textFilterPatterns = getPatterns( textFilters );	
+		parseFilters( true );
+
 	}
 	
 	@Override
 	public String[]
 	getWithoutWords()
 	{
-		return( excludeTextFilters );
+		return( excludeFiltersRaw );
 	}
 
 	@Override
@@ -267,9 +285,9 @@ SubscriptionResultFilterImpl
 	setWithoutWords(
 		String[] without_words)
 	{
-		excludeTextFilters = without_words;
+		excludeFiltersRaw = without_words;
 
-		excludeTextFilterPatterns = getPatterns( excludeTextFilters );
+		parseFilters( false );
 	}
 	
 	@Override
@@ -295,6 +313,80 @@ SubscriptionResultFilterImpl
 		return( SubscriptionUtils.getDependsOnClosure( subs ));
 	}
 	
+	private void
+	parseFilters(
+		boolean		include )
+	{
+		String[] raws = include?includeFiltersRaw:excludeFiltersRaw;
+		
+		int	num = raws.length;
+		
+		int[]		types;
+		String[]	filters;
+		Pattern[]	patterns;
+
+		if ( num == 0 ){
+			
+			types 		= NO_TYPES;
+			filters 	= NO_STRINGS;
+			patterns	= NO_PATTERNS;
+			
+		}else{
+			
+			types 		= new int[num];
+			filters 	= new String[num];
+			patterns	= new Pattern[num];
+					
+			for ( int i=0; i<num; i++ ){
+		
+				String raw = raws[i];
+				
+				int		type;
+				String	filter;
+				
+				if ( raw.startsWith( "category:" )){
+					
+					type	= FILTER_CAT;
+					filter	= raw.substring( 9 );
+					
+				}else if ( raw.startsWith( "tag:" )){
+					
+					type	= FILTER_TAG;
+					filter	= raw.substring( 4 );
+					
+				}else{
+					
+					type	= FILTER_NAME;
+					filter	= raw;
+				}
+				
+				types[i]	= type;
+				filters[i]	= filter;
+				
+				try{
+					patterns[i] = Pattern.compile( filter.trim());
+	
+				}catch( Throwable e ){
+	
+					// System.out.println( "Failed to compile pattern '" + strs[i] );
+				}
+			}
+		}
+		
+		if ( include ){
+			
+			includeFilterTypes		= types;
+			includeFilters			= filters;
+			includeFilterPatterns	= patterns;
+			
+		}else{
+			
+			excludeFilterTypes		= types;
+			excludeFilters			= filters;
+			excludeFilterPatterns	= patterns;
+		}
+	}
+	
 	@Override
 	public void
 	save()
@@ -307,8 +399,8 @@ SubscriptionResultFilterImpl
 
 		map.put( "filters", filters );
 
-		exportStrings( filters, "text_filter", textFilters );
-		exportStrings( filters, "text_filter_out", excludeTextFilters );
+		exportStrings( filters, "text_filter", includeFiltersRaw );
+		exportStrings( filters, "text_filter_out", excludeFiltersRaw );
 	
 		filters.put( "min_size", minSize );
 		filters.put( "max_size", maxSize );
@@ -324,9 +416,9 @@ SubscriptionResultFilterImpl
 	public String
 	getString()
 	{
-		String	res = addString( "", "+", getString(textFilters));
+		String	res = addString( "", "+", getString(includeFiltersRaw));
 
-		res = addString( res, "-", getString(excludeTextFilters));
+		res = addString( res, "-", getString(excludeFiltersRaw));
 
 		long kInB = DisplayFormatters.getKinB();
 		long mInB = kInB*kInB;
@@ -376,34 +468,6 @@ SubscriptionResultFilterImpl
 		}
 
 		return( res );
-	}
-
-
-	private static Pattern[] NO_PATTERNS = {};
-
-	private Pattern[]
-	getPatterns(
-		String[]	strs )
-	{
-		if ( strs.length == 0 ){
-
-			return( NO_PATTERNS );
-		}
-
-		Pattern[] pats = new Pattern[strs.length];
-
-		for (int i=0;i<strs.length;i++){
-
-			try{
-				pats[i] = Pattern.compile( strs[i].trim());
-
-			}catch( Throwable e ){
-
-				// System.out.println( "Failed to compile pattern '" + strs[i] );
-			}
-		}
-
-		return( pats );
 	}
 
 	private String[] importStrings(Map filters,String key,String separator) throws IOException {
@@ -487,58 +551,130 @@ SubscriptionResultFilterImpl
 		FilterableResult result )
 	{
 		String name = result.getName();
-		//Results need a name, or they are by default invalid
-		if(name == null) {
+		
+			//Results need a name, or they are by default invalid
+		
+		if ( name == null ){
+			
 			return( true );
 		}
+		
 		name = name.toLowerCase();
 
-		boolean valid = true;
-		for(int j = 0 ; j < textFilters.length ; j++) {
-
-			//If one of the text filters do not match, let's not keep testing the others
-			// and mark the result as not valid
-			if(!name.contains(textFilters[j])) {
-
-					// double check against reg-expr if exists
-
-				Pattern p = textFilterPatterns[j];
-
-				if ( p == null  || !p.matcher( name ).find()){
-
-					valid = false;
-
-					break;
-				}
-			}
-		}
-
-		//if invalid after name check, let's get to the next result
+		String[] names = { name };
 		
-		if (!valid){
-			return( true );
-		}
-
-		for(int j = 0 ; j < excludeTextFilters.length ; j++) {
-
-			//If one of the text filters do not match, let's not keep testing the others
-			// and mark the result as not valid
-			if(name.contains(excludeTextFilters[j])) {
-				valid = false;
-				break;
+		String[]	categories	= NO_STRINGS;
+		String[] 	tags		= NO_STRINGS;
+			
+		for ( int i=0;i<2;i++){
+			
+			boolean	isInclude = i==0;
+			
+			int[]	 	types;
+			String[]	filters;
+			Pattern[]	patterns;
+			
+			if ( isInclude ){
+				types		= includeFilterTypes;
+				filters		= includeFilters;
+				patterns	= includeFilterPatterns;
 			}else{
-				Pattern p = excludeTextFilterPatterns[j];
+				types		= excludeFilterTypes;
+				filters		= excludeFilters;
+				patterns	= excludeFilterPatterns;
+			}
 
-				if ( p != null  && p.matcher( name ).find()){
-					valid = false;
-					break;
+			for ( int j = 0 ; j<filters.length; j++ ){
+	
+				String[] matches;
+				
+				int type = types[j];
+				
+				switch( type ){
+					case FILTER_CAT:{
+						if ( categories == NO_STRINGS ){
+							String category = result.getCategory();
+							if ( category == null || category.isEmpty()){
+								categories = new String[0];
+							}else{
+								categories = new String[]{ category.toLowerCase() };
+							}
+						}
+						matches = categories;
+						break;
+					}
+					case FILTER_TAG:{
+						if ( tags == NO_STRINGS ){
+							String[] temp = result.getTags();
+							if ( temp == null || temp.length == 0 ){
+								tags = new String[0];
+							}else{
+								tags = new String[temp.length];
+								for ( int k=0;k<temp.length;k++){
+									tags[k] = temp[k].toLowerCase();
+								}
+							}
+						}
+						matches = tags;
+						break;
+					}
+					default:{
+						matches = names;
+					}
+				}
+				
+				String filter = filters[j];
+				
+				if ( type != FILTER_NAME && filter.isEmpty()){
+					
+					if ( isInclude ){
+						
+						if ( matches.length == 0 ){
+							
+							return( true );
+						}
+					}else{
+						
+						if ( matches.length > 0 ){
+						
+							return( true );
+						}
+					}
+				}
+				
+				int	hits 	= 0;
+				
+				for ( String match: matches ){
+										
+					if ( match.contains( filter )){
+		
+						hits++;
+						
+					}else{
+		
+						Pattern p = patterns[j];
+		
+						if ( p != null  && p.matcher( match ).find()){
+		
+							hits++;
+						}
+					}
+				}
+				
+				if ( isInclude ){
+					
+					if ( hits == 0 ){
+						
+						return( true );
+					}
+				}else{
+					
+					if ( hits > 0 ){
+						
+						return( true );
+					}
 				}
 			}
-		}
-
-		//if invalid after name check, let's get to the next result
-		if(!valid) {
-			return( true );
 		}
 
 		long size = result.getSize();
@@ -595,8 +731,8 @@ SubscriptionResultFilterImpl
 			}
 		}
 		if(categoryFilter != null) {
-			String category = result.getCategory();
-			if(category == null || !category.equalsIgnoreCase(categoryFilter)) {
+			String cat = result.getCategory();
+			if(cat == null || !cat.equalsIgnoreCase(categoryFilter)) {
 				return( true );
 			}
 		}
