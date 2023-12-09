@@ -450,17 +450,7 @@ public class TorrentFolderWatcher {
 									if (Logger.isEnabled())
 										Logger.log(new LogEvent(LOGID, file.getAbsolutePath()
 												+ " is already being downloaded"));
-										
-										// check to see if we can rename the torrent file
-
-									if ( rename_to_imported ){
-									
-										if ( !file.equals( FileUtil.newFile( existing_dm.getTorrentFileName()).getAbsoluteFile())){
-											
-											renameToImported( folder, file );
-										}
-									}
-									
+																			
 									applyTag( existing_dm, tag_name );
 
 									TOTorrent existing_torrent	= existing_dm.getTorrent();
@@ -488,6 +478,20 @@ public class TorrentFolderWatcher {
 										}
 									}
 									
+										// check to see if we can rename/delete the torrent file
+								
+									if ( !file.equals( FileUtil.newFile( existing_dm.getTorrentFileName()).getAbsoluteFile())){
+										
+										if ( rename_to_imported ){
+
+											renameToImported( folder, file );
+											
+										}else{
+											
+											to_delete.add( new_torrent );
+										}
+									}
+								
 									log( "Import ignored, download already present: " + file.getName());
 									
 								}else if ( plugin_dm.lookupDownloadStub( new_torrent.getHash()) != null ){
