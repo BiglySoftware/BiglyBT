@@ -395,7 +395,10 @@ public class TorrentFolderWatcher {
 
 				File	folder = folders.get(folder_index);
 
-				log( "Processing " + folder );
+				if ( Logger.isEnabled()){
+				
+					log( "Processing " + folder );
+				}
 				
 				final String tag_name = tags.get(folder_index);
 
@@ -441,6 +444,8 @@ public class TorrentFolderWatcher {
 							
 							try {
 	
+								boolean logged = false;
+								
 								TOTorrent new_torrent = TorrentUtils.readFromFile(file, false);
 	
 								DownloadManager existing_dm = global_manager.getDownloadManager( new_torrent );
@@ -474,6 +479,8 @@ public class TorrentFolderWatcher {
 												tc.resetTrackerUrl( false );
 											}
 											
+											logged = true;
+											
 											log( "Merged trackers from " + file.getName() + " into existing download" );
 										}
 									}
@@ -492,7 +499,10 @@ public class TorrentFolderWatcher {
 										}
 									}
 								
-									log( "Import ignored, download already present: " + file.getName());
+									if ( !logged ){
+										
+										log( "Import ignored, download already present: " + file.getName());
+									}
 									
 								}else if ( plugin_dm.lookupDownloadStub( new_torrent.getHash()) != null ){
 	
