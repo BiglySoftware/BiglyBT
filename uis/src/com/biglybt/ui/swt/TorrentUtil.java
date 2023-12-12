@@ -4847,7 +4847,7 @@ public class TorrentUtil
 				
 				Download stub = PluginCoreUtils.wrap(dm);
 
-				if ( stub.canStubbify()){
+				if ( stub != null && stub.canStubbify()){
 
 					if ( canArchive == null ){
 						
