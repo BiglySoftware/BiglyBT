@@ -729,6 +729,34 @@ public class TorrentFolderWatcher {
 											
 										applyTag( new_dm, tag_name );
 										
+											// if it was a magnet download then pick up any tags that
+											// were manually added to it while it was downloading
+										
+										List<String> it = TorrentUtils.getInitialTags( new_torrent );
+										
+										if ( !it.isEmpty()){
+											
+											try{
+												TagManager tm = TagManagerFactory.getTagManager();
+												
+												for ( String tag: it ){
+													
+													Tag t = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTag( tag,  true );
+													
+													if ( t != null ){
+														
+														if ( !t.hasTaggable( new_dm )){
+															
+															t.addTaggable( new_dm );
+														}	
+													}
+												}
+											}catch( Throwable e ){
+												
+												Debug.out( e );
+											}
+										}
+										
 										TorrentOpenOptions.addModePostCreate(start_mode, new_dm );	
 										
 										if (Logger.isEnabled()){

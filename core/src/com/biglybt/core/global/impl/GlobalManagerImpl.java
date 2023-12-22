@@ -244,6 +244,7 @@ public class GlobalManagerImpl
 	static boolean disable_never_started_scrapes;
 
 	static int		no_space_dl_restart_check_period_millis;
+	static long		no_space_dl_pause_min_bytes;
 
 	static int		missing_file_dl_restart_check_period_millis;
 	static Object	missing_file_dl_restart_key = new Object();
@@ -545,6 +546,28 @@ public class GlobalManagerImpl
         		}
         	}
 
+        	if ( no_space_dl_pause_min_bytes > 0 ){
+        		
+           		DownloadManager[] managers = managers_list_cow;
+    			
+        		for ( DownloadManager manager: managers ){
+        			
+        			if ( manager.getState() == DownloadManager.STATE_DOWNLOADING ){
+        				
+        				File save_loc = manager.getSaveLocation();
+        						
+        				long avail = FileUtil.getUsableSpace( save_loc );
+        				
+        				if ( avail >= 0 && avail < no_space_dl_pause_min_bytes ){
+        					
+        					manager.pause( true );
+        					
+							manager.setStopReason( "Insufficient space on '" + save_loc.getAbsolutePath() + "'" );
+        				}
+        			}
+        		}
+        	}
+        	
            	if ( missing_file_dl_restart_check_period_millis > 0 ){
 
     			long now = SystemTime.getMonotonousTime();
