@@ -578,6 +578,14 @@ public class SBC_TagsOverview
 					}
 				});
 		
+		tableManager.registerColumn(Tag.class, ColumnTagsSortAutoApply.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagsSortAutoApply(column);
+					}
+				});
+
 		tableManager.setDefaultColumnNames(TABLE_TAGS,
 				new String[] {
 					ColumnTagColor.COLUMN_ID,
