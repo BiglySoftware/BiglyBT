@@ -1083,10 +1083,10 @@ public class TorrentFolderWatcher {
 			return;
 		}
 		
-		log( "Adding magnet to queue: " + file.getName());
-		
 		pending_magnets.add( file );
-		
+
+		log( "Adding magnet to queue: " + file.getName() + " - pending=" + pending_magnets.size() + ", active=" + active_magnets.size());
+				
 		if ( active_magnets.size() >= 5 ){
 			
 			return;
@@ -1109,7 +1109,7 @@ public class TorrentFolderWatcher {
 					boolean		bad_magnet 	= true;
 					
 					try{
-						log( "Processing magnet: " + active.getName());
+						log( "Processing magnet: " + active.getName() + " - pending=" + pending_magnets.size() + ", active=" + active_magnets.size());
 						
 						String magnet_uri = FileUtil.readFileAsString( active, 32000, "UTF-8" );
 						
