@@ -23,7 +23,6 @@ package com.biglybt.plugin.simpleapi;
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.util.*;
 
 import org.json.simple.JSONArray;
@@ -1101,7 +1100,12 @@ SimpleAPIPlugin
 	
 					}else if ( !lc_target.startsWith("http")){
 	
-						target = UrlUtils.parseTextForURL( target, true, true );
+						String temp = UrlUtils.parseTextForURL( target, true, true );
+						
+						if ( temp != null ){
+							
+							target = temp;
+						}
 					}
 					
 					try{
@@ -1139,7 +1143,50 @@ SimpleAPIPlugin
 							
 						}catch( Throwable e ){
 							
-							log_channel.log( "Torrent download failed for '" + f_url + "'", e );
+								// see if we can convert to a magnet
+							
+							boolean alt_tried = false;
+
+							try{
+								String url_str = f_url.toExternalForm();
+								
+									// remove the protocol so we don't just find the same url when parsing the "text"
+								
+								url_str = url_str.substring( url_str.indexOf( ":" ));
+								
+								String alt_target = UrlUtils.parseTextForURL( url_str, true, true );
+															
+								if ( alt_target != null ){
+									
+									URL url2 = new URL( alt_target );
+									
+									if ( !f_url.equals( url2 )){
+										
+										TorrentDownloader dl2 = torrentManager.getURLDownloader( url2, null, null );
+		
+										AEThread2.createAndStartDaemon( "SAPI:tdl2", ()->{
+											
+											try{
+												Torrent torrent = dl2.download( Constants.DEFAULT_ENCODING );
+												
+												addTorrent( PluginCoreUtils.unwrap( torrent ));
+												
+											}catch( Throwable f ){
+											
+												log_channel.log( "Torrent download failed for '" + f_url + "'", e );
+											}
+										});
+									
+										alt_tried = true;
+									}
+								}
+							}catch( Throwable f ){									
+							}
+							
+							if ( !alt_tried ){
+															
+								log_channel.log( "Torrent download failed for '" + f_url + "'", e );
+							}
 						}
 					});
 					
