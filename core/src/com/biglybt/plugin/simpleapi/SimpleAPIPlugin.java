@@ -21,6 +21,9 @@
 package com.biglybt.plugin.simpleapi;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.*;
 
 import org.json.simple.JSONArray;
@@ -48,12 +51,16 @@ import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.torrent.TOTorrentFile;
+import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ipc.IPCException;
 import com.biglybt.pif.logging.LoggerChannel;
+import com.biglybt.pif.torrent.Torrent;
+import com.biglybt.pif.torrent.TorrentDownloader;
+import com.biglybt.pif.torrent.TorrentManager;
 import com.biglybt.pif.tracker.web.TrackerWebPageRequest;
 import com.biglybt.pif.tracker.web.TrackerWebPageResponse;
 import com.biglybt.pif.ui.config.ActionParameter;
@@ -61,6 +68,8 @@ import com.biglybt.pif.ui.config.HyperlinkParameter;
 import com.biglybt.pif.ui.config.StringParameter;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.webplugin.WebPlugin;
 import com.biglybt.util.JSONUtils;
 
@@ -121,6 +130,8 @@ SimpleAPIPlugin
 		return( singleton );
 	}
 
+	private PluginInterface		plugin_interface;
+	
 	private StringParameter		api_key;
 	
 	private HyperlinkParameter	test_param;
@@ -138,6 +149,8 @@ SimpleAPIPlugin
 
 		throws PluginException
 	{
+		plugin_interface = pi;
+		
 		singleton = this;
 
 		pi.getPluginProperties().setProperty( "plugin.name", PLUGIN_NAME );
@@ -1024,6 +1037,116 @@ SimpleAPIPlugin
 						
 					subs_man.markReadInAllSubscriptions( results );
 				}
+			}else if ( 	method.equals( "addtorrent" ) || 
+						method.equals( "adddownload" )){
+				
+				String original_target = args.get( "file" );
+								
+				if ( original_target == null ){
+					
+					original_target = args.get( "magnet" );
+				}
+				
+				if ( original_target == null ){
+					
+					original_target = args.get( "url" );
+				}
+
+				if ( original_target == null ){
+					
+					throw( new Exception( "missing file/magnet/url parameter" ));
+				}
+				
+				String target = original_target;
+
+				File 	file = null;
+				URL		url = null;
+				
+				try{
+					File f = FileUtil.newFile( target );
+					
+					if ( f.exists()){
+						
+						file = f;
+					}
+				}catch( Throwable e ){
+				}
+				
+				if ( file == null ){
+					
+					try{
+						File f = FileUtil.newFile( new URI( target ));
+						
+						if ( f.exists()){
+							
+							file = f;
+						}
+					}catch( Throwable e ){
+					}
+				}
+				
+				if ( file == null ){
+					
+					target = UrlUtils.decode( target );
+					
+					target = target.trim().replaceAll(" ", "%20");
+	
+					// hack due to core bug - have to add a bogus arg onto magnet uris else they fail to parse
+	
+					String lc_target = target.toLowerCase(Locale.US);
+	
+					if ( lc_target.startsWith("magnet:")) {
+	
+						target += "&dummy_param=1";
+	
+					}else if ( !lc_target.startsWith("http")){
+	
+						target = UrlUtils.parseTextForURL( target, true, true );
+					}
+					
+					try{
+						url = new URL( target );
+						
+					}catch( Throwable e ){
+					}
+				}
+				
+				if ( file != null ){
+					
+					try{
+						TOTorrent torrent = TorrentUtils.readFromFile( file, false );
+						
+						addTorrent( torrent );
+						
+					}catch( Throwable e ){
+						
+						throw( new Exception( "failed to read torrent from '" + file.getAbsolutePath() + "'" ));
+					}
+				}else if ( url != null ){
+					
+					URL f_url = url;
+					
+					TorrentManager torrentManager = plugin_interface.getTorrentManager();
+
+					TorrentDownloader dl = torrentManager.getURLDownloader( url, null, null );
+
+					AEThread2.createAndStartDaemon( "SAPI:tdl", ()->{
+						
+						try{
+							Torrent torrent = dl.download( Constants.DEFAULT_ENCODING );
+							
+							addTorrent( PluginCoreUtils.unwrap( torrent ));
+							
+						}catch( Throwable e ){
+							
+							log_channel.log( "Torrent download failed for '" + f_url + "'", e );
+						}
+					});
+					
+				}else{
+					
+					throw( new Exception( "invalid file/magnet/url parameter '" + original_target + "'" ));
+				}
 			}else{
 				throw( new Exception( "unsupported method '" + method + "'" ));
 			}
@@ -1033,6 +1156,48 @@ SimpleAPIPlugin
 		}
 		
 		return( null );
+	}
+	
+	private void
+	addTorrent(
+		TOTorrent		torrent )
+	{
+		try{
+			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+	
+			DownloadManager existing_dm = gm.getDownloadManager( torrent );
+	
+			if ( existing_dm != null ){
+				
+				log_channel.log( "Download '" + existing_dm.getDisplayName() + "' already added" );
+				
+				return;
+			}
+			
+			TorrentOpenOptions torrentOptions = new TorrentOpenOptions( null );
+		
+			torrent = TorrentUtils.cloneTorrent( torrent );
+			
+			File to_file = AETemporaryFileHandler.createTempFile();
+				
+			TorrentUtils.writeToFile( torrent, to_file, false );											
+			
+			torrent = TorrentUtils.readFromFile( to_file, false );
+					
+			torrentOptions.setDeleteFileOnCancel( true );
+			torrentOptions.setTorrentFile( to_file.getAbsolutePath());
+			torrentOptions.setTorrent( torrent );
+			
+			UIFunctions uif = UIFunctionsManager.getUIFunctions();
+	
+			uif.addTorrentWithOptions( false, torrentOptions );
+			
+			log_channel.log( "Added download '" + new String( torrent.getName()) + "'");
+			
+		}catch( Throwable e ){
+			
+			log_channel.log( "Failed to add download '" + new String( torrent.getName()) + "'", e );
+		}
 	}
 	
 	private boolean
