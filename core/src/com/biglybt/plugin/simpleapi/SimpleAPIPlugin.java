@@ -36,6 +36,7 @@ import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.subs.Subscription;
@@ -1056,6 +1057,8 @@ SimpleAPIPlugin
 					throw( new Exception( "missing file/magnet/url parameter" ));
 				}
 				
+				String f_original_target = original_target;
+				
 				String target = original_target;
 
 				File 	file = null;
@@ -1134,10 +1137,21 @@ SimpleAPIPlugin
 
 					TorrentDownloader dl = torrentManager.getURLDownloader( url, null, null );
 
+					UIFunctions uif = UIFunctionsManager.getUIFunctions();
+					
 					AEThread2.createAndStartDaemon( "SAPI:tdl", ()->{
 						
+						Object sk = 
+							uif.pushStatusText( 
+								MessageText.getString("fileDownloadWindow.state_downloading") + ": " + f_original_target );
+						
 						try{
+	
 							Torrent torrent = dl.download( Constants.DEFAULT_ENCODING );
+									
+							uif.popStatusText( sk, 0, null );
+							
+							sk = null;
 							
 							addTorrent( PluginCoreUtils.unwrap( torrent ));
 							
@@ -1160,20 +1174,43 @@ SimpleAPIPlugin
 									
 									URL url2 = new URL( alt_target );
 									
-									if ( !f_url.equals( url2 )){
+									if ( !f_url.equals( url2 )){									
 										
+										uif.popStatusText( sk, 1, null );
+										
+										sk = null;
+
 										TorrentDownloader dl2 = torrentManager.getURLDownloader( url2, null, null );
 		
 										AEThread2.createAndStartDaemon( "SAPI:tdl2", ()->{
 											
+											Object sk2 = 
+												uif.pushStatusText( 
+														MessageText.getString("fileDownloadWindow.state_downloading") + ": " + url2.toExternalForm());
+											
 											try{
 												Torrent torrent = dl2.download( Constants.DEFAULT_ENCODING );
+												
+												uif.popStatusText( sk2, 0, null );
+												
+												sk2 = null;
 												
 												addTorrent( PluginCoreUtils.unwrap( torrent ));
 												
 											}catch( Throwable f ){
 											
 												log_channel.log( "Torrent download failed for '" + f_url + "'", e );
+												
+												uif.popStatusText( sk2, 2, Debug.getNestedExceptionMessage(f));
+												
+												sk2 = null;
+												
+											}finally{
+												
+												if ( sk2 != null ){
+												
+													uif.popStatusText( sk2, 2, null );
+												}
 											}
 										});
 									
@@ -1186,6 +1223,16 @@ SimpleAPIPlugin
 							if ( !alt_tried ){
 															
 								log_channel.log( "Torrent download failed for '" + f_url + "'", e );
+								
+								uif.popStatusText( sk, 2, Debug.getNestedExceptionMessage(e));
+								
+								sk = null;
+							}
+						}finally{
+							
+							if ( sk != null ){
+							
+								uif.popStatusText( sk, 2, null );
 							}
 						}
 					});

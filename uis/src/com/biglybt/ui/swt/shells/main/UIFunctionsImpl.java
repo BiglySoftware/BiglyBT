@@ -73,6 +73,8 @@ import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl;
 import com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore;
 import com.biglybt.ui.swt.pifimpl.UIToolBarManagerImpl;
 import com.biglybt.ui.swt.plugininstall.SimplePluginInstaller;
+import com.biglybt.ui.swt.progress.IProgressReporter;
+import com.biglybt.ui.swt.progress.ProgressReportingManager;
 import com.biglybt.ui.swt.search.SearchHandler;
 import com.biglybt.ui.swt.shells.*;
 import com.biglybt.ui.swt.shells.opentorrent.OpenTorrentOptionsWindow;
@@ -353,6 +355,63 @@ public class UIFunctionsImpl
 		});
 	}
 
+	@Override
+	public Object 
+	pushStatusText(
+		String key )
+	{
+		IProgressReporter pReporter = ProgressReportingManager.getInstance().addReporter();
+		
+		pReporter.setName( key );
+		
+		pReporter.setTitle(MessageText.getString("fileDownloadWindow.title"));
+		
+		return( pReporter );
+	}
+
+	@Override
+	public void 
+	popStatusText(
+		Object	o,
+		int		reason,
+		String	message )
+	{
+		IProgressReporter pReporter = (IProgressReporter)o;
+			
+		if ( reason == 0 ){
+		
+			if ( message != null ){
+				
+				pReporter.appendDetailMessage(message);
+			}
+			
+			pReporter.setDone();
+			
+		}else if ( reason == 1 ){
+			
+			if ( message != null ){
+				
+				pReporter.appendDetailMessage(message);
+			}
+
+			pReporter.cancel();
+			
+		}else{
+			
+			pReporter.setErrorMessage( message!=null?message:MessageText.getString("fileDownloadWindow.state_error"));
+		}
+		
+		pReporter.dispose();
+		
+		if ( reason == 1 ){
+		
+				// remove if cancelled as not of interest, leave for success/fail so result
+				// remains visible if "auto remove" not enabled
+			
+			ProgressReportingManager.getInstance().remove(pReporter);
+		}
+	}
+	
 	// @see UIFunctionsSWT#getMainStatusBar()
 	@Override
 	public IMainStatusBar getMainStatusBar() {

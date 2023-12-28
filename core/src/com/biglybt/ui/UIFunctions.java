@@ -90,6 +90,10 @@ public interface UIFunctions
 
 	void setStatusText(int statustype, String key, UIStatusTextClickListener l);
 
+	Object pushStatusText( String message );
+	
+	void popStatusText( Object pushed, int reason, String message );
+	
 	/**
 	 * Request the UI be shut down.
 	 *

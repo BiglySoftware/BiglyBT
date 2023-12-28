@@ -616,6 +616,7 @@ MainWindowDelayStub
 		setStatusText(
 			String key)
 		{
+			log( "setStatusText" );
 		}
 
 		@Override
@@ -627,7 +628,27 @@ MainWindowDelayStub
 		{
 			log( "setStatusText" );
 		}
+		
+		@Override
+		public Object 
+		pushStatusText(
+			String key )
+		{
+			log( "pushStatusText" );
+			
+			return( "" );
+		}
 
+		@Override
+		public void 
+		popStatusText(
+			Object 	o,
+			int		reason,
+			String	message )
+		{
+			log( "popStatusText" );
+		}
+		
 		@Override
 		public boolean
 		dispose(
