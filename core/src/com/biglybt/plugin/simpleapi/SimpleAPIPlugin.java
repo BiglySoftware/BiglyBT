@@ -1040,21 +1040,23 @@ SimpleAPIPlugin
 			}else if ( 	method.equals( "addtorrent" ) || 
 						method.equals( "adddownload" )){
 				
-				String original_target = args.get( "file" );
-								
-				if ( original_target == null ){
+				String[] target_args = { "file", "magnet", "url", "torrent" };
+				
+				String original_target = null;
+				
+				for ( String ta: target_args ){
 					
-					original_target = args.get( "magnet" );
+					original_target = args.get( ta );
+					
+					if ( original_target != null ){
+						
+						break;
+					}
 				}
 				
 				if ( original_target == null ){
 					
-					original_target = args.get( "url" );
-				}
-
-				if ( original_target == null ){
-					
-					throw( new Exception( "missing file/magnet/url parameter" ));
+					throw( new Exception( "missing file/magnet/url/torrent parameter" ));
 				}
 				
 				String f_original_target = original_target;
