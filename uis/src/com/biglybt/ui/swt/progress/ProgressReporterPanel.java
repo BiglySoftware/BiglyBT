@@ -378,6 +378,22 @@ public class ProgressReporterPanel
 		
 		detailListWidget.setIndent(4);
 		
+		detailListWidget.addListener(SWT.KeyDown, event -> {
+			int key = event.character;
+
+			if (key <= 26 && key > 0) {
+
+				key += 'a' - 1;
+			}
+
+			if (key == 'a' && event.stateMask == SWT.MOD1) {
+
+				event.doit = false;
+
+				detailListWidget.selectAll();
+			}
+		});
+		
 		if ( Utils.isDarkAppearanceNativeWindows()){
 			
 			// removed SWT.BORDER for this as pain in the arse to fix up the code, grr
