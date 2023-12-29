@@ -1223,6 +1223,9 @@ public class UIFunctionsImpl
 								MessageText.getString("Button.no")
 							}, 1);
 
+						promptSepDL.setRemember("remember:openTorrentWindow.mb.alreadyExists.add.dup", false,
+								MessageText.getString("MessageBoxWindow.nomoreprompting"));
+						
 						promptSepDL.open(result -> {
 							if ( result == 0 ){ // Yes
 
