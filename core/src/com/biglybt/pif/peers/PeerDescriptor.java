@@ -19,8 +19,11 @@
 
 package com.biglybt.pif.peers;
 
+import com.biglybt.core.util.DataSourceResolver.ExportableDataSource;
+
 public interface
 PeerDescriptor
+	extends ExportableDataSource
 {
 	public String
 	getIP();

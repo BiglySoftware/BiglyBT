@@ -1313,6 +1313,11 @@ public abstract class BaseMdiEntry
 			data_source = getInitialDataSource();
 		}
 		
+		if ( data_source == null ){
+			
+			data_source = getUserData( UD_STANDALONE_DATA_SOURCE );
+		}
+		
 		if ( data_source != null ) {
 		
 			if ( data_source instanceof String ) {
@@ -1374,13 +1379,20 @@ public abstract class BaseMdiEntry
 	buildStandAlone(
 		SWTSkinObjectContainer		soParent )
 	{
+		Object data_source = getDatasourceCore();
+
+		if ( data_source == null ){
+
+			data_source = getUserData( UD_STANDALONE_DATA_SOURCE );
+		}
+		
 		return(
 			buildStandAlone(
 				soParent,
 				getSkinRef(),
 				skin,
 				id,
-				getDatasourceCore(),
+				data_source,
 				getControlType(),
 				getEventListenerBuilder() ));
 	}

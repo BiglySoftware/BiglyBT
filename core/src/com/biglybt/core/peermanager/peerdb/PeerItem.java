@@ -27,6 +27,7 @@ import java.util.Arrays;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.pif.peers.PeerDescriptor;
 
 
@@ -236,6 +237,14 @@ public class PeerItem implements PeerDescriptor {
 	  return address.length == 4;
   }
 
+  @Override
+  public ExportedDataSource 
+  exportDataSource()
+  {
+	  // TODO Auto-generated method stub
+	  return null;
+  }
+  
   /*
   public String toString() {
 	  return com.biglybt.core.util.ByteFormatter.encodeString(this.address) + ":" + this.tcp_port;

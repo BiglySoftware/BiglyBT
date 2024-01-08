@@ -65,6 +65,7 @@ import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pif.dht.mainline.MainlineDHTProvider;
 import com.biglybt.pif.network.Connection;
 import com.biglybt.pif.peers.Peer;
+import com.biglybt.pif.peers.PeerDescriptor;
 import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
 import com.biglybt.pifimpl.local.network.ConnectionImpl;
 
@@ -6543,6 +6544,13 @@ implements PEPeerTransport
 	public void setTaggableTransientProperty(String key, Object value) {
 	}
 
+	@Override
+	public PeerDescriptor 
+	getDescriptor()
+	{
+		return( PeerItemFactory.getDescriptor( this ));
+	}
+	
 	@Override
 	public void
 	generateEvidence(

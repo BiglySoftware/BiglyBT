@@ -710,10 +710,9 @@ public class Initializer
 			
 			OpenTorrentOptionsWindow.initialise();
 			
-			PopOutManager.initialise();
+			PopOutManager.initialise( core );
 			
-		}
-		finally{
+		}finally{
 
 			if ( !main_window_will_report_complete ){
 				init_task.release();

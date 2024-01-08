@@ -40,6 +40,7 @@ import com.biglybt.core.networkmanager.admin.NetworkAdminASN;
 import com.biglybt.core.networkmanager.admin.NetworkAdminASNListener;
 import com.biglybt.core.networkmanager.admin.NetworkAdminException;
 import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peermanager.peerdb.PeerItemFactory;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.peers.Peer;
 import com.biglybt.pif.utils.LocationProvider;
@@ -126,6 +127,12 @@ public class PeerUtils {
 			});
    }
 
+   public static void
+   initialise()
+   {
+	   PeerItemFactory.initialise();
+   }
+   
    public static int
    getPeerPriority(
 	   String 	address,

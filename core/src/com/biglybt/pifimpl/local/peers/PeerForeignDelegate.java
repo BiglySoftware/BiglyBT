@@ -1424,4 +1424,11 @@ PeerForeignDelegate
 	@Override
 	public void setTaggableTransientProperty(String key, Object value) {
 	}
+	
+	@Override
+	public PeerDescriptor 
+	getDescriptor()
+	{
+		return( PeerItemFactory.getDescriptor( this ));
+	}
 }

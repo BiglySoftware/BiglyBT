@@ -27,12 +27,14 @@ import java.util.Map;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 
+import com.biglybt.core.Core;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.DataSourceResolver.ExportableDataSource;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.pif.PluginAdapter;
 import com.biglybt.pif.download.Download;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -90,9 +92,23 @@ PopOutManager
 	private static List<PopOutDetails>	popout_details = new ArrayList<>();
 	
 	public static void
-	initialise()
+	initialise(
+		Core		core )
 	{
-		Utils.execSWTThread( PopOutManager::loadConfig );
+			// wait until all plugins are initialised as they may register views and this must
+			// be done before recovering any pop-outs
+		
+		core.getPluginManager().getDefaultPluginInterface().addListener(
+			new PluginAdapter()
+			{
+				@Override
+				public void initializationComplete()
+				{
+					Utils.execSWTThread( PopOutManager::loadConfig );
+				}		
+			});
+		
+		
 	}
 	
 	private static synchronized void

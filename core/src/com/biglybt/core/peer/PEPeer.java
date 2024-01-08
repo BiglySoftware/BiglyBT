@@ -35,7 +35,7 @@ import com.biglybt.core.peermanager.messaging.Message;
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.pif.network.Connection;
-import com.biglybt.pif.peers.PeerReadRequest;
+import com.biglybt.pif.peers.PeerDescriptor;
 
 
 /**
@@ -512,4 +512,7 @@ PEPeer
 
 	public boolean
 	isClosed();
+	
+	 public PeerDescriptor
+	 getDescriptor();
 }

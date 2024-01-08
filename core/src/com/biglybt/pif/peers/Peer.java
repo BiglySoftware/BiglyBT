@@ -285,4 +285,7 @@ Peer
   public RateLimiter[]
   getRateLimiters(
    		 boolean	is_upload );
+  
+  public PeerDescriptor
+  getDescriptor();
 }

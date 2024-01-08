@@ -37,6 +37,8 @@ public interface UISWTViewCore
 	// XXX ControlType never seems to be set to this.. could remove?
 	public static final int CONTROLTYPE_SKINOBJECT = 0x100 + 1;
 
+	public static final Object	UD_STANDALONE_DATA_SOURCE = new Object();
+	
 	// >> From IView
   /**
    * This method is called when the view is instanciated, it should initialize all GUI

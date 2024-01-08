@@ -68,4 +68,14 @@ public class TransportImpl implements Transport {
 	  );
   }
 
+  @Override
+  public boolean isEncrypted(){
+	  if ( core_transport == null ){
+		  core_transport = core_network.getTransport();
+		  if ( core_transport == null ){
+			  return( false );
+		  }
+	  }
+	  return core_transport.isEncrypted();
+  }
 }

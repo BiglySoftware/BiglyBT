@@ -7465,6 +7465,12 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		public void setTaggableTransientProperty(String key, Object value){
 		}
 
+		@Override
+		public PeerDescriptor 
+		getDescriptor()
+		{
+			return( PeerItemFactory.getDescriptor( this ));
+		}
 	}
 
 	private class MyPeerStats implements PEPeerStats{

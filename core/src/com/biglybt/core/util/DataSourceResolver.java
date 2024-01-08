@@ -3,6 +3,8 @@ package com.biglybt.core.util;
 import java.util.*;
 
 import com.biglybt.core.devices.Device;
+import com.biglybt.core.peer.PEPeer;
+import com.biglybt.pif.peers.Peer;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 public class 
@@ -59,6 +61,14 @@ DataSourceResolver
 			// not required as resolved internally
 			
 			return( null );
+			
+		}else if ( data_source instanceof Peer ){
+			
+			return( exportDataSource(((Peer)data_source).getDescriptor()));
+			
+		}else if ( data_source instanceof PEPeer ){
+			
+			return( exportDataSource(((PEPeer)data_source).getDescriptor()));
 			
 		}else if ( data_source == DEFAULT_DATASOURCE ){
 			

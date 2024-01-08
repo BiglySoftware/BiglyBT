@@ -819,4 +819,10 @@ PeerImpl
 	public byte[] getHandshakeReservedBytes() {
 		return delegate.getHandshakeReservedBytes();
 	}
+	
+	 public PeerDescriptor
+	 getDescriptor()
+	 {
+		 return( delegate.getDescriptor());
+	 }
 }

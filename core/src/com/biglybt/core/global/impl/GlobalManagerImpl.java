@@ -81,6 +81,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
 import com.biglybt.core.speedmanager.SpeedManager;
 import com.biglybt.core.speedmanager.impl.SpeedManagerImpl;
@@ -694,6 +695,8 @@ public class GlobalManagerImpl
   	AEDiagnostics.addWeakEvidenceGenerator( this );
 
   	DataSourceResolver.registerExporter( this );
+  	
+  	PeerUtils.initialise();
   	
     stats = new GlobalManagerStatsImpl( this );
 

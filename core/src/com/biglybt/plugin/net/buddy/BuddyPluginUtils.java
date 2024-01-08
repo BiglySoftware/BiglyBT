@@ -38,6 +38,8 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.peers.Peer;
+import com.biglybt.pif.peers.PeerDescriptor;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
@@ -582,6 +584,58 @@ BuddyPluginUtils
 		return( getChatKey( download.getTorrent()));
 	}
 
+	public static String
+	getChatKey(
+		Peer		peer )
+	{
+		if ( peer != null ){
+		
+			try{
+				InetAddress ia = AddressUtils.getByName( peer.getIp());
+			
+				String[] info = PeerUtils.getCountryDetails( ia );
+			
+				if ( info != null ){
+								
+					String cc = info[0].toUpperCase( Locale.US );
+				
+					String chat_key = Constants.APP_NAME + ": Country: " + cc ;
+					
+					return( chat_key );
+				}
+			}catch( Throwable e ){
+			}
+		}
+		
+		return( null );
+	}
+	
+	public static String
+	getChatKey(
+		PeerDescriptor		peer )
+	{
+		if ( peer != null ){
+		
+			try{
+				InetAddress ia = AddressUtils.getByName( peer.getIP());
+			
+				String[] info = PeerUtils.getCountryDetails( ia );
+			
+				if ( info != null ){
+								
+					String cc = info[0].toUpperCase( Locale.US );
+				
+					String chat_key = Constants.APP_NAME + ": Country: " + cc ;
+					
+					return( chat_key );
+				}
+			}catch( Throwable e ){
+			}
+		}
+		
+		return( null );
+	}
+	
 	public static String
 	getChatKey(
 		Torrent		torrent )

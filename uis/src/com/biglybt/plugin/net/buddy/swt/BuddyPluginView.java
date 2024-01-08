@@ -56,11 +56,14 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.minibar.AllTransfersBar;
 import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.peers.Peer;
+import com.biglybt.pif.peers.PeerDescriptor;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.*;
@@ -859,11 +862,16 @@ BuddyPluginView
 	addBetaSubviews(
 		boolean	enable )
 	{
-		Class[] datasourceTypes = {
+		Class[] datasourceTypes1 = {
 			// TODO: Use com.biglybt.pif.tag.Tag?
 			Tag.class,
 			Download.class,
 		};
+		
+		Class[] datasourceTypes2 = {
+				Peer.class,
+				PeerDescriptor.class,
+			};
 
 		if ( enable ){
 
@@ -907,7 +915,7 @@ BuddyPluginView
 			TagManagerFactory.getTagManager().addTaggableLifecycleListener(
 				Taggable.TT_DOWNLOAD, taggableLifecycleAdapter);
 
-			UISWTViewEventListener listener =
+			UISWTViewEventListener listener1 =
 				new UISWTViewEventListener()
 				{
 					@Override
@@ -942,7 +950,7 @@ BuddyPluginView
 
 								if ( subview != null ){
 
-									subview.setDataSource( event.getData());
+									subview.setDataSource( currentView, event.getData());
 								}
 
 								break;
@@ -984,11 +992,86 @@ BuddyPluginView
 						return true;
 					}
 				};
-
-			// Our one listener instance can handle multiple views, so we
-			// return same listener for every instantiation
 				
-			UISWTViewBuilder viewBuilder = 
+			UISWTViewEventListener listener2 =
+				new UISWTViewEventListener()
+				{
+					@Override
+					public boolean
+					eventOccurred(
+						UISWTViewEvent event )
+					{
+						UISWTView 	currentView = event.getView();
+
+						switch (event.getType()) {
+							case UISWTViewEvent.TYPE_CREATE:{
+
+								beta_subviews.put(currentView, new BetaSubViewHolder( Peer.class ));
+								currentView.setDestroyOnDeactivate(false);
+
+								break;
+							}
+							case UISWTViewEvent.TYPE_INITIALIZE:{
+
+								BetaSubViewHolder subview = beta_subviews.get(currentView);
+
+								if ( subview != null ){
+
+									subview.initialise(event.getView(), (Composite)event.getData());
+								}
+
+								break;
+							}
+							case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:{
+
+								BetaSubViewHolder subview = beta_subviews.get(currentView);
+
+								if ( subview != null ){
+
+									subview.setDataSource( currentView, event.getData());
+								}
+
+								break;
+							}
+							case UISWTViewEvent.TYPE_FOCUSGAINED:{
+
+								BetaSubViewHolder subview = beta_subviews.get(currentView);
+
+								if ( subview != null ){
+
+									subview.gotFocus();
+								}
+
+								break;
+							}
+							case UISWTViewEvent.TYPE_FOCUSLOST:{
+
+								BetaSubViewHolder subview = beta_subviews.get(currentView);
+
+								if ( subview != null ){
+
+									subview.lostFocus();
+								}
+
+								break;
+							}
+							case UISWTViewEvent.TYPE_DESTROY:{
+
+								BetaSubViewHolder subview = beta_subviews.remove(currentView);
+
+								if ( subview != null ){
+
+									subview.destroy();
+								}
+
+								break;
+							}
+						}
+						return true;
+					}
+				};
+					
+			UISWTViewBuilder viewBuilder1 = 
 				ui_instance.createViewBuilder(
 					VIEWID_CHAT).setListenerInstantiator(
 						new UISWTViewBuilder.UISWTViewEventListenerInstantiator()
@@ -1004,7 +1087,7 @@ BuddyPluginView
 							public UISWTViewEventListener createNewInstance(UISWTViewBuilder Builder, UISWTView forView)
 									throws Exception{
 								
-								return listener;
+								return listener1;
 							}
 							
 							@Override
@@ -1013,8 +1096,36 @@ BuddyPluginView
 							}
 						});
 			
-			for (Class datasourceType : datasourceTypes) {
-				ui_instance.registerView(datasourceType, viewBuilder);
+			UISWTViewBuilder viewBuilder2 = 
+					ui_instance.createViewBuilder(
+						VIEWID_CHAT).setListenerInstantiator(
+							new UISWTViewBuilder.UISWTViewEventListenerInstantiator()
+							{
+								@Override
+								public boolean
+								supportsMultipleViews()
+								{
+									return( true );
+								}
+								
+								@Override
+								public UISWTViewEventListener createNewInstance(UISWTViewBuilder Builder, UISWTView forView)
+										throws Exception{
+									
+									return listener2;
+								}
+								
+								@Override
+								public String getUID(){
+									return( VIEWID_CHAT );
+								}
+							});
+			
+			for (Class datasourceType : datasourceTypes1) {
+				ui_instance.registerView(datasourceType, viewBuilder1);
+			}
+			for (Class datasourceType : datasourceTypes2) {
+				ui_instance.registerView(datasourceType, viewBuilder2);
 			}
 
 			TableManager	table_manager = plugin.getPluginInterface().getUIManager().getTableManager();
@@ -1256,7 +1367,10 @@ BuddyPluginView
 			
 		}else{
 
-			for (Class datasourceType : datasourceTypes) {
+			for (Class datasourceType : datasourceTypes1) {
+				ui_instance.unregisterView(datasourceType, VIEWID_CHAT);
+			}
+			for (Class datasourceType : datasourceTypes2) {
 				ui_instance.unregisterView(datasourceType, VIEWID_CHAT);
 			}
 
@@ -2110,13 +2224,15 @@ BuddyPluginView
 	BetaSubViewHolder
 		implements View
 	{
+		private Class	ds_only;
+		
 		private int CHAT_DOWNLOAD 		= 0;
 		private int CHAT_TRACKERS 		= 1;
 		private int CHAT_TAG	 		= 2;
 		private int CHAT_GENERAL		= 3;
 		private int CHAT_FAVOURITES		= 4;
-
-		private boolean			download_only_mode;
+		
+		private int CHAT_PEER			= 5;
 
 		private ViewListener	view_listener;
 
@@ -2140,6 +2256,8 @@ BuddyPluginView
 		private String				current_tracker;
 		private Tag					current_tag;
 		private String				current_general;
+		
+		private PeerDescriptor		current_peer;
 
 		private String			current_favourite_net;
 		private String			current_favourite_key;
@@ -2153,9 +2271,18 @@ BuddyPluginView
 		private
 		BetaSubViewHolder()
 		{
-			checkBetaInit();
+			this( null );
 		}
 
+		private
+		BetaSubViewHolder(
+			Class	_ds_only )
+		{
+			ds_only = _ds_only;
+			
+			checkBetaInit();
+		}
+		
 		private void
 		initialise(
 			Composite			parent,
@@ -2164,7 +2291,7 @@ BuddyPluginView
 		{
 			view_listener 		= listener;
 			current_download	= download;
-			download_only_mode	= true;
+			ds_only				= Download.class;
 
 			initialiseSupport( parent );
 
@@ -2192,7 +2319,7 @@ BuddyPluginView
 		initialise(
 			UISWTView		view,
 			Composite		parent )
-		{
+		{			
 			UISWTView parent_view = view.getParentView();
 
 			if ( parent_view != null ){
@@ -2215,7 +2342,7 @@ BuddyPluginView
 			final Composite composite	= parent;
 
 			GridLayout layout = new GridLayout();
-			layout.numColumns = download_only_mode?1:3;
+			layout.numColumns = ds_only!=null?1:3;
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
 			layout.marginTop = 4;
@@ -2225,7 +2352,7 @@ BuddyPluginView
 			GridData grid_data = new GridData(GridData.FILL_BOTH );
 			composite.setLayoutData(grid_data);
 
-			if ( !download_only_mode ){
+			if ( ds_only == null ){
 
 				// left
 
@@ -2260,7 +2387,7 @@ BuddyPluginView
 				favourites.setText( MessageText.getString( "label.favorites" ));
 				favourites.setData( CHAT_FAVOURITES );
 
-				if ( download_only_mode ){
+				if ( ds_only != null ){
 
 					lhs.setVisible( false );
 				}
@@ -2483,6 +2610,13 @@ BuddyPluginView
 		setChatMode(
 			int		mode )
 		{
+				// override regardless
+			
+			if ( ds_only == Peer.class ){
+				
+				mode = CHAT_PEER;
+			}
+			
 			if ( chat_mode == mode ){
 
 				return;
@@ -2507,14 +2641,15 @@ BuddyPluginView
 					// doesn't change so no rebuild required
 			}else{
 
-				if ( !download_only_mode ){
+				if ( ds_only == null ){
 
 					for ( Control c: middle.getChildren()){
 
 						c.dispose();
 					}
 
-					if ( mode == CHAT_DOWNLOAD ||(( mode == CHAT_TRACKERS || mode == CHAT_TAG ) &&  download == null && current_ds_tag == null )){
+					if ( 	mode == CHAT_DOWNLOAD ||
+							(( mode == CHAT_TRACKERS || mode == CHAT_TAG ) &&  download == null && current_ds_tag == null )){
 
 						middle.setVisible( false );
 						middle.setText( "" );
@@ -3001,7 +3136,7 @@ BuddyPluginView
 
 				if ( current_download == null ){
 
-						setChatMode( current_ds_tag==null?CHAT_GENERAL:CHAT_TAG );
+					setChatMode( current_ds_tag==null?CHAT_GENERAL:CHAT_TAG );
 				}
 
 				buildChatMode( chat_mode, false );
@@ -3040,40 +3175,47 @@ BuddyPluginView
 
 				}else{
 
-					DownloadAdapter	download 	= current_download;
-
-					if ( download == null ){
-
-							// no current download to guide us
-
-						activateNetwork( null, true );
-
+					if ( current_peer != null ){
+						
+						activateNetwork( AENetworkClassifier.AT_PUBLIC, true );
+						
 					}else{
-
-						String[] nets = download.getNetworks();
-
-						boolean	pub 	= false;
-						boolean	anon	= false;
-
-						for ( String net: nets ){
-
-							if ( net == AENetworkClassifier.AT_PUBLIC ){
-
-								pub = true;
-
-							}else if ( net == AENetworkClassifier.AT_I2P ){
-
-								anon = true;
+						
+						DownloadAdapter	download 	= current_download;
+	
+						if ( download == null ){
+	
+								// no current download to guide us
+	
+							activateNetwork( null, true );
+	
+						}else{
+	
+							String[] nets = download.getNetworks();
+	
+							boolean	pub 	= false;
+							boolean	anon	= false;
+	
+							for ( String net: nets ){
+	
+								if ( net == AENetworkClassifier.AT_PUBLIC ){
+	
+									pub = true;
+	
+								}else if ( net == AENetworkClassifier.AT_I2P ){
+	
+									anon = true;
+								}
 							}
-						}
-
-						if ( pub && anon ){
-							activateNetwork( AENetworkClassifier.AT_PUBLIC, true );
-							activateNetwork( AENetworkClassifier.AT_I2P, false );	// warm it up
-						}else if ( pub ){
-							activateNetwork( AENetworkClassifier.AT_PUBLIC, true );
-						}else if ( anon ){
-							activateNetwork( AENetworkClassifier.AT_I2P, true );
+	
+							if ( pub && anon ){
+								activateNetwork( AENetworkClassifier.AT_PUBLIC, true );
+								activateNetwork( AENetworkClassifier.AT_I2P, false );	// warm it up
+							}else if ( pub ){
+								activateNetwork( AENetworkClassifier.AT_PUBLIC, true );
+							}else if ( anon ){
+								activateNetwork( AENetworkClassifier.AT_I2P, true );
+							}
 						}
 					}
 				}
@@ -3123,6 +3265,19 @@ BuddyPluginView
 
 					key = TagUIUtils.getChatKey( tag );
 				}
+				
+			}else if ( chat_mode == CHAT_PEER ){
+				
+				PeerDescriptor peer = current_peer;
+				
+				if ( peer == null ){
+					
+					key = null;
+					
+				}else{
+					
+					key = BuddyPluginUtils.getChatKey( peer );
+				}
 			}else if ( chat_mode == CHAT_GENERAL ){
 
 				key = current_general;
@@ -3132,7 +3287,9 @@ BuddyPluginView
 				key	= current_favourite_key;
 			}
 
-			activateChat( network, key, select_tab );
+			Utils.execSWTThread(()->{
+				activateChat( network, key, select_tab );
+			});
 		}
 
 		private void
@@ -3415,29 +3572,42 @@ BuddyPluginView
 
 		private void
 		setDataSource(
+			UISWTView	view,
 			Object		obj )
-		{
+		{	
 			Download 			dl 		= null;
 			DiskManagerFileInfo	dl_file = null;
 			Tag					tag		= null;
 
+			PeerDescriptor		peer_desc	= null;
+			
 			if ( obj instanceof Object[]){
 
 				Object[] ds = (Object[])obj;
 
 				if ( ds.length > 0 ){
 
-					if ( ds[0] instanceof Download ){
+					Object d = ds[0];
+					
+					if ( d instanceof Download ){
 
 						dl = (Download)ds[0];
 
-					}else if ( ds[0] instanceof DiskManagerFileInfo ){
+					}else if ( d instanceof DiskManagerFileInfo ){
 
-						dl_file = (DiskManagerFileInfo)ds[0];
+						dl_file = (DiskManagerFileInfo)d;
 
-					}else if ( ds[0] instanceof Tag ) {
+					}else if ( d instanceof Tag ) {
 
-						tag = (Tag) ds[0];
+						tag = (Tag)d;
+						
+					}else if ( d instanceof Peer ){
+						
+						peer_desc = ((Peer)d).getDescriptor();
+						
+					}else if ( d instanceof PeerDescriptor ){
+						
+						peer_desc = (PeerDescriptor)d;
 					}
 				}
 			}else{
@@ -3453,6 +3623,14 @@ BuddyPluginView
 				}else if ( obj instanceof Tag ){
 
 					tag = (Tag)obj;
+					
+				}else if ( obj instanceof Peer ){
+					
+					peer_desc = ((Peer)obj).getDescriptor();
+					
+				}else if ( obj instanceof PeerDescriptor ){
+					
+					peer_desc = (PeerDescriptor)obj;
 				}
 			}
 
@@ -3467,15 +3645,33 @@ BuddyPluginView
 
 			synchronized( this ){
 
-				if ( dl == current_download && tag == current_ds_tag ){
+				if ( dl == current_download && tag == current_ds_tag && peer_desc == current_peer ){
 
 					return;
 				}
 
+				if ( peer_desc != null && current_peer != null && peer_desc.getIP().equals( current_peer.getIP())){
+					
+					return;
+				}
+				
 				last_selected_network = null;
 
 				current_download 	= dl==null?null:getDownloadAdapter( dl );
 				current_ds_tag		= tag;
+				
+					// we don't null out the current peer as we want to keep the chat around until
+					// the user decides to switch to another
+				
+				if ( peer_desc != null ){
+					
+					current_peer		= peer_desc;
+					
+					if ( obj != null && view instanceof UISWTViewCore ){
+						
+						((UISWTViewCore)view).setUserData( UISWTViewCore.UD_STANDALONE_DATA_SOURCE, peer_desc );
+					}
+				}
 
 				if (current_download != null) {
 					setChatMode(CHAT_DOWNLOAD);

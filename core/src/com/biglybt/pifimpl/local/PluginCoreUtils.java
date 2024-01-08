@@ -628,7 +628,11 @@ PluginCoreUtils
 	unwrap(
 		Peer		peer )
 	{
-		return(((PeerImpl)peer).getDelegate());
+		if ( peer instanceof PeerImpl ){
+			return(((PeerImpl)peer).getDelegate());
+		}else{
+			return( null );
+		}
 	}
 
 	public static boolean
