@@ -1117,7 +1117,7 @@ BuddyPluginView
 								
 								@Override
 								public String getUID(){
-									return( VIEWID_CHAT );
+									return( VIEWID_CHAT + ".2" );
 								}
 							});
 			
