@@ -3409,6 +3409,26 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				return( dn );
 			}
 			
+			String str = getShortKey();
+
+			if ( abbreviated ){
+
+				return( MessageText.getString(
+						network==AENetworkClassifier.AT_PUBLIC?"label.public.medium":"label.anon.medium") +
+						" - '" + str + "'" );
+
+			}else{
+
+				return(
+					MessageText.getString(
+						network==AENetworkClassifier.AT_PUBLIC?"label.public":"label.anon") +
+						" - '" + str + "'" );
+			}
+		}
+
+		public String
+		getShortKey()
+		{
 			String str = key;
 
 			int pos = str.lastIndexOf( '[' );
@@ -3433,22 +3453,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					str = str.substring( 0, pos );
 				}
 			}
-
-			if ( abbreviated ){
-
-				return( MessageText.getString(
-						network==AENetworkClassifier.AT_PUBLIC?"label.public.medium":"label.anon.medium") +
-						" - '" + str + "'" );
-
-			}else{
-
-				return(
-					MessageText.getString(
-						network==AENetworkClassifier.AT_PUBLIC?"label.public":"label.anon") +
-						" - '" + str + "'" );
-			}
+			
+			return( str );
 		}
-
+		
 		public String
 		getShortName()
 		{
@@ -4401,9 +4409,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					if ( Constants.isCVSVersion()){
 
-						str += ", Refs=" + reference_count;
+						str += ", refs=" + reference_count;
 					}
 
+					str += ": '" + getShortKey() + "'";
+					
 					return( str );
 
 				}else{
