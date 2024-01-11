@@ -3476,7 +3476,10 @@ SubscriptionManagerUI
 		} else if (target.getClass().isArray()) {
 			Object[] entries = (Object[]) target;
 			for (Object entry : entries) {
-				if (entry instanceof MdiEntry) {
+				if ( entry instanceof Subscription ){
+					Subscription sub = (Subscription) entry;
+					(sub.isSearchTemplate() ? lists.templates : lists.subs).add(sub);
+				}else  if (entry instanceof MdiEntry) {
 					Object ds = ((UIPluginView) entry).getDataSource();
 					if (ds instanceof Subscription) {
 						Subscription sub = (Subscription) ds;
