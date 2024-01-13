@@ -197,6 +197,7 @@ public class MainMenuV3
 		if (!Constants.isOSX) {
 			MenuFactory.addSeparatorMenuItem(fileMenu);
 			MenuFactory.addCloseWindowMenuItem(fileMenu);
+			MenuFactory.addCloseCurrentViewMenuItem(fileMenu);
 			MenuFactory.addCloseDetailsMenuItem(fileMenu);
 			MenuFactory.addCloseDownloadBarsToMenu(fileMenu);
 		}
@@ -633,6 +634,7 @@ public class MainMenuV3
 
 		MenuFactory.addSeparatorMenuItem(windowMenu);
 		MenuFactory.addBringAllToFrontMenuItem(windowMenu);
+		MenuFactory.addCloseCurrentViewMenuItem(windowMenu);
 		MenuFactory.addCloseDetailsMenuItem(windowMenu);
 		MenuFactory.addCloseDownloadBarsToMenu(windowMenu);
 

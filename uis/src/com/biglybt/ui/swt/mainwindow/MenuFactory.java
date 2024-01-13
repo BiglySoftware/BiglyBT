@@ -531,6 +531,47 @@ public class MenuFactory
 		return menuItem;
 	}
 
+	public static MenuItem addCloseCurrentViewMenuItem(Menu menu) {
+		
+		final MenuItem item = addMenuItem(menu, MENU_ID_CLOSE_CURRENT_VIEW,
+				new Listener() {
+					@Override
+					public void handleEvent(Event e) {
+						MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+						if (mdi != null) {
+							MdiEntry currentEntry = mdi.getCurrentEntry();
+							if (currentEntry != null && currentEntry.isCloseable()) {
+								mdi.closeEntry(currentEntry,true);
+							}
+						}
+					}
+				});
+
+		Listener enableHandler = new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				if (MenuFactory.isEnabledForCurrentMode(item)) {
+					if (!item.isDisposed() && !event.widget.isDisposed()) {
+						MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+						if (mdi != null) {
+							MdiEntry currentEntry = mdi.getCurrentEntry();
+							if (currentEntry != null && currentEntry.isCloseable()) {
+								item.setEnabled(true);
+								return;
+							}
+						}
+						item.setEnabled(false);
+					}
+				}
+			}
+		};
+
+		menu.addListener(SWT.Show, enableHandler);
+
+		return item;
+		
+	}
+	
 	public static MenuItem addCloseDetailsMenuItem(Menu menu) {
 		final MenuItem item = addMenuItem(menu, MENU_ID_CLOSE_ALL_DETAIL,
 				new Listener() {
