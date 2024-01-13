@@ -18,6 +18,7 @@
 
 package com.biglybt.ui.swt.progress;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -25,7 +26,8 @@ import java.util.List;
 import org.eclipse.swt.graphics.Image;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
-
+import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.CopyOnWriteList;
 
 /**
@@ -171,6 +173,7 @@ public class ProgressReporter
 		manager = _manager;
 		this.name = name;
 		this.ID = manager.getNextAvailableID();
+		initMessageHistory();
 	}
 
 	/* (non-Javadoc)
@@ -235,9 +238,20 @@ public class ProgressReporter
 		errorMessage = "";
 		message = "";
 		detailMessage = "";
-		messageHistory.clear();
+		initMessageHistory();
 	}
 
+	private void
+	initMessageHistory()
+	{
+		messageHistory.clear();
+		
+		addToMessageHistory( 
+			MessageText.getString( "OpenTorrentWindow.startMode.started" ) + " " +  
+			new SimpleDateFormat().format(SystemTime.getCurrentTime()),
+			MSG_TYPE_INFO);
+	}
+	
 	/**
 	 * Notifies registered listener that an event has occurred.
 	 * Subsequently a listener may be removed if it returns the value of  <code>RETVAL_OK_TO_DISPOSE</code>;
