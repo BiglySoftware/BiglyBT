@@ -747,9 +747,11 @@ public class MainWindowImpl
 					COConfigurationManager.getBooleanParameter(configID)
 							&& COConfigurationManager.getIntParameter("User Mode") > 1);
 
-			setVisible(WINDOW_ELEMENT_RIGHTBAR,
-					COConfigurationManager.getBooleanParameter( SkinConstants.VIEWID_RIGHTBAR + ".visible" ));
-
+			if ( !Utils.isAZ2UI()){
+				setVisible(WINDOW_ELEMENT_RIGHTBAR,
+						COConfigurationManager.getBooleanParameter( SkinConstants.VIEWID_RIGHTBAR + ".visible" ));
+			}
+			
 			setVisible(WINDOW_ELEMENT_TOOLBAR,
 					COConfigurationManager.getBooleanParameter("IconBar.enabled"));
 
