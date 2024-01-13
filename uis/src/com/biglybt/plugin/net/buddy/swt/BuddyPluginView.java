@@ -1799,6 +1799,11 @@ BuddyPluginView
 	setBetaStatus(
 		final Image		image )
 	{
+		if ( beta_status == null ) {
+			
+			return;
+		}
+		
 		beta_status.setImage( image );
 
 		final AllTransfersBar bar = AllTransfersBar.getBarIfOpen(CoreFactory.getSingleton().getGlobalManager());
@@ -1887,6 +1892,11 @@ BuddyPluginView
 
 			menu_items.clear();
 
+			if ( beta_status == null ) {
+				
+				return;
+			}
+			
 			final MenuManager menu_manager = plugin.getPluginInterface().getUIManager().getMenuManager();
 
 			MenuContext mc = beta_status.getMenuContext();
