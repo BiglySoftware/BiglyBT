@@ -29,6 +29,7 @@ import java.util.List;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.ui.config.ConfigSectionImpl;
@@ -362,11 +363,16 @@ public class ConfigSectionInterfaceTablesSWT
 
 		add(new LabelParameterImpl("ConfigView.label.lh.info"), listLaunchGroup);
 		
-		String sf = MessageText.getString( "explicit.helper.showfile", new String[]{  Utils.PL_SHOW_FILE });
-		
-		String info3 = MessageText.getString( "ConfigView.label.lh.info3", new String[]{ sf });
-		
-		add(new LabelParameterImpl("!" + info3 + "!"), listLaunchGroup);
+		if ( Constants.isUnix ){
+			
+				// only need this for linux at the moment
+			
+			String sf = MessageText.getString( "explicit.helper.showfile", new String[]{  Utils.PL_SHOW_FILE });
+			
+			String info3 = MessageText.getString( "ConfigView.label.lh.info3", new String[]{ sf });
+			
+			add(new LabelParameterImpl("!" + info3 + "!"), listLaunchGroup);
+		}
 		
 		add(new LabelParameterImpl("ConfigView.label.lh.info2"), listLaunchGroup);
 
