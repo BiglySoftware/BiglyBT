@@ -317,11 +317,13 @@ public class ManagerUtils {
 		if (f.isDirectory()) {
 			Utils.launch(f.toString()); // default launcher
 		} else {
-			String exe = Utils.getPredefinedExplicitLauncher( Utils.PL_SHOW_FILE );
+			String cmd = Utils.getPredefinedExplicitLauncher( Utils.PL_SHOW_FILE );
 			
-			if ( exe != null ){
+			if ( cmd != null ){
 				
-				Utils.launchFileExplicit( f.getAbsolutePath(), exe);
+				String[] cmd_args = GeneralUtils.splitQuotedTokens( cmd );
+				
+				Utils.launchFileExplicit( f.getAbsolutePath(), cmd_args );
 				
 			}else{
 			

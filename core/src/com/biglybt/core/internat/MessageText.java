@@ -407,10 +407,16 @@ public class MessageText {
 		  while (matcher.find()) {
 			  String key = matcher.group(2);
 			  String expression = matcher.group(1);
-				String text = null;
+			  String text = null;
 
 			  try {
-				  text = getResourceBundleString(key);
+				  String	target_key = key + PLATFORM_SUFFIX;
+
+				  if ( !platform_specific_keys.contains( target_key )){
+
+					  target_key	= key;
+				  }
+				  text = getResourceBundleString(target_key);
 			  } catch (MissingResourceException ignore) {
 				  // no substitution for particular key
 			  }

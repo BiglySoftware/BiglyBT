@@ -39,7 +39,6 @@ import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterValidator.ValidationInfo;
 
-import static com.biglybt.core.config.ConfigKeys.File.ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT;
 import static com.biglybt.ui.swt.ConfigKeysSWT.*;
 
 public class ConfigSectionInterfaceTablesSWT
@@ -362,6 +361,13 @@ public class ConfigSectionInterfaceTablesSWT
 		List<Parameter> listLaunchGroup = new ArrayList<>();
 
 		add(new LabelParameterImpl("ConfigView.label.lh.info"), listLaunchGroup);
+		
+		String sf = MessageText.getString( "explicit.helper.showfile", new String[]{  Utils.PL_SHOW_FILE });
+		
+		String info3 = MessageText.getString( "ConfigView.label.lh.info3", new String[]{ sf });
+		
+		add(new LabelParameterImpl("!" + info3 + "!"), listLaunchGroup);
+		
 		add(new LabelParameterImpl("ConfigView.label.lh.info2"), listLaunchGroup);
 
 		List<Parameter> listLaunchHelpers = new ArrayList<>();
