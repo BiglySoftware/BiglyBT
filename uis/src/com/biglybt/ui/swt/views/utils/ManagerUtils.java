@@ -317,7 +317,16 @@ public class ManagerUtils {
 		if (f.isDirectory()) {
 			Utils.launch(f.toString()); // default launcher
 		} else {
-			Utils.launch(f.getParent().toString());
+			String exe = Utils.getPredefinedExplicitLauncher( Utils.PL_SHOW_FILE );
+			
+			if ( exe != null ){
+				
+				Utils.launchFileExplicit( f.getAbsolutePath(), exe);
+				
+			}else{
+			
+				Utils.launch(f.getParent().toString());
+			}
 		}
 	}
 

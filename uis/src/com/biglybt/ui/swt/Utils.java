@@ -2496,37 +2496,61 @@ public class Utils
 	public static void
 	launchFileExplicit(
 		String		sfile,
-		String		exe )
+		String...	cmd_args )
 	{
 		File	file = new File( sfile );
 
 		try{
-			System.out.println( "Launching " + sfile + " with " + exe );
+			String cmd = "";
+			
+			for ( String ca: cmd_args ){
+				
+				cmd += (cmd.isEmpty()?"":" ") + ca;	// should do something about spaces in ca someday
+			}
+			
+			System.out.println( "Launching " + sfile + " with " + cmd );
 
 			if ( Constants.isWindows ){
 
+					// handle fact that "explorer.exe /select," doesn't require a space :(
+				
+				if ( !cmd.endsWith( "," )){
+					
+					cmd += " ";
+				}
+				
+				try{
 					// need to use createProcess as we want to force the process to decouple correctly (otherwise Vuze won't close until the child closes)
 
-				try{
-					PlatformManagerFactory.getPlatformManager().createProcess( exe + " \"" + sfile + "\"", false );
+					PlatformManagerFactory.getPlatformManager().createProcess( cmd + "\"" + sfile + "\"", false );
 
 					return;
 
 				}catch( Throwable e ){
 				}
-			} else if (Constants.isOSX && exe.endsWith(".app")) {
+			} else if (Constants.isOSX && cmd.endsWith(".app")) {
+				
 				ProcessBuilder pb = GeneralUtils.createProcessBuilder(
-						file.getParentFile(), new String[] {
-								"open",
-								"-a",
-							exe,
+						file.getParentFile(), 
+						new String[] {
+							"open",
+							"-a",
+							cmd,
 							file.getName()
 						}, null);
+				
 				pb.start();
+				
 				return;
 			}
 
-			ProcessBuilder pb = GeneralUtils.createProcessBuilder( file.getParentFile(), new String[]{ exe, file.getName()}, null );
+			String[] args = new String[cmd_args.length+1];
+		
+			System.arraycopy(cmd_args,0,args,0,cmd_args.length);
+			
+			args[args.length-1] = file.getName();
+			
+			ProcessBuilder pb = GeneralUtils.createProcessBuilder( file.getParentFile(), args, null );
 
 			pb.start();
 
@@ -2973,6 +2997,37 @@ public class Utils
 		return( null );
 	}
 
+	public static final String PL_SHOW_FILE = "<showfile>";
+	
+	public static String
+	getPredefinedExplicitLauncher(
+		String	type )
+	{
+		for ( int i=0;i<ConfigKeysSWT.getLaunchHelperEntryCount();i++){
+
+			String exts = ConfigKeysSWT.getLaunchHelpersExts(i).trim();
+			String exe 	= ConfigKeysSWT.getLaunchHelpersProg(i).trim();
+
+			if ( exts.length() > 0 && exe.length() > 0 ){
+
+				exts = "," + exts.toLowerCase();
+
+				exts = exts.replaceAll( "\\.", "," );
+				exts = exts.replaceAll( ";", "," );
+				exts = exts.replaceAll( " ", "," );
+
+				exts = exts.replaceAll( "[,]+", "," );
+
+				if ( exts.contains( type )){
+
+					return( exe );
+				}
+			}
+		}
+
+		return( null );
+	}
+	
 	/**
 	 * Sets the checkbox in a Virtual Table while inside a SWT.SetData listener
 	 * trigger.  SWT 3.1 has an OSX bug that needs working around.
