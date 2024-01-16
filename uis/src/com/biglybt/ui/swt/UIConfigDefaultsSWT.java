@@ -322,11 +322,23 @@ public class UIConfigDefaultsSWT
 		def.addParameter( "browser.external.non.pub", true );
 		def.addParameter( "browser.external.test.url", Constants.URL_CLIENT_HOME );
 
+	    def.addParameter( "Show Side Bar", true );
+	    def.addParameter( "Side Bar Top Level Gap", 1 );
+	    def.addParameter( "Show Options In Side Bar", false );
+	    def.addParameter( "Show New In Side Bar", true );
+	    def.addParameter( "Show Downloading In Side Bar", true );
+	    def.addParameter( "Side Bar Close Position", 0 );
+	    def.addParameter( "Side Bar Indent Expanders", true );
+	    def.addParameter( "Side Bar Compact View", false );
+	    def.addParameter( "Side Bar Hide Left Icon", false );
+	    
 		String orderDef = "";
 		for (int i=0;i<MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT.length;i++){
 			orderDef += (orderDef.isEmpty()?"":", ") + (i+1);
 		}
 		def.addParameter( "Side Bar Top Level Order", orderDef );
+		def.addParameter( "Side Bar Double Click Action", 0 );
+		
 		def.addParameter( "Library.TagInTabBar", 1 );
 		
 		def.addParameter( "Peers View Show Local Peer", false);

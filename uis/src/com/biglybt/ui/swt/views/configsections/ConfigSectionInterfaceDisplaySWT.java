@@ -374,6 +374,17 @@ public class ConfigSectionInterfaceDisplaySWT
 				add(compact, listSideBar);
 			}
 
+			String[] pop_labs = {
+					MessageText.getString("sb.dblclick.action.ontop"),
+					MessageText.getString("sb.dblclick.action.independent"),
+				};
+
+				add(new IntListParameterImpl("Side Bar Double Click Action",
+						"sb.dblclick.action", new int[] {
+							0,
+							1,
+						}, pop_labs), listSideBar);
+			
 			ParameterGroupImpl group = add(new ParameterGroupImpl("v3.MainWindow.menu.view.sidebar", listSideBar));
 			
 			group.setReferenceID( REFID_SECTION_SIDEBAR );

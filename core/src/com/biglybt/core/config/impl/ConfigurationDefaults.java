@@ -814,16 +814,6 @@ public class ConfigurationDefaults {
     def.put( "subscriptions.auto.start.max.mb", ZERO );
     def.put( "subscriptions.auto.dl.mark.read.days", ZERO );
 
-    def.put( "Show Side Bar", TRUE );
-    def.put( "Side Bar Top Level Gap", ONE );
-    def.put( "Show Options In Side Bar", FALSE );
-    def.put( "Show New In Side Bar", TRUE );
-    def.put( "Show Downloading In Side Bar", TRUE );
-    def.put( "Side Bar Close Position", ZERO );
-    def.put( "Side Bar Indent Expanders", TRUE );
-    def.put( "Side Bar Compact View", FALSE );
-    def.put( "Side Bar Hide Left Icon", FALSE );
-    
     def.put( "Share Ratio Progress Interval", 1000L );	// thousandths
 
     def.put( "search.showRCMView", FALSE );

@@ -1115,7 +1115,9 @@ public class SideBar
 										
 										if ( canPopoutEntry(entry)){
 										
-											done = popoutEntry( entry, PopOutManager.OPT_MAP_ON_TOP );
+											int action = COConfigurationManager.getIntParameter("Side Bar Double Click Action");
+											
+											done = popoutEntry( entry, action==0?PopOutManager.OPT_MAP_ON_TOP:PopOutManager.OPT_MAP_NONE );
 										}
 									}
 								}
