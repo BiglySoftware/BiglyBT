@@ -219,7 +219,7 @@ public class Utils
 	
 	private static volatile boolean	gui_refresh_disable_when_min	= false;
 	private static volatile boolean	gui_is_minimized				= false;
-	private static volatile boolean gui_refresh_disable				= false;
+	private static volatile boolean gui_refresh_enable				= true;
 	
 	private static String SHELL_METRICS_DISABLED_KEY = "utils:shmd";
 	
@@ -286,7 +286,7 @@ public class Utils
 				gradient_fill					= COConfigurationManager.getBooleanParameter( "Gradient Fill Selection" );
 				gui_refresh_disable_when_min	= COConfigurationManager.getBooleanParameter( "GUI Refresh Disable When Minimized" );
 				
-				gui_refresh_disable = gui_is_minimized && gui_refresh_disable_when_min;
+				gui_refresh_enable = !( gui_is_minimized && gui_refresh_disable_when_min );
 			}
 		};
 		
@@ -953,13 +953,13 @@ public class Utils
 	{
 		gui_is_minimized = !visible;
 		
-		gui_refresh_disable = gui_is_minimized && gui_refresh_disable_when_min;
+		gui_refresh_enable = !( gui_is_minimized && gui_refresh_disable_when_min );
 	}
 	
 	public static boolean
 	isUIUpdateEnabled()
 	{
-		return( gui_refresh_disable );
+		return( gui_refresh_enable );
 	}
 	
 	public static void
