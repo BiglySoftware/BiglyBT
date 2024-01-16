@@ -22,7 +22,6 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import com.biglybt.core.config.COConfigurationManager;
@@ -130,7 +129,9 @@ public class ViewUpSpeedGraph
 					if ( upSpeedCanvas.isDisposed()){
 						timerEvent.cancel();
 					}else{
-						periodicUpdate();
+						if ( Utils.isUIUpdateEnabled()){
+							periodicUpdate();
+						}
 					}
 				}
 			});

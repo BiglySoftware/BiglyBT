@@ -925,7 +925,7 @@ public class UISWTViewImpl
 	public static SWTSkinObjectContainer
 	buildStandAlone(
 		SWTSkinObjectContainer		soParent,
-		SWTSkin skin,
+		SWTSkin 					skin,
 		String						id,
 		Object						datasource,
 		int							controlType,
@@ -1033,7 +1033,7 @@ public class UISWTViewImpl
 
 						@Override
 						public String getUpdateUIName() {
-							return ("Popout-" + view.getViewID());
+							return ("StandAlone:" + view.getFullTitle());
 						}
 					});
 
@@ -1055,7 +1055,7 @@ public class UISWTViewImpl
 
 								@Override
 								public String getUpdateUIName() {
-									return ("Popout-" + view.getViewID());
+									return ("StandAlone:" + view.getFullTitle());
 								}
 							});
 					}

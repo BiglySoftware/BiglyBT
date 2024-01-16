@@ -213,8 +213,13 @@ public class Utils
 	private static Skinner	skinner;
 	private static int		skinning_enabled = 1;
 	
-	private static volatile boolean	dark_misc_things = false;
-	private static volatile boolean	gradient_fill	 = true;
+	private static volatile boolean	dark_misc_things 		= false;
+	private static volatile boolean	gradient_fill	 		= true;
+	
+	
+	private static volatile boolean	gui_refresh_disable_when_min	= false;
+	private static volatile boolean	gui_is_minimized				= false;
+	private static volatile boolean gui_refresh_disable				= false;
 	
 	private static String SHELL_METRICS_DISABLED_KEY = "utils:shmd";
 	
@@ -277,8 +282,11 @@ public class Utils
 		configOtherListener = new ParameterListener() {
 			@Override
 			public void parameterChanged(String parameterName) {
-				dark_misc_things	= COConfigurationManager.getBooleanParameter( "Dark Misc Colors" );
-				gradient_fill		= COConfigurationManager.getBooleanParameter( "Gradient Fill Selection" );
+				dark_misc_things				= COConfigurationManager.getBooleanParameter( "Dark Misc Colors" );
+				gradient_fill					= COConfigurationManager.getBooleanParameter( "Gradient Fill Selection" );
+				gui_refresh_disable_when_min	= COConfigurationManager.getBooleanParameter( "GUI Refresh Disable When Minimized" );
+				
+				gui_refresh_disable = gui_is_minimized && gui_refresh_disable_when_min;
 			}
 		};
 		
@@ -286,6 +294,7 @@ public class Utils
 				new String[]{
 					"Dark Misc Colors",
 					"Gradient Fill Selection",
+					"GUI Refresh Disable When Minimized",
 				},
 				configOtherListener );
 	}
@@ -936,6 +945,21 @@ public class Utils
 		}
 		
 		return( 100 );
+	}
+	
+	public static void
+	setUIVisible(
+		boolean	visible )
+	{
+		gui_is_minimized = !visible;
+		
+		gui_refresh_disable = gui_is_minimized && gui_refresh_disable_when_min;
+	}
+	
+	public static boolean
+	isUIUpdateEnabled()
+	{
+		return( gui_refresh_disable );
 	}
 	
 	public static void
@@ -6303,7 +6327,8 @@ public class Utils
 		COConfigurationManager.removeParameterListeners(
 				new String[]{
 					"Dark Misc Colors",
-					"Gradient Fill Selection" },
+					"Gradient Fill Selection",
+					"GUI Refresh Disable When Minimized" },
 				configOtherListener);
 	}
 	

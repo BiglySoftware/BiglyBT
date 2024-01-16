@@ -692,6 +692,11 @@ public class ConfigSectionInterfaceDisplaySWT
 				"ConfigView.section.style.graphicsUpdate", 1, Integer.MAX_VALUE),
 				listRefresh);
 
+		BooleanParameterImpl disableWhenMin = new BooleanParameterImpl(
+				"GUI Refresh Disable When Minimized", "ConfigView.section.style.guiUpdateDisableWhenMin");
+		
+		add(disableWhenMin, Parameter.MODE_INTERMEDIATE, listRefresh);
+		
 		add(new ParameterGroupImpl("upnp.refresh.button", listRefresh));
 
 	}

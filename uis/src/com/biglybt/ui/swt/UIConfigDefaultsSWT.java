@@ -48,6 +48,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Graphics Update", 4);
 		def.addParameter("ReOrder Delay", 4);
 		def.addParameter("Refresh When Inactive", 2);
+		def.addParameter("GUI Refresh Disable When Minimized", false );
 		def.addParameter("Send Version Info", true);
 		def.addParameter("Show Download Basket", false);
 		def.addParameter("config.style.refreshMT", 0);

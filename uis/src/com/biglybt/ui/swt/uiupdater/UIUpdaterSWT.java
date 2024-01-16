@@ -291,6 +291,8 @@ public class UIUpdaterSWT
 			return;
 		}
 
+		boolean enabled = Utils.isUIUpdateEnabled();
+		
 		for ( UIUpdatable updateable: updateables ){
 			try {
 				if (DEBUG_TIMER) {
@@ -299,7 +301,9 @@ public class UIUpdaterSWT
 				if ( updateable instanceof UIUpdatableAlways ){
 					((UIUpdatableAlways)updateable).updateUI(is_visible);
 				}else{
-					updateable.updateUI();
+					if ( enabled ){
+						updateable.updateUI();
+					}
 				}
 
 				if (DEBUG_TIMER) {
@@ -444,14 +448,18 @@ public class UIUpdaterSWT
 								}
 							}
 							
-							for ( UIUpdatable u: perioidic_updateables ) {
+							if ( Utils.isUIUpdateEnabled()){
 								
-								try {
-									u.updateUI();
+								for ( UIUpdatable u: perioidic_updateables ) {
 									
-								}catch( Throwable e ) {
+									try{
+										
+										u.updateUI();
 									
-									Debug.out( e );
+									}catch( Throwable e ) {
+										
+										Debug.out( e );
+									}
 								}
 							}
 						}

@@ -144,7 +144,9 @@ public class ViewDownSpeedGraph
 					if ( downSpeedCanvas.isDisposed()){
 						timerEvent.cancel();
 					}else{
-						periodicUpdate();
+						if ( Utils.isUIUpdateEnabled()){
+							periodicUpdate();
+						}
 					}
 				}
 			});
