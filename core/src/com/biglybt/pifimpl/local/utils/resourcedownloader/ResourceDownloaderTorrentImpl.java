@@ -471,7 +471,10 @@ ResourceDownloaderTorrentImpl
 
 			download.moveTo(1);
 
-			download.setForceStart( true );
+			if ( !download.isComplete()){
+			
+				download.setForceStart( true );
+			}
 
 				// Prevents any move-on-completion or move-on-removal behaviour happening.
 
