@@ -443,7 +443,7 @@ TransferProcessor
   {
 	  if ( connection.isClosed()){
 
-		  Debug.out( "Connection is closed" );
+		  // Debug.out( "Connection is closed" );
 
 		  return;
 	  }
