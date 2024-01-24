@@ -18,6 +18,8 @@
 package com.biglybt.ui.swt.columns.searchsubs;
 
 
+import java.math.BigInteger;
+
 import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.pif.ui.tables.*;
@@ -50,9 +52,9 @@ public class ColumnSearchSubResultHash
 
 		byte[] hash = result.getHash();
 
-		String str = hash==null?"":ByteFormatter.encodeString( hash );
-
-		if ( !cell.setSortValue(str) && cell.isValid()){
+		BigInteger sort = hash==null?new BigInteger(-1,new byte[0]):new BigInteger(1,hash);
+		
+		if ( !cell.setSortValue(sort) && cell.isValid()){
 
 			return;
 		}
@@ -61,6 +63,8 @@ public class ColumnSearchSubResultHash
 
 			return;
 		}
+
+		String str = hash==null?"":ByteFormatter.encodeString( hash );
 
 		cell.setText(str);
 	}

@@ -17,6 +17,8 @@
 
 package com.biglybt.ui.swt.columns.dlhistory;
 
+import java.math.BigInteger;
+
 import com.biglybt.core.history.DownloadHistory;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.pif.ui.tables.*;
@@ -60,9 +62,9 @@ public class ColumnDLHistoryHash
 			hash = dl.getTorrentHash();
 		}
 
-		String str = hash==null?"":ByteFormatter.encodeString( hash );
+		BigInteger sort = hash==null?new BigInteger(-1,new byte[0]):new BigInteger(1,hash);
 
-		if ( !cell.setSortValue(str) && cell.isValid()){
+		if ( !cell.setSortValue(sort) && cell.isValid()){
 
 			return;
 		}
@@ -71,6 +73,8 @@ public class ColumnDLHistoryHash
 
 			return;
 		}
+
+		String str = hash==null?"":ByteFormatter.encodeString( hash );
 
 		cell.setText(str);
 	}

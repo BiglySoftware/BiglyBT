@@ -21,6 +21,8 @@ package com.biglybt.ui.swt.views.tableitems.files;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
+import java.math.BigInteger;
+
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.ByteFormatter;
@@ -50,6 +52,7 @@ public class TorrentV2RootHashItem
     DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)cell.getDataSource();
     TOTorrentFile torrentFile = fileInfo==null?null:fileInfo.getTorrentFile();
     String text;
+    BigInteger sort;
     if ( torrentFile != null ){
     	byte[] hash = torrentFile.getRootHash();
     	if ( hash == null ){
@@ -57,9 +60,13 @@ public class TorrentV2RootHashItem
     	}else{
     		text = ByteFormatter.encodeString( hash );
     	}
+		sort = hash==null?new BigInteger(-1,new byte[0]):new BigInteger(1,hash);
+
     }else{
     	text = "";
+    	sort = new BigInteger(-1,new byte[0]);
     }
+    cell.setSortValue(sort);
     cell.setText(text);
   }
 }
