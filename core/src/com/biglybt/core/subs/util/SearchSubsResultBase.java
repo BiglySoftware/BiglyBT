@@ -44,6 +44,9 @@ SearchSubsResultBase
 	public int
 	getNbSeeds();
 	
+	public int
+	getNbPeers();
+	
 	public String
 	getSeedsPeers();
 

@@ -46,6 +46,7 @@ SBC_SearchResult
 	private final String			seeds_peers;
 	private final long				seeds_peers_sort;
 	private final int				seed_count;
+	private final int				peer_count;
 	private final long				votes_comments_sort;
 	private final String			votes_comments;
 
@@ -88,6 +89,7 @@ SBC_SearchResult
 		}
 		
 		seed_count = seeds<0?0:seeds;
+		peer_count = leechers<0?0:leechers;
 		
 		seeds_peers = (seeds<0?"--":String.valueOf(seeds)) + "/" + (leechers<0?"--":String.valueOf(leechers));
 
@@ -185,6 +187,13 @@ SBC_SearchResult
 	getNbSeeds()
 	{
 		return( seed_count );
+	}
+	
+	@Override
+	public int 
+	getNbPeers()
+	{
+		return( peer_count );
 	}
 	
 	@Override

@@ -1010,6 +1010,28 @@ SBC_SearchResultsView
 				});
 
 		tableManager.registerColumn(
+				SBC_SearchResult.class,
+				ColumnSearchSubResultSeeds.COLUMN_ID,
+					new TableColumnCreationListener() {
+
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new ColumnSearchSubResultSeeds(column);
+						}
+					});
+
+		tableManager.registerColumn(
+				SBC_SearchResult.class,
+				ColumnSearchSubResultPeers.COLUMN_ID,
+					new TableColumnCreationListener() {
+
+						@Override
+						public void tableColumnCreated(TableColumn column) {
+							new ColumnSearchSubResultPeers(column);
+						}
+					});
+
+		tableManager.registerColumn(
 			SBC_SearchResult.class,
 			ColumnSearchSubResultRatings.COLUMN_ID,
 				new TableColumnCreationListener() {
