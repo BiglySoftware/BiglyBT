@@ -24,6 +24,7 @@ import com.biglybt.core.CoreFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
@@ -49,6 +50,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.UIExitUtilsSWT.canCloseListener;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.shells.opentorrent.OpenTorrentOptionsWindow;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationListener;
 import com.biglybt.core.CoreOperationTask;
@@ -60,6 +62,10 @@ public class
 ProgressWindow
 {
 	private static canCloseListener canCloseListener;
+	
+	private static final AtomicInteger	window_id_next = new AtomicInteger();
+
+	private static List<ProgressWindow>	active_windows = new ArrayList();
 	
 	public static void
 	register(
@@ -290,6 +296,8 @@ ProgressWindow
 	
     private static final ThreadPool	core_op_pool = new ThreadPool( "ProgressWindow:coreops", 32, true );
 	
+	private final int window_id = window_id_next.incrementAndGet();
+
 	private volatile Shell 			shell;
 	private volatile boolean 		task_complete;
 
@@ -524,6 +532,12 @@ ProgressWindow
 		}
 	}
 
+	private Shell
+	getShell()
+	{
+		return( shell );
+	}
+	
 	protected void
 	showDialog(
 		Shell			_shell,
@@ -920,7 +934,69 @@ ProgressWindow
 			}
 		}
 		
-		shell.open();
+		ProgressWindow moveBelow = null;
+		
+		for ( ProgressWindow window: active_windows ){
+			
+			if ( 	moveBelow == null || 
+					moveBelow.window_id < window.window_id ){
+				
+				moveBelow = window;
+			}
+		}
+		
+		active_windows.add( this );
+		
+		shell.addListener( SWT.Dispose, (ev)->{ active_windows.remove( this ); });
+
+		if ( moveBelow == null ){
+			
+			shell.open();
+			
+		}else{
+			
+			shell.moveBelow(moveBelow.getShell());
+
+			shell.setVisible(true);
+		}
+		
+			// don't want them appearing on top of each other
+
+		int	num_active_windows = active_windows.size();
+
+		if ( num_active_windows > 1 ){
+
+			int	max_x = Integer.MIN_VALUE;
+			int max_y = Integer.MIN_VALUE;
+
+			for ( ProgressWindow window: active_windows ){
+						
+				Rectangle rect = window.getShell().getBounds();
+
+				max_x = Math.max( max_x, rect.x );
+				max_y = Math.max( max_y, rect.y );
+			}
+
+			if ( max_x > Integer.MIN_VALUE ){
+				
+				Rectangle rect = shell.getBounds();
+
+				rect.x = max_x + 16;
+				rect.y = max_y + 16;
+
+				try{
+					Utils.setShellMetricsConfigEnabled( shell, false );
+				
+					shell.setBounds( rect );
+					
+				}finally{
+					
+					Utils.setShellMetricsConfigEnabled( shell, true );
+				}
+			}
+		}
+
+		Utils.verifyShellRect( shell, true );
 	}
 
 	public void
