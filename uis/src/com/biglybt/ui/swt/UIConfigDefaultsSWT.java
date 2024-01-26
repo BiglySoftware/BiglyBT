@@ -75,7 +75,9 @@ public class UIConfigDefaultsSWT
 		def.addParameter("RankColumn.showUpDownIcon.small", false );
 		def.addParameter("SeedsColumn.showNetworkIcon", true );
 		def.addParameter("PeersColumn.showNetworkIcon", true );
-
+		def.addParameter("DownSpeedColumn.showIcon", true );
+		def.addParameter("UpSpeedColumn.showIcon", true );
+		
 		def.addParameter("DND Always In Incomplete", false);
 
 		def.addParameter("Message Popup Autoclose in Seconds", 15);

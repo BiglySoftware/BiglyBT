@@ -23,19 +23,26 @@
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.StringInterner;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
-
+import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.plugin.startstoprules.defaultplugin.DefaultRankCalculator;
 import com.biglybt.plugin.startstoprules.defaultplugin.StartStopRulesDefaultPlugin;
 
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemFillListener;
+import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.*;
 
 
@@ -46,91 +53,159 @@ import com.biglybt.pif.ui.tables.*;
  */
 public class UpSpeedItem
        extends CoreTableColumnSWT
-       implements TableCellAddedListener
+       implements TableCellAddedListener, ParameterListener
 {
 	public static final Class DATASOURCE_TYPE = Download.class;
 
-  public static final String COLUMN_ID = "upspeed";
+	public static final String COLUMN_ID = "upspeed";
 
-  /*
-   * Default Constructor
-   *
-   * @param sTableID The ID of the table the cell belongs to
-   */
-  public UpSpeedItem(String sTableID) {
-    super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
+	private static final String CFG_SHOW_ICON 		= "UpSpeedColumn.showIcon";
+	
+	private static Image disabled_img;
+	
+	static{
+		ImageLoader imageLoader = ImageLoader.getInstance();
+
+		disabled_img 	= imageLoader.getImage("Blocked_x");
+	}
+	
+	private boolean showIcon;
+	public UpSpeedItem(String sTableID) {
+		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
 		setType(TableColumn.TYPE_TEXT);
-    setRefreshInterval(INTERVAL_LIVE);
-    setUseCoreDataSource(false);
-   }
+		setRefreshInterval(INTERVAL_LIVE);
+		setUseCoreDataSource(false);
+		
+		showIcon	 = COConfigurationManager.getBooleanParameter(CFG_SHOW_ICON);
 
-  @Override
-  public void fillTableColumnInfo(TableColumnInfo info) {
+		COConfigurationManager.addWeakParameterListener(this, false, CFG_SHOW_ICON);
+
+		TableContextMenuItem menuShowIcon = addContextMenuItem(
+				"pairing.ui.icon.show", MENU_STYLE_HEADER);
+		menuShowIcon.setStyle(TableContextMenuItem.STYLE_CHECK);
+		menuShowIcon.addFillListener(new MenuItemFillListener() {
+			@Override
+			public void menuWillBeShown(MenuItem menu, Object data) {
+				menu.setData(Boolean.valueOf(showIcon));
+			}
+		});
+
+		menuShowIcon.addMultiListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				COConfigurationManager.setParameter(CFG_SHOW_ICON,
+						((Boolean) menu.getData()).booleanValue());
+			}
+		});
+	}
+
+	@Override
+	public void 
+	parameterChanged(
+		String parameterName) 
+	{
+		setShowIcon( COConfigurationManager.getBooleanParameter(CFG_SHOW_ICON));
+	}
+	
+	private void 
+	setShowIcon(
+		boolean b )
+	{	
+		showIcon = b;
+		invalidateCells();
+	}
+	
+	@Override
+	public void reset() {
+		super.reset();
+
+		COConfigurationManager.removeParameter( CFG_SHOW_ICON );
+	}
+	
+	@Override
+	public void fillTableColumnInfo(TableColumnInfo info) {
 		info.addCategories(new String[] {
-			CAT_SHARING,
-			CAT_BYTES
+				CAT_SHARING,
+				CAT_BYTES
 		});
 		Class dsType = info.getColumn().getForDataSourceType();
 		if (DownloadTypeComplete.class == dsType) {
 			info.addCategories(new String[] {
-				CAT_ESSENTIAL
+					CAT_ESSENTIAL
 			});
 			info.setProficiency(TableColumnInfo.PROFICIENCY_BEGINNER);
 		}
 	}
 
-  @Override
-  public void cellAdded(TableCell cell) {
-    cell.addRefreshListener(new RefreshListener());
-  }
+	@Override
+	public void cellAdded(TableCell cell) {
+		cell.addRefreshListener(new RefreshListener());
+	}
 
-  private static class RefreshListener implements TableCellRefreshListener {
-    private int iLastState;
-    private int loop = 0;
+	private class RefreshListener implements TableCellRefreshListener {
+		private int iLastState;
+		private int loop = 0;
 
-    @Override
-    public void refresh(TableCell cell) {
-      Download dm = (Download)cell.getDataSource();
-      long value;
-      int iState;
-      if (dm == null) {
-        iState = -1;
-        value = 0;
-      } else {
-        iState = dm.getState();
-        value = dm.getStats().getUploadAverage();
-      }
+		@Override
+		public void refresh(TableCell cell) {
+			Download dm = (Download)cell.getDataSource();
+			long value;
+			int iState;
+			if (dm == null) {
+				iState = -1;
+				value = 0;
+			} else {
+				iState = dm.getState();
+				value = dm.getStats().getUploadAverage();
+			}
 
-      boolean bChangeColor = (++loop % 10) == 0;
+			boolean bChangeColor = (++loop % 10) == 0;
 
-      if (cell.setSortValue(value) || !cell.isValid() || (iState != iLastState)) {
-				cell.setText(value == 0
-						? ""
-						: StringInterner.intern(DisplayFormatters.formatByteCountToKiBEtcPerSec(value)));
-      	bChangeColor = true;
-      }
+			if ( cell instanceof TableCellSWT && dm != null ) {
 
-      if (bChangeColor && dm != null) {
-        changeColor(cell, dm, iState);
-        loop = 0;
-      }
-    }
+				TableCellSWT swtCell = (TableCellSWT)cell;
 
-    private void changeColor(TableCell cell, Download dl, int iState) {
-      try {
-      	DefaultRankCalculator calc = StartStopRulesDefaultPlugin.getRankCalculator(dl);
+				Image icon = null;
 
-        Color newFG = null;
-        if (calc != null && dl.getState() == Download.ST_SEEDING
+				if ( dm.getUploadRateLimitBytesPerSecond() == -1 ){
+				
+					value = -1;	// sort below everything else
+										
+					if ( showIcon ){
+					
+						icon = disabled_img;
+					}
+				}
+				
+				swtCell.setIcon(icon);
+			}
+
+			if (cell.setSortValue(value) || !cell.isValid() || (iState != iLastState)) {
+				cell.setText( value<=0?(showIcon?" ":""):DisplayFormatters.formatByteCountToKiBEtcPerSec(value));
+				bChangeColor = true;
+			}
+
+			if (bChangeColor && dm != null) {
+				changeColor(cell, dm, iState);
+				loop = 0;
+			}
+		}
+
+		private void changeColor(TableCell cell, Download dl, int iState) {
+			try {
+				DefaultRankCalculator calc = StartStopRulesDefaultPlugin.getRankCalculator(dl);
+
+				Color newFG = null;
+				if (calc != null && dl.getState() == Download.ST_SEEDING
 						&& !calc.getActivelySeeding())
 					newFG = Colors.colorWarning;
 
-        cell.setForeground(Utils.colorToIntArray(newFG));
+				cell.setForeground(Utils.colorToIntArray(newFG));
 
-        iLastState = iState;
-      } catch (Exception e) {
-      	Debug.printStackTrace( e );
-      }
-    }
-  }
+				iLastState = iState;
+			} catch (Exception e) {
+				Debug.printStackTrace( e );
+			}
+		}
+	}
 }
