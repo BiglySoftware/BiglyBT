@@ -1771,7 +1771,9 @@ MagnetPlugin
 
 				boolean	update_torrent = false;
 
-				if ( dn != null ){
+				boolean rename = COConfigurationManager.getBooleanParameter( "Plugin.Magnet URI Handler.MagnetPlugin.rename.using.dn" );
+				
+				if ( dn != null&& rename ){
 					
 					if ( TorrentUtils.getDisplayName( torrent ) == null ){
 						
