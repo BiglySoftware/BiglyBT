@@ -1129,13 +1129,16 @@ MagnetPluginMDDownloader
 					}
 	
 					try{
-						String dn		= magnet_args.get( "dn" );
-	
-						if ( dn != null ){
-	
-							PlatformTorrentUtils.setContentTitle( torrent, dn );
+						if ( plugin.getRenameDisplayName()){
+							
+							String dn		= magnet_args.get( "dn" );
+		
+							if ( dn != null ){
+		
+								PlatformTorrentUtils.setContentTitle( torrent, dn );
+							}
 						}
-	
+						
 						String pfi_str = magnet_args.get( "pfi" );
 	
 						if ( pfi_str != null ){

@@ -905,6 +905,12 @@ MagnetPlugin
 				});
 	}
 
+	protected boolean
+	getRenameDisplayName()
+	{
+		return( COConfigurationManager.getBooleanParameter( "Plugin.Magnet URI Handler.MagnetPlugin.rename.using.dn" ));
+	}
+	
 	public String
 	addSource(
 		Download			download,
@@ -1771,9 +1777,8 @@ MagnetPlugin
 
 				boolean	update_torrent = false;
 
-				boolean rename = COConfigurationManager.getBooleanParameter( "Plugin.Magnet URI Handler.MagnetPlugin.rename.using.dn" );
 				
-				if ( dn != null&& rename ){
+				if ( dn != null && getRenameDisplayName()){
 					
 					if ( TorrentUtils.getDisplayName( torrent ) == null ){
 						
