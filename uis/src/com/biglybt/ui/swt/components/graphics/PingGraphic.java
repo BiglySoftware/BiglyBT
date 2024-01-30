@@ -239,34 +239,21 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
 	  
    try{
    	  this_mon.enter();
-
-   	  // should create bufferscale
-      drawScale(sizeChanged);
-
-    	if (bufferScale == null || bufferScale.isDisposed()) {
-    		return;
-    	}
+      
+      if ( bufferImage != null && !bufferImage.isDisposed()){
+    	  
+    	  bufferImage.dispose();
+      }
+      
+      bufferImage = null;
 
       Rectangle bounds = drawCanvas.getClientArea();
 
-      //If bufferedImage is not null, dispose it
-      if(bufferImage != null && ! bufferImage.isDisposed()){
-        bufferImage.dispose();
-      }
-      
       if ( bounds.isEmpty()){
-    	  bufferImage = null;
+    	  
     	  return;
       }
       
-      bufferImage = new Image(drawCanvas.getDisplay(),bounds);
-
-      GC gcImage = new GC(bufferImage);
-
-      gcImage.drawImage(bufferScale,0,0);
-
-      gcImage.setAntialias( SWT.ON );
-
       int oldAverage = 0;
       int[] oldTargetValues = new int[all_values.length];
       int[] maxs = new int[all_values.length];
@@ -289,6 +276,23 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
       }
 
       scale.setMax(max);
+      
+  	  	// should create bufferscale
+      
+      drawScale(sizeChanged);
+
+      if ( bufferScale == null || bufferScale.isDisposed()){
+    	  
+    	  return;
+      }
+
+      bufferImage = new Image(drawCanvas.getDisplay(),bounds);
+
+      GC gcImage = new GC(bufferImage);
+
+      gcImage.drawImage(bufferScale,0,0);
+
+      gcImage.setAntialias( SWT.ON );
 
       int lastAverage = -1;
       for(int x = 0 ; x < bounds.width - 71 ; x++) {

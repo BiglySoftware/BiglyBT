@@ -19,8 +19,10 @@
 package com.biglybt.ui.swt.components.graphics;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -577,35 +579,29 @@ MultiPlotGraphic
 		try{
 			this_mon.enter();
 
-			drawScale( sizeChanged );
-
-			if ( bufferScale == null || bufferScale.isDisposed()){
-
-				return;
-			}
-
-			Rectangle bounds = drawCanvas.getClientArea();
-
-			if ( bounds.isEmpty()){
-				return;
-			}
-
-				//If bufferedImage is not null, dispose it
-
-			if (bufferImage != null && !bufferImage.isDisposed()){
-
+			if ( bufferImage != null && !bufferImage.isDisposed()){
+				
 				bufferImage.dispose();
 			}
+			
+		    bufferImage = null;
 
+			Rectangle bounds = drawCanvas.getClientArea();
+			
+			if ( bounds.isEmpty()){
+				
+				return;
+			}
+			
 			bufferImage = new Image(drawCanvas.getDisplay(), bounds);
 
-			gcImage = new GC(bufferImage);
+			gcImage = new GC( bufferImage );
 
 			gcImage.drawImage(bufferScale, 0, 0);
 
 			gcImage.setAntialias( SWT.ON );
 			gcImage.setTextAntialias( SWT.ON );
-
+			
 			Set<ValueSource>	invisible_sources = new HashSet<>();
 
 			for ( int i=0;i<value_sources.length;i++){
@@ -801,8 +797,17 @@ MultiPlotGraphic
 				max = (( max + kInB - 1 )/kInB)*kInB;
 			}
 
+				// got to set the max before creating scale otherwise we miss a cycle...
+			
 			scale.setMax( max );
+			
+			drawScale(sizeChanged);
 
+			if ( bufferScale == null || bufferScale.isDisposed()){
+				
+				return;
+			}
+	
 			int[]	prev_x = new int[value_sources.length];
 			int[]	prev_y = new int[value_sources.length];
 

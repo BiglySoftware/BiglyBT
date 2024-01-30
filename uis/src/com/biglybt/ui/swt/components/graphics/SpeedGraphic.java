@@ -293,51 +293,49 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 		}
 		
 		GC gcImage = null;
-		try
-		{
+		
+		try{
+		
 			this_mon.enter();
 
-			drawScale(sizeChanged);
-
-			if (bufferScale == null || bufferScale.isDisposed())
-				return;
+			if ( bufferImage != null && !bufferImage.isDisposed()){
+				
+				bufferImage.dispose();
+			}
+			
+		    bufferImage = null;
 
 			Rectangle bounds = drawCanvas.getClientArea();
-			if (bounds.isEmpty())
+			
+			if (bounds.isEmpty()){
+				
 				return;
-
-
-			//If bufferedImage is not null, dispose it
-			if (bufferImage != null && !bufferImage.isDisposed())
-				bufferImage.dispose();
-
-			bufferImage = new Image(drawCanvas.getDisplay(), bounds);
-			gcImage = new GC(bufferImage);
-			gcImage.drawImage(bufferScale, 0, 0);
-
-			gcImage.setAntialias( SWT.ON );
+			}
 
 			int oldAverage = 0;
 			int[] oldTargetValues = new int[all_values.length];
 
 			int[] maxs = new int[all_values.length];
 
-			for (int x = 0; x < bounds.width - 71; x++)
-			{
+			for (int x = 0; x < bounds.width - 71; x++){
+			
 				int position = currentPosition - x - 1;
-				if (position < 0)
-				{
+				
+				if (position < 0){
+				
 					position += maxEntries;
-					if (position < 0)
-					{
+					
+					if (position < 0){
+					
 						position = 0;
 					}
 				}
-				for (int chartIdx = 0; chartIdx < all_values.length; chartIdx++)
-				{
+				for (int chartIdx = 0; chartIdx < all_values.length; chartIdx++){
+				
 					int value = all_values[chartIdx][position];
-					if (value > maxs[chartIdx])
-					{
+					
+					if (value > maxs[chartIdx]){
+						
 						maxs[chartIdx] = value;
 					}
 				}
@@ -346,26 +344,28 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 			int max = maxs[0];
 			int max_primary = max;
 
-			for (int i = 1; i < maxs.length; i++)
-			{
+			for (int i = 1; i < maxs.length; i++){
+			
 				int m = maxs[i];
-				if (i == 1)
-				{
+				if (i == 1){
+				
 					if (max < m)
 					{
 						max = m;
 						max_primary = max;
 					}
-				} else
-				{
-					// trim secondary indicators so we don't loose the more important info
-					if (max < m)
-					{
-						if (m <= 2 * max_primary)
-						{
+				}else{
+					
+						// trim secondary indicators so we don't loose the more important info
+					
+					if (max < m){
+					
+						if (m <= 2 * max_primary){
+						
 							max = m;
-						} else
-						{
+							
+						}else{
+			
 							max = 2 * max_primary;
 							break;
 						}
@@ -374,6 +374,21 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 			}
 
 			scale.setMax(max);
+			
+			drawScale(sizeChanged);
+
+			if ( bufferScale == null || bufferScale.isDisposed()){
+				
+				return;
+			}
+
+			bufferImage = new Image(drawCanvas.getDisplay(), bounds);
+			
+			gcImage = new GC(bufferImage);
+			
+			gcImage.drawImage(bufferScale, 0, 0);
+
+			gcImage.setAntialias( SWT.ON );
 
 			long now		= SystemTime.getCurrentTime();
 									

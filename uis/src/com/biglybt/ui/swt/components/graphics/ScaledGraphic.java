@@ -62,9 +62,14 @@ public class ScaledGraphic extends BackGroundGraphic {
   		return;
   	}
 
-    boolean scaleChanged = lastMax != scale.getMax();
+  	int max = scale.getMax();
+  	
+    boolean scaleChanged = lastMax != max;
 
-    if(sizeChanged || scaleChanged || bufferScale == null) {
+    lastMax = max;
+        
+    if (sizeChanged || scaleChanged || bufferScale == null){
+    	
       Rectangle bounds = drawCanvas.getClientArea();
       if(bounds.height < 1  || bounds.width < 1)
         return;
