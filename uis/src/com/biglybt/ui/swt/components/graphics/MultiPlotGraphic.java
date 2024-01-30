@@ -724,8 +724,9 @@ MultiPlotGraphic
 			Set<ValueSource>	bold_sources = new HashSet<>();
 			Set<ValueSource>	dotted_sources = new HashSet<>();
 
-			int max = 0;
-
+			int max			= 0;
+			int trim_max	= 0;
+			
 			for ( int i=0;i<maxs.length;i++){
 
 				ValueSource source = value_sources[i];
@@ -745,12 +746,21 @@ MultiPlotGraphic
 					dotted_sources.add( source );
 				}
 
-				if ( !source.isTrimmable()){
+				if ( source.isTrimmable()){
 
+					trim_max = Math.max( trim_max, maxs[i] );
+					
+				}else{
+					
 					max = Math.max( max, maxs[i] );
 				}
 			}
 
+			if ( max == 0 ){
+				
+				max = trim_max;
+			}
+			
 			int max_primary = max;
 
 			for ( int i=0;i<maxs.length;i++){
