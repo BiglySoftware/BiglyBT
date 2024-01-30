@@ -383,6 +383,8 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 			
 			int last_xpos = -1;
 			
+		    int lastAverage = -1;
+
 			for (int x = 0; x < bounds.width - 71; x++){
 			
 				int position = currentPosition - x - 1;
@@ -492,15 +494,17 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 					int h2 = bounds.height - scale.getScaledValue(oldAverage) - 2;
 					gcImage.setForeground(colors[COLOR_AVERAGE]);
 					gcImage.drawLine(xDraw, h1, xDraw + 1, h2);
+					if ( lastAverage == -1 ){
+						lastAverage = oldAverage;
+					}
 				}
 				oldAverage = average;
 			}
 
-			if (nbValues > 0)
-			{
-				int height = bounds.height - scale.getScaledValue(computeAverage(currentPosition - 6)) - 2;
+			if (lastAverage >= 0){
+				int height = bounds.height - scale.getScaledValue(lastAverage) - 2;
 				gcImage.setForeground(colors[COLOR_AVERAGE]);
-				gcImage.drawText(formater.format(computeAverage(currentPosition - 6)), bounds.width - 65, height - 12, true);
+				gcImage.drawText(formater.format(lastAverage), bounds.width - 65, height - 12, true);
 			}
 
 		} catch (Exception e)

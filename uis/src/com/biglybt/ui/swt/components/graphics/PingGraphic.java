@@ -290,6 +290,7 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
 
       scale.setMax(max);
 
+      int lastAverage = -1;
       for(int x = 0 ; x < bounds.width - 71 ; x++) {
         int position = currentPosition - x -1;
         if(position < 0)
@@ -302,8 +303,8 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
 	        int oldTargetValue 	= oldTargetValues[z];
 
 	        if ( x > 1 ){
-		        	int h1 = bounds.height - scale.getScaledValue(targetValue) - 2;
-		        	int h2 = bounds.height - scale.getScaledValue(oldTargetValue) - 2;
+		        int h1 = bounds.height - scale.getScaledValue(targetValue) - 2;
+		        int h2 = bounds.height - scale.getScaledValue(oldTargetValue) - 2;
 		        gcImage.setForeground( externalAverage?colors[z]: (z <= 2 ? colors[z+1] : colors[3]));
 	            gcImage.drawLine(xDraw,h1,xDraw+1, h2);
 	        }
@@ -318,14 +319,17 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
           gcImage.setForeground(colors[COLOR_AVERAGE]);
           gcImage.setLineWidth(2);
           gcImage.drawLine(xDraw,h1,xDraw+1, h2);
+          if ( lastAverage == -1 ){
+         	  lastAverage = oldAverage;
+          }
         }
         oldAverage = average;
       }
 
-      if(nbValues > 0) {
-        int height = bounds.height - scale.getScaledValue(computeAverage(currentPosition-6)) - 2;
+      if(lastAverage >= 0) {
+        int height = bounds.height - scale.getScaledValue(lastAverage) - 2;
         gcImage.setForeground(colors[COLOR_AVERAGE]);
-        gcImage.drawText(formater.format(computeAverage(currentPosition-6)),bounds.width - 65,height - 12,true);
+        gcImage.drawText(formater.format(lastAverage),bounds.width - 65,height - 12,true);
       }
 
       gcImage.dispose();

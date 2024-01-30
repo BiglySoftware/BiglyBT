@@ -940,29 +940,36 @@ MultiPlotGraphic
 							
 							if ( show_label ){
 
-								int	average_val = computeAverage( chartIdx, currentPosition - 6 );
+								int position = currentPosition-1;
+								
+								if ( position < 0 ){
 
-								int average_mod = average_val;
+									position += maxEntries;
+								}
+								
+								int	last_val = all_values[chartIdx][ position ];
 
-								if ( average_mod > max ){
+								int last_mod = last_val;
 
-									average_mod = max;
+								if ( last_mod > max ){
+
+									last_mod = max;
 								}
 
-								int height = bounds.height - scale.getScaledValue( average_mod) - 2;
+								int height = bounds.height - scale.getScaledValue( last_mod) - 2;
 
 								gcImage.setAlpha( 255 );
 
 								gcImage.setForeground( source.getLineColor());
 
-								gcImage.drawText(formater.format( average_val ), bounds.width - 65, height - 12, SWT.DRAW_TRANSPARENT);
+								gcImage.drawText(formater.format( last_mod ), bounds.width - 65, height - 12, SWT.DRAW_TRANSPARENT);
 
 								Color bg = gcImage.getBackground();
 
 								if (( style & ValueSource.STYLE_DOWN ) != 0 ){
 
 									int	x = bounds.width - 72;
-									int y = height - 12;
+									int y = height-3;
 
 									gcImage.setBackground( source.getLineColor());
 
@@ -973,7 +980,7 @@ MultiPlotGraphic
 								}else  if (( style & ValueSource.STYLE_UP ) != 0 ){
 
 									int	x = bounds.width - 72;
-									int y = height - 12;
+									int y = height - 3;
 
 									gcImage.setBackground( source.getLineColor());
 
@@ -984,7 +991,7 @@ MultiPlotGraphic
 								}else  if (( style & ValueSource.STYLE_BLOB ) != 0 ){
 
 									int	x = bounds.width - 72;
-									int y = height - 12;
+									int y = height - 3;
 
 									gcImage.setBackground( source.getLineColor());
 
@@ -1010,23 +1017,6 @@ MultiPlotGraphic
 
 			this_mon.exit();
 		}
-	}
-
-	private int
-	computeAverage(
-		int	line_index,
-		int position )
-	{
-		long sum = 0;
-		for(int i = -5 ; i < 6 ; i++) {
-			int pos = position + i;
-			pos %= maxEntries;
-			if (pos < 0)
-				pos += maxEntries;
-			sum += all_values[line_index][pos];
-		}
-		return(int)(sum / 11);
-
 	}
 
 	@Override
