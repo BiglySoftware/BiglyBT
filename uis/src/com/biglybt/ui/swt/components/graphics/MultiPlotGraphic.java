@@ -597,8 +597,6 @@ MultiPlotGraphic
 
 			gcImage = new GC( bufferImage );
 
-			gcImage.drawImage(bufferScale, 0, 0);
-
 			gcImage.setAntialias( SWT.ON );
 			gcImage.setTextAntialias( SWT.ON );
 			
@@ -614,6 +612,8 @@ MultiPlotGraphic
 				}
 			}
 
+			List<Object[]>	time_strs = new ArrayList<>();
+			
 			int[] oldTargetValues = new int[all_values.length];
 
 			int[] maxs = new int[all_values.length];
@@ -663,10 +663,8 @@ MultiPlotGraphic
 							if ( xPos >= 0 ){
 							
 								if ( last_xpos < 0 ||  xPos + p.x < last_xpos ){
-								
-									gcImage.setForeground( colorGrey );
-	
-									gcImage.drawText( str, xPos, 0, true );
+									
+									time_strs.add( new Object[]{ str, xPos });
 									
 									last_xpos = xPos;
 								}
@@ -689,10 +687,8 @@ MultiPlotGraphic
 								int xPos = xDraw-p.x/2;
 								
 								if ( xPos >= 0 ){
-								
-									gcImage.setForeground( colorGrey );
-								
-									gcImage.drawText( str, xPos, 0, true );
+																
+									time_strs.add( new Object[]{ str, xPos });
 								}
 							}
 						}
@@ -808,6 +804,21 @@ MultiPlotGraphic
 				return;
 			}
 	
+		    gcImage.drawImage(bufferScale,0,0);
+
+		    if ( !time_strs.isEmpty()){
+		    	
+				gcImage.setForeground( colorGrey );
+	
+			    for ( Object[] entry: time_strs ){
+			    	
+			    	String	str		= (String)entry[0];
+			    	int		xPos	= (Integer)entry[1];
+			    	
+					gcImage.drawText( str, xPos, 0, true );
+			    }
+		    }
+		    
 			int[]	prev_x = new int[value_sources.length];
 			int[]	prev_y = new int[value_sources.length];
 
