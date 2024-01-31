@@ -514,7 +514,7 @@ ResourceDownloaderTorrentImpl
 					@Override
 					public void
 					stateChanged(
-						final Download		download,
+						Download		download,
 						int				old_state,
 						int				new_state )
 					{
@@ -524,18 +524,11 @@ ResourceDownloaderTorrentImpl
 
 							download.removeListener( this );
 
-							PluginInitializer.getDefaultInterface().getUtilities().createThread(
-								"resource complete event dispatcher",
-								new Runnable()
-								{
-									@Override
-									public void
-									run()
-									{
-										downloadSucceeded( download, torrent_file, data_dir );
-									}
-								});
-
+							AEThread2.createAndStartDaemon(	"resource complete event dispatcher", ()->{
+								
+								downloadSucceeded( download, torrent_file, data_dir );
+								
+							});
 						}
 					}
 
@@ -576,18 +569,18 @@ ResourceDownloaderTorrentImpl
 	
 			
 			int state = download.getState();
-			
-			if ( state == Download.ST_STOPPED ){
-
-					// might have been added-stopped, start if so
-		
-				download.start();
-				
-			}else if ( state == Download.ST_SEEDING || download.isComplete()){
+							
+			if ( state == Download.ST_SEEDING || download.isComplete()){
 
 					// its possible that the d/l has already occurred and it is seeding!
 
 				downloadSucceeded( download, torrent_file, data_dir );
+				
+			}else if ( state == Download.ST_STOPPED ){
+
+					// might have been added-stopped, start if so
+		
+				download.start();
 			}
 		}catch( Throwable e ){
 
