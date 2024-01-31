@@ -74,7 +74,7 @@ ResourceDownloaderTorrentImpl
 	protected boolean					completed;
 
 	protected ResourceDownloader		current_downloader;
-	protected Object					result;
+	protected volatile Object			result;
 	protected AESemaphore				done_sem	= new AESemaphore("RDTorrent");
 
 	public
@@ -549,42 +549,31 @@ ResourceDownloaderTorrentImpl
 					}
 				});
 
-			Thread	t =
-				new AEThread( "RDTorrent percentage checker")
-				{
-					@Override
-					public void
-					runSupport()
-					{
-						int	last_percentage = 0;
+			AEThread2.createAndStartDaemon( "RDTorrent percentage checker",()->{
 
-						while( result == null ){
+				int	last_percentage = 0;
 
-							int	this_percentage = download.getStats().getDownloadCompleted(false)/10;
+				while( result == null ){
 
-							long	total	= torrent.getSize();
+					int	this_percentage = download.getStats().getDownloadCompleted(false)/10;
 
-							if ( this_percentage != last_percentage ){
+					if ( this_percentage != last_percentage ){
 
-								reportPercentComplete( ResourceDownloaderTorrentImpl.this, this_percentage );
+						reportPercentComplete( ResourceDownloaderTorrentImpl.this, this_percentage );
 
-								last_percentage = this_percentage;
-							}
-
-							try{
-								Thread.sleep(1000);
-
-							}catch( Throwable e ){
-
-								Debug.printStackTrace( e );
-							}
-						}
+						last_percentage = this_percentage;
 					}
-				};
 
-			t.setDaemon( true );
+					try{
+						Thread.sleep(1000);
 
-			t.start();
+					}catch( Throwable e ){
+
+						Debug.printStackTrace( e );
+					}
+				}
+			});
+	
 			
 			int state = download.getState();
 			
@@ -594,7 +583,7 @@ ResourceDownloaderTorrentImpl
 		
 				download.start();
 				
-			}else if ( state == Download.ST_SEEDING ){
+			}else if ( state == Download.ST_SEEDING || download.isComplete()){
 
 					// its possible that the d/l has already occurred and it is seeding!
 
