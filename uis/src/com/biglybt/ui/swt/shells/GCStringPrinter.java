@@ -1247,7 +1247,7 @@ public class GCStringPrinter
 		return textExtent;
 	}
 
-	private static Point
+	public static Point
 	stringExtent(
 		GC		gc,
 		String	text )

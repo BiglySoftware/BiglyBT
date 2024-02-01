@@ -99,23 +99,19 @@ public class SubscriptionsView
 
 	private UISWTView swtView;
 
-	public SubscriptionsView() {
-
+	public 
+	SubscriptionsView() 
+	{
 	}
 
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.core.subs.SubscriptionManagerListener#associationsChanged(byte[])
-	 */
 	@Override
-	public void associationsChanged(byte[] association_hash) {
-		// TODO Auto-generated method stub
-
+	public void 
+	associationsChanged(
+		byte[] association_hash) 
+	{
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.core.subs.SubscriptionManagerListener#subscriptionSelected(com.biglybt.core.subs.Subscription)
-	 */
 	@Override
 	public void
 	subscriptionSelected(
@@ -131,9 +127,6 @@ public class SubscriptionsView
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.core.subs.SubscriptionManagerListener#subscriptionAdded(com.biglybt.core.subs.Subscription)
-	 */
 	@Override
 	public void subscriptionAdded(Subscription subscription) {
 		if ( subscription.isSubscribed()){
@@ -141,18 +134,12 @@ public class SubscriptionsView
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.core.subs.SubscriptionManagerListener#subscriptionRemoved(com.biglybt.core.subs.Subscription)
-	 */
 	@Override
 	public void subscriptionRemoved(Subscription subscription) {
 		view.removeDataSource(subscription);
 
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.core.subs.SubscriptionManagerListener#subscriptionChanged(com.biglybt.core.subs.Subscription)
-	 */
 	@Override
 	public void subscriptionChanged(Subscription subscription, int reason) {
 		if ( !subscription.isSubscribed()){
@@ -173,9 +160,6 @@ public class SubscriptionsView
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.pif.ui.UIPluginViewToolBarListener#refreshToolBarItems(java.util.Map)
-	 */
 	@Override
 	public void refreshToolBarItems(Map<String, Long> list) {
 		if ( view == null ){
@@ -186,9 +170,6 @@ public class SubscriptionsView
 		list.put("share", numRows == 1 ? UIToolBarItem.STATE_ENABLED : 0);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.pif.ui.toolbar.UIToolBarActivationListener#toolBarItemActivated(ToolBarItem, long, java.lang.Object)
-	 */
 	@Override
 	public boolean toolBarItemActivated(ToolBarItem item, long activationType,
 	                                    Object datasource) {

@@ -761,10 +761,6 @@ public class TableRowPainted
 					cellBounds.width -= ofs;
 				}
 				//System.out.println("PS " + getIndex() + ";" + cellBounds + ";" + cell.getText());
-				int style = TableColumnSWTUtils.convertColumnAlignmentToSWT(column.getAlignment());
-				if (cellBounds.height > 20) {
-					style |= SWT.WRAP;
-				}
 				int textOpacity = cell.getTextAlpha();
 				//gc.setFont(getRandomFont());
 				//textOpacity = 130;
@@ -791,9 +787,22 @@ public class TableRowPainted
 				cellBounds.y += 2;
 				cellBounds.height -= 4;
 				if (!cellBounds.isEmpty()) {
-					GCStringPrinter sp = new GCStringPrinter(gc, text, cellBounds, true,
-							cellBounds.height > 20, style);
+					
+					int singleLineHeight = GCStringPrinter.stringExtent( gc, text ).y;
+										
+					boolean worthWrap = cellBounds.height >= singleLineHeight*2;
+					
+					int style = TableColumnSWTUtils.convertColumnAlignmentToSWT(column.getAlignment());
+					
+					if ( worthWrap ){
+						
+						style |= SWT.WRAP;
+					}
 
+					GCStringPrinter sp = new GCStringPrinter(gc, text, cellBounds, true, worthWrap, style);
+
+					sp.calculateMetrics();
+					
 					if (shadowColor != null) {
 						Color oldFG = gc.getForeground();
 						gc.setForeground(shadowColor);
