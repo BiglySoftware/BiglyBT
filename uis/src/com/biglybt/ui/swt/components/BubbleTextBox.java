@@ -631,12 +631,12 @@ public class BubbleTextBox
 	public void validateFilterRegex() {
 		Color old_bg = (Color) textWidget.getData("TVSWTC:filter.bg");
 		if (old_bg == null) {
-			old_bg = textWidget.getBackground();
+			old_bg = Utils.getSkinnedBackground( textWidget );
 			textWidget.setData("TVSWTC:filter.bg", old_bg);
 		}
 		Color old_fg = (Color) textWidget.getData("TVSWTC:filter.fg");
 		if (old_fg == null) {
-			old_fg = textWidget.getForeground();
+			old_fg = Utils.getSkinnedForeground( textWidget );
 			textWidget.setData("TVSWTC:filter.fg", old_fg);
 		}
 		boolean old = regexIsError;
