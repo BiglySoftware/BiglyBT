@@ -814,7 +814,7 @@ redirect_label:
 						try{
 							SSLSocketFactory ssl_socket_factory = null;
 
-							for ( int connect_loop=0;connect_loop<3;connect_loop++ ){
+							for ( int connect_loop=0;connect_loop<4;connect_loop++ ){
 
 								File					temp_file	= null;
 
