@@ -986,7 +986,13 @@ public class GeneralView
     
     loadThumb();
     
-    genComposite.layout();
+    	// If we force a layout on win dark mode the Link labels background flash white
+    	// Couldn't figure out why but not sure why we need this layout anyway
+    
+    if ( !Utils.isDarkAppearanceNativeWindows()){
+    
+    	genComposite.layout();
+    }
   }
 
   public Composite getComposite() {
@@ -1529,6 +1535,10 @@ public class GeneralView
 	      return;
 	    }
 
+	    if ( pImage == null || pImage.isDisposed()){
+	    	bForce = true;
+	    }
+	    
 	    if ( piecesImageRefreshNeeded ){
 	    	bForce = true;
 	    	piecesImageRefreshNeeded = false;

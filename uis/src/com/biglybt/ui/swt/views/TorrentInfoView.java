@@ -118,7 +118,7 @@ public class TorrentInfoView
 		}
 
 		if (showHeader) {
-			Composite cHeader = new Composite(panel, SWT.BORDER);
+			Composite cHeader = new Composite(panel, Utils.isDarkAppearanceNativeWindows()?SWT.NONE:SWT.BORDER);
 			GridLayout configLayout = new GridLayout();
 			configLayout.marginHeight = 3;
 			configLayout.marginWidth = 0;
