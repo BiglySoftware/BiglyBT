@@ -1477,7 +1477,26 @@ public class TorrentOpenOptions
 		return torrent;
 	}
 
-	public void setTorrent(TOTorrent torrent) {
+	public void 
+	setTorrent(
+		TOTorrent torrent )
+	{
+		try{
+			if ( torrent.isSimpleTorrent() && COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_ALWAYS_CREATE_TORRENT_SUB_FOLDER )){
+				
+				String file = TorrentUtils.getTorrentFileName( torrent );
+				
+				torrent = torrent.setSimpleTorrentDisabled( true );
+				
+				if ( file != null ){
+					
+					TorrentUtils.writeToFile( torrent, new File( file ), false );
+				}
+			}
+		}catch( Throwable e ){
+			Debug.out( e );
+		}
+		
 		this.torrent = torrent;
 
 		if (COConfigurationManager.getBooleanParameter("DefaultDir.BestGuess") &&

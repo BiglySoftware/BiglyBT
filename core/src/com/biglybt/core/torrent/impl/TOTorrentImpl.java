@@ -121,7 +121,9 @@ TOTorrentImpl
 	private byte[]		torrent_hash_v2;
 	private HashWrapper	torrent_hash_wrapper_v2;
 
-	private boolean				simple_torrent;
+	private boolean				simple_torrent_original;
+	private boolean				simple_torrent_effective;
+	
 	private TOTorrentFileImpl[]	files;
 
 	private long				creation_date;
@@ -165,7 +167,8 @@ TOTorrentImpl
 		torrent_name_utf8 = torrent_name;
 
 		setAnnounceURL(_announce_url);
-		simple_torrent = _simple_torrent;
+		
+		simple_torrent_original = simple_torrent_effective = _simple_torrent;
 	}
 
 	protected void
@@ -498,7 +501,7 @@ TOTorrentImpl
 	
 			info.put( TK_PIECES, flat_pieces );
 			
-			if ( simple_torrent ){
+			if ( simple_torrent_original ){
 
 				TOTorrentFile	file = files[0];
 
@@ -740,7 +743,7 @@ TOTorrentImpl
 	public boolean
 	isSimpleTorrent()
 	{
-		return( simple_torrent );
+		return( simple_torrent_effective );
 	}
 
 	@Override
@@ -1107,7 +1110,84 @@ TOTorrentImpl
 	{
 		return( torrent_hash_override );
 	}
+	
+	
+	@Override
+	public TOTorrent 
+	setSimpleTorrentDisabled(
+		boolean		disabled )
+		
+		throws TOTorrentException
+	{
+		
+		TOTorrent clone = TOTorrentFactory.deserialiseFromBEncodedByteArray( serialiseToByteArray());
 
+		TorrentUtils.clearTorrentFileName( clone );
+		
+		Map<String,Object> private_props = (Map<String,Object>)clone.getAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES );
+
+		if ( disabled ){
+			
+			if ( !simple_torrent_effective ){
+		
+				throw( new TOTorrentException( 	"Torrent isn't simple", TOTorrentException.RT_CREATE_FAILED ));
+			}
+		}else{
+			
+			if ( private_props == null || !private_props.containsKey( TorrentUtils.TORRENT_AZ_PROP_SIMPLE_TORRENT_DISABLED )){
+				
+				throw( new TOTorrentException( 	"Torrent wasn't simple-disabled", TOTorrentException.RT_CREATE_FAILED ));
+			}
+		}
+		
+		if ( disabled ){
+			
+			if ( private_props == null ){
+				
+				private_props = new HashMap<>();
+			}
+			
+			private_props.put( TorrentUtils.TORRENT_AZ_PROP_SIMPLE_TORRENT_DISABLED, 1L );
+			
+			clone.setAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES, private_props );
+			
+		}else{
+			
+			if ( private_props != null ){
+				
+				private_props.remove( TorrentUtils.TORRENT_AZ_PROP_HYBRID_HASH_V2 );
+			}
+		}
+		
+		try{
+				// recreate with new properties so result represents this
+			
+			return( TOTorrentFactory.deserialiseFromBEncodedByteArray( BEncoder.encode( clone.serialiseToMap())));
+			
+		}catch( Throwable e ){
+			
+			throw( new TOTorrentException( "Encode failed", TOTorrentException.RT_CREATE_FAILED, e ));
+		}
+	}
+	
+	@Override
+	public boolean 
+	isSimpleTorrentDisabled() 
+	
+		throws TOTorrentException
+	{
+		Map<String,Object> private_props = (Map<String,Object>)getAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES );
+
+		return( private_props != null && private_props.containsKey( TorrentUtils.TORRENT_AZ_PROP_SIMPLE_TORRENT_DISABLED ));
+	}
+
+	protected void
+	setSimpleTorrentDisabledInternal(
+		boolean		b )
+	{
+		simple_torrent_effective = !b;
+	}
+	
 	@Override
 	public void
 	setPrivate(
@@ -1288,14 +1368,14 @@ TOTorrentImpl
 	protected boolean
 	getSimpleTorrent()
 	{
-		return( simple_torrent );
+		return( simple_torrent_original );
 	}
 
 	protected void
 	setSimpleTorrent(
 		boolean	_simple_torrent )
 	{
-		simple_torrent	= _simple_torrent;
+		simple_torrent_original = simple_torrent_effective = _simple_torrent;
 	}
 
 	protected Map

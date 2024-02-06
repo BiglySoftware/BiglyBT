@@ -4993,6 +4993,39 @@ DownloadManagerStateImpl
     	}
 
     	@Override
+    	public TOTorrent
+    	setSimpleTorrentDisabled(
+    		boolean	disabled )
+    	
+    		throws TOTorrentException
+    	{
+    		if ( fixup()){
+    			
+    			return( delegate.setSimpleTorrentDisabled( disabled ));
+    			
+    		}else{
+    			
+    			throw( new TOTorrentException( "fixup failed", TOTorrentException.RT_CREATE_FAILED ));
+    		}	
+    	}
+    	
+    	@Override
+    	public boolean
+    	isSimpleTorrentDisabled()
+    	
+    		throws TOTorrentException
+    	{
+    		if ( fixup()){
+    			
+    			return( delegate.isSimpleTorrentDisabled());
+    			
+    		}else{
+    			
+    			throw( new TOTorrentException( "fixup failed", TOTorrentException.RT_CREATE_FAILED ));
+    		}
+    	}
+    	
+    	@Override
 	    public boolean
     	hasSameHashAs(
     		TOTorrent		other )

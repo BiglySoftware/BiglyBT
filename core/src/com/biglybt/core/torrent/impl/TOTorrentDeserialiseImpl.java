@@ -905,6 +905,16 @@ TOTorrentDeserialiseImpl
 
 				Debug.printStackTrace(e);
 			}
+			
+			try{
+				if ( isSimpleTorrentDisabled()){
+					
+					setSimpleTorrentDisabledInternal( true );
+				}
+			}catch( Throwable e ){
+
+				Debug.printStackTrace(e);
+			}
 		}catch( Throwable e ){
 
 			if ( e instanceof TOTorrentException){

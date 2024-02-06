@@ -69,6 +69,12 @@ public class ConfigSectionFile
 		pathParameter.setDialogTitleKey("ConfigView.dialog.choosedefaultsavepath");
 		pathParameter.setDialogTitleKey("ConfigView.section.file.defaultdir.ask");
 
+		BooleanParameterImpl alwaysFolder = new BooleanParameterImpl(
+				BCFG_ALWAYS_CREATE_TORRENT_SUB_FOLDER,
+				"ConfigView.section.file.always.create.sub.folder");
+		add(alwaysFolder, Parameter.MODE_INTERMEDIATE, listDefaultDir);
+		
+		
 		// def dir: autoSave
 
 		String[] openValues = {

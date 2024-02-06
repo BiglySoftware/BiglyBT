@@ -114,6 +114,7 @@ public final class ConfigKeys {
 	public static class File {
 		public static final String BCFG_DEFAULT_DIR_BEST_GUESS = "DefaultDir.BestGuess";
 		public static final String SCFG_DEFAULT_SAVE_PATH = "Default save path";
+		public static final String BCFG_ALWAYS_CREATE_TORRENT_SUB_FOLDER = "Always Create Torrent Sub-Folder";
 		public static final String BCFG_UI_ADDTORRENT_OPENOPTIONS_SEP = "ui.addtorrent.openoptions.sep";
 		public static final String BCFG_DEFAULT_DIR_AUTO_SAVE_AUTO_RENAME = "DefaultDir.AutoSave.AutoRename";
 		public static final String ICFG_UI_ADDTORRENT_OPENOPTIONS_AUTO_CLOSE_SECS = "ui.addtorrent.openoptions.auto.close.secs";

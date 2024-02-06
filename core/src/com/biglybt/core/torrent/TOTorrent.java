@@ -310,6 +310,17 @@ TOTorrent
 
 		throws TOTorrentException;
 
+	public TOTorrent
+	setSimpleTorrentDisabled(
+		boolean		disabled )
+	
+		throws TOTorrentException;
+	
+	public boolean
+	isSimpleTorrentDisabled()
+	
+		throws TOTorrentException;
+	
 	/**
 	 * compares two torrents by hash
 	 * @param other

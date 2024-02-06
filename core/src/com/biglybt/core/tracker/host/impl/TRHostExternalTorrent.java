@@ -351,6 +351,25 @@ TRHostExternalTorrent
 		throw( new TOTorrentException( "Not supported", TOTorrentException.RT_HASH_FAILS ));
 	}
 
+   	@Override
+	public TOTorrent
+	setSimpleTorrentDisabled(
+		boolean	disabled )
+	
+		throws TOTorrentException
+	{
+   		throw( new TOTorrentException( "Not supported", TOTorrentException.RT_CREATE_FAILED ));
+	}
+	
+	@Override
+	public boolean
+	isSimpleTorrentDisabled()
+	
+		throws TOTorrentException
+	{
+		throw( new TOTorrentException( "Not supported", TOTorrentException.RT_CREATE_FAILED ));
+	}
+	
 	@Override
 	public boolean
 	getPrivate()

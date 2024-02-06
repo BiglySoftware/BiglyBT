@@ -134,7 +134,8 @@ TorrentUtils
 	public static final String		TORRENT_AZ_PROP_HASHTREE_STATE			= "hash_tree";
 	public static final String		TORRENT_AZ_PROP_HYBRID_HASH_V2			= "hybrid_hash_v2";
 	private static final String		TORRENT_AZ_PROP_V2_ROOT_HASH_CACHE		= "v2_root_hash_cache";	// used for non-v2 torrents only
-	
+	public static final String		TORRENT_AZ_PROP_SIMPLE_TORRENT_DISABLED	= "simple_torrent_disable";
+
 	private static final String		MEM_ONLY_TORRENT_PATH		= "?/\\!:mem_only:!\\/?";
 
 	private static final long		PC_MARKER = RandomUtils.nextLong();
@@ -4004,6 +4005,25 @@ TorrentUtils
     		throw( new TOTorrentException( "Not supported", TOTorrentException.RT_HASH_FAILS ));
     	}
 
+	   	@Override
+		public TOTorrent
+		setSimpleTorrentDisabled(
+			boolean	disabled )
+		
+			throws TOTorrentException
+		{
+	   		return( delegate.setSimpleTorrentDisabled(disabled));
+		}
+		
+		@Override
+		public boolean
+		isSimpleTorrentDisabled()
+		
+			throws TOTorrentException
+		{
+			return( delegate.isSimpleTorrentDisabled());
+		}
+		
 		@Override
 		public boolean
 		getPrivate()
