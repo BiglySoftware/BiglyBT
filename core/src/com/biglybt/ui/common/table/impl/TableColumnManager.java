@@ -969,7 +969,7 @@ public class TableColumnManager {
 		return columnInfo;
 	}
 
-	private void
+	public void
 	resetAllTables()
 	{
 		for ( String tableID: new ArrayList<>(mapTableDefaultColumns.keySet())){
@@ -983,6 +983,13 @@ public class TableColumnManager {
   				resetColumns(dataSourceType, tableID);
   			}
 			}
+		}
+		
+		synchronized( this ){
+			
+			tablesConfig = new HashMap<>();
+		
+			saveTableConfigs();
 		}
 	}
 
