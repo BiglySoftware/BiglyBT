@@ -78,6 +78,7 @@ import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.swt.components.BufferedTruncatedLabel;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
@@ -6337,25 +6338,16 @@ public class Utils
 		String		base,
 		String		sub )
 	{
-		return( base + "::" + sub );
+		return( TableColumnManager.createSubViewID(base,sub));
 	}
 	
 	public static String
 	getBaseViewID(
 		String		id )
 	{
-		int	pos = id.lastIndexOf( "::" );
-		
-		if ( pos == -1 ){
-			
-			return( id );
-			
-		}else{
-			
-			return( id.substring( 0, pos ));
-		}
+		return( TableColumnManager.getBaseViewID(id));
 	}
-		
+	
 	public static boolean
 	isDarkAppearanceNativeWindows()
 	{

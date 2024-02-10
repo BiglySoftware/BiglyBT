@@ -33,6 +33,7 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableStructureEventDispatcher;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.swt.ConfigKeysSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
@@ -496,6 +497,12 @@ public class TableHeaderPainted
 						} else {
 							int diff = (e.x - columnSizingStart);
 							columnSizing.setWidthPX(columnSizing.getWidth() + diff);
+							
+							TableColumnManager tcm = TableColumnManager.getInstance();
+							
+							String tableID = tv.getTableID();
+							
+							tcm.saveTableColumns(tv.getDataSourceType(), tableID);
 						}
 					}
 					columnSizing = null;
@@ -608,6 +615,12 @@ public class TableHeaderPainted
 				}
 				tv.setColumnsOrdered(visibleColumns);
 
+				TableColumnManager tcm = TableColumnManager.getInstance();
+				
+				String tableID = tv.getTableID();
+				
+				tcm.saveTableColumns(tv.getDataSourceType(), tableID);
+				
 				TableStructureEventDispatcher.getInstance(
 						tv.getTableID()).tableStructureChanged(columnAdded,
 								tv.getDataSourceType());

@@ -264,6 +264,16 @@ public class TableColumnSetupWindow
 		fd.bottom = null;
 		topInfo.setLayoutData(fd);
 
+		
+		final Button btnDefault = new Button(shell, SWT.PUSH);
+		Messages.setLanguageText(btnDefault, "label.default");
+		Utils.setTT(btnDefault, MessageText.getString( "label.set.as.default.for.new.views" ));
+		btnDefault.addListener(SWT.Selection,(ev)->{
+			tcm.saveTableColumns(forDataSourceType, forTableID);
+			Map config = tcm.getTableConfigMap(forTableID);
+			tcm.setTableConfigDefault(forTableID,config);
+		});		
+		
 		Button btnOk = new Button(shell, SWT.PUSH);
 		Messages.setLanguageText(btnOk, "Button.ok");
 		btnOk.addSelectionListener(new SelectionAdapter() {
@@ -1022,6 +1032,11 @@ public class TableColumnSetupWindow
 		//fd.width = 64;
 		btnApply.setLayoutData(fd);
 
+		fd = new FormData();
+		fd.left = new FormAttachment(cPickArea, 3, SWT.RIGHT);
+		fd.bottom = new FormAttachment(100, -3);
+		btnDefault.setLayoutData(fd);
+		
 		fd = new FormData();
 		fd.right = new FormAttachment(100, -8);
 		fd.bottom = new FormAttachment(100, -3);

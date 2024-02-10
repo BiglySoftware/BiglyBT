@@ -198,6 +198,7 @@ public class TableColumnManager {
   public void addColumns(TableColumnCore[] itemsToAdd) {
 		try {
 			items_mon.enter();
+			Map<String,Map> configCache = new HashMap<>();
 			for (int i = 0; i < itemsToAdd.length; i++) {
 				TableColumnCore item = itemsToAdd[i];
 				if (item == null || item.isRemoved()){
@@ -213,7 +214,11 @@ public class TableColumnManager {
 				}
 				if (!mTypes.containsKey(name)) {
 					mTypes.put(name, item);
-					Map mapColumnConfig = getTableConfigMap(sTableID);
+					Map mapColumnConfig = configCache.get( sTableID );
+					if (mapColumnConfig == null ){
+						mapColumnConfig = getTableConfigMap(sTableID);
+						configCache.put(sTableID, mapColumnConfig);
+					}
 					item.loadSettings(mapColumnConfig);
 				}
 			}
@@ -739,7 +744,13 @@ public class TableColumnManager {
 		  Map mapTablesConfig = getTablesConfigMap();
 
 		  Map mapTableConfig = (Map) mapTablesConfig.get(key);
+		  
 		  if (mapTableConfig == null) {
+			  mapTableConfig = getTableConfigDefaultMap( sTableID );
+		  }
+		  
+		  if (mapTableConfig == null) {
+			  
 			  mapTableConfig = new HashMap();
 			  mapTablesConfig.put(key, mapTableConfig);
 		  } else {
@@ -767,8 +778,72 @@ public class TableColumnManager {
 		  Map mapTablesConfig = getTablesConfigMap();
 
 		  mapTablesConfig.put(key, mapTableConfig);
-			markDirty();
+		
+		  markDirty();
 	  }
+  }
+
+  public static String
+  createSubViewID(
+		  String		base,
+		  String		sub )
+  {
+	  return( base + "::" + sub );
+  }
+	
+  public static String
+  getBaseViewID(
+	  String		id )
+  {
+	  int	pos = id.lastIndexOf( "::" );
+
+	  if ( pos == -1 ){
+
+		  return( id );
+
+	  }else{
+
+		  return( id.substring( 0, pos ));
+	  }
+  }
+	
+  private Map 
+  getTableConfigDefaultMap(
+	  String sTableID) 
+  {
+	  sTableID = getBaseViewID( sTableID );
+	  synchronized (this) {
+		  String key = "TableDefault." + sTableID;
+
+		  Map mapTablesConfig = getTablesConfigMap();
+
+		  return((Map)mapTablesConfig.get(key));
+	  }
+  }
+
+  private void 
+  setTableConfigDefaultMap(
+	 String sTableID, 
+	 Map mapTableConfigDefault ) 
+  {
+	  sTableID = getBaseViewID( sTableID );
+	  synchronized (this) {
+		  String key = "TableDefault." + sTableID;
+
+		  Map mapTablesConfig = getTablesConfigMap();
+
+		  mapTablesConfig.put(key, mapTableConfigDefault );
+		
+		  markDirty();
+	  }
+  }
+  
+  public void
+  setTableConfigDefault(
+	String	sTableID, 
+	Map		mapTableConfig )
+  {
+	  setTableConfigDefaultMap( sTableID, mapTableConfig );
   }
   
   public void setAutoHideOrder(String sTableID, String[] autoHideOrderColumnIDs) {
