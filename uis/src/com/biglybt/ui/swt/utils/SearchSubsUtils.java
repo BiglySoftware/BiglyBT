@@ -305,9 +305,8 @@ SearchSubsUtils
 				Field field = Program.class.getDeclaredField("command");
 				field.setAccessible(true);
 				String command = (String) field.get(program);
-				command = command.replaceAll("%[1lL]", Matcher.quoteReplacement(s));
-				command = command.replace(" --", "");
-				PluginInitializer.getDefaultInterface().getUtilities().createProcess(command + " -incognito");
+				command = command.replaceAll("%[1lL]", Matcher.quoteReplacement("--incognito "+s));
+				PluginInitializer.getDefaultInterface().getUtilities().createProcess( command );
 			} catch (Exception e1) {
 				e1.printStackTrace();
 				Utils.launch(s);
