@@ -4628,7 +4628,7 @@ TagPropertyConstraintHandler
 						
 						String app_name = Constants.APP_NAME;
 						
-						if ( tracker.equals( app_name.toLowerCase())){
+						if ( tracker.equals( app_name.toLowerCase() + "dht")){
 							
 							target = app_name;
 							
@@ -4636,7 +4636,7 @@ TagPropertyConstraintHandler
 							
 							target = "mldht";
 									
-						}else if ( tracker.equals( "i2p" )){
+						}else if ( tracker.equals( "i2pdht" )){
 							
 							target = "i2p";
 							
