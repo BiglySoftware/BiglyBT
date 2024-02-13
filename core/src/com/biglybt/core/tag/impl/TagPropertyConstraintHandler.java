@@ -55,6 +55,7 @@ import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLGroup;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
+import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginAdapter;
@@ -2785,6 +2786,8 @@ TagPropertyConstraintHandler
 		private static final int FT_GET_TAG_SORT		= 59;
 		private static final int FT_LENGTH				= 60;
 		private static final int FT_COUNT				= 61;
+		private static final int FT_TRACKER_PEERS		= 62;
+		private static final int FT_TRACKER_SEEDS		= 63;
 
 		static{
 			fn_map.put( "hastag", FT_HAS_TAG );
@@ -2861,6 +2864,9 @@ TagPropertyConstraintHandler
 			fn_map.put( "gettagsort", FT_GET_TAG_SORT );
 			fn_map.put( "length", FT_LENGTH );
 			fn_map.put( "count", FT_COUNT );
+			
+			fn_map.put( "trackerpeers", FT_TRACKER_PEERS );
+			fn_map.put( "trackerseeds", FT_TRACKER_SEEDS );
 		}
 		
 		private static final int	DEP_STATIC		= 0;
@@ -3566,6 +3572,13 @@ TagPropertyConstraintHandler
 					case FT_IF_THEN_ELSE:{
 										
 						params_ok = num_params == 3;
+						
+						break;
+					}
+					case FT_TRACKER_PEERS:
+					case FT_TRACKER_SEEDS:{
+						
+						params_ok = num_params == 1 && getStringLiteral( params, 0 );
 						
 						break;
 					}
@@ -4598,6 +4611,82 @@ TagPropertyConstraintHandler
 							
 							return( getWhatever( context, dm, tags, params, 2, debug ));
 						}
+					}
+					case FT_TRACKER_PEERS:
+					case FT_TRACKER_SEEDS:{
+						
+						int state = dm.getState();
+						
+						if ( state != DownloadManager.STATE_DOWNLOADING && state != DownloadManager.STATE_SEEDING ){
+							
+							return( -1 );
+						}
+						
+						String tracker = getStringParam( params, 0, debug ).toLowerCase();
+
+						String target = null;
+						
+						String app_name = Constants.APP_NAME;
+						
+						if ( tracker.equals( app_name.toLowerCase())){
+							
+							target = app_name;
+							
+						}else if ( tracker.equals( "mldht" )){
+							
+							target = "mldht";
+									
+						}else if ( tracker.equals( "i2p" )){
+							
+							target = "i2p";
+							
+						}else{
+						
+							setError( "Unsupported tracker type: " + tracker );
+							
+							return( -1 );
+						}
+						
+						List<TrackerPeerSource> tps_list = dm.getTrackerPeerSources();
+
+						for ( TrackerPeerSource tps: tps_list ){
+							
+							int type = tps.getType();
+							
+							if ( type == TrackerPeerSource.TP_DHT && target == app_name ){
+								
+								if ( fn_type == FT_TRACKER_PEERS ){
+									
+									return( tps.getLeecherCount());
+									
+								}else{
+									
+									return( tps.getSeedCount());
+								}
+							}else if ( type == TrackerPeerSource.TP_PLUGIN ){
+																
+								String details = tps.getDetails();
+								
+								if ( details == null ){
+									
+									continue;
+								}
+								
+								if ( details.toLowerCase().startsWith( target )){
+									
+									if ( fn_type == FT_TRACKER_PEERS ){
+									
+										return( tps.getLeecherCount());
+										
+									}else{
+										
+										return( tps.getSeedCount());
+									}
+								}
+							}			
+						}
+
+						return( -1 );
 					}
 				}
 

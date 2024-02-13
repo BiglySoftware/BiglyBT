@@ -1557,6 +1557,13 @@ DownloadImpl
 						}
 		
 						@Override
+						public String 
+						getDetails()
+						{
+							return( getName());
+						}
+						
+						@Override
 						public int
 						getSeedCount()
 						{
