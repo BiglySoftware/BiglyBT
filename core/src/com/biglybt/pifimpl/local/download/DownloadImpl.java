@@ -1675,13 +1675,33 @@ DownloadImpl
 	{
 		String class_name = getTrackingName( result );
 
-		if ( class_name != null ){
+		String plugin_id;
+		
+		if ( class_name == null ){
+			
+			plugin_id = "azbpdhdtracker";
+			
+		}else{
+			
+			if ( class_name.equalsIgnoreCase( "I2P" )){
+				
+				plugin_id = "azneti2phelper";
+				
+			}else{
+				
+				plugin_id = class_name;
+			}
+		}
+		
+		boolean skip_announce = false;
+		
+		if ( plugin_id != null ){
 			
 			Map all_opts = download_manager.getDownloadState().getMapAttribute( DownloadManagerState.AT_PLUGIN_OPTIONS );
 			
 			if ( all_opts != null ){
 				
-				Map opts = (Map)all_opts.get( class_name.toLowerCase( Locale.US ));
+				Map opts = (Map)all_opts.get( plugin_id.toLowerCase( Locale.US ));
 				
 				if ( opts != null ){
 					
@@ -1689,24 +1709,7 @@ DownloadImpl
 					
 					if ( e != null && e.intValue() == 0 ){
 						
-						boolean inform = false;
-						
-						try{
-							peer_listeners_mon.enter();
-						
-							inform = announce_response_map.remove( class_name ) != null;
-							
-						}finally{
-
-							peer_listeners_mon.exit();
-						}
-						
-						if ( inform ){
-							
-							download_manager.informTPSChanged();
-						}
-						
-						return;
+						skip_announce = true;
 					}
 				}
 			}
@@ -1762,7 +1765,10 @@ DownloadImpl
 			}
 		}
 
-		download_manager.setAnnounceResult( result );
+		if ( !skip_announce ){
+		
+			download_manager.setAnnounceResult( result );
+		}
 		
 		if ( new_entry ){
 			

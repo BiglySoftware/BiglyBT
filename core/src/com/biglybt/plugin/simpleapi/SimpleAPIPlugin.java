@@ -843,6 +843,15 @@ SimpleAPIPlugin
 							throw( new Exception( "Plugin id parameter missing" ));
 						}
 						
+						if ( plugin_id.equalsIgnoreCase( "dht" )){
+							
+							plugin_id = "azbpdhdtracker";
+							
+						}else if ( plugin_id.equalsIgnoreCase( "I2P" )){
+							
+							plugin_id = "azneti2phelper";
+						}
+						
 						PluginInterface pi = plugin_interface.getPluginManager().getPluginInterfaceByID( plugin_id );
 						
 						if ( pi == null ){
