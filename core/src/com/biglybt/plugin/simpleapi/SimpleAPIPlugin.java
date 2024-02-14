@@ -805,6 +805,82 @@ SimpleAPIPlugin
 						
 						dm.getDownloadState().setFlag( DownloadManagerState.FLAG_DISABLE_IP_FILTER, !enable );
 						
+					}else if ( name.equals( "pluginoption" )){
+												
+						String[] opt_strs = value.split( "&" );
+						
+						String 	plugin_id		= null;
+						Boolean	enable_announce	= null;
+								
+						for ( String opt_str: opt_strs ){
+							
+							String[]	bits = opt_str.split( "=" );
+							
+							String opt_name = bits[0].toLowerCase( Locale.US );
+							String opt_value;
+							
+							if ( bits.length == 2 ){
+								
+								opt_value = UrlUtils.decode( bits[1] );
+													
+							}else{
+								
+								opt_value = "";
+							}
+							
+							if ( opt_name.equals( "id" )){
+								
+								plugin_id = opt_value;
+								
+							}else if ( opt_name.equals( "enableannounce" )){
+								
+								enable_announce = getBoolean( opt_value );
+							}
+						}
+						
+						if ( plugin_id == null ){
+							
+							throw( new Exception( "Plugin id parameter missing" ));
+						}
+						
+						PluginInterface pi = plugin_interface.getPluginManager().getPluginInterfaceByID( plugin_id );
+						
+						if ( pi == null ){
+							
+							throw( new Exception( "Plugin id '" + plugin_id + "' not found" ));
+						}
+						
+						if ( enable_announce == null ){
+						
+							throw( new Exception( "No plugin options supplied" ));
+						}
+						
+						plugin_id = plugin_id.toLowerCase( Locale.US );
+						
+						Map opts_map = dm.getDownloadState().getMapAttribute( DownloadManagerState.AT_PLUGIN_OPTIONS );
+						
+						if ( opts_map == null ){
+							
+							opts_map = new HashMap<>();
+							
+						}else{
+							
+							opts_map = BEncoder.cloneMap(opts_map);
+						}
+						
+						Map opt_map = (Map)opts_map.get( plugin_id );
+						
+						if ( opt_map == null ){
+							
+							opt_map = new HashMap<>();
+							
+							opts_map.put( plugin_id, opt_map );
+						}
+						
+						opt_map.put( "enableannounce", enable_announce?1:0 );
+						
+						dm.getDownloadState().setMapAttribute( DownloadManagerState.AT_PLUGIN_OPTIONS, opts_map );
+						
 					}else{
 						
 						throw( new Exception( "invalid 'name' parameter (" + name + ")" ));

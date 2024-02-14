@@ -1675,6 +1675,43 @@ DownloadImpl
 	{
 		String class_name = getTrackingName( result );
 
+		if ( class_name != null ){
+			
+			Map all_opts = download_manager.getDownloadState().getMapAttribute( DownloadManagerState.AT_PLUGIN_OPTIONS );
+			
+			if ( all_opts != null ){
+				
+				Map opts = (Map)all_opts.get( class_name.toLowerCase( Locale.US ));
+				
+				if ( opts != null ){
+					
+					Number e = (Number)opts.get( "enableannounce" );
+					
+					if ( e != null && e.intValue() == 0 ){
+						
+						boolean inform = false;
+						
+						try{
+							peer_listeners_mon.enter();
+						
+							inform = announce_response_map.remove( class_name ) != null;
+							
+						}finally{
+
+							peer_listeners_mon.exit();
+						}
+						
+						if ( inform ){
+							
+							download_manager.informTPSChanged();
+						}
+						
+						return;
+					}
+				}
+			}
+		}
+		
 		boolean new_entry = false;
 		
 		if ( class_name != null ){
