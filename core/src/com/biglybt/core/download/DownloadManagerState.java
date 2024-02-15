@@ -94,7 +94,8 @@ DownloadManagerState
 	public static final String AT_SWARM_TAGS				= "stag";			// list
 	public static final String AT_MASK_DL_COMP_OPTIONAL		= "mdlc";			// Boolean (optional)
 	public static final String AT_REAL_DM_MAGNET_TIME		= "rdmmt";			// long
-	public static final String AT_PLUGIN_OPTIONS			= "pluginoptions";	// Map; enabled=boolean
+	public static final String AT_PLUGIN_OPTIONS			= "pluginoptions";	// Map
+	public static final String 		AT_PO_ENABLE_ANNOUNCE		= "enableannounce";		// boolean, def=true
 	
 	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
 	public static final String AT_TRANSIENT_TAG_SORT		= "t_tagsort";

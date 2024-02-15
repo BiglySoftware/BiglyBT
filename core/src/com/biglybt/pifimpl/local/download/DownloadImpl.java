@@ -1705,7 +1705,7 @@ DownloadImpl
 				
 				if ( opts != null ){
 					
-					Number e = (Number)opts.get( "enableannounce" );
+					Number e = (Number)opts.get( DownloadManagerState.AT_PO_ENABLE_ANNOUNCE );
 					
 					if ( e != null && e.intValue() == 0 ){
 						

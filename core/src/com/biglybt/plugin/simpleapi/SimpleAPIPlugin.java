@@ -886,7 +886,7 @@ SimpleAPIPlugin
 							opts_map.put( plugin_id, opt_map );
 						}
 						
-						opt_map.put( "enableannounce", enable_announce?1:0 );
+						opt_map.put( DownloadManagerState.AT_PO_ENABLE_ANNOUNCE, enable_announce?1:0 );
 						
 						dm.getDownloadState().setMapAttribute( DownloadManagerState.AT_PLUGIN_OPTIONS, opts_map );
 						

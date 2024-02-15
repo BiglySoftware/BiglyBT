@@ -2788,6 +2788,7 @@ TagPropertyConstraintHandler
 		private static final int FT_COUNT				= 61;
 		private static final int FT_TRACKER_PEERS		= 62;
 		private static final int FT_TRACKER_SEEDS		= 63;
+		private static final int FT_PLUGIN_OPTION		= 64;
 
 		static{
 			fn_map.put( "hastag", FT_HAS_TAG );
@@ -2867,6 +2868,8 @@ TagPropertyConstraintHandler
 			
 			fn_map.put( "trackerpeers", FT_TRACKER_PEERS );
 			fn_map.put( "trackerseeds", FT_TRACKER_SEEDS );
+			
+			fn_map.put( "pluginoption", FT_PLUGIN_OPTION );
 		}
 		
 		private static final int	DEP_STATIC		= 0;
@@ -3579,6 +3582,12 @@ TagPropertyConstraintHandler
 					case FT_TRACKER_SEEDS:{
 						
 						params_ok = num_params == 1 && getStringLiteral( params, 0 );
+						
+						break;
+					}
+					case FT_PLUGIN_OPTION:{
+						
+						params_ok = num_params == 2 && getStringLiteral( params, 0 ) && getStringLiteral( params, 1 );
 						
 						break;
 					}
@@ -4622,15 +4631,15 @@ TagPropertyConstraintHandler
 							return( -1 );
 						}
 						
-						String tracker = getStringParam( params, 0, debug ).toLowerCase();
+						String tracker = getStringParam( params, 0, debug ).toLowerCase( Locale.US );
 
 						String target = null;
 						
 						String app_name = Constants.APP_NAME;
 						
-						if ( tracker.equals( app_name.toLowerCase() + "dht")){
+						if ( tracker.equals( app_name.toLowerCase( Locale.US ) + "dht") || tracker.equals( "dht" )){
 							
-							target = app_name;
+							target = "dht";
 							
 						}else if ( tracker.equals( "mldht" )){
 							
@@ -4653,7 +4662,7 @@ TagPropertyConstraintHandler
 							
 							int type = tps.getType();
 							
-							if ( type == TrackerPeerSource.TP_DHT && target == app_name ){
+							if ( type == TrackerPeerSource.TP_DHT && target.equals( "dht" )){
 								
 								if ( fn_type == FT_TRACKER_PEERS ){
 									
@@ -4687,6 +4696,49 @@ TagPropertyConstraintHandler
 						}
 
 						return( -1 );
+					}
+					case FT_PLUGIN_OPTION:{
+						
+						String plugin_id	= getStringParam( params, 0, debug ).toLowerCase();
+						
+						if ( plugin_id.equalsIgnoreCase( "dht" )){
+
+							plugin_id = "azbpdhdtracker";
+
+						}else if ( plugin_id.equalsIgnoreCase( "I2P" )){
+
+							plugin_id = "azneti2phelper";
+						}
+
+						String attr			= getStringParam( params, 1, debug ).toLowerCase();
+
+						if ( !attr.equals( DownloadManagerState.AT_PO_ENABLE_ANNOUNCE )){
+							
+							setError( "Unsupported plugin option attribute type: " + attr );
+							
+							return( null );
+						}
+						
+						boolean value = true;		// default
+						
+						Map all_opts = dm.getDownloadState().getMapAttribute( DownloadManagerState.AT_PLUGIN_OPTIONS );
+						
+						if ( all_opts != null ){
+													
+							Map opts = (Map)all_opts.get( plugin_id.toLowerCase( Locale.US ));
+							
+							if ( opts != null ){
+								
+								Number e = (Number)opts.get( DownloadManagerState.AT_PO_ENABLE_ANNOUNCE );
+								
+								if ( e != null ){
+									
+									value = e.intValue() != 0;
+								}
+							}
+						}
+						
+						return( value );
 					}
 				}
 
