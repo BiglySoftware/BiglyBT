@@ -15,7 +15,7 @@ msgstr ""
 "X-Crowdin-Language: es-VE\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 508\n"
-"PO-Revision-Date: 2022-08-02 13:58\n"
+"PO-Revision-Date: 2024-02-18 18:34\n"
 
 msgid "test"
 msgstr "Prueba en Inglés"
@@ -36,7 +36,7 @@ msgid "donation_onetime_title"
 msgstr "Oferta Única"
 
 msgid "donation_bitcoin_title"
-msgstr ""
+msgstr "Bitcoin"
 
 msgid "donation_monthly_description"
 msgstr "Dele a los desarrolladores un café todos los meses"
@@ -57,14 +57,14 @@ msgid "donation_bitcoin_addresses"
 msgstr "Dirección BCH/BTC:"
 
 msgid "donation_crypto_title"
-msgstr ""
+msgstr "Criptomoneda"
 
 msgid "donation_crypto_description"
-msgstr ""
+msgstr "Háganos saber si su moneda o token favorito no aparece en la lista y agregaremos una dirección :)"
 
 msgid "no_thanks"
-msgstr ""
+msgstr "No, gracias."
 
 msgid "close"
-msgstr ""
+msgstr "Cerrar"
 
