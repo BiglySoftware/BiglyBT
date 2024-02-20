@@ -378,6 +378,8 @@ NewTorrentWizard
   getNextPanelForMode(
 	  AbstractWizardPanel<NewTorrentWizard>		prev )
   {
+	  return new BYOPanel( this, prev );
+	  /*
 	  switch( create_mode ){
 	  	case MODE_DIRECTORY:
 		  return new DirectoryPanel( this, prev);
@@ -386,5 +388,6 @@ NewTorrentWizard
 		default:
 		  return new BYOPanel( this, prev );
 	  }
+	  */
   }
 }

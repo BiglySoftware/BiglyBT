@@ -490,8 +490,9 @@ public class ModePanel extends AbstractWizardPanel<NewTorrentWizard> {
   }
 
   void activateMode(int mode) {
+	  // BYO is the only mode used, directory+single file panels are dead...
     wizard.setCurrentInfo(MessageText.getString(mode==NewTorrentWizard.MODE_SINGLE_FILE? "wizard.maketorrent.singlefile.help" :(mode==NewTorrentWizard.MODE_DIRECTORY? "wizard.maketorrent.directory.help" :"wizard.newtorrent.byo.help")));
-    ((NewTorrentWizard) wizard).create_mode = mode;
+    //((NewTorrentWizard) wizard).create_mode = mode;
   }
 
   void updateTrackerURL() {

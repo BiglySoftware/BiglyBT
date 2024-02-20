@@ -203,8 +203,9 @@ public class Wizard {
        */
       @Override
       public void handleEvent(Event arg0) {
+    	IWizardPanel<?>	prevPanel = currentPanel.getPreviousPanel();
         clearPanel();
-        currentPanel = currentPanel.getPreviousPanel();
+        currentPanel = prevPanel;
         refresh();
       }
     });

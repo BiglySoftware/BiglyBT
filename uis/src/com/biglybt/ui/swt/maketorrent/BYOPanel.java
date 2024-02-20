@@ -56,7 +56,7 @@ public class BYOPanel
 			IWizardPanel<NewTorrentWizard> previous) {
 		super(wizard, previous);
 
-		wizard.byo_map = null;
+		//wizard.byo_map = null;
 	}
 
 	/*
@@ -201,40 +201,55 @@ public class BYOPanel
 			}
 		});
 
+			// restore state if there is any
 
-		if (wizard.byo_map != null) {
-			List list = (List) wizard.byo_map.get("file_map");
-			if (list != null) {
-				for (Iterator iterator = list.iterator(); iterator.hasNext();) {
-					Map map = (Map) iterator.next();
-					String target = MapUtils.getMapString(map, "target", null);
-					List path = MapUtils.getMapList(map, "logical_path", null);
-					if (target != null && path != null) {
-						File targetFile = new File(target);
-						if (path.size() == 1) {
-							addFilename(targetFile, (String) path.get(0), null, true);
-						} else {
-							TreeItem[] items = tree.getItems();
-							TreeItem parent = null;
-							for (int i = 0; i < path.size() - 1; i++) {
-								TreeItem lastParent = parent;
-								String name = (String) path.get(i);
-
-								boolean found = false;
-								for (TreeItem item : items) {
-									if (item.getText().equals(name)) {
-										parent = item;
-										found = true;
-										break;
+		if ( wizard.create_mode == wizard.MODE_DIRECTORY || wizard.create_mode == wizard.MODE_SINGLE_FILE ){
+			
+			String path = wizard.create_mode == wizard.MODE_DIRECTORY?wizard.directoryPath:wizard.singlePath;
+			
+			if ( path != null ){
+				
+				File file = new File( path );
+				
+				if ( file.exists()){
+					addFilename( file );
+				}
+			}
+		}else{
+			if (wizard.byo_map != null) {
+				List list = (List) wizard.byo_map.get("file_map");
+				if (list != null) {
+					for (Iterator iterator = list.iterator(); iterator.hasNext();) {
+						Map map = (Map) iterator.next();
+						String target = MapUtils.getMapString(map, "target", null);
+						List path = MapUtils.getMapList(map, "logical_path", null);
+						if (target != null && path != null) {
+							File targetFile = new File(target);
+							if (path.size() == 1) {
+								addFilename(targetFile, (String) path.get(0), null, true);
+							} else {
+								TreeItem[] items = tree.getItems();
+								TreeItem parent = null;
+								for (int i = 0; i < path.size() - 1; i++) {
+									TreeItem lastParent = parent;
+									String name = (String) path.get(i);
+	
+									boolean found = false;
+									for (TreeItem item : items) {
+										if (item.getText().equals(name)) {
+											parent = item;
+											found = true;
+											break;
+										}
 									}
+									if (!found) {
+										parent = createContainer(lastParent, name);
+									}
+									items = parent.getItems();
 								}
-								if (!found) {
-									parent = createContainer(lastParent, name);
-								}
-								items = parent.getItems();
+								String name = (String) path.get(path.size() - 1);
+								addFilename(targetFile, name, parent, false);
 							}
-							String name = (String) path.get(path.size() - 1);
-							addFilename(targetFile, name, parent, false);
 						}
 					}
 				}
@@ -484,52 +499,79 @@ public class BYOPanel
 		itemToMove.dispose();
 	}
 
-	@Override
-	public IWizardPanel<NewTorrentWizard> getNextPanel() {
+	private void
+	saveState()
+	{
 		if (tree.getItemCount() == 1) {
-			// might be single file or single directory
+				// might be single file or single directory
 			TreeItem item = tree.getItem(0);
 			String name = item.getText();
 			File file = (File) item.getData();
 			if (file != null && file.getName().equals(name) && file.exists()) {
 				String	parent = file.getParent();
-        if ( parent != null ){
-        	((NewTorrentWizard) wizard).setDefaultOpenDir( parent );
-        }
+				if ( parent != null ){
+					((NewTorrentWizard) wizard).setDefaultOpenDir( parent );
+				}
 
-        if (file.isDirectory()) {
+				if (file.isDirectory()) {
 					wizard.directoryPath = file.getAbsolutePath();
 					wizard.create_mode = wizard.MODE_DIRECTORY;
 
-					return new SavePathPanel(wizard, this);
 				} else {
 					wizard.singlePath = file.getAbsolutePath();
 					wizard.create_mode = wizard.MODE_SINGLE_FILE;
-					return new SavePathPanel(wizard, this);
 				}
+				
+				return;
 			}
 		}
-		Map map = new HashMap();
-
-		List<Map> list = new ArrayList<>();
-
-		map.put("file_map", list);
-
-		buildList(list, tree.getItems());
-
-		wizard.byo_map = map;
-
-		try {
-			wizard.byo_desc_file = AETemporaryFileHandler.createTempFile();
-
-			FileUtil.writeBytesAsFile(wizard.byo_desc_file.getAbsolutePath(),
-					BEncoder.encode(map));
-
-		} catch (Throwable e) {
-
-			Debug.out(e);
+		
+		wizard.create_mode = wizard.MODE_BYO;
+		
+		if ( tree.getItemCount() == 0 ){
+			
+			wizard.byo_map = null;
+			
+		}else{
+			
+			Map map = new HashMap();
+	
+			List<Map> list = new ArrayList<>();
+	
+			map.put("file_map", list);
+	
+			buildList(list, tree.getItems());
+	
+			wizard.byo_map = map;
+	
+			try {
+				wizard.byo_desc_file = AETemporaryFileHandler.createTempFile();
+	
+				FileUtil.writeBytesAsFile(wizard.byo_desc_file.getAbsolutePath(),
+						BEncoder.encode(map));
+	
+			} catch (Throwable e) {
+	
+				Debug.out(e);
+			}
 		}
-
+	}
+	
+	@Override
+	public IWizardPanel<NewTorrentWizard> 
+	getPreviousPanel() 
+	{
+		saveState();
+		
+		return( super.getPreviousPanel());
+	}
+	  
+	@Override
+	public IWizardPanel<NewTorrentWizard> 
+	getNextPanel() 
+	{
+		saveState();
+		
 		return new SavePathPanel(wizard, this);
 	}
 
