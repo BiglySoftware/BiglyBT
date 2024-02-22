@@ -3910,6 +3910,7 @@ DownloadManagerController
 			DiskManager			dm, 
 			DiskManagerPiece	piece )
 		{
+			download_manager.informPieceDoneChanged( piece );
 		}
 		
 		@Override

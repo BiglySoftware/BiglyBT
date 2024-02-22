@@ -42,6 +42,7 @@ import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimerEvent;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.ui.swt.components.LinkLabel;
+import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.pifimpl.AbstractUISWTInputReceiver;
 import com.biglybt.ui.swt.utils.DragDropUtils;
 
@@ -118,6 +119,11 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 		if ( parent_shell == null ){
 
 			parent = Display.getDefault().getActiveShell();
+			
+			if ( parent != null && parent.getData( ShellFactory.NOT_A_GOOD_PARENT ) != null ){
+				
+				parent = null;
+			}
 		}
 
 		if (parent == null) {

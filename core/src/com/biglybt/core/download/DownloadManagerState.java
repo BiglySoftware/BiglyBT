@@ -96,7 +96,8 @@ DownloadManagerState
 	public static final String AT_REAL_DM_MAGNET_TIME		= "rdmmt";			// long
 	public static final String AT_PLUGIN_OPTIONS			= "pluginoptions";	// Map
 	public static final String 		AT_PO_ENABLE_ANNOUNCE		= "enableannounce";		// boolean, def=true
-	
+	public static final String AT_SET_FILE_PRIORITY_REM_PIECE	= "sfp.rp";		// int
+
 	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
 	public static final String AT_TRANSIENT_TAG_SORT		= "t_tagsort";
 

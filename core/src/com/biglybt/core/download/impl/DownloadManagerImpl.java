@@ -35,6 +35,8 @@ import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.disk.*;
 import com.biglybt.core.disk.impl.DiskManagerImpl;
 import com.biglybt.core.disk.impl.DiskManagerUtil;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 import com.biglybt.core.download.*;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerEvent;
@@ -723,6 +725,8 @@ DownloadManagerImpl
     private int		message_mode	= -1;
 
     private volatile int		tcp_port_override;
+
+    private volatile int		set_file_priority_high_pieces_rem	= 0;
     
 	// Only call this with STATE_QUEUED, STATE_WAITING, or STATE_STOPPED unless you know what you are doing
 
@@ -1096,7 +1100,7 @@ DownloadManagerImpl
 					 			};
 
 					 	@Override
-					  public void
+					 	public void
 					 	attributeEventOccurred(
 							DownloadManager dm, String attribute_name, int event_type)
 					 	{
@@ -1131,6 +1135,9 @@ DownloadManagerImpl
 
 					 				tc.resetTrackerUrl( false );
 					 			}
+							}else if ( attribute_name.equals( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE )){
+								
+								readParameters();
 							}
 						}
 					};
@@ -1138,6 +1145,7 @@ DownloadManagerImpl
 				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_FILE_LINKS2, DownloadManagerStateAttributeListener.WRITTEN);
 				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_PARAMETERS, DownloadManagerStateAttributeListener.WRITTEN);
 				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_NETWORKS, DownloadManagerStateAttributeListener.WRITTEN);
+				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE, DownloadManagerStateAttributeListener.WRITTEN);
 
 				 torrent	= download_manager_state.getTorrent();
 
@@ -1647,19 +1655,23 @@ DownloadManagerImpl
 	protected void
 	readParameters()
 	{
-		max_connections							= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_PEERS );
-		max_connections_when_seeding_enabled	= getDownloadState().getBooleanParameter( DownloadManagerState.PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED );
-		max_connections_when_seeding			= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_PEERS_WHEN_SEEDING );
-		max_seed_connections					= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_SEEDS );
-		max_uploads						 		= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_UPLOADS );
-		max_uploads_when_seeding_enabled 		= getDownloadState().getBooleanParameter( DownloadManagerState.PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED );
-		max_uploads_when_seeding 				= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_UPLOADS_WHEN_SEEDING );
-		max_upload_when_busy_bps				= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_UPLOAD_WHEN_BUSY ) * 1024;
+		DownloadManagerState state = getDownloadState();
+		
+		max_connections							= state.getIntParameter( DownloadManagerState.PARAM_MAX_PEERS );
+		max_connections_when_seeding_enabled	= state.getBooleanParameter( DownloadManagerState.PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED );
+		max_connections_when_seeding			= state.getIntParameter( DownloadManagerState.PARAM_MAX_PEERS_WHEN_SEEDING );
+		max_seed_connections					= state.getIntParameter( DownloadManagerState.PARAM_MAX_SEEDS );
+		max_uploads						 		= state.getIntParameter( DownloadManagerState.PARAM_MAX_UPLOADS );
+		max_uploads_when_seeding_enabled 		= state.getBooleanParameter( DownloadManagerState.PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED );
+		max_uploads_when_seeding 				= state.getIntParameter( DownloadManagerState.PARAM_MAX_UPLOADS_WHEN_SEEDING );
+		max_upload_when_busy_bps				= state.getIntParameter( DownloadManagerState.PARAM_MAX_UPLOAD_WHEN_BUSY ) * 1024;
 
 		max_uploads = Math.max( max_uploads, DownloadManagerState.MIN_MAX_UPLOADS );
 		max_uploads_when_seeding = Math.max( max_uploads_when_seeding, DownloadManagerState.MIN_MAX_UPLOADS );
 
-		upload_priority_manual					= getDownloadState().getIntParameter( DownloadManagerState.PARAM_UPLOAD_PRIORITY );
+		upload_priority_manual					= state.getIntParameter( DownloadManagerState.PARAM_UPLOAD_PRIORITY );
+		
+		set_file_priority_high_pieces_rem		= state.getIntAttribute( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE );
 	}
 
 	protected int[]
@@ -4147,6 +4159,56 @@ DownloadManagerImpl
 		List<DiskManagerFileInfo>	files )
 	{
 		informPrioritiesChange( files );
+	}
+	
+	protected void
+	informPieceDoneChanged(
+		DiskManagerPiece	piece )
+	{
+		int num = set_file_priority_high_pieces_rem;
+		
+		if ( num > 0 ){
+			
+			DiskManager	dm = getDiskManager();
+			
+			if ( dm != null ){
+				
+				DiskManagerPiece[] pieces = dm.getPieces();
+	
+				DMPieceList list = piece.getPieceList();
+				
+				for ( int i=0;i<list.size();i++) {
+	
+					DMPieceMapEntry entry = list.get( i );
+	
+					DiskManagerFileInfo info = entry.getFile();
+					
+					if ( info.getPriority() != 0 ){
+						
+						continue;
+					}
+					
+					int start = info.getFirstPieceNumber();
+		    		
+		    		int end = start + info.getNbPieces();
+		    		
+		    		int remaining = 0;
+		    		
+		    		for ( int j = start; j < end; j++ ){
+		    			
+		    			if ( !pieces[ j ].isDone() ){
+		    				
+		    				remaining++;
+		    			}
+		    		}
+		    		
+		    		if ( remaining <= num ){
+		    			
+		    			info.setPriority( 1 );
+		    		}
+				}
+			}
+		}
 	}
 	
 	protected void

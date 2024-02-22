@@ -67,6 +67,8 @@ import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.common.table.TableStructureEventDispatcher;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.components.shell.ShellFactory.AEShell;
 import com.biglybt.ui.swt.exporttorrent.wizard.ExportTorrentWizard;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.minibar.DownloadBar;
@@ -427,6 +429,8 @@ public class TorrentMenuFancy
 			}
 		};
 
+		shell.setData( ShellFactory.NOT_A_GOOD_PARENT, "" );
+		
 		//FormLayout shellLayout = new FormLayout();
 		RowLayout shellLayout = new RowLayout(SWT.VERTICAL);
 		shellLayout.fill = true;
@@ -1532,6 +1536,42 @@ public class TorrentMenuFancy
 							
 							itemMaskDLComp.setEnabled( dms.length > 0 );
 
+								// set file priority when pieces remaining
+							
+							MenuItem itemSetFilePriority = new MenuItem(menu, SWT.PUSH);
+									
+							String sfp_text = MessageText.getString( "ConfigView.label.set.file.pri.pieces.rem" );
+							
+							int sfp_def;
+							
+							if ( dms.length == 1 ){
+								
+								sfp_def = dms[0].getDownloadState().getIntAttribute( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE );
+								
+								if ( sfp_def > 0 ){
+									
+									sfp_text += " (" + sfp_def + ")";
+								}
+							}else{
+								
+								sfp_def = -1;
+							}
+							
+							itemSetFilePriority.setText(sfp_text+"...");
+							
+							itemSetFilePriority.addListener(SWT.Selection, new ListenerDMTask(dms) {
+								@Override
+								public void run(DownloadManager[] dms) {
+									Utils.numberPrompt( "enter.number", "number.of.pieces", sfp_def>0?sfp_def:null, (num)->{
+										for ( DownloadManager dm: dms ){
+											dm.getDownloadState().setIntAttribute(DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE, num);
+										}
+									});
+								}
+							});
+
+							itemSetFilePriority.setEnabled( dms.length > 0 );					
+							
 							if (userMode > 1 && isSeedingView) {
 
 								boolean canSetSuperSeed = false;

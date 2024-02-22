@@ -23,7 +23,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
@@ -42,7 +41,8 @@ import com.biglybt.ui.swt.UIFunctionsSWT;
  */
 public final class ShellFactory
 {
-
+	public static final String NOT_A_GOOD_PARENT = "ShellFactory.NOT_A_GOOD_PARENT";
+	
 	public static Shell createMainShell(int styles) {
 		Shell parent = null;
 

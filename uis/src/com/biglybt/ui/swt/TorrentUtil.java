@@ -1293,7 +1293,7 @@ public class TorrentUtil
 		
 		itemRestoreResume.setEnabled( restoreEnabled);
 		
-		// mask dl comp
+			// mask dl comp
 				
 		MenuItem itemMaskDLComp = new MenuItem(menuFiles, SWT.CHECK);
 		
@@ -1301,8 +1301,7 @@ public class TorrentUtil
 			itemMaskDLComp.setSelection( allMaskDC );
 		}
 		
-		Messages.setLanguageText(itemMaskDLComp,
-				"ConfigView.label.hap");
+		Messages.setLanguageText(itemMaskDLComp,"ConfigView.label.hap");
 		itemMaskDLComp.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager dm) {
@@ -1311,6 +1310,42 @@ public class TorrentUtil
 		});
 
 		itemMaskDLComp.setEnabled( dms.length > 0 );
+		
+			// set file priority when pieces remaining
+		
+		MenuItem itemSetFilePriority = new MenuItem(menuFiles, SWT.PUSH);
+				
+		String sfp_text = MessageText.getString( "ConfigView.label.set.file.pri.pieces.rem" );
+		
+		int sfp_def;
+		
+		if ( dms.length == 1 ){
+			
+			sfp_def = dms[0].getDownloadState().getIntAttribute( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE );
+			
+			if ( sfp_def > 0 ){
+				
+				sfp_text += " (" + sfp_def + ")";
+			}
+		}else{
+			
+			sfp_def = -1;
+		}
+		
+		itemSetFilePriority.setText(sfp_text + "...");
+		
+		itemSetFilePriority.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager[] dms) {
+				Utils.numberPrompt( "enter.number", "number.of.pieces", sfp_def>0?sfp_def:null, (num)->{
+					for ( DownloadManager dm: dms ){
+						dm.getDownloadState().setIntAttribute(DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE, num);
+					}
+				});
+			}
+		});
+
+		itemSetFilePriority.setEnabled( dms.length > 0 );
 		
 			// Advanced -> archive
 

@@ -69,6 +69,7 @@ import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
+import com.biglybt.core.torrent.impl.TorrentOpenFileOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.platform.PlatformManager;
@@ -99,6 +100,8 @@ import com.biglybt.pif.disk.DiskManagerListener;
 import com.biglybt.pif.platform.PlatformManagerException;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.Graphic;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.utils.PooledByteBuffer;
 
 /**
@@ -7183,5 +7186,57 @@ public class Utils
 	listFileRootsWithTimeout()
 	{
 		return( FileUtil.listRootsWithTimeout( 250 ));
+	}
+	
+	public static void
+	numberPrompt(
+		String				title_resource,
+		String				text_resource,
+		Integer				def,
+		Consumer<Integer>	cons )
+	{
+		SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow( title_resource, text_resource );
+				
+		if ( def != null ){
+			
+			entryWindow.setPreenteredText( String.valueOf( def ), false );
+			entryWindow.selectPreenteredText( true );
+		}
+		
+		entryWindow.prompt(
+			new UIInputReceiverListener() {
+				@Override
+				public void 
+				UIInputReceiverClosed(
+					UIInputReceiver entryWindow ) 
+				{
+					if (!entryWindow.hasSubmittedInput()){
+						
+						return;
+					}
+					
+					String sReturn = entryWindow.getSubmittedInput();
+
+					if ( sReturn == null ){
+						
+						return;
+					}
+					
+					try{
+						int num = Integer.valueOf(sReturn).intValue();
+						
+						cons.accept( num );
+						
+					}catch ( Throwable e ){
+
+						new MessageBoxShell(SWT.ICON_ERROR | SWT.OK,
+								MessageText.getString("value.invalid.title"),
+								MessageText.getString("value.invalid.text", new String[]{ sReturn })).open(
+										(n)->{
+											Utils.execSWTThreadLater(1,()->numberPrompt(title_resource,text_resource, def, cons ));
+										});
+					}
+				}
+			});
 	}
 }
