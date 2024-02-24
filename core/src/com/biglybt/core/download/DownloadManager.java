@@ -134,6 +134,13 @@ DownloadManager
     
     public void 
     forceRecheck();
+    
+    	/**
+    	 * Called for certain config change events so that individual managers don't have to separately listener for changes
+    	 */
+    
+    public void
+    syncGlobalConfig();
 
     	/**
          * Reset the file download state to totally undownloaded. Download must be stopped

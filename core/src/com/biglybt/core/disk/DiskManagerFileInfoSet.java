@@ -51,7 +51,7 @@ DiskManagerFileInfoSet
 	/**
 	 * Sets the priorities of all files
 	 *
-	 * @param newPriorities array size must be # of files in set
+	 * @param newPriorities array size must be # of files in set. Use Integer.MIN_VALUE to signify "no change"
 	 */
 	public void setPriority(int[] newPriorities);
 

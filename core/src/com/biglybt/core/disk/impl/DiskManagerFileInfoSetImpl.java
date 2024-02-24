@@ -55,30 +55,48 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 	}
 
 	@Override
-	public void setPriority(int[] newPriorities) {
-		if(newPriorities.length != files.length)
+	public void 
+	setPriority(
+		int[] newPriorities) 
+	{
+		if ( newPriorities.length != files.length ){
+			
 			throw new IllegalArgumentException("array length mismatches the number of files");
-
+		}
+		
 		DownloadManagerState dmState = diskManager.getDownloadState();
 
-		try	{
+		try{
 			dmState.suppressStateSave(true);
 
-
-			for(int i=0;i<files.length;i++)
-				if(newPriorities[i] != 0){
-					files[i].setPriority(newPriorities[i]);
+			for ( int i=0;i<files.length;i++ ){
+				
+					// existing code ignored 0, dunno why, removed it. anyway I've added Integer.MIN_VALUE to signify no change
+				
+				int np = newPriorities[i];
+				
+				if ( np != Integer.MIN_VALUE ){
+					
+					files[i].setPriority( np );
 				}
-		} finally {
+			}
+		}finally{
+			
 			dmState.suppressStateSave(false);
 		}
 	}
 
 	@Override
-	public void setSkipped(boolean[] toChange, boolean setSkipped) {
-		if(toChange.length != files.length)
+	public void 
+	setSkipped(
+		boolean[] toChange, 
+		boolean setSkipped) 
+	{
+		if (toChange.length != files.length ){
+			
 			throw new IllegalArgumentException("array length mismatches the number of files");
-
+		}
+		
 		DownloadManagerState dmState = diskManager.getDownloadState();
 
 		try	{

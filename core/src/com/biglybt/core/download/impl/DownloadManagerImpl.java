@@ -1084,6 +1084,8 @@ DownloadManagerImpl
 				 controller.setDownloadManagerState( download_manager_state );
 				 
 				 readParameters();
+				 
+				 readFilePriorityConfig( true, false );
 
 					// establish any file links
 
@@ -1137,7 +1139,7 @@ DownloadManagerImpl
 					 			}
 							}else if ( attribute_name.equals( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE )){
 								
-								readParameters();
+								readFilePriorityConfig( false, false );
 							}
 						}
 					};
@@ -1652,6 +1654,13 @@ DownloadManagerImpl
 
 	}
 
+	@Override
+	public void 
+	syncGlobalConfig()
+	{
+		readFilePriorityConfig( false, true );
+	}
+	
 	protected void
 	readParameters()
 	{
@@ -1670,10 +1679,31 @@ DownloadManagerImpl
 		max_uploads_when_seeding = Math.max( max_uploads_when_seeding, DownloadManagerState.MIN_MAX_UPLOADS );
 
 		upload_priority_manual					= state.getIntParameter( DownloadManagerState.PARAM_UPLOAD_PRIORITY );
-		
-		set_file_priority_high_pieces_rem		= state.getIntAttribute( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE );
 	}
 
+	private void
+	readFilePriorityConfig(
+		boolean		init,
+		boolean		global_change )
+	{
+		int sfp		= getDownloadState().getIntAttribute( DownloadManagerState.AT_SET_FILE_PRIORITY_REM_PIECE );
+		
+		if ( sfp == 0 ){
+			
+			sfp = COConfigurationManager.getIntParameter( ConfigKeys.Transfer.ICFG_SET_FILE_PRIORITY_REM_PIECE );
+		}
+		
+		if ( sfp != set_file_priority_high_pieces_rem ){
+		
+			set_file_priority_high_pieces_rem = sfp;
+			
+			if ( !init ){
+				
+				checkFilePriorities( global_change );
+			}
+		}
+	}
+	
 	protected int[]
 	getMaxConnections( boolean mixed )
 	{
@@ -4047,6 +4077,59 @@ DownloadManagerImpl
 		}
 	}
 
+	private void
+	checkFilePriorities(
+		boolean	global_change )
+	{
+			// on global change to zero we reset file priorities as user seems to want to disable the default and manually clearing priorities across
+			// all downloads is a pain
+		
+		int sfp_pieces = set_file_priority_high_pieces_rem;
+		
+		if ( global_change || sfp_pieces > 0 ){
+			
+			DiskManager	dm = getDiskManager();
+			
+			if ( dm != null ){
+
+				long sfp_bytes = dm.getPieceLength() * sfp_pieces;
+				
+				DiskManagerFileInfoSet set = getDiskManagerFileInfoSet();
+				
+				DiskManagerFileInfo[] files = set.getFiles();
+				
+				int[]	priorities = null;
+						
+				for ( DiskManagerFileInfo file: files ){
+					
+					long	rem = file.getLength() - file.getDownloaded();
+		    		
+		    		int expected = sfp_bytes==0?0:( rem <= sfp_bytes?1:0);
+		    					    				
+		    		int existing = file.getPriority();
+		    		
+		    		if ( expected != existing && ( existing == 0 || existing == 1 )){
+		    			
+	    				if ( priorities == null ){
+	    					
+	    					priorities = new int[files.length];
+	    					
+	    					Arrays.fill( priorities, Integer.MIN_VALUE );
+	    				}
+	    				
+	    				priorities[file.getIndex()] = expected;
+		    		}
+				}
+				
+				if ( priorities != null ){
+				
+					set.setPriority( priorities );
+				}
+			}
+			
+		}
+	}
+	
 	/**
 	 * Doesn't not inform if state didn't change from last inform call
 	 */
@@ -4078,6 +4161,10 @@ DownloadManagerImpl
 					resume_time = 0;
 				}
 
+				if ( new_state == DownloadManager.STATE_DOWNLOADING ){
+					
+					checkFilePriorities( false );
+				}
 
 				listeners.dispatch( LDT_STATECHANGED, new Object[]{ this, new Integer( new_state )});
 			}
@@ -4165,46 +4252,29 @@ DownloadManagerImpl
 	informPieceDoneChanged(
 		DiskManagerPiece	piece )
 	{
-		int num = set_file_priority_high_pieces_rem;
+		int sfp_pieces = set_file_priority_high_pieces_rem;
 		
-		if ( num > 0 ){
+		if ( sfp_pieces > 0 ){
 			
 			DiskManager	dm = getDiskManager();
 			
 			if ( dm != null ){
-				
-				DiskManagerPiece[] pieces = dm.getPieces();
-	
+					
+				long sfp_bytes = dm.getPieceLength() * sfp_pieces;	// easier to work with bytes and close enough
+
 				DMPieceList list = piece.getPieceList();
 				
-				for ( int i=0;i<list.size();i++) {
+				for ( int i=0; i<list.size(); i++){
 	
 					DMPieceMapEntry entry = list.get( i );
 	
-					DiskManagerFileInfo info = entry.getFile();
+					DiskManagerFileInfo file = entry.getFile();
 					
-					if ( info.getPriority() != 0 ){
-						
-						continue;
-					}
-					
-					int start = info.getFirstPieceNumber();
-		    		
-		    		int end = start + info.getNbPieces();
-		    		
-		    		int remaining = 0;
-		    		
-		    		for ( int j = start; j < end; j++ ){
-		    			
-		    			if ( !pieces[ j ].isDone() ){
-		    				
-		    				remaining++;
-		    			}
-		    		}
-		    		
-		    		if ( remaining <= num ){
-		    			
-		    			info.setPriority( 1 );
+					long	rem = file.getLength() - file.getDownloaded();
+
+		    		if ( rem <= sfp_bytes ){
+    						    			
+		    			file.setPriority( 1 );
 		    		}
 				}
 			}

@@ -1030,6 +1030,22 @@ public class GlobalManagerImpl
     	});
 
     file_merger = new GlobalManagerFileMerger( this );
+    
+    COConfigurationManager.addParameterListener(
+    	ConfigKeys.Transfer.ICFG_SET_FILE_PRIORITY_REM_PIECE,
+    	(n)->{
+    		for ( DownloadManager dm: managers_list_cow ){
+    			
+    			try{
+    				
+    				dm.syncGlobalConfig();
+    				
+    			}catch( Throwable e ){
+    				
+    				Debug.out( e );
+    			}
+    		}
+    	});
   }
 
   @Override

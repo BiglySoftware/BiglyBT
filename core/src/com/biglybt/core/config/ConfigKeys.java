@@ -430,6 +430,7 @@ public final class ConfigKeys {
 		public static final String ICFG_PRIORITIZE_FIRST_MB = "Prioritize First MB";
 		public static final String BCFG_PRIORITIZE_FIRST_PIECE_FORCE = "Prioritize First Piece Force";
 		public static final String BCFG_PRIORITIZE_MOST_COMPLETED_FILES = "Prioritize Most Completed Files";
+		public static final String ICFG_SET_FILE_PRIORITY_REM_PIECE = "Set File Priority Remaining Pieces";
 		public static final String SCFG_IGNORE_PEER_PORTS = "Ignore.peer.ports";
 		public static final String BCFG_LAN_SPEED_ENABLED = "LAN Speed Enabled";
 		public static final String ICFG_MAX_LAN_UPLOAD_SPEED_K_BS = "Max LAN Upload Speed KBs";

@@ -462,8 +462,12 @@ DiskManagerUtil
 		        final DiskManagerFileInfoSet fileSetSkeleton = new DiskManagerFileInfoSet() {
 
 		        	@Override
-		        	public void load(int[] priorities, boolean[] skipped){
+		        	public void 
+		        	load(
+		        		int[] priorities, boolean[] skipped)
+		        	{
 		        		for ( int i=0;i<priorities.length;i++){
+		        			
 		        			res[i].load(priorities[i],skipped[i]);
 		        		}
 		        	}
@@ -485,39 +489,56 @@ DiskManagerUtil
 					}
 
 					@Override
-					public void setPriority(int[] newPriorities) {
-						if(newPriorities.length != res.length){
+					public void 
+					setPriority(
+						int[] newPriorities ) 
+					{
+						if ( newPriorities.length != res.length){
+							
 							throw new IllegalArgumentException("array length mismatches the number of files");
 						}
 						
 						List<DiskManagerFileInfo> priorityChanged = new ArrayList<>( res.length );
 						
-						for(int i=0;i<res.length;i++){
+						for ( int i=0; i<res.length; i++){
+							
+							FileSkeleton file = res[i];
 							
 							int np = newPriorities[i];
 							
-							res[i].priority = np;
-							
-							if ( np != 0 ){
-								priorityChanged.add( res[i] );
+							if ( np != Integer.MIN_VALUE ){
+								
+								if ( file.priority != np ){
+								
+									file.priority = np;
+																									
+									priorityChanged.add( file );
+								}
 							}
 						}
 						if ( !loading[0] ){
 
-							DiskManagerImpl.storeFilePriorities( download_manager, res);
+							DiskManagerImpl.storeFilePriorities( download_manager, res );
 						}
 
 						if ( !priorityChanged.isEmpty()){
+							
 							listener.filePriorityChanged(getDiskManager(),priorityChanged);
 						}
 					}
 
 					@Override
-					public void setSkipped(boolean[] toChange, boolean setSkipped) {
-						if(toChange.length != res.length)
+					public void 
+					setSkipped(
+							boolean[] toChange, boolean setSkipped) 
+					{
+						if ( toChange.length != res.length ){
+							
 							throw new IllegalArgumentException("array length mismatches the number of files");
-
-		        		if (!setSkipped ){
+						}
+						
+		        		if ( !setSkipped ){
+		        			
 		    				String[] types = DiskManagerImpl.getStorageTypes(download_manager);
 
 		    				boolean[]	toLinear 	= new boolean[toChange.length];

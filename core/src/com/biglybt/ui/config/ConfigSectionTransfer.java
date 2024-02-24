@@ -396,6 +396,12 @@ public class ConfigSectionTransfer
 				"ConfigView.label.prioritizemostcompletedfiles"),
 				Parameter.MODE_INTERMEDIATE);
 
+		IntParameterImpl sfp =new IntParameterImpl( ICFG_SET_FILE_PRIORITY_REM_PIECE, "ConfigView.label.set.file.pri.pieces.rem", 0, Integer.MAX_VALUE);
+		
+		sfp.setGenerateIntermediateEvents( false );
+		
+		add( sfp, Parameter.MODE_INTERMEDIATE);
+		
 		// ignore ports
 
 		StringParameterImpl paramIgnorePeerPorts = new StringParameterImpl(

@@ -246,8 +246,9 @@ public class IntSwtParameter
 					debug("create timeSaveEvent (" + spinner.getSelection() + ") ");
 				}
 				if (!disableTimedSave) {
-					timedSaveEvent = SimpleTimer.addEvent("IntParam Saver",
-							SystemTime.getOffsetTime(750), timerEventSave);
+					if ( pluginParam == null || pluginParam.getGenerateIntermediateEvents()){
+						timedSaveEvent = SimpleTimer.addEvent("IntParam Saver",	SystemTime.getOffsetTime(750), timerEventSave);
+					}
 				}
 			}
 		});
