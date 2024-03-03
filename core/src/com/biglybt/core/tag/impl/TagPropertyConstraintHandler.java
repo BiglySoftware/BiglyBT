@@ -96,7 +96,9 @@ TagPropertyConstraintHandler
 	private final TagManagerImpl	tag_manager;
 	private final ShareManager		share_manager;
 	
-	
+	private static final Pattern COMMENT_PATTERN1 = Pattern.compile( "/\\*(.*?)\\*/", Pattern.DOTALL );
+	private static final Pattern COMMENT_PATTERN2 = Pattern.compile( "((#|//).*$)" );
+
 	private volatile boolean		initialised;
 	
 	private boolean 	initial_assignment_complete;
@@ -1589,6 +1591,10 @@ TagPropertyConstraintHandler
 		removeComments(
 			String	str )
 		{
+	        Matcher matcher = COMMENT_PATTERN1.matcher( str );
+	        
+	        str = matcher.replaceAll("");
+
 			String[] lines = str.trim().split( "\n" );
 			
 			String result = "";
@@ -1597,12 +1603,14 @@ TagPropertyConstraintHandler
 				
 				line = line.trim();
 				
-				if ( line.startsWith( "#" ) || line.startsWith( "//" )) {
-					
-				}else{
-					
-					result += line + "\n";
-				}
+		        matcher = COMMENT_PATTERN2.matcher( line );
+		        
+		        line = matcher.replaceAll("");
+		        
+		        if ( !line.isEmpty()) {
+		        	
+		        	result += line + "\n";
+		        }
 			}
 			
 			return( result.trim());
