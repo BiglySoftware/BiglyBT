@@ -1585,13 +1585,36 @@ TagPropertyConstraintHandler
 			return( depends_on_names_etc );
 		}
 		
+		private String
+		removeComments(
+			String	str )
+		{
+			String[] lines = str.trim().split( "\n" );
+			
+			String result = "";
+			
+			for ( String line: lines ){
+				
+				line = line.trim();
+				
+				if ( line.startsWith( "#" ) || line.startsWith( "//" )) {
+					
+				}else{
+					
+					result += line + "\n";
+				}
+			}
+			
+			return( result.trim());
+		}
+		
 		private ConstraintExpr
 		compileStart(
 			String						str,
 			Map<String,ConstraintExpr>	context )
 		{
-			str = str.trim();
-
+			str = removeComments( str );
+			
 			if ( str.equalsIgnoreCase( "true" )){
 
 				return( new ConstraintExprTrue());
