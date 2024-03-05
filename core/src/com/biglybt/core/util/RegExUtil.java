@@ -35,7 +35,9 @@ RegExUtil
 	public static final Pattern PAT_SPLIT_DOT = Pattern.compile("\\.");
 	public static final Pattern PAT_SPLIT_SPACE = Pattern.compile(" ");
 	public static final Pattern PAT_SPLIT_SLASH_N = Pattern.compile("\n");
-
+	
+	public static final String PAT_WHITE_SPACE = "(?:\\s|\\p{Z})+";	// includes non-breaking space char
+			
 	private static final ThreadLocal<Map<String,Object[]>>		tls	=
 		new ThreadLocal<Map<String,Object[]>>()
 		{

@@ -489,7 +489,7 @@ Result
 		}
 	}
 
-	protected static String removeHTMLTags(String input) {
+	public static String removeHTMLTags(String input) {
 		if ( input == null ){
 			return( null );
 		}

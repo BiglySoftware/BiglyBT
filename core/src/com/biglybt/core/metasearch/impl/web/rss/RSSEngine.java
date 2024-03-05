@@ -35,6 +35,7 @@ import com.biglybt.core.metasearch.impl.web.WebEngine;
 import com.biglybt.core.metasearch.impl.web.WebResult;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.utils.StaticUtilities;
@@ -48,8 +49,10 @@ public class
 RSSEngine
 	extends WebEngine
 {
-	private Pattern seed_leecher_pat 	= Pattern.compile("([0-9]+)\\s+(seed|leecher)s", Pattern.CASE_INSENSITIVE);
-	private Pattern size_pat 			= Pattern.compile("([0-9\\.]+)\\s+(B|KB|KiB|MB|MiB|GB|GiB|TB|TiB)", Pattern.CASE_INSENSITIVE);
+	private Pattern seed_leecher_pat1 	= Pattern.compile("([0-9]+)" + RegExUtil.PAT_WHITE_SPACE + "(seed|seeder|leech|leecher)s", Pattern.CASE_INSENSITIVE );
+	private Pattern seed_leecher_pat2 	= Pattern.compile("(seed|seeder|leech|leecher)s" + RegExUtil.PAT_WHITE_SPACE + "([0-9]+)", Pattern.CASE_INSENSITIVE );
+	
+	private Pattern size_pat 			= Pattern.compile("([0-9\\.]+)" + RegExUtil.PAT_WHITE_SPACE + "(B|KB|KiB|MB|MiB|GB|GiB|TB|TiB)", Pattern.CASE_INSENSITIVE );
 
 	public static EngineImpl
 	importFromBEncodedMap(
@@ -641,26 +644,50 @@ RSSEngine
 
 								desc = desc.replaceAll( "\\(s\\)", "s" );
 
-								desc = desc.replaceAll( "seeders", "seeds" );
+								desc = desc.replace( ":", " " );
+								
+								desc = Result.removeHTMLTags( desc );
+								
+								Matcher m = seed_leecher_pat1.matcher( desc );
 
-								Matcher m = seed_leecher_pat.matcher( desc );
+								if ( m.find()){
+									
+									do{
+										String	num = m.group(1);
 
-								while( m.find()){
+										String	type = m.group(2);
 
-									String	num = m.group(1);
+										if ( type.toLowerCase().charAt(0) == 's' ){
 
-									String	type = m.group(2);
+											result.setNbSeedsFromHTML( num );
 
-									if ( type.toLowerCase().charAt(0) == 's' ){
+										}else{
 
-										result.setNbSeedsFromHTML( num );
+											result.setNbPeersFromHTML( num );
+										}
+									}while( m.find());
+									
+								}else{
+									
+									m = seed_leecher_pat2.matcher( desc );
 
-									}else{
+									while( m.find()){
+										
+										String	num = m.group(2);
 
-										result.setNbPeersFromHTML( num );
+										String	type = m.group(1);
+
+										if ( type.toLowerCase().charAt(0) == 's' ){
+
+											result.setNbSeedsFromHTML( num );
+
+										}else{
+
+											result.setNbPeersFromHTML( num );
+										}
 									}
 								}
-
+								
 								m = size_pat.matcher( desc );
 
 								if ( m.find()){
