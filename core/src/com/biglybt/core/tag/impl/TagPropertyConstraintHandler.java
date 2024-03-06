@@ -97,7 +97,7 @@ TagPropertyConstraintHandler
 	private final ShareManager		share_manager;
 	
 	private static final Pattern COMMENT_PATTERN1 = Pattern.compile( "/\\*(.*?)\\*/", Pattern.DOTALL );
-	private static final Pattern COMMENT_PATTERN2 = Pattern.compile( "((#|//).*$)" );
+	private static final Pattern COMMENT_PATTERN2 = Pattern.compile( "((^#|//).*$)" );
 
 	private volatile boolean		initialised;
 	
