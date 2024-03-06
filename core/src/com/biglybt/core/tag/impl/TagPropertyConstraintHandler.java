@@ -1623,7 +1623,11 @@ TagPropertyConstraintHandler
 		{
 			str = removeComments( str );
 			
-			if ( str.equalsIgnoreCase( "true" )){
+			if ( str.isEmpty() || str.equalsIgnoreCase( "false" )){
+				
+				return( new ConstraintExprFalse());
+				
+			}else if ( str.equalsIgnoreCase( "true" )){
 
 				return( new ConstraintExprTrue());
 			}
@@ -2262,6 +2266,34 @@ TagPropertyConstraintHandler
 			}
 		}
 
+		private static class
+		ConstraintExprFalse
+			implements ConstraintExpr
+		{
+			@Override
+			public Object
+			eval(
+				Map<String,Object>	context,
+				DownloadManager		dm,
+				List<Tag>			tags,
+				StringBuilder		debug )
+			{
+				if ( debug != null ){
+					
+					debug.append( getString());
+				}
+				
+				return( false );
+			}
+
+			@Override
+			public String
+			getString()
+			{
+				return( "false" );
+			}
+		}
+		
 		private class
 		ConstraintExprParams
 			implements  ConstraintExpr
