@@ -605,8 +605,13 @@ RSSEngine
 						}else if( lc_child_name.equals( "peers" ) || lc_child_name.equals( "leechers" )){
 
 							try{
-								item_peers = Integer.parseInt( value );
-
+									// when we say "peers" we really mean "leechers" so if both are present we 
+									// have leechers over-riding peers as some feeds have "peers" meaning "seeders + leechers"...
+								
+								if ( lc_child_name.equals( "leechers" ) || item_peers < 0 ){
+								
+									item_peers = Integer.parseInt( value );
+								}
 							}catch( Throwable e ){
 
 							}
