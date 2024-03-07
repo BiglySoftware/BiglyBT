@@ -18,9 +18,9 @@ jobs:
         java-version: [ '8', '11', '17' ]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up JDK
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: ${{ matrix.java-version }}
         distribution: 'temurin'
@@ -33,7 +33,7 @@ jobs:
       if: steps.maven_package.outcome == 'success'
     - name: Publish artifact
       if: steps.maven_package.outcome == 'success'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: BiglyBT_${{ runner.os }}_JDK_${{ matrix.java-version }}
         path: staging
