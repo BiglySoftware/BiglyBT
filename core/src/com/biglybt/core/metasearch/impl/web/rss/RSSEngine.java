@@ -922,7 +922,7 @@ RSSEngine
 					
 					if ( item_completed >= 0 || desc_completed >= 0) {
 						
-						result.setNbCompleted( Math.max( item_completed, desc_completed ));
+						result.setNbCompleted(item_completed>= 0?item_completed:desc_completed);
 					}
 
 						// if we still have no download link see if the magnet is in the title
