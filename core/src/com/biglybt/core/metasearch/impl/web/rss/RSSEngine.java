@@ -51,6 +51,7 @@ RSSEngine
 {
 	private Pattern seed_leecher_pat1 	= Pattern.compile("([0-9]+)" + RegExUtil.PAT_WHITE_SPACE + "(seed|seeder|leech|leecher)s", Pattern.CASE_INSENSITIVE );
 	private Pattern seed_leecher_pat2 	= Pattern.compile("(seed|seeder|leech|leecher)s" + RegExUtil.PAT_WHITE_SPACE + "([0-9]+)", Pattern.CASE_INSENSITIVE );
+	private Pattern completed_pat	 	= Pattern.compile("(?:complete|completed)" + RegExUtil.PAT_WHITE_SPACE + "([0-9]+)", Pattern.CASE_INSENSITIVE );
 	
 	private Pattern size_pat 			= Pattern.compile("([0-9\\.]+)" + RegExUtil.PAT_WHITE_SPACE + "(B|KB|KiB|MB|MiB|GB|GiB|TB|TiB)", Pattern.CASE_INSENSITIVE );
 
@@ -353,11 +354,14 @@ RSSEngine
 
 					int	item_seeds		= -1;
 					int item_peers		= -1;
+					int	item_completed	= -1;
+					
 					String item_hash	= null;
 					String item_magnet	= null;
 
-					String	desc_size = null;
-
+					String	desc_size		= null;
+					int		desc_completed	= -1;
+					
 					String potential_cdp_link = null;
 					
 					SimpleXMLParserDocumentNode node = item.getNode();
@@ -615,6 +619,15 @@ RSSEngine
 							}catch( Throwable e ){
 
 							}
+						}else if( lc_child_name.equals( "grabs" ) || lc_child_name.equals( "completed" )){
+
+							try{
+								item_completed = Integer.parseInt( value );
+
+							}catch( Throwable e ){
+
+							}
+
 						}else if( lc_child_name.equals( "infohash" ) || lc_child_name.equals( "info_hash" )){
 
 							item_hash = value;
@@ -690,6 +703,17 @@ RSSEngine
 
 											result.setNbPeersFromHTML( num );
 										}
+									}
+								}
+								
+								m = completed_pat.matcher( desc );
+
+								if ( m.find()){
+
+									try{
+										desc_completed = Integer.parseInt(m.group(1));
+										
+									}catch( Throwable e ){
 									}
 								}
 								
@@ -894,6 +918,11 @@ RSSEngine
 
 							result.setTorrentLink( item_magnet );
 						}
+					}
+					
+					if ( item_completed >= 0 || desc_completed >= 0) {
+						
+						result.setNbCompleted( Math.max( item_completed, desc_completed ));
 					}
 
 						// if we still have no download link see if the magnet is in the title

@@ -55,13 +55,16 @@ public class WebResult extends Result {
 	Date assetDate;
 	
 	long size = -1;
-	int nbPeers = -1;
-	int nbSeeds = -1;
-	int nbSuperSeeds = -1;
+	
+	int nbPeers			= -1;
+	int nbSeeds			= -1;
+	int nbSuperSeeds	= -1;
+	int nbCompleted		= -1;
+	
 	int	comments	= -1;
-	int votes = -1;
-	int votesDown = -1;
-	float rank = -1;
+	int votes		= -1;
+	int votesDown	= -1;
+	float rank		= -1;
 
 	boolean privateTorrent;
 
@@ -205,6 +208,9 @@ public class WebResult extends Result {
 		}
 	}
 
+	public void setNbCompleted( int num ){
+		nbCompleted = num;
+	}
 	public void setRankFromHTML( String rank_str, float divisor ){
 		if (rank_str == null) {
 			return;
@@ -558,6 +564,11 @@ public class WebResult extends Result {
 		return nbSuperSeeds;
 	}
 
+	@Override
+	public int getNbCompleted(){
+		return( nbCompleted );
+	}
+	
 	@Override
 	public Date getPublishedDate() {
 		return publishedDate;

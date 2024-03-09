@@ -716,6 +716,9 @@ SubscriptionResultImpl
 
 			result.put( SearchResult.PR_LEECHER_COUNT, peers==null?-1:Long.parseLong(peers) );
 
+			String	completed = (String)map.get( "gr" );
+
+			result.put( SearchResult.PR_COMPLETED_COUNT, completed==null?-1:Long.parseLong(completed) );
 
 			String	votes = (String)map.get( "v" );
 

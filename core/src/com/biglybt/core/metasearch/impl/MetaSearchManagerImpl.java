@@ -1921,6 +1921,10 @@ MetaSearchManagerImpl
 
 	     				return( new Long( result.getNbSuperSeeds()));
 	     			}
+	     			case PR_COMPLETED_COUNT:{
+
+	     				return( new Long( result.getNbCompleted()));
+	     			}
 	     			case PR_CATEGORY:{
 
 	     				return( result.getCategory());

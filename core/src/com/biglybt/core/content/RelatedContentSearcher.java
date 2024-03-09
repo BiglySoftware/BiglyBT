@@ -709,6 +709,10 @@ RelatedContentSearcher
 
 							return( new Long( 0 ));
 						}
+						case SearchResult.PR_COMPLETED_COUNT:{
+
+							return( new Long( -1 ));
+						}
 						case SearchResult.PR_PUB_DATE:{
 
 							long	date = c.getPublishDate();

@@ -47,6 +47,7 @@ SBC_SearchResult
 	private final long				seeds_peers_sort;
 	private final int				seed_count;
 	private final int				peer_count;
+	private final int				completed_count;
 	private final long				votes_comments_sort;
 	private final String			votes_comments;
 
@@ -107,6 +108,8 @@ SBC_SearchResult
 
 		seeds_peers_sort = ((seeds&0x7fffffff)<<32) | ( leechers & 0xffffffff );
 
+		completed_count = result.getNbCompleted();
+		
 		long votes		= result.getVotes();
 		long comments 	= result.getComments();
 
@@ -210,6 +213,13 @@ SBC_SearchResult
 		return( seeds_peers_sort );
 	}
 
+	@Override
+	public int 
+	getNbCompleted() 
+	{
+		return( completed_count );
+	}
+	
 	@Override
 	public String
 	getVotesComments()

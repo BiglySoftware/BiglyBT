@@ -143,6 +143,13 @@ PluginResult
 	{
 		return(getIntProperty( SearchResult.PR_SUPER_SEED_COUNT ));
 	}
+	
+	@Override
+	public int
+	getNbCompleted()
+	{
+		return(getIntProperty( SearchResult.PR_COMPLETED_COUNT ));
+	}
 
 	@Override
 	public int

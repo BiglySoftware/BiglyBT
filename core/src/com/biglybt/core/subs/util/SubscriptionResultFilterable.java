@@ -51,6 +51,7 @@ SubscriptionResultFilterable
 	private String				seeds_peers;
 	private int					seed_count;
 	private int					peer_count;
+	private int					completed_count;
 	private long				votes_comments_sort;
 	private String				votes_comments;
 	private int					rank;
@@ -147,6 +148,8 @@ SubscriptionResultFilterable
 
 		long seeds 		= (Long)properties.get( SearchResult.PR_SEED_COUNT );
 		long leechers 	= (Long)properties.get( SearchResult.PR_LEECHER_COUNT );
+
+		completed_count 	= ((Long)properties.get( SearchResult.PR_COMPLETED_COUNT )).intValue();
 
 		seed_count = (int)(seeds<0?0:seeds);
 		peer_count = (int)(leechers<0?0:leechers);
@@ -271,6 +274,13 @@ SubscriptionResultFilterable
 		return( seeds_peers_sort );
 	}
 
+	@Override
+	public int 
+	getNbCompleted()
+	{
+		return( completed_count );
+	}
+	
 	@Override
 	public String
 	getVotesComments()

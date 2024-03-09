@@ -56,6 +56,7 @@ Result
 	public abstract int getNbPeers();
 	public abstract int getNbSeeds();
 	public abstract int getNbSuperSeeds();
+	public abstract int getNbCompleted();
 	public abstract int getComments();
 	public abstract int getVotes();
 	public abstract int getVotesDown();
@@ -283,6 +284,13 @@ Result
 			object.put("p","-1");
 		}
 
+		int completed = getNbCompleted();
+		
+		if ( completed >= 0 ) {
+			
+			object.put( "gr", "" + completed);	// grabbed
+		}
+		
 		int	comments = getComments();
 
 		if ( comments >= 0 ){

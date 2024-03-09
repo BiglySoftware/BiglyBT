@@ -53,6 +53,9 @@ SearchSubsResultBase
 	public long
 	getSeedsPeersSortValue();
 
+	public int
+	getNbCompleted();
+	
 	public String
 	getVotesComments();
 
