@@ -288,6 +288,13 @@ SubscriptionRSSFeed
 							pw.println( "<vuze:rank>" + rank + "</vuze:rank>" );
 						}
 						
+						Long	completed = (Long)result.getProperty( SearchResult.PR_COMPLETED_COUNT );
+
+						if ( completed != null && completed >= 0){
+
+							pw.println( "<completed>" + completed + "</completed>" );
+						}
+						
 						String	cat = (String)result.getProperty( SearchResult.PR_CATEGORY );
 						
 						if ( cat != null && !cat.isEmpty()){
