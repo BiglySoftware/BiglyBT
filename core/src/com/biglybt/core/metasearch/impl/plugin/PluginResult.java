@@ -317,7 +317,9 @@ PluginResult
 	getIntProperty(
 		int		name )
 	{
-		return((int)getLongProperty( name ));
+		long res = getLongProperty( name );
+		
+		return( res == Long.MIN_VALUE?Integer.MIN_VALUE:(int)res );
 	}
 
 	protected long

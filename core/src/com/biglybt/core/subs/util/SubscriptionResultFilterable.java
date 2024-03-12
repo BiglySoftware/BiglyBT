@@ -149,7 +149,9 @@ SubscriptionResultFilterable
 		long seeds 		= (Long)properties.get( SearchResult.PR_SEED_COUNT );
 		long leechers 	= (Long)properties.get( SearchResult.PR_LEECHER_COUNT );
 
-		completed_count 	= ((Long)properties.get( SearchResult.PR_COMPLETED_COUNT )).intValue();
+		long cc = (Long)properties.get( SearchResult.PR_COMPLETED_COUNT );
+		
+		completed_count 	= cc<0?-1:(int)cc;
 
 		seed_count = (int)(seeds<0?0:seeds);
 		peer_count = (int)(leechers<0?0:leechers);
