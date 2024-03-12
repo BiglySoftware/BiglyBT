@@ -58,7 +58,7 @@ public class ColumnSearchSubResultGrabbed
 			return;
 		}
 
-		cell.setText( String.valueOf( num ));
+		cell.setText( num<0?"":String.valueOf( num ));
 
 		return;
 

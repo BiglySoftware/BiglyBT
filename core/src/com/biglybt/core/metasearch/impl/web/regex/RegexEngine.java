@@ -447,7 +447,7 @@ RegexEngine
 													result.setNameFromHTML(fieldContent);
 													break;
 												case FIELD_SIZE :
-													result.setSizeFromHTML(fieldContent);
+													result.setSizeFromHTML(fieldContent, 0);
 													break;
 												case FIELD_PEERS :
 													result.setNbPeersFromHTML(fieldContent);

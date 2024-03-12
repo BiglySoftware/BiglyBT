@@ -295,7 +295,7 @@ public class WebResult extends Result {
 		assetDate = RSSUtils.parseRSSDate( str );
 	}
 
-	public void setSizeFromHTML(String size) {
+	public void setSizeFromHTML(String size, long minAcceptable) {
 		if(size != null) {
 			size = removeHTMLTags(size);
 			String sizeS = Entities.HTML40.unescape(size).replace((char)160,(char)32);
@@ -318,7 +318,10 @@ public class WebResult extends Result {
 				if ( multiplier <= 0 ){
 					multiplier= 1;	// ignore invalid 
 				}
-				this.size = (long) (base * multiplier );
+				long result = (long) (base * multiplier );
+				if ( result >= minAcceptable ){
+					this.size = result;
+				}
 			} catch(Throwable e) {
 				//e.printStackTrace();
 			}

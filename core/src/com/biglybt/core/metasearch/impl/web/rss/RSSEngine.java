@@ -410,7 +410,11 @@ RSSEngine
 
 								if (lengthAtt != null){
 
-									result.setSizeFromHTML(lengthAtt.getValue());
+										// The enclosure size is supposed to be that of the related content, i.e. the size of the
+										// torrent file, NOT the size of the download
+										// However historically it was used incorrectly to refer to the sie of the download itself.
+										// So only accept it as such if the size is probably too large for a torrent file
+									result.setSizeFromHTML(lengthAtt.getValue(), 1024*1024 );
 								}
 							}
 						}else if(lc_child_name.equals( "category" )) {
@@ -535,7 +539,7 @@ RSSEngine
 							}
 						}else if ( lc_full_child_name.equals( "vuze:size" )){
 
-							result.setSizeFromHTML( value );
+							result.setSizeFromHTML( value, 0 );
 
 						}else if ( lc_full_child_name.equals( "vuze:seeds" )){
 
@@ -745,7 +749,7 @@ RSSEngine
 									try{
 										long l = Long.parseLong( n.getValue().trim());
 
-										result.setSizeFromHTML( l + " B" );
+										result.setSizeFromHTML( l + " B", 0 );
 
 									}catch( Throwable e ){
 
@@ -900,7 +904,7 @@ RSSEngine
 
 						if ( n != null ){
 
-							result.setSizeFromHTML( n.getValue().trim());
+							result.setSizeFromHTML( n.getValue().trim(), 0 );
 						}
 					}
 
@@ -984,7 +988,7 @@ RSSEngine
 
 						if ( desc_size != null ){
 
-							result.setSizeFromHTML( desc_size );
+							result.setSizeFromHTML( desc_size, 0 );
 
 						}
 					}
