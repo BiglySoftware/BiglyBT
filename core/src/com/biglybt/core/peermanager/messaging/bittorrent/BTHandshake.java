@@ -87,7 +87,7 @@ public class BTHandshake implements BTMessage, RawMessage {
 
   private final byte[] reserved_bytes;
   private final byte[] datahash_bytes;
-  private final byte[] peer_id_bytes;
+  private byte[] peer_id_bytes;
   private final byte version;
 
   private static byte[] duplicate(byte[] b) {
@@ -130,9 +130,7 @@ public class BTHandshake implements BTMessage, RawMessage {
 
   public byte[] getPeerId() {  return peer_id_bytes;  }
 
-
-
-
+  public void setPeerId( byte[] id ){ peer_id_bytes = id; }
 
   // message
   @Override
