@@ -38,17 +38,17 @@ PeerControlSchedulerPrioritised
 	final List<instanceWrapper>	pending_registrations = new ArrayList<>();
 
 	private volatile boolean	registrations_changed;
-	private volatile long		latest_time;
+	private volatile long		latest_time_mono;
 
 	private final Object	instance_lock = new Object();
 
 	private final SpeedTokenDispenserPrioritised tokenDispenser = new SpeedTokenDispenserPrioritised();
 
-	private long	next_peer_count_time 	= SystemTime.getMonotonousTime();
-	private long	next_piece_count_time 	= SystemTime.getMonotonousTime();
+	private long	next_peer_count_time_mono 	= SystemTime.getMonotonousTime();
+	private long	next_piece_count_time_mono 	= SystemTime.getMonotonousTime();
 	
-	private volatile long		peer_count_active_time = 0;
-	private volatile long		piece_count_active_time = 0;
+	private volatile long		peer_count_active_time_mono		= 0;
+	private volatile long		piece_count_active_time_mono	= 0;
 
 	private volatile int[]		last_peer_count = { 0, 0 };
 	private volatile int[]		last_piece_count = { 0, 0 };
@@ -57,54 +57,54 @@ PeerControlSchedulerPrioritised
 	protected void
 	schedule()
 	{
-		latest_time	= SystemTime.getMonotonousTime();
+		latest_time_mono	= SystemTime.getMonotonousTime();
 		
 		SystemTime.registerMonotonousConsumer(
 			new SystemTime.TickConsumer()
 			{
 				@Override
 				public void
-				consume( long	time )
+				consume( long	time_mono )
 				{
 					boolean count_peers 	= false;
 					boolean count_pieces 	= false;
 					
 					synchronized( PeerControlSchedulerPrioritised.this ){
 						
-						if ( peer_count_active_time > 0 ){
+						if ( peer_count_active_time_mono > 0 ){
 							
-							if ( time >= next_peer_count_time ){
+							if ( time_mono >= next_peer_count_time_mono ){
 								
-								if ( time - peer_count_active_time > 15*1000 ){
+								if ( time_mono - peer_count_active_time_mono > 15*1000 ){
 									
-									peer_count_active_time = 0;
+									peer_count_active_time_mono = 0;
 									
 								}else{
 									count_peers = true;
 									
-									next_peer_count_time = time+900;
+									next_peer_count_time_mono = time_mono+900;
 								}
 							}
 						}
 						
-						if ( piece_count_active_time > 0 ){
+						if ( piece_count_active_time_mono > 0 ){
 							
-							if ( time >= next_piece_count_time ){
+							if ( time_mono >= next_piece_count_time_mono ){
 								
-								if ( time - piece_count_active_time > 15*1000 ){
+								if ( time_mono - piece_count_active_time_mono > 15*1000 ){
 									
-									piece_count_active_time = 0;
+									piece_count_active_time_mono = 0;
 									
 								}else{
 									
 									count_pieces = true;
 									
-									next_piece_count_time = time+900;
+									next_piece_count_time_mono = time_mono+900;
 								}
 							}
 						}
 
-						latest_time	= time;
+						latest_time_mono	= time_mono;
 
 						if ( instance_map.size() > 0 || pending_registrations.size() > 0 ){
 
@@ -153,20 +153,20 @@ PeerControlSchedulerPrioritised
 			});
 
 
-		ArrayList	instances = new ArrayList();
+		ArrayList<instanceWrapper>	instances = new ArrayList<>();
 
-		long	latest_time_used	= 0;
-		int scheduledNext = 0;
-		long	currentScheduleStart = latest_time;
-		long 	last_stats_time	= latest_time;
+		long	latest_time_used_mono		= 0;
+		int		scheduledNext				= 0;
+		long	currentScheduleStartMono	= latest_time_mono;
+		long 	last_stats_time_mono		= latest_time_mono;
 
 		while( true ){
 
 			if ( registrations_changed ){
 				synchronized( instance_lock ){
-					Iterator	it = instances.iterator();
+					Iterator<instanceWrapper>	it = instances.iterator();
 					while( it.hasNext()){
-						if (((instanceWrapper)it.next()).isUnregistered()){
+						if (it.next().isUnregistered()){
 							it.remove();
 						}
 					}
@@ -185,18 +185,18 @@ PeerControlSchedulerPrioritised
 					}
 
 					scheduledNext = 0;
-					currentScheduleStart = latest_time;
+					currentScheduleStartMono = latest_time_mono;
 
 					registrations_changed	= false;
 				}
 			}
 
-			tokenDispenser.update(latest_time);
+			tokenDispenser.update(latest_time_mono);
 
 			for (int i = scheduledNext; i < instances.size(); i++)
 			{
-				instanceWrapper inst = (instanceWrapper) instances.get(i);
-				if (currentScheduleStart + inst.getScheduleOffset() > latest_time_used)
+				instanceWrapper inst = instances.get(i);
+				if (currentScheduleStartMono + inst.getScheduleOffset() > latest_time_used_mono)
 					break; // too early for next task, continue waiting
 				if (i == 0 || !useWeights)
 					tokenDispenser.refill();
@@ -208,11 +208,11 @@ PeerControlSchedulerPrioritised
 				{
 					scheduledNext = 0;
 					// try to run every task every SCHEDULE_PERIOD_MILLIS on average
-					currentScheduleStart += SCHEDULE_PERIOD_MILLIS;
+					currentScheduleStartMono += SCHEDULE_PERIOD_MILLIS;
 					// if tasks hog too much time then delay to prevent massive
 					// catch-up-hammering
-					if (latest_time_used - currentScheduleStart > SCHEDULE_PERIOD_MAX_CATCHUP )
-						currentScheduleStart = latest_time_used + SCHEDULE_PERIOD_MILLIS;
+					if (latest_time_used_mono - currentScheduleStartMono > SCHEDULE_PERIOD_MAX_CATCHUP )
+						currentScheduleStartMono = latest_time_used_mono + SCHEDULE_PERIOD_MILLIS;
 				}
 			}
 
@@ -235,7 +235,7 @@ PeerControlSchedulerPrioritised
 			}*/
 
 			synchronized( this ){
-				if ( latest_time == latest_time_used ){
+				if ( latest_time_mono == latest_time_used_mono ){
 					wait_count++;
 					try{
 						long wait_start = SystemTime.getHighPrecisionCounter();
@@ -251,14 +251,14 @@ PeerControlSchedulerPrioritised
 					Thread.yield();
 				}
 
-				latest_time_used	= latest_time;
+				latest_time_used_mono	= latest_time_mono;
 			}
 
-			long	stats_diff =  latest_time_used - last_stats_time;
+			long	stats_diff =  latest_time_used_mono - last_stats_time_mono;
 
 			if ( stats_diff > 10000 ){
 				// System.out.println( "stats: time = " + stats_diff + ", ticks = " + tick_count + ", inst = " + instances.size());
-				last_stats_time	= latest_time_used;
+				last_stats_time_mono	= latest_time_used_mono;
 			}
 		}
 	}
@@ -272,7 +272,7 @@ PeerControlSchedulerPrioritised
 
 		synchronized( instance_lock ){
 
-			Map	new_map = new HashMap( instance_map );
+			Map<PeerControlInstance,instanceWrapper>	new_map = new HashMap<>( instance_map );
 
 			new_map.put( instance, wrapper );
 
@@ -291,7 +291,7 @@ PeerControlSchedulerPrioritised
 	{
 		synchronized( instance_lock ){
 
-			Map	new_map = new HashMap( instance_map );
+			Map<PeerControlInstance,instanceWrapper>	new_map = new HashMap<>( instance_map );
 
 			instanceWrapper wrapper = (instanceWrapper)new_map.remove(instance);
 
@@ -325,7 +325,7 @@ PeerControlSchedulerPrioritised
 	@Override
 	public int[] getPeerCount()
 	{
-		peer_count_active_time = SystemTime.getMonotonousTime();
+		peer_count_active_time_mono = SystemTime.getMonotonousTime();
 
 		return( last_peer_count );
 	}
@@ -333,13 +333,13 @@ PeerControlSchedulerPrioritised
 	@Override
 	public int[] getPieceCount()
 	{
-		piece_count_active_time = SystemTime.getMonotonousTime();
+		piece_count_active_time_mono = SystemTime.getMonotonousTime();
 		
 		return( last_piece_count );
 	}
 	
 	protected static class
-	instanceWrapper implements Comparable
+	instanceWrapper implements Comparable<instanceWrapper>
 	{
 		private final PeerControlInstance		instance;
 		private boolean					unregistered;
@@ -397,8 +397,8 @@ PeerControlSchedulerPrioritised
 		}
 
 		@Override
-		public int compareTo(Object o) {
-			return instance.getSchedulePriority()-((instanceWrapper)o).instance.getSchedulePriority();
+		public int compareTo(instanceWrapper o) {
+			return instance.getSchedulePriority()-o.instance.getSchedulePriority();
 		}
 	}
 }

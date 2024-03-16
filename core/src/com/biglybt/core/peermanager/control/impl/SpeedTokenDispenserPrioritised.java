@@ -46,18 +46,18 @@ SpeedTokenDispenserPrioritised
 				}
 
 				threshold = Math.max(BUCKET_THRESHOLD_FACTOR*rateKiB, BUCKET_THRESHOLD_LOWER_BOUND);
-				lastTime = currentTime - 1; // shortest possible delta
+				lastTimeMono = currentTimeMono - 1; // shortest possible delta
 				refill(); // cap buffer to threshold in case something accumulated
 			}
 		});
 	}
 	private long	threshold;
 	private long	bucket		= 0;
-	private long	lastTime	= SystemTime.getCurrentTime();
-	private long	currentTime;
+	private long	lastTimeMono	= SystemTime.getMonotonousTime();
+	private long	currentTimeMono;
 
-	public void update(long newTime) {
-		currentTime = newTime;
+	public void update(long newTimeMono) {
+		currentTimeMono = newTimeMono;
 	}
 
 	// allow at least 2 outstanding requests
@@ -68,11 +68,11 @@ SpeedTokenDispenserPrioritised
 	private static final int	BUCKET_THRESHOLD_FACTOR			= 1024 * BUCKET_RESPONSE_TIME;
 
 	public void refill() {
-		if (lastTime == currentTime || rateKiB == 0)
+		if (lastTimeMono == currentTimeMono || rateKiB == 0)
 			return;
 
-		if ( lastTime > currentTime ){
-			lastTime = currentTime;
+		if ( lastTimeMono > currentTimeMono ){
+			lastTimeMono = currentTimeMono;
 			return;
 		}
 
@@ -80,8 +80,8 @@ SpeedTokenDispenserPrioritised
 			Debug.out( "Bucket is more than empty! - " + bucket );
 			bucket = 0;
 		}
-		long delta = currentTime - lastTime;
-		lastTime = currentTime;
+		long delta = currentTimeMono - lastTimeMono;
+		lastTimeMono = currentTimeMono;
 		// upcast to long since we might exceed int-max when rate and delta are
 		// large enough; then downcast again...
 		long tickDelta = ( rateKiB * 1024L * delta) / 1000;
