@@ -61,6 +61,7 @@ IpFilter
 		String 	ipAddress,
 		String 	torrent_name,
 		byte[]	torrent_hash,
+		boolean	is_specific,
 		boolean	loggable );
 
 	public boolean
@@ -68,6 +69,7 @@ IpFilter
 		InetAddress 	ipAddress,
 		String 			torrent_name,
 		byte[]			torrent_hash,
+		boolean			is_specific,
 		boolean			loggable );
 
 	public IpRange
@@ -108,9 +110,21 @@ IpFilter
 	ban(
 		String 	ipAddress,
 		String	torrent_name,
+		byte[]	specific_hash,
+		boolean	manual );
+	
+	public boolean
+	ban(
+		String 	ipAddress,
+		String	torrent_name,
 		boolean	manual,
 		int		ban_for_mins );
 
+	public boolean
+	isBanned(
+		String	ipAddress,
+		byte[]	specific_hash );
+	
 	public boolean
 	unban(String ipAddress);
 

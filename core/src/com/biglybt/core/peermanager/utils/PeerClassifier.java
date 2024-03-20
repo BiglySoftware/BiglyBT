@@ -34,7 +34,9 @@ import com.biglybt.core.util.IPToHostNameResolver;
  */
 public class PeerClassifier {
 
-	public static final String CACHE_LOGIC = "CacheLogic";
+	public static final String CACHE_LOGIC 		= "CacheLogic";
+	public static final String HTTP_SEED_PREFIX = "HTTP Seed: ";
+	public static final String WEB_SEED_PREFIX	= "WebSeed: ";
 
   /**
    * Get a client description (name and version) from the given peerID byte array.
@@ -136,5 +138,17 @@ public class PeerClassifier {
 		}
 
 		return( false );
+	}
+	
+	public static boolean
+	isHTTPSeed(
+		String		client )
+	{
+		if ( client == null || client.isEmpty()){
+			
+			return( false );
+		}
+		
+		return( client.startsWith(HTTP_SEED_PREFIX) || client.startsWith( WEB_SEED_PREFIX ));
 	}
 }

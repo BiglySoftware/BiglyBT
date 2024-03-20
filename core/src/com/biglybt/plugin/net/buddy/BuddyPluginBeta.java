@@ -7825,7 +7825,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				
 				if ( is_ip_filtered == null ){
 					
-					is_ip_filtered = ip_filter.isInRange( AddressUtils.getHostAddress( getAddress()), "D-Chat", null, true );
+					is_ip_filtered = ip_filter.isInRange( AddressUtils.getHostAddress( getAddress()), "D-Chat", null, false, true );
 				}
 				
 				return( is_ip_filtered );

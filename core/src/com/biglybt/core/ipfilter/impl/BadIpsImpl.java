@@ -25,6 +25,7 @@ import java.util.Map;
 import com.biglybt.core.ipfilter.BadIp;
 import com.biglybt.core.ipfilter.BadIps;
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.ByteFormatter;
 
 /**
  * @author Olivier
@@ -65,8 +66,14 @@ public class BadIpsImpl implements BadIps {
   @Override
   public int
   addWarningForIp(
-  	String ip )
+  	String	ip,
+  	byte[]	specific_hash )
   {
+	if ( specific_hash != null ){
+
+	  ip += " [" + ByteFormatter.encodeString( specific_hash ) + "]";
+	}
+
     try{
     	bad_ip_map_mon.enter();
 
@@ -81,31 +88,6 @@ public class BadIpsImpl implements BadIps {
 
     	return( bad_ip.incrementWarnings());
 
-    }finally{
-
-    	bad_ip_map_mon.exit();
-    }
-  }
-
-
-  @Override
-  public int
-  getNbWarningForIp(
-  	String ip)
-  {
-    try{
-    	bad_ip_map_mon.enter();
-
-        BadIpImpl bad_ip = bad_ip_map.get(ip);
-
-      if ( bad_ip == null ){
-
-        return 0;
-
-      }else{
-
-        return bad_ip.getNumberOfWarnings();
-      }
     }finally{
 
     	bad_ip_map_mon.exit();

@@ -25,6 +25,7 @@ import java.util.Map;
 
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.peermanager.piecepicker.PiecePriorityProvider;
+import com.biglybt.core.peermanager.utils.PeerClassifier;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.Debug;
@@ -192,7 +193,7 @@ ExternalSeedReaderGetRight
 	public String
 	getName()
 	{
-		return( "HTTP Seed: " + url );
+		return( PeerClassifier.HTTP_SEED_PREFIX + url );
 	}
 
 	@Override

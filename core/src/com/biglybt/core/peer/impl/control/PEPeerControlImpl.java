@@ -69,6 +69,7 @@ import com.biglybt.core.peermanager.unchoker.UnchokerFactory;
 import com.biglybt.core.peermanager.unchoker.UnchokerUtil;
 import com.biglybt.core.peermanager.uploadslots.UploadHelper;
 import com.biglybt.core.peermanager.uploadslots.UploadSlotManager;
+import com.biglybt.core.peermanager.utils.PeerClassifier;
 import com.biglybt.core.tag.TaggableResolver;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
@@ -1122,11 +1123,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			throw(new RuntimeException("invalid class"));
 		}
 
-		final PEPeerTransport transport = (PEPeerTransport) _transport;
+		PEPeerTransport transport = (PEPeerTransport) _transport;
 
-		if(!ip_filter.isInRange(transport.getIp(), getDisplayName(), getTorrentHash())){
+		if ( !isBlocked(transport, getDisplayName(), getTorrentHash())){
 
-			final ArrayList<PEPeerTransport> peer_transports = peer_transports_cow;
+			ArrayList<PEPeerTransport> peer_transports = peer_transports_cow;
 
 			if(!peer_transports.contains(transport)){
 
@@ -2477,7 +2478,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	@Override
 	public void addPeerTransport(PEPeerTransport transport){
-		if(!ip_filter.isInRange(transport.getIp(), getDisplayName(), getTorrentHash())){
+		if(!isBlocked(transport, getDisplayName(), getTorrentHash())){
 			final ArrayList peer_transports = peer_transports_cow;
 
 			if(!peer_transports.contains(transport)){
@@ -4027,7 +4028,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 	private void processPieceCheckResult(DiskManagerCheckRequest request, int outcome){
 		final int check_type = ((Integer) request.getUserData()).intValue();
-
+		
 		try{
 
 			final int pieceNumber = request.getPieceNumber();
@@ -4217,7 +4218,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 									PEPeerTransport pt = getTransportFromAddress(writer);
 
 									if(pt != null && pt.getReservedPieceNumbers() == null
-											&& !ip_filter.isInRange(writer, getDisplayName(), getTorrentHash())){
+											&& !isBlocked(pt, getDisplayName(), getTorrentHash())){
 
 										bestWriter = writer;
 										maxWrites = writes;
@@ -4321,11 +4322,9 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 		// Debug.out("Bad Peer Detected: " + peerIP + " [" + peer.getClient() + "]");
 
-		IpFilterManager filter_manager = IpFilterManagerFactory.getSingleton();
-
 		// Ban fist to avoid a fast reco of the bad peer
 
-		int nbWarnings = filter_manager.getBadIps().addWarningForIp(ip);
+		int nbWarnings = addWarning( ip, peer );
 
 		boolean disconnect_peer = false;
 
@@ -4341,7 +4340,7 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 
 				// if a block-ban occurred, check other connections
 
-				if(ip_filter.ban(ip, getDisplayName() + ": " + reason, false)){
+				if( addBan( ip, reason )){
 
 					checkForBannedConnections();
 				}
@@ -4566,8 +4565,11 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 		}
 	}
 
-	private void checkForBannedConnections(){
-		if(ip_filter.isEnabled()){ // if ipfiltering is enabled, remove any existing filtered connections
+	private void 
+	checkForBannedConnections()
+	{
+		if (ip_filter.isEnabled()){ // if ipfiltering is enabled, remove any existing filtered connections
+			
 			List<PEPeerTransport> to_close = null;
 
 			final List<PEPeerTransport> peer_transports = peer_transports_cow;
@@ -4575,24 +4577,98 @@ public class PEPeerControlImpl extends LogRelation implements PEPeerControl, Dis
 			String name = getDisplayName();
 			byte[] hash = getTorrentHash();
 
-			for(int i = 0; i < peer_transports.size(); i++){
-				final PEPeerTransport conn = peer_transports.get(i);
+			for( PEPeerTransport peer: peer_transports ){
 
-				if(ip_filter.isInRange(conn.getIp(), name, hash)){
-					if(to_close == null)
-						to_close = new ArrayList();
-					to_close.add(conn);
+				if ( isBlocked(peer, name, hash)){
+					
+					if ( to_close == null ){
+						
+						to_close = new ArrayList<>();
+					}
+					
+					to_close.add(peer);
 				}
 			}
 
-			if(to_close != null){
-				for(int i = 0; i < to_close.size(); i++){
-					closeAndRemovePeer(to_close.get(i), "IPFilter banned IP address", Transport.CR_IP_BLOCKED, true);
+			if ( to_close != null ){
+				
+				for ( PEPeerTransport peer: to_close ){
+					
+					closeAndRemovePeer( peer, "IPFilter banned IP address", Transport.CR_IP_BLOCKED, true);
 				}
 			}
 		}
 	}
 
+	private boolean
+	isBlocked(
+		PEPeerTransport	peer,
+		String			name,
+		byte[]			hash )
+	{
+		return( ip_filter.isInRange( peer.getIp(), name, hash, PeerClassifier.isHTTPSeed( peer.getClient()), true ));
+	}
+	
+	private int
+	addWarning(
+		String				ip,
+		PEPeerTransport		peer )
+	{
+		IpFilterManager filter_manager = IpFilterManagerFactory.getSingleton();
+
+		byte[]	specific_hash = null;
+		
+		if ( peer != null ){
+			
+			if ( PeerClassifier.isHTTPSeed( peer.getClient())){
+				
+				specific_hash = getTorrentHash();
+			}
+			
+		}else{
+			
+				// might be recently banned http seed that's since disconnected
+			
+			if ( ip_filter.isBanned( ip, getTorrentHash())){
+				
+				specific_hash = getTorrentHash();
+			}
+		}
+		
+		int nbWarnings = filter_manager.getBadIps().addWarningForIp( ip, specific_hash );
+		
+		return( nbWarnings );
+	}
+	
+	private boolean
+	addBan(
+		String			ip,
+		String			reason )
+	{
+		PEPeerTransport peer = getTransportFromAddress( ip );
+		
+		byte[]	specific_hash = null;
+		
+		if ( peer != null ){
+			
+			if ( PeerClassifier.isHTTPSeed( peer.getClient())){
+				
+				specific_hash = getTorrentHash();
+			}
+			
+		}else{
+			
+				// might be recently banned http seed that's since disconnected
+			
+			if ( ip_filter.isBanned( ip, getTorrentHash())){
+				
+				specific_hash = getTorrentHash();
+			}
+		}
+		
+		return( ip_filter.ban( ip, getDisplayName() + ": " + reason, specific_hash, false));
+	}
+	
 	@Override
 	public boolean isSeeding(){
 		return(seeding_mode);

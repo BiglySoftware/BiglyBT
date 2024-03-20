@@ -28,10 +28,7 @@ public interface
 BadIps
 {
   public int
-  addWarningForIp(String ip);
-
-  public int
-  getNbWarningForIp(String ip);
+  addWarningForIp(String ip, byte[] specific_hash );
 
   public int
   getNbBadIps();

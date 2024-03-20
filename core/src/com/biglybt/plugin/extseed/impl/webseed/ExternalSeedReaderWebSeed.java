@@ -24,6 +24,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Map;
 
+import com.biglybt.core.peermanager.utils.PeerClassifier;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.plugin.extseed.ExternalSeedException;
@@ -92,7 +93,7 @@ ExternalSeedReaderWebSeed
 	public String
 	getName()
 	{
-		return( "WebSeed: " + url );
+		return( PeerClassifier.WEB_SEED_PREFIX + url );
 	}
 
 	@Override

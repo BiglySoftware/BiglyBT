@@ -35,6 +35,7 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.tracker.protocol.PRHelpers;
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.HostNameToIPResolver;
@@ -213,8 +214,14 @@ IPBannerImpl
 	
 	protected boolean
 	isBanned(
-		InetAddress ipAddress)
+		InetAddress ipAddress,
+		byte[]		specific_hash )
 	{
+		if ( specific_hash != null ){
+			
+			Debug.out( "Specific hash not supported" );
+		}
+		
 		Object oa = decodeAddress( ipAddress );
 		
 		try{
@@ -237,8 +244,14 @@ IPBannerImpl
 
 	protected boolean
 	isBanned(
-		String ipAddress)
+		String 	ipAddress,
+		byte[]	specific_hash )
 	{
+		if ( specific_hash != null ){
+			
+			ipAddress += " [" + ByteFormatter.encodeString( specific_hash ) + "]";
+		}
+		
 		Object oa = decodeAddress( ipAddress );
 
 		try{
@@ -266,9 +279,10 @@ IPBannerImpl
 	ban(
 		String 		ipAddress,
 		String		torrent_name,
+		byte[]		specific_hash,
 		boolean		manual,
 		int			for_mins )
-	{
+	{		
 			// always allow manual bans through
 
 		if ( !manual ){
@@ -293,6 +307,10 @@ IPBannerImpl
 		List<BannedIpImpl>	new_bans = new ArrayList<>();
 
 		boolean temporary = for_mins > 0;
+
+		if ( specific_hash != null ){
+			ipAddress += " [" + ByteFormatter.encodeString( specific_hash ) + "]";
+		}
 
 		Object oa = decodeAddress( ipAddress );
 		
@@ -729,6 +747,11 @@ IPBannerImpl
 		String		address )
 	{
 		try{
+			if ( address.endsWith( "]" )){	// specific hash
+				
+				return( address );
+			}
+			
 			if ( HostNameToIPResolver.isNonDNSName( address )){
 				
 				return( address );
