@@ -15,7 +15,7 @@ msgstr ""
 "X-Crowdin-Language: et\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
 "X-Crowdin-File-ID: 508\n"
-"PO-Revision-Date: 2024-03-20 05:23\n"
+"PO-Revision-Date: 2024-03-20 14:10\n"
 
 msgid "test"
 msgstr ""
@@ -57,7 +57,7 @@ msgid "donation_bitcoin_addresses"
 msgstr ""
 
 msgid "donation_crypto_title"
-msgstr ""
+msgstr "Krüptovaluuta"
 
 msgid "donation_crypto_description"
 msgstr ""
@@ -66,5 +66,5 @@ msgid "no_thanks"
 msgstr ""
 
 msgid "close"
-msgstr ""
+msgstr "Sulge"
 
