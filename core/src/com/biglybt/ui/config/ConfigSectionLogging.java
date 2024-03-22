@@ -287,7 +287,7 @@ public class ConfigSectionLogging
 		pgAdvSetting.setNumberOfColumns(3);
 
 		// network diagnostics
-
+		/* this is all fubar
 		ActionParameterImpl generate_net_button = new ActionParameterImpl(
 				"ConfigView.section.logging.netinfo",
 				"ConfigView.section.logging.generatediagnostics");
@@ -319,7 +319,8 @@ public class ConfigSectionLogging
 
 					}
 				}.start());
-
+		*/
+		
 		// stats
 
 		ActionParameterImpl generate_stats_button = new ActionParameterImpl(

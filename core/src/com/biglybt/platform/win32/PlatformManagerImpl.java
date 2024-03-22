@@ -2128,7 +2128,7 @@ PlatformManagerImpl
 
 		}catch( Throwable e ){
 
-			throw( new PlatformManagerException( "Failed to trace route", e ));
+			throw( new PlatformManagerException( "Failed to ping", e ));
 		}
 	}
 

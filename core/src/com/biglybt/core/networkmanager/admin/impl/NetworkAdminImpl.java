@@ -4717,6 +4717,23 @@ addressLoop:
 
 		NetworkAdminNetworkInterface[] interfaces = getInterfaces();
 
+		for (int i=0;i<interfaces.length;i++){
+
+			networkInterface	interf = (networkInterface)interfaces[i];
+
+			iw.indent();
+
+			try{
+
+				interf.generateDiagnostics( iw, public_addresses );
+
+			}finally{
+
+				iw.exdent();
+			}
+		}
+		
+		/*
 		if ( FULL_INTF_PROBE ){
 
 			if ( interfaces.length > 0 ){
@@ -4803,7 +4820,8 @@ addressLoop:
 				iw.println( "getRoutes failed: " + Debug.getNestedExceptionMessage( e ));
 			}
 		}
-
+		*/
+		
 		iw.println( "Inbound protocols: default routing" );
 
 
@@ -5052,7 +5070,7 @@ addressLoop:
 				iw.println( "" + getAddress());
 
 				try{
-					iw.println( "  Trace route" );
+					//iw.println( "  Trace route" );
 
 					iw.indent();
 
@@ -5062,6 +5080,7 @@ addressLoop:
 
 					}else{
 
+						/*
 						try{
 							String domain = COConfigurationManager.getStringParameter(
 								ConfigKeys.Connection.SCFG_CONNECTION_TEST_DOMAIN);
@@ -5077,7 +5096,8 @@ addressLoop:
 
 							iw.println( "Can't resolve host for route trace - " + e.getMessage());
 						}
-
+						*/
+						
 						iw.println( "Outbound protocols: bound" );
 
 						Core core = CoreFactory.getSingleton();

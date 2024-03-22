@@ -512,6 +512,9 @@ AEWin32AccessImpl
 
 		throws AEWin32AccessException
 	{
+		throw( new AEWin32AccessException( "Sorry, traceRoute is broken" ));	// causing crashes/not working
+		
+		/*
 		int	trace_id;
 
 		synchronized( this ){
@@ -527,6 +530,7 @@ AEWin32AccessImpl
 				addressToInt( target_address ),
 				ping_mode?1:0,
 				cb );
+		*/
 	}
 
 	private int
