@@ -152,8 +152,10 @@ DHTPluginImpl
 						_port,
 						3,
 						1,
-						10000, 	// udp timeout - tried less but a significant number of
+						5000, 	// udp timeout - tried less but a significant number of
 								// premature timeouts occurred
+								// reduced from 10s to 5s on 2024/03 as observing few
+								// responses received after 5s
 						send_delay, recv_delay,
 						bootstrap,
 						initial_reachable,
